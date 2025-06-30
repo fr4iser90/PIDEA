@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <title>Cursor Chat Web</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="stylesheet" href="main.css">
+  <link rel="stylesheet" href="/web/main.css">
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
@@ -53,6 +53,37 @@
   </div>
 
   <script>
+    // WebSocket connection for live reloading
+    let ws;
+    function connectWebSocket() {
+      // Connect to dev server for live reloading
+      ws = new WebSocket('ws://localhost:3001');
+      
+      ws.onopen = () => {
+        console.log('[WebSocket] Connected for live reload');
+      };
+      
+      ws.onmessage = (event) => {
+        const data = JSON.parse(event.data);
+        if (data.type === 'reload') {
+          console.log('[WebSocket] Reloading page...', data.file);
+          window.location.reload();
+        }
+      };
+      
+      ws.onclose = () => {
+        console.log('[WebSocket] Connection closed, attempting to reconnect...');
+        setTimeout(connectWebSocket, 1000);
+      };
+      
+      ws.onerror = (error) => {
+        console.error('[WebSocket] Error:', error);
+      };
+    }
+    
+    // Connect WebSocket on page load
+    connectWebSocket();
+
     let lastMessageCount = 0;
     let lastMessages = [];
     let lastMessageHash = '';
@@ -202,6 +233,10 @@
         }
         
         const processedMessages = processMessages(realMessages);
+        
+        // Sortiere Nachrichten chronologisch (User-Nachrichten sollten nach AI-Nachrichten kommen)
+        // Da wir die Nachrichten vom Server in der Reihenfolge bekommen, wie sie im DOM stehen,
+        // müssen wir sie nicht extra sortieren, aber sicherstellen dass sie korrekt angezeigt werden
         
         // Update messages mit Animation
         if (processedMessages.length !== lastMessages.length) {
