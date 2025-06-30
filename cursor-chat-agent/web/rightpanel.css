@@ -1,7 +1,8 @@
 /* Right Panel Styles */
 .right-panel {
-  position: sticky;
+  position: fixed;
   top: 0;
+  right: 0;
   height: 100vh;
   width: 340px;
   min-width: 220px;
@@ -12,7 +13,7 @@
   flex-direction: column;
   align-items: flex-start;
   justify-content: flex-start;
-  z-index: 9;
+  z-index: 20;
 }
 
 #rightPanelContent {
