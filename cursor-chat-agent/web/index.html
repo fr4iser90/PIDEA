@@ -5,19 +5,46 @@
   <title>Cursor Chat Web</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
-    body { font-family: sans-serif; background: #181c20; color: #eee; margin: 0; padding: 0; }
-    #chat { max-width: 600px; margin: 40px auto 0; background: #23272e; border-radius: 8px; box-shadow: 0 2px 12px #0008; padding: 24px; }
-    #messages { min-height: 300px; max-height: 400px; overflow-y: auto; margin-bottom: 16px; }
-    .msg { background: #2c313a; margin: 8px 0; padding: 10px 14px; border-radius: 6px; }
-    .msg.user { background: #1e3a8a; }
-    .msg.ai { background: #374151; }
-    .msg.new { animation: highlight 2s ease-out; }
+    body { font-family: 'Inter', 'Segoe UI', Arial, sans-serif; background: #181c20; color: #eee; margin: 0; padding: 0; }
+    #chat { max-width: 600px; margin: 40px auto 0; background: #23272e; border-radius: 12px; box-shadow: 0 4px 24px #000a; padding: 32px 24px 24px 24px; }
+    #messages { min-height: 300px; max-height: 400px; overflow-y: auto; margin-bottom: 18px; }
+    .msg { background: #23272e; margin: 14px 0; padding: 16px 18px; border-radius: 10px; font-size: 1.08em; line-height: 1.7; box-shadow: 0 1px 4px #0002; transition: background 0.2s; word-break: break-word; }
+    .msg.user { background: #1e3a8a; color: #eaf1ff; align-self: flex-end; }
+    .msg.ai { background: #2d323c; color: #e5e7eb; }
+    .msg.new { animation: highlight 1.2s ease-out; }
     #inputRow { display: flex; gap: 8px; }
-    #msgInput { flex: 1; padding: 10px; border-radius: 6px; border: none; font-size: 1em; background: #23272e; color: #eee; }
-    #sendBtn { padding: 10px 18px; border-radius: 6px; border: none; background: #4e8cff; color: #fff; font-weight: bold; cursor: pointer; }
+    #msgInput { flex: 1; padding: 12px; border-radius: 8px; border: none; font-size: 1.08em; background: #23272e; color: #eee; }
+    #sendBtn { padding: 12px 22px; border-radius: 8px; border: none; background: #4e8cff; color: #fff; font-weight: bold; cursor: pointer; font-size: 1.08em; }
     #sendBtn:disabled { background: #888; cursor: not-allowed; }
-    #status { text-align: center; margin-bottom: 10px; font-size: 0.9em; color: #888; }
-    @keyframes highlight { 0% { background: #4e8cff; } 100% { background: #2c313a; } }
+    #debugBtn { background: #ef4444; color: #fff; border-radius: 8px; border: none; padding: 12px 16px; font-weight: bold; cursor: pointer; font-size: 1.08em; }
+    #status { text-align: center; margin-bottom: 10px; font-size: 0.98em; color: #8ca0b3; }
+    @keyframes highlight { 0% { background: #4e8cff; } 100% { background: #23272e; } }
+
+    /* Markdown Styling */
+    .msg h1, .msg h2, .msg h3, .msg h4, .msg h5, .msg h6 {
+      color: #8ecaff; margin: 1.1em 0 0.5em 0; font-weight: 700;
+    }
+    .msg h1 { font-size: 1.6em; }
+    .msg h2 { font-size: 1.35em; }
+    .msg h3 { font-size: 1.18em; }
+    .msg ul, .msg ol { margin: 0.7em 0 0.7em 1.5em; }
+    .msg li { margin-bottom: 0.3em; }
+    .msg a { color: #4e8cff; text-decoration: underline; }
+    .msg blockquote { border-left: 4px solid #4e8cff; background: #20232a; color: #b5c6e0; margin: 1em 0; padding: 0.7em 1em; border-radius: 6px; }
+    .msg table { border-collapse: collapse; margin: 1em 0; }
+    .msg th, .msg td { border: 1px solid #444; padding: 0.4em 0.8em; }
+    .msg th { background: #2a3340; color: #b5c6e0; }
+    .msg code { background: #232b36; color: #ffb86c; border-radius: 4px; padding: 2px 6px; font-size: 0.98em; font-family: 'JetBrains Mono', 'Fira Mono', 'Consolas', monospace; }
+    .msg pre code { background: none; color: inherit; padding: 0; border-radius: 0; font-size: 1em; }
+    .msg pre { background: #181c20; color: #e5e7eb; border-radius: 8px; padding: 1em 1.2em; margin: 1.1em 0; overflow-x: auto; font-size: 1.01em; box-shadow: 0 2px 8px #0003; }
+    .msg pre::-webkit-scrollbar { height: 8px; background: #23272e; }
+    .msg pre::-webkit-scrollbar-thumb { background: #4e8cff; border-radius: 4px; }
+    .msg img { max-width: 100%; border-radius: 6px; margin: 0.5em 0; }
+    .msg hr { border: none; border-top: 1px solid #444; margin: 1.2em 0; }
+    @media (max-width: 700px) {
+      #chat { max-width: 98vw; padding: 10vw 2vw 2vw 2vw; }
+      .msg { padding: 10px 6vw; font-size: 1em; }
+    }
   </style>
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
@@ -88,36 +115,52 @@
           }, 3000);
         }
         
+        // --- NEU: AI-Blöcke zusammenfassen ---
+        function mergeAIMessages(messages) {
+          const merged = [];
+          let buffer = '';
+          let lastWasAI = false;
+          messages.forEach((m, i) => {
+            const isAI = !(m.includes('User:') || m.includes('Du:') || m.includes('You:'));
+            if (isAI) {
+              buffer += (buffer ? '\n\n' : '') + m;
+              lastWasAI = true;
+            } else {
+              if (lastWasAI && buffer) merged.push(buffer);
+              buffer = '';
+              merged.push(m);
+              lastWasAI = false;
+            }
+          });
+          if (lastWasAI && buffer) merged.push(buffer);
+          return merged;
+        }
+        const mergedMessages = mergeAIMessages(realMessages);
+        // ---
+        
         // Update messages
         msgDiv.innerHTML = '';
-        realMessages.forEach((m, index) => {
+        mergedMessages.forEach((m, index) => {
           const el = document.createElement('div');
           el.className = 'msg';
-          
           // Markiere neue Nachrichten
-          if (index >= lastMessageCount) {
-            el.classList.add('new');
-          }
-          
-          // Versuche User vs AI Nachrichten zu unterscheiden
+          if (index >= lastMessageCount) el.classList.add('new');
           if (m.includes('User:') || m.includes('Du:') || m.includes('You:')) {
             el.classList.add('user');
-          } else if (m.includes('AI:') || m.includes('Assistant:') || m.includes('Cursor:')) {
+          } else {
             el.classList.add('ai');
           }
-          
           // --- NEU: Markdown-Rendering und Syntax-Highlighting ---
           el.innerHTML = marked.parse(m);
           // Nach dem Einfügen Highlighting anwenden
           setTimeout(() => { hljs.highlightAll(); }, 0);
           // ---
-          
           msgDiv.appendChild(el);
         });
         
         msgDiv.scrollTop = msgDiv.scrollHeight;
-        lastMessageCount = realMessages.length;
-        lastMessages = realMessages;
+        lastMessageCount = mergedMessages.length;
+        lastMessages = mergedMessages;
       } catch (e) {
         console.error('[Web] Fehler beim Laden des Chatverlaufs:', e);
         document.getElementById('status').textContent = 'Fehler beim Laden der Nachrichten';
