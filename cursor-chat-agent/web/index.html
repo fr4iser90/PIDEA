@@ -28,6 +28,7 @@
     <div id="inputRow">
       <input id="msgInput" type="text" placeholder="Nachricht eingeben..." autocomplete="off" />
       <button id="sendBtn">Senden</button>
+      <button id="debugBtn" style="background: #ef4444;">Debug DOM</button>
     </div>
   </div>
   <script>
@@ -120,6 +121,22 @@
     document.getElementById('sendBtn').onclick = sendMessage;
     document.getElementById('msgInput').onkeydown = e => {
       if (e.key === 'Enter') sendMessage();
+    };
+    
+    // Debug-Funktion
+    document.getElementById('debugBtn').onclick = async () => {
+      try {
+        console.log('[Web] Debug DOM...');
+        const res = await fetch('/debug-dom');
+        const data = await res.json();
+        console.log('[Web] DOM-Analyse:', data);
+        
+        // Zeige Debug-Info in der Konsole
+        alert('DOM-Analyse in der Browser-Konsole verfügbar (F12 drücken)');
+      } catch (e) {
+        console.error('[Web] Debug-Fehler:', e);
+        alert('Debug-Fehler: ' + e.message);
+      }
     };
     
     // Aktualisiere alle 1 Sekunde statt 2 Sekunden
