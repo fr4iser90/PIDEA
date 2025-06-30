@@ -91,19 +91,15 @@ app.get('/chat-history', async (req, res) => {
     // User-Nachrichten hinzufügen
     userMessages.forEach(msg => {
       if (msg.text && msg.text.trim().length > 0) {
-        // Entferne Console Logs und HTML Tags
+        // Entferne nur HTML Tags und extra Whitespace
         let cleanText = msg.text.trim();
-        cleanText = cleanText.replace(/\[Web\].*?localhost:\d+:\d+:\d+/g, '');
-        cleanText = cleanText.replace(/\[Web\].*?Array\(\d+\).*?/g, '');
-        cleanText = cleanText.replace(/\[Web\].*?Chatverlauf geändert.*?/g, '');
-        cleanText = cleanText.replace(/\[Web\].*?Sende Nachricht.*?/g, '');
         cleanText = cleanText.replace(/<[^>]*>/g, '');
         cleanText = cleanText.replace(/\s+/g, ' ').trim();
         
         if (cleanText && cleanText.length > 0) {
           processedMessages.push({
             type: 'user',
-            content: `User: ${cleanText}`
+            content: cleanText
           });
         }
       }
