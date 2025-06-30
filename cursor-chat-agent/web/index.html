@@ -19,6 +19,9 @@
     #status { text-align: center; margin-bottom: 10px; font-size: 0.9em; color: #888; }
     @keyframes highlight { 0% { background: #4e8cff; } 100% { background: #2c313a; } }
   </style>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
 </head>
 <body>
   <div id="chat">
@@ -103,7 +106,12 @@
             el.classList.add('ai');
           }
           
-          el.textContent = m;
+          // --- NEU: Markdown-Rendering und Syntax-Highlighting ---
+          el.innerHTML = marked.parse(m);
+          // Nach dem Einfügen Highlighting anwenden
+          setTimeout(() => { hljs.highlightAll(); }, 0);
+          // ---
+          
           msgDiv.appendChild(el);
         });
         
