@@ -46,75 +46,90 @@ app.get('/chat-history', async (req, res) => {
     // Warte kurz, damit neue Nachrichten geladen werden können
     await page.waitForTimeout(1000);
     
-    // Suche nach allen Chat-Nachrichten (User und AI)
-    const messageSelectors = [
-      // User messages
-      '.aislash-editor-input-readonly[contenteditable="false"]',
-      // AI responses - bisherige und NEU: echte DOM-Selektoren
-      '.aislash-editor-message',
-      '.aislash-editor-response',
-      '.aislash-editor-content',
-      '[data-testid="chat-message"]',
-      '.chat-message',
-      '.message-content',
-      // --- NEU: Cursor IDE AI-Antworten laut DOM-Analyse ---
-      'div.hide-if-empty .message-content-animated',
-      'div.message-content-animated',
-      'span.anysphere-markdown-container-root',
-      'section.markdown-section',
-      // ---
-      // Allgemeinere Selektoren für Chat-Inhalte
-      '[role="log"] > div',
-      '.chat-container > div',
-      '.conversation-item',
-      // Weitere mögliche AI Selektoren
-      '[data-testid="assistant-message"]',
-      '[data-testid="ai-message"]',
-      '.assistant-message',
-      '.ai-message',
-      '.bot-message',
-      '.cursor-message',
-      // Code Snippets und Antworten
-      '.aislash-editor-message code',
-      '.aislash-editor-response code',
-      '.aislash-editor-content code'
-    ];
+    // KORREKTE DOM-SELECTORS basierend auf aktueller Cursor-Version
+    const userMessageSelector = 'div.aislash-editor-input-readonly[contenteditable="false"][data-lexical-editor="true"]';
+    const aiMessageSelector = 'span.anysphere-markdown-container-root';
     
-    let allMessages = [];
+    let userMessages = [];
+    let aiMessages = [];
     
-    for (const selector of messageSelectors) {
-      try {
-        const messages = await page.$$eval(selector, nodes => 
-          nodes.map(n => ({
-            text: n.innerText || n.textContent || '',
-            html: n.innerHTML || '',
-            className: n.className || '',
-            tagName: n.tagName || ''
-          }))
-        );
-        
-        if (messages.length > 0) {
-          allMessages = allMessages.concat(messages);
-        }
-      } catch (e) {
-        // Ignoriere Selektoren die nicht funktionieren
+    // User-Nachrichten extrahieren
+    try {
+      userMessages = await page.$$eval(userMessageSelector, nodes => 
+        nodes.map(n => ({
+          text: n.innerText || n.textContent || '',
+          html: n.innerHTML || '',
+          className: n.className || '',
+          tagName: n.tagName || ''
+        }))
+      );
+      console.log(`[GET /chat-history] User-Selector gefunden: ${userMessages.length} Elemente`);
+      if (userMessages.length > 0) {
+        console.log('[GET /chat-history] User-Elemente:', userMessages);
       }
+    } catch (e) {
+      console.log('[GET /chat-history] User-Selector nicht gefunden:', e.message);
     }
     
-    // Entferne leere Nachrichten und Duplikate
-    const uniqueMessages = allMessages
-      .filter(msg => msg.text && msg.text.trim().length > 0)
-      .filter((msg, index, arr) => 
-        arr.findIndex(m => m.text === msg.text) === index
-      )
-      .map(msg => msg.text.trim());
+    // AI-Nachrichten extrahieren
+    try {
+      aiMessages = await page.$$eval(aiMessageSelector, nodes => 
+        nodes.map(n => ({
+          text: n.innerText || n.textContent || '',
+          html: n.innerHTML || '',
+          className: n.className || '',
+          tagName: n.tagName || ''
+        }))
+      );
+    } catch (e) {
+      console.log('[GET /chat-history] AI-Selector nicht gefunden:', e.message);
+    }
+    
+    // Nachrichten verarbeiten und labeln
+    const processedMessages = [];
+    
+    // User-Nachrichten hinzufügen
+    userMessages.forEach(msg => {
+      if (msg.text && msg.text.trim().length > 0) {
+        // Entferne Console Logs und HTML Tags
+        let cleanText = msg.text.trim();
+        cleanText = cleanText.replace(/\[Web\].*?localhost:\d+:\d+:\d+/g, '');
+        cleanText = cleanText.replace(/\[Web\].*?Array\(\d+\).*?/g, '');
+        cleanText = cleanText.replace(/\[Web\].*?Chatverlauf geändert.*?/g, '');
+        cleanText = cleanText.replace(/\[Web\].*?Sende Nachricht.*?/g, '');
+        cleanText = cleanText.replace(/<[^>]*>/g, '');
+        cleanText = cleanText.replace(/\s+/g, ' ').trim();
+        
+        if (cleanText && cleanText.length > 0) {
+          processedMessages.push({
+            type: 'user',
+            content: `User: ${cleanText}`
+          });
+        }
+      }
+    });
+    
+    // AI-Nachrichten hinzufügen
+    aiMessages.forEach(msg => {
+      if (msg.text && msg.text.trim().length > 0) {
+        processedMessages.push({
+          type: 'ai',
+          content: msg.text.trim()
+        });
+      }
+    });
+    
+    // Entferne Duplikate basierend auf Inhalt
+    const uniqueMessages = processedMessages.filter((msg, index, arr) => 
+      arr.findIndex(m => m.content === msg.content) === index
+    );
     
     // Nur loggen wenn sich die Nachrichten geändert haben
     const messagesChanged = JSON.stringify(uniqueMessages) !== JSON.stringify(lastLoggedMessages);
     
     if (messagesChanged) {
-      console.log(`[GET /chat-history] Gefunden mit .aislash-editor-input-readonly[contenteditable="false"]:`, uniqueMessages.length, 'Nachrichten');
-      console.log(`[GET /chat-history] Verlauf gesendet (${uniqueMessages.length} Nachrichten)`);
+      console.log(`[GET /chat-history] Gefunden: ${userMessages.length} User, ${aiMessages.length} AI Nachrichten`);
+      console.log(`[GET /chat-history] Verarbeitet: ${uniqueMessages.length} eindeutige Nachrichten`);
       console.log('[GET /chat-history] Nachrichten:', uniqueMessages);
       lastLoggedMessages = [...uniqueMessages]; // Kopie speichern
     }

@@ -60,9 +60,34 @@
     let isUserScrolling = false;
     let scrollTimeout;
     
+    // Copy-Button für Codeblöcke
+    function addCopyButtons() {
+      document.querySelectorAll('.codeblock-copy-btn').forEach(btn => {
+        btn.onclick = function() {
+          const code = btn.parentElement.querySelector('code').innerText;
+          navigator.clipboard.writeText(code);
+          btn.textContent = 'Kopiert!';
+          setTimeout(() => { btn.textContent = 'Copy'; }, 1200);
+        };
+      });
+    }
+    
+    // Erkennung ob User-Input ein Codeblock ist
+    function isUserCodeBlock(text) {
+      const trimmed = text.trim();
+      return (trimmed.startsWith('```') && trimmed.endsWith('```')) ||
+             (/^[ \t]*[a-zA-Z0-9_\-\.]+ ?= ?.+$/m.test(trimmed)) ||
+             (/^[ \t]*((if|for|while|def|class|function|let|const|var)\b|#include|import |public |private |protected )/m.test(trimmed));
+    }
+    
     // Hash-Funktion für Nachrichtenvergleich
     function hashMessages(messages) {
-      return messages.map(m => m.trim()).join('|');
+      return messages.map(m => {
+        if (typeof m === 'object' && m.type && m.content) {
+          return `${m.type}:${m.content}`;
+        }
+        return m.toString().trim();
+      }).join('|');
     }
     
     // Scroll-Handler für bessere UX
@@ -100,13 +125,18 @@
         
         // Filtere nur echte Nachrichten (keine Debug/Log-Nachrichten)
         const realMessages = messages.filter(m => {
+          // Neue Objekt-Nachrichten immer akzeptieren
+          if (typeof m === 'object' && m.type && m.content) {
+            return true;
+          }
+          
+          // String-Nachrichten filtern
           const msg = m.toString().trim();
           return !msg.startsWith('[Web]') && 
                  !msg.startsWith('Debug') && 
                  !msg.startsWith('Fehler') &&
                  !msg.startsWith('Error') &&
                  !Array.isArray(msg) &&
-                 !(typeof msg === 'object') &&
                  msg.length > 0;
         });
         
@@ -134,9 +164,19 @@
           }, 3000);
         }
         
-        // KORREKTE LABEL-ERKENNUNG - Server liefert jetzt "User:" und "KI:" Prefixe
+        // KORREKTE VERARBEITUNG - Server liefert jetzt Objekte mit type und content
         function processMessages(messages) {
           return messages.map(m => {
+            // Wenn es bereits ein Objekt mit type/content ist
+            if (typeof m === 'object' && m.type && m.content) {
+              return {
+                type: m.type,
+                content: m.content,
+                original: m.content
+              };
+            }
+            
+            // Fallback für String-Nachrichten (alte Format)
             const text = m.toString().trim();
             if (text.startsWith('User:')) {
               return {
@@ -184,11 +224,39 @@
             const bubbleEl = document.createElement('div');
             bubbleEl.className = 'message-bubble';
             
-            // Markdown-Rendering und Syntax-Highlighting
-            bubbleEl.innerHTML = marked.parse(msg.content);
+            // USER: Codeblock oder Bubble
+            if (msg.type === 'user' && isUserCodeBlock(msg.content)) {
+              // User-Codeblock
+              const codeBlock = document.createElement('pre');
+              codeBlock.className = 'user-codeblock';
+              const code = document.createElement('code');
+              code.textContent = msg.content.replace(/^```[a-zA-Z0-9]*|```$/g, '').trim();
+              codeBlock.appendChild(code);
+              // Copy-Button
+              const copyBtn = document.createElement('button');
+              copyBtn.className = 'codeblock-copy-btn';
+              copyBtn.textContent = 'Copy';
+              codeBlock.appendChild(copyBtn);
+              messageEl.appendChild(codeBlock);
+            } else if (msg.type === 'user') {
+              // User-Bubble
+              bubbleEl.textContent = msg.content;
+              messageEl.appendChild(bubbleEl);
+            } else {
+              // KI: Markdown + Codeblöcke mit Copy-Button
+              bubbleEl.innerHTML = marked.parse(msg.content);
+              // Füge Copy-Button zu jedem Codeblock hinzu
+              bubbleEl.querySelectorAll('pre code').forEach(code => {
+                const btn = document.createElement('button');
+                btn.className = 'codeblock-copy-btn';
+                btn.textContent = 'Copy';
+                code.parentElement.style.position = 'relative';
+                code.parentElement.appendChild(btn);
+              });
+              messageEl.appendChild(bubbleEl);
+            }
             
             messageEl.appendChild(avatarEl);
-            messageEl.appendChild(bubbleEl);
             msgDiv.appendChild(messageEl);
             
             // Animation für neue Nachrichten
@@ -202,7 +270,7 @@
           });
           
           // Nach dem Einfügen Highlighting anwenden
-          setTimeout(() => { hljs.highlightAll(); }, 100);
+          setTimeout(() => { hljs.highlightAll(); addCopyButtons(); }, 100);
           
           // Auto-scroll nur wenn User am Bottom ist oder neue Nachrichten
           if (shouldAutoScroll || hasNewMessages) {
@@ -319,8 +387,8 @@
       }
     };
     
-    // Smart Polling - nur alle 2 Sekunden statt 1 Sekunde
-    setInterval(loadMessages, 2000);
+    // Smart Polling - nur alle 5 Sekunden statt 2 Sekunden
+    setInterval(loadMessages, 5000);
     loadMessages();
   </script>
 </body>
