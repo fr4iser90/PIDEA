@@ -16,11 +16,11 @@ class WebSocketManager {
     // Subscribe to domain events
     if (this.eventBus) {
       this.eventBus.subscribe('MessageSent', (eventData) => {
-        this.broadcastToClients('messageSent', eventData);
+        this.broadcastToClients('chatUpdate', eventData);
       });
 
       this.eventBus.subscribe('ChatHistoryUpdated', (eventData) => {
-        this.broadcastToClients('chatHistoryUpdated', eventData);
+        this.broadcastToClients('chatUpdate', eventData);
       });
     }
   }

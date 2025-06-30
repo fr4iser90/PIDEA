@@ -84,6 +84,30 @@
     // Connect WebSocket on page load
     connectWebSocket();
 
+    // WebSocket connection for chat live updates
+    let chatWs;
+    function connectChatWebSocket() {
+      chatWs = new WebSocket('ws://localhost:3001');
+      chatWs.onopen = () => {
+        console.log('[WebSocket] Connected for chat updates');
+      };
+      chatWs.onmessage = (event) => {
+        const data = JSON.parse(event.data);
+        if (data.type === 'chatUpdate') {
+          console.log('[WebSocket] Chat update received');
+          loadMessages();
+        }
+      };
+      chatWs.onclose = () => {
+        console.log('[WebSocket] Chat WebSocket closed, reconnecting...');
+        setTimeout(connectChatWebSocket, 1000);
+      };
+      chatWs.onerror = (error) => {
+        console.error('[WebSocket] Chat WebSocket error:', error);
+      };
+    }
+    connectChatWebSocket();
+
     let lastMessageCount = 0;
     let lastMessages = [];
     let lastMessageHash = '';
@@ -373,6 +397,7 @@
         btn.disabled = false;
         input.disabled = false;
         typingIndicator.classList.remove('show');
+        input.focus();
         
         // Force scroll to bottom after sending
         shouldAutoScroll = true;
@@ -386,6 +411,7 @@
         btn.disabled = false;
         input.disabled = false;
         typingIndicator.classList.remove('show');
+        input.focus();
         
         // Zeige Fehlermeldung
         const msgDiv = document.getElementById('messages');
@@ -439,8 +465,8 @@
       }
     };
     
-    // Smart Polling - nur alle 30 Sekunden um Spam zu vermeiden
-    setInterval(loadMessages, 30000);
+    // Smart Polling - alle 2 Sekunden für Pseudo-Live-Feeling
+    setInterval(loadMessages, 2000);
     loadMessages();
   </script>
 </body>
