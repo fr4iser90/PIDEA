@@ -164,6 +164,7 @@
     // Smooth scroll to bottom
     function scrollToBottom(smooth = true) {
       const msgDiv = document.getElementById('messages');
+      if (!shouldAutoScroll) return;
       if (smooth) {
         msgDiv.scrollTo({
           top: msgDiv.scrollHeight,
@@ -196,7 +197,7 @@
           lastMessageHash = currentHash;
         }
         const msgDiv = document.getElementById('messages');
-        // Initiales Rendern: baue alle Nachrichten auf
+        // Nur wenn sich die Nachrichtenanzahl ändert, DOM neu bauen
         if (msgDiv.childElementCount === 0 || realMessages.length !== lastMessages.length) {
           msgDiv.innerHTML = '';
           realMessages.forEach((msg, i) => {
@@ -236,8 +237,11 @@
             messageEl.appendChild(avatarEl);
             msgDiv.appendChild(messageEl);
           });
-          setTimeout(() => { hljs.highlightAll(); addCopyButtons(); }, 100);
-          if (shouldAutoScroll) setTimeout(() => scrollToBottom(true), 150);
+          requestAnimationFrame(() => {
+            hljs.highlightAll();
+            addCopyButtons();
+            if (shouldAutoScroll) scrollToBottom(true);
+          });
         } else {
           // Nur die letzte AI-Nachricht patchen
           const lastMsg = realMessages[realMessages.length - 1];
@@ -253,7 +257,11 @@
                 code.parentElement.style.position = 'relative';
                 code.parentElement.appendChild(btn);
               });
-              setTimeout(() => { hljs.highlightAll(); addCopyButtons(); }, 100);
+              requestAnimationFrame(() => {
+                hljs.highlightAll();
+                addCopyButtons();
+                if (shouldAutoScroll) scrollToBottom(true);
+              });
               lastAiContent = lastMsg.content;
               if (aiTypingTimeout) clearTimeout(aiTypingTimeout);
               document.getElementById('typingIndicator').classList.add('show');
