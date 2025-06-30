@@ -230,17 +230,18 @@ body {
 }
 
 #msgInput {
-  flex: 1;
+  width: 100%;
+  min-height: 60px;
+  max-height: 70vh;
+  resize: vertical;
+  overflow-y: auto;
+  font-size: 1rem;
   padding: 16px 20px;
   border: 2px solid rgba(255,255,255,0.1);
-  border-radius: var(--border-radius);
-  background: var(--bg-secondary);
-  color: var(--text-primary);
-  font-size: 1rem;
+  border-radius: 12px;
+  background: #1a1d23;
+  color: #e5e7eb;
   font-family: inherit;
-  resize: none;
-  min-height: 56px;
-  max-height: 120px;
   transition: all 0.3s ease;
 }
 

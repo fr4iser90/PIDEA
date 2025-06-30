@@ -340,7 +340,7 @@
     function autoResizeTextarea() {
       const textarea = document.getElementById('msgInput');
       textarea.style.height = 'auto';
-      textarea.style.height = Math.min(textarea.scrollHeight, 120) + 'px';
+      textarea.style.height = Math.min(textarea.scrollHeight, window.innerHeight * 0.7) + 'px';
     }
     
     // Event Listeners
@@ -353,6 +353,8 @@
     };
     
     document.getElementById('msgInput').addEventListener('input', autoResizeTextarea);
+    window.addEventListener('DOMContentLoaded', autoResizeTextarea);
+    document.getElementById('msgInput').addEventListener('focus', autoResizeTextarea);
     
     // Scroll Event Listener
     document.getElementById('messages').addEventListener('scroll', () => {
