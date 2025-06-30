@@ -1,4 +1,4 @@
-# Layout-Plan: Cursor IDE Webschnittstelle
+# Layout-Plan: Cursor Chat Web (Modern, Fokus: Chat)
 
 ---
 
@@ -7,47 +7,42 @@
 ### A. Header (oben, fixiert)
 - App-Name, Status, User/Settings, Theme-Switcher
 
-### B. Sidebar (links, ein-/ausblendbar)
-- Tabs/Buttons für:
-  - **Projektstruktur (Tree-View)**
-  - **Extensions**
-  - **Dokumente**
-- Tree-View zeigt das gesamte Projekt (wie in IDE)
-- Extensions als eigene Sektion
+### B. (Optional) Sidebar (links, schmal, ein-/ausblendbar)
+- Projektstruktur/Dateien (Tree-View), aber minimiert, nie im Fokus
+- Öffnet als Drawer/Overlay, nicht dauerhaft sichtbar
 
-### C. Main Area (zentral, flexibel)
-- **Tabs für offene Dateien/Sessions** (wie VSCode)
-- **Editor-Panel** (Code-Editor, Markdown-Editor, Preview)
-- **Preview-Panel** (Markdown/Code gerendert, ggf. Split-View)
-- **Umschaltbar:** Editor ↔ Preview ↔ Chat
+### C. Main Area (zentral, 80% Breite, Fokus)
+- **Chatverlauf** (zentral, groß, modern, Markdown/Code-Highlighting)
+- **Eingabefeld** (unten, auto-resize, modern, Senden per Enter)
+- **Datei-Upload-Button** (rechts neben Eingabe)
+- **Drag & Drop** für Dateien
 
-### D. Chat-Panel (unten, immer sichtbar oder ein-/ausklappbar)
-- Chatverlauf, Eingabefeld, Senden-Button, Drag & Drop für Dateien
-- Smart Scroll, Auto-Resize, Kontextmenüs
+### D. (Optional) Drawer/Modal
+- Für Dateibaum, Doku, Extensions, öffnet über den Chat, niemals daneben
 
 ---
 
 ## 2. Umschaltlogik & Navigation
 
-- **Sidebar-Tabs:** Wechsel zwischen Projektstruktur, Extensions, Dokumenten
-- **Main-Tabs:** Wechsel zwischen offenen Dateien/Sessions
-- **Split-View:** Optional Editor + Preview nebeneinander
-- **Chat immer erreichbar:** Entweder als Dock unten oder als Overlay/Drawer
+- **Sidebar/Drawer:** Projektstruktur/Dateien nur als Overlay/Drawer
+- **Chat immer im Mittelpunkt:** Kein Editor/Preview als Hauptpanel
+- **(Optional) Modale Overlays:** Für Doku, Extensions, etc.
 
 ---
 
 ## 3. Responsive & Modern
 
 - **Flexbox/Grid** für alle Bereiche
-- Sidebar auf Mobile als Drawer
-- Main-Content im Fokus, Chat als Slide-Up/Overlay
+- Sidebar/Drawer auf Mobile als Overlay
+- Main-Content = Chat, immer im Fokus
 
 ---
 
 ## 4. UX-Details
 
-- **Drag & Drop** für Dateien in Chat/Editor
-- **Kontextmenüs** für Nachrichten und Dateien
-- **Quick-Open/Command Palette**
+- **Drag & Drop** für Dateien in Chat
+- **Kontextmenüs** für Nachrichten
+- **Quick-Open/Command Palette** (optional)
 - **Theme-Switcher (Dark/Light)**
-- **Smart Scroll, Auto-Resize für Eingabefelder** 
+- **Smart Scroll, Auto-Resize für Eingabefelder**
+- **Copy-Buttons für Codeblöcke** 
