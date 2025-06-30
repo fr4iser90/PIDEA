@@ -1,0 +1,32 @@
+/* Sidebar Styles */
+.sidebar {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  width: 220px;
+  background: #20232a;
+  border-right: 1px solid #23272e;
+  padding: 24px 12px;
+  min-width: 180px;
+  max-width: 260px;
+  color: #b3d1ff;
+  font-size: 1em;
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-start;
+  z-index: 9;
+}
+
+#sidebarContent {
+  width: 100%;
+  text-align: center;
+  opacity: 0.6;
+  font-style: italic;
+  padding-top: 32px;
+}
+
+body.light-theme .sidebar {
+  background: #e6e6e6;
+  color: #1976d2;
+  border-right: 1px solid #ccc;
+} 

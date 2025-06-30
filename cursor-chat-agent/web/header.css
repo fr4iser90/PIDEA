@@ -1,0 +1,91 @@
+/* Header Styles */
+.app-header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 56px;
+  padding: 0 24px;
+  border-bottom: 1px solid #23272e;
+  box-shadow: 0 2px 8px #0003;
+}
+
+.app-title {
+  font-size: 1.2em;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+
+.header-switch {
+  display: flex;
+  gap: 8px;
+  margin-right: 24px;
+}
+
+.status-indicator {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.95em;
+  color: var(--accent-green);
+}
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent-green);
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.chat-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-left: 16px;
+}
+
+#themeSwitcher, #settingsBtn {
+  background: none;
+  border: none;
+  color: #e6e6e6;
+  font-size: 1.2em;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: background 0.2s;
+}
+#themeSwitcher:hover, #settingsBtn:hover {
+  background: #333;
+}
+
+body.light-theme .app-header {
+  background: #e6e6e6;
+  color: #23272e;
+  border-bottom: 1px solid #ccc;
+  box-shadow: 0 2px 8px #bbb8;
+}
+body.light-theme .app-title {
+  color: #23272e;
+}
+body.light-theme .status-indicator {
+  color: #4caf50;
+}
+body.light-theme .status-dot {
+  background: #4caf50;
+}
+body.light-theme #themeSwitcher, body.light-theme #settingsBtn {
+  color: #23272e;
+}
+body.light-theme #themeSwitcher:hover, body.light-theme #settingsBtn:hover {
+  background: #b3d1ff;
+} 

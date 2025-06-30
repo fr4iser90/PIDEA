@@ -1,0 +1,156 @@
+/* Chat Layout */
+#chat {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  max-width: 800px;
+  margin: 0 auto;
+  background: var(--bg-secondary);
+  box-shadow: var(--shadow-lg);
+}
+
+#chatView {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.chat-header {
+  flex-shrink: 0;
+}
+
+#messages {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  min-height: 0;
+  padding: 20px;
+  background: var(--bg-secondary);
+  scroll-behavior: smooth;
+}
+
+.message {
+  margin-bottom: 20px;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  opacity: 0;
+  transform: translateY(20px);
+  animation: messageSlideIn 0.3s ease-out forwards;
+}
+
+.message.show {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+@keyframes messageSlideIn {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.message.user {
+  flex-direction: row-reverse;
+}
+
+.message-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 0.875rem;
+  flex-shrink: 0;
+  background: linear-gradient(135deg, #223c6a 60%, #4e8cff 100%);
+  color: #fff;
+  box-shadow: 0 2px 8px #223c6a44;
+}
+
+.message-bubble {
+  max-width: 70%;
+  padding: 16px 20px;
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow-sm);
+  position: relative;
+  word-wrap: break-word;
+  background: linear-gradient(135deg, #223c6a 80%, #4e8cff 100%);
+  color: #fff;
+  border-bottom-right-radius: 4px;
+  box-shadow: 0 2px 8px #223c6a33;
+}
+
+.input-area {
+  flex-shrink: 0;
+  padding: 20px 24px;
+  background: var(--bg-tertiary);
+  border-top: 1px solid #23272e;
+  position: sticky;
+  bottom: 0;
+  z-index: 5;
+}
+
+.input-container {
+  display: flex;
+  gap: 12px;
+  align-items: flex-end;
+  background: transparent;
+}
+
+#msgInput {
+  width: 100%;
+  min-height: 60px;
+  max-height: 70vh;
+  resize: vertical;
+  overflow-y: auto;
+  font-size: 1rem;
+  padding: 16px 20px;
+  border: 1px solid #23272e;
+  border-radius: 12px;
+  background: #181c20;
+  color: #e6e6e6;
+  font-family: inherit;
+  transition: all 0.3s ease;
+}
+
+#msgInput:focus {
+  outline: none;
+  border-color: #4e8cff;
+  box-shadow: 0 0 0 3px rgba(78, 140, 255, 0.1);
+}
+
+.button-group {
+  display: flex;
+  gap: 8px;
+}
+
+.btn, .btn-primary, .btn-secondary {
+  padding: 16px 20px;
+  border: 1px solid #23272e;
+  border-radius: var(--border-radius);
+  font-weight: 600;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 44px;
+  justify-content: center;
+  background: #23272e;
+  color: #e6e6e6;
+  box-shadow: 0 1px 3px #0006;
+}
+
+.btn-primary {
+  background: #4e8cff;
+  color: #fff;
+}
+
+.btn-secondary {
+  background: #181c20;
+  color: #e6e6e6;
+  border: 1px solid #23272e;
+} 
