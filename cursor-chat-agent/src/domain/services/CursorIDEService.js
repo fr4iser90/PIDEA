@@ -12,8 +12,7 @@ class CursorIDEService {
 
       const inputSelector = '.aislash-editor-input[contenteditable="true"]';
       await page.focus(inputSelector);
-      await page.fill(inputSelector, '');
-      await page.type(inputSelector, message);
+      await page.fill(inputSelector, message);
       await page.keyboard.press('Enter');
     } catch (error) {
       console.error('[CursorIDEService] Error sending message:', error.message);
