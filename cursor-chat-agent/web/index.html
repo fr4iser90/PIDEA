@@ -108,6 +108,8 @@
     }
     connectChatWebSocket();
 
+    let lastAiContent = '';
+    let aiTypingTimeout;
     let lastMessageCount = 0;
     let lastMessages = [];
     let lastMessageHash = '';
@@ -176,146 +178,52 @@
       try {
         const res = await fetch('/api/chat/history');
         const data = await res.json();
-        
-        // Handle both old and new API response formats
         let messages = [];
         if (data.messages) {
-          // Old format
           messages = data.messages;
         } else if (data.data && data.data.messages) {
-          // New DDD format
           messages = data.data.messages;
         } else {
           messages = [];
         }
-        
-        // Filtere nur echte Nachrichten (keine Debug/Log-Nachrichten)
         const realMessages = messages.filter(m => {
-          // Neue Objekt-Nachrichten immer akzeptieren
-          if (typeof m === 'object' && m.type && m.content) {
-            return true;
-          }
-          
-          // String-Nachrichten filtern
+          if (typeof m === 'object' && m.type && m.content) return true;
           const msg = m.toString().trim();
-          return !msg.startsWith('[Web]') && 
-                 !msg.startsWith('Debug') && 
-                 !msg.startsWith('Fehler') &&
-                 !msg.startsWith('Error') &&
-                 !Array.isArray(msg) &&
-                 msg.length > 0;
+          return !msg.startsWith('[Web]') && !msg.startsWith('Debug') && !msg.startsWith('Fehler') && !msg.startsWith('Error') && !Array.isArray(msg) && msg.length > 0;
         });
-        
         const currentHash = hashMessages(realMessages);
-        
-        // Nur loggen wenn sich was geändert hat
         if (currentHash !== lastMessageHash) {
-          console.log('[Web] Chatverlauf geändert:', realMessages);
           lastMessageHash = currentHash;
         }
-        
         const msgDiv = document.getElementById('messages');
-        const statusDiv = document.getElementById('status');
-        
-        // Prüfe ob neue Nachrichten da sind
-        const hasNewMessages = realMessages.length > lastMessageCount;
-        const newMessages = realMessages.slice(lastMessageCount);
-        
-        if (hasNewMessages) {
-          statusDiv.textContent = `Neue Nachrichten (${newMessages.length})`;
-          
-          // Reset status nach 3 Sekunden
-          setTimeout(() => {
-            statusDiv.textContent = 'Verbunden';
-          }, 3000);
-        }
-        
-        // KORREKTE VERARBEITUNG - Server liefert jetzt Objekte mit type und content
-        function processMessages(messages) {
-          return messages.map(m => {
-            // Wenn es bereits ein Objekt mit type/content ist
-            if (typeof m === 'object' && m.type && m.content) {
-              return {
-                type: m.type,
-                content: m.content,
-                original: m.content
-              };
-            }
-            
-            // Fallback für String-Nachrichten (alte Format)
-            const text = m.toString().trim();
-            if (text.startsWith('User:')) {
-              return {
-                type: 'user',
-                content: text.substring(5).trim(),
-                original: text
-              };
-            } else if (text.startsWith('KI:')) {
-              return {
-                type: 'ai',
-                content: text.substring(3).trim(),
-                original: text
-              };
-            } else {
-              // Fallback für Nachrichten ohne Prefix
-              return {
-                type: 'ai',
-                content: text,
-                original: text
-              };
-            }
-          });
-        }
-        
-        const processedMessages = processMessages(realMessages);
-        
-        // Sortiere Nachrichten chronologisch (User-Nachrichten sollten nach AI-Nachrichten kommen)
-        // Da wir die Nachrichten vom Server in der Reihenfolge bekommen, wie sie im DOM stehen,
-        // müssen wir sie nicht extra sortieren, aber sicherstellen dass sie korrekt angezeigt werden
-        
-        // Update messages mit Animation
-        if (processedMessages.length !== lastMessages.length) {
+        // Initiales Rendern: baue alle Nachrichten auf
+        if (msgDiv.childElementCount === 0 || realMessages.length !== lastMessages.length) {
           msgDiv.innerHTML = '';
-          processedMessages.forEach((msg, index) => {
+          realMessages.forEach((msg, i) => {
             const messageEl = document.createElement('div');
             messageEl.className = `message ${msg.type}`;
-            
-            // Markiere neue Nachrichten
-            if (index >= lastMessageCount) {
-              messageEl.classList.add('new');
-            }
-            
-            // Avatar
+            messageEl.dataset.index = i;
             const avatarEl = document.createElement('div');
             avatarEl.className = 'message-avatar';
             avatarEl.textContent = msg.type === 'user' ? 'U' : 'AI';
-            
-            // Bubble
             const bubbleEl = document.createElement('div');
             bubbleEl.className = 'message-bubble';
-            
-            // USER: Codeblock oder Bubble
             if (msg.type === 'user' && isUserCodeBlock(msg.content)) {
-              // User-Codeblock
               const codeBlock = document.createElement('pre');
               codeBlock.className = 'user-codeblock';
               const code = document.createElement('code');
               code.textContent = msg.content.replace(/^```[a-zA-Z0-9]*|```$/g, '').trim();
               codeBlock.appendChild(code);
-              // Copy-Button
               const copyBtn = document.createElement('button');
               copyBtn.className = 'codeblock-copy-btn';
               copyBtn.textContent = 'Copy';
               codeBlock.appendChild(copyBtn);
               messageEl.appendChild(codeBlock);
             } else if (msg.type === 'user') {
-              // User-Bubble - Zeige den kompletten Inhalt (inkl. "User:" prefix)
               bubbleEl.textContent = msg.content;
               messageEl.appendChild(bubbleEl);
             } else {
-              // KI: Markdown + Codeblöcke mit Copy-Button
               bubbleEl.innerHTML = marked.parse(msg.content);
-              // Füge Copy-Button zu jedem Codeblock hinzu
               bubbleEl.querySelectorAll('pre code').forEach(code => {
                 const btn = document.createElement('button');
                 btn.className = 'codeblock-copy-btn';
@@ -325,43 +233,46 @@
               });
               messageEl.appendChild(bubbleEl);
             }
-            
             messageEl.appendChild(avatarEl);
             msgDiv.appendChild(messageEl);
-            
-            // Animation für neue Nachrichten
-            if (index >= lastMessageCount) {
-              setTimeout(() => {
-                messageEl.classList.add('show');
-              }, 50 * (index - lastMessageCount + 1));
-            } else {
-              messageEl.classList.add('show');
-            }
           });
-          
-          // Nach dem Einfügen Highlighting anwenden
           setTimeout(() => { hljs.highlightAll(); addCopyButtons(); }, 100);
-          
-          // Auto-scroll nur wenn User am Bottom ist oder neue Nachrichten
-          if (shouldAutoScroll || hasNewMessages) {
-            setTimeout(() => scrollToBottom(true), 150);
+          if (shouldAutoScroll) setTimeout(() => scrollToBottom(true), 150);
+        } else {
+          // Nur die letzte AI-Nachricht patchen
+          const lastMsg = realMessages[realMessages.length - 1];
+          const lastDom = msgDiv.lastElementChild;
+          if (lastMsg && lastMsg.type === 'ai' && lastDom && lastDom.classList.contains('ai')) {
+            const bubble = lastDom.querySelector('.message-bubble');
+            if (bubble && lastMsg.content !== lastAiContent) {
+              bubble.innerHTML = marked.parse(lastMsg.content);
+              bubble.querySelectorAll('pre code').forEach(code => {
+                const btn = document.createElement('button');
+                btn.className = 'codeblock-copy-btn';
+                btn.textContent = 'Copy';
+                code.parentElement.style.position = 'relative';
+                code.parentElement.appendChild(btn);
+              });
+              setTimeout(() => { hljs.highlightAll(); addCopyButtons(); }, 100);
+              lastAiContent = lastMsg.content;
+              if (aiTypingTimeout) clearTimeout(aiTypingTimeout);
+              document.getElementById('typingIndicator').classList.add('show');
+              aiTypingTimeout = setTimeout(() => {
+                document.getElementById('typingIndicator').classList.remove('show');
+              }, 2000);
+            }
+          } else {
+            document.getElementById('typingIndicator').classList.remove('show');
           }
         }
-        
-        lastMessageCount = processedMessages.length;
-        lastMessages = processedMessages;
+        lastMessageCount = realMessages.length;
+        lastMessages = realMessages;
       } catch (e) {
-        console.error('[Web] Fehler beim Laden des Chatverlaufs:', e);
         document.getElementById('status').textContent = 'Fehler';
-        
-        // Zeige Fehlermeldung
         const msgDiv = document.getElementById('messages');
         const errorEl = document.createElement('div');
         errorEl.className = 'error-message';
-        errorEl.innerHTML = `
-          <span>⚠️</span>
-          <span>Fehler beim Laden der Nachrichten: ${e.message}</span>
-        `;
+        errorEl.innerHTML = `<span>⚠️</span><span>Fehler beim Laden der Nachrichten: ${e.message}</span>`;
         msgDiv.appendChild(errorEl);
       }
     }
