@@ -239,7 +239,7 @@
               codeBlock.appendChild(copyBtn);
               messageEl.appendChild(codeBlock);
             } else if (msg.type === 'user') {
-              // User-Bubble
+              // User-Bubble - Zeige den kompletten Inhalt (inkl. "User:" prefix)
               bubbleEl.textContent = msg.content;
               messageEl.appendChild(bubbleEl);
             } else {
