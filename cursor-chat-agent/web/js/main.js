@@ -1,19 +1,25 @@
 import AppController from './presentation/controllers/AppController.js';
+import SidebarComponent from './presentation/components/SidebarComponent.js';
+import RightPanelComponent from './presentation/components/RightPanelComponent.js';
+import EventBus from '../js/infrastructure/events/EventBus.js';
 
 // Wait for DOM to be ready
 document.addEventListener('DOMContentLoaded', () => {
   try {
-    // Initialize the application
+    // EventBus für die Komponenten
+    const eventBus = new EventBus();
+
+    // Sidebar (links) aktivieren
+    new SidebarComponent('sidebar', eventBus);
+    // RightPanel (rechts) aktivieren
+    new RightPanelComponent('rightPanel', eventBus);
+
+    // Chat-App initialisieren
     const app = new AppController();
-    
-    // Make app globally available for debugging
     window.app = app;
-    
     console.log('Cursor IDE Chat Application initialized successfully');
   } catch (error) {
     console.error('Failed to initialize application:', error);
-    
-    // Show user-friendly error message
     const errorDiv = document.createElement('div');
     errorDiv.className = 'error-message';
     errorDiv.innerHTML = `
