@@ -152,7 +152,18 @@
       try {
         const res = await fetch('/chat-history');
         const data = await res.json();
-        const messages = data.messages || [];
+        
+        // Handle both old and new API response formats
+        let messages = [];
+        if (data.messages) {
+          // Old format
+          messages = data.messages;
+        } else if (data.data && data.data.messages) {
+          // New DDD format
+          messages = data.data.messages;
+        } else {
+          messages = [];
+        }
         
         // Filtere nur echte Nachrichten (keine Debug/Log-Nachrichten)
         const realMessages = messages.filter(m => {
@@ -347,11 +358,16 @@
         // Zeige Typing Indicator
         typingIndicator.classList.add('show');
         
-        await fetch('/chat', {
+        const response = await fetch('/chat', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ message: msg })
         });
+        
+        const result = await response.json();
+        if (!result.success) {
+          throw new Error(result.error || 'Failed to send message');
+        }
         
         input.value = '';
         btn.disabled = false;
@@ -422,8 +438,8 @@
       }
     };
     
-    // Smart Polling - nur alle 5 Sekunden statt 2 Sekunden
-    setInterval(loadMessages, 5000);
+    // Smart Polling - nur alle 10 Sekunden um Fehler zu reduzieren
+    setInterval(loadMessages, 10000);
     loadMessages();
   </script>
 </body>

@@ -1,25 +1,45 @@
 {
   "name": "cursor-chat-agent",
-  "version": "1.0.0",
-  "main": "server.js",
+  "version": "2.0.0",
+  "main": "src/server.js",
   "scripts": {
-    "start": "node server.js",
-    "dev": "nodemon server.js --watch server.js --watch web/ --ext js,html,css",
+    "start": "node src/server.js",
+    "dev": "nodemon src/server.js --watch src/ --ext js,json",
     "dev:frontend": "node dev-server.js",
-    "dev:full": "concurrently \"npm run dev\" \"npm run dev:frontend\""
+    "dev:full": "concurrently \"npm run dev\" \"npm run dev:frontend\"",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
+    "lint": "eslint src/",
+    "lint:fix": "eslint src/ --fix",
+    "build": "echo 'No build step required for Node.js application'",
+    "clean": "rm -rf node_modules package-lock.json"
   },
-  "keywords": [],
+  "keywords": [
+    "cursor",
+    "ide",
+    "chat",
+    "playwright",
+    "ddd",
+    "architecture"
+  ],
   "author": "",
   "license": "ISC",
-  "description": "",
+  "description": "Cursor IDE Chat Agent with DDD Architecture",
   "dependencies": {
     "express": "^5.1.0",
     "playwright": "^1.44.0",
-    "ws": "^8.14.2"
+    "ws": "^8.14.2",
+    "uuid": "^9.0.1"
   },
   "devDependencies": {
     "nodemon": "^3.0.2",
     "chokidar": "^3.5.3",
-    "concurrently": "^8.2.2"
+    "concurrently": "^8.2.2",
+    "jest": "^29.7.0",
+    "eslint": "^8.55.0"
+  },
+  "engines": {
+    "node": ">=16.0.0"
   }
 }
