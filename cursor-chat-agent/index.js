@@ -20,7 +20,7 @@ app.use(express.json({ limit: '50mb' }));
 const CHAT_DATA_PATH = '/home/fr4iser/.cursor/chat-data.json'; // Hypothetical path, needs to be confirmed
 
 // Endpoint to send a chat message to Cursor IDE
-app.post('/chat', async (req, res) => {
+app.post('/api/chat', async (req, res) => {
   try {
     const { message } = req.body;
     if (!message) {
@@ -104,7 +104,7 @@ app.post('/chat-history', async (req, res) => {
 });
 
 // Endpoint to retrieve chat history from the extension
-app.get('/chat-history', async (req, res) => {
+app.get('/api/chat/history', async (req, res) => {
   try {
     const data = await fs.readFile('/tmp/received-chat.json', 'utf8');
     res.type('application/json').send(data);
@@ -119,10 +119,10 @@ app.get('/', (req, res) => {
     status: 'Cursor Chat Agent is running',
     message: 'This is a prototype agent for interacting with Cursor IDE chat. Use POST /chat to send messages and GET /logs to retrieve chat history. Actual integration with Cursor IDE is not yet implemented.',
     endpoints: {
-      chat: 'POST /chat - Send a message to Cursor IDE (placeholder)',
+      chat: 'POST /api/chat - Send a message to Cursor IDE (placeholder)',
       logs: 'GET /logs - Retrieve chat logs (placeholder)',
       chatUpdate: 'POST /chat-update - Receives chat updates from the extension',
-      chatHistory: 'POST /chat-history - Receives chat history from the extension'
+      chatHistory: 'GET /api/chat/history - Retrieve chat history'
     }
   });
 });
