@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
   <meta charset="UTF-8">
-  <title>Cursor IDE Chat</title>
+  <title>Cursor IDE Chat - Chat View</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" href="/web/main.css">
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
@@ -15,7 +15,7 @@
       <span class="app-title">Cursor IDE Chat</span>
       <div class="header-switch">
         <button id="chatModeBtn" class="mode-btn active">Chat</button>
-        <button id="codeModeBtn" class="mode-btn">Code Explorer</button>
+        <button id="codeModeBtn" class="mode-btn" onclick="window.location.href='/web/code.html'">Code Explorer</button>
       </div>
       <div class="status-indicator">
         <div class="status-dot"></div>
@@ -33,14 +33,8 @@
       </aside>
       
       <main class="main-content" id="mainContent">
-        <!-- Chat View -->
         <div id="chatView">
           <!-- ChatComponent will render here -->
-        </div>
-        
-        <!-- Code Explorer View -->
-        <div id="codeExplorerView" style="display:none">
-          <!-- CodeExplorerComponent will render here -->
         </div>
       </main>
       
@@ -89,4 +83,4 @@
   <!-- Load the modular application -->
   <script type="module" src="/web/js/main.js"></script>
 </body>
-</html> 
+</html>

@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <title>Cursor IDE Chat - File Tree</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="/web/main.css">
+</head>
+<body>
+  <div class="app-root">
+    <header class="app-header">
+      <span class="app-title">Cursor IDE Chat - File Tree</span>
+      <div class="header-switch">
+        <button id="chatModeBtn" class="mode-btn" onclick="window.location.href='/web/chat.html'">Chat</button>
+        <button id="codeModeBtn" class="mode-btn" onclick="window.location.href='/web/code.html'">Code Explorer</button>
+        <button id="treeModeBtn" class="mode-btn active">File Tree</button>
+      </div>
+      <div class="status-indicator">
+        <div class="status-dot"></div>
+        <span id="status">Verbunden</span>
+      </div>
+      <div class="chat-header-actions">
+        <button id="themeSwitcher" title="Theme wechseln">🌗</button>
+        <button id="settingsBtn" title="Einstellungen">⚙️</button>
+      </div>
+    </header>
+    
+    <div class="main-layout">
+      <main class="main-content" id="mainContent">
+        <div id="treeView">
+          <div class="tree-container">
+            <h2>Projektstruktur</h2>
+            <div id="fileTree">
+              <!-- File tree will be rendered here -->
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+    
+    <footer class="app-footer">File Tree View</footer>
+  </div>
+
+  <!-- Load the modular application -->
+  <script type="module" src="/web/js/main.js"></script>
+</body>
+</html>
