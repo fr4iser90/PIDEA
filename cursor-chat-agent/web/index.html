@@ -7,18 +7,29 @@
   <style>
     body { font-family: 'Inter', 'Segoe UI', Arial, sans-serif; background: #181c20; color: #eee; margin: 0; padding: 0; }
     #chat { max-width: 600px; margin: 40px auto 0; background: #23272e; border-radius: 12px; box-shadow: 0 4px 24px #000a; padding: 32px 24px 24px 24px; }
-    #messages { min-height: 300px; max-height: 400px; overflow-y: auto; margin-bottom: 18px; }
-    .msg { background: #23272e; margin: 14px 0; padding: 16px 18px; border-radius: 10px; font-size: 1.08em; line-height: 1.7; box-shadow: 0 1px 4px #0002; transition: background 0.2s; word-break: break-word; }
-    .msg.user { background: #1e3a8a; color: #eaf1ff; align-self: flex-end; }
-    .msg.ai { background: #2d323c; color: #e5e7eb; }
+    #messages { min-height: 300px; max-height: 400px; overflow-y: auto; margin-bottom: 18px; scroll-behavior: smooth; }
+    #messages::-webkit-scrollbar { width: 8px; }
+    #messages::-webkit-scrollbar-track { background: #1a1d23; border-radius: 4px; }
+    #messages::-webkit-scrollbar-thumb { background: #4e8cff; border-radius: 4px; }
+    #messages::-webkit-scrollbar-thumb:hover { background: #3b7de8; }
+    .msg { background: #23272e; margin: 14px 0; padding: 16px 18px; border-radius: 10px; font-size: 1.08em; line-height: 1.7; box-shadow: 0 1px 4px #0002; transition: all 0.3s ease; word-break: break-word; opacity: 0; transform: translateY(10px); }
+    .msg.show { opacity: 1; transform: translateY(0); }
+    .msg.user { background: #1e3a8a; color: #eaf1ff; align-self: flex-end; margin-left: 20%; }
+    .msg.ai { background: #2d323c; color: #e5e7eb; margin-right: 20%; }
     .msg.new { animation: highlight 1.2s ease-out; }
-    #inputRow { display: flex; gap: 8px; }
-    #msgInput { flex: 1; padding: 12px; border-radius: 8px; border: none; font-size: 1.08em; background: #23272e; color: #eee; }
-    #sendBtn { padding: 12px 22px; border-radius: 8px; border: none; background: #4e8cff; color: #fff; font-weight: bold; cursor: pointer; font-size: 1.08em; }
-    #sendBtn:disabled { background: #888; cursor: not-allowed; }
-    #debugBtn { background: #ef4444; color: #fff; border-radius: 8px; border: none; padding: 12px 16px; font-weight: bold; cursor: pointer; font-size: 1.08em; }
-    #status { text-align: center; margin-bottom: 10px; font-size: 0.98em; color: #8ca0b3; }
-    @keyframes highlight { 0% { background: #4e8cff; } 100% { background: #23272e; } }
+    #inputRow { display: flex; gap: 8px; position: sticky; bottom: 0; background: #23272e; padding-top: 10px; }
+    #msgInput { flex: 1; padding: 12px; border-radius: 8px; border: 2px solid #3a3f47; font-size: 1.08em; background: #23272e; color: #eee; transition: border-color 0.3s ease; }
+    #msgInput:focus { outline: none; border-color: #4e8cff; }
+    #sendBtn { padding: 12px 22px; border-radius: 8px; border: none; background: #4e8cff; color: #fff; font-weight: bold; cursor: pointer; font-size: 1.08em; transition: all 0.3s ease; }
+    #sendBtn:hover:not(:disabled) { background: #3b7de8; transform: translateY(-1px); }
+    #sendBtn:disabled { background: #888; cursor: not-allowed; transform: none; }
+    #debugBtn { background: #ef4444; color: #fff; border-radius: 8px; border: none; padding: 12px 16px; font-weight: bold; cursor: pointer; font-size: 1.08em; transition: all 0.3s ease; }
+    #debugBtn:hover { background: #dc2626; transform: translateY(-1px); }
+    #status { text-align: center; margin-bottom: 10px; font-size: 0.98em; color: #8ca0b3; transition: all 0.3s ease; }
+    .typing-indicator { display: none; color: #8ca0b3; font-style: italic; margin: 10px 0; }
+    .typing-indicator.show { display: block; }
+    @keyframes highlight { 0% { background: #4e8cff; transform: scale(1.02); } 100% { background: #23272e; transform: scale(1); } }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
     /* Markdown Styling */
     .msg h1, .msg h2, .msg h3, .msg h4, .msg h5, .msg h6 {
@@ -43,7 +54,7 @@
     .msg hr { border: none; border-top: 1px solid #444; margin: 1.2em 0; }
     @media (max-width: 700px) {
       #chat { max-width: 98vw; padding: 10vw 2vw 2vw 2vw; }
-      .msg { padding: 10px 6vw; font-size: 1em; }
+      .msg { padding: 10px 6vw; font-size: 1em; margin-left: 0 !important; margin-right: 0 !important; }
     }
   </style>
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
@@ -55,6 +66,7 @@
     <h2>Cursor IDE Chat</h2>
     <div id="status">Verbunden - Aktualisiere alle 1 Sekunde</div>
     <div id="messages"></div>
+    <div class="typing-indicator" id="typingIndicator">Cursor schreibt...</div>
     <div id="inputRow">
       <input id="msgInput" type="text" placeholder="Nachricht eingeben..." autocomplete="off" />
       <button id="sendBtn">Senden</button>
@@ -65,10 +77,40 @@
     let lastMessageCount = 0;
     let lastMessages = [];
     let lastMessageHash = '';
+    let shouldAutoScroll = true;
+    let isUserScrolling = false;
+    let scrollTimeout;
     
     // Hash-Funktion für Nachrichtenvergleich
     function hashMessages(messages) {
       return messages.map(m => m.trim()).join('|');
+    }
+    
+    // Scroll-Handler für bessere UX
+    function handleScroll() {
+      const msgDiv = document.getElementById('messages');
+      const isAtBottom = msgDiv.scrollTop + msgDiv.clientHeight >= msgDiv.scrollHeight - 10;
+      shouldAutoScroll = isAtBottom;
+      
+      if (isUserScrolling) {
+        clearTimeout(scrollTimeout);
+        scrollTimeout = setTimeout(() => {
+          isUserScrolling = false;
+        }, 150);
+      }
+    }
+    
+    // Smooth scroll to bottom
+    function scrollToBottom(smooth = true) {
+      const msgDiv = document.getElementById('messages');
+      if (smooth) {
+        msgDiv.scrollTo({
+          top: msgDiv.scrollHeight,
+          behavior: 'smooth'
+        });
+      } else {
+        msgDiv.scrollTop = msgDiv.scrollHeight;
+      }
     }
     
     async function loadMessages() {
@@ -111,7 +153,7 @@
           // Reset status nach 3 Sekunden
           setTimeout(() => {
             statusDiv.textContent = 'Verbunden - Aktualisiere alle 1 Sekunde';
-            statusDiv.style.color = '#888';
+            statusDiv.style.color = '#8ca0b3';
           }, 3000);
         }
         
@@ -136,29 +178,49 @@
           return merged;
         }
         const mergedMessages = mergeAIMessages(realMessages);
-        // ---
         
-        // Update messages
-        msgDiv.innerHTML = '';
-        mergedMessages.forEach((m, index) => {
-          const el = document.createElement('div');
-          el.className = 'msg';
-          // Markiere neue Nachrichten
-          if (index >= lastMessageCount) el.classList.add('new');
-          if (m.includes('User:') || m.includes('Du:') || m.includes('You:')) {
-            el.classList.add('user');
-          } else {
-            el.classList.add('ai');
-          }
-          // --- NEU: Markdown-Rendering und Syntax-Highlighting ---
-          el.innerHTML = marked.parse(m);
+        // Update messages mit Animation
+        if (mergedMessages.length !== lastMessages.length) {
+          msgDiv.innerHTML = '';
+          mergedMessages.forEach((m, index) => {
+            const el = document.createElement('div');
+            el.className = 'msg';
+            
+            // Markiere neue Nachrichten
+            if (index >= lastMessageCount) {
+              el.classList.add('new');
+            }
+            
+            if (m.includes('User:') || m.includes('Du:') || m.includes('You:')) {
+              el.classList.add('user');
+            } else {
+              el.classList.add('ai');
+            }
+            
+            // Markdown-Rendering und Syntax-Highlighting
+            el.innerHTML = marked.parse(m);
+            
+            msgDiv.appendChild(el);
+            
+            // Animation für neue Nachrichten
+            if (index >= lastMessageCount) {
+              setTimeout(() => {
+                el.classList.add('show');
+              }, 50 * (index - lastMessageCount + 1));
+            } else {
+              el.classList.add('show');
+            }
+          });
+          
           // Nach dem Einfügen Highlighting anwenden
-          setTimeout(() => { hljs.highlightAll(); }, 0);
-          // ---
-          msgDiv.appendChild(el);
-        });
+          setTimeout(() => { hljs.highlightAll(); }, 100);
+          
+          // Auto-scroll nur wenn User am Bottom ist oder neue Nachrichten
+          if (shouldAutoScroll || hasNewMessages) {
+            setTimeout(() => scrollToBottom(true), 150);
+          }
+        }
         
-        msgDiv.scrollTop = msgDiv.scrollHeight;
         lastMessageCount = mergedMessages.length;
         lastMessages = mergedMessages;
       } catch (e) {
@@ -171,32 +233,58 @@
     async function sendMessage() {
       const input = document.getElementById('msgInput');
       const btn = document.getElementById('sendBtn');
+      const typingIndicator = document.getElementById('typingIndicator');
       const msg = input.value.trim();
       if (!msg) return;
       
       btn.disabled = true;
+      input.disabled = true;
+      
       try {
         console.log('[Web] Sende Nachricht:', msg);
+        
+        // Zeige Typing Indicator
+        typingIndicator.classList.add('show');
+        
         await fetch('/chat', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ message: msg })
         });
+        
         input.value = '';
         btn.disabled = false;
+        input.disabled = false;
+        typingIndicator.classList.remove('show');
+        
+        // Force scroll to bottom after sending
+        shouldAutoScroll = true;
+        setTimeout(() => scrollToBottom(true), 100);
         
         // Sofort nach dem Senden laden
         setTimeout(loadMessages, 500);
       } catch (e) {
         console.error('[Web] Fehler beim Senden:', e);
         btn.disabled = false;
+        input.disabled = false;
+        typingIndicator.classList.remove('show');
       }
     }
     
+    // Event Listeners
     document.getElementById('sendBtn').onclick = sendMessage;
     document.getElementById('msgInput').onkeydown = e => {
-      if (e.key === 'Enter') sendMessage();
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        sendMessage();
+      }
     };
+    
+    // Scroll Event Listener
+    document.getElementById('messages').addEventListener('scroll', () => {
+      isUserScrolling = true;
+      handleScroll();
+    });
     
     // Debug-Funktion
     document.getElementById('debugBtn').onclick = async () => {
