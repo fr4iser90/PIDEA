@@ -389,6 +389,14 @@
     // Smart Polling - alle 2 Sekunden für Pseudo-Live-Feeling
     setInterval(loadMessages, 2000);
     loadMessages();
+
+    // Klick auf leeren Bereich der Input-Area setzt Fokus ins Textfeld
+    document.querySelector('.input-area').addEventListener('mousedown', function(e) {
+      if (e.target.id !== 'msgInput') {
+        document.getElementById('msgInput').focus();
+        e.preventDefault();
+      }
+    });
   </script>
 </body>
 </html> 
