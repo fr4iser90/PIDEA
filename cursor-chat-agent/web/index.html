@@ -150,7 +150,7 @@
     
     async function loadMessages() {
       try {
-        const res = await fetch('/chat-history');
+        const res = await fetch('/api/chat/history');
         const data = await res.json();
         
         // Handle both old and new API response formats
@@ -358,7 +358,7 @@
         // Zeige Typing Indicator
         typingIndicator.classList.add('show');
         
-        const response = await fetch('/chat', {
+        const response = await fetch('/api/chat', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ message: msg })
@@ -378,8 +378,9 @@
         shouldAutoScroll = true;
         setTimeout(() => scrollToBottom(true), 100);
         
-        // Sofort nach dem Senden laden
-        setTimeout(loadMessages, 500);
+        // Warte 3 Sekunden bevor Chat-Historie neu geladen wird
+        setTimeout(loadMessages, 3000);
+      
       } catch (e) {
         console.error('[Web] Fehler beim Senden:', e);
         btn.disabled = false;
@@ -438,8 +439,8 @@
       }
     };
     
-    // Smart Polling - nur alle 10 Sekunden um Fehler zu reduzieren
-    setInterval(loadMessages, 10000);
+    // Smart Polling - nur alle 30 Sekunden um Spam zu vermeiden
+    setInterval(loadMessages, 30000);
     loadMessages();
   </script>
 </body>

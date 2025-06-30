@@ -129,10 +129,6 @@ class Application {
         data: this.webSocketManager.getHealthStatus()
       });
     });
-
-    // Legacy routes for backward compatibility
-    this.app.post('/chat', (req, res) => this.chatController.sendMessage(req, res));
-    this.app.get('/chat-history', (req, res) => this.chatController.getChatHistory(req, res));
   }
 
   setupEventHandlers() {
