@@ -50,17 +50,34 @@ app.get('/chat-history', async (req, res) => {
     const messageSelectors = [
       // User messages
       '.aislash-editor-input-readonly[contenteditable="false"]',
-      // AI responses - verschiedene mögliche Selektoren
+      // AI responses - bisherige und NEU: echte DOM-Selektoren
       '.aislash-editor-message',
       '.aislash-editor-response',
       '.aislash-editor-content',
       '[data-testid="chat-message"]',
       '.chat-message',
       '.message-content',
+      // --- NEU: Cursor IDE AI-Antworten laut DOM-Analyse ---
+      'div.hide-if-empty .message-content-animated',
+      'div.message-content-animated',
+      'span.anysphere-markdown-container-root',
+      'section.markdown-section',
+      // ---
       // Allgemeinere Selektoren für Chat-Inhalte
       '[role="log"] > div',
       '.chat-container > div',
-      '.conversation-item'
+      '.conversation-item',
+      // Weitere mögliche AI Selektoren
+      '[data-testid="assistant-message"]',
+      '[data-testid="ai-message"]',
+      '.assistant-message',
+      '.ai-message',
+      '.bot-message',
+      '.cursor-message',
+      // Code Snippets und Antworten
+      '.aislash-editor-message code',
+      '.aislash-editor-response code',
+      '.aislash-editor-content code'
     ];
     
     let allMessages = [];
