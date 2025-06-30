@@ -17,6 +17,11 @@
         <div class="status-dot"></div>
         <span id="status">Verbunden</span>
       </div>
+      <div class="chat-header-actions">
+        <button id="drawerBtn" title="Projektstruktur anzeigen">📁</button>
+        <button id="themeSwitcher" title="Theme wechseln">🌗</button>
+        <button id="settingsBtn" title="Einstellungen">⚙️</button>
+      </div>
     </div>
 
     <div id="messages"></div>
@@ -34,6 +39,8 @@
 
     <div class="input-area">
       <div class="input-container">
+        <button id="fileUploadBtn" title="Datei hochladen">📎</button>
+        <input type="file" id="fileInput" style="display:none" />
         <textarea 
           id="msgInput" 
           placeholder="Nachricht eingeben..." 
@@ -49,6 +56,14 @@
           </button>
         </div>
       </div>
+    </div>
+  </div>
+
+  <div id="drawerOverlay" class="drawer-overlay" style="display:none">
+    <div class="drawer-content">
+      <button id="drawerClose" class="drawer-close">✖</button>
+      <h3>Projektstruktur</h3>
+      <div class="project-tree">(Hier kommt der Tree-View)</div>
     </div>
   </div>
 
@@ -397,6 +412,22 @@
         e.preventDefault();
       }
     });
+
+    // Drawer öffnen/schließen
+    document.getElementById('drawerBtn').onclick = () => {
+      document.getElementById('drawerOverlay').style.display = 'flex';
+    };
+    document.getElementById('drawerClose').onclick = () => {
+      document.getElementById('drawerOverlay').style.display = 'none';
+    };
+    // Datei-Upload-Button
+    document.getElementById('fileUploadBtn').onclick = () => {
+      document.getElementById('fileInput').click();
+    };
+    // Theme-Switcher (Dark/Light Toggle)
+    document.getElementById('themeSwitcher').onclick = () => {
+      document.body.classList.toggle('light-theme');
+    };
   </script>
 </body>
 </html> 
