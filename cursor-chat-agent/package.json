@@ -1,0 +1,16 @@
+{
+  "name": "cursor-chat-agent",
+  "version": "1.0.0",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "express": "^5.1.0",
+    "playwright": "^1.44.0"
+  }
+}

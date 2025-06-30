@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <title>Cursor Chat Web</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body { font-family: sans-serif; background: #181c20; color: #eee; margin: 0; padding: 0; }
+    #chat { max-width: 600px; margin: 40px auto 0; background: #23272e; border-radius: 8px; box-shadow: 0 2px 12px #0008; padding: 24px; }
+    #messages { min-height: 300px; max-height: 400px; overflow-y: auto; margin-bottom: 16px; }
+    .msg { background: #2c313a; margin: 8px 0; padding: 10px 14px; border-radius: 6px; }
+    .msg.user { background: #1e3a8a; }
+    .msg.ai { background: #374151; }
+    .msg.new { animation: highlight 2s ease-out; }
+    #inputRow { display: flex; gap: 8px; }
+    #msgInput { flex: 1; padding: 10px; border-radius: 6px; border: none; font-size: 1em; background: #23272e; color: #eee; }
+    #sendBtn { padding: 10px 18px; border-radius: 6px; border: none; background: #4e8cff; color: #fff; font-weight: bold; cursor: pointer; }
+    #sendBtn:disabled { background: #888; cursor: not-allowed; }
+    #status { text-align: center; margin-bottom: 10px; font-size: 0.9em; color: #888; }
+    @keyframes highlight { 0% { background: #4e8cff; } 100% { background: #2c313a; } }
+  </style>
+</head>
+<body>
+  <div id="chat">
+    <h2>Cursor IDE Chat</h2>
+    <div id="status">Verbunden - Aktualisiere alle 1 Sekunde</div>
+    <div id="messages"></div>
+    <div id="inputRow">
+      <input id="msgInput" type="text" placeholder="Nachricht eingeben..." autocomplete="off" />
+      <button id="sendBtn">Senden</button>
+    </div>
+  </div>
+  <script>
+    let lastMessageCount = 0;
+    let lastMessages = [];
+    
+    async function loadMessages() {
+      try {
+        const res = await fetch('/chat-history');
+        const data = await res.json();
+        const messages = data.messages || [];
+        console.log('[Web] Chatverlauf empfangen:', messages);
+        
+        const msgDiv = document.getElementById('messages');
+        const statusDiv = document.getElementById('status');
+        
+        // Prüfe ob neue Nachrichten da sind
+        const hasNewMessages = messages.length > lastMessageCount;
+        const newMessages = messages.slice(lastMessageCount);
+        
+        if (hasNewMessages) {
+          console.log('[Web] Neue Nachrichten gefunden:', newMessages);
+          statusDiv.textContent = `Neue Nachrichten empfangen! (${newMessages.length})`;
+          statusDiv.style.color = '#4e8cff';
+          
+          // Reset status nach 3 Sekunden
+          setTimeout(() => {
+            statusDiv.textContent = 'Verbunden - Aktualisiere alle 1 Sekunde';
+            statusDiv.style.color = '#888';
+          }, 3000);
+        }
+        
+        // Update messages
+        msgDiv.innerHTML = '';
+        messages.forEach((m, index) => {
+          const el = document.createElement('div');
+          el.className = 'msg';
+          
+          // Markiere neue Nachrichten
+          if (index >= lastMessageCount) {
+            el.classList.add('new');
+          }
+          
+          // Versuche User vs AI Nachrichten zu unterscheiden
+          if (m.includes('User:') || m.includes('Du:') || m.includes('You:')) {
+            el.classList.add('user');
+          } else if (m.includes('AI:') || m.includes('Assistant:') || m.includes('Cursor:')) {
+            el.classList.add('ai');
+          }
+          
+          el.textContent = m;
+          msgDiv.appendChild(el);
+        });
+        
+        msgDiv.scrollTop = msgDiv.scrollHeight;
+        lastMessageCount = messages.length;
+        lastMessages = messages;
+      } catch (e) {
+        console.error('[Web] Fehler beim Laden des Chatverlaufs:', e);
+        document.getElementById('status').textContent = 'Fehler beim Laden der Nachrichten';
+        document.getElementById('status').style.color = '#ef4444';
+      }
+    }
+    
+    async function sendMessage() {
+      const input = document.getElementById('msgInput');
+      const btn = document.getElementById('sendBtn');
+      const msg = input.value.trim();
+      if (!msg) return;
+      
+      btn.disabled = true;
+      try {
+        console.log('[Web] Sende Nachricht:', msg);
+        await fetch('/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message: msg })
+        });
+        input.value = '';
+        btn.disabled = false;
+        
+        // Sofort nach dem Senden laden
+        setTimeout(loadMessages, 500);
+      } catch (e) {
+        console.error('[Web] Fehler beim Senden:', e);
+        btn.disabled = false;
+      }
+    }
+    
+    document.getElementById('sendBtn').onclick = sendMessage;
+    document.getElementById('msgInput').onkeydown = e => {
+      if (e.key === 'Enter') sendMessage();
+    };
+    
+    // Aktualisiere alle 1 Sekunde statt 2 Sekunden
+    setInterval(loadMessages, 1000);
+    loadMessages();
+  </script>
+</body>
+</html> 
