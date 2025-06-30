@@ -141,4 +141,54 @@ Ein System, das es ermöglicht, den Chat von Cursor IDE vollständig remote zu b
 
 ## Zusammenfassung
 
-**Das System steuert den Cursor IDE Chat remote per DOM-Automation (Playwright). Nur wenn das nicht mehr möglich ist, wird auf UI-Automation mit pyautogui/pytesseract zurückgegriffen.** 
+**Das System steuert den Cursor IDE Chat remote per DOM-Automation (Playwright). Nur wenn das nicht mehr möglich ist, wird auf UI-Automation mit pyautogui/pytesseract zurückgegriffen.**
+
+---
+
+## WICHTIG: KORREKTE DOM-SELECTOREN FÜR CHAT-NACHRICHTEN (User & KI)
+
+**User-Message (dein Input):**
+- Selector: `.aislash-editor-input-readonly[contenteditable="false"]`
+- Erkennung:
+  - `className` enthält `aislash-editor-input-readonly`
+  - `tagName` ist `DIV`
+  - `html` enthält `data-lexical-editor="true"`
+
+**KI-Message (AI/Assistant):**
+- ALLE anderen Selektoren aus der Liste, z.B.:
+  - `.aislash-editor-message`
+  - `.aislash-editor-response`
+  - `.aislash-editor-content`
+  - `[data-testid="chat-message"]`
+  - `.chat-message`
+  - `.message-content`
+  - `div.hide-if-empty .message-content-animated`
+  - `div.message-content-animated`
+  - `span.anysphere-markdown-container-root`
+  - `section.markdown-section`
+  - `[role="log"] > div`
+  - `.chat-container > div`
+  - `.conversation-item`
+  - `[data-testid="assistant-message"]`
+  - `[data-testid="ai-message"]`
+  - `.assistant-message`
+  - `.ai-message`
+  - `.bot-message`
+  - `.cursor-message`
+  - `.aislash-editor-message code`
+  - `.aislash-editor-response code`
+  - `.aislash-editor-content code`
+
+**Label-Logik im Code:**
+```js
+if (
+  msg.className && msg.className.includes('aislash-editor-input-readonly') &&
+  msg.tagName && msg.tagName.toLowerCase() === 'div' &&
+  msg.html && msg.html.includes('data-lexical-editor="true"')
+) {
+  return 'User: ' + text;
+}
+return 'KI: ' + text;
+```
+
+**Wenn KEINE KI-Nachrichten angezeigt werden, matched KEIN Selector auf die KI-Antworten im DOM! Dann Debug-Button im Web-UI nutzen und den DOM-Output posten!** 
