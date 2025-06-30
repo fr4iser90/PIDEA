@@ -9,6 +9,7 @@ app.use(express.json({ limit: '2mb' }));
 app.use(express.static(path.join(__dirname, 'web')));
 
 let browser, page;
+let lastLoggedMessages = []; // Speichert die letzten geloggten Nachrichten
 
 async function ensureBrowser() {
   if (browser && page) return;
@@ -76,12 +77,10 @@ app.get('/chat-history', async (req, res) => {
         );
         
         if (messages.length > 0) {
-          console.log(`[GET /chat-history] Gefunden mit ${selector}:`, messages.length, 'Nachrichten');
           allMessages = allMessages.concat(messages);
         }
       } catch (e) {
         // Ignoriere Selektoren die nicht funktionieren
-        console.log(`[GET /chat-history] Selector ${selector} nicht gefunden`);
       }
     }
     
@@ -93,8 +92,15 @@ app.get('/chat-history', async (req, res) => {
       )
       .map(msg => msg.text.trim());
     
-    console.log(`[GET /chat-history] Verlauf gesendet (${uniqueMessages.length} Nachrichten)`);
-    console.log('[GET /chat-history] Nachrichten:', uniqueMessages);
+    // Nur loggen wenn sich die Nachrichten geändert haben
+    const messagesChanged = JSON.stringify(uniqueMessages) !== JSON.stringify(lastLoggedMessages);
+    
+    if (messagesChanged) {
+      console.log(`[GET /chat-history] Gefunden mit .aislash-editor-input-readonly[contenteditable="false"]:`, uniqueMessages.length, 'Nachrichten');
+      console.log(`[GET /chat-history] Verlauf gesendet (${uniqueMessages.length} Nachrichten)`);
+      console.log('[GET /chat-history] Nachrichten:', uniqueMessages);
+      lastLoggedMessages = [...uniqueMessages]; // Kopie speichern
+    }
     
     res.json({ messages: uniqueMessages });
   } catch (e) {

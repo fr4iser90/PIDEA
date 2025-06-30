@@ -34,23 +34,47 @@
   <script>
     let lastMessageCount = 0;
     let lastMessages = [];
+    let lastMessageHash = '';
+    
+    // Hash-Funktion für Nachrichtenvergleich
+    function hashMessages(messages) {
+      return messages.map(m => m.trim()).join('|');
+    }
     
     async function loadMessages() {
       try {
         const res = await fetch('/chat-history');
         const data = await res.json();
         const messages = data.messages || [];
-        console.log('[Web] Chatverlauf empfangen:', messages);
+        
+        // Filtere nur echte Nachrichten (keine Debug/Log-Nachrichten)
+        const realMessages = messages.filter(m => {
+          const msg = m.toString().trim();
+          return !msg.startsWith('[Web]') && 
+                 !msg.startsWith('Debug') && 
+                 !msg.startsWith('Fehler') &&
+                 !msg.startsWith('Error') &&
+                 !Array.isArray(msg) &&
+                 !(typeof msg === 'object') &&
+                 msg.length > 0;
+        });
+        
+        const currentHash = hashMessages(realMessages);
+        
+        // Nur loggen wenn sich was geändert hat
+        if (currentHash !== lastMessageHash) {
+          console.log('[Web] Chatverlauf geändert:', realMessages);
+          lastMessageHash = currentHash;
+        }
         
         const msgDiv = document.getElementById('messages');
         const statusDiv = document.getElementById('status');
         
         // Prüfe ob neue Nachrichten da sind
-        const hasNewMessages = messages.length > lastMessageCount;
-        const newMessages = messages.slice(lastMessageCount);
+        const hasNewMessages = realMessages.length > lastMessageCount;
+        const newMessages = realMessages.slice(lastMessageCount);
         
         if (hasNewMessages) {
-          console.log('[Web] Neue Nachrichten gefunden:', newMessages);
           statusDiv.textContent = `Neue Nachrichten empfangen! (${newMessages.length})`;
           statusDiv.style.color = '#4e8cff';
           
@@ -63,7 +87,7 @@
         
         // Update messages
         msgDiv.innerHTML = '';
-        messages.forEach((m, index) => {
+        realMessages.forEach((m, index) => {
           const el = document.createElement('div');
           el.className = 'msg';
           
@@ -84,8 +108,8 @@
         });
         
         msgDiv.scrollTop = msgDiv.scrollHeight;
-        lastMessageCount = messages.length;
-        lastMessages = messages;
+        lastMessageCount = realMessages.length;
+        lastMessages = realMessages;
       } catch (e) {
         console.error('[Web] Fehler beim Laden des Chatverlaufs:', e);
         document.getElementById('status').textContent = 'Fehler beim Laden der Nachrichten';
