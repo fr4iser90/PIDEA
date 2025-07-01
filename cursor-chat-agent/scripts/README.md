@@ -28,6 +28,10 @@ npm run analyze-dom
 node scripts/dom-analyzer.js
 ```
 
+### **Automatische Datei-Auswahl:**
+- ✅ **Bevorzugt**: `all-cursor-dom-source.md` (komplettes DOM)
+- 🔄 **Fallback**: Einzelne `*-dom-source.md` Dateien falls all-* nicht existiert
+
 ## Output
 Das Script erstellt: `output/dom-analysis-results.json`
 
@@ -144,3 +148,97 @@ extractFeatures(document, sourceFile) {
 - **Keine Dateien gefunden:** Prüfe Pfad zu `docs/ides/cursor/`
 - **HTML Parse-Fehler:** Prüfe HTML-Syntax in DOM-Source Dateien
 - **Leere Ergebnisse:** Prüfe ob HTML in DOM-Source Dateien vorhanden 
+
+# DOM Analysis Scripts
+
+## Current Coverage Status ✅
+
+**31/43 Features erfolgreich erkannt** (72% Abdeckung)
+
+### ✅ Bereits erfasste Bereiche:
+- **Chat System:** 9 Features (komplett)
+- **File Explorer:** 5 Features (komplett) 
+- **Editor:** 5 Features (komplett)
+- **Git Integration:** 4 Features (komplett)
+- **Terminal & Debug:** 5 Features (komplett)
+- **Status & AI:** 3 Features (komplett)
+
+## 🎯 Fehlende Features sammeln
+
+### Features die nur in bestimmten Zuständen sichtbar sind:
+
+#### 1. **Command Palette & Quick Actions**
+```bash
+# Öffne Command Palette und sammle DOM:
+Ctrl+Shift+P → DOM sammeln
+Ctrl+P → DOM sammeln  
+Ctrl+G → DOM sammeln
+```
+
+#### 2. **Extensions Panel** 
+```bash
+# Extensions-Seitenleiste öffnen:
+Ctrl+Shift+X → DOM sammeln
+```
+
+#### 3. **Search Panel**
+```bash
+# Global Search öffnen:
+Ctrl+Shift+F → DOM sammeln
+```
+
+#### 4. **Debug Panel aktiv**
+```bash
+# Debug-Seitenleiste + Debug-Session:
+Ctrl+Shift+D → Breakpoint setzen → F5 → DOM sammeln
+```
+
+#### 5. **Problems & Output Panels**
+```bash
+# Panels öffnen:
+Ctrl+Shift+M (Problems) → DOM sammeln
+Ctrl+Shift+U (Output) → DOM sammeln
+```
+
+## 📋 DOM-Sammlung Checkliste
+
+### Phase 1: Standard-Zustände ✅
+- [x] Normal IDE-Ansicht
+- [x] Chat aktiv
+- [x] File Explorer geöffnet
+- [x] Editor mit Tabs
+- [x] Terminal geöffnet
+
+### Phase 2: Erweiterte Zustände 🎯
+- [ ] Command Palette geöffnet
+- [ ] Quick Open geöffnet
+- [ ] Extensions Panel aktiv
+- [ ] Search Panel aktiv
+- [ ] Debug Session aktiv
+- [ ] Problems Panel geöffnet
+- [ ] Output Panel geöffnet
+- [ ] Settings UI geöffnet
+
+### Phase 3: Kontextmenüs 🎯
+- [ ] File Context Menu (Rechtsklick)
+- [ ] Editor Context Menu
+- [ ] Git Context Menu
+- [ ] Extension Context Menu
+
+## 🚀 Vollständige Automatisierung erreichen
+
+### Empfohlene Sammlungsreihenfolge:
+1. **Command Palette States** (höchste Priorität)
+2. **Extensions Management** 
+3. **Debug & Problems**
+4. **Kontextmenüs**
+5. **Settings & Preferences**
+
+### Nach jeder Sammlung:
+```bash
+npm run analyze-dom
+```
+
+## 📊 Ziel: 100% Coverage
+**Aktuell: 31/43 Features (72%)**
+**Ziel: 43/43 Features (100%)** 

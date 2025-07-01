@@ -15,10 +15,23 @@ class DOMAnalyzer {
   // Lade alle DOM-Source Dateien
   loadDOMSources() {
     const docsPath = path.join(__dirname, '../docs/ides/cursor');
-    const sourceFiles = fs.readdirSync(docsPath)
+    const allFiles = fs.readdirSync(docsPath)
       .filter(file => file.endsWith('-dom-source.md'));
     
-    console.log(`📁 Gefundene DOM-Source Dateien: ${sourceFiles.length}`);
+    // Priorisiere all-cursor-dom-source.md 
+    const completeFile = allFiles.find(file => file.startsWith('all-'));
+    
+    let sourceFiles;
+    if (completeFile) {
+      sourceFiles = [completeFile];
+      console.log(`📁 Verwende komplette DOM-Source: ${completeFile}`);
+    } else {
+      // Fallback zu individuellen Dateien falls all-* nicht existiert
+      sourceFiles = allFiles.filter(file => !file.startsWith('all-'));
+      console.log(`📁 Fallback zu individuellen Dateien: ${sourceFiles.length} gefunden`);
+    }
+    
+    console.log(`📁 Analyse-Dateien: ${sourceFiles.length}`);
     
     const sources = {};
     sourceFiles.forEach(file => {
@@ -33,28 +46,68 @@ class DOMAnalyzer {
 
   // Extrahiere HTML aus Markdown
   extractHTML(content) {
-    // Falls es reines HTML ist, return as-is
+    // Falls es reines HTML ist, CSS-Style-Blöcke entfernen
     if (content.startsWith('<')) {
-      return content;
+      return this.cleanHTML(content);
     }
     
-    // Falls es in ```html blocks ist
+    // Extrahiere nur HTML-Blöcke (keine CSS, JS, etc.)
+    let htmlContent = '';
+    
+    // 1. Explizite ```html blocks
     const htmlBlocks = content.match(/```html([\s\S]*?)```/g);
     if (htmlBlocks) {
-      return htmlBlocks.map(block => 
+      htmlContent += htmlBlocks.map(block => 
         block.replace(/```html\n?/, '').replace(/\n?```/, '')
       ).join('\n');
     }
     
-    // Falls es in ``` blocks ohne html ist
-    const codeBlocks = content.match(/```([\s\S]*?)```/g);
+    // 2. Code-Blöcke ohne Label prüfen ob sie HTML enthalten
+    const codeBlocks = content.match(/```\n([\s\S]*?)```/g);
     if (codeBlocks) {
-      return codeBlocks.map(block => 
-        block.replace(/```\n?/, '').replace(/\n?```/, '')
-      ).join('\n');
+      codeBlocks.forEach(block => {
+        const blockContent = block.replace(/```\n?/, '').replace(/\n?```/, '');
+        
+        // Nur hinzufügen wenn es HTML-Tags enthält und KEINE CSS-Variablen
+        if (blockContent.includes('<') && 
+            blockContent.includes('>') && 
+            !blockContent.includes('--vscode-') &&
+            !blockContent.includes(': #') &&
+            !blockContent.includes('color:') &&
+            !blockContent.includes('background:')) {
+          htmlContent += blockContent + '\n';
+        }
+      });
     }
     
-    return content;
+    // 3. HTML-Zeilen direkt im Text (ohne Code-Blöcke)
+    const lines = content.split('\n');
+    lines.forEach(line => {
+      if (line.trim().startsWith('<') && 
+          line.trim().includes('>') &&
+          !line.includes('--vscode-') &&
+          !line.includes(': #')) {
+        htmlContent += line + '\n';
+      }
+    });
+    
+    return htmlContent;
+  }
+
+  // HTML von CSS-Style-Blöcken säubern
+  cleanHTML(html) {
+    if (!html || !html.includes('<')) return '';
+    
+    // Entferne alle <style>...</style> Blöcke komplett
+    let cleaned = html.replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '');
+    
+    // Entferne auch <script> Blöcke
+    cleaned = cleaned.replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '');
+    
+    // Entferne leere Zeilen
+    cleaned = cleaned.replace(/^\s*\n/gm, '');
+    
+    return cleaned.trim();
   }
 
   // Parse HTML mit jsdom
@@ -65,14 +118,14 @@ class DOMAnalyzer {
       
       console.log(`🔍 Analyzing ${sourceFile}...`);
       
-      // Alle Elemente finden
-      const allElements = document.querySelectorAll('*');
+      // Alle Elemente finden (ABER style/script/meta Tags ignorieren)
+      const allElements = document.querySelectorAll('*:not(style):not(script):not(meta):not(link):not(title)');
       console.log(`  └─ ${allElements.length} DOM-Elemente gefunden`);
       
       // Features extrahieren
       this.extractFeatures(document, sourceFile);
       
-      // Selektoren extrahieren
+      // Selektoren extrahieren (nur strukturelle Elemente)
       this.extractSelectors(document, sourceFile);
       
       return true;
@@ -85,62 +138,341 @@ class DOMAnalyzer {
   // Extrahiere Chat-Features
   extractFeatures(document, sourceFile) {
     const features = {
-      // Chat Actions
+      // === EXISTING CHAT FEATURES ===
       newChat: this.findElements(document, [
         '[aria-label*="New Chat"]',
-        '.codicon-add-two',
-        '[aria-label*="Ctrl+N"]'
+        '[title*="New Chat"]',
+        '.new-chat-button',
+        '[data-testid*="new-chat"]'
       ]),
       
       chatHistory: this.findElements(document, [
         '[aria-label*="Chat History"]',
-        '.codicon-history-two',
-        '[aria-label*="Ctrl+Alt"]'
+        '[aria-label*="Show Chat History"]',
+        '.chat-history',
+        '[data-testid*="chat-history"]'
       ]),
       
-      // Chat Input/Output
       chatInput: this.findElements(document, [
-        '.aislash-editor-input[contenteditable="true"]',
-        '[data-lexical-editor="true"][contenteditable="true"]'
+        '.aislash-editor-input',
+        '[placeholder*="Ask"]',
+        '[placeholder*="chat"]',
+        '.chat-input',
+        '[data-testid*="chat-input"]'
       ]),
       
       userMessages: this.findElements(document, [
-        '.aislash-editor-input-readonly[contenteditable="false"]',
-        '.composer-human-message'
+        'div.composer-human-message',
+        '.user-message',
+        '.human-message',
+        '.aislash-editor-input-readonly'
       ]),
       
       aiMessages: this.findElements(document, [
-        '.anysphere-markdown-container-root',
-        'span.anysphere-markdown-container-root'
+        'span.anysphere-markdown-container-root',
+        '.ai-message',
+        '.assistant-message',
+        '.markdown-container'
       ]),
       
-      // Chat UI Elements
       chatTabs: this.findElements(document, [
-        '.composite-bar-action-tab',
-        '.action-item.composite-bar-action-tab'
+        'li.action-item',
+        '.chat-tab',
+        '[aria-label*="Plan for"]',
+        '[role="tab"]'
       ]),
       
       sendButton: this.findElements(document, [
+        '[aria-label*="Send Message"]',
         '[aria-label*="Send"]',
         '.chat-send-button',
-        '.send-message-button'
+        '.send-message-button',
+        'button[type="submit"]'
       ]),
       
-      // Settings & More
       settings: this.findElements(document, [
-        '.codicon-settings-gear',
-        '[aria-label*="Settings"]'
+        '[aria-label="Settings"]',
+        '.settings-button',
+        '[data-testid*="settings"]'
       ]),
       
       moreActions: this.findElements(document, [
-        '.codicon-ellipsis-two',
-        '[aria-label*="More Actions"]'
+        '[aria-label*="More Actions"]',
+        '[aria-label*="Close, Export, Settings"]',
+        'span.codicon',
+        '.more-actions'
       ]),
       
-      // Background Agents
       backgroundAgents: this.findElements(document, [
-        '.codicon-cloud-two',
-        '[aria-label*="Background Agents"]'
+        '[aria-label*="Background Agents"]',
+        '.background-agents',
+        '[data-testid*="background"]'
+      ]),
+
+      // === EXPLORER & FILE TREE ===
+      fileExplorer: this.findElements(document, [
+        '.explorer-viewlet',
+        '[id*="explorer"]',
+        '.pane[aria-label*="Explorer"]',
+        '.monaco-pane-view .pane'
+      ]),
+      
+      fileTree: this.findElements(document, [
+        '.monaco-tree',
+        '.explorer-item',
+        '.monaco-list',
+        '[role="tree"]'
+      ]),
+      
+      folderToggle: this.findElements(document, [
+        '.folder-icon',
+        '.expand-collapse-button',
+        '.codicon-chevron-right',
+        '.codicon-chevron-down'
+      ]),
+      
+      fileContextMenu: this.findElements(document, [
+        '.monaco-menu',
+        '.context-menu',
+        '[role="menu"]'
+      ]),
+      
+      newFile: this.findElements(document, [
+        '[aria-label*="New File"]',
+        '.new-file-button',
+        '[title*="New File"]'
+      ]),
+      
+      newFolder: this.findElements(document, [
+        '[aria-label*="New Folder"]',
+        '.new-folder-button',
+        '[title*="New Folder"]'
+      ]),
+
+      // === EDITOR ===
+      editorTabs: this.findElements(document, [
+        '.tabs-container',
+        '.tab',
+        '.editor-tab',
+        '[role="tab"]'
+      ]),
+      
+      activeEditor: this.findElements(document, [
+        '.editor-instance',
+        '.monaco-editor',
+        '.active-editor'
+      ]),
+      
+      editorContent: this.findElements(document, [
+        '.monaco-editor-background',
+        '.view-lines',
+        '.monaco-editor textarea'
+      ]),
+      
+      tabCloseButton: this.findElements(document, [
+        '.tab-close',
+        '.codicon-close',
+        '[aria-label*="Close"]'
+      ]),
+      
+      splitEditor: this.findElements(document, [
+        '[aria-label*="Split Editor"]',
+        '.split-editor',
+        '.editor-actions'
+      ]),
+
+      // === SEARCH & REPLACE ===
+      globalSearch: this.findElements(document, [
+        '.search-viewlet',
+        '[id*="search"]',
+        '.search-view'
+      ]),
+      
+      searchInput: this.findElements(document, [
+        '.search-input',
+        '[placeholder*="Search"]',
+        '.monaco-inputbox input'
+      ]),
+      
+      replaceInput: this.findElements(document, [
+        '.replace-input',
+        '[placeholder*="Replace"]'
+      ]),
+      
+      searchResults: this.findElements(document, [
+        '.search-results',
+        '.monaco-tree-row',
+        '.search-result'
+      ]),
+      
+      searchFilters: this.findElements(document, [
+        '.search-actions',
+        '.regex-button',
+        '.case-sensitive-button',
+        '.whole-word-button'
+      ]),
+
+      // === GIT SOURCE CONTROL ===
+      gitSourceControl: this.findElements(document, [
+        '.scm-viewlet',
+        '[id*="scm"]',
+        '.source-control-view'
+      ]),
+      
+      gitChanges: this.findElements(document, [
+        '.scm-resource',
+        '.change-item',
+        '.monaco-list-row'
+      ]),
+      
+      gitStaging: this.findElements(document, [
+        '.scm-changes-container',
+        '.staged-changes',
+        '.unstaged-changes'
+      ]),
+      
+      commitInput: this.findElements(document, [
+        '.scm-commit-input',
+        '[placeholder*="Message"]',
+        '.monaco-inputbox'
+      ]),
+      
+      commitButton: this.findElements(document, [
+        '.commit-button',
+        '[aria-label*="Commit"]'
+      ]),
+      
+      gitBranch: this.findElements(document, [
+        '.git-branch',
+        '.branch-status',
+        '.statusbar-item[title*="branch"]'
+      ]),
+
+      // === EXTENSIONS ===
+      extensionsPanel: this.findElements(document, [
+        '.extensions-viewlet',
+        '[id*="extensions"]',
+        '.extensions-view'
+      ]),
+      
+      extensionSearch: this.findElements(document, [
+        '.extensions-search',
+        '[placeholder*="Search Extensions"]'
+      ]),
+      
+      installExtension: this.findElements(document, [
+        '.install-button',
+        '[aria-label*="Install"]'
+      ]),
+
+      // === TERMINAL ===
+      terminal: this.findElements(document, [
+        '.terminal-wrapper',
+        '.xterm-screen',
+        '.integrated-terminal'
+      ]),
+      
+      newTerminal: this.findElements(document, [
+        '[aria-label*="New Terminal"]',
+        '.new-terminal-button'
+      ]),
+      
+      terminalTabs: this.findElements(document, [
+        '.terminal-tab',
+        '.terminal-tabs-container'
+      ]),
+      
+      terminalInput: this.findElements(document, [
+        '.xterm-cursor-layer',
+        '.terminal-input'
+      ]),
+
+      // === DEBUG & RUN ===
+      debugPanel: this.findElements(document, [
+        '.debug-viewlet',
+        '[id*="debug"]',
+        '.debug-view'
+      ]),
+      
+      runButton: this.findElements(document, [
+        '[aria-label*="Run"]',
+        '.run-button',
+        '.codicon-play'
+      ]),
+      
+      debugButton: this.findElements(document, [
+        '[aria-label*="Debug"]',
+        '.debug-button',
+        '.codicon-debug-alt'
+      ]),
+      
+      breakpoints: this.findElements(document, [
+        '.breakpoint',
+        '.debug-breakpoint',
+        '.glyph-margin-widgets'
+      ]),
+
+      // === COMMAND PALETTE & NAVIGATION ===
+      commandPalette: this.findElements(document, [
+        '.quick-input-widget',
+        '.monaco-quick-input',
+        '[placeholder*="Type a command"]'
+      ]),
+      
+      quickOpen: this.findElements(document, [
+        '.quick-input-widget',
+        '[placeholder*="Go to File"]'
+      ]),
+      
+      breadcrumbs: this.findElements(document, [
+        '.breadcrumbs',
+        '.breadcrumb-item'
+      ]),
+
+      // === STATUS BAR ===
+      statusBar: this.findElements(document, [
+        '.statusbar',
+        '.monaco-workbench .part.statusbar'
+      ]),
+      
+      languageSelector: this.findElements(document, [
+        '.language-status',
+        '[title*="Select Language Mode"]'
+      ]),
+      
+      cursorPosition: this.findElements(document, [
+        '.cursor-position',
+        '[title*="Go to Line"]'
+      ]),
+
+      // === PANELS ===
+      problemsPanel: this.findElements(document, [
+        '.markers-panel',
+        '.problems-panel'
+      ]),
+      
+      outputPanel: this.findElements(document, [
+        '.output-panel',
+        '.output-view'
+      ]),
+
+      // === CURSOR AI FEATURES ===
+      copilotSuggestions: this.findElements(document, [
+        '.ghost-text',
+        '.inline-suggestion',
+        '.copilot-suggestion'
+      ]),
+      
+      inlineChat: this.findElements(document, [
+        '.inline-chat',
+        '.chat-widget',
+        '.interactive-session'
+      ]),
+      
+      aiCodeActions: this.findElements(document, [
+        '.code-action',
+        '.lightbulb-glyph',
+        '.monaco-editor .suggest-widget'
       ])
     };
     
@@ -180,9 +512,10 @@ class DOMAnalyzer {
 
   // Extrahiere alle möglichen Selektoren
   extractSelectors(document, sourceFile) {
-    const allElements = document.querySelectorAll('*');
+    // NUR strukturelle HTML-Elemente (keine style/script/meta Tags)
+    const structuralElements = document.querySelectorAll('*:not(style):not(script):not(meta):not(link):not(title):not(head)');
     
-    allElements.forEach(element => {
+    structuralElements.forEach(element => {
       const selectors = this.generateSelectorsForElement(element);
       
       if (selectors.length > 0) {
@@ -224,8 +557,16 @@ class DOMAnalyzer {
     const attributes = this.getElementAttributes(element);
     Object.entries(attributes).forEach(([key, value]) => {
       if (key === 'aria-label' && value) {
+        // Vollständiges aria-label hat Priorität
         selectors.push(`[aria-label="${value}"]`);
-        selectors.push(`[aria-label*="${value.split(' ')[0]}"]`);
+        // Nur bei langen Labels auch Teilstring-Varianten
+        if (value.length > 20) {
+          const words = value.split(' ');
+          if (words.length > 1) {
+            selectors.push(`[aria-label*="${words[0]}"]`);
+            selectors.push(`[aria-label*="${words.slice(0, 2).join(' ')}"]`);
+          }
+        }
       }
       if (key === 'role' && value) {
         selectors.push(`[role="${value}"]`);
@@ -254,15 +595,38 @@ class DOMAnalyzer {
   elementToSelector(element) {
     const selectors = this.generateSelectorsForElement(element);
     
-    // Priorität: ID > aria-label > class > tag
+    // Priorität: ID > spezifische aria-label > kombinierte Selektoren > class > tag
     const prioritized = selectors.sort((a, b) => {
+      // IDs haben höchste Priorität
       if (a.startsWith('#')) return -1;
       if (b.startsWith('#')) return 1;
-      if (a.includes('aria-label')) return -1;
-      if (b.includes('aria-label')) return 1;
-      if (a.startsWith('.')) return -1;
-      if (b.startsWith('.')) return 1;
-      return 0;
+      
+      // Vollständige aria-labels haben Priorität vor Teilstrings
+      if (a.includes('aria-label="') && b.includes('aria-label*=')) return -1;
+      if (b.includes('aria-label="') && a.includes('aria-label*=')) return 1;
+      
+      // Kombinierte Selektoren (tag + class) haben Priorität
+      if (a.includes('.') && !a.startsWith('.') && b.startsWith('.')) return -1;
+      if (b.includes('.') && !b.startsWith('.') && a.startsWith('.')) return 1;
+      
+      // Spezifische Klassen haben Priorität vor generischen
+      if (a.startsWith('.') && b.startsWith('.')) {
+        const aSpecific = a.includes('-') || a.includes('_');
+        const bSpecific = b.includes('-') || b.includes('_');
+        if (aSpecific && !bSpecific) return -1;
+        if (bSpecific && !aSpecific) return 1;
+      }
+      
+      // aria-label hat Priorität vor Klassen
+      if (a.includes('aria-label') && !b.includes('aria-label')) return -1;
+      if (b.includes('aria-label') && !a.includes('aria-label')) return 1;
+      
+      // Klassen haben Priorität vor Tags
+      if (a.startsWith('.') && !b.startsWith('.')) return -1;
+      if (b.startsWith('.') && !a.startsWith('.')) return 1;
+      
+      // Bei gleicher Priorität: längerer = spezifischer
+      return b.length - a.length;
     });
     
     return prioritized[0] || element.tagName.toLowerCase();
