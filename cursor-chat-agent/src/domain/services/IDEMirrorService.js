@@ -41,7 +41,7 @@ class IDEMirrorService {
         console.log('🔍 Capturing complete IDE state...');
 
         const domStructure = await page.evaluate(() => {
-            function serializeElement(element, depth = 0, maxDepth = 10) {
+            function serializeElement(element, depth = 0, maxDepth = 30) {
                 if (!element || element.nodeType !== 1 || depth > maxDepth) return null;
                 
                 const rect = element.getBoundingClientRect();
@@ -69,6 +69,9 @@ class IDEMirrorService {
                                   element.classList.contains('action-item') ||
                                   element.classList.contains('action-label') ||
                                   element.classList.contains('monaco-button') ||
+                                  element.classList.contains('monaco-icon-button') ||
+                                  element.classList.contains('codicon') ||
+                                  element.classList.contains('tab') ||
                                   computedStyle.cursor === 'pointer' ||
                                   element.tabIndex >= 0;
 
@@ -100,17 +103,17 @@ class IDEMirrorService {
                         cursor: computedStyle.cursor
                     },
                     isClickable: isClickable,
-                    isVisible: rect.width > 0 && rect.height > 0 && 
+                    isVisible: rect.width >= 0 && rect.height >= 0 && 
                               computedStyle.visibility !== 'hidden' && 
                               computedStyle.display !== 'none',
                     children: []
                 };
 
-                // Recursively serialize visible children
+                // Recursively serialize ALL children
                 if (element.children && element.children.length > 0 && depth < maxDepth) {
                     for (const child of element.children) {
                         const childData = serializeElement(child, depth + 1, maxDepth);
-                        if (childData && childData.isVisible) {
+                        if (childData) {
                             elementData.children.push(childData);
                         }
                     }
@@ -134,7 +137,20 @@ class IDEMirrorService {
         const activeIDE = await this.ideManager.getActiveIDE();
         domStructure.idePort = activeIDE ? activeIDE.port : null;
         
-        console.log(`✅ Captured IDE state: ${domStructure.body?.children?.length || 0} main elements`);
+        // Count total elements recursively
+        function countElements(element) {
+            if (!element) return 0;
+            let count = 1;
+            if (element.children) {
+                element.children.forEach(child => {
+                    count += countElements(child);
+                });
+            }
+            return count;
+        }
+        
+        const totalElements = countElements(domStructure.body);
+        console.log(`✅ Captured IDE state: ${totalElements} total elements (${domStructure.body?.children?.length || 0} direct children)`);
         return domStructure;
     }
 
