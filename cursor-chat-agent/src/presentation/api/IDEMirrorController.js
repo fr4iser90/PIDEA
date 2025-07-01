@@ -4,6 +4,10 @@ class IDEMirrorController {
     constructor() {
         this.ideMirrorService = new IDEMirrorService();
         this.connectedClients = new Set();
+        
+        // Message queue for sequential processing
+        this.messageQueue = [];
+        this.isProcessingQueue = false;
     }
 
     // HTTP Endpoints
@@ -306,13 +310,19 @@ class IDEMirrorController {
     async handleWebSocketMessage(ws, data) {
         const { type, payload } = data;
 
+        // For typing messages, use queue to ensure order
+        if (type === 'type-text') {
+            this.messageQueue.push({ ws, data });
+            if (!this.isProcessingQueue) {
+                this.processMessageQueue();
+            }
+            return;
+        }
+
+        // Other messages process normally
         switch (type) {
             case 'click-element':
                 await this.handleWebSocketClick(ws, payload);
-                break;
-            
-            case 'type-text':
-                await this.handleWebSocketType(ws, payload);
                 break;
                 
             case 'focus-and-type':
@@ -340,6 +350,38 @@ class IDEMirrorController {
                     type: 'error',
                     message: `Unknown message type: ${type}`
                 }));
+        }
+    }
+
+    async processMessageQueue() {
+        if (this.isProcessingQueue) return;
+        this.isProcessingQueue = true;
+
+        try {
+            while (this.messageQueue.length > 0) {
+                const { ws, data } = this.messageQueue.shift();
+                
+                try {
+                    await this.handleWebSocketType(ws, data.payload);
+                    
+                    // Small delay between characters for stability
+                    await new Promise(resolve => setTimeout(resolve, 30));
+                } catch (error) {
+                    console.error('❌ Queue processing error:', error.message);
+                    
+                    // If it's a connection error, clear the queue and stop
+                    if (error.message.includes('closed') || error.message.includes('disconnected')) {
+                        console.log('🧹 Clearing message queue due to connection error');
+                        this.messageQueue = [];
+                        break;
+                    }
+                    
+                    // For other errors, continue with next message
+                    continue;
+                }
+            }
+        } finally {
+            this.isProcessingQueue = false;
         }
     }
 

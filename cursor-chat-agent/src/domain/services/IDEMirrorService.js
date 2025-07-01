@@ -6,6 +6,9 @@ class IDEMirrorService {
         this.ideManager = new IDEManager();
         this.browserManager = new BrowserManager();
         this.isInitialized = false;
+        this.lastFocusedElement = null;
+        this.lastFocusTime = 0;
+        this.typingMutex = false;
     }
 
     async connectToIDE() {
@@ -286,53 +289,136 @@ class IDEMirrorService {
     }
 
     async typeInIDE(text, selector = null, key = null, modifiers = {}) {
-        const page = await this.browserManager.getPage();
-        if (!page) {
-            throw new Error('No IDE connection available');
+        // Simple mutex to prevent overlapping typing operations
+        if (this.typingMutex) {
+            await new Promise(resolve => setTimeout(resolve, 50));
+            return this.typeInIDE(text, selector, key, modifiers);
         }
 
+        this.typingMutex = true;
+
         try {
+            const page = await this.browserManager.getPage();
+            if (!page) {
+                throw new Error('No IDE connection available');
+            }
+
+            // Check if page is still connected
+            if (page.isClosed()) {
+                console.log('🔄 Page closed, attempting reconnect...');
+                await this.browserManager.reconnect();
+                const newPage = await this.browserManager.getPage();
+                if (!newPage || newPage.isClosed()) {
+                    throw new Error('Could not reconnect to IDE');
+                }
+                return await this.typeInIDE(text, selector, key, modifiers); // Retry
+            }
+
             // If it's a special key or key combination
             if (key && key.length > 1) {
                 console.log(`⌨️ Sending special key: ${key} ${JSON.stringify(modifiers)}`);
                 
-                // Handle modifiers
-                if (modifiers.ctrlKey) await page.keyboard.down('Control');
-                if (modifiers.shiftKey) await page.keyboard.down('Shift');
-                if (modifiers.altKey) await page.keyboard.down('Alt');
-                if (modifiers.metaKey) await page.keyboard.down('Meta');
+                // Use direct CDP for special keys (more reliable)
+                const cdp = await page.context().newCDPSession(page);
                 
-                // Send the key
-                await page.keyboard.press(key);
+                await cdp.send('Input.dispatchKeyEvent', {
+                    type: 'keyDown',
+                    key: key,
+                    code: key,
+                    modifiers: this.getModifierBitmask(modifiers),
+                    windowsVirtualKeyCode: this.getVirtualKeyCode(key)
+                });
                 
-                // Release modifiers
-                if (modifiers.metaKey) await page.keyboard.up('Meta');
-                if (modifiers.altKey) await page.keyboard.up('Alt');
-                if (modifiers.shiftKey) await page.keyboard.up('Shift');
-                if (modifiers.ctrlKey) await page.keyboard.up('Control');
+                await page.waitForTimeout(50);
                 
-                console.log(`✅ Sent special key: ${key}`);
+                await cdp.send('Input.dispatchKeyEvent', {
+                    type: 'keyUp',
+                    key: key,
+                    code: key,
+                    modifiers: this.getModifierBitmask(modifiers),
+                    windowsVirtualKeyCode: this.getVirtualKeyCode(key)
+                });
+                
+                console.log(`✅ Sent special key via CDP: ${key}`);
                 return true;
             }
             
-            // Regular text input with improved focus handling
+            // Regular text input - try direct DOM insertion first
             if (text) {
                 console.log(`⌨️ Typing "${text.substring(0, 50)}..." ${selector ? `in ${selector}` : 'at cursor'}`);
                 
-                // Smart selector handling for different IDE elements
-                if (selector) {
+                // Always focus for chat elements to ensure proper input target
+                const needsFocus = selector && (
+                    selector.includes('composer-bar') || 
+                    selector !== this.lastFocusedElement ||
+                    (Date.now() - this.lastFocusTime) > 1000
+                );
+
+                if (needsFocus) {
+                    console.log(`🎯 Focusing before typing in: ${selector}`);
                     await this.focusElement(page, selector);
+                    this.lastFocusedElement = selector;
+                    this.lastFocusTime = Date.now();
+                    await this.safeWaitForTimeout(page, 200);
                 }
                 
-                // Type the text
-                await page.keyboard.type(text, { delay: 20 });
+                // Skip DOM insertion - use real keyboard events for Cursor
+                console.log(`⌨️ Using real keyboard events for Cursor compatibility`);
+                await page.keyboard.type(text, { delay: 30 });
+                
                 console.log(`✅ Typed text: ${text.substring(0, 50)}...`);
                 return true;
             }
             
+            return true;
         } catch (error) {
             console.error(`❌ Failed to type: ${error.message}`);
             throw error;
+        } finally {
+            this.typingMutex = false;
+        }
+    }
+
+    // DOM injection removed - using real keyboard events for Cursor compatibility
+
+    getModifierBitmask(modifiers) {
+        let mask = 0;
+        if (modifiers.altKey) mask |= 1;
+        if (modifiers.ctrlKey) mask |= 2;
+        if (modifiers.metaKey) mask |= 4;
+        if (modifiers.shiftKey) mask |= 8;
+        return mask;
+    }
+
+    getVirtualKeyCode(key) {
+        const keyCodes = {
+            'Backspace': 8, 'Tab': 9, 'Enter': 13, 'Shift': 16,
+            'Control': 17, 'Alt': 18, 'Escape': 27, 'Space': 32,
+            'ArrowLeft': 37, 'ArrowUp': 38, 'ArrowRight': 39, 'ArrowDown': 40,
+            'Delete': 46
+        };
+        return keyCodes[key] || key.charCodeAt(0);
+    }
+
+    getKeyCode(char) {
+        if (char >= 'a' && char <= 'z') return `Key${char.toUpperCase()}`;
+        if (char >= 'A' && char <= 'Z') return `Key${char}`;
+        if (char >= '0' && char <= '9') return `Digit${char}`;
+        if (char === ' ') return 'Space';
+        return `Key${char.toUpperCase()}`;
+    }
+
+    async safeWaitForTimeout(page, ms) {
+        try {
+            if (page && !page.isClosed()) {
+                await page.waitForTimeout(ms);
+            } else {
+                // Fallback to regular timeout if page is closed
+                await new Promise(resolve => setTimeout(resolve, ms));
+            }
+        } catch (error) {
+            // If page operations fail, use regular timeout
+            await new Promise(resolve => setTimeout(resolve, ms));
         }
     }
 
@@ -341,50 +427,102 @@ class IDEMirrorService {
         if (selector.includes('composer-bar')) {
             // For chat/composer elements, try multiple strategies
             const chatSelectors = [
-                `${selector} textarea`,
-                `${selector} .monaco-editor textarea`,
+                `${selector} .monaco-editor .view-lines`,
+                `${selector} .monaco-editor [contenteditable="true"]`,
                 `${selector} [contenteditable="true"]`,
-                `${selector} input`,
+                `${selector} textarea`,
+                `${selector} input[type="text"]`,
                 selector
             ];
 
             for (const chatSelector of chatSelectors) {
                 try {
-                    const element = await page.$(chatSelector);
-                    if (element) {
-                        const isVisible = await element.isVisible();
-                        if (isVisible) {
-                            console.log(`🎯 Focusing chat element: ${chatSelector}`);
-                            await element.click();
-                            await page.waitForTimeout(200);
-                            
-                            // Try to ensure focus by clicking again if needed
-                            const isFocused = await page.evaluate((sel) => {
-                                const el = document.querySelector(sel);
-                                return el && (el === document.activeElement || el.contains(document.activeElement));
-                            }, chatSelector);
-                            
-                            if (!isFocused) {
-                                await element.focus();
-                                await page.waitForTimeout(100);
+                    // First check if element exists and is the right type
+                    const elementInfo = await page.evaluate((sel) => {
+                        const el = document.querySelector(sel);
+                        if (!el) return null;
+                        
+                        const isInputElement = (
+                            el.contentEditable === 'true' || 
+                            el.tagName === 'TEXTAREA' || 
+                            el.tagName === 'INPUT'
+                        );
+                        
+                        if (!isInputElement) return null;
+                        
+                        const rect = el.getBoundingClientRect();
+                        return {
+                            visible: rect.width > 0 && rect.height > 0,
+                            focused: el === document.activeElement || el.contains(document.activeElement),
+                            type: el.tagName,
+                            contentEditable: el.contentEditable
+                        };
+                    }, chatSelector);
+                    
+                    if (elementInfo && elementInfo.visible) {
+                        console.log(`🎯 Targeting input element: ${chatSelector} (${elementInfo.type})`);
+                        
+                        // Prevent auto-scroll and click properly
+                        await page.evaluate((sel) => {
+                            const el = document.querySelector(sel);
+                            if (el) {
+                                // Prevent scrolling during focus
+                                const originalScrollBehavior = document.documentElement.style.scrollBehavior;
+                                document.documentElement.style.scrollBehavior = 'auto';
+                                
+                                // Click and focus without scrolling
+                                el.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+                                el.focus({ preventScroll: true });
+                                
+                                // Restore scroll behavior
+                                setTimeout(() => {
+                                    document.documentElement.style.scrollBehavior = originalScrollBehavior;
+                                }, 100);
                             }
-                            
+                        }, chatSelector);
+                        
+                        await this.safeWaitForTimeout(page, 150);
+                        
+                        // Verify focus
+                        const isFocused = await page.evaluate((sel) => {
+                            const el = document.querySelector(sel);
+                            return el && (el === document.activeElement || el.contains(document.activeElement));
+                        }, chatSelector);
+                        
+                        if (isFocused) {
                             console.log(`✅ Successfully focused: ${chatSelector}`);
                             return true;
+                        } else {
+                            // Try clicking as backup
+                            const element = await page.$(chatSelector);
+                            if (element) {
+                                await element.click({ force: true });
+                                await this.safeWaitForTimeout(page, 100);
+                            }
                         }
                     }
                 } catch (e) {
-                    // Try next selector
+                    console.log(`⚠️ Focus attempt failed for ${chatSelector}: ${e.message}`);
                 }
             }
         } else {
             // Standard element focusing
             try {
-                await page.click(selector);
-                await page.waitForTimeout(100);
+                await page.evaluate((sel) => {
+                    const el = document.querySelector(sel);
+                    if (el) {
+                        el.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+                        el.focus({ preventScroll: true });
+                    }
+                }, selector);
+                await this.safeWaitForTimeout(page, 100);
             } catch (e) {
-                console.log(`⚠️ Standard click failed for ${selector}, trying focus()`);
-                await page.focus(selector);
+                console.log(`⚠️ Standard focus failed for ${selector}, trying click`);
+                try {
+                    await page.click(selector);
+                } catch (clickError) {
+                    console.log(`⚠️ Click also failed: ${clickError.message}`);
+                }
             }
         }
     }
