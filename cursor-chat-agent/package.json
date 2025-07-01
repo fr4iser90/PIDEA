@@ -13,7 +13,8 @@
     "lint": "eslint src/",
     "lint:fix": "eslint src/ --fix",
     "build": "echo 'No build step required for Node.js application'",
-    "clean": "rm -rf node_modules package-lock.json"
+    "clean": "rm -rf node_modules package-lock.json",
+    "analyze-dom": "node scripts/dom-analyzer.js"
   },
   "keywords": [
     "cursor",
@@ -30,7 +31,8 @@
     "express": "^5.1.0",
     "playwright": "^1.44.0",
     "ws": "^8.14.2",
-    "uuid": "^9.0.1"
+    "uuid": "^9.0.1",
+    "jsdom": "^23.0.1"
   },
   "devDependencies": {
     "nodemon": "^3.0.2",

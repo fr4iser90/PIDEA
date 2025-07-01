@@ -1,0 +1,1679 @@
+{
+  "meta": {
+    "generatedAt": "2025-07-01T11:28:43.900Z",
+    "script": "dom-analyzer.js",
+    "stats": {
+      "totalElements": 3632,
+      "totalFeatures": 9,
+      "featuresFound": 9,
+      "sources": 9
+    }
+  },
+  "optimizedSelectors": {
+    "newChat": "[aria-label*=\"New\"]",
+    "chatHistory": "[aria-label*=\"Show\"]",
+    "chatInput": ".aislash-editor-input",
+    "userMessages": ".composer-human-message",
+    "aiMessages": ".anysphere-markdown-container-root",
+    "chatTabs": ".checked",
+    "settings": "[aria-label*=\"Close,\"]",
+    "moreActions": ".!text-[10px]",
+    "backgroundAgents": "[aria-label*=\"Show\"]"
+  },
+  "detailedFeatures": {
+    "newChat": [
+      {
+        "source": "chat-dom-source.md",
+        "count": 2,
+        "elements": [
+          "[aria-label*=\"New\"]",
+          "[aria-label*=\"New\"]"
+        ]
+      }
+    ],
+    "chatHistory": [
+      {
+        "source": "chat-dom-source.md",
+        "count": 2,
+        "elements": [
+          "[aria-label*=\"Show\"]",
+          "[aria-label*=\"Show\"]"
+        ]
+      }
+    ],
+    "chatInput": [
+      {
+        "source": "chat-dom-source.md",
+        "count": 1,
+        "elements": [
+          ".aislash-editor-input"
+        ]
+      }
+    ],
+    "userMessages": [
+      {
+        "source": "chat-dom-source.md",
+        "count": 6,
+        "elements": [
+          ".aislash-editor-input-readonly",
+          ".aislash-editor-input-readonly",
+          ".aislash-editor-input-readonly",
+          ".composer-human-message",
+          ".composer-human-message",
+          ".composer-human-message"
+        ]
+      }
+    ],
+    "aiMessages": [
+      {
+        "source": "chat-dom-source.md",
+        "count": 11,
+        "elements": [
+          ".anysphere-markdown-container-root",
+          ".anysphere-markdown-container-root",
+          ".anysphere-markdown-container-root",
+          ".anysphere-markdown-container-root",
+          ".anysphere-markdown-container-root",
+          ".anysphere-markdown-container-root",
+          ".anysphere-markdown-container-root",
+          ".anysphere-markdown-container-root",
+          ".anysphere-markdown-container-root",
+          ".anysphere-markdown-container-root",
+          ".anysphere-markdown-container-root"
+        ]
+      },
+      {
+        "source": "editor-dom-source.md",
+        "count": 1,
+        "elements": [
+          ".anysphere-markdown-container-root"
+        ]
+      }
+    ],
+    "chatTabs": [
+      {
+        "source": "chat-dom-source.md",
+        "count": 1,
+        "elements": [
+          "[aria-label*=\"Frustration\"]"
+        ]
+      },
+      {
+        "source": "terminal-dom-source.md",
+        "count": 5,
+        "elements": [
+          ".composite-bar-action-tab",
+          ".composite-bar-action-tab",
+          "[aria-label*=\"Debug\"]",
+          ".checked",
+          ".composite-bar-action-tab"
+        ]
+      }
+    ],
+    "settings": [
+      {
+        "source": "chat-dom-source.md",
+        "count": 3,
+        "elements": [
+          "[aria-label*=\"Settings\"]",
+          "[aria-label*=\"Settings\"]",
+          "[aria-label*=\"Close,\"]"
+        ]
+      },
+      {
+        "source": "editor-dom-source.md",
+        "count": 2,
+        "elements": [
+          "[aria-label*=\"Cursor\"]",
+          "[aria-label*=\"Cursor\"]"
+        ]
+      },
+      {
+        "source": "sidebar-dom-source.md",
+        "count": 1,
+        "elements": [
+          "[aria-label*=\"Settings\"]"
+        ]
+      },
+      {
+        "source": "terminal-dom-source.md",
+        "count": 3,
+        "elements": [
+          "[aria-label*=\"Settings\"]",
+          "[aria-label*=\"Settings\"]",
+          "[aria-label*=\"Close,\"]"
+        ]
+      }
+    ],
+    "moreActions": [
+      {
+        "source": "chat-dom-source.md",
+        "count": 12,
+        "elements": [
+          "[aria-label*=\"Close,\"]",
+          "[aria-label*=\"More\"]",
+          ".!text-[10px]",
+          ".!text-[10px]",
+          ".!text-[14px]",
+          ".!text-[14px]",
+          ".!text-[10px]",
+          ".!text-[10px]",
+          ".!text-[10px]",
+          ".!text-[10px]",
+          ".!text-[10px]",
+          ".!text-[14px]"
+        ]
+      },
+      {
+        "source": "editor-dom-source.md",
+        "count": 1,
+        "elements": [
+          "[aria-label*=\"More\"]"
+        ]
+      },
+      {
+        "source": "terminal-dom-source.md",
+        "count": 2,
+        "elements": [
+          "[aria-label*=\"Close,\"]",
+          "[aria-label*=\"More\"]"
+        ]
+      }
+    ],
+    "backgroundAgents": [
+      {
+        "source": "chat-dom-source.md",
+        "count": 2,
+        "elements": [
+          "[aria-label*=\"Show\"]",
+          "[aria-label*=\"Show\"]"
+        ]
+      }
+    ]
+  },
+  "allElements": [
+    {
+      "source": "chat-dom-source.md",
+      "tagName": "DIV",
+      "selectors": [
+        ".split-view-view.visible",
+        ".split-view-view",
+        ".visible",
+        "div.split-view-view"
+      ],
+      "attributes": {
+        "class": "split-view-view visible",
+        "style": "left: 1410px; width: 259px;"
+      }
+    },
+    {
+      "source": "chat-dom-source.md",
+      "tagName": "DIV",
+      "selectors": [
+        "#workbench.parts.auxiliarybar",
+        ".part.auxiliarybar.basepanel.right.pane-composite-part",
+        ".part",
+        ".auxiliarybar",
+        ".basepanel",
+        ".right",
+        ".pane-composite-part",
+        "[role=\"none\"]",
+        "div.part"
+      ],
+      "attributes": {
+        "class": "part auxiliarybar basepanel right pane-composite-part",
+        "id": "workbench.parts.auxiliarybar",
+        "role": "none",
+        "style": "background-color: rgb(20, 20, 20); color: rgba(204, 204, 204, 0.6); border-left: 1px solid rgba(255, 255, 255, 0.05); border-right: 0px none rgba(255, 255, 255, 0.05);"
+      }
+    },
+    {
+      "source": "chat-dom-source.md",
+      "tagName": "DIV",
+      "selectors": [
+        ".composite.title.has-composite-bar",
+        ".composite",
+        ".title",
+        ".has-composite-bar",
+        "div.composite"
+      ],
+      "attributes": {
+        "class": "composite title has-composite-bar"
+      }
+    },
+    {
+      "source": "chat-dom-source.md",
+      "tagName": "DIV",
+      "selectors": [
+        ".composite-bar-container",
+        ".composite-bar-container",
+        "div.composite-bar-container"
+      ],
+      "attributes": {
+        "class": "composite-bar-container"
+      }
+    },
+    {
+      "source": "chat-dom-source.md",
+      "tagName": "DIV",
+      "selectors": [
+        ".composite-bar",
+        ".composite-bar",
+        "div.composite-bar"
+      ],
+      "attributes": {
+        "class": "composite-bar"
+      }
+    },
+    {
+      "source": "chat-dom-source.md",
+      "tagName": "DIV",
+      "selectors": [
+        ".monaco-action-bar",
+        ".monaco-action-bar",
+        "div.monaco-action-bar"
+      ],
+      "attributes": {
+        "class": "monaco-action-bar"
+      }
+    },
+    {
+      "source": "chat-dom-source.md",
+      "tagName": "UL",
+      "selectors": [
+        ".actions-container",
+        ".actions-container",
+        "[role=\"tablist\"]",
+        "[aria-label=\"Active View Switcher\"]",
+        "[aria-label*=\"Active\"]",
+        "ul.actions-container"
+      ],
+      "attributes": {
+        "class": "actions-container",
+        "role": "tablist",
+        "aria-label": "Active View Switcher"
+      }
+    },
+    {
+      "source": "chat-dom-source.md",
+      "tagName": "LI",
+      "selectors": [
+        ".action-item.composite-bar-action-tab.checked.is-truncated",
+        ".action-item",
+        ".composite-bar-action-tab",
+        ".checked",
+        ".is-truncated",
+        "[role=\"tab\"]",
+        "[aria-label=\"Frustration with bot failures\"]",
+        "[aria-label*=\"Frustration\"]",
+        "li.action-item"
+      ],
+      "attributes": {
+        "class": "action-item composite-bar-action-tab checked is-truncated",
+        "role": "tab",
+        "draggable": "true",
+        "aria-label": "Frustration with bot failures",
+        "aria-expanded": "true",
+        "aria-selected": "true",
+        "tabindex": "0",
+        "style": "--insert-border-color: #ffffff;"
+      }
+    },
+    {
+      "source": "chat-dom-source.md",
+      "tagName": "DIV",
+      "selectors": [
+        ".status-indicator",
+        ".status-indicator",
+        "div.status-indicator"
+      ],
+      "attributes": {
+        "class": "status-indicator"
+      }
+    },
+    {
+      "source": "chat-dom-source.md",
+      "tagName": "A",
+      "selectors": [
+        ".action-label",
+        ".action-label",
+        "[aria-label=\"Frustration with bot failures\"]",
+        "[aria-label*=\"Frustration\"]",
+        "a.action-label"
+      ],
+      "attributes": {
+        "class": "action-label",
+        "aria-label": "Frustration with bot failures",
+        "style": "color: rgb(255, 255, 255); border-bottom-color: rgba(255, 255, 255, 0);"
+      }
+    },
+    {
+      "source": "chat-dom-source.md",
+      "tagName": "DIV",
+      "selectors": [
+        ".badge",
+        ".badge",
+        "[aria-label=\"Frustration with bot failures\"]",
+        "[aria-label*=\"Frustration\"]",
+        "div.badge"
+      ],
+      "attributes": {
+        "class": "badge",
+        "aria-hidden": "true",
+        "aria-label": "Frustration with bot failures",
+        "style": "display: none;"
+      }
+    },
+    {
+      "source": "chat-dom-source.md",
+      "tagName": "DIV",
+      "selectors": [
+        ".badge-content",
+        ".badge-content",
+        "div.badge-content"
+      ],
+      "attributes": {
+        "class": "badge-content",
+        "style": "color: rgb(0, 0, 0); background-color: rgb(136, 192, 208);"
+      }
+    },
+    {
+      "source": "chat-dom-source.md",
+      "tagName": "DIV",
+      "selectors": [
+        ".codicon.codicon-close.remove-button",
+        ".codicon",
+        ".codicon-close",
+        ".remove-button",
+        "div.codicon"
+      ],
+      "attributes": {
+        "class": "codicon codicon-close remove-button",
+        "style": "position: absolute; right: 0px; top: 50%; transform: translateY(-50%); cursor: pointer; z-index: 2; opacity: 0; pointer-events: none;"
+      }
+    },
+    {
+      "source": "chat-dom-source.md",
+      "tagName": "DIV",
+      "selectors": [
+        ".active-item-indicator",
+        ".active-item-indicator",
+        "div.active-item-indicator"
+      ],
+      "attributes": {
+        "class": "active-item-indicator"
+      }
+    },
+    {
+      "source": "chat-dom-source.md",
+      "tagName": "DIV",
+      "selectors": [
+        ".title-label",
+        ".title-label",
+        "div.title-label"
+      ],
+      "attributes": {
+        "class": "title-label"
+      }
+    },
+    {
+      "source": "chat-dom-source.md",
+      "tagName": "DIV",
+      "selectors": [
+        ".title-actions",
+        ".title-actions",
+        "div.title-actions"
+      ],
+      "attributes": {
+        "class": "title-actions"
+      }
+    },
+    {
+      "source": "chat-dom-source.md",
+      "tagName": "DIV",
+      "selectors": [
+        ".monaco-toolbar",
+        ".monaco-toolbar",
+        "div.monaco-toolbar"
+      ],
+      "attributes": {
+        "class": "monaco-toolbar"
+      }
+    },
+    {
+      "source": "chat-dom-source.md",
+      "tagName": "DIV",
+      "selectors": [
+        ".monaco-action-bar",
+        ".monaco-action-bar",
+        "div.monaco-action-bar"
+      ],
+      "attributes": {
+        "class": "monaco-action-bar"
+      }
+    },
+    {
+      "source": "chat-dom-source.md",
+      "tagName": "UL",
+      "selectors": [
+        ".actions-container",
+        ".actions-container",
+        "[role=\"toolbar\"]",
+        "[aria-label=\"Chat actions\"]",
+        "[aria-label*=\"Chat\"]",
+        "ul.actions-container"
+      ],
+      "attributes": {
+        "class": "actions-container",
+        "role": "toolbar",
+        "aria-label": "Chat actions"
+      }
+    },
+    {
+      "source": "chat-dom-source.md",
+      "tagName": "LI",
+      "selectors": [
+        ".action-item.menu-entry",
+        ".action-item",
+        ".menu-entry",
+        "[role=\"presentation\"]",
+        "li.action-item"
+      ],
+      "attributes": {
+        "class": "action-item menu-entry",
+        "role": "presentation",
+        "custom-hover": "true"
+      }
+    },
+    {
+      "source": "chat-dom-source.md",
+      "tagName": "A",
+      "selectors": [
+        ".action-label.codicon.codicon-settings-gear",
+        ".action-label",
+        ".codicon",
+        ".codicon-settings-gear",
+        "[role=\"button\"]",
+        "[aria-label=\"Settings\"]",
+        "[aria-label*=\"Settings\"]",
+        "a.action-label"
+      ],
+      "attributes": {
+        "class": "action-label codicon codicon-settings-gear",
+        "role": "button",
+        "aria-label": "Settings",
+        "tabindex": "0"
+      }
+    },
+    {
+      "source": "chat-dom-source.md",
+      "tagName": "DIV",
+      "selectors": [
+        ".badge",
+        ".badge",
+        "div.badge"
+      ],
+      "attributes": {
+        "class": "badge",
+        "aria-hidden": "true",
+        "style": "display: none;"
+      }
+    },
+    {
+      "source": "chat-dom-source.md",
+      "tagName": "DIV",
+      "selectors": [
+        ".badge-content",
+        ".badge-content",
+        "div.badge-content"
+      ],
+      "attributes": {
+        "class": "badge-content"
+      }
+    },
+    {
+      "source": "chat-dom-source.md",
+      "tagName": "LI",
+      "selectors": [
+        ".action-item.menu-entry",
+        ".action-item",
+        ".menu-entry",
+        "[role=\"presentation\"]",
+        "li.action-item"
+      ],
+      "attributes": {
+        "class": "action-item menu-entry",
+        "role": "presentation",
+        "custom-hover": "true"
+      }
+    },
+    {
+      "source": "chat-dom-source.md",
+      "tagName": "A",
+      "selectors": [
+        ".action-label.codicon.codicon-add-two",
+        ".action-label",
+        ".codicon",
+        ".codicon-add-two",
+        "[role=\"button\"]",
+        "[aria-label=\"New Chat (Ctrl+N)\n[Alt] New Tab (Ctrl+T)\"]",
+        "[aria-label*=\"New\"]",
+        "a.action-label"
+      ],
+      "attributes": {
+        "class": "action-label codicon codicon-add-two",
+        "role": "button",
+        "aria-label": "New Chat (Ctrl+N)\n[Alt] New Tab (Ctrl+T)"
+      }
+    },
+    {
+      "source": "chat-dom-source.md",
+      "tagName": "DIV",
+      "selectors": [
+        ".badge",
+        ".badge",
+        "div.badge"
+      ],
+      "attributes": {
+        "class": "badge",
+        "aria-hidden": "true",
+        "style": "display: none;"
+      }
+    },
+    {
+      "source": "chat-dom-source.md",
+      "tagName": "DIV",
+      "selectors": [
+        ".badge-content",
+        ".badge-content",
+        "div.badge-content"
+      ],
+      "attributes": {
+        "class": "badge-content"
+      }
+    },
+    {
+      "source": "chat-dom-source.md",
+      "tagName": "LI",
+      "selectors": [
+        ".action-item.menu-entry",
+        ".action-item",
+        ".menu-entry",
+        "[role=\"presentation\"]",
+        "li.action-item"
+      ],
+      "attributes": {
+        "class": "action-item menu-entry",
+        "role": "presentation",
+        "custom-hover": "true"
+      }
+    },
+    {
+      "source": "chat-dom-source.md",
+      "tagName": "A",
+      "selectors": [
+        ".action-label.codicon.codicon-cloud-two",
+        ".action-label",
+        ".codicon",
+        ".codicon-cloud-two",
+        "[role=\"button\"]",
+        "[aria-label=\"Show Background Agents (Ctrl+E)\"]",
+        "[aria-label*=\"Show\"]",
+        "a.action-label"
+      ],
+      "attributes": {
+        "class": "action-label codicon codicon-cloud-two",
+        "role": "button",
+        "aria-label": "Show Background Agents (Ctrl+E)"
+      }
+    },
+    {
+      "source": "chat-dom-source.md",
+      "tagName": "DIV",
+      "selectors": [
+        ".badge",
+        ".badge",
+        "div.badge"
+      ],
+      "attributes": {
+        "class": "badge",
+        "aria-hidden": "true",
+        "style": "display: none;"
+      }
+    },
+    {
+      "source": "chat-dom-source.md",
+      "tagName": "DIV",
+      "selectors": [
+        ".badge-content",
+        ".badge-content",
+        "div.badge-content"
+      ],
+      "attributes": {
+        "class": "badge-content"
+      }
+    },
+    {
+      "source": "chat-dom-source.md",
+      "tagName": "LI",
+      "selectors": [
+        ".action-item.menu-entry",
+        ".action-item",
+        ".menu-entry",
+        "[role=\"presentation\"]",
+        "li.action-item"
+      ],
+      "attributes": {
+        "class": "action-item menu-entry",
+        "role": "presentation",
+        "custom-hover": "true"
+      }
+    },
+    {
+      "source": "chat-dom-source.md",
+      "tagName": "A",
+      "selectors": [
+        ".action-label.codicon.codicon-history-two",
+        ".action-label",
+        ".codicon",
+        ".codicon-history-two",
+        "[role=\"button\"]",
+        "[aria-label=\"Show Chat History (Ctrl+Alt+')\"]",
+        "[aria-label*=\"Show\"]",
+        "a.action-label"
+      ],
+      "attributes": {
+        "class": "action-label codicon codicon-history-two",
+        "role": "button",
+        "aria-label": "Show Chat History (Ctrl+Alt+')"
+      }
+    },
+    {
+      "source": "chat-dom-source.md",
+      "tagName": "DIV",
+      "selectors": [
+        ".badge",
+        ".badge",
+        "div.badge"
+      ],
+      "attributes": {
+        "class": "badge",
+        "aria-hidden": "true",
+        "style": "display: none;"
+      }
+    },
+    {
+      "source": "chat-dom-source.md",
+      "tagName": "DIV",
+      "selectors": [
+        ".badge-content",
+        ".badge-content",
+        "div.badge-content"
+      ],
+      "attributes": {
+        "class": "badge-content"
+      }
+    },
+    {
+      "source": "chat-dom-source.md",
+      "tagName": "LI",
+      "selectors": [
+        ".action-item",
+        ".action-item",
+        "[role=\"presentation\"]",
+        "li.action-item"
+      ],
+      "attributes": {
+        "class": "action-item",
+        "role": "presentation"
+      }
+    },
+    {
+      "source": "chat-dom-source.md",
+      "tagName": "DIV",
+      "selectors": [
+        ".monaco-dropdown",
+        ".monaco-dropdown",
+        "div.monaco-dropdown"
+      ],
+      "attributes": {
+        "class": "monaco-dropdown"
+      }
+    },
+    {
+      "source": "chat-dom-source.md",
+      "tagName": "DIV",
+      "selectors": [
+        ".dropdown-label",
+        ".dropdown-label",
+        "div.dropdown-label"
+      ],
+      "attributes": {
+        "class": "dropdown-label"
+      }
+    },
+    {
+      "source": "chat-dom-source.md",
+      "tagName": "A",
+      "selectors": [
+        ".action-label.codicon.codicon-ellipsis-two",
+        ".action-label",
+        ".codicon",
+        ".codicon-ellipsis-two",
+        "[role=\"button\"]",
+        "[aria-label=\"Close, Export, Settings and More...\"]",
+        "[aria-label*=\"Close,\"]",
+        "a.action-label"
+      ],
+      "attributes": {
+        "class": "action-label codicon codicon-ellipsis-two",
+        "role": "button",
+        "aria-haspopup": "true",
+        "aria-expanded": "false",
+        "custom-hover": "true",
+        "aria-label": "Close, Export, Settings and More..."
+      }
+    },
+    {
+      "source": "chat-dom-source.md",
+      "tagName": "DIV",
+      "selectors": [
+        ".global-actions",
+        ".global-actions",
+        "div.global-actions"
+      ],
+      "attributes": {
+        "class": "global-actions"
+      }
+    },
+    {
+      "source": "chat-dom-source.md",
+      "tagName": "DIV",
+      "selectors": [
+        ".monaco-toolbar",
+        ".monaco-toolbar",
+        "div.monaco-toolbar"
+      ],
+      "attributes": {
+        "class": "monaco-toolbar"
+      }
+    },
+    {
+      "source": "chat-dom-source.md",
+      "tagName": "DIV",
+      "selectors": [
+        ".monaco-action-bar",
+        ".monaco-action-bar",
+        "div.monaco-action-bar"
+      ],
+      "attributes": {
+        "class": "monaco-action-bar"
+      }
+    },
+    {
+      "source": "chat-dom-source.md",
+      "tagName": "UL",
+      "selectors": [
+        ".actions-container",
+        ".actions-container",
+        "[role=\"toolbar\"]",
+        "ul.actions-container"
+      ],
+      "attributes": {
+        "class": "actions-container",
+        "role": "toolbar"
+      }
+    },
+    {
+      "source": "chat-dom-source.md",
+      "tagName": "LI",
+      "selectors": [
+        ".action-item.menu-entry",
+        ".action-item",
+        ".menu-entry",
+        "[role=\"presentation\"]",
+        "li.action-item"
+      ],
+      "attributes": {
+        "class": "action-item menu-entry",
+        "role": "presentation",
+        "custom-hover": "true"
+      }
+    },
+    {
+      "source": "chat-dom-source.md",
+      "tagName": "A",
+      "selectors": [
+        ".action-label.codicon.codicon-panel-close",
+        ".action-label",
+        ".codicon",
+        ".codicon-panel-close",
+        "[role=\"button\"]",
+        "[aria-label=\"Close AI Sidebar\"]",
+        "[aria-label*=\"Close\"]",
+        "a.action-label"
+      ],
+      "attributes": {
+        "class": "action-label codicon codicon-panel-close",
+        "role": "button",
+        "aria-label": "Close AI Sidebar",
+        "tabindex": "0"
+      }
+    },
+    {
+      "source": "chat-dom-source.md",
+      "tagName": "DIV",
+      "selectors": [
+        ".badge",
+        ".badge",
+        "div.badge"
+      ],
+      "attributes": {
+        "class": "badge",
+        "aria-hidden": "true",
+        "style": "display: none;"
+      }
+    },
+    {
+      "source": "chat-dom-source.md",
+      "tagName": "DIV",
+      "selectors": [
+        ".badge-content",
+        ".badge-content",
+        "div.badge-content"
+      ],
+      "attributes": {
+        "class": "badge-content"
+      }
+    },
+    {
+      "source": "chat-dom-source.md",
+      "tagName": "DIV",
+      "selectors": [
+        ".content",
+        ".content",
+        "div.content"
+      ],
+      "attributes": {
+        "class": "content",
+        "style": "width: 258px; height: 944px;"
+      }
+    },
+    {
+      "source": "chat-dom-source.md",
+      "tagName": "DIV",
+      "selectors": [
+        ".monaco-progress-container.done",
+        ".monaco-progress-container",
+        ".done",
+        "[role=\"progressbar\"]",
+        "div.monaco-progress-container"
+      ],
+      "attributes": {
+        "class": "monaco-progress-container done",
+        "role": "progressbar",
+        "aria-valuemin": "0",
+        "style": "display: none;",
+        "aria-hidden": "true"
+      }
+    },
+    {
+      "source": "chat-dom-source.md",
+      "tagName": "DIV",
+      "selectors": [
+        ".progress-bit",
+        ".progress-bit",
+        "div.progress-bit"
+      ],
+      "attributes": {
+        "class": "progress-bit",
+        "style": "background-color: var(--vscode-progressBar-background); width: inherit; opacity: 1;"
+      }
+    },
+    {
+      "source": "chat-dom-source.md",
+      "tagName": "DIV",
+      "selectors": [
+        ".empty-pane-message-area",
+        ".empty-pane-message-area",
+        "div.empty-pane-message-area"
+      ],
+      "attributes": {
+        "class": "empty-pane-message-area"
+      }
+    },
+    {
+      "source": "chat-dom-source.md",
+      "tagName": "DIV",
+      "selectors": [
+        ".empty-pane-message.clickable",
+        ".empty-pane-message",
+        ".clickable",
+        "div.empty-pane-message"
+      ],
+      "attributes": {
+        "class": "empty-pane-message clickable",
+        "style": "cursor: pointer; color: var(--vscode-button-foreground); background-color: var(--vscode-button-background); padding: 8px 12px; border-radius: 4px; font-weight: 500; transition: background-color 0.2s;"
+      }
+    },
+    {
+      "source": "chat-dom-source.md",
+      "tagName": "DIV",
+      "selectors": [
+        "#workbench.panel.aichat.2c39c077-a5b0-416f-aa9a-c752388d05d4",
+        ".composite.auxiliarybar",
+        ".composite",
+        ".auxiliarybar",
+        "div.composite"
+      ],
+      "attributes": {
+        "class": "composite auxiliarybar",
+        "id": "workbench.panel.aichat.2c39c077-a5b0-416f-aa9a-c752388d05d4"
+      }
+    },
+    {
+      "source": "chat-dom-source.md",
+      "tagName": "DIV",
+      "selectors": [
+        ".monaco-pane-view",
+        ".monaco-pane-view",
+        "[data-keybinding-context=\"9\"]",
+        "div.monaco-pane-view"
+      ],
+      "attributes": {
+        "class": "monaco-pane-view",
+        "data-keybinding-context": "9"
+      }
+    },
+    {
+      "source": "chat-dom-source.md",
+      "tagName": "DIV",
+      "selectors": [
+        ".monaco-split-view2.vertical",
+        ".monaco-split-view2",
+        ".vertical",
+        "div.monaco-split-view2"
+      ],
+      "attributes": {
+        "class": "monaco-split-view2 vertical"
+      }
+    },
+    {
+      "source": "chat-dom-source.md",
+      "tagName": "DIV",
+      "selectors": [
+        ".sash-container",
+        ".sash-container",
+        "div.sash-container"
+      ],
+      "attributes": {
+        "class": "sash-container"
+      }
+    },
+    {
+      "source": "chat-dom-source.md",
+      "tagName": "DIV",
+      "selectors": [
+        ".monaco-scrollable-element",
+        ".monaco-scrollable-element",
+        "[role=\"presentation\"]",
+        "div.monaco-scrollable-element"
+      ],
+      "attributes": {
+        "class": "monaco-scrollable-element ",
+        "role": "presentation",
+        "style": "position: relative; overflow: hidden;"
+      }
+    },
+    {
+      "source": "chat-dom-source.md",
+      "tagName": "DIV",
+      "selectors": [
+        ".split-view-container",
+        ".split-view-container",
+        "div.split-view-container"
+      ],
+      "attributes": {
+        "class": "split-view-container",
+        "style": "overflow: hidden;"
+      }
+    },
+    {
+      "source": "chat-dom-source.md",
+      "tagName": "DIV",
+      "selectors": [
+        ".split-view-view.visible",
+        ".split-view-view",
+        ".visible",
+        "div.split-view-view"
+      ],
+      "attributes": {
+        "class": "split-view-view visible",
+        "style": "top: 0px; height: 944px;"
+      }
+    },
+    {
+      "source": "chat-dom-source.md",
+      "tagName": "DIV",
+      "selectors": [
+        ".pane.expanded.vertical.merged-header",
+        ".pane",
+        ".expanded",
+        ".vertical",
+        ".merged-header",
+        "[data-keybinding-context=\"456\"]",
+        "div.pane"
+      ],
+      "attributes": {
+        "class": "pane expanded vertical merged-header",
+        "data-keybinding-context": "456"
+      }
+    },
+    {
+      "source": "chat-dom-source.md",
+      "tagName": "DIV",
+      "selectors": [
+        ".pane-header.expanded.hidden",
+        ".pane-header",
+        ".expanded",
+        ".hidden",
+        "[role=\"button\"]",
+        "[aria-label=\"Chat Section\"]",
+        "[aria-label*=\"Chat\"]",
+        "div.pane-header"
+      ],
+      "attributes": {
+        "class": "pane-header expanded hidden",
+        "tabindex": "0",
+        "role": "button",
+        "aria-label": "Chat Section",
+        "aria-expanded": "true",
+        "draggable": "true",
+        "style": "line-height: 0px; color: var(--vscode-sideBarSectionHeader-foreground); background-color: var(--vscode-sideBarSectionHeader-background); border-top: 1px solid var(--vscode-sideBarSectionHeader-border);"
+      }
+    },
+    {
+      "source": "chat-dom-source.md",
+      "tagName": "DIV",
+      "selectors": [
+        ".twisties-container-in-view-pane-header.twisty-container.codicon-view-pane-container-expanded.codicon",
+        ".twisties-container-in-view-pane-header",
+        ".twisty-container",
+        ".codicon-view-pane-container-expanded",
+        ".codicon",
+        "div.twisties-container-in-view-pane-header"
+      ],
+      "attributes": {
+        "class": "twisties-container-in-view-pane-header twisty-container codicon-view-pane-container-expanded codicon"
+      }
+    },
+    {
+      "source": "chat-dom-source.md",
+      "tagName": "DIV",
+      "selectors": [
+        ".icon.codicon.codicon-files",
+        ".icon",
+        ".codicon",
+        ".codicon-files",
+        "[aria-label=\"Chat\"]",
+        "[aria-label*=\"Chat\"]",
+        "div.icon"
+      ],
+      "attributes": {
+        "class": "icon codicon codicon-files",
+        "custom-hover": "true",
+        "aria-label": "Chat",
+        "style": "color: var(--vscode-sideBarSectionHeader-foreground, var(--vscode-foreground));"
+      }
+    },
+    {
+      "source": "chat-dom-source.md",
+      "tagName": "H3",
+      "selectors": [
+        ".title",
+        ".title",
+        "h3.title"
+      ],
+      "attributes": {
+        "class": "title",
+        "custom-hover": "true"
+      }
+    },
+    {
+      "source": "chat-dom-source.md",
+      "tagName": "DIV",
+      "selectors": [
+        ".actions",
+        ".actions",
+        "div.actions"
+      ],
+      "attributes": {
+        "class": "actions"
+      }
+    },
+    {
+      "source": "chat-dom-source.md",
+      "tagName": "DIV",
+      "selectors": [
+        ".monaco-toolbar",
+        ".monaco-toolbar",
+        "div.monaco-toolbar"
+      ],
+      "attributes": {
+        "class": "monaco-toolbar"
+      }
+    },
+    {
+      "source": "chat-dom-source.md",
+      "tagName": "DIV",
+      "selectors": [
+        ".monaco-action-bar",
+        ".monaco-action-bar",
+        "div.monaco-action-bar"
+      ],
+      "attributes": {
+        "class": "monaco-action-bar"
+      }
+    },
+    {
+      "source": "chat-dom-source.md",
+      "tagName": "UL",
+      "selectors": [
+        ".actions-container",
+        ".actions-container",
+        "[role=\"toolbar\"]",
+        "[aria-label=\"Chat actions\"]",
+        "[aria-label*=\"Chat\"]",
+        "ul.actions-container"
+      ],
+      "attributes": {
+        "class": "actions-container",
+        "role": "toolbar",
+        "aria-label": "Chat actions"
+      }
+    },
+    {
+      "source": "chat-dom-source.md",
+      "tagName": "LI",
+      "selectors": [
+        ".action-item.menu-entry",
+        ".action-item",
+        ".menu-entry",
+        "[role=\"presentation\"]",
+        "li.action-item"
+      ],
+      "attributes": {
+        "class": "action-item menu-entry",
+        "role": "presentation",
+        "custom-hover": "true"
+      }
+    },
+    {
+      "source": "chat-dom-source.md",
+      "tagName": "A",
+      "selectors": [
+        ".action-label.codicon.codicon-settings-gear",
+        ".action-label",
+        ".codicon",
+        ".codicon-settings-gear",
+        "[role=\"button\"]",
+        "[aria-label=\"Settings\"]",
+        "[aria-label*=\"Settings\"]",
+        "a.action-label"
+      ],
+      "attributes": {
+        "class": "action-label codicon codicon-settings-gear",
+        "role": "button",
+        "aria-label": "Settings",
+        "tabindex": "0"
+      }
+    },
+    {
+      "source": "chat-dom-source.md",
+      "tagName": "DIV",
+      "selectors": [
+        ".badge",
+        ".badge",
+        "div.badge"
+      ],
+      "attributes": {
+        "class": "badge",
+        "aria-hidden": "true",
+        "style": "display: none;"
+      }
+    },
+    {
+      "source": "chat-dom-source.md",
+      "tagName": "DIV",
+      "selectors": [
+        ".badge-content",
+        ".badge-content",
+        "div.badge-content"
+      ],
+      "attributes": {
+        "class": "badge-content"
+      }
+    },
+    {
+      "source": "chat-dom-source.md",
+      "tagName": "LI",
+      "selectors": [
+        ".action-item.menu-entry",
+        ".action-item",
+        ".menu-entry",
+        "[role=\"presentation\"]",
+        "li.action-item"
+      ],
+      "attributes": {
+        "class": "action-item menu-entry",
+        "role": "presentation",
+        "custom-hover": "true"
+      }
+    },
+    {
+      "source": "chat-dom-source.md",
+      "tagName": "A",
+      "selectors": [
+        ".action-label.codicon.codicon-add-two",
+        ".action-label",
+        ".codicon",
+        ".codicon-add-two",
+        "[role=\"button\"]",
+        "[aria-label=\"New Chat (Ctrl+N)\n[Alt] New Tab (Ctrl+T)\"]",
+        "[aria-label*=\"New\"]",
+        "a.action-label"
+      ],
+      "attributes": {
+        "class": "action-label codicon codicon-add-two",
+        "role": "button",
+        "aria-label": "New Chat (Ctrl+N)\n[Alt] New Tab (Ctrl+T)"
+      }
+    },
+    {
+      "source": "chat-dom-source.md",
+      "tagName": "DIV",
+      "selectors": [
+        ".badge",
+        ".badge",
+        "div.badge"
+      ],
+      "attributes": {
+        "class": "badge",
+        "aria-hidden": "true",
+        "style": "display: none;"
+      }
+    },
+    {
+      "source": "chat-dom-source.md",
+      "tagName": "DIV",
+      "selectors": [
+        ".badge-content",
+        ".badge-content",
+        "div.badge-content"
+      ],
+      "attributes": {
+        "class": "badge-content"
+      }
+    },
+    {
+      "source": "chat-dom-source.md",
+      "tagName": "LI",
+      "selectors": [
+        ".action-item.menu-entry",
+        ".action-item",
+        ".menu-entry",
+        "[role=\"presentation\"]",
+        "li.action-item"
+      ],
+      "attributes": {
+        "class": "action-item menu-entry",
+        "role": "presentation",
+        "custom-hover": "true"
+      }
+    },
+    {
+      "source": "chat-dom-source.md",
+      "tagName": "A",
+      "selectors": [
+        ".action-label.codicon.codicon-cloud-two",
+        ".action-label",
+        ".codicon",
+        ".codicon-cloud-two",
+        "[role=\"button\"]",
+        "[aria-label=\"Show Background Agents (Ctrl+E)\"]",
+        "[aria-label*=\"Show\"]",
+        "a.action-label"
+      ],
+      "attributes": {
+        "class": "action-label codicon codicon-cloud-two",
+        "role": "button",
+        "aria-label": "Show Background Agents (Ctrl+E)"
+      }
+    },
+    {
+      "source": "chat-dom-source.md",
+      "tagName": "DIV",
+      "selectors": [
+        ".badge",
+        ".badge",
+        "div.badge"
+      ],
+      "attributes": {
+        "class": "badge",
+        "aria-hidden": "true",
+        "style": "display: none;"
+      }
+    },
+    {
+      "source": "chat-dom-source.md",
+      "tagName": "DIV",
+      "selectors": [
+        ".badge-content",
+        ".badge-content",
+        "div.badge-content"
+      ],
+      "attributes": {
+        "class": "badge-content"
+      }
+    },
+    {
+      "source": "chat-dom-source.md",
+      "tagName": "LI",
+      "selectors": [
+        ".action-item.menu-entry",
+        ".action-item",
+        ".menu-entry",
+        "[role=\"presentation\"]",
+        "li.action-item"
+      ],
+      "attributes": {
+        "class": "action-item menu-entry",
+        "role": "presentation",
+        "custom-hover": "true"
+      }
+    },
+    {
+      "source": "chat-dom-source.md",
+      "tagName": "A",
+      "selectors": [
+        ".action-label.codicon.codicon-history-two",
+        ".action-label",
+        ".codicon",
+        ".codicon-history-two",
+        "[role=\"button\"]",
+        "[aria-label=\"Show Chat History (Ctrl+Alt+')\"]",
+        "[aria-label*=\"Show\"]",
+        "a.action-label"
+      ],
+      "attributes": {
+        "class": "action-label codicon codicon-history-two",
+        "role": "button",
+        "aria-label": "Show Chat History (Ctrl+Alt+')"
+      }
+    },
+    {
+      "source": "chat-dom-source.md",
+      "tagName": "DIV",
+      "selectors": [
+        ".badge",
+        ".badge",
+        "div.badge"
+      ],
+      "attributes": {
+        "class": "badge",
+        "aria-hidden": "true",
+        "style": "display: none;"
+      }
+    },
+    {
+      "source": "chat-dom-source.md",
+      "tagName": "DIV",
+      "selectors": [
+        ".badge-content",
+        ".badge-content",
+        "div.badge-content"
+      ],
+      "attributes": {
+        "class": "badge-content"
+      }
+    },
+    {
+      "source": "chat-dom-source.md",
+      "tagName": "LI",
+      "selectors": [
+        ".action-item",
+        ".action-item",
+        "[role=\"presentation\"]",
+        "li.action-item"
+      ],
+      "attributes": {
+        "class": "action-item",
+        "role": "presentation"
+      }
+    },
+    {
+      "source": "chat-dom-source.md",
+      "tagName": "DIV",
+      "selectors": [
+        ".monaco-dropdown",
+        ".monaco-dropdown",
+        "div.monaco-dropdown"
+      ],
+      "attributes": {
+        "class": "monaco-dropdown"
+      }
+    },
+    {
+      "source": "chat-dom-source.md",
+      "tagName": "DIV",
+      "selectors": [
+        ".dropdown-label",
+        ".dropdown-label",
+        "div.dropdown-label"
+      ],
+      "attributes": {
+        "class": "dropdown-label"
+      }
+    },
+    {
+      "source": "chat-dom-source.md",
+      "tagName": "A",
+      "selectors": [
+        ".action-label.codicon.codicon-ellipsis-two",
+        ".action-label",
+        ".codicon",
+        ".codicon-ellipsis-two",
+        "[role=\"button\"]",
+        "[aria-label=\"More Actions...\"]",
+        "[aria-label*=\"More\"]",
+        "a.action-label"
+      ],
+      "attributes": {
+        "class": "action-label codicon codicon-ellipsis-two",
+        "role": "button",
+        "aria-haspopup": "true",
+        "aria-expanded": "false",
+        "custom-hover": "true",
+        "aria-label": "More Actions..."
+      }
+    },
+    {
+      "source": "chat-dom-source.md",
+      "tagName": "DIV",
+      "selectors": [
+        ".pane-body",
+        ".pane-body",
+        "div.pane-body"
+      ],
+      "attributes": {
+        "class": "pane-body"
+      }
+    },
+    {
+      "source": "chat-dom-source.md",
+      "tagName": "DIV",
+      "selectors": [
+        ".composer-bar",
+        ".composer-bar",
+        "div.composer-bar"
+      ],
+      "attributes": {
+        "tabindex": "0",
+        "class": "composer-bar",
+        "style": "box-sizing: border-box; outline: none; display: flex; flex-direction: column; background: rgb(20, 20, 20); width: 100%; height: 100%; overflow: hidden;"
+      }
+    },
+    {
+      "source": "chat-dom-source.md",
+      "tagName": "DIV",
+      "selectors": [
+        ".conversations",
+        ".conversations",
+        "div.conversations"
+      ],
+      "attributes": {
+        "class": "conversations",
+        "style": "display: flex; flex-direction: column; padding-top: 0px; flex: 1 1 0%; min-height: 0px; width: 100%; background: rgb(20, 20, 20);"
+      }
+    },
+    {
+      "source": "chat-dom-source.md",
+      "tagName": "DIV",
+      "selectors": [
+        ".scrollable-div-container.undefined",
+        ".scrollable-div-container",
+        ".undefined",
+        "div.scrollable-div-container"
+      ],
+      "attributes": {
+        "class": "scrollable-div-container undefined   ",
+        "style": "height: 100%;"
+      }
+    },
+    {
+      "source": "chat-dom-source.md",
+      "tagName": "DIV",
+      "selectors": [
+        ".monaco-scrollable-element",
+        ".monaco-scrollable-element",
+        "[role=\"presentation\"]",
+        "div.monaco-scrollable-element"
+      ],
+      "attributes": {
+        "class": "monaco-scrollable-element ",
+        "role": "presentation",
+        "style": "position: relative; overflow-y: hidden; width: 100%; height: unset;"
+      }
+    },
+    {
+      "source": "chat-dom-source.md",
+      "tagName": "DIV",
+      "selectors": [
+        ".cursor-button.cursor-button-secondary.cursor-button-secondary-clickable",
+        ".cursor-button",
+        ".cursor-button-secondary",
+        ".cursor-button-secondary-clickable",
+        "div.cursor-button"
+      ],
+      "attributes": {
+        "class": "cursor-button cursor-button-secondary cursor-button-secondary-clickable",
+        "style": "user-select: none; flex-shrink: 0; font-size: 12px; padding: 4px 8px; outline: none;"
+      }
+    },
+    {
+      "source": "chat-dom-source.md",
+      "tagName": "DIV",
+      "selectors": [
+        "#bubble-c8d5d9738ad4",
+        ".hide-if-empty",
+        ".hide-if-empty",
+        "[data-message-index=\"31\"]",
+        "div.hide-if-empty"
+      ],
+      "attributes": {
+        "tabindex": "0",
+        "data-message-index": "31",
+        "class": " hide-if-empty",
+        "id": "bubble-c8d5d9738ad4",
+        "style": "display: block; outline: none; padding: 0.4rem 12px; opacity: 1; position: relative;"
+      }
+    },
+    {
+      "source": "chat-dom-source.md",
+      "tagName": "DIV",
+      "selectors": [
+        ".composer-human-message",
+        ".composer-human-message",
+        "div.composer-human-message"
+      ],
+      "attributes": {
+        "class": "composer-human-message",
+        "style": "cursor: pointer; background-color: var(--vscode-input-background); outline: none;"
+      }
+    },
+    {
+      "source": "chat-dom-source.md",
+      "tagName": "DIV",
+      "selectors": [
+        ".p-2.box-border.w-full.flex.flex-col.gap-1.5",
+        ".p-2",
+        ".box-border",
+        ".w-full",
+        ".flex",
+        ".flex-col",
+        ".gap-1.5",
+        "div.p-2"
+      ],
+      "attributes": {
+        "class": "p-2 box-border w-full flex flex-col gap-1.5"
+      }
+    },
+    {
+      "source": "chat-dom-source.md",
+      "tagName": "DIV",
+      "selectors": [
+        "#pill-3f4af9de-7055-47c0-ae4a-c8d5d9738ad4-0-file-4c5e4ffe-a31d-4f54-b608-86719982062c",
+        "[data-test-context-pill-key=\"multi-ide.md\"]"
+      ],
+      "attributes": {
+        "tabindex": "0",
+        "id": "pill-3f4af9de-7055-47c0-ae4a-c8d5d9738ad4-0-file-4c5e4ffe-a31d-4f54-b608-86719982062c",
+        "data-test-context-pill-key": "multi-ide.md",
+        "style": "display: inline-flex; max-width: 100%; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; flex-shrink: 0; position: relative; outline: none; visibility: visible;"
+      }
+    },
+    {
+      "source": "chat-dom-source.md",
+      "tagName": "DIV",
+      "selectors": [
+        ".context-pill.context-pill-default",
+        ".context-pill",
+        ".context-pill-default",
+        "div.context-pill"
+      ],
+      "attributes": {
+        "class": "context-pill context-pill-default ",
+        "style": "transition: opacity 0.2s; position: relative; cursor: pointer; border-top-color: ; border-style: solid; border-top-width: ; border-right-color: ; border-right-width: ; border-bottom-color: ; border-bottom-width: ; border-left-color: ; border-left-width: ; border-image-source: ; border-image-slice: ; border-image-width: ; border-image-outset: ; border-image-repeat: ; opacity: 1;"
+      }
+    },
+    {
+      "source": "chat-dom-source.md",
+      "tagName": "DIV",
+      "selectors": [
+        ".show-file-icons",
+        ".show-file-icons",
+        "div.show-file-icons"
+      ],
+      "attributes": {
+        "class": "show-file-icons",
+        "style": "height: 18px;"
+      }
+    }
+  ],
+  "rawStats": {
+    "totalElements": 3632,
+    "totalFeatures": 9,
+    "featuresFound": 9,
+    "sources": 9
+  }
+}
