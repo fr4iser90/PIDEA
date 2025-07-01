@@ -1,4 +1,23 @@
+/**
+ * ChatSidebarComponent - Manages the chat session sidebar for the chat mode
+ * 
+ * This component provides a dedicated sidebar for chat functionality including:
+ * - Chat session management (create, select, delete)
+ * - Session list display with metadata
+ * - Quick actions (export, clear)
+ * - Event-driven communication with other components
+ * 
+ * @class ChatSidebarComponent
+ * @example
+ * const chatSidebar = new ChatSidebarComponent('chatSidebarContent', eventBus);
+ */
 class ChatSidebarComponent {
+  /**
+   * Creates a new ChatSidebarComponent instance
+   * 
+   * @param {string} containerId - The DOM element ID where the sidebar will be rendered
+   * @param {EventBus} eventBus - The event bus for component communication
+   */
   constructor(containerId, eventBus) {
     this.container = document.getElementById(containerId);
     this.eventBus = eventBus;
@@ -8,12 +27,20 @@ class ChatSidebarComponent {
     this.init();
   }
 
+  /**
+   * Initializes the component by rendering and setting up event listeners
+   * @private
+   */
   init() {
     this.render();
     this.bindEvents();
     this.setupEventListeners();
   }
 
+  /**
+   * Renders the sidebar HTML structure
+   * @private
+   */
   render() {
     this.container.innerHTML = `
       <div class="chat-sidebar-content">
@@ -36,6 +63,11 @@ class ChatSidebarComponent {
     `;
   }
 
+  /**
+   * Renders the list of chat sessions
+   * @private
+   * @returns {string} HTML string for the chat sessions list
+   */
   renderChatSessions() {
     if (this.chatSessions.length === 0) {
       return '<div class="no-sessions">Keine Chats vorhanden</div>';
@@ -56,6 +88,12 @@ class ChatSidebarComponent {
     `).join('');
   }
 
+  /**
+   * Formats a date into a human-readable relative time string
+   * @private
+   * @param {Date|string} date - The date to format
+   * @returns {string} Formatted date string
+   */
   formatDate(date) {
     if (!date) return '';
     const d = new Date(date);
@@ -68,6 +106,10 @@ class ChatSidebarComponent {
     return d.toLocaleDateString();
   }
 
+  /**
+   * Binds DOM event listeners to interactive elements
+   * @private
+   */
   bindEvents() {
     const newChatBtn = this.container.querySelector('#newChatBtn');
     const exportChatBtn = this.container.querySelector('#exportChatBtn');
@@ -105,6 +147,10 @@ class ChatSidebarComponent {
     });
   }
 
+  /**
+   * Sets up event listeners for external events
+   * @private
+   */
   setupEventListeners() {
     this.eventBus.on('chat-sidebar:sessions:updated', (data) => {
       this.updateSessions(data.sessions);
@@ -115,24 +161,40 @@ class ChatSidebarComponent {
     });
   }
 
+  /**
+   * Selects a chat session and emits the selection event
+   * @param {string} sessionId - The ID of the session to select
+   */
   selectSession(sessionId) {
     this.currentSessionId = sessionId;
     this.eventBus.emit('chat-sidebar:session:requested', { sessionId });
     this.render();
   }
 
+  /**
+   * Deletes a chat session after user confirmation
+   * @param {string} sessionId - The ID of the session to delete
+   */
   deleteSession(sessionId) {
     if (confirm('Chat wirklich löschen?')) {
       this.eventBus.emit('chat-sidebar:session:delete', { sessionId });
     }
   }
 
+  /**
+   * Updates the list of chat sessions and re-renders
+   * @param {Array} sessions - Array of chat session objects
+   */
   updateSessions(sessions) {
     this.chatSessions = sessions;
     this.render();
     this.bindEvents();
   }
 
+  /**
+   * Sets the currently active session
+   * @param {string} sessionId - The ID of the session to set as current
+   */
   setCurrentSession(sessionId) {
     this.currentSessionId = sessionId;
     this.render();

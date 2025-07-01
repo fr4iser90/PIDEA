@@ -1,4 +1,24 @@
+/**
+ * CodeSidebarComponent - Manages the file explorer sidebar for the code explorer mode
+ * 
+ * This component provides a dedicated sidebar for code exploration functionality including:
+ * - Project tree navigation with hierarchical display
+ * - Folder expansion/collapse functionality
+ * - File type detection and appropriate icons
+ * - File selection and navigation
+ * - Search and hidden files toggle
+ * 
+ * @class CodeSidebarComponent
+ * @example
+ * const codeSidebar = new CodeSidebarComponent('codeSidebarContent', eventBus);
+ */
 class CodeSidebarComponent {
+  /**
+   * Creates a new CodeSidebarComponent instance
+   * 
+   * @param {string} containerId - The DOM element ID where the sidebar will be rendered
+   * @param {EventBus} eventBus - The event bus for component communication
+   */
   constructor(containerId, eventBus) {
     this.container = document.getElementById(containerId);
     this.eventBus = eventBus;
@@ -9,12 +29,20 @@ class CodeSidebarComponent {
     this.init();
   }
 
+  /**
+   * Initializes the component by rendering and setting up event listeners
+   * @private
+   */
   init() {
     this.render();
     this.bindEvents();
     this.setupEventListeners();
   }
 
+  /**
+   * Renders the sidebar HTML structure
+   * @private
+   */
   render() {
     this.container.innerHTML = `
       <div class="code-sidebar-content">
@@ -39,6 +67,11 @@ class CodeSidebarComponent {
     `;
   }
 
+  /**
+   * Renders the file tree structure
+   * @private
+   * @returns {string} HTML string for the file tree
+   */
   renderFileTree() {
     if (this.fileTree.length === 0) {
       return '<div class="no-files">Keine Dateien verfügbar</div>';
@@ -47,10 +80,16 @@ class CodeSidebarComponent {
     return this.fileTree.map(file => this.renderFileItem(file)).join('');
   }
 
+  /**
+   * Renders a single file or directory item with proper indentation
+   * @private
+   * @param {Object} file - File object with path, name, type properties
+   * @param {number} level - Nesting level for indentation
+   * @returns {string} HTML string for the file item
+   */
   renderFileItem(file, level = 0) {
     const isExpanded = this.expandedFolders.has(file.path);
     const isSelected = this.currentFile && this.currentFile.path === file.path;
-    const indent = '  '.repeat(level);
     
     if (file.type === 'directory') {
       const children = this.fileTree.filter(f => 
@@ -86,6 +125,12 @@ class CodeSidebarComponent {
     }
   }
 
+  /**
+   * Returns the appropriate icon for a file based on its extension
+   * @private
+   * @param {Object} file - File object with name property
+   * @returns {string} Emoji icon for the file type
+   */
   getFileIcon(file) {
     if (file.name.endsWith('.js')) return '📄';
     if (file.name.endsWith('.html')) return '🌐';
@@ -100,6 +145,10 @@ class CodeSidebarComponent {
     return '📄';
   }
 
+  /**
+   * Binds DOM event listeners to interactive elements
+   * @private
+   */
   bindEvents() {
     const refreshBtn = this.container.querySelector('#refreshFilesBtn');
     const searchBtn = this.container.querySelector('#searchFilesBtn');
@@ -135,6 +184,10 @@ class CodeSidebarComponent {
     });
   }
 
+  /**
+   * Sets up event listeners for external events
+   * @private
+   */
   setupEventListeners() {
     this.eventBus.on('code-sidebar:files:loaded', (data) => {
       this.updateFileTree(data.files);
@@ -145,6 +198,10 @@ class CodeSidebarComponent {
     });
   }
 
+  /**
+   * Toggles the expansion state of a folder
+   * @param {string} path - The path of the folder to toggle
+   */
   toggleFolder(path) {
     if (this.expandedFolders.has(path)) {
       this.expandedFolders.delete(path);
@@ -155,6 +212,10 @@ class CodeSidebarComponent {
     this.bindEvents();
   }
 
+  /**
+   * Selects a file and emits the selection event
+   * @param {string} path - The path of the file to select
+   */
   selectFile(path) {
     this.currentFile = { path };
     this.eventBus.emit('code-sidebar:file:requested', { path });
@@ -162,12 +223,20 @@ class CodeSidebarComponent {
     this.bindEvents();
   }
 
+  /**
+   * Sets the currently selected file
+   * @param {Object} file - File object to set as current
+   */
   setCurrentFile(file) {
     this.currentFile = file;
     this.render();
     this.bindEvents();
   }
 
+  /**
+   * Updates the file tree and re-renders
+   * @param {Array} files - Array of file objects
+   */
   updateFileTree(files) {
     this.fileTree = files;
     this.render();

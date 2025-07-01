@@ -701,47 +701,28 @@ body.light-theme .mode-btn:not(.active):hover {
 }
 
 .code-explorer-layout {
-  display: grid;
-  grid-template-columns: 220px 1fr 0.01fr 340px;
-  grid-template-areas: "tree editor toggle chat";
+  display: flex;
   width: 100%;
-  min-height: 70vh;
+  height: 100%;
   gap: 0;
 }
-.code-explorer-tree {
-  grid-area: tree;
-  background: #20232a;
-  border-right: 1px solid #23272e;
-  padding: 24px 12px;
-  min-width: 180px;
-  max-width: 260px;
-  color: #b3d1ff;
-  font-size: 1em;
-  height: 100%;
-}
+/* Removed - now handled by CodeSidebarComponent */
 .code-explorer-editor {
-  grid-area: editor;
+  flex: 1;
   background: #181c20;
-  padding: 32px 24px;
   color: #e6e6e6;
-  min-height: 400px;
   height: 100%;
-}
-.code-explorer-chat-toggle {
-  grid-area: toggle;
   display: flex;
-  align-items: flex-start;
-  justify-content: center;
-  padding: 32px 0 0 0;
+  flex-direction: column;
 }
+/* Removed - now handled by editor header */
 #toggleExplorerChat {
-  background: #23272e;
+  background: transparent;
   color: #4e8cff;
-  border: 1.5px solid #4e8cff;
-  border-radius: 50%;
-  font-size: 1.3em;
-  width: 38px;
-  height: 38px;
+  border: 1px solid #4e8cff;
+  border-radius: 4px;
+  font-size: 1em;
+  padding: 6px 8px;
   cursor: pointer;
   transition: background 0.2s, color 0.2s;
 }
@@ -749,105 +730,14 @@ body.light-theme .mode-btn:not(.active):hover {
   background: #4e8cff;
   color: #fff;
 }
-.explorer-chat-panel {
-  grid-area: chat;
-  background: #23272e;
-  border-left: 1px solid #23272e;
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  min-width: 320px;
-  max-width: 340px;
-  box-shadow: -2px 0 12px #0006;
-  z-index: 2;
-}
-.explorer-chat-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 18px 18px 8px 18px;
-  font-weight: 600;
-  color: #4e8cff;
-  border-bottom: 1px solid #23272e;
-}
-.explorer-chat-messages {
-  flex: 1 1 auto;
-  overflow-y: auto;
-  padding: 18px;
-  color: #e6e6e6;
-  font-size: 1em;
-}
-.explorer-chat-input-area {
-  display: flex;
-  align-items: flex-end;
-  gap: 8px;
-  padding: 12px 18px 18px 18px;
-  background: #23272e;
-  border-top: 1px solid #23272e;
-}
-#explorerMsgInput {
-  flex: 1 1 auto;
-  min-height: 32px;
-  max-height: 90px;
-  resize: vertical;
-  border-radius: 6px;
-  border: 1px solid #333;
-  background: #20232a;
-  color: #e6e6e6;
-  padding: 8px 12px;
-  font-size: 1em;
-}
-#explorerSendBtn {
-  background: #4e8cff;
-  color: #fff;
-  border: none;
-  border-radius: 6px;
-  padding: 8px 18px;
-  font-size: 1em;
-  cursor: pointer;
-  transition: background 0.2s;
-}
-#explorerSendBtn:hover {
-  background: #1976d2;
-}
-body.light-theme .code-explorer-tree {
-  background: #e6e6e6;
-  color: #1976d2;
-  border-right: 1px solid #ccc;
-}
+/* Removed - now handled by CodeRightPanelComponent */
+/* Removed - now handled by CodeRightPanelComponent */
+/* Removed - now handled by CodeSidebarComponent */
 body.light-theme .code-explorer-editor {
   background: #f8f9fa;
   color: #23272e;
 }
-body.light-theme .explorer-chat-panel {
-  background: #e6e6e6;
-  color: #23272e;
-  border-left: 1px solid #ccc;
-  box-shadow: -2px 0 12px #bbb8;
-}
-body.light-theme .explorer-chat-header {
-  color: #1976d2;
-  border-bottom: 1px solid #ccc;
-}
-body.light-theme .explorer-chat-messages {
-  color: #23272e;
-}
-body.light-theme .explorer-chat-input-area {
-  background: #e6e6e6;
-  border-top: 1px solid #ccc;
-}
-body.light-theme #explorerMsgInput {
-  background: #f8f9fa;
-  color: #23272e;
-  border: 1px solid #ccc;
-}
-body.light-theme #explorerSendBtn {
-  background: #1976d2;
-  color: #fff;
-}
-body.light-theme #explorerSendBtn:hover {
-  background: #4e8cff;
-}
+/* Removed - now handled by CodeRightPanelComponent */
 
 .app-root {
   display: flex;

@@ -1,110 +1,101 @@
+/**
+ * CodeExplorerComponent - Manages the code editor area for the code explorer mode
+ * 
+ * This component provides the main editor area for code exploration including:
+ * - File content display with syntax highlighting
+ * - Editor header with file information
+ * - Code content rendering
+ * - Error handling and display
+ * 
+ * @class CodeExplorerComponent
+ * @example
+ * const codeExplorer = new CodeExplorerComponent('codeExplorerView', eventBus);
+ */
 class CodeExplorerComponent {
+  /**
+   * Creates a new CodeExplorerComponent instance
+   * 
+   * @param {string} containerId - The DOM element ID where the component will be rendered
+   * @param {EventBus} eventBus - The event bus for component communication
+   */
   constructor(containerId, eventBus) {
     this.container = document.getElementById(containerId);
     this.eventBus = eventBus;
     this.currentFile = null;
-    this.fileTree = [];
     
     this.init();
   }
 
+  /**
+   * Initializes the component by rendering and setting up event listeners
+   * @private
+   */
   init() {
     this.render();
     this.bindEvents();
     this.setupEventListeners();
   }
 
+  /**
+   * Renders the editor HTML structure
+   * @private
+   */
   render() {
     this.container.innerHTML = `
       <div class="code-explorer-container">
         <div class="code-explorer-layout">
-          <div class="code-explorer-tree" id="fileTree">
-            <h3>Projektbaum</h3>
-            <div class="file-tree-content">
-              ${this.renderFileTree()}
-            </div>
-          </div>
           <div class="code-explorer-editor" id="codeEditor">
             <div class="editor-header">
               <span class="file-name">${this.currentFile ? this.currentFile.name : 'Keine Datei ausgewählt'}</span>
+              <div class="editor-actions">
+                <button id="toggleExplorerChat" title="Chat öffnen/schließen">💬</button>
+              </div>
             </div>
             <div class="editor-content">
               <pre><code id="codeContent">${this.currentFile ? this.currentFile.content : 'Wählen Sie eine Datei aus dem Projektbaum aus.'}</code></pre>
             </div>
-          </div>
-          <div class="code-explorer-chat-toggle">
-            <button id="toggleExplorerChat" title="Chat öffnen/schließen">💬</button>
           </div>
         </div>
       </div>
     `;
   }
 
-  renderFileTree() {
-    if (this.fileTree.length === 0) {
-      return '<div class="no-files">Keine Dateien verfügbar</div>';
-    }
-
-    return this.fileTree.map(file => `
-      <div class="file-item ${file.type}" data-path="${file.path}">
-        <span class="file-icon">${this.getFileIcon(file)}</span>
-        <span class="file-name">${file.name}</span>
-      </div>
-    `).join('');
-  }
-
-  getFileIcon(file) {
-    if (file.type === 'directory') return '📁';
-    if (file.name.endsWith('.js')) return '📄';
-    if (file.name.endsWith('.html')) return '🌐';
-    if (file.name.endsWith('.css')) return '🎨';
-    if (file.name.endsWith('.json')) return '📋';
-    if (file.name.endsWith('.md')) return '📝';
-    return '📄';
-  }
-
+  /**
+   * Binds DOM event listeners to interactive elements
+   * @private
+   */
   bindEvents() {
     const toggleBtn = this.container.querySelector('#toggleExplorerChat');
-    const fileItems = this.container.querySelectorAll('.file-item');
 
-    toggleBtn.addEventListener('click', () => {
+    toggleBtn?.addEventListener('click', () => {
       this.eventBus.emit('code-explorer:toggle-chat');
-    });
-
-    fileItems.forEach(item => {
-      item.addEventListener('click', () => {
-        const path = item.dataset.path;
-        this.selectFile(path);
-      });
     });
   }
 
+  /**
+   * Sets up event listeners for external events
+   * @private
+   */
   setupEventListeners() {
-    this.eventBus.on('code-explorer:files:loaded', (data) => {
-      this.updateFileTree(data.files);
-    });
-
     this.eventBus.on('code-explorer:file:selected', (data) => {
       this.loadFile(data.file);
     });
   }
 
-  selectFile(path) {
-    this.eventBus.emit('code-explorer:file:requested', { path });
-  }
-
+  /**
+   * Loads and displays a file in the editor
+   * @param {Object} file - File object with name and content properties
+   */
   loadFile(file) {
     this.currentFile = file;
     this.render();
     this.highlightCode();
   }
 
-  updateFileTree(files) {
-    this.fileTree = files;
-    this.render();
-    this.bindEvents();
-  }
-
+  /**
+   * Applies syntax highlighting to the code content
+   * @private
+   */
   highlightCode() {
     if (window.hljs && this.currentFile) {
       const codeElement = this.container.querySelector('#codeContent');
@@ -114,6 +105,10 @@ class CodeExplorerComponent {
     }
   }
 
+  /**
+   * Displays an error message in the editor area
+   * @param {string} error - Error message to display
+   */
   showError(error) {
     const editorContent = this.container.querySelector('.editor-content');
     if (editorContent) {
