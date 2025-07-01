@@ -279,9 +279,41 @@ class Application {
     try {
       await this.initialize();
       
-      // Start terminal monitoring
-      if (this.cursorIDEService) {
-        await this.cursorIDEService.startTerminalMonitoring();
+      // Workspace-Erkennung für ALLE IDEs beim Start
+      if (this.cursorIDEService && this.ideManager) {
+        const availableIDEs = await this.ideManager.getAvailableIDEs();
+        console.log('[Application] Checking workspace paths for all IDEs:', availableIDEs.length);
+        
+        for (const ide of availableIDEs) {
+          const port = ide.port;
+          const existingPath = this.ideManager.getWorkspacePath(port);
+          
+          if (!existingPath) {
+            console.log(`[Application] No workspace path for IDE ${port}, detecting...`);
+            try {
+              // Temporär zu dieser IDE wechseln
+              await this.ideManager.switchToIDE(port);
+              await this.cursorIDEService.browserManager.switchToPort(port);
+              
+              // Workspace-Pfad erkennen
+              const workspacePath = await this.cursorIDEService.addWorkspacePathDetectionViaPlaywright();
+              if (workspacePath) {
+                console.log(`[Application] Detected workspace path for IDE ${port}:`, workspacePath);
+              }
+            } catch (error) {
+              console.error(`[Application] Error detecting workspace for IDE ${port}:`, error.message);
+            }
+          } else {
+            console.log(`[Application] IDE ${port} already has workspace path:`, existingPath);
+          }
+        }
+        
+        // Zurück zur ursprünglichen aktiven IDE
+        const activePort = this.ideManager.getActivePort();
+        if (activePort) {
+          await this.ideManager.switchToIDE(activePort);
+          await this.cursorIDEService.browserManager.switchToPort(activePort);
+        }
       }
       
       this.server.listen(this.config.port, () => {

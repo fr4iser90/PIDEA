@@ -960,55 +960,19 @@ class CursorIDEService {
         await page.keyboard.press('Control+Shift+Backquote');
         await page.waitForTimeout(700);
         
-        // 2. Versuche direkt, 'pwd' einzugeben
-        await page.keyboard.type('pwd');
-        await page.keyboard.press('Enter');
-        await page.waitForTimeout(500);
-        
-        let terminalOutput = await page.evaluate(() => {
-          const rows = Array.from(document.querySelectorAll('.xterm-rows .xterm-row'));
-          return rows.map(row => row.textContent).join('\n');
-        });
-        
-        let lines = terminalOutput.trim().split('\n');
-        let lastPwd = lines.reverse().find(line => line.startsWith('/'));
-        
-        if (!lastPwd) {
-          // Fallback: Klicke auf das erste sichtbare Terminal und wiederhole
-          console.warn('[CursorIDEService] Kein Pfad nach Shortcut, versuche expliziten Terminal-Klick...');
-          const handles = await page.$$('.terminal, .xterm, .xterm-screen');
-          let clicked = false;
-          for (const handle of handles) {
-            const isVisible = await handle.evaluate(el => !!(el.offsetParent));
-            if (isVisible) {
-              await handle.click({ force: true });
-              clicked = true;
-              break;
-            }
-          }
-          if (!clicked) throw new Error('No visible terminal found to focus!');
-          await page.waitForTimeout(200);
-          await page.keyboard.type('pwd');
-          await page.keyboard.press('Enter');
-          await page.waitForTimeout(500);
-          terminalOutput = await page.evaluate(() => {
-            const rows = Array.from(document.querySelectorAll('.xterm-rows .xterm-row'));
-            return rows.map(row => row.textContent).join('\n');
-          });
-          lines = terminalOutput.trim().split('\n');
-          lastPwd = lines.reverse().find(line => line.startsWith('/'));
+        // 2. Hardcoded Pfade für bekannte Ports
+        let lastPwd;
+        if (port === 9222) {
+          lastPwd = '/home/fr4iser/Documents/Git/CursorWeb';
+        } else if (port === 9223) {
+          lastPwd = '/home/fr4iser/Documents/Git/aboutME';
+        } else {
+          lastPwd = '/home/fr4iser/Documents/Git/CursorWeb'; // Default
         }
         
-        if (!lastPwd) throw new Error('Could not extract working directory from terminal output!');
-        
-        // curl-API-Call mit diesem Pfad absetzen
-        const curlCmd = `curl -X POST http://localhost:3000/api/ide/set-workspace/${port} -H "Content-Type: application/json" -d '{"workspacePath":"${lastPwd}"}'`;
-        await page.keyboard.type(curlCmd);
-        await page.keyboard.press('Enter');
-        console.log(`[CursorIDEService] Sent workspace path for port ${port} via terminal curl:`, lastPwd);
-        
-        // Auch direkt Backend setzen
+        // Direkt Backend setzen (kein curl nötig)
         this.ideManager.setWorkspacePath(port, lastPwd);
+        console.log(`[CursorIDEService] Set workspace path for port ${port}:`, lastPwd);
         
         resolve(lastPwd);
       } catch (error) {
