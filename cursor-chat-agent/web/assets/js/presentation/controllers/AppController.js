@@ -3,6 +3,10 @@ import APIChatRepository from '../../infrastructure/repositories/APIChatReposito
 import EventBus from '../../infrastructure/events/EventBus.js';
 import ChatComponent from '../components/ChatComponent.js';
 import CodeExplorerComponent from '../components/CodeExplorerComponent.js';
+import ChatSidebarComponent from '../components/ChatSidebarComponent.js';
+import CodeSidebarComponent from '../components/CodeSidebarComponent.js';
+import ChatRightPanelComponent from '../components/ChatRightPanelComponent.js';
+import CodeRightPanelComponent from '../components/CodeRightPanelComponent.js';
 
 class AppController {
   constructor() {
@@ -12,6 +16,10 @@ class AppController {
     
     this.chatComponent = null;
     this.codeExplorerComponent = null;
+    this.chatSidebarComponent = null;
+    this.codeSidebarComponent = null;
+    this.chatRightPanelComponent = null;
+    this.codeRightPanelComponent = null;
     this.currentMode = 'chat';
     
     this.init();
@@ -31,11 +39,15 @@ class AppController {
   }
 
   setupComponents() {
-    // Initialize chat component
+    // Initialize chat components
     this.chatComponent = new ChatComponent('chatView', this.eventBus);
+    this.chatSidebarComponent = new ChatSidebarComponent('chatSidebarContent', this.eventBus);
+    this.chatRightPanelComponent = new ChatRightPanelComponent('chatRightPanelContent', this.eventBus);
     
-    // Initialize code explorer component
+    // Initialize code explorer components
     this.codeExplorerComponent = new CodeExplorerComponent('codeExplorerView', this.eventBus);
+    this.codeSidebarComponent = new CodeSidebarComponent('codeSidebarContent', this.eventBus);
+    this.codeRightPanelComponent = new CodeRightPanelComponent('codeRightPanelContent', this.eventBus);
     
     // Load initial messages
     this.chatService.loadMessages();
@@ -55,9 +67,36 @@ class AppController {
       this.handleDebug();
     });
 
+    // Chat sidebar events
+    this.eventBus.on('chat-sidebar:new-chat', () => {
+      this.chatService.createNewSession();
+    });
+
+    this.eventBus.on('chat-sidebar:session:requested', (data) => {
+      this.chatService.loadSession(data.sessionId);
+    });
+
+    this.eventBus.on('chat-sidebar:session:delete', (data) => {
+      this.chatService.deleteSession(data.sessionId);
+    });
+
+    // Chat right panel events
+    this.eventBus.on('chat-right-panel:quick-prompt', (data) => {
+      this.chatService.sendMessage(data.prompt);
+    });
+
+    // Code sidebar events
+    this.eventBus.on('code-sidebar:refresh-files', () => {
+      this.loadFileTree();
+    });
+
+    this.eventBus.on('code-sidebar:file:requested', (data) => {
+      this.loadFile(data.path);
+    });
+
     // Code explorer events
     this.eventBus.on('code-explorer:toggle-chat', () => {
-      this.toggleRightPanel();
+      this.toggleCodeRightPanel();
     });
 
     this.eventBus.on('code-explorer:file:requested', (data) => {
@@ -98,30 +137,54 @@ class AppController {
     const codeModeBtn = document.getElementById('codeModeBtn');
     const chatView = document.getElementById('chatView');
     const codeExplorerView = document.getElementById('codeExplorerView');
+    const chatSidebar = document.getElementById('chatSidebar');
+    const codeSidebar = document.getElementById('codeSidebar');
+    const chatRightPanel = document.getElementById('chatRightPanel');
+    const codeRightPanel = document.getElementById('codeRightPanel');
 
     if (mode === 'chat') {
       chatModeBtn.classList.add('active');
       codeModeBtn.classList.remove('active');
       chatView.style.display = '';
       codeExplorerView.style.display = 'none';
+      chatSidebar.style.display = '';
+      codeSidebar.style.display = 'none';
+      chatRightPanel.style.display = '';
+      codeRightPanel.style.display = 'none';
       this.currentMode = 'chat';
     } else {
       codeModeBtn.classList.add('active');
       chatModeBtn.classList.remove('active');
       chatView.style.display = 'none';
       codeExplorerView.style.display = '';
+      chatSidebar.style.display = 'none';
+      codeSidebar.style.display = '';
+      chatRightPanel.style.display = 'none';
+      codeRightPanel.style.display = '';
       this.currentMode = 'code';
     }
   }
 
-  toggleRightPanel() {
-    const rightPanel = document.getElementById('rightPanel');
-    const isVisible = rightPanel.style.display !== 'none';
+  toggleCodeRightPanel() {
+    const codeRightPanel = document.getElementById('codeRightPanel');
+    const isVisible = codeRightPanel.style.display !== 'none';
     
     if (isVisible) {
-      rightPanel.style.display = 'none';
+      codeRightPanel.style.display = 'none';
     } else {
-      rightPanel.style.display = 'flex';
+      codeRightPanel.style.display = 'flex';
+    }
+  }
+
+  async loadFileTree() {
+    try {
+      const response = await fetch('/api/files');
+      const files = await response.json();
+      
+      this.eventBus.emit('code-sidebar:files:loaded', { files });
+    } catch (error) {
+      console.error('Failed to load file tree:', error);
+      this.showError('Failed to load file tree');
     }
   }
 

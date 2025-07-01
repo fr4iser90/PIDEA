@@ -1,19 +1,8 @@
 import AppController from './presentation/controllers/AppController.js';
-import SidebarComponent from './presentation/components/SidebarComponent.js';
-import RightPanelComponent from './presentation/components/RightPanelComponent.js';
-import EventBus from '../js/infrastructure/events/EventBus.js';
 
 // Wait for DOM to be ready
 document.addEventListener('DOMContentLoaded', () => {
   try {
-    // EventBus für die Komponenten
-    const eventBus = new EventBus();
-
-    // Sidebar (links) aktivieren
-    new SidebarComponent('sidebar', eventBus);
-    // RightPanel (rechts) aktivieren
-    new RightPanelComponent('rightPanel', eventBus);
-
     // Chat-App initialisieren
     const app = new AppController();
     window.app = app;
