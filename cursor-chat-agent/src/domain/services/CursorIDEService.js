@@ -1,6 +1,7 @@
 class CursorIDEService {
-  constructor(browserManager) {
+  constructor(browserManager, ideManager) {
     this.browserManager = browserManager;
+    this.ideManager = ideManager;
   }
 
   async sendMessage(message) {
@@ -92,6 +93,36 @@ class CursorIDEService {
     } catch (error) {
       return false;
     }
+  }
+
+  async switchToSession(session) {
+    if (!session.idePort) {
+      throw new Error('Session has no IDE port assigned');
+    }
+
+    const activeIDE = await this.ideManager.getActiveIDE();
+    if (activeIDE && activeIDE.port === session.idePort) {
+      return; // Already connected to the right IDE
+    }
+
+    await this.ideManager.switchToIDE(session.idePort);
+    await this.browserManager.switchToPort(session.idePort);
+  }
+
+  async getAvailableIDEs() {
+    return await this.ideManager.getAvailableIDEs();
+  }
+
+  async startNewIDE(workspacePath = null) {
+    return await this.ideManager.startNewIDE(workspacePath);
+  }
+
+  async stopIDE(port) {
+    return await this.ideManager.stopIDE(port);
+  }
+
+  getActivePort() {
+    return this.ideManager.getActivePort();
   }
 }
 

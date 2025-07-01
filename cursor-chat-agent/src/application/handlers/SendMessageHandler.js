@@ -25,7 +25,9 @@ class SendMessageHandler {
           throw new Error('Session not found');
         }
       } else {
-        session = new ChatSession();
+        // Create new session with IDE port assignment
+        const activePort = this.cursorIDEService.getActivePort();
+        session = new ChatSession(null, null, {}, activePort);
       }
 
       // Add message to session
@@ -33,6 +35,11 @@ class SendMessageHandler {
 
       // Save to repository
       await this.chatRepository.saveSession(session);
+
+      // Switch to session's IDE if needed
+      if (session.idePort) {
+        await this.cursorIDEService.switchToSession(session);
+      }
 
       // Send to Cursor IDE
       await this.cursorIDEService.sendMessage(command.content);

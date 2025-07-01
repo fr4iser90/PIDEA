@@ -16,11 +16,13 @@ const GetChatHistoryHandler = require('./application/handlers/GetChatHistoryHand
 
 // Infrastructure
 const BrowserManager = require('./infrastructure/external/BrowserManager');
+const IDEManager = require('./infrastructure/external/IDEManager');
 const InMemoryChatRepository = require('./infrastructure/database/InMemoryChatRepository');
 const EventBus = require('./infrastructure/messaging/EventBus');
 
 // Presentation
 const ChatController = require('./presentation/api/ChatController');
+const IDEController = require('./presentation/api/IDEController');
 const WebSocketManager = require('./presentation/websocket/WebSocketManager');
 
 class Application {
@@ -40,11 +42,12 @@ class Application {
 
     // Initialize infrastructure
     this.browserManager = new BrowserManager();
+    this.ideManager = new IDEManager();
     this.chatRepository = new InMemoryChatRepository();
     this.eventBus = new EventBus();
 
     // Initialize domain services
-    this.cursorIDEService = new CursorIDEService(this.browserManager);
+    this.cursorIDEService = new CursorIDEService(this.browserManager, this.ideManager);
 
     // Initialize application handlers
     this.sendMessageHandler = new SendMessageHandler(
@@ -65,6 +68,11 @@ class Application {
       this.cursorIDEService
     );
 
+    this.ideController = new IDEController(
+      this.ideManager,
+      this.eventBus
+    );
+
     // Setup Express app
     this.app = express();
     this.setupMiddleware();
@@ -75,6 +83,9 @@ class Application {
 
     // Initialize WebSocket manager
     this.webSocketManager = new WebSocketManager(this.server, this.eventBus);
+
+    // Initialize IDE Manager
+    await this.ideManager.initialize();
 
     // Setup event handlers
     this.setupEventHandlers();
@@ -166,6 +177,13 @@ class Application {
         });
       }
     });
+
+    // IDE Management API routes
+    this.app.get('/api/ide/available', (req, res) => this.ideController.getAvailableIDEs(req, res));
+    this.app.post('/api/ide/start', (req, res) => this.ideController.startIDE(req, res));
+    this.app.post('/api/ide/switch/:port', (req, res) => this.ideController.switchIDE(req, res));
+    this.app.delete('/api/ide/stop/:port', (req, res) => this.ideController.stopIDE(req, res));
+    this.app.get('/api/ide/status', (req, res) => this.ideController.getStatus(req, res));
 
     // WebSocket status
     this.app.get('/api/websocket/status', (req, res) => {

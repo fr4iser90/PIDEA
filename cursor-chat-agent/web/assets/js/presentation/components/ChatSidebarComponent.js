@@ -23,6 +23,8 @@ class ChatSidebarComponent {
     this.eventBus = eventBus;
     this.chatSessions = [];
     this.currentSessionId = null;
+    this.availableIDEs = [];
+    this.activePort = null;
     
     this.init();
   }
@@ -49,6 +51,16 @@ class ChatSidebarComponent {
           <button id="newChatBtn" class="btn-icon" title="Neuer Chat">➕</button>
         </div>
         
+        <div class="ide-management-section">
+          <div class="ide-header">
+            <h4>🖥️ IDE Management</h4>
+            <button id="newIDEBtn" class="btn-icon" title="Neue IDE starten">🚀</button>
+          </div>
+          <div class="ide-list" id="ideList">
+            ${this.renderIDEs()}
+          </div>
+        </div>
+        
         <div class="chat-sessions-list" id="chatSessionsList">
           ${this.renderChatSessions()}
         </div>
@@ -61,6 +73,37 @@ class ChatSidebarComponent {
         </div>
       </div>
     `;
+  }
+
+  /**
+   * Renders the list of available IDEs
+   * @private
+   * @returns {string} HTML string for the IDE list
+   */
+  renderIDEs() {
+    if (this.availableIDEs.length === 0) {
+      return '<div class="no-ides">Keine IDEs verfügbar</div>';
+    }
+
+    return this.availableIDEs.map(ide => `
+      <div class="ide-item ${ide.port === this.activePort ? 'active' : ''}" 
+           data-port="${ide.port}">
+        <div class="ide-info">
+          <div class="ide-title">Port ${ide.port}</div>
+          <div class="ide-meta">
+            <span class="ide-status ${ide.status}">${ide.status}</span>
+            <span class="ide-source">${ide.source || 'unknown'}</span>
+          </div>
+        </div>
+        <div class="ide-actions">
+          ${ide.port !== this.activePort ? 
+            `<button class="ide-switch-btn" data-port="${ide.port}" title="Zu IDE wechseln">🔗</button>` : 
+            '<span class="active-indicator">✓</span>'
+          }
+          <button class="ide-stop-btn" data-port="${ide.port}" title="IDE stoppen">⏹️</button>
+        </div>
+      </div>
+    `).join('');
   }
 
   /**
@@ -81,6 +124,7 @@ class ChatSidebarComponent {
           <div class="session-meta">
             <span class="message-count">${session.messageCount || 0} Nachrichten</span>
             <span class="last-activity">${this.formatDate(session.lastActivity)}</span>
+            ${session.idePort ? `<span class="ide-port">Port ${session.idePort}</span>` : ''}
           </div>
         </div>
         <button class="session-delete-btn" data-session-id="${session.id}" title="Chat löschen">×</button>
@@ -112,13 +156,21 @@ class ChatSidebarComponent {
    */
   bindEvents() {
     const newChatBtn = this.container.querySelector('#newChatBtn');
+    const newIDEBtn = this.container.querySelector('#newIDEBtn');
     const exportChatBtn = this.container.querySelector('#exportChatBtn');
     const clearChatBtn = this.container.querySelector('#clearChatBtn');
     const sessionItems = this.container.querySelectorAll('.chat-session-item');
     const deleteBtns = this.container.querySelectorAll('.session-delete-btn');
+    const ideItems = this.container.querySelectorAll('.ide-item');
+    const ideSwitchBtns = this.container.querySelectorAll('.ide-switch-btn');
+    const ideStopBtns = this.container.querySelectorAll('.ide-stop-btn');
 
     newChatBtn?.addEventListener('click', () => {
       this.eventBus.emit('chat-sidebar:new-chat');
+    });
+
+    newIDEBtn?.addEventListener('click', () => {
+      this.eventBus.emit('chat-sidebar:new-ide');
     });
 
     exportChatBtn?.addEventListener('click', () => {
@@ -145,6 +197,22 @@ class ChatSidebarComponent {
         this.deleteSession(sessionId);
       });
     });
+
+    ideSwitchBtns.forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const port = parseInt(btn.dataset.port);
+        this.switchToIDE(port);
+      });
+    });
+
+    ideStopBtns.forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const port = parseInt(btn.dataset.port);
+        this.stopIDE(port);
+      });
+    });
   }
 
   /**
@@ -158,6 +226,21 @@ class ChatSidebarComponent {
 
     this.eventBus.on('chat-sidebar:session:selected', (data) => {
       this.setCurrentSession(data.sessionId);
+    });
+
+    // IDE management events
+    this.eventBus.on('ideListUpdated', (data) => {
+      if (data.ides) {
+        this.updateIDEs(data.ides);
+      } else {
+        this.refreshIDEList();
+      }
+    });
+
+    this.eventBus.on('activeIDEChanged', (data) => {
+      this.activePort = data.port;
+      this.render();
+      this.bindEvents();
     });
   }
 
@@ -197,6 +280,51 @@ class ChatSidebarComponent {
    */
   setCurrentSession(sessionId) {
     this.currentSessionId = sessionId;
+    this.render();
+    this.bindEvents();
+  }
+
+  /**
+   * Switches to a specific IDE
+   * @param {number} port - The port of the IDE to switch to
+   */
+  switchToIDE(port) {
+    this.eventBus.emit('chat-sidebar:ide:switch', { port });
+  }
+
+  /**
+   * Stops a specific IDE
+   * @param {number} port - The port of the IDE to stop
+   */
+  stopIDE(port) {
+    if (confirm(`IDE auf Port ${port} wirklich stoppen?`)) {
+      this.eventBus.emit('chat-sidebar:ide:stop', { port });
+    }
+  }
+
+  /**
+   * Refreshes the IDE list from the server
+   */
+  async refreshIDEList() {
+    try {
+      const response = await fetch('/api/ide/available');
+      const result = await response.json();
+      if (result.success) {
+        this.availableIDEs = result.data;
+        this.render();
+        this.bindEvents();
+      }
+    } catch (error) {
+      console.error('Error refreshing IDE list:', error);
+    }
+  }
+
+  /**
+   * Updates the IDE list
+   * @param {Array} ides - Array of IDE objects
+   */
+  updateIDEs(ides) {
+    this.availableIDEs = ides;
     this.render();
     this.bindEvents();
   }

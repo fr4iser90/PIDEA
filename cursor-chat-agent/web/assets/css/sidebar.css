@@ -81,6 +81,214 @@
   border-color: #6a6a6a;
 }
 
+/* IDE Management Styles */
+.ide-management-section {
+  background: #1e1e1e;
+  border-bottom: 1px solid #3c3c3c;
+  padding: 8px 0;
+}
+
+.ide-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px 8px 16px;
+}
+
+.ide-header h4 {
+  margin: 0;
+  font-size: 11px;
+  font-weight: 600;
+  color: #888888;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.ide-list {
+  max-height: 120px;
+  overflow-y: auto;
+}
+
+.ide-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 16px;
+  cursor: pointer;
+  user-select: none;
+  font-size: 12px;
+  color: #cccccc;
+  transition: background-color 0.1s;
+  border-left: 3px solid transparent;
+}
+
+.ide-item:hover {
+  background: #2a2d2e;
+}
+
+.ide-item.active {
+  background: #094771;
+  border-left-color: #007acc;
+}
+
+.ide-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.ide-title {
+  font-weight: 500;
+  margin-bottom: 2px;
+}
+
+.ide-meta {
+  display: flex;
+  gap: 8px;
+  font-size: 10px;
+  color: #888888;
+}
+
+.ide-status {
+  padding: 1px 4px;
+  border-radius: 2px;
+  font-size: 9px;
+  text-transform: uppercase;
+}
+
+.ide-status.running {
+  background: #2d5a2d;
+  color: #4ec9b0;
+}
+
+.ide-status.starting {
+  background: #5a5a2d;
+  color: #f7df1e;
+}
+
+.ide-source {
+  font-style: italic;
+}
+
+.ide-actions {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+}
+
+.ide-switch-btn,
+.ide-stop-btn {
+  background: transparent;
+  border: none;
+  color: #cccccc;
+  cursor: pointer;
+  padding: 2px;
+  border-radius: 2px;
+  font-size: 10px;
+  transition: background-color 0.2s;
+}
+
+.ide-switch-btn:hover {
+  background: #3c3c3c;
+  color: #007acc;
+}
+
+.ide-stop-btn:hover {
+  background: #3c3c3c;
+  color: #ff6b6b;
+}
+
+.active-indicator {
+  color: #4ec9b0;
+  font-weight: bold;
+  font-size: 12px;
+}
+
+.no-ides {
+  padding: 8px 16px;
+  text-align: center;
+  color: #888888;
+  font-style: italic;
+  font-size: 11px;
+}
+
+/* Chat Session Styles */
+.chat-sessions-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 4px 0;
+}
+
+.chat-session-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 16px;
+  cursor: pointer;
+  user-select: none;
+  font-size: 12px;
+  color: #cccccc;
+  transition: background-color 0.1s;
+  border-left: 3px solid transparent;
+}
+
+.chat-session-item:hover {
+  background: #2a2d2e;
+}
+
+.chat-session-item.active {
+  background: #094771;
+  border-left-color: #007acc;
+}
+
+.session-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.session-title {
+  font-weight: 500;
+  margin-bottom: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.session-meta {
+  display: flex;
+  gap: 8px;
+  font-size: 10px;
+  color: #888888;
+}
+
+.ide-port {
+  color: #007acc;
+  font-weight: 500;
+}
+
+.session-delete-btn {
+  background: transparent;
+  border: none;
+  color: #888888;
+  cursor: pointer;
+  padding: 2px 4px;
+  border-radius: 2px;
+  font-size: 12px;
+  transition: all 0.2s;
+}
+
+.session-delete-btn:hover {
+  background: #ff6b6b;
+  color: #ffffff;
+}
+
+.no-sessions {
+  padding: 16px;
+  text-align: center;
+  color: #888888;
+  font-style: italic;
+  font-size: 12px;
+}
+
 /* File Explorer Styles */
 .file-explorer {
   flex: 1;

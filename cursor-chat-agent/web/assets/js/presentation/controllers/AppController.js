@@ -32,6 +32,7 @@ class AppController {
       this.setupEventListeners();
       this.setupWebSocket();
       this.startPolling();
+      await this.loadInitialIDEList();
     } catch (error) {
       console.error('Failed to initialize app:', error);
       this.showError('Failed to initialize application');
@@ -78,6 +79,60 @@ class AppController {
 
     this.eventBus.on('chat-sidebar:session:delete', (data) => {
       this.chatService.deleteSession(data.sessionId);
+    });
+
+    // IDE management events
+    this.eventBus.on('chat-sidebar:new-ide', async () => {
+      try {
+        const response = await fetch('/api/ide/start', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({})
+        });
+        const result = await response.json();
+        if (result.success) {
+          console.log('New IDE started:', result.data);
+        } else {
+          throw new Error(result.error || 'Failed to start IDE');
+        }
+      } catch (error) {
+        console.error('Failed to start IDE:', error);
+        this.showError('Failed to start IDE');
+      }
+    });
+
+    this.eventBus.on('chat-sidebar:ide:switch', async (data) => {
+      try {
+        const response = await fetch(`/api/ide/switch/${data.port}`, {
+          method: 'POST'
+        });
+        const result = await response.json();
+        if (result.success) {
+          console.log('Switched to IDE:', result.data);
+        } else {
+          throw new Error(result.error || 'Failed to switch IDE');
+        }
+      } catch (error) {
+        console.error('Failed to switch IDE:', error);
+        this.showError('Failed to switch IDE');
+      }
+    });
+
+    this.eventBus.on('chat-sidebar:ide:stop', async (data) => {
+      try {
+        const response = await fetch(`/api/ide/stop/${data.port}`, {
+          method: 'DELETE'
+        });
+        const result = await response.json();
+        if (result.success) {
+          console.log('IDE stopped:', result.data);
+        } else {
+          throw new Error(result.error || 'Failed to stop IDE');
+        }
+      } catch (error) {
+        console.error('Failed to stop IDE:', error);
+        this.showError('Failed to stop IDE');
+      }
     });
 
     // Chat right panel events
@@ -277,6 +332,18 @@ class AppController {
   showError(message) {
     console.error('App Error:', message);
     // You could show a toast notification here
+  }
+
+  async loadInitialIDEList() {
+    try {
+      const response = await fetch('/api/ide/available');
+      const result = await response.json();
+      if (result.success) {
+        this.eventBus.emit('ideListUpdated', { ides: result.data });
+      }
+    } catch (error) {
+      console.error('Failed to load initial IDE list:', error);
+    }
   }
 }
 

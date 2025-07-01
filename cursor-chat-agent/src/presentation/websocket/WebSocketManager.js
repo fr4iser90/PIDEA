@@ -22,6 +22,19 @@ class WebSocketManager {
       this.eventBus.subscribe('ChatHistoryUpdated', (eventData) => {
         this.broadcastToClients('chatUpdate', eventData);
       });
+
+      // Subscribe to IDE events
+      this.eventBus.subscribe('ideAdded', (eventData) => {
+        this.broadcastToClients('ideListUpdated', eventData);
+      });
+
+      this.eventBus.subscribe('ideRemoved', (eventData) => {
+        this.broadcastToClients('ideListUpdated', eventData);
+      });
+
+      this.eventBus.subscribe('activeIDEChanged', (eventData) => {
+        this.broadcastToClients('activeIDEChanged', eventData);
+      });
     }
   }
 

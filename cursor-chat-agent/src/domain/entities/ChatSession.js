@@ -2,11 +2,12 @@ const { v4: uuidv4 } = require('uuid');
 const ChatMessage = require('./ChatMessage');
 
 class ChatSession {
-  constructor(id, name = null, metadata = {}) {
+  constructor(id, name = null, metadata = {}, idePort = null) {
     this._id = id || uuidv4();
     this._name = name;
     this._messages = [];
     this._metadata = metadata;
+    this._idePort = idePort;
     this._createdAt = new Date();
     this._updatedAt = new Date();
   }
@@ -16,6 +17,7 @@ class ChatSession {
   get name() { return this._name; }
   get messages() { return [...this._messages]; }
   get metadata() { return { ...this._metadata }; }
+  get idePort() { return this._idePort; }
   get createdAt() { return this._createdAt; }
   get updatedAt() { return this._updatedAt; }
   get messageCount() { return this._messages.length; }
@@ -74,6 +76,7 @@ class ChatSession {
       name: this._name,
       messages: this._messages.map(msg => msg.toJSON()),
       metadata: this._metadata,
+      idePort: this._idePort,
       createdAt: this._createdAt.toISOString(),
       updatedAt: this._updatedAt.toISOString(),
       messageCount: this.messageCount
@@ -81,7 +84,7 @@ class ChatSession {
   }
 
   static fromJSON(data) {
-    const session = new ChatSession(data.id, data.name, data.metadata);
+    const session = new ChatSession(data.id, data.name, data.metadata, data.idePort);
     session._createdAt = new Date(data.createdAt);
     session._updatedAt = new Date(data.updatedAt);
     session._messages = data.messages.map(msgData => ChatMessage.fromJSON(msgData));

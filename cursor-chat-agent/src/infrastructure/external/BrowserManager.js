@@ -5,10 +5,15 @@ class BrowserManager {
     this.browser = null;
     this.page = null;
     this.isConnecting = false;
+    this.currentPort = 9222;
   }
 
-  async connect() {
-    if (this.browser && this.page) {
+  async connect(port = null) {
+    if (port) {
+      this.currentPort = port;
+    }
+
+    if (this.browser && this.page && !port) {
       return this.page;
     }
 
@@ -23,8 +28,14 @@ class BrowserManager {
     this.isConnecting = true;
 
     try {
-      console.log('[BrowserManager] Connecting to Cursor IDE...');
-      this.browser = await chromium.connectOverCDP('http://127.0.0.1:9222');
+      console.log(`[BrowserManager] Connecting to Cursor IDE on port ${this.currentPort}...`);
+      
+      // Disconnect existing connection if switching ports
+      if (this.browser && port) {
+        await this.disconnect();
+      }
+      
+      this.browser = await chromium.connectOverCDP(`http://127.0.0.1:${this.currentPort}`);
       const contexts = this.browser.contexts();
       this.page = contexts[0].pages()[0];
       
@@ -32,11 +43,11 @@ class BrowserManager {
         throw new Error('No page found in Cursor IDE');
       }
 
-      console.log('[BrowserManager] Successfully connected to Cursor IDE');
+      console.log(`[BrowserManager] Successfully connected to Cursor IDE on port ${this.currentPort}`);
       return this.page;
 
     } catch (error) {
-      console.error('[BrowserManager] Connection failed:', error.message);
+      console.error(`[BrowserManager] Connection failed on port ${this.currentPort}:`, error.message);
       this.browser = null;
       this.page = null;
       throw error;
@@ -63,6 +74,16 @@ class BrowserManager {
       console.error('[BrowserManager] Error getting page:', error.message);
       return null;
     }
+  }
+
+  async switchToPort(port) {
+    console.log(`[BrowserManager] Switching to port ${port}...`);
+    this.currentPort = port;
+    await this.connect(port);
+  }
+
+  getCurrentPort() {
+    return this.currentPort;
   }
 
   // File Explorer Methods
