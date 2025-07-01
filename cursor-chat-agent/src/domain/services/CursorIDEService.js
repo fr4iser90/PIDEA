@@ -124,6 +124,21 @@ class CursorIDEService {
   getActivePort() {
     return this.ideManager.getActivePort();
   }
+
+  async switchToPort(port) {
+    if (this.getActivePort() === port) {
+      console.log(`[CursorIDEService] Already connected to port ${port}`);
+      return;
+    }
+    
+    console.log(`[CursorIDEService] Switching to port ${port}`);
+    await this.browserManager.switchToPort(port);
+    
+    // Update active port in IDE manager
+    if (this.ideManager.switchToIDE) {
+      await this.ideManager.switchToIDE(port);
+    }
+  }
 }
 
 module.exports = CursorIDEService; 

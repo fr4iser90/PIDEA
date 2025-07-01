@@ -139,6 +139,87 @@ class ChatController {
       });
     }
   }
+
+  async getChatHistoryForPort(req, res) {
+    try {
+      const port = parseInt(req.params.port);
+      
+      if (isNaN(port) || port < 1000 || port > 65535) {
+        return res.status(400).json({
+          error: 'Invalid port number',
+          code: 'INVALID_PORT'
+        });
+      }
+      
+      // Switch to port first
+      await this.cursorIDEService.switchToPort(port);
+      
+      // Extract chat history
+      const messages = await this.cursorIDEService.extractChatHistory();
+      
+      // Find or create session for this port
+      const sessions = await this.getChatHistoryHandler.handle(
+        new GetChatHistoryQuery(null, 100, 0)
+      );
+      
+      let targetSession = sessions.sessions.find(s => s.idePort === port);
+      
+      if (!targetSession) {
+        targetSession = {
+          id: `port-${port}-session`,
+          idePort: port,
+          title: `IDE Port ${port}`,
+          messageCount: messages.length,
+          lastActivity: new Date().toISOString(),
+          messages: []
+        };
+      }
+      
+      res.json({
+        success: true,
+        data: {
+          port: port,
+          sessionId: targetSession.id,
+          session: targetSession,
+          messages: messages
+        }
+      });
+    } catch (error) {
+      console.error('[ChatController] Get chat history for port error:', error);
+      res.status(500).json({ 
+        error: 'Failed to load chat for port',
+        code: 'PORT_CHAT_ERROR',
+        details: error.message
+      });
+    }
+  }
+
+  async switchToPortEndpoint(req, res) {
+    try {
+      const port = parseInt(req.params.port);
+      
+      if (isNaN(port) || port < 1000 || port > 65535) {
+        return res.status(400).json({
+          error: 'Invalid port number',
+          code: 'INVALID_PORT'
+        });
+      }
+      
+      await this.cursorIDEService.switchToPort(port);
+      
+      res.json({
+        success: true,
+        data: { port: port }
+      });
+    } catch (error) {
+      console.error('[ChatController] Switch to port error:', error);
+      res.status(500).json({ 
+        error: 'Failed to switch to port',
+        code: 'PORT_SWITCH_ERROR',
+        details: error.message
+      });
+    }
+  }
 }
 
 module.exports = ChatController; 

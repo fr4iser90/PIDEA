@@ -96,10 +96,7 @@ class ChatSidebarComponent {
           </div>
         </div>
         <div class="ide-actions">
-          ${ide.port !== this.activePort ? 
-            `<button class="ide-switch-btn" data-port="${ide.port}" title="Zu IDE wechseln">🔗</button>` : 
-            '<span class="active-indicator">✓</span>'
-          }
+          ${ide.port === this.activePort ? '<span class="active-indicator">✓</span>' : ''}
           <button class="ide-stop-btn" data-port="${ide.port}" title="IDE stoppen">⏹️</button>
         </div>
       </div>
@@ -124,7 +121,6 @@ class ChatSidebarComponent {
           <div class="session-meta">
             <span class="message-count">${session.messageCount || 0} Nachrichten</span>
             <span class="last-activity">${this.formatDate(session.lastActivity)}</span>
-            ${session.idePort ? `<span class="ide-port">Port ${session.idePort}</span>` : ''}
           </div>
         </div>
         <button class="session-delete-btn" data-session-id="${session.id}" title="Chat löschen">×</button>
@@ -162,7 +158,6 @@ class ChatSidebarComponent {
     const sessionItems = this.container.querySelectorAll('.chat-session-item');
     const deleteBtns = this.container.querySelectorAll('.session-delete-btn');
     const ideItems = this.container.querySelectorAll('.ide-item');
-    const ideSwitchBtns = this.container.querySelectorAll('.ide-switch-btn');
     const ideStopBtns = this.container.querySelectorAll('.ide-stop-btn');
 
     newChatBtn?.addEventListener('click', () => {
@@ -198,11 +193,13 @@ class ChatSidebarComponent {
       });
     });
 
-    ideSwitchBtns.forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        const port = parseInt(btn.dataset.port);
-        this.switchToIDE(port);
+    ideItems.forEach(item => {
+      item.addEventListener('click', (e) => {
+        // Nur wenn nicht auf Stop-Button geklickt
+        if (!e.target.classList.contains('ide-stop-btn')) {
+          const port = parseInt(item.dataset.port);
+          this.switchDirectlyToIDE(port);
+        }
       });
     });
 
@@ -290,6 +287,18 @@ class ChatSidebarComponent {
    */
   switchToIDE(port) {
     this.eventBus.emit('chat-sidebar:ide:switch', { port });
+  }
+
+  /**
+   * Switches directly to IDE and loads its chat
+   * @param {number} port - The port of the IDE to switch to
+   */
+  switchDirectlyToIDE(port) {
+    // 1. Switch IDE (existing infrastructure)
+    this.eventBus.emit('chat-sidebar:ide:switch', { port });
+    
+    // 2. Load chat for this port (new functionality)
+    this.eventBus.emit('chat-sidebar:load-chat-for-port', { port });
   }
 
   /**

@@ -158,6 +158,48 @@ class AppController {
       this.loadFile(data.path);
     });
 
+    // NEW: Chat for port loading
+    this.eventBus.on('chat-sidebar:load-chat-for-port', async (data) => {
+      try {
+        const response = await fetch(`/api/chat/port/${data.port}/history`);
+        const result = await response.json();
+        
+        if (result.success) {
+          // Update chat with new messages
+          this.eventBus.emit('chat:messages:loaded', { 
+            messages: result.data.messages,
+            port: data.port,
+            sessionId: result.data.sessionId,
+            session: result.data.session
+          });
+          
+          // Update session in sidebar
+          this.eventBus.emit('chat-sidebar:session:selected', { 
+            sessionId: result.data.sessionId 
+          });
+          
+          console.log(`Chat loaded for port ${data.port}: ${result.data.messages.length} messages`);
+        } else {
+          throw new Error(result.error || 'Failed to load chat');
+        }
+      } catch (error) {
+        console.error('Failed to load chat for port:', error);
+        this.showError(`Failed to load chat for port ${data.port}: ${error.message}`);
+      }
+    });
+
+    // Handle chat messages loading
+    this.eventBus.on('chat:messages:loaded', (data) => {
+      if (this.chatComponent && this.chatComponent.loadMessages) {
+        this.chatComponent.loadMessages(data.messages);
+      }
+      
+      if (data.session && this.chatSidebarComponent) {
+        this.chatSidebarComponent.updateSessions([data.session]);
+        this.chatSidebarComponent.setCurrentSession(data.sessionId);
+      }
+    });
+
     // Mode switching
     this.setupModeSwitching();
     

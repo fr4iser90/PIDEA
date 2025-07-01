@@ -185,6 +185,10 @@ class Application {
     this.app.delete('/api/ide/stop/:port', (req, res) => this.ideController.stopIDE(req, res));
     this.app.get('/api/ide/status', (req, res) => this.ideController.getStatus(req, res));
 
+    // Port-specific Chat API
+    this.app.get('/api/chat/port/:port/history', (req, res) => this.chatController.getChatHistoryForPort(req, res));
+    this.app.post('/api/chat/port/:port/switch', (req, res) => this.chatController.switchToPortEndpoint(req, res));
+
     // WebSocket status
     this.app.get('/api/websocket/status', (req, res) => {
       res.json({
