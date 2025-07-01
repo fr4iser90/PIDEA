@@ -179,9 +179,13 @@ class AppController {
   async loadFileTree() {
     try {
       const response = await fetch('/api/files');
-      const files = await response.json();
+      const result = await response.json();
       
-      this.eventBus.emit('code-sidebar:files:loaded', { files });
+      if (result.success) {
+        this.eventBus.emit('code-sidebar:files:loaded', { files: result.data });
+      } else {
+        throw new Error(result.error || 'Failed to load file tree');
+      }
     } catch (error) {
       console.error('Failed to load file tree:', error);
       this.showError('Failed to load file tree');
@@ -191,9 +195,13 @@ class AppController {
   async loadFile(path) {
     try {
       const response = await fetch(`/api/files/${encodeURIComponent(path)}`);
-      const file = await response.json();
+      const result = await response.json();
       
-      this.eventBus.emit('code-explorer:file:selected', { file });
+      if (result.success) {
+        this.eventBus.emit('code-explorer:file:selected', { file: result.data });
+      } else {
+        throw new Error(result.error || 'Failed to load file');
+      }
     } catch (error) {
       console.error('Failed to load file:', error);
       this.showError('Failed to load file');

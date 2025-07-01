@@ -122,6 +122,49 @@ class Application {
     this.app.get('/api/chat/status', (req, res) => this.chatController.getConnectionStatus(req, res));
     this.app.get('/api/health', (req, res) => this.chatController.healthCheck(req, res));
 
+    // CodeExplorer API routes
+    this.app.get('/api/files', async (req, res) => {
+      try {
+        const fileTree = await this.browserManager.getFileExplorerTree();
+        res.json({
+          success: true,
+          data: fileTree
+        });
+      } catch (error) {
+        console.error('[Application] Error getting file tree:', error);
+        res.status(500).json({
+          success: false,
+          error: 'Failed to get file tree'
+        });
+      }
+    });
+
+    this.app.get('/api/files/content', async (req, res) => {
+      try {
+        const filePath = req.query.path;
+        if (!filePath) {
+          return res.status(400).json({
+            success: false,
+            error: 'File path is required'
+          });
+        }
+        const content = await this.browserManager.getFileContent(filePath);
+        res.json({
+          success: true,
+          data: {
+            path: filePath,
+            content: content
+          }
+        });
+      } catch (error) {
+        console.error('[Application] Error getting file content:', error);
+        res.status(500).json({
+          success: false,
+          error: 'Failed to get file content'
+        });
+      }
+    });
+
     // WebSocket status
     this.app.get('/api/websocket/status', (req, res) => {
       res.json({

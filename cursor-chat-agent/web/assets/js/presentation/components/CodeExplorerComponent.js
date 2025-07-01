@@ -86,10 +86,26 @@ class CodeExplorerComponent {
    * Loads and displays a file in the editor
    * @param {Object} file - File object with name and content properties
    */
-  loadFile(file) {
-    this.currentFile = file;
-    this.render();
-    this.highlightCode();
+  async loadFile(file) {
+    try {
+      this.currentFile = file;
+      this.render();
+      
+      // Load file content from API
+      const response = await fetch(`/api/files/content?path=${encodeURIComponent(file.path)}`);
+      const result = await response.json();
+      
+      if (result.success) {
+        this.currentFile.content = result.data.content;
+        this.render();
+        this.highlightCode();
+      } else {
+        this.showError(`Fehler beim Laden der Datei: ${result.error}`);
+      }
+    } catch (error) {
+      console.error('Failed to load file:', error);
+      this.showError('Fehler beim Laden der Datei');
+    }
   }
 
   /**

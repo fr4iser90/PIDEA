@@ -16,6 +16,68 @@ const port = 3000;
 // Middleware to parse JSON bodies
 app.use(express.json({ limit: '50mb' }));
 
+// Serve static files from web directory
+app.use('/web', express.static(path.join(__dirname, 'web')));
+
+// Import BrowserManager for file operations
+const BrowserManager = require('./src/infrastructure/external/BrowserManager');
+const browserManager = new BrowserManager();
+
+// Test route first
+app.get('/api/test', (req, res) => {
+  console.log('[API] Test route called');
+  res.json({ message: 'Test route working!' });
+});
+
+// Code Explorer API routes - direct implementation like chat
+app.get('/api/files', async (req, res) => {
+  try {
+    console.log('[API] Getting file tree...');
+    const files = await browserManager.getFileExplorerTree();
+    res.json({
+      success: true,
+      data: files
+    });
+  } catch (error) {
+    console.error('[API] Error getting file tree:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
+app.get('/api/files/:path(*)', async (req, res) => {
+  try {
+    const { path } = req.params;
+    console.log(`[API] Getting file content for: ${path}`);
+    
+    const opened = await browserManager.openFile(path);
+    if (!opened) {
+      return res.status(404).json({
+        success: false,
+        error: 'File not found or could not be opened'
+      });
+    }
+
+    const content = await browserManager.getCurrentFileContent();
+    res.json({
+      success: true,
+      data: {
+        path,
+        content,
+        opened
+      }
+    });
+  } catch (error) {
+    console.error('[API] Error getting file content:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
 // Placeholder path for Cursor IDE chat data (to be determined)
 const CHAT_DATA_PATH = '/home/fr4iser/.cursor/chat-data.json'; // Hypothetical path, needs to be confirmed
 

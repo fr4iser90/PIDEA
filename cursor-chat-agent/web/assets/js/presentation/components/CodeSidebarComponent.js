@@ -37,6 +37,7 @@ class CodeSidebarComponent {
     this.render();
     this.bindEvents();
     this.setupEventListeners();
+    this.loadFileTree();
   }
 
   /**
@@ -120,6 +121,7 @@ class CodeSidebarComponent {
         <div class="file-item file ${isSelected ? 'selected' : ''}" data-path="${file.path}" style="padding-left: ${level * 16 + 20}px">
           <span class="file-icon">${this.getFileIcon(file)}</span>
           <span class="file-name">${file.name}</span>
+          ${file.selected ? '<span class="file-status">●</span>' : ''}
         </div>
       `;
     }
@@ -231,6 +233,31 @@ class CodeSidebarComponent {
     this.currentFile = file;
     this.render();
     this.bindEvents();
+  }
+
+  /**
+   * Loads the file tree from the API
+   * @private
+   */
+  async loadFileTree() {
+    try {
+      const response = await fetch('/api/files');
+      
+      if (!response.ok) {
+        console.error('Failed to load file tree: HTTP', response.status);
+        return;
+      }
+      
+      const result = await response.json();
+      
+      if (result.success) {
+        this.updateFileTree(result.data);
+      } else {
+        console.error('Failed to load file tree:', result.error);
+      }
+    } catch (error) {
+      console.error('Failed to load file tree:', error);
+    }
   }
 
   /**
