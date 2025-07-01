@@ -1,0 +1,98 @@
+{
+  "meta": {
+    "generatedAt": "2025-07-01T12:34:06.812Z",
+    "collector": "auto-dom-collector.js",
+    "method": "Direct CDP Connection",
+    "idePort": 9222,
+    "totalStatesCollected": 11
+  },
+  "collectedStates": {
+    "default-state": {
+      "description": "Basis IDE-Ansicht",
+      "filename": "default-state.md",
+      "timestamp": "2025-07-01T12:33:32.918Z",
+      "elementCount": 17078,
+      "size": 1088233
+    },
+    "chat-active": {
+      "description": "Chat Panel aktiv",
+      "filename": "chat-active.md",
+      "timestamp": "2025-07-01T12:33:36.464Z",
+      "elementCount": 17110,
+      "size": 1090520
+    },
+    "command-palette": {
+      "description": "Command Palette (Ctrl+Shift+P)",
+      "filename": "command-palette.md",
+      "timestamp": "2025-07-01T12:33:38.958Z",
+      "elementCount": 18265,
+      "size": 1137067
+    },
+    "quick-open": {
+      "description": "Quick Open (Ctrl+P)",
+      "filename": "quick-open.md",
+      "timestamp": "2025-07-01T12:33:41.369Z",
+      "elementCount": 18387,
+      "size": 1144700
+    },
+    "global-search": {
+      "description": "Global Search (Ctrl+Shift+F)",
+      "filename": "global-search.md",
+      "timestamp": "2025-07-01T12:33:44.775Z",
+      "elementCount": 17623,
+      "size": 1109385
+    },
+    "extensions-panel": {
+      "description": "Extensions Panel (Ctrl+Shift+X)",
+      "filename": "extensions-panel.md",
+      "timestamp": "2025-07-01T12:33:48.199Z",
+      "elementCount": 17926,
+      "size": 1128458
+    },
+    "debug-panel": {
+      "description": "Debug Panel (Ctrl+Shift+D)",
+      "filename": "debug-panel.md",
+      "timestamp": "2025-07-01T12:33:51.585Z",
+      "elementCount": 17231,
+      "size": 1082774
+    },
+    "terminal-active": {
+      "description": "Terminal aktiv (Ctrl+Shift+`)",
+      "filename": "terminal-active.md",
+      "timestamp": "2025-07-01T12:33:55.039Z",
+      "elementCount": 17341,
+      "size": 1088293
+    },
+    "problems-panel": {
+      "description": "Problems Panel (Ctrl+Shift+M)",
+      "filename": "problems-panel.md",
+      "timestamp": "2025-07-01T12:33:58.446Z",
+      "elementCount": 16980,
+      "size": 1072633
+    },
+    "output-panel": {
+      "description": "Output Panel (Ctrl+Shift+U)",
+      "filename": "output-panel.md",
+      "timestamp": "2025-07-01T12:34:01.791Z",
+      "elementCount": 16980,
+      "size": 1072623
+    },
+    "settings-open": {
+      "description": "Settings geöffnet",
+      "filename": "settings-open.md",
+      "timestamp": "2025-07-01T12:34:05.309Z",
+      "elementCount": 16781,
+      "size": 1074040
+    }
+  },
+  "summary": {
+    "totalFiles": 11,
+    "outputDirectory": "/home/fr4iser/Documents/Git/CursorWeb/cursor-chat-agent/output/auto-collected",
+    "avgElementCount": 17427
+  },
+  "nextSteps": [
+    "npm run analyze-dom     # Analysiere gesammelte DOM-Daten",
+    "npm run validate-coverage  # Prüfe Feature-Abdeckung",
+    "npm run generate-selectors # Erstelle Playwright-Selektoren"
+  ]
+}

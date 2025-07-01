@@ -14,7 +14,10 @@
     "lint:fix": "eslint src/ --fix",
     "build": "echo 'No build step required for Node.js application'",
     "clean": "rm -rf node_modules package-lock.json",
-    "analyze-dom": "node scripts/dom-analyzer.js"
+    "analyze-dom": "node scripts/dom-analyzer.js && node scripts/coverage-validator.js && node scripts/selector-generator.js",
+    "auto-collect-dom": "node scripts/auto-dom-collector.js",
+    "full-analysis": "npm run auto-collect-dom && npm run analyze-dom",
+    "quick-check": "node scripts/coverage-validator.js quick"
   },
   "keywords": [
     "cursor",

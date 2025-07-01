@@ -696,8 +696,31 @@ class DOMAnalyzer {
     return output;
   }
 
+  async runAutomaticWorkflow() {
+    try {
+      // 1. Coverage Validation
+      console.log('\n✅ [1/2] Coverage Validation...');
+      const CoverageValidator = require('./coverage-validator');
+      const validator = new CoverageValidator();
+      await validator.validate();
+
+      // 2. Selector Generation
+      console.log('\n🔧 [2/2] Selector Generierung...');
+      const SelectorGenerator = require('./selector-generator');
+      const generator = new SelectorGenerator();
+      await generator.generate();
+
+      console.log('\n🎉 VOLLSTÄNDIGE DOM-ANALYSE ABGESCHLOSSEN!');
+      console.log('📁 Alle Dateien generiert in: cursor-chat-agent/generated/');
+
+    } catch (error) {
+      console.error('❌ Automatischer Workflow fehlgeschlagen:', error.message);
+      throw error;
+    }
+  }
+
   // Hauptanalysemethode
-  analyze() {
+  async analyze() {
     console.log('🚀 DOM-Analyzer gestartet...\n');
     
     // 1. Lade DOM-Sources
@@ -717,7 +740,14 @@ class DOMAnalyzer {
       fs.mkdirSync(outputDir, { recursive: true });
     }
     
-    return this.writeResults(outputPath);
+    const result = this.writeResults(outputPath);
+
+    // 4. AUTOMATISCHER WORKFLOW WENN VOM npm script ausgeführt
+    if (require.main === module) {
+      await this.runAutomaticWorkflow();
+    }
+
+    return result;
   }
 }
 
@@ -725,12 +755,16 @@ class DOMAnalyzer {
 if (require.main === module) {
   const analyzer = new DOMAnalyzer();
   
-  try {
-    analyzer.analyze();
-  } catch (error) {
-    console.error('❌ FEHLER:', error.message);
-    process.exit(1);
+  async function run() {
+    try {
+      await analyzer.analyze();
+    } catch (error) {
+      console.error('❌ FEHLER:', error.message);
+      process.exit(1);
+    }
   }
+  
+  run();
 }
 
 module.exports = DOMAnalyzer; 
