@@ -208,6 +208,11 @@ class AppController {
       }
     });
 
+    // User app detection events
+    this.eventBus.on('userAppDetected', (data) => {
+      this.handleUserAppUrl(data);
+    });
+
     // Mode switching
     this.setupModeSwitching();
     
@@ -297,6 +302,10 @@ class AppController {
 
       this.previewComponent.container.addEventListener('preview:share', (e) => {
         this.sharePreview();
+      });
+
+      this.previewComponent.container.addEventListener('preview:restartApp', (e) => {
+        this.handleAppRestart(e.detail);
       });
     }
   }
@@ -416,39 +425,10 @@ class AppController {
   }
 
   setupWebSocket() {
-    // WebSocket for live reloading
-    let ws;
-    const connectWebSocket = () => {
-      ws = new WebSocket('ws://localhost:3001');
-      
-      ws.onopen = () => {
-        console.log('[WebSocket] Connected for live reload');
-      };
-      
-      ws.onmessage = (event) => {
-        const data = JSON.parse(event.data);
-        if (data.type === 'reload') {
-          console.log('[WebSocket] Reloading page...', data.file);
-          window.location.reload();
-        }
-      };
-      
-      ws.onclose = () => {
-        console.log('[WebSocket] Connection closed, attempting to reconnect...');
-        setTimeout(connectWebSocket, 1000);
-      };
-      
-      ws.onerror = (error) => {
-        console.error('[WebSocket] Error:', error);
-      };
-    };
-    
-    connectWebSocket();
-
-    // WebSocket for chat updates
+    // WebSocket for chat updates only (existing functionality)
     let chatWs;
     const connectChatWebSocket = () => {
-      chatWs = new WebSocket('ws://localhost:3001');
+      chatWs = new WebSocket('ws://localhost:3000'); // Use same port as main server
       chatWs.onopen = () => {
         console.log('[WebSocket] Connected for chat updates');
       };
@@ -457,6 +437,10 @@ class AppController {
         if (data.type === 'chatUpdate') {
           console.log('[WebSocket] Chat update received');
           this.chatService.loadMessages();
+        }
+        if (data.type === 'userAppUrl') {
+          console.log('[WebSocket] User app URL received:', data.data);
+          this.handleUserAppUrl(data.data);
         }
       };
       chatWs.onclose = () => {
@@ -593,9 +577,39 @@ class AppController {
     }
   }
 
-  refreshPreview() {
+  async refreshPreview() {
     console.log('Refreshing preview...');
-    // Add custom refresh logic here
+    try {
+      // Ask backend for current user app URL
+      const response = await fetch('/api/ide/user-app-url');
+      const result = await response.json();
+      
+      if (result.success && result.data && result.data.url) {
+        console.log('Found user app URL:', result.data.url);
+        this.handleUserAppUrl({ url: result.data.url });
+      } else {
+        console.log('No user app URL found, checking terminal output...');
+        // Trigger terminal monitoring on backend
+        const monitorResponse = await fetch('/api/ide/monitor-terminal', {
+          method: 'POST'
+        });
+        const monitorResult = await monitorResponse.json();
+        
+        if (monitorResult.success && monitorResult.data && monitorResult.data.url) {
+          console.log('Found URL from terminal monitoring:', monitorResult.data.url);
+          this.handleUserAppUrl({ url: monitorResult.data.url });
+        } else {
+          console.log('No URL found in terminal output, using default frontend dev server...');
+          // Use the main server URL as fallback (not the WebSocket server)
+          this.handleUserAppUrl({ url: 'http://localhost:3000' });
+        }
+      }
+    } catch (error) {
+      console.error('Failed to refresh preview:', error);
+      // Fallback to main server
+      console.log('Using fallback main server URL...');
+      this.handleUserAppUrl({ url: 'http://localhost:3000' });
+    }
   }
 
   exportPreview() {
@@ -606,6 +620,30 @@ class AppController {
   sharePreview() {
     console.log('Sharing preview...');
     // Add custom share logic here
+  }
+
+  handleUserAppUrl(data) {
+    if (this.previewComponent && data.url) {
+      this.previewComponent.setIframe(data.url);
+      this.previewComponent.show();
+    }
+  }
+
+  async handleAppRestart(data) {
+    try {
+      const response = await fetch('/api/ide/restart-app', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url: data.url })
+      });
+      const result = await response.json();
+      if (!result.success) {
+        throw new Error(result.error);
+      }
+    } catch (error) {
+      console.error('Failed to restart app:', error);
+      this.showError('Failed to restart app');
+    }
   }
 }
 

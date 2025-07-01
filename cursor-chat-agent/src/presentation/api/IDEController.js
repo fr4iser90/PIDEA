@@ -1,7 +1,8 @@
 class IDEController {
-  constructor(ideManager, eventBus) {
+  constructor(ideManager, eventBus, cursorIDEService = null) {
     this.ideManager = ideManager;
     this.eventBus = eventBus;
+    this.cursorIDEService = cursorIDEService;
   }
 
   async getAvailableIDEs(req, res) {
@@ -109,6 +110,63 @@ class IDEController {
       res.status(500).json({
         success: false,
         error: 'Failed to get IDE status'
+      });
+    }
+  }
+
+  async restartUserApp(req, res) {
+    try {
+      if (!this.cursorIDEService) {
+        throw new Error('CursorIDEService not available');
+      }
+      
+      await this.cursorIDEService.restartUserApp();
+      res.json({ success: true });
+    } catch (error) {
+      console.error('[IDEController] Error restarting user app:', error);
+      res.status(500).json({ 
+        success: false, 
+        error: error.message 
+      });
+    }
+  }
+
+  async getUserAppUrl(req, res) {
+    try {
+      if (!this.cursorIDEService) {
+        throw new Error('CursorIDEService not available');
+      }
+      
+      const url = await this.cursorIDEService.monitorTerminalOutput();
+      res.json({ 
+        success: true, 
+        data: { url: url } 
+      });
+    } catch (error) {
+      console.error('[IDEController] Error getting user app URL:', error);
+      res.status(500).json({ 
+        success: false, 
+        error: error.message 
+      });
+    }
+  }
+
+  async monitorTerminal(req, res) {
+    try {
+      if (!this.cursorIDEService) {
+        throw new Error('CursorIDEService not available');
+      }
+      
+      const url = await this.cursorIDEService.monitorTerminalOutput();
+      res.json({ 
+        success: true, 
+        data: { url: url } 
+      });
+    } catch (error) {
+      console.error('[IDEController] Error monitoring terminal:', error);
+      res.status(500).json({ 
+        success: false, 
+        error: error.message 
       });
     }
   }

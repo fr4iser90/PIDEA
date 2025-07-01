@@ -30,6 +30,9 @@ export default class PreviewComponent {
         <span class="preview-text">Preview</span>
       </div>
       <div class="preview-actions">
+        <button class="preview-btn" id="previewRestartBtn" title="Restart App">
+          <span class="btn-icon">🔄</span>
+        </button>
         <button class="preview-btn" id="previewFullscreenBtn" title="Fullscreen">
           <span class="btn-icon">⛶</span>
         </button>
@@ -96,6 +99,10 @@ export default class PreviewComponent {
 
   bindEvents() {
     // Header action buttons
+    this.container.querySelector('#previewRestartBtn').addEventListener('click', () => {
+      this.restartApp();
+    });
+
     this.container.querySelector('#previewFullscreenBtn').addEventListener('click', () => {
       this.toggleFullScreen();
     });
@@ -287,6 +294,13 @@ export default class PreviewComponent {
     this.emit('share');
   }
 
+  async restartApp() {
+    if (this.currentIframeUrl) {
+      // Send restart command via API
+      this.emit('restartApp', { url: this.currentIframeUrl });
+    }
+  }
+
   // Event system
   emit(eventName, data = null) {
     const event = new CustomEvent(`preview:${eventName}`, {
@@ -317,5 +331,11 @@ export default class PreviewComponent {
     if (this.container && this.container.parentNode) {
       this.container.parentNode.removeChild(this.container);
     }
+  }
+
+  setIframe(url) {
+    const iframeHTML = `<iframe src="${url}" style="width:100%;height:100%;border:0;" allow="clipboard-write; clipboard-read; geolocation; microphone; camera"></iframe>`;
+    this.setContent(iframeHTML);
+    this.currentIframeUrl = url;
   }
 } 

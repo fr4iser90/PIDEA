@@ -48,7 +48,7 @@ class Application {
     this.eventBus = new EventBus();
 
     // Initialize domain services
-    this.cursorIDEService = new CursorIDEService(this.browserManager, this.ideManager);
+    this.cursorIDEService = new CursorIDEService(this.browserManager, this.ideManager, this.eventBus);
 
     // Initialize application handlers
     this.sendMessageHandler = new SendMessageHandler(
@@ -71,7 +71,8 @@ class Application {
 
     this.ideController = new IDEController(
       this.ideManager,
-      this.eventBus
+      this.eventBus,
+      this.cursorIDEService
     );
 
     this.ideMirrorController = new IDEMirrorController();
@@ -190,6 +191,9 @@ class Application {
     this.app.post('/api/ide/switch/:port', (req, res) => this.ideController.switchIDE(req, res));
     this.app.delete('/api/ide/stop/:port', (req, res) => this.ideController.stopIDE(req, res));
     this.app.get('/api/ide/status', (req, res) => this.ideController.getStatus(req, res));
+    this.app.post('/api/ide/restart-app', (req, res) => this.ideController.restartUserApp(req, res));
+    this.app.get('/api/ide/user-app-url', (req, res) => this.ideController.getUserAppUrl(req, res));
+    this.app.post('/api/ide/monitor-terminal', (req, res) => this.ideController.monitorTerminal(req, res));
 
     // Port-specific Chat API
     this.app.get('/api/chat/port/:port/history', (req, res) => this.chatController.getChatHistoryForPort(req, res));
@@ -225,6 +229,15 @@ class Application {
       console.log('[Application] Chat history updated event:', eventData);
       // Could trigger caching, indexing, etc.
     });
+
+    // Handle user app detection
+    this.eventBus.subscribe('userAppDetected', async (eventData) => {
+      console.log('[Application] User app detected event:', eventData);
+      // Broadcast to frontend via WebSocket
+      if (this.webSocketManager) {
+        this.webSocketManager.broadcastToClients('userAppUrl', eventData);
+      }
+    });
   }
 
   async start() {
@@ -235,6 +248,11 @@ class Application {
 
     try {
       await this.initialize();
+      
+      // Start terminal monitoring
+      if (this.cursorIDEService) {
+        await this.cursorIDEService.startTerminalMonitoring();
+      }
       
       this.server.listen(this.config.port, () => {
         console.log(`[Application] Server running at http://localhost:${this.config.port}/`);
