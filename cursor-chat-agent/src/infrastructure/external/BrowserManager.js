@@ -86,79 +86,73 @@ class BrowserManager {
         try {
           await page.waitForSelector(selector, { timeout: 2000 });
           explorerFound = true;
-          console.log(`[BrowserManager] Found explorer with selector: ${selector}`);
           break;
-        } catch (e) {
-          console.log(`[BrowserManager] Selector ${selector} not found, trying next...`);
-        }
+        } catch (e) {}
       }
+      if (!explorerFound) return [];
 
-      if (!explorerFound) {
-        console.log('[BrowserManager] No explorer found, returning empty tree');
-        return [];
-      }
-
-      // Extract the file tree structure
-      const fileTree = await page.evaluate(() => {
-        // Try multiple selectors for tree items
+      // Extract the file tree structure as a flat list
+      const flatFiles = await page.evaluate(() => {
         const selectors = [
           '.explorer-folders-view .monaco-list-row',
           '.monaco-list.list_id_2 .monaco-list-row',
           '[data-keybinding-context="16"] .monaco-list-row',
           '.monaco-list[role="tree"] .monaco-list-row'
         ];
-
         let treeItems = [];
         for (const selector of selectors) {
           const items = document.querySelectorAll(selector);
           if (items.length > 0) {
             treeItems = Array.from(items);
-            console.log(`Found ${items.length} items with selector: ${selector}`);
             break;
           }
         }
-
-        const files = [];
-
-        treeItems.forEach(item => {
+        return treeItems.map(item => {
           const labelElement = item.querySelector('.label-name');
-          if (!labelElement) return;
-
+          if (!labelElement) return null;
           const name = labelElement.textContent.trim();
           const ariaLabel = item.getAttribute('aria-label');
           const ariaLevel = parseInt(item.getAttribute('aria-level') || '1');
           const ariaExpanded = item.getAttribute('aria-expanded') === 'true';
           const isSelected = item.classList.contains('selected');
-          
-          // Determine if it's a file or directory
           const isDirectory = item.querySelector('.codicon-tree-item-expanded') !== null;
-          
-          // Extract file path from aria-label
           let path = '';
           if (ariaLabel) {
-            // aria-label format: "~/Documents/Git/CursorWeb/cursor-chat-agent/src/Application.js"
             const pathMatch = ariaLabel.match(/~\/Documents\/Git\/CursorWeb\/(.+)/);
             if (pathMatch) {
               path = pathMatch[1];
             }
           }
-
-          files.push({
+          return {
             name,
             path,
             type: isDirectory ? 'directory' : 'file',
             level: ariaLevel,
             expanded: ariaExpanded,
-            selected: isSelected,
-            ariaLabel
-          });
-        });
-
-        return files;
+            selected: isSelected
+          };
+        }).filter(Boolean);
       });
 
-      return fileTree;
-
+      // Build tree from flat list
+      function buildTree(flatList) {
+        const root = [];
+        const pathMap = {};
+        flatList.forEach(item => {
+          item.children = [];
+          pathMap[item.path] = item;
+        });
+        flatList.forEach(item => {
+          const parentPath = item.path.split('/').slice(0, -1).join('/');
+          if (parentPath && pathMap[parentPath]) {
+            pathMap[parentPath].children.push(item);
+          } else {
+            root.push(item);
+          }
+        });
+        return root;
+      }
+      return buildTree(flatFiles);
     } catch (error) {
       console.error('[BrowserManager] Error reading file explorer tree:', error.message);
       return [];

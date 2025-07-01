@@ -46,10 +46,10 @@ class CodeSidebarComponent {
    */
   render() {
     this.container.innerHTML = `
-      <div class="code-sidebar-content">
+      <div class="sidebar-content">
         <div class="sidebar-header">
-          <h3>📁 Projekt Explorer</h3>
-          <button id="refreshFilesBtn" class="btn-icon" title="Dateien aktualisieren">🔄</button>
+          <h3>📁 EXPLORER</h3>
+          <button id="refreshFilesBtn" class="btn-icon" title="Refresh">🔄</button>
         </div>
         
         <div class="file-explorer" id="fileExplorer">
@@ -60,8 +60,8 @@ class CodeSidebarComponent {
         
         <div class="sidebar-footer">
           <div class="quick-actions">
-            <button id="searchFilesBtn" class="btn-secondary" title="Dateien suchen">🔍 Suche</button>
-            <button id="showHiddenBtn" class="btn-secondary" title="Versteckte Dateien">👁️ Hidden</button>
+            <button id="searchFilesBtn" class="btn-secondary" title="Search">🔍</button>
+            <button id="showHiddenBtn" class="btn-secondary" title="Show Hidden">👁️</button>
           </div>
         </div>
       </div>
@@ -73,12 +73,11 @@ class CodeSidebarComponent {
    * @private
    * @returns {string} HTML string for the file tree
    */
-  renderFileTree() {
-    if (this.fileTree.length === 0) {
+  renderFileTree(tree = this.fileTree, level = 0) {
+    if (!tree || tree.length === 0) {
       return '<div class="no-files">Keine Dateien verfügbar</div>';
     }
-
-    return this.fileTree.map(file => this.renderFileItem(file)).join('');
+    return tree.map(file => this.renderFileItem(file, level)).join('');
   }
 
   /**
@@ -91,35 +90,30 @@ class CodeSidebarComponent {
   renderFileItem(file, level = 0) {
     const isExpanded = this.expandedFolders.has(file.path);
     const isSelected = this.currentFile && this.currentFile.path === file.path;
-    
     if (file.type === 'directory') {
-      const children = this.fileTree.filter(f => 
-        f.path.startsWith(file.path + '/') && 
-        f.path.split('/').length === file.path.split('/').length + 1
-      );
-      
       return `
         <div class="file-item directory ${isSelected ? 'selected' : ''}" data-path="${file.path}">
           <div class="file-header" style="padding-left: ${level * 16}px">
             <button class="expand-btn ${isExpanded ? 'expanded' : ''}" data-path="${file.path}">
               ${isExpanded ? '▼' : '▶'}
             </button>
+            <div class="file-info">
+              <span class="file-icon" data-type="folder">📁</span>
+              <span class="file-name">${file.name}</span>
+            </div>
           </div>
-          <div class="file-info">
-            <span class="file-icon">📁</span>
-            <span class="file-name">${file.name}</span>
-          </div>
-          ${isExpanded ? `
+          ${isExpanded && file.children && file.children.length > 0 ? `
             <div class="file-children">
-              ${children.map(child => this.renderFileItem(child, level + 1)).join('')}
+              ${this.renderFileTree(file.children, level + 1)}
             </div>
           ` : ''}
         </div>
       `;
     } else {
+      const fileIcon = this.getFileIcon(file);
       return `
         <div class="file-item file ${isSelected ? 'selected' : ''}" data-path="${file.path}" style="padding-left: ${level * 16 + 20}px">
-          <span class="file-icon">${this.getFileIcon(file)}</span>
+          <span class="file-icon" data-type="${fileIcon.type}">${fileIcon.icon}</span>
           <span class="file-name">${file.name}</span>
           ${file.selected ? '<span class="file-status">●</span>' : ''}
         </div>
@@ -131,20 +125,35 @@ class CodeSidebarComponent {
    * Returns the appropriate icon for a file based on its extension
    * @private
    * @param {Object} file - File object with name property
-   * @returns {string} Emoji icon for the file type
+   * @returns {string} Icon class and type for the file
    */
   getFileIcon(file) {
-    if (file.name.endsWith('.js')) return '📄';
-    if (file.name.endsWith('.html')) return '🌐';
-    if (file.name.endsWith('.css')) return '🎨';
-    if (file.name.endsWith('.json')) return '📋';
-    if (file.name.endsWith('.md')) return '📝';
-    if (file.name.endsWith('.py')) return '🐍';
-    if (file.name.endsWith('.java')) return '☕';
-    if (file.name.endsWith('.cpp') || file.name.endsWith('.c')) return '⚙️';
-    if (file.name.endsWith('.ts')) return '📘';
-    if (file.name.endsWith('.jsx') || file.name.endsWith('.tsx')) return '⚛️';
-    return '📄';
+    const extension = file.name.split('.').pop().toLowerCase();
+    
+    const iconMap = {
+      'js': { icon: '📄', type: 'js' },
+      'html': { icon: '🌐', type: 'html' },
+      'css': { icon: '🎨', type: 'css' },
+      'json': { icon: '📋', type: 'json' },
+      'md': { icon: '📝', type: 'md' },
+      'py': { icon: '🐍', type: 'py' },
+      'java': { icon: '☕', type: 'java' },
+      'cpp': { icon: '⚙️', type: 'cpp' },
+      'c': { icon: '⚙️', type: 'cpp' },
+      'ts': { icon: '📘', type: 'ts' },
+      'jsx': { icon: '⚛️', type: 'jsx' },
+      'tsx': { icon: '⚛️', type: 'tsx' },
+      'sh': { icon: '💻', type: 'sh' },
+      'yml': { icon: '⚙️', type: 'yml' },
+      'yaml': { icon: '⚙️', type: 'yml' },
+      'xml': { icon: '📄', type: 'xml' },
+      'txt': { icon: '📄', type: 'txt' },
+      'log': { icon: '📄', type: 'log' },
+      'gitignore': { icon: '📄', type: 'gitignore' },
+      'lock': { icon: '🔒', type: 'lock' }
+    };
+    
+    return iconMap[extension] || { icon: '📄', type: 'file' };
   }
 
   /**
