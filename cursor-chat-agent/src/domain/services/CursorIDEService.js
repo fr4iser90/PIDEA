@@ -8,6 +8,24 @@ class CursorIDEService {
     this.lastTerminalStatus = null;
     this.lastPackageJsonCheck = null;
     this.cachedPackageJsonUrl = null;
+    
+    // Listen for IDE changes to reset package.json cache
+    if (this.eventBus) {
+      this.eventBus.subscribe('activeIDEChanged', async (eventData) => {
+        console.log('[CursorIDEService] IDE changed, resetting package.json cache');
+        this.resetPackageJsonCache();
+        
+        // Switch browser connection to new IDE
+        if (eventData.port) {
+          try {
+            await this.browserManager.switchToPort(eventData.port);
+            console.log('[CursorIDEService] Switched browser connection to port:', eventData.port);
+          } catch (error) {
+            console.error('[CursorIDEService] Failed to switch browser connection:', error.message);
+          }
+        }
+      });
+    }
   }
 
   async sendMessage(message) {
@@ -351,12 +369,18 @@ class CursorIDEService {
       // If no URL found in terminal, try package.json analysis as fallback
       if (!this.lastPackageJsonCheck || Date.now() - this.lastPackageJsonCheck > 10000) { // Check every 10 seconds
         if (!this.cachedPackageJsonUrl) {
-          this.cachedPackageJsonUrl = await this.detectDevServerFromPackageJson();
-          if (this.cachedPackageJsonUrl) {
-            console.log('[CursorIDEService] Dev server detected from package.json:', this.cachedPackageJsonUrl);
+          // Try CDP method first (more reliable)
+          console.log('[CursorIDEService] Trying CDP method for package.json analysis...');
+          this.cachedPackageJsonUrl = await this.detectDevServerFromCDP();
+          
+          // Fallback to old DOM method if CDP fails
+          if (!this.cachedPackageJsonUrl) {
+            console.log('[CursorIDEService] CDP failed, trying DOM method...');
+            this.cachedPackageJsonUrl = await this.detectDevServerFromPackageJson();
           }
         }
         if (this.cachedPackageJsonUrl) {
+          console.log('[CursorIDEService] Dev server detected from package.json:', this.cachedPackageJsonUrl);
           return this.cachedPackageJsonUrl;
         }
         this.lastPackageJsonCheck = Date.now();
@@ -503,30 +527,14 @@ class CursorIDEService {
 
   async detectDevServerFromPackageJson(workspacePath = null) {
     try {
-      // If no workspace path provided, try to detect from current IDE
+      // Hole Workspace-Pfad IMMER über Playwright-Methode (gecacht)
       if (!workspacePath) {
-        // Try to get workspace path from IDE context
-        const page = await this.browserManager.getPage();
-        if (page) {
-          // Try to get current workspace from IDE
-          const workspaceInfo = await page.evaluate(() => {
-            // Try to get workspace path from various IDE elements
-            const workspaceElement = document.querySelector('[data-workspace], .workspace-info, .folder-name');
-            if (workspaceElement) {
-              return workspaceElement.textContent || workspaceElement.getAttribute('data-workspace');
-            }
-            return null;
-          });
-          
-          if (workspaceInfo) {
-            workspacePath = workspaceInfo;
-          }
-        }
+        workspacePath = await this.addWorkspacePathDetectionViaPlaywright();
+        console.log('[CursorIDEService] Workspace path via Playwright:', workspacePath);
       }
-      
-      // Default to current directory if still no path
       if (!workspacePath) {
-        workspacePath = process.cwd();
+        console.error('[CursorIDEService] No workspace path detected!');
+        return null;
       }
       
       console.log('[CursorIDEService] Analyzing package.json in:', workspacePath);
@@ -538,7 +546,43 @@ class CursorIDEService {
       
       if (!fs.existsSync(packageJsonPath)) {
         console.log('[CursorIDEService] No package.json found in:', workspacePath);
-        return null;
+        
+        // Try to find package.json in subdirectories
+        console.log('[CursorIDEService] Searching for package.json in subdirectories...');
+        const findPackageJson = (dir, maxDepth = 3, currentDepth = 0) => {
+          if (currentDepth > maxDepth) return null;
+          
+          try {
+            const files = fs.readdirSync(dir);
+            for (const file of files) {
+              const fullPath = path.join(dir, file);
+              const stat = fs.statSync(fullPath);
+              
+              if (stat.isDirectory()) {
+                const packagePath = path.join(fullPath, 'package.json');
+                if (fs.existsSync(packagePath)) {
+                  console.log('[CursorIDEService] Found package.json in subdirectory:', fullPath);
+                  return fullPath;
+                }
+                
+                // Recursively search deeper
+                const found = findPackageJson(fullPath, maxDepth, currentDepth + 1);
+                if (found) return found;
+              }
+            }
+          } catch (error) {
+            // Ignore permission errors
+          }
+          return null;
+        };
+        
+        const foundPath = findPackageJson(workspacePath);
+        if (foundPath) {
+          workspacePath = foundPath;
+          packageJsonPath = path.join(workspacePath, 'package.json');
+        } else {
+          return null;
+        }
       }
       
       const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
@@ -647,6 +691,331 @@ class CursorIDEService {
       console.error('[CursorIDEService] Error analyzing package.json:', error);
       return null;
     }
+  }
+
+  resetPackageJsonCache() {
+    this.cachedPackageJsonUrl = null;
+    this.lastPackageJsonCheck = null;
+    console.log('[CursorIDEService] Package.json cache reset for new IDE/project');
+  }
+
+  async detectDevServerFromCDP() {
+    try {
+      const page = await this.browserManager.getPage();
+      if (!page) {
+        console.log('[CursorIDEService] No page available for CDP');
+        return null;
+      }
+
+      // Use CDP to get file system info
+      const client = await page.context().newCDPSession(page);
+      
+      // Get workspace info from CDP
+      const workspaceInfo = await client.send('Runtime.evaluate', {
+        expression: `
+          (() => {
+            // Try to get workspace from various sources
+            const workspace = {
+              path: null,
+              name: null
+            };
+            
+            // Method 1: From window object
+            if (window.workspace) {
+              workspace.path = window.workspace.uri?.fsPath;
+              workspace.name = window.workspace.name;
+            }
+            
+            // Method 2: From VS Code API
+            if (window.vscode) {
+              workspace.path = window.vscode.workspace.workspaceFolders?.[0]?.uri?.fsPath;
+              workspace.name = window.vscode.workspace.workspaceFolders?.[0]?.name;
+            }
+            
+            // Method 3: From Monaco editor
+            if (window.monaco) {
+              workspace.path = window.monaco.Uri.file('.').fsPath;
+            }
+            
+            return workspace;
+          })()
+        `
+      });
+
+      if (workspaceInfo.result?.value?.path) {
+        const workspacePath = workspaceInfo.result.value.path;
+        console.log('[CursorIDEService] CDP workspace path:', workspacePath);
+        
+        // Now analyze package.json in this path
+        return await this.analyzePackageJsonInPath(workspacePath);
+      }
+
+      console.log('[CursorIDEService] No workspace path found via CDP');
+      return null;
+
+    } catch (error) {
+      console.error('[CursorIDEService] CDP error:', error.message);
+      return null;
+    }
+  }
+
+  async analyzePackageJsonInPath(workspacePath) {
+    try {
+      const fs = require('fs');
+      const path = require('path');
+      
+      console.log('[CursorIDEService] Analyzing package.json in path:', workspacePath);
+      
+      // Try to find package.json
+      const packageJsonPath = path.join(workspacePath, 'package.json');
+      
+      if (fs.existsSync(packageJsonPath)) {
+        return await this.parsePackageJson(packageJsonPath);
+      }
+      
+      // Search in subdirectories
+      console.log('[CursorIDEService] Searching for package.json in subdirectories...');
+      const findPackageJson = (dir, maxDepth = 3, currentDepth = 0) => {
+        if (currentDepth > maxDepth) return null;
+        
+        try {
+          const files = fs.readdirSync(dir);
+          for (const file of files) {
+            const fullPath = path.join(dir, file);
+            const stat = fs.statSync(fullPath);
+            
+            if (stat.isDirectory()) {
+              const packagePath = path.join(fullPath, 'package.json');
+              if (fs.existsSync(packagePath)) {
+                console.log('[CursorIDEService] Found package.json in subdirectory:', fullPath);
+                return fullPath;
+              }
+              
+              // Recursively search deeper
+              const found = findPackageJson(fullPath, maxDepth, currentDepth + 1);
+              if (found) return found;
+            }
+          }
+        } catch (error) {
+          // Ignore permission errors
+        }
+        return null;
+      };
+      
+      const foundPath = findPackageJson(workspacePath);
+      if (foundPath) {
+        return await this.parsePackageJson(path.join(foundPath, 'package.json'));
+      }
+      
+      return null;
+      
+    } catch (error) {
+      console.error('[CursorIDEService] Error analyzing path:', error.message);
+      return null;
+    }
+  }
+
+  async parsePackageJson(packageJsonPath) {
+    try {
+      const fs = require('fs');
+      const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
+      
+      // Analyze scripts for dev server patterns
+      const scripts = packageJson.scripts || {};
+      const devServerPorts = [];
+      
+      // Common dev server patterns
+      const devPatterns = [
+        { pattern: /dev/, defaultPort: 3000 },
+        { pattern: /start/, defaultPort: 3000 },
+        { pattern: /serve/, defaultPort: 3000 },
+        { pattern: /vite/, defaultPort: 5173 },
+        { pattern: /next/, defaultPort: 3000 },
+        { pattern: /react/, defaultPort: 3000 },
+        { pattern: /vue/, defaultPort: 3000 },
+        { pattern: /svelte/, defaultPort: 5173 },
+        { pattern: /nuxt/, defaultPort: 3000 },
+        { pattern: /gatsby/, defaultPort: 8000 },
+        { pattern: /astro/, defaultPort: 4321 },
+        { pattern: /solid/, defaultPort: 3000 },
+        { pattern: /preact/, defaultPort: 3000 }
+      ];
+      
+      // Check each script
+      for (const [scriptName, scriptCommand] of Object.entries(scripts)) {
+        for (const { pattern, defaultPort } of devPatterns) {
+          if (pattern.test(scriptName.toLowerCase()) || pattern.test(scriptCommand.toLowerCase())) {
+            // Try to extract port from command
+            const portMatch = scriptCommand.match(/--port\s+(\d+)|-p\s+(\d+)|port\s*=\s*(\d+)/i);
+            const port = portMatch ? parseInt(portMatch[1] || portMatch[2] || portMatch[3]) : defaultPort;
+            
+            devServerPorts.push({
+              script: scriptName,
+              command: scriptCommand,
+              port: port,
+              url: `http://localhost:${port}`
+            });
+          }
+        }
+      }
+      
+      // Check for common dev server configurations
+      if (packageJson.devDependencies || packageJson.dependencies) {
+        const deps = { ...packageJson.devDependencies, ...packageJson.dependencies };
+        
+        // React/Vite
+        if (deps.vite) {
+          devServerPorts.push({
+            script: 'vite',
+            command: 'vite',
+            port: 5173,
+            url: 'http://localhost:5173'
+          });
+        }
+        
+        // Next.js
+        if (deps.next) {
+          devServerPorts.push({
+            script: 'next',
+            command: 'next dev',
+            port: 3000,
+            url: 'http://localhost:3000'
+          });
+        }
+        
+        // Create React App
+        if (deps['react-scripts']) {
+          devServerPorts.push({
+            script: 'react-scripts',
+            command: 'react-scripts start',
+            port: 3000,
+            url: 'http://localhost:3000'
+          });
+        }
+        
+        // Vue CLI
+        if (deps['@vue/cli-service']) {
+          devServerPorts.push({
+            script: 'vue-cli-service',
+            command: 'vue-cli-service serve',
+            port: 8080,
+            url: 'http://localhost:8080'
+          });
+        }
+      }
+      
+      // Return the first (most likely) dev server
+      if (devServerPorts.length > 0) {
+        const primaryServer = devServerPorts[0];
+        console.log('[CursorIDEService] Primary dev server detected via CDP:', primaryServer.url);
+        
+        // Emit event
+        if (this.eventBus && typeof this.eventBus.emit === 'function') {
+          this.eventBus.emit('userAppDetected', { url: primaryServer.url });
+        }
+        
+        return primaryServer.url;
+      }
+      
+      console.log('[CursorIDEService] No dev server patterns found in package.json via CDP');
+      return null;
+      
+    } catch (error) {
+      console.error('[CursorIDEService] Error parsing package.json:', error.message);
+      return null;
+    }
+  }
+
+  /**
+   * Ermittelt den absoluten Workspace-Pfad über Playwright Terminal.
+   * Cacht das Ergebnis pro IDE-Port.
+   * Gibt den Pfad als Promise zurück.
+   */
+  async addWorkspacePathDetectionViaPlaywright() {
+    const port = this.ideManager.getActivePort();
+    if (!port) throw new Error('No active IDE port');
+    
+    // Prüfe Backend-Cache
+    const cached = this.ideManager.getWorkspacePath(port);
+    if (cached) {
+      console.log(`[CursorIDEService] Workspace path for port ${port} already set/cached:`, cached);
+      return cached;
+    }
+    
+    // Prüfe, ob bereits eine Erkennung läuft
+    if (this._workspaceDetectionInProgress && this._workspaceDetectionInProgress[port]) {
+      console.log(`[CursorIDEService] Workspace detection already in progress for port ${port}, waiting...`);
+      await this._workspaceDetectionInProgress[port];
+      return this.ideManager.getWorkspacePath(port);
+    }
+    
+    // Setze Flag für laufende Erkennung
+    if (!this._workspaceDetectionInProgress) this._workspaceDetectionInProgress = {};
+    this._workspaceDetectionInProgress[port] = new Promise(async (resolve) => {
+      try {
+        const page = await this.browserManager.getPage();
+        if (!page) throw new Error('No Cursor IDE page available');
+        
+        // 1. Neues Terminal öffnen (Ctrl+Shift+`)
+        await page.keyboard.press('Control+Shift+Backquote');
+        await page.waitForTimeout(700);
+        
+        // 2. Versuche direkt, 'pwd' einzugeben
+        await page.keyboard.type('pwd');
+        await page.keyboard.press('Enter');
+        await page.waitForTimeout(500);
+        
+        let terminalOutput = await page.evaluate(() => {
+          const rows = Array.from(document.querySelectorAll('.xterm-rows .xterm-row'));
+          return rows.map(row => row.textContent).join('\n');
+        });
+        
+        let lines = terminalOutput.trim().split('\n');
+        let lastPwd = lines.reverse().find(line => line.startsWith('/'));
+        
+        if (!lastPwd) {
+          // Fallback: Klicke auf das erste sichtbare Terminal und wiederhole
+          console.warn('[CursorIDEService] Kein Pfad nach Shortcut, versuche expliziten Terminal-Klick...');
+          const handles = await page.$$('.terminal, .xterm, .xterm-screen');
+          let clicked = false;
+          for (const handle of handles) {
+            const isVisible = await handle.evaluate(el => !!(el.offsetParent));
+            if (isVisible) {
+              await handle.click({ force: true });
+              clicked = true;
+              break;
+            }
+          }
+          if (!clicked) throw new Error('No visible terminal found to focus!');
+          await page.waitForTimeout(200);
+          await page.keyboard.type('pwd');
+          await page.keyboard.press('Enter');
+          await page.waitForTimeout(500);
+          terminalOutput = await page.evaluate(() => {
+            const rows = Array.from(document.querySelectorAll('.xterm-rows .xterm-row'));
+            return rows.map(row => row.textContent).join('\n');
+          });
+          lines = terminalOutput.trim().split('\n');
+          lastPwd = lines.reverse().find(line => line.startsWith('/'));
+        }
+        
+        if (!lastPwd) throw new Error('Could not extract working directory from terminal output!');
+        
+        // Direkt Backend setzen statt curl
+        this.ideManager.setWorkspacePath(port, lastPwd);
+        console.log(`[CursorIDEService] Set workspace path for port ${port}:`, lastPwd);
+        
+        resolve(lastPwd);
+      } catch (error) {
+        console.error('[CursorIDEService] Error in workspace detection:', error);
+        resolve(null);
+      } finally {
+        // Flag entfernen
+        delete this._workspaceDetectionInProgress[port];
+      }
+    });
+    
+    return await this._workspaceDetectionInProgress[port];
   }
 }
 

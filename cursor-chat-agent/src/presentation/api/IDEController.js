@@ -170,6 +170,157 @@ class IDEController {
       });
     }
   }
+
+  async setWorkspacePath(req, res) {
+    try {
+      const port = parseInt(req.params.port);
+      const { workspacePath } = req.body;
+      
+      if (!workspacePath) {
+        return res.status(400).json({
+          success: false,
+          error: 'Workspace path is required'
+        });
+      }
+      
+      this.ideManager.setWorkspacePath(port, workspacePath);
+      
+      // Trigger dev server detection with the new workspace path
+      if (this.cursorIDEService) {
+        const devServerUrl = await this.cursorIDEService.detectDevServerFromPackageJson(workspacePath);
+        if (devServerUrl) {
+          console.log('[IDEController] Detected dev server for workspace:', devServerUrl);
+          // Broadcast the new dev server URL
+          if (this.eventBus) {
+            await this.eventBus.publish('userAppDetected', { url: devServerUrl });
+          }
+        }
+      }
+      
+      res.json({
+        success: true,
+        data: {
+          port: port,
+          workspacePath: workspacePath
+        }
+      });
+    } catch (error) {
+      console.error('[IDEController] Error setting workspace path:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to set workspace path'
+      });
+    }
+  }
+
+  async getWorkspaceInfo(req, res) {
+    try {
+      const availableIDEs = await this.ideManager.getAvailableIDEs();
+      const workspaceInfo = availableIDEs.map(ide => ({
+        port: ide.port,
+        status: ide.status,
+        workspacePath: this.ideManager.getWorkspacePath(ide.port),
+        hasWorkspace: !!this.ideManager.getWorkspacePath(ide.port)
+      }));
+      
+      res.json({
+        success: true,
+        data: workspaceInfo
+      });
+    } catch (error) {
+      console.error('[IDEController] Error getting workspace info:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to get workspace info'
+      });
+    }
+  }
+
+  async debugDOM(req, res) {
+    try {
+      if (!this.cursorIDEService) {
+        throw new Error('CursorIDEService not available');
+      }
+      
+      const page = await this.cursorIDEService.browserManager.getPage();
+      if (!page) {
+        throw new Error('No page available');
+      }
+      
+      const domInfo = await page.evaluate(() => {
+        const info = {
+          title: document.title,
+          url: window.location.href,
+          vscode: !!window.vscode,
+          monaco: !!window.monaco,
+          workspace: !!window.workspace,
+          fileExplorer: {
+            hasExplorer: !!document.querySelector('.explorer-folders-view'),
+            rootFolders: [],
+            allElements: []
+          },
+          statusBar: {
+            items: []
+          },
+          breadcrumbs: {
+            items: []
+          }
+        };
+        
+        // Get file explorer info
+        const explorerElements = document.querySelectorAll('.explorer-folders-view *');
+        explorerElements.forEach(el => {
+          const text = el.textContent || el.innerText;
+          if (text && text.trim()) {
+            info.fileExplorer.allElements.push({
+              tagName: el.tagName,
+              className: el.className,
+              text: text.trim(),
+              ariaLevel: el.getAttribute('aria-level'),
+              role: el.getAttribute('role')
+            });
+          }
+        });
+        
+        // Get status bar info
+        const statusItems = document.querySelectorAll('.status-bar-item');
+        statusItems.forEach(item => {
+          const text = item.textContent || item.innerText;
+          const title = item.getAttribute('title');
+          const ariaLabel = item.getAttribute('aria-label');
+          if (text || title || ariaLabel) {
+            info.statusBar.items.push({
+              text: text,
+              title: title,
+              ariaLabel: ariaLabel
+            });
+          }
+        });
+        
+        // Get breadcrumb info
+        const breadcrumbItems = document.querySelectorAll('.breadcrumb-item, .monaco-breadcrumb-item');
+        breadcrumbItems.forEach(item => {
+          const text = item.textContent || item.innerText;
+          if (text && text.trim()) {
+            info.breadcrumbs.items.push(text.trim());
+          }
+        });
+        
+        return info;
+      });
+      
+      res.json({
+        success: true,
+        data: domInfo
+      });
+    } catch (error) {
+      console.error('[IDEController] Error debugging DOM:', error);
+      res.status(500).json({
+        success: false,
+        error: error.message
+      });
+    }
+  }
 }
 
 module.exports = IDEController; 

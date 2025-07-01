@@ -1,5 +1,7 @@
 const IDEDetector = require('./IDEDetector');
 const IDEStarter = require('./IDEStarter');
+const fs = require('fs');
+const path = require('path');
 
 class IDEManager {
   constructor() {
@@ -7,6 +9,7 @@ class IDEManager {
     this.starter = new IDEStarter();
     this.activePort = null;
     this.ideStatus = new Map(); // port -> status
+    this.ideWorkspaces = new Map(); // port -> workspace path
   }
 
   async initialize() {
@@ -16,6 +19,8 @@ class IDEManager {
     const existingIDEs = await this.detector.scanForIDEs();
     existingIDEs.forEach(ide => {
       this.ideStatus.set(ide.port, ide.status);
+      // Don't auto-detect workspace paths for existing IDEs
+      // They need to be set manually or through IDE startup
     });
 
     // Set first available IDE as active
@@ -37,14 +42,16 @@ class IDEManager {
     detectedIDEs.forEach(ide => {
       allIDEs.set(ide.port, {
         ...ide,
-        source: 'detected'
+        source: 'detected',
+        workspacePath: this.ideWorkspaces.get(ide.port) || null
       });
     });
     
     startedIDEs.forEach(ide => {
       allIDEs.set(ide.port, {
         ...ide,
-        source: 'started'
+        source: 'started',
+        workspacePath: this.ideWorkspaces.get(ide.port) || null
       });
     });
 
@@ -58,6 +65,12 @@ class IDEManager {
     const ideInfo = await this.starter.startIDE(availablePort, workspacePath);
     
     this.ideStatus.set(availablePort, 'starting');
+    
+    // Track workspace path if provided
+    if (workspacePath) {
+      this.ideWorkspaces.set(availablePort, workspacePath);
+      console.log('[IDEManager] Tracked workspace path for port', availablePort, ':', workspacePath);
+    }
     
     // Wait for IDE to be ready
     await this.waitForIDE(availablePort);
@@ -87,12 +100,15 @@ class IDEManager {
       throw new Error(`IDE on port ${port} is not running`);
     }
     
+    const previousPort = this.activePort;
     this.activePort = port;
     console.log('[IDEManager] Switched to IDE on port', port);
     
     return {
       port: port,
-      status: 'active'
+      status: 'active',
+      workspacePath: this.ideWorkspaces.get(port) || null,
+      previousPort: previousPort
     };
   }
 
@@ -102,8 +118,9 @@ class IDEManager {
     // Stop the IDE process
     await this.starter.stopIDE(port);
     
-    // Update status
+    // Update status and remove workspace tracking
     this.ideStatus.delete(port);
+    this.ideWorkspaces.delete(port);
     
     // If this was the active IDE, switch to another one
     if (this.activePort === port) {
@@ -125,6 +142,7 @@ class IDEManager {
     
     await this.starter.stopAllIDEs();
     this.ideStatus.clear();
+    this.ideWorkspaces.clear();
     this.activePort = null;
     
     console.log('[IDEManager] All IDEs stopped');
@@ -140,7 +158,53 @@ class IDEManager {
     }
     
     const availableIDEs = await this.getAvailableIDEs();
-    return availableIDEs.find(ide => ide.port === this.activePort) || null;
+    const activeIDE = availableIDEs.find(ide => ide.port === this.activePort);
+    
+    if (activeIDE) {
+      activeIDE.workspacePath = this.ideWorkspaces.get(this.activePort) || null;
+    }
+    
+    return activeIDE;
+  }
+
+  // New method to get workspace path for a specific IDE
+  getWorkspacePath(port) {
+    return this.ideWorkspaces.get(port) || null;
+  }
+
+  // New method to get active workspace path
+  getActiveWorkspacePath() {
+    if (!this.activePort) {
+      return null;
+    }
+    return this.ideWorkspaces.get(this.activePort) || null;
+  }
+
+  // New method to detect workspace path for existing IDEs
+  async detectWorkspacePath(port) {
+    try {
+      // For existing IDEs, we need to be more careful about workspace detection
+      // Don't automatically assign the same workspace to all IDEs
+      
+      // First check if we already have a workspace for this port
+      if (this.ideWorkspaces.has(port)) {
+        return this.ideWorkspaces.get(port);
+      }
+      
+      // For now, don't auto-detect workspace paths for existing IDEs
+      // This should be set manually or through the IDE startup process
+      console.log('[IDEManager] No workspace path set for port', port, '- manual configuration required');
+      return null;
+    } catch (error) {
+      console.log('[IDEManager] Could not detect workspace path for port', port, ':', error.message);
+    }
+    return null;
+  }
+
+  // New method to set workspace path for an IDE
+  setWorkspacePath(port, workspacePath) {
+    this.ideWorkspaces.set(port, workspacePath);
+    console.log('[IDEManager] Set workspace path for port', port, ':', workspacePath);
   }
 
   async waitForIDE(port, maxAttempts = 30) {
@@ -191,7 +255,8 @@ class IDEManager {
     return {
       activePort: this.activePort,
       totalIDEs: this.ideStatus.size,
-      ideStatus: Object.fromEntries(this.ideStatus)
+      ideStatus: Object.fromEntries(this.ideStatus),
+      workspacePaths: Object.fromEntries(this.ideWorkspaces)
     };
   }
 }
