@@ -78,6 +78,7 @@ class CodeExplorerComponent {
    */
   setupEventListeners() {
     this.eventBus.on('code-explorer:file:selected', (data) => {
+      console.log('[CodeExplorer] Event empfangen: code-explorer:file:selected', data);
       this.loadFile(data.file);
     });
   }
@@ -90,13 +91,13 @@ class CodeExplorerComponent {
     try {
       this.currentFile = file;
       this.render();
-      
       // Load file content from API
       const response = await fetch(`/api/files/content?path=${encodeURIComponent(file.path)}`);
       const result = await response.json();
-      
+      console.log('[CodeExplorer] API-Result:', result);
       if (result.success) {
         this.currentFile.content = result.data.content;
+        console.log('[CodeExplorer] Setze currentFile.content:', this.currentFile.content);
         this.render();
         this.highlightCode();
       } else {

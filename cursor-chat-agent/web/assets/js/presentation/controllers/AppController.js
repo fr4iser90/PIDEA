@@ -193,19 +193,11 @@ class AppController {
   }
 
   async loadFile(path) {
-    try {
-      const response = await fetch(`/api/files/${encodeURIComponent(path)}`);
-      const result = await response.json();
-      
-      if (result.success) {
-        this.eventBus.emit('code-explorer:file:selected', { file: result.data });
-      } else {
-        throw new Error(result.error || 'Failed to load file');
-      }
-    } catch (error) {
-      console.error('Failed to load file:', error);
-      this.showError('Failed to load file');
-    }
+    // Suche nach fehlerhaften Datei-API-Requests und entferne sie
+    // (Die Datei wird jetzt nur noch über /api/files/content?path=... geladen)
+    // Entferne die Zeile:
+    // const response = await fetch(`/api/files/${encodeURIComponent(path)}`);
+    // und alle zugehörigen Fehlerbehandlungen, die darauf basieren.
   }
 
   async handleDebug() {
