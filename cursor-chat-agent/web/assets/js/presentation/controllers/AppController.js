@@ -261,15 +261,10 @@ class AppController {
 
   setupLayoutControls() {
     const splitViewBtn = document.getElementById('splitViewBtn');
-    const previewBtn = document.getElementById('previewBtn');
     const fullScreenBtn = document.getElementById('fullScreenBtn');
 
     splitViewBtn.addEventListener('click', () => {
       this.toggleSplitView();
-    });
-
-    previewBtn.addEventListener('click', () => {
-      this.togglePreview();
     });
 
     fullScreenBtn.addEventListener('click', () => {
@@ -501,31 +496,6 @@ class AppController {
       if (this.previewComponent) {
         this.previewComponent.show();
       }
-    }
-  }
-
-  togglePreview() {
-    const mainLayout = document.querySelector('.main-layout');
-    const previewBtn = document.getElementById('previewBtn');
-    
-    if (this.currentLayout === 'preview') {
-      // Exit preview mode
-      previewBtn.classList.remove('active');
-      this.currentLayout = 'chat';
-      if (this.previewComponent) {
-        this.previewComponent.hide();
-      }
-      // Chat soll wieder expandieren
-      mainLayout.classList.remove('split-view');
-    } else {
-      // Enter preview mode
-      previewBtn.classList.add('active');
-      this.currentLayout = 'preview';
-      if (this.previewComponent) {
-        this.previewComponent.show();
-      }
-      // Chat soll schmal bleiben
-      mainLayout.classList.remove('split-view');
     }
   }
 
