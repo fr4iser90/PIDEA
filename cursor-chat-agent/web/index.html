@@ -20,7 +20,7 @@
       <span class="app-title">Cursor IDE Chat</span>
       <div class="header-switch">
         <button id="chatModeBtn" class="mode-btn active">Chat</button>
-        <button id="codeModeBtn" class="mode-btn">Code Explorer</button>
+        <button id="codeModeBtn" class="mode-btn">IDE</button>
       </div>
       <div class="status-indicator">
         <div class="status-dot"></div>
@@ -52,6 +52,16 @@
         <!-- Code Explorer View -->
         <div id="codeExplorerView" style="display:none">
           <!-- CodeExplorerComponent will render here -->
+        </div>
+        
+        <!-- IDE Mirror View - FULL SCREEN -->
+        <div id="ideMirrorView" style="display:none">
+          <div id="ideMirrorContainer">
+            <div class="loading-message">
+              <div class="loading-spinner"></div>
+              <p>Connecting to IDE...</p>
+            </div>
+          </div>
         </div>
       </main>
       

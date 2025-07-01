@@ -5,6 +5,7 @@ class WebSocketManager {
     this.wss = new WebSocket.Server({ server });
     this.clients = new Set();
     this.eventBus = eventBus;
+    this.ideMirrorController = null;
     this.setupEventHandlers();
   }
 
@@ -81,6 +82,21 @@ class WebSocketManager {
           });
           break;
         
+        // IDE Mirror messages
+        case 'click-element':
+        case 'refresh-ide':
+        case 'connect-ide':
+        case 'switch-ide':
+          if (this.ideMirrorController) {
+            this.ideMirrorController.handleWebSocketMessage(ws, message);
+          } else {
+            this.sendToClient(ws, 'error', { 
+              error: 'IDE Mirror not available',
+              timestamp: new Date().toISOString()
+            });
+          }
+          break;
+        
         default:
           console.log('[WebSocketManager] Unknown message type:', message.type);
       }
@@ -125,6 +141,11 @@ class WebSocketManager {
 
   getClientCount() {
     return this.clients.size;
+  }
+
+  // Set IDE Mirror Controller
+  setIDEMirrorController(controller) {
+    this.ideMirrorController = controller;
   }
 
   // Health check

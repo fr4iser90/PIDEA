@@ -1,5 +1,105 @@
 /* Code Explorer Specific Styles */
 
+/* Code Mode Tabs */
+.code-mode-tabs {
+  display: flex;
+  background: #2c313a;
+  border-bottom: 1px solid #333;
+  padding: 0;
+  margin: 0;
+}
+
+.code-mode-tabs .tab-btn {
+  background: transparent;
+  border: none;
+  color: #e6e6e6;
+  padding: 12px 20px;
+  cursor: pointer;
+  font-size: 0.9em;
+  transition: all 0.2s;
+  border-bottom: 2px solid transparent;
+}
+
+.code-mode-tabs .tab-btn:hover {
+  background: #333;
+  color: #4e8cff;
+}
+
+.code-mode-tabs .tab-btn.active {
+  color: #4e8cff;
+  border-bottom-color: #4e8cff;
+  background: #181c20;
+}
+
+#codeExplorerContent,
+#ideMirrorContent {
+  height: calc(100% - 48px);
+  overflow: hidden;
+}
+
+/* IDE Mirror Styles */
+#ideMirrorContainer {
+  width: 100%;
+  height: 100%;
+  background: #181c20;
+  color: #e6e6e6;
+}
+
+.ide-mirror-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 16px;
+  background: #2c313a;
+  border-bottom: 1px solid #333;
+  font-size: 0.9em;
+}
+
+.refresh-btn, .retry-btn {
+  background: #4e8cff;
+  border: none;
+  color: white;
+  padding: 4px 8px;
+  border-radius: 3px;
+  cursor: pointer;
+  font-size: 0.8em;
+}
+
+.refresh-btn:hover, .retry-btn:hover {
+  background: #3a7ae4;
+}
+
+.ide-mirror-viewport {
+  height: calc(100% - 40px);
+  overflow: auto;
+  background: #252526;
+}
+
+.mirror-element.clickable {
+  outline: 1px dashed rgba(78, 140, 255, 0.5) !important;
+  cursor: pointer !important;
+}
+
+.mirror-element.clickable:hover {
+  outline: 2px solid #4e8cff !important;
+  background-color: rgba(78, 140, 255, 0.1) !important;
+}
+
+.loading-spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid #333;
+  border-top: 3px solid #4e8cff;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 16px;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
 /* Code Sidebar */
 .code-sidebar {
   position: fixed;

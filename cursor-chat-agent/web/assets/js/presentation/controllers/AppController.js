@@ -7,6 +7,7 @@ import ChatSidebarComponent from '../components/ChatSidebarComponent.js';
 import CodeSidebarComponent from '../components/CodeSidebarComponent.js';
 import ChatRightPanelComponent from '../components/ChatRightPanelComponent.js';
 import CodeRightPanelComponent from '../components/CodeRightPanelComponent.js';
+import IDEMirrorComponent from '../components/IDEMirrorComponent.js';
 
 class AppController {
   constructor() {
@@ -20,6 +21,7 @@ class AppController {
     this.codeSidebarComponent = null;
     this.chatRightPanelComponent = null;
     this.codeRightPanelComponent = null;
+    this.ideMirrorComponent = null;
     this.currentMode = 'chat';
     
     this.init();
@@ -203,6 +205,11 @@ class AppController {
     // Mode switching
     this.setupModeSwitching();
     
+    // Code mode tab switching
+    console.log('🔧 About to setup code tab switching...');
+    this.setupCodeTabSwitching();
+    console.log('✅ Code tab switching setup completed');
+    
     // Theme switching
     this.setupThemeSwitching();
   }
@@ -218,8 +225,14 @@ class AppController {
     });
 
     codeModeBtn.addEventListener('click', () => {
-      this.switchMode('code');
+      console.log('🔘 IDE button clicked - switching to IDE Mirror');
+      this.switchMode('ide');
     });
+  }
+
+  setupCodeTabSwitching() {
+    // No tabs needed - IDE Mirror is now a separate full-screen mode
+    console.log('🔧 Tab switching disabled - IDE Mirror is full-screen mode');
   }
 
   setupThemeSwitching() {
@@ -230,35 +243,69 @@ class AppController {
   }
 
   switchMode(mode) {
+    console.log(`🔄 Switching to mode: ${mode}`);
     const chatModeBtn = document.getElementById('chatModeBtn');
     const codeModeBtn = document.getElementById('codeModeBtn');
     const chatView = document.getElementById('chatView');
     const codeExplorerView = document.getElementById('codeExplorerView');
+    const ideMirrorView = document.getElementById('ideMirrorView');
     const chatSidebar = document.getElementById('chatSidebar');
     const codeSidebar = document.getElementById('codeSidebar');
     const chatRightPanel = document.getElementById('chatRightPanel');
     const codeRightPanel = document.getElementById('codeRightPanel');
+
+    console.log('🔍 Found main mode elements:', {
+      chatModeBtn: !!chatModeBtn,
+      codeModeBtn: !!codeModeBtn,
+      chatView: !!chatView,
+      codeExplorerView: !!codeExplorerView,
+      ideMirrorView: !!ideMirrorView
+    });
 
     if (mode === 'chat') {
       chatModeBtn.classList.add('active');
       codeModeBtn.classList.remove('active');
       chatView.style.display = '';
       codeExplorerView.style.display = 'none';
+      ideMirrorView.style.display = 'none';
       chatSidebar.style.display = '';
       codeSidebar.style.display = 'none';
       chatRightPanel.style.display = '';
       codeRightPanel.style.display = 'none';
       this.currentMode = 'chat';
+    } else if (mode === 'ide') {
+      console.log('🖥️ Activating IDE Mirror - FULL SCREEN...');
+      codeModeBtn.classList.add('active');
+      chatModeBtn.classList.remove('active');
+      chatView.style.display = 'none';
+      codeExplorerView.style.display = 'none';
+      ideMirrorView.style.display = 'block';
+      // Hide ALL sidebars for full screen
+      chatSidebar.style.display = 'none';
+      codeSidebar.style.display = 'none';
+      chatRightPanel.style.display = 'none';
+      codeRightPanel.style.display = 'none';
+      this.currentMode = 'ide';
+      
+      // Initialize IDE Mirror Component
+      if (!this.ideMirrorComponent) {
+        console.log('🔄 Creating IDEMirrorComponent...');
+        this.ideMirrorComponent = new IDEMirrorComponent('ideMirrorContainer', this.eventBus);
+      }
+      console.log('✅ IDE Mirror activated');
     } else {
+      console.log('🖥️ Activating code mode...');
       codeModeBtn.classList.add('active');
       chatModeBtn.classList.remove('active');
       chatView.style.display = 'none';
       codeExplorerView.style.display = '';
+      ideMirrorView.style.display = 'none';
       chatSidebar.style.display = 'none';
       codeSidebar.style.display = '';
       chatRightPanel.style.display = 'none';
       codeRightPanel.style.display = '';
       this.currentMode = 'code';
+      console.log('✅ Code mode activated');
     }
   }
 

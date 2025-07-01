@@ -23,6 +23,7 @@ const EventBus = require('./infrastructure/messaging/EventBus');
 // Presentation
 const ChatController = require('./presentation/api/ChatController');
 const IDEController = require('./presentation/api/IDEController');
+const IDEMirrorController = require('./presentation/api/IDEMirrorController');
 const WebSocketManager = require('./presentation/websocket/WebSocketManager');
 
 class Application {
@@ -73,6 +74,8 @@ class Application {
       this.eventBus
     );
 
+    this.ideMirrorController = new IDEMirrorController();
+
     // Setup Express app
     this.app = express();
     this.setupMiddleware();
@@ -83,6 +86,9 @@ class Application {
 
     // Initialize WebSocket manager
     this.webSocketManager = new WebSocketManager(this.server, this.eventBus);
+
+    // Connect IDE Mirror Controller to WebSocket Manager
+    this.webSocketManager.setIDEMirrorController(this.ideMirrorController);
 
     // Initialize IDE Manager
     await this.ideManager.initialize();
@@ -188,6 +194,9 @@ class Application {
     // Port-specific Chat API
     this.app.get('/api/chat/port/:port/history', (req, res) => this.chatController.getChatHistoryForPort(req, res));
     this.app.post('/api/chat/port/:port/switch', (req, res) => this.chatController.switchToPortEndpoint(req, res));
+
+    // IDE Mirror API routes
+    this.ideMirrorController.setupRoutes(this.app);
 
     // WebSocket status
     this.app.get('/api/websocket/status', (req, res) => {
