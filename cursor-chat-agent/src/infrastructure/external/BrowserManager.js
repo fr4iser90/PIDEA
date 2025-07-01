@@ -258,83 +258,98 @@ class BrowserManager {
         let log = `[getCurrentFileContent] Active tab: ${fileName}.`;
         let content = '';
         
-        // Try multiple approaches to get content
-        const editors = document.querySelectorAll('.monaco-editor');
-        log += ` Found ${editors.length} .monaco-editor instances.`;
-        
-        // Approach 1: Try Monaco API
+        // Primary approach: Use Monaco API to get full content
         if (window.monaco && window.monaco.editor && window.monaco.editor.getEditors) {
           const allEditors = window.monaco.editor.getEditors();
           log += ` Monaco-API: ${allEditors.length} Editor-Objekte.`;
           
-          // Try to find the editor with the correct file name in its model
+          // Try to find the active editor or editor with matching file
+          let targetEditor = null;
+          
+          // First try to find editor with matching file name
           for (const editor of allEditors) {
             try {
               const model = editor.getModel && editor.getModel();
               if (model && model.uri && model.uri.path && fileName && model.uri.path.endsWith(fileName)) {
-                content = editor.getValue();
-                log += ` Inhalt aus Monaco Editor für ${fileName} geholt.`;
+                targetEditor = editor;
+                log += ` Editor mit passendem Dateinamen gefunden: ${fileName}`;
                 break;
               }
             } catch (e) {
               log += ` Error checking Monaco editor: ${e.message}.`;
             }
           }
+          
+          // If no matching editor found, try to get the active/focused editor
+          if (!targetEditor) {
+            for (const editor of allEditors) {
+              try {
+                if (editor.hasFocus && editor.hasFocus()) {
+                  targetEditor = editor;
+                  log += ' Aktiver Editor gefunden.';
+                  break;
+                }
+              } catch (e) {
+                log += ` Error checking editor focus: ${e.message}.`;
+              }
+            }
+          }
+          
+          // If still no editor found, try the first available editor
+          if (!targetEditor && allEditors.length > 0) {
+            targetEditor = allEditors[0];
+            log += ' Ersten verfügbaren Editor verwendet.';
+          }
+          
+          // Get content from the target editor
+          if (targetEditor) {
+            try {
+              content = targetEditor.getValue();
+              log += ` Vollständiger Inhalt aus Monaco Editor geholt (${content.length} Zeichen).`;
+            } catch (e) {
+              log += ` Error getting value from editor: ${e.message}.`;
+            }
+          }
         }
         
-        // Approach 2: Try contenteditable elements
+        // Fallback: Try to get content from DOM if Monaco API fails
         if (!content) {
+          const editors = document.querySelectorAll('.monaco-editor');
+          log += ` Fallback: ${editors.length} .monaco-editor instances gefunden.`;
+          
+          // Try contenteditable elements
           for (const editor of editors) {
             const contentEditable = editor.querySelector('[contenteditable="true"]');
             if (contentEditable && contentEditable.textContent) {
               content = contentEditable.textContent;
-              log += ' Inhalt aus contenteditable geholt.';
+              log += ' Inhalt aus contenteditable geholt (nur sichtbare Zeilen).';
               break;
             }
           }
-        }
-        
-        // Approach 3: Try textarea elements
-        if (!content) {
-          for (const editor of editors) {
-            const textarea = editor.querySelector('textarea');
-            if (textarea && textarea.value) {
-              content = textarea.value;
-              log += ' Inhalt aus textarea geholt.';
-              break;
-            }
-          }
-        }
-        
-        // Approach 4: Try any text content in the editor
-        if (!content) {
-          for (const editor of editors) {
-            const textElements = editor.querySelectorAll('.view-line');
-            if (textElements.length > 0) {
-              content = Array.from(textElements)
-                .map(el => el.textContent || '')
-                .join('\n');
-              log += ' Inhalt aus view-line Elementen geholt.';
-              break;
-            }
-          }
-        }
-        
-        // Approach 5: Try the most visible/active editor
-        if (!content && editors.length > 0) {
-          // Get the first visible editor
-          const visibleEditor = Array.from(editors).find(editor => {
-            const rect = editor.getBoundingClientRect();
-            return rect.width > 0 && rect.height > 0;
-          });
           
-          if (visibleEditor) {
-            const textElements = visibleEditor.querySelectorAll('.view-line');
-            if (textElements.length > 0) {
-              content = Array.from(textElements)
-                .map(el => el.textContent || '')
-                .join('\n');
-              log += ' Inhalt aus sichtbarem Editor geholt.';
+          // Try textarea elements
+          if (!content) {
+            for (const editor of editors) {
+              const textarea = editor.querySelector('textarea');
+              if (textarea && textarea.value) {
+                content = textarea.value;
+                log += ' Inhalt aus textarea geholt.';
+                break;
+              }
+            }
+          }
+          
+          // Last resort: Try view-line elements (only visible lines)
+          if (!content) {
+            for (const editor of editors) {
+              const textElements = editor.querySelectorAll('.view-line');
+              if (textElements.length > 0) {
+                content = Array.from(textElements)
+                  .map(el => el.textContent || '')
+                  .join('\n');
+                log += ` Inhalt aus view-line Elementen geholt (nur ${textElements.length} sichtbare Zeilen).`;
+                break;
+              }
             }
           }
         }
