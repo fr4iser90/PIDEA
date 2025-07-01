@@ -26,6 +26,42 @@
   margin-right: 24px;
 }
 
+/* Layout Controls */
+.layout-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-right: 16px;
+}
+
+.layout-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border: none;
+  background: var(--bg-secondary);
+  color: var(--text-secondary);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.layout-btn:hover {
+  background: var(--hover-bg);
+  color: var(--text-primary);
+}
+
+.layout-btn.active {
+  background: var(--primary-color);
+  color: white;
+}
+
+.layout-btn .btn-icon {
+  font-size: 16px;
+}
+
 .status-indicator {
   display: flex;
   align-items: center;
@@ -88,4 +124,20 @@ body.light-theme #themeSwitcher, body.light-theme #settingsBtn {
 }
 body.light-theme #themeSwitcher:hover, body.light-theme #settingsBtn:hover {
   background: #b3d1ff;
+}
+
+/* Light theme support for layout controls */
+body.light-theme .layout-btn {
+  background: #e9ecef;
+  color: #6c757d;
+}
+
+body.light-theme .layout-btn:hover {
+  background: #dee2e6;
+  color: #495057;
+}
+
+body.light-theme .layout-btn.active {
+  background: var(--primary-color);
+  color: white;
 } 

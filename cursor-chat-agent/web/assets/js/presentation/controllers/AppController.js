@@ -8,6 +8,7 @@ import CodeSidebarComponent from '../components/CodeSidebarComponent.js';
 import ChatRightPanelComponent from '../components/ChatRightPanelComponent.js';
 import CodeRightPanelComponent from '../components/CodeRightPanelComponent.js';
 import IDEMirrorComponent from '../components/IDEMirrorComponent.js';
+import PreviewComponent from '../components/PreviewComponent.js';
 
 class AppController {
   constructor() {
@@ -22,7 +23,9 @@ class AppController {
     this.chatRightPanelComponent = null;
     this.codeRightPanelComponent = null;
     this.ideMirrorComponent = null;
+    this.previewComponent = null;
     this.currentMode = 'chat';
+    this.currentLayout = 'chat'; // 'chat', 'split', 'preview', 'fullscreen'
     
     this.init();
   }
@@ -51,6 +54,9 @@ class AppController {
     this.codeExplorerComponent = new CodeExplorerComponent('codeExplorerView', this.eventBus);
     this.codeSidebarComponent = new CodeSidebarComponent('codeSidebarContent', this.eventBus);
     this.codeRightPanelComponent = new CodeRightPanelComponent('codeRightPanelContent', this.eventBus);
+    
+    // Initialize preview component
+    this.previewComponent = new PreviewComponent('previewView');
     
     // Load initial messages
     this.chatService.loadMessages();
@@ -212,6 +218,12 @@ class AppController {
     
     // Theme switching
     this.setupThemeSwitching();
+    
+    // Layout controls
+    this.setupLayoutControls();
+    
+    // Preview component events
+    this.setupPreviewEvents();
   }
 
   setupModeSwitching() {
@@ -240,6 +252,53 @@ class AppController {
     themeSwitcher.addEventListener('click', () => {
       document.body.classList.toggle('light-theme');
     });
+  }
+
+  setupLayoutControls() {
+    const splitViewBtn = document.getElementById('splitViewBtn');
+    const previewBtn = document.getElementById('previewBtn');
+    const fullScreenBtn = document.getElementById('fullScreenBtn');
+
+    splitViewBtn.addEventListener('click', () => {
+      this.toggleSplitView();
+    });
+
+    previewBtn.addEventListener('click', () => {
+      this.togglePreview();
+    });
+
+    fullScreenBtn.addEventListener('click', () => {
+      this.toggleFullScreen();
+    });
+  }
+
+  setupPreviewEvents() {
+    // Listen for preview component events
+    if (this.previewComponent) {
+      this.previewComponent.container.addEventListener('preview:show', (e) => {
+        console.log('Preview shown:', e.detail);
+      });
+
+      this.previewComponent.container.addEventListener('preview:hide', (e) => {
+        console.log('Preview hidden');
+      });
+
+      this.previewComponent.container.addEventListener('preview:contentChanged', (e) => {
+        console.log('Preview content changed:', e.detail);
+      });
+
+      this.previewComponent.container.addEventListener('preview:refresh', (e) => {
+        this.refreshPreview();
+      });
+
+      this.previewComponent.container.addEventListener('preview:export', (e) => {
+        this.exportPreview();
+      });
+
+      this.previewComponent.container.addEventListener('preview:share', (e) => {
+        this.sharePreview();
+      });
+    }
   }
 
   switchMode(mode) {
@@ -433,6 +492,120 @@ class AppController {
     } catch (error) {
       console.error('Failed to load initial IDE list:', error);
     }
+  }
+
+  // Layout Control Methods
+  toggleSplitView() {
+    const mainLayout = document.querySelector('.main-layout');
+    const splitViewBtn = document.getElementById('splitViewBtn');
+    
+    if (this.currentLayout === 'split') {
+      // Exit split view
+      mainLayout.classList.remove('split-view');
+      splitViewBtn.classList.remove('active');
+      this.currentLayout = 'chat';
+      // Hide preview if it was shown
+      if (this.previewComponent) {
+        this.previewComponent.hide();
+      }
+    } else {
+      // Enter split view
+      mainLayout.classList.add('split-view');
+      splitViewBtn.classList.add('active');
+      this.currentLayout = 'split';
+      // Show preview in split view
+      if (this.previewComponent) {
+        this.previewComponent.show();
+      }
+    }
+  }
+
+  togglePreview() {
+    const mainLayout = document.querySelector('.main-layout');
+    const previewBtn = document.getElementById('previewBtn');
+    
+    if (this.currentLayout === 'preview') {
+      // Exit preview mode
+      previewBtn.classList.remove('active');
+      this.currentLayout = 'chat';
+      if (this.previewComponent) {
+        this.previewComponent.hide();
+      }
+      // Chat soll wieder expandieren
+      mainLayout.classList.remove('split-view');
+    } else {
+      // Enter preview mode
+      previewBtn.classList.add('active');
+      this.currentLayout = 'preview';
+      if (this.previewComponent) {
+        this.previewComponent.show();
+      }
+      // Chat soll schmal bleiben
+      mainLayout.classList.remove('split-view');
+    }
+  }
+
+  toggleFullScreen() {
+    const mainLayout = document.querySelector('.main-layout');
+    const fullScreenBtn = document.getElementById('fullScreenBtn');
+    
+    if (this.currentLayout === 'fullscreen') {
+      // Exit fullscreen
+      fullScreenBtn.classList.remove('active');
+      this.currentLayout = 'chat';
+      if (this.previewComponent) {
+        this.previewComponent.hideFullScreen();
+      }
+      // Chat soll wieder expandieren
+      mainLayout.classList.remove('split-view');
+    } else {
+      // Enter fullscreen
+      fullScreenBtn.classList.add('active');
+      this.currentLayout = 'fullscreen';
+      if (this.previewComponent) {
+        this.previewComponent.showFullScreen();
+      }
+      // Chat bleibt schmal
+      mainLayout.classList.remove('split-view');
+    }
+  }
+
+  hidePreview() {
+    const mainLayout = document.querySelector('.main-layout');
+    if (this.previewComponent) {
+      this.previewComponent.hide();
+    }
+    // Chat soll wieder expandieren
+    mainLayout.classList.remove('split-view');
+    this.currentLayout = 'chat';
+  }
+
+  // Preview Management Methods
+  showPreview(content = null, options = {}) {
+    if (this.previewComponent) {
+      this.previewComponent.show(content, options);
+    }
+  }
+
+  updatePreviewContent(content) {
+    if (this.previewComponent) {
+      this.previewComponent.setContent(content);
+    }
+  }
+
+  refreshPreview() {
+    console.log('Refreshing preview...');
+    // Add custom refresh logic here
+  }
+
+  exportPreview() {
+    console.log('Exporting preview...');
+    // Add custom export logic here
+  }
+
+  sharePreview() {
+    console.log('Sharing preview...');
+    // Add custom share logic here
   }
 }
 

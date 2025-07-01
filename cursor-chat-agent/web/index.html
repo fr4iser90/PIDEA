@@ -10,6 +10,7 @@
   <link rel="stylesheet" href="/web/assets/css/sidebar.css">
   <link rel="stylesheet" href="/web/assets/css/rightpanel.css">
   <link rel="stylesheet" href="/web/assets/css/code.css">
+  <link rel="stylesheet" href="/web/assets/css/preview.css">
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
@@ -21,6 +22,17 @@
       <div class="header-switch">
         <button id="chatModeBtn" class="mode-btn active">Chat</button>
         <button id="codeModeBtn" class="mode-btn">IDE</button>
+      </div>
+      <div class="layout-controls">
+        <button id="splitViewBtn" class="layout-btn" title="Split View">
+          <span class="btn-icon">⊞</span>
+        </button>
+        <button id="previewBtn" class="layout-btn" title="Show Preview">
+          <span class="btn-icon">👁️</span>
+        </button>
+        <button id="fullScreenBtn" class="layout-btn" title="Full Screen">
+          <span class="btn-icon">⛶</span>
+        </button>
       </div>
       <div class="status-indicator">
         <div class="status-dot"></div>
@@ -45,8 +57,13 @@
       
       <main class="main-content" id="mainContent">
         <!-- Chat View -->
-        <div id="chatView">
+        <div id="chatView" class="chat-container">
           <!-- ChatComponent will render here -->
+        </div>
+        
+        <!-- Preview View -->
+        <div id="previewView" class="preview-container" style="display:none">
+          <!-- PreviewComponent will render here -->
         </div>
         
         <!-- Code Explorer View -->

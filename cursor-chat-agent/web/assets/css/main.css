@@ -768,6 +768,30 @@ body.light-theme .code-explorer-editor {
   overflow: hidden;
 }
 
+/* Split View Layout */
+.main-layout.split-view {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  height: calc(100vh - 56px);
+  padding: 16px;
+}
+
+.main-layout.split-view .main-content {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  height: 100%;
+}
+
+.main-layout.split-view .chat-container,
+.main-layout.split-view .preview-container {
+  height: 100%;
+  min-height: 0;
+  border-radius: var(--border-radius);
+  overflow: hidden;
+}
+
 .main-content {
   flex: 1;
   display: flex;
@@ -1309,6 +1333,16 @@ body.light-theme .theme-btn.active {
   .main-content {
     margin-left: 0;
     margin-right: 0;
+  }
+  
+  /* Responsive Split View */
+  .main-layout.split-view {
+    grid-template-columns: 1fr;
+    padding: 8px;
+  }
+  
+  .main-layout.split-view .main-content {
+    grid-template-columns: 1fr;
   }
 }
 
