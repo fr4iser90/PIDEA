@@ -175,11 +175,61 @@ class BrowserManager {
       if (!page) {
         throw new Error('No connection to Cursor IDE');
       }
+      
+      // Debug: Log all available files in explorer
+      const debugInfo = await page.evaluate(() => {
+        const rows = document.querySelectorAll('.explorer-folders-view .monaco-list-row');
+        const files = [];
+        rows.forEach(row => {
+          const ariaLabel = row.getAttribute('aria-label');
+          const title = row.getAttribute('title');
+          const textContent = row.textContent?.trim();
+          files.push({ ariaLabel, title, textContent });
+        });
+        return files;
+      });
+      console.log('[BrowserManager] Available files in explorer:', debugInfo);
+      
       // Find the file in the explorer and click it
-      const fileSelector = `.explorer-folders-view .monaco-list-row[aria-label*="${filePath}"]`;
-      console.log('[BrowserManager] Suche Selector:', fileSelector);
-      await page.waitForSelector(fileSelector, { timeout: 5000 });
-      await page.click(fileSelector);
+      const fileName = filePath.split('/').pop();
+      console.log('[BrowserManager] Looking for file name:', fileName);
+      
+      // Try multiple selector strategies
+      const rows = await page.$$('.explorer-folders-view .monaco-list-row');
+      let found = false;
+      
+      for (const row of rows) {
+        const ariaLabel = await row.getAttribute('aria-label');
+        const title = await row.getAttribute('title');
+        const textContent = await row.evaluate(el => el.textContent?.trim());
+        
+        console.log('[BrowserManager] Checking row:', { ariaLabel, title, textContent });
+        
+        // Check if this row matches our file
+        if (ariaLabel && ariaLabel.includes(fileName) || 
+            title && title.includes(fileName) || 
+            textContent && textContent.includes(fileName)) {
+          console.log('[BrowserManager] Found matching file, clicking:', { ariaLabel, title, textContent });
+          await row.click();
+          found = true;
+          break;
+        }
+      }
+      
+      if (!found) {
+        console.error('[BrowserManager] File not found. Available files:', debugInfo);
+        throw new Error(`File not found in explorer: ${filePath}`);
+      }
+      
+      // Wait for the editor tab with the file name to be active
+      const tabSelector = `.tab[aria-label*="${fileName}"]`;
+      try {
+        await page.waitForSelector(tabSelector, { timeout: 5000 });
+        console.log('[BrowserManager] Editor-Tab gefunden für:', filePath);
+      } catch (e) {
+        console.warn('[BrowserManager] WARN: Editor-Tab NICHT gefunden für:', filePath);
+      }
+      
       // Wait for the file to open in the editor
       await page.waitForSelector('.monaco-editor', { timeout: 5000 });
       console.log(`[BrowserManager] Opened file: ${filePath}`);
@@ -196,37 +246,109 @@ class BrowserManager {
       if (!page) {
         throw new Error('No connection to Cursor IDE');
       }
-
-      // Wait for the editor to be available
       await page.waitForSelector('.monaco-editor', { timeout: 5000 });
-
-      // Get the file content from the editor
-      const content = await page.evaluate(() => {
-        const editorElement = document.querySelector('.monaco-editor');
-        if (!editorElement) return '';
-
-        // Try to get content from Monaco editor
-        const monacoEditor = window.monaco?.editor?.getEditors()?.[0];
-        if (monacoEditor) {
-          return monacoEditor.getValue();
+      
+      const result = await page.evaluate(() => {
+        // Find the active tab and get its file name
+        const activeTab = document.querySelector('.tab.active, .tab.active-modified');
+        let fileName = '';
+        if (activeTab) {
+          fileName = activeTab.getAttribute('aria-label') || '';
         }
-
-        // Fallback: try to get content from textarea or contenteditable
-        const textarea = editorElement.querySelector('textarea');
-        if (textarea) {
-          return textarea.value;
+        let log = `[getCurrentFileContent] Active tab: ${fileName}.`;
+        let content = '';
+        
+        // Try multiple approaches to get content
+        const editors = document.querySelectorAll('.monaco-editor');
+        log += ` Found ${editors.length} .monaco-editor instances.`;
+        
+        // Approach 1: Try Monaco API
+        if (window.monaco && window.monaco.editor && window.monaco.editor.getEditors) {
+          const allEditors = window.monaco.editor.getEditors();
+          log += ` Monaco-API: ${allEditors.length} Editor-Objekte.`;
+          
+          // Try to find the editor with the correct file name in its model
+          for (const editor of allEditors) {
+            try {
+              const model = editor.getModel && editor.getModel();
+              if (model && model.uri && model.uri.path && fileName && model.uri.path.endsWith(fileName)) {
+                content = editor.getValue();
+                log += ` Inhalt aus Monaco Editor für ${fileName} geholt.`;
+                break;
+              }
+            } catch (e) {
+              log += ` Error checking Monaco editor: ${e.message}.`;
+            }
+          }
         }
-
-        const contentEditable = editorElement.querySelector('[contenteditable="true"]');
-        if (contentEditable) {
-          return contentEditable.textContent;
+        
+        // Approach 2: Try contenteditable elements
+        if (!content) {
+          for (const editor of editors) {
+            const contentEditable = editor.querySelector('[contenteditable="true"]');
+            if (contentEditable && contentEditable.textContent) {
+              content = contentEditable.textContent;
+              log += ' Inhalt aus contenteditable geholt.';
+              break;
+            }
+          }
         }
-
-        return '';
+        
+        // Approach 3: Try textarea elements
+        if (!content) {
+          for (const editor of editors) {
+            const textarea = editor.querySelector('textarea');
+            if (textarea && textarea.value) {
+              content = textarea.value;
+              log += ' Inhalt aus textarea geholt.';
+              break;
+            }
+          }
+        }
+        
+        // Approach 4: Try any text content in the editor
+        if (!content) {
+          for (const editor of editors) {
+            const textElements = editor.querySelectorAll('.view-line');
+            if (textElements.length > 0) {
+              content = Array.from(textElements)
+                .map(el => el.textContent || '')
+                .join('\n');
+              log += ' Inhalt aus view-line Elementen geholt.';
+              break;
+            }
+          }
+        }
+        
+        // Approach 5: Try the most visible/active editor
+        if (!content && editors.length > 0) {
+          // Get the first visible editor
+          const visibleEditor = Array.from(editors).find(editor => {
+            const rect = editor.getBoundingClientRect();
+            return rect.width > 0 && rect.height > 0;
+          });
+          
+          if (visibleEditor) {
+            const textElements = visibleEditor.querySelectorAll('.view-line');
+            if (textElements.length > 0) {
+              content = Array.from(textElements)
+                .map(el => el.textContent || '')
+                .join('\n');
+              log += ' Inhalt aus sichtbarem Editor geholt.';
+            }
+          }
+        }
+        
+        if (!content) {
+          log += ' Kein Inhalt gefunden!';
+        }
+        
+        return { content, log };
       });
-
-      return content;
-
+      
+      console.log('[BrowserManager] getCurrentFileContent: LOG:', result.log);
+      console.log('[BrowserManager] getCurrentFileContent: Inhalt (erster Teil):', result.content ? result.content.slice(0, 200) : '<leer>');
+      return result.content;
     } catch (error) {
       console.error('[BrowserManager] Error reading file content:', error.message);
       return '';
