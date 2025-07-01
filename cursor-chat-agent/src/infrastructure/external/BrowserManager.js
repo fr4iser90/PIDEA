@@ -477,6 +477,12 @@ class BrowserManager {
     }
   }
 
+  async reconnect() {
+    console.log('[BrowserManager] Reconnecting to Cursor IDE...');
+    await this.disconnect();
+    return await this.connect(this.currentPort);
+  }
+
   isConnected() {
     return this.browser !== null && this.page !== null;
   }

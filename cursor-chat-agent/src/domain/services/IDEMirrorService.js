@@ -40,7 +40,83 @@ class IDEMirrorService {
 
         console.log('🔍 Capturing complete IDE state...');
 
-        const domStructure = await page.evaluate(() => {
+        try {
+            // Check if page is still connected before evaluate
+            if (page.isClosed()) {
+                console.log('⚠️ Page is closed, reconnecting...');
+                await this.browserManager.reconnect();
+                const newPage = await this.browserManager.getPage();
+                if (!newPage) {
+                    throw new Error('Could not reconnect to IDE');
+                }
+                return await this.captureCompleteIDEState(); // Retry with new page
+            }
+
+            // 1. Take screenshot first
+            console.log('📸 Taking IDE screenshot...');
+            const screenshotBuffer = await page.screenshot({
+                type: 'png',
+                fullPage: false // Only visible area
+            });
+            
+            // Convert to base64 for web transfer
+            const screenshotBase64 = screenshotBuffer.toString('base64');
+            const screenshotDataURL = `data:image/png;base64,${screenshotBase64}`;
+
+            // 2. Get DOM structure for clickable areas
+            const domStructure = await page.evaluate(() => {
+            // First, capture ALL CSS from the page
+            function captureAllCSS() {
+                const cssData = {
+                    external: [],
+                    inline: [],
+                    computed: []
+                };
+                
+                // 1. External stylesheets
+                Array.from(document.styleSheets).forEach(sheet => {
+                    try {
+                        if (sheet.href) {
+                            // For Electron URLs, try to get the actual CSS content
+                            if (sheet.href.includes('vscode-file://') || sheet.href.includes('electron://')) {
+                                try {
+                                    // Try to get CSS rules directly from the stylesheet
+                                    const rules = Array.from(sheet.cssRules).map(rule => rule.cssText).join('\n');
+                                    if (rules.trim()) {
+                                        cssData.inline.push(rules);
+                                        console.log('✅ Extracted CSS from Electron URL:', sheet.href);
+                                    }
+                                } catch (e) {
+                                    console.log('⚠️ Could not extract CSS from:', sheet.href);
+                                }
+                            } else {
+                                cssData.external.push(sheet.href);
+                            }
+                        } else if (sheet.cssRules) {
+                            // Inline stylesheets
+                            const rules = Array.from(sheet.cssRules).map(rule => rule.cssText).join('\n');
+                            if (rules.trim()) {
+                                cssData.inline.push(rules);
+                            }
+                        }
+                    } catch (e) {
+                        // CORS blocked stylesheets - capture what we can
+                        if (sheet.href && !sheet.href.includes('vscode-file://')) {
+                            cssData.external.push(sheet.href);
+                        }
+                    }
+                });
+                
+                // 2. Inline styles from <style> tags
+                Array.from(document.querySelectorAll('style')).forEach(styleEl => {
+                    if (styleEl.textContent.trim()) {
+                        cssData.inline.push(styleEl.textContent);
+                    }
+                });
+                
+                return cssData;
+            }
+            
             function serializeElement(element, depth = 0, maxDepth = 30) {
                 if (!element || element.nodeType !== 1 || depth > maxDepth) return null;
                 
@@ -122,6 +198,8 @@ class IDEMirrorService {
                 return elementData;
             }
 
+            const cssData = captureAllCSS();
+            
             return {
                 timestamp: Date.now(),
                 url: window.location.href,
@@ -130,28 +208,46 @@ class IDEMirrorService {
                 viewport: {
                     width: window.innerWidth,
                     height: window.innerHeight
-                }
+                },
+                css: cssData
             };
-        });
+                    });
 
-        const activeIDE = await this.ideManager.getActiveIDE();
-        domStructure.idePort = activeIDE ? activeIDE.port : null;
-        
-        // Count total elements recursively
-        function countElements(element) {
-            if (!element) return 0;
-            let count = 1;
-            if (element.children) {
-                element.children.forEach(child => {
-                    count += countElements(child);
-                });
+            const activeIDE = await this.ideManager.getActiveIDE();
+            domStructure.idePort = activeIDE ? activeIDE.port : null;
+            
+            // Add screenshot to the result
+            domStructure.screenshot = screenshotDataURL;
+            
+            // Count total elements recursively
+            function countElements(element) {
+                if (!element) return 0;
+                let count = 1;
+                if (element.children) {
+                    element.children.forEach(child => {
+                        count += countElements(child);
+                    });
+                }
+                return count;
             }
-            return count;
+            
+            const totalElements = countElements(domStructure.body);
+            console.log(`📸✅ Captured IDE: Screenshot + ${totalElements} clickable elements`);
+            return domStructure;
+        } catch (error) {
+            console.error('❌ Failed to capture IDE state:', error.message);
+            if (error.message.includes('Target page, context or browser has been closed')) {
+                console.log('🔄 Browser connection lost, attempting reconnect...');
+                try {
+                    await this.browserManager.reconnect();
+                    return await this.captureCompleteIDEState(); // Retry once
+                } catch (reconnectError) {
+                    console.error('❌ Reconnect failed:', reconnectError.message);
+                    throw new Error('IDE connection lost and reconnect failed');
+                }
+            }
+            throw error;
         }
-        
-        const totalElements = countElements(domStructure.body);
-        console.log(`✅ Captured IDE state: ${totalElements} total elements (${domStructure.body?.children?.length || 0} direct children)`);
-        return domStructure;
     }
 
     async clickElementInIDE(selector, coordinates) {
