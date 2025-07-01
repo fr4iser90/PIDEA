@@ -72,11 +72,49 @@ class IDEMirrorComponent {
                 this.renderIDEState(data);
                 break;
             
+            case 'typing-confirmed':
+                // Lightweight typing confirmation without full render
+                this.handleTypingConfirmation(data);
+                break;
+            
             case 'error':
                 console.error('❌ IDE Error:', message.message || message.error);
                 this.showError(message.message || message.error);
                 break;
         }
+    }
+
+    handleTypingConfirmation(data) {
+        // Update typing status in header
+        const typingStatus = document.getElementById('typingStatus');
+        if (typingStatus) {
+            typingStatus.textContent = `⌨️ ${data.key}`;
+            typingStatus.style.opacity = '1';
+            
+            // Fade out after short delay
+            setTimeout(() => {
+                typingStatus.style.opacity = '0.5';
+            }, 500);
+        }
+        
+        // Update predictive indicator with success feedback
+        if (this.predictiveIndicator) {
+            const originalBg = this.predictiveIndicator.style.background;
+            this.predictiveIndicator.style.background = 'linear-gradient(135deg, #28a745, #20c997)';
+            this.predictiveIndicator.innerHTML = `✅ <span style="font-weight: 600;">${this.typingBuffer}</span>`;
+            
+            // Quick success pulse
+            this.predictiveIndicator.style.transform = 'scale(1.05)';
+            setTimeout(() => {
+                if (this.predictiveIndicator) {
+                    this.predictiveIndicator.style.transform = 'scale(1)';
+                    this.predictiveIndicator.style.background = originalBg;
+                    this.predictiveIndicator.innerHTML = `⌨️ <span style="font-weight: 600;">${this.typingBuffer}</span>`;
+                }
+            }, 200);
+        }
+        
+        console.log(`✅ Typing confirmed: ${data.key} at ${data.selector}`);
     }
 
     async connectToIDE() {
@@ -262,6 +300,66 @@ class IDEMirrorComponent {
                 this.handleSmartClick(zone);
             });
 
+            // Add input overlay for chat zones
+            if (zone.elementType === 'chat') {
+                const inputOverlay = document.createElement('textarea');
+                inputOverlay.className = 'chat-input-overlay';
+                inputOverlay.style.cssText = `
+                    position: absolute;
+                    left: 0;
+                    top: 0;
+                    width: 100%;
+                    height: 100%;
+                    background: rgba(0, 0, 0, 0.8);
+                    border: 2px solid #4e8cff;
+                    outline: none;
+                    color: #ffffff;
+                    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                    font-size: 14px;
+                    line-height: 1.4;
+                    padding: 8px;
+                    resize: none;
+                    z-index: 1001;
+                    pointer-events: all;
+                    opacity: 1;
+                    transition: opacity 0.2s ease;
+                `;
+                inputOverlay.placeholder = 'Type your message here...';
+                inputOverlay.dataset.zoneSelector = zone.selector;
+                inputOverlay.dataset.zoneType = zone.elementType;
+                
+                inputOverlay.addEventListener('keydown', (e) => {
+                    e.stopPropagation();
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        const message = inputOverlay.value.trim();
+                        if (message) {
+                            fetch('/api/chat', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ message })
+                            }).catch(error => {
+                                console.error('❌ Failed to send chat message via API:', error);
+                            });
+                        }
+                        inputOverlay.value = '';
+                        inputOverlay.blur();
+                        inputOverlay.remove();
+                    } else if (e.key === 'Escape') {
+                        e.preventDefault();
+                        inputOverlay.value = '';
+                        inputOverlay.blur();
+                        inputOverlay.remove();
+                    }
+                });
+                inputOverlay.addEventListener('input', (e) => {
+                    e.stopPropagation();
+                });
+                clickZone.appendChild(inputOverlay);
+                setTimeout(() => inputOverlay.focus(), 0);
+                console.log('💬 Overlay appended', inputOverlay);
+            }
+
             // Tooltip with element type
             const typeEmoji = {
                 'editor': '📝',
@@ -324,24 +422,32 @@ class IDEMirrorComponent {
     extractClickableZones(elementData, zones = []) {
         if (!elementData) return zones;
 
-        const { position, isClickable, selector, className, tagName } = elementData;
+        const { position, isClickable, selector, className, tagName, elementType: backendElementType } = elementData;
+        // Chat-Zone immer als clickable behandeln
+        if ((className && className.match(/composer-bar|chat|input|message|msg|send/)) ||
+            (selector && selector.match(/composer-bar|chat|input|message|msg|send/))) {
+            elementData.isClickable = true;
+        }
+        // Logge alle Zonen zur Analyse
+        console.log('ZONE:', { selector, className, tagName, backendElementType });
 
         // Add clickable elements with valid positions
-        if (isClickable && position && position.width > 0 && position.height > 0) {
-            // Detect element type for smart typing
-            let elementType = 'unknown';
+        if (elementData.isClickable && position && position.width > 0 && position.height > 0) {
+            // Use backend elementType if available, otherwise detect locally
+            let elementType = backendElementType || 'unknown';
             const classStr = className || '';
-            
-            if (classStr.includes('monaco-editor') || classStr.includes('editor')) {
-                elementType = 'editor';
-            } else if (classStr.includes('chat') || classStr.includes('composer')) {
-                elementType = 'chat';
-            } else if (classStr.includes('terminal')) {
-                elementType = 'terminal';
-            } else if (tagName === 'textarea' || tagName === 'input') {
-                elementType = 'input';
+            // Only detect locally if backend didn't provide elementType
+            if (!backendElementType) {
+                if (classStr.match(/monaco-editor|editor/)) {
+                    elementType = 'editor';
+                } else if (classStr.match(/chat|composer|composer-bar|input|message|msg|send/)) {
+                    elementType = 'chat';
+                } else if (classStr.match(/terminal/)) {
+                    elementType = 'terminal';
+                } else if (tagName === 'textarea' || tagName === 'input') {
+                    elementType = 'input';
+                }
             }
-
             zones.push({
                 x: position.x,
                 y: position.y,
@@ -352,14 +458,12 @@ class IDEMirrorComponent {
                 className: classStr
             });
         }
-
         // Recursively extract from children
         if (elementData.children) {
             elementData.children.forEach(child => {
                 this.extractClickableZones(child, zones);
             });
         }
-
         return zones;
     }
 
@@ -482,10 +586,11 @@ class IDEMirrorComponent {
             // First click the element
             await this.handleElementClick(zone.selector, zone);
             
-            // If it's a typeable element, activate typing mode
-            if (['editor', 'chat', 'terminal', 'input'].includes(zone.elementType)) {
+            // Only activate typing mode for non-chat elements (chat uses overlay input)
+            if (['editor', 'terminal', 'input'].includes(zone.elementType)) {
                 this.activateTypingMode(zone);
             }
+            // Chat zones are handled by the overlay input in renderScreenshotWithOverlay
         } catch (error) {
             console.error('❌ Smart click failed:', error);
         }
@@ -526,32 +631,44 @@ class IDEMirrorComponent {
         this.isTypingMode = true;
         this.currentTypingZone = zone;
         
-        // Update status
-        const status = document.getElementById('typingStatus');
-        const typeNames = {
-            'editor': 'Editor',
-            'chat': 'Chat', 
-            'terminal': 'Terminal',
-            'input': 'Input'
-        };
-        status.textContent = `⌨️ Typing in ${typeNames[zone.elementType]} - Press ESC to stop`;
-        
-        // Visual feedback - highlight the active zone
-        this.highlightActiveZone(zone);
-        
-        // Start keyboard listening
-        this.startKeyboardListening();
-        
-        console.log(`✅ Typing mode activated for ${zone.elementType}`);
+        // Only activate for non-chat elements (editor, terminal, input)
+        // Chat zones use the overlay input from renderScreenshotWithOverlay
+        if (['editor', 'terminal', 'input'].includes(zone.elementType)) {
+            this.highlightActiveZone(zone);
+            this.startKeyboardListening();
+            
+            // Update Status
+            const status = document.getElementById('typingStatus');
+            const typeNames = {
+                'editor': 'Editor',
+                'terminal': 'Terminal',
+                'input': 'Input'
+            };
+            status.textContent = `⌨️ Typing in ${typeNames[zone.elementType]} - Press ESC to stop`;
+            
+            console.log(`✅ Typing mode activated for ${zone.elementType}`);
+        }
     }
 
     stopTyping() {
+        console.log('🛑 Stopping typing mode');
+        
+        // Send any pending batch before stopping
+        if (this.typingBatch) {
+            this.sendTypingBatch();
+        }
+        
         this.isTypingMode = false;
         this.currentTypingZone = null;
         
         // Update status
         const status = document.getElementById('typingStatus');
-        status.textContent = '';
+        if (status) status.textContent = '';
+        
+        // Hide predictive indicators
+        if (this.predictiveIndicator) {
+            this.predictiveIndicator.style.opacity = '0';
+        }
         
         // Remove highlights
         this.removeZoneHighlights();
@@ -559,7 +676,7 @@ class IDEMirrorComponent {
         // Stop keyboard listening
         this.stopKeyboardListening();
         
-        console.log('⏹️ Typing mode stopped');
+        console.log('✅ Typing mode stopped, pending batches sent');
     }
 
     highlightActiveZone(zone) {
@@ -628,20 +745,193 @@ class IDEMirrorComponent {
     sendKeystrokeToIDE(event) {
         if (!this.currentTypingZone || !this.isConnected) return;
         
+        // DON'T send keystrokes if we're in a chat zone (chat uses overlay input)
+        if (this.currentTypingZone.elementType === 'chat') {
+            console.log('💬 Chat zone detected - skipping keyboard events (using overlay input)');
+            return;
+        }
+        
         const { key, ctrlKey, shiftKey, altKey, metaKey } = event;
         
-        console.log(`⌨️ Sending keystroke: ${key} to ${this.currentTypingZone.elementType}`);
+        // Special keys send immediately
+        if (key.length > 1) {
+            console.log(`⌨️ Sending special key immediately: ${key}`);
+            this.ws.send(JSON.stringify({
+                type: 'type-text',
+                payload: { 
+                    text: '',
+                    key: key,
+                    modifiers: { ctrlKey, shiftKey, altKey, metaKey },
+                    selector: this.currentTypingZone.selector 
+                }
+            }));
+            return;
+        }
         
-        // Send keystroke to IDE
+        // Batch regular characters for speed
+        if (key.length === 1 || key === ' ') {
+            this.showPredictiveText(key);
+            this.addToTypingBatch(key);
+        }
+    }
+
+    addToTypingBatch(char) {
+        // Initialize batching if needed
+        if (!this.typingBatch) {
+            this.typingBatch = '';
+            this.batchStartTime = Date.now();
+        }
+        
+        // Add character to batch
+        this.typingBatch += char;
+        
+        // Clear existing timeout
+        if (this.batchTimeout) {
+            clearTimeout(this.batchTimeout);
+        }
+        
+        // Send batch after delay OR when it gets too long
+        const shouldSendNow = (
+            this.typingBatch.length >= 10 || // Max batch size
+            Date.now() - this.batchStartTime > 300 // Max wait time
+        );
+        
+        if (shouldSendNow) {
+            this.sendTypingBatch();
+        } else {
+            // Wait for more characters (debounce)
+            this.batchTimeout = setTimeout(() => {
+                this.sendTypingBatch();
+            }, 150); // 150ms batch window
+        }
+    }
+    
+    sendTypingBatch() {
+        if (!this.typingBatch || !this.currentTypingZone) return;
+        
+        const batchText = this.typingBatch;
+        console.log(`⚡ Sending batch: "${batchText}" (${batchText.length} chars)`);
+        
+        // Send entire batch as one request
         this.ws.send(JSON.stringify({
-            type: 'type-text',
+            type: 'type-batch',
             payload: { 
-                text: key.length === 1 ? key : '', // Only send printable characters as text
-                key: key,
-                modifiers: { ctrlKey, shiftKey, altKey, metaKey },
+                text: batchText,
                 selector: this.currentTypingZone.selector 
             }
         }));
+        
+        // Reset batch
+        this.typingBatch = '';
+        this.batchStartTime = null;
+        if (this.batchTimeout) {
+            clearTimeout(this.batchTimeout);
+            this.batchTimeout = null;
+        }
+    }
+
+    showPredictiveText(text) {
+        // Create/update predictive text indicator
+        if (!this.predictiveIndicator) {
+            this.predictiveIndicator = document.createElement('div');
+            this.predictiveIndicator.style.cssText = `
+                position: absolute;
+                background: linear-gradient(135deg, #4e8cff, #00d4ff);
+                color: white;
+                padding: 4px 8px;
+                border-radius: 12px;
+                font-size: 11px;
+                font-family: 'Consolas', 'Monaco', monospace;
+                pointer-events: none;
+                z-index: 100000;
+                box-shadow: 0 2px 12px rgba(0,0,0,0.4);
+                transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+                opacity: 0;
+                transform: translateY(-5px);
+                white-space: nowrap;
+                max-width: 200px;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            `;
+            document.body.appendChild(this.predictiveIndicator);
+        }
+        
+        // Position near active typing zone
+        if (this.currentTypingZone) {
+            const activeZone = document.querySelector('.active-typing-zone');
+            if (activeZone) {
+                const rect = activeZone.getBoundingClientRect();
+                this.predictiveIndicator.style.left = `${rect.left + rect.width + 8}px`;
+                this.predictiveIndicator.style.top = `${rect.top + (rect.height / 2) - 12}px`;
+            }
+        }
+        
+        // Accumulate typing buffer
+        this.typingBuffer = (this.typingBuffer || '') + text;
+        
+        // Limit buffer length for performance
+        if (this.typingBuffer.length > 50) {
+            this.typingBuffer = '...' + this.typingBuffer.slice(-47);
+        }
+        
+        // Update display
+        this.predictiveIndicator.innerHTML = `⌨️ <span style="font-weight: 600;">${this.typingBuffer}</span>`;
+        this.predictiveIndicator.style.opacity = '1';
+        this.predictiveIndicator.style.transform = 'translateY(0)';
+        
+        // Auto-fade after delay
+        clearTimeout(this.predictiveTimeout);
+        this.predictiveTimeout = setTimeout(() => {
+            if (this.predictiveIndicator) {
+                this.predictiveIndicator.style.opacity = '0';
+                this.predictiveIndicator.style.transform = 'translateY(-5px)';
+            }
+            // Clear buffer after fade
+            setTimeout(() => {
+                this.typingBuffer = '';
+            }, 200);
+        }, 1500);
+    }
+
+    handleChatSubmit(message, selector) {
+        console.log(`📤 Sending chat message: "${message}" to ${selector}`);
+        
+        if (!message.trim()) return;
+        
+        // First send the text as batch to the IDE (so it appears in the chat input)
+        if (this.isConnected) {
+            this.ws.send(JSON.stringify({
+                type: 'type-batch',
+                payload: { text: message.trim(), selector }
+            }));
+        }
+        
+        // Then send the message via WebSocket (to actually send it)
+        if (this.isConnected) {
+            this.ws.send(JSON.stringify({
+                type: 'send-chat-message',
+                payload: { message: message.trim() }
+            }));
+        }
+        
+        // Also try API
+        fetch('/api/ide-mirror/chat', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ message: message.trim() })
+        }).catch(error => {
+            console.error('❌ Failed to send chat message via API:', error);
+        });
+        
+        // Update typing status
+        const typingStatus = document.getElementById('typingStatus');
+        if (typingStatus) {
+            typingStatus.textContent = `📤 Message sent`;
+            typingStatus.style.opacity = '1';
+            setTimeout(() => {
+                typingStatus.style.opacity = '0.5';
+            }, 2000);
+        }
     }
 
     setupEventListeners() {

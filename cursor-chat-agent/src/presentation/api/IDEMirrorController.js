@@ -325,6 +325,10 @@ class IDEMirrorController {
                 await this.handleWebSocketClick(ws, payload);
                 break;
                 
+            case 'type-batch':
+                await this.handleWebSocketTypeBatch(ws, payload);
+                break;
+                
             case 'focus-and-type':
                 await this.handleWebSocketFocusAndType(ws, payload);
                 break;
@@ -358,14 +362,26 @@ class IDEMirrorController {
         this.isProcessingQueue = true;
 
         try {
+            let processedCount = 0;
+            const batchSize = 5; // Process in small batches for responsiveness
+            
             while (this.messageQueue.length > 0) {
                 const { ws, data } = this.messageQueue.shift();
                 
                 try {
                     await this.handleWebSocketType(ws, data.payload);
+                    processedCount++;
                     
-                    // Small delay between characters for stability
-                    await new Promise(resolve => setTimeout(resolve, 30));
+                    // Adaptive delay - faster for rapid typing
+                    const isRapidTyping = this.messageQueue.length > 3;
+                    const delay = isRapidTyping ? 15 : 30;
+                    await new Promise(resolve => setTimeout(resolve, delay));
+                    
+                    // Take a breather every batch to keep UI responsive
+                    if (processedCount % batchSize === 0 && this.messageQueue.length > 0) {
+                        await new Promise(resolve => setTimeout(resolve, 5));
+                    }
+                    
                 } catch (error) {
                     console.error('❌ Queue processing error:', error.message);
                     
@@ -380,6 +396,8 @@ class IDEMirrorController {
                     continue;
                 }
             }
+            
+            console.log(`⚡ Processed ${processedCount} keystrokes in queue`);
         } finally {
             this.isProcessingQueue = false;
         }
@@ -413,25 +431,58 @@ class IDEMirrorController {
         console.log(`⌨️ Processing keystroke: ${key || text} for ${selector}`);
         await this.ideMirrorService.typeInIDE(text, selector, key, modifiers);
         
-        // Only capture screenshots for significant events to reduce load
+        // Smart screenshot timing - only when truly needed
         const shouldUpdateScreenshot = (
-            key === 'Enter' || 
-            key === 'Tab' || 
-            key === 'Escape' ||
-            (key && key.includes('Arrow')) ||
-            (modifiers && (modifiers.ctrlKey || modifiers.metaKey))
+            key === 'Enter' ||     // Messages sent, new lines
+            key === 'Escape' ||    // Mode changes 
+            key === 'Tab' ||       // Autocomplete, navigation
+            (key && key.startsWith('Arrow')) || // Cursor movement
+            (key && key.startsWith('F')) ||     // Function keys
+            (modifiers && (modifiers.ctrlKey || modifiers.metaKey)) || // Shortcuts
+            this.isEndOfWord(text) // End of word for autocomplete
         );
         
         if (shouldUpdateScreenshot) {
-            // Small delay for IDE to update
-            await new Promise(resolve => setTimeout(resolve, 200));
+            // Minimal delay for critical updates
+            await new Promise(resolve => setTimeout(resolve, 150));
             
             const newState = await this.ideMirrorService.captureCompleteIDEState();
             this.broadcastToClients('ide-state-updated', newState);
             console.log(`📸 Screenshot updated for key: ${key}`);
         } else {
             console.log(`⏩ Skipping screenshot for: ${key || text}`);
+            
+            // Send lightweight typing confirmation without screenshot
+            this.broadcastToClients('typing-confirmed', {
+                key: key || text,
+                selector: selector,
+                timestamp: Date.now()
+            });
         }
+    }
+
+    async handleWebSocketTypeBatch(ws, payload) {
+        const { text, selector } = payload;
+        
+        if (!this.ideMirrorService.isIDEConnected()) {
+            await this.ideMirrorService.connectToIDE();
+        }
+
+        console.log(`⚡ Processing batch: "${text}" (${text.length} chars) for ${selector}`);
+        
+        // Send entire batch at once - much faster than individual keystrokes
+        await this.ideMirrorService.typeInIDE(text, selector);
+        
+        // Always update screenshot after batch (user expects to see result)
+        await new Promise(resolve => setTimeout(resolve, 100));
+        
+        const newState = await this.ideMirrorService.captureCompleteIDEState();
+        this.broadcastToClients('ide-state-updated', newState);
+        console.log(`📸 Screenshot updated after batch: "${text.substring(0, 20)}..."`);
+    }
+
+    isEndOfWord(text) {
+        return text && (text === ' ' || text === '.' || text === ',' || text === ';');
     }
 
     async handleWebSocketFocusAndType(ws, payload) {

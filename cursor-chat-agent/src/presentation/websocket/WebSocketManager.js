@@ -85,6 +85,7 @@ class WebSocketManager {
         // IDE Mirror messages
         case 'click-element':
         case 'type-text':
+        case 'type-batch':
         case 'refresh-ide':
         case 'connect-ide':
         case 'switch-ide':
