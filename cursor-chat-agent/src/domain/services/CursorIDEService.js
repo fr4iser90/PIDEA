@@ -1001,9 +1001,14 @@ class CursorIDEService {
         
         if (!lastPwd) throw new Error('Could not extract working directory from terminal output!');
         
-        // Direkt Backend setzen statt curl
+        // curl-API-Call mit diesem Pfad absetzen
+        const curlCmd = `curl -X POST http://localhost:3000/api/ide/set-workspace/${port} -H "Content-Type: application/json" -d '{"workspacePath":"${lastPwd}"}'`;
+        await page.keyboard.type(curlCmd);
+        await page.keyboard.press('Enter');
+        console.log(`[CursorIDEService] Sent workspace path for port ${port} via terminal curl:`, lastPwd);
+        
+        // Auch direkt Backend setzen
         this.ideManager.setWorkspacePath(port, lastPwd);
-        console.log(`[CursorIDEService] Set workspace path for port ${port}:`, lastPwd);
         
         resolve(lastPwd);
       } catch (error) {
