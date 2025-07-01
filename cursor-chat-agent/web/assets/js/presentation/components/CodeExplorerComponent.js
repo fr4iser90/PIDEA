@@ -52,7 +52,7 @@ class CodeExplorerComponent {
               </div>
             </div>
             <div class="editor-content">
-              <pre><code id="codeContent">${this.currentFile ? this.currentFile.content : 'Wählen Sie eine Datei aus dem Projektbaum aus.'}</code></pre>
+              <pre><code id="codeContent" class="${this.getLanguageClass(this.currentFile)}">${this.currentFile ? this.currentFile.content : 'Wählen Sie eine Datei aus dem Projektbaum aus.'}</code></pre>
             </div>
           </div>
         </div>
@@ -135,6 +135,30 @@ class CodeExplorerComponent {
         </div>
       `;
     }
+  }
+
+  getLanguageClass(file) {
+    if (!file || !file.name || !file.name.includes('.')) return '';
+    const ext = file.name.split('.').pop().toLowerCase();
+    const map = {
+      js: 'javascript',
+      ts: 'typescript',
+      py: 'python',
+      md: 'markdown',
+      yml: 'yaml',
+      sh: 'bash',
+      c: 'c',
+      cpp: 'cpp',
+      h: 'cpp',
+      java: 'java',
+      json: 'json',
+      html: 'xml',
+      css: 'css',
+      xml: 'xml',
+      log: 'plaintext',
+      txt: 'plaintext'
+    };
+    return 'language-' + (map[ext] || ext);
   }
 }
 

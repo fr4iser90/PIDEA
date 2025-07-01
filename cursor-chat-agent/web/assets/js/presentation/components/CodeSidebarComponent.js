@@ -183,6 +183,7 @@ class CodeSidebarComponent {
       btn.addEventListener('click', (e) => {
         e.stopPropagation();
         const path = btn.dataset.path;
+        console.log('[Sidebar] Ordner expand/collapse:', path);
         this.toggleFolder(path);
       });
     });
@@ -190,7 +191,13 @@ class CodeSidebarComponent {
     fileItems.forEach(item => {
       item.addEventListener('click', () => {
         const path = item.dataset.path;
-        this.selectFile(path);
+        const file = this.findFileByPath(this.fileTree, path);
+        if (file && file.type === 'file') {
+          console.log('[Sidebar] Datei geklickt:', path, file);
+          this.selectFile(path);
+          console.log('[Sidebar] Sende Event an EventBus: code-explorer:file:selected', file);
+          this.eventBus.emit('code-explorer:file:selected', { file });
+        }
       });
     });
   }
@@ -277,6 +284,18 @@ class CodeSidebarComponent {
     this.fileTree = files;
     this.render();
     this.bindEvents();
+  }
+
+  // Hilfsfunktion: Suche File-Objekt im Baum anhand des Pfads
+  findFileByPath(tree, path) {
+    for (const file of tree) {
+      if (file.path === path) return file;
+      if (file.type === 'directory' && file.children) {
+        const found = this.findFileByPath(file.children, path);
+        if (found) return found;
+      }
+    }
+    return null;
   }
 }
 

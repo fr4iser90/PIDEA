@@ -142,12 +142,14 @@ class Application {
     this.app.get('/api/files/content', async (req, res) => {
       try {
         const filePath = req.query.path;
+        console.log('[API] /api/files/content aufgerufen mit path:', filePath);
         if (!filePath) {
           return res.status(400).json({
             success: false,
             error: 'File path is required'
           });
         }
+        console.log('[API] Rufe BrowserManager.getFileContent auf mit:', filePath);
         const content = await this.browserManager.getFileContent(filePath);
         res.json({
           success: true,

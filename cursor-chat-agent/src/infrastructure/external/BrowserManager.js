@@ -123,6 +123,15 @@ class BrowserManager {
               path = pathMatch[1];
             }
           }
+          // Fallback: Wenn path leer ist und Root-Ordner, setze ihn auf den Namen
+          if (!path && isDirectory && ariaLevel === 1) {
+            path = name;
+            console.warn('[BrowserManager] WARN: Root-Ordner ohne Pfad, setze path auf name:', name);
+          }
+          if (!path) {
+            path = name;
+            console.warn('[BrowserManager] WARN: Leerer Pfad für', name, ariaLabel);
+          }
           return {
             name,
             path,
@@ -161,22 +170,20 @@ class BrowserManager {
 
   async openFile(filePath) {
     try {
+      console.log('[BrowserManager] openFile aufgerufen mit:', filePath);
       const page = await this.getPage();
       if (!page) {
         throw new Error('No connection to Cursor IDE');
       }
-
       // Find the file in the explorer and click it
       const fileSelector = `.explorer-folders-view .monaco-list-row[aria-label*="${filePath}"]`;
+      console.log('[BrowserManager] Suche Selector:', fileSelector);
       await page.waitForSelector(fileSelector, { timeout: 5000 });
       await page.click(fileSelector);
-
       // Wait for the file to open in the editor
       await page.waitForSelector('.monaco-editor', { timeout: 5000 });
-
       console.log(`[BrowserManager] Opened file: ${filePath}`);
       return true;
-
     } catch (error) {
       console.error(`[BrowserManager] Error opening file ${filePath}:`, error.message);
       return false;
@@ -228,24 +235,22 @@ class BrowserManager {
 
   async getFileContent(filePath) {
     try {
+      console.log('[BrowserManager] getFileContent aufgerufen mit:', filePath);
       const page = await this.getPage();
       if (!page) {
         throw new Error('No connection to Cursor IDE');
       }
-
       // First, open the file in the editor
       const opened = await this.openFile(filePath);
       if (!opened) {
         throw new Error(`Failed to open file: ${filePath}`);
       }
-
       // Wait a bit for the file to load
       await page.waitForTimeout(1000);
-
       // Get the content from the editor
       const content = await this.getCurrentFileContent();
+      console.log('[BrowserManager] Dateiinhalt geladen für:', filePath);
       return content;
-
     } catch (error) {
       console.error(`[BrowserManager] Error getting file content for ${filePath}:`, error.message);
       throw error;
