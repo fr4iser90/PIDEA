@@ -534,7 +534,7 @@ body.light-theme .message-bubble pre code {
     font-size: 1.25rem;
   }
 
-  #messages {
+  .messages-container {
     padding: 16px;
   }
 
