@@ -166,13 +166,22 @@ class IDEMirrorComponent {
             position: relative;
         `;
         header.innerHTML = `
-            <div>
+            <div style="display: flex; align-items: center; gap: 15px;">
                 <span>📸 ${ideState.title || 'Cursor IDE Screenshot'}</span>
-                <span style="margin-left: 15px;">Port: ${ideState.idePort || 'unknown'}</span>
-                <span style="margin-left: 15px;">Elements: ${totalElements}</span>
+                <span>Port: ${ideState.idePort || 'unknown'}</span>
+                <span>Elements: ${totalElements}</span>
+                <span id="typingStatus" style="color: #28a745; font-weight: bold;"></span>
             </div>
-            <button onclick="location.reload()" style="padding: 4px 8px; background: #4e8cff; color: white; border: none; border-radius: 3px; cursor: pointer;">🔄 Refresh</button>
+            <div style="display: flex; gap: 10px;">
+                <button onclick="location.reload()" style="padding: 4px 8px; background: #4e8cff; color: white; border: none; border-radius: 3px; cursor: pointer;">🔄 Refresh</button>
+                <button onclick="window.ideComponent.stopTyping()" style="padding: 4px 8px; background: #dc3545; color: white; border: none; border-radius: 3px; cursor: pointer;">⏹️ Stop Typing</button>
+            </div>
         `;
+        
+        // Set global reference and typing state
+        window.ideComponent = this;
+        this.isTypingMode = false;
+        this.currentTypingZone = null;
 
         // Create viewport container
         const viewport = document.createElement('div');
@@ -246,15 +255,21 @@ class IDEMirrorComponent {
                 clickZone.style.boxShadow = 'none';
             });
 
-            // Click handler
+            // Click handler with typing mode
             clickZone.addEventListener('click', (e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                this.handleElementClick(zone.selector, zone);
+                this.handleSmartClick(zone);
             });
 
-            // Tooltip
-            clickZone.title = `Click: ${zone.selector}`;
+            // Tooltip with element type
+            const typeEmoji = {
+                'editor': '📝',
+                'chat': '💬', 
+                'terminal': '💻',
+                'input': '📝'
+            };
+            clickZone.title = `${typeEmoji[zone.elementType] || '🖱️'} ${zone.elementType}: ${zone.selector}`;
             overlay.appendChild(clickZone);
         });
 
@@ -309,16 +324,32 @@ class IDEMirrorComponent {
     extractClickableZones(elementData, zones = []) {
         if (!elementData) return zones;
 
-        const { position, isClickable, selector } = elementData;
+        const { position, isClickable, selector, className, tagName } = elementData;
 
         // Add clickable elements with valid positions
         if (isClickable && position && position.width > 0 && position.height > 0) {
+            // Detect element type for smart typing
+            let elementType = 'unknown';
+            const classStr = className || '';
+            
+            if (classStr.includes('monaco-editor') || classStr.includes('editor')) {
+                elementType = 'editor';
+            } else if (classStr.includes('chat') || classStr.includes('composer')) {
+                elementType = 'chat';
+            } else if (classStr.includes('terminal')) {
+                elementType = 'terminal';
+            } else if (tagName === 'textarea' || tagName === 'input') {
+                elementType = 'input';
+            }
+
             zones.push({
                 x: position.x,
                 y: position.y,
                 width: position.width,
                 height: position.height,
-                selector: selector || 'unknown'
+                selector: selector || 'unknown',
+                elementType: elementType,
+                className: classStr
             });
         }
 
@@ -444,6 +475,22 @@ class IDEMirrorComponent {
         });
     }
 
+    async handleSmartClick(zone) {
+        console.log(`🎯 Smart click on ${zone.elementType}: ${zone.selector}`);
+        
+        try {
+            // First click the element
+            await this.handleElementClick(zone.selector, zone);
+            
+            // If it's a typeable element, activate typing mode
+            if (['editor', 'chat', 'terminal', 'input'].includes(zone.elementType)) {
+                this.activateTypingMode(zone);
+            }
+        } catch (error) {
+            console.error('❌ Smart click failed:', error);
+        }
+    }
+
     async handleElementClick(selector, position) {
         console.log(`🖱️ Clicking element: ${selector}`, position);
         
@@ -475,6 +522,128 @@ class IDEMirrorComponent {
         }
     }
 
+    activateTypingMode(zone) {
+        this.isTypingMode = true;
+        this.currentTypingZone = zone;
+        
+        // Update status
+        const status = document.getElementById('typingStatus');
+        const typeNames = {
+            'editor': 'Editor',
+            'chat': 'Chat', 
+            'terminal': 'Terminal',
+            'input': 'Input'
+        };
+        status.textContent = `⌨️ Typing in ${typeNames[zone.elementType]} - Press ESC to stop`;
+        
+        // Visual feedback - highlight the active zone
+        this.highlightActiveZone(zone);
+        
+        // Start keyboard listening
+        this.startKeyboardListening();
+        
+        console.log(`✅ Typing mode activated for ${zone.elementType}`);
+    }
+
+    stopTyping() {
+        this.isTypingMode = false;
+        this.currentTypingZone = null;
+        
+        // Update status
+        const status = document.getElementById('typingStatus');
+        status.textContent = '';
+        
+        // Remove highlights
+        this.removeZoneHighlights();
+        
+        // Stop keyboard listening
+        this.stopKeyboardListening();
+        
+        console.log('⏹️ Typing mode stopped');
+    }
+
+    highlightActiveZone(zone) {
+        // Remove existing highlights
+        this.removeZoneHighlights();
+        
+        // Find and highlight the corresponding zone
+        const zones = document.querySelectorAll('.clickable-zone');
+        zones.forEach(zoneEl => {
+            if (zoneEl.title.includes(zone.selector)) {
+                zoneEl.style.background = 'rgba(40, 167, 69, 0.4)';
+                zoneEl.style.border = '3px solid rgba(40, 167, 69, 0.8)';
+                zoneEl.style.boxShadow = '0 0 15px rgba(40, 167, 69, 0.6)';
+                zoneEl.classList.add('active-typing-zone');
+            }
+        });
+    }
+
+    removeZoneHighlights() {
+        const activeZones = document.querySelectorAll('.active-typing-zone');
+        activeZones.forEach(zone => {
+            zone.style.background = 'rgba(78, 140, 255, 0.1)';
+            zone.style.border = '1px solid rgba(78, 140, 255, 0.3)';
+            zone.style.boxShadow = 'none';
+            zone.classList.remove('active-typing-zone');
+        });
+    }
+
+    startKeyboardListening() {
+        if (this.keyboardListener) {
+            this.stopKeyboardListening();
+        }
+        
+        this.keyboardListener = (e) => {
+            if (!this.isTypingMode || !this.currentTypingZone) return;
+            
+            // Stop typing on ESC
+            if (e.key === 'Escape') {
+                this.stopTyping();
+                e.preventDefault();
+                return;
+            }
+            
+            // Ignore certain keys
+            if (['F1', 'F2', 'F3', 'F4', 'F5', 'F6', 'F7', 'F8', 'F9', 'F10', 'F11', 'F12'].includes(e.key)) {
+                return;
+            }
+            
+            // Send keystroke to IDE
+            this.sendKeystrokeToIDE(e);
+            e.preventDefault();
+        };
+        
+        document.addEventListener('keydown', this.keyboardListener);
+        console.log('⌨️ Keyboard listening started');
+    }
+
+    stopKeyboardListening() {
+        if (this.keyboardListener) {
+            document.removeEventListener('keydown', this.keyboardListener);
+            this.keyboardListener = null;
+            console.log('⌨️ Keyboard listening stopped');
+        }
+    }
+
+    sendKeystrokeToIDE(event) {
+        if (!this.currentTypingZone || !this.isConnected) return;
+        
+        const { key, ctrlKey, shiftKey, altKey, metaKey } = event;
+        
+        console.log(`⌨️ Sending keystroke: ${key} to ${this.currentTypingZone.elementType}`);
+        
+        // Send keystroke to IDE
+        this.ws.send(JSON.stringify({
+            type: 'type-text',
+            payload: { 
+                text: key.length === 1 ? key : '', // Only send printable characters as text
+                key: key,
+                modifiers: { ctrlKey, shiftKey, altKey, metaKey },
+                selector: this.currentTypingZone.selector 
+            }
+        }));
+    }
+
     setupEventListeners() {
         // Refresh button
         this.refreshIDE = async () => {
@@ -504,6 +673,12 @@ class IDEMirrorComponent {
     showClickFeedback() {
         // Visual click feedback could be added here
         console.log('👆 Click registered');
+    }
+
+    // Clean up on component destroy
+    destroy() {
+        this.stopKeyboardListening();
+        this.removeZoneHighlights();
     }
     
     injectIDECSS(cssData) {

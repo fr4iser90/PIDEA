@@ -285,21 +285,185 @@ class IDEMirrorService {
         }
     }
 
-    async typeInIDE(text, selector = null) {
+    async typeInIDE(text, selector = null, key = null, modifiers = {}) {
         const page = await this.browserManager.getPage();
         if (!page) {
             throw new Error('No IDE connection available');
         }
 
         try {
-            if (selector) {
-                await page.fill(selector, text);
-            } else {
-                await page.keyboard.type(text);
+            // If it's a special key or key combination
+            if (key && key.length > 1) {
+                console.log(`⌨️ Sending special key: ${key} ${JSON.stringify(modifiers)}`);
+                
+                // Handle modifiers
+                if (modifiers.ctrlKey) await page.keyboard.down('Control');
+                if (modifiers.shiftKey) await page.keyboard.down('Shift');
+                if (modifiers.altKey) await page.keyboard.down('Alt');
+                if (modifiers.metaKey) await page.keyboard.down('Meta');
+                
+                // Send the key
+                await page.keyboard.press(key);
+                
+                // Release modifiers
+                if (modifiers.metaKey) await page.keyboard.up('Meta');
+                if (modifiers.altKey) await page.keyboard.up('Alt');
+                if (modifiers.shiftKey) await page.keyboard.up('Shift');
+                if (modifiers.ctrlKey) await page.keyboard.up('Control');
+                
+                console.log(`✅ Sent special key: ${key}`);
+                return true;
             }
-            console.log(`✅ Typed text: ${text.substring(0, 50)}...`);
+            
+            // Regular text input with improved focus handling
+            if (text) {
+                console.log(`⌨️ Typing "${text.substring(0, 50)}..." ${selector ? `in ${selector}` : 'at cursor'}`);
+                
+                // Smart selector handling for different IDE elements
+                if (selector) {
+                    await this.focusElement(page, selector);
+                }
+                
+                // Type the text
+                await page.keyboard.type(text, { delay: 20 });
+                console.log(`✅ Typed text: ${text.substring(0, 50)}...`);
+                return true;
+            }
+            
         } catch (error) {
-            console.error(`❌ Failed to type text: ${error.message}`);
+            console.error(`❌ Failed to type: ${error.message}`);
+            throw error;
+        }
+    }
+
+    async focusElement(page, selector) {
+        // Special handling for different types of elements
+        if (selector.includes('composer-bar')) {
+            // For chat/composer elements, try multiple strategies
+            const chatSelectors = [
+                `${selector} textarea`,
+                `${selector} .monaco-editor textarea`,
+                `${selector} [contenteditable="true"]`,
+                `${selector} input`,
+                selector
+            ];
+
+            for (const chatSelector of chatSelectors) {
+                try {
+                    const element = await page.$(chatSelector);
+                    if (element) {
+                        const isVisible = await element.isVisible();
+                        if (isVisible) {
+                            console.log(`🎯 Focusing chat element: ${chatSelector}`);
+                            await element.click();
+                            await page.waitForTimeout(200);
+                            
+                            // Try to ensure focus by clicking again if needed
+                            const isFocused = await page.evaluate((sel) => {
+                                const el = document.querySelector(sel);
+                                return el && (el === document.activeElement || el.contains(document.activeElement));
+                            }, chatSelector);
+                            
+                            if (!isFocused) {
+                                await element.focus();
+                                await page.waitForTimeout(100);
+                            }
+                            
+                            console.log(`✅ Successfully focused: ${chatSelector}`);
+                            return true;
+                        }
+                    }
+                } catch (e) {
+                    // Try next selector
+                }
+            }
+        } else {
+            // Standard element focusing
+            try {
+                await page.click(selector);
+                await page.waitForTimeout(100);
+            } catch (e) {
+                console.log(`⚠️ Standard click failed for ${selector}, trying focus()`);
+                await page.focus(selector);
+            }
+        }
+    }
+
+    async focusAndTypeInIDE(selector, text, clearFirst = false) {
+        const page = await this.browserManager.getPage();
+        if (!page) {
+            throw new Error('No IDE connection available');
+        }
+
+        console.log(`🎯 Focus and type in ${selector}: "${text.substring(0, 50)}..."`);
+
+        try {
+            // Click to focus the element
+            await page.click(selector);
+            await page.waitForTimeout(300);
+
+            // Clear existing content if requested
+            if (clearFirst) {
+                await page.keyboard.down('Control');
+                await page.keyboard.press('a');
+                await page.keyboard.up('Control');
+                await page.waitForTimeout(100);
+            }
+
+            // Type new content
+            await page.keyboard.type(text, { delay: 30 });
+            
+            console.log(`✅ Focused and typed in ${selector}`);
+            return true;
+
+        } catch (error) {
+            console.error(`❌ Focus and type failed: ${error.message}`);
+            throw error;
+        }
+    }
+
+    async sendChatMessage(message) {
+        const page = await this.browserManager.getPage();
+        if (!page) {
+            throw new Error('No IDE connection available');
+        }
+
+        console.log(`💬 Sending chat message: "${message.substring(0, 50)}..."`);
+
+        try {
+            // Common chat input selectors in Cursor
+            const chatSelectors = [
+                '.chat-input textarea',
+                '.composer-bar textarea',
+                '[placeholder*="Ask"]',
+                '[placeholder*="chat"]',
+                '.chat-composer textarea'
+            ];
+
+            let chatFound = false;
+            for (const selector of chatSelectors) {
+                try {
+                    await page.waitForSelector(selector, { timeout: 1000 });
+                    await page.click(selector);
+                    await page.waitForTimeout(200);
+                    await page.keyboard.type(message, { delay: 30 });
+                    await page.keyboard.press('Enter');
+                    console.log(`✅ Chat message sent via ${selector}`);
+                    chatFound = true;
+                    break;
+                } catch (e) {
+                    // Try next selector
+                }
+            }
+
+            if (!chatFound) {
+                throw new Error('Chat input not found');
+            }
+
+            return true;
+
+        } catch (error) {
+            console.error(`❌ Failed to send chat message: ${error.message}`);
             throw error;
         }
     }

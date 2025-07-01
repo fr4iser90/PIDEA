@@ -144,6 +144,124 @@ class IDEMirrorController {
         }
     }
 
+    async typeText(req, res) {
+        try {
+            const { text, selector } = req.body;
+
+            if (!text) {
+                return res.status(400).json({
+                    success: false,
+                    error: 'Text is required'
+                });
+            }
+
+            if (!this.ideMirrorService.isIDEConnected()) {
+                await this.ideMirrorService.connectToIDE();
+            }
+
+            await this.ideMirrorService.typeInIDE(text, selector);
+            
+            // Wait for IDE to update
+            await new Promise(resolve => setTimeout(resolve, 300));
+            
+            // Get new state
+            const newState = await this.ideMirrorService.captureCompleteIDEState();
+            this.broadcastToClients('ide-state-updated', newState);
+
+            res.json({
+                success: true,
+                data: newState,
+                action: 'type',
+                text: text.substring(0, 50)
+            });
+        } catch (error) {
+            console.error('❌ Failed to type text:', error.message);
+            res.status(500).json({
+                success: false,
+                error: error.message
+            });
+        }
+    }
+
+    async focusAndType(req, res) {
+        try {
+            const { selector, text, clearFirst = false } = req.body;
+
+            if (!selector || !text) {
+                return res.status(400).json({
+                    success: false,
+                    error: 'Selector and text are required'
+                });
+            }
+
+            if (!this.ideMirrorService.isIDEConnected()) {
+                await this.ideMirrorService.connectToIDE();
+            }
+
+            await this.ideMirrorService.focusAndTypeInIDE(selector, text, clearFirst);
+            
+            // Wait for IDE to update
+            await new Promise(resolve => setTimeout(resolve, 300));
+            
+            // Get new state
+            const newState = await this.ideMirrorService.captureCompleteIDEState();
+            this.broadcastToClients('ide-state-updated', newState);
+
+            res.json({
+                success: true,
+                data: newState,
+                action: 'focus-and-type',
+                target: selector,
+                text: text.substring(0, 50)
+            });
+        } catch (error) {
+            console.error('❌ Failed to focus and type:', error.message);
+            res.status(500).json({
+                success: false,
+                error: error.message
+            });
+        }
+    }
+
+    async sendChatMessage(req, res) {
+        try {
+            const { message } = req.body;
+
+            if (!message) {
+                return res.status(400).json({
+                    success: false,
+                    error: 'Message is required'
+                });
+            }
+
+            if (!this.ideMirrorService.isIDEConnected()) {
+                await this.ideMirrorService.connectToIDE();
+            }
+
+            await this.ideMirrorService.sendChatMessage(message);
+            
+            // Wait for response
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            
+            // Get new state
+            const newState = await this.ideMirrorService.captureCompleteIDEState();
+            this.broadcastToClients('ide-state-updated', newState);
+
+            res.json({
+                success: true,
+                data: newState,
+                action: 'chat-message',
+                message: message.substring(0, 50)
+            });
+        } catch (error) {
+            console.error('❌ Failed to send chat message:', error.message);
+            res.status(500).json({
+                success: false,
+                error: error.message
+            });
+        }
+    }
+
     // WebSocket Event Handlers
     handleWebSocketConnection(ws) {
         console.log('🔌 IDE Mirror client connected');
@@ -193,6 +311,18 @@ class IDEMirrorController {
                 await this.handleWebSocketClick(ws, payload);
                 break;
             
+            case 'type-text':
+                await this.handleWebSocketType(ws, payload);
+                break;
+                
+            case 'focus-and-type':
+                await this.handleWebSocketFocusAndType(ws, payload);
+                break;
+                
+            case 'send-chat-message':
+                await this.handleWebSocketChatMessage(ws, payload);
+                break;
+            
             case 'refresh-ide':
                 await this.handleWebSocketRefresh(ws);
                 break;
@@ -220,8 +350,71 @@ class IDEMirrorController {
             await this.ideMirrorService.connectToIDE();
         }
 
+        console.log(`🖱️ Processing click: ${selector}`);
         await this.ideMirrorService.clickElementInIDE(selector, coordinates);
-        await new Promise(resolve => setTimeout(resolve, 500));
+        
+        // Wait for UI changes
+        await new Promise(resolve => setTimeout(resolve, 300));
+        
+        const newState = await this.ideMirrorService.captureCompleteIDEState();
+        this.broadcastToClients('ide-state-updated', newState);
+        console.log(`📸 Screenshot updated after click: ${selector}`);
+    }
+
+    async handleWebSocketType(ws, payload) {
+        const { text, selector, key, modifiers } = payload;
+        
+        if (!this.ideMirrorService.isIDEConnected()) {
+            await this.ideMirrorService.connectToIDE();
+        }
+
+        console.log(`⌨️ Processing keystroke: ${key || text} for ${selector}`);
+        await this.ideMirrorService.typeInIDE(text, selector, key, modifiers);
+        
+        // Only capture screenshots for significant events to reduce load
+        const shouldUpdateScreenshot = (
+            key === 'Enter' || 
+            key === 'Tab' || 
+            key === 'Escape' ||
+            (key && key.includes('Arrow')) ||
+            (modifiers && (modifiers.ctrlKey || modifiers.metaKey))
+        );
+        
+        if (shouldUpdateScreenshot) {
+            // Small delay for IDE to update
+            await new Promise(resolve => setTimeout(resolve, 200));
+            
+            const newState = await this.ideMirrorService.captureCompleteIDEState();
+            this.broadcastToClients('ide-state-updated', newState);
+            console.log(`📸 Screenshot updated for key: ${key}`);
+        } else {
+            console.log(`⏩ Skipping screenshot for: ${key || text}`);
+        }
+    }
+
+    async handleWebSocketFocusAndType(ws, payload) {
+        const { selector, text, clearFirst = false } = payload;
+        
+        if (!this.ideMirrorService.isIDEConnected()) {
+            await this.ideMirrorService.connectToIDE();
+        }
+
+        await this.ideMirrorService.focusAndTypeInIDE(selector, text, clearFirst);
+        await new Promise(resolve => setTimeout(resolve, 300));
+        
+        const newState = await this.ideMirrorService.captureCompleteIDEState();
+        this.broadcastToClients('ide-state-updated', newState);
+    }
+
+    async handleWebSocketChatMessage(ws, payload) {
+        const { message } = payload;
+        
+        if (!this.ideMirrorService.isIDEConnected()) {
+            await this.ideMirrorService.connectToIDE();
+        }
+
+        await this.ideMirrorService.sendChatMessage(message);
+        await new Promise(resolve => setTimeout(resolve, 1000));
         
         const newState = await this.ideMirrorService.captureCompleteIDEState();
         this.broadcastToClients('ide-state-updated', newState);
@@ -271,6 +464,9 @@ class IDEMirrorController {
         app.get('/api/ide-mirror/state', this.getIDEState.bind(this));
         app.get('/api/ide-mirror/ides', this.getAvailableIDEs.bind(this));
         app.post('/api/ide-mirror/click', this.clickElement.bind(this));
+        app.post('/api/ide-mirror/type', this.typeText.bind(this));
+        app.post('/api/ide-mirror/focus-and-type', this.focusAndType.bind(this));
+        app.post('/api/ide-mirror/chat', this.sendChatMessage.bind(this));
         app.post('/api/ide-mirror/connect', this.connectToIDE.bind(this));
         app.post('/api/ide-mirror/switch', this.switchIDE.bind(this));
     }
