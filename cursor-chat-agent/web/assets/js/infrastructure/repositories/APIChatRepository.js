@@ -41,7 +41,7 @@ class APIChatRepository extends ChatRepository {
       const response = await fetch(`${this.baseURL}/api/chat`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: message.content })
+        body: JSON.stringify({ message: typeof message === 'string' ? message : message.content })
       });
 
       const result = await response.json();

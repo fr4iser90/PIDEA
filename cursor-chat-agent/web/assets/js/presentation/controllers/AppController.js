@@ -87,7 +87,21 @@ class AppController {
     // Chat events
     this.eventBus.on('chat:send:message', async (data) => {
       try {
-        await this.chatService.sendMessage(data.content);
+        const activeFrameworks = this.frameworkPanelComponent?.getActiveFrameworks?.() || [];
+        console.log('Aktive Frameworks:', activeFrameworks);
+        let contextText = '';
+        let contents = [];
+        if (activeFrameworks.length > 0) {
+          contents = await Promise.all(
+            activeFrameworks.map(fw => fetch(`/framework/${fw.name}`).then(r => r.text()))
+          );
+          console.log('Geladene Framework-Inhalte:', contents);
+          contextText = contents.map((c, i) => `--- [${activeFrameworks[i].name}] ---\n${c}\n`).join('\n');
+          console.log('Kontexttext:', contextText);
+        }
+        const fullMessage = contextText + (data.content || '');
+        console.log('FullMessage an ChatService:', fullMessage);
+        await this.chatService.sendMessage(fullMessage);
       } catch (error) {
         console.error('Failed to send message:', error);
       }
