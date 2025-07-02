@@ -76,13 +76,13 @@
 }
 
 .mirror-element.clickable {
-  outline: 1px dashed rgba(78, 140, 255, 0.5) !important;
-  cursor: pointer !important;
+  outline: 1px dashed rgba(78, 140, 255, 0.5) ;
+  cursor: pointer ;
 }
 
 .mirror-element.clickable:hover {
-  outline: 2px solid #4e8cff !important;
-  background-color: rgba(78, 140, 255, 0.1) !important;
+  outline: 2px solid #4e8cff ;
+  background-color: rgba(78, 140, 255, 0.1) ;
 }
 
 .loading-spinner {

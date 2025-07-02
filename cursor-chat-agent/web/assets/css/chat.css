@@ -16,6 +16,13 @@
   min-height: 0;
 }
 
+.chat-container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  min-height: 0;
+}
+
 .chat-header {
   flex-shrink: 0;
   padding: 20px 24px;
@@ -35,8 +42,17 @@
 
 #messages {
   flex: 1 1 auto;
-  overflow-y: auto;
   min-height: 0;
+  overflow-y: auto;
+  padding: 20px;
+  background: var(--bg-secondary);
+  scroll-behavior: smooth;
+}
+
+.messages-container {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
   padding: 20px;
   background: var(--bg-secondary);
   scroll-behavior: smooth;
@@ -157,18 +173,20 @@
 
 .input-area {
   flex-shrink: 0;
-  position: sticky;
-  bottom: 0;
-  z-index: 15;
+  width: 100%;
   background: var(--bg-tertiary);
+  padding: 16px 24px;
   border-top: 1px solid #23272e;
-  padding: 20px 24px;
+  box-sizing: border-box;
+  position: relative;
+  bottom: 0;
 }
 
 .input-container {
   display: flex;
   gap: 12px;
   align-items: flex-end;
+  width: 100%;
   background: transparent;
 }
 
@@ -235,7 +253,7 @@
 .btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
-  transform: none !important;
+  transform: none ;
 }
 
 /* Markdown Styling */
@@ -477,8 +495,4 @@ body.light-theme .message-bubble pre code {
   .btn {
     padding: 12px 14px;
   }
-}
-
-.main-content {
-  overflow: visible !important;
 } 
