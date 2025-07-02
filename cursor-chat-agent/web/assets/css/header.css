@@ -100,33 +100,64 @@
   border-radius: 4px;
   transition: background 0.2s;
 }
+
 #themeSwitcher:hover, #settingsBtn:hover {
   background: #333;
 }
 
+/* Mode Buttons */
+.mode-btn {
+  background: none;
+  border: 1.5px solid #4e8cff;
+  color: #4e8cff;
+  font-size: 1em;
+  font-weight: 600;
+  padding: 6px 18px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+
+.mode-btn.active {
+  background: #4e8cff;
+  color: #fff;
+}
+
+.mode-btn:not(.active):hover {
+  background: #23272e;
+  color: #fff;
+}
+
+/* Light Theme Support */
 body.light-theme .app-header {
   background: #e6e6e6;
   color: #23272e;
   border-bottom: 1px solid #ccc;
   box-shadow: 0 2px 8px #bbb8;
 }
+
 body.light-theme .app-title {
   color: #23272e;
 }
+
 body.light-theme .status-indicator {
   color: #4caf50;
 }
+
 body.light-theme .status-dot {
   background: #4caf50;
 }
-body.light-theme #themeSwitcher, body.light-theme #settingsBtn {
+
+body.light-theme #themeSwitcher, 
+body.light-theme #settingsBtn {
   color: #23272e;
 }
-body.light-theme #themeSwitcher:hover, body.light-theme #settingsBtn:hover {
+
+body.light-theme #themeSwitcher:hover, 
+body.light-theme #settingsBtn:hover {
   background: #b3d1ff;
 }
 
-/* Light theme support for layout controls */
 body.light-theme .layout-btn {
   background: #e9ecef;
   color: #6c757d;
@@ -140,4 +171,19 @@ body.light-theme .layout-btn:hover {
 body.light-theme .layout-btn.active {
   background: var(--primary-color);
   color: white;
+}
+
+body.light-theme .mode-btn {
+  border: 1.5px solid #1976d2;
+  color: #1976d2;
+}
+
+body.light-theme .mode-btn.active {
+  background: #1976d2;
+  color: #fff;
+}
+
+body.light-theme .mode-btn:not(.active):hover {
+  background: #b3d1ff;
+  color: #23272e;
 } 

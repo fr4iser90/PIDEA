@@ -264,38 +264,114 @@
   background: var(--bg-secondary);
 }
 
-/* Split View Layout */
-.main-layout.split-view {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 16px;
-  height: 100%;
+/* Animation Classes */
+.preview-refreshing {
+  animation: refreshSpin 0.5s ease;
 }
 
-.main-layout.split-view .main-content {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 16px;
-  height: 100%;
+@keyframes refreshSpin {
+  0% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+  100% {
+    opacity: 1;
+  }
 }
 
-.main-layout.split-view .chat-container,
-.main-layout.split-view .preview-container {
-  height: 100%;
-  min-height: 0;
+/* Accessibility */
+.preview-container:focus-within {
+  outline: 2px solid var(--primary-color);
+  outline-offset: 2px;
+}
+
+.preview-btn:focus,
+.floating-action-btn:focus,
+.modal-close-btn:focus {
+  outline: 2px solid var(--primary-color);
+  outline-offset: 2px;
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .preview-container {
+    border-width: 2px;
+  }
+  
+  .preview-btn,
+  .floating-action-btn,
+  .modal-close-btn {
+    border: 1px solid currentColor;
+  }
+}
+
+/* Light Theme Support */
+body.light-theme .preview-container {
+  background: #f8f9fa;
+  border-color: #e9ecef;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+body.light-theme .preview-header {
+  background: #e9ecef;
+  border-bottom-color: #dee2e6;
+}
+
+body.light-theme .preview-title {
+  color: #495057;
+}
+
+body.light-theme .preview-content {
+  background: #f8f9fa;
+}
+
+body.light-theme .preview-placeholder {
+  color: #6c757d;
+}
+
+body.light-theme .preview-placeholder h3 {
+  color: #495057;
+}
+
+body.light-theme .preview-btn {
+  color: #6c757d;
+}
+
+body.light-theme .preview-btn:hover {
+  background: #dee2e6;
+  color: #495057;
+}
+
+body.light-theme .preview-modal {
+  background: #f8f9fa;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+}
+
+body.light-theme .preview-modal-header {
+  background: #e9ecef;
+  border-bottom-color: #dee2e6;
+}
+
+body.light-theme .preview-modal-header h3 {
+  color: #495057;
+}
+
+body.light-theme .preview-modal-content {
+  background: #f8f9fa;
+}
+
+body.light-theme .modal-close-btn {
+  color: #6c757d;
+}
+
+body.light-theme .modal-close-btn:hover {
+  background: #dee2e6;
+  color: #495057;
 }
 
 /* Responsive Design */
-@media (max-width: 1200px) {
-  .main-layout.split-view {
-    grid-template-columns: 1fr;
-  }
-  
-  .main-layout.split-view .main-content {
-    grid-template-columns: 1fr;
-  }
-}
-
 @media (max-width: 768px) {
   .preview-container {
     min-height: 250px;
@@ -372,113 +448,6 @@
   
   .preview-placeholder p {
     font-size: 12px;
-  }
-}
-
-/* Light Theme Support */
-body.light-theme .preview-container {
-  background: #f8f9fa;
-  border-color: #e9ecef;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-}
-
-body.light-theme .preview-header {
-  background: #e9ecef;
-  border-bottom-color: #dee2e6;
-}
-
-body.light-theme .preview-title {
-  color: #495057;
-}
-
-body.light-theme .preview-content {
-  background: #f8f9fa;
-}
-
-body.light-theme .preview-placeholder {
-  color: #6c757d;
-}
-
-body.light-theme .preview-placeholder h3 {
-  color: #495057;
-}
-
-body.light-theme .preview-btn {
-  color: #6c757d;
-}
-
-body.light-theme .preview-btn:hover {
-  background: #dee2e6;
-  color: #495057;
-}
-
-body.light-theme .preview-modal {
-  background: #f8f9fa;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
-}
-
-body.light-theme .preview-modal-header {
-  background: #e9ecef;
-  border-bottom-color: #dee2e6;
-}
-
-body.light-theme .preview-modal-header h3 {
-  color: #495057;
-}
-
-body.light-theme .preview-modal-content {
-  background: #f8f9fa;
-}
-
-body.light-theme .modal-close-btn {
-  color: #6c757d;
-}
-
-body.light-theme .modal-close-btn:hover {
-  background: #dee2e6;
-  color: #495057;
-}
-
-/* Animation Classes */
-.preview-refreshing {
-  animation: refreshSpin 0.5s ease;
-}
-
-@keyframes refreshSpin {
-  0% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.5;
-  }
-  100% {
-    opacity: 1;
-  }
-}
-
-/* Accessibility */
-.preview-container:focus-within {
-  outline: 2px solid var(--primary-color);
-  outline-offset: 2px;
-}
-
-.preview-btn:focus,
-.floating-action-btn:focus,
-.modal-close-btn:focus {
-  outline: 2px solid var(--primary-color);
-  outline-offset: 2px;
-}
-
-/* High contrast mode support */
-@media (prefers-contrast: high) {
-  .preview-container {
-    border-width: 2px;
-  }
-  
-  .preview-btn,
-  .floating-action-btn,
-  .modal-close-btn {
-    border: 1px solid currentColor;
   }
 }
 

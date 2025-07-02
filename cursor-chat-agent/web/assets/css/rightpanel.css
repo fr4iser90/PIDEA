@@ -278,6 +278,7 @@
   border-color: var(--primary-color);
 }
 
+/* Right Panel Input Area */
 .right-panel-input-area {
   display: flex;
   align-items: flex-end;
@@ -310,9 +311,11 @@
   cursor: pointer;
   transition: background 0.2s;
 }
+
 #rightPanelSendBtn:hover {
   background: #1976d2;
 }
+
 /* Responsive Design */
 @media (max-width: 1200px) {
   .chat-right-panel {

@@ -348,75 +348,6 @@
   color: #ff6b6b;
 }
 
-/* Light Theme Support */
-body.light-theme .code-sidebar-content {
-  background: #f8f9fa;
-  color: #23272e;
-}
-
-body.light-theme .code-sidebar-content .sidebar-header {
-  background: #e9ecef;
-  border-bottom: 1px solid #dee2e6;
-}
-
-body.light-theme .code-sidebar-content .sidebar-header h3 {
-  color: #1976d2;
-}
-
-body.light-theme .file-item:hover {
-  background: #e9ecef;
-}
-
-body.light-theme .file-item.selected {
-  background: #1976d2;
-  color: #fff;
-}
-
-body.light-theme .expand-btn {
-  color: #1976d2;
-}
-
-body.light-theme .file-children {
-  border-left: 1px solid #dee2e6;
-}
-
-body.light-theme .code-sidebar-content .sidebar-footer {
-  background: #e9ecef;
-  border-top: 1px solid #dee2e6;
-}
-
-body.light-theme .code-sidebar-content .btn-secondary {
-  border: 1px solid #adb5bd;
-  color: #495057;
-}
-
-body.light-theme .code-sidebar-content .btn-secondary:hover {
-  background: #1976d2;
-  border-color: #1976d2;
-  color: #fff;
-}
-
-body.light-theme .editor-header {
-  background: #e9ecef;
-  border-bottom: 1px solid #dee2e6;
-  color: #495057;
-}
-
-body.light-theme .editor-header .file-name {
-  color: #1976d2;
-}
-
-body.light-theme .editor-content {
-  background: #ffffff;
-  color: #23272e;
-}
-
-body.light-theme .error-message {
-  background: #f8d7da;
-  border: 1px solid #f5c6cb;
-  color: #721c24;
-}
-
 /* Code Right Panel */
 .code-right-panel {
   position: fixed;
@@ -755,6 +686,75 @@ body.light-theme .error-message {
 .status-item .value {
   color: var(--text-primary);
   font-weight: 500;
+}
+
+/* Light Theme Support */
+body.light-theme .code-sidebar-content {
+  background: #f8f9fa;
+  color: #23272e;
+}
+
+body.light-theme .code-sidebar-content .sidebar-header {
+  background: #e9ecef;
+  border-bottom: 1px solid #dee2e6;
+}
+
+body.light-theme .code-sidebar-content .sidebar-header h3 {
+  color: #1976d2;
+}
+
+body.light-theme .file-item:hover {
+  background: #e9ecef;
+}
+
+body.light-theme .file-item.selected {
+  background: #1976d2;
+  color: #fff;
+}
+
+body.light-theme .expand-btn {
+  color: #1976d2;
+}
+
+body.light-theme .file-children {
+  border-left: 1px solid #dee2e6;
+}
+
+body.light-theme .code-sidebar-content .sidebar-footer {
+  background: #e9ecef;
+  border-top: 1px solid #dee2e6;
+}
+
+body.light-theme .code-sidebar-content .btn-secondary {
+  border: 1px solid #adb5bd;
+  color: #495057;
+}
+
+body.light-theme .code-sidebar-content .btn-secondary:hover {
+  background: #1976d2;
+  border-color: #1976d2;
+  color: #fff;
+}
+
+body.light-theme .editor-header {
+  background: #e9ecef;
+  border-bottom: 1px solid #dee2e6;
+  color: #495057;
+}
+
+body.light-theme .editor-header .file-name {
+  color: #1976d2;
+}
+
+body.light-theme .editor-content {
+  background: #ffffff;
+  color: #23272e;
+}
+
+body.light-theme .error-message {
+  background: #f8d7da;
+  border: 1px solid #f5c6cb;
+  color: #721c24;
 }
 
 /* Responsive Design */
