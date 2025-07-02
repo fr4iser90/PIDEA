@@ -179,8 +179,7 @@
   padding: 16px 24px;
   border-top: 1px solid #23272e;
   box-sizing: border-box;
-  position: relative;
-  bottom: 0;
+  position: static !important;
 }
 
 .input-container {
