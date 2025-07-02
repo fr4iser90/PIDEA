@@ -1,114 +1,194 @@
-# Cursor Chat Agent Framework
+# Framework Documentation
 
 ## Overview
-This framework provides comprehensive documentation, patterns, and guidelines for building applications with the Cursor Chat Agent system. It serves as a reference for developers working on web applications, mobile apps, extensions, and various architectural patterns.
+This framework provides comprehensive guidelines, patterns, and best practices for modern web development. It covers everything from basic patterns to advanced architectures, ensuring scalable, maintainable, and performant applications.
 
 ## Structure
 
-### 📁 Domains
-Application-specific patterns and guidelines for different types of projects:
-- **Web Apps**: CRUD applications, e-commerce platforms, dashboards, social media, streaming platforms
-- **Mobile Apps**: Android and iOS applications with modern patterns
-- **Extensions**: IDE extensions and plugins
+### 📁 **Domains** - Application Types
+Guides for building specific types of applications with detailed requirements and implementations.
 
-### 📁 Patterns
-Architectural and design patterns for building robust applications:
-- **Architectural**: Domain-Driven Design (DDD), Model-View-Controller (MVC)
-- **Design**: Singleton, Observer, Factory, Strategy patterns
+- **Web Apps**
+  - `crud-app.md` - CRUD application patterns and best practices
+  - `dashboard.md` - Dashboard applications with data visualization
+  - `ecommerce.md` - E-commerce platform development
+  - `social-media.md` - Social media application architecture
+  - `streaming-platform.md` - Video/audio streaming platforms
 
-### 📁 Tech Stacks
-Technology stack configurations and best practices:
-- **Web**: React, Vue.js with modern development patterns
-- **Mobile**: Android (Kotlin/Jetpack Compose) and iOS (Swift/SwiftUI) development stacks
+- **Mobile Apps**
+  - `todo-app.md` - Mobile todo application patterns
 
-### 📁 General
-General guidelines, standards, and AI agent instructions:
-- **Accessibility**: WCAG compliance and inclusive design
-- **Code Style**: Coding standards and conventions
-- **AI Instructions**: Special files for directing the Cursor Chat Agent
+- **Extensions**
+  - `vscode-extension.md` - VS Code extension development
 
-## AI Agent Instructions
+### 📁 **Patterns** - Design & Architecture Patterns
+Software design patterns and architectural approaches for building robust applications.
 
-### Code-Only Instructions (`general/code-only.md`)
-Use for direct code modifications without explanations:
-- Bug fixes and quick patches
-- Simple refactoring tasks
-- Adding new functions or classes
-- Performance optimizations
+- **Architectural Patterns**
+  - `ddd.md` - Domain-Driven Design implementation
+  - `mvc.md` - Model-View-Controller pattern
 
-### Code Documentation (`general/doc-code.md`)
-Use for code-related documentation:
-- API documentation and JSDoc comments
-- README files for libraries and components
-- Code examples and usage guides
-- Technical specifications
+- **Design Patterns**
+  - `factory.md` - Factory pattern implementation
+  - `observer.md` - Observer pattern for event handling
+  - `singleton.md` - Singleton pattern usage
+  - `strategy.md` - Strategy pattern for algorithms
 
-### General Documentation (`general/doc-general.md`)
-Use for project-wide documentation:
-- Project setup and installation guides
-- Architecture documentation
-- Deployment and CI/CD instructions
-- Contributing guidelines and project overviews
+### 📁 **Tech Stacks** - Technology Combinations
+Pre-configured technology stacks for different platforms and use cases.
+
+- **Web Stacks**
+  - `react-stack.md` - Modern React ecosystem setup
+  - `vue-stack.md` - Vue.js development stack
+
+- **Mobile Stacks**
+  - `android-stack.md` - Android development with modern tools
+  - `ios-stack.md` - iOS development stack
+
+### 📁 **General** - Development Guidelines
+General development practices and AI agent instructions.
+
+- `accessibility.md` - Web accessibility standards and implementation
+- `code-style.md` - Code style guidelines and conventions
+- `code-only.md` - AI agent instruction for direct code changes
+- `doc-code.md` - AI agent instruction for code documentation
+- `doc-general.md` - AI agent instruction for general documentation
+
+### 📁 **DevOps** - Deployment & CI/CD
+Modern DevOps practices and deployment strategies.
+
+- **CI/CD**
+  - `github-actions.md` - GitHub Actions workflows and automation
+
+- **Deployment**
+  - `docker.md` - Docker containerization and orchestration
+
+### 📁 **Testing** - Quality Assurance
+Comprehensive testing strategies and implementations.
+
+- **Unit Testing**
+  - `jest.md` - Jest testing framework with advanced patterns
+
+### 📁 **Security** - Security Best Practices
+Security implementation and authentication patterns.
+
+- **Authentication**
+  - `jwt.md` - JWT authentication with security best practices
+
+### 📁 **Database** - Data Management
+Database design and management patterns.
+
+- **SQL**
+  - `postgresql.md` - PostgreSQL with advanced features and optimization
+
+### 📁 **API Design** - API Development
+API design principles and implementation standards.
+
+- **REST**
+  - `standards.md` - REST API design standards and best practices
+
+### 📁 **Performance** - Optimization Strategies
+Performance optimization techniques and monitoring.
+
+- **Optimization**
+  - `caching.md` - Caching strategies and implementations
+
+### 📁 **Cloud** - Cloud-Native Development
+Cloud platform integration and serverless architectures.
+
+- **AWS**
+  - `serverless.md` - AWS serverless architecture with modern patterns
+
+### 📁 **Microservices** - Distributed Systems
+Microservices architecture patterns and implementation.
+
+- **Architecture**
+  - `patterns.md` - Microservices patterns and best practices
+
+### 📁 **AI/ML** - Artificial Intelligence Integration
+AI and machine learning integration patterns.
+
+- **Integration**
+  - `llm.md` - Large Language Model integration with modern patterns
+
+### 📁 **Frontend** - Modern Frontend Development
+Advanced frontend patterns and modern development techniques.
+
+- **Modern**
+  - `react-advanced.md` - Advanced React patterns and optimization
 
 ## Usage
 
-### For New Projects
-1. Choose the appropriate domain folder for your project type
-2. Reference the relevant tech stack documentation
-3. Apply architectural patterns as needed
-4. Follow general guidelines for accessibility and code style
-5. Use AI instruction files to guide development
+### For Developers
+1. **Choose your domain** - Start with the appropriate application type
+2. **Select patterns** - Apply relevant architectural and design patterns
+3. **Pick tech stack** - Use pre-configured technology combinations
+4. **Follow guidelines** - Implement best practices from general guidelines
+5. **Add infrastructure** - Apply DevOps, testing, and security patterns
 
-### For Existing Projects
-1. Review patterns for refactoring opportunities
-2. Update tech stack documentation as needed
-3. Ensure compliance with accessibility standards
-4. Maintain consistent code style
-5. Leverage AI instructions for maintenance tasks
+### For AI Agents
+- Use `code-only.md` for direct code modifications without explanations
+- Use `doc-code.md` for code-related documentation tasks
+- Use `doc-general.md` for general project documentation
+- Follow patterns and guidelines in respective folders for consistent implementation
 
-## Documentation Types
+## Best Practices
 
-### Domain-Specific Patterns
-Each domain contains specialized patterns and best practices:
-- **Web Apps**: Modern web development patterns, state management, API integration
-- **Mobile Apps**: Native development patterns, platform-specific considerations
-- **Extensions**: IDE integration patterns, extension development lifecycle
+### Architecture
+- Start with domain-driven design principles
+- Choose appropriate patterns for your use case
+- Implement proper separation of concerns
+- Use modern technology stacks
 
-### Architectural Patterns
-Foundation patterns for building scalable applications:
-- **DDD**: Domain modeling, bounded contexts, aggregate design
-- **MVC**: Separation of concerns, data flow management
+### Development
+- Follow established code style guidelines
+- Implement comprehensive testing strategies
+- Apply security best practices
+- Optimize for performance
 
-### Design Patterns
-Reusable solutions for common programming problems:
-- **Singleton**: Global state management, resource sharing
-- **Observer**: Event handling, reactive programming
-- **Factory**: Object creation, dependency management
-- **Strategy**: Algorithm selection, behavior switching
+### Deployment
+- Use containerization for consistency
+- Implement automated CI/CD pipelines
+- Monitor application performance
+- Ensure proper error handling
 
-### Tech Stack Guides
-Comprehensive guides for modern development stacks:
-- **React**: Hooks, Context API, performance optimization
-- **Vue**: Composition API, Pinia, modern Vue patterns
-- **Android**: MVVM, Jetpack Compose, Room database
-- **iOS**: SwiftUI, Combine, Core Data integration
+### Maintenance
+- Keep documentation up to date
+- Regular security updates
+- Performance monitoring
+- Code quality maintenance
 
 ## Contributing
-When adding new patterns or tech stacks:
-1. Follow the existing file structure and naming conventions
-2. Use clear, concise documentation with practical examples
-3. Include code samples and implementation details
-4. Maintain consistency with existing patterns
-5. Update this README when adding new categories
 
-## Future Enhancements
+When adding new patterns or guidelines:
 
-### Potential New Categories
-- **DevOps**: CI/CD pipelines, deployment strategies, infrastructure
-- **Testing**: Unit testing, integration testing, E2E testing patterns
-- **Security**: Authentication, authorization, security best practices
-- **Performance**: Optimization techniques, monitoring, profiling
-- **Microservices**: Service architecture, communication patterns
-- **Cloud**: AWS, Azure, GCP integration patterns
-- **Database**: SQL, NoSQL, ORM patterns and best practices
-- **API Design**: REST, GraphQL, API versioning strategies
+1. **Follow existing structure** - Place files in appropriate folders
+2. **Use consistent formatting** - Follow established documentation style
+3. **Include practical examples** - Provide working code examples
+4. **Update this README** - Add new sections to the structure
+5. **Test implementations** - Ensure examples work correctly
+
+## Modern Standards
+
+This framework emphasizes:
+
+- **TypeScript** for type safety
+- **Modern JavaScript** (ES2022+) features
+- **Cloud-native** architectures
+- **Serverless** computing patterns
+- **AI/ML** integration
+- **Performance** optimization
+- **Security** best practices
+- **Accessibility** compliance
+- **Testing** strategies
+- **DevOps** automation
+
+## Quick Start
+
+1. **Web Application**: Start with `domains/web-apps/` and `techstacks/web/`
+2. **Mobile App**: Use `domains/android-apps/` and `techstacks/mobile/`
+3. **API Development**: Follow `api-design/rest/` and `database/sql/`
+4. **Cloud Deployment**: Implement `cloud/aws/` and `devops/` patterns
+5. **AI Integration**: Use `ai-ml/integration/` for LLM features
+
+Each section provides comprehensive examples, best practices, and implementation guidance for modern development scenarios.
