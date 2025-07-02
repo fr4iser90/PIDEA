@@ -489,25 +489,27 @@ class AppController {
   toggleSplitView() {
     const mainLayout = document.querySelector('.main-layout');
     const splitViewBtn = document.getElementById('splitViewBtn');
+    const chatSidebar = document.getElementById('chatSidebar');
+    const codeSidebar = document.getElementById('codeSidebar');
     
     if (this.currentLayout === 'split') {
       // Exit split view
       mainLayout.classList.remove('split-view');
       splitViewBtn.classList.remove('active');
       this.currentLayout = 'chat';
-      // Hide preview if it was shown
-      if (this.previewComponent) {
-        this.previewComponent.hide();
-      }
+      if (this.previewComponent) this.previewComponent.hide();
+      // Sidebar-Logik wie im Chat-Modus
+      chatSidebar.style.display = '';
+      codeSidebar.style.display = 'none';
     } else {
       // Enter split view
       mainLayout.classList.add('split-view');
       splitViewBtn.classList.add('active');
       this.currentLayout = 'split';
-      // Show preview in split view
-      if (this.previewComponent) {
-        this.previewComponent.show();
-      }
+      if (this.previewComponent) this.previewComponent.show();
+      // **Sidebar SICHTBAR machen!**
+      chatSidebar.style.display = '';
+      codeSidebar.style.display = 'none';
     }
   }
 
@@ -588,9 +590,6 @@ class AppController {
       }
     } catch (error) {
       console.error('Failed to refresh preview:', error);
-      // Fallback to main server
-      console.log('Using fallback main server URL...');
-      this.handleUserAppUrl({ url: 'http://localhost:3000' });
     }
   }
 
@@ -607,7 +606,12 @@ class AppController {
   handleUserAppUrl(data) {
     if (this.previewComponent && data.url) {
       this.previewComponent.setIframe(data.url);
-      this.previewComponent.show();
+      // NUR anzeigen, wenn SplitView oder Fullscreen aktiv ist!
+      if (this.currentLayout === 'split' || this.currentLayout === 'fullscreen') {
+        this.previewComponent.show();
+      } else {
+        this.previewComponent.hide();
+      }
     }
   }
 

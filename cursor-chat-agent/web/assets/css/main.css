@@ -775,7 +775,10 @@ body.light-theme .code-explorer-editor {
   gap: 0;
 }
 
-.main-layout.split-view .chat-sidebar,
+.main-layout.split-view .chat-sidebar {
+  display: block !important;
+}
+
 .main-layout.split-view .code-sidebar,
 .main-layout.split-view .right-panel {
   display: none !important;
@@ -790,6 +793,7 @@ body.light-theme .code-explorer-editor {
   grid-template-columns: 1fr 1fr;
   gap: 16px;
   height: 100%;
+
 }
 
 .main-layout.split-view .chat-container,

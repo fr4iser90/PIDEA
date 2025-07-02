@@ -71,24 +71,10 @@ export default class PreviewComponent {
       </button>
     `;
 
-    // Create modal overlay
-    this.modalOverlay = document.createElement('div');
-    this.modalOverlay.className = 'preview-modal-overlay';
-    this.modalOverlay.innerHTML = `
-      <div class="preview-modal">
-        <div class="preview-modal-header">
-          <h3>Preview</h3>
-          <button class="modal-close-btn" id="modalCloseBtn">✕</button>
-        </div>
-        <div class="preview-modal-content"></div>
-      </div>
-    `;
-
     // Assemble the component
     this.container.appendChild(this.header);
     this.container.appendChild(this.content);
     this.container.appendChild(this.floatingActions);
-    this.container.appendChild(this.modalOverlay);
 
     // Add to DOM
     const mainContent = document.getElementById('mainContent');
@@ -108,7 +94,7 @@ export default class PreviewComponent {
     });
 
     this.container.querySelector('#previewModalBtn').addEventListener('click', () => {
-      this.toggleModal();
+      this.openInNewWindow();
     });
 
     this.container.querySelector('#previewCloseBtn').addEventListener('click', () => {
@@ -128,23 +114,8 @@ export default class PreviewComponent {
       this.share();
     });
 
-    // Modal close button
-    this.container.querySelector('#modalCloseBtn').addEventListener('click', () => {
-      this.closeModal();
-    });
-
-    // Modal overlay click to close
-    this.modalOverlay.addEventListener('click', (e) => {
-      if (e.target === this.modalOverlay) {
-        this.closeModal();
-      }
-    });
-
     // Keyboard shortcuts
     document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape' && this.isModal) {
-        this.closeModal();
-      }
       if (e.key === 'F11' && this.isVisible) {
         e.preventDefault();
         this.toggleFullScreen();
@@ -182,10 +153,6 @@ export default class PreviewComponent {
       this.setContent(content);
     }
 
-    if (options.modal) {
-      this.showModal();
-    }
-
     if (options.fullScreen) {
       this.showFullScreen();
     }
@@ -196,12 +163,10 @@ export default class PreviewComponent {
 
   hide() {
     this.isVisible = false;
-    this.isModal = false;
     this.isFullScreen = false;
     
     this.container.style.display = 'none';
-    this.container.classList.remove('preview-visible', 'preview-modal-active', 'preview-fullscreen');
-    this.modalOverlay.classList.remove('modal-visible');
+    this.container.classList.remove('preview-visible', 'preview-fullscreen');
     
     this.emit('hide');
   }
@@ -229,31 +194,16 @@ export default class PreviewComponent {
     this.emit('contentChanged', content);
   }
 
-  showModal() {
-    this.isModal = true;
-    this.modalOverlay.classList.add('modal-visible');
-    this.container.classList.add('preview-modal-active');
-    
-    // Copy content to modal
-    const modalContent = this.modalOverlay.querySelector('.preview-modal-content');
-    modalContent.innerHTML = this.content.innerHTML;
-    
-    this.emit('modalShow');
-  }
-
-  closeModal() {
-    this.isModal = false;
-    this.modalOverlay.classList.remove('modal-visible');
-    this.container.classList.remove('preview-modal-active');
-    
-    this.emit('modalClose');
-  }
-
-  toggleModal() {
-    if (this.isModal) {
-      this.closeModal();
-    } else {
-      this.showModal();
+  openInNewWindow() {
+    if (this.currentIframeUrl) {
+      const previewUrl = `/web/pages/preview.html?url=${encodeURIComponent(this.currentIframeUrl)}`;
+      const newWindow = window.open(previewUrl, 'preview', 'width=1200,height=800,scrollbars=yes,resizable=yes');
+      
+      if (newWindow) {
+        this.emit('newWindowOpened', { url: this.currentIframeUrl, window: newWindow });
+      } else {
+        console.warn('Popup blocked. Please allow popups for this site.');
+      }
     }
   }
 
@@ -337,5 +287,8 @@ export default class PreviewComponent {
     const iframeHTML = `<iframe src="${url}" style="width:100%;height:100%;border:0;" allow="clipboard-write; clipboard-read; geolocation; microphone; camera"></iframe>`;
     this.setContent(iframeHTML);
     this.currentIframeUrl = url;
+    
+    // Emit event for URL change
+    this.emit('urlChanged', { url: url });
   }
 } 
