@@ -1,14 +1,9 @@
-// FrameworkPanelComponent.js
-// Hierarchical framework panel with templates and prompts
-
-export default class FrameworkPanelComponent {
-  constructor(containerId, onFrameworkClick, onToggle, frameworks) {
-    this.container = document.getElementById(containerId);
-    this.onFrameworkClick = onFrameworkClick;
-    this.onToggle = onToggle;
+class FrameworkPanelComponent {
+  constructor(container) {
+    this.container = container;
     this.frameworkData = null;
-    this.selectedItems = new Set();
-    this.expandedCategories = new Set(['templates', 'prompts']);
+    this.selectedItem = null;
+    this.expandedCategories = new Set();
     this.init();
   }
 
@@ -136,6 +131,12 @@ export default class FrameworkPanelComponent {
                   name: "🔧 General",
                   description: "General development prompts",
                   items: [
+                    {
+                      id: "vibe-coder-experiece",
+                      name: "Vibe Coder Experiece",
+                      description: "Vibe Coder Experiece",
+                      file: "prompts/general/vibe-coder-experiece.md"
+                    },
                     {
                       id: "code-style",
                       name: "Code Style",
@@ -362,6 +363,7 @@ export default class FrameworkPanelComponent {
     return categories.map(category => {
       const isExpanded = this.expandedCategories.has(category.id);
       const hasChildren = category.items && category.items.length > 0;
+      const isLeaf = !hasChildren;
       
       return `
         <li class="framework-category" data-category-id="${category.id}" data-level="${level}">
@@ -392,11 +394,10 @@ export default class FrameworkPanelComponent {
       const hasChildren = item.items && item.items.length > 0;
       const isTemplate = item.file && item.file.includes('templates/');
       const isPrompt = item.file && item.file.includes('prompts/');
-      const isSelected = this.selectedItems.has(item.id);
       
       return `
         <li class="framework-item" data-item-id="${item.id}" data-level="${level}">
-          <div class="framework-item-header ${isExpanded ? 'expanded' : ''} ${isSelected ? 'selected' : ''}" data-item-id="${item.id}">
+          <div class="framework-item-header ${isExpanded ? 'expanded' : ''}" data-item-id="${item.id}">
             <div class="item-toggle ${hasChildren ? 'has-children' : 'no-children'}">
               ${hasChildren ? (isExpanded ? '▼' : '▶') : '•'}
             </div>
@@ -408,9 +409,6 @@ export default class FrameworkPanelComponent {
               <div class="item-description">${item.description}</div>
             </div>
             <div class="item-actions">
-              <button class="btn-select-item${isSelected ? ' selected' : ''}" data-item-id="${item.id}" title="Select this template/prompt">
-                <span>${isSelected ? '✓' : '○'}</span>
-              </button>
               <button class="btn-use-item" data-item-id="${item.id}" title="Use this template/prompt">
                 <span>▶</span>
               </button>
@@ -432,7 +430,6 @@ export default class FrameworkPanelComponent {
     this.container.addEventListener('click', (e) => {
       const categoryHeader = e.target.closest('.framework-category-header');
       const itemHeader = e.target.closest('.framework-item-header');
-      const selectButton = e.target.closest('.btn-select-item');
       const useButton = e.target.closest('.btn-use-item');
       const expandAllBtn = e.target.closest('#expandAllBtn');
       const collapseAllBtn = e.target.closest('#collapseAllBtn');
@@ -442,8 +439,6 @@ export default class FrameworkPanelComponent {
         this.toggleCategory(categoryHeader.dataset.categoryId);
       } else if (itemHeader) {
         this.toggleItem(itemHeader.dataset.itemId);
-      } else if (selectButton) {
-        this.toggleItemSelection(selectButton.dataset.itemId);
       } else if (useButton) {
         this.useItem(useButton.dataset.itemId);
       } else if (expandAllBtn) {
@@ -490,32 +485,18 @@ export default class FrameworkPanelComponent {
     this.render();
   }
 
-  toggleItemSelection(itemId) {
-    if (this.selectedItems.has(itemId)) {
-      this.selectedItems.delete(itemId);
-    } else {
-      this.selectedItems.add(itemId);
-    }
-
-    // Notify parent about selection change
-    if (this.onToggle) {
-      const item = this.findItem(itemId);
-      if (item) {
-        this.onToggle({ id: itemId, name: item.name, file: item.file, active: this.selectedItems.has(itemId) });
-      }
-    }
-
-    this.render();
-  }
-
   useItem(itemId) {
     const item = this.findItem(itemId);
     if (!item) return;
 
-    // Notify parent about item usage
-    if (this.onFrameworkClick) {
-      this.onFrameworkClick(item);
-    }
+    // Emit event for using the template/prompt
+    const event = new CustomEvent('frameworkItemSelected', {
+      detail: {
+        item: item,
+        type: item.file?.includes('templates/') ? 'template' : 'prompt'
+      }
+    });
+    this.container.dispatchEvent(event);
   }
 
   expandAll() {
@@ -556,14 +537,8 @@ export default class FrameworkPanelComponent {
   }
 
   addCustomFramework() {
-    const fname = prompt('Framework-Dateiname (.md):');
-    if (fname && fname.endsWith('.md')) {
-      // Add to selected items for backward compatibility
-      this.selectedItems.add(fname);
-      if (this.onToggle) {
-        this.onToggle({ name: fname, active: true });
-      }
-    }
+    // Implementation for adding custom frameworks
+    console.log('Add custom framework functionality');
   }
 
   findCategory(categoryId) {
@@ -585,15 +560,9 @@ export default class FrameworkPanelComponent {
     }
     return null;
   }
+}
 
-  getActiveFrameworks() {
-    // Convert selected items to the format expected by the old system
-    return Array.from(this.selectedItems).map(itemId => {
-      const item = this.findItem(itemId);
-      return {
-        name: item ? item.file : itemId,
-        active: true
-      };
-    });
-  }
+// Export for use in other modules
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = FrameworkPanelComponent;
 } 

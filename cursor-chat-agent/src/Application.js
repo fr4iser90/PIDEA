@@ -25,6 +25,7 @@ const EventBus = require('./infrastructure/messaging/EventBus');
 const ChatController = require('./presentation/api/ChatController');
 const IDEController = require('./presentation/api/IDEController');
 const IDEMirrorController = require('./presentation/api/IDEMirrorController');
+const FrameworkController = require('./presentation/api/FrameworkController');
 const WebSocketManager = require('./presentation/websocket/WebSocketManager');
 
 class Application {
@@ -77,6 +78,9 @@ class Application {
     );
 
     this.ideMirrorController = new IDEMirrorController();
+
+    // Initialize Framework Controller
+    this.frameworkController = new FrameworkController();
 
     // Setup Express app
     this.app = express();
@@ -198,6 +202,9 @@ class Application {
     this.app.get('/api/ide/user-app-url', (req, res) => this.ideController.getUserAppUrl(req, res));
     this.app.post('/api/ide/monitor-terminal', (req, res) => this.ideController.monitorTerminal(req, res));
     this.app.post('/api/ide/set-workspace/:port', (req, res) => this.ideController.setWorkspacePath(req, res));
+
+    // Framework API routes
+    this.frameworkController.registerRoutes(this.app);
     this.app.get('/api/ide/workspace-info', (req, res) => this.ideController.getWorkspaceInfo(req, res));
     this.app.get('/api/ide/debug-dom', (req, res) => this.ideController.debugDOM(req, res));
 
