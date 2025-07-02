@@ -28,37 +28,48 @@ class IDEMirrorComponent {
         console.log('🔍 IDEMirrorComponent: Container element:', this.container);
         this.showStatus('Connecting to WebSocket...');
 
-        this.ws = new WebSocket(wsUrl);
+        try {
+            this.ws = new WebSocket(wsUrl);
 
-        this.ws.onopen = () => {
-            console.log('✅ WebSocket connected');
-            this.isConnected = true;
-            this.showStatus('Connected - Loading IDE...');
+            this.ws.onopen = () => {
+                console.log('✅ WebSocket connected');
+                this.isConnected = true;
+                this.showStatus('Connected - Loading IDE...');
+                this.connectToIDE();
+            };
+
+            this.ws.onmessage = (event) => {
+                try {
+                    const message = JSON.parse(event.data);
+                    this.handleWebSocketMessage(message);
+                } catch (error) {
+                    console.error('❌ Failed to parse WebSocket message:', error);
+                }
+            };
+
+            this.ws.onclose = (event) => {
+                console.log('🔌 WebSocket disconnected:', event.code, event.reason);
+                this.isConnected = false;
+                this.showStatus('Disconnected - Reconnecting...');
+                
+                // Auto-reconnect only if not a normal closure
+                if (event.code !== 1000) {
+                    setTimeout(() => this.setupWebSocket(), 3000);
+                }
+            };
+
+            this.ws.onerror = (error) => {
+                console.error('❌ WebSocket error:', error);
+                this.showStatus('Connection Error - Trying API fallback...');
+                // Try API fallback immediately
+                this.connectToIDE();
+            };
+        } catch (error) {
+            console.error('❌ Failed to create WebSocket:', error);
+            this.showStatus('WebSocket failed - Using API fallback...');
+            // Fallback to API-only mode
             this.connectToIDE();
-        };
-
-        this.ws.onmessage = (event) => {
-            try {
-                const message = JSON.parse(event.data);
-                this.handleWebSocketMessage(message);
-            } catch (error) {
-                console.error('❌ Failed to parse WebSocket message:', error);
-            }
-        };
-
-        this.ws.onclose = () => {
-            console.log('🔌 WebSocket disconnected');
-            this.isConnected = false;
-            this.showStatus('Disconnected - Reconnecting...');
-            
-            // Auto-reconnect
-            setTimeout(() => this.setupWebSocket(), 3000);
-        };
-
-        this.ws.onerror = (error) => {
-            console.error('❌ WebSocket error:', error);
-            this.showStatus('Connection Error');
-        };
+        }
     }
 
     handleWebSocketMessage(message) {
@@ -122,16 +133,23 @@ class IDEMirrorComponent {
         this.showStatus('Connecting to Cursor IDE...');
         
         try {
-            // First try via WebSocket
-            if (this.isConnected) {
+            // Try WebSocket first if available
+            if (this.isConnected && this.ws && this.ws.readyState === WebSocket.OPEN) {
+                console.log('📡 Sending connect request via WebSocket...');
                 this.ws.send(JSON.stringify({ type: 'connect-ide' }));
+            } else {
+                console.log('📡 WebSocket not available, using API only...');
             }
             
-            // Also try direct API call
+            // Always try direct API call as fallback
             const response = await fetch('/api/ide-mirror/connect', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' }
             });
+            
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
             
             const result = await response.json();
             if (result.success && result.data) {
@@ -143,6 +161,11 @@ class IDEMirrorComponent {
         } catch (error) {
             console.error('❌ Failed to connect to IDE:', error);
             this.showError(`Failed to connect: ${error.message}`);
+            
+            // Show more helpful error message
+            if (error.message.includes('Failed to fetch')) {
+                this.showError('Server not running. Please start the development server.');
+            }
         }
     }
 
@@ -386,7 +409,20 @@ class IDEMirrorComponent {
         // Get actual viewport and screenshot dimensions
         const viewportRect = viewport.getBoundingClientRect();
         const img = viewport.querySelector('img');
+        
+        // Check if image exists and is loaded
+        if (!img) {
+            console.warn('⚠️ Image not found in viewport, skipping position recalculation');
+            return;
+        }
+        
         const imgRect = img.getBoundingClientRect();
+        
+        // Check if image has valid dimensions
+        if (imgRect.width === 0 || imgRect.height === 0) {
+            console.warn('⚠️ Image has zero dimensions, skipping position recalculation');
+            return;
+        }
         
         // Calculate scaling factors
         const scaleX = imgRect.width / (ideState.viewport?.width || imgRect.width);
@@ -424,12 +460,15 @@ class IDEMirrorComponent {
 
         const { position, isClickable, selector, className, tagName, elementType: backendElementType } = elementData;
         // Chat-Zone immer als clickable behandeln
-        if ((className && className.match(/composer-bar|chat|input|message|msg|send/)) ||
-            (selector && selector.match(/composer-bar|chat|input|message|msg|send/))) {
+        if ((className && typeof className === 'string' && className.match(/composer-bar|chat|input|message|msg|send/)) ||
+            (selector && typeof selector === 'string' && selector.match(/composer-bar|chat|input|message|msg|send/))) {
             elementData.isClickable = true;
         }
-        // Logge alle Zonen zur Analyse
-        console.log('ZONE:', { selector, className, tagName, backendElementType });
+        
+        // Only log zones that are actually clickable or have issues
+        if (elementData.isClickable || (className && typeof className === 'string' && className.includes('error'))) {
+            console.log('ZONE:', { selector, className, tagName, backendElementType });
+        }
 
         // Add clickable elements with valid positions
         if (elementData.isClickable && position && position.width > 0 && position.height > 0) {
@@ -438,11 +477,11 @@ class IDEMirrorComponent {
             const classStr = className || '';
             // Only detect locally if backend didn't provide elementType
             if (!backendElementType) {
-                if (classStr.match(/monaco-editor|editor/)) {
+                if (typeof classStr === 'string' && classStr.match(/monaco-editor|editor/)) {
                     elementType = 'editor';
-                } else if (classStr.match(/chat|composer|composer-bar|input|message|msg|send/)) {
+                } else if (typeof classStr === 'string' && classStr.match(/chat|composer|composer-bar|input|message|msg|send/)) {
                     elementType = 'chat';
-                } else if (classStr.match(/terminal/)) {
+                } else if (typeof classStr === 'string' && classStr.match(/terminal/)) {
                     elementType = 'terminal';
                 } else if (tagName === 'textarea' || tagName === 'input') {
                     elementType = 'input';

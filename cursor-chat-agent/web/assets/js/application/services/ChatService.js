@@ -62,19 +62,22 @@ class ChatService {
     try {
       const messages = await this.chatRepository.getChatHistory();
       
-      // Update current session with new messages
-      this.currentSession.messages = messages;
-      this.currentSession.lastActivity = new Date();
-      
-      this.eventBus.emit('chat:messages:loaded', { 
-        messages: messages,
-        session: this.currentSession 
-      });
+      // Only update if we have a valid session
+      if (this.currentSession && Array.isArray(messages)) {
+        this.currentSession.messages = messages;
+        this.currentSession.lastActivity = new Date();
+        
+        this.eventBus.emit('chat:messages:loaded', { 
+          messages: messages,
+          session: this.currentSession 
+        });
+      }
       
       return messages;
     } catch (error) {
-      this.eventBus.emit('chat:error', { error: error.message });
-      throw error;
+      // Don't emit error events for polling failures
+      console.debug('Chat messages load failed (normal during startup):', error.message);
+      return [];
     }
   }
 
