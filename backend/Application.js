@@ -138,7 +138,7 @@ class Application {
   setupRoutes() {
     // Serve the main page
     this.app.get('/', (req, res) => {
-      res.sendFile(path.join(__dirname, '../web/index.html'));
+      res.sendFile(path.join(__dirname, '../frontend/index2.html'));
     });
 
     // API routes
