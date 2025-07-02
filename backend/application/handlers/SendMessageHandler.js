@@ -15,7 +15,8 @@ class SendMessageHandler {
 
     try {
       // Create message entity
-      const message = ChatMessage.createUserMessage(command.content);
+      const type = command.content.includes('```') ? 'code' : 'text';
+      const message = ChatMessage.createUserMessage(command.content, type);
 
       // Get or create session
       let session;
@@ -50,6 +51,8 @@ class SendMessageHandler {
           sessionId: session.id,
           messageId: message.id,
           content: message.content,
+          sender: message.sender,
+          type: message.type,
           timestamp: message.timestamp
         });
       }

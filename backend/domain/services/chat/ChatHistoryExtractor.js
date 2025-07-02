@@ -26,7 +26,8 @@ class ChatHistoryExtractor {
           const text = element.innerText || element.textContent || '';
           if (text.trim()) {
             messages.push({
-              type: 'user',
+              sender: 'user',
+              type: text.includes('```') ? 'code' : 'text',
               content: text.trim(),
               element: element,
               index: index
@@ -40,7 +41,8 @@ class ChatHistoryExtractor {
           const text = element.innerText || element.textContent || '';
           if (text.trim()) {
             messages.push({
-              type: 'ai',
+              sender: 'ai',
+              type: text.includes('```') ? 'code' : 'text',
               content: text.trim(),
               element: element,
               index: index
@@ -56,6 +58,7 @@ class ChatHistoryExtractor {
         });
         
         return messages.map(msg => ({
+          sender: msg.sender,
           type: msg.type,
           content: msg.content
         }));

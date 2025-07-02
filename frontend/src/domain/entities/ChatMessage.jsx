@@ -1,18 +1,27 @@
-class ChatMessage {
-  constructor(id, content, type, timestamp = new Date(), metadata = {}) {
+export default class ChatMessage {
+  constructor({ id, content, sender, type, timestamp, metadata = {} }) {
     this.id = id;
     this.content = content;
-    this.type = type; // 'user' | 'ai'
-    this.timestamp = timestamp;
+    this.sender = sender;
+    this.type = type;
+    this.timestamp = timestamp ? new Date(timestamp) : new Date();
     this.metadata = metadata;
   }
 
   isUserMessage() {
-    return this.type === 'user';
+    return this.sender === 'user';
   }
 
   isAIMessage() {
-    return this.type === 'ai';
+    return this.sender === 'ai';
+  }
+
+  isCodeBlock() {
+    return this.type === 'code';
+  }
+
+  getCleanContent() {
+    return this.content.replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim();
   }
 
   hasCodeBlock() {
@@ -37,6 +46,7 @@ class ChatMessage {
     return {
       id: this.id,
       content: this.content,
+      sender: this.sender,
       type: this.type,
       timestamp: this.timestamp.toISOString(),
       metadata: this.metadata
@@ -44,14 +54,13 @@ class ChatMessage {
   }
 
   static fromJSON(data) {
-    return new ChatMessage(
-      data.id,
-      data.content,
-      data.type,
-      new Date(data.timestamp),
-      data.metadata || {}
-    );
+    return new ChatMessage({
+      id: data.id,
+      content: data.content,
+      sender: data.sender,
+      type: data.type,
+      timestamp: data.timestamp,
+      metadata: data.metadata || {}
+    });
   }
-}
-
-export default ChatMessage; 
+} 

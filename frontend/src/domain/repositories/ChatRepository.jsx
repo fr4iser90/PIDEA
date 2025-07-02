@@ -1,4 +1,27 @@
-class ChatRepository {
+import ChatSession from '../entities/ChatSession';
+
+export default class ChatRepository {
+  constructor() {
+    this.sessions = new Map();
+  }
+
+  saveSession(session) {
+    if (!(session instanceof ChatSession)) {
+      throw new Error('Invalid session');
+    }
+    this.sessions.set(session.id, session);
+  }
+
+  findSessionById(sessionId) {
+    const session = this.sessions.get(sessionId);
+    if (!session) return null;
+    return session;
+  }
+
+  getAllSessions() {
+    return Array.from(this.sessions.values());
+  }
+
   async getChatHistory() {
     throw new Error('getChatHistory method must be implemented');
   }
@@ -22,6 +45,4 @@ class ChatRepository {
   async deleteSession(sessionId) {
     throw new Error('deleteSession method must be implemented');
   }
-}
-
-export default ChatRepository; 
+} 

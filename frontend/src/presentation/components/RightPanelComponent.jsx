@@ -1,7 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { apiCall, API_CONFIG } from '@infrastructure/repositories/APIChatRepository.jsx';
+import ChatMessage from '@domain/entities/ChatMessage.jsx';
+import '../../css/rightpanel.css';
 
-function RightPanelComponent({ eventBus }) {
+function RightPanelComponent({ eventBus, messages = [] }) {
   const [activeTab, setActiveTab] = useState('chat');
   const [isVisible, setIsVisible] = useState(true);
   const [quickPrompts, setQuickPrompts] = useState([]);

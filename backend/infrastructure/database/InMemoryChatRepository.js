@@ -11,15 +11,19 @@ class InMemoryChatRepository extends ChatRepository {
 
   async saveSession(session) {
     if (!(session instanceof ChatSession)) {
-      throw new Error('session must be an instance of ChatSession');
+      throw new Error('Invalid session');
     }
-    
-    this.sessions.set(session.id, session);
-    return session;
+    this.sessions.set(session.id, session.toJSON());
   }
 
-  async findSessionById(id) {
-    return this.sessions.get(id) || null;
+  async findSessionById(sessionId) {
+    const data = this.sessions.get(sessionId);
+    if (!data) return null;
+    return ChatSession.fromJSON(data);
+  }
+
+  async getAllSessions() {
+    return Array.from(this.sessions.values()).map(s => ChatSession.fromJSON(s));
   }
 
   async findAllSessions() {

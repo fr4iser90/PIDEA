@@ -2,22 +2,24 @@ const { v4: uuidv4 } = require('uuid');
 const ChatMessage = require('./ChatMessage');
 
 class ChatSession {
-  constructor(id, name = null, metadata = {}, idePort = null) {
+  constructor(id, title, metadata = {}, idePort = null, messages = []) {
     this._id = id || uuidv4();
-    this._name = name;
-    this._messages = [];
+    this._title = title;
     this._metadata = metadata;
     this._idePort = idePort;
+    this._messages = messages.map(msg =>
+      msg instanceof ChatMessage ? msg : ChatMessage.fromJSON(msg)
+    );
     this._createdAt = new Date();
     this._updatedAt = new Date();
   }
 
   // Getters
   get id() { return this._id; }
-  get name() { return this._name; }
-  get messages() { return [...this._messages]; }
+  get title() { return this._title; }
   get metadata() { return { ...this._metadata }; }
   get idePort() { return this._idePort; }
+  get messages() { return this._messages.slice(); }
   get createdAt() { return this._createdAt; }
   get updatedAt() { return this._updatedAt; }
   get messageCount() { return this._messages.length; }
@@ -25,16 +27,15 @@ class ChatSession {
   // Domain methods
   addMessage(message) {
     if (!(message instanceof ChatMessage)) {
-      throw new Error('Message must be an instance of ChatMessage');
+      message = ChatMessage.fromJSON(message);
     }
-    
     this._messages.push(message);
     this._updatedAt = new Date();
     
     // Auto-generate name from first user message if not set
-    if (!this._name && message.isUserMessage()) {
+    if (!this._title && message.isUserMessage()) {
       const content = message.getCleanContent();
-      this._name = content.length > 50 ? content.substring(0, 50) + '...' : content;
+      this._title = content.length > 50 ? content.substring(0, 50) + '...' : content;
     }
   }
 
@@ -73,10 +74,10 @@ class ChatSession {
   toJSON() {
     return {
       id: this._id,
-      name: this._name,
-      messages: this._messages.map(msg => msg.toJSON()),
+      title: this._title,
       metadata: this._metadata,
       idePort: this._idePort,
+      messages: this._messages.map(m => m.toJSON()),
       createdAt: this._createdAt.toISOString(),
       updatedAt: this._updatedAt.toISOString(),
       messageCount: this.messageCount
@@ -84,11 +85,13 @@ class ChatSession {
   }
 
   static fromJSON(data) {
-    const session = new ChatSession(data.id, data.name, data.metadata, data.idePort);
-    session._createdAt = new Date(data.createdAt);
-    session._updatedAt = new Date(data.updatedAt);
-    session._messages = data.messages.map(msgData => ChatMessage.fromJSON(msgData));
-    return session;
+    return new ChatSession(
+      data.id,
+      data.title,
+      data.metadata,
+      data.idePort,
+      (data.messages || []).map(m => ChatMessage.fromJSON(m))
+    );
   }
 }
 

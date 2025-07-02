@@ -57,7 +57,7 @@ const apiCall = async (endpoint, options = {}) => {
   }
 };
 
-class APIChatRepository extends ChatRepository {
+export default class APIChatRepository extends ChatRepository {
   constructor() {
     super();
     this.baseURL = API_CONFIG.baseURL;
@@ -72,11 +72,18 @@ class APIChatRepository extends ChatRepository {
     return apiCall(`${API_CONFIG.baseURL}${API_CONFIG.endpoints.chat.portHistory(port)}`);
   }
 
-  async sendMessage(message, sessionId = null) {
-    return apiCall(API_CONFIG.endpoints.chat.send, {
+  async sendMessage(message, sessionId) {
+    const url = '/api/chat';
+    const res = await fetch(url, {
       method: 'POST',
-      body: JSON.stringify(sessionId ? { message, sessionId } : { message })
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message, sessionId })
     });
+    if (!res.ok) throw new Error('Failed to send message');
+    const data = await res.json();
+    if (!data.success || !data.data) throw new Error('Invalid response');
+    const msg = data.data.message;
+    return ChatMessage.fromJSON(msg);
   }
 
   async getStatus() {
@@ -106,7 +113,22 @@ class APIChatRepository extends ChatRepository {
   async getSettings() {
     return apiCall(API_CONFIG.endpoints.settings);
   }
+
+  async fetchChatHistory(sessionId) {
+    const url = `/api/chat/history?sessionId=${encodeURIComponent(sessionId)}`;
+    const res = await fetch(url);
+    if (!res.ok) throw new Error('Failed to fetch chat history');
+    const data = await res.json();
+    if (!data.success || !data.data) throw new Error('Invalid response');
+    const sessionData = data.data;
+    return ChatSession.fromJSON({
+      id: sessionData.sessionId || sessionData.id,
+      title: sessionData.title,
+      metadata: sessionData.metadata,
+      idePort: sessionData.idePort,
+      messages: (sessionData.messages || []).map(m => ChatMessage.fromJSON(m))
+    });
+  }
 }
 
-export default APIChatRepository;
 export { API_CONFIG, apiCall }; 

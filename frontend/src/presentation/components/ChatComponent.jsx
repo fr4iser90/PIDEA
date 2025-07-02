@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { apiCall, API_CONFIG } from '@infrastructure/repositories/APIChatRepository.jsx';
+import ChatMessage from '@domain/entities/ChatMessage.jsx';
+import '../../css/chat.css';
 
 // Use global marked from CDN script tag
 
@@ -122,13 +124,21 @@ function ChatComponent({ eventBus }) {
   const renderMessage = (message) => {
     const isUser = message.sender === 'user';
     const isSystem = message.sender === 'system';
+    const content = message.content || message.text;
     return (
-      <div key={message.id} className={`message ${isUser ? 'user' : isSystem ? 'system' : 'ai'}`}>
-        <div className="message-bubble">
-          <div className="message-text">{message.text}</div>
-          <div className="message-timestamp">{formatTimestamp(message.timestamp)}</div>
+      <div key={message.id} className={`chat-message chat-message-${message.sender} chat-message-type-${message.type}`}>
+        <div className="chat-message-meta">
+          <span className="chat-message-sender">{message.sender}</span>
+          <span className="chat-message-type">{message.type}</span>
+          <span className="chat-message-timestamp">{message.timestamp && new Date(message.timestamp).toLocaleTimeString()}</span>
         </div>
-        <div className="message-avatar">{isUser ? 'U' : isSystem ? 'S' : 'AI'}</div>
+        <div className="chat-message-content">
+          {message.type === 'code' ? (
+            <pre><code>{content}</code></pre>
+          ) : (
+            <span>{content}</span>
+          )}
+        </div>
       </div>
     );
   };

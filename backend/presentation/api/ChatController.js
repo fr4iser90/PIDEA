@@ -67,6 +67,13 @@ class ChatController {
       
       const result = await this.getChatHistoryHandler.handle(query);
 
+      if (result && result.messages) {
+        result.messages = result.messages.map(msg => {
+          if (msg.toJSON) return msg.toJSON();
+          return msg;
+        });
+      }
+
       res.json({
         success: true,
         data: result
@@ -175,13 +182,18 @@ class ChatController {
         };
       }
       
+      const serialMessages = messages.map(msg => {
+        if (msg.toJSON) return msg.toJSON();
+        return msg;
+      });
+      
       res.json({
         success: true,
         data: {
           port: port,
           sessionId: targetSession.id,
           session: targetSession,
-          messages: messages
+          messages: serialMessages
         }
       });
     } catch (error) {

@@ -1,10 +1,25 @@
+const ChatSession = require('../entities/ChatSession');
+
 class ChatRepository {
-  async saveSession(session) {
-    throw new Error('saveSession method must be implemented');
+  constructor() {
+    this.sessions = new Map();
   }
 
-  async findSessionById(id) {
-    throw new Error('findSessionById method must be implemented');
+  async saveSession(session) {
+    if (!(session instanceof ChatSession)) {
+      throw new Error('Invalid session');
+    }
+    this.sessions.set(session.id, session.toJSON());
+  }
+
+  async findSessionById(sessionId) {
+    const data = this.sessions.get(sessionId);
+    if (!data) return null;
+    return ChatSession.fromJSON(data);
+  }
+
+  async getAllSessions() {
+    return Array.from(this.sessions.values()).map(s => ChatSession.fromJSON(s));
   }
 
   async findAllSessions() {

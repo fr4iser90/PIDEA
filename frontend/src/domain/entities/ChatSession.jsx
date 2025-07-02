@@ -1,20 +1,21 @@
-import ChatMessage from '@domain/entities/ChatMessage.jsx';
+import ChatMessage from './ChatMessage';
 
-class ChatSession {
-  constructor(id, title = 'New Chat', createdAt = new Date()) {
+export default class ChatSession {
+  constructor({ id, title, metadata = {}, idePort = null, messages = [] }) {
     this.id = id;
     this.title = title;
-    this.createdAt = createdAt;
-    this.messages = [];
+    this.metadata = metadata;
+    this.idePort = idePort;
+    this.messages = messages.map(m => m instanceof ChatMessage ? m : ChatMessage.fromJSON(m));
+    this.createdAt = new Date();
     this.isTyping = false;
-    this.lastActivity = createdAt;
+    this.lastActivity = this.createdAt;
   }
 
   addMessage(message) {
     if (!(message instanceof ChatMessage)) {
-      throw new Error('Message must be an instance of ChatMessage');
+      message = ChatMessage.fromJSON(message);
     }
-    
     this.messages.push(message);
     this.lastActivity = new Date();
     this.updateTitle();
@@ -62,21 +63,19 @@ class ChatSession {
       createdAt: this.createdAt.toISOString(),
       lastActivity: this.lastActivity.toISOString(),
       messages: this.messages.map(m => m.toJSON()),
-      isTyping: this.isTyping
+      isTyping: this.isTyping,
+      metadata: this.metadata,
+      idePort: this.idePort
     };
   }
 
   static fromJSON(data) {
-    const session = new ChatSession(
-      data.id,
-      data.title,
-      new Date(data.createdAt)
-    );
-    session.lastActivity = new Date(data.lastActivity);
-    session.isTyping = data.isTyping || false;
-    session.messages = data.messages.map(m => ChatMessage.fromJSON(m));
-    return session;
+    return new ChatSession({
+      id: data.id,
+      title: data.title,
+      metadata: data.metadata,
+      idePort: data.idePort,
+      messages: (data.messages || []).map(m => ChatMessage.fromJSON(m))
+    });
   }
-}
-
-export default ChatSession; 
+} 
