@@ -396,7 +396,7 @@ export default class FrameworkPanelComponent {
       
       return `
         <li class="framework-item" data-item-id="${item.id}" data-level="${level}">
-          <div class="framework-item-header ${isExpanded ? 'expanded' : ''} ${isSelected ? 'selected' : ''}" data-item-id="${item.id}">
+          <div class="framework-item-header${isExpanded ? ' expanded' : ''}${isSelected ? ' selected' : ''}" data-item-id="${item.id}">
             <div class="item-toggle ${hasChildren ? 'has-children' : 'no-children'}">
               ${hasChildren ? (isExpanded ? '▼' : '▶') : '•'}
             </div>
@@ -408,9 +408,6 @@ export default class FrameworkPanelComponent {
               <div class="item-description">${item.description}</div>
             </div>
             <div class="item-actions">
-              <button class="btn-select-item${isSelected ? ' selected' : ''}" data-item-id="${item.id}" title="Select this template/prompt">
-                <span>${isSelected ? '✓' : '○'}</span>
-              </button>
               <button class="btn-use-item" data-item-id="${item.id}" title="Use this template/prompt">
                 <span>▶</span>
               </button>
@@ -432,7 +429,6 @@ export default class FrameworkPanelComponent {
     this.container.addEventListener('click', (e) => {
       const categoryHeader = e.target.closest('.framework-category-header');
       const itemHeader = e.target.closest('.framework-item-header');
-      const selectButton = e.target.closest('.btn-select-item');
       const useButton = e.target.closest('.btn-use-item');
       const expandAllBtn = e.target.closest('#expandAllBtn');
       const collapseAllBtn = e.target.closest('#collapseAllBtn');
@@ -441,9 +437,7 @@ export default class FrameworkPanelComponent {
       if (categoryHeader) {
         this.toggleCategory(categoryHeader.dataset.categoryId);
       } else if (itemHeader) {
-        this.toggleItem(itemHeader.dataset.itemId);
-      } else if (selectButton) {
-        this.toggleItemSelection(selectButton.dataset.itemId);
+        this.toggleItemSelection(itemHeader.dataset.itemId);
       } else if (useButton) {
         this.useItem(useButton.dataset.itemId);
       } else if (expandAllBtn) {
@@ -493,8 +487,10 @@ export default class FrameworkPanelComponent {
   toggleItemSelection(itemId) {
     if (this.selectedItems.has(itemId)) {
       this.selectedItems.delete(itemId);
+      console.log('[FrameworkPanel] Deaktiviert:', itemId);
     } else {
       this.selectedItems.add(itemId);
+      console.log('[FrameworkPanel] Aktiviert:', itemId);
     }
 
     // Notify parent about selection change
