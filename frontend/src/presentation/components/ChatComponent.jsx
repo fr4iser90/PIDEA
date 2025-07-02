@@ -12,13 +12,35 @@ function escapeHtml(text) {
   return div.innerHTML;
 }
 
+function normalizeMessage(msg) {
+  // Fallbacks für sender/type
+  let sender = msg.sender;
+  let type = msg.type;
+  if (!sender) {
+    if (type === 'user' || msg.isUserMessage?.() || msg.role === 'user') sender = 'user';
+    else if (type === 'ai' || msg.isAIMessage?.() || msg.role === 'ai') sender = 'ai';
+    else if (type === 'system' || msg.role === 'system') sender = 'system';
+    else sender = 'ai'; // fallback
+  }
+  if (!type) {
+    if (msg.content && msg.content.includes('```')) type = 'code';
+    else if (msg.type) type = msg.type;
+    else type = 'text';
+  }
+  return { ...msg, sender, type };
+}
+
 function ChatComponent({ eventBus }) {
   const [messages, setMessages] = useState([]);
   const [isTyping, setIsTyping] = useState(false);
   const [inputValue, setInputValue] = useState('');
   const [isConnected, setIsConnected] = useState(false);
+  const [error, setError] = useState(null);
   const containerRef = useRef(null);
   const messagesEndRef = useRef(null);
+  const msgInputRef = useRef(null);
+  const fileInputRef = useRef(null);
+  const [shouldAutoScroll, setShouldAutoScroll] = useState(true);
 
   useEffect(() => {
     setupEventListeners();
@@ -27,8 +49,8 @@ function ChatComponent({ eventBus }) {
   }, []);
 
   useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
+    if (shouldAutoScroll) scrollToBottom();
+  }, [messages, isTyping]);
 
   const setupEventListeners = () => {
     if (eventBus) {
@@ -43,23 +65,23 @@ function ChatComponent({ eventBus }) {
   const loadChatHistory = async () => {
     try {
       const data = await apiCall(API_CONFIG.endpoints.chat.history);
+      let msgs = [];
       if (data.success && data.data && data.data.messages) {
-        setMessages(data.data.messages);
+        msgs = data.data.messages;
       } else if (data.messages) {
-        setMessages(data.messages);
+        msgs = data.messages;
       } else if (Array.isArray(data)) {
-        setMessages(data);
-      } else {
-        setMessages([]);
+        msgs = data;
       }
+      setMessages(msgs.map(normalizeMessage));
     } catch (error) {
       setMessages([]);
-      console.error('❌ Failed to load chat history:', error);
+      setError('❌ Failed to load chat history: ' + error.message);
     }
   };
 
   const handleMessageReceived = (message) => {
-    setMessages(prevMessages => [...prevMessages, message]);
+    setMessages(prevMessages => [...prevMessages, normalizeMessage(message)]);
     if (eventBus) {
       eventBus.emit('chat-message-added', { message });
     }
@@ -72,13 +94,13 @@ function ChatComponent({ eventBus }) {
 
   const sendMessage = async (message) => {
     if (!message.trim()) return;
-    const newMessage = {
+    const newMessage = normalizeMessage({
       id: Date.now(),
-      text: message,
+      content: message,
       sender: 'user',
       timestamp: new Date().toISOString(),
-      type: 'text'
-    };
+      type: message.includes('```') ? 'code' : 'text'
+    });
     setMessages(prevMessages => [...prevMessages, newMessage]);
     setInputValue('');
     try {
@@ -86,27 +108,51 @@ function ChatComponent({ eventBus }) {
         method: 'POST',
         body: JSON.stringify({ message: message.trim() })
       });
-      if (result.success) {
-        // ok
-      } else {
+      if (!result.success) {
         throw new Error(result.error || 'Failed to send message');
       }
     } catch (error) {
-      const errorMessage = {
+      setError('❌ ' + error.message);
+      const errorMessage = normalizeMessage({
         id: Date.now() + 1,
-        text: `Error: ${error.message}`,
+        content: `Error: ${error.message}`,
         sender: 'system',
         timestamp: new Date().toISOString(),
         type: 'error'
-      };
+      });
       setMessages(prevMessages => [...prevMessages, errorMessage]);
     }
   };
 
   const handleInputChange = (e) => setInputValue(e.target.value);
-  const handleInputKeyPress = (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(inputValue); } };
+  const handleInputKeyDown = (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      sendMessage(inputValue);
+    }
+    autoResizeTextarea();
+  };
   const handleSendClick = () => sendMessage(inputValue);
-  const scrollToBottom = () => { messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }); };
+  const handleDebugClick = () => eventBus && eventBus.emit('chat:debug:requested');
+  const handleFileUploadClick = () => fileInputRef.current && fileInputRef.current.click();
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      setInputValue(ev.target.result);
+      autoResizeTextarea();
+    };
+    reader.readAsText(file);
+  };
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+  const handleScroll = (e) => {
+    const el = e.target;
+    const isAtBottom = el.scrollTop + el.clientHeight >= el.scrollHeight - 10;
+    setShouldAutoScroll(isAtBottom);
+  };
   const clearChat = () => setMessages([]);
   const exportChat = () => {
     const chatData = { messages, exportDate: new Date().toISOString(), totalMessages: messages.length };
@@ -120,51 +166,55 @@ function ChatComponent({ eventBus }) {
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
   };
-  const formatTimestamp = (timestamp) => { const date = new Date(timestamp); return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }); };
-  const renderMessage = (message) => {
+  const autoResizeTextarea = () => {
+    const textarea = msgInputRef.current;
+    if (textarea) {
+      textarea.style.height = 'auto';
+      textarea.style.height = Math.min(textarea.scrollHeight, window.innerHeight * 0.7) + 'px';
+    }
+  };
+  useEffect(() => { autoResizeTextarea(); }, [inputValue]);
+
+  // Copy code to clipboard
+  const handleCopyClick = (code) => {
+    navigator.clipboard.writeText(code);
+  };
+
+  // Render message bubble (user/ai)
+  const renderMessage = (message, index) => {
     const isUser = message.sender === 'user';
-    const isSystem = message.sender === 'system';
-    const content = message.content || message.text;
+    const isAI = message.sender === 'ai';
+    const isCode = message.type === 'code';
+    let content = message.content || message.text;
+    let bubbleContent;
+    if (isAI && window.marked) {
+      bubbleContent = <span dangerouslySetInnerHTML={{ __html: window.marked.parse(content) }} />;
+    } else if (isCode) {
+      bubbleContent = (
+        <pre className="user-codeblock">
+          <code>{content.replace(/^```[a-zA-Z0-9]*|```$/g, '').trim()}</code>
+          <button className="codeblock-copy-btn" onClick={() => handleCopyClick(content.replace(/^```[a-zA-Z0-9]*|```$/g, '').trim())}>Copy</button>
+        </pre>
+      );
+    } else {
+      bubbleContent = <div className="message-bubble">{escapeHtml(content)}</div>;
+    }
     return (
-      <div key={message.id} className={`chat-message chat-message-${message.sender} chat-message-type-${message.type}`}>
-        <div className="chat-message-meta">
-          <span className="chat-message-sender">{message.sender}</span>
-          <span className="chat-message-type">{message.type}</span>
-          <span className="chat-message-timestamp">{message.timestamp && new Date(message.timestamp).toLocaleTimeString()}</span>
-        </div>
-        <div className="chat-message-content">
-          {message.type === 'code' ? (
-            <pre><code>{content}</code></pre>
-          ) : (
-            <span>{content}</span>
-          )}
-        </div>
+      <div className={`message ${isUser ? 'user' : 'ai'}`} key={message.id || index} data-index={index}>
+        {isUser && !isCode && <div className="message-avatar">U</div>}
+        {isAI && <div className="message-avatar">AI</div>}
+        {isUser && isCode && (
+          <div className="message-avatar">U</div>
+        )}
+        {bubbleContent}
       </div>
     );
   };
+
   return (
     <div ref={containerRef} className="chat-container">
-      <div className="chat-header">
-        <h2>Chat</h2>
-        <div className="chat-header-actions">
-          <div className="status-indicator">
-            <div className={`status-dot ${isConnected ? 'connected' : 'disconnected'}`}></div>
-            <span>{isConnected ? 'Connected' : 'Disconnected'}</span>
-          </div>
-          <button onClick={clearChat} className="btn-icon" title="Clear Chat">🗑️</button>
-          <button onClick={exportChat} className="btn-icon" title="Export Chat">📤</button>
-        </div>
-      </div>
-      <div className="messages-container" id="messages">
-        {messages.length === 0 ? (
-          <div className="empty-chat">
-            <div className="empty-chat-icon">💬</div>
-            <h3>No messages yet</h3>
-            <p>Start a conversation by typing a message below.</p>
-          </div>
-        ) : (
-          messages.map(renderMessage)
-        )}
+      <div className="messages-container" id="messages" onScroll={handleScroll}>
+        {messages.map(renderMessage)}
         {isTyping && (
           <div className="typing-indicator show">
             <div className="message-avatar">AI</div>
@@ -177,13 +227,30 @@ function ChatComponent({ eventBus }) {
             </div>
           </div>
         )}
+        {error && <div className="error-message"><span>⚠️</span><span>{error}</span></div>}
         <div ref={messagesEndRef} />
       </div>
       <div className="input-area">
         <div className="input-container">
-          <textarea id="msgInput" value={inputValue} onChange={handleInputChange} onKeyPress={handleInputKeyPress} placeholder="Type your message..." />
+          <button id="fileUploadBtn" title="Datei hochladen" onClick={handleFileUploadClick}>📎</button>
+          <input type="file" ref={fileInputRef} style={{ display: 'none' }} onChange={handleFileChange} />
+          <textarea
+            id="msgInput"
+            ref={msgInputRef}
+            value={inputValue}
+            onChange={handleInputChange}
+            onKeyDown={handleInputKeyDown}
+            placeholder="Nachricht eingeben..."
+            autoComplete="off"
+            rows={1}
+          />
           <div className="button-group">
-            <button id="sendBtn" onClick={handleSendClick} disabled={!inputValue.trim()} className="btn btn-primary">Send</button>
+            <button id="sendBtn" onClick={handleSendClick} disabled={!inputValue.trim()} className="btn btn-primary">
+              <span>Senden</span>
+            </button>
+            <button id="debugBtn" onClick={handleDebugClick} className="btn btn-secondary">
+              <span>Debug</span>
+            </button>
           </div>
         </div>
       </div>
