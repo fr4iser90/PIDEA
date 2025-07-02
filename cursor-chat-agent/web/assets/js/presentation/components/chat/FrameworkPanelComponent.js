@@ -437,7 +437,13 @@ export default class FrameworkPanelComponent {
       if (categoryHeader) {
         this.toggleCategory(categoryHeader.dataset.categoryId);
       } else if (itemHeader) {
-        this.toggleItemSelection(itemHeader.dataset.itemId);
+        const itemId = itemHeader.dataset.itemId;
+        const item = this.findItem(itemId);
+        if (item && item.file) {
+          this.toggleItemSelection(itemId);
+        } else if (item && item.items) {
+          this.toggleItem(itemId);
+        }
       } else if (useButton) {
         this.useItem(useButton.dataset.itemId);
       } else if (expandAllBtn) {
