@@ -3,6 +3,7 @@ const { v4: uuidv4 } = require('uuid');
 class ChatMessage {
   constructor(id, content, type, timestamp, metadata = {}) {
     this._id = id || uuidv4();
+    this._sender = sender; // 'user' | 'ai' | 'system'
     this._content = content;
     this._type = type; // 'user' | 'ai'
     this._timestamp = timestamp || new Date();

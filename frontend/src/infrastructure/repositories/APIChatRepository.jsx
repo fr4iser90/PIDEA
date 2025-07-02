@@ -7,10 +7,11 @@ const API_CONFIG = {
   baseURL: 'http://localhost:3000',
   endpoints: {
     chat: {
+      send: '/api/chat',
       history: '/api/chat/history',
-      send: '/api/chat/send',
-      sessions: '/api/chat/sessions',
-      info: '/api/chat/info'
+      status: '/api/chat/status',
+      portHistory: (port) => `/api/chat/port/${port}/history`,
+      portSwitch: (port) => `/api/chat/port/${port}/switch`,
     },
     ide: {
       list: '/api/ide/available',
@@ -28,13 +29,14 @@ const API_CONFIG = {
     prompts: {
       quick: '/api/prompts/quick'
     },
-    settings: '/api/settings'
+    settings: '/api/settings',
+    health: '/api/health'
   }
 };
 
 // Helper function to make API calls
 const apiCall = async (endpoint, options = {}) => {
-  const url = `${API_CONFIG.baseURL}${endpoint}`;
+  const url = typeof endpoint === 'function' ? endpoint() : `${API_CONFIG.baseURL}${endpoint}`;
   const config = {
     headers: {
       'Content-Type': 'application/json',
@@ -66,46 +68,23 @@ class APIChatRepository extends ChatRepository {
     return apiCall(API_CONFIG.endpoints.chat.history);
   }
 
-  async sendMessage(message) {
+  async getPortChatHistory(port) {
+    return apiCall(`${API_CONFIG.baseURL}${API_CONFIG.endpoints.chat.portHistory(port)}`);
+  }
+
+  async sendMessage(message, sessionId = null) {
     return apiCall(API_CONFIG.endpoints.chat.send, {
       method: 'POST',
-      body: JSON.stringify({ message })
+      body: JSON.stringify(sessionId ? { message, sessionId } : { message })
     });
   }
 
-  async getCurrentSession() {
-    if (!this.currentSession) {
-      this.currentSession = new ChatSession('default', 'Current Chat');
-    }
-    return this.currentSession;
+  async getStatus() {
+    return apiCall(API_CONFIG.endpoints.chat.status);
   }
 
-  async createSession(session) {
-    // In a real app, this would create a session on the server
-    this.currentSession = session;
-    return session;
-  }
-
-  async updateSession(session) {
-    // In a real app, this would update the session on the server
-    this.currentSession = session;
-    return session;
-  }
-
-  async deleteSession(sessionId) {
-    // In a real app, this would delete the session on the server
-    if (this.currentSession && this.currentSession.id === sessionId) {
-      this.currentSession = null;
-    }
-    return true;
-  }
-
-  async getChatSessions() {
-    return apiCall(API_CONFIG.endpoints.chat.sessions);
-  }
-
-  async getChatInfo() {
-    return apiCall(API_CONFIG.endpoints.chat.info);
+  async getHealth() {
+    return apiCall(API_CONFIG.endpoints.health);
   }
 
   async getIDEs() {
