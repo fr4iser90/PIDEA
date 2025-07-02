@@ -8,7 +8,7 @@ This document organizes DOM structure documentation for different IDEs to enable
 ```
 docs/
 ├── DOM-STRUCTURES.md          # This file - master overview
-├── ides/
+├── ide/
 │   ├── cursor/
 │   │   ├── chat-dom.md        # Cursor chat interface DOM
 │   │   ├── editor-dom.md      # Cursor editor interface DOM  

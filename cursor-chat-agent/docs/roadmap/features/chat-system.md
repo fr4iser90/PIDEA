@@ -1,4 +1,4 @@
-# Chat View Improvements & Framework Integration
+# Chat System Features & Framework Integration
 
 ## Current State Analysis
 
@@ -18,7 +18,7 @@
 - **No Framework Detection**: Can't identify React, Vue, Angular, etc.
 - **Missing Specialized Tools**: No refactoring, architecture, or documentation tools
 
-## Proposed Framework-Specific Improvements
+## Proposed Framework-Specific Features
 
 ### 1. Framework Detection & Context
 
@@ -202,65 +202,7 @@ ${prompt}
 };
 ```
 
-### 5. Advanced Chat Features
-
-#### Code Analysis Integration
-```javascript
-const codeAnalysis = {
-  // Real-time code quality analysis
-  analyzeCode: (content) => {
-    return {
-      complexity: calculateComplexity(content),
-      smells: detectCodeSmells(content),
-      patterns: identifyPatterns(content),
-      suggestions: generateSuggestions(content)
-    };
-  },
-
-  // Architecture suggestions
-  suggestArchitecture: (projectStructure) => {
-    return {
-      patterns: recommendPatterns(projectStructure),
-      improvements: suggestImprovements(projectStructure),
-      refactoring: suggestRefactoring(projectStructure)
-    };
-  }
-};
-```
-
-#### Interactive Code Generation
-```javascript
-const codeGenerator = {
-  // Generate code based on framework and patterns
-  generateComponent: (framework, pattern, props) => {
-    const templates = {
-      react: {
-        functional: generateReactFunctionalComponent,
-        class: generateReactClassComponent,
-        hook: generateReactCustomHook
-      },
-      vue: {
-        composition: generateVueCompositionComponent,
-        options: generateVueOptionsComponent,
-        composable: generateVueComposable
-      }
-    };
-    return templates[framework][pattern](props);
-  },
-
-  // Generate tests
-  generateTests: (framework, component, testType) => {
-    const testGenerators = {
-      react: generateReactTests,
-      vue: generateVueTests,
-      backend: generateBackendTests
-    };
-    return testGenerators[framework](component, testType);
-  }
-};
-```
-
-### 6. New UI Components
+### 5. New UI Components
 
 #### Framework Selector
 ```javascript
@@ -313,70 +255,7 @@ const patternLibrary = {
 };
 ```
 
-### 7. Implementation Roadmap
-
-#### Phase 1: Foundation (Week 1-2)
-- [ ] Framework detection system
-- [ ] Project type classification
-- [ ] Basic context injection
-- [ ] Framework selector UI
-
-#### Phase 2: Framework Integration (Week 3-4)
-- [ ] Framework-specific prompts
-- [ ] Architecture patterns library
-- [ ] Code analysis integration
-- [ ] Enhanced right panel tabs
-
-#### Phase 3: Advanced Features (Week 5-6)
-- [ ] Interactive code generation
-- [ ] Real-time code quality analysis
-- [ ] Documentation generators
-- [ ] Testing framework integration
-
-#### Phase 4: Polish & Optimization (Week 7-8)
-- [ ] Performance optimization
-- [ ] User experience improvements
-- [ ] Advanced customization options
-- [ ] Comprehensive testing
-
-### 8. Technical Architecture
-
-#### New Components Structure
-```
-src/
-├── domain/
-│   ├── services/
-│   │   ├── framework/
-│   │   │   ├── FrameworkDetector.js
-│   │   │   ├── ProjectTypeClassifier.js
-│   │   │   └── ContextInjector.js
-│   │   ├── patterns/
-│   │   │   ├── PatternLibrary.js
-│   │   │   ├── ArchitectureAnalyzer.js
-│   │   │   └── CodeGenerator.js
-│   │   └── documentation/
-│   │       ├── DocGenerator.js
-│   │       ├── TemplateManager.js
-│   │       └── ApiDocGenerator.js
-│   └── entities/
-│       ├── Framework.js
-│       ├── Pattern.js
-│       └── ProjectContext.js
-├── presentation/
-│   └── components/
-│       ├── FrameworkSelectorComponent.js
-│       ├── PatternLibraryComponent.js
-│       ├── ArchitectureTabComponent.js
-│       └── DocumentationTabComponent.js
-└── infrastructure/
-    └── frameworks/
-        ├── react/
-        ├── vue/
-        ├── angular/
-        └── backend/
-```
-
-### 9. Benefits & Impact
+### 6. Benefits & Impact
 
 #### For Developers
 - **Faster Development**: Framework-specific guidance and patterns
@@ -396,7 +275,7 @@ src/
 - **Maintainability**: Code quality analysis and refactoring tools
 - **Documentation**: Comprehensive, up-to-date documentation
 
-### 10. Success Metrics
+### 7. Success Metrics
 
 #### Technical Metrics
 - Framework detection accuracy: >95%

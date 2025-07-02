@@ -1,6 +1,6 @@
-# 🚀 TECHNICAL PLAN: Screenshot Streaming (10fps+)
+# IDE Mirror Features - Screenshot Streaming
 
-## **Current State Analysis**
+## Current State Analysis
 
 ### **Existing Implementation**
 - **IDEMirrorService**: Single screenshot capture on user actions (click/type)
@@ -17,46 +17,6 @@
 - Frontend uses static `<img>` tags (flickering on updates)
 
 ---
-
-## **Affected Files & Functions**
-
-### **Backend (Node.js)**
-- `src/domain/services/IDEMirrorService.js`
-  - **Add:** `startScreenshotStreamLoop(fps, quality)`
-  - **Add:** `stopScreenshotStreamLoop()`
-  - **Add:** `getCompressedScreenshot(format, quality)`
-  - **Change:** Screenshot logic from single capture to continuous loop
-- `src/presentation/api/IDEMirrorController.js`
-  - **Add:** WebSocket handlers for streaming frames
-  - **Change:** API/Controller for continuous streaming
-  - **Remove:** Single-shot API endpoints (optional)
-- `src/presentation/websocket/WebSocketManager.js`
-  - **Add:** Binary data broadcasting (frames) to clients
-  - **Add:** Batching/throttling for slow clients
-  - **Add:** Frame buffering and queue management
-- `src/infrastructure/external/BrowserManager.js`
-  - **Add:** Screenshot compression (WebP/JPEG)
-  - **Change:** Screenshot API returns compressed frames
-  - **Add:** Frame rate control and timing
-- `src/server.js` / `src/Application.js`
-  - **Change:** Initialization/start of screenshot stream
-- *(optional new)* `src/domain/services/ScreenshotStreamer.js`
-  - **Add:** Centralized streaming logic (loop, compression, region detection)
-
-### **Frontend (Web)**
-- `web/assets/js/presentation/components/IDEMirrorComponent.js`
-  - **Add:** Reception & rendering of streaming frames (Canvas/Video)
-  - **Add:** Double-buffering, CSS transitions
-  - **Change:** `<img>` replacement with Canvas/Video rendering
-  - **Add:** FPS/quality/region UI controls
-- `web/assets/js/main.js`
-  - **Change:** Initialization of new streaming frontend
-- *(optional new)* `web/assets/js/presentation/components/VideoStreamCanvas.js`
-  - **Add:** Dedicated module for video-like frame rendering
-
----
-
-# 🚀 TODO: IDE Screenshot Streaming (Video-like Experience, 10fps+)
 
 ## **Objective**
 - Smooth, continuous IDE streaming (video-like, 10fps+)
@@ -102,27 +62,6 @@
 - [ ] **Add:** Performance metrics (FPS, latency, bandwidth)
 - [ ] **Add:** Debug overlay for frame statistics
 - [ ] **Add:** Error handling for frame drops/connection issues
-
----
-
-# 🚩 TODO: Full DOM Detection & Playwright DOM Fetching Improvements
-
-## **Full DOM Detection**
-- [ ] **Add:** Comprehensive DOM extraction (not just visible/active elements)
-- [ ] **Add:** Detection of all interactive elements (buttons, overlays, toolbars, popups, modals, tooltips, etc.)
-- [ ] **Add:** Handle dynamic/hidden elements (e.g., those shown on hover, focus, or via JS)
-- [ ] **Add:** Serialize all actionable UI controls, including deeply nested and shadow DOM elements
-- [ ] **Add:** Mark/annotate elements with metadata (type, role, ARIA, etc.) for better frontend mapping
-- [ ] **Add:** Automated tests to verify coverage of all UI controls
-
-## **Playwright DOM Fetching Improvements**
-- [ ] **Add:** More robust and flexible selector strategies (fallbacks, attribute-based, ARIA, etc.)
-- [ ] **Add:** Support for shadow DOM and web components
-- [ ] **Add:** Handle dynamic content and late-loading elements (waitFor, polling, etc.)
-- [ ] **Add:** Improve error handling for missing or unstable selectors
-- [ ] **Add:** Coverage for overlays, modals, tooltips, and context menus
-- [ ] **Add:** Performance optimizations for large DOMs (batching, throttling, etc.)
-- [ ] **Add:** Logging and debugging tools for DOM extraction issues
 
 ---
 
