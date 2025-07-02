@@ -9,6 +9,8 @@ import ChatRightPanelComponent from '../components/ChatRightPanelComponent.js';
 import CodeRightPanelComponent from '../components/CodeRightPanelComponent.js';
 import IDEMirrorComponent from '../components/IDEMirrorComponent.js';
 import PreviewComponent from '../components/PreviewComponent.js';
+import FrameworkPanelComponent from '../components/chat/FrameworkPanelComponent.js';
+import FrameworkModalComponent from '../components/chat/FrameworkModalComponent.js';
 
 class AppController {
   constructor() {
@@ -24,6 +26,8 @@ class AppController {
     this.codeRightPanelComponent = null;
     this.ideMirrorComponent = null;
     this.previewComponent = null;
+    this.frameworkPanelComponent = null;
+    this.frameworkModalComponent = null;
     this.currentMode = 'chat';
     this.currentLayout = 'chat'; // 'chat', 'split', 'preview', 'fullscreen'
     
@@ -57,6 +61,14 @@ class AppController {
     
     // Initialize preview component
     this.previewComponent = new PreviewComponent('previewView');
+    
+    // Framework Panel & Modal
+    this.frameworkPanelComponent = new FrameworkPanelComponent(
+      'frameworkPanelContainer',
+      (fw) => this.openFrameworkModal(fw),
+      (fw) => {/* Toggle-Handler, z.B. speichern */}
+    );
+    this.frameworkModalComponent = new FrameworkModalComponent('frameworkModalContainer');
     
     // Load initial messages
     this.chatService.loadMessages();
@@ -630,6 +642,10 @@ class AppController {
       console.error('Failed to restart app:', error);
       this.showError('Failed to restart app');
     }
+  }
+
+  openFrameworkModal(framework) {
+    this.frameworkModalComponent.open(framework);
   }
 }
 

@@ -338,4 +338,71 @@
     font-size: 11px;
     padding: 4px 8px;
   }
+}
+
+/* === Framework Panel Styles === */
+.framework-panel {
+  margin-top: 24px;
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 12px 0 8px 0;
+}
+.framework-panel-header {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+  padding: 0 16px 8px 16px;
+  margin-bottom: 4px;
+}
+.framework-prompt-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 8px;
+  padding: 0 8px;
+}
+.framework-prompt-btn {
+  display: flex;
+  align-items: center;
+  background: #222;
+  border-radius: 6px;
+  padding: 6px 10px;
+  cursor: pointer;
+  transition: background 0.2s;
+  color: #e6e6e6;
+}
+.framework-prompt-btn.active {
+  background: #1db954;
+  color: #fff;
+}
+.framework-toggle-label, .framework-toggle-checkbox, .framework-toggle-custom { display: none !important; }
+.framework-name {
+  flex: 1;
+  user-select: none;
+  cursor: pointer;
+  padding: 4px 10px;
+  border-radius: 4px;
+  transition: background 0.2s, color 0.2s;
+}
+.framework-name.active {
+  background: #1db954;
+  color: #fff;
+}
+.framework-name:hover {
+  background: #333;
+}
+.framework-add-btn {
+  width: 100%;
+  margin-top: 8px;
+  background: #333;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 6px 0;
+  cursor: pointer;
+  font-size: 13px;
+}
+.framework-add-btn:hover {
+  background: #444;
 } 
