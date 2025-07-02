@@ -967,14 +967,14 @@ class CursorIDEService {
         await page.waitForTimeout(700);
         
         // 2. Hardcoded Pfade für bekannte Ports
-        let lastPwd;
-        if (port === 9222) {
-          lastPwd = '/home/fr4iser/Documents/Git/CursorWeb';
-        } else if (port === 9223) {
-          lastPwd = '/home/fr4iser/Documents/Git/aboutME';
-        } else {
-          lastPwd = '/home/fr4iser/Documents/Git/CursorWeb'; // Default
-        }
+        // let lastPwd;
+        // if (port === 9222) {
+        //   lastPwd = '/home/fr4iser/Documents/Git/CursorWeb';
+        // } else if (port === 9223) {
+        //   lastPwd = '/home/fr4iser/Documents/Git/aboutME';
+        // } else {
+        //   lastPwd = '/home/fr4iser/Documents/Git/CursorWeb'; // Default
+        // }
         
         // Direkt Backend setzen (kein curl nötig)
         this.ideManager.setWorkspacePath(port, lastPwd);
