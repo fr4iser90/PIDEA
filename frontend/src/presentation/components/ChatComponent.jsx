@@ -188,7 +188,9 @@ function ChatComponent({ eventBus }) {
     let content = message.content || message.text;
     let bubbleContent;
     if (isAI && window.marked) {
-      bubbleContent = <span dangerouslySetInnerHTML={{ __html: window.marked.parse(content) }} />;
+      bubbleContent = (
+        <div className="message-bubble" dangerouslySetInnerHTML={{ __html: window.marked.parse(content) }} />
+      );
     } else if (isCode) {
       bubbleContent = (
         <pre className="user-codeblock">
