@@ -527,25 +527,31 @@ class CursorIDEService {
 
   async detectDevServerFromPackageJson(workspacePath = null) {
     try {
-      // Hole Workspace-Pfad IMMER über Playwright-Methode (gecacht)
-      if (!workspacePath) {
-        workspacePath = await this.addWorkspacePathDetectionViaPlaywright();
-        console.log('[CursorIDEService] Workspace path via Playwright:', workspacePath);
+      // Hole Workspace-Pfad NUR wenn bereits gesetzt (nicht alle 2 Sekunden!)
+      let finalWorkspacePath = workspacePath;
+      if (!finalWorkspacePath) {
+        const port = this.ideManager.getActivePort();
+        finalWorkspacePath = this.ideManager.getWorkspacePath(port);
+        if (!finalWorkspacePath) {
+          console.log('[CursorIDEService] No workspace path set, skipping package.json analysis');
+          return null;
+        }
+        console.log('[CursorIDEService] Using cached workspace path:', finalWorkspacePath);
       }
-      if (!workspacePath) {
+      if (!finalWorkspacePath) {
         console.error('[CursorIDEService] No workspace path detected!');
         return null;
       }
       
-      console.log('[CursorIDEService] Analyzing package.json in:', workspacePath);
+      console.log('[CursorIDEService] Analyzing package.json in:', finalWorkspacePath);
       
       // Read package.json
       const fs = require('fs');
       const path = require('path');
-      const packageJsonPath = path.join(workspacePath, 'package.json');
+      let packageJsonPath = path.join(finalWorkspacePath, 'package.json');
       
       if (!fs.existsSync(packageJsonPath)) {
-        console.log('[CursorIDEService] No package.json found in:', workspacePath);
+        console.log('[CursorIDEService] No package.json found in:', finalWorkspacePath);
         
         // Try to find package.json in subdirectories
         console.log('[CursorIDEService] Searching for package.json in subdirectories...');
@@ -576,10 +582,10 @@ class CursorIDEService {
           return null;
         };
         
-        const foundPath = findPackageJson(workspacePath);
+        const foundPath = findPackageJson(finalWorkspacePath);
         if (foundPath) {
-          workspacePath = foundPath;
-          packageJsonPath = path.join(workspacePath, 'package.json');
+          const updatedWorkspacePath = foundPath;
+          packageJsonPath = path.join(updatedWorkspacePath, 'package.json');
         } else {
           return null;
         }

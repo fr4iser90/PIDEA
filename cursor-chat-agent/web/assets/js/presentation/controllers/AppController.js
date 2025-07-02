@@ -213,6 +213,13 @@ class AppController {
       this.handleUserAppUrl(data);
     });
 
+    // Active IDE changed events
+    this.eventBus.on('activeIDEChanged', (data) => {
+      console.log('Active IDE changed, refreshing preview...');
+      // Refresh preview when switching to a new IDE
+      this.refreshPreview();
+    });
+
     // Mode switching
     this.setupModeSwitching();
     
@@ -436,6 +443,11 @@ class AppController {
         if (data.type === 'userAppUrl') {
           console.log('[WebSocket] User app URL received:', data.data);
           this.handleUserAppUrl(data.data);
+        }
+        if (data.type === 'activeIDEChanged') {
+          console.log('[WebSocket] Active IDE changed:', data.data);
+          // Emit the event to trigger preview refresh
+          this.eventBus.emit('activeIDEChanged', data.data);
         }
       };
       chatWs.onclose = () => {

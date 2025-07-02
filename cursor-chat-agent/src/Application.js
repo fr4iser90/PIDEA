@@ -246,14 +246,14 @@ class Application {
     this.eventBus.subscribe('activeIDEChanged', async (eventData) => {
       console.log('[Application] Active IDE changed event:', eventData);
       
-      // Trigger workspace path detection for the new active IDE
-      if (eventData.port && this.cursorIDEService) {
+      // Use cached workspace path for the new active IDE
+      if (eventData.port && this.cursorIDEService && this.ideManager) {
         try {
-          const workspacePath = await this.cursorIDEService.addWorkspacePathDetectionViaPlaywright();
+          const workspacePath = this.ideManager.getWorkspacePath(eventData.port);
           if (workspacePath) {
-            console.log('[Application] Detected workspace path for new active IDE:', workspacePath);
+            console.log('[Application] Using cached workspace path for new active IDE:', workspacePath);
             
-            // Trigger dev server detection with the new workspace path
+            // Trigger dev server detection with the cached workspace path
             const devServerUrl = await this.cursorIDEService.detectDevServerFromPackageJson(workspacePath);
             if (devServerUrl) {
               console.log('[Application] Detected dev server for new IDE:', devServerUrl);
@@ -262,9 +262,26 @@ class Application {
                 this.webSocketManager.broadcastToClients('userAppUrl', { url: devServerUrl });
               }
             }
+          } else {
+            console.log('[Application] No cached workspace path for new IDE, detecting...');
+            // Only detect if not cached
+            const detectedPath = await this.cursorIDEService.addWorkspacePathDetectionViaPlaywright();
+            if (detectedPath) {
+              console.log('[Application] Detected workspace path for new active IDE:', detectedPath);
+              
+              // Trigger dev server detection with the detected workspace path
+              const devServerUrl = await this.cursorIDEService.detectDevServerFromPackageJson(detectedPath);
+              if (devServerUrl) {
+                console.log('[Application] Detected dev server for new IDE:', devServerUrl);
+                // Broadcast the new dev server URL
+                if (this.webSocketManager) {
+                  this.webSocketManager.broadcastToClients('userAppUrl', { url: devServerUrl });
+                }
+              }
+            }
           }
         } catch (error) {
-          console.error('[Application] Error detecting workspace path for new IDE:', error.message);
+          console.error('[Application] Error handling workspace path for new IDE:', error.message);
         }
       }
     });
