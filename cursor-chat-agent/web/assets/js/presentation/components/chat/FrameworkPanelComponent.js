@@ -2,16 +2,12 @@
 // Zeigt alle Framework-.md-Dateien als Liste mit Toggle und Modal-Trigger
 
 export default class FrameworkPanelComponent {
-  constructor(containerId, onFrameworkClick, onToggle) {
+  constructor(containerId, onFrameworkClick, onToggle, frameworks) {
     this.container = document.getElementById(containerId);
     this.onFrameworkClick = onFrameworkClick;
     this.onToggle = onToggle;
-    // Platzhalter-Frameworks
-    this.frameworks = [
-      { name: 'doc-general.md', active: false },
-      { name: 'doc-code.md', active: false },
-      { name: 'my-custom-framework.md', active: false }
-    ];
+    // Use provided frameworks or fallback to empty array
+    this.frameworks = Array.isArray(frameworks) ? frameworks.map(fw => ({ ...fw })) : [];
     this.render();
   }
 

@@ -1,6 +1,7 @@
 const express = require('express');
 const path = require('path');
 const http = require('http');
+const fs = require('fs');
 
 // Domain
 const ChatMessage = require('./domain/entities/ChatMessage');
@@ -126,6 +127,8 @@ class Application {
         next();
       }
     });
+
+    this.app.use('/framework', require('express').static(path.join(__dirname, '../framework')));
   }
 
   setupRoutes() {
@@ -210,6 +213,16 @@ class Application {
       res.json({
         success: true,
         data: this.webSocketManager.getHealthStatus()
+      });
+    });
+
+    // New API route for frameworks
+    const frameworkDir = path.join(__dirname, '../framework');
+    this.app.get('/api/frameworks', (req, res) => {
+      fs.readdir(frameworkDir, (err, files) => {
+        if (err) return res.status(500).json({ error: err.message });
+        const mdFiles = files.filter(f => f.endsWith('.md'));
+        res.json(mdFiles);
       });
     });
   }

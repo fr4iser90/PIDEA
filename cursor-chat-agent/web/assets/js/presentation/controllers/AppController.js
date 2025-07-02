@@ -48,7 +48,7 @@ class AppController {
     }
   }
 
-  setupComponents() {
+  async setupComponents() {
     // Initialize chat components
     this.chatComponent = new ChatComponent('chatView', this.eventBus);
     this.chatSidebarComponent = new ChatSidebarComponent('chatSidebarContent', this.eventBus);
@@ -62,11 +62,20 @@ class AppController {
     // Initialize preview component
     this.previewComponent = new PreviewComponent('previewView');
     
-    // Framework Panel & Modal
+    // Frameworks dynamisch laden
+    let frameworks = [];
+    try {
+      const res = await fetch('/api/frameworks');
+      const files = await res.json();
+      frameworks = files.map(name => ({ name, active: false }));
+    } catch (e) {
+      console.error('Fehler beim Laden der Framework-Dateien:', e);
+    }
     this.frameworkPanelComponent = new FrameworkPanelComponent(
       'frameworkPanelContainer',
       (fw) => this.openFrameworkModal(fw),
-      (fw) => {/* Toggle-Handler, z.B. speichern */}
+      (fw) => {/* Toggle-Handler, z.B. speichern */},
+      frameworks
     );
     this.frameworkModalComponent = new FrameworkModalComponent('frameworkModalContainer');
     
