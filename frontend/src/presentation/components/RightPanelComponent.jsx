@@ -68,10 +68,10 @@ function RightPanelComponent({ eventBus, messages = [] }) {
       return newState;
     });
   }, [isVisible]);
-  const handleFilesAttached = (files) => setAttachedFiles(prevFiles => [...prevFiles, ...files]);
-  const handleFilesRemoved = (fileIds) => setAttachedFiles(prevFiles => prevFiles.filter(f => !fileIds.includes(f.id)));
-  const handleSettingsUpdate = (newSettings) => setSettings(newSettings);
-  const handleQuickPromptSelected = (prompt) => { if (eventBus) { eventBus.emit('prompt-selected', { prompt }); } };
+  const handleFilesAttached = useCallback((files) => setAttachedFiles(prevFiles => [...prevFiles, ...files]), []);
+  const handleFilesRemoved = useCallback((fileIds) => setAttachedFiles(prevFiles => prevFiles.filter(f => !fileIds.includes(f.id))), []);
+  const handleSettingsUpdate = useCallback((newSettings) => setSettings(newSettings), []);
+  const handleQuickPromptSelected = useCallback((prompt) => { if (eventBus) { eventBus.emit('prompt-selected', { prompt }); } }, [eventBus]);
   const handleTabChange = (tab) => setActiveTab(tab);
   const handleFileUpload = (event) => {
     const files = Array.from(event.target.files);
