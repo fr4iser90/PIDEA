@@ -19,8 +19,6 @@ class IDEManager {
     const existingIDEs = await this.detector.scanForIDEs();
     existingIDEs.forEach(ide => {
       this.ideStatus.set(ide.port, ide.status);
-      // Don't auto-detect workspace paths for existing IDEs
-      // They need to be set manually or through IDE startup
     });
 
     // Set first available IDE as active
@@ -28,6 +26,9 @@ class IDEManager {
       this.activePort = existingIDEs[0].port;
       console.log('[IDEManager] Set active IDE to port', this.activePort);
     }
+
+    // Try to detect workspace paths for existing IDEs
+    await this.detectWorkspacePathsForAllIDEs();
 
     console.log('[IDEManager] Initialization complete. Found', existingIDEs.length, 'IDEs');
   }
@@ -56,6 +57,25 @@ class IDEManager {
         active: ide.port === this.activePort
       });
     });
+
+    // Try to detect workspace paths for IDEs that don't have one
+    const idesWithoutWorkspace = Array.from(allIDEs.values()).filter(ide => !ide.workspacePath);
+    if (idesWithoutWorkspace.length > 0) {
+      console.log('[IDEManager] Attempting to detect workspace paths for', idesWithoutWorkspace.length, 'IDEs');
+      for (const ide of idesWithoutWorkspace) {
+        try {
+          await this.detectWorkspacePath(ide.port);
+          // Update the workspace path in the result
+          const workspacePath = this.ideWorkspaces.get(ide.port);
+          if (workspacePath) {
+            ide.workspacePath = workspacePath;
+            console.log('[IDEManager] Detected workspace path for port', ide.port, ':', workspacePath);
+          }
+        } catch (error) {
+          console.log('[IDEManager] Could not detect workspace path for port', ide.port, ':', error.message);
+        }
+      }
+    }
 
     return Array.from(allIDEs.values());
   }
@@ -191,18 +211,45 @@ class IDEManager {
   // New method to detect workspace path for existing IDEs
   async detectWorkspacePath(port) {
     try {
-      // For existing IDEs, we need to be more careful about workspace detection
-      // Don't automatically assign the same workspace to all IDEs
-      
       // First check if we already have a workspace for this port
       if (this.ideWorkspaces.has(port)) {
         return this.ideWorkspaces.get(port);
       }
       
-      // For now, don't auto-detect workspace paths for existing IDEs
-      // This should be set manually or through the IDE startup process
-      console.log('[IDEManager] No workspace path set for port', port, '- manual configuration required');
-      return null;
+      console.log('[IDEManager] Attempting to detect workspace path for port', port);
+      
+      // Strategy 1: Try to use the current project root as fallback
+      const path = require('path');
+      const currentDir = process.cwd();
+      const projectRoot = path.resolve(currentDir, '..');
+      
+      // Check if this looks like a valid project root
+      const fs = require('fs');
+      const projectFiles = ['package.json', '.git', 'README.md', 'src', 'app'];
+      let hasProjectFiles = false;
+      
+      for (const file of projectFiles) {
+        if (fs.existsSync(path.join(projectRoot, file))) {
+          hasProjectFiles = true;
+          break;
+        }
+      }
+      
+      if (hasProjectFiles) {
+        console.log('[IDEManager] Using project root as workspace path for port', port, ':', projectRoot);
+        this.ideWorkspaces.set(port, projectRoot);
+        return projectRoot;
+      }
+      
+      // Strategy 2: Try to detect from browser if available
+      // This would require the browserManager to be available
+      // For now, we'll use a more conservative approach
+      
+      // Strategy 3: Use current working directory as last resort
+      console.log('[IDEManager] Using current directory as workspace path for port', port, ':', currentDir);
+      this.ideWorkspaces.set(port, currentDir);
+      return currentDir;
+      
     } catch (error) {
       console.log('[IDEManager] Could not detect workspace path for port', port, ':', error.message);
     }
@@ -266,6 +313,25 @@ class IDEManager {
       ideStatus: Object.fromEntries(this.ideStatus),
       workspacePaths: Object.fromEntries(this.ideWorkspaces)
     };
+  }
+
+  // New method to detect workspace paths for all IDEs
+  async detectWorkspacePathsForAllIDEs() {
+    const availableIDEs = await this.detector.scanForIDEs();
+    const startedIDEs = this.starter.getRunningIDEs();
+    const allIDEs = [...availableIDEs, ...startedIDEs];
+    
+    console.log('[IDEManager] Detecting workspace paths for', allIDEs.length, 'IDEs');
+    
+    for (const ide of allIDEs) {
+      if (!this.ideWorkspaces.has(ide.port)) {
+        try {
+          await this.detectWorkspacePath(ide.port);
+        } catch (error) {
+          console.log('[IDEManager] Could not detect workspace path for port', ide.port, ':', error.message);
+        }
+      }
+    }
   }
 }
 

@@ -27,6 +27,9 @@ class AppController {
     this.frameworkModalComponent = null;
     this.currentMode = 'chat';
     this.currentLayout = 'chat'; // 'chat', 'split', 'preview', 'fullscreen'
+    this.currentCodeTab = 'tree';
+    this.currentTheme = 'dark';
+    this.apiRepository = new APIChatRepository();
     
     this.init();
   }
@@ -595,8 +598,7 @@ class AppController {
     console.log('Refreshing preview...');
     try {
       // Ask backend for current user app URL
-      const response = await fetch('/api/ide/user-app-url');
-      const result = await response.json();
+      const result = await this.apiRepository.getUserAppUrl();
       
       if (result.success && result.data && result.data.url) {
         console.log('Found user app URL:', result.data.url);
@@ -604,10 +606,7 @@ class AppController {
       } else {
         console.log('No user app URL found, checking terminal output...');
         // Trigger terminal monitoring on backend
-        const monitorResponse = await fetch('/api/ide/monitor-terminal', {
-          method: 'POST'
-        });
-        const monitorResult = await monitorResponse.json();
+        const monitorResult = await this.apiRepository.monitorTerminal();
         
         if (monitorResult.success && monitorResult.data && monitorResult.data.url) {
           console.log('Found URL from terminal monitoring:', monitorResult.data.url);
@@ -647,12 +646,7 @@ class AppController {
 
   async handleAppRestart(data) {
     try {
-      const response = await fetch('/api/ide/restart-app', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ url: data.url })
-      });
-      const result = await response.json();
+      const result = await this.apiRepository.restartApp({ url: data.url });
       if (!result.success) {
         throw new Error(result.error);
       }

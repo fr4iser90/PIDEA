@@ -16,6 +16,16 @@ const API_CONFIG = {
     },
     ide: {
       list: '/api/ide/available',
+      userAppUrl: '/api/ide/user-app-url',
+      monitorTerminal: '/api/ide/monitor-terminal',
+      restartApp: '/api/ide/restart-app',
+      detectWorkspacePaths: '/api/ide/detect-workspace-paths',
+      workspaceInfo: '/api/ide/workspace-info',
+      setWorkspace: (port) => `/api/ide/set-workspace/${port}`,
+      switchIDE: (port) => `/api/ide/switch/${port}`,
+      stopIDE: (port) => `/api/ide/stop/${port}`,
+      status: '/api/ide/status',
+      start: '/api/ide/start',
       mirror: {
         status: '/api/ide/mirror/status',
         connect: '/api/ide/mirror/connect',
@@ -120,6 +130,63 @@ export default class APIChatRepository extends ChatRepository {
 
   async getIDEs() {
     return apiCall(API_CONFIG.endpoints.ide.list);
+  }
+
+  async getUserAppUrl() {
+    return apiCall(API_CONFIG.endpoints.ide.userAppUrl);
+  }
+
+  async monitorTerminal() {
+    return apiCall(API_CONFIG.endpoints.ide.monitorTerminal, {
+      method: 'POST'
+    });
+  }
+
+  async restartApp(data) {
+    return apiCall(API_CONFIG.endpoints.ide.restartApp, {
+      method: 'POST',
+      body: JSON.stringify(data)
+    });
+  }
+
+  async detectWorkspacePaths() {
+    return apiCall(API_CONFIG.endpoints.ide.detectWorkspacePaths, {
+      method: 'POST'
+    });
+  }
+
+  async getWorkspaceInfo() {
+    return apiCall(API_CONFIG.endpoints.ide.workspaceInfo);
+  }
+
+  async setWorkspacePath(port, workspacePath) {
+    return apiCall(API_CONFIG.endpoints.ide.setWorkspace(port), {
+      method: 'POST',
+      body: JSON.stringify({ workspacePath })
+    });
+  }
+
+  async switchIDE(port) {
+    return apiCall(API_CONFIG.endpoints.ide.switchIDE(port), {
+      method: 'POST'
+    });
+  }
+
+  async stopIDE(port) {
+    return apiCall(API_CONFIG.endpoints.ide.stopIDE(port), {
+      method: 'DELETE'
+    });
+  }
+
+  async getIDEStatus() {
+    return apiCall(API_CONFIG.endpoints.ide.status);
+  }
+
+  async startIDE(workspacePath = null) {
+    return apiCall(API_CONFIG.endpoints.ide.start, {
+      method: 'POST',
+      body: JSON.stringify({ workspacePath })
+    });
   }
 
   async getPreviewStatus() {

@@ -311,6 +311,14 @@ class Application {
     this.app.get('/api/ide/available', (req, res) => this.ideController.getAvailableIDEs(req, res));
     this.app.post('/api/ide/start', (req, res) => this.ideController.startIDE(req, res));
     this.app.post('/api/ide/switch/:port', (req, res) => this.ideController.switchIDE(req, res));
+    this.app.delete('/api/ide/stop/:port', (req, res) => this.ideController.stopIDE(req, res));
+    this.app.get('/api/ide/status', (req, res) => this.ideController.getStatus(req, res));
+    this.app.post('/api/ide/restart-app', (req, res) => this.ideController.restartUserApp(req, res));
+    this.app.get('/api/ide/user-app-url', (req, res) => this.ideController.getUserAppUrl(req, res));
+    this.app.post('/api/ide/monitor-terminal', (req, res) => this.ideController.monitorTerminal(req, res));
+    this.app.post('/api/ide/set-workspace/:port', (req, res) => this.ideController.setWorkspacePath(req, res));
+    this.app.get('/api/ide/workspace-info', (req, res) => this.ideController.getWorkspaceInfo(req, res));
+    this.app.post('/api/ide/detect-workspace-paths', (req, res) => this.ideController.detectWorkspacePaths(req, res));
 
     // File explorer routes (protected)
     this.app.use('/api/files', this.authMiddleware.authenticate());

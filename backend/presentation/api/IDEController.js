@@ -236,6 +236,35 @@ class IDEController {
     }
   }
 
+  async detectWorkspacePaths(req, res) {
+    try {
+      console.log('[IDEController] Triggering workspace path detection for all IDEs');
+      await this.ideManager.detectWorkspacePathsForAllIDEs();
+      
+      // Get updated IDE list with workspace paths
+      const availableIDEs = await this.ideManager.getAvailableIDEs();
+      
+      res.json({
+        success: true,
+        data: {
+          message: 'Workspace path detection completed',
+          ides: availableIDEs.map(ide => ({
+            port: ide.port,
+            status: ide.status,
+            workspacePath: ide.workspacePath,
+            hasWorkspace: !!ide.workspacePath
+          }))
+        }
+      });
+    } catch (error) {
+      console.error('[IDEController] Error detecting workspace paths:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to detect workspace paths'
+      });
+    }
+  }
+
   async debugDOM(req, res) {
     try {
       if (!this.cursorIDEService) {

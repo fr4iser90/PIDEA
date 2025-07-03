@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { apiCall, API_CONFIG } from '@infrastructure/repositories/APIChatRepository.jsx';
+import APIChatRepository from '@infrastructure/repositories/APIChatRepository.jsx';
 
 function PreviewComponent({ eventBus }) {
   const [previewData, setPreviewData] = useState(null);
@@ -10,6 +10,7 @@ function PreviewComponent({ eventBus }) {
   const [refreshInterval, setRefreshInterval] = useState(null);
   const containerRef = useRef(null);
   const iframeRef = useRef(null);
+  const apiRepository = new APIChatRepository();
 
   useEffect(() => {
     console.log('🔄 PreviewComponent initializing...');
@@ -82,8 +83,7 @@ function PreviewComponent({ eventBus }) {
   const loadPreviewData = async () => {
     try {
       // First try to get user app URL from backend
-      const response = await fetch('/api/ide/user-app-url');
-      const result = await response.json();
+      const result = await apiRepository.getUserAppUrl();
       
       let previewUrl = null;
       
@@ -93,10 +93,7 @@ function PreviewComponent({ eventBus }) {
       } else {
         console.log('No user app URL found, checking terminal output...');
         // Trigger terminal monitoring on backend
-        const monitorResponse = await fetch('/api/ide/monitor-terminal', {
-          method: 'POST'
-        });
-        const monitorResult = await monitorResponse.json();
+        const monitorResult = await apiRepository.monitorTerminal();
         
         if (monitorResult.success && monitorResult.data && monitorResult.data.url) {
           console.log('Found URL from terminal monitoring:', monitorResult.data.url);
