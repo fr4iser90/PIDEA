@@ -77,6 +77,7 @@ class WebSocketManager {
         // Register as anonymous connection
         this.registerAnonymousConnection(ws);
         console.log('[WebSocketManager] Anonymous connection established');
+        console.log('[WebSocketManager] Total clients after anonymous connection:', this.wss.clients.size);
       }
 
       // Setup message handling
@@ -187,6 +188,7 @@ class WebSocketManager {
     // Store anonymous connection info
     this.userConnections.set(ws, { userId: null, sessionId: null });
     this.connectionCount++;
+    console.log('[WebSocketManager] Anonymous connection registered. Total connections:', this.connectionCount);
   }
 
   handleAnonymousDisconnect(ws, code, reason) {
@@ -481,6 +483,8 @@ class WebSocketManager {
       data,
       timestamp: new Date().toISOString()
     });
+
+    console.log(`[WebSocketManager] Broadcasting ${event} to ${this.wss.clients.size} clients:`, data);
 
     this.wss.clients.forEach(client => {
       if (client.readyState === WebSocket.OPEN) {

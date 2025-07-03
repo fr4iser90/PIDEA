@@ -223,6 +223,13 @@ function PreviewComponent({ eventBus }) {
     return classes.join(' ');
   };
 
+  const getIframeUrl = () => {
+    if (!previewData || !previewData.url) return 'about:blank';
+    const baseUrl = previewData.url;
+    const sep = baseUrl.includes('?') ? '&' : '?';
+    return baseUrl + sep + 't=' + Date.now();
+  };
+
   if (isFullscreen) {
     return (
       <div className="preview-modal-overlay modal-visible">
@@ -248,8 +255,9 @@ function PreviewComponent({ eventBus }) {
             )}
             {previewData && !isLoading && !error && (
               <iframe
+                key={previewData.url}
                 ref={iframeRef}
-                src={previewData.url || 'about:blank'}
+                src={getIframeUrl()}
                 onLoad={handleIframeLoad}
                 onError={handleIframeError}
                 style={{ width: '100%', height: '100%', border: 'none' }}
@@ -336,8 +344,9 @@ function PreviewComponent({ eventBus }) {
         
         {previewData && !isLoading && !error && (
           <iframe
+            key={previewData.url}
             ref={iframeRef}
-            src={previewData.url || 'about:blank'}
+            src={getIframeUrl()}
             onLoad={handleIframeLoad}
             onError={handleIframeError}
             style={{ width: '100%', height: '100%', border: 'none' }}

@@ -208,14 +208,16 @@ class IDEManager {
   }
 
   // FILE-BASIERTE WORKSPACE-ERKENNUNG
+  // Nur ausführen wenn noch keine Workspace-Pfad gespeichert ist
   async detectWorkspacePath(port) {
     try {
-      // Prüfe Cache
+      // Prüfe Cache zuerst
       if (this.ideWorkspaces.has(port)) {
+        console.log('[IDEManager] Workspace path already cached for port', port, ':', this.ideWorkspaces.get(port));
         return this.ideWorkspaces.get(port);
       }
       
-      console.log('[IDEManager] File-based workspace detection for port', port);
+      console.log('[IDEManager] Starting file-based workspace detection for port', port);
       
       // File-basierte Methode
       if (this.fileDetector) {
@@ -225,7 +227,7 @@ class IDEManager {
             await this.browserManager.switchToPort(port);
           }
           
-          // Workspace-Info über File-Output
+          // Workspace-Info über File-Output (nur wenn keine Daten vorhanden)
           const workspaceInfo = await this.fileDetector.getWorkspaceInfo(port);
           
           if (workspaceInfo && workspaceInfo.workspace) {
@@ -396,20 +398,27 @@ class IDEManager {
   }
 
   // New method to detect workspace paths for all IDEs
+  // Nur für IDEs ohne bereits gespeicherte Workspace-Pfade
   async detectWorkspacePathsForAllIDEs() {
     const availableIDEs = await this.detector.scanForIDEs();
     const startedIDEs = this.starter.getRunningIDEs();
     const allIDEs = [...availableIDEs, ...startedIDEs];
     
-    console.log('[IDEManager] Detecting workspace paths for', allIDEs.length, 'IDEs');
+    // Filtere IDEs die bereits Workspace-Pfade haben
+    const idesWithoutWorkspace = allIDEs.filter(ide => !this.ideWorkspaces.has(ide.port));
     
-    for (const ide of allIDEs) {
-      if (!this.ideWorkspaces.has(ide.port)) {
-        try {
-          await this.detectWorkspacePath(ide.port);
-        } catch (error) {
-          console.log('[IDEManager] Could not detect workspace path for port', ide.port, ':', error.message);
-        }
+    if (idesWithoutWorkspace.length === 0) {
+      console.log('[IDEManager] All IDEs already have workspace paths, skipping detection');
+      return;
+    }
+    
+    console.log(`[IDEManager] Detecting workspace paths for ${idesWithoutWorkspace.length} IDEs (${allIDEs.length - idesWithoutWorkspace.length} already have paths)`);
+    
+    for (const ide of idesWithoutWorkspace) {
+      try {
+        await this.detectWorkspacePath(ide.port);
+      } catch (error) {
+        console.log('[IDEManager] Could not detect workspace path for port', ide.port, ':', error.message);
       }
     }
   }

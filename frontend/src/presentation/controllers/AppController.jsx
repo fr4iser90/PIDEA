@@ -248,7 +248,8 @@ class AppController {
 
     // Active IDE changed events
     this.eventBus.on('activeIDEChanged', (data) => {
-      console.log('Active IDE changed, refreshing preview...');
+      console.log('🔄 [AppController] Active IDE changed event received:', data);
+      console.log('🔄 [AppController] Refreshing preview...');
       // Refresh preview when switching to a new IDE
       this.refreshPreview();
     });
@@ -463,22 +464,28 @@ class AppController {
     // WebSocket for chat updates only (existing functionality)
     let chatWs;
     const connectChatWebSocket = () => {
-      chatWs = new WebSocket('ws://localhost:4000'); // Use same port as main server
+      chatWs = new WebSocket('ws://localhost:3000/ws');
       chatWs.onopen = () => {
         console.log('[WebSocket] Connected for chat updates');
+        console.log('[WebSocket] Connection URL:', chatWs.url);
+        console.log('[WebSocket] Ready state:', chatWs.readyState);
       };
       chatWs.onmessage = (event) => {
         const data = JSON.parse(event.data);
-        if (data.type === 'chatUpdate') {
+        console.log('[WebSocket] Received message:', data);
+        
+        // Handle different message formats
+        if (data.type === 'chatUpdate' || data.event === 'chatUpdate') {
           console.log('[WebSocket] Chat update received');
           this.chatService.loadMessages();
         }
-        if (data.type === 'userAppUrl') {
+        if (data.type === 'userAppUrl' || data.event === 'userAppUrl') {
           console.log('[WebSocket] User app URL received:', data.data);
           this.handleUserAppUrl(data.data);
         }
-        if (data.type === 'activeIDEChanged') {
+        if (data.type === 'activeIDEChanged' || data.event === 'activeIDEChanged') {
           console.log('[WebSocket] Active IDE changed:', data.data);
+          console.log('[WebSocket] Emitting activeIDEChanged event to eventBus');
           // Emit the event to trigger preview refresh
           this.eventBus.emit('activeIDEChanged', data.data);
         }
@@ -595,7 +602,7 @@ class AppController {
   }
 
   async refreshPreview() {
-    console.log('Refreshing preview...');
+    console.log('🔄 [AppController] refreshPreview() called');
     try {
       // Ask backend for current user app URL
       const result = await this.apiRepository.getUserAppUrl();

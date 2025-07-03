@@ -397,6 +397,7 @@ class Application {
     this.logger.info('[Application] Setting up event handlers...');
 
     if (this.eventBus) {
+      this.logger.info('[Application] EventBus available, setting up subscriptions...');
       this.eventBus.subscribe('ide-started', (data) => {
         this.logger.info('[Application] IDE started:', data);
         if (this.webSocketManager) {
@@ -435,16 +436,21 @@ class Application {
       this.eventBus.subscribe('userAppDetected', (data) => {
         this.logger.info('[Application] User app detected event:', data);
         if (this.webSocketManager) {
-          this.webSocketManager.broadcastToUser('userAppUrl', data);
+          this.webSocketManager.broadcastToAll('userAppUrl', data);
         }
       });
 
       this.eventBus.subscribe('activeIDEChanged', (data) => {
         this.logger.info('[Application] Active IDE changed event:', data);
         if (this.webSocketManager) {
-          this.webSocketManager.broadcastToUser('activeIDEChanged', data);
+          this.logger.info('[Application] Broadcasting activeIDEChanged to all clients');
+          this.webSocketManager.broadcastToAll('activeIDEChanged', data);
+        } else {
+          this.logger.warn('[Application] No WebSocket manager available for broadcasting activeIDEChanged');
         }
       });
+    } else {
+      this.logger.warn('[Application] No EventBus available for setting up event handlers');
     }
 
     this.logger.info('[Application] Event handlers setup complete');
@@ -491,12 +497,19 @@ class Application {
         this.logger.info(`[Application] Database: ${this.databaseConnection.getType()}`);
         this.logger.info(`[Application] Auto-security: ${this.autoSecurityManager.isProduction() ? 'Production' : 'Development'}`);
         
-        // Start workspace detection after server is running
+        // Start workspace detection after server is running (only if no existing data)
         try {
-          this.logger.info('[Application] Starting workspace detection...');
-          await this.ideWorkspaceDetectionService.detectAllWorkspaces();
+          this.logger.info('[Application] Checking if workspace detection is needed...');
           const stats = this.ideWorkspaceDetectionService.getDetectionStats();
-          this.logger.info(`[Application] Workspace detection completed: ${stats.successful}/${stats.total} successful`);
+          
+          if (stats.total === 0) {
+            this.logger.info('[Application] No existing detection data found, starting workspace detection...');
+            await this.ideWorkspaceDetectionService.detectAllWorkspaces();
+            const newStats = this.ideWorkspaceDetectionService.getDetectionStats();
+            this.logger.info(`[Application] Workspace detection completed: ${newStats.successful}/${newStats.total} successful`);
+          } else {
+            this.logger.info(`[Application] Found existing detection data (${stats.total} results), skipping workspace detection`);
+          }
         } catch (error) {
           this.logger.error('[Application] Workspace detection failed:', error);
         }

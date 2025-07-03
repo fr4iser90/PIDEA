@@ -12,6 +12,7 @@ class IDEWorkspaceDetectionService {
 
   /**
    * Alle verfügbaren IDEs scannen und Workspace-Info sammeln
+   * Nur für IDEs ohne bereits vorhandene Detection-Ergebnisse
    */
   async detectAllWorkspaces() {
     try {
@@ -25,10 +26,18 @@ class IDEWorkspaceDetectionService {
         return this.detectionResults;
       }
       
-      console.log(`[IDEWorkspaceDetectionService] Found ${availableIDEs.length} IDEs for detection`);
+      // Filtere IDEs die bereits Detection-Ergebnisse haben
+      const idesWithoutResults = availableIDEs.filter(ide => !this.detectionResults.has(ide.port));
       
-      // Für jede IDE Workspace-Info sammeln
-      for (const ide of availableIDEs) {
+      if (idesWithoutResults.length === 0) {
+        console.log('[IDEWorkspaceDetectionService] All IDEs already have detection results, skipping detection');
+        return this.detectionResults;
+      }
+      
+      console.log(`[IDEWorkspaceDetectionService] Found ${idesWithoutResults.length} IDEs for detection (${availableIDEs.length - idesWithoutResults.length} already have results)`);
+      
+      // Nur für IDEs ohne Ergebnisse Workspace-Info sammeln
+      for (const ide of idesWithoutResults) {
         await this.detectWorkspaceForIDE(ide.port);
       }
       
@@ -43,9 +52,17 @@ class IDEWorkspaceDetectionService {
 
   /**
    * Workspace für eine spezifische IDE erkennen
+   * Nur wenn noch keine Ergebnisse für diesen Port vorhanden sind
    */
   async detectWorkspaceForIDE(port) {
     try {
+      // Prüfe ob bereits Ergebnisse vorhanden sind
+      if (this.detectionResults.has(port)) {
+        const existingResult = this.detectionResults.get(port);
+        console.log(`[IDEWorkspaceDetectionService] Port ${port}: Using existing detection result:`, existingResult.workspace || existingResult.error);
+        return existingResult;
+      }
+      
       console.log(`[IDEWorkspaceDetectionService] Detecting workspace for IDE on port ${port}...`);
       
       const workspaceInfo = await this.ideManager.getWorkspaceInfo(port);

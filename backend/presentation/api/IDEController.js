@@ -54,10 +54,13 @@ class IDEController {
       
       // Publish event
       if (this.eventBus) {
+        console.log('[IDEController] Publishing activeIDEChanged event:', { port, previousPort: this.ideManager.getActivePort() });
         await this.eventBus.publish('activeIDEChanged', {
           port: port,
           previousPort: this.ideManager.getActivePort()
         });
+      } else {
+        console.log('[IDEController] No eventBus available for publishing activeIDEChanged');
       }
       
       res.json({
