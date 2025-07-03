@@ -3,8 +3,9 @@ const ChatMessage = require('../../domain/entities/ChatMessage');
 const ChatSession = require('../../domain/entities/ChatSession');
 
 class GetChatHistoryHandler {
-  constructor(chatRepository) {
+  constructor(chatRepository, cursorIDEService = null) {
     this.chatRepository = chatRepository;
+    this.cursorIDEService = cursorIDEService;
   }
 
   async handle(query) {
@@ -167,6 +168,86 @@ class GetChatHistoryHandler {
     // Note: This would need to be implemented in the repository
     // For now, we'll just return success
     return true;
+  }
+
+  async getPortChatHistory(port, userId, options = {}) {
+    const { limit = 50, offset = 0 } = options;
+
+    console.log(`[GetChatHistoryHandler] Getting chat history for port ${port}, user ${userId}`);
+
+    // Get all sessions and filter by port and user
+    const allSessions = await this.chatRepository.getAllSessions();
+    const portSessions = allSessions.filter(session => 
+      session.idePort === parseInt(port) && session.userId === userId
+    );
+
+    // Try to extract live chat from IDE first
+    let liveMessages = [];
+    try {
+      if (this.cursorIDEService) {
+        console.log(`[GetChatHistoryHandler] Attempting to extract live chat from IDE port ${port}`);
+        liveMessages = await this.cursorIDEService.extractChatHistory();
+        console.log(`[GetChatHistoryHandler] Extracted ${liveMessages.length} live messages from IDE`);
+      }
+    } catch (error) {
+      console.log(`[GetChatHistoryHandler] Failed to extract live chat: ${error.message}`);
+    }
+
+    // If we have live messages, return them
+    if (liveMessages && liveMessages.length > 0) {
+      console.log(`[GetChatHistoryHandler] Returning ${liveMessages.length} live messages from IDE`);
+      return {
+        messages: liveMessages.map(m => ({
+          id: m.id || Date.now() + Math.random(),
+          content: m.content,
+          sender: m.sender,
+          type: m.type || 'text',
+          timestamp: m.timestamp || new Date().toISOString(),
+          metadata: m.metadata || {}
+        })),
+        sessionId: 'live-ide',
+        port: port,
+        totalCount: liveMessages.length,
+        hasMore: false
+      };
+    }
+
+    // Fallback to stored sessions
+    if (portSessions.length === 0) {
+      console.log(`[GetChatHistoryHandler] No sessions found for port ${port}`);
+      return {
+        messages: [],
+        sessionId: null,
+        port: port,
+        totalCount: 0,
+        hasMore: false
+      };
+    }
+
+    // Get the most recent session for this port
+    const latestSession = portSessions.sort((a, b) => 
+      new Date(b.updatedAt) - new Date(a.updatedAt)
+    )[0];
+
+    console.log(`[GetChatHistoryHandler] Found session ${latestSession.id} for port ${port}`);
+
+    let messages = latestSession.messages || [];
+    
+    // Apply pagination
+    if (offset) {
+      messages = messages.slice(offset);
+    }
+    if (limit) {
+      messages = messages.slice(0, limit);
+    }
+
+    return {
+      messages: messages.map(m => this.sanitizeMessage(m, false)),
+      sessionId: latestSession.id,
+      port: port,
+      totalCount: latestSession.messages ? latestSession.messages.length : 0,
+      hasMore: (latestSession.messages ? latestSession.messages.length : 0) > (offset + limit)
+    };
   }
 
   sanitizeMessage(message, includeUserData) {
