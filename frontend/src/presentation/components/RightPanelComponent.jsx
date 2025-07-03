@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { apiCall, API_CONFIG } from '@infrastructure/repositories/APIChatRepository.jsx';
 import ChatMessage from '@domain/entities/ChatMessage.jsx';
-import '../../css/rightpanel.css';
+import FrameworkPanelComponent from './chat/FrameworkPanelComponent.jsx';
+import '@css/framework-panel.css';
 
 function RightPanelComponent({ eventBus, messages = [] }) {
   const [activeTab, setActiveTab] = useState('chat');
@@ -138,6 +139,11 @@ function RightPanelComponent({ eventBus, messages = [] }) {
       </div>
     </div>
   );
+  const renderFrameworksTab = () => (
+    <div className="frameworks-tab">
+      <FrameworkPanelComponent />
+    </div>
+  );
   if (!isVisible) return null;
   return (
     <div ref={containerRef} className="chat-right-panel">
@@ -147,6 +153,7 @@ function RightPanelComponent({ eventBus, messages = [] }) {
             <button onClick={() => handleTabChange('chat')} className={`tab-btn ${activeTab === 'chat' ? 'active' : ''}`}>Chat</button>
             <button onClick={() => handleTabChange('files')} className={`tab-btn ${activeTab === 'files' ? 'active' : ''}`}>Files</button>
             <button onClick={() => handleTabChange('settings')} className={`tab-btn ${activeTab === 'settings' ? 'active' : ''}`}>Settings</button>
+            <button onClick={() => handleTabChange('frameworks')} className={`tab-btn ${activeTab === 'frameworks' ? 'active' : ''}`}>Frameworks</button>
           </div>
           <button onClick={handleToggle} className="btn-icon" title="Toggle Right Panel">✕</button>
         </div>
@@ -154,6 +161,7 @@ function RightPanelComponent({ eventBus, messages = [] }) {
           {activeTab === 'chat' && renderChatTab()}
           {activeTab === 'files' && renderFilesTab()}
           {activeTab === 'settings' && renderSettingsTab()}
+          {activeTab === 'frameworks' && renderFrameworksTab()}
         </div>
         <div className="right-panel-input-area">
           <textarea id="rightPanelMsgInput" value={inputValue} onChange={(e) => setInputValue(e.target.value)} onKeyPress={handleInputKeyPress} placeholder="Quick message..." />
