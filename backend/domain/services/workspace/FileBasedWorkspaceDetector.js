@@ -14,12 +14,27 @@ class FileBasedWorkspaceDetector {
 
   /**
    * HAUPTMETHODE: Workspace-Info über File-Output
+   * Nur ausführen wenn keine Daten vorhanden sind
    */
   async getWorkspaceInfo(port) {
     const cacheKey = `workspace-${port}`;
+    
+    // 1. Prüfe Cache zuerst
     if (this._detectionCache.has(cacheKey)) {
+      console.log(`[FileBasedWorkspaceDetector] Using cached workspace info for port ${port}`);
       return this._detectionCache.get(cacheKey);
     }
+
+    // 2. Prüfe ob bereits Files vorhanden sind
+    const existingData = await this._checkExistingFiles(port);
+    if (existingData && existingData.workspace) {
+      console.log(`[FileBasedWorkspaceDetector] Found existing workspace data for port ${port}:`, existingData.workspace);
+      this._detectionCache.set(cacheKey, existingData);
+      return existingData;
+    }
+
+    // 3. Nur wenn keine Daten vorhanden sind, neue Detection starten
+    console.log(`[FileBasedWorkspaceDetector] No existing data found for port ${port}, starting new detection...`);
 
     try {
       const page = await this.browserManager.getPage();
@@ -27,8 +42,6 @@ class FileBasedWorkspaceDetector {
         console.error('[FileBasedWorkspaceDetector] No page available');
         return null;
       }
-
-      console.log(`[FileBasedWorkspaceDetector] Getting workspace info for port ${port} via file-based terminal output...`);
 
       // 1. Terminal öffnen und File-Struktur erstellen
       await this._setupTerminalAndFiles(page, port);
@@ -140,6 +153,39 @@ class FileBasedWorkspaceDetector {
 
     } catch (error) {
       console.error('[FileBasedWorkspaceDetector] Error executing terminal commands:', error);
+    }
+  }
+
+  /**
+   * Prüfe ob bereits Files vorhanden sind ohne Terminal zu öffnen
+   */
+  async _checkExistingFiles(port) {
+    try {
+      const basePath = `/tmp/IDEWEB/${port}`;
+      
+      // Prüfe ob Verzeichnis existiert
+      if (!fs.existsSync(basePath)) {
+        return null;
+      }
+
+      // Prüfe ob workspace.txt existiert und nicht leer ist
+      const workspaceFile = `${basePath}/workspace.txt`;
+      if (!fs.existsSync(workspaceFile)) {
+        return null;
+      }
+
+      const workspaceContent = fs.readFileSync(workspaceFile, 'utf8').trim();
+      if (!workspaceContent) {
+        return null;
+      }
+
+      // Wenn workspace.txt existiert und Inhalt hat, alle Files auslesen
+      console.log(`[FileBasedWorkspaceDetector] Found existing files for port ${port}, reading them...`);
+      return await this._readWorkspaceFiles(port);
+
+    } catch (error) {
+      console.error('[FileBasedWorkspaceDetector] Error checking existing files:', error);
+      return null;
     }
   }
 
