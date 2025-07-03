@@ -5,6 +5,9 @@ import ChatSidebarComponent from '@presentation/components/ChatSidebarComponent.
 import RightPanelComponent from '@presentation/components/RightPanelComponent.jsx';
 import IDEMirrorComponent from '@presentation/components/IDEMirrorComponent.jsx';
 import PreviewComponent from '@presentation/components/PreviewComponent.jsx';
+import AuthWrapper from '@presentation/components/auth/AuthWrapper.jsx';
+import UserMenu from '@presentation/components/auth/UserMenu.jsx';
+import useAuthStore from '@infrastructure/stores/AuthStore.jsx';
 
 function App() {
   const [eventBus] = useState(() => new EventBus());
@@ -14,6 +17,7 @@ function App() {
   const [activePort, setActivePort] = useState(null);
   const [isSplitView, setIsSplitView] = useState(false);
   const containerRef = useRef(null);
+  const { isAuthenticated } = useAuthStore();
 
   useEffect(() => {
     console.log('🔄 App initializing...');
@@ -63,9 +67,10 @@ function App() {
   };
 
   const fetchActivePort = async () => {
+    if (!isAuthenticated) return;
     try {
-      const res = await fetch('/api/ide/available');
-      const result = await res.json();
+      const { apiCall } = await import('@infrastructure/repositories/APIChatRepository.jsx');
+      const result = await apiCall('/api/ide/available');
       if (result.success && result.data) {
         const activeIDE = result.data.find(ide => ide.active);
         if (activeIDE) setActivePort(activeIDE.port);
@@ -141,79 +146,82 @@ function App() {
   }
 
   return (
-    <div ref={containerRef} className="app-root">
-      {/* Header */}
-      <header className="app-header">
-        <div className="header-content">
-          <h1 className="app-title">CursorWeb</h1>
+    <AuthWrapper>
+      <div ref={containerRef} className="app-root">
+        {/* Header */}
+        <header className="app-header">
+          <div className="header-content">
+            <h1 className="app-title">CursorWeb</h1>
+            
+            {/* Navigation */}
+            <nav className="header-navigation">
+              <button
+                onClick={() => handleNavigationClick('chat')}
+                className={`mode-btn ${currentView === 'chat' ? 'active' : ''}`}
+              >
+                💬 Chat
+              </button>
+              <button
+                onClick={() => handleNavigationClick('ide-mirror')}
+                className={`mode-btn ${currentView === 'ide-mirror' ? 'active' : ''}`}
+              >
+                🖥️ IDE Mirror
+              </button>
+              <button
+                onClick={() => handleNavigationClick('preview')}
+                className={`mode-btn ${currentView === 'preview' ? 'active' : ''}`}
+              >
+                👁️ Preview
+              </button>
+              <button
+                onClick={() => handleNavigationClick('code')}
+                className={`mode-btn ${currentView === 'code' ? 'active' : ''}`}
+              >
+                📝 Code
+              </button>
+            </nav>
+          </div>
           
-          {/* Navigation */}
-          <nav className="header-navigation">
+          <div className="header-actions">
             <button
-              onClick={() => handleNavigationClick('chat')}
-              className={`mode-btn ${currentView === 'chat' ? 'active' : ''}`}
+              onClick={() => eventBus?.emit('sidebar-toggle')}
+              className="btn-icon"
+              title="Toggle Sidebar"
             >
-              💬 Chat
+              📁
             </button>
             <button
-              onClick={() => handleNavigationClick('ide-mirror')}
-              className={`mode-btn ${currentView === 'ide-mirror' ? 'active' : ''}`}
+              onClick={() => {
+                console.log('Header right panel button clicked');
+                eventBus?.emit('right-panel-toggle');
+              }}
+              className="btn-icon"
+              title="Toggle Right Panel"
             >
-              🖥️ IDE Mirror
+              📋
             </button>
-            <button
-              onClick={() => handleNavigationClick('preview')}
-              className={`mode-btn ${currentView === 'preview' ? 'active' : ''}`}
-            >
-              👁️ Preview
-            </button>
-            <button
-              onClick={() => handleNavigationClick('code')}
-              className={`mode-btn ${currentView === 'code' ? 'active' : ''}`}
-            >
-              📝 Code
-            </button>
-          </nav>
-        </div>
-        
-        <div className="header-actions">
-          <button
-            onClick={() => eventBus?.emit('sidebar-toggle')}
-            className="btn-icon"
-            title="Toggle Sidebar"
-          >
-            📁
-          </button>
-          <button
-            onClick={() => {
-              console.log('Header right panel button clicked');
-              eventBus?.emit('right-panel-toggle');
-            }}
-            className="btn-icon"
-            title="Toggle Right Panel"
-          >
-            📋
-          </button>
-        </div>
-      </header>
+            <UserMenu />
+          </div>
+        </header>
 
-      {/* Main Content */}
-      <main className="main-layout">
-        {/* Sidebar */}
-        <div className="chat-sidebar">
-          <ChatSidebarComponent eventBus={eventBus} activePort={activePort} onActivePortChange={setActivePort} />
-        </div>
-        
-        {/* Main View */}
-        <div className={`main-content ${isSplitView ? 'split-view' : ''}`}>
-          {renderView()}
-          {isSplitView && <PreviewComponent eventBus={eventBus} />}
-        </div>
-        
-        {/* Right Panel */}
-        <RightPanelComponent eventBus={eventBus} />
-      </main>
-    </div>
+        {/* Main Content */}
+        <main className="main-layout">
+          {/* Sidebar */}
+          <div className="chat-sidebar">
+            <ChatSidebarComponent eventBus={eventBus} activePort={activePort} onActivePortChange={setActivePort} />
+          </div>
+          
+          {/* Main View */}
+          <div className={`main-content ${isSplitView ? 'split-view' : ''}`}>
+            {renderView()}
+            {isSplitView && <PreviewComponent eventBus={eventBus} />}
+          </div>
+          
+          {/* Right Panel */}
+          <RightPanelComponent eventBus={eventBus} />
+        </main>
+      </div>
+    </AuthWrapper>
   );
 }
 

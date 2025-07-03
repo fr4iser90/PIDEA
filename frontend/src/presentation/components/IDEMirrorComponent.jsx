@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { apiCall, API_CONFIG } from '@infrastructure/repositories/APIChatRepository.jsx';
+import webSocketService from '@infrastructure/services/WebSocketService.jsx';
 
 function IDEMirrorComponent({ eventBus }) {
     const [ws, setWs] = useState(null);
@@ -35,9 +36,6 @@ function IDEMirrorComponent({ eventBus }) {
 
         return () => {
             clearTimeout(timer);
-            if (ws) {
-                ws.close();
-            }
             stopKeyboardListening();
         };
     }, []);
@@ -56,57 +54,35 @@ function IDEMirrorComponent({ eventBus }) {
     }, []);
 
     const setupWebSocket = () => {
-        const protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
-        const wsUrl = `${protocol}//${location.host}`;
-        
-        console.log('🔌 IDEMirrorComponent: Connecting to WebSocket:', wsUrl);
-        console.log('🔍 IDEMirrorComponent: Container element:', containerRef.current);
+        console.log('🔌 IDEMirrorComponent: Setting up WebSocket service...');
         showStatus('Connecting to WebSocket...');
 
-        try {
-            const newWs = new WebSocket(wsUrl);
-
-            newWs.onopen = () => {
-                console.log('✅ WebSocket connected');
+        // Connect to WebSocket service
+        webSocketService.connect()
+            .then(() => {
+                console.log('✅ WebSocket service connected');
                 setIsConnected(true);
                 showStatus('Connected - Loading IDE...');
-                connectToIDE();
-            };
-
-            newWs.onmessage = (event) => {
-                try {
-                    const message = JSON.parse(event.data);
-                    handleWebSocketMessage(message);
-                } catch (error) {
-                    console.error('❌ Failed to parse WebSocket message:', error);
-                }
-            };
-
-            newWs.onclose = (event) => {
-                console.log('🔌 WebSocket disconnected:', event.code, event.reason);
-                setIsConnected(false);
-                showStatus('Disconnected - Reconnecting...');
                 
-                // Auto-reconnect only if not a normal closure
-                if (event.code !== 1000) {
-                    setTimeout(() => setupWebSocket(), 3000);
-                }
-            };
-
-            newWs.onerror = (error) => {
-                console.error('❌ WebSocket error:', error);
-                showStatus('Connection Error - Trying API fallback...');
-                // Try API fallback immediately
+                // Listen for IDE state changes
+                webSocketService.onIDEStateChange((data) => {
+                    console.log('📨 IDE state change received:', data);
+                    renderIDEState(data);
+                });
+                
+                // Listen for connection status
+                webSocketService.on('connection-established', (data) => {
+                    console.log('✅ WebSocket connection established:', data);
+                });
+                
                 connectToIDE();
-            };
-
-            setWs(newWs);
-        } catch (error) {
-            console.error('❌ Failed to create WebSocket:', error);
-            showStatus('WebSocket failed - Using API fallback...');
-            // Fallback to API-only mode
-            connectToIDE();
-        }
+            })
+            .catch((error) => {
+                console.error('❌ WebSocket service connection failed:', error);
+                showStatus('WebSocket failed - Using API fallback...');
+                // Fallback to API-only mode
+                connectToIDE();
+            });
     };
 
     const handleWebSocketMessage = (message) => {
@@ -166,14 +142,14 @@ function IDEMirrorComponent({ eventBus }) {
     };
 
     const connectToIDE = async () => {
-        console.log('🔌 Connecting to IDE via API...');
+        console.log('🔌 Connecting to IDE...');
         showStatus('Connecting to Cursor IDE...');
         
         try {
             // Try WebSocket first if available
-            if (isConnected && ws && ws.readyState === WebSocket.OPEN) {
+            if (isConnected && webSocketService.getConnectionStatus().isConnected) {
                 console.log('📡 Sending connect request via WebSocket...');
-                ws.send(JSON.stringify({ type: 'connect-ide' }));
+                webSocketService.sendIDEConnect();
             } else {
                 console.log('📡 WebSocket not available, using API only...');
             }

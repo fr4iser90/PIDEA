@@ -1,6 +1,7 @@
 import ChatRepository from '@domain/repositories/ChatRepository.jsx';
 import ChatMessage from '@domain/entities/ChatMessage.jsx';
 import ChatSession from '@domain/entities/ChatSession.jsx';
+import useAuthStore from '@infrastructure/stores/AuthStore.jsx';
 
 // Central API Configuration
 const API_CONFIG = {
@@ -37,22 +38,49 @@ const API_CONFIG = {
 // Helper function to make API calls
 const apiCall = async (endpoint, options = {}) => {
   const url = typeof endpoint === 'function' ? endpoint() : `${API_CONFIG.baseURL}${endpoint}`;
+  
+  console.log('🔍 [APIChatRepository] Making API call to:', url);
+  
+  // Get authentication headers
+  const { getAuthHeaders } = useAuthStore.getState();
+  const authHeaders = getAuthHeaders();
+  
   const config = {
     headers: {
       'Content-Type': 'application/json',
+      ...authHeaders,
       ...options.headers
     },
     ...options
   };
 
+  console.log('🔍 [APIChatRepository] Request config:', {
+    method: config.method || 'GET',
+    headers: config.headers,
+    hasBody: !!config.body
+  });
+
   try {
     const response = await fetch(url, config);
+    
+    console.log('🔍 [APIChatRepository] Response status:', response.status);
+    
     if (!response.ok) {
+      if (response.status === 401) {
+        console.log('❌ [APIChatRepository] 401 Unauthorized - logging out user');
+        // Token expired or invalid, logout user
+        const { logout } = useAuthStore.getState();
+        logout();
+        throw new Error('Authentication required. Please log in again.');
+      }
       throw new Error(`HTTP ${response.status}: ${response.statusText}`);
     }
-    return await response.json();
+    
+    const data = await response.json();
+    console.log('✅ [APIChatRepository] API call successful');
+    return data;
   } catch (error) {
-    console.error(`❌ API call failed for ${endpoint}:`, error);
+    console.error(`❌ [APIChatRepository] API call failed for ${url}:`, error);
     throw error;
   }
 };
@@ -73,14 +101,10 @@ export default class APIChatRepository extends ChatRepository {
   }
 
   async sendMessage(message, sessionId) {
-    const url = '/api/chat';
-    const res = await fetch(url, {
+    const data = await apiCall(API_CONFIG.endpoints.chat.send, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ message, sessionId })
     });
-    if (!res.ok) throw new Error('Failed to send message');
-    const data = await res.json();
     if (!data.success || !data.data) throw new Error('Invalid response');
     const msg = data.data.message;
     return ChatMessage.fromJSON(msg);
@@ -115,10 +139,7 @@ export default class APIChatRepository extends ChatRepository {
   }
 
   async fetchChatHistory(sessionId) {
-    const url = `/api/chat/history?sessionId=${encodeURIComponent(sessionId)}`;
-    const res = await fetch(url);
-    if (!res.ok) throw new Error('Failed to fetch chat history');
-    const data = await res.json();
+    const data = await apiCall(`/api/chat/history?sessionId=${encodeURIComponent(sessionId)}`);
     if (!data.success || !data.data) throw new Error('Invalid response');
     const sessionData = data.data;
     return ChatSession.fromJSON({

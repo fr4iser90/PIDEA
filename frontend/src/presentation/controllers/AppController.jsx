@@ -507,8 +507,8 @@ class AppController {
 
   async loadInitialIDEList() {
     try {
-      const response = await fetch('/api/ide/available');
-      const result = await response.json();
+      const { apiCall } = await import('@infrastructure/repositories/APIChatRepository.jsx');
+      const result = await apiCall('/api/ide/available');
       if (result.success) {
         this.eventBus.emit('ideListUpdated', { ides: result.data });
       }

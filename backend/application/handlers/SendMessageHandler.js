@@ -10,6 +10,104 @@ class SendMessageHandler {
   }
 
   async handle(command) {
+    // Handle new user-specific command format
+    if (command.userId) {
+      return await this.handleUserSpecificCommand(command);
+    }
+
+    // Legacy command handling for backward compatibility
+    return await this.handleLegacyCommand(command);
+  }
+
+  async handleUserSpecificCommand(command) {
+    const { content, userId, sessionId, timestamp, metadata = {} } = command;
+
+    try {
+      // Validate input
+      if (!content || content.trim().length === 0) {
+        throw new Error('Message content is required');
+      }
+
+      if (!userId) {
+        throw new Error('User ID is required');
+      }
+
+      // Create message entity
+      const type = content.includes('```') ? 'code' : 'text';
+      const message = ChatMessage.createUserMessage(content, type, {
+        ...metadata,
+        userId: userId,
+        timestamp: timestamp
+      });
+
+      // Get or create session
+      let session;
+      if (sessionId) {
+        session = await this.chatRepository.findSessionById(sessionId);
+        if (!session) {
+          throw new Error('Session not found');
+        }
+        
+        // Check if user can access this session
+        if (!session.belongsToUser(userId)) {
+          throw new Error('Access denied to this session');
+        }
+      } else {
+        // Create new session for user
+        const activePort = this.cursorIDEService.getActivePort();
+        session = ChatSession.createSession(
+          userId,
+          'New Chat',
+          {
+            ...metadata,
+            createdBy: userId,
+            idePort: activePort
+          }
+        );
+      }
+
+      // Add message to session
+      session.addMessage(message);
+
+      // Save to repository
+      await this.chatRepository.saveSession(session);
+
+      // Switch to session's IDE if needed
+      if (session.idePort) {
+        await this.cursorIDEService.switchToSession(session);
+      }
+
+      // Send to Cursor IDE
+      await this.cursorIDEService.sendMessage(content);
+
+      // Publish events
+      if (this.eventBus) {
+        await this.eventBus.publish('MessageSent', {
+          sessionId: session.id,
+          messageId: message.id,
+          userId: userId,
+          content: message.content,
+          sender: message.sender,
+          type: message.type,
+          timestamp: message.timestamp
+        });
+      }
+
+      return {
+        success: true,
+        sessionId: session.id,
+        messageId: message.id,
+        response: 'Message sent successfully',
+        timestamp: new Date()
+      };
+
+    } catch (error) {
+      console.error('[SendMessageHandler] Error:', error);
+      throw error;
+    }
+  }
+
+  async handleLegacyCommand(command) {
     // Validate command
     command.validate();
 

@@ -6,7 +6,7 @@ import path from 'path'
 export default defineConfig({
   plugins: [react()],
   server: {
-    port: 4000,
+    port: 4005,
     proxy: {
       '/api': {
         target: 'http://localhost:3000',
@@ -33,7 +33,7 @@ export default defineConfig({
     }
   },
   preview: {
-    port: 4000
+    port: 4005
   },
   resolve: {
     alias: {

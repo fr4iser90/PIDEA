@@ -3,48 +3,63 @@
     "version": "2.0.0",
     "main": "server.js",
     "scripts": {
-      "start": "node server.js",
-      "dev": "nodemon server.js --watch  --ext js,json",
-      "dev:frontend": "node dev-server.js",
-      "dev:full": "concurrently \"npm run dev\" \"npm run dev:frontend\"",
-      "test": "jest",
-      "test:watch": "jest --watch",
-      "test:coverage": "jest --coverage",
-      "lint": "eslint ",
-      "lint:fix": "eslint  --fix",
-      "build": "echo 'No build step required for Node.js application'",
-      "clean": "rm -rf node_modules package-lock.json",
-      "analyze-dom": "node scripts/dom-analyzer.js && node scripts/coverage-validator.js && node scripts/selector-generator.js",
-      "auto-collect-dom": "node scripts/auto-dom-collector.js",
-      "full-analysis": "npm run auto-collect-dom && npm run analyze-dom",
-      "quick-check": "node scripts/coverage-validator.js quick"
+        "start": "node server.js",
+        "dev": "nodemon server.js --watch  --ext js,json",
+        "dev:frontend": "node dev-server.js",
+        "dev:full": "concurrently \"npm run dev\" \"npm run dev:frontend\"",
+        "test": "jest",
+        "test:watch": "jest --watch",
+        "test:coverage": "jest --coverage",
+        "lint": "eslint ",
+        "lint:fix": "eslint  --fix",
+        "build": "echo 'No build step required for Node.js application'",
+        "clean": "rm -rf node_modules package-lock.json",
+        "analyze-dom": "node scripts/dom-analyzer.js && node scripts/coverage-validator.js && node scripts/selector-generator.js",
+        "auto-collect-dom": "node scripts/auto-dom-collector.js",
+        "full-analysis": "npm run auto-collect-dom && npm run analyze-dom",
+        "quick-check": "node scripts/coverage-validator.js quick",
+        "migrate": "node scripts/migrate.js",
+        "seed": "node scripts/seed.js",
+        "db:setup": "npm run migrate && npm run seed"
     },
     "keywords": [
-      "cursor",
-      "ide",
-      "chat",
-      "playwright",
-      "ddd",
-      "architecture"
+        "cursor",
+        "ide",
+        "chat",
+        "playwright",
+        "ddd",
+        "architecture"
     ],
     "author": "",
     "license": "ISC",
     "description": "Cursor IDE Chat Agent with DDD Architecture",
     "dependencies": {
-      "express": "^5.1.0",
-      "playwright": "^1.44.0",
-      "ws": "^8.14.2",
-      "uuid": "^9.0.1",
-      "jsdom": "^23.0.1"
+        "bcryptjs": "^2.4.3",
+        "cors": "^2.8.5",
+        "crypto": "^1.0.1",
+        "dotenv": "^16.3.1",
+        "express": "^5.1.0",
+        "express-rate-limit": "^7.1.5",
+        "helmet": "^7.1.0",
+        "joi": "^17.11.0",
+        "jsdom": "^23.0.1",
+        "jsonwebtoken": "^9.0.2",
+        "pg": "^8.11.3",
+        "playwright": "^1.44.0",
+        "sqlite3": "^5.1.7",
+        "uuid": "^9.0.1",
+        "winston": "^3.11.0",
+        "ws": "^8.14.2"
     },
     "devDependencies": {
-      "nodemon": "^3.0.2",
-      "chokidar": "^3.5.3",
-      "concurrently": "^8.2.2",
-      "jest": "^29.7.0",
-      "eslint": "^8.55.0"
+        "chokidar": "^3.5.3",
+        "concurrently": "^8.2.2",
+        "eslint": "^8.55.0",
+        "jest": "^29.7.0",
+        "nodemon": "^3.0.2",
+        "supertest": "^6.3.3"
     },
     "engines": {
-      "node": ">=16.0.0"
+        "node": ">=16.0.0"
     }
-  }
+}

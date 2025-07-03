@@ -3,6 +3,7 @@ import { apiCall, API_CONFIG } from '@infrastructure/repositories/APIChatReposit
 import ChatMessage from '@domain/entities/ChatMessage.jsx';
 import FrameworkPanelComponent from './chat/FrameworkPanelComponent.jsx';
 import '@css/framework-panel.css';
+import useAuthStore from '@infrastructure/stores/AuthStore.jsx';
 
 function RightPanelComponent({ eventBus, messages = [] }) {
   const [activeTab, setActiveTab] = useState('chat');
@@ -12,6 +13,7 @@ function RightPanelComponent({ eventBus, messages = [] }) {
   const [settings, setSettings] = useState({});
   const [inputValue, setInputValue] = useState('');
   const containerRef = useRef(null);
+  const { isAuthenticated } = useAuthStore();
 
   useEffect(() => {
     console.log('RightPanelComponent useEffect running, eventBus:', !!eventBus);
@@ -44,6 +46,7 @@ function RightPanelComponent({ eventBus, messages = [] }) {
   };
 
   const loadPanelData = async () => {
+    if (!isAuthenticated) return;
     try {
       // Load quick prompts
       const promptsData = await apiCall(API_CONFIG.endpoints.prompts.quick);

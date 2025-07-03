@@ -12,6 +12,7 @@
  * const chatSidebar = new ChatSidebarComponent('chatSidebarContent', eventBus);
  */
 import React, { useState, useEffect } from 'react';
+import useAuthStore from '@infrastructure/stores/AuthStore.jsx';
 
 function ChatSidebarComponent({ eventBus, activePort, onActivePortChange }) {
   console.log('🔍 ChatSidebarComponent RENDERING!');
@@ -19,6 +20,7 @@ function ChatSidebarComponent({ eventBus, activePort, onActivePortChange }) {
   const [chatSessions, setChatSessions] = useState([]);
   const [currentSessionId, setCurrentSessionId] = useState(null);
   const [availableIDEs, setAvailableIDEs] = useState([]);
+  const { isAuthenticated } = useAuthStore();
 
   // EventBus-Listener
   useEffect(() => {
@@ -106,9 +108,10 @@ function ChatSidebarComponent({ eventBus, activePort, onActivePortChange }) {
   };
 
   const refreshIDEList = async () => {
+    if (!isAuthenticated) return;
     try {
-      const response = await fetch('/api/ide/available');
-      const result = await response.json();
+      const { apiCall } = await import('@infrastructure/repositories/APIChatRepository.jsx');
+      const result = await apiCall('/api/ide/available');
       if (result.success) {
         setAvailableIDEs(result.data);
       }

@@ -172,6 +172,37 @@ class CursorIDEService {
   async addWorkspacePathDetectionViaPlaywright() {
     return await this.workspacePathDetector.addWorkspacePathDetectionViaPlaywright();
   }
+
+  // User-specific connection status
+  async getConnectionStatus(userId) {
+    try {
+      const isConnected = await this.isConnected();
+      const activePort = this.getActivePort();
+      const availableIDEs = await this.getAvailableIDEs();
+
+      return {
+        connected: isConnected,
+        activePort: activePort,
+        availablePorts: availableIDEs.map(ide => ({
+          port: ide.port,
+          active: ide.active,
+          workspacePath: ide.workspacePath
+        })),
+        lastActivity: new Date().toISOString(),
+        userId: userId
+      };
+    } catch (error) {
+      console.error('[CursorIDEService] Error getting connection status:', error);
+      return {
+        connected: false,
+        activePort: null,
+        availablePorts: [],
+        lastActivity: new Date().toISOString(),
+        userId: userId,
+        error: error.message
+      };
+    }
+  }
 }
 
 module.exports = CursorIDEService; 
