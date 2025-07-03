@@ -101,7 +101,75 @@ class WorkspacePathDetector {
         const page = await this.browserManager.getPage();
         if (!page) throw new Error('No Cursor IDE page available');
         
-        // Playwright führt JavaScript im Browser aus um Workspace-Pfad zu bekommen
+        // Method 1: Try to execute pwd command in terminal to get actual working directory
+        console.log(`[WorkspacePathDetector] Trying to get pwd from terminal for port ${port}...`);
+        
+        // Use Playwright's keyboard API to open terminal (Ctrl+Shift+`)
+        await page.keyboard.down('Control');
+        await page.keyboard.down('Shift');
+        await page.keyboard.press('`');
+        await page.keyboard.up('Shift');
+        await page.keyboard.up('Control');
+        
+        // Wait for terminal to open
+        await page.waitForTimeout(1000);
+        
+        // Look for terminal input
+        const terminalInput = await page.$('.xterm-helper-textarea') || 
+                             await page.$('.terminal-input') ||
+                             await page.$('.xterm textarea');
+        
+        if (terminalInput) {
+          console.log('[WorkspacePathDetector] Found terminal input, sending pwd command...');
+          
+          // Focus and send pwd command
+          await terminalInput.focus();
+          await terminalInput.type('pwd');
+          await terminalInput.press('Enter');
+          
+          // Wait for output
+          await page.waitForTimeout(2000);
+          
+          // Look for terminal output
+          const terminalOutput = await page.$('.xterm-viewport') || 
+                                await page.$('.terminal-output');
+          
+          if (terminalOutput) {
+            const text = await terminalOutput.textContent();
+            console.log('[WorkspacePathDetector] Terminal output:', text);
+            
+            // Find the path in the output
+            const lines = text.split('\n');
+            for (let i = lines.length - 1; i >= 0; i--) {
+              const line = lines[i].trim();
+              if (line && line.startsWith('/') && !line.includes('$') && !line.includes('>') && !line.includes('pwd')) {
+                console.log('[WorkspacePathDetector] Found path:', line);
+                
+                // Close terminal with Ctrl+W
+                await page.keyboard.down('Control');
+                await page.keyboard.press('w');
+                await page.keyboard.up('Control');
+                
+                this.ideManager.setWorkspacePath(port, line);
+                resolve(line);
+                return;
+              }
+            }
+          }
+          
+          // Close terminal if no result
+          await page.keyboard.down('Control');
+          await page.keyboard.press('w');
+          await page.keyboard.up('Control');
+        } else {
+          console.log('[WorkspacePathDetector] No terminal input found');
+        }
+        
+        // If we get here, terminal method failed
+        const actualPath = null;
+        
+        // Method 2: Fallback to VS Code API
+        console.log(`[WorkspacePathDetector] Terminal method failed, trying VS Code API for port ${port}...`);
         const filePath = await page.evaluate(() => {
           try {
             // 1. VS Code API - Workspace Folders
@@ -109,7 +177,7 @@ class WorkspacePathDetector {
               const folders = window.vscode.workspace.workspaceFolders;
               if (folders.length > 0) {
                 const uri = folders[0].uri;
-                // Konvertiere URI zu Dateisystem-Pfad
+                // Only use file:// URIs, skip virtual paths
                 if (uri.scheme === 'file') {
                   return uri.fsPath || uri.path;
                 }
@@ -127,42 +195,9 @@ class WorkspacePathDetector {
               if (models.length > 0) {
                 for (const model of models) {
                   const uri = model.uri;
-                  if (uri && uri.path && !uri.path.includes('/.cache/') && !uri.path.includes('/usr/share/')) {
+                  if (uri && uri.path && !uri.path.includes('/.cache/') && !uri.path.includes('/usr/share/') && uri.scheme === 'file') {
                     return uri.path;
                   }
-                }
-              }
-            }
-            
-            // 4. Node.js process.cwd() (falls verfügbar)
-            if (typeof process !== 'undefined' && process.cwd) {
-              const cwd = process.cwd();
-              // Prüfe ob es ein echter Workspace-Pfad ist
-              if (cwd && !cwd.includes('/.cache/') && !cwd.includes('/usr/share/')) {
-                return cwd;
-              }
-            }
-            
-            // 5. Suche nach Workspace-Dateien im DOM
-            const workspaceElements = document.querySelectorAll('[data-workspace], [data-path], [data-uri]');
-            for (const element of workspaceElements) {
-              const path = element.getAttribute('data-workspace') || 
-                          element.getAttribute('data-path') || 
-                          element.getAttribute('data-uri');
-              if (path && !path.includes('/.cache/') && !path.includes('/usr/share/')) {
-                return path;
-              }
-            }
-            
-            // 6. Fallback: Suche nach package.json oder anderen Projekt-Dateien
-            const projectIndicators = ['package.json', '.git', 'README.md', 'src/', 'app/'];
-            for (const indicator of projectIndicators) {
-              const elements = document.querySelectorAll(`[href*="${indicator}"], [src*="${indicator}"]`);
-              for (const element of elements) {
-                const href = element.href || element.src;
-                if (href && !href.includes('/.cache/') && !href.includes('/usr/share/')) {
-                  const url = new URL(href);
-                  return url.pathname;
                 }
               }
             }

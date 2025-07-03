@@ -17,6 +17,7 @@ const API_CONFIG = {
     ide: {
       list: '/api/ide/available',
       userAppUrl: '/api/ide/user-app-url',
+      userAppUrlForPort: (port) => `/api/ide/user-app-url/${port}`,
       monitorTerminal: '/api/ide/monitor-terminal',
       restartApp: '/api/ide/restart-app',
       detectWorkspacePaths: '/api/ide/detect-workspace-paths',
@@ -134,6 +135,10 @@ export default class APIChatRepository extends ChatRepository {
 
   async getUserAppUrl() {
     return apiCall(API_CONFIG.endpoints.ide.userAppUrl);
+  }
+
+  async getUserAppUrlForPort(port) {
+    return apiCall(API_CONFIG.endpoints.ide.userAppUrlForPort(port));
   }
 
   async monitorTerminal() {

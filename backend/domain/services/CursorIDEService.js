@@ -131,6 +131,52 @@ class CursorIDEService {
     }
   }
 
+  // New method to get user app URL for a specific IDE port
+  async getUserAppUrlForPort(port = null) {
+    try {
+      // If no port specified, use active IDE
+      if (!port) {
+        const activeIDE = await this.ideManager.getActiveIDE();
+        port = activeIDE?.port;
+      }
+      
+      if (!port) {
+        console.log('[CursorIDEService] No IDE port available');
+        return null;
+      }
+      
+      console.log('[CursorIDEService] Getting user app URL for port:', port);
+      
+      // Get workspace path for this specific port
+      const workspacePath = this.ideManager.getWorkspacePath(port);
+      console.log('[CursorIDEService] Workspace path for port', port, ':', workspacePath);
+      
+      if (!workspacePath) {
+        console.log('[CursorIDEService] No workspace path found for port', port);
+        return null;
+      }
+      
+      // Try package.json analysis first
+      const packageJsonUrl = await this.packageJsonAnalyzer.analyzePackageJsonInPath(workspacePath);
+      if (packageJsonUrl) {
+        console.log('[CursorIDEService] Dev server detected via package.json for port', port, ':', packageJsonUrl);
+        return packageJsonUrl;
+      }
+      
+      // Fallback to terminal monitoring (but this might not work for non-active IDEs)
+      if (port === this.getActivePort()) {
+        console.log('[CursorIDEService] Trying terminal monitoring for active port', port);
+        return await this.terminalMonitor.monitorTerminalOutput();
+      } else {
+        console.log('[CursorIDEService] Port', port, 'is not active, cannot use terminal monitoring');
+        return null;
+      }
+    } catch (error) {
+      console.error('[CursorIDEService] Error getting user app URL for port', port, ':', error);
+      return null;
+    }
+  }
+
   // Terminal monitoring methods
   async startTerminalMonitoring() {
     return await this.terminalMonitor.startTerminalMonitoring();

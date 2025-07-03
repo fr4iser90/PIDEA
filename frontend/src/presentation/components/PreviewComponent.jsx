@@ -28,6 +28,32 @@ function PreviewComponent({ eventBus }) {
       eventBus.on('preview-refresh', handleRefresh);
       eventBus.on('preview-toggle-fullscreen', handleToggleFullscreen);
       eventBus.on('preview-toggle-compact', handleToggleCompact);
+      
+      // Listen for IDE changes and user app URL updates
+      eventBus.on('activeIDEChanged', handleIDEChanged);
+      eventBus.on('userAppUrl', handleUserAppUrl);
+      eventBus.on('userAppDetected', handleUserAppUrl);
+    }
+  };
+
+  const handleIDEChanged = async (data) => {
+    console.log('🔄 [PreviewComponent] Active IDE changed:', data);
+    // Refresh preview data when IDE changes
+    await handleRefresh();
+  };
+
+  const handleUserAppUrl = (data) => {
+    console.log('🔄 [PreviewComponent] User app URL received:', data);
+    if (data.url) {
+      const previewData = {
+        url: data.url,
+        title: `Preview - User App${data.port ? ` (IDE: ${data.port})` : ''}`,
+        timestamp: new Date().toISOString(),
+        port: data.port,
+        workspacePath: data.workspacePath
+      };
+      setPreviewData(previewData);
+      setError(null);
     }
   };
 
@@ -86,10 +112,14 @@ function PreviewComponent({ eventBus }) {
       const result = await apiRepository.getUserAppUrl();
       
       let previewUrl = null;
+      let port = null;
+      let workspacePath = null;
       
       if (result.success && result.data && result.data.url) {
         console.log('Found user app URL:', result.data.url);
         previewUrl = result.data.url;
+        port = result.data.port;
+        workspacePath = result.data.workspacePath;
       } else {
         console.log('No user app URL found, checking terminal output...');
         // Trigger terminal monitoring on backend
@@ -98,6 +128,8 @@ function PreviewComponent({ eventBus }) {
         if (monitorResult.success && monitorResult.data && monitorResult.data.url) {
           console.log('Found URL from terminal monitoring:', monitorResult.data.url);
           previewUrl = monitorResult.data.url;
+          port = monitorResult.data.port;
+          workspacePath = monitorResult.data.workspacePath;
         } else {
           throw new Error('No user app URL found in terminal output');
       }
@@ -105,8 +137,10 @@ function PreviewComponent({ eventBus }) {
 
       const previewData = {
         url: previewUrl,
-        title: `Preview - User App`,
-        timestamp: new Date().toISOString()
+        title: `Preview - User App${port ? ` (IDE: ${port})` : ''}`,
+        timestamp: new Date().toISOString(),
+        port: port,
+        workspacePath: workspacePath
       };
 
       setPreviewData(previewData);
@@ -119,6 +153,17 @@ function PreviewComponent({ eventBus }) {
   const cleanupPreview = () => {
     if (refreshInterval) {
       clearInterval(refreshInterval);
+    }
+    
+    // Remove event listeners
+    if (eventBus) {
+      eventBus.off('preview-update', handlePreviewUpdate);
+      eventBus.off('preview-refresh', handleRefresh);
+      eventBus.off('preview-toggle-fullscreen', handleToggleFullscreen);
+      eventBus.off('preview-toggle-compact', handleToggleCompact);
+      eventBus.off('activeIDEChanged', handleIDEChanged);
+      eventBus.off('userAppUrl', handleUserAppUrl);
+      eventBus.off('userAppDetected', handleUserAppUrl);
     }
   };
 

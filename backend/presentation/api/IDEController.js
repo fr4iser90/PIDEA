@@ -137,13 +137,54 @@ class IDEController {
         throw new Error('CursorIDEService not available');
       }
       
-      const url = await this.cursorIDEService.monitorTerminalOutput();
+      // Get the active IDE to include port information
+      const activeIDE = await this.ideManager.getActiveIDE();
+      const url = await this.cursorIDEService.getUserAppUrlForPort();
+      
       res.json({ 
         success: true, 
-        data: { url: url } 
+        data: { 
+          url: url,
+          port: activeIDE?.port || null,
+          workspacePath: activeIDE?.workspacePath || null
+        } 
       });
     } catch (error) {
       console.error('[IDEController] Error getting user app URL:', error);
+      res.status(500).json({ 
+        success: false, 
+        error: error.message 
+      });
+    }
+  }
+
+  async getUserAppUrlForPort(req, res) {
+    try {
+      if (!this.cursorIDEService) {
+        throw new Error('CursorIDEService not available');
+      }
+      
+      const port = parseInt(req.params.port);
+      if (!port) {
+        return res.status(400).json({
+          success: false,
+          error: 'Port parameter is required'
+        });
+      }
+      
+      const url = await this.cursorIDEService.getUserAppUrlForPort(port);
+      const workspacePath = this.ideManager.getWorkspacePath(port);
+      
+      res.json({ 
+        success: true, 
+        data: { 
+          url: url,
+          port: port,
+          workspacePath: workspacePath
+        } 
+      });
+    } catch (error) {
+      console.error('[IDEController] Error getting user app URL for port:', error);
       res.status(500).json({ 
         success: false, 
         error: error.message 

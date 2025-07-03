@@ -148,6 +148,7 @@ class Application {
 
     this.browserManager = new BrowserManager();
     this.ideManager = new IDEManager();
+    this.ideManager.browserManager = this.browserManager;
     this.chatRepository = new InMemoryChatRepository();
     this.eventBus = new EventBus();
 
@@ -315,6 +316,7 @@ class Application {
     this.app.get('/api/ide/status', (req, res) => this.ideController.getStatus(req, res));
     this.app.post('/api/ide/restart-app', (req, res) => this.ideController.restartUserApp(req, res));
     this.app.get('/api/ide/user-app-url', (req, res) => this.ideController.getUserAppUrl(req, res));
+    this.app.get('/api/ide/user-app-url/:port', (req, res) => this.ideController.getUserAppUrlForPort(req, res));
     this.app.post('/api/ide/monitor-terminal', (req, res) => this.ideController.monitorTerminal(req, res));
     this.app.post('/api/ide/set-workspace/:port', (req, res) => this.ideController.setWorkspacePath(req, res));
     this.app.get('/api/ide/workspace-info', (req, res) => this.ideController.getWorkspaceInfo(req, res));
