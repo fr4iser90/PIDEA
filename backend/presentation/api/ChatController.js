@@ -101,6 +101,40 @@ class ChatController {
     }
   }
 
+  // GET /api/chat/port/:port/history
+  async getPortChatHistory(req, res) {
+    try {
+      const userId = req.user.id;
+      const { port } = req.params;
+      const { limit = 50, offset = 0 } = req.query;
+
+      console.log(`[ChatController] Getting chat history for port ${port}, user ${userId}`);
+
+      // Get chat history for specific port
+      const result = await this.getChatHistoryHandler.getPortChatHistory(port, userId, {
+        limit: parseInt(limit),
+        offset: parseInt(offset)
+      });
+
+      res.json({
+        success: true,
+        data: {
+          messages: result.messages || [],
+          sessionId: result.sessionId,
+          port: port,
+          totalCount: result.totalCount || 0,
+          hasMore: result.hasMore || false
+        }
+      });
+    } catch (error) {
+      console.error('[ChatController] Get port chat history error:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to get port chat history'
+      });
+    }
+  }
+
   // GET /api/chat/sessions
   async getUserSessions(req, res) {
     try {

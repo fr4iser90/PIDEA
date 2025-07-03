@@ -93,10 +93,11 @@ function ChatSidebarComponent({ eventBus, activePort, onActivePortChange }) {
   const handleSwitchToIDE = (port) => eventBus.emit('chat-sidebar:ide:switch', { port });
   const handleSwitchDirectlyToIDE = async (port) => {
     try {
-      await fetch(`/api/ide/switch/${port}`, { method: 'POST' });
+      const { apiCall } = await import('@infrastructure/repositories/APIChatRepository.jsx');
+      await apiCall(`/api/ide/switch/${port}`, { method: 'POST' });
       if (onActivePortChange) onActivePortChange(port);
       refreshIDEList();
-    eventBus.emit('chat-sidebar:load-chat-for-port', { port });
+      eventBus.emit('chat-sidebar:load-chat-for-port', { port });
     } catch (error) {
       console.error('Fehler beim Umschalten der IDE:', error);
     }

@@ -143,10 +143,8 @@ class AppController {
 
     this.eventBus.on('chat-sidebar:ide:switch', async (data) => {
       try {
-        const response = await fetch(`/api/ide/switch/${data.port}`, {
-          method: 'POST'
-        });
-        const result = await response.json();
+        const { apiCall } = await import('@infrastructure/repositories/APIChatRepository.jsx');
+        const result = await apiCall(`/api/ide/switch/${data.port}`, { method: 'POST' });
         if (result.success) {
           console.log('Switched to IDE:', result.data);
         } else {
@@ -201,8 +199,8 @@ class AppController {
     // NEW: Chat for port loading
     this.eventBus.on('chat-sidebar:load-chat-for-port', async (data) => {
       try {
-        const response = await fetch(`/api/chat/port/${data.port}/history`);
-        const result = await response.json();
+        const { apiCall } = await import('@infrastructure/repositories/APIChatRepository.jsx');
+        const result = await apiCall(`/api/chat/port/${data.port}/history`);
         
         if (result.success) {
           // Update chat with new messages
