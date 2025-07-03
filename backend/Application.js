@@ -146,6 +146,8 @@ class Application {
     this.app.get('/api/chat/history', (req, res) => this.chatController.getChatHistory(req, res));
     this.app.get('/api/chat/status', (req, res) => this.chatController.getConnectionStatus(req, res));
     this.app.get('/api/health', (req, res) => this.chatController.healthCheck(req, res));
+    this.app.get('/api/prompts/quick', (req, res) => this.chatController.getQuickPrompts(req, res));
+    this.app.get('/api/settings', (req, res) => this.chatController.getSettings(req, res));
 
     // CodeExplorer API routes
     this.app.get('/api/files', async (req, res) => {

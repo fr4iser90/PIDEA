@@ -14,6 +14,8 @@
 import React, { useState, useEffect } from 'react';
 
 function ChatSidebarComponent({ eventBus }) {
+  console.log('🔍 ChatSidebarComponent RENDERING!');
+  
   const [chatSessions, setChatSessions] = useState([]);
   const [currentSessionId, setCurrentSessionId] = useState(null);
   const [availableIDEs, setAvailableIDEs] = useState([]);
@@ -46,6 +48,11 @@ function ChatSidebarComponent({ eventBus }) {
     };
   }, [eventBus]);
 
+  // Load IDE list on component mount
+  useEffect(() => {
+    refreshIDEList();
+  }, []);
+
   const formatDate = (date) => {
     if (!date) return '';
     const d = new Date(date);
@@ -71,9 +78,15 @@ function ChatSidebarComponent({ eventBus }) {
     }
   };
   const handleSwitchToIDE = (port) => eventBus.emit('chat-sidebar:ide:switch', { port });
-  const handleSwitchDirectlyToIDE = (port) => {
-    eventBus.emit('chat-sidebar:ide:switch', { port });
-    eventBus.emit('chat-sidebar:load-chat-for-port', { port });
+  const handleSwitchDirectlyToIDE = async (port) => {
+    try {
+      await fetch(`/api/ide/switch/${port}`, { method: 'POST' });
+      setActivePort(port);
+      refreshIDEList();
+      eventBus.emit('chat-sidebar:load-chat-for-port', { port });
+    } catch (error) {
+      console.error('Fehler beim Umschalten der IDE:', error);
+    }
   };
   const handleStopIDE = (port) => {
     if (window.confirm(`IDE auf Port ${port} wirklich stoppen?`)) {
@@ -93,6 +106,11 @@ function ChatSidebarComponent({ eventBus }) {
     }
   };
 
+  // Debug: Log availableIDEs vor dem Rendern
+  console.log('DEBUG IDE-LIST:', availableIDEs);
+  console.log('DEBUG ACTIVE VALUES:', availableIDEs.map(ide => ({ port: ide.port, active: ide.active, activeType: typeof ide.active })));
+  console.log('DEBUG FULL IDE DATA:', JSON.stringify(availableIDEs, null, 2));
+
   return (
     <div className="chat-sidebar-content">
       <div className="sidebar-header">
@@ -110,7 +128,7 @@ function ChatSidebarComponent({ eventBus }) {
           ) : (
             availableIDEs.map(ide => (
               <div
-                className={`ide-item${ide.port === activePort ? ' active' : ''}`}
+                className={`ide-item${ide.active === true ? ' active' : ''}`}
                 data-port={ide.port}
                 key={ide.port}
                 onClick={e => {
@@ -127,7 +145,7 @@ function ChatSidebarComponent({ eventBus }) {
                   </div>
                 </div>
                 <div className="ide-actions">
-                  {ide.port === activePort && <span className="active-indicator">✓</span>}
+                  {ide.active && <span className="active-indicator">✓</span>}
                   <button
                     className="ide-stop-btn"
                     data-port={ide.port}

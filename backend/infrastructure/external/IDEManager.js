@@ -43,7 +43,8 @@ class IDEManager {
       allIDEs.set(ide.port, {
         ...ide,
         source: 'detected',
-        workspacePath: this.ideWorkspaces.get(ide.port) || null
+        workspacePath: this.ideWorkspaces.get(ide.port) || null,
+        active: ide.port === this.activePort
       });
     });
     
@@ -51,7 +52,8 @@ class IDEManager {
       allIDEs.set(ide.port, {
         ...ide,
         source: 'started',
-        workspacePath: this.ideWorkspaces.get(ide.port) || null
+        workspacePath: this.ideWorkspaces.get(ide.port) || null,
+        active: ide.port === this.activePort
       });
     });
 

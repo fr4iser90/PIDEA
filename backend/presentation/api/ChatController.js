@@ -164,12 +164,10 @@ class ChatController {
       // Extract chat history
       const messages = await this.cursorIDEService.extractChatHistory();
       
-      // Find or create session for this port
-      const sessions = await this.getChatHistoryHandler.handle(
-        new GetChatHistoryQuery(null, 100, 0)
-      );
+      // Get all sessions from repository
+      const allSessions = await this.getChatHistoryHandler.chatRepository.getAllSessions();
       
-      let targetSession = sessions.sessions.find(s => s.idePort === port);
+      let targetSession = allSessions.find(s => s.idePort === port);
       
       if (!targetSession) {
         targetSession = {
@@ -229,6 +227,98 @@ class ChatController {
         error: 'Failed to switch to port',
         code: 'PORT_SWITCH_ERROR',
         details: error.message
+      });
+    }
+  }
+
+  async getQuickPrompts(req, res) {
+    try {
+      const quickPrompts = [
+        {
+          id: 'code-review',
+          title: 'Code Review',
+          content: 'Please review this code and suggest improvements for readability, performance, and best practices.',
+          category: 'development'
+        },
+        {
+          id: 'bug-fix',
+          title: 'Bug Fix',
+          content: 'I found a bug in this code. Can you help me identify the issue and provide a fix?',
+          category: 'debugging'
+        },
+        {
+          id: 'refactor',
+          title: 'Refactor Code',
+          content: 'This code works but could be cleaner. Can you help me refactor it to be more maintainable?',
+          category: 'development'
+        },
+        {
+          id: 'explain',
+          title: 'Explain Code',
+          content: 'Can you explain what this code does and how it works?',
+          category: 'learning'
+        },
+        {
+          id: 'optimize',
+          title: 'Optimize Performance',
+          content: 'This code is slow. Can you help me optimize it for better performance?',
+          category: 'performance'
+        },
+        {
+          id: 'test',
+          title: 'Write Tests',
+          content: 'Can you help me write unit tests for this code?',
+          category: 'testing'
+        },
+        {
+          id: 'document',
+          title: 'Add Documentation',
+          content: 'Can you help me add proper documentation and comments to this code?',
+          category: 'documentation'
+        },
+        {
+          id: 'security',
+          title: 'Security Review',
+          content: 'Can you review this code for potential security vulnerabilities?',
+          category: 'security'
+        }
+      ];
+      
+      res.json({
+        success: true,
+        prompts: quickPrompts
+      });
+
+    } catch (error) {
+      console.error('[ChatController] Get quick prompts error:', error);
+      res.status(500).json({ 
+        error: 'Internal server error',
+        code: 'INTERNAL_ERROR'
+      });
+    }
+  }
+
+  async getSettings(req, res) {
+    try {
+      const settings = {
+        theme: 'dark',
+        autoScroll: true,
+        showTimestamps: true,
+        maxMessages: 100,
+        enableNotifications: true,
+        language: 'en'
+      };
+      
+      res.json({
+        success: true,
+        settings: settings
+      });
+
+    } catch (error) {
+      console.error('[ChatController] Get settings error:', error);
+      res.status(500).json({ 
+        error: 'Internal server error',
+        code: 'INTERNAL_ERROR'
       });
     }
   }

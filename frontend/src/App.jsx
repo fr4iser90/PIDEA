@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import EventBus from '@infrastructure/events/EventBus.jsx';
 import ChatComponent from '@presentation/components/ChatComponent.jsx';
-import SidebarComponent from '@presentation/components/SidebarComponent.jsx';
+import ChatSidebarComponent from '@presentation/components/ChatSidebarComponent.jsx';
 import RightPanelComponent from '@presentation/components/RightPanelComponent.jsx';
 import IDEMirrorComponent from '@presentation/components/IDEMirrorComponent.jsx';
 import PreviewComponent from '@presentation/components/PreviewComponent.jsx';
@@ -11,13 +11,14 @@ function App() {
   const [currentView, setCurrentView] = useState('chat');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [activePort, setActivePort] = useState(null);
   const containerRef = useRef(null);
 
   useEffect(() => {
     console.log('🔄 App initializing...');
     setupEventListeners();
     initializeApp();
-    
+    fetchActivePort();
     return () => {
       // Cleanup if needed
     };
@@ -60,10 +61,36 @@ function App() {
     console.log('✅ App ready');
   };
 
+  const fetchActivePort = async () => {
+    try {
+      const res = await fetch('/api/ide/available');
+      const result = await res.json();
+      if (result.success && result.data) {
+        const activeIDE = result.data.find(ide => ide.active);
+        if (activeIDE) setActivePort(activeIDE.port);
+      }
+    } catch (e) {
+      setError('❌ Failed to load IDE list: ' + e.message);
+    }
+  };
+
+  useEffect(() => {
+    if (!eventBus) return;
+    const handleActiveIDEChanged = (data) => {
+      if (data && data.port) {
+        setActivePort(data.port);
+      }
+    };
+    eventBus.on('activeIDEChanged', handleActiveIDEChanged);
+    return () => {
+      eventBus.off('activeIDEChanged', handleActiveIDEChanged);
+    };
+  }, [eventBus]);
+
   const renderView = () => {
     switch (currentView) {
       case 'chat':
-        return <ChatComponent eventBus={eventBus} />;
+        return <ChatComponent eventBus={eventBus} activePort={activePort} />;
       case 'ide-mirror':
         return <IDEMirrorComponent eventBus={eventBus} />;
       case 'preview':
@@ -71,7 +98,7 @@ function App() {
       case 'code':
         return <div className="code-explorer-container">Code Editor View</div>;
       default:
-        return <ChatComponent eventBus={eventBus} />;
+        return <ChatComponent eventBus={eventBus} activePort={activePort} />;
     }
   };
 
@@ -162,7 +189,7 @@ function App() {
       {/* Main Content */}
       <main className="main-layout">
         {/* Sidebar */}
-        <SidebarComponent eventBus={eventBus} />
+        <ChatSidebarComponent eventBus={eventBus} />
         
         {/* Main View */}
         <div className="main-content">

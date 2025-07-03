@@ -64,7 +64,24 @@ function ChatComponent({ eventBus }) {
 
   const loadChatHistory = async () => {
     try {
-      const data = await apiCall(API_CONFIG.endpoints.chat.history);
+      // Get active IDE first
+      const ideData = await apiCall(API_CONFIG.endpoints.ide.list);
+      let activePort = null;
+      
+      if (ideData.success && ideData.data) {
+        const activeIDE = ideData.data.find(ide => ide.active);
+        if (activeIDE) {
+          activePort = activeIDE.port;
+        }
+      }
+      
+      if (!activePort) {
+        setError('❌ No active IDE found');
+        return;
+      }
+      
+      // Load chat history for active IDE
+      const data = await apiCall(API_CONFIG.endpoints.chat.portHistory(activePort));
       let msgs = [];
       if (data.success && data.data && data.data.messages) {
         msgs = data.data.messages;
@@ -104,6 +121,22 @@ function ChatComponent({ eventBus }) {
     setMessages(prevMessages => [...prevMessages, newMessage]);
     setInputValue('');
     try {
+      // Get active IDE first
+      const ideData = await apiCall(API_CONFIG.endpoints.ide.list);
+      let activePort = null;
+      
+      if (ideData.success && ideData.data) {
+        const activeIDE = ideData.data.find(ide => ide.active);
+        if (activeIDE) {
+          activePort = activeIDE.port;
+        }
+      }
+      
+      if (!activePort) {
+        throw new Error('No active IDE found');
+      }
+      
+      // Send message to active IDE
       const result = await apiCall(API_CONFIG.endpoints.chat.send, {
         method: 'POST',
         body: JSON.stringify({ message: message.trim() })

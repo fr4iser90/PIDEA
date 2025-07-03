@@ -13,6 +13,8 @@ class GetChatHistoryQuery {
     if (this.offset < 0) {
       throw new Error('Offset must be non-negative');
     }
+    
+    // sessionId is optional now
   }
 }
 
