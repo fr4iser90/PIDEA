@@ -35,15 +35,27 @@ function ChatSidebarComponent({ eventBus, activePort, onActivePortChange }) {
     const handleActiveIDEChanged = (data) => {
       if (onActivePortChange) onActivePortChange(data.port);
     };
+    const handleSidebarToggle = () => {
+      const sidebar = document.querySelector('.chat-sidebar');
+      if (sidebar) {
+        const isVisible = sidebar.style.display !== 'none';
+        sidebar.style.display = isVisible ? 'none' : 'flex';
+        console.log('Sidebar toggled:', isVisible ? 'hidden' : 'visible');
+      } else {
+        console.log('Sidebar element not found');
+      }
+    };
     eventBus.on('chat-sidebar:sessions:updated', handleSessionsUpdated);
     eventBus.on('chat-sidebar:session:selected', handleSessionSelected);
     eventBus.on('ideListUpdated', handleIDEListUpdated);
     eventBus.on('activeIDEChanged', handleActiveIDEChanged);
+    eventBus.on('sidebar-toggle', handleSidebarToggle);
     return () => {
       eventBus.off('chat-sidebar:sessions:updated', handleSessionsUpdated);
       eventBus.off('chat-sidebar:session:selected', handleSessionSelected);
       eventBus.off('ideListUpdated', handleIDEListUpdated);
       eventBus.off('activeIDEChanged', handleActiveIDEChanged);
+      eventBus.off('sidebar-toggle', handleSidebarToggle);
     };
   }, [eventBus, onActivePortChange]);
 
@@ -111,7 +123,7 @@ function ChatSidebarComponent({ eventBus, activePort, onActivePortChange }) {
   console.log('DEBUG FULL IDE DATA:', JSON.stringify(availableIDEs, null, 2));
 
   return (
-    <div className="chat-sidebar-content">
+    <div className="chat-sidebar-content" style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       <div className="sidebar-header">
         <h3>💬 Chat Sessions</h3>
         <button id="newChatBtn" className="btn-icon" title="Neuer Chat" onClick={handleNewChat}>➕</button>

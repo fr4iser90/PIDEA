@@ -185,7 +185,10 @@ function App() {
             📁
           </button>
           <button
-            onClick={() => eventBus?.emit('right-panel-toggle')}
+            onClick={() => {
+              console.log('Header right panel button clicked');
+              eventBus?.emit('right-panel-toggle');
+            }}
             className="btn-icon"
             title="Toggle Right Panel"
           >
@@ -197,7 +200,9 @@ function App() {
       {/* Main Content */}
       <main className="main-layout">
         {/* Sidebar */}
-        <ChatSidebarComponent eventBus={eventBus} activePort={activePort} onActivePortChange={setActivePort} />
+        <div className="chat-sidebar">
+          <ChatSidebarComponent eventBus={eventBus} activePort={activePort} onActivePortChange={setActivePort} />
+        </div>
         
         {/* Main View */}
         <div className={`main-content ${isSplitView ? 'split-view' : ''}`}>

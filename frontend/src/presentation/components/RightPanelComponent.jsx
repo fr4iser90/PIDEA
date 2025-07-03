@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { apiCall, API_CONFIG } from '@infrastructure/repositories/APIChatRepository.jsx';
 import ChatMessage from '@domain/entities/ChatMessage.jsx';
 import FrameworkPanelComponent from './chat/FrameworkPanelComponent.jsx';
@@ -14,18 +14,32 @@ function RightPanelComponent({ eventBus, messages = [] }) {
   const containerRef = useRef(null);
 
   useEffect(() => {
+    console.log('RightPanelComponent useEffect running, eventBus:', !!eventBus);
     setupEventListeners();
     loadPanelData();
-    return () => {};
-  }, []);
+    return () => {
+      if (eventBus) {
+        console.log('Cleaning up right panel event listeners');
+        eventBus.off('right-panel-toggle', handleToggle);
+        eventBus.off('files-attached', handleFilesAttached);
+        eventBus.off('files-removed', handleFilesRemoved);
+        eventBus.off('settings-updated', handleSettingsUpdate);
+        eventBus.off('quick-prompt-selected', handleQuickPromptSelected);
+      }
+    };
+  }, [eventBus]);
 
   const setupEventListeners = () => {
     if (eventBus) {
+      console.log('Setting up right panel event listeners');
       eventBus.on('right-panel-toggle', handleToggle);
       eventBus.on('files-attached', handleFilesAttached);
       eventBus.on('files-removed', handleFilesRemoved);
       eventBus.on('settings-updated', handleSettingsUpdate);
       eventBus.on('quick-prompt-selected', handleQuickPromptSelected);
+      console.log('Right panel event listeners set up');
+    } else {
+      console.log('No eventBus provided to RightPanelComponent');
     }
   };
 
@@ -46,7 +60,14 @@ function RightPanelComponent({ eventBus, messages = [] }) {
     }
   };
 
-  const handleToggle = () => setIsVisible(!isVisible);
+  const handleToggle = useCallback(() => {
+    console.log('Right panel toggle called, current state:', isVisible);
+    setIsVisible(prev => {
+      const newState = !prev;
+      console.log('Right panel new state:', newState);
+      return newState;
+    });
+  }, [isVisible]);
   const handleFilesAttached = (files) => setAttachedFiles(prevFiles => [...prevFiles, ...files]);
   const handleFilesRemoved = (fileIds) => setAttachedFiles(prevFiles => prevFiles.filter(f => !fileIds.includes(f.id)));
   const handleSettingsUpdate = (newSettings) => setSettings(newSettings);
@@ -144,9 +165,8 @@ function RightPanelComponent({ eventBus, messages = [] }) {
       <FrameworkPanelComponent />
     </div>
   );
-  if (!isVisible) return null;
   return (
-    <div ref={containerRef} className="chat-right-panel">
+    <div ref={containerRef} className="chat-right-panel" style={{ display: isVisible ? 'flex' : 'none' }}>
       <div className="chat-right-panel-content">
         <div className="panel-header">
           <div className="panel-tabs">
