@@ -28,6 +28,7 @@ const GetChatHistoryHandler = require('./application/handlers/GetChatHistoryHand
 // Infrastructure
 const BrowserManager = require('./infrastructure/external/BrowserManager');
 const IDEManager = require('./infrastructure/external/IDEManager');
+const IDEWorkspaceDetectionService = require('./domain/services/IDEWorkspaceDetectionService');
 const InMemoryChatRepository = require('./infrastructure/database/InMemoryChatRepository');
 const DatabaseConnection = require('./infrastructure/database/DatabaseConnection');
 const PostgreSQLUserRepository = require('./infrastructure/database/PostgreSQLUserRepository');
@@ -147,14 +148,16 @@ class Application {
     this.logger.info('[Application] Initializing infrastructure...');
 
     this.browserManager = new BrowserManager();
-    this.ideManager = new IDEManager();
-    this.ideManager.browserManager = this.browserManager;
+    this.ideManager = new IDEManager(this.browserManager);
     this.chatRepository = new InMemoryChatRepository();
     this.eventBus = new EventBus();
 
     // Initialize repositories
     this.userRepository = new PostgreSQLUserRepository(this.databaseConnection);
     this.userSessionRepository = new PostgreSQLUserSessionRepository(this.databaseConnection);
+
+    // IDE Services
+    this.ideWorkspaceDetectionService = new IDEWorkspaceDetectionService(this.ideManager);
 
     this.logger.info('[Application] Infrastructure initialized');
   }
@@ -322,6 +325,13 @@ class Application {
     this.app.get('/api/ide/workspace-info', (req, res) => this.ideController.getWorkspaceInfo(req, res));
     this.app.post('/api/ide/detect-workspace-paths', (req, res) => this.ideController.detectWorkspacePaths(req, res));
 
+    // Workspace Detection routes (protected)
+    this.app.get('/api/ide/workspace-detection', (req, res) => this.ideController.detectAllWorkspaces(req, res));
+    this.app.get('/api/ide/workspace-detection/:port', (req, res) => this.ideController.detectWorkspaceForIDE(req, res));
+    this.app.get('/api/ide/workspace-detection/stats', (req, res) => this.ideController.getDetectionStats(req, res));
+    this.app.delete('/api/ide/workspace-detection/results', (req, res) => this.ideController.clearDetectionResults(req, res));
+    this.app.post('/api/ide/workspace-detection/:port/execute', (req, res) => this.ideController.executeTerminalCommand(req, res));
+
     // File explorer routes (protected)
     this.app.use('/api/files', this.authMiddleware.authenticate());
     this.app.get('/api/files', async (req, res) => {
@@ -474,12 +484,22 @@ class Application {
         await this.initialize();
       }
 
-      this.server.listen(this.config.port, () => {
+      this.server.listen(this.config.port, async () => {
         this.isRunning = true;
         this.logger.info(`[Application] Server running on port ${this.config.port}`);
         this.logger.info(`[Application] Environment: ${this.autoSecurityManager.getEnvironment()}`);
         this.logger.info(`[Application] Database: ${this.databaseConnection.getType()}`);
         this.logger.info(`[Application] Auto-security: ${this.autoSecurityManager.isProduction() ? 'Production' : 'Development'}`);
+        
+        // Start workspace detection after server is running
+        try {
+          this.logger.info('[Application] Starting workspace detection...');
+          await this.ideWorkspaceDetectionService.detectAllWorkspaces();
+          const stats = this.ideWorkspaceDetectionService.getDetectionStats();
+          this.logger.info(`[Application] Workspace detection completed: ${stats.successful}/${stats.total} successful`);
+        } catch (error) {
+          this.logger.error('[Application] Workspace detection failed:', error);
+        }
       });
 
       // Graceful shutdown
@@ -535,6 +555,13 @@ class Application {
 
   getLogger() {
     return this.logger;
+  }
+
+  /**
+   * IDE Workspace Detection Service
+   */
+  getIDEWorkspaceDetectionService() {
+    return this.ideWorkspaceDetectionService;
   }
 }
 

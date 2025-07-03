@@ -391,6 +391,138 @@ class IDEController {
       });
     }
   }
+
+  /**
+   * GET /api/ide/workspace-detection
+   * Alle IDEs scannen und Workspace-Info sammeln
+   */
+  async detectAllWorkspaces(req, res) {
+    try {
+      const detectionService = this.application.getIDEWorkspaceDetectionService();
+      const results = await detectionService.detectAllWorkspaces();
+      
+      res.json({
+        success: true,
+        message: 'Workspace detection completed',
+        results: detectionService.getDetectionResults(),
+        stats: detectionService.getDetectionStats()
+      });
+    } catch (error) {
+      console.error('[IDEController] Error detecting workspaces:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to detect workspaces',
+        message: error.message
+      });
+    }
+  }
+
+  /**
+   * GET /api/ide/workspace-detection/:port
+   * Workspace für eine spezifische IDE erkennen
+   */
+  async detectWorkspaceForIDE(req, res) {
+    try {
+      const { port } = req.params;
+      const detectionService = this.application.getIDEWorkspaceDetectionService();
+      const result = await detectionService.detectWorkspaceForIDE(parseInt(port));
+      
+      res.json({
+        success: true,
+        port: parseInt(port),
+        result: result,
+        detectionResults: detectionService.getDetectionResults()
+      });
+    } catch (error) {
+      console.error(`[IDEController] Error detecting workspace for port ${req.params.port}:`, error);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to detect workspace',
+        message: error.message
+      });
+    }
+  }
+
+  /**
+   * GET /api/ide/workspace-detection/stats
+   * Detection-Statistiken abrufen
+   */
+  async getDetectionStats(req, res) {
+    try {
+      const detectionService = this.application.getIDEWorkspaceDetectionService();
+      
+      res.json({
+        success: true,
+        stats: detectionService.getDetectionStats(),
+        serviceStatus: detectionService.getServiceStatus()
+      });
+    } catch (error) {
+      console.error('[IDEController] Error getting detection stats:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to get detection stats',
+        message: error.message
+      });
+    }
+  }
+
+  /**
+   * DELETE /api/ide/workspace-detection/results
+   * Detection-Ergebnisse zurücksetzen
+   */
+  async clearDetectionResults(req, res) {
+    try {
+      const detectionService = this.application.getIDEWorkspaceDetectionService();
+      detectionService.clearDetectionResults();
+      
+      res.json({
+        success: true,
+        message: 'Detection results cleared'
+      });
+    } catch (error) {
+      console.error('[IDEController] Error clearing detection results:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to clear detection results',
+        message: error.message
+      });
+    }
+  }
+
+  /**
+   * POST /api/ide/workspace-detection/:port/execute
+   * Terminal-Befehl für eine IDE ausführen
+   */
+  async executeTerminalCommand(req, res) {
+    try {
+      const { port } = req.params;
+      const { command, outputFile } = req.body;
+      
+      if (!command) {
+        return res.status(400).json({
+          success: false,
+          error: 'Command is required'
+        });
+      }
+      
+      const detectionService = this.application.getIDEWorkspaceDetectionService();
+      const result = await detectionService.executeTerminalCommand(parseInt(port), command, outputFile);
+      
+      res.json({
+        success: true,
+        port: parseInt(port),
+        command: command,
+        result: result
+      });
+    } catch (error) {
+      console.error(`[IDEController] Error executing terminal command for port ${req.params.port}:`, error);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to execute terminal command',
+        message: error.message
+      });
+    }
+  }
 }
 
 module.exports = IDEController; 
