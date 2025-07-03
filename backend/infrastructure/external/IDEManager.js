@@ -1,12 +1,15 @@
 const IDEDetector = require('./IDEDetector');
 const IDEStarter = require('./IDEStarter');
+const FileBasedWorkspaceDetector = require('../../domain/services/workspace/FileBasedWorkspaceDetector');
 const fs = require('fs');
 const path = require('path');
 
 class IDEManager {
-  constructor() {
+  constructor(browserManager = null) {
     this.detector = new IDEDetector();
     this.starter = new IDEStarter();
+    this.browserManager = browserManager;
+    this.fileDetector = browserManager ? new FileBasedWorkspaceDetector(browserManager) : null;
     this.activePort = null;
     this.ideStatus = new Map(); // port -> status
     this.ideWorkspaces = new Map(); // port -> workspace path
@@ -204,45 +207,41 @@ class IDEManager {
     return this.ideWorkspaces.get(this.activePort) || null;
   }
 
-  // New method to detect workspace path for existing IDEs
+  // FILE-BASIERTE WORKSPACE-ERKENNUNG
   async detectWorkspacePath(port) {
     try {
-      // First check if we already have a workspace for this port
+      // Prüfe Cache
       if (this.ideWorkspaces.has(port)) {
         return this.ideWorkspaces.get(port);
       }
       
-      console.log('[IDEManager] Attempting to detect workspace path for port', port);
+      console.log('[IDEManager] File-based workspace detection for port', port);
       
-      // Try CDP-based detection if browserManager is available
-      // This requires the browserManager to be injected into IDEManager
-      if (this.browserManager) {
+      // File-basierte Methode
+      if (this.fileDetector) {
         try {
-          const WorkspacePathDetector = require('../../domain/services/workspace/WorkspacePathDetector');
-          const workspaceDetector = new WorkspacePathDetector(this.browserManager, this);
+          // Switch to target port
+          if (this.browserManager) {
+            await this.browserManager.switchToPort(port);
+          }
           
-          // Switch to the target port first
-          await this.browserManager.switchToPort(port);
+          // Workspace-Info über File-Output
+          const workspaceInfo = await this.fileDetector.getWorkspaceInfo(port);
           
-          // Use CDP to detect workspace path
-          const workspacePath = await workspaceDetector.addWorkspacePathDetectionViaPlaywright();
-          
-          if (workspacePath) {
-            console.log('[IDEManager] CDP detected workspace path for port', port, ':', workspacePath);
-            this.ideWorkspaces.set(port, workspacePath);
-            return workspacePath;
+          if (workspaceInfo && workspaceInfo.workspace) {
+            console.log('[IDEManager] File-based detected workspace path for port', port, ':', workspaceInfo.workspace);
+            this.ideWorkspaces.set(port, workspaceInfo.workspace);
+            return workspaceInfo.workspace;
           }
         } catch (error) {
-          console.log('[IDEManager] CDP detection failed for port', port, ':', error.message);
+          console.log('[IDEManager] File-based detection failed for port', port, ':', error.message);
         }
       }
       
-      // Fallback: For now, don't auto-detect workspace paths for existing IDEs
-      // This should be set manually or through the IDE startup process
-      console.log('[IDEManager] No workspace path set for port', port, '- manual configuration required');
+      console.log('[IDEManager] No workspace path detected for port', port);
       return null;
     } catch (error) {
-      console.log('[IDEManager] Could not detect workspace path for port', port, ':', error.message);
+      console.log('[IDEManager] Error in workspace detection for port', port, ':', error.message);
     }
     return null;
   }
@@ -251,6 +250,96 @@ class IDEManager {
   setWorkspacePath(port, workspacePath) {
     this.ideWorkspaces.set(port, workspacePath);
     console.log('[IDEManager] Set workspace path for port', port, ':', workspacePath);
+  }
+
+  // FILE-BASIERTE METHODEN
+  async getWorkspaceInfo(port) {
+    if (!this.fileDetector) {
+      console.error('[IDEManager] File detector not available');
+      return null;
+    }
+    
+    try {
+      // Switch to target port
+      if (this.browserManager) {
+        await this.browserManager.switchToPort(port);
+      }
+      
+      return await this.fileDetector.getWorkspaceInfo(port);
+    } catch (error) {
+      console.error('[IDEManager] Error getting workspace info for port', port, ':', error.message);
+      return null;
+    }
+  }
+
+  async getFilesList(port) {
+    if (!this.fileDetector) {
+      console.error('[IDEManager] File detector not available');
+      return [];
+    }
+    
+    try {
+      // Switch to target port
+      if (this.browserManager) {
+        await this.browserManager.switchToPort(port);
+      }
+      
+      return await this.fileDetector.getFilesList(port);
+    } catch (error) {
+      console.error('[IDEManager] Error getting files list for port', port, ':', error.message);
+      return [];
+    }
+  }
+
+  async getGitStatus(port) {
+    if (!this.fileDetector) {
+      console.error('[IDEManager] File detector not available');
+      return null;
+    }
+    
+    try {
+      // Switch to target port
+      if (this.browserManager) {
+        await this.browserManager.switchToPort(port);
+      }
+      
+      return await this.fileDetector.getGitStatus(port);
+    } catch (error) {
+      console.error('[IDEManager] Error getting git status for port', port, ':', error.message);
+      return null;
+    }
+  }
+
+  async executeTerminalCommand(port, command, outputFile = null) {
+    if (!this.fileDetector) {
+      console.error('[IDEManager] File detector not available');
+      return null;
+    }
+    
+    try {
+      // Switch to target port
+      if (this.browserManager) {
+        await this.browserManager.switchToPort(port);
+      }
+      
+      return await this.fileDetector.executeCommand(port, command, outputFile);
+    } catch (error) {
+      console.error('[IDEManager] Error executing terminal command for port', port, ':', error.message);
+      return null;
+    }
+  }
+
+  // FILE DETECTOR STATUS
+  getFileDetectorStatus() {
+    if (!this.fileDetector) {
+      return { available: false, error: 'File detector not initialized' };
+    }
+    
+    return {
+      available: true,
+      cacheStatus: this.fileDetector.getCacheStatus(),
+      fileStructureStatus: this.fileDetector.getFileStructureStatus()
+    };
   }
 
   async waitForIDE(port, maxAttempts = 30) {
