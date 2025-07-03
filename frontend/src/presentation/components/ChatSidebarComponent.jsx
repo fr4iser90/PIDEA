@@ -13,13 +13,12 @@
  */
 import React, { useState, useEffect } from 'react';
 
-function ChatSidebarComponent({ eventBus }) {
+function ChatSidebarComponent({ eventBus, activePort, onActivePortChange }) {
   console.log('🔍 ChatSidebarComponent RENDERING!');
   
   const [chatSessions, setChatSessions] = useState([]);
   const [currentSessionId, setCurrentSessionId] = useState(null);
   const [availableIDEs, setAvailableIDEs] = useState([]);
-  const [activePort, setActivePort] = useState(null);
 
   // EventBus-Listener
   useEffect(() => {
@@ -34,7 +33,7 @@ function ChatSidebarComponent({ eventBus }) {
       }
     };
     const handleActiveIDEChanged = (data) => {
-      setActivePort(data.port);
+      if (onActivePortChange) onActivePortChange(data.port);
     };
     eventBus.on('chat-sidebar:sessions:updated', handleSessionsUpdated);
     eventBus.on('chat-sidebar:session:selected', handleSessionSelected);
@@ -46,7 +45,7 @@ function ChatSidebarComponent({ eventBus }) {
       eventBus.off('ideListUpdated', handleIDEListUpdated);
       eventBus.off('activeIDEChanged', handleActiveIDEChanged);
     };
-  }, [eventBus]);
+  }, [eventBus, onActivePortChange]);
 
   // Load IDE list on component mount
   useEffect(() => {
@@ -81,7 +80,7 @@ function ChatSidebarComponent({ eventBus }) {
   const handleSwitchDirectlyToIDE = async (port) => {
     try {
       await fetch(`/api/ide/switch/${port}`, { method: 'POST' });
-      setActivePort(port);
+      if (onActivePortChange) onActivePortChange(port);
       refreshIDEList();
       eventBus.emit('chat-sidebar:load-chat-for-port', { port });
     } catch (error) {

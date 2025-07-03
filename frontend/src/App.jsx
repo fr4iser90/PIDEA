@@ -189,7 +189,7 @@ function App() {
       {/* Main Content */}
       <main className="main-layout">
         {/* Sidebar */}
-        <ChatSidebarComponent eventBus={eventBus} />
+        <ChatSidebarComponent eventBus={eventBus} activePort={activePort} onActivePortChange={setActivePort} />
         
         {/* Main View */}
         <div className="main-content">

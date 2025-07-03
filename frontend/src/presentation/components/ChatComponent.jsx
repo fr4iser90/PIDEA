@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { apiCall, API_CONFIG } from '@infrastructure/repositories/APIChatRepository.jsx';
 import ChatMessage from '@domain/entities/ChatMessage.jsx';
 import '../../css/chat.css';
@@ -30,7 +30,7 @@ function normalizeMessage(msg) {
   return { ...msg, sender, type };
 }
 
-function ChatComponent({ eventBus }) {
+function ChatComponent({ eventBus, activePort }) {
   const [messages, setMessages] = useState([]);
   const [isTyping, setIsTyping] = useState(false);
   const [inputValue, setInputValue] = useState('');
@@ -42,45 +42,11 @@ function ChatComponent({ eventBus }) {
   const fileInputRef = useRef(null);
   const [shouldAutoScroll, setShouldAutoScroll] = useState(true);
 
-  useEffect(() => {
-    setupEventListeners();
-    loadChatHistory();
-    return () => {};
-  }, []);
-
-  useEffect(() => {
-    if (shouldAutoScroll) scrollToBottom();
-  }, [messages, isTyping]);
-
-  const setupEventListeners = () => {
-    if (eventBus) {
-      eventBus.on('chat-message-received', handleMessageReceived);
-      eventBus.on('chat-typing-started', handleTypingStarted);
-      eventBus.on('chat-typing-stopped', handleTypingStopped);
-      eventBus.on('chat-connected', handleConnected);
-      eventBus.on('chat-disconnected', handleDisconnected);
-    }
-  };
-
-  const loadChatHistory = async () => {
+  // Lade Chat immer, wenn activePort sich ändert (React-Way)
+  const loadChatHistory = useCallback(async () => {
+    if (!activePort) return;
+    console.log('[ChatComponent] Lade Chat für Port:', activePort);
     try {
-      // Get active IDE first
-      const ideData = await apiCall(API_CONFIG.endpoints.ide.list);
-      let activePort = null;
-      
-      if (ideData.success && ideData.data) {
-        const activeIDE = ideData.data.find(ide => ide.active);
-        if (activeIDE) {
-          activePort = activeIDE.port;
-        }
-      }
-      
-      if (!activePort) {
-        setError('❌ No active IDE found');
-        return;
-      }
-      
-      // Load chat history for active IDE
       const data = await apiCall(API_CONFIG.endpoints.chat.portHistory(activePort));
       let msgs = [];
       if (data.success && data.data && data.data.messages) {
@@ -90,24 +56,27 @@ function ChatComponent({ eventBus }) {
       } else if (Array.isArray(data)) {
         msgs = data;
       }
+      console.log('[ChatComponent] Neue Nachrichten geladen:', msgs.length);
       setMessages(msgs.map(normalizeMessage));
     } catch (error) {
       setMessages([]);
       setError('❌ Failed to load chat history: ' + error.message);
     }
-  };
+  }, [activePort]);
 
-  const handleMessageReceived = (message) => {
-    setMessages(prevMessages => [...prevMessages, normalizeMessage(message)]);
-    if (eventBus) {
-      eventBus.emit('chat-message-added', { message });
-    }
-  };
+  useEffect(() => {
+    console.log('[ChatComponent] activePort changed:', activePort);
+    // Wenn sich der Port ändert, sofort leeren!
+    setMessages([]);
+    setError(null);
+    console.log('[ChatComponent] setMessages([]) aufgerufen!');
+    loadChatHistory();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activePort]);
 
-  const handleTypingStarted = () => setIsTyping(true);
-  const handleTypingStopped = () => setIsTyping(false);
-  const handleConnected = () => setIsConnected(true);
-  const handleDisconnected = () => setIsConnected(false);
+  useEffect(() => {
+    if (shouldAutoScroll) scrollToBottom();
+  }, [messages, isTyping]);
 
   const sendMessage = async (message) => {
     if (!message.trim()) return;
