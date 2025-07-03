@@ -63,16 +63,22 @@ class IDEManager {
   async startNewIDE(workspacePath = null) {
     console.log('[IDEManager] Starting new IDE...');
     
+    // If no workspace path provided, use the project root (one level up from backend)
+    if (!workspacePath) {
+      const currentDir = process.cwd();
+      const projectRoot = path.resolve(currentDir, '..');
+      workspacePath = projectRoot;
+      console.log('[IDEManager] No workspace path provided, using project root:', workspacePath);
+    }
+    
     const availablePort = await this.detector.findAvailablePort();
     const ideInfo = await this.starter.startIDE(availablePort, workspacePath);
     
     this.ideStatus.set(availablePort, 'starting');
     
-    // Track workspace path if provided
-    if (workspacePath) {
-      this.ideWorkspaces.set(availablePort, workspacePath);
-      console.log('[IDEManager] Tracked workspace path for port', availablePort, ':', workspacePath);
-    }
+    // Track workspace path
+    this.ideWorkspaces.set(availablePort, workspacePath);
+    console.log('[IDEManager] Tracked workspace path for port', availablePort, ':', workspacePath);
     
     // Wait for IDE to be ready
     await this.waitForIDE(availablePort);

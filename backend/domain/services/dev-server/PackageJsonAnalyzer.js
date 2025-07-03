@@ -1,169 +1,145 @@
 class PackageJsonAnalyzer {
   constructor(eventBus = null) {
     this.eventBus = eventBus;
+    this.frontendFolders = ['frontend', 'client', 'web', 'app', 'ui'];
+    this.frontendTechs = [
+      'react', 'vite', 'next', 'vue', 'svelte', 'astro', 'preact', 'angular', '@angular', 'solid', 'nuxt', 'gatsby'
+    ];
   }
 
   async analyzePackageJsonInPath(workspacePath) {
     try {
       const fs = require('fs');
       const path = require('path');
-      
       console.log('[PackageJsonAnalyzer] Analyzing package.json in path:', workspacePath);
-      
-      // Try to find package.json
-      const packageJsonPath = path.join(workspacePath, 'package.json');
-      
-      if (fs.existsSync(packageJsonPath)) {
-        return await this.parsePackageJson(packageJsonPath);
-      }
-      
-      // Search in subdirectories
-      console.log('[PackageJsonAnalyzer] Searching for package.json in subdirectories...');
-      const findPackageJson = (dir, maxDepth = 3, currentDepth = 0) => {
-        if (currentDepth > maxDepth) return null;
-        
+      let candidates = [];
+      // Helper: robust recursive search for ALL package.json files
+      const allPackageJsons = [];
+      const findAllPackageJsons = (dir, maxDepth = 5, currentDepth = 0) => {
+        if (currentDepth > maxDepth) return;
         try {
-          const files = fs.readdirSync(dir);
+          const files = fs.readdirSync(dir, { withFileTypes: true });
           for (const file of files) {
-            const fullPath = path.join(dir, file);
-            const stat = fs.statSync(fullPath);
-            
-            if (stat.isDirectory()) {
-              const packagePath = path.join(fullPath, 'package.json');
-              if (fs.existsSync(packagePath)) {
-                console.log('[PackageJsonAnalyzer] Found package.json in subdirectory:', fullPath);
-                return fullPath;
-              }
-              
-              // Recursively search deeper
-              const found = findPackageJson(fullPath, maxDepth, currentDepth + 1);
-              if (found) return found;
+            const fullPath = path.join(dir, file.name);
+            if (file.isDirectory()) {
+              // Skip node_modules/.git but NOT frontend etc.
+              if (file.name === 'node_modules' || file.name === '.git') continue;
+              findAllPackageJsons(fullPath, maxDepth, currentDepth + 1);
+            } else if (file.isFile() && file.name === 'package.json') {
+              allPackageJsons.push(fullPath);
+              console.log('[PackageJsonAnalyzer] Found package.json:', fullPath);
             }
           }
-        } catch (error) {
-          // Ignore permission errors
-        }
-        return null;
+        } catch (e) {}
       };
-      
-      const foundPath = findPackageJson(workspacePath);
-      if (foundPath) {
-        return await this.parsePackageJson(path.join(foundPath, 'package.json'));
+      findAllPackageJsons(workspacePath);
+      for (const pkgPath of allPackageJsons) {
+        const dir = path.dirname(pkgPath);
+        candidates.push({ dir, score: this.scoreFolder(dir) });
       }
-      
+      if (candidates.length > 0) {
+        let best = null;
+        let bestScore = -1;
+        for (const cand of candidates) {
+          const pkgPath = path.join(cand.dir, 'package.json');
+          // LOG: Show which package.json is being parsed
+          console.log('[PackageJsonAnalyzer] Checking package.json:', pkgPath);
+          const techScore = await this.techstackScore(pkgPath);
+          const totalScore = cand.score + techScore;
+          if (!best || totalScore > bestScore) {
+            best = { dir: cand.dir, score: totalScore };
+            bestScore = totalScore;
+          }
+          // LOG: Show all scripts in this package.json
+          try {
+            const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8'));
+            console.log('[PackageJsonAnalyzer] Scripts in', pkgPath, ':', Object.entries(pkg.scripts || {}));
+          } catch (e) {}
+        }
+        if (best) {
+          return await this.parsePackageJson(path.join(best.dir, 'package.json'), best.dir);
+        }
+      }
       return null;
-      
     } catch (error) {
       console.error('[PackageJsonAnalyzer] Error analyzing path:', error.message);
       return null;
     }
   }
 
-  async parsePackageJson(packageJsonPath) {
+  scoreFolder(folderPath) {
+    const path = require('path');
+    const parts = folderPath.split(path.sep);
+    let score = 0;
+    for (const part of parts) {
+      if (this.frontendFolders.includes(part.toLowerCase())) score += 10;
+    }
+    return score;
+  }
+
+  async techstackScore(packageJsonPath) {
     try {
       const fs = require('fs');
       const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
-      
-      // Analyze scripts for dev server patterns
+      let techScore = 0;
+      const allDeps = { ...packageJson.devDependencies, ...packageJson.dependencies };
+      for (const dep of Object.keys(allDeps)) {
+        if (this.frontendTechs.some(t => dep.toLowerCase().includes(t))) techScore += 10;
+      }
+      return techScore;
+    } catch (e) {
+      return 0;
+    }
+  }
+
+  async parsePackageJson(packageJsonPath, folderPath) {
+    try {
+      const fs = require('fs');
+      const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
       const scripts = packageJson.scripts || {};
       const devServerPorts = [];
-      
-      // Common dev server patterns
+      // Techstack scoring
+      let techScore = 0;
+      const allDeps = { ...packageJson.devDependencies, ...packageJson.dependencies };
+      for (const dep of Object.keys(allDeps)) {
+        if (this.frontendTechs.some(t => dep.toLowerCase().includes(t))) techScore += 10;
+      }
+      // Nur dev server, wenn Port explizit im Script steht
       const devPatterns = [
-        { pattern: /dev/, defaultPort: 3000 },
-        { pattern: /start/, defaultPort: 3000 },
-        { pattern: /serve/, defaultPort: 3000 },
-        { pattern: /vite/, defaultPort: 5173 },
-        { pattern: /next/, defaultPort: 3000 },
-        { pattern: /react/, defaultPort: 3000 },
-        { pattern: /vue/, defaultPort: 3000 },
-        { pattern: /svelte/, defaultPort: 5173 },
-        { pattern: /nuxt/, defaultPort: 3000 },
-        { pattern: /gatsby/, defaultPort: 8000 },
-        { pattern: /astro/, defaultPort: 4321 },
-        { pattern: /solid/, defaultPort: 3000 },
-        { pattern: /preact/, defaultPort: 3000 }
+        /dev/, /start/, /serve/, /vite/, /next/, /react/, /vue/, /svelte/, /nuxt/, /gatsby/, /astro/, /solid/, /preact/
       ];
-      
-      // Check each script
+      console.log('[PackageJsonAnalyzer] Analyzing scripts:', Object.keys(scripts));
       for (const [scriptName, scriptCommand] of Object.entries(scripts)) {
-        for (const { pattern, defaultPort } of devPatterns) {
+        for (const pattern of devPatterns) {
           if (pattern.test(scriptName.toLowerCase()) || pattern.test(scriptCommand.toLowerCase())) {
-            // Try to extract port from command
-            const portMatch = scriptCommand.match(/--port\s+(\d+)|-p\s+(\d+)|port\s*=\s*(\d+)/i);
-            const port = portMatch ? parseInt(portMatch[1] || portMatch[2] || portMatch[3]) : defaultPort;
-            
-            devServerPorts.push({
-              script: scriptName,
-              command: scriptCommand,
-              port: port,
-              url: `http://localhost:${port}`
-            });
+            // Port-Extraktion
+            const portMatch = scriptCommand.match(/--port\s+(\d+)|-p\s+(\d+)|port\s*=\s*(\d+)|--port=(\d+)/i);
+            const port = portMatch ? parseInt(portMatch[1] || portMatch[2] || portMatch[3] || portMatch[4]) : null;
+            console.log(`[PackageJsonAnalyzer] Script: ${scriptName}, Command: ${scriptCommand}, Port match:`, portMatch, 'Extracted port:', port);
+            if (port) {
+              devServerPorts.push({
+                script: scriptName,
+                command: scriptCommand,
+                port: port,
+                url: `http://localhost:${port}`,
+                techScore
+              });
+            }
           }
         }
       }
-      
-      // Check for common dev server configurations
-      if (packageJson.devDependencies || packageJson.dependencies) {
-        const deps = { ...packageJson.devDependencies, ...packageJson.dependencies };
-        
-        // React/Vite
-        if (deps.vite) {
-          devServerPorts.push({
-            script: 'vite',
-            command: 'vite',
-            port: 5173,
-            url: 'http://localhost:5173'
-          });
-        }
-        
-        // Next.js
-        if (deps.next) {
-          devServerPorts.push({
-            script: 'next',
-            command: 'next dev',
-            port: 3000,
-            url: 'http://localhost:3000'
-          });
-        }
-        
-        // Create React App
-        if (deps['react-scripts']) {
-          devServerPorts.push({
-            script: 'react-scripts',
-            command: 'react-scripts start',
-            port: 3000,
-            url: 'http://localhost:3000'
-          });
-        }
-        
-        // Vue CLI
-        if (deps['@vue/cli-service']) {
-          devServerPorts.push({
-            script: 'vue-cli-service',
-            command: 'vue-cli-service serve',
-            port: 8080,
-            url: 'http://localhost:8080'
-          });
-        }
-      }
-      
-      // Return the first (most likely) dev server
-      if (devServerPorts.length > 0) {
+      // Sort by techScore (Frontend-Stack bevorzugen)
+      devServerPorts.sort((a, b) => b.techScore - a.techScore);
+      if (devServerPorts.length > 0 && devServerPorts[0].techScore > 0) {
         const primaryServer = devServerPorts[0];
-        console.log('[PackageJsonAnalyzer] Primary dev server detected via CDP:', primaryServer.url);
-        
-        // Emit event
+        console.log('[PackageJsonAnalyzer] Primary dev server detected:', primaryServer.url);
         if (this.eventBus && typeof this.eventBus.emit === 'function') {
           this.eventBus.emit('userAppDetected', { url: primaryServer.url });
         }
-        
         return primaryServer.url;
       }
-      
-      console.log('[PackageJsonAnalyzer] No dev server patterns found in package.json via CDP');
+      console.log('[PackageJsonAnalyzer] No suitable frontend dev server found in package.json');
       return null;
-      
     } catch (error) {
       console.error('[PackageJsonAnalyzer] Error parsing package.json:', error.message);
       return null;
@@ -172,3 +148,4 @@ class PackageJsonAnalyzer {
 }
 
 module.exports = PackageJsonAnalyzer;
+

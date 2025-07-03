@@ -1,8 +1,8 @@
 const TerminalMonitor = require('./terminal/TerminalMonitor');
-const DevServerDetector = require('./dev-server/DevServerDetector');
 const WorkspacePathDetector = require('./workspace/WorkspacePathDetector');
 const ChatMessageHandler = require('./chat/ChatMessageHandler');
 const ChatHistoryExtractor = require('./chat/ChatHistoryExtractor');
+const PackageJsonAnalyzer = require('./dev-server/PackageJsonAnalyzer');
 
 class CursorIDEService {
   constructor(browserManager, ideManager, eventBus = null) {
@@ -12,17 +12,17 @@ class CursorIDEService {
     
     // Initialize separated services
     this.terminalMonitor = new TerminalMonitor(browserManager, eventBus);
-    this.devServerDetector = new DevServerDetector(ideManager, eventBus, browserManager);
+    this.packageJsonAnalyzer = new PackageJsonAnalyzer(eventBus);
     this.workspacePathDetector = new WorkspacePathDetector(browserManager, ideManager);
     this.chatMessageHandler = new ChatMessageHandler(browserManager);
     this.chatHistoryExtractor = new ChatHistoryExtractor(browserManager);
     
-    // Listen for IDE changes to reset package.json cache
+    // Listen for IDE changes to reset package.json cache (optional, if you cache results)
     if (this.eventBus) {
       this.eventBus.subscribe('activeIDEChanged', async (eventData) => {
         console.log('[CursorIDEService] IDE changed, resetting package.json cache');
-        this.devServerDetector.resetPackageJsonCache();
-        
+        // No cache in new analyzer, but if you add one, reset here
+        // this.packageJsonAnalyzer.resetCache?.();
         // Switch browser connection to new IDE
         if (eventData.port) {
           try {
@@ -103,12 +103,25 @@ class CursorIDEService {
     try {
       // First try package.json analysis (more reliable)
       console.log('[CursorIDEService] Trying package.json analysis first...');
-      const packageJsonUrl = await this.devServerDetector.detectDevServerFromPackageJson();
+      
+      // Use the workspace path of the active IDE
+      const activeIDE = await this.ideManager.getActiveIDE();
+      let workspacePath = activeIDE?.workspacePath;
+      console.log('[CursorIDEService] Using workspace path for package.json analysis:', workspacePath);
+      
+      // If workspace path is virtual (like composer-code-block-anysphere:/), use project root as fallback
+      if (workspacePath && workspacePath.includes(':')) {
+        const path = require('path');
+        const currentDir = process.cwd();
+        workspacePath = path.resolve(currentDir, '..');
+        console.log('[CursorIDEService] Virtual workspace detected, using project root as fallback:', workspacePath);
+      }
+      
+      const packageJsonUrl = await this.packageJsonAnalyzer.analyzePackageJsonInPath(workspacePath);
       if (packageJsonUrl) {
         console.log('[CursorIDEService] Dev server detected via package.json:', packageJsonUrl);
         return packageJsonUrl;
       }
-
       // Fallback to terminal monitoring (less reliable due to CDP limitations)
       console.log('[CursorIDEService] Package.json analysis failed, trying terminal monitoring...');
       return await this.terminalMonitor.monitorTerminalOutput();
@@ -137,15 +150,22 @@ class CursorIDEService {
 
   // Dev server detection methods
   async detectDevServerFromPackageJson(workspacePath = null) {
-    return await this.devServerDetector.detectDevServerFromPackageJson(workspacePath);
-  }
-
-  async detectDevServerFromCDP() {
-    return await this.devServerDetector.detectDevServerFromCDP();
-  }
-
-  resetPackageJsonCache() {
-    return this.devServerDetector.resetPackageJsonCache();
+    // If no workspace path provided, use the active IDE's workspace path
+    if (!workspacePath) {
+      const activeIDE = await this.ideManager.getActiveIDE();
+      workspacePath = activeIDE?.workspacePath;
+      console.log('[CursorIDEService] No workspace path provided, using active IDE workspace path:', workspacePath);
+    }
+    
+    // If workspace path is virtual (like composer-code-block-anysphere:/), use project root as fallback
+    if (workspacePath && workspacePath.includes(':')) {
+      const path = require('path');
+      const currentDir = process.cwd();
+      workspacePath = path.resolve(currentDir, '..');
+      console.log('[CursorIDEService] Virtual workspace detected, using project root as fallback:', workspacePath);
+    }
+    
+    return await this.packageJsonAnalyzer.analyzePackageJsonInPath(workspacePath);
   }
 
   // Workspace path detection methods

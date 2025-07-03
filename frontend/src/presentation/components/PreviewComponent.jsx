@@ -35,10 +35,8 @@ function PreviewComponent({ eventBus }) {
     setError(null);
     
     try {
-      const data = await apiCall(API_CONFIG.endpoints.preview.status);
-      if (data.success) {
+      // Use existing IDE endpoints to get user app URL
         await loadPreviewData();
-      }
     } catch (error) {
       console.error('❌ Failed to initialize preview:', error);
       setError('Failed to initialize preview');
@@ -83,12 +81,38 @@ function PreviewComponent({ eventBus }) {
 
   const loadPreviewData = async () => {
     try {
-      const data = await apiCall(API_CONFIG.endpoints.preview.data);
-      if (data.success) {
-        setPreviewData(data.previewData);
+      // First try to get user app URL from backend
+      const response = await fetch('/api/ide/user-app-url');
+      const result = await response.json();
+      
+      let previewUrl = null;
+      
+      if (result.success && result.data && result.data.url) {
+        console.log('Found user app URL:', result.data.url);
+        previewUrl = result.data.url;
       } else {
-        throw new Error(data.error || 'Failed to load preview data');
+        console.log('No user app URL found, checking terminal output...');
+        // Trigger terminal monitoring on backend
+        const monitorResponse = await fetch('/api/ide/monitor-terminal', {
+          method: 'POST'
+        });
+        const monitorResult = await monitorResponse.json();
+        
+        if (monitorResult.success && monitorResult.data && monitorResult.data.url) {
+          console.log('Found URL from terminal monitoring:', monitorResult.data.url);
+          previewUrl = monitorResult.data.url;
+        } else {
+          throw new Error('No user app URL found in terminal output');
       }
+      }
+
+      const previewData = {
+        url: previewUrl,
+        title: `Preview - User App`,
+        timestamp: new Date().toISOString()
+      };
+
+      setPreviewData(previewData);
     } catch (error) {
       console.error('❌ Failed to load preview data:', error);
       throw error;

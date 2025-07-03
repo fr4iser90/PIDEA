@@ -12,21 +12,21 @@ class GetChatHistoryHandler {
     
     // If sessionId is provided, use it (for backward compatibility)
     if (query.sessionId) {
-      const session = await this.chatRepository.findSessionById(query.sessionId);
-      if (!session) {
-        throw new Error('Session not found');
-      }
-      let messages = session.messages;
-      if (query.offset) {
-        messages = messages.slice(query.offset);
-      }
-      if (query.limit) {
-        messages = messages.slice(0, query.limit);
-      }
-      return {
-        sessionId: session.id,
-        idePort: session.idePort,
-        messages: messages.map(m => m.toJSON())
+    const session = await this.chatRepository.findSessionById(query.sessionId);
+    if (!session) {
+      throw new Error('Session not found');
+    }
+    let messages = session.messages;
+    if (query.offset) {
+      messages = messages.slice(query.offset);
+    }
+    if (query.limit) {
+      messages = messages.slice(0, query.limit);
+    }
+    return {
+      sessionId: session.id,
+      idePort: session.idePort,
+      messages: messages.map(m => m.toJSON())
       };
     }
     

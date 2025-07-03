@@ -357,7 +357,6 @@ class Application {
       
       this.server.listen(this.config.port, () => {
         console.log(`[Application] Server running at http://localhost:${this.config.port}/`);
-        console.log(`[Application] Web-UI: http://localhost:${this.config.port}/`);
         console.log(`[Application] API: http://localhost:${this.config.port}/api/`);
         this.isRunning = true;
       });

@@ -462,7 +462,7 @@ class AppController {
     // WebSocket for chat updates only (existing functionality)
     let chatWs;
     const connectChatWebSocket = () => {
-      chatWs = new WebSocket('ws://localhost:3000'); // Use same port as main server
+      chatWs = new WebSocket('ws://localhost:4000'); // Use same port as main server
       chatWs.onopen = () => {
         console.log('[WebSocket] Connected for chat updates');
       };

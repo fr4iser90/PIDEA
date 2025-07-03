@@ -12,6 +12,7 @@ function App() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
   const [activePort, setActivePort] = useState(null);
+  const [isSplitView, setIsSplitView] = useState(false);
   const containerRef = useRef(null);
 
   useEffect(() => {
@@ -103,7 +104,14 @@ function App() {
   };
 
   const handleNavigationClick = (view) => {
+    if (view === 'preview') {
+      // Toggle split view for preview
+      setIsSplitView(!isSplitView);
+      setCurrentView('chat'); // Always stay in chat view, just add preview
+    } else {
+      setIsSplitView(false); // Exit split view for other views
     setCurrentView(view);
+    }
     if (eventBus) {
       eventBus.emit('view-changed', { view });
     }
@@ -192,8 +200,9 @@ function App() {
         <ChatSidebarComponent eventBus={eventBus} activePort={activePort} onActivePortChange={setActivePort} />
         
         {/* Main View */}
-        <div className="main-content">
+        <div className={`main-content ${isSplitView ? 'split-view' : ''}`}>
           {renderView()}
+          {isSplitView && <PreviewComponent eventBus={eventBus} />}
         </div>
         
         {/* Right Panel */}
