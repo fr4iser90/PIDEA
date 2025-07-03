@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import APIChatRepository from '@infrastructure/repositories/APIChatRepository.jsx';
 
-function PreviewComponent({ eventBus }) {
+function PreviewComponent({ eventBus, activePort }) {
   const [previewData, setPreviewData] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -21,6 +21,23 @@ function PreviewComponent({ eventBus }) {
       cleanupPreview();
     };
   }, []);
+
+  // Lade Preview immer, wenn activePort sich ändert (React-Way)
+  useEffect(() => {
+    console.log('[PreviewComponent] activePort changed:', activePort);
+    if (activePort) {
+      console.log('[PreviewComponent] Loading preview for port:', activePort);
+      handleRefresh();
+    }
+  }, [activePort]);
+
+  useEffect(() => {
+    if (!eventBus) return;
+    eventBus.on('activeIDEChanged', handleIDEChanged);
+    return () => {
+      eventBus.off('activeIDEChanged', handleIDEChanged);
+    };
+  }, [eventBus]);
 
   const setupEventListeners = () => {
     if (eventBus) {
@@ -108,31 +125,49 @@ function PreviewComponent({ eventBus }) {
 
   const loadPreviewData = async () => {
     try {
-      // First try to get user app URL from backend
-      const result = await apiRepository.getUserAppUrl();
-      
       let previewUrl = null;
       let port = null;
       let workspacePath = null;
       
-      if (result.success && result.data && result.data.url) {
-        console.log('Found user app URL:', result.data.url);
-        previewUrl = result.data.url;
-        port = result.data.port;
-        workspacePath = result.data.workspacePath;
-      } else {
-        console.log('No user app URL found, checking terminal output...');
-        // Trigger terminal monitoring on backend
-        const monitorResult = await apiRepository.monitorTerminal();
+      // If we have activePort, try to get user app URL for that specific port
+      if (activePort) {
+        console.log('[PreviewComponent] Getting user app URL for port:', activePort);
+        const result = await apiRepository.getUserAppUrlForPort(activePort);
         
-        if (monitorResult.success && monitorResult.data && monitorResult.data.url) {
-          console.log('Found URL from terminal monitoring:', monitorResult.data.url);
-          previewUrl = monitorResult.data.url;
-          port = monitorResult.data.port;
-          workspacePath = monitorResult.data.workspacePath;
+        if (result.success && result.data && result.data.url) {
+          console.log('Found user app URL for port:', result.data.url);
+          previewUrl = result.data.url;
+          port = result.data.port;
+          workspacePath = result.data.workspacePath;
         } else {
-          throw new Error('No user app URL found in terminal output');
+          console.log('No user app URL found for port, trying general endpoint...');
+        }
       }
+      
+      // Fallback to general user app URL if port-specific failed
+      if (!previewUrl) {
+        console.log('Trying general user app URL...');
+        const result = await apiRepository.getUserAppUrl();
+        
+        if (result.success && result.data && result.data.url) {
+          console.log('Found user app URL:', result.data.url);
+          previewUrl = result.data.url;
+          port = result.data.port;
+          workspacePath = result.data.workspacePath;
+        } else {
+          console.log('No user app URL found, checking terminal output...');
+          // Trigger terminal monitoring on backend
+          const monitorResult = await apiRepository.monitorTerminal();
+          
+          if (monitorResult.success && monitorResult.data && monitorResult.data.url) {
+            console.log('Found URL from terminal monitoring:', monitorResult.data.url);
+            previewUrl = monitorResult.data.url;
+            port = monitorResult.data.port;
+            workspacePath = monitorResult.data.workspacePath;
+          } else {
+            throw new Error('No user app URL found in terminal output');
+          }
+        }
       }
 
       const previewData = {

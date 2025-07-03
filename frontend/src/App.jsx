@@ -100,7 +100,7 @@ function App() {
       case 'ide-mirror':
         return <IDEMirrorComponent eventBus={eventBus} />;
       case 'preview':
-        return <PreviewComponent eventBus={eventBus} />;
+        return <PreviewComponent eventBus={eventBus} activePort={activePort} />;
       case 'code':
         return <div className="code-explorer-container">Code Editor View</div>;
       default:
@@ -214,7 +214,7 @@ function App() {
           {/* Main View */}
           <div className={`main-content ${isSplitView ? 'split-view' : ''}`}>
             {renderView()}
-            {isSplitView && <PreviewComponent eventBus={eventBus} />}
+            {isSplitView && <PreviewComponent eventBus={eventBus} activePort={activePort} />}
           </div>
           
           {/* Right Panel */}
