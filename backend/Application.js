@@ -31,6 +31,51 @@ const CreateTaskHandler = require('./application/handlers/CreateTaskHandler');
 const AnalyzeProjectHandler = require('./application/handlers/AnalyzeProjectHandler');
 const AutoModeHandler = require('./application/handlers/AutoModeHandler');
 
+// Analyze Commands and Handlers
+const AnalyzeArchitectureCommand = require('./application/commands/analyze/AnalyzeArchitectureCommand');
+const AnalyzeCodeQualityCommand = require('./application/commands/analyze/AnalyzeCodeQualityCommand');
+const AnalyzeDependenciesCommand = require('./application/commands/analyze/AnalyzeDependenciesCommand');
+const AnalyzePerformanceCommand = require('./application/commands/analyze/AnalyzePerformanceCommand');
+const AnalyzeSecurityCommand = require('./application/commands/analyze/AnalyzeSecurityCommand');
+const VibeCoderAnalyzeCommand = require('./application/commands/vibecoder/VibeCoderAnalyzeCommand');
+
+const AnalyzeArchitectureHandler = require('./application/handlers/analyze/AnalyzeArchitectureHandler');
+const AnalyzeCodeQualityHandler = require('./application/handlers/analyze/AnalyzeCodeQualityHandler');
+const AnalyzeDependenciesHandler = require('./application/handlers/analyze/AnalyzeDependenciesHandler');
+const AnalyzePerformanceHandler = require('./application/handlers/analyze/AnalyzePerformanceHandler');
+const AnalyzeSecurityHandler = require('./application/handlers/analyze/AnalyzeSecurityHandler');
+const VibeCoderAnalyzeHandler = require('./application/handlers/vibecoder/VibeCoderAnalyzeHandler');
+
+// Refactor Commands and Handlers
+const SplitLargeFilesCommand = require('./application/commands/refactor/SplitLargeFilesCommand');
+const OrganizeModulesCommand = require('./application/commands/refactor/OrganizeModulesCommand');
+const CleanDependenciesCommand = require('./application/commands/refactor/CleanDependenciesCommand');
+const RestructureArchitectureCommand = require('./application/commands/refactor/RestructureArchitectureCommand');
+const VibeCoderRefactorCommand = require('./application/commands/vibecoder/VibeCoderRefactorCommand');
+
+const SplitLargeFilesHandler = require('./application/handlers/refactor/SplitLargeFilesHandler');
+const OrganizeModulesHandler = require('./application/handlers/refactor/OrganizeModulesHandler');
+const CleanDependenciesHandler = require('./application/handlers/refactor/CleanDependenciesHandler');
+const RestructureArchitectureHandler = require('./application/handlers/refactor/RestructureArchitectureHandler');
+const VibeCoderRefactorHandler = require('./application/handlers/vibecoder/VibeCoderRefactorHandler');
+
+// Generate Commands and Handlers
+const GenerateTestsCommand = require('./application/commands/generate/GenerateTestsCommand');
+const GenerateDocumentationCommand = require('./application/commands/generate/GenerateDocumentationCommand');
+const GenerateConfigsCommand = require('./application/commands/generate/GenerateConfigsCommand');
+const GenerateScriptsCommand = require('./application/commands/generate/GenerateScriptsCommand');
+const VibeCoderGenerateCommand = require('./application/commands/vibecoder/VibeCoderGenerateCommand');
+
+const GenerateTestsHandler = require('./application/handlers/generate/GenerateTestsHandler');
+const GenerateDocumentationHandler = require('./application/handlers/generate/GenerateDocumentationHandler');
+const GenerateConfigsHandler = require('./application/handlers/generate/GenerateConfigsHandler');
+const GenerateScriptsHandler = require('./application/handlers/generate/GenerateScriptsHandler');
+const VibeCoderGenerateHandler = require('./application/handlers/vibecoder/VibeCoderGenerateHandler');
+
+// VibeCoder Mode Command and Handler
+const VibeCoderModeCommand = require('./application/commands/vibecoder/VibeCoderModeCommand');
+const VibeCoderModeHandler = require('./application/handlers/vibecoder/VibeCoderModeHandler');
+
 // Infrastructure
 const BrowserManager = require('./infrastructure/external/BrowserManager');
 const IDEManager = require('./infrastructure/external/IDEManager');
@@ -302,18 +347,161 @@ class Application {
       eventBus: this.eventBus,
       logger: this.logger
     });
+
     this.autoModeHandler = new AutoModeHandler({
       taskRepository: this.taskRepository,
       eventBus: this.eventBus,
       logger: this.logger,
       cursorIDEService: this.cursorIDEService,
       projectAnalyzer: this.projectAnalyzer,
-      projectMappingService: this.projectMappingService
+      projectMappingService: this.projectMappingService,
+      codeQualityService: this.codeQualityService,
+      securityService: this.securityService,
+      performanceService: this.performanceService,
+      architectureService: this.architectureService
     });
+
+    // Initialize Analyze Handlers
+    this.analyzeArchitectureHandler = new AnalyzeArchitectureHandler({
+      eventBus: this.eventBus,
+      analysisRepository: this.analysisRepository,
+      logger: this.logger
+    });
+
+    this.analyzeCodeQualityHandler = new AnalyzeCodeQualityHandler({
+      eventBus: this.eventBus,
+      analysisRepository: this.analysisRepository,
+      logger: this.logger
+    });
+
+    this.analyzeDependenciesHandler = new AnalyzeDependenciesHandler({
+      eventBus: this.eventBus,
+      analysisRepository: this.analysisRepository,
+      logger: this.logger
+    });
+
+    this.analyzePerformanceHandler = new AnalyzePerformanceHandler({
+      eventBus: this.eventBus,
+      analysisRepository: this.analysisRepository,
+      logger: this.logger
+    });
+
+    this.analyzeSecurityHandler = new AnalyzeSecurityHandler({
+      eventBus: this.eventBus,
+      analysisRepository: this.analysisRepository,
+      logger: this.logger
+    });
+
+    // Initialize Refactor Handlers
+    this.splitLargeFilesHandler = new SplitLargeFilesHandler({
+      eventBus: this.eventBus,
+      analysisRepository: this.analysisRepository,
+      logger: this.logger
+    });
+
+    this.organizeModulesHandler = new OrganizeModulesHandler({
+      eventBus: this.eventBus,
+      analysisRepository: this.analysisRepository,
+      logger: this.logger
+    });
+
+    this.cleanDependenciesHandler = new CleanDependenciesHandler({
+      eventBus: this.eventBus,
+      analysisRepository: this.analysisRepository,
+      logger: this.logger
+    });
+
+    this.restructureArchitectureHandler = new RestructureArchitectureHandler({
+      eventBus: this.eventBus,
+      analysisRepository: this.analysisRepository,
+      logger: this.logger
+    });
+
+    // Initialize Generate Handlers
+    this.generateTestsHandler = new GenerateTestsHandler({
+      eventBus: this.eventBus,
+      analysisRepository: this.analysisRepository,
+      logger: this.logger
+    });
+
+    this.generateDocumentationHandler = new GenerateDocumentationHandler({
+      eventBus: this.eventBus,
+      analysisRepository: this.analysisRepository,
+      logger: this.logger
+    });
+
+    this.generateConfigsHandler = new GenerateConfigsHandler({
+      eventBus: this.eventBus,
+      analysisRepository: this.analysisRepository,
+      logger: this.logger
+    });
+
+    this.generateScriptsHandler = new GenerateScriptsHandler({
+      eventBus: this.eventBus,
+      analysisRepository: this.analysisRepository,
+      logger: this.logger
+    });
+
+    // Initialize VibeCoder Wrapper Handlers
+    this.vibeCoderAnalyzeHandler = new VibeCoderAnalyzeHandler({
+      eventBus: this.eventBus,
+      analysisRepository: this.analysisRepository,
+      commandBus: this.commandBus,
+      logger: this.logger
+    });
+
+    this.vibeCoderRefactorHandler = new VibeCoderRefactorHandler({
+      eventBus: this.eventBus,
+      analysisRepository: this.analysisRepository,
+      commandBus: this.commandBus,
+      logger: this.logger
+    });
+
+    this.vibeCoderGenerateHandler = new VibeCoderGenerateHandler({
+      eventBus: this.eventBus,
+      analysisRepository: this.analysisRepository,
+      commandBus: this.commandBus,
+      logger: this.logger
+    });
+
+    this.vibeCoderModeHandler = new VibeCoderModeHandler({
+      eventBus: this.eventBus,
+      analysisRepository: this.analysisRepository,
+      commandBus: this.commandBus,
+      logger: this.logger
+    });
+
     // TODO: Add TaskExecutionEngine when available
     this.taskExecutionEngine = null;
+
+    // Register all command handlers
     this.commandBus.register('AnalyzeProjectCommand', this.analyzeProjectHandler);
     this.commandBus.register('AutoModeCommand', this.autoModeHandler);
+
+    // Register Analyze Commands
+    this.commandBus.register('AnalyzeArchitectureCommand', this.analyzeArchitectureHandler);
+    this.commandBus.register('AnalyzeCodeQualityCommand', this.analyzeCodeQualityHandler);
+    this.commandBus.register('AnalyzeDependenciesCommand', this.analyzeDependenciesHandler);
+    this.commandBus.register('AnalyzePerformanceCommand', this.analyzePerformanceHandler);
+    this.commandBus.register('AnalyzeSecurityCommand', this.analyzeSecurityHandler);
+    this.commandBus.register('VibeCoderAnalyzeCommand', this.vibeCoderAnalyzeHandler);
+
+    // Register Refactor Commands
+    this.commandBus.register('SplitLargeFilesCommand', this.splitLargeFilesHandler);
+    this.commandBus.register('OrganizeModulesCommand', this.organizeModulesHandler);
+    this.commandBus.register('CleanDependenciesCommand', this.cleanDependenciesHandler);
+    this.commandBus.register('RestructureArchitectureCommand', this.restructureArchitectureHandler);
+    this.commandBus.register('VibeCoderRefactorCommand', this.vibeCoderRefactorHandler);
+
+    // Register Generate Commands
+    this.commandBus.register('GenerateTestsCommand', this.generateTestsHandler);
+    this.commandBus.register('GenerateDocumentationCommand', this.generateDocumentationHandler);
+    this.commandBus.register('GenerateConfigsCommand', this.generateConfigsHandler);
+    this.commandBus.register('GenerateScriptsCommand', this.generateScriptsHandler);
+    this.commandBus.register('VibeCoderGenerateCommand', this.vibeCoderGenerateHandler);
+
+    // Register VibeCoder Mode Command
+    this.commandBus.register('VibeCoderModeCommand', this.vibeCoderModeHandler);
 
     this.logger.info('[Application] Application handlers initialized');
   }

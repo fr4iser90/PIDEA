@@ -73,17 +73,17 @@ class AutoModeController {
             this.logger.info('AutoModeController: Auto mode execution started', {
                 projectPath,
                 mode,
-                sessionId: result.session.id,
+                sessionId: result.result.session.id,
                 userId
             });
 
             res.json({
                 success: true,
                 data: {
-                    session: result.session,
-                    tasks: result.tasks,
-                    scripts: result.scripts,
-                    analysis: result.analysis
+                    session: result.result.session,
+                    tasks: result.result.tasks,
+                    scripts: result.result.scripts,
+                    analysis: result.result.analysis
                 },
                 message: 'Auto mode execution started successfully'
             });
