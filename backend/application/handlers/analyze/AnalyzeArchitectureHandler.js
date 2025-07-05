@@ -275,13 +275,13 @@ class AnalyzeArchitectureHandler {
             return {
                 projectInfo,
                 architecture,
-                patterns: architecture.patterns || [],
-                layers: architecture.layers || [],
-                modules: architecture.modules || [],
+                patterns: architecture.detectedPatterns || [],
+                layers: architecture.structure?.layers || [],
+                modules: Object.keys(architecture.coupling?.instability || {}),
                 coupling: architecture.coupling || {},
                 cohesion: architecture.cohesion || {},
-                antiPatterns: architecture.antiPatterns || [],
-                designPrinciples: architecture.designPrinciples || [],
+                antiPatterns: architecture.violations?.filter(v => v.severity === 'high') || [],
+                designPrinciples: architecture.recommendations || [],
                 analysisOptions: options,
                 timestamp: new Date()
             };
@@ -300,11 +300,11 @@ class AnalyzeArchitectureHandler {
         const { architecture } = analysis;
         
         return {
-            patternCount: architecture.patterns?.length || 0,
-            layerCount: architecture.layers?.length || 0,
-            moduleCount: architecture.modules?.length || 0,
-            antiPatternCount: architecture.antiPatterns?.length || 0,
-            designPrincipleCount: architecture.designPrinciples?.length || 0,
+            patternCount: architecture.detectedPatterns?.length || 0,
+            layerCount: architecture.structure?.layers?.length || 0,
+            moduleCount: Object.keys(architecture.coupling?.instability || {}).length,
+            antiPatternCount: architecture.violations?.filter(v => v.severity === 'high').length || 0,
+            designPrincipleCount: architecture.recommendations?.length || 0,
             averageCoupling: this.calculateAverageCoupling(architecture.coupling),
             averageCohesion: this.calculateAverageCohesion(architecture.cohesion),
             complexityScore: this.calculateComplexityScore(architecture)
@@ -312,24 +312,25 @@ class AnalyzeArchitectureHandler {
     }
 
     calculateAverageCoupling(coupling) {
-        if (!coupling || Object.keys(coupling).length === 0) return 0;
-        const values = Object.values(coupling);
+        if (!coupling || !coupling.instability || Object.keys(coupling.instability).length === 0) return 0;
+        const values = Object.values(coupling.instability).filter(v => !isNaN(v) && isFinite(v));
+        if (values.length === 0) return 0;
         return values.reduce((a, b) => a + b, 0) / values.length;
     }
 
     calculateAverageCohesion(cohesion) {
-        if (!cohesion || Object.keys(cohesion).length === 0) return 0;
-        const values = Object.values(cohesion);
+        if (!cohesion || !cohesion.moduleCohesion || Object.keys(cohesion.moduleCohesion).length === 0) return 0;
+        const values = Object.values(cohesion.moduleCohesion);
         return values.reduce((a, b) => a + b, 0) / values.length;
     }
 
     calculateComplexityScore(architecture) {
         let score = 0;
         
-        if (architecture.patterns) score += architecture.patterns.length * 10;
-        if (architecture.layers) score += architecture.layers.length * 5;
-        if (architecture.modules) score += architecture.modules.length * 3;
-        if (architecture.antiPatterns) score += architecture.antiPatterns.length * -15;
+        if (architecture.detectedPatterns) score += architecture.detectedPatterns.length * 10;
+        if (architecture.structure?.layers) score += architecture.structure.layers.length * 5;
+        if (architecture.coupling?.instability) score += Object.keys(architecture.coupling.instability).length * 3;
+        if (architecture.violations) score += architecture.violations.filter(v => v.severity === 'high').length * -15;
         
         return Math.max(0, score);
     }

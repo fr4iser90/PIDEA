@@ -98,46 +98,16 @@ class ArchitectureAnalyzer {
         };
 
         try {
-            const items = await fsPromises.readdir(projectPath);
+            // Recursively analyze directory structure
+            await this.analyzeDirectoryRecursively(projectPath, structure, projectPath);
             
-            // Analyze directory structure
-            for (const item of items) {
-                const itemPath = path.join(projectPath, item);
-                const stats = await fsPromises.stat(itemPath);
-                
-                if (stats.isDirectory === true) {
-                    // Detect common architectural layers
-                    if (item.toLowerCase().includes('controller') || item.toLowerCase().includes('api')) {
-                        structure.layers.push({ name: 'presentation', path: item });
-                    }
-                    if (item.toLowerCase().includes('service') || item.toLowerCase().includes('business')) {
-                        structure.layers.push({ name: 'business', path: item });
-                    }
-                    if (item.toLowerCase().includes('model') || item.toLowerCase().includes('entity')) {
-                        structure.layers.push({ name: 'data', path: item });
-                    }
-                    if (item.toLowerCase().includes('repository') || item.toLowerCase().includes('dao')) {
-                        structure.layers.push({ name: 'data', path: item });
-                    }
-                    if (item.toLowerCase().includes('middleware') || item.toLowerCase().includes('interceptor')) {
-                        structure.layers.push({ name: 'cross-cutting', path: item });
-                    }
-                    if (item.toLowerCase().includes('util') || item.toLowerCase().includes('helper')) {
-                        structure.utilities.push(item);
-                    }
-                    if (item.toLowerCase().includes('config') || item.toLowerCase().includes('setting')) {
-                        structure.configuration[item] = await this.analyzeConfiguration(itemPath);
-                    }
-                }
-            }
-
             // Determine organization pattern
             if (structure.layers.length > 0) {
                 structure.organization = 'layered';
-            } else if (items.some(item => item.includes('module') || item.includes('feature'))) {
+            } else if (structure.modules.length > 0) {
                 structure.organization = 'modular';
-            } else if (items.some(item => item.includes('microservice') || item.includes('service'))) {
-                structure.organization = 'microservices';
+            } else if (structure.services.length > 0) {
+                structure.organization = 'service-oriented';
             } else {
                 structure.organization = 'flat';
             }
@@ -147,6 +117,55 @@ class ArchitectureAnalyzer {
         }
 
         return structure;
+    }
+
+    async analyzeDirectoryRecursively(dirPath, structure, projectPath, depth = 0) {
+        if (depth > 3) return; // Limit recursion depth
+        
+        try {
+            const items = await fsPromises.readdir(dirPath);
+            
+            for (const item of items) {
+                const itemPath = path.join(dirPath, item);
+                const stats = await fsPromises.stat(itemPath);
+                
+                if (stats.isDirectory()) {
+                    const relativePath = path.relative(projectPath, itemPath);
+                    
+                    // Detect common architectural layers
+                    if (item.toLowerCase().includes('controller') || item.toLowerCase().includes('api') || 
+                        item.toLowerCase().includes('presentation') || item.toLowerCase().includes('web')) {
+                        structure.layers.push({ name: 'presentation', path: relativePath });
+                    }
+                    if (item.toLowerCase().includes('service') || item.toLowerCase().includes('business') || 
+                        item.toLowerCase().includes('application') || item.toLowerCase().includes('domain')) {
+                        structure.layers.push({ name: 'business', path: relativePath });
+                        structure.services.push(relativePath);
+                    }
+                    if (item.toLowerCase().includes('model') || item.toLowerCase().includes('entity') || 
+                        item.toLowerCase().includes('data') || item.toLowerCase().includes('repository')) {
+                        structure.layers.push({ name: 'data', path: relativePath });
+                    }
+                    if (item.toLowerCase().includes('middleware') || item.toLowerCase().includes('interceptor') || 
+                        item.toLowerCase().includes('auth') || item.toLowerCase().includes('infrastructure')) {
+                        structure.layers.push({ name: 'cross-cutting', path: relativePath });
+                    }
+                    if (item.toLowerCase().includes('util') || item.toLowerCase().includes('helper') || 
+                        item.toLowerCase().includes('common') || item.toLowerCase().includes('shared')) {
+                        structure.utilities.push(relativePath);
+                    }
+                    if (item.toLowerCase().includes('config') || item.toLowerCase().includes('setting') || 
+                        item.toLowerCase().includes('conf')) {
+                        structure.configuration[relativePath] = await this.analyzeConfiguration(itemPath);
+                    }
+                    
+                    // Recursively analyze subdirectories
+                    await this.analyzeDirectoryRecursively(itemPath, structure, projectPath, depth + 1);
+                }
+            }
+        } catch (error) {
+            // Ignore errors
+        }
     }
 
     /**
@@ -211,6 +230,9 @@ class ArchitectureAnalyzer {
         if (content.includes('class') && content.includes('View')) {
             patterns.push({ pattern: 'mvc', confidence: 0.6, file: filePath });
         }
+        if (content.includes('Controller') || content.includes('controller')) {
+            patterns.push({ pattern: 'mvc', confidence: 0.7, file: filePath });
+        }
 
         // CQRS Pattern detection
         if (content.includes('Command') && content.includes('Query')) {
@@ -218,6 +240,9 @@ class ArchitectureAnalyzer {
         }
         if (content.includes('CommandHandler') || content.includes('QueryHandler')) {
             patterns.push({ pattern: 'cqrs', confidence: 0.8, file: filePath });
+        }
+        if (content.includes('Command') || content.includes('Query')) {
+            patterns.push({ pattern: 'cqrs', confidence: 0.5, file: filePath });
         }
 
         // DDD Pattern detection
@@ -227,6 +252,9 @@ class ArchitectureAnalyzer {
         if (content.includes('DomainService') || content.includes('Repository')) {
             patterns.push({ pattern: 'ddd', confidence: 0.6, file: filePath });
         }
+        if (content.includes('domain') || content.includes('Domain')) {
+            patterns.push({ pattern: 'ddd', confidence: 0.4, file: filePath });
+        }
 
         // Event-Driven Pattern detection
         if (content.includes('EventEmitter') || content.includes('emit(') || content.includes('on(')) {
@@ -235,15 +263,26 @@ class ArchitectureAnalyzer {
         if (content.includes('EventBus') || content.includes('EventStore')) {
             patterns.push({ pattern: 'eventDriven', confidence: 0.8, file: filePath });
         }
+        if (content.includes('Event') || content.includes('event')) {
+            patterns.push({ pattern: 'eventDriven', confidence: 0.4, file: filePath });
+        }
 
         // Layered Architecture detection
         if (content.includes('Service') && content.includes('Repository')) {
             patterns.push({ pattern: 'layered', confidence: 0.5, file: filePath });
         }
+        if (content.includes('service') || content.includes('Service')) {
+            patterns.push({ pattern: 'layered', confidence: 0.3, file: filePath });
+        }
 
         // Microservices detection
         if (content.includes('microservice') || content.includes('service-discovery')) {
             patterns.push({ pattern: 'microservices', confidence: 0.7, file: filePath });
+        }
+
+        // Monolithic detection
+        if (content.includes('app.js') || content.includes('server.js') || content.includes('index.js')) {
+            patterns.push({ pattern: 'monolith', confidence: 0.4, file: filePath });
         }
 
         return patterns;
@@ -268,13 +307,13 @@ class ArchitectureAnalyzer {
             const modules = this.groupFilesIntoModules(files);
             
             for (const [moduleName, moduleFiles] of Object.entries(modules)) {
-                const afferent = this.calculateAfferentCoupling(moduleFiles, files);
-                const efferent = this.calculateEfferentCoupling(moduleFiles, files);
+                const afferent = await this.calculateAfferentCoupling(moduleFiles, files);
+                const efferent = await this.calculateEfferentCoupling(moduleFiles, files);
                 
                 coupling.afferentCoupling[moduleName] = afferent;
                 coupling.efferentCoupling[moduleName] = efferent;
-                coupling.instability[moduleName] = efferent / (afferent + efferent);
-                coupling.abstractness[moduleName] = this.calculateAbstractness(moduleFiles);
+                coupling.instability[moduleName] = (afferent + efferent) > 0 ? efferent / (afferent + efferent) : 0;
+                coupling.abstractness[moduleName] = await this.calculateAbstractness(moduleFiles);
                 
                 // Distance from main sequence
                 const instability = coupling.instability[moduleName];
@@ -295,18 +334,22 @@ class ArchitectureAnalyzer {
      * @param {Array} allFiles - All project files
      * @returns {number} Afferent coupling count
      */
-    calculateAfferentCoupling(moduleFiles, allFiles) {
+    async calculateAfferentCoupling(moduleFiles, allFiles) {
         let afferent = 0;
         
         for (const file of allFiles) {
             if (!moduleFiles.includes(file)) {
-                const content = fs.readFileSync(file, 'utf8');
-                for (const moduleFile of moduleFiles) {
-                    const moduleName = path.basename(moduleFile, path.extname(moduleFile));
-                    if (content.includes(`require('${moduleName}')`) || content.includes(`import ${moduleName}`)) {
-                        afferent++;
-                        break;
+                try {
+                    const content = await fsPromises.readFile(file, 'utf8');
+                    for (const moduleFile of moduleFiles) {
+                        const moduleName = path.basename(moduleFile, path.extname(moduleFile));
+                        if (content.includes(`require('${moduleName}')`) || content.includes(`import ${moduleName}`)) {
+                            afferent++;
+                            break;
+                        }
                     }
+                } catch (error) {
+                    // Ignore file read errors
                 }
             }
         }
@@ -320,18 +363,22 @@ class ArchitectureAnalyzer {
      * @param {Array} allFiles - All project files
      * @returns {number} Efferent coupling count
      */
-    calculateEfferentCoupling(moduleFiles, allFiles) {
+    async calculateEfferentCoupling(moduleFiles, allFiles) {
         let efferent = 0;
         
         for (const file of moduleFiles) {
-            const content = fs.readFileSync(file, 'utf8');
-            for (const otherFile of allFiles) {
-                if (!moduleFiles.includes(otherFile)) {
-                    const otherModuleName = path.basename(otherFile, path.extname(otherFile));
-                    if (content.includes(`require('${otherModuleName}')`) || content.includes(`import ${otherModuleName}`)) {
-                        efferent++;
+            try {
+                const content = await fsPromises.readFile(file, 'utf8');
+                for (const otherFile of allFiles) {
+                    if (!moduleFiles.includes(otherFile)) {
+                        const otherModuleName = path.basename(otherFile, path.extname(otherFile));
+                        if (content.includes(`require('${otherModuleName}')`) || content.includes(`import ${otherModuleName}`)) {
+                            efferent++;
+                        }
                     }
                 }
+            } catch (error) {
+                // Ignore file read errors
             }
         }
         
@@ -343,17 +390,21 @@ class ArchitectureAnalyzer {
      * @param {Array} moduleFiles - Files in the module
      * @returns {number} Abstractness ratio
      */
-    calculateAbstractness(moduleFiles) {
+    async calculateAbstractness(moduleFiles) {
         let abstractClasses = 0;
         let totalClasses = 0;
         
         for (const file of moduleFiles) {
-            const content = fs.readFileSync(file, 'utf8');
-            const classMatches = content.match(/class\s+\w+/g) || [];
-            const abstractMatches = content.match(/abstract\s+class\s+\w+/g) || [];
-            
-            totalClasses += classMatches.length;
-            abstractClasses += abstractMatches.length;
+            try {
+                const content = await fsPromises.readFile(file, 'utf8');
+                const classMatches = content.match(/class\s+\w+/g) || [];
+                const abstractMatches = content.match(/abstract\s+class\s+\w+/g) || [];
+                
+                totalClasses += classMatches.length;
+                abstractClasses += abstractMatches.length;
+            } catch (error) {
+                // Ignore file read errors
+            }
         }
         
         return totalClasses > 0 ? abstractClasses / totalClasses : 0;
@@ -377,9 +428,9 @@ class ArchitectureAnalyzer {
             const modules = this.groupFilesIntoModules(files);
             
             for (const [moduleName, moduleFiles] of Object.entries(modules)) {
-                cohesion.moduleCohesion[moduleName] = this.calculateModuleCohesion(moduleFiles);
-                cohesion.functionalCohesion[moduleName] = this.calculateFunctionalCohesion(moduleFiles);
-                cohesion.temporalCohesion[moduleName] = this.calculateTemporalCohesion(moduleFiles);
+                cohesion.moduleCohesion[moduleName] = await this.calculateModuleCohesion(moduleFiles);
+                cohesion.functionalCohesion[moduleName] = await this.calculateFunctionalCohesion(moduleFiles);
+                cohesion.temporalCohesion[moduleName] = await this.calculateTemporalCohesion(moduleFiles);
                 cohesion.logicalCohesion[moduleName] = this.calculateLogicalCohesion(moduleFiles);
             }
 
@@ -395,28 +446,36 @@ class ArchitectureAnalyzer {
      * @param {Array} moduleFiles - Files in the module
      * @returns {number} Cohesion score
      */
-    calculateModuleCohesion(moduleFiles) {
+    async calculateModuleCohesion(moduleFiles) {
         if (moduleFiles.length <= 1) return 1;
         
         let sharedFunctions = 0;
         let totalFunctions = 0;
         
         for (const file of moduleFiles) {
-            const content = fs.readFileSync(file, 'utf8');
-            const functions = content.match(/function\s+\w+|const\s+\w+\s*=\s*\(/g) || [];
-            totalFunctions += functions.length;
-            
-            // Check for shared function names across files
-            for (const otherFile of moduleFiles) {
-                if (file !== otherFile) {
-                    const otherContent = fs.readFileSync(otherFile, 'utf8');
-                    for (const func of functions) {
-                        const funcName = func.replace(/function\s+|const\s+(\w+)\s*=\s*\(.*/, '$1');
-                        if (otherContent.includes(funcName)) {
-                            sharedFunctions++;
+            try {
+                const content = await fsPromises.readFile(file, 'utf8');
+                const functions = content.match(/function\s+\w+|const\s+\w+\s*=\s*\(/g) || [];
+                totalFunctions += functions.length;
+                
+                // Check for shared function names across files
+                for (const otherFile of moduleFiles) {
+                    if (file !== otherFile) {
+                        try {
+                            const otherContent = await fsPromises.readFile(otherFile, 'utf8');
+                            for (const func of functions) {
+                                const funcName = func.replace(/function\s+|const\s+(\w+)\s*=\s*\(.*/, '$1');
+                                if (otherContent.includes(funcName)) {
+                                    sharedFunctions++;
+                                }
+                            }
+                        } catch (error) {
+                            // Ignore file read errors
                         }
                     }
                 }
+            } catch (error) {
+                // Ignore file read errors
             }
         }
         
@@ -428,22 +487,26 @@ class ArchitectureAnalyzer {
      * @param {Array} moduleFiles - Files in the module
      * @returns {number} Functional cohesion score
      */
-    calculateFunctionalCohesion(moduleFiles) {
+    async calculateFunctionalCohesion(moduleFiles) {
         // Simplified functional cohesion calculation
         const commonFunctions = ['create', 'read', 'update', 'delete', 'validate', 'process'];
         let cohesionScore = 0;
         
         for (const file of moduleFiles) {
-            const content = fs.readFileSync(file, 'utf8');
-            let functionCount = 0;
-            
-            for (const func of commonFunctions) {
-                if (content.includes(func)) {
-                    functionCount++;
+            try {
+                const content = await fsPromises.readFile(file, 'utf8');
+                let functionCount = 0;
+                
+                for (const func of commonFunctions) {
+                    if (content.includes(func)) {
+                        functionCount++;
+                    }
                 }
+                
+                cohesionScore += functionCount / commonFunctions.length;
+            } catch (error) {
+                // Ignore file read errors
             }
-            
-            cohesionScore += functionCount / commonFunctions.length;
         }
         
         return moduleFiles.length > 0 ? cohesionScore / moduleFiles.length : 0;
@@ -454,22 +517,26 @@ class ArchitectureAnalyzer {
      * @param {Array} moduleFiles - Files in the module
      * @returns {number} Temporal cohesion score
      */
-    calculateTemporalCohesion(moduleFiles) {
+    async calculateTemporalCohesion(moduleFiles) {
         // Simplified temporal cohesion calculation
         const temporalKeywords = ['init', 'start', 'stop', 'shutdown', 'cleanup'];
         let cohesionScore = 0;
         
         for (const file of moduleFiles) {
-            const content = fs.readFileSync(file, 'utf8');
-            let keywordCount = 0;
-            
-            for (const keyword of temporalKeywords) {
-                if (content.includes(keyword)) {
-                    keywordCount++;
+            try {
+                const content = await fsPromises.readFile(file, 'utf8');
+                let keywordCount = 0;
+                
+                for (const keyword of temporalKeywords) {
+                    if (content.includes(keyword)) {
+                        keywordCount++;
+                    }
                 }
+                
+                cohesionScore += keywordCount / temporalKeywords.length;
+            } catch (error) {
+                // Ignore file read errors
             }
-            
-            cohesionScore += keywordCount / temporalKeywords.length;
         }
         
         return moduleFiles.length > 0 ? cohesionScore / moduleFiles.length : 0;
@@ -528,18 +595,22 @@ class ArchitectureAnalyzer {
             
             // Create edges
             for (const file of files) {
-                const content = fs.readFileSync(file, 'utf8');
-                const imports = this.extractImports(content);
-                
-                for (const importPath of imports) {
-                    const targetFile = this.resolveImportPath(importPath, file, projectPath);
-                    if (targetFile && files.includes(targetFile)) {
-                        dependencies.edges.push({
-                            from: file,
-                            to: targetFile,
-                            type: 'import'
-                        });
+                try {
+                    const content = await fsPromises.readFile(file, 'utf8');
+                    const imports = this.extractImports(content);
+                    
+                    for (const importPath of imports) {
+                        const targetFile = this.resolveImportPath(importPath, file, projectPath);
+                        if (targetFile && files.includes(targetFile)) {
+                            dependencies.edges.push({
+                                from: file,
+                                to: targetFile,
+                                type: 'import'
+                            });
+                        }
                     }
+                } catch (error) {
+                    // Ignore file read errors
                 }
             }
             
@@ -566,9 +637,13 @@ class ArchitectureAnalyzer {
             const files = await this.getCodeFiles(projectPath);
             
             for (const file of files) {
-                const content = fs.readFileSync(file, 'utf8');
-                const fileViolations = this.findArchitectureViolations(content, file);
-                violations.push(...fileViolations);
+                try {
+                    const content = await fsPromises.readFile(file, 'utf8');
+                    const fileViolations = this.findArchitectureViolations(content, file);
+                    violations.push(...fileViolations);
+                } catch (error) {
+                    // Ignore file read errors
+                }
             }
 
         } catch (error) {
