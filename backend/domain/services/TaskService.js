@@ -297,13 +297,13 @@ class TaskService {
 ## Task Information
 - **Title**: ${task.title}
 - **Description**: ${task.description}
-- **Type**: ${task.type}
-- **Priority**: ${task.priority}
-- **File**: ${task.filePath}
-- **Lines**: ${task.lines}
+- **Type**: ${task.type.value}
+- **Priority**: ${task.priority.value}
+- **File**: ${task.metadata.filePath}
+- **Lines**: ${task.metadata.lines}
 
 ## Refactoring Steps
-${task.refactoringSteps ? task.refactoringSteps.map(step => `- ${step}`).join('\n') : '- Split large file into smaller modules\n- Improve code organization\n- Follow best practices'}
+${task.metadata.refactoringSteps ? task.metadata.refactoringSteps.map(step => `- ${step}`).join('\n') : '- Split large file into smaller modules\n- Improve code organization\n- Follow best practices'}
 
 ## Instructions
 Please refactor the code according to the task requirements. Focus on:
@@ -313,7 +313,7 @@ Please refactor the code according to the task requirements. Focus on:
 4. Maintaining functionality
 
 ## File to Refactor
-${task.filePath}
+${task.metadata.filePath}
 
 Please provide the refactored code and explain the changes made.`;
   }
@@ -328,7 +328,7 @@ Please provide the refactored code and explain the changes made.`;
     // Extract refactored code from AI response
     // This is a simplified implementation
     return {
-      originalFile: task.filePath,
+      originalFile: task.metadata.filePath,
       refactoredCode: aiResponse,
       changes: ['Code refactored for better maintainability'],
       timestamp: new Date()
@@ -346,7 +346,7 @@ Please provide the refactored code and explain the changes made.`;
       // Use CursorIDEService to interact with Cursor IDE
       if (this.cursorIDEService) {
         // Send refactored code to Cursor IDE
-        const result = await this.cursorIDEService.applyRefactoring(task.filePath, refactoringResult.refactoredCode);
+        const result = await this.cursorIDEService.applyRefactoring(task.metadata.filePath, refactoringResult.refactoredCode);
         
         return {
           success: true,
@@ -358,10 +358,10 @@ Please provide the refactored code and explain the changes made.`;
         const fs = require('fs');
         const path = require('path');
         
-        const backupPath = `${task.filePath}.backup.${Date.now()}`;
-        fs.copyFileSync(task.filePath, backupPath);
+        const backupPath = `${task.metadata.filePath}.backup.${Date.now()}`;
+        fs.copyFileSync(task.metadata.filePath, backupPath);
         
-        fs.writeFileSync(task.filePath, refactoringResult.refactoredCode);
+        fs.writeFileSync(task.metadata.filePath, refactoringResult.refactoredCode);
         
         return {
           success: true,
@@ -395,7 +395,7 @@ Please provide the refactored code and explain the changes made.`;
         
         for (const command of testCommands) {
           try {
-            const { stdout, stderr } = await execAsync(command, { cwd: task.projectPath, timeout: 30000 });
+            const { stdout, stderr } = await execAsync(command, { cwd: task.metadata.projectPath, timeout: 30000 });
             testResults = { passed: true, message: `Tests passed with ${command}`, output: stdout };
             break;
           } catch (error) {
@@ -412,8 +412,8 @@ Please provide the refactored code and explain the changes made.`;
       
       try {
         // Check if file is valid JavaScript/TypeScript
-        if (task.filePath.endsWith('.js') || task.filePath.endsWith('.ts')) {
-          const { stdout, stderr } = await execAsync(`node -c "${task.filePath}"`, { cwd: task.projectPath });
+        if (task.metadata.filePath.endsWith('.js') || task.metadata.filePath.endsWith('.ts')) {
+          const { stdout, stderr } = await execAsync(`node -c "${task.metadata.filePath}"`, { cwd: task.metadata.projectPath });
           syntaxValidation = { passed: true, message: 'JavaScript syntax validation passed' };
         }
       } catch (error) {

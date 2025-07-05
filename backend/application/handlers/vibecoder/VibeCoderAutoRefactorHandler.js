@@ -1,6 +1,10 @@
 const fs = require('fs').promises;
 const path = require('path');
 const { v4: uuidv4 } = require('uuid');
+const Task = require('@domain/entities/Task');
+const TaskStatus = require('@domain/value-objects/TaskStatus');
+const TaskPriority = require('@domain/value-objects/TaskPriority');
+const TaskType = require('@domain/value-objects/TaskType');
 
 class VibeCoderAutoRefactorHandler {
     constructor(dependencies = {}) {
@@ -189,32 +193,33 @@ class VibeCoderAutoRefactorHandler {
             taskDescription = `Split the large file ${fileName} (${fileInfo.lines} lines) into smaller, more maintainable files.`;
         }
 
-        const task = {
-            id: taskId,
-            title: taskTitle,
-            description: taskDescription,
-            type: taskType,
-            priority: fileInfo.priority,
-            status: 'pending',
-            estimatedTime: fileInfo.estimatedTime,
+        // Create proper Task entity with all required metadata
+        const taskMetadata = {
+            refactoringType: 'file-split',
+            originalFile: fileInfo.path,
             filePath: fileInfo.path,
-            projectPath: projectPath, // Add project path for Git operations
-            projectId: 'cursorweb', // Add project ID for task management
+            projectPath: projectPath,
+            fileSize: fileInfo.lines,
             package: fileInfo.package,
             lines: fileInfo.lines,
             currentLines: fileInfo.lines,
             targetLines: '<500',
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
+            estimatedTime: fileInfo.estimatedTime,
             refactoringSteps: this.generateRefactoringSteps(fileInfo),
-            metadata: {
-                refactoringType: 'file-split',
-                originalFile: fileInfo.path,
-                fileSize: fileInfo.lines,
-                package: fileInfo.package,
-                analysisId: `vibecoder_auto_refactor_${Date.now()}_${uuidv4().substring(0, 8)}`
-            }
+            analysisId: `vibecoder_auto_refactor_${Date.now()}_${uuidv4().substring(0, 8)}`
         };
+
+        // Create proper Task entity
+        const task = new Task(
+            taskId,
+            'cursorweb', // projectId
+            taskTitle,
+            taskDescription,
+            TaskStatus.PENDING,
+            fileInfo.priority,
+            taskType,
+            taskMetadata
+        );
 
         // Save task to repository
         await this.taskRepository.create(task);
