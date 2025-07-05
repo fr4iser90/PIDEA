@@ -1,0 +1,128 @@
+/**
+ * Project type analyzer service for SingleRepoStrategy
+ */
+const path = require('path');
+const { 
+    FRONTEND_FRAMEWORKS, 
+    BACKEND_FRAMEWORKS, 
+    BUILD_TOOLS_DETECTION 
+} = require('../constants');
+
+class ProjectTypeAnalyzer {
+    constructor(logger, fileUtils) {
+        this.logger = logger;
+        this.fileUtils = fileUtils;
+    }
+
+    /**
+     * Get project type
+     * @param {string} projectPath - Project path
+     * @returns {Promise<string>} Project type
+     */
+    async getProjectType(projectPath) {
+        try {
+            const packageJsonPath = path.join(projectPath, 'package.json');
+            const packageJson = await this.fileUtils.readJsonFile(packageJsonPath);
+            
+            if (!packageJson) {
+                return 'unknown';
+            }
+
+            const dependencies = { ...packageJson.dependencies, ...packageJson.devDependencies };
+
+            // Check frontend frameworks
+            const frontendType = this.detectFrontendFramework(dependencies);
+            if (frontendType) {
+                return frontendType;
+            }
+
+            // Check backend frameworks
+            const backendType = this.detectBackendFramework(dependencies);
+            if (backendType) {
+                return backendType;
+            }
+
+            // Check build tools
+            const buildType = await this.detectBuildTool(projectPath, dependencies);
+            if (buildType) {
+                return buildType;
+            }
+
+            // Check for TypeScript
+            if (dependencies.typescript || await this.fileUtils.fileExists(path.join(projectPath, 'tsconfig.json'))) {
+                return 'typescript-library';
+            }
+
+            return 'node-app';
+        } catch (error) {
+            this.logger.error('ProjectTypeAnalyzer: Failed to get project type', {
+                projectPath,
+                error: error.message
+            });
+            return 'unknown';
+        }
+    }
+
+    /**
+     * Detect frontend framework
+     * @param {Object} dependencies - Dependencies object
+     * @returns {string|null} Framework type or null
+     */
+    detectFrontendFramework(dependencies) {
+        for (const [dep, type] of Object.entries(FRONTEND_FRAMEWORKS)) {
+            if (dependencies[dep]) {
+                return type;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Detect backend framework
+     * @param {Object} dependencies - Dependencies object
+     * @returns {string|null} Framework type or null
+     */
+    detectBackendFramework(dependencies) {
+        for (const [dep, type] of Object.entries(BACKEND_FRAMEWORKS)) {
+            if (dependencies[dep]) {
+                return type;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Detect build tool
+     * @param {string} projectPath - Project path
+     * @param {Object} dependencies - Dependencies object
+     * @returns {Promise<string|null>} Build tool type or null
+     */
+    async detectBuildTool(projectPath, dependencies) {
+        // Check dependencies first
+        for (const [dep, type] of Object.entries(BUILD_TOOLS_DETECTION)) {
+            if (dependencies[dep]) {
+                return type;
+            }
+        }
+
+        // Check configuration files
+        const buildConfigs = {
+            'webpack.config.js': 'webpack-app',
+            'webpack.config.ts': 'webpack-app',
+            'vite.config.js': 'vite-app',
+            'vite.config.ts': 'vite-app',
+            'rollup.config.js': 'rollup-app',
+            'rollup.config.ts': 'rollup-app'
+        };
+
+        for (const [configFile, type] of Object.entries(buildConfigs)) {
+            if (await this.fileUtils.fileExists(path.join(projectPath, configFile))) {
+                return type;
+            }
+        }
+
+        return null;
+    }
+}
+
+module.exports = ProjectTypeAnalyzer; 

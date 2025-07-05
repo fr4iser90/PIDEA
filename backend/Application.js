@@ -535,7 +535,7 @@ class Application {
       gitService: this.gitService,
       dockerService: this.dockerService,
       taskRepository: this.taskRepository,
-      analysisRepository: this.analysisRepository
+      analysisRepository: this.analysisRepository,
       logger: this.logger,
       eventBus: this.eventBus
     });
