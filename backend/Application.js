@@ -553,7 +553,8 @@ class Application {
       queryBus: this.queryBus,
       logger: this.logger,
       eventBus: this.eventBus,
-      application: this
+      application: this,
+      ideManager: this.ideManager
     });
 
     this.analysisController = new AnalysisController(

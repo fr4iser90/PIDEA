@@ -11,6 +11,7 @@ class AutoModeController {
         this.logger = dependencies.logger || console;
         this.eventBus = dependencies.eventBus;
         this.application = dependencies.application;
+        this.ideManager = dependencies.ideManager;
     }
 
     /**
@@ -49,9 +50,38 @@ class AutoModeController {
                 }
             }
 
-            // Fallback to current working directory
+            // Use File-based Workspace Detection as fallback
             if (!workspacePath) {
-                workspacePath = process.cwd();
+                try {
+                    // Try to get workspace path from active IDE
+                    if (this.ideManager) {
+                        const activeIDE = await this.ideManager.getActiveIDE();
+                        if (activeIDE && activeIDE.port) {
+                            const workspaceInfo = await this.ideManager.getWorkspaceInfo(activeIDE.port);
+                            if (workspaceInfo && workspaceInfo.workspace) {
+                                workspacePath = workspaceInfo.workspace;
+                                this.logger.info('AutoModeController: Using workspace path from File-based detection', {
+                                    port: activeIDE.port,
+                                    workspacePath
+                                });
+                            }
+                        }
+                    }
+                } catch (error) {
+                    this.logger.warn('AutoModeController: File-based detection failed, using project root', {
+                        error: error.message
+                    });
+                }
+            }
+
+            // Final fallback: Use project root (one level up from backend)
+            if (!workspacePath) {
+                const path = require('path');
+                const currentDir = process.cwd();
+                workspacePath = path.resolve(currentDir, '..');
+                this.logger.info('AutoModeController: Using project root as final fallback', {
+                    workspacePath
+                });
             }
 
             this.logger.info('AutoModeController: Using workspace path', {

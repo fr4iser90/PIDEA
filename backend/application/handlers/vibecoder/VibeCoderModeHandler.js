@@ -555,21 +555,29 @@ class VibeCoderModeHandler {
             nextSteps: []
         };
 
+        // Extract scores from the actual analysis results structure
+        const codeQualityScore = this.extractScoreFromResult(analyzeResults.codeQuality, 'overallQualityScore', 100);
+        const architectureScore = this.extractScoreFromResult(analyzeResults.architecture, 'architectureScore', 100);
+        const maintainabilityScore = this.extractScoreFromResult(analyzeResults.maintainability, 'maintainabilityIndex', 100);
+
         // Determine if refactoring is needed
-        if (analyzeResults.codeQuality.score < 75 || 
-            analyzeResults.architecture.score < 75 || 
-            analyzeResults.maintainability.score < 70) {
+        if (codeQualityScore < 75 || 
+            architectureScore < 75 || 
+            maintainabilityScore < 70) {
             recommendations.refactor = true;
             recommendations.nextSteps.push('Refactor code to improve quality and maintainability');
         }
 
         // Determine if generation is needed
-        if (analyzeResults.codeQuality.testability < 70) {
+        const testabilityScore = this.extractScoreFromResult(analyzeResults.codeQuality, 'testCoverage', 100);
+        if (testabilityScore < 70) {
             recommendations.generate = true;
             recommendations.nextSteps.push('Generate tests to improve test coverage');
         }
 
-        if (analyzeResults.architecture.recommendations.length > 0) {
+        // Check for architecture recommendations
+        const architectureRecommendations = this.extractRecommendations(analyzeResults.architecture);
+        if (architectureRecommendations.length > 0) {
             recommendations.generate = true;
             recommendations.nextSteps.push('Generate documentation for architectural patterns');
         }
@@ -577,21 +585,79 @@ class VibeCoderModeHandler {
         return recommendations;
     }
 
+    extractRecommendations(result) {
+        if (!result) return [];
+        
+        // Try to get recommendations from different possible locations
+        if (result.recommendations && Array.isArray(result.recommendations)) {
+            return result.recommendations;
+        }
+        
+        if (result.architecture && result.architecture.recommendations && Array.isArray(result.architecture.recommendations)) {
+            return result.architecture.recommendations;
+        }
+        
+        if (result.qualityAnalysis && result.qualityAnalysis.recommendations && Array.isArray(result.qualityAnalysis.recommendations)) {
+            return result.qualityAnalysis.recommendations;
+        }
+        
+        return [];
+    }
+
     calculateAnalyzeMetrics(analyzeResults) {
+        // Extract scores from the actual analysis results structure
+        const codeQualityScore = this.extractScoreFromResult(analyzeResults.codeQuality, 'overallQualityScore', 100);
+        const architectureScore = this.extractScoreFromResult(analyzeResults.architecture, 'architectureScore', 100);
+        const dependenciesScore = this.extractScoreFromResult(analyzeResults.dependencies, 'securityScore', 100);
+        const performanceScore = this.extractScoreFromResult(analyzeResults.performance, 'performanceScore', 100);
+        const securityScore = this.extractScoreFromResult(analyzeResults.security, 'securityScore', 100);
+        const maintainabilityScore = this.extractScoreFromResult(analyzeResults.maintainability, 'maintainabilityIndex', 100);
+
         return {
             overallScore: Math.round(
-                (analyzeResults.codeQuality.score + 
-                 analyzeResults.architecture.score + 
-                 analyzeResults.dependencies.score + 
-                 analyzeResults.performance.score + 
-                 analyzeResults.security.score + 
-                 analyzeResults.maintainability.score) / 6
+                (codeQualityScore + 
+                 architectureScore + 
+                 dependenciesScore + 
+                 performanceScore + 
+                 securityScore + 
+                 maintainabilityScore) / 6
             ),
-            qualityScore: analyzeResults.codeQuality.score,
-            architectureScore: analyzeResults.architecture.score,
-            securityScore: analyzeResults.security.score,
-            performanceScore: analyzeResults.performance.score
+            qualityScore: codeQualityScore,
+            architectureScore: architectureScore,
+            securityScore: securityScore,
+            performanceScore: performanceScore
         };
+    }
+
+    extractScoreFromResult(result, scoreKey, defaultValue = 100) {
+        if (!result) return defaultValue;
+        
+        // Try to get score from metrics first
+        if (result.metrics && result.metrics[scoreKey] !== undefined) {
+            return result.metrics[scoreKey];
+        }
+        
+        // Try to get score from result directly
+        if (result[scoreKey] !== undefined) {
+            return result[scoreKey];
+        }
+        
+        // Try to get score from qualityAnalysis
+        if (result.qualityAnalysis && result.qualityAnalysis.overallScore !== undefined) {
+            return result.qualityAnalysis.overallScore;
+        }
+        
+        // Try to get score from architecture
+        if (result.architecture && result.architecture.architectureScore !== undefined) {
+            return result.architecture.architectureScore;
+        }
+        
+        // Try to get score from dependenciesAnalysis
+        if (result.dependenciesAnalysis && result.dependenciesAnalysis.securityScore !== undefined) {
+            return result.dependenciesAnalysis.securityScore;
+        }
+        
+        return defaultValue;
     }
 
     async executeRefactorPhase(command, strategy, analyzeResults) {

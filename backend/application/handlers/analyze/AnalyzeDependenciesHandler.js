@@ -341,7 +341,7 @@ class AnalyzeDependenciesHandler {
         const { dependenciesAnalysis, metrics } = analysis;
 
         // Check for vulnerabilities
-        if (metrics.vulnerabilityCount > 0) {
+        if (metrics && metrics.vulnerabilityCount > 0) {
             const criticalVulns = dependenciesAnalysis.vulnerabilities?.filter(v => v.severity === 'critical').length || 0;
             const highVulns = dependenciesAnalysis.vulnerabilities?.filter(v => v.severity === 'high').length || 0;
             
@@ -365,7 +365,7 @@ class AnalyzeDependenciesHandler {
         }
 
         // Check for outdated packages
-        if (metrics.outdatedPackageCount > 5) {
+        if (metrics && metrics.outdatedPackageCount > 5) {
             recommendations.push({
                 type: 'outdated_packages',
                 severity: 'medium',
@@ -375,7 +375,7 @@ class AnalyzeDependenciesHandler {
         }
 
         // Check for license issues
-        if (metrics.licenseIssueCount > 0) {
+        if (metrics && metrics.licenseIssueCount > 0) {
             recommendations.push({
                 type: 'license_issues',
                 severity: 'medium',
@@ -385,7 +385,7 @@ class AnalyzeDependenciesHandler {
         }
 
         // Check bundle size
-        if (metrics.bundleSize > 1024 * 1024 * 5) { // 5MB
+        if (metrics && metrics.bundleSize > 1024 * 1024 * 5) { // 5MB
             recommendations.push({
                 type: 'large_bundle_size',
                 severity: 'low',
@@ -395,7 +395,7 @@ class AnalyzeDependenciesHandler {
         }
 
         // Check dependency age
-        if (metrics.averageDependencyAge > 365) { // 1 year
+        if (metrics && metrics.averageDependencyAge > 365) { // 1 year
             recommendations.push({
                 type: 'old_dependencies',
                 severity: 'low',
