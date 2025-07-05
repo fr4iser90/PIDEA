@@ -15,6 +15,9 @@ class SecurityAnalyzer {
                 low: ['information-disclosure', 'weak-randomness']
             }
         };
+        
+        // Add logger
+        this.logger = console;
     }
 
     /**
@@ -88,30 +91,60 @@ class SecurityAnalyzer {
                 ...packageJson.devDependencies 
             };
 
-            // Check for known vulnerable packages
-            const vulnerablePackages = [
-                'lodash', 'moment', 'jquery', 'express', 'axios'
-            ];
-
-            for (const [pkg, version] of Object.entries(allDeps)) {
-                // Check if package is in vulnerable list
-                if (vulnerablePackages.includes(pkg)) {
-                    vulnerabilities.vulnerable.push({
-                        package: pkg,
-                        version: version,
-                        severity: 'medium',
-                        description: `Known vulnerable package: ${pkg}`
+            // Run npm audit for real vulnerability detection
+            try {
+                const auditResult = await this.runNpmAudit(projectPath);
+                if (auditResult.vulnerabilities) {
+                    Object.entries(auditResult.vulnerabilities).forEach(([severity, vulns]) => {
+                        vulns.forEach(vuln => {
+                            vulnerabilities.vulnerable.push({
+                                package: vuln.name,
+                                version: vuln.version,
+                                severity: severity,
+                                description: vuln.title || `Vulnerability in ${vuln.name}`,
+                                cve: vuln.cves ? vuln.cves[0] : null,
+                                recommendation: vuln.recommendation || 'Update to latest version'
+                            });
+                            
+                            switch (severity) {
+                                case 'critical': vulnerabilities.critical++; break;
+                                case 'high': vulnerabilities.high++; break;
+                                case 'moderate': vulnerabilities.medium++; break;
+                                case 'low': vulnerabilities.low++; break;
+                            }
+                        });
                     });
-                    vulnerabilities.medium++;
                 }
+            } catch (auditError) {
+                // Fallback to pattern-based detection
+                this.logger.warn('npm audit failed, using pattern-based detection:', auditError.message);
+                
+                // Check for known vulnerable packages
+                const vulnerablePackages = [
+                    'lodash', 'moment', 'jquery', 'express', 'axios', 'debug', 'minimist'
+                ];
 
-                // Check for outdated packages (simplified)
-                if (version.includes('^') || version.includes('~')) {
-                    vulnerabilities.outdated.push({
-                        package: pkg,
-                        version: version,
-                        recommendation: 'Update to latest version'
-                    });
+                for (const [pkg, version] of Object.entries(allDeps)) {
+                    // Check if package is in vulnerable list
+                    if (vulnerablePackages.includes(pkg)) {
+                        vulnerabilities.vulnerable.push({
+                            package: pkg,
+                            version: version,
+                            severity: 'medium',
+                            description: `Known vulnerable package: ${pkg}`,
+                            recommendation: 'Update to latest version'
+                        });
+                        vulnerabilities.medium++;
+                    }
+
+                    // Check for outdated packages (simplified)
+                    if (version.includes('^') || version.includes('~')) {
+                        vulnerabilities.outdated.push({
+                            package: pkg,
+                            version: version,
+                            recommendation: 'Update to latest version'
+                        });
+                    }
                 }
             }
 
@@ -120,9 +153,39 @@ class SecurityAnalyzer {
 
         } catch (error) {
             // No package.json or parsing error
+            this.logger.warn('Failed to analyze dependencies:', error.message);
         }
 
         return vulnerabilities;
+    }
+
+    /**
+     * Run npm audit for vulnerability detection
+     * @param {string} projectPath - Project directory path
+     * @returns {Promise<Object>} npm audit result
+     */
+    async runNpmAudit(projectPath) {
+        try {
+            const result = execSync('npm audit --json', {
+                cwd: projectPath,
+                encoding: 'utf8',
+                timeout: 30000 // 30 second timeout
+            });
+            
+            return JSON.parse(result);
+        } catch (error) {
+            // npm audit failed or no vulnerabilities found
+            if (error.status === 1) {
+                // npm audit returns 1 when vulnerabilities are found
+                try {
+                    const output = error.stdout.toString();
+                    return JSON.parse(output);
+                } catch (parseError) {
+                    throw new Error('Failed to parse npm audit output');
+                }
+            }
+            throw error;
+        }
     }
 
     /**
@@ -448,9 +511,7 @@ class SecurityAnalyzer {
      */
     async generateSecurityRecommendations(analysis) {
         const recommendations = [];
-
-        // Dependency recommendations
-        if (analysis.dependencies.vulnerable.length > 0) {
+        if (analysis.dependencies.vulnerable && analysis.dependencies.vulnerable.length > 0) {
             recommendations.push({
                 title: 'Update vulnerable dependencies',
                 description: `${analysis.dependencies.vulnerable.length} vulnerable packages found`,
@@ -458,9 +519,7 @@ class SecurityAnalyzer {
                 category: 'dependencies'
             });
         }
-
-        // Configuration recommendations
-        if (analysis.configuration.missingSecurity.length > 0) {
+        if (analysis.configuration.missingSecurity && analysis.configuration.missingSecurity.length > 0) {
             recommendations.push({
                 title: 'Add security middleware',
                 description: `Missing: ${analysis.configuration.missingSecurity.join(', ')}`,
@@ -468,8 +527,6 @@ class SecurityAnalyzer {
                 category: 'configuration'
             });
         }
-
-        // Code recommendations
         const criticalIssues = analysis.codeIssues.filter(issue => issue.severity === 'critical');
         if (criticalIssues.length > 0) {
             recommendations.push({
@@ -479,9 +536,7 @@ class SecurityAnalyzer {
                 category: 'code'
             });
         }
-
-        // Secrets recommendations
-        if (analysis.secrets.found.length > 0) {
+        if (analysis.secrets.found && analysis.secrets.found.length > 0) {
             recommendations.push({
                 title: 'Remove hardcoded secrets',
                 description: `${analysis.secrets.found.length} secrets found in code`,
@@ -489,17 +544,6 @@ class SecurityAnalyzer {
                 category: 'secrets'
             });
         }
-
-        // General security recommendations
-        if (!analysis.configuration.hasHTTPS) {
-            recommendations.push({
-                title: 'Enable HTTPS',
-                description: 'Use HTTPS for all communications',
-                priority: 'high',
-                category: 'configuration'
-            });
-        }
-
         return recommendations;
     }
 

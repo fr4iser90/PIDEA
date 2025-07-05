@@ -389,6 +389,47 @@ class AnalysisOutputService {
                         };
                     }
                 }
+                // For security, use package-specific data if available
+                else if (type === 'Security' && result.data) {
+                    // Check if this is a monorepo with package-specific security data
+                    if (result.data.isMonorepo && result.data.packageSecurityAnalyses && result.data.packageSecurityAnalyses[pkg.name]) {
+                        const packageSecurity = result.data.packageSecurityAnalyses[pkg.name];
+                        const securityAnalysis = packageSecurity.securityAnalysis;
+                        
+                        const packageSecurityData = {
+                            package: pkg.name,
+                            packagePath: pkg.path,
+                            securityScore: securityAnalysis.securityScore || 100,
+                            overallRiskLevel: securityAnalysis.overallRiskLevel || 'low',
+                            vulnerabilities: packageSecurity.vulnerabilities || [],
+                            codeIssues: packageSecurity.codeIssues || [],
+                            configuration: packageSecurity.configuration || {},
+                            dependencies: packageSecurity.dependencies || {},
+                            secrets: packageSecurity.secrets || {},
+                            recommendations: packageSecurity.recommendations || []
+                        };
+                        
+                        // Calculate metrics for this package
+                        packageSecurityData.metrics = {
+                            vulnerabilityCount: packageSecurityData.vulnerabilities.length,
+                            codeIssueCount: packageSecurityData.codeIssues.length,
+                            secretCount: packageSecurityData.secrets.found?.length || 0,
+                            missingSecurityCount: packageSecurityData.configuration.missingSecurity?.length || 0,
+                            criticalVulnerabilities: this.countCriticalVulnerabilities(packageSecurityData.vulnerabilities),
+                            highVulnerabilities: this.countHighVulnerabilities(packageSecurityData.vulnerabilities),
+                            mediumVulnerabilities: this.countMediumVulnerabilities(packageSecurityData.vulnerabilities),
+                            lowVulnerabilities: this.countLowVulnerabilities(packageSecurityData.vulnerabilities)
+                        };
+                        
+                        packageResults[type] = {
+                            ...result,
+                            data: packageSecurityData
+                        };
+                    } else {
+                        // Use project-wide data
+                        packageResults[type] = result;
+                    }
+                }
                 // For other analyses with files, filter by package path
                 else if (result.data.files) {
                     const packageFiles = result.data.files.filter(file => {
@@ -447,18 +488,18 @@ class AnalysisOutputService {
             packageMarkdown += `**Generated:** ${new Date().toLocaleString()}\n\n`;
             
             // Filter analysis results for this package
-            const packageResults = this.filterAnalysisResultsForPackage(analysisResults, pkg);
+            const filteredResults = this.filterAnalysisResultsForPackage(analysisResults, pkg);
             
-                    // Generate package-specific sections (NO Performance/Security here!)
-        const sections = [
-            { key: 'Architecture', filename: 'architecture' },
-            { key: 'Code Quality', filename: 'code-quality' },
-            { key: 'Dependencies', filename: 'dependencies' },
-            { key: 'Tech Stack', filename: 'tech-stack' }
-        ];
+            // Generate package-specific sections (NO Performance/Security here!)
+            const sections = [
+                { key: 'Architecture', filename: 'architecture' },
+                { key: 'Code Quality', filename: 'code-quality' },
+                { key: 'Dependencies', filename: 'dependencies' },
+                { key: 'Tech Stack', filename: 'tech-stack' }
+            ];
             
             for (const section of sections) {
-                const data = packageResults[section.key] || packageResults[section.key.toLowerCase()];
+                const data = filteredResults[section.key] || filteredResults[section.key.toLowerCase()];
                 if (data) {
                     packageMarkdown += `## ${section.key}\n\n`;
                     
@@ -480,6 +521,13 @@ class AnalysisOutputService {
                             break;
                     }
                 }
+            }
+            
+            // Security-Report pro Package
+            if (filteredResults['Security'] && filteredResults['Security'].data) {
+                const secData = filteredResults['Security'].data;
+                const secMd = this.formatSecurityData(secData, secData.metrics, secData.recommendations);
+                packageMarkdown += secMd;
             }
             
             await fs.writeFile(packageFilepath, packageMarkdown);
@@ -956,19 +1004,168 @@ class AnalysisOutputService {
         const securityMetrics = metrics || data.metrics || {};
         const securityRecommendations = recommendations || data.recommendations || [];
         
-        if (data.vulnerabilities && data.vulnerabilities.length > 0) {
-            md += '### Security Vulnerabilities\n\n';
-            md += '| Severity | Type | Description | File |\n';
-            md += '|----------|------|-------------|------|\n';
-            
-            data.vulnerabilities.forEach(vuln => {
-                md += `| ${vuln.severity} | ${vuln.type} | ${vuln.description} | \`${vuln.file || 'N/A'}\` |\n`;
-            });
-            md += '\n';
-        }
-
+        // Security Score with breakdown
         if (data.securityScore !== undefined) {
             md += `**Security Score:** ${data.securityScore}/100\n\n`;
+            
+            // Show score calculation breakdown
+            md += '### Score Calculation\n\n';
+            let baseScore = 100;
+            let deductions = [];
+            
+            // Dependency vulnerabilities
+            if (data.dependencies) {
+                const deps = data.dependencies;
+                if (deps.critical > 0) {
+                    const deduction = deps.critical * 15;
+                    deductions.push(`- Critical vulnerabilities: -${deduction} (${deps.critical} × 15)`);
+                    baseScore -= deduction;
+                }
+                if (deps.high > 0) {
+                    const deduction = deps.high * 10;
+                    deductions.push(`- High vulnerabilities: -${deduction} (${deps.high} × 10)`);
+                    baseScore -= deduction;
+                }
+                if (deps.medium > 0) {
+                    const deduction = deps.medium * 5;
+                    deductions.push(`- Medium vulnerabilities: -${deduction} (${deps.medium} × 5)`);
+                    baseScore -= deduction;
+                }
+            }
+            
+            // Code issues
+            if (data.codeIssues && data.codeIssues.length > 0) {
+                const criticalIssues = data.codeIssues.filter(issue => issue.severity === 'critical').length;
+                const highIssues = data.codeIssues.filter(issue => issue.severity === 'high').length;
+                const mediumIssues = data.codeIssues.filter(issue => issue.severity === 'medium').length;
+                
+                if (criticalIssues > 0) {
+                    const deduction = criticalIssues * 15;
+                    deductions.push(`- Critical code issues: -${deduction} (${criticalIssues} × 15)`);
+                    baseScore -= deduction;
+                }
+                if (highIssues > 0) {
+                    const deduction = highIssues * 10;
+                    deductions.push(`- High code issues: -${deduction} (${highIssues} × 10)`);
+                    baseScore -= deduction;
+                }
+                if (mediumIssues > 0) {
+                    const deduction = mediumIssues * 5;
+                    deductions.push(`- Medium code issues: -${deduction} (${mediumIssues} × 5)`);
+                    baseScore -= deduction;
+                }
+            }
+            
+            // Secrets
+            if (data.secrets && data.secrets.found && data.secrets.found.length > 0) {
+                const deduction = data.secrets.found.length * 10;
+                deductions.push(`- Hardcoded secrets: -${deduction} (${data.secrets.found.length} × 10)`);
+                baseScore -= deduction;
+            }
+            
+            // Missing security
+            if (data.configuration && data.configuration.missingSecurity && data.configuration.missingSecurity.length > 0) {
+                const deduction = data.configuration.missingSecurity.length * 5;
+                deductions.push(`- Missing security: -${deduction} (${data.configuration.missingSecurity.length} × 5)`);
+                baseScore -= deduction;
+            }
+            
+            if (deductions.length > 0) {
+                md += '**Deductions:**\n';
+                deductions.forEach(deduction => md += `${deduction}\n`);
+                md += '\n';
+            } else {
+                md += '**No deductions applied - all security measures in place!**\n\n';
+            }
+        }
+        
+        // Security Configuration Status
+        if (data.configuration) {
+            md += '### Security Configuration\n\n';
+            
+            // Present security middleware
+            if (data.configuration.securityMiddleware && data.configuration.securityMiddleware.length > 0) {
+                md += '**✅ Present Security Features:**\n';
+                data.configuration.securityMiddleware.forEach(middleware => {
+                    md += `- ${middleware}\n`;
+                });
+                md += '\n';
+            }
+            
+            // Missing security middleware
+            if (data.configuration.missingSecurity && data.configuration.missingSecurity.length > 0) {
+                md += '**❌ Missing Security Features:**\n';
+                data.configuration.missingSecurity.forEach(missing => {
+                    md += `- ${missing}\n`;
+                });
+                md += '\n';
+            }
+            
+            // Security status summary
+            const presentCount = data.configuration.securityMiddleware ? data.configuration.securityMiddleware.length : 0;
+            const missingCount = data.configuration.missingSecurity ? data.configuration.missingSecurity.length : 0;
+            md += `**Security Coverage:** ${presentCount} present, ${missingCount} missing\n\n`;
+        }
+        
+        // Dependency Vulnerabilities
+        if (data.dependencies) {
+            const deps = data.dependencies;
+            if (deps.vulnerable && deps.vulnerable.length > 0) {
+                md += '### Dependency Vulnerabilities\n\n';
+                md += '| Package | Version | Severity | Description |\n';
+                md += '|---------|---------|----------|-------------|\n';
+                
+                deps.vulnerable.forEach(vuln => {
+                    md += `| ${vuln.package} | ${vuln.version} | ${vuln.severity} | ${vuln.description} |\n`;
+                });
+                md += '\n';
+                
+                md += `**Summary:** ${deps.critical || 0} critical, ${deps.high || 0} high, ${deps.medium || 0} medium, ${deps.low || 0} low vulnerabilities\n\n`;
+            } else {
+                md += '### Dependency Vulnerabilities\n\n';
+                md += '✅ **No vulnerable dependencies found**\n\n';
+            }
+        }
+        
+        // Code Security Issues
+        if (data.codeIssues && data.codeIssues.length > 0) {
+            md += '### Code Security Issues\n\n';
+            md += '| File | Line | Severity | Type | Description |\n';
+            md += '|------|------|----------|------|-------------|\n';
+            
+            data.codeIssues.forEach(issue => {
+                md += `| \`${issue.file}\` | ${issue.line} | ${issue.severity} | ${issue.type} | ${issue.description} |\n`;
+            });
+            md += '\n';
+        } else if (data.codeIssues !== undefined) {
+            md += '### Code Security Issues\n\n';
+            md += '✅ **No security issues found in code**\n\n';
+        }
+        
+        // Secrets Analysis
+        if (data.secrets) {
+            md += '### Secrets Analysis\n\n';
+            
+            if (data.secrets.found && data.secrets.found.length > 0) {
+                md += '**❌ Hardcoded Secrets Found:**\n';
+                md += '| File | Line | Type | Description |\n';
+                md += '|------|------|------|-------------|\n';
+                
+                data.secrets.found.forEach(secret => {
+                    md += `| \`${secret.file}\` | ${secret.line} | ${secret.type} | ${secret.description} |\n`;
+                });
+                md += '\n';
+            } else {
+                md += '✅ **No hardcoded secrets found**\n\n';
+            }
+            
+            if (data.secrets.patterns && data.secrets.patterns.length > 0) {
+                md += '**Secret Patterns Detected:**\n';
+                data.secrets.patterns.forEach(pattern => {
+                    md += `- ${pattern.pattern}: ${pattern.count} occurrences\n`;
+                });
+                md += '\n';
+            }
         }
         
         // Metrics Table
@@ -1627,6 +1824,42 @@ class AnalysisOutputService {
         const sizes = ['B', 'KB', 'MB', 'GB'];
         const i = Math.floor(Math.log(bytes) / Math.log(k));
         return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+    }
+
+    /**
+     * Count critical vulnerabilities
+     * @param {Array} vulnerabilities - Vulnerabilities array
+     * @returns {number} Count of critical vulnerabilities
+     */
+    countCriticalVulnerabilities(vulnerabilities) {
+        return vulnerabilities.filter(v => v.severity === 'critical').length;
+    }
+
+    /**
+     * Count high vulnerabilities
+     * @param {Array} vulnerabilities - Vulnerabilities array
+     * @returns {number} Count of high vulnerabilities
+     */
+    countHighVulnerabilities(vulnerabilities) {
+        return vulnerabilities.filter(v => v.severity === 'high').length;
+    }
+
+    /**
+     * Count medium vulnerabilities
+     * @param {Array} vulnerabilities - Vulnerabilities array
+     * @returns {number} Count of medium vulnerabilities
+     */
+    countMediumVulnerabilities(vulnerabilities) {
+        return vulnerabilities.filter(v => v.severity === 'medium').length;
+    }
+
+    /**
+     * Count low vulnerabilities
+     * @param {Array} vulnerabilities - Vulnerabilities array
+     * @returns {number} Count of low vulnerabilities
+     */
+    countLowVulnerabilities(vulnerabilities) {
+        return vulnerabilities.filter(v => v.severity === 'low').length;
     }
 }
 

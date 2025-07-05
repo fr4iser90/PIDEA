@@ -11,6 +11,8 @@ const AnalyzeCodeQualityCommand = require('../../commands/analyze/AnalyzeCodeQua
 const AnalyzeDependenciesCommand = require('../../commands/analyze/AnalyzeDependenciesCommand');
 const AnalyzeTechStackCommand = require('../../commands/analyze/AnalyzeTechStackCommand');
 const { SubprojectDetector } = require('../../../domain/services');
+const path = require('path');
+const fs = require('fs');
 
 
 class VibeCoderModeHandler {
@@ -318,18 +320,58 @@ class VibeCoderModeHandler {
 
     async analyzeSecurity(projectPath) {
         try {
-            // Use real security analyzer
-            const securityAnalyzer = require('@infrastructure/external/SecurityAnalyzer');
-            const analyzer = new securityAnalyzer();
-            return await analyzer.analyzeSecurity(projectPath);
+            const packages = await this.findPackages(projectPath);
+            if (packages.length > 1) {
+                const packageSecurityAnalyses = {};
+                for (const pkg of packages) {
+                    const securityAnalyzer = require('@infrastructure/external/SecurityAnalyzer');
+                    const secAnalyzer = new securityAnalyzer();
+                    const packageSecurityResult = await secAnalyzer.analyzeSecurity(pkg.path);
+                    packageSecurityAnalyses[pkg.name] = {
+                        package: pkg,
+                        securityAnalysis: packageSecurityResult,
+                        vulnerabilities: packageSecurityResult.vulnerabilities || [],
+                        codeIssues: packageSecurityResult.codeIssues || [],
+                        configuration: packageSecurityResult.configuration || {},
+                        dependencies: packageSecurityResult.dependencies || {},
+                        secrets: packageSecurityResult.secrets || {},
+                        recommendations: packageSecurityResult.recommendations || []
+                    };
+                }
+                const aggregatedSecurity = {
+                    isMonorepo: true,
+                    packages,
+                    packageSecurityAnalyses,
+                    overallRiskLevel: this.calculateOverallRiskLevel(packageSecurityAnalyses),
+                    overallSecurityScore: this.calculateOverallSecurityScore(packageSecurityAnalyses),
+                    totalVulnerabilities: this.calculateTotalVulnerabilities(packageSecurityAnalyses),
+                    totalCodeIssues: this.calculateTotalCodeIssues(packageSecurityAnalyses),
+                    overallRecommendations: this.generateOverallSecurityRecommendations(packageSecurityAnalyses)
+                };
+                return {
+                    status: 'success',
+                    result: aggregatedSecurity,
+                    metrics: { overallScore: aggregatedSecurity.overallSecurityScore || 0 },
+                    recommendations: aggregatedSecurity.overallRecommendations || []
+                };
+            } else {
+                const securityAnalyzer = require('@infrastructure/external/SecurityAnalyzer');
+                const secAnalyzer = new securityAnalyzer();
+                const securityResult = await secAnalyzer.analyzeSecurity(projectPath);
+                return {
+                    status: 'success',
+                    result: securityResult,
+                    metrics: { overallScore: securityResult.securityScore || 0 },
+                    recommendations: securityResult.recommendations || []
+                };
+            }
         } catch (error) {
-            this.logger.warn('Security analysis failed, using fallback:', error.message);
+            this.logger.warn('Security analysis failed:', error.message);
             return {
-                vulnerabilities: [],
-                securityIssues: [],
-                recommendations: [],
-                score: 0,
-                recommendations: ['Enable security analysis for detailed insights']
+                status: 'failed',
+                result: { error: error.message },
+                metrics: { overallScore: 0 },
+                recommendations: ['Security analysis failed']
             };
         }
     }
@@ -566,15 +608,51 @@ class VibeCoderModeHandler {
             
             // 7. Analyze security using real analyzer
             try {
-                const securityAnalyzer = require('@infrastructure/external/SecurityAnalyzer');
-                const secAnalyzer = new securityAnalyzer();
-                const securityResult = await secAnalyzer.analyzeSecurity(command.projectPath);
-                analysisResults.security = {
-                    status: 'success',
-                    result: securityResult,
-                    metrics: { overallScore: securityResult.securityScore || 0 },
-                    recommendations: securityResult.recommendations || []
-                };
+                const packages = await this.findPackages(command.projectPath);
+                if (packages.length > 1) {
+                    const packageSecurityAnalyses = {};
+                    for (const pkg of packages) {
+                        const securityAnalyzer = require('@infrastructure/external/SecurityAnalyzer');
+                        const secAnalyzer = new securityAnalyzer();
+                        const packageSecurityResult = await secAnalyzer.analyzeSecurity(pkg.path);
+                        packageSecurityAnalyses[pkg.name] = {
+                            package: pkg,
+                            securityAnalysis: packageSecurityResult,
+                            vulnerabilities: packageSecurityResult.vulnerabilities || [],
+                            codeIssues: packageSecurityResult.codeIssues || [],
+                            configuration: packageSecurityResult.configuration || {},
+                            dependencies: packageSecurityResult.dependencies || {},
+                            secrets: packageSecurityResult.secrets || {},
+                            recommendations: packageSecurityResult.recommendations || []
+                        };
+                    }
+                    const aggregatedSecurity = {
+                        isMonorepo: true,
+                        packages,
+                        packageSecurityAnalyses,
+                        overallRiskLevel: this.calculateOverallRiskLevel(packageSecurityAnalyses),
+                        overallSecurityScore: this.calculateOverallSecurityScore(packageSecurityAnalyses),
+                        totalVulnerabilities: this.calculateTotalVulnerabilities(packageSecurityAnalyses),
+                        totalCodeIssues: this.calculateTotalCodeIssues(packageSecurityAnalyses),
+                        overallRecommendations: this.generateOverallSecurityRecommendations(packageSecurityAnalyses)
+                    };
+                    analysisResults.security = {
+                        status: 'success',
+                        result: aggregatedSecurity,
+                        metrics: { overallScore: aggregatedSecurity.overallSecurityScore || 0 },
+                        recommendations: aggregatedSecurity.overallRecommendations || []
+                    };
+                } else {
+                    const securityAnalyzer = require('@infrastructure/external/SecurityAnalyzer');
+                    const secAnalyzer = new securityAnalyzer();
+                    const securityResult = await secAnalyzer.analyzeSecurity(command.projectPath);
+                    analysisResults.security = {
+                        status: 'success',
+                        result: securityResult,
+                        metrics: { overallScore: securityResult.securityScore || 0 },
+                        recommendations: securityResult.recommendations || []
+                    };
+                }
             } catch (error) {
                 this.logger.warn('Security analysis failed:', error.message);
                 analysisResults.security = {
@@ -1315,6 +1393,228 @@ class VibeCoderModeHandler {
             });
         } catch (error) {
             this.logger.error('Failed to save VibeCoder mode results:', error);
+        }
+    }
+
+    /**
+     * Calculate overall risk level from package security analyses
+     * @param {Object} packageSecurityAnalyses - Package security analyses
+     * @returns {string} Overall risk level
+     */
+    calculateOverallRiskLevel(packageSecurityAnalyses) {
+        let maxRiskScore = 0;
+        
+        Object.values(packageSecurityAnalyses).forEach(pkgSec => {
+            const riskScore = this.calculateRiskScore(pkgSec.securityAnalysis);
+            maxRiskScore = Math.max(maxRiskScore, riskScore);
+        });
+        
+        if (maxRiskScore >= 50) return 'critical';
+        if (maxRiskScore >= 30) return 'high';
+        if (maxRiskScore >= 15) return 'medium';
+        return 'low';
+    }
+
+    /**
+     * Calculate risk score for security analysis
+     * @param {Object} securityAnalysis - Security analysis result
+     * @returns {number} Risk score
+     */
+    calculateRiskScore(securityAnalysis) {
+        let riskScore = 0;
+        
+        // Add points for vulnerabilities
+        if (securityAnalysis.dependencies) {
+            riskScore += (securityAnalysis.dependencies.critical || 0) * 10;
+            riskScore += (securityAnalysis.dependencies.high || 0) * 5;
+            riskScore += (securityAnalysis.dependencies.medium || 0) * 2;
+        }
+        
+        // Add points for code issues
+        const criticalIssues = (securityAnalysis.codeIssues || []).filter(issue => issue.severity === 'critical').length;
+        const highIssues = (securityAnalysis.codeIssues || []).filter(issue => issue.severity === 'high').length;
+        
+        riskScore += criticalIssues * 10;
+        riskScore += highIssues * 5;
+        
+        // Add points for secrets
+        riskScore += (securityAnalysis.secrets?.found?.length || 0) * 5;
+        
+        // Add points for missing security
+        riskScore += (securityAnalysis.configuration?.missingSecurity?.length || 0) * 2;
+        
+        return riskScore;
+    }
+
+    /**
+     * Calculate overall security score from package security analyses
+     * @param {Object} packageSecurityAnalyses - Package security analyses
+     * @returns {number} Overall security score (0-100)
+     */
+    calculateOverallSecurityScore(packageSecurityAnalyses) {
+        let totalScore = 0;
+        let packageCount = 0;
+        
+        Object.values(packageSecurityAnalyses).forEach(pkgSec => {
+            totalScore += pkgSec.securityAnalysis.securityScore || 100;
+            packageCount++;
+        });
+        
+        return packageCount > 0 ? Math.round(totalScore / packageCount) : 100;
+    }
+
+    /**
+     * Calculate total vulnerabilities across all packages
+     * @param {Object} packageSecurityAnalyses - Package security analyses
+     * @returns {number} Total vulnerabilities
+     */
+    calculateTotalVulnerabilities(packageSecurityAnalyses) {
+        let total = 0;
+        
+        Object.values(packageSecurityAnalyses).forEach(pkgSec => {
+            if (pkgSec.securityAnalysis.dependencies) {
+                total += pkgSec.securityAnalysis.dependencies.critical || 0;
+                total += pkgSec.securityAnalysis.dependencies.high || 0;
+                total += pkgSec.securityAnalysis.dependencies.medium || 0;
+                total += pkgSec.securityAnalysis.dependencies.low || 0;
+            }
+        });
+        
+        return total;
+    }
+
+    /**
+     * Calculate total code issues across all packages
+     * @param {Object} packageSecurityAnalyses - Package security analyses
+     * @returns {number} Total code issues
+     */
+    calculateTotalCodeIssues(packageSecurityAnalyses) {
+        let total = 0;
+        
+        Object.values(packageSecurityAnalyses).forEach(pkgSec => {
+            total += pkgSec.securityAnalysis.codeIssues?.length || 0;
+        });
+        
+        return total;
+    }
+
+    /**
+     * Generate overall security recommendations from package analyses
+     * @param {Object} packageSecurityAnalyses - Package security analyses
+     * @returns {Array} Overall recommendations
+     */
+    generateOverallSecurityRecommendations(packageSecurityAnalyses) {
+        const recommendations = [];
+        
+        // Check for critical vulnerabilities across packages
+        let criticalVulns = 0;
+        Object.values(packageSecurityAnalyses).forEach(pkgSec => {
+            if (pkgSec.securityAnalysis.dependencies) {
+                criticalVulns += pkgSec.securityAnalysis.dependencies.critical || 0;
+            }
+        });
+        
+        if (criticalVulns > 0) {
+            recommendations.push({
+                title: 'Fix critical vulnerabilities',
+                description: `${criticalVulns} critical vulnerabilities found across packages`,
+                priority: 'critical',
+                category: 'vulnerabilities'
+            });
+        }
+        
+        // Check for missing security middleware across packages
+        const missingSecurity = new Set();
+        Object.values(packageSecurityAnalyses).forEach(pkgSec => {
+            if (pkgSec.securityAnalysis.configuration?.missingSecurity) {
+                pkgSec.securityAnalysis.configuration.missingSecurity.forEach(item => {
+                    missingSecurity.add(item);
+                });
+            }
+        });
+        
+        if (missingSecurity.size > 0) {
+            recommendations.push({
+                title: 'Add security middleware',
+                description: `Missing: ${Array.from(missingSecurity).join(', ')}`,
+                priority: 'high',
+                category: 'configuration'
+            });
+        }
+        
+        // Check for secrets across packages
+        let totalSecrets = 0;
+        Object.values(packageSecurityAnalyses).forEach(pkgSec => {
+            totalSecrets += pkgSec.securityAnalysis.secrets?.found?.length || 0;
+        });
+        
+        if (totalSecrets > 0) {
+            recommendations.push({
+                title: 'Remove hardcoded secrets',
+                description: `${totalSecrets} secrets found across packages`,
+                priority: 'critical',
+                category: 'secrets'
+            });
+        }
+        
+        return recommendations;
+    }
+
+    /**
+     * Find packages in project
+     * @param {string} projectPath - Project path
+     * @returns {Promise<Array>} Array of packages
+     */
+    async findPackages(projectPath) {
+        const packages = [];
+        
+        try {
+            // Check root package.json
+            const rootPackagePath = path.join(projectPath, 'package.json');
+            if (await this.fileExists(rootPackagePath)) {
+                packages.push({
+                    name: 'root',
+                    path: projectPath
+                });
+            }
+            
+            // Check common subdirectories
+            const commonDirs = ['backend', 'frontend', 'api', 'client', 'server', 'app', 'src'];
+            
+            for (const dir of commonDirs) {
+                const dirPath = path.join(projectPath, dir);
+                const packagePath = path.join(dirPath, 'package.json');
+                
+                if (await this.fileExists(packagePath)) {
+                    try {
+                        const packageJson = JSON.parse(await fs.readFile(packagePath, 'utf8'));
+                        packages.push({
+                            name: packageJson.name || dir,
+                            path: dirPath
+                        });
+                    } catch (error) {
+                        // Ignore package.json parsing errors
+                    }
+                }
+            }
+        } catch (error) {
+            this.logger.warn('Failed to find packages:', error.message);
+        }
+        
+        return packages;
+    }
+
+    /**
+     * Check if file exists
+     * @param {string} filePath - File path
+     * @returns {Promise<boolean>} True if file exists
+     */
+    async fileExists(filePath) {
+        try {
+            await fs.access(filePath);
+            return true;
+        } catch {
+            return false;
         }
     }
 }
