@@ -1,4 +1,5 @@
-const fs = require('fs').promises;
+const fs = require('fs');
+const fsPromises = require('fs').promises;
 const path = require('path');
 const semver = require('semver');
 
@@ -12,8 +13,9 @@ class DependencyAnalyzer {
         let packageJson, packageLock;
         
         try {
-            packageJson = JSON.parse(await fs.readFile(packageJsonPath, 'utf-8'));
+            packageJson = JSON.parse(await fsPromises.readFile(packageJsonPath, 'utf-8'));
         } catch (e) {
+            console.error('Error reading package.json:', e);
             // Return empty results for projects without package.json
             return {
                 directDependencies: [],
@@ -23,12 +25,24 @@ class DependencyAnalyzer {
                 vulnerabilities: [],
                 license: null,
                 bundleSize: {},
-                dependencyGraph: {}
+                dependencyGraph: {},
+                metrics: {
+                    directDependencyCount: 0,
+                    transitiveDependencyCount: 0,
+                    totalDependencies: 0,
+                    vulnerabilityCount: 0,
+                    outdatedPackageCount: 0,
+                    licenseIssueCount: 1,
+                    bundleSize: 0,
+                    averageDependencyAge: 0,
+                    securityScore: 0,
+                    updateScore: 0
+                }
             };
         }
         
         try {
-            packageLock = JSON.parse(await fs.readFile(lockPath, 'utf-8'));
+            packageLock = JSON.parse(await fsPromises.readFile(lockPath, 'utf-8'));
         } catch (e) {
             packageLock = null;
         }
@@ -54,6 +68,20 @@ class DependencyAnalyzer {
         // Dependency graph: Not supported, return empty
         const dependencyGraph = {};
 
+        // Calculate real metrics
+        const metrics = {
+            directDependencyCount: directDependencies.length,
+            transitiveDependencyCount: transitiveDependencies.length,
+            totalDependencies: directDependencies.length + transitiveDependencies.length,
+            vulnerabilityCount: vulnerabilities.length,
+            outdatedPackageCount: outdatedPackages.length,
+            licenseIssueCount: license ? 0 : 1,
+            bundleSize: Object.keys(bundleSize).length > 0 ? Object.values(bundleSize).reduce((a, b) => a + b, 0) : 0,
+            averageDependencyAge: this.calculateAverageAge(directDependencies),
+            securityScore: vulnerabilities.length === 0 ? 100 : Math.max(0, 100 - vulnerabilities.length * 10),
+            updateScore: outdatedPackages.length === 0 ? 100 : Math.max(0, 100 - outdatedPackages.length * 5)
+        };
+
         return {
             directDependencies,
             directDevDependencies,
@@ -62,7 +90,8 @@ class DependencyAnalyzer {
             vulnerabilities,
             license,
             bundleSize,
-            dependencyGraph
+            dependencyGraph,
+            metrics
         };
     }
 
@@ -105,7 +134,7 @@ class DependencyAnalyzer {
             if (!dep.installed) continue;
             try {
                 const pkgPath = path.join(nodeModulesPath, dep.name, 'package.json');
-                const pkg = JSON.parse(await fs.readFile(pkgPath, 'utf-8'));
+                const pkg = JSON.parse(await fsPromises.readFile(pkgPath, 'utf-8'));
                 if (!semver.satisfies(pkg.version, dep.required)) {
                     outdated.push({
                         name: dep.name,
@@ -134,6 +163,35 @@ class DependencyAnalyzer {
             if (semver.patch(installed) !== semver.patch(required)) return 'patch';
         } catch (e) {}
         return 'unknown';
+    }
+
+    calculateAverageAge(dependencies) {
+        if (dependencies.length === 0) return 0;
+        
+        let totalAge = 0;
+        let validDeps = 0;
+        
+        for (const dep of dependencies) {
+            if (dep.installed) {
+                try {
+                    // Calculate age based on version (simplified)
+                    const version = dep.installed;
+                    const parts = version.split('.');
+                    if (parts.length >= 3) {
+                        const major = parseInt(parts[0]);
+                        const minor = parseInt(parts[1]);
+                        const patch = parseInt(parts[2]);
+                        // Simplified age calculation
+                        totalAge += major * 12 + minor * 2 + patch * 0.1;
+                        validDeps++;
+                    }
+                } catch (e) {
+                    // Skip invalid versions
+                }
+            }
+        }
+        
+        return validDeps > 0 ? Math.round(totalAge / validDeps) : 0;
     }
 }
 

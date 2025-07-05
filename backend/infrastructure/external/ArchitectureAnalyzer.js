@@ -2,7 +2,8 @@
  * ArchitectureAnalyzer - Comprehensive architecture analysis
  */
 const path = require('path');
-const fs = require('fs').promises;
+const fs = require('fs');
+const fsPromises = require('fs').promises;
 
 class ArchitectureAnalyzer {
     constructor() {
@@ -97,12 +98,12 @@ class ArchitectureAnalyzer {
         };
 
         try {
-            const items = await fs.readdir(projectPath);
+            const items = await fsPromises.readdir(projectPath);
             
             // Analyze directory structure
             for (const item of items) {
                 const itemPath = path.join(projectPath, item);
-                const stats = await fs.stat(itemPath);
+                const stats = await fsPromises.stat(itemPath);
                 
                 if (stats.isDirectory === true) {
                     // Detect common architectural layers
@@ -160,7 +161,7 @@ class ArchitectureAnalyzer {
             const files = await this.getCodeFiles(projectPath);
             
             for (const file of files) {
-                const content = await fs.readFile(file, 'utf8');
+                const content = await fsPromises.readFile(file, 'utf8');
                 const filePatterns = this.detectPatternsInFile(content, file);
                 detectedPatterns.push(...filePatterns);
             }
@@ -741,7 +742,7 @@ class ArchitectureAnalyzer {
      */
     async analyzeConfiguration(configPath) {
         try {
-            const items = await fs.readdir(configPath);
+            const items = await fsPromises.readdir(configPath);
             return { files: items, type: 'configuration' };
         } catch {
             return { files: [], type: 'unknown' };
@@ -814,14 +815,14 @@ class ArchitectureAnalyzer {
         
         try {
             const getFiles = async (dir) => {
-                const items = await fs.readdir(dir);
+                const items = await fsPromises.readdir(dir);
                 for (const item of items) {
                     const itemPath = path.join(dir, item);
-                    const stats = await fs.stat(itemPath);
+                    const stats = await fsPromises.stat(itemPath);
                     
-                    if (stats.isDirectory === true && !item.startsWith('.') && item !== 'node_modules') {
+                    if (stats.isDirectory() && !item.startsWith('.') && item !== 'node_modules') {
                         await getFiles(itemPath);
-                    } else if (stats.isFile === true) {
+                    } else if (stats.isFile()) {
                         const ext = path.extname(item);
                         if (['.js', '.jsx', '.ts', '.tsx'].includes(ext)) {
                             files.push(itemPath);
@@ -832,7 +833,7 @@ class ArchitectureAnalyzer {
             
             await getFiles(projectPath);
         } catch (error) {
-            // Ignore errors
+            console.error('Error reading code files:', error);
         }
 
         return files;

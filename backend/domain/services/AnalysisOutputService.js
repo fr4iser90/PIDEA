@@ -54,8 +54,8 @@ class AnalysisOutputService {
         // Repository Structure Section
         markdown += `## Repository Structure\n\n`;
         const repoStructure = analysisResults['Repository Structure'] || analysisResults['projectStructure'];
-        if (repoStructure && repoStructure.data) {
-            markdown += this.formatAnalysisData('Repository Structure', repoStructure.data);
+        if (repoStructure) {
+            markdown += this.formatAnalysisData('Repository Structure', repoStructure);
         } else {
             markdown += `### Project Structure\n\nNo repository structure data available.\n\n`;
         }
@@ -64,8 +64,8 @@ class AnalysisOutputService {
         // Architecture Section
         markdown += `## Architecture\n\n`;
         const architecture = analysisResults['Architecture'] || analysisResults['architecture'];
-        if (architecture && architecture.data) {
-            markdown += this.formatAnalysisData('Architecture', architecture.data);
+        if (architecture) {
+            markdown += this.formatAnalysisData('Architecture', architecture);
         } else {
             markdown += `### Architecture Analysis\n\nNo architecture data available.\n\n`;
         }
@@ -74,8 +74,8 @@ class AnalysisOutputService {
         // Code Quality Section
         markdown += `## Code Quality\n\n`;
         const codeQuality = analysisResults['Code Quality'] || analysisResults['codeQuality'];
-        if (codeQuality && codeQuality.data) {
-            markdown += this.formatAnalysisData('Code Quality', codeQuality.data);
+        if (codeQuality) {
+            markdown += this.formatAnalysisData('Code Quality', codeQuality);
         } else {
             markdown += `### Code Quality Analysis\n\nNo code quality data available.\n\n`;
         }
@@ -84,8 +84,8 @@ class AnalysisOutputService {
         // Dependencies Section
         markdown += `## Dependencies\n\n`;
         const dependencies = analysisResults['Dependencies'] || analysisResults['dependencies'];
-        if (dependencies && dependencies.data) {
-            markdown += this.formatAnalysisData('Dependencies', dependencies.data);
+        if (dependencies) {
+            markdown += this.formatAnalysisData('Dependencies', dependencies);
         } else {
             markdown += `### Dependencies Analysis\n\nNo dependencies data available.\n\n`;
         }
@@ -94,8 +94,8 @@ class AnalysisOutputService {
         // Tech Stack Section
         markdown += `## Tech Stack\n\n`;
         const techStack = analysisResults['Tech Stack'] || analysisResults['techStack'];
-        if (techStack && techStack.data) {
-            markdown += this.formatAnalysisData('Tech Stack', techStack.data);
+        if (techStack) {
+            markdown += this.formatAnalysisData('Tech Stack', techStack);
         } else {
             markdown += `### Tech Stack Analysis\n\nNo tech stack data available.\n\n`;
         }
@@ -104,8 +104,8 @@ class AnalysisOutputService {
         // Performance Section
         markdown += `## Performance\n\n`;
         const performance = analysisResults['Performance'] || analysisResults['performance'];
-        if (performance && performance.data) {
-            markdown += this.formatAnalysisData('Performance', performance.data);
+        if (performance) {
+            markdown += this.formatAnalysisData('Performance', performance);
         } else {
             markdown += `### Performance Analysis\n\nNo performance data available.\n\n`;
         }
@@ -114,8 +114,8 @@ class AnalysisOutputService {
         // Security Section
         markdown += `## Security\n\n`;
         const security = analysisResults['Security'] || analysisResults['security'];
-        if (security && security.data) {
-            markdown += this.formatAnalysisData('Security', security.data);
+        if (security) {
+            markdown += this.formatAnalysisData('Security', security);
         } else {
             markdown += `### Security Analysis\n\nNo security data available.\n\n`;
         }
@@ -124,8 +124,8 @@ class AnalysisOutputService {
         // Refactoring Section
         markdown += `## Refactoring\n\n`;
         const refactoring = analysisResults['Refactoring'] || analysisResults['refactoring'];
-        if (refactoring && refactoring.data) {
-            markdown += this.formatAnalysisData('Refactoring', refactoring.data);
+        if (refactoring) {
+            markdown += this.formatAnalysisData('Refactoring', refactoring);
         } else {
             markdown += `### Refactoring Analysis\n\nNo refactoring data available.\n\n`;
         }
@@ -134,8 +134,8 @@ class AnalysisOutputService {
         // Generation Section
         markdown += `## Generation\n\n`;
         const generation = analysisResults['Generation'] || analysisResults['generation'];
-        if (generation && generation.data) {
-            markdown += this.formatAnalysisData('Generation', generation.data);
+        if (generation) {
+            markdown += this.formatAnalysisData('Generation', generation);
         } else {
             markdown += `### Generation Analysis\n\nNo generation data available.\n\n`;
         }
@@ -157,8 +157,8 @@ class AnalysisOutputService {
         
         // Collect all recommendations from different sections
         Object.entries(analysisResults).forEach(([type, result]) => {
-            if (result && result.data && result.data.recommendations) {
-                result.data.recommendations.forEach(rec => {
+            if (result && result.recommendations) {
+                result.recommendations.forEach(rec => {
                     allRecommendations.push({
                         type: type,
                         recommendation: rec
@@ -304,79 +304,77 @@ class AnalysisOutputService {
         const qualityMetrics = metrics || data.metrics || {};
         const qualityRecommendations = recommendations || data.recommendations || [];
         
-        if (data.qualityAnalysis) {
-            const analysis = data.qualityAnalysis;
+        md += '### Code Quality Analysis\n\n';
+        
+        // Overall Score
+        if (data.overallScore !== undefined) {
+            md += `**Overall Quality Score:** ${data.overallScore}/100\n\n`;
+        }
+        
+        // Metrics Table
+        if (qualityMetrics && Object.keys(qualityMetrics).length > 0) {
+            md += '### Quality Metrics\n\n';
+            md += '| Metric | Value |\n';
+            md += '|--------|-------|\n';
             
-            md += '### Code Quality Analysis\n\n';
-            
-            // Overall Score
-            if (analysis.overallScore !== undefined) {
-                md += `**Overall Quality Score:** ${analysis.overallScore}/100\n\n`;
-            }
-            
-            // Metrics Table
-            if (qualityMetrics && Object.keys(qualityMetrics).length > 0) {
-                md += '### Quality Metrics\n\n';
-                md += '| Metric | Value |\n';
-                md += '|--------|-------|\n';
-                
-                Object.entries(qualityMetrics).forEach(([metric, value]) => {
-                    if (value !== null && value !== undefined) {
+            Object.entries(qualityMetrics).forEach(([metric, value]) => {
+                if (value !== null && value !== undefined) {
+                    if (typeof value === 'object') {
+                        // Handle nested metrics
+                        Object.entries(value).forEach(([subMetric, subValue]) => {
+                            if (subValue !== null && subValue !== undefined) {
+                                md += `| ${metric}.${subMetric} | ${subValue} |\n`;
+                            }
+                        });
+                    } else {
                         md += `| ${metric} | ${value} |\n`;
                     }
-                });
-                md += '\n';
-            }
-            
-            // Issues
-            if (analysis.issues && analysis.issues.length > 0) {
-                md += '### Issues Found\n\n';
-                analysis.issues.forEach(issue => {
-                    md += `- **${issue.type}**: ${issue.message}\n`;
-                    if (issue.file) md += `  - File: ${issue.file}\n`;
-                    if (issue.line) md += `  - Line: ${issue.line}\n`;
-                });
-                md += '\n';
-            }
-            
-            // Configuration
-            if (analysis.configuration) {
-                md += '### Configuration\n\n';
-                if (analysis.configuration.linting) {
-                    md += '#### Linting\n';
-                    md += `- ESLint: ${analysis.configuration.linting.hasESLint ? '✅' : '❌'}\n`;
-                    md += `- Prettier: ${analysis.configuration.linting.hasPrettier ? '✅' : '❌'}\n`;
-                    md += `- Husky: ${analysis.configuration.linting.hasHusky ? '✅' : '❌'}\n`;
-                    md += '\n';
                 }
-            }
-        } else {
-            // Legacy format
-            if (data.overallScore !== undefined) {
-                md += `**Overall Quality Score:** ${data.overallScore}/100\n\n`;
-            }
-
-            if (qualityMetrics && Object.keys(qualityMetrics).length > 0) {
-                md += '### Quality Metrics\n\n';
-                md += '| Metric | Score | Status |\n';
-                md += '|--------|-------|--------|\n';
-                
-                Object.entries(qualityMetrics).forEach(([metric, value]) => {
-                    const status = value >= 80 ? '🟢 Good' : value >= 60 ? '🟡 Warning' : '🔴 Poor';
-                    md += `| ${metric} | ${value}/100 | ${status} |\n`;
-                });
+            });
+            md += '\n';
+        }
+        
+        // Issues
+        if (data.issues && data.issues.length > 0) {
+            md += '### Issues Found\n\n';
+            data.issues.forEach(issue => {
+                md += `- **${issue.type || issue.rule || 'Issue'}**: ${issue.message || issue.description}\n`;
+                if (issue.file) md += `  - File: \`${issue.file}\`\n`;
+                if (issue.line) md += `  - Line: ${issue.line}\n`;
+                if (issue.severity) md += `  - Severity: ${issue.severity}\n`;
+                md += '\n';
+            });
+        }
+        
+        // Configuration
+        if (data.configuration) {
+            md += '### Configuration\n\n';
+            
+            if (data.configuration.linting) {
+                md += '#### Linting\n';
+                md += `- ESLint: ${data.configuration.linting.hasESLint ? '✅' : '❌'}\n`;
+                md += `- Prettier: ${data.configuration.linting.hasPrettier ? '✅' : '❌'}\n`;
+                md += `- Husky: ${data.configuration.linting.hasHusky ? '✅' : '❌'}\n`;
+                md += `- Lint-staged: ${data.configuration.linting.hasLintStaged ? '✅' : '❌'}\n`;
                 md += '\n';
             }
-
-            if (data.issues && data.issues.length > 0) {
-                md += '### Issues Found\n\n';
-                data.issues.forEach(issue => {
-                    md += `- **${issue.type}:** ${issue.message}\n`;
-                    if (issue.file) md += `  - File: \`${issue.file}\`\n`;
-                    if (issue.line) md += `  - Line: ${issue.line}\n`;
-                    md += '\n';
-                });
+            
+            if (data.configuration.formatting) {
+                md += '#### Formatting\n';
+                md += `- Prettier: ${data.configuration.formatting.hasPrettier ? '✅' : '❌'}\n`;
+                md += `- EditorConfig: ${data.configuration.formatting.hasEditorConfig ? '✅' : '❌'}\n`;
+                md += `- VSCode Settings: ${data.configuration.formatting.hasVSCodeSettings ? '✅' : '❌'}\n`;
+                md += '\n';
             }
+        }
+        
+        // Coverage
+        if (data.coverage && Object.keys(data.coverage).length > 0) {
+            md += '### Test Coverage\n\n';
+            Object.entries(data.coverage).forEach(([type, coverage]) => {
+                md += `- **${type}:** ${coverage}%\n`;
+            });
+            md += '\n';
         }
         
         // Recommendations
@@ -508,71 +506,117 @@ class AnalysisOutputService {
         const archMetrics = metrics || data.metrics || {};
         const archRecommendations = recommendations || data.recommendations || [];
         
-        if (data.architecture) {
-            const architecture = data.architecture;
+        md += '### Architecture Analysis\n\n';
+        
+        // Architecture Score
+        if (data.architectureScore !== undefined) {
+            md += `**Architecture Score:** ${data.architectureScore}/100\n\n`;
+        }
+        
+        // Metrics Table
+        if (archMetrics && Object.keys(archMetrics).length > 0) {
+            md += '### Architecture Metrics\n\n';
+            md += '| Metric | Value |\n';
+            md += '|--------|-------|\n';
             
-            md += '### Architecture Analysis\n\n';
+            Object.entries(archMetrics).forEach(([metric, value]) => {
+                if (value !== null && value !== undefined) {
+                    md += `| ${metric} | ${value} |\n`;
+                }
+            });
+            md += '\n';
+        }
+        
+        // Patterns
+        if (data.detectedPatterns && data.detectedPatterns.length > 0) {
+            md += '### Detected Patterns\n\n';
+            data.detectedPatterns.forEach(pattern => {
+                md += `- **${pattern.pattern || pattern.name}:** ${pattern.description}\n`;
+                if (pattern.confidence) {
+                    md += `  - Confidence: ${Math.round(pattern.confidence * 100)}%\n`;
+                }
+                if (pattern.files) {
+                    md += `  - Files: ${pattern.files.join(', ')}\n`;
+                }
+                md += '\n';
+            });
+        }
+        
+        // Structure
+        if (data.structure) {
+            md += '### Project Structure\n\n';
             
-            // Architecture Score
-            if (architecture.architectureScore !== undefined) {
-                md += `**Architecture Score:** ${architecture.architectureScore}/100\n\n`;
+            if (data.structure.organization) {
+                md += `**Organization Pattern:** ${data.structure.organization}\n\n`;
             }
             
-            // Metrics Table
-            if (archMetrics && Object.keys(archMetrics).length > 0) {
-                md += '### Architecture Metrics\n\n';
-                md += '| Metric | Value |\n';
-                md += '|--------|-------|\n';
-                
-                Object.entries(archMetrics).forEach(([metric, value]) => {
-                    if (value !== null && value !== undefined) {
-                        md += `| ${metric} | ${value} |\n`;
-                    }
+            if (data.structure.layers && data.structure.layers.length > 0) {
+                md += '#### Layers\n\n';
+                data.structure.layers.forEach(layer => {
+                    md += `- **${layer.name}:** ${layer.path}\n`;
                 });
                 md += '\n';
             }
             
-            // Patterns
-            if (architecture.detectedPatterns && architecture.detectedPatterns.length > 0) {
-                md += '### Detected Patterns\n\n';
-                architecture.detectedPatterns.forEach(pattern => {
-                    md += `- **${pattern.name}:** ${pattern.description}\n`;
-                    if (pattern.files) {
-                        md += `  - Files: ${pattern.files.join(', ')}\n`;
-                    }
-                    md += '\n';
+            if (data.structure.modules && data.structure.modules.length > 0) {
+                md += '#### Modules\n\n';
+                data.structure.modules.forEach(module => {
+                    md += `- ${module}\n`;
                 });
+                md += '\n';
             }
             
-            // Violations
-            if (architecture.violations && architecture.violations.length > 0) {
-                md += '### Architecture Violations\n\n';
-                architecture.violations.forEach(violation => {
-                    md += `- **${violation.type}:** ${violation.description}\n`;
-                    if (violation.severity) md += `  - Severity: ${violation.severity}\n`;
-                    md += '\n';
+            if (data.structure.utilities && data.structure.utilities.length > 0) {
+                md += '#### Utilities\n\n';
+                data.structure.utilities.forEach(util => {
+                    md += `- ${util}\n`;
                 });
+                md += '\n';
             }
-        } else {
-            // Legacy format
-            if (data.patterns && data.patterns.length > 0) {
-                md += '### Architectural Patterns\n\n';
-                data.patterns.forEach(pattern => {
-                    md += `- **${pattern.name}:** ${pattern.description}\n`;
-                    if (pattern.files) {
-                        md += `  - Files: ${pattern.files.join(', ')}\n`;
-                    }
-                    md += '\n';
-                });
-            }
-
-            if (data.couplingScore !== undefined) {
-                md += `**Coupling Score:** ${data.couplingScore}/100 (Lower is better)\n\n`;
-            }
-
-            if (data.cohesionScore !== undefined) {
-                md += `**Cohesion Score:** ${data.cohesionScore}/100 (Higher is better)\n\n`;
-            }
+        }
+        
+        // Coupling Analysis
+        if (data.coupling && Object.keys(data.coupling).length > 0) {
+            md += '### Coupling Analysis\n\n';
+            Object.entries(data.coupling).forEach(([module, coupling]) => {
+                if (typeof coupling === 'object' && coupling !== null) {
+                    Object.entries(coupling).forEach(([metric, value]) => {
+                        if (value !== null && value !== undefined) {
+                            md += `- **${module}.${metric}:** ${value}/100\n`;
+                        }
+                    });
+                } else {
+                    md += `- **${module}:** ${coupling}/100\n`;
+                }
+            });
+            md += '\n';
+        }
+        
+        // Cohesion Analysis
+        if (data.cohesion && Object.keys(data.cohesion).length > 0) {
+            md += '### Cohesion Analysis\n\n';
+            Object.entries(data.cohesion).forEach(([module, cohesion]) => {
+                if (typeof cohesion === 'object' && cohesion !== null) {
+                    Object.entries(cohesion).forEach(([metric, value]) => {
+                        if (value !== null && value !== undefined) {
+                            md += `- **${module}.${metric}:** ${value}/100\n`;
+                        }
+                    });
+                } else {
+                    md += `- **${module}:** ${cohesion}/100\n`;
+                }
+            });
+            md += '\n';
+        }
+        
+        // Violations
+        if (data.violations && data.violations.length > 0) {
+            md += '### Architecture Violations\n\n';
+            data.violations.forEach(violation => {
+                md += `- **${violation.type}:** ${violation.description}\n`;
+                if (violation.severity) md += `  - Severity: ${violation.severity}\n`;
+                md += '\n';
+            });
         }
         
         // Recommendations

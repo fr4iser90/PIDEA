@@ -2,7 +2,8 @@
  * CodeQualityAnalyzer - Comprehensive code quality analysis
  */
 const path = require('path');
-const fs = require('fs').promises;
+const fs = require('fs');
+const fsPromises = require('fs').promises;
 const { execSync } = require('child_process');
 
 class CodeQualityAnalyzer {
@@ -38,6 +39,7 @@ class CodeQualityAnalyzer {
 
             // Get all code files
             const codeFiles = await this.getCodeFiles(projectPath);
+            analysis.codeFiles = codeFiles; // Store for real metrics calculation
             
             if (codeFiles.length === 0) {
                 analysis.overallScore = 0;
@@ -79,7 +81,7 @@ class CodeQualityAnalyzer {
             analysis.recommendations = await this.generateRecommendations(analysis);
             
             // Calculate overall score
-            analysis.overallScore = this.calculateOverallScore(analysis);
+            analysis.overallScore = await this.calculateOverallScore(analysis);
 
             return analysis;
         } catch (error) {
@@ -108,11 +110,11 @@ class CodeQualityAnalyzer {
             const eslintConfigs = ['.eslintrc.js', '.eslintrc.json', '.eslintrc.yml', 'eslint.config.js'];
             for (const configFile of eslintConfigs) {
                 try {
-                    await fs.access(path.join(projectPath, configFile));
+                    await fsPromises.access(path.join(projectPath, configFile));
                     config.hasESLint = true;
                     
                     // Parse ESLint config
-                    const configContent = await fs.readFile(path.join(projectPath, configFile), 'utf8');
+                    const configContent = await fsPromises.readFile(path.join(projectPath, configFile), 'utf8');
                     const eslintConfig = JSON.parse(configContent);
                     
                     config.rules = eslintConfig.rules || {};
@@ -128,7 +130,7 @@ class CodeQualityAnalyzer {
             const prettierConfigs = ['.prettierrc', '.prettierrc.js', '.prettierrc.json'];
             for (const configFile of prettierConfigs) {
                 try {
-                    await fs.access(path.join(projectPath, configFile));
+                    await fsPromises.access(path.join(projectPath, configFile));
                     config.hasPrettier = true;
                     break;
                 } catch {
@@ -138,7 +140,7 @@ class CodeQualityAnalyzer {
 
             // Check for Husky and lint-staged
             try {
-                const packageJson = JSON.parse(await fs.readFile(path.join(projectPath, 'package.json'), 'utf8'));
+                const packageJson = JSON.parse(await fsPromises.readFile(path.join(projectPath, 'package.json'), 'utf8'));
                 config.hasHusky = !!(packageJson.dependencies?.husky || packageJson.devDependencies?.husky);
                 config.hasLintStaged = !!(packageJson.dependencies?.['lint-staged'] || packageJson.devDependencies?.['lint-staged']);
             } catch {
@@ -170,10 +172,10 @@ class CodeQualityAnalyzer {
             const prettierConfigs = ['.prettierrc', '.prettierrc.js', '.prettierrc.json'];
             for (const configFile of prettierConfigs) {
                 try {
-                    await fs.access(path.join(projectPath, configFile));
+                    await fsPromises.access(path.join(projectPath, configFile));
                     config.hasPrettier = true;
                     
-                    const configContent = await fs.readFile(path.join(projectPath, configFile), 'utf8');
+                    const configContent = await fsPromises.readFile(path.join(projectPath, configFile), 'utf8');
                     config.formattingRules = JSON.parse(configContent);
                     break;
                 } catch {
@@ -183,7 +185,7 @@ class CodeQualityAnalyzer {
 
             // Check for EditorConfig
             try {
-                await fs.access(path.join(projectPath, '.editorconfig'));
+                await fsPromises.access(path.join(projectPath, '.editorconfig'));
                 config.hasEditorConfig = true;
             } catch {
                 // No .editorconfig
@@ -191,7 +193,7 @@ class CodeQualityAnalyzer {
 
             // Check for VSCode settings
             try {
-                await fs.access(path.join(projectPath, '.vscode/settings.json'));
+                await fsPromises.access(path.join(projectPath, '.vscode/settings.json'));
                 config.hasVSCodeSettings = true;
             } catch {
                 // No VSCode settings
@@ -219,7 +221,7 @@ class CodeQualityAnalyzer {
             classComplexity: {}
         };
         for (const file of codeFiles) {
-            const content = await fs.readFile(file, 'utf8');
+            const content = await fsPromises.readFile(file, 'utf8');
             // Cyclomatic: count if/for/while/case/catch/&&/||
             const cyclomatic = (content.match(/\b(if|for|while|case|catch)\b|&&|\|\|/g) || []).length + 1;
             // Cognitive: count nested blocks
@@ -261,8 +263,8 @@ class CodeQualityAnalyzer {
             maintainabilityIndex: 100
         };
         for (const file of codeFiles) {
-            const content = await fs.readFile(file, 'utf8');
-            const stats = await fs.stat(file);
+            const content = await fsPromises.readFile(file, 'utf8');
+            const stats = await fsPromises.stat(file);
             if (stats.size > 50000) {
                 maintainability.largeFiles.push({ file, size: stats.size });
             }
@@ -296,7 +298,7 @@ class CodeQualityAnalyzer {
         };
         let totalLines = 0, totalLength = 0, longLines = 0, commentLines = 0;
         for (const file of codeFiles) {
-            const content = await fs.readFile(file, 'utf8');
+            const content = await fsPromises.readFile(file, 'utf8');
             for (const line of content.split('\n')) {
                 totalLines++;
                 totalLength += line.length;
@@ -329,7 +331,7 @@ class CodeQualityAnalyzer {
         testability.hasTests = testFiles.length > 0;
         // Test framework detection
         try {
-            const packageJson = JSON.parse(await fs.readFile(path.join(projectPath, 'package.json'), 'utf8'));
+            const packageJson = JSON.parse(await fsPromises.readFile(path.join(projectPath, 'package.json'), 'utf8'));
             const deps = { ...packageJson.dependencies, ...packageJson.devDependencies };
             if (deps.jest) testability.testFramework = 'jest';
             else if (deps.mocha) testability.testFramework = 'mocha';
@@ -352,7 +354,7 @@ class CodeQualityAnalyzer {
         try {
             // Check if ESLint is available
             const packageJsonPath = path.join(projectPath, 'package.json');
-            const packageJson = JSON.parse(await fs.readFile(packageJsonPath, 'utf8'));
+            const packageJson = JSON.parse(await fsPromises.readFile(packageJsonPath, 'utf8'));
             const hasESLint = !!(packageJson.dependencies?.eslint || packageJson.devDependencies?.eslint);
 
             if (hasESLint) {
@@ -398,14 +400,14 @@ class CodeQualityAnalyzer {
         
         try {
             const getFiles = async (dir) => {
-                const items = await fs.readdir(dir);
+                const items = await fsPromises.readdir(dir);
                 for (const item of items) {
                     const itemPath = path.join(dir, item);
-                    const stats = await fs.stat(itemPath);
+                    const stats = await fsPromises.stat(itemPath);
                     
-                    if (stats.isDirectory === true && !item.startsWith('.') && item !== 'node_modules') {
+                    if (stats.isDirectory() && !item.startsWith('.') && item !== 'node_modules') {
                         await getFiles(itemPath);
-                    } else if (stats.isFile === true) {
+                    } else if (stats.isFile()) {
                         if (item.includes('.test.') || item.includes('.spec.') || item.includes('test/')) {
                             testFiles.push(itemPath);
                         }
@@ -430,7 +432,7 @@ class CodeQualityAnalyzer {
     async findCodeSmells(projectPath, codeFiles) {
         const smells = [];
         for (const file of codeFiles) {
-            const content = await fs.readFile(file, 'utf8');
+            const content = await fsPromises.readFile(file, 'utf8');
             // Long function
             const functions = content.split(/function\s+\w+|\w+\s*=\s*\([^)]*\)\s*=>/);
             for (const fn of functions) {
@@ -473,34 +475,76 @@ class CodeQualityAnalyzer {
     /**
      * Calculate overall quality score
      * @param {Object} analysis - Complete analysis results
-     * @returns {number} Overall score (0-100)
+     * @returns {Promise<number>} Overall score (0-100)
      */
-    calculateOverallScore(analysis) {
+    async calculateOverallScore(analysis) {
         let score = 100;
 
-        // Deduct points for missing tools
-        if (!analysis.configuration.linting.hasESLint) score -= 15;
-        if (!analysis.configuration.formatting.hasPrettier) score -= 10;
+        // Analyze actual code files for real metrics
+        const codeFiles = analysis.codeFiles || [];
+        let totalLines = 0;
+        let totalFunctions = 0;
+        let totalClasses = 0;
+        let lintingIssues = 0;
+        let complexityIssues = 0;
+        let maintainabilityIssues = 0;
+        let testFiles = 0;
 
-        // Deduct points for issues
-        score -= analysis.issues.length * 2;
+        for (const file of codeFiles) {
+            try {
+                const content = await fsPromises.readFile(file, 'utf8');
+                const lines = content.split('\n');
+                totalLines += lines.length;
 
-        // Deduct points for complexity
-        const avgComplexity = Object.values(analysis.metrics.complexity.cyclomaticComplexity)
-            .reduce((sum, val) => sum + val, 0) / 
-            Math.max(Object.keys(analysis.metrics.complexity.cyclomaticComplexity).length, 1);
-        
-        if (avgComplexity > 10) score -= 20;
-        else if (avgComplexity > 5) score -= 10;
+                // Count functions
+                const functionMatches = content.match(/function\s+\w+|const\s+\w+\s*=\s*\(|=>\s*\{/g) || [];
+                totalFunctions += functionMatches.length;
 
-        // Deduct points for maintainability issues
-        score -= analysis.metrics.maintainability.largeFiles.length * 5;
-        score -= analysis.metrics.maintainability.magicNumbers * 1;
+                // Count classes
+                const classMatches = content.match(/class\s+\w+/g) || [];
+                totalClasses += classMatches.length;
 
-        // Deduct points for missing tests
-        if (!analysis.metrics.testability.hasTests) score -= 25;
+                // Count linting issues
+                if (content.includes('console.log')) lintingIssues++;
+                if (content.includes('var ')) lintingIssues++;
+                if (content.includes('==')) lintingIssues++;
 
-        return Math.max(0, Math.min(100, score));
+                // Count complexity issues
+                const nestedLevels = content.match(/\{/g)?.length || 0;
+                if (nestedLevels > 10) complexityIssues++;
+
+                // Count maintainability issues
+                if (lines.length > 200) maintainabilityIssues++;
+                if (content.match(/\b\d{3,}\b/g)?.length > 5) maintainabilityIssues++;
+
+                // Count test files
+                if (file.includes('.test.') || file.includes('.spec.')) testFiles++;
+            } catch (error) {
+                console.error(`Error reading file ${file}:`, error);
+            }
+        }
+
+        // Calculate real metrics
+        analysis.metrics = {
+            lintingIssues,
+            averageComplexity: complexityIssues,
+            maintainabilityIndex: Math.max(0, 100 - maintainabilityIssues * 10),
+            testCoverage: testFiles > 0 ? Math.min(100, (testFiles / Math.max(codeFiles.length, 1)) * 100) : 0,
+            codeDuplicationPercentage: 0, // Would need more complex analysis
+            codeStyleIssues: lintingIssues,
+            documentationCoverage: 0, // Would need comment analysis
+            performanceIssues: 0, // Would need performance analysis
+            overallQualityScore: 0
+        };
+
+        // Calculate score based on real metrics
+        if (lintingIssues > 0) score -= lintingIssues * 5;
+        if (complexityIssues > 0) score -= complexityIssues * 10;
+        if (maintainabilityIssues > 0) score -= maintainabilityIssues * 8;
+        if (testFiles === 0) score -= 30;
+
+        analysis.metrics.overallQualityScore = Math.max(0, Math.min(100, score));
+        return analysis.metrics.overallQualityScore;
     }
 
     /**
@@ -513,14 +557,14 @@ class CodeQualityAnalyzer {
         
         try {
             const getFiles = async (dir) => {
-                const items = await fs.readdir(dir);
+                const items = await fsPromises.readdir(dir);
                 for (const item of items) {
                     const itemPath = path.join(dir, item);
-                    const stats = await fs.stat(itemPath);
+                    const stats = await fsPromises.stat(itemPath);
                     
-                    if (stats.isDirectory === true && !item.startsWith('.') && item !== 'node_modules') {
+                    if (stats.isDirectory() && !item.startsWith('.') && item !== 'node_modules') {
                         await getFiles(itemPath);
-                    } else if (stats.isFile === true) {
+                    } else if (stats.isFile()) {
                         const ext = path.extname(item);
                         if (['.js', '.jsx', '.ts', '.tsx', '.py', '.java', '.cs'].includes(ext)) {
                             files.push(itemPath);
@@ -531,7 +575,7 @@ class CodeQualityAnalyzer {
             
             await getFiles(projectPath);
         } catch (error) {
-            // Ignore errors
+            console.error('Error reading code files:', error);
         }
 
         return files;
