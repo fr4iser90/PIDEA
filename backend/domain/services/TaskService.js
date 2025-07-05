@@ -14,6 +14,26 @@ class TaskService {
     this.cursorIDEService = cursorIDEService;
   }
 
+  buildRefactoringPrompt(task) {
+    const file = task.metadata?.filePath || task.metadata?.originalFile || 'UNKNOWN FILE';
+    const title = task.title || 'Refactor File';
+    const description = task.description || '';
+    const steps = Array.isArray(task.metadata?.refactoringSteps) ? task.metadata.refactoringSteps : [];
+    let prompt = `Refactor the following file for better maintainability and structure.\n\n`;
+    prompt += `File: ${file}\n`;
+    prompt += `Task: ${title}\n`;
+    if (description) prompt += `Description: ${description}\n`;
+    if (steps.length) {
+      prompt += `\nRefactoring Steps:\n`;
+      steps.forEach((step, i) => {
+        prompt += `${i + 1}. ${step}\n`;
+      });
+    }
+    prompt += `\nDo not change any business logic. Only split, extract, and organize code as described.\n`;
+    prompt += `Apply all changes directly in the IDE. Do not output explanations.\n`;
+    return prompt;
+  }
+
   /**
    * Create a new task for a project
    * @param {string} projectId - Project ID
