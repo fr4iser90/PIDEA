@@ -21,4 +21,5 @@ module.exports = {
   TaskService: require('./TaskService'),
   TaskSuggestionService: require('./TaskSuggestionService'),
   TaskValidationService: require('./TaskValidationService'),
+  SubprojectDetector: require('./SubprojectDetector'),
 }; 

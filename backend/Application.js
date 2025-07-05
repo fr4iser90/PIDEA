@@ -246,6 +246,7 @@ class Application {
     this.securityAnalyzer = new SecurityAnalyzer();
     this.performanceAnalyzer = new PerformanceAnalyzer();
     this.architectureAnalyzer = new ArchitectureAnalyzer();
+    this.subprojectDetector = new (require('./domain/services/SubprojectDetector'))();
 
     // Initialize analysis output service and repository
     this.analysisOutputService = new (require('./domain/services/AnalysisOutputService'))();
@@ -468,7 +469,15 @@ class Application {
       eventBus: this.eventBus,
       analysisRepository: this.analysisRepository,
       commandBus: this.commandBus,
-      logger: this.logger
+      logger: this.logger,
+      analysisOutputService: this.analysisOutputService,
+      subprojectDetector: this.subprojectDetector,
+      projectAnalyzer: this.projectAnalyzer,
+      codeQualityAnalyzer: this.codeQualityAnalyzer,
+      architectureAnalyzer: this.architectureAnalyzer,
+      dependencyAnalyzer: this.dependencyAnalyzer,
+      securityAnalyzer: this.securityAnalyzer,
+      performanceAnalyzer: this.performanceAnalyzer
     });
 
     this.taskExecutionEngine = new (require('./infrastructure/external/TaskExecutionEngine'))({

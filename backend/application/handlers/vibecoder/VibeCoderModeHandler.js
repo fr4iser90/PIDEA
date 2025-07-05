@@ -9,6 +9,7 @@ const AnalyzeRepoStructureCommand = require('../../commands/analyze/AnalyzeRepoS
 const AnalyzeArchitectureCommand = require('../../commands/analyze/AnalyzeArchitectureCommand');
 const AnalyzeCodeQualityCommand = require('../../commands/analyze/AnalyzeCodeQualityCommand');
 const AnalyzeDependenciesCommand = require('../../commands/analyze/AnalyzeDependenciesCommand');
+const { SubprojectDetector } = require('../../../domain/services');
 
 
 class VibeCoderModeHandler {
@@ -17,6 +18,16 @@ class VibeCoderModeHandler {
         this.analysisRepository = dependencies.analysisRepository || new AnalysisRepository();
         this.commandBus = dependencies.commandBus || new CommandBus();
         this.logger = dependencies.logger || console;
+        this.subprojectDetector = dependencies.subprojectDetector || new SubprojectDetector();
+        this.analysisOutputService = dependencies.analysisOutputService;
+        
+        // Initialize analyzers
+        this.projectAnalyzer = dependencies.projectAnalyzer;
+        this.codeQualityAnalyzer = dependencies.codeQualityAnalyzer;
+        this.architectureAnalyzer = dependencies.architectureAnalyzer;
+        this.dependencyAnalyzer = dependencies.dependencyAnalyzer;
+        this.securityAnalyzer = dependencies.securityAnalyzer;
+        this.performanceAnalyzer = dependencies.performanceAnalyzer;
     }
 
     async handle(command) {
@@ -45,11 +56,40 @@ class VibeCoderModeHandler {
             const options = command.getModeOptions();
             const outputConfig = command.getOutputConfiguration();
 
-            // Step 1: Initial comprehensive analysis
-            const initialAnalysis = await this.performComprehensiveAnalysis(command.projectPath);
-            
+            const projectPath = command.projectPath;
+            // 1. Subprojekte erkennen
+            const subprojects = await this.subprojectDetector.detectSubprojects(projectPath);
+            let results = {};
+            let errors = [];
+            if (subprojects.length > 1) {
+                // Monorepo-Strategie: Alle Subprojekte analysieren
+                await Promise.all(subprojects.map(async (sub) => {
+                    try {
+                        results[sub.path] = await this.analyzeSubproject(sub);
+                    } catch (e) {
+                        errors.push({ path: sub.path, error: e.message });
+                    }
+                }));
+            } else if (subprojects.length === 1) {
+                // Single-Repo-Strategie: Nur ein Subprojekt
+                try {
+                    results[subprojects[0].path] = await this.analyzeSubproject(subprojects[0]);
+                } catch (e) {
+                    errors.push({ path: subprojects[0].path, error: e.message });
+                }
+            } else {
+                // Fallback: Root analysieren
+                try {
+                    results[projectPath] = await this.analyzeSubproject({ path: projectPath, type: 'unknown', meta: {} });
+                } catch (e) {
+                    errors.push({ path: projectPath, error: e.message });
+                }
+            }
+            // 2. Ergebnisse aggregieren
+            const aggregated = this.aggregateResults(results, errors);
+
             // Step 2: Determine optimal execution strategy
-            const executionStrategy = await this.determineExecutionStrategy(initialAnalysis, options);
+            const executionStrategy = await this.determineExecutionStrategy(aggregated, options);
             
             // Step 3: Execute analyze phase
             const analyzeResults = await this.executeAnalyzePhase(command, executionStrategy);
@@ -67,7 +107,7 @@ class VibeCoderModeHandler {
             }
             
             // Step 6: Validate overall results
-            const validationResults = await this.validateOverallResults(command.projectPath, {
+            const validationResults = await this.validateOverallResults(projectPath, {
                 analyze: analyzeResults,
                 refactor: refactorResults,
                 generate: generateResults
@@ -83,7 +123,7 @@ class VibeCoderModeHandler {
             // Step 8: Generate output
             const output = await this.generateOutput({
                 command,
-                initialAnalysis,
+                initialAnalysis: aggregated,
                 executionStrategy,
                 analyzeResults,
                 refactorResults,
@@ -119,6 +159,41 @@ class VibeCoderModeHandler {
 
             throw error;
         }
+    }
+
+    async analyzeSubproject(sub) {
+        // Analysiere je nach Typ
+        const result = { type: sub.type, path: sub.path, meta: sub.meta, analyses: {} };
+        // Struktur-Analyse (immer)
+        result.analyses.structure = await this.projectAnalyzer.analyzeStructure(sub.path);
+        // Node.js
+        if (sub.type === 'nodejs') {
+            result.analyses.codeQuality = await this.codeQualityAnalyzer.analyze(sub.path);
+            result.analyses.architecture = await this.architectureAnalyzer.analyze(sub.path);
+            result.analyses.dependencies = await this.dependencyAnalyzer.analyze(sub.path);
+            result.analyses.security = await this.securityAnalyzer.analyze(sub.path);
+            result.analyses.performance = await this.performanceAnalyzer.analyze(sub.path);
+        }
+        // Python
+        else if (sub.type === 'python') {
+            // Nur Struktur und Maintainability (Demo, kann erweitert werden)
+            result.analyses.maintainability = await this.projectAnalyzer.calculateComplexity(sub.path);
+        }
+        // Java
+        else if (sub.type === 'java') {
+            // Nur Struktur (Demo, kann erweitert werden)
+        }
+        // C#
+        else if (sub.type === 'csharp') {
+            // Nur Struktur (Demo, kann erweitert werden)
+        }
+        // Unbekannt: Nur Struktur
+        return result;
+    }
+
+    aggregateResults(results, errors) {
+        // Aggregiere alle Ergebnisse und Fehler
+        return { results, errors };
     }
 
     async performComprehensiveAnalysis(projectPath) {
@@ -916,6 +991,7 @@ class VibeCoderModeHandler {
 
     async saveResults(command, output) {
         try {
+            // Save to database
             await this.analysisRepository.save({
                 id: command.commandId,
                 type: 'vibecoder_mode',
@@ -924,6 +1000,60 @@ class VibeCoderModeHandler {
                 timestamp: new Date(),
                 metadata: command.getMetadata()
             });
+
+            // Save to output files using AnalysisOutputService
+            if (this.analysisOutputService) {
+                const projectId = command.commandId;
+                
+                // Save main analysis result
+                await this.analysisOutputService.saveAnalysisResult(
+                    projectId, 
+                    'vibecoder_mode', 
+                    output
+                );
+
+                // Save individual analysis results if available
+                if (output.results && output.results.analyze) {
+                    await this.analysisOutputService.saveAnalysisResult(
+                        projectId,
+                        'analyze_phase',
+                        output.results.analyze
+                    );
+                }
+
+                if (output.results && output.results.refactor) {
+                    await this.analysisOutputService.saveAnalysisResult(
+                        projectId,
+                        'refactor_phase',
+                        output.results.refactor
+                    );
+                }
+
+                if (output.results && output.results.generate) {
+                    await this.analysisOutputService.saveAnalysisResult(
+                        projectId,
+                        'generate_phase',
+                        output.results.generate
+                    );
+                }
+
+                // Generate markdown report
+                const analysisResults = {};
+                if (output.results) {
+                    Object.entries(output.results).forEach(([phase, data]) => {
+                        if (data) {
+                            analysisResults[phase] = { data };
+                        }
+                    });
+                }
+                
+                if (Object.keys(analysisResults).length > 0) {
+                    await this.analysisOutputService.generateMarkdownReport(
+                        projectId,
+                        analysisResults
+                    );
+                }
+            }
 
             await this.eventBus.publish('vibecoder.mode.completed', {
                 commandId: command.commandId,
