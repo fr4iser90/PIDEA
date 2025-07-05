@@ -63,6 +63,7 @@ class DependencyAnalyzer {
         };
 
         return {
+            packages: packages,
             directDependencies: allDirectDependencies,
             directDevDependencies: allDirectDevDependencies,
             transitiveDependencies: allTransitiveDependencies,

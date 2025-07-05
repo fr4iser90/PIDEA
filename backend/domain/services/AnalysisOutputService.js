@@ -61,18 +61,46 @@ class AnalysisOutputService {
     extractPackagesFromAnalysis(analysisResults) {
         const packages = [];
         
-        // Extract packages from dependencies analysis
+        console.log('DEBUG: extractPackagesFromAnalysis called with:', Object.keys(analysisResults));
+        
+        // Extract packages from dependencies analysis (multiple possible locations)
         if (analysisResults.Dependencies && analysisResults.Dependencies.data && analysisResults.Dependencies.data.packages) {
+            console.log('DEBUG: Found packages in Dependencies.data.packages');
             packages.push(...analysisResults.Dependencies.data.packages);
+        }
+        
+        // Extract packages from structure analysis (where they actually are!)
+        if (analysisResults.structure && analysisResults.structure.data && analysisResults.structure.data.dependenciesAnalysis && analysisResults.structure.data.dependenciesAnalysis.packages) {
+            console.log('DEBUG: Found packages in structure.data.dependenciesAnalysis.packages');
+            packages.push(...analysisResults.structure.data.dependenciesAnalysis.packages);
         }
         
         // Extract packages from architecture analysis
         if (analysisResults.Architecture && analysisResults.Architecture.data && analysisResults.Architecture.data.packages) {
+            console.log('DEBUG: Found packages in Architecture.data.packages');
             packages.push(...analysisResults.Architecture.data.packages);
         }
         
+        // Check all possible locations recursively
+        const checkForPackages = (obj, path = '') => {
+            if (obj && typeof obj === 'object') {
+                if (obj.packages && Array.isArray(obj.packages)) {
+                    console.log(`DEBUG: Found packages in ${path}.packages`);
+                    packages.push(...obj.packages);
+                }
+                Object.entries(obj).forEach(([key, value]) => {
+                    checkForPackages(value, path ? `${path}.${key}` : key);
+                });
+            }
+        };
+        
+        checkForPackages(analysisResults);
+        
+        console.log('DEBUG: Total packages found:', packages.length);
+        
         // If no packages found, assume single package
         if (packages.length === 0) {
+            console.log('DEBUG: No packages found, using single package');
             packages.push({ name: 'root', path: '.', relativePath: '.' });
         }
         
@@ -95,11 +123,31 @@ class AnalysisOutputService {
                         };
                     }
                 }
-                // For other analyses, filter files by package path
+                // For repository structure, filter files by package path
+                else if (type === 'Repository Structure' && result.data.structure && result.data.structure.files) {
+                    const packageFiles = result.data.structure.files.filter(file => {
+                        const filePath = file.path || file;
+                        return filePath.includes(pkg.path) || filePath.startsWith(pkg.relativePath);
+                    });
+                    if (packageFiles.length > 0) {
+                        packageResults[type] = {
+                            ...result,
+                            data: {
+                                ...result.data,
+                                structure: {
+                                    ...result.data.structure,
+                                    files: packageFiles
+                                }
+                            }
+                        };
+                    }
+                }
+                // For other analyses with files, filter by package path
                 else if (result.data.files) {
-                    const packageFiles = result.data.files.filter(file => 
-                        file.includes(pkg.path) || file.startsWith(pkg.relativePath)
-                    );
+                    const packageFiles = result.data.files.filter(file => {
+                        const filePath = file.path || file;
+                        return filePath.includes(pkg.path) || filePath.startsWith(pkg.relativePath);
+                    });
                     if (packageFiles.length > 0) {
                         packageResults[type] = {
                             ...result,
@@ -154,16 +202,13 @@ class AnalysisOutputService {
             // Filter analysis results for this package
             const packageResults = this.filterAnalysisResultsForPackage(analysisResults, pkg);
             
-            // Generate sections for this package
-            const sections = [
-                { key: 'Repository Structure', filename: 'repository-structure' },
-                { key: 'Architecture', filename: 'architecture' },
-                { key: 'Code Quality', filename: 'code-quality' },
-                { key: 'Dependencies', filename: 'dependencies' },
-                { key: 'Tech Stack', filename: 'tech-stack' },
-                { key: 'Performance', filename: 'performance' },
-                { key: 'Security', filename: 'security' }
-            ];
+                    // Generate package-specific sections (NO Performance/Security here!)
+        const sections = [
+            { key: 'Architecture', filename: 'architecture' },
+            { key: 'Code Quality', filename: 'code-quality' },
+            { key: 'Dependencies', filename: 'dependencies' },
+            { key: 'Tech Stack', filename: 'tech-stack' }
+        ];
             
             for (const section of sections) {
                 const data = packageResults[section.key] || packageResults[section.key.toLowerCase()];
@@ -186,12 +231,6 @@ class AnalysisOutputService {
                         case 'Tech Stack':
                             packageMarkdown += this.formatTechStackData(data.data || data);
                             break;
-                        case 'Performance':
-                            packageMarkdown += this.formatPerformanceData(data.data || data, data.metrics, data.recommendations);
-                            break;
-                        case 'Security':
-                            packageMarkdown += this.formatSecurityData(data.data || data, data.metrics, data.recommendations);
-                            break;
                     }
                 }
             }
@@ -200,6 +239,59 @@ class AnalysisOutputService {
             generatedFiles.push(packageFilename);
             
             indexMarkdown += `- [${packageName}](${packageFilename})\n`;
+        }
+        
+        // Add shared structure report (common files)
+        const sharedStructureData = analysisResults['Repository Structure'] || analysisResults['repository structure'];
+        if (sharedStructureData) {
+            const sharedFilename = `${baseFilename}-shared-structure.md`;
+            const sharedFilepath = path.join(projectDir, sharedFilename);
+            
+            let sharedMarkdown = `# Shared Project Structure\n\n`;
+            sharedMarkdown += `**Project ID:** ${projectId}\n`;
+            sharedMarkdown += `**Generated:** ${new Date().toLocaleString()}\n`;
+            sharedMarkdown += `**Scope:** System-wide (common files)\n\n`;
+            sharedMarkdown += this.formatProjectStructureData(sharedStructureData.data || sharedStructureData, sharedStructureData.metrics, sharedStructureData.recommendations);
+            
+            await fs.writeFile(sharedFilepath, sharedMarkdown);
+            generatedFiles.push(sharedFilename);
+            
+            indexMarkdown += `\n## Shared Structure\n\n`;
+            indexMarkdown += `- [Shared Structure](${sharedFilename})\n`;
+        }
+        
+        // Add system-wide reports (Performance, Security)
+        const systemSections = [
+            { key: 'Performance', filename: 'performance' },
+            { key: 'Security', filename: 'security' }
+        ];
+        
+        for (const section of systemSections) {
+            const data = analysisResults[section.key] || analysisResults[section.key.toLowerCase()];
+            if (data) {
+                const sectionFilename = `${baseFilename}-${section.filename}.md`;
+                const sectionFilepath = path.join(projectDir, sectionFilename);
+                
+                let sectionMarkdown = `# ${section.key}\n\n`;
+                sectionMarkdown += `**Project ID:** ${projectId}\n`;
+                sectionMarkdown += `**Generated:** ${new Date().toLocaleString()}\n`;
+                sectionMarkdown += `**Scope:** System-wide\n\n`;
+                
+                switch (section.key) {
+                    case 'Performance':
+                        sectionMarkdown += this.formatPerformanceData(data.data || data, data.metrics, data.recommendations);
+                        break;
+                    case 'Security':
+                        sectionMarkdown += this.formatSecurityData(data.data || data, data.metrics, data.recommendations);
+                        break;
+                }
+                
+                await fs.writeFile(sectionFilepath, sectionMarkdown);
+                generatedFiles.push(sectionFilename);
+                
+                indexMarkdown += `\n## System-wide Reports\n\n`;
+                indexMarkdown += `- [${section.key}](${sectionFilename})\n`;
+            }
         }
         
         // Add overall suggestions
@@ -969,6 +1061,32 @@ class AnalysisOutputService {
         // Use provided metrics or extract from data
         const depsMetrics = metrics || data.metrics || {};
         const depsRecommendations = recommendations || data.recommendations || [];
+        
+        // Show packages if available (for monorepo detection)
+        if (data.packages && data.packages.length > 0) {
+            md += '### Packages\n\n';
+            md += '| Package | Path | Dependencies | Dev Dependencies |\n';
+            md += '|---------|------|--------------|------------------|\n';
+            data.packages.forEach(pkg => {
+                const depsCount = Object.keys(pkg.dependencies || {}).length;
+                const devDepsCount = Object.keys(pkg.devDependencies || {}).length;
+                md += `| \`${pkg.name}\` | \`${pkg.path}\` | ${depsCount} | ${devDepsCount} |\n`;
+            });
+            md += '\n';
+        }
+        
+        // Also check in dependenciesAnalysis.packages
+        if (data.dependenciesAnalysis && data.dependenciesAnalysis.packages && data.dependenciesAnalysis.packages.length > 0) {
+            md += '### Packages\n\n';
+            md += '| Package | Path | Dependencies | Dev Dependencies |\n';
+            md += '|---------|------|--------------|------------------|\n';
+            data.dependenciesAnalysis.packages.forEach(pkg => {
+                const depsCount = Object.keys(pkg.dependencies || {}).length;
+                const devDepsCount = Object.keys(pkg.devDependencies || {}).length;
+                md += `| \`${pkg.name}\` | \`${pkg.path}\` | ${depsCount} | ${devDepsCount} |\n`;
+            });
+            md += '\n';
+        }
         
         if (data.dependenciesAnalysis) {
             const deps = data.dependenciesAnalysis;
