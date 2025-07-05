@@ -182,112 +182,11 @@ class AnalysisOutputService {
                 // For architecture, use package-specific data if available
                 else if (type === 'Architecture' && result.data) {
                     // Check if this is a monorepo with package-specific architecture data
-                    if (result.data.isMonorepo && result.data.packageArchitectures && result.data.packageArchitectures[pkg.name]) {
-                        const packageArchitecture = result.data.packageArchitectures[pkg.name];
-                        const architecture = packageArchitecture.architecture;
-                        
-                        const packageArchitectureData = {
-                            package: pkg.name,
-                            packagePath: pkg.path,
-                            architectureScore: architecture.architectureScore,
-                            detectedPatterns: architecture.detectedPatterns || [],
-                            structure: architecture.structure || {},
-                            coupling: architecture.coupling || {},
-                            cohesion: architecture.cohesion || {},
-                            dependencies: architecture.dependencies || {},
-                            violations: architecture.violations || [],
-                            recommendations: architecture.recommendations || [],
-                            patterns: packageArchitecture.patterns || [],
-                            layers: packageArchitecture.layers || [],
-                            modules: packageArchitecture.modules || [],
-                            antiPatterns: packageArchitecture.antiPatterns || [],
-                            designPrinciples: packageArchitecture.designPrinciples || []
-                        };
-                        
-                        // Calculate metrics for this package
-                        packageArchitectureData.metrics = {
-                            patternCount: packageArchitectureData.patterns.length,
-                            layerCount: packageArchitectureData.layers.length,
-                            moduleCount: packageArchitectureData.modules.length,
-                            antiPatternCount: packageArchitectureData.antiPatterns.length,
-                            designPrincipleCount: packageArchitectureData.designPrinciples.length,
-                            averageCoupling: this.calculateAverageCoupling(packageArchitectureData.coupling),
-                            averageCohesion: this.calculateAverageCohesion(packageArchitectureData.cohesion),
-                            complexityScore: this.calculateComplexityScore(packageArchitectureData)
-                        };
-                        
+                    if (result.data.isMonorepo && result.data.packages) {
+                        console.log('DEBUG: Found packages in Architecture.data.packages (monorepo)');
                         packageResults[type] = {
                             ...result,
-                            data: packageArchitectureData
-                        };
-                    } else {
-                        // Fallback to old filtering logic for single package or legacy data
-                        const packageArchitecture = {
-                            ...result.data,
-                            package: pkg.name,
-                            packagePath: pkg.path
-                        };
-                        
-                        // Filter patterns by package
-                        if (result.data.patterns) {
-                            packageArchitecture.patterns = result.data.patterns.filter(pattern => {
-                                return pattern.files && pattern.files.some(file => 
-                                    file.includes(pkg.path) || file.startsWith(pkg.relativePath)
-                                );
-                            });
-                        }
-                        
-                        // Filter layers by package
-                        if (result.data.layers) {
-                            packageArchitecture.layers = result.data.layers.filter(layer => {
-                                return layer.path && (layer.path.includes(pkg.path) || layer.path.startsWith(pkg.relativePath));
-                            });
-                        }
-                        
-                        // Filter modules by package
-                        if (result.data.modules) {
-                            packageArchitecture.modules = result.data.modules.filter(module => {
-                                return module.includes(pkg.path) || module.startsWith(pkg.relativePath);
-                            });
-                        }
-                        
-                        // Filter coupling analysis by package
-                        if (result.data.coupling) {
-                            packageArchitecture.coupling = {};
-                            Object.entries(result.data.coupling).forEach(([module, coupling]) => {
-                                if (module.includes(pkg.name) || module.includes(path.basename(pkg.path))) {
-                                    packageArchitecture.coupling[module] = coupling;
-                                }
-                            });
-                        }
-                        
-                        // Filter cohesion analysis by package
-                        if (result.data.cohesion) {
-                            packageArchitecture.cohesion = {};
-                            Object.entries(result.data.cohesion).forEach(([module, cohesion]) => {
-                                if (module.includes(pkg.name) || module.includes(path.basename(pkg.path))) {
-                                    packageArchitecture.cohesion[module] = cohesion;
-                                }
-                            });
-                        }
-                        
-                        // Recalculate metrics for this package
-                        if (packageArchitecture.patterns || packageArchitecture.layers || packageArchitecture.modules) {
-                            packageArchitecture.metrics = {
-                                patternCount: packageArchitecture.patterns ? packageArchitecture.patterns.length : 0,
-                                layerCount: packageArchitecture.layers ? packageArchitecture.layers.length : 0,
-                                moduleCount: packageArchitecture.modules ? packageArchitecture.modules.length : 0,
-                                antiPatternCount: packageArchitecture.antiPatterns ? packageArchitecture.antiPatterns.length : 0,
-                                designPrincipleCount: packageArchitecture.designPrinciples ? packageArchitecture.designPrinciples.length : 0,
-                                averageCoupling: this.calculateAverageCoupling(packageArchitecture.coupling),
-                                averageCohesion: this.calculateAverageCohesion(packageArchitecture.cohesion),
-                                complexityScore: this.calculateComplexityScore(packageArchitecture)
-                            };
-                        }
-                        
-                        packageResults[type] = {
-                            ...result,
-                            data: packageArchitecture
+                            data: result.data
                         };
                     }
                 }
@@ -340,60 +239,16 @@ class AnalysisOutputService {
                             ...result,
                             data: packageQualityData
                         };
-                    } else {
-                        // Fallback to old filtering logic for single package or legacy data
-                        const packageQualityData = {
-                            ...result.data,
-                            package: pkg.name,
-                            packagePath: pkg.path
-                        };
-                        
-                        // Filter issues by package path
-                        if (result.data.issues) {
-                            packageQualityData.issues = result.data.issues.filter(issue => {
-                                return issue.file && (issue.file.includes(pkg.path) || issue.file.startsWith(pkg.relativePath));
-                            });
-                        }
-                        
-                        // Filter linting issues by package path
-                        if (result.data.lintingIssuesList) {
-                            packageQualityData.lintingIssuesList = result.data.lintingIssuesList.filter(issue => {
-                                return issue.file && (issue.file.includes(pkg.path) || issue.file.startsWith(pkg.relativePath));
-                            });
-                        }
-                        
-                        // Filter complexity issues by package path
-                        if (result.data.complexityIssuesList) {
-                            packageQualityData.complexityIssuesList = result.data.complexityIssuesList.filter(issue => {
-                                return issue.file && (issue.file.includes(pkg.path) || issue.file.startsWith(pkg.relativePath));
-                            });
-                        }
-                        
-                        // Filter large files by package path
-                        if (result.data.largeFiles) {
-                            packageQualityData.largeFiles = result.data.largeFiles.filter(file => {
-                                return file.file && (file.file.includes(pkg.path) || file.file.startsWith(pkg.relativePath));
-                            });
-                        }
-                        
-                        // Filter magic number files by package path
-                        if (result.data.magicNumberFiles) {
-                            packageQualityData.magicNumberFiles = result.data.magicNumberFiles.filter(file => {
-                                return file.file && (file.file.includes(pkg.path) || file.file.startsWith(pkg.relativePath));
-                            });
-                        }
-                        
-                        packageResults[type] = {
-                            ...result,
-                            data: packageQualityData
-                        };
                     }
                 }
-                // For security, use package-specific data if available
+                // For security, use package-specific data ONLY if available
                 else if (type === 'Security' && result.data) {
-                    // Check if this is a monorepo with package-specific security data
-                    if (result.data.isMonorepo && result.data.packageSecurityAnalyses && result.data.packageSecurityAnalyses[pkg.name]) {
-                        const packageSecurity = result.data.packageSecurityAnalyses[pkg.name];
+                    // Check if there's a monorepo security analysis with package-specific data
+                    const securityData = analysisResults['Security'] || analysisResults['security'];
+                    if (securityData && securityData.data && securityData.data.isMonorepo && 
+                        securityData.data.packageSecurityAnalyses && securityData.data.packageSecurityAnalyses[pkg.name]) {
+                        
+                        const packageSecurity = securityData.data.packageSecurityAnalyses[pkg.name];
                         const securityAnalysis = packageSecurity.securityAnalysis;
                         
                         const packageSecurityData = {
@@ -401,12 +256,12 @@ class AnalysisOutputService {
                             packagePath: pkg.path,
                             securityScore: securityAnalysis.securityScore || 100,
                             overallRiskLevel: securityAnalysis.overallRiskLevel || 'low',
-                            vulnerabilities: packageSecurity.vulnerabilities || [],
-                            codeIssues: packageSecurity.codeIssues || [],
-                            configuration: packageSecurity.configuration || {},
-                            dependencies: packageSecurity.dependencies || {},
-                            secrets: packageSecurity.secrets || {},
-                            recommendations: packageSecurity.recommendations || []
+                            vulnerabilities: securityAnalysis.vulnerabilities || [],
+                            codeIssues: securityAnalysis.codeIssues || [],
+                            configuration: securityAnalysis.configuration || {},
+                            dependencies: securityAnalysis.dependencies || {},
+                            secrets: securityAnalysis.secrets || {},
+                            recommendations: securityAnalysis.recommendations || []
                         };
                         
                         // Calculate metrics for this package
@@ -425,9 +280,6 @@ class AnalysisOutputService {
                             ...result,
                             data: packageSecurityData
                         };
-                    } else {
-                        // Use project-wide data
-                        packageResults[type] = result;
                     }
                 }
                 // For other analyses with files, filter by package path
@@ -524,10 +376,52 @@ class AnalysisOutputService {
             }
             
             // Security-Report pro Package
-            if (filteredResults['Security'] && filteredResults['Security'].data) {
+            packageMarkdown += '## Security\n\n';
+            
+            // Check if there's a monorepo security analysis with package-specific data
+            const securityData = analysisResults['Security'] || analysisResults['security'];
+            
+            if (securityData && securityData.data && securityData.data.isMonorepo && 
+                securityData.data.packageSecurityAnalyses && securityData.data.packageSecurityAnalyses[pkg.name]) {
+                
+                const packageSecurity = securityData.data.packageSecurityAnalyses[pkg.name];
+                const securityAnalysis = packageSecurity.securityAnalysis;
+                
+                const packageSecurityData = {
+                    package: pkg.name,
+                    packagePath: pkg.path,
+                    securityScore: securityAnalysis.securityScore || 100,
+                    overallRiskLevel: securityAnalysis.overallRiskLevel || 'low',
+                    vulnerabilities: securityAnalysis.vulnerabilities || [],
+                    codeIssues: securityAnalysis.codeIssues || [],
+                    configuration: securityAnalysis.configuration || {},
+                    dependencies: securityAnalysis.dependencies || {},
+                    secrets: securityAnalysis.secrets || {},
+                    recommendations: securityAnalysis.recommendations || []
+                };
+                
+                // Calculate metrics for this package
+                packageSecurityData.metrics = {
+                    vulnerabilityCount: packageSecurityData.vulnerabilities.length,
+                    codeIssueCount: packageSecurityData.codeIssues.length,
+                    secretCount: packageSecurityData.secrets.found?.length || 0,
+                    missingSecurityCount: packageSecurityData.configuration.missingSecurity?.length || 0,
+                    criticalVulnerabilities: this.countCriticalVulnerabilities(packageSecurityData.vulnerabilities),
+                    highVulnerabilities: this.countHighVulnerabilities(packageSecurityData.vulnerabilities),
+                    mediumVulnerabilities: this.countMediumVulnerabilities(packageSecurityData.vulnerabilities),
+                    lowVulnerabilities: this.countLowVulnerabilities(packageSecurityData.vulnerabilities)
+                };
+                
+                const secMd = this.formatSecurityData(packageSecurityData, packageSecurityData.metrics, packageSecurityData.recommendations);
+                packageMarkdown += secMd;
+            } else if (filteredResults['Security'] && filteredResults['Security'].data) {
+                // Fallback to filtered results if no monorepo data
                 const secData = filteredResults['Security'].data;
                 const secMd = this.formatSecurityData(secData, secData.metrics, secData.recommendations);
                 packageMarkdown += secMd;
+            } else {
+                // No security data available for this package
+                packageMarkdown += '**No security analysis available for this package.**\n\n';
             }
             
             await fs.writeFile(packageFilepath, packageMarkdown);
@@ -577,7 +471,14 @@ class AnalysisOutputService {
                         sectionMarkdown += this.formatPerformanceData(data.data || data, data.metrics, data.recommendations);
                         break;
                     case 'Security':
-                        sectionMarkdown += this.formatSecurityData(data.data || data, data.metrics, data.recommendations);
+                        // Special handling for security to aggregate package data
+                        if (data.data && data.data.isMonorepo && data.data.packageSecurityAnalyses) {
+                            // Create aggregated security data from all packages
+                            const aggregatedSecurityData = this.aggregateSecurityData(data.data);
+                            sectionMarkdown += this.formatSecurityData(aggregatedSecurityData, aggregatedSecurityData.metrics, aggregatedSecurityData.recommendations);
+                        } else {
+                            sectionMarkdown += this.formatSecurityData(data.data || data, data.metrics, data.recommendations);
+                        }
                         break;
                 }
                 
@@ -869,22 +770,22 @@ class AnalysisOutputService {
         // Use provided metrics or extract from data
         const qualityMetrics = metrics || data.metrics || {};
         const qualityRecommendations = recommendations || data.recommendations || [];
-        
-        md += '### Code Quality Analysis\n\n';
-        
-        // Overall Score
+            
+            md += '### Code Quality Analysis\n\n';
+            
+            // Overall Score
         if (data.overallScore !== undefined) {
             md += `**Overall Quality Score:** ${data.overallScore}/100\n\n`;
-        }
-        
-        // Metrics Table
-        if (qualityMetrics && Object.keys(qualityMetrics).length > 0) {
-            md += '### Quality Metrics\n\n';
-            md += '| Metric | Value |\n';
-            md += '|--------|-------|\n';
+            }
             
-            Object.entries(qualityMetrics).forEach(([metric, value]) => {
-                if (value !== null && value !== undefined) {
+            // Metrics Table
+            if (qualityMetrics && Object.keys(qualityMetrics).length > 0) {
+                md += '### Quality Metrics\n\n';
+                md += '| Metric | Value |\n';
+                md += '|--------|-------|\n';
+                
+                Object.entries(qualityMetrics).forEach(([metric, value]) => {
+                    if (value !== null && value !== undefined) {
                     if (typeof value === 'object') {
                         // Handle nested metrics
                         Object.entries(value).forEach(([subMetric, subValue]) => {
@@ -895,18 +796,18 @@ class AnalysisOutputService {
                     } else {
                         md += `| ${metric} | ${value} |\n`;
                     }
-                }
-            });
-            md += '\n';
-        }
-        
-        // Issues
+                    }
+                });
+                md += '\n';
+            }
+            
+            // Issues
         if (data.issues && data.issues.length > 0) {
-            md += '### Issues Found\n\n';
+                md += '### Issues Found\n\n';
             data.issues.forEach(issue => {
                 md += `- **${issue.type || issue.rule || 'Issue'}**: ${issue.message || issue.description}\n`;
                 if (issue.file) md += `  - File: \`${issue.file}\`\n`;
-                if (issue.line) md += `  - Line: ${issue.line}\n`;
+                    if (issue.line) md += `  - Line: ${issue.line}\n`;
                 if (issue.severity) md += `  - Severity: ${issue.severity}\n`;
                 md += '\n';
             });
@@ -917,17 +818,17 @@ class AnalysisOutputService {
             md += '### Large Files (>500 LOC)\n\n';
             data.largeFiles.forEach(file => {
                 md += `- **${file.file}**: ${file.lines} lines\n`;
-            });
-            md += '\n';
-        }
-        
+                });
+                md += '\n';
+            }
+            
         if (data.magicNumberFiles && data.magicNumberFiles.length > 0) {
             md += '### Files with Many Magic Numbers (>20)\n\n';
             data.magicNumberFiles.forEach(file => {
                 md += `- **${file.file}**: ${file.magicNumbers} magic numbers\n`;
             });
-            md += '\n';
-        }
+                    md += '\n';
+                }
         
         if (data.complexityIssuesList && data.complexityIssuesList.length > 0) {
             md += '### Complexity Issues\n\n';
@@ -960,13 +861,13 @@ class AnalysisOutputService {
                 md += `- Lint-staged: ${data.configuration.linting.hasLintStaged ? 'Yes' : 'No'}\n`;
                 md += '\n';
             }
-            
+
             if (data.configuration.formatting) {
                 md += '#### Formatting\n';
                 md += `- Prettier: ${data.configuration.formatting.hasPrettier ? 'Yes' : 'No'}\n`;
                 md += `- EditorConfig: ${data.configuration.formatting.hasEditorConfig ? 'Yes' : 'No'}\n`;
                 md += `- VSCode Settings: ${data.configuration.formatting.hasVSCodeSettings ? 'Yes' : 'No'}\n`;
-                md += '\n';
+                    md += '\n';
             }
         }
         
@@ -999,181 +900,132 @@ class AnalysisOutputService {
 
     formatSecurityData(data, metrics = null, recommendations = null) {
         let md = '';
-        
-        // Use provided metrics or extract from data
-        const securityMetrics = metrics || data.metrics || {};
-        const securityRecommendations = recommendations || data.recommendations || [];
-        
-        // Security Score with breakdown
-        if (data.securityScore !== undefined) {
-            md += `**Security Score:** ${data.securityScore}/100\n\n`;
-            
-            // Show score calculation breakdown
-            md += '### Score Calculation\n\n';
-            let baseScore = 100;
-            let deductions = [];
-            
-            // Dependency vulnerabilities
-            if (data.dependencies) {
-                const deps = data.dependencies;
-                if (deps.critical > 0) {
-                    const deduction = deps.critical * 15;
-                    deductions.push(`- Critical vulnerabilities: -${deduction} (${deps.critical} × 15)`);
-                    baseScore -= deduction;
-                }
-                if (deps.high > 0) {
-                    const deduction = deps.high * 10;
-                    deductions.push(`- High vulnerabilities: -${deduction} (${deps.high} × 10)`);
-                    baseScore -= deduction;
-                }
-                if (deps.medium > 0) {
-                    const deduction = deps.medium * 5;
-                    deductions.push(`- Medium vulnerabilities: -${deduction} (${deps.medium} × 5)`);
-                    baseScore -= deduction;
-                }
-            }
-            
-            // Code issues
-            if (data.codeIssues && data.codeIssues.length > 0) {
-                const criticalIssues = data.codeIssues.filter(issue => issue.severity === 'critical').length;
-                const highIssues = data.codeIssues.filter(issue => issue.severity === 'high').length;
-                const mediumIssues = data.codeIssues.filter(issue => issue.severity === 'medium').length;
-                
-                if (criticalIssues > 0) {
-                    const deduction = criticalIssues * 15;
-                    deductions.push(`- Critical code issues: -${deduction} (${criticalIssues} × 15)`);
-                    baseScore -= deduction;
-                }
-                if (highIssues > 0) {
-                    const deduction = highIssues * 10;
-                    deductions.push(`- High code issues: -${deduction} (${highIssues} × 10)`);
-                    baseScore -= deduction;
-                }
-                if (mediumIssues > 0) {
-                    const deduction = mediumIssues * 5;
-                    deductions.push(`- Medium code issues: -${deduction} (${mediumIssues} × 5)`);
-                    baseScore -= deduction;
-                }
-            }
-            
-            // Secrets
-            if (data.secrets && data.secrets.found && data.secrets.found.length > 0) {
-                const deduction = data.secrets.found.length * 10;
-                deductions.push(`- Hardcoded secrets: -${deduction} (${data.secrets.found.length} × 10)`);
-                baseScore -= deduction;
-            }
-            
-            // Missing security
-            if (data.configuration && data.configuration.missingSecurity && data.configuration.missingSecurity.length > 0) {
-                const deduction = data.configuration.missingSecurity.length * 5;
-                deductions.push(`- Missing security: -${deduction} (${data.configuration.missingSecurity.length} × 5)`);
-                baseScore -= deduction;
-            }
-            
-            if (deductions.length > 0) {
-                md += '**Deductions:**\n';
-                deductions.forEach(deduction => md += `${deduction}\n`);
-                md += '\n';
-            } else {
-                md += '**No deductions applied - all security measures in place!**\n\n';
-            }
+        let securityData = data;
+        let securityMetrics = metrics;
+        let securityRecommendations = recommendations;
+
+        // Wrapper-Handling (wie bisher)
+        if (data && data.result && typeof data.result === 'object') {
+            securityData = data.result;
+            securityMetrics = metrics || data.metrics;
+            securityRecommendations = recommendations || data.recommendations;
         }
+        if (data && data.securityAnalysis && typeof data.securityAnalysis === 'object') {
+            securityData = data.securityAnalysis;
+            securityMetrics = metrics || data.metrics;
+            securityRecommendations = recommendations || data.recommendations;
+        }
+        if (data && data.configuration && data.dependencies && data.codeIssues) {
+            securityData = data;
+            securityMetrics = metrics || { overallScore: data.securityScore || 0 };
+            securityRecommendations = recommendations || data.recommendations || [];
+        }
+        if (!securityMetrics) {
+            securityMetrics = securityData.metrics || {};
+        }
+        if (!securityRecommendations) {
+            securityRecommendations = securityData.recommendations || [];
+        }
+
+        // Security Score
+        if (securityData.securityScore !== undefined) {
+            md += `**Security Score:** ${securityData.securityScore}/100\n\n`;
+        }
+
+        // Security Configuration
+        md += '### Security Configuration\n\n';
         
-        // Security Configuration Status
-        if (data.configuration) {
-            md += '### Security Configuration\n\n';
-            
-            // Present security middleware
-            if (data.configuration.securityMiddleware && data.configuration.securityMiddleware.length > 0) {
+        // Debug: Log what we actually have
+        console.log('DEBUG: securityData keys:', Object.keys(securityData || {}));
+        console.log('DEBUG: securityData.configuration:', securityData.configuration);
+        console.log('DEBUG: securityData.configuration?.securityMiddleware:', securityData.configuration?.securityMiddleware);
+        console.log('DEBUG: securityData.configuration?.missingSecurity:', securityData.configuration?.missingSecurity);
+        
+        // Present security middleware
+        if (securityData.configuration && Array.isArray(securityData.configuration.securityMiddleware)) {
+            if (securityData.configuration.securityMiddleware.length > 0) {
                 md += '**✅ Present Security Features:**\n';
-                data.configuration.securityMiddleware.forEach(middleware => {
+                securityData.configuration.securityMiddleware.forEach(middleware => {
                     md += `- ${middleware}\n`;
                 });
                 md += '\n';
+            } else {
+                md += '**Keine Sicherheitsfeatures gefunden**\n\n';
             }
-            
-            // Missing security middleware
-            if (data.configuration.missingSecurity && data.configuration.missingSecurity.length > 0) {
+        } else {
+            md += '**Keine Sicherheitsfeatures gefunden**\n\n';
+        }
+        // Missing security middleware
+        if (securityData.configuration && Array.isArray(securityData.configuration.missingSecurity)) {
+            if (securityData.configuration.missingSecurity.length > 0) {
                 md += '**❌ Missing Security Features:**\n';
-                data.configuration.missingSecurity.forEach(missing => {
+                securityData.configuration.missingSecurity.forEach(missing => {
                     md += `- ${missing}\n`;
                 });
                 md += '\n';
+            } else {
+                md += '**Keine fehlenden Sicherheitsfeatures**\n\n';
             }
-            
-            // Security status summary
-            const presentCount = data.configuration.securityMiddleware ? data.configuration.securityMiddleware.length : 0;
-            const missingCount = data.configuration.missingSecurity ? data.configuration.missingSecurity.length : 0;
-            md += `**Security Coverage:** ${presentCount} present, ${missingCount} missing\n\n`;
+        } else {
+            md += '**Keine fehlenden Sicherheitsfeatures**\n\n';
         }
-        
+
         // Dependency Vulnerabilities
-        if (data.dependencies) {
-            const deps = data.dependencies;
+        if (securityData.dependencies) {
+            const deps = securityData.dependencies;
             if (deps.vulnerable && deps.vulnerable.length > 0) {
                 md += '### Dependency Vulnerabilities\n\n';
                 md += '| Package | Version | Severity | Description |\n';
                 md += '|---------|---------|----------|-------------|\n';
-                
                 deps.vulnerable.forEach(vuln => {
                     md += `| ${vuln.package} | ${vuln.version} | ${vuln.severity} | ${vuln.description} |\n`;
                 });
                 md += '\n';
-                
-                md += `**Summary:** ${deps.critical || 0} critical, ${deps.high || 0} high, ${deps.medium || 0} medium, ${deps.low || 0} low vulnerabilities\n\n`;
             } else {
                 md += '### Dependency Vulnerabilities\n\n';
                 md += '✅ **No vulnerable dependencies found**\n\n';
             }
         }
-        
         // Code Security Issues
-        if (data.codeIssues && data.codeIssues.length > 0) {
+        if (securityData.codeIssues && securityData.codeIssues.length > 0) {
             md += '### Code Security Issues\n\n';
             md += '| File | Line | Severity | Type | Description |\n';
             md += '|------|------|----------|------|-------------|\n';
-            
-            data.codeIssues.forEach(issue => {
+            securityData.codeIssues.forEach(issue => {
                 md += `| \`${issue.file}\` | ${issue.line} | ${issue.severity} | ${issue.type} | ${issue.description} |\n`;
             });
             md += '\n';
-        } else if (data.codeIssues !== undefined) {
+        } else if (securityData.codeIssues !== undefined) {
             md += '### Code Security Issues\n\n';
             md += '✅ **No security issues found in code**\n\n';
         }
-        
         // Secrets Analysis
-        if (data.secrets) {
+        if (securityData.secrets) {
             md += '### Secrets Analysis\n\n';
-            
-            if (data.secrets.found && data.secrets.found.length > 0) {
+            if (securityData.secrets.found && securityData.secrets.found.length > 0) {
                 md += '**❌ Hardcoded Secrets Found:**\n';
                 md += '| File | Line | Type | Description |\n';
                 md += '|------|------|------|-------------|\n';
-                
-                data.secrets.found.forEach(secret => {
+                securityData.secrets.found.forEach(secret => {
                     md += `| \`${secret.file}\` | ${secret.line} | ${secret.type} | ${secret.description} |\n`;
                 });
                 md += '\n';
             } else {
                 md += '✅ **No hardcoded secrets found**\n\n';
             }
-            
-            if (data.secrets.patterns && data.secrets.patterns.length > 0) {
+            if (securityData.secrets.patterns && securityData.secrets.patterns.length > 0) {
                 md += '**Secret Patterns Detected:**\n';
-                data.secrets.patterns.forEach(pattern => {
+                securityData.secrets.patterns.forEach(pattern => {
                     md += `- ${pattern.pattern}: ${pattern.count} occurrences\n`;
                 });
                 md += '\n';
             }
         }
-        
         // Metrics Table
         if (securityMetrics && Object.keys(securityMetrics).length > 0) {
             md += '### Security Metrics\n\n';
             md += '| Metric | Value |\n';
             md += '|--------|-------|\n';
-            
             Object.entries(securityMetrics).forEach(([metric, value]) => {
                 if (value !== null && value !== undefined) {
                     md += `| ${metric} | ${value} |\n`;
@@ -1181,7 +1033,6 @@ class AnalysisOutputService {
             });
             md += '\n';
         }
-
         // Recommendations
         if (securityRecommendations && securityRecommendations.length > 0) {
             md += '### Security Recommendations\n\n';
@@ -1196,7 +1047,6 @@ class AnalysisOutputService {
                 md += '\n';
             });
         }
-
         return md;
     }
 
@@ -1255,43 +1105,43 @@ class AnalysisOutputService {
         // Use package-specific metrics from data if available, otherwise use passed metrics
         const archMetrics = data.metrics || metrics || {};
         const archRecommendations = recommendations || data.recommendations || [];
-        
-        md += '### Architecture Analysis\n\n';
-        
-        // Architecture Score
+            
+            md += '### Architecture Analysis\n\n';
+            
+            // Architecture Score
         if (data.architectureScore !== undefined) {
             md += `**Architecture Score:** ${data.architectureScore}/100\n\n`;
-        }
-        
-        // Metrics Table
-        if (archMetrics && Object.keys(archMetrics).length > 0) {
-            md += '### Architecture Metrics\n\n';
-            md += '| Metric | Value |\n';
-            md += '|--------|-------|\n';
+            }
             
-            Object.entries(archMetrics).forEach(([metric, value]) => {
-                if (value !== null && value !== undefined) {
-                    md += `| ${metric} | ${value} |\n`;
-                }
-            });
-            md += '\n';
-        }
-        
-        // Patterns
+            // Metrics Table
+            if (archMetrics && Object.keys(archMetrics).length > 0) {
+                md += '### Architecture Metrics\n\n';
+                md += '| Metric | Value |\n';
+                md += '|--------|-------|\n';
+                
+                Object.entries(archMetrics).forEach(([metric, value]) => {
+                    if (value !== null && value !== undefined) {
+                        md += `| ${metric} | ${value} |\n`;
+                    }
+                });
+                md += '\n';
+            }
+            
+            // Patterns
         if (data.detectedPatterns && data.detectedPatterns.length > 0) {
-            md += '### Detected Patterns\n\n';
+                md += '### Detected Patterns\n\n';
             data.detectedPatterns.forEach(pattern => {
                 md += `- **${pattern.pattern || pattern.name}:** ${pattern.description}\n`;
                 if (pattern.confidence) {
                     md += `  - Confidence: ${Math.round(pattern.confidence * 100)}%\n`;
                 }
-                if (pattern.files) {
-                    md += `  - Files: ${pattern.files.join(', ')}\n`;
-                }
-                md += '\n';
-            });
-        }
-        
+                    if (pattern.files) {
+                        md += `  - Files: ${pattern.files.join(', ')}\n`;
+                    }
+                    md += '\n';
+                });
+            }
+            
         // Structure
         if (data.structure) {
             md += '### Project Structure\n\n';
@@ -1305,7 +1155,7 @@ class AnalysisOutputService {
                 data.structure.layers.forEach(layer => {
                     md += `- **${layer.name}:** ${layer.path}\n`;
                 });
-                md += '\n';
+                    md += '\n';
             }
             
             if (data.structure.modules && data.structure.modules.length > 0) {
@@ -1335,7 +1185,7 @@ class AnalysisOutputService {
                             md += `- **${module}.${metric}:** ${value}/100\n`;
                         }
                     });
-                } else {
+        } else {
                     md += `- **${module}:** ${coupling}/100\n`;
                 }
             });
@@ -1461,7 +1311,7 @@ class AnalysisOutputService {
                     if (typeof value === 'object') {
                         md += `| ${metric} | ${JSON.stringify(value)} |\n`;
                     } else {
-                        md += `| ${metric} | ${value} |\n`;
+                    md += `| ${metric} | ${value} |\n`;
                     }
                 }
             });
@@ -1861,6 +1711,115 @@ class AnalysisOutputService {
     countLowVulnerabilities(vulnerabilities) {
         return vulnerabilities.filter(v => v.severity === 'low').length;
     }
+
+    /**
+     * Aggregate security data from all packages in a monorepo
+     * @param {Object} monorepoSecurityData - Monorepo security data with packageSecurityAnalyses
+     * @returns {Object} Aggregated security data
+     */
+    aggregateSecurityData(monorepoSecurityData) {
+        const aggregated = {
+            isMonorepo: true,
+            packages: monorepoSecurityData.packages || [],
+            securityScore: monorepoSecurityData.overallSecurityScore || 100,
+            overallRiskLevel: monorepoSecurityData.overallRiskLevel || 'low',
+            vulnerabilities: [],
+            codeIssues: [],
+            configuration: {
+                securityMiddleware: [],
+                missingSecurity: []
+            },
+            dependencies: {
+                total: 0,
+                critical: 0,
+                high: 0,
+                medium: 0,
+                low: 0,
+                vulnerable: []
+            },
+            secrets: {
+                found: [],
+                patterns: []
+            },
+            recommendations: monorepoSecurityData.overallRecommendations || [],
+            metrics: {
+                totalVulnerabilities: monorepoSecurityData.totalVulnerabilities || 0,
+                totalCodeIssues: monorepoSecurityData.totalCodeIssues || 0,
+                totalSecrets: 0,
+                totalMissingSecurity: 0,
+                criticalVulnerabilities: 0,
+                highVulnerabilities: 0,
+                mediumVulnerabilities: 0,
+                lowVulnerabilities: 0
+            }
+        };
+
+        // Aggregate data from all packages
+        Object.values(monorepoSecurityData.packageSecurityAnalyses || {}).forEach(pkgSec => {
+            const securityAnalysis = pkgSec.securityAnalysis;
+            
+            // Aggregate vulnerabilities
+            if (securityAnalysis.vulnerabilities) {
+                aggregated.vulnerabilities.push(...securityAnalysis.vulnerabilities);
+            }
+            
+            // Aggregate code issues
+            if (securityAnalysis.codeIssues) {
+                aggregated.codeIssues.push(...securityAnalysis.codeIssues);
+            }
+            
+                    // Aggregate configuration - track what's present vs missing across all packages
+        if (securityAnalysis.configuration) {
+            if (securityAnalysis.configuration.securityMiddleware) {
+                aggregated.configuration.securityMiddleware.push(...securityAnalysis.configuration.securityMiddleware);
+            }
+            if (securityAnalysis.configuration.missingSecurity) {
+                aggregated.configuration.missingSecurity.push(...securityAnalysis.configuration.missingSecurity);
+            }
+        }
+            
+            // Aggregate dependencies
+            if (securityAnalysis.dependencies) {
+                aggregated.dependencies.total += securityAnalysis.dependencies.total || 0;
+                aggregated.dependencies.critical += securityAnalysis.dependencies.critical || 0;
+                aggregated.dependencies.high += securityAnalysis.dependencies.high || 0;
+                aggregated.dependencies.medium += securityAnalysis.dependencies.medium || 0;
+                aggregated.dependencies.low += securityAnalysis.dependencies.low || 0;
+                if (securityAnalysis.dependencies.vulnerable) {
+                    aggregated.dependencies.vulnerable.push(...securityAnalysis.dependencies.vulnerable);
+                }
+            }
+            
+            // Aggregate secrets
+            if (securityAnalysis.secrets) {
+                if (securityAnalysis.secrets.found) {
+                    aggregated.secrets.found.push(...securityAnalysis.secrets.found);
+                }
+                if (securityAnalysis.secrets.patterns) {
+                    aggregated.secrets.patterns.push(...securityAnalysis.secrets.patterns);
+                }
+            }
+        });
+
+        // Remove duplicates from arrays
+        aggregated.configuration.securityMiddleware = [...new Set(aggregated.configuration.securityMiddleware)];
+        aggregated.configuration.missingSecurity = [...new Set(aggregated.configuration.missingSecurity)];
+        
+        // Remove features from missingSecurity if they are present in securityMiddleware
+        aggregated.configuration.missingSecurity = aggregated.configuration.missingSecurity.filter(
+            missing => !aggregated.configuration.securityMiddleware.includes(missing)
+        );
+        
+        // Update metrics
+        aggregated.metrics.totalSecrets = aggregated.secrets.found.length;
+        aggregated.metrics.totalMissingSecurity = aggregated.configuration.missingSecurity.length;
+        aggregated.metrics.criticalVulnerabilities = this.countCriticalVulnerabilities(aggregated.vulnerabilities);
+        aggregated.metrics.highVulnerabilities = this.countHighVulnerabilities(aggregated.vulnerabilities);
+        aggregated.metrics.mediumVulnerabilities = this.countMediumVulnerabilities(aggregated.vulnerabilities);
+        aggregated.metrics.lowVulnerabilities = this.countLowVulnerabilities(aggregated.vulnerabilities);
+
+        return aggregated;
+    }
 }
 
-module.exports = AnalysisOutputService;
+module.exports = AnalysisOutputService; 

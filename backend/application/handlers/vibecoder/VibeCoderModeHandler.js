@@ -174,7 +174,7 @@ class VibeCoderModeHandler {
             result.analyses.codeQuality = await this.codeQualityAnalyzer.analyze(sub.path);
             result.analyses.architecture = await this.architectureAnalyzer.analyze(sub.path);
             result.analyses.dependencies = await this.dependencyAnalyzer.analyzeDependencies(sub.path);
-            result.analyses.security = await this.securityAnalyzer.analyze(sub.path);
+            result.analyses.security = await this.securityAnalyzer.analyzeSecurity(sub.path);
             result.analyses.performance = await this.performanceAnalyzer.analyze(sub.path);
         }
         // Python
@@ -230,7 +230,7 @@ class VibeCoderModeHandler {
             // Analyze performance
             analysis.performance = await this.analyzePerformance(projectPath);
             
-            // Analyze security
+            // Analyze security (will use packages from architecture analysis if available)
             analysis.security = await this.analyzeSecurity(projectPath);
             
             // Analyze tech stack
@@ -318,15 +318,24 @@ class VibeCoderModeHandler {
         }
     }
 
-    async analyzeSecurity(projectPath) {
+    async analyzeSecurity(projectPath, existingPackages = null) {
         try {
-            const packages = await this.findPackages(projectPath);
+            // Use existing packages if provided, otherwise find packages
+            let packages = existingPackages;
+            if (!packages) {
+                packages = await this.findPackages(projectPath);
+                this.logger.info('Found packages for standalone security analysis:', packages.length);
+            } else {
+                this.logger.info('Using provided packages for security analysis:', packages.length);
+            }
+            
             if (packages.length > 1) {
                 const packageSecurityAnalyses = {};
                 for (const pkg of packages) {
                     const securityAnalyzer = require('@infrastructure/external/SecurityAnalyzer');
                     const secAnalyzer = new securityAnalyzer();
                     const packageSecurityResult = await secAnalyzer.analyzeSecurity(pkg.path);
+                    
                     packageSecurityAnalyses[pkg.name] = {
                         package: pkg,
                         securityAnalysis: packageSecurityResult,
@@ -358,6 +367,7 @@ class VibeCoderModeHandler {
                 const securityAnalyzer = require('@infrastructure/external/SecurityAnalyzer');
                 const secAnalyzer = new securityAnalyzer();
                 const securityResult = await secAnalyzer.analyzeSecurity(projectPath);
+                
                 return {
                     status: 'success',
                     result: securityResult,
@@ -608,13 +618,24 @@ class VibeCoderModeHandler {
             
             // 7. Analyze security using real analyzer
             try {
-                const packages = await this.findPackages(command.projectPath);
+                // Use packages from architecture analysis if available, otherwise find packages
+                let packages = [];
+                if (analysisResults.architecture && analysisResults.architecture.result && 
+                    analysisResults.architecture.result.packages) {
+                    packages = analysisResults.architecture.result.packages;
+                    this.logger.info('Using packages from architecture analysis:', packages.length);
+                } else {
+                    packages = await this.findPackages(command.projectPath);
+                    this.logger.info('Found packages for security analysis:', packages.length);
+                }
+                
                 if (packages.length > 1) {
                     const packageSecurityAnalyses = {};
                     for (const pkg of packages) {
                         const securityAnalyzer = require('@infrastructure/external/SecurityAnalyzer');
                         const secAnalyzer = new securityAnalyzer();
                         const packageSecurityResult = await secAnalyzer.analyzeSecurity(pkg.path);
+                        
                         packageSecurityAnalyses[pkg.name] = {
                             package: pkg,
                             securityAnalysis: packageSecurityResult,
@@ -646,6 +667,7 @@ class VibeCoderModeHandler {
                     const securityAnalyzer = require('@infrastructure/external/SecurityAnalyzer');
                     const secAnalyzer = new securityAnalyzer();
                     const securityResult = await secAnalyzer.analyzeSecurity(command.projectPath);
+                    
                     analysisResults.security = {
                         status: 'success',
                         result: securityResult,

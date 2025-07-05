@@ -84,6 +84,7 @@ class SecurityAnalyzer {
         try {
             // Check for package.json
             const packageJsonPath = path.join(projectPath, 'package.json');
+            
             const packageJson = JSON.parse(await fs.readFile(packageJsonPath, 'utf8'));
             
             const allDeps = { 
@@ -209,6 +210,7 @@ class SecurityAnalyzer {
 
         try {
             const packageJson = JSON.parse(await fs.readFile(path.join(projectPath, 'package.json'), 'utf8'));
+            
             const allDeps = { ...packageJson.dependencies, ...packageJson.devDependencies };
 
             // Check for security middleware
