@@ -6,6 +6,7 @@ const TaskStatus = require('@domain/value-objects/TaskStatus');
 const TaskPriority = require('@domain/value-objects/TaskPriority');
 const TaskType = require('@domain/value-objects/TaskType');
 
+
 class VibeCoderAutoRefactorHandler {
     constructor(dependencies = {}) {
         this.eventBus = dependencies.eventBus;

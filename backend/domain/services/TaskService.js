@@ -107,22 +107,25 @@ class TaskService {
       try {
               // Step 1: Create Git Branch for Refactoring
       console.log('🔧 [TaskService] Step 1: Creating Git branch...');
+      // Get projectPath from task metadata
+      const projectPath = task.metadata.projectPath;
+      
       console.log('🔍 [TaskService] Task details:', {
         id: task.id,
         title: task.title,
-        projectPath: task.projectPath,
-        filePath: task.filePath,
-        type: task.type
+        projectPath: projectPath,
+        filePath: task.metadata.filePath,
+        type: task.type.value
       });
       
       execution.steps.push({ step: 'git_branch', status: 'running', message: 'Creating refactoring branch' });
       
-      if (!task.projectPath) {
-        throw new Error('Task has no projectPath - cannot create Git branch');
+      if (!projectPath) {
+        throw new Error('Task has no projectPath in metadata - cannot create Git branch');
       }
       
-      const branchName = `refactor/${task.type}-${taskId}-${Date.now()}`;
-      const gitResult = await this.createRefactoringBranch(task.projectPath, branchName);
+      const branchName = `refactor/${task.type.value}-${taskId}-${Date.now()}`;
+      const gitResult = await this.createRefactoringBranch(projectPath, branchName);
         
         execution.steps[execution.steps.length - 1] = { 
           step: 'git_branch', 
@@ -179,7 +182,7 @@ class TaskService {
           console.log('📝 [TaskService] Step 5: Committing and pushing changes...');
           execution.steps.push({ step: 'commit_push', status: 'running', message: 'Committing and pushing changes' });
           
-          const commitResult = await this.commitAndPushChanges(task.projectPath, branchName, task);
+          const commitResult = await this.commitAndPushChanges(projectPath, branchName, task);
           
           execution.steps[execution.steps.length - 1] = { 
             step: 'commit_push', 
@@ -195,7 +198,7 @@ class TaskService {
         } else {
           // Rollback changes if validation failed
           console.log('🔄 [TaskService] Validation failed, rolling back changes...');
-          await this.rollbackChanges(task.projectPath, branchName);
+          await this.rollbackChanges(projectPath, branchName);
           
           task.updateStatus(TaskStatus.FAILED);
           await this.taskRepository.update(taskId, task);

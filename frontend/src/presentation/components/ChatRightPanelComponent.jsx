@@ -289,7 +289,7 @@ function ChatRightPanelComponent({ eventBus }) {
             filePath: task.filePath
           });
           
-          const result = await apiRepository.executeTask(task.id);
+          const result = await api.executeTask(task.id);
           
           console.log('🔍 [ChatRightPanelComponent] Task execution result:', result);
           
