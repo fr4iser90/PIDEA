@@ -183,12 +183,10 @@ function ChatRightPanelComponent({ eventBus }) {
     setFeedback('Starting Auto Refactor...');
     try {
       const projectId = await api.getCurrentProjectId();
-      const response = await api.startAutoMode(projectId, {
-        mode: 'refactoring'
-      });
+      const response = await api.startAutoRefactor(projectId);
       if (response.success) {
-        setFeedback('Auto Refactor started successfully!');
-        if (eventBus) eventBus.emit('vibecoder-refactor-started', response.data);
+        setFeedback(`Auto Refactor completed! Created ${response.data.totalTasks} refactoring tasks.`);
+        if (eventBus) eventBus.emit('vibecoder-auto-refactor-completed', response.data);
       } else {
         setFeedback('Failed to start Auto Refactor: ' + response.error);
       }

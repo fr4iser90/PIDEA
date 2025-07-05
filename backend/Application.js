@@ -577,6 +577,8 @@ class Application {
       ideManager: this.ideManager
     });
 
+    this.vibeCoderAutoRefactorController = new (require('./presentation/api/VibeCoderAutoRefactorController'))();
+
     this.analysisController = new AnalysisController(
       this.codeQualityService,
       this.securityService,
@@ -774,6 +776,10 @@ class Application {
     this.app.post('/api/projects/:projectId/auto/execute', (req, res) => this.autoModeController.executeAutoMode(req, res));
     this.app.get('/api/projects/:projectId/auto/status', (req, res) => this.autoModeController.getAutoModeStatus(req, res));
     this.app.post('/api/projects/:projectId/auto/stop', (req, res) => this.autoModeController.stopAutoMode(req, res));
+
+    // VibeCoder Auto Refactor routes (protected) - PROJECT-BASED
+    this.app.use('/api/projects/:projectId/auto-refactor', this.authMiddleware.authenticate());
+    this.app.post('/api/projects/:projectId/auto-refactor/execute', (req, res) => this.vibeCoderAutoRefactorController.startAutoRefactor(req, res));
 
     // Specialized Analysis routes (protected) - PROJECT-BASED
     this.app.use('/api/projects/:projectId/analysis', this.authMiddleware.authenticate());

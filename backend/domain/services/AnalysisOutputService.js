@@ -1817,6 +1817,15 @@ class AnalysisOutputService {
         aggregated.metrics.highVulnerabilities = this.countHighVulnerabilities(aggregated.vulnerabilities);
         aggregated.metrics.mediumVulnerabilities = this.countMediumVulnerabilities(aggregated.vulnerabilities);
         aggregated.metrics.lowVulnerabilities = this.countLowVulnerabilities(aggregated.vulnerabilities);
+        
+        // Filter recommendations based on aggregated data
+        aggregated.recommendations = aggregated.recommendations.filter(rec => {
+            // Remove "Add security middleware" recommendation if no security features are missing
+            if (rec.title === 'Add security middleware' && aggregated.configuration.missingSecurity.length === 0) {
+                return false;
+            }
+            return true;
+        });
 
         return aggregated;
     }

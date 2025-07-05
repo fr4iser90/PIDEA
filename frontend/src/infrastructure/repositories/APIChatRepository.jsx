@@ -69,6 +69,9 @@ const API_CONFIG = {
         start: (projectId) => `/api/projects/${projectId}/auto/execute`,
         stop: (projectId) => `/api/projects/${projectId}/auto/stop`,
         status: (projectId) => `/api/projects/${projectId}/auto/status`
+      },
+      autoRefactor: {
+        execute: (projectId) => `/api/projects/${projectId}/auto-refactor/execute`
       }
     },
     analysis: {
@@ -359,6 +362,14 @@ export default class APIChatRepository extends ChatRepository {
   async getAutoModeStatus(projectId = null) {
     const currentProjectId = projectId || await this.getCurrentProjectId();
     return apiCall(API_CONFIG.endpoints.tasks.autoMode.status(currentProjectId));
+  }
+
+  async startAutoRefactor(projectId = null) {
+    const currentProjectId = projectId || await this.getCurrentProjectId();
+    return apiCall(API_CONFIG.endpoints.tasks.autoRefactor.execute(currentProjectId), {
+      method: 'POST',
+      body: JSON.stringify({ projectPath: process.cwd() })
+    });
   }
 
   // Analysis output methods
