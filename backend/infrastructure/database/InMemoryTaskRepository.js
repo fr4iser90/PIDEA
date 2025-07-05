@@ -15,7 +15,14 @@ class InMemoryTaskRepository extends TaskRepository {
   }
 
   async findById(id) {
-    return this.tasks.get(id) || null;
+    const task = this.tasks.get(id) || null;
+    console.log('🔍 [InMemoryTaskRepository] findById:', { 
+      requestedId: id, 
+      found: !!task,
+      totalTasks: this.tasks.size,
+      availableIds: Array.from(this.tasks.keys()).slice(0, 5) // Show first 5 IDs
+    });
+    return task;
   }
 
   async findByProject(projectId, filters = {}) {

@@ -165,9 +165,19 @@ class TaskController {
             console.log('🔍 [TaskController] executeTask called:', { projectId, id, userId });
 
             const task = await this.taskRepository.findById(id);
+            console.log('🔍 [TaskController] Found task:', task ? {
+                id: task.id,
+                projectId: task.projectId,
+                title: task.title,
+                belongsToProject: task.belongsToProject(projectId)
+            } : 'NOT FOUND');
             
             if (!task || !task.belongsToProject(projectId)) {
                 console.log('❌ [TaskController] Task not found or does not belong to project');
+                console.log('❌ [TaskController] Task exists:', !!task);
+                console.log('❌ [TaskController] Task projectId:', task?.projectId);
+                console.log('❌ [TaskController] Requested projectId:', projectId);
+                console.log('❌ [TaskController] belongsToProject result:', task?.belongsToProject(projectId));
                 return res.status(404).json({
                     success: false,
                     error: 'Task not found'
