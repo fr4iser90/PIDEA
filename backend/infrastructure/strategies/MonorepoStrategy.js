@@ -96,7 +96,7 @@ class MonorepoStrategy {
             this.logger.info('MonorepoStrategy: Analyzing monorepo', { projectPath });
 
             const analysis = {
-                isMonorepo: await this.isMonorepo(projectPath),
+                isMonorepo: true, // Skip the check to avoid infinite loop
                 type: await this.getMonorepoType(projectPath),
                 workspaces: await this.getWorkspaces(projectPath),
                 packages: await this.getPackages(projectPath),
@@ -257,6 +257,47 @@ class MonorepoStrategy {
                             // Skip invalid package.json files
                         }
                     }
+
+                    // Also check common subdirectories like backend/frontend
+                    const commonSubdirs = ['backend', 'frontend', 'api', 'client', 'server', 'app', 'src'];
+                    if (commonSubdirs.includes(entry.name)) {
+                        const subdirPackages = await this.findPackagesInSubdirectory(packagePath);
+                        packages.push(...subdirPackages);
+                    }
+                }
+            }
+
+            return packages;
+        } catch {
+            return [];
+        }
+    }
+
+    /**
+     * Find packages in subdirectory
+     * @param {string} subdirPath - Subdirectory path
+     * @returns {Promise<Array>} Package list
+     */
+    async findPackagesInSubdirectory(subdirPath) {
+        try {
+            const packages = [];
+            const packageJsonPath = path.join(subdirPath, 'package.json');
+
+            if (await this.fileExists(packageJsonPath)) {
+                try {
+                    const packageJson = JSON.parse(await fs.readFile(packageJsonPath, 'utf8'));
+                    packages.push({
+                        name: packageJson.name,
+                        version: packageJson.version,
+                        path: subdirPath,
+                        relativePath: path.relative(path.dirname(path.dirname(subdirPath)), subdirPath),
+                        type: this.determinePackageType(packageJson),
+                        dependencies: packageJson.dependencies || {},
+                        devDependencies: packageJson.devDependencies || {},
+                        scripts: packageJson.scripts || {}
+                    });
+                } catch {
+                    // Skip invalid package.json files
                 }
             }
 

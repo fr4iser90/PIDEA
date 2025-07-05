@@ -99,10 +99,11 @@ class SingleRepoStrategy {
             this.logger.info('SingleRepoStrategy: Analyzing single repository', { projectPath });
 
             const analysis = {
-                isSingleRepo: await this.isSingleRepo(projectPath),
+                isSingleRepo: true, // Skip the check to avoid infinite loop
                 projectType: await this.getProjectType(projectPath),
                 structure: await this.analyzeStructure(projectPath),
                 dependencies: await this.analyzeDependencies(projectPath),
+                packages: await this.getPackages(projectPath),
                 buildTools: await this.detectBuildTools(projectPath),
                 testing: await this.analyzeTesting(projectPath),
                 linting: await this.analyzeLinting(projectPath),
@@ -371,6 +372,32 @@ class SingleRepoStrategy {
                 error: error.message
             });
             return {};
+        }
+    }
+
+    /**
+     * Get packages for single repo (compatibility with DependencyAnalyzer)
+     * @param {string} projectPath - Project path
+     * @returns {Promise<Array>} Package list
+     */
+    async getPackages(projectPath) {
+        try {
+            const packageJsonPath = path.join(projectPath, 'package.json');
+            const packageJson = JSON.parse(await fs.readFile(packageJsonPath, 'utf8'));
+            
+            return [{
+                name: packageJson.name,
+                version: packageJson.version,
+                path: projectPath,
+                dependencies: packageJson.dependencies || {},
+                devDependencies: packageJson.devDependencies || {}
+            }];
+        } catch (error) {
+            this.logger.error('SingleRepoStrategy: Failed to get packages', {
+                projectPath,
+                error: error.message
+            });
+            return [];
         }
     }
 

@@ -46,11 +46,198 @@ class AnalysisOutputService {
         const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
         const baseFilename = `analysis-report-${timestamp}`;
         
+        // Check if this is a monorepo with multiple packages
+        const packages = this.extractPackagesFromAnalysis(analysisResults);
+        
+        if (packages.length > 1) {
+            // Generate separate reports for each package
+            return await this.generateMonorepoReports(projectId, analysisResults, packages, baseFilename);
+        } else {
+            // Generate single report for single package
+            return await this.generateSinglePackageReport(projectId, analysisResults, baseFilename);
+        }
+    }
+
+    extractPackagesFromAnalysis(analysisResults) {
+        const packages = [];
+        
+        // Extract packages from dependencies analysis
+        if (analysisResults.Dependencies && analysisResults.Dependencies.data && analysisResults.Dependencies.data.packages) {
+            packages.push(...analysisResults.Dependencies.data.packages);
+        }
+        
+        // Extract packages from architecture analysis
+        if (analysisResults.Architecture && analysisResults.Architecture.data && analysisResults.Architecture.data.packages) {
+            packages.push(...analysisResults.Architecture.data.packages);
+        }
+        
+        // If no packages found, assume single package
+        if (packages.length === 0) {
+            packages.push({ name: 'root', path: '.', relativePath: '.' });
+        }
+        
+        return packages;
+    }
+
+    filterAnalysisResultsForPackage(analysisResults, pkg) {
+        const packageResults = {};
+        
+        // Filter each analysis type for this specific package
+        Object.entries(analysisResults).forEach(([type, result]) => {
+            if (result && result.data) {
+                // For dependencies, filter by package
+                if (type === 'Dependencies' && result.data.packages) {
+                    const packageData = result.data.packages.find(p => p.path === pkg.path);
+                    if (packageData) {
+                        packageResults[type] = {
+                            ...result,
+                            data: packageData
+                        };
+                    }
+                }
+                // For other analyses, filter files by package path
+                else if (result.data.files) {
+                    const packageFiles = result.data.files.filter(file => 
+                        file.includes(pkg.path) || file.startsWith(pkg.relativePath)
+                    );
+                    if (packageFiles.length > 0) {
+                        packageResults[type] = {
+                            ...result,
+                            data: {
+                                ...result.data,
+                                files: packageFiles
+                            }
+                        };
+                    }
+                }
+                // For metrics-based analyses, keep the data but adjust context
+                else {
+                    packageResults[type] = {
+                        ...result,
+                        data: {
+                            ...result.data,
+                            package: pkg.name,
+                            packagePath: pkg.path
+                        }
+                    };
+                }
+            }
+        });
+        
+        return packageResults;
+    }
+
+    async generateMonorepoReports(projectId, analysisResults, packages, baseFilename) {
+        const projectDir = path.join(this.projectsPath, projectId);
+        const generatedFiles = [];
+        
+        // Create main index file
+        const indexFilepath = path.join(projectDir, `${baseFilename}-index.md`);
+        let indexMarkdown = `# Monorepo Analysis Report\n\n`;
+        indexMarkdown += `**Project ID:** ${projectId}\n`;
+        indexMarkdown += `**Generated:** ${new Date().toLocaleString()}\n`;
+        indexMarkdown += `**Type:** Monorepo (${packages.length} packages)\n\n`;
+        indexMarkdown += `## Packages\n\n`;
+        
+        // Generate report for each package
+        for (const pkg of packages) {
+            const packageName = pkg.name || path.basename(pkg.path);
+            const packageFilename = `${baseFilename}-${packageName}.md`;
+            const packageFilepath = path.join(projectDir, packageFilename);
+            
+            let packageMarkdown = `# Package: ${packageName}\n\n`;
+            packageMarkdown += `**Project ID:** ${projectId}\n`;
+            packageMarkdown += `**Package:** ${packageName}\n`;
+            packageMarkdown += `**Path:** ${pkg.path}\n`;
+            packageMarkdown += `**Generated:** ${new Date().toLocaleString()}\n\n`;
+            
+            // Filter analysis results for this package
+            const packageResults = this.filterAnalysisResultsForPackage(analysisResults, pkg);
+            
+            // Generate sections for this package
+            const sections = [
+                { key: 'Repository Structure', filename: 'repository-structure' },
+                { key: 'Architecture', filename: 'architecture' },
+                { key: 'Code Quality', filename: 'code-quality' },
+                { key: 'Dependencies', filename: 'dependencies' },
+                { key: 'Tech Stack', filename: 'tech-stack' },
+                { key: 'Performance', filename: 'performance' },
+                { key: 'Security', filename: 'security' }
+            ];
+            
+            for (const section of sections) {
+                const data = packageResults[section.key] || packageResults[section.key.toLowerCase()];
+                if (data) {
+                    packageMarkdown += `## ${section.key}\n\n`;
+                    
+                    switch (section.key) {
+                        case 'Repository Structure':
+                            packageMarkdown += this.formatProjectStructureData(data.data || data, data.metrics, data.recommendations);
+                            break;
+                        case 'Architecture':
+                            packageMarkdown += this.formatArchitectureData(data.data || data, data.metrics, data.recommendations);
+                            break;
+                        case 'Code Quality':
+                            packageMarkdown += this.formatCodeQualityData(data.data || data, data.metrics, data.recommendations);
+                            break;
+                        case 'Dependencies':
+                            packageMarkdown += this.formatDependenciesData(data.data || data, data.metrics, data.recommendations);
+                            break;
+                        case 'Tech Stack':
+                            packageMarkdown += this.formatTechStackData(data.data || data);
+                            break;
+                        case 'Performance':
+                            packageMarkdown += this.formatPerformanceData(data.data || data, data.metrics, data.recommendations);
+                            break;
+                        case 'Security':
+                            packageMarkdown += this.formatSecurityData(data.data || data, data.metrics, data.recommendations);
+                            break;
+                    }
+                }
+            }
+            
+            await fs.writeFile(packageFilepath, packageMarkdown);
+            generatedFiles.push(packageFilename);
+            
+            indexMarkdown += `- [${packageName}](${packageFilename})\n`;
+        }
+        
+        // Add overall suggestions
+        const suggestions = this.generateComprehensiveSuggestions(analysisResults);
+        if (suggestions.trim()) {
+            const suggestionsFilename = `${baseFilename}-suggestions.md`;
+            const suggestionsFilepath = path.join(projectDir, suggestionsFilename);
+            
+            let suggestionsMarkdown = `# Overall Suggestions\n\n`;
+            suggestionsMarkdown += `**Project ID:** ${projectId}\n`;
+            suggestionsMarkdown += `**Generated:** ${new Date().toLocaleString()}\n\n`;
+            suggestionsMarkdown += suggestions;
+            
+            await fs.writeFile(suggestionsFilepath, suggestionsMarkdown);
+            generatedFiles.push(suggestionsFilename);
+            
+            indexMarkdown += `\n## Overall Suggestions\n\n`;
+            indexMarkdown += `- [Suggestions](${suggestionsFilename})\n`;
+        }
+        
+        await fs.writeFile(indexFilepath, indexMarkdown);
+        
+        return { 
+            filepath: indexFilepath, 
+            filename: `${baseFilename}-index.md`,
+            sections: generatedFiles
+        };
+    }
+
+    async generateSinglePackageReport(projectId, analysisResults, baseFilename) {
+        const projectDir = path.join(this.projectsPath, projectId);
+        
         // Create main index file
         const indexFilepath = path.join(projectDir, `${baseFilename}-index.md`);
         let indexMarkdown = `# Project Analysis Report\n\n`;
         indexMarkdown += `**Project ID:** ${projectId}\n`;
-        indexMarkdown += `**Generated:** ${new Date().toLocaleString()}\n\n`;
+        indexMarkdown += `**Generated:** ${new Date().toLocaleString()}\n`;
+        indexMarkdown += `**Type:** Single Package\n\n`;
         indexMarkdown += `## Report Sections\n\n`;
 
         const sections = [

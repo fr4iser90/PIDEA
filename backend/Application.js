@@ -224,6 +224,22 @@ class Application {
     // IDE Services
     this.ideWorkspaceDetectionService = new IDEWorkspaceDetectionService(this.ideManager);
 
+    // Initialize file system service for strategies
+    this.fileSystemService = new (require('./domain/services/FileSystemService'))();
+
+    // Initialize strategies
+    this.monorepoStrategy = new (require('./infrastructure/strategies/MonorepoStrategy'))({
+      logger: this.logger,
+      eventBus: this.eventBus,
+      fileSystemService: this.fileSystemService
+    });
+
+    this.singleRepoStrategy = new (require('./infrastructure/strategies/SingleRepoStrategy'))({
+      logger: this.logger,
+      eventBus: this.eventBus,
+      fileSystemService: this.fileSystemService
+    });
+
     this.logger.info('[Application] Infrastructure initialized');
   }
 
@@ -310,9 +326,11 @@ class Application {
       this.analysisRepository
     );
 
-    // Stelle sicher, dass alle benötigten Services initialisiert sind
-    this.dependencyAnalyzer = this.dependencyAnalyzer || new (require('./infrastructure/external/DependencyAnalyzer'))();
-    this.fileSystemService = this.fileSystemService || new (require('./domain/services/FileSystemService'))();
+    // Initialize dependency analyzer with strategies
+    this.dependencyAnalyzer = new (require('./infrastructure/external/DependencyAnalyzer'))({
+      monorepoStrategy: this.monorepoStrategy,
+      singleRepoStrategy: this.singleRepoStrategy
+    });
 
     this.logger.info('[Application] Domain services initialized');
   }

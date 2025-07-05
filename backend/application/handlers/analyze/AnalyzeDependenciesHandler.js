@@ -281,13 +281,18 @@ class AnalyzeDependenciesHandler {
     generateMetrics(analysis) {
         const { dependenciesAnalysis } = analysis;
         
+        // Use metrics from analyzer if available, otherwise calculate from data
+        if (dependenciesAnalysis.metrics) {
+            return dependenciesAnalysis.metrics;
+        }
+        
         return {
             directDependencyCount: dependenciesAnalysis.directDependencies?.length || 0,
             transitiveDependencyCount: dependenciesAnalysis.transitiveDependencies?.length || 0,
             totalDependencies: (dependenciesAnalysis.directDependencies?.length || 0) + (dependenciesAnalysis.transitiveDependencies?.length || 0),
             vulnerabilityCount: dependenciesAnalysis.vulnerabilities?.length || 0,
             outdatedPackageCount: dependenciesAnalysis.outdatedPackages?.length || 0,
-            licenseIssueCount: dependenciesAnalysis.licenseIssues?.length || 0,
+            licenseIssueCount: dependenciesAnalysis.license ? 0 : 1,
             bundleSize: dependenciesAnalysis.bundleSize?.totalSize || 0,
             averageDependencyAge: this.calculateAverageDependencyAge(dependenciesAnalysis.directDependencies),
             securityScore: this.calculateSecurityScore(dependenciesAnalysis.vulnerabilities),
