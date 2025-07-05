@@ -12,6 +12,13 @@ function RightPanelComponent({ eventBus, messages = [] }) {
   const [attachedFiles, setAttachedFiles] = useState([]);
   const [settings, setSettings] = useState({});
   const [inputValue, setInputValue] = useState('');
+  const [tasks, setTasks] = useState([]);
+  const [taskStatus, setTaskStatus] = useState({});
+  const [autoModeStatus, setAutoModeStatus] = useState({ isRunning: false, currentTask: null });
+  const [isLoadingTasks, setIsLoadingTasks] = useState(false);
+  const [showCreateTask, setShowCreateTask] = useState(false);
+  const [newTask, setNewTask] = useState({ title: '', description: '', type: '', priority: 'low' });
+  const [selectedTask, setSelectedTask] = useState(null);
   const containerRef = useRef(null);
   const { isAuthenticated } = useAuthStore();
 
@@ -27,6 +34,11 @@ function RightPanelComponent({ eventBus, messages = [] }) {
         eventBus.off('files-removed', handleFilesRemoved);
         eventBus.off('settings-updated', handleSettingsUpdate);
         eventBus.off('quick-prompt-selected', handleQuickPromptSelected);
+        eventBus.off('task-created', handleTaskCreated);
+        eventBus.off('task-updated', handleTaskUpdated);
+        eventBus.off('task-executed', handleTaskExecuted);
+        eventBus.off('auto-mode-started', handleAutoModeStarted);
+        eventBus.off('auto-mode-stopped', handleAutoModeStopped);
       }
     };
   }, [eventBus]);
@@ -39,6 +51,11 @@ function RightPanelComponent({ eventBus, messages = [] }) {
       eventBus.on('files-removed', handleFilesRemoved);
       eventBus.on('settings-updated', handleSettingsUpdate);
       eventBus.on('quick-prompt-selected', handleQuickPromptSelected);
+      eventBus.on('task-created', handleTaskCreated);
+      eventBus.on('task-updated', handleTaskUpdated);
+      eventBus.on('task-executed', handleTaskExecuted);
+      eventBus.on('auto-mode-started', handleAutoModeStarted);
+      eventBus.on('auto-mode-stopped', handleAutoModeStopped);
       console.log('Right panel event listeners set up');
     } else {
       console.log('No eventBus provided to RightPanelComponent');
@@ -58,6 +75,8 @@ function RightPanelComponent({ eventBus, messages = [] }) {
       if (settingsData.success) {
         setSettings(settingsData.settings || {});
       }
+      // Load tasks
+      await loadTasks();
     } catch (error) {
       console.error('❌ Failed to load panel data:', error);
     }
@@ -168,6 +187,275 @@ function RightPanelComponent({ eventBus, messages = [] }) {
       <FrameworkPanelComponent />
     </div>
   );
+  
+  const renderTasksTab = () => {
+    console.log('🔍 [RightPanelComponent] renderTasksTab called, tasks:', tasks);
+    return (
+    <div className="tasks-tab">
+      <div className="task-controls">
+        <h4>Task Management</h4>
+        <div className="task-actions">
+          <button onClick={() => setShowCreateTask(true)} className="btn-primary">Create Task</button>
+          <button onClick={loadTasks} className="btn-secondary" disabled={isLoadingTasks}>
+            {isLoadingTasks ? 'Loading...' : 'Refresh'}
+          </button>
+        </div>
+      </div>
+      
+      <div className="auto-mode-section">
+        <h4>Auto Mode</h4>
+        <div className="auto-mode-controls">
+          {autoModeStatus.isRunning ? (
+            <div className="auto-mode-status running">
+              <span className="status-indicator">🔄</span>
+              <span>Auto Mode Running</span>
+              <button onClick={stopAutoMode} className="btn-danger">Stop</button>
+            </div>
+          ) : (
+            <div className="auto-mode-status stopped">
+              <span className="status-indicator">⏸️</span>
+              <span>Auto Mode Stopped</span>
+              <button onClick={() => startAutoMode('default')} className="btn-success">Start</button>
+            </div>
+          )}
+        </div>
+        {autoModeStatus.currentTask && (
+          <div className="current-task">
+            <strong>Current Task:</strong> {autoModeStatus.currentTask.title}
+          </div>
+        )}
+      </div>
+      
+      <div className="task-list">
+        <h4>Tasks ({tasks.length})</h4>
+        {tasks.length === 0 ? (
+          <div className="no-tasks">No tasks available</div>
+        ) : (
+          <div className="task-items">
+            {tasks.map(task => {
+              if (!task) return null;
+              return (
+                <div key={task.id} className="task-item">
+                  <div className="task-header">
+                    <span className="task-title">{task.title || 'Untitled'}</span>
+                    <span className={`task-status ${task.status || 'pending'}`}>{task.status || 'pending'}</span>
+                  </div>
+                  <div className="task-description">{task.description || 'No description'}</div>
+                  <div className="task-meta">
+                    <span className="task-type">{task.type || 'unknown'}</span>
+                    <span className="task-priority">{task.priority || 'low'}</span>
+                  </div>
+                  <div className="task-actions">
+                    <button 
+                      onClick={() => executeTask(task.id)} 
+                      className="btn-execute"
+                      disabled={task.status === 'running' || task.status === 'completed'}
+                    >
+                      {task.status === 'running' ? 'Running...' : 'Execute'}
+                    </button>
+                    <button onClick={() => setSelectedTask(task)} className="btn-view">View</button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+      
+      {showCreateTask && (
+        <div className="create-task-modal">
+          <div className="modal-content">
+            <h4>Create New Task</h4>
+            <form onSubmit={handleCreateTaskSubmit}>
+              <div className="form-group">
+                <label>Title:</label>
+                <input 
+                  type="text" 
+                  value={newTask.title} 
+                  onChange={(e) => setNewTask(prev => ({ ...prev, title: e.target.value }))}
+                  required 
+                />
+              </div>
+              <div className="form-group">
+                <label>Description:</label>
+                <textarea 
+                  value={newTask.description} 
+                  onChange={(e) => setNewTask(prev => ({ ...prev, description: e.target.value }))}
+                  required 
+                />
+              </div>
+              <div className="form-group">
+                <label>Type:</label>
+                <select 
+                  value={newTask.type} 
+                  onChange={(e) => setNewTask(prev => ({ ...prev, type: e.target.value }))}
+                  required
+                >
+                  <option value="">Select Type</option>
+                  <option value="analysis">Analysis</option>
+                  <option value="script">Script</option>
+                  <option value="feature">Feature</option>
+                  <option value="bugfix">Bug Fix</option>
+                </select>
+              </div>
+              <div className="form-group">
+                <label>Priority:</label>
+                <select 
+                  value={newTask.priority} 
+                  onChange={(e) => setNewTask(prev => ({ ...prev, priority: e.target.value }))}
+                  required
+                >
+                  <option value="low">Low</option>
+                  <option value="medium">Medium</option>
+                  <option value="high">High</option>
+                </select>
+              </div>
+              <div className="form-actions">
+                <button type="submit" className="btn-primary">Create Task</button>
+                <button type="button" onClick={() => setShowCreateTask(false)} className="btn-secondary">Cancel</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+    </div>
+    );
+  };
+
+  // Task Event Handlers
+  const handleTaskCreated = useCallback((task) => {
+    console.log('🔍 [RightPanelComponent] handleTaskCreated called with task:', task);
+    if (!task) {
+      console.error('❌ [RightPanelComponent] handleTaskCreated received undefined task');
+      return;
+    }
+    setTasks(prev => [...prev, task]);
+    if (eventBus) eventBus.emit('task-status-updated', { taskId: task.id, status: 'created' });
+  }, [eventBus]);
+  
+  const handleTaskUpdated = useCallback((task) => {
+    setTasks(prev => prev.map(t => t.id === task.id ? task : t));
+    if (eventBus) eventBus.emit('task-status-updated', { taskId: task.id, status: 'updated' });
+  }, [eventBus]);
+  
+  const handleTaskExecuted = useCallback((task) => {
+    setTasks(prev => prev.map(t => t.id === task.id ? task : t));
+    setTaskStatus(prev => ({ ...prev, [task.id]: task.status }));
+    if (eventBus) eventBus.emit('task-status-updated', { taskId: task.id, status: task.status });
+  }, [eventBus]);
+  
+  const handleAutoModeStarted = useCallback((data) => {
+    console.log('🔍 [RightPanelComponent] Auto mode started:', data);
+    setAutoModeStatus({ 
+      isRunning: true, 
+      currentTask: data.currentTask,
+      session: data.session,
+      tasks: data.tasks || []
+    });
+    if (eventBus) eventBus.emit('auto-mode-status-updated', { isRunning: true });
+  }, [eventBus]);
+  
+  const handleAutoModeStopped = useCallback(() => {
+    setAutoModeStatus({ isRunning: false, currentTask: null });
+    if (eventBus) eventBus.emit('auto-mode-status-updated', { isRunning: false });
+  }, [eventBus]);
+  
+  // Task Management Functions
+  const loadTasks = async () => {
+    if (!isAuthenticated) return;
+    setIsLoadingTasks(true);
+    try {
+      const response = await apiCall(API_CONFIG.endpoints.tasks.projectTasks('default'));
+      if (response.success) {
+        setTasks(response.data || []);
+      }
+    } catch (error) {
+      console.error('❌ Failed to load tasks:', error);
+    } finally {
+      setIsLoadingTasks(false);
+    }
+  };
+  
+  const createTask = async (taskData) => {
+    try {
+      const response = await apiCall(API_CONFIG.endpoints.tasks.projectCreate('default'), {
+        method: 'POST',
+        body: JSON.stringify(taskData)
+      });
+      console.log('🔍 [RightPanelComponent] createTask response:', response);
+      if (response.success) {
+        console.log('🔍 [RightPanelComponent] Calling handleTaskCreated with:', response.data);
+        handleTaskCreated(response.data);
+        return response.data;
+      }
+    } catch (error) {
+      console.error('❌ Failed to create task:', error);
+      throw error;
+    }
+  };
+  
+  const executeTask = async (taskId) => {
+    try {
+      const response = await apiCall(API_CONFIG.endpoints.tasks.projectExecute('default', taskId), {
+        method: 'POST'
+      });
+      if (response.success) {
+        handleTaskExecuted(response.data);
+        return response.data;
+      }
+    } catch (error) {
+      console.error('❌ Failed to execute task:', error);
+      throw error;
+    }
+  };
+  
+  const startAutoMode = async (projectId = 'default') => {
+    try {
+      const response = await apiCall(API_CONFIG.endpoints.tasks.autoMode.start(projectId), {
+        method: 'POST',
+        body: JSON.stringify({})
+      });
+      if (response.success) {
+        handleAutoModeStarted(response.data);
+        return response.data;
+      }
+    } catch (error) {
+      console.error('❌ Failed to start auto mode:', error);
+      throw error;
+    }
+  };
+  
+  const stopAutoMode = async (projectId = 'default') => {
+    try {
+      const response = await apiCall(API_CONFIG.endpoints.tasks.autoMode.stop(projectId), {
+        method: 'POST'
+      });
+      if (response.success) {
+        handleAutoModeStopped();
+        return response.data;
+      }
+    } catch (error) {
+      console.error('❌ Failed to stop auto mode:', error);
+      throw error;
+    }
+  };
+
+  const handleCreateTaskSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      await createTask({
+        title: newTask.title,
+        description: newTask.description,
+        type: newTask.type,
+        priority: newTask.priority
+      });
+      setNewTask({ title: '', description: '', type: '', priority: 'low' });
+      setShowCreateTask(false);
+    } catch (error) {
+      console.error('❌ Failed to create task:', error);
+    }
+  };
+
   return (
     <div ref={containerRef} className="chat-right-panel" style={{ display: isVisible ? 'flex' : 'none' }}>
       <div className="chat-right-panel-content">
@@ -175,6 +463,7 @@ function RightPanelComponent({ eventBus, messages = [] }) {
           <div className="panel-tabs">
             <button onClick={() => handleTabChange('chat')} className={`tab-btn ${activeTab === 'chat' ? 'active' : ''}`}>Chat</button>
             <button onClick={() => handleTabChange('files')} className={`tab-btn ${activeTab === 'files' ? 'active' : ''}`}>Files</button>
+            <button onClick={() => handleTabChange('tasks')} className={`tab-btn ${activeTab === 'tasks' ? 'active' : ''}`}>Tasks</button>
             <button onClick={() => handleTabChange('settings')} className={`tab-btn ${activeTab === 'settings' ? 'active' : ''}`}>Settings</button>
             <button onClick={() => handleTabChange('frameworks')} className={`tab-btn ${activeTab === 'frameworks' ? 'active' : ''}`}>Frameworks</button>
           </div>
@@ -185,7 +474,80 @@ function RightPanelComponent({ eventBus, messages = [] }) {
           {activeTab === 'files' && renderFilesTab()}
           {activeTab === 'settings' && renderSettingsTab()}
           {activeTab === 'frameworks' && renderFrameworksTab()}
+          {activeTab === 'tasks' && renderTasksTab()}
         </div>
+        
+        {/* Task Status Panel - Always visible when tasks are active */}
+        {(activeTab === 'tasks' || autoModeStatus.isRunning || Object.keys(taskStatus).length > 0) && (
+          <div className="task-status-panel">
+            <div className="status-panel-header">
+              <h5>Task Status</h5>
+              <span className="status-indicator">
+                {autoModeStatus.isRunning ? '🔄' : '⏸️'}
+              </span>
+            </div>
+            <div className="status-panel-content">
+              {autoModeStatus.isRunning && (
+                <div className="auto-mode-status-item">
+                  <div className="status-item-header">
+                    <span className="status-label">Auto Mode</span>
+                    <span className="status-value running">Running</span>
+                  </div>
+                  {autoModeStatus.session && (
+                    <div className="session-info">
+                      <span className="session-id">Session: {autoModeStatus.session.id}</span>
+                      <span className="session-status">{autoModeStatus.session.status}</span>
+                    </div>
+                  )}
+                  {autoModeStatus.tasks && autoModeStatus.tasks.length > 0 && (
+                    <div className="auto-tasks-info">
+                      <span className="tasks-count">{autoModeStatus.tasks.length} tasks generated</span>
+                      <div className="auto-tasks-list">
+                        {autoModeStatus.tasks.map(task => (
+                          <div key={task.id} className="auto-task-item">
+                            <span className="task-title">{task.title}</span>
+                            <span className={`task-status ${task.status}`}>{task.status}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  {autoModeStatus.currentTask && (
+                    <div className="current-task-info">
+                      <span className="task-name">{autoModeStatus.currentTask.title}</span>
+                      <span className="task-progress">Processing...</span>
+                    </div>
+                  )}
+                </div>
+              )}
+              
+              {Object.entries(taskStatus).map(([taskId, status]) => {
+                const task = tasks.find(t => t && t.id === taskId);
+                if (!task) return null;
+                
+                return (
+                  <div key={taskId} className="task-status-item">
+                    <div className="status-item-header">
+                      <span className="status-label">{task.title || 'Unknown Task'}</span>
+                      <span className={`status-value ${status}`}>{status}</span>
+                    </div>
+                    <div className="task-progress-info">
+                      {status === 'running' && <span className="progress-text">Executing...</span>}
+                      {status === 'completed' && <span className="progress-text success">✓ Completed</span>}
+                      {status === 'failed' && <span className="progress-text error">✗ Failed</span>}
+                    </div>
+                  </div>
+                );
+              })}
+              
+              {!autoModeStatus.isRunning && Object.keys(taskStatus).length === 0 && (
+                <div className="no-active-tasks">
+                  <span>No active tasks</span>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
         <div className="right-panel-input-area">
           <textarea id="rightPanelMsgInput" value={inputValue} onChange={(e) => setInputValue(e.target.value)} onKeyPress={handleInputKeyPress} placeholder="Quick message..." />
           <button id="rightPanelSendBtn" onClick={handleRightPanelSend} disabled={!inputValue.trim()}>Send</button>

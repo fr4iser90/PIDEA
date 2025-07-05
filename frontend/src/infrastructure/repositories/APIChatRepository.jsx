@@ -41,6 +41,24 @@ const API_CONFIG = {
     prompts: {
       quick: '/api/prompts/quick'
     },
+    tasks: {
+      projectTasks: (projectId) => `/api/projects/${projectId}/tasks`,
+      projectCreate: (projectId) => `/api/projects/${projectId}/tasks`,
+      projectGet: (projectId, id) => `/api/projects/${projectId}/tasks/${id}`,
+      projectUpdate: (projectId, id) => `/api/projects/${projectId}/tasks/${id}`,
+      projectDelete: (projectId, id) => `/api/projects/${projectId}/tasks/${id}`,
+      projectExecute: (projectId, taskId) => `/api/projects/${projectId}/tasks/${taskId}/execute`,
+      projectStatus: (projectId, id) => `/api/projects/${projectId}/tasks/${id}/execution`,
+      analysis: {
+        project: (projectId) => `/api/projects/${projectId}/analysis`,
+        ai: (projectId) => `/api/projects/${projectId}/analysis/ai`
+      },
+      autoMode: {
+        start: (projectId) => `/api/projects/${projectId}/auto/execute`,
+        stop: (projectId) => `/api/projects/${projectId}/auto/stop`,
+        status: (projectId) => `/api/projects/${projectId}/auto/status`
+      }
+    },
     settings: '/api/settings',
     health: '/api/health'
   }
@@ -221,6 +239,69 @@ export default class APIChatRepository extends ChatRepository {
       idePort: sessionData.idePort,
       messages: (sessionData.messages || []).map(m => ChatMessage.fromJSON(m))
     });
+  }
+
+  // Task Management Methods
+  async createTask(taskData, projectId = 'default') {
+    return apiCall(API_CONFIG.endpoints.tasks.projectCreate(projectId), {
+      method: 'POST',
+      body: JSON.stringify(taskData)
+    });
+  }
+
+  async getTasks(projectId = 'default') {
+    return apiCall(API_CONFIG.endpoints.tasks.projectTasks(projectId));
+  }
+
+  async getTask(taskId, projectId = 'default') {
+    return apiCall(API_CONFIG.endpoints.tasks.projectGet(projectId, taskId));
+  }
+
+  async updateTask(taskId, taskData, projectId = 'default') {
+    return apiCall(API_CONFIG.endpoints.tasks.projectUpdate(projectId, taskId), {
+      method: 'PUT',
+      body: JSON.stringify(taskData)
+    });
+  }
+
+  async deleteTask(taskId, projectId = 'default') {
+    return apiCall(API_CONFIG.endpoints.tasks.projectDelete(projectId, taskId), {
+      method: 'DELETE'
+    });
+  }
+
+  async executeTask(taskId, projectId = 'default') {
+    return apiCall(API_CONFIG.endpoints.tasks.projectExecute(projectId, taskId), {
+      method: 'POST'
+    });
+  }
+
+  async getTaskStatus(taskId, projectId = 'default') {
+    return apiCall(API_CONFIG.endpoints.tasks.projectStatus(projectId, taskId));
+  }
+
+  async analyzeProject(projectPath, options = {}, projectId = 'default') {
+    return apiCall(API_CONFIG.endpoints.tasks.analysis.project(projectId), {
+      method: 'POST',
+      body: JSON.stringify({ projectPath, ...options })
+    });
+  }
+
+  async startAutoMode(projectId = 'default', options = {}) {
+    return apiCall(API_CONFIG.endpoints.tasks.autoMode.start(projectId), {
+      method: 'POST',
+      body: JSON.stringify({ ...options })
+    });
+  }
+
+  async stopAutoMode(projectId = 'default') {
+    return apiCall(API_CONFIG.endpoints.tasks.autoMode.stop(projectId), {
+      method: 'POST'
+    });
+  }
+
+  async getAutoModeStatus(projectId = 'default') {
+    return apiCall(API_CONFIG.endpoints.tasks.autoMode.status(projectId));
   }
 }
 

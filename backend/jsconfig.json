@@ -1,0 +1,16 @@
+{
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./*"],
+      "@/domain/*": ["./domain/*"],
+      "@/application/*": ["./application/*"],
+      "@/infrastructure/*": ["./infrastructure/*"],
+      "@/presentation/*": ["./presentation/*"],
+      "@/tests/*": ["./tests/*"],
+      "@/cli/*": ["./cli/*"],
+      "@/scripts/*": ["./scripts/*"]
+    }
+  },
+  "exclude": ["node_modules", "tests", "coverage"]
+}

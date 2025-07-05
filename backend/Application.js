@@ -18,22 +18,33 @@ const User = require('./domain/entities/User');
 const UserSession = require('./domain/entities/UserSession');
 const CursorIDEService = require('./domain/services/CursorIDEService');
 const AuthService = require('./domain/services/AuthService');
+const TaskService = require('./domain/services/TaskService');
+const TaskRepository = require('./domain/repositories/TaskRepository');
+const TaskValidationService = require('./domain/services/TaskValidationService');
 
 // Application
 const SendMessageCommand = require('./application/commands/SendMessageCommand');
 const GetChatHistoryQuery = require('./application/queries/GetChatHistoryQuery');
 const SendMessageHandler = require('./application/handlers/SendMessageHandler');
 const GetChatHistoryHandler = require('./application/handlers/GetChatHistoryHandler');
+const CreateTaskHandler = require('./application/handlers/CreateTaskHandler');
+const AnalyzeProjectHandler = require('./application/handlers/AnalyzeProjectHandler');
+const AutoModeHandler = require('./application/handlers/AutoModeHandler');
 
 // Infrastructure
 const BrowserManager = require('./infrastructure/external/BrowserManager');
 const IDEManager = require('./infrastructure/external/IDEManager');
+const AIService = require('./infrastructure/external/AIService');
+const ProjectAnalyzer = require('./infrastructure/external/ProjectAnalyzer');
 const IDEWorkspaceDetectionService = require('./domain/services/IDEWorkspaceDetectionService');
 const InMemoryChatRepository = require('./infrastructure/database/InMemoryChatRepository');
+const InMemoryTaskRepository = require('./infrastructure/database/InMemoryTaskRepository');
 const DatabaseConnection = require('./infrastructure/database/DatabaseConnection');
 const PostgreSQLUserRepository = require('./infrastructure/database/PostgreSQLUserRepository');
 const PostgreSQLUserSessionRepository = require('./infrastructure/database/PostgreSQLUserSessionRepository');
 const EventBus = require('./infrastructure/messaging/EventBus');
+const CommandBus = require('./infrastructure/messaging/CommandBus');
+const QueryBus = require('./infrastructure/messaging/QueryBus');
 const AuthMiddleware = require('./infrastructure/auth/AuthMiddleware');
 
 // Presentation
@@ -42,6 +53,8 @@ const IDEController = require('./presentation/api/IDEController');
 const IDEMirrorController = require('./presentation/api/IDEMirrorController');
 const FrameworkController = require('./presentation/api/FrameworkController');
 const AuthController = require('./presentation/api/AuthController');
+const TaskController = require('./presentation/api/TaskController');
+const AutoModeController = require('./presentation/api/AutoModeController');
 const WebSocketManager = require('./presentation/websocket/WebSocketManager');
 
 class Application {
@@ -151,6 +164,12 @@ class Application {
     this.ideManager = new IDEManager(this.browserManager);
     this.chatRepository = new InMemoryChatRepository();
     this.eventBus = new EventBus();
+    
+    // Initialize command and query buses
+    this.commandBus = new CommandBus();
+    this.queryBus = new QueryBus();
+    this.commandBus.setLogger(this.logger);
+    this.queryBus.setLogger(this.logger);
 
     // Initialize repositories
     this.userRepository = new PostgreSQLUserRepository(this.databaseConnection);
@@ -174,22 +193,77 @@ class Application {
       this.autoSecurityManager.getJWTRefreshSecret()
     );
 
+    // Initialize AI and analysis services
+    this.aiService = new AIService();
+    this.projectAnalyzer = new ProjectAnalyzer();
+
+    // Initialize task repository and service
+    this.taskRepository = new InMemoryTaskRepository();
+    this.taskService = new TaskService(this.taskRepository, this.aiService, this.projectAnalyzer);
+    
+    // Initialize task validation service
+    this.taskValidationService = new TaskValidationService(
+      this.taskRepository,
+      null, // taskExecutionRepository - TODO: Add when available
+      this.cursorIDEService,
+      this.eventBus,
+      null // fileSystemService - TODO: Add when available
+    );
+
+    this.taskAnalysisService = new (require('./domain/services/TaskAnalysisService'))(
+      this.cursorIDEService,
+      this.eventBus,
+      this.logger,
+      this.aiService,
+      this.projectAnalyzer
+    );
+
     this.logger.info('[Application] Domain services initialized');
   }
 
   async initializeApplicationHandlers() {
     this.logger.info('[Application] Initializing application handlers...');
 
-    this.sendMessageHandler = new SendMessageHandler(
-      this.chatRepository,
-      this.cursorIDEService,
-      this.eventBus
-    );
+    this.sendMessageHandler = new SendMessageHandler({
+      messagingService: this.cursorIDEService,
+      eventBus: this.eventBus,
+      logger: this.logger
+    });
 
     this.getChatHistoryHandler = new GetChatHistoryHandler(
       this.chatRepository,
       this.cursorIDEService
     );
+
+    this.createTaskHandler = new CreateTaskHandler({
+      taskRepository: this.taskRepository,
+      taskTemplateRepository: null, // TODO: Add when available
+      taskSuggestionRepository: null, // TODO: Add when available
+      taskValidationService: this.taskValidationService,
+      taskGenerationService: null, // TODO: Add when available
+      eventBus: this.eventBus,
+      logger: this.logger
+    });
+
+    this.analyzeProjectHandler = new AnalyzeProjectHandler({
+      taskAnalysisService: this.taskAnalysisService,
+      projectAnalyzer: this.projectAnalyzer,
+      cursorIDEService: this.cursorIDEService,
+      taskRepository: this.taskRepository,
+      eventBus: this.eventBus,
+      logger: this.logger
+    });
+    this.autoModeHandler = new AutoModeHandler({
+      taskRepository: this.taskRepository,
+      eventBus: this.eventBus,
+      logger: this.logger,
+      cursorIDEService: this.cursorIDEService,
+      projectAnalyzer: this.projectAnalyzer
+    });
+    // TODO: Add TaskExecutionEngine when available
+    this.taskExecutionEngine = null;
+    this.commandBus.register('AnalyzeProjectCommand', this.analyzeProjectHandler);
+    this.commandBus.register('AutoModeCommand', this.autoModeHandler);
 
     this.logger.info('[Application] Application handlers initialized');
   }
@@ -219,6 +293,20 @@ class Application {
     this.ideMirrorController = new IDEMirrorController();
 
     this.frameworkController = new FrameworkController();
+
+    this.taskController = new TaskController(
+      this.taskService,
+      this.taskRepository,
+      this.aiService,
+      this.projectAnalyzer
+    );
+
+    this.autoModeController = new AutoModeController({
+      commandBus: this.commandBus,
+      queryBus: this.queryBus,
+      logger: this.logger,
+      eventBus: this.eventBus
+    });
 
     this.logger.info('[Application] Presentation layer initialized');
   }
@@ -380,6 +468,35 @@ class Application {
     // Framework routes (public)
     this.app.get('/api/framework/prompts', (req, res) => this.frameworkController.getPrompts(req, res));
     this.app.get('/api/framework/templates', (req, res) => this.frameworkController.getTemplates(req, res));
+
+    // Task Management routes (protected) - PROJECT-BASED
+    this.app.use('/api/projects/:projectId/tasks', this.authMiddleware.authenticate());
+    this.app.post('/api/projects/:projectId/tasks', (req, res) => this.taskController.createTask(req, res));
+    this.app.get('/api/projects/:projectId/tasks', (req, res) => this.taskController.getTasks(req, res));
+    this.app.get('/api/projects/:projectId/tasks/:id', (req, res) => this.taskController.getTaskById(req, res));
+    this.app.put('/api/projects/:projectId/tasks/:id', (req, res) => this.taskController.updateTask(req, res));
+    this.app.delete('/api/projects/:projectId/tasks/:id', (req, res) => this.taskController.deleteTask(req, res));
+    this.app.post('/api/projects/:projectId/tasks/:id/execute', (req, res) => this.taskController.executeTask(req, res));
+    this.app.get('/api/projects/:projectId/tasks/:id/execution', (req, res) => this.taskController.getTaskExecution(req, res));
+    this.app.post('/api/projects/:projectId/tasks/:id/cancel', (req, res) => this.taskController.cancelTask(req, res));
+
+    // Project Analysis routes (protected) - PROJECT-BASED
+    this.app.use('/api/projects/:projectId/analysis', this.authMiddleware.authenticate());
+    this.app.post('/api/projects/:projectId/analysis', (req, res) => this.taskController.analyzeProject(req, res));
+    this.app.get('/api/projects/:projectId/analysis/:analysisId', (req, res) => this.taskController.getProjectAnalysis(req, res));
+    this.app.post('/api/projects/:projectId/analysis/ai', (req, res) => this.taskController.aiAnalysis(req, res));
+
+    // Auto Mode routes (protected) - PROJECT-BASED
+    this.app.use('/api/projects/:projectId/auto', this.authMiddleware.authenticate());
+    this.app.post('/api/projects/:projectId/auto/execute', (req, res) => this.autoModeController.executeAutoMode(req, res));
+    this.app.get('/api/projects/:projectId/auto/status', (req, res) => this.autoModeController.getAutoModeStatus(req, res));
+    this.app.post('/api/projects/:projectId/auto/stop', (req, res) => this.autoModeController.stopAutoMode(req, res));
+
+    // Script Generation routes (protected) - PROJECT-BASED
+    this.app.use('/api/projects/:projectId/scripts', this.authMiddleware.authenticate());
+    this.app.post('/api/projects/:projectId/scripts/generate', (req, res) => this.taskController.generateScript(req, res));
+    this.app.get('/api/projects/:projectId/scripts', (req, res) => this.taskController.getGeneratedScripts(req, res));
+    this.app.post('/api/projects/:projectId/scripts/:id/execute', (req, res) => this.taskController.executeScript(req, res));
 
     // Error handling middleware
     this.app.use((error, req, res, next) => {
@@ -544,6 +661,42 @@ class Application {
 
     this.logger.info('[Application] Stopped');
     process.exit(0);
+  }
+
+  async cleanup() {
+    this.logger.info('[Application] Cleaning up...');
+    
+    this.isRunning = false;
+
+    if (this.server) {
+      this.server.close();
+    }
+
+    if (this.databaseConnection) {
+      await this.databaseConnection.disconnect();
+    }
+
+    if (this.ideManager) {
+      await this.ideManager.cleanup();
+    }
+
+    this.logger.info('[Application] Cleanup completed');
+  }
+
+  async reset() {
+    this.logger.info('[Application] Resetting for tests...');
+    
+    // Reset task repository
+    if (this.taskRepository && this.taskRepository.clear) {
+      await this.taskRepository.clear();
+    }
+
+    // Reset chat repository
+    if (this.chatRepository && this.chatRepository.clear) {
+      await this.chatRepository.clear();
+    }
+
+    this.logger.info('[Application] Reset completed');
   }
 
   getWebSocketManager() {

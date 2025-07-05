@@ -2,21 +2,125 @@ const SendMessageCommand = require('../commands/SendMessageCommand');
 const ChatMessage = require('../../domain/entities/ChatMessage');
 const ChatSession = require('../../domain/entities/ChatSession');
 
+/**
+ * SendMessageHandler - Handles task/AI messaging commands
+ * Implements the Command Handler pattern for messaging
+ */
 class SendMessageHandler {
-  constructor(chatRepository, cursorIDEService, eventBus) {
-    this.chatRepository = chatRepository;
-    this.cursorIDEService = cursorIDEService;
-    this.eventBus = eventBus;
+  constructor(dependencies = {}) {
+    this.validateDependencies(dependencies);
+    this.messagingService = dependencies.messagingService;
+    this.eventBus = dependencies.eventBus;
+    this.logger = dependencies.logger;
+    this.handlerId = this.generateHandlerId();
   }
 
-  async handle(command) {
-    // Handle new user-specific command format
-    if (command.userId) {
-      return await this.handleUserSpecificCommand(command);
+  /**
+   * Validate handler dependencies
+   * @param {Object} dependencies - Handler dependencies
+   * @throws {Error} If dependencies are invalid
+   */
+  validateDependencies(dependencies) {
+    const required = [
+      'messagingService',
+      'eventBus',
+      'logger'
+    ];
+    for (const dep of required) {
+      if (!dependencies[dep]) {
+        throw new Error(`Missing required dependency: ${dep}`);
+      }
     }
+  }
 
-    // Legacy command handling for backward compatibility
-    return await this.handleLegacyCommand(command);
+  /**
+   * Generate unique handler ID
+   * @returns {string} Unique handler ID
+   */
+  generateHandlerId() {
+    return `send_message_handler_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  }
+
+  /**
+   * Handle SendMessageCommand
+   * @param {SendMessageCommand} command - Messaging command
+   * @returns {Promise<Object>} Messaging result
+   */
+  async handle(command) {
+    // Validate command
+    const validationResult = await this.validateCommand(command);
+    if (!validationResult.isValid) {
+      throw new Error(`Command validation failed: ${validationResult.errors.join(', ')}`);
+    }
+    try {
+      this.logger.info('SendMessageHandler: Sending message', {
+        handlerId: this.handlerId,
+        commandId: command.commandId,
+        requestedBy: command.requestedBy
+      });
+      await this.eventBus.publish('message.sending', {
+        commandId: command.commandId,
+        requestedBy: command.requestedBy,
+        message: command.message,
+        timestamp: new Date()
+      });
+      // Call messaging service
+      const result = await this.messagingService.send(command.message, {
+        requestedBy: command.requestedBy,
+        options: command.options || {}
+      });
+      await this.eventBus.publish('message.sent', {
+        commandId: command.commandId,
+        requestedBy: command.requestedBy,
+        message: command.message,
+        result,
+        timestamp: new Date()
+      });
+      this.logger.info('SendMessageHandler: Message sent', {
+        handlerId: this.handlerId,
+        commandId: command.commandId
+      });
+      return {
+        success: true,
+        result
+      };
+    } catch (error) {
+      this.logger.error('SendMessageHandler: Message sending failed', {
+        handlerId: this.handlerId,
+        commandId: command.commandId,
+        error: error.message
+      });
+      await this.eventBus.publish('message.failed', {
+        commandId: command.commandId,
+        requestedBy: command.requestedBy,
+        message: command.message,
+        error: error.message,
+        timestamp: new Date()
+      });
+      throw error;
+    }
+  }
+
+  /**
+   * Validate command
+   * @param {SendMessageCommand} command - Messaging command
+   * @returns {Promise<Object>} Validation result
+   */
+  async validateCommand(command) {
+    const errors = [];
+    const warnings = [];
+    if (!command.message) {
+      errors.push('Message is required');
+    }
+    if (!command.requestedBy) {
+      errors.push('Requested by is required');
+    }
+    // Add more validation as needed
+    return {
+      isValid: errors.length === 0,
+      errors,
+      warnings
+    };
   }
 
   async handleUserSpecificCommand(command) {

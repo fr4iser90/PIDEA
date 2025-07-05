@@ -12,6 +12,11 @@ class EventBus {
     this.handlers.get(eventName).push(handler);
   }
 
+  // Alias for subscribe (for compatibility with tests)
+  on(eventName, handler) {
+    return this.subscribe(eventName, handler);
+  }
+
   // Unsubscribe from events
   unsubscribe(eventName, handler) {
     if (this.handlers.has(eventName)) {
