@@ -20,7 +20,7 @@ const AnalysisPanelComponent = ({ projectId = null }) => {
       setLoading(true);
       const response = await apiRepository.getAnalysisHistory(projectId);
       if (response.success) {
-        setAnalysisHistory(response.data);
+        setAnalysisHistory(Array.isArray(response.data) ? response.data : []);
       }
     } catch (err) {
       setError('Failed to load analysis history');
@@ -96,6 +96,11 @@ const AnalysisPanelComponent = ({ projectId = null }) => {
   const renderAnalysisHistory = () => {
     if (loading) return <div className="text-center py-4">Loading...</div>;
     if (error) return <div className="text-red-500 text-center py-4">{error}</div>;
+
+    if (!Array.isArray(analysisHistory)) {
+      console.warn('Analysis history is not an array:', analysisHistory);
+      return <div className="text-center py-4 text-red-500">Invalid data format</div>;
+    }
 
     if (analysisHistory.length === 0) {
       return (
