@@ -128,26 +128,69 @@ const useAuthStore = create(
       validateToken: async () => {
         const { token } = get();
         if (!token) {
+          console.log('🔍 [AuthStore] No token found for validation');
           set({ isAuthenticated: false });
           return false;
         }
 
         try {
+          console.log('🔍 [AuthStore] Validating token...');
           const response = await fetch('/api/auth/validate', {
             headers: {
               Authorization: `Bearer ${token}`,
             },
           });
 
+          console.log('🔍 [AuthStore] Validation response status:', response.status);
+
           if (!response.ok) {
+            console.log('❌ [AuthStore] Token validation failed:', response.status);
             set({ isAuthenticated: false, token: null, user: null });
             return false;
           }
 
           const data = await response.json();
+          console.log('✅ [AuthStore] Token validation successful');
           set({ user: data.user, isAuthenticated: true });
           return true;
         } catch (error) {
+          console.error('❌ [AuthStore] Token validation error:', error);
+          set({ isAuthenticated: false, token: null, user: null });
+          return false;
+        }
+      },
+
+      // Refresh token if needed
+      refreshToken: async () => {
+        const { token } = get();
+        if (!token) {
+          console.log('🔍 [AuthStore] No token to refresh');
+          return false;
+        }
+
+        try {
+          console.log('🔍 [AuthStore] Refreshing token...');
+          const response = await fetch('/api/auth/refresh', {
+            method: 'POST',
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          });
+
+          if (!response.ok) {
+            console.log('❌ [AuthStore] Token refresh failed');
+            set({ isAuthenticated: false, token: null, user: null });
+            return false;
+          }
+
+          const data = await response.json();
+          const newToken = data.accessToken || data.token;
+          
+          console.log('✅ [AuthStore] Token refreshed successfully');
+          set({ token: newToken, isAuthenticated: true });
+          return true;
+        } catch (error) {
+          console.error('❌ [AuthStore] Token refresh error:', error);
           set({ isAuthenticated: false, token: null, user: null });
           return false;
         }

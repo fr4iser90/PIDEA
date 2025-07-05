@@ -179,6 +179,32 @@ class AuthController {
     }
   }
 
+  // GET /api/auth/validate
+  async validateToken(req, res) {
+    try {
+      if (!req.user) {
+        return res.status(401).json({
+          success: false,
+          error: 'Invalid or expired token'
+        });
+      }
+
+      // Token is valid, return user data
+      res.json({
+        success: true,
+        data: {
+          user: req.user.toJSON()
+        }
+      });
+    } catch (error) {
+      console.error('[AuthController] Token validation error:', error);
+      res.status(401).json({
+        success: false,
+        error: 'Token validation failed'
+      });
+    }
+  }
+
   // PUT /api/auth/profile
   async updateProfile(req, res) {
     try {
