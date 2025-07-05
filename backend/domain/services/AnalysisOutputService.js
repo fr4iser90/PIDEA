@@ -44,110 +44,102 @@ class AnalysisOutputService {
         await fs.mkdir(projectDir, { recursive: true });
 
         const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-        const filename = `analysis-report-${timestamp}.md`;
-        const filepath = path.join(projectDir, filename);
+        const baseFilename = `analysis-report-${timestamp}`;
+        
+        // Create main index file
+        const indexFilepath = path.join(projectDir, `${baseFilename}-index.md`);
+        let indexMarkdown = `# Project Analysis Report\n\n`;
+        indexMarkdown += `**Project ID:** ${projectId}\n`;
+        indexMarkdown += `**Generated:** ${new Date().toLocaleString()}\n\n`;
+        indexMarkdown += `## Report Sections\n\n`;
 
-        let markdown = `# Project Analysis Report\n\n`;
-        markdown += `**Project ID:** ${projectId}\n`;
-        markdown += `**Generated:** ${new Date().toLocaleString()}\n\n`;
+        const sections = [
+            { key: 'Repository Structure', filename: 'repository-structure' },
+            { key: 'Architecture', filename: 'architecture' },
+            { key: 'Code Quality', filename: 'code-quality' },
+            { key: 'Dependencies', filename: 'dependencies' },
+            { key: 'Tech Stack', filename: 'tech-stack' },
+            { key: 'Performance', filename: 'performance' },
+            { key: 'Security', filename: 'security' },
+            { key: 'Refactoring', filename: 'refactoring' },
+            { key: 'Generation', filename: 'generation' }
+        ];
 
-        // Repository Structure Section
-        markdown += `## Repository Structure\n\n`;
-        const repoStructure = analysisResults['Repository Structure'] || analysisResults['projectStructure'];
-        if (repoStructure) {
-            markdown += this.formatAnalysisData('Repository Structure', repoStructure);
-        } else {
-            markdown += `### Project Structure\n\nNo repository structure data available.\n\n`;
+        const generatedFiles = [];
+
+        for (const section of sections) {
+            const data = analysisResults[section.key] || analysisResults[section.key.toLowerCase()];
+            if (data) {
+                const sectionFilename = `${baseFilename}-${section.filename}.md`;
+                const sectionFilepath = path.join(projectDir, sectionFilename);
+                
+                let sectionMarkdown = `# ${section.key}\n\n`;
+                sectionMarkdown += `**Project ID:** ${projectId}\n`;
+                sectionMarkdown += `**Generated:** ${new Date().toLocaleString()}\n\n`;
+                
+                switch (section.key) {
+                    case 'Repository Structure':
+                        sectionMarkdown += this.formatProjectStructureData(data.data || data, data.metrics, data.recommendations);
+                        break;
+                    case 'Architecture':
+                        sectionMarkdown += this.formatArchitectureData(data.data || data, data.metrics, data.recommendations);
+                        break;
+                    case 'Code Quality':
+                        sectionMarkdown += this.formatCodeQualityData(data.data || data, data.metrics, data.recommendations);
+                        break;
+                    case 'Dependencies':
+                        sectionMarkdown += this.formatDependenciesData(data.data || data, data.metrics, data.recommendations);
+                        break;
+                    case 'Tech Stack':
+                        sectionMarkdown += this.formatTechStackData(data.data || data);
+                        break;
+                    case 'Performance':
+                        sectionMarkdown += this.formatPerformanceData(data.data || data, data.metrics, data.recommendations);
+                        break;
+                    case 'Security':
+                        sectionMarkdown += this.formatSecurityData(data.data || data, data.metrics, data.recommendations);
+                        break;
+                    case 'Refactoring':
+                        sectionMarkdown += this.formatRefactoringData(data.data || data);
+                        break;
+                    case 'Generation':
+                        sectionMarkdown += this.formatGenerationData(data.data || data);
+                        break;
+                }
+                
+                await fs.writeFile(sectionFilepath, sectionMarkdown);
+                generatedFiles.push(sectionFilename);
+                
+                indexMarkdown += `- [${section.key}](${sectionFilename})\n`;
+            } else {
+                indexMarkdown += `- ${section.key} - No data available\n`;
+            }
         }
-        markdown += `\n---\n\n`;
 
-        // Architecture Section
-        markdown += `## Architecture\n\n`;
-        const architecture = analysisResults['Architecture'] || analysisResults['architecture'];
-        if (architecture) {
-            markdown += this.formatAnalysisData('Architecture', architecture);
-        } else {
-            markdown += `### Architecture Analysis\n\nNo architecture data available.\n\n`;
+        // Add suggestions section
+        const suggestions = this.generateComprehensiveSuggestions(analysisResults);
+        if (suggestions.trim()) {
+            const suggestionsFilename = `${baseFilename}-suggestions.md`;
+            const suggestionsFilepath = path.join(projectDir, suggestionsFilename);
+            
+            let suggestionsMarkdown = `# Suggestions\n\n`;
+            suggestionsMarkdown += `**Project ID:** ${projectId}\n`;
+            suggestionsMarkdown += `**Generated:** ${new Date().toLocaleString()}\n\n`;
+            suggestionsMarkdown += suggestions;
+            
+            await fs.writeFile(suggestionsFilepath, suggestionsMarkdown);
+            generatedFiles.push(suggestionsFilename);
+            
+            indexMarkdown += `- [Suggestions](${suggestionsFilename})\n`;
         }
-        markdown += `\n---\n\n`;
 
-        // Code Quality Section
-        markdown += `## Code Quality\n\n`;
-        const codeQuality = analysisResults['Code Quality'] || analysisResults['codeQuality'];
-        if (codeQuality) {
-            markdown += this.formatAnalysisData('Code Quality', codeQuality);
-        } else {
-            markdown += `### Code Quality Analysis\n\nNo code quality data available.\n\n`;
-        }
-        markdown += `\n---\n\n`;
-
-        // Dependencies Section
-        markdown += `## Dependencies\n\n`;
-        const dependencies = analysisResults['Dependencies'] || analysisResults['dependencies'];
-        if (dependencies) {
-            markdown += this.formatAnalysisData('Dependencies', dependencies);
-        } else {
-            markdown += `### Dependencies Analysis\n\nNo dependencies data available.\n\n`;
-        }
-        markdown += `\n---\n\n`;
-
-        // Tech Stack Section
-        markdown += `## Tech Stack\n\n`;
-        const techStack = analysisResults['Tech Stack'] || analysisResults['techStack'];
-        if (techStack) {
-            markdown += this.formatAnalysisData('Tech Stack', techStack);
-        } else {
-            markdown += `### Tech Stack Analysis\n\nNo tech stack data available.\n\n`;
-        }
-        markdown += `\n---\n\n`;
-
-        // Performance Section
-        markdown += `## Performance\n\n`;
-        const performance = analysisResults['Performance'] || analysisResults['performance'];
-        if (performance) {
-            markdown += this.formatAnalysisData('Performance', performance);
-        } else {
-            markdown += `### Performance Analysis\n\nNo performance data available.\n\n`;
-        }
-        markdown += `\n---\n\n`;
-
-        // Security Section
-        markdown += `## Security\n\n`;
-        const security = analysisResults['Security'] || analysisResults['security'];
-        if (security) {
-            markdown += this.formatAnalysisData('Security', security);
-        } else {
-            markdown += `### Security Analysis\n\nNo security data available.\n\n`;
-        }
-        markdown += `\n---\n\n`;
-
-        // Refactoring Section
-        markdown += `## Refactoring\n\n`;
-        const refactoring = analysisResults['Refactoring'] || analysisResults['refactoring'];
-        if (refactoring) {
-            markdown += this.formatAnalysisData('Refactoring', refactoring);
-        } else {
-            markdown += `### Refactoring Analysis\n\nNo refactoring data available.\n\n`;
-        }
-        markdown += `\n---\n\n`;
-
-        // Generation Section
-        markdown += `## Generation\n\n`;
-        const generation = analysisResults['Generation'] || analysisResults['generation'];
-        if (generation) {
-            markdown += this.formatAnalysisData('Generation', generation);
-        } else {
-            markdown += `### Generation Analysis\n\nNo generation data available.\n\n`;
-        }
-        markdown += `\n---\n\n`;
-
-        // Suggestions Section
-        markdown += `## Suggestions\n\n`;
-        markdown += this.generateComprehensiveSuggestions(analysisResults);
-        markdown += `\n---\n\n`;
-
-        await fs.writeFile(filepath, markdown);
-        return { filepath, filename };
+        await fs.writeFile(indexFilepath, indexMarkdown);
+        
+        return { 
+            filepath: indexFilepath, 
+            filename: `${baseFilename}-index.md`,
+            sections: generatedFiles
+        };
     }
 
     generateComprehensiveSuggestions(analysisResults) {
@@ -187,7 +179,7 @@ class AnalysisOutputService {
             );
 
             if (highPriority.length > 0) {
-                suggestions += `#### 🔴 High Priority\n\n`;
+                suggestions += `#### High Priority\n\n`;
                 highPriority.forEach(rec => {
                     if (typeof rec.recommendation === 'string') {
                         suggestions += `- **${rec.type}:** ${rec.recommendation}\n`;
@@ -199,7 +191,7 @@ class AnalysisOutputService {
             }
 
             if (mediumPriority.length > 0) {
-                suggestions += `#### 🟡 Medium Priority\n\n`;
+                suggestions += `#### Medium Priority\n\n`;
                 mediumPriority.forEach(rec => {
                     if (typeof rec.recommendation === 'string') {
                         suggestions += `- **${rec.type}:** ${rec.recommendation}\n`;
@@ -211,7 +203,7 @@ class AnalysisOutputService {
             }
 
             if (lowPriority.length > 0) {
-                suggestions += `#### 🟢 Low Priority\n\n`;
+                suggestions += `#### Low Priority\n\n`;
                 lowPriority.forEach(rec => {
                     if (typeof rec.recommendation === 'string') {
                         suggestions += `- **${rec.type}:** ${rec.recommendation}\n`;
@@ -352,18 +344,18 @@ class AnalysisOutputService {
             
             if (data.configuration.linting) {
                 md += '#### Linting\n';
-                md += `- ESLint: ${data.configuration.linting.hasESLint ? '✅' : '❌'}\n`;
-                md += `- Prettier: ${data.configuration.linting.hasPrettier ? '✅' : '❌'}\n`;
-                md += `- Husky: ${data.configuration.linting.hasHusky ? '✅' : '❌'}\n`;
-                md += `- Lint-staged: ${data.configuration.linting.hasLintStaged ? '✅' : '❌'}\n`;
+                md += `- ESLint: ${data.configuration.linting.hasESLint ? 'Yes' : 'No'}\n`;
+                md += `- Prettier: ${data.configuration.linting.hasPrettier ? 'Yes' : 'No'}\n`;
+                md += `- Husky: ${data.configuration.linting.hasHusky ? 'Yes' : 'No'}\n`;
+                md += `- Lint-staged: ${data.configuration.linting.hasLintStaged ? 'Yes' : 'No'}\n`;
                 md += '\n';
             }
             
             if (data.configuration.formatting) {
                 md += '#### Formatting\n';
-                md += `- Prettier: ${data.configuration.formatting.hasPrettier ? '✅' : '❌'}\n`;
-                md += `- EditorConfig: ${data.configuration.formatting.hasEditorConfig ? '✅' : '❌'}\n`;
-                md += `- VSCode Settings: ${data.configuration.formatting.hasVSCodeSettings ? '✅' : '❌'}\n`;
+                md += `- Prettier: ${data.configuration.formatting.hasPrettier ? 'Yes' : 'No'}\n`;
+                md += `- EditorConfig: ${data.configuration.formatting.hasEditorConfig ? 'Yes' : 'No'}\n`;
+                md += `- VSCode Settings: ${data.configuration.formatting.hasVSCodeSettings ? 'Yes' : 'No'}\n`;
                 md += '\n';
             }
         }
@@ -408,8 +400,7 @@ class AnalysisOutputService {
             md += '|----------|------|-------------|------|\n';
             
             data.vulnerabilities.forEach(vuln => {
-                const severity = vuln.severity === 'high' ? '🔴' : vuln.severity === 'medium' ? '🟡' : '🟢';
-                md += `| ${severity} ${vuln.severity} | ${vuln.type} | ${vuln.description} | \`${vuln.file || 'N/A'}\` |\n`;
+                md += `| ${vuln.severity} | ${vuln.type} | ${vuln.description} | \`${vuln.file || 'N/A'}\` |\n`;
             });
             md += '\n';
         }
@@ -463,9 +454,9 @@ class AnalysisOutputService {
             md += '|--------|-------|--------|\n';
             
             Object.entries(perfMetrics).forEach(([metric, value]) => {
-                let status = '🟢 Good';
-                if (metric.includes('time') && value > 1000) status = '🔴 Slow';
-                else if (metric.includes('size') && value > 1000000) status = '🟡 Large';
+                let status = 'Good';
+                if (metric.includes('time') && value > 1000) status = 'Slow';
+                else if (metric.includes('size') && value > 1000000) status = 'Large';
                 
                 md += `| ${metric} | ${value} | ${status} |\n`;
             });
@@ -651,9 +642,9 @@ class AnalysisOutputService {
             if (data.structure.files && Array.isArray(data.structure.files)) {
                 md += '#### Files\n\n';
                 data.structure.files.forEach(file => {
-                    const icon = file.isDirectory ? '📁' : '📄';
+                    const type = file.isDirectory ? 'Directory' : 'File';
                     const size = file.size ? ` (${this.formatFileSize(file.size)})` : '';
-                    md += `- ${icon} \`${file.path}\`${size}\n`;
+                    md += `- ${type}: \`${file.path}\`${size}\n`;
                 });
                 md += '\n';
             }
@@ -708,7 +699,11 @@ class AnalysisOutputService {
             
             Object.entries(structureMetrics).forEach(([metric, value]) => {
                 if (value !== null && value !== undefined) {
-                    md += `| ${metric} | ${value} |\n`;
+                    if (typeof value === 'object') {
+                        md += `| ${metric} | ${JSON.stringify(value)} |\n`;
+                    } else {
+                        md += `| ${metric} | ${value} |\n`;
+                    }
                 }
             });
             md += '\n';
@@ -784,8 +779,7 @@ class AnalysisOutputService {
                 md += '| Severity | Package | Description |\n';
                 md += '|----------|---------|-------------|\n';
                 deps.vulnerabilities.forEach(vuln => {
-                    const severity = vuln.severity === 'high' ? '🔴' : vuln.severity === 'medium' ? '🟡' : '🟢';
-                    md += `| ${severity} ${vuln.severity} | \`${vuln.package}\` | ${vuln.description} |\n`;
+                    md += `| ${vuln.severity} | \`${vuln.package}\` | ${vuln.description} |\n`;
                 });
                 md += '\n';
             }
@@ -1048,4 +1042,4 @@ class AnalysisOutputService {
     }
 }
 
-module.exports = AnalysisOutputService; 
+module.exports = AnalysisOutputService;
