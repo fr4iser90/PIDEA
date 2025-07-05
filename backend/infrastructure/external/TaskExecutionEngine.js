@@ -76,14 +76,44 @@ class TaskExecutionEngine {
             dockerService: this.dockerService
         };
 
-        this.analysisService = new AnalysisService(serviceDependencies, this.logger);
-        this.scriptService = new ScriptService(serviceDependencies, this.logger);
-        this.optimizationService = new OptimizationService(serviceDependencies, this.logger);
-        this.securityService = new SecurityService(serviceDependencies, this.logger);
-        this.refactoringService = new RefactoringService(serviceDependencies, this.logger);
-        this.testingService = new TestingService(serviceDependencies, this.logger);
-        this.deploymentService = new DeploymentService(serviceDependencies, this.logger);
-        this.customTaskService = new CustomTaskService(serviceDependencies, this.logger);
+        // Use DI system for service creation
+        const { getServiceRegistry } = require('../di/ServiceRegistry');
+        const registry = getServiceRegistry();
+        
+        // Register serviceDependencies in DI container if not already present
+        if (!registry.getContainer().factories.has('serviceDependencies')) {
+            registry.getContainer().register('serviceDependencies', () => serviceDependencies, { singleton: true });
+        }
+        
+        // Register services if not already registered
+        const servicesToRegister = [
+            { name: 'analysisService', class: AnalysisService },
+            { name: 'scriptService', class: ScriptService },
+            { name: 'optimizationService', class: OptimizationService },
+            { name: 'securityService', class: SecurityService },
+            { name: 'refactoringService', class: RefactoringService },
+            { name: 'testingService', class: TestingService },
+            { name: 'deploymentService', class: DeploymentService },
+            { name: 'customTaskService', class: CustomTaskService }
+        ];
+        
+        servicesToRegister.forEach(({ name, class: ServiceClass }) => {
+            if (!registry.getContainer().factories.has(name)) {
+                registry.getContainer().register(name, (serviceDependencies, logger) => {
+                    return new ServiceClass(serviceDependencies, logger);
+                }, { singleton: true, dependencies: ['serviceDependencies', 'logger'] });
+            }
+        });
+        
+        // Get services through DI
+        this.analysisService = registry.getService('analysisService');
+        this.scriptService = registry.getService('scriptService');
+        this.optimizationService = registry.getService('optimizationService');
+        this.securityService = registry.getService('securityService');
+        this.refactoringService = registry.getService('refactoringService');
+        this.testingService = registry.getService('testingService');
+        this.deploymentService = registry.getService('deploymentService');
+        this.customTaskService = registry.getService('customTaskService');
     }
 
     /**

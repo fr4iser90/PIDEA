@@ -209,6 +209,22 @@ class Application {
   async initializeInfrastructure() {
     this.logger.info('[Application] Initializing infrastructure...');
 
+    // Initialize DI system first
+    const { getServiceRegistry } = require('./infrastructure/di/ServiceRegistry');
+    const { getProjectContextService } = require('./infrastructure/di/ProjectContextService');
+    
+    this.serviceRegistry = getServiceRegistry();
+    this.projectContext = getProjectContextService();
+    
+    // Register all services (including handlers)
+    this.serviceRegistry.registerAllServices();
+    
+    // Register the logger service with the actual logger instance
+    this.serviceRegistry.getContainer().registerSingleton('logger', this.logger);
+    
+    // Replace the DI container's database connection with the properly configured one
+    this.serviceRegistry.getContainer().registerSingleton('databaseConnection', this.databaseConnection);
+
     this.browserManager = new BrowserManager();
     this.ideManager = new IDEManager(this.browserManager);
     this.chatRepository = new InMemoryChatRepository();
@@ -230,147 +246,85 @@ class Application {
     // Initialize file system service for strategies
     this.fileSystemService = new (require('./domain/services/FileSystemService'))();
 
-    // Initialize strategies
-    this.monorepoStrategy = new (require('./infrastructure/strategies/MonorepoStrategy'))({
-      logger: this.logger,
-      eventBus: this.eventBus,
-      fileSystemService: this.fileSystemService
-    });
+    // Register remaining services
+    this.serviceRegistry.registerRepositoryServices();
+    this.serviceRegistry.registerDomainServices();
+    this.serviceRegistry.registerExternalServices();
+    this.serviceRegistry.registerStrategyServices();
 
-    this.singleRepoStrategy = new (require('./infrastructure/strategies/SingleRepoStrategy'))({
-      logger: this.logger,
-      eventBus: this.eventBus,
-      fileSystemService: this.fileSystemService
-    });
+    // Get strategies through DI
+    this.monorepoStrategy = this.serviceRegistry.getService('monorepoStrategy');
+    this.singleRepoStrategy = this.serviceRegistry.getService('singleRepoStrategy');
 
-    this.logger.info('[Application] Infrastructure initialized');
+    this.logger.info('[Application] Infrastructure initialized with DI');
   }
 
   async initializeDomainServices() {
-    this.logger.info('[Application] Initializing domain services...');
+    this.logger.info('[Application] Initializing domain services with DI...');
 
-    this.cursorIDEService = new CursorIDEService(this.browserManager, this.ideManager, this.eventBus);
+    // Set up project context
+    await this.setupProjectContext();
+
+    // Get services through DI container
+    this.cursorIDEService = this.serviceRegistry.getService('cursorIDEService');
+    this.authService = this.serviceRegistry.getService('authService');
+    this.aiService = this.serviceRegistry.getService('aiService');
+    this.projectAnalyzer = this.serviceRegistry.getService('projectAnalyzer');
+    this.codeQualityAnalyzer = this.serviceRegistry.getService('codeQualityAnalyzer');
+    this.securityAnalyzer = this.serviceRegistry.getService('securityAnalyzer');
+    this.performanceAnalyzer = this.serviceRegistry.getService('performanceAnalyzer');
+    this.architectureAnalyzer = this.serviceRegistry.getService('architectureAnalyzer');
+    this.techStackAnalyzer = this.serviceRegistry.getService('techStackAnalyzer');
+    this.subprojectDetector = this.serviceRegistry.getService('subprojectDetector');
+    this.analysisOutputService = this.serviceRegistry.getService('analysisOutputService');
+    this.analysisRepository = this.serviceRegistry.getService('analysisRepository');
+    this.projectMappingService = this.serviceRegistry.getService('projectMappingService');
+    this.taskRepository = this.serviceRegistry.getService('taskRepository');
+    this.taskExecutionRepository = this.serviceRegistry.getService('taskExecutionRepository');
+    this.taskService = this.serviceRegistry.getService('taskService');
+    this.taskExecutionService = this.serviceRegistry.getService('taskExecutionService');
+    this.taskValidationService = this.serviceRegistry.getService('taskValidationService');
+    this.taskAnalysisService = this.serviceRegistry.getService('taskAnalysisService');
+    this.codeQualityService = this.serviceRegistry.getService('codeQualityService');
+    this.securityService = this.serviceRegistry.getService('securityService');
+    this.performanceService = this.serviceRegistry.getService('performanceService');
+    this.architectureService = this.serviceRegistry.getService('architectureService');
+    this.dependencyAnalyzer = this.serviceRegistry.getService('dependencyAnalyzer');
+    this.monorepoStrategy = this.serviceRegistry.getService('monorepoStrategy');
+    this.singleRepoStrategy = this.serviceRegistry.getService('singleRepoStrategy');
+
+    this.logger.info('[Application] Domain services initialized with DI');
+  }
+
+  async setupProjectContext() {
+    this.logger.info('[Application] Setting up project context...');
     
-    this.authService = new AuthService(
-      this.userRepository,
-      this.userSessionRepository,
-      this.autoSecurityManager.getJWTSecret(),
-      this.autoSecurityManager.getJWTRefreshSecret()
-    );
-
-    // Initialize AI and analysis services
-    this.aiService = new AIService();
-    this.projectAnalyzer = new ProjectAnalyzer();
-    this.codeQualityAnalyzer = new CodeQualityAnalyzer();
-    this.securityAnalyzer = new SecurityAnalyzer();
-    this.performanceAnalyzer = new PerformanceAnalyzer();
-    this.architectureAnalyzer = new ArchitectureAnalyzer();
-    this.techStackAnalyzer = new (require('./infrastructure/external/TechStackAnalyzer'))();
-    this.subprojectDetector = new (require('./domain/services/SubprojectDetector'))();
-
-    // Initialize analysis output service and repository
-    this.analysisOutputService = new (require('./domain/services/AnalysisOutputService'))();
-    this.analysisRepository = new (require('./infrastructure/database/InMemoryAnalysisRepository'))();
-
-    // Initialize project mapping service
-    this.projectMappingService = new (require('./domain/services/ProjectMappingService'))();
-
-    // Initialize task repository and services
-    this.taskRepository = new InMemoryTaskRepository();
-    this.taskExecutionRepository = new (require('./infrastructure/database/InMemoryTaskExecutionRepository'))();
-    this.taskService = new TaskService(this.taskRepository, this.aiService, this.projectAnalyzer, this.cursorIDEService);
+    // Auto-detect project path
+    const projectPath = await this.projectContext.autoDetectProjectPath();
     
-    // Initialize TaskExecutionService for proper task execution
-    this.taskExecutionService = new (require('./domain/services/TaskExecutionService'))(
-      this.taskRepository,
-      this.taskExecutionRepository,
-      this.cursorIDEService,
-      this.eventBus,
-      this.logger
-    );
-    
-    // Initialize task validation service
-    this.taskValidationService = new TaskValidationService(
-      this.taskRepository,
-      new (require('./infrastructure/database/InMemoryTaskExecutionRepository'))(),
-      this.cursorIDEService,
-      this.eventBus,
-      new (require('./infrastructure/external/FileSystemService'))()
-    );
-
-    this.taskAnalysisService = new (require('./domain/services/TaskAnalysisService'))(
-      this.cursorIDEService,
-      this.eventBus,
-      this.logger,
-      this.aiService,
-      this.projectAnalyzer
-    );
-
-    // Initialize specialized analysis services
-    this.codeQualityService = new (require('./domain/services/CodeQualityService'))(
-      this.codeQualityAnalyzer,
-      this.eventBus,
-      this.logger,
-      this.analysisOutputService,
-      this.analysisRepository
-    );
-
-    this.securityService = new (require('./domain/services/SecurityService'))(
-      this.securityAnalyzer,
-      this.eventBus,
-      this.logger,
-      this.analysisOutputService,
-      this.analysisRepository
-    );
-
-    this.performanceService = new (require('./domain/services/PerformanceService'))(
-      this.performanceAnalyzer,
-      this.eventBus,
-      this.logger,
-      this.analysisOutputService,
-      this.analysisRepository
-    );
-
-    this.architectureService = new (require('./domain/services/ArchitectureService'))(
-      this.architectureAnalyzer,
-      this.eventBus,
-      this.logger,
-      this.analysisOutputService,
-      this.analysisRepository
-    );
-
-    // Initialize dependency analyzer with strategies
-    this.dependencyAnalyzer = new (require('./infrastructure/external/DependencyAnalyzer'))({
-      monorepoStrategy: this.monorepoStrategy,
-      singleRepoStrategy: this.singleRepoStrategy
+    // Set project context
+    await this.projectContext.setProjectContext({
+      projectPath: projectPath || process.env.PROJECT_PATH,
+      projectId: process.env.PROJECT_ID,
+      workspacePath: process.env.WORKSPACE_PATH
     });
 
-    this.logger.info('[Application] Domain services initialized');
+    // Validate project context
+    const validation = await this.projectContext.validateProjectContext();
+    if (!validation.isValid) {
+      this.logger.warn('[Application] Project context validation warnings:', validation.warnings);
+    } else {
+      this.logger.info('[Application] Project context validated successfully');
+    }
   }
 
   async initializeApplicationHandlers() {
-    this.logger.info('[Application] Initializing application handlers...');
+    this.logger.info('[Application] Initializing application handlers with DI...');
 
-    this.sendMessageHandler = new SendMessageHandler({
-      messagingService: this.cursorIDEService,
-      eventBus: this.eventBus,
-      logger: this.logger
-    });
-
-    this.getChatHistoryHandler = new GetChatHistoryHandler(
-      this.chatRepository,
-      this.cursorIDEService
-    );
-
-    this.createTaskHandler = new CreateTaskHandler({
-      taskRepository: this.taskRepository,
-      taskTemplateRepository: new (require('./infrastructure/database/SQLiteTaskTemplateRepository'))(this.databaseConnection.connection),
-      taskSuggestionRepository: new (require('./infrastructure/database/SQLiteTaskSuggestionRepository'))(this.databaseConnection.connection),
-      taskValidationService: this.taskValidationService,
-      taskGenerationService: new (require('./domain/services/TaskGenerationService'))(this.eventBus, this.logger),
-      eventBus: this.eventBus,
-      logger: this.logger
-    });
+    // Get handlers through DI container
+    this.sendMessageHandler = this.serviceRegistry.getService('sendMessageHandler');
+    this.getChatHistoryHandler = this.serviceRegistry.getService('getChatHistoryHandler');
+    this.createTaskHandler = this.serviceRegistry.getService('createTaskHandler');
 
     // Initialize Analyze Handlers
     this.analyzeArchitectureHandler = new AnalyzeArchitectureHandler({

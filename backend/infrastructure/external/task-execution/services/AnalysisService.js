@@ -22,7 +22,9 @@ class AnalysisService {
             execution.progress = 10;
 
             // Get project path
-            const projectPath = execution.task.projectPath || execution.options.projectPath;
+            const { getProjectContextService } = require('../../../di/ProjectContextService');
+            const projectContext = getProjectContextService();
+            const projectPath = await projectContext.getProjectPath();
             if (!projectPath) {
                 throw new Error('Project path is required for analysis task');
             }

@@ -80,7 +80,9 @@ class TestingService {
      */
     async installTestDependencies(target, execution) {
         try {
-            const projectPath = execution.options.projectPath;
+            const { getProjectContextService } = require('../../../di/ProjectContextService');
+            const projectContext = getProjectContextService();
+            const projectPath = await projectContext.getProjectPath();
             
             // Check if package.json exists
             const packageJsonPath = `${projectPath}/package.json`;
@@ -118,7 +120,9 @@ class TestingService {
      */
     async runTests(target, testType, execution) {
         try {
-            const projectPath = execution.options.projectPath;
+            const { getProjectContextService } = require('../../../di/ProjectContextService');
+            const projectContext = getProjectContextService();
+            const projectPath = await projectContext.getProjectPath();
             let testCommand = '';
             let testResults = {};
 

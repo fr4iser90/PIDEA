@@ -44,8 +44,21 @@ class SingleRepoStrategy {
         this.deploymentAnalyzer = new DeploymentAnalyzer(this.logger, this.fileUtils);
         this.performanceAnalyzer = new PerformanceAnalyzer(this.logger, this.fileUtils);
         this.securityAnalyzer = new SecurityAnalyzer(this.logger, this.fileUtils);
-        this.recommendationsService = new RecommendationsService(this.logger);
-        this.optimizationService = new OptimizationService(this.logger);
+        // Use DI system for service creation
+        const { getServiceRegistry } = require('../di/ServiceRegistry');
+        const registry = getServiceRegistry();
+        
+        // Get services through DI (they should already be registered)
+        try {
+            this.recommendationsService = registry.getService('recommendationsService');
+            this.optimizationService = registry.getService('optimizationService');
+        } catch (error) {
+            // Fallback to direct instantiation if services not registered
+            const RecommendationsService = require('./single-repo/services/recommendationsService');
+            const OptimizationService = require('./single-repo/services/optimizationService');
+            this.recommendationsService = new RecommendationsService(this.logger);
+            this.optimizationService = new OptimizationService(this.logger);
+        }
 
         // Initialize validators
         this.repositoryTypeValidator = new RepositoryTypeValidator(this.logger, this.fileUtils);

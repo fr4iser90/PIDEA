@@ -2,7 +2,19 @@ const IDEMirrorService = require('../../domain/services/IDEMirrorService');
 
 class IDEMirrorController {
     constructor() {
-        this.ideMirrorService = new IDEMirrorService();
+        // Use DI system for service creation
+    const { getServiceRegistry } = require('../../infrastructure/di/ServiceRegistry');
+    const registry = getServiceRegistry();
+    
+    // Register service if not already registered
+    if (!registry.getContainer().factories.has('ideMirrorService')) {
+        registry.getContainer().register('ideMirrorService', () => {
+            const IDEMirrorService = require('../../domain/services/IDEMirrorService');
+            return new IDEMirrorService();
+        }, { singleton: true });
+    }
+    
+    this.ideMirrorService = registry.getService('ideMirrorService');
         this.connectedClients = new Set();
         
         // Message queue for sequential processing

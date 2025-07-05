@@ -42,8 +42,11 @@ class ExecutionUtils {
     async prepareExecutionContext(execution) {
         const { task, options } = execution;
         
-        // Get project path
-        const projectPath = task.projectPath || options.projectPath;
+        // Get project path using centralized service
+        const { getProjectContextService } = require('../../di/ProjectContextService');
+        const projectContext = getProjectContextService();
+        const projectPath = await projectContext.getProjectPath();
+        
         if (!projectPath) {
             throw new Error('Project path is required for execution');
         }
@@ -119,7 +122,9 @@ class ExecutionUtils {
             throw new Error('FileSystemService is required for collecting project data');
         }
 
-        const projectPath = execution.options.projectPath;
+        const { getProjectContextService } = require('../../di/ProjectContextService');
+        const projectContext = getProjectContextService();
+        const projectPath = await projectContext.getProjectPath();
         const files = await this.getTargetFiles(target, execution);
 
         // Get project structure

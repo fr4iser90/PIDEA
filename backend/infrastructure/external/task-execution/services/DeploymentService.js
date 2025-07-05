@@ -89,7 +89,9 @@ class DeploymentService {
      */
     async buildApplication(target, execution) {
         try {
-            const projectPath = execution.options.projectPath;
+            const { getProjectContextService } = require('../../../di/ProjectContextService');
+            const projectContext = getProjectContextService();
+            const projectPath = await projectContext.getProjectPath();
             let buildCommand = '';
 
             // Determine build command based on project type
@@ -147,7 +149,9 @@ class DeploymentService {
         };
 
         try {
-            const projectPath = execution.options.projectPath;
+            const { getProjectContextService } = require('../../../di/ProjectContextService');
+            const projectContext = getProjectContextService();
+            const projectPath = await projectContext.getProjectPath();
 
             // Check if build artifacts exist
             const buildArtifacts = await this.checkBuildArtifacts(projectPath);
@@ -204,7 +208,9 @@ class DeploymentService {
      */
     async deployApplication(target, environment, deploymentType, execution) {
         try {
-            const projectPath = execution.options.projectPath;
+            const { getProjectContextService } = require('../../../di/ProjectContextService');
+            const projectContext = getProjectContextService();
+            const projectPath = await projectContext.getProjectPath();
 
             switch (deploymentType) {
                 case EXECUTION_CONSTANTS.DEPLOYMENT_TYPES.LOCAL:

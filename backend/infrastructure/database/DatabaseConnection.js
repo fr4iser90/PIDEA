@@ -69,7 +69,7 @@ class DatabaseConnection {
     }
 
     return new Promise((resolve, reject) => {
-      const db = new sqlite3.Database(dbPath, (err) => {
+      const db = new sqlite3.Database(dbPath, async (err) => {
         if (err) {
           reject(err);
         } else {
@@ -77,7 +77,13 @@ class DatabaseConnection {
           this.type = 'sqlite';
           this.isConnected = true;
           db.run('PRAGMA foreign_keys = ON');
-          this.runMigrations().then(resolve).catch(reject);
+          try {
+            await this.runMigrations();
+            console.log('✅ [DatabaseConnection] SQLite connected successfully');
+            resolve();
+          } catch (error) {
+            reject(error);
+          }
         }
       });
     });
@@ -89,7 +95,7 @@ class DatabaseConnection {
       await this.connectSQLite();
     } else if (this.config.fallback.type === 'memory') {
       return new Promise((resolve, reject) => {
-        const db = new sqlite3.Database(':memory:', (err) => {
+        const db = new sqlite3.Database(':memory:', async (err) => {
           if (err) {
             reject(err);
           } else {
@@ -97,7 +103,13 @@ class DatabaseConnection {
             this.type = 'memory';
             this.isConnected = true;
             db.run('PRAGMA foreign_keys = ON');
-            this.runMigrations().then(resolve).catch(reject);
+            try {
+              await this.runMigrations();
+              console.log('✅ [DatabaseConnection] Memory database connected successfully');
+              resolve();
+            } catch (error) {
+              reject(error);
+            }
           }
         });
       });
@@ -297,7 +309,7 @@ class DatabaseConnection {
     return this.type;
   }
 
-  isConnected() {
+  getConnectionStatus() {
     return this.isConnected;
   }
 }
