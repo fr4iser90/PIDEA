@@ -1,66 +1,58 @@
 # Test Generation Workflow Implementation
 
 ## 1. Project Overview
-- **Feature/Component Name**: Test Generation Workflow
+- **Feature/Component Name**: Test Generation Workflow Integration
 - **Priority**: High
-- **Estimated Time**: 8-12 hours
-- **Dependencies**: Existing GenerateTestsHandler, TestingService, CodeQualityAnalyzer
-- **Related Issues**: Low test coverage (1.4%), need automated test generation
+- **Estimated Time**: 4-6 hours (reduced due to existing infrastructure)
+- **Dependencies**: Existing GenerateTestsHandler, TestingService, TaskService
+- **Related Issues**: Low test coverage (1.4%), need automated test generation in refactor workflow
 
 ## 2. Technical Requirements
-- **Tech Stack**: Node.js, Jest, Mocha, Vitest, Playwright
+- **Tech Stack**: Node.js, Jest, Mocha, Vitest, Playwright (existing)
 - **Architecture Pattern**: Command Pattern (existing)
 - **Database Changes**: None
-- **API Changes**: New test generation endpoints
+- **API Changes**: Extend existing refactor endpoints
 - **Frontend Changes**: Test generation UI components
-- **Backend Changes**: Enhanced test generation services
+- **Backend Changes**: Integrate test generation into existing refactor workflow
 
 ## 3. File Impact Analysis
 
 ### Files to Modify:
-- [ ] `backend/domain/services/TaskService.js` - Add test generation step to refactor workflow
-- [ ] `backend/application/handlers/generate/GenerateTestsHandler.js` - Enhance with file-by-file analysis
-- [ ] `backend/infrastructure/external/task-execution/services/TestingService.js` - Add test execution after generation
-- [ ] `backend/domain/services/chat/ChatMessageHandler.js` - Add test generation prompts
-- [ ] `backend/infrastructure/external/CodeQualityAnalyzer.js` - Enhance testability analysis
+- [x] `backend/domain/services/TaskService.js` - Extend refactor workflow with test generation steps
+- [x] `backend/application/handlers/generate/GenerateTestsHandler.js` - Enhance with test execution and debug reporting
+- [x] `backend/infrastructure/external/task-execution/services/TestingService.js` - Add test execution after generation
+- [x] `backend/infrastructure/templates/AIPrompts.js` - Add test generation prompts to existing AI prompts
+- [x] `backend/domain/services/chat/ChatMessageHandler.js` - Add test generation prompts
+- [x] `backend/infrastructure/external/CodeQualityAnalyzer.js` - Enhance testability analysis
 
 ### Files to Create:
-- [ ] `backend/domain/services/TestGenerationWorkflowService.js` - Main workflow orchestration
-- [ ] `backend/infrastructure/external/task-execution/services/TestGenerationService.js` - Enhanced test generation
-- [ ] `backend/application/handlers/test/TestGenerationWorkflowHandler.js` - Workflow handler
-- [ ] `backend/application/commands/test/TestGenerationWorkflowCommand.js` - Workflow command
-- [ ] `framework/prompts/testing/test-generation-workflow.md` - AI prompts for test generation
+- [ ] `backend/tests/unit/services/TestGenerationWorkflow.test.js` - Unit tests for workflow integration
+- [ ] `backend/tests/integration/TestGenerationWorkflow.test.js` - Integration tests
 
 ### Files to Delete:
 - [ ] None
 
 ## 4. Implementation Phases
 
-### Phase 1: Foundation Setup
-- [ ] Create TestGenerationWorkflowService
-- [ ] Enhance existing test analysis capabilities
-- [ ] Create test generation prompts
-- [ ] Set up file-by-file analysis
+### Phase 1: Integration Setup (1-2 hours)
+- [ ] Extend TaskService.js refactor workflow with test generation steps
+- [ ] Enhance GenerateTestsHandler with test execution capabilities
+- [ ] Add test generation prompts to existing AIPrompts.js
+- [ ] Add test generation options to task configuration
 
-### Phase 2: Core Implementation
-- [ ] Implement test generation workflow
-- [ ] Add AI-powered test creation
-- [ ] Implement test execution pipeline
-- [ ] Add coverage analysis
-
-### Phase 3: Integration
-- [ ] Integrate with existing refactor workflow
-- [ ] Connect with chat system
+### Phase 2: Core Integration (2-3 hours)
+- [ ] Integrate test generation into existing refactor workflow
 - [ ] Add test execution after generation
 - [ ] Implement debug reporting
+- [ ] Add coverage analysis integration
 
-### Phase 4: Testing & Documentation
-- [ ] Write unit tests for new services
-- [ ] Test workflow integration
+### Phase 3: Testing & Documentation (1 hour)
+- [ ] Write unit tests for workflow integration
+- [ ] Test end-to-end workflow
 - [ ] Update documentation
 - [ ] Create user guides
 
-### Phase 5: Deployment & Validation
+### Phase 4: Deployment & Validation
 - [ ] Deploy to staging
 - [ ] Test with real projects
 - [ ] Fix issues
@@ -91,8 +83,8 @@
 ## 8. Testing Strategy
 
 ### Unit Tests:
-- [ ] Test file: `backend/tests/unit/services/TestGenerationWorkflowService.test.js`
-- [ ] Test cases: Workflow orchestration, file analysis, AI integration
+- [ ] Test file: `backend/tests/unit/services/TestGenerationWorkflow.test.js`
+- [ ] Test cases: Workflow integration, test execution, AI integration
 - [ ] Mock requirements: AI service, file system, test execution
 
 ### Integration Tests:
@@ -177,130 +169,253 @@
 
 ## Implementation Details
 
-### Test Generation Workflow Service
+### Enhanced TaskService Integration
 ```javascript
-class TestGenerationWorkflowService {
-  async executeWorkflow(projectPath, options) {
-    // 1. Analyze project structure
-    const analysis = await this.analyzeProject(projectPath);
+// Enhanced refactor workflow in TaskService.js
+async executeRefactoringWorkflow(task) {
+  // Step 1: Git Branch ✅ (existing)
+  await this.createRefactoringBranch(task);
+  
+  // Step 2: AI Refactoring ✅ (existing)
+  await this.executeAIRefactoring(task);
+  
+  // Step 3: Chat Integration ✅ (existing)
+  await this.sendRefactoringPrompt(task);
+  
+  // Step 4: Test Generation 🆕 (new)
+  if (task.options.includeTestGeneration) {
+    await this.executeTestGenerationWorkflow(task);
+  }
+}
+
+async executeTestGenerationWorkflow(task) {
+  // Use existing AIPrompts for test generation
+  const aiPrompts = new AIPrompts();
+  const testPrompt = aiPrompts.generatePrompt('testing', 'testGenerationWorkflow', {
+    FILE_PATH: task.metadata.filePath,
+    PURPOSE: task.description || 'Refactored code',
+    TECH_STACK: task.metadata.techStack || 'Node.js, JavaScript',
+    TESTING_FRAMEWORK: task.options.testFramework || 'jest',
+    REFACTORING_CHANGES: task.metadata.refactoringChanges || 'Code refactoring'
+  });
+  
+  // Use existing GenerateTestsHandler
+  const testHandler = new GenerateTestsHandler({
+    eventBus: this.eventBus,
+    analysisRepository: this.analysisRepository
+  });
+  
+  // Generate tests using AI prompt
+  const testResults = await testHandler.handle({
+    projectPath: task.metadata.projectPath,
+    options: task.options.testOptions || {
+      generateUnitTests: true,
+      generateIntegrationTests: false,
+      testFramework: 'jest',
+      includeMocks: true
+    },
+    aiPrompt: testPrompt
+  });
+  
+  // Execute generated tests using existing TestingService
+  const testingService = new TestingService({
+    aiService: this.aiService,
+    fileSystemService: this.fileSystemService,
+    scriptExecutor: this.scriptExecutor
+  });
+  
+  const executionResults = await testingService.executeTestingTask({
+    target: task.metadata.projectPath,
+    testType: 'unit',
+    options: {
+      projectPath: task.metadata.projectPath,
+      timeout: 300000
+    }
+  });
+  
+  // Generate debug report using AI prompt
+  const debugPrompt = aiPrompts.generatePrompt('testing', 'testExecutionValidation', {
+    TEST_RESULTS: `${executionResults.summary?.passedTests || 0} passed, ${executionResults.summary?.failedTests || 0} failed`,
+    FAILED_TESTS: executionResults.failures?.map(f => f.test).join(', ') || 'None',
+    COVERAGE_REPORT: `${executionResults.summary?.coverage || 0}% overall coverage`,
+    EXECUTION_ERRORS: executionResults.error || 'None'
+  });
+  
+  const debugReport = await this.generateDebugReport(testResults, executionResults, debugPrompt);
+  
+  return { testResults, executionResults, debugReport };
+}
+```
+
+### Enhanced GenerateTestsHandler
+```javascript
+// Extend existing GenerateTestsHandler.js
+class GenerateTestsHandler {
+  // ... existing methods ...
+  
+  async executeGeneratedTests(testResults, options) {
+    const testingService = new TestingService({
+      aiService: this.aiService,
+      fileSystemService: this.fileSystemService,
+      scriptExecutor: this.scriptExecutor
+    });
     
-    // 2. Generate tests file by file
-    const testResults = await this.generateTestsForFiles(analysis.files);
-    
-    // 3. Execute generated tests
-    const executionResults = await this.executeGeneratedTests(testResults);
-    
-    // 4. Analyze coverage and quality
-    const coverageAnalysis = await this.analyzeCoverage(executionResults);
-    
-    // 5. Generate debug report
-    const debugReport = await this.generateDebugReport(executionResults);
-    
+    return await testingService.executeTestingTask({
+      target: options.projectPath,
+      testType: 'unit',
+      options: {
+        projectPath: options.projectPath,
+        timeout: options.timeout || 300000
+      }
+    });
+  }
+  
+  async generateDebugReport(testResults, executionResults) {
     return {
-      analysis,
-      testResults,
-      executionResults,
-      coverageAnalysis,
-      debugReport
+      testGeneration: {
+        filesGenerated: testResults.files?.length || 0,
+        totalTests: testResults.totalTests || 0,
+        framework: testResults.framework
+      },
+      testExecution: {
+        totalTests: executionResults.summary?.totalTests || 0,
+        passedTests: executionResults.summary?.passedTests || 0,
+        failedTests: executionResults.summary?.failedTests || 0,
+        coverage: executionResults.summary?.coverage || 0,
+        duration: executionResults.metrics?.testDuration || 0
+      },
+      recommendations: this.generateRecommendations(testResults, executionResults)
+    };
+  }
+  
+  generateRecommendations(testResults, executionResults) {
+    const recommendations = [];
+    
+    if (executionResults.summary?.failedTests > 0) {
+      recommendations.push('Some tests failed - review generated test logic');
+    }
+    
+    if (executionResults.summary?.coverage < 80) {
+      recommendations.push('Coverage below 80% - consider additional test cases');
+    }
+    
+    return recommendations;
+  }
+}
+```
+
+### Enhanced AIPrompts.js Integration
+```javascript
+// Erweitere backend/infrastructure/templates/AIPrompts.js
+class AIPrompts {
+  // ... existing methods ...
+  
+  getTestingPrompts() {
+    return {
+      // ... existing testing prompts ...
+      
+      testGenerationWorkflow: {
+        name: 'Test Generation Workflow',
+        description: 'Generate comprehensive tests for refactored code',
+        category: 'testing',
+        prompt: `Generate comprehensive tests for the following refactored code:
+
+Test Context:
+- File Path: {{FILE_PATH}}
+- Code Purpose: {{PURPOSE}}
+- Technology Stack: {{TECH_STACK}}
+- Testing Framework: {{TESTING_FRAMEWORK}}
+- Refactoring Changes: {{REFACTORING_CHANGES}}
+
+Please generate:
+1. **Unit Tests**: Comprehensive unit tests for all refactored functions
+2. **Integration Tests**: Integration tests for component interactions
+3. **Edge Cases**: Tests for edge cases and error conditions
+4. **Mock Data**: Appropriate mock data and fixtures
+5. **Test Utilities**: Helper functions for testing
+6. **Test Configuration**: Test setup and configuration
+7. **Coverage Goals**: Achieve >80% code coverage
+8. **Performance Tests**: Performance testing if applicable
+9. **Accessibility Tests**: Accessibility testing if applicable
+10. **Documentation**: Test documentation and examples
+
+Focus on testing the refactored code structure and ensuring all changes are properly covered.
+
+Include test examples with proper assertions and error handling.`,
+        variables: {
+          FILE_PATH: 'src/components/UserService.js',
+          PURPOSE: 'User authentication service',
+          TECH_STACK: 'Node.js, Express, JWT',
+          TESTING_FRAMEWORK: 'Jest',
+          REFACTORING_CHANGES: 'Extracted functions, improved error handling'
+        }
+      },
+
+      testExecutionValidation: {
+        name: 'Test Execution Validation',
+        description: 'Validate and debug test execution results',
+        category: 'testing',
+        prompt: `Analyze the following test execution results and provide debugging guidance:
+
+Test Execution Context:
+- Test Results: {{TEST_RESULTS}}
+- Failed Tests: {{FAILED_TESTS}}
+- Coverage Report: {{COVERAGE_REPORT}}
+- Execution Errors: {{EXECUTION_ERRORS}}
+
+Please analyze:
+1. **Test Failures**: Identify root causes of test failures
+2. **Coverage Gaps**: Identify areas with insufficient coverage
+3. **Test Quality**: Assess test quality and reliability
+4. **Performance Issues**: Identify slow or flaky tests
+5. **Mock Issues**: Identify mock configuration problems
+6. **Environment Issues**: Identify environment-related problems
+7. **Test Data Issues**: Identify test data problems
+8. **Assertion Issues**: Identify assertion logic problems
+9. **Setup Issues**: Identify test setup problems
+10. **Recommendations**: Provide specific fix recommendations
+
+Provide actionable debugging steps and code examples for fixes.`,
+        variables: {
+          TEST_RESULTS: '15 passed, 3 failed',
+          FAILED_TESTS: 'UserService.test.js:45, AuthService.test.js:12',
+          COVERAGE_REPORT: '75% overall coverage',
+          EXECUTION_ERRORS: 'Timeout errors in integration tests'
+        }
+      }
     };
   }
 }
 ```
 
-### AI Test Generation Prompts
-```javascript
-const testGenerationPrompts = {
-  unitTest: `
-    Analyze the following code and create comprehensive unit tests:
-    
-    File: {filePath}
-    Code:
-    {code}
-    
-    Requirements:
-    1. Use {framework} testing framework
-    2. Test all public methods and functions
-    3. Include edge cases and error scenarios
-    4. Mock external dependencies
-    5. Achieve >80% code coverage
-    6. Follow AAA pattern (Arrange, Act, Assert)
-    7. Use descriptive test names
-    8. Include setup and teardown if needed
-    
-    Generate the complete test file with all necessary imports and configurations.
-  `,
-  
-  integrationTest: `
-    Create integration tests for the following component:
-    
-    Component: {componentName}
-    Dependencies: {dependencies}
-    
-    Requirements:
-    1. Test component integration with dependencies
-    2. Test data flow between components
-    3. Test error handling and edge cases
-    4. Use realistic test data
-    5. Test both success and failure scenarios
-  `
-};
-```
-
-### Workflow Integration
-```javascript
-// Enhanced refactor workflow
-async executeRefactoringWorkflow(task) {
-  // Step 1: Git Branch ✅
-  await this.createRefactoringBranch(task);
-  
-  // Step 2: AI Refactoring ✅
-  await this.executeAIRefactoring(task);
-  
-  // Step 3: Chat Integration ✅
-  await this.sendRefactoringPrompt(task);
-  
-  // Step 4: Wait for AI Response 🆕
-  await this.waitForAIResponse(task);
-  
-  // Step 5: Generate Tests 🆕
-  await this.generateTestsForRefactoredCode(task);
-  
-  // Step 6: Execute Tests 🆕
-  await this.executeGeneratedTests(task);
-  
-  // Step 7: Debug Report 🆕
-  await this.generateDebugReport(task);
-}
-```
-
 ## Usage Instructions
 
-1. **Configure test generation options** in project settings
-2. **Run refactor workflow** which automatically includes test generation
-3. **Monitor test generation progress** through logs and UI
-4. **Review generated tests** and debug reports
-5. **Manually adjust tests** if needed
-6. **Commit tests** along with refactored code
+1. **Konfiguriere Test-Generation Optionen** in Projekt-Einstellungen
+2. **Führe Refactor Workflow aus** der automatisch Test-Generation einschließt
+3. **Überwache Test-Generation Fortschritt** durch Logs und UI
+4. **Überprüfe generierte Tests** und Debug-Reports
+5. **Passe Tests manuell an** wenn nötig
+6. **Commit Tests** zusammen mit refaktorisiertem Code
 
 ## Example Usage
 
 ```bash
-# Run complete refactor + test generation workflow
+# Führe kompletten Refactor + Test-Generation Workflow aus
 npm run refactor:with-tests --project=./my-project --framework=jest
 
-# Run test generation only
+# Führe nur Test-Generation aus
 npm run generate:tests --project=./my-project --coverage-target=80
 
-# Execute generated tests
+# Führe generierte Tests aus
 npm run execute:generated-tests --project=./my-project
 ```
 
 ---
 
-**Next Steps:**
-1. Implement TestGenerationWorkflowService
-2. Create AI prompts for test generation
-3. Integrate with existing refactor workflow
-4. Add test execution and debug reporting
-5. Test with real projects
-6. Deploy and monitor 
+**Nächste Schritte:**
+1. Erweitere TaskService.js um Test-Generation Schritte
+2. Füge Test-Generation Prompts zu AIPrompts.js hinzu
+3. Integriere mit bestehendem Refactor Workflow
+4. Füge Test-Execution und Debug-Reporting hinzu
+5. Teste mit echten Projekten
+6. Deploy und überwache 
