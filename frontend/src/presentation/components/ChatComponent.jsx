@@ -90,21 +90,6 @@ function ChatComponent({ eventBus, activePort }) {
     setMessages(prevMessages => [...prevMessages, newMessage]);
     setInputValue('');
     try {
-      // Get active IDE first
-      const ideData = await apiCall(API_CONFIG.endpoints.ide.list);
-      let activePort = null;
-      
-      if (ideData.success && ideData.data) {
-        const activeIDE = ideData.data.find(ide => ide.active);
-        if (activeIDE) {
-          activePort = activeIDE.port;
-        }
-      }
-      
-      if (!activePort) {
-        throw new Error('No active IDE found');
-      }
-      
       // Send message to active IDE
       const result = await apiCall(API_CONFIG.endpoints.chat.send, {
         method: 'POST',

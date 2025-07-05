@@ -172,18 +172,25 @@ class GetChatHistoryHandler {
 
   async getPortChatHistory(port, userId, options = {}) {
     const { limit = 50, offset = 0 } = options;
+    
+    console.log(`[GetChatHistoryHandler] getPortChatHistory called with port: ${port}, userId: ${userId}`);
+    console.log(`[GetChatHistoryHandler] Current active port in cursorIDEService:`, this.cursorIDEService?.getActivePort?.());
 
     // Get all sessions and filter by port and user
     const allSessions = await this.chatRepository.getAllSessions();
     const portSessions = allSessions.filter(session => 
       session.idePort === parseInt(port) && session.userId === userId
     );
+    
+    console.log(`[GetChatHistoryHandler] Found ${portSessions.length} sessions for port ${port}`);
 
     // Try to extract live chat from IDE first
     let liveMessages = [];
     try {
       if (this.cursorIDEService) {
+        console.log(`[GetChatHistoryHandler] Extracting live chat from IDE...`);
         liveMessages = await this.cursorIDEService.extractChatHistory();
+        console.log(`[GetChatHistoryHandler] Extracted ${liveMessages.length} live messages`);
       }
     } catch (error) {
       console.log(`[GetChatHistoryHandler] Failed to extract live chat: ${error.message}`);

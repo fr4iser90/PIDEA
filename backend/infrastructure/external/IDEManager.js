@@ -117,7 +117,10 @@ class IDEManager {
     console.log('[IDEManager] Switching to IDE on port', port);
     
     const availableIDEs = await this.getAvailableIDEs();
+    console.log('[IDEManager] Available IDEs:', availableIDEs.map(ide => ({ port: ide.port, status: ide.status, active: ide.active })));
+    
     const targetIDE = availableIDEs.find(ide => ide.port === port);
+    console.log('[IDEManager] Target IDE found:', targetIDE ? { port: targetIDE.port, status: targetIDE.status } : 'NOT FOUND');
     
     if (!targetIDE) {
       throw new Error(`No IDE found on port ${port}`);
@@ -129,7 +132,9 @@ class IDEManager {
     
     const previousPort = this.activePort;
     this.activePort = port;
-    console.log('[IDEManager] Switched to IDE on port', port);
+    console.log('[IDEManager] Previous active port:', previousPort);
+    console.log('[IDEManager] New active port:', this.activePort);
+    console.log('[IDEManager] Successfully switched to IDE on port', port);
     
     return {
       port: port,

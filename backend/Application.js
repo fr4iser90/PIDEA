@@ -225,26 +225,25 @@ class Application {
     // Replace the DI container's database connection with the properly configured one
     this.serviceRegistry.getContainer().registerSingleton('databaseConnection', this.databaseConnection);
 
-    this.browserManager = new BrowserManager();
-    this.ideManager = new IDEManager(this.browserManager);
-    this.chatRepository = new InMemoryChatRepository();
-    this.eventBus = new EventBus();
+    // Get services from DI container to ensure consistency
+    this.browserManager = this.serviceRegistry.getService('browserManager');
+    this.ideManager = this.serviceRegistry.getService('ideManager');
+    this.chatRepository = this.serviceRegistry.getService('chatRepository');
+    this.eventBus = this.serviceRegistry.getService('eventBus');
     
     // Initialize command and query buses
-    this.commandBus = new CommandBus();
-    this.queryBus = new QueryBus();
-    this.commandBus.setLogger(this.logger);
-    this.queryBus.setLogger(this.logger);
+    this.commandBus = this.serviceRegistry.getService('commandBus');
+    this.queryBus = this.serviceRegistry.getService('queryBus');
 
     // Initialize repositories
-    this.userRepository = new PostgreSQLUserRepository(this.databaseConnection);
-    this.userSessionRepository = new PostgreSQLUserSessionRepository(this.databaseConnection);
+    this.userRepository = this.serviceRegistry.getService('userRepository');
+    this.userSessionRepository = this.serviceRegistry.getService('userSessionRepository');
 
     // IDE Services
-    this.ideWorkspaceDetectionService = new IDEWorkspaceDetectionService(this.ideManager);
+    this.ideWorkspaceDetectionService = this.serviceRegistry.getService('ideWorkspaceDetectionService');
 
     // Initialize file system service for strategies
-    this.fileSystemService = new (require('./domain/services/FileSystemService'))();
+    this.fileSystemService = this.serviceRegistry.getService('fileSystemService');
 
     // Register remaining services
     this.serviceRegistry.registerRepositoryServices();

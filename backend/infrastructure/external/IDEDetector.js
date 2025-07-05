@@ -30,7 +30,7 @@ class IDEDetector {
       }
     });
 
-    console.log('[IDEDetector] Found', availableIDEs.length, 'running IDEs');
+    console.log('[IDEDetector] Found', availableIDEs.length, 'running IDEs:', availableIDEs.map(ide => ({ port: ide.port, status: ide.status, url: ide.url })));
     return availableIDEs;
   }
 

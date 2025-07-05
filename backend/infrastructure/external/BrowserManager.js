@@ -5,7 +5,7 @@ class BrowserManager {
     this.browser = null;
     this.page = null;
     this.isConnecting = false;
-    this.currentPort = 9222;
+    this.currentPort = null; // Will be set dynamically
   }
 
   async connect(port = null) {

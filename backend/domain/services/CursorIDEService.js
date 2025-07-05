@@ -21,13 +21,15 @@ class CursorIDEService {
     if (this.eventBus) {
       this.eventBus.subscribe('activeIDEChanged', async (eventData) => {
         console.log('[CursorIDEService] IDE changed, resetting package.json cache');
+        console.log('[CursorIDEService] Event data:', eventData);
         // No cache in new analyzer, but if you add one, reset here
         // this.packageJsonAnalyzer.resetCache?.();
         // Switch browser connection to new IDE
         if (eventData.port) {
           try {
+            console.log('[CursorIDEService] Switching browser connection to port:', eventData.port);
             await this.browserManager.switchToPort(eventData.port);
-            console.log('[CursorIDEService] Switched browser connection to port:', eventData.port);
+            console.log('[CursorIDEService] Successfully switched browser connection to port:', eventData.port);
           } catch (error) {
             console.error('[CursorIDEService] Failed to switch browser connection:', error.message);
           }
@@ -37,10 +39,48 @@ class CursorIDEService {
   }
 
   async sendMessage(message, options = {}) {
+    // Ensure browser is connected to the active IDE port
+    const activePort = this.getActivePort();
+    console.log('[CursorIDEService] sendMessage() - Active port:', activePort);
+    
+    if (activePort) {
+      try {
+        // Switch browser to active port if needed
+        const currentBrowserPort = this.browserManager.getCurrentPort();
+        console.log('[CursorIDEService] sendMessage() - Current browser port:', currentBrowserPort);
+        
+        if (currentBrowserPort !== activePort) {
+          console.log('[CursorIDEService] sendMessage() - Switching browser to active port:', activePort);
+          await this.browserManager.switchToPort(activePort);
+        }
+      } catch (error) {
+        console.error('[CursorIDEService] sendMessage() - Failed to switch browser port:', error.message);
+      }
+    }
+    
     return await this.chatMessageHandler.sendMessage(message, options);
   }
 
   async extractChatHistory() {
+    // Ensure browser is connected to the active IDE port
+    const activePort = this.getActivePort();
+    console.log('[CursorIDEService] extractChatHistory() - Active port:', activePort);
+    
+    if (activePort) {
+      try {
+        // Switch browser to active port if needed
+        const currentBrowserPort = this.browserManager.getCurrentPort();
+        console.log('[CursorIDEService] extractChatHistory() - Current browser port:', currentBrowserPort);
+        
+        if (currentBrowserPort !== activePort) {
+          console.log('[CursorIDEService] extractChatHistory() - Switching browser to active port:', activePort);
+          await this.browserManager.switchToPort(activePort);
+        }
+      } catch (error) {
+        console.error('[CursorIDEService] extractChatHistory() - Failed to switch browser port:', error.message);
+      }
+    }
+    
     return await this.chatHistoryExtractor.extractChatHistory();
   }
 
@@ -143,11 +183,16 @@ After applying the changes, please confirm that the refactoring has been complet
   }
 
   getActivePort() {
-    return this.ideManager.getActivePort();
+    const activePort = this.ideManager.getActivePort();
+    console.log('[CursorIDEService] getActivePort() called, returning:', activePort);
+    return activePort;
   }
 
   async switchToPort(port) {
-    if (this.getActivePort() === port) {
+    const currentActivePort = this.getActivePort();
+    console.log(`[CursorIDEService] switchToPort(${port}) called, current active port:`, currentActivePort);
+    
+    if (currentActivePort === port) {
       console.log(`[CursorIDEService] Already connected to port ${port}`);
       return;
     }
@@ -157,7 +202,9 @@ After applying the changes, please confirm that the refactoring has been complet
     
     // Update active port in IDE manager
     if (this.ideManager.switchToIDE) {
+      console.log(`[CursorIDEService] Calling ideManager.switchToIDE(${port})`);
       await this.ideManager.switchToIDE(port);
+      console.log(`[CursorIDEService] ideManager.switchToIDE(${port}) completed`);
     }
   }
 

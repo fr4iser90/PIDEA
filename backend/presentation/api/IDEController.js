@@ -50,7 +50,12 @@ class IDEController {
   async switchIDE(req, res) {
     try {
       const port = parseInt(req.params.port);
+      console.log('[IDEController] switchIDE called with port:', port);
+      console.log('[IDEController] Current active port before switch:', this.ideManager.getActivePort());
+      
       const result = await this.ideManager.switchToIDE(port);
+      console.log('[IDEController] ideManager.switchToIDE completed, result:', result);
+      console.log('[IDEController] New active port after switch:', this.ideManager.getActivePort());
       
       // Publish event
       if (this.eventBus) {
