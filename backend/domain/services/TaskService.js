@@ -105,12 +105,24 @@ class TaskService {
       };
 
       try {
-        // Step 1: Create Git Branch for Refactoring
-        console.log('🔧 [TaskService] Step 1: Creating Git branch...');
-        execution.steps.push({ step: 'git_branch', status: 'running', message: 'Creating refactoring branch' });
-        
-        const branchName = `refactor/${task.type}-${taskId}-${Date.now()}`;
-        const gitResult = await this.createRefactoringBranch(task.projectPath, branchName);
+              // Step 1: Create Git Branch for Refactoring
+      console.log('🔧 [TaskService] Step 1: Creating Git branch...');
+      console.log('🔍 [TaskService] Task details:', {
+        id: task.id,
+        title: task.title,
+        projectPath: task.projectPath,
+        filePath: task.filePath,
+        type: task.type
+      });
+      
+      execution.steps.push({ step: 'git_branch', status: 'running', message: 'Creating refactoring branch' });
+      
+      if (!task.projectPath) {
+        throw new Error('Task has no projectPath - cannot create Git branch');
+      }
+      
+      const branchName = `refactor/${task.type}-${taskId}-${Date.now()}`;
+      const gitResult = await this.createRefactoringBranch(task.projectPath, branchName);
         
         execution.steps[execution.steps.length - 1] = { 
           step: 'git_branch', 

@@ -198,6 +198,8 @@ class VibeCoderAutoRefactorHandler {
             status: 'pending',
             estimatedTime: fileInfo.estimatedTime,
             filePath: fileInfo.path,
+            projectPath: projectPath, // Add project path for Git operations
+            projectId: 'cursorweb', // Add project ID for task management
             package: fileInfo.package,
             lines: fileInfo.lines,
             currentLines: fileInfo.lines,

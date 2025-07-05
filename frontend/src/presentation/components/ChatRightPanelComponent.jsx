@@ -282,7 +282,16 @@ function ChatRightPanelComponent({ eventBus }) {
           setFeedback(`Executing task: ${task.title}...`);
           
           // Execute the task via API
+          console.log('🔍 [ChatRightPanelComponent] Executing task:', {
+            id: task.id,
+            title: task.title,
+            projectPath: task.projectPath,
+            filePath: task.filePath
+          });
+          
           const result = await apiRepository.executeTask(task.id);
+          
+          console.log('🔍 [ChatRightPanelComponent] Task execution result:', result);
           
           if (result.success) {
             executionResults.push({
