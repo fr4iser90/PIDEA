@@ -169,62 +169,14 @@ class TaskService {
         };
         execution.progress = 50;
 
-        // Step 3: Playwright Integration - Interact with Cursor IDE
-        console.log('🎭 [TaskService] Step 3: Playwright integration...');
-        execution.steps.push({ step: 'playwright_integration', status: 'running', message: 'Integrating with Cursor IDE' });
-        
-        const playwrightResult = await this.integrateWithCursorIDE(task, refactoringResult);
-        
-        execution.steps[execution.steps.length - 1] = { 
-          step: 'playwright_integration', 
-          status: 'completed', 
-          message: 'Cursor IDE integration completed',
-          data: playwrightResult
-        };
-        execution.progress = 70;
+        // Step 3: Task completed - prompt sent to chat
+        console.log('✅ [TaskService] Step 3: Task completed - prompt sent to chat');
+        execution.steps.push({ step: 'chat_integration', status: 'completed', message: 'Refactoring prompt sent to IDE chat' });
+        execution.progress = 100;
 
-        // Step 4: Validation - Run Tests
-        console.log('🧪 [TaskService] Step 4: Running validation tests...');
-        execution.steps.push({ step: 'validation', status: 'running', message: 'Running validation tests' });
-        
-        const validationResult = await this.validateRefactoring(task, refactoringResult);
-        
-        execution.steps[execution.steps.length - 1] = { 
-          step: 'validation', 
-          status: validationResult.passed ? 'completed' : 'failed', 
-          message: validationResult.passed ? 'Validation passed' : 'Validation failed',
-          data: validationResult
-        };
-        execution.progress = 90;
-
-        // Step 5: Commit & Push Changes
-        if (validationResult.passed) {
-          console.log('📝 [TaskService] Step 5: Committing and pushing changes...');
-          execution.steps.push({ step: 'commit_push', status: 'running', message: 'Committing and pushing changes' });
-          
-          const commitResult = await this.commitAndPushChanges(projectPath, branchName, task);
-          
-          execution.steps[execution.steps.length - 1] = { 
-            step: 'commit_push', 
-            status: 'completed', 
-            message: 'Changes committed and pushed',
-            data: commitResult
-          };
-          execution.progress = 100;
-
-          // Mark task as completed
-          task.updateStatus(TaskStatus.COMPLETED);
-          await this.taskRepository.update(taskId, task);
-        } else {
-          // Rollback changes if validation failed
-          console.log('🔄 [TaskService] Validation failed, rolling back changes...');
-          await this.rollbackChanges(projectPath, branchName);
-          
-          task.updateStatus(TaskStatus.FAILED);
-          await this.taskRepository.update(taskId, task);
-          
-          throw new Error('Refactoring validation failed');
-        }
+        // Mark task as completed
+        task.updateStatus(TaskStatus.COMPLETED);
+        await this.taskRepository.update(taskId, task);
 
         execution.status = 'completed';
         execution.endTime = new Date();
@@ -292,15 +244,28 @@ class TaskService {
       // Build AI prompt for refactoring
       const aiPrompt = this.buildRefactoringPrompt(task);
       
-      // Sende den Prompt als ChatMessage an den User (über ChatMessageHandler)
-      if (this.cursorIDEService && this.cursorIDEService.chatMessageHandler) {
-        await this.cursorIDEService.chatMessageHandler.sendMessage(aiPrompt);
+      // Use the same working chat mechanism as the frontend
+      if (this.cursorIDEService) {
+        // Try to send via ChatMessageHandler first
+        if (this.cursorIDEService.chatMessageHandler) {
+          await this.cursorIDEService.chatMessageHandler.sendMessage(aiPrompt);
+          console.log('✅ [TaskService] Refactoring prompt sent via ChatMessageHandler');
+        } else {
+          // Fallback: use the sendMessage method directly
+          await this.cursorIDEService.sendMessage(aiPrompt);
+          console.log('✅ [TaskService] Refactoring prompt sent via sendMessage');
+        }
+        
+        return {
+          success: true,
+          prompt: aiPrompt,
+          message: 'Refactoring prompt sent to IDE chat',
+          timestamp: new Date()
+        };
       } else {
-        console.log('⚠️ [TaskService] ChatMessageHandler nicht verfügbar!');
+        console.log('⚠️ [TaskService] CursorIDEService nicht verfügbar!');
+        throw new Error('CursorIDEService not available');
       }
-      
-      // Breche ab, keine automatische Änderung!
-      throw new Error('Automatisches Refactoring im Backend ist deaktiviert! Refactoring muss über den Chat laufen.');
     } catch (error) {
       throw new Error(`AI refactoring failed: ${error.message}`);
     }
