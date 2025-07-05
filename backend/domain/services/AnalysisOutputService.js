@@ -75,10 +75,18 @@ class AnalysisOutputService {
             packages.push(...analysisResults.structure.data.dependenciesAnalysis.packages);
         }
         
-        // Extract packages from architecture analysis
-        if (analysisResults.Architecture && analysisResults.Architecture.data && analysisResults.Architecture.data.packages) {
-            console.log('DEBUG: Found packages in Architecture.data.packages');
-            packages.push(...analysisResults.Architecture.data.packages);
+        // Extract packages from architecture analysis (new structure)
+        if (analysisResults.Architecture && analysisResults.Architecture.data) {
+            // Check for new monorepo structure
+            if (analysisResults.Architecture.data.isMonorepo && analysisResults.Architecture.data.packages) {
+                console.log('DEBUG: Found packages in Architecture.data.packages (monorepo)');
+                packages.push(...analysisResults.Architecture.data.packages);
+            }
+            // Check for old structure
+            else if (analysisResults.Architecture.data.packages) {
+                console.log('DEBUG: Found packages in Architecture.data.packages (legacy)');
+                packages.push(...analysisResults.Architecture.data.packages);
+            }
         }
         
         // Check all possible locations recursively
@@ -105,6 +113,35 @@ class AnalysisOutputService {
         }
         
         return packages;
+    }
+
+    calculateAverageCoupling(coupling) {
+        if (!coupling || Object.keys(coupling).length === 0) return 0;
+        
+        const values = Object.values(coupling).filter(v => typeof v === 'number');
+        if (values.length === 0) return 0;
+        
+        return values.reduce((sum, val) => sum + val, 0) / values.length;
+    }
+
+    calculateAverageCohesion(cohesion) {
+        if (!cohesion || Object.keys(cohesion).length === 0) return 0;
+        
+        const values = Object.values(cohesion).filter(v => typeof v === 'number');
+        if (values.length === 0) return 0;
+        
+        return values.reduce((sum, val) => sum + val, 0) / values.length;
+    }
+
+    calculateComplexityScore(architecture) {
+        let score = 0;
+        
+        if (architecture.patterns) score += architecture.patterns.length * 10;
+        if (architecture.layers) score += architecture.layers.length * 5;
+        if (architecture.modules) score += architecture.modules.length * 3;
+        if (architecture.antiPatterns) score += architecture.antiPatterns.length * 15;
+        
+        return score;
     }
 
     filterAnalysisResultsForPackage(analysisResults, pkg) {
@@ -139,6 +176,118 @@ class AnalysisOutputService {
                                     files: packageFiles
                                 }
                             }
+                        };
+                    }
+                }
+                // For architecture, use package-specific data if available
+                else if (type === 'Architecture' && result.data) {
+                    // Check if this is a monorepo with package-specific architecture data
+                    if (result.data.isMonorepo && result.data.packageArchitectures && result.data.packageArchitectures[pkg.name]) {
+                        const packageArchitecture = result.data.packageArchitectures[pkg.name];
+                        const architecture = packageArchitecture.architecture;
+                        
+                        const packageArchitectureData = {
+                            package: pkg.name,
+                            packagePath: pkg.path,
+                            architectureScore: architecture.architectureScore,
+                            detectedPatterns: architecture.detectedPatterns || [],
+                            structure: architecture.structure || {},
+                            coupling: architecture.coupling || {},
+                            cohesion: architecture.cohesion || {},
+                            dependencies: architecture.dependencies || {},
+                            violations: architecture.violations || [],
+                            recommendations: architecture.recommendations || [],
+                            patterns: packageArchitecture.patterns || [],
+                            layers: packageArchitecture.layers || [],
+                            modules: packageArchitecture.modules || [],
+                            antiPatterns: packageArchitecture.antiPatterns || [],
+                            designPrinciples: packageArchitecture.designPrinciples || []
+                        };
+                        
+                        // Calculate metrics for this package
+                        packageArchitectureData.metrics = {
+                            patternCount: packageArchitectureData.patterns.length,
+                            layerCount: packageArchitectureData.layers.length,
+                            moduleCount: packageArchitectureData.modules.length,
+                            antiPatternCount: packageArchitectureData.antiPatterns.length,
+                            designPrincipleCount: packageArchitectureData.designPrinciples.length,
+                            averageCoupling: this.calculateAverageCoupling(packageArchitectureData.coupling),
+                            averageCohesion: this.calculateAverageCohesion(packageArchitectureData.cohesion),
+                            complexityScore: this.calculateComplexityScore(packageArchitectureData)
+                        };
+                        
+                        packageResults[type] = {
+                            ...result,
+                            data: packageArchitectureData
+                        };
+                    } else {
+                        // Fallback to old filtering logic for single package or legacy data
+                        const packageArchitecture = {
+                            ...result.data,
+                            package: pkg.name,
+                            packagePath: pkg.path
+                        };
+                        
+                        // Filter patterns by package
+                        if (result.data.patterns) {
+                            packageArchitecture.patterns = result.data.patterns.filter(pattern => {
+                                return pattern.files && pattern.files.some(file => 
+                                    file.includes(pkg.path) || file.startsWith(pkg.relativePath)
+                                );
+                            });
+                        }
+                        
+                        // Filter layers by package
+                        if (result.data.layers) {
+                            packageArchitecture.layers = result.data.layers.filter(layer => {
+                                return layer.path && (layer.path.includes(pkg.path) || layer.path.startsWith(pkg.relativePath));
+                            });
+                        }
+                        
+                        // Filter modules by package
+                        if (result.data.modules) {
+                            packageArchitecture.modules = result.data.modules.filter(module => {
+                                return module.includes(pkg.path) || module.startsWith(pkg.relativePath);
+                            });
+                        }
+                        
+                        // Filter coupling analysis by package
+                        if (result.data.coupling) {
+                            packageArchitecture.coupling = {};
+                            Object.entries(result.data.coupling).forEach(([module, coupling]) => {
+                                if (module.includes(pkg.name) || module.includes(path.basename(pkg.path))) {
+                                    packageArchitecture.coupling[module] = coupling;
+                                }
+                            });
+                        }
+                        
+                        // Filter cohesion analysis by package
+                        if (result.data.cohesion) {
+                            packageArchitecture.cohesion = {};
+                            Object.entries(result.data.cohesion).forEach(([module, cohesion]) => {
+                                if (module.includes(pkg.name) || module.includes(path.basename(pkg.path))) {
+                                    packageArchitecture.cohesion[module] = cohesion;
+                                }
+                            });
+                        }
+                        
+                        // Recalculate metrics for this package
+                        if (packageArchitecture.patterns || packageArchitecture.layers || packageArchitecture.modules) {
+                            packageArchitecture.metrics = {
+                                patternCount: packageArchitecture.patterns ? packageArchitecture.patterns.length : 0,
+                                layerCount: packageArchitecture.layers ? packageArchitecture.layers.length : 0,
+                                moduleCount: packageArchitecture.modules ? packageArchitecture.modules.length : 0,
+                                antiPatternCount: packageArchitecture.antiPatterns ? packageArchitecture.antiPatterns.length : 0,
+                                designPrincipleCount: packageArchitecture.designPrinciples ? packageArchitecture.designPrinciples.length : 0,
+                                averageCoupling: this.calculateAverageCoupling(packageArchitecture.coupling),
+                                averageCohesion: this.calculateAverageCohesion(packageArchitecture.cohesion),
+                                complexityScore: this.calculateComplexityScore(packageArchitecture)
+                            };
+                        }
+                        
+                        packageResults[type] = {
+                            ...result,
+                            data: packageArchitecture
                         };
                     }
                 }

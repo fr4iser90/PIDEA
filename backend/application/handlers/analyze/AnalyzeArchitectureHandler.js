@@ -2,6 +2,9 @@
  * AnalyzeArchitectureHandler - Handles architecture analysis commands
  * Implements the Command Handler pattern for architecture analysis
  */
+const fs = require('fs').promises;
+const path = require('path');
+
 class AnalyzeArchitectureHandler {
     constructor(dependencies = {}) {
         this.validateDependencies(dependencies);
@@ -257,34 +260,81 @@ class AnalyzeArchitectureHandler {
         const options = command.getAnalysisOptions();
         
         try {
-            const architecture = await this.architectureAnalyzer.analyze(
-                projectInfo.path,
-                {
-                    detectPatterns: options.detectPatterns,
-                    analyzeDependencies: options.analyzeDependencies,
-                    complexityAnalysis: options.complexityAnalysis,
-                    detectLayers: options.detectLayers,
-                    detectModules: options.detectModules,
-                    analyzeCoupling: options.analyzeCoupling,
-                    analyzeCohesion: options.analyzeCohesion,
-                    detectAntiPatterns: options.detectAntiPatterns,
-                    analyzeDesignPrinciples: options.analyzeDesignPrinciples
+            // Check if this is a monorepo by looking for packages
+            const packages = await this.findPackages(projectInfo.path);
+            
+            if (packages.length > 1) {
+                // Monorepo: analyze each package separately
+                const packageArchitectures = {};
+                
+                for (const pkg of packages) {
+                    const packageArchitecture = await this.architectureAnalyzer.analyze(
+                        pkg.path,
+                        {
+                            detectPatterns: options.detectPatterns,
+                            analyzeDependencies: options.analyzeDependencies,
+                            complexityAnalysis: options.complexityAnalysis,
+                            detectLayers: options.detectLayers,
+                            detectModules: options.detectModules,
+                            analyzeCoupling: options.analyzeCoupling,
+                            analyzeCohesion: options.analyzeCohesion,
+                            detectAntiPatterns: options.detectAntiPatterns,
+                            analyzeDesignPrinciples: options.analyzeDesignPrinciples
+                        }
+                    );
+                    
+                    packageArchitectures[pkg.name] = {
+                        package: pkg,
+                        architecture: packageArchitecture,
+                        patterns: packageArchitecture.detectedPatterns || [],
+                        layers: packageArchitecture.structure?.layers || [],
+                        modules: Object.keys(packageArchitecture.coupling?.instability || {}),
+                        coupling: packageArchitecture.coupling || {},
+                        cohesion: packageArchitecture.cohesion || {},
+                        antiPatterns: packageArchitecture.violations?.filter(v => v.severity === 'high') || [],
+                        designPrinciples: packageArchitecture.recommendations || []
+                    };
                 }
-            );
+                
+                return {
+                    projectInfo,
+                    packages,
+                    packageArchitectures,
+                    isMonorepo: true,
+                    analysisOptions: options,
+                    timestamp: new Date()
+                };
+            } else {
+                // Single package: analyze project-wide
+                const architecture = await this.architectureAnalyzer.analyze(
+                    projectInfo.path,
+                    {
+                        detectPatterns: options.detectPatterns,
+                        analyzeDependencies: options.analyzeDependencies,
+                        complexityAnalysis: options.complexityAnalysis,
+                        detectLayers: options.detectLayers,
+                        detectModules: options.detectModules,
+                        analyzeCoupling: options.analyzeCoupling,
+                        analyzeCohesion: options.analyzeCohesion,
+                        detectAntiPatterns: options.detectAntiPatterns,
+                        analyzeDesignPrinciples: options.analyzeDesignPrinciples
+                    }
+                );
 
-            return {
-                projectInfo,
-                architecture,
-                patterns: architecture.detectedPatterns || [],
-                layers: architecture.structure?.layers || [],
-                modules: Object.keys(architecture.coupling?.instability || {}),
-                coupling: architecture.coupling || {},
-                cohesion: architecture.cohesion || {},
-                antiPatterns: architecture.violations?.filter(v => v.severity === 'high') || [],
-                designPrinciples: architecture.recommendations || [],
-                analysisOptions: options,
-                timestamp: new Date()
-            };
+                return {
+                    projectInfo,
+                    architecture,
+                    patterns: architecture.detectedPatterns || [],
+                    layers: architecture.structure?.layers || [],
+                    modules: Object.keys(architecture.coupling?.instability || {}),
+                    coupling: architecture.coupling || {},
+                    cohesion: architecture.cohesion || {},
+                    antiPatterns: architecture.violations?.filter(v => v.severity === 'high') || [],
+                    designPrinciples: architecture.recommendations || [],
+                    analysisOptions: options,
+                    timestamp: new Date()
+                };
+            }
 
         } catch (error) {
             this.logger.error('AnalyzeArchitectureHandler: Architecture analysis failed', {
@@ -296,19 +346,123 @@ class AnalyzeArchitectureHandler {
         }
     }
 
-    generateMetrics(analysis) {
-        const { architecture } = analysis;
+    async findPackages(projectPath) {
+        const packages = [];
         
-        return {
-            patternCount: architecture.detectedPatterns?.length || 0,
-            layerCount: architecture.structure?.layers?.length || 0,
-            moduleCount: Object.keys(architecture.coupling?.instability || {}).length,
-            antiPatternCount: architecture.violations?.filter(v => v.severity === 'high').length || 0,
-            designPrincipleCount: architecture.recommendations?.length || 0,
-            averageCoupling: this.calculateAverageCoupling(architecture.coupling),
-            averageCohesion: this.calculateAverageCohesion(architecture.cohesion),
-            complexityScore: this.calculateComplexityScore(architecture)
-        };
+        // Check root package.json
+        const rootPackagePath = path.join(projectPath, 'package.json');
+        if (await this.fileExists(rootPackagePath)) {
+            try {
+                const packageJson = JSON.parse(await fs.readFile(rootPackagePath, 'utf-8'));
+                packages.push({
+                    name: packageJson.name || 'root',
+                    version: packageJson.version,
+                    path: projectPath,
+                    relativePath: '.',
+                    dependencies: packageJson.dependencies || {},
+                    devDependencies: packageJson.devDependencies || {}
+                });
+            } catch (e) {
+                // Ignore parse errors
+            }
+        }
+
+        // Check common subdirectories
+        const commonDirs = ['backend', 'frontend', 'api', 'client', 'server', 'app', 'src'];
+        for (const dir of commonDirs) {
+            const subdirPath = path.join(projectPath, dir);
+            const packagePath = path.join(subdirPath, 'package.json');
+            
+            if (await this.fileExists(packagePath)) {
+                try {
+                    const packageJson = JSON.parse(await fs.readFile(packagePath, 'utf-8'));
+                    packages.push({
+                        name: packageJson.name || dir,
+                        version: packageJson.version,
+                        path: subdirPath,
+                        relativePath: dir,
+                        dependencies: packageJson.dependencies || {},
+                        devDependencies: packageJson.devDependencies || {}
+                    });
+                } catch (e) {
+                    // Ignore parse errors
+                }
+            }
+        }
+
+        return packages;
+    }
+
+    async fileExists(filePath) {
+        try {
+            await fs.access(filePath);
+            return true;
+        } catch {
+            return false;
+        }
+    }
+
+    generateMetrics(analysis) {
+        if (analysis.isMonorepo) {
+            // For monorepo, aggregate metrics from all packages
+            const aggregatedMetrics = {
+                totalPatternCount: 0,
+                totalLayerCount: 0,
+                totalModuleCount: 0,
+                totalAntiPatternCount: 0,
+                totalDesignPrincipleCount: 0,
+                averageCoupling: 0,
+                averageCohesion: 0,
+                complexityScore: 0,
+                packageCount: Object.keys(analysis.packageArchitectures).length
+            };
+            
+            let totalCoupling = 0;
+            let totalCohesion = 0;
+            let packageCount = 0;
+            
+            Object.values(analysis.packageArchitectures).forEach(pkgArch => {
+                const { architecture } = pkgArch;
+                
+                aggregatedMetrics.totalPatternCount += architecture.detectedPatterns?.length || 0;
+                aggregatedMetrics.totalLayerCount += architecture.structure?.layers?.length || 0;
+                aggregatedMetrics.totalModuleCount += Object.keys(architecture.coupling?.instability || {}).length;
+                aggregatedMetrics.totalAntiPatternCount += architecture.violations?.filter(v => v.severity === 'high').length || 0;
+                aggregatedMetrics.totalDesignPrincipleCount += architecture.recommendations?.length || 0;
+                
+                const pkgCoupling = this.calculateAverageCoupling(architecture.coupling);
+                const pkgCohesion = this.calculateAverageCohesion(architecture.cohesion);
+                
+                if (pkgCoupling > 0) {
+                    totalCoupling += pkgCoupling;
+                    packageCount++;
+                }
+                if (pkgCohesion > 0) {
+                    totalCohesion += pkgCohesion;
+                }
+                
+                aggregatedMetrics.complexityScore += this.calculateComplexityScore(architecture);
+            });
+            
+            aggregatedMetrics.averageCoupling = packageCount > 0 ? totalCoupling / packageCount : 0;
+            aggregatedMetrics.averageCohesion = packageCount > 0 ? totalCohesion / packageCount : 0;
+            
+            return aggregatedMetrics;
+        } else {
+            // For single package, use existing logic
+            const { architecture } = analysis;
+            
+            return {
+                patternCount: architecture.detectedPatterns?.length || 0,
+                layerCount: architecture.structure?.layers?.length || 0,
+                moduleCount: Object.keys(architecture.coupling?.instability || {}).length,
+                antiPatternCount: architecture.violations?.filter(v => v.severity === 'high').length || 0,
+                designPrincipleCount: architecture.recommendations?.length || 0,
+                averageCoupling: this.calculateAverageCoupling(architecture.coupling),
+                averageCohesion: this.calculateAverageCohesion(architecture.cohesion),
+                complexityScore: this.calculateComplexityScore(architecture)
+            };
+        }
     }
 
     calculateAverageCoupling(coupling) {
@@ -337,38 +491,92 @@ class AnalyzeArchitectureHandler {
 
     generateRecommendations(analysis, command) {
         const recommendations = [];
-        const { architecture, metrics } = analysis;
-
-        // Check for anti-patterns
-        if (architecture.antiPatterns && architecture.antiPatterns.length > 0) {
-            recommendations.push({
-                type: 'anti_patterns',
-                severity: 'high',
-                message: `Found ${architecture.antiPatterns.length} architectural anti-pattern(s)`,
-                details: architecture.antiPatterns
+        
+        if (analysis.isMonorepo) {
+            // For monorepo, generate recommendations per package and overall
+            Object.entries(analysis.packageArchitectures).forEach(([packageName, pkgArch]) => {
+                const { architecture } = pkgArch;
+                
+                // Package-specific recommendations
+                if (architecture.violations?.length > 0) {
+                    recommendations.push({
+                        title: `Fix architecture violations in ${packageName}`,
+                        description: `${architecture.violations.length} violations found in ${packageName}`,
+                        priority: 'high',
+                        category: 'architecture',
+                        package: packageName
+                    });
+                }
+                
+                if (architecture.dependencies?.circularDependencies?.length > 0) {
+                    recommendations.push({
+                        title: `Remove circular dependencies in ${packageName}`,
+                        description: `${architecture.dependencies.circularDependencies.length} circular dependencies found in ${packageName}`,
+                        priority: 'high',
+                        category: 'dependencies',
+                        package: packageName
+                    });
+                }
+                
+                const highInstability = Object.entries(architecture.coupling?.instability || {})
+                    .filter(([module, instability]) => instability > 0.7);
+                
+                if (highInstability.length > 0) {
+                    recommendations.push({
+                        title: `Reduce module instability in ${packageName}`,
+                        description: `${highInstability.length} modules have high instability in ${packageName}`,
+                        priority: 'medium',
+                        category: 'coupling',
+                        package: packageName
+                    });
+                }
             });
+            
+            // Overall monorepo recommendations
+            if (Object.keys(analysis.packageArchitectures).length > 2) {
+                recommendations.push({
+                    title: 'Consider microservices architecture',
+                    description: 'Large monorepo detected. Consider splitting into microservices for better maintainability.',
+                    priority: 'medium',
+                    category: 'architecture',
+                    package: 'overall'
+                });
+            }
+        } else {
+            // For single package, use existing logic
+            const { architecture } = analysis;
+            
+            if (architecture.violations?.length > 0) {
+                recommendations.push({
+                    title: 'Fix architecture violations',
+                    description: `${architecture.violations.length} violations found`,
+                    priority: 'high',
+                    category: 'architecture'
+                });
+            }
+            
+            if (architecture.dependencies?.circularDependencies?.length > 0) {
+                recommendations.push({
+                    title: 'Remove circular dependencies',
+                    description: `${architecture.dependencies.circularDependencies.length} circular dependencies found`,
+                    priority: 'high',
+                    category: 'dependencies'
+                });
+            }
+            
+            const highInstability = Object.entries(architecture.coupling?.instability || {})
+                .filter(([module, instability]) => instability > 0.7);
+            
+            if (highInstability.length > 0) {
+                recommendations.push({
+                    title: 'Reduce module instability',
+                    description: `${highInstability.length} modules have high instability`,
+                    priority: 'medium',
+                    category: 'coupling'
+                });
+            }
         }
-
-        // Check coupling
-        if (metrics && metrics.averageCoupling > 0.7) {
-            recommendations.push({
-                type: 'high_coupling',
-                severity: 'medium',
-                message: 'High coupling detected',
-                details: { averageCoupling: metrics.averageCoupling, recommendation: 'Consider reducing dependencies between modules' }
-            });
-        }
-
-        // Check cohesion
-        if (metrics && metrics.averageCohesion < 0.3) {
-            recommendations.push({
-                type: 'low_cohesion',
-                severity: 'medium',
-                message: 'Low cohesion detected',
-                details: { averageCohesion: metrics.averageCohesion, recommendation: 'Consider grouping related functionality together' }
-            });
-        }
-
+        
         return recommendations;
     }
 
