@@ -126,11 +126,11 @@ const TaskSelectionModal = ({
                       <div className="task-steps">
                         <h4>Refactoring Steps:</h4>
                         <ol>
-                          {(task.refactoringSteps || task.steps || []).map((step, index) => (
+                          {(task.metadata?.refactoringSteps || task.refactoringSteps || task.steps || []).map((step, index) => (
                             <li key={index}>{step}</li>
                           ))}
                         </ol>
-                        {(!task.refactoringSteps && !task.steps) && (
+                        {(!task.metadata?.refactoringSteps && !task.refactoringSteps && !task.steps) && (
                           <p className="no-steps">No specific steps provided</p>
                         )}
                       </div>
