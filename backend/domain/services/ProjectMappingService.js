@@ -1,0 +1,123 @@
+const path = require('path');
+const fs = require('fs').promises;
+
+class ProjectMappingService {
+    constructor() {
+        this.projectMappings = new Map();
+        this.workspaceMappings = new Map();
+    }
+
+    /**
+     * Convert workspace path to project ID
+     * @param {string} workspacePath - Full workspace path
+     * @returns {string} Project ID
+     */
+    getProjectIdFromWorkspace(workspacePath) {
+        if (!workspacePath) return 'default';
+        
+        // Extract project name from path
+        const pathParts = workspacePath.split('/');
+        const projectName = pathParts[pathParts.length - 1];
+        
+        // Convert to lowercase and remove special characters
+        const projectId = projectName.toLowerCase().replace(/[^a-z0-9]/g, '');
+        
+        // Store mapping
+        this.projectMappings.set(projectId, workspacePath);
+        this.workspaceMappings.set(workspacePath, projectId);
+        
+        return projectId;
+    }
+
+    /**
+     * Get workspace path from project ID
+     * @param {string} projectId - Project ID
+     * @returns {string} Workspace path
+     */
+    getWorkspaceFromProjectId(projectId) {
+        return this.projectMappings.get(projectId) || null;
+    }
+
+    /**
+     * Get project ID from workspace path
+     * @param {string} workspacePath - Workspace path
+     * @returns {string} Project ID
+     */
+    getProjectIdFromWorkspacePath(workspacePath) {
+        return this.workspaceMappings.get(workspacePath) || this.getProjectIdFromWorkspace(workspacePath);
+    }
+
+    /**
+     * Register a workspace mapping
+     * @param {string} workspacePath - Workspace path
+     * @param {string} projectId - Optional project ID
+     * @returns {string} Project ID
+     */
+    registerWorkspace(workspacePath, projectId = null) {
+        if (!workspacePath) return 'default';
+        
+        const calculatedProjectId = projectId || this.getProjectIdFromWorkspace(workspacePath);
+        
+        this.projectMappings.set(calculatedProjectId, workspacePath);
+        this.workspaceMappings.set(workspacePath, calculatedProjectId);
+        
+        return calculatedProjectId;
+    }
+
+    /**
+     * Get all registered projects
+     * @returns {Array} Array of project mappings
+     */
+    getAllProjects() {
+        const projects = [];
+        for (const [projectId, workspacePath] of this.projectMappings.entries()) {
+            projects.push({
+                projectId,
+                workspacePath,
+                projectName: path.basename(workspacePath)
+            });
+        }
+        return projects;
+    }
+
+    /**
+     * Validate if workspace path exists
+     * @param {string} workspacePath - Workspace path to validate
+     * @returns {Promise<boolean>} True if path exists and is accessible
+     */
+    async validateWorkspacePath(workspacePath) {
+        try {
+            await fs.access(workspacePath);
+            return true;
+        } catch (error) {
+            return false;
+        }
+    }
+
+    /**
+     * Get project info
+     * @param {string} projectId - Project ID
+     * @returns {Object|null} Project info or null if not found
+     */
+    getProjectInfo(projectId) {
+        const workspacePath = this.getWorkspaceFromProjectId(projectId);
+        if (!workspacePath) return null;
+        
+        return {
+            projectId,
+            workspacePath,
+            projectName: path.basename(workspacePath),
+            exists: false // Will be validated when needed
+        };
+    }
+
+    /**
+     * Clear all mappings
+     */
+    clearMappings() {
+        this.projectMappings.clear();
+        this.workspaceMappings.clear();
+    }
+}
+
+module.exports = ProjectMappingService; 

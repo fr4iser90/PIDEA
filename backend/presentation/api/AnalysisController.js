@@ -2,12 +2,14 @@
  * AnalysisController - API controller for specialized analysis endpoints
  */
 class AnalysisController {
-  constructor(codeQualityService, securityService, performanceService, architectureService, logger) {
+  constructor(codeQualityService, securityService, performanceService, architectureService, logger, analysisOutputService, analysisRepository) {
     this.codeQualityService = codeQualityService;
     this.securityService = securityService;
     this.performanceService = performanceService;
     this.architectureService = architectureService;
     this.logger = logger || { info: () => {}, error: () => {} };
+    this.analysisOutputService = analysisOutputService;
+    this.analysisRepository = analysisRepository;
   }
 
   /**
@@ -284,6 +286,103 @@ class AnalysisController {
         success: false,
         error: error.message
       });
+    }
+  }
+
+  /**
+   * Get analysis history
+   * @param {Object} req - Express request
+   * @param {Object} res - Express response
+   */
+  async getAnalysisHistory(req, res) {
+    try {
+      const { projectId } = req.params;
+      const history = await this.analysisOutputService.getAnalysisHistory(projectId);
+      res.json({ success: true, data: history });
+    } catch (error) {
+      this.logger.error(`[AnalysisController] Failed to get analysis history:`, error);
+      res.status(500).json({ success: false, error: error.message });
+    }
+  }
+
+  /**
+   * Get analysis file
+   * @param {Object} req - Express request
+   * @param {Object} res - Express response
+   */
+  async getAnalysisFile(req, res) {
+    try {
+      const { projectId, filename } = req.params;
+      const content = await this.analysisOutputService.getAnalysisFile(projectId, filename);
+      res.json({ success: true, data: content });
+    } catch (error) {
+      this.logger.error(`[AnalysisController] Failed to get analysis file:`, error);
+      res.status(404).json({ success: false, error: error.message });
+    }
+  }
+
+  /**
+   * Get analysis from database
+   * @param {Object} req - Express request
+   * @param {Object} res - Express response
+   */
+  async getAnalysisFromDatabase(req, res) {
+    try {
+      const { projectId } = req.params;
+      const { type } = req.query;
+      
+      let analyses;
+      if (type) {
+        analyses = await this.analysisRepository.findByProjectIdAndType(projectId, type);
+      } else {
+        analyses = await this.analysisRepository.findByProjectId(projectId);
+      }
+      
+      res.json({ success: true, data: analyses });
+    } catch (error) {
+      this.logger.error(`[AnalysisController] Failed to get analysis from database:`, error);
+      res.status(500).json({ success: false, error: error.message });
+    }
+  }
+
+  /**
+   * Generate comprehensive report
+   * @param {Object} req - Express request
+   * @param {Object} res - Express response
+   */
+  async generateComprehensiveReport(req, res) {
+    try {
+      const { projectId } = req.params;
+      
+      // Get all analyses for this project
+      const analyses = await this.analysisRepository.findByProjectId(projectId);
+      
+      // Group by type and get latest
+      const latestAnalyses = {};
+      analyses.forEach(analysis => {
+        if (!latestAnalyses[analysis.analysisType] || 
+            new Date(analysis.timestamp) > new Date(latestAnalyses[analysis.analysisType].timestamp)) {
+          latestAnalyses[analysis.analysisType] = analysis;
+        }
+      });
+      
+      // Generate markdown report
+      const reportResult = await this.analysisOutputService.generateMarkdownReport(
+        projectId, 
+        latestAnalyses
+      );
+      
+      res.json({ 
+        success: true, 
+        data: {
+          reportFile: reportResult.filename,
+          reportPath: reportResult.filepath,
+          analyses: Object.keys(latestAnalyses)
+        }
+      });
+    } catch (error) {
+      this.logger.error(`[AnalysisController] Failed to generate comprehensive report:`, error);
+      res.status(500).json({ success: false, error: error.message });
     }
   }
 

@@ -10,6 +10,7 @@ class AutoModeController {
         this.queryBus = dependencies.queryBus;
         this.logger = dependencies.logger || console;
         this.eventBus = dependencies.eventBus;
+        this.application = dependencies.application;
     }
 
     /**
@@ -27,6 +28,7 @@ class AutoModeController {
                 });
             }
 
+            const { projectId } = req.params;
             const {
                 projectPath,
                 mode = 'full',
@@ -37,8 +39,28 @@ class AutoModeController {
 
             const userId = req.user?.id;
 
+            // Get workspace path from project ID if not provided
+            let workspacePath = projectPath;
+            if (!workspacePath && projectId !== 'default') {
+                // Try to get workspace path from project mapping
+                const projectMappingService = this.application?.projectMappingService;
+                if (projectMappingService) {
+                    workspacePath = projectMappingService.getWorkspaceFromProjectId(projectId);
+                }
+            }
+
+            // Fallback to current working directory
+            if (!workspacePath) {
+                workspacePath = process.cwd();
+            }
+
+            this.logger.info('AutoModeController: Using workspace path', {
+                projectId,
+                workspacePath
+            });
+
             const command = new AutoModeCommand({
-                projectPath,
+                projectPath: workspacePath,
                 mode,
                 options,
                 aiModel,

@@ -1,3 +1,5 @@
+const path = require('path');
+
 /**
  * AutoModeHandler - Handles VibeCoder auto mode execution
  * Implements the Command Handler pattern for full automation
@@ -10,6 +12,7 @@ class AutoModeHandler {
         this.logger = dependencies.logger;
         this.cursorIDEService = dependencies.cursorIDEService;
         this.projectAnalyzer = dependencies.projectAnalyzer;
+        this.projectMappingService = dependencies.projectMappingService;
         this.handlerId = this.generateHandlerId();
     }
 
@@ -75,12 +78,16 @@ class AutoModeHandler {
             const aiSuggestions = await this.cursorIDEService.generateTaskSuggestions(projectAnalysis);
             console.log('🔍 [AutoModeHandler] AI suggestions generated:', aiSuggestions);
             
-            // 3. Create real tasks from suggestions
+            // 3. Get project ID from workspace path
+            const projectId = this.projectMappingService.getProjectIdFromWorkspace(command.projectPath);
+            console.log('🔍 [AutoModeHandler] Project ID:', projectId, 'from workspace:', command.projectPath);
+            
+            // 4. Create real tasks from suggestions
             const tasks = [];
             for (const suggestion of aiSuggestions) {
                 const task = await this.taskRepository.create({
                     id: `auto_task_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-                    projectId: 'default',
+                    projectId: projectId,
                     title: suggestion.title,
                     description: suggestion.description,
                     type: suggestion.type || 'analysis',
@@ -89,6 +96,7 @@ class AutoModeHandler {
                     metadata: {
                         source: 'ai_auto_mode',
                         projectPath: command.projectPath,
+                        projectId: projectId,
                         analysisId: projectAnalysis.id
                     }
                 });
@@ -174,7 +182,7 @@ Complete all generated tasks and provide a comprehensive summary.
                 tasks: tasks,
                 scripts: [],
                 analysis: projectAnalysis,
-                tasksFilePath: tasksFilePath
+                tasksFilePath: path.join(process.cwd(), 'auto_mode_tasks.md')
             };
             await this.eventBus.publish('auto.mode.completed', {
                 projectPath: command.projectPath,

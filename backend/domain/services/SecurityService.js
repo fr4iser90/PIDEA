@@ -2,10 +2,12 @@
  * SecurityService - Domain service for security analysis
  */
 class SecurityService {
-  constructor(securityAnalyzer, eventBus, logger) {
+  constructor(securityAnalyzer, eventBus, logger, analysisOutputService, analysisRepository) {
     this.securityAnalyzer = securityAnalyzer;
     this.eventBus = eventBus || { emit: () => {} };
     this.logger = logger || { info: () => {}, error: () => {}, warn: () => {} };
+    this.analysisOutputService = analysisOutputService;
+    this.analysisRepository = analysisRepository;
   }
 
   /**
@@ -14,14 +16,35 @@ class SecurityService {
    * @param {Object} options - Analysis options
    * @returns {Promise<Object>} Security analysis results
    */
-  async analyzeSecurity(projectPath, options = {}) {
+  async analyzeSecurity(projectPath, options = {}, projectId = 'default') {
     try {
       this.logger.info(`[SecurityService] Starting security analysis for: ${projectPath}`);
 
       const analysis = await this.securityAnalyzer.analyzeSecurity(projectPath, options);
 
+      // Save to file
+      if (this.analysisOutputService) {
+        const fileResult = await this.analysisOutputService.saveAnalysisResult(
+          projectId, 
+          'security', 
+          analysis
+        );
+        
+        // Save to database
+        if (this.analysisRepository) {
+          const AnalysisResult = require('../entities/AnalysisResult');
+          const analysisResult = AnalysisResult.create(
+            projectId, 
+            'security', 
+            analysis, 
+            fileResult.filepath
+          );
+          await this.analysisRepository.save(analysisResult);
+        }
+      }
+
       this.logger.info(`[SecurityService] Security analysis completed for: ${projectPath}`);
-      this.eventBus.emit('security:analysis:completed', { projectPath, analysis });
+      this.eventBus.emit('security:analysis:completed', { projectPath, analysis, projectId });
 
       return analysis;
     } catch (error) {

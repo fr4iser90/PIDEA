@@ -3,6 +3,18 @@ import ChatMessage from '@domain/entities/ChatMessage.jsx';
 import ChatSession from '@domain/entities/ChatSession.jsx';
 import useAuthStore from '@infrastructure/stores/AuthStore.jsx';
 
+// Utility function to convert workspace path to project ID
+const getProjectIdFromWorkspace = (workspacePath) => {
+  if (!workspacePath) return 'default';
+  
+  // Extract project name from path
+  const pathParts = workspacePath.split('/');
+  const projectName = pathParts[pathParts.length - 1];
+  
+  // Convert to lowercase and remove special characters
+  return projectName.toLowerCase().replace(/[^a-z0-9]/g, '');
+};
+
 // Central API Configuration
 const API_CONFIG = {
   baseURL: 'http://localhost:3000',
@@ -58,6 +70,11 @@ const API_CONFIG = {
         stop: (projectId) => `/api/projects/${projectId}/auto/stop`,
         status: (projectId) => `/api/projects/${projectId}/auto/status`
       }
+    },
+    analysis: {
+      history: (projectId) => `/api/projects/${projectId}/analysis/history`,
+      file: (projectId, filename) => `/api/projects/${projectId}/analysis/files/${filename}`,
+      report: (projectId) => `/api/projects/${projectId}/analysis/report`
     },
     vibecoder: {
       analyze: (projectId) => `/api/projects/${projectId}/auto/execute`,
@@ -126,6 +143,28 @@ export default class APIChatRepository extends ChatRepository {
     super();
     this.baseURL = API_CONFIG.baseURL;
     this.currentSession = null;
+    this.currentProjectId = null;
+  }
+
+  // Get current project ID from active IDE
+  async getCurrentProjectId() {
+    try {
+      const ideList = await this.getIDEs();
+      if (ideList.success && ideList.data) {
+        const activeIDE = ideList.data.find(ide => ide.active);
+        if (activeIDE && activeIDE.workspacePath) {
+          this.currentProjectId = getProjectIdFromWorkspace(activeIDE.workspacePath);
+          console.log('🔍 [APIChatRepository] Current project ID:', this.currentProjectId, 'from workspace:', activeIDE.workspacePath);
+          return this.currentProjectId;
+        }
+      }
+    } catch (error) {
+      console.error('❌ [APIChatRepository] Error getting current project ID:', error);
+    }
+    
+    // Fallback to default
+    this.currentProjectId = 'default';
+    return this.currentProjectId;
   }
 
   async getChatHistory() {
@@ -249,66 +288,95 @@ export default class APIChatRepository extends ChatRepository {
   }
 
   // Task Management Methods
-  async createTask(taskData, projectId = 'default') {
-    return apiCall(API_CONFIG.endpoints.tasks.projectCreate(projectId), {
+  async createTask(taskData, projectId = null) {
+    const currentProjectId = projectId || await this.getCurrentProjectId();
+    return apiCall(API_CONFIG.endpoints.tasks.projectCreate(currentProjectId), {
       method: 'POST',
       body: JSON.stringify(taskData)
     });
   }
 
-  async getTasks(projectId = 'default') {
-    return apiCall(API_CONFIG.endpoints.tasks.projectTasks(projectId));
+  async getTasks(projectId = null) {
+    const currentProjectId = projectId || await this.getCurrentProjectId();
+    return apiCall(API_CONFIG.endpoints.tasks.projectTasks(currentProjectId));
   }
 
-  async getTask(taskId, projectId = 'default') {
-    return apiCall(API_CONFIG.endpoints.tasks.projectGet(projectId, taskId));
+  async getTask(taskId, projectId = null) {
+    const currentProjectId = projectId || await this.getCurrentProjectId();
+    return apiCall(API_CONFIG.endpoints.tasks.projectGet(currentProjectId, taskId));
   }
 
-  async updateTask(taskId, taskData, projectId = 'default') {
-    return apiCall(API_CONFIG.endpoints.tasks.projectUpdate(projectId, taskId), {
+  async updateTask(taskId, taskData, projectId = null) {
+    const currentProjectId = projectId || await this.getCurrentProjectId();
+    return apiCall(API_CONFIG.endpoints.tasks.projectUpdate(currentProjectId, taskId), {
       method: 'PUT',
       body: JSON.stringify(taskData)
     });
   }
 
-  async deleteTask(taskId, projectId = 'default') {
-    return apiCall(API_CONFIG.endpoints.tasks.projectDelete(projectId, taskId), {
+  async deleteTask(taskId, projectId = null) {
+    const currentProjectId = projectId || await this.getCurrentProjectId();
+    return apiCall(API_CONFIG.endpoints.tasks.projectDelete(currentProjectId, taskId), {
       method: 'DELETE'
     });
   }
 
-  async executeTask(taskId, projectId = 'default') {
-    return apiCall(API_CONFIG.endpoints.tasks.projectExecute(projectId, taskId), {
+  async executeTask(taskId, projectId = null) {
+    const currentProjectId = projectId || await this.getCurrentProjectId();
+    return apiCall(API_CONFIG.endpoints.tasks.projectExecute(currentProjectId, taskId), {
       method: 'POST'
     });
   }
 
-  async getTaskStatus(taskId, projectId = 'default') {
-    return apiCall(API_CONFIG.endpoints.tasks.projectStatus(projectId, taskId));
+  async getTaskStatus(taskId, projectId = null) {
+    const currentProjectId = projectId || await this.getCurrentProjectId();
+    return apiCall(API_CONFIG.endpoints.tasks.projectStatus(currentProjectId, taskId));
   }
 
-  async analyzeProject(projectPath, options = {}, projectId = 'default') {
-    return apiCall(API_CONFIG.endpoints.tasks.analysis.project(projectId), {
+  async analyzeProject(projectPath, options = {}, projectId = null) {
+    const currentProjectId = projectId || await this.getCurrentProjectId();
+    return apiCall(API_CONFIG.endpoints.tasks.analysis.project(currentProjectId), {
       method: 'POST',
       body: JSON.stringify({ projectPath, ...options })
     });
   }
 
-  async startAutoMode(projectId = 'default', options = {}) {
-    return apiCall(API_CONFIG.endpoints.tasks.autoMode.start(projectId), {
+  async startAutoMode(projectId = null, options = {}) {
+    const currentProjectId = projectId || await this.getCurrentProjectId();
+    return apiCall(API_CONFIG.endpoints.tasks.autoMode.start(currentProjectId), {
       method: 'POST',
       body: JSON.stringify({ ...options })
     });
   }
 
-  async stopAutoMode(projectId = 'default') {
-    return apiCall(API_CONFIG.endpoints.tasks.autoMode.stop(projectId), {
+  async stopAutoMode(projectId = null) {
+    const currentProjectId = projectId || await this.getCurrentProjectId();
+    return apiCall(API_CONFIG.endpoints.tasks.autoMode.stop(currentProjectId), {
       method: 'POST'
     });
   }
 
-  async getAutoModeStatus(projectId = 'default') {
-    return apiCall(API_CONFIG.endpoints.tasks.autoMode.status(projectId));
+  async getAutoModeStatus(projectId = null) {
+    const currentProjectId = projectId || await this.getCurrentProjectId();
+    return apiCall(API_CONFIG.endpoints.tasks.autoMode.status(currentProjectId));
+  }
+
+  // Analysis output methods
+  async getAnalysisHistory(projectId = null) {
+    const currentProjectId = projectId || await this.getCurrentProjectId();
+    return apiCall(API_CONFIG.endpoints.analysis.history(currentProjectId));
+  }
+
+  async getAnalysisFile(projectId, filename) {
+    const currentProjectId = projectId || await this.getCurrentProjectId();
+    return apiCall(API_CONFIG.endpoints.analysis.file(currentProjectId, filename));
+  }
+
+  async generateAnalysisReport(projectId = null) {
+    const currentProjectId = projectId || await this.getCurrentProjectId();
+    return apiCall(API_CONFIG.endpoints.analysis.report(currentProjectId), {
+      method: 'POST'
+    });
   }
 }
 

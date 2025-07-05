@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import AnalysisPanelComponent from './chat/panel/AnalysisPanelComponent.jsx';
 
 function ChatRightPanelComponent({ eventBus }) {
   const [currentTab, setCurrentTab] = useState('chat');
@@ -106,6 +107,7 @@ function ChatRightPanelComponent({ eventBus }) {
         <div className="panel-tabs">
           <button className={`tab-btn${currentTab === 'chat' ? ' active' : ''}`} data-tab="chat" onClick={() => handleTabSwitch('chat')}>💬 Chat</button>
           <button className={`tab-btn${currentTab === 'files' ? ' active' : ''}`} data-tab="files" onClick={() => handleTabSwitch('files')}>📁 Files</button>
+          <button className={`tab-btn${currentTab === 'analysis' ? ' active' : ''}`} data-tab="analysis" onClick={() => handleTabSwitch('analysis')}>📊 Analysis</button>
           <button className={`tab-btn${currentTab === 'settings' ? ' active' : ''}`} data-tab="settings" onClick={() => handleTabSwitch('settings')}>⚙️</button>
         </div>
         <button id="toggleChatPanelBtn" className="btn-icon" title="Panel ein-/ausblenden" onClick={handleTogglePanel}>◀</button>
@@ -113,6 +115,7 @@ function ChatRightPanelComponent({ eventBus }) {
       <div className="panel-content">
         {currentTab === 'chat' && renderChatTab()}
         {currentTab === 'files' && renderFilesTab()}
+        {currentTab === 'analysis' && <AnalysisPanelComponent />}
         {currentTab === 'settings' && renderSettingsTab()}
       </div>
     </div>

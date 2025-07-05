@@ -206,6 +206,13 @@ class Application {
     this.performanceAnalyzer = new PerformanceAnalyzer();
     this.architectureAnalyzer = new ArchitectureAnalyzer();
 
+    // Initialize analysis output service and repository
+    this.analysisOutputService = new (require('./domain/services/AnalysisOutputService'))();
+    this.analysisRepository = new (require('./infrastructure/database/InMemoryAnalysisRepository'))();
+
+    // Initialize project mapping service
+    this.projectMappingService = new (require('./domain/services/ProjectMappingService'))();
+
     // Initialize task repository and service
     this.taskRepository = new InMemoryTaskRepository();
     this.taskService = new TaskService(this.taskRepository, this.aiService, this.projectAnalyzer, this.cursorIDEService);
@@ -231,25 +238,33 @@ class Application {
     this.codeQualityService = new (require('./domain/services/CodeQualityService'))(
       this.codeQualityAnalyzer,
       this.eventBus,
-      this.logger
+      this.logger,
+      this.analysisOutputService,
+      this.analysisRepository
     );
 
     this.securityService = new (require('./domain/services/SecurityService'))(
       this.securityAnalyzer,
       this.eventBus,
-      this.logger
+      this.logger,
+      this.analysisOutputService,
+      this.analysisRepository
     );
 
     this.performanceService = new (require('./domain/services/PerformanceService'))(
       this.performanceAnalyzer,
       this.eventBus,
-      this.logger
+      this.logger,
+      this.analysisOutputService,
+      this.analysisRepository
     );
 
     this.architectureService = new (require('./domain/services/ArchitectureService'))(
       this.architectureAnalyzer,
       this.eventBus,
-      this.logger
+      this.logger,
+      this.analysisOutputService,
+      this.analysisRepository
     );
 
     this.logger.info('[Application] Domain services initialized');
@@ -292,7 +307,8 @@ class Application {
       eventBus: this.eventBus,
       logger: this.logger,
       cursorIDEService: this.cursorIDEService,
-      projectAnalyzer: this.projectAnalyzer
+      projectAnalyzer: this.projectAnalyzer,
+      projectMappingService: this.projectMappingService
     });
     // TODO: Add TaskExecutionEngine when available
     this.taskExecutionEngine = null;
@@ -339,7 +355,8 @@ class Application {
       commandBus: this.commandBus,
       queryBus: this.queryBus,
       logger: this.logger,
-      eventBus: this.eventBus
+      eventBus: this.eventBus,
+      application: this
     });
 
     this.analysisController = new AnalysisController(
@@ -347,7 +364,9 @@ class Application {
       this.securityService,
       this.performanceService,
       this.architectureService,
-      this.logger
+      this.logger,
+      this.analysisOutputService,
+      this.analysisRepository
     );
 
     this.logger.info('[Application] Presentation layer initialized');
@@ -542,6 +561,12 @@ class Application {
     this.app.post('/api/projects/:projectId/analysis/performance', (req, res) => this.analysisController.analyzePerformance(req, res));
     this.app.post('/api/projects/:projectId/analysis/architecture', (req, res) => this.analysisController.analyzeArchitecture(req, res));
     this.app.post('/api/projects/:projectId/analysis/comprehensive', (req, res) => this.analysisController.analyzeComprehensive(req, res));
+    
+    // Analysis output and history routes
+    this.app.get('/api/projects/:projectId/analysis/history', (req, res) => this.analysisController.getAnalysisHistory(req, res));
+    this.app.get('/api/projects/:projectId/analysis/files/:filename', (req, res) => this.analysisController.getAnalysisFile(req, res));
+    this.app.get('/api/projects/:projectId/analysis/database', (req, res) => this.analysisController.getAnalysisFromDatabase(req, res));
+    this.app.post('/api/projects/:projectId/analysis/report', (req, res) => this.analysisController.generateComprehensiveReport(req, res));
 
     // Script Generation routes (protected) - PROJECT-BASED
     this.app.use('/api/projects/:projectId/scripts', this.authMiddleware.authenticate());

@@ -2,10 +2,12 @@
  * PerformanceService - Domain service for performance analysis
  */
 class PerformanceService {
-  constructor(performanceAnalyzer, eventBus, logger) {
+  constructor(performanceAnalyzer, eventBus, logger, analysisOutputService, analysisRepository) {
     this.performanceAnalyzer = performanceAnalyzer;
     this.eventBus = eventBus || { emit: () => {} };
     this.logger = logger || { info: () => {}, error: () => {}, warn: () => {} };
+    this.analysisOutputService = analysisOutputService;
+    this.analysisRepository = analysisRepository;
   }
 
   /**
@@ -14,14 +16,35 @@ class PerformanceService {
    * @param {Object} options - Analysis options
    * @returns {Promise<Object>} Performance analysis results
    */
-  async analyzePerformance(projectPath, options = {}) {
+  async analyzePerformance(projectPath, options = {}, projectId = 'default') {
     try {
       this.logger.info(`[PerformanceService] Starting performance analysis for: ${projectPath}`);
 
       const analysis = await this.performanceAnalyzer.analyzePerformance(projectPath, options);
 
+      // Save to file
+      if (this.analysisOutputService) {
+        const fileResult = await this.analysisOutputService.saveAnalysisResult(
+          projectId, 
+          'performance', 
+          analysis
+        );
+        
+        // Save to database
+        if (this.analysisRepository) {
+          const AnalysisResult = require('../entities/AnalysisResult');
+          const analysisResult = AnalysisResult.create(
+            projectId, 
+            'performance', 
+            analysis, 
+            fileResult.filepath
+          );
+          await this.analysisRepository.save(analysisResult);
+        }
+      }
+
       this.logger.info(`[PerformanceService] Performance analysis completed for: ${projectPath}`);
-      this.eventBus.emit('performance:analysis:completed', { projectPath, analysis });
+      this.eventBus.emit('performance:analysis:completed', { projectPath, analysis, projectId });
 
       return analysis;
     } catch (error) {

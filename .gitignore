@@ -7,3 +7,4 @@ node_modules
 .secrets
 logs
 backend/database
+output/

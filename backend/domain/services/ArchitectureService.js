@@ -2,10 +2,12 @@
  * ArchitectureService - Domain service for architecture analysis
  */
 class ArchitectureService {
-  constructor(architectureAnalyzer, eventBus, logger) {
+  constructor(architectureAnalyzer, eventBus, logger, analysisOutputService, analysisRepository) {
     this.architectureAnalyzer = architectureAnalyzer;
     this.eventBus = eventBus || { emit: () => {} };
     this.logger = logger || { info: () => {}, error: () => {}, warn: () => {} };
+    this.analysisOutputService = analysisOutputService;
+    this.analysisRepository = analysisRepository;
   }
 
   /**
@@ -14,14 +16,35 @@ class ArchitectureService {
    * @param {Object} options - Analysis options
    * @returns {Promise<Object>} Architecture analysis results
    */
-  async analyzeArchitecture(projectPath, options = {}) {
+  async analyzeArchitecture(projectPath, options = {}, projectId = 'default') {
     try {
       this.logger.info(`[ArchitectureService] Starting architecture analysis for: ${projectPath}`);
 
       const analysis = await this.architectureAnalyzer.analyzeArchitecture(projectPath, options);
 
+      // Save to file
+      if (this.analysisOutputService) {
+        const fileResult = await this.analysisOutputService.saveAnalysisResult(
+          projectId, 
+          'architecture', 
+          analysis
+        );
+        
+        // Save to database
+        if (this.analysisRepository) {
+          const AnalysisResult = require('../entities/AnalysisResult');
+          const analysisResult = AnalysisResult.create(
+            projectId, 
+            'architecture', 
+            analysis, 
+            fileResult.filepath
+          );
+          await this.analysisRepository.save(analysisResult);
+        }
+      }
+
       this.logger.info(`[ArchitectureService] Architecture analysis completed for: ${projectPath}`);
-      this.eventBus.emit('architecture:analysis:completed', { projectPath, analysis });
+      this.eventBus.emit('architecture:analysis:completed', { projectPath, analysis, projectId });
 
       return analysis;
     } catch (error) {
