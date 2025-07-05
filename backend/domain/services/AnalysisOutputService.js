@@ -957,8 +957,8 @@ class AnalysisOutputService {
     formatArchitectureData(data, metrics = null, recommendations = null) {
         let md = '';
         
-        // Use provided metrics or extract from data
-        const archMetrics = metrics || data.metrics || {};
+        // Use package-specific metrics from data if available, otherwise use passed metrics
+        const archMetrics = data.metrics || metrics || {};
         const archRecommendations = recommendations || data.recommendations || [];
         
         md += '### Architecture Analysis\n\n';
