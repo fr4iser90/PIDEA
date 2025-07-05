@@ -53,6 +53,69 @@ class CursorIDEService {
     }
   }
 
+  /**
+   * Send a prompt to Cursor IDE via chat
+   * @param {string} prompt - The prompt to send
+   * @returns {Promise<Object>} Result of sending prompt
+   */
+  async postToCursor(prompt) {
+    try {
+      console.log('[CursorIDEService] Sending prompt to Cursor IDE:', prompt.substring(0, 100) + '...');
+      
+      // Use the chat message handler to send the prompt
+      const result = await this.chatMessageHandler.sendMessage(prompt);
+      
+      console.log('[CursorIDEService] Prompt sent successfully');
+      return result;
+    } catch (error) {
+      console.error('[CursorIDEService] Error sending prompt to Cursor:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Apply refactoring changes to a file in Cursor IDE
+   * @param {string} filePath - Path to the file to refactor
+   * @param {string} refactoredCode - The refactored code content
+   * @returns {Promise<Object>} Result of the refactoring application
+   */
+  async applyRefactoring(filePath, refactoredCode) {
+    try {
+      console.log('[CursorIDEService] Applying refactoring to file:', filePath);
+      
+      // Create a prompt to apply the refactored code
+      const applyPrompt = `Please apply the following refactored code to the file ${filePath}:
+
+\`\`\`
+${refactoredCode}
+\`\`\`
+
+Please replace the entire content of the file with this refactored version. Make sure to:
+1. Replace all existing content
+2. Maintain proper formatting
+3. Preserve any necessary imports or dependencies
+4. Ensure the code compiles and runs correctly
+
+After applying the changes, please confirm that the refactoring has been completed successfully.`;
+
+      // Send the refactoring prompt to Cursor IDE
+      const result = await this.postToCursor(applyPrompt);
+      
+      console.log('[CursorIDEService] Refactoring applied successfully');
+      
+      return {
+        success: true,
+        filePath,
+        appliedAt: new Date(),
+        result: result,
+        message: 'Refactoring applied to Cursor IDE'
+      };
+    } catch (error) {
+      console.error('[CursorIDEService] Error applying refactoring:', error);
+      throw new Error(`Failed to apply refactoring: ${error.message}`);
+    }
+  }
+
   async switchToSession(session) {
     if (!session.idePort) {
       throw new Error('Session has no IDE port assigned');

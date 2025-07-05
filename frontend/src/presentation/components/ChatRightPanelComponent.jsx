@@ -266,14 +266,73 @@ function ChatRightPanelComponent({ eventBus }) {
     console.log('Starting refactoring for tasks:', selectedTasks);
     setIsTaskModalOpen(false);
     
-    // TODO: Implement the actual refactoring workflow
-    // 1. Git branch creation
-    // 2. Playwright chat interaction
-    // 3. AI task execution
-    // 4. Validation and debugging
-    
-    // For now, just show a message
-    alert(`Starting automated refactoring for ${selectedTasks.length} tasks...`);
+    if (!selectedTasks || selectedTasks.length === 0) {
+      alert('No tasks selected for refactoring');
+      return;
+    }
+
+    try {
+      setFeedback(`Starting automated refactoring for ${selectedTasks.length} tasks...`);
+      
+      // Execute each selected task
+      const executionResults = [];
+      
+      for (const task of selectedTasks) {
+        try {
+          setFeedback(`Executing task: ${task.title}...`);
+          
+          // Execute the task via API
+          const result = await apiRepository.executeTask(task.id);
+          
+          if (result.success) {
+            executionResults.push({
+              taskId: task.id,
+              taskTitle: task.title,
+              status: 'success',
+              result: result.data
+            });
+            setFeedback(`✅ Task "${task.title}" executed successfully`);
+          } else {
+            executionResults.push({
+              taskId: task.id,
+              taskTitle: task.title,
+              status: 'failed',
+              error: result.error || 'Unknown error'
+            });
+            setFeedback(`❌ Task "${task.title}" failed: ${result.error}`);
+          }
+          
+          // Small delay between tasks
+          await new Promise(resolve => setTimeout(resolve, 1000));
+          
+        } catch (error) {
+          console.error(`Failed to execute task ${task.id}:`, error);
+          executionResults.push({
+            taskId: task.id,
+            taskTitle: task.title,
+            status: 'error',
+            error: error.message
+          });
+          setFeedback(`❌ Task "${task.title}" error: ${error.message}`);
+        }
+      }
+      
+      // Show final results
+      const successfulTasks = executionResults.filter(r => r.status === 'success');
+      const failedTasks = executionResults.filter(r => r.status !== 'success');
+      
+      setFeedback(`Refactoring completed! ${successfulTasks.length} successful, ${failedTasks.length} failed.`);
+      
+      // Log detailed results
+      console.log('Refactoring execution results:', executionResults);
+      
+      // Refresh tasks to show updated status
+      await handleRefresh();
+      
+    } catch (error) {
+      console.error('Refactoring workflow failed:', error);
+      setFeedback(`❌ Refactoring workflow failed: ${error.message}`);
+    }
   };
 
   const handleCloseTaskModal = () => {

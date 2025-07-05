@@ -275,9 +275,19 @@ class Application {
     // Initialize project mapping service
     this.projectMappingService = new (require('./domain/services/ProjectMappingService'))();
 
-    // Initialize task repository and service
+    // Initialize task repository and services
     this.taskRepository = new InMemoryTaskRepository();
+    this.taskExecutionRepository = new (require('./infrastructure/database/InMemoryTaskExecutionRepository'))();
     this.taskService = new TaskService(this.taskRepository, this.aiService, this.projectAnalyzer, this.cursorIDEService);
+    
+    // Initialize TaskExecutionService for proper task execution
+    this.taskExecutionService = new (require('./domain/services/TaskExecutionService'))(
+      this.taskRepository,
+      this.taskExecutionRepository,
+      this.cursorIDEService,
+      this.eventBus,
+      this.logger
+    );
     
     // Initialize task validation service
     this.taskValidationService = new TaskValidationService(
