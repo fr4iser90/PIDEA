@@ -6,7 +6,7 @@ const semver = require('semver');
 class DependencyAnalyzer {
     constructor() {}
 
-    async analyze(projectPath, options = {}) {
+    async analyzeDependencies(projectPath, options = {}) {
         const packageJsonPath = path.join(projectPath, 'package.json');
         const lockPath = path.join(projectPath, 'package-lock.json');
         let packageJson, packageLock;

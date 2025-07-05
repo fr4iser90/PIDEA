@@ -241,7 +241,7 @@ class AnalyzeDependenciesHandler {
         const options = command.getAnalysisOptions();
         
         try {
-            const dependenciesAnalysis = await this.dependencyAnalyzer.analyze(
+            const dependenciesAnalysis = await this.dependencyAnalyzer.analyzeDependencies(
                 projectInfo.path,
                 {
                     analyzeVersions: options.analyzeVersions,

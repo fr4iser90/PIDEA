@@ -9,6 +9,7 @@ const AnalyzeRepoStructureCommand = require('../../commands/analyze/AnalyzeRepoS
 const AnalyzeArchitectureCommand = require('../../commands/analyze/AnalyzeArchitectureCommand');
 const AnalyzeCodeQualityCommand = require('../../commands/analyze/AnalyzeCodeQualityCommand');
 const AnalyzeDependenciesCommand = require('../../commands/analyze/AnalyzeDependenciesCommand');
+const AnalyzeTechStackCommand = require('../../commands/analyze/AnalyzeTechStackCommand');
 const { SubprojectDetector } = require('../../../domain/services');
 
 
@@ -170,7 +171,7 @@ class VibeCoderModeHandler {
         if (sub.type === 'nodejs') {
             result.analyses.codeQuality = await this.codeQualityAnalyzer.analyze(sub.path);
             result.analyses.architecture = await this.architectureAnalyzer.analyze(sub.path);
-            result.analyses.dependencies = await this.dependencyAnalyzer.analyze(sub.path);
+            result.analyses.dependencies = await this.dependencyAnalyzer.analyzeDependencies(sub.path);
             result.analyses.security = await this.securityAnalyzer.analyze(sub.path);
             result.analyses.performance = await this.performanceAnalyzer.analyze(sub.path);
         }
@@ -523,7 +524,26 @@ class VibeCoderModeHandler {
             const dependenciesResult = await this.commandBus.execute('AnalyzeDependenciesCommand', dependenciesCommandInstance);
             analysisResults.dependencies = dependenciesResult;
             
-            // 5. Analyze performance using real analyzer
+            // 5. Analyze tech stack
+            const techStackCommand = {
+                commandId: `${command.commandId}-techstack`,
+                projectPath: command.projectPath,
+                options: {
+                    detectFrameworks: true,
+                    detectLibraries: true,
+                    detectTools: true,
+                    detectLanguages: true,
+                    detectDatabases: true,
+                    detectCloudServices: true
+                },
+                requestedBy: command.requestedBy || 'vibecoder-mode',
+                metadata: command.getMetadata()
+            };
+            const techStackCommandInstance = new AnalyzeTechStackCommand(techStackCommand);
+            const techStackResult = await this.commandBus.execute('AnalyzeTechStackCommand', techStackCommandInstance);
+            analysisResults.techStack = techStackResult;
+            
+            // 6. Analyze performance using real analyzer
             try {
                 const performanceAnalyzer = require('@infrastructure/external/PerformanceAnalyzer');
                 const perfAnalyzer = new performanceAnalyzer();
@@ -544,7 +564,7 @@ class VibeCoderModeHandler {
                 };
             }
             
-            // 6. Analyze security using real analyzer
+            // 7. Analyze security using real analyzer
             try {
                 const securityAnalyzer = require('@infrastructure/external/SecurityAnalyzer');
                 const secAnalyzer = new securityAnalyzer();
@@ -565,26 +585,7 @@ class VibeCoderModeHandler {
                 };
             }
             
-            // 7. Analyze tech stack using real analyzer
-            try {
-                const techStackAnalyzer = require('@infrastructure/external/TechStackAnalyzer');
-                const techAnalyzer = new techStackAnalyzer();
-                const techStackResult = await techAnalyzer.analyzeTechStack(command.projectPath);
-                analysisResults.techStack = {
-                    status: 'success',
-                    result: techStackResult,
-                    metrics: { frameworkCount: techStackResult.frameworks?.length || 0 },
-                    recommendations: techStackResult.recommendations || []
-                };
-            } catch (error) {
-                this.logger.warn('Tech stack analysis failed:', error.message);
-                analysisResults.techStack = {
-                    status: 'failed',
-                    result: { error: error.message },
-                    metrics: { frameworkCount: 0 },
-                    recommendations: ['Tech stack analysis failed']
-                };
-            }
+
             
             results.results = analysisResults;
             

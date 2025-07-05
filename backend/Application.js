@@ -246,6 +246,7 @@ class Application {
     this.securityAnalyzer = new SecurityAnalyzer();
     this.performanceAnalyzer = new PerformanceAnalyzer();
     this.architectureAnalyzer = new ArchitectureAnalyzer();
+    this.techStackAnalyzer = new (require('./infrastructure/external/TechStackAnalyzer'))();
     this.subprojectDetector = new (require('./domain/services/SubprojectDetector'))();
 
     // Initialize analysis output service and repository
@@ -493,6 +494,7 @@ class Application {
     this.commandBus.register('AnalyzeCodeQualityCommand', this.analyzeCodeQualityHandler);
     this.commandBus.register('AnalyzeDependenciesCommand', this.analyzeDependenciesHandler);
     this.commandBus.register('AnalyzeRepoStructureCommand', this.analyzeRepoStructureHandler);
+    this.commandBus.register('AnalyzeTechStackCommand', this.analyzeTechStackHandler);
     this.commandBus.register('VibeCoderAnalyzeCommand', this.vibeCoderAnalyzeHandler);
 
     // Register Refactor Commands

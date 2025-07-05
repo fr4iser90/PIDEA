@@ -181,7 +181,7 @@ class AnalyzeTechStackHandler {
             const projectInfo = await this.getProjectInfo(command.projectPath);
             const analysis = await this.performTechStackAnalysis(command, projectInfo);
             const metrics = this.generateMetrics(analysis);
-            const recommendations = this.generateRecommendations(analysis, command);
+            const recommendations = this.generateRecommendations(analysis, metrics, command);
 
             const duration = Date.now() - startTime;
 
@@ -241,17 +241,18 @@ class AnalyzeTechStackHandler {
         const options = command.getAnalysisOptions();
         
         try {
-            const techStack = await this.projectAnalyzer.analyzeTechStack(
+            // Use the TechStackAnalyzer directly
+            const TechStackAnalyzer = require('@infrastructure/external/TechStackAnalyzer');
+            const techStackAnalyzer = new TechStackAnalyzer();
+            const techStack = await techStackAnalyzer.analyzeTechStack(
                 projectInfo.path,
                 {
                     detectFrameworks: options.detectFrameworks,
                     detectLibraries: options.detectLibraries,
                     detectTools: options.detectTools,
-                    analyzeVersions: options.analyzeVersions,
-                    checkCompatibility: options.checkCompatibility,
-                    detectBuildTools: options.detectBuildTools,
-                    detectTestingFrameworks: options.detectTestingFrameworks,
-                    detectLintingTools: options.detectLintingTools
+                    detectLanguages: options.detectLanguages,
+                    detectDatabases: options.detectDatabases,
+                    detectCloudServices: options.detectCloudServices
                 }
             );
 
@@ -317,9 +318,9 @@ class AnalyzeTechStackHandler {
         return scores.reduce((a, b) => a + b, 0) / scores.length;
     }
 
-    generateRecommendations(analysis, command) {
+    generateRecommendations(analysis, metrics, command) {
         const recommendations = [];
-        const { techStack, metrics } = analysis;
+        const { techStack } = analysis;
 
         // Check for outdated versions
         if (metrics.averageVersionAge > 365) { // 1 year
