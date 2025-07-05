@@ -36,6 +36,20 @@ class CodeQualityAnalyzer {
                 coverage: {}
             };
 
+            // Get all code files
+            const codeFiles = await this.getCodeFiles(projectPath);
+            
+            if (codeFiles.length === 0) {
+                analysis.overallScore = 0;
+                analysis.recommendations.push({
+                    title: 'No code files found',
+                    description: 'No JavaScript/TypeScript files found in the project',
+                    priority: 'high',
+                    category: 'structure'
+                });
+                return analysis;
+            }
+
             // Analyze linting configuration
             analysis.configuration.linting = await this.analyzeLintingConfig(projectPath);
             
@@ -43,19 +57,23 @@ class CodeQualityAnalyzer {
             analysis.configuration.formatting = await this.analyzeFormattingConfig(projectPath);
             
             // Analyze code complexity
-            analysis.metrics.complexity = await this.analyzeComplexity(projectPath);
+            analysis.metrics.complexity = await this.analyzeComplexity(projectPath, codeFiles);
             
             // Analyze maintainability
-            analysis.metrics.maintainability = await this.analyzeMaintainability(projectPath);
+            analysis.metrics.maintainability = await this.analyzeMaintainability(projectPath, codeFiles);
             
             // Analyze readability
-            analysis.metrics.readability = await this.analyzeReadability(projectPath);
+            analysis.metrics.readability = await this.analyzeReadability(projectPath, codeFiles);
             
             // Analyze testability
-            analysis.metrics.testability = await this.analyzeTestability(projectPath);
+            analysis.metrics.testability = await this.analyzeTestability(projectPath, codeFiles);
             
             // Run ESLint analysis
             analysis.issues = await this.runESLintAnalysis(projectPath);
+            
+            // Find code smells and issues
+            const codeSmells = await this.findCodeSmells(projectPath, codeFiles);
+            analysis.issues.push(...codeSmells);
             
             // Generate recommendations
             analysis.recommendations = await this.generateRecommendations(analysis);
@@ -189,9 +207,10 @@ class CodeQualityAnalyzer {
     /**
      * Analyze code complexity
      * @param {string} projectPath - Project directory path
+     * @param {Array} codeFiles - Array of code file paths
      * @returns {Promise<Object>} Complexity analysis
      */
-    async analyzeComplexity(projectPath) {
+    async analyzeComplexity(projectPath, codeFiles) {
         const complexity = {
             cyclomaticComplexity: {},
             cognitiveComplexity: {},
@@ -199,205 +218,105 @@ class CodeQualityAnalyzer {
             functionLength: {},
             classComplexity: {}
         };
-
-        try {
-            const files = await this.getCodeFiles(projectPath);
-            
-            for (const file of files) {
-                const content = await fs.readFile(file, 'utf8');
-                const fileComplexity = this.calculateFileComplexity(content, file);
-                
-                complexity.cyclomaticComplexity[file] = fileComplexity.cyclomatic;
-                complexity.cognitiveComplexity[file] = fileComplexity.cognitive;
-                complexity.nestingDepth[file] = fileComplexity.nesting;
-                complexity.functionLength[file] = fileComplexity.functionLength;
-                complexity.classComplexity[file] = fileComplexity.classComplexity;
+        for (const file of codeFiles) {
+            const content = await fs.readFile(file, 'utf8');
+            // Cyclomatic: count if/for/while/case/catch/&&/||
+            const cyclomatic = (content.match(/\b(if|for|while|case|catch)\b|&&|\|\|/g) || []).length + 1;
+            // Cognitive: count nested blocks
+            const cognitive = (content.match(/\{/g) || []).length;
+            // Nesting: max depth
+            let maxNesting = 0, nesting = 0;
+            for (const line of content.split('\n')) {
+                nesting += (line.match(/\{/g) || []).length;
+                nesting -= (line.match(/\}/g) || []).length;
+                if (nesting > maxNesting) maxNesting = nesting;
             }
-
-        } catch (error) {
-            // Ignore errors
+            // Function length: lines per function
+            const functions = content.match(/function\s+\w+|\w+\s*=\s*\([^)]*\)\s*=>/g) || [];
+            const functionLength = functions.length > 0 ? content.split('\n').length / functions.length : 0;
+            // Class complexity: number of classes
+            const classComplexity = (content.match(/class\s+\w+/g) || []).length;
+            complexity.cyclomaticComplexity[file] = cyclomatic;
+            complexity.cognitiveComplexity[file] = cognitive;
+            complexity.nestingDepth[file] = maxNesting;
+            complexity.functionLength[file] = Math.round(functionLength);
+            complexity.classComplexity[file] = classComplexity;
         }
-
         return complexity;
-    }
-
-    /**
-     * Calculate complexity for a single file
-     * @param {string} content - File content
-     * @param {string} filePath - File path
-     * @returns {Object} Complexity metrics
-     */
-    calculateFileComplexity(content, filePath) {
-        const ext = path.extname(filePath);
-        const isJS = ['.js', '.jsx', '.ts', '.tsx'].includes(ext);
-        
-        if (!isJS) {
-            return {
-                cyclomatic: 0,
-                cognitive: 0,
-                nesting: 0,
-                functionLength: 0,
-                classComplexity: 0
-            };
-        }
-
-        // Simple complexity calculation
-        const lines = content.split('\n');
-        let cyclomatic = 1; // Base complexity
-        let cognitive = 0;
-        let maxNesting = 0;
-        let currentNesting = 0;
-        let functionCount = 0;
-        let totalFunctionLength = 0;
-        let classCount = 0;
-
-        for (const line of lines) {
-            const trimmed = line.trim();
-            
-            // Cyclomatic complexity factors
-            if (trimmed.includes('if ') || trimmed.includes('else if')) cyclomatic++;
-            if (trimmed.includes('for ') || trimmed.includes('while ')) cyclomatic++;
-            if (trimmed.includes('case ') || trimmed.includes('default:')) cyclomatic++;
-            if (trimmed.includes('&&') || trimmed.includes('||')) cyclomatic++;
-            if (trimmed.includes('catch ')) cyclomatic++;
-            if (trimmed.includes('switch ')) cyclomatic++;
-
-            // Cognitive complexity
-            if (trimmed.includes('if ') || trimmed.includes('else if')) cognitive += 1;
-            if (trimmed.includes('for ') || trimmed.includes('while ')) cognitive += 1;
-            if (trimmed.includes('switch ')) cognitive += 1;
-            if (trimmed.includes('catch ')) cognitive += 1;
-            if (trimmed.includes('&&') || trimmed.includes('||')) cognitive += 1;
-
-            // Nesting depth
-            if (trimmed.includes('{')) currentNesting++;
-            if (trimmed.includes('}')) currentNesting--;
-            maxNesting = Math.max(maxNesting, currentNesting);
-
-            // Function detection
-            if (trimmed.includes('function ') || trimmed.includes('=>')) functionCount++;
-
-            // Class detection
-            if (trimmed.includes('class ')) classCount++;
-        }
-
-        return {
-            cyclomatic,
-            cognitive,
-            nesting: maxNesting,
-            functionLength: functionCount > 0 ? Math.round(lines.length / functionCount) : 0,
-            classComplexity: classCount
-        };
     }
 
     /**
      * Analyze maintainability
      * @param {string} projectPath - Project directory path
+     * @param {Array} codeFiles - Array of code file paths
      * @returns {Promise<Object>} Maintainability analysis
      */
-    async analyzeMaintainability(projectPath) {
+    async analyzeMaintainability(projectPath, codeFiles) {
         const maintainability = {
             codeDuplication: 0,
             largeFiles: [],
             longFunctions: [],
             magicNumbers: 0,
             hardcodedStrings: 0,
-            maintainabilityIndex: 0
+            maintainabilityIndex: 100
         };
-
-        try {
-            const files = await this.getCodeFiles(projectPath);
-            
-            for (const file of files) {
-                const content = await fs.readFile(file, 'utf8');
-                const stats = await fs.stat(file);
-                
-                // Large files
-                if (stats.size > 50000) { // 50KB
-                    maintainability.largeFiles.push({
-                        file,
-                        size: stats.size,
-                        lines: content.split('\n').length
-                    });
-                }
-
-                // Analyze content for maintainability issues
-                const lines = content.split('\n');
-                for (const line of lines) {
-                    // Magic numbers
-                    if (/\b\d{3,}\b/.test(line)) maintainability.magicNumbers++;
-                    
-                    // Hardcoded strings
-                    if (line.includes('"http://') || line.includes("'http://")) maintainability.hardcodedStrings++;
-                    if (line.includes('"https://') || line.includes("'https://")) maintainability.hardcodedStrings++;
-                }
+        for (const file of codeFiles) {
+            const content = await fs.readFile(file, 'utf8');
+            const stats = await fs.stat(file);
+            if (stats.size > 50000) {
+                maintainability.largeFiles.push({ file, size: stats.size });
             }
-
-            // Calculate maintainability index (simplified)
-            const totalIssues = maintainability.largeFiles.length + 
-                              maintainability.magicNumbers + 
-                              maintainability.hardcodedStrings;
-            
-            maintainability.maintainabilityIndex = Math.max(0, 100 - totalIssues * 5);
-
-        } catch (error) {
-            // Ignore errors
+            // Magic numbers
+            maintainability.magicNumbers += (content.match(/\b\d{3,}\b/g) || []).length;
+            // Hardcoded strings (URLs)
+            maintainability.hardcodedStrings += (content.match(/['"]https?:\/\//g) || []).length;
+            // Long functions
+            const functions = content.split(/function\s+\w+|\w+\s*=\s*\([^)]*\)\s*=>/);
+            for (const fn of functions) {
+                if (fn.split('\n').length > 80) maintainability.longFunctions.push({ file, length: fn.split('\n').length });
+            }
         }
-
+        // Maintainability Index (simple)
+        const totalIssues = maintainability.largeFiles.length + maintainability.magicNumbers + maintainability.hardcodedStrings + maintainability.longFunctions.length;
+        maintainability.maintainabilityIndex = Math.max(0, 100 - totalIssues * 2);
         return maintainability;
     }
 
     /**
      * Analyze readability
      * @param {string} projectPath - Project directory path
+     * @param {Array} codeFiles - Array of code file paths
      * @returns {Promise<Object>} Readability analysis
      */
-    async analyzeReadability(projectPath) {
+    async analyzeReadability(projectPath, codeFiles) {
         const readability = {
             averageLineLength: 0,
             longLines: 0,
-            commentRatio: 0,
-            namingConventions: {},
-            documentation: {}
+            commentRatio: 0
         };
-
-        try {
-            const files = await this.getCodeFiles(projectPath);
-            let totalLines = 0;
-            let totalLength = 0;
-            let longLines = 0;
-            let commentLines = 0;
-
-            for (const file of files) {
-                const content = await fs.readFile(file, 'utf8');
-                const lines = content.split('\n');
-                
-                for (const line of lines) {
-                    totalLines++;
-                    totalLength += line.length;
-                    
-                    if (line.length > 120) longLines++;
-                    if (line.trim().startsWith('//') || line.trim().startsWith('/*')) commentLines++;
-                }
+        let totalLines = 0, totalLength = 0, longLines = 0, commentLines = 0;
+        for (const file of codeFiles) {
+            const content = await fs.readFile(file, 'utf8');
+            for (const line of content.split('\n')) {
+                totalLines++;
+                totalLength += line.length;
+                if (line.length > 120) longLines++;
+                if (line.trim().startsWith('//') || line.trim().startsWith('/*')) commentLines++;
             }
-
-            readability.averageLineLength = totalLines > 0 ? Math.round(totalLength / totalLines) : 0;
-            readability.longLines = longLines;
-            readability.commentRatio = totalLines > 0 ? Math.round((commentLines / totalLines) * 100) : 0;
-
-        } catch (error) {
-            // Ignore errors
         }
-
+        readability.averageLineLength = totalLines > 0 ? Math.round(totalLength / totalLines) : 0;
+        readability.longLines = longLines;
+        readability.commentRatio = totalLines > 0 ? Math.round((commentLines / totalLines) * 100) : 0;
         return readability;
     }
 
     /**
      * Analyze testability
      * @param {string} projectPath - Project directory path
+     * @param {Array} codeFiles - Array of code file paths
      * @returns {Promise<Object>} Testability analysis
      */
-    async analyzeTestability(projectPath) {
+    async analyzeTestability(projectPath, codeFiles) {
         const testability = {
             hasTests: false,
             testCoverage: 0,
@@ -406,40 +325,19 @@ class CodeQualityAnalyzer {
             mockDependencies: 0,
             testFramework: null
         };
-
+        const testFiles = await this.findTestFiles(projectPath);
+        testability.hasTests = testFiles.length > 0;
+        // Test framework detection
         try {
-            // Check for test files
-            const testFiles = await this.findTestFiles(projectPath);
-            testability.hasTests = testFiles.length > 0;
-
-            // Detect test framework
-            try {
-                const packageJson = JSON.parse(await fs.readFile(path.join(projectPath, 'package.json'), 'utf8'));
-                const deps = { ...packageJson.dependencies, ...packageJson.devDependencies };
-                
-                if (deps.jest) testability.testFramework = 'jest';
-                else if (deps.mocha) testability.testFramework = 'mocha';
-                else if (deps.vitest) testability.testFramework = 'vitest';
-                else if (deps.cypress) testability.testFramework = 'cypress';
-            } catch {
-                // No package.json
-            }
-
-            // Analyze test coverage (simplified)
-            const codeFiles = await this.getCodeFiles(projectPath);
-            const testableFiles = codeFiles.filter(file => 
-                !file.includes('node_modules') && 
-                !file.includes('test') && 
-                !file.includes('spec')
-            );
-
-            testability.testCoverage = testableFiles.length > 0 ? 
-                Math.round((testFiles.length / testableFiles.length) * 100) : 0;
-
-        } catch (error) {
-            // Ignore errors
-        }
-
+            const packageJson = JSON.parse(await fs.readFile(path.join(projectPath, 'package.json'), 'utf8'));
+            const deps = { ...packageJson.dependencies, ...packageJson.devDependencies };
+            if (deps.jest) testability.testFramework = 'jest';
+            else if (deps.mocha) testability.testFramework = 'mocha';
+            else if (deps.vitest) testability.testFramework = 'vitest';
+            else if (deps.cypress) testability.testFramework = 'cypress';
+        } catch {}
+        // Coverage (simple): ratio test files / code files
+        testability.testCoverage = codeFiles.length > 0 ? Math.round((testFiles.length / codeFiles.length) * 100) : 0;
         return testability;
     }
 
@@ -491,67 +389,85 @@ class CodeQualityAnalyzer {
     }
 
     /**
+     * Find test files in project
+     * @param {string} projectPath - Project directory path
+     * @returns {Promise<Array>} Array of test file paths
+     */
+    async findTestFiles(projectPath) {
+        const testFiles = [];
+        
+        try {
+            const getFiles = async (dir) => {
+                const items = await fs.readdir(dir);
+                for (const item of items) {
+                    const itemPath = path.join(dir, item);
+                    const stats = await fs.stat(itemPath);
+                    
+                    if (stats.isDirectory === true && !item.startsWith('.') && item !== 'node_modules') {
+                        await getFiles(itemPath);
+                    } else if (stats.isFile === true) {
+                        if (item.includes('.test.') || item.includes('.spec.') || item.includes('test/')) {
+                            testFiles.push(itemPath);
+                        }
+                    }
+                }
+            };
+            
+            await getFiles(projectPath);
+        } catch (error) {
+            // Ignore errors
+        }
+
+        return testFiles;
+    }
+
+    /**
+     * Find code smells and issues
+     * @param {string} projectPath - Project directory path
+     * @param {Array} codeFiles - Array of code file paths
+     * @returns {Promise<Array>} Array of code smell objects
+     */
+    async findCodeSmells(projectPath, codeFiles) {
+        const smells = [];
+        for (const file of codeFiles) {
+            const content = await fs.readFile(file, 'utf8');
+            // Long function
+            const functions = content.split(/function\s+\w+|\w+\s*=\s*\([^)]*\)\s*=>/);
+            for (const fn of functions) {
+                if (fn.split('\n').length > 80) smells.push({ file, type: 'long-function', message: 'Function too long' });
+            }
+            // Deep nesting
+            let maxNesting = 0, nesting = 0;
+            for (const line of content.split('\n')) {
+                nesting += (line.match(/\{/g) || []).length;
+                nesting -= (line.match(/\}/g) || []).length;
+                if (nesting > maxNesting) maxNesting = nesting;
+            }
+            if (maxNesting > 5) smells.push({ file, type: 'deep-nesting', message: 'Deep nesting detected' });
+            // Magic numbers
+            if ((content.match(/\b\d{3,}\b/g) || []).length > 10) smells.push({ file, type: 'magic-numbers', message: 'Many magic numbers' });
+            // Hardcoded URLs
+            if ((content.match(/['"]https?:\/\//g) || []).length > 0) smells.push({ file, type: 'hardcoded-url', message: 'Hardcoded URL found' });
+            // Console.log
+            if (content.includes('console.log')) smells.push({ file, type: 'console-log', message: 'console.log found' });
+        }
+        return smells;
+    }
+
+    /**
      * Generate recommendations based on analysis
      * @param {Object} analysis - Complete analysis results
      * @returns {Promise<Array>} Recommendations
      */
     async generateRecommendations(analysis) {
-        const recommendations = [];
-
-        // Linting recommendations
-        if (!analysis.configuration.linting.hasESLint) {
-            recommendations.push({
-                title: 'Add ESLint for code quality',
-                description: 'ESLint helps maintain consistent code style and catch potential errors',
-                priority: 'high',
-                category: 'linting'
-            });
-        }
-
-        if (!analysis.configuration.formatting.hasPrettier) {
-            recommendations.push({
-                title: 'Add Prettier for code formatting',
-                description: 'Prettier ensures consistent code formatting across the project',
-                priority: 'medium',
-                category: 'formatting'
-            });
-        }
-
-        // Complexity recommendations
-        const highComplexityFiles = Object.entries(analysis.metrics.complexity.cyclomaticComplexity)
-            .filter(([file, complexity]) => complexity > 10)
-            .map(([file]) => file);
-
-        if (highComplexityFiles.length > 0) {
-            recommendations.push({
-                title: 'Reduce code complexity',
-                description: `High cyclomatic complexity detected in: ${highComplexityFiles.join(', ')}`,
-                priority: 'high',
-                category: 'complexity'
-            });
-        }
-
-        // Maintainability recommendations
-        if (analysis.metrics.maintainability.largeFiles.length > 0) {
-            recommendations.push({
-                title: 'Split large files',
-                description: `${analysis.metrics.maintainability.largeFiles.length} files are too large and should be split`,
-                priority: 'medium',
-                category: 'maintainability'
-            });
-        }
-
-        // Testability recommendations
-        if (!analysis.metrics.testability.hasTests) {
-            recommendations.push({
-                title: 'Add unit tests',
-                description: 'No test files found. Add unit tests to improve code reliability',
-                priority: 'high',
-                category: 'testing'
-            });
-        }
-
-        return recommendations;
+        const recs = [];
+        if (!analysis.configuration.linting.hasESLint) recs.push({ title: 'Add ESLint', description: 'ESLint helps maintain code quality', priority: 'high', category: 'linting' });
+        if (!analysis.configuration.formatting.hasPrettier) recs.push({ title: 'Add Prettier', description: 'Prettier ensures consistent formatting', priority: 'medium', category: 'formatting' });
+        if (analysis.metrics.complexity && Object.values(analysis.metrics.complexity.cyclomaticComplexity).some(v => v > 10)) recs.push({ title: 'Reduce complexity', description: 'Some files have high cyclomatic complexity', priority: 'high', category: 'complexity' });
+        if (analysis.metrics.maintainability && analysis.metrics.maintainability.largeFiles.length > 0) recs.push({ title: 'Split large files', description: 'Some files are too large', priority: 'medium', category: 'maintainability' });
+        if (analysis.metrics.testability && !analysis.metrics.testability.hasTests) recs.push({ title: 'Add tests', description: 'No test files found', priority: 'high', category: 'testing' });
+        if (analysis.issues && analysis.issues.some(i => i.type === 'console-log')) recs.push({ title: 'Remove console.log', description: 'console.log found in code', priority: 'low', category: 'smell' });
+        return recs;
     }
 
     /**
@@ -619,39 +535,6 @@ class CodeQualityAnalyzer {
         }
 
         return files;
-    }
-
-    /**
-     * Find test files in project
-     * @param {string} projectPath - Project directory path
-     * @returns {Promise<Array>} Array of test file paths
-     */
-    async findTestFiles(projectPath) {
-        const testFiles = [];
-        
-        try {
-            const getFiles = async (dir) => {
-                const items = await fs.readdir(dir);
-                for (const item of items) {
-                    const itemPath = path.join(dir, item);
-                    const stats = await fs.stat(itemPath);
-                    
-                    if (stats.isDirectory === true && !item.startsWith('.') && item !== 'node_modules') {
-                        await getFiles(itemPath);
-                    } else if (stats.isFile === true) {
-                        if (item.includes('.test.') || item.includes('.spec.') || item.includes('test/')) {
-                            testFiles.push(itemPath);
-                        }
-                    }
-                }
-            };
-            
-            await getFiles(projectPath);
-        } catch (error) {
-            // Ignore errors
-        }
-
-        return testFiles;
     }
 
     /**

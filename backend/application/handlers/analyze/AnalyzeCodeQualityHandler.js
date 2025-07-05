@@ -241,7 +241,7 @@ class AnalyzeCodeQualityHandler {
         const options = command.getAnalysisOptions();
         
         try {
-            const qualityAnalysis = await this.codeQualityAnalyzer.analyze(
+            const qualityAnalysis = await this.codeQualityAnalyzer.analyzeCodeQuality(
                 projectInfo.path,
                 {
                     linting: options.linting,
@@ -258,14 +258,14 @@ class AnalyzeCodeQualityHandler {
             return {
                 projectInfo,
                 qualityAnalysis,
-                lintingResults: qualityAnalysis.lintingResults || [],
-                complexityMetrics: qualityAnalysis.complexityMetrics || {},
-                maintainabilityIndex: qualityAnalysis.maintainabilityIndex || 0,
-                testCoverage: qualityAnalysis.testCoverage || 0,
-                codeDuplication: qualityAnalysis.codeDuplication || {},
-                codeStyleIssues: qualityAnalysis.codeStyleIssues || [],
-                documentationCoverage: qualityAnalysis.documentationCoverage || 0,
-                performanceIssues: qualityAnalysis.performanceIssues || [],
+                lintingResults: qualityAnalysis.issues || [],
+                complexityMetrics: qualityAnalysis.metrics?.complexity || {},
+                maintainabilityIndex: qualityAnalysis.metrics?.maintainability?.maintainabilityIndex || 0,
+                testCoverage: qualityAnalysis.metrics?.testability?.testCoverage || 0,
+                codeDuplication: qualityAnalysis.metrics?.maintainability?.codeDuplication || {},
+                codeStyleIssues: qualityAnalysis.issues?.filter(issue => issue.type === 'code-smell') || [],
+                documentationCoverage: qualityAnalysis.metrics?.readability?.commentRatio || 0,
+                performanceIssues: qualityAnalysis.issues?.filter(issue => issue.severity === 'high') || [],
                 analysisOptions: options,
                 timestamp: new Date()
             };
@@ -284,57 +284,68 @@ class AnalyzeCodeQualityHandler {
         const { qualityAnalysis } = analysis;
         
         return {
-            lintingIssues: qualityAnalysis.lintingResults?.length || 0,
-            averageComplexity: this.calculateAverageComplexity(qualityAnalysis.complexityMetrics),
-            maintainabilityIndex: qualityAnalysis.maintainabilityIndex || 0,
-            testCoverage: qualityAnalysis.testCoverage || 0,
-            codeDuplicationPercentage: this.calculateDuplicationPercentage(qualityAnalysis.codeDuplication),
-            codeStyleIssues: qualityAnalysis.codeStyleIssues?.length || 0,
-            documentationCoverage: qualityAnalysis.documentationCoverage || 0,
-            performanceIssues: qualityAnalysis.performanceIssues?.length || 0,
-            overallQualityScore: this.calculateOverallQualityScore(analysis)
+            lintingIssues: qualityAnalysis.issues?.length || 0,
+            averageComplexity: this.calculateAverageComplexity(qualityAnalysis.metrics?.complexity),
+            maintainabilityIndex: qualityAnalysis.metrics?.maintainability?.maintainabilityIndex || 0,
+            testCoverage: qualityAnalysis.metrics?.testability?.testCoverage || 0,
+            codeDuplicationPercentage: this.calculateDuplicationPercentage(qualityAnalysis.metrics?.maintainability?.codeDuplication),
+            codeStyleIssues: qualityAnalysis.issues?.filter(issue => issue.type === 'code-smell')?.length || 0,
+            documentationCoverage: qualityAnalysis.metrics?.readability?.commentRatio || 0,
+            performanceIssues: qualityAnalysis.issues?.filter(issue => issue.severity === 'high')?.length || 0,
+            overallQualityScore: qualityAnalysis.overallScore || this.calculateOverallQualityScore(analysis)
         };
     }
 
     calculateAverageComplexity(complexityMetrics) {
         if (!complexityMetrics || Object.keys(complexityMetrics).length === 0) return 0;
         
-        const values = Object.values(complexityMetrics);
-        return values.reduce((a, b) => a + b, 0) / values.length;
+        // Handle the new complexity structure
+        const cyclomaticValues = Object.values(complexityMetrics.cyclomaticComplexity || {});
+        const cognitiveValues = Object.values(complexityMetrics.cognitiveComplexity || {});
+        
+        const allValues = [...cyclomaticValues, ...cognitiveValues];
+        
+        if (allValues.length === 0) return 0;
+        return allValues.reduce((a, b) => a + b, 0) / allValues.length;
     }
 
     calculateDuplicationPercentage(codeDuplication) {
-        if (!codeDuplication || !codeDuplication.totalLines) return 0;
-        return (codeDuplication.duplicatedLines / codeDuplication.totalLines) * 100;
+        if (!codeDuplication || typeof codeDuplication !== 'number') return 0;
+        return codeDuplication; // The analyzer already returns the percentage
     }
 
     calculateOverallQualityScore(analysis) {
         let score = 100;
         const { qualityAnalysis } = analysis;
 
-        // Deduct points for issues
-        if (qualityAnalysis.lintingResults) {
-            score -= qualityAnalysis.lintingResults.length * 2;
+        // Use the overall score from the analyzer if available
+        if (qualityAnalysis.overallScore !== undefined) {
+            return qualityAnalysis.overallScore;
         }
 
-        if (qualityAnalysis.maintainabilityIndex < 50) {
+        // Deduct points for issues
+        if (qualityAnalysis.issues) {
+            score -= qualityAnalysis.issues.length * 2;
+        }
+
+        if (qualityAnalysis.metrics?.maintainability?.maintainabilityIndex < 50) {
             score -= 20;
-        } else if (qualityAnalysis.maintainabilityIndex < 70) {
+        } else if (qualityAnalysis.metrics?.maintainability?.maintainabilityIndex < 70) {
             score -= 10;
         }
 
-        if (qualityAnalysis.testCoverage < 50) {
+        if (qualityAnalysis.metrics?.testability?.testCoverage < 50) {
             score -= 15;
-        } else if (qualityAnalysis.testCoverage < 80) {
+        } else if (qualityAnalysis.metrics?.testability?.testCoverage < 80) {
             score -= 5;
         }
 
-        if (this.calculateDuplicationPercentage(qualityAnalysis.codeDuplication) > 10) {
+        if (this.calculateDuplicationPercentage(qualityAnalysis.metrics?.maintainability?.codeDuplication) > 10) {
             score -= 10;
         }
 
-        if (qualityAnalysis.codeStyleIssues) {
-            score -= qualityAnalysis.codeStyleIssues.length;
+        if (qualityAnalysis.issues?.filter(issue => issue.type === 'code-smell')?.length > 5) {
+            score -= 5;
         }
 
         return Math.max(0, score);
@@ -385,11 +396,11 @@ class AnalyzeCodeQualityHandler {
         }
 
         // Check code style
-        if (metrics && metrics.codeStyleIssues > 5) {
+        if (metrics && metrics.codeStyleIssues.length > 5) {
             recommendations.push({
                 type: 'code_style_issues',
                 severity: 'low',
-                message: `${metrics.codeStyleIssues} code style issues found`,
+                message: `${metrics.codeStyleIssues.length} code style issues found`,
                 details: { recommendation: 'Fix code style issues for consistency' }
             });
         }

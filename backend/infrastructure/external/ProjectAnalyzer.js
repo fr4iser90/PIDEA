@@ -97,56 +97,86 @@ class ProjectAnalyzer {
      * @param {string} projectPath - Project directory path
      * @returns {Promise<Object>} Structure analysis
      */
-    async analyzeStructure(projectPath) {
+    async analyzeStructure(projectPath, options = {}) {
         const structure = {
             files: [],
             directories: [],
             totalFiles: 0,
             totalDirectories: 0,
             fileTypes: {},
-            largestFiles: []
+            largestFiles: [],
+            totalSize: 0
         };
 
+        const maxDepth = options.maxDepth || 10;
+        const includeHidden = options.includeHidden || false;
+        const excludePatterns = options.excludePatterns || ['node_modules', '.git', 'dist', 'build', 'coverage'];
+        const fileTypes = options.fileTypes || [];
+
         try {
-            const analyzeDirectory = async (dir, relativePath = '') => {
+            const analyzeDirectory = async (dir, relativePath = '', currentDepth = 0) => {
+                if (currentDepth > maxDepth) return;
+                
                 const items = await fs.readdir(dir);
                 for (const item of items) {
+                    // Skip hidden files if not included
+                    if (!includeHidden && item.startsWith('.')) continue;
+                    
+                    // Skip excluded patterns
+                    if (excludePatterns.some(pattern => item.includes(pattern))) continue;
+                    
                     const itemPath = path.join(dir, item);
                     const relativeItemPath = path.join(relativePath, item);
-                    const stats = await fs.stat(itemPath);
-                    if (stats.isDirectory === true) {
-                        structure.directories.push({
-                            path: relativeItemPath,
-                            size: stats.size,
-                            isDirectory: true,
-                            isFile: false,
-                            fileCount: 0
-                        });
-                        structure.totalDirectories++;
-                        await analyzeDirectory(itemPath, relativeItemPath);
-                    } else {
-                        const ext = path.extname(item);
-                        structure.files.push({
-                            path: relativeItemPath,
-                            size: stats.size,
-                            isDirectory: false,
-                            isFile: true,
-                            extension: ext
-                        });
-                        structure.totalFiles++;
-                        structure.fileTypes[ext] = (structure.fileTypes[ext] || 0) + 1;
-                        structure.largestFiles.push({
-                            path: relativeItemPath,
-                            size: stats.size
-                        });
+                    
+                    try {
+                        const stats = await fs.stat(itemPath);
+                        
+                        if (stats.isDirectory()) {
+                            structure.directories.push({
+                                path: relativeItemPath,
+                                size: stats.size,
+                                isDirectory: true,
+                                isFile: false,
+                                fileCount: 0
+                            });
+                            structure.totalDirectories++;
+                            structure.totalSize += stats.size;
+                            
+                            // Recursively analyze subdirectory
+                            await analyzeDirectory(itemPath, relativeItemPath, currentDepth + 1);
+                        } else {
+                            const ext = path.extname(item);
+                            
+                            // Filter by file types if specified
+                            if (fileTypes.length > 0 && !fileTypes.includes(ext.replace('.', ''))) continue;
+                            
+                            structure.files.push({
+                                path: relativeItemPath,
+                                size: stats.size,
+                                isDirectory: false,
+                                isFile: true,
+                                extension: ext
+                            });
+                            structure.totalFiles++;
+                            structure.totalSize += stats.size;
+                            structure.fileTypes[ext] = (structure.fileTypes[ext] || 0) + 1;
+                            structure.largestFiles.push({
+                                path: relativeItemPath,
+                                size: stats.size
+                            });
+                        }
+                    } catch (error) {
+                        // Skip files we can't access
+                        continue;
                     }
                 }
             };
+            
             await analyzeDirectory(projectPath);
             structure.largestFiles.sort((a, b) => b.size - a.size);
             structure.largestFiles = structure.largestFiles.slice(0, 10);
         } catch (error) {
-            // Ignore read errors
+            console.error('Error analyzing structure:', error);
         }
         return structure;
     }

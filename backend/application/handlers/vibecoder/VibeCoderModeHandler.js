@@ -207,6 +207,7 @@ class VibeCoderModeHandler {
             performance: {},
             security: {},
             maintainability: {},
+            techStack: {},
             metrics: {}
         };
 
@@ -228,6 +229,9 @@ class VibeCoderModeHandler {
             
             // Analyze security
             analysis.security = await this.analyzeSecurity(projectPath);
+            
+            // Analyze tech stack
+            analysis.techStack = await this.analyzeTechStack(projectPath);
             
             // Analyze maintainability
             analysis.maintainability = await this.analyzeMaintainability(projectPath);
@@ -275,34 +279,58 @@ class VibeCoderModeHandler {
     }
 
     async analyzeDependencies(projectPath) {
-        // This would integrate with dependency analysis
-        return {
-            directDependencies: 0,
-            transitiveDependencies: 0,
-            outdatedPackages: [],
-            securityIssues: [],
-            score: 0
-        };
+        try {
+            // Use real dependency analyzer
+            const dependencyAnalyzer = require('@infrastructure/external/DependencyAnalyzer');
+            const analyzer = new dependencyAnalyzer();
+            return await analyzer.analyzeDependencies(projectPath);
+        } catch (error) {
+            this.logger.warn('Dependency analysis failed, using fallback:', error.message);
+            return {
+                directDependencies: 0,
+                transitiveDependencies: 0,
+                outdatedPackages: [],
+                securityIssues: [],
+                score: 0,
+                recommendations: ['Enable dependency analysis for detailed insights']
+            };
+        }
     }
 
     async analyzePerformance(projectPath) {
-        // This would integrate with performance analysis
-        return {
-            bottlenecks: [],
-            optimizationOpportunities: [],
-            metrics: {},
-            score: 0
-        };
+        try {
+            // Use real performance analyzer
+            const performanceAnalyzer = require('@infrastructure/external/PerformanceAnalyzer');
+            const analyzer = new performanceAnalyzer();
+            return await analyzer.analyzePerformance(projectPath);
+        } catch (error) {
+            this.logger.warn('Performance analysis failed, using fallback:', error.message);
+            return {
+                bottlenecks: [],
+                optimizationOpportunities: [],
+                metrics: {},
+                score: 0,
+                recommendations: ['Enable performance analysis for detailed insights']
+            };
+        }
     }
 
     async analyzeSecurity(projectPath) {
-        // This would integrate with security analysis
-        return {
-            vulnerabilities: [],
-            securityIssues: [],
-            recommendations: [],
-            score: 0
-        };
+        try {
+            // Use real security analyzer
+            const securityAnalyzer = require('@infrastructure/external/SecurityAnalyzer');
+            const analyzer = new securityAnalyzer();
+            return await analyzer.analyzeSecurity(projectPath);
+        } catch (error) {
+            this.logger.warn('Security analysis failed, using fallback:', error.message);
+            return {
+                vulnerabilities: [],
+                securityIssues: [],
+                recommendations: [],
+                score: 0,
+                recommendations: ['Enable security analysis for detailed insights']
+            };
+        }
     }
 
     async analyzeMaintainability(projectPath) {
@@ -313,6 +341,24 @@ class VibeCoderModeHandler {
             refactoringNeeds: [],
             score: 0
         };
+    }
+
+    async analyzeTechStack(projectPath) {
+        try {
+            // Use real tech stack analyzer
+            const techStackAnalyzer = require('@infrastructure/external/TechStackAnalyzer');
+            const analyzer = new techStackAnalyzer();
+            return await analyzer.analyzeTechStack(projectPath);
+        } catch (error) {
+            this.logger.warn('Tech stack analysis failed, using fallback:', error.message);
+            return {
+                frameworks: [],
+                libraries: [],
+                tools: [],
+                languages: [],
+                recommendations: ['Enable tech stack analysis for detailed insights']
+            };
+        }
     }
 
     calculateComprehensiveMetrics(analysis) {
@@ -398,15 +444,17 @@ class VibeCoderModeHandler {
             // Execute comprehensive analysis using real commands
             const analysisResults = {};
             
-            // 1. Analyze repository structure
+            // 1. Analyze repository structure with deep scanning
             const structureCommand = {
                 commandId: `${command.commandId}-structure`,
                 projectPath: command.projectPath,
                 options: {
                     includeHidden: true,
-                    maxDepth: 10,
-                    fileTypes: ['js', 'ts', 'jsx', 'tsx', 'json', 'md', 'yml', 'yaml'],
-                    includeStats: true
+                    maxDepth: 20, // Increased depth
+                    fileTypes: ['js', 'ts', 'jsx', 'tsx', 'json', 'md', 'yml', 'yaml', 'html', 'css', 'scss', 'sql', 'sh', 'dockerfile'],
+                    includeStats: true,
+                    recursive: true, // Force recursive scanning
+                    excludePatterns: ['node_modules', '.git', 'dist', 'build', 'coverage']
                 },
                 requestedBy: command.requestedBy || 'vibecoder-mode',
                 metadata: command.getMetadata()
@@ -474,6 +522,69 @@ class VibeCoderModeHandler {
             const dependenciesCommandInstance = new AnalyzeDependenciesCommand(dependenciesCommand);
             const dependenciesResult = await this.commandBus.execute('AnalyzeDependenciesCommand', dependenciesCommandInstance);
             analysisResults.dependencies = dependenciesResult;
+            
+            // 5. Analyze performance using real analyzer
+            try {
+                const performanceAnalyzer = require('@infrastructure/external/PerformanceAnalyzer');
+                const perfAnalyzer = new performanceAnalyzer();
+                const performanceResult = await perfAnalyzer.analyzePerformance(command.projectPath);
+                analysisResults.performance = {
+                    status: 'success',
+                    result: performanceResult,
+                    metrics: { overallScore: performanceResult.overallScore || 0 },
+                    recommendations: performanceResult.recommendations || []
+                };
+            } catch (error) {
+                this.logger.warn('Performance analysis failed:', error.message);
+                analysisResults.performance = {
+                    status: 'failed',
+                    result: { error: error.message },
+                    metrics: { overallScore: 0 },
+                    recommendations: ['Performance analysis failed']
+                };
+            }
+            
+            // 6. Analyze security using real analyzer
+            try {
+                const securityAnalyzer = require('@infrastructure/external/SecurityAnalyzer');
+                const secAnalyzer = new securityAnalyzer();
+                const securityResult = await secAnalyzer.analyzeSecurity(command.projectPath);
+                analysisResults.security = {
+                    status: 'success',
+                    result: securityResult,
+                    metrics: { overallScore: securityResult.securityScore || 0 },
+                    recommendations: securityResult.recommendations || []
+                };
+            } catch (error) {
+                this.logger.warn('Security analysis failed:', error.message);
+                analysisResults.security = {
+                    status: 'failed',
+                    result: { error: error.message },
+                    metrics: { overallScore: 0 },
+                    recommendations: ['Security analysis failed']
+                };
+            }
+            
+            // 7. Analyze tech stack using real analyzer
+            try {
+                const techStackAnalyzer = require('@infrastructure/external/TechStackAnalyzer');
+                const techAnalyzer = new techStackAnalyzer();
+                const techStackResult = await techAnalyzer.analyzeTechStack(command.projectPath);
+                analysisResults.techStack = {
+                    status: 'success',
+                    result: techStackResult,
+                    metrics: { frameworkCount: techStackResult.frameworks?.length || 0 },
+                    recommendations: techStackResult.recommendations || []
+                };
+            } catch (error) {
+                this.logger.warn('Tech stack analysis failed:', error.message);
+                analysisResults.techStack = {
+                    status: 'failed',
+                    result: { error: error.message },
+                    metrics: { frameworkCount: 0 },
+                    recommendations: ['Tech stack analysis failed']
+                };
+            }
             
             results.results = analysisResults;
             
@@ -1071,54 +1182,128 @@ class VibeCoderModeHandler {
             if (this.analysisOutputService) {
                 const projectId = command.commandId;
                 
-                // Save main analysis result
+                // Prepare analysis results for markdown generation
+                const analysisResults = {};
+                
+                // Add analyze phase results
+                if (output.results && output.results.analyze && output.results.analyze.results) {
+                    const analyzeResults = output.results.analyze.results;
+                    
+                    // Extract individual analysis results
+                    if (analyzeResults.structure) {
+                        analysisResults['Repository Structure'] = { 
+                            data: analyzeResults.structure.result,
+                            metrics: analyzeResults.structure.metrics,
+                            recommendations: analyzeResults.structure.recommendations
+                        };
+                    }
+                    
+                    if (analyzeResults.architecture) {
+                        analysisResults['Architecture'] = { 
+                            data: analyzeResults.architecture.result,
+                            metrics: analyzeResults.architecture.metrics,
+                            recommendations: analyzeResults.architecture.recommendations
+                        };
+                    }
+                    
+                    if (analyzeResults.codeQuality) {
+                        analysisResults['Code Quality'] = { 
+                            data: analyzeResults.codeQuality.result,
+                            metrics: analyzeResults.codeQuality.metrics,
+                            recommendations: analyzeResults.codeQuality.recommendations
+                        };
+                    }
+                    
+                    if (analyzeResults.dependencies) {
+                        analysisResults['Dependencies'] = { 
+                            data: analyzeResults.dependencies.result,
+                            metrics: analyzeResults.dependencies.metrics,
+                            recommendations: analyzeResults.dependencies.recommendations
+                        };
+                    }
+                    
+                    if (analyzeResults.techStack) {
+                        analysisResults['Tech Stack'] = { 
+                            data: analyzeResults.techStack.result,
+                            metrics: analyzeResults.techStack.metrics,
+                            recommendations: analyzeResults.techStack.recommendations
+                        };
+                    } else if (analyzeResults.techStack) {
+                        // Handle direct tech stack data
+                        analysisResults['Tech Stack'] = { 
+                            data: analyzeResults.techStack,
+                            metrics: analyzeResults.techStack.metrics || {},
+                            recommendations: analyzeResults.techStack.recommendations || []
+                        };
+                    }
+
+                    // Add dependencies analysis
+                    if (analyzeResults.dependencies) {
+                        analysisResults['Dependencies'] = { 
+                            data: analyzeResults.dependencies.result || analyzeResults.dependencies,
+                            metrics: analyzeResults.dependencies.metrics || {},
+                            recommendations: analyzeResults.dependencies.recommendations || []
+                        };
+                    }
+
+                    // Add performance analysis
+                    if (analyzeResults.performance) {
+                        analysisResults['Performance'] = { 
+                            data: analyzeResults.performance.result || analyzeResults.performance,
+                            metrics: analyzeResults.performance.metrics || {},
+                            recommendations: analyzeResults.performance.recommendations || []
+                        };
+                    }
+
+                    // Add security analysis
+                    if (analyzeResults.security) {
+                        analysisResults['Security'] = { 
+                            data: analyzeResults.security.result || analyzeResults.security,
+                            metrics: analyzeResults.security.metrics || {},
+                            recommendations: analyzeResults.security.recommendations || []
+                        };
+                    }
+                }
+                
+                // Add refactor phase results
+                if (output.results && output.results.refactor) {
+                    analysisResults['Refactoring'] = { 
+                        data: output.results.refactor,
+                        metrics: output.results.refactor.metrics,
+                        recommendations: output.results.refactor.recommendations
+                    };
+                }
+                
+                // Add generate phase results
+                if (output.results && output.results.generate) {
+                    analysisResults['Generation'] = { 
+                        data: output.results.generate,
+                        metrics: output.results.generate.metrics,
+                        recommendations: output.results.generate.recommendations
+                    };
+                }
+                
+                // Generate comprehensive markdown report
+                if (Object.keys(analysisResults).length > 0) {
+                    this.logger.info('Generating markdown report with analysis results:', {
+                        projectId,
+                        analysisTypes: Object.keys(analysisResults)
+                    });
+                    
+                    await this.analysisOutputService.generateMarkdownReport(
+                        projectId,
+                        analysisResults
+                    );
+                } else {
+                    this.logger.warn('No analysis results found for markdown generation');
+                }
+                
+                // Also save raw JSON for reference
                 await this.analysisOutputService.saveAnalysisResult(
                     projectId, 
                     'vibecoder_mode', 
                     output
                 );
-
-                // Save individual analysis results if available
-                if (output.results && output.results.analyze) {
-                    await this.analysisOutputService.saveAnalysisResult(
-                        projectId,
-                        'analyze_phase',
-                        output.results.analyze
-                    );
-                }
-
-                if (output.results && output.results.refactor) {
-                    await this.analysisOutputService.saveAnalysisResult(
-                        projectId,
-                        'refactor_phase',
-                        output.results.refactor
-                    );
-                }
-
-                if (output.results && output.results.generate) {
-                    await this.analysisOutputService.saveAnalysisResult(
-                        projectId,
-                        'generate_phase',
-                        output.results.generate
-                    );
-                }
-
-                // Generate markdown report
-                const analysisResults = {};
-                if (output.results) {
-                    Object.entries(output.results).forEach(([phase, data]) => {
-                        if (data) {
-                            analysisResults[phase] = { data };
-                        }
-                    });
-                }
-                
-                if (Object.keys(analysisResults).length > 0) {
-                    await this.analysisOutputService.generateMarkdownReport(
-                        projectId,
-                        analysisResults
-                    );
-                }
             }
 
             await this.eventBus.publish('vibecoder.mode.completed', {
