@@ -2,6 +2,9 @@
  * AnalyzeCodeQualityHandler - Handles code quality analysis commands
  * Implements the Command Handler pattern for code quality analysis
  */
+const fs = require('fs').promises;
+const path = require('path');
+
 class AnalyzeCodeQualityHandler {
     constructor(dependencies = {}) {
         this.validateDependencies(dependencies);
@@ -180,8 +183,8 @@ class AnalyzeCodeQualityHandler {
 
             const projectInfo = await this.getProjectInfo(command.projectPath);
             const analysis = await this.performCodeQualityAnalysis(command, projectInfo);
-            const metrics = this.generateMetrics(analysis.qualityAnalysis);
-            const recommendations = this.generateRecommendations(analysis.qualityAnalysis, command);
+            const metrics = this.generateMetrics(analysis);
+            const recommendations = this.generateRecommendations(analysis, command);
 
             const duration = Date.now() - startTime;
 
@@ -241,50 +244,113 @@ class AnalyzeCodeQualityHandler {
         const options = command.getAnalysisOptions();
         
         try {
-            const qualityAnalysis = await this.codeQualityAnalyzer.analyzeCodeQuality(
-                projectInfo.path,
-                {
-                    linting: options.linting,
-                    complexity: options.complexity,
-                    maintainability: options.maintainability,
-                    testCoverage: options.testCoverage,
-                    codeDuplication: options.codeDuplication,
-                    codeStyle: options.codeStyle,
-                    documentation: options.documentation,
-                    performance: options.performance
+            // Check if this is a monorepo by looking for packages
+            const packages = await this.findPackages(projectInfo.path);
+            
+            if (packages.length > 1) {
+                // Monorepo: analyze each package separately
+                const packageQualityAnalyses = {};
+                
+                for (const pkg of packages) {
+                    const packageQualityAnalysis = await this.codeQualityAnalyzer.analyzeCodeQuality(
+                        pkg.path,
+                        {
+                            linting: options.linting,
+                            complexity: options.complexity,
+                            maintainability: options.maintainability,
+                            testCoverage: options.testCoverage,
+                            codeDuplication: options.codeDuplication,
+                            codeStyle: options.codeStyle,
+                            documentation: options.documentation,
+                            performance: options.performance
+                        }
+                    );
+
+                    // Ensure realMetrics are included in the analysis
+                    const analysisWithRealMetrics = {
+                        ...packageQualityAnalysis,
+                        realMetrics: packageQualityAnalysis.realMetrics || packageQualityAnalysis.metrics?.realMetrics
+                    };
+
+                    // Validate that realMetrics exist
+                    if (!analysisWithRealMetrics.realMetrics) {
+                        throw new Error(`Real metrics not calculated by analyzer for package ${pkg.name}`);
+                    }
+
+                    packageQualityAnalyses[pkg.name] = {
+                        package: pkg,
+                        qualityAnalysis: analysisWithRealMetrics,
+                        lintingResults: packageQualityAnalysis.issues || [],
+                        complexityMetrics: packageQualityAnalysis.metrics?.complexity || {},
+                        maintainabilityIndex: analysisWithRealMetrics.realMetrics.maintainabilityIndex,
+                        testCoverage: analysisWithRealMetrics.realMetrics.testCoverage,
+                        codeDuplication: packageQualityAnalysis.metrics?.maintainability?.codeDuplication || {},
+                        codeStyleIssues: packageQualityAnalysis.issues?.filter(issue => issue.type === 'code-smell') || [],
+                        documentationCoverage: analysisWithRealMetrics.realMetrics.documentationCoverage,
+                        performanceIssues: packageQualityAnalysis.issues?.filter(issue => issue.severity === 'high') || [],
+                        // Detailed issues from real metrics
+                        largeFiles: analysisWithRealMetrics.realMetrics.largeFiles || [],
+                        magicNumberFiles: analysisWithRealMetrics.realMetrics.magicNumberFiles || [],
+                        complexityIssuesList: analysisWithRealMetrics.realMetrics.complexityIssuesList || [],
+                        lintingIssuesList: analysisWithRealMetrics.realMetrics.lintingIssuesList || []
+                    };
                 }
-            );
+                
+                return {
+                    projectInfo,
+                    packages,
+                    packageQualityAnalyses,
+                    isMonorepo: true,
+                    analysisOptions: options,
+                    timestamp: new Date()
+                };
+            } else {
+                // Single package: analyze project-wide
+                const qualityAnalysis = await this.codeQualityAnalyzer.analyzeCodeQuality(
+                    projectInfo.path,
+                    {
+                        linting: options.linting,
+                        complexity: options.complexity,
+                        maintainability: options.maintainability,
+                        testCoverage: options.testCoverage,
+                        codeDuplication: options.codeDuplication,
+                        codeStyle: options.codeStyle,
+                        documentation: options.documentation,
+                        performance: options.performance
+                    }
+                );
 
-            // Ensure realMetrics are included in the analysis
-            const analysisWithRealMetrics = {
-                ...qualityAnalysis,
-                realMetrics: qualityAnalysis.realMetrics || qualityAnalysis.metrics?.realMetrics
-            };
+                // Ensure realMetrics are included in the analysis
+                const analysisWithRealMetrics = {
+                    ...qualityAnalysis,
+                    realMetrics: qualityAnalysis.realMetrics || qualityAnalysis.metrics?.realMetrics
+                };
 
-            // Validate that realMetrics exist
-            if (!analysisWithRealMetrics.realMetrics) {
-                throw new Error('Real metrics not calculated by analyzer');
+                // Validate that realMetrics exist
+                if (!analysisWithRealMetrics.realMetrics) {
+                    throw new Error('Real metrics not calculated by analyzer');
+                }
+
+                return {
+                    projectInfo,
+                    qualityAnalysis: analysisWithRealMetrics,
+                    lintingResults: qualityAnalysis.issues || [],
+                    complexityMetrics: qualityAnalysis.metrics?.complexity || {},
+                    maintainabilityIndex: analysisWithRealMetrics.realMetrics.maintainabilityIndex,
+                    testCoverage: analysisWithRealMetrics.realMetrics.testCoverage,
+                    codeDuplication: qualityAnalysis.metrics?.maintainability?.codeDuplication || {},
+                    codeStyleIssues: qualityAnalysis.issues?.filter(issue => issue.type === 'code-smell') || [],
+                    documentationCoverage: analysisWithRealMetrics.realMetrics.documentationCoverage,
+                    performanceIssues: qualityAnalysis.issues?.filter(issue => issue.severity === 'high') || [],
+                    // Detailed issues from real metrics
+                    largeFiles: analysisWithRealMetrics.realMetrics.largeFiles || [],
+                    magicNumberFiles: analysisWithRealMetrics.realMetrics.magicNumberFiles || [],
+                    complexityIssuesList: analysisWithRealMetrics.realMetrics.complexityIssuesList || [],
+                    lintingIssuesList: analysisWithRealMetrics.realMetrics.lintingIssuesList || [],
+                    analysisOptions: options,
+                    timestamp: new Date()
+                };
             }
-
-            return {
-                projectInfo,
-                qualityAnalysis: analysisWithRealMetrics,
-                lintingResults: qualityAnalysis.issues || [],
-                complexityMetrics: qualityAnalysis.metrics?.complexity || {},
-                maintainabilityIndex: analysisWithRealMetrics.realMetrics.maintainabilityIndex,
-                testCoverage: analysisWithRealMetrics.realMetrics.testCoverage,
-                codeDuplication: qualityAnalysis.metrics?.maintainability?.codeDuplication || {},
-                codeStyleIssues: qualityAnalysis.issues?.filter(issue => issue.type === 'code-smell') || [],
-                documentationCoverage: analysisWithRealMetrics.realMetrics.documentationCoverage,
-                performanceIssues: qualityAnalysis.issues?.filter(issue => issue.severity === 'high') || [],
-                // Detailed issues from real metrics
-                largeFiles: analysisWithRealMetrics.realMetrics.largeFiles || [],
-                magicNumberFiles: analysisWithRealMetrics.realMetrics.magicNumberFiles || [],
-                complexityIssuesList: analysisWithRealMetrics.realMetrics.complexityIssuesList || [],
-                lintingIssuesList: analysisWithRealMetrics.realMetrics.lintingIssuesList || [],
-                analysisOptions: options,
-                timestamp: new Date()
-            };
 
         } catch (error) {
             this.logger.error('AnalyzeCodeQualityHandler: Code quality analysis failed', {
@@ -296,27 +362,138 @@ class AnalyzeCodeQualityHandler {
         }
     }
 
-    generateMetrics(analysis) {
-        const qualityAnalysis = analysis;
+    async findPackages(projectPath) {
+        const packages = [];
         
-        // ONLY use real metrics - NO FALLBACKS
-        const realMetrics = qualityAnalysis.realMetrics || qualityAnalysis.metrics?.realMetrics;
-        
-        if (!realMetrics) {
-            throw new Error('Real metrics not found - analysis failed');
+        // Check root package.json
+        const rootPackagePath = path.join(projectPath, 'package.json');
+        if (await this.fileExists(rootPackagePath)) {
+            try {
+                const packageJson = JSON.parse(await fs.readFile(rootPackagePath, 'utf-8'));
+                packages.push({
+                    name: packageJson.name || 'root',
+                    version: packageJson.version,
+                    path: projectPath,
+                    relativePath: '.',
+                    dependencies: packageJson.dependencies || {},
+                    devDependencies: packageJson.devDependencies || {}
+                });
+            } catch (e) {
+                // Ignore parse errors
+            }
         }
-        
-        return {
-            lintingIssues: realMetrics.lintingIssues,
-            averageComplexity: realMetrics.averageComplexity,
-            maintainabilityIndex: realMetrics.maintainabilityIndex,
-            testCoverage: realMetrics.testCoverage,
-            codeDuplicationPercentage: realMetrics.codeDuplicationPercentage,
-            codeStyleIssues: realMetrics.codeStyleIssues,
-            documentationCoverage: realMetrics.documentationCoverage,
-            performanceIssues: realMetrics.performanceIssues,
-            overallQualityScore: realMetrics.overallQualityScore
-        };
+
+        // Check common subdirectories
+        const commonDirs = ['backend', 'frontend', 'api', 'client', 'server', 'app', 'src'];
+        for (const dir of commonDirs) {
+            const subdirPath = path.join(projectPath, dir);
+            const packagePath = path.join(subdirPath, 'package.json');
+            
+            if (await this.fileExists(packagePath)) {
+                try {
+                    const packageJson = JSON.parse(await fs.readFile(packagePath, 'utf-8'));
+                    packages.push({
+                        name: packageJson.name || dir,
+                        version: packageJson.version,
+                        path: subdirPath,
+                        relativePath: dir,
+                        dependencies: packageJson.dependencies || {},
+                        devDependencies: packageJson.devDependencies || {}
+                    });
+                } catch (e) {
+                    // Ignore parse errors
+                }
+            }
+        }
+
+        return packages;
+    }
+
+    async fileExists(filePath) {
+        try {
+            await fs.access(filePath);
+            return true;
+        } catch {
+            return false;
+        }
+    }
+
+    generateMetrics(analysis) {
+        if (analysis.isMonorepo) {
+            // For monorepo, aggregate metrics from all packages
+            const aggregatedMetrics = {
+                totalLintingIssues: 0,
+                totalComplexityIssues: 0,
+                averageMaintainabilityIndex: 0,
+                averageTestCoverage: 0,
+                totalCodeDuplicationPercentage: 0,
+                totalCodeStyleIssues: 0,
+                averageDocumentationCoverage: 0,
+                totalPerformanceIssues: 0,
+                averageOverallQualityScore: 0,
+                packageCount: Object.keys(analysis.packageQualityAnalyses).length
+            };
+            
+            let totalMaintainability = 0;
+            let totalTestCoverage = 0;
+            let totalDocumentationCoverage = 0;
+            let totalOverallScore = 0;
+            let packageCount = 0;
+            
+            Object.values(analysis.packageQualityAnalyses).forEach(pkgQuality => {
+                const { qualityAnalysis } = pkgQuality;
+                const realMetrics = qualityAnalysis.realMetrics;
+                
+                aggregatedMetrics.totalLintingIssues += realMetrics.lintingIssues || 0;
+                aggregatedMetrics.totalComplexityIssues += realMetrics.averageComplexity || 0;
+                aggregatedMetrics.totalCodeDuplicationPercentage += realMetrics.codeDuplicationPercentage || 0;
+                aggregatedMetrics.totalCodeStyleIssues += realMetrics.codeStyleIssues || 0;
+                aggregatedMetrics.totalPerformanceIssues += realMetrics.performanceIssues || 0;
+                
+                if (realMetrics.maintainabilityIndex > 0) {
+                    totalMaintainability += realMetrics.maintainabilityIndex;
+                    packageCount++;
+                }
+                if (realMetrics.testCoverage > 0) {
+                    totalTestCoverage += realMetrics.testCoverage;
+                }
+                if (realMetrics.documentationCoverage > 0) {
+                    totalDocumentationCoverage += realMetrics.documentationCoverage;
+                }
+                if (realMetrics.overallQualityScore > 0) {
+                    totalOverallScore += realMetrics.overallQualityScore;
+                }
+            });
+            
+            aggregatedMetrics.averageMaintainabilityIndex = packageCount > 0 ? totalMaintainability / packageCount : 0;
+            aggregatedMetrics.averageTestCoverage = packageCount > 0 ? totalTestCoverage / packageCount : 0;
+            aggregatedMetrics.averageDocumentationCoverage = packageCount > 0 ? totalDocumentationCoverage / packageCount : 0;
+            aggregatedMetrics.averageOverallQualityScore = packageCount > 0 ? totalOverallScore / packageCount : 0;
+            
+            return aggregatedMetrics;
+        } else {
+            // For single package, use existing logic
+            const qualityAnalysis = analysis.qualityAnalysis;
+            
+            // ONLY use real metrics - NO FALLBACKS
+            const realMetrics = qualityAnalysis.realMetrics || qualityAnalysis.metrics?.realMetrics;
+            
+            if (!realMetrics) {
+                throw new Error('Real metrics not found - analysis failed');
+            }
+            
+            return {
+                lintingIssues: realMetrics.lintingIssues,
+                averageComplexity: realMetrics.averageComplexity,
+                maintainabilityIndex: realMetrics.maintainabilityIndex,
+                testCoverage: realMetrics.testCoverage,
+                codeDuplicationPercentage: realMetrics.codeDuplicationPercentage,
+                codeStyleIssues: realMetrics.codeStyleIssues,
+                documentationCoverage: realMetrics.documentationCoverage,
+                performanceIssues: realMetrics.performanceIssues,
+                overallQualityScore: realMetrics.overallQualityScore
+            };
+        }
     }
 
     calculateAverageComplexity(complexityMetrics) {
@@ -376,64 +553,110 @@ class AnalyzeCodeQualityHandler {
 
     generateRecommendations(analysis, command) {
         const recommendations = [];
-        const qualityAnalysis = analysis;
-        const metrics = this.generateMetrics(analysis);
-
-        // Check for linting issues
-        if (metrics && metrics.lintingIssues > 10) {
-            recommendations.push({
-                type: 'linting_issues',
-                severity: 'medium',
-                title: 'Fix Linting Issues',
-                message: `${metrics.lintingIssues} linting issues found`,
-                details: { recommendation: 'Fix linting issues to improve code quality' }
+        
+        if (analysis.isMonorepo) {
+            // For monorepo, generate recommendations per package and overall
+            Object.entries(analysis.packageQualityAnalyses).forEach(([packageName, pkgQuality]) => {
+                const { qualityAnalysis } = pkgQuality;
+                
+                // Package-specific recommendations
+                if (qualityAnalysis.realMetrics.lintingIssues > 0) {
+                    recommendations.push({
+                        title: `Fix linting issues in ${packageName}`,
+                        description: `${qualityAnalysis.realMetrics.lintingIssues} linting issues found in ${packageName}`,
+                        priority: 'medium',
+                        category: 'linting',
+                        package: packageName
+                    });
+                }
+                
+                if (qualityAnalysis.realMetrics.maintainabilityIndex < 70) {
+                    recommendations.push({
+                        title: `Improve maintainability in ${packageName}`,
+                        description: `Maintainability index is ${qualityAnalysis.realMetrics.maintainabilityIndex} in ${packageName}`,
+                        priority: 'high',
+                        category: 'maintainability',
+                        package: packageName
+                    });
+                }
+                
+                if (qualityAnalysis.realMetrics.testCoverage < 80) {
+                    recommendations.push({
+                        title: `Improve test coverage in ${packageName}`,
+                        description: `Test coverage is ${qualityAnalysis.realMetrics.testCoverage}% in ${packageName}`,
+                        priority: 'high',
+                        category: 'testing',
+                        package: packageName
+                    });
+                }
+                
+                if (qualityAnalysis.realMetrics.overallQualityScore < 70) {
+                    recommendations.push({
+                        title: `Improve overall code quality in ${packageName}`,
+                        description: `Overall quality score is ${qualityAnalysis.realMetrics.overallQualityScore} in ${packageName}`,
+                        priority: 'high',
+                        category: 'quality',
+                        package: packageName
+                    });
+                }
             });
+            
+            // Overall monorepo recommendations
+            const avgQualityScore = analysis.packageQualityAnalyses && 
+                Object.values(analysis.packageQualityAnalyses).reduce((sum, pkg) => 
+                    sum + (pkg.qualityAnalysis.realMetrics.overallQualityScore || 0), 0) / 
+                Object.keys(analysis.packageQualityAnalyses).length;
+            
+            if (avgQualityScore < 75) {
+                recommendations.push({
+                    title: 'Improve overall code quality across packages',
+                    description: `Average quality score across packages is ${avgQualityScore}`,
+                    priority: 'medium',
+                    category: 'quality',
+                    package: 'overall'
+                });
+            }
+        } else {
+            // For single package, use existing logic
+            const qualityAnalysis = analysis.qualityAnalysis;
+            
+            if (qualityAnalysis.realMetrics.lintingIssues > 0) {
+                recommendations.push({
+                    title: 'Fix linting issues',
+                    description: `${qualityAnalysis.realMetrics.lintingIssues} linting issues found`,
+                    priority: 'medium',
+                    category: 'linting'
+                });
+            }
+            
+            if (qualityAnalysis.realMetrics.maintainabilityIndex < 70) {
+                recommendations.push({
+                    title: 'Improve maintainability',
+                    description: `Maintainability index is ${qualityAnalysis.realMetrics.maintainabilityIndex}`,
+                    priority: 'high',
+                    category: 'maintainability'
+                });
+            }
+            
+            if (qualityAnalysis.realMetrics.testCoverage < 80) {
+                recommendations.push({
+                    title: 'Improve test coverage',
+                    description: `Test coverage is ${qualityAnalysis.realMetrics.testCoverage}%`,
+                    priority: 'high',
+                    category: 'testing'
+                });
+            }
+            
+            if (qualityAnalysis.realMetrics.overallQualityScore < 70) {
+                recommendations.push({
+                    title: 'Improve overall code quality',
+                    description: `Overall quality score is ${qualityAnalysis.realMetrics.overallQualityScore}`,
+                    priority: 'high',
+                    category: 'quality'
+                });
+            }
         }
-
-        // Check maintainability
-        if (metrics && metrics.maintainabilityIndex < 50) {
-            recommendations.push({
-                type: 'low_maintainability',
-                severity: 'high',
-                title: 'Improve Maintainability',
-                message: 'Low maintainability index detected',
-                details: { maintainabilityIndex: metrics.maintainabilityIndex, recommendation: 'Refactor code to improve maintainability' }
-            });
-        }
-
-        // Check test coverage
-        if (metrics && metrics.testCoverage < 80) {
-            recommendations.push({
-                type: 'low_test_coverage',
-                severity: 'medium',
-                title: 'Increase Test Coverage',
-                message: 'Low test coverage detected',
-                details: { testCoverage: metrics.testCoverage, recommendation: 'Add more tests to improve coverage' }
-            });
-        }
-
-        // Check code duplication
-        if (metrics && metrics.codeDuplicationPercentage > 10) {
-            recommendations.push({
-                type: 'code_duplication',
-                severity: 'medium',
-                title: 'Reduce Code Duplication',
-                message: 'High code duplication detected',
-                details: { duplicationPercentage: metrics.codeDuplicationPercentage, recommendation: 'Refactor duplicated code' }
-            });
-        }
-
-        // Check code style
-        if (metrics && metrics.codeStyleIssues > 5) {
-            recommendations.push({
-                type: 'code_style_issues',
-                severity: 'low',
-                title: 'Fix Code Style Issues',
-                message: `${metrics.codeStyleIssues} code style issues found`,
-                details: { recommendation: 'Fix code style issues for consistency' }
-            });
-        }
-
+        
         return recommendations;
     }
 

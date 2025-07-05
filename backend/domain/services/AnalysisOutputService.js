@@ -291,6 +291,104 @@ class AnalysisOutputService {
                         };
                     }
                 }
+                // For code quality, use package-specific data if available
+                else if (type === 'Code Quality' && result.data) {
+                    // Check if this is a monorepo with package-specific code quality data
+                    if (result.data.isMonorepo && result.data.packageQualityAnalyses && result.data.packageQualityAnalyses[pkg.name]) {
+                        const packageQuality = result.data.packageQualityAnalyses[pkg.name];
+                        const qualityAnalysis = packageQuality.qualityAnalysis;
+                        
+                        const packageQualityData = {
+                            package: pkg.name,
+                            packagePath: pkg.path,
+                            overallScore: qualityAnalysis.overallScore,
+                            metrics: qualityAnalysis.metrics || {},
+                            issues: qualityAnalysis.issues || [],
+                            recommendations: qualityAnalysis.recommendations || [],
+                            configuration: qualityAnalysis.configuration || {},
+                            coverage: qualityAnalysis.coverage || {},
+                            realMetrics: qualityAnalysis.realMetrics || {},
+                            // Package-specific data
+                            lintingResults: packageQuality.lintingResults || [],
+                            complexityMetrics: packageQuality.complexityMetrics || {},
+                            maintainabilityIndex: packageQuality.maintainabilityIndex,
+                            testCoverage: packageQuality.testCoverage,
+                            codeDuplication: packageQuality.codeDuplication || {},
+                            codeStyleIssues: packageQuality.codeStyleIssues || [],
+                            documentationCoverage: packageQuality.documentationCoverage,
+                            performanceIssues: packageQuality.performanceIssues || [],
+                            largeFiles: packageQuality.largeFiles || [],
+                            magicNumberFiles: packageQuality.magicNumberFiles || [],
+                            complexityIssuesList: packageQuality.complexityIssuesList || [],
+                            lintingIssuesList: packageQuality.lintingIssuesList || []
+                        };
+                        
+                        // Calculate package-specific metrics
+                        packageQualityData.metrics = {
+                            lintingIssues: packageQualityData.realMetrics.lintingIssues || 0,
+                            averageComplexity: packageQualityData.realMetrics.averageComplexity || 0,
+                            maintainabilityIndex: packageQualityData.realMetrics.maintainabilityIndex || 0,
+                            testCoverage: packageQualityData.realMetrics.testCoverage || 0,
+                            codeDuplicationPercentage: packageQualityData.realMetrics.codeDuplicationPercentage || 0,
+                            codeStyleIssues: packageQualityData.realMetrics.codeStyleIssues || 0,
+                            documentationCoverage: packageQualityData.realMetrics.documentationCoverage || 0,
+                            performanceIssues: packageQualityData.realMetrics.performanceIssues || 0,
+                            overallQualityScore: packageQualityData.realMetrics.overallQualityScore || 0
+                        };
+                        
+                        packageResults[type] = {
+                            ...result,
+                            data: packageQualityData
+                        };
+                    } else {
+                        // Fallback to old filtering logic for single package or legacy data
+                        const packageQualityData = {
+                            ...result.data,
+                            package: pkg.name,
+                            packagePath: pkg.path
+                        };
+                        
+                        // Filter issues by package path
+                        if (result.data.issues) {
+                            packageQualityData.issues = result.data.issues.filter(issue => {
+                                return issue.file && (issue.file.includes(pkg.path) || issue.file.startsWith(pkg.relativePath));
+                            });
+                        }
+                        
+                        // Filter linting issues by package path
+                        if (result.data.lintingIssuesList) {
+                            packageQualityData.lintingIssuesList = result.data.lintingIssuesList.filter(issue => {
+                                return issue.file && (issue.file.includes(pkg.path) || issue.file.startsWith(pkg.relativePath));
+                            });
+                        }
+                        
+                        // Filter complexity issues by package path
+                        if (result.data.complexityIssuesList) {
+                            packageQualityData.complexityIssuesList = result.data.complexityIssuesList.filter(issue => {
+                                return issue.file && (issue.file.includes(pkg.path) || issue.file.startsWith(pkg.relativePath));
+                            });
+                        }
+                        
+                        // Filter large files by package path
+                        if (result.data.largeFiles) {
+                            packageQualityData.largeFiles = result.data.largeFiles.filter(file => {
+                                return file.file && (file.file.includes(pkg.path) || file.file.startsWith(pkg.relativePath));
+                            });
+                        }
+                        
+                        // Filter magic number files by package path
+                        if (result.data.magicNumberFiles) {
+                            packageQualityData.magicNumberFiles = result.data.magicNumberFiles.filter(file => {
+                                return file.file && (file.file.includes(pkg.path) || file.file.startsWith(pkg.relativePath));
+                            });
+                        }
+                        
+                        packageResults[type] = {
+                            ...result,
+                            data: packageQualityData
+                        };
+                    }
+                }
                 // For other analyses with files, filter by package path
                 else if (result.data.files) {
                     const packageFiles = result.data.files.filter(file => {
