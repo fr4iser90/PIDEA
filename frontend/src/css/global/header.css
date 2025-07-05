@@ -1,14 +1,16 @@
 /* Header Styles */
 .app-header {
-  position: sticky;
+  position: fixed;
   top: 0;
-  z-index: 10;
+  left: 0;
+  right: 0;
+  z-index: 1000;
   background: var(--bg-tertiary);
   color: var(--text-primary);
   display: flex;
   align-items: center;
   justify-content: space-between;
-  height: 56px;
+  height: var(--header-height);
   padding: 0 24px;
   border-bottom: 1px solid #23272e;
   box-shadow: 0 2px 8px #0003;
@@ -186,4 +188,56 @@ body.light-theme .mode-btn.active {
 body.light-theme .mode-btn:not(.active):hover {
   background: #b3d1ff;
   color: #23272e;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .app-header {
+    padding: 0 16px;
+  }
+  
+  .app-title {
+    font-size: 1.1em;
+  }
+  
+  .header-switch {
+    margin-right: 16px;
+  }
+  
+  .layout-controls {
+    margin-right: 12px;
+  }
+  
+  .layout-btn {
+    width: 32px;
+    height: 32px;
+  }
+  
+  .mode-btn {
+    padding: 4px 12px;
+    font-size: 0.9em;
+  }
+}
+
+@media (max-width: 480px) {
+  .app-header {
+    padding: 0 12px;
+  }
+  
+  .app-title {
+    font-size: 1em;
+  }
+  
+  .header-switch {
+    margin-right: 12px;
+  }
+  
+  .layout-controls {
+    margin-right: 8px;
+  }
+  
+  .chat-header-actions {
+    margin-left: 8px;
+    gap: 8px;
+  }
 } 

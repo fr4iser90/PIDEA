@@ -205,14 +205,14 @@ function App() {
         </header>
 
         {/* Main Content */}
-        <main className="main-layout">
+        <main className={`main-layout${isSplitView ? ' split-view' : ''}`}>
           {/* Sidebar */}
           <div className="chat-sidebar">
             <ChatSidebarComponent eventBus={eventBus} activePort={activePort} onActivePortChange={setActivePort} />
           </div>
           
           {/* Main View */}
-          <div className={`main-content ${isSplitView ? 'split-view' : ''}`}>
+          <div className="main-content">
             {renderView()}
             {isSplitView && <PreviewComponent eventBus={eventBus} activePort={activePort} />}
           </div>
