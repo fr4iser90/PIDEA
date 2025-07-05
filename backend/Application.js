@@ -534,6 +534,8 @@ class Application {
       fileSystemService: this.fileSystemService,
       gitService: this.gitService,
       dockerService: this.dockerService,
+      taskRepository: this.taskRepository,
+      analysisRepository: this.analysisRepository
       logger: this.logger,
       eventBus: this.eventBus
     });
