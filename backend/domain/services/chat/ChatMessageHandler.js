@@ -38,15 +38,15 @@ class ChatMessageHandler {
    */
   async waitForAIResponse(options = {}) {
     const page = await this.browserManager.getPage();
-    const timeout = options.timeout || 120000; // 2 minutes default
-    const checkInterval = options.checkInterval || 2000; // Check every 2 seconds
+    const timeout = options.timeout || 300000; // 5 minutes default (increased from 2)
+    const checkInterval = options.checkInterval || 3000; // Check every 3 seconds (increased from 2)
     
     console.log('⏳ [ChatMessageHandler] Waiting for AI to finish editing...');
     
     const startTime = Date.now();
     let lastMessageCount = 0;
     let stableCount = 0;
-    const requiredStableChecks = 3; // Wait for 3 stable checks (6 seconds)
+    const requiredStableChecks = 15; // Wait for 5 stable checks (15 seconds) - increased from 3
     
     while (Date.now() - startTime < timeout) {
       try {
