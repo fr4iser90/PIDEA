@@ -155,18 +155,8 @@ function PreviewComponent({ eventBus, activePort }) {
           port = result.data.port;
           workspacePath = result.data.workspacePath;
         } else {
-          console.log('No user app URL found, checking terminal output...');
-          // Trigger terminal monitoring on backend
-          const monitorResult = await apiRepository.monitorTerminal();
-          
-          if (monitorResult.success && monitorResult.data && monitorResult.data.url) {
-            console.log('Found URL from terminal monitoring:', monitorResult.data.url);
-            previewUrl = monitorResult.data.url;
-            port = monitorResult.data.port;
-            workspacePath = monitorResult.data.workspacePath;
-          } else {
-            throw new Error('No user app URL found in terminal output');
-          }
+          console.log('No user app URL found in any IDE workspace');
+          throw new Error('No frontend URL found in any available IDE workspace');
         }
       }
 

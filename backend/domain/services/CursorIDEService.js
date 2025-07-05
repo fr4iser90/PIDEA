@@ -266,6 +266,12 @@ After applying the changes, please confirm that the refactoring has been complet
         return null;
       }
       
+      // If workspace path is virtual (like composer-code-block-anysphere:/), skip
+      if (workspacePath.includes(':')) {
+        console.log('[CursorIDEService] Skipping virtual workspace for port', port, ':', workspacePath);
+        return null;
+      }
+      
       // Try package.json analysis first
       const packageJsonUrl = await this.packageJsonAnalyzer.analyzePackageJsonInPath(workspacePath);
       if (packageJsonUrl) {
@@ -273,14 +279,9 @@ After applying the changes, please confirm that the refactoring has been complet
         return packageJsonUrl;
       }
       
-      // Fallback to terminal monitoring (but this might not work for non-active IDEs)
-      if (port === this.getActivePort()) {
-        console.log('[CursorIDEService] Trying terminal monitoring for active port', port);
-        return await this.terminalMonitor.monitorTerminalOutput();
-      } else {
-        console.log('[CursorIDEService] Port', port, 'is not active, cannot use terminal monitoring');
-        return null;
-      }
+      // No frontend found in this workspace
+      console.log('[CursorIDEService] No frontend found in workspace for port', port, ':', workspacePath);
+      return null;
     } catch (error) {
       console.error('[CursorIDEService] Error getting user app URL for port', port, ':', error);
       return null;

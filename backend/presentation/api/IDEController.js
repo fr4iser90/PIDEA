@@ -145,16 +145,36 @@ class IDEController {
         throw new Error('CursorIDEService not available');
       }
       
-      // Get the active IDE to include port information
-      const activeIDE = await this.ideManager.getActiveIDE();
-      const url = await this.cursorIDEService.getUserAppUrlForPort();
+      // Get ALL available IDEs and find frontend URLs in any of them
+      const availableIDEs = await this.ideManager.getAvailableIDEs();
+      console.log('[IDEController] Searching for frontend URLs in', availableIDEs.length, 'IDEs');
+      
+      let foundUrl = null;
+      let foundPort = null;
+      let foundWorkspacePath = null;
+      
+      // Try each IDE workspace until we find a frontend
+      for (const ide of availableIDEs) {
+        if (ide.workspacePath && !ide.workspacePath.includes(':')) {
+          console.log('[IDEController] Checking IDE port', ide.port, 'workspace:', ide.workspacePath);
+          
+          const url = await this.cursorIDEService.getUserAppUrlForPort(ide.port);
+          if (url) {
+            console.log('[IDEController] Found frontend URL in IDE port', ide.port, ':', url);
+            foundUrl = url;
+            foundPort = ide.port;
+            foundWorkspacePath = ide.workspacePath;
+            break;
+          }
+        }
+      }
       
       res.json({ 
         success: true, 
         data: { 
-          url: url,
-          port: activeIDE?.port || null,
-          workspacePath: activeIDE?.workspacePath || null
+          url: foundUrl,
+          port: foundPort,
+          workspacePath: foundWorkspacePath
         } 
       });
     } catch (error) {

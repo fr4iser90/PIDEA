@@ -13,30 +13,52 @@ class PackageJsonAnalyzer {
       const path = require('path');
       console.log('[PackageJsonAnalyzer] Analyzing package.json in path:', workspacePath);
       let candidates = [];
+      
       // Helper: robust recursive search for ALL package.json files
       const allPackageJsons = [];
       const findAllPackageJsons = (dir, maxDepth = 5, currentDepth = 0) => {
-        if (currentDepth > maxDepth) return;
+        if (currentDepth > maxDepth) {
+          console.log('[PackageJsonAnalyzer] Max depth reached for:', dir);
+          return;
+        }
+        console.log('[PackageJsonAnalyzer] Searching in directory:', dir, 'depth:', currentDepth);
         try {
           const files = fs.readdirSync(dir, { withFileTypes: true });
+          console.log('[PackageJsonAnalyzer] Found', files.length, 'items in:', dir);
           for (const file of files) {
             const fullPath = path.join(dir, file.name);
-            if (file.isDirectory === true) {
-              // Skip node_modules/.git but NOT frontend etc.
-              if (file.name === 'node_modules' || file.name === '.git') continue;
+            if (file.isDirectory()) {
+              // Skip only node_modules, not .git (to allow finding package.json in git repos)
+              if (file.name === 'node_modules') {
+                console.log('[PackageJsonAnalyzer] Skipping node_modules:', fullPath);
+                continue;
+              }
+              console.log('[PackageJsonAnalyzer] Recursing into directory:', fullPath, 'depth:', currentDepth + 1);
               findAllPackageJsons(fullPath, maxDepth, currentDepth + 1);
-            } else if (file.isFile === true && file.name === 'package.json') {
-              allPackageJsons.push(fullPath);
-              console.log('[PackageJsonAnalyzer] Found package.json:', fullPath);
+            } else if (file.isFile()) {
+              console.log('[PackageJsonAnalyzer] Found file:', fullPath);
+              if (file.name === 'package.json') {
+                allPackageJsons.push(fullPath);
+                console.log('[PackageJsonAnalyzer] Found package.json:', fullPath);
+              }
             }
           }
-        } catch (e) {}
+        } catch (e) {
+          console.error('[PackageJsonAnalyzer] Error reading directory:', dir, 'Error:', e.message);
+        }
       };
+      
       findAllPackageJsons(workspacePath);
+      console.log('[PackageJsonAnalyzer] Total package.json files found:', allPackageJsons.length);
+      console.log('[PackageJsonAnalyzer] All package.json paths:', allPackageJsons);
+      
       for (const pkgPath of allPackageJsons) {
         const dir = path.dirname(pkgPath);
-        candidates.push({ dir, score: this.scoreFolder(dir) });
+        const score = this.scoreFolder(dir);
+        console.log('[PackageJsonAnalyzer] Candidate:', { dir, score });
+        candidates.push({ dir, score });
       }
+      
       if (candidates.length > 0) {
         let best = null;
         let bestScore = -1;
@@ -98,17 +120,20 @@ class PackageJsonAnalyzer {
       const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
       const scripts = packageJson.scripts || {};
       const devServerPorts = [];
+      
       // Techstack scoring
       let techScore = 0;
       const allDeps = { ...packageJson.devDependencies, ...packageJson.dependencies };
       for (const dep of Object.keys(allDeps)) {
         if (this.frontendTechs.some(t => dep.toLowerCase().includes(t))) techScore += 10;
       }
+      
       // Nur dev server, wenn Port explizit im Script steht
       const devPatterns = [
         /dev/, /start/, /serve/, /vite/, /next/, /react/, /vue/, /svelte/, /nuxt/, /gatsby/, /astro/, /solid/, /preact/
       ];
       console.log('[PackageJsonAnalyzer] Analyzing scripts:', Object.keys(scripts));
+      
       for (const [scriptName, scriptCommand] of Object.entries(scripts)) {
         for (const pattern of devPatterns) {
           if (pattern.test(scriptName.toLowerCase()) || pattern.test(scriptCommand.toLowerCase())) {
@@ -128,6 +153,7 @@ class PackageJsonAnalyzer {
           }
         }
       }
+      
       // Sort by techScore (Frontend-Stack bevorzugen)
       devServerPorts.sort((a, b) => b.techScore - a.techScore);
       if (devServerPorts.length > 0 && devServerPorts[0].techScore > 0) {
