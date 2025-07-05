@@ -338,6 +338,42 @@ class AnalysisOutputService {
             });
         }
         
+        // Detailed Issues from Real Metrics
+        if (data.largeFiles && data.largeFiles.length > 0) {
+            md += '### Large Files (>500 LOC)\n\n';
+            data.largeFiles.forEach(file => {
+                md += `- **${file.file}**: ${file.lines} lines\n`;
+            });
+            md += '\n';
+        }
+        
+        if (data.magicNumberFiles && data.magicNumberFiles.length > 0) {
+            md += '### Files with Many Magic Numbers (>20)\n\n';
+            data.magicNumberFiles.forEach(file => {
+                md += `- **${file.file}**: ${file.magicNumbers} magic numbers\n`;
+            });
+            md += '\n';
+        }
+        
+        if (data.complexityIssuesList && data.complexityIssuesList.length > 0) {
+            md += '### Complexity Issues\n\n';
+            data.complexityIssuesList.forEach(issue => {
+                md += `- **${issue.file}**: ${issue.issue}\n`;
+            });
+            md += '\n';
+        }
+        
+        if (data.lintingIssuesList && data.lintingIssuesList.length > 0) {
+            md += '### Linting Issues\n\n';
+            data.lintingIssuesList.forEach(issue => {
+                md += `- **${issue.file}:${issue.line}**: ${issue.issue}\n`;
+                if (issue.code) {
+                    md += `  \`${issue.code}\`\n`;
+                }
+            });
+            md += '\n';
+        }
+        
         // Configuration
         if (data.configuration) {
             md += '### Configuration\n\n';
@@ -376,8 +412,8 @@ class AnalysisOutputService {
                 if (typeof rec === 'string') {
                     md += `- ${rec}\n`;
                 } else {
-                    md += `- **${rec.title}** (${rec.priority} priority)\n`;
-                    md += `  ${rec.description}\n`;
+                    md += `- **${rec.title || rec.type}** (${rec.severity || rec.priority} priority)\n`;
+                    md += `  ${rec.message || rec.description || 'No description available'}\n`;
                     if (rec.category) md += `  - Category: ${rec.category}\n`;
                 }
                 md += '\n';

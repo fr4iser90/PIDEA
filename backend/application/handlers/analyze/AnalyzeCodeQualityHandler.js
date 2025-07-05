@@ -180,8 +180,8 @@ class AnalyzeCodeQualityHandler {
 
             const projectInfo = await this.getProjectInfo(command.projectPath);
             const analysis = await this.performCodeQualityAnalysis(command, projectInfo);
-            const metrics = this.generateMetrics(analysis);
-            const recommendations = this.generateRecommendations(analysis, command);
+            const metrics = this.generateMetrics(analysis.qualityAnalysis);
+            const recommendations = this.generateRecommendations(analysis.qualityAnalysis, command);
 
             const duration = Date.now() - startTime;
 
@@ -255,17 +255,33 @@ class AnalyzeCodeQualityHandler {
                 }
             );
 
+            // Ensure realMetrics are included in the analysis
+            const analysisWithRealMetrics = {
+                ...qualityAnalysis,
+                realMetrics: qualityAnalysis.realMetrics || qualityAnalysis.metrics?.realMetrics
+            };
+
+            // Validate that realMetrics exist
+            if (!analysisWithRealMetrics.realMetrics) {
+                throw new Error('Real metrics not calculated by analyzer');
+            }
+
             return {
                 projectInfo,
-                qualityAnalysis,
+                qualityAnalysis: analysisWithRealMetrics,
                 lintingResults: qualityAnalysis.issues || [],
                 complexityMetrics: qualityAnalysis.metrics?.complexity || {},
-                maintainabilityIndex: qualityAnalysis.metrics?.maintainability?.maintainabilityIndex || 0,
-                testCoverage: qualityAnalysis.metrics?.testability?.testCoverage || 0,
+                maintainabilityIndex: analysisWithRealMetrics.realMetrics.maintainabilityIndex,
+                testCoverage: analysisWithRealMetrics.realMetrics.testCoverage,
                 codeDuplication: qualityAnalysis.metrics?.maintainability?.codeDuplication || {},
                 codeStyleIssues: qualityAnalysis.issues?.filter(issue => issue.type === 'code-smell') || [],
-                documentationCoverage: qualityAnalysis.metrics?.readability?.commentRatio || 0,
+                documentationCoverage: analysisWithRealMetrics.realMetrics.documentationCoverage,
                 performanceIssues: qualityAnalysis.issues?.filter(issue => issue.severity === 'high') || [],
+                // Detailed issues from real metrics
+                largeFiles: analysisWithRealMetrics.realMetrics.largeFiles || [],
+                magicNumberFiles: analysisWithRealMetrics.realMetrics.magicNumberFiles || [],
+                complexityIssuesList: analysisWithRealMetrics.realMetrics.complexityIssuesList || [],
+                lintingIssuesList: analysisWithRealMetrics.realMetrics.lintingIssuesList || [],
                 analysisOptions: options,
                 timestamp: new Date()
             };
@@ -281,18 +297,25 @@ class AnalyzeCodeQualityHandler {
     }
 
     generateMetrics(analysis) {
-        const { qualityAnalysis } = analysis;
+        const qualityAnalysis = analysis;
+        
+        // ONLY use real metrics - NO FALLBACKS
+        const realMetrics = qualityAnalysis.realMetrics || qualityAnalysis.metrics?.realMetrics;
+        
+        if (!realMetrics) {
+            throw new Error('Real metrics not found - analysis failed');
+        }
         
         return {
-            lintingIssues: qualityAnalysis.issues?.length || 0,
-            averageComplexity: this.calculateAverageComplexity(qualityAnalysis.metrics?.complexity),
-            maintainabilityIndex: qualityAnalysis.metrics?.maintainability?.maintainabilityIndex || 0,
-            testCoverage: qualityAnalysis.metrics?.testability?.testCoverage || 0,
-            codeDuplicationPercentage: this.calculateDuplicationPercentage(qualityAnalysis.metrics?.maintainability?.codeDuplication),
-            codeStyleIssues: qualityAnalysis.issues?.filter(issue => issue.type === 'code-smell')?.length || 0,
-            documentationCoverage: qualityAnalysis.metrics?.readability?.commentRatio || 0,
-            performanceIssues: qualityAnalysis.issues?.filter(issue => issue.severity === 'high')?.length || 0,
-            overallQualityScore: qualityAnalysis.overallScore || this.calculateOverallQualityScore(analysis)
+            lintingIssues: realMetrics.lintingIssues,
+            averageComplexity: realMetrics.averageComplexity,
+            maintainabilityIndex: realMetrics.maintainabilityIndex,
+            testCoverage: realMetrics.testCoverage,
+            codeDuplicationPercentage: realMetrics.codeDuplicationPercentage,
+            codeStyleIssues: realMetrics.codeStyleIssues,
+            documentationCoverage: realMetrics.documentationCoverage,
+            performanceIssues: realMetrics.performanceIssues,
+            overallQualityScore: realMetrics.overallQualityScore
         };
     }
 
@@ -316,7 +339,7 @@ class AnalyzeCodeQualityHandler {
 
     calculateOverallQualityScore(analysis) {
         let score = 100;
-        const { qualityAnalysis } = analysis;
+        const qualityAnalysis = analysis;
 
         // Use the overall score from the analyzer if available
         if (qualityAnalysis.overallScore !== undefined) {
@@ -353,13 +376,15 @@ class AnalyzeCodeQualityHandler {
 
     generateRecommendations(analysis, command) {
         const recommendations = [];
-        const { qualityAnalysis, metrics } = analysis;
+        const qualityAnalysis = analysis;
+        const metrics = this.generateMetrics(analysis);
 
         // Check for linting issues
         if (metrics && metrics.lintingIssues > 10) {
             recommendations.push({
                 type: 'linting_issues',
                 severity: 'medium',
+                title: 'Fix Linting Issues',
                 message: `${metrics.lintingIssues} linting issues found`,
                 details: { recommendation: 'Fix linting issues to improve code quality' }
             });
@@ -370,6 +395,7 @@ class AnalyzeCodeQualityHandler {
             recommendations.push({
                 type: 'low_maintainability',
                 severity: 'high',
+                title: 'Improve Maintainability',
                 message: 'Low maintainability index detected',
                 details: { maintainabilityIndex: metrics.maintainabilityIndex, recommendation: 'Refactor code to improve maintainability' }
             });
@@ -380,6 +406,7 @@ class AnalyzeCodeQualityHandler {
             recommendations.push({
                 type: 'low_test_coverage',
                 severity: 'medium',
+                title: 'Increase Test Coverage',
                 message: 'Low test coverage detected',
                 details: { testCoverage: metrics.testCoverage, recommendation: 'Add more tests to improve coverage' }
             });
@@ -390,17 +417,19 @@ class AnalyzeCodeQualityHandler {
             recommendations.push({
                 type: 'code_duplication',
                 severity: 'medium',
+                title: 'Reduce Code Duplication',
                 message: 'High code duplication detected',
                 details: { duplicationPercentage: metrics.codeDuplicationPercentage, recommendation: 'Refactor duplicated code' }
             });
         }
 
         // Check code style
-        if (metrics && metrics.codeStyleIssues.length > 5) {
+        if (metrics && metrics.codeStyleIssues > 5) {
             recommendations.push({
                 type: 'code_style_issues',
                 severity: 'low',
-                message: `${metrics.codeStyleIssues.length} code style issues found`,
+                title: 'Fix Code Style Issues',
+                message: `${metrics.codeStyleIssues} code style issues found`,
                 details: { recommendation: 'Fix code style issues for consistency' }
             });
         }

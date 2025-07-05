@@ -77,11 +77,28 @@ class CodeQualityAnalyzer {
             const codeSmells = await this.findCodeSmells(projectPath, codeFiles);
             analysis.issues.push(...codeSmells);
             
-            // Generate recommendations
-            analysis.recommendations = await this.generateRecommendations(analysis);
+            // Calculate real metrics based on actual analysis
+            const realMetrics = await this.calculateRealMetrics(analysis, codeFiles);
+            
+            console.log('DEBUG: Real metrics calculated:', JSON.stringify(realMetrics, null, 2));
+            
+            // Add real metrics to existing metrics without overwriting
+            analysis.metrics.realMetrics = realMetrics;
+            
+            // Also add realMetrics at the top level for easier access
+            analysis.realMetrics = realMetrics;
             
             // Calculate overall score
-            analysis.overallScore = await this.calculateOverallScore(analysis);
+            analysis.overallScore = realMetrics.overallQualityScore;
+            
+            console.log('DEBUG: Analysis with real metrics:', JSON.stringify({
+                realMetrics: analysis.realMetrics,
+                overallScore: analysis.overallScore,
+                metricsRealMetrics: analysis.metrics.realMetrics
+            }, null, 2));
+            
+            // Generate recommendations
+            analysis.recommendations = await this.generateRecommendations(analysis);
 
             return analysis;
         } catch (error) {
@@ -473,15 +490,16 @@ class CodeQualityAnalyzer {
     }
 
     /**
-     * Calculate overall quality score
+     * Calculate real metrics based on actual analysis
      * @param {Object} analysis - Complete analysis results
-     * @returns {Promise<number>} Overall score (0-100)
+     * @param {Array} codeFiles - Array of code file paths
+     * @returns {Promise<Object>} Real metrics
      */
-    async calculateOverallScore(analysis) {
+    async calculateRealMetrics(analysis, codeFiles) {
         let score = 100;
 
         // Analyze actual code files for real metrics
-        const codeFiles = analysis.codeFiles || [];
+        const filesToAnalyze = codeFiles || analysis.codeFiles || [];
         let totalLines = 0;
         let totalFunctions = 0;
         let totalClasses = 0;
@@ -489,8 +507,14 @@ class CodeQualityAnalyzer {
         let complexityIssues = 0;
         let maintainabilityIssues = 0;
         let testFiles = 0;
+        
+        // Collect specific issues for detailed reporting
+        const largeFiles = [];
+        const magicNumberFiles = [];
+        const complexityIssuesList = [];
+        const lintingIssuesList = [];
 
-        for (const file of codeFiles) {
+        for (const file of filesToAnalyze) {
             try {
                 const content = await fsPromises.readFile(file, 'utf8');
                 const lines = content.split('\n');
@@ -504,18 +528,54 @@ class CodeQualityAnalyzer {
                 const classMatches = content.match(/class\s+\w+/g) || [];
                 totalClasses += classMatches.length;
 
-                // Count linting issues
-                if (content.includes('console.log')) lintingIssues++;
-                if (content.includes('var ')) lintingIssues++;
-                if (content.includes('==')) lintingIssues++;
+                // Count linting issues with line details
+                const contentLines = content.split('\n');
+                contentLines.forEach((line, lineNumber) => {
+                    if (line.includes('console.log')) {
+                        lintingIssues++;
+                        lintingIssuesList.push({ 
+                            file, 
+                            line: lineNumber + 1,
+                            issue: 'console.log found',
+                            code: line.trim()
+                        });
+                    }
+                    if (line.includes('var ')) {
+                        lintingIssues++;
+                        lintingIssuesList.push({ 
+                            file, 
+                            line: lineNumber + 1,
+                            issue: 'var declaration found',
+                            code: line.trim()
+                        });
+                    }
+                    if (line.includes('==') && !line.includes('===')) {
+                        lintingIssues++;
+                        lintingIssuesList.push({ 
+                            file, 
+                            line: lineNumber + 1,
+                            issue: '== instead of === found',
+                            code: line.trim()
+                        });
+                    }
+                });
 
                 // Count complexity issues
                 const nestedLevels = content.match(/\{/g)?.length || 0;
-                if (nestedLevels > 10) complexityIssues++;
+                if (nestedLevels > 10) {
+                    complexityIssues++;
+                    complexityIssuesList.push({ file, issue: `High nesting: ${nestedLevels} levels` });
+                }
 
-                // Count maintainability issues
-                if (lines.length > 200) maintainabilityIssues++;
-                if (content.match(/\b\d{3,}\b/g)?.length > 5) maintainabilityIssues++;
+                // Count maintainability issues - based on real requirements
+                if (lines.length > 500) {
+                    maintainabilityIssues++;
+                    largeFiles.push({ file, lines: lines.length });
+                }
+                if (content.match(/\b\d{3,}\b/g)?.length > 20) {
+                    maintainabilityIssues++;
+                    magicNumberFiles.push({ file, magicNumbers: content.match(/\b\d{3,}\b/g)?.length || 0 });
+                }
 
                 // Count test files
                 if (file.includes('.test.') || file.includes('.spec.')) testFiles++;
@@ -524,27 +584,33 @@ class CodeQualityAnalyzer {
             }
         }
 
-        // Calculate real metrics
-        analysis.metrics = {
+        // Calculate score based on real metrics - use more reasonable penalties
+        if (lintingIssues > 0) score -= Math.min(30, lintingIssues * 0.5); // Cap at 30 points, 0.5 per issue
+        if (complexityIssues > 0) score -= Math.min(25, complexityIssues * 2); // Cap at 25 points, 2 per issue
+        if (maintainabilityIssues > 0) score -= Math.min(20, maintainabilityIssues * 1); // Cap at 20 points, 1 per issue
+        if (testFiles === 0) score -= 15; // No tests penalty
+
+        const finalScore = Math.max(0, Math.min(100, score));
+        
+        // Calculate real metrics and update analysis - use more reasonable formula
+        const maintainabilityIndex = Math.max(0, Math.min(100, 100 - maintainabilityIssues * 0.5));
+        
+        return {
             lintingIssues,
             averageComplexity: complexityIssues,
-            maintainabilityIndex: Math.max(0, 100 - maintainabilityIssues * 10),
-            testCoverage: testFiles > 0 ? Math.min(100, (testFiles / Math.max(codeFiles.length, 1)) * 100) : 0,
+            maintainabilityIndex,
+            testCoverage: testFiles > 0 ? Math.min(100, (testFiles / Math.max(filesToAnalyze.length, 1)) * 100) : 0,
             codeDuplicationPercentage: 0, // Would need more complex analysis
             codeStyleIssues: lintingIssues,
             documentationCoverage: 0, // Would need comment analysis
             performanceIssues: 0, // Would need performance analysis
-            overallQualityScore: 0
+            overallQualityScore: finalScore,
+            // Detailed issues for reporting
+            largeFiles,
+            magicNumberFiles,
+            complexityIssuesList,
+            lintingIssuesList
         };
-
-        // Calculate score based on real metrics
-        if (lintingIssues > 0) score -= lintingIssues * 5;
-        if (complexityIssues > 0) score -= complexityIssues * 10;
-        if (maintainabilityIssues > 0) score -= maintainabilityIssues * 8;
-        if (testFiles === 0) score -= 30;
-
-        analysis.metrics.overallQualityScore = Math.max(0, Math.min(100, score));
-        return analysis.metrics.overallQualityScore;
     }
 
     /**
