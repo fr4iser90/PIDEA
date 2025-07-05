@@ -11,6 +11,7 @@ class VibeCoderAutoRefactorHandler {
     constructor(dependencies = {}) {
         this.eventBus = dependencies.eventBus;
         this.analysisRepository = dependencies.analysisRepository;
+        this.projectAnalysisRepository = dependencies.projectAnalysisRepository;
         this.commandBus = dependencies.commandBus;
         this.logger = dependencies.logger;
         this.analysisOutputService = dependencies.analysisOutputService;
@@ -53,54 +54,159 @@ class VibeCoderAutoRefactorHandler {
     }
 
     async runComprehensiveAnalysis(projectPath) {
-        // Lies die vorhandenen Analyse-Reports aus dem richtigen Projekt-Output-Ordner
-        const fs = require('fs').promises;
-        const path = require('path');
         try {
-            const outputDir = path.join(projectPath, 'output', 'analysis', 'projects');
-            const projectDirs = await fs.readdir(outputDir);
-            // Finde das aktuellste Analyse-Verzeichnis
-            let latestAnalysisDir = null;
-            let latestTime = 0;
-            for (const dir of projectDirs) {
-                const dirPath = path.join(outputDir, dir);
-                const stats = await fs.stat(dirPath);
-                if (stats.isDirectory() && stats.mtime.getTime() > latestTime) {
-                    latestTime = stats.mtime.getTime();
-                    latestAnalysisDir = dir;
-                }
-            }
-            if (!latestAnalysisDir) throw new Error('Kein Analyse-Output gefunden!');
-            const analysisDir = path.join(outputDir, latestAnalysisDir);
-            const files = await fs.readdir(analysisDir);
-            // Parse die Large Files aus allen .md-Reports
+            // Extrahiere projectId aus dem Pfad
+            const projectId = path.basename(projectPath);
+            
+            // Lade die neuesten Analysen aus der Datenbank
+            const latestArchitectureAnalysis = await this.projectAnalysisRepository.findLatestByProjectIdAndType(projectId, 'architecture');
+            const latestCodeQualityAnalysis = await this.projectAnalysisRepository.findLatestByProjectIdAndType(projectId, 'code-quality');
+            const latestDependenciesAnalysis = await this.projectAnalysisRepository.findLatestByProjectIdAndType(projectId, 'dependencies');
+            
+            // Kombiniere alle Analysen
+            const combinedAnalysis = {
+                architecture: latestArchitectureAnalysis?.getAnalysisData() || {},
+                codeQuality: latestCodeQualityAnalysis?.getAnalysisData() || {},
+                dependencies: latestDependenciesAnalysis?.getAnalysisData() || {}
+            };
+            
+            // Extrahiere Large Files aus der Code-Quality-Analyse
             const largeFiles = [];
-            for (const file of files) {
-                if (file.endsWith('.md')) {
-                    const filePath = path.join(analysisDir, file);
-                    const content = await fs.readFile(filePath, 'utf8');
-                    const largeFilesMatch = content.match(/### Large Files \(>500 LOC\)\n\n([\s\S]*?)(?=\n###|\n##|$)/);
-                    if (largeFilesMatch) {
-                        const largeFilesSection = largeFilesMatch[1];
-                        const fileMatches = largeFilesSection.matchAll(/- \*\*(.*?)\*\*: (\d+) lines/g);
-                        for (const match of fileMatches) {
-                            largeFiles.push({
-                                file: match[1],
-                                lines: parseInt(match[2]),
-                                report: file
-                            });
-                        }
-                    }
-                }
+            if (combinedAnalysis.codeQuality && combinedAnalysis.codeQuality.largeFiles) {
+                largeFiles.push(...combinedAnalysis.codeQuality.largeFiles);
             }
+            
+            // Fallback: Wenn keine Analysen in der DB sind, erstelle eine Standard-Analyse
+            if (largeFiles.length === 0) {
+                console.log('⚠️ [AutoRefactor] Keine Analysen in der Datenbank gefunden, erstelle Standard-Analyse...');
+                
+                // Erstelle eine Standard-Analyse basierend auf dem aktuellen Projekt
+                const standardAnalysis = await this.createStandardAnalysis(projectPath, projectId);
+                
+                return {
+                    codeQuality: { data: { largeFiles: standardAnalysis.largeFiles } },
+                    largeFiles: standardAnalysis.largeFiles,
+                    analysis: standardAnalysis,
+                    message: 'Standard-Analyse erstellt. Für detailliertere Ergebnisse führen Sie bitte eine vollständige Projekt-Analyse durch.'
+                };
+            }
+            
             return {
                 codeQuality: { data: { largeFiles } },
-                largeFiles
+                largeFiles,
+                analysis: combinedAnalysis
             };
         } catch (error) {
-            console.error('❌ [AutoRefactor] Fehler beim Lesen der Analyse:', error);
+            console.error('❌ [AutoRefactor] Fehler beim Lesen der Analyse aus der Datenbank:', error);
             throw error;
         }
+    }
+
+    async createStandardAnalysis(projectPath, projectId) {
+        try {
+            console.log('🔍 [AutoRefactor] Erstelle Standard-Analyse für Projekt:', projectId);
+            
+            // Scanne das Projekt nach großen Dateien
+            const fs = require('fs').promises;
+            const path = require('path');
+            
+            const largeFiles = [];
+            const scanDirectory = async (dir) => {
+                try {
+                    const items = await fs.readdir(dir);
+                    for (const item of items) {
+                        const fullPath = path.join(dir, item);
+                        const stats = await fs.stat(fullPath);
+                        
+                        if (stats.isDirectory() && !item.startsWith('.') && item !== 'node_modules') {
+                            await scanDirectory(fullPath);
+                        } else if (stats.isFile() && this.isCodeFile(item)) {
+                            const relativePath = path.relative(projectPath, fullPath);
+                            const lineCount = await this.countLines(fullPath);
+                            
+                            if (lineCount > 100) { // Dateien mit mehr als 100 Zeilen
+                                largeFiles.push({
+                                    file: relativePath,
+                                    path: relativePath,
+                                    lines: lineCount,
+                                    package: this.getPackageFromPath(relativePath)
+                                });
+                            }
+                        }
+                    }
+                } catch (error) {
+                    // Ignoriere Fehler beim Scannen
+                }
+            };
+            
+            await scanDirectory(projectPath);
+            
+            // Sortiere nach Zeilenanzahl (größte zuerst)
+            largeFiles.sort((a, b) => b.lines - a.lines);
+            
+            // Erstelle eine Standard-Analyse-Entity und speichere sie in der DB
+            const ProjectAnalysis = require('../../../domain/entities/ProjectAnalysis');
+            const standardAnalysis = new ProjectAnalysis({
+                projectId: projectId,
+                projectPath: projectPath,
+                analysisType: 'code-quality',
+                analysisData: {
+                    largeFiles: largeFiles,
+                    totalFiles: largeFiles.length,
+                    averageLines: largeFiles.length > 0 ? Math.round(largeFiles.reduce((sum, file) => sum + file.lines, 0) / largeFiles.length) : 0,
+                    largestFile: largeFiles.length > 0 ? largeFiles[0] : null,
+                    scanTimestamp: new Date().toISOString()
+                },
+                metadata: {
+                    source: 'auto-refactor-fallback',
+                    scanMethod: 'file-system-scan',
+                    threshold: 100
+                }
+            });
+            
+            // Speichere in der Datenbank
+            await this.projectAnalysisRepository.save(standardAnalysis);
+            console.log('✅ [AutoRefactor] Standard-Analyse in Datenbank gespeichert');
+            
+            return {
+                codeQuality: {
+                    largeFiles: largeFiles,
+                    totalFiles: largeFiles.length,
+                    averageLines: largeFiles.length > 0 ? Math.round(largeFiles.reduce((sum, file) => sum + file.lines, 0) / largeFiles.length) : 0
+                },
+                largeFiles: largeFiles
+            };
+            
+        } catch (error) {
+            console.error('❌ [AutoRefactor] Fehler beim Erstellen der Standard-Analyse:', error);
+            return {
+                codeQuality: { largeFiles: [] },
+                largeFiles: []
+            };
+        }
+    }
+
+    isCodeFile(filename) {
+        const codeExtensions = ['.js', '.jsx', '.ts', '.tsx', '.py', '.java', '.cpp', '.c', '.cs', '.php', '.rb', '.go', '.rs', '.swift', '.kt'];
+        return codeExtensions.some(ext => filename.endsWith(ext));
+    }
+
+    async countLines(filePath) {
+        try {
+            const fs = require('fs').promises;
+            const content = await fs.readFile(filePath, 'utf8');
+            return content.split('\n').length;
+        } catch (error) {
+            return 0;
+        }
+    }
+
+    getPackageFromPath(filePath) {
+        const parts = filePath.split('/');
+        if (parts.length > 1) {
+            return parts[0];
+        }
+        return 'root';
     }
 
     identifyLargeFiles(analysisResults) {

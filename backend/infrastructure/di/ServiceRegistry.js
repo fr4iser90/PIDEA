@@ -308,6 +308,12 @@ class ServiceRegistry {
             return new PostgreSQLUserSessionRepository(databaseConnection);
         }, { singleton: true, dependencies: ['databaseConnection'] });
 
+        // Project analysis repository
+        this.container.register('projectAnalysisRepository', (databaseConnection) => {
+            const PostgreSQLProjectAnalysisRepository = require('../database/PostgreSQLProjectAnalysisRepository');
+            return new PostgreSQLProjectAnalysisRepository(databaseConnection);
+        }, { singleton: true, dependencies: ['databaseConnection'] });
+
         this.registeredServices.add('repositories');
     }
 
@@ -339,6 +345,12 @@ class ServiceRegistry {
                 logger
             });
         }, { singleton: true, dependencies: ['taskRepository', 'taskValidationService', 'eventBus', 'logger'] });
+
+        // VibeCoder auto refactor handler
+        this.container.register('vibeCoderAutoRefactorHandler', (taskRepository, projectAnalysisRepository, eventBus, logger) => {
+            const VibeCoderAutoRefactorHandler = require('../../application/handlers/vibecoder/VibeCoderAutoRefactorHandler');
+            return new VibeCoderAutoRefactorHandler({ taskRepository, projectAnalysisRepository, eventBus, logger });
+        }, { singleton: true, dependencies: ['taskRepository', 'projectAnalysisRepository', 'eventBus', 'logger'] });
 
         this.registeredServices.add('handlers');
     }

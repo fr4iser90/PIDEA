@@ -222,6 +222,18 @@ class DatabaseConnection {
         status TEXT DEFAULT 'pending',
         createdAt TEXT NOT NULL,
         updatedAt TEXT NOT NULL
+      )`,
+      
+      `CREATE TABLE IF NOT EXISTS project_analyses (
+        id VARCHAR(36) PRIMARY KEY,
+        project_id VARCHAR(255) NOT NULL,
+        project_path VARCHAR(500) NOT NULL,
+        analysis_type VARCHAR(100) NOT NULL,
+        analysis_data ${metadataType} NOT NULL,
+        version VARCHAR(20) DEFAULT '1.0.0',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        metadata ${metadataType} DEFAULT '{}'
       )`
     ];
 

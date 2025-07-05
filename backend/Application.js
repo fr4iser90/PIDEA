@@ -466,21 +466,7 @@ class Application {
       performanceAnalyzer: this.performanceAnalyzer
     });
 
-    this.vibeCoderAutoRefactorHandler = new (require('./application/handlers/vibecoder/VibeCoderAutoRefactorHandler'))({
-      eventBus: this.eventBus,
-      analysisRepository: this.analysisRepository,
-      commandBus: this.commandBus,
-      logger: this.logger,
-      analysisOutputService: this.analysisOutputService,
-      subprojectDetector: this.subprojectDetector,
-      projectAnalyzer: this.projectAnalyzer,
-      codeQualityAnalyzer: this.codeQualityAnalyzer,
-      architectureAnalyzer: this.architectureAnalyzer,
-      dependencyAnalyzer: this.dependencyAnalyzer,
-      securityAnalyzer: this.securityAnalyzer,
-      performanceAnalyzer: this.performanceAnalyzer,
-      taskRepository: this.taskRepository
-    });
+    this.vibeCoderAutoRefactorHandler = this.serviceRegistry.getService('vibeCoderAutoRefactorHandler');
 
     this.taskExecutionEngine = new (require('./infrastructure/external/TaskExecutionEngine'))({
       aiService: this.aiService,
@@ -566,6 +552,11 @@ class Application {
     });
 
     this.vibeCoderAutoRefactorController = new (require('./presentation/api/VibeCoderAutoRefactorController'))(this.commandBus);
+
+    this.projectAnalysisController = new (require('./presentation/api/ProjectAnalysisController'))(
+      this.serviceRegistry.getService('projectAnalysisRepository'),
+      this.logger
+    );
 
     this.analysisController = new AnalysisController(
       this.codeQualityService,
@@ -768,6 +759,16 @@ class Application {
     // VibeCoder Auto Refactor routes (protected) - PROJECT-BASED
     this.app.use('/api/projects/:projectId/auto-refactor', this.authMiddleware.authenticate());
     this.app.post('/api/projects/:projectId/auto-refactor/execute', (req, res) => this.vibeCoderAutoRefactorController.startAutoRefactor(req, res));
+
+    // Project analysis routes (protected)
+    this.app.use('/api/projects/:projectId/analyses', this.authMiddleware.authenticate());
+    this.app.get('/api/projects/:projectId/analyses', (req, res) => this.projectAnalysisController.getProjectAnalyses(req, res));
+    this.app.get('/api/projects/:projectId/analyses/stats', (req, res) => this.projectAnalysisController.getAnalysisStats(req, res));
+    this.app.get('/api/projects/:projectId/analyses/:analysisType', (req, res) => this.projectAnalysisController.getAnalysesByType(req, res));
+    this.app.get('/api/projects/:projectId/analyses/:analysisType/latest', (req, res) => this.projectAnalysisController.getLatestAnalysisByType(req, res));
+    this.app.post('/api/projects/:projectId/analyses', (req, res) => this.projectAnalysisController.createAnalysis(req, res));
+    this.app.put('/api/projects/:projectId/analyses/:id', (req, res) => this.projectAnalysisController.updateAnalysis(req, res));
+    this.app.delete('/api/projects/:projectId/analyses/:id', (req, res) => this.projectAnalysisController.deleteAnalysis(req, res));
 
     // Specialized Analysis routes (protected) - PROJECT-BASED
     this.app.use('/api/projects/:projectId/analysis', this.authMiddleware.authenticate());
