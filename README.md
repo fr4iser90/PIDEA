@@ -72,5 +72,9 @@ I welcome contributions to CursorWeb! Please follow these steps:
 ## License
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
+## Personal Goal: Project Unifier
+
+My personal objective with CursorWeb is to create a unifying platform for all my projects. The goal is to standardize frameworks, maintain consistent documentation, and ensure a uniform structure across different endeavors. I'm happy to share this tool with the community, hoping it saves time and brings efficiency to others as well.
+
 ## Contact
-For questions or feedback, reach out via the chat system within CursorWeb or open an issue on GitHub.
+For questions or feedback, reach me out via email : pa.boe90@gmail.com
