@@ -2,7 +2,7 @@
 // Hierarchical framework panel with templates and prompts
 
 import React, { useState, useEffect } from 'react';
-import '@css/framework-panel.css';
+import '@css/panel/framework-panel.css';
 
 const FALLBACK_STRUCTURE = {
           name: "AI Framework",

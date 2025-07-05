@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import EventBus from '@infrastructure/events/EventBus.jsx';
 import ChatComponent from '@presentation/components/ChatComponent.jsx';
 import ChatSidebarComponent from '@presentation/components/ChatSidebarComponent.jsx';
-import RightPanelComponent from '@presentation/components/RightPanelComponent.jsx';
+import ChatRightPanelComponent from '@presentation/components/ChatRightPanelComponent.jsx';
 import IDEMirrorComponent from '@presentation/components/IDEMirrorComponent.jsx';
 import PreviewComponent from '@presentation/components/PreviewComponent.jsx';
 import AuthWrapper from '@presentation/components/auth/AuthWrapper.jsx';
@@ -218,7 +218,7 @@ function App() {
           </div>
           
           {/* Right Panel */}
-          <RightPanelComponent eventBus={eventBus} />
+          <ChatRightPanelComponent eventBus={eventBus} />
         </main>
       </div>
     </AuthWrapper>

@@ -1,0 +1,142 @@
+/* VibeCoder Mode Button Group */
+.vibecoder-btn-group {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+  .vibecoder-btn {
+    background: #23272e;
+    color: #e6e6e6;
+    border: 1px solid var(--border-color);
+    border-radius: 5px;
+    padding: 6px 12px;
+    font-size: 13px;
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .vibecoder-btn.active, .vibecoder-btn:active {
+    background: var(--primary-color);
+    color: #fff;
+  }
+  .vibecoder-btn:hover {
+    background: var(--hover-bg);
+    color: var(--primary-color);
+  }
+  
+  /* Preset Buttons */
+  .preset-btn-group {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 10px;
+  }
+  .preset-btn {
+    background: #222;
+    color: #e6e6e6;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    padding: 5px 10px;
+    font-size: 12px;
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s;
+  }
+  .preset-btn.active, .preset-btn:active {
+    background: var(--primary-color);
+    color: #fff;
+  }
+  .preset-btn:hover {
+    background: var(--hover-bg);
+    color: var(--primary-color);
+  }
+  
+  /* Auto Mode Section */
+  .auto-mode-section {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 12px;
+    margin-bottom: 12px;
+  }
+  .auto-mode-status {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+  }
+  .auto-mode-btn {
+    background: #1db954;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    padding: 6px 16px;
+    font-size: 13px;
+    cursor: pointer;
+    margin-left: auto;
+    transition: background 0.2s;
+  }
+  .auto-mode-btn:hover {
+    background: #1976d2;
+  }
+  
+  /* Preset Buttons */
+  .btn-preset {
+    background: #222;
+    color: #e6e6e6;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    padding: 5px 10px;
+    font-size: 12px;
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s;
+    margin-bottom: 2px;
+  }
+  .btn-preset.active, .btn-preset:active {
+    background: var(--primary-color);
+    color: #fff;
+  }
+  .btn-preset:hover {
+    background: var(--hover-bg);
+    color: var(--primary-color);
+  }
+  
+  /* VibeCoder Mode Buttons */
+  .btn-vibecoder {
+    background: #23272e;
+    color: #e6e6e6;
+    border: 1px solid var(--border-color);
+    border-radius: 5px;
+    padding: 6px 12px;
+    font-size: 13px;
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .btn-vibecoder.active, .btn-vibecoder:active {
+    background: var(--primary-color);
+    color: #fff;
+  }
+  .btn-vibecoder:hover {
+    background: var(--hover-bg);
+    color: var(--primary-color);
+  }
+  
+  /* Danger Button (Stop) */
+  .btn-danger {
+    background: #b91c1c;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    padding: 6px 12px;
+    font-size: 13px;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  .btn-danger:hover {
+    background: #ef4444;
+  }
+  
+  /* Nur Task-Panel-spezifische Styles: Button-Gruppen, Task-Status, Analysis Results, etc. Keine generellen Panel- oder Framework-Styles! */ 

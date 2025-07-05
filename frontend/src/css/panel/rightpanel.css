@@ -5,8 +5,9 @@
   right: 0;
   height: calc(100vh - 56px);
   background: var(--panel-bg);
-  border-left: 1px solid var(--border-color);
-  width: 320px;
+  border-left: 2px solid var(--primary-color);
+  box-shadow: var(--shadow-lg);
+  width: 350px;
   min-width: 320px;
   display: flex;
   flex-direction: column;
@@ -18,6 +19,7 @@
   display: flex;
   flex-direction: column;
   height: 100%;
+  padding: 20px 22px 0 22px;
 }
 
 .chat-right-panel .panel-header {
@@ -58,7 +60,7 @@
 .chat-right-panel .panel-content {
   flex: 1;
   overflow-y: auto;
-  padding: 16px;
+  padding: 0 !important;
 }
 
 /* Chat Tab Styles */
@@ -340,69 +342,76 @@
   }
 }
 
-/* === Framework Panel Styles === */
-.framework-panel {
-  margin-top: 24px;
+/* Remove double border on panel */
+.chat-right-panel {
+  border-left: 1px solid var(--border-color);
+}
+
+/* Remove legacy card backgrounds from new panel */
+.task-ai-panel .card-bg, .task-ai-panel .card {
+  background: none;
+  border: none;
+}
+
+/* Remove excessive padding from panel-content */
+.panel-content {
+  padding: 0 !important;
+}
+
+.panel-block {
   background: var(--card-bg);
-  border: 1px solid var(--border-color);
-  border-radius: 8px;
-  padding: 12px 0 8px 0;
+  border: 1.5px solid var(--border-color);
+  border-radius: 12px;
+  margin-bottom: 18px;
+  padding: 18px 18px 12px 18px;
+  box-shadow: var(--shadow-sm);
 }
-.framework-panel-header {
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--text-primary);
-  padding: 0 16px 8px 16px;
-  margin-bottom: 4px;
+
+.frameworks-tab {
+  background: var(--card-bg);
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow-md);
+  margin: 18px 0;
+  padding: 18px 12px 18px 12px;
+  min-height: 320px;
 }
-.framework-prompt-list {
+
+.panel-tabs {
   display: flex;
-  flex-direction: column;
-  gap: 8px;
-  margin-bottom: 8px;
+  gap: 2px;
+  background: var(--panel-bg);
+  border-bottom: 1.5px solid var(--border-color);
   padding: 0 8px;
 }
-.framework-prompt-btn {
-  display: flex;
-  align-items: center;
-  background: #222;
-  border-radius: 6px;
-  padding: 6px 10px;
-  cursor: pointer;
-  transition: background 0.2s;
-  color: #e6e6e6;
-}
-.framework-prompt-btn.active {
-  background: #1db954;
-  color: #fff;
-}
-.framework-toggle-label, .framework-toggle-checkbox, .framework-toggle-custom { display: none !important; }
-.framework-name {
-  flex: 1;
-  user-select: none;
-  cursor: pointer;
-  padding: 4px 10px;
-  border-radius: 4px;
-  transition: background 0.2s, color 0.2s;
-}
-.framework-name.active {
-  background: #1db954;
-  color: #fff;
-}
-.framework-name:hover {
-  background: #333;
-}
-.framework-add-btn {
-  width: 100%;
-  margin-top: 8px;
-  background: #333;
-  color: #fff;
+
+.tab-btn {
+  background: none;
   border: none;
-  border-radius: 6px;
-  padding: 6px 0;
+  color: var(--text-secondary);
+  font-weight: 500;
+  font-size: 1rem;
+  padding: 10px 16px;
+  border-radius: 8px 8px 0 0;
   cursor: pointer;
-  font-size: 13px;
+  transition: background 0.15s, color 0.15s;
 }
-.framework-add-btn:hover {
-  background: #444;
-} 
+
+.tab-btn.active {
+  background: var(--card-bg);
+  color: var(--primary-color);
+  border-bottom: 2.5px solid var(--primary-color);
+  font-weight: 700;
+}
+
+.panel-content {
+  padding: 0 8px 8px 8px;
+  min-height: 400px;
+}
+
+.chat-tab, .files-tab, .settings-tab {
+  background: var(--card-bg);
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow-sm);
+  margin: 18px 0;
+  padding: 18px 12px 18px 12px;
+}

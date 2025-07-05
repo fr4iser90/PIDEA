@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { APIChatRepository } from '../../../../infrastructure/repositories/APIChatRepository';
+import APIChatRepository from '../../../../infrastructure/repositories/APIChatRepository';
 
 const AnalysisPanelComponent = ({ projectId = null }) => {
   const [analysisHistory, setAnalysisHistory] = useState([]);
