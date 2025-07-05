@@ -232,33 +232,160 @@ class ProjectAnalyzer {
         try {
             const items = await fs.readdir(projectPath);
             
+            // Basic file checks
             if (!items.includes('.gitignore')) {
-                issues.push('Missing .gitignore file');
+                issues.push({
+                    title: 'Missing .gitignore file',
+                    description: 'No .gitignore file found. This can lead to committing sensitive files.',
+                    severity: 'medium',
+                    category: 'security'
+                });
             }
             
             if (!items.includes('README.md')) {
-                issues.push('Missing README.md file');
+                issues.push({
+                    title: 'Missing README.md file',
+                    description: 'No README.md file found. Documentation is essential for project maintainability.',
+                    severity: 'medium',
+                    category: 'documentation'
+                });
             }
             
-            if (!items.includes('package.json') && !items.includes('requirements.txt') && !items.includes('pom.xml')) {
-                issues.push('No dependency management file found');
+            // Advanced structure analysis
+            const structure = await this.analyzeStructure(projectPath);
+            
+            // Check for large files that should be split
+            const largeFiles = structure.largestFiles.filter(file => file.size > 50000); // 50KB
+            largeFiles.forEach(file => {
+                issues.push({
+                    title: `Large file detected: ${file.path}`,
+                    description: `File ${file.path} is ${(file.size / 1024).toFixed(1)}KB. Consider splitting into smaller modules.`,
+                    severity: 'high',
+                    category: 'architecture'
+                });
+            });
+            
+            // Check for deep directory nesting
+            const deepDirs = structure.directories.filter(dir => dir.split('/').length > 5);
+            if (deepDirs.length > 0) {
+                issues.push({
+                    title: 'Deep directory nesting detected',
+                    description: `${deepDirs.length} directories have more than 5 levels. This can make navigation difficult.`,
+                    severity: 'medium',
+                    category: 'architecture'
+                });
             }
             
-            // Check for common security issues
+            // Check for too many files in single directory
+            const largeDirs = structure.directories.filter(dir => {
+                const dirPath = path.join(projectPath, dir);
+                try {
+                    const files = fs.readdirSync(dirPath);
+                    return files.length > 20;
+                } catch {
+                    return false;
+                }
+            });
+            
+            if (largeDirs.length > 0) {
+                issues.push({
+                    title: 'Directories with too many files',
+                    description: `${largeDirs.length} directories contain more than 20 files. Consider organizing into subdirectories.`,
+                    severity: 'medium',
+                    category: 'organization'
+                });
+            }
+            
+            // Check for mixed file types in same directory
+            const mixedDirs = structure.directories.filter(dir => {
+                const dirPath = path.join(projectPath, dir);
+                try {
+                    const files = fs.readdirSync(dirPath);
+                    const extensions = files.map(f => path.extname(f)).filter(ext => ext);
+                    const uniqueExts = new Set(extensions);
+                    return uniqueExts.size > 5; // More than 5 different file types
+                } catch {
+                    return false;
+                }
+            });
+            
+            if (mixedDirs.length > 0) {
+                issues.push({
+                    title: 'Mixed file types in directories',
+                    description: `${mixedDirs.length} directories contain mixed file types. Consider organizing by file type.`,
+                    severity: 'low',
+                    category: 'organization'
+                });
+            }
+            
+            // Security checks for Node.js projects
             if (items.includes('package.json')) {
                 try {
                     const packageJson = JSON.parse(await fs.readFile(path.join(projectPath, 'package.json'), 'utf8'));
+                    
                     if (packageJson.dependencies && packageJson.dependencies['express']) {
                         if (!packageJson.dependencies['helmet']) {
-                            issues.push('Express app missing security middleware (helmet)');
+                            issues.push({
+                                title: 'Express app missing security middleware',
+                                description: 'Express app is missing helmet for security headers. Add helmet dependency.',
+                                severity: 'high',
+                                category: 'security'
+                            });
+                        }
+                        
+                        if (!packageJson.dependencies['cors']) {
+                            issues.push({
+                                title: 'Express app missing CORS middleware',
+                                description: 'Express app is missing CORS configuration. Add cors dependency.',
+                                severity: 'medium',
+                                category: 'security'
+                            });
+                        }
+                    }
+                    
+                    // Check for outdated packages
+                    if (packageJson.dependencies) {
+                        const outdatedPackages = Object.keys(packageJson.dependencies).filter(pkg => {
+                            const version = packageJson.dependencies[pkg];
+                            return version.startsWith('^') || version.startsWith('~');
+                        });
+                        
+                        if (outdatedPackages.length > 5) {
+                            issues.push({
+                                title: 'Many outdated packages detected',
+                                description: `${outdatedPackages.length} packages may be outdated. Run npm update to check for updates.`,
+                                severity: 'medium',
+                                category: 'maintenance'
+                            });
                         }
                     }
                 } catch {
                     // Ignore errors
                 }
             }
-        } catch {
-            // Ignore errors
+            
+            // Check for test coverage
+            if (!items.includes('tests') && !items.includes('test') && !items.includes('__tests__')) {
+                issues.push({
+                    title: 'No test directory found',
+                    description: 'No test directory detected. Add tests to improve code quality and reliability.',
+                    severity: 'high',
+                    category: 'testing'
+                });
+            }
+            
+            // Check for configuration files
+            if (!items.includes('.eslintrc') && !items.includes('eslint.config.js')) {
+                issues.push({
+                    title: 'No ESLint configuration found',
+                    description: 'No ESLint configuration detected. Add ESLint for code quality enforcement.',
+                    severity: 'medium',
+                    category: 'quality'
+                });
+            }
+            
+        } catch (error) {
+            console.error('Error detecting issues:', error);
         }
 
         return issues;
@@ -274,24 +401,119 @@ class ProjectAnalyzer {
         
         try {
             const items = await fs.readdir(projectPath);
+            const structure = await this.analyzeStructure(projectPath);
+            const dependencies = await this.analyzeDependencies(projectPath);
             
+            // Architecture suggestions based on structure
+            if (structure.totalFiles > 100) {
+                suggestions.push({
+                    title: 'Consider modular architecture',
+                    description: 'Project has many files. Consider organizing into modules or microservices.',
+                    priority: 'high',
+                    category: 'architecture'
+                });
+            }
+            
+            if (structure.largestFiles.length > 0 && structure.largestFiles[0].size > 100000) {
+                suggestions.push({
+                    title: 'Split large files into modules',
+                    description: `File ${structure.largestFiles[0].path} is very large. Split into smaller, focused modules.`,
+                    priority: 'high',
+                    category: 'refactoring'
+                });
+            }
+            
+            // Testing suggestions
             if (!items.includes('tests') && !items.includes('test') && !items.includes('__tests__')) {
-                suggestions.push('Add test directory and unit tests');
+                suggestions.push({
+                    title: 'Implement comprehensive testing strategy',
+                    description: 'Add unit tests, integration tests, and e2e tests. Consider Jest for Node.js projects.',
+                    priority: 'high',
+                    category: 'testing'
+                });
             }
             
+            // Code quality suggestions
             if (!items.includes('.eslintrc') && !items.includes('eslint.config.js')) {
-                suggestions.push('Add ESLint configuration for code quality');
+                suggestions.push({
+                    title: 'Add code quality tools',
+                    description: 'Implement ESLint, Prettier, and Husky for consistent code quality.',
+                    priority: 'medium',
+                    category: 'quality'
+                });
             }
             
+            // Performance suggestions
+            if (dependencies.dependencies.includes('express')) {
+                suggestions.push({
+                    title: 'Optimize Express.js performance',
+                    description: 'Add compression, caching, and database connection pooling for better performance.',
+                    priority: 'medium',
+                    category: 'performance'
+                });
+            }
+            
+            // Security suggestions
+            if (dependencies.dependencies.includes('express')) {
+                suggestions.push({
+                    title: 'Enhance security measures',
+                    description: 'Add rate limiting, input validation, and security headers.',
+                    priority: 'high',
+                    category: 'security'
+                });
+            }
+            
+            // Documentation suggestions
+            if (!items.includes('README.md')) {
+                suggestions.push({
+                    title: 'Create comprehensive documentation',
+                    description: 'Add README.md, API documentation, and inline code comments.',
+                    priority: 'medium',
+                    category: 'documentation'
+                });
+            }
+            
+            // DevOps suggestions
             if (!items.includes('Dockerfile')) {
-                suggestions.push('Consider adding Docker support for containerization');
+                suggestions.push({
+                    title: 'Add containerization support',
+                    description: 'Create Dockerfile and docker-compose.yml for easy deployment.',
+                    priority: 'medium',
+                    category: 'devops'
+                });
             }
             
             if (!items.includes('.github')) {
-                suggestions.push('Add GitHub Actions for CI/CD');
+                suggestions.push({
+                    title: 'Implement CI/CD pipeline',
+                    description: 'Add GitHub Actions for automated testing and deployment.',
+                    priority: 'medium',
+                    category: 'devops'
+                });
             }
-        } catch {
-            // Ignore errors
+            
+            // Monitoring suggestions
+            if (!items.includes('logs') && !items.includes('monitoring')) {
+                suggestions.push({
+                    title: 'Add logging and monitoring',
+                    description: 'Implement structured logging and application monitoring.',
+                    priority: 'medium',
+                    category: 'monitoring'
+                });
+            }
+            
+            // Database suggestions (if applicable)
+            if (dependencies.dependencies.some(dep => ['mongoose', 'sequelize', 'prisma'].includes(dep))) {
+                suggestions.push({
+                    title: 'Optimize database operations',
+                    description: 'Add database indexing, connection pooling, and query optimization.',
+                    priority: 'medium',
+                    category: 'database'
+                });
+            }
+            
+        } catch (error) {
+            console.error('Error generating suggestions:', error);
         }
 
         return suggestions;

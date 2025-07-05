@@ -59,6 +59,13 @@ const API_CONFIG = {
         status: (projectId) => `/api/projects/${projectId}/auto/status`
       }
     },
+    vibecoder: {
+      analyze: (projectId) => `/api/projects/${projectId}/auto/execute`,
+      refactor: (projectId) => `/api/projects/${projectId}/auto/execute`,
+      mode: (projectId) => `/api/projects/${projectId}/auto/execute`,
+      status: (projectId) => `/api/projects/${projectId}/auto/status`,
+      progress: (projectId) => `/api/projects/${projectId}/auto/status`
+    },
     settings: '/api/settings',
     health: '/api/health'
   }

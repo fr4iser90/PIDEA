@@ -36,6 +36,10 @@ const BrowserManager = require('./infrastructure/external/BrowserManager');
 const IDEManager = require('./infrastructure/external/IDEManager');
 const AIService = require('./infrastructure/external/AIService');
 const ProjectAnalyzer = require('./infrastructure/external/ProjectAnalyzer');
+const CodeQualityAnalyzer = require('./infrastructure/external/CodeQualityAnalyzer');
+const SecurityAnalyzer = require('./infrastructure/external/SecurityAnalyzer');
+const PerformanceAnalyzer = require('./infrastructure/external/PerformanceAnalyzer');
+const ArchitectureAnalyzer = require('./infrastructure/external/ArchitectureAnalyzer');
 const IDEWorkspaceDetectionService = require('./domain/services/IDEWorkspaceDetectionService');
 const InMemoryChatRepository = require('./infrastructure/database/InMemoryChatRepository');
 const InMemoryTaskRepository = require('./infrastructure/database/InMemoryTaskRepository');
@@ -55,6 +59,7 @@ const FrameworkController = require('./presentation/api/FrameworkController');
 const AuthController = require('./presentation/api/AuthController');
 const TaskController = require('./presentation/api/TaskController');
 const AutoModeController = require('./presentation/api/AutoModeController');
+const AnalysisController = require('./presentation/api/AnalysisController');
 const WebSocketManager = require('./presentation/websocket/WebSocketManager');
 
 class Application {
@@ -196,10 +201,14 @@ class Application {
     // Initialize AI and analysis services
     this.aiService = new AIService();
     this.projectAnalyzer = new ProjectAnalyzer();
+    this.codeQualityAnalyzer = new CodeQualityAnalyzer();
+    this.securityAnalyzer = new SecurityAnalyzer();
+    this.performanceAnalyzer = new PerformanceAnalyzer();
+    this.architectureAnalyzer = new ArchitectureAnalyzer();
 
     // Initialize task repository and service
     this.taskRepository = new InMemoryTaskRepository();
-    this.taskService = new TaskService(this.taskRepository, this.aiService, this.projectAnalyzer);
+    this.taskService = new TaskService(this.taskRepository, this.aiService, this.projectAnalyzer, this.cursorIDEService);
     
     // Initialize task validation service
     this.taskValidationService = new TaskValidationService(
@@ -216,6 +225,31 @@ class Application {
       this.logger,
       this.aiService,
       this.projectAnalyzer
+    );
+
+    // Initialize specialized analysis services
+    this.codeQualityService = new (require('./domain/services/CodeQualityService'))(
+      this.codeQualityAnalyzer,
+      this.eventBus,
+      this.logger
+    );
+
+    this.securityService = new (require('./domain/services/SecurityService'))(
+      this.securityAnalyzer,
+      this.eventBus,
+      this.logger
+    );
+
+    this.performanceService = new (require('./domain/services/PerformanceService'))(
+      this.performanceAnalyzer,
+      this.eventBus,
+      this.logger
+    );
+
+    this.architectureService = new (require('./domain/services/ArchitectureService'))(
+      this.architectureAnalyzer,
+      this.eventBus,
+      this.logger
     );
 
     this.logger.info('[Application] Domain services initialized');
@@ -307,6 +341,14 @@ class Application {
       logger: this.logger,
       eventBus: this.eventBus
     });
+
+    this.analysisController = new AnalysisController(
+      this.codeQualityService,
+      this.securityService,
+      this.performanceService,
+      this.architectureService,
+      this.logger
+    );
 
     this.logger.info('[Application] Presentation layer initialized');
   }
@@ -491,6 +533,15 @@ class Application {
     this.app.post('/api/projects/:projectId/auto/execute', (req, res) => this.autoModeController.executeAutoMode(req, res));
     this.app.get('/api/projects/:projectId/auto/status', (req, res) => this.autoModeController.getAutoModeStatus(req, res));
     this.app.post('/api/projects/:projectId/auto/stop', (req, res) => this.autoModeController.stopAutoMode(req, res));
+
+    // Specialized Analysis routes (protected) - PROJECT-BASED
+    this.app.use('/api/projects/:projectId/analysis', this.authMiddleware.authenticate());
+    this.app.get('/api/projects/:projectId/analysis/status', (req, res) => this.analysisController.getAnalysisStatus(req, res));
+    this.app.post('/api/projects/:projectId/analysis/code-quality', (req, res) => this.analysisController.analyzeCodeQuality(req, res));
+    this.app.post('/api/projects/:projectId/analysis/security', (req, res) => this.analysisController.analyzeSecurity(req, res));
+    this.app.post('/api/projects/:projectId/analysis/performance', (req, res) => this.analysisController.analyzePerformance(req, res));
+    this.app.post('/api/projects/:projectId/analysis/architecture', (req, res) => this.analysisController.analyzeArchitecture(req, res));
+    this.app.post('/api/projects/:projectId/analysis/comprehensive', (req, res) => this.analysisController.analyzeComprehensive(req, res));
 
     // Script Generation routes (protected) - PROJECT-BASED
     this.app.use('/api/projects/:projectId/scripts', this.authMiddleware.authenticate());

@@ -202,6 +202,25 @@ function RightPanelComponent({ eventBus, messages = [] }) {
         </div>
       </div>
       
+      <div className="vibecoder-controls">
+        <h4>🚀 VibeCoder Mode</h4>
+        <div className="vibecoder-actions">
+          <button onClick={() => startVibeCoderAnalyze()} className="btn-vibecoder analyze">
+            🔍 Analyze Project
+          </button>
+          <button onClick={() => startVibeCoderRefactor()} className="btn-vibecoder refactor">
+            🔧 Auto Refactor
+          </button>
+          <button onClick={() => startVibeCoderMode()} className="btn-vibecoder mode">
+            ⚡ VibeCoder Mode
+          </button>
+        </div>
+        <div className="vibecoder-status">
+          <span className="status-indicator">💤</span>
+          <span>Ready for VibeCoder Magic</span>
+        </div>
+      </div>
+      
       <div className="auto-mode-section">
         <h4>Auto Mode</h4>
         <div className="auto-mode-controls">
@@ -437,6 +456,67 @@ function RightPanelComponent({ eventBus, messages = [] }) {
     } catch (error) {
       console.error('❌ Failed to stop auto mode:', error);
       throw error;
+    }
+  };
+
+  // 🚀 VibeCoder Mode Functions (using existing Auto Mode endpoints)
+  const startVibeCoderAnalyze = async () => {
+    try {
+      console.log('🚀 Starting VibeCoder Analyze...');
+      const response = await apiCall(API_CONFIG.endpoints.vibecoder.analyze('default'), {
+        method: 'POST',
+        body: JSON.stringify({
+          mode: 'analyze',
+          projectPath: '/home/fr4iser/Documents/Git/CursorWeb/backend'
+        })
+      });
+      if (response.success) {
+        console.log('✅ VibeCoder Analyze started:', response);
+        // Update UI to show analysis in progress
+        if (eventBus) eventBus.emit('vibecoder-analyze-started', response.data);
+      }
+    } catch (error) {
+      console.error('❌ Failed to start VibeCoder Analyze:', error);
+    }
+  };
+
+  const startVibeCoderRefactor = async () => {
+    try {
+      console.log('🚀 Starting VibeCoder Refactor...');
+      const response = await apiCall(API_CONFIG.endpoints.vibecoder.refactor('default'), {
+        method: 'POST',
+        body: JSON.stringify({
+          mode: 'refactor',
+          projectPath: '/home/fr4iser/Documents/Git/CursorWeb/backend'
+        })
+      });
+      if (response.success) {
+        console.log('✅ VibeCoder Refactor started:', response);
+        // Update UI to show refactoring in progress
+        if (eventBus) eventBus.emit('vibecoder-refactor-started', response.data);
+      }
+    } catch (error) {
+      console.error('❌ Failed to start VibeCoder Refactor:', error);
+    }
+  };
+
+  const startVibeCoderMode = async () => {
+    try {
+      console.log('🚀 Starting VibeCoder Mode...');
+      const response = await apiCall(API_CONFIG.endpoints.vibecoder.mode('default'), {
+        method: 'POST',
+        body: JSON.stringify({
+          mode: 'full',
+          projectPath: '/home/fr4iser/Documents/Git/CursorWeb/backend'
+        })
+      });
+      if (response.success) {
+        console.log('✅ VibeCoder Mode started:', response);
+        // Update UI to show VibeCoder mode in progress
+        if (eventBus) eventBus.emit('vibecoder-mode-started', response.data);
+      }
+    } catch (error) {
+      console.error('❌ Failed to start VibeCoder Mode:', error);
     }
   };
 

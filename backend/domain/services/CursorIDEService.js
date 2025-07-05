@@ -249,6 +249,320 @@ class CursorIDEService {
       };
     }
   }
+
+  /**
+   * Generate AI-powered task suggestions based on project analysis
+   * @param {Object} projectAnalysis - Project analysis results
+   * @returns {Promise<Array>} Array of task suggestions
+   */
+  async generateTaskSuggestions(projectAnalysis) {
+    console.log('🔍 [CursorIDEService] Generating AI task suggestions for:', projectAnalysis.projectType);
+    
+    // Generate suggestions based on project type and analysis
+    const suggestions = [];
+    
+    // Common suggestions for all project types
+    suggestions.push({
+      title: 'Add comprehensive tests',
+      description: 'Create unit tests, integration tests, and e2e tests to improve code quality and reliability',
+      type: 'test',
+      priority: 'high'
+    });
+    
+    suggestions.push({
+      title: 'Improve documentation',
+      description: 'Add README.md, API documentation, and inline code comments',
+      type: 'documentation',
+      priority: 'medium'
+    });
+    
+    suggestions.push({
+      title: 'Code quality improvements',
+      description: 'Run linters, fix code style issues, and improve code organization',
+      type: 'refactor',
+      priority: 'medium'
+    });
+    
+    // Project-specific suggestions
+    if (projectAnalysis.projectType === 'nodejs' || projectAnalysis.projectType === 'react') {
+      suggestions.push({
+        title: 'Update dependencies',
+        description: 'Check for outdated packages and update them to latest versions',
+        type: 'maintenance',
+        priority: 'medium'
+      });
+      
+      suggestions.push({
+        title: 'Add error handling',
+        description: 'Implement proper error handling and logging throughout the application',
+        type: 'bugfix',
+        priority: 'high'
+      });
+    }
+    
+    if (projectAnalysis.projectType === 'react') {
+      suggestions.push({
+        title: 'Optimize bundle size',
+        description: 'Analyze and reduce JavaScript bundle size for better performance',
+        type: 'optimization',
+        priority: 'medium'
+      });
+      
+      suggestions.push({
+        title: 'Add accessibility features',
+        description: 'Implement ARIA labels, keyboard navigation, and screen reader support',
+        type: 'feature',
+        priority: 'medium'
+      });
+    }
+    
+    if (projectAnalysis.complexity === 'high') {
+      suggestions.push({
+        title: 'Architecture review',
+        description: 'Review and refactor complex code structures for better maintainability',
+        type: 'refactor',
+        priority: 'high'
+      });
+    }
+    
+    // Add suggestions based on detected issues
+    if (projectAnalysis.issues && projectAnalysis.issues.length > 0) {
+      projectAnalysis.issues.forEach(issue => {
+        // Handle both old string format and new object format
+        const issueTitle = typeof issue === 'string' ? issue : issue.title;
+        const issueDescription = typeof issue === 'string' ? issue : issue.description;
+        const issueSeverity = typeof issue === 'string' ? 'medium' : issue.severity;
+        
+        suggestions.push({
+          title: `Fix: ${issueTitle}`,
+          description: issueDescription,
+          type: 'bugfix',
+          priority: issueSeverity === 'high' ? 'high' : 'medium'
+        });
+      });
+    }
+    
+    // Add suggestions from project analysis
+    if (projectAnalysis.suggestions && projectAnalysis.suggestions.length > 0) {
+      projectAnalysis.suggestions.forEach(suggestion => {
+        // Handle both old string format and new object format
+        const suggestionTitle = typeof suggestion === 'string' ? suggestion : suggestion.title;
+        const suggestionDescription = typeof suggestion === 'string' ? suggestion : suggestion.description;
+        const suggestionPriority = typeof suggestion === 'string' ? 'medium' : suggestion.priority;
+        
+        suggestions.push({
+          title: suggestionTitle,
+          description: suggestionDescription,
+          type: 'improvement',
+          priority: suggestionPriority === 'high' ? 'high' : 'medium'
+        });
+      });
+    }
+    
+    console.log('✅ [CursorIDEService] Generated', suggestions.length, 'task suggestions');
+    return suggestions;
+  }
+
+  /**
+   * Send task to Cursor IDE via Playwright
+   * @param {Object} task - Task object
+   * @param {string} workspacePath - Workspace path
+   * @returns {Promise<Object>} Result of sending task
+   */
+  async sendTaskToCursorIDE(task, workspacePath = null) {
+    console.log('🔍 [CursorIDEService] Sending task to Cursor IDE:', task.title);
+    
+    try {
+      // Get active IDE workspace path if not provided
+      if (!workspacePath) {
+        const activeIDE = await this.ideManager.getActiveIDE();
+        workspacePath = activeIDE?.workspacePath;
+        console.log('🔍 [CursorIDEService] Using active IDE workspace path:', workspacePath);
+      }
+      
+      if (!workspacePath) {
+        throw new Error('No workspace path available for Cursor IDE');
+      }
+      
+      // Create task content
+      const taskContent = `# Task: ${task.title}
+
+## Description
+${task.description}
+
+## Type: ${task.type}
+## Priority: ${task.priority}
+## Status: ${task.status}
+
+## Instructions
+Please execute this task in Cursor IDE and provide a summary of what was accomplished.
+
+## Task ID: ${task.id}
+## Created: ${task.createdAt}
+## Project: ${task.projectId}
+
+---
+*Generated by CursorWeb Task Management System*
+`;
+
+      // Get browser page
+      const page = await this.browserManager.getPage();
+      if (!page) {
+        throw new Error('No browser page available');
+      }
+      
+      // Create file in workspace via Playwright
+      const fs = require('fs');
+      const path = require('path');
+      
+      // Use real workspace path, not backend path
+      const taskFilePath = path.join(workspacePath, `task_${task.id}.md`);
+      fs.writeFileSync(taskFilePath, taskContent);
+      
+      console.log('✅ [CursorIDEService] Created task file at:', taskFilePath);
+      
+      // Open file in Cursor IDE via Playwright
+      await page.evaluate((filePath) => {
+        // This would open the file in Cursor IDE
+        // For now, we'll just log it
+        console.log('Opening file in Cursor IDE:', filePath);
+      }, taskFilePath);
+      
+      // Send message to Cursor chat
+      const chatMessage = `New task created: ${task.title}
+
+Please open the file \`task_${task.id}.md\` in your workspace and execute the task.
+
+Task details:
+- Title: ${task.title}
+- Description: ${task.description}
+- Type: ${task.type}
+- Priority: ${task.priority}
+
+Please provide a summary when you complete the task.`;
+      
+      await this.sendMessage(chatMessage);
+      
+      return {
+        success: true,
+        taskFilePath,
+        message: 'Task sent to Cursor IDE successfully'
+      };
+      
+    } catch (error) {
+      console.error('❌ [CursorIDEService] Error sending task to Cursor IDE:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Send auto mode tasks to Cursor IDE via Playwright
+   * @param {Array} tasks - Array of tasks
+   * @param {Object} projectAnalysis - Project analysis
+   * @param {string} workspacePath - Workspace path
+   * @returns {Promise<Object>} Result of sending tasks
+   */
+  async sendAutoModeTasksToCursorIDE(tasks, projectAnalysis, workspacePath = null) {
+    console.log('🔍 [CursorIDEService] Sending auto mode tasks to Cursor IDE:', tasks.length, 'tasks');
+    
+    try {
+      // Get active IDE workspace path if not provided
+      if (!workspacePath) {
+        const activeIDE = await this.ideManager.getActiveIDE();
+        workspacePath = activeIDE?.workspacePath;
+        console.log('🔍 [CursorIDEService] Using active IDE workspace path:', workspacePath);
+      }
+      
+      if (!workspacePath) {
+        throw new Error('No workspace path available for Cursor IDE');
+      }
+      
+      // Create comprehensive auto mode content
+      const autoModeContent = `# Auto Mode Tasks: ${projectAnalysis.projectType} Project
+
+## Project Analysis
+- **Type**: ${projectAnalysis.projectType}
+- **Complexity**: ${projectAnalysis.complexity}
+- **Path**: ${projectAnalysis.projectPath}
+- **Analysis Time**: ${projectAnalysis.timestamp}
+
+## Generated Tasks (${tasks.length} total)
+
+${tasks.map((task, index) => `
+### Task ${index + 1}: ${task.title}
+- **Type**: ${task.type}
+- **Priority**: ${task.priority}
+- **Description**: ${task.description}
+
+**Instructions**: ${task.description}
+
+---
+`).join('\n')}
+
+## Auto Mode Instructions
+1. Review each task above
+2. Execute tasks in priority order (High → Medium → Low)
+3. Provide completion status for each task
+4. Report any issues or additional tasks needed
+
+## Expected Outcome
+Complete all generated tasks and provide a comprehensive summary.
+
+---
+*Auto-generated by CursorWeb AI Task Management System*
+`;
+
+      // Create file in workspace via Playwright
+      const fs = require('fs');
+      const path = require('path');
+      
+      // Use real workspace path, not backend path
+      const autoModeFilePath = path.join(workspacePath, 'auto_mode_tasks.md');
+      fs.writeFileSync(autoModeFilePath, autoModeContent);
+      
+      console.log('✅ [CursorIDEService] Created auto mode file at:', autoModeFilePath);
+      
+      // Get browser page
+      const page = await this.browserManager.getPage();
+      if (!page) {
+        throw new Error('No browser page available');
+      }
+      
+      // Open file in Cursor IDE via Playwright
+      await page.evaluate((filePath) => {
+        // This would open the file in Cursor IDE
+        // For now, we'll just log it
+        console.log('Opening auto mode file in Cursor IDE:', filePath);
+      }, autoModeFilePath);
+      
+      // Send message to Cursor chat
+      const chatMessage = `Auto Mode activated! 🚀
+
+I've analyzed your project and generated ${tasks.length} tasks to improve your codebase.
+
+Please open the file \`auto_mode_tasks.md\` in your workspace and execute all tasks in priority order.
+
+Project Analysis:
+- Type: ${projectAnalysis.projectType}
+- Complexity: ${projectAnalysis.complexity}
+- Issues Found: ${projectAnalysis.issues?.length || 0}
+
+Please provide a comprehensive summary when you complete all tasks.`;
+      
+      await this.sendMessage(chatMessage);
+      
+      return {
+        success: true,
+        autoModeFilePath,
+        tasksCount: tasks.length,
+        message: 'Auto mode tasks sent to Cursor IDE successfully'
+      };
+      
+    } catch (error) {
+      console.error('❌ [CursorIDEService] Error sending auto mode tasks to Cursor IDE:', error);
+      throw error;
+    }
+  }
 }
 
 module.exports = CursorIDEService; 
