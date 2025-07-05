@@ -155,23 +155,77 @@ class TaskService {
         };
         execution.progress = 20;
 
-        // Step 2: AI-Powered Refactoring
-        console.log('🤖 [TaskService] Step 2: AI-powered refactoring...');
+        // Step 2: AI-Powered Refactoring with Validation Loop
+        console.log('🤖 [TaskService] Step 2: AI-powered refactoring with validation...');
         execution.steps.push({ step: 'ai_refactoring', status: 'running', message: 'Executing AI refactoring' });
         
-        const refactoringResult = await this.executeAIRefactoring(task);
+        let refactoringResult;
+        let buildValid = false;
+        let attemptCount = 0;
+        const maxAttempts = 3;
+        
+        while (!buildValid && attemptCount < maxAttempts) {
+          attemptCount++;
+          console.log(`🔄 [TaskService] Refactoring attempt ${attemptCount}/${maxAttempts}`);
+          
+          // Execute AI refactoring
+          refactoringResult = await this.executeAIRefactoring(task);
+          
+          if (!refactoringResult.success) {
+            throw new Error(`AI refactoring failed: ${refactoringResult.error}`);
+          }
+          
+          // Step 3: Validate Build
+          console.log('🔍 [TaskService] Step 3: Validating build...');
+          execution.steps.push({ step: 'build_validation', status: 'running', message: `Validating build (attempt ${attemptCount})` });
+          
+          const buildResult = await this.validateBuild(task.metadata.projectPath);
+          
+          if (buildResult.success) {
+            console.log('✅ [TaskService] Build validation successful!');
+            buildValid = true;
+            execution.steps[execution.steps.length - 1] = { 
+              step: 'build_validation', 
+              status: 'completed', 
+              message: 'Build validation successful',
+              data: buildResult
+            };
+          } else {
+            console.log('❌ [TaskService] Build validation failed:', buildResult.error);
+            execution.steps[execution.steps.length - 1] = { 
+              step: 'build_validation', 
+              status: 'failed', 
+              message: `Build validation failed (attempt ${attemptCount})`,
+              data: buildResult
+            };
+            
+            // Send error back to AI for fixing
+            if (attemptCount < maxAttempts) {
+              console.log('🔄 [TaskService] Sending error to AI for fixing...');
+              const errorPrompt = this.buildErrorFixPrompt(task, buildResult.error);
+              await this.cursorIDEService.chatMessageHandler.sendMessage(errorPrompt, {
+                waitForResponse: true,
+                timeout: 120000
+              });
+            }
+          }
+        }
+        
+        if (!buildValid) {
+          throw new Error(`Build validation failed after ${maxAttempts} attempts`);
+        }
         
         execution.steps[execution.steps.length - 1] = { 
           step: 'ai_refactoring', 
           status: 'completed', 
-          message: 'AI refactoring completed',
+          message: 'AI refactoring completed with successful build',
           data: refactoringResult
         };
-        execution.progress = 50;
+        execution.progress = 80;
 
-        // Step 3: Task completed - prompt sent to chat
-        console.log('✅ [TaskService] Step 3: Task completed - prompt sent to chat');
-        execution.steps.push({ step: 'chat_integration', status: 'completed', message: 'Refactoring prompt sent to IDE chat' });
+        // Step 4: Task completed successfully
+        console.log('✅ [TaskService] Step 4: Task completed successfully with valid build');
+        execution.steps.push({ step: 'completion', status: 'completed', message: 'Task completed with successful build validation' });
         execution.progress = 100;
 
         // Mark task as completed
@@ -248,20 +302,39 @@ class TaskService {
       if (this.cursorIDEService) {
         // Try to send via ChatMessageHandler first
         if (this.cursorIDEService.chatMessageHandler) {
-          await this.cursorIDEService.chatMessageHandler.sendMessage(aiPrompt);
-          console.log('✅ [TaskService] Refactoring prompt sent via ChatMessageHandler');
+          console.log('🤖 [TaskService] Sending refactoring prompt and waiting for AI to finish editing...');
+          const result = await this.cursorIDEService.chatMessageHandler.sendMessage(aiPrompt, {
+            waitForResponse: true,
+            timeout: 120000, // 2 minutes timeout
+            checkInterval: 2000 // Check every 2 seconds
+          });
+          
+          console.log('✅ [TaskService] AI finished editing:', {
+            success: result.success,
+            responseLength: result.response?.length || 0,
+            duration: result.duration
+          });
+          
+          return {
+            success: result.success,
+            prompt: aiPrompt,
+            aiResponse: result.response,
+            message: result.success ? 'AI finished editing codebase' : 'AI editing timed out',
+            duration: result.duration,
+            timestamp: new Date()
+          };
         } else {
           // Fallback: use the sendMessage method directly
           await this.cursorIDEService.sendMessage(aiPrompt);
-          console.log('✅ [TaskService] Refactoring prompt sent via sendMessage');
+          console.log('✅ [TaskService] Refactoring prompt sent via sendMessage (no response waiting)');
+          
+          return {
+            success: true,
+            prompt: aiPrompt,
+            message: 'Refactoring prompt sent to IDE chat (no response waiting)',
+            timestamp: new Date()
+          };
         }
-        
-        return {
-          success: true,
-          prompt: aiPrompt,
-          message: 'Refactoring prompt sent to IDE chat',
-          timestamp: new Date()
-        };
       } else {
         console.log('⚠️ [TaskService] CursorIDEService nicht verfügbar!');
         throw new Error('CursorIDEService not available');
@@ -326,67 +399,86 @@ class TaskService {
   }
 
   /**
-   * Validate refactoring changes
-   * @param {Object} task - Task object
-   * @param {Object} refactoringResult - Refactoring result
-   * @returns {Promise<Object>} Validation result
+   * Validate build after AI refactoring
+   * @param {string} projectPath - Project path
+   * @returns {Promise<Object>} Build validation result
    */
-  async validateRefactoring(task, refactoringResult) {
+  async validateBuild(projectPath) {
     try {
       const { exec } = require('child_process');
       const util = require('util');
       const execAsync = util.promisify(exec);
 
-      // Run tests if they exist
-      let testResults = { passed: true, message: 'No tests found' };
-      
-      try {
-        // Check for common test commands
-        const testCommands = ['npm test', 'yarn test', 'jest', 'mocha'];
-        
-        for (const command of testCommands) {
-          try {
-            const { stdout, stderr } = await execAsync(command, { cwd: task.metadata.projectPath, timeout: 30000 });
-            testResults = { passed: true, message: `Tests passed with ${command}`, output: stdout };
-            break;
-          } catch (error) {
-            // Command not found or failed, try next
-            continue;
-          }
+      console.log('🔍 [TaskService] Running build validation...');
+
+      // Try common build commands
+      const buildCommands = [
+        'npm run build',
+        'yarn build', 
+        'npm run test',
+        'yarn test',
+        'npm run lint',
+        'yarn lint'
+      ];
+
+      let buildResult = { success: false, error: 'No build commands found' };
+
+      for (const command of buildCommands) {
+        try {
+          console.log(`🔍 [TaskService] Trying: ${command}`);
+          const { stdout, stderr } = await execAsync(command, { 
+            cwd: projectPath, 
+            timeout: 60000 // 1 minute timeout
+          });
+          
+          buildResult = { 
+            success: true, 
+            command,
+            output: stdout,
+            stderr: stderr,
+            message: `Build validation passed with ${command}`,
+            timestamp: new Date()
+          };
+          console.log(`✅ [TaskService] Build validation successful with ${command}`);
+          break;
+        } catch (error) {
+          console.log(`❌ [TaskService] ${command} failed:`, error.message);
+          // Continue to next command
         }
-      } catch (error) {
-        testResults = { passed: false, message: 'Test execution failed', error: error.message };
       }
 
-      // Basic syntax validation
-      let syntaxValidation = { passed: true, message: 'Syntax validation passed' };
-      
-      try {
-        // Check if file is valid JavaScript/TypeScript
-        if (task.metadata.filePath.endsWith('.js') || task.metadata.filePath.endsWith('.ts')) {
-          const { stdout, stderr } = await execAsync(`node -c "${task.metadata.filePath}"`, { cwd: task.metadata.projectPath });
-          syntaxValidation = { passed: true, message: 'JavaScript syntax validation passed' };
-        }
-      } catch (error) {
-        syntaxValidation = { passed: false, message: 'Syntax validation failed', error: error.message };
-      }
-
-      const overallPassed = testResults.passed && syntaxValidation.passed;
-
-      return {
-        passed: overallPassed,
-        testResults,
-        syntaxValidation,
-        timestamp: new Date()
-      };
+      return buildResult;
 
     } catch (error) {
+      console.error('❌ [TaskService] Build validation error:', error);
       return {
-        passed: false,
+        success: false,
         error: error.message,
         timestamp: new Date()
       };
     }
+  }
+
+  /**
+   * Build error fix prompt for AI
+   * @param {Object} task - Task object
+   * @param {string} error - Build error message
+   * @returns {string} Error fix prompt
+   */
+  buildErrorFixPrompt(task, error) {
+    return `The build validation failed with the following error:
+
+${error}
+
+Please fix the issues in the code and ensure the build passes. Focus on:
+1. Syntax errors
+2. Import/export issues  
+3. Missing dependencies
+4. Type errors (if using TypeScript)
+
+The file being refactored is: ${task.metadata.filePath}
+
+Please fix the issues and let me know when you're done.`;
   }
 
   /**

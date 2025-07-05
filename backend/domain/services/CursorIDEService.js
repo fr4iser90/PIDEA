@@ -36,8 +36,8 @@ class CursorIDEService {
     }
   }
 
-  async sendMessage(message) {
-    return await this.chatMessageHandler.sendMessage(message);
+  async sendMessage(message, options = {}) {
+    return await this.chatMessageHandler.sendMessage(message, options);
   }
 
   async extractChatHistory() {
