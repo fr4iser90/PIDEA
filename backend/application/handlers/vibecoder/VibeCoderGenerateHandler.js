@@ -2,9 +2,10 @@
  * VibeCoderGenerateHandler - Orchestrates generation operations
  * Implements the Handler pattern for coordinating multiple generation commands
  */
-const { EventBus } = require('../../infrastructure/messaging/EventBus');
-const { AnalysisRepository } = require('../../domain/repositories/AnalysisRepository');
-const { CommandBus } = require('../../infrastructure/messaging/CommandBus');
+const EventBus = require('../../../infrastructure/messaging/EventBus');
+const AnalysisRepository = require('../../../domain/repositories/AnalysisRepository');
+const CommandBus = require('../../../infrastructure/messaging/CommandBus');
+
 
 class VibeCoderGenerateHandler {
     constructor(dependencies = {}) {

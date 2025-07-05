@@ -28,22 +28,16 @@ const GetChatHistoryQuery = require('./application/queries/GetChatHistoryQuery')
 const SendMessageHandler = require('./application/handlers/SendMessageHandler');
 const GetChatHistoryHandler = require('./application/handlers/GetChatHistoryHandler');
 const CreateTaskHandler = require('./application/handlers/CreateTaskHandler');
-const AnalyzeProjectHandler = require('./application/handlers/AnalyzeProjectHandler');
-const AutoModeHandler = require('./application/handlers/AutoModeHandler');
 
 // Analyze Commands and Handlers
 const AnalyzeArchitectureCommand = require('./application/commands/analyze/AnalyzeArchitectureCommand');
 const AnalyzeCodeQualityCommand = require('./application/commands/analyze/AnalyzeCodeQualityCommand');
 const AnalyzeDependenciesCommand = require('./application/commands/analyze/AnalyzeDependenciesCommand');
-const AnalyzePerformanceCommand = require('./application/commands/analyze/AnalyzePerformanceCommand');
-const AnalyzeSecurityCommand = require('./application/commands/analyze/AnalyzeSecurityCommand');
 const VibeCoderAnalyzeCommand = require('./application/commands/vibecoder/VibeCoderAnalyzeCommand');
 
 const AnalyzeArchitectureHandler = require('./application/handlers/analyze/AnalyzeArchitectureHandler');
 const AnalyzeCodeQualityHandler = require('./application/handlers/analyze/AnalyzeCodeQualityHandler');
 const AnalyzeDependenciesHandler = require('./application/handlers/analyze/AnalyzeDependenciesHandler');
-const AnalyzePerformanceHandler = require('./application/handlers/analyze/AnalyzePerformanceHandler');
-const AnalyzeSecurityHandler = require('./application/handlers/analyze/AnalyzeSecurityHandler');
 const VibeCoderAnalyzeHandler = require('./application/handlers/vibecoder/VibeCoderAnalyzeHandler');
 
 // Refactor Commands and Handlers
@@ -339,28 +333,6 @@ class Application {
       logger: this.logger
     });
 
-    this.analyzeProjectHandler = new AnalyzeProjectHandler({
-      taskAnalysisService: this.taskAnalysisService,
-      projectAnalyzer: this.projectAnalyzer,
-      cursorIDEService: this.cursorIDEService,
-      taskRepository: this.taskRepository,
-      eventBus: this.eventBus,
-      logger: this.logger
-    });
-
-    this.autoModeHandler = new AutoModeHandler({
-      taskRepository: this.taskRepository,
-      eventBus: this.eventBus,
-      logger: this.logger,
-      cursorIDEService: this.cursorIDEService,
-      projectAnalyzer: this.projectAnalyzer,
-      projectMappingService: this.projectMappingService,
-      codeQualityService: this.codeQualityService,
-      securityService: this.securityService,
-      performanceService: this.performanceService,
-      architectureService: this.architectureService
-    });
-
     // Initialize Analyze Handlers
     this.analyzeArchitectureHandler = new AnalyzeArchitectureHandler({
       eventBus: this.eventBus,
@@ -380,17 +352,7 @@ class Application {
       logger: this.logger
     });
 
-    this.analyzePerformanceHandler = new AnalyzePerformanceHandler({
-      eventBus: this.eventBus,
-      analysisRepository: this.analysisRepository,
-      logger: this.logger
-    });
 
-    this.analyzeSecurityHandler = new AnalyzeSecurityHandler({
-      eventBus: this.eventBus,
-      analysisRepository: this.analysisRepository,
-      logger: this.logger
-    });
 
     // Initialize Refactor Handlers
     this.splitLargeFilesHandler = new SplitLargeFilesHandler({
@@ -475,15 +437,9 @@ class Application {
     this.taskExecutionEngine = null;
 
     // Register all command handlers
-    this.commandBus.register('AnalyzeProjectCommand', this.analyzeProjectHandler);
-    this.commandBus.register('AutoModeCommand', this.autoModeHandler);
-
-    // Register Analyze Commands
     this.commandBus.register('AnalyzeArchitectureCommand', this.analyzeArchitectureHandler);
     this.commandBus.register('AnalyzeCodeQualityCommand', this.analyzeCodeQualityHandler);
     this.commandBus.register('AnalyzeDependenciesCommand', this.analyzeDependenciesHandler);
-    this.commandBus.register('AnalyzePerformanceCommand', this.analyzePerformanceHandler);
-    this.commandBus.register('AnalyzeSecurityCommand', this.analyzeSecurityHandler);
     this.commandBus.register('VibeCoderAnalyzeCommand', this.vibeCoderAnalyzeHandler);
 
     // Register Refactor Commands

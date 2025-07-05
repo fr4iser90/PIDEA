@@ -4,8 +4,8 @@
  */
 const fs = require('fs').promises;
 const path = require('path');
-const { EventBus } = require('../../infrastructure/messaging/EventBus');
-const { AnalysisRepository } = require('../../domain/repositories/AnalysisRepository');
+const EventBus = require('../../../infrastructure/messaging/EventBus');
+const AnalysisRepository = require('../../../domain/repositories/AnalysisRepository');
 
 class OrganizeModulesHandler {
     constructor(dependencies = {}) {

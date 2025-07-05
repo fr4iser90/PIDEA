@@ -2,9 +2,10 @@
  * VibeCoderModeHandler - Ultimate orchestrator for all VibeCoder operations
  * Implements the Handler pattern for coordinating analyze, refactor, and generate operations
  */
-const { EventBus } = require('../../infrastructure/messaging/EventBus');
-const { AnalysisRepository } = require('../../domain/repositories/AnalysisRepository');
-const { CommandBus } = require('../../infrastructure/messaging/CommandBus');
+const EventBus = require('../../../infrastructure/messaging/EventBus');
+const AnalysisRepository = require('../../../domain/repositories/AnalysisRepository');
+const CommandBus = require('../../../infrastructure/messaging/CommandBus');
+
 
 class VibeCoderModeHandler {
     constructor(dependencies = {}) {

@@ -2,9 +2,9 @@
  * VibeCoderRefactorHandler - Orchestrates refactoring operations
  * Implements the Handler pattern for coordinating multiple refactoring commands
  */
-const { EventBus } = require('../../infrastructure/messaging/EventBus');
-const { AnalysisRepository } = require('../../domain/repositories/AnalysisRepository');
-const { CommandBus } = require('../../infrastructure/messaging/CommandBus');
+const EventBus = require('../../../infrastructure/messaging/EventBus');
+const AnalysisRepository = require('../../../domain/repositories/AnalysisRepository');
+const CommandBus = require('../../../infrastructure/messaging/CommandBus');
 
 class VibeCoderRefactorHandler {
     constructor(dependencies = {}) {
