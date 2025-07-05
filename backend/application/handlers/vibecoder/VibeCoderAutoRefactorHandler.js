@@ -316,10 +316,13 @@ class VibeCoderAutoRefactorHandler {
             analysisId: `vibecoder_auto_refactor_${Date.now()}_${uuidv4().substring(0, 8)}`
         };
 
+        // Extract projectId from projectPath dynamically
+        const projectId = path.basename(projectPath);
+        
         // Create proper Task entity
         const task = new Task(
             taskId,
-            'cursorweb', // projectId
+            projectId, 
             taskTitle,
             taskDescription,
             TaskStatus.PENDING,

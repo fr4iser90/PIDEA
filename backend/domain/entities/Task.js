@@ -435,7 +435,8 @@ class Task {
   }
 
   belongsToProject(projectId) {
-    return this.projectId === projectId;
+    // Case-insensitive comparison to handle different casing (e.g., 'aboutME' vs 'aboutme')
+    return this.projectId.toLowerCase() === projectId.toLowerCase();
   }
 
   updateStatus(newStatus) {
