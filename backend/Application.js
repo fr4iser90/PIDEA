@@ -529,11 +529,13 @@ class Application {
     });
 
     this.taskExecutionEngine = new (require('./infrastructure/external/TaskExecutionEngine'))({
-      logger: this.logger,
-      eventBus: this.eventBus,
+      aiService: this.aiService,
+      scriptExecutor: new (require('./infrastructure/external/ScriptExecutor'))(this.logger),
       fileSystemService: this.fileSystemService,
-      taskRepository: this.taskRepository,
-      analysisRepository: this.analysisRepository
+      gitService: this.gitService,
+      dockerService: this.dockerService,
+      logger: this.logger,
+      eventBus: this.eventBus
     });
 
     // Register all command handlers
