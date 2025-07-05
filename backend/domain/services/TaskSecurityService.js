@@ -1,6 +1,6 @@
-const { Task, TaskExecution } = require('../entities');
-const { TaskStatus, TaskType } = require('../value-objects');
-const { TaskRepository, TaskExecutionRepository } = require('../repositories');
+const { Task, TaskExecution } = require('@domain/entities');
+const { TaskStatus, TaskType } = require('@domain/value-objects');
+const { TaskRepository, TaskExecutionRepository } = require('@domain/repositories');
 
 /**
  * TaskSecurityService - Provides security scanning and fixes

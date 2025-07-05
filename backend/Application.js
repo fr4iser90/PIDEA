@@ -331,8 +331,8 @@ class Application {
 
     this.createTaskHandler = new CreateTaskHandler({
       taskRepository: this.taskRepository,
-      taskTemplateRepository: new (require('./infrastructure/database/SQLiteTaskTemplateRepository'))(this.databaseConnection),
-      taskSuggestionRepository: new (require('./infrastructure/database/SQLiteTaskSuggestionRepository'))(this.databaseConnection),
+      taskTemplateRepository: new (require('./infrastructure/database/SQLiteTaskTemplateRepository'))(this.databaseConnection.connection),
+      taskSuggestionRepository: new (require('./infrastructure/database/SQLiteTaskSuggestionRepository'))(this.databaseConnection.connection),
       taskValidationService: this.taskValidationService,
       taskGenerationService: new (require('./domain/services/TaskGenerationService'))(this.eventBus, this.logger),
       eventBus: this.eventBus,

@@ -1,5 +1,5 @@
 const UserSessionRepository = require('../../domain/repositories/UserSessionRepository');
-const UserSession = require('../../domain/entities/UserSession');
+const UserSession = require('@domain/entities/UserSession');
 
 class PostgreSQLUserSessionRepository extends UserSessionRepository {
   constructor(databaseConnection) {

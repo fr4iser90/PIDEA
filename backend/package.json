@@ -21,6 +21,7 @@
         "migrate": "node scripts/migrate.js",
         "seed": "node scripts/seed.js",
         "db:setup": "npm run migrate && npm run seed",
+        "refactor-imports": "node scripts/refactor-imports.js",
         "postinstall": "npx module-alias"
     },
     "keywords": [
@@ -79,12 +80,12 @@
     },
     "_moduleAliases": {
         "@": ".",
-        "@/domain": "./domain",
-        "@/application": "./application",
-        "@/infrastructure": "./infrastructure",
-        "@/presentation": "./presentation",
-        "@/tests": "./tests",
-        "@/cli": "./cli",
-        "@/scripts": "./scripts"
+        "@domain": "./domain",
+        "@application": "./application",
+        "@infrastructure": "./infrastructure",
+        "@presentation": "./presentation",
+        "@tests": "./tests",
+        "@cli": "./cli",
+        "@scripts": "./scripts"
     }
 }

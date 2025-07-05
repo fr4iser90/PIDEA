@@ -2,13 +2,13 @@
  * TaskAnalysisService
  * Provides AI-powered project analysis capabilities
  */
-const ProjectType = require('../value-objects/ProjectType');
-const TaskType = require('../value-objects/TaskType');
-const TaskPriority = require('../value-objects/TaskPriority');
-const AISuggestion = require('../value-objects/AISuggestion');
+const ProjectType = require('@domain/value-objects/ProjectType');
+const TaskType = require('@domain/value-objects/TaskType');
+const TaskPriority = require('@domain/value-objects/TaskPriority');
+const AISuggestion = require('@domain/value-objects/AISuggestion');
 const AIService = require('../../infrastructure/external/AIService');
 const ProjectAnalyzer = require('../../infrastructure/external/ProjectAnalyzer');
-const Task = require('../entities/Task');
+const Task = require('@domain/entities/Task');
 
 class TaskAnalysisService {
   constructor(cursorIDEService, eventBus, logger, aiService, projectAnalyzer) {

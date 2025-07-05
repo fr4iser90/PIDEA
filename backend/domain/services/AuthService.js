@@ -1,5 +1,5 @@
-const User = require('../entities/User');
-const UserSession = require('../entities/UserSession');
+const User = require('@domain/entities/User');
+const UserSession = require('@domain/entities/UserSession');
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 

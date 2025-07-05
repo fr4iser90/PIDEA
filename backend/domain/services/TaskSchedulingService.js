@@ -1,6 +1,6 @@
-const { Task, TaskExecution } = require('../entities');
-const { TaskStatus, TaskPriority, TaskType } = require('../value-objects');
-const { TaskRepository, TaskExecutionRepository } = require('../repositories');
+const { Task, TaskExecution } = require('@domain/entities');
+const { TaskStatus, TaskPriority, TaskType } = require('@domain/value-objects');
+const { TaskRepository, TaskExecutionRepository } = require('@domain/repositories');
 
 /**
  * TaskSchedulingService - Handles task scheduling and prioritization

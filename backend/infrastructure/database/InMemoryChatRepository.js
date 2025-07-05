@@ -1,6 +1,6 @@
-const ChatRepository = require('../../domain/repositories/ChatRepository');
-const ChatSession = require('../../domain/entities/ChatSession');
-const ChatMessage = require('../../domain/entities/ChatMessage');
+const ChatRepository = require('@domain/repositories/ChatRepository');
+const ChatSession = require('@domain/entities/ChatSession');
+const ChatMessage = require('@domain/entities/ChatMessage');
 
 class InMemoryChatRepository extends ChatRepository {
   constructor() {

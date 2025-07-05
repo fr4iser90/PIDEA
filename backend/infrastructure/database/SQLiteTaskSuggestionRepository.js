@@ -1,5 +1,6 @@
-const { TaskSuggestion } = require('../../domain/entities');
-const { TaskType, TaskPriority } = require('../../domain/value-objects');
+const TaskSuggestion = require('@domain/entities/TaskSuggestion');
+const TaskType = require('@domain/value-objects/TaskType')
+const TaskPriority = require('@domain/value-objects/TaskPriority');
 
 /**
  * SQLiteTaskSuggestionRepository - SQLite implementation of TaskSuggestionRepository
@@ -9,47 +10,24 @@ class SQLiteTaskSuggestionRepository {
     constructor(database) {
         this.database = database;
         this.tableName = 'task_suggestions';
-        this.initTable();
+        this.initIndexes();
     }
 
     /**
-     * Initialize the task_suggestions table
+     * Initialize indexes for the task_suggestions table
      */
-    async initTable() {
-        const createTableSQL = `
-            CREATE TABLE IF NOT EXISTS ${this.tableName} (
-                id TEXT PRIMARY KEY,
-                title TEXT NOT NULL,
-                description TEXT,
-                taskType TEXT NOT NULL,
-                priority TEXT NOT NULL,
-                estimatedTime INTEGER,
-                tags TEXT,
-                confidence REAL DEFAULT 0.0,
-                reasoning TEXT,
-                context TEXT,
-                projectPath TEXT,
-                metadata TEXT,
-                status TEXT DEFAULT 'pending',
-                isApproved BOOLEAN DEFAULT 0,
-                isRejected BOOLEAN DEFAULT 0,
-                appliedAt TEXT,
-                appliedBy TEXT,
-                aiModel TEXT,
-                aiResponse TEXT,
-                createdAt TEXT NOT NULL,
-                updatedAt TEXT NOT NULL
-            )
-        `;
-
-        await this.database.run(createTableSQL);
-        
-        // Create indexes for better performance
-        await this.database.run(`CREATE INDEX IF NOT EXISTS idx_task_suggestions_status ON ${this.tableName} (status)`);
-        await this.database.run(`CREATE INDEX IF NOT EXISTS idx_task_suggestions_project ON ${this.tableName} (projectPath)`);
-        await this.database.run(`CREATE INDEX IF NOT EXISTS idx_task_suggestions_confidence ON ${this.tableName} (confidence)`);
-        await this.database.run(`CREATE INDEX IF NOT EXISTS idx_task_suggestions_approved ON ${this.tableName} (isApproved)`);
-        await this.database.run(`CREATE INDEX IF NOT EXISTS idx_task_suggestions_created_at ON ${this.tableName} (createdAt)`);
+    async initIndexes() {
+        try {
+            // Create indexes for better performance
+            await this.database.run(`CREATE INDEX IF NOT EXISTS idx_task_suggestions_status ON ${this.tableName} (status)`);
+            await this.database.run(`CREATE INDEX IF NOT EXISTS idx_task_suggestions_project ON ${this.tableName} (projectPath)`);
+            await this.database.run(`CREATE INDEX IF NOT EXISTS idx_task_suggestions_confidence ON ${this.tableName} (confidence)`);
+            await this.database.run(`CREATE INDEX IF NOT EXISTS idx_task_suggestions_approved ON ${this.tableName} (isApproved)`);
+            await this.database.run(`CREATE INDEX IF NOT EXISTS idx_task_suggestions_created_at ON ${this.tableName} (createdAt)`);
+        } catch (error) {
+            // Indexes might already exist, ignore errors
+            console.log(`[SQLiteTaskSuggestionRepository] Index creation skipped: ${error.message}`);
+        }
     }
 
     /**

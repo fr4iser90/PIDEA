@@ -1,5 +1,5 @@
-const AuthService = require('../../domain/services/AuthService');
-const User = require('../../domain/entities/User');
+const AuthService = require('@domain/services/AuthService');
+const User = require('@domain/entities/User');
 const bcrypt = require('bcryptjs');
 
 class AuthController {

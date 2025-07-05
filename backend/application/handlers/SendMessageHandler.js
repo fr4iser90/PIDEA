@@ -1,6 +1,6 @@
-const SendMessageCommand = require('../commands/SendMessageCommand');
-const ChatMessage = require('../../domain/entities/ChatMessage');
-const ChatSession = require('../../domain/entities/ChatSession');
+const SendMessageCommand = require('@application/commands/SendMessageCommand');
+const ChatMessage = require('@domain/entities/ChatMessage');
+const ChatSession = require('@domain/entities/ChatSession');
 
 /**
  * SendMessageHandler - Handles task/AI messaging commands

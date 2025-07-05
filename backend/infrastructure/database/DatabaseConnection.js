@@ -176,6 +176,40 @@ class DatabaseConnection {
         timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         metadata ${metadataType},
         FOREIGN KEY (session_id) REFERENCES chat_sessions(id) ON DELETE CASCADE
+      )`,
+      
+      `CREATE TABLE IF NOT EXISTS task_templates (
+        id TEXT PRIMARY KEY,
+        name TEXT NOT NULL UNIQUE,
+        description TEXT,
+        type TEXT NOT NULL,
+        defaultPriority TEXT NOT NULL,
+        estimatedTime INTEGER,
+        tags TEXT,
+        content TEXT NOT NULL,
+        variables TEXT,
+        metadata TEXT,
+        isActive BOOLEAN DEFAULT 1,
+        version TEXT DEFAULT '1.0.0',
+        createdBy TEXT,
+        createdAt TEXT NOT NULL,
+        updatedAt TEXT NOT NULL
+      )`,
+      
+      `CREATE TABLE IF NOT EXISTS task_suggestions (
+        id TEXT PRIMARY KEY,
+        taskId TEXT NOT NULL,
+        title TEXT NOT NULL,
+        description TEXT,
+        type TEXT NOT NULL,
+        priority TEXT NOT NULL,
+        estimatedTime INTEGER,
+        tags TEXT,
+        reasoning TEXT,
+        confidence REAL DEFAULT 0.0,
+        status TEXT DEFAULT 'pending',
+        createdAt TEXT NOT NULL,
+        updatedAt TEXT NOT NULL
       )`
     ];
 

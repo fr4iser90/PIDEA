@@ -3,9 +3,9 @@
  * Tasks are always associated with a specific project
  */
 const { v4: uuidv4 } = require('uuid');
-const TaskStatus = require('../value-objects/TaskStatus');
-const TaskPriority = require('../value-objects/TaskPriority');
-const TaskType = require('../value-objects/TaskType');
+const TaskStatus = require('@domain/value-objects/TaskStatus');
+const TaskPriority = require('@domain/value-objects/TaskPriority');
+const TaskType = require('@domain/value-objects/TaskType');
 
 class Task {
   constructor(

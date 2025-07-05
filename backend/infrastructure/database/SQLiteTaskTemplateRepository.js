@@ -1,6 +1,6 @@
-const TaskTemplate = require('../../domain/entities/TaskTemplate');
-const TaskType = require('../../domain/value-objects/TaskType');
-const TaskPriority = require('../../domain/value-objects/TaskPriority');
+const TaskTemplate = require('@domain/entities/TaskTemplate');
+const TaskType = require('@domain/value-objects/TaskType');
+const TaskPriority = require('@domain/value-objects/TaskPriority');
 
 /**
  * SQLiteTaskTemplateRepository - SQLite implementation of TaskTemplateRepository
@@ -10,40 +10,23 @@ class SQLiteTaskTemplateRepository {
     constructor(database) {
         this.database = database;
         this.tableName = 'task_templates';
-        this.initTable();
+        this.initIndexes();
     }
 
     /**
-     * Initialize the task_templates table
+     * Initialize indexes for the task_templates table
      */
-    async initTable() {
-        const createTableSQL = `
-            CREATE TABLE IF NOT EXISTS ${this.tableName} (
-                id TEXT PRIMARY KEY,
-                name TEXT NOT NULL UNIQUE,
-                description TEXT,
-                type TEXT NOT NULL,
-                defaultPriority TEXT NOT NULL,
-                estimatedTime INTEGER,
-                tags TEXT,
-                content TEXT NOT NULL,
-                variables TEXT,
-                metadata TEXT,
-                isActive BOOLEAN DEFAULT 1,
-                version TEXT DEFAULT '1.0.0',
-                createdBy TEXT,
-                createdAt TEXT NOT NULL,
-                updatedAt TEXT NOT NULL
-            )
-        `;
-
-        await this.database.run(createTableSQL);
-        
-        // Create indexes for better performance
-        await this.database.run(`CREATE INDEX IF NOT EXISTS idx_task_templates_name ON ${this.tableName} (name)`);
-        await this.database.run(`CREATE INDEX IF NOT EXISTS idx_task_templates_type ON ${this.tableName} (type)`);
-        await this.database.run(`CREATE INDEX IF NOT EXISTS idx_task_templates_active ON ${this.tableName} (isActive)`);
-        await this.database.run(`CREATE INDEX IF NOT EXISTS idx_task_templates_version ON ${this.tableName} (version)`);
+    async initIndexes() {
+        try {
+            // Create indexes for better performance
+            await this.database.run(`CREATE INDEX IF NOT EXISTS idx_task_templates_name ON ${this.tableName} (name)`);
+            await this.database.run(`CREATE INDEX IF NOT EXISTS idx_task_templates_type ON ${this.tableName} (type)`);
+            await this.database.run(`CREATE INDEX IF NOT EXISTS idx_task_templates_active ON ${this.tableName} (isActive)`);
+            await this.database.run(`CREATE INDEX IF NOT EXISTS idx_task_templates_version ON ${this.tableName} (version)`);
+        } catch (error) {
+            // Indexes might already exist, ignore errors
+            console.log(`[SQLiteTaskTemplateRepository] Index creation skipped: ${error.message}`);
+        }
     }
 
     /**

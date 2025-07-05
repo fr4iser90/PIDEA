@@ -1,3 +1,4 @@
+require('module-alias/register');
 const Application = require('./Application');
 
 async function main() {

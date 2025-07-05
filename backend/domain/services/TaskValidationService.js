@@ -1,10 +1,10 @@
-const Task = require('../entities/Task');
-const TaskExecution = require('../entities/TaskExecution');
-const TaskStatus = require('../value-objects/TaskStatus');
-const TaskType = require('../value-objects/TaskType');
-const TaskPriority = require('../value-objects/TaskPriority');
-const TaskRepository = require('../repositories/TaskRepository');
-const TaskExecutionRepository = require('../repositories/TaskExecutionRepository');
+const Task = require('@domain/entities/Task');
+const TaskExecution = require('@domain/entities/TaskExecution');
+const TaskStatus = require('@domain/value-objects/TaskStatus');
+const TaskType = require('@domain/value-objects/TaskType');
+const TaskPriority = require('@domain/value-objects/TaskPriority');
+const TaskRepository = require('@domain/repositories/TaskRepository');
+const TaskExecutionRepository = require('@domain/repositories/TaskExecutionRepository');
 
 /**
  * TaskValidationService - Provides comprehensive task validation and verification
