@@ -37,6 +37,16 @@ class CursorIDEService {
   }
 
   async sendMessage(message) {
+    // Ensure we're connected to the active IDE before sending
+    const activeIDE = await this.ideManager.getActiveIDE();
+    if (activeIDE && activeIDE.port) {
+      const currentPort = this.getActivePort();
+      if (currentPort !== activeIDE.port) {
+        console.log(`[CursorIDEService] Switching from port ${currentPort} to active port ${activeIDE.port} before sending message`);
+        await this.switchToPort(activeIDE.port);
+      }
+    }
+    
     return await this.chatMessageHandler.sendMessage(message);
   }
 
