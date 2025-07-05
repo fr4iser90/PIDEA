@@ -366,9 +366,21 @@ export default class APIChatRepository extends ChatRepository {
 
   async startAutoRefactor(projectId = null) {
     const currentProjectId = projectId || await this.getCurrentProjectId();
+    
+    // Get the current workspace path from the active IDE
+    const ideList = await this.getIDEs();
+    if (!ideList.success || !ideList.data) {
+      throw new Error('Failed to get IDE information');
+    }
+    
+    const activeIDE = ideList.data.find(ide => ide.active);
+    if (!activeIDE || !activeIDE.workspacePath) {
+      throw new Error('No active IDE with workspace path found');
+    }
+    
     return apiCall(API_CONFIG.endpoints.tasks.autoRefactor.execute(currentProjectId), {
       method: 'POST',
-      body: JSON.stringify({ projectPath: process.cwd() })
+      body: JSON.stringify({ projectPath: activeIDE.workspacePath })
     });
   }
 

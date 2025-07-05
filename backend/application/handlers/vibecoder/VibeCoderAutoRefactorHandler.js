@@ -3,9 +3,20 @@ const path = require('path');
 const { v4: uuidv4 } = require('uuid');
 
 class VibeCoderAutoRefactorHandler {
-    constructor() {
-        this.analysisOutputService = require('@domain/services/AnalysisOutputService');
-        this.taskRepository = require('@domain/repositories/TaskRepository');
+    constructor(dependencies = {}) {
+        this.eventBus = dependencies.eventBus;
+        this.analysisRepository = dependencies.analysisRepository;
+        this.commandBus = dependencies.commandBus;
+        this.logger = dependencies.logger;
+        this.analysisOutputService = dependencies.analysisOutputService;
+        this.taskRepository = dependencies.taskRepository;
+        this.subprojectDetector = dependencies.subprojectDetector;
+        this.projectAnalyzer = dependencies.projectAnalyzer;
+        this.codeQualityAnalyzer = dependencies.codeQualityAnalyzer;
+        this.architectureAnalyzer = dependencies.architectureAnalyzer;
+        this.dependencyAnalyzer = dependencies.dependencyAnalyzer;
+        this.securityAnalyzer = dependencies.securityAnalyzer;
+        this.performanceAnalyzer = dependencies.performanceAnalyzer;
     }
 
     async handle(command) {
@@ -37,58 +48,97 @@ class VibeCoderAutoRefactorHandler {
     }
 
     async runComprehensiveAnalysis(projectPath) {
-        // Run VibeCoder Mode analysis to get current state
-        const VibeCoderModeHandler = require('./VibeCoderModeHandler');
-        const modeHandler = new VibeCoderModeHandler();
-        
-        const analysis = await modeHandler.performComprehensiveAnalysis(projectPath);
-        
-        // Save analysis results
-        const projectId = `vibecoder_auto_refactor_${Date.now()}_${uuidv4().substring(0, 8)}`;
-        await this.analysisOutputService.saveAnalysisResult(projectId, 'comprehensive', analysis);
-        
-        return analysis;
+        // Lies die vorhandenen Analyse-Reports aus dem richtigen Projekt-Output-Ordner
+        const fs = require('fs').promises;
+        const path = require('path');
+        try {
+            const outputDir = path.join(projectPath, 'output', 'analysis', 'projects');
+            const projectDirs = await fs.readdir(outputDir);
+            // Finde das aktuellste Analyse-Verzeichnis
+            let latestAnalysisDir = null;
+            let latestTime = 0;
+            for (const dir of projectDirs) {
+                const dirPath = path.join(outputDir, dir);
+                const stats = await fs.stat(dirPath);
+                if (stats.isDirectory() && stats.mtime.getTime() > latestTime) {
+                    latestTime = stats.mtime.getTime();
+                    latestAnalysisDir = dir;
+                }
+            }
+            if (!latestAnalysisDir) throw new Error('Kein Analyse-Output gefunden!');
+            const analysisDir = path.join(outputDir, latestAnalysisDir);
+            const files = await fs.readdir(analysisDir);
+            // Parse die Large Files aus allen .md-Reports
+            const largeFiles = [];
+            for (const file of files) {
+                if (file.endsWith('.md')) {
+                    const filePath = path.join(analysisDir, file);
+                    const content = await fs.readFile(filePath, 'utf8');
+                    const largeFilesMatch = content.match(/### Large Files \(>500 LOC\)\n\n([\s\S]*?)(?=\n###|\n##|$)/);
+                    if (largeFilesMatch) {
+                        const largeFilesSection = largeFilesMatch[1];
+                        const fileMatches = largeFilesSection.matchAll(/- \*\*(.*?)\*\*: (\d+) lines/g);
+                        for (const match of fileMatches) {
+                            largeFiles.push({
+                                file: match[1],
+                                lines: parseInt(match[2]),
+                                report: file
+                            });
+                        }
+                    }
+                }
+            }
+            return {
+                codeQuality: { data: { largeFiles } },
+                largeFiles
+            };
+        } catch (error) {
+            console.error('❌ [AutoRefactor] Fehler beim Lesen der Analyse:', error);
+            throw error;
+        }
     }
 
     identifyLargeFiles(analysisResults) {
         const largeFiles = [];
-        const LARGE_FILE_THRESHOLD = 500; // lines of code
-
-        // Extract large files from code quality analysis
-        if (analysisResults.codeQuality) {
-            const codeQualityData = analysisResults.codeQuality;
-            
-            // Check if it's a monorepo with packages
-            if (codeQualityData.packages) {
-                Object.values(codeQualityData.packages).forEach(pkgData => {
-                    if (pkgData.largeFiles) {
-                        pkgData.largeFiles.forEach(file => {
-                            largeFiles.push({
-                                path: file.path,
-                                lines: file.lines,
-                                package: pkgData.packageName || 'unknown',
-                                priority: this.calculatePriority(file.lines),
-                                estimatedTime: this.estimateRefactoringTime(file.lines)
-                            });
-                        });
-                    }
-                });
-            } else {
-                // Single package
-                if (codeQualityData.largeFiles) {
+        
+        // Parse the analysis results to find large files
+        // The analysis results contain the data from the VibeCoder Mode analysis
+        if (analysisResults && typeof analysisResults === 'object') {
+            // Look for large files in the analysis structure
+            // Based on the analysis report format, large files are stored in codeQuality section
+            if (analysisResults.codeQuality && analysisResults.codeQuality.data) {
+                const codeQualityData = analysisResults.codeQuality.data;
+                
+                // Check for largeFiles array in the data
+                if (codeQualityData.largeFiles && Array.isArray(codeQualityData.largeFiles)) {
                     codeQualityData.largeFiles.forEach(file => {
                         largeFiles.push({
-                            path: file.path,
-                            lines: file.lines,
+                            path: file.file || file.path,
+                            lines: parseInt(file.lines) || 0,
                             package: 'main',
-                            priority: this.calculatePriority(file.lines),
-                            estimatedTime: this.estimateRefactoringTime(file.lines)
+                            priority: this.calculatePriority(parseInt(file.lines) || 0),
+                            estimatedTime: this.estimateRefactoringTime(parseInt(file.lines) || 0)
                         });
                     });
                 }
             }
+            
+            // Also check if largeFiles is directly in the root
+            if (analysisResults.largeFiles && Array.isArray(analysisResults.largeFiles)) {
+                analysisResults.largeFiles.forEach(file => {
+                    largeFiles.push({
+                        path: file.file || file.path,
+                        lines: parseInt(file.lines) || 0,
+                        package: 'root',
+                        priority: this.calculatePriority(parseInt(file.lines) || 0),
+                        estimatedTime: this.estimateRefactoringTime(parseInt(file.lines) || 0)
+                    });
+                });
+            }
         }
-
+        
+        console.log(`🔍 [AutoRefactor] Found ${largeFiles.length} large files to refactor`);
+        
         // Sort by priority (largest files first)
         return largeFiles.sort((a, b) => b.lines - a.lines);
     }
@@ -149,10 +199,12 @@ class VibeCoderAutoRefactorHandler {
             estimatedTime: fileInfo.estimatedTime,
             filePath: fileInfo.path,
             package: fileInfo.package,
+            lines: fileInfo.lines,
             currentLines: fileInfo.lines,
             targetLines: '<500',
             createdAt: new Date().toISOString(),
             updatedAt: new Date().toISOString(),
+            refactoringSteps: this.generateRefactoringSteps(fileInfo),
             metadata: {
                 refactoringType: 'file-split',
                 originalFile: fileInfo.path,
@@ -376,6 +428,46 @@ class VibeCoderAutoRefactorHandler {
 `;
 
         return planContent;
+    }
+
+    generateRefactoringSteps(fileInfo) {
+        const fileName = path.basename(fileInfo.path, path.extname(fileInfo.path));
+        const fileExt = path.extname(fileInfo.path);
+        
+        const baseSteps = [
+            `Analyze the current structure of ${fileName} to identify extractable functions and components`,
+            `Create backup of the original file before making changes`,
+            `Extract utility functions and helper methods into separate modules`,
+            `Separate business logic from presentation/UI logic`,
+            `Extract constants and configuration into dedicated files`,
+            `Split large functions into smaller, more focused functions`,
+            `Update import statements in the original file`,
+            `Test all extracted functionality to ensure no regressions`,
+            `Update documentation and comments`,
+            `Verify that the refactored code maintains the same functionality`
+        ];
+
+        if (fileExt === '.jsx' || fileExt === '.tsx') {
+            return [
+                ...baseSteps,
+                `Extract reusable React components into separate files`,
+                `Create custom hooks for shared logic`,
+                `Separate component logic from UI rendering`,
+                `Extract prop types and interfaces into types file`,
+                `Create component-specific utility functions`
+            ];
+        } else if (fileExt === '.js' || fileExt === '.ts') {
+            return [
+                ...baseSteps,
+                `Extract service layer functions into separate service files`,
+                `Separate data processing logic from business logic`,
+                `Create dedicated validation modules`,
+                `Extract event handlers and listeners into separate files`,
+                `Organize imports and exports for better maintainability`
+            ];
+        } else {
+            return baseSteps;
+        }
     }
 }
 

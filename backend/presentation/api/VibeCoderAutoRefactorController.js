@@ -1,9 +1,11 @@
 const VibeCoderAutoRefactorCommand = require('@application/commands/vibecoder/VibeCoderAutoRefactorCommand');
-const VibeCoderAutoRefactorHandler = require('@application/handlers/vibecoder/VibeCoderAutoRefactorHandler');
 
 class VibeCoderAutoRefactorController {
-    constructor() {
-        this.handler = new VibeCoderAutoRefactorHandler();
+    constructor(commandBus) {
+        this.commandBus = commandBus;
+        if (!this.commandBus) {
+            throw new Error('Command bus is required');
+        }
     }
 
     async startAutoRefactor(req, res) {
@@ -18,7 +20,7 @@ class VibeCoderAutoRefactorController {
             }
 
             const command = new VibeCoderAutoRefactorCommand(projectPath);
-            const result = await this.handler.handle(command);
+            const result = await this.commandBus.execute('VibeCoderAutoRefactorCommand', command);
 
             res.json({
                 success: true,

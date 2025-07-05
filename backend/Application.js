@@ -187,6 +187,9 @@ class Application {
       // Setup cleanup tasks
       this.setupCleanupTasks();
 
+      // Make application instance globally available
+      global.application = this;
+
       this.logger.info('[Application] Initialization complete');
     } catch (error) {
       this.logger.error('[Application] Initialization failed:', error);
@@ -499,6 +502,22 @@ class Application {
       performanceAnalyzer: this.performanceAnalyzer
     });
 
+    this.vibeCoderAutoRefactorHandler = new (require('./application/handlers/vibecoder/VibeCoderAutoRefactorHandler'))({
+      eventBus: this.eventBus,
+      analysisRepository: this.analysisRepository,
+      commandBus: this.commandBus,
+      logger: this.logger,
+      analysisOutputService: this.analysisOutputService,
+      subprojectDetector: this.subprojectDetector,
+      projectAnalyzer: this.projectAnalyzer,
+      codeQualityAnalyzer: this.codeQualityAnalyzer,
+      architectureAnalyzer: this.architectureAnalyzer,
+      dependencyAnalyzer: this.dependencyAnalyzer,
+      securityAnalyzer: this.securityAnalyzer,
+      performanceAnalyzer: this.performanceAnalyzer,
+      taskRepository: this.taskRepository
+    });
+
     this.taskExecutionEngine = new (require('./infrastructure/external/TaskExecutionEngine'))({
       logger: this.logger,
       eventBus: this.eventBus,
@@ -531,6 +550,7 @@ class Application {
 
     // Register VibeCoder Mode Command
     this.commandBus.register('VibeCoderModeCommand', this.vibeCoderModeHandler);
+    this.commandBus.register('VibeCoderAutoRefactorCommand', this.vibeCoderAutoRefactorHandler);
 
     this.logger.info('[Application] Application handlers initialized');
   }
@@ -577,7 +597,7 @@ class Application {
       ideManager: this.ideManager
     });
 
-    this.vibeCoderAutoRefactorController = new (require('./presentation/api/VibeCoderAutoRefactorController'))();
+    this.vibeCoderAutoRefactorController = new (require('./presentation/api/VibeCoderAutoRefactorController'))(this.commandBus);
 
     this.analysisController = new AnalysisController(
       this.codeQualityService,

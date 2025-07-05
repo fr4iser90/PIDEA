@@ -8,3 +8,4 @@ node_modules
 logs
 backend/database
 output/
+refactor_*.md

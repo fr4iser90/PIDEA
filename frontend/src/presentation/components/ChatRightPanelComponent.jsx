@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import AnalysisPanelComponent from './chat/panel/AnalysisPanelComponent.jsx';
 import APIChatRepository from '../../infrastructure/repositories/APIChatRepository.jsx';
 import FrameworkPanelComponent from './chat/FrameworkPanelComponent.jsx';
+import TaskSelectionModal from './TaskSelectionModal';
 
 const TASK_TYPES = [
   { value: 'test', label: 'Test' },
@@ -91,6 +92,9 @@ function ChatRightPanelComponent({ eventBus }) {
   const [modalType, setModalType] = useState('feature');
   const [feedback, setFeedback] = useState(null);
   const api = new APIChatRepository();
+  const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
+  const [refactoringTasks, setRefactoringTasks] = useState([]);
+  const [isAutoRefactoring, setIsAutoRefactoring] = useState(false);
 
   // General Button Handlers
   const handleCreateTask = () => {
@@ -179,19 +183,24 @@ function ChatRightPanelComponent({ eventBus }) {
     }
   };
   
-  const handleAutoRefactor = async () => { 
-    setFeedback('Starting Auto Refactor...');
+  const handleAutoRefactor = async () => {
     try {
-      const projectId = await api.getCurrentProjectId();
-      const response = await api.startAutoRefactor(projectId);
-      if (response.success) {
-        setFeedback(`Auto Refactor completed! Created ${response.data.totalTasks} refactoring tasks.`);
-        if (eventBus) eventBus.emit('vibecoder-auto-refactor-completed', response.data);
+      setIsAutoRefactoring(true);
+      const response = await api.startAutoRefactor();
+      
+      if (response.success && response.data) {
+        const tasks = response.data.tasks || [];
+        setRefactoringTasks(tasks);
+        setIsTaskModalOpen(true);
       } else {
-        setFeedback('Failed to start Auto Refactor: ' + response.error);
+        console.error('Auto Refactor failed:', response.error);
+        // Show error message to user
       }
-    } catch (err) {
-      setFeedback('Error starting Auto Refactor: ' + (err.message || err));
+    } catch (error) {
+      console.error('Error starting Auto Refactor:', error);
+      // Show error message to user
+    } finally {
+      setIsAutoRefactoring(false);
     }
   };
   
@@ -252,6 +261,25 @@ function ChatRightPanelComponent({ eventBus }) {
   }, [eventBus]);
 
   const handleQuickPrompt = (prompt) => eventBus.emit('chat-right-panel:quick-prompt', { prompt });
+
+  const handleStartRefactoring = async (selectedTasks) => {
+    console.log('Starting refactoring for tasks:', selectedTasks);
+    setIsTaskModalOpen(false);
+    
+    // TODO: Implement the actual refactoring workflow
+    // 1. Git branch creation
+    // 2. Playwright chat interaction
+    // 3. AI task execution
+    // 4. Validation and debugging
+    
+    // For now, just show a message
+    alert(`Starting automated refactoring for ${selectedTasks.length} tasks...`);
+  };
+
+  const handleCloseTaskModal = () => {
+    setIsTaskModalOpen(false);
+    setRefactoringTasks([]);
+  };
 
   // Tab-Inhalte
   const renderChatTab = () => (
@@ -348,6 +376,13 @@ function ChatRightPanelComponent({ eventBus }) {
   return (
     <div className="chat-right-panel-content">
       <TaskModal open={showTaskModal} onClose={() => setShowTaskModal(false)} onSubmit={handleTaskSubmit} defaultType={modalType} />
+      <TaskSelectionModal
+        isOpen={isTaskModalOpen}
+        onClose={handleCloseTaskModal}
+        tasks={refactoringTasks}
+        onStartRefactoring={handleStartRefactoring}
+        isLoading={isAutoRefactoring}
+      />
       <div className="panel-header">
         <div className="panel-tabs">
           <button className={`tab-btn${currentTab === 'chat' ? ' active' : ''}`} onClick={() => handleTabSwitch('chat')}>💬 Chat</button>
