@@ -272,78 +272,18 @@ class TaskService {
       // Build AI prompt for refactoring
       const aiPrompt = this.buildRefactoringPrompt(task);
       
-      // WE ARE CURSOR IDE! So instead of sending to external IDE,
-      // we'll create a chat message that appears in OUR chat
-      console.log('🤖 [TaskService] Creating refactoring request in OUR chat...');
+      // Sende den Prompt als ChatMessage an den User (über ChatMessageHandler)
+      if (this.cursorIDEService && this.cursorIDEService.chatMessageHandler) {
+        await this.cursorIDEService.chatMessageHandler.sendMessage(aiPrompt);
+      } else {
+        console.log('⚠️ [TaskService] ChatMessageHandler nicht verfügbar!');
+      }
       
-      // Create a chat message that will appear in our current chat
-      const refactoringMessage = {
-        id: `refactor_${task.id}_${Date.now()}`,
-        type: 'refactoring_request',
-        content: aiPrompt,
-        taskId: task.id,
-        filePath: task.metadata.filePath,
-        timestamp: new Date(),
-        status: 'waiting_for_response'
-      };
-      
-      // For now, let's just log the prompt so you can see it
-      console.log('📝 [TaskService] REFACTORING PROMPT FOR YOU:');
-      console.log('='.repeat(50));
-      console.log(aiPrompt);
-      console.log('='.repeat(50));
-      console.log('📝 [TaskService] Please respond to this prompt above with the refactored code!');
-      
-      // Return a placeholder result - in real implementation this would wait for your response
-      const refactoringResult = {
-        originalFile: task.metadata.filePath,
-        refactoredCode: `// TODO: Waiting for your response to the refactoring prompt above\n// Please provide the refactored code for: ${task.metadata.filePath}`,
-        changes: ['Refactoring request created - waiting for your response'],
-        timestamp: new Date(),
-        status: 'waiting_for_user_response'
-      };
-      
-      return {
-        success: true,
-        aiResponse: 'Waiting for user response',
-        refactoringResult,
-        timestamp: new Date()
-      };
+      // Breche ab, keine automatische Änderung!
+      throw new Error('Automatisches Refactoring im Backend ist deaktiviert! Refactoring muss über den Chat laufen.');
     } catch (error) {
       throw new Error(`AI refactoring failed: ${error.message}`);
     }
-  }
-
-  /**
-   * Build refactoring prompt for AI
-   * @param {Object} task - Task object
-   * @returns {string} AI prompt
-   */
-  buildRefactoringPrompt(task) {
-    return `# AI Refactoring Task
-
-## Task Information
-- **Title**: ${task.title}
-- **Description**: ${task.description}
-- **Type**: ${task.type.value}
-- **Priority**: ${task.priority.value}
-- **File**: ${task.metadata.filePath}
-- **Lines**: ${task.metadata.lines}
-
-## Refactoring Steps
-${task.metadata.refactoringSteps ? task.metadata.refactoringSteps.map(step => `- ${step}`).join('\n') : '- Split large file into smaller modules\n- Improve code organization\n- Follow best practices'}
-
-## Instructions
-Please refactor the code according to the task requirements. Focus on:
-1. Improving code maintainability
-2. Reducing file size and complexity
-3. Following best practices
-4. Maintaining functionality
-
-## File to Refactor
-${task.metadata.filePath}
-
-Please provide the refactored code and explain the changes made.`;
   }
 
   /**
@@ -383,6 +323,9 @@ Please provide the refactored code and explain the changes made.`;
       console.log('📦 [TaskService] Created backup:', backupPath);
       
       // Apply the refactored code to the file
+      if (!refactoringResult.refactoredCode) {
+        throw new Error('Refactored code is undefined - cannot write to file');
+      }
       fs.writeFileSync(task.metadata.filePath, refactoringResult.refactoredCode);
       console.log('✅ [TaskService] Applied refactored code to:', task.metadata.filePath);
       
