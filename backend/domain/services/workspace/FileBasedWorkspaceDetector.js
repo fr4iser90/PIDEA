@@ -362,7 +362,7 @@ class FileBasedWorkspaceDetector {
 
       for (const port of ports) {
         const portPath = path.join(this.baseDir, port);
-        if (fs.statSync(portPath).isDirectory()) {
+        if (fs.statSync(portPath).isDirectory === true) {
           const files = fs.readdirSync(portPath);
           status[port] = {
             files: files,

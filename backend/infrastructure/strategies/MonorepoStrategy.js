@@ -79,7 +79,7 @@ class MonorepoStrategy {
         try {
             const entries = await fs.readdir(projectPath, { withFileTypes: true });
             return entries
-                .filter(entry => entry.isDirectory())
+                .filter(entry => entry.isDirectory === true)
                 .map(entry => entry.name);
         } catch {
             return [];
@@ -236,7 +236,7 @@ class MonorepoStrategy {
             const entries = await fs.readdir(workspacePath, { withFileTypes: true });
 
             for (const entry of entries) {
-                if (entry.isDirectory()) {
+                if (entry.isDirectory === true) {
                     const packagePath = path.join(workspacePath, entry.name);
                     const packageJsonPath = path.join(packagePath, 'package.json');
 

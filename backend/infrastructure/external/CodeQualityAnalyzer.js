@@ -602,9 +602,9 @@ class CodeQualityAnalyzer {
                     const itemPath = path.join(dir, item);
                     const stats = await fs.stat(itemPath);
                     
-                    if (stats.isDirectory() && !item.startsWith('.') && item !== 'node_modules') {
+                    if (stats.isDirectory === true && !item.startsWith('.') && item !== 'node_modules') {
                         await getFiles(itemPath);
-                    } else if (stats.isFile()) {
+                    } else if (stats.isFile === true) {
                         const ext = path.extname(item);
                         if (['.js', '.jsx', '.ts', '.tsx', '.py', '.java', '.cs'].includes(ext)) {
                             files.push(itemPath);
@@ -636,9 +636,9 @@ class CodeQualityAnalyzer {
                     const itemPath = path.join(dir, item);
                     const stats = await fs.stat(itemPath);
                     
-                    if (stats.isDirectory() && !item.startsWith('.') && item !== 'node_modules') {
+                    if (stats.isDirectory === true && !item.startsWith('.') && item !== 'node_modules') {
                         await getFiles(itemPath);
-                    } else if (stats.isFile()) {
+                    } else if (stats.isFile === true) {
                         if (item.includes('.test.') || item.includes('.spec.') || item.includes('test/')) {
                             testFiles.push(itemPath);
                         }
@@ -652,6 +652,16 @@ class CodeQualityAnalyzer {
         }
 
         return testFiles;
+    }
+
+    /**
+     * Analyze code quality for a project (alias for analyzeCodeQuality)
+     * @param {string} projectPath - Project directory path
+     * @param {Object} options - Analysis options
+     * @returns {Promise<Object>} Code quality analysis results
+     */
+    async analyze(projectPath, options = {}) {
+        return this.analyzeCodeQuality(projectPath, options);
     }
 }
 

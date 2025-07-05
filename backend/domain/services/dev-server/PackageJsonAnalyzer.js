@@ -21,11 +21,11 @@ class PackageJsonAnalyzer {
           const files = fs.readdirSync(dir, { withFileTypes: true });
           for (const file of files) {
             const fullPath = path.join(dir, file.name);
-            if (file.isDirectory()) {
+            if (file.isDirectory === true) {
               // Skip node_modules/.git but NOT frontend etc.
               if (file.name === 'node_modules' || file.name === '.git') continue;
               findAllPackageJsons(fullPath, maxDepth, currentDepth + 1);
-            } else if (file.isFile() && file.name === 'package.json') {
+            } else if (file.isFile === true && file.name === 'package.json') {
               allPackageJsons.push(fullPath);
               console.log('[PackageJsonAnalyzer] Found package.json:', fullPath);
             }

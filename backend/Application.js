@@ -483,6 +483,7 @@ class Application {
     this.commandBus.register('AnalyzeArchitectureCommand', this.analyzeArchitectureHandler);
     this.commandBus.register('AnalyzeCodeQualityCommand', this.analyzeCodeQualityHandler);
     this.commandBus.register('AnalyzeDependenciesCommand', this.analyzeDependenciesHandler);
+    this.commandBus.register('AnalyzeRepoStructureCommand', this.analyzeRepoStructureHandler);
     this.commandBus.register('VibeCoderAnalyzeCommand', this.vibeCoderAnalyzeHandler);
 
     // Register Refactor Commands

@@ -38,8 +38,8 @@ class FileSystemService {
             const stats = await fs.stat(filePath);
             return {
                 exists: true,
-                isFile: stats.isFile(),
-                isDirectory: stats.isDirectory(),
+                isDirectory: stats.isDirectory === true,
+                isFile: stats.isFile === true,
                 size: stats.size,
                 sizeKB: Math.round(stats.size / 1024),
                 sizeMB: Math.round(stats.size / (1024 * 1024) * 100) / 100,
@@ -115,7 +115,7 @@ class FileSystemService {
             const force = options.force || false;
 
             const stats = await fs.stat(path);
-            if (stats.isDirectory()) {
+            if (stats.isDirectory === true) {
                 if (recursive) {
                     await fs.rmdir(path, { recursive: true });
                 } else {
@@ -179,8 +179,8 @@ class FileSystemService {
                 const itemInfo = {
                     name: item,
                     path: itemPath,
-                    isFile: stats.isFile(),
-                    isDirectory: stats.isDirectory(),
+                    isFile: stats.isFile === true,
+                    isDirectory: stats.isDirectory === true,
                     size: stats.size,
                     sizeKB: Math.round(stats.size / 1024),
                     modified: stats.mtime,
@@ -244,9 +244,9 @@ class FileSystemService {
 
                     const stats = await fs.stat(itemPath);
                     
-                    if (stats.isDirectory()) {
+                    if (stats.isDirectory === true) {
                         await traverse(itemPath, depth + 1);
-                    } else if (stats.isFile()) {
+                    } else if (stats.isFile === true) {
                         // Check include patterns
                         if (includePatterns.length > 0 && !includePatterns.some(pattern => 
                             typeof pattern === 'string' ? itemPath.includes(pattern) : pattern.test(itemPath)
@@ -368,7 +368,7 @@ class FileSystemService {
 
                     const stats = await fs.stat(itemPath);
                     
-                    if (stats.isDirectory()) {
+                    if (stats.isDirectory === true) {
                         directories.push({
                             path: itemPath,
                             name: item,

@@ -241,7 +241,7 @@ class AnalyzeArchitectureHandler {
                 size: stats.size,
                 fileCount: files.length,
                 lastModified: stats.mtime,
-                isDirectory: stats.isDirectory()
+                isDirectory: stats.isDirectory === true
             };
         } catch (error) {
             this.logger.error('AnalyzeArchitectureHandler: Failed to get project info', {
@@ -349,7 +349,7 @@ class AnalyzeArchitectureHandler {
         }
 
         // Check coupling
-        if (metrics.averageCoupling > 0.7) {
+        if (metrics && metrics.averageCoupling > 0.7) {
             recommendations.push({
                 type: 'high_coupling',
                 severity: 'medium',
@@ -359,7 +359,7 @@ class AnalyzeArchitectureHandler {
         }
 
         // Check cohesion
-        if (metrics.averageCohesion < 0.3) {
+        if (metrics && metrics.averageCohesion < 0.3) {
             recommendations.push({
                 type: 'low_cohesion',
                 severity: 'medium',

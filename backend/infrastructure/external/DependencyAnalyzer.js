@@ -10,11 +10,23 @@ class DependencyAnalyzer {
         const packageJsonPath = path.join(projectPath, 'package.json');
         const lockPath = path.join(projectPath, 'package-lock.json');
         let packageJson, packageLock;
+        
         try {
             packageJson = JSON.parse(await fs.readFile(packageJsonPath, 'utf-8'));
         } catch (e) {
-            throw new Error(`package.json not found or invalid at ${packageJsonPath}`);
+            // Return empty results for projects without package.json
+            return {
+                directDependencies: [],
+                directDevDependencies: [],
+                transitiveDependencies: [],
+                outdatedPackages: [],
+                vulnerabilities: [],
+                license: null,
+                bundleSize: {},
+                dependencyGraph: {}
+            };
         }
+        
         try {
             packageLock = JSON.parse(await fs.readFile(lockPath, 'utf-8'));
         } catch (e) {

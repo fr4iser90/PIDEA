@@ -141,9 +141,9 @@ class FileSystemService {
             const entries = await this.readDirectory(dirPath);
             
             for (const entry of entries) {
-                if (entry.isFile()) {
+                if (entry.isFile === true) {
                     totalSize += await this.getFileSize(entry.path);
-                } else if (entry.isDirectory) {
+                } else if (entry.isDirectory === true) {
                     totalSize += await this.getDirectorySize(entry.path);
                 }
             }
@@ -160,11 +160,11 @@ class FileSystemService {
             const entries = await this.readDirectory(dirPath);
             
             for (const entry of entries) {
-                if (entry.isFile()) {
+                if (entry.isFile === true) {
                     if (!pattern || entry.name.match(pattern)) {
                         files.push(entry.path);
                     }
-                } else if (entry.isDirectory) {
+                } else if (entry.isDirectory === true) {
                     const subFiles = await this.findFiles(entry.path, pattern);
                     files.push(...subFiles);
                 }
@@ -200,6 +200,15 @@ class FileSystemService {
             return path.resolve(basePath, relativePath);
         } catch (error) {
             throw new Error(`Failed to get absolute path for ${relativePath}: ${error.message}`);
+        }
+    }
+
+    async isReadable(filePath) {
+        try {
+            await fs.access(filePath, fs.constants.R_OK);
+            return true;
+        } catch (error) {
+            return false;
         }
     }
 

@@ -71,6 +71,16 @@ class ArchitectureAnalyzer {
     }
 
     /**
+     * Analyze architecture for a project (alias for analyzeArchitecture)
+     * @param {string} projectPath - Project directory path
+     * @param {Object} options - Analysis options
+     * @returns {Promise<Object>} Architecture analysis results
+     */
+    async analyze(projectPath, options = {}) {
+        return this.analyzeArchitecture(projectPath, options);
+    }
+
+    /**
      * Analyze project structure
      * @param {string} projectPath - Project directory path
      * @returns {Promise<Object>} Project structure analysis
@@ -94,7 +104,7 @@ class ArchitectureAnalyzer {
                 const itemPath = path.join(projectPath, item);
                 const stats = await fs.stat(itemPath);
                 
-                if (stats.isDirectory()) {
+                if (stats.isDirectory === true) {
                     // Detect common architectural layers
                     if (item.toLowerCase().includes('controller') || item.toLowerCase().includes('api')) {
                         structure.layers.push({ name: 'presentation', path: item });
@@ -809,9 +819,9 @@ class ArchitectureAnalyzer {
                     const itemPath = path.join(dir, item);
                     const stats = await fs.stat(itemPath);
                     
-                    if (stats.isDirectory() && !item.startsWith('.') && item !== 'node_modules') {
+                    if (stats.isDirectory === true && !item.startsWith('.') && item !== 'node_modules') {
                         await getFiles(itemPath);
-                    } else if (stats.isFile()) {
+                    } else if (stats.isFile === true) {
                         const ext = path.extname(item);
                         if (['.js', '.jsx', '.ts', '.tsx'].includes(ext)) {
                             files.push(itemPath);

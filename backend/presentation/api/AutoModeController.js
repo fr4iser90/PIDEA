@@ -2,6 +2,7 @@
  * AutoModeController - REST API endpoints for VibeCoder auto mode
  */
 const { validationResult } = require('express-validator');
+const VibeCoderModeCommand = require('../../application/commands/vibecoder/VibeCoderModeCommand');
 
 class AutoModeController {
     constructor(dependencies = {}) {
@@ -58,9 +59,74 @@ class AutoModeController {
                 workspacePath
             });
 
+            // Execute the actual auto mode analysis
+            const command = {
+                commandId: `auto-mode-${Date.now()}`,
+                projectPath: workspacePath,
+                mode: mode,
+                options: {
+                    aiModel,
+                    autoExecute,
+                    ...options
+                },
+                metadata: {
+                    userId,
+                    projectId,
+                    timestamp: new Date()
+                }
+            };
+
+            // Set correct operation flags based on mode
+            if (mode === 'analysis') {
+                command.options.includeAnalyze = true;
+                command.options.includeRefactor = false;
+                command.options.includeGenerate = false;
+            }
+            if (mode === 'refactor') {
+                command.options.includeAnalyze = false;
+                command.options.includeRefactor = true;
+                command.options.includeGenerate = false;
+            }
+            if (mode === 'full') {
+                command.options.includeAnalyze = true;
+                command.options.includeRefactor = true;
+                command.options.includeGenerate = true;
+            }
+
+            this.logger.info('AutoModeController: Executing auto mode command', {
+                commandId: command.commandId,
+                projectPath: workspacePath,
+                mode
+            });
+
+            // FIX: Wrap command in VibeCoderModeCommand instance
+            const commandInstance = new VibeCoderModeCommand(command);
+
+            // Execute the command asynchronously
+            const result = await this.commandBus.execute('VibeCoderModeCommand', commandInstance);
+
+            this.logger.info('AutoModeController: Auto mode execution completed', {
+                commandId: command.commandId,
+                success: true
+            });
+
+            // Emit event for real-time updates
+            if (this.eventBus) {
+                this.eventBus.publish('autoMode:completed', {
+                    commandId: command.commandId,
+                    projectId,
+                    userId,
+                    result
+                });
+            }
+
             res.json({
                 success: true,
-                message: 'Auto mode execution started successfully'
+                message: 'Auto mode execution completed successfully',
+                data: {
+                    commandId: command.commandId,
+                    result: result
+                }
             });
 
         } catch (error) {
@@ -69,6 +135,15 @@ class AutoModeController {
                 error: error.message,
                 userId: req.user?.id
             });
+
+            // Emit error event
+            if (this.eventBus) {
+                this.eventBus.publish('autoMode:failed', {
+                    projectId: req.params.projectId,
+                    userId: req.user?.id,
+                    error: error.message
+                });
+            }
 
             res.status(500).json({
                 success: false,

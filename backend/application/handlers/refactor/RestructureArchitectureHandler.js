@@ -152,7 +152,7 @@ class RestructureArchitectureHandler {
                 const fullPath = path.join(dir, entry.name);
                 const relativePath = path.relative(projectPath, fullPath);
                 
-                if (entry.isDirectory() && !this.shouldSkipDirectory(entry.name)) {
+                if (entry.isDirectory === true && !this.shouldSkipDirectory(entry.name)) {
                     structure.directories.push({
                         path: relativePath,
                         name: entry.name,
@@ -162,7 +162,7 @@ class RestructureArchitectureHandler {
                     
                     await scanDir(fullPath, currentDepth + 1);
                     structure.depth = Math.max(structure.depth, currentDepth + 1);
-                } else if (entry.isFile() && this.isCodeFile(entry.name)) {
+                } else if (entry.isFile === true && this.isCodeFile(entry.name)) {
                     structure.files.push({
                         path: relativePath,
                         name: entry.name,
@@ -304,9 +304,9 @@ class RestructureArchitectureHandler {
             for (const entry of entries) {
                 const fullPath = path.join(dir, entry.name);
                 
-                if (entry.isDirectory() && !this.shouldSkipDirectory(entry.name)) {
+                if (entry.isDirectory === true && !this.shouldSkipDirectory(entry.name)) {
                     await scanDir(fullPath);
-                } else if (entry.isFile() && this.isCodeFile(entry.name)) {
+                } else if (entry.isFile === true && this.isCodeFile(entry.name)) {
                     files.push(fullPath);
                 }
             }
@@ -591,7 +591,7 @@ class RestructureArchitectureHandler {
             const srcPath = path.join(src, entry.name);
             const destPath = path.join(dest, entry.name);
             
-            if (entry.isDirectory()) {
+            if (entry.isDirectory === true) {
                 await this.copyDirectory(srcPath, destPath);
             } else {
                 await fs.copyFile(srcPath, destPath);
@@ -606,7 +606,7 @@ class RestructureArchitectureHandler {
         for (const entry of entries) {
             const fullPath = path.join(dirPath, entry.name);
             
-            if (entry.isDirectory()) {
+            if (entry.isDirectory === true) {
                 size += await this.calculateDirectorySize(fullPath);
             } else {
                 const stats = await fs.stat(fullPath);

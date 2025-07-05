@@ -936,14 +936,14 @@ class TaskExecutionEngine {
             if (typeof target === 'string') {
                 // Single file or directory
                 const stats = await fs.stat(target);
-                if (stats.isFile()) {
+                if (stats.isFile === true) {
                     files.push({
                         path: target,
                         type: 'file',
                         size: stats.size,
                         modified: stats.mtime
                     });
-                } else if (stats.isDirectory()) {
+                } else if (stats.isDirectory === true) {
                     // Recursively get all files in directory
                     const allFiles = await this.getAllFiles(target);
                     files.push(...allFiles);
@@ -1548,7 +1548,7 @@ class TaskExecutionEngine {
                             const artifactPath = path.join(projectPath, dir);
                             if (await this.exists(artifactPath)) {
                                 const stats = await fs.stat(artifactPath);
-                                if (stats.isDirectory()) {
+                                if (stats.isDirectory === true) {
                                     const files = await this.getAllFiles(artifactPath);
                                     results.artifacts.push({
                                         directory: dir,
@@ -1815,12 +1815,12 @@ class TaskExecutionEngine {
                 const itemPath = path.join(dirPath, item);
                 const stats = await fs.stat(itemPath);
                 
-                if (stats.isDirectory()) {
+                if (stats.isDirectory === true) {
                     if (!item.startsWith('.') && item !== 'node_modules') {
                         const subFiles = await this.getAllFiles(itemPath);
                         files.push(...subFiles);
                     }
-                } else if (stats.isFile()) {
+                } else if (stats.isFile === true) {
                     files.push({
                         path: itemPath,
                         size: stats.size,

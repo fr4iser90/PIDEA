@@ -18,7 +18,7 @@ class ProjectAnalyzer {
     async analyzeProject(projectPath) {
         try {
             const stats = await fs.stat(projectPath);
-            if (!stats.isDirectory()) {
+            if (!stats.isDirectory === true) {
                 throw new Error('Project path must be a directory');
             }
 
@@ -63,7 +63,8 @@ class ProjectAnalyzer {
             }
             
             return 'nodejs';
-        } catch {
+        } catch (error) {
+            // package.json not found, continue with other project types
             try {
                 // Check for requirements.txt (Python)
                 await fs.access(path.join(projectPath, 'requirements.txt'));
@@ -113,20 +114,27 @@ class ProjectAnalyzer {
                     const itemPath = path.join(dir, item);
                     const relativeItemPath = path.join(relativePath, item);
                     const stats = await fs.stat(itemPath);
-                    
-                    if (stats.isDirectory()) {
-                        structure.directories.push(relativeItemPath);
+                    if (stats.isDirectory === true) {
+                        structure.directories.push({
+                            path: relativeItemPath,
+                            size: stats.size,
+                            isDirectory: true,
+                            isFile: false,
+                            fileCount: 0
+                        });
                         structure.totalDirectories++;
                         await analyzeDirectory(itemPath, relativeItemPath);
                     } else {
-                        structure.files.push(relativeItemPath);
-                        structure.totalFiles++;
-                        
-                        // Track file types
                         const ext = path.extname(item);
+                        structure.files.push({
+                            path: relativeItemPath,
+                            size: stats.size,
+                            isDirectory: false,
+                            isFile: true,
+                            extension: ext
+                        });
+                        structure.totalFiles++;
                         structure.fileTypes[ext] = (structure.fileTypes[ext] || 0) + 1;
-                        
-                        // Track largest files
                         structure.largestFiles.push({
                             path: relativeItemPath,
                             size: stats.size
@@ -134,16 +142,12 @@ class ProjectAnalyzer {
                     }
                 }
             };
-            
             await analyzeDirectory(projectPath);
-            
-            // Sort largest files
             structure.largestFiles.sort((a, b) => b.size - a.size);
             structure.largestFiles = structure.largestFiles.slice(0, 10);
         } catch (error) {
             // Ignore read errors
         }
-
         return structure;
     }
 
@@ -192,7 +196,7 @@ class ProjectAnalyzer {
                     const itemPath = path.join(dir, item);
                     const stats = await fs.stat(itemPath);
                     
-                    if (stats.isDirectory()) {
+                    if (stats.isDirectory === true) {
                         await countFiles(itemPath);
                     } else {
                         fileCount++;

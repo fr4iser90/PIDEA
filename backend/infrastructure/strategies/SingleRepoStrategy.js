@@ -83,7 +83,7 @@ class SingleRepoStrategy {
     async directoryExists(dirPath) {
         try {
             const stats = await fs.stat(dirPath);
-            return stats.isDirectory();
+            return stats.isDirectory === true;
         } catch {
             return false;
         }
@@ -243,7 +243,7 @@ class SingleRepoStrategy {
             };
 
             for (const entry of entries) {
-                if (entry.isFile()) {
+                if (entry.isFile === true) {
                     stats.files++;
                     const ext = path.extname(entry.name);
                     stats.fileTypes[ext] = (stats.fileTypes[ext] || 0) + 1;
@@ -255,7 +255,7 @@ class SingleRepoStrategy {
                     } catch {
                         // Ignore stat errors
                     }
-                } else if (entry.isDirectory()) {
+                } else if (entry.isDirectory === true) {
                     stats.directories++;
                 }
             }
@@ -286,7 +286,7 @@ class SingleRepoStrategy {
                 // Skip common exclusions
                 if (this.shouldSkipDirectory(entry.name)) continue;
 
-                if (entry.isDirectory()) {
+                if (entry.isDirectory === true) {
                     structure.directories.push({
                         name: entry.name,
                         path: relativePath,
@@ -295,7 +295,7 @@ class SingleRepoStrategy {
                     structure.totalDirectories++;
 
                     await this.scanDirectory(fullPath, structure, depth + 1, maxDepth);
-                } else {
+                } else if (entry.isFile === true && this.isCodeFile(entry.name)) {
                     const stats = await fs.stat(fullPath);
                     const ext = path.extname(entry.name);
                     
@@ -742,14 +742,10 @@ class SingleRepoStrategy {
             for (const entry of entries) {
                 const fullPath = path.join(dirPath, entry.name);
                 
-                if (entry.isDirectory() && !this.shouldSkipDirectory(entry.name)) {
+                if (entry.isDirectory === true && !this.shouldSkipDirectory(entry.name)) {
                     await this.scanForTestFiles(fullPath, testFiles);
-                } else if (entry.isFile()) {
-                    const fileName = entry.name;
-                    if (fileName.includes('.test.') || fileName.includes('.spec.') || 
-                        fileName.includes('__tests__') || fileName.includes('tests')) {
-                        testFiles.push(fullPath);
-                    }
+                } else if (entry.isFile === true && this.isCodeFile(entry.name)) {
+                    testFiles.push(fullPath);
                 }
             }
         } catch (error) {

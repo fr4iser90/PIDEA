@@ -225,7 +225,7 @@ class AnalyzeCodeQualityHandler {
                 size: stats.size,
                 fileCount: files.length,
                 lastModified: stats.mtime,
-                isDirectory: stats.isDirectory()
+                isDirectory: stats.isDirectory === true
             };
         } catch (error) {
             this.logger.error('AnalyzeCodeQualityHandler: Failed to get project info', {
@@ -345,7 +345,7 @@ class AnalyzeCodeQualityHandler {
         const { qualityAnalysis, metrics } = analysis;
 
         // Check for linting issues
-        if (metrics.lintingIssues > 10) {
+        if (metrics && metrics.lintingIssues > 10) {
             recommendations.push({
                 type: 'linting_issues',
                 severity: 'medium',
@@ -355,7 +355,7 @@ class AnalyzeCodeQualityHandler {
         }
 
         // Check maintainability
-        if (metrics.maintainabilityIndex < 50) {
+        if (metrics && metrics.maintainabilityIndex < 50) {
             recommendations.push({
                 type: 'low_maintainability',
                 severity: 'high',
@@ -365,7 +365,7 @@ class AnalyzeCodeQualityHandler {
         }
 
         // Check test coverage
-        if (metrics.testCoverage < 80) {
+        if (metrics && metrics.testCoverage < 80) {
             recommendations.push({
                 type: 'low_test_coverage',
                 severity: 'medium',
@@ -375,7 +375,7 @@ class AnalyzeCodeQualityHandler {
         }
 
         // Check code duplication
-        if (metrics.codeDuplicationPercentage > 10) {
+        if (metrics && metrics.codeDuplicationPercentage > 10) {
             recommendations.push({
                 type: 'code_duplication',
                 severity: 'medium',
@@ -385,7 +385,7 @@ class AnalyzeCodeQualityHandler {
         }
 
         // Check code style
-        if (metrics.codeStyleIssues > 5) {
+        if (metrics && metrics.codeStyleIssues > 5) {
             recommendations.push({
                 type: 'code_style_issues',
                 severity: 'low',

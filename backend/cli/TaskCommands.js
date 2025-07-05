@@ -592,9 +592,9 @@ class TaskCommands {
         for (const entry of entries) {
             const fullPath = path.join(dirPath, entry.name);
             
-            if (entry.isDirectory() && !entry.name.startsWith('.') && entry.name !== 'node_modules') {
+            if (entry.isDirectory === true && !entry.name.startsWith('.') && entry.name !== 'node_modules') {
                 await this.scanDirectory(fullPath, files, extensions);
-            } else if (entry.isFile() && extensions.includes(path.extname(entry.name))) {
+            } else if (entry.isFile === true && extensions.includes(path.extname(entry.name))) {
                 files.push(fullPath);
             }
         }

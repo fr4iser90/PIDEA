@@ -170,7 +170,7 @@ class PerformanceAnalyzer {
                     const fullPath = path.join(projectPath, distPath);
                     const stats = await fs.stat(fullPath);
                     
-                    if (stats.isDirectory()) {
+                    if (stats.isDirectory === true) {
                         const files = await this.getBundleFiles(fullPath);
                         
                         for (const file of files) {
@@ -562,9 +562,9 @@ class PerformanceAnalyzer {
                     const itemPath = path.join(dir, item);
                     const stats = await fs.stat(itemPath);
                     
-                    if (stats.isDirectory()) {
+                    if (stats.isDirectory === true) {
                         await getFiles(itemPath);
-                    } else if (stats.isFile()) {
+                    } else if (stats.isFile === true) {
                         const ext = path.extname(item);
                         if (['.js', '.css', '.html'].includes(ext)) {
                             files.push(itemPath);
@@ -708,9 +708,9 @@ class PerformanceAnalyzer {
                     const itemPath = path.join(dir, item);
                     const stats = await fs.stat(itemPath);
                     
-                    if (stats.isDirectory() && !item.startsWith('.') && item !== 'node_modules') {
+                    if (stats.isDirectory === true && !item.startsWith('.') && item !== 'node_modules') {
                         await getFiles(itemPath);
-                    } else if (stats.isFile()) {
+                    } else if (stats.isFile === true) {
                         const ext = path.extname(item);
                         if (['.js', '.jsx', '.ts', '.tsx'].includes(ext)) {
                             files.push(itemPath);

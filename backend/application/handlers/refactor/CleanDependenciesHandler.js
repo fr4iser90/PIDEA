@@ -221,9 +221,9 @@ class CleanDependenciesHandler {
             for (const entry of entries) {
                 const fullPath = path.join(dir, entry.name);
                 
-                if (entry.isDirectory() && !this.shouldSkipDirectory(entry.name)) {
+                if (entry.isDirectory === true && !this.shouldSkipDirectory(entry.name)) {
                     await scanDir(fullPath);
-                } else if (entry.isFile() && this.isCodeFile(entry.name)) {
+                } else if (entry.isFile === true && this.isCodeFile(entry.name)) {
                     files.push(fullPath);
                 }
             }

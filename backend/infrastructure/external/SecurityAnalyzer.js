@@ -581,9 +581,9 @@ class SecurityAnalyzer {
                     const itemPath = path.join(dir, item);
                     const stats = await fs.stat(itemPath);
                     
-                    if (stats.isDirectory() && !item.startsWith('.') && item !== 'node_modules') {
+                    if (stats.isDirectory === true && !item.startsWith('.') && item !== 'node_modules') {
                         await getFiles(itemPath);
-                    } else if (stats.isFile()) {
+                    } else if (stats.isFile === true) {
                         const ext = path.extname(item);
                         if (['.js', '.jsx', '.ts', '.tsx'].includes(ext)) {
                             files.push(itemPath);

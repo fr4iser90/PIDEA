@@ -407,12 +407,12 @@ class SplitLargeFilesHandler {
             const itemPath = path.join(dirPath, item);
             const stats = await fs.stat(itemPath);
             
-            if (stats.isDirectory()) {
+            if (stats.isDirectory === true) {
                 if (!item.startsWith('.') && item !== 'node_modules') {
                     const subFiles = await this.getAllFiles(itemPath);
                     files.push(...subFiles);
                 }
-            } else if (stats.isFile()) {
+            } else if (stats.isFile === true) {
                 const ext = path.extname(itemPath);
                 if (['.js', '.jsx', '.ts', '.tsx'].includes(ext)) {
                     files.push(itemPath);

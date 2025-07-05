@@ -321,7 +321,7 @@ class AnalyzeRepoStructureHandler {
                 size: stats.size,
                 fileCount: files.length,
                 lastModified: stats.mtime,
-                isDirectory: stats.isDirectory()
+                isDirectory: stats.isDirectory === true
             };
         } catch (error) {
             this.logger.error('AnalyzeRepoStructureHandler: Failed to get project info', {
@@ -344,7 +344,7 @@ class AnalyzeRepoStructureHandler {
         
         try {
             // Use project analyzer to analyze repository structure
-            const structure = await this.projectAnalyzer.analyzeStructure(
+            let structure = await this.projectAnalyzer.analyzeStructure(
                 projectInfo.path,
                 {
                     includeHidden: options.includeHidden,
@@ -354,6 +354,14 @@ class AnalyzeRepoStructureHandler {
                     includeStats: options.includeStats
                 }
             );
+
+            // Patch: convert files/dirs to objects if needed
+            if (structure.files && typeof structure.files[0] === 'string') {
+                structure.files = structure.files.map(f => ({ path: f, size: 0, extension: f.split('.').pop() }));
+            }
+            if (structure.directories && typeof structure.directories[0] === 'string') {
+                structure.directories = structure.directories.map(d => ({ path: d, size: 0, fileCount: 0 }));
+            }
 
             return {
                 projectInfo,
@@ -405,14 +413,14 @@ class AnalyzeRepoStructureHandler {
 
         return {
             totalFiles: structure.files.length,
-            totalDirectories: structure.directories.length,
+            totalDirectories: structure.directories ? structure.directories.length : 0,
             totalSize: structure.totalSize,
             fileTypeDistribution: fileTypes,
             averageFileSize: fileSizes.length > 0 ? fileSizes.reduce((a, b) => a + b, 0) / fileSizes.length : 0,
             maxFileSize: fileSizes.length > 0 ? Math.max(...fileSizes) : 0,
             minFileSize: fileSizes.length > 0 ? Math.min(...fileSizes) : 0,
             directorySizeDistribution: directorySizes,
-            depthDistribution: this.calculateDepthDistribution(structure.directories)
+            depthDistribution: structure.directories ? this.calculateDepthDistribution(structure.directories) : {}
         };
     }
 
@@ -425,7 +433,7 @@ class AnalyzeRepoStructureHandler {
         const distribution = {};
         
         directories.forEach(dir => {
-            const depth = dir.path.split('/').length - 1;
+            const depth = (dir.path || dir).split('/').length - 1;
             distribution[depth] = (distribution[depth] || 0) + 1;
         });
 
@@ -454,14 +462,16 @@ class AnalyzeRepoStructureHandler {
         }
 
         // Check for deep directory structure
-        const maxDepth = Math.max(...Object.keys(metrics.depthDistribution).map(Number));
-        if (maxDepth > 8) {
-            recommendations.push({
-                type: 'deep_structure',
-                severity: 'low',
-                message: `Directory structure is very deep (${maxDepth} levels)`,
-                details: { maxDepth, recommendation: 'Consider flattening the structure' }
-            });
+        if (metrics && metrics.depthDistribution && Object.keys(metrics.depthDistribution).length > 0) {
+            const maxDepth = Math.max(...Object.keys(metrics.depthDistribution).map(Number));
+            if (maxDepth > 8) {
+                recommendations.push({
+                    type: 'deep_structure',
+                    severity: 'low',
+                    message: `Directory structure is very deep (${maxDepth} levels)`,
+                    details: { maxDepth, recommendation: 'Consider flattening the structure' }
+                });
+            }
         }
 
         // Check for many files in single directory

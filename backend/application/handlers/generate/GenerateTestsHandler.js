@@ -135,7 +135,7 @@ class GenerateTestsHandler {
             const fullPath = path.join(projectPath, entry.name);
             const relativeEntryPath = path.join(relativePath, entry.name);
             
-            if (entry.isDirectory()) {
+            if (entry.isDirectory === true) {
                 if (!this.shouldSkipDirectory(entry.name)) {
                     structure.directories.push({
                         path: relativeEntryPath,
@@ -145,7 +145,7 @@ class GenerateTestsHandler {
                     
                     await this.scanProject(fullPath, structure, relativeEntryPath);
                 }
-            } else if (entry.isFile()) {
+            } else if (entry.isFile === true) {
                 if (this.isCodeFile(entry.name)) {
                     const fileInfo = await this.analyzeFile(fullPath, relativeEntryPath);
                     structure.files.push(fileInfo);
@@ -783,7 +783,7 @@ export default defineConfig({
             const entries = await fs.readdir(testDir, { withFileTypes: true });
             
             for (const entry of entries) {
-                if (entry.isFile() && entry.name.endsWith('.test.js')) {
+                if (entry.isFile === true && entry.name.endsWith('.test.js')) {
                     files.push(path.join(testDir, entry.name));
                 }
             }

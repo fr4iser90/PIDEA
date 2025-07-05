@@ -225,7 +225,7 @@ class AnalyzeDependenciesHandler {
                 size: stats.size,
                 fileCount: files.length,
                 lastModified: stats.mtime,
-                isDirectory: stats.isDirectory()
+                isDirectory: stats.isDirectory === true
             };
         } catch (error) {
             this.logger.error('AnalyzeDependenciesHandler: Failed to get project info', {

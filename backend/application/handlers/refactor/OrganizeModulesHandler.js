@@ -122,7 +122,7 @@ class OrganizeModulesHandler {
             const fullPath = path.join(dirPath, entry.name);
             const relativeEntryPath = path.join(relativePath, entry.name);
             
-            if (entry.isDirectory()) {
+            if (entry.isDirectory === true) {
                 if (!this.shouldSkipDirectory(entry.name)) {
                     structure.directories.push({
                         path: relativeEntryPath,
@@ -132,7 +132,7 @@ class OrganizeModulesHandler {
                     
                     await this.scanDirectory(fullPath, structure, relativeEntryPath);
                 }
-            } else if (entry.isFile()) {
+            } else if (entry.isFile === true) {
                 if (this.isCodeFile(entry.name)) {
                     const fileInfo = await this.analyzeFile(fullPath, relativeEntryPath);
                     structure.files.push(fileInfo);
@@ -629,9 +629,9 @@ class OrganizeModulesHandler {
             for (const entry of entries) {
                 const fullPath = path.join(dir, entry.name);
                 
-                if (entry.isDirectory() && !this.shouldSkipDirectory(entry.name)) {
+                if (entry.isDirectory === true && !this.shouldSkipDirectory(entry.name)) {
                     await scanDir(fullPath);
-                } else if (entry.isFile() && this.isCodeFile(entry.name)) {
+                } else if (entry.isFile === true && this.isCodeFile(entry.name)) {
                     files.push(fullPath);
                 }
             }

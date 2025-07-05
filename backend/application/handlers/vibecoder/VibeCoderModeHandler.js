@@ -5,6 +5,10 @@
 const EventBus = require('../../../infrastructure/messaging/EventBus');
 const AnalysisRepository = require('../../../domain/repositories/AnalysisRepository');
 const CommandBus = require('../../../infrastructure/messaging/CommandBus');
+const AnalyzeRepoStructureCommand = require('../../commands/analyze/AnalyzeRepoStructureCommand');
+const AnalyzeArchitectureCommand = require('../../commands/analyze/AnalyzeArchitectureCommand');
+const AnalyzeCodeQualityCommand = require('../../commands/analyze/AnalyzeCodeQualityCommand');
+const AnalyzeDependenciesCommand = require('../../commands/analyze/AnalyzeDependenciesCommand');
 
 
 class VibeCoderModeHandler {
@@ -19,6 +23,20 @@ class VibeCoderModeHandler {
         this.logger.info(`Starting VibeCoder mode orchestration for project: ${command.projectPath}`);
 
         try {
+            // Debug: Check if eventBus is properly initialized
+            if (!this.eventBus) {
+                this.logger.error('EventBus is not initialized');
+                throw new Error('EventBus is not initialized');
+            }
+
+            if (typeof this.eventBus.publish !== 'function') {
+                this.logger.error('EventBus.publish is not a function', {
+                    eventBusType: typeof this.eventBus,
+                    eventBusKeys: Object.keys(this.eventBus || {})
+                });
+                throw new Error('EventBus.publish is not a function');
+            }
+
             const validation = command.validateBusinessRules();
             if (!validation.isValid) {
                 throw new Error(`Business rule validation failed: ${validation.errors.join(', ')}`);
@@ -90,12 +108,14 @@ class VibeCoderModeHandler {
         } catch (error) {
             this.logger.error(`VibeCoder mode orchestration failed for project ${command.projectPath}:`, error);
             
-            await this.eventBus.publish('vibecoder.mode.failed', {
-                commandId: command.commandId,
-                projectPath: command.projectPath,
-                error: error.message,
-                timestamp: new Date()
-            });
+            if (this.eventBus && typeof this.eventBus.publish === 'function') {
+                await this.eventBus.publish('vibecoder.mode.failed', {
+                    commandId: command.commandId,
+                    projectPath: command.projectPath,
+                    error: error.message,
+                    timestamp: new Date()
+                });
+            }
 
             throw error;
         }
@@ -300,17 +320,87 @@ class VibeCoderModeHandler {
         };
 
         try {
-            // Execute comprehensive analysis
-            const analyzeCommand = {
-                commandId: `${command.commandId}-analyze`,
+            // Execute comprehensive analysis using real commands
+            const analysisResults = {};
+            
+            // 1. Analyze repository structure
+            const structureCommand = {
+                commandId: `${command.commandId}-structure`,
                 projectPath: command.projectPath,
-                analysisTypes: ['comprehensive'],
-                options: command.getModeOptions(),
+                options: {
+                    includeHidden: true,
+                    maxDepth: 10,
+                    fileTypes: ['js', 'ts', 'jsx', 'tsx', 'json', 'md', 'yml', 'yaml'],
+                    includeStats: true
+                },
+                requestedBy: command.requestedBy || 'vibecoder-mode',
                 metadata: command.getMetadata()
             };
-
-            // This would dispatch to the VibeCoderAnalyzeCommand
-            results.results = await this.simulateAnalyzeOperation(analyzeCommand);
+            const structureCommandInstance = new AnalyzeRepoStructureCommand(structureCommand);
+            const structureResult = await this.commandBus.execute('AnalyzeRepoStructureCommand', structureCommandInstance);
+            analysisResults.structure = structureResult;
+            
+            // 2. Analyze architecture
+            const architectureCommand = {
+                commandId: `${command.commandId}-architecture`,
+                projectPath: command.projectPath,
+                options: {
+                    detectPatterns: true,
+                    analyzeDependencies: true,
+                    complexityAnalysis: true,
+                    detectLayers: true,
+                    detectModules: true,
+                    analyzeCoupling: true,
+                    analyzeCohesion: true,
+                    detectAntiPatterns: true,
+                    analyzeDesignPrinciples: true
+                },
+                requestedBy: command.requestedBy || 'vibecoder-mode',
+                metadata: command.getMetadata()
+            };
+            const architectureCommandInstance = new AnalyzeArchitectureCommand(architectureCommand);
+            const architectureResult = await this.commandBus.execute('AnalyzeArchitectureCommand', architectureCommandInstance);
+            analysisResults.architecture = architectureResult;
+            
+            // 3. Analyze code quality
+            const qualityCommand = {
+                commandId: `${command.commandId}-quality`,
+                projectPath: command.projectPath,
+                options: {
+                    analyzeComplexity: true,
+                    detectCodeSmells: true,
+                    analyzeMaintainability: true,
+                    analyzeReadability: true,
+                    detectDuplications: true,
+                    analyzeTestCoverage: true
+                },
+                requestedBy: command.requestedBy || 'vibecoder-mode',
+                metadata: command.getMetadata()
+            };
+            const qualityCommandInstance = new AnalyzeCodeQualityCommand(qualityCommand);
+            const qualityResult = await this.commandBus.execute('AnalyzeCodeQualityCommand', qualityCommandInstance);
+            analysisResults.codeQuality = qualityResult;
+            
+            // 4. Analyze dependencies
+            const dependenciesCommand = {
+                commandId: `${command.commandId}-dependencies`,
+                projectPath: command.projectPath,
+                options: {
+                    analyzePackageJson: true,
+                    detectOutdatedDependencies: true,
+                    analyzeSecurityVulnerabilities: true,
+                    analyzeDependencyGraph: true,
+                    detectCircularDependencies: true,
+                    analyzeDependencySize: true
+                },
+                requestedBy: command.requestedBy || 'vibecoder-mode',
+                metadata: command.getMetadata()
+            };
+            const dependenciesCommandInstance = new AnalyzeDependenciesCommand(dependenciesCommand);
+            const dependenciesResult = await this.commandBus.execute('AnalyzeDependenciesCommand', dependenciesCommandInstance);
+            analysisResults.dependencies = dependenciesResult;
+            
+            results.results = analysisResults;
             
             // Generate recommendations based on analysis results
             results.recommendations = this.generateAnalyzeRecommendations(results.results);
@@ -321,6 +411,10 @@ class VibeCoderModeHandler {
         } catch (error) {
             results.status = 'failed';
             results.error = error.message;
+            this.logger.error('VibeCoderModeHandler: Analyze phase failed', {
+                commandId: command.commandId,
+                error: error.message
+            });
         }
 
         return results;
@@ -698,7 +792,7 @@ class VibeCoderModeHandler {
                 issues.push({
                     type: 'phase_failure',
                     phase: phase,
-                    message: results.error,
+                    message: results.error || 'Unknown error',
                     severity: 'high'
                 });
             }
@@ -706,15 +800,13 @@ class VibeCoderModeHandler {
         
         // Check for incomplete operations
         Object.entries(allResults).forEach(([phase, results]) => {
-            if (results && results.results && results.results.summary) {
-                if (results.results.summary.failed > 0) {
-                    issues.push({
-                        type: 'incomplete_operations',
-                        phase: phase,
-                        message: `${results.results.summary.failed} operations failed in ${phase} phase`,
-                        severity: 'medium'
-                    });
-                }
+            if (results && results.results && results.results.summary && results.results.summary.failed > 0) {
+                issues.push({
+                    type: 'incomplete_operations',
+                    phase: phase,
+                    message: `${results.results.summary.failed} operations failed in ${phase} phase`,
+                    severity: 'medium'
+                });
             }
         });
         
@@ -733,16 +825,16 @@ class VibeCoderModeHandler {
             },
             phases: Object.entries(allResults).map(([phase, results]) => ({
                 phase: phase,
-                status: results.status,
-                results: results.results || null,
-                recommendations: results.recommendations || null,
-                metrics: results.metrics || null,
-                error: results.error || null
+                status: results ? (results.status || 'unknown') : 'unknown',
+                results: results ? (results.results || null) : null,
+                recommendations: results ? (results.recommendations || null) : null,
+                metrics: results ? (results.metrics || null) : null,
+                error: results ? (results.error || null) : null
             })),
             validation: {
-                overall: validationResults.overall,
-                issues: validationResults.issues,
-                metrics: validationResults.metrics
+                overall: validationResults ? validationResults.overall : false,
+                issues: validationResults ? validationResults.issues : [],
+                metrics: validationResults ? validationResults.metrics : {}
             },
             recommendations: this.generateComprehensiveRecommendations(allResults, validationResults)
         };
@@ -767,7 +859,7 @@ class VibeCoderModeHandler {
         
         // Check for specific improvements
         const analyzeResults = allResults.analyze;
-        if (analyzeResults && analyzeResults.metrics.overallScore < 80) {
+        if (analyzeResults && analyzeResults.metrics && analyzeResults.metrics.overallScore < 80) {
             recommendations.push({
                 type: 'continue_improvement',
                 priority: 'medium',
@@ -793,13 +885,13 @@ class VibeCoderModeHandler {
             timestamp: new Date(),
             summary: {
                 mode: command.getModeOptions().mode,
-                totalPhases: report.summary.totalPhases,
-                successfulPhases: report.summary.successfulPhases,
-                failedPhases: report.summary.failedPhases,
-                successRate: report.summary.successRate,
-                validationPassed: validationResults.overall
+                totalPhases: report ? report.summary.totalPhases : 0,
+                successfulPhases: report ? report.summary.successfulPhases : 0,
+                failedPhases: report ? report.summary.failedPhases : 0,
+                successRate: report ? report.summary.successRate : 0,
+                validationPassed: validationResults ? validationResults.overall : false
             },
-            initialAnalysis: outputConfig.includeRawData ? initialAnalysis : initialAnalysis.metrics,
+            initialAnalysis: outputConfig && outputConfig.includeRawData ? initialAnalysis : (initialAnalysis ? initialAnalysis.metrics : {}),
             executionStrategy,
             results: {
                 analyze: analyzeResults,
@@ -808,14 +900,14 @@ class VibeCoderModeHandler {
             },
             validationResults,
             report,
-            recommendations: report.recommendations
+            recommendations: report ? report.recommendations : []
         };
 
-        if (outputConfig.includeMetrics) {
+        if (outputConfig && outputConfig.includeMetrics) {
             output.metrics = {
-                before: initialAnalysis.metrics,
-                after: validationResults.metrics.after,
-                improvement: validationResults.metrics.improvement
+                before: initialAnalysis ? initialAnalysis.metrics : {},
+                after: validationResults && validationResults.metrics ? validationResults.metrics.after : {},
+                improvement: validationResults && validationResults.metrics ? validationResults.metrics.improvement : {}
             };
         }
 

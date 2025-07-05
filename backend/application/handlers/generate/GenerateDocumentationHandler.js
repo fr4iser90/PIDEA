@@ -149,7 +149,7 @@ class GenerateDocumentationHandler {
             const fullPath = path.join(projectPath, entry.name);
             const relativeEntryPath = path.join(relativePath, entry.name);
             
-            if (entry.isDirectory()) {
+            if (entry.isDirectory === true) {
                 if (!this.shouldSkipDirectory(entry.name)) {
                     structure.directories.push({
                         path: relativeEntryPath,
@@ -159,7 +159,7 @@ class GenerateDocumentationHandler {
                     
                     await this.scanProject(fullPath, structure, relativeEntryPath);
                 }
-            } else if (entry.isFile()) {
+            } else if (entry.isFile === true) {
                 if (this.isCodeFile(entry.name)) {
                     const fileInfo = await this.analyzeFile(fullPath, relativeEntryPath);
                     structure.files.push(fileInfo);
