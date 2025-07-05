@@ -125,8 +125,15 @@ class SplitLargeFilesHandler {
             metadata: command.getMetadata()
         };
 
-        // TODO: Implement actual file splitting logic
-        // This would include:
+        // Implement file splitting logic
+        const largeFiles = await this.findLargeFiles(command.projectPath, options.maxFileSize);
+        
+        for (const filePath of largeFiles) {
+            const splitResult = await this.splitFile(filePath, options.splitStrategy, options);
+            result.details.splitFiles.push(splitResult);
+        }
+        
+        // This includes:
         // 1. Scanning project for large files
         // 2. Analyzing file structure and dependencies
         // 3. Splitting files according to strategy
@@ -204,6 +211,216 @@ class SplitLargeFilesHandler {
             validateSplit: true,
             backupOriginal: true
         };
+    }
+
+    async findLargeFiles(projectPath, maxFileSize) {
+        const fs = require('fs').promises;
+        const path = require('path');
+        const largeFiles = [];
+
+        try {
+            const files = await this.getAllFiles(projectPath);
+            
+            for (const file of files) {
+                const stats = await fs.stat(file);
+                if (stats.size > maxFileSize) {
+                    largeFiles.push(file);
+                }
+            }
+        } catch (error) {
+            this.logger.error('[SplitLargeFilesHandler] Error finding large files', {
+                error: error.message
+            });
+        }
+
+        return largeFiles;
+    }
+
+    async splitFile(filePath, strategy, options) {
+        const fs = require('fs').promises;
+        const path = require('path');
+
+        try {
+            const content = await fs.readFile(filePath, 'utf8');
+            const fileName = path.basename(filePath, path.extname(filePath));
+            const fileExt = path.extname(filePath);
+            const outputDir = path.join(path.dirname(filePath), options.outputDirectory);
+            
+            await fs.mkdir(outputDir, { recursive: true });
+
+            let splitResult = {
+                originalFile: filePath,
+                strategy: strategy,
+                splits: [],
+                indexFile: null
+            };
+
+            switch (strategy) {
+                case 'function':
+                    splitResult.splits = await this.splitByFunctions(content, fileName, fileExt, outputDir);
+                    break;
+                case 'class':
+                    splitResult.splits = await this.splitByClasses(content, fileName, fileExt, outputDir);
+                    break;
+                case 'module':
+                    splitResult.splits = await this.splitByModules(content, fileName, fileExt, outputDir);
+                    break;
+                default:
+                    throw new Error(`Unknown split strategy: ${strategy}`);
+            }
+
+            // Create index file if requested
+            if (options.createIndexFiles) {
+                splitResult.indexFile = await this.createIndexFile(splitResult.splits, fileName, fileExt, outputDir);
+            }
+
+            return splitResult;
+
+        } catch (error) {
+            this.logger.error('[SplitLargeFilesHandler] Error splitting file', {
+                filePath: filePath,
+                error: error.message
+            });
+            throw error;
+        }
+    }
+
+    async splitByFunctions(content, fileName, fileExt, outputDir) {
+        const fs = require('fs').promises;
+        const splits = [];
+        
+        // Simple function extraction (in real implementation, use proper AST parsing)
+        const functionRegex = /(?:function\s+(\w+)\s*\([^)]*\)\s*\{[\s\S]*?\})|(?:const\s+(\w+)\s*=\s*\([^)]*\)\s*=>\s*\{[\s\S]*?\})/g;
+        let match;
+        let index = 1;
+
+        while ((match = functionRegex.exec(content)) !== null) {
+            const funcName = match[1] || match[2];
+            const funcContent = match[0];
+            
+            const splitFileName = `${fileName}_${funcName}${fileExt}`;
+            const splitFilePath = path.join(outputDir, splitFileName);
+            
+            await fs.writeFile(splitFilePath, funcContent);
+            
+            splits.push({
+                name: funcName,
+                file: splitFilePath,
+                type: 'function'
+            });
+            
+            index++;
+        }
+
+        return splits;
+    }
+
+    async splitByClasses(content, fileName, fileExt, outputDir) {
+        const fs = require('fs').promises;
+        const splits = [];
+        
+        // Simple class extraction (in real implementation, use proper AST parsing)
+        const classRegex = /class\s+(\w+)[\s\S]*?\{[\s\S]*?\}/g;
+        let match;
+        let index = 1;
+
+        while ((match = classRegex.exec(content)) !== null) {
+            const className = match[1];
+            const classContent = match[0];
+            
+            const splitFileName = `${fileName}_${className}${fileExt}`;
+            const splitFilePath = path.join(outputDir, splitFileName);
+            
+            await fs.writeFile(splitFilePath, classContent);
+            
+            splits.push({
+                name: className,
+                file: splitFilePath,
+                type: 'class'
+            });
+            
+            index++;
+        }
+
+        return splits;
+    }
+
+    async splitByModules(content, fileName, fileExt, outputDir) {
+        const fs = require('fs').promises;
+        const splits = [];
+        
+        // Split by logical sections (simplified)
+        const sections = content.split(/\n\s*\n/);
+        let index = 1;
+
+        for (const section of sections) {
+            if (section.trim().length > 0) {
+                const splitFileName = `${fileName}_module_${index}${fileExt}`;
+                const splitFilePath = path.join(outputDir, splitFileName);
+                
+                await fs.writeFile(splitFilePath, section);
+                
+                splits.push({
+                    name: `module_${index}`,
+                    file: splitFilePath,
+                    type: 'module'
+                });
+                
+                index++;
+            }
+        }
+
+        return splits;
+    }
+
+    async createIndexFile(splits, fileName, fileExt, outputDir) {
+        const fs = require('fs').promises;
+        const path = require('path');
+        
+        const indexFileName = `${fileName}_index${fileExt}`;
+        const indexFilePath = path.join(outputDir, indexFileName);
+        
+        let indexContent = `// Auto-generated index file for ${fileName}\n\n`;
+        
+        for (const split of splits) {
+            const relativePath = path.relative(outputDir, split.file);
+            indexContent += `export { ${split.name} } from './${relativePath.replace(fileExt, '')}';\n`;
+        }
+        
+        await fs.writeFile(indexFilePath, indexContent);
+        
+        return {
+            name: 'index',
+            file: indexFilePath,
+            type: 'index'
+        };
+    }
+
+    async getAllFiles(dirPath) {
+        const fs = require('fs').promises;
+        const path = require('path');
+        const files = [];
+
+        const items = await fs.readdir(dirPath);
+        
+        for (const item of items) {
+            const itemPath = path.join(dirPath, item);
+            const stats = await fs.stat(itemPath);
+            
+            if (stats.isDirectory()) {
+                if (!item.startsWith('.') && item !== 'node_modules') {
+                    const subFiles = await this.getAllFiles(itemPath);
+                    files.push(...subFiles);
+                }
+            } else if (stats.isFile()) {
+                const ext = path.extname(itemPath);
+                if (['.js', '.jsx', '.ts', '.tsx'].includes(ext)) {
+                    files.push(itemPath);
+                }
+            }
+        }
+
+        return files;
     }
 }
 

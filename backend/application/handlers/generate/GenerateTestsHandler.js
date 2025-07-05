@@ -500,7 +500,7 @@ describe('${testCase.name}', () => {
             testCases.push({
                 name: func.name,
                 description: `should handle ${func.name} correctly`,
-                implementation: `// TODO: Implement test for ${func.name}\n    expect(true).toBe(true);`
+                implementation: `expect(${func.name}()).toBeDefined();\n    // Add specific test cases based on function behavior`
             });
         }
 
@@ -509,7 +509,7 @@ describe('${testCase.name}', () => {
             testCases.push({
                 name: cls.name,
                 description: `should instantiate ${cls.name} correctly`,
-                implementation: `// TODO: Implement test for ${cls.name}\n    expect(true).toBe(true);`
+                implementation: `expect(new ${cls.name}()).toBeInstanceOf(${cls.name});\n    // Add specific test cases for class methods`
             });
         }
 

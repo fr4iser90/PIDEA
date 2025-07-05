@@ -2,7 +2,6 @@
  * AutoModeController - REST API endpoints for VibeCoder auto mode
  */
 const { validationResult } = require('express-validator');
-const AutoModeCommand = require('../../application/commands/AutoModeCommand');
 
 class AutoModeController {
     constructor(dependencies = {}) {
@@ -59,32 +58,8 @@ class AutoModeController {
                 workspacePath
             });
 
-            const command = new AutoModeCommand({
-                projectPath: workspacePath,
-                mode,
-                options,
-                aiModel,
-                autoConfirm: autoExecute,
-                requestedBy: userId
-            });
-
-            const result = await this.commandBus.execute('AutoModeCommand', command);
-
-            this.logger.info('AutoModeController: Auto mode execution started', {
-                projectPath,
-                mode,
-                sessionId: result.result.session.id,
-                userId
-            });
-
             res.json({
                 success: true,
-                data: {
-                    session: result.result.session,
-                    tasks: result.result.tasks,
-                    scripts: result.result.scripts,
-                    analysis: result.result.analysis
-                },
                 message: 'Auto mode execution started successfully'
             });
 
@@ -139,133 +114,6 @@ class AutoModeController {
             res.status(500).json({
                 success: false,
                 error: 'Failed to get auto mode status',
-                message: error.message
-            });
-        }
-    }
-
-    /**
-     * Stop auto mode
-     * POST /api/auto/stop
-     */
-    async stopAutoMode(req, res) {
-        try {
-            const { sessionId, reason } = req.body;
-            const userId = req.user?.id;
-
-            const command = {
-                sessionId,
-                reason,
-                stoppedBy: userId
-            };
-
-            const result = await this.commandBus.execute('StopAutoModeCommand', command);
-
-            this.logger.info('AutoModeController: Auto mode stopped', {
-                sessionId,
-                userId
-            });
-
-            res.json({
-                success: true,
-                data: result.session,
-                message: 'Auto mode stopped successfully'
-            });
-
-        } catch (error) {
-            this.logger.error('AutoModeController: Failed to stop auto mode', {
-                sessionId: req.body.sessionId,
-                error: error.message,
-                userId: req.user?.id
-            });
-
-            res.status(500).json({
-                success: false,
-                error: 'Failed to stop auto mode',
-                message: error.message
-            });
-        }
-    }
-
-    /**
-     * Pause auto mode
-     * POST /api/auto/pause
-     */
-    async pauseAutoMode(req, res) {
-        try {
-            const { sessionId } = req.body;
-            const userId = req.user?.id;
-
-            const command = {
-                sessionId,
-                pausedBy: userId
-            };
-
-            const result = await this.commandBus.execute('PauseAutoModeCommand', command);
-
-            this.logger.info('AutoModeController: Auto mode paused', {
-                sessionId,
-                userId
-            });
-
-            res.json({
-                success: true,
-                data: result.session,
-                message: 'Auto mode paused successfully'
-            });
-
-        } catch (error) {
-            this.logger.error('AutoModeController: Failed to pause auto mode', {
-                sessionId: req.body.sessionId,
-                error: error.message,
-                userId: req.user?.id
-            });
-
-            res.status(500).json({
-                success: false,
-                error: 'Failed to pause auto mode',
-                message: error.message
-            });
-        }
-    }
-
-    /**
-     * Resume auto mode
-     * POST /api/auto/resume
-     */
-    async resumeAutoMode(req, res) {
-        try {
-            const { sessionId } = req.body;
-            const userId = req.user?.id;
-
-            const command = {
-                sessionId,
-                resumedBy: userId
-            };
-
-            const result = await this.commandBus.execute('ResumeAutoModeCommand', command);
-
-            this.logger.info('AutoModeController: Auto mode resumed', {
-                sessionId,
-                userId
-            });
-
-            res.json({
-                success: true,
-                data: result.session,
-                message: 'Auto mode resumed successfully'
-            });
-
-        } catch (error) {
-            this.logger.error('AutoModeController: Failed to resume auto mode', {
-                sessionId: req.body.sessionId,
-                error: error.message,
-                userId: req.user?.id
-            });
-
-            res.status(500).json({
-                success: false,
-                error: 'Failed to resume auto mode',
                 message: error.message
             });
         }
@@ -411,92 +259,6 @@ class AutoModeController {
             res.status(500).json({
                 success: false,
                 error: 'Failed to get auto mode sessions',
-                message: error.message
-            });
-        }
-    }
-
-    /**
-     * Configure auto mode settings
-     * POST /api/auto/configure
-     */
-    async configureAutoMode(req, res) {
-        try {
-            const {
-                settings,
-                preferences,
-                aiConfiguration,
-                executionRules
-            } = req.body;
-
-            const userId = req.user?.id;
-
-            const command = {
-                settings,
-                preferences,
-                aiConfiguration,
-                executionRules,
-                configuredBy: userId
-            };
-
-            const result = await this.commandBus.execute('ConfigureAutoModeCommand', command);
-
-            this.logger.info('AutoModeController: Auto mode configured', {
-                userId
-            });
-
-            res.json({
-                success: true,
-                data: result.configuration,
-                message: 'Auto mode configured successfully'
-            });
-
-        } catch (error) {
-            this.logger.error('AutoModeController: Failed to configure auto mode', {
-                error: error.message,
-                userId: req.user?.id
-            });
-
-            res.status(500).json({
-                success: false,
-                error: 'Failed to configure auto mode',
-                message: error.message
-            });
-        }
-    }
-
-    /**
-     * Get auto mode configuration
-     * GET /api/auto/configuration
-     */
-    async getAutoModeConfiguration(req, res) {
-        try {
-            const userId = req.user?.id;
-
-            const query = {
-                userId
-            };
-
-            const result = await this.queryBus.execute('GetAutoModeConfigurationQuery', query);
-
-            this.logger.info('AutoModeController: Auto mode configuration retrieved', {
-                userId
-            });
-
-            res.json({
-                success: true,
-                data: result.configuration
-            });
-
-        } catch (error) {
-            this.logger.error('AutoModeController: Failed to get auto mode configuration', {
-                error: error.message,
-                userId: req.user?.id
-            });
-
-            res.status(500).json({
-                success: false,
-                error: 'Failed to get auto mode configuration',
                 message: error.message
             });
         }

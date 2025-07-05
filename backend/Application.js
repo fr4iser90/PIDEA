@@ -38,6 +38,8 @@ const VibeCoderAnalyzeCommand = require('./application/commands/vibecoder/VibeCo
 const AnalyzeArchitectureHandler = require('./application/handlers/analyze/AnalyzeArchitectureHandler');
 const AnalyzeCodeQualityHandler = require('./application/handlers/analyze/AnalyzeCodeQualityHandler');
 const AnalyzeDependenciesHandler = require('./application/handlers/analyze/AnalyzeDependenciesHandler');
+const AnalyzeRepoStructureHandler = require('./application/handlers/analyze/AnalyzeRepoStructureHandler');
+const AnalyzeTechStackHandler = require('./application/handlers/analyze/AnalyzeTechStackHandler');
 const VibeCoderAnalyzeHandler = require('./application/handlers/vibecoder/VibeCoderAnalyzeHandler');
 
 // Refactor Commands and Handlers
@@ -259,10 +261,10 @@ class Application {
     // Initialize task validation service
     this.taskValidationService = new TaskValidationService(
       this.taskRepository,
-      null, // taskExecutionRepository - TODO: Add when available
+      new (require('./infrastructure/database/InMemoryTaskExecutionRepository'))(),
       this.cursorIDEService,
       this.eventBus,
-      null // fileSystemService - TODO: Add when available
+      new (require('./infrastructure/external/FileSystemService'))()
     );
 
     this.taskAnalysisService = new (require('./domain/services/TaskAnalysisService'))(
@@ -306,6 +308,10 @@ class Application {
       this.analysisRepository
     );
 
+    // Stelle sicher, dass alle benötigten Services initialisiert sind
+    this.dependencyAnalyzer = this.dependencyAnalyzer || new (require('./infrastructure/external/DependencyAnalyzer'))();
+    this.fileSystemService = this.fileSystemService || new (require('./domain/services/FileSystemService'))();
+
     this.logger.info('[Application] Domain services initialized');
   }
 
@@ -325,10 +331,10 @@ class Application {
 
     this.createTaskHandler = new CreateTaskHandler({
       taskRepository: this.taskRepository,
-      taskTemplateRepository: null, // TODO: Add when available
-      taskSuggestionRepository: null, // TODO: Add when available
+      taskTemplateRepository: new (require('./infrastructure/database/SQLiteTaskTemplateRepository'))(this.databaseConnection),
+      taskSuggestionRepository: new (require('./infrastructure/database/SQLiteTaskSuggestionRepository'))(this.databaseConnection),
       taskValidationService: this.taskValidationService,
-      taskGenerationService: null, // TODO: Add when available
+      taskGenerationService: new (require('./domain/services/TaskGenerationService'))(this.eventBus, this.logger),
       eventBus: this.eventBus,
       logger: this.logger
     });
@@ -337,22 +343,52 @@ class Application {
     this.analyzeArchitectureHandler = new AnalyzeArchitectureHandler({
       eventBus: this.eventBus,
       analysisRepository: this.analysisRepository,
+      architectureAnalyzer: this.architectureAnalyzer,
+      cursorIDEService: this.cursorIDEService,
+      taskRepository: this.taskRepository,
+      fileSystemService: this.fileSystemService,
       logger: this.logger
     });
 
     this.analyzeCodeQualityHandler = new AnalyzeCodeQualityHandler({
       eventBus: this.eventBus,
       analysisRepository: this.analysisRepository,
+      codeQualityAnalyzer: this.codeQualityAnalyzer,
+      cursorIDEService: this.cursorIDEService,
+      taskRepository: this.taskRepository,
+      fileSystemService: this.fileSystemService,
       logger: this.logger
     });
 
     this.analyzeDependenciesHandler = new AnalyzeDependenciesHandler({
       eventBus: this.eventBus,
       analysisRepository: this.analysisRepository,
+      dependencyAnalyzer: this.dependencyAnalyzer,
+      cursorIDEService: this.cursorIDEService,
+      taskRepository: this.taskRepository,
+      fileSystemService: this.fileSystemService,
       logger: this.logger
     });
 
+    this.analyzeRepoStructureHandler = new AnalyzeRepoStructureHandler({
+      eventBus: this.eventBus,
+      analysisRepository: this.analysisRepository,
+      projectAnalyzer: this.projectAnalyzer,
+      cursorIDEService: this.cursorIDEService,
+      taskRepository: this.taskRepository,
+      fileSystemService: this.fileSystemService,
+      logger: this.logger
+    });
 
+    this.analyzeTechStackHandler = new AnalyzeTechStackHandler({
+      eventBus: this.eventBus,
+      analysisRepository: this.analysisRepository,
+      projectAnalyzer: this.projectAnalyzer,
+      cursorIDEService: this.cursorIDEService,
+      taskRepository: this.taskRepository,
+      fileSystemService: this.fileSystemService,
+      logger: this.logger
+    });
 
     // Initialize Refactor Handlers
     this.splitLargeFilesHandler = new SplitLargeFilesHandler({
@@ -409,6 +445,8 @@ class Application {
       eventBus: this.eventBus,
       analysisRepository: this.analysisRepository,
       commandBus: this.commandBus,
+      taskRepository: this.taskRepository,
+      cursorIDEService: this.cursorIDEService,
       logger: this.logger
     });
 
@@ -433,8 +471,13 @@ class Application {
       logger: this.logger
     });
 
-    // TODO: Add TaskExecutionEngine when available
-    this.taskExecutionEngine = null;
+    this.taskExecutionEngine = new (require('./infrastructure/external/TaskExecutionEngine'))({
+      logger: this.logger,
+      eventBus: this.eventBus,
+      fileSystemService: this.fileSystemService,
+      taskRepository: this.taskRepository,
+      analysisRepository: this.analysisRepository
+    });
 
     // Register all command handlers
     this.commandBus.register('AnalyzeArchitectureCommand', this.analyzeArchitectureHandler);

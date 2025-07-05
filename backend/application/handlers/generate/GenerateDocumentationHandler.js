@@ -666,17 +666,17 @@ ${func.documentation || 'No documentation available.'}
 // Example usage of ${func.name}
 import { ${func.name} } from '${func.file}';
 
-// TODO: Add example implementation
-const result = ${func.name}();
+// Example usage:
+const result = ${func.name}(${func.params.map(p => p.name).join(', ')});
 
 console.log(result);
 \`\`\`
 
 ## Parameters
-// TODO: Add parameter documentation
+${func.params.map(param => `- **${param.name}** (${param.type || 'any'}) - ${param.description || 'Parameter description'}`).join('\n')}
 
 ## Return Value
-// TODO: Add return value documentation
+${func.returnType ? `**${func.returnType}** - ${func.returnDescription || 'Return value description'}` : 'No return value specified'}
 
 ## Notes
 - Generated on: ${new Date().toISOString()}
@@ -704,10 +704,10 @@ console.log(instance);
 \`\`\`
 
 ## Constructor
-// TODO: Add constructor documentation
+The constructor initializes a new instance of ${cls.name}.
 
 ## Methods
-// TODO: Add method documentation
+${cls.methods ? cls.methods.map(method => `- **${method.name}()** - ${method.description || 'Method description'}`).join('\n') : 'No methods documented'}
 
 ## Notes
 - Generated on: ${new Date().toISOString()}

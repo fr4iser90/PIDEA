@@ -349,9 +349,63 @@ class AIIntegrationManager {
      * @returns {number} Accuracy score
      */
     assessAccuracy(content, context) {
-        // Implementation for accuracy assessment
-        // This would typically involve comparing with expected patterns or known correct answers
-        return 0.9; // Placeholder
+        let score = 0.8; // Base score
+        
+        try {
+            // Check for technical accuracy indicators
+            const accuracyIndicators = {
+                codeSyntax: /function\s+\w+\s*\(|class\s+\w+|const\s+\w+|let\s+\w+|var\s+\w+/g,
+                properNaming: /\b[a-zA-Z_$][a-zA-Z0-9_$]*\b/g,
+                logicalStructure: /if\s*\(|for\s*\(|while\s*\(|switch\s*\(/g,
+                errorHandling: /try\s*\{|catch\s*\(|finally\s*\{/g,
+                documentation: /\/\*\*|\/\*|\/\/\s*@/g
+            };
+            
+            let totalIndicators = 0;
+            let foundIndicators = 0;
+            
+            for (const [type, pattern] of Object.entries(accuracyIndicators)) {
+                const matches = content.match(pattern);
+                if (matches && matches.length > 0) {
+                    foundIndicators++;
+                }
+                totalIndicators++;
+            }
+            
+            // Adjust score based on indicators
+            const indicatorScore = foundIndicators / totalIndicators;
+            score = 0.6 + (indicatorScore * 0.4); // 0.6 to 1.0 range
+            
+            // Check for common errors
+            const errorPatterns = [
+                /undefined\s+is\s+not\s+a\s+function/,
+                /cannot\s+read\s+property/,
+                /unexpected\s+token/,
+                /missing\s+semicolon/
+            ];
+            
+            for (const pattern of errorPatterns) {
+                if (pattern.test(content)) {
+                    score -= 0.1;
+                }
+            }
+            
+            // Consider context relevance
+            if (context.expectedPatterns) {
+                const contextMatches = context.expectedPatterns.filter(pattern => 
+                    content.includes(pattern)
+                ).length;
+                const contextScore = contextMatches / context.expectedPatterns.length;
+                score = (score + contextScore) / 2;
+            }
+            
+        } catch (error) {
+            this.logger.error('AIIntegrationManager: Failed to assess accuracy', {
+                error: error.message
+            });
+        }
+        
+        return Math.max(0, Math.min(1, score));
     }
 
     /**
@@ -361,9 +415,57 @@ class AIIntegrationManager {
      * @returns {number} Relevance score
      */
     assessRelevance(content, context) {
-        // Implementation for relevance assessment
-        // This would check if the response addresses the original query
-        return 0.85; // Placeholder
+        let score = 0.7; // Base score
+        
+        try {
+            if (!context.query) {
+                return score;
+            }
+            
+            const query = context.query.toLowerCase();
+            const contentLower = content.toLowerCase();
+            
+            // Extract key terms from query
+            const queryTerms = query.split(/\s+/).filter(term => term.length > 3);
+            let matchingTerms = 0;
+            
+            for (const term of queryTerms) {
+                if (contentLower.includes(term)) {
+                    matchingTerms++;
+                }
+            }
+            
+            // Calculate relevance based on term matching
+            if (queryTerms.length > 0) {
+                const termScore = matchingTerms / queryTerms.length;
+                score = 0.5 + (termScore * 0.5); // 0.5 to 1.0 range
+            }
+            
+            // Check for task-specific relevance
+            if (context.taskType) {
+                const taskKeywords = this.getTaskKeywords(context.taskType);
+                const taskMatches = taskKeywords.filter(keyword => 
+                    contentLower.includes(keyword)
+                ).length;
+                
+                if (taskKeywords.length > 0) {
+                    const taskScore = taskMatches / taskKeywords.length;
+                    score = (score + taskScore) / 2;
+                }
+            }
+            
+            // Penalize completely off-topic responses
+            if (matchingTerms === 0 && queryTerms.length > 0) {
+                score = 0.3;
+            }
+            
+        } catch (error) {
+            this.logger.error('AIIntegrationManager: Failed to assess relevance', {
+                error: error.message
+            });
+        }
+        
+        return Math.max(0, Math.min(1, score));
     }
 
     /**
@@ -373,9 +475,76 @@ class AIIntegrationManager {
      * @returns {number} Completeness score
      */
     assessCompleteness(content, context) {
-        // Implementation for completeness assessment
-        // This would check if all aspects of the query are addressed
-        return 0.8; // Placeholder
+        let score = 0.7; // Base score
+        
+        try {
+            if (!context.query) {
+                return score;
+            }
+            
+            const query = context.query.toLowerCase();
+            const contentLower = content.toLowerCase();
+            
+            // Check for question words that indicate what should be answered
+            const questionWords = ['what', 'how', 'why', 'when', 'where', 'which'];
+            const foundQuestions = questionWords.filter(word => query.includes(word));
+            
+            // Check if response addresses each question type
+            let addressedQuestions = 0;
+            for (const question of foundQuestions) {
+                if (question === 'what' && (contentLower.includes('is') || contentLower.includes('are'))) {
+                    addressedQuestions++;
+                } else if (question === 'how' && (contentLower.includes('step') || contentLower.includes('process'))) {
+                    addressedQuestions++;
+                } else if (question === 'why' && (contentLower.includes('because') || contentLower.includes('reason'))) {
+                    addressedQuestions++;
+                } else if (contentLower.includes(question)) {
+                    addressedQuestions++;
+                }
+            }
+            
+            if (foundQuestions.length > 0) {
+                const questionScore = addressedQuestions / foundQuestions.length;
+                score = 0.5 + (questionScore * 0.5);
+            }
+            
+            // Check for code completeness indicators
+            const completenessIndicators = [
+                /function\s+\w+\s*\([^)]*\)\s*\{[\s\S]*\}/, // Complete function
+                /class\s+\w+\s*\{[\s\S]*\}/, // Complete class
+                /if\s*\([^)]*\)\s*\{[\s\S]*\}/, // Complete if statement
+                /try\s*\{[\s\S]*\}\s*catch\s*\([^)]*\)\s*\{[\s\S]*\}/ // Complete try-catch
+            ];
+            
+            let completeStructures = 0;
+            for (const pattern of completenessIndicators) {
+                if (pattern.test(content)) {
+                    completeStructures++;
+                }
+            }
+            
+            // Adjust score based on complete structures
+            if (completeStructures > 0) {
+                score += 0.1;
+            }
+            
+            // Check content length appropriateness
+            const expectedLength = this.getExpectedLength(context.query, context.taskType);
+            const actualLength = content.length;
+            
+            if (expectedLength > 0) {
+                const lengthRatio = Math.min(actualLength / expectedLength, 2);
+                const lengthScore = lengthRatio > 0.5 ? Math.min(lengthRatio, 1.5) / 1.5 : lengthRatio;
+                score = (score + lengthScore) / 2;
+            }
+            
+        } catch (error) {
+            this.logger.error('AIIntegrationManager: Failed to assess completeness', {
+                error: error.message
+            });
+        }
+        
+        return Math.max(0, Math.min(1, score));
     }
 
     /**
@@ -384,9 +553,51 @@ class AIIntegrationManager {
      * @returns {number} Coherence score
      */
     assessCoherence(content) {
-        // Implementation for coherence assessment
-        // This would check if the response is logically structured
-        return 0.9; // Placeholder
+        let score = 0.8; // Base score
+        
+        try {
+            // Check for logical flow indicators
+            const flowIndicators = [
+                /first|second|third|finally/, // Sequential markers
+                /however|but|although|while/, // Contrast markers
+                /therefore|thus|consequently/, // Conclusion markers
+                /for example|such as|including/, // Example markers
+                /in addition|furthermore|moreover/ // Addition markers
+            ];
+            
+            let flowScore = 0;
+            for (const pattern of flowIndicators) {
+                if (pattern.test(content)) {
+                    flowScore += 0.1;
+                }
+            }
+            flowScore = Math.min(flowScore, 0.3);
+            
+            // Check for code structure coherence
+            const codeStructure = {
+                balancedBraces: this.checkBalancedBraces(content),
+                properIndentation: this.checkProperIndentation(content),
+                consistentNaming: this.checkConsistentNaming(content)
+            };
+            
+            let structureScore = 0;
+            if (codeStructure.balancedBraces) structureScore += 0.2;
+            if (codeStructure.properIndentation) structureScore += 0.2;
+            if (codeStructure.consistentNaming) structureScore += 0.2;
+            
+            // Check for paragraph structure
+            const paragraphs = content.split(/\n\s*\n/).filter(p => p.trim().length > 0);
+            const paragraphScore = paragraphs.length > 1 ? 0.2 : 0;
+            
+            score = 0.5 + flowScore + structureScore + paragraphScore;
+            
+        } catch (error) {
+            this.logger.error('AIIntegrationManager: Failed to assess coherence', {
+                error: error.message
+            });
+        }
+        
+        return Math.max(0, Math.min(1, score));
     }
 
     /**
@@ -396,9 +607,164 @@ class AIIntegrationManager {
      * @returns {number} Length score
      */
     assessLength(content, context) {
-        // Implementation for length assessment
-        // This would check if the response length is appropriate for the query
-        return 0.85; // Placeholder
+        let score = 0.8; // Base score
+        
+        try {
+            const contentLength = content.length;
+            const expectedLength = this.getExpectedLength(context.query, context.taskType);
+            
+            if (expectedLength > 0) {
+                const ratio = contentLength / expectedLength;
+                
+                if (ratio >= 0.8 && ratio <= 1.5) {
+                    score = 1.0; // Optimal length
+                } else if (ratio >= 0.5 && ratio <= 2.0) {
+                    score = 0.8; // Acceptable length
+                } else if (ratio < 0.3) {
+                    score = 0.4; // Too short
+                } else if (ratio > 3.0) {
+                    score = 0.6; // Too long
+                } else {
+                    score = 0.7; // Borderline
+                }
+            } else {
+                // No expected length, use heuristics
+                if (contentLength < 50) {
+                    score = 0.4; // Very short
+                } else if (contentLength > 2000) {
+                    score = 0.7; // Very long
+                } else {
+                    score = 0.9; // Reasonable length
+                }
+            }
+            
+        } catch (error) {
+            this.logger.error('AIIntegrationManager: Failed to assess length', {
+                error: error.message
+            });
+        }
+        
+        return Math.max(0, Math.min(1, score));
+    }
+
+    /**
+     * Get task-specific keywords
+     * @param {string} taskType - Task type
+     * @returns {Array} Keywords
+     */
+    getTaskKeywords(taskType) {
+        const keywordMap = {
+            'code_generation': ['function', 'class', 'method', 'implementation', 'code'],
+            'code_review': ['review', 'analysis', 'quality', 'issues', 'improvements'],
+            'bug_fix': ['bug', 'error', 'fix', 'issue', 'problem', 'solution'],
+            'refactoring': ['refactor', 'improve', 'optimize', 'restructure', 'clean'],
+            'documentation': ['document', 'comment', 'explain', 'describe', 'guide'],
+            'testing': ['test', 'spec', 'assert', 'verify', 'validate'],
+            'deployment': ['deploy', 'build', 'release', 'production', 'environment'],
+            'analysis': ['analyze', 'examine', 'investigate', 'assess', 'evaluate']
+        };
+        
+        return keywordMap[taskType] || [];
+    }
+
+    /**
+     * Get expected content length
+     * @param {string} query - User query
+     * @param {string} taskType - Task type
+     * @returns {number} Expected length
+     */
+    getExpectedLength(query, taskType) {
+        const queryLength = query.length;
+        const taskLengthMap = {
+            'code_generation': queryLength * 3,
+            'code_review': queryLength * 2,
+            'bug_fix': queryLength * 2.5,
+            'refactoring': queryLength * 2,
+            'documentation': queryLength * 2.5,
+            'testing': queryLength * 2,
+            'deployment': queryLength * 1.5,
+            'analysis': queryLength * 3
+        };
+        
+        return taskLengthMap[taskType] || queryLength * 2;
+    }
+
+    /**
+     * Check if braces are balanced
+     * @param {string} content - Content to check
+     * @returns {boolean} Balanced status
+     */
+    checkBalancedBraces(content) {
+        const stack = [];
+        const bracePairs = { '{': '}', '[': ']', '(': ')' };
+        
+        for (const char of content) {
+            if (bracePairs[char]) {
+                stack.push(char);
+            } else if (Object.values(bracePairs).includes(char)) {
+                const lastOpen = stack.pop();
+                if (!lastOpen || bracePairs[lastOpen] !== char) {
+                    return false;
+                }
+            }
+        }
+        
+        return stack.length === 0;
+    }
+
+    /**
+     * Check for proper indentation
+     * @param {string} content - Content to check
+     * @returns {boolean} Proper indentation
+     */
+    checkProperIndentation(content) {
+        const lines = content.split('\n');
+        let consistentIndentation = true;
+        let expectedIndent = 0;
+        
+        for (const line of lines) {
+            if (line.trim().length === 0) continue;
+            
+            const indent = line.length - line.trimStart().length;
+            
+            if (line.trim().endsWith('{')) {
+                expectedIndent += 2;
+            } else if (line.trim().startsWith('}')) {
+                expectedIndent = Math.max(0, expectedIndent - 2);
+            }
+            
+            if (indent !== expectedIndent && line.trim().length > 0) {
+                consistentIndentation = false;
+                break;
+            }
+        }
+        
+        return consistentIndentation;
+    }
+
+    /**
+     * Check for consistent naming
+     * @param {string} content - Content to check
+     * @returns {boolean} Consistent naming
+     */
+    checkConsistentNaming(content) {
+        const variablePattern = /(?:const|let|var)\s+([a-zA-Z_$][a-zA-Z0-9_$]*)/g;
+        const functionPattern = /function\s+([a-zA-Z_$][a-zA-Z0-9_$]*)/g;
+        const classPattern = /class\s+([A-Z][a-zA-Z0-9_$]*)/g;
+        
+        const variables = [...content.matchAll(variablePattern)].map(match => match[1]);
+        const functions = [...content.matchAll(functionPattern)].map(match => match[1]);
+        const classes = [...content.matchAll(classPattern)].map(match => match[1]);
+        
+        // Check for consistent naming conventions
+        const camelCase = /^[a-z][a-zA-Z0-9]*$/;
+        const PascalCase = /^[A-Z][a-zA-Z0-9]*$/;
+        
+        const variableConsistent = variables.every(v => camelCase.test(v));
+        const functionConsistent = functions.every(f => camelCase.test(f));
+        const classConsistent = classes.every(c => PascalCase.test(c));
+        
+        return variableConsistent && functionConsistent && classConsistent;
     }
 
     /**
