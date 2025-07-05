@@ -74,30 +74,35 @@ class AutoModeHandler {
             const projectAnalysis = await this.projectAnalyzer.analyzeProject(command.projectPath);
             console.log('🔍 [AutoModeHandler] Project analysis completed:', projectAnalysis);
             
-            // 2. Generate AI-powered task suggestions
-            const aiSuggestions = await this.cursorIDEService.generateTaskSuggestions(projectAnalysis);
-            console.log('🔍 [AutoModeHandler] AI suggestions generated:', aiSuggestions);
+            // 2. Run comprehensive analysis using real analysis services
+            const comprehensiveAnalysis = await this.runComprehensiveAnalysis(command.projectPath);
+            console.log('🔍 [AutoModeHandler] Comprehensive analysis completed:', comprehensiveAnalysis);
+            
+            // 3. Generate tasks from real analysis results
+            const realTasks = await this.generateTasksFromAnalysis(comprehensiveAnalysis, projectAnalysis);
+            console.log('🔍 [AutoModeHandler] Real tasks generated from analysis:', realTasks);
             
             // 3. Get project ID from workspace path
             const projectId = this.projectMappingService.getProjectIdFromWorkspace(command.projectPath);
             console.log('🔍 [AutoModeHandler] Project ID:', projectId, 'from workspace:', command.projectPath);
             
-            // 4. Create real tasks from suggestions
+            // 4. Create real tasks from analysis results
             const tasks = [];
-            for (const suggestion of aiSuggestions) {
+            for (const realTask of realTasks) {
                 const task = await this.taskRepository.create({
                     id: `auto_task_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
                     projectId: projectId,
-                    title: suggestion.title,
-                    description: suggestion.description,
-                    type: suggestion.type || 'analysis',
-                    priority: suggestion.priority || 'medium',
+                    title: realTask.title,
+                    description: realTask.description,
+                    type: realTask.type || 'analysis',
+                    priority: realTask.priority || 'medium',
                     status: 'pending',
                     metadata: {
-                        source: 'ai_auto_mode',
+                        source: 'comprehensive_analysis',
                         projectPath: command.projectPath,
                         projectId: projectId,
-                        analysisId: projectAnalysis.id
+                        analysisId: projectAnalysis.id,
+                        analysisResults: realTask.analysisResults
                     }
                 });
                 tasks.push(task);
@@ -238,6 +243,287 @@ Complete all generated tasks and provide a comprehensive summary.
             errors,
             warnings
         };
+    }
+
+    /**
+     * Run comprehensive analysis using real analysis services
+     * @param {string} projectPath - Project path
+     * @returns {Promise<Object>} Comprehensive analysis results
+     */
+    async runComprehensiveAnalysis(projectPath) {
+        console.log('🔍 [AutoModeHandler] Running comprehensive analysis for:', projectPath);
+        
+        const analysisResults = {
+            codeQuality: null,
+            security: null,
+            performance: null,
+            architecture: null,
+            timestamp: new Date()
+        };
+
+        try {
+            // Run code quality analysis
+            console.log('🔍 [AutoModeHandler] Running code quality analysis...');
+            analysisResults.codeQuality = await this.runCodeQualityAnalysis(projectPath);
+            
+            // Run security analysis
+            console.log('🔍 [AutoModeHandler] Running security analysis...');
+            analysisResults.security = await this.runSecurityAnalysis(projectPath);
+            
+            // Run performance analysis
+            console.log('🔍 [AutoModeHandler] Running performance analysis...');
+            analysisResults.performance = await this.runPerformanceAnalysis(projectPath);
+            
+            // Run architecture analysis
+            console.log('🔍 [AutoModeHandler] Running architecture analysis...');
+            analysisResults.architecture = await this.runArchitectureAnalysis(projectPath);
+
+            console.log('✅ [AutoModeHandler] Comprehensive analysis completed');
+            return analysisResults;
+        } catch (error) {
+            console.error('❌ [AutoModeHandler] Comprehensive analysis failed:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Run code quality analysis
+     * @param {string} projectPath - Project path
+     * @returns {Promise<Object>} Code quality analysis results
+     */
+    async runCodeQualityAnalysis(projectPath) {
+        try {
+            // Use the real code quality service
+            const analysis = await this.projectAnalyzer.analyzeCodeQuality(projectPath);
+            
+            // Save results to output folder
+            const outputPath = path.join(process.cwd(), 'output', 'analysis', 'code-quality.json');
+            const fs = require('fs');
+            fs.writeFileSync(outputPath, JSON.stringify(analysis, null, 2));
+            
+            return analysis;
+        } catch (error) {
+            console.error('❌ [AutoModeHandler] Code quality analysis failed:', error);
+            return { error: error.message };
+        }
+    }
+
+    /**
+     * Run security analysis
+     * @param {string} projectPath - Project path
+     * @returns {Promise<Object>} Security analysis results
+     */
+    async runSecurityAnalysis(projectPath) {
+        try {
+            // Use the real security service
+            const analysis = await this.projectAnalyzer.analyzeSecurity(projectPath);
+            
+            // Save results to output folder
+            const outputPath = path.join(process.cwd(), 'output', 'analysis', 'security.json');
+            const fs = require('fs');
+            fs.writeFileSync(outputPath, JSON.stringify(analysis, null, 2));
+            
+            return analysis;
+        } catch (error) {
+            console.error('❌ [AutoModeHandler] Security analysis failed:', error);
+            return { error: error.message };
+        }
+    }
+
+    /**
+     * Run performance analysis
+     * @param {string} projectPath - Project path
+     * @returns {Promise<Object>} Performance analysis results
+     */
+    async runPerformanceAnalysis(projectPath) {
+        try {
+            // Use the real performance service
+            const analysis = await this.projectAnalyzer.analyzePerformance(projectPath);
+            
+            // Save results to output folder
+            const outputPath = path.join(process.cwd(), 'output', 'analysis', 'performance.json');
+            const fs = require('fs');
+            fs.writeFileSync(outputPath, JSON.stringify(analysis, null, 2));
+            
+            return analysis;
+        } catch (error) {
+            console.error('❌ [AutoModeHandler] Performance analysis failed:', error);
+            return { error: error.message };
+        }
+    }
+
+    /**
+     * Run architecture analysis
+     * @param {string} projectPath - Project path
+     * @returns {Promise<Object>} Architecture analysis results
+     */
+    async runArchitectureAnalysis(projectPath) {
+        try {
+            // Use the real architecture service
+            const analysis = await this.projectAnalyzer.analyzeArchitecture(projectPath);
+            
+            // Save results to output folder
+            const outputPath = path.join(process.cwd(), 'output', 'analysis', 'architecture.json');
+            const fs = require('fs');
+            fs.writeFileSync(outputPath, JSON.stringify(analysis, null, 2));
+            
+            return analysis;
+        } catch (error) {
+            console.error('❌ [AutoModeHandler] Architecture analysis failed:', error);
+            return { error: error.message };
+        }
+    }
+
+    /**
+     * Generate tasks from analysis results
+     * @param {Object} comprehensiveAnalysis - Comprehensive analysis results
+     * @param {Object} projectAnalysis - Project analysis
+     * @returns {Promise<Array>} Array of tasks
+     */
+    async generateTasksFromAnalysis(comprehensiveAnalysis, projectAnalysis) {
+        const tasks = [];
+
+        // Generate tasks from code quality analysis
+        if (comprehensiveAnalysis.codeQuality && !comprehensiveAnalysis.codeQuality.error) {
+            const codeQualityTasks = this.generateCodeQualityTasks(comprehensiveAnalysis.codeQuality);
+            tasks.push(...codeQualityTasks);
+        }
+
+        // Generate tasks from security analysis
+        if (comprehensiveAnalysis.security && !comprehensiveAnalysis.security.error) {
+            const securityTasks = this.generateSecurityTasks(comprehensiveAnalysis.security);
+            tasks.push(...securityTasks);
+        }
+
+        // Generate tasks from performance analysis
+        if (comprehensiveAnalysis.performance && !comprehensiveAnalysis.performance.error) {
+            const performanceTasks = this.generatePerformanceTasks(comprehensiveAnalysis.performance);
+            tasks.push(...performanceTasks);
+        }
+
+        // Generate tasks from architecture analysis
+        if (comprehensiveAnalysis.architecture && !comprehensiveAnalysis.architecture.error) {
+            const architectureTasks = this.generateArchitectureTasks(comprehensiveAnalysis.architecture);
+            tasks.push(...architectureTasks);
+        }
+
+        return tasks;
+    }
+
+    /**
+     * Generate code quality tasks
+     * @param {Object} codeQualityAnalysis - Code quality analysis results
+     * @returns {Array} Array of tasks
+     */
+    generateCodeQualityTasks(codeQualityAnalysis) {
+        const tasks = [];
+
+        if (codeQualityAnalysis.issues && codeQualityAnalysis.issues.length > 0) {
+            codeQualityAnalysis.issues.forEach((issue, index) => {
+                tasks.push({
+                    title: `Fix Code Quality Issue: ${issue.title || `Issue ${index + 1}`}`,
+                    description: issue.description || 'Code quality issue detected that needs to be addressed',
+                    type: 'bugfix',
+                    priority: issue.severity === 'high' ? 'high' : 'medium',
+                    analysisResults: { codeQuality: issue }
+                });
+            });
+        }
+
+        if (codeQualityAnalysis.recommendations && codeQualityAnalysis.recommendations.length > 0) {
+            codeQualityAnalysis.recommendations.forEach((rec, index) => {
+                tasks.push({
+                    title: `Code Quality Improvement: ${rec.title || `Recommendation ${index + 1}`}`,
+                    description: rec.description || 'Code quality improvement recommendation',
+                    type: 'improvement',
+                    priority: 'medium',
+                    analysisResults: { codeQuality: rec }
+                });
+            });
+        }
+
+        return tasks;
+    }
+
+    /**
+     * Generate security tasks
+     * @param {Object} securityAnalysis - Security analysis results
+     * @returns {Array} Array of tasks
+     */
+    generateSecurityTasks(securityAnalysis) {
+        const tasks = [];
+
+        if (securityAnalysis.vulnerabilities && securityAnalysis.vulnerabilities.length > 0) {
+            securityAnalysis.vulnerabilities.forEach((vuln, index) => {
+                tasks.push({
+                    title: `Fix Security Vulnerability: ${vuln.title || `Vulnerability ${index + 1}`}`,
+                    description: vuln.description || 'Security vulnerability detected that needs to be addressed',
+                    type: 'security',
+                    priority: vuln.severity === 'critical' ? 'high' : 'medium',
+                    analysisResults: { security: vuln }
+                });
+            });
+        }
+
+        return tasks;
+    }
+
+    /**
+     * Generate performance tasks
+     * @param {Object} performanceAnalysis - Performance analysis results
+     * @returns {Array} Array of tasks
+     */
+    generatePerformanceTasks(performanceAnalysis) {
+        const tasks = [];
+
+        if (performanceAnalysis.bottlenecks && performanceAnalysis.bottlenecks.length > 0) {
+            performanceAnalysis.bottlenecks.forEach((bottleneck, index) => {
+                tasks.push({
+                    title: `Fix Performance Bottleneck: ${bottleneck.title || `Bottleneck ${index + 1}`}`,
+                    description: bottleneck.description || 'Performance bottleneck detected that needs optimization',
+                    type: 'optimization',
+                    priority: 'medium',
+                    analysisResults: { performance: bottleneck }
+                });
+            });
+        }
+
+        if (performanceAnalysis.recommendations && performanceAnalysis.recommendations.length > 0) {
+            performanceAnalysis.recommendations.forEach((rec, index) => {
+                tasks.push({
+                    title: `Performance Optimization: ${rec.title || `Optimization ${index + 1}`}`,
+                    description: rec.description || 'Performance optimization recommendation',
+                    type: 'optimization',
+                    priority: 'medium',
+                    analysisResults: { performance: rec }
+                });
+            });
+        }
+
+        return tasks;
+    }
+
+    /**
+     * Generate architecture tasks
+     * @param {Object} architectureAnalysis - Architecture analysis results
+     * @returns {Array} Array of tasks
+     */
+    generateArchitectureTasks(architectureAnalysis) {
+        const tasks = [];
+
+        if (architectureAnalysis.issues && architectureAnalysis.issues.length > 0) {
+            architectureAnalysis.issues.forEach((issue, index) => {
+                tasks.push({
+                    title: `Fix Architecture Issue: ${issue.title || `Issue ${index + 1}`}`,
+                    description: issue.description || 'Architecture issue detected that needs to be addressed',
+                    type: 'refactor',
+                    priority: issue.severity === 'high' ? 'high' : 'medium',
+                    analysisResults: { architecture: issue }
+                });
+            });
+        }
+
+        return tasks;
     }
 }
 

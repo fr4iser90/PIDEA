@@ -16,6 +16,8 @@ function App() {
   const [error, setError] = useState(null);
   const [activePort, setActivePort] = useState(null);
   const [isSplitView, setIsSplitView] = useState(false);
+  const [isSidebarVisible, setIsSidebarVisible] = useState(true);
+  const [isRightPanelVisible, setIsRightPanelVisible] = useState(true);
   const containerRef = useRef(null);
   const { isAuthenticated } = useAuthStore();
 
@@ -90,6 +92,18 @@ function App() {
     eventBus.on('activeIDEChanged', handleActiveIDEChanged);
     return () => {
       eventBus.off('activeIDEChanged', handleActiveIDEChanged);
+    };
+  }, [eventBus]);
+
+  useEffect(() => {
+    if (!eventBus) return;
+    const handleSidebarToggle = () => setIsSidebarVisible(v => !v);
+    const handleRightPanelToggle = () => setIsRightPanelVisible(v => !v);
+    eventBus.on('sidebar-toggle', handleSidebarToggle);
+    eventBus.on('right-panel-toggle', handleRightPanelToggle);
+    return () => {
+      eventBus.off('sidebar-toggle', handleSidebarToggle);
+      eventBus.off('right-panel-toggle', handleRightPanelToggle);
     };
   }, [eventBus]);
 
@@ -205,11 +219,13 @@ function App() {
         </header>
 
         {/* Main Content */}
-        <main className={`main-layout${isSplitView ? ' split-view' : ''}`}>
+        <main className={`main-layout${isSplitView ? ' split-view' : ''}${!isSidebarVisible ? ' sidebar-hidden' : ''}${!isRightPanelVisible ? ' rightpanel-hidden' : ''}`}>
           {/* Sidebar */}
-          <div className="chat-sidebar">
-            <ChatSidebarComponent eventBus={eventBus} activePort={activePort} onActivePortChange={setActivePort} />
-          </div>
+          {isSidebarVisible && (
+            <div className="chat-sidebar">
+              <ChatSidebarComponent eventBus={eventBus} activePort={activePort} onActivePortChange={setActivePort} />
+            </div>
+          )}
           
           {/* Main View */}
           <div className="main-content">
@@ -218,7 +234,7 @@ function App() {
           </div>
           
           {/* Right Panel */}
-          <ChatRightPanelComponent eventBus={eventBus} />
+          {isRightPanelVisible && <ChatRightPanelComponent eventBus={eventBus} />}
         </main>
       </div>
     </AuthWrapper>

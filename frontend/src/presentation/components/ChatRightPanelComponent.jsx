@@ -97,8 +97,40 @@ function ChatRightPanelComponent({ eventBus }) {
     setModalType('feature');
     setShowTaskModal(true);
   };
-  const handleAnalyzeProject = () => { setFeedback('Analyze Project: TODO'); };
-  const handleRefresh = () => { setFeedback('Refresh: TODO'); };
+  const handleAnalyzeProject = async () => { 
+    setFeedback('Starting Project Analysis...');
+    try {
+      const projectId = await api.getCurrentProjectId();
+      const response = await api.analyzeProject(null, {
+        analysisType: 'full',
+        includeAI: true
+      }, projectId);
+      if (response.success) {
+        setFeedback('Project Analysis completed successfully!');
+        if (eventBus) eventBus.emit('project-analysis-completed', response.data);
+      } else {
+        setFeedback('Failed to analyze project: ' + response.error);
+      }
+    } catch (err) {
+      setFeedback('Error analyzing project: ' + (err.message || err));
+    }
+  };
+  const handleRefresh = async () => { 
+    setFeedback('Refreshing project data...');
+    try {
+      const projectId = await api.getCurrentProjectId();
+      // Trigger workspace path detection to refresh project data
+      const response = await api.detectWorkspacePaths();
+      if (response.success) {
+        setFeedback('Project data refreshed successfully!');
+        if (eventBus) eventBus.emit('project-data-refreshed', response.data);
+      } else {
+        setFeedback('Failed to refresh project data: ' + response.error);
+      }
+    } catch (err) {
+      setFeedback('Error refreshing project data: ' + (err.message || err));
+    }
+  };
 
   // Preset Handlers
   const handlePreset = (type) => {
@@ -111,11 +143,93 @@ function ChatRightPanelComponent({ eventBus }) {
   };
 
   // VibeCoder Mode Handlers (stubs)
-  const handleVibeCoderStart = () => { setFeedback('VibeCoder Mode: TODO'); };
-  const handleAutoAnalyze = () => { setFeedback('Auto Analyze: TODO'); };
-  const handleAutoRefactor = () => { setFeedback('Auto Refactor: TODO'); };
-  const handleAutoTest = () => { setFeedback('Auto Test: TODO'); };
-  const handleAutoStop = () => { setFeedback('Stop: TODO'); };
+  const handleVibeCoderStart = async () => { 
+    setFeedback('Starting VibeCoder Mode...');
+    try {
+      const projectId = await api.getCurrentProjectId();
+      const response = await api.startAutoMode(projectId, {
+        mode: 'full'
+      });
+      if (response.success) {
+        setFeedback('VibeCoder Mode started successfully!');
+        if (eventBus) eventBus.emit('vibecoder-mode-started', response.data);
+      } else {
+        setFeedback('Failed to start VibeCoder Mode: ' + response.error);
+      }
+    } catch (err) {
+      setFeedback('Error starting VibeCoder Mode: ' + (err.message || err));
+    }
+  };
+  
+  const handleAutoAnalyze = async () => { 
+    setFeedback('Starting Auto Analyze...');
+    try {
+      const projectId = await api.getCurrentProjectId();
+      const response = await api.startAutoMode(projectId, {
+        mode: 'analysis'
+      });
+      if (response.success) {
+        setFeedback('Auto Analyze started successfully!');
+        if (eventBus) eventBus.emit('vibecoder-analyze-started', response.data);
+      } else {
+        setFeedback('Failed to start Auto Analyze: ' + response.error);
+      }
+    } catch (err) {
+      setFeedback('Error starting Auto Analyze: ' + (err.message || err));
+    }
+  };
+  
+  const handleAutoRefactor = async () => { 
+    setFeedback('Starting Auto Refactor...');
+    try {
+      const projectId = await api.getCurrentProjectId();
+      const response = await api.startAutoMode(projectId, {
+        mode: 'refactoring'
+      });
+      if (response.success) {
+        setFeedback('Auto Refactor started successfully!');
+        if (eventBus) eventBus.emit('vibecoder-refactor-started', response.data);
+      } else {
+        setFeedback('Failed to start Auto Refactor: ' + response.error);
+      }
+    } catch (err) {
+      setFeedback('Error starting Auto Refactor: ' + (err.message || err));
+    }
+  };
+  
+  const handleAutoTest = async () => { 
+    setFeedback('Starting Auto Test...');
+    try {
+      const projectId = await api.getCurrentProjectId();
+      const response = await api.startAutoMode(projectId, {
+        mode: 'testing'
+      });
+      if (response.success) {
+        setFeedback('Auto Test started successfully!');
+        if (eventBus) eventBus.emit('vibecoder-test-started', response.data);
+      } else {
+        setFeedback('Failed to start Auto Test: ' + response.error);
+      }
+    } catch (err) {
+      setFeedback('Error starting Auto Test: ' + (err.message || err));
+    }
+  };
+  
+  const handleAutoStop = async () => { 
+    setFeedback('Stopping Auto Mode...');
+    try {
+      const projectId = await api.getCurrentProjectId();
+      const response = await api.stopAutoMode(projectId);
+      if (response.success) {
+        setFeedback('Auto Mode stopped successfully!');
+        if (eventBus) eventBus.emit('vibecoder-stopped', response.data);
+      } else {
+        setFeedback('Failed to stop Auto Mode: ' + response.error);
+      }
+    } catch (err) {
+      setFeedback('Error stopping Auto Mode: ' + (err.message || err));
+    }
+  };
 
   // Task creation logic
   const handleTaskSubmit = async (taskData) => {

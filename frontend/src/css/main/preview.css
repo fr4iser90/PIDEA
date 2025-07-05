@@ -2,15 +2,19 @@
 .preview-container {
   display: none;
   flex-direction: column;
-  background: var(--bg-secondary);
-  border: 1px solid var(--border-color);
+  background: var(--panel-bg);
   border-radius: var(--border-radius);
-  overflow: hidden;
+  box-shadow: var(--shadow-lg);
+  border: 1.5px solid var(--border-color);
+  margin: 0;
+  padding: 0 0 0 0; /* No extra padding outside, only inside if needed */
   position: relative;
   min-height: 300px;
   max-height: 100%;
   transition: all 0.3s ease;
-  box-shadow: var(--shadow-md);
+  flex: 1 1 0;
+  min-width: 0;
+  min-height: 0;
 }
 
 .preview-container.preview-visible {

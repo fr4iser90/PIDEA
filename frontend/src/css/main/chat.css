@@ -24,11 +24,13 @@
   min-height: 0;
   background: var(--panel-bg);
   border-radius: var(--border-radius);
-  border: 2px solid var(--primary-color);
   box-shadow: var(--shadow-lg);
-  padding: 12px 0 0 0;
+  border: 1.5px solid var(--border-color);
   margin: 0;
-  max-width: none;
+  padding: 0 0 0 0;
+  flex: 1 1 0;
+  min-width: 0;
+  min-height: 0;
 }
 
 .chat-header {
