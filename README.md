@@ -5,7 +5,7 @@
 
 ## Overview
 
-PIDEA is an innovative web-based platform designed to enhance developer productivity through integrated tools and AI-driven assistance. It provides a seamless environment for coding, collaboration, and project management, with features like real-time chat, IDE mirroring, and content preview. The platform is built to support developers in creating, analyzing, and refactoring projects efficiently.
+**Personal IDE Agent** - An innovative web-based platform designed to enhance developer productivity through integrated tools and AI-driven assistance. It provides a seamless environment for coding, collaboration, and project management, with features like real-time chat, IDE mirroring, and content preview. The platform is built to support developers in creating, analyzing, and refactoring projects efficiently.
 
 ## Key Features
 
