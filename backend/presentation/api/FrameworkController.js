@@ -45,7 +45,9 @@ class FrameworkController {
   async getPrompt(req, res) {
     try {
       const { promptId } = req.params;
-      const promptPath = path.join(this.frameworkPath, 'prompts', `${promptId}.md`);
+      // Handle nested paths by replacing dashes with slashes
+      const promptPathParts = promptId.split('-');
+      const promptPath = path.join(this.frameworkPath, 'prompts', ...promptPathParts) + '.md';
       
       const promptContent = await fs.readFile(promptPath, 'utf8');
       res.json({ 
