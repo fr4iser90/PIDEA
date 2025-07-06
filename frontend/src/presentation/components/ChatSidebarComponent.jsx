@@ -171,6 +171,21 @@ function ChatSidebarComponent({ eventBus, activePort, onActivePortChange }) {
                 <div className="ide-actions">
                   {ide.active && <span className="active-indicator">✓</span>}
                   <button
+                    className="ide-refresh-btn"
+                    data-port={ide.port}
+                    title="Workspace neu erkennen (Terminal pwd)"
+                    onClick={async e => {
+                      e.stopPropagation();
+                      try {
+                        const { apiCall } = await import('@infrastructure/repositories/APIChatRepository.jsx');
+                        await apiCall(`/api/ide/workspace-detection/${ide.port}`, { method: 'POST' });
+                        refreshIDEList();
+                      } catch (err) {
+                        alert('Fehler beim Workspace-Update: ' + (err?.message || err));
+                      }
+                    }}
+                  >🔄</button>
+                  <button
                     className="ide-stop-btn"
                     data-port={ide.port}
                     title="IDE stoppen"

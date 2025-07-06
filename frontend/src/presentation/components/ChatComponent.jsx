@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { apiCall, API_CONFIG } from '@infrastructure/repositories/APIChatRepository.jsx';
 import ChatMessage from '@domain/entities/ChatMessage.jsx';
 import '@css/main/chat.css';
+import useAuthStore from '@infrastructure/stores/AuthStore.jsx';
 
 // Use global marked from CDN script tag
 
@@ -41,6 +42,8 @@ function ChatComponent({ eventBus, activePort }) {
   const msgInputRef = useRef(null);
   const fileInputRef = useRef(null);
   const [shouldAutoScroll, setShouldAutoScroll] = useState(true);
+  const { user } = useAuthStore.getState();
+  const requestedBy = user?.email || user?.id || 'unknown';
 
   // Lade Chat immer, wenn activePort sich ändert (React-Way)
   const loadChatHistory = useCallback(async () => {
@@ -93,7 +96,7 @@ function ChatComponent({ eventBus, activePort }) {
       // Send message to active IDE
       const result = await apiCall(API_CONFIG.endpoints.chat.send, {
         method: 'POST',
-        body: JSON.stringify({ message: message.trim() })
+        body: JSON.stringify({ message: message.trim(), requestedBy })
       });
       if (!result.success) {
         throw new Error(result.error || 'Failed to send message');

@@ -179,7 +179,10 @@ class DevSetup {
     console.log('🔄 Resetting database...');
     try {
       const { execSync } = require('child_process');
-      execSync('node scripts/reset-database.js', { stdio: 'inherit' });
+      execSync('node scripts/reset-database.js', { 
+        stdio: 'inherit',
+        cwd: path.join(__dirname, '..')
+      });
       console.log('✅ Database reset successful!');
     } catch (error) {
       console.error('❌ Database reset failed:', error.message);
@@ -190,7 +193,10 @@ class DevSetup {
     console.log('🗑️ Clearing all data...');
     try {
       const { execSync } = require('child_process');
-      execSync('node scripts/clean-invalid-users.js', { stdio: 'inherit' });
+      execSync('node scripts/clean-invalid-users.js', { 
+        stdio: 'inherit',
+        cwd: path.join(__dirname, '..')
+      });
       console.log('✅ All data cleared!');
     } catch (error) {
       console.error('❌ Clear failed:', error.message);
@@ -214,7 +220,10 @@ class DevSetup {
     console.log('👤 Creating test user...');
     try {
       const { execSync } = require('child_process');
-      execSync('node scripts/create-test-user.js', { stdio: 'inherit' });
+      execSync('node scripts/create-test-user.js', { 
+        stdio: 'inherit',
+        cwd: path.join(__dirname, '..')
+      });
     } catch (error) {
       console.error('❌ Failed to create test user:', error.message);
     }
@@ -285,7 +294,10 @@ class DevSetup {
     console.log('🗑️ Clearing all users...');
     try {
       const { execSync } = require('child_process');
-      execSync('node scripts/clean-invalid-users.js', { stdio: 'inherit' });
+      execSync('node scripts/clean-invalid-users.js', { 
+        stdio: 'inherit',
+        cwd: path.join(__dirname, '..')
+      });
       console.log('✅ All users cleared!');
     } catch (error) {
       console.error('❌ Clear failed:', error.message);

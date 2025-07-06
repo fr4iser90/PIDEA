@@ -65,7 +65,7 @@ class SendMessageHandler {
         timestamp: new Date()
       });
       // Call messaging service
-      const result = await this.messagingService.send(command.message, {
+      const result = await this.messagingService.sendMessage(command.message, {
         requestedBy: command.requestedBy,
         options: command.options || {}
       });

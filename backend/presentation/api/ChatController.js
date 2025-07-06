@@ -13,20 +13,23 @@ class ChatController {
   // POST /api/chat
   async sendMessage(req, res) {
     try {
-      const { message, sessionId } = req.body;
-      const userId = req.user.id;
-
+      const { message, requestedBy, sessionId } = req.body;
       if (!message || message.trim().length === 0) {
         return res.status(400).json({
           success: false,
           error: 'Message content is required'
         });
       }
-
-      // Create command with user context
+      if (!requestedBy) {
+        return res.status(400).json({
+          success: false,
+          error: 'Requested by is required'
+        });
+      }
+      // Command mit exakt den Feldern, die der Handler erwartet
       const command = {
-        content: message.trim(),
-        userId: userId,
+        message: message.trim(),
+        requestedBy: requestedBy,
         sessionId: sessionId,
         timestamp: new Date(),
         metadata: {
@@ -35,10 +38,8 @@ class ChatController {
           userRole: req.user.role
         }
       };
-
       // Execute command
       const result = await this.sendMessageHandler.handle(command);
-
       res.json({
         success: true,
         data: {
