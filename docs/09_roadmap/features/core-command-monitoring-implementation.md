@@ -37,22 +37,30 @@
 ## 4. Implementation Phases
 
 ### Phase 1: Foundation Setup
-- [ ] Create TerminalLogCaptureService structure
-- [ ] Set up log file system in /tmp/IDEWEB/{port}/logs/
-- [ ] Create initial test framework
-- [ ] Set up LogEncryptionService and LogPermissionManager
+- [ ] **TerminalLogCaptureService.js** with `initializeCapture(port)` function
+- [ ] **TerminalLogCaptureService.js** with `fs.mkdir()` to create `/tmp/IDEWEB/{port}/logs/`
+- [ ] **LogEncryptionService.js** with `encryptLogEntry()` and `decryptLogEntry()` functions
+- [ ] **LogEncryptionService.js** with `crypto.createCipher()` and `crypto.createDecipher()`
+- [ ] **LogPermissionManager.js** with `setSecureLogPermissions()` and `fs.chmod()`
+- [ ] **LogPermissionManager.js** with `validateLogPath()` to prevent path traversal
 
 ### Phase 2: Playwright Terminal Capture
-- [ ] Implement Playwright script to capture browser terminal output
-- [ ] Add output redirection to encrypted log files
-- [ ] Implement real-time log writing
-- [ ] Add log rotation and cleanup
+- [ ] **backend/scripts/terminal-capture.js** - Node.js script that runs in terminal
+- [ ] **executeTerminalCommand(command)** function with `page.$('.xterm-helper-textarea')`
+- [ ] **executeTerminalCommand(command)** function with `page.focus()` and `page.fill(command)`
+- [ ] **executeTerminalCommand(command)** function with `page.keyboard.press('Enter')`
+- [ ] **Playwright script** opens browser and navigates to `localhost:${port}`
+- [ ] **Playwright script** opens terminal with `page.keyboard.press('Control+Shift+`')`
+- [ ] **Playwright script** executes commands like `npm run dev > /tmp/IDEWEB/${port}/logs/terminal.log 2>&1`
+- [ ] **Backend service** monitors log files with `setInterval()` and `fs.readFile()`
 
 ### Phase 3: Backend Log Reading
-- [ ] Implement log file reading and decryption
-- [ ] Add REST API endpoints for log access
-- [ ] Implement log parsing and formatting
-- [ ] Add log search and filtering
+- [ ] **TerminalLogReader.js** with `getRecentLogs(port, lines)` function
+- [ ] **TerminalLogReader.js** with `fs.readFile()` to read encrypted logs
+- [ ] **TerminalLogReader.js** with `crypto.createDecipher()` to decrypt logs
+- [ ] **IDEController.js** with REST endpoint `GET /api/terminal-logs/:port`
+- [ ] **IDEController.js** with query parameter `?lines=50` for log count
+- [ ] **IDEController.js** with response format `{ success: true, data: logs }`
 
 ### Phase 4: Frontend Integration
 - [ ] Create log display components
