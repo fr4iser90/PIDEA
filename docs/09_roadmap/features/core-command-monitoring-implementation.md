@@ -1,79 +1,77 @@
-# Core Command Monitoring System Implementation (File-Based Polling Only)
+# Terminal Log Capture & Display System
 
 ## 1. Project Overview
-- **Feature/Component Name**: Core Command Monitoring System (File-Based Polling)
+- **Feature/Component Name**: Terminal Log Capture & Display System
 - **Priority**: Critical
 - **Estimated Time**: 1-2 weeks
-- **Dependencies**: Existing FileBasedWorkspaceDetector, REST API, File System
-- **Related Issues**: VibeCoderRefactorCommand completion detection, real-time status monitoring, file security
+- **Dependencies**: Playwright, Browser Terminal, REST API, File System, Crypto
+- **Related Issues**: Browser terminal output capture, encrypted log storage, real-time log display
 
 ## 2. Technical Requirements
-- **Tech Stack**: Node.js, Express (REST API), EventEmitter, Jest, File System Monitoring, Crypto (for encryption)
-- **Architecture Pattern**: Polling-Based Monitoring, Observer Pattern, File-Based Monitoring, Security-First Design
-- **Database Changes**: None (file-based state management in /tmp/IDEWEB/)
-- **API Changes**: New REST endpoints for command status polling
-- **Frontend Changes**: Polling-based status display components
-- **Backend Changes**: File-based command monitoring service, REST endpoints, encryption service
+- **Tech Stack**: Playwright, Node.js, Express (REST API), Crypto (for encryption), File System
+- **Architecture Pattern**: Log Capture, File-Based Storage, Encryption, Polling-Based Display
+- **Database Changes**: None (file-based log storage in /tmp/IDEWEB/)
+- **API Changes**: New REST endpoints for encrypted log reading
+- **Frontend Changes**: Log display components with real-time updates
+- **Backend Changes**: Log decryption service, REST endpoints
 
 ## 3. File Impact Analysis
 
 ### Files to Modify:
-- [x] `backend/domain/services/workspace/FileBasedWorkspaceDetector.js` - Add command monitoring capabilities
-- [x] `backend/domain/services/TaskMonitoringService.js` - Integrate with file-based monitoring
-- [x] `backend/presentation/api/IDEController.js` - Add REST endpoints for command status polling
-- [ ] `frontend/src/presentation/components/ChatComponent.jsx` - Display command status (polling)
+- [ ] `backend/presentation/api/IDEController.js` - Add log reading endpoints
+- [ ] `frontend/src/presentation/components/ChatComponent.jsx` - Add log display button
+- [ ] Playwright scripts - Add terminal log capture
 
 ### Files to Create:
-- [ ] `backend/domain/services/FileBasedCommandMonitor.js` - Core file-based monitoring logic
-- [ ] `backend/domain/services/CommandStatusTracker.js` - Real-time status tracking
-- [ ] `backend/domain/services/CommandOutputParser.js` - Parse command output from files
-- [ ] `backend/infrastructure/security/FileEncryptionService.js` - File encryption/decryption
-- [ ] `backend/infrastructure/security/FilePermissionManager.js` - Secure file permissions
-- [ ] `backend/tests/unit/domain/services/FileBasedCommandMonitor.test.js` - Unit tests
-- [ ] `backend/tests/integration/CommandMonitoring.test.js` - Integration tests
-- [ ] `backend/tests/unit/infrastructure/security/FileEncryptionService.test.js` - Security tests
+- [ ] `backend/domain/services/TerminalLogCaptureService.js` - Core log capture logic
+- [ ] `backend/domain/services/TerminalLogReader.js` - Read and decrypt logs
+- [ ] `backend/infrastructure/security/LogEncryptionService.js` - Log encryption/decryption
+- [ ] `backend/infrastructure/security/LogPermissionManager.js` - Secure log file permissions
+- [ ] `backend/tests/unit/domain/services/TerminalLogCaptureService.test.js` - Unit tests
+- [ ] `backend/tests/integration/TerminalLogCapture.test.js` - Integration tests
+- [ ] `backend/tests/unit/infrastructure/security/LogEncryptionService.test.js` - Security tests
 
 ### Files to Delete:
-- [ ] Remove all WebSocket and Extension-related monitoring code
+- [ ] Remove all command monitoring related code
 
 ## 4. Implementation Phases
 
 ### Phase 1: Foundation Setup
-- [x] Create FileBasedCommandMonitor service structure
-- [x] Set up file polling system for /tmp/IDEWEB/{port}/
-- [x] Create initial test framework
-- [x] Set up FileEncryptionService and FilePermissionManager
+- [ ] Create TerminalLogCaptureService structure
+- [ ] Set up log file system in /tmp/IDEWEB/{port}/logs/
+- [ ] Create initial test framework
+- [ ] Set up LogEncryptionService and LogPermissionManager
 
-### Phase 2: Core Implementation
-- [ ] Implement VibeCoderRefactorCommand file-based execution
-- [ ] Add polling-based file monitoring (setInterval or similar)
-- [ ] Implement progress tracking via status files
-- [ ] Add error detection patterns in output files
-- [ ] Implement file encryption for sensitive data
+### Phase 2: Playwright Terminal Capture
+- [ ] Implement Playwright script to capture browser terminal output
+- [ ] Add output redirection to encrypted log files
+- [ ] Implement real-time log writing
+- [ ] Add log rotation and cleanup
 
-### Phase 3: Security Implementation
-- [ ] Implement secure file permissions (chmod 600/700)
-- [ ] Add file encryption for command output
+### Phase 3: Backend Log Reading
+- [ ] Implement log file reading and decryption
+- [ ] Add REST API endpoints for log access
+- [ ] Implement log parsing and formatting
+- [ ] Add log search and filtering
+
+### Phase 4: Frontend Integration
+- [ ] Create log display components
+- [ ] Add real-time log updates
+- [ ] Implement log search and navigation
+- [ ] Add log export functionality
+
+### Phase 5: Security Implementation
+- [ ] Implement secure log file permissions (chmod 600/700)
+- [ ] Add log encryption for sensitive data
 - [ ] Implement auto-cleanup mechanisms
 - [ ] Add path validation and traversal prevention
 - [ ] Implement secure key management
 
-### Phase 4: Integration
-- [ ] Connect with existing FileBasedWorkspaceDetector
-- [ ] Update frontend status display to use polling
-- [ ] Test integration points
-
-### Phase 5: Testing & Documentation
+### Phase 6: Testing & Documentation
 - [ ] Write comprehensive unit tests
 - [ ] Write integration tests
 - [ ] Update API documentation
-- [ ] Create monitoring guide
-
-### Phase 6: Deployment & Validation
-- [ ] Deploy to development environment
-- [ ] Perform end-to-end testing
-- [ ] Fix any issues
-- [ ] Deploy to staging
+- [ ] Create user guide
 
 ## 5. Code Standards & Patterns
 - **Coding Style**: ESLint with Airbnb config, Prettier formatting
@@ -85,60 +83,60 @@
 - **Security**: Input validation, path sanitization, encryption for sensitive data
 
 ## 6. Security Considerations
-- [ ] File system access validation
-- [ ] Command execution authorization
-- [ ] Input sanitization for command parameters
-- [ ] Rate limiting for status polling
-- [ ] Secure file path handling
-- [ ] Access control for monitoring data
-- [ ] File encryption for sensitive output
-- [ ] Secure file permissions (600/700)
-- [ ] Auto-cleanup of temporary files
+- [ ] Log file access validation
+- [ ] Terminal output sanitization
+- [ ] Input sanitization for log parameters
+- [ ] Rate limiting for log reading
+- [ ] Secure log file path handling
+- [ ] Access control for log data
+- [ ] Log encryption for sensitive output
+- [ ] Secure log file permissions (600/700)
+- [ ] Auto-cleanup of old log files
 - [ ] Path traversal prevention
 - [ ] Secure key management
 
 ## 7. Performance Requirements
-- **Response Time**: < 100ms for status polling
-- **Throughput**: 1000+ concurrent command monitoring
-- **Memory Usage**: < 50MB for monitoring system
+- **Response Time**: < 100ms for log reading
+- **Throughput**: 100+ concurrent log readers
+- **Memory Usage**: < 100MB for log system
 - **Database Queries**: N/A (file-based)
-- **Caching Strategy**: Command status cached for 5 minutes
-- **Encryption Overhead**: < 10ms per file operation
+- **Caching Strategy**: Recent logs cached for 1 minute
+- **Encryption Overhead**: < 20ms per log operation
 
 ## 8. Testing Strategy
 
 ### Unit Tests:
-- [ ] Test file: `backend/tests/unit/domain/services/FileBasedCommandMonitor.test.js`
-- [ ] Test cases: Command start, progress updates, completion detection, error handling
-- [ ] Mock requirements: File system, REST API, EventEmitter
+- [ ] Test file: `backend/tests/unit/domain/services/TerminalLogCaptureService.test.js`
+- [ ] Test cases: Log capture, encryption, decryption, file operations
+- [ ] Mock requirements: File system, Playwright, Crypto
 
 ### Security Tests:
-- [ ] Test file: `backend/tests/unit/infrastructure/security/FileEncryptionService.test.js`
-- [ ] Test cases: File encryption/decryption, key management, permission validation
+- [ ] Test file: `backend/tests/unit/infrastructure/security/LogEncryptionService.test.js`
+- [ ] Test cases: Log encryption/decryption, key management, permission validation
 - [ ] Mock requirements: Crypto, File system, Permission system
 
 ### Integration Tests:
-- [ ] Test file: `backend/tests/integration/CommandMonitoring.test.js`
-- [ ] Test scenarios: Full command lifecycle, file monitoring, REST API communication
-- [ ] Test data: Mock command output files, status files
+- [ ] Test file: `backend/tests/integration/TerminalLogCapture.test.js`
+- [ ] Test scenarios: Full log capture lifecycle, Playwright integration, API communication
+- [ ] Test data: Mock terminal output, log files
 
 ### E2E Tests:
-- [ ] Test file: `backend/tests/e2e/CommandMonitoringE2E.test.js`
-- [ ] User flows: Start command, monitor progress, receive completion notification
+- [ ] Test file: `backend/tests/e2e/TerminalLogCaptureE2E.test.js`
+- [ ] User flows: Start terminal, capture logs, view in frontend
 - [ ] Browser compatibility: Chrome, Firefox
 
 ## 9. Documentation Requirements
 
 ### Code Documentation:
-- [ ] JSDoc comments for FileBasedCommandMonitor methods
-- [ ] README updates for monitoring system
+- [ ] JSDoc comments for TerminalLogCaptureService methods
+- [ ] README updates for log capture system
 - [ ] API documentation for REST endpoints
-- [ ] Architecture diagrams for file monitoring flow
-- [ ] Security documentation for file encryption
+- [ ] Architecture diagrams for log capture flow
+- [ ] Security documentation for log encryption
 
 ### User Documentation:
-- [ ] Command monitoring user guide
-- [ ] Troubleshooting guide for monitoring issues
+- [ ] Terminal log capture user guide
+- [ ] Troubleshooting guide for log issues
 - [ ] Performance optimization guide
 - [ ] Security best practices guide
 
@@ -150,18 +148,18 @@
 - [ ] Documentation updated
 - [ ] Performance benchmarks met
 - [ ] Security review passed
-- [ ] File encryption tested
+- [ ] Log encryption tested
 
 ### Deployment:
 - [ ] Environment variables configured
-- [ ] Monitoring service deployed
+- [ ] Log capture service deployed
 - [ ] Health checks passing
 - [ ] Frontend updated
-- [ ] File permissions configured
+- [ ] Log file permissions configured
 - [ ] Encryption keys deployed
 
 ### Post-deployment:
-- [ ] Verify command status polling
+- [ ] Verify log capture working
 - [ ] Performance monitoring active
 - [ ] User feedback collection
 - [ ] Security monitoring active
@@ -169,151 +167,296 @@
 ## 11. Rollback Plan
 - [ ] REST API rollback procedure
 - [ ] Frontend component rollback
-- [ ] File system cleanup procedure
+- [ ] Log file cleanup procedure
 - [ ] Communication plan for users
 - [ ] Encryption key rollback procedure
 
 ## 12. Success Criteria
-- [ ] VibeCoderRefactorCommand completion detected within 5 seconds
-- [ ] Status updates working via file polling
-- [ ] REST endpoints properly transmit status
-- [ ] Frontend displays command status correctly
+- [ ] Browser terminal output captured within 1 second
+- [ ] Log updates working via file polling
+- [ ] REST endpoints properly transmit logs
+- [ ] Frontend displays terminal logs correctly
 - [ ] 90% test coverage achieved
 - [ ] Performance requirements met
 - [ ] No memory leaks detected
-- [ ] File encryption working correctly
-- [ ] Secure file permissions enforced
+- [ ] Log encryption working correctly
+- [ ] Secure log file permissions enforced
 
 ## 13. Risk Assessment
 
 ### High Risk:
-- [ ] File system permission issues - Implement proper error handling and fallback
-- [ ] Command detection false positives - Add multiple validation layers
+- [ ] Log file permission issues - Implement proper error handling and fallback
+- [ ] Playwright capture failures - Add multiple capture methods
 - [ ] Encryption key compromise - Implement secure key rotation
 
 ### Medium Risk:
-- [ ] Performance degradation with many commands - Implement file cleanup and monitoring limits
-- [ ] Frontend status display issues - Add fallback UI states
-- [ ] File corruption during encryption - Implement backup and recovery
+- [ ] Performance degradation with large logs - Implement log rotation and cleanup
+- [ ] Frontend log display issues - Add fallback UI states
+- [ ] Log corruption during encryption - Implement backup and recovery
 
 ### Low Risk:
 - [ ] Minor UI glitches - Add error boundaries and graceful degradation
 
 ## 14. References & Resources
 - **Technical Documentation**: [Node.js File System](https://nodejs.org/api/fs.html)
-- **API References**: [Node.js EventEmitter](https://nodejs.org/api/events.html)
-- **Design Patterns**: Observer Pattern, Polling-Based Monitoring, File-Based Monitoring
+- **Playwright Documentation**: [Playwright API](https://playwright.dev/docs/api/class-page)
+- **Design Patterns**: Observer Pattern, File-Based Logging, Encryption
 - **Best Practices**: [File System Best Practices](https://nodejs.org/en/docs/guides/working-with-different-filesystems/)
 - **Similar Implementations**: Existing FileBasedWorkspaceDetector.js
 
-## 15. File-Based Monitoring Strategy
+## 15. Terminal Log Capture Strategy
 
-### Command Execution Pattern:
+### Playwright Terminal Capture Pattern:
 ```javascript
-// Execute command with output redirection
-const command = `VibeCoderRefactorCommand > /tmp/IDEWEB/${port}/vibecoder-output.txt 2>&1 & echo $! > /tmp/IDEWEB/${port}/vibecoder-pid.txt`;
+// 1. PLAYWRIGHT SETUP - Browser starten und Terminal öffnen
+const { chromium } = require('playwright');
+const fs = require('fs').promises;
+const path = require('path');
 
-// Monitor these files:
-// /tmp/IDEWEB/{port}/vibecoder-status.txt     (running/completed/failed)
-// /tmp/IDEWEB/{port}/vibecoder-progress.txt   (progress updates)
-// /tmp/IDEWEB/{port}/vibecoder-output.txt     (full output)
-// /tmp/IDEWEB/{port}/vibecoder-pid.txt        (process ID)
+// Browser starten
+const browser = await chromium.launch({ headless: false });
+const page = await browser.newPage();
+
+
+await page.keyboard.down('Control');
+await page.keyboard.down('Shift');
+await page.keyboard.press('`');
+await page.keyboard.up('Shift');
+await page.keyboard.up('Control');
+
+// Warten bis Terminal offen ist
+await page.waitForTimeout(1000);
+
+// 3. TERMINAL BEFEHLE AUSFÜHREN - Das macht Playwright WIRKLICH!
+const commands = [
+  'mkdir -p /tmp/IDEWEB/3000/logs',
+  'npm run dev > /tmp/IDEWEB/3000/logs/terminal.log 2>&1 & echo $! > /tmp/IDEWEB/3000/logs/process.pid',
+  'tail -f /tmp/IDEWEB/3000/logs/terminal.log > /tmp/IDEWEB/3000/logs/terminal-realtime.log 2>&1 &'
+];
+
+for (const command of commands) {
+  // FOKUSSIEREN und FÜLLEN - das macht Playwright WIRKLICH!
+  await page.focus('.xterm-helper-textarea');
+  await page.fill('.xterm-helper-textarea', command);
+  await page.keyboard.press('Enter');
+  await page.waitForTimeout(1000); // Warten bis Befehl ausgeführt ist
+}
+
+// 5. VERSCHLÜSSELTE DATEI SCHREIBEN - Funktion
+async function writeToEncryptedLog(filePath, logEntry) {
+  try {
+    // Verzeichnis erstellen falls nicht vorhanden
+    const dir = path.dirname(filePath);
+    await fs.mkdir(dir, { recursive: true });
+    
+    // Log-Entry verschlüsseln
+    const crypto = require('crypto');
+    const key = process.env.LOG_ENCRYPTION_KEY || 'default-key-32-chars-long!!';
+    const algorithm = 'aes-256-cbc';
+    
+    const data = JSON.stringify(logEntry);
+    const iv = crypto.randomBytes(16);
+    const cipher = crypto.createCipher(algorithm, key);
+    
+    const encrypted = Buffer.concat([cipher.update(data, 'utf8'), cipher.final()]);
+    const result = Buffer.concat([iv, encrypted]);
+    
+    // Verschlüsselte Daten an Datei anhängen (append mode)
+    await fs.appendFile(filePath, result.toString('base64') + '\n');
+    
+    console.log('✅ LOG ENTRY VERSCHLÜSSELT GESCHRIEBEN:', filePath);
+    
+  } catch (error) {
+    console.error('❌ FEHLER BEIM SCHREIBEN DER LOG-DATEI:', error);
+  }
+}
+
+// 6. LOG-DATEI ÜBERWACHEN - Polling alle 2 Sekunden
+setInterval(async () => {
+  try {
+    const logPath = '/tmp/IDEWEB/3000/logs/terminal.log';
+    const stats = await fs.stat(logPath);
+    
+    if (stats.size > 0) {
+      // Log-Datei lesen
+      const logContent = await fs.readFile(logPath, 'utf8');
+      const lines = logContent.split('\n').filter(line => line.trim());
+      
+      // Neue Zeilen verarbeiten
+      for (const line of lines) {
+        const logEntry = {
+          timestamp: new Date().toISOString(),
+          type: 'terminal',
+          text: line,
+          level: 'info'
+        };
+        
+        // In verschlüsselte Datei schreiben
+        await writeToEncryptedLog('/tmp/IDEWEB/3000/logs/terminal.encrypted.log', logEntry);
+      }
+      
+      // Original-Log leeren (nur neue Zeilen behalten)
+      await fs.writeFile(logPath, '');
+    }
+    
+  } catch (error) {
+    console.log('📝 Log-Datei noch nicht erstellt oder leer');
+  }
+}, 2000);
+
+// 7. CLEANUP - Beim Beenden
+process.on('SIGINT', async () => {
+  console.log('🧹 Cleanup: Browser schließen...');
+  
+  // Prozess beenden falls PID-Datei existiert
+  try {
+    const pidPath = '/tmp/IDEWEB/3000/logs/process.pid';
+    const pid = await fs.readFile(pidPath, 'utf8');
+    if (pid) {
+      process.kill(parseInt(pid), 'SIGTERM');
+    }
+  } catch (error) {
+    console.log('Kein Prozess zu beenden');
+  }
+  
+  await browser.close();
+  process.exit(0);
+});
 ```
 
-### File Polling Approach:
-```javascript
-// Use setInterval for polling file status
-setInterval(() => {
-  // Read status/progress/output files
-  // Detect completion/error patterns
-}, 2000); // Poll every 2 seconds
+### DETAILLIERTE ERKLÄRUNG WIE PLAYWRIGHT TERMINAL-OUTPUT IN DATEIEN SCHREIBT:
+
+**SCHRITT 1: Playwright öffnet Terminal**
+- `page.keyboard.press('Control+Shift+`')` - Öffnet Terminal in Cursor IDE
+- `page.$('.xterm-helper-textarea')` - Findet Terminal-Input-Element
+- **Playwright KANN Terminal öffnen und Input senden!**
+
+**SCHRITT 2: Befehle mit Output-Umleitung ausführen**
+- `npm run dev > /tmp/IDEWEB/3000/logs/terminal.log 2>&1` - Leitet Output in Datei um
+- `& echo $! > /tmp/IDEWEB/3000/logs/process.pid` - Speichert Prozess-ID
+- `tail -f` - Überwacht Datei in Echtzeit
+- **Playwright KANN Befehle ausführen die Output in Dateien schreiben!**
+
+**SCHRITT 3: Backend liest und verschlüsselt Log-Dateien**
+- `setInterval()` prüft alle 2 Sekunden die Log-Datei
+- `fs.readFile()` liest den Terminal-Output
+- `writeToEncryptedLog()` verschlüsselt und speichert
+- **Backend kann Dateien lesen die Playwright erstellt hat!**
+
+**SCHRITT 4: Datei-Struktur**
+```
+/tmp/IDEWEB/3000/logs/
+├── terminal.log              # Terminal-Output (nicht verschlüsselt)
+├── terminal.encrypted.log    # Verschlüsselte Log-Einträge
+├── process.pid               # Prozess-ID für Cleanup
+└── terminal-realtime.log     # Echtzeit-Output
 ```
 
-### Completion Detection:
+**WICHTIG: Playwright KANN NICHT Terminal-Output LESEN!**
+- Terminal ist ein Canvas - kein Text drin!
+- Playwright kann NUR Befehle eingeben
+- Output muss in Dateien umgeleitet werden
+- Backend liest dann die Dateien
+
+### Log File Structure:
 ```javascript
-// Check for completion patterns in output file
-const output = fs.readFileSync(`/tmp/IDEWEB/${port}/vibecoder-output.txt`, 'utf8');
-const isCompleted = output.includes('Refactoring completed') || 
-                   output.includes('Task finished') ||
-                   !fs.existsSync(`/tmp/IDEWEB/${port}/vibecoder-pid.txt`);
+// Log file structure
+/tmp/IDEWEB/{port}/logs/
+├── terminal.log.enc         # Encrypted terminal output
+├── terminal.log.meta        # Log metadata (non-encrypted)
+├── terminal.log.index       # Log index for quick access
+└── keys/                    # Encryption keys
+    └── session-{sessionId}.key
 ```
 
-## 16. File Security Implementation
+### Log Reading Approach:
+```javascript
+// Read and decrypt logs
+const logReader = new TerminalLogReader();
+const logs = await logReader.getRecentLogs(port, 50); // Last 50 lines
 
-### Secure File Structure:
+// API endpoint
+app.get('/api/terminal-logs/:port', async (req, res) => {
+  const { port } = req.params;
+  const { lines = 50 } = req.query;
+  
+  const logs = await logReader.getRecentLogs(port, parseInt(lines));
+  res.json({ success: true, data: logs });
+});
+```
+
+## 16. Log Security Implementation
+
+### Secure Log Structure:
 ```javascript
 // Secure directory structure
-/tmp/IDEWEB/{port}/
-├── secure/                           # Encrypted files (chmod 700)
-│   ├── vibecoder-output.enc         # Encrypted command output
-│   ├── vibecoder-status.enc         # Encrypted status
-│   └── vibecoder-progress.enc       # Encrypted progress
-├── public/                          # Public files (chmod 644)
-│   ├── vibecoder-pid.txt            # Process ID (non-sensitive)
-│   └── vibecoder-meta.json          # Metadata (non-sensitive)
-└── keys/                            # Encryption keys (chmod 600)
-    └── session-{sessionId}.key      # Session-specific keys
+/tmp/IDEWEB/{port}/logs/
+├── terminal.log.enc         # Encrypted terminal output (chmod 600)
+├── terminal.log.meta        # Log metadata (chmod 644)
+├── terminal.log.index       # Log index (chmod 644)
+└── keys/                    # Encryption keys (chmod 600)
+    └── session-{sessionId}.key
 ```
 
-### File Encryption Service:
+### Log Encryption Service:
 ```javascript
-class FileEncryptionService {
+class LogEncryptionService {
   constructor() {
     this.algorithm = 'aes-256-cbc';
     this.keyLength = 32;
   }
 
-  async encryptFile(inputPath, outputPath, key) {
+  async encryptLogEntry(logEntry, key) {
     const crypto = require('crypto');
-    const fs = require('fs');
     
-    const input = fs.readFileSync(inputPath);
+    const data = JSON.stringify(logEntry);
     const iv = crypto.randomBytes(16);
     const cipher = crypto.createCipher(this.algorithm, key);
     
-    const encrypted = Buffer.concat([cipher.update(input), cipher.final()]);
+    const encrypted = Buffer.concat([cipher.update(data, 'utf8'), cipher.final()]);
     const result = Buffer.concat([iv, encrypted]);
     
-    fs.writeFileSync(outputPath, result);
+    return result.toString('base64');
   }
 
-  async decryptFile(inputPath, outputPath, key) {
+  async decryptLogEntry(encryptedData, key) {
     const crypto = require('crypto');
-    const fs = require('fs');
     
-    const input = fs.readFileSync(inputPath);
-    const iv = input.slice(0, 16);
-    const encrypted = input.slice(16);
+    const data = Buffer.from(encryptedData, 'base64');
+    const iv = data.slice(0, 16);
+    const encrypted = data.slice(16);
     
     const decipher = crypto.createDecipher(this.algorithm, key);
     const decrypted = Buffer.concat([decipher.update(encrypted), decipher.final()]);
     
-    fs.writeFileSync(outputPath, decrypted);
+    return JSON.parse(decrypted.toString('utf8'));
   }
 }
 ```
 
-### File Permission Manager:
+### Log Permission Manager:
 ```javascript
-class FilePermissionManager {
-  async setSecurePermissions(path, type = 'file') {
+class LogPermissionManager {
+  async setSecureLogPermissions(path, type = 'log') {
     const fs = require('fs');
     
     if (type === 'directory') {
       await fs.chmod(path, 0o700); // Owner read/write/execute only
-    } else {
+    } else if (type === 'log') {
       await fs.chmod(path, 0o600); // Owner read/write only
+    } else {
+      await fs.chmod(path, 0o644); // Owner read/write, others read
     }
   }
 
-  async createSecureDirectory(path) {
+  async createSecureLogDirectory(path) {
     const fs = require('fs');
     
     await fs.mkdir(path, { recursive: true });
-    await this.setSecurePermissions(path, 'directory');
+    await this.setSecureLogPermissions(path, 'directory');
   }
 
-  validatePath(path) {
+  validateLogPath(path) {
     // Prevent directory traversal
     const normalized = require('path').normalize(path);
     if (normalized.includes('..') || normalized.includes('~')) {
@@ -326,49 +469,50 @@ class FilePermissionManager {
 
 ## 17. Implementation Progress
 
-### Phase 1: Foundation Setup ✅ COMPLETED
-- [x] Created FileBasedCommandMonitor service structure
-- [x] Set up file polling system for /tmp/IDEWEB/{port}/
-- [x] Created initial test framework
-- [x] Set up FileEncryptionService and FilePermissionManager
+### Phase 1: Foundation Setup ⏳ PENDING
+- [ ] Create TerminalLogCaptureService structure
+- [ ] Set up log file system in /tmp/IDEWEB/{port}/logs/
+- [ ] Create initial test framework
+- [ ] Set up LogEncryptionService and LogPermissionManager
 
-### Phase 2: Core Implementation 🔄 IN PROGRESS
-- [ ] Implement VibeCoderRefactorCommand file-based execution
-- [ ] Add polling-based file monitoring (setInterval or similar)
-- [ ] Implement progress tracking via status files
-- [ ] Add error detection patterns in output files
-- [ ] Implement file encryption for sensitive data
+### Phase 2: Playwright Terminal Capture ⏳ PENDING
+- [ ] Implement Playwright script to capture browser terminal output
+- [ ] Add output redirection to encrypted log files
+- [ ] Implement real-time log writing
+- [ ] Add log rotation and cleanup
 
-### Phase 3: Security Implementation ⏳ PENDING
-- [ ] Implement secure file permissions (chmod 600/700)
-- [ ] Add file encryption for command output
+### Phase 3: Backend Log Reading ⏳ PENDING
+- [ ] Implement log file reading and decryption
+- [ ] Add REST API endpoints for log access
+- [ ] Implement log parsing and formatting
+- [ ] Add log search and filtering
+
+### Phase 4: Frontend Integration ⏳ PENDING
+- [ ] Create log display components
+- [ ] Add real-time log updates
+- [ ] Implement log search and navigation
+- [ ] Add log export functionality
+
+### Phase 5: Security Implementation ⏳ PENDING
+- [ ] Implement secure log file permissions (chmod 600/700)
+- [ ] Add log encryption for sensitive data
 - [ ] Implement auto-cleanup mechanisms
 - [ ] Add path validation and traversal prevention
 - [ ] Implement secure key management
 
-### Phase 4: Integration ⏳ PENDING
-- [ ] Connect with existing FileBasedWorkspaceDetector
-- [ ] Update frontend status display to use polling
-- [ ] Test integration points
-
-### Phase 5: Testing & Documentation ⏳ PENDING
+### Phase 6: Testing & Documentation ⏳ PENDING
 - [ ] Write comprehensive unit tests
 - [ ] Write integration tests
 - [ ] Update API documentation
-- [ ] Create monitoring guide
-
-### Phase 6: Deployment & Validation ⏳ PENDING
-- [ ] Deploy to development environment
-- [ ] Perform end-to-end testing
-- [ ] Fix any issues
-- [ ] Deploy to staging
+- [ ] Create user guide
 
 ## 18. Current Status
-**Phase 1 Completed** - Foundation setup is complete. Moving to Phase 2: Core Implementation.
+**Ready to Start** - Foundation setup needs to be implemented.
 
 **Next Steps:**
-1. Create FileBasedCommandMonitor.js with core monitoring logic
-2. Create CommandStatusTracker.js for real-time status tracking
-3. Create CommandOutputParser.js for parsing command output
-4. Create security services (FileEncryptionService.js, FilePermissionManager.js)
-5. Update existing services to integrate with new monitoring system 
+1. Create TerminalLogCaptureService.js with log capture logic
+2. Create LogEncryptionService.js for log encryption/decryption
+3. Create LogPermissionManager.js for secure file permissions
+4. Implement Playwright terminal capture scripts
+5. Create REST API endpoints for log reading
+6. Add frontend components for log display 
