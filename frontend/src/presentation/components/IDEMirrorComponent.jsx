@@ -57,14 +57,14 @@ function IDEMirrorComponent({ eventBus }) {
             console.log('🔍 Streaming options:', {
                 fps: 15,
                 quality: 0.8,
-                format: 'webp',
+                format: 'jpeg',
                 maxFrameSize: 50 * 1024
             });
             
             const result = await streamingService.startStreaming(sessionId, port, {
                 fps: 15,
                 quality: 0.8,
-                format: 'webp',
+                format: 'jpeg',
                 maxFrameSize: 50 * 1024
             });
 

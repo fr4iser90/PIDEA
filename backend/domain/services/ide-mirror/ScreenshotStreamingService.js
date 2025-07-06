@@ -60,73 +60,64 @@ class ScreenshotStreamingService {
     try {
       console.log(`[ScreenshotStreamingService] Starting streaming session ${sessionId} for port ${port}`);
       
-      // Validate inputs
-      if (!sessionId || typeof sessionId !== 'string') {
-        throw new Error('Valid session ID is required');
-      }
-      
-      if (!port || typeof port !== 'number' || port < 1 || port > 65535) {
-        throw new Error('Valid port number (1-65535) is required');
-      }
-      
-      // Check if session already exists
-      if (this.activeSessions.has(sessionId)) {
-        throw new Error(`Streaming session ${sessionId} already exists`);
-      }
-      
-      // Create streaming session
-      const sessionOptions = {
-        fps: options.fps || this.defaultFPS,
-        quality: options.quality || this.defaultQuality,
-        format: options.format || 'webp',
-        maxFrameSize: options.maxFrameSize || this.maxFrameSize,
-        enableRegionDetection: options.enableRegionDetection || false
+      // Default options with JPEG only
+      const defaultOptions = {
+        fps: 10,
+        quality: 0.4, // Komprimiert für kleine Frames
+        format: 'jpeg', // Nur JPEG
+        maxFrameSize: 3 * 1024 * 1024, // 3MB für Test
+        enableRegionDetection: false,
+        retryAttempts: 3,
+        retryDelay: 1000
       };
       
-      const session = StreamingSession.create(sessionId, port, sessionOptions);
+      const sessionOptions = { ...defaultOptions, ...options, format: 'jpeg' };
       
-      // Ensure browser is connected to the correct port
-      await this.ensureBrowserConnection(port);
-      
-      // Start the session
-      session.start();
+      // Create streaming session
+      const session = new StreamingSession(sessionId, port, sessionOptions);
       this.activeSessions.set(sessionId, session);
-      this.frameCounters.set(sessionId, 0);
       
-      // Start streaming loop
-      const intervalMs = 1000 / session.fps;
-      const streamingInterval = setInterval(async () => {
-        await this.captureAndStreamFrame(sessionId);
-      }, intervalMs);
+      // Start frame capture loop
+      const frameInterval = 1000 / sessionOptions.fps;
+      console.log(`[ScreenshotStreamingService] Streaming started for session ${sessionId} at ${sessionOptions.fps} FPS`);
       
-      this.streamingIntervals.set(sessionId, streamingInterval);
+      // Publish streaming started event
+      if (this.eventBus) {
+        this.eventBus.publish('streaming.started', {
+          sessionId,
+          port,
+          options: { ...sessionOptions, format: 'jpeg' },
+          result: {
+            success: true,
+            sessionId,
+            port,
+            fps: sessionOptions.fps,
+            quality: sessionOptions.quality,
+            format: 'jpeg',
+            status: 'active'
+          },
+          timestamp: new Date().toISOString()
+        });
+      }
       
-      // Activate session
-      session.activate();
-      
-      // Update statistics
-      this.stats.totalSessions++;
-      this.stats.activeSessions++;
-      
-      console.log(`[ScreenshotStreamingService] Streaming started for session ${sessionId} at ${session.fps} FPS`);
+      // Start frame capture loop
+      this.startFrameCaptureLoop(sessionId, frameInterval);
       
       return {
         success: true,
         sessionId,
         port,
-        fps: session.fps,
-        quality: session.quality,
-        format: session.format,
-        status: session.status
+        result: session.toJSON()
       };
       
     } catch (error) {
       console.error(`[ScreenshotStreamingService] Failed to start streaming for session ${sessionId}:`, error.message);
-      
-      // Cleanup on failure
-      await this.stopStreaming(sessionId);
-      
-      throw error;
+      return {
+        success: false,
+        sessionId,
+        port,
+        error: error.message
+      };
     }
   }
 
@@ -179,58 +170,71 @@ class ScreenshotStreamingService {
   }
 
   /**
+   * Start frame capture loop for a session
+   * @param {string} sessionId - Session identifier
+   * @param {number} frameInterval - Interval between frames in milliseconds
+   */
+  startFrameCaptureLoop(sessionId, frameInterval) {
+    const session = this.activeSessions.get(sessionId);
+    if (!session) {
+      console.error(`[ScreenshotStreamingService] Session ${sessionId} not found for frame capture loop`);
+      return;
+    }
+    
+    console.log(`[ScreenshotStreamingService] Starting frame capture loop for session ${sessionId} with ${frameInterval}ms interval`);
+    
+    const captureLoop = async () => {
+      if (!this.activeSessions.has(sessionId)) {
+        console.log(`[ScreenshotStreamingService] Session ${sessionId} stopped, ending capture loop`);
+        return;
+      }
+      
+      try {
+        await this.captureAndStreamFrame(sessionId);
+      } catch (error) {
+        console.error(`[ScreenshotStreamingService] Frame capture error in loop for session ${sessionId}:`, error.message);
+      }
+      
+      // Schedule next frame
+      setTimeout(captureLoop, frameInterval);
+    };
+    
+    // Start the loop
+    captureLoop();
+  }
+
+  /**
    * Capture and stream a single frame
    * @param {string} sessionId - Session identifier
-   * @returns {Promise<boolean>} Whether frame was captured and streamed successfully
+   * @returns {Promise<boolean>} Success status
    */
   async captureAndStreamFrame(sessionId) {
     const session = this.activeSessions.get(sessionId);
-    if (!session || !session.isActive()) {
+    if (!session) {
+      console.warn(`[ScreenshotStreamingService] Session ${sessionId} not found for frame capture`);
       return false;
     }
     
-    const frameNumber = (this.frameCounters.get(sessionId) || 0) + 1;
-    this.frameCounters.set(sessionId, frameNumber);
-    
-    const metrics = FrameMetrics.create(sessionId, frameNumber);
     const startTime = Date.now();
+    const frameNumber = session.incrementFrameCount();
     
     try {
-      // Start capture
-      metrics.startCapture();
-      
       // Capture screenshot
       const screenshot = await this.captureScreenshot(session.port);
       if (!screenshot) {
         throw new Error('Failed to capture screenshot');
       }
       
-      metrics.endCapture(screenshot.length);
-      
-      // Start compression
-      metrics.startCompression();
-      
-      // Compress frame
+      // Compress frame with adaptive quality
       const compressedFrame = await this.compressionEngine.compress(screenshot, {
         format: session.format,
         quality: session.quality,
         maxSize: session.maxFrameSize
       });
       
-      metrics.endCompression(compressedFrame.size, compressedFrame.format, compressedFrame.quality);
-      
-      // Region detection (if enabled)
-      if (session.enableRegionDetection) {
-        const previousFrame = this.frameBuffer.getLatestFrame(sessionId);
-        if (previousFrame) {
-          const regionResult = this.regionDetector.detectChangedRegions(screenshot, previousFrame.data);
-          metrics.setRegionDetection(regionResult.regions, regionResult.fullFrame);
-        }
-      }
-      
       // Add to frame buffer
       const frameData = {
-        data: compressedFrame.data,
+        data: compressedFrame.buffer,
         timestamp: Date.now(),
         size: compressedFrame.size,
         format: compressedFrame.format,
@@ -250,13 +254,8 @@ class ScreenshotStreamingService {
         console.warn(`[ScreenshotStreamingService] Failed to add frame to buffer for session ${sessionId}`);
       }
       
-      // Start streaming
-      metrics.startStreaming();
-      
       // Stream via WebSocket
       await this.streamFrame(sessionId, frameData);
-      
-      metrics.endStreaming();
       
       // Update session metrics
       const totalLatency = Date.now() - startTime;
@@ -271,15 +270,8 @@ class ScreenshotStreamingService {
     } catch (error) {
       console.error(`[ScreenshotStreamingService] Frame capture error for session ${sessionId}:`, error.message);
       
-      metrics.setError(error.message);
       session.error(error.message);
       this.stats.totalErrors++;
-      
-      // Retry logic
-      if (frameNumber <= this.maxRetries) {
-        console.log(`[ScreenshotStreamingService] Retrying frame capture for session ${sessionId} (attempt ${frameNumber})`);
-        setTimeout(() => this.captureAndStreamFrame(sessionId), this.retryDelay);
-      }
       
       return false;
     }
@@ -311,11 +303,10 @@ class ScreenshotStreamingService {
         return await this.captureScreenshot(port); // Retry with new page
       }
       
-      // Capture screenshot
+      // Capture screenshot - use PNG format without quality option
       const screenshotBuffer = await page.screenshot({
         type: 'png',
-        fullPage: false, // Only visible area for better performance
-        quality: 100 // Full quality before compression
+        fullPage: false // Only visible area for better performance
       });
       
       return screenshotBuffer;

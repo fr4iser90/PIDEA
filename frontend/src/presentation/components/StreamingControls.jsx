@@ -22,7 +22,7 @@ const StreamingControls = ({
   const [config, setConfig] = useState({
     fps: 10,
     quality: 0.8,
-    format: 'webp',
+    format: 'jpeg',
     maxFrameSize: 50 * 1024,
     enableRegionDetection: false
   });
@@ -302,8 +302,7 @@ const StreamingControls = ({
               onChange={(e) => handleConfigUpdate({ format: e.target.value })}
               style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ddd' }}
             >
-              <option value="webp">WebP (Better compression)</option>
-              <option value="jpeg">JPEG (Better compatibility)</option>
+              <option value="jpeg">JPEG (Beste Kompatibilität)</option>
             </select>
           </div>
 

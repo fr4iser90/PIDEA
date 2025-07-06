@@ -10,6 +10,8 @@ const CanvasRenderer = ({
   width = 800, 
   height = 600, 
   sessionId, 
+  screenshot,
+  frameNumber,
   onFrameReceived,
   onError,
   className = '',
@@ -28,98 +30,53 @@ const CanvasRenderer = ({
   const frameTimes = useRef([]);
   const maxFrameTimes = 60; // Track last 60 frames for FPS calculation
 
+  const isRenderingRef = useRef(false);
+
   /**
    * Render frame to canvas
    * @param {Object} frameData - Frame data with base64 image
-   * @param {string} format - Image format (webp/jpeg)
    */
-  const renderFrame = useCallback(async (frameData, format = 'webp') => {
+  const renderFrame = useCallback(async (frameData) => {
     try {
       if (!canvasRef.current) {
         throw new Error('Canvas not available');
       }
-
       const canvas = canvasRef.current;
       const ctx = canvas.getContext('2d');
-
       if (!ctx) {
         throw new Error('Could not get canvas context');
       }
-
-      // Create image from base64 data
       const img = new Image();
-      
       return new Promise((resolve, reject) => {
         img.onload = () => {
           try {
-            // Double buffering for smooth transitions
-            if (isRendering) {
-              setNextImage(img);
-            } else {
-              renderImageToCanvas(ctx, img, canvas.width, canvas.height);
-              setIsRendering(true);
-              
-              // Smooth transition to next frame
-              requestAnimationFrame(() => {
-                if (nextImage) {
-                  renderImageToCanvas(ctx, nextImage, canvas.width, canvas.height);
-                  setNextImage(null);
-                }
-                setIsRendering(false);
-              });
-            }
-
-            // Update frame statistics
-            const now = performance.now();
-            const frameTime = now - lastFrameTime;
-            
-            frameTimes.current.push(frameTime);
-            if (frameTimes.current.length > maxFrameTimes) {
-              frameTimes.current.shift();
-            }
-
-            const averageFrameTime = frameTimes.current.reduce((sum, time) => sum + time, 0) / frameTimes.current.length;
-            const currentFps = 1000 / averageFrameTime;
-
-            setFrameCount(prev => prev + 1);
-            setLastFrameTime(now);
-            setFps(Math.round(currentFps * 100) / 100);
-
-            // Call callback if provided
-            if (onFrameReceived) {
-              onFrameReceived({
-                frameNumber: frameCount + 1,
-                timestamp: now,
-                fps: currentFps,
-                format: format,
-                size: frameData.size
-              });
-            }
-
+            renderImageToCanvas(ctx, img, canvas.width, canvas.height);
+            setIsRendering(true);
+            requestAnimationFrame(() => {
+              setIsRendering(false);
+            });
+            URL.revokeObjectURL(img.src);
             resolve();
           } catch (error) {
+            URL.revokeObjectURL(img.src);
             reject(error);
           }
         };
-
         img.onerror = (error) => {
+          URL.revokeObjectURL(img.src);
           reject(new Error(`Failed to load image: ${error.message}`));
         };
-
-        // Convert base64 to blob URL for rendering
-        const blob = base64ToBlob(frameData, `image/${format}`);
+        const blob = base64ToBlob(frameData, 'image/jpeg');
         img.src = URL.createObjectURL(blob);
       });
-
     } catch (error) {
-      console.error('[CanvasRenderer] Error rendering frame:', error.message);
       setError(error.message);
       if (onError) {
         onError(error);
       }
       throw error;
     }
-  }, [isRendering, nextImage, lastFrameTime, frameCount, onFrameReceived, onError]);
+  }, [onFrameReceived, onError]);
 
   /**
    * Render image to canvas with proper scaling
@@ -240,6 +197,23 @@ const CanvasRenderer = ({
       canvasRef.current.getStats = getStats;
     }
   }, [renderFrame, clearCanvas, reset, getStats]);
+
+  // Automatisches Rendern bei neuem Frame
+  useEffect(() => {
+    if (screenshot && !isRenderingRef.current) {
+      isRenderingRef.current = true;
+      setError(null);
+      renderFrame(screenshot)
+        .catch((err) => {
+          setError(err.message);
+          if (onError) onError(err);
+        })
+        .finally(() => {
+          isRenderingRef.current = false;
+        });
+    }
+    // eslint-disable-next-line
+  }, [screenshot, frameNumber]);
 
   return (
     <div className={`canvas-renderer ${className}`} style={style}>

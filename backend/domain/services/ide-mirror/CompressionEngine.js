@@ -30,79 +30,33 @@ class CompressionEngine {
    * @returns {Promise<Object>} Compressed frame data
    */
   async compress(imageBuffer, options = {}) {
-    const startTime = Date.now();
-    const format = options.format || this.defaultFormat;
-    const quality = options.quality || 0.8;
-    const maxSize = options.maxSize || 50 * 1024; // 50KB default
-    
-    try {
-      this.compressionStats.totalCompressions++;
-      
-      // Validate input
-      if (!Buffer.isBuffer(imageBuffer)) {
-        throw new Error('Input must be a Buffer');
-      }
-      
-      if (imageBuffer.length === 0) {
-        throw new Error('Input buffer is empty');
-      }
-      
-      // Try primary format first
-      let compressedFrame = await this.compressWithFormat(imageBuffer, format, quality);
-      
-      // If size is too large, try reducing quality
-      if (compressedFrame.size > maxSize && quality > 0.3) {
-        const reducedQuality = Math.max(0.3, quality - 0.2);
-        compressedFrame = await this.compressWithFormat(imageBuffer, format, reducedQuality);
-      }
-      
-      // If still too large, fallback to JPEG
-      if (compressedFrame.size > maxSize && format === 'webp') {
-        console.log(`[CompressionEngine] WebP too large (${compressedFrame.size} bytes), falling back to JPEG`);
-        compressedFrame = await this.compressWithFormat(imageBuffer, 'jpeg', quality);
-      }
-      
-      // Final size check
-      if (compressedFrame.size > maxSize) {
-        console.warn(`[CompressionEngine] Frame size (${compressedFrame.size} bytes) exceeds max size (${maxSize} bytes)`);
-      }
-      
-      // Update statistics
-      const compressionTime = Date.now() - startTime;
-      this.updateStats(format, compressionTime, true);
-      
-      return {
-        ...compressedFrame,
-        compressionTime,
-        originalSize: imageBuffer.length,
-        compressionRatio: compressedFrame.size / imageBuffer.length
-      };
-      
-    } catch (error) {
-      // Fallback to JPEG if primary format fails
-      if (format === 'webp') {
-        console.warn(`[CompressionEngine] WebP compression failed, falling back to JPEG:`, error.message);
-        try {
-          const fallbackResult = await this.compressWithFormat(imageBuffer, 'jpeg', quality);
-          const compressionTime = Date.now() - startTime;
-          this.updateStats('jpeg', compressionTime, true);
-          
-          return {
-            ...fallbackResult,
-            compressionTime,
-            originalSize: imageBuffer.length,
-            compressionRatio: fallbackResult.size / imageBuffer.length,
-            fallbackUsed: true
-          };
-        } catch (fallbackError) {
-          this.updateStats(format, Date.now() - startTime, false);
-          throw new Error(`Both WebP and JPEG compression failed: ${fallbackError.message}`);
-        }
-      } else {
-        this.updateStats(format, Date.now() - startTime, false);
-        throw error;
-      }
+    const {
+      format = 'jpeg',
+      quality = 0.4,
+      maxSize = 3 * 1024 * 1024
+    } = options;
+
+    // Immer nur JPEG komprimieren
+    let outputBuffer = await sharp(imageBuffer)
+      .jpeg({ quality: Math.round(quality * 100) })
+      .toBuffer();
+
+    // Optional: Schleife für weitere Qualitätsreduktion falls zu groß
+    let currentQuality = quality;
+    while (outputBuffer.length > maxSize && currentQuality > 0.11) {
+      currentQuality -= 0.1;
+      if (currentQuality < 0.11) currentQuality = 0.11;
+      outputBuffer = await sharp(imageBuffer)
+        .jpeg({ quality: Math.max(10, Math.round(currentQuality * 100)) })
+        .toBuffer();
     }
+
+    return {
+      buffer: outputBuffer,
+      format: 'jpeg',
+      size: outputBuffer.length,
+      quality: currentQuality
+    };
   }
 
   /**

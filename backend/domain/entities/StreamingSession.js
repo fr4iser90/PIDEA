@@ -120,6 +120,11 @@ class StreamingSession {
     this.updateAverageMetrics(frameSize, latency);
   }
 
+  incrementFrameCount() {
+    this.frameCount++;
+    return this.frameCount;
+  }
+
   updateAverageMetrics(frameSize, latency) {
     // Simple moving average calculation
     const alpha = 0.1; // Smoothing factor

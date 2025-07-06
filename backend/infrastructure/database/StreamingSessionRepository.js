@@ -60,7 +60,7 @@ class StreamingSessionRepository {
         fps INTEGER DEFAULT 10,
         quality DECIMAL(3,2) DEFAULT 0.8,
         format VARCHAR(10) DEFAULT 'webp',
-        max_frame_size INTEGER DEFAULT 51200,
+        max_frame_size INTEGER DEFAULT 3145728,
         enable_region_detection BOOLEAN DEFAULT FALSE,
         average_frame_size INTEGER DEFAULT 0,
         average_latency INTEGER DEFAULT 0,
