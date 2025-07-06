@@ -1,8 +1,11 @@
+const DocsTasksHandler = require('./handlers/DocsTasksHandler');
+
 class IDEController {
   constructor(ideManager, eventBus, cursorIDEService = null) {
     this.ideManager = ideManager;
     this.eventBus = eventBus;
     this.cursorIDEService = cursorIDEService;
+    this.docsTasksHandler = new DocsTasksHandler(() => this.ideManager.getActiveWorkspacePath());
   }
 
   async getAvailableIDEs(req, res) {
@@ -622,6 +625,38 @@ class IDEController {
         success: false,
         error: 'Failed to execute terminal command',
         message: error.message
+      });
+    }
+  }
+
+  /**
+   * GET /api/docs-tasks
+   * Get list of all documentation tasks
+   */
+  async getDocsTasks(req, res) {
+    try {
+      await this.docsTasksHandler.getDocsTasks(req, res);
+    } catch (error) {
+      console.error('[IDEController] Error in getDocsTasks:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to get documentation tasks'
+      });
+    }
+  }
+
+  /**
+   * GET /api/docs-tasks/:filename
+   * Get specific documentation task details
+   */
+  async getDocsTaskDetails(req, res) {
+    try {
+      await this.docsTasksHandler.getDocsTaskDetails(req, res);
+    } catch (error) {
+      console.error('[IDEController] Error in getDocsTaskDetails:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to get documentation task details'
       });
     }
   }

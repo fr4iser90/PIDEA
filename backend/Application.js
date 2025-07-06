@@ -813,6 +813,11 @@ class Application {
     // IDE Mirror API-Routen einbinden
     this.ideMirrorController.setupRoutes(this.app);
 
+    // Documentation Tasks routes (protected)
+    this.app.use('/api/docs-tasks', this.authMiddleware.authenticate());
+    this.app.get('/api/docs-tasks', (req, res) => this.ideController.getDocsTasks(req, res));
+    this.app.get('/api/docs-tasks/:filename', (req, res) => this.ideController.getDocsTaskDetails(req, res));
+
     // Error handling middleware
     this.app.use((error, req, res, next) => {
       this.logger.error('[Application] Unhandled error:', error);

@@ -39,5 +39,8 @@
     "productivity"
   ],
   "author": "fr4iser90",
-  "license": "MIT"
-} 
+  "license": "MIT",
+  "dependencies": {
+    "marked": "^16.0.0"
+  }
+}

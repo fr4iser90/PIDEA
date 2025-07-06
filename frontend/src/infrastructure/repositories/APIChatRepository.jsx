@@ -87,7 +87,11 @@ const API_CONFIG = {
       progress: (projectId) => `/api/projects/${projectId}/auto/status`
     },
     settings: '/api/settings',
-    health: '/api/health'
+    health: '/api/health',
+    docsTasks: {
+      list: '/api/docs-tasks',
+      details: (filename) => `/api/docs-tasks/${filename}`
+    }
   }
 };
 
@@ -400,6 +404,18 @@ export default class APIChatRepository extends ChatRepository {
     return apiCall(API_CONFIG.endpoints.analysis.report(currentProjectId), {
       method: 'POST'
     });
+  }
+
+  // Documentation Tasks Methods
+  async getDocsTasks() {
+    return apiCall(API_CONFIG.endpoints.docsTasks.list);
+  }
+
+  async getDocsTaskDetails(filename) {
+    if (!filename) {
+      throw new Error('Filename is required');
+    }
+    return apiCall(API_CONFIG.endpoints.docsTasks.details(filename));
   }
 }
 
