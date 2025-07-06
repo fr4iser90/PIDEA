@@ -51,8 +51,8 @@ class ConfirmationSystem {
     
     // Configuration
     this.config = {
-      maxAttempts: 3,
-      timeout: 10000, // 10 seconds
+      maxAttempts: 10,
+      timeout: 30000, // 10 seconds
       confidenceThreshold: 0.8,
       languageDetection: true,
       autoDetectLanguage: true
