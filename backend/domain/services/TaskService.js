@@ -34,6 +34,40 @@ class TaskService {
     return prompt;
   }
 
+  async buildTaskExecutionPrompt(task) {
+    // Lade task-execute.md Prompt über API
+    let taskExecutePrompt = '';
+    try {
+      const response = await fetch('http://localhost:3000/api/framework/prompt/task-execute');
+      if (response.ok) {
+        const data = await response.json();
+        taskExecutePrompt = data.content;
+      } else {
+        throw new Error(`Failed to load task-execute.md: ${response.status}`);
+      }
+    } catch (error) {
+      console.error('Error reading task-execute.md via API:', error);
+      taskExecutePrompt = 'Execute the following task:\n\n';
+    }
+
+    // Für Doc Tasks: Verwende den Markdown-Inhalt der Datei als Prompt
+    if (task.metadata?.taskFilePath) {
+      try {
+        const taskFilePath = path.resolve(task.metadata.taskFilePath);
+        const markdownContent = fs.readFileSync(taskFilePath, 'utf8');
+        
+        // Kombiniere: task-execute.md + Task-Inhalt
+        return `${taskExecutePrompt}\n\n${markdownContent}`;
+      } catch (error) {
+        console.error('Error reading task file:', error);
+        return `${taskExecutePrompt}\n\n${task.title}\n\n${task.description || ''}`;
+      }
+    }
+    
+    // Für normale Tasks: Verwende task-execute.md + Task-Details
+    return `${taskExecutePrompt}\n\n${task.title}\n\n${task.description || ''}`;
+  }
+
   /**
    * Create a new task for a project
    * @param {string} projectId - Project ID
@@ -295,8 +329,8 @@ class TaskService {
    */
   async executeAIRefactoring(task) {
     try {
-      // Build AI prompt for refactoring
-      const aiPrompt = this.buildRefactoringPrompt(task);
+      // Build AI prompt for task execution (uses markdown content for doc tasks)
+      const aiPrompt = await this.buildTaskExecutionPrompt(task);
       
       // Use the same working chat mechanism as the frontend
       if (this.cursorIDEService) {

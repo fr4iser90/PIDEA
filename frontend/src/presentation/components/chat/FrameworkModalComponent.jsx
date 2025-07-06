@@ -1,5 +1,6 @@
 // FrameworkModalComponent.js
 // Zeigt den Inhalt einer Framework-.md-Datei im Modal (Read-Only, Editiermodus, Speichern, Löschen)
+import { apiCall } from '@infrastructure/repositories/APIChatRepository.jsx';
 
 export default class FrameworkModalComponent {
   constructor(containerId) {
@@ -9,9 +10,9 @@ export default class FrameworkModalComponent {
     this.content = '';
   }
 
-  open(framework) {
+  async open(framework) {
     this.framework = framework;
-    this.content = this.getFrameworkContent(framework.name);
+    this.content = await this.getFrameworkContent(framework.file || framework.name);
     this.isEditing = false;
     this.render();
     this.container.style.display = 'block';
@@ -70,10 +71,25 @@ export default class FrameworkModalComponent {
     };
   }
 
-  getFrameworkContent(name) {
-    // Platzhalter-Inhalte
-    if (name === 'doc-general.md') return '# General Framework\n\n- Accessibility\n- Performance';
-    if (name === 'doc-code.md') return '# Code Framework\n\n- Clean Code\n- Tests';
-    return '# Custom Framework\n\n- Custom Rules';
+  async getFrameworkContent(filePath) {
+    try {
+      console.log('🔍 [FrameworkModalComponent] Loading content for:', filePath);
+      
+      // Determine if it's a template or prompt based on the file path
+      if (filePath.includes('templates/')) {
+        const templateId = filePath.replace('templates/', '').replace('.md', '');
+        const data = await apiCall(`/api/framework/template/${templateId}`);
+        return data.content;
+      } else if (filePath.includes('prompts/')) {
+        const promptId = filePath.replace('prompts/', '').replace('.md', '');
+        const data = await apiCall(`/api/framework/prompt/${promptId}`);
+        return data.content;
+      } else {
+        throw new Error('Unknown file type');
+      }
+    } catch (error) {
+      console.error('❌ [FrameworkModalComponent] Failed to load content:', error);
+      return `❌ Fehler beim Laden des Inhalts: ${error.message}`;
+    }
   }
 } 

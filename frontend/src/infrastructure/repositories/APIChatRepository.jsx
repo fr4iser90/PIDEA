@@ -91,6 +91,13 @@ const API_CONFIG = {
     docsTasks: {
       list: '/api/docs-tasks',
       details: (filename) => `/api/docs-tasks/${filename}`
+    },
+    framework: {
+      structure: '/api/framework/structure',
+      template: (templateId) => `/api/framework/template/${templateId}`,
+      prompt: (promptId) => `/api/framework/prompt/${promptId}`,
+      search: '/api/framework/search',
+      stats: '/api/framework/stats'
     }
   }
 };
@@ -416,6 +423,27 @@ export default class APIChatRepository extends ChatRepository {
       throw new Error('Filename is required');
     }
     return apiCall(API_CONFIG.endpoints.docsTasks.details(filename));
+  }
+
+  // Framework Methods
+  async getFrameworkStructure() {
+    return apiCall(API_CONFIG.endpoints.framework.structure);
+  }
+
+  async getFrameworkTemplate(templateId) {
+    return apiCall(API_CONFIG.endpoints.framework.template(templateId));
+  }
+
+  async getFrameworkPrompt(promptId) {
+    return apiCall(API_CONFIG.endpoints.framework.prompt(promptId));
+  }
+
+  async searchFrameworks(query) {
+    return apiCall(`${API_CONFIG.endpoints.framework.search}?query=${encodeURIComponent(query)}`);
+  }
+
+  async getFrameworkStats() {
+    return apiCall(API_CONFIG.endpoints.framework.stats);
   }
 }
 

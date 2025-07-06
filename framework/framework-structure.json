@@ -106,33 +106,198 @@
         "icon": "💡",
         "items": [
           {
-            "id": "general",
-            "name": "🔧 General",
-            "description": "General development prompts",
+            "id": "task-management",
+            "name": "📋 Task Management",
+            "description": "Task creation, execution, and management prompts",
+            "items": [
+              {
+                "id": "task-create",
+                "name": "Task Create",
+                "description": "Create comprehensive development task plans",
+                "file": "prompts/task-management/task-create.md"
+              },
+              {
+                "id": "task-execute",
+                "name": "Task Execute",
+                "description": "Complete automated task execution",
+                "file": "prompts/task-management/task-execute.md"
+              },
+              {
+                "id": "task-refactor",
+                "name": "Task Refactor",
+                "description": "Create comprehensive refactoring task plans",
+                "file": "prompts/task-management/task-refactor.md"
+              },
+              {
+                "id": "task-review",
+                "name": "Task Review",
+                "description": "Task review and validation system",
+                "file": "prompts/task-management/task-review.md"
+              },
+              {
+                "id": "task-check-state",
+                "name": "Task Check State",
+                "description": "Analyze and update implementation files",
+                "file": "prompts/task-management/task-check-state.md"
+              }
+            ]
+          },
+          {
+            "id": "documentation",
+            "name": "📝 Documentation",
+            "description": "Documentation creation and management prompts",
+            "items": [
+              {
+                "id": "doc-create",
+                "name": "Documentation Create",
+                "description": "Create comprehensive project documentation",
+                "file": "prompts/documentation/doc-create.md"
+              },
+              {
+                "id": "doc-code",
+                "name": "Documentation Code",
+                "description": "Update code-related documentation",
+                "file": "prompts/documentation/doc-code.md"
+              },
+              {
+                "id": "doc-general",
+                "name": "Documentation General",
+                "description": "Update general project documentation",
+                "file": "prompts/documentation/doc-general.md"
+              }
+            ]
+          },
+          {
+            "id": "development",
+            "name": "🔧 Development",
+            "description": "Code development and quality prompts",
             "items": [
               {
                 "id": "code-style",
                 "name": "Code Style",
                 "description": "Code style and formatting guidelines",
-                "file": "prompts/general/code-style.md"
-              },
-              {
-                "id": "accessibility",
-                "name": "Accessibility",
-                "description": "Web accessibility guidelines",
-                "file": "prompts/general/accessibility.md"
+                "file": "prompts/development/code-style.md"
               },
               {
                 "id": "code-review",
                 "name": "Code Review",
                 "description": "Code review best practices",
-                "file": "prompts/general/code-review.md"
+                "file": "prompts/development/code-review.md"
+              },
+              {
+                "id": "refactor-suggestions",
+                "name": "Refactor Suggestions",
+                "description": "Systematic refactoring approach",
+                "file": "prompts/development/refactor-suggestions.md"
               },
               {
                 "id": "test-generator",
                 "name": "Test Generator",
                 "description": "Automated test generation",
-                "file": "prompts/general/test-generator.md"
+                "file": "prompts/development/test-generator.md"
+              }
+            ]
+          },
+          {
+            "id": "ai-tools",
+            "name": "🤖 AI Tools",
+            "description": "AI-specific workflow prompts",
+            "items": [
+              {
+                "id": "vibe-coder-experiece",
+                "name": "Vibe Coder Experience",
+                "description": "ECHO v5.0 AI coding assistant",
+                "file": "prompts/ai-tools/vibe-coder-experiece.md"
+              },
+              {
+                "id": "code-only",
+                "name": "Code Only",
+                "description": "Auto-apply code without explanations",
+                "file": "prompts/ai-tools/code-only.md"
+              }
+            ]
+          },
+          {
+            "id": "accessibility",
+            "name": "♿ Accessibility",
+            "description": "Web accessibility guidelines",
+            "items": [
+              {
+                "id": "accessibility",
+                "name": "Accessibility",
+                "description": "WCAG 2.1 compliance guidelines",
+                "file": "prompts/accessibility/accessibility.md"
+              }
+            ]
+          },
+          {
+            "id": "ai-ml",
+            "name": "🤖 AI/ML",
+            "description": "Artificial intelligence and machine learning",
+            "items": [
+              {
+                "id": "integration",
+                "name": "Integration",
+                "description": "LLM integration and AI tools",
+                "file": "prompts/ai-ml/integration/"
+              }
+            ]
+          },
+          {
+            "id": "api-design",
+            "name": "🔌 API Design",
+            "description": "API design and development",
+            "items": [
+              {
+                "id": "rest",
+                "name": "REST",
+                "description": "REST API design standards",
+                "file": "prompts/api-design/rest/"
+              }
+            ]
+          },
+          {
+            "id": "cloud",
+            "name": "☁️ Cloud",
+            "description": "Cloud computing and deployment",
+            "items": [
+              {
+                "id": "aws",
+                "name": "AWS",
+                "description": "Amazon Web Services",
+                "file": "prompts/cloud/aws/"
+              }
+            ]
+          },
+          {
+            "id": "database",
+            "name": "🗄️ Database",
+            "description": "Database design and optimization",
+            "items": [
+              {
+                "id": "sql",
+                "name": "SQL",
+                "description": "PostgreSQL, MySQL, and SQL databases",
+                "file": "prompts/database/sql/"
+              }
+            ]
+          },
+          {
+            "id": "devops",
+            "name": "🚀 DevOps",
+            "description": "DevOps and deployment prompts",
+            "items": [
+              {
+                "id": "ci-cd",
+                "name": "CI/CD",
+                "description": "Continuous integration and deployment",
+                "file": "prompts/devops/ci-cd/"
+              },
+              {
+                "id": "deployment",
+                "name": "Deployment",
+                "description": "Docker, cloud deployment",
+                "file": "prompts/devops/deployment/"
               }
             ]
           },
@@ -162,6 +327,32 @@
             ]
           },
           {
+            "id": "frontend",
+            "name": "🎨 Frontend",
+            "description": "Frontend development prompts",
+            "items": [
+              {
+                "id": "modern",
+                "name": "Modern",
+                "description": "Modern frontend frameworks",
+                "file": "prompts/frontend/modern/"
+              }
+            ]
+          },
+          {
+            "id": "microservices",
+            "name": "🔗 Microservices",
+            "description": "Microservices architecture",
+            "items": [
+              {
+                "id": "architecture",
+                "name": "Architecture",
+                "description": "Microservices patterns",
+                "file": "prompts/microservices/architecture/"
+              }
+            ]
+          },
+          {
             "id": "patterns",
             "name": "🏗️ Patterns",
             "description": "Design and architectural patterns",
@@ -177,6 +368,32 @@
                 "name": "Design Patterns",
                 "description": "Singleton, Observer, Factory patterns",
                 "file": "prompts/patterns/design/"
+              }
+            ]
+          },
+          {
+            "id": "performance",
+            "name": "⚡ Performance",
+            "description": "Performance optimization",
+            "items": [
+              {
+                "id": "optimization",
+                "name": "Optimization",
+                "description": "Caching, optimization strategies",
+                "file": "prompts/performance/optimization/"
+              }
+            ]
+          },
+          {
+            "id": "security",
+            "name": "🔒 Security",
+            "description": "Security and authentication",
+            "items": [
+              {
+                "id": "authentication",
+                "name": "Authentication",
+                "description": "JWT, OAuth, and auth systems",
+                "file": "prompts/security/authentication/"
               }
             ]
           },
@@ -200,51 +417,6 @@
             ]
           },
           {
-            "id": "devops",
-            "name": "🚀 DevOps",
-            "description": "DevOps and deployment prompts",
-            "items": [
-              {
-                "id": "ci-cd",
-                "name": "CI/CD",
-                "description": "Continuous integration and deployment",
-                "file": "prompts/devops/ci-cd/"
-              },
-              {
-                "id": "deployment",
-                "name": "Deployment",
-                "description": "Docker, cloud deployment",
-                "file": "prompts/devops/deployment/"
-              }
-            ]
-          },
-          {
-            "id": "security",
-            "name": "🔒 Security",
-            "description": "Security and authentication",
-            "items": [
-              {
-                "id": "authentication",
-                "name": "Authentication",
-                "description": "JWT, OAuth, and auth systems",
-                "file": "prompts/security/authentication/"
-              }
-            ]
-          },
-          {
-            "id": "database",
-            "name": "🗄️ Database",
-            "description": "Database design and optimization",
-            "items": [
-              {
-                "id": "sql",
-                "name": "SQL",
-                "description": "PostgreSQL, MySQL, and SQL databases",
-                "file": "prompts/database/sql/"
-              }
-            ]
-          },
-          {
             "id": "testing",
             "name": "🧪 Testing",
             "description": "Testing strategies and frameworks",
@@ -254,32 +426,6 @@
                 "name": "Unit Testing",
                 "description": "Jest, testing libraries",
                 "file": "prompts/testing/unit-testing/"
-              }
-            ]
-          },
-          {
-            "id": "performance",
-            "name": "⚡ Performance",
-            "description": "Performance optimization",
-            "items": [
-              {
-                "id": "optimization",
-                "name": "Optimization",
-                "description": "Caching, optimization strategies",
-                "file": "prompts/performance/optimization/"
-              }
-            ]
-          },
-          {
-            "id": "ai-ml",
-            "name": "🤖 AI/ML",
-            "description": "Artificial intelligence and machine learning",
-            "items": [
-              {
-                "id": "integration",
-                "name": "Integration",
-                "description": "LLM integration and AI tools",
-                "file": "prompts/ai-ml/integration/"
               }
             ]
           }
