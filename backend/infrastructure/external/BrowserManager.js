@@ -483,6 +483,121 @@ class BrowserManager {
     return await this.connect(this.currentPort);
   }
 
+  /**
+   * Click the "New Chat" button in the IDE to create a new chat session
+   * @returns {Promise<boolean>} Success status
+   */
+  async clickNewChat() {
+    try {
+      const page = await this.getPage();
+      if (!page) {
+        throw new Error('No connection to Cursor IDE');
+      }
+
+      console.log('[BrowserManager] Clicking New Chat button...');
+
+      // Try multiple selectors for the New Chat button
+      const selectors = [
+        'a.action-label.codicon.codicon-add-two[aria-label*="New Chat"]',
+        'a.action-label.codicon.codicon-add-two[aria-label*="New Tab"]',
+        '.action-label.codicon.codicon-add-two[role="button"]',
+        '[aria-label*="New Chat"]',
+        '[aria-label*="New Tab"]'
+      ];
+
+      let buttonFound = false;
+      for (const selector of selectors) {
+        try {
+          const button = await page.$(selector);
+          if (button) {
+            console.log(`[BrowserManager] Found New Chat button with selector: ${selector}`);
+            await button.click();
+            buttonFound = true;
+            break;
+          }
+        } catch (e) {
+          console.log(`[BrowserManager] Selector ${selector} not found, trying next...`);
+        }
+      }
+
+      if (!buttonFound) {
+        // Fallback: Try to find by text content
+        const allButtons = await page.$$('a.action-label, .action-label');
+        for (const button of allButtons) {
+          try {
+            const ariaLabel = await button.getAttribute('aria-label');
+            const title = await button.getAttribute('title');
+            const textContent = await button.evaluate(el => el.textContent?.trim());
+            
+            if (ariaLabel && (ariaLabel.includes('New Chat') || ariaLabel.includes('New Tab')) ||
+                title && (title.includes('New Chat') || title.includes('New Tab')) ||
+                textContent && (textContent.includes('New Chat') || textContent.includes('New Tab'))) {
+              console.log(`[BrowserManager] Found New Chat button by text: ${ariaLabel || title || textContent}`);
+              await button.click();
+              buttonFound = true;
+              break;
+            }
+          } catch (e) {
+            // Continue to next button
+          }
+        }
+      }
+
+      if (!buttonFound) {
+        throw new Error('New Chat button not found in IDE');
+      }
+
+      // Wait for the new chat to be created
+      await page.waitForTimeout(1000);
+      
+      console.log('[BrowserManager] Successfully clicked New Chat button');
+      return true;
+
+    } catch (error) {
+      console.error('[BrowserManager] Error clicking New Chat button:', error.message);
+      return false;
+    }
+  }
+
+  /**
+   * Create a new chat and optionally send a message
+   * @param {string} message - Optional message to send after creating chat
+   * @returns {Promise<boolean>} Success status
+   */
+  async createNewChat(message = null) {
+    try {
+      const success = await this.clickNewChat();
+      if (!success) {
+        throw new Error('Failed to click New Chat button');
+      }
+
+      if (message) {
+        // Wait for chat input to be ready
+        await this.page.waitForTimeout(2000);
+        
+        // Find and fill the chat input
+        const chatInput = await this.page.$('.chat-input, .monaco-editor[data-testid="chat-input"], textarea[placeholder*="chat"]');
+        if (chatInput) {
+          await chatInput.click();
+          await chatInput.type(message);
+          
+          // Find and click send button
+          const sendButton = await this.page.$('button[aria-label*="Send"], .send-button, .codicon-send');
+          if (sendButton) {
+            await sendButton.click();
+            console.log('[BrowserManager] Message sent in new chat:', message);
+          }
+        }
+      }
+
+      return true;
+
+    } catch (error) {
+      console.error('[BrowserManager] Error creating new chat:', error.message);
+      return false;
+    }
+  }
+
   isConnected() {
     return this.browser !== null && this.page !== null;
   }

@@ -44,7 +44,8 @@ const API_CONFIG = {
         connect: '/api/ide/mirror/connect',
         disconnect: '/api/ide/mirror/disconnect',
         data: '/api/ide/mirror/data'
-      }
+      },
+      newChat: (port) => `/api/ide/new-chat/${port}`
     },
     preview: {
       status: '/api/preview/status',
@@ -444,6 +445,14 @@ export default class APIChatRepository extends ChatRepository {
 
   async getFrameworkStats() {
     return apiCall(API_CONFIG.endpoints.framework.stats);
+  }
+
+  // New Chat functionality
+  async clickNewChat(port, message = null) {
+    return apiCall(API_CONFIG.endpoints.ide.newChat(port), {
+      method: 'POST',
+      body: JSON.stringify({ message })
+    });
   }
 }
 

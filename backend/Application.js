@@ -682,6 +682,7 @@ class Application {
     this.app.post('/api/ide/set-workspace/:port', (req, res) => this.ideController.setWorkspacePath(req, res));
     this.app.get('/api/ide/workspace-info', (req, res) => this.ideController.getWorkspaceInfo(req, res));
     this.app.post('/api/ide/detect-workspace-paths', (req, res) => this.ideController.detectWorkspacePaths(req, res));
+    this.app.post('/api/ide/new-chat/:port', (req, res) => this.ideController.clickNewChat(req, res));
 
     // Workspace Detection routes (protected)
     this.app.get('/api/ide/workspace-detection', (req, res) => this.ideController.detectAllWorkspaces(req, res));
