@@ -452,17 +452,91 @@ class IDEController {
   async detectWorkspaceForIDE(req, res) {
     try {
       const { port } = req.params;
-      const detectionService = this.application.getIDEWorkspaceDetectionService();
-      const result = await detectionService.detectWorkspaceForIDE(parseInt(port));
+      const portNum = parseInt(port);
+      
+      console.log(`[IDEController] Detecting workspace for port ${portNum}`);
+      
+      // Trigger workspace detection for this specific port
+      await this.ideManager.detectWorkspacePath(portNum);
+      
+      // Get the updated workspace path
+      const workspacePath = this.ideManager.getWorkspacePath(portNum);
+      
+      console.log(`[IDEController] Workspace detection completed for port ${portNum}:`, workspacePath);
       
       res.json({
         success: true,
-        port: parseInt(port),
-        result: result,
-        detectionResults: detectionService.getDetectionResults()
+        port: portNum,
+        workspacePath: workspacePath,
+        message: 'Workspace detection completed'
       });
     } catch (error) {
       console.error(`[IDEController] Error detecting workspace for port ${req.params.port}:`, error);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to detect workspace',
+        message: error.message
+      });
+    }
+  }
+
+  /**
+   * POST /api/ide/workspace-detection/:port
+   * Workspace für eine spezifische IDE erkennen (mit Cache-Clear für Button)
+   */
+  async forceDetectWorkspaceForIDE(req, res) {
+    try {
+      const { port } = req.params;
+      const portNum = parseInt(port);
+      
+      console.log(`[IDEController] Force detecting workspace for port ${portNum} (clearing cache)`);
+      
+      // Clear cached workspace path to force re-detection
+      this.ideManager.ideWorkspaces.delete(portNum);
+      console.log(`[IDEController] Cleared cached workspace for port ${portNum}`);
+      
+      // Clear FileBasedWorkspaceDetector cache
+      if (this.ideManager.fileDetector) {
+        this.ideManager.fileDetector.clearCache();
+        console.log(`[IDEController] Cleared FileBasedWorkspaceDetector cache for port ${portNum}`);
+        
+        // Also clear the actual files on disk
+        const fs = require('fs');
+        const path = require('path');
+        const cacheDir = `/tmp/IDEWEB/${portNum}`;
+        
+        if (fs.existsSync(cacheDir)) {
+          try {
+            // Delete all files in the cache directory
+            const files = fs.readdirSync(cacheDir);
+            for (const file of files) {
+              const filePath = path.join(cacheDir, file);
+              fs.unlinkSync(filePath);
+              console.log(`[IDEController] Deleted cached file: ${filePath}`);
+            }
+            console.log(`[IDEController] Cleared disk cache for port ${portNum}`);
+          } catch (error) {
+            console.error(`[IDEController] Error clearing disk cache for port ${portNum}:`, error);
+          }
+        }
+      }
+      
+      // Trigger workspace detection for this specific port
+      await this.ideManager.detectWorkspacePath(portNum);
+      
+      // Get the updated workspace path
+      const workspacePath = this.ideManager.getWorkspacePath(portNum);
+      
+      console.log(`[IDEController] Force workspace detection completed for port ${portNum}:`, workspacePath);
+      
+      res.json({
+        success: true,
+        port: portNum,
+        workspacePath: workspacePath,
+        message: 'Workspace detection completed (cache cleared)'
+      });
+    } catch (error) {
+      console.error(`[IDEController] Error force detecting workspace for port ${req.params.port}:`, error);
       res.status(500).json({
         success: false,
         error: 'Failed to detect workspace',
