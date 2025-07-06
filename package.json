@@ -1,0 +1,43 @@
+{
+  "name": "pidea",
+  "version": "1.0.0",
+  "description": "Personal IDE Agent - A unified development platform",
+  "private": true,
+  "workspaces": [
+    "backend",
+    "frontend"
+  ],
+  "scripts": {
+    "setup": "node setup.js",
+    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
+    "dev:backend": "npm run start --workspace=backend",
+    "dev:frontend": "npm run dev --workspace=frontend",
+    "start": "concurrently \"npm run start:backend\" \"npm run start:frontend\"",
+    "start:backend": "npm run start --workspace=backend",
+    "start:frontend": "npm run dev --workspace=frontend",
+    "install:all": "npm install && npm install --workspace=backend && npm install --workspace=frontend",
+    "build": "npm run build --workspace=frontend",
+    "test": "npm run test --workspaces",
+    "lint": "npm run lint --workspaces",
+    "clean": "npm run clean --workspaces && rm -rf node_modules"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  },
+  "engines": {
+    "node": ">=16.0.0",
+    "npm": ">=8.0.0"
+  },
+  "keywords": [
+    "ide",
+    "development",
+    "cursor",
+    "vscode",
+    "windsurf",
+    "ai",
+    "chat",
+    "productivity"
+  ],
+  "author": "fr4iser90",
+  "license": "MIT"
+} 

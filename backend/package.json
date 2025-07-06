@@ -22,7 +22,8 @@
         "seed": "node scripts/seed.js",
         "db:setup": "npm run migrate && npm run seed",
         "refactor-imports": "node scripts/refactor-imports.js",
-        "postinstall": "npx module-alias"
+        "setup": "node scripts/dev-setup.js",
+        "postinstall": "node -e \"console.log('Postinstall completed')\""
     },
     "keywords": [
         "cursor",

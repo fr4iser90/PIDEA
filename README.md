@@ -3,6 +3,34 @@
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Version](https://img.shields.io/badge/version-1.0.0-green.svg)](CHANGELOG.md)
 
+## Quickstart (Monorepo & Dev Setup)
+
+1. **Clone the repository:**
+   ```bash
+   git clone https://github.com/fr4iser90/PIDEA.git && cd PIDEA
+   ```
+2. **Install all dependencies (backend & frontend):**
+   ```bash
+   npm install
+   ```
+3. **Start the interactive dev setup menu:**
+   ```bash
+   npm run setup
+   # or directly: ./setup.js
+   ```
+   The menu allows you to:
+   - Reset the database
+   - Create test or custom users
+   - Start backend/frontend
+   - Check system status and more
+
+4. **Alternatively, start both backend & frontend together:**
+   ```bash
+   npm run dev
+   ```
+
+---
+
 ## Overview
 
 **Personal IDE Agent** - An innovative web-based platform designed to enhance developer productivity through integrated tools and AI-driven assistance. It provides a seamless environment for coding, collaboration, and project management, with features like real-time chat, IDE mirroring, and content preview. The platform is built to support developers in creating, analyzing, and refactoring projects efficiently.
@@ -86,22 +114,6 @@ Future versions will expand IDE integration beyond Cursor to include:
 - **VS Code**: Full integration with Visual Studio Code for seamless development workflows.
 - **Windsurf**: Support for the Windsurf IDE to provide additional development environment options.
 - **Universal IDE Interface**: A standardized approach to IDE communication that can be extended to support other popular development environments.
-## Getting Started
-
-### Installation
-1. Clone the repository: `git clone https://github.com/fr4iser90/PIDEA.git`
-2. Navigate to the project directory: `cd PIDEA`
-3. Install dependencies:
-   - Frontend: `cd frontend && npm install`
-   - Backend: `cd backend && npm install`
-4. Start the development servers:
-   - Frontend: `cd frontend && npm run dev`
-   - Backend: `cd backend && npm run start`
-
-### Usage
-- Access the web interface at `http://localhost:4005` (or the port specified by your frontend server).
-- Use the navigation buttons to switch between Chat, IDE Mirror, Preview, and Code views.
-- Engage with the chat system to communicate or request AI assistance (once implemented).
 
 ## Project Structure
 - **frontend/**: Contains React-based UI components and pages for chat, preview, and IDE integration.
