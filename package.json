@@ -41,6 +41,7 @@
   "author": "fr4iser90",
   "license": "MIT",
   "dependencies": {
+    "jsdom": "^26.1.0",
     "marked": "^16.0.0"
   }
 }
