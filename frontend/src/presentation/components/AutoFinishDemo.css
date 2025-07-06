@@ -1,0 +1,333 @@
+.auto-finish-demo {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.demo-header {
+  text-align: center;
+  margin-bottom: 40px;
+  padding: 20px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border-radius: 12px;
+}
+
+.demo-header h1 {
+  margin: 0 0 10px 0;
+  font-size: 2.5rem;
+  font-weight: 700;
+}
+
+.demo-header p {
+  margin: 0;
+  font-size: 1.1rem;
+  opacity: 0.9;
+}
+
+.demo-content {
+  display: grid;
+  gap: 30px;
+}
+
+.input-section {
+  background: white;
+  border-radius: 12px;
+  padding: 30px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e1e5e9;
+}
+
+.input-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.input-header h2 {
+  margin: 0;
+  color: #2d3748;
+  font-size: 1.5rem;
+}
+
+.input-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.btn {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+
+.btn-primary:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+.btn-primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.btn-secondary {
+  background: #f7fafc;
+  color: #4a5568;
+  border: 1px solid #e2e8f0;
+}
+
+.btn-secondary:hover {
+  background: #edf2f7;
+  border-color: #cbd5e0;
+}
+
+.todo-input {
+  width: 100%;
+  padding: 15px;
+  border: 2px solid #e2e8f0;
+  border-radius: 8px;
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  font-size: 14px;
+  line-height: 1.5;
+  resize: vertical;
+  transition: border-color 0.2s ease;
+}
+
+.todo-input:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.todo-input:disabled {
+  background: #f7fafc;
+  color: #a0aec0;
+  cursor: not-allowed;
+}
+
+.input-footer {
+  margin-top: 20px;
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.error-message {
+  color: #e53e3e;
+  background: #fed7d7;
+  padding: 10px 15px;
+  border-radius: 6px;
+  border: 1px solid #feb2b2;
+  font-size: 14px;
+}
+
+.progress-section {
+  background: white;
+  border-radius: 12px;
+  padding: 30px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e1e5e9;
+}
+
+.progress-section h2 {
+  margin: 0 0 20px 0;
+  color: #2d3748;
+  font-size: 1.5rem;
+}
+
+.info-section {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 30px;
+}
+
+.patterns-info,
+.task-types-info {
+  background: white;
+  border-radius: 12px;
+  padding: 30px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e1e5e9;
+}
+
+.patterns-info h3,
+.task-types-info h3 {
+  margin: 0 0 20px 0;
+  color: #2d3748;
+  font-size: 1.3rem;
+}
+
+.patterns-info ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.patterns-info li {
+  padding: 8px 0;
+  border-bottom: 1px solid #f1f5f9;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.patterns-info li:last-child {
+  border-bottom: none;
+}
+
+.patterns-info code {
+  background: #f1f5f9;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  font-size: 12px;
+  color: #374151;
+  min-width: 80px;
+  text-align: center;
+}
+
+.task-types-grid {
+  display: grid;
+  gap: 15px;
+}
+
+.task-type {
+  padding: 15px;
+  background: #f8fafc;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+}
+
+.task-type h4 {
+  margin: 0 0 8px 0;
+  color: #2d3748;
+  font-size: 1rem;
+  text-transform: capitalize;
+}
+
+.task-type p {
+  margin: 0;
+  color: #4a5568;
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .auto-finish-demo {
+    padding: 15px;
+  }
+
+  .demo-header h1 {
+    font-size: 2rem;
+  }
+
+  .input-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 15px;
+  }
+
+  .input-actions {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .info-section {
+    grid-template-columns: 1fr;
+  }
+
+  .input-footer {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
+/* Loading animation */
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.processing {
+  animation: pulse 2s infinite;
+}
+
+/* Success/Error states */
+.success {
+  border-color: #48bb78;
+  background: #f0fff4;
+}
+
+.error {
+  border-color: #f56565;
+  background: #fff5f5;
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  .auto-finish-demo {
+    background: #1a202c;
+    color: #e2e8f0;
+  }
+
+  .input-section,
+  .progress-section,
+  .patterns-info,
+  .task-types-info {
+    background: #2d3748;
+    border-color: #4a5568;
+    color: #e2e8f0;
+  }
+
+  .todo-input {
+    background: #2d3748;
+    border-color: #4a5568;
+    color: #e2e8f0;
+  }
+
+  .todo-input:focus {
+    border-color: #667eea;
+  }
+
+  .btn-secondary {
+    background: #4a5568;
+    color: #e2e8f0;
+    border-color: #718096;
+  }
+
+  .btn-secondary:hover {
+    background: #718096;
+  }
+
+  .task-type {
+    background: #4a5568;
+    border-color: #718096;
+  }
+
+  .patterns-info code {
+    background: #4a5568;
+    color: #e2e8f0;
+  }
+} 

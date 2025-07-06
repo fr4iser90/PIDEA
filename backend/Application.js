@@ -22,12 +22,20 @@ const TaskService = require('./domain/services/TaskService');
 const TaskRepository = require('./domain/repositories/TaskRepository');
 const TaskValidationService = require('./domain/services/TaskValidationService');
 
+// Auto-Finish System
+const AutoFinishSystem = require('./domain/services/auto-finish/AutoFinishSystem');
+const TaskSession = require('./domain/entities/TaskSession');
+const TodoTask = require('./domain/entities/TodoTask');
+const TaskSessionRepository = require('./infrastructure/database/TaskSessionRepository');
+
 // Application
 const SendMessageCommand = require('./application/commands/SendMessageCommand');
 const GetChatHistoryQuery = require('./application/queries/GetChatHistoryQuery');
 const SendMessageHandler = require('./application/handlers/SendMessageHandler');
 const GetChatHistoryHandler = require('./application/handlers/GetChatHistoryHandler');
 const CreateTaskHandler = require('./application/handlers/CreateTaskHandler');
+const ProcessTodoListCommand = require('./application/commands/ProcessTodoListCommand');
+const ProcessTodoListHandler = require('./application/handlers/ProcessTodoListHandler');
 
 // Analyze Commands and Handlers
 const AnalyzeArchitectureCommand = require('./application/commands/analyze/AnalyzeArchitectureCommand');
@@ -100,6 +108,7 @@ const FrameworkController = require('./presentation/api/FrameworkController');
 const AuthController = require('./presentation/api/AuthController');
 const TaskController = require('./presentation/api/TaskController');
 const AutoModeController = require('./presentation/api/AutoModeController');
+const AutoFinishController = require('./presentation/api/AutoFinishController');
 const AnalysisController = require('./presentation/api/AnalysisController');
 const GitController = require('./presentation/api/GitController');
 const WebSocketManager = require('./presentation/websocket/WebSocketManager');
@@ -293,6 +302,18 @@ class Application {
     this.monorepoStrategy = this.serviceRegistry.getService('monorepoStrategy');
     this.singleRepoStrategy = this.serviceRegistry.getService('singleRepoStrategy');
 
+    // Initialize Auto-Finish System
+    this.taskSessionRepository = new TaskSessionRepository(this.databaseConnection);
+    await this.taskSessionRepository.initialize();
+    
+    this.autoFinishSystem = new AutoFinishSystem(
+      this.cursorIDEService,
+      this.browserManager,
+      this.ideManager,
+      this.webSocketManager
+    );
+    await this.autoFinishSystem.initialize();
+
     this.logger.info('[Application] Domain services initialized with DI');
   }
 
@@ -457,13 +478,22 @@ class Application {
       commandBus: this.commandBus,
       logger: this.logger,
       analysisOutputService: this.analysisOutputService,
-      subprojectDetector: this.subprojectDetector,
       projectAnalyzer: this.projectAnalyzer,
-      codeQualityAnalyzer: this.codeQualityAnalyzer,
-      architectureAnalyzer: this.architectureAnalyzer,
-      dependencyAnalyzer: this.dependencyAnalyzer,
-      securityAnalyzer: this.securityAnalyzer,
-      performanceAnalyzer: this.performanceAnalyzer
+      cursorIDEService: this.cursorIDEService,
+      taskRepository: this.taskRepository,
+      fileSystemService: this.fileSystemService
+    });
+
+    // Initialize Auto-Finish Handler
+    this.processTodoListHandler = new ProcessTodoListHandler({
+      autoFinishSystem: this.autoFinishSystem,
+      cursorIDE: this.cursorIDEService,
+      browserManager: this.browserManager,
+      ideManager: this.ideManager,
+      webSocketManager: this.webSocketManager,
+      taskSessionRepository: this.taskSessionRepository,
+      eventBus: this.eventBus,
+      logger: this.logger
     });
 
     this.vibeCoderAutoRefactorHandler = this.serviceRegistry.getService('vibeCoderAutoRefactorHandler');
@@ -505,6 +535,9 @@ class Application {
     // Register VibeCoder Mode Command
     this.commandBus.register('VibeCoderModeCommand', this.vibeCoderModeHandler);
     this.commandBus.register('VibeCoderAutoRefactorCommand', this.vibeCoderAutoRefactorHandler);
+
+    // Register Auto-Finish Commands
+    this.commandBus.register('ProcessTodoListCommand', this.processTodoListHandler);
 
     this.logger.info('[Application] Application handlers initialized');
   }
@@ -572,6 +605,13 @@ class Application {
       gitService: this.gitService,
       logger: this.logger,
       eventBus: this.eventBus
+    });
+
+    this.autoFinishController = new AutoFinishController({
+      commandBus: this.commandBus,
+      taskSessionRepository: this.taskSessionRepository,
+      autoFinishSystem: this.autoFinishSystem,
+      logger: this.logger
     });
 
     this.logger.info('[Application] Presentation layer initialized');
@@ -822,6 +862,18 @@ class Application {
     this.app.get('/api/docs-tasks', (req, res) => this.ideController.getDocsTasks(req, res));
     this.app.get('/api/docs-tasks/:filename', (req, res) => this.ideController.getDocsTaskDetails(req, res));
 
+    // Auto Finish routes (protected)
+    this.app.use('/api/auto-finish', this.authMiddleware.authenticate());
+    this.app.post('/api/auto-finish/process', (req, res) => this.autoFinishController.processTodoList(req, res));
+    this.app.get('/api/auto-finish/sessions/:sessionId', (req, res) => this.autoFinishController.getSessionStatus(req, res));
+    this.app.get('/api/auto-finish/sessions', (req, res) => this.autoFinishController.getUserSessions(req, res));
+    this.app.get('/api/projects/:projectId/auto-finish/sessions', (req, res) => this.autoFinishController.getProjectSessions(req, res));
+    this.app.delete('/api/auto-finish/sessions/:sessionId', (req, res) => this.autoFinishController.cancelSession(req, res));
+    this.app.get('/api/auto-finish/stats', (req, res) => this.autoFinishController.getSystemStats(req, res));
+    this.app.get('/api/auto-finish/patterns', (req, res) => this.autoFinishController.getSupportedPatterns(req, res));
+    this.app.get('/api/auto-finish/task-types', (req, res) => this.autoFinishController.getTaskTypeKeywords(req, res));
+    this.app.get('/api/auto-finish/health', (req, res) => this.autoFinishController.healthCheck(req, res));
+
     // Error handling middleware
     this.app.use((error, req, res, next) => {
       this.logger.error('[Application] Unhandled error:', error);
@@ -920,6 +972,18 @@ class Application {
       }
     }, 24 * 60 * 60 * 1000); // 24 hours
 
+    // Cleanup old Auto-Finish sessions every 6 hours
+    setInterval(async () => {
+      try {
+        if (this.taskSessionRepository) {
+          await this.taskSessionRepository.cleanupOldSessions(7); // Keep sessions for 7 days
+          this.logger.info('[Application] Cleaned up old Auto-Finish sessions');
+        }
+      } catch (error) {
+        this.logger.error('[Application] Failed to cleanup old Auto-Finish sessions:', error);
+      }
+    }, 6 * 60 * 60 * 1000); // 6 hours
+
     this.logger.info('[Application] Cleanup tasks setup complete');
   }
 
@@ -1002,6 +1066,11 @@ class Application {
 
     if (this.ideManager) {
       await this.ideManager.cleanup();
+    }
+
+    // Cleanup Auto-Finish System
+    if (this.autoFinishSystem) {
+      await this.autoFinishSystem.cleanup();
     }
 
     this.logger.info('[Application] Cleanup completed');
