@@ -45,23 +45,71 @@ class FrameworkController {
   async getPrompt(req, res) {
     try {
       const { promptId } = req.params;
-      // Handle nested paths by replacing dashes with slashes
-      const promptPathParts = promptId.split('-');
-      const promptPath = path.join(this.frameworkPath, 'prompts', ...promptPathParts) + '.md';
+      console.log('🔍 [FrameworkController] getPrompt called with promptId:', promptId);
+      
+      // Load framework structure to find the correct file path
+      const structurePath = path.join(this.frameworkPath, 'framework-structure.json');
+      const structureData = await fs.readFile(structurePath, 'utf8');
+      const structure = JSON.parse(structureData);
+      
+      // Find the prompt in the framework structure
+      const promptInfo = this.findPromptInStructure(structure.frameworkStructure, promptId);
+      
+      if (!promptInfo) {
+        console.error('❌ [FrameworkController] Prompt not found in framework structure:', promptId);
+        return res.status(404).json({ 
+          error: 'Prompt not found',
+          message: `Prompt '${promptId}' not found in framework structure`
+        });
+      }
+      
+      // Build the full path using the file path from structure
+      const promptPath = path.join(this.frameworkPath, promptInfo.file);
+      console.log('🔍 [FrameworkController] Resolved path:', promptPath);
       
       const promptContent = await fs.readFile(promptPath, 'utf8');
+      console.log('✅ [FrameworkController] Successfully loaded prompt, length:', promptContent.length);
+      
       res.json({ 
         id: promptId,
         content: promptContent,
-        type: 'prompt'
+        type: 'prompt',
+        file: promptInfo.file
       });
     } catch (error) {
-      console.error('Error loading prompt:', error);
+      console.error('❌ [FrameworkController] Error loading prompt:', error);
       res.status(404).json({ 
         error: 'Prompt not found',
         message: error.message 
       });
     }
+  }
+
+  findPromptInStructure(structure, promptId) {
+    // Search through all categories and their items
+    if (structure.categories) {
+      for (const category of structure.categories) {
+        if (category.items) {
+          for (const item of category.items) {
+            // Check if this item has sub-items (like task-management)
+            if (item.items) {
+              for (const subItem of item.items) {
+                // Check both the direct ID and the combined ID (category-item)
+                if ((subItem.id === promptId || `${item.id}-${subItem.id}` === promptId) && subItem.file) {
+                  return subItem;
+                }
+              }
+            } else {
+              // Direct item (like code-only)
+              if (item.id === promptId && item.file) {
+                return item;
+              }
+            }
+          }
+        }
+      }
+    }
+    return null;
   }
 
   async searchFrameworks(req, res) {

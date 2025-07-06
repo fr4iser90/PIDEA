@@ -740,6 +740,8 @@ class Application {
     this.app.get('/api/framework/prompts', (req, res) => this.frameworkController.getPrompts(req, res));
     this.app.get('/api/framework/templates', (req, res) => this.frameworkController.getTemplates(req, res));
     this.app.get('/api/framework/structure', (req, res) => this.frameworkController.getFrameworkStructure(req, res));
+    this.app.get('/api/framework/prompt/:promptId', (req, res) => this.frameworkController.getPrompt(req, res));
+    this.app.get('/api/framework/template/:templateId', (req, res) => this.frameworkController.getTemplate(req, res));
 
     // Task Management routes (protected) - PROJECT-BASED
     this.app.use('/api/projects/:projectId/tasks', this.authMiddleware.authenticate());

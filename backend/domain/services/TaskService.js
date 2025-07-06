@@ -46,7 +46,7 @@ class TaskService {
     let taskExecutePrompt = '';
     try {
       console.log('🔍 [TaskService] Loading task-execute.md via API...');
-      const response = await fetch('http://localhost:3000/api/framework/prompt/task-management-task-execute');
+      const response = await fetch('http://localhost:3000/api/framework/prompt/task-management/task-execute');
       console.log('🔍 [TaskService] API response status:', response.status);
       
       if (response.ok) {
