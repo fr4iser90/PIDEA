@@ -500,6 +500,7 @@ class BrowserManager {
       const selectors = [
         'a.action-label.codicon.codicon-add-two[aria-label*="New Chat"]',
         'a.action-label.codicon.codicon-add-two[aria-label*="New Tab"]',
+        'a.action-label.codicon.codicon-add-two[role="button"]',
         '.action-label.codicon.codicon-add-two[role="button"]',
         '[aria-label*="New Chat"]',
         '[aria-label*="New Tab"]'
@@ -528,7 +529,17 @@ class BrowserManager {
             const ariaLabel = await button.getAttribute('aria-label');
             const title = await button.getAttribute('title');
             const textContent = await button.evaluate(el => el.textContent?.trim());
+            const className = await button.getAttribute('class');
             
+            // Check if this is the add-two button (New Chat/Tab)
+            if (className && className.includes('codicon-add-two')) {
+              console.log(`[BrowserManager] Found add-two button with aria-label: ${ariaLabel}`);
+              await button.click();
+              buttonFound = true;
+              break;
+            }
+            
+            // Also check by text content
             if (ariaLabel && (ariaLabel.includes('New Chat') || ariaLabel.includes('New Tab')) ||
                 title && (title.includes('New Chat') || title.includes('New Tab')) ||
                 textContent && (textContent.includes('New Chat') || textContent.includes('New Tab'))) {
