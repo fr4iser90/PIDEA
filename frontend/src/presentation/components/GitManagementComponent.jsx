@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import './GitManagementComponent.css';
+import { apiCall } from '@infrastructure/repositories/APIChatRepository.jsx';
 
 const GitManagementComponent = ({ activePort, onGitOperation }) => {
   const [gitStatus, setGitStatus] = useState(null);
@@ -26,7 +27,6 @@ const GitManagementComponent = ({ activePort, onGitOperation }) => {
 
   const loadWorkspacePath = async () => {
     try {
-      const { apiCall } = await import('@infrastructure/repositories/APIChatRepository.jsx');
       const result = await apiCall('/api/ide/available');
       if (result.success && result.data) {
         const activeIDE = result.data.find(ide => ide.port === activePort);
@@ -42,19 +42,13 @@ const GitManagementComponent = ({ activePort, onGitOperation }) => {
   const loadGitStatus = async () => {
     try {
       if (!workspacePath) return;
-      
       setIsLoading(true);
-      const response = await fetch('/api/git/status', {
+      const data = await apiCall('/api/git/status', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ projectPath: workspacePath })
       });
-      
-      if (response.ok) {
-        const data = await response.json();
-        setGitStatus(data.status);
-        setCurrentBranch(data.currentBranch);
-      }
+      setGitStatus(data.status);
+      setCurrentBranch(data.currentBranch);
     } catch (error) {
       console.error('Failed to load Git status:', error);
     } finally {
@@ -65,17 +59,11 @@ const GitManagementComponent = ({ activePort, onGitOperation }) => {
   const loadBranches = async () => {
     try {
       if (!workspacePath) return;
-      
-      const response = await fetch('/api/git/branches', {
+      const data = await apiCall('/api/git/branches', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ projectPath: workspacePath })
       });
-      
-      if (response.ok) {
-        const data = await response.json();
-        setBranches(data.branches);
-      }
+      setBranches((data && data.data && data.data.branches) ? data.data.branches : []);
     } catch (error) {
       console.error('Failed to load branches:', error);
     }
@@ -87,28 +75,17 @@ const GitManagementComponent = ({ activePort, onGitOperation }) => {
         setOperationResult({ type: 'error', message: 'No workspace path available' });
         return;
       }
-      
       setIsLoading(true);
       setOperationResult(null);
-
-      const response = await fetch(`/api/git/${operation}`, {
+      const result = await apiCall(`/api/git/${operation}`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ projectPath: workspacePath, ...options })
       });
-
-      const result = await response.json();
-      
-      if (response.ok) {
-        setOperationResult({ type: 'success', message: result.message, data: result.data });
-        await loadGitStatus();
-        await loadBranches();
-        
-        if (onGitOperation) {
-          onGitOperation(operation, result);
-        }
-      } else {
-        setOperationResult({ type: 'error', message: result.message || 'Operation failed' });
+      setOperationResult({ type: 'success', message: result.message, data: result.data });
+      await loadGitStatus();
+      await loadBranches();
+      if (onGitOperation) {
+        onGitOperation(operation, result);
       }
     } catch (error) {
       setOperationResult({ type: 'error', message: error.message });
@@ -127,23 +104,17 @@ const GitManagementComponent = ({ activePort, onGitOperation }) => {
         setOperationResult({ type: 'error', message: 'No workspace path available' });
         return;
       }
-      
       setIsLoading(true);
-      const response = await fetch('/api/git/compare', {
+      const result = await apiCall('/api/git/compare', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
           projectPath: workspacePath, 
           sourceBranch: currentBranch, 
           targetBranch: 'main' 
         })
       });
-
-      if (response.ok) {
-        const result = await response.json();
-        setDiffContent(result.diff);
-        setShowDiff(true);
-      }
+      setDiffContent(result.diff);
+      setShowDiff(true);
     } catch (error) {
       setOperationResult({ type: 'error', message: error.message });
     } finally {
