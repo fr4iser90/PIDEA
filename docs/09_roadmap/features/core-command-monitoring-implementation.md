@@ -228,10 +228,11 @@ await page.keyboard.up('Control');
 await page.waitForTimeout(1000);
 
 // 3. TERMINAL BEFEHLE AUSFÜHREN - Das macht Playwright WIRKLICH!
+const port = XXXX; // IDE Port (9222-9231)
 const commands = [
-  'mkdir -p /tmp/IDEWEB/3000/logs',
-  'npm run dev > /tmp/IDEWEB/3000/logs/terminal.log 2>&1 & echo $! > /tmp/IDEWEB/3000/logs/process.pid',
-  'tail -f /tmp/IDEWEB/3000/logs/terminal.log > /tmp/IDEWEB/3000/logs/terminal-realtime.log 2>&1 &'
+  `mkdir -p /tmp/IDEWEB/${port}/logs`,
+  `npm run dev > /tmp/IDEWEB/${port}/logs/terminal.log 2>&1 & echo $! > /tmp/IDEWEB/${port}/logs/process.pid`,
+  `tail -f /tmp/IDEWEB/${port}/logs/terminal.log > /tmp/IDEWEB/${port}/logs/terminal-realtime.log 2>&1 &`
 ];
 
 for (const command of commands) {
@@ -274,7 +275,7 @@ async function writeToEncryptedLog(filePath, logEntry) {
 // 6. LOG-DATEI ÜBERWACHEN - Polling alle 2 Sekunden
 setInterval(async () => {
   try {
-    const logPath = '/tmp/IDEWEB/3000/logs/terminal.log';
+    const logPath = `/tmp/IDEWEB/${port}/logs/terminal.log`;
     const stats = await fs.stat(logPath);
     
     if (stats.size > 0) {
@@ -292,7 +293,7 @@ setInterval(async () => {
         };
         
         // In verschlüsselte Datei schreiben
-        await writeToEncryptedLog('/tmp/IDEWEB/3000/logs/terminal.encrypted.log', logEntry);
+        await writeToEncryptedLog(`/tmp/IDEWEB/${port}/logs/terminal.encrypted.log`, logEntry);
       }
       
       // Original-Log leeren (nur neue Zeilen behalten)
@@ -310,7 +311,7 @@ process.on('SIGINT', async () => {
   
   // Prozess beenden falls PID-Datei existiert
   try {
-    const pidPath = '/tmp/IDEWEB/3000/logs/process.pid';
+    const pidPath = `/tmp/IDEWEB/${port}/logs/process.pid`;
     const pid = await fs.readFile(pidPath, 'utf8');
     if (pid) {
       process.kill(parseInt(pid), 'SIGTERM');
@@ -332,8 +333,8 @@ process.on('SIGINT', async () => {
 - **Playwright KANN Terminal öffnen und Input senden!**
 
 **SCHRITT 2: Befehle mit Output-Umleitung ausführen**
-- `npm run dev > /tmp/IDEWEB/3000/logs/terminal.log 2>&1` - Leitet Output in Datei um
-- `& echo $! > /tmp/IDEWEB/3000/logs/process.pid` - Speichert Prozess-ID
+- `npm run dev > /tmp/IDEWEB/${port}/logs/terminal.log 2>&1` - Leitet Output in Datei um
+- `& echo $! > /tmp/IDEWEB/${port}/logs/process.pid` - Speichert Prozess-ID
 - `tail -f` - Überwacht Datei in Echtzeit
 - **Playwright KANN Befehle ausführen die Output in Dateien schreiben!**
 
@@ -345,7 +346,7 @@ process.on('SIGINT', async () => {
 
 **SCHRITT 4: Datei-Struktur**
 ```
-/tmp/IDEWEB/3000/logs/
+/tmp/IDEWEB/{port}/logs/
 ├── terminal.log              # Terminal-Output (nicht verschlüsselt)
 ├── terminal.encrypted.log    # Verschlüsselte Log-Einträge
 ├── process.pid               # Prozess-ID für Cleanup
