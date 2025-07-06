@@ -152,6 +152,9 @@ const GitManagementComponent = ({ activePort, onGitOperation }) => {
     return `${totalChanges} changes`;
   };
 
+  // Filtere nur lokale Branches (ohne 'remotes/')
+  const localBranches = branches.filter(branch => !branch.startsWith('remotes/'));
+
   return (
     <div className="git-management">
       {/* Git Status Header */}
@@ -236,7 +239,7 @@ const GitManagementComponent = ({ activePort, onGitOperation }) => {
           disabled={isLoading}
           className="branch-select"
         >
-          {branches.map(branch => (
+          {localBranches.map(branch => (
             <option key={branch} value={branch}>
               {branch === currentBranch ? `📍 ${branch}` : branch}
             </option>

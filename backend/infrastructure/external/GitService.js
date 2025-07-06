@@ -133,28 +133,25 @@ class GitService {
     }
 
     /**
-     * Get all branches
+     * Get all real origin branches (as on GitHub, no HEAD, no duplicates, no remotes/)
      * @param {string} repoPath - Repository path
-     * @param {Object} options - Branch options
      * @returns {Promise<Array>} Branch list
      */
     async getBranches(repoPath, options = {}) {
-        const { remote = false, all = false } = options;
-
         try {
-            let command = 'git branch';
-            if (all) command += ' -a';
-            else if (remote) command += ' -r';
-
+            const command = 'git branch -r';
             const result = execSync(command, {
                 cwd: repoPath,
                 encoding: 'utf8'
             });
-
             return result
                 .split('\n')
-                .filter(line => line.trim())
-                .map(line => line.trim().replace(/^\*?\s*/, ''));
+                .map(line => line.trim())
+                .filter(line => line.startsWith('origin/')) // nur origin-Branches
+                .filter(line => !line.includes('HEAD ->')) // kein HEAD
+                .map(line => line.replace(/^origin\//, ''))
+                .filter(branch => branch && branch.length > 0)
+                .filter((branch, idx, arr) => arr.indexOf(branch) === idx); // unique
         } catch (error) {
             this.logger.error('GitService: Failed to get branches', {
                 repoPath,
