@@ -1,1 +1,0 @@
-use screenshots, fetch all dom content , clear out unnneccasry stuff, terminal browser console if needed etc , fetch, clear , prompt via plawright to debug + framework
