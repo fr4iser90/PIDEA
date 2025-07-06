@@ -503,7 +503,17 @@ class BrowserManager {
         'a.action-label.codicon.codicon-add-two[role="button"]',
         '.action-label.codicon.codicon-add-two[role="button"]',
         '[aria-label*="New Chat"]',
-        '[aria-label*="New Tab"]'
+        '[aria-label*="New Tab"]',
+        '.codicon-add-two',
+        '.action-label[aria-label*="New"]',
+        'button[aria-label*="New Chat"]',
+        'a[aria-label*="New Chat"]',
+        '.new-chat-button',
+        '[data-testid*="new-chat"]',
+        '.codicon-add',
+        '[aria-label*="Add"]',
+        'button[title*="New"]',
+        'a[title*="New"]'
       ];
 
       let buttonFound = false;
@@ -523,7 +533,7 @@ class BrowserManager {
 
       if (!buttonFound) {
         // Fallback: Try to find by text content
-        const allButtons = await page.$$('a.action-label, .action-label');
+        const allButtons = await page.$$('a.action-label, .action-label, button, a[role="button"]');
         for (const button of allButtons) {
           try {
             const ariaLabel = await button.getAttribute('aria-label');
@@ -558,15 +568,111 @@ class BrowserManager {
         throw new Error('New Chat button not found in IDE');
       }
 
-      // Wait for the new chat to be created
+      // Wait for potential modal to appear
       await page.waitForTimeout(1000);
       
-      console.log('[BrowserManager] Successfully clicked New Chat button');
+      // CRITICAL: Handle the New Chat modal that appears after clicking New Chat
+      await this.handleNewChatModal(page);
+      
+      console.log('[BrowserManager] Successfully clicked New Chat button and handled modal');
       return true;
 
     } catch (error) {
       console.error('[BrowserManager] Error clicking New Chat button:', error.message);
       return false;
+    }
+  }
+
+  /**
+   * Handle the New Chat modal that appears after clicking New Chat button
+   * @param {Page} page - Playwright page object
+   */
+  async handleNewChatModal(page) {
+    try {
+      console.log('[BrowserManager] Checking for New Chat modal...');
+      
+      // Wait for modal to appear
+      await page.waitForTimeout(500);
+      
+      // Look for buttons in the New Chat modal
+      const modalSelectors = [
+        // Common modal buttons
+        'button[role="button"]',
+        '.monaco-button',
+        '.action-label',
+        '.codicon',
+        '[aria-label*="button"]',
+        
+        // Specific New Chat modal buttons
+        'button:has-text("OK")',
+        'button:has-text("Continue")',
+        'button:has-text("Start")',
+        'button:has-text("Create")',
+        'button:has-text("Begin")',
+        'button:has-text("Yes")',
+        'button:has-text("No")',
+        'button:has-text("Cancel")',
+        
+        // Aria-label based
+        '[aria-label*="OK"]',
+        '[aria-label*="Continue"]',
+        '[aria-label*="Start"]',
+        '[aria-label*="Create"]',
+        '[aria-label*="Begin"]',
+        '[aria-label*="Yes"]',
+        '[aria-label*="No"]',
+        '[aria-label*="Cancel"]'
+      ];
+
+      // Try to find and click any button to proceed
+      for (const selector of modalSelectors) {
+        try {
+          const element = await page.$(selector);
+          if (element) {
+            const text = await element.textContent();
+            const ariaLabel = await element.getAttribute('aria-label');
+            
+            // Skip close/cancel buttons, prefer action buttons
+            if (text?.includes('Cancel') || ariaLabel?.includes('Cancel') ||
+                text?.includes('Close') || ariaLabel?.includes('Close')) {
+              continue;
+            }
+            
+            console.log(`[BrowserManager] Clicking New Chat modal button: ${text || ariaLabel}`);
+            await element.click();
+            await page.waitForTimeout(500);
+            return;
+          }
+        } catch (e) {
+          continue;
+        }
+      }
+      
+      // If no action button found, try any button
+      for (const selector of modalSelectors) {
+        try {
+          const element = await page.$(selector);
+          if (element) {
+            const text = await element.textContent();
+            const ariaLabel = await element.getAttribute('aria-label');
+            console.log(`[BrowserManager] Clicking any modal button: ${text || ariaLabel}`);
+            await element.click();
+            await page.waitForTimeout(500);
+            return;
+          }
+        } catch (e) {
+          continue;
+        }
+      }
+      
+      // Last resort: try Escape key
+      await page.keyboard.press('Escape');
+      await page.waitForTimeout(500);
+      
+      console.log('[BrowserManager] New Chat modal handled (or no modal found)');
+      
+    } catch (error) {
+      console.log(`[BrowserManager] New Chat modal handling failed: ${error.message}`);
     }
   }
 
@@ -679,21 +785,15 @@ class BrowserManager {
       }
 
       if (message) {
-        // Wait for chat input to be ready
-        await this.page.waitForTimeout(2000);
+        // Wait for chat input to be ready (longer wait since modal handling might take time)
+        await this.page.waitForTimeout(1000);
         
-        // Find and fill the chat input
-        const chatInput = await this.page.$('.chat-input, .monaco-editor[data-testid="chat-input"], textarea[placeholder*="chat"]');
-        if (chatInput) {
-          await chatInput.click();
-          await chatInput.type(message);
-          
-          // Find and click send button
-          const sendButton = await this.page.$('button[aria-label*="Send"], .send-button, .codicon-send');
-          if (sendButton) {
-            await sendButton.click();
-            console.log('[BrowserManager] Message sent in new chat:', message);
-          }
+        // Use the improved typeMessage method
+        const messageSent = await this.typeMessage(message, true);
+        if (messageSent) {
+          console.log('[BrowserManager] Message sent in new chat:', message);
+        } else {
+          console.warn('[BrowserManager] Failed to send message in new chat');
         }
       }
 
