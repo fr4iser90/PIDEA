@@ -670,6 +670,50 @@ class IDEController {
       });
     }
   }
+
+  async clickNewChat(req, res) {
+    try {
+      const { port } = req.params;
+      const { message } = req.body;
+
+      console.log(`[IDEController] Clicking New Chat for port ${port}${message ? ` with message: ${message}` : ''}`);
+
+      // Get the browser manager for the specified port
+      const browserManager = this.ideManager.browserManager;
+      if (!browserManager) {
+        throw new Error('Browser manager not available');
+      }
+
+      // Switch to the specified port first
+      await browserManager.switchToPort(parseInt(port));
+
+      // Click the New Chat button
+      const success = await browserManager.clickNewChat();
+      
+      if (success) {
+        console.log(`[IDEController] Successfully clicked New Chat button on port ${port}`);
+        
+        // If a message was provided, type it into the chat
+        if (message) {
+          console.log(`[IDEController] Typing message: ${message}`);
+          await browserManager.typeMessage(message);
+        }
+        
+        res.json({
+          success: true,
+          message: `New chat created on port ${port}${message ? ` with message: ${message}` : ''}`
+        });
+      } else {
+        throw new Error('Failed to click New Chat button');
+      }
+    } catch (error) {
+      console.error('[IDEController] Error clicking New Chat:', error);
+      res.status(500).json({
+        success: false,
+        error: error.message
+      });
+    }
+  }
 }
 
 module.exports = IDEController; 

@@ -571,6 +571,102 @@ class BrowserManager {
   }
 
   /**
+   * Type a message into the chat input and optionally send it
+   * @param {string} message - Message to type
+   * @param {boolean} send - Whether to send the message after typing
+   * @returns {Promise<boolean>} Success status
+   */
+  async typeMessage(message, send = true) {
+    try {
+      const page = await this.getPage();
+      if (!page) {
+        throw new Error('No connection to Cursor IDE');
+      }
+
+      console.log(`[BrowserManager] Typing message: ${message}`);
+
+      // Wait for chat input to be ready
+      await page.waitForTimeout(1000);
+
+      // Try multiple selectors for the chat input
+      const inputSelectors = [
+        '.chat-input',
+        '.monaco-editor[data-testid="chat-input"]',
+        'textarea[placeholder*="chat"]',
+        'textarea[placeholder*="message"]',
+        '.monaco-editor textarea',
+        '[contenteditable="true"][role="textbox"]',
+        '.chat-input textarea'
+      ];
+
+      let chatInput = null;
+      for (const selector of inputSelectors) {
+        try {
+          chatInput = await page.$(selector);
+          if (chatInput) {
+            console.log(`[BrowserManager] Found chat input with selector: ${selector}`);
+            break;
+          }
+        } catch (e) {
+          // Continue to next selector
+        }
+      }
+
+      if (!chatInput) {
+        throw new Error('Chat input not found');
+      }
+
+      // Click the input to focus it
+      await chatInput.click();
+      await page.waitForTimeout(500);
+
+      // Clear existing content and type the message
+      await chatInput.fill('');
+      await chatInput.type(message);
+      console.log(`[BrowserManager] Message typed: ${message}`);
+
+      if (send) {
+        // Find and click send button
+        const sendSelectors = [
+          'button[aria-label*="Send"]',
+          '.send-button',
+          '.codicon-send',
+          'button[title*="Send"]',
+          '[data-testid="send-button"]'
+        ];
+
+        let sendButton = null;
+        for (const selector of sendSelectors) {
+          try {
+            sendButton = await page.$(selector);
+            if (sendButton) {
+              console.log(`[BrowserManager] Found send button with selector: ${selector}`);
+              break;
+            }
+          } catch (e) {
+            // Continue to next selector
+          }
+        }
+
+        if (sendButton) {
+          await sendButton.click();
+          console.log(`[BrowserManager] Message sent: ${message}`);
+        } else {
+          // Fallback: Press Enter to send
+          await chatInput.press('Enter');
+          console.log(`[BrowserManager] Message sent via Enter key: ${message}`);
+        }
+      }
+
+      return true;
+
+    } catch (error) {
+      console.error('[BrowserManager] Error typing message:', error.message);
+      return false;
+    }
+  }
+
+  /**
    * Create a new chat and optionally send a message
    * @param {string} message - Optional message to send after creating chat
    * @returns {Promise<boolean>} Success status
