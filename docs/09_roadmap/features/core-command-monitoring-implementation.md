@@ -553,3 +553,33 @@ class LogPermissionManager {
 4. Implement terminal capture using existing CDP functions (NO NEW BROWSER!)
 5. Create REST API endpoints for log reading
 6. Add frontend components for log display 
+
+## 3a. REST API Endpoints & Controller (MUSS IMPLEMENTIERT WERDEN)
+
+### Zu implementierende Endpoints (z.B. in IDEController.js):
+- [ ] **POST /api/terminal-logs/:port/execute**  
+      Führt einen Befehl im Terminal der IDE aus (über CDP/IDEMirrorService)
+- [ ] **GET /api/terminal-logs/:port**  
+      Holt die letzten Logzeilen (optional: ?lines=50)
+- [ ] **GET /api/terminal-logs/:port/search**  
+      Sucht nach Text in den Logs
+- [ ] **GET /api/terminal-logs/:port/export**  
+      Exportiert Logs (JSON, CSV, TXT)
+- [ ] **DELETE /api/terminal-logs/:port**  
+      Löscht die Logs
+- [ ] **GET /api/terminal-logs/:port/capture-status**  
+      Gibt den Status der Log-Capture zurück
+
+### Aufgaben der Controller-Logik:
+- Routing und Validierung der Requests
+- Aufruf der jeweiligen Service-Methoden (z.B. TerminalLogCaptureService, TerminalLogReader)
+- Fehlerbehandlung und Response-Formatierung
+
+### Phase 3: Backend Log Reading
+- [ ] **TerminalLogReader.js** with `getRecentLogs(port, lines)` function
+- [ ] **TerminalLogReader.js** with `fs.readFile()` to read encrypted logs
+- [ ] **TerminalLogReader.js** with `crypto.createDecipher()` to decrypt logs
+- [ ] **IDEController.js** with REST endpoint `GET /api/terminal-logs/:port`
+- [ ] **IDEController.js** with query parameter `?lines=50` for log count
+- [ ] **IDEController.js** with response format `{ success: true, data: logs }`
+- [ ] **ALLE WEITEREN API-ENDPOINTS SIEHE OBEN (execute, search, export, delete, capture-status)** 
