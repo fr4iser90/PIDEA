@@ -568,11 +568,16 @@ class BrowserManager {
         throw new Error('New Chat button not found in IDE');
       }
 
-      // Wait for potential modal to appear
-      await page.waitForTimeout(1000);
+      // Wait for potential modal to appear (shorter)
+      await page.waitForTimeout(300);
       
-      // CRITICAL: Handle the New Chat modal that appears after clicking New Chat
-      await this.handleNewChatModal(page);
+      // Optimized: Only handle modal if it exists
+      const modal = await page.$('.monaco-dialog, [role="dialog"], .modal-dialog');
+      if (modal) {
+        await this.handleNewChatModal(page, modal);
+      } else {
+        console.log('[BrowserManager] No New Chat modal detected, continuing immediately.');
+      }
       
       console.log('[BrowserManager] Successfully clicked New Chat button and handled modal');
       return true;
@@ -586,15 +591,12 @@ class BrowserManager {
   /**
    * Handle the New Chat modal that appears after clicking New Chat button
    * @param {Page} page - Playwright page object
+   * @param {ElementHandle} modal - The modal element (if found)
    */
-  async handleNewChatModal(page) {
+  async handleNewChatModal(page, modal) {
     try {
-      console.log('[BrowserManager] Checking for New Chat modal...');
-      
-      // Wait for modal to appear
-      await page.waitForTimeout(500);
-      
-      // Look for buttons in the New Chat modal
+      console.log('[BrowserManager] Handling New Chat modal...');
+      // Look for buttons in the New Chat modal only
       const modalSelectors = [
         // Common modal buttons
         'button[role="button"]',
@@ -602,7 +604,6 @@ class BrowserManager {
         '.action-label',
         '.codicon',
         '[aria-label*="button"]',
-        
         // Specific New Chat modal buttons
         'button:has-text("OK")',
         'button:has-text("Continue")',
@@ -612,7 +613,6 @@ class BrowserManager {
         'button:has-text("Yes")',
         'button:has-text("No")',
         'button:has-text("Cancel")',
-        
         // Aria-label based
         '[aria-label*="OK"]',
         '[aria-label*="Continue"]',
@@ -624,53 +624,46 @@ class BrowserManager {
         '[aria-label*="Cancel"]'
       ];
 
-      // Try to find and click any button to proceed
       for (const selector of modalSelectors) {
         try {
-          const element = await page.$(selector);
+          const element = await modal.$(selector);
           if (element) {
             const text = await element.textContent();
             const ariaLabel = await element.getAttribute('aria-label');
-            
             // Skip close/cancel buttons, prefer action buttons
             if (text?.includes('Cancel') || ariaLabel?.includes('Cancel') ||
                 text?.includes('Close') || ariaLabel?.includes('Close')) {
               continue;
             }
-            
             console.log(`[BrowserManager] Clicking New Chat modal button: ${text || ariaLabel}`);
             await element.click();
-            await page.waitForTimeout(500);
+            await page.waitForTimeout(200);
             return;
           }
         } catch (e) {
           continue;
         }
       }
-      
       // If no action button found, try any button
       for (const selector of modalSelectors) {
         try {
-          const element = await page.$(selector);
+          const element = await modal.$(selector);
           if (element) {
             const text = await element.textContent();
             const ariaLabel = await element.getAttribute('aria-label');
             console.log(`[BrowserManager] Clicking any modal button: ${text || ariaLabel}`);
             await element.click();
-            await page.waitForTimeout(500);
+            await page.waitForTimeout(200);
             return;
           }
         } catch (e) {
           continue;
         }
       }
-      
       // Last resort: try Escape key
       await page.keyboard.press('Escape');
-      await page.waitForTimeout(500);
-      
+      await page.waitForTimeout(200);
       console.log('[BrowserManager] New Chat modal handled (or no modal found)');
-      
     } catch (error) {
       console.log(`[BrowserManager] New Chat modal handling failed: ${error.message}`);
     }
@@ -786,7 +779,7 @@ class BrowserManager {
 
       if (message) {
         // Wait for chat input to be ready (longer wait since modal handling might take time)
-        await this.page.waitForTimeout(1000);
+        await this.page.waitForTimeout(300);
         
         // Use the improved typeMessage method
         const messageSent = await this.typeMessage(message, true);
