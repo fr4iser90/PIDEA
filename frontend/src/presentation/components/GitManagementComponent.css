@@ -1,11 +1,15 @@
 .git-management {
-  background: #ffffff;
-  border: 1px solid #e1e5e9;
-  border-radius: 8px;
-  padding: 16px;
-  margin: 16px 0;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background: var(--panel-bg);
+  border: 2px solid var(--primary-color);
+  border-radius: var(--border-radius);
+  padding: 20px;
+  margin: 16px;
+  box-shadow: var(--shadow-lg);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  color: var(--text-primary);
+  height: 100%;
+  display: flex;
+  flex-direction: column;
 }
 
 /* Git Status Header */
@@ -13,31 +17,32 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 16px;
-  padding-bottom: 12px;
-  border-bottom: 1px solid #e1e5e9;
+  margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--border-color);
 }
 
 /* Workspace Info */
 .workspace-info {
   display: flex;
   align-items: center;
-  gap: 8px;
-  margin-bottom: 16px;
-  padding: 8px 12px;
-  background: #f6f8fa;
-  border-radius: 6px;
+  gap: 12px;
+  margin-bottom: 20px;
+  padding: 12px 16px;
+  background: var(--card-bg);
+  border-radius: var(--border-radius);
   font-size: 13px;
+  border: 1px solid var(--border-color);
 }
 
 .workspace-label {
-  font-weight: 500;
-  color: #24292f;
+  font-weight: 600;
+  color: var(--text-primary);
   white-space: nowrap;
 }
 
 .workspace-path {
-  color: #656d76;
+  color: var(--text-secondary);
   font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
   font-size: 12px;
   word-break: break-all;
@@ -46,63 +51,66 @@
 .git-status-info {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 12px;
   font-size: 14px;
 }
 
 .git-status-icon {
-  font-size: 18px;
+  font-size: 20px;
 }
 
 .git-status-text {
-  font-weight: 500;
-  color: #24292f;
+  font-weight: 600;
+  color: var(--text-primary);
 }
 
 .git-branch-name {
-  color: #656d76;
+  color: var(--text-secondary);
   font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
-  background: #f6f8fa;
-  padding: 2px 6px;
-  border-radius: 4px;
+  background: var(--card-bg);
+  padding: 4px 8px;
+  border-radius: 6px;
   font-size: 12px;
+  border: 1px solid var(--border-color);
 }
 
 /* Git Controls */
 .git-controls {
-  margin-bottom: 16px;
+  margin-bottom: 20px;
 }
 
 .git-button-group {
   display: flex;
-  gap: 8px;
+  gap: 12px;
   flex-wrap: wrap;
 }
 
 .git-btn {
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 8px 12px;
-  border: 1px solid #d0d7de;
-  border-radius: 6px;
-  background: #ffffff;
-  color: #24292f;
+  gap: 8px;
+  padding: 12px 16px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  background: var(--button-bg);
+  color: var(--text-primary);
   font-size: 13px;
-  font-weight: 500;
+  font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;
-  min-width: 80px;
+  min-width: 100px;
   justify-content: center;
+  box-shadow: var(--shadow-sm);
 }
 
 .git-btn:hover:not(:disabled) {
-  background: #f6f8fa;
-  border-color: #0969da;
+  background: var(--hover-bg);
+  border-color: var(--primary-color);
+  box-shadow: var(--shadow-md);
 }
 
 .git-btn:active:not(:disabled) {
-  background: #f0f3f6;
+  background: var(--card-bg);
   transform: translateY(1px);
 }
 
@@ -121,23 +129,23 @@
 
 /* Button Variants */
 .validate-btn {
-  border-color: #2da44e;
-  color: #2da44e;
+  border-color: var(--accent-green);
+  color: var(--accent-green);
 }
 
 .validate-btn:hover:not(:disabled) {
-  background: #f0f9ff;
-  border-color: #2da44e;
+  background: rgba(16, 185, 129, 0.1);
+  border-color: var(--accent-green);
 }
 
 .compare-btn {
-  border-color: #0969da;
-  color: #0969da;
+  border-color: var(--accent-blue);
+  color: var(--accent-blue);
 }
 
 .compare-btn:hover:not(:disabled) {
-  background: #f0f9ff;
-  border-color: #0969da;
+  background: rgba(78, 140, 255, 0.1);
+  border-color: var(--accent-blue);
 }
 
 .pull-btn {
@@ -146,18 +154,18 @@
 }
 
 .pull-btn:hover:not(:disabled) {
-  background: #faf5ff;
+  background: rgba(130, 80, 223, 0.1);
   border-color: #8250df;
 }
 
 .merge-btn {
-  border-color: #cf222e;
-  color: #cf222e;
+  border-color: var(--accent-red);
+  color: var(--accent-red);
 }
 
 .merge-btn:hover:not(:disabled) {
-  background: #fff5f5;
-  border-color: #cf222e;
+  background: rgba(239, 68, 68, 0.1);
+  border-color: var(--accent-red);
 }
 
 .refresh-btn {
@@ -170,52 +178,55 @@
 .branch-selector {
   display: flex;
   align-items: center;
-  gap: 8px;
-  margin-bottom: 16px;
-  padding: 12px;
-  background: #f6f8fa;
-  border-radius: 6px;
+  gap: 12px;
+  margin-bottom: 20px;
+  padding: 16px;
+  background: var(--card-bg);
+  border-radius: var(--border-radius);
+  border: 1px solid var(--border-color);
 }
 
 .branch-label {
   font-size: 13px;
-  font-weight: 500;
-  color: #24292f;
+  font-weight: 600;
+  color: var(--text-primary);
   white-space: nowrap;
 }
 
 .branch-select {
   flex: 1;
-  padding: 6px 8px;
-  border: 1px solid #d0d7de;
-  border-radius: 4px;
-  background: #ffffff;
+  padding: 8px 12px;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  background: var(--bg-secondary);
   font-size: 13px;
   font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
-  color: #24292f;
+  color: var(--text-primary);
 }
 
 .branch-select:focus {
   outline: none;
-  border-color: #0969da;
-  box-shadow: 0 0 0 3px rgba(9, 105, 218, 0.1);
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px rgba(78, 140, 255, 0.1);
 }
 
 /* Git Status Details */
 .git-status-details {
-  border-top: 1px solid #e1e5e9;
-  padding-top: 16px;
+  border-top: 1px solid var(--border-color);
+  padding-top: 20px;
+  flex: 1;
+  overflow-y: auto;
 }
 
 .status-section {
-  margin-bottom: 16px;
+  margin-bottom: 20px;
 }
 
 .status-section h4 {
-  margin: 0 0 8px 0;
-  font-size: 13px;
+  margin: 0 0 12px 0;
+  font-size: 14px;
   font-weight: 600;
-  color: #24292f;
+  color: var(--text-primary);
 }
 
 .file-list {
@@ -224,19 +235,19 @@
   margin: 0;
   max-height: 120px;
   overflow-y: auto;
-  border: 1px solid #e1e5e9;
-  border-radius: 4px;
-  background: #f6f8fa;
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  background: var(--card-bg);
 }
 
 .file-item {
-  padding: 4px 8px;
+  padding: 8px 12px;
   font-size: 12px;
   font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
-  border-bottom: 1px solid #e1e5e9;
+  border-bottom: 1px solid var(--border-color);
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
 }
 
 .file-item:last-child {
@@ -244,41 +255,41 @@
 }
 
 .file-item.modified {
-  color: #9a6700;
-  background: #fff8c5;
+  color: #f59e0b;
+  background: rgba(245, 158, 11, 0.1);
 }
 
 .file-item.added {
-  color: #2da44e;
-  background: #dafbe1;
+  color: var(--accent-green);
+  background: rgba(16, 185, 129, 0.1);
 }
 
 .file-item.deleted {
-  color: #cf222e;
-  background: #ffebe9;
+  color: var(--accent-red);
+  background: rgba(239, 68, 68, 0.1);
 }
 
 /* Operation Result */
 .operation-result {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 12px;
-  border-radius: 6px;
-  margin-top: 12px;
+  gap: 12px;
+  padding: 16px;
+  border-radius: var(--border-radius);
+  margin-top: 16px;
   font-size: 13px;
 }
 
 .operation-result.success {
-  background: #dafbe1;
-  border: 1px solid #2da44e;
-  color: #1a7f37;
+  background: rgba(16, 185, 129, 0.1);
+  border: 1px solid var(--accent-green);
+  color: var(--accent-green);
 }
 
 .operation-result.error {
-  background: #ffebe9;
-  border: 1px solid #cf222e;
-  color: #a40e26;
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid var(--accent-red);
+  color: var(--accent-red);
 }
 
 .result-icon {
@@ -296,7 +307,7 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(0, 0, 0, 0.7);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -304,9 +315,10 @@
 }
 
 .diff-modal {
-  background: #ffffff;
-  border-radius: 8px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  background: var(--panel-bg);
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow-lg);
+  border: 2px solid var(--primary-color);
   width: 90%;
   max-width: 800px;
   max-height: 80vh;
@@ -318,49 +330,50 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 16px 20px;
-  border-bottom: 1px solid #e1e5e9;
+  padding: 20px 24px;
+  border-bottom: 1px solid var(--border-color);
 }
 
 .diff-header h3 {
   margin: 0;
   font-size: 16px;
   font-weight: 600;
-  color: #24292f;
+  color: var(--text-primary);
 }
 
 .close-btn {
   background: none;
   border: none;
-  font-size: 18px;
+  font-size: 20px;
   cursor: pointer;
-  color: #656d76;
-  padding: 4px;
-  border-radius: 4px;
+  color: var(--text-secondary);
+  padding: 8px;
+  border-radius: 6px;
+  transition: all 0.2s ease;
 }
 
 .close-btn:hover {
-  background: #f6f8fa;
-  color: #24292f;
+  background: var(--hover-bg);
+  color: var(--text-primary);
 }
 
 .diff-content {
   flex: 1;
   overflow: auto;
-  padding: 20px;
+  padding: 24px;
 }
 
 .diff-text {
   font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
   font-size: 12px;
   line-height: 1.5;
-  color: #24292f;
+  color: var(--text-primary);
   white-space: pre-wrap;
   margin: 0;
-  background: #f6f8fa;
-  padding: 16px;
-  border-radius: 4px;
-  border: 1px solid #e1e5e9;
+  background: var(--card-bg);
+  padding: 20px;
+  border-radius: var(--border-radius);
+  border: 1px solid var(--border-color);
   max-height: 400px;
   overflow-y: auto;
 }
@@ -372,19 +385,21 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(255, 255, 255, 0.9);
+  background: rgba(26, 29, 35, 0.8);
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  border-radius: 8px;
+  gap: 12px;
+  border-radius: var(--border-radius);
   z-index: 10;
+  backdrop-filter: blur(2px);
 }
 
 .loading-spinner {
   font-size: 24px;
   animation: spin 1s linear infinite;
+  color: var(--primary-color);
 }
 
 @keyframes spin {
@@ -416,22 +431,22 @@
 /* Scrollbar Styling */
 .file-list::-webkit-scrollbar,
 .diff-text::-webkit-scrollbar {
-  width: 6px;
+  width: 8px;
 }
 
 .file-list::-webkit-scrollbar-track,
 .diff-text::-webkit-scrollbar-track {
-  background: #f1f1f1;
-  border-radius: 3px;
+  background: var(--bg-secondary);
+  border-radius: 4px;
 }
 
 .file-list::-webkit-scrollbar-thumb,
 .diff-text::-webkit-scrollbar-thumb {
-  background: #c1c1c1;
-  border-radius: 3px;
+  background: var(--border-color);
+  border-radius: 4px;
 }
 
 .file-list::-webkit-scrollbar-thumb:hover,
 .diff-text::-webkit-scrollbar-thumb:hover {
-  background: #a8a8a8;
+  background: var(--text-secondary);
 } 
