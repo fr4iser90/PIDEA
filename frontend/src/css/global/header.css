@@ -16,10 +16,28 @@
   box-shadow: 0 2px 8px #0003;
 }
 
+/* Header Content Container */
+.header-content {
+  display: flex;
+  align-items: center;
+  gap: 32px;
+  flex: 1;
+}
+
 .app-title {
   font-size: 1.2em;
   font-weight: 700;
   letter-spacing: 0.5px;
+  margin: 0;
+  white-space: nowrap;
+}
+
+/* Header Navigation */
+.header-navigation {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
 }
 
 .header-switch {
@@ -196,8 +214,16 @@ body.light-theme .mode-btn:not(.active):hover {
     padding: 0 16px;
   }
   
+  .header-content {
+    gap: 16px;
+  }
+  
   .app-title {
     font-size: 1.1em;
+  }
+  
+  .header-navigation {
+    gap: 4px;
   }
   
   .header-switch {
@@ -224,8 +250,16 @@ body.light-theme .mode-btn:not(.active):hover {
     padding: 0 12px;
   }
   
+  .header-content {
+    gap: 12px;
+  }
+  
   .app-title {
     font-size: 1em;
+  }
+  
+  .header-navigation {
+    gap: 2px;
   }
   
   .header-switch {

@@ -22,6 +22,10 @@
 - [ ] `backend/infrastructure/auth/AuthMiddleware.js` - Add extension authentication
 - [ ] `backend/presentation/api/IDEController.js` - Add extension status endpoints
 - [ ] `frontend/src/presentation/components/ChatComponent.jsx` - Add extension status display
+- [ ] `package.json` - Add monorepo scripts for extension development
+- [ ] `docker-compose.yml` - Add extension development environment
+- [ ] `backend/Application.js` - Register extension services
+- [ ] `backend/infrastructure/di/ApplicationIntegration.js` - Add extension DI configuration
 
 ### Files to Create:
 - [ ] `extension/package.json` - Extension manifest
@@ -37,64 +41,93 @@
 - [ ] `extension/webpack.config.js` - Webpack configuration
 - [ ] `extension/.vscodeignore` - Extension ignore file
 - [ ] `extension/README.md` - Extension documentation
+- [ ] `extension/tsconfig.json` - TypeScript configuration
+- [ ] `extension/jest.config.js` - Jest configuration
+- [ ] `extension/.eslintrc.js` - ESLint configuration
+- [ ] `extension/.prettierrc` - Prettier configuration
 - [ ] `backend/domain/services/ExtensionBridgeService.js` - Backend extension bridge
 - [ ] `backend/tests/unit/domain/services/ExtensionBridgeService.test.js` - Extension tests
+- [ ] `backend/presentation/api/ExtensionController.js` - Extension API endpoints
+- [ ] `backend/infrastructure/auth/ExtensionAuthMiddleware.js` - Extension-specific auth
+- [ ] `backend/domain/repositories/ExtensionSessionRepository.js` - Extension session management
+- [ ] `backend/infrastructure/database/InMemoryExtensionSessionRepository.js` - In-memory extension sessions
+- [ ] `scripts/extension-dev.sh` - Extension development script
+- [ ] `scripts/extension-build.sh` - Extension build script
+- [ ] `scripts/extension-test.sh` - Extension testing script
+- [ ] `scripts/extension-package.sh` - Extension packaging script
+- [ ] `docs/extension/installation.md` - Extension installation guide
+- [ ] `docs/extension/development.md` - Extension development guide
+- [ ] `docs/extension/api.md` - Extension API documentation
 
 ### Files to Delete:
 - [ ] None
 
 ## 4. Implementation Phases
 
-### Phase 1: Extension Foundation Setup
+### Phase 1: Monorepo Integration Setup
+- [ ] Update root package.json with extension scripts
+- [ ] Create extension directory structure
+- [ ] Set up extension development environment
+- [ ] Configure Docker for extension development
+- [ ] Add extension to monorepo build pipeline
+
+### Phase 2: Extension Foundation Setup
 - [ ] Create VS Code extension project structure
 - [ ] Set up TypeScript configuration
 - [ ] Configure Webpack for bundling
 - [ ] Create basic extension manifest
 - [ ] Set up development environment
 
-### Phase 2: WebSocket Communication
+### Phase 3: Backend Extension Services
+- [ ] Create ExtensionBridgeService
+- [ ] Implement ExtensionController
+- [ ] Add ExtensionAuthMiddleware
+- [ ] Create ExtensionSessionRepository
+- [ ] Integrate extension services into DI container
+
+### Phase 4: WebSocket Communication
 - [ ] Implement WebSocket client for backend connection
 - [ ] Add connection management and reconnection logic
 - [ ] Implement message serialization/deserialization
 - [ ] Add error handling and logging
 - [ ] Create connection status indicators
 
-### Phase 3: Command Monitoring
+### Phase 5: Command Monitoring
 - [ ] Implement command execution tracking
 - [ ] Add terminal output capture
 - [ ] Create command lifecycle monitoring
 - [ ] Implement progress tracking
 - [ ] Add completion detection
 
-### Phase 4: IDE Integration
+### Phase 6: IDE Integration
 - [ ] Add status bar integration
 - [ ] Create command palette commands
 - [ ] Implement settings and configuration
 - [ ] Add notifications and alerts
 - [ ] Create extension UI components
 
-### Phase 5: Security Implementation
+### Phase 7: Security Implementation
 - [ ] Implement extension authentication
 - [ ] Add secure token management
 - [ ] Implement message validation
 - [ ] Add connection encryption
 - [ ] Create security audit logging
 
-### Phase 6: Backend Integration
+### Phase 8: Backend Integration
 - [ ] Create ExtensionBridgeService on backend
 - [ ] Implement extension authentication endpoints
 - [ ] Add WebSocket message routing
 - [ ] Create extension status monitoring
 - [ ] Test backend-extension communication
 
-### Phase 7: Testing & Documentation
+### Phase 9: Testing & Documentation
 - [ ] Write comprehensive unit tests
 - [ ] Create integration tests
 - [ ] Test extension in different environments
 - [ ] Create user documentation
 - [ ] Write developer documentation
 
-### Phase 8: Deployment & Validation
+### Phase 10: Deployment & Validation
 - [ ] Package extension for distribution
 - [ ] Test extension installation
 - [ ] Validate security measures
@@ -325,7 +358,276 @@ extension/
 }
 ```
 
-## 16. WebSocket Communication Protocol
+## 16. Monorepo Integration
+
+### Root Package.json Scripts:
+```json
+{
+  "scripts": {
+    "extension:dev": "cd extension && npm run watch",
+    "extension:build": "cd extension && npm run compile",
+    "extension:test": "cd extension && npm test",
+    "extension:package": "cd extension && npm run package",
+    "extension:install": "cd extension && code --install-extension pidea-connector-0.0.1.vsix",
+    "extension:uninstall": "code --uninstall-extension pidea-connector",
+    "extension:clean": "cd extension && rm -rf out node_modules package-lock.json",
+    "extension:setup": "cd extension && npm install && npm run compile",
+    "dev:full": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\" \"npm run extension:dev\"",
+    "test:full": "npm run test:backend && npm run test:frontend && npm run extension:test",
+    "build:full": "npm run build:backend && npm run build:frontend && npm run extension:build"
+  },
+  "devDependencies": {
+    "concurrently": "^7.0.0"
+  }
+}
+```
+
+### Docker Integration:
+```yaml
+# docker-compose.yml additions
+services:
+  extension-dev:
+    build:
+      context: ./extension
+      dockerfile: Dockerfile.dev
+    volumes:
+      - ./extension:/workspace
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      - NODE_ENV=development
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+      - frontend
+    command: npm run extension:dev
+
+  extension-test:
+    build:
+      context: ./extension
+      dockerfile: Dockerfile.test
+    volumes:
+      - ./extension:/workspace
+    environment:
+      - NODE_ENV=test
+    command: npm run extension:test
+```
+
+### Extension Development Dockerfile:
+```dockerfile
+# extension/Dockerfile.dev
+FROM node:16-alpine
+
+WORKDIR /workspace
+
+# Install VS Code CLI
+RUN npm install -g @vscode/vsce
+
+# Copy package files
+COPY package*.json ./
+
+# Install dependencies
+RUN npm install
+
+# Copy source code
+COPY . .
+
+# Expose development port
+EXPOSE 3000
+
+# Start development server
+CMD ["npm", "run", "extension:dev"]
+```
+
+## 17. Backend Extension Services
+
+### ExtensionBridgeService:
+```javascript
+// backend/domain/services/ExtensionBridgeService.js
+class ExtensionBridgeService {
+  constructor(websocketManager, extensionSessionRepository) {
+    this.websocketManager = websocketManager;
+    this.extensionSessionRepository = extensionSessionRepository;
+    this.activeConnections = new Map();
+  }
+
+  async handleExtensionConnection(socket, token) {
+    try {
+      // Validate extension token
+      const session = await this.validateExtensionToken(token);
+      if (!session) {
+        throw new Error('Invalid extension token');
+      }
+
+      // Store connection
+      this.activeConnections.set(session.id, {
+        socket,
+        session,
+        connectedAt: new Date()
+      });
+
+      // Send connection confirmation
+      socket.send(JSON.stringify({
+        type: 'authenticated',
+        data: { sessionId: session.id },
+        timestamp: Date.now()
+      }));
+
+      // Set up message handlers
+      socket.on('message', (data) => {
+        this.handleExtensionMessage(session.id, JSON.parse(data));
+      });
+
+      socket.on('close', () => {
+        this.handleExtensionDisconnect(session.id);
+      });
+
+    } catch (error) {
+      socket.send(JSON.stringify({
+        type: 'error',
+        data: { message: error.message },
+        timestamp: Date.now()
+      }));
+      socket.close();
+    }
+  }
+
+  async handleExtensionMessage(sessionId, message) {
+    const connection = this.activeConnections.get(sessionId);
+    if (!connection) {
+      return;
+    }
+
+    switch (message.type) {
+      case 'command-started':
+        await this.handleCommandStarted(sessionId, message.data);
+        break;
+      case 'command-completed':
+        await this.handleCommandCompleted(sessionId, message.data);
+        break;
+      case 'terminal-output':
+        await this.handleTerminalOutput(sessionId, message.data);
+        break;
+      default:
+        console.warn(`Unknown message type: ${message.type}`);
+    }
+  }
+
+  async handleCommandStarted(sessionId, data) {
+    // Notify backend systems about command start
+    await this.websocketManager.broadcastToClients({
+      type: 'extension-command-started',
+      data: { ...data, sessionId },
+      timestamp: Date.now()
+    });
+  }
+
+  async handleCommandCompleted(sessionId, data) {
+    // Notify backend systems about command completion
+    await this.websocketManager.broadcastToClients({
+      type: 'extension-command-completed',
+      data: { ...data, sessionId },
+      timestamp: Date.now()
+    });
+  }
+
+  async handleTerminalOutput(sessionId, data) {
+    // Process terminal output
+    await this.websocketManager.broadcastToClients({
+      type: 'extension-terminal-output',
+      data: { ...data, sessionId },
+      timestamp: Date.now()
+    });
+  }
+
+  async handleExtensionDisconnect(sessionId) {
+    this.activeConnections.delete(sessionId);
+    await this.extensionSessionRepository.removeSession(sessionId);
+  }
+
+  async validateExtensionToken(token) {
+    // Validate extension JWT token
+    // Implementation depends on your auth system
+    return await this.extensionSessionRepository.validateToken(token);
+  }
+
+  getActiveConnections() {
+    return Array.from(this.activeConnections.values());
+  }
+}
+
+module.exports = ExtensionBridgeService;
+```
+
+### ExtensionController:
+```javascript
+// backend/presentation/api/ExtensionController.js
+const ExtensionBridgeService = require('../../domain/services/ExtensionBridgeService');
+
+class ExtensionController {
+  constructor(extensionBridgeService) {
+    this.extensionBridgeService = extensionBridgeService;
+  }
+
+  async getExtensionStatus(req, res) {
+    try {
+      const connections = this.extensionBridgeService.getActiveConnections();
+      res.json({
+        status: 'success',
+        data: {
+          activeConnections: connections.length,
+          connections: connections.map(conn => ({
+            sessionId: conn.session.id,
+            connectedAt: conn.connectedAt,
+            status: 'active'
+          }))
+        }
+      });
+    } catch (error) {
+      res.status(500).json({
+        status: 'error',
+        message: error.message
+      });
+    }
+  }
+
+  async generateExtensionToken(req, res) {
+    try {
+      // Generate new extension token
+      const token = await this.extensionBridgeService.generateToken();
+      res.json({
+        status: 'success',
+        data: { token }
+      });
+    } catch (error) {
+      res.status(500).json({
+        status: 'error',
+        message: error.message
+      });
+    }
+  }
+
+  async revokeExtensionToken(req, res) {
+    try {
+      const { token } = req.body;
+      await this.extensionBridgeService.revokeToken(token);
+      res.json({
+        status: 'success',
+        message: 'Token revoked successfully'
+      });
+    } catch (error) {
+      res.status(500).json({
+        status: 'error',
+        message: error.message
+      });
+    }
+  }
+}
+
+module.exports = ExtensionController;
+```
+
+## 18. WebSocket Communication Protocol
 
 ### Message Types:
 ```typescript
@@ -402,7 +704,7 @@ class WebSocketClient {
 }
 ```
 
-## 17. Command Monitoring Implementation
+## 19. Command Monitoring Implementation
 
 ### Terminal Output Capture:
 ```typescript
@@ -450,7 +752,7 @@ class TerminalMonitor {
 }
 ```
 
-## 18. Status Bar Integration
+## 20. Status Bar Integration
 
 ### Status Bar Manager:
 ```typescript
@@ -489,7 +791,7 @@ class StatusBarManager {
 }
 ```
 
-## 19. Security Implementation
+## 21. Security Implementation
 
 ### Token Management:
 ```typescript
@@ -537,7 +839,7 @@ class SecurityManager {
 }
 ```
 
-## 20. Testing Implementation
+## 22. Testing Implementation
 
 ### Extension Tests:
 ```typescript
@@ -584,3 +886,234 @@ describe('WebSocketClient', () => {
   });
 });
 ```
+
+## 23. Development Workflow
+
+### Development Scripts:
+```bash
+#!/bin/bash
+# scripts/extension-dev.sh
+
+echo "Starting PIDEA Extension Development Environment..."
+
+# Check if extension directory exists
+if [ ! -d "extension" ]; then
+    echo "Creating extension directory..."
+    mkdir -p extension
+    cd extension
+    
+    # Initialize extension project
+    npm init -y
+    npm install --save-dev @types/vscode @types/node typescript jest @types/jest vsce
+    npm install --save-dev webpack webpack-cli ts-loader
+    
+    # Create TypeScript config
+    cat > tsconfig.json << EOF
+{
+  "compilerOptions": {
+    "module": "commonjs",
+    "target": "ES2020",
+    "outDir": "out",
+    "lib": ["ES2020"],
+    "sourceMap": true,
+    "rootDir": "src",
+    "strict": true
+  },
+  "exclude": ["node_modules", ".vscode-test"]
+}
+EOF
+    
+    cd ..
+fi
+
+# Install dependencies
+echo "Installing extension dependencies..."
+cd extension && npm install && cd ..
+
+# Start development servers
+echo "Starting development servers..."
+concurrently \
+  "npm run dev:backend" \
+  "npm run dev:frontend" \
+  "cd extension && npm run watch" \
+  --names "backend,frontend,extension" \
+  --prefix-colors "blue,green,yellow"
+```
+
+### Build Script:
+```bash
+#!/bin/bash
+# scripts/extension-build.sh
+
+echo "Building PIDEA Extension..."
+
+# Build extension
+cd extension
+npm run compile
+
+# Run tests
+npm test
+
+# Package extension
+npm run package
+
+echo "Extension built successfully!"
+echo "Package: extension/pidea-connector-0.0.1.vsix"
+```
+
+### Test Script:
+```bash
+#!/bin/bash
+# scripts/extension-test.sh
+
+echo "Running PIDEA Extension Tests..."
+
+cd extension
+
+# Run unit tests
+npm test
+
+# Run integration tests
+npm run test:integration
+
+# Run E2E tests
+npm run test:e2e
+
+echo "All tests completed!"
+```
+
+## 24. Deployment Integration
+
+### CI/CD Pipeline:
+```yaml
+# .github/workflows/extension.yml
+name: Extension CI/CD
+
+on:
+  push:
+    branches: [main]
+    paths: ['extension/**']
+  pull_request:
+    branches: [main]
+    paths: ['extension/**']
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '16'
+        cache: 'npm'
+        cache-dependency-path: extension/package-lock.json
+    
+    - name: Install dependencies
+      run: |
+        cd extension
+        npm ci
+    
+    - name: Run tests
+      run: |
+        cd extension
+        npm test
+    
+    - name: Build extension
+      run: |
+        cd extension
+        npm run compile
+    
+    - name: Package extension
+      run: |
+        cd extension
+        npm run package
+    
+    - name: Upload artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: extension-package
+        path: extension/pidea-connector-*.vsix
+
+  deploy:
+    needs: test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Download artifact
+      uses: actions/download-artifact@v3
+      with:
+        name: extension-package
+    
+    - name: Publish to VS Code Marketplace
+      run: |
+        # Publish extension to marketplace
+        # This requires marketplace publisher token
+        echo "Publishing extension..."
+```
+
+## 25. Monitoring & Analytics
+
+### Extension Metrics:
+```typescript
+class ExtensionMetrics {
+  private metrics = {
+    connections: 0,
+    commandsMonitored: 0,
+    errors: 0,
+    uptime: 0
+  };
+
+  trackConnection(): void {
+    this.metrics.connections++;
+    this.sendMetrics();
+  }
+
+  trackCommand(): void {
+    this.metrics.commandsMonitored++;
+    this.sendMetrics();
+  }
+
+  trackError(): void {
+    this.metrics.errors++;
+    this.sendMetrics();
+  }
+
+  private sendMetrics(): void {
+    // Send metrics to backend
+    this.websocketClient.send({
+      type: 'metrics',
+      data: this.metrics,
+      timestamp: Date.now()
+    });
+  }
+}
+```
+
+## 26. Troubleshooting Guide
+
+### Common Issues:
+1. **Extension won't connect**: Check backend URL and token
+2. **Commands not monitored**: Verify command patterns and permissions
+3. **Performance issues**: Check WebSocket connection and message frequency
+4. **Security errors**: Validate token and connection encryption
+
+### Debug Commands:
+```bash
+# Enable extension debugging
+code --enable-proposed-api pidea-connector
+
+# View extension logs
+code --log-level debug
+
+# Reset extension settings
+code --disable-extensions pidea-connector
+code --enable-extensions pidea-connector
+```
+
+This comprehensive plan now includes all necessary monorepo integration details, backend services, Docker configuration, development workflow, CI/CD pipeline, and deployment procedures for direct implementation.
