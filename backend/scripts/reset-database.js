@@ -2,7 +2,7 @@ const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
 
 // Use the same database path as the application
-const dbPath = path.join(__dirname, '../database/cursorweb-dev.db');
+const dbPath = path.join(__dirname, '../database/PIDEA-dev.db');
 
 console.log('🗄️ [ResetDatabase] Starting database reset...');
 console.log(`📁 Database path: ${dbPath}`);

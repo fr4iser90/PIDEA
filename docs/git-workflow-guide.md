@@ -2,7 +2,7 @@
 
 ## Overview
 
-This guide explains how to use the Git management system in CursorWeb to handle your Git workflow, from feature branch creation to merging changes back to main.
+This guide explains how to use the Git management system in PIDEA to handle your Git workflow, from feature branch creation to merging changes back to main.
 
 ## Git Workflow Steps
 

@@ -80,7 +80,7 @@ const RegisterComponent = ({ onSwitchToLogin }) => {
     <div className="auth-bg">
       <div className="auth-card">
         <h2 className="auth-title">Create your account</h2>
-        <p className="auth-subtitle">Join CursorWeb for secure development</p>
+        <p className="auth-subtitle">Join PIDEA for secure development</p>
         <form className="auth-form" onSubmit={handleSubmit}>
           <input
             id="username"

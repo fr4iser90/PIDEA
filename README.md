@@ -1,11 +1,11 @@
-# CursorWeb
+# PIDEA
 
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Version](https://img.shields.io/badge/version-1.0.0-green.svg)](CHANGELOG.md)
 
 ## Overview
 
-CursorWeb is an innovative web-based platform designed to enhance developer productivity through integrated tools and AI-driven assistance. It provides a seamless environment for coding, collaboration, and project management, with features like real-time chat, IDE mirroring, and content preview. The platform is built to support developers in creating, analyzing, and refactoring projects efficiently.
+PIDEA is an innovative web-based platform designed to enhance developer productivity through integrated tools and AI-driven assistance. It provides a seamless environment for coding, collaboration, and project management, with features like real-time chat, IDE mirroring, and content preview. The platform is built to support developers in creating, analyzing, and refactoring projects efficiently.
 
 ## Key Features
 
@@ -16,7 +16,7 @@ CursorWeb is an innovative web-based platform designed to enhance developer prod
 
 ## Cursor IDE Setup
 
-To use CursorWeb with Cursor IDE, you need to start Cursor with remote debugging enabled. This allows CursorWeb to communicate with and mirror your IDE.
+To use PIDEA with Cursor IDE, you need to start Cursor with remote debugging enabled. This allows PIDEA to communicate with and mirror your IDE.
 
 ### Starting Cursor with Remote Debugging
 
@@ -30,7 +30,7 @@ appimage-run ./Cursor-1.1.6-x86_64.AppImage \
 
 **Parameters explained:**
 - `--user-data-dir="$HOME/.cursor-profile-dev"`: Creates a separate profile directory for development, keeping your main Cursor profile clean
-- `--remote-debugging-port=9223`: Enables remote debugging on port 9223, which CursorWeb uses to connect to your IDE
+- `--remote-debugging-port=9223`: Enables remote debugging on port 9223, which PIDEA uses to connect to your IDE
 
 ### Alternative Startup Methods
 
@@ -55,12 +55,12 @@ cursor.exe --user-data-dir="%USERPROFILE%\.cursor-profile-dev" --remote-debuggin
   --remote-debugging-port=9223
 ```
 
-Once Cursor is running with remote debugging enabled, CursorWeb can connect to it and provide IDE mirroring functionality.
+Once Cursor is running with remote debugging enabled, PIDEA can connect to it and provide IDE mirroring functionality.
 
 ## Upcoming Enhancements
 
 ### Mobile Web Interface
-CursorWeb is being adapted for mobile devices to ensure accessibility and usability on the go. Planned updates include:
+PIDEA is being adapted for mobile devices to ensure accessibility and usability on the go. Planned updates include:
 - Responsive design for optimal viewing on smaller screens.
 - Touch-friendly navigation with a bottom bar or hamburger menu.
 - Simplified layouts prioritizing key features like chat and preview.
@@ -73,7 +73,7 @@ An AI assistant is under development to provide advanced project management capa
 
 ### Git Management
 Future updates will include Git integration for mobile and desktop users:
-- Commit, push, pull, and manage branches directly from the CursorWeb interface.
+- Commit, push, pull, and manage branches directly from the PIDEA interface.
 - Execute Git commands securely via backend scripts.
 
 ### Terminal Management
@@ -83,8 +83,8 @@ An emulated terminal is planned for running commands specific to the project:
 ## Getting Started
 
 ### Installation
-1. Clone the repository: `git clone https://github.com/fr4iser90/CursorWeb.git`
-2. Navigate to the project directory: `cd CursorWeb`
+1. Clone the repository: `git clone https://github.com/fr4iser90/PIDEA.git`
+2. Navigate to the project directory: `cd PIDEA`
 3. Install dependencies:
    - Frontend: `cd frontend && npm install`
    - Backend: `cd backend && npm install`
@@ -105,7 +105,7 @@ An emulated terminal is planned for running commands specific to the project:
 - **docs/**: Detailed documentation on features, setup, and development.
 
 ## Contributing
-I welcome contributions to CursorWeb! Please follow these steps:
+I welcome contributions to PIDEA! Please follow these steps:
 1. Fork the repository.
 2. Create a feature branch: `git checkout -b feature/your-feature-name`
 3. Commit your changes: `git commit -m 'Add some feature'`
@@ -117,7 +117,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## Personal Goal: Project Unifier
 
-My personal objective with CursorWeb is to create a unifying platform for all my projects. The goal is to standardize frameworks, maintain consistent documentation, and ensure a uniform structure across different endeavors. I'm happy to share this tool with the community, hoping it saves time and brings efficiency to others as well.
+My personal objective with PIDEA is to create a unifying platform for all my projects. The goal is to standardize frameworks, maintain consistent documentation, and ensure a uniform structure across different endeavors. I'm happy to share this tool with the community, hoping it saves time and brings efficiency to others as well.
 
 ## Contact
 For questions or feedback, reach me out via email : pa.boe90@gmail.com

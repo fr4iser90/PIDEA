@@ -1,8 +1,8 @@
-# CursorWeb Task Management System
+# PIDEA Task Management System
 
 ## 🚀 Complete Development Automation Suite
 
-**CursorWeb** is a revolutionary task management system that provides **zero-configuration, AI-powered development automation** through **Playwright-based Cursor IDE integration**. Built with Domain-Driven Design (DDD) architecture, it leverages the existing CursorWeb infrastructure to offer intelligent project analysis, automated task generation, script creation, and real-time monitoring.
+**PIDEA** is a revolutionary task management system that provides **zero-configuration, AI-powered development automation** through **Playwright-based Cursor IDE integration**. Built with Domain-Driven Design (DDD) architecture, it leverages the existing PIDEA infrastructure to offer intelligent project analysis, automated task generation, script creation, and real-time monitoring.
 
 ## ✨ Key Features
 
@@ -16,7 +16,7 @@ task auto
 - **AI-powered analysis** via Playwright + Cursor IDE integration
 - **Automated task generation** and execution
 - **Real-time progress tracking** with beautiful UI
-- **Multiple AI models** through existing CursorWeb AI integration
+- **Multiple AI models** through existing PIDEA AI integration
 
 ### 🎯 **Complete Task Management**
 - **Intelligent task suggestions** based on project analysis
@@ -59,9 +59,9 @@ task auto
 ### Installation
 
 ```bash
-# Clone the CursorWeb repository
-git clone https://github.com/your-org/CursorWeb.git
-cd CursorWeb
+# Clone the PIDEA repository
+git clone https://github.com/your-org/PIDEA.git
+cd PIDEA
 
 # Install dependencies
 npm install
@@ -232,20 +232,20 @@ task --interactive
 ### Environment Variables
 
 ```bash
-# CursorWeb Configuration
+# PIDEA Configuration
 CURSOR_IDE_URL=http://localhost:3000
 PLAYWRIGHT_BROWSER_PATH=/usr/bin/google-chrome
 
-# AI Configuration (via existing CursorWeb integration)
+# AI Configuration (via existing PIDEA integration)
 AI_MODEL=gpt-4
 AI_API_KEY=your-openai-api-key
 AI_MAX_TOKENS=4000
 
-# Database Configuration (existing CursorWeb setup)
-DATABASE_URL=sqlite:///cursorweb.db
-POSTGRES_URL=postgresql://user:pass@localhost/cursorweb
+# Database Configuration (existing PIDEA setup)
+DATABASE_URL=sqlite:///PIDEA.db
+POSTGRES_URL=postgresql://user:pass@localhost/PIDEA
 
-# Security Configuration (existing CursorWeb auth)
+# Security Configuration (existing PIDEA auth)
 JWT_SECRET=your-jwt-secret
 RATE_LIMIT_WINDOW=900000
 RATE_LIMIT_MAX_REQUESTS=100
@@ -258,7 +258,7 @@ MEMORY_LIMIT=1073741824
 
 ### Configuration File
 
-Create `config/cursorweb.json`:
+Create `config/PIDEA.json`:
 
 ```json
 {
@@ -380,10 +380,10 @@ class AIService {
     // Navigate to Cursor IDE
     await page.goto(this.cursorIdeUrl);
     
-    // Use existing CursorWeb AI integration
+    // Use existing PIDEA AI integration
     const prompt = this.buildAnalysisPrompt(projectData);
     const response = await page.evaluate(async (prompt) => {
-      // Use existing CursorWeb AI service
+      // Use existing PIDEA AI service
       return await window.cursorAI.analyze(prompt);
     }, prompt);
 
@@ -392,7 +392,7 @@ class AIService {
   }
 }
 
-// Task Repository (existing CursorWeb database)
+// Task Repository (existing PIDEA database)
 class SQLiteTaskRepository {
   async save(task) {
     const query = `
@@ -505,7 +505,7 @@ The system maintains high test coverage:
 
 ```bash
 # Build Docker image
-docker build -t cursorweb-task-management .
+docker build -t PIDEA-task-management .
 
 # Run with Docker Compose
 docker-compose up -d
@@ -525,7 +525,7 @@ services:
       - "3000:3000"
     environment:
       - NODE_ENV=production
-      - DATABASE_URL=postgresql://user:pass@db:5432/cursorweb
+      - DATABASE_URL=postgresql://user:pass@db:5432/PIDEA
     depends_on:
       - db
       - redis
@@ -533,7 +533,7 @@ services:
   db:
     image: postgres:13
     environment:
-      - POSTGRES_DB=cursorweb
+      - POSTGRES_DB=PIDEA
       - POSTGRES_USER=user
       - POSTGRES_PASSWORD=pass
     volumes:
@@ -558,7 +558,7 @@ pm2 start ecosystem.config.js
 pm2 monit
 
 # View logs
-pm2 logs cursorweb-task-management
+pm2 logs PIDEA-task-management
 ```
 
 ### Environment Configuration
@@ -567,7 +567,7 @@ pm2 logs cursorweb-task-management
 # Production environment
 NODE_ENV=production
 PORT=3000
-DATABASE_URL=postgresql://user:pass@localhost/cursorweb
+DATABASE_URL=postgresql://user:pass@localhost/PIDEA
 REDIS_URL=redis://localhost:6379
 CURSOR_IDE_URL=http://localhost:3000
 AI_API_KEY=your-production-api-key
@@ -641,8 +641,8 @@ npm audit fix
 
 ```bash
 # Clone repository
-git clone https://github.com/your-org/CursorWeb.git
-cd CursorWeb
+git clone https://github.com/your-org/PIDEA.git
+cd PIDEA
 
 # Install dependencies
 npm install
@@ -685,17 +685,17 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - **Documentation**: [docs/](docs/)
 - **API Reference**: [docs/api/](docs/api/)
 - **Examples**: [examples/](examples/)
-- **Issues**: [GitHub Issues](https://github.com/your-org/CursorWeb/issues)
+- **Issues**: [GitHub Issues](https://github.com/your-org/PIDEA/issues)
 
 ### Community
 
-- **Discord**: [Join our Discord](https://discord.gg/cursorweb)
-- **Discussions**: [GitHub Discussions](https://github.com/your-org/CursorWeb/discussions)
-- **Blog**: [CursorWeb Blog](https://blog.cursorweb.dev)
+- **Discord**: [Join our Discord](https://discord.gg/PIDEA)
+- **Discussions**: [GitHub Discussions](https://github.com/your-org/PIDEA/discussions)
+- **Blog**: [PIDEA Blog](https://blog.PIDEA.dev)
 
 ## 🎉 Success Stories
 
-> "CursorWeb transformed our development workflow. What used to take hours now happens automatically with `task auto`!" - *Senior Developer, TechCorp*
+> "PIDEA transformed our development workflow. What used to take hours now happens automatically with `task auto`!" - *Senior Developer, TechCorp*
 
 > "The AI-powered analysis via Playwright caught issues we never would have found manually. Game changer!" - *Lead Architect, StartupXYZ*
 
@@ -707,9 +707,9 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ```bash
 # Get started in 30 seconds
-npm install -g cursorweb-task-management
+npm install -g PIDEA-task-management
 cd your-project
 task auto
 ```
 
-**That's it!** CursorWeb will automatically analyze your project and optimize your development process. No configuration required! 
+**That's it!** PIDEA will automatically analyze your project and optimize your development process. No configuration required! 

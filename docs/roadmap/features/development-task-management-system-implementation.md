@@ -577,7 +577,7 @@ Presentation/
 ```bash
 # Schritt 1: IDE startet
 GET /api/ide/3000/projects
-→ Response: ["CursorWeb", "OtherProject", "Monorepo"]
+→ Response: ["PIDEA", "OtherProject", "Monorepo"]
 
 # Schritt 2: User wählt Projekt
 POST /api/ide/3000/projects
@@ -590,7 +590,7 @@ POST /api/projects/cursor-web-uuid/auto
 
 # Schritt 4: Auto Mode
 POST /api/ide/3000/auto
-→ Auto-detected: "CursorWeb" Projekt
+→ Auto-detected: "PIDEA" Projekt
 → Führt Tasks für dieses Projekt aus
 ```
 

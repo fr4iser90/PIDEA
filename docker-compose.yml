@@ -1,58 +1,58 @@
 services:
-  cursor-to-bolt-db:
+  pidea-db:
     build:
       context: ./database
       dockerfile: Dockerfile
-    image: fr4iser/cursor-to-bolt:db
-    container_name: cursor-to-bolt-db
+    image: fr4iser/pidea:db
+    container_name: pidea-db
     ports:
       - "5452:5432"
     volumes:
-      - cursor-to-bolt-db-data:/var/lib/postgresql/data
+      - pidea-db-data:/var/lib/postgresql/data
     env_file:
       - .env
     restart: unless-stopped
 
-  cursor-to-bolt-backend:
+  pidea-backend:
     build:
       context: ./backend
       dockerfile: Dockerfile
       target: production
-    image: fr4iser/cursor-to-bolt:backend
-    container_name: cursor-to-bolt-backend
+    image: fr4iser/pidea:backend
+    container_name: pidea-backend
     ports:
       - "8090:8000"
     depends_on:
-      cursor-to-bolt-db:
+      pidea-db:
         condition: service_healthy
     env_file:
       - .env
     volumes:
-      - cursor-to-bolt-backend_logs:/app/logs
+      - pidea-backend_logs:/app/logs
       - /var/run/docker.sock:/var/run/docker.sock
     restart: unless-stopped
 
-  cursor-to-bolt-frontend:
+  pidea-frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile
       target: production
-    image: fr4iser/cursor-to-bolt:frontend
-    container_name: cursor-to-bolt-frontend
+    image: fr4iser/pidea:frontend
+    container_name: pidea-frontend
     ports:
       - "4040:4000"
     depends_on:
-      - cursor-to-bolt-backend
+      - pidea-backend
     env_file:
       - .env
     volumes:
-      - cursor-to-bolt-frontend_logs:/var/log/nginx
+      - pidea-frontend_logs:/var/log/nginx
     restart: unless-stopped
 
 volumes:
-  cursor-to-bolt-db-data:
+  pidea-db-data:
     driver: local
-  cursor-to-bolt-backend_logs:
+  pidea-backend_logs:
     driver: local
-  cursor-to-bolt-frontend_logs:
+  pidea-frontend_logs:
     driver: local

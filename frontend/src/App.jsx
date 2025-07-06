@@ -173,7 +173,7 @@ function App() {
         {/* Header */}
         <header className="app-header">
           <div className="header-content">
-            <h1 className="app-title">CursorWeb</h1>
+            <h1 className="app-title">PIDEA</h1>
             
             {/* Navigation */}
             <nav className="header-navigation">

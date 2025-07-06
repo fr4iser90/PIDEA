@@ -65,7 +65,7 @@ const LoginComponent = ({ onSwitchToRegister }) => {
   return (
     <div className="auth-bg">
       <div className="auth-card">
-        <h2 className="auth-title">Sign in to CursorWeb</h2>
+        <h2 className="auth-title">Sign in to PIDEA</h2>
         <p className="auth-subtitle">Access your secure development environment</p>
         <form className="auth-form" onSubmit={handleSubmit}>
           <input

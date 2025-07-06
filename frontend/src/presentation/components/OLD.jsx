@@ -467,7 +467,7 @@ function RightPanelComponent({ eventBus, messages = [] }) {
         method: 'POST',
         body: JSON.stringify({
           mode: 'analyze',
-          projectPath: '/home/fr4iser/Documents/Git/CursorWeb/backend'
+          projectPath: '/home/fr4iser/Documents/Git/PIDEA/backend'
         })
       });
       if (response.success) {
@@ -487,7 +487,7 @@ function RightPanelComponent({ eventBus, messages = [] }) {
         method: 'POST',
         body: JSON.stringify({
           mode: 'refactor',
-          projectPath: '/home/fr4iser/Documents/Git/CursorWeb/backend'
+          projectPath: '/home/fr4iser/Documents/Git/PIDEA/backend'
         })
       });
       if (response.success) {
@@ -507,7 +507,7 @@ function RightPanelComponent({ eventBus, messages = [] }) {
         method: 'POST',
         body: JSON.stringify({
           mode: 'full',
-          projectPath: '/home/fr4iser/Documents/Git/CursorWeb/backend'
+          projectPath: '/home/fr4iser/Documents/Git/PIDEA/backend'
         })
       });
       if (response.success) {

@@ -139,7 +139,7 @@ class BrowserManager {
           const isDirectory = item.querySelector('.codicon-tree-item-expanded') !== null;
           let path = '';
           if (ariaLabel) {
-            const pathMatch = ariaLabel.match(/~\/Documents\/Git\/CursorWeb\/(.+)/);
+            const pathMatch = ariaLabel.match(/~\/Documents\/Git\/PIDEA\/(.+)/);
             if (pathMatch) {
               path = pathMatch[1];
             }

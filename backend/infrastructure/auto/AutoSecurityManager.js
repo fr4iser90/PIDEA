@@ -109,19 +109,19 @@ class AutoSecurityManager {
         type: 'postgresql',
         host: process.env.DB_HOST || 'localhost',
         port: process.env.DB_PORT || 5432,
-        database: process.env.DB_NAME || 'cursorweb',
+        database: process.env.DB_NAME || 'PIDEA',
         username: process.env.DB_USER || 'postgres',
         password: process.env.DB_PASSWORD || 'postgres',
         fallback: {
           type: 'sqlite',
-          database: path.join(__dirname, '../../database/cursorweb.db')
+          database: path.join(__dirname, '../../database/PIDEA.db')
         }
       };
     } else {
       // Development: Use SQLite
       return {
         type: 'sqlite',
-        database: path.join(__dirname, '../../database/cursorweb-dev.db'),
+        database: path.join(__dirname, '../../database/PIDEA-dev.db'),
         fallback: {
           type: 'memory',
           database: ':memory:'
