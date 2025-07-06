@@ -149,6 +149,12 @@ class ServiceRegistry {
       return new ArchitectureService(architectureAnalyzer, eventBus, logger, analysisOutputService, analysisRepository);
     }, { singleton: true, dependencies: ['architectureAnalyzer', 'eventBus', 'logger', 'analysisOutputService', 'analysisRepository'] });
 
+    // Auto-Finish System
+    this.container.register('autoFinishSystem', (cursorIDEService, browserManager, ideManager) => {
+      const AutoFinishSystem = require('../../domain/services/auto-finish/AutoFinishSystem');
+      return new AutoFinishSystem(cursorIDEService, browserManager, ideManager);
+    }, { singleton: true, dependencies: ['cursorIDEService', 'browserManager', 'ideManager'] });
+
         // Cursor IDE service
         this.container.register('cursorIDEService', (browserManager, ideManager, eventBus) => {
             const CursorIDEService = require('../../domain/services/CursorIDEService');
@@ -162,10 +168,10 @@ class ServiceRegistry {
         }, { singleton: true, dependencies: ['userRepository', 'userSessionRepository'] });
 
         // Task service
-        this.container.register('taskService', (taskRepository, aiService, projectAnalyzer, cursorIDEService) => {
+        this.container.register('taskService', (taskRepository, aiService, projectAnalyzer, cursorIDEService, autoFinishSystem) => {
             const TaskService = require('../../domain/services/TaskService');
-            return new TaskService(taskRepository, aiService, projectAnalyzer, cursorIDEService);
-        }, { singleton: true, dependencies: ['taskRepository', 'aiService', 'projectAnalyzer', 'cursorIDEService'] });
+            return new TaskService(taskRepository, aiService, projectAnalyzer, cursorIDEService, autoFinishSystem);
+        }, { singleton: true, dependencies: ['taskRepository', 'aiService', 'projectAnalyzer', 'cursorIDEService', 'autoFinishSystem'] });
 
         // Task validation service
         this.container.register('taskValidationService', (taskRepository, taskExecutionRepository, cursorIDEService, eventBus, fileSystemService) => {

@@ -7,11 +7,12 @@ const TaskType = require('@/domain/value-objects/TaskType');
  * TaskService - Business logic for project-based task management
  */
 class TaskService {
-  constructor(taskRepository, aiService, projectAnalyzer, cursorIDEService = null) {
+  constructor(taskRepository, aiService, projectAnalyzer, cursorIDEService = null, autoFinishSystem) {
     this.taskRepository = taskRepository;
     this.aiService = aiService;
     this.projectAnalyzer = projectAnalyzer;
     this.cursorIDEService = cursorIDEService;
+    this.autoFinishSystem = autoFinishSystem;
   }
 
   buildRefactoringPrompt(task) {
@@ -228,7 +229,7 @@ class TaskService {
           console.log(`🔄 [TaskService] Refactoring attempt ${attemptCount}/${maxAttempts}`);
           
           // Execute AI refactoring
-          refactoringResult = await this.executeAIRefactoring(task);
+          refactoringResult = await this.executeAIRefactoringWithAutoFinish(task);
           
           if (!refactoringResult.success) {
             throw new Error(`AI refactoring failed: ${refactoringResult.error}`);
@@ -344,6 +345,71 @@ class TaskService {
       };
     } catch (error) {
       throw new Error(`Failed to create git branch: ${error.message}`);
+    }
+  }
+
+  /**
+   * Execute AI-powered refactoring with Auto-Finish System integration
+   * @param {Object} task - Task object
+   * @returns {Promise<Object>} Refactoring result
+   */
+  async executeAIRefactoringWithAutoFinish(task) {
+    try {
+      // Build AI prompt for task execution
+      const aiPrompt = await this.buildTaskExecutionPrompt(task);
+      
+      // Use Auto-Finish System if available
+      if (this.autoFinishSystem && this.cursorIDEService) {
+        console.log('🤖 [TaskService] Using Auto-Finish System for AI refactoring...');
+        
+        // Create temporary task for Auto-Finish processing
+        const tempTask = {
+          id: task.id,
+          description: task.title || task.description,
+          type: task.type?.value || 'refactoring',
+          metadata: task.metadata || {}
+        };
+        
+        // Process with Auto-Finish confirmation loops and fallback detection
+        const autoFinishResult = await this.autoFinishSystem.processTask(tempTask, `task-${task.id}`, {
+          stopOnError: false,
+          maxConfirmationAttempts: 3,
+          confirmationTimeout: 10000,
+          fallbackDetectionEnabled: true
+        });
+        
+        console.log('✅ [TaskService] Auto-Finish processing completed:', {
+          success: autoFinishResult.success,
+          status: autoFinishResult.status,
+          duration: autoFinishResult.duration
+        });
+        
+        // Handle different Auto-Finish results
+        if (autoFinishResult.status === 'paused') {
+          throw new Error(`Task requires user input: ${autoFinishResult.reason}`);
+        }
+        
+        if (!autoFinishResult.success) {
+          throw new Error(`Auto-Finish processing failed: ${autoFinishResult.error || 'Unknown error'}`);
+        }
+        
+        return {
+          success: true,
+          prompt: aiPrompt,
+          aiResponse: autoFinishResult.aiResponse,
+          message: 'AI refactoring completed with Auto-Finish confirmation',
+          duration: autoFinishResult.duration,
+          timestamp: new Date(),
+          autoFinishResult: autoFinishResult
+        };
+        
+      } else {
+        // Fallback to original simple approach
+        console.log('⚠️ [TaskService] Auto-Finish System not available, using fallback approach...');
+        return await this.executeAIRefactoring(task);
+      }
+    } catch (error) {
+      throw new Error(`AI refactoring with Auto-Finish failed: ${error.message}`);
     }
   }
 
