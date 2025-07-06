@@ -3,8 +3,8 @@
  * Manages reusable task templates with validation and business logic
  */
 const { v4: uuidv4 } = require('uuid');
-const TaskType = require('@domain/value-objects/TaskType');
-const TaskPriority = require('@domain/value-objects/TaskPriority');
+const TaskType = require('@/domain/value-objects/TaskType');
+const TaskPriority = require('@/domain/value-objects/TaskPriority');
 
 class TaskTemplate {
   constructor(

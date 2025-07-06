@@ -790,6 +790,9 @@ class Application {
     this.app.get('/api/projects/:projectId/scripts', (req, res) => this.taskController.getGeneratedScripts(req, res));
     this.app.post('/api/projects/:projectId/scripts/:id/execute', (req, res) => this.taskController.executeScript(req, res));
 
+    // IDE Mirror API-Routen einbinden
+    this.ideMirrorController.setupRoutes(this.app);
+
     // Error handling middleware
     this.app.use((error, req, res, next) => {
       this.logger.error('[Application] Unhandled error:', error);

@@ -1,4 +1,4 @@
-const VibeCoderAutoRefactorCommand = require('@application/commands/vibecoder/VibeCoderAutoRefactorCommand');
+const VibeCoderAutoRefactorCommand = require('@/application/commands/vibecoder/VibeCoderAutoRefactorCommand');
 
 class VibeCoderAutoRefactorController {
     constructor(commandBus) {

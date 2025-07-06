@@ -1,5 +1,5 @@
 const UserRepository = require('../../domain/repositories/UserRepository');
-const User = require('@domain/entities/User');
+const User = require('@/domain/entities/User');
 
 class PostgreSQLUserRepository extends UserRepository {
   constructor(databaseConnection) {

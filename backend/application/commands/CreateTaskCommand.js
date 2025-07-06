@@ -1,4 +1,4 @@
-const TaskPriority = require('@domain/value-objects/TaskPriority');
+const TaskPriority = require('@/domain/value-objects/TaskPriority');
 const TaskType = require('@/domain/value-objects/TaskType');
 
 /**

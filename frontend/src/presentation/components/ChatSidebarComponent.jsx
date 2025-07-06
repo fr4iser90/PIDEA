@@ -153,10 +153,19 @@ function ChatSidebarComponent({ eventBus, activePort, onActivePortChange }) {
                 }}
               >
                 <div className="ide-info">
-                  <div className="ide-title">Port {ide.port}</div>
+                  <div className="ide-title">
+                    Port {ide.port}
+                    <span className="ide-project-name" style={{ marginLeft: '8px', fontWeight: 'bold' }}>
+                      {ide.projectName || (ide.workspacePath ? ide.workspacePath.split('/').pop() : 'Unbekanntes Projekt')}
+                    </span>
+                  </div>
                   <div className="ide-meta">
                     <span className={`ide-status ${ide.status}`}>{ide.status}</span>
-                    <span className="ide-source">{ide.source || 'unknown'}</span>
+                    {ide.workspacePath && (
+                      <span className="ide-root-folder" style={{ marginLeft: '8px', color: '#888', fontSize: '0.9em' }}>
+                        {ide.workspacePath}
+                      </span>
+                    )}
                   </div>
                 </div>
                 <div className="ide-actions">

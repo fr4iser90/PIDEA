@@ -242,7 +242,7 @@ class AnalyzeTechStackHandler {
         
         try {
             // Use the TechStackAnalyzer directly
-            const TechStackAnalyzer = require('@infrastructure/external/TechStackAnalyzer');
+            const TechStackAnalyzer = require('@/infrastructure/external/TechStackAnalyzer');
             const techStackAnalyzer = new TechStackAnalyzer();
             const techStack = await techStackAnalyzer.analyzeTechStack(
                 projectInfo.path,

@@ -1,6 +1,6 @@
-const GetChatHistoryQuery = require('@application/queries/GetChatHistoryQuery');
-const ChatMessage = require('@domain/entities/ChatMessage');
-const ChatSession = require('@domain/entities/ChatSession');
+const GetChatHistoryQuery = require('@/application/queries/GetChatHistoryQuery');
+const ChatMessage = require('@/domain/entities/ChatMessage');
+const ChatSession = require('@/domain/entities/ChatSession');
 
 class GetChatHistoryHandler {
   constructor(chatRepository, cursorIDEService = null) {

@@ -3,7 +3,7 @@
  * Manages automatically generated scripts with comprehensive business logic
  */
 const { v4: uuidv4 } = require('uuid');
-const TaskType = require('@domain/value-objects/TaskType');
+const TaskType = require('@/domain/value-objects/TaskType');
 
 class GeneratedScript {
   constructor(

@@ -14,6 +14,49 @@ CursorWeb is an innovative web-based platform designed to enhance developer prod
 - **Preview Functionality**: View code output or project content in real-time alongside your workspace.
 - **Multi-View Interface**: Switch between chat, code, IDE mirror, and preview modes to suit your workflow.
 
+## Cursor IDE Setup
+
+To use CursorWeb with Cursor IDE, you need to start Cursor with remote debugging enabled. This allows CursorWeb to communicate with and mirror your IDE.
+
+### Starting Cursor with Remote Debugging
+
+Run the following command to start Cursor with the necessary configuration:
+
+```bash
+appimage-run ./Cursor-1.1.6-x86_64.AppImage \
+  --user-data-dir="$HOME/.cursor-profile-dev" \
+  --remote-debugging-port=9223
+```
+
+**Parameters explained:**
+- `--user-data-dir="$HOME/.cursor-profile-dev"`: Creates a separate profile directory for development, keeping your main Cursor profile clean
+- `--remote-debugging-port=9223`: Enables remote debugging on port 9223, which CursorWeb uses to connect to your IDE
+
+### Alternative Startup Methods
+
+If you're not using an AppImage, adjust the command based on your installation:
+
+**For installed Cursor:**
+```bash
+cursor \
+  --user-data-dir="$HOME/.cursor-profile-dev" \
+  --remote-debugging-port=9223
+```
+
+**For Windows:**
+```cmd
+cursor.exe --user-data-dir="%USERPROFILE%\.cursor-profile-dev" --remote-debugging-port=9223
+```
+
+**For macOS:**
+```bash
+/Applications/Cursor.app/Contents/MacOS/Cursor \
+  --user-data-dir="$HOME/.cursor-profile-dev" \
+  --remote-debugging-port=9223
+```
+
+Once Cursor is running with remote debugging enabled, CursorWeb can connect to it and provide IDE mirroring functionality.
+
 ## Upcoming Enhancements
 
 ### Mobile Web Interface

@@ -1,7 +1,7 @@
-const Task = require('@domain/entities/Task');
-const TaskStatus = require('@domain/value-objects/TaskStatus');
-const TaskPriority = require('@domain/value-objects/TaskPriority');
-const TaskType = require('@domain/value-objects/TaskType');
+const Task = require('@/domain/entities/Task');
+const TaskStatus = require('@/domain/value-objects/TaskStatus');
+const TaskPriority = require('@/domain/value-objects/TaskPriority');
+const TaskType = require('@/domain/value-objects/TaskType');
 
 /**
  * TaskService - Business logic for project-based task management

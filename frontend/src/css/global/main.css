@@ -75,7 +75,7 @@ body.light-theme {
   overflow: hidden;
   background: var(--bg-secondary);
   margin-left: var(--sidebar-width);
-  margin-right: var(--right-panel-width);
+  margin-right: 0;
   min-width: 0;
   transition: margin 0.3s cubic-bezier(.4,0,.2,1);
 }
@@ -105,7 +105,6 @@ body.light-theme .main-content {
 .main-layout.split-view .main-content {
   display: flex;
   flex-direction: row;
-  gap: 8px;
   height: 100%;
   min-width: 0;
   margin-right: 0;
@@ -260,5 +259,10 @@ body.light-theme .main-content {
 #ideMirrorContainer {
   width: 100%;
   height: 100%;
+}
+
+/* Wenn das Panel offen ist, z.B. mit einer Klasse .with-right-panel am Body oder main-content */
+.main-content.with-right-panel {
+  margin-right: var(--right-panel-width);
 }
 

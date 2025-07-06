@@ -1,5 +1,5 @@
-const TaskExecution = require('@domain/entities/TaskExecution');
-const TaskStatus = require('@domain/value-objects/TaskStatus');
+const TaskExecution = require('@/domain/entities/TaskExecution');
+const TaskStatus = require('@/domain/value-objects/TaskStatus');
 
 /**
  * SQLiteTaskExecutionRepository - SQLite implementation of TaskExecutionRepository

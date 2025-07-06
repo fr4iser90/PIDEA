@@ -301,15 +301,15 @@ class VibeCoderAnalyzeHandler {
     async getSubCommandClass(commandType) {
         switch (commandType) {
             case 'AnalyzeRepoStructureCommand':
-                return require('@application/commands/analyze/AnalyzeRepoStructureCommand');
+                return require('@/application/commands/analyze/AnalyzeRepoStructureCommand');
             case 'AnalyzeArchitectureCommand':
-                return require('@application/commands/analyze/AnalyzeArchitectureCommand');
+                return require('@/application/commands/analyze/AnalyzeArchitectureCommand');
             case 'AnalyzeTechStackCommand':
-                return require('@application/commands/analyze/AnalyzeTechStackCommand');
+                return require('@/application/commands/analyze/AnalyzeTechStackCommand');
             case 'AnalyzeCodeQualityCommand':
-                return require('@application/commands/analyze/AnalyzeCodeQualityCommand');
+                return require('@/application/commands/analyze/AnalyzeCodeQualityCommand');
             case 'AnalyzeDependenciesCommand':
-                return require('@application/commands/analyze/AnalyzeDependenciesCommand');
+                return require('@/application/commands/analyze/AnalyzeDependenciesCommand');
             default:
                 throw new Error(`Unknown command type: ${commandType}`);
         }

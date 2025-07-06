@@ -1,0 +1,9 @@
+.ide-mirror-container {
+  position: relative;
+  width: 100vw;  /* Volle Viewport-Breite */
+  height: 100vh;
+  overflow: hidden;
+  background: rgb(30, 30, 30);
+  margin-left: calc(-1 * var(--sidebar-width));  /* Kompensiert die Sidebar */
+  margin-right: calc(-1 * var(--right-panel-width));  /* Kompensiert das rechte Panel */
+}

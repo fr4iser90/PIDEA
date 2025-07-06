@@ -2,8 +2,8 @@
  * SQLiteTaskRepository
  * SQLite implementation of TaskRepository interface
  */
-const TaskRepository = require('@domain/repositories/TaskRepository');
-const Task = require('@domain/entities/Task');
+const TaskRepository = require('@/domain/repositories/TaskRepository');
+const Task = require('@/domain/entities/Task');
 const TaskStatus = require('../../domain/value-objects/TaskStatus');
 
 class SQLiteTaskRepository extends TaskRepository {

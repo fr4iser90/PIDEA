@@ -219,13 +219,9 @@ function IDEMirrorComponent({ eventBus }) {
         // Clear container and set up
         if (containerRef.current) {
             containerRef.current.innerHTML = '';
-            containerRef.current.style.cssText = `
-                position: relative;
-                width: 100%;
-                height: 100vh;
-                overflow: hidden;
-                background: #1e1e1e;
-            `;
+            // Entferne inline styles - lass CSS-Datei das machen
+            containerRef.current.className = 'ide-mirror-container';
+            containerRef.current.style.background = '#1e1e1e';
 
             // Create header
             const header = document.createElement('div');

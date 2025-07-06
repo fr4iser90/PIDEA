@@ -32,7 +32,7 @@ class SecurityService {
         
         // Save to database
         if (this.analysisRepository) {
-          const AnalysisResult = require('@domain/entities/AnalysisResult');
+          const AnalysisResult = require('@/domain/entities/AnalysisResult');
           const analysisResult = AnalysisResult.create(
             projectId, 
             'security', 

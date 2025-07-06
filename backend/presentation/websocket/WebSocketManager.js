@@ -1,5 +1,5 @@
 const WebSocket = require('ws');
-const AuthMiddleware = require('@infrastructure/auth/AuthMiddleware');
+const AuthMiddleware = require('@/infrastructure/auth/AuthMiddleware');
 
 class WebSocketManager {
   constructor(server, eventBus, authMiddleware) {

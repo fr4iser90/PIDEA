@@ -1,4 +1,4 @@
-const AnalysisRepository = require('@domain/repositories/AnalysisRepository');
+const AnalysisRepository = require('@/domain/repositories/AnalysisRepository');
 
 class InMemoryAnalysisRepository extends AnalysisRepository {
     constructor() {

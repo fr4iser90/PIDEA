@@ -85,7 +85,7 @@ class CreateTaskHandler {
             }
 
             // Create task entity directly (since taskGenerationService is null)
-            const Task = require('@domain/entities/Task');
+            const Task = require('@/domain/entities/Task');
             const task = Task.create(
                 command.projectId,
                 command.title,
@@ -229,7 +229,7 @@ class CreateTaskHandler {
             options: { ...template.options, ...command.options }
         };
 
-        return new (require('@application/commands/CreateTaskCommand'))(mergedParams);
+        return new (require('@/application/commands/CreateTaskCommand'))(mergedParams);
     }
 
     /**
@@ -261,7 +261,7 @@ class CreateTaskHandler {
             options: { ...suggestion.options, ...command.options }
         };
 
-        return new (require('@application/commands/CreateTaskCommand'))(mergedParams);
+        return new (require('@/application/commands/CreateTaskCommand'))(mergedParams);
     }
 
     /**

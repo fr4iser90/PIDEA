@@ -79,8 +79,9 @@
 }
 
 .ide-list {
-  max-height: 120px;
+  max-height: 60vh;
   overflow-y: auto;
+  transition: max-height 0.3s;
 }
 
 .ide-item {

@@ -284,7 +284,7 @@ class VibeCoderModeHandler {
     async analyzeDependencies(projectPath) {
         try {
             // Use real dependency analyzer
-            const dependencyAnalyzer = require('@infrastructure/external/DependencyAnalyzer');
+            const dependencyAnalyzer = require('@/infrastructure/external/DependencyAnalyzer');
             const analyzer = new dependencyAnalyzer();
             return await analyzer.analyzeDependencies(projectPath);
         } catch (error) {
@@ -303,7 +303,7 @@ class VibeCoderModeHandler {
     async analyzePerformance(projectPath) {
         try {
             // Use real performance analyzer
-            const performanceAnalyzer = require('@infrastructure/external/PerformanceAnalyzer');
+            const performanceAnalyzer = require('@/infrastructure/external/PerformanceAnalyzer');
             const analyzer = new performanceAnalyzer();
             return await analyzer.analyzePerformance(projectPath);
         } catch (error) {
@@ -332,7 +332,7 @@ class VibeCoderModeHandler {
             if (packages.length > 1) {
                 const packageSecurityAnalyses = {};
                 for (const pkg of packages) {
-                    const securityAnalyzer = require('@infrastructure/external/SecurityAnalyzer');
+                    const securityAnalyzer = require('@/infrastructure/external/SecurityAnalyzer');
                     const secAnalyzer = new securityAnalyzer();
                     const packageSecurityResult = await secAnalyzer.analyzeSecurity(pkg.path);
                     
@@ -364,7 +364,7 @@ class VibeCoderModeHandler {
                     recommendations: aggregatedSecurity.overallRecommendations || []
                 };
             } else {
-                const securityAnalyzer = require('@infrastructure/external/SecurityAnalyzer');
+                const securityAnalyzer = require('@/infrastructure/external/SecurityAnalyzer');
                 const secAnalyzer = new securityAnalyzer();
                 const securityResult = await secAnalyzer.analyzeSecurity(projectPath);
                 
@@ -399,7 +399,7 @@ class VibeCoderModeHandler {
     async analyzeTechStack(projectPath) {
         try {
             // Use real tech stack analyzer
-            const techStackAnalyzer = require('@infrastructure/external/TechStackAnalyzer');
+            const techStackAnalyzer = require('@/infrastructure/external/TechStackAnalyzer');
             const analyzer = new techStackAnalyzer();
             return await analyzer.analyzeTechStack(projectPath);
         } catch (error) {
@@ -597,7 +597,7 @@ class VibeCoderModeHandler {
             
             // 6. Analyze performance using real analyzer
             try {
-                const performanceAnalyzer = require('@infrastructure/external/PerformanceAnalyzer');
+                const performanceAnalyzer = require('@/infrastructure/external/PerformanceAnalyzer');
                 const perfAnalyzer = new performanceAnalyzer();
                 const performanceResult = await perfAnalyzer.analyzePerformance(command.projectPath);
                 analysisResults.performance = {
@@ -632,7 +632,7 @@ class VibeCoderModeHandler {
                 if (packages.length > 1) {
                     const packageSecurityAnalyses = {};
                     for (const pkg of packages) {
-                        const securityAnalyzer = require('@infrastructure/external/SecurityAnalyzer');
+                        const securityAnalyzer = require('@/infrastructure/external/SecurityAnalyzer');
                         const secAnalyzer = new securityAnalyzer();
                         const packageSecurityResult = await secAnalyzer.analyzeSecurity(pkg.path);
                         
@@ -664,7 +664,7 @@ class VibeCoderModeHandler {
                         recommendations: aggregatedSecurity.overallRecommendations || []
                     };
                 } else {
-                    const securityAnalyzer = require('@infrastructure/external/SecurityAnalyzer');
+                    const securityAnalyzer = require('@/infrastructure/external/SecurityAnalyzer');
                     const secAnalyzer = new securityAnalyzer();
                     const securityResult = await secAnalyzer.analyzeSecurity(command.projectPath);
                     

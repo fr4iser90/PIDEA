@@ -1,6 +1,6 @@
-const TaskSuggestion = require('@domain/entities/TaskSuggestion');
-const TaskType = require('@domain/value-objects/TaskType')
-const TaskPriority = require('@domain/value-objects/TaskPriority');
+const TaskSuggestion = require('@/domain/entities/TaskSuggestion');
+const TaskType = require('@/domain/value-objects/TaskType')
+const TaskPriority = require('@/domain/value-objects/TaskPriority');
 
 /**
  * SQLiteTaskSuggestionRepository - SQLite implementation of TaskSuggestionRepository

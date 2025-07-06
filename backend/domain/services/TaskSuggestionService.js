@@ -2,9 +2,9 @@
  * TaskSuggestionService
  * Manages AI-generated task suggestions
  */
-const AISuggestion = require('@domain/value-objects/AISuggestion');
-const TaskSuggestion = require('@domain/entities/TaskSuggestion');
-const TaskType = require('@domain/value-objects/TaskType');
+const AISuggestion = require('@/domain/value-objects/AISuggestion');
+const TaskSuggestion = require('@/domain/entities/TaskSuggestion');
+const TaskType = require('@/domain/value-objects/TaskType');
 
 class TaskSuggestionService {
   constructor(cursorIDEService, eventBus, logger) {

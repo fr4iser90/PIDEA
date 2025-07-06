@@ -3,9 +3,9 @@
  * Manages AI-generated task suggestions with comprehensive business logic
  */
 const { v4: uuidv4 } = require('uuid');
-const AISuggestion = require('@domain/value-objects/AISuggestion');
-const TaskType = require('@domain/value-objects/TaskType');
-const TaskPriority = require('@domain/value-objects/TaskPriority');
+const AISuggestion = require('@/domain/value-objects/AISuggestion');
+const TaskType = require('@/domain/value-objects/TaskType');
+const TaskPriority = require('@/domain/value-objects/TaskPriority');
 
 class TaskSuggestion {
   constructor(

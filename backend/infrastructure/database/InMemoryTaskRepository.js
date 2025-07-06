@@ -1,4 +1,4 @@
-const TaskRepository = require('@domain/repositories/TaskRepository');
+const TaskRepository = require('@/domain/repositories/TaskRepository');
 
 /**
  * InMemoryTaskRepository - In-memory implementation for testing and development
