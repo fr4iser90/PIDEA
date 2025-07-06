@@ -235,6 +235,7 @@ class SecurityTestingService {
 3. **Code Application** → Fix implementieren
 4. **Test Execution** → Funktioniert es?
 5. **Repeat** → Bis Problem gelöst
+6. **If time > 1h** -> reset git , mark task as needs to be reviewed , Näcshte Task anfangen
 
 ## 📊 **Monitoring & Analytics**
 
