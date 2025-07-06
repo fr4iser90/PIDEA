@@ -160,6 +160,14 @@ class TaskService {
         throw new Error('Task is already completed');
       }
 
+      // CRITICAL: Create new chat ONLY at the start of task execution
+      if (this.cursorIDEService && this.cursorIDEService.browserManager) {
+        console.log('🆕 [TaskService] Creating new chat for task execution...');
+        await this.cursorIDEService.browserManager.clickNewChat();
+        // Wait for new chat to be ready
+        await new Promise(resolve => setTimeout(resolve, 2000));
+      }
+
       // Update task status to in progress
       task.updateStatus(TaskStatus.IN_PROGRESS);
       await this.taskRepository.update(taskId, task);
