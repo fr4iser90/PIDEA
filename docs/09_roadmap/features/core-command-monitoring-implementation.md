@@ -8,12 +8,26 @@
 - **Related Issues**: Browser terminal output capture, encrypted log storage, real-time log display
 
 ## 2. Technical Requirements
-- **Tech Stack**: Playwright, Node.js, Express (REST API), Crypto (for encryption), File System
-- **Architecture Pattern**: Log Capture, File-Based Storage, Encryption, Polling-Based Display
+- **Tech Stack**: Playwright (CDP only), Node.js, Express (REST API), Crypto (for encryption), File System
+- **Architecture Pattern**: Log Capture, File-Based Storage, Encryption, CDP-Based Terminal Access
 - **Database Changes**: None (file-based log storage in /tmp/IDEWEB/)
 - **API Changes**: New REST endpoints for encrypted log reading
 - **Frontend Changes**: Log display components with real-time updates
-- **Backend Changes**: Log decryption service, REST endpoints
+- **Backend Changes**: Log decryption service, REST endpoints, CDP terminal access via existing connection
+
+## 2.1 Existing Functions to Use (NO NEW BROWSER!)
+- **BrowserManager** - `connect(port)` - Verbindet sich über CDP zu Port 9222
+- **IDEManager** - `getActiveIDE()`, `switchToIDE(port)` - Verwaltet IDE Instanzen
+- **IDEMirrorService** - `typeInIDE()`, `clickElementInIDE()` - Kann Terminal öffnen und Befehle ausführen
+- **CursorIDEService** - `switchToPort(port)` - Wechselt zwischen IDE Ports
+- **IDEStarter** - `startIDE(port)` - Startet neue IDE Instanzen
+- **IDEDetector** - `scanForIDEs()` - Findet laufende IDE Instanzen
+
+## 2.2 EXISTING TERMINAL SERVICES (NUTZLOS FÜR LOG CAPTURE!)
+- **TerminalMonitor** - ❌ KANN NICHT Terminal-Output lesen (Terminal ist Canvas!)
+- **TerminalContentExtractor** - ❌ KANN NICHT Terminal-Inhalt extrahieren
+- **TerminalUrlExtractor** - ❌ KANN NICHT URLs aus Terminal lesen
+- **WAHRHEIT**: Diese Services sind KOMPLETT NUTZLOS für Terminal Log Capture!
 
 ## 3. File Impact Analysis
 
@@ -23,13 +37,13 @@
 - [ ] Playwright scripts - Add terminal log capture
 
 ### Files to Create:
-- [ ] `backend/domain/services/TerminalLogCaptureService.js` - Core log capture logic
-- [ ] `backend/domain/services/TerminalLogReader.js` - Read and decrypt logs
-- [ ] `backend/infrastructure/security/LogEncryptionService.js` - Log encryption/decryption
-- [ ] `backend/infrastructure/security/LogPermissionManager.js` - Secure log file permissions
-- [ ] `backend/tests/unit/domain/services/TerminalLogCaptureService.test.js` - Unit tests
-- [ ] `backend/tests/integration/TerminalLogCapture.test.js` - Integration tests
-- [ ] `backend/tests/unit/infrastructure/security/LogEncryptionService.test.js` - Security tests
+- [ ] `backend/domain/services/TerminalLogCaptureService.js` - Core log capture logic (KOMPLETT NEU!)
+- [ ] `backend/domain/services/TerminalLogReader.js` - Read and decrypt logs (KOMPLETT NEU!)
+- [ ] `backend/infrastructure/security/LogEncryptionService.js` - Log encryption/decryption (KOMPLETT NEU!)
+- [ ] `backend/infrastructure/security/LogPermissionManager.js` - Secure log file permissions (KOMPLETT NEU!)
+- [ ] `backend/tests/unit/domain/services/TerminalLogCaptureService.test.js` - Unit tests (KOMPLETT NEU!)
+- [ ] `backend/tests/integration/TerminalLogCapture.test.js` - Integration tests (KOMPLETT NEU!)
+- [ ] `backend/tests/unit/infrastructure/security/LogEncryptionService.test.js` - Security tests (KOMPLETT NEU!)
 
 ### Files to Delete:
 - [ ] Remove all command monitoring related code
@@ -44,15 +58,15 @@
 - [ ] **LogPermissionManager.js** with `setSecureLogPermissions()` and `fs.chmod()`
 - [ ] **LogPermissionManager.js** with `validateLogPath()` to prevent path traversal
 
-### Phase 2: Playwright Terminal Capture
-- [ ] **backend/scripts/terminal-capture.js** - Node.js script that runs in terminal
-- [ ] **executeTerminalCommand(command)** function with `page.$('.xterm-helper-textarea')`
-- [ ] **executeTerminalCommand(command)** function with `page.focus()` and `page.fill(command)`
-- [ ] **executeTerminalCommand(command)** function with `page.keyboard.press('Enter')`
-- [ ] **Playwright script** opens browser and navigates to `localhost:${port}`
-- [ ] **Playwright script** opens terminal with `page.keyboard.press('Control+Shift+`')`
-- [ ] **Playwright script** executes commands like `npm run dev > /tmp/IDEWEB/${port}/logs/terminal.log 2>&1`
-- [ ] **Backend service** monitors log files with `setInterval()` and `fs.readFile()`
+### Phase 2: Terminal Capture Using Existing Functions
+- [ ] **TerminalLogCaptureService.js** - Nutzt `BrowserManager.connect(port)` für CDP Verbindung
+- [ ] **executeTerminalCommand(command)** function mit `IDEMirrorService.typeInIDE(command)`
+- [ ] **executeTerminalCommand(command)** function mit `IDEMirrorService.clickElementInIDE('.xterm-helper-textarea')`
+- [ ] **executeTerminalCommand(command)** function mit `IDEMirrorService.typeInIDE('Enter')` für Enter-Taste
+- [ ] **TerminalLogCaptureService.js** nutzt `IDEManager.getActiveIDE()` für aktuelle IDE
+- [ ] **TerminalLogCaptureService.js** öffnet Terminal mit `IDEMirrorService.typeInIDE('Control+Shift+`')`
+- [ ] **TerminalLogCaptureService.js** führt Befehle aus wie `npm run dev > /tmp/IDEWEB/${port}/logs/terminal.log 2>&1`
+- [ ] **Backend service** überwacht Log-Dateien mit `setInterval()` und `fs.readFile()`
 
 ### Phase 3: Backend Log Reading
 - [ ] **TerminalLogReader.js** with `getRecentLogs(port, lines)` function
@@ -214,29 +228,28 @@
 
 ## 15. Terminal Log Capture Strategy
 
-### Playwright Terminal Capture Pattern:
+### Using Existing Functions Pattern (NO NEW BROWSER!):
 ```javascript
-// 1. PLAYWRIGHT SETUP - Browser starten und Terminal öffnen
-const { chromium } = require('playwright');
+// 1. EXISTING FUNCTIONS SETUP - Nutze bestehende CDP Verbindung
+const BrowserManager = require('./infrastructure/external/BrowserManager');
+const IDEManager = require('./infrastructure/external/IDEManager');
+const IDEMirrorService = require('./domain/services/IDEMirrorService');
 const fs = require('fs').promises;
 const path = require('path');
 
-// Browser starten
-const browser = await chromium.launch({ headless: false });
-const page = await browser.newPage();
+// 2. BESTEHENDE CDP VERBINDUNG NUTZEN - KEIN NEUER BROWSER!
+await ideManager.initialize();
+const activeIDE = await ideManager.getActiveIDE();
+await browserManager.connect(activeIDE.port);
 
-
-await page.keyboard.down('Control');
-await page.keyboard.down('Shift');
-await page.keyboard.press('`');
-await page.keyboard.up('Shift');
-await page.keyboard.up('Control');
+// Terminal öffnen mit bestehenden Funktionen
+await ideMirrorService.typeInIDE('Control+Shift+`');
 
 // Warten bis Terminal offen ist
-await page.waitForTimeout(1000);
+await new Promise(resolve => setTimeout(resolve, 1000));
 
-// 3. TERMINAL BEFEHLE AUSFÜHREN - Das macht Playwright WIRKLICH!
-const port = XXXX; // IDE Port (9222-9231)
+// 3. TERMINAL BEFEHLE AUSFÜHREN - Mit bestehenden Funktionen!
+const port = activeIDE.port; // IDE Port (9222-9231)
 const commands = [
   `mkdir -p /tmp/IDEWEB/${port}/logs`,
   `npm run dev > /tmp/IDEWEB/${port}/logs/terminal.log 2>&1 & echo $! > /tmp/IDEWEB/${port}/logs/process.pid`,
@@ -244,11 +257,11 @@ const commands = [
 ];
 
 for (const command of commands) {
-  // FOKUSSIEREN und FÜLLEN - das macht Playwright WIRKLICH!
-  await page.focus('.xterm-helper-textarea');
-  await page.fill('.xterm-helper-textarea', command);
-  await page.keyboard.press('Enter');
-  await page.waitForTimeout(1000); // Warten bis Befehl ausgeführt ist
+  // FOKUSSIEREN und FÜLLEN - mit bestehenden Funktionen!
+  await ideMirrorService.clickElementInIDE('.xterm-helper-textarea');
+  await ideMirrorService.typeInIDE(command);
+  await ideMirrorService.typeInIDE('Enter');
+  await new Promise(resolve => setTimeout(resolve, 1000)); // Warten bis Befehl ausgeführt ist
 }
 
 // 5. VERSCHLÜSSELTE DATEI SCHREIBEN - Funktion
@@ -313,9 +326,9 @@ setInterval(async () => {
   }
 }, 2000);
 
-// 7. CLEANUP - Beim Beenden
+// 7. CLEANUP - Beim Beenden (KEIN BROWSER SCHLIEßEN!)
 process.on('SIGINT', async () => {
-  console.log('🧹 Cleanup: Browser schließen...');
+  console.log('🧹 Cleanup: Prozesse beenden...');
   
   // Prozess beenden falls PID-Datei existiert
   try {
@@ -328,29 +341,30 @@ process.on('SIGINT', async () => {
     console.log('Kein Prozess zu beenden');
   }
   
-  await browser.close();
+  // KEIN browser.close() - bestehende Verbindung bleibt!
   process.exit(0);
 });
 ```
 
-### DETAILLIERTE ERKLÄRUNG WIE PLAYWRIGHT TERMINAL-OUTPUT IN DATEIEN SCHREIBT:
+### DETAILLIERTE ERKLÄRUNG WIE BESTEHENDE FUNKTIONEN TERMINAL-OUTPUT IN DATEIEN SCHREIBT:
 
-**SCHRITT 1: Playwright öffnet Terminal**
-- `page.keyboard.press('Control+Shift+`')` - Öffnet Terminal in Cursor IDE
-- `page.$('.xterm-helper-textarea')` - Findet Terminal-Input-Element
-- **Playwright KANN Terminal öffnen und Input senden!**
+**SCHRITT 1: Bestehende CDP Verbindung nutzen**
+- `ideManager.getActiveIDE()` - Findet aktive IDE Instanz
+- `browserManager.connect(port)` - Verbindet sich über bestehende CDP Verbindung
+- `ideMirrorService.typeInIDE('Control+Shift+`')` - Öffnet Terminal mit bestehenden Funktionen
+- **KEIN NEUER BROWSER - nur bestehende Verbindung nutzen!**
 
-**SCHRITT 2: Befehle mit Output-Umleitung ausführen**
-- `npm run dev > /tmp/IDEWEB/${port}/logs/terminal.log 2>&1` - Leitet Output in Datei um
-- `& echo $! > /tmp/IDEWEB/${port}/logs/process.pid` - Speichert Prozess-ID
-- `tail -f` - Überwacht Datei in Echtzeit
-- **Playwright KANN Befehle ausführen die Output in Dateien schreiben!**
+**SCHRITT 2: Befehle mit bestehenden Funktionen ausführen**
+- `ideMirrorService.clickElementInIDE('.xterm-helper-textarea')` - Fokussiert Terminal
+- `ideMirrorService.typeInIDE(command)` - Gibt Befehl ein
+- `ideMirrorService.typeInIDE('Enter')` - Führt Befehl aus
+- **Bestehende Funktionen können Befehle ausführen die Output in Dateien schreiben!**
 
 **SCHRITT 3: Backend liest und verschlüsselt Log-Dateien**
 - `setInterval()` prüft alle 2 Sekunden die Log-Datei
 - `fs.readFile()` liest den Terminal-Output
 - `writeToEncryptedLog()` verschlüsselt und speichert
-- **Backend kann Dateien lesen die Playwright erstellt hat!**
+- **Backend kann Dateien lesen die bestehende Funktionen erstellt haben!**
 
 **SCHRITT 4: Datei-Struktur**
 ```
@@ -361,9 +375,9 @@ process.on('SIGINT', async () => {
 └── terminal-realtime.log     # Echtzeit-Output
 ```
 
-**WICHTIG: Playwright KANN NICHT Terminal-Output LESEN!**
+**WICHTIG: Bestehende Funktionen KÖNNEN NICHT Terminal-Output LESEN!**
 - Terminal ist ein Canvas - kein Text drin!
-- Playwright kann NUR Befehle eingeben
+- Bestehende Funktionen können NUR Befehle eingeben
 - Output muss in Dateien umgeleitet werden
 - Backend liest dann die Dateien
 
@@ -478,50 +492,64 @@ class LogPermissionManager {
 
 ## 17. Implementation Progress
 
-### Phase 1: Foundation Setup ⏳ PENDING
+### Phase 1: Foundation Setup ❌ NICHT IMPLEMENTIERT
 - [ ] Create TerminalLogCaptureService structure
 - [ ] Set up log file system in /tmp/IDEWEB/{port}/logs/
 - [ ] Create initial test framework
 - [ ] Set up LogEncryptionService and LogPermissionManager
 
-### Phase 2: Playwright Terminal Capture ⏳ PENDING
-- [ ] Implement Playwright script to capture browser terminal output
-- [ ] Add output redirection to encrypted log files
-- [ ] Implement real-time log writing
+### Phase 2: Terminal Capture Using Existing Functions ❌ NICHT IMPLEMENTIERT
+- [ ] Implement TerminalLogCaptureService using existing BrowserManager/IDEManager
+- [ ] Add output redirection to encrypted log files using existing CDP connection
+- [ ] Implement real-time log writing with existing IDE functions
 - [ ] Add log rotation and cleanup
 
-### Phase 3: Backend Log Reading ⏳ PENDING
+### Phase 3: Backend Log Reading ❌ NICHT IMPLEMENTIERT
 - [ ] Implement log file reading and decryption
 - [ ] Add REST API endpoints for log access
 - [ ] Implement log parsing and formatting
 - [ ] Add log search and filtering
 
-### Phase 4: Frontend Integration ⏳ PENDING
+### Phase 4: Frontend Integration ❌ NICHT IMPLEMENTIERT
 - [ ] Create log display components
 - [ ] Add real-time log updates
 - [ ] Implement log search and navigation
 - [ ] Add log export functionality
 
-### Phase 5: Security Implementation ⏳ PENDING
+### Phase 5: Security Implementation ❌ NICHT IMPLEMENTIERT
 - [ ] Implement secure log file permissions (chmod 600/700)
 - [ ] Add log encryption for sensitive data
 - [ ] Implement auto-cleanup mechanisms
 - [ ] Add path validation and traversal prevention
 - [ ] Implement secure key management
 
-### Phase 6: Testing & Documentation ⏳ PENDING
+### Phase 6: Testing & Documentation ❌ NICHT IMPLEMENTIERT
 - [ ] Write comprehensive unit tests
 - [ ] Write integration tests
 - [ ] Update API documentation
 - [ ] Create user guide
 
 ## 18. Current Status
-**Ready to Start** - Foundation setup needs to be implemented.
+**❌ KOMPLETT NICHT IMPLEMENTIERT** - Alles gelöscht/discarded!
 
-**Next Steps:**
+**WAHRHEIT:**
+- ❌ TerminalLogCaptureService.js - **EXISTIERT NICHT**
+- ❌ LogEncryptionService.js - **EXISTIERT NICHT**
+- ❌ LogPermissionManager.js - **EXISTIERT NICHT**
+- ❌ TerminalLogReader.js - **EXISTIERT NICHT**
+- ❌ TerminalLogDisplay.jsx - **EXISTIERT NICHT**
+- ❌ API Endpoints - **EXISTIEREN NICHT**
+- ❌ Tests - **EXISTIEREN NICHT**
+
+**Bestehende Terminal Services sind NUTZLOS:**
+- TerminalMonitor.js - Kann Terminal-Output nicht lesen (Terminal ist Canvas!)
+- TerminalContentExtractor.js - Kann Terminal-Inhalt nicht extrahieren
+- TerminalUrlExtractor.js - Kann URLs nicht aus Terminal lesen
+
+**Next Steps (KOMPLETT NEU IMPLEMENTIEREN):**
 1. Create TerminalLogCaptureService.js with log capture logic
 2. Create LogEncryptionService.js for log encryption/decryption
 3. Create LogPermissionManager.js for secure file permissions
-4. Implement Playwright terminal capture scripts
+4. Implement terminal capture using existing CDP functions (NO NEW BROWSER!)
 5. Create REST API endpoints for log reading
 6. Add frontend components for log display 
