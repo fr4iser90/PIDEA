@@ -1,0 +1,437 @@
+.git-management {
+  background: #ffffff;
+  border: 1px solid #e1e5e9;
+  border-radius: 8px;
+  padding: 16px;
+  margin: 16px 0;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* Git Status Header */
+.git-status-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #e1e5e9;
+}
+
+/* Workspace Info */
+.workspace-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 16px;
+  padding: 8px 12px;
+  background: #f6f8fa;
+  border-radius: 6px;
+  font-size: 13px;
+}
+
+.workspace-label {
+  font-weight: 500;
+  color: #24292f;
+  white-space: nowrap;
+}
+
+.workspace-path {
+  color: #656d76;
+  font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+  font-size: 12px;
+  word-break: break-all;
+}
+
+.git-status-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+}
+
+.git-status-icon {
+  font-size: 18px;
+}
+
+.git-status-text {
+  font-weight: 500;
+  color: #24292f;
+}
+
+.git-branch-name {
+  color: #656d76;
+  font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+  background: #f6f8fa;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 12px;
+}
+
+/* Git Controls */
+.git-controls {
+  margin-bottom: 16px;
+}
+
+.git-button-group {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.git-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  border: 1px solid #d0d7de;
+  border-radius: 6px;
+  background: #ffffff;
+  color: #24292f;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 80px;
+  justify-content: center;
+}
+
+.git-btn:hover:not(:disabled) {
+  background: #f6f8fa;
+  border-color: #0969da;
+}
+
+.git-btn:active:not(:disabled) {
+  background: #f0f3f6;
+  transform: translateY(1px);
+}
+
+.git-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-icon {
+  font-size: 14px;
+}
+
+.btn-text {
+  font-size: 12px;
+}
+
+/* Button Variants */
+.validate-btn {
+  border-color: #2da44e;
+  color: #2da44e;
+}
+
+.validate-btn:hover:not(:disabled) {
+  background: #f0f9ff;
+  border-color: #2da44e;
+}
+
+.compare-btn {
+  border-color: #0969da;
+  color: #0969da;
+}
+
+.compare-btn:hover:not(:disabled) {
+  background: #f0f9ff;
+  border-color: #0969da;
+}
+
+.pull-btn {
+  border-color: #8250df;
+  color: #8250df;
+}
+
+.pull-btn:hover:not(:disabled) {
+  background: #faf5ff;
+  border-color: #8250df;
+}
+
+.merge-btn {
+  border-color: #cf222e;
+  color: #cf222e;
+}
+
+.merge-btn:hover:not(:disabled) {
+  background: #fff5f5;
+  border-color: #cf222e;
+}
+
+.refresh-btn {
+  padding: 6px;
+  min-width: auto;
+  border-radius: 4px;
+}
+
+/* Branch Selector */
+.branch-selector {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 16px;
+  padding: 12px;
+  background: #f6f8fa;
+  border-radius: 6px;
+}
+
+.branch-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: #24292f;
+  white-space: nowrap;
+}
+
+.branch-select {
+  flex: 1;
+  padding: 6px 8px;
+  border: 1px solid #d0d7de;
+  border-radius: 4px;
+  background: #ffffff;
+  font-size: 13px;
+  font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+  color: #24292f;
+}
+
+.branch-select:focus {
+  outline: none;
+  border-color: #0969da;
+  box-shadow: 0 0 0 3px rgba(9, 105, 218, 0.1);
+}
+
+/* Git Status Details */
+.git-status-details {
+  border-top: 1px solid #e1e5e9;
+  padding-top: 16px;
+}
+
+.status-section {
+  margin-bottom: 16px;
+}
+
+.status-section h4 {
+  margin: 0 0 8px 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: #24292f;
+}
+
+.file-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  max-height: 120px;
+  overflow-y: auto;
+  border: 1px solid #e1e5e9;
+  border-radius: 4px;
+  background: #f6f8fa;
+}
+
+.file-item {
+  padding: 4px 8px;
+  font-size: 12px;
+  font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+  border-bottom: 1px solid #e1e5e9;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.file-item:last-child {
+  border-bottom: none;
+}
+
+.file-item.modified {
+  color: #9a6700;
+  background: #fff8c5;
+}
+
+.file-item.added {
+  color: #2da44e;
+  background: #dafbe1;
+}
+
+.file-item.deleted {
+  color: #cf222e;
+  background: #ffebe9;
+}
+
+/* Operation Result */
+.operation-result {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px;
+  border-radius: 6px;
+  margin-top: 12px;
+  font-size: 13px;
+}
+
+.operation-result.success {
+  background: #dafbe1;
+  border: 1px solid #2da44e;
+  color: #1a7f37;
+}
+
+.operation-result.error {
+  background: #ffebe9;
+  border: 1px solid #cf222e;
+  color: #a40e26;
+}
+
+.result-icon {
+  font-size: 16px;
+}
+
+.result-message {
+  flex: 1;
+}
+
+/* Diff Modal */
+.diff-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.diff-modal {
+  background: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  width: 90%;
+  max-width: 800px;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.diff-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  border-bottom: 1px solid #e1e5e9;
+}
+
+.diff-header h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #24292f;
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  font-size: 18px;
+  cursor: pointer;
+  color: #656d76;
+  padding: 4px;
+  border-radius: 4px;
+}
+
+.close-btn:hover {
+  background: #f6f8fa;
+  color: #24292f;
+}
+
+.diff-content {
+  flex: 1;
+  overflow: auto;
+  padding: 20px;
+}
+
+.diff-text {
+  font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+  font-size: 12px;
+  line-height: 1.5;
+  color: #24292f;
+  white-space: pre-wrap;
+  margin: 0;
+  background: #f6f8fa;
+  padding: 16px;
+  border-radius: 4px;
+  border: 1px solid #e1e5e9;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+/* Loading Overlay */
+.loading-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.9);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border-radius: 8px;
+  z-index: 10;
+}
+
+.loading-spinner {
+  font-size: 24px;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .git-button-group {
+    flex-direction: column;
+  }
+  
+  .git-btn {
+    width: 100%;
+  }
+  
+  .branch-selector {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .diff-modal {
+    width: 95%;
+    margin: 20px;
+  }
+}
+
+/* Scrollbar Styling */
+.file-list::-webkit-scrollbar,
+.diff-text::-webkit-scrollbar {
+  width: 6px;
+}
+
+.file-list::-webkit-scrollbar-track,
+.diff-text::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 3px;
+}
+
+.file-list::-webkit-scrollbar-thumb,
+.diff-text::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 3px;
+}
+
+.file-list::-webkit-scrollbar-thumb:hover,
+.diff-text::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+} 

@@ -101,6 +101,7 @@ const AuthController = require('./presentation/api/AuthController');
 const TaskController = require('./presentation/api/TaskController');
 const AutoModeController = require('./presentation/api/AutoModeController');
 const AnalysisController = require('./presentation/api/AnalysisController');
+const GitController = require('./presentation/api/GitController');
 const WebSocketManager = require('./presentation/websocket/WebSocketManager');
 
 class Application {
@@ -567,6 +568,12 @@ class Application {
       this.analysisRepository
     );
 
+    this.gitController = new GitController({
+      gitService: this.gitService,
+      logger: this.logger,
+      eventBus: this.eventBus
+    });
+
     this.logger.info('[Application] Presentation layer initialized');
   }
 
@@ -789,6 +796,18 @@ class Application {
     this.app.post('/api/projects/:projectId/scripts/generate', (req, res) => this.taskController.generateScript(req, res));
     this.app.get('/api/projects/:projectId/scripts', (req, res) => this.taskController.getGeneratedScripts(req, res));
     this.app.post('/api/projects/:projectId/scripts/:id/execute', (req, res) => this.taskController.executeScript(req, res));
+
+    // Git Management routes (protected)
+    this.app.use('/api/git', this.authMiddleware.authenticate());
+    this.app.post('/api/git/status', (req, res) => this.gitController.getStatus(req, res));
+    this.app.post('/api/git/branches', (req, res) => this.gitController.getBranches(req, res));
+    this.app.post('/api/git/validate', (req, res) => this.gitController.validate(req, res));
+    this.app.post('/api/git/compare', (req, res) => this.gitController.compare(req, res));
+    this.app.post('/api/git/pull', (req, res) => this.gitController.pull(req, res));
+    this.app.post('/api/git/checkout', (req, res) => this.gitController.checkout(req, res));
+    this.app.post('/api/git/merge', (req, res) => this.gitController.merge(req, res));
+    this.app.post('/api/git/create-branch', (req, res) => this.gitController.createBranch(req, res));
+    this.app.post('/api/git/info', (req, res) => this.gitController.getRepositoryInfo(req, res));
 
     // IDE Mirror API-Routen einbinden
     this.ideMirrorController.setupRoutes(this.app);

@@ -5,6 +5,7 @@ import ChatSidebarComponent from '@presentation/components/ChatSidebarComponent.
 import ChatRightPanelComponent from '@presentation/components/ChatRightPanelComponent.jsx';
 import IDEMirrorComponent from '@presentation/components/IDEMirrorComponent.jsx';
 import PreviewComponent from '@presentation/components/PreviewComponent.jsx';
+import GitManagementComponent from '@presentation/components/GitManagementComponent.jsx';
 import AuthWrapper from '@presentation/components/auth/AuthWrapper.jsx';
 import UserMenu from '@presentation/components/auth/UserMenu.jsx';
 import useAuthStore from '@infrastructure/stores/AuthStore.jsx';
@@ -115,6 +116,13 @@ function App() {
         return <IDEMirrorComponent eventBus={eventBus} />;
       case 'preview':
         return <PreviewComponent eventBus={eventBus} activePort={activePort} />;
+      case 'git':
+        return <GitManagementComponent activePort={activePort} onGitOperation={(operation, result) => {
+          console.log('Git operation completed:', operation, result);
+          if (eventBus) {
+            eventBus.emit('git-operation-completed', { operation, result });
+          }
+        }} />;
       case 'code':
         return <div className="code-explorer-container">Code Editor View</div>;
       default:
@@ -186,6 +194,12 @@ function App() {
                 className={`mode-btn ${currentView === 'preview' ? 'active' : ''}`}
               >
                 👁️ Preview
+              </button>
+              <button
+                onClick={() => handleNavigationClick('git')}
+                className={`mode-btn ${currentView === 'git' ? 'active' : ''}`}
+              >
+                🔧 Git
               </button>
               <button
                 onClick={() => handleNavigationClick('code')}

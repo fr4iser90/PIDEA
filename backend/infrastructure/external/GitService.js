@@ -666,6 +666,47 @@ class GitService {
     }
 
     /**
+     * Merge branch
+     * @param {string} repoPath - Repository path
+     * @param {string} branchName - Branch to merge
+     * @param {Object} options - Merge options
+     * @returns {Promise<Object>} Merge result
+     */
+    async mergeBranch(repoPath, branchName, options = {}) {
+        const { strategy = 'recursive', noFF = false } = options;
+
+        try {
+            this.logger.info('GitService: Merging branch', { repoPath, branchName });
+            
+            const args = ['merge'];
+            if (noFF) args.push('--no-ff');
+            args.push(branchName);
+
+            const result = execSync(`git ${args.join(' ')}`, {
+                cwd: repoPath,
+                encoding: 'utf8'
+            });
+
+            if (this.eventBus) {
+                this.eventBus.publish('git.branch.merge', {
+                    repoPath,
+                    branchName,
+                    timestamp: new Date()
+                });
+            }
+
+            return { success: true, output: result };
+        } catch (error) {
+            this.logger.error('GitService: Failed to merge branch', {
+                repoPath,
+                branchName,
+                error: error.message
+            });
+            throw new Error(`Failed to merge branch: ${error.message}`);
+        }
+    }
+
+    /**
      * Get repository info
      * @param {string} repoPath - Repository path
      * @returns {Promise<Object>} Repository information
