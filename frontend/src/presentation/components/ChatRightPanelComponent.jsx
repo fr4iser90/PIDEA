@@ -341,6 +341,69 @@ function ChatRightPanelComponent({ eventBus }) {
     setSelectedDocsTask(null);
   };
 
+
+
+  const handleExecuteDocsTask = async (taskDetails) => {
+    try {
+      setFeedback(`Starting automated execution of task: ${taskDetails.title}...`);
+      
+      // Get the current workspace path from the active IDE
+      const ideList = await api.getIDEs();
+      if (!ideList.success || !ideList.data) {
+        throw new Error('Failed to get IDE information');
+      }
+      
+      const activeIDE = ideList.data.find(ide => ide.active);
+      if (!activeIDE || !activeIDE.workspacePath) {
+        throw new Error('No active IDE with workspace path found');
+      }
+
+      // Create a task from the docs task
+      const taskData = {
+        title: taskDetails.title,
+        description: taskDetails.content,
+        priority: taskDetails.priority || 'medium',
+        type: 'feature',
+        metadata: {
+          projectPath: activeIDE.workspacePath,
+          source: 'docs-task',
+          originalFile: taskDetails.filename,
+          estimatedTime: taskDetails.estimatedTime,
+          status: taskDetails.status
+        }
+      };
+
+      // Create the task
+      const createResult = await api.createTask(taskData);
+      if (!createResult.success) {
+        throw new Error(`Failed to create task: ${createResult.error}`);
+      }
+
+      const taskId = createResult.data.id;
+      setFeedback(`Task created with ID: ${taskId}. Starting execution...`);
+
+      // Execute the task (this will create Git branch, run AI, etc.)
+      const executeResult = await api.executeTask(taskId);
+      
+      if (executeResult.success) {
+        setFeedback(`✅ Task "${taskDetails.title}" executed successfully!`);
+        console.log('Task execution result:', executeResult.data);
+      } else {
+        throw new Error(`Task execution failed: ${executeResult.error}`);
+      }
+
+    } catch (error) {
+      console.error('Error executing docs task:', error);
+      setFeedback(`❌ Failed to execute task: ${error.message}`);
+    }
+  };
+
+  const handleSendDocsTaskToChat = (messageContent) => {
+    if (eventBus) {
+      eventBus.emit('chat-right-panel:quick-prompt', { prompt: messageContent });
+    }
+  };
+
   const getPriorityColor = (priority) => {
     switch (priority?.toLowerCase()) {
       case 'high': return '#ff4444';
@@ -820,6 +883,8 @@ function ChatRightPanelComponent({ eventBus }) {
         onClose={handleCloseDocsTaskModal}
         taskDetails={selectedDocsTask}
         isLoading={isLoadingDocsTaskDetails}
+        onSendToChat={handleSendDocsTaskToChat}
+        onExecuteTask={handleExecuteDocsTask}
       />
       <div className="panel-header">
         <div className="panel-tabs">

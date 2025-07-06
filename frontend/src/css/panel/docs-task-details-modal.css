@@ -391,15 +391,41 @@
 
 /* Modal Footer */
 .modal-footer {
-  padding: 16px 24px;
-  border-top: 1px solid #333;
-  background-color: #1a1a1a;
+  padding: 16px 20px;
+  border-top: 1px solid var(--border-color);
+  background: var(--modal-bg);
+  border-radius: 0 0 12px 12px;
 }
 
 .footer-actions {
   display: flex;
-  justify-content: flex-end;
   gap: 12px;
+  justify-content: flex-end;
+  margin-bottom: 12px;
+}
+
+.execute-options {
+  padding-top: 12px;
+  border-top: 1px solid var(--border-color);
+}
+
+.execute-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+
+.execute-checkbox input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--primary-color);
+}
+
+.execute-checkbox span {
+  line-height: 1.4;
 }
 
 .btn-primary,
