@@ -565,6 +565,68 @@ class WebSocketManager {
     this.ideMirrorController = controller;
   }
 
+  // Streaming support
+  setScreenshotStreamingService(streamingService) {
+    this.screenshotStreamingService = streamingService;
+  }
+
+  /**
+   * Broadcast message to a specific topic
+   * @param {string} topic - Topic to broadcast to
+   * @param {Object} message - Message to broadcast
+   */
+  broadcastToTopic(topic, message) {
+    try {
+      const topicMessage = {
+        type: 'topic',
+        topic: topic,
+        data: message,
+        timestamp: new Date().toISOString()
+      };
+
+      // Send to all connected clients
+      this.wss.clients.forEach(client => {
+        if (client.readyState === WebSocket.OPEN) {
+          try {
+            client.send(JSON.stringify(topicMessage));
+          } catch (error) {
+            console.error('[WebSocketManager] Error sending topic message:', error.message);
+          }
+        }
+      });
+
+    } catch (error) {
+      console.error('[WebSocketManager] Error broadcasting to topic:', error.message);
+    }
+  }
+
+  /**
+   * Send binary frame data to clients
+   * @param {string} sessionId - Streaming session ID
+   * @param {Object} frameData - Frame data to send
+   */
+  async sendFrameData(sessionId, frameData) {
+    try {
+      const message = {
+        type: 'frame',
+        sessionId: sessionId,
+        timestamp: frameData.timestamp,
+        frameNumber: frameData.frameNumber,
+        format: frameData.format,
+        size: frameData.size,
+        quality: frameData.quality,
+        data: frameData.data.toString('base64'), // Convert binary to base64
+        metadata: frameData.metadata
+      };
+
+      // Broadcast to all clients
+      this.broadcastToTopic(`mirror-${frameData.metadata.port}-frames`, message);
+
+    } catch (error) {
+      console.error('[WebSocketManager] Error sending frame data:', error.message);
+    }
+  }
+
   getHealthStatus() {
     return {
       status: 'healthy',

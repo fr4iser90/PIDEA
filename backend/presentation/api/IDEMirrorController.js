@@ -1,25 +1,92 @@
 const IDEMirrorService = require('../../domain/services/IDEMirrorService');
+const ScreenshotStreamingService = require('../../domain/services/ide-mirror/ScreenshotStreamingService');
+const StreamingController = require('./StreamingController');
 
 class IDEMirrorController {
     constructor() {
         // Use DI system for service creation
-    const { getServiceRegistry } = require('../../infrastructure/di/ServiceRegistry');
-    const registry = getServiceRegistry();
-    
-    // Register service if not already registered
-    if (!registry.getContainer().factories.has('ideMirrorService')) {
-        registry.getContainer().register('ideMirrorService', () => {
-            const IDEMirrorService = require('../../domain/services/IDEMirrorService');
-            return new IDEMirrorService();
-        }, { singleton: true });
-    }
-    
-    this.ideMirrorService = registry.getService('ideMirrorService');
+        const { getServiceRegistry } = require('../../infrastructure/di/ServiceRegistry');
+        const registry = getServiceRegistry();
+        
+        // Register IDE mirror service if not already registered
+        if (!registry.getContainer().factories.has('ideMirrorService')) {
+            registry.getContainer().register('ideMirrorService', () => {
+                const IDEMirrorService = require('../../domain/services/IDEMirrorService');
+                return new IDEMirrorService();
+            }, { singleton: true });
+        }
+        
+        this.ideMirrorService = registry.getService('ideMirrorService');
         this.connectedClients = new Set();
         
         // Message queue for sequential processing
         this.messageQueue = [];
         this.isProcessingQueue = false;
+
+        // Streaming services will be initialized later after WebSocket manager is available
+        this.streamingController = null;
+        this.screenshotStreamingService = null;
+    }
+
+    /**
+     * Initialize streaming services
+     * @param {Object} registry - Service registry
+     */
+    initializeStreamingServices(registry) {
+        try {
+            console.log('[IDEMirrorController] Initializing streaming services...');
+            
+            // Get required services
+            const browserManager = registry.getService('browserManager');
+            console.log('[IDEMirrorController] Browser manager available:', !!browserManager);
+            
+            const webSocketManager = registry.getService('webSocketManager');
+            console.log('[IDEMirrorController] WebSocket manager available:', !!webSocketManager);
+            
+            const eventBus = registry.getService('eventBus');
+            console.log('[IDEMirrorController] Event bus available:', !!eventBus);
+
+            if (!browserManager) {
+                throw new Error('Browser manager service not found');
+            }
+            
+            if (!webSocketManager) {
+                throw new Error('WebSocket manager service not found');
+            }
+            
+            if (!eventBus) {
+                throw new Error('Event bus service not found');
+            }
+
+            // Create screenshot streaming service
+            this.screenshotStreamingService = new ScreenshotStreamingService(
+                browserManager,
+                webSocketManager,
+                {
+                    defaultFPS: 10,
+                    maxFPS: 30,
+                    defaultQuality: 0.8,
+                    maxFrameSize: 50 * 1024
+                }
+            );
+
+            // Create streaming controller
+            this.streamingController = new StreamingController(
+                this.screenshotStreamingService,
+                eventBus
+            );
+
+            // Set streaming service in WebSocket manager
+            if (webSocketManager) {
+                webSocketManager.setScreenshotStreamingService(this.screenshotStreamingService);
+            }
+
+            console.log('[IDEMirrorController] Streaming services initialized successfully');
+
+        } catch (error) {
+            console.error('[IDEMirrorController] Error initializing streaming services:', error.message);
+            console.error('[IDEMirrorController] Error stack:', error.stack);
+        }
     }
 
     // HTTP Endpoints
@@ -565,6 +632,9 @@ class IDEMirrorController {
 
     // Route setup method
     setupRoutes(app) {
+        console.log('[IDEMirrorController] Setting up routes...');
+        console.log('[IDEMirrorController] Streaming controller available:', !!this.streamingController);
+        
         // HTTP API Routes
         app.get('/api/ide-mirror/state', this.getIDEState.bind(this));
         app.get('/api/ide-mirror/ides', this.getAvailableIDEs.bind(this));
@@ -574,6 +644,27 @@ class IDEMirrorController {
         app.post('/api/ide-mirror/chat', this.sendChatMessage.bind(this));
         app.post('/api/ide-mirror/connect', this.connectToIDE.bind(this));
         app.post('/api/ide-mirror/switch', this.switchIDE.bind(this));
+
+        // Streaming endpoints
+        if (this.streamingController) {
+            console.log('[IDEMirrorController] Registering streaming routes...');
+            // Port-specific streaming routes
+            app.post('/api/ide-mirror/:port/stream/start', (req, res) => this.streamingController.startStreaming(req, res));
+            app.post('/api/ide-mirror/:port/stream/stop', (req, res) => this.streamingController.stopStreaming(req, res));
+            app.get('/api/ide-mirror/:port/stream/session/:sessionId', (req, res) => this.streamingController.getSession(req, res));
+            app.put('/api/ide-mirror/:port/stream/session/:sessionId/config', (req, res) => this.streamingController.updateSessionConfig(req, res));
+            app.post('/api/ide-mirror/:port/stream/session/:sessionId/pause', (req, res) => this.streamingController.pauseStreaming(req, res));
+            app.post('/api/ide-mirror/:port/stream/session/:sessionId/resume', (req, res) => this.streamingController.resumeStreaming(req, res));
+
+            // Global streaming routes
+            app.get('/api/ide-mirror/stream/sessions', (req, res) => this.streamingController.getAllSessions(req, res));
+            app.get('/api/ide-mirror/stream/stats', (req, res) => this.streamingController.getStats(req, res));
+            app.post('/api/ide-mirror/stream/stop-all', (req, res) => this.streamingController.stopAllStreaming(req, res));
+            app.get('/api/ide-mirror/stream/health', (req, res) => this.streamingController.healthCheck(req, res));
+            console.log('[IDEMirrorController] Streaming routes registered successfully');
+        } else {
+            console.log('[IDEMirrorController] Streaming controller not available, skipping streaming routes');
+        }
     }
 }
 

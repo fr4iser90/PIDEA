@@ -48,8 +48,15 @@ class WebSocketService {
 
         this.ws.onmessage = (event) => {
           try {
-            const message = JSON.parse(event.data);
-            this.handleMessage(message);
+            // Handle both JSON and binary messages
+            if (event.data instanceof Blob) {
+              // Handle binary data (frames)
+              this.handleBinaryMessage(event.data);
+            } else {
+              // Handle JSON messages
+              const message = JSON.parse(event.data);
+              this.handleMessage(message);
+            }
           } catch (error) {
             console.error('❌ WebSocketService: Failed to parse message:', error);
           }
@@ -120,9 +127,21 @@ class WebSocketService {
   }
 
   handleMessage(message) {
-    const { event, data, timestamp } = message;
+    const { event, data, timestamp, type, topic } = message;
     
-    console.log('📨 WebSocketService: Received message:', event, data);
+    console.log('📨 WebSocketService: Received message:', event || type, data);
+    
+    // Handle topic messages for streaming
+    if (type === 'topic' && topic) {
+      this.handleTopicMessage(topic, data);
+      return;
+    }
+    
+    // Handle frame messages
+    if (type === 'frame') {
+      this.handleFrameMessage(data);
+      return;
+    }
     
     // Emit to registered listeners
     if (this.eventListeners.has(event)) {
@@ -131,6 +150,54 @@ class WebSocketService {
           callback(data, timestamp);
         } catch (error) {
           console.error('❌ WebSocketService: Error in event listener:', error);
+        }
+      });
+    }
+  }
+
+  handleBinaryMessage(blob) {
+    try {
+      // Convert blob to base64 for processing
+      const reader = new FileReader();
+      reader.onload = () => {
+        const base64Data = reader.result.split(',')[1]; // Remove data URL prefix
+        this.handleFrameMessage({
+          data: base64Data,
+          format: 'webp', // Default format for binary data
+          timestamp: Date.now()
+        });
+      };
+      reader.readAsDataURL(blob);
+    } catch (error) {
+      console.error('❌ WebSocketService: Failed to handle binary message:', error);
+    }
+  }
+
+  handleTopicMessage(topic, data) {
+    console.log('📨 WebSocketService: Received topic message:', topic);
+    
+    // Emit topic-specific events
+    if (this.eventListeners.has(topic)) {
+      this.eventListeners.get(topic).forEach(callback => {
+        try {
+          callback(data);
+        } catch (error) {
+          console.error('❌ WebSocketService: Error in topic listener:', error);
+        }
+      });
+    }
+  }
+
+  handleFrameMessage(frameData) {
+    console.log('📨 WebSocketService: Received frame message:', frameData.frameNumber);
+    
+    // Emit frame events
+    if (this.eventListeners.has('frame')) {
+      this.eventListeners.get('frame').forEach(callback => {
+        try {
+          callback(frameData);
+        } catch (error) {
+          console.error('❌ WebSocketService: Error in frame listener:', error);
         }
       });
     }

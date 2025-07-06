@@ -185,8 +185,17 @@ class Application {
       this.webSocketManager = new WebSocketManager(this.server, this.eventBus, this.authMiddleware);
       this.webSocketManager.initialize();
 
+      // Register WebSocket manager in service registry
+      this.serviceRegistry.getContainer().registerSingleton('webSocketManager', this.webSocketManager);
+
       // Connect IDE Mirror Controller to WebSocket Manager
       this.webSocketManager.setIDEMirrorController(this.ideMirrorController);
+
+      // Initialize streaming services after WebSocket manager is available
+      this.ideMirrorController.initializeStreamingServices(this.serviceRegistry);
+
+      // Re-register routes to include streaming endpoints
+      this.ideMirrorController.setupRoutes(this.app);
 
       // Initialize IDE Manager
       await this.ideManager.initialize();

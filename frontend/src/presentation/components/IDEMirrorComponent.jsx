@@ -1,32 +1,97 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { apiCall, API_CONFIG } from '@infrastructure/repositories/APIChatRepository.jsx';
-import webSocketService from '@infrastructure/services/WebSocketService.jsx';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import webSocketService from '../../infrastructure/services/WebSocketService';
+import StreamingService from '../../application/services/StreamingService';
+import CanvasRenderer from './CanvasRenderer';
+import StreamingControls from './StreamingControls';
+import './IDEMirrorComponent.css';
 
 function IDEMirrorComponent({ eventBus }) {
-    const [ws, setWs] = useState(null);
     const [currentState, setCurrentState] = useState(null);
-    const [isConnected, setIsConnected] = useState(false);
-    const [isTypingMode, setIsTypingMode] = useState(false);
-    const [currentTypingZone, setCurrentTypingZone] = useState(null);
-    const [typingBatch, setTypingBatch] = useState('');
-    const [batchStartTime, setBatchStartTime] = useState(null);
-    const [batchTimeout, setBatchTimeout] = useState(null);
-    const [typingBuffer, setTypingBuffer] = useState('');
-    const [predictiveTimeout, setPredictiveTimeout] = useState(null);
-    const [cachedClickableZones, setCachedClickableZones] = useState([]);
-    const [predictiveIndicator, setPredictiveIndicator] = useState(null);
-    const [keyboardListener, setKeyboardListener] = useState(null);
-    const containerRef = useRef(null);
-    const iframeRef = useRef(null);
     const [isLoading, setIsLoading] = useState(false);
-    const [error, setError] = useState(null);
-    const [mirrorData, setMirrorData] = useState(null);
-    const [selectedElement, setSelectedElement] = useState(null);
+    const [isConnected, setIsConnected] = useState(false);
     const [viewportSize, setViewportSize] = useState({ width: 0, height: 0 });
+    const [isStreaming, setIsStreaming] = useState(false);
+    const [streamingSessionId, setStreamingSessionId] = useState(null);
+    const [currentPort, setCurrentPort] = useState(9222);
+    const [streamingService, setStreamingService] = useState(null);
+    const [streamingStats, setStreamingStats] = useState({
+        fps: 0,
+        frameCount: 0,
+        latency: 0,
+        bandwidth: 0
+    });
+    const [error, setError] = useState(null);
+
+    // Refs
+    const containerRef = useRef(null);
+    const predictiveIndicator = useRef(null);
+    const typingBuffer = useRef('');
+    const typingTimeout = useRef(null);
+
+    // Services - use the singleton instance
+    // const webSocketService = new WebSocketService();
+
+    // Define startStreaming function before useEffect
+    const startStreaming = useCallback(async (port = 9222) => {
+        console.log('🔍 startStreaming called with:', { port, streamingService: !!streamingService });
+        console.log('🔍 startStreaming - streamingService details:', {
+            hasService: !!streamingService,
+            serviceType: streamingService ? streamingService.constructor.name : 'null',
+            isConnected: streamingService ? streamingService.isConnected : 'N/A'
+        });
+        
+        if (!streamingService) {
+            console.error('❌ Streaming service not available');
+            return;
+        }
+
+        try {
+            const sessionId = `stream-${port}-${Date.now()}`;
+            console.log('🔍 Generated session ID:', sessionId);
+            
+            setStreamingSessionId(sessionId);
+            setCurrentPort(port);
+
+            console.log(`🚀 Starting streaming for port ${port} with session ${sessionId}`);
+            console.log('🔍 Calling streamingService.startStreaming...');
+            console.log('🔍 Streaming options:', {
+                fps: 15,
+                quality: 0.8,
+                format: 'webp',
+                maxFrameSize: 50 * 1024
+            });
+            
+            const result = await streamingService.startStreaming(sessionId, port, {
+                fps: 15,
+                quality: 0.8,
+                format: 'webp',
+                maxFrameSize: 50 * 1024
+            });
+
+            console.log('🔍 streamingService.startStreaming result:', result);
+
+            setIsStreaming(true);
+            console.log(`Streaming started on port ${port}`);
+            
+            console.log('✅ Streaming started successfully');
+
+        } catch (error) {
+            console.error('❌ Failed to start streaming:', error);
+            console.error('❌ Error details:', error.stack);
+            console.error('❌ Error name:', error.name);
+            console.error('❌ Error message:', error.message);
+            console.error(`Failed to start streaming: ${error.message}`);
+        }
+    }, [streamingService]);
 
     // WebSocket setup
     useEffect(() => {
         console.log('🔄 IDEMirrorComponent initializing...');
+        
+        // Initialize streaming service with the singleton webSocketService
+        const newStreamingService = new StreamingService(webSocketService);
+        setStreamingService(newStreamingService);
+        
         setupWebSocket();
         
         // Auto-connect after short delay
@@ -37,6 +102,10 @@ function IDEMirrorComponent({ eventBus }) {
         return () => {
             clearTimeout(timer);
             stopKeyboardListening();
+            // Cleanup streaming
+            if (streamingService && streamingSessionId) {
+                streamingService.stopStreaming(streamingSessionId);
+            }
         };
     }, []);
 
@@ -52,6 +121,47 @@ function IDEMirrorComponent({ eventBus }) {
         window.addEventListener('resize', handleResize);
         return () => window.removeEventListener('resize', handleResize);
     }, []);
+
+    // Monitor streaming service availability
+    useEffect(() => {
+        if (streamingService) {
+            console.log('✅ Streaming service is now available');
+        }
+    }, [streamingService]);
+
+    // Auto-Start-Streaming, sobald StreamingService bereit ist
+    useEffect(() => {
+        console.log('🔍 Auto-start useEffect triggered with:', {
+            streamingService: !!streamingService,
+            isStreaming,
+            currentPort
+        });
+        
+        if (streamingService && !isStreaming) {
+            console.log('🚀 Auto-starting streaming in 2 seconds...');
+            const timer = setTimeout(() => {
+                console.log('🚀 Starting streaming now...');
+                console.log('🔍 About to call startStreaming with port:', currentPort);
+                console.log('🔍 startStreaming function exists:', typeof startStreaming);
+                
+                if (typeof startStreaming === 'function') {
+                    startStreaming(currentPort);
+                } else {
+                    console.error('❌ startStreaming is not a function!');
+                }
+            }, 2000);
+            return () => {
+                console.log('🔍 Clearing auto-start timer');
+                clearTimeout(timer);
+            };
+        } else {
+            console.log('❌ Auto-start conditions not met:', {
+                hasStreamingService: !!streamingService,
+                isStreaming,
+                currentPort
+            });
+        }
+    }, [streamingService, isStreaming, currentPort, startStreaming]);
 
     const setupWebSocket = () => {
         console.log('🔌 IDEMirrorComponent: Setting up WebSocket service...');
@@ -70,6 +180,12 @@ function IDEMirrorComponent({ eventBus }) {
                     renderIDEState(data);
                 });
                 
+                // Listen for streaming frames
+                webSocketService.on('frame', (frameData) => {
+                    console.log('📨 Streaming frame received:', frameData.frameNumber);
+                    handleStreamingFrame(frameData);
+                });
+                
                 // Listen for connection status
                 webSocketService.on('connection-established', (data) => {
                     console.log('✅ WebSocket connection established:', data);
@@ -83,6 +199,46 @@ function IDEMirrorComponent({ eventBus }) {
                 // Fallback to API-only mode
                 connectToIDE();
             });
+    };
+
+    const handleStreamingFrame = (frameData) => {
+        // Update streaming stats
+        setStreamingStats(prev => ({
+            ...prev,
+            frameCount: prev.frameCount + 1,
+            fps: frameData.fps || prev.fps,
+            latency: frameData.latency || prev.latency,
+            bandwidth: frameData.size || prev.bandwidth
+        }));
+
+        // Update current state with streaming data
+        if (frameData.data) {
+            setCurrentState(prev => ({
+                ...prev,
+                screenshot: frameData.data,
+                timestamp: frameData.timestamp,
+                frameNumber: frameData.frameNumber
+            }));
+        }
+    };
+
+    const stopStreaming = async () => {
+        if (!streamingService || !streamingSessionId) {
+            return;
+        }
+
+        try {
+            await streamingService.stopStreaming(streamingSessionId);
+            setIsStreaming(false);
+            setStreamingSessionId(null);
+            showStatus('Streaming stopped');
+            
+            console.log('✅ Streaming stopped successfully');
+
+        } catch (error) {
+            console.error('❌ Failed to stop streaming:', error);
+            showError(`Failed to stop streaming: ${error.message}`);
+        }
     };
 
     const handleWebSocketMessage = (message) => {
@@ -122,18 +278,18 @@ function IDEMirrorComponent({ eventBus }) {
         }
         
         // Update predictive indicator with success feedback
-        if (predictiveIndicator) {
-            const originalBg = predictiveIndicator.style.background;
-            predictiveIndicator.style.background = 'linear-gradient(135deg, #28a745, #20c997)';
-            predictiveIndicator.innerHTML = `✅ <span style="font-weight: 600;">${typingBuffer}</span>`;
+        if (predictiveIndicator.current) {
+            const originalBg = predictiveIndicator.current.style.background;
+            predictiveIndicator.current.style.background = 'linear-gradient(135deg, #28a745, #20c997)';
+            predictiveIndicator.current.innerHTML = `✅ <span style="font-weight: 600;">${typingBuffer.current}</span>`;
             
             // Quick success pulse
-            predictiveIndicator.style.transform = 'scale(1.05)';
+            predictiveIndicator.current.style.transform = 'scale(1.05)';
             setTimeout(() => {
-                if (predictiveIndicator) {
-                    predictiveIndicator.style.transform = 'scale(1)';
-                    predictiveIndicator.style.background = originalBg;
-                    predictiveIndicator.innerHTML = `⌨️ <span style="font-weight: 600;">${typingBuffer}</span>`;
+                if (predictiveIndicator.current) {
+                    predictiveIndicator.current.style.transform = 'scale(1)';
+                    predictiveIndicator.current.style.background = originalBg;
+                    predictiveIndicator.current.innerHTML = `⌨️ <span style="font-weight: 600;">${typingBuffer.current}</span>`;
                 }
             }, 200);
         }
@@ -142,9 +298,8 @@ function IDEMirrorComponent({ eventBus }) {
     };
 
     const connectToIDE = async () => {
-        console.log('🔌 Connecting to IDE...');
-        showStatus('Connecting to Cursor IDE...');
-        
+        setIsLoading(true);
+        showStatus('Connecting to IDE...');
         try {
             // Try WebSocket first if available
             if (isConnected && webSocketService.getConnectionStatus().isConnected) {
@@ -179,6 +334,8 @@ function IDEMirrorComponent({ eventBus }) {
             if (error.message.includes('Failed to fetch')) {
                 showError('Server not running. Please start the development server.');
             }
+        } finally {
+            setIsLoading(false);
         }
     };
 
@@ -190,15 +347,6 @@ function IDEMirrorComponent({ eventBus }) {
         }
 
         setCurrentState(ideState);
-
-        // Check if we have a screenshot
-        if (ideState.screenshot) {
-            console.log('📸 Rendering IDE with screenshot + overlay approach');
-            renderScreenshotWithOverlay(ideState);
-        } else {
-            console.log('🎨 Fallback to DOM rendering');
-            renderDOMElements(ideState);
-        }
     };
 
     const renderScreenshotWithOverlay = (ideState) => {
@@ -293,7 +441,6 @@ function IDEMirrorComponent({ eventBus }) {
 
             // Extract and cache clickable zones
             const zones = extractClickableZones(ideState.body);
-            setCachedClickableZones(zones);
             console.log(`🎯 Creating ${zones.length} clickable zones`);
 
             zones.forEach(zone => {
@@ -446,7 +593,7 @@ function IDEMirrorComponent({ eventBus }) {
         // Update all clickable zones with corrected positions
         const zones = overlay.querySelectorAll('.clickable-zone');
         zones.forEach((zone, index) => {
-            const originalData = cachedClickableZones[index];
+            const originalData = zones[index];
             if (originalData) {
                 const newX = originalData.x * scaleX;
                 const newY = originalData.y * scaleY;
@@ -656,8 +803,8 @@ function IDEMirrorComponent({ eventBus }) {
             showClickFeedback();
             
             // Send click via WebSocket
-            if (isConnected && ws) {
-                ws.send(JSON.stringify({
+            if (isConnected && webSocketService) {
+                webSocketService.send(JSON.stringify({
                     type: 'click-element',
                     payload: { selector, coordinates: position }
                 }));
@@ -680,60 +827,8 @@ function IDEMirrorComponent({ eventBus }) {
     };
 
     const activateTypingMode = (zone) => {
-        setIsTypingMode(true);
-        setCurrentTypingZone(zone);
+        console.log('🚀 Activating typing mode');
         
-        // Only activate for non-chat elements (editor, terminal, input)
-        // Chat zones use the overlay input from renderScreenshotWithOverlay
-        if (['editor', 'terminal', 'input'].includes(zone.elementType)) {
-            highlightActiveZone(zone);
-            startKeyboardListening();
-            
-            // Update Status
-            const status = document.getElementById('typingStatus');
-            const typeNames = {
-                'editor': 'Editor',
-                'terminal': 'Terminal',
-                'input': 'Input'
-            };
-            if (status) {
-                status.textContent = `⌨️ Typing in ${typeNames[zone.elementType]} - Press ESC to stop`;
-            }
-            
-            console.log(`✅ Typing mode activated for ${zone.elementType}`);
-        }
-    };
-
-    const stopTyping = () => {
-        console.log('🛑 Stopping typing mode');
-        
-        // Send any pending batch before stopping
-        if (typingBatch) {
-            sendTypingBatch();
-        }
-        
-        setIsTypingMode(false);
-        setCurrentTypingZone(null);
-        
-        // Update status
-        const status = document.getElementById('typingStatus');
-        if (status) status.textContent = '';
-        
-        // Hide predictive indicators
-        if (predictiveIndicator) {
-            predictiveIndicator.style.opacity = '0';
-        }
-        
-        // Remove highlights
-        removeZoneHighlights();
-        
-        // Stop keyboard listening
-        stopKeyboardListening();
-        
-        console.log('✅ Typing mode stopped, pending batches sent');
-    };
-
-    const highlightActiveZone = (zone) => {
         // Remove existing highlights
         removeZoneHighlights();
         
@@ -747,6 +842,26 @@ function IDEMirrorComponent({ eventBus }) {
                 zoneEl.classList.add('active-typing-zone');
             }
         });
+        
+        // Start typing
+        startKeyboardListening();
+    };
+
+    const stopTyping = () => {
+        console.log('🛑 Stopping typing mode');
+        
+        // Send any pending batch before stopping
+        if (typingBuffer.current) {
+            sendTypingBatch();
+        }
+        
+        // Remove highlights
+        removeZoneHighlights();
+        
+        // Stop keyboard listening
+        stopKeyboardListening();
+        
+        console.log('✅ Typing mode stopped, pending batches sent');
     };
 
     const removeZoneHighlights = () => {
@@ -760,12 +875,12 @@ function IDEMirrorComponent({ eventBus }) {
     };
 
     const startKeyboardListening = () => {
-        if (keyboardListener) {
-            stopKeyboardListening();
+        if (typingTimeout.current) {
+            clearTimeout(typingTimeout.current);
         }
         
         const listener = (e) => {
-            if (!isTypingMode || !currentTypingZone) return;
+            if (!isStreaming || !currentState) return;
             
             // Stop typing on ESC
             if (e.key === 'Escape') {
@@ -785,23 +900,25 @@ function IDEMirrorComponent({ eventBus }) {
         };
         
         document.addEventListener('keydown', listener);
-        setKeyboardListener(listener);
+        typingTimeout.current = setTimeout(() => {
+            document.removeEventListener('keydown', listener);
+            console.log('⌨️ Keyboard listening stopped');
+        }, 1000);
         console.log('⌨️ Keyboard listening started');
     };
 
     const stopKeyboardListening = () => {
-        if (keyboardListener) {
-            document.removeEventListener('keydown', keyboardListener);
-            setKeyboardListener(null);
-            console.log('⌨️ Keyboard listening stopped');
+        if (typingTimeout.current) {
+            clearTimeout(typingTimeout.current);
         }
+        console.log('⌨️ Keyboard listening stopped');
     };
 
     const sendKeystrokeToIDE = (event) => {
-        if (!currentTypingZone || !isConnected) return;
+        if (!currentState || !isConnected) return;
         
         // DON'T send keystrokes if we're in a chat zone (chat uses overlay input)
-        if (currentTypingZone.elementType === 'chat') {
+        if (currentState.elementType === 'chat') {
             console.log('💬 Chat zone detected - skipping keyboard events (using overlay input)');
             return;
         }
@@ -811,14 +928,14 @@ function IDEMirrorComponent({ eventBus }) {
         // Special keys send immediately
         if (key.length > 1) {
             console.log(`⌨️ Sending special key immediately: ${key}`);
-            if (ws) {
-                ws.send(JSON.stringify({
+            if (webSocketService) {
+                webSocketService.send(JSON.stringify({
                     type: 'type-text',
                     payload: { 
                         text: '',
                         key: key,
                         modifiers: { ctrlKey, shiftKey, altKey, metaKey },
-                        selector: currentTypingZone.selector 
+                        selector: currentState.selector 
                     }
                 }));
             }
@@ -834,24 +951,18 @@ function IDEMirrorComponent({ eventBus }) {
 
     const addToTypingBatch = (char) => {
         // Initialize batching if needed
-        if (!typingBatch) {
-            setTypingBatch('');
-            setBatchStartTime(Date.now());
+        if (!typingBuffer.current) {
+            typingBuffer.current = '';
         }
         
         // Add character to batch
-        const newBatch = typingBatch + char;
-        setTypingBatch(newBatch);
-        
-        // Clear existing timeout
-        if (batchTimeout) {
-            clearTimeout(batchTimeout);
-        }
+        const newBatch = typingBuffer.current + char;
+        typingBuffer.current = newBatch;
         
         // Send batch after delay OR when it gets too long
         const shouldSendNow = (
             newBatch.length >= 10 || // Max batch size
-            Date.now() - (batchStartTime || Date.now()) > 300 // Max wait time
+            Date.now() - (typingTimeout.current || Date.now()) > 300 // Max wait time
         );
         
         if (shouldSendNow) {
@@ -861,39 +972,37 @@ function IDEMirrorComponent({ eventBus }) {
             const timeout = setTimeout(() => {
                 sendTypingBatch();
             }, 150); // 150ms batch window
-            setBatchTimeout(timeout);
+            typingTimeout.current = timeout;
         }
     };
     
     const sendTypingBatch = () => {
-        if (!typingBatch || !currentTypingZone) return;
+        if (!typingBuffer.current || !currentState) return;
         
-        const batchText = typingBatch;
+        const batchText = typingBuffer.current;
         console.log(`⚡ Sending batch: "${batchText}" (${batchText.length} chars)`);
         
         // Send entire batch as one request
-        if (ws) {
-            ws.send(JSON.stringify({
+        if (webSocketService) {
+            webSocketService.send(JSON.stringify({
                 type: 'type-batch',
                 payload: { 
                     text: batchText,
-                    selector: currentTypingZone.selector 
+                    selector: currentState.selector 
                 }
             }));
         }
         
         // Reset batch
-        setTypingBatch('');
-        setBatchStartTime(null);
-        if (batchTimeout) {
-            clearTimeout(batchTimeout);
-            setBatchTimeout(null);
-        }
+        typingBuffer.current = '';
+        typingTimeout.current = null;
+        
+        console.log('✅ Batch sent successfully');
     };
 
     const showPredictiveText = (text) => {
         // Create/update predictive text indicator
-        if (!predictiveIndicator) {
+        if (!predictiveIndicator.current) {
             const indicator = document.createElement('div');
             indicator.style.cssText = `
                 position: absolute;
@@ -915,50 +1024,50 @@ function IDEMirrorComponent({ eventBus }) {
                 text-overflow: ellipsis;
             `;
             document.body.appendChild(indicator);
-            setPredictiveIndicator(indicator);
+            predictiveIndicator.current = indicator;
         }
         
         // Position near active typing zone
-        if (currentTypingZone && predictiveIndicator) {
+        if (currentState && predictiveIndicator.current) {
             const activeZone = document.querySelector('.active-typing-zone');
             if (activeZone) {
                 const rect = activeZone.getBoundingClientRect();
-                predictiveIndicator.style.left = `${rect.left + rect.width + 8}px`;
-                predictiveIndicator.style.top = `${rect.top + (rect.height / 2) - 12}px`;
+                predictiveIndicator.current.style.left = `${rect.left + rect.width + 8}px`;
+                predictiveIndicator.current.style.top = `${rect.top + (rect.height / 2) - 12}px`;
             }
         }
         
         // Accumulate typing buffer
-        const newBuffer = (typingBuffer || '') + text;
-        setTypingBuffer(newBuffer);
+        const newBuffer = (typingBuffer.current || '') + text;
+        typingBuffer.current = newBuffer;
         
         // Limit buffer length for performance
         if (newBuffer.length > 50) {
-            setTypingBuffer('...' + newBuffer.slice(-47));
+            typingBuffer.current = '...' + newBuffer.slice(-47);
         }
         
         // Update display
-        if (predictiveIndicator) {
-            predictiveIndicator.innerHTML = `⌨️ <span style="font-weight: 600;">${newBuffer}</span>`;
-            predictiveIndicator.style.opacity = '1';
-            predictiveIndicator.style.transform = 'translateY(0)';
+        if (predictiveIndicator.current) {
+            predictiveIndicator.current.innerHTML = `⌨️ <span style="font-weight: 600;">${typingBuffer.current}</span>`;
+            predictiveIndicator.current.style.opacity = '1';
+            predictiveIndicator.current.style.transform = 'translateY(0)';
         }
         
         // Auto-fade after delay
-        if (predictiveTimeout) {
-            clearTimeout(predictiveTimeout);
+        if (typingTimeout.current) {
+            clearTimeout(typingTimeout.current);
         }
         const timeout = setTimeout(() => {
-            if (predictiveIndicator) {
-                predictiveIndicator.style.opacity = '0';
-                predictiveIndicator.style.transform = 'translateY(-5px)';
+            if (predictiveIndicator.current) {
+                predictiveIndicator.current.style.opacity = '0';
+                predictiveIndicator.current.style.transform = 'translateY(-5px)';
             }
             // Clear buffer after fade
             setTimeout(() => {
-                setTypingBuffer('');
+                typingBuffer.current = '';
             }, 200);
         }, 1500);
-        setPredictiveTimeout(timeout);
+        typingTimeout.current = timeout;
     };
 
     const handleChatSubmit = (message, selector) => {
@@ -967,16 +1076,16 @@ function IDEMirrorComponent({ eventBus }) {
         if (!message.trim()) return;
         
         // First send the text as batch to the IDE (so it appears in the chat input)
-        if (isConnected && ws) {
-            ws.send(JSON.stringify({
+        if (isConnected && webSocketService) {
+            webSocketService.send(JSON.stringify({
                 type: 'type-batch',
                 payload: { text: message.trim(), selector }
             }));
         }
         
         // Then send the message via WebSocket (to actually send it)
-        if (isConnected && ws) {
-            ws.send(JSON.stringify({
+        if (isConnected && webSocketService) {
+            webSocketService.send(JSON.stringify({
                 type: 'send-chat-message',
                 payload: { message: message.trim() }
             }));
@@ -1003,25 +1112,13 @@ function IDEMirrorComponent({ eventBus }) {
     };
 
     const showStatus = (message) => {
-        if (containerRef.current) {
-            containerRef.current.innerHTML = `
-                <div class="loading-message">
-                    <div class="loading-spinner"></div>
-                    <p>${message}</p>
-                </div>
-            `;
-        }
+        console.log(`📊 Status: ${message}`);
+        // You can add UI status display here if needed
     };
 
     const showError = (message) => {
-        if (containerRef.current) {
-            containerRef.current.innerHTML = `
-                <div class="error-message">
-                    <p>❌ ${message}</p>
-                    <button onclick="location.reload()" class="retry-btn">Retry</button>
-                </div>
-            `;
-        }
+        console.error(`❌ Error: ${message}`);
+        setError(message);
     };
 
     const showClickFeedback = () => {
@@ -1125,7 +1222,140 @@ function IDEMirrorComponent({ eventBus }) {
 
     return (
         <div ref={containerRef} className="ide-mirror-container">
-            {/* Content will be rendered dynamically */}
+            {/* Streaming Controls */}
+            <div className="streaming-controls-overlay">
+                <StreamingControls
+                    sessionId={streamingSessionId}
+                    port={currentPort}
+                    onStartStreaming={startStreaming}
+                    onStopStreaming={stopStreaming}
+                    isStreaming={isStreaming}
+                    stats={streamingStats}
+                />
+            </div>
+
+            {/* Canvas Renderer for Streaming */}
+            {isStreaming && currentState?.screenshot && (
+                <CanvasRenderer
+                    width={viewportSize.width}
+                    height={viewportSize.height}
+                    screenshot={currentState.screenshot}
+                    frameNumber={currentState.frameNumber}
+                    timestamp={currentState.timestamp}
+                />
+            )}
+
+            {/* Screenshot + Overlay als React-Komponente */}
+            {!isStreaming && currentState?.screenshot && currentState?.body && (
+                <ScreenshotWithOverlay
+                    screenshot={currentState.screenshot}
+                    zones={extractClickableZones(currentState.body)}
+                    onZoneClick={handleSmartClick}
+                />
+            )}
+
+            {/* Fallback: Nur Screenshot */}
+            {!isStreaming && currentState?.screenshot && !currentState?.body && (
+                <img
+                    src={currentState.screenshot}
+                    alt="IDE Screenshot"
+                    style={{ width: '100%', height: '100%', objectFit: 'fill', display: 'block', userSelect: 'none', pointerEvents: 'none' }}
+                />
+            )}
+
+            {/* Fallback: DOM-Rendering */}
+            {!isStreaming && !currentState?.screenshot && (
+                <div className="fallback-content">
+                    <p>Kein Screenshot oder Stream verfügbar.</p>
+                </div>
+            )}
+
+            {/* Loading/Error States */}
+            {isLoading && (
+                <div className="loading-overlay">
+                    <div className="loading-spinner"></div>
+                    <p>Connecting to IDE...</p>
+                </div>
+            )}
+
+            {error && (
+                <div className="error-overlay">
+                    <p>❌ {error}</p>
+                    <button onClick={() => window.location.reload()} className="retry-btn">
+                        Retry
+                    </button>
+                </div>
+            )}
+        </div>
+    );
+}
+
+// ScreenshotWithOverlay-Komponente
+function ScreenshotWithOverlay({ screenshot, zones = [], onZoneClick }) {
+    return (
+        <div className="screenshot-overlay-container" style={{ position: 'relative', width: '100%', height: '100%' }}>
+            <img
+                src={screenshot}
+                alt="IDE Screenshot"
+                style={{ width: '100%', height: '100%', objectFit: 'fill', display: 'block', userSelect: 'none', pointerEvents: 'none' }}
+            />
+            {/* Overlays */}
+            {zones.map((zone, idx) => (
+                <div
+                    key={idx}
+                    className="clickable-zone"
+                    style={{
+                        position: 'absolute',
+                        left: zone.x,
+                        top: zone.y,
+                        width: zone.width,
+                        height: zone.height,
+                        background: 'rgba(78, 140, 255, 0.1)',
+                        border: '1px solid rgba(78, 140, 255, 0.3)',
+                        cursor: 'pointer',
+                        pointerEvents: 'all',
+                        transition: 'all 0.2s ease',
+                        zIndex: 1000
+                    }}
+                    onClick={e => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        onZoneClick && onZoneClick(zone);
+                    }}
+                    onMouseEnter={e => {
+                        e.currentTarget.style.background = 'rgba(78, 140, 255, 0.25)';
+                        e.currentTarget.style.border = '2px solid rgba(78, 140, 255, 0.7)';
+                        e.currentTarget.style.boxShadow = '0 0 10px rgba(78, 140, 255, 0.5)';
+                    }}
+                    onMouseLeave={e => {
+                        e.currentTarget.style.background = 'rgba(78, 140, 255, 0.1)';
+                        e.currentTarget.style.border = '1px solid rgba(78, 140, 255, 0.3)';
+                        e.currentTarget.style.boxShadow = 'none';
+                    }}
+                >
+                    {/* Optional: Chat-Input-Overlay */}
+                    {zone.elementType === 'chat' && (
+                        <textarea
+                            className="chat-input-overlay"
+                            style={{
+                                position: 'absolute',
+                                left: 0,
+                                top: 0,
+                                width: '100%',
+                                height: '100%',
+                                background: 'rgba(0,0,0,0.8)',
+                                border: '2px solid #4e8cff',
+                                color: '#fff',
+                                fontSize: 14,
+                                resize: 'none',
+                                zIndex: 1100
+                            }}
+                            placeholder="Type your message here..."
+                            onClick={e => e.stopPropagation()}
+                        />
+                    )}
+                </div>
+            ))}
         </div>
     );
 }
