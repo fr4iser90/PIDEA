@@ -854,6 +854,22 @@ class Application {
     this.app.post('/api/git/create-branch', (req, res) => this.gitController.createBranch(req, res));
     this.app.post('/api/git/info', (req, res) => this.gitController.getRepositoryInfo(req, res));
 
+    // Terminal Log routes (protected)
+    this.app.use('/api/terminal-logs/:port', this.authMiddleware.authenticate());
+    this.app.post('/api/terminal-logs/:port/initialize', (req, res) => this.ideController.initializeTerminalLogCapture(req, res));
+    this.app.post('/api/terminal-logs/:port/execute', (req, res) => this.ideController.executeTerminalCommandWithCapture(req, res));
+    this.app.get('/api/terminal-logs/:port', (req, res) => this.ideController.getTerminalLogs(req, res));
+    this.app.get('/api/terminal-logs/:port/search', (req, res) => this.ideController.searchTerminalLogs(req, res));
+    this.app.get('/api/terminal-logs/:port/export', (req, res) => this.ideController.exportTerminalLogs(req, res));
+    this.app.delete('/api/terminal-logs/:port', (req, res) => this.ideController.deleteTerminalLogs(req, res));
+    this.app.get('/api/terminal-logs/:port/capture-status', (req, res) => this.ideController.getTerminalLogCaptureStatus(req, res));
+
+    // Terminal Log test routes (unprotected for testing)
+    this.app.get('/api/test/terminal-logs/:port/capture-status', (req, res) => this.ideController.getTerminalLogCaptureStatus(req, res));
+    this.app.get('/api/test/terminal-logs/:port', (req, res) => this.ideController.getTerminalLogs(req, res));
+    this.app.post('/api/test/terminal-logs/:port/execute', (req, res) => this.ideController.executeTerminalCommandWithCapture(req, res));
+    this.app.post('/api/test/terminal-logs/:port/initialize', (req, res) => this.ideController.initializeTerminalLogCapture(req, res));
+
     // IDE Mirror API-Routen einbinden
     this.ideMirrorController.setupRoutes(this.app);
 

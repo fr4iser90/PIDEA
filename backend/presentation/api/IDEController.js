@@ -1,4 +1,6 @@
 const DocsTasksHandler = require('./handlers/DocsTasksHandler');
+const TerminalLogCaptureService = require('../../domain/services/TerminalLogCaptureService');
+const TerminalLogReader = require('../../domain/services/TerminalLogReader');
 
 class IDEController {
   constructor(ideManager, eventBus, cursorIDEService = null) {
@@ -16,6 +18,10 @@ class IDEController {
       }
       return activePath;
     });
+    
+    // Initialize terminal log services
+    this.terminalLogCaptureService = new TerminalLogCaptureService();
+    this.terminalLogReader = new TerminalLogReader();
   }
 
   async getAvailableIDEs(req, res) {
@@ -712,6 +718,264 @@ class IDEController {
         success: false,
         error: error.message
       });
+    }
+  }
+
+  // ===== TERMINAL LOG ENDPOINTS =====
+
+  /**
+   * POST /api/terminal-logs/:port/execute
+   * Execute a command in the terminal and capture its output
+   */
+  async executeTerminalCommandWithCapture(req, res) {
+    try {
+      const { port } = req.params;
+      const { command } = req.body;
+
+      if (!command) {
+        return res.status(400).json({
+          success: false,
+          error: 'Command is required'
+        });
+      }
+
+      console.log(`[IDEController] Executing terminal command with capture for port ${port}: ${command}`);
+
+      // Initialize capture if not already done
+      await this.terminalLogCaptureService.initialize();
+      await this.terminalLogCaptureService.initializeCapture(parseInt(port));
+
+      // Execute command with capture
+      const result = await this.terminalLogCaptureService.executeCommandWithCapture(parseInt(port), command);
+
+      res.json({
+        success: true,
+        port: parseInt(port),
+        command: command,
+        result: result,
+        message: 'Command executed and output captured'
+      });
+    } catch (error) {
+      console.error(`[IDEController] Error executing terminal command with capture for port ${req.params.port}:`, error);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to execute terminal command with capture',
+        message: error.message
+      });
+    }
+  }
+
+  /**
+   * GET /api/terminal-logs/:port
+   * Get recent terminal logs for a specific port
+   */
+  async getTerminalLogs(req, res) {
+    try {
+      const { port } = req.params;
+      const { lines = 50 } = req.query;
+
+      console.log(`[IDEController] Getting terminal logs for port ${port}, lines: ${lines}`);
+
+      const logs = await this.terminalLogReader.getRecentLogs(parseInt(port), parseInt(lines));
+
+      res.json({
+        success: true,
+        port: parseInt(port),
+        lines: parseInt(lines),
+        data: logs,
+        count: logs.length
+      });
+    } catch (error) {
+      console.error(`[IDEController] Error getting terminal logs for port ${req.params.port}:`, error);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to get terminal logs',
+        message: error.message
+      });
+    }
+  }
+
+  /**
+   * GET /api/terminal-logs/:port/search
+   * Search terminal logs for specific text
+   */
+  async searchTerminalLogs(req, res) {
+    try {
+      const { port } = req.params;
+      const { q: searchText, caseSensitive, useRegex, maxResults = 100 } = req.query;
+
+      if (!searchText) {
+        return res.status(400).json({
+          success: false,
+          error: 'Search query is required'
+        });
+      }
+
+      console.log(`[IDEController] Searching terminal logs for port ${port}: "${searchText}"`);
+
+      const options = {
+        caseSensitive: caseSensitive === 'true',
+        useRegex: useRegex === 'true',
+        maxResults: parseInt(maxResults)
+      };
+
+      const results = await this.terminalLogReader.searchLogs(parseInt(port), searchText, options);
+
+      res.json({
+        success: true,
+        port: parseInt(port),
+        searchText: searchText,
+        options: options,
+        data: results,
+        count: results.length
+      });
+    } catch (error) {
+      console.error(`[IDEController] Error searching terminal logs for port ${req.params.port}:`, error);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to search terminal logs',
+        message: error.message
+      });
+    }
+  }
+
+  /**
+   * GET /api/terminal-logs/:port/export
+   * Export terminal logs in different formats
+   */
+  async exportTerminalLogs(req, res) {
+    try {
+      const { port } = req.params;
+      const { format = 'json', lines, startTime, endTime } = req.query;
+
+      console.log(`[IDEController] Exporting terminal logs for port ${port} in ${format} format`);
+
+      const options = {};
+      if (lines) options.lines = parseInt(lines);
+      if (startTime) options.startTime = new Date(startTime);
+      if (endTime) options.endTime = new Date(endTime);
+
+      const exportedData = await this.terminalLogReader.exportLogs(parseInt(port), format, options);
+
+      // Set appropriate headers for download
+      const filename = `terminal-logs-port-${port}-${new Date().toISOString().split('T')[0]}.${format}`;
+      
+      res.setHeader('Content-Type', this.getContentType(format));
+      res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+      
+      res.send(exportedData);
+    } catch (error) {
+      console.error(`[IDEController] Error exporting terminal logs for port ${req.params.port}:`, error);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to export terminal logs',
+        message: error.message
+      });
+    }
+  }
+
+  /**
+   * DELETE /api/terminal-logs/:port
+   * Delete terminal logs for a specific port
+   */
+  async deleteTerminalLogs(req, res) {
+    try {
+      const { port } = req.params;
+
+      console.log(`[IDEController] Deleting terminal logs for port ${port}`);
+
+      // Stop capture if running
+      await this.terminalLogCaptureService.stopCapture(parseInt(port));
+
+      // Clear cache
+      this.terminalLogReader.clearCache(parseInt(port));
+
+      res.json({
+        success: true,
+        port: parseInt(port),
+        message: 'Terminal logs deleted and capture stopped'
+      });
+    } catch (error) {
+      console.error(`[IDEController] Error deleting terminal logs for port ${req.params.port}:`, error);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to delete terminal logs',
+        message: error.message
+      });
+    }
+  }
+
+  /**
+   * GET /api/terminal-logs/:port/capture-status
+   * Get capture status for a specific port
+   */
+  async getTerminalLogCaptureStatus(req, res) {
+    try {
+      const { port } = req.params;
+
+      console.log(`[IDEController] Getting capture status for port ${port}`);
+
+      const status = await this.terminalLogCaptureService.getCaptureStatus(parseInt(port));
+      const statistics = await this.terminalLogReader.getLogStatistics(parseInt(port));
+
+      res.json({
+        success: true,
+        port: parseInt(port),
+        captureStatus: status,
+        statistics: statistics
+      });
+    } catch (error) {
+      console.error(`[IDEController] Error getting capture status for port ${req.params.port}:`, error);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to get capture status',
+        message: error.message
+      });
+    }
+  }
+
+  /**
+   * POST /api/terminal-logs/:port/initialize
+   * Initialize terminal log capture for a specific port
+   */
+  async initializeTerminalLogCapture(req, res) {
+    try {
+      const { port } = req.params;
+
+      console.log(`[IDEController] Initializing terminal log capture for port ${port}`);
+
+      await this.terminalLogCaptureService.initialize();
+      const result = await this.terminalLogCaptureService.initializeCapture(parseInt(port));
+
+      res.json({
+        success: true,
+        port: parseInt(port),
+        result: result,
+        message: 'Terminal log capture initialized'
+      });
+    } catch (error) {
+      console.error(`[IDEController] Error initializing terminal log capture for port ${req.params.port}:`, error);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to initialize terminal log capture',
+        message: error.message
+      });
+    }
+  }
+
+  /**
+   * Helper method to get content type for export formats
+   */
+  getContentType(format) {
+    switch (format.toLowerCase()) {
+      case 'json':
+        return 'application/json';
+      case 'csv':
+        return 'text/csv';
+      case 'txt':
+        return 'text/plain';
+      default:
+        return 'application/octet-stream';
     }
   }
 }
