@@ -80,6 +80,12 @@ Future updates will include Git integration for mobile and desktop users:
 An emulated terminal is planned for running commands specific to the project:
 - Commands will be restricted to the work path to ensure security.
 - Global command execution will be prohibited to prevent unintended system changes.
+
+### Extended IDE Support
+Future versions will expand IDE integration beyond Cursor to include:
+- **VS Code**: Full integration with Visual Studio Code for seamless development workflows.
+- **Windsurf**: Support for the Windsurf IDE to provide additional development environment options.
+- **Universal IDE Interface**: A standardized approach to IDE communication that can be extended to support other popular development environments.
 ## Getting Started
 
 ### Installation
