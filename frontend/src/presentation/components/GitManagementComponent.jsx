@@ -136,7 +136,14 @@ const GitManagementComponent = ({ activePort, onGitOperation }) => {
   };
 
   const handleSwitchBranch = async (branchName) => {
-    await handleGitOperation('checkout', { branch: branchName });
+    if (branchName === currentBranch) {
+      alert(`You are already on the branch "${branchName}".`);
+      return;
+    }
+    const confirmed = window.confirm(`Are you sure you want to switch to branch "${branchName}"?`);
+    if (confirmed) {
+      await handleGitOperation('checkout', { branch: branchName });
+    }
   };
 
   const getStatusIcon = () => {
