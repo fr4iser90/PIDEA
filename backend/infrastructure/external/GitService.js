@@ -122,7 +122,9 @@ class GitService {
                 cwd: repoPath,
                 encoding: 'utf8'
             });
-            return result.trim();
+            const branch = result.trim();
+            this.logger.info(`[GitService] Aktueller Branch für ${repoPath}: "${branch}"`);
+            return branch;
         } catch (error) {
             this.logger.error('GitService: Failed to get current branch', {
                 repoPath,

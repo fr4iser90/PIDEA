@@ -47,8 +47,8 @@ const GitManagementComponent = ({ activePort, onGitOperation }) => {
         method: 'POST',
         body: JSON.stringify({ projectPath: workspacePath })
       });
-      setGitStatus(data.status);
-      setCurrentBranch(data.currentBranch);
+      setGitStatus(data.data?.status);
+      setCurrentBranch(data.data?.currentBranch);
     } catch (error) {
       console.error('Failed to load Git status:', error);
     } finally {
@@ -162,7 +162,7 @@ const GitManagementComponent = ({ activePort, onGitOperation }) => {
         <div className="git-status-info">
           <span className="git-status-icon">{getStatusIcon()}</span>
           <span className="git-status-text">{getStatusText()}</span>
-          <span className="git-branch-name">ranch: {currentBranch}</span>
+          <span className="git-branch-name">branch: {currentBranch}</span>
         </div>
         
         <div className="git-actions">
