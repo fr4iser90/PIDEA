@@ -5,7 +5,17 @@ class IDEController {
     this.ideManager = ideManager;
     this.eventBus = eventBus;
     this.cursorIDEService = cursorIDEService;
-    this.docsTasksHandler = new DocsTasksHandler(() => this.ideManager.getActiveWorkspacePath());
+    this.docsTasksHandler = new DocsTasksHandler(() => {
+      const activePath = this.ideManager.getActiveWorkspacePath();
+      console.log('[IDEController] Active workspace path:', activePath);
+      console.log('[IDEController] Active port:', this.ideManager.getActivePort());
+      console.log('[IDEController] Available workspaces:', Array.from(this.ideManager.ideWorkspaces.entries()));
+      
+      if (!activePath) {
+        throw new Error('No active workspace path available - IDE workspace detection failed');
+      }
+      return activePath;
+    });
   }
 
   async getAvailableIDEs(req, res) {

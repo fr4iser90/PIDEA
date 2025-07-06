@@ -206,10 +206,19 @@ class IDEManager {
 
   // New method to get active workspace path
   getActiveWorkspacePath() {
+    console.log('[IDEManager] getActiveWorkspacePath called');
+    console.log('[IDEManager] activePort:', this.activePort);
+    console.log('[IDEManager] ideWorkspaces entries:', Array.from(this.ideWorkspaces.entries()));
+    
     if (!this.activePort) {
+      console.log('[IDEManager] No active port set');
       return null;
     }
-    return this.ideWorkspaces.get(this.activePort) || null;
+    
+    const workspacePath = this.ideWorkspaces.get(this.activePort);
+    console.log('[IDEManager] Workspace path for active port', this.activePort, ':', workspacePath);
+    
+    return workspacePath || null;
   }
 
   // FILE-BASIERTE WORKSPACE-ERKENNUNG

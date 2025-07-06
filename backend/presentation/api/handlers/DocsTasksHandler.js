@@ -18,7 +18,17 @@ class DocsTasksHandler {
   getFeaturesDir() {
     // Always resolve from the current workspace root
     const workspaceRoot = this.getWorkspacePath();
-    return path.resolve(workspaceRoot, 'docs/09_roadmap/features');
+    
+    if (!workspaceRoot) {
+      console.error('[DocsTasksHandler] Workspace path is undefined');
+      throw new Error('Workspace path is not available');
+    }
+    
+    console.log(`[DocsTasksHandler] Workspace root: ${workspaceRoot}`);
+    const featuresDir = path.resolve(workspaceRoot, 'docs/09_roadmap/features');
+    console.log(`[DocsTasksHandler] Features directory resolved: ${featuresDir}`);
+    
+    return featuresDir;
   }
 
   /**
@@ -116,6 +126,7 @@ class DocsTasksHandler {
 
       const featuresDir = this.getFeaturesDir();
       console.log(`[DocsTasksHandler] Getting details for file: ${filename}`);
+      console.log(`[DocsTasksHandler] Features directory: ${featuresDir}`);
 
       // Validate filename to prevent path traversal
       const safeFilename = this.validateFilename(filename);
@@ -126,7 +137,7 @@ class DocsTasksHandler {
         });
       }
 
-      const filePath = path.join(this.featuresDir, safeFilename);
+      const filePath = path.join(featuresDir, safeFilename);
       
       // Check if it's a valid markdown file first
       if (!this.isValidMarkdownFile(safeFilename)) {
