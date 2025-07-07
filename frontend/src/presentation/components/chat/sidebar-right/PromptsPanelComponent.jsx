@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { apiCall } from '@infrastructure/repositories/APIChatRepository.jsx';
+import { apiCall, API_CONFIG } from '@infrastructure/repositories/APIChatRepository.jsx';
 import PromptDetailsModal from '../modal/PromptDetailsModal.jsx';
 import '@css/panel/prompt-panel.css';
 
@@ -106,7 +106,26 @@ function PromptsPanelComponent({ onPromptClick, onQuickPrompt }) {
   // Card click handler: load content and insert into chat input
   const handlePromptCardClick = async (prompt) => {
     try {
-      const response = await apiCall(`/api/prompts/${prompt.category}/${prompt.filename}`);
+      let url;
+      if (prompt.frameworkId) {
+        let filename = prompt.filename;
+        if (!filename && prompt.file) {
+          filename = prompt.file.split('/').pop();
+        }
+        url = API_CONFIG.endpoints.frameworks.promptFile(prompt.frameworkId, filename);
+      } else {
+        // Parse the file path to get category and filename
+        // Remove 'prompts/' prefix if it exists
+        let filePath = prompt.file;
+        if (filePath.startsWith('prompts/')) {
+          filePath = filePath.substring(8); // Remove 'prompts/' prefix
+        }
+        const pathParts = filePath.split('/');
+        const filename = pathParts.pop(); // Get the filename
+        const category = pathParts.join('/'); // Get the category path
+        url = API_CONFIG.endpoints.prompts.file(category, filename);
+      }
+      const response = await apiCall(url);
       if (response.success && onQuickPrompt) {
         onQuickPrompt(response.data.content);
       }
@@ -118,7 +137,26 @@ function PromptsPanelComponent({ onPromptClick, onQuickPrompt }) {
   // View button handler: show prompt content in modal
   const handleViewPrompt = async (prompt) => {
     try {
-      const response = await apiCall(`/api/prompts/${prompt.file}`);
+      let url;
+      if (prompt.frameworkId) {
+        let filename = prompt.filename;
+        if (!filename && prompt.file) {
+          filename = prompt.file.split('/').pop();
+        }
+        url = API_CONFIG.endpoints.frameworks.promptFile(prompt.frameworkId, filename);
+      } else {
+        // Parse the file path to get category and filename
+        // Remove 'prompts/' prefix if it exists
+        let filePath = prompt.file;
+        if (filePath.startsWith('prompts/')) {
+          filePath = filePath.substring(8); // Remove 'prompts/' prefix
+        }
+        const pathParts = filePath.split('/');
+        const filename = pathParts.pop(); // Get the filename
+        const category = pathParts.join('/'); // Get the category path
+        url = API_CONFIG.endpoints.prompts.file(category, filename);
+      }
+      const response = await apiCall(url);
       if (response.success) {
         setModalTitle(prompt.name);
         setModalContent(response.data.content);
@@ -130,6 +168,61 @@ function PromptsPanelComponent({ onPromptClick, onQuickPrompt }) {
       setModalOpen(true);
     }
   };
+
+  // Hilfsfunktion: Prompts rekursiv nach file-Pfad gruppieren
+  function groupPromptsByPath(prompts) {
+    const tree = {};
+    prompts.forEach(prompt => {
+      const parts = prompt.file.split('/');
+      let node = tree;
+      for (let i = 0; i < parts.length - 1; i++) {
+        const part = parts[i];
+        if (!node[part]) node[part] = {};
+        node = node[part];
+      }
+      if (!node.__prompts) node.__prompts = [];
+      node.__prompts.push(prompt);
+    });
+    return tree;
+  }
+
+  const groupedPrompts = groupPromptsByPath(filteredPrompts);
+
+  // Rekursive Komponente zum Rendern der Gruppen
+  function RenderPromptTree({ node, path = [] }) {
+    return Object.entries(node).map(([key, value]) => {
+      if (key === "__prompts") {
+        return value.map(prompt => (
+          <div
+            key={prompt.file}
+            className={`panel-block prompt-card cursor-pointer transition-colors flex flex-col`}
+            aria-selected={false}
+            onClick={() => handlePromptCardClick(prompt)}
+          >
+            <div className="prompt-card-header">
+              <h4 className="prompt-card-title">{prompt.name}</h4>
+              <button
+                className="prompt-card-view-btn"
+                onClick={e => { e.stopPropagation(); handleViewPrompt(prompt); }}
+                title="View prompt content"
+              >
+                <span role="img" aria-label="view">👁️</span>
+              </button>
+            </div>
+          </div>
+        ));
+      } else {
+        return (
+          <div key={path.concat(key).join('/') + '-group'} className="prompt-category-block">
+            <div className="font-semibold text-base text-blue-400 mb-2 capitalize">{key}</div>
+            <div className="grid gap-3">
+              <RenderPromptTree node={value} path={path.concat(key)} />
+            </div>
+          </div>
+        );
+      }
+    });
+  }
 
   return (
     <div className="prompts-tab space-y-4 p-3">
@@ -145,33 +238,7 @@ function PromptsPanelComponent({ onPromptClick, onQuickPrompt }) {
         />
       </div>
       <div className="prompts-panel space-y-6">
-        {categories.map(category => (
-          <div key={category} className="prompt-category-block">
-            <div className="font-semibold text-base text-blue-400 mb-2 capitalize">{category}</div>
-            <div className="grid gap-3">
-              {promptsByCategory[category].map(prompt => (
-                <div
-                  key={prompt.path}
-                  className={`panel-block prompt-card cursor-pointer transition-colors flex flex-col`}
-                  aria-selected={false}
-                  onClick={() => handlePromptCardClick(prompt)}
-                >
-                  <div className="prompt-card-header">
-                    <h4 className="prompt-card-title">{prompt.name}</h4>
-                    <button
-                      className="prompt-card-view-btn"
-                      onClick={e => { e.stopPropagation(); handleViewPrompt(prompt); }}
-                      title="View prompt content"
-                    >
-                      <span role="img" aria-label="view">👁️</span>
-                    </button>
-                  </div>
-                  {/* Optionally, add a description or tags here in the future */}
-                </div>
-              ))}
-            </div>
-          </div>
-        ))}
+        <RenderPromptTree node={groupedPrompts} />
       </div>
     </div>
   );
