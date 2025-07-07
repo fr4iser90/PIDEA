@@ -174,21 +174,37 @@ class AutoModeController {
                 try {
                     const taskService = this.application?.taskService;
                     if (taskService) {
-                        const taskResult = await taskService.executeTask(taskOptions.task, {
+                        // Create a temporary task for execution
+                        const tempTask = {
+                            id: `temp_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+                            title: taskOptions.task.split('\n')[0].replace('Execute this refactoring task: ', ''),
+                            description: taskOptions.task,
+                            type: { value: 'refactoring' },
+                            metadata: {
+                                filePath: workspacePath,
+                                projectPath: workspacePath,
+                                branchName: taskOptions.branchName
+                            }
+                        };
+
+                        // Execute task using TaskService with proper task object
+                        const taskResult = await taskService.executeTask(tempTask.id, {
                             projectPath: workspacePath,
                             userId,
                             projectId
                         });
                         
                         this.logger.info('AutoModeController: Task executed successfully', {
-                            task: taskOptions.task
+                            taskId: tempTask.id,
+                            taskTitle: tempTask.title
                         });
 
                         res.json({
                             success: true,
                             message: 'Task executed successfully',
                             data: {
-                                task: taskOptions.task,
+                                taskId: tempTask.id,
+                                taskTitle: tempTask.title,
                                 result: taskResult,
                                 gitBranch: taskOptions.createGitBranch ? taskOptions.branchName : null,
                                 newChat: taskOptions.clickNewChat
