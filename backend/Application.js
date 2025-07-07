@@ -860,6 +860,10 @@ class Application {
     // Documentation Framework routes (protected) - PROJECT-BASED
     this.app.post('/api/projects/:projectId/documentation/analyze', (req, res) => this.documentationController.analyzeDocumentation(req, res));
     
+    // Bulk Documentation Analysis route (protected)
+    this.app.use('/api/projects/analyze-all', this.authMiddleware.authenticate());
+    this.app.post('/api/projects/analyze-all/documentation', (req, res) => this.documentationController.analyzeAllProjects(req, res));
+    
     // Analysis output and history routes
     this.app.get('/api/projects/:projectId/analysis/history', (req, res) => this.analysisController.getAnalysisHistory(req, res));
     this.app.get('/api/projects/:projectId/analysis/files/:filename', (req, res) => this.analysisController.getAnalysisFile(req, res));

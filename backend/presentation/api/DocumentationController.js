@@ -11,6 +11,132 @@ class DocumentationController {
     }
 
     /**
+     * Analyze ALL projects documentation simultaneously
+     * POST /api/projects/analyze-all/documentation
+     */
+    async analyzeAllProjects(req, res) {
+        try {
+            this.logger.info('[DocumentationController] Starting bulk documentation analysis for all projects');
+
+            if (!this.ideManager) {
+                return res.status(500).json({
+                    success: false,
+                    error: 'IDE Manager not available'
+                });
+            }
+
+            // Get all available IDEs
+            const availableIDEs = await this.ideManager.getAvailableIDEs();
+            
+            if (availableIDEs.length === 0) {
+                return res.status(400).json({
+                    success: false,
+                    error: 'No IDE instances found. Please open projects in Cursor IDE first.'
+                });
+            }
+
+            this.logger.info('[DocumentationController] Found IDEs for bulk analysis', {
+                ideCount: availableIDEs.length,
+                ports: availableIDEs.map(ide => ide.port)
+            });
+
+            // Process each IDE concurrently
+            const analysisPromises = availableIDEs.map(async (ide) => {
+                const workspacePath = this.ideManager.getWorkspacePath(ide.port);
+                if (!workspacePath || workspacePath.includes(':')) {
+                    this.logger.warn('[DocumentationController] Skipping IDE with invalid workspace', {
+                        port: ide.port,
+                        workspacePath
+                    });
+                    return {
+                        port: ide.port,
+                        success: false,
+                        error: 'Invalid workspace path'
+                    };
+                }
+
+                const projectId = this.getProjectIdFromPath(workspacePath);
+                
+                try {
+                    const result = await this.runSingleProjectAnalysis(projectId, workspacePath, ide.port);
+                    return {
+                        port: ide.port,
+                        projectId,
+                        workspacePath,
+                        success: true,
+                        result
+                    };
+                } catch (error) {
+                    this.logger.error('[DocumentationController] Bulk analysis failed for IDE', {
+                        port: ide.port,
+                        projectId,
+                        error: error.message
+                    });
+                    return {
+                        port: ide.port,
+                        projectId,
+                        workspacePath,
+                        success: false,
+                        error: error.message
+                    };
+                }
+            });
+
+            // Wait for all analyses to complete
+            const results = await Promise.allSettled(analysisPromises);
+            
+            // Process results
+            const successfulAnalyses = [];
+            const failedAnalyses = [];
+            let totalTasks = 0;
+
+            results.forEach((result, index) => {
+                if (result.status === 'fulfilled') {
+                    const analysisResult = result.value;
+                    if (analysisResult.success) {
+                        successfulAnalyses.push(analysisResult);
+                        totalTasks += analysisResult.result?.createdTasks?.length || 0;
+                    } else {
+                        failedAnalyses.push(analysisResult);
+                    }
+                }
+            });
+
+            this.logger.info('[DocumentationController] Bulk analysis completed', {
+                total: availableIDEs.length,
+                successful: successfulAnalyses.length,
+                failed: failedAnalyses.length,
+                totalTasks
+            });
+
+            res.json({
+                success: true,
+                data: {
+                    totalIDEs: availableIDEs.length,
+                    successfulAnalyses: successfulAnalyses.length,
+                    failedAnalyses: failedAnalyses.length,
+                    totalTasksCreated: totalTasks,
+                    results: {
+                        successful: successfulAnalyses,
+                        failed: failedAnalyses
+                    },
+                    timestamp: new Date().toISOString()
+                }
+            });
+
+        } catch (error) {
+            this.logger.error('[DocumentationController] Bulk documentation analysis failed', {
+                error: error.message
+            });
+
+            res.status(500).json({
+                success: false,
+                error: error.message
+            });
+        }
+    }
+
+    /**
      * Find IDE that matches the project path
      */
     async findProjectIDE(projectPath) {
@@ -554,6 +680,126 @@ class DocumentationController {
         if (['high', 'critical', 'urgent'].includes(normalized)) return 'high';
         if (['low', 'minor'].includes(normalized)) return 'low';
         return 'medium'; // default
+    }
+
+    /**
+     * Extract project ID from workspace path
+     */
+    getProjectIdFromPath(workspacePath) {
+        if (!workspacePath) return 'unknown';
+        
+        const pathParts = workspacePath.split('/');
+        const projectName = pathParts[pathParts.length - 1];
+        
+        // Convert to lowercase and remove special characters
+        return projectName.toLowerCase().replace(/[^a-z0-9]/g, '');
+    }
+
+    /**
+     * Run documentation analysis for a single project
+     */
+    async runSingleProjectAnalysis(projectId, workspacePath, idePort) {
+        this.logger.info('[DocumentationController] Running single project analysis', {
+            projectId,
+            workspacePath,
+            idePort
+        });
+
+        // Switch to the correct IDE
+        const currentActivePort = this.cursorIDEService.getActivePort();
+        if (currentActivePort !== idePort) {
+            this.logger.info('[DocumentationController] Switching to project IDE for analysis', {
+                from: currentActivePort,
+                to: idePort
+            });
+            
+            await this.cursorIDEService.switchToPort(idePort);
+        }
+
+        // Load doc-analyze.md prompt
+        const promptPath = path.join(
+            this.contentLibraryPath,
+            'frameworks/documentation-framework/prompts/doc-analyze.md'
+        );
+
+        if (!fs.existsSync(promptPath)) {
+            throw new Error('doc-analyze.md prompt not found');
+        }
+
+        const promptTemplate = fs.readFileSync(promptPath, 'utf8');
+
+        // Create contextualized prompt with project info
+        const contextualizedPrompt = `${promptTemplate}
+
+---
+
+## 🎯 PROJECT CONTEXT
+
+**Project Path**: ${workspacePath}
+**Project ID**: ${projectId}
+**Analysis Date**: ${new Date().toISOString()}
+**IDE Port**: ${idePort}
+
+**Instructions**: 
+1. Analyze the documentation in the above project path
+2. Follow the framework phases exactly
+3. Create a comprehensive improvement plan
+4. Generate specific, actionable tasks
+5. Focus on this specific project's needs
+
+**Please begin your analysis now:**`;
+
+        // Send to Cursor IDE and wait for complete response
+        this.logger.info('[DocumentationController] Sending analysis prompt to IDE', {
+            projectId,
+            idePort,
+            promptLength: contextualizedPrompt.length
+        });
+        
+        const ideResponse = await this.cursorIDEService.sendMessage(contextualizedPrompt, {
+            waitForResponse: true,
+            timeout: 300000, // 5 minutes for comprehensive analysis
+            checkInterval: 5000
+        });
+
+        this.logger.info('[DocumentationController] Received AI response for project', {
+            projectId,
+            idePort,
+            success: ideResponse.success,
+            responseLength: ideResponse.response?.length || 0,
+            duration: ideResponse.duration
+        });
+
+        if (!ideResponse.success) {
+            throw new Error(`AI analysis timed out or failed for project ${projectId}`);
+        }
+
+        // Process the response
+        const analysisResult = this.processDocumentationAnalysis(ideResponse.response, projectId);
+
+        // Create tasks in database and execute them automatically
+        const taskResults = await this.createTasksFromAnalysis(analysisResult, projectId);
+        
+        this.logger.info('[DocumentationController] Created and executed tasks for project', {
+            projectId,
+            idePort,
+            taskCount: taskResults.createdTasks.length,
+            successful: taskResults.summary.successful,
+            failed: taskResults.summary.failed
+        });
+
+        return {
+            projectId,
+            projectPath: workspacePath,
+            idePort,
+            analysis: analysisResult,
+            createdTasks: taskResults.createdTasks,
+            executionResults: taskResults.executionResults,
+            executionSummary: taskResults.summary,
+            promptSent: true,
+            ideResponse: ideResponse,
+            timestamp: new Date().toISOString()
+        };
     }
 
     /**
