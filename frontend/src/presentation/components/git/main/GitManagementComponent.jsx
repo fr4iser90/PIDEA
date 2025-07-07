@@ -2,6 +2,18 @@ import React, { useState, useEffect } from 'react';
 import '@css/main/git.css';
 import { apiCall } from '@infrastructure/repositories/APIChatRepository.jsx';
 
+// Utility function to convert workspace path to project ID
+const getProjectIdFromWorkspace = (workspacePath) => {
+  if (!workspacePath) return 'default';
+  
+  // Extract project name from path
+  const pathParts = workspacePath.split('/');
+  const projectName = pathParts[pathParts.length - 1];
+  
+  // Convert to lowercase and remove special characters
+  return projectName.toLowerCase().replace(/[^a-z0-9]/g, '');
+};
+
 const GitManagementComponent = ({ activePort, onGitOperation, onGitStatusChange }) => {
   const [gitStatus, setGitStatus] = useState(null);
   const [currentBranch, setCurrentBranch] = useState('');
