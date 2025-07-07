@@ -39,7 +39,7 @@
 
 ## Key Features
 
-- **Real-Time Chat System**: Communicate and collaborate with team members or AI assistants directly within the platform.
+- **Real-Time Chat System**: Interact with AI assistants for coding support directly within the platform, designed primarily for single users with a focus on local IDE integration which is critical for functionality.
 - **IDE Integration**: Mirror and interact with your Cursor IDE for a unified coding experience.
 - **Preview Functionality**: View code output or project content in real-time alongside your workspace.
 - **Multi-View Interface**: Switch between chat, code, IDE mirror, and preview modes to suit your workflow.
