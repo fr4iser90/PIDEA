@@ -1,7 +1,15 @@
 # Global Workflow System Implementation
 
 ## Goal
-Implement missing global workflow routes and fix the broken task execution system to enable complete automated task execution with Git branch creation, New Chat clicking, and task execution.
+Implement missing global workflow routes to enable the "⚡ Execute Task" button to automatically create Git branches, click New Chat, and execute tasks via Playwright/IDE automation.
+
+## Overview
+
+**Workflows = Backend Automation für bestehende Frontend-Buttons**
+
+- Deine bestehenden Buttons bleiben unverändert
+- Workflows laufen automatisch im Hintergrund
+- Playwright/IDE Automation für Git + New Chat + Task Execution
 
 ## Template Structure
 
@@ -13,25 +21,25 @@ Implement missing global workflow routes and fix the broken task execution syste
 - **Related Issues**: Missing workflow execution, broken task execution
 
 ### 2. Technical Requirements
-- **Tech Stack**: Node.js, Express, React
+- **Tech Stack**: Node.js, Express, React, Playwright
 - **Architecture Pattern**: REST API with Command Pattern
 - **Database Changes**: None (uses existing)
-- **API Changes**: Add new global workflow routes
-- **Frontend Changes**: Update task execution logic
+- **API Changes**: Add global workflow routes
+- **Frontend Changes**: Update task execution to use workflow API
 - **Backend Changes**: Create WorkflowController, WorkflowService
 
 ### 3. File Impact Analysis
 
 #### Files to Create:
-- [ ] `backend/presentation/api/WorkflowController.js` - Handle global workflow execution
+- [ ] `backend/presentation/api/WorkflowController.js` - Handle workflow execution
 - [ ] `backend/domain/services/WorkflowService.js` - Orchestrate workflow steps
 - [ ] `backend/application/commands/ExecuteWorkflowCommand.js` - Workflow command
 - [ ] `backend/application/handlers/ExecuteWorkflowHandler.js` - Workflow handler
 - [ ] `frontend/src/infrastructure/repositories/WorkflowRepository.jsx` - Frontend workflow API
 
 #### Files to Modify:
-- [ ] `backend/Application.js` - Add new workflow routes
-- [ ] `frontend/src/presentation/components/chat/sidebar-right/TasksPanelComponent.jsx` - Use new workflow API
+- [ ] `backend/Application.js` - Add workflow routes
+- [ ] `frontend/src/presentation/components/chat/sidebar-right/TasksPanelComponent.jsx` - Use workflow API
 - [ ] `frontend/src/infrastructure/repositories/APIChatRepository.jsx` - Add workflow methods
 
 ### 4. Implementation Phases
@@ -56,7 +64,7 @@ Implement missing global workflow routes and fix the broken task execution syste
 ### 5. New Routes to Add
 
 ```javascript
-// ✅ NEW GLOBAL WORKFLOW ROUTES:
+// ✅ GLOBAL WORKFLOW ROUTES:
 /api/workflows/execute                              // POST - Execute complete workflow
 /api/workflows/:id/status                           // GET - Workflow status
 /api/workflows/:id/cancel                           // POST - Cancel workflow
@@ -87,7 +95,43 @@ const workflowResponse = await api.executeWorkflow({
 });
 ```
 
-### 8. Code Standards & Patterns
+### 8. AI Git Branch Strategy
+
+#### Branch Structure
+```
+main (PROTECTED - Human only)
+├── staging (AI can merge from develop)
+├── develop (AI can merge from feature branches)
+├── ai/feature/* (AI development branches)
+├── ai/debug/* (AI debugging branches)
+├── ai/refactor/* (AI refactoring branches)
+└── human/feature/* (Human development branches)
+```
+
+#### Main Branch Protection
+```javascript
+// AI can NEVER touch main branch
+const mainBranchProtection = {
+  main: {
+    protected: true,
+    humanOnly: true,
+    aiBlocked: true,
+    requiresReview: true,
+    requiresTests: true,
+    requiresStaging: true
+  }
+};
+```
+
+#### AI Branch Naming
+```javascript
+// AI branches follow strict naming convention
+ai/feature/auto-execute-${taskId}-${timestamp}
+ai/feature/auto-debug-${issueId}-${timestamp}
+ai/feature/auto-refactor-${scope}-${timestamp}
+```
+
+### 9. Code Standards & Patterns
 - **Coding Style**: Follow existing ESLint rules
 - **Naming Conventions**: Use camelCase for variables, PascalCase for classes
 - **Error Handling**: Try-catch with proper error logging
@@ -95,20 +139,21 @@ const workflowResponse = await api.executeWorkflow({
 - **Testing**: Jest for unit tests, integration tests for API
 - **Documentation**: JSDoc for all new functions
 
-### 9. Security Considerations
+### 10. Security Considerations
 - [ ] Input validation for workflow parameters
 - [ ] Authentication checks on all new endpoints
 - [ ] Authorization rules for workflow execution
 - [ ] Rate limiting for workflow endpoints
 - [ ] Sanitize task content before execution
+- [ ] Main branch protection (AI never touches main)
 
-### 10. Performance Requirements
+### 11. Performance Requirements
 - **Response Time**: < 2 seconds for workflow start
 - **Throughput**: Support 10 concurrent workflows
 - **Memory Usage**: < 100MB per workflow
 - **Database Queries**: Minimize queries, use caching where appropriate
 
-### 11. Testing Strategy
+### 12. Testing Strategy
 
 #### Unit Tests:
 - [ ] Test file: `backend/tests/unit/WorkflowService.test.js`
@@ -125,7 +170,7 @@ const workflowResponse = await api.executeWorkflow({
 - [ ] User flows: Click "⚡ Execute Task" → Complete workflow execution
 - [ ] Browser compatibility: Chrome, Firefox, Safari
 
-### 12. Documentation Requirements
+### 13. Documentation Requirements
 
 #### Code Documentation:
 - [ ] JSDoc comments for all new functions
@@ -138,7 +183,7 @@ const workflowResponse = await api.executeWorkflow({
 - [ ] Troubleshooting guide for workflow issues
 - [ ] Migration guide for existing task execution
 
-### 13. Deployment Checklist
+### 14. Deployment Checklist
 
 #### Pre-deployment:
 - [ ] All tests passing
@@ -159,27 +204,29 @@ const workflowResponse = await api.executeWorkflow({
 - [ ] Collect user feedback
 - [ ] Verify all existing functionality
 
-### 14. Rollback Plan
+### 15. Rollback Plan
 - [ ] Database rollback: None required
 - [ ] Configuration rollback: Revert route changes
 - [ ] Service rollback: Deploy previous version
 - [ ] Communication plan: Notify users of temporary unavailability
 
-### 15. Success Criteria
-- [ ] "⚡ Execute Task" button creates Git branch
-- [ ] "⚡ Execute Task" button clicks New Chat
+### 16. Success Criteria
+- [ ] "⚡ Execute Task" button creates Git branch automatically
+- [ ] "⚡ Execute Task" button clicks New Chat automatically
 - [ ] "⚡ Execute Task" button executes task automatically
 - [ ] All existing functionality preserved
 - [ ] Error handling and rollback working
 - [ ] Workflow status tracking working
 - [ ] Performance requirements met
 - [ ] Security requirements satisfied
+- [ ] Main branch protection working
 
-### 16. Risk Assessment
+### 17. Risk Assessment
 
 #### High Risk:
 - [ ] Breaking existing task execution - Mitigation: Thorough testing and gradual rollout
 - [ ] Workflow timing issues - Mitigation: Proper async handling and timeouts
+- [ ] AI touching main branch - Mitigation: Strict branch protection rules
 
 #### Medium Risk:
 - [ ] UI feedback delays - Mitigation: Loading states and progress indicators
@@ -189,12 +236,13 @@ const workflowResponse = await api.executeWorkflow({
 - [ ] Documentation gaps - Mitigation: Comprehensive documentation review
 - [ ] Minor UI inconsistencies - Mitigation: Design review and testing
 
-### 17. References & Resources
+### 18. References & Resources
 - **Technical Documentation**: Existing Auto-Mode and Auto-Finish documentation
 - **API References**: Current API documentation
 - **Design Patterns**: Command Pattern, Service Layer Pattern
 - **Best Practices**: REST API design, error handling patterns
 - **Similar Implementations**: Existing Auto-Mode implementation
+- **Git Flow**: Git branching strategy documentation
 
 ---
 

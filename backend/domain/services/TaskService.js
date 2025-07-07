@@ -7,12 +7,13 @@ const TaskType = require('@/domain/value-objects/TaskType');
  * TaskService - Business logic for project-based task management
  */
 class TaskService {
-  constructor(taskRepository, aiService, projectAnalyzer, cursorIDEService = null, autoFinishSystem) {
+  constructor(taskRepository, aiService, projectAnalyzer, cursorIDEService = null, autoFinishSystem, workflowGitService = null) {
     this.taskRepository = taskRepository;
     this.aiService = aiService;
     this.projectAnalyzer = projectAnalyzer;
     this.cursorIDEService = cursorIDEService;
     this.autoFinishSystem = autoFinishSystem;
+    this.workflowGitService = workflowGitService;
   }
 
   buildRefactoringPrompt(task) {
@@ -331,6 +332,21 @@ class TaskService {
    * @returns {Promise<Object>} Git result
    */
   async createRefactoringBranch(projectPath, branchName) {
+    // Use WorkflowGitService if available for better branch strategies
+    if (this.workflowGitService) {
+      const tempTask = {
+        id: 'temp-task',
+        title: 'Temporary task',
+        type: { value: 'refactoring' },
+        metadata: { projectPath }
+      };
+      
+      return await this.workflowGitService.createWorkflowBranch(projectPath, tempTask, {
+        customBranchName: branchName
+      });
+    }
+
+    // Fallback to direct Git operations
     const { exec } = require('child_process');
     const util = require('util');
     const execAsync = util.promisify(exec);

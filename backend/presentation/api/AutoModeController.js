@@ -35,8 +35,39 @@ class AutoModeController {
                 mode = 'full',
                 options = {},
                 aiModel = 'gpt-4',
-                autoExecute = true
+                autoExecute = true,
+                task,
+                createGitBranch = false,
+                branchName,
+                clickNewChat = false
             } = req.body;
+
+            // Debug logging
+            this.logger.info('AutoModeController: Received request body', {
+                projectId,
+                projectPath,
+                mode,
+                options,
+                task,
+                createGitBranch,
+                branchName,
+                clickNewChat,
+                bodyKeys: Object.keys(req.body)
+            });
+
+            // Extract task-specific options from options object or root level
+            const taskOptions = (options.task || task) ? {
+                task: options.task || task,
+                createGitBranch: options.createGitBranch || createGitBranch || false,
+                branchName: options.branchName || branchName,
+                clickNewChat: options.clickNewChat || clickNewChat || false,
+                autoExecute: options.autoExecute || autoExecute || true
+            } : null;
+
+            this.logger.info('AutoModeController: Extracted taskOptions', {
+                taskOptions,
+                hasTask: !!taskOptions?.task
+            });
 
             const userId = req.user?.id;
 
@@ -89,7 +120,98 @@ class AutoModeController {
                 workspacePath
             });
 
-            // Execute the actual auto mode analysis
+            // Check if this is a task execution request
+            this.logger.info('AutoModeController: Checking task execution request', {
+                taskOptionsExists: !!taskOptions,
+                taskOptions,
+                hasTask: !!taskOptions?.task
+            });
+            
+            if (taskOptions && taskOptions.task) {
+                this.logger.info('AutoModeController: Processing task execution request', {
+                    task: taskOptions.task,
+                    createGitBranch: taskOptions.createGitBranch,
+                    branchName: taskOptions.branchName,
+                    clickNewChat: taskOptions.clickNewChat
+                });
+
+                // Create Git branch if requested
+                if (taskOptions.createGitBranch && taskOptions.branchName) {
+                    try {
+                        const gitService = this.application?.gitService;
+                        if (gitService) {
+                            await gitService.createBranch(workspacePath, taskOptions.branchName);
+                            this.logger.info('AutoModeController: Git branch created', {
+                                branchName: taskOptions.branchName
+                            });
+                        }
+                    } catch (error) {
+                        this.logger.error('AutoModeController: Failed to create Git branch', {
+                            error: error.message,
+                            branchName: taskOptions.branchName
+                        });
+                    }
+                }
+
+                // Click new chat if requested
+                if (taskOptions.clickNewChat) {
+                    try {
+                        const activeIDE = await this.ideManager.getActiveIDE();
+                        if (activeIDE && activeIDE.port) {
+                            await this.ideManager.clickNewChat(activeIDE.port);
+                            this.logger.info('AutoModeController: New chat clicked', {
+                                port: activeIDE.port
+                            });
+                        }
+                    } catch (error) {
+                        this.logger.error('AutoModeController: Failed to click new chat', {
+                            error: error.message
+                        });
+                    }
+                }
+
+                // Execute task using TaskService
+                try {
+                    const taskService = this.application?.taskService;
+                    if (taskService) {
+                        const taskResult = await taskService.executeTask(taskOptions.task, {
+                            projectPath: workspacePath,
+                            userId,
+                            projectId
+                        });
+                        
+                        this.logger.info('AutoModeController: Task executed successfully', {
+                            task: taskOptions.task
+                        });
+
+                        res.json({
+                            success: true,
+                            message: 'Task executed successfully',
+                            data: {
+                                task: taskOptions.task,
+                                result: taskResult,
+                                gitBranch: taskOptions.createGitBranch ? taskOptions.branchName : null,
+                                newChat: taskOptions.clickNewChat
+                            }
+                        });
+                        return;
+                    }
+                } catch (error) {
+                    this.logger.error('AutoModeController: Failed to execute task', {
+                        error: error.message,
+                        task: taskOptions.task
+                    });
+                    
+                    res.status(500).json({
+                        success: false,
+                        error: 'Failed to execute task',
+                        message: error.message
+                    });
+                    return;
+                }
+            }
+
+            // Execute the actual auto mode analysis (VibeCoder)
             const command = {
                 commandId: `auto-mode-${Date.now()}`,
                 projectPath: workspacePath,

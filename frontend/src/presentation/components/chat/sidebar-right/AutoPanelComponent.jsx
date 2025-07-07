@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import APIChatRepository from '@infrastructure/repositories/APIChatRepository.jsx';
+import TaskSelectionModal from '../modal/TaskSelectionModal.jsx';
 
 function AutoPanelComponent({ eventBus }) {
   const api = new APIChatRepository();
@@ -12,6 +13,11 @@ function AutoPanelComponent({ eventBus }) {
     thresholds: { confidence: 0.8, complexity: 10 }
   });
   const [feedback, setFeedback] = useState(null);
+
+  // Auto Refactor Modal state
+  const [showAutoRefactorModal, setShowAutoRefactorModal] = useState(false);
+  const [refactoringTasks, setRefactoringTasks] = useState([]);
+  const [isAutoRefactoring, setIsAutoRefactoring] = useState(false);
 
   // VibeCoder Mode Handlers
   const handleVibeCoderStart = async () => { 
@@ -53,21 +59,60 @@ function AutoPanelComponent({ eventBus }) {
   };
   
   const handleAutoRefactor = async () => {
-    setFeedback('Starting Auto Refactor...');
+    setFeedback('Loading refactoring tasks...');
     try {
+      // Get refactoring tasks from the auto-refactor endpoint
       const projectId = await api.getCurrentProjectId();
-      const response = await api.startAutoMode(projectId, {
-        mode: 'refactoring'
-      });
-      if (response.success) {
-        setAutoStatus('refactoring');
-        setFeedback('Auto Refactor started successfully!');
-        if (eventBus) eventBus.emit('vibecoder-refactor-started', response.data);
+      const response = await api.startAutoRefactor(projectId);
+      
+      if (response.success && response.data && response.data.tasks) {
+        setRefactoringTasks(response.data.tasks);
+        setShowAutoRefactorModal(true);
+        setFeedback('Refactoring tasks loaded successfully!');
       } else {
-        setFeedback('Failed to start Auto Refactor: ' + response.error);
+        setFeedback('No refactoring tasks found or failed to load tasks');
       }
     } catch (err) {
-      setFeedback('Error starting Auto Refactor: ' + (err.message || err));
+      setFeedback('Error loading refactoring tasks: ' + (err.message || err));
+    }
+  };
+
+  const handleStartRefactoring = async (selectedTasks) => {
+    setIsAutoRefactoring(true);
+    setFeedback('Starting refactoring for selected tasks...');
+    
+    try {
+      const projectId = await api.getCurrentProjectId();
+      
+      // Execute each selected task
+      for (const task of selectedTasks) {
+        const taskMessage = `Execute this refactoring task: ${task.title}\n\nDescription: ${task.description}`;
+        
+        const autoModeResponse = await api.startAutoMode(projectId, {
+          task: taskMessage,
+          options: {
+            createGitBranch: true,
+            branchName: `refactor/${task.id}-${Date.now()}`,
+            clickNewChat: true,
+            autoExecute: true
+          }
+        });
+        
+        if (!autoModeResponse.success) {
+          throw new Error(`Failed to execute task ${task.title}: ${autoModeResponse.error}`);
+        }
+      }
+      
+      setAutoStatus('refactoring');
+      setFeedback(`✅ Refactoring started for ${selectedTasks.length} tasks!`);
+      setShowAutoRefactorModal(false);
+      
+      if (eventBus) eventBus.emit('vibecoder-refactor-started', { tasks: selectedTasks });
+      
+    } catch (err) {
+      setFeedback('Error starting refactoring: ' + (err.message || err));
+    } finally {
+      setIsAutoRefactoring(false);
     }
   };
   
@@ -184,6 +229,15 @@ function AutoPanelComponent({ eventBus }) {
           {feedback}
         </div>
       )}
+
+      {/* Auto Refactor Modal */}
+      <TaskSelectionModal
+        isOpen={showAutoRefactorModal}
+        onClose={() => setShowAutoRefactorModal(false)}
+        tasks={refactoringTasks}
+        onStartRefactoring={handleStartRefactoring}
+        isLoading={isAutoRefactoring}
+      />
     </div>
   );
 }
