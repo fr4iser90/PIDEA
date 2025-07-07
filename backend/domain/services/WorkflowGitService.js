@@ -181,7 +181,7 @@ class WorkflowGitService {
                 prefix: 'docs',
                 startPoint: 'main',
                 protection: 'low',
-                autoMerge: true,
+                autoMerge: false,
                 requiresReview: false,
                 mergeTarget: 'main'
             },

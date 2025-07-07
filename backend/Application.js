@@ -628,7 +628,8 @@ class Application {
     this.documentationController = new DocumentationController(
       this.taskService,
       this.cursorIDEService,
-      this.logger
+      this.logger,
+      this.ideManager
     );
 
     this.logger.info('[Application] Presentation layer initialized');

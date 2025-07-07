@@ -2,11 +2,68 @@ const path = require('path');
 const fs = require('fs');
 
 class DocumentationController {
-    constructor(taskService, cursorIDEService, logger) {
+    constructor(taskService, cursorIDEService, logger, ideManager = null) {
         this.taskService = taskService;
         this.cursorIDEService = cursorIDEService;
         this.logger = logger;
+        this.ideManager = ideManager;
         this.contentLibraryPath = path.join(__dirname, '../../../content-library');
+    }
+
+    /**
+     * Find IDE that matches the project path
+     */
+    async findProjectIDE(projectPath) {
+        try {
+            if (!this.ideManager) {
+                this.logger.warn('[DocumentationController] No IDE manager available, using active IDE');
+                return { port: this.cursorIDEService.getActivePort() };
+            }
+
+            // Get all available IDEs
+            const availableIDEs = await this.ideManager.getAvailableIDEs();
+            
+            // Find IDE with matching workspace path
+            for (const ide of availableIDEs) {
+                const workspacePath = this.ideManager.getWorkspacePath(ide.port);
+                if (workspacePath && projectPath.includes(workspacePath)) {
+                    this.logger.info('[DocumentationController] Found matching IDE', {
+                        port: ide.port,
+                        workspacePath,
+                        projectPath
+                    });
+                    return ide;
+                }
+            }
+
+            // If no exact match, look for partial matches
+            for (const ide of availableIDEs) {
+                const workspacePath = this.ideManager.getWorkspacePath(ide.port);
+                if (workspacePath && workspacePath.includes(projectPath.split('/').pop())) {
+                    this.logger.info('[DocumentationController] Found partial match IDE', {
+                        port: ide.port,
+                        workspacePath,
+                        projectPath
+                    });
+                    return ide;
+                }
+            }
+
+            // Fallback to active IDE
+            const activePort = this.cursorIDEService.getActivePort();
+            this.logger.warn('[DocumentationController] No matching IDE found, using active IDE', {
+                activePort,
+                projectPath
+            });
+            return { port: activePort };
+
+        } catch (error) {
+            this.logger.error('[DocumentationController] Error finding project IDE', {
+                error: error.message,
+                projectPath
+            });
+            return { port: this.cursorIDEService.getActivePort() };
+        }
     }
 
     /**
@@ -22,6 +79,32 @@ class DocumentationController {
                 projectId,
                 projectPath
             });
+
+            // Find the IDE that matches this project path
+            const projectIDE = await this.findProjectIDE(projectPath);
+            if (!projectIDE || !projectIDE.port) {
+                return res.status(400).json({
+                    success: false,
+                    error: 'No IDE found for this project. Please open the project in Cursor IDE first.'
+                });
+            }
+
+            this.logger.info('[DocumentationController] Found project IDE', {
+                projectId,
+                projectPath,
+                idePort: projectIDE.port
+            });
+
+            // Switch to the correct IDE for this project
+            const currentActivePort = this.cursorIDEService.getActivePort();
+            if (currentActivePort !== projectIDE.port) {
+                this.logger.info('[DocumentationController] Switching to project IDE', {
+                    from: currentActivePort,
+                    to: projectIDE.port
+                });
+                
+                await this.cursorIDEService.switchToPort(projectIDE.port);
+            }
 
             // Load doc-analyze.md prompt
             const promptPath = path.join(
@@ -45,6 +128,7 @@ class DocumentationController {
 **Project Path**: ${projectPath}
 **Project ID**: ${projectId}
 **Analysis Date**: ${new Date().toISOString()}
+**IDE Port**: ${projectIDE.port}
 
 **Instructions**: 
 1. Analyze the documentation in the above project path
@@ -56,7 +140,11 @@ class DocumentationController {
 **Please begin your analysis now:**`;
 
             // Send to Cursor IDE and wait for complete response
-            this.logger.info('[DocumentationController] Sending documentation analysis prompt to IDE');
+            this.logger.info('[DocumentationController] Sending documentation analysis prompt to IDE', {
+                idePort: projectIDE.port,
+                promptLength: contextualizedPrompt.length
+            });
+            
             const ideResponse = await this.cursorIDEService.sendMessage(contextualizedPrompt, {
                 waitForResponse: true,
                 timeout: 300000, // 5 minutes for comprehensive analysis
@@ -76,20 +164,14 @@ class DocumentationController {
             // Process the response (parse tasks, etc.)
             const analysisResult = this.processDocumentationAnalysis(ideResponse.response, projectId);
 
-            // Create tasks in database automatically
-            const createdTasks = await this.createTasksFromAnalysis(analysisResult, projectId);
+            // Create tasks in database and execute them automatically with Git integration
+            const taskResults = await this.createTasksFromAnalysis(analysisResult, projectId);
             
-            this.logger.info('[DocumentationController] Created tasks from analysis', {
-                taskCount: createdTasks.length
+            this.logger.info('[DocumentationController] Created and executed tasks from analysis', {
+                taskCount: taskResults.createdTasks.length,
+                successful: taskResults.summary.successful,
+                failed: taskResults.summary.failed
             });
-
-            // Auto-execute tasks by sending them to Cursor IDE
-            if (createdTasks.length > 0) {
-                this.logger.info('[DocumentationController] Sending tasks to IDE for execution');
-                const executionResult = await this.sendTasksToIDE(createdTasks, projectPath);
-                analysisResult.executionTriggered = true;
-                analysisResult.executionResult = executionResult;
-            }
 
             res.json({
                 success: true,
@@ -97,9 +179,13 @@ class DocumentationController {
                     projectId,
                     projectPath,
                     analysis: analysisResult,
-                    createdTasks: createdTasks,
+                    createdTasks: taskResults.createdTasks,
+                    executionResults: taskResults.executionResults,
+                    executionSummary: taskResults.summary,
                     promptSent: true,
                     ideResponse: ideResponse,
+                    autoExecutionEnabled: true,
+                    gitIntegrationEnabled: true,
                     timestamp: new Date().toISOString()
                 }
             });
@@ -344,15 +430,16 @@ class DocumentationController {
     }
 
     /**
-     * Create tasks in database from analysis results
+     * Create tasks in database from analysis results and execute them automatically
      */
     async createTasksFromAnalysis(analysisResult, projectId) {
         const createdTasks = [];
+        const executionResults = [];
         
         try {
             const tasks = analysisResult.tasks || [];
             
-            this.logger.info('[DocumentationController] Creating tasks from analysis', {
+            this.logger.info('[DocumentationController] Creating and executing tasks from analysis', {
                 taskCount: tasks.length,
                 projectId
             });
@@ -380,11 +467,49 @@ class DocumentationController {
 
                     createdTasks.push(task);
                     
-                    this.logger.debug('[DocumentationController] Created task', {
+                    this.logger.info('[DocumentationController] Created task, starting auto-execution', {
                         taskId: task.id,
                         title: task.title,
                         priority: task.priority
                     });
+
+                    // ✅ AUTO-EXECUTE TASK WITH GIT INTEGRATION
+                    try {
+                        this.logger.info('[DocumentationController] Executing documentation task with Git workflow', {
+                            taskId: task.id,
+                            title: task.title
+                        });
+
+                        const executionResult = await this.taskService.executeTask(task.id, 'documentation-framework');
+                        
+                        executionResults.push({
+                            taskId: task.id,
+                            title: task.title,
+                            success: true,
+                            execution: executionResult,
+                            message: 'Task executed successfully with Git integration'
+                        });
+
+                        this.logger.info('[DocumentationController] Task execution completed', {
+                            taskId: task.id,
+                            status: executionResult.status,
+                            progress: executionResult.progress
+                        });
+
+                    } catch (executionError) {
+                        this.logger.error('[DocumentationController] Task execution failed', {
+                            taskId: task.id,
+                            error: executionError.message
+                        });
+
+                        executionResults.push({
+                            taskId: task.id,
+                            title: task.title,
+                            success: false,
+                            error: executionError.message,
+                            message: 'Task execution failed'
+                        });
+                    }
 
                 } catch (taskError) {
                     this.logger.error('[DocumentationController] Failed to create individual task', {
@@ -394,9 +519,11 @@ class DocumentationController {
                 }
             }
 
-            this.logger.info('[DocumentationController] Task creation completed', {
+            this.logger.info('[DocumentationController] Task creation and execution completed', {
                 created: createdTasks.length,
-                total: tasks.length
+                total: tasks.length,
+                successful: executionResults.filter(r => r.success).length,
+                failed: executionResults.filter(r => !r.success).length
             });
 
         } catch (error) {
@@ -406,7 +533,15 @@ class DocumentationController {
             });
         }
 
-        return createdTasks;
+        return {
+            createdTasks,
+            executionResults,
+            summary: {
+                total: createdTasks.length,
+                successful: executionResults.filter(r => r.success).length,
+                failed: executionResults.filter(r => !r.success).length
+            }
+        };
     }
 
     /**
@@ -423,9 +558,24 @@ class DocumentationController {
 
     /**
      * Send created tasks to Cursor IDE for automatic execution
+     * @deprecated This method is deprecated. Tasks are now executed automatically via TaskService.executeTask()
+     * which includes full Git integration (branch creation, auto-commit, auto-push, auto-merge).
      */
-    async sendTasksToIDE(tasks, projectPath) {
+    async sendTasksToIDE(tasks, projectPath, idePort = null) {
         try {
+            // Switch to the correct IDE if specified
+            if (idePort) {
+                const currentActivePort = this.cursorIDEService.getActivePort();
+                if (currentActivePort !== idePort) {
+                    this.logger.info('[DocumentationController] Switching to project IDE for task execution', {
+                        from: currentActivePort,
+                        to: idePort
+                    });
+                    
+                    await this.cursorIDEService.switchToPort(idePort);
+                }
+            }
+
             // Load doc-execute.md prompt for task execution
             const executePromptPath = path.join(
                 this.contentLibraryPath,
@@ -515,7 +665,8 @@ ${lowPriorityTasks.map((task, index) => `
                 taskCount: tasks.length,
                 highPriority: highPriorityTasks.length,
                 mediumPriority: mediumPriorityTasks.length,
-                lowPriority: lowPriorityTasks.length
+                lowPriority: lowPriorityTasks.length,
+                idePort: idePort || this.cursorIDEService.getActivePort()
             });
 
             const ideResponse = await this.cursorIDEService.sendMessage(taskExecutionPrompt, {
@@ -524,21 +675,23 @@ ${lowPriorityTasks.map((task, index) => `
 
             this.logger.info('[DocumentationController] Task execution prompt sent to IDE', {
                 success: ideResponse.success,
-                promptLength: taskExecutionPrompt.length
+                promptLength: taskExecutionPrompt.length,
+                idePort: idePort || this.cursorIDEService.getActivePort()
             });
 
-            return {
-                success: ideResponse.success,
-                promptSent: true,
-                promptLength: taskExecutionPrompt.length,
-                tasksSent: tasks.length,
-                priorityBreakdown: {
-                    high: highPriorityTasks.length,
-                    medium: mediumPriorityTasks.length,
-                    low: lowPriorityTasks.length
-                },
-                timestamp: new Date().toISOString()
-            };
+                            return {
+                    success: ideResponse.success,
+                    promptSent: true,
+                    promptLength: taskExecutionPrompt.length,
+                    tasksSent: tasks.length,
+                    idePort: idePort || this.cursorIDEService.getActivePort(),
+                    priorityBreakdown: {
+                        high: highPriorityTasks.length,
+                        medium: mediumPriorityTasks.length,
+                        low: lowPriorityTasks.length
+                    },
+                    timestamp: new Date().toISOString()
+                };
 
         } catch (error) {
             this.logger.error('[DocumentationController] Failed to send tasks to IDE', {
