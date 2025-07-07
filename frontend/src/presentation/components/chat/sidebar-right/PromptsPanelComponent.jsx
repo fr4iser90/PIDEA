@@ -2,8 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { apiCall, API_CONFIG } from '@infrastructure/repositories/APIChatRepository.jsx';
 import PromptDetailsModal from '../modal/PromptDetailsModal.jsx';
 import '@css/panel/prompt-panel.css';
+import '@css/modal/prompt-details-modal.css';
 
-function PromptsPanelComponent({ onPromptClick, onQuickPrompt }) {
+function PromptsPanelComponent({ onPromptClick, onQuickPrompt, attachedPrompts: attachedPromptsProp, setAttachedPrompts: setAttachedPromptsProp }) {
   const [prompts, setPrompts] = useState([]);
   const [frameworks, setFrameworks] = useState([]);
   const [selectedFramework, setSelectedFramework] = useState(null);
@@ -15,6 +16,11 @@ function PromptsPanelComponent({ onPromptClick, onQuickPrompt }) {
   const [modalOpen, setModalOpen] = useState(false);
   const [modalContent, setModalContent] = useState('');
   const [modalTitle, setModalTitle] = useState('');
+
+  // Lokaler State, falls nicht als Prop übergeben
+  const [internalAttachedPrompts, setInternalAttachedPrompts] = useState([]);
+  const attachedPrompts = attachedPromptsProp !== undefined ? attachedPromptsProp : internalAttachedPrompts;
+  const setAttachedPrompts = setAttachedPromptsProp !== undefined ? setAttachedPromptsProp : setInternalAttachedPrompts;
 
   useEffect(() => {
     loadGenericPrompts();
@@ -70,23 +76,54 @@ function PromptsPanelComponent({ onPromptClick, onQuickPrompt }) {
     }
   };
 
-  const handlePromptClick = async (prompt) => {
-    try {
-      const response = await apiCall(`/api/prompts/${prompt.file}`);
-      if (response.success && onPromptClick) {
-        onPromptClick({
-          ...prompt,
-          content: response.data.content
-        });
+  // Toggle attach/detach prompt
+  const handleAttachPrompt = (prompt) => {
+    setAttachedPrompts(prev => {
+      if (prev.includes(prompt.file)) {
+        return prev.filter(f => f !== prompt.file);
+      } else {
+        return [...prev, prompt.file];
       }
-    } catch (error) {
-      console.error('Failed to load prompt content:', error);
-    }
+    });
   };
 
-  const handleQuickPrompt = (promptText) => {
-    if (onQuickPrompt) {
-      onQuickPrompt(promptText);
+  // Card click handler: toggle attach
+  const handlePromptCardClick = (prompt) => {
+    handleAttachPrompt(prompt);
+  };
+
+  // View button handler: show prompt content in modal
+  const handleViewPrompt = async (prompt) => {
+    try {
+      let url;
+      if (prompt.frameworkId) {
+        let filename = prompt.filename;
+        if (!filename && prompt.file) {
+          filename = prompt.file.split('/').pop();
+        }
+        url = API_CONFIG.endpoints.frameworks.promptFile(prompt.frameworkId, filename);
+      } else {
+        // Parse the file path to get category and filename
+        // Remove 'prompts/' prefix if it exists
+        let filePath = prompt.file;
+        if (filePath.startsWith('prompts/')) {
+          filePath = filePath.substring(8); // Remove 'prompts/' prefix
+        }
+        const pathParts = filePath.split('/');
+        const filename = pathParts.pop(); // Get the filename
+        const category = pathParts.join('/'); // Get the category path
+        url = API_CONFIG.endpoints.prompts.file(category, filename);
+      }
+      const response = await apiCall(url);
+      if (response.success) {
+        setModalTitle(prompt.name);
+        setModalContent(response.content);
+        setModalOpen(true);
+      }
+    } catch (error) {
+      setModalTitle(prompt.name);
+      setModalContent('Failed to load prompt content.');
+      setModalOpen(true);
     }
   };
 
@@ -94,86 +131,6 @@ function PromptsPanelComponent({ onPromptClick, onQuickPrompt }) {
     prompt.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     prompt.category?.toLowerCase().includes(searchTerm.toLowerCase())
   );
-
-  const categories = [...new Set(prompts.map(p => p.category).filter(Boolean))];
-
-  // Group prompts by category
-  const promptsByCategory = categories.reduce((acc, category) => {
-    acc[category] = filteredPrompts.filter(p => p.category === category);
-    return acc;
-  }, {});
-
-  // Card click handler: load content and insert into chat input
-  const handlePromptCardClick = async (prompt) => {
-    try {
-      let url;
-      if (prompt.frameworkId) {
-        let filename = prompt.filename;
-        if (!filename && prompt.file) {
-          filename = prompt.file.split('/').pop();
-        }
-        url = API_CONFIG.endpoints.frameworks.promptFile(prompt.frameworkId, filename);
-      } else {
-        // Parse the file path to get category and filename
-        // Remove 'prompts/' prefix if it exists
-        let filePath = prompt.file;
-        if (filePath.startsWith('prompts/')) {
-          filePath = filePath.substring(8); // Remove 'prompts/' prefix
-        }
-        const pathParts = filePath.split('/');
-        const filename = pathParts.pop(); // Get the filename
-        const category = pathParts.join('/'); // Get the category path
-        url = API_CONFIG.endpoints.prompts.file(category, filename);
-      }
-      const response = await apiCall(url);
-      if (response.success && onQuickPrompt) {
-        onQuickPrompt(response.content);
-      }
-    } catch (error) {
-      console.error('Failed to load prompt content:', error);
-    }
-  };
-
-  // View button handler: show prompt content in modal
-  const handleViewPrompt = async (prompt) => {
-    console.log('🔍 [PromptsPanel] handleViewPrompt called for:', prompt.name);
-    try {
-      let url;
-      if (prompt.frameworkId) {
-        let filename = prompt.filename;
-        if (!filename && prompt.file) {
-          filename = prompt.file.split('/').pop();
-        }
-        url = API_CONFIG.endpoints.frameworks.promptFile(prompt.frameworkId, filename);
-      } else {
-        // Parse the file path to get category and filename
-        // Remove 'prompts/' prefix if it exists
-        let filePath = prompt.file;
-        if (filePath.startsWith('prompts/')) {
-          filePath = filePath.substring(8); // Remove 'prompts/' prefix
-        }
-        const pathParts = filePath.split('/');
-        const filename = pathParts.pop(); // Get the filename
-        const category = pathParts.join('/'); // Get the category path
-        url = API_CONFIG.endpoints.prompts.file(category, filename);
-      }
-      console.log('🔍 [PromptsPanel] Loading content from URL:', url);
-      const response = await apiCall(url);
-      console.log('🔍 [PromptsPanel] Response:', response);
-      if (response.success) {
-        console.log('🔍 [PromptsPanel] Setting modal content, length:', response.content?.length);
-        setModalTitle(prompt.name);
-        setModalContent(response.content);
-        setModalOpen(true);
-        console.log('🔍 [PromptsPanel] Modal should be open now');
-      }
-    } catch (error) {
-      console.error('❌ [PromptsPanel] Error in handleViewPrompt:', error);
-      setModalTitle(prompt.name);
-      setModalContent('Failed to load prompt content.');
-      setModalOpen(true);
-    }
-  };
 
   // Hilfsfunktion: Prompts rekursiv nach file-Pfad gruppieren
   function groupPromptsByPath(prompts) {
@@ -201,8 +158,8 @@ function PromptsPanelComponent({ onPromptClick, onQuickPrompt }) {
         return value.map(prompt => (
           <div
             key={prompt.file}
-            className={`panel-block prompt-card cursor-pointer transition-colors flex flex-col`}
-            aria-selected={false}
+            className={`panel-block prompt-card cursor-pointer transition-colors flex flex-col${attachedPrompts.includes(prompt.file) ? ' active' : ''}`}
+            aria-selected={attachedPrompts.includes(prompt.file)}
             onClick={() => handlePromptCardClick(prompt)}
           >
             <div className="prompt-card-header">
@@ -232,7 +189,6 @@ function PromptsPanelComponent({ onPromptClick, onQuickPrompt }) {
 
   return (
     <div className="prompts-tab space-y-4 p-3">
-      {console.log('🔍 [PromptsPanel] Rendering, modalOpen:', modalOpen, 'title:', modalTitle)}
       <PromptDetailsModal open={modalOpen} onClose={() => setModalOpen(false)} title={modalTitle} content={modalContent} />
       <div className="panel-header flex items-center justify-between mb-4">
         <div className="panel-title text-lg font-semibold text-white">Prompts</div>

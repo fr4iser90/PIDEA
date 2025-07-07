@@ -10,13 +10,14 @@
   justify-content: space-between;
   min-height: 28px;
   margin-bottom: 8px;
+  width: 100%;
 }
 .prompt-card-title {
+  font-weight: 500;
+  color: #fff;
+  font-size: 0.97em;
   flex: 1 1 0;
   margin: 0;
-  font-size: 1rem;
-  font-weight: 600;
-  color: #fff;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -25,19 +26,23 @@
   margin-left: 12px;
   padding: 4px;
   background: transparent;
-  border-radius: 50%;
-  color: #7ecfff;
   border: none;
-  transition: background 0.2s, color 0.2s;
-  min-width: 28px;
-  min-height: 28px;
+  color: #4e8cff;
+  border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.1em;
-  cursor: pointer;
+  min-width: 28px;
+  min-height: 28px;
+  transition: background 0.15s, color 0.15s;
 }
 .prompt-card-view-btn:hover {
-  background: #007acc;
+  background: #23272e;
   color: #fff;
+}
+
+.prompt-card.active {
+  background: #22c55e; /* Tailwind: bg-green-500 */
+  color: #fff;
+  border-color: #16a34a;
 }
