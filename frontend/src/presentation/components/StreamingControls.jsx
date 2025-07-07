@@ -7,7 +7,6 @@ import React, { useState, useEffect } from 'react';
  * including start/stop, configuration, and performance monitoring.
  */
 const StreamingControls = ({
-  sessionId,
   port,
   onStartStreaming,
   onStopStreaming,
@@ -44,16 +43,16 @@ const StreamingControls = ({
 
     const interval = setInterval(async () => {
       try {
-        const response = await fetch(`/api/ide-mirror/${port}/stream/session/${sessionId}`);
+        const response = await fetch(`/api/ide-mirror/${port}/stream/stats`);
         if (response.ok) {
           const data = await response.json();
-          if (data.success && data.session) {
+          if (data.success && data.stats) {
             setStats({
-              frameCount: data.session.frameCount || 0,
-              fps: data.session.frameRate || 0,
-              bandwidth: data.session.bandwidthUsage || 0,
-              latency: data.session.averageLatency || 0,
-              errorCount: data.session.errorCount || 0
+              frameCount: data.stats.frameCount || 0,
+              fps: data.stats.frameRate || 0,
+              bandwidth: data.stats.bandwidthUsage || 0,
+              latency: data.stats.averageLatency || 0,
+              errorCount: data.stats.errorCount || 0
             });
           }
         }
@@ -63,7 +62,7 @@ const StreamingControls = ({
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [isStreaming, sessionId, port]);
+  }, [isStreaming, port]);
 
   /**
    * Handle start streaming
@@ -74,7 +73,7 @@ const StreamingControls = ({
       setError(null);
 
       if (onStartStreaming) {
-        await onStartStreaming(sessionId, port, config);
+        await onStartStreaming(port, config);
       } else {
         // Default API call
         const response = await fetch(`/api/ide-mirror/${port}/stream/start`, {
@@ -82,10 +81,7 @@ const StreamingControls = ({
           headers: {
             'Content-Type': 'application/json'
           },
-          body: JSON.stringify({
-            sessionId,
-            ...config
-          })
+          body: JSON.stringify(config)
         });
 
         const data = await response.json();
@@ -110,7 +106,7 @@ const StreamingControls = ({
       setError(null);
 
       if (onStopStreaming) {
-        await onStopStreaming(sessionId);
+        await onStopStreaming(port);
       } else {
         // Default API call
         const response = await fetch(`/api/ide-mirror/${port}/stream/stop`, {
@@ -118,7 +114,7 @@ const StreamingControls = ({
           headers: {
             'Content-Type': 'application/json'
           },
-          body: JSON.stringify({ sessionId })
+          body: JSON.stringify({ port })
         });
 
         const data = await response.json();
@@ -140,9 +136,9 @@ const StreamingControls = ({
   const handlePause = async () => {
     try {
       if (onPause) {
-        await onPause(sessionId);
+        await onPause(port);
       } else {
-        const response = await fetch(`/api/ide-mirror/${port}/stream/session/${sessionId}/pause`, {
+        const response = await fetch(`/api/ide-mirror/${port}/stream/pause`, {
           method: 'POST'
         });
         const data = await response.json();
@@ -162,9 +158,9 @@ const StreamingControls = ({
   const handleResume = async () => {
     try {
       if (onResume) {
-        await onResume(sessionId);
+        await onResume(port);
       } else {
-        const response = await fetch(`/api/ide-mirror/${port}/stream/session/${sessionId}/resume`, {
+        const response = await fetch(`/api/ide-mirror/${port}/stream/resume`, {
           method: 'POST'
         });
         const data = await response.json();
@@ -187,10 +183,10 @@ const StreamingControls = ({
       setConfig(updatedConfig);
 
       if (onUpdateConfig) {
-        await onUpdateConfig(sessionId, updatedConfig);
+        await onUpdateConfig(port, updatedConfig);
       } else if (isStreaming) {
         // Update via API if streaming
-        const response = await fetch(`/api/ide-mirror/${port}/stream/session/${sessionId}/config`, {
+        const response = await fetch(`/api/ide-mirror/${port}/stream/config`, {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json'
@@ -446,7 +442,6 @@ const StreamingControls = ({
         fontSize: '12px',
         color: '#666'
       }}>
-        <div><strong>Session ID:</strong> {sessionId}</div>
         <div><strong>Port:</strong> {port}</div>
         <div><strong>Status:</strong> {isStreaming ? (isPaused ? 'Paused' : 'Active') : 'Inactive'}</div>
       </div>

@@ -1,9 +1,14 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import webSocketService from '../../infrastructure/services/WebSocketService';
-import StreamingService from '../../application/services/StreamingService';
+import { StreamingService } from '../../application/services/StreamingService';
 import CanvasRenderer from './CanvasRenderer';
 import StreamingControls from './StreamingControls';
 import './IDEMirrorComponent.css';
+
+// Create streaming service instance
+const streamingService = new StreamingService(webSocketService);
+
+
 
 function IDEMirrorComponent({ eventBus }) {
     const [currentState, setCurrentState] = useState(null);
@@ -11,9 +16,7 @@ function IDEMirrorComponent({ eventBus }) {
     const [isConnected, setIsConnected] = useState(false);
     const [viewportSize, setViewportSize] = useState({ width: 0, height: 0 });
     const [isStreaming, setIsStreaming] = useState(false);
-    const [streamingSessionId, setStreamingSessionId] = useState(null);
     const [currentPort, setCurrentPort] = useState(9222);
-    const [streamingService, setStreamingService] = useState(null);
     const [streamingStats, setStreamingStats] = useState({
         fps: 0,
         frameCount: 0,
@@ -31,50 +34,64 @@ function IDEMirrorComponent({ eventBus }) {
     // Services - use the singleton instance
     // const webSocketService = new WebSocketService();
 
+    // Define handleStreamingFrame first since startStreaming depends on it
+    const handleStreamingFrame = useCallback((frameData) => {
+        // Update streaming stats
+        setStreamingStats(prev => ({
+            ...prev,
+            frameCount: prev.frameCount + 1,
+            fps: frameData.fps || prev.fps,
+            latency: frameData.latency || prev.latency,
+            bandwidth: frameData.size || prev.bandwidth
+        }));
+
+        // Update current state with streaming data
+        if (frameData.data) {
+            setCurrentState(prev => ({
+                ...prev,
+                screenshot: frameData.data,
+                timestamp: frameData.timestamp,
+                frameNumber: frameData.frameNumber
+            }));
+        }
+    }, []);
+
+    // Register frame handler for currentPort
+    useEffect(() => {
+        if (!currentPort) return;
+        
+        console.log(`[IDEMirrorComponent] Registering frame handler for port ${currentPort}`);
+        streamingService.registerFrameHandler(currentPort, handleStreamingFrame);
+        
+        return () => {
+            console.log(`[IDEMirrorComponent] Cleaning up frame handler for port ${currentPort}`);
+            streamingService.frameHandlers.delete(currentPort);
+        };
+    }, [currentPort, handleStreamingFrame]);
+
     // Define startStreaming function before useEffect
     const startStreaming = useCallback(async (port = 9222) => {
-        console.log('🔍 startStreaming called with:', { port, streamingService: !!streamingService });
-        console.log('🔍 startStreaming - streamingService details:', {
-            hasService: !!streamingService,
-            serviceType: streamingService ? streamingService.constructor.name : 'null',
-            isConnected: streamingService ? streamingService.isConnected : 'N/A'
-        });
+        console.log('🔍 startStreaming called with:', { port });
         
-        if (!streamingService) {
-            console.error('❌ Streaming service not available');
-            return;
-        }
-
         try {
-            const sessionId = `stream-${port}-${Date.now()}`;
-            console.log('🔍 Generated session ID:', sessionId);
-            
-            setStreamingSessionId(sessionId);
             setCurrentPort(port);
-
-            console.log(`🚀 Starting streaming for port ${port} with session ${sessionId}`);
-            console.log('🔍 Calling streamingService.startStreaming...');
+            console.log(`🚀 Starting streaming for port ${port}`);
             console.log('🔍 Streaming options:', {
                 fps: 15,
                 quality: 0.8,
                 format: 'jpeg',
                 maxFrameSize: 50 * 1024
             });
-            
-            const result = await streamingService.startStreaming(sessionId, port, {
+            const result = await streamingService.startStreaming(port, {
                 fps: 15,
                 quality: 0.8,
                 format: 'jpeg',
                 maxFrameSize: 50 * 1024
             });
-
             console.log('🔍 streamingService.startStreaming result:', result);
-
             setIsStreaming(true);
             console.log(`Streaming started on port ${port}`);
-            
             console.log('✅ Streaming started successfully');
-
         } catch (error) {
             console.error('❌ Failed to start streaming:', error);
             console.error('❌ Error details:', error.stack);
@@ -82,15 +99,11 @@ function IDEMirrorComponent({ eventBus }) {
             console.error('❌ Error message:', error.message);
             console.error(`Failed to start streaming: ${error.message}`);
         }
-    }, [streamingService]);
+    }, [handleStreamingFrame, currentPort]);
 
     // WebSocket setup
     useEffect(() => {
         console.log('🔄 IDEMirrorComponent initializing...');
-        
-        // Initialize streaming service with the singleton webSocketService
-        const newStreamingService = new StreamingService(webSocketService);
-        setStreamingService(newStreamingService);
         
         setupWebSocket();
         
@@ -103,8 +116,8 @@ function IDEMirrorComponent({ eventBus }) {
             clearTimeout(timer);
             stopKeyboardListening();
             // Cleanup streaming
-            if (streamingService && streamingSessionId) {
-                streamingService.stopStreaming(streamingSessionId);
+            if (currentPort) {
+                streamingService.stopStreaming(currentPort);
             }
         };
     }, []);
@@ -137,7 +150,7 @@ function IDEMirrorComponent({ eventBus }) {
             currentPort
         });
         
-        if (streamingService && !isStreaming) {
+        if (streamingService && !isStreaming && currentPort) {
             console.log('🚀 Auto-starting streaming in 2 seconds...');
             const timer = setTimeout(() => {
                 console.log('🚀 Starting streaming now...');
@@ -180,11 +193,11 @@ function IDEMirrorComponent({ eventBus }) {
                     renderIDEState(data);
                 });
                 
-                // Listen for streaming frames
-                webSocketService.on('frame', (frameData) => {
-                    console.log('📨 Streaming frame received:', frameData.frameNumber);
-                    handleStreamingFrame(frameData);
-                });
+                // Listen for streaming frames (handled by StreamingService now)
+                // webSocketService.on('frame', (frameData) => {
+                //     console.log('📨 Streaming frame received:', frameData.frameNumber);
+                //     handleStreamingFrame(frameData);
+                // });
                 
                 // Listen for connection status
                 webSocketService.on('connection-established', (data) => {
@@ -201,40 +214,13 @@ function IDEMirrorComponent({ eventBus }) {
             });
     };
 
-    const handleStreamingFrame = (frameData) => {
-        // Update streaming stats
-        setStreamingStats(prev => ({
-            ...prev,
-            frameCount: prev.frameCount + 1,
-            fps: frameData.fps || prev.fps,
-            latency: frameData.latency || prev.latency,
-            bandwidth: frameData.size || prev.bandwidth
-        }));
-
-        // Update current state with streaming data
-        if (frameData.data) {
-            setCurrentState(prev => ({
-                ...prev,
-                screenshot: frameData.data,
-                timestamp: frameData.timestamp,
-                frameNumber: frameData.frameNumber
-            }));
-        }
-    };
-
     const stopStreaming = async () => {
-        if (!streamingService || !streamingSessionId) {
-            return;
-        }
-
+        if (!currentPort) return;
         try {
-            await streamingService.stopStreaming(streamingSessionId);
+            await streamingService.stopStreaming(currentPort);
             setIsStreaming(false);
-            setStreamingSessionId(null);
             showStatus('Streaming stopped');
-            
             console.log('✅ Streaming stopped successfully');
-
         } catch (error) {
             console.error('❌ Failed to stop streaming:', error);
             showError(`Failed to stop streaming: ${error.message}`);
@@ -1225,7 +1211,6 @@ function IDEMirrorComponent({ eventBus }) {
             {/* Streaming Controls */}
             <div className="streaming-controls-overlay">
                 <StreamingControls
-                    sessionId={streamingSessionId}
                     port={currentPort}
                     onStartStreaming={startStreaming}
                     onStopStreaming={stopStreaming}

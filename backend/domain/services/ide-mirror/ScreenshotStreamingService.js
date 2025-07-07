@@ -2,10 +2,11 @@
  * ScreenshotStreamingService
  * 
  * Core service for continuous IDE screenshot streaming with compression,
- * buffering, and WebSocket delivery. Manages streaming sessions and
+ * buffering, and WebSocket delivery. Manages streaming ports and
  * coordinates between BrowserManager, CompressionEngine, and FrameBuffer.
+ * Updated to use port-based architecture instead of session-based.
  */
-const StreamingSession = require('../../entities/StreamingSession');
+const StreamingPort = require('../../entities/StreamingPort');
 const FrameMetrics = require('../../entities/FrameMetrics');
 const CompressionEngine = require('./CompressionEngine');
 const FrameBuffer = require('./FrameBuffer');
@@ -21,10 +22,10 @@ class ScreenshotStreamingService {
     this.frameBuffer = new FrameBuffer(options.frameBuffer || {});
     this.regionDetector = new RegionDetector();
     
-    // Session management
-    this.activeSessions = new Map(); // sessionId -> StreamingSession
-    this.streamingIntervals = new Map(); // sessionId -> interval
-    this.frameCounters = new Map(); // sessionId -> frame counter
+    // Port management
+    this.activePorts = new Map(); // port -> StreamingPort
+    this.streamingIntervals = new Map(); // port -> interval
+    this.frameCounters = new Map(); // port -> frame counter
     
     // Configuration
     this.defaultFPS = options.defaultFPS || 10;
@@ -34,8 +35,8 @@ class ScreenshotStreamingService {
     
     // Performance tracking
     this.stats = {
-      totalSessions: 0,
-      activeSessions: 0,
+      totalPorts: 0,
+      activePorts: 0,
       totalFramesStreamed: 0,
       totalErrors: 0,
       averageLatency: 0,
@@ -46,53 +47,50 @@ class ScreenshotStreamingService {
     this.maxRetries = options.maxRetries || 3;
     this.retryDelay = options.retryDelay || 1000;
     
-    console.log('[ScreenshotStreamingService] Initialized with default FPS:', this.defaultFPS);
+    console.log('[ScreenshotStreamingService] Initialized with port-based architecture, default FPS:', this.defaultFPS);
   }
 
   /**
    * Start streaming for a specific IDE port
-   * @param {string} sessionId - Unique session identifier
    * @param {number} port - IDE port to stream from
    * @param {Object} options - Streaming options
-   * @returns {Promise<Object>} Streaming session info
+   * @returns {Promise<Object>} Streaming port info
    */
-  async startStreaming(sessionId, port, options = {}) {
+  async startStreaming(port, options = {}) {
     try {
-      console.log(`[ScreenshotStreamingService] Starting streaming session ${sessionId} for port ${port}`);
+      console.log(`[ScreenshotStreamingService] Starting streaming for port ${port}`);
       
       // Default options with JPEG only
       const defaultOptions = {
         fps: 10,
-        quality: 0.4, // Komprimiert für kleine Frames
-        format: 'jpeg', // Nur JPEG
-        maxFrameSize: 3 * 1024 * 1024, // 3MB für Test
+        quality: 0.4, // Compressed for small frames
+        format: 'jpeg', // JPEG only
+        maxFrameSize: 3 * 1024 * 1024, // 3MB for testing
         enableRegionDetection: false,
         retryAttempts: 3,
         retryDelay: 1000
       };
       
-      const sessionOptions = { ...defaultOptions, ...options, format: 'jpeg' };
+      const portOptions = { ...defaultOptions, ...options, format: 'jpeg' };
       
-      // Create streaming session
-      const session = new StreamingSession(sessionId, port, sessionOptions);
-      this.activeSessions.set(sessionId, session);
+      // Create streaming port
+      const streamingPort = new StreamingPort(port, portOptions);
+      this.activePorts.set(port, streamingPort);
       
       // Start frame capture loop
-      const frameInterval = 1000 / sessionOptions.fps;
-      console.log(`[ScreenshotStreamingService] Streaming started for session ${sessionId} at ${sessionOptions.fps} FPS`);
+      const frameInterval = 1000 / portOptions.fps;
+      console.log(`[ScreenshotStreamingService] Streaming started for port ${port} at ${portOptions.fps} FPS`);
       
       // Publish streaming started event
       if (this.eventBus) {
-        this.eventBus.publish('streaming.started', {
-          sessionId,
+        this.eventBus.publish('streaming.port.started', {
           port,
-          options: { ...sessionOptions, format: 'jpeg' },
+          options: { ...portOptions, format: 'jpeg' },
           result: {
             success: true,
-            sessionId,
             port,
-            fps: sessionOptions.fps,
-            quality: sessionOptions.quality,
+            fps: portOptions.fps,
+            quality: portOptions.quality,
             format: 'jpeg',
             status: 'active'
           },
@@ -101,20 +99,18 @@ class ScreenshotStreamingService {
       }
       
       // Start frame capture loop
-      this.startFrameCaptureLoop(sessionId, frameInterval);
+      this.startFrameCaptureLoop(port, frameInterval);
       
       return {
         success: true,
-        sessionId,
         port,
-        result: session.toJSON()
+        result: streamingPort.toJSON()
       };
       
     } catch (error) {
-      console.error(`[ScreenshotStreamingService] Failed to start streaming for session ${sessionId}:`, error.message);
+      console.error(`[ScreenshotStreamingService] Failed to start streaming for port ${port}:`, error.message);
       return {
         success: false,
-        sessionId,
         port,
         error: error.message
       };
@@ -122,77 +118,77 @@ class ScreenshotStreamingService {
   }
 
   /**
-   * Stop streaming for a session
-   * @param {string} sessionId - Session identifier
+   * Stop streaming for a port
+   * @param {number} port - Port identifier
    * @returns {Promise<Object>} Stop result
    */
-  async stopStreaming(sessionId) {
+  async stopStreaming(port) {
     try {
-      console.log(`[ScreenshotStreamingService] Stopping streaming session ${sessionId}`);
+      console.log(`[ScreenshotStreamingService] Stopping streaming for port ${port}`);
       
-      const session = this.activeSessions.get(sessionId);
-      if (!session) {
-        return { success: false, error: 'Session not found' };
+      const streamingPort = this.activePorts.get(port);
+      if (!streamingPort) {
+        return { success: false, error: 'Port not found' };
       }
       
       // Stop the streaming interval
-      const interval = this.streamingIntervals.get(sessionId);
+      const interval = this.streamingIntervals.get(port);
       if (interval) {
         clearInterval(interval);
-        this.streamingIntervals.delete(sessionId);
+        this.streamingIntervals.delete(port);
       }
       
-      // Stop the session
-      session.stop();
+      // Stop the port
+      streamingPort.stop();
       
       // Clean up resources
-      this.frameBuffer.clearBuffer(sessionId);
-      this.frameCounters.delete(sessionId);
-      this.activeSessions.delete(sessionId);
+      this.frameBuffer.clearBuffer(port);
+      this.frameCounters.delete(port);
+      this.activePorts.delete(port);
       
       // Update statistics
-      this.stats.activeSessions = Math.max(0, this.stats.activeSessions - 1);
+      this.stats.activePorts = Math.max(0, this.stats.activePorts - 1);
       
-      console.log(`[ScreenshotStreamingService] Streaming stopped for session ${sessionId}`);
+      console.log(`[ScreenshotStreamingService] Streaming stopped for port ${port}`);
       
       return {
         success: true,
-        sessionId,
-        status: session.status,
-        duration: session.getDuration(),
-        frameCount: session.frameCount
+        port,
+        status: streamingPort.status,
+        duration: streamingPort.getDuration(),
+        frameCount: streamingPort.frameCount
       };
       
     } catch (error) {
-      console.error(`[ScreenshotStreamingService] Error stopping streaming for session ${sessionId}:`, error.message);
+      console.error(`[ScreenshotStreamingService] Error stopping streaming for port ${port}:`, error.message);
       return { success: false, error: error.message };
     }
   }
 
   /**
-   * Start frame capture loop for a session
-   * @param {string} sessionId - Session identifier
+   * Start frame capture loop for a port
+   * @param {number} port - Port identifier
    * @param {number} frameInterval - Interval between frames in milliseconds
    */
-  startFrameCaptureLoop(sessionId, frameInterval) {
-    const session = this.activeSessions.get(sessionId);
-    if (!session) {
-      console.error(`[ScreenshotStreamingService] Session ${sessionId} not found for frame capture loop`);
+  startFrameCaptureLoop(port, frameInterval) {
+    const streamingPort = this.activePorts.get(port);
+    if (!streamingPort) {
+      console.error(`[ScreenshotStreamingService] Port ${port} not found for frame capture loop`);
       return;
     }
     
-    console.log(`[ScreenshotStreamingService] Starting frame capture loop for session ${sessionId} with ${frameInterval}ms interval`);
+    console.log(`[ScreenshotStreamingService] Starting frame capture loop for port ${port} with ${frameInterval}ms interval`);
     
     const captureLoop = async () => {
-      if (!this.activeSessions.has(sessionId)) {
-        console.log(`[ScreenshotStreamingService] Session ${sessionId} stopped, ending capture loop`);
+      if (!this.activePorts.has(port)) {
+        console.log(`[ScreenshotStreamingService] Port ${port} stopped, ending capture loop`);
         return;
       }
       
       try {
-        await this.captureAndStreamFrame(sessionId);
+        await this.captureAndStreamFrame(port);
       } catch (error) {
-        console.error(`[ScreenshotStreamingService] Frame capture error in loop for session ${sessionId}:`, error.message);
+        console.error(`[ScreenshotStreamingService] Frame capture error in loop for port ${port}:`, error.message);
       }
       
       // Schedule next frame
@@ -205,31 +201,31 @@ class ScreenshotStreamingService {
 
   /**
    * Capture and stream a single frame
-   * @param {string} sessionId - Session identifier
+   * @param {number} port - Port identifier
    * @returns {Promise<boolean>} Success status
    */
-  async captureAndStreamFrame(sessionId) {
-    const session = this.activeSessions.get(sessionId);
-    if (!session) {
-      console.warn(`[ScreenshotStreamingService] Session ${sessionId} not found for frame capture`);
+  async captureAndStreamFrame(port) {
+    const streamingPort = this.activePorts.get(port);
+    if (!streamingPort) {
+      console.warn(`[ScreenshotStreamingService] Port ${port} not found for frame capture`);
       return false;
     }
     
     const startTime = Date.now();
-    const frameNumber = session.incrementFrameCount();
+    const frameNumber = streamingPort.frameCount + 1;
     
     try {
       // Capture screenshot
-      const screenshot = await this.captureScreenshot(session.port);
+      const screenshot = await this.captureScreenshot(port);
       if (!screenshot) {
         throw new Error('Failed to capture screenshot');
       }
       
       // Compress frame with adaptive quality
       const compressedFrame = await this.compressionEngine.compress(screenshot, {
-        format: session.format,
-        quality: session.quality,
-        maxSize: session.maxFrameSize
+        format: streamingPort.format,
+        quality: streamingPort.quality,
+        maxSize: streamingPort.maxFrameSize
       });
       
       // Add to frame buffer
@@ -241,25 +237,24 @@ class ScreenshotStreamingService {
         quality: compressedFrame.quality,
         frameNumber: frameNumber,
         metadata: {
-          sessionId,
-          port: session.port,
+          port: port,
           compressionTime: compressedFrame.compressionTime,
           originalSize: compressedFrame.originalSize,
           compressionRatio: compressedFrame.compressionRatio
         }
       };
       
-      const bufferSuccess = this.frameBuffer.addFrame(sessionId, frameData);
+      const bufferSuccess = this.frameBuffer.addFrame(port, frameData);
       if (!bufferSuccess) {
-        console.warn(`[ScreenshotStreamingService] Failed to add frame to buffer for session ${sessionId}`);
+        console.warn(`[ScreenshotStreamingService] Failed to add frame to buffer for port ${port}`);
       }
       
       // Stream via WebSocket
-      await this.streamFrame(sessionId, frameData);
+      await this.streamFrame(port, frameData);
       
-      // Update session metrics
+      // Update port metrics
       const totalLatency = Date.now() - startTime;
-      session.updateFrame(compressedFrame.size, totalLatency);
+      streamingPort.updateFrame(compressedFrame.size, totalLatency);
       
       // Update service statistics
       this.stats.totalFramesStreamed++;
@@ -268,9 +263,9 @@ class ScreenshotStreamingService {
       return true;
       
     } catch (error) {
-      console.error(`[ScreenshotStreamingService] Frame capture error for session ${sessionId}:`, error.message);
+      console.error(`[ScreenshotStreamingService] Frame capture error for port ${port}:`, error.message);
       
-      session.error(error.message);
+      streamingPort.error(error.message);
       this.stats.totalErrors++;
       
       return false;
@@ -345,11 +340,11 @@ class ScreenshotStreamingService {
 
   /**
    * Stream frame via WebSocket
-   * @param {string} sessionId - Session identifier
+   * @param {number} port - Port identifier
    * @param {Object} frameData - Frame data to stream
    * @returns {Promise<void>}
    */
-  async streamFrame(sessionId, frameData) {
+  async streamFrame(port, frameData) {
     try {
       if (!this.webSocketManager) {
         console.warn('[ScreenshotStreamingService] WebSocket manager not available');
@@ -358,7 +353,7 @@ class ScreenshotStreamingService {
       
       const message = {
         type: 'frame',
-        sessionId: sessionId,
+        port: port,
         timestamp: frameData.timestamp,
         frameNumber: frameData.frameNumber,
         format: frameData.format,
@@ -368,139 +363,139 @@ class ScreenshotStreamingService {
         metadata: frameData.metadata
       };
       
-      // Broadcast to all clients subscribed to this session
-      this.webSocketManager.broadcastToTopic(`mirror-${frameData.metadata.port}-frames`, message);
+      // Broadcast to all clients subscribed to this port
+      this.webSocketManager.broadcastToTopic(`mirror-${port}-frames`, message);
       
     } catch (error) {
-      console.error(`[ScreenshotStreamingService] WebSocket streaming error for session ${sessionId}:`, error.message);
+      console.error(`[ScreenshotStreamingService] WebSocket streaming error for port ${port}:`, error.message);
       throw error;
     }
   }
 
   /**
-   * Get session information
-   * @param {string} sessionId - Session identifier
-   * @returns {Object|null} Session information or null if not found
+   * Get port information
+   * @param {number} port - Port identifier
+   * @returns {Object|null} Port information or null if not found
    */
-  getSession(sessionId) {
-    const session = this.activeSessions.get(sessionId);
-    return session ? session.toJSON() : null;
+  getPort(port) {
+    const streamingPort = this.activePorts.get(port);
+    return streamingPort ? streamingPort.toJSON() : null;
   }
 
   /**
-   * Get all active sessions
-   * @returns {Array} Array of active session information
+   * Get all active ports
+   * @returns {Array} Array of active port information
    */
-  getAllSessions() {
-    return Array.from(this.activeSessions.values()).map(session => session.toJSON());
+  getAllPorts() {
+    return Array.from(this.activePorts.values()).map(port => port.toJSON());
   }
 
   /**
-   * Pause streaming for a session
-   * @param {string} sessionId - Session identifier
+   * Pause streaming for a port
+   * @param {number} port - Port identifier
    * @returns {Promise<Object>} Pause result
    */
-  async pauseStreaming(sessionId) {
+  async pauseStreaming(port) {
     try {
-      const session = this.activeSessions.get(sessionId);
-      if (!session) {
-        return { success: false, error: 'Session not found' };
+      const streamingPort = this.activePorts.get(port);
+      if (!streamingPort) {
+        return { success: false, error: 'Port not found' };
       }
       
-      session.pause();
+      streamingPort.pause();
       
       // Stop the streaming interval
-      const interval = this.streamingIntervals.get(sessionId);
+      const interval = this.streamingIntervals.get(port);
       if (interval) {
         clearInterval(interval);
-        this.streamingIntervals.delete(sessionId);
+        this.streamingIntervals.delete(port);
       }
       
-      console.log(`[ScreenshotStreamingService] Streaming paused for session ${sessionId}`);
+      console.log(`[ScreenshotStreamingService] Streaming paused for port ${port}`);
       
-      return { success: true, sessionId, status: session.status };
+      return { success: true, port, status: streamingPort.status };
       
     } catch (error) {
-      console.error(`[ScreenshotStreamingService] Error pausing streaming for session ${sessionId}:`, error.message);
+      console.error(`[ScreenshotStreamingService] Error pausing streaming for port ${port}:`, error.message);
       return { success: false, error: error.message };
     }
   }
 
   /**
-   * Resume streaming for a session
-   * @param {string} sessionId - Session identifier
+   * Resume streaming for a port
+   * @param {number} port - Port identifier
    * @returns {Promise<Object>} Resume result
    */
-  async resumeStreaming(sessionId) {
+  async resumeStreaming(port) {
     try {
-      const session = this.activeSessions.get(sessionId);
-      if (!session) {
-        return { success: false, error: 'Session not found' };
+      const streamingPort = this.activePorts.get(port);
+      if (!streamingPort) {
+        return { success: false, error: 'Port not found' };
       }
       
-      session.resume();
+      streamingPort.resume();
       
       // Restart streaming interval
-      const intervalMs = 1000 / session.fps;
+      const intervalMs = 1000 / streamingPort.fps;
       const streamingInterval = setInterval(async () => {
-        await this.captureAndStreamFrame(sessionId);
+        await this.captureAndStreamFrame(port);
       }, intervalMs);
       
-      this.streamingIntervals.set(sessionId, streamingInterval);
+      this.streamingIntervals.set(port, streamingInterval);
       
-      console.log(`[ScreenshotStreamingService] Streaming resumed for session ${sessionId}`);
+      console.log(`[ScreenshotStreamingService] Streaming resumed for port ${port}`);
       
-      return { success: true, sessionId, status: session.status };
+      return { success: true, port, status: streamingPort.status };
       
     } catch (error) {
-      console.error(`[ScreenshotStreamingService] Error resuming streaming for session ${sessionId}:`, error.message);
+      console.error(`[ScreenshotStreamingService] Error resuming streaming for port ${port}:`, error.message);
       return { success: false, error: error.message };
     }
   }
 
   /**
-   * Update session configuration
-   * @param {string} sessionId - Session identifier
+   * Update port configuration
+   * @param {number} port - Port identifier
    * @param {Object} options - New configuration options
    * @returns {Promise<Object>} Update result
    */
-  async updateSessionConfig(sessionId, options) {
+  async updatePortConfig(port, options) {
     try {
-      const session = this.activeSessions.get(sessionId);
-      if (!session) {
-        return { success: false, error: 'Session not found' };
+      const streamingPort = this.activePorts.get(port);
+      if (!streamingPort) {
+        return { success: false, error: 'Port not found' };
       }
       
-      // Update session configuration
+      // Update port configuration
       if (options.fps !== undefined) {
-        session.fps = Math.min(Math.max(options.fps, 1), this.maxFPS);
+        streamingPort.fps = Math.min(Math.max(options.fps, 1), this.maxFPS);
       }
       
       if (options.quality !== undefined) {
-        session.quality = Math.min(Math.max(options.quality, 0.1), 1.0);
+        streamingPort.quality = Math.min(Math.max(options.quality, 0.1), 1.0);
       }
       
       if (options.format !== undefined) {
-        session.format = options.format;
+        streamingPort.format = options.format;
       }
       
       // Restart interval with new FPS if needed
-      const interval = this.streamingIntervals.get(sessionId);
+      const interval = this.streamingIntervals.get(port);
       if (interval && options.fps !== undefined) {
         clearInterval(interval);
-        const newIntervalMs = 1000 / session.fps;
+        const newIntervalMs = 1000 / streamingPort.fps;
         const newStreamingInterval = setInterval(async () => {
-          await this.captureAndStreamFrame(sessionId);
+          await this.captureAndStreamFrame(port);
         }, newIntervalMs);
-        this.streamingIntervals.set(sessionId, newStreamingInterval);
+        this.streamingIntervals.set(port, newStreamingInterval);
       }
       
-      console.log(`[ScreenshotStreamingService] Updated configuration for session ${sessionId}`);
+      console.log(`[ScreenshotStreamingService] Updated configuration for port ${port}`);
       
-      return { success: true, sessionId, config: session.toJSON() };
+      return { success: true, port, config: streamingPort.toJSON() };
       
     } catch (error) {
-      console.error(`[ScreenshotStreamingService] Error updating session config for ${sessionId}:`, error.message);
+      console.error(`[ScreenshotStreamingService] Error updating port config for ${port}:`, error.message);
       return { success: false, error: error.message };
     }
   }
@@ -529,27 +524,27 @@ class ScreenshotStreamingService {
       averageLatency: Math.round(this.stats.averageLatency),
       compression: compressionStats,
       buffer: bufferStats,
-      sessions: this.getAllSessions()
+      ports: this.getAllPorts()
     };
   }
 
   /**
-   * Stop all streaming sessions
-   * @returns {Promise<number>} Number of sessions stopped
+   * Stop all streaming ports
+   * @returns {Promise<number>} Number of ports stopped
    */
   async stopAllStreaming() {
     try {
-      const sessionIds = Array.from(this.activeSessions.keys());
+      const ports = Array.from(this.activePorts.keys());
       let stoppedCount = 0;
       
-      for (const sessionId of sessionIds) {
-        const result = await this.stopStreaming(sessionId);
+      for (const port of ports) {
+        const result = await this.stopStreaming(port);
         if (result.success) {
           stoppedCount++;
         }
       }
       
-      console.log(`[ScreenshotStreamingService] Stopped all streaming sessions: ${stoppedCount} sessions`);
+      console.log(`[ScreenshotStreamingService] Stopped all streaming ports: ${stoppedCount} ports`);
       return stoppedCount;
       
     } catch (error) {

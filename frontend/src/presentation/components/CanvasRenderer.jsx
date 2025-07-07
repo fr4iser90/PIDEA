@@ -47,6 +47,7 @@ const CanvasRenderer = ({
         throw new Error('Could not get canvas context');
       }
       const img = new Image();
+      console.log('[CanvasRenderer] renderFrame: Rendering Frame', { frameNumber, base64len: frameData?.length, base64start: frameData?.slice(0, 100) });
       return new Promise((resolve, reject) => {
         img.onload = () => {
           try {
@@ -59,12 +60,14 @@ const CanvasRenderer = ({
             resolve();
           } catch (error) {
             URL.revokeObjectURL(img.src);
+            console.error('[CanvasRenderer] img.onload error:', error.message, 'Base64 length:', frameData?.length);
             reject(error);
           }
         };
         img.onerror = (error) => {
           URL.revokeObjectURL(img.src);
-          reject(new Error(`Failed to load image: ${error.message}`));
+          console.error('[CanvasRenderer] img.onerror:', error.message, 'Base64 length:', frameData?.length);
+          reject(new Error(`Failed to load image: ${error.message} (Base64 length: ${frameData?.length || 0})`));
         };
         const blob = base64ToBlob(frameData, 'image/jpeg');
         img.src = URL.createObjectURL(blob);
@@ -74,6 +77,7 @@ const CanvasRenderer = ({
       if (onError) {
         onError(error);
       }
+      console.error('[CanvasRenderer] renderFrame catch:', error.message, 'Base64 length:', frameData?.length);
       throw error;
     }
   }, [onFrameReceived, onError]);
@@ -122,7 +126,29 @@ const CanvasRenderer = ({
    */
   const base64ToBlob = (base64, mimeType) => {
     try {
-      const byteCharacters = atob(base64);
+      console.log('[CanvasRenderer] base64ToBlob: Converting base64 string', {
+        length: base64?.length,
+        start: base64?.slice(0, 50),
+        end: base64?.slice(-50),
+        isValid: base64 && typeof base64 === 'string' && base64.length > 0
+      });
+
+      if (!base64 || typeof base64 !== 'string' || base64.length === 0) {
+        throw new Error('Invalid base64 string: empty or not a string');
+      }
+
+      // Check if base64 string is complete (should end with = or be divisible by 4)
+      if (base64.length % 4 !== 0 && !base64.endsWith('=')) {
+        console.warn('[CanvasRenderer] base64ToBlob: Base64 string may be truncated', {
+          length: base64.length,
+          remainder: base64.length % 4
+        });
+      }
+
+      // Remove any data URL prefix if present
+      const cleanBase64 = base64.replace(/^data:image\/[a-z]+;base64,/, '');
+      
+      const byteCharacters = atob(cleanBase64);
       const byteNumbers = new Array(byteCharacters.length);
       
       for (let i = 0; i < byteCharacters.length; i++) {
@@ -130,9 +156,22 @@ const CanvasRenderer = ({
       }
       
       const byteArray = new Uint8Array(byteNumbers);
-      return new Blob([byteArray], { type: mimeType });
+      const blob = new Blob([byteArray], { type: mimeType });
+      
+      console.log('[CanvasRenderer] base64ToBlob: Successfully created blob', {
+        blobSize: blob.size,
+        mimeType: blob.type
+      });
+      
+      return blob;
     } catch (error) {
-      throw new Error(`Failed to convert base64 to blob: ${error.message}`);
+      console.error('[CanvasRenderer] base64ToBlob: Error converting base64 to blob', {
+        error: error.message,
+        base64Length: base64?.length,
+        base64Start: base64?.slice(0, 100),
+        base64End: base64?.slice(-100)
+      });
+      throw new Error(`Failed to convert base64 to blob: ${error.message} (Base64 length: ${base64?.length || 0})`);
     }
   };
 
@@ -201,11 +240,13 @@ const CanvasRenderer = ({
   // Automatisches Rendern bei neuem Frame
   useEffect(() => {
     if (screenshot && !isRenderingRef.current) {
-      isRenderingRef.current = true;
       setError(null);
+      isRenderingRef.current = true;
+      console.log('[CanvasRenderer] useEffect: Neuer Frame', { frameNumber, base64len: screenshot?.length, base64start: screenshot?.slice(0, 100) });
       renderFrame(screenshot)
         .catch((err) => {
-          setError(err.message);
+          console.error('[CanvasRenderer] Frame render error:', err.message, 'Base64 length:', screenshot?.length);
+          setError(err.message + ' (Base64 length: ' + (screenshot?.length || 0) + ')');
           if (onError) onError(err);
         })
         .finally(() => {

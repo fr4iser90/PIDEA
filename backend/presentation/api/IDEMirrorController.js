@@ -645,23 +645,25 @@ class IDEMirrorController {
         app.post('/api/ide-mirror/connect', this.connectToIDE.bind(this));
         app.post('/api/ide-mirror/switch', this.switchIDE.bind(this));
 
-        // Streaming endpoints
+        // Streaming endpoints (port-based)
         if (this.streamingController) {
-            console.log('[IDEMirrorController] Registering streaming routes...');
+            console.log('[IDEMirrorController] Registering port-based streaming routes...');
+            
             // Port-specific streaming routes
             app.post('/api/ide-mirror/:port/stream/start', (req, res) => this.streamingController.startStreaming(req, res));
             app.post('/api/ide-mirror/:port/stream/stop', (req, res) => this.streamingController.stopStreaming(req, res));
-            app.get('/api/ide-mirror/:port/stream/session/:sessionId', (req, res) => this.streamingController.getSession(req, res));
-            app.put('/api/ide-mirror/:port/stream/session/:sessionId/config', (req, res) => this.streamingController.updateSessionConfig(req, res));
-            app.post('/api/ide-mirror/:port/stream/session/:sessionId/pause', (req, res) => this.streamingController.pauseStreaming(req, res));
-            app.post('/api/ide-mirror/:port/stream/session/:sessionId/resume', (req, res) => this.streamingController.resumeStreaming(req, res));
+            app.get('/api/ide-mirror/:port/stream/status', (req, res) => this.streamingController.getPortStatus(req, res));
+            app.put('/api/ide-mirror/:port/stream/config', (req, res) => this.streamingController.updatePortConfig(req, res));
+            app.post('/api/ide-mirror/:port/stream/pause', (req, res) => this.streamingController.pauseStreaming(req, res));
+            app.post('/api/ide-mirror/:port/stream/resume', (req, res) => this.streamingController.resumeStreaming(req, res));
 
             // Global streaming routes
-            app.get('/api/ide-mirror/stream/sessions', (req, res) => this.streamingController.getAllSessions(req, res));
+            app.get('/api/ide-mirror/stream/ports', (req, res) => this.streamingController.getAllPorts(req, res));
             app.get('/api/ide-mirror/stream/stats', (req, res) => this.streamingController.getStats(req, res));
             app.post('/api/ide-mirror/stream/stop-all', (req, res) => this.streamingController.stopAllStreaming(req, res));
             app.get('/api/ide-mirror/stream/health', (req, res) => this.streamingController.healthCheck(req, res));
-            console.log('[IDEMirrorController] Streaming routes registered successfully');
+            
+            console.log('[IDEMirrorController] Port-based streaming routes registered successfully');
         } else {
             console.log('[IDEMirrorController] Streaming controller not available, skipping streaming routes');
         }

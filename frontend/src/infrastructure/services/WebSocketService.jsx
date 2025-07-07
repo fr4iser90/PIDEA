@@ -186,6 +186,17 @@ class WebSocketService {
         }
       });
     }
+    
+    // Also emit generic 'topic' event for StreamingService
+    if (this.eventListeners.has('topic')) {
+      this.eventListeners.get('topic').forEach(callback => {
+        try {
+          callback({ topic, data });
+        } catch (error) {
+          console.error('❌ WebSocketService: Error in topic listener:', error);
+        }
+      });
+    }
   }
 
   handleFrameMessage(frameData) {

@@ -2,20 +2,18 @@
  * StreamingController
  * 
  * REST API controller for IDE screenshot streaming operations.
+ * Updated to use port-based architecture instead of session-based.
  */
-const StartStreamingCommand = require('../../application/commands/StartStreamingCommand');
-const StopStreamingCommand = require('../../application/commands/StopStreamingCommand');
-const StartStreamingHandler = require('../../application/handlers/StartStreamingHandler');
-const StopStreamingHandler = require('../../application/handlers/StopStreamingHandler');
+const PortStreamingCommand = require('../../application/commands/PortStreamingCommand');
+const PortStreamingHandler = require('../../application/handlers/PortStreamingHandler');
 
 class StreamingController {
   constructor(screenshotStreamingService, eventBus = null) {
     this.screenshotStreamingService = screenshotStreamingService;
     this.eventBus = eventBus;
     
-    // Initialize handlers
-    this.startStreamingHandler = new StartStreamingHandler(screenshotStreamingService, eventBus);
-    this.stopStreamingHandler = new StopStreamingHandler(screenshotStreamingService, eventBus);
+    // Initialize port-based handler
+    this.portStreamingHandler = new PortStreamingHandler(screenshotStreamingService, eventBus);
   }
 
   /**
@@ -25,7 +23,7 @@ class StreamingController {
   async startStreaming(req, res) {
     try {
       const port = parseInt(req.params.port);
-      const { sessionId, fps, quality, format, maxFrameSize, enableRegionDetection } = req.body;
+      const { fps, quality, format, maxFrameSize, enableRegionDetection } = req.body;
       
       // Validate port parameter
       if (!port || isNaN(port) || port < 1 || port > 65535) {
@@ -35,25 +33,21 @@ class StreamingController {
         });
       }
       
-      // Generate session ID if not provided
-      const finalSessionId = sessionId || `stream-${port}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-      
-      // Create command
-      const command = new StartStreamingCommand(finalSessionId, port, {
+      // Create port-based command
+      const command = PortStreamingCommand.createStartCommand(port, {
         fps: fps || 10,
         quality: quality || 0.8,
-        format: format || 'webp',
+        format: format || 'jpeg',
         maxFrameSize: maxFrameSize || 50 * 1024,
         enableRegionDetection: enableRegionDetection || false
       });
       
       // Execute command
-      const result = await this.startStreamingHandler.handle(command);
+      const result = await this.portStreamingHandler.handle(command);
       
       if (result.success) {
         res.status(200).json({
           success: true,
-          sessionId: finalSessionId,
           port: port,
           result: result.result,
           message: 'Streaming started successfully'
@@ -62,7 +56,7 @@ class StreamingController {
         res.status(400).json({
           success: false,
           error: result.error,
-          sessionId: finalSessionId
+          port: port
         });
       }
       
@@ -77,13 +71,12 @@ class StreamingController {
   }
 
   /**
-   * Stop streaming for a session
+   * Stop streaming for a port
    * POST /api/ide-mirror/:port/stream/stop
    */
   async stopStreaming(req, res) {
     try {
       const port = parseInt(req.params.port);
-      const { sessionId } = req.body;
       
       // Validate port parameter
       if (!port || isNaN(port) || port < 1 || port > 65535) {
@@ -93,24 +86,16 @@ class StreamingController {
         });
       }
       
-      // Validate session ID
-      if (!sessionId) {
-        return res.status(400).json({
-          success: false,
-          error: 'Session ID is required'
-        });
-      }
-      
-      // Create command
-      const command = new StopStreamingCommand(sessionId);
+      // Create port-based command
+      const command = PortStreamingCommand.createStopCommand(port);
       
       // Execute command
-      const result = await this.stopStreamingHandler.handle(command);
+      const result = await this.portStreamingHandler.handle(command);
       
       if (result.success) {
         res.status(200).json({
           success: true,
-          sessionId: sessionId,
+          port: port,
           result: result.result,
           message: 'Streaming stopped successfully'
         });
@@ -118,7 +103,7 @@ class StreamingController {
         res.status(400).json({
           success: false,
           error: result.error,
-          sessionId: sessionId
+          port: port
         });
       }
       
@@ -133,13 +118,12 @@ class StreamingController {
   }
 
   /**
-   * Get streaming session information
-   * GET /api/ide-mirror/:port/stream/session/:sessionId
+   * Get streaming port information
+   * GET /api/ide-mirror/:port/stream/status
    */
-  async getSession(req, res) {
+  async getPortStatus(req, res) {
     try {
       const port = parseInt(req.params.port);
-      const { sessionId } = req.params;
       
       // Validate parameters
       if (!port || isNaN(port) || port < 1 || port > 65535) {
@@ -149,31 +133,25 @@ class StreamingController {
         });
       }
       
-      if (!sessionId) {
-        return res.status(400).json({
-          success: false,
-          error: 'Session ID is required'
-        });
-      }
+      // Get port information
+      const portInfo = this.screenshotStreamingService.getPort(port);
       
-      // Get session information
-      const session = this.screenshotStreamingService.getSession(sessionId);
-      
-      if (!session) {
+      if (!portInfo) {
         return res.status(404).json({
           success: false,
-          error: 'Session not found',
-          sessionId: sessionId
+          error: 'Port not found',
+          port: port
         });
       }
       
       res.status(200).json({
         success: true,
-        session: session
+        port: port,
+        status: portInfo
       });
       
     } catch (error) {
-      console.error('[StreamingController] Error getting session:', error.message);
+      console.error('[StreamingController] Error getting port status:', error.message);
       res.status(500).json({
         success: false,
         error: 'Internal server error',
@@ -183,21 +161,21 @@ class StreamingController {
   }
 
   /**
-   * Get all active streaming sessions
-   * GET /api/ide-mirror/stream/sessions
+   * Get all active streaming ports
+   * GET /api/ide-mirror/stream/ports
    */
-  async getAllSessions(req, res) {
+  async getAllPorts(req, res) {
     try {
-      const sessions = this.screenshotStreamingService.getAllSessions();
+      const ports = this.screenshotStreamingService.getAllPorts();
       
       res.status(200).json({
         success: true,
-        sessions: sessions,
-        count: sessions.length
+        ports: ports,
+        count: ports.length
       });
       
     } catch (error) {
-      console.error('[StreamingController] Error getting all sessions:', error.message);
+      console.error('[StreamingController] Error getting all ports:', error.message);
       res.status(500).json({
         success: false,
         error: 'Internal server error',
@@ -207,13 +185,12 @@ class StreamingController {
   }
 
   /**
-   * Update streaming session configuration
-   * PUT /api/ide-mirror/:port/stream/session/:sessionId/config
+   * Update streaming port configuration
+   * PUT /api/ide-mirror/:port/stream/config
    */
-  async updateSessionConfig(req, res) {
+  async updatePortConfig(req, res) {
     try {
       const port = parseInt(req.params.port);
-      const { sessionId } = req.params;
       const { fps, quality, format, maxFrameSize, enableRegionDetection } = req.body;
       
       // Validate parameters
@@ -224,15 +201,8 @@ class StreamingController {
         });
       }
       
-      if (!sessionId) {
-        return res.status(400).json({
-          success: false,
-          error: 'Session ID is required'
-        });
-      }
-      
-      // Update session configuration
-      const result = await this.screenshotStreamingService.updateSessionConfig(sessionId, {
+      // Create port-based command
+      const command = PortStreamingCommand.createConfigCommand(port, {
         fps,
         quality,
         format,
@@ -240,23 +210,26 @@ class StreamingController {
         enableRegionDetection
       });
       
+      // Execute command
+      const result = await this.portStreamingHandler.handle(command);
+      
       if (result.success) {
         res.status(200).json({
           success: true,
-          sessionId: sessionId,
-          config: result.config,
-          message: 'Session configuration updated successfully'
+          port: port,
+          config: result.result,
+          message: 'Port configuration updated successfully'
         });
       } else {
         res.status(400).json({
           success: false,
           error: result.error,
-          sessionId: sessionId
+          port: port
         });
       }
       
     } catch (error) {
-      console.error('[StreamingController] Error updating session config:', error.message);
+      console.error('[StreamingController] Error updating port config:', error.message);
       res.status(500).json({
         success: false,
         error: 'Internal server error',
@@ -266,13 +239,12 @@ class StreamingController {
   }
 
   /**
-   * Pause streaming for a session
-   * POST /api/ide-mirror/:port/stream/session/:sessionId/pause
+   * Pause streaming for a port
+   * POST /api/ide-mirror/:port/stream/pause
    */
   async pauseStreaming(req, res) {
     try {
       const port = parseInt(req.params.port);
-      const { sessionId } = req.params;
       
       // Validate parameters
       if (!port || isNaN(port) || port < 1 || port > 65535) {
@@ -282,28 +254,24 @@ class StreamingController {
         });
       }
       
-      if (!sessionId) {
-        return res.status(400).json({
-          success: false,
-          error: 'Session ID is required'
-        });
-      }
+      // Create port-based command
+      const command = PortStreamingCommand.createPauseCommand(port);
       
-      // Pause streaming
-      const result = await this.screenshotStreamingService.pauseStreaming(sessionId);
+      // Execute command
+      const result = await this.portStreamingHandler.handle(command);
       
       if (result.success) {
         res.status(200).json({
           success: true,
-          sessionId: sessionId,
-          status: result.status,
+          port: port,
+          status: result.result.status,
           message: 'Streaming paused successfully'
         });
       } else {
         res.status(400).json({
           success: false,
           error: result.error,
-          sessionId: sessionId
+          port: port
         });
       }
       
@@ -318,13 +286,12 @@ class StreamingController {
   }
 
   /**
-   * Resume streaming for a session
-   * POST /api/ide-mirror/:port/stream/session/:sessionId/resume
+   * Resume streaming for a port
+   * POST /api/ide-mirror/:port/stream/resume
    */
   async resumeStreaming(req, res) {
     try {
       const port = parseInt(req.params.port);
-      const { sessionId } = req.params;
       
       // Validate parameters
       if (!port || isNaN(port) || port < 1 || port > 65535) {
@@ -334,28 +301,24 @@ class StreamingController {
         });
       }
       
-      if (!sessionId) {
-        return res.status(400).json({
-          success: false,
-          error: 'Session ID is required'
-        });
-      }
+      // Create port-based command
+      const command = PortStreamingCommand.createResumeCommand(port);
       
-      // Resume streaming
-      const result = await this.screenshotStreamingService.resumeStreaming(sessionId);
+      // Execute command
+      const result = await this.portStreamingHandler.handle(command);
       
       if (result.success) {
         res.status(200).json({
           success: true,
-          sessionId: sessionId,
-          status: result.status,
+          port: port,
+          status: result.result.status,
           message: 'Streaming resumed successfully'
         });
       } else {
         res.status(400).json({
           success: false,
           error: result.error,
-          sessionId: sessionId
+          port: port
         });
       }
       
