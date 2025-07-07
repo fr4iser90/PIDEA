@@ -77,15 +77,15 @@ class ProjectContextService {
 
     /**
      * Get project ID (with fallback generation)
-     * @returns {string} Project ID
+     * @returns {Promise<string>} Project ID
      */
-    getProjectId() {
+    async getProjectId() {
         let projectId = this.container.getProjectId();
         
         if (!projectId) {
             const projectPath = this.container.getProjectPath();
             if (projectPath && this.projectMappingService) {
-                projectId = this.projectMappingService.getProjectIdFromWorkspace(projectPath);
+                projectId = await this.projectMappingService.getProjectIdFromWorkspace(projectPath);
                 this.container.setProjectContext({ projectId });
             }
         }
@@ -118,8 +118,39 @@ class ProjectContextService {
     async autoDetectProjectPath() {
         try {
             const cwd = process.cwd();
-            const files = await fs.readdir(cwd);
             
+            // Check if we're in a monorepo subdirectory (backend, frontend, etc.)
+            const currentDirName = path.basename(cwd);
+            const monorepoSubdirs = ['backend', 'frontend', 'client', 'server', 'api', 'app', 'web', 'mobile'];
+            
+            if (monorepoSubdirs.includes(currentDirName)) {
+                // We're likely in a monorepo subdirectory, check parent
+                const parentDir = path.dirname(cwd);
+                const parentFiles = await fs.readdir(parentDir);
+                
+                // Check if parent has monorepo indicators
+                const monorepoIndicators = [
+                    'package.json', '.git', 'README.md', 'docker-compose.yml',
+                    'lerna.json', 'nx.json', 'rush.json', 'pnpm-workspace.yaml'
+                ];
+                
+                const hasMonorepoIndicators = monorepoIndicators.some(indicator => 
+                    parentFiles.includes(indicator)
+                );
+                
+                // Check if parent has multiple subdirectories that look like a monorepo
+                const hasMultipleSubdirs = monorepoSubdirs.filter(subdir => 
+                    parentFiles.includes(subdir)
+                ).length >= 2;
+                
+                if (hasMonorepoIndicators && hasMultipleSubdirs) {
+                    console.log('[ProjectContextService] Detected monorepo, using parent directory:', parentDir);
+                    return parentDir;
+                }
+            }
+            
+            // Fallback to current directory if not a monorepo subdirectory
+            const files = await fs.readdir(cwd);
             const projectIndicators = [
                 'package.json', 'pyproject.toml', 'requirements.txt',
                 'Cargo.toml', 'composer.json', 'pom.xml', 'build.gradle',
@@ -132,7 +163,7 @@ class ProjectContextService {
                 }
             }
 
-            // Check parent directories
+            // Check parent directories as final fallback
             const parentDir = path.dirname(cwd);
             if (parentDir !== cwd) {
                 const parentFiles = await fs.readdir(parentDir);
@@ -256,7 +287,7 @@ class ProjectContextService {
         
         // Auto-detect project ID if missing
         if (!context.projectId && context.projectPath && this.projectMappingService) {
-            const projectId = this.projectMappingService.getProjectIdFromWorkspace(context.projectPath);
+            const projectId = await this.projectMappingService.getProjectIdFromWorkspace(context.projectPath);
             this.container.setProjectContext({ projectId });
         }
     }

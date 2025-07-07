@@ -78,10 +78,10 @@ class ServiceRegistry {
         console.log('[ServiceRegistry] Registering domain services...');
 
         // Project mapping service
-        this.container.register('projectMappingService', () => {
+        this.container.register('projectMappingService', (monorepoStrategy) => {
             const ProjectMappingService = require('../../domain/services/ProjectMappingService');
-            return new ProjectMappingService();
-        }, { singleton: true });
+            return new ProjectMappingService({ monorepoStrategy });
+        }, { singleton: true, dependencies: ['monorepoStrategy'] });
 
         // Workspace path detector
         this.container.register('workspacePathDetector', () => {
@@ -369,9 +369,9 @@ class ServiceRegistry {
 
         this.registerInfrastructureServices();
         this.registerRepositoryServices();
+        this.registerStrategyServices(); // ✅ MOVED BEFORE registerDomainServices
         this.registerDomainServices();
         this.registerExternalServices();
-        this.registerStrategyServices();
         this.registerApplicationHandlers();
 
         console.log('[ServiceRegistry] All services registered successfully');
