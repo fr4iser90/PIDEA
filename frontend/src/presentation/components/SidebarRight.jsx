@@ -1,11 +1,24 @@
+/**
+ * SidebarRight - Manages the right sidebar/panel for tasks, auto features, and content library
+ * 
+ * This component provides a dedicated right sidebar/panel for:
+ * - Task management (create, view, execute)
+ * - Auto features (VibeCoder, analysis, refactoring)
+ * - Content library (frameworks, prompts, templates)
+ * - Analysis results and settings
+ * - Event-driven communication with other components
+ * 
+ * @class SidebarRight
+ */
 import React, { useState, useEffect } from 'react';
 import AnalysisPanelComponent from './chat/panel/AnalysisPanelComponent.jsx';
 import APIChatRepository from '../../infrastructure/repositories/APIChatRepository.jsx';
 import FrameworksPanelComponent from './chat/panel/FrameworksPanelComponent.jsx';
 import PromptsPanelComponent from './chat/panel/PromptsPanelComponent.jsx';
 import TemplatesPanelComponent from './chat/panel/TemplatesPanelComponent.jsx';
-import TaskSelectionModal from './TaskSelectionModal';
-import DocsTaskDetailsModal from './DocsTaskDetailsModal';
+import TaskSelectionModal from './chat/modal/TaskSelectionModal.jsx';
+import DocsTaskDetailsModal from './chat/modal/DocsTaskDetailsModal.jsx';
+import '@css/sidebar/sidebar-right.css';
 
 const TASK_TYPES = [
   { value: 'test', label: 'Test' },
@@ -88,7 +101,7 @@ function TaskModal({ open, onClose, onSubmit, defaultType }) {
   );
 }
 
-function ChatRightPanelComponent({ eventBus }) {
+function SidebarRight({ eventBus }) {
   const [currentTab, setCurrentTab] = useState('tasks');
   const [isVisible, setIsVisible] = useState(true);
   const [showTaskModal, setShowTaskModal] = useState(false);
@@ -343,8 +356,6 @@ function ChatRightPanelComponent({ eventBus }) {
     setSelectedDocsTask(null);
   };
 
-
-
   const handleExecuteDocsTask = async (taskDetails) => {
     try {
       setFeedback(`Starting automated execution of task: ${taskDetails.title}...`);
@@ -402,7 +413,7 @@ function ChatRightPanelComponent({ eventBus }) {
 
   const handleSendDocsTaskToChat = (messageContent) => {
     if (eventBus) {
-      eventBus.emit('chat-right-panel:quick-prompt', { prompt: messageContent });
+      eventBus.emit('sidebar-right:quick-prompt', { prompt: messageContent });
     }
   };
 
@@ -447,7 +458,7 @@ function ChatRightPanelComponent({ eventBus }) {
     return matchesSearch && matchesFilter;
   });
 
-  const handleQuickPrompt = (prompt) => eventBus.emit('chat-right-panel:quick-prompt', { prompt });
+  const handleQuickPrompt = (prompt) => eventBus.emit('sidebar-right:quick-prompt', { prompt });
 
   const handleStartRefactoring = async (selectedTasks) => {
     console.log('Starting refactoring for tasks:', selectedTasks);
@@ -467,7 +478,7 @@ function ChatRightPanelComponent({ eventBus }) {
         try {
           setFeedback(`Executing task: ${task.title}...`);
           
-          console.log('🔍 [ChatRightPanelComponent] Executing task:', {
+          console.log('🔍 [SidebarRight] Executing task:', {
             id: task.id,
             title: task.title,
             projectPath: task.projectPath,
@@ -476,7 +487,7 @@ function ChatRightPanelComponent({ eventBus }) {
           
           const result = await api.executeTask(task.id);
           
-          console.log('🔍 [ChatRightPanelComponent] Task execution result:', result);
+          console.log('🔍 [SidebarRight] Task execution result:', result);
           
           if (result.success) {
             executionResults.push({
@@ -861,7 +872,7 @@ function ChatRightPanelComponent({ eventBus }) {
   if (!isVisible) return null;
 
   return (
-    <div className="chat-right-panel-content">
+    <div className="sidebar-right-content">
       <TaskModal open={showTaskModal} onClose={() => setShowTaskModal(false)} onSubmit={handleTaskSubmit} defaultType={modalType} />
       <TaskSelectionModal
         isOpen={isTaskModalOpen}
@@ -888,7 +899,7 @@ function ChatRightPanelComponent({ eventBus }) {
           <button className={`tab-btn${currentTab === 'analysis' ? ' active' : ''}`} onClick={() => handleTabSwitch('analysis')}>📊 Analysis</button>
           <button className={`tab-btn${currentTab === 'settings' ? ' active' : ''}`} onClick={() => handleTabSwitch('settings')}>⚙️ Settings</button>
         </div>
-        <button id="toggleChatPanelBtn" className="btn-icon" title="Panel ein-/ausblenden" onClick={handleTogglePanel}>◀</button>
+        <button id="toggleSidebarRightBtn" className="btn-icon" title="Panel ein-/ausblenden" onClick={handleTogglePanel}>◀</button>
       </div>
       <div className="panel-content">
         {currentTab === 'tasks' && renderTasksTab()}
@@ -903,4 +914,4 @@ function ChatRightPanelComponent({ eventBus }) {
   );
 }
 
-export default ChatRightPanelComponent; 
+export default SidebarRight; 

@@ -2,12 +2,14 @@
 
 .ide-mirror-container {
     position: relative;
-    width: 100%;
+    width: 100vw;  /* Volle Viewport-Breite */
     height: 100vh;
-    background: #1e1e1e;
     overflow: hidden;
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-}
+    background: rgb(30, 30, 30);
+    margin-left: calc(-1 * var(--sidebar-width));  /* Kompensiert die Sidebar */
+    margin-right: calc(-1 * var(--right-panel-width));  /* Kompensiert das rechte Panel */
+  }
+  
 
 /* Streaming Controls Overlay */
 .streaming-controls-overlay {

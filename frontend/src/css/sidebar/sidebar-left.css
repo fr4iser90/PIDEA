@@ -1,0 +1,289 @@
+/* SidebarLeft Component Styles */
+
+/* Main Sidebar Container */
+.sidebar-left {
+  position: fixed;
+  top: var(--header-height);
+  left: 0;
+  height: calc(100vh - var(--header-height));
+  background: var(--sidebar-bg);
+  border-right: 1px solid var(--border-color);
+  width: var(--sidebar-left-width);
+  min-width: var(--sidebar-left-width);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  z-index: 100;
+  transition: transform 0.3s ease;
+}
+
+/* Alternative class for when sidebar is wrapped */
+.chat-sidebar {
+  position: fixed;
+  top: var(--header-height);
+  left: 0;
+  height: calc(100vh - var(--header-height));
+  background: var(--sidebar-bg);
+  border-right: 1px solid var(--border-color);
+  width: var(--sidebar-left-width);
+  min-width: var(--sidebar-left-width);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  z-index: 100;
+  transition: transform 0.3s ease;
+}
+  
+  .sidebar-left-content {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+}
+  
+  /* Sidebar Panel Container */
+.sidebar-panel-container {
+  flex: 1;
+  overflow: hidden;
+}
+  
+  .btn-icon {
+    background: none;
+    border: none;
+    color: #8ca0b3;
+    font-size: 1.2em;
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 4px;
+    transition: all 0.2s;
+  }
+  
+  .btn-icon:hover {
+    background: #23272e;
+    color: #4e8cff;
+  }
+  
+  /* IDE Management Styles */
+  .ide-management-section {
+    background: #1e1e1e;
+    border-bottom: 1px solid #3c3c3c;
+    padding: 8px 0;
+    margin-bottom: 16px;
+  }
+  
+  .ide-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 16px 8px 16px;
+  }
+  
+  .ide-header h4 {
+    margin: 0;
+    font-size: 11px;
+    font-weight: 600;
+    color: #888888;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  
+  .ide-list {
+    max-height: 60vh;
+    overflow-y: auto;
+    transition: max-height 0.3s;
+  }
+  
+  .ide-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 6px 16px;
+    cursor: pointer;
+    user-select: none;
+    font-size: 12px;
+    color: #cccccc;
+    transition: background-color 0.1s;
+    border-left: 3px solid transparent;
+  }
+  
+  .ide-item:hover {
+    background: #2a2d2e;
+  }
+  
+  .ide-item.active {
+    background: #094771;
+    border-left-color: #007acc;
+  }
+  
+  .ide-info {
+    flex: 1;
+    min-width: 0;
+  }
+  
+  .ide-title {
+    font-weight: 500;
+    margin-bottom: 2px;
+  }
+  
+  .ide-meta {
+    display: flex;
+    gap: 8px;
+    font-size: 10px;
+    color: #888888;
+  }
+  
+  .ide-status {
+    padding: 1px 4px;
+    border-radius: 2px;
+    font-size: 9px;
+    text-transform: uppercase;
+  }
+  
+  .ide-status.running {
+    background: #2d5a2d;
+    color: #4ec9b0;
+  }
+  
+  .ide-status.starting {
+    background: #5a5a2d;
+    color: #f7df1e;
+  }
+  
+  .ide-source {
+    font-style: italic;
+  }
+  
+  .ide-actions {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+  }
+  
+  .ide-switch-btn,
+  .ide-stop-btn,
+  .ide-refresh-btn {
+    background: transparent;
+    border: none;
+    color: #cccccc;
+    cursor: pointer;
+    padding: 2px;
+    border-radius: 2px;
+    font-size: 10px;
+    transition: background-color 0.2s;
+  }
+  
+  .ide-switch-btn:hover,
+  .ide-refresh-btn:hover {
+    background: #3c3c3c;
+    color: #007acc;
+  }
+  
+  .ide-stop-btn:hover {
+    background: #3c3c3c;
+    color: #ff6b6b;
+  }
+  
+  .active-indicator {
+    color: #4ec9b0;
+    font-weight: bold;
+    font-size: 12px;
+  }
+  
+  .no-ides {
+    padding: 8px 16px;
+    text-align: center;
+    color: #888888;
+    font-style: italic;
+    font-size: 11px;
+  }
+  
+  /* Placeholder for other panels */
+.code-panel,
+.git-panel,
+.default-panel {
+  padding: 16px;
+  color: #cccccc;
+  text-align: center;
+  font-style: italic;
+}
+  
+  /* Light Theme Support */
+  body.light-theme .sidebar-header {
+    border-bottom-color: #e1e5e9;
+  }
+  
+  body.light-theme .chat-session-item {
+    background: #f8f9fa;
+    color: #495057;
+  }
+  
+  body.light-theme .chat-session-item:hover {
+    background: #e9ecef;
+    border-color: #dee2e6;
+  }
+  
+  body.light-theme .chat-session-item.active {
+    background: #e3f2fd;
+    border-color: #2196f3;
+  }
+  
+  body.light-theme .session-meta {
+    color: #6c757d;
+  }
+  
+  body.light-theme .session-delete-btn {
+    color: #adb5bd;
+  }
+  
+  body.light-theme .session-delete-btn:hover {
+    background: #dc3545;
+    color: white;
+  }
+  
+  body.light-theme .sidebar-footer {
+    border-top-color: #e1e5e9;
+  }
+  
+  body.light-theme .quick-actions .btn-secondary {
+    background: #f8f9fa;
+    border-color: #dee2e6;
+    color: #495057;
+  }
+  
+  body.light-theme .quick-actions .btn-secondary:hover {
+    background: #e9ecef;
+    border-color: #2196f3;
+    color: #2196f3;
+  }
+  
+  /* Responsive Design */
+  @media (max-width: 768px) {
+    .sidebar-left {
+      width: 100%;
+      min-width: 100%;
+      transform: translateX(-100%);
+    }
+    
+    .sidebar-left.open {
+      transform: translateX(0);
+    }
+    
+    .sidebar-header h3 {
+      font-size: 1em;
+    }
+  }
+  
+  @media (max-width: 480px) {
+    .sidebar-left {
+      width: 100%;
+      min-width: 100%;
+    }
+    
+    .sidebar-left-content {
+      padding: 12px;
+    }
+    
+    .sidebar-header h3 {
+      font-size: 0.9em;
+    }
+  }

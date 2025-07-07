@@ -27,10 +27,11 @@
   box-shadow: var(--shadow-lg);
   border: 1.5px solid var(--border-color);
   margin: 0;
-  padding: 0 0 0 0;
+  padding: 0;
   flex: 1 1 0;
   min-width: 0;
   min-height: 0;
+  width: 100%;
 }
 
 .chat-header {

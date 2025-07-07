@@ -1,8 +1,8 @@
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
-import ChatRightPanelComponent from '../../src/presentation/components/ChatRightPanelComponent';
-import DocsTaskDetailsModal from '../../src/presentation/components/DocsTaskDetailsModal';
+import SidebarRight from '../../src/presentation/components/SidebarRight';
+import DocsTaskDetailsModal from '../../src/presentation/components/chat/modal/DocsTaskDetailsModal';
 import APIChatRepository from '../../src/infrastructure/repositories/APIChatRepository';
 
 // Mock the API repository
@@ -46,7 +46,7 @@ describe('DocsTasks Integration Tests', () => {
     jest.clearAllMocks();
   });
 
-  describe('ChatRightPanelComponent - Docs Tasks Integration', () => {
+  describe('SidebarRight - Docs Tasks Integration', () => {
     it('should load and display docs tasks on mount', async () => {
       const mockDocsTasks = [
         {
@@ -74,7 +74,7 @@ describe('DocsTasks Integration Tests', () => {
         data: mockDocsTasks
       });
 
-      render(<ChatRightPanelComponent eventBus={mockEventBus} />);
+      render(<SidebarRight eventBus={mockEventBus} />);
 
       // Wait for tasks to load
       await waitFor(() => {
@@ -95,7 +95,7 @@ describe('DocsTasks Integration Tests', () => {
     it('should handle docs tasks loading error', async () => {
       mockApi.getDocsTasks.mockRejectedValue(new Error('API Error'));
 
-      render(<ChatRightPanelComponent eventBus={mockEventBus} />);
+      render(<SidebarRight eventBus={mockEventBus} />);
 
       await waitFor(() => {
         expect(mockApi.getDocsTasks).toHaveBeenCalled();
@@ -132,7 +132,7 @@ describe('DocsTasks Integration Tests', () => {
         data: mockDocsTasks
       });
 
-      render(<ChatRightPanelComponent eventBus={mockEventBus} />);
+      render(<SidebarRight eventBus={mockEventBus} />);
 
       await waitFor(() => {
         expect(screen.getByText('Frontend Implementation')).toBeInTheDocument();
@@ -174,7 +174,7 @@ describe('DocsTasks Integration Tests', () => {
         data: mockDocsTasks
       });
 
-      render(<ChatRightPanelComponent eventBus={mockEventBus} />);
+      render(<SidebarRight eventBus={mockEventBus} />);
 
       await waitFor(() => {
         expect(screen.getByText('High Priority Task')).toBeInTheDocument();
@@ -224,7 +224,7 @@ describe('DocsTasks Integration Tests', () => {
         data: mockTaskDetails
       });
 
-      render(<ChatRightPanelComponent eventBus={mockEventBus} />);
+      render(<SidebarRight eventBus={mockEventBus} />);
 
       await waitFor(() => {
         expect(screen.getByText('Test Task')).toBeInTheDocument();
@@ -265,7 +265,7 @@ describe('DocsTasks Integration Tests', () => {
 
       mockApi.getDocsTaskDetails.mockRejectedValue(new Error('Details Error'));
 
-      render(<ChatRightPanelComponent eventBus={mockEventBus} />);
+      render(<SidebarRight eventBus={mockEventBus} />);
 
       await waitFor(() => {
         expect(screen.getByText('Test Task')).toBeInTheDocument();
@@ -298,7 +298,7 @@ describe('DocsTasks Integration Tests', () => {
         data: mockDocsTasks
       });
 
-      render(<ChatRightPanelComponent eventBus={mockEventBus} />);
+      render(<SidebarRight eventBus={mockEventBus} />);
 
       await waitFor(() => {
         expect(mockApi.getDocsTasks).toHaveBeenCalledTimes(1);
@@ -480,7 +480,7 @@ describe('DocsTasks Integration Tests', () => {
         data: mockDocsTasks
       });
 
-      render(<ChatRightPanelComponent eventBus={mockEventBus} />);
+      render(<SidebarRight eventBus={mockEventBus} />);
 
       await waitFor(() => {
         expect(mockApi.getDocsTasks).toHaveBeenCalled();
@@ -490,7 +490,7 @@ describe('DocsTasks Integration Tests', () => {
     it('should handle API authentication errors', async () => {
       mockApi.getDocsTasks.mockRejectedValue(new Error('401 Unauthorized'));
 
-      render(<ChatRightPanelComponent eventBus={mockEventBus} />);
+      render(<SidebarRight eventBus={mockEventBus} />);
 
       await waitFor(() => {
         expect(screen.getByText(/Error loading documentation tasks/)).toBeInTheDocument();

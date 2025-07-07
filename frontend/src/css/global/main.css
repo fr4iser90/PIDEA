@@ -17,10 +17,10 @@
   
   /* Layout variables */
   --header-height: 65px;
-  --sidebar-width: 280px;
-  --right-panel-width: 320px;
-  --sidebar-bg: #20232a;
-  --panel-bg: #23272e;
+  --sidebar-left-width: 280px;
+  --sidebar-right-width: 320px;
+  --sidebar-left-bg: #20232a;
+  --sidebar-right-bg: #23272e;
   --header-bg: #1a1d23;
   --card-bg: #2a2e35;
   --button-bg: #3a3f47;
@@ -74,7 +74,7 @@ body.light-theme {
   flex-direction: column;
   overflow: hidden;
   background: var(--bg-secondary);
-  margin-left: var(--sidebar-width);
+  margin-left: var(--sidebar-left-width);
   margin-right: 0;
   min-width: 0;
   transition: margin 0.3s cubic-bezier(.4,0,.2,1);
@@ -186,7 +186,7 @@ body.light-theme .main-content {
 /* Responsive Design */
 @media (max-width: 1200px) {
   :root {
-    --right-panel-width: 280px;
+    --sidebar-right-width: 280px;
   }
 }
 
@@ -228,8 +228,8 @@ body.light-theme .main-content {
 
 @media (max-width: 768px) {
   :root {
-    --sidebar-width: 240px;
-    --right-panel-width: 240px;
+    --sidebar-left-width: 200px;
+    --sidebar-right-width: 200px;
   }
   
   .main-layout.split-view .chat-container,
@@ -240,8 +240,8 @@ body.light-theme .main-content {
 
 @media (max-width: 480px) {
   :root {
-    --sidebar-width: 200px;
-    --right-panel-width: 200px;
+    --sidebar-left-width: 160px;
+    --sidebar-right-width: 160px;
   }
 }
 
@@ -263,6 +263,6 @@ body.light-theme .main-content {
 
 /* Wenn das Panel offen ist, z.B. mit einer Klasse .with-right-panel am Body oder main-content */
 .main-content.with-right-panel {
-  margin-right: var(--right-panel-width);
+  margin-right: var(--sidebar-right-width);
 }
 

@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
 import EventBus from '@infrastructure/events/EventBus.jsx';
-import ChatComponent from '@presentation/components/ChatComponent.jsx';
-import ChatSidebarComponent from '@presentation/components/ChatSidebarComponent.jsx';
-import ChatRightPanelComponent from '@presentation/components/ChatRightPanelComponent.jsx';
-import IDEMirrorComponent from '@presentation/components/IDEMirrorComponent.jsx';
-import PreviewComponent from '@presentation/components/PreviewComponent.jsx';
-import GitManagementComponent from '@presentation/components/GitManagementComponent.jsx';
+import ChatComponent from '@presentation/components/chat/main/ChatComponent.jsx';
+import SidebarLeft from '@presentation/components/SidebarLeft.jsx';
+import SidebarRight from '@presentation/components/SidebarRight.jsx';
+import IDEMirrorComponent from '@presentation/components/mirror/main/IDEMirrorComponent.jsx';
+import PreviewComponent from '@presentation/components/chat/main/PreviewComponent.jsx';
+import GitManagementComponent from '@presentation/components/git/main/GitManagementComponent.jsx';
 import AuthWrapper from '@presentation/components/auth/AuthWrapper.jsx';
 import UserMenu from '@presentation/components/auth/UserMenu.jsx';
 import useAuthStore from '@infrastructure/stores/AuthStore.jsx';
@@ -100,11 +100,11 @@ function App() {
     if (!eventBus) return;
     const handleSidebarToggle = () => setIsSidebarVisible(v => !v);
     const handleRightPanelToggle = () => setIsRightPanelVisible(v => !v);
-    eventBus.on('sidebar-toggle', handleSidebarToggle);
-    eventBus.on('right-panel-toggle', handleRightPanelToggle);
+    eventBus.on('sidebar-left-toggle', handleSidebarToggle);
+    eventBus.on('sidebar-right-toggle', handleRightPanelToggle);
     return () => {
-      eventBus.off('sidebar-toggle', handleSidebarToggle);
-      eventBus.off('right-panel-toggle', handleRightPanelToggle);
+      eventBus.off('sidebar-left-toggle', handleSidebarToggle);
+      eventBus.off('sidebar-right-toggle', handleRightPanelToggle);
     };
   }, [eventBus]);
 
@@ -212,7 +212,7 @@ function App() {
           
           <div className="header-actions">
             <button
-              onClick={() => eventBus?.emit('sidebar-toggle')}
+              onClick={() => eventBus?.emit('sidebar-left-toggle')}
               className="btn-icon"
               title="Toggle Sidebar"
             >
@@ -221,7 +221,7 @@ function App() {
             <button
               onClick={() => {
                 console.log('Header right panel button clicked');
-                eventBus?.emit('right-panel-toggle');
+                eventBus?.emit('sidebar-right-toggle');
               }}
               className="btn-icon"
               title="Toggle Right Panel"
@@ -236,9 +236,7 @@ function App() {
         <main className={`main-layout${isSplitView ? ' split-view' : ''}${!isSidebarVisible ? ' sidebar-hidden' : ''}${!isRightPanelVisible ? ' rightpanel-hidden' : ''}`}>
           {/* Sidebar */}
           {isSidebarVisible && (
-            <div className="chat-sidebar">
-              <ChatSidebarComponent eventBus={eventBus} activePort={activePort} onActivePortChange={setActivePort} />
-            </div>
+            <SidebarLeft eventBus={eventBus} activePort={activePort} onActivePortChange={setActivePort} />
           )}
           
           {/* Main View */}
@@ -248,7 +246,7 @@ function App() {
           </div>
           
           {/* Right Panel */}
-          {isRightPanelVisible && <ChatRightPanelComponent eventBus={eventBus} />}
+          {isRightPanelVisible && <SidebarRight eventBus={eventBus} />}
         </main>
       </div>
     </AuthWrapper>

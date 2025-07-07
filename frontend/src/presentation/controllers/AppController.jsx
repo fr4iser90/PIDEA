@@ -2,8 +2,8 @@ import ChatService from '@application/services/ChatService.jsx';
 import APIChatRepository from '@infrastructure/repositories/APIChatRepository.jsx';
 import EventBus from '@infrastructure/events/EventBus.jsx';
 import ChatComponent from '@presentation/components/ChatComponent.jsx';
-import ChatSidebarComponent from '@presentation/components/ChatSidebarComponent.jsx';
-import ChatRightPanelComponent from '@presentation/components/ChatRightPanelComponent.jsx';
+import SidebarLeft from '@presentation/components/SidebarLeft.jsx';
+import SidebarRight from '@presentation/components/SidebarRight.jsx';
 import IDEMirrorComponent from '@presentation/components/IDEMirrorComponent.jsx';
 import PreviewComponent from '@presentation/components/PreviewComponent.jsx';
 import FrameworkPanelComponent from '@presentation/components/chat/FrameworkPanelComponent.jsx';
@@ -17,9 +17,9 @@ class AppController {
     
     this.chatComponent = null;
     this.codeExplorerComponent = null;
-    this.chatSidebarComponent = null;
+    this.sidebarLeft = null;
     this.codeSidebarComponent = null;
-    this.chatRightPanelComponent = null;
+    this.sidebarRight = null;
     this.codeRightPanelComponent = null;
     this.ideMirrorComponent = null;
     this.previewComponent = null;
@@ -51,8 +51,8 @@ class AppController {
   async setupComponents() {
     // Initialize chat components
     this.chatComponent = new ChatComponent('chatView', this.eventBus);
-    this.chatSidebarComponent = new ChatSidebarComponent('chatSidebarContent', this.eventBus);
-    this.chatRightPanelComponent = new ChatRightPanelComponent('chatRightPanelContent', this.eventBus);
+    this.sidebarLeft = new SidebarLeft('sidebarLeftContent', this.eventBus);
+    this.sidebarRight = new SidebarRight('sidebarRightContent', this.eventBus);
     
     // Initialize code explorer components
     this.codeExplorerComponent = new CodeExplorerComponent('codeExplorerView', this.eventBus);
@@ -182,8 +182,8 @@ class AppController {
       }
     });
 
-    // Chat right panel events
-    this.eventBus.on('chat-right-panel:quick-prompt', (data) => {
+    // Sidebar right events
+    this.eventBus.on('sidebar-right:quick-prompt', (data) => {
       this.chatService.sendMessage(data.prompt);
     });
 
@@ -241,9 +241,9 @@ class AppController {
         this.chatComponent.loadMessages(data.messages);
       }
       
-      if (data.session && this.chatSidebarComponent) {
-        this.chatSidebarComponent.updateSessions([data.session]);
-        this.chatSidebarComponent.setCurrentSession(data.sessionId);
+      if (data.session && this.sidebarLeft) {
+        this.sidebarLeft.updateSessions([data.session]);
+        this.sidebarLeft.setCurrentSession(data.sessionId);
       }
     });
 
@@ -378,9 +378,9 @@ class AppController {
       chatView.style.display = '';
       codeExplorerView.style.display = 'none';
       ideMirrorView.style.display = 'none';
-      chatSidebar.style.display = '';
+      sidebarLeft.style.display = '';
       codeSidebar.style.display = 'none';
-      chatRightPanel.style.display = '';
+      sidebarRight.style.display = '';
       codeRightPanel.style.display = 'none';
       this.currentMode = 'chat';
     } else if (mode === 'ide') {
@@ -391,9 +391,9 @@ class AppController {
       codeExplorerView.style.display = 'none';
       ideMirrorView.style.display = 'block';
       // Hide ALL sidebars for full screen
-      chatSidebar.style.display = 'none';
+      sidebarLeft.style.display = 'none';
       codeSidebar.style.display = 'none';
-      chatRightPanel.style.display = 'none';
+      sidebarRight.style.display = 'none';
       codeRightPanel.style.display = 'none';
       this.currentMode = 'ide';
       
@@ -410,9 +410,9 @@ class AppController {
       chatView.style.display = 'none';
       codeExplorerView.style.display = '';
       ideMirrorView.style.display = 'none';
-      chatSidebar.style.display = 'none';
+      sidebarLeft.style.display = 'none';
       codeSidebar.style.display = '';
-      chatRightPanel.style.display = 'none';
+      sidebarRight.style.display = 'none';
       codeRightPanel.style.display = '';
       this.currentMode = 'code';
       console.log('✅ Code mode activated');
@@ -545,7 +545,7 @@ class AppController {
       this.currentLayout = 'chat';
       if (this.previewComponent) this.previewComponent.hide();
       // Sidebar-Logik wie im Chat-Modus
-      chatSidebar.style.display = '';
+      sidebarLeft.style.display = '';
       codeSidebar.style.display = 'none';
     } else {
       // Enter split view
@@ -554,7 +554,7 @@ class AppController {
       this.currentLayout = 'split';
       if (this.previewComponent) this.previewComponent.show();
       // **Sidebar SICHTBAR machen!**
-      chatSidebar.style.display = '';
+      sidebarLeft.style.display = '';
       codeSidebar.style.display = 'none';
     }
   }
