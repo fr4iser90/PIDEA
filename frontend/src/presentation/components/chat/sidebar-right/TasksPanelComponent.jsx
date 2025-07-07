@@ -1,7 +1,32 @@
 import React, { useState, useEffect } from 'react';
-import APIChatRepository from '@infrastructure/repositories/APIChatRepository.jsx';
+import APIChatRepository, { apiCall } from '@infrastructure/repositories/APIChatRepository.jsx';
 import TaskSelectionModal from '../modal/TaskSelectionModal.jsx';
 import DocsTaskDetailsModal from '../modal/DocsTaskDetailsModal.jsx';
+
+// Import the SAME fetchPromptContent function that works everywhere
+async function fetchPromptContent(promptFile) {
+  let url;
+  if (promptFile.startsWith('frameworks/')) {
+    const parts = promptFile.split('/');
+    const frameworkId = parts[1];
+    const filename = parts[3];
+    url = `/api/frameworks/${frameworkId}/prompts/${filename}`;
+  } else {
+    let filePath = promptFile;
+    if (filePath.startsWith('prompts/')) filePath = filePath.substring(8);
+    const pathParts = filePath.split('/');
+    const filename = pathParts.pop();
+    const category = pathParts.join('/');
+    url = `/api/prompts/${category}/${filename}`;
+  }
+  const response = await apiCall(url);
+  // Robust: prüfe alle sinnvollen Felder
+  if (response.content) return response.content;
+  if (response.data && response.data.content) return response.data.content;
+  if (typeof response.data === 'string') return response.data;
+  if (typeof response === 'string') return response;
+  throw new Error(`Prompt content not found for ${promptFile}`);
+}
 
 const TASK_TYPES = [
   { value: 'test', label: 'Test' },
@@ -92,13 +117,8 @@ function TasksPanelComponent({ eventBus }) {
   // Handle executing task (send to chat with execute prompt)
   const handleExecuteTask = async (taskDetails) => {
     try {
-      // Load the execute prompt from framework
-      const response = await api.getFrameworkPrompt('task-management/task-execute');
-      let executePromptContent = '';
-      
-      if (response.success && response.data) {
-        executePromptContent = response.data.content || response.data;
-      }
+      // Load the execute prompt using the SAME function as everywhere else
+      const executePromptContent = await fetchPromptContent('prompts/task-management/task-execute.md');
 
       // Create the complete message with execute prompt
       const messageContent = `${executePromptContent}
