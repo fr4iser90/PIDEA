@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { apiCall } from '@infrastructure/repositories/APIChatRepository.jsx';
+import DocumentationFrameworkModal from './frameworks/DocumentationFrameworkModal.jsx';
 
 function FrameworksPanelComponent({ onFrameworkSelect, onNavigateToPrompts, onNavigateToTemplates }) {
   const [frameworks, setFrameworks] = useState([]);
@@ -8,6 +9,7 @@ function FrameworksPanelComponent({ onFrameworkSelect, onNavigateToPrompts, onNa
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [activeView, setActiveView] = useState('overview'); // 'overview', 'prompts', 'templates'
+  const [isDocumentationModalOpen, setIsDocumentationModalOpen] = useState(false);
 
   useEffect(() => {
     loadFrameworks();
@@ -56,6 +58,13 @@ function FrameworksPanelComponent({ onFrameworkSelect, onNavigateToPrompts, onNa
   };
 
   const handleFrameworkSelect = (framework) => {
+    // Special handling for workflow frameworks
+    if (framework.id === 'documentation-framework') {
+      setIsDocumentationModalOpen(true);
+      return;
+    }
+    
+    // Default handling for regular frameworks
     setSelectedFramework(framework.id);
     setActiveView('overview');
     if (onFrameworkSelect) {
@@ -107,9 +116,15 @@ function FrameworksPanelComponent({ onFrameworkSelect, onNavigateToPrompts, onNa
       'mobile-framework': '📱',
       'desktop-framework': '🖥️',
       'game-framework': '🎮',
-      'data-framework': '📊'
+      'data-framework': '📊',
+      'documentation-framework': '📚'
     };
     return icons[frameworkId] || '🧩';
+  };
+
+  const isWorkflowFramework = (frameworkId) => {
+    const workflowFrameworks = ['documentation-framework'];
+    return workflowFrameworks.includes(frameworkId);
   };
 
   const renderOverview = () => (
@@ -128,12 +143,19 @@ function FrameworksPanelComponent({ onFrameworkSelect, onNavigateToPrompts, onNa
         {frameworks.map(fw => (
           <div
             key={fw.id}
-            className={`framework-item flex items-center gap-2 p-2 rounded cursor-pointer transition-all duration-200 ${selectedFramework === fw.id ? 'ring-2 ring-blue-500' : ''}`}
-            onClick={() => setSelectedFramework(fw.id)}
+            className={`framework-item flex items-center gap-2 p-2 rounded cursor-pointer transition-all duration-200 ${selectedFramework === fw.id ? 'ring-2 ring-blue-500' : ''} ${isWorkflowFramework(fw.id) ? 'workflow-framework' : ''}`}
+            onClick={() => handleFrameworkSelect(fw)}
           >
             <span className="text-xl">{getFrameworkIcon(fw.id)}</span>
-            <span className="font-semibold text-white">{fw.name}</span>
-            <span className="text-gray-400 text-xs">{fw.id}</span>
+            <div className="flex-1">
+              <div className="flex items-center gap-2">
+                <span className="font-semibold text-white">{fw.name}</span>
+                {isWorkflowFramework(fw.id) && (
+                  <span className="workflow-badge">Workflow</span>
+                )}
+              </div>
+              <span className="text-gray-400 text-xs">{fw.id}</span>
+            </div>
           </div>
         ))}
       </div>
@@ -247,19 +269,32 @@ function FrameworksPanelComponent({ onFrameworkSelect, onNavigateToPrompts, onNa
             key={fw.id}
             className={`panel-block framework-card flex items-center gap-3 cursor-pointer transition-colors
               ${selectedFramework === fw.id ? 'ring-2 ring-blue-500 border-blue-500 bg-gray-700' : ''}
+              ${isWorkflowFramework(fw.id) ? 'workflow-framework' : ''}
             `}
             aria-selected={selectedFramework === fw.id}
-            onClick={() => setSelectedFramework(fw.id)}
+            onClick={() => handleFrameworkSelect(fw)}
           >
             <span className="text-2xl mr-2">{getFrameworkIcon(fw.id)}</span>
             <div className="flex-1">
-              <div className="font-semibold text-white text-base">{fw.name}</div>
+              <div className="flex items-center gap-2">
+                <div className="font-semibold text-white text-base">{fw.name}</div>
+                {isWorkflowFramework(fw.id) && (
+                  <span className="workflow-badge">Workflow</span>
+                )}
+              </div>
               <span className="category-badge framework">Framework</span>
               <div className="text-xs text-gray-400">{fw.id}</div>
             </div>
           </div>
         ))}
       </div>
+      
+      {/* Documentation Framework Modal */}
+      <DocumentationFrameworkModal
+        isOpen={isDocumentationModalOpen}
+        onClose={() => setIsDocumentationModalOpen(false)}
+        framework={{ id: 'documentation-framework', name: 'Documentation Framework' }}
+      />
     </div>
   );
 }
