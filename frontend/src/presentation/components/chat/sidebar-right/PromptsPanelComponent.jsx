@@ -127,7 +127,7 @@ function PromptsPanelComponent({ onPromptClick, onQuickPrompt }) {
       }
       const response = await apiCall(url);
       if (response.success && onQuickPrompt) {
-        onQuickPrompt(response.data.content);
+        onQuickPrompt(response.content);
       }
     } catch (error) {
       console.error('Failed to load prompt content:', error);
@@ -161,9 +161,9 @@ function PromptsPanelComponent({ onPromptClick, onQuickPrompt }) {
       const response = await apiCall(url);
       console.log('🔍 [PromptsPanel] Response:', response);
       if (response.success) {
-        console.log('🔍 [PromptsPanel] Setting modal content, length:', response.data.content?.length);
+        console.log('🔍 [PromptsPanel] Setting modal content, length:', response.content?.length);
         setModalTitle(prompt.name);
-        setModalContent(response.data.content);
+        setModalContent(response.content);
         setModalOpen(true);
         console.log('🔍 [PromptsPanel] Modal should be open now');
       }
