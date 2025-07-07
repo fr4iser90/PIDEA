@@ -40,76 +40,133 @@ class DocumentationController {
                 ports: availableIDEs.map(ide => ide.port)
             });
 
-            // 🚀 SMART PARALLEL: Send all prompts quickly, then collect responses
-            this.logger.info('[DocumentationController] Phase 1: Sending all prompts quickly');
+            // 🚀 SEQUENTIAL SEND: Send prompts one by one with short delays (stable)
+            this.logger.info('[DocumentationController] Phase 1: Sending prompts sequentially (stable)');
             
-            const promptPromises = availableIDEs.map(async (ide) => {
+            const promptResults = [];
+            
+            for (const ide of availableIDEs) {
                 const workspacePath = this.ideManager.getWorkspacePath(ide.port);
                 if (!workspacePath || workspacePath.includes(':')) {
-                    return { ide, success: false, error: 'Invalid workspace path' };
+                    this.logger.warn('[DocumentationController] Skipping IDE with invalid workspace', {
+                        port: ide.port,
+                        workspacePath
+                    });
+                    promptResults.push({ 
+                        status: 'fulfilled', 
+                        value: { ide, success: false, error: 'Invalid workspace path' }
+                    });
+                    continue;
                 }
 
                 const projectId = this.getProjectIdFromPath(workspacePath);
                 
                 try {
-                    // 🔥 QUICK SEND: Just send prompt without waiting
+                    this.logger.info('[DocumentationController] Sending prompt to IDE', {
+                        port: ide.port,
+                        projectId,
+                        remaining: availableIDEs.length - promptResults.length
+                    });
+                    
+                    // 🔥 SEQUENTIAL SEND: One by one with stability
                     await this.sendQuickPrompt(projectId, workspacePath, ide.port);
-                    return { ide, projectId, workspacePath, success: true };
+                    
+                    promptResults.push({ 
+                        status: 'fulfilled', 
+                        value: { ide, projectId, workspacePath, success: true }
+                    });
+                    
+                    // ⏰ SHORT DELAY: 250ms between IDEs for stability
+                    if (promptResults.length < availableIDEs.length) {
+                        this.logger.info('[DocumentationController] Waiting 250ms before next IDE...');
+                        await new Promise(resolve => setTimeout(resolve, 250));
+                    }
+                    
                 } catch (error) {
-                    return { ide, projectId, workspacePath, success: false, error: error.message };
+                    this.logger.error('[DocumentationController] Failed to send prompt to IDE', {
+                        port: ide.port,
+                        projectId,
+                        error: error.message
+                    });
+                    
+                    promptResults.push({ 
+                        status: 'fulfilled', 
+                        value: { ide, projectId, workspacePath, success: false, error: error.message }
+                    });
                 }
-            });
-
-            // Wait for all prompts to be sent (should be ~30 seconds)
-            const promptResults = await Promise.allSettled(promptPromises);
+            }
             
             this.logger.info('[DocumentationController] Phase 2: Waiting for AI responses (2 minutes)');
             
             // 🕐 SMART WAIT: Give AI time to work on all projects
             await new Promise(resolve => setTimeout(resolve, 180000)); // 2 minutes for AI to work
             
-            this.logger.info('[DocumentationController] Phase 3: Collecting responses and creating tasks');
+            this.logger.info('[DocumentationController] Phase 3: Collecting responses and creating tasks sequentially');
             
-            // 📝 COLLECT RESPONSES: Now collect all responses
-            const analysisPromises = promptResults.map(async (promptResult) => {
+            // 📝 SEQUENTIAL COLLECT: Collect responses one by one for stability
+            const results = [];
+            
+            for (const promptResult of promptResults) {
                 if (promptResult.status !== 'fulfilled' || !promptResult.value.success) {
-                    return {
-                        port: promptResult.value?.ide?.port,
-                        success: false,
-                        error: promptResult.value?.error || 'Prompt sending failed'
-                    };
+                    results.push({
+                        status: 'fulfilled',
+                        value: {
+                            port: promptResult.value?.ide?.port,
+                            success: false,
+                            error: promptResult.value?.error || 'Prompt sending failed'
+                        }
+                    });
+                    continue;
                 }
                 
                 const { ide, projectId, workspacePath } = promptResult.value;
                 
                 try {
-                    // 📊 COLLECT RESPONSE: Get the AI response and create tasks
-                    const result = await this.collectResponseAndCreateTasks(projectId, workspacePath, ide.port);
-                    return {
+                    this.logger.info('[DocumentationController] Collecting response from IDE', {
                         port: ide.port,
                         projectId,
-                        workspacePath,
-                        success: true,
-                        result
-                    };
+                        remaining: promptResults.length - results.length
+                    });
+                    
+                    // 📊 SEQUENTIAL COLLECT: One by one with stability
+                    const result = await this.collectResponseAndCreateTasks(projectId, workspacePath, ide.port);
+                    
+                    results.push({
+                        status: 'fulfilled',
+                        value: {
+                            port: ide.port,
+                            projectId,
+                            workspacePath,
+                            success: true,
+                            result
+                        }
+                    });
+                    
+                    // ⏰ SHORT DELAY: 300ms between response collections
+                    if (results.length < promptResults.length) {
+                        this.logger.info('[DocumentationController] Waiting 300ms before next response collection...');
+                        await new Promise(resolve => setTimeout(resolve, 300));
+                    }
+                    
                 } catch (error) {
                     this.logger.error('[DocumentationController] Failed to collect response for IDE', {
                         port: ide.port,
                         projectId,
                         error: error.message
                     });
-                    return {
-                        port: ide.port,
-                        projectId,
-                        workspacePath,
-                        success: false,
-                        error: error.message
-                    };
+                    
+                    results.push({
+                        status: 'fulfilled',
+                        value: {
+                            port: ide.port,
+                            projectId,
+                            workspacePath,
+                            success: false,
+                            error: error.message
+                        }
+                    });
                 }
-            });
-
-            // Wait for all response collection to complete
-            const results = await Promise.allSettled(analysisPromises);
+            }
             
             // Process results
             const successfulAnalyses = [];
@@ -125,6 +182,11 @@ class DocumentationController {
                     } else {
                         failedAnalyses.push(analysisResult);
                     }
+                } else {
+                    failedAnalyses.push({
+                        success: false,
+                        error: result.reason || 'Unknown error'
+                    });
                 }
             });
 
