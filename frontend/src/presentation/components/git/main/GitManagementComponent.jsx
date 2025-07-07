@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import '@css/main/git.css';
 import { apiCall } from '@infrastructure/repositories/APIChatRepository.jsx';
 
-const GitManagementComponent = ({ activePort, onGitOperation }) => {
+const GitManagementComponent = ({ activePort, onGitOperation, onGitStatusChange }) => {
   const [gitStatus, setGitStatus] = useState(null);
   const [currentBranch, setCurrentBranch] = useState('');
   const [branches, setBranches] = useState([]);
@@ -49,6 +49,9 @@ const GitManagementComponent = ({ activePort, onGitOperation }) => {
       });
       setGitStatus(data.data?.status);
       setCurrentBranch(data.data?.currentBranch);
+      if (onGitStatusChange) {
+        onGitStatusChange(data.data?.status);
+      }
     } catch (error) {
       console.error('Failed to load Git status:', error);
     } finally {

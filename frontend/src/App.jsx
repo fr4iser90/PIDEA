@@ -10,6 +10,7 @@ import AuthWrapper from '@presentation/components/auth/AuthWrapper.jsx';
 import Header from '@presentation/components/Header.jsx';
 import Footer from '@presentation/components/Footer.jsx';
 import useAuthStore from '@infrastructure/stores/AuthStore.jsx';
+import { apiCall } from '@infrastructure/repositories/APIChatRepository.jsx';
 
 function App() {
   const [eventBus] = useState(() => new EventBus());
@@ -21,6 +22,7 @@ function App() {
   const [isLeftSidebarVisible, setIsLeftSidebarVisible] = useState(true);
   const [isRightSidebarVisible, setIsRightSidebarVisible] = useState(true);
   const [gitStatus, setGitStatus] = useState(null);
+  const [gitBranch, setGitBranch] = useState('');
   const containerRef = useRef(null);
   const { isAuthenticated } = useAuthStore();
 
@@ -74,7 +76,6 @@ function App() {
   const fetchActivePort = async () => {
     if (!isAuthenticated) return;
     try {
-      const { apiCall } = await import('@infrastructure/repositories/APIChatRepository.jsx');
       const result = await apiCall('/api/ide/available');
       if (result.success && result.data) {
         const activeIDE = result.data.find(ide => ide.active);
@@ -109,6 +110,42 @@ function App() {
       eventBus.off('sidebar-right-toggle', handleRightSidebarToggle);
     };
   }, [eventBus]);
+
+  useEffect(() => {
+    const fetchGitStatusForPort = async (port) => {
+      if (!port) {
+        setGitStatus(null);
+        setGitBranch('');
+        return;
+      }
+      try {
+        const ideRes = await apiCall('/api/ide/available');
+        if (ideRes.success && ideRes.data) {
+          const activeIDE = ideRes.data.find(ide => ide.port === port);
+          if (activeIDE && activeIDE.workspacePath) {
+            const gitRes = await apiCall('/api/git/status', {
+              method: 'POST',
+              body: JSON.stringify({ projectPath: activeIDE.workspacePath })
+            });
+            setGitStatus(gitRes.data?.status || null);
+            setGitBranch(gitRes.data?.currentBranch || '');
+          } else {
+            setGitStatus(null);
+            setGitBranch('');
+          }
+        }
+      } catch (e) {
+        setGitStatus(null);
+        setGitBranch('');
+      }
+    };
+    if (activePort) {
+      fetchGitStatusForPort(activePort);
+    } else {
+      setGitStatus(null);
+      setGitBranch('');
+    }
+  }, [activePort]);
 
   const renderView = () => {
     switch (currentView) {
@@ -209,6 +246,7 @@ function App() {
           eventBus={eventBus}
           activePort={activePort}
           gitStatus={gitStatus}
+          gitBranch={gitBranch}
           version="1.0.0"
           message="Welcome to PIDEA! Your AI development assistant is ready to help."
         />

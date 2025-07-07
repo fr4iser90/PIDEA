@@ -11,11 +11,11 @@
  * @class SidebarRight
  */
 import React, { useState, useEffect } from 'react';
-import AnalysisPanelComponent from './chat/panel/AnalysisPanelComponent.jsx';
-import APIChatRepository from '../../infrastructure/repositories/APIChatRepository.jsx';
-import FrameworksPanelComponent from './chat/panel/FrameworksPanelComponent.jsx';
-import PromptsPanelComponent from './chat/panel/PromptsPanelComponent.jsx';
-import TemplatesPanelComponent from './chat/panel/TemplatesPanelComponent.jsx';
+import AnalysisPanelComponent from './chat/sidebar-right/AnalysisPanelComponent.jsx';
+import APIChatRepository from '@infrastructure/repositories/APIChatRepository.jsx';
+import FrameworksPanelComponent from './chat/sidebar-right/FrameworksPanelComponent.jsx';
+import PromptsPanelComponent from './chat/sidebar-right/PromptsPanelComponent.jsx';
+import TemplatesPanelComponent from './chat/sidebar-right/TemplatesPanelComponent.jsx';
 import TaskSelectionModal from './chat/modal/TaskSelectionModal.jsx';
 import DocsTaskDetailsModal from './chat/modal/DocsTaskDetailsModal.jsx';
 import '@css/global/sidebar-right.css';

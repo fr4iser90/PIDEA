@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 
-function Footer({ eventBus, activePort, gitStatus, version = 'dev', message = 'Welcome to PIDEA!' }) {
+function Footer({ eventBus, activePort, gitStatus, gitBranch, version = 'dev', message = 'Welcome to PIDEA!' }) {
   const [currentTime, setCurrentTime] = useState(new Date());
   const [isOnline, setIsOnline] = useState(true);
 
@@ -36,36 +36,19 @@ function Footer({ eventBus, activePort, gitStatus, version = 'dev', message = 'W
   return (
     <footer className="app-footer">
       <div className="footer-status">
-        <div className="status-item">
-          <span className="status-label">Git:</span>
-          <span className="status-value">
-            {gitStatus?.branch ? `${gitStatus.repo}/${gitStatus.branch}` : 'N/A'}
-          </span>
-        </div>
-        
-        <div className="status-item">
-          <span className="status-label">Port:</span>
-          <span className="status-value">
-            {activePort ? `:${activePort}` : 'N/A'}
-          </span>
-        </div>
-        
-        <div className="status-item">
-          <span className="status-label">Status:</span>
-          <span className={`status-indicator ${isOnline ? 'online' : 'offline'}`}>
-            {isOnline ? '🟢 Online' : '🔴 Offline'}
-          </span>
-        </div>
-        
-        <div className="status-item">
-          <span className="status-label">Time:</span>
-          <span className="status-value">{formatTime(currentTime)}</span>
-        </div>
-        
-        <div className="status-item">
-          <span className="status-label">Version:</span>
-          <span className="status-value">v{version}</span>
-        </div>
+        <span className="footer-git" title={gitBranch ? `Branch: ${gitBranch}` : 'No Git repository detected'}>
+          <span className="git-icon">Git-Branch:</span>
+          {gitBranch ? (
+            <span className="git-branch">{gitBranch}</span>
+          ) : (
+            <span className="git-branch git-unknown">No Repo</span>
+          )}
+          {gitStatus?.dirty && <span className="git-dirty" title="Uncommitted changes">*</span>}
+        </span>
+        <span className="status-item">Port: <span className="status-value">{activePort ? `:${activePort}` : 'N/A'}</span></span>
+        <span className="status-item">Status: <span className={`status-indicator ${isOnline ? 'online' : 'offline'}`}>{isOnline ? '🟢 Online' : '🔴 Offline'}</span></span>
+        <span className="status-item">Time: <span className="status-value">{formatTime(currentTime)}</span></span>
+        <span className="status-item">Version: <span className="status-value">v{version}</span></span>
       </div>
       
       <div className="footer-marquee">
