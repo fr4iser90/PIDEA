@@ -285,10 +285,10 @@ class ServiceRegistry {
         }, { singleton: true });
 
         // Task repository
-        this.container.register('taskRepository', () => {
-            const InMemoryTaskRepository = require('../database/InMemoryTaskRepository');
-            return new InMemoryTaskRepository();
-        }, { singleton: true });
+        this.container.register('taskRepository', (databaseConnection) => {
+            const PostgreSQLTaskRepository = require('../database/PostgreSQLTaskRepository');
+            return new PostgreSQLTaskRepository(databaseConnection);
+        }, { singleton: true, dependencies: ['databaseConnection'] });
 
         // Task execution repository
         this.container.register('taskExecutionRepository', () => {
