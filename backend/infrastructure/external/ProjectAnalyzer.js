@@ -300,7 +300,7 @@ class ProjectAnalyzer {
             });
             
             // Check for deep directory nesting
-            const deepDirs = structure.directories.filter(dir => dir.split('/').length > 5);
+            const deepDirs = structure.directories.filter(dir => dir.path.split('/').length > 5);
             if (deepDirs.length > 0) {
                 issues.push({
                     title: 'Deep directory nesting detected',
@@ -312,7 +312,7 @@ class ProjectAnalyzer {
             
             // Check for too many files in single directory
             const largeDirs = structure.directories.filter(dir => {
-                const dirPath = path.join(projectPath, dir);
+                const dirPath = path.join(projectPath, dir.path);
                 try {
                     const files = fs.readdirSync(dirPath);
                     return files.length > 20;
@@ -332,7 +332,7 @@ class ProjectAnalyzer {
             
             // Check for mixed file types in same directory
             const mixedDirs = structure.directories.filter(dir => {
-                const dirPath = path.join(projectPath, dir);
+                const dirPath = path.join(projectPath, dir.path);
                 try {
                     const files = fs.readdirSync(dirPath);
                     const extensions = files.map(f => path.extname(f)).filter(ext => ext);

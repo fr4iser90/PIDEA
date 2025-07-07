@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import APIChatRepository from '@infrastructure/repositories/APIChatRepository.jsx';
+import APIChatRepository, { apiCall } from '@infrastructure/repositories/APIChatRepository.jsx';
 
 function AnalysisStep({ framework, onAnalysisComplete, workflowData, setWorkflowData }) {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -44,13 +44,20 @@ function AnalysisStep({ framework, onAnalysisComplete, workflowData, setWorkflow
     setAnalysisError(null);
     
     try {
-      // Use existing project analysis API
-      const response = await api.analyzeProject(currentProject.path, {
-        analysisType: 'documentation',
-        framework: 'documentation-framework'
+      // Use new documentation-specific analysis API
+      console.log('📊 [AnalysisStep] Starting documentation analysis for project:', currentProject.id);
+      console.log('📊 [AnalysisStep] Project path:', currentProject.path);
+      
+      const response = await apiCall(`/api/projects/${currentProject.id}/documentation/analyze`, {
+        method: 'POST',
+        body: JSON.stringify({
+          projectPath: currentProject.path
+        })
       });
 
       if (response.success) {
+        console.log('✅ [AnalysisStep] Documentation analysis completed:', response.data);
+        
         // Parse analysis results for documentation framework
         const results = parseAnalysisResults(response.data);
         setAnalysisResults(results);
@@ -67,9 +74,10 @@ function AnalysisStep({ framework, onAnalysisComplete, workflowData, setWorkflow
         // Notify parent component
         onAnalysisComplete(results);
       } else {
-        setAnalysisError('Failed to analyze documentation: ' + response.error);
+        throw new Error(response.error || 'Documentation analysis failed');
       }
     } catch (error) {
+      console.error('❌ [AnalysisStep] Documentation analysis error:', error);
       setAnalysisError('Error during analysis: ' + error.message);
     } finally {
       setIsAnalyzing(false);
@@ -77,39 +85,59 @@ function AnalysisStep({ framework, onAnalysisComplete, workflowData, setWorkflow
   };
 
   const parseAnalysisResults = (analysisData) => {
-    // Convert backend analysis results to documentation framework format
-    // This would parse the real analysis data
+    // Parse real documentation analysis results from DocumentationController
+    const analysis = analysisData.analysis || {};
+    const coverage = analysis.coverage || {};
+    const tasks = analysis.tasks || [];
+    
+    // Extract coverage areas from the analysis
+    const areas = Object.entries(coverage).map(([name, percentage]) => ({
+      name,
+      coverage: percentage,
+      quality: percentage > 80 ? 'Excellent' : percentage > 60 ? 'Good' : 'Poor',
+      missing: [] // TODO: Extract from priorities
+    }));
+    
+    // Calculate overall coverage
+    const overallCoverage = areas.length > 0 
+      ? Math.round(areas.reduce((sum, area) => sum + area.coverage, 0) / areas.length)
+      : 0;
+    
+    // Convert tasks to our format
+    const prioritizedTasks = tasks.map(task => ({
+      title: task.title,
+      priority: task.priority ? task.priority.charAt(0).toUpperCase() + task.priority.slice(1) : 'Medium',
+      estimatedHours: task.estimatedTime || 2,
+      category: task.type || 'documentation',
+      description: task.description
+    }));
+    
+    // Extract recommendations from summary or priorities
+    const recommendations = analysis.priorities?.flatMap(p => p.items) || [
+      'Review the generated analysis from Cursor IDE',
+      'Implement high-priority tasks first',
+      'Focus on areas with low coverage'
+    ];
+    
     return {
-      overallCoverage: analysisData.documentationCoverage || 70,
-      areas: analysisData.areas || [
-        { name: 'Getting Started', coverage: 80, quality: 'Good', missing: ['Installation screenshots'] },
-        { name: 'API Documentation', coverage: 40, quality: 'Poor', missing: ['API examples', 'Auth guide'] },
-        { name: 'Development Setup', coverage: 90, quality: 'Excellent', missing: ['Docker troubleshooting'] },
-        { name: 'Architecture', coverage: 60, quality: 'Good', missing: ['Database schema'] },
-        { name: 'Testing', coverage: 30, quality: 'Poor', missing: ['Test coverage report'] }
+      overallCoverage,
+      areas: areas.length > 0 ? areas : [
+        { name: 'Getting Started', coverage: 70, quality: 'Good', missing: [] },
+        { name: 'API Documentation', coverage: 50, quality: 'Fair', missing: [] },
+        { name: 'Development Guide', coverage: 60, quality: 'Good', missing: [] }
       ],
-      prioritizedTasks: analysisData.recommendedTasks || [
+      prioritizedTasks: prioritizedTasks.length > 0 ? prioritizedTasks : [
         { 
-          title: 'Create API Documentation Examples',
+          title: 'Review Documentation Analysis',
           priority: 'High',
-          estimatedHours: 4,
-          category: 'api',
-          description: 'Add comprehensive API examples with request/response samples'
-        },
-        {
-          title: 'Improve Testing Documentation',
-          priority: 'High', 
-          estimatedHours: 3,
-          category: 'testing',
-          description: 'Create testing guide with examples and coverage reports'
+          estimatedHours: 1,
+          category: 'review',
+          description: 'Review the analysis results from Cursor IDE in the next step'
         }
       ],
-      qualityScore: analysisData.qualityScore || 65,
-      recommendations: analysisData.recommendations || [
-        'Focus on API documentation first - highest impact',
-        'Add visual elements (diagrams, screenshots)',
-        'Implement documentation testing/validation'
-      ]
+      qualityScore: analysis.summary?.avgCoverage || overallCoverage,
+      recommendations,
+      rawAnalysis: analysisData // Keep original for debugging
     };
   };
 

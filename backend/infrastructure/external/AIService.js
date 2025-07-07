@@ -250,8 +250,18 @@ Please analyze the project and execute improvements automatically. Provide detai
      */
     async sendToCursorIDE(aiRequest, options = {}) {
         try {
-            // Use existing CursorIDEService to send AI request
-            const response = await this.cursorIDEService.sendAIRequest(aiRequest, options);
+            // Check if CursorIDEService is available
+            if (!this.cursorIDEService) {
+                this.logger.warn('AIService: CursorIDEService not available, returning mock response');
+                return {
+                    content: 'CursorIDEService not available',
+                    success: false
+                };
+            }
+
+            // Use existing CursorIDEService to send AI request  
+            const prompt = this.buildPromptFromAIRequest(aiRequest);
+            const response = await this.cursorIDEService.postToCursor(prompt);
 
             // Parse and validate response
             const parsedResponse = this.parseAIResponse(response);
@@ -270,6 +280,25 @@ Please analyze the project and execute improvements automatically. Provide detai
             });
             throw error;
         }
+    }
+
+    /**
+     * Build prompt from AI request
+     * @param {Object} aiRequest - AI request object
+     * @returns {string} Simple prompt string
+     */
+    buildPromptFromAIRequest(aiRequest) {
+        const { messages } = aiRequest;
+        let prompt = '';
+        
+        // Just combine the messages into a simple prompt
+        for (const message of messages) {
+            if (message.role === 'user') {
+                prompt += message.content;
+            }
+        }
+        
+        return prompt;
     }
 
     /**
@@ -421,6 +450,17 @@ Please analyze the project and execute improvements automatically. Provide detai
      */
     async generateTaskSuggestions(context, options = {}) {
         try {
+            // If CursorIDEService is not available, return empty suggestions
+            if (!this.cursorIDEService) {
+                this.logger.warn('AIService: CursorIDEService not available, returning empty suggestions');
+                return {
+                    suggestions: [],
+                    analysis: 'CursorIDEService not available',
+                    context,
+                    timestamp: new Date()
+                };
+            }
+
             const data = {
                 projectName: context.projectName,
                 context: context.description,
@@ -442,7 +482,13 @@ Please analyze the project and execute improvements automatically. Provide detai
             this.logger.error('AIService: Failed to generate task suggestions', {
                 error: error.message
             });
-            throw error;
+            // Return empty suggestions instead of throwing
+            return {
+                suggestions: [],
+                analysis: 'Error: ' + error.message,
+                context,
+                timestamp: new Date()
+            };
         }
     }
 

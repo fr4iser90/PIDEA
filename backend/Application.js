@@ -111,6 +111,7 @@ const AutoModeController = require('./presentation/api/AutoModeController');
 const AutoFinishController = require('./presentation/api/AutoFinishController');
 const AnalysisController = require('./presentation/api/AnalysisController');
 const GitController = require('./presentation/api/GitController');
+const DocumentationController = require('./presentation/api/DocumentationController');
 const WebSocketManager = require('./presentation/websocket/WebSocketManager');
 
 class Application {
@@ -624,6 +625,12 @@ class Application {
       logger: this.logger
     });
 
+    this.documentationController = new DocumentationController(
+      this.taskService,
+      this.cursorIDEService,
+      this.logger
+    );
+
     this.logger.info('[Application] Presentation layer initialized');
   }
 
@@ -848,6 +855,9 @@ class Application {
     this.app.post('/api/projects/:projectId/analysis/performance', (req, res) => this.analysisController.analyzePerformance(req, res));
     this.app.post('/api/projects/:projectId/analysis/architecture', (req, res) => this.analysisController.analyzeArchitecture(req, res));
     this.app.post('/api/projects/:projectId/analysis/comprehensive', (req, res) => this.analysisController.analyzeComprehensive(req, res));
+    
+    // Documentation Framework routes (protected) - PROJECT-BASED
+    this.app.post('/api/projects/:projectId/documentation/analyze', (req, res) => this.documentationController.analyzeDocumentation(req, res));
     
     // Analysis output and history routes
     this.app.get('/api/projects/:projectId/analysis/history', (req, res) => this.analysisController.getAnalysisHistory(req, res));
