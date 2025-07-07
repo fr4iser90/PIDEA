@@ -136,6 +136,7 @@ function PromptsPanelComponent({ onPromptClick, onQuickPrompt }) {
 
   // View button handler: show prompt content in modal
   const handleViewPrompt = async (prompt) => {
+    console.log('🔍 [PromptsPanel] handleViewPrompt called for:', prompt.name);
     try {
       let url;
       if (prompt.frameworkId) {
@@ -156,13 +157,18 @@ function PromptsPanelComponent({ onPromptClick, onQuickPrompt }) {
         const category = pathParts.join('/'); // Get the category path
         url = API_CONFIG.endpoints.prompts.file(category, filename);
       }
+      console.log('🔍 [PromptsPanel] Loading content from URL:', url);
       const response = await apiCall(url);
+      console.log('🔍 [PromptsPanel] Response:', response);
       if (response.success) {
+        console.log('🔍 [PromptsPanel] Setting modal content, length:', response.data.content?.length);
         setModalTitle(prompt.name);
         setModalContent(response.data.content);
         setModalOpen(true);
+        console.log('🔍 [PromptsPanel] Modal should be open now');
       }
     } catch (error) {
+      console.error('❌ [PromptsPanel] Error in handleViewPrompt:', error);
       setModalTitle(prompt.name);
       setModalContent('Failed to load prompt content.');
       setModalOpen(true);
@@ -226,6 +232,7 @@ function PromptsPanelComponent({ onPromptClick, onQuickPrompt }) {
 
   return (
     <div className="prompts-tab space-y-4 p-3">
+      {console.log('🔍 [PromptsPanel] Rendering, modalOpen:', modalOpen, 'title:', modalTitle)}
       <PromptDetailsModal open={modalOpen} onClose={() => setModalOpen(false)} title={modalTitle} content={modalContent} />
       <div className="panel-header flex items-center justify-between mb-4">
         <div className="panel-title text-lg font-semibold text-white">Prompts</div>

@@ -1,0 +1,281 @@
+/* Prompt Details Modal Styles */
+
+.prompt-details-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  padding: 20px;
+  backdrop-filter: blur(4px);
+}
+
+.prompt-details-modal {
+  background: #1a1a1a;
+  border: 1px solid #333;
+  border-radius: 12px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+  width: 100%;
+  max-width: 900px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: modalSlideIn 0.3s ease-out;
+}
+
+@keyframes modalSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Modal Header */
+.prompt-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 24px;
+  border-bottom: 1px solid #333;
+  background: linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%);
+}
+
+.prompt-modal-title {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #007acc;
+  line-height: 1.3;
+  word-wrap: break-word;
+}
+
+.prompt-modal-close-btn {
+  background: none;
+  border: none;
+  color: #888;
+  font-size: 1.5rem;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.prompt-modal-close-btn:hover {
+  color: #ffffff;
+  background-color: #333;
+}
+
+/* Modal Content */
+.prompt-modal-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 24px;
+}
+
+.prompt-content {
+  background-color: #1a202c;
+  border: 1px solid #333;
+  border-radius: 6px;
+  padding: 16px;
+  margin: 0;
+  overflow-x: auto;
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: #e2e8f0;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  max-height: 60vh;
+  overflow-y: auto;
+}
+
+.prompt-content code {
+  background: none;
+  padding: 0;
+  color: inherit;
+}
+
+/* Markdown Content Styles */
+.prompt-markdown-content {
+  color: #e2e8f0;
+  line-height: 1.6;
+  font-size: 0.875rem;
+}
+
+.prompt-markdown-content h1,
+.prompt-markdown-content h2,
+.prompt-markdown-content h3,
+.prompt-markdown-content h4,
+.prompt-markdown-content h5,
+.prompt-markdown-content h6 {
+  color: #ffffff;
+  margin-top: 24px;
+  margin-bottom: 16px;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.prompt-markdown-content h1 {
+  font-size: 1.75rem;
+  border-bottom: 2px solid #333;
+  padding-bottom: 8px;
+}
+
+.prompt-markdown-content h2 {
+  font-size: 1.5rem;
+  border-bottom: 1px solid #333;
+  padding-bottom: 6px;
+}
+
+.prompt-markdown-content h3 {
+  font-size: 1.25rem;
+}
+
+.prompt-markdown-content h4 {
+  font-size: 1.125rem;
+}
+
+.prompt-markdown-content p {
+  margin-bottom: 16px;
+}
+
+.prompt-markdown-content ul,
+.prompt-markdown-content ol {
+  margin-bottom: 16px;
+  padding-left: 24px;
+}
+
+.prompt-markdown-content li {
+  margin-bottom: 4px;
+}
+
+.prompt-markdown-content blockquote {
+  border-left: 4px solid #007acc;
+  padding-left: 16px;
+  margin: 16px 0;
+  color: #a0aec0;
+  font-style: italic;
+}
+
+.prompt-markdown-content code {
+  background-color: #2d3748;
+  color: #e2e8f0;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  font-size: 0.875em;
+}
+
+.prompt-markdown-content pre {
+  background-color: #1a202c;
+  border: 1px solid #333;
+  border-radius: 6px;
+  padding: 16px;
+  margin: 16px 0;
+  overflow-x: auto;
+}
+
+.prompt-markdown-content pre code {
+  background: none;
+  padding: 0;
+  color: #e2e8f0;
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .prompt-details-modal {
+    max-width: 95vw;
+    max-height: 95vh;
+    margin: 10px;
+  }
+
+  .prompt-modal-header {
+    padding: 16px 20px;
+  }
+
+  .prompt-modal-title {
+    font-size: 1.25rem;
+  }
+
+  .prompt-modal-content {
+    padding: 16px 20px;
+  }
+
+  .prompt-markdown-content {
+    font-size: 0.8rem;
+  }
+
+  .prompt-markdown-content h1 {
+    font-size: 1.5rem;
+  }
+
+  .prompt-markdown-content h2 {
+    font-size: 1.25rem;
+  }
+
+  .prompt-markdown-content h3 {
+    font-size: 1.125rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .prompt-details-modal-overlay {
+    padding: 10px;
+  }
+
+  .prompt-details-modal {
+    max-width: 100vw;
+    max-height: 100vh;
+    border-radius: 0;
+  }
+
+  .prompt-modal-header {
+    padding: 12px 16px;
+  }
+
+  .prompt-modal-title {
+    font-size: 1.125rem;
+  }
+
+  .prompt-modal-content {
+    padding: 12px 16px;
+  }
+
+  .prompt-markdown-content {
+    font-size: 0.75rem;
+  }
+}
+
+/* Scrollbar Styling */
+.prompt-modal-content::-webkit-scrollbar,
+.prompt-content::-webkit-scrollbar {
+  width: 8px;
+}
+
+.prompt-modal-content::-webkit-scrollbar-track,
+.prompt-content::-webkit-scrollbar-track {
+  background: #1a1a1a;
+}
+
+.prompt-modal-content::-webkit-scrollbar-thumb,
+.prompt-content::-webkit-scrollbar-thumb {
+  background: #4a5568;
+  border-radius: 4px;
+}
+
+.prompt-modal-content::-webkit-scrollbar-thumb:hover,
+.prompt-content::-webkit-scrollbar-thumb:hover {
+  background: #2d3748;
+}

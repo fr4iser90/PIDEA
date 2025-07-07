@@ -181,6 +181,18 @@ class ContentLibraryController {
     }
   }
 
+  // GET /api/prompts/:category/:subcategory/:filename - Einzelne Prompt-Datei (mit Subkategorie)
+  async getPromptFileWithSubcategory(req, res) {
+    try {
+      const { category, subcategory, filename } = req.params;
+      const filePath = path.join(this.contentLibraryPath, 'prompts', category, subcategory, filename);
+      const content = await fs.readFile(filePath, 'utf-8');
+      res.json({ success: true, category, subcategory, filename, content });
+    } catch (error) {
+      res.status(404).json({ success: false, error: 'Prompt file not found', message: error.message });
+    }
+  }
+
   // ===== TEMPLATE-ENDPUNKTE =====
 
   // GET /api/templates - Alle generischen Templates
