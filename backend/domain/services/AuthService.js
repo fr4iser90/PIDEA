@@ -136,12 +136,12 @@ class AuthService {
       });
       
       const session = await this.userSessionRepository.findByAccessToken(accessToken);
-      console.log('🔍 [AuthService] Session found:', session ? {
-        id: session.id,
-        userId: session.userId,
-        isActive: session.isActive(),
-        expiresAt: session.expiresAt
-      } : 'null');
+      // console.log('🔍 [AuthService] Session found:', session ? {
+      //   id: session.id,
+      //   userId: session.userId,
+      //   isActive: session.isActive(),
+      //   expiresAt: session.expiresAt
+      // } : 'null');
       
       if (!session || !session.isActive()) {
         console.log('❌ [AuthService] Session invalid or expired');
@@ -149,11 +149,11 @@ class AuthService {
       }
 
       const user = await this.userRepository.findById(decoded.userId);
-      console.log('🔍 [AuthService] User found:', user ? {
-        id: user.id,
-        email: user.email,
-        role: user.role
-      } : 'null');
+      // console.log('🔍 [AuthService] User found:', user ? {
+      //   id: user.id,
+      //   email: user.email,
+      //   role: user.role
+      // } : 'null');
       
       if (!user) {
         console.log('❌ [AuthService] User not found');

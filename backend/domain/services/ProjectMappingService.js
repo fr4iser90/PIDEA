@@ -2,9 +2,10 @@ const path = require('path');
 const fs = require('fs').promises;
 
 class ProjectMappingService {
-    constructor() {
+    constructor(dependencies = {}) {
         this.projectMappings = new Map();
         this.workspaceMappings = new Map();
+        this.monorepoStrategy = dependencies.monorepoStrategy;
     }
 
     /**
@@ -12,12 +13,28 @@ class ProjectMappingService {
      * @param {string} workspacePath - Full workspace path
      * @returns {string} Project ID
      */
-    getProjectIdFromWorkspace(workspacePath) {
+    async getProjectIdFromWorkspace(workspacePath) {
         if (!workspacePath) return 'default';
         
         // Extract project name from path
         const pathParts = workspacePath.split('/');
-        const projectName = pathParts[pathParts.length - 1];
+        let projectName = pathParts[pathParts.length - 1];
+        
+        // Use MonorepoStrategy to detect if it's a monorepo
+        if (this.monorepoStrategy) {
+            try {
+                const isMonorepo = await this.monorepoStrategy.isMonorepo(workspacePath);
+                if (isMonorepo) {
+                    // For monorepo subdirectories, use parent directory
+                    const monorepoSubdirs = ['backend', 'frontend', 'client', 'server', 'api', 'app', 'web', 'mobile'];
+                    if (monorepoSubdirs.includes(projectName) && pathParts.length > 1) {
+                        projectName = pathParts[pathParts.length - 2];
+                    }
+                }
+            } catch (error) {
+                console.warn('ProjectMappingService: Failed to check monorepo status:', error.message);
+            }
+        }
         
         // Convert to lowercase and remove special characters
         const projectId = projectName.toLowerCase().replace(/[^a-z0-9]/g, '');
@@ -43,8 +60,8 @@ class ProjectMappingService {
      * @param {string} workspacePath - Workspace path
      * @returns {string} Project ID
      */
-    getProjectIdFromWorkspacePath(workspacePath) {
-        return this.workspaceMappings.get(workspacePath) || this.getProjectIdFromWorkspace(workspacePath);
+    async getProjectIdFromWorkspacePath(workspacePath) {
+        return this.workspaceMappings.get(workspacePath) || await this.getProjectIdFromWorkspace(workspacePath);
     }
 
     /**

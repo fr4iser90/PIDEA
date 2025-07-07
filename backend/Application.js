@@ -808,6 +808,11 @@ class Application {
     this.app.post('/api/projects/:projectId/tasks/:id/execute', (req, res) => this.taskController.executeTask(req, res));
     this.app.get('/api/projects/:projectId/tasks/:id/execution', (req, res) => this.taskController.getTaskExecution(req, res));
     this.app.post('/api/projects/:projectId/tasks/:id/cancel', (req, res) => this.taskController.cancelTask(req, res));
+    
+    // NEW: Sync docs tasks route
+    this.app.post('/api/projects/:projectId/tasks/sync-docs', (req, res) => this.taskController.syncDocsTasks(req, res));
+    // NEW: Clean docs tasks route
+    this.app.post('/api/projects/:projectId/tasks/clean-docs', (req, res) => this.taskController.cleanDocsTasks(req, res));
 
     // Project Analysis routes (protected) - PROJECT-BASED
     this.app.use('/api/projects/:projectId/analysis', this.authMiddleware.authenticate());
@@ -882,9 +887,9 @@ class Application {
     this.ideMirrorController.setupRoutes(this.app);
 
     // Documentation Tasks routes (protected)
-    this.app.use('/api/docs-tasks', this.authMiddleware.authenticate());
-    this.app.get('/api/docs-tasks', (req, res) => this.ideController.getDocsTasks(req, res));
-    this.app.get('/api/docs-tasks/:filename', (req, res) => this.ideController.getDocsTaskDetails(req, res));
+    this.app.use('/api/projects/:projectId/docs-tasks', this.authMiddleware.authenticate());
+    this.app.get('/api/projects/:projectId/docs-tasks', (req, res) => this.ideController.getDocsTasks(req, res));
+    this.app.get('/api/projects/:projectId/docs-tasks/:id', (req, res) => this.ideController.getDocsTaskDetails(req, res));
 
     // Auto Finish routes (protected)
     this.app.use('/api/projects/:projectId/auto-finish', this.authMiddleware.authenticate());
