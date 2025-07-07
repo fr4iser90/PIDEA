@@ -1,3 +1,5 @@
+@import './panel-block.css';
+
 /* VibeCoder Mode Button Group */
 .vibecoder-btn-group {
     display: flex;

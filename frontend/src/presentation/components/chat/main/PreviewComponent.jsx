@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import APIChatRepository from '@infrastructure/repositories/APIChatRepository.jsx';
+import '@css/main/preview.css';
 
 function PreviewComponent({ eventBus, activePort }) {
   const [previewData, setPreviewData] = useState(null);

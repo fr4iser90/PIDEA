@@ -3,7 +3,7 @@ import webSocketService from '@infrastructure/services/WebSocketService';
 import { StreamingService } from '@application/services/StreamingService';
 import CanvasRenderer from './CanvasRenderer';
 import StreamingControls from './StreamingControls';
-import '@css/main/IDEMirrorComponent.css';
+import '@css/main/mirror.css';
 
 // Create streaming service instance
 const streamingService = new StreamingService(webSocketService);

@@ -1,3 +1,5 @@
+@import './panel-block.css';
+
 /* Content Library Panel Styles */
 
 /* (Alle Tailwind-@apply-Direktiven entfernt. Styling jetzt direkt im JSX!) */
@@ -224,4 +226,6 @@
 /* Focus States */
 .focus-ring {
   @apply focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-gray-900;
-} 
+}
+
+/* Content Library Panel specific styles (add below) */ 

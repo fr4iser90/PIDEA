@@ -10,7 +10,7 @@
  * @class ChatPanelComponent
  */
 import React, { useState, useEffect } from 'react';
-import '@css/panel/panel-chat.css';
+import '@css/panel/chat-panel.css';
 
 function ChatPanelComponent({ eventBus, currentSessionId, onSessionSelect }) {
   const [chatSessions, setChatSessions] = useState([]);

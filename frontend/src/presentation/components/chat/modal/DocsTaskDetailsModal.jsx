@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { marked } from 'marked';
-import '@css/panel/task-docs-details-modal.css';
+import '@css/modal/task-docs-details-modal.css';
 
 /**
  * Modal component for displaying documentation task details

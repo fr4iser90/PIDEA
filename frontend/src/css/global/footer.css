@@ -1,0 +1,27 @@
+.app-footer {
+  height: 40px;
+  min-height: 32px;
+  max-height: 48px;
+  background: #23272f;
+  color: #e6e6e6;
+  display: flex;
+  align-items: center;
+  padding: 0 24px;
+  font-size: 0.95rem;
+  border-top: 1px solid #222;
+  z-index: 101;
+  width: 100%;
+  box-sizing: border-box;
+  position: sticky;
+  bottom: 0;
+  left: 0;
+  right: 0;
+}
+
+@media (max-width: 600px) {
+  .app-footer {
+    font-size: 0.85rem;
+    padding: 0 8px;
+    height: 32px;
+  }
+}

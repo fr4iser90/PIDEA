@@ -12,7 +12,7 @@
 import React, { useState, useEffect } from 'react';
 import useAuthStore from '@infrastructure/stores/AuthStore.jsx';
 import ChatPanelComponent from './chat/sidebar-left/ChatPanelComponent.jsx';
-import '@css/sidebar/sidebar-left.css';
+import '@css/global/sidebar-left.css';
 
 function SidebarLeft({ eventBus, activePort, onActivePortChange, mode = 'chat' }) {
   console.log('🔍 SidebarLeft RENDERING!');
@@ -37,26 +37,26 @@ function SidebarLeft({ eventBus, activePort, onActivePortChange, mode = 'chat' }
       if (onActivePortChange) onActivePortChange(data.port);
     };
     
-    const handleSidebarToggle = () => {
+    const handleLeftSidebarToggle = () => {
       const sidebar = document.querySelector('.sidebar-left');
       if (sidebar) {
         const isVisible = sidebar.style.display !== 'none';
         sidebar.style.display = isVisible ? 'none' : 'flex';
-        console.log('Sidebar toggled:', isVisible ? 'hidden' : 'visible');
+        console.log('Left Sidebar toggled:', isVisible ? 'hidden' : 'visible');
       } else {
-        console.log('Sidebar element not found');
+        console.log('Left Sidebar element not found');
       }
     };
 
     // IDE Management Events
     eventBus.on('ideListUpdated', handleIDEListUpdated);
     eventBus.on('activeIDEChanged', handleActiveIDEChanged);
-    eventBus.on('sidebar-left-toggle', handleSidebarToggle);
+    eventBus.on('sidebar-left-toggle', handleLeftSidebarToggle);
     
     return () => {
       eventBus.off('ideListUpdated', handleIDEListUpdated);
       eventBus.off('activeIDEChanged', handleActiveIDEChanged);
-      eventBus.off('sidebar-left-toggle', handleSidebarToggle);
+      eventBus.off('sidebar-left-toggle', handleLeftSidebarToggle);
     };
   }, [eventBus, onActivePortChange]);
 

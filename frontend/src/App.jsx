@@ -7,7 +7,8 @@ import IDEMirrorComponent from '@presentation/components/mirror/main/IDEMirrorCo
 import PreviewComponent from '@presentation/components/chat/main/PreviewComponent.jsx';
 import GitManagementComponent from '@presentation/components/git/main/GitManagementComponent.jsx';
 import AuthWrapper from '@presentation/components/auth/AuthWrapper.jsx';
-import UserMenu from '@presentation/components/auth/UserMenu.jsx';
+import Header from '@presentation/components/Header.jsx';
+import Footer from '@presentation/components/Footer.jsx';
 import useAuthStore from '@infrastructure/stores/AuthStore.jsx';
 
 function App() {
@@ -17,8 +18,9 @@ function App() {
   const [error, setError] = useState(null);
   const [activePort, setActivePort] = useState(null);
   const [isSplitView, setIsSplitView] = useState(false);
-  const [isSidebarVisible, setIsSidebarVisible] = useState(true);
-  const [isRightPanelVisible, setIsRightPanelVisible] = useState(true);
+  const [isLeftSidebarVisible, setIsLeftSidebarVisible] = useState(true);
+  const [isRightSidebarVisible, setIsRightSidebarVisible] = useState(true);
+  const [gitStatus, setGitStatus] = useState(null);
   const containerRef = useRef(null);
   const { isAuthenticated } = useAuthStore();
 
@@ -98,13 +100,13 @@ function App() {
 
   useEffect(() => {
     if (!eventBus) return;
-    const handleSidebarToggle = () => setIsSidebarVisible(v => !v);
-    const handleRightPanelToggle = () => setIsRightPanelVisible(v => !v);
-    eventBus.on('sidebar-left-toggle', handleSidebarToggle);
-    eventBus.on('sidebar-right-toggle', handleRightPanelToggle);
+    const handleLeftSidebarToggle = () => setIsLeftSidebarVisible(v => !v);
+    const handleRightSidebarToggle = () => setIsRightSidebarVisible(v => !v);
+    eventBus.on('sidebar-left-toggle', handleLeftSidebarToggle);
+    eventBus.on('sidebar-right-toggle', handleRightSidebarToggle);
     return () => {
-      eventBus.off('sidebar-left-toggle', handleSidebarToggle);
-      eventBus.off('sidebar-right-toggle', handleRightPanelToggle);
+      eventBus.off('sidebar-left-toggle', handleLeftSidebarToggle);
+      eventBus.off('sidebar-right-toggle', handleRightSidebarToggle);
     };
   }, [eventBus]);
 
@@ -130,18 +132,26 @@ function App() {
     }
   };
 
-  const handleNavigationClick = (view) => {
+    const handleNavigationClick = (view) => {
     if (view === 'preview') {
       // Toggle split view for preview
       setIsSplitView(!isSplitView);
       setCurrentView('chat'); // Always stay in chat view, just add preview
     } else {
       setIsSplitView(false); // Exit split view for other views
-    setCurrentView(view);
+      setCurrentView(view);
     }
     if (eventBus) {
       eventBus.emit('view-changed', { view });
     }
+  };
+
+  const handleLeftSidebarToggle = () => {
+    setIsLeftSidebarVisible(v => !v);
+  };
+
+  const handleRightSidebarToggle = () => {
+    setIsRightSidebarVisible(v => !v);
   };
 
   if (isLoading) {
@@ -170,72 +180,18 @@ function App() {
   return (
     <AuthWrapper>
       <div ref={containerRef} className="app-root">
-        {/* Header */}
-        <header className="app-header">
-          <div className="header-content">
-            <h1 className="app-title">PIDEA- Your personal AI agent</h1>
-            
-            {/* Navigation */}
-            <nav className="header-navigation">
-              <button
-                onClick={() => handleNavigationClick('chat')}
-                className={`mode-btn ${currentView === 'chat' ? 'active' : ''}`}
-              >
-                💬 Chat
-              </button>
-              <button
-                onClick={() => handleNavigationClick('ide-mirror')}
-                className={`mode-btn ${currentView === 'ide-mirror' ? 'active' : ''}`}
-              >
-                🖥️ IDE Mirror
-              </button>
-              <button
-                onClick={() => handleNavigationClick('preview')}
-                className={`mode-btn ${currentView === 'preview' ? 'active' : ''}`}
-              >
-                👁️ Preview
-              </button>
-              <button
-                onClick={() => handleNavigationClick('git')}
-                className={`mode-btn ${currentView === 'git' ? 'active' : ''}`}
-              >
-                🔧 Git
-              </button>
-              <button
-                onClick={() => handleNavigationClick('code')}
-                className={`mode-btn ${currentView === 'code' ? 'active' : ''}`}
-              >
-                📝 Code
-              </button>
-            </nav>
-          </div>
-          
-          <div className="header-actions">
-            <button
-              onClick={() => eventBus?.emit('sidebar-left-toggle')}
-              className="btn-icon"
-              title="Toggle Sidebar"
-            >
-              📁
-            </button>
-            <button
-              onClick={() => {
-                console.log('Header right panel button clicked');
-                eventBus?.emit('sidebar-right-toggle');
-              }}
-              className="btn-icon"
-              title="Toggle Right Panel"
-            >
-              📋
-            </button>
-            <UserMenu />
-          </div>
-        </header>
+        <Header 
+          eventBus={eventBus}
+          currentView={currentView}
+          onNavigationClick={handleNavigationClick}
+          onLeftSidebarToggle={handleLeftSidebarToggle}
+          onRightSidebarToggle={handleRightSidebarToggle}
+        />
 
         {/* Main Content */}
-        <main className={`main-layout${isSplitView ? ' split-view' : ''}${!isSidebarVisible ? ' sidebar-hidden' : ''}${!isRightPanelVisible ? ' rightpanel-hidden' : ''}`}>
-          {/* Sidebar */}
-          {isSidebarVisible && (
+        <main className={`main-layout${isSplitView ? ' split-view' : ''}${!isLeftSidebarVisible ? ' sidebar-hidden' : ''}${!isRightSidebarVisible ? ' rightpanel-hidden' : ''}`}>
+          {/* Left Sidebar */}
+          {isLeftSidebarVisible && (
             <SidebarLeft eventBus={eventBus} activePort={activePort} onActivePortChange={setActivePort} />
           )}
           
@@ -245,9 +201,17 @@ function App() {
             {isSplitView && <PreviewComponent eventBus={eventBus} activePort={activePort} />}
           </div>
           
-          {/* Right Panel */}
-          {isRightPanelVisible && <SidebarRight eventBus={eventBus} />}
+          {/* Right Sidebar */}
+          {isRightSidebarVisible && <SidebarRight eventBus={eventBus} />}
         </main>
+
+        <Footer 
+          eventBus={eventBus}
+          activePort={activePort}
+          gitStatus={gitStatus}
+          version="1.0.0"
+          message="Welcome to PIDEA! Your AI development assistant is ready to help."
+        />
       </div>
     </AuthWrapper>
   );

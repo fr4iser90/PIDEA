@@ -18,7 +18,7 @@ import PromptsPanelComponent from './chat/panel/PromptsPanelComponent.jsx';
 import TemplatesPanelComponent from './chat/panel/TemplatesPanelComponent.jsx';
 import TaskSelectionModal from './chat/modal/TaskSelectionModal.jsx';
 import DocsTaskDetailsModal from './chat/modal/DocsTaskDetailsModal.jsx';
-import '@css/sidebar/sidebar-right.css';
+import '@css/global/sidebar-right.css';
 
 const TASK_TYPES = [
   { value: 'test', label: 'Test' },
