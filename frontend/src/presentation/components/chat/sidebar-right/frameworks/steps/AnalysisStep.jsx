@@ -55,27 +55,30 @@ function AnalysisStep({ framework, onAnalysisComplete, workflowData, setWorkflow
         })
       });
 
-      if (response.success) {
-        console.log('✅ [AnalysisStep] Documentation analysis completed:', response.data);
-        
-        // Parse analysis results for documentation framework
-        const results = parseAnalysisResults(response.data);
-        setAnalysisResults(results);
-        
-        // Update workflow data
-        setWorkflowData(prev => ({
-          ...prev,
-          projectId: currentProject.id,
-          projectName: currentProject.name,
-          projectPath: currentProject.path,
-          analysisComplete: true
-        }));
-        
-        // Notify parent component
-        onAnalysisComplete(results);
-      } else {
-        throw new Error(response.error || 'Documentation analysis failed');
-      }
+              if (response.success) {
+          console.log('✅ [AnalysisStep] Documentation analysis completed:', response.data);
+          console.log('✅ [AnalysisStep] Created tasks:', response.data.createdTasks);
+          
+          // Parse analysis results for documentation framework
+          const results = parseAnalysisResults(response.data);
+          setAnalysisResults(results);
+          
+          // Update workflow data with created tasks
+          setWorkflowData(prev => ({
+            ...prev,
+            projectId: currentProject.id,
+            projectName: currentProject.name,
+            projectPath: currentProject.path,
+            analysisComplete: true,
+            createdTasks: response.data.createdTasks || [],
+            taskCount: response.data.createdTasks?.length || 0
+          }));
+          
+          // Notify parent component
+          onAnalysisComplete(results);
+        } else {
+          throw new Error(response.error || 'Documentation analysis failed');
+        }
     } catch (error) {
       console.error('❌ [AnalysisStep] Documentation analysis error:', error);
       setAnalysisError('Error during analysis: ' + error.message);
@@ -302,6 +305,38 @@ function AnalysisStep({ framework, onAnalysisComplete, workflowData, setWorkflow
               </span>
             </div>
           </div>
+
+          {workflowData.taskCount > 0 && (
+            <div className="task-creation-success">
+              <div className="success-icon">✅</div>
+              <div className="success-content">
+                <h4>Tasks Created & Sent to IDE</h4>
+                <p>
+                  Successfully created <strong>{workflowData.taskCount} tasks</strong> from the documentation analysis.
+                  These tasks have been automatically sent to Cursor IDE for execution.
+                </p>
+                <div className="success-details">
+                  <span className="detail-item">📋 {workflowData.taskCount} tasks created</span>
+                  <span className="detail-item">🗃️ Saved to database</span>
+                  <span className="detail-item">🚀 Sent to Cursor IDE</span>
+                  <span className="detail-item">🤖 AI will execute tasks</span>
+                </div>
+                
+                {analysisResults?.rawAnalysis?.executionTriggered && (
+                  <div className="execution-info">
+                    <div className="execution-status">
+                      <span className="status-icon">🎯</span>
+                      <strong>Auto-Execution Started</strong>
+                    </div>
+                    <p className="execution-details">
+                      Cursor IDE is now executing the documentation tasks automatically. 
+                      Check your IDE for progress updates and Git commits.
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
 
           {renderCoverageChart()}
           {renderTaskPreview()}

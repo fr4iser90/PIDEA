@@ -58,6 +58,9 @@ function Footer({ eventBus, activePort, gitStatus, gitBranch, version = 'dev', m
           </div>
         </div>
       </div>
+      <div className="footer-images" style={{ display: 'flex', gap: '10px', marginLeft: '10px' }}>
+        <img src="/big.png" alt="Big Icon" style={{ height: '24px' }} />
+      </div>
     </footer>
   );
 }

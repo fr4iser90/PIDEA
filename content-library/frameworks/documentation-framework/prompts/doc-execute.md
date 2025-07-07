@@ -1,7 +1,59 @@
 # Documentation Execution Framework
 
 ## 🎯 Goal
-Execute documentation creation/improvement tasks based on the analysis and improvement plan. This prompt works iteratively to create high-quality documentation piece by piece.
+Execute documentation creation/improvement tasks based on the analysis and improvement plan. This prompt works iteratively to create high-quality documentation piece by piece using the **PIDEA Standard Documentation Structure**.
+
+## 📁 MANDATORY: PIDEA Documentation Structure
+**ALWAYS use this exact structure for ALL projects:**
+
+```
+docs/
+├── 01_getting-started/
+│   ├── installation.md
+│   ├── quick-start.md
+│   └── screenshots/
+├── 02_architecture/
+│   ├── diagrams/
+│   ├── overview.md
+│   └── components.md
+├── 03_features/
+│   ├── overview.md
+│   ├── [feature-name].md
+│   └── screenshots/
+├── 04_api-reference/
+│   ├── endpoints.md
+│   ├── authentication.md
+│   └── examples.md
+├── 05_development/
+│   ├── environment.md
+│   ├── setup.md
+│   └── git-workflow.md
+├── 06_deployment/
+│   ├── docker.md
+│   ├── production.md
+│   └── monitoring.md
+├── 07_testing/
+│   ├── unit-tests.md
+│   ├── integration-tests.md
+│   └── e2e-tests.md
+├── 08_reference/
+│   ├── config.md
+│   ├── cli.md
+│   └── troubleshooting.md
+├── 09_roadmap/
+│   ├── features/
+│   └── overview.md
+├── 10_maintenance/
+│   ├── updates.md
+│   └── support.md
+├── assets/
+│   ├── diagrams/
+│   ├── screenshots/
+│   └── icons/
+└── README.md
+```
+
+**FIRST STEP: Always create this folder structure before writing any documentation!**
 
 ## 📋 Input Requirements
 
@@ -22,7 +74,53 @@ Specify which documentation task to execute:
 
 ## 📋 Execution Process
 
-### Phase 1: Pre-Execution Analysis
+### Phase 1: MANDATORY Structure Creation
+**BEFORE writing any documentation, ALWAYS execute these commands:**
+
+```bash
+# Create the PIDEA standard documentation structure
+mkdir -p docs/01_getting-started/screenshots
+mkdir -p docs/02_architecture/diagrams
+mkdir -p docs/03_features/screenshots
+mkdir -p docs/04_api-reference
+mkdir -p docs/05_development
+mkdir -p docs/06_deployment
+mkdir -p docs/07_testing
+mkdir -p docs/08_reference
+mkdir -p docs/09_roadmap/features
+mkdir -p docs/10_maintenance
+mkdir -p docs/assets/diagrams
+mkdir -p docs/assets/screenshots
+mkdir -p docs/assets/icons
+
+# Create index files for each section
+touch docs/01_getting-started/installation.md
+touch docs/01_getting-started/quick-start.md
+touch docs/02_architecture/overview.md
+touch docs/02_architecture/components.md
+touch docs/03_features/overview.md
+touch docs/04_api-reference/endpoints.md
+touch docs/04_api-reference/authentication.md
+touch docs/04_api-reference/examples.md
+touch docs/05_development/environment.md
+touch docs/05_development/setup.md
+touch docs/05_development/git-workflow.md
+touch docs/06_deployment/docker.md
+touch docs/06_deployment/production.md
+touch docs/06_deployment/monitoring.md
+touch docs/07_testing/unit-tests.md
+touch docs/07_testing/integration-tests.md
+touch docs/07_testing/e2e-tests.md
+touch docs/08_reference/config.md
+touch docs/08_reference/cli.md
+touch docs/08_reference/troubleshooting.md
+touch docs/09_roadmap/overview.md
+touch docs/10_maintenance/updates.md
+touch docs/10_maintenance/support.md
+touch docs/README.md
+```
+
+### Phase 2: Pre-Execution Analysis
 Before creating documentation, analyze:
 
 #### Project Context
@@ -37,7 +135,79 @@ Before creating documentation, analyze:
 - **Length**: Brief/Detailed/Comprehensive
 - **Examples**: Code samples, screenshots, diagrams needed
 
-### Phase 2: Content Creation Strategy
+### Phase 3: Main README Creation
+**Create the main `docs/README.md` with this EXACT structure:**
+
+```markdown
+# [Project Name] Documentation
+
+Welcome to the complete documentation for [Project Name]. This documentation follows the PIDEA standard structure for consistency and ease of navigation.
+
+## 📚 Documentation Structure
+
+### 🚀 [01. Getting Started](./01_getting-started/)
+- [Installation Guide](./01_getting-started/installation.md)
+- [Quick Start](./01_getting-started/quick-start.md)
+- [Screenshots](./01_getting-started/screenshots/)
+
+### 🏗️ [02. Architecture](./02_architecture/)
+- [System Overview](./02_architecture/overview.md)
+- [Component Architecture](./02_architecture/components.md)
+- [Diagrams](./02_architecture/diagrams/)
+
+### ⚡ [03. Features](./03_features/)
+- [Feature Overview](./03_features/overview.md)
+- [Screenshots](./03_features/screenshots/)
+
+### 🔌 [04. API Reference](./04_api-reference/)
+- [API Endpoints](./04_api-reference/endpoints.md)
+- [Authentication](./04_api-reference/authentication.md)
+- [Examples](./04_api-reference/examples.md)
+
+### 💻 [05. Development](./05_development/)
+- [Environment Setup](./05_development/environment.md)
+- [Development Setup](./05_development/setup.md)
+- [Git Workflow](./05_development/git-workflow.md)
+
+### 🚀 [06. Deployment](./06_deployment/)
+- [Docker Deployment](./06_deployment/docker.md)
+- [Production Setup](./06_deployment/production.md)
+- [Monitoring](./06_deployment/monitoring.md)
+
+### 🧪 [07. Testing](./07_testing/)
+- [Unit Tests](./07_testing/unit-tests.md)
+- [Integration Tests](./07_testing/integration-tests.md)
+- [End-to-End Tests](./07_testing/e2e-tests.md)
+
+### 📖 [08. Reference](./08_reference/)
+- [Configuration](./08_reference/config.md)
+- [CLI Reference](./08_reference/cli.md)
+- [Troubleshooting](./08_reference/troubleshooting.md)
+
+### 🗺️ [09. Roadmap](./09_roadmap/)
+- [Roadmap Overview](./09_roadmap/overview.md)
+- [Future Features](./09_roadmap/features/)
+
+### 🔧 [10. Maintenance](./10_maintenance/)
+- [Updates](./10_maintenance/updates.md)
+- [Support](./10_maintenance/support.md)
+
+---
+
+## 🎯 Quick Navigation
+
+- **New to [Project Name]?** → Start with [Getting Started](./01_getting-started/)
+- **Need API docs?** → Check [API Reference](./04_api-reference/)
+- **Want to contribute?** → See [Development](./05_development/)
+- **Deployment help?** → Visit [Deployment](./06_deployment/)
+- **Having issues?** → Check [Troubleshooting](./08_reference/troubleshooting.md)
+
+---
+
+*This documentation follows the PIDEA standard structure for consistent, high-quality project documentation.*
+```
+
+### Phase 4: Content Creation Strategy
 
 #### Structure Planning
 ```markdown
@@ -253,12 +423,24 @@ graph TD
 ## 🎯 Usage Instructions
 
 ### For New Documentation
-1. **Analyze Requirements**: Use analysis results to understand what's needed
-2. **Select Template**: Choose appropriate template based on content type
-3. **Create Content**: Follow structure and quality guidelines
-4. **Test Examples**: Verify all code examples and procedures work
-5. **Review Quality**: Complete quality checklist
-6. **Update Index**: Add new documentation to navigation/index
+1. **Create PIDEA Structure**: ALWAYS start by creating the standard folder structure
+2. **Create Main README**: Use the exact template provided above
+3. **Analyze Requirements**: Use analysis results to understand what's needed
+4. **Place Content Correctly**: Map content to the appropriate PIDEA sections:
+   - **Installation/Setup** → `01_getting-started/`
+   - **System Design** → `02_architecture/`
+   - **Feature Descriptions** → `03_features/`
+   - **API Docs** → `04_api-reference/`
+   - **Development Info** → `05_development/`
+   - **Deployment** → `06_deployment/`
+   - **Testing** → `07_testing/`
+   - **Configuration** → `08_reference/`
+   - **Future Plans** → `09_roadmap/`
+   - **Maintenance** → `10_maintenance/`
+5. **Follow Structure Guidelines**: Keep content organized within the correct sections
+6. **Test Examples**: Verify all code examples and procedures work
+7. **Review Quality**: Complete quality checklist
+8. **Update Links**: Ensure all cross-references work correctly
 
 ### For Updating Existing Documentation
 1. **Review Current Content**: Identify what needs updating
@@ -276,4 +458,23 @@ graph TD
 5. **Redirect Old Links**: Set up redirects for moved content
 6. **Announce Changes**: Communicate restructuring to users
 
-This framework ensures systematic, high-quality documentation creation that serves both technical and non-technical stakeholders effectively. 
+This framework ensures systematic, high-quality documentation creation that serves both technical and non-technical stakeholders effectively.
+
+## ⚠️ CRITICAL RULES
+
+### 🚫 NEVER DO THIS:
+- **Don't create your own folder structure** - Always use the PIDEA standard
+- **Don't skip folder creation** - Every project needs the complete structure
+- **Don't rename numbered folders** - Keep the 01_, 02_, etc. prefixes
+- **Don't mix content types** - Place content in the correct sections
+- **Don't create a flat structure** - Use the hierarchical organization
+
+### ✅ ALWAYS DO THIS:
+- **Create the full PIDEA structure first** - Even if some folders remain empty
+- **Use the exact folder names** - `01_getting-started`, not `getting-started`
+- **Create the main README** - With the complete navigation structure
+- **Follow the content mapping** - Put content in the right sections
+- **Maintain consistency** - Every project should look the same
+
+### 🎯 QUALITY GOAL:
+**Every project should have identical documentation structure, making it easy for developers to navigate any project instantly.** 
