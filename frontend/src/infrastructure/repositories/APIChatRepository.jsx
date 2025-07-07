@@ -104,7 +104,7 @@ const API_CONFIG = {
 };
 
 // Helper function to make API calls
-const apiCall = async (endpoint, options = {}) => {
+export const apiCall = async (endpoint, options = {}) => {
   const url = typeof endpoint === 'function' ? endpoint() : `${API_CONFIG.baseURL}${endpoint}`;
   
   console.log('🔍 [APIChatRepository] Making API call to:', url);
@@ -456,4 +456,4 @@ export default class APIChatRepository extends ChatRepository {
   }
 }
 
-export { API_CONFIG, apiCall }; 
+export { API_CONFIG }; 

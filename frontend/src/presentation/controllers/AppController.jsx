@@ -66,10 +66,16 @@ class AppController {
     let frameworks = [];
     try {
       const res = await fetch('/api/frameworks');
-      const files = await res.json();
-      frameworks = files.map(name => ({ name, active: false }));
+      const result = await res.json();
+      if (result.success) {
+        frameworks = result.data.map(framework => ({ 
+          name: framework.id, 
+          displayName: framework.name,
+          active: false 
+        }));
+      }
     } catch (e) {
-      console.error('Fehler beim Laden der Framework-Dateien:', e);
+      console.error('Fehler beim Laden der Frameworks:', e);
     }
     this.frameworkPanelComponent = new FrameworkPanelComponent(
       'frameworkPanelContainer',

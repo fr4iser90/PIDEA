@@ -1,0 +1,227 @@
+/* Content Library Panel Styles */
+
+/* (Alle Tailwind-@apply-Direktiven entfernt. Styling jetzt direkt im JSX!) */
+
+/* Common Panel Styles */
+.content-library-panel {
+  @apply space-y-4 p-3;
+}
+
+.panel-header {
+  @apply flex items-center justify-between mb-4;
+}
+
+.panel-title {
+  @apply text-lg font-semibold text-white;
+}
+
+/* Framework Panel */
+.frameworks-panel .framework-item {
+  @apply transition-all duration-200;
+}
+
+.frameworks-panel .framework-item:hover {
+  @apply transform scale-[1.02];
+}
+
+.frameworks-panel .framework-item.selected {
+  @apply ring-2 ring-blue-500;
+}
+
+/* Prompts Panel */
+.prompts-panel .prompt-item {
+  @apply transition-all duration-200;
+}
+
+.prompts-panel .prompt-item:hover {
+  @apply transform scale-[1.01];
+}
+
+.quick-prompt-btn {
+  @apply transition-colors duration-200;
+}
+
+.quick-prompt-btn:hover {
+  @apply bg-gray-700 text-white;
+}
+
+/* Templates Panel */
+.templates-panel .template-item {
+  @apply transition-all duration-200;
+}
+
+.templates-panel .template-item:hover {
+  @apply transform scale-[1.01];
+}
+
+.template-category-btn {
+  @apply transition-colors duration-200;
+}
+
+.template-category-btn:hover {
+  @apply bg-gray-700 text-white;
+}
+
+/* Loading Spinner */
+.loading-spinner {
+  @apply inline-block w-4 h-4 border-2 border-gray-300 border-t-blue-600 rounded-full animate-spin;
+}
+
+/* Search Input */
+.search-input {
+  @apply w-full rounded p-2 bg-gray-800 text-gray-100 border border-gray-700 focus:border-blue-500 focus:outline-none transition-colors;
+}
+
+/* Tab Navigation */
+.tab-nav {
+  @apply flex gap-2 mb-4;
+}
+
+.tab-nav button {
+  @apply px-3 py-2 rounded text-sm font-medium transition-colors;
+}
+
+.tab-nav button.active {
+  @apply bg-blue-600 text-white;
+}
+
+.tab-nav button:not(.active) {
+  @apply bg-gray-700 text-gray-300 hover:bg-gray-600;
+}
+
+/* Category Badges */
+.category-badge {
+  @apply text-xs px-2 py-1 rounded font-medium;
+}
+
+.category-badge.prompt {
+  @apply bg-blue-600 text-white;
+}
+
+.category-badge.template {
+  @apply bg-green-600 text-white;
+}
+
+/* Item Actions */
+.item-actions {
+  @apply flex gap-1;
+}
+
+.item-actions button {
+  @apply text-xs px-2 py-1 rounded transition-colors;
+}
+
+.item-actions .btn-use {
+  @apply bg-blue-600 text-white hover:bg-blue-700;
+}
+
+.item-actions .btn-view {
+  @apply bg-gray-600 text-white hover:bg-gray-700;
+}
+
+/* Framework Icons */
+.framework-icon {
+  @apply text-2xl;
+}
+
+/* Stats Cards */
+.stats-card {
+  @apply bg-gray-800 p-3 rounded;
+}
+
+.stats-number {
+  @apply text-2xl font-bold;
+}
+
+.stats-label {
+  @apply text-xs text-gray-400;
+}
+
+/* Navigation Buttons */
+.nav-button {
+  @apply w-full p-3 rounded text-white transition-colors;
+}
+
+.nav-button.primary {
+  @apply bg-blue-600 hover:bg-blue-700;
+}
+
+.nav-button.secondary {
+  @apply bg-green-600 hover:bg-green-700;
+}
+
+.nav-button:disabled {
+  @apply bg-gray-600 text-gray-400 cursor-not-allowed;
+}
+
+/* Recent Items */
+.recent-items {
+  @apply space-y-1;
+}
+
+.recent-item {
+  @apply text-xs text-gray-400 p-2 bg-gray-800 rounded;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .content-library-panel {
+    @apply p-2;
+  }
+  
+  .tab-nav {
+    @apply flex-wrap;
+  }
+  
+  .tab-nav button {
+    @apply text-xs px-2 py-1;
+  }
+  
+  .stats-card {
+    @apply p-2;
+  }
+  
+  .stats-number {
+    @apply text-xl;
+  }
+}
+
+/* Dark Theme Enhancements */
+.dark .content-library-panel {
+  @apply bg-gray-900;
+}
+
+.dark .search-input {
+  @apply bg-gray-800 border-gray-600;
+}
+
+.dark .stats-card {
+  @apply bg-gray-800;
+}
+
+/* Animation Classes */
+.fade-in {
+  @apply animate-in fade-in duration-300;
+}
+
+.slide-in {
+  @apply animate-in slide-in-from-right duration-300;
+}
+
+.scale-in {
+  @apply animate-in zoom-in duration-200;
+}
+
+/* Hover Effects */
+.hover-lift {
+  @apply transition-transform duration-200;
+}
+
+.hover-lift:hover {
+  @apply transform translate-y-[-2px];
+}
+
+/* Focus States */
+.focus-ring {
+  @apply focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-gray-900;
+} 

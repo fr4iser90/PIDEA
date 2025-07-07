@@ -104,7 +104,7 @@ const AuthMiddleware = require('./infrastructure/auth/AuthMiddleware');
 const ChatController = require('./presentation/api/ChatController');
 const IDEController = require('./presentation/api/IDEController');
 const IDEMirrorController = require('./presentation/api/IDEMirrorController');
-const FrameworkController = require('./presentation/api/FrameworkController');
+const ContentLibraryController = require('./presentation/api/ContentLibraryController');
 const AuthController = require('./presentation/api/AuthController');
 const TaskController = require('./presentation/api/TaskController');
 const AutoModeController = require('./presentation/api/AutoModeController');
@@ -575,7 +575,7 @@ class Application {
 
     this.ideMirrorController = new IDEMirrorController();
 
-    this.frameworkController = new FrameworkController();
+    this.ContentLibraryController = new ContentLibraryController();
 
     this.taskController = new TaskController(
       this.taskService,
@@ -786,12 +786,16 @@ class Application {
       }
     });
 
-    // Framework routes (public)
-    this.app.get('/api/framework/prompts', (req, res) => this.frameworkController.getPrompts(req, res));
-    this.app.get('/api/framework/templates', (req, res) => this.frameworkController.getTemplates(req, res));
-    this.app.get('/api/framework/structure', (req, res) => this.frameworkController.getFrameworkStructure(req, res));
-    this.app.get('/api/framework/prompt/:promptId', (req, res) => this.frameworkController.getPrompt(req, res));
-    this.app.get('/api/framework/template/:templateId', (req, res) => this.frameworkController.getTemplate(req, res));
+    // Content Library routes (public)
+    this.app.get('/api/frameworks', (req, res) => this.ContentLibraryController.getFrameworks(req, res));
+    this.app.get('/api/frameworks/:frameworkId/prompts', (req, res) => this.ContentLibraryController.getFrameworkPrompts(req, res));
+    this.app.get('/api/frameworks/:frameworkId/templates', (req, res) => this.ContentLibraryController.getFrameworkTemplates(req, res));
+    this.app.get('/api/frameworks/:frameworkId/prompts/:filename', (req, res) => this.ContentLibraryController.getFrameworkPromptFile(req, res));
+    this.app.get('/api/frameworks/:frameworkId/templates/:filename', (req, res) => this.ContentLibraryController.getFrameworkTemplateFile(req, res));
+    this.app.get('/api/prompts', (req, res) => this.ContentLibraryController.getPrompts(req, res));
+    this.app.get('/api/prompts/:category/:filename', (req, res) => this.ContentLibraryController.getPromptFile(req, res));
+    this.app.get('/api/templates', (req, res) => this.ContentLibraryController.getTemplates(req, res));
+    this.app.get('/api/templates/:category/:filename', (req, res) => this.ContentLibraryController.getTemplateFile(req, res));
 
     // Task Management routes (protected) - PROJECT-BASED
     this.app.use('/api/projects/:projectId/tasks', this.authMiddleware.authenticate());

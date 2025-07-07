@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import AnalysisPanelComponent from './chat/panel/AnalysisPanelComponent.jsx';
 import APIChatRepository from '../../infrastructure/repositories/APIChatRepository.jsx';
-import FrameworkPanelComponent from './chat/FrameworkPanelComponent.jsx';
+import FrameworksPanelComponent from './chat/panel/FrameworksPanelComponent.jsx';
+import PromptsPanelComponent from './chat/panel/PromptsPanelComponent.jsx';
+import TemplatesPanelComponent from './chat/panel/TemplatesPanelComponent.jsx';
 import TaskSelectionModal from './TaskSelectionModal';
 import DocsTaskDetailsModal from './DocsTaskDetailsModal';
 
@@ -751,58 +753,48 @@ function ChatRightPanelComponent({ eventBus }) {
 
   const renderFrameworksTab = () => (
     <div className="frameworks-tab space-y-4 p-3">
-      <div className="panel-block">
-        <div className="font-semibold mb-2">Detected Frameworks</div>
-        <div className="bg-gray-900 rounded p-3 min-h-[100px]">
-          <FrameworkPanelComponent />
-        </div>
-      </div>
-      
-      <div className="panel-block">
-        <div className="font-semibold mb-2">Framework Actions</div>
-        <div className="flex gap-2 flex-wrap">
-          <button className="btn-secondary">Generate Component</button>
-          <button className="btn-secondary">Generate API</button>
-          <button className="btn-secondary">Generate Tests</button>
-        </div>
-      </div>
+      <FrameworksPanelComponent 
+        onFrameworkSelect={(framework) => {
+          console.log('Framework selected:', framework);
+        }}
+        onNavigateToPrompts={(frameworkId) => {
+          setCurrentTab('prompts');
+          // TODO: Set framework context for prompts tab
+        }}
+        onNavigateToTemplates={(frameworkId) => {
+          setCurrentTab('templates');
+          // TODO: Set framework context for templates tab
+        }}
+      />
     </div>
   );
 
   const renderPromptsTab = () => (
     <div className="prompts-tab space-y-4 p-3">
-      {/* Prompt Categories */}
-      <div className="panel-block">
-        <div className="font-semibold mb-2">Prompt Categories</div>
-        <div className="flex gap-2 flex-wrap">
-          <button className="btn-secondary">Analyze</button>
-          <button className="btn-secondary">Refactor</button>
-          <button className="btn-secondary">Feature</button>
-          <button className="btn-secondary">Test</button>
-          <button className="btn-secondary">Documentation</button>
-        </div>
-      </div>
+      <PromptsPanelComponent 
+        onPromptClick={(prompt) => {
+          console.log('Prompt clicked:', prompt);
+          // TODO: Handle prompt selection - maybe send to chat or show in modal
+        }}
+        onQuickPrompt={(promptText) => {
+          handleQuickPrompt(promptText);
+        }}
+      />
+    </div>
+  );
 
-      {/* Prompt Library */}
-      <div className="panel-block">
-        <div className="font-semibold mb-2">Prompt Library</div>
-        <div className="bg-gray-900 rounded p-3 min-h-[200px]">
-          <div className="text-gray-400 text-sm">Prompt library will be populated here</div>
-        </div>
-      </div>
-
-      {/* Quick Prompts */}
-      <div className="panel-block">
-        <div className="font-semibold mb-2">Quick Prompts</div>
-        <div className="space-y-2">
-          <button className="prompt-btn w-full text-left" onClick={() => handleQuickPrompt('Erkläre mir das kurz')}>💡 Kurze Erklärung</button>
-          <button className="prompt-btn w-full text-left" onClick={() => handleQuickPrompt('Zeige mir ein Beispiel')}>📝 Beispiel</button>
-          <button className="prompt-btn w-full text-left" onClick={() => handleQuickPrompt('Debugge diesen Code')}>🐛 Debug</button>
-          <button className="prompt-btn w-full text-left" onClick={() => handleQuickPrompt('Optimiere diesen Code')}>⚡ Optimieren</button>
-          <button className="prompt-btn w-full text-left" onClick={() => handleQuickPrompt('Schreibe Tests für diesen Code')}>🧪 Tests</button>
-          <button className="prompt-btn w-full text-left" onClick={() => handleQuickPrompt('Dokumentiere diesen Code')}>📚 Dokumentation</button>
-        </div>
-      </div>
+  const renderTemplatesTab = () => (
+    <div className="templates-tab space-y-4 p-3">
+      <TemplatesPanelComponent 
+        onTemplateClick={(template) => {
+          console.log('Template clicked:', template);
+          // TODO: Handle template selection - maybe show in modal
+        }}
+        onTemplateUse={(template) => {
+          console.log('Template use:', template);
+          // TODO: Handle template usage - maybe send to chat or apply to project
+        }}
+      />
     </div>
   );
 
@@ -892,6 +884,7 @@ function ChatRightPanelComponent({ eventBus }) {
           <button className={`tab-btn${currentTab === 'auto' ? ' active' : ''}`} onClick={() => handleTabSwitch('auto')}>🤖 Auto</button>
           <button className={`tab-btn${currentTab === 'frameworks' ? ' active' : ''}`} onClick={() => handleTabSwitch('frameworks')}>🧩 Frameworks</button>
           <button className={`tab-btn${currentTab === 'prompts' ? ' active' : ''}`} onClick={() => handleTabSwitch('prompts')}>💬 Prompts</button>
+          <button className={`tab-btn${currentTab === 'templates' ? ' active' : ''}`} onClick={() => handleTabSwitch('templates')}>📋 Templates</button>
           <button className={`tab-btn${currentTab === 'analysis' ? ' active' : ''}`} onClick={() => handleTabSwitch('analysis')}>📊 Analysis</button>
           <button className={`tab-btn${currentTab === 'settings' ? ' active' : ''}`} onClick={() => handleTabSwitch('settings')}>⚙️ Settings</button>
         </div>
@@ -902,6 +895,7 @@ function ChatRightPanelComponent({ eventBus }) {
         {currentTab === 'auto' && renderAutoTab()}
         {currentTab === 'frameworks' && renderFrameworksTab()}
         {currentTab === 'prompts' && renderPromptsTab()}
+        {currentTab === 'templates' && renderTemplatesTab()}
         {currentTab === 'analysis' && renderAnalysisTab()}
         {currentTab === 'settings' && renderSettingsTab()}
       </div>

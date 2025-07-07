@@ -43,17 +43,21 @@ class TaskService {
       hasTaskFilePath: !!task.metadata?.taskFilePath
     });
     
-    // Lade task-execute.md Prompt über API
+    // Lade task-execute.md Prompt über neue API
     let taskExecutePrompt = '';
     try {
-      console.log('🔍 [TaskService] Loading task-execute.md via API...');
-      const response = await fetch('http://localhost:3000/api/framework/prompt/task-management-task-execute');
+      console.log('🔍 [TaskService] Loading task-execute.md via new API...');
+      const response = await fetch('http://localhost:3000/api/content/prompts/task-management/task-execute.md');
       console.log('🔍 [TaskService] API response status:', response.status);
       
       if (response.ok) {
         const data = await response.json();
-        taskExecutePrompt = data.content;
-        console.log('✅ [TaskService] Successfully loaded task-execute.md, length:', taskExecutePrompt.length);
+        if (data.success && data.data.content) {
+          taskExecutePrompt = data.data.content;
+          console.log('✅ [TaskService] Successfully loaded task-execute.md, length:', taskExecutePrompt.length);
+        } else {
+          throw new Error('Invalid API response format');
+        }
       } else {
         throw new Error(`Failed to load task-execute.md: ${response.status}`);
       }

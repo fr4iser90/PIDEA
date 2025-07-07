@@ -2,6 +2,7 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App.jsx';
 import './css/global/main.css';
+import './css/panel/content-library-panel.css';
 
 // Add global styles for animations
 const globalStyles = document.createElement('style');

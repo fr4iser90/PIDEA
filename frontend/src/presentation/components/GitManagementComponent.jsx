@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import './GitManagementComponent.css';
+import '@css/main/git.css';
 import { apiCall } from '@infrastructure/repositories/APIChatRepository.jsx';
 
 const GitManagementComponent = ({ activePort, onGitOperation }) => {
