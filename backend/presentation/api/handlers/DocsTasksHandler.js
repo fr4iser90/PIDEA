@@ -1,15 +1,19 @@
 const fs = require('fs').promises;
+const fsSync = require('fs');
 const path = require('path');
 const { marked } = require('marked');
+const crypto = require('crypto');
+const Task = require('../../../domain/entities/Task');
 
 /**
  * Handler for managing documentation tasks from markdown files
  * Provides secure access to task documentation in docs/09_roadmap/features/
  */
 class DocsTasksHandler {
-  constructor(getWorkspacePath) {
+  constructor(getWorkspacePath, taskRepository = null) {
     // getWorkspacePath: function that returns the current workspace root path
     this.getWorkspacePath = getWorkspacePath || (() => process.cwd());
+    this.taskRepository = taskRepository;
     this.allowedExtensions = ['.md', '.markdown'];
     this.cache = new Map();
     this.cacheTimeout = 60000; // 1 minute cache
@@ -38,6 +42,11 @@ class DocsTasksHandler {
    */
   async getDocsTasks(req, res) {
     try {
+      // Sync docs tasks to repository if available
+      if (this.taskRepository) {
+        await this.syncDocsTasksToRepository();
+      }
+
       const featuresDir = this.getFeaturesDir();
       console.log('[DocsTasksHandler] Getting docs tasks list from:', featuresDir);
       
@@ -317,6 +326,99 @@ class DocsTasksHandler {
   clearCache() {
     this.cache.clear();
     console.log('[DocsTasksHandler] Cache cleared');
+  }
+
+  /**
+   * Sync documentation tasks to repository
+   */
+  async syncDocsTasksToRepository() {
+    if (!this.taskRepository) {
+      console.log('[DocsTasksHandler] No task repository available, skipping sync');
+      return;
+    }
+
+    try {
+      const featuresDir = this.getFeaturesDir();
+      const allDocFiles = this._findAllMarkdownFiles(featuresDir);
+      const existingTasks = await this.taskRepository.findAllByType('documentation');
+      const existingTaskMap = new Map(existingTasks.map(t => [t.metadata && t.metadata.filePath, t]));
+      const foundPaths = new Set();
+
+      for (const filePath of allDocFiles) {
+        foundPaths.add(filePath);
+        const content = fsSync.readFileSync(filePath, 'utf-8');
+        const id = this._generateId(filePath, content);
+        const title = this._extractTitle(content, filePath);
+        const metadata = { filePath, hash: this._hashContent(content) };
+        let task = existingTaskMap.get(filePath);
+        
+        if (!task) {
+          task = new Task({
+            id,
+            title,
+            description: title,
+            type: 'documentation',
+            status: 'open',
+            metadata,
+          });
+          await this.taskRepository.save(task);
+          console.log(`[DocsTasksHandler] Created new task: ${title}`);
+        } else {
+          // Update if hash/content changed
+          if (task.metadata.hash !== metadata.hash) {
+            task._title = title;
+            task._description = title;
+            task._metadata = metadata;
+            await this.taskRepository.save(task);
+            console.log(`[DocsTasksHandler] Updated task: ${title}`);
+          }
+        }
+      }
+
+      // Remove tasks for deleted files
+      for (const [filePath, task] of existingTaskMap.entries()) {
+        if (!foundPaths.has(filePath)) {
+          await this.taskRepository.delete(task.id);
+          console.log(`[DocsTasksHandler] Removed task: ${task.title}`);
+        }
+      }
+
+      console.log(`[DocsTasksHandler] Sync completed: ${allDocFiles.length} files processed`);
+    } catch (error) {
+      console.error('[DocsTasksHandler] Error syncing docs tasks:', error);
+    }
+  }
+
+  _findAllMarkdownFiles(dir) {
+    const files = [];
+    this._walk(dir, files);
+    return files;
+  }
+
+  _walk(dir, files) {
+    if (!fsSync.existsSync(dir)) return;
+    for (const entry of fsSync.readdirSync(dir)) {
+      const fullPath = path.join(dir, entry);
+      if (fsSync.statSync(fullPath).isDirectory()) {
+        this._walk(fullPath, files);
+      } else if (fullPath.endsWith('.md')) {
+        files.push(fullPath);
+      }
+    }
+  }
+
+  _generateId(filePath, content) {
+    return crypto.createHash('sha1').update(filePath + this._hashContent(content)).digest('hex');
+  }
+
+  _hashContent(content) {
+    return crypto.createHash('sha1').update(content).digest('hex');
+  }
+
+  _extractTitle(content, filePath) {
+    const match = content.match(/^#\s+(.+)/m);
+    if (match) return match[1].trim();
+    return path.basename(filePath, '.md');
   }
 }
 

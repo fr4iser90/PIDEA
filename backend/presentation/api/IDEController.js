@@ -3,10 +3,11 @@ const TerminalLogCaptureService = require('../../domain/services/TerminalLogCapt
 const TerminalLogReader = require('../../domain/services/TerminalLogReader');
 
 class IDEController {
-  constructor(ideManager, eventBus, cursorIDEService = null) {
+  constructor(ideManager, eventBus, cursorIDEService = null, taskRepository = null) {
     this.ideManager = ideManager;
     this.eventBus = eventBus;
     this.cursorIDEService = cursorIDEService;
+    this.taskRepository = taskRepository;
     this.docsTasksHandler = new DocsTasksHandler(() => {
       const activePath = this.ideManager.getActiveWorkspacePath();
       console.log('[IDEController] Active workspace path:', activePath);
@@ -17,7 +18,7 @@ class IDEController {
         throw new Error('No active workspace path available - IDE workspace detection failed');
       }
       return activePath;
-    });
+    }, this.taskRepository);
     
     // Initialize terminal log services
     this.terminalLogCaptureService = new TerminalLogCaptureService();

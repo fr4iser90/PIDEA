@@ -570,7 +570,8 @@ class Application {
     this.ideController = new IDEController(
       this.ideManager,
       this.eventBus,
-      this.cursorIDEService
+      this.cursorIDEService,
+      this.taskRepository
     );
 
     this.ideMirrorController = new IDEMirrorController();
