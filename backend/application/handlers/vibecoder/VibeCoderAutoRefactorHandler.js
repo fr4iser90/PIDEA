@@ -134,7 +134,7 @@ class VibeCoderAutoRefactorHandler {
                             const relativePath = path.relative(projectPath, fullPath);
                             const lineCount = await this.countLines(fullPath);
                             
-                            if (lineCount > 100) { // Dateien mit mehr als 100 Zeilen
+                            if (lineCount > 200) { // Dateien mit mehr als 200 Zeilen (realistischerer Schwellenwert)
                                 largeFiles.push({
                                     file: relativePath,
                                     path: relativePath,
@@ -333,7 +333,17 @@ class VibeCoderAutoRefactorHandler {
 
     async createRefactoringTask(fileInfo, projectPath) {
         // Check if task already exists for this file
-        const existingTasks = await this.taskRepository.findByProjectPath(projectPath);
+        let existingTasks = [];
+        try {
+            if (this.taskRepository && typeof this.taskRepository.findByProjectPath === 'function') {
+                existingTasks = await this.taskRepository.findByProjectPath(projectPath);
+            } else {
+                console.warn('⚠️ [AutoRefactor] taskRepository.findByProjectPath not available, skipping duplicate check');
+            }
+        } catch (error) {
+            console.warn('⚠️ [AutoRefactor] Error checking existing tasks:', error.message);
+        }
+        
         const existingTask = existingTasks.find(task => 
             task.metadata?.filePath === fileInfo.path && 
             task.title.includes(path.basename(fileInfo.path, path.extname(fileInfo.path)))
@@ -419,7 +429,17 @@ class VibeCoderAutoRefactorHandler {
         );
 
         // Save task to repository
-        await this.taskRepository.create(task);
+        try {
+            if (this.taskRepository && typeof this.taskRepository.create === 'function') {
+                await this.taskRepository.create(task);
+                console.log(`✅ [AutoRefactor] Task saved to repository: ${taskId}`);
+            } else {
+                console.warn('⚠️ [AutoRefactor] taskRepository.create not available, task created in memory only');
+            }
+        } catch (error) {
+            console.error(`❌ [AutoRefactor] Failed to save task ${taskId}:`, error.message);
+            // Return task anyway so it can be used
+        }
         
         // Create detailed refactoring plan
         await this.createRefactoringPlan(task, fileInfo);
@@ -755,6 +775,12 @@ class VibeCoderAutoRefactorHandler {
     async needsAnalysisRefresh(projectPath) {
         try {
             const projectId = path.basename(projectPath);
+            
+            if (!this.projectAnalysisRepository || typeof this.projectAnalysisRepository.findLatestByProjectId !== 'function') {
+                console.warn('⚠️ [AutoRefactor] projectAnalysisRepository.findLatestByProjectId not available');
+                return true; // Default to refresh if repository not available
+            }
+            
             const latestAnalysis = await this.projectAnalysisRepository.findLatestByProjectId(projectId);
             
             if (!latestAnalysis) {
