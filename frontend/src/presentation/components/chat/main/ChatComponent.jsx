@@ -105,6 +105,24 @@ function ChatComponent({ eventBus, activePort, attachedPrompts = [] }) {
     if (shouldAutoScroll) scrollToBottom();
   }, [messages, isTyping]);
 
+  // Listen for external chat messages (from task execution, etc.)
+  useEffect(() => {
+    if (!eventBus) return;
+    
+    const handleExternalMessage = (data) => {
+      if (data && data.message) {
+        console.log('[ChatComponent] Received external message:', data.message);
+        sendMessage(data.message);
+      }
+    };
+
+    eventBus.on('chat:send:message', handleExternalMessage);
+    
+    return () => {
+      eventBus.off('chat:send:message', handleExternalMessage);
+    };
+  }, [eventBus]);
+
   const sendMessage = async (message) => {
     if (!message.trim()) return;
     let promptContents = [];

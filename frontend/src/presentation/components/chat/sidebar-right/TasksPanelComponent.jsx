@@ -81,6 +81,52 @@ function TasksPanelComponent({ eventBus }) {
     setSelectedDocsTask(null);
   };
 
+  // Handle sending task to chat
+  const handleSendToChat = (messageContent) => {
+    if (eventBus) {
+      eventBus.emit('chat:send:message', { message: messageContent });
+    }
+    handleCloseDocsTaskModal();
+  };
+
+  // Handle executing task (send to chat with execute prompt)
+  const handleExecuteTask = async (taskDetails) => {
+    try {
+      // Load the execute prompt from framework
+      const response = await api.getFrameworkPrompt('task-management/task-execute');
+      let executePromptContent = '';
+      
+      if (response.success && response.data) {
+        executePromptContent = response.data.content || response.data;
+      }
+
+      // Create the complete message with execute prompt
+      const messageContent = `${executePromptContent}
+
+---
+
+# TASK TO EXECUTE: ${taskDetails.title}
+
+## Task Details
+- **Priority**: ${taskDetails.priority || 'Not specified'}
+- **Status**: ${taskDetails.status || 'Not specified'}
+- **Estimated Time**: ${taskDetails.estimatedTime || 'Not specified'}
+- **File**: ${taskDetails.filename}
+
+## Task Content
+${taskDetails.content}
+
+## Execute Instructions
+**Execute this task automatically using the above prompt framework. Create a Git branch named \`task/${taskDetails.id}-${Date.now()}\` and implement everything with zero user input required.**`;
+
+      // Send to chat
+      handleSendToChat(messageContent);
+    } catch (error) {
+      console.error('Error executing task:', error);
+      setFeedback('Failed to execute task: ' + error.message);
+    }
+  };
+
   // Docs tasks filter/search
   const filteredDocsTasks = docsTasks.filter(task => {
     const matchesSearch = task.title.toLowerCase().includes(docsTaskSearch.toLowerCase()) ||
@@ -269,8 +315,8 @@ function TasksPanelComponent({ eventBus }) {
         onClose={handleCloseDocsTaskModal}
         taskDetails={selectedDocsTask}
         isLoading={isLoadingDocsTaskDetails}
-        onSendToChat={() => {}}
-        onExecuteTask={() => {}}
+        onSendToChat={handleSendToChat}
+        onExecuteTask={handleExecuteTask}
       />
       <TaskSelectionModal
         isOpen={isTaskModalOpen}
