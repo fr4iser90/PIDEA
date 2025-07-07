@@ -986,8 +986,8 @@ class DocumentationController {
             await this.cursorIDEService.switchToPort(idePort);
         }
 
-        // 📊 GET LATEST AI RESPONSE: Check what AI has written
-        const ideResponse = await this.cursorIDEService.getLatestResponse(idePort);
+        // 📊 GET LATEST AI RESPONSE: Read from browser DOM and save to chat DB
+        const ideResponse = await this.getLatestChatResponse(projectId, idePort);
 
         this.logger.info('[DocumentationController] Collected AI response for project', {
             projectId,
@@ -1043,6 +1043,115 @@ class DocumentationController {
             ideResponse: ideResponse,
             timestamp: new Date().toISOString()
         };
+    }
+
+    /**
+     * Get latest chat response from browser DOM and save to chat database
+     */
+    async getLatestChatResponse(projectId, idePort) {
+        try {
+            this.logger.info('[DocumentationController] Reading latest chat response from browser', {
+                projectId,
+                idePort
+            });
+
+            // Get browser page for this IDE
+            const page = await this.cursorIDEService.browserManager.getPage();
+            if (!page) {
+                throw new Error('No browser connection to Cursor IDE');
+            }
+
+            // Read latest AI response from chat DOM
+            const chatResponse = await page.evaluate(() => {
+                // Try multiple selectors for chat messages
+                const selectors = [
+                    '.chat-message',
+                    '.monaco-editor',
+                    '[data-testid*="chat"]',
+                    '.chat-response',
+                    '.ai-response',
+                    '.assistant-message'
+                ];
+
+                let messages = [];
+                
+                // Try each selector to find chat messages
+                for (const selector of selectors) {
+                    const elements = document.querySelectorAll(selector);
+                    if (elements.length > 0) {
+                        messages = Array.from(elements).map(el => ({
+                            content: el.textContent?.trim() || '',
+                            html: el.innerHTML || '',
+                            timestamp: new Date().toISOString()
+                        }));
+                        break;
+                    }
+                }
+
+                // If no specific chat messages found, try to get any visible text
+                if (messages.length === 0) {
+                    const textElements = document.querySelectorAll('div, p, span');
+                    const textContent = Array.from(textElements)
+                        .map(el => el.textContent?.trim())
+                        .filter(text => text && text.length > 50) // Only substantial text
+                        .join('\n');
+
+                    if (textContent) {
+                        messages = [{
+                            content: textContent,
+                            html: '',
+                            timestamp: new Date().toISOString()
+                        }];
+                    }
+                }
+
+                // Return the latest (last) message
+                return messages.length > 0 ? messages[messages.length - 1] : null;
+            });
+
+            if (!chatResponse || !chatResponse.content) {
+                this.logger.warn('[DocumentationController] No chat response found in browser DOM', {
+                    projectId,
+                    idePort
+                });
+                
+                return {
+                    success: false,
+                    response: null,
+                    error: 'No chat response found'
+                };
+            }
+
+            this.logger.info('[DocumentationController] Successfully read chat response from browser', {
+                projectId,
+                idePort,
+                responseLength: chatResponse.content.length
+            });
+
+            // TODO: Save to ChatRepository here if needed
+            // const chatSession = await this.createOrGetChatSession(projectId, idePort);
+            // await this.saveChatMessage(chatSession.id, chatResponse.content, 'assistant');
+
+            return {
+                success: true,
+                response: chatResponse.content,
+                html: chatResponse.html,
+                timestamp: chatResponse.timestamp
+            };
+
+        } catch (error) {
+            this.logger.error('[DocumentationController] Error reading chat response', {
+                projectId,
+                idePort,
+                error: error.message
+            });
+
+            return {
+                success: false,
+                response: null,
+                error: error.message
+            };
+        }
     }
 
     /**
