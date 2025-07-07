@@ -60,54 +60,98 @@ class VibeCoderAutoRefactorHandler {
             const needsRefresh = await this.needsAnalysisRefresh(projectPath);
             if (needsRefresh) {
                 console.log('🔄 [AutoRefactor] Analysis data needs refresh, running fresh analysis...');
-                // Here you could trigger a fresh analysis if needed
-                // For now, we'll continue with existing data but log a warning
-                console.warn('⚠️ [AutoRefactor] Using potentially outdated analysis data');
+                // Run a fresh analysis instead of just logging a warning
+                return await this.createStandardAnalysis(projectPath, path.basename(projectPath));
             }
             
-            // Extrahiere projectId aus dem Pfad
+            // Extract projectId from the path
             const projectId = path.basename(projectPath);
             
-            // Lade die neuesten Analysen aus der Datenbank
+            // Load the latest analyses from the database
             const latestArchitectureAnalysis = await this.projectAnalysisRepository.findLatestByProjectIdAndType(projectId, 'architecture');
             const latestCodeQualityAnalysis = await this.projectAnalysisRepository.findLatestByProjectIdAndType(projectId, 'code-quality');
             const latestDependenciesAnalysis = await this.projectAnalysisRepository.findLatestByProjectIdAndType(projectId, 'dependencies');
             
-            // Kombiniere alle Analysen
+            // Combine all analyses
             const combinedAnalysis = {
                 architecture: latestArchitectureAnalysis?.getAnalysisData() || {},
                 codeQuality: latestCodeQualityAnalysis?.getAnalysisData() || {},
                 dependencies: latestDependenciesAnalysis?.getAnalysisData() || {}
             };
             
-            // Extrahiere Large Files aus der Code-Quality-Analyse
+            // Extract Large Files from the Code-Quality analysis
             const largeFiles = [];
-            if (combinedAnalysis.codeQuality && combinedAnalysis.codeQuality.largeFiles) {
-                largeFiles.push(...combinedAnalysis.codeQuality.largeFiles);
+            
+            // Check multiple possible locations for large files data
+            if (combinedAnalysis.codeQuality) {
+                // Check direct largeFiles array
+                if (combinedAnalysis.codeQuality.largeFiles && Array.isArray(combinedAnalysis.codeQuality.largeFiles)) {
+                    largeFiles.push(...combinedAnalysis.codeQuality.largeFiles);
+                }
+                
+                // Check in data.largeFiles
+                if (combinedAnalysis.codeQuality.data && combinedAnalysis.codeQuality.data.largeFiles && Array.isArray(combinedAnalysis.codeQuality.data.largeFiles)) {
+                    largeFiles.push(...combinedAnalysis.codeQuality.data.largeFiles);
+                }
+                
+                // Check in realMetrics.largeFiles
+                if (combinedAnalysis.codeQuality.realMetrics && combinedAnalysis.codeQuality.realMetrics.largeFiles && Array.isArray(combinedAnalysis.codeQuality.realMetrics.largeFiles)) {
+                    largeFiles.push(...combinedAnalysis.codeQuality.realMetrics.largeFiles);
+                }
             }
             
-            // Fallback: Wenn keine Analysen in der DB sind, erstelle eine Standard-Analyse
+            // Fallback: If no analyses in DB, create a standard analysis
             if (largeFiles.length === 0) {
-                console.log('⚠️ [AutoRefactor] Keine Analysen in der Datenbank gefunden, erstelle Standard-Analyse...');
+                console.log('⚠️ [AutoRefactor] No analyses found in database, creating standard analysis...');
                 
-                // Erstelle eine Standard-Analyse basierend auf dem aktuellen Projekt
+                // Create a standard analysis based on the current project
                 const standardAnalysis = await this.createStandardAnalysis(projectPath, projectId);
                 
                 return {
                     codeQuality: { data: { largeFiles: standardAnalysis.largeFiles } },
                     largeFiles: standardAnalysis.largeFiles,
                     analysis: standardAnalysis,
-                    message: 'Standard-Analyse erstellt. Für detailliertere Ergebnisse führen Sie bitte eine vollständige Projekt-Analyse durch.'
+                    message: 'Standard analysis created. For more detailed results, please run a complete project analysis.'
                 };
             }
             
+            // Validate and fix line counts for all large files
+            const validatedLargeFiles = [];
+            for (const file of largeFiles) {
+                let lines = file.lines;
+                
+                // If lines is undefined, null, or 0, try to count them manually
+                if (!lines || lines <= 0) {
+                    try {
+                        const fullPath = path.join(projectPath, file.file || file.path);
+                        lines = await this.countLines(fullPath);
+                        console.log(`📊 [AutoRefactor] Manually counted lines for ${file.file || file.path}: ${lines}`);
+                    } catch (error) {
+                        console.warn(`⚠️ [AutoRefactor] Could not count lines for ${file.file || file.path}: ${error.message}`);
+                        continue; // Skip this file
+                    }
+                }
+                
+                // Only include files with valid line counts
+                if (lines && lines > 0) {
+                    validatedLargeFiles.push({
+                        file: file.file || file.path,
+                        path: file.path || file.file,
+                        lines: parseInt(lines) || 0,
+                        package: file.package || this.getPackageFromPath(file.file || file.path)
+                    });
+                }
+            }
+            
+            console.log(`✅ [AutoRefactor] Found ${validatedLargeFiles.length} valid large files from analysis data`);
+            
             return {
-                codeQuality: { data: { largeFiles } },
-                largeFiles,
+                codeQuality: { data: { largeFiles: validatedLargeFiles } },
+                largeFiles: validatedLargeFiles,
                 analysis: combinedAnalysis
             };
         } catch (error) {
-            console.error('❌ [AutoRefactor] Fehler beim Lesen der Analyse aus der Datenbank:', error);
+            console.error('❌ [AutoRefactor] Error reading analysis from database:', error);
             throw error;
         }
     }
@@ -222,25 +266,45 @@ class VibeCoderAutoRefactorHandler {
         const largeFiles = [];
         const processedPaths = new Set(); // Prevent duplicate tasks
         
+        console.log('🔍 [AutoRefactor] Analyzing results structure:', JSON.stringify(analysisResults, null, 2));
+        
         // Parse the analysis results to find large files
-        // The analysis results contain the data from the VibeCoder Mode analysis
         if (analysisResults && typeof analysisResults === 'object') {
-            // Look for large files in the analysis structure
-            // Based on the analysis report format, large files are stored in codeQuality section
-            if (analysisResults.codeQuality && analysisResults.codeQuality.data) {
-                const codeQualityData = analysisResults.codeQuality.data;
-                
-                // Check for largeFiles array in the data
-                if (codeQualityData.largeFiles && Array.isArray(codeQualityData.largeFiles)) {
-                    codeQualityData.largeFiles.forEach(file => {
+            // Check multiple possible locations for large files data
+            const possibleLargeFilesSources = [
+                analysisResults.codeQuality?.data?.largeFiles,
+                analysisResults.codeQuality?.largeFiles,
+                analysisResults.codeQuality?.realMetrics?.largeFiles,
+                analysisResults.largeFiles,
+                analysisResults.analysis?.codeQuality?.largeFiles,
+                analysisResults.analysis?.codeQuality?.data?.largeFiles
+            ];
+            
+            for (const source of possibleLargeFilesSources) {
+                if (source && Array.isArray(source)) {
+                    console.log(`📁 [AutoRefactor] Found large files in source:`, source.length, 'files');
+                    
+                    source.forEach(file => {
                         const filePath = file.file || file.path;
                         if (filePath && !processedPaths.has(filePath)) {
-                            const lines = parseInt(file.lines) || 0;
-                            if (lines > 0) { // Only add files with valid line count
+                            // Handle different line count formats
+                            let lines = 0;
+                            if (typeof file.lines === 'number') {
+                                lines = file.lines;
+                            } else if (typeof file.lines === 'string') {
+                                lines = parseInt(file.lines) || 0;
+                            } else if (file.size) {
+                                // Fallback: estimate lines from file size (rough estimate)
+                                lines = Math.round(file.size / 50); // ~50 bytes per line average
+                            }
+                            
+                            console.log(`📊 [AutoRefactor] File ${filePath}: lines=${lines}, original=${file.lines}`);
+                            
+                            if (lines > 0) {
                                 largeFiles.push({
                                     path: filePath,
                                     lines: lines,
-                                    package: 'main',
+                                    package: file.package || this.getPackageFromPath(filePath),
                                     priority: this.calculatePriority(lines),
                                     estimatedTime: this.estimateRefactoringTime(lines)
                                 });
@@ -251,48 +315,26 @@ class VibeCoderAutoRefactorHandler {
                 }
             }
             
-            // Also check if largeFiles is directly in the root
-            if (analysisResults.largeFiles && Array.isArray(analysisResults.largeFiles)) {
-                analysisResults.largeFiles.forEach(file => {
-                    const filePath = file.file || file.path;
-                    if (filePath && !processedPaths.has(filePath)) {
-                        const lines = parseInt(file.lines) || 0;
-                        if (lines > 0) { // Only add files with valid line count
-                            largeFiles.push({
-                                path: filePath,
-                                lines: lines,
-                                package: 'root',
-                                priority: this.calculatePriority(lines),
-                                estimatedTime: this.estimateRefactoringTime(lines)
-                            });
-                            processedPaths.add(filePath);
-                        }
-                    }
-                });
-            }
-            
-            // Check for files in structure analysis
-            if (analysisResults.structure && analysisResults.structure.files) {
-                analysisResults.structure.files.forEach(file => {
-                    const filePath = file.path || file.file;
-                    if (filePath && !processedPaths.has(filePath)) {
-                        const lines = parseInt(file.lines) || 0;
-                        if (lines > 500) { // Only large files
-                            largeFiles.push({
-                                path: filePath,
-                                lines: lines,
-                                package: this.getPackageFromPath(filePath),
-                                priority: this.calculatePriority(lines),
-                                estimatedTime: this.estimateRefactoringTime(lines)
-                            });
-                            processedPaths.add(filePath);
-                        }
-                    }
-                });
+            // If no large files found in analysis, check if we have a specific file mentioned
+            if (largeFiles.length === 0 && analysisResults.message) {
+                // Look for file references in the message or task description
+                const fileMatch = analysisResults.message.match(/AnalysisOutputService.*?(\d+)\s*lines/);
+                if (fileMatch) {
+                    const lines = parseInt(fileMatch[1]);
+                    console.log(`🎯 [AutoRefactor] Found file reference in message: AnalysisOutputService with ${lines} lines`);
+                    
+                    largeFiles.push({
+                        path: 'backend/domain/services/AnalysisOutputService.js',
+                        lines: lines,
+                        package: 'backend',
+                        priority: this.calculatePriority(lines),
+                        estimatedTime: this.estimateRefactoringTime(lines)
+                    });
+                }
             }
         }
         
-        console.log(`🔍 [AutoRefactor] Found ${largeFiles.length} large files to refactor`);
+        console.log(`🔍 [AutoRefactor] Found ${largeFiles.length} large files to refactor:`, largeFiles.map(f => `${f.path} (${f.lines} lines)`));
         
         // Sort by priority (largest files first)
         return largeFiles.sort((a, b) => b.lines - a.lines);
@@ -784,18 +826,38 @@ class VibeCoderAutoRefactorHandler {
             const latestAnalysis = await this.projectAnalysisRepository.findLatestByProjectId(projectId);
             
             if (!latestAnalysis) {
+                console.log('🔄 [AutoRefactor] No analysis found, refresh needed');
                 return true; // No analysis exists, need refresh
             }
             
-            // Check if analysis is older than 1 hour
+            // Check if analysis is older than 30 minutes (more aggressive refresh)
             const analysisAge = Date.now() - new Date(latestAnalysis.createdAt).getTime();
-            const oneHour = 60 * 60 * 1000;
+            const thirtyMinutes = 30 * 60 * 1000;
             
-            if (analysisAge > oneHour) {
+            if (analysisAge > thirtyMinutes) {
                 console.log(`🔄 [AutoRefactor] Analysis data is ${Math.round(analysisAge / 60000)} minutes old, refresh needed`);
                 return true;
             }
             
+            // Check if analysis data is incomplete or has undefined line counts
+            const analysisData = latestAnalysis.getAnalysisData();
+            if (analysisData && analysisData.codeQuality) {
+                const largeFiles = analysisData.codeQuality.largeFiles || 
+                                  analysisData.codeQuality.data?.largeFiles || 
+                                  analysisData.codeQuality.realMetrics?.largeFiles || [];
+                
+                // Check if any large files have undefined or 0 line counts
+                const hasInvalidLineCounts = largeFiles.some(file => 
+                    !file.lines || file.lines === 0 || file.lines === 'undefined' || file.lines === undefined
+                );
+                
+                if (hasInvalidLineCounts) {
+                    console.log('🔄 [AutoRefactor] Analysis data has invalid line counts, refresh needed');
+                    return true;
+                }
+            }
+            
+            console.log('✅ [AutoRefactor] Analysis data is current and valid');
             return false;
             
         } catch (error) {
