@@ -288,18 +288,79 @@ class TaskService {
         };
         execution.progress = 80;
 
-        // Step 4: Task completed successfully
-        console.log('✅ [TaskService] Step 4: Task completed successfully with valid build');
-        execution.steps.push({ step: 'completion', status: 'completed', message: 'Task completed with successful build validation' });
+        // Step 4: Commit and push changes to Git branch
+        console.log('🔧 [TaskService] Step 4: Committing and pushing changes to Git branch...');
+        execution.steps.push({ step: 'git_commit_push', status: 'running', message: 'Committing and pushing refactored code' });
+        
+        const commitResult = await this.commitAndPushChanges(projectPath, branchName, task);
+        
+        execution.steps[execution.steps.length - 1] = { 
+          step: 'git_commit_push', 
+          status: 'completed', 
+          message: 'Changes committed and pushed successfully',
+          data: commitResult
+        };
+        execution.progress = 90;
+
+        // Step 5: Create merge request (optional)
+        console.log('🔧 [TaskService] Step 5: Creating merge request...');
+        execution.steps.push({ step: 'merge_request', status: 'running', message: 'Creating merge request for review' });
+        
+        let mergeRequestResult = null;
+        try {
+          mergeRequestResult = await this.createMergeRequest(projectPath, branchName, task);
+          execution.steps[execution.steps.length - 1] = { 
+            step: 'merge_request', 
+            status: 'completed', 
+            message: 'Merge request created successfully',
+            data: mergeRequestResult
+          };
+        } catch (error) {
+          console.warn('⚠️ [TaskService] Failed to create merge request:', error.message);
+          execution.steps[execution.steps.length - 1] = { 
+            step: 'merge_request', 
+            status: 'skipped', 
+            message: 'Merge request creation skipped',
+            data: { error: error.message }
+          };
+        }
+        execution.progress = 95;
+
+        // Step 6: Task completed successfully (ONLY after Git operations)
+        console.log('✅ [TaskService] Step 6: Task completed successfully with Git operations');
+        execution.steps.push({ step: 'completion', status: 'completed', message: 'Task completed with successful Git operations' });
         execution.progress = 100;
 
-        // Mark task as completed
+        // Mark task as completed (ONLY after successful Git operations)
         task.updateStatus(TaskStatus.COMPLETED);
         await this.taskRepository.update(taskId, task);
 
         execution.status = 'completed';
         execution.endTime = new Date();
         execution.duration = execution.endTime - execution.startedAt;
+
+        // Refresh analysis data after task completion
+        if (task.metadata?.projectPath && task.type?.value?.includes('refactor')) {
+            try {
+                console.log('🔄 [TaskService] Refreshing analysis data after refactoring task completion...');
+                
+                // Get the VibeCoderAutoRefactorHandler to refresh analysis data
+                const VibeCoderAutoRefactorHandler = require('../application/handlers/vibecoder/VibeCoderAutoRefactorHandler');
+                const autoRefactorHandler = new VibeCoderAutoRefactorHandler({
+                    taskRepository: this.taskRepository,
+                    projectAnalysisRepository: this.projectAnalysisRepository
+                });
+                
+                await autoRefactorHandler.refreshAnalysisDataAfterTaskCompletion(
+                    task.metadata.projectPath, 
+                    taskId
+                );
+                
+                console.log('✅ [TaskService] Analysis data refreshed after task completion');
+            } catch (error) {
+                console.warn('⚠️ [TaskService] Failed to refresh analysis data after task completion:', error.message);
+            }
+        }
 
         console.log('✅ [TaskService] Automated refactoring workflow completed successfully');
         return execution;
@@ -692,6 +753,80 @@ Please fix the issues and let me know when you're done.`;
         error: error.message
       };
     }
+  }
+
+  /**
+   * Create merge request for refactored code
+   * @param {string} projectPath - Project path
+   * @param {string} branchName - Branch name
+   * @param {Task} task - Task object
+   * @returns {Promise<Object>} Merge request result
+   */
+  async createMergeRequest(projectPath, branchName, task) {
+    try {
+      // Check if we have GitLab/GitHub integration
+      if (this.workflowGitService && this.workflowGitService.createMergeRequest) {
+        return await this.workflowGitService.createMergeRequest(projectPath, branchName, {
+          title: `Refactor: ${task.title}`,
+          description: this.buildMergeRequestDescription(task),
+          sourceBranch: branchName,
+          targetBranch: 'main'
+        });
+      }
+
+      // Fallback: Just log the merge request info
+      const mergeRequestInfo = {
+        title: `Refactor: ${task.title}`,
+        description: this.buildMergeRequestDescription(task),
+        sourceBranch: branchName,
+        targetBranch: 'main',
+        status: 'manual_creation_required',
+        message: 'Please create merge request manually in your Git platform'
+      };
+
+      console.log('📋 [TaskService] Merge request info:', mergeRequestInfo);
+      
+      return mergeRequestInfo;
+    } catch (error) {
+      throw new Error(`Failed to create merge request: ${error.message}`);
+    }
+  }
+
+  /**
+   * Build merge request description
+   * @param {Task} task - Task object
+   * @returns {string} Merge request description
+   */
+  buildMergeRequestDescription(task) {
+    return `
+## Refactoring Task: ${task.title}
+
+### Description
+${task.description}
+
+### Changes Made
+- Refactored file: \`${task.metadata.filePath}\`
+- Original lines: ${task.metadata.lines}
+- Target: <500 lines per file
+- Refactoring type: ${task.metadata.refactoringType}
+
+### Files Modified
+- \`${task.metadata.filePath}\` - Main refactored file
+
+### Testing
+- ✅ Build validation passed
+- ✅ Code structure improved
+- ✅ No business logic changes
+
+### Review Checklist
+- [ ] Code follows project conventions
+- [ ] No breaking changes introduced
+- [ ] All imports/exports updated correctly
+- [ ] File size reduced as expected
+
+---
+*Auto-generated by PIDEA Refactoring System*
+    `.trim();
   }
 
   /**

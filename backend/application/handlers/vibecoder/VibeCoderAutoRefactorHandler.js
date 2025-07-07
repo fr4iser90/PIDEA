@@ -5,6 +5,7 @@ const Task = require('@/domain/entities/Task');
 const TaskStatus = require('@/domain/value-objects/TaskStatus');
 const TaskPriority = require('@/domain/value-objects/TaskPriority');
 const TaskType = require('@/domain/value-objects/TaskType');
+const ProjectAnalysis = require('@/domain/entities/ProjectAnalysis');
 
 
 class VibeCoderAutoRefactorHandler {
@@ -55,6 +56,15 @@ class VibeCoderAutoRefactorHandler {
 
     async runComprehensiveAnalysis(projectPath) {
         try {
+            // Check if analysis data needs refresh
+            const needsRefresh = await this.needsAnalysisRefresh(projectPath);
+            if (needsRefresh) {
+                console.log('🔄 [AutoRefactor] Analysis data needs refresh, running fresh analysis...');
+                // Here you could trigger a fresh analysis if needed
+                // For now, we'll continue with existing data but log a warning
+                console.warn('⚠️ [AutoRefactor] Using potentially outdated analysis data');
+            }
+            
             // Extrahiere projectId aus dem Pfad
             const projectId = path.basename(projectPath);
             
@@ -145,7 +155,6 @@ class VibeCoderAutoRefactorHandler {
             largeFiles.sort((a, b) => b.lines - a.lines);
             
             // Erstelle eine Standard-Analyse-Entity und speichere sie in der DB
-            const ProjectAnalysis = require('../../../domain/entities/ProjectAnalysis');
             const standardAnalysis = new ProjectAnalysis({
                 projectId: projectId,
                 projectPath: projectPath,
@@ -211,6 +220,7 @@ class VibeCoderAutoRefactorHandler {
 
     identifyLargeFiles(analysisResults) {
         const largeFiles = [];
+        const processedPaths = new Set(); // Prevent duplicate tasks
         
         // Parse the analysis results to find large files
         // The analysis results contain the data from the VibeCoder Mode analysis
@@ -223,13 +233,20 @@ class VibeCoderAutoRefactorHandler {
                 // Check for largeFiles array in the data
                 if (codeQualityData.largeFiles && Array.isArray(codeQualityData.largeFiles)) {
                     codeQualityData.largeFiles.forEach(file => {
-                        largeFiles.push({
-                            path: file.file || file.path,
-                            lines: parseInt(file.lines) || 0,
-                            package: 'main',
-                            priority: this.calculatePriority(parseInt(file.lines) || 0),
-                            estimatedTime: this.estimateRefactoringTime(parseInt(file.lines) || 0)
-                        });
+                        const filePath = file.file || file.path;
+                        if (filePath && !processedPaths.has(filePath)) {
+                            const lines = parseInt(file.lines) || 0;
+                            if (lines > 0) { // Only add files with valid line count
+                                largeFiles.push({
+                                    path: filePath,
+                                    lines: lines,
+                                    package: 'main',
+                                    priority: this.calculatePriority(lines),
+                                    estimatedTime: this.estimateRefactoringTime(lines)
+                                });
+                                processedPaths.add(filePath);
+                            }
+                        }
                     });
                 }
             }
@@ -237,13 +254,40 @@ class VibeCoderAutoRefactorHandler {
             // Also check if largeFiles is directly in the root
             if (analysisResults.largeFiles && Array.isArray(analysisResults.largeFiles)) {
                 analysisResults.largeFiles.forEach(file => {
-                    largeFiles.push({
-                        path: file.file || file.path,
-                        lines: parseInt(file.lines) || 0,
-                        package: 'root',
-                        priority: this.calculatePriority(parseInt(file.lines) || 0),
-                        estimatedTime: this.estimateRefactoringTime(parseInt(file.lines) || 0)
-                    });
+                    const filePath = file.file || file.path;
+                    if (filePath && !processedPaths.has(filePath)) {
+                        const lines = parseInt(file.lines) || 0;
+                        if (lines > 0) { // Only add files with valid line count
+                            largeFiles.push({
+                                path: filePath,
+                                lines: lines,
+                                package: 'root',
+                                priority: this.calculatePriority(lines),
+                                estimatedTime: this.estimateRefactoringTime(lines)
+                            });
+                            processedPaths.add(filePath);
+                        }
+                    }
+                });
+            }
+            
+            // Check for files in structure analysis
+            if (analysisResults.structure && analysisResults.structure.files) {
+                analysisResults.structure.files.forEach(file => {
+                    const filePath = file.path || file.file;
+                    if (filePath && !processedPaths.has(filePath)) {
+                        const lines = parseInt(file.lines) || 0;
+                        if (lines > 500) { // Only large files
+                            largeFiles.push({
+                                path: filePath,
+                                lines: lines,
+                                package: this.getPackageFromPath(filePath),
+                                priority: this.calculatePriority(lines),
+                                estimatedTime: this.estimateRefactoringTime(lines)
+                            });
+                            processedPaths.add(filePath);
+                        }
+                    }
                 });
             }
         }
@@ -269,18 +313,61 @@ class VibeCoderAutoRefactorHandler {
     async createRefactoringTasks(largeFiles, projectPath) {
         const tasks = [];
         
+        console.log(`🔍 [AutoRefactor] Creating refactoring tasks for ${largeFiles.length} files...`);
+        
         for (const file of largeFiles) {
-            const task = await this.createRefactoringTask(file, projectPath);
-            tasks.push(task);
+            try {
+                const task = await this.createRefactoringTask(file, projectPath);
+                if (task) {
+                    tasks.push(task);
+                }
+            } catch (error) {
+                console.error(`❌ [AutoRefactor] Failed to create task for ${file.path}:`, error.message);
+            }
         }
+        
+        console.log(`✅ [AutoRefactor] Successfully created ${tasks.length} refactoring tasks`);
         
         return tasks;
     }
 
     async createRefactoringTask(fileInfo, projectPath) {
+        // Check if task already exists for this file
+        const existingTasks = await this.taskRepository.findByProjectPath(projectPath);
+        const existingTask = existingTasks.find(task => 
+            task.metadata?.filePath === fileInfo.path && 
+            task.title.includes(path.basename(fileInfo.path, path.extname(fileInfo.path)))
+        );
+        
+        if (existingTask) {
+            console.log(`⚠️ [AutoRefactor] Task already exists for ${fileInfo.path}, skipping...`);
+            return existingTask;
+        }
+        
         const taskId = `refactor_${Date.now()}_${uuidv4().substring(0, 8)}`;
         const fileName = path.basename(fileInfo.path, path.extname(fileInfo.path));
         const fileExt = path.extname(fileInfo.path);
+        
+        // Validate and fix file info
+        let lines = fileInfo.lines;
+        if (!lines || lines <= 0) {
+            // Try to count lines manually if not provided
+            try {
+                lines = await this.countLines(fileInfo.path);
+                console.log(`📊 [AutoRefactor] Manually counted lines for ${fileInfo.path}: ${lines}`);
+            } catch (error) {
+                console.warn(`⚠️ [AutoRefactor] Could not count lines for ${fileInfo.path}: ${error.message}`);
+                return null;
+            }
+        }
+        
+        if (!lines || lines <= 0) {
+            console.warn(`⚠️ [AutoRefactor] Invalid line count for ${fileInfo.path}: ${lines}, skipping...`);
+            return null;
+        }
+        
+        // Update fileInfo with correct line count
+        fileInfo.lines = lines;
         
         // Determine file type and create appropriate task
         let taskType = 'refactor';
@@ -336,6 +423,8 @@ class VibeCoderAutoRefactorHandler {
         
         // Create detailed refactoring plan
         await this.createRefactoringPlan(task, fileInfo);
+        
+        console.log(`✅ [AutoRefactor] Created refactoring task for ${fileInfo.path} (${fileInfo.lines} lines)`);
         
         return task;
     }
@@ -584,6 +673,108 @@ class VibeCoderAutoRefactorHandler {
             ];
         } else {
             return baseSteps;
+        }
+    }
+
+    /**
+     * Refresh analysis data after task completion
+     * @param {string} projectPath - Project path
+     * @param {string} taskId - Completed task ID
+     * @returns {Promise<void>}
+     */
+    async refreshAnalysisDataAfterTaskCompletion(projectPath, taskId) {
+        try {
+            console.log(`🔄 [AutoRefactor] Refreshing analysis data after task completion: ${taskId}`);
+            
+            // Get the completed task
+            const task = await this.taskRepository.findById(taskId);
+            if (!task || !task.isCompleted()) {
+                console.log(`⚠️ [AutoRefactor] Task ${taskId} not found or not completed, skipping refresh`);
+                return;
+            }
+
+            // Update analysis data to reflect the completed refactoring
+            const projectId = path.basename(projectPath);
+            const latestAnalysis = await this.projectAnalysisRepository.findLatestByProjectId(projectId);
+            
+            if (latestAnalysis) {
+                // Update the analysis data to remove the completed file from large files list
+                const analysisData = latestAnalysis.getAnalysisData();
+                
+                if (analysisData.codeQuality && analysisData.codeQuality.largeFiles) {
+                    // Remove the completed file from large files list
+                    analysisData.codeQuality.largeFiles = analysisData.codeQuality.largeFiles.filter(
+                        file => file.file !== task.metadata.filePath && file.path !== task.metadata.filePath
+                    );
+                    
+                    // Update the analysis
+                    latestAnalysis.updateAnalysisData(analysisData);
+                    latestAnalysis.addMetadata('lastRefactoredTask', taskId);
+                    latestAnalysis.addMetadata('lastRefactoredFile', task.metadata.filePath);
+                    latestAnalysis.addMetadata('refactoredAt', new Date().toISOString());
+                    
+                    await this.projectAnalysisRepository.update(latestAnalysis);
+                    
+                    console.log(`✅ [AutoRefactor] Analysis data updated after task completion: ${taskId}`);
+                }
+            }
+            
+            // Create a new analysis entry for the completed refactoring
+            const refactoringAnalysis = new ProjectAnalysis({
+                projectId,
+                projectPath,
+                analysisType: 'refactoring-completion',
+                analysisData: {
+                    completedTaskId: taskId,
+                    completedFile: task.metadata.filePath,
+                    originalLines: task.metadata.lines,
+                    completionTime: new Date().toISOString(),
+                    refactoringType: task.metadata.refactoringType
+                },
+                metadata: {
+                    taskId,
+                    filePath: task.metadata.filePath,
+                    completionStatus: 'success'
+                }
+            });
+            
+            await this.projectAnalysisRepository.save(refactoringAnalysis);
+            
+            console.log(`✅ [AutoRefactor] Created refactoring completion analysis for task: ${taskId}`);
+            
+        } catch (error) {
+            console.error(`❌ [AutoRefactor] Failed to refresh analysis data after task completion:`, error.message);
+        }
+    }
+
+    /**
+     * Check if analysis data needs refresh
+     * @param {string} projectPath - Project path
+     * @returns {Promise<boolean>} True if refresh is needed
+     */
+    async needsAnalysisRefresh(projectPath) {
+        try {
+            const projectId = path.basename(projectPath);
+            const latestAnalysis = await this.projectAnalysisRepository.findLatestByProjectId(projectId);
+            
+            if (!latestAnalysis) {
+                return true; // No analysis exists, need refresh
+            }
+            
+            // Check if analysis is older than 1 hour
+            const analysisAge = Date.now() - new Date(latestAnalysis.createdAt).getTime();
+            const oneHour = 60 * 60 * 1000;
+            
+            if (analysisAge > oneHour) {
+                console.log(`🔄 [AutoRefactor] Analysis data is ${Math.round(analysisAge / 60000)} minutes old, refresh needed`);
+                return true;
+            }
+            
+            return false;
+            
+        } catch (error) {
+            console.error(`❌ [AutoRefactor] Error checking analysis refresh need:`, error.message);
+            return true; // Default to refresh on error
         }
     }
 }
