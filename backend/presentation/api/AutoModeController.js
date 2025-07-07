@@ -55,13 +55,13 @@ class AutoModeController {
                 bodyKeys: Object.keys(req.body)
             });
 
-            // Extract task-specific options from options object or root level
-            const taskOptions = options.taskId ? {
-                taskId: options.taskId,
-                createGitBranch: options.createGitBranch || false,
-                branchName: options.branchName,
-                clickNewChat: options.clickNewChat || false,
-                autoExecute: options.autoExecute || true
+            // Extract task-specific options from root level or options object
+            const taskOptions = (req.body.taskId || options.taskId) ? {
+                taskId: req.body.taskId || options.taskId,
+                createGitBranch: (req.body.options?.createGitBranch || options.createGitBranch) || false,
+                branchName: req.body.options?.branchName || options.branchName,
+                clickNewChat: (req.body.options?.clickNewChat || options.clickNewChat) || false,
+                autoExecute: (req.body.options?.autoExecute || options.autoExecute) || true
             } : null;
 
             this.logger.info('AutoModeController: Extracted taskOptions', {
