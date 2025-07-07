@@ -114,14 +114,14 @@ function TasksPanelComponent({ eventBus }) {
     handleCloseDocsTaskModal();
   };
 
-  // Handle executing task (send to chat with execute prompt)
+  // Handle executing task (start auto-mode with git branch and new chat)
   const handleExecuteTask = async (taskDetails) => {
     try {
       // Load the execute prompt using the SAME function as everywhere else
       const executePromptContent = await fetchPromptContent('prompts/task-management/task-execute.md');
 
-      // Create the complete message with execute prompt
-      const messageContent = `${executePromptContent}
+      // Create the complete task message
+      const taskMessage = `${executePromptContent}
 
 ---
 
@@ -139,8 +139,29 @@ ${taskDetails.content}
 ## Execute Instructions
 **Execute this task automatically using the above prompt framework. Create a Git branch named \`task/${taskDetails.id}-${Date.now()}\` and implement everything with zero user input required.**`;
 
-      // Send to chat
-      handleSendToChat(messageContent);
+      // Get current project ID
+      const projectId = await api.getCurrentProjectId();
+      
+      // Start auto-mode with the task
+      const autoModeResponse = await apiCall(`/api/projects/${projectId}/auto/execute`, {
+        method: 'POST',
+        body: JSON.stringify({
+          task: taskMessage,
+          options: {
+            createGitBranch: true,
+            branchName: `task/${taskDetails.id}-${Date.now()}`,
+            clickNewChat: true,
+            autoExecute: true
+          }
+        })
+      });
+
+      if (autoModeResponse.success) {
+        setFeedback('✅ Auto-mode started! Git branch created and task execution initiated.');
+        handleCloseDocsTaskModal();
+      } else {
+        throw new Error(autoModeResponse.error || 'Failed to start auto-mode');
+      }
     } catch (error) {
       console.error('Error executing task:', error);
       setFeedback('Failed to execute task: ' + error.message);
