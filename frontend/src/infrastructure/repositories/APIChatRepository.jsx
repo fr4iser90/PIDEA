@@ -456,6 +456,14 @@ export default class APIChatRepository extends ChatRepository {
     });
   }
 
+  // NEW: Clean docs tasks from database
+  async cleanDocsTasks() {
+    const projectId = await this.getCurrentProjectId();
+    return await apiCall(`/api/projects/${projectId}/tasks/clean-docs`, {
+      method: 'POST'
+    });
+  }
+
   // Framework Methods
   async getFrameworkStructure() {
     return apiCall(API_CONFIG.endpoints.framework.structure);

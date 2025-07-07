@@ -620,6 +620,53 @@ class TaskController {
             return null;
         }
     }
+
+    // NEW: Clean docs tasks from database
+    async cleanDocsTasks(req, res) {
+        try {
+            const { projectId } = req.params;
+            const userId = req.user.id;
+
+            console.log('🗑️ [TaskController] Cleaning docs tasks for project:', projectId);
+
+            // Get all docs-synced tasks
+            const allTasks = await this.taskRepository.findByProject(projectId);
+            const docsTasksToDelete = allTasks.filter(task => 
+                task.metadata && task.metadata.source === 'docs_sync'
+            );
+
+            console.log(`🗑️ [TaskController] Found ${docsTasksToDelete.length} docs tasks to delete`);
+
+            // Delete all docs tasks
+            let deletedCount = 0;
+            for (const task of docsTasksToDelete) {
+                try {
+                    await this.taskRepository.delete(task.id);
+                    deletedCount++;
+                    console.log(`🗑️ [TaskController] Deleted task: ${task.title}`);
+                } catch (error) {
+                    console.error(`❌ [TaskController] Failed to delete task ${task.id}:`, error);
+                }
+            }
+
+            res.json({
+                success: true,
+                data: {
+                    deletedTasks: docsTasksToDelete,
+                    totalFound: docsTasksToDelete.length,
+                    deletedCount: deletedCount
+                },
+                message: `Successfully deleted ${deletedCount} docs tasks`
+            });
+
+        } catch (error) {
+            console.error('❌ [TaskController] Failed to clean docs tasks:', error);
+            res.status(500).json({
+                success: false,
+                error: error.message
+            });
+        }
+    }
 }
 
 module.exports = TaskController; 

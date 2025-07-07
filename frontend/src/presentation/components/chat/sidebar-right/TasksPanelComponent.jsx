@@ -103,6 +103,30 @@ function TasksPanelComponent({ eventBus }) {
     }
   };
 
+  const handleCleanDocsTasks = async () => {
+    if (!window.confirm('🗑️ Are you sure you want to delete ALL docs tasks from the database? This cannot be undone!')) {
+      return;
+    }
+    
+    setIsLoadingDocsTasks(true);
+    try {
+      console.log('🗑️ [TasksPanelComponent] Starting docs tasks cleanup...');
+      const response = await api.cleanDocsTasks();
+      if (response.success) {
+        setFeedback(`✅ Successfully deleted ${response.data.deletedCount} docs tasks from database`);
+        // Reload tasks after cleanup
+        await loadDocsTasks();
+      } else {
+        setFeedback('❌ Failed to clean documentation tasks: ' + response.error);
+      }
+    } catch (error) {
+      console.error('Error cleaning docs tasks:', error);
+      setFeedback('❌ Error cleaning docs tasks: ' + error.message);
+    } finally {
+      setIsLoadingDocsTasks(false);
+    }
+  };
+
   const handleDocsTaskClick = async (task) => {
     setIsLoadingDocsTaskDetails(true);
     setIsDocsTaskModalOpen(true);
@@ -266,6 +290,13 @@ ${taskDetails.description}
               disabled={isLoadingDocsTasks}
             >
               {isLoadingDocsTasks ? 'Syncing...' : '🔄 Sync'}
+            </button>
+            <button 
+              className="btn-secondary text-sm"
+              onClick={handleCleanDocsTasks}
+              disabled={isLoadingDocsTasks}
+            >
+              {isLoadingDocsTasks ? 'Cleaning...' : '🗑️ Clean'}
             </button>
             <button 
               className="btn-secondary text-sm"
