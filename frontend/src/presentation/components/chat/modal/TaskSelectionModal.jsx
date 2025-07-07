@@ -54,8 +54,23 @@ const TaskSelectionModal = ({
   };
 
   const formatFileSize = (lines) => {
-    if (lines > 1000) return `${(lines / 1000).toFixed(1)}k lines`;
-    return `${lines} lines`;
+    // Handle undefined, null, or invalid values
+    if (!lines || lines === 'undefined' || lines === undefined || lines === null) {
+      return 'unknown lines';
+    }
+    
+    // Convert to number if it's a string
+    const lineCount = parseInt(lines) || 0;
+    
+    if (lineCount === 0) {
+      return 'unknown lines';
+    }
+    
+    if (lineCount > 1000) {
+      return `${(lineCount / 1000).toFixed(1)}k lines`;
+    }
+    
+    return `${lineCount} lines`;
   };
 
   if (!isOpen) return null;

@@ -379,7 +379,7 @@ class Task {
 
   // Serialization
   toJSON() {
-    return {
+    const baseObject = {
       id: this.id,
       projectId: this.projectId,
       title: this._title,
@@ -399,6 +399,31 @@ class Task {
       requiresExecution: this.requiresExecution(),
       requiresHumanReview: this.requiresHumanReview()
     };
+
+    // Extract common metadata fields to top level for frontend compatibility
+    if (this._metadata) {
+      // Lines information for refactoring tasks
+      if (this._metadata.lines) {
+        baseObject.lines = this._metadata.lines;
+      }
+      
+      // File path information
+      if (this._metadata.filePath) {
+        baseObject.filePath = this._metadata.filePath;
+      }
+      
+      // Refactoring steps
+      if (this._metadata.refactoringSteps) {
+        baseObject.refactoringSteps = this._metadata.refactoringSteps;
+      }
+      
+      // Estimated time
+      if (this._metadata.estimatedTime) {
+        baseObject.estimatedTime = this._metadata.estimatedTime;
+      }
+    }
+
+    return baseObject;
   }
 
   static fromJSON(data) {
