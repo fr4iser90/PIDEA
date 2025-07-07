@@ -23,6 +23,7 @@ function App() {
   const [isRightSidebarVisible, setIsRightSidebarVisible] = useState(true);
   const [gitStatus, setGitStatus] = useState(null);
   const [gitBranch, setGitBranch] = useState('');
+  const [attachedPrompts, setAttachedPrompts] = useState([]);
   const containerRef = useRef(null);
   const { isAuthenticated } = useAuthStore();
 
@@ -150,7 +151,7 @@ function App() {
   const renderView = () => {
     switch (currentView) {
       case 'chat':
-        return <ChatComponent eventBus={eventBus} activePort={activePort} />;
+        return <ChatComponent eventBus={eventBus} activePort={activePort} attachedPrompts={attachedPrompts} />;
       case 'ide-mirror':
         return <IDEMirrorComponent eventBus={eventBus} />;
       case 'preview':
@@ -165,7 +166,7 @@ function App() {
       case 'code':
         return <div className="code-explorer-container">Code Editor View</div>;
       default:
-        return <ChatComponent eventBus={eventBus} activePort={activePort} />;
+        return <ChatComponent eventBus={eventBus} activePort={activePort} attachedPrompts={attachedPrompts} />;
     }
   };
 
@@ -239,7 +240,7 @@ function App() {
           </div>
           
           {/* Right Sidebar */}
-          {isRightSidebarVisible && <SidebarRight eventBus={eventBus} />}
+          {isRightSidebarVisible && <SidebarRight eventBus={eventBus} attachedPrompts={attachedPrompts} setAttachedPrompts={setAttachedPrompts} />}
         </main>
 
         <Footer 

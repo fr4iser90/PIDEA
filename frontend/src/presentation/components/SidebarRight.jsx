@@ -19,7 +19,7 @@ import TemplatesPanelComponent from './chat/sidebar-right/TemplatesPanelComponen
 import TasksPanelComponent from './chat/sidebar-right/TasksPanelComponent.jsx';
 import '@css/global/sidebar-right.css';
 
-function SidebarRight({ eventBus }) {
+function SidebarRight({ eventBus, attachedPrompts, setAttachedPrompts }) {
   const [currentTab, setCurrentTab] = useState('tasks');
   const [isVisible, setIsVisible] = useState(true);
 
@@ -43,7 +43,7 @@ function SidebarRight({ eventBus }) {
         {currentTab === 'tasks' && <TasksPanelComponent eventBus={eventBus} />}
         {currentTab === 'auto' && <AutoPanelComponent eventBus={eventBus} />}
         {currentTab === 'frameworks' && <FrameworksPanelComponent />}
-        {currentTab === 'prompts' && <PromptsPanelComponent />}
+        {currentTab === 'prompts' && <PromptsPanelComponent attachedPrompts={attachedPrompts} setAttachedPrompts={setAttachedPrompts} />}
         {currentTab === 'templates' && <TemplatesPanelComponent />}
         {currentTab === 'analysis' && <AnalysisPanelComponent />}
         {currentTab === 'settings' && <div className="settings-tab">Settings Panel (TODO)</div>}

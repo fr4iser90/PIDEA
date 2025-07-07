@@ -31,7 +31,31 @@ function normalizeMessage(msg) {
   return { ...msg, sender, type };
 }
 
-function ChatComponent({ eventBus, activePort }) {
+async function fetchPromptContent(promptFile) {
+  let url;
+  if (promptFile.startsWith('frameworks/')) {
+    const parts = promptFile.split('/');
+    const frameworkId = parts[1];
+    const filename = parts[3];
+    url = `/api/frameworks/${frameworkId}/prompts/${filename}`;
+  } else {
+    let filePath = promptFile;
+    if (filePath.startsWith('prompts/')) filePath = filePath.substring(8);
+    const pathParts = filePath.split('/');
+    const filename = pathParts.pop();
+    const category = pathParts.join('/');
+    url = `/api/prompts/${category}/${filename}`;
+  }
+  const response = await apiCall(url);
+  // Robust: prüfe alle sinnvollen Felder
+  if (response.content) return response.content;
+  if (response.data && response.data.content) return response.data.content;
+  if (typeof response.data === 'string') return response.data;
+  if (typeof response === 'string') return response;
+  throw new Error(`Prompt content not found for ${promptFile}`);
+}
+
+function ChatComponent({ eventBus, activePort, attachedPrompts = [] }) {
   const [messages, setMessages] = useState([]);
   const [isTyping, setIsTyping] = useState(false);
   const [inputValue, setInputValue] = useState('');
@@ -83,20 +107,51 @@ function ChatComponent({ eventBus, activePort }) {
 
   const sendMessage = async (message) => {
     if (!message.trim()) return;
+    let promptContents = [];
+    let failedPrompts = [];
+    // Fetch all attached prompt contents
+    if (attachedPrompts.length > 0) {
+      await Promise.all(attachedPrompts.map(async (promptFile) => {
+        try {
+          const content = await fetchPromptContent(promptFile);
+          promptContents.push(content);
+        } catch (err) {
+          failedPrompts.push(promptFile);
+        }
+      }));
+    }
+    // Combine prompt contents and user message
+    const finalMessage = `${promptContents.join('\n\n')}${promptContents.length > 0 ? '\n\n' : ''}${message}`;
+    // === DEBUG LOGS START ===
+    console.log('==== PROMPT CONTENTS ====', promptContents);
+    console.log('==== FAILED PROMPTS ====', failedPrompts);
+    console.log('==== FINAL MESSAGE ====', finalMessage);
+    // === DEBUG LOGS END ===
     const newMessage = normalizeMessage({
       id: Date.now(),
-      content: message,
+      content: finalMessage,
       sender: 'user',
       timestamp: new Date().toISOString(),
-      type: message.includes('```') ? 'code' : 'text'
+      type: finalMessage.includes('```') ? 'code' : 'text'
     });
     setMessages(prevMessages => [...prevMessages, newMessage]);
     setInputValue('');
+    if (failedPrompts.length > 0) {
+      const errorMessage = normalizeMessage({
+        id: Date.now() + 1,
+        content: `Fehler beim Laden folgender Prompts: ${failedPrompts.join(', ')}`,
+        sender: 'system',
+        timestamp: new Date().toISOString(),
+        type: 'error'
+      });
+      setMessages(prevMessages => [...prevMessages, errorMessage]);
+    }
     try {
+
       // Send message to active IDE
       const result = await apiCall(API_CONFIG.endpoints.chat.send, {
         method: 'POST',
-        body: JSON.stringify({ message: message.trim(), requestedBy })
+        body: JSON.stringify({ message: finalMessage.trim(), requestedBy })
       });
       if (!result.success) {
         throw new Error(result.error || 'Failed to send message');
@@ -104,7 +159,7 @@ function ChatComponent({ eventBus, activePort }) {
     } catch (error) {
       setError('❌ ' + error.message);
       const errorMessage = normalizeMessage({
-        id: Date.now() + 1,
+        id: Date.now() + 2,
         content: `Error: ${error.message}`,
         sender: 'system',
         timestamp: new Date().toISOString(),
