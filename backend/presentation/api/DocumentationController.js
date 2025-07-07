@@ -40,25 +40,51 @@ class DocumentationController {
                 ports: availableIDEs.map(ide => ide.port)
             });
 
-            // Process each IDE concurrently
-            const analysisPromises = availableIDEs.map(async (ide) => {
+            // 🚀 SMART PARALLEL: Send all prompts quickly, then collect responses
+            this.logger.info('[DocumentationController] Phase 1: Sending all prompts quickly');
+            
+            const promptPromises = availableIDEs.map(async (ide) => {
                 const workspacePath = this.ideManager.getWorkspacePath(ide.port);
                 if (!workspacePath || workspacePath.includes(':')) {
-                    this.logger.warn('[DocumentationController] Skipping IDE with invalid workspace', {
-                        port: ide.port,
-                        workspacePath
-                    });
-                    return {
-                        port: ide.port,
-                        success: false,
-                        error: 'Invalid workspace path'
-                    };
+                    return { ide, success: false, error: 'Invalid workspace path' };
                 }
 
                 const projectId = this.getProjectIdFromPath(workspacePath);
                 
                 try {
-                    const result = await this.runSingleProjectAnalysis(projectId, workspacePath, ide.port);
+                    // 🔥 QUICK SEND: Just send prompt without waiting
+                    await this.sendQuickPrompt(projectId, workspacePath, ide.port);
+                    return { ide, projectId, workspacePath, success: true };
+                } catch (error) {
+                    return { ide, projectId, workspacePath, success: false, error: error.message };
+                }
+            });
+
+            // Wait for all prompts to be sent (should be ~30 seconds)
+            const promptResults = await Promise.allSettled(promptPromises);
+            
+            this.logger.info('[DocumentationController] Phase 2: Waiting for AI responses (2 minutes)');
+            
+            // 🕐 SMART WAIT: Give AI time to work on all projects
+            await new Promise(resolve => setTimeout(resolve, 180000)); // 2 minutes for AI to work
+            
+            this.logger.info('[DocumentationController] Phase 3: Collecting responses and creating tasks');
+            
+            // 📝 COLLECT RESPONSES: Now collect all responses
+            const analysisPromises = promptResults.map(async (promptResult) => {
+                if (promptResult.status !== 'fulfilled' || !promptResult.value.success) {
+                    return {
+                        port: promptResult.value?.ide?.port,
+                        success: false,
+                        error: promptResult.value?.error || 'Prompt sending failed'
+                    };
+                }
+                
+                const { ide, projectId, workspacePath } = promptResult.value;
+                
+                try {
+                    // 📊 COLLECT RESPONSE: Get the AI response and create tasks
+                    const result = await this.collectResponseAndCreateTasks(projectId, workspacePath, ide.port);
                     return {
                         port: ide.port,
                         projectId,
@@ -67,7 +93,7 @@ class DocumentationController {
                         result
                     };
                 } catch (error) {
-                    this.logger.error('[DocumentationController] Bulk analysis failed for IDE', {
+                    this.logger.error('[DocumentationController] Failed to collect response for IDE', {
                         port: ide.port,
                         projectId,
                         error: error.message
@@ -82,7 +108,7 @@ class DocumentationController {
                 }
             });
 
-            // Wait for all analyses to complete
+            // Wait for all response collection to complete
             const results = await Promise.allSettled(analysisPromises);
             
             // Process results
@@ -757,9 +783,7 @@ class DocumentationController {
         });
         
         const ideResponse = await this.cursorIDEService.sendMessage(contextualizedPrompt, {
-            waitForResponse: true,
-            timeout: 300000, // 5 minutes for comprehensive analysis
-            checkInterval: 5000
+            waitForResponse: false // 🚀 Fire and Forget - don't wait for response
         });
 
         this.logger.info('[DocumentationController] Received AI response for project', {
@@ -772,6 +796,163 @@ class DocumentationController {
 
         if (!ideResponse.success) {
             throw new Error(`AI analysis timed out or failed for project ${projectId}`);
+        }
+
+        // Process the response
+        const analysisResult = this.processDocumentationAnalysis(ideResponse.response, projectId);
+
+        // Create tasks in database and execute them automatically
+        const taskResults = await this.createTasksFromAnalysis(analysisResult, projectId);
+        
+        this.logger.info('[DocumentationController] Created and executed tasks for project', {
+            projectId,
+            idePort,
+            taskCount: taskResults.createdTasks.length,
+            successful: taskResults.summary.successful,
+            failed: taskResults.summary.failed
+        });
+
+        return {
+            projectId,
+            projectPath: workspacePath,
+            idePort,
+            analysis: analysisResult,
+            createdTasks: taskResults.createdTasks,
+            executionResults: taskResults.executionResults,
+            executionSummary: taskResults.summary,
+            promptSent: true,
+            ideResponse: ideResponse,
+            timestamp: new Date().toISOString()
+        };
+    }
+
+    /**
+     * Send prompt quickly without waiting for response (Phase 1 of Smart Parallel)
+     */
+    async sendQuickPrompt(projectId, workspacePath, idePort) {
+        this.logger.info('[DocumentationController] Quick-sending prompt to IDE', {
+            projectId,
+            workspacePath,
+            idePort
+        });
+
+        // Switch to the correct IDE
+        const currentActivePort = this.cursorIDEService.getActivePort();
+        if (currentActivePort !== idePort) {
+            this.logger.info('[DocumentationController] Switching to project IDE for quick prompt', {
+                from: currentActivePort,
+                to: idePort
+            });
+            
+            await this.cursorIDEService.switchToPort(idePort);
+        }
+
+        // Load doc-analyze.md prompt
+        const promptPath = path.join(
+            this.contentLibraryPath,
+            'frameworks/documentation-framework/prompts/doc-analyze.md'
+        );
+
+        if (!fs.existsSync(promptPath)) {
+            throw new Error('doc-analyze.md prompt not found');
+        }
+
+        const promptTemplate = fs.readFileSync(promptPath, 'utf8');
+
+        // Create contextualized prompt with project info
+        const contextualizedPrompt = `${promptTemplate}
+
+---
+
+## 🎯 PROJECT CONTEXT
+
+**Project Path**: ${workspacePath}
+**Project ID**: ${projectId}
+**Analysis Date**: ${new Date().toISOString()}
+**IDE Port**: ${idePort}
+
+**Instructions**: 
+1. Analyze the documentation in the above project path
+2. Follow the framework phases exactly
+3. Create a comprehensive improvement plan
+4. Generate specific, actionable tasks
+5. Focus on this specific project's needs
+
+**Please begin your analysis now:**`;
+
+        // 🚀 FIRE AND FORGET: Send prompt without waiting
+        this.logger.info('[DocumentationController] Sending quick prompt to IDE', {
+            projectId,
+            idePort,
+            promptLength: contextualizedPrompt.length
+        });
+        
+        const ideResponse = await this.cursorIDEService.sendMessage(contextualizedPrompt, {
+            waitForResponse: false // 🔥 Quick send - don't wait
+        });
+
+        if (!ideResponse.success) {
+            throw new Error(`Failed to send prompt to IDE ${idePort}`);
+        }
+
+        this.logger.info('[DocumentationController] Quick prompt sent successfully', {
+            projectId,
+            idePort
+        });
+
+        return { success: true, promptSent: true };
+    }
+
+    /**
+     * Collect AI response and create tasks (Phase 3 of Smart Parallel)
+     */
+    async collectResponseAndCreateTasks(projectId, workspacePath, idePort) {
+        this.logger.info('[DocumentationController] Collecting response from IDE', {
+            projectId,
+            workspacePath,
+            idePort
+        });
+
+        // Switch to the correct IDE to get response
+        const currentActivePort = this.cursorIDEService.getActivePort();
+        if (currentActivePort !== idePort) {
+            this.logger.info('[DocumentationController] Switching to project IDE for response collection', {
+                from: currentActivePort,
+                to: idePort
+            });
+            
+            await this.cursorIDEService.switchToPort(idePort);
+        }
+
+        // 📊 GET LATEST AI RESPONSE: Check what AI has written
+        const ideResponse = await this.cursorIDEService.getLatestResponse(idePort);
+
+        this.logger.info('[DocumentationController] Collected AI response for project', {
+            projectId,
+            idePort,
+            success: ideResponse.success,
+            responseLength: ideResponse.response?.length || 0
+        });
+
+        if (!ideResponse.success || !ideResponse.response) {
+            // Fallback: Try to get any response from the chat
+            this.logger.warn('[DocumentationController] No response found, using fallback method', {
+                projectId,
+                idePort
+            });
+            
+            return {
+                projectId,
+                projectPath: workspacePath,
+                idePort,
+                analysis: { rawResponse: 'No response received', tasks: [], coverage: {}, priorities: [] },
+                createdTasks: [],
+                executionResults: [],
+                executionSummary: { total: 0, successful: 0, failed: 0 },
+                promptSent: true,
+                ideResponse: { success: false, response: 'No response' },
+                timestamp: new Date().toISOString()
+            };
         }
 
         // Process the response
