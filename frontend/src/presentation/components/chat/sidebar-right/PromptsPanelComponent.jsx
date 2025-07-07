@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { apiCall } from '@infrastructure/repositories/APIChatRepository.jsx';
+import PromptDetailsModal from '../modal/PromptDetailsModal.jsx';
+import '@css/panel/prompt-panel.css';
 
 function PromptsPanelComponent({ onPromptClick, onQuickPrompt }) {
   const [prompts, setPrompts] = useState([]);
@@ -10,6 +12,9 @@ function PromptsPanelComponent({ onPromptClick, onQuickPrompt }) {
   const [searchTerm, setSearchTerm] = useState('');
   const [activeTab, setActiveTab] = useState('generic'); // 'generic' or 'frameworks'
   const [selectedPrompt, setSelectedPrompt] = useState(null);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [modalContent, setModalContent] = useState('');
+  const [modalTitle, setModalTitle] = useState('');
 
   useEffect(() => {
     loadGenericPrompts();
@@ -92,8 +97,43 @@ function PromptsPanelComponent({ onPromptClick, onQuickPrompt }) {
 
   const categories = [...new Set(prompts.map(p => p.category).filter(Boolean))];
 
+  // Group prompts by category
+  const promptsByCategory = categories.reduce((acc, category) => {
+    acc[category] = filteredPrompts.filter(p => p.category === category);
+    return acc;
+  }, {});
+
+  // Card click handler: load content and insert into chat input
+  const handlePromptCardClick = async (prompt) => {
+    try {
+      const response = await apiCall(`/api/content/${prompt.file}`);
+      if (response.success && onQuickPrompt) {
+        onQuickPrompt(response.data.content);
+      }
+    } catch (error) {
+      console.error('Failed to load prompt content:', error);
+    }
+  };
+
+  // View button handler: show prompt content in modal
+  const handleViewPrompt = async (prompt) => {
+    try {
+      const response = await apiCall(`/api/content/${prompt.file}`);
+      if (response.success) {
+        setModalTitle(prompt.name);
+        setModalContent(response.data.content);
+        setModalOpen(true);
+      }
+    } catch (error) {
+      setModalTitle(prompt.name);
+      setModalContent('Failed to load prompt content.');
+      setModalOpen(true);
+    }
+  };
+
   return (
-    <div className="content-library-panel space-y-4 p-3">
+    <div className="prompts-tab space-y-4 p-3">
+      <PromptDetailsModal open={modalOpen} onClose={() => setModalOpen(false)} title={modalTitle} content={modalContent} />
       <div className="panel-header flex items-center justify-between mb-4">
         <div className="panel-title text-lg font-semibold text-white">Prompts</div>
         <input
@@ -104,16 +144,32 @@ function PromptsPanelComponent({ onPromptClick, onQuickPrompt }) {
           onChange={e => setSearchTerm(e.target.value)}
         />
       </div>
-      <div className="prompts-panel grid gap-3">
-        {prompts.map(prompt => (
-          <div
-            key={prompt.path}
-            className={`prompt-item p-4 rounded-lg border shadow-sm cursor-pointer transition-all duration-200 bg-gray-800 hover:bg-gray-700 hover:shadow-md flex flex-col ${selectedPrompt === prompt.path ? 'ring-2 ring-blue-500 border-blue-500 bg-gray-700' : 'border-gray-700'}`}
-            onClick={() => setSelectedPrompt(prompt.path)}
-          >
-            <div className="font-semibold text-white text-base mb-1">{prompt.name}</div>
-            <div className="text-xs text-gray-400 mb-1">{prompt.category}</div>
-            <div className="text-xs text-gray-500 font-mono">{prompt.path}</div>
+      <div className="prompts-panel space-y-6">
+        {categories.map(category => (
+          <div key={category} className="prompt-category-block">
+            <div className="font-semibold text-base text-blue-400 mb-2 capitalize">{category}</div>
+            <div className="grid gap-3">
+              {promptsByCategory[category].map(prompt => (
+                <div
+                  key={prompt.path}
+                  className={`panel-block prompt-card cursor-pointer transition-colors flex flex-col`}
+                  aria-selected={false}
+                  onClick={() => handlePromptCardClick(prompt)}
+                >
+                  <div className="prompt-card-header">
+                    <h4 className="prompt-card-title">{prompt.name}</h4>
+                    <button
+                      className="prompt-card-view-btn"
+                      onClick={e => { e.stopPropagation(); handleViewPrompt(prompt); }}
+                      title="View prompt content"
+                    >
+                      <span role="img" aria-label="view">👁️</span>
+                    </button>
+                  </div>
+                  {/* Optionally, add a description or tags here in the future */}
+                </div>
+              ))}
+            </div>
           </div>
         ))}
       </div>

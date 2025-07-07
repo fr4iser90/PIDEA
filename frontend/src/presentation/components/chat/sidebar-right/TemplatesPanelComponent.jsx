@@ -101,7 +101,7 @@ function TemplatesPanelComponent({ onTemplateClick, onTemplateUse }) {
   const categories = [...new Set(templates.map(t => t.category).filter(Boolean))];
 
   return (
-    <div className="content-library-panel space-y-4 p-3">
+    <div className="templates-tab space-y-4 p-3">
       <div className="panel-header flex items-center justify-between mb-4">
         <div className="panel-title text-lg font-semibold text-white">Templates</div>
         <input
@@ -116,10 +116,16 @@ function TemplatesPanelComponent({ onTemplateClick, onTemplateUse }) {
         {templates.map(template => (
           <div
             key={template.path}
-            className={`template-item p-4 rounded-lg border shadow-sm cursor-pointer transition-all duration-200 bg-gray-800 hover:bg-gray-700 hover:shadow-md flex flex-col ${selectedTemplate === template.path ? 'ring-2 ring-blue-500 border-blue-500 bg-gray-700' : 'border-gray-700'}`}
+            className={`panel-block template-card cursor-pointer transition-colors flex flex-col
+              ${selectedTemplate === template.path ? 'ring-2 ring-blue-500 border-blue-500 bg-gray-700' : ''}
+            `}
+            aria-selected={selectedTemplate === template.path}
             onClick={() => setSelectedTemplate(template.path)}
           >
-            <div className="font-semibold text-white text-base mb-1">{template.name}</div>
+            <div className="flex justify-between items-center mb-2">
+              <div className="font-semibold text-white text-base mb-1">{template.name}</div>
+              <span className="category-badge template">Template</span>
+            </div>
             <div className="text-xs text-gray-400 mb-1">{template.category}</div>
             <div className="text-xs text-gray-500 font-mono">{template.path}</div>
           </div>

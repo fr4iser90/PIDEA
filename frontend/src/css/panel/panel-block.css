@@ -57,3 +57,28 @@ body.light-theme .panel-header {
 body.light-theme .panel-title {
   color: #2196f3;
 }
+
+/* Badge Styles for all panels */
+.category-badge, .status-badge, .priority-badge, .active-badge {
+  display: inline-block;
+  font-size: 0.75em;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 8px;
+  margin-left: 4px;
+  margin-right: 0;
+  color: #fff;
+  vertical-align: middle;
+}
+.category-badge.system { background: #2196f3; }
+.category-badge.user { background: #43a047; }
+.category-badge.template { background: #8e24aa; }
+.category-badge.framework { background: #00bcd4; }
+.status-badge.completed { background: #44aa44; }
+.status-badge.pending { background: #888888; }
+.status-badge.inprogress { background: #ffaa00; }
+.status-badge.blocked { background: #ff4444; }
+.priority-badge.high { background: #ff4444; }
+.priority-badge.medium { background: #ffaa00; }
+.priority-badge.low { background: #44aa44; }
+.active-badge { background: #43a047; }

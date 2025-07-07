@@ -230,7 +230,7 @@ function FrameworksPanelComponent({ onFrameworkSelect, onNavigateToPrompts, onNa
   };
 
   return (
-    <div className="content-library-panel space-y-4 p-3">
+    <div className="frameworks-tab space-y-4 p-3">
       <div className="panel-header flex items-center justify-between mb-4">
         <div className="panel-title text-lg font-semibold text-white">Frameworks</div>
         <input
@@ -245,12 +245,16 @@ function FrameworksPanelComponent({ onFrameworkSelect, onNavigateToPrompts, onNa
         {frameworks.map(fw => (
           <div
             key={fw.id}
-            className={`framework-item flex items-center gap-3 p-4 rounded-lg border shadow-sm cursor-pointer transition-all duration-200 bg-gray-800 hover:bg-gray-700 hover:shadow-md ${selectedFramework === fw.id ? 'ring-2 ring-blue-500 border-blue-500 bg-gray-700' : 'border-gray-700'}`}
+            className={`panel-block framework-card flex items-center gap-3 cursor-pointer transition-colors
+              ${selectedFramework === fw.id ? 'ring-2 ring-blue-500 border-blue-500 bg-gray-700' : ''}
+            `}
+            aria-selected={selectedFramework === fw.id}
             onClick={() => setSelectedFramework(fw.id)}
           >
             <span className="text-2xl mr-2">{getFrameworkIcon(fw.id)}</span>
             <div className="flex-1">
               <div className="font-semibold text-white text-base">{fw.name}</div>
+              <span className="category-badge framework">Framework</span>
               <div className="text-xs text-gray-400">{fw.id}</div>
             </div>
           </div>
