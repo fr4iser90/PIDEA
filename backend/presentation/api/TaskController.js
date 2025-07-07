@@ -1,6 +1,12 @@
 /**
  * TaskController - Handles project-based task management
  */
+const path = require('path');
+const fs = require('fs').promises;
+const fsSync = require('fs');
+const TaskPriority = require('@domain/value-objects/TaskPriority');
+const TaskType = require('@domain/value-objects/TaskType');
+
 class TaskController {
     constructor(taskService, taskRepository, aiService, projectAnalyzer) {
         this.taskService = taskService;
@@ -446,6 +452,172 @@ class TaskController {
                 success: false,
                 error: error.message
             });
+        }
+    }
+
+    // NEW: Sync docs tasks from markdown files to database
+    async syncDocsTasks(req, res) {
+        try {
+            const { projectId } = req.params;
+            const userId = req.user.id;
+
+            console.log('🔄 [TaskController] Syncing docs tasks for project:', projectId);
+
+            // Robust path resolution for docs/09_roadmap/features
+            let docsTasksPath = path.join(process.cwd(), 'docs', '09_roadmap', 'features');
+            if (!fsSync.existsSync(docsTasksPath)) {
+                docsTasksPath = path.resolve(process.cwd(), '../docs/09_roadmap/features');
+            }
+            if (!fsSync.existsSync(docsTasksPath)) {
+                throw new Error('docs/09_roadmap/features directory not found!');
+            }
+
+            const importedTasks = [];
+
+            // Read all markdown files in the features directory
+            const files = await fs.readdir(docsTasksPath);
+            const markdownFiles = files.filter(file => file.endsWith('.md'));
+
+            for (const filename of markdownFiles) {
+                const filePath = path.join(docsTasksPath, filename);
+                const content = await fs.readFile(filePath, 'utf8');
+
+                // Parse markdown content to extract task info
+                const taskInfo = this.parseDocsTaskFromMarkdown(content, filename);
+
+                console.log(`🔍 [TaskController] Parsed taskInfo for ${filename}:`, {
+                    title: taskInfo?.title,
+                    priority: taskInfo?.priority,
+                    type: taskInfo?.type,
+                    hasContent: !!taskInfo
+                });
+
+                if (taskInfo) {
+                    // Check if task already exists (by title or filename)
+                    const existingTask = await this.taskRepository.findByTitle(taskInfo.title);
+                    
+                    if (!existingTask) {
+                        console.log(`🔍 [TaskController] Creating task with:`, {
+                            projectId,
+                            title: taskInfo.title,
+                            priority: taskInfo.priority,
+                            type: taskInfo.type
+                        });
+                        
+                        // Create new task in database
+                        const task = await this.taskService.createTask(
+                            projectId,
+                            taskInfo.title,
+                            content,
+                            taskInfo.priority,
+                            taskInfo.type,
+                            {
+                                source: 'docs_sync',
+                                filename: filename,
+                                filePath: filePath,
+                                importedBy: userId,
+                                importedAt: new Date(),
+                                content: content,
+                                ...taskInfo.metadata
+                            }
+                        );
+                        if (task && !task.filename) task.filename = filename;
+                        if (task && !task.description) task.description = content;
+
+                        importedTasks.push(task);
+                        console.log(`✅ [TaskController] Imported task: ${taskInfo.title}\nContent: ${content.substring(0, 500)}...`);
+                    } else {
+                        console.log(`⚠️ [TaskController] Task already exists: ${taskInfo.title}`);
+                    }
+                }
+            }
+
+            res.json({
+                success: true,
+                data: {
+                    importedTasks,
+                    totalFiles: markdownFiles.length,
+                    importedCount: importedTasks.length
+                },
+                message: `Successfully imported ${importedTasks.length} docs tasks`
+            });
+
+        } catch (error) {
+            console.error('❌ [TaskController] Failed to sync docs tasks:', error);
+            res.status(500).json({
+                success: false,
+                error: error.message
+            });
+        }
+    }
+
+    // Helper method to parse markdown content
+    parseDocsTaskFromMarkdown(content, filename) {
+        try {
+            // Extract title from first line (usually # Task Name)
+            const titleMatch = content.match(/^#\s+(.+)$/m);
+            const title = titleMatch ? titleMatch[1].trim() : filename.replace('.md', '');
+
+            // Extract priority from content - use TaskPriority static values
+            let priority = TaskPriority.MEDIUM;
+            if (content.includes('KRITISCH') || content.includes('CRITICAL')) {
+                priority = TaskPriority.CRITICAL;
+            } else if (content.includes('HIGH') || content.includes('HOCH')) {
+                priority = TaskPriority.HIGH;
+            } else if (content.includes('LOW') || content.includes('NICHTIG') || content.includes('NIEDRIG')) {
+                priority = TaskPriority.LOW;
+            }
+            
+            console.log('🔍 [TaskController] Priority parsing:', {
+                content: content.substring(0, 200),
+                priority: priority,
+                TaskPriority_LOW: TaskPriority.LOW,
+                TaskPriority_MEDIUM: TaskPriority.MEDIUM,
+                TaskPriority_HIGH: TaskPriority.HIGH,
+                TaskPriority_CRITICAL: TaskPriority.CRITICAL
+            });
+
+            // Extract type from content or filename - use TaskType static values
+            let type = TaskType.FEATURE;
+            if (content.includes('refactor') || content.includes('Refactor')) {
+                type = TaskType.REFACTOR;
+            } else if (content.includes('bug') || content.includes('Bug')) {
+                type = TaskType.BUG;
+            } else if (content.includes('test') || content.includes('Test')) {
+                type = TaskType.TEST;
+            } else if (content.includes('documentation') || content.includes('docs')) {
+                type = TaskType.DOCUMENTATION;
+            }
+            
+            console.log('🔍 [TaskController] Type parsing:', {
+                type: type,
+                TaskType_FEATURE: TaskType.FEATURE,
+                TaskType_REFACTOR: TaskType.REFACTOR,
+                TaskType_BUG: TaskType.BUG,
+                TaskType_TEST: TaskType.TEST,
+                TaskType_DOCUMENTATION: TaskType.DOCUMENTATION
+            });
+
+            // Create description from content
+            const description = content
+                .split('\n')
+                .slice(0, 10) // First 10 lines
+                .join('\n')
+                .substring(0, 500); // Max 500 chars
+
+            return {
+                title,
+                description,
+                priority,
+                type,
+                metadata: {
+                    originalFilename: filename,
+                    contentLength: content.length
+                }
+            };
+        } catch (error) {
+            console.error(`❌ [TaskController] Failed to parse markdown file ${filename}:`, error);
+            return null;
         }
     }
 }

@@ -439,14 +439,21 @@ export default class APIChatRepository extends ChatRepository {
 
   // Documentation Tasks Methods
   async getDocsTasks() {
-    return apiCall(API_CONFIG.endpoints.docsTasks.list);
+    const projectId = await this.getCurrentProjectId();
+    return apiCall(`/api/projects/${projectId}/docs-tasks`);
   }
 
-  async getDocsTaskDetails(filename) {
-    if (!filename) {
-      throw new Error('Filename is required');
-    }
-    return apiCall(API_CONFIG.endpoints.docsTasks.details(filename));
+  async getDocsTaskDetails(taskId) {
+    const projectId = await this.getCurrentProjectId();
+    return await apiCall(`/api/projects/${projectId}/docs-tasks/${taskId}`);
+  }
+
+  // NEW: Sync docs tasks to database
+  async syncDocsTasks() {
+    const projectId = await this.getCurrentProjectId();
+    return await apiCall(`/api/projects/${projectId}/tasks/sync-docs`, {
+      method: 'POST'
+    });
   }
 
   // Framework Methods

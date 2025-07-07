@@ -647,12 +647,32 @@ class IDEController {
   }
 
   /**
-   * GET /api/docs-tasks
+   * GET /api/projects/:projectId/docs-tasks
    * Get list of all documentation tasks
    */
   async getDocsTasks(req, res) {
     try {
-      await this.docsTasksHandler.getDocsTasks(req, res);
+      const { projectId } = req.params;
+      
+      if (!this.taskRepository) {
+        return res.status(500).json({
+          success: false,
+          error: 'Task repository not available'
+        });
+      }
+      
+      // Get all tasks from database for this project that were synced from docs
+      const tasks = await this.taskRepository.findByProject(projectId);
+      
+      // Filter only docs-synced tasks
+      const docsTasks = tasks.filter(task => 
+        task.metadata && task.metadata.source === 'docs_sync'
+      );
+      
+      res.json({
+        success: true,
+        data: docsTasks
+      });
     } catch (error) {
       console.error('[IDEController] Error in getDocsTasks:', error);
       res.status(500).json({
@@ -663,12 +683,42 @@ class IDEController {
   }
 
   /**
-   * GET /api/docs-tasks/:filename
+   * GET /api/projects/:projectId/docs-tasks/:id
    * Get specific documentation task details
    */
   async getDocsTaskDetails(req, res) {
     try {
-      await this.docsTasksHandler.getDocsTaskDetails(req, res);
+      const { projectId, id } = req.params;
+      
+      if (!this.taskRepository) {
+        return res.status(500).json({
+          success: false,
+          error: 'Task repository not available'
+        });
+      }
+      
+      // Get task from database by ID
+      const task = await this.taskRepository.findById(id);
+      
+      if (!task || task.projectId !== projectId) {
+        return res.status(404).json({
+          success: false,
+          error: 'Task not found'
+        });
+      }
+      
+      // Only return docs-synced tasks
+      if (!task.metadata || task.metadata.source !== 'docs_sync') {
+        return res.status(404).json({
+          success: false,
+          error: 'Task not found'
+        });
+      }
+      
+      res.json({
+        success: true,
+        data: task
+      });
     } catch (error) {
       console.error('[IDEController] Error in getDocsTaskDetails:', error);
       res.status(500).json({

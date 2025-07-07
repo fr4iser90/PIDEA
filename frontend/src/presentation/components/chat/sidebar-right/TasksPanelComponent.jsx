@@ -83,12 +83,32 @@ function TasksPanelComponent({ eventBus }) {
     }
   };
 
+  const handleSyncDocsTasks = async () => {
+    setIsLoadingDocsTasks(true);
+    try {
+      console.log('🔄 [TasksPanelComponent] Starting docs tasks sync...');
+      const response = await api.syncDocsTasks();
+      if (response.success) {
+        setFeedback(`✅ Successfully synced ${response.data.importedCount} docs tasks to database`);
+        // Reload tasks after sync
+        await loadDocsTasks();
+      } else {
+        setFeedback('❌ Failed to sync documentation tasks: ' + response.error);
+      }
+    } catch (error) {
+      console.error('Error syncing docs tasks:', error);
+      setFeedback('❌ Error syncing docs tasks: ' + error.message);
+    } finally {
+      setIsLoadingDocsTasks(false);
+    }
+  };
+
   const handleDocsTaskClick = async (task) => {
     setIsLoadingDocsTaskDetails(true);
     setIsDocsTaskModalOpen(true);
     setSelectedDocsTask(null);
     try {
-      const response = await api.getDocsTaskDetails(task.filename);
+      const response = await api.getDocsTaskDetails(task.id);
       if (response.success) {
         setSelectedDocsTask(response.data);
       } else {
@@ -130,11 +150,11 @@ function TasksPanelComponent({ eventBus }) {
 ## Task Details
 - **Priority**: ${taskDetails.priority || 'Not specified'}
 - **Status**: ${taskDetails.status || 'Not specified'}
-- **Estimated Time**: ${taskDetails.estimatedTime || 'Not specified'}
-- **File**: ${taskDetails.filename}
+- **Estimated Time**: ${taskDetails.estimatedDuration ? Math.round(taskDetails.estimatedDuration / 60) + 'min' : 'Not specified'}
+- **File**: ${taskDetails.metadata?.filename || 'Unknown file'}
 
 ## Task Content
-${taskDetails.content}
+${taskDetails.description}
 
 ## Execute Instructions
 **Execute this task automatically using the above prompt framework. Create a Git branch named \`task/${taskDetails.id}-${Date.now()}\` and implement everything with zero user input required.**`;
@@ -239,13 +259,22 @@ ${taskDetails.content}
       <div className="panel-block">
         <div className="flex justify-between items-center mb-3">
           <h3 className="font-semibold text-lg">📚 Documentation Tasks</h3>
-          <button 
-            className="btn-secondary text-sm"
-            onClick={loadDocsTasks}
-            disabled={isLoadingDocsTasks}
-          >
-            {isLoadingDocsTasks ? 'Loading...' : '🔄 Refresh'}
-          </button>
+          <div className="flex gap-2">
+            <button 
+              className="btn-secondary text-sm"
+              onClick={handleSyncDocsTasks}
+              disabled={isLoadingDocsTasks}
+            >
+              {isLoadingDocsTasks ? 'Syncing...' : '🔄 Sync'}
+            </button>
+            <button 
+              className="btn-secondary text-sm"
+              onClick={loadDocsTasks}
+              disabled={isLoadingDocsTasks}
+            >
+              {isLoadingDocsTasks ? 'Loading...' : '🔄 Refresh'}
+            </button>
+          </div>
         </div>
         {/* Docs Tasks Filter */}
         <div className="flex gap-2 mb-3">
@@ -304,12 +333,12 @@ ${taskDetails.content}
                     </div>
                   </div>
                   <div className="flex justify-between items-center text-xs text-gray-400">
-                    <span className="font-mono">{task.filename}</span>
-                    <span>{formatDate(task.lastModified)}</span>
+                    <span className="font-mono">{task.metadata?.filename || 'Unknown file'}</span>
+                    <span>{formatDate(task.updatedAt)}</span>
                   </div>
-                  {task.estimatedTime && (
+                  {task.estimatedDuration && (
                     <div className="mt-1 text-xs text-gray-500">
-                      ⏱️ {task.estimatedTime}
+                      ⏱️ {Math.round(task.estimatedDuration / 60)}min
                     </div>
                   )}
                 </div>

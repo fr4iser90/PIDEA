@@ -21,7 +21,8 @@ const DocsTaskDetailsModal = ({
   const [executePromptContent, setExecutePromptContent] = useState('');
 
   useEffect(() => {
-    if (taskDetails && taskDetails.content) {
+    const content = taskDetails?.content || taskDetails?.description;
+    if (taskDetails && content) {
       try {
         // Configure marked for security and proper rendering
         marked.setOptions({
@@ -35,7 +36,7 @@ const DocsTaskDetailsModal = ({
           }
         });
 
-        const html = marked(taskDetails.content);
+        const html = marked(content);
         setHtmlContent(html);
       } catch (error) {
         console.error('Error rendering markdown:', error);
@@ -95,7 +96,7 @@ const DocsTaskDetailsModal = ({
 - **File**: ${taskDetails.filename}
 
 ## Task Content
-${taskDetails.content}
+${taskDetails.content || taskDetails.description}
 
 ## Execute Instructions
 **Execute this task automatically using the above prompt framework. Create a Git branch named \`task/${taskDetails.id}-${Date.now()}\` and implement everything with zero user input required.**`;
@@ -103,7 +104,7 @@ ${taskDetails.content}
       // Just send the task content
       messageContent = `# ${taskDetails.title}
 
-${taskDetails.content}`;
+${taskDetails.content || taskDetails.description}`;
     }
 
     onSendToChat(messageContent);

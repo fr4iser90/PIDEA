@@ -116,6 +116,26 @@ class SQLiteTaskRepository extends TaskRepository {
   }
 
   /**
+   * Find a task by title
+   * @param {string} title - The task title
+   * @returns {Promise<Task|null>} The found task or null
+   */
+  async findByTitle(title) {
+    try {
+      const sql = `SELECT * FROM ${this.tableName} WHERE title = ?`;
+      const row = await this.database.get(sql, [title]);
+      
+      if (!row) {
+        return null;
+      }
+
+      return this._rowToTask(row);
+    } catch (error) {
+      throw new Error(`Failed to find task by title: ${error.message}`);
+    }
+  }
+
+  /**
    * Find all tasks
    * @param {Object} filters - Optional filters
    * @returns {Promise<Task[]>} Array of tasks
@@ -179,6 +199,16 @@ class SQLiteTaskRepository extends TaskRepository {
    */
   async findByProjectId(projectId, filters = {}) {
     return this.findAll({ ...filters, projectId });
+  }
+
+  /**
+   * Find tasks by project (alias for findByProjectId)
+   * @param {string} projectId - The project ID
+   * @param {Object} filters - Optional filters
+   * @returns {Promise<Task[]>} Array of tasks
+   */
+  async findByProject(projectId, filters = {}) {
+    return this.findByProjectId(projectId, filters);
   }
 
   /**

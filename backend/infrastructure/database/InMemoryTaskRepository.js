@@ -77,6 +77,12 @@ class InMemoryTaskRepository extends TaskRepository {
     );
   }
 
+  async findByTitle(title) {
+    const tasks = Array.from(this.tasks.values());
+    const task = tasks.find(task => task.title === title);
+    return task || null;
+  }
+
   async getProjectStats(projectId) {
     const projectTasks = Array.from(this.tasks.values()).filter(
       task => task.belongsToProject(projectId)

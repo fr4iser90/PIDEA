@@ -31,6 +31,15 @@ class TaskRepository {
   }
 
   /**
+   * Find task by title
+   * @param {string} title - Task title
+   * @returns {Promise<Task|null>} Task or null
+   */
+  async findByTitle(title) {
+    throw new Error('findByTitle method must be implemented');
+  }
+
+  /**
    * Update task
    * @param {string} id - Task ID
    * @param {Object} updates - Update data
