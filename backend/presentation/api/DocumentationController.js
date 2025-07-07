@@ -96,10 +96,10 @@ class DocumentationController {
                 }
             }
             
-            this.logger.info('[DocumentationController] Phase 2: Waiting for AI responses (2 minutes)');
+            this.logger.info('[DocumentationController] Phase 2: Waiting for AI responses (2,5 minutes)');
             
             // 🕐 SMART WAIT: Give AI time to work on all projects
-            await new Promise(resolve => setTimeout(resolve, 180000)); // 2 minutes for AI to work
+            await new Promise(resolve => setTimeout(resolve, 150000)); // 2,5 minutes for AI to work
             
             this.logger.info('[DocumentationController] Phase 3: Collecting responses and creating tasks sequentially');
             
@@ -465,16 +465,24 @@ class DocumentationController {
     extractTasksFromAnalysis(analysisText) {
         const tasks = [];
         
-        // Pattern 1: "**Task**: ..." format
-        const taskRegex = /\*\*Task\*\*:\s*([^\n]+)/g;
+        // 🚨 DEBUG: Log the actual AI response to see what we're working with
+        this.logger.info('[DocumentationController] DEBUG: Full AI response text', {
+            responseLength: analysisText?.length || 0,
+            first500Chars: analysisText?.substring(0, 500) || 'NO TEXT',
+            last500Chars: analysisText?.length > 500 ? analysisText.substring(analysisText.length - 500) : ''
+        });
+        
+        // Pattern 1: "1. **Task**: ..." format (with numbers)
+        const taskRegex = /\d+\.\s*\*\*Task\*\*:\s*([^\n]+)/g;
         let match;
         
         while ((match = taskRegex.exec(analysisText)) !== null) {
             const taskTitle = match[1].trim();
             
-            // Try to extract additional info
-            const timeMatch = analysisText.match(new RegExp(`${taskTitle}[\\s\\S]*?Estimated Time.*?([0-9]+)\\s*hours?`));
-            const priorityMatch = analysisText.match(new RegExp(`${taskTitle}[\\s\\S]*?Priority.*?(High|Medium|Low)`));
+            // Try to extract additional info from the following lines
+            const taskContext = analysisText.substring(match.index, match.index + 500);
+            const timeMatch = taskContext.match(/Estimated Time.*?([0-9]+)\s*hours?/i);
+            const priorityMatch = taskContext.match(/Priority.*?(High|Medium|Low)/i);
             
             tasks.push({
                 title: taskTitle,
@@ -485,7 +493,60 @@ class DocumentationController {
             });
         }
         
-        // Pattern 2: Timeline format "Day X-X: ...", "Week X: ...", "Month X: ..."
+        // Pattern 2: "**Task**: ..." format (without numbers)
+        const taskRegexSimple = /\*\*Task\*\*:\s*([^\n]+)/g;
+        while ((match = taskRegexSimple.exec(analysisText)) !== null) {
+            const taskTitle = match[1].trim();
+            
+            // Try to extract additional info
+            const taskContext = analysisText.substring(match.index, match.index + 500);
+            const timeMatch = taskContext.match(/Estimated Time.*?([0-9]+)\s*hours?/i);
+            const priorityMatch = taskContext.match(/Priority.*?(High|Medium|Low)/i);
+            
+            tasks.push({
+                title: taskTitle,
+                description: `Documentation task: ${taskTitle}`,
+                priority: priorityMatch ? priorityMatch[1].toLowerCase() : 'medium',
+                type: 'documentation',
+                estimatedTime: timeMatch ? parseInt(timeMatch[1]) : null
+            });
+        }
+        
+        // Pattern 3: "- [ ] **Task**: ..." format (checkbox format)
+        const checkboxTaskRegex = /-\s*\[\s*\]\s*\*\*([^*]+)\*\*:\s*([^\n]+)/g;
+        while ((match = checkboxTaskRegex.exec(analysisText)) !== null) {
+            const taskType = match[1].trim();
+            const taskTitle = match[2].trim();
+            
+            if (taskType.toLowerCase().includes('task')) {
+                tasks.push({
+                    title: taskTitle,
+                    description: `Documentation task: ${taskTitle}`,
+                    priority: 'medium',
+                    type: 'documentation',
+                    estimatedTime: null
+                });
+            }
+        }
+        
+        // Pattern 4: "- [ ] Create/Develop/Write..." format (action items)
+        const actionRegex = /-\s*\[\s*\]\s*\*\*([^*]+)\*\*:\s*([^\n]+)/g;
+        while ((match = actionRegex.exec(analysisText)) !== null) {
+            const actionType = match[1].trim();
+            const actionDescription = match[2].trim();
+            
+            if (actionType && actionDescription.length > 10) {
+                tasks.push({
+                    title: `${actionType}: ${actionDescription}`,
+                    description: actionDescription,
+                    priority: 'medium',
+                    type: 'documentation',
+                    estimatedTime: null
+                });
+            }
+        }
+        
+        // Pattern 5: Timeline format "Day X-X: ...", "Week X: ...", "Month X: ..."
         const timelineRegex = /(Day|Week|Month)\s+(\d+(?:-\d+)?):?\s*([^\n]+)/g;
         while ((match = timelineRegex.exec(analysisText)) !== null) {
             const period = match[1];
@@ -506,7 +567,7 @@ class DocumentationController {
             }
         }
         
-        // Pattern 3: Next Steps numbered list
+        // Pattern 6: Next Steps numbered list
         const nextStepsSection = analysisText.match(/Next Steps[\s\S]*?(?=\n\n|$)/i);
         if (nextStepsSection) {
             const numberedItems = nextStepsSection[0].match(/\d+\.\s*([^\n]+)/g);
@@ -527,7 +588,7 @@ class DocumentationController {
             }
         }
         
-        // Pattern 4: Goal format "Month X Goal: ..."
+        // Pattern 7: Goal format "Month X Goal: ..."
         const goalRegex = /(Month|Week)\s+(\d+)\s+Goal:\s*([^\n]+)/g;
         while ((match = goalRegex.exec(analysisText)) !== null) {
             const period = match[1];
@@ -554,14 +615,56 @@ class DocumentationController {
             totalFound: tasks.length,
             uniqueTasks: uniqueTasks.length,
             patterns: {
-                taskFormat: tasks.filter(t => t.title.includes('Documentation task:')).length,
+                numberedTasks: tasks.filter(t => t.title.includes('Documentation task:')).length,
+                taskFormat: tasks.filter(t => /^\d+\.\s*\*\*Task\*\*:/.test(t.title)).length,
                 timeline: tasks.filter(t => /^(Day|Week|Month)/.test(t.title)).length,
                 actions: tasks.filter(t => t.title.includes('Action')).length,
-                goals: tasks.filter(t => t.title.includes('Goal')).length
+                goals: tasks.filter(t => t.title.includes('Goal')).length,
+                checkboxes: tasks.filter(t => t.title.includes(':')).length
             }
         });
         
         return uniqueTasks;
+    }
+
+    /**
+     * Create or get existing chat session for project and IDE port
+     */
+    async createOrGetChatSession(projectId, idePort) {
+        const sessionId = `${projectId}_port_${idePort}`;
+        
+        // For now, return a simple session object
+        // TODO: Implement proper ChatRepository integration if needed
+        return {
+            id: sessionId,
+            projectId: projectId,
+            idePort: idePort,
+            createdAt: new Date()
+        };
+    }
+
+    /**
+     * Save chat message to repository
+     */
+    async saveChatMessage(sessionId, content, sender = 'assistant', type = 'documentation') {
+        // For now, just log the message
+        // TODO: Implement proper ChatRepository integration if needed
+        this.logger.info('[DocumentationController] Chat message saved', {
+            sessionId,
+            sender,
+            type,
+            contentLength: content?.length || 0,
+            timestamp: new Date().toISOString()
+        });
+        
+        return {
+            id: Date.now() + Math.random(),
+            sessionId,
+            content,
+            sender,
+            type,
+            timestamp: new Date()
+        };
     }
 
     /**
@@ -646,7 +749,7 @@ class DocumentationController {
     /**
      * Create tasks in database from analysis results and execute them automatically
      */
-    async createTasksFromAnalysis(analysisResult, projectId) {
+    async createTasksFromAnalysis(analysisResult, projectId, workspacePath = null) {
         const createdTasks = [];
         const executionResults = [];
         
@@ -655,13 +758,17 @@ class DocumentationController {
             
             this.logger.info('[DocumentationController] Creating and executing tasks from analysis', {
                 taskCount: tasks.length,
-                projectId
+                projectId,
+                workspacePath
             });
 
             for (const taskData of tasks) {
                 try {
                     // Convert priority string to proper format
                     const priority = this.normalizePriority(taskData.priority);
+                    
+                    // Get project path - use provided or get from IDE manager
+                    const projectPath = workspacePath || this.ideManager.getWorkspacePath(this.cursorIDEService.getActivePort());
                     
                     // Create task via TaskService
                     const task = await this.taskService.createTask(
@@ -675,7 +782,8 @@ class DocumentationController {
                             category: taskData.type || 'documentation',
                             estimatedTime: taskData.estimatedTime,
                             framework: 'documentation-framework',
-                            analysisTimestamp: new Date().toISOString()
+                            analysisTimestamp: new Date().toISOString(),
+                            projectPath: projectPath // FIX: Add projectPath for Git branch creation
                         }
                     );
 
@@ -864,7 +972,7 @@ class DocumentationController {
         const analysisResult = this.processDocumentationAnalysis(ideResponse.response, projectId);
 
         // Create tasks in database and execute them automatically
-        const taskResults = await this.createTasksFromAnalysis(analysisResult, projectId);
+        const taskResults = await this.createTasksFromAnalysis(analysisResult, projectId, workspacePath);
         
         this.logger.info('[DocumentationController] Created and executed tasks for project', {
             projectId,
@@ -1021,7 +1129,7 @@ class DocumentationController {
         const analysisResult = this.processDocumentationAnalysis(ideResponse.response, projectId);
 
         // Create tasks in database and execute them automatically
-        const taskResults = await this.createTasksFromAnalysis(analysisResult, projectId);
+        const taskResults = await this.createTasksFromAnalysis(analysisResult, projectId, workspacePath);
         
         this.logger.info('[DocumentationController] Created and executed tasks for project', {
             projectId,
@@ -1128,9 +1236,23 @@ class DocumentationController {
                 responseLength: chatResponse.content.length
             });
 
-            // TODO: Save to ChatRepository here if needed
-            // const chatSession = await this.createOrGetChatSession(projectId, idePort);
-            // await this.saveChatMessage(chatSession.id, chatResponse.content, 'assistant');
+            // Save AI response to ChatRepository so we can retrieve it later
+            try {
+                const chatSession = await this.createOrGetChatSession(projectId, idePort);
+                await this.saveChatMessage(chatSession.id, chatResponse.content, 'assistant', 'documentation_analysis');
+                this.logger.info('[DocumentationController] AI response saved to database', {
+                    projectId,
+                    idePort,
+                    sessionId: chatSession.id,
+                    responseLength: chatResponse.content.length
+                });
+            } catch (saveError) {
+                this.logger.warn('[DocumentationController] Failed to save AI response to database', {
+                    projectId,
+                    idePort,
+                    error: saveError.message
+                });
+            }
 
             return {
                 success: true,

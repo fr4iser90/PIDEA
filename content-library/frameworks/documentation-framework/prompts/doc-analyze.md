@@ -102,6 +102,8 @@ Identify what's completely missing:
 ### Prioritized Task List
 Generate specific tasks for documentation improvement:
 
+⚠️ **CRITICAL**: Use EXACTLY this format for tasks (required for automated processing):
+
 #### Immediate Actions (Week 1)
 1. **Task**: Create project overview README
    - **Estimated Time**: 2 hours
@@ -134,6 +136,28 @@ Generate specific tasks for documentation improvement:
    - **Estimated Time**: 10 hours
    - **Priority**: Medium
    - **Dependencies**: Architecture diagrams
+
+### 🚨 TASK FORMAT REQUIREMENTS
+
+**MANDATORY**: Every task must use this EXACT format:
+```
+1. **Task**: [Clear task description]
+   - **Estimated Time**: [Number] hours
+   - **Priority**: [High|Medium|Low]
+   - **Dependencies**: [None|Task name]
+```
+
+**Examples of CORRECT format:**
+- `1. **Task**: Create comprehensive README with installation guide`
+- `2. **Task**: Document all API endpoints with examples`
+- `3. **Task**: Add deployment guide with Docker instructions`
+
+**Examples of INCORRECT format (will be ignored):**
+- `1. Create README` (missing "**Task**:")
+- `- **Task**: Create README` (wrong numbering)
+- `**Task**: Create README` (missing number)
+
+**IMPORTANT**: Each task MUST start with a number, followed by ". **Task**: "
 
 ## 📋 Phase 5: Success Metrics
 
@@ -196,4 +220,25 @@ Generate specific tasks for documentation improvement:
 5. **Track Progress**: Monitor completion and quality metrics
 6. **Iterate**: Continuously improve based on usage and feedback
 
-This framework provides a systematic approach to documentation improvement that can be applied to any project type while maintaining quality and user focus. 
+This framework provides a systematic approach to documentation improvement that can be applied to any project type while maintaining quality and user focus.
+
+## 🚨 FINAL REMINDER: TASK FORMAT COMPLIANCE
+
+**CRITICAL**: For automated task processing, every task MUST use this exact format:
+
+```
+1. **Task**: [Description]
+   - **Estimated Time**: [Number] hours
+   - **Priority**: [High|Medium|Low]
+   - **Dependencies**: [None|Task name]
+```
+
+**Your response will be processed automatically. Tasks not following this format will be ignored.**
+
+**Required elements:**
+- Start with number + ". **Task**: "
+- Include "**Estimated Time**: X hours"
+- Include "**Priority**: High/Medium/Low"
+- Include "**Dependencies**: None" or task name
+
+**Double-check your task format before responding!** 
