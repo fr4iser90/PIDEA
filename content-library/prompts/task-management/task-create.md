@@ -1,25 +1,26 @@
-# Prompt: Create Comprehensive Development Task Plan
+# Prompt: Create Comprehensive Development Task Plan (Database-First)
 
 ## Goal
-Generate a complete, actionable development plan with all necessary details for consistent and accurate implementation.
-Create new [Name]-implementaion.md in docs/roadmap/features .
+Generate a complete, actionable development plan that will be parsed into a database task with all necessary details for AI auto-implementation, tracking, and execution.
+
+Create new [Name]-implementation.md in docs/roadmap/features with the following structure:
 
 ## Template Structure
 
 ### 1. Project Overview
-- **Feature/Component Name**: [Name]
-- **Priority**: [High/Medium/Low]
-- **Estimated Time**: [X hours/days]
-- **Dependencies**: [List any prerequisites]
+- **Feature/Component Name**: [Exact name for task.title]
+- **Priority**: [High/Medium/Low - maps to task.priority]
+- **Estimated Time**: [X hours/days - maps to task.metadata.estimated_hours]
+- **Dependencies**: [List prerequisites - maps to task.dependencies]
 - **Related Issues**: [Link to existing issues/tickets]
 
 ### 2. Technical Requirements
-- **Tech Stack**: [List all technologies involved]
-- **Architecture Pattern**: [MVC, DDD, etc.]
-- **Database Changes**: [Schema updates, migrations]
-- **API Changes**: [New endpoints, modifications]
-- **Frontend Changes**: [Components, pages, state management]
-- **Backend Changes**: [Services, controllers, handlers]
+- **Tech Stack**: [List all technologies - maps to task.metadata.tech_stack]
+- **Architecture Pattern**: [MVC, DDD, etc. - maps to task.metadata.architecture]
+- **Database Changes**: [Schema updates, migrations - maps to task.metadata.database_changes]
+- **API Changes**: [New endpoints, modifications - maps to task.metadata.api_changes]
+- **Frontend Changes**: [Components, pages, state management - maps to task.metadata.frontend_changes]
+- **Backend Changes**: [Services, controllers, handlers - maps to task.metadata.backend_changes]
 
 ### 3. File Impact Analysis
 #### Files to Modify:
@@ -37,52 +38,51 @@ Create new [Name]-implementaion.md in docs/roadmap/features .
 
 ### 4. Implementation Phases
 
-#### Phase 1: Foundation Setup
+#### Phase 1: Foundation Setup ([X] hours)
 - [ ] Create base structure
 - [ ] Set up dependencies
 - [ ] Configure environment
 - [ ] Create initial tests
 
-#### Phase 2: Core Implementation
+#### Phase 2: Core Implementation ([X] hours)
 - [ ] Implement main functionality
 - [ ] Add error handling
 - [ ] Implement validation
 - [ ] Add logging
 
-#### Phase 3: Integration
+#### Phase 3: Integration ([X] hours)
 - [ ] Connect with existing systems
 - [ ] Update API endpoints
 - [ ] Integrate with frontend
 - [ ] Test integration points
 
-#### Phase 4: Testing & Documentation
+#### Phase 4: Testing & Documentation ([X] hours)
 - [ ] Write unit tests
 - [ ] Write integration tests
 - [ ] Update documentation
 - [ ] Create user guides
 
-#### Phase 5: Deployment & Validation
+#### Phase 5: Deployment & Validation ([X] hours)
 - [ ] Deploy to staging
 - [ ] Perform testing
 - [ ] Fix issues
 - [ ] Deploy to production
 
 ### 5. Code Standards & Patterns
-- **Coding Style**: [ESLint rules, Prettier config]
-- **Naming Conventions**: [Variables, functions, files]
-- **Error Handling**: [Try-catch patterns, error types]
-- **Logging**: [Log levels, format, locations]
-- **Testing**: [Framework, coverage requirements]
-- **Documentation**: [JSDoc, README, inline comments]
+- **Coding Style**: ESLint with existing project rules, Prettier formatting
+- **Naming Conventions**: camelCase for variables/functions, PascalCase for classes, kebab-case for files
+- **Error Handling**: Try-catch with specific error types, proper error logging
+- **Logging**: Winston logger with structured logging, different levels for operations
+- **Testing**: Jest framework, 90% coverage requirement
+- **Documentation**: JSDoc for all public methods, README updates
 
 ### 6. Security Considerations
-- [ ] Input validation
-- [ ] Authentication checks
-- [ ] Authorization rules
-- [ ] Data sanitization
-- [ ] SQL injection prevention
-- [ ] XSS protection
-- [ ] CSRF protection
+- [ ] Input validation and sanitization
+- [ ] User authentication and authorization
+- [ ] Data privacy and protection
+- [ ] Rate limiting for operations
+- [ ] Audit logging for all actions
+- [ ] Protection against malicious inputs
 
 ### 7. Performance Requirements
 - **Response Time**: [Target milliseconds]
@@ -92,98 +92,161 @@ Create new [Name]-implementaion.md in docs/roadmap/features .
 - **Caching Strategy**: [What to cache, how long]
 
 ### 8. Testing Strategy
+
 #### Unit Tests:
-- [ ] Test file: `path/to/test.js`
-- [ ] Test cases: [List specific scenarios]
-- [ ] Mock requirements: [External dependencies]
+- [ ] Test file: `tests/unit/[ComponentName].test.js`
+- [ ] Test cases: [List specific scenarios to test]
+- [ ] Mock requirements: [External dependencies to mock]
 
 #### Integration Tests:
-- [ ] Test file: `path/to/integration-test.js`
-- [ ] Test scenarios: [API endpoints, database]
-- [ ] Test data: [Fixtures, seed data]
+- [ ] Test file: `tests/integration/[ComponentName].test.js`
+- [ ] Test scenarios: [API endpoints, database interactions]
+- [ ] Test data: [Fixtures, seed data requirements]
 
 #### E2E Tests:
-- [ ] Test file: `path/to/e2e-test.js`
-- [ ] User flows: [Complete user journeys]
-- [ ] Browser compatibility: [Chrome, Firefox, Safari]
+- [ ] Test file: `tests/e2e/[ComponentName].test.js`
+- [ ] User flows: [Complete user journeys to test]
+- [ ] Browser compatibility: [Chrome, Firefox compatibility]
 
 ### 9. Documentation Requirements
+
 #### Code Documentation:
-- [ ] JSDoc comments for all functions
-- [ ] README updates
-- [ ] API documentation
-- [ ] Architecture diagrams
+- [ ] JSDoc comments for all functions and classes
+- [ ] README updates with new functionality
+- [ ] API documentation for new endpoints
+- [ ] Architecture diagrams for complex components
 
 #### User Documentation:
-- [ ] User guide updates
-- [ ] Feature documentation
-- [ ] Troubleshooting guide
+- [ ] User guide updates for new features
+- [ ] Feature documentation for developers
+- [ ] Troubleshooting guide for common issues
 - [ ] Migration guide (if applicable)
 
 ### 10. Deployment Checklist
+
 #### Pre-deployment:
-- [ ] All tests passing
-- [ ] Code review completed
-- [ ] Documentation updated
+- [ ] All tests passing (unit, integration, e2e)
+- [ ] Code review completed and approved
+- [ ] Documentation updated and reviewed
 - [ ] Security scan passed
 - [ ] Performance benchmarks met
 
 #### Deployment:
-- [ ] Database migrations
-- [ ] Environment variables
-- [ ] Configuration updates
-- [ ] Service restarts
-- [ ] Health checks
+- [ ] Database migrations (if applicable)
+- [ ] Environment variables configured
+- [ ] Configuration updates applied
+- [ ] Service restarts if needed
+- [ ] Health checks configured
 
 #### Post-deployment:
-- [ ] Monitor logs
-- [ ] Verify functionality
-- [ ] Performance monitoring
-- [ ] User feedback collection
+- [ ] Monitor logs for errors
+- [ ] Verify functionality in production
+- [ ] Performance monitoring active
+- [ ] User feedback collection enabled
 
 ### 11. Rollback Plan
-- [ ] Database rollback script
-- [ ] Configuration rollback
-- [ ] Service rollback procedure
-- [ ] Communication plan
+- [ ] Database rollback script prepared
+- [ ] Configuration rollback procedure
+- [ ] Service rollback procedure documented
+- [ ] Communication plan for stakeholders
 
 ### 12. Success Criteria
-- [ ] Feature works as specified
-- [ ] All tests pass
+- [ ] Feature works as specified in requirements
+- [ ] All tests pass (unit, integration, e2e)
 - [ ] Performance requirements met
 - [ ] Security requirements satisfied
-- [ ] Documentation complete
+- [ ] Documentation complete and accurate
 - [ ] User acceptance testing passed
 
 ### 13. Risk Assessment
+
 #### High Risk:
-- [ ] [Risk description] - [Mitigation strategy]
+- [ ] [Risk description] - Mitigation: [Specific mitigation strategy]
 
 #### Medium Risk:
-- [ ] [Risk description] - [Mitigation strategy]
+- [ ] [Risk description] - Mitigation: [Specific mitigation strategy]
 
 #### Low Risk:
-- [ ] [Risk description] - [Mitigation strategy]
+- [ ] [Risk description] - Mitigation: [Specific mitigation strategy]
 
-### 14. References & Resources
-- **Technical Documentation**: [Links to relevant docs]
-- **API References**: [External API docs]
-- **Design Patterns**: [Patterns to follow]
-- **Best Practices**: [Industry standards]
-- **Similar Implementations**: [Existing code examples]
+### 14. AI Auto-Implementation Instructions
+
+#### Task Database Fields:
+- **source_type**: 'markdown_doc'
+- **source_path**: 'docs/roadmap/features/[name]-implementation.md'
+- **automation_level**: 'semi_auto' | 'full_auto' | 'manual'
+- **confirmation_required**: true | false
+- **max_attempts**: 3 (default)
+- **git_branch_required**: true | false
+- **new_chat_required**: true | false
+
+#### AI Execution Context:
+```json
+{
+  "requires_new_chat": true,
+  "git_branch_name": "feature/[feature-name]",
+  "confirmation_keywords": ["fertig", "done", "complete"],
+  "fallback_detection": true,
+  "max_confirmation_attempts": 3,
+  "timeout_seconds": 300
+}
+```
+
+#### Success Indicators:
+- [ ] All checkboxes in phases completed
+- [ ] Tests pass
+- [ ] No build errors
+- [ ] Code follows standards
+- [ ] Documentation updated
+
+### 15. References & Resources
+- **Technical Documentation**: [Links to relevant technical docs]
+- **API References**: [External API documentation]
+- **Design Patterns**: [Patterns to follow in implementation]
+- **Best Practices**: [Industry standards and project conventions]
+- **Similar Implementations**: [Existing code examples in codebase]
 
 ---
 
+## Database Task Creation Instructions
+
+This markdown will be parsed into a database task with the following mapping:
+
+```sql
+INSERT INTO tasks (
+  id, project_id, title, description, type, category, priority, status,
+  source_type, source_path, source_content, metadata, estimated_hours
+) VALUES (
+  uuid(), -- Generated
+  '[project_id]', -- From context
+  '[Feature/Component Name]', -- From section 1
+  '[Full markdown content]', -- Complete description
+  '[Derived from Technical Requirements]', -- 'feature'|'bug'|'refactor'|etc
+  '[Derived from context]', -- 'frontend'|'backend'|'database'|etc
+  '[Priority]', -- From section 1
+  'pending', -- Initial status
+  'markdown_doc', -- Source type
+  'docs/roadmap/features/[name]-implementation.md', -- Source path
+  '[Full markdown content]', -- For reference
+  '[JSON with all metadata]', -- All technical details
+  '[Estimated Time in hours]' -- From section 1
+);
+```
+
 ## Usage Instructions
 
-1. **Fill in all sections** - Don't leave any section empty
-2. **Be specific** - Use exact file paths and detailed descriptions
-3. **Check dependencies** - Ensure all prerequisites are listed
-4. **Estimate realistically** - Consider complexity and unknowns
-5. **Include all stakeholders** - Frontend, backend, DevOps, QA
-6. **Plan for failure** - Include rollback and error handling
-7. **Document decisions** - Explain why certain choices were made
+1. **Fill in all sections completely** - Every field maps to database columns
+2. **Be specific with file paths** - Enables precise file tracking
+3. **Include exact time estimates** - Critical for project planning
+4. **Specify AI execution requirements** - Automation level, confirmation needs
+5. **List all dependencies** - Enables proper task sequencing
+6. **Include success criteria** - Enables automatic completion detection
+7. **Provide detailed phases** - Enables progress tracking
 
 ## Example Usage
 
-> Create a comprehensive development plan for implementing user authentication with JWT tokens, including all necessary files, phases, and checkboxes. Follow the template structure above and ensure all sections are completed with specific details for this project's tech stack and architecture.
+> Create a comprehensive development plan for implementing user authentication with JWT tokens. Include all database fields, AI execution context, file impacts, and success criteria. Follow the template structure above and ensure every section is completed with specific details for database-first task architecture.
+
+---
+
+**Note**: This template is optimized for database-first task architecture where markdown docs serve as specifications that get parsed into trackable, executable database tasks with full AI auto-implementation support.
