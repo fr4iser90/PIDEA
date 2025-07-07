@@ -19,7 +19,7 @@ class TaskType {
   }
 
   requiresExecution() {
-    return [TaskType.FEATURE, TaskType.BUG, TaskType.REFACTOR, TaskType.OPTIMIZATION, TaskType.SECURITY].includes(this.value);
+    return [TaskType.FEATURE, TaskType.BUG, TaskType.REFACTOR, TaskType.OPTIMIZATION, TaskType.SECURITY, TaskType.DOCUMENTATION].includes(this.value);
   }
 
   requiresHumanReview() {
