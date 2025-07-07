@@ -52,7 +52,21 @@ const API_CONFIG = {
       data: '/api/preview/data'
     },
     prompts: {
-      quick: '/api/prompts/quick'
+      list: '/api/prompts',
+      byCategory: (category) => `/api/prompts/${category}`,
+      file: (category, filename) => `/api/prompts/${category}/${filename}`
+    },
+    templates: {
+      list: '/api/templates',
+      byCategory: (category) => `/api/templates/${category}`,
+      file: (category, filename) => `/api/templates/${category}/${filename}`
+    },
+    frameworks: {
+      list: '/api/frameworks',
+      prompts: (frameworkId) => `/api/frameworks/${frameworkId}/prompts`,
+      promptFile: (frameworkId, filename) => `/api/frameworks/${frameworkId}/prompts/${filename}`,
+      templates: (frameworkId) => `/api/frameworks/${frameworkId}/templates`,
+      templateFile: (frameworkId, filename) => `/api/frameworks/${frameworkId}/templates/${filename}`
     },
     tasks: {
       projectTasks: (projectId) => `/api/projects/${projectId}/tasks`,
@@ -95,8 +109,6 @@ const API_CONFIG = {
     },
     framework: {
       structure: '/api/framework/structure',
-      template: (templateId) => `/api/framework/template/${templateId}`,
-      prompt: (promptId) => `/api/framework/prompt/${promptId}`,
       search: '/api/framework/search',
       stats: '/api/framework/stats'
     }

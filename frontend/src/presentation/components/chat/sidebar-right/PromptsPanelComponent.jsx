@@ -72,7 +72,7 @@ function PromptsPanelComponent({ onPromptClick, onQuickPrompt }) {
 
   const handlePromptClick = async (prompt) => {
     try {
-      const response = await apiCall(`/api/content/${prompt.file}`);
+      const response = await apiCall(`/api/prompts/${prompt.file}`);
       if (response.success && onPromptClick) {
         onPromptClick({
           ...prompt,
@@ -106,7 +106,7 @@ function PromptsPanelComponent({ onPromptClick, onQuickPrompt }) {
   // Card click handler: load content and insert into chat input
   const handlePromptCardClick = async (prompt) => {
     try {
-      const response = await apiCall(`/api/content/${prompt.file}`);
+      const response = await apiCall(`/api/prompts/${prompt.category}/${prompt.filename}`);
       if (response.success && onQuickPrompt) {
         onQuickPrompt(response.data.content);
       }
@@ -118,7 +118,7 @@ function PromptsPanelComponent({ onPromptClick, onQuickPrompt }) {
   // View button handler: show prompt content in modal
   const handleViewPrompt = async (prompt) => {
     try {
-      const response = await apiCall(`/api/content/${prompt.file}`);
+      const response = await apiCall(`/api/prompts/${prompt.file}`);
       if (response.success) {
         setModalTitle(prompt.name);
         setModalContent(response.data.content);
