@@ -86,10 +86,8 @@ function AutoPanelComponent({ eventBus }) {
       
       // Execute each selected task
       for (const task of selectedTasks) {
-        const taskMessage = `Execute this refactoring task: ${task.title}\n\nDescription: ${task.description}`;
-        
         const autoModeResponse = await api.startAutoMode(projectId, {
-          task: taskMessage,
+          taskId: task.id,  // Send the REAL task ID!
           options: {
             createGitBranch: true,
             branchName: `refactor/${task.id}-${Date.now()}`,

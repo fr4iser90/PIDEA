@@ -56,12 +56,12 @@ class AutoModeController {
             });
 
             // Extract task-specific options from options object or root level
-            const taskOptions = (options.task || task) ? {
-                task: options.task || task,
-                createGitBranch: options.createGitBranch || createGitBranch || false,
-                branchName: options.branchName || branchName,
-                clickNewChat: options.clickNewChat || clickNewChat || false,
-                autoExecute: options.autoExecute || autoExecute || true
+            const taskOptions = options.taskId ? {
+                taskId: options.taskId,
+                createGitBranch: options.createGitBranch || false,
+                branchName: options.branchName,
+                clickNewChat: options.clickNewChat || false,
+                autoExecute: options.autoExecute || true
             } : null;
 
             this.logger.info('AutoModeController: Extracted taskOptions', {
@@ -124,12 +124,12 @@ class AutoModeController {
             this.logger.info('AutoModeController: Checking task execution request', {
                 taskOptionsExists: !!taskOptions,
                 taskOptions,
-                hasTask: !!taskOptions?.task
+                hasTaskId: !!taskOptions?.taskId
             });
             
-            if (taskOptions && taskOptions.task) {
+            if (taskOptions && taskOptions.taskId) {
                 this.logger.info('AutoModeController: Processing task execution request', {
-                    task: taskOptions.task,
+                    taskId: taskOptions.taskId,
                     createGitBranch: taskOptions.createGitBranch,
                     branchName: taskOptions.branchName,
                     clickNewChat: taskOptions.clickNewChat
@@ -174,37 +174,22 @@ class AutoModeController {
                 try {
                     const taskService = this.application?.taskService;
                     if (taskService) {
-                        // Create a temporary task for execution
-                        const tempTask = {
-                            id: `temp_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-                            title: taskOptions.task.split('\n')[0].replace('Execute this refactoring task: ', ''),
-                            description: taskOptions.task,
-                            type: { value: 'refactoring' },
-                            metadata: {
-                                filePath: workspacePath,
-                                projectPath: workspacePath,
-                                branchName: taskOptions.branchName
-                            }
-                        };
-
-                        // Execute task using TaskService with proper task object
-                        const taskResult = await taskService.executeTask(tempTask.id, {
+                        // Execute task using TaskService with existing task ID
+                        const taskResult = await taskService.executeTask(taskOptions.taskId, {
                             projectPath: workspacePath,
                             userId,
                             projectId
                         });
                         
                         this.logger.info('AutoModeController: Task executed successfully', {
-                            taskId: tempTask.id,
-                            taskTitle: tempTask.title
+                            taskId: taskOptions.taskId
                         });
 
                         res.json({
                             success: true,
                             message: 'Task executed successfully',
                             data: {
-                                taskId: tempTask.id,
-                                taskTitle: tempTask.title,
+                                taskId: taskOptions.taskId,
                                 result: taskResult,
                                 gitBranch: taskOptions.createGitBranch ? taskOptions.branchName : null,
                                 newChat: taskOptions.clickNewChat
@@ -215,7 +200,7 @@ class AutoModeController {
                 } catch (error) {
                     this.logger.error('AutoModeController: Failed to execute task', {
                         error: error.message,
-                        task: taskOptions.task
+                        taskId: taskOptions.taskId
                     });
                     
                     res.status(500).json({
