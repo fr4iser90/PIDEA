@@ -12,12 +12,20 @@ class GitController {
 
     /**
      * Get Git status
-     * POST /api/git/status
+     * POST /api/projects/:projectId/git/status
      */
     async getStatus(req, res) {
         try {
+            const projectId = req.params.projectId;
             const { projectPath } = req.body;
             const userId = req.user?.id;
+
+            if (!projectId) {
+                return res.status(400).json({
+                    success: false,
+                    error: 'Project ID is required'
+                });
+            }
 
             if (!projectPath) {
                 return res.status(400).json({
@@ -26,7 +34,7 @@ class GitController {
                 });
             }
 
-            this.logger.info('GitController: Getting Git status', { projectPath, userId });
+            this.logger.info('GitController: Getting Git status', { projectId, projectPath, userId });
 
             // Check if it's a Git repository
             const isGitRepo = await this.gitService.isGitRepository(projectPath);
@@ -48,6 +56,7 @@ class GitController {
 
             if (this.eventBus) {
                 this.eventBus.publish('git.status.retrieved', {
+                    projectId,
                     projectPath,
                     currentBranch,
                     status,
@@ -84,12 +93,20 @@ class GitController {
 
     /**
      * Get branches
-     * POST /api/git/branches
+     * POST /api/projects/:projectId/git/branches
      */
     async getBranches(req, res) {
         try {
+            const projectId = req.params.projectId;
             const { projectPath } = req.body;
             const userId = req.user?.id;
+
+            if (!projectId) {
+                return res.status(400).json({
+                    success: false,
+                    error: 'Project ID is required'
+                });
+            }
 
             if (!projectPath) {
                 return res.status(400).json({
@@ -98,7 +115,7 @@ class GitController {
                 });
             }
 
-            this.logger.info('GitController: Getting branches', { projectPath, userId });
+            this.logger.info('GitController: Getting branches', { projectId, projectPath, userId });
 
             const branches = await this.gitService.getBranches(projectPath, { all: true });
             const currentBranch = await this.gitService.getCurrentBranch(projectPath);
@@ -129,12 +146,20 @@ class GitController {
 
     /**
      * Validate changes
-     * POST /api/git/validate
+     * POST /api/projects/:projectId/git/validate
      */
     async validate(req, res) {
         try {
+            const projectId = req.params.projectId;
             const { projectPath } = req.body;
             const userId = req.user?.id;
+
+            if (!projectId) {
+                return res.status(400).json({
+                    success: false,
+                    error: 'Project ID is required'
+                });
+            }
 
             if (!projectPath) {
                 return res.status(400).json({
@@ -143,7 +168,7 @@ class GitController {
                 });
             }
 
-            this.logger.info('GitController: Validating changes', { projectPath, userId });
+            this.logger.info('GitController: Validating changes', { projectId, projectPath, userId });
 
             // Get status to check for changes
             const status = await this.gitService.getStatus(projectPath);
@@ -207,12 +232,20 @@ class GitController {
 
     /**
      * Compare branches
-     * POST /api/git/compare
+     * POST /api/projects/:projectId/git/compare
      */
     async compare(req, res) {
         try {
+            const projectId = req.params.projectId;
             const { projectPath, sourceBranch, targetBranch = 'main' } = req.body;
             const userId = req.user?.id;
+
+            if (!projectId) {
+                return res.status(400).json({
+                    success: false,
+                    error: 'Project ID is required'
+                });
+            }
 
             if (!projectPath || !sourceBranch) {
                 return res.status(400).json({
@@ -222,6 +255,7 @@ class GitController {
             }
 
             this.logger.info('GitController: Comparing branches', { 
+                projectId,
                 projectPath, 
                 sourceBranch, 
                 targetBranch, 
@@ -287,12 +321,20 @@ class GitController {
 
     /**
      * Pull changes
-     * POST /api/git/pull
+     * POST /api/projects/:projectId/git/pull
      */
     async pull(req, res) {
         try {
+            const projectId = req.params.projectId;
             const { projectPath, branch = 'main', remote = 'origin' } = req.body;
             const userId = req.user?.id;
+
+            if (!projectId) {
+                return res.status(400).json({
+                    success: false,
+                    error: 'Project ID is required'
+                });
+            }
 
             if (!projectPath) {
                 return res.status(400).json({
@@ -302,6 +344,7 @@ class GitController {
             }
 
             this.logger.info('GitController: Pulling changes', { 
+                projectId,
                 projectPath, 
                 branch, 
                 remote, 
@@ -361,12 +404,20 @@ class GitController {
 
     /**
      * Checkout branch
-     * POST /api/git/checkout
+     * POST /api/projects/:projectId/git/checkout
      */
     async checkout(req, res) {
         try {
+            const projectId = req.params.projectId;
             const { projectPath, branch } = req.body;
             const userId = req.user?.id;
+
+            if (!projectId) {
+                return res.status(400).json({
+                    success: false,
+                    error: 'Project ID is required'
+                });
+            }
 
             if (!projectPath || !branch) {
                 return res.status(400).json({
@@ -376,6 +427,7 @@ class GitController {
             }
 
             this.logger.info('GitController: Checking out branch', { 
+                projectId,
                 projectPath, 
                 branch, 
                 userId 
@@ -419,12 +471,20 @@ class GitController {
 
     /**
      * Merge branches
-     * POST /api/git/merge
+     * POST /api/projects/:projectId/git/merge
      */
     async merge(req, res) {
         try {
+            const projectId = req.params.projectId;
             const { projectPath, sourceBranch, targetBranch = 'main' } = req.body;
             const userId = req.user?.id;
+
+            if (!projectId) {
+                return res.status(400).json({
+                    success: false,
+                    error: 'Project ID is required'
+                });
+            }
 
             if (!projectPath || !sourceBranch) {
                 return res.status(400).json({
@@ -434,6 +494,7 @@ class GitController {
             }
 
             this.logger.info('GitController: Merging branches', { 
+                projectId,
                 projectPath, 
                 sourceBranch, 
                 targetBranch, 
@@ -494,12 +555,20 @@ class GitController {
 
     /**
      * Create branch
-     * POST /api/git/create-branch
+     * POST /api/projects/:projectId/git/create-branch
      */
     async createBranch(req, res) {
         try {
+            const projectId = req.params.projectId;
             const { projectPath, branchName, startPoint = 'main' } = req.body;
             const userId = req.user?.id;
+
+            if (!projectId) {
+                return res.status(400).json({
+                    success: false,
+                    error: 'Project ID is required'
+                });
+            }
 
             if (!projectPath || !branchName) {
                 return res.status(400).json({
@@ -509,6 +578,7 @@ class GitController {
             }
 
             this.logger.info('GitController: Creating branch', { 
+                projectId,
                 projectPath, 
                 branchName, 
                 startPoint, 
@@ -557,12 +627,20 @@ class GitController {
 
     /**
      * Get repository info
-     * POST /api/git/info
+     * POST /api/projects/:projectId/git/info
      */
     async getRepositoryInfo(req, res) {
         try {
+            const projectId = req.params.projectId;
             const { projectPath } = req.body;
             const userId = req.user?.id;
+
+            if (!projectId) {
+                return res.status(400).json({
+                    success: false,
+                    error: 'Project ID is required'
+                });
+            }
 
             if (!projectPath) {
                 return res.status(400).json({
@@ -571,7 +649,7 @@ class GitController {
                 });
             }
 
-            this.logger.info('GitController: Getting repository info', { projectPath, userId });
+            this.logger.info('GitController: Getting repository info', { projectId, projectPath, userId });
 
             const info = await this.gitService.getRepositoryInfo(projectPath);
 

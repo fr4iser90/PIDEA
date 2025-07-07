@@ -43,7 +43,11 @@ const GitManagementComponent = ({ activePort, onGitOperation, onGitStatusChange 
     try {
       if (!workspacePath) return;
       setIsLoading(true);
-      const data = await apiCall('/api/git/status', {
+      
+      // Get project ID from workspace path
+      const projectId = getProjectIdFromWorkspace(workspacePath);
+      
+      const data = await apiCall(`/api/projects/${projectId}/git/status`, {
         method: 'POST',
         body: JSON.stringify({ projectPath: workspacePath })
       });
@@ -62,7 +66,11 @@ const GitManagementComponent = ({ activePort, onGitOperation, onGitStatusChange 
   const loadBranches = async () => {
     try {
       if (!workspacePath) return;
-      const data = await apiCall('/api/git/branches', {
+      
+      // Get project ID from workspace path
+      const projectId = getProjectIdFromWorkspace(workspacePath);
+      
+      const data = await apiCall(`/api/projects/${projectId}/git/branches`, {
         method: 'POST',
         body: JSON.stringify({ projectPath: workspacePath })
       });
@@ -80,7 +88,11 @@ const GitManagementComponent = ({ activePort, onGitOperation, onGitStatusChange 
       }
       setIsLoading(true);
       setOperationResult(null);
-      const result = await apiCall(`/api/git/${operation}`, {
+      
+      // Get project ID from workspace path
+      const projectId = getProjectIdFromWorkspace(workspacePath);
+      
+      const result = await apiCall(`/api/projects/${projectId}/git/${operation}`, {
         method: 'POST',
         body: JSON.stringify({ projectPath: workspacePath, ...options })
       });
@@ -108,7 +120,11 @@ const GitManagementComponent = ({ activePort, onGitOperation, onGitStatusChange 
         return;
       }
       setIsLoading(true);
-      const result = await apiCall('/api/git/compare', {
+      
+      // Get project ID from workspace path
+      const projectId = getProjectIdFromWorkspace(workspacePath);
+      
+      const result = await apiCall(`/api/projects/${projectId}/git/compare`, {
         method: 'POST',
         body: JSON.stringify({ 
           projectPath: workspacePath, 

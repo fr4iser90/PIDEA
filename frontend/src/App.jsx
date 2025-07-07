@@ -122,18 +122,21 @@ function App() {
       try {
         const ideRes = await apiCall('/api/ide/available');
         if (ideRes.success && ideRes.data) {
-          const activeIDE = ideRes.data.find(ide => ide.port === port);
-          if (activeIDE && activeIDE.workspacePath) {
-            const gitRes = await apiCall('/api/git/status', {
-              method: 'POST',
-              body: JSON.stringify({ projectPath: activeIDE.workspacePath })
-            });
-            setGitStatus(gitRes.data?.status || null);
-            setGitBranch(gitRes.data?.currentBranch || '');
-          } else {
-            setGitStatus(null);
-            setGitBranch('');
-          }
+                  const activeIDE = ideRes.data.find(ide => ide.port === port);
+        if (activeIDE && activeIDE.workspacePath) {
+          // Get project ID from workspace path
+          const projectId = getProjectIdFromWorkspace(activeIDE.workspacePath);
+          
+          const gitRes = await apiCall(`/api/projects/${projectId}/git/status`, {
+            method: 'POST',
+            body: JSON.stringify({ projectPath: activeIDE.workspacePath })
+          });
+          setGitStatus(gitRes.data?.status || null);
+          setGitBranch(gitRes.data?.currentBranch || '');
+        } else {
+          setGitStatus(null);
+          setGitBranch('');
+        }
         }
       } catch (e) {
         setGitStatus(null);

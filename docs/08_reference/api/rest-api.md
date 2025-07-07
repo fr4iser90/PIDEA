@@ -474,6 +474,22 @@ Get the content of a specific file.
 }
 ```
 
+## Git Management API
+
+For complete Git management functionality, see the dedicated [Git API Documentation](git-api.md).
+
+### Available Git Endpoints
+
+- **POST** `/api/projects/:projectId/git/status` - Get Git status
+- **POST** `/api/projects/:projectId/git/branches` - Get all branches
+- **POST** `/api/projects/:projectId/git/validate` - Validate changes
+- **POST** `/api/projects/:projectId/git/compare` - Compare branches
+- **POST** `/api/projects/:projectId/git/pull` - Pull changes
+- **POST** `/api/projects/:projectId/git/checkout` - Checkout branch
+- **POST** `/api/projects/:projectId/git/merge` - Merge branches
+- **POST** `/api/projects/:projectId/git/create-branch` - Create branch
+- **POST** `/api/projects/:projectId/git/info` - Get repository info
+
 ## System API
 
 ### Health Check

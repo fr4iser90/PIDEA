@@ -134,17 +134,19 @@ If you encounter issues:
 
 ## API Endpoints
 
-The Git management system provides these API endpoints:
+The Git management system provides these project-based API endpoints:
 
-- `POST /api/git/status` - Get Git status
-- `POST /api/git/branches` - Get all branches
-- `POST /api/git/validate` - Validate changes
-- `POST /api/git/compare` - Compare branches
-- `POST /api/git/pull` - Pull changes
-- `POST /api/git/checkout` - Switch branches
-- `POST /api/git/merge` - Merge branches
-- `POST /api/git/create-branch` - Create new branch
-- `POST /api/git/info` - Get repository info
+- `POST /api/projects/:projectId/git/status` - Get Git status
+- `POST /api/projects/:projectId/git/branches` - Get all branches
+- `POST /api/projects/:projectId/git/validate` - Validate changes
+- `POST /api/projects/:projectId/git/compare` - Compare branches
+- `POST /api/projects/:projectId/git/pull` - Pull changes
+- `POST /api/projects/:projectId/git/checkout` - Switch branches
+- `POST /api/projects/:projectId/git/merge` - Merge branches
+- `POST /api/projects/:projectId/git/create-branch` - Create new branch
+- `POST /api/projects/:projectId/git/info` - Get repository info
+
+For complete API documentation, see [Git API Reference](../08_reference/api/git-api.md).
 
 ## Security Considerations
 

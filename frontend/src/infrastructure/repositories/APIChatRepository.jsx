@@ -101,6 +101,17 @@ const API_CONFIG = {
       status: (projectId) => `/api/projects/${projectId}/auto/status`,
       progress: (projectId) => `/api/projects/${projectId}/auto/status`
     },
+    git: {
+      status: (projectId) => `/api/projects/${projectId}/git/status`,
+      branches: (projectId) => `/api/projects/${projectId}/git/branches`,
+      validate: (projectId) => `/api/projects/${projectId}/git/validate`,
+      compare: (projectId) => `/api/projects/${projectId}/git/compare`,
+      pull: (projectId) => `/api/projects/${projectId}/git/pull`,
+      checkout: (projectId) => `/api/projects/${projectId}/git/checkout`,
+      merge: (projectId) => `/api/projects/${projectId}/git/merge`,
+      createBranch: (projectId) => `/api/projects/${projectId}/git/create-branch`,
+      info: (projectId) => `/api/projects/${projectId}/git/info`
+    },
     settings: '/api/settings',
     health: '/api/health',
     docsTasks: {
@@ -464,6 +475,79 @@ export default class APIChatRepository extends ChatRepository {
     return apiCall(API_CONFIG.endpoints.ide.newChat(port), {
       method: 'POST',
       body: JSON.stringify({ message })
+    });
+  }
+
+  // Git Management Methods
+  async getGitStatus(projectId = null, projectPath = null) {
+    const actualProjectId = projectId || await this.getCurrentProjectId();
+    return apiCall(API_CONFIG.endpoints.git.status(actualProjectId), {
+      method: 'POST',
+      body: JSON.stringify({ projectPath })
+    });
+  }
+
+  async getGitBranches(projectId = null, projectPath = null) {
+    const actualProjectId = projectId || await this.getCurrentProjectId();
+    return apiCall(API_CONFIG.endpoints.git.branches(actualProjectId), {
+      method: 'POST',
+      body: JSON.stringify({ projectPath })
+    });
+  }
+
+  async validateGitChanges(projectId = null, projectPath = null) {
+    const actualProjectId = projectId || await this.getCurrentProjectId();
+    return apiCall(API_CONFIG.endpoints.git.validate(actualProjectId), {
+      method: 'POST',
+      body: JSON.stringify({ projectPath })
+    });
+  }
+
+  async compareGitBranches(projectId = null, projectPath = null, sourceBranch = null, targetBranch = 'main') {
+    const actualProjectId = projectId || await this.getCurrentProjectId();
+    return apiCall(API_CONFIG.endpoints.git.compare(actualProjectId), {
+      method: 'POST',
+      body: JSON.stringify({ projectPath, sourceBranch, targetBranch })
+    });
+  }
+
+  async pullGitChanges(projectId = null, projectPath = null, branch = 'main', remote = 'origin') {
+    const actualProjectId = projectId || await this.getCurrentProjectId();
+    return apiCall(API_CONFIG.endpoints.git.pull(actualProjectId), {
+      method: 'POST',
+      body: JSON.stringify({ projectPath, branch, remote })
+    });
+  }
+
+  async checkoutGitBranch(projectId = null, projectPath = null, branch = null) {
+    const actualProjectId = projectId || await this.getCurrentProjectId();
+    return apiCall(API_CONFIG.endpoints.git.checkout(actualProjectId), {
+      method: 'POST',
+      body: JSON.stringify({ projectPath, branch })
+    });
+  }
+
+  async mergeGitBranches(projectId = null, projectPath = null, sourceBranch = null, targetBranch = 'main') {
+    const actualProjectId = projectId || await this.getCurrentProjectId();
+    return apiCall(API_CONFIG.endpoints.git.merge(actualProjectId), {
+      method: 'POST',
+      body: JSON.stringify({ projectPath, sourceBranch, targetBranch })
+    });
+  }
+
+  async createGitBranch(projectId = null, projectPath = null, branchName = null, startPoint = 'main') {
+    const actualProjectId = projectId || await this.getCurrentProjectId();
+    return apiCall(API_CONFIG.endpoints.git.createBranch(actualProjectId), {
+      method: 'POST',
+      body: JSON.stringify({ projectPath, branchName, startPoint })
+    });
+  }
+
+  async getGitRepositoryInfo(projectId = null, projectPath = null) {
+    const actualProjectId = projectId || await this.getCurrentProjectId();
+    return apiCall(API_CONFIG.endpoints.git.info(actualProjectId), {
+      method: 'POST',
+      body: JSON.stringify({ projectPath })
     });
   }
 }

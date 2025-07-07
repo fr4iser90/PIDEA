@@ -855,17 +855,17 @@ class Application {
     this.app.get('/api/projects/:projectId/scripts', (req, res) => this.taskController.getGeneratedScripts(req, res));
     this.app.post('/api/projects/:projectId/scripts/:id/execute', (req, res) => this.taskController.executeScript(req, res));
 
-    // Git Management routes (protected)
-    this.app.use('/api/git', this.authMiddleware.authenticate());
-    this.app.post('/api/git/status', (req, res) => this.gitController.getStatus(req, res));
-    this.app.post('/api/git/branches', (req, res) => this.gitController.getBranches(req, res));
-    this.app.post('/api/git/validate', (req, res) => this.gitController.validate(req, res));
-    this.app.post('/api/git/compare', (req, res) => this.gitController.compare(req, res));
-    this.app.post('/api/git/pull', (req, res) => this.gitController.pull(req, res));
-    this.app.post('/api/git/checkout', (req, res) => this.gitController.checkout(req, res));
-    this.app.post('/api/git/merge', (req, res) => this.gitController.merge(req, res));
-    this.app.post('/api/git/create-branch', (req, res) => this.gitController.createBranch(req, res));
-    this.app.post('/api/git/info', (req, res) => this.gitController.getRepositoryInfo(req, res));
+    // Git Management routes (protected) - PROJECT-BASED
+    this.app.use('/api/projects/:projectId/git', this.authMiddleware.authenticate());
+    this.app.post('/api/projects/:projectId/git/status', (req, res) => this.gitController.getStatus(req, res));
+    this.app.post('/api/projects/:projectId/git/branches', (req, res) => this.gitController.getBranches(req, res));
+    this.app.post('/api/projects/:projectId/git/validate', (req, res) => this.gitController.validate(req, res));
+    this.app.post('/api/projects/:projectId/git/compare', (req, res) => this.gitController.compare(req, res));
+    this.app.post('/api/projects/:projectId/git/pull', (req, res) => this.gitController.pull(req, res));
+    this.app.post('/api/projects/:projectId/git/checkout', (req, res) => this.gitController.checkout(req, res));
+    this.app.post('/api/projects/:projectId/git/merge', (req, res) => this.gitController.merge(req, res));
+    this.app.post('/api/projects/:projectId/git/create-branch', (req, res) => this.gitController.createBranch(req, res));
+    this.app.post('/api/projects/:projectId/git/info', (req, res) => this.gitController.getRepositoryInfo(req, res));
 
     // Terminal Log routes (protected)
     this.app.use('/api/terminal-logs/:port', this.authMiddleware.authenticate());
@@ -877,12 +877,6 @@ class Application {
     this.app.delete('/api/terminal-logs/:port', (req, res) => this.ideController.deleteTerminalLogs(req, res));
     this.app.get('/api/terminal-logs/:port/capture-status', (req, res) => this.ideController.getTerminalLogCaptureStatus(req, res));
 
-    // Terminal Log test routes (unprotected for testing)
-    this.app.get('/api/test/terminal-logs/:port/capture-status', (req, res) => this.ideController.getTerminalLogCaptureStatus(req, res));
-    this.app.get('/api/test/terminal-logs/:port', (req, res) => this.ideController.getTerminalLogs(req, res));
-    this.app.post('/api/test/terminal-logs/:port/execute', (req, res) => this.ideController.executeTerminalCommandWithCapture(req, res));
-    this.app.post('/api/test/terminal-logs/:port/initialize', (req, res) => this.ideController.initializeTerminalLogCapture(req, res));
-
     // IDE Mirror API-Routen einbinden
     this.ideMirrorController.setupRoutes(this.app);
 
@@ -892,16 +886,13 @@ class Application {
     this.app.get('/api/docs-tasks/:filename', (req, res) => this.ideController.getDocsTaskDetails(req, res));
 
     // Auto Finish routes (protected)
-    this.app.use('/api/auto-finish', this.authMiddleware.authenticate());
-    this.app.post('/api/auto-finish/process', (req, res) => this.autoFinishController.processTodoList(req, res));
-    this.app.get('/api/auto-finish/sessions/:sessionId', (req, res) => this.autoFinishController.getSessionStatus(req, res));
-    this.app.get('/api/auto-finish/sessions', (req, res) => this.autoFinishController.getUserSessions(req, res));
-    this.app.get('/api/projects/:projectId/auto-finish/sessions', (req, res) => this.autoFinishController.getProjectSessions(req, res));
-    this.app.delete('/api/auto-finish/sessions/:sessionId', (req, res) => this.autoFinishController.cancelSession(req, res));
-    this.app.get('/api/auto-finish/stats', (req, res) => this.autoFinishController.getSystemStats(req, res));
-    this.app.get('/api/auto-finish/patterns', (req, res) => this.autoFinishController.getSupportedPatterns(req, res));
-    this.app.get('/api/auto-finish/task-types', (req, res) => this.autoFinishController.getTaskTypeKeywords(req, res));
-    this.app.get('/api/auto-finish/health', (req, res) => this.autoFinishController.healthCheck(req, res));
+    this.app.use('/api/projects/:projectId/auto-finish', this.authMiddleware.authenticate());
+    this.app.post('/api/projects/:projectId/auto-finish/process', (req, res) => this.autoFinishController.processTodoList(req, res));
+    this.app.get('/api/projects/:projectId/auto-finish/status', (req, res) => this.autoFinishController.getSessionStatus(req, res));
+    this.app.post('/api/projects/:projectId/auto-finish/cancel', (req, res) => this.autoFinishController.cancelSession(req, res));
+    this.app.get('/api/projects/:projectId/auto-finish/stats', (req, res) => this.autoFinishController.getProjectStats(req, res));
+    this.app.get('/api/projects/:projectId/auto-finish/patterns', (req, res) => this.autoFinishController.getSupportedPatterns(req, res));
+    this.app.get('/api/projects/:projectId/auto-finish/health', (req, res) => this.autoFinishController.healthCheck(req, res));
 
     // Error handling middleware
     this.app.use((error, req, res, next) => {
