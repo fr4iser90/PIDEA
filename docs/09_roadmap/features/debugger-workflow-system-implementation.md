@@ -199,7 +199,7 @@
 
 #### Task Database Fields:
 - **source_type**: 'markdown_doc'
-- **source_path**: 'docs/roadmap/features/debugger-workflow-system-implementation.md'
+- **source_path**: 'docs/09_roadmap/features/debugger-workflow-system-implementation.md'
 - **automation_level**: 'semi_auto'
 - **confirmation_required**: true
 - **max_attempts**: 3

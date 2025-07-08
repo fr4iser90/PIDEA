@@ -191,7 +191,7 @@
 
 #### Task Database Fields:
 - **source_type**: 'markdown_doc'
-- **source_path**: 'docs/roadmap/features/frontend-bot-automation-implementation.md'
+- **source_path**: 'docs/09_roadmap/features/frontend-bot-automation-implementation.md'
 - **automation_level**: 'semi_auto'
 - **confirmation_required**: true
 - **max_attempts**: 3

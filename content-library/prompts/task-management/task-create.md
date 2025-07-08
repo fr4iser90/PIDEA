@@ -226,7 +226,7 @@ INSERT INTO tasks (
   '[Priority]', -- From section 1
   'pending', -- Initial status
   'markdown_doc', -- Source type
-  'docs/roadmap/features/[name]-implementation.md', -- Source path
+  'docs/09_roadmap/features/[name]-implementation.md', -- Source path
   '[Full markdown content]', -- For reference
   '[JSON with all metadata]', -- All technical details
   '[Estimated Time in hours]' -- From section 1

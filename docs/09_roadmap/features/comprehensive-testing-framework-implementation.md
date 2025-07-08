@@ -190,7 +190,7 @@
 
 #### Task Database Fields:
 - **source_type**: 'markdown_doc'
-- **source_path**: 'docs/roadmap/features/comprehensive-testing-framework-implementation.md'
+- **source_path**: 'docs/09_roadmap/features/comprehensive-testing-framework-implementation.md'
 - **automation_level**: 'semi_auto'
 - **confirmation_required**: true
 - **max_attempts**: 3

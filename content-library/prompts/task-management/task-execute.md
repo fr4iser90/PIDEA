@@ -81,7 +81,7 @@ Execute complete development tasks automatically with phase-by-phase implementat
 - Ensure backward compatibility
 
 ### Implementation File Updates
-- Create/update `docs/roadmap/features/[Name]-implementation.md`
+- Create/update `docs/09_roadmap/features/[Name]-implementation.md`
 - Track progress through all phases
 - Document all changes and decisions
 - Update completion status automatically
