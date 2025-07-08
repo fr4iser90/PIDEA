@@ -35,6 +35,7 @@
         "test:refactor:slow": "node scripts/test-correction/index.js refactor --slow",
         "test:correction-status": "node scripts/test-correction/index.js status",
         "test:correction-report": "node scripts/test-correction/index.js report",
+        "fix:task-priorities": "node scripts/fix-task-priorities.js",
         "lint": "eslint ",
         "lint:fix": "eslint  --fix",
         "build": "echo 'No build step required for Node.js application'",

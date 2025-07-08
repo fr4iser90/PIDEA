@@ -4,9 +4,9 @@
  */
 const TaskRepository = require('@/domain/repositories/TaskRepository');
 const Task = require('@/domain/entities/Task');
-const TaskStatus = require('../../domain/value-objects/TaskStatus');
-const TaskPriority = require('../../domain/value-objects/TaskPriority');
-const TaskType = require('../../domain/value-objects/TaskType');
+const TaskStatus = require('@/domain/value-objects/TaskStatus');
+const TaskPriority = require('@/domain/value-objects/TaskPriority');
+const TaskType = require('@/domain/value-objects/TaskType');
 
 class PostgreSQLTaskRepository extends TaskRepository {
   constructor(databaseConnection) {
@@ -75,27 +75,32 @@ class PostgreSQLTaskRepository extends TaskRepository {
         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `;
 
-             const params = [
-         task.id,
-         task.title,
-         task.description,
-         task.type?.value || task.type,
-         task.priority?.value || task.priority,
-         task.status?.value || task.status,
-         task.projectId,
-         task.userId,
-         task.estimatedDuration,
-         JSON.stringify(task.metadata || {}),
-         task.createdAt ? task.createdAt.toISOString() : new Date().toISOString(),
-         task.updatedAt ? task.updatedAt.toISOString() : new Date().toISOString(),
-         JSON.stringify(task.dependencies || []),
-         JSON.stringify(task.tags || []),
-         task.assignee,
-         task.dueDate ? task.dueDate.toISOString() : null,
-         task.startedAt ? task.startedAt.toISOString() : null,
-         task.completedAt ? task.completedAt.toISOString() : null,
-         JSON.stringify(task.executionHistory || [])
-       ];
+      // Extract string values from value objects
+      const taskType = task.type?.value || task.type;
+      const taskPriority = task.priority?.value || task.priority;
+      const taskStatus = task.status?.value || task.status;
+
+      const params = [
+        task.id,
+        task.title,
+        task.description,
+        taskType,
+        taskPriority,
+        taskStatus,
+        task.projectId,
+        task.userId,
+        task.estimatedDuration,
+        JSON.stringify(task.metadata || {}),
+        task.createdAt ? task.createdAt.toISOString() : new Date().toISOString(),
+        task.updatedAt ? task.updatedAt.toISOString() : new Date().toISOString(),
+        JSON.stringify(task.dependencies || []),
+        JSON.stringify(task.tags || []),
+        task.assignee,
+        task.dueDate ? task.dueDate.toISOString() : null,
+        task.startedAt ? task.startedAt.toISOString() : null,
+        task.completedAt ? task.completedAt.toISOString() : null,
+        JSON.stringify(task.executionHistory || [])
+      ];
 
       await this.databaseConnection.execute(sql, params);
       return task;
@@ -215,26 +220,31 @@ class PostgreSQLTaskRepository extends TaskRepository {
         WHERE id = ?
       `;
 
-             const params = [
-         task.title,
-         task.description,
-         task.type?.value || task.type,
-         task.priority?.value || task.priority,
-         task.status?.value || task.status,
-         task.projectId,
-         task.userId,
-         task.estimatedDuration,
-         JSON.stringify(task.metadata || {}),
-         task.updatedAt ? task.updatedAt.toISOString() : new Date().toISOString(),
-         JSON.stringify(task.dependencies || []),
-         JSON.stringify(task.tags || []),
-         task.assignee,
-         task.dueDate ? task.dueDate.toISOString() : null,
-         task.startedAt ? task.startedAt.toISOString() : null,
-         task.completedAt ? task.completedAt.toISOString() : null,
-         JSON.stringify(task.executionHistory || []),
-         task.id
-       ];
+      // Extract string values from value objects
+      const taskType = task.type?.value || task.type;
+      const taskPriority = task.priority?.value || task.priority;
+      const taskStatus = task.status?.value || task.status;
+
+      const params = [
+        task.title,
+        task.description,
+        taskType,
+        taskPriority,
+        taskStatus,
+        task.projectId,
+        task.userId,
+        task.estimatedDuration,
+        JSON.stringify(task.metadata || {}),
+        task.updatedAt ? task.updatedAt.toISOString() : new Date().toISOString(),
+        JSON.stringify(task.dependencies || []),
+        JSON.stringify(task.tags || []),
+        task.assignee,
+        task.dueDate ? task.dueDate.toISOString() : null,
+        task.startedAt ? task.startedAt.toISOString() : null,
+        task.completedAt ? task.completedAt.toISOString() : null,
+        JSON.stringify(task.executionHistory || []),
+        task.id
+      ];
 
       await this.databaseConnection.execute(sql, params);
       return task;
@@ -265,11 +275,14 @@ class PostgreSQLTaskRepository extends TaskRepository {
    */
   _rowToTask(row) {
     try {
+      // Provide default title if missing
+      const title = row.title || 'Untitled Task';
+      
       // Use Task constructor with parameters in correct order
       const task = new Task(
         row.id || '',
         row.projectId || null,
-        row.title || 'Untitled Task',
+        title,
         row.description || '',
         row.status || 'pending',
         row.priority || 'medium',
