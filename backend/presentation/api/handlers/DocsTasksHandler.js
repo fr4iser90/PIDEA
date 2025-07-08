@@ -360,6 +360,7 @@ class DocsTasksHandler {
             type: 'documentation',
             status: 'open',
             metadata,
+            projectPath: this.getWorkspacePath(), 
           });
           await this.taskRepository.save(task);
           console.log(`[DocsTasksHandler] Created new task: ${title}`);
@@ -369,6 +370,7 @@ class DocsTasksHandler {
             task._title = title;
             task._description = title;
             task._metadata = metadata;
+            task._projectPath = this.getWorkspacePath(); 
             await this.taskRepository.save(task);
             console.log(`[DocsTasksHandler] Updated task: ${title}`);
           }
