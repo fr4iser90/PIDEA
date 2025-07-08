@@ -82,7 +82,8 @@ class VibeCoderModeHandler {
         this.outputService = new OutputService({ 
             logger: this.logger, 
             analysisOutputService: this.analysisOutputService,
-            analysisRepository: this.analysisRepository
+            analysisRepository: this.analysisRepository,
+            eventBus: this.eventBus
         });
 
         // Initialize utils

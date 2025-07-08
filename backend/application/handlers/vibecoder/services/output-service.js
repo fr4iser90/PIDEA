@@ -7,6 +7,7 @@ class OutputService {
         this.logger = dependencies.logger || console;
         this.analysisOutputService = dependencies.analysisOutputService;
         this.analysisRepository = dependencies.analysisRepository;
+        this.eventBus = dependencies.eventBus;
     }
 
     /**
