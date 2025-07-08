@@ -258,32 +258,51 @@ class VSCodeChatHandler {
     const page = this.page;
     if (!page) throw new Error('VSCode app page not available!');
     console.log('📋 Getting VSCode chat history...');
-    const messageSelectors = [
-      '.chat-message',
-      '.chat-session-detail',
-      '.ced-chat-session-detail',
-      '[class*="chat-session"]',
-      '.chat-content'
-    ];
+    // Selektoren für Chat-Zeilen
+    const chatRows = await page.$$('.monaco-list-row');
     const messages = [];
-    for (const selector of messageSelectors) {
+    for (let i = 0; i < chatRows.length; i++) {
+      const row = chatRows[i];
+      // Prüfe auf User- oder AI-Message
+      let type = null;
+      if (await row.$('.interactive-request')) type = 'user';
+      if (await row.$('.interactive-response')) type = 'ai';
+      if (!type) continue; // Nur relevante Messages
+      // Username extrahieren
+      let username = '';
       try {
-        const elements = await page.$$(selector);
-        if (elements.length > 0) {
-          console.log(`  ✅ Found ${elements.length} messages with selector: ${selector}`);
-          for (let i = 0; i < Math.min(elements.length, 5); i++) {
-            const text = await elements[i].textContent();
-            if (text && text.trim()) {
-              messages.push({
-                selector: selector,
-                index: i,
-                text: text.trim().substring(0, 100) + '...'
-              });
-            }
-          }
-          break;
+        username = await row.$eval('.username', el => el.textContent.trim());
+      } catch {}
+      // Text extrahieren
+      let text = '';
+      try {
+        text = await row.$eval('.value .rendered-markdown p', el => el.textContent.trim());
+      } catch {}
+      // CSS-Selektor für diese Zeile
+      let selector = '';
+      try {
+        // Baue einen robusten Selector (z.B. über data-index)
+        const dataIndex = await row.getAttribute('data-index');
+        if (dataIndex !== null) {
+          selector = `.monaco-list-row[data-index="${dataIndex}"]`;
+        } else {
+          // Fallback: nth-child
+          selector = `.monaco-list-row:nth-child(${i + 1})`;
         }
-      } catch (e) { continue; }
+      } catch {}
+      // Rohes HTML (optional für Debugging)
+      let rawHtml = '';
+      try {
+        rawHtml = await row.evaluate(el => el.outerHTML);
+      } catch {}
+      messages.push({
+        type,
+        username,
+        text,
+        selector,
+        rowIndex: i,
+        rawHtml
+      });
     }
     return messages;
   }
@@ -363,6 +382,18 @@ if (require.main === module) {
       const history = await handler.getChatHistory();
       if (history.length > 0) {
         console.log(`📋 Found ${history.length} chat messages`);
+        // Ausgabe aller Messages mit Selektoren
+        history.forEach(msg => {
+          console.log(`---`);
+          console.log(`Type:      ${msg.type}`);
+          console.log(`Username:  ${msg.username}`);
+          console.log(`Text:      ${msg.text}`);
+          console.log(`Selector:  ${msg.selector}`);
+          console.log(`RowIndex:  ${msg.rowIndex}`);
+          // Optional: rawHtml für Debugging
+          // console.log(msg.rawHtml);
+        });
+        console.log('---');
       } else {
         console.log('📋 No chat history found');
       }
