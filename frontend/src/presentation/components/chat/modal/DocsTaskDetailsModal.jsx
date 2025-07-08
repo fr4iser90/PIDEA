@@ -53,7 +53,7 @@ const DocsTaskDetailsModal = ({
 
   const loadExecutePrompt = async () => {
     try {
-      const response = await fetch('/api/framework/prompt/task-management/task-execute');
+      const response = await fetch('/api/prompts/task-management/task-execute');
       if (response.ok) {
         const data = await response.json();
         setExecutePromptContent(data.content);

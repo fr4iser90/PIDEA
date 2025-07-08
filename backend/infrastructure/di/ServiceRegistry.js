@@ -155,6 +155,18 @@ class ServiceRegistry {
       return new AutoFinishSystem(cursorIDEService, browserManager, ideManager);
     }, { singleton: true, dependencies: ['cursorIDEService', 'browserManager', 'ideManager'] });
 
+    // Workflow Orchestration Service
+    this.container.register('workflowOrchestrationService', (cursorIDEService, autoFinishSystem, taskRepository, eventBus, logger) => {
+      const WorkflowOrchestrationService = require('../../domain/services/WorkflowOrchestrationService');
+      return new WorkflowOrchestrationService({
+        cursorIDEService,
+        autoFinishSystem,
+        taskRepository,
+        eventBus,
+        logger
+      });
+    }, { singleton: true, dependencies: ['cursorIDEService', 'autoFinishSystem', 'taskRepository', 'eventBus', 'logger'] });
+
         // Cursor IDE service
         this.container.register('cursorIDEService', (browserManager, ideManager, eventBus) => {
             const CursorIDEService = require('../../domain/services/CursorIDEService');

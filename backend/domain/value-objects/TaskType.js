@@ -7,6 +7,7 @@ class TaskType {
   static REFACTOR = 'refactor';
   static DOCUMENTATION = 'documentation';
   static TEST = 'test';
+  static TESTING = 'testing';
   static TEST_FIX = 'test_fix';
   static TEST_COVERAGE = 'test_coverage';
   static TEST_REFACTOR = 'test_refactor';
@@ -24,11 +25,11 @@ class TaskType {
   }
 
   requiresAI() {
-    return [TaskType.FEATURE, TaskType.BUG, TaskType.OPTIMIZATION, TaskType.SECURITY, TaskType.ANALYSIS, TaskType.TEST_FIX, TaskType.TEST_COVERAGE, TaskType.TEST_REFACTOR].includes(this.value);
+    return [TaskType.FEATURE, TaskType.BUG, TaskType.OPTIMIZATION, TaskType.SECURITY, TaskType.ANALYSIS, TaskType.TEST, TaskType.TESTING, TaskType.TEST_FIX, TaskType.TEST_COVERAGE, TaskType.TEST_REFACTOR].includes(this.value);
   }
 
   requiresExecution() {
-    return [TaskType.FEATURE, TaskType.BUG, TaskType.REFACTOR, TaskType.OPTIMIZATION, TaskType.SECURITY, TaskType.DOCUMENTATION, TaskType.ANALYSIS, TaskType.TEST_FIX, TaskType.TEST_COVERAGE, TaskType.TEST_REFACTOR, TaskType.TEST_STATUS, TaskType.TEST_REPORT].includes(this.value);
+    return [TaskType.FEATURE, TaskType.BUG, TaskType.REFACTOR, TaskType.OPTIMIZATION, TaskType.SECURITY, TaskType.DOCUMENTATION, TaskType.ANALYSIS, TaskType.TEST, TaskType.TESTING, TaskType.TEST_FIX, TaskType.TEST_COVERAGE, TaskType.TEST_REFACTOR, TaskType.TEST_STATUS, TaskType.TEST_REPORT].includes(this.value);
   }
 
   requiresHumanReview() {
@@ -53,6 +54,10 @@ class TaskType {
 
   isTest() {
     return this.value === TaskType.TEST;
+  }
+
+  isTesting() {
+    return this.value === TaskType.TESTING;
   }
 
   isTestFix() {
@@ -94,6 +99,7 @@ class TaskType {
       TaskType.REFACTOR,
       TaskType.DOCUMENTATION,
       TaskType.TEST,
+      TaskType.TESTING,
       TaskType.TEST_FIX,
       TaskType.TEST_COVERAGE,
       TaskType.TEST_REFACTOR,
@@ -112,6 +118,7 @@ class TaskType {
       TaskType.REFACTOR,
       TaskType.DOCUMENTATION,
       TaskType.TEST,
+      TaskType.TESTING,
       TaskType.TEST_FIX,
       TaskType.TEST_COVERAGE,
       TaskType.TEST_REFACTOR,

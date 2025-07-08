@@ -316,6 +316,9 @@ class Application {
     this.monorepoStrategy = this.serviceRegistry.getService('monorepoStrategy');
     this.singleRepoStrategy = this.serviceRegistry.getService('singleRepoStrategy');
 
+    // Get Workflow Orchestration Service
+    this.workflowOrchestrationService = this.serviceRegistry.getService('workflowOrchestrationService');
+
     // Initialize Auto-Finish System
     this.taskSessionRepository = new TaskSessionRepository(this.databaseConnection);
     await this.taskSessionRepository.initialize();
