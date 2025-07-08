@@ -349,7 +349,11 @@ class DocsTasksHandler {
         const content = fsSync.readFileSync(filePath, 'utf-8');
         const id = this._generateId(filePath, content);
         const title = this._extractTitle(content, filePath);
-        const metadata = { filePath, hash: this._hashContent(content) };
+        const metadata = { 
+          filePath, 
+          hash: this._hashContent(content),
+          projectPath: this.getWorkspacePath()
+        };
         let task = existingTaskMap.get(filePath);
         
         if (!task) {
@@ -360,7 +364,6 @@ class DocsTasksHandler {
             type: 'documentation',
             status: 'open',
             metadata,
-            projectPath: this.getWorkspacePath(), 
           });
           await this.taskRepository.save(task);
           console.log(`[DocsTasksHandler] Created new task: ${title}`);
@@ -370,7 +373,6 @@ class DocsTasksHandler {
             task._title = title;
             task._description = title;
             task._metadata = metadata;
-            task._projectPath = this.getWorkspacePath(); 
             await this.taskRepository.save(task);
             console.log(`[DocsTasksHandler] Updated task: ${title}`);
           }
