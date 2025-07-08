@@ -19,7 +19,9 @@
     "build": "npm run build --workspace=frontend",
     "test": "npm run test --workspaces",
     "lint": "npm run lint --workspaces",
-    "clean": "npm run clean --workspaces && rm -rf node_modules"
+    "clean": "npm run clean --workspaces && rm -rf node_modules",
+    "analyze:workflows": "node scripts/workflow-analyzer.js",
+    "open:workflows": "node scripts/open-workflow-report.js"
   },
   "devDependencies": {
     "concurrently": "^8.2.2"
