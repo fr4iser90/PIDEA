@@ -18,8 +18,21 @@ module.exports = {
   coverageReporters: ['text', 'lcov', 'html'],
   setupFilesAfterEnv: ['<rootDir>/tests/setup.js'],
   transformIgnorePatterns: [
-    'node_modules/(?!(chalk|ora|inquirer|cli-table3|commander|marked)/)'
+    'node_modules/(?!(chalk|ora|inquirer|cli-table3|commander)/)'
   ],
+  
+  // Test Management Reporter Configuration
+  reporters: [
+    'default',
+    ['<rootDir>/tests/reporters/test-management-reporter.js', {
+      enabled: process.env.TEST_MANAGEMENT_ENABLED !== 'false',
+      autoRegister: process.env.TEST_AUTO_REGISTER !== 'false',
+      statusTracking: process.env.TEST_STATUS_TRACKING !== 'false',
+      exportResults: process.env.TEST_EXPORT_RESULTS === 'true',
+      exportPath: process.env.TEST_EXPORT_PATH || 'test-results.json'
+    }]
+  ],
+
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/$1',
     '^@domain/(.*)$': '<rootDir>/domain/$1',

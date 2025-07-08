@@ -1,5 +1,5 @@
 const request = require('supertest');
-const Application = require('../../backend/Application');
+const Application = require('@/Application');
 
 describe('TODO Processing Integration', () => {
   let app;

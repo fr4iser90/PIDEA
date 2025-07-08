@@ -294,6 +294,11 @@ class TerminalLogCaptureService {
     try {
       console.log(`[TerminalLogCaptureService] Executing command with capture: ${command}`);
       
+      // Initialize capture if not already done
+      if (!this.logDirectories.has(port)) {
+        await this.initializeCapture(port);
+      }
+      
       // Switch to target IDE if needed
       const activeIDE = await this.ideManager.getActiveIDE();
       if (!activeIDE || activeIDE.port !== port) {

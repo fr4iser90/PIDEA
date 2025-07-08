@@ -6,6 +6,16 @@ OLD
 .env.test.local
 .env.production.local
 .secrets
+coverage.txt
+test-analysis-full.json
+test-report.md
+test-report-full.md
+test-data.json
+test-report.html
+test-report-full.html
+test-report.json
+test-report-full.json
+
 logs
 backend/coverage
 backend/database

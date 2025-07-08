@@ -281,25 +281,32 @@ describe('TerminalLogCaptureService', () => {
       const port = 9222;
       const command = 'npm run dev';
       
-      mockIDEManager.prototype.getActiveIDE = jest.fn().mockResolvedValue({ port: 9222 });
+      service.initializeCapture = jest.fn().mockResolvedValue();
+      service.executeTerminalCommand = jest.fn().mockResolvedValue();
+      service.logDirectories.set(port, '/tmp/IDEWEB/9222/logs'); // Simuliere, dass Capture schon initialisiert ist
       
       await service.executeCommandWithCapture(port, command);
       
-      expect(mockIDEManager.prototype.switchToIDE).toHaveBeenCalledWith(port);
-      expect(mockBrowserManager.prototype.connect).toHaveBeenCalledWith(port);
-      expect(mockIDEMirrorService.prototype.clickElementInIDE).toHaveBeenCalledWith('.xterm-helper-textarea');
-      expect(mockIDEMirrorService.prototype.typeInIDE).toHaveBeenCalledWith(`${command} >> /tmp/IDEWEB/${port}/logs/terminal.log 2>&1`);
+      expect(service.initializeCapture).not.toHaveBeenCalled(); // Sollte nicht aufgerufen werden, da logDirectories gesetzt ist
+      expect(service.executeTerminalCommand).toHaveBeenCalledWith(`${command} >> /tmp/IDEWEB/${port}/logs/terminal.log 2>&1`);
     });
 
     test('should switch IDE if not on target port', async () => {
       const port = 9222;
       const command = 'npm run dev';
       
-      mockIDEManager.prototype.getActiveIDE = jest.fn().mockResolvedValue({ port: 9223 });
+      service.initializeCapture = jest.fn().mockResolvedValue();
+      service.executeTerminalCommand = jest.fn().mockResolvedValue();
+      service.logDirectories.set(port, '/tmp/IDEWEB/9222/logs');
+      service.ideManager.getActiveIDE = jest.fn().mockResolvedValue({ port: 9223 });
+      service.ideManager.switchToIDE = jest.fn().mockResolvedValue();
+      service.browserManager.connect = jest.fn().mockResolvedValue();
       
       await service.executeCommandWithCapture(port, command);
       
-      expect(mockIDEManager.prototype.switchToIDE).toHaveBeenCalledWith(port);
+      expect(service.ideManager.switchToIDE).toHaveBeenCalledWith(port);
+      expect(service.browserManager.connect).toHaveBeenCalledWith(port);
+      expect(service.executeTerminalCommand).toHaveBeenCalledWith(`${command} >> /tmp/IDEWEB/${port}/logs/terminal.log 2>&1`);
     });
   });
 

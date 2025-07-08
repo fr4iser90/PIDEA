@@ -1,3 +1,4 @@
+require('module-alias/register');
 /**
  * TaskProgressUI - Beautiful progress visualization and real-time monitoring
  */

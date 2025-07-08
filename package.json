@@ -18,6 +18,7 @@
     "install:all": "npm install && npm install --workspace=backend && npm install --workspace=frontend",
     "build": "npm run build --workspace=frontend",
     "test": "npm run test --workspaces",
+    "test:full": "npm run test:full --workspace=backend",
     "lint": "npm run lint --workspaces",
     "clean": "npm run clean --workspaces && rm -rf node_modules",
     "analyze:workflows": "node scripts/workflow-analyzer.js",

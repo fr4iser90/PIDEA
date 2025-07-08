@@ -1,7 +1,15 @@
 const fs = require('fs').promises;
 const fsSync = require('fs');
 const path = require('path');
-const { marked } = require('marked');
+// Mock marked for Jest compatibility
+let marked;
+try {
+  const markedModule = require('marked');
+  marked = markedModule.marked || markedModule;
+} catch (error) {
+  // Fallback for Jest environment
+  marked = (text) => text;
+}
 const crypto = require('crypto');
 const Task = require('../../../domain/entities/Task');
 

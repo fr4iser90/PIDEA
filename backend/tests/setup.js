@@ -12,4 +12,38 @@ global.console = {
 };
 
 // Increase timeout for async operations
-jest.setTimeout(30000); 
+jest.setTimeout(30000);
+
+// Test Management Integration
+if (process.env.TEST_MANAGEMENT_ENABLED !== 'false') {
+  const TestManagementService = require('@/domain/services/TestManagementService');
+  
+  // Initialize test management service
+  global.testManagementService = new TestManagementService();
+  
+  // Test lifecycle hooks for management
+  beforeAll(async () => {
+    if (process.env.TEST_AUTO_REGISTER !== 'false') {
+      // Auto-register test file
+      const testPath = expect.getState().testPath;
+      if (testPath) {
+        try {
+          await global.testManagementService.registerTest(
+            testPath,
+            'test-suite',
+            { registeredBy: 'jest-setup', testFramework: 'jest' }
+          );
+        } catch (error) {
+          console.warn(`Failed to auto-register test: ${error.message}`);
+        }
+      }
+    }
+  });
+  
+  afterAll(async () => {
+    // Cleanup if needed
+    if (process.env.TEST_CLEANUP === 'true') {
+      // Add cleanup logic here if needed
+    }
+  });
+} 

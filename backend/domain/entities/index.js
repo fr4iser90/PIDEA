@@ -7,6 +7,7 @@ module.exports = {
   TaskExecution: require('./TaskExecution'),
   TaskSuggestion: require('./TaskSuggestion'),
   TaskTemplate: require('./TaskTemplate'),
+  TestMetadata: require('./TestMetadata'),
   User: require('./User'),
   UserSession: require('./UserSession'),
 }; 

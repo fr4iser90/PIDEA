@@ -183,6 +183,7 @@ class Task {
   fail(error = null) {
     this._status = this._status.transitionTo(TaskStatus.FAILED);
     this._updatedAt = new Date();
+    this._completedAt = new Date();
     
     if (error) {
       this._metadata.error = error;
@@ -198,6 +199,7 @@ class Task {
 
     this._status = this._status.transitionTo(TaskStatus.CANCELLED);
     this._updatedAt = new Date();
+    this._completedAt = new Date();
     
     if (reason) {
       this._metadata.cancelReason = reason;
@@ -366,6 +368,15 @@ class Task {
 
     if (this._dueDate && this._dueDate < this._createdAt) {
       throw new Error('Task due date cannot be before creation date');
+    }
+    if (!TaskPriority.isValid(this._priority.value)) {
+      throw new Error(`Invalid task priority: ${this._priority.value}`);
+    }
+    if (!this._type || !this._type.value || typeof this._type.value !== 'string') {
+      throw new Error('Task type is required');
+    }
+    if (!TaskType.isValid(this._type.value)) {
+      throw new Error(`Invalid task type: ${this._type.value}`);
     }
   }
 

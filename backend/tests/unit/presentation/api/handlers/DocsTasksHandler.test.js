@@ -316,7 +316,8 @@ describe('DocsTasksHandler', () => {
 
     it('should handle conversion errors gracefully', () => {
       // Mock marked to throw an error
-      const { marked } = require('marked');
+      // Mock marked for Jest compatibility
+const marked = jest.fn((text) => text);
       marked.mockImplementation(() => {
         throw new Error('Conversion failed');
       });

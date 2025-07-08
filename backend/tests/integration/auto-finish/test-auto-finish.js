@@ -1,10 +1,12 @@
-const AutoFinishSystem = require('./domain/services/auto-finish/AutoFinishSystem');
-const TodoParser = require('./domain/services/auto-finish/TodoParser');
-const ConfirmationSystem = require('./domain/services/auto-finish/ConfirmationSystem');
-const FallbackDetection = require('./domain/services/auto-finish/FallbackDetection');
-const TaskSequencer = require('./domain/services/auto-finish/TaskSequencer');
-const TaskSession = require('./domain/entities/TaskSession');
-const TodoTask = require('./domain/entities/TodoTask');
+require('module-alias/register');
+
+const AutoFinishSystem = require('@/domain/services/auto-finish/AutoFinishSystem');
+const TodoParser = require('@/domain/services/auto-finish/TodoParser');
+const ConfirmationSystem = require('@/domain/services/auto-finish/ConfirmationSystem');
+const FallbackDetection = require('@/domain/services/auto-finish/FallbackDetection');
+const TaskSequencer = require('@/domain/services/auto-finish/TaskSequencer');
+const TaskSession = require('@/domain/entities/TaskSession');
+const TodoTask = require('@/domain/entities/TodoTask');
 
 async function testAutoFinishSystem() {
   console.log('🧪 Testing Auto-Finish System Components...\n');

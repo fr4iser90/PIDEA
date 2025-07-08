@@ -1,3 +1,4 @@
+require('module-alias/register');
 /**
  * TaskInteractiveCLI - Interactive CLI interface with advanced features
  */

@@ -7,8 +7,28 @@ class TaskPriority {
   static HIGH = 'high';
   static CRITICAL = 'critical';
 
+  constructor(value = TaskPriority.MEDIUM) {
+    if (!TaskPriority.isValid(value)) {
+      throw new Error(`Invalid task priority: ${value}`);
+    }
+    this.value = value;
+  }
+
+  isHigh() {
+    return this.value === TaskPriority.HIGH;
+  }
+
+  isCritical() {
+    return this.value === TaskPriority.CRITICAL;
+  }
+
   static isValid(priority) {
-    return Object.values(TaskPriority).includes(priority);
+    return [
+      TaskPriority.LOW,
+      TaskPriority.MEDIUM,
+      TaskPriority.HIGH,
+      TaskPriority.CRITICAL
+    ].includes(priority);
   }
 
   static getAll() {

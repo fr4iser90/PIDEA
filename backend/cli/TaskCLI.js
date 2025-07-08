@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+require('module-alias/register');
 
 /**
  * TaskCLI - Main command-line interface for task management system

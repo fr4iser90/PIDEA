@@ -9,17 +9,21 @@ class TaskType {
   static TEST = 'test';
   static OPTIMIZATION = 'optimization';
   static SECURITY = 'security';
+  static ANALYSIS = 'analysis';
 
   constructor(value = TaskType.FEATURE) {
+    if (!TaskType.isValid(value)) {
+      throw new Error(`Invalid task type: ${value}`);
+    }
     this.value = value;
   }
 
   requiresAI() {
-    return [TaskType.FEATURE, TaskType.BUG, TaskType.OPTIMIZATION, TaskType.SECURITY].includes(this.value);
+    return [TaskType.FEATURE, TaskType.BUG, TaskType.OPTIMIZATION, TaskType.SECURITY, TaskType.ANALYSIS].includes(this.value);
   }
 
   requiresExecution() {
-    return [TaskType.FEATURE, TaskType.BUG, TaskType.REFACTOR, TaskType.OPTIMIZATION, TaskType.SECURITY, TaskType.DOCUMENTATION].includes(this.value);
+    return [TaskType.FEATURE, TaskType.BUG, TaskType.REFACTOR, TaskType.OPTIMIZATION, TaskType.SECURITY, TaskType.DOCUMENTATION, TaskType.ANALYSIS].includes(this.value);
   }
 
   requiresHumanReview() {
@@ -54,8 +58,21 @@ class TaskType {
     return this.value === TaskType.SECURITY;
   }
 
+  isAnalysis() {
+    return this.value === TaskType.ANALYSIS;
+  }
+
   static isValid(type) {
-    return Object.values(TaskType).includes(type);
+    return [
+      TaskType.FEATURE,
+      TaskType.BUG,
+      TaskType.REFACTOR,
+      TaskType.DOCUMENTATION,
+      TaskType.TEST,
+      TaskType.OPTIMIZATION,
+      TaskType.SECURITY,
+      TaskType.ANALYSIS
+    ].includes(type);
   }
 
   static getAll() {
@@ -66,7 +83,8 @@ class TaskType {
       TaskType.DOCUMENTATION,
       TaskType.TEST,
       TaskType.OPTIMIZATION,
-      TaskType.SECURITY
+      TaskType.SECURITY,
+      TaskType.ANALYSIS
     ];
   }
 }

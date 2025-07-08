@@ -1,3 +1,4 @@
+require('module-alias/register');
 /**
  * TaskCommands - CLI command implementations
  */

@@ -5,6 +5,7 @@ module.exports = {
   TaskRepository: require('./TaskRepository'),
   TaskSuggestionRepository: require('./TaskSuggestionRepository'),
   TaskTemplateRepository: require('./TaskTemplateRepository'),
+  TestMetadataRepository: require('./TestMetadataRepository'),
   UserRepository: require('./UserRepository'),
   UserSessionRepository: require('./UserSessionRepository'),
 }; 

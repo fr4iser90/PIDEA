@@ -1,6 +1,8 @@
-const IDEDetector = require('./infrastructure/external/IDEDetector');
-const IDEManager = require('./infrastructure/external/IDEManager');
-const BrowserManager = require('./infrastructure/external/BrowserManager');
+require('module-alias/register');
+
+const IDEDetector = require('@/infrastructure/external/IDEDetector');
+const IDEManager = require('@/infrastructure/external/IDEManager');
+const BrowserManager = require('@/infrastructure/external/BrowserManager');
 
 async function testPortDetection() {
   console.log('🔍 Testing Port Detection...\n');
