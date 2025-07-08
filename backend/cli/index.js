@@ -4,6 +4,10 @@
  * VibeCoder Task Management CLI - Main Entry Point
  * The famous 'task auto' command starts here!
  */
+
+// Load module aliases BEFORE any other imports
+require('module-alias/register');
+
 const path = require('path');
 const fs = require('fs');
 

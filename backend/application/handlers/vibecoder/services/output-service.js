@@ -6,6 +6,7 @@ class OutputService {
     constructor(dependencies = {}) {
         this.logger = dependencies.logger || console;
         this.analysisOutputService = dependencies.analysisOutputService;
+        this.analysisRepository = dependencies.analysisRepository;
     }
 
     /**
