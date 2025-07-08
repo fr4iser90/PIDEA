@@ -3,7 +3,7 @@
 ## Goal
 Generate a complete, actionable development plan that will be parsed into a database task with all necessary details for AI auto-implementation, tracking, and execution.
 
-Create new [Name]-implementation.md in docs/roadmap/features with the following structure:
+Create new [Name]-implementation.md in docs/09_roadmap/features with the following structure:
 
 ## Template Structure
 
@@ -173,7 +173,7 @@ Create new [Name]-implementation.md in docs/roadmap/features with the following 
 
 #### Task Database Fields:
 - **source_type**: 'markdown_doc'
-- **source_path**: 'docs/roadmap/features/[name]-implementation.md'
+- **source_path**: 'docs/09_roadmap/features/[name]-implementation.md'
 - **automation_level**: 'semi_auto' | 'full_auto' | 'manual'
 - **confirmation_required**: true | false
 - **max_attempts**: 3 (default)
