@@ -1,12 +1,11 @@
 const fs = require('fs');
 const path = require('path');
-const BrowserManager = require('../../backend/infrastructure/external/BrowserManager');
-const IDEManager = require('../../backend/infrastructure/external/IDEManager');
+const BrowserManager = require('@infrastructure/external/BrowserManager');
 
 class VSCodeTerminalHandler {
-  constructor() {
+  constructor(ideManager = null) {
     this.browserManager = new BrowserManager();
-    this.ideManager = new IDEManager();
+    this.ideManager = ideManager;
     this.outputDir = path.join(__dirname, 'output/vscode-terminal');
     this.ensureOutputDir();
   }
@@ -23,6 +22,9 @@ class VSCodeTerminalHandler {
     try {
       // If no port specified, find VSCode automatically
       if (!port) {
+        if (!this.ideManager) {
+          throw new Error('IDEManager not provided to VSCodeTerminalHandler');
+        }
         await this.ideManager.initialize();
         
         const availableIDEs = await this.ideManager.getAvailableIDEs();

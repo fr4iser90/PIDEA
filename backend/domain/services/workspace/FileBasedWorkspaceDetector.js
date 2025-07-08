@@ -4,6 +4,7 @@
  */
 const fs = require('fs');
 const path = require('path');
+const VSCodeTerminalHandler = require('../terminal/VSCodeTerminalHandler');
 
 class FileBasedWorkspaceDetector {
   constructor(browserManager) {
@@ -74,6 +75,16 @@ class FileBasedWorkspaceDetector {
    * Terminal öffnen und File-Struktur erstellen
    */
   async _setupTerminalAndFiles(page, port) {
+    // VSCode: use handler
+    if (this._isVSCodePort(port)) {
+      const handler = new VSCodeTerminalHandler();
+      await handler.initialize(port);
+      // File-Struktur erstellen
+      await handler.executeCommand(`mkdir -p /tmp/IDEWEB/${port}`);
+      await handler.executeCommand(`rm -f /tmp/IDEWEB/${port}/*.txt`);
+      await handler.cleanup();
+      return;
+    }
     try {
       console.log(`[FileBasedWorkspaceDetector] Setting up terminal and file structure for port ${port}...`);
 
@@ -132,6 +143,23 @@ class FileBasedWorkspaceDetector {
    * Terminal-Befehle ausführen und Output in Files umleiten
    */
   async _executeTerminalCommands(page, port) {
+    // VSCode: use handler
+    if (this._isVSCodePort(port)) {
+      const handler = new VSCodeTerminalHandler();
+      await handler.initialize(port);
+      const commands = [
+        `pwd > /tmp/IDEWEB/${port}/workspace.txt`,
+        `ls -la > /tmp/IDEWEB/${port}/files.txt`,
+        `git status > /tmp/IDEWEB/${port}/git-status.txt 2>&1`,
+        `pwd && ls -la && git status > /tmp/IDEWEB/${port}/info.txt 2>&1`,
+        `echo "Terminal session started at $(date)" > /tmp/IDEWEB/${port}/terminal-session.txt`
+      ];
+      for (const command of commands) {
+        await handler.executeCommand(command);
+      }
+      await handler.cleanup();
+      return;
+    }
     try {
       console.log(`[FileBasedWorkspaceDetector] Executing terminal commands for port ${port}...`);
 
@@ -290,6 +318,22 @@ class FileBasedWorkspaceDetector {
    * Terminal-Befehl ausführen und Output in File umleiten
    */
   async executeCommand(port, command, outputFile = null) {
+    // VSCode: use handler
+    if (this._isVSCodePort(port)) {
+      const handler = new VSCodeTerminalHandler();
+      await handler.initialize(port);
+      let result = await handler.executeCommand(outputFile 
+        ? `${command} > /tmp/IDEWEB/${port}/${outputFile} 2>&1`
+        : command);
+      await handler.cleanup();
+      if (outputFile) {
+        const filePath = `/tmp/IDEWEB/${port}/${outputFile}`;
+        if (fs.existsSync(filePath)) {
+          return fs.readFileSync(filePath, 'utf8').trim();
+        }
+      }
+      return result;
+    }
     try {
       const page = await this.browserManager.getPage();
       if (!page) return null;
@@ -380,6 +424,11 @@ class FileBasedWorkspaceDetector {
     } catch (error) {
       return { exists: false, error: error.message };
     }
+  }
+
+  _isVSCodePort(port) {
+    // VSCode ports: 9232-9241
+    return Number(port) >= 9232 && Number(port) <= 9241;
   }
 }
 
