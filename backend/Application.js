@@ -743,6 +743,13 @@ class Application {
     this.app.post('/api/ide/detect-workspace-paths', (req, res) => this.ideController.detectWorkspacePaths(req, res));
     this.app.post('/api/ide/new-chat/:port', (req, res) => this.ideController.clickNewChat(req, res));
 
+    // VSCode-specific routes (protected)
+    this.app.post('/api/ide/start-vscode', (req, res) => this.ideController.startVSCode(req, res));
+    this.app.get('/api/ide/vscode/:port/extensions', (req, res) => this.ideController.getVSCodeExtensions(req, res));
+    this.app.get('/api/ide/vscode/:port/workspace-info', (req, res) => this.ideController.getVSCodeWorkspaceInfo(req, res));
+    this.app.post('/api/ide/vscode/send-message', (req, res) => this.ideController.sendMessageToVSCode(req, res));
+    this.app.get('/api/ide/vscode/:port/status', (req, res) => this.ideController.getVSCodeStatus(req, res));
+
     // Workspace Detection routes (protected)
     this.app.get('/api/ide/workspace-detection', (req, res) => this.ideController.detectAllWorkspaces(req, res));
     this.app.get('/api/ide/workspace-detection/:port', (req, res) => this.ideController.detectWorkspaceForIDE(req, res));

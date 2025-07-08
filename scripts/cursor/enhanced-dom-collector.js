@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
-const BrowserManager = require('../backend/infrastructure/external/BrowserManager');
-const IDEManager = require('../backend/infrastructure/external/IDEManager');
+const BrowserManager = require('../../backend/infrastructure/external/BrowserManager');
+const IDEManager = require('../../backend/infrastructure/external/IDEManager');
 
 class EnhancedDOMCollector {
   constructor() {
@@ -525,13 +525,27 @@ ${html}
     // First ensure chat is active
     await this.activateChat();
     
-    // Focus chat input
-    const inputSelectors = [
-      '.aislash-editor-input[contenteditable="true"]',
-      '[contenteditable="true"]',
-      'textarea[placeholder*="chat"]',
-      '.chat-input'
-    ];
+    // Detect IDE type
+    let ideType = 'cursor';
+    const currentPort = this.browserManager.getCurrentPort();
+    if (currentPort && currentPort >= 9232) {
+      ideType = 'vscode';
+    }
+    
+    // Focus chat input with IDE-specific selectors
+    const inputSelectors = ideType === 'vscode'
+      ? [
+          'textarea[data-testid="chat-input"]',
+          'textarea[placeholder*="Type your task"]',
+          '.chat-input-container textarea',
+          '.chat-editor-container textarea'
+        ]
+      : [
+          '.aislash-editor-input[contenteditable="true"]',
+          '[contenteditable="true"]',
+          'textarea[placeholder*="chat"]',
+          '.chat-input'
+        ];
 
     for (const selector of inputSelectors) {
       try {
@@ -539,12 +553,15 @@ ${html}
         if (element) {
           await element.click();
           await element.focus();
+          console.log(`  ✅ Found chat input with selector: ${selector} (${ideType})`);
           return;
         }
       } catch (e) {
         continue;
       }
     }
+    
+    console.log(`  ⚠️ No chat input found for ${ideType}`);
   }
 
   async triggerChatLoading() {
@@ -553,7 +570,40 @@ ${html}
     // Focus chat input and send a message to trigger loading
     await this.focusChatInput();
     await page.keyboard.type('Test message for loading state');
-    await page.keyboard.press('Enter');
+    
+    // Detect IDE type for send button
+    let ideType = 'cursor';
+    const currentPort = this.browserManager.getCurrentPort();
+    if (currentPort && currentPort >= 9232) {
+      ideType = 'vscode';
+    }
+    
+    if (ideType === 'vscode') {
+      // Try to find and click VSCode send button
+      const sendSelectors = [
+        '.codicon-send',
+        '.action-label[aria-label*="Send"]',
+        '.chat-execute-toolbar .codicon-send',
+        '.monaco-action-bar .codicon-send'
+      ];
+      
+      for (const selector of sendSelectors) {
+        try {
+          const sendButton = await page.$(selector);
+          if (sendButton) {
+            await sendButton.click();
+            console.log(`  ✅ Clicked VSCode send button: ${selector}`);
+            break;
+          }
+        } catch (e) {
+          continue;
+        }
+      }
+    } else {
+      // Use Enter key for Cursor
+      await page.keyboard.press('Enter');
+    }
+    
     await this.wait(2000); // Wait for AI response
   }
 
@@ -777,6 +827,59 @@ ${html}
 
   async wait(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
+  }
+
+  // === VSCode SPECIFIC METHODS ===
+  
+  async sendVSCodeChatMessage(message) {
+    const page = await this.browserManager.getPage();
+    const currentPort = this.browserManager.getCurrentPort();
+    
+    if (!currentPort || currentPort < 9232) {
+      throw new Error('VSCode not detected on current port');
+    }
+    
+    console.log(`📝 Sending VSCode chat message: "${message}"`);
+    
+    // Focus chat input
+    await this.focusChatInput();
+    
+    // Clear existing text and type new message
+    await page.keyboard.down('Control');
+    await page.keyboard.press('KeyA');
+    await page.keyboard.up('Control');
+    await page.keyboard.type(message);
+    
+    // Find and click send button
+    const sendSelectors = [
+      '.codicon-send',
+      '.action-label[aria-label*="Send"]',
+      '.chat-execute-toolbar .codicon-send',
+      '.monaco-action-bar .codicon-send'
+    ];
+    
+    let sent = false;
+    for (const selector of sendSelectors) {
+      try {
+        const sendButton = await page.$(selector);
+        if (sendButton) {
+          await sendButton.click();
+          console.log(`  ✅ Message sent via VSCode send button: ${selector}`);
+          sent = true;
+          break;
+        }
+      } catch (e) {
+        continue;
+      }
+    }
+    
+    if (!sent) {
+      // Fallback: try Enter key
+      await page.keyboard.press('Enter');
+      console.log(`  ⚠️ Used Enter key fallback for VSCode`);
+    }
+    
+    return sent;
   }
 
   async generateEnhancedReport() {
