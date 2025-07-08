@@ -1,8 +1,8 @@
 /**
  * Unit tests for TaskAnalysisService
  */
-const TaskAnalysisService = require('@/domain/services/TaskAnalysisService');
-const ProjectType = require('@/domain/value-objects/ProjectType');
+const TaskAnalysisService = require('../../../domain/services/TaskAnalysisService');
+const ProjectType = require('../../../domain/value-objects/ProjectType');
 
 // Mock dependencies
 jest.mock('@/infrastructure/external/AIService');

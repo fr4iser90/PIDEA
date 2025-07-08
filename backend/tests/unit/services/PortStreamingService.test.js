@@ -4,13 +4,13 @@
  * Tests for the port-based streaming service functionality including
  * port management, frame capture, compression, and streaming.
  */
-const ScreenshotStreamingService = require('../../backend/domain/services/ide-mirror/ScreenshotStreamingService');
-const StreamingPort = require('../../backend/domain/entities/StreamingPort');
-const FrameMetrics = require('../../backend/domain/entities/FrameMetrics');
+const ScreenshotStreamingService = require('@/domain/services/ide-mirror/ScreenshotStreamingService');
+const StreamingPort = require('@/domain/entities/StreamingPort');
+const FrameMetrics = require('@/domain/entities/FrameMetrics');
 
 // Mock dependencies
-jest.mock('../../backend/infrastructure/external/BrowserManager');
-jest.mock('../../backend/infrastructure/external/WebSocketManager');
+jest.mock('@/infrastructure/external/BrowserManager');
+jest.mock('@/infrastructure/external/WebSocketManager');
 
 describe('ScreenshotStreamingService - Port-Based', () => {
   let service;
