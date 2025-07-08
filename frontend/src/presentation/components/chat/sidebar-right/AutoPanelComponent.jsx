@@ -115,22 +115,76 @@ function AutoPanelComponent({ eventBus }) {
   };
   
   const handleAutoTest = async () => { 
-    setFeedback('Starting Auto Test...');
+    setFeedback('Starting Auto Test Fix...');
     try {
       const projectId = await api.getCurrentProjectId();
-      const response = await api.startAutoMode(projectId, {
-        mode: 'testing'
-      });
+      console.log('[AutoPanelComponent] Starting auto test fix for project:', projectId);
+      
+      // Use the api object for the request
+      console.log('[AutoPanelComponent] Making API call...');
+      try {
+        // Import the apiCall function directly
+        const { apiCall } = await import('@/infrastructure/repositories/APIChatRepository.jsx');
+        
+        const response = await apiCall(`/api/projects/${projectId}/auto/tests/fix`, {
+          method: 'POST',
+          body: JSON.stringify({
+            options: {
+              coverageThreshold: 90,
+              autoCommit: true,
+              autoBranch: true,
+              maxFixAttempts: 3
+            }
+          })
+        });
+        
+        console.log('[AutoPanelComponent] Auto test fix response:', response);
+      } catch (error) {
+        console.error('[AutoPanelComponent] API call failed:', error);
+        setFeedback('Error making API call: ' + error.message);
+        return;
+      }
+
       if (response.success) {
         setAutoStatus('testing');
-        setFeedback('Auto Test started successfully!');
-        if (eventBus) eventBus.emit('vibecoder-test-started', response.data);
+        setFeedback('Auto Test Fix started successfully! Session ID: ' + response.sessionId);
+        if (eventBus) eventBus.emit('auto-test-fix-started', response);
+        
+        // Start polling for status
+        pollAutoTestStatus(response.sessionId, projectId);
       } else {
-        setFeedback('Failed to start Auto Test: ' + response.error);
+        setFeedback('Failed to start Auto Test Fix: ' + response.error);
       }
     } catch (err) {
-      setFeedback('Error starting Auto Test: ' + (err.message || err));
+      setFeedback('Error starting Auto Test Fix: ' + (err.message || err));
     }
+  };
+
+  const pollAutoTestStatus = async (sessionId, projectId) => {
+    const pollInterval = setInterval(async () => {
+      try {
+        const response = await api.apiCall(`/api/projects/${projectId}/auto/tests/status/${sessionId}`);
+
+        if (response.success) {
+          const status = response.status;
+          setFeedback(`Auto Test Fix: ${status.status} - ${status.progress}%`);
+          
+          if (status.status === 'completed') {
+            clearInterval(pollInterval);
+            setAutoStatus('stopped');
+            setFeedback('✅ Auto Test Fix completed successfully!');
+            if (eventBus) eventBus.emit('auto-test-fix-completed', status.result);
+          } else if (status.status === 'failed') {
+            clearInterval(pollInterval);
+            setAutoStatus('stopped');
+            setFeedback('❌ Auto Test Fix failed: ' + status.error);
+          }
+        }
+      } catch (error) {
+        console.error('Failed to poll auto test status:', error);
+        clearInterval(pollInterval);
+      }
+    }, 5000); // Poll every 5 seconds
   };
   
   const handleAutoStop = async () => { 
@@ -168,7 +222,7 @@ function AutoPanelComponent({ eventBus }) {
           <button className="btn-vibecoder" onClick={handleVibeCoderStart}>VibeCoder Mode Start</button>
           <button className="btn-vibecoder" onClick={handleAutoAnalyze}>Auto Analyze</button>
           <button className="btn-vibecoder" onClick={handleAutoRefactor}>Auto Refactor</button>
-          <button className="btn-vibecoder" onClick={handleAutoTest}>Auto Test</button>
+          <button className="btn-vibecoder" onClick={handleAutoTest}>Auto Test Fix</button>
           <button className="btn-danger" onClick={handleAutoStop}>Stop</button>
         </div>
       </div>

@@ -1,6 +1,27 @@
 # AI Development Assistant Framework
 ## Preventing "New Creation" Instead of "Existing Modification"
 
+POST /api/projects/:projectId/auto/tests/analyze
+POST /api/projects/:projectId/auto/tests/fix
+POST /api/projects/:projectId/auto/tests/execute
+GET /api/projects/:projectId/auto/tests/status
+
+sequenceDiagram
+    participant User
+    participant Frontend
+    participant Backend
+    participant AI_Agent
+
+    User->>Frontend: Clicks "Auto Test" button
+    Frontend->>Backend: POST /api/auto-test-fix
+    Backend->>Backend: Analyze project, create Task
+    Backend->>AI_Agent: POST Task to AI agent
+    AI_Agent-->>Backend: (Async) Returns result
+    Backend->>Frontend: (Optional) Notify/poll for completion
+    Frontend->>Backend: GET /api/tasks/:id/result
+    Backend-->>Frontend: Returns result/report
+    Frontend-->>User: Shows result
+    
 ### 🎯 **Core Problem**
 AI assistants often "forget" context and create new components/files instead of modifying existing ones, leading to:
 - Duplicate functionality

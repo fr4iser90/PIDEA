@@ -1,567 +1,454 @@
-const fs = require('fs-extra');
+/**
+ * TestFixer - Infrastructure component for fixing failing tests
+ * Applies AI-powered fixes to test files
+ */
+const fs = require('fs').promises;
 const path = require('path');
-const logger = require('@/infrastructure/logging/logger');
 
 class TestFixer {
   constructor() {
-    this.fixTemplates = {
-      simple_fix: {
-        syntax: this.fixSyntaxError.bind(this),
-        import: this.fixImportError.bind(this),
-        reference: this.fixReferenceError.bind(this),
-        type: this.fixTypeError.bind(this),
-        assertion: this.fixAssertionError.bind(this)
-      },
-      mock_fix: {
-        external_dependency: this.fixExternalDependency.bind(this),
-        network_call: this.fixNetworkCall.bind(this),
-        file_system: this.fixFileSystem.bind(this),
-        database: this.fixDatabase.bind(this)
-      },
-      refactor: this.refactorTest.bind(this),
-      migrate: this.migrateLegacyTest.bind(this),
-      rewrite: this.rewriteTest.bind(this)
+    this.logger = console;
+    this.fixStrategies = {
+      timeout: this.fixTimeoutIssue.bind(this),
+      async: this.fixAsyncIssue.bind(this),
+      mock: this.fixMockIssue.bind(this),
+      import: this.fixImportIssue.bind(this),
+      syntax: this.fixSyntaxIssue.bind(this),
+      type: this.fixTypeIssue.bind(this),
+      undefined: this.fixUndefinedIssue.bind(this),
+      null: this.fixNullIssue.bind(this),
+      general: this.fixGeneralIssue.bind(this)
     };
   }
 
   /**
-   * Apply simple fix to a test
+   * Initialize the fixer
    */
-  async applySimpleFix(testFile, testName, error) {
-    logger.info('Applying simple fix', { testFile, testName });
-    
+  async initialize() {
+    this.logger.info('[TestFixer] Initialized');
+  }
+
+  /**
+   * Fix a failing test
+   * @param {Object} testData - Test data object
+   * @param {Object} options - Fix options
+   * @returns {Promise<Object>} Fix result
+   */
+  async fixTest(testData, options = {}) {
     try {
-      const content = await fs.readFile(testFile, 'utf8');
-      const errorType = this.classifyError(error);
-      const fixFunction = this.fixTemplates.simple_fix[errorType];
+      this.logger.info(`[TestFixer] Fixing test: ${testData.testName || testData.filePath}`);
       
-      if (!fixFunction) {
-        throw new Error(`No simple fix available for error type: ${errorType}`);
+      const startTime = Date.now();
+      
+      // Read test file
+      const content = await fs.readFile(testData.filePath, 'utf8');
+      
+      // Determine fix strategy based on failure type
+      const failureType = testData.metadata?.failureType || 'general';
+      const fixStrategy = this.fixStrategies[failureType];
+      
+      if (!fixStrategy) {
+        throw new Error(`Unknown failure type: ${failureType}`);
       }
       
-      const fixedContent = await fixFunction(content, testName, error);
-      await this.backupAndWrite(testFile, fixedContent);
+      // Apply fix
+      const fixedContent = await fixStrategy(content, testData, options);
       
-      return {
+      // Write fixed content back to file
+      await fs.writeFile(testData.filePath, fixedContent, 'utf8');
+      
+      const duration = Date.now() - startTime;
+      
+      const result = {
         success: true,
-        fixType: 'simple_fix',
-        errorType,
-        changes: this.detectChanges(content, fixedContent)
+        testId: testData.id,
+        filePath: testData.filePath,
+        failureType: failureType,
+        originalContent: content,
+        fixedContent: fixedContent,
+        changes: this.diffContent(content, fixedContent),
+        duration: duration,
+        timestamp: new Date().toISOString()
       };
       
+      this.logger.info(`[TestFixer] Successfully fixed test in ${duration}ms`);
+      return result;
+      
     } catch (error) {
-      logger.error('Simple fix failed', { testFile, testName, error: error.message });
+      this.logger.error(`[TestFixer] Failed to fix test: ${error.message}`);
+      
       return {
         success: false,
+        testId: testData.id,
+        filePath: testData.filePath,
         error: error.message,
-        fixType: 'simple_fix'
+        timestamp: new Date().toISOString()
       };
     }
   }
 
   /**
-   * Apply mock fix to a test
+   * Fix timeout issues
+   * @param {string} content - Test file content
+   * @param {Object} testData - Test data
+   * @param {Object} options - Fix options
+   * @returns {Promise<string>} Fixed content
    */
-  async applyMockFix(testFile, testName, error) {
-    logger.info('Applying mock fix', { testFile, testName });
-    
-    try {
-      const content = await fs.readFile(testFile, 'utf8');
-      const patterns = this.detectMockPatterns(content);
-      let fixedContent = content;
-      
-      for (const pattern of patterns) {
-        const fixFunction = this.fixTemplates.mock_fix[pattern];
-        if (fixFunction) {
-          fixedContent = await fixFunction(fixedContent, testName, error);
-        }
-      }
-      
-      await this.backupAndWrite(testFile, fixedContent);
-      
-      return {
-        success: true,
-        fixType: 'mock_fix',
-        patterns,
-        changes: this.detectChanges(content, fixedContent)
-      };
-      
-    } catch (error) {
-      logger.error('Mock fix failed', { testFile, testName, error: error.message });
-      return {
-        success: false,
-        error: error.message,
-        fixType: 'mock_fix'
-      };
-    }
-  }
-
-  /**
-   * Apply refactor fix to a test
-   */
-  async applyRefactorFix(testFile, testName, error) {
-    logger.info('Applying refactor fix', { testFile, testName });
-    
-    try {
-      const content = await fs.readFile(testFile, 'utf8');
-      const refactoredContent = await this.fixTemplates.refactor(content, testName, error);
-      await this.backupAndWrite(testFile, refactoredContent);
-      
-      return {
-        success: true,
-        fixType: 'refactor',
-        changes: this.detectChanges(content, refactoredContent)
-      };
-      
-    } catch (error) {
-      logger.error('Refactor fix failed', { testFile, testName, error: error.message });
-      return {
-        success: false,
-        error: error.message,
-        fixType: 'refactor'
-      };
-    }
-  }
-
-  /**
-   * Apply migration fix to a test
-   */
-  async applyMigrationFix(testFile, testName, error) {
-    logger.info('Applying migration fix', { testFile, testName });
-    
-    try {
-      const content = await fs.readFile(testFile, 'utf8');
-      const migratedContent = await this.fixTemplates.migrate(content, testName, error);
-      await this.backupAndWrite(testFile, migratedContent);
-      
-      return {
-        success: true,
-        fixType: 'migrate',
-        changes: this.detectChanges(content, migratedContent)
-      };
-      
-    } catch (error) {
-      logger.error('Migration fix failed', { testFile, testName, error: error.message });
-      return {
-        success: false,
-        error: error.message,
-        fixType: 'migrate'
-      };
-    }
-  }
-
-  /**
-   * Apply rewrite fix to a test
-   */
-  async applyRewriteFix(testFile, testName, error) {
-    logger.info('Applying rewrite fix', { testFile, testName });
-    
-    try {
-      const content = await fs.readFile(testFile, 'utf8');
-      const rewrittenContent = await this.fixTemplates.rewrite(content, testName, error);
-      await this.backupAndWrite(testFile, rewrittenContent);
-      
-      return {
-        success: true,
-        fixType: 'rewrite',
-        changes: this.detectChanges(content, rewrittenContent)
-      };
-      
-    } catch (error) {
-      logger.error('Rewrite fix failed', { testFile, testName, error: error.message });
-      return {
-        success: false,
-        error: error.message,
-        fixType: 'rewrite'
-      };
-    }
-  }
-
-  // Simple fix implementations
-  async fixSyntaxError(content, testName, error) {
-    // Fix common syntax errors
+  async fixTimeoutIssue(content, testData, options) {
     let fixedContent = content;
     
-    // Fix missing semicolons
-    fixedContent = fixedContent.replace(/([^;])\n/g, '$1;\n');
+    // Add timeout to test functions
+    const timeoutPatterns = [
+      /(it\s*\(\s*['"`][^'"`]+['"`]\s*,\s*)(async\s+)?function\s*\(/g,
+      /(test\s*\(\s*['"`][^'"`]+['"`]\s*,\s*)(async\s+)?function\s*\(/g,
+      /(describe\s*\(\s*['"`][^'"`]+['"`]\s*,\s*)(async\s+)?function\s*\(/g
+    ];
     
-    // Fix missing brackets
-    const openBrackets = (fixedContent.match(/\{/g) || []).length;
-    const closeBrackets = (fixedContent.match(/\}/g) || []).length;
+    for (const pattern of timeoutPatterns) {
+      fixedContent = fixedContent.replace(pattern, (match, prefix, asyncKeyword) => {
+        const timeout = options.timeout || 10000;
+        return `${prefix}${asyncKeyword || ''}function(done) {\n  jest.setTimeout(${timeout});\n  `;
+      });
+    }
     
-    if (openBrackets > closeBrackets) {
-      fixedContent += '\n'.repeat(openBrackets - closeBrackets) + '}';
+    // Add timeout to arrow functions
+    const arrowTimeoutPatterns = [
+      /(it\s*\(\s*['"`][^'"`]+['"`]\s*,\s*)(async\s+)?\(/g,
+      /(test\s*\(\s*['"`][^'"`]+['"`]\s*,\s*)(async\s+)?\(/g,
+      /(describe\s*\(\s*['"`][^'"`]+['"`]\s*,\s*)(async\s+)?\(/g
+    ];
+    
+    for (const pattern of arrowTimeoutPatterns) {
+      fixedContent = fixedContent.replace(pattern, (match, prefix, asyncKeyword) => {
+        const timeout = options.timeout || 10000;
+        return `${prefix}${asyncKeyword || ''}() => {\n  jest.setTimeout(${timeout});\n  `;
+      });
     }
     
     return fixedContent;
   }
 
-  async fixImportError(content, testName, error) {
-    // Fix import/require errors
+  /**
+   * Fix async issues
+   * @param {string} content - Test file content
+   * @param {Object} testData - Test data
+   * @param {Object} options - Fix options
+   * @returns {Promise<string>} Fixed content
+   */
+  async fixAsyncIssue(content, testData, options) {
     let fixedContent = content;
     
-    // Convert require to import if needed
-    fixedContent = fixedContent.replace(
-      /const\s+(\w+)\s*=\s*require\(['"]([^'"]+)['"]\)/g,
-      "import $1 from '$2'"
-    );
+    // Add async/await to test functions
+    const asyncPatterns = [
+      /(it\s*\(\s*['"`][^'"`]+['"`]\s*,\s*)function\s*\(/g,
+      /(test\s*\(\s*['"`][^'"`]+['"`]\s*,\s*)function\s*\(/g
+    ];
     
-    // Fix relative paths
-    fixedContent = fixedContent.replace(
-      /from\s+['"]\.\.\/\.\.\/\.\.\//g,
-      "from '../../../"
-    );
+    for (const pattern of asyncPatterns) {
+      fixedContent = fixedContent.replace(pattern, '$1async function(');
+    }
+    
+    // Add await to promise calls
+    const promisePatterns = [
+      /(\s+)(\w+\.\w+\([^)]*\)\.then\()/g,
+      /(\s+)(\w+\.\w+\([^)]*\)\.catch\()/g
+    ];
+    
+    for (const pattern of promisePatterns) {
+      fixedContent = fixedContent.replace(pattern, '$1await $2');
+    }
     
     return fixedContent;
   }
 
-  async fixReferenceError(content, testName, error) {
-    // Fix reference errors
+  /**
+   * Fix mock issues
+   * @param {string} content - Test file content
+   * @param {Object} testData - Test data
+   * @param {Object} options - Fix options
+   * @returns {Promise<string>} Fixed content
+   */
+  async fixMockIssue(content, testData, options) {
     let fixedContent = content;
     
-    // Add missing variable declarations
-    const missingVars = this.extractMissingVariables(error);
+    // Add jest.mock() calls at the top
+    const mockImports = this.extractMockImports(content);
     
-    for (const varName of missingVars) {
-      if (!fixedContent.includes(`const ${varName}`) && !fixedContent.includes(`let ${varName}`)) {
-        fixedContent = `const ${varName} = {};\n` + fixedContent;
+    if (mockImports.length > 0) {
+      const mockCalls = mockImports.map(importPath => 
+        `jest.mock('${importPath}');`
+      ).join('\n');
+      
+      // Insert mock calls after imports
+      const importEndIndex = this.findImportEndIndex(content);
+      if (importEndIndex > 0) {
+        fixedContent = content.slice(0, importEndIndex) + 
+                      '\n\n' + mockCalls + '\n' + 
+                      content.slice(importEndIndex);
+      } else {
+        fixedContent = mockCalls + '\n\n' + content;
       }
     }
     
     return fixedContent;
   }
 
-  async fixTypeError(content, testName, error) {
-    // Fix type errors
+  /**
+   * Fix import issues
+   * @param {string} content - Test file content
+   * @param {Object} testData - Test data
+   * @param {Object} options - Fix options
+   * @returns {Promise<string>} Fixed content
+   */
+  async fixImportIssue(content, testData, options) {
+    let fixedContent = content;
+    
+    // Fix common import issues
+    const importFixes = [
+      // Fix relative imports
+      [/from\s+['"`]\.\.\/\.\.\/\.\.\/src\/([^'"`]+)['"`]/g, "from '@/src/$1'"],
+      [/from\s+['"`]\.\.\/\.\.\/src\/([^'"`]+)['"`]/g, "from '@/src/$1'"],
+      [/from\s+['"`]\.\.\/src\/([^'"`]+)['"`]/g, "from '@/src/$1'"],
+      
+      // Fix missing extensions
+      [/from\s+['"`]([^'"`]+)['"`](?!\s*;)/g, "from '$1'"],
+      
+      // Fix default imports
+      [/import\s+(\w+)\s+from\s+['"`]([^'"`]+)['"`]/g, "import $1 from '$2'"]
+    ];
+    
+    for (const [pattern, replacement] of importFixes) {
+      fixedContent = fixedContent.replace(pattern, replacement);
+    }
+    
+    return fixedContent;
+  }
+
+  /**
+   * Fix syntax issues
+   * @param {string} content - Test file content
+   * @param {Object} testData - Test data
+   * @param {Object} options - Fix options
+   * @returns {Promise<string>} Fixed content
+   */
+  async fixSyntaxIssue(content, testData, options) {
+    let fixedContent = content;
+    
+    // Fix common syntax issues
+    const syntaxFixes = [
+      // Fix missing semicolons
+      [/(\w+)\s*=\s*([^;]+)(?!\s*;)/g, '$1 = $2;'],
+      
+      // Fix missing parentheses
+      [/(\w+)\s*{\s*([^}]+)\s*}/g, '$1() {\n  $2\n}'],
+      
+      // Fix missing quotes
+      [/(\w+):\s*([^,}]+)(?=[,}])/g, '$1: "$2"']
+    ];
+    
+    for (const [pattern, replacement] of syntaxFixes) {
+      fixedContent = fixedContent.replace(pattern, replacement);
+    }
+    
+    return fixedContent;
+  }
+
+  /**
+   * Fix type issues
+   * @param {string} content - Test file content
+   * @param {Object} testData - Test data
+   * @param {Object} options - Fix options
+   * @returns {Promise<string>} Fixed content
+   */
+  async fixTypeIssue(content, testData, options) {
+    let fixedContent = content;
+    
+    // Add type annotations for TypeScript
+    const typeFixes = [
+      // Add function parameter types
+      [/function\s+(\w+)\s*\(([^)]+)\)/g, 'function $1($2: any)'],
+      
+      // Add variable types
+      [/(const|let|var)\s+(\w+)\s*=\s*([^;]+);/g, '$1 $2: any = $3;'],
+      
+      // Add return types
+      [/function\s+(\w+)\s*\([^)]*\)\s*{/g, 'function $1(): any {']
+    ];
+    
+    for (const [pattern, replacement] of typeFixes) {
+      fixedContent = fixedContent.replace(pattern, replacement);
+    }
+    
+    return fixedContent;
+  }
+
+  /**
+   * Fix undefined issues
+   * @param {string} content - Test file content
+   * @param {Object} testData - Test data
+   * @param {Object} options - Fix options
+   * @returns {Promise<string>} Fixed content
+   */
+  async fixUndefinedIssue(content, testData, options) {
+    let fixedContent = content;
+    
+    // Add null checks and default values
+    const undefinedFixes = [
+      // Add optional chaining
+      [/(\w+)\.(\w+)/g, '$1?.$2'],
+      
+      // Add default values
+      [/(\w+)\s*=\s*([^;]+);/g, '$1 = $2 || null;'],
+      
+      // Add existence checks
+      [/(\w+)\s*\.\s*(\w+)/g, '$1 && $1.$2']
+    ];
+    
+    for (const [pattern, replacement] of undefinedFixes) {
+      fixedContent = fixedContent.replace(pattern, replacement);
+    }
+    
+    return fixedContent;
+  }
+
+  /**
+   * Fix null issues
+   * @param {string} content - Test file content
+   * @param {Object} testData - Test data
+   * @param {Object} options - Fix options
+   * @returns {Promise<string>} Fixed content
+   */
+  async fixNullIssue(content, testData, options) {
     let fixedContent = content;
     
     // Add null checks
-    fixedContent = fixedContent.replace(
-      /(\w+)\.(\w+)/g,
-      '$1 && $1.$2'
-    );
+    const nullFixes = [
+      // Add null checks before property access
+      [/(\w+)\.(\w+)/g, '$1 && $1.$2'],
+      
+      // Add default values for null
+      [/(\w+)\s*=\s*([^;]+);/g, '$1 = $2 || {};'],
+      
+      // Add null assertions
+      [/(\w+)\s*\.\s*(\w+)/g, '$1!.$2']
+    ];
     
-    // Add type checking
-    if (error.includes('is not a function')) {
-      const funcName = this.extractFunctionName(error);
-      fixedContent = fixedContent.replace(
-        new RegExp(`(${funcName})\\(`, 'g'),
-        `typeof $1 === 'function' && $1(`
-      );
+    for (const [pattern, replacement] of nullFixes) {
+      fixedContent = fixedContent.replace(pattern, replacement);
     }
     
     return fixedContent;
   }
 
-  async fixAssertionError(content, testName, error) {
-    // Fix assertion errors
+  /**
+   * Fix general issues
+   * @param {string} content - Test file content
+   * @param {Object} testData - Test data
+   * @param {Object} options - Fix options
+   * @returns {Promise<string>} Fixed content
+   */
+  async fixGeneralIssue(content, testData, options) {
     let fixedContent = content;
     
-    // Fix common assertion patterns
-    fixedContent = fixedContent.replace(
-      /expect\((\w+)\)\.toBe\((\w+)\)/g,
-      'expect($1).toEqual($2)'
-    );
+    // Apply general fixes
+    const generalFixes = [
+      // Fix common test patterns
+      [/expect\(([^)]+)\)\.toBe\(([^)]+)\)/g, 'expect($1).toBe($2)'],
+      
+      // Add proper test structure
+      [/describe\(([^)]+),\s*\(\)\s*=>\s*{/g, 'describe($1, () => {'],
+      
+      // Fix assertion syntax
+      [/assert\(([^)]+)\)/g, 'expect($1).toBeTruthy()']
+    ];
     
-    // Add proper async handling
-    if (content.includes('async') || content.includes('await')) {
-      fixedContent = fixedContent.replace(
-        /it\(['"]([^'"]+)['"],\s*async\s*\(\)\s*=>\s*\{/g,
-        "it('$1', async () => {"
-      );
+    for (const [pattern, replacement] of generalFixes) {
+      fixedContent = fixedContent.replace(pattern, replacement);
     }
     
     return fixedContent;
   }
 
-  // Mock fix implementations
-  async fixExternalDependency(content, testName, error) {
-    let fixedContent = content;
-    
-    // Add Jest mock for external dependencies
-    const imports = this.extractImports(content);
-    
-    for (const importName of imports) {
-      if (!content.includes(`jest.mock('${importName}')`)) {
-        const mockCode = `\njest.mock('${importName}', () => ({
-  __esModule: true,
-  default: jest.fn(),
-  ...jest.requireActual('${importName}')
-}));\n`;
-        fixedContent = mockCode + fixedContent;
-      }
-    }
-    
-    return fixedContent;
-  }
-
-  async fixNetworkCall(content, testName, error) {
-    let fixedContent = content;
-    
-    // Mock fetch calls
-    if (content.includes('fetch(')) {
-      const mockFetch = `
-global.fetch = jest.fn(() =>
-  Promise.resolve({
-    ok: true,
-    json: () => Promise.resolve({}),
-    text: () => Promise.resolve('')
-  })
-);\n`;
-      fixedContent = mockFetch + fixedContent;
-    }
-    
-    // Mock axios calls
-    if (content.includes('axios')) {
-      const mockAxios = `
-jest.mock('axios', () => ({
-  get: jest.fn(() => Promise.resolve({ data: {} })),
-  post: jest.fn(() => Promise.resolve({ data: {} })),
-  put: jest.fn(() => Promise.resolve({ data: {} })),
-  delete: jest.fn(() => Promise.resolve({ data: {} }))
-}));\n`;
-      fixedContent = mockAxios + fixedContent;
-    }
-    
-    return fixedContent;
-  }
-
-  async fixFileSystem(content, testName, error) {
-    let fixedContent = content;
-    
-    // Mock fs operations
-    if (content.includes('fs.')) {
-      const mockFs = `
-jest.mock('fs', () => ({
-  readFile: jest.fn((path, callback) => callback(null, 'mock content')),
-  writeFile: jest.fn((path, data, callback) => callback(null)),
-  existsSync: jest.fn(() => true),
-  mkdirSync: jest.fn(),
-  readdirSync: jest.fn(() => [])
-}));\n`;
-      fixedContent = mockFs + fixedContent;
-    }
-    
-    return fixedContent;
-  }
-
-  async fixDatabase(content, testName, error) {
-    let fixedContent = content;
-    
-    // Mock database operations
-    if (content.includes('database') || content.includes('db.')) {
-      const mockDb = `
-const mockDb = {
-  query: jest.fn(() => Promise.resolve([])),
-  execute: jest.fn(() => Promise.resolve()),
-  connect: jest.fn(() => Promise.resolve()),
-  disconnect: jest.fn(() => Promise.resolve())
-};
-
-jest.mock('../database', () => ({
-  getConnection: jest.fn(() => mockDb)
-}));\n`;
-      fixedContent = mockDb + fixedContent;
-    }
-    
-    return fixedContent;
-  }
-
-  // Refactor implementation
-  async refactorTest(content, testName, error) {
-    let refactoredContent = content;
-    
-    // Extract test setup
-    const setupCode = this.extractTestSetup(content);
-    if (setupCode) {
-      refactoredContent = this.createTestHelper(setupCode) + refactoredContent;
-    }
-    
-    // Split large test suites
-    const describeBlocks = this.countDescribeBlocks(content);
-    if (describeBlocks > 3) {
-      refactoredContent = this.splitTestSuite(refactoredContent);
-    }
-    
-    // Simplify complex assertions
-    refactoredContent = this.simplifyAssertions(refactoredContent);
-    
-    return refactoredContent;
-  }
-
-  // Migration implementation
-  async migrateLegacyTest(content, testName, error) {
-    let migratedContent = content;
-    
-    // Update Jest syntax
-    migratedContent = migratedContent.replace(/describe\(/g, 'describe(');
-    migratedContent = migratedContent.replace(/it\(/g, 'test(');
-    migratedContent = migratedContent.replace(/beforeEach\(/g, 'beforeEach(');
-    migratedContent = migratedContent.replace(/afterEach\(/g, 'afterEach(');
-    
-    // Update assertion syntax
-    migratedContent = migratedContent.replace(/\.toBe\(/g, '.toEqual(');
-    migratedContent = migratedContent.replace(/\.toContain\(/g, '.toContain(');
-    
-    // Add modern Jest setup
-    const modernSetup = `
-import { jest } from '@jest/globals';
-
-beforeEach(() => {
-  jest.clearAllMocks();
-});
-
-afterEach(() => {
-  jest.resetAllMocks();
-});\n`;
-    
-    migratedContent = modernSetup + migratedContent;
-    
-    return migratedContent;
-  }
-
-  // Rewrite implementation
-  async rewriteTest(content, testName, error) {
-    // Create a completely new test structure
-    const newTestContent = `
-import { jest } from '@jest/globals';
-
-describe('${testName}', () => {
-  beforeEach(() => {
-    jest.clearAllMocks();
-  });
-
-  afterEach(() => {
-    jest.resetAllMocks();
-  });
-
-  test('should work correctly', () => {
-    // TODO: Implement proper test logic
-    expect(true).toBe(true);
-  });
-});
-`;
-    
-    return newTestContent;
-  }
-
-  // Utility methods
-  classifyError(error) {
-    if (error.includes('SyntaxError')) return 'syntax';
-    if (error.includes('Cannot find module')) return 'import';
-    if (error.includes('ReferenceError')) return 'reference';
-    if (error.includes('TypeError')) return 'type';
-    if (error.includes('expect(received)')) return 'assertion';
-    return 'unknown';
-  }
-
-  detectMockPatterns(content) {
-    const patterns = [];
-    
-    if (content.includes('require(') || content.includes('import ')) {
-      patterns.push('external_dependency');
-    }
-    if (content.includes('fetch(') || content.includes('axios')) {
-      patterns.push('network_call');
-    }
-    if (content.includes('fs.')) {
-      patterns.push('file_system');
-    }
-    if (content.includes('database') || content.includes('db.')) {
-      patterns.push('database');
-    }
-    
-    return patterns;
-  }
-
-  extractMissingVariables(error) {
-    const matches = error.match(/(\w+) is not defined/g);
-    return matches ? matches.map(m => m.replace(' is not defined', '')) : [];
-  }
-
-  extractFunctionName(error) {
-    const match = error.match(/(\w+) is not a function/);
-    return match ? match[1] : '';
-  }
-
-  extractImports(content) {
+  /**
+   * Extract mock imports from content
+   * @param {string} content - Test file content
+   * @returns {Array} Array of import paths
+   */
+  extractMockImports(content) {
     const imports = [];
-    const importRegex = /import\s+.*\s+from\s+['"]([^'"]+)['"]/g;
-    const requireRegex = /require\(['"]([^'"]+)['"]\)/g;
+    const importPattern = /import\s+.*\s+from\s+['"`]([^'"`]+)['"`]/g;
     
     let match;
-    while ((match = importRegex.exec(content)) !== null) {
-      imports.push(match[1]);
-    }
-    while ((match = requireRegex.exec(content)) !== null) {
+    while ((match = importPattern.exec(content)) !== null) {
       imports.push(match[1]);
     }
     
     return imports;
   }
 
-  extractTestSetup(content) {
-    const setupMatch = content.match(/beforeEach\(\(\)\s*=>\s*\{([^}]+)\}/);
-    return setupMatch ? setupMatch[1] : null;
-  }
-
-  countDescribeBlocks(content) {
-    return (content.match(/describe\(/g) || []).length;
-  }
-
-  createTestHelper(setupCode) {
-    return `
-const setupTest = () => {
-  ${setupCode}
-};
-
-beforeEach(setupTest);
-`;
-  }
-
-  splitTestSuite(content) {
-    // Simple split by describe blocks
-    const describeBlocks = content.split(/describe\(/);
-    if (describeBlocks.length <= 1) return content;
+  /**
+   * Find the end index of imports section
+   * @param {string} content - Test file content
+   * @returns {number} End index
+   */
+  findImportEndIndex(content) {
+    const lines = content.split('\n');
     
-    return describeBlocks[0] + describeBlocks.slice(1).map(block => 
-      'describe(' + block
-    ).join('\n\n');
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i].trim();
+      
+      // Stop at first non-import line
+      if (line && !line.startsWith('import') && !line.startsWith('const') && !line.startsWith('let') && !line.startsWith('var')) {
+        return content.indexOf(lines[i]);
+      }
+    }
+    
+    return -1;
   }
 
-  simplifyAssertions(content) {
-    return content.replace(
-      /expect\(([^)]+)\)\.toBe\(([^)]+)\)\.toBe\(([^)]+)\)/g,
-      'expect($1).toEqual($2)'
-    );
-  }
-
-  detectChanges(originalContent, newContent) {
+  /**
+   * Generate diff between original and fixed content
+   * @param {string} original - Original content
+   * @param {string} fixed - Fixed content
+   * @returns {Object} Diff object
+   */
+  diffContent(original, fixed) {
+    const originalLines = original.split('\n');
+    const fixedLines = fixed.split('\n');
+    
     const changes = {
-      linesAdded: 0,
-      linesRemoved: 0,
-      charactersChanged: 0
+      added: [],
+      removed: [],
+      modified: []
     };
     
-    const originalLines = originalContent.split('\n');
-    const newLines = newContent.split('\n');
-    
-    changes.linesAdded = Math.max(0, newLines.length - originalLines.length);
-    changes.linesRemoved = Math.max(0, originalLines.length - newLines.length);
-    changes.charactersChanged = Math.abs(newContent.length - originalContent.length);
+    // Simple line-by-line comparison
+    for (let i = 0; i < Math.max(originalLines.length, fixedLines.length); i++) {
+      const originalLine = originalLines[i] || '';
+      const fixedLine = fixedLines[i] || '';
+      
+      if (originalLine !== fixedLine) {
+        if (i < originalLines.length && i < fixedLines.length) {
+          changes.modified.push({
+            line: i + 1,
+            original: originalLine,
+            fixed: fixedLine
+          });
+        } else if (i >= originalLines.length) {
+          changes.added.push({
+            line: i + 1,
+            content: fixedLine
+          });
+        } else {
+          changes.removed.push({
+            line: i + 1,
+            content: originalLine
+          });
+        }
+      }
+    }
     
     return changes;
-  }
-
-  async backupAndWrite(filePath, content) {
-    const backupPath = filePath + '.backup.' + Date.now();
-    await fs.copy(filePath, backupPath);
-    await fs.writeFile(filePath, content, 'utf8');
-    
-    logger.debug('File updated with backup', {
-      original: filePath,
-      backup: backupPath
-    });
   }
 }
 

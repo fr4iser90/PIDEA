@@ -29,6 +29,9 @@ const TaskSession = require('./domain/entities/TaskSession');
 const TodoTask = require('./domain/entities/TodoTask');
 const TaskSessionRepository = require('./infrastructure/database/TaskSessionRepository');
 
+// Auto Test Fix System
+const AutoTestFixSystem = require('./domain/services/auto-test/AutoTestFixSystem');
+
 // Application
 const SendMessageCommand = require('./application/commands/SendMessageCommand');
 const GetChatHistoryQuery = require('./application/queries/GetChatHistoryQuery');
@@ -324,6 +327,18 @@ class Application {
       this.webSocketManager
     );
     await this.autoFinishSystem.initialize();
+
+    // Initialize Auto Test Fix System
+    this.autoTestFixSystem = new AutoTestFixSystem({
+      cursorIDE: this.cursorIDEService,
+      browserManager: this.browserManager,
+      ideManager: this.ideManager,
+      webSocketManager: this.webSocketManager,
+      taskRepository: this.taskRepository,
+      workflowOrchestrationService: this.workflowOrchestrationService,
+      logger: this.logger
+    });
+    await this.autoTestFixSystem.initialize();
 
     this.logger.info('[Application] Domain services initialized with DI');
   }
@@ -626,6 +641,20 @@ class Application {
       logger: this.logger
     });
 
+    this.autoTestFixController = new (require('./presentation/api/controllers/AutoTestFixController'))({
+      autoTestFixSystem: this.autoTestFixSystem,
+      commandBus: this.commandBus,
+      taskService: this.taskService,
+      taskRepository: this.taskRepository,
+      aiService: this.aiService,
+      projectAnalyzer: this.projectAnalyzer,
+      cursorIDEService: this.cursorIDEService,
+      ideManager: this.ideManager,
+      webSocketManager: this.webSocketManager,
+      eventBus: this.eventBus,
+      logger: this.logger
+    });
+
     this.documentationController = new DocumentationController(
       this.taskService,
       this.cursorIDEService,
@@ -923,6 +952,24 @@ class Application {
     this.app.get('/api/projects/:projectId/auto-finish/stats', (req, res) => this.autoFinishController.getProjectStats(req, res));
     this.app.get('/api/projects/:projectId/auto-finish/patterns', (req, res) => this.autoFinishController.getSupportedPatterns(req, res));
     this.app.get('/api/projects/:projectId/auto-finish/health', (req, res) => this.autoFinishController.healthCheck(req, res));
+
+    // Auto Test Fix routes (protected) - PROJECT-BASED
+    this.app.use('/api/projects/:projectId/auto/tests', this.authMiddleware.authenticate());
+    this.app.post('/api/projects/:projectId/auto/tests/analyze', (req, res) => this.autoTestFixController.analyzeProjectTests(req, res));
+    this.app.post('/api/projects/:projectId/auto/tests/fix', (req, res) => {
+      this.logger.info('[Application] Auto test fix route hit', { 
+        projectId: req.params.projectId, 
+        method: req.method,
+        url: req.url 
+      });
+      this.autoTestFixController.executeAutoTestFix(req, res);
+    });
+    this.app.get('/api/projects/:projectId/auto/tests/status/:sessionId', (req, res) => this.autoTestFixController.getSessionStatus(req, res));
+    this.app.post('/api/projects/:projectId/auto/tests/cancel/:sessionId', (req, res) => this.autoTestFixController.cancelSession(req, res));
+    this.app.get('/api/projects/:projectId/auto/tests/stats', (req, res) => this.autoTestFixController.getStats(req, res));
+    this.app.get('/api/projects/:projectId/auto/tests/tasks', (req, res) => this.autoTestFixController.getAutoTestTasks(req, res));
+    this.app.get('/api/projects/:projectId/auto/tests/tasks/:taskId', (req, res) => this.autoTestFixController.getAutoTestTaskDetails(req, res));
+    this.app.post('/api/projects/:projectId/auto/tests/tasks/:taskId/retry', (req, res) => this.autoTestFixController.retryAutoTestTask(req, res));
 
     // Error handling middleware
     this.app.use((error, req, res, next) => {
