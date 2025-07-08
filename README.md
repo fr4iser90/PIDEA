@@ -135,6 +135,14 @@ I welcome contributions to PIDEA! Please follow these steps:
 ## License
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
+## Support the Project
+
+If you find this project useful, please consider supporting its development:
+
+[![Donate with PayPal](https://www.paypalobjects.com/en_US/i/btn/btn_donate_SM.gif)](https://www.paypal.me/SupportMySnacks)
+
+Your support helps cover development costs and keeps the project actively maintained.
+
 ## Personal Goal: Project Unifier
 
 My personal objective with PIDEA is to create a unifying platform for all my projects. The goal is to standardize frameworks, maintain consistent documentation, and ensure a uniform structure across different endeavors. I'm happy to share this tool with the community, hoping it saves time and brings efficiency to others as well.
