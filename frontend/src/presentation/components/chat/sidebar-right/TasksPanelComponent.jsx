@@ -190,7 +190,7 @@ ${taskDetails.description}
       const autoModeResponse = await apiCall(`/api/projects/${projectId}/auto/execute`, {
         method: 'POST',
         body: JSON.stringify({
-          task: taskMessage,
+          taskId: taskDetails.id,
           options: {
             createGitBranch: true,
             branchName: `task/${taskDetails.id}-${Date.now()}`,
