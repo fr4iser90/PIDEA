@@ -83,6 +83,9 @@ class WorkflowGitService {
      * @returns {Object} Branch strategy
      */
     determineBranchStrategy(taskType, options = {}) {
+        // Handle both TaskType objects and plain objects with value property
+        const taskTypeValue = taskType?.value || taskType;
+        
         const strategies = {
             // Refactoring Workflows
             [TaskType.REFACTORING.value]: {
@@ -209,7 +212,7 @@ class WorkflowGitService {
             }
         };
 
-        return strategies[taskType?.value] || strategies.default;
+        return strategies[taskTypeValue] || strategies.default;
     }
 
     /**

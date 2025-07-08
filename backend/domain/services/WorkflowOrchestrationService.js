@@ -22,6 +22,8 @@ class WorkflowOrchestrationService {
      * @returns {Promise<Object>} Workflow execution result
      */
     async executeWorkflow(task, options = {}) {
+        let branchResult = null;
+        
         try {
             this.logger.info('WorkflowOrchestrationService: Starting workflow execution', {
                 taskId: task.id,
@@ -30,7 +32,7 @@ class WorkflowOrchestrationService {
             });
 
             // Step 1: Create workflow-specific branch
-            const branchResult = await this.workflowGitService.createWorkflowBranch(
+            branchResult = await this.workflowGitService.createWorkflowBranch(
                 task.metadata.projectPath,
                 task,
                 options
