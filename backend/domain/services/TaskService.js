@@ -192,8 +192,8 @@ class TaskService {
       try {
               // Step 1: Create Git Branch for Refactoring
       console.log('🔧 [TaskService] Step 1: Creating Git branch...');
-      // Get projectPath from task metadata
-      const projectPath = task.metadata.projectPath;
+      // Get projectPath from userId parameter OR task metadata (fallback)
+      const projectPath = userId.projectPath || task.metadata.projectPath;
       
       console.log('🔍 [TaskService] Task details:', {
         id: task.id,
