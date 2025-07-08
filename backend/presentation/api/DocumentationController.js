@@ -101,20 +101,16 @@ class DocumentationController {
             // 🕐 SMART WAIT: Give AI time to work on all projects
             await new Promise(resolve => setTimeout(resolve, 150000)); // 2,5 minutes for AI to work
             
-            this.logger.info('[DocumentationController] Phase 3: Collecting responses and creating tasks sequentially');
+            this.logger.info('[DocumentationController] Phase 3: Collecting responses (WITHOUT creating tasks)');
             
-            // 📝 SEQUENTIAL COLLECT: Collect responses one by one for stability
-            const results = [];
+            // 📝 COLLECT RESPONSES ONLY: Collect all responses first
+            const collectedResponses = [];
             
             for (const promptResult of promptResults) {
                 if (promptResult.status !== 'fulfilled' || !promptResult.value.success) {
-                    results.push({
-                        status: 'fulfilled',
-                        value: {
-                            port: promptResult.value?.ide?.port,
-                            success: false,
-                            error: promptResult.value?.error || 'Prompt sending failed'
-                        }
+                    this.logger.warn('[DocumentationController] Skipping failed prompt result', {
+                        port: promptResult.value?.ide?.port,
+                        error: promptResult.value?.error
                     });
                     continue;
                 }
@@ -125,25 +121,37 @@ class DocumentationController {
                     this.logger.info('[DocumentationController] Collecting response from IDE', {
                         port: ide.port,
                         projectId,
-                        remaining: promptResults.length - results.length
+                        remaining: promptResults.length - collectedResponses.length
                     });
                     
-                    // 📊 SEQUENTIAL COLLECT: One by one with stability
-                    const result = await this.collectResponseAndCreateTasks(projectId, workspacePath, ide.port);
+                    // 📊 COLLECT RESPONSE ONLY: Don't create tasks yet
+                    const responseResult = await this.collectResponseOnly(projectId, workspacePath, ide.port);
                     
-                    results.push({
-                        status: 'fulfilled',
-                        value: {
+                    if (responseResult.success) {
+                        collectedResponses.push({
                             port: ide.port,
                             projectId,
                             workspacePath,
                             success: true,
-                            result
-                        }
-                    });
+                            response: responseResult.response,
+                            analysis: responseResult.analysis
+                        });
+                        
+                        this.logger.info('[DocumentationController] Successfully collected response', {
+                            port: ide.port,
+                            projectId,
+                            responseLength: responseResult.response?.length || 0
+                        });
+                    } else {
+                        this.logger.warn('[DocumentationController] No response found for IDE', {
+                            port: ide.port,
+                            projectId,
+                            error: responseResult.error
+                        });
+                    }
                     
                     // ⏰ SHORT DELAY: 300ms between response collections
-                    if (results.length < promptResults.length) {
+                    if (collectedResponses.length < promptResults.filter(r => r.status === 'fulfilled' && r.value.success).length) {
                         this.logger.info('[DocumentationController] Waiting 300ms before next response collection...');
                         await new Promise(resolve => setTimeout(resolve, 300));
                     }
@@ -154,13 +162,70 @@ class DocumentationController {
                         projectId,
                         error: error.message
                     });
+                }
+            }
+            
+            this.logger.info('[DocumentationController] Phase 4: Creating and executing tasks from collected responses');
+            
+            // 🚀 CREATE AND EXECUTE TASKS: Now create tasks from all collected responses
+            const results = [];
+            
+            for (const collectedResponse of collectedResponses) {
+                try {
+                    this.logger.info('[DocumentationController] Creating tasks for response', {
+                        port: collectedResponse.port,
+                        projectId: collectedResponse.projectId
+                    });
+
+                    const taskResults = await this.createTasksFromAnalysis(
+                        collectedResponse.analysis, 
+                        collectedResponse.projectId, 
+                        collectedResponse.workspacePath
+                    );
                     
                     results.push({
                         status: 'fulfilled',
                         value: {
-                            port: ide.port,
-                            projectId,
-                            workspacePath,
+                            port: collectedResponse.port,
+                            projectId: collectedResponse.projectId,
+                            workspacePath: collectedResponse.workspacePath,
+                            success: true,
+                            result: {
+                                projectId: collectedResponse.projectId,
+                                projectPath: collectedResponse.workspacePath,
+                                idePort: collectedResponse.port,
+                                analysis: collectedResponse.analysis,
+                                createdTasks: taskResults.createdTasks,
+                                executionResults: taskResults.executionResults,
+                                executionSummary: taskResults.summary,
+                                promptSent: true,
+                                ideResponse: { success: true, response: collectedResponse.response },
+                                timestamp: new Date().toISOString()
+                            }
+                        }
+                    });
+                    
+                    this.logger.info('[DocumentationController] Successfully created and executed tasks', {
+                        port: collectedResponse.port,
+                        projectId: collectedResponse.projectId,
+                        tasksCreated: taskResults.createdTasks?.length || 0,
+                        successful: taskResults.summary?.successful || 0,
+                        failed: taskResults.summary?.failed || 0
+                    });
+                    
+                } catch (error) {
+                    this.logger.error('[DocumentationController] Failed to create tasks for response', {
+                        port: collectedResponse.port,
+                        projectId: collectedResponse.projectId,
+                        error: error.message
+                    });
+                    
+                    results.push({
+                        status: 'fulfilled',
+                        value: {
+                            port: collectedResponse.port,
+                            projectId: collectedResponse.projectId,
+                            workspacePath: collectedResponse.workspacePath,
                             success: false,
                             error: error.message
                         }
@@ -472,139 +537,26 @@ class DocumentationController {
             last500Chars: analysisText?.length > 500 ? analysisText.substring(analysisText.length - 500) : ''
         });
         
-        // Pattern 1: "1. **Task**: ..." format (with numbers)
-        const taskRegex = /\d+\.\s*\*\*Task\*\*:\s*([^\n]+)/g;
+        // Pattern 1: "TASK: ..." format (simple format)
+        const taskRegex = /TASK:\s*([^\n]+)/g;
         let match;
         
         while ((match = taskRegex.exec(analysisText)) !== null) {
             const taskTitle = match[1].trim();
             
-            // Try to extract additional info from the following lines
-            const taskContext = analysisText.substring(match.index, match.index + 500);
-            const timeMatch = taskContext.match(/Estimated Time.*?([0-9]+)\s*hours?/i);
-            const priorityMatch = taskContext.match(/Priority.*?(High|Medium|Low)/i);
+            // Skip empty or very short tasks
+            if (taskTitle.length < 10) continue;
             
             tasks.push({
                 title: taskTitle,
                 description: `Documentation task: ${taskTitle}`,
-                priority: priorityMatch ? priorityMatch[1].toLowerCase() : 'medium',
+                priority: 'medium', // Default priority
                 type: 'documentation',
-                estimatedTime: timeMatch ? parseInt(timeMatch[1]) : null
+                estimatedTime: 2 // Default 2 hours
             });
         }
         
-        // Pattern 2: "**Task**: ..." format (without numbers)
-        const taskRegexSimple = /\*\*Task\*\*:\s*([^\n]+)/g;
-        while ((match = taskRegexSimple.exec(analysisText)) !== null) {
-            const taskTitle = match[1].trim();
-            
-            // Try to extract additional info
-            const taskContext = analysisText.substring(match.index, match.index + 500);
-            const timeMatch = taskContext.match(/Estimated Time.*?([0-9]+)\s*hours?/i);
-            const priorityMatch = taskContext.match(/Priority.*?(High|Medium|Low)/i);
-            
-            tasks.push({
-                title: taskTitle,
-                description: `Documentation task: ${taskTitle}`,
-                priority: priorityMatch ? priorityMatch[1].toLowerCase() : 'medium',
-                type: 'documentation',
-                estimatedTime: timeMatch ? parseInt(timeMatch[1]) : null
-            });
-        }
-        
-        // Pattern 3: "- [ ] **Task**: ..." format (checkbox format)
-        const checkboxTaskRegex = /-\s*\[\s*\]\s*\*\*([^*]+)\*\*:\s*([^\n]+)/g;
-        while ((match = checkboxTaskRegex.exec(analysisText)) !== null) {
-            const taskType = match[1].trim();
-            const taskTitle = match[2].trim();
-            
-            if (taskType.toLowerCase().includes('task')) {
-                tasks.push({
-                    title: taskTitle,
-                    description: `Documentation task: ${taskTitle}`,
-                    priority: 'medium',
-                    type: 'documentation',
-                    estimatedTime: null
-                });
-            }
-        }
-        
-        // Pattern 4: "- [ ] Create/Develop/Write..." format (action items)
-        const actionRegex = /-\s*\[\s*\]\s*\*\*([^*]+)\*\*:\s*([^\n]+)/g;
-        while ((match = actionRegex.exec(analysisText)) !== null) {
-            const actionType = match[1].trim();
-            const actionDescription = match[2].trim();
-            
-            if (actionType && actionDescription.length > 10) {
-                tasks.push({
-                    title: `${actionType}: ${actionDescription}`,
-                    description: actionDescription,
-                    priority: 'medium',
-                    type: 'documentation',
-                    estimatedTime: null
-                });
-            }
-        }
-        
-        // Pattern 5: Timeline format "Day X-X: ...", "Week X: ...", "Month X: ..."
-        const timelineRegex = /(Day|Week|Month)\s+(\d+(?:-\d+)?):?\s*([^\n]+)/g;
-        while ((match = timelineRegex.exec(analysisText)) !== null) {
-            const period = match[1];
-            const timeFrame = match[2];
-            const description = match[3].trim();
-            
-            if (description && description.length > 10) {
-                const priority = period === 'Day' ? 'high' : period === 'Week' ? 'medium' : 'low';
-                const estimatedHours = period === 'Day' ? 8 : period === 'Week' ? 20 : 40;
-                
-                tasks.push({
-                    title: `${period} ${timeFrame}: ${description}`,
-                    description: description,
-                    priority: priority,
-                    type: 'documentation',
-                    estimatedTime: estimatedHours
-                });
-            }
-        }
-        
-        // Pattern 6: Next Steps numbered list
-        const nextStepsSection = analysisText.match(/Next Steps[\s\S]*?(?=\n\n|$)/i);
-        if (nextStepsSection) {
-            const numberedItems = nextStepsSection[0].match(/\d+\.\s*([^\n]+)/g);
-            if (numberedItems) {
-                numberedItems.forEach((item, index) => {
-                    const description = item.replace(/^\d+\.\s*/, '').trim();
-                    if (description.length > 5) {
-                        const priority = index < 2 ? 'high' : 'medium';
-                        tasks.push({
-                            title: `Action ${index + 1}: ${description}`,
-                            description: description,
-                            priority: priority,
-                            type: 'documentation',
-                            estimatedTime: 4
-                        });
-                    }
-                });
-            }
-        }
-        
-        // Pattern 7: Goal format "Month X Goal: ..."
-        const goalRegex = /(Month|Week)\s+(\d+)\s+Goal:\s*([^\n]+)/g;
-        while ((match = goalRegex.exec(analysisText)) !== null) {
-            const period = match[1];
-            const timeFrame = match[2];
-            const description = match[3].trim();
-            
-            if (description && description.length > 10) {
-                tasks.push({
-                    title: `${period} ${timeFrame} Goal: ${description}`,
-                    description: description,
-                    priority: 'medium',
-                    type: 'milestone',
-                    estimatedTime: period === 'Week' ? 20 : 40
-                });
-            }
-        }
+        // Keep it simple - only look for the TASK: format we defined
         
         // Remove duplicates based on title similarity
         const uniqueTasks = tasks.filter((task, index, self) => 
@@ -1274,6 +1226,60 @@ class DocumentationController {
                 error: error.message
             };
         }
+    }
+
+    /**
+     * Collect AI response only (without creating tasks)
+     */
+    async collectResponseOnly(projectId, workspacePath, idePort) {
+        this.logger.info('[DocumentationController] Collecting response only from IDE', {
+            projectId,
+            workspacePath,
+            idePort
+        });
+
+        // Switch to the correct IDE to get response
+        const currentActivePort = this.cursorIDEService.getActivePort();
+        if (currentActivePort !== idePort) {
+            this.logger.info('[DocumentationController] Switching to project IDE for response collection', {
+                from: currentActivePort,
+                to: idePort
+            });
+            
+            await this.cursorIDEService.switchToPort(idePort);
+        }
+
+        // 📊 GET LATEST AI RESPONSE: Read from browser DOM and save to chat DB
+        const ideResponse = await this.getLatestChatResponse(projectId, idePort);
+
+        this.logger.info('[DocumentationController] Collected AI response for project', {
+            projectId,
+            idePort,
+            success: ideResponse.success,
+            responseLength: ideResponse.response?.length || 0
+        });
+
+        if (!ideResponse.success || !ideResponse.response) {
+            this.logger.warn('[DocumentationController] No response found', {
+                projectId,
+                idePort
+            });
+            
+            return {
+                success: false,
+                response: null,
+                error: 'No response received'
+            };
+        }
+
+        // Process the response (but don't create tasks yet)
+        const analysisResult = this.processDocumentationAnalysis(ideResponse.response, projectId);
+
+        return {
+            success: true,
+            response: ideResponse.response,
+            analysis: analysisResult
+        };
     }
 
     /**
