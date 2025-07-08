@@ -629,7 +629,8 @@ class Application {
       this.taskService,
       this.cursorIDEService,
       this.logger,
-      this.ideManager
+      this.ideManager,
+      this.chatRepository
     );
 
     this.logger.info('[Application] Presentation layer initialized');
