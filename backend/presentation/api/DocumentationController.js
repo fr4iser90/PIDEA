@@ -537,26 +537,50 @@ class DocumentationController {
             last500Chars: analysisText?.length > 500 ? analysisText.substring(analysisText.length - 500) : ''
         });
         
-        // Pattern 1: "TASK: ..." format (simple format)
-        const taskRegex = /TASK:\s*([^\n]+)/g;
-        let match;
+        // 🎯 BETTER REGEX: Extract complete task blocks with all details
+        const taskBlockRegex = /(?:^|\n)\s*(?:\d+\.\s*\*\*)?Task(?:\*\*)?:\s*([^\n]+)(?:\s*\n\s*(?:-\s*\*\*)?Estimated Time(?:\*\*)?:\s*(\d+)\s*hours?)?(?:\s*\n\s*(?:-\s*\*\*)?Priority(?:\*\*)?:\s*(High|Medium|Low))?(?:\s*\n\s*(?:-\s*\*\*)?Dependencies(?:\*\*)?:\s*([^\n]+))?/gim;
         
-        while ((match = taskRegex.exec(analysisText)) !== null) {
-            const taskTitle = match[1].trim();
+        let match;
+        while ((match = taskBlockRegex.exec(analysisText)) !== null) {
+            const taskTitle = match[1]?.trim();
+            const estimatedTime = match[2] ? parseInt(match[2]) : 2;
+            const priority = match[3]?.toLowerCase() || 'medium';
+            const dependencies = match[4]?.trim() || 'None';
             
             // Skip empty or very short tasks
-            if (taskTitle.length < 10) continue;
+            if (!taskTitle || taskTitle.length < 10) continue;
             
             tasks.push({
                 title: taskTitle,
                 description: `Documentation task: ${taskTitle}`,
-                priority: 'medium', // Default priority
+                priority: priority,
                 type: 'documentation',
-                estimatedTime: 2 // Default 2 hours
+                estimatedTime: estimatedTime,
+                dependencies: dependencies
             });
         }
         
-        // Keep it simple - only look for the TASK: format we defined
+        // 🔍 FALLBACK: Simple task extraction if complex regex fails
+        if (tasks.length === 0) {
+            this.logger.warn('[DocumentationController] Complex regex failed, using simple fallback');
+            
+            const simpleTaskRegex = /(?:Task|TASK):\s*([^\n]+)/gi;
+            let simpleMatch;
+            
+            while ((simpleMatch = simpleTaskRegex.exec(analysisText)) !== null) {
+                const taskTitle = simpleMatch[1].trim();
+                
+                if (taskTitle.length < 10) continue;
+                
+                tasks.push({
+                    title: taskTitle,
+                    description: `Documentation task: ${taskTitle}`,
+                    priority: 'medium',
+                    type: 'documentation',
+                    estimatedTime: 2
+                });
+            }
+        }
         
         // Remove duplicates based on title similarity
         const uniqueTasks = tasks.filter((task, index, self) => 
@@ -566,14 +590,11 @@ class DocumentationController {
         this.logger.info('[DocumentationController] Extracted tasks from analysis', {
             totalFound: tasks.length,
             uniqueTasks: uniqueTasks.length,
-            patterns: {
-                numberedTasks: tasks.filter(t => t.title.includes('Documentation task:')).length,
-                taskFormat: tasks.filter(t => /^\d+\.\s*\*\*Task\*\*:/.test(t.title)).length,
-                timeline: tasks.filter(t => /^(Day|Week|Month)/.test(t.title)).length,
-                actions: tasks.filter(t => t.title.includes('Action')).length,
-                goals: tasks.filter(t => t.title.includes('Goal')).length,
-                checkboxes: tasks.filter(t => t.title.includes(':')).length
-            }
+            complexRegexMatches: tasks.filter(t => t.estimatedTime > 2).length,
+            fallbackMatches: tasks.filter(t => t.estimatedTime === 2).length,
+            highPriority: tasks.filter(t => t.priority === 'high').length,
+            mediumPriority: tasks.filter(t => t.priority === 'medium').length,
+            lowPriority: tasks.filter(t => t.priority === 'low').length
         });
         
         return uniqueTasks;
@@ -747,31 +768,31 @@ class DocumentationController {
                         priority: task.priority
                     });
 
-                    // ✅ AUTO-EXECUTE TASK WITH GIT INTEGRATION
+                    // ✅ EXECUTE DOCUMENTATION TASK DIRECTLY (NOT via TaskService!)
                     try {
-                        this.logger.info('[DocumentationController] Executing documentation task with Git workflow', {
+                        this.logger.info('[DocumentationController] Executing documentation task directly', {
                             taskId: task.id,
                             title: task.title
                         });
 
-                        const executionResult = await this.taskService.executeTask(task.id, 'documentation-framework');
+                        const executionResult = await this.executeDocumentationTask(task, projectPath);
                         
                         executionResults.push({
                             taskId: task.id,
                             title: task.title,
                             success: true,
                             execution: executionResult,
-                            message: 'Task executed successfully with Git integration'
+                            message: 'Documentation task executed successfully'
                         });
 
-                        this.logger.info('[DocumentationController] Task execution completed', {
+                        this.logger.info('[DocumentationController] Documentation task execution completed', {
                             taskId: task.id,
                             status: executionResult.status,
                             progress: executionResult.progress
                         });
 
                     } catch (executionError) {
-                        this.logger.error('[DocumentationController] Task execution failed', {
+                        this.logger.error('[DocumentationController] Documentation task execution failed', {
                             taskId: task.id,
                             error: executionError.message
                         });
@@ -781,7 +802,7 @@ class DocumentationController {
                             title: task.title,
                             success: false,
                             error: executionError.message,
-                            message: 'Task execution failed'
+                            message: 'Documentation task execution failed'
                         });
                     }
 
@@ -1283,9 +1304,83 @@ class DocumentationController {
     }
 
     /**
+     * Execute documentation task directly using doc-execute.md framework
+     */
+    async executeDocumentationTask(task, projectPath) {
+        try {
+            this.logger.info('[DocumentationController] Executing documentation task directly', {
+                taskId: task.id,
+                title: task.title,
+                projectPath
+            });
+
+            // Load doc-execute.md prompt
+            const executePromptPath = path.join(
+                this.contentLibraryPath,
+                'frameworks/documentation-framework/prompts/doc-execute.md'
+            );
+
+            if (!fs.existsSync(executePromptPath)) {
+                throw new Error('doc-execute.md prompt not found');
+            }
+
+            const executePromptTemplate = fs.readFileSync(executePromptPath, 'utf8');
+
+            // Create contextualized execution prompt - MINIMAL context only
+            const contextualizedPrompt = `${executePromptTemplate}
+
+---
+
+**TASK**: ${task.title}
+**DESCRIPTION**: ${task.description}
+**PROJECT**: ${projectPath}`;
+
+            // Send to Cursor IDE for execution
+            this.logger.info('[DocumentationController] Sending doc-execute prompt to IDE', {
+                taskId: task.id,
+                promptLength: contextualizedPrompt.length
+            });
+            
+            const ideResponse = await this.cursorIDEService.sendMessage(contextualizedPrompt, {
+                waitForResponse: false // Fire and forget for now
+            });
+
+            this.logger.info('[DocumentationController] Documentation task execution prompt sent', {
+                taskId: task.id,
+                success: ideResponse.success,
+                responseLength: ideResponse.response?.length || 0
+            });
+
+            return {
+                taskId: task.id,
+                status: 'completed',
+                progress: 100,
+                executionTime: new Date().toISOString(),
+                promptSent: true,
+                ideResponse: ideResponse,
+                message: 'Documentation task executed via doc-execute.md framework'
+            };
+
+        } catch (error) {
+            this.logger.error('[DocumentationController] Documentation task execution failed', {
+                taskId: task.id,
+                error: error.message
+            });
+
+            return {
+                taskId: task.id,
+                status: 'failed',
+                progress: 0,
+                error: error.message,
+                message: 'Documentation task execution failed'
+            };
+        }
+    }
+
+    /**
      * Send created tasks to Cursor IDE for automatic execution
-     * @deprecated This method is deprecated. Tasks are now executed automatically via TaskService.executeTask()
-     * which includes full Git integration (branch creation, auto-commit, auto-push, auto-merge).
+     * @deprecated This method is deprecated. Tasks are now executed automatically via executeDocumentationTask()
+     * which uses the doc-execute.md framework directly.
      */
     async sendTasksToIDE(tasks, projectPath, idePort = null) {
         try {
