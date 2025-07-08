@@ -1,6 +1,5 @@
 const GetChatHistoryQuery = require('@/application/queries/GetChatHistoryQuery');
 const ChatMessage = require('@/domain/entities/ChatMessage');
-const ChatSession = require('@/domain/entities/ChatSession');
 
 class GetChatHistoryHandler {
   constructor(chatRepository, cursorIDEService = null) {
@@ -19,50 +18,27 @@ class GetChatHistoryHandler {
   }
 
   async handleUserSpecificQuery(query) {
-    const { userId, sessionId, limit = 50, offset = 0, includeUserData = false } = query;
+    const { userId, port, limit = 50, offset = 0, includeUserData = false } = query;
 
-    if (sessionId) {
-      // Get specific session for user
-      const session = await this.chatRepository.findSessionById(sessionId);
-      if (!session || session.userId !== userId) {
-        throw new Error('Session not found or access denied');
-      }
-
-      let messages = session.messages || [];
+    if (port) {
+      // Get messages for specific port and user
+      const messages = await this.getMessagesByPort(port, userId, { limit, offset });
       
-      // Apply pagination
-      if (offset) {
-        messages = messages.slice(offset);
-      }
-      if (limit) {
-        messages = messages.slice(0, limit);
-      }
-
       return {
-        sessionId: session.id,
+        port: port,
         messages: messages.map(m => this.sanitizeMessage(m, includeUserData)),
-        totalCount: session.messages ? session.messages.length : 0,
-        hasMore: (session.messages ? session.messages.length : 0) > (offset + limit)
+        totalCount: messages.length,
+        hasMore: messages.length >= limit
       };
     } else {
-      // Get all sessions for user
-      const userSessions = await this.getUserSessions(userId, { limit, offset });
-      const allMessages = [];
-
-      for (const session of userSessions) {
-        if (session.messages) {
-          allMessages.push(...session.messages);
-        }
-      }
-
-      // Sort by timestamp
-      allMessages.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
-
+      // Get all messages for user across all ports
+      const allMessages = await this.getAllMessagesForUser(userId, { limit, offset });
+      
       return {
-        sessionId: 'user-all',
+        port: 'all',
         messages: allMessages.map(m => this.sanitizeMessage(m, includeUserData)),
         totalCount: allMessages.length,
-        hasMore: allMessages.length > (offset + limit)
+        hasMore: allMessages.length >= limit
       };
     }
   }
@@ -71,118 +47,105 @@ class GetChatHistoryHandler {
     // Validate query
     query.validate();
     
-    // If sessionId is provided, use it (for backward compatibility)
-    if (query.sessionId) {
-      const session = await this.chatRepository.findSessionById(query.sessionId);
-      if (!session) {
-        throw new Error('Session not found');
-      }
-      let messages = session.messages;
-      if (query.offset) {
-        messages = messages.slice(query.offset);
-      }
-      if (query.limit) {
-        messages = messages.slice(0, query.limit);
-      }
+    // If port is provided, get messages for that port
+    if (query.port) {
+      const messages = await this.getMessagesByPort(query.port, null, { 
+        limit: query.limit, 
+        offset: query.offset 
+      });
+      
       return {
-        sessionId: session.id,
-        idePort: session.idePort,
+        port: query.port,
         messages: messages.map(m => m.toJSON())
       };
     }
     
-    // If no sessionId, get all messages (global chat)
-    const allSessions = await this.chatRepository.getAllSessions();
-    let allMessages = [];
-    
-    allSessions.forEach(session => {
-      allMessages = allMessages.concat(session.messages);
+    // If no port, get all messages (global chat)
+    const allMessages = await this.getAllMessages({ 
+      limit: query.limit, 
+      offset: query.offset 
     });
     
-    // Sort by timestamp
-    allMessages.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
-    
-    if (query.offset) {
-      allMessages = allMessages.slice(query.offset);
-    }
-    if (query.limit) {
-      allMessages = allMessages.slice(0, query.limit);
-    }
-    
     return {
-      sessionId: 'global',
-      idePort: null,
+      port: 'global',
       messages: allMessages.map(m => m.toJSON())
     };
   }
 
-  async getUserSessions(userId, options = {}) {
-    const { limit = 20, offset = 0 } = options;
-
-    // Get all sessions and filter by user
-    const allSessions = await this.chatRepository.getAllSessions();
-    const userSessions = allSessions.filter(session => session.userId === userId);
-
-    // Apply pagination
-    const paginatedSessions = userSessions.slice(offset, offset + limit);
-
-    return paginatedSessions.map(session => ({
-      id: session.id,
-      title: session.title || `Chat Session ${session.id}`,
-      createdAt: session.createdAt,
-      updatedAt: session.updatedAt,
-      messageCount: session.messages ? session.messages.length : 0,
-      lastMessage: session.messages && session.messages.length > 0 
-        ? this.sanitizeMessage(session.messages[session.messages.length - 1], false)
-        : null
-    }));
-  }
-
-  async createSession(userId, options = {}) {
-    const { title, metadata = {} } = options;
-
-    const session = new ChatSession(
-      null,
-      userId,
-      title,
-      new Date(),
-      new Date(),
-      metadata
-    );
-
-    await this.chatRepository.saveSession(session);
-    return session;
-  }
-
-  async deleteSession(sessionId, userId) {
-    const session = await this.chatRepository.findSessionById(sessionId);
+  async getMessagesByPort(port, userId = null, options = {}) {
+    const { limit = 50, offset = 0 } = options;
     
-    if (!session) {
-      throw new Error('Session not found');
+    console.log(`[GetChatHistoryHandler] getMessagesByPort called with port: ${port}, userId: ${userId}`);
+
+    // Use the new direct message method from ChatRepository
+    const filteredMessages = await this.chatRepository.getMessagesByPort(port, userId);
+    
+    console.log(`[GetChatHistoryHandler] Found ${filteredMessages.length} messages for port ${port}`);
+
+    // Sort by timestamp (newest first)
+    filteredMessages.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+    
+    // Apply pagination
+    let paginatedMessages = filteredMessages;
+    if (offset) {
+      paginatedMessages = paginatedMessages.slice(offset);
+    }
+    if (limit) {
+      paginatedMessages = paginatedMessages.slice(0, limit);
     }
 
-    if (session.userId !== userId) {
-      throw new Error('Access denied to this session');
+    return paginatedMessages;
+  }
+
+  async getAllMessagesForUser(userId, options = {}) {
+    const { limit = 50, offset = 0 } = options;
+
+    // Use the new direct message method from ChatRepository
+    const userMessages = await this.chatRepository.getMessagesByUser(userId);
+
+    // Sort by timestamp (newest first)
+    userMessages.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+    
+    // Apply pagination
+    let paginatedMessages = userMessages;
+    if (offset) {
+      paginatedMessages = paginatedMessages.slice(offset);
+    }
+    if (limit) {
+      paginatedMessages = paginatedMessages.slice(0, limit);
     }
 
-    // Note: This would need to be implemented in the repository
-    // For now, we'll just return success
-    return true;
+    return paginatedMessages;
+  }
+
+  async getAllMessages(options = {}) {
+    const { limit = 50, offset = 0 } = options;
+
+    // Use the new direct message method from ChatRepository
+    const allMessages = await this.chatRepository.getAllMessages();
+
+    // Sort by timestamp (newest first)
+    allMessages.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+    
+    // Apply pagination
+    let paginatedMessages = allMessages;
+    if (offset) {
+      paginatedMessages = paginatedMessages.slice(offset);
+    }
+    if (limit) {
+      paginatedMessages = paginatedMessages.slice(0, limit);
+    }
+
+    return paginatedMessages;
   }
 
   async getPortChatHistory(port, userId, options = {}) {
     const { limit = 50, offset = 0 } = options;
     
     console.log(`[GetChatHistoryHandler] getPortChatHistory called with port: ${port}, userId: ${userId}`);
-    console.log(`[GetChatHistoryHandler] Current active port in cursorIDEService:`, this.cursorIDEService?.getActivePort?.());
 
-    // Get all sessions and filter by port and user
-    const allSessions = await this.chatRepository.getAllSessions();
-    const portSessions = allSessions.filter(session => 
-      session.idePort === parseInt(port) && session.userId === userId
-    );
-    
-    console.log(`[GetChatHistoryHandler] Found ${portSessions.length} sessions for port ${port}`);
+    // Get messages for this port and user
+    const messages = await this.getMessagesByPort(port, userId, { limit, offset });
 
     // Try to extract live chat from IDE first
     let liveMessages = [];
@@ -207,48 +170,18 @@ class GetChatHistoryHandler {
           timestamp: m.timestamp || new Date().toISOString(),
           metadata: m.metadata || {}
         })),
-        sessionId: 'live-ide',
         port: port,
         totalCount: liveMessages.length,
         hasMore: false
       };
     }
 
-    // Fallback to stored sessions
-    if (portSessions.length === 0) {
-      console.log(`[GetChatHistoryHandler] No sessions found for port ${port}`);
-      return {
-        messages: [],
-        sessionId: null,
-        port: port,
-        totalCount: 0,
-        hasMore: false
-      };
-    }
-
-    // Get the most recent session for this port
-    const latestSession = portSessions.sort((a, b) => 
-      new Date(b.updatedAt) - new Date(a.updatedAt)
-    )[0];
-
-    console.log(`[GetChatHistoryHandler] Found session ${latestSession.id} for port ${port}`);
-
-    let messages = latestSession.messages || [];
-    
-    // Apply pagination
-    if (offset) {
-      messages = messages.slice(offset);
-    }
-    if (limit) {
-      messages = messages.slice(0, limit);
-    }
-
+    // Return stored messages
     return {
       messages: messages.map(m => this.sanitizeMessage(m, false)),
-      sessionId: latestSession.id,
       port: port,
-      totalCount: latestSession.messages ? latestSession.messages.length : 0,
-      hasMore: (latestSession.messages ? latestSession.messages.length : 0) > (offset + limit)
+      totalCount: messages.length,
+      hasMore: messages.length >= limit
     };
   }
 

@@ -124,7 +124,7 @@ class AuthService {
       throw new Error('Access token is required');
     }
 
-    console.log('🔍 [AuthService] Validating access token:', accessToken.substring(0, 20) + '...');
+    // console.log('🔍 [AuthService] Validating access token:', accessToken.substring(0, 20) + '...');
 
     try {
       const decoded = jwt.verify(accessToken, this.jwtSecret);

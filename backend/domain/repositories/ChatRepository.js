@@ -1,45 +1,49 @@
-const ChatSession = require('@/domain/entities/ChatSession');
+const ChatMessage = require('@/domain/entities/ChatMessage');
 
 class ChatRepository {
   constructor() {
-    this.sessions = new Map();
+    this.messages = new Map();
+    this.messageCounter = 0;
   }
 
-  async saveSession(session) {
-    if (!(session instanceof ChatSession)) {
-      throw new Error('Invalid session');
+  async saveMessage(message) {
+    if (!(message instanceof ChatMessage)) {
+      throw new Error('Invalid message');
     }
-    this.sessions.set(session.id, session.toJSON());
+    
+    const messageId = message.id || `msg_${++this.messageCounter}`;
+    this.messages.set(messageId, message.toJSON());
+    return messageId;
   }
 
-  async findSessionById(sessionId) {
-    const data = this.sessions.get(sessionId);
+  async getAllMessages() {
+    return Array.from(this.messages.values()).map(m => ChatMessage.fromJSON(m));
+  }
+
+  async getMessagesByPort(port, userId = null) {
+    const allMessages = await this.getAllMessages();
+    let filteredMessages = allMessages.filter(message => message.port === parseInt(port));
+    
+    if (userId) {
+      filteredMessages = filteredMessages.filter(message => message.userId === userId);
+    }
+    
+    return filteredMessages;
+  }
+
+  async getMessagesByUser(userId) {
+    const allMessages = await this.getAllMessages();
+    return allMessages.filter(message => message.userId === userId);
+  }
+
+  async findMessageById(messageId) {
+    const data = this.messages.get(messageId);
     if (!data) return null;
-    return ChatSession.fromJSON(data);
+    return ChatMessage.fromJSON(data);
   }
 
-  async getAllSessions() {
-    return Array.from(this.sessions.values()).map(s => ChatSession.fromJSON(s));
-  }
-
-  async findAllSessions() {
-    throw new Error('findAllSessions method must be implemented');
-  }
-
-  async deleteSession(id) {
-    throw new Error('deleteSession method must be implemented');
-  }
-
-  async addMessageToSession(sessionId, message) {
-    throw new Error('addMessageToSession method must be implemented');
-  }
-
-  async getSessionMessages(sessionId) {
-    throw new Error('getSessionMessages method must be implemented');
-  }
-
-  async updateSession(session) {
-    throw new Error('updateSession method must be implemented');
+  async deleteMessage(messageId) {
+    return this.messages.delete(messageId);
   }
 }
 

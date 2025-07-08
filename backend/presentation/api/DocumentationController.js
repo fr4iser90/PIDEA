@@ -2,11 +2,12 @@ const path = require('path');
 const fs = require('fs');
 
 class DocumentationController {
-    constructor(taskService, cursorIDEService, logger, ideManager = null) {
+    constructor(taskService, cursorIDEService, logger, ideManager = null, chatRepository = null) {
         this.taskService = taskService;
         this.cursorIDEService = cursorIDEService;
         this.logger = logger;
         this.ideManager = ideManager;
+        this.chatRepository = chatRepository;
         this.contentLibraryPath = path.join(__dirname, '../../../content-library');
     }
 
@@ -96,10 +97,10 @@ class DocumentationController {
                 }
             }
             
-            this.logger.info('[DocumentationController] Phase 2: Waiting for AI responses (2,5 minutes)');
+            this.logger.info('[DocumentationController] Phase 2: Waiting for AI responses (3 minutes)');
             
             // 🕐 SMART WAIT: Give AI time to work on all projects
-            await new Promise(resolve => setTimeout(resolve, 150000)); // 2,5 minutes for AI to work
+            await new Promise(resolve => setTimeout(resolve, 180000)); // 3 minutes for AI to work
             
             this.logger.info('[DocumentationController] Phase 3: Processing each IDE completely (COLLECT → CREATE → EXECUTE)');
             
@@ -124,16 +125,11 @@ class DocumentationController {
                         remaining: promptResults.length - results.length
                     });
                     
-                    // 🎯 COMPLETE WORKFLOW FOR THIS IDE:
-                    // 1. Send Prompt (already done in Phase 1)
-                    // 2. Wait for AI (already done in Phase 2)
-                    // 3. Switch to IDE → Get Chat from DB → Create Tasks → Execute Tasks
-                    
                     // 🔄 SWITCH TO IDE FIRST
                     await this.cursorIDEService.switchToPort(ide.port);
                     
-                    // 📊 GET CHAT FROM DB (not DOM!)
-                    const responseResult = await this.getLatestChatResponse(projectId, ide.port);
+                    // 📊 POLLING: Hole Response mit Polling und speichere sie
+                    const responseResult = await this.collectResponseWithPolling(projectId, workspacePath, ide.port);
                     
                     if (responseResult.success) {
                         this.logger.info('[DocumentationController] Successfully collected response, creating tasks', {
@@ -434,7 +430,7 @@ class DocumentationController {
             // Process the response (parse tasks, etc.)
             const analysisResult = this.processDocumentationAnalysis(ideResponse.response, projectId);
 
-            // Create tasks in database and execute them automatically with Git integration
+            // Create tasks in database and execute them automatically
             const taskResults = await this.createTasksFromAnalysis(analysisResult, projectId);
             
             this.logger.info('[DocumentationController] Created and executed tasks from analysis', {
@@ -898,16 +894,7 @@ class DocumentationController {
 **Project Path**: ${workspacePath}
 **Project ID**: ${projectId}
 **Analysis Date**: ${new Date().toISOString()}
-**IDE Port**: ${idePort}
-
-**Instructions**: 
-1. Analyze the documentation in the above project path
-2. Follow the framework phases exactly
-3. Create a comprehensive improvement plan
-4. Generate specific, actionable tasks
-5. Focus on this specific project's needs
-
-**Please begin your analysis now:**`;
+**IDE Port**: ${idePort}`;
 
         // Send to Cursor IDE and wait for complete response
         this.logger.info('[DocumentationController] Sending analysis prompt to IDE', {
@@ -917,7 +904,9 @@ class DocumentationController {
         });
         
         const ideResponse = await this.cursorIDEService.sendMessage(contextualizedPrompt, {
-            waitForResponse: false // 🚀 Fire and Forget - don't wait for response
+            waitForResponse: true, // ✅ Nutze Polling - warte auf AI-Response
+            timeout: 300000,       // 5 Minuten
+            checkInterval: 5000    // Check alle 5 Sekunden
         });
 
         this.logger.info('[DocumentationController] Received AI response for project', {
@@ -1003,16 +992,7 @@ class DocumentationController {
 **Project Path**: ${workspacePath}
 **Project ID**: ${projectId}
 **Analysis Date**: ${new Date().toISOString()}
-**IDE Port**: ${idePort}
-
-**Instructions**: 
-1. Analyze the documentation in the above project path
-2. Follow the framework phases exactly
-3. Create a comprehensive improvement plan
-4. Generate specific, actionable tasks
-5. Focus on this specific project's needs
-
-**Please begin your analysis now:**`;
+**IDE Port**: ${idePort}`;
 
         // 🚀 FIRE AND FORGET: Send prompt without waiting
         this.logger.info('[DocumentationController] Sending quick prompt to IDE', {
@@ -1022,7 +1002,7 @@ class DocumentationController {
         });
         
         const ideResponse = await this.cursorIDEService.sendMessage(contextualizedPrompt, {
-            waitForResponse: false // 🔥 Quick send - don't wait
+            waitForResponse: false // 🔥 Fire & Forget - send prompt only
         });
 
         if (!ideResponse.success) {
@@ -1118,115 +1098,76 @@ class DocumentationController {
     }
 
     /**
-     * Get latest chat response from browser DOM and save to chat database
+     * Get latest chat response from database by port (NO SESSIONS!)
      */
     async getLatestChatResponse(projectId, idePort) {
         try {
-            this.logger.info('[DocumentationController] Reading latest chat response from browser', {
+            this.logger.info('[DocumentationController] Reading latest chat response from ChatRepository by port', {
                 projectId,
                 idePort
             });
 
-            // Get browser page for this IDE
-            const page = await this.cursorIDEService.browserManager.getPage();
-            if (!page) {
-                throw new Error('No browser connection to Cursor IDE');
+            // Get chat messages from ChatRepository by port (NO SESSIONS!)
+            if (!this.chatRepository) {
+                throw new Error('ChatRepository not available');
             }
 
-            // Read latest AI response from chat DOM
-            const chatResponse = await page.evaluate(() => {
-                // Try multiple selectors for chat messages
-                const selectors = [
-                    '.chat-message',
-                    '.monaco-editor',
-                    '[data-testid*="chat"]',
-                    '.chat-response',
-                    '.ai-response',
-                    '.assistant-message'
-                ];
-
-                let messages = [];
-                
-                // Try each selector to find chat messages
-                for (const selector of selectors) {
-                    const elements = document.querySelectorAll(selector);
-                    if (elements.length > 0) {
-                        messages = Array.from(elements).map(el => ({
-                            content: el.textContent?.trim() || '',
-                            html: el.innerHTML || '',
-                            timestamp: new Date().toISOString()
-                        }));
-                        break;
-                    }
-                }
-
-                // If no specific chat messages found, try to get any visible text
-                if (messages.length === 0) {
-                    const textElements = document.querySelectorAll('div, p, span');
-                    const textContent = Array.from(textElements)
-                        .map(el => el.textContent?.trim())
-                        .filter(text => text && text.length > 50) // Only substantial text
-                        .join('\n');
-
-                    if (textContent) {
-                        messages = [{
-                            content: textContent,
-                            html: '',
-                            timestamp: new Date().toISOString()
-                        }];
-                    }
-                }
-
-                // Return the latest (last) message
-                return messages.length > 0 ? messages[messages.length - 1] : null;
-            });
-
-            if (!chatResponse || !chatResponse.content) {
-                this.logger.warn('[DocumentationController] No chat response found in browser DOM', {
+            // Use the new direct message method from ChatRepository
+            const portMessages = await this.chatRepository.getMessagesByPort(idePort);
+            
+            if (portMessages.length === 0) {
+                this.logger.warn('[DocumentationController] No messages found for port', {
                     projectId,
-                    idePort
+                    idePort,
+                    totalMessages: 0
                 });
                 
                 return {
                     success: false,
                     response: null,
-                    error: 'No chat response found'
+                    error: 'No messages found for port'
                 };
             }
 
-            this.logger.info('[DocumentationController] Successfully read chat response from browser', {
+            // Sort by timestamp (newest first) and get the latest AI response
+            portMessages.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+            
+            // Get the latest AI response (last message from assistant)
+            const aiMessages = portMessages.filter(msg => msg.sender === 'assistant');
+            
+            if (aiMessages.length === 0) {
+                this.logger.warn('[DocumentationController] No AI messages found for port', {
+                    projectId,
+                    idePort,
+                    totalMessages: portMessages.length
+                });
+                
+                return {
+                    success: false,
+                    response: null,
+                    error: 'No AI messages found for port'
+                };
+            }
+
+            const latestAIMessage = aiMessages[0]; // Already sorted newest first
+
+            this.logger.info('[DocumentationController] Successfully read chat response from ChatRepository by port', {
                 projectId,
                 idePort,
-                responseLength: chatResponse.content.length
+                responseLength: latestAIMessage.content.length,
+                messageId: latestAIMessage.id,
+                timestamp: latestAIMessage.timestamp
             });
-
-            // Save AI response to ChatRepository so we can retrieve it later
-            try {
-                const chatSession = await this.createOrGetChatSession(projectId, idePort);
-                await this.saveChatMessage(chatSession.id, chatResponse.content, 'assistant', 'documentation_analysis');
-                this.logger.info('[DocumentationController] AI response saved to database', {
-                    projectId,
-                    idePort,
-                    sessionId: chatSession.id,
-                    responseLength: chatResponse.content.length
-                });
-            } catch (saveError) {
-                this.logger.warn('[DocumentationController] Failed to save AI response to database', {
-                    projectId,
-                    idePort,
-                    error: saveError.message
-                });
-            }
 
             return {
                 success: true,
-                response: chatResponse.content,
-                html: chatResponse.html,
-                timestamp: chatResponse.timestamp
+                response: latestAIMessage.content,
+                html: '',
+                timestamp: latestAIMessage.timestamp
             };
 
         } catch (error) {
-            this.logger.error('[DocumentationController] Error reading chat response', {
+            this.logger.error('[DocumentationController] Error reading chat response from ChatRepository by port', {
                 projectId,
                 idePort,
                 error: error.message
@@ -1518,6 +1459,108 @@ ${lowPriorityTasks.map((task, index) => `
                 timestamp: new Date().toISOString()
             };
         }
+    }
+
+    /**
+     * Pollt die aktive IDE und speichert die AI-Response in die DB
+     */
+    async collectResponseWithPolling(projectId, workspacePath, idePort) {
+        this.logger.info('[DocumentationController] Polling for AI response in IDE', {
+            projectId,
+            workspacePath,
+            idePort
+        });
+
+        // Switch to the correct IDE
+        const currentActivePort = this.cursorIDEService.getActivePort();
+        if (currentActivePort !== idePort) {
+            this.logger.info('[DocumentationController] Switching to project IDE for polling', {
+                from: currentActivePort,
+                to: idePort
+            });
+            await this.cursorIDEService.switchToPort(idePort);
+        }
+
+        // Nutze dein vorhandenes Polling-System (OHNE neue Nachricht zu senden!)
+        const chatMessageHandler = this.cursorIDEService.chatMessageHandler;
+        if (!chatMessageHandler) {
+            this.logger.error('[DocumentationController] ChatMessageHandler not available');
+            return {
+                success: false,
+                response: null,
+                error: 'ChatMessageHandler not available'
+            };
+        }
+
+        // Polling: warte auf AI-Response mit deinem vorhandenen System
+        const pollingResult = await chatMessageHandler.waitForAIResponse({
+            timeout: 300000,      // 5 Minuten
+            checkInterval: 5000   // Check alle 5 Sekunden
+        });
+
+        if (!pollingResult.success || !pollingResult.response) {
+            this.logger.warn('[DocumentationController] No AI response found after polling', {
+                projectId,
+                idePort,
+                error: pollingResult.error
+            });
+            return {
+                success: false,
+                response: null,
+                error: pollingResult.error || 'No AI response found after polling'
+            };
+        }
+
+        // Speichere die Response in die ChatRepository - KORREKT mit ChatMessage Objekt
+        if (this.chatRepository) {
+            try {
+                const ChatMessage = require('@/domain/entities/ChatMessage');
+                
+                // Erstelle ein richtiges ChatMessage Objekt mit Factory-Methode
+                const message = ChatMessage.createAIMessage(
+                    pollingResult.response,
+                    'text',
+                    {
+                        port: idePort,
+                        projectId: projectId,
+                        timestamp: new Date().toISOString()
+                    }
+                );
+
+                await this.chatRepository.saveMessage(message);
+                
+                this.logger.info('[DocumentationController] AI response saved to ChatRepository', {
+                    projectId,
+                    idePort,
+                    messageId: message.id,
+                    contentLength: pollingResult.response.length
+                });
+                
+            } catch (saveError) {
+                this.logger.error('[DocumentationController] Failed to save message to ChatRepository', {
+                    projectId,
+                    idePort,
+                    error: saveError.message
+                });
+                // Continue anyway - we have the response
+            }
+        }
+
+        this.logger.info('[DocumentationController] AI response collected and saved', {
+            projectId,
+            idePort,
+            responseLength: pollingResult.response.length,
+            duration: pollingResult.duration
+        });
+
+        // Verarbeite die Response zu einer Analysis
+        const analysis = this.processDocumentationAnalysis(pollingResult.response, projectId);
+
+        return {
+            success: true,
+            response: pollingResult.response,
+            analysis: analysis
+        };
     }
 }
 

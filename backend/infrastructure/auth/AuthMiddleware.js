@@ -16,7 +16,7 @@ class AuthMiddleware {
         });
         
         const token = this.extractToken(req);
-        console.log('🔍 [AuthMiddleware] Extracted token:', token ? token.substring(0, 20) + '...' : 'null');
+        // console.log('🔍 [AuthMiddleware] Extracted token:', token ? token.substring(0, 20) + '...' : 'null');
         
         if (!token) {
           console.log('❌ [AuthMiddleware] No token found');
