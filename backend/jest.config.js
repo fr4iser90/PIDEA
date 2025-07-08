@@ -18,7 +18,7 @@ module.exports = {
   coverageReporters: ['text', 'lcov', 'html'],
   setupFilesAfterEnv: ['<rootDir>/tests/setup.js'],
   transformIgnorePatterns: [
-    'node_modules/(?!(chalk|ora|inquirer|cli-table3|commander)/)'
+    'node_modules/(?!(chalk|ora|inquirer|cli-table3|commander|marked)/)'
   ],
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/$1',
