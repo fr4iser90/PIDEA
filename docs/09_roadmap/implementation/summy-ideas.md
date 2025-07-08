@@ -349,10 +349,9 @@
 - Chat message storage by port
 - Basic task execution workflow
 - WebSocket infrastructure
-- Screenshot comparison and DOM analysis
+- DOM analysis
 - IDE mirror with clickable overlays
-- Screenshot comparison and DOM analysis
-- IDE mirror with clickable overlays
+
 
 ### 🔄 **Partially Implemented**
 - Task categorization and prioritization
