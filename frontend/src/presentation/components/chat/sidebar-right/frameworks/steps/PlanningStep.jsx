@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import APIChatRepository from '@infrastructure/repositories/APIChatRepository.jsx';
+import APIChatRepository from '@/infrastructure/repositories/APIChatRepository.jsx';
 
 function PlanningStep({ analysisResults, onTasksCreated, workflowData }) {
   const [isCreatingTasks, setIsCreatingTasks] = useState(false);

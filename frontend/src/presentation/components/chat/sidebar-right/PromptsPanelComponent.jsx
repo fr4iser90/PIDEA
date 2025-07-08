@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { apiCall, API_CONFIG } from '@infrastructure/repositories/APIChatRepository.jsx';
+import { apiCall, API_CONFIG } from '@/infrastructure/repositories/APIChatRepository.jsx';
 import PromptDetailsModal from '../modal/PromptDetailsModal.jsx';
-import '@css/panel/prompt-panel.css';
-import '@css/modal/prompt-details-modal.css';
+import '@/css/panel/prompt-panel.css';
+import '@/css/modal/prompt-details-modal.css';
 
 function PromptsPanelComponent({ onPromptClick, onQuickPrompt, attachedPrompts: attachedPromptsProp, setAttachedPrompts: setAttachedPromptsProp }) {
   const [prompts, setPrompts] = useState([]);

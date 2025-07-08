@@ -1,16 +1,16 @@
 import React, { useState, useEffect, useRef } from 'react';
-import EventBus from '@infrastructure/events/EventBus.jsx';
-import ChatComponent from '@presentation/components/chat/main/ChatComponent.jsx';
-import SidebarLeft from '@presentation/components/SidebarLeft.jsx';
-import SidebarRight from '@presentation/components/SidebarRight.jsx';
-import IDEMirrorComponent from '@presentation/components/mirror/main/IDEMirrorComponent.jsx';
-import PreviewComponent from '@presentation/components/chat/main/PreviewComponent.jsx';
-import GitManagementComponent from '@presentation/components/git/main/GitManagementComponent.jsx';
-import AuthWrapper from '@presentation/components/auth/AuthWrapper.jsx';
-import Header from '@presentation/components/Header.jsx';
-import Footer from '@presentation/components/Footer.jsx';
-import useAuthStore from '@infrastructure/stores/AuthStore.jsx';
-import { apiCall } from '@infrastructure/repositories/APIChatRepository.jsx';
+import EventBus from '@/infrastructure/events/EventBus.jsx';
+import ChatComponent from '@/presentation/components/chat/main/ChatComponent.jsx';
+import SidebarLeft from '@/presentation/components/SidebarLeft.jsx';
+import SidebarRight from '@/presentation/components/SidebarRight.jsx';
+import IDEMirrorComponent from '@/presentation/components/mirror/main/IDEMirrorComponent.jsx';
+import PreviewComponent from '@/presentation/components/chat/main/PreviewComponent.jsx';
+import GitManagementComponent from '@/presentation/components/git/main/GitManagementComponent.jsx';
+import AuthWrapper from '@/presentation/components/auth/AuthWrapper.jsx';
+import Header from '@/presentation/components/Header.jsx';
+import Footer from '@/presentation/components/Footer.jsx';
+import useAuthStore from '@/infrastructure/stores/AuthStore.jsx';
+import { apiCall } from '@/infrastructure/repositories/APIChatRepository.jsx';
 
 function App() {
   const [eventBus] = useState(() => new EventBus());

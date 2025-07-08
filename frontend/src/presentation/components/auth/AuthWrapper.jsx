@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import useAuthStore from '@infrastructure/stores/AuthStore.jsx';
+import useAuthStore from '@/infrastructure/stores/AuthStore.jsx';
 import LoginComponent from './LoginComponent.jsx';
 import RegisterComponent from './RegisterComponent.jsx';
 

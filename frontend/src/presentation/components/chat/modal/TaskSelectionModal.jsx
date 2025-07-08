@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import '@css/modal/task-selection-modal.css';
+import '@/css/modal/task-selection-modal.css';
 
 const TaskSelectionModal = ({ 
   isOpen, 

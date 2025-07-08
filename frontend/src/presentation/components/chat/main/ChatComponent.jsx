@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { apiCall, API_CONFIG } from '@infrastructure/repositories/APIChatRepository.jsx';
-import ChatMessage from '@domain/entities/ChatMessage.jsx';
-import '@css/main/chat.css';
-import useAuthStore from '@infrastructure/stores/AuthStore.jsx';
+import { apiCall, API_CONFIG } from '@/infrastructure/repositories/APIChatRepository.jsx';
+import ChatMessage from '@/domain/entities/ChatMessage.jsx';
+import '@/css/main/chat.css';
+import useAuthStore from '@/infrastructure/stores/AuthStore.jsx';
 
 // Use global marked from CDN script tag
 

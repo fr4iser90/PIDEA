@@ -1,4 +1,4 @@
-import useAuthStore from '@infrastructure/stores/AuthStore.jsx';
+import useAuthStore from '@/infrastructure/stores/AuthStore.jsx';
 
 class WebSocketService {
   constructor() {

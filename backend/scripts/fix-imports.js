@@ -4,18 +4,18 @@ const path = require('path');
 
 /**
  * Fix import patterns in all JavaScript files
- * Replaces @domain/ with @/domain/, @application/ with @/application/, etc.
+ * Replaces @/domain/ with @/domain/, @/application/ with @/application/, etc.
  */
 function fixImports() {
     const backendDir = path.join(__dirname, '..');
     const patterns = [
-        { from: '@domain/', to: '@/domain/' },
-        { from: '@application/', to: '@/application/' },
-        { from: '@infrastructure/', to: '@/infrastructure/' },
-        { from: '@presentation/', to: '@/presentation/' },
-        { from: '@tests/', to: '@/tests/' },
-        { from: '@cli/', to: '@/cli/' },
-        { from: '@scripts/', to: '@/scripts/' }
+        { from: '@/domain/', to: '@/domain/' },
+        { from: '@/application/', to: '@/application/' },
+        { from: '@/infrastructure/', to: '@/infrastructure/' },
+        { from: '@/presentation/', to: '@/presentation/' },
+        { from: '@/tests/', to: '@/tests/' },
+        { from: '@/cli/', to: '@/cli/' },
+        { from: '@/scripts/', to: '@/scripts/' }
     ];
 
     function processDirectory(dir) {

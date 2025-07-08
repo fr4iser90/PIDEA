@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import APIChatRepository from '@infrastructure/repositories/APIChatRepository.jsx';
+import APIChatRepository from '@/infrastructure/repositories/APIChatRepository.jsx';
 
 function ExecutionStep({ tasks, onTaskProgress, workflowData }) {
   const [taskStatuses, setTaskStatuses] = useState({});

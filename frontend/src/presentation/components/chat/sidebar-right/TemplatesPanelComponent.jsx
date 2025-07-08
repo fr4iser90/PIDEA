@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { apiCall } from '@infrastructure/repositories/APIChatRepository.jsx';
+import { apiCall } from '@/infrastructure/repositories/APIChatRepository.jsx';
 
 function TemplatesPanelComponent({ onTemplateClick, onTemplateUse }) {
   const [templates, setTemplates] = useState([]);

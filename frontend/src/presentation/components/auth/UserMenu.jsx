@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import useAuthStore from '@infrastructure/stores/AuthStore.jsx';
+import useAuthStore from '@/infrastructure/stores/AuthStore.jsx';
 
 const UserMenu = () => {
   const { user, logout } = useAuthStore();

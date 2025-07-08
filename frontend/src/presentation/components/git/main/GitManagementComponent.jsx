@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import '@css/main/git.css';
-import { apiCall } from '@infrastructure/repositories/APIChatRepository.jsx';
+import '@/css/main/git.css';
+import { apiCall } from '@/infrastructure/repositories/APIChatRepository.jsx';
 
 // Utility function to convert workspace path to project ID
 const getProjectIdFromWorkspace = (workspacePath) => {

@@ -1,6 +1,6 @@
 const fs = require('fs');
 const path = require('path');
-const BrowserManager = require('@infrastructure/external/BrowserManager');
+const BrowserManager = require('@/infrastructure/external/BrowserManager');
 
 class VSCodeTerminalHandler {
   constructor(ideManager = null) {

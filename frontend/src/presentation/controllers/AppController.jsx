@@ -1,13 +1,13 @@
-import ChatService from '@application/services/ChatService.jsx';
-import APIChatRepository from '@infrastructure/repositories/APIChatRepository.jsx';
-import EventBus from '@infrastructure/events/EventBus.jsx';
-import ChatComponent from '@presentation/components/ChatComponent.jsx';
-import SidebarLeft from '@presentation/components/SidebarLeft.jsx';
-import SidebarRight from '@presentation/components/SidebarRight.jsx';
-import IDEMirrorComponent from '@presentation/components/IDEMirrorComponent.jsx';
-import PreviewComponent from '@presentation/components/PreviewComponent.jsx';
-import FrameworkPanelComponent from '@presentation/components/chat/FrameworkPanelComponent.jsx';
-import FrameworkModalComponent from '@presentation/components/chat/FrameworkModalComponent.jsx';
+import ChatService from '@/application/services/ChatService.jsx';
+import APIChatRepository from '@/infrastructure/repositories/APIChatRepository.jsx';
+import EventBus from '@/infrastructure/events/EventBus.jsx';
+import ChatComponent from '@/presentation/components/ChatComponent.jsx';
+import SidebarLeft from '@/presentation/components/SidebarLeft.jsx';
+import SidebarRight from '@/presentation/components/SidebarRight.jsx';
+import IDEMirrorComponent from '@/presentation/components/IDEMirrorComponent.jsx';
+import PreviewComponent from '@/presentation/components/PreviewComponent.jsx';
+import FrameworkPanelComponent from '@/presentation/components/chat/FrameworkPanelComponent.jsx';
+import FrameworkModalComponent from '@/presentation/components/chat/FrameworkModalComponent.jsx';
 
 class AppController {
   constructor() {
@@ -152,7 +152,7 @@ class AppController {
 
     this.eventBus.on('chat-sidebar:ide:switch', async (data) => {
       try {
-        const { apiCall } = await import('@infrastructure/repositories/APIChatRepository.jsx');
+        const { apiCall } = await import('@/infrastructure/repositories/APIChatRepository.jsx');
         const result = await apiCall(`/api/ide/switch/${data.port}`, { method: 'POST' });
         if (result.success) {
           console.log('Switched to IDE:', result.data);
@@ -208,7 +208,7 @@ class AppController {
     // NEW: Chat for port loading
     this.eventBus.on('chat-sidebar:load-chat-for-port', async (data) => {
       try {
-        const { apiCall } = await import('@infrastructure/repositories/APIChatRepository.jsx');
+        const { apiCall } = await import('@/infrastructure/repositories/APIChatRepository.jsx');
         const result = await apiCall(`/api/chat/port/${data.port}/history`);
         
         if (result.success) {
@@ -521,7 +521,7 @@ class AppController {
 
   async loadInitialIDEList() {
     try {
-      const { apiCall } = await import('@infrastructure/repositories/APIChatRepository.jsx');
+      const { apiCall } = await import('@/infrastructure/repositories/APIChatRepository.jsx');
       const result = await apiCall('/api/ide/available');
       if (result.success) {
         this.eventBus.emit('ideListUpdated', { ides: result.data });

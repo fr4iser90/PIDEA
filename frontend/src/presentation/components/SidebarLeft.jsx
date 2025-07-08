@@ -10,9 +10,9 @@
  * @class SidebarLeft
  */
 import React, { useState, useEffect } from 'react';
-import useAuthStore from '@infrastructure/stores/AuthStore.jsx';
+import useAuthStore from '@/infrastructure/stores/AuthStore.jsx';
 import ChatPanelComponent from './chat/sidebar-left/ChatPanelComponent.jsx';
-import '@css/global/sidebar-left.css';
+import '@/css/global/sidebar-left.css';
 
 function SidebarLeft({ eventBus, activePort, onActivePortChange, mode = 'chat' }) {
   console.log('🔍 SidebarLeft RENDERING!');
@@ -69,7 +69,7 @@ function SidebarLeft({ eventBus, activePort, onActivePortChange, mode = 'chat' }
   
   const handleSwitchDirectlyToIDE = async (port) => {
     try {
-      const { apiCall } = await import('@infrastructure/repositories/APIChatRepository.jsx');
+      const { apiCall } = await import('@/infrastructure/repositories/APIChatRepository.jsx');
       await apiCall(`/api/ide/switch/${port}`, { method: 'POST' });
       if (onActivePortChange) onActivePortChange(port);
       refreshIDEList();
@@ -88,7 +88,7 @@ function SidebarLeft({ eventBus, activePort, onActivePortChange, mode = 'chat' }
   const refreshIDEList = async () => {
     if (!isAuthenticated) return;
     try {
-      const { apiCall } = await import('@infrastructure/repositories/APIChatRepository.jsx');
+      const { apiCall } = await import('@/infrastructure/repositories/APIChatRepository.jsx');
       const result = await apiCall('/api/ide/available');
       if (result.success) {
         setAvailableIDEs(result.data);
@@ -176,7 +176,7 @@ function SidebarLeft({ eventBus, activePort, onActivePortChange, mode = 'chat' }
                     onClick={async e => {
                       e.stopPropagation();
                       try {
-                        const { apiCall } = await import('@infrastructure/repositories/APIChatRepository.jsx');
+                        const { apiCall } = await import('@/infrastructure/repositories/APIChatRepository.jsx');
                         await apiCall(`/api/ide/workspace-detection/${ide.port}`, { method: 'POST' });
                         refreshIDEList();
                       } catch (err) {

@@ -1,10 +1,10 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App.jsx';
-import '@css/global/main.css';
-import '@css/global/sidebar-left.css';
-import '@css/global/sidebar-right.css';
-import '@css/panel/chat-panel.css';
+import '@/css/global/main.css';
+import '@/css/global/sidebar-left.css';
+import '@/css/global/sidebar-right.css';
+import '@/css/panel/chat-panel.css';
 
 // Add global styles for animations
 const globalStyles = document.createElement('style');

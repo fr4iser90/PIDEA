@@ -4,8 +4,8 @@
 const path = require('path');
 const fs = require('fs').promises;
 const fsSync = require('fs');
-const TaskPriority = require('@domain/value-objects/TaskPriority');
-const TaskType = require('@domain/value-objects/TaskType');
+const TaskPriority = require('@/domain/value-objects/TaskPriority');
+const TaskType = require('@/domain/value-objects/TaskType');
 
 class TaskController {
     constructor(taskService, taskRepository, aiService, projectAnalyzer) {

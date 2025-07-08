@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import APIChatRepository, { apiCall } from '@infrastructure/repositories/APIChatRepository.jsx';
+import APIChatRepository, { apiCall } from '@/infrastructure/repositories/APIChatRepository.jsx';
 
 function AnalysisStep({ framework, onAnalysisComplete, workflowData, setWorkflowData }) {
   const [isAnalyzing, setIsAnalyzing] = useState(false);

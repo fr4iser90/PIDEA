@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import APIChatRepository from '@infrastructure/repositories/APIChatRepository.jsx';
+import APIChatRepository from '@/infrastructure/repositories/APIChatRepository.jsx';
 import TaskSelectionModal from '../modal/TaskSelectionModal.jsx';
 
 function AutoPanelComponent({ eventBus }) {

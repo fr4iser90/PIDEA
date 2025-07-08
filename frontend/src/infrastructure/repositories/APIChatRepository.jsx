@@ -1,7 +1,7 @@
-import ChatRepository from '@domain/repositories/ChatRepository.jsx';
-import ChatMessage from '@domain/entities/ChatMessage.jsx';
-import ChatSession from '@domain/entities/ChatSession.jsx';
-import useAuthStore from '@infrastructure/stores/AuthStore.jsx';
+import ChatRepository from '@/domain/repositories/ChatRepository.jsx';
+import ChatMessage from '@/domain/entities/ChatMessage.jsx';
+import ChatSession from '@/domain/entities/ChatSession.jsx';
+import useAuthStore from '@/infrastructure/stores/AuthStore.jsx';
 
 // Utility function to convert workspace path to project ID
 const getProjectIdFromWorkspace = (workspacePath) => {

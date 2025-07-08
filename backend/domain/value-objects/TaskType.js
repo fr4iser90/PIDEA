@@ -7,6 +7,11 @@ class TaskType {
   static REFACTOR = 'refactor';
   static DOCUMENTATION = 'documentation';
   static TEST = 'test';
+  static TEST_FIX = 'test_fix';
+  static TEST_COVERAGE = 'test_coverage';
+  static TEST_REFACTOR = 'test_refactor';
+  static TEST_STATUS = 'test_status';
+  static TEST_REPORT = 'test_report';
   static OPTIMIZATION = 'optimization';
   static SECURITY = 'security';
   static ANALYSIS = 'analysis';
@@ -19,11 +24,11 @@ class TaskType {
   }
 
   requiresAI() {
-    return [TaskType.FEATURE, TaskType.BUG, TaskType.OPTIMIZATION, TaskType.SECURITY, TaskType.ANALYSIS].includes(this.value);
+    return [TaskType.FEATURE, TaskType.BUG, TaskType.OPTIMIZATION, TaskType.SECURITY, TaskType.ANALYSIS, TaskType.TEST_FIX, TaskType.TEST_COVERAGE, TaskType.TEST_REFACTOR].includes(this.value);
   }
 
   requiresExecution() {
-    return [TaskType.FEATURE, TaskType.BUG, TaskType.REFACTOR, TaskType.OPTIMIZATION, TaskType.SECURITY, TaskType.DOCUMENTATION, TaskType.ANALYSIS].includes(this.value);
+    return [TaskType.FEATURE, TaskType.BUG, TaskType.REFACTOR, TaskType.OPTIMIZATION, TaskType.SECURITY, TaskType.DOCUMENTATION, TaskType.ANALYSIS, TaskType.TEST_FIX, TaskType.TEST_COVERAGE, TaskType.TEST_REFACTOR, TaskType.TEST_STATUS, TaskType.TEST_REPORT].includes(this.value);
   }
 
   requiresHumanReview() {
@@ -50,6 +55,26 @@ class TaskType {
     return this.value === TaskType.TEST;
   }
 
+  isTestFix() {
+    return this.value === TaskType.TEST_FIX;
+  }
+
+  isTestCoverage() {
+    return this.value === TaskType.TEST_COVERAGE;
+  }
+
+  isTestRefactor() {
+    return this.value === TaskType.TEST_REFACTOR;
+  }
+
+  isTestStatus() {
+    return this.value === TaskType.TEST_STATUS;
+  }
+
+  isTestReport() {
+    return this.value === TaskType.TEST_REPORT;
+  }
+
   isOptimization() {
     return this.value === TaskType.OPTIMIZATION;
   }
@@ -69,6 +94,11 @@ class TaskType {
       TaskType.REFACTOR,
       TaskType.DOCUMENTATION,
       TaskType.TEST,
+      TaskType.TEST_FIX,
+      TaskType.TEST_COVERAGE,
+      TaskType.TEST_REFACTOR,
+      TaskType.TEST_STATUS,
+      TaskType.TEST_REPORT,
       TaskType.OPTIMIZATION,
       TaskType.SECURITY,
       TaskType.ANALYSIS
@@ -82,6 +112,11 @@ class TaskType {
       TaskType.REFACTOR,
       TaskType.DOCUMENTATION,
       TaskType.TEST,
+      TaskType.TEST_FIX,
+      TaskType.TEST_COVERAGE,
+      TaskType.TEST_REFACTOR,
+      TaskType.TEST_STATUS,
+      TaskType.TEST_REPORT,
       TaskType.OPTIMIZATION,
       TaskType.SECURITY,
       TaskType.ANALYSIS

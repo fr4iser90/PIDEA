@@ -17,7 +17,7 @@ import FrameworksPanelComponent from './chat/sidebar-right/FrameworksPanelCompon
 import PromptsPanelComponent from './chat/sidebar-right/PromptsPanelComponent.jsx';
 import TemplatesPanelComponent from './chat/sidebar-right/TemplatesPanelComponent.jsx';
 import TasksPanelComponent from './chat/sidebar-right/TasksPanelComponent.jsx';
-import '@css/global/sidebar-right.css';
+import '@/css/global/sidebar-right.css';
 
 function SidebarRight({ eventBus, attachedPrompts, setAttachedPrompts }) {
   const [currentTab, setCurrentTab] = useState('tasks');

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import APIChatRepository, { apiCall } from '@infrastructure/repositories/APIChatRepository.jsx';
+import APIChatRepository, { apiCall } from '@/infrastructure/repositories/APIChatRepository.jsx';
 import TaskSelectionModal from '../modal/TaskSelectionModal.jsx';
 import DocsTaskDetailsModal from '../modal/DocsTaskDetailsModal.jsx';
 

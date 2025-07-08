@@ -1,5 +1,5 @@
 import React from 'react';
-import '@css/modal/prompt-details-modal.css';
+import '@/css/modal/prompt-details-modal.css';
 
 function PromptDetailsModal({ open, onClose, title, content }) {
   if (!open) return null;
