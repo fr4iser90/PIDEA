@@ -722,13 +722,13 @@ class DocumentationController {
                 workspacePath
             });
 
+            // Get project path - use provided or get from IDE manager (ONCE, outside the loop!)
+            const projectPath = workspacePath || this.ideManager.getWorkspacePath(this.cursorIDEService.getActivePort());
+            
             for (const taskData of tasks) {
                 try {
                     // Convert priority string to proper format
                     const priority = this.normalizePriority(taskData.priority);
-                    
-                    // Get project path - use provided or get from IDE manager
-                    const projectPath = workspacePath || this.ideManager.getWorkspacePath(this.cursorIDEService.getActivePort());
                     
                     // Create task via TaskService
                     const task = await this.taskService.createTask(
@@ -748,55 +748,50 @@ class DocumentationController {
                     );
 
                     createdTasks.push(task);
-                    
-                    this.logger.info('[DocumentationController] Created task, starting auto-execution', {
-                        taskId: task.id,
-                        title: task.title,
-                        priority: task.priority
-                    });
-
-                    // ✅ EXECUTE DOCUMENTATION TASK DIRECTLY (NOT via TaskService!)
-                    try {
-                        this.logger.info('[DocumentationController] Executing documentation task directly', {
-                            taskId: task.id,
-                            title: task.title
-                        });
-
-                        const executionResult = await this.executeDocumentationTask(task, projectPath);
-                        
-                        executionResults.push({
-                            taskId: task.id,
-                            title: task.title,
-                            success: true,
-                            execution: executionResult,
-                            message: 'Documentation task executed successfully'
-                        });
-
-                        this.logger.info('[DocumentationController] Documentation task execution completed', {
-                            taskId: task.id,
-                            status: executionResult.status,
-                            progress: executionResult.progress
-                        });
-
-                    } catch (executionError) {
-                        this.logger.error('[DocumentationController] Documentation task execution failed', {
-                            taskId: task.id,
-                            error: executionError.message
-                        });
-
-                        executionResults.push({
-                            taskId: task.id,
-                            title: task.title,
-                            success: false,
-                            error: executionError.message,
-                            message: 'Documentation task execution failed'
-                        });
-                    }
 
                 } catch (taskError) {
                     this.logger.error('[DocumentationController] Failed to create individual task', {
                         error: taskError.message,
                         taskData: taskData
+                    });
+                }
+            }
+
+            // ✅ EXECUTE ALL TASKS IN BATCH (not individually!)
+            if (createdTasks.length > 0) {
+                this.logger.info('[DocumentationController] Executing all tasks in batch', {
+                    taskCount: createdTasks.length,
+                    projectId
+                });
+
+                try {
+                    const batchExecutionResult = await this.executeDocumentationTasksBatch(createdTasks, projectPath);
+                    
+                    executionResults.push({
+                        batchId: `batch_${projectId}_${Date.now()}`,
+                        success: true,
+                        execution: batchExecutionResult,
+                        message: `Executed ${createdTasks.length} documentation tasks in batch`,
+                        taskCount: createdTasks.length
+                    });
+
+                    this.logger.info('[DocumentationController] Batch task execution completed', {
+                        taskCount: createdTasks.length,
+                        status: batchExecutionResult.status
+                    });
+
+                } catch (batchError) {
+                    this.logger.error('[DocumentationController] Batch task execution failed', {
+                        error: batchError.message,
+                        taskCount: createdTasks.length
+                    });
+
+                    executionResults.push({
+                        batchId: `batch_${projectId}_${Date.now()}`,
+                        success: false,
+                        error: batchError.message,
+                        message: 'Batch task execution failed',
+                        taskCount: createdTasks.length
                     });
                 }
             }
@@ -1236,7 +1231,141 @@ class DocumentationController {
     }
 
     /**
-     * Execute documentation task directly using doc-execute.md framework
+     * Execute all documentation tasks in batch (ONE prompt for all tasks!)
+     */
+    async executeDocumentationTasksBatch(tasks, projectPath) {
+        try {
+            this.logger.info('[DocumentationController] Executing documentation tasks in batch', {
+                taskCount: tasks.length,
+                projectPath
+            });
+
+            // Load doc-execute.md prompt
+            const executePromptPath = path.join(
+                this.contentLibraryPath,
+                'frameworks/documentation-framework/prompts/doc-execute.md'
+            );
+
+            if (!fs.existsSync(executePromptPath)) {
+                throw new Error('doc-execute.md prompt not found');
+            }
+
+            const executePromptTemplate = fs.readFileSync(executePromptPath, 'utf8');
+
+            // Group tasks by priority
+            const highPriorityTasks = tasks.filter(t => t.priority === 'high');
+            const mediumPriorityTasks = tasks.filter(t => t.priority === 'medium');
+            const lowPriorityTasks = tasks.filter(t => t.priority === 'low');
+
+            // Create comprehensive batch execution prompt - ALL TASKS IN ONE PROMPT!
+            const batchPrompt = `${executePromptTemplate}
+
+---
+
+# 🎯 BATCH DOCUMENTATION TASK EXECUTION
+
+**Project Path**: ${projectPath}
+**Total Tasks**: ${tasks.length}
+**Execution Mode**: Batch Processing (All tasks in one session)
+
+## 📋 TASK PRIORITIZATION
+
+### 🔴 HIGH PRIORITY TASKS (Execute First)
+${highPriorityTasks.map((task, index) => `
+**${index + 1}. ${task.title}**
+- **Description**: ${task.description}
+- **Type**: ${task.type}
+- **Created**: ${task.createdAt}
+`).join('\n')}
+
+### 🟡 MEDIUM PRIORITY TASKS (Execute After High Priority)
+${mediumPriorityTasks.map((task, index) => `
+**${index + 1}. ${task.title}**
+- **Description**: ${task.description}
+- **Type**: ${task.type}
+- **Created**: ${task.createdAt}
+`).join('\n')}
+
+### 🟢 LOW PRIORITY TASKS (Execute Last)
+${lowPriorityTasks.map((task, index) => `
+**${index + 1}. ${task.title}**
+- **Description**: ${task.description}
+- **Type**: ${task.type}
+- **Created**: ${task.createdAt}
+`).join('\n')}
+
+## 🚀 BATCH EXECUTION INSTRUCTIONS
+
+1. **Execute ALL tasks in this single session** - Do not stop between tasks
+2. **Follow priority order**: HIGH → MEDIUM → LOW
+3. **Create Git branches** for major task groups (e.g., \`docs/api-documentation\`, \`docs/readme-update\`)
+4. **Follow documentation best practices**:
+   - Clear, concise writing
+   - Proper markdown formatting
+   - Include examples and code snippets
+   - Add diagrams where helpful
+5. **Test all documentation** - Ensure links work and examples are accurate
+6. **Commit frequently** with descriptive messages
+
+## 🎯 SUCCESS CRITERIA
+
+- ✅ All tasks completed in this session
+- ✅ Documentation structure is coherent
+- ✅ All examples are tested and working
+- ✅ Documentation follows consistent style
+- ✅ README and API docs are comprehensive
+
+**Begin executing ALL tasks now in priority order. Complete the entire batch in this session.**
+
+---
+
+*Generated by PIDEA Documentation Framework - ${new Date().toISOString()}*`;
+
+            // Send the batch prompt to Cursor IDE - ONLY ONE PROMPT FOR ALL TASKS!
+            this.logger.info('[DocumentationController] Sending batch execution prompt to IDE', {
+                taskCount: tasks.length,
+                promptLength: batchPrompt.length
+            });
+            
+            const ideResponse = await this.cursorIDEService.sendMessage(batchPrompt, {
+                waitForResponse: false // Fire and forget for batch execution
+            });
+
+            this.logger.info('[DocumentationController] Batch execution prompt sent', {
+                taskCount: tasks.length,
+                success: ideResponse.success,
+                responseLength: ideResponse.response?.length || 0
+            });
+
+            return {
+                batchId: `batch_${Date.now()}`,
+                status: 'completed',
+                progress: 100,
+                executionTime: new Date().toISOString(),
+                promptSent: true,
+                ideResponse: ideResponse,
+                message: `Executed ${tasks.length} documentation tasks in batch`,
+                taskCount: tasks.length
+            };
+
+        } catch (error) {
+            this.logger.error('[DocumentationController] Batch task execution failed', {
+                taskCount: tasks.length,
+                error: error.message
+            });
+
+            return {
+                batchId: `batch_${Date.now()}`,
+                status: 'failed',
+                progress: 0,
+                error: error.message,
+                message: 'Batch task execution failed'
+            };
+        }
+    }
+
+    /**
+     * Execute documentation task directly using doc-execute.md framework (DEPRECATED - use executeDocumentationTasksBatch instead)
      */
     async executeDocumentationTask(task, projectPath) {
         try {
