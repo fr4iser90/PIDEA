@@ -11,6 +11,7 @@ Review, validate, and improve development tasks against the actual codebase. Ana
 - [ ] Map current architecture patterns and conventions
 - [ ] Document actual tech stack and dependencies
 - [ ] Analyze existing code quality and patterns
+- [ ] Assess task complexity and splitting requirements
 
 ### Phase 2: Implementation File Validation
 - [ ] Read existing implementation file
@@ -39,6 +40,8 @@ Review, validate, and improve development tasks against the actual codebase. Ana
 - [ ] Correct technical specifications
 - [ ] Enhance implementation details
 - [ ] Add real-world constraints and considerations
+- [ ] Evaluate and recommend task splitting if needed
+- [ ] Create subtask breakdown for large tasks
 
 ## Validation Rules
 
@@ -62,6 +65,13 @@ Review, validate, and improve development tasks against the actual codebase. Ana
 - **Frontend-Backend**: Validate data flow between layers
 - **Event System**: Check event handling and messaging
 - **WebSocket**: Verify real-time communication setup
+
+### Task Splitting Validation
+- **Size Assessment**: Tasks > 8 hours should be split
+- **Complexity Check**: Tasks with > 10 files or > 5 phases need splitting
+- **Dependency Analysis**: Independent components can be parallel subtasks
+- **Risk Isolation**: High-risk components should be separate subtasks
+- **Atomic Units**: Each subtask should be independently testable
 
 ## Review Output Format
 
@@ -94,6 +104,12 @@ Review, validate, and improve development tasks against the actual codebase. Ana
 2. Fix security vulnerabilities in `AuthController.js`
 3. Add integration tests for user registration
 4. Update API documentation
+
+### 📋 Task Splitting Recommendations
+- **Main Task**: User Authentication System (12 hours) → Split into 3 subtasks
+- **Subtask 1**: Authentication Backend (4 hours) - Foundation services
+- **Subtask 2**: Frontend Components (4 hours) - UI and forms
+- **Subtask 3**: Integration & Testing (4 hours) - End-to-end validation
 ```
 
 ### Gap Analysis Report
@@ -135,6 +151,13 @@ Review, validate, and improve development tasks against the actual codebase. Ana
 2. **Missing Packages**
    - `bcryptjs` (used but not in package.json)
    - `jsonwebtoken` (version mismatch)
+
+### Task Splitting Analysis
+1. **Current Task Size**: 12 hours (exceeds 8-hour limit)
+2. **File Count**: 15 files to modify (exceeds 10-file limit)
+3. **Phase Count**: 6 phases (exceeds 5-phase limit)
+4. **Recommended Split**: 3 subtasks of 4 hours each
+5. **Independent Components**: Backend, Frontend, Integration
 ```
 
 ## Automated Validation Commands
@@ -186,19 +209,27 @@ npm run db:validate
 - Remove references to non-existent files
 - Update import statements with correct paths
 
-### 2. Enhance Technical Details
+### 2. Task Splitting Assessment
+- Evaluate task size against 8-hour threshold
+- Count files to modify (limit: 10 files)
+- Count implementation phases (limit: 5 phases)
+- Identify independent components for parallel development
+- Assess risk factors for isolation
+- Create subtask breakdown with clear boundaries
+
+### 3. Enhance Technical Details
 - Add actual code examples from existing files
 - Include real configuration values
 - Document actual API responses
 - Add error handling patterns from codebase
 
-### 3. Improve Implementation Steps
+### 4. Improve Implementation Steps
 - Break down complex tasks into smaller steps
 - Add validation checkpoints
 - Include rollback procedures
 - Add troubleshooting guides
 
-### 4. Update Dependencies
+### 5. Update Dependencies
 - List actual package versions used
 - Include peer dependencies
 - Document environment requirements
@@ -240,6 +271,8 @@ npm run db:validate
 - [ ] Add missing implementation details
 - [ ] Include real-world examples
 - [ ] Document lessons learned
+- [ ] Create subtask breakdown if splitting required
+- [ ] Update parent task with subtask references
 
 ## Success Criteria
 - All file paths match actual project structure
@@ -249,6 +282,9 @@ npm run db:validate
 - Code quality meets project standards
 - Security and performance requirements are met
 - Documentation is comprehensive and up-to-date
+- Large tasks are properly split into manageable subtasks
+- Subtask dependencies and order are clearly defined
+- Each subtask is independently deliverable and testable
 
 ## Usage Instructions
 1. Run codebase analysis to understand current state
@@ -257,6 +293,10 @@ npm run db:validate
 4. Update implementation file with findings
 5. Provide actionable recommendations
 6. Document lessons learned and best practices
+7. Assess task size and complexity for splitting requirements
+8. Create subtask breakdown for large tasks
+9. Validate subtask dependencies and execution order
+10. Ensure each subtask meets size and complexity guidelines
 
 ## Example Usage
-> Review and validate the user authentication implementation against the current codebase. Analyze the auth-implementation.md file, check all planned files exist, verify API endpoints work, and update the implementation file with any gaps or improvements found.
+> Review and validate the user authentication implementation against the current codebase. Analyze the auth-implementation.md file, check all planned files exist, verify API endpoints work, assess if the 12-hour task needs splitting into smaller subtasks, and update the implementation file with any gaps, improvements, or subtask breakdown found.
