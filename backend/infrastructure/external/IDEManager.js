@@ -13,6 +13,7 @@ class IDEManager {
     this.activePort = null;
     this.ideStatus = new Map(); // port -> status
     this.ideWorkspaces = new Map(); // port -> workspace path
+    this.ideTypes = new Map(); // port -> ide type (cursor/vscode)
   }
 
   async initialize() {
@@ -63,6 +64,7 @@ class IDEManager {
         ...ide,
         source: 'detected',
         workspacePath: this.ideWorkspaces.get(ide.port) || null,
+        ideType: this.ideTypes.get(ide.port) || ide.ideType || 'cursor',
         active: ide.port === this.activePort
       });
     });
@@ -72,6 +74,7 @@ class IDEManager {
         ...ide,
         source: 'started',
         workspacePath: this.ideWorkspaces.get(ide.port) || null,
+        ideType: this.ideTypes.get(ide.port) || ide.ideType || 'cursor',
         active: ide.port === this.activePort
       });
     });
@@ -79,8 +82,8 @@ class IDEManager {
     return Array.from(allIDEs.values());
   }
 
-  async startNewIDE(workspacePath = null) {
-    console.log('[IDEManager] Starting new IDE...');
+  async startNewIDE(workspacePath = null, ideType = 'cursor') {
+    console.log('[IDEManager] Starting new', ideType, 'IDE...');
     
     // If no workspace path provided, use the project root (one level up from backend)
     if (!workspacePath) {
@@ -90,14 +93,15 @@ class IDEManager {
       console.log('[IDEManager] No workspace path provided, using project root:', workspacePath);
     }
     
-    const availablePort = await this.detector.findAvailablePort();
-    const ideInfo = await this.starter.startIDE(availablePort, workspacePath);
+    const availablePort = await this.detector.findAvailablePort(ideType);
+    const ideInfo = await this.starter.startIDE(availablePort, workspacePath, ideType);
     
     this.ideStatus.set(availablePort, 'starting');
     
-    // Track workspace path
+    // Track workspace path and IDE type
     this.ideWorkspaces.set(availablePort, workspacePath);
-    console.log('[IDEManager] Tracked workspace path for port', availablePort, ':', workspacePath);
+    this.ideTypes.set(availablePort, ideType);
+    console.log('[IDEManager] Tracked workspace path for port', availablePort, ':', workspacePath, 'IDE type:', ideType);
     
     // Wait for IDE to be ready
     await this.waitForIDE(availablePort);
@@ -109,7 +113,7 @@ class IDEManager {
       this.activePort = availablePort;
     }
     
-    console.log('[IDEManager] New IDE started on port', availablePort);
+    console.log('[IDEManager] New', ideType, 'IDE started on port', availablePort);
     return ideInfo;
   }
 
@@ -147,12 +151,15 @@ class IDEManager {
   async stopIDE(port) {
     console.log('[IDEManager] Stopping IDE on port', port);
     
-    // Stop the IDE process
-    await this.starter.stopIDE(port);
+    const ideType = this.ideTypes.get(port) || 'cursor';
     
-    // Update status and remove workspace tracking
+    // Stop the IDE process
+    await this.starter.stopIDE(port, ideType);
+    
+    // Update status and remove tracking
     this.ideStatus.delete(port);
     this.ideWorkspaces.delete(port);
+    this.ideTypes.delete(port);
     
     // If this was the active IDE, switch to another one
     if (this.activePort === port) {
@@ -166,7 +173,7 @@ class IDEManager {
       }
     }
     
-    return { port, status: 'stopped' };
+    return { port, status: 'stopped', ideType };
   }
 
   async stopAllIDEs() {
@@ -202,6 +209,10 @@ class IDEManager {
   // New method to get workspace path for a specific IDE
   getWorkspacePath(port) {
     return this.ideWorkspaces.get(port) || null;
+  }
+
+  getIDEType(port) {
+    return this.ideTypes.get(port) || 'cursor';
   }
 
   // New method to get active workspace path

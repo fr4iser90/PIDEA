@@ -161,6 +161,12 @@ class ServiceRegistry {
             return new CursorIDEService(browserManager, ideManager, eventBus);
         }, { singleton: true, dependencies: ['browserManager', 'ideManager', 'eventBus'] });
 
+        // VSCode service
+        this.container.register('vscodeService', (browserManager, ideManager, eventBus) => {
+            const VSCodeService = require('../../domain/services/VSCodeService');
+            return new VSCodeService(browserManager, ideManager, eventBus);
+        }, { singleton: true, dependencies: ['browserManager', 'ideManager', 'eventBus'] });
+
         // Auth service
         this.container.register('authService', (userRepository, userSessionRepository) => {
             const AuthService = require('../../domain/services/AuthService');

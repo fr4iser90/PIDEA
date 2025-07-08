@@ -43,14 +43,15 @@ class IDEController {
 
   async startIDE(req, res) {
     try {
-      const { workspacePath } = req.body;
-      const ideInfo = await this.ideManager.startNewIDE(workspacePath);
+      const { workspacePath, ideType = 'cursor' } = req.body;
+      const ideInfo = await this.ideManager.startNewIDE(workspacePath, ideType);
       
       // Publish event
       if (this.eventBus) {
         await this.eventBus.publish('ideAdded', {
           port: ideInfo.port,
-          status: ideInfo.status
+          status: ideInfo.status,
+          ideType: ideInfo.ideType
         });
       }
       
@@ -1027,6 +1028,131 @@ class IDEController {
         return 'text/plain';
       default:
         return 'application/octet-stream';
+    }
+  }
+
+  // VSCode-specific endpoints
+  async startVSCode(req, res) {
+    try {
+      const { workspacePath } = req.body;
+      const ideInfo = await this.ideManager.startNewIDE(workspacePath, 'vscode');
+      
+      // Publish event
+      if (this.eventBus) {
+        await this.eventBus.publish('vscodeAdded', {
+          port: ideInfo.port,
+          status: ideInfo.status,
+          ideType: 'vscode'
+        });
+      }
+      
+      res.json({
+        success: true,
+        data: ideInfo
+      });
+    } catch (error) {
+      console.error('[IDEController] Error starting VSCode:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to start VSCode'
+      });
+    }
+  }
+
+  async getVSCodeExtensions(req, res) {
+    try {
+      const port = parseInt(req.params.port);
+      
+      if (!this.cursorIDEService) {
+        throw new Error('VSCodeService not available');
+      }
+      
+      const extensions = await this.cursorIDEService.getExtensions(port);
+      
+      res.json({
+        success: true,
+        data: extensions
+      });
+    } catch (error) {
+      console.error('[IDEController] Error getting VSCode extensions:', error);
+      res.status(500).json({
+        success: false,
+        error: error.message
+      });
+    }
+  }
+
+  async getVSCodeWorkspaceInfo(req, res) {
+    try {
+      const port = parseInt(req.params.port);
+      
+      if (!this.cursorIDEService) {
+        throw new Error('VSCodeService not available');
+      }
+      
+      const workspaceInfo = await this.ideManager.getWorkspaceInfo(port);
+      
+      res.json({
+        success: true,
+        data: workspaceInfo
+      });
+    } catch (error) {
+      console.error('[IDEController] Error getting VSCode workspace info:', error);
+      res.status(500).json({
+        success: false,
+        error: error.message
+      });
+    }
+  }
+
+  async sendMessageToVSCode(req, res) {
+    try {
+      const { message, extensionType = 'githubCopilot', port } = req.body;
+      
+      if (!this.cursorIDEService) {
+        throw new Error('VSCodeService not available');
+      }
+      
+      // Switch to specified port if provided
+      if (port) {
+        await this.cursorIDEService.switchToPort(port);
+      }
+      
+      const result = await this.cursorIDEService.sendMessage(message, { extensionType });
+      
+      res.json({
+        success: true,
+        data: result
+      });
+    } catch (error) {
+      console.error('[IDEController] Error sending message to VSCode:', error);
+      res.status(500).json({
+        success: false,
+        error: error.message
+      });
+    }
+  }
+
+  async getVSCodeStatus(req, res) {
+    try {
+      const port = parseInt(req.params.port);
+      
+      if (!this.cursorIDEService) {
+        throw new Error('VSCodeService not available');
+      }
+      
+      const status = await this.cursorIDEService.getConnectionStatus('vscode-user');
+      
+      res.json({
+        success: true,
+        data: status
+      });
+    } catch (error) {
+      console.error('[IDEController] Error getting VSCode status:', error);
+      res.status(500).json({
+        success: false,
+        error: error.message
+      });
     }
   }
 }
