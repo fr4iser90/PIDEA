@@ -1,6 +1,6 @@
 const TerminalMonitor = require('./terminal/TerminalMonitor');
 const WorkspacePathDetector = require('./workspace/WorkspacePathDetector');
-const ChatMessageHandler = require('./chat/ChatMessageHandler');
+const VSCodeChatHandler = require('./vscode/VSCodeChatHandler');
 const ChatHistoryExtractor = require('./chat/ChatHistoryExtractor');
 const PackageJsonAnalyzer = require('./dev-server/PackageJsonAnalyzer');
 const VSCodeExtensionManager = require('../../infrastructure/external/VSCodeExtensionManager');
@@ -15,7 +15,7 @@ class VSCodeService {
     this.terminalMonitor = new TerminalMonitor(browserManager, eventBus);
     this.packageJsonAnalyzer = new PackageJsonAnalyzer(eventBus);
     this.workspacePathDetector = new WorkspacePathDetector(browserManager, ideManager);
-    this.chatMessageHandler = new ChatMessageHandler(browserManager);
+    this.chatMessageHandler = new VSCodeChatHandler(browserManager);
     this.chatHistoryExtractor = new ChatHistoryExtractor(browserManager);
     this.extensionManager = new VSCodeExtensionManager();
     

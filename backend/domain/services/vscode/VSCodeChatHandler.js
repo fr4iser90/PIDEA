@@ -5,22 +5,80 @@ class VSCodeChatHandler extends ChatMessageHandler {
     super(browserManager);
     this.extensionSelectors = {
       githubCopilot: {
-        chatInput: '.copilot-chat-input',
-        sendButton: '.copilot-chat-send-button',
-        chatContainer: '.copilot-chat-container',
-        messages: '.copilot-chat-message'
+        chatInput: [
+          '.copilot-chat-input',
+          '.copilot-chat-input textarea',
+          '.copilot-chat-input input',
+          '.ced-chat-session-detail textarea',
+          '.ced-chat-session-detail input',
+          '.ced-chat-session-detail-6d1b1917-3 textarea',
+          '.ced-chat-session-detail-6d1b1917-4 textarea',
+          '.monaco-workbench textarea',
+          '.monaco-workbench input',
+          '.chat-input',
+          '.chat-input textarea',
+          '.chat-input input'
+        ],
+        sendButton: [
+          '.copilot-chat-send-button',
+          '.copilot-chat button[type="submit"]',
+          '.copilot-chat button:has-text("Send")',
+          '.chat-send-button',
+          '.chat button[type="submit"]',
+          '.chat button:has-text("Send")',
+          'button[aria-label*="Send"]',
+          'button[title*="Send"]'
+        ],
+        chatContainer: [
+          '.copilot-chat-container',
+          '.copilot-chat',
+          '.ced-chat-session-detail',
+          '.chat'
+        ],
+        messages: [
+          '.copilot-chat-message',
+          '.ced-chat-session-detail-6d1b1917-3',
+          '.ced-chat-session-detail-6d1b1917-4',
+          '.chat-message'
+        ]
       },
       chatGPT: {
-        chatInput: '.chatgpt-input',
-        sendButton: '.chatgpt-send-button',
-        chatContainer: '.chatgpt-container',
-        messages: '.chatgpt-message'
+        chatInput: [
+          '.chatgpt-input',
+          '.chatgpt-input textarea',
+          '.chatgpt-input input'
+        ],
+        sendButton: [
+          '.chatgpt-send-button',
+          '.chatgpt button[type="submit"]',
+          '.chatgpt button:has-text("Send")'
+        ],
+        chatContainer: [
+          '.chatgpt-container',
+          '.chatgpt'
+        ],
+        messages: [
+          '.chatgpt-message'
+        ]
       },
       codeGPT: {
-        chatInput: '.codegpt-input',
-        sendButton: '.codegpt-send-button',
-        chatContainer: '.codegpt-container',
-        messages: '.codegpt-message'
+        chatInput: [
+          '.codegpt-input',
+          '.codegpt-input textarea',
+          '.codegpt-input input'
+        ],
+        sendButton: [
+          '.codegpt-send-button',
+          '.codegpt button[type="submit"]',
+          '.codegpt button:has-text("Send")'
+        ],
+        chatContainer: [
+          '.codegpt-container',
+          '.codegpt'
+        ],
+        messages: [
+          '.codegpt-message'
+        ]
       }
     };
   }
@@ -41,16 +99,56 @@ class VSCodeChatHandler extends ChatMessageHandler {
         throw new Error(`Unsupported extension type: ${extensionType}`);
       }
 
-      await page.waitForSelector(selectors.chatInput, { timeout: 10000 });
-      
-      await page.click(selectors.chatInput);
+      // Wait for VSCode to be ready
+      await page.waitForSelector('.monaco-workbench', { timeout: 10000 });
+
+      // Find chat input using multiple selectors
+      let chatInput = null;
+      for (const selector of selectors.chatInput) {
+        try {
+          chatInput = await page.$(selector);
+          if (chatInput) {
+            console.log(`[VSCodeChatHandler] Found chat input with selector: ${selector}`);
+            break;
+          }
+        } catch (e) {
+          // Continue to next selector
+        }
+      }
+
+      if (!chatInput) {
+        throw new Error(`Could not find chat input for ${extensionType}`);
+      }
+
+      // Clear existing text and type the message
+      await chatInput.click();
       await page.keyboard.down('Control');
       await page.keyboard.press('KeyA');
       await page.keyboard.up('Control');
       await page.keyboard.press('Backspace');
-      
-      await page.type(selectors.chatInput, message);
-      await page.click(selectors.sendButton);
+      await chatInput.type(message);
+
+      // Find and click send button
+      let sendButton = null;
+      for (const selector of selectors.sendButton) {
+        try {
+          sendButton = await page.$(selector);
+          if (sendButton) {
+            console.log(`[VSCodeChatHandler] Found send button with selector: ${selector}`);
+            break;
+          }
+        } catch (e) {
+          // Continue to next selector
+        }
+      }
+
+      if (!sendButton) {
+        // Try pressing Enter as fallback
+        console.log('[VSCodeChatHandler] No send button found, trying Enter key...');
+        await page.keyboard.press('Enter');
+      } else {
+        await sendButton.click();
+      }
       
       console.log('[VSCodeChatHandler] Message sent successfully');
       
@@ -83,17 +181,51 @@ class VSCodeChatHandler extends ChatMessageHandler {
         throw new Error(`Unsupported extension type: ${extensionType}`);
       }
 
-      await page.waitForSelector(selectors.chatContainer, { timeout: 10000 });
+      // Wait for VSCode to be ready
+      await page.waitForSelector('.monaco-workbench', { timeout: 10000 });
+
+      // Find chat container using multiple selectors
+      let chatContainer = null;
+      for (const selector of selectors.chatContainer) {
+        try {
+          chatContainer = await page.$(selector);
+          if (chatContainer) {
+            console.log(`[VSCodeChatHandler] Found chat container with selector: ${selector}`);
+            break;
+          }
+        } catch (e) {
+          // Continue to next selector
+        }
+      }
+
+      if (!chatContainer) {
+        console.log('[VSCodeChatHandler] No chat container found, returning empty history');
+        return [];
+      }
       
-      const messages = await page.evaluate((selector) => {
-        const messageElements = document.querySelectorAll(selector);
-        return Array.from(messageElements).map((element, index) => ({
-          id: index,
-          content: element.textContent || element.innerText,
-          timestamp: new Date().toISOString(),
-          element: element.outerHTML
-        }));
-      }, selectors.messages);
+      // Extract messages using multiple selectors
+      let messages = [];
+      for (const selector of selectors.messages) {
+        try {
+          const messageElements = await page.$$(selector);
+          if (messageElements.length > 0) {
+            console.log(`[VSCodeChatHandler] Found ${messageElements.length} messages with selector: ${selector}`);
+            
+            messages = await page.evaluate((sel) => {
+              const elements = document.querySelectorAll(sel);
+              return Array.from(elements).map((element, index) => ({
+                id: index,
+                content: element.textContent || element.innerText,
+                timestamp: new Date().toISOString(),
+                element: element.outerHTML
+              }));
+            }, selector);
+            break;
+          }
+        } catch (e) {
+          // Continue to next selector
+        }
+      }
       
       console.log('[VSCodeChatHandler] Extracted', messages.length, 'messages');
       
@@ -117,8 +249,20 @@ class VSCodeChatHandler extends ChatMessageHandler {
         return false;
       }
 
-      const element = await page.$(selectors.chatInput);
-      return element !== null;
+      // Check if any of the chat input selectors exist
+      for (const selector of selectors.chatInput) {
+        try {
+          const element = await page.$(selector);
+          if (element !== null) {
+            console.log(`[VSCodeChatHandler] Extension ${extensionType} available with selector: ${selector}`);
+            return true;
+          }
+        } catch (e) {
+          // Continue to next selector
+        }
+      }
+      
+      return false;
       
     } catch (error) {
       console.error('[VSCodeChatHandler] Error checking extension availability:', error);

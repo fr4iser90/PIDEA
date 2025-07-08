@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
-const BrowserManager = require('../backend/infrastructure/external/BrowserManager');
-const IDEManager = require('../backend/infrastructure/external/IDEManager');
+const BrowserManager = require('../../backend/infrastructure/external/BrowserManager');
+const IDEManager = require('../../backend/infrastructure/external/IDEManager');
 
 class AutoDOMCollector {
   constructor() {
