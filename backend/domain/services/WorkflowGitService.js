@@ -218,15 +218,15 @@ class WorkflowGitService {
                 mergeTarget: 'develop'
             },
 
-            // Testing Workflows - PIDEA Agent Branch
+            // Testing Workflows 
             [safe(TaskType.TESTING)]: {
                 type: 'testing',
                 prefix: 'test',
-                startPoint: 'pidea-agent',
+                startPoint: 'main',
                 protection: 'low',
                 autoMerge: true,
                 requiresReview: false,
-                mergeTarget: 'pidea-agent'
+                mergeTarget: 'main'
             },
 
             // Documentation Workflows
