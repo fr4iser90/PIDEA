@@ -30,29 +30,56 @@ class TestFixTaskGenerator {
 
       // Generate tasks for failing tests
       for (const failingTest of parsedData.failingTests) {
+        const filePath = failingTest.testFile || failingTest.fileName;
+        if (this.shouldSkipFile(filePath)) {
+          this.logger.debug(`[TestFixTaskGenerator] Skipping failing test file: ${filePath}`);
+          continue; // Skip non-code files!
+        }
         const task = this.createFailingTestTask(failingTest, projectId, userId);
         tasks.push(task);
       }
 
       // Generate tasks for coverage issues
       for (const coverageIssue of parsedData.coverageIssues) {
+        if (this.shouldSkipFile(coverageIssue.file)) {
+          this.logger.debug(`[TestFixTaskGenerator] Skipping coverage file: ${coverageIssue.file}`);
+          continue;
+        }
         const task = this.createCoverageTask(coverageIssue, projectId, userId);
         tasks.push(task);
       }
 
       // Generate tasks for legacy tests
       for (const legacyTest of parsedData.legacyTests) {
+        const filePath = legacyTest.testFile || legacyTest.fileName;
+        if (this.shouldSkipFile(filePath)) {
+          this.logger.debug(`[TestFixTaskGenerator] Skipping legacy test file: ${filePath}`);
+          continue;
+        }
         const task = this.createLegacyTestTask(legacyTest, projectId, userId);
         tasks.push(task);
       }
 
       // Generate tasks for complex tests
       for (const complexTest of parsedData.complexTests) {
+        if (this.shouldSkipFile(complexTest.fileName)) {
+          this.logger.debug(`[TestFixTaskGenerator] Skipping complex test file: ${complexTest.fileName}`);
+          continue;
+        }
         const task = this.createComplexTestTask(complexTest, projectId, userId);
         tasks.push(task);
       }
 
-      this.logger.info(`[TestFixTaskGenerator] Generated ${tasks.length} tasks`);
+      this.logger.info(`[TestFixTaskGenerator] Generated ${tasks.length} tasks from test data`);
+      
+      // Log summary of what was processed
+      const totalFailingTests = parsedData.failingTests?.length || 0;
+      const totalCoverageIssues = parsedData.coverageIssues?.length || 0;
+      const totalLegacyTests = parsedData.legacyTests?.length || 0;
+      const totalComplexTests = parsedData.complexTests?.length || 0;
+      
+      this.logger.info(`[TestFixTaskGenerator] Summary: ${totalFailingTests} failing tests, ${totalCoverageIssues} coverage issues, ${totalLegacyTests} legacy tests, ${totalComplexTests} complex tests processed`);
+      
       return tasks;
 
     } catch (error) {
@@ -332,6 +359,67 @@ class TestFixTaskGenerator {
     if (coverage < 20) return TaskPriority.HIGH;
     if (coverage < 50) return TaskPriority.MEDIUM;
     return TaskPriority.LOW;
+  }
+
+  /**
+   * Check if a file should be skipped (non-code files)
+   * @param {string} filePath - File path to check
+   * @returns {boolean} True if file should be skipped
+   */
+  shouldSkipFile(filePath) {
+    if (!filePath) return true;
+    
+    // Skip markdown files
+    if (filePath.endsWith('.md') || filePath.endsWith('.markdown')) {
+      return true;
+    }
+    
+    // Skip documentation directories
+    if (filePath.includes('/docs/') || filePath.includes('/documentation/')) {
+      return true;
+    }
+    
+    // Skip README files
+    if (filePath.toLowerCase().includes('readme')) {
+      return true;
+    }
+    
+    // Skip license files
+    if (filePath.toLowerCase().includes('license')) {
+      return true;
+    }
+    
+    // Skip configuration files that don't need test coverage
+    if (filePath.endsWith('.json') || filePath.endsWith('.yaml') || filePath.endsWith('.yml')) {
+      return true;
+    }
+    
+    // Skip lock files
+    if (filePath.endsWith('.lock') || filePath.includes('package-lock.json') || filePath.includes('yarn.lock')) {
+      return true;
+    }
+    
+    // Skip git files
+    if (filePath.includes('.git/') || filePath.includes('.gitignore')) {
+      return true;
+    }
+    
+    // Skip node_modules
+    if (filePath.includes('node_modules/')) {
+      return true;
+    }
+    
+    // Skip build artifacts
+    if (filePath.includes('/dist/') || filePath.includes('/build/') || filePath.includes('/coverage/')) {
+      return true;
+    }
+    
+    // Skip log files
+    if (filePath.endsWith('.log')) {
+      return true;
+    }
+    
+    return false;
   }
 
   /**

@@ -31,32 +31,67 @@ class TestReportParser {
       // Parse test-report.md
       const testReportPath = path.join(projectPath, 'test-report.md');
       if (fs.existsSync(testReportPath)) {
+        this.logger.info('[TestReportParser] Found test-report.md, parsing...');
         const testReportData = await this.parseTestReport(testReportPath);
         results.failingTests = testReportData.failingTests;
         results.legacyTests = testReportData.legacyTests;
         results.complexTests = testReportData.complexTests;
         results.summary.testReport = testReportData.summary;
+      } else {
+        this.logger.warn('[TestReportParser] test-report.md not found, skipping...');
+      }
+
+      // Parse test-report-full.md
+      const testReportFullPath = path.join(projectPath, 'test-report-full.md');
+      if (fs.existsSync(testReportFullPath)) {
+        this.logger.info('[TestReportParser] Found test-report-full.md, parsing...');
+        const testReportFullData = await this.parseTestReport(testReportFullPath);
+        // Merge with existing data
+        results.failingTests = this.mergeTestData(results.failingTests, testReportFullData.failingTests);
+        results.legacyTests = this.mergeTestData(results.legacyTests, testReportFullData.legacyTests);
+        results.complexTests = this.mergeTestData(results.complexTests, testReportFullData.complexTests);
+      } else {
+        this.logger.warn('[TestReportParser] test-report-full.md not found, skipping...');
       }
 
       // Parse coverage.md
       const coveragePath = path.join(projectPath, 'coverage.md');
       if (fs.existsSync(coveragePath)) {
+        this.logger.info('[TestReportParser] Found coverage.md, parsing...');
         const coverageData = await this.parseCoverageReport(coveragePath);
         results.coverageIssues = coverageData.coverageIssues;
         results.summary.coverage = coverageData.summary;
+      } else {
+        this.logger.warn('[TestReportParser] coverage.md not found, skipping...');
       }
 
       // Parse test-analysis-full.json
       const analysisPath = path.join(projectPath, 'test-analysis-full.json');
       if (fs.existsSync(analysisPath)) {
+        this.logger.info('[TestReportParser] Found test-analysis-full.json, parsing...');
         const analysisData = await this.parseAnalysisJson(analysisPath);
         results.summary.analysis = analysisData.summary;
         // Merge with existing data
         results.failingTests = this.mergeTestData(results.failingTests, analysisData.failingTests);
         results.legacyTests = this.mergeTestData(results.legacyTests, analysisData.legacyTests);
+      } else {
+        this.logger.warn('[TestReportParser] test-analysis-full.json not found, skipping...');
       }
 
-      this.logger.info(`[TestReportParser] Parsed ${results.failingTests.length} failing tests, ${results.coverageIssues.length} coverage issues`);
+      // Parse test-data.json (from test:export)
+      const testDataPath = path.join(projectPath, 'test-data.json');
+      if (fs.existsSync(testDataPath)) {
+        this.logger.info('[TestReportParser] Found test-data.json, parsing...');
+        const testData = await this.parseTestDataJson(testDataPath);
+        // Merge with existing data
+        results.failingTests = this.mergeTestData(results.failingTests, testData.failingTests);
+        results.legacyTests = this.mergeTestData(results.legacyTests, testData.legacyTests);
+        results.complexTests = this.mergeTestData(results.complexTests, testData.complexTests);
+      } else {
+        this.logger.warn('[TestReportParser] test-data.json not found, skipping...');
+      }
+
+      this.logger.info(`[TestReportParser] Parsed ${results.failingTests.length} failing tests, ${results.coverageIssues.length} coverage issues, ${results.legacyTests.length} legacy tests, ${results.complexTests.length} complex tests`);
       return results;
 
     } catch (error) {
@@ -198,6 +233,47 @@ class TestReportParser {
       maintenanceTests: data.maintenanceTests || [],
       complexTests: data.complexTests || []
     };
+  }
+
+  /**
+   * Parse test-data.json file (from test:export)
+   * @param {string} filePath - Path to test-data.json
+   * @returns {Promise<Object>} Parsed test data
+   */
+  async parseTestDataJson(filePath) {
+    const content = fs.readFileSync(filePath, 'utf8');
+    const data = JSON.parse(content);
+    
+    const result = {
+      failingTests: [],
+      legacyTests: [],
+      complexTests: []
+    };
+
+    // Convert TestMetadata objects to test data format
+    if (data.tests && Array.isArray(data.tests)) {
+      for (const test of data.tests) {
+        const testData = {
+          fileName: test.fileName,
+          testName: test.testName,
+          error: test.getMetadata('lastError') || 'Unknown error',
+          healthScore: test.getHealthScore(),
+          legacyScore: test.legacyScore,
+          complexityScore: test.complexityScore,
+          source: 'test-data-export'
+        };
+
+        if (test.isFailing()) {
+          result.failingTests.push(testData);
+        } else if (test.isLegacy || test.legacyScore > 70) {
+          result.legacyTests.push(testData);
+        } else if (test.isHighComplexity()) {
+          result.complexTests.push(testData);
+        }
+      }
+    }
+
+    return result;
   }
 
   /**

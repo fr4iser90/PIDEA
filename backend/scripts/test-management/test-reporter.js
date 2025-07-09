@@ -30,6 +30,18 @@ async function loadTestDataFromFile(filePath) {
   }
 }
 
+async function loadJestResults() {
+  const jestResultsPath = path.join(process.cwd(), 'jest-results.json');
+  if (!fs.existsSync(jestResultsPath)) return null;
+  
+  try {
+    const data = JSON.parse(fs.readFileSync(jestResultsPath, 'utf8'));
+    return data;
+  } catch (e) {
+    return null;
+  }
+}
+
 async function main() {
   const args = process.argv.slice(2);
   const format = args.includes('--format') ? args[args.indexOf('--format') + 1] : 'markdown';

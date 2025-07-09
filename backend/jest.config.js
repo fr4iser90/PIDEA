@@ -62,5 +62,15 @@ module.exports = {
   restoreMocks: true,
   resetModules: true,
   forceExit: true,
-  detectOpenHandles: true
+  detectOpenHandles: true,
+  
+  // Test Management Integration
+  reporters: [
+    'default',
+    ['<rootDir>/tests/reporters/test-management-reporter.js', {
+      enabled: process.env.TEST_MANAGEMENT_ENABLED !== 'false',
+      autoRegister: process.env.TEST_AUTO_REGISTER !== 'false',
+      statusTracking: process.env.TEST_STATUS_TRACKING !== 'false'
+    }]
+  ]
 }; 
