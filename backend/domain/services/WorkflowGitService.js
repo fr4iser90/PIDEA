@@ -592,6 +592,117 @@ class WorkflowGitService {
             throw new Error(`Workflow rollback failed: ${error.message}`);
         }
     }
+
+    /**
+     * Merge current branch to target branch
+     * @param {string} projectPath - Project path
+     * @param {string} targetBranch - Target branch name
+     * @param {Object} task - Task object
+     * @param {Object} options - Merge options
+     * @returns {Promise<Object>} Merge result
+     */
+    async mergeToBranch(projectPath, targetBranch, task, options = {}) {
+        try {
+            this.logger.info('WorkflowGitService: Merging to target branch', {
+                projectPath,
+                targetBranch,
+                taskId: task.id,
+                taskType: task.type?.value
+            });
+
+            // Get current branch name
+            const currentBranch = await this.gitService.getCurrentBranch(projectPath);
+            
+            // Ensure target branch exists
+            await this.ensureBranchExists(projectPath, targetBranch);
+            
+            // Switch to target branch
+            await this.gitService.checkout(projectPath, targetBranch);
+            
+            // Merge current branch into target branch
+            const mergeResult = await this.gitService.merge(projectPath, currentBranch, {
+                strategy: options.mergeStrategy || 'recursive',
+                message: this.generateMergeMessage(task, targetBranch),
+                allowFastForward: options.allowFastForward !== false
+            });
+            
+            // Push changes to remote
+            await this.gitService.push(projectPath, targetBranch);
+            
+            // Switch back to original branch
+            await this.gitService.checkout(projectPath, currentBranch);
+            
+            const result = {
+                success: true,
+                sourceBranch: currentBranch,
+                targetBranch: targetBranch,
+                mergeResult,
+                message: `Successfully merged ${currentBranch} into ${targetBranch}`,
+                metadata: {
+                    taskId: task.id,
+                    taskType: task.type?.value,
+                    mergeStrategy: options.mergeStrategy || 'recursive',
+                    timestamp: new Date()
+                }
+            };
+            
+            // Emit merge completed event
+            if (this.eventBus) {
+                this.eventBus.publish('workflow.merge.completed', {
+                    projectPath,
+                    taskId: task.id,
+                    sourceBranch: currentBranch,
+                    targetBranch: targetBranch,
+                    result,
+                    timestamp: new Date()
+                });
+            }
+            
+            return result;
+            
+        } catch (error) {
+            this.logger.error('WorkflowGitService: Failed to merge to target branch', {
+                projectPath,
+                targetBranch,
+                taskId: task.id,
+                error: error.message
+            });
+            
+            // Emit merge failed event
+            if (this.eventBus) {
+                this.eventBus.publish('workflow.merge.failed', {
+                    projectPath,
+                    taskId: task.id,
+                    targetBranch: targetBranch,
+                    error: error.message,
+                    timestamp: new Date()
+                });
+            }
+            
+            throw new Error(`Merge to ${targetBranch} failed: ${error.message}`);
+        }
+    }
+
+    /**
+     * Generate merge commit message
+     * @param {Object} task - Task object
+     * @param {string} targetBranch - Target branch name
+     * @returns {string} Merge commit message
+     */
+    generateMergeMessage(task, targetBranch) {
+        const taskTitle = task.title || 'Unknown Task';
+        const taskType = task.type?.value || 'unknown';
+        const taskId = task.id || 'unknown';
+        
+        return `Merge task ${taskId} (${taskType}) into ${targetBranch}
+
+Task: ${taskTitle}
+Type: ${taskType}
+ID: ${taskId}
+
+Automatically merged by PIDEA Workflow System
+        `.trim();
+    }
 }
 
 module.exports = WorkflowGitService; 

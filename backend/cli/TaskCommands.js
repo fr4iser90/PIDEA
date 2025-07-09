@@ -540,6 +540,339 @@ class TaskCommands {
         }
     }
 
+    /**
+     * Execute tasks sequentially via IDE chat
+     * @param {Object} options - Command options
+     */
+    async executeSequentialTasks(options) {
+        try {
+            console.log('🚀 Starting sequential task execution via IDE chat...');
+            
+            // Get tasks from database or file
+            const tasks = await this.getTasksForSequentialExecution(options);
+            
+            if (tasks.length === 0) {
+                console.log('❌ No tasks found for sequential execution');
+                return;
+            }
+            
+            console.log(`📋 Found ${tasks.length} tasks to execute sequentially`);
+            
+            // Initialize services
+            const workflowOrchestrationService = this.serviceContainer.get('workflowOrchestrationService');
+            const cursorIDEService = this.serviceContainer.get('cursorIDEService');
+            
+            if (!workflowOrchestrationService || !cursorIDEService) {
+                throw new Error('Required services not available');
+            }
+            
+            // Execute tasks sequentially
+            const result = await workflowOrchestrationService.executeTasksSequentiallyViaIDE(tasks, {
+                projectPath: options.projectPath || process.cwd(),
+                completionTimeout: options.timeout || 300000, // 5 minutes per task
+                autoCommit: options.autoCommit !== false,
+                autoBranch: options.autoBranch !== false
+            });
+            
+            // Display results
+            console.log('\n📊 Sequential Task Execution Results:');
+            console.log(`✅ Successful: ${result.successful}/${result.totalTasks}`);
+            console.log(`❌ Failed: ${result.failed}/${result.totalTasks}`);
+            console.log(`⏱️  Total Duration: ${Math.round(result.totalDuration / 1000)}s`);
+            console.log(`📈 Average Duration: ${Math.round(result.averageDuration / 1000)}s per task`);
+            
+            if (result.success) {
+                console.log('\n🎉 All tasks completed successfully!');
+            } else {
+                console.log('\n⚠️  Some tasks failed. Check the results above.');
+            }
+            
+            // Show detailed results
+            if (options.verbose) {
+                console.log('\n📝 Detailed Results:');
+                result.results.forEach((taskResult, index) => {
+                    const status = taskResult.success ? '✅' : '❌';
+                    console.log(`${status} Task ${index + 1}: ${taskResult.taskTitle}`);
+                    console.log(`   Duration: ${Math.round(taskResult.duration / 1000)}s`);
+                    if (!taskResult.success) {
+                        console.log(`   Error: ${taskResult.error}`);
+                    }
+                });
+            }
+            
+        } catch (error) {
+            console.error('❌ Sequential task execution failed:', error.message);
+            process.exit(1);
+        }
+    }
+
+    /**
+     * Get tasks for sequential execution
+     * @param {Object} options - Options
+     * @returns {Promise<Array>} Tasks to execute
+     */
+    async getTasksForSequentialExecution(options) {
+        // Try to get tasks from database first
+        if (options.fromDatabase) {
+            const taskRepository = this.serviceContainer.get('taskRepository');
+            if (taskRepository) {
+                const tasks = await taskRepository.findByStatus('pending');
+                if (tasks.length > 0) {
+                    console.log(`📋 Found ${tasks.length} pending tasks in database`);
+                    return tasks;
+                }
+            }
+        }
+        
+        // Try to get tasks from test reports
+        if (options.fromTestReports) {
+            const tasks = await this.getTasksFromTestReports(options);
+            if (tasks.length > 0) {
+                console.log(`📋 Found ${tasks.length} tasks from test reports`);
+                return tasks;
+            }
+        }
+        
+        // Try to get tasks from coverage report
+        if (options.fromCoverage) {
+            const tasks = await this.getTasksFromCoverageReport(options);
+            if (tasks.length > 0) {
+                console.log(`📋 Found ${tasks.length} tasks from coverage report`);
+                return tasks;
+            }
+        }
+        
+        // Default: create tasks from current test failures
+        console.log('📋 Creating tasks from current test failures...');
+        return await this.createTasksFromTestFailures(options);
+    }
+
+    /**
+     * Get tasks from test reports
+     * @param {Object} options - Options
+     * @returns {Promise<Array>} Tasks
+     */
+    async getTasksFromTestReports(options) {
+        const fs = require('fs').promises;
+        const path = require('path');
+        
+        try {
+            const testReportPath = options.testReportPath || 'test-report.md';
+            const testReportFullPath = options.testReportFullPath || 'test-report-full.md';
+            
+            let tasks = [];
+            
+            // Try test-report.md
+            try {
+                const testReport = await fs.readFile(testReportPath, 'utf8');
+                tasks = this.parseTasksFromTestReport(testReport);
+            } catch (error) {
+                console.log('No test-report.md found');
+            }
+            
+            // Try test-report-full.md
+            try {
+                const testReportFull = await fs.readFile(testReportFullPath, 'utf8');
+                const fullTasks = this.parseTasksFromTestReportFull(testReportFull);
+                tasks = [...tasks, ...fullTasks];
+            } catch (error) {
+                console.log('No test-report-full.md found');
+            }
+            
+            return tasks;
+            
+        } catch (error) {
+            console.log('Failed to read test reports:', error.message);
+            return [];
+        }
+    }
+
+    /**
+     * Get tasks from coverage report
+     * @param {Object} options - Options
+     * @returns {Promise<Array>} Tasks
+     */
+    async getTasksFromCoverageReport(options) {
+        const fs = require('fs').promises;
+        
+        try {
+            const coveragePath = options.coveragePath || 'coverage.md';
+            const coverageReport = await fs.readFile(coveragePath, 'utf8');
+            
+            return this.parseTasksFromCoverageReport(coverageReport);
+            
+        } catch (error) {
+            console.log('Failed to read coverage report:', error.message);
+            return [];
+        }
+    }
+
+    /**
+     * Create tasks from current test failures
+     * @param {Object} options - Options
+     * @returns {Promise<Array>} Tasks
+     */
+    async createTasksFromTestFailures(options) {
+        const { execSync } = require('child_process');
+        
+        try {
+            // Run tests to get current failures
+            const testOutput = execSync('npm test -- --json --silent', {
+                cwd: process.cwd(),
+                encoding: 'utf8',
+                stdio: 'pipe'
+            });
+            
+            const testResults = JSON.parse(testOutput);
+            const failingTests = testResults.testResults
+                .flatMap(result => result.assertionResults || [])
+                .filter(test => test.status === 'failed');
+            
+            // Create tasks for each failing test
+            return failingTests.map((test, index) => ({
+                id: `auto-fix-${Date.now()}-${index}`,
+                title: `Fix failing test: ${test.title}`,
+                description: `Fix the failing test "${test.title}" in ${test.ancestorTitles.join(' > ')}`,
+                type: { value: 'testing' },
+                priority: { value: 'high' },
+                status: { value: 'pending' },
+                metadata: {
+                    testFile: test.ancestorTitles.join(' > '),
+                    testName: test.title,
+                    error: test.failureMessages?.[0] || 'Unknown error',
+                    projectPath: process.cwd()
+                },
+                createdAt: new Date(),
+                updatedAt: new Date()
+            }));
+            
+        } catch (error) {
+            console.log('Failed to create tasks from test failures:', error.message);
+            return [];
+        }
+    }
+
+    /**
+     * Parse tasks from test report
+     * @param {string} testReport - Test report content
+     * @returns {Array} Tasks
+     */
+    parseTasksFromTestReport(testReport) {
+        const tasks = [];
+        
+        // Parse failing tests from test report
+        const failingTestsMatch = testReport.match(/Failing Tests.*?(\d+)/s);
+        if (failingTestsMatch) {
+            const failingCount = parseInt(failingTestsMatch[1]);
+            
+            for (let i = 0; i < failingCount; i++) {
+                tasks.push({
+                    id: `test-fix-${Date.now()}-${i}`,
+                    title: `Fix failing test ${i + 1}`,
+                    description: `Fix failing test from test report`,
+                    type: { value: 'testing' },
+                    priority: { value: 'high' },
+                    status: { value: 'pending' },
+                    metadata: {
+                        source: 'test-report',
+                        projectPath: process.cwd()
+                    },
+                    createdAt: new Date(),
+                    updatedAt: new Date()
+                });
+            }
+        }
+        
+        return tasks;
+    }
+
+    /**
+     * Parse tasks from full test report
+     * @param {string} testReportFull - Full test report content
+     * @returns {Array} Tasks
+     */
+    parseTasksFromTestReportFull(testReportFull) {
+        const tasks = [];
+        
+        // Parse specific failing tests from full report
+        const failingTestsSection = testReportFull.match(/❌ Failing Tests.*?(?=##|$)/s);
+        if (failingTestsSection) {
+            const failingTestLines = failingTestsSection[0].match(/\| `([^`]+)` \| `([^`]+)` \| `([^`]+)` \|/g);
+            
+            if (failingTestLines) {
+                failingTestLines.forEach((line, index) => {
+                    const matches = line.match(/\| `([^`]+)` \| `([^`]+)` \| `([^`]+)` \|/);
+                    if (matches) {
+                        const [, fileName, testName, lastError] = matches;
+                        tasks.push({
+                            id: `test-fix-${Date.now()}-${index}`,
+                            title: `Fix test: ${testName}`,
+                            description: `Fix the failing test "${testName}" in ${fileName}`,
+                            type: { value: 'testing' },
+                            priority: { value: 'high' },
+                            status: { value: 'pending' },
+                            metadata: {
+                                testFile: fileName,
+                                testName: testName,
+                                error: lastError,
+                                source: 'test-report-full',
+                                projectPath: process.cwd()
+                            },
+                            createdAt: new Date(),
+                            updatedAt: new Date()
+                        });
+                    }
+                });
+            }
+        }
+        
+        return tasks;
+    }
+
+    /**
+     * Parse tasks from coverage report
+     * @param {string} coverageReport - Coverage report content
+     * @returns {Array} Tasks
+     */
+    parseTasksFromCoverageReport(coverageReport) {
+        const tasks = [];
+        
+        // Parse files with low coverage
+        const lowCoverageMatch = coverageReport.match(/Files with ≥80% Coverage.*?(\d+)/s);
+        if (lowCoverageMatch) {
+            const lowCoverageCount = parseInt(lowCoverageMatch[1]);
+            
+            // Find files with low coverage
+            const fileLines = coverageReport.match(/\| `([^`]+)` \| \d+% \| \d+% \| \d+% \| \d+% \| ❌ \|/g);
+            
+            if (fileLines) {
+                fileLines.forEach((line, index) => {
+                    const fileMatch = line.match(/\| `([^`]+)` \|/);
+                    if (fileMatch) {
+                        const fileName = fileMatch[1];
+                        tasks.push({
+                            id: `coverage-improve-${Date.now()}-${index}`,
+                            title: `Improve coverage for ${fileName}`,
+                            description: `Improve test coverage for ${fileName}`,
+                            type: { value: 'testing' },
+                            priority: { value: 'medium' },
+                            status: { value: 'pending' },
+                            metadata: {
+                                fileName: fileName,
+                                source: 'coverage-report',
+                                projectPath: process.cwd()
+                            },
+                            createdAt: new Date(),
+                            updatedAt: new Date()
+                        });
+                    }
+                });
+            }
+        }
+        
+        return tasks;
+    }
+
     // Helper methods
     createSpinner(text) {
         const ora = require('ora');

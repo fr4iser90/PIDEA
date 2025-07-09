@@ -10,6 +10,7 @@ require('module-alias/register');
 
 const path = require('path');
 const fs = require('fs');
+const chalk = require('chalk');
 
 // Import CLI components
 const TaskCLI = require('./TaskCLI');
@@ -159,6 +160,11 @@ class TaskCLIMain {
 
             if (command === 'demo') {
                 await this.runDemo();
+                return;
+            }
+
+            if (command === 'sequential') {
+                await this.runSequentialMode(args.slice(1));
                 return;
             }
 
@@ -448,6 +454,171 @@ class TaskCLIMain {
 
         console.log(chalk.green('\n🎉 Your project has been automatically analyzed and optimized!'));
         console.log(chalk.yellow('💡 Check the generated reports and scripts for details.'));
+    }
+
+    /**
+     * Run Sequential Task Execution Mode
+     * @param {Array} args - Additional arguments
+     */
+    async runSequentialMode(args) {
+        console.log(chalk.blue.bold('\n🔄 Sequential Task Execution Mode'));
+        console.log(chalk.gray('Execute tasks sequentially via IDE chat\n'));
+
+        // Parse sequential mode options
+        const options = this.parseSequentialModeOptions(args);
+        
+        // Start progress UI
+        this.progressUI.startSession({
+            id: `sequential-${Date.now()}`,
+            type: 'sequential',
+            title: 'Sequential Task Execution',
+            description: 'Executing tasks one by one via IDE chat'
+        });
+
+        try {
+            // Execute sequential tasks
+            const result = await this.taskCommands.executeSequentialTasks(options);
+            
+            // Display results
+            this.displaySequentialModeResults(result);
+            
+        } catch (error) {
+            console.error('❌ Sequential mode failed:', error.message);
+            this.progressUI.emit('execution:error', { error: error.message });
+        } finally {
+            this.progressUI.endSession();
+        }
+    }
+
+    /**
+     * Parse sequential mode options
+     * @param {Array} args - Command line arguments
+     * @returns {Object} Parsed options
+     */
+    parseSequentialModeOptions(args) {
+        const options = {
+            projectPath: process.cwd(),
+            timeout: 300000, // 5 minutes per task
+            autoCommit: true,
+            autoBranch: true,
+            verbose: false,
+            fromDatabase: false,
+            fromTestReports: false,
+            fromCoverage: false
+        };
+
+        for (let i = 0; i < args.length; i++) {
+            const arg = args[i];
+            
+            switch (arg) {
+                case '--project':
+                case '-p':
+                    options.projectPath = args[++i];
+                    break;
+                    
+                case '--timeout':
+                case '-t':
+                    options.timeout = parseInt(args[++i]) * 1000; // Convert to milliseconds
+                    break;
+                    
+                case '--no-commit':
+                    options.autoCommit = false;
+                    break;
+                    
+                case '--no-branch':
+                    options.autoBranch = false;
+                    break;
+                    
+                case '--verbose':
+                case '-v':
+                    options.verbose = true;
+                    break;
+                    
+                case '--from-database':
+                    options.fromDatabase = true;
+                    break;
+                    
+                case '--from-test-reports':
+                    options.fromTestReports = true;
+                    break;
+                    
+                case '--from-coverage':
+                    options.fromCoverage = true;
+                    break;
+                    
+                case '--help':
+                case '-h':
+                    this.displaySequentialModeHelp();
+                    process.exit(0);
+                    break;
+            }
+        }
+
+        return options;
+    }
+
+    /**
+     * Display sequential mode help
+     */
+    displaySequentialModeHelp() {
+        console.log(chalk.blue.bold('\n🔄 Sequential Task Execution Mode'));
+        console.log(chalk.gray('Execute tasks sequentially via IDE chat\n'));
+        
+        console.log(chalk.yellow('Usage:'));
+        console.log('  node cli/index.js sequential [options]\n');
+        
+        console.log(chalk.yellow('Options:'));
+        console.log('  --project, -p <path>     Project path (default: current directory)');
+        console.log('  --timeout, -t <seconds>  Timeout per task in seconds (default: 300)');
+        console.log('  --no-commit              Disable auto-commit after each task');
+        console.log('  --no-branch              Disable auto-branch creation');
+        console.log('  --verbose, -v            Show detailed results');
+        console.log('  --from-database          Get tasks from database');
+        console.log('  --from-test-reports      Get tasks from test reports');
+        console.log('  --from-coverage          Get tasks from coverage report');
+        console.log('  --help, -h               Show this help\n');
+        
+        console.log(chalk.yellow('Examples:'));
+        console.log('  node cli/index.js sequential');
+        console.log('  node cli/index.js sequential --verbose --timeout 600');
+        console.log('  node cli/index.js sequential --from-test-reports --project /path/to/project');
+    }
+
+    /**
+     * Display sequential mode results
+     * @param {Object} result - Execution result
+     */
+    displaySequentialModeResults(result) {
+        console.log(chalk.green.bold('\n🎉 Sequential Task Execution Completed!'));
+        
+        console.log(chalk.blue('\n📊 Summary:'));
+        console.log(`  Total Tasks: ${result.totalTasks}`);
+        console.log(`  Successful: ${chalk.green(result.successful)}`);
+        console.log(`  Failed: ${chalk.red(result.failed)}`);
+        console.log(`  Total Duration: ${chalk.yellow(Math.round(result.totalDuration / 1000))}s`);
+        console.log(`  Average Duration: ${chalk.yellow(Math.round(result.averageDuration / 1000))}s per task`);
+        
+        if (result.success) {
+            console.log(chalk.green('\n✅ All tasks completed successfully!'));
+        } else {
+            console.log(chalk.yellow('\n⚠️  Some tasks failed. Check the details above.'));
+        }
+        
+        // Show task details if verbose
+        if (result.results && result.results.length > 0) {
+            console.log(chalk.blue('\n📝 Task Details:'));
+            result.results.forEach((taskResult, index) => {
+                const status = taskResult.success ? chalk.green('✅') : chalk.red('❌');
+                const duration = Math.round(taskResult.duration / 1000);
+                
+                console.log(`  ${status} Task ${index + 1}: ${taskResult.taskTitle}`);
+                console.log(`     Duration: ${chalk.yellow(duration)}s`);
+                
+                if (!taskResult.success && taskResult.error) {
+                    console.log(`     Error: ${chalk.red(taskResult.error)}`);
+                }
+            });
+        }
     }
 
     /**

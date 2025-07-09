@@ -982,6 +982,273 @@ class WorkflowOrchestrationService {
         // Implementation similar to Auto-Refactor
         return [];
     }
+
+    /**
+     * Execute tasks sequentially via IDE chat with Playwright
+     * @param {Array} tasks - Array of tasks to execute
+     * @param {Object} options - Workflow options
+     * @returns {Promise<Object>} Sequential execution result
+     */
+    async executeTasksSequentiallyViaIDE(tasks, options = {}) {
+        const results = [];
+        const startTime = Date.now();
+        
+        this.logger.info('Starting sequential IDE chat execution', {
+            totalTasks: tasks.length,
+            projectPath: options.projectPath
+        });
+        
+        for (let i = 0; i < tasks.length; i++) {
+            const task = tasks[i];
+            const taskStartTime = Date.now();
+            
+            try {
+                this.logger.info(`Processing task ${i + 1}/${tasks.length}`, {
+                    taskId: task.id,
+                    taskTitle: task.title,
+                    taskType: task.type?.value
+                });
+                
+                // Step 1: Create new chat for this task
+                if (this.cursorIDEService?.browserManager) {
+                    await this.cursorIDEService.browserManager.clickNewChat();
+                    await new Promise(resolve => setTimeout(resolve, 2000));
+                }
+                
+                // Step 2: Send task prompt to IDE chat
+                const taskPrompt = await this.buildTaskPrompt(task, options);
+                const chatResponse = await this.cursorIDEService.sendMessage(taskPrompt);
+                
+                // Step 3: Wait for completion confirmation
+                const completionResult = await this.waitForTaskCompletion(task, chatResponse, options);
+                
+                // Step 4: Merge changes to pidea-agent branch
+                const mergeResult = await this.mergeTaskToPideaAgent(task, options);
+                
+                // Step 5: Create next branch for next task (if not last)
+                let nextBranchResult = null;
+                if (i < tasks.length - 1) {
+                    nextBranchResult = await this.createNextTaskBranch(tasks[i + 1], options);
+                }
+                
+                const taskResult = {
+                    taskId: task.id,
+                    taskTitle: task.title,
+                    success: completionResult.success,
+                    chatResponse,
+                    completionResult,
+                    mergeResult,
+                    nextBranch: nextBranchResult,
+                    duration: Date.now() - taskStartTime,
+                    taskIndex: i + 1,
+                    totalTasks: tasks.length
+                };
+                
+                results.push(taskResult);
+                
+                this.logger.info(`Completed task ${i + 1}/${tasks.length}`, {
+                    taskId: task.id,
+                    success: taskResult.success,
+                    duration: taskResult.duration
+                });
+                
+                // Emit task completed event
+                if (this.eventBus) {
+                    this.eventBus.emit('task:sequential:completed', taskResult);
+                }
+                
+            } catch (error) {
+                this.logger.error(`Failed to process task ${i + 1}/${tasks.length}`, {
+                    taskId: task.id,
+                    error: error.message
+                });
+                
+                results.push({
+                    taskId: task.id,
+                    taskTitle: task.title,
+                    success: false,
+                    error: error.message,
+                    duration: Date.now() - taskStartTime,
+                    taskIndex: i + 1,
+                    totalTasks: tasks.length
+                });
+                
+                // Emit task failed event
+                if (this.eventBus) {
+                    this.eventBus.emit('task:sequential:failed', {
+                        taskId: task.id,
+                        error: error.message,
+                        taskIndex: i + 1
+                    });
+                }
+            }
+        }
+        
+        const totalDuration = Date.now() - startTime;
+        const successfulTasks = results.filter(r => r.success).length;
+        const failedTasks = results.filter(r => !r.success).length;
+        
+        this.logger.info('Completed sequential IDE chat execution', {
+            totalTasks: tasks.length,
+            successful: successfulTasks,
+            failed: failedTasks,
+            totalDuration
+        });
+        
+        return {
+            success: failedTasks === 0,
+            totalTasks: tasks.length,
+            successful: successfulTasks,
+            failed: failedTasks,
+            results,
+            totalDuration,
+            averageDuration: totalDuration / tasks.length
+        };
+    }
+
+    /**
+     * Build task prompt for IDE chat
+     * @param {Object} task - Task object
+     * @param {Object} options - Options
+     * @returns {string} Task prompt
+     */
+    async buildTaskPrompt(task, options) {
+        const basePrompt = await this.buildTaskExecutionPrompt(task);
+        
+        return `
+${basePrompt}
+
+## Task Execution Instructions:
+1. Execute this task completely
+2. Test your changes if applicable
+3. Ensure all requirements are met
+4. Respond with "DONE" when finished
+5. Provide a brief summary of what was accomplished
+
+## Task Details:
+- **ID**: ${task.id}
+- **Type**: ${task.type?.value}
+- **Priority**: ${task.priority?.value}
+- **Project**: ${task.metadata?.projectPath || 'Current Project'}
+
+Please proceed with the task execution.
+        `.trim();
+    }
+
+    /**
+     * Wait for task completion confirmation
+     * @param {Object} task - Task object
+     * @param {Object} chatResponse - Initial chat response
+     * @param {Object} options - Options
+     * @returns {Promise<Object>} Completion result
+     */
+    async waitForTaskCompletion(task, chatResponse, options) {
+        const maxWaitTime = options.completionTimeout || 300000; // 5 minutes
+        const checkInterval = 5000; // 5 seconds
+        const startTime = Date.now();
+        
+        while (Date.now() - startTime < maxWaitTime) {
+            // Check if response contains completion indicators
+            const responseText = chatResponse.content || chatResponse.message || '';
+            
+            if (responseText.toLowerCase().includes('done') || 
+                responseText.toLowerCase().includes('completed') ||
+                responseText.toLowerCase().includes('finished')) {
+                
+                return {
+                    success: true,
+                    completionTime: Date.now() - startTime,
+                    completionIndicator: 'found'
+                };
+            }
+            
+            // Wait before next check
+            await new Promise(resolve => setTimeout(resolve, checkInterval));
+        }
+        
+        // Timeout reached
+        return {
+            success: false,
+            error: 'Task completion timeout',
+            completionTime: maxWaitTime
+        };
+    }
+
+    /**
+     * Merge task changes to pidea-agent branch
+     * @param {Object} task - Task object
+     * @param {Object} options - Options
+     * @returns {Promise<Object>} Merge result
+     */
+    async mergeTaskToPideaAgent(task, options) {
+        try {
+            const projectPath = task.metadata?.projectPath || options.projectPath;
+            
+            // Merge current branch to pidea-agent
+            const mergeResult = await this.workflowGitService.mergeToBranch(
+                projectPath,
+                'pidea-agent',
+                task,
+                options
+            );
+            
+            return {
+                success: true,
+                mergeResult,
+                targetBranch: 'pidea-agent'
+            };
+            
+        } catch (error) {
+            return {
+                success: false,
+                error: error.message,
+                targetBranch: 'pidea-agent'
+            };
+        }
+    }
+
+    /**
+     * Create next task branch
+     * @param {Object} nextTask - Next task object
+     * @param {Object} options - Options
+     * @returns {Promise<Object>} Branch creation result
+     */
+    async createNextTaskBranch(nextTask, options) {
+        try {
+            const projectPath = nextTask.metadata?.projectPath || options.projectPath;
+            
+            // Create branch for next task
+            const branchResult = await this.workflowGitService.createWorkflowBranch(
+                projectPath,
+                nextTask,
+                options
+            );
+            
+            return {
+                success: true,
+                branchName: branchResult.branchName,
+                nextTaskId: nextTask.id
+            };
+            
+        } catch (error) {
+            return {
+                success: false,
+                error: error.message,
+                nextTaskId: nextTask.id
+            };
+        }
+    }
+
+    /**
+     * Build task execution prompt (delegate to TaskService)
+     * @param {Object} task - Task object
+     * @returns {Promise<string>} Task execution prompt
+     */
+    async buildTaskExecutionPrompt(task) {
+        // Use existing TaskService buildTaskExecutionPrompt
+        const taskService = new (require('./TaskService'))();
+        return await taskService.buildTaskExecutionPrompt(task);
+    }
 }
 
 module.exports = WorkflowOrchestrationService; 
