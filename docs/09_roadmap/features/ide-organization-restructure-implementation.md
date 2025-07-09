@@ -3,9 +3,10 @@
 ## 1. Project Overview
 - **Feature/Component Name**: IDE Organization Restructure & Multi-IDE Support Framework
 - **Priority**: High
-- **Estimated Time**: 60 hours
+- **Estimated Time**: 60 hours (SPLIT INTO 4 SUBTASKS - see Task Splitting section)
 - **Dependencies**: Existing Cursor IDE support, VSCode support infrastructure
 - **Related Issues**: Better organization for multiple IDE support, scalable architecture for future IDEs
+- **Current State**: VSCode support already implemented, Windsurf support missing, no common interface
 
 ## 2. Technical Requirements
 - **Tech Stack**: Node.js, Playwright, Chrome DevTools Protocol (CDP), IDE-specific APIs
@@ -20,30 +21,34 @@
 ### Files to Modify:
 - [ ] `backend/domain/services/CursorIDEService.js` - Refactor to implement IDE interface
 - [ ] `backend/domain/services/VSCodeService.js` - Refactor to implement IDE interface
-- [ ] `backend/infrastructure/external/IDEManager.js` - Extend for multi-IDE support
-- [ ] `backend/infrastructure/external/IDEDetector.js` - Add IDE type detection
-- [ ] `backend/infrastructure/external/IDEStarter.js` - Add IDE-specific startup logic
-- [ ] `backend/presentation/api/IDEController.js` - Unify for all IDEs
+- [ ] `backend/infrastructure/external/IDEManager.js` - Extend for multi-IDE support (already supports multiple IDEs)
+- [ ] `backend/infrastructure/external/IDEDetector.js` - Add IDE type detection (already supports Cursor/VSCode)
+- [ ] `backend/infrastructure/external/IDEStarter.js` - Add IDE-specific startup logic (already supports Cursor/VSCode)
+- [ ] `backend/presentation/api/IDEController.js` - Unify for all IDEs (already has VSCode endpoints)
 - [ ] `frontend/src/presentation/components/mirror/main/IDEMirrorComponent.jsx` - Add IDE selection
+- [ ] `backend/infrastructure/di/ServiceRegistry.js` - Update to use IDE factory pattern
 
 ### Files to Create:
 - [ ] `backend/domain/services/ide/` - New IDE abstraction layer
 - [ ] `backend/domain/services/ide/IDEInterface.js` - Base IDE interface
 - [ ] `backend/domain/services/ide/IDEFactory.js` - IDE factory pattern
+- [ ] `backend/domain/services/ide/BaseIDE.js` - Common IDE functionality
 - [ ] `backend/domain/services/ide/implementations/` - IDE-specific implementations
-- [ ] `backend/domain/services/ide/implementations/CursorIDE.js` - Cursor implementation
-- [ ] `backend/domain/services/ide/implementations/VSCodeIDE.js` - VSCode implementation
-- [ ] `backend/domain/services/ide/implementations/WindsurfIDE.js` - Windsurf implementation
+- [ ] `backend/domain/services/ide/implementations/CursorIDE.js` - Cursor implementation (refactor existing)
+- [ ] `backend/domain/services/ide/implementations/VSCodeIDE.js` - VSCode implementation (refactor existing)
+- [ ] `backend/domain/services/ide/implementations/WindsurfIDE.js` - Windsurf implementation (NEW)
 - [ ] `backend/infrastructure/external/ide/` - IDE infrastructure layer
 - [ ] `backend/infrastructure/external/ide/IDEDetectorFactory.js` - IDE detection factory
 - [ ] `backend/infrastructure/external/ide/IDEStarterFactory.js` - IDE startup factory
+- [ ] `backend/infrastructure/external/WindsurfDetector.js` - Windsurf detection (NEW)
+- [ ] `backend/infrastructure/external/WindsurfStarter.js` - Windsurf startup (NEW)
 - [ ] `docs/04_ide-support/` - Restructured documentation
 - [ ] `scripts/ide/` - Unified IDE scripts
 - [ ] `generated/ide/` - IDE-specific generated code
 
 ## 4. Implementation Phases
 
-### Phase 1: Core Abstraction Layer (20 hours)
+### Phase 1: Core Abstraction Layer (15 hours)
 - [ ] Create IDE interface and base classes
 - [ ] Implement IDE factory pattern
 - [ ] Create unified IDE service layer
@@ -64,12 +69,12 @@
 - [ ] Add IDE-specific feature detection
 - [ ] Implement IDE switching capabilities
 
-### Phase 4: Documentation & Scripts (10 hours)
+### Phase 4: Documentation & Windsurf Implementation (15 hours)
 - [ ] Restructure IDE documentation
 - [ ] Create unified IDE scripts
-- [ ] Add IDE-specific templates
-- [ ] Create IDE migration guides
+- [ ] Implement complete Windsurf support
 - [ ] Add IDE comparison documentation
+- [ ] Create migration guides
 
 ## 5. Code Standards & Patterns
 - **Coding Style**: ESLint with existing project rules, Prettier formatting
@@ -165,14 +170,14 @@
 ## 13. Risk Assessment
 
 ### High Risk:
-- [ ] Breaking existing IDE functionality - Mitigation: Comprehensive testing and gradual migration
+- [ ] Breaking existing IDE functionality - Mitigation: Comprehensive testing and gradual migration with feature flags
 - [ ] IDE detection accuracy issues - Mitigation: Multiple detection methods and fallbacks
 - [ ] IDE switching performance issues - Mitigation: Optimized switching logic and caching
 
 ### Medium Risk:
 - [ ] IDE-specific feature compatibility - Mitigation: Feature detection and graceful degradation
 - [ ] IDE configuration complexity - Mitigation: Simplified configuration management
-- [ ] IDE documentation maintenance - Mitigation: Automated documentation generation
+- [ ] Windsurf implementation complexity - Mitigation: Leverage existing Cursor/VSCode patterns
 
 ### Low Risk:
 - [ ] IDE naming conflicts - Mitigation: Namespace isolation
@@ -214,6 +219,46 @@
 - **Design Patterns**: [Factory pattern, Strategy pattern, Interface pattern]
 - **Best Practices**: [Multi-IDE architecture patterns]
 - **Similar Implementations**: [Existing IDE integration examples]
+
+---
+
+## Task Splitting Recommendations
+
+### **Main Task**: IDE Organization Restructure (60 hours) → Split into 4 subtasks
+
+**Subtask 1**: Core Abstraction Layer (15 hours)
+- Create IDE interface and base classes
+- Implement IDE factory pattern
+- Create unified IDE service layer
+- Refactor existing Cursor and VSCode services
+- Add IDE type detection and registration
+
+**Subtask 2**: Infrastructure Restructure (15 hours)
+- Create IDE-specific detector implementations
+- Create IDE-specific starter implementations
+- Unify IDE management across all IDEs
+- Implement IDE configuration management
+- Add IDE health monitoring
+
+**Subtask 3**: API & Frontend Unification (15 hours)
+- Create unified IDE API endpoints
+- Implement IDE selection UI
+- Create unified IDE mirror interface
+- Add IDE-specific feature detection
+- Implement IDE switching capabilities
+
+**Subtask 4**: Documentation & Windsurf Implementation (15 hours)
+- Restructure IDE documentation
+- Create unified IDE scripts
+- Implement complete Windsurf support
+- Add IDE comparison documentation
+- Create migration guides
+
+### **Why Split?**
+- **Size**: 60 hours exceeds 8-hour guideline
+- **Complexity**: 15+ files to modify exceeds 10-file guideline
+- **Risk**: Independent components can be developed in parallel
+- **Testing**: Each subtask can be independently validated
 
 ---
 
@@ -351,14 +396,42 @@ PIDEA/
 2. Refactor VSCodeService to implement interface
 3. Update IDEManager to use factory pattern
 
-### Phase 3: Update Infrastructure
+### Phase 3: Add Windsurf Support
+1. Implement WindsurfDetector and WindsurfStarter
+2. Create WindsurfService implementing interface
+3. Add Windsurf-specific DOM documentation
+
+### Phase 4: Update Infrastructure
 1. Create IDE-specific detectors and starters
 2. Update API controllers
 3. Update frontend components
 
-### Phase 4: Documentation & Testing
+### Phase 5: Documentation & Testing
 1. Restructure documentation
 2. Update scripts
 3. Add comprehensive tests
 
-This structure provides a solid foundation for supporting multiple IDEs while maintaining clean separation of concerns and enabling easy extension for future IDE support. 
+This structure provides a solid foundation for supporting multiple IDEs while maintaining clean separation of concerns and enabling easy extension for future IDE support.
+
+---
+
+## Current State Analysis
+
+### ✅ **Already Implemented**
+- **VSCode Support**: Full implementation with `VSCodeService.js`, `VSCodeDetector.js`, `VSCodeStarter.js`
+- **Multi-IDE Detection**: `IDEDetector.js` supports both Cursor and VSCode
+- **IDE Management**: `IDEManager.js` handles multiple IDE types
+- **IDE Controller**: `IDEController.js` has VSCode-specific endpoints
+- **Service Registry**: DI container registers both Cursor and VSCode services
+
+### ❌ **Missing Implementation**
+- **Windsurf Support**: No implementation found in codebase
+- **Common Interface**: No shared interface between IDE services
+- **Factory Pattern**: No factory pattern for dynamic IDE loading
+- **Unified API**: IDE-specific endpoints mixed with generic ones
+
+### 🔧 **Architecture Issues**
+- **Inconsistent Patterns**: Each IDE service has different implementation patterns
+- **No Abstraction**: Direct dependencies on specific IDE implementations
+- **Documentation Gaps**: Windsurf referenced but not implemented
+- **No Comparison**: No IDE comparison matrix or migration guides 
