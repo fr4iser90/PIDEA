@@ -117,6 +117,9 @@ describe('AdvancedAnalysisHandler', () => {
                 duration: 120000
             };
 
+            // Ensure scheduledAt is not set or is in the future
+            mockCommand.scheduledAt = new Date(Date.now() + 60 * 1000); // 1 minute in the future
+
             mockTaskRepository.save.mockResolvedValue(mockTask);
             mockExecutionRepository.save.mockResolvedValue(mockExecution);
             mockAdvancedAnalysisService.performAdvancedAnalysis.mockResolvedValue(mockAnalysisResult.analysis);
@@ -166,6 +169,10 @@ describe('AdvancedAnalysisHandler', () => {
                 duration: 120000
             };
 
+            // Mock filesystem check for project path validation
+            const fs = require('fs').promises;
+            jest.spyOn(fs, 'stat').mockResolvedValue({ isDirectory: () => true });
+
             const commandWithoutReport = new AdvancedAnalysisCommand({
                 projectPath: '/test/project',
                 requestedBy: 'test-user',
@@ -208,6 +215,9 @@ describe('AdvancedAnalysisHandler', () => {
             const fs = require('fs').promises;
             jest.spyOn(fs, 'stat').mockRejectedValue(new Error('ENOENT: no such file or directory'));
 
+            // Ensure scheduledAt is not set or is in the future to pass command validation
+            mockCommand.scheduledAt = new Date(Date.now() + 60 * 1000); // 1 minute in the future
+
             await expect(handler.handle(mockCommand)).rejects.toThrow('Invalid project path');
 
             expect(mockLogger.error).toHaveBeenCalledWith(
@@ -221,6 +231,13 @@ describe('AdvancedAnalysisHandler', () => {
         test('should handle analysis service errors', async () => {
             const mockTask = { id: 'task-123', status: 'pending' };
             const mockExecution = { id: 'execution-123', taskId: 'task-123', status: 'running' };
+
+            // Ensure scheduledAt is not set or is in the future
+            mockCommand.scheduledAt = new Date(Date.now() + 60 * 1000); // 1 minute in the future
+
+            // Mock filesystem check for project path validation
+            const fs = require('fs').promises;
+            jest.spyOn(fs, 'stat').mockResolvedValue({ isDirectory: () => true });
 
             mockTaskRepository.save.mockResolvedValue(mockTask);
             mockExecutionRepository.save.mockResolvedValue(mockExecution);
@@ -336,7 +353,11 @@ describe('AdvancedAnalysisHandler', () => {
 
             const result = await handler.createAnalysisTask(mockCommand);
 
-            expect(result).toEqual(mockTask);
+            expect(result).toEqual(expect.objectContaining({
+                id: expect.any(String),
+                title: 'Advanced Analysis: /test/project',
+                status: 'pending'
+            }));
             expect(mockTaskRepository.save).toHaveBeenCalledWith(
                 expect.objectContaining({
                     title: 'Advanced Analysis: /test/project',

@@ -22,6 +22,8 @@ class AdvancedAnalysisHandler {
      * @returns {Promise<Object>} Analysis results
      */
     async handle(command) {
+        let execution = null;
+        
         try {
             this.logger.info('AdvancedAnalysisHandler: Starting advanced analysis', {
                 handlerId: this.handlerId,
@@ -43,7 +45,7 @@ class AdvancedAnalysisHandler {
             const task = await this.createAnalysisTask(command);
 
             // Create execution record
-            const execution = await this.createExecutionRecord(task, command);
+            execution = await this.createExecutionRecord(task, command);
 
             // Publish analysis started event
             await this.publishAnalysisStartedEvent(execution, command);

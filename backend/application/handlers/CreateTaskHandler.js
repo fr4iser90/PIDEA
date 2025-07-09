@@ -53,6 +53,16 @@ class CreateTaskHandler {
                 priority: command.priority
             });
 
+            // Add validation for missing type
+            if (!command.type || (typeof command.type === 'string' && command.type.trim() === '')) {
+                throw new Error('Task type is required');
+            }
+
+            // Add validation for missing creator
+            if (!command.requestedBy) {
+                throw new Error('Task creator is required');
+            }
+
             // Validate command business rules
             const businessValidation = command.validateBusinessRules ? command.validateBusinessRules() : { isValid: true, errors: [], warnings: [] };
             if (!businessValidation.isValid) {
@@ -95,9 +105,22 @@ class CreateTaskHandler {
                 {
                     ...command.metadata,
                     createdBy: command.requestedBy,
-                    commandId: command.commandId
+                    commandId: command.commandId,
+                    status: command.status
                 }
             );
+
+            // Set dependencies if provided
+            if (command.dependencies && Array.isArray(command.dependencies)) {
+                for (const dep of command.dependencies) {
+                    task.addDependency(dep);
+                }
+            }
+
+            // Set deadline if provided
+            if (command.deadline) {
+                task.setDueDate(command.deadline);
+            }
 
             // Save task to repository
             const savedTask = await this.taskRepository.save(task);

@@ -8,6 +8,7 @@ const CoverageAnalyzer = require('@/infrastructure/external/CoverageAnalyzer');
 const TestReportParser = require('@/domain/services/TestReportParser');
 const TestFixTaskGenerator = require('@/domain/services/TestFixTaskGenerator');
 const WorkflowGitService = require('@/domain/services/WorkflowGitService');
+const ConfirmationSystem = require('@/domain/services/auto-finish/ConfirmationSystem');
 const TaskType = require('@/domain/value-objects/TaskType');
 const { v4: uuidv4 } = require('uuid');
 
@@ -26,6 +27,9 @@ class AutoTestFixSystem {
     this.coverageAnalyzer = new CoverageAnalyzer();
     this.testReportParser = new TestReportParser();
     this.testFixTaskGenerator = new TestFixTaskGenerator(this.taskRepository);
+    
+    // Initialize ConfirmationSystem like AutoFinishSystem
+    this.confirmationSystem = new ConfirmationSystem(this.cursorIDE);
     
     // Initialize WorkflowGitService for proper branch management
     this.workflowGitService = new WorkflowGitService({
@@ -49,7 +53,9 @@ class AutoTestFixSystem {
       stopOnError: false,
       parallelExecution: true,
       maxParallelTests: 5,
-      updateTaskStatus: true // Whether to update task status in database
+      updateTaskStatus: true, // Whether to update task status in database
+      maxConfirmationAttempts: 3, // Like AutoFinishSystem
+      confirmationTimeout: 10000 // 10 seconds
     };
     
     this.logger = dependencies.logger || console;
@@ -491,24 +497,60 @@ class AutoTestFixSystem {
       this.logger.info(`[AutoTestFixSystem] Sending task to Cursor IDE: ${task.title}`);
       
       // Send to Cursor IDE via postToCursor()
-      const aiResponse = await this.cursorIDE.postToCursor(idePrompt);
+      let aiResponse = await this.cursorIDE.postToCursor(idePrompt);
       
-      // Validate task completion
-      const validationResult = await this.validateTaskCompletion(task, aiResponse);
+      // Confirmation loop like AutoFinishSystem
+      let confirmationAttempts = 0;
+      const maxConfirmationAttempts = 3;
+      let confirmationResult = null;
       
-      // Automatische Test-Validierung nach KI-Antwort
+      while (confirmationAttempts < maxConfirmationAttempts) {
+        confirmationAttempts++;
+        this.logger.info(`[AutoTestFixSystem] Confirmation attempt ${confirmationAttempts}/${maxConfirmationAttempts}`);
+        
+        // Ask for explicit confirmation
+        confirmationResult = await this.confirmationSystem.askConfirmation('test');
+        
+        this.logger.info(`[AutoTestFixSystem] Confirmation result: status=${confirmationResult.status}, isValid=${confirmationResult.isValid}, confidence=${confirmationResult.confidence}`);
+        
+        if (confirmationResult.testResults) {
+          this.logger.info(`[AutoTestFixSystem] Test results from AI: ${confirmationResult.testResults.status} ${confirmationResult.testResults.percentage}%`);
+        }
+        
+        if (confirmationResult.isValid) {
+          this.logger.info(`[AutoTestFixSystem] ✅ Task confirmed as complete on attempt ${confirmationAttempts}`);
+          break;
+        } else {
+          this.logger.info(`[AutoTestFixSystem] ❌ Task not confirmed (status: ${confirmationResult.status}), attempt ${confirmationAttempts}/${maxConfirmationAttempts}`);
+          
+          if (confirmationAttempts < maxConfirmationAttempts) {
+            // Wait a bit before next attempt
+            await new Promise(resolve => setTimeout(resolve, 2000));
+          }
+        }
+      }
+      
+      // If we got confirmation, proceed with test validation
       let testValidationResult = null;
-      if (validationResult.isValid) {
-        this.logger.info(`[AutoTestFixSystem] KI-Antwort valid, führe automatische Test-Validierung aus...`);
+      if (confirmationResult && confirmationResult.isValid) {
+        this.logger.info(`[AutoTestFixSystem] Proceeding with test validation for task: ${task.id}`);
         testValidationResult = await this.validateTestsWithExecution(task, branchResult);
+      } else {
+        this.logger.warn(`[AutoTestFixSystem] Task not confirmed after ${maxConfirmationAttempts} attempts (final status: ${confirmationResult?.status}), skipping test validation`);
+        testValidationResult = {
+          success: false,
+          reason: 'task_not_confirmed',
+          successRate: 0,
+          threshold: 80
+        };
       }
       
       const taskResult = {
         taskId: task.id,
         description: task.title,
-        success: validationResult.isValid && (!testValidationResult || testValidationResult.success),
+        success: (confirmationResult?.confirmed || options.forceTestValidation) && (!testValidationResult || testValidationResult.success),
         aiResponse,
-        validationResult,
+        confirmationResult,
         testValidationResult,
         branchResult,
         completedAt: new Date()
@@ -1036,12 +1078,17 @@ Requires Review: ${branchStrategy.requiresReview ? 'Yes' : 'No'}`;
       const successThreshold = 80;
       const isSuccessful = testResult.successRate >= successThreshold;
       
+      // ALWAYS commit changes, regardless of test success
+      this.logger.info(`[AutoTestFixSystem] Tests ${isSuccessful ? 'passed' : 'failed'} (${testResult.successRate}% ${isSuccessful ? '>=' : '<'} ${successThreshold}%), committing changes...`);
+      
+      // Commit and push changes with appropriate message
+      const commitResult = await this.commitAndPushChanges(task, branchResult, {
+        testSuccess: isSuccessful,
+        successRate: testResult.successRate,
+        threshold: successThreshold
+      });
+      
       if (isSuccessful) {
-        this.logger.info(`[AutoTestFixSystem] Tests passed (${testResult.successRate}% >= ${successThreshold}%), committing changes...`);
-        
-        // Commit and push changes
-        const commitResult = await this.commitAndPushChanges(task, branchResult);
-        
         return {
           success: true,
           successRate: testResult.successRate,
@@ -1050,14 +1097,13 @@ Requires Review: ${branchStrategy.requiresReview ? 'Yes' : 'No'}`;
           message: `Tests passed with ${testResult.successRate}% success rate, changes committed`
         };
       } else {
-        this.logger.warn(`[AutoTestFixSystem] Tests failed (${testResult.successRate}% < ${successThreshold}%)`);
-        
         return {
           success: false,
           successRate: testResult.successRate,
           testOutput: testOutput.substring(0, 500) + '...', // Truncated for logging
+          commitResult, // Still committed despite test failure
           error: `Test success rate ${testResult.successRate}% below threshold ${successThreshold}%`,
-          message: `Tests failed with ${testResult.successRate}% success rate`
+          message: `Tests failed with ${testResult.successRate}% success rate, but changes committed for review`
         };
       }
       
@@ -1153,20 +1199,31 @@ Requires Review: ${branchStrategy.requiresReview ? 'Yes' : 'No'}`;
   }
 
   /**
-   * Commit and push changes after successful test validation
+   * Commit and push changes after test validation
    * @param {Task} task - Task object
    * @param {Object} branchResult - Branch creation result
+   * @param {Object} testInfo - Test information (success, successRate, threshold)
    * @returns {Promise<Object>} Commit result
    */
-  async commitAndPushChanges(task, branchResult) {
+  async commitAndPushChanges(task, branchResult, testInfo = {}) {
     try {
       this.logger.info(`[AutoTestFixSystem] Committing and pushing changes for task: ${task.id}`);
       
       if (this.cursorIDE && this.cursorIDE.browserManager) {
-        // Execute git commands in terminal
+        // Build commit message based on test results
+        let commitMessage = '';
+        
+        if (testInfo.testSuccess) {
+          commitMessage = `${task.title} (Task ID: ${task.id}) - ✅ Tests PASSED (${testInfo.successRate}%) - Auto-fixed by PIDEA`;
+        } else {
+          commitMessage = `${task.title} (Task ID: ${task.id}) - ❌ Tests FAILED (${testInfo.successRate}%) - Auto-fixed by PIDEA`;
+        }
+        
+        this.logger.info(`[AutoTestFixSystem] Commit message: ${commitMessage}`);
+        
         const commands = [
           'git add .',
-          `git commit -m "${task.title} (Task ID: ${task.id}) - Auto-fixed by PIDEA"`,
+          `git commit -m "${commitMessage}"`,
           'git push'
         ];
         
@@ -1179,8 +1236,12 @@ Requires Review: ${branchStrategy.requiresReview ? 'Yes' : 'No'}`;
         return {
           success: true,
           branchName: branchResult?.branchName,
-          commitMessage: `${task.title} (Task ID: ${task.id}) - Auto-fixed by PIDEA`,
-          message: 'Changes committed and pushed successfully'
+          commitMessage,
+          testSuccess: testInfo.testSuccess,
+          successRate: testInfo.successRate,
+          message: testInfo.testSuccess ? 
+            'Changes committed and pushed successfully - Tests passed' : 
+            'Changes committed and pushed successfully - Tests failed, review needed'
         };
       } else {
         throw new Error('CursorIDE or browserManager not available for git operations');

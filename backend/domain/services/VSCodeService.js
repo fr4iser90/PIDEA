@@ -382,15 +382,33 @@ After applying the changes, please confirm that the refactoring has been complet
 
   async getConnectionStatus(userId) {
     try {
-      const isConnected = await this.isConnected();
+      // Check connection status by attempting to get page
+      let isConnected = false;
+      let connectionError = null;
+      
+      try {
+        const page = await this.browserManager.getPage();
+        isConnected = page !== null;
+      } catch (error) {
+        isConnected = false;
+        connectionError = error.message;
+      }
+      
       const activeIDE = await this.ideManager.getActiveIDE();
       
-      return {
+      const result = {
         connected: isConnected,
         activeIDE: activeIDE,
         userId: userId,
         timestamp: new Date().toISOString()
       };
+      
+      // Add error property if there was a connection error
+      if (connectionError) {
+        result.error = connectionError;
+      }
+      
+      return result;
     } catch (error) {
       console.error('[VSCodeService] Error getting connection status:', error);
       return {

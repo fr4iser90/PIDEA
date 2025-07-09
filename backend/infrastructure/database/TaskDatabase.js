@@ -36,6 +36,7 @@ class TaskDatabase {
                 priority TEXT NOT NULL,
                 status TEXT NOT NULL,
                 createdBy TEXT NOT NULL,
+                userId TEXT,
                 assignedTo TEXT,
                 metadata TEXT,
                 createdAt TEXT NOT NULL,
@@ -43,7 +44,13 @@ class TaskDatabase {
                 completedAt TEXT,
                 estimatedHours REAL,
                 actualHours REAL,
-                tags TEXT
+                estimatedDuration REAL,
+                tags TEXT,
+                dependencies TEXT,
+                assignee TEXT,
+                dueDate TEXT,
+                startedAt TEXT,
+                executionHistory TEXT
             )
         `;
 

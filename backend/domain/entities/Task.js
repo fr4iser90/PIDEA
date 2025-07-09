@@ -408,7 +408,9 @@ class Task {
       isOverdue: this.isOverdue(),
       requiresAI: this.requiresAI(),
       requiresExecution: this.requiresExecution(),
-      requiresHumanReview: this.requiresHumanReview()
+      requiresHumanReview: this.requiresHumanReview(),
+      userId: this._metadata.createdBy || this._metadata.userId || null,
+      estimatedDuration: this._metadata.estimatedDuration || null
     };
 
     // Extract common metadata fields to top level for frontend compatibility
@@ -452,12 +454,47 @@ class Task {
     );
   }
 
-  static create(projectId, title, description, priority = TaskPriority.MEDIUM, type = TaskType.FEATURE, metadata = {}) {
-    if (!projectId) {
-      throw new Error('Project ID is required for task creation');
+  static create(idOrProjectId, projectIdOrTitle, titleOrDescription, descriptionOrPriority, priorityOrType, typeOrMetadata, metadataMaybe) {
+    // Support: (id, projectId, title, description, priority, type, metadata)
+    // Or: (projectId, title, description, priority, type, metadata)
+    let id, projectId, title, description, priority, type, metadata;
+    if (
+      typeof idOrProjectId === 'string' &&
+      typeof projectIdOrTitle === 'string' &&
+      typeof titleOrDescription === 'string' &&
+      typeof descriptionOrPriority === 'string' &&
+      (typeof priorityOrType === 'string' || typeof priorityOrType === 'undefined') &&
+      (typeof typeOrMetadata === 'string' || typeof typeOrMetadata === 'undefined')
+    ) {
+      // If idOrProjectId looks like a custom id, use it as id
+      if (idOrProjectId.startsWith('task_') || idOrProjectId.startsWith('custom-') || idOrProjectId.startsWith('custom_')) {
+        id = idOrProjectId;
+        projectId = projectIdOrTitle;
+        title = titleOrDescription;
+        description = descriptionOrPriority;
+        priority = priorityOrType;
+        type = typeOrMetadata;
+        metadata = metadataMaybe || {};
+      } else {
+        // (projectId, title, description, priority, type, metadata)
+        id = `task_${idOrProjectId}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+        projectId = idOrProjectId;
+        title = projectIdOrTitle;
+        description = titleOrDescription;
+        priority = descriptionOrPriority;
+        type = priorityOrType;
+        metadata = typeOrMetadata || {};
+      }
+    } else {
+      // fallback to old signature
+      id = `task_${idOrProjectId}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      projectId = idOrProjectId;
+      title = projectIdOrTitle;
+      description = titleOrDescription;
+      priority = descriptionOrPriority;
+      type = priorityOrType;
+      metadata = typeOrMetadata || {};
     }
-    
-    const id = `task_${projectId}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     return new Task(
       id,
       projectId,

@@ -30,7 +30,7 @@ class StopStreamingHandler {
       }
       
       // Stop streaming
-      const result = await this.screenshotStreamingService.stopStreaming(command.sessionId);
+      const result = await this.screenshotStreamingService.stopStreamingSession(command.sessionId);
       
       if (!result.success) {
         throw new Error(result.error || 'Failed to stop streaming');
