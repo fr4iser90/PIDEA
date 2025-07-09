@@ -1104,9 +1104,9 @@ Please proceed with the implementation and let me know when you're finished.`;
       this.logger.info(`[AutoTestFixSystem] Starting test validation for task: ${task.id}`);
       
       // Ensure terminal is open in IDE
-      if (this.cursorIDE && this.cursorIDE.browserManager) {
+      if (this.cursorIDE) {
         this.logger.info(`[AutoTestFixSystem] Opening terminal in IDE...`);
-        await this.cursorIDE.browserManager.ensureTerminalOpen();
+        await this.cursorIDE.ensureTerminalOpen();
         await new Promise(resolve => setTimeout(resolve, 1000)); // Wait for terminal
       }
       
@@ -1114,10 +1114,15 @@ Please proceed with the implementation and let me know when you're finished.`;
       const testCommand = 'npm test > test-output.log 2>&1';
       this.logger.info(`[AutoTestFixSystem] Executing: ${testCommand}`);
       
-      if (this.cursorIDE && this.cursorIDE.browserManager) {
-        await this.cursorIDE.browserManager.executeTerminalCommand(testCommand);
-        // Wait for test execution to complete
-        await new Promise(resolve => setTimeout(resolve, 5000));
+      if (this.ideManager) {
+        const currentPort = this.browserManager?.getCurrentPort?.();
+        if (currentPort) {
+          await this.ideManager.executeTerminalCommand(currentPort, testCommand);
+          // Wait for test execution to complete
+          await new Promise(resolve => setTimeout(resolve, 5000));
+        } else {
+          this.logger.warn(`[AutoTestFixSystem] No current port available for test execution`);
+        }
       }
       
       // Read and parse test output
@@ -1177,17 +1182,22 @@ Please proceed with the implementation and let me know when you're finished.`;
         this.logger.info(`[AutoTestFixSystem] ❌ Tests FAILED (${testResult.successRate}% < ${successThreshold}%), discarding changes and marking for review...`);
         
         // Discard changes by resetting to clean state
-        if (this.cursorIDE && this.cursorIDE.browserManager) {
+        if (this.ideManager) {
           this.logger.info(`[AutoTestFixSystem] Discarding changes...`);
-          const discardCommands = [
-            'git reset --hard HEAD',
-            'git clean -fd'
-          ];
-          
-          for (const command of discardCommands) {
-            this.logger.info(`[AutoTestFixSystem] Executing: ${command}`);
-            await this.cursorIDE.browserManager.executeTerminalCommand(command);
-            await new Promise(resolve => setTimeout(resolve, 1000));
+          const currentPort = this.browserManager?.getCurrentPort?.();
+          if (currentPort) {
+            const discardCommands = [
+              'git reset --hard HEAD',
+              'git clean -fd'
+            ];
+            
+            for (const command of discardCommands) {
+              this.logger.info(`[AutoTestFixSystem] Executing: ${command}`);
+              await this.ideManager.executeTerminalCommand(currentPort, command);
+              await new Promise(resolve => setTimeout(resolve, 1000));
+            }
+          } else {
+            this.logger.warn(`[AutoTestFixSystem] No current port available for discard commands`);
           }
         }
         
@@ -1347,35 +1357,40 @@ Please proceed with the implementation and let me know when you're finished.`;
         };
       }
       
-      if (this.cursorIDE && this.cursorIDE.browserManager) {
+      if (this.ideManager) {
         // Build commit message for successful tests
         const commitMessage = `${task.title} (Task ID: ${task.id}) - ✅ Tests PASSED (${testInfo.successRate}%) - Auto-fixed by PIDEA`;
         
         this.logger.info(`[AutoTestFixSystem] Commit message: ${commitMessage}`);
         
-        const commands = [
-          'git add .',
-          `git commit -m "${commitMessage}"`,
-          'git push'
-        ];
-        
-        for (const command of commands) {
-          this.logger.info(`[AutoTestFixSystem] Executing: ${command}`);
-          await this.cursorIDE.browserManager.executeTerminalCommand(command);
-          await new Promise(resolve => setTimeout(resolve, 1000)); // Wait between commands
+        const currentPort = this.browserManager?.getCurrentPort?.();
+        if (currentPort) {
+          const commands = [
+            'git add .',
+            `git commit -m "${commitMessage}"`,
+            'git push'
+          ];
+          
+          for (const command of commands) {
+            this.logger.info(`[AutoTestFixSystem] Executing: ${command}`);
+            await this.ideManager.executeTerminalCommand(currentPort, command);
+            await new Promise(resolve => setTimeout(resolve, 1000)); // Wait between commands
+          }
+          
+          return {
+            success: true,
+            branchName: branchResult?.branchName,
+            commitMessage,
+            testSuccess: testInfo.testSuccess,
+            successRate: testInfo.successRate,
+            action: 'committed',
+            message: 'Changes committed and pushed successfully - Tests passed'
+          };
+        } else {
+          throw new Error('No current port available for git operations');
         }
-        
-        return {
-          success: true,
-          branchName: branchResult?.branchName,
-          commitMessage,
-          testSuccess: testInfo.testSuccess,
-          successRate: testInfo.successRate,
-          action: 'committed',
-          message: 'Changes committed and pushed successfully - Tests passed'
-        };
       } else {
-        throw new Error('CursorIDE or browserManager not available for git operations');
+        throw new Error('IDEManager not available for git operations');
       }
       
     } catch (error) {
