@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+require('module-alias/register');
 
 /**
  * Test script to verify WorkflowGitService branch strategy
