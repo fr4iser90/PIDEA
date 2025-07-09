@@ -422,16 +422,16 @@ class VibeCoderAutoRefactorHandler {
         fileInfo.lines = lines;
         
         // Determine file type and create appropriate task
-        let taskType = 'refactor';
+        let taskType = TaskType.REFACTOR;
         let taskTitle = '';
         let taskDescription = '';
         
         if (fileExt === '.jsx' || fileExt === '.tsx') {
-            taskType = 'refactor_react';
+            taskType = TaskType.REFACTOR_REACT;
             taskTitle = `Refactor React Component: ${fileName}`;
             taskDescription = `Split the large React component ${fileName} (${fileInfo.lines} lines) into smaller, more maintainable files.`;
         } else if (fileExt === '.js' || fileExt === '.ts') {
-            taskType = 'refactor_node';
+            taskType = TaskType.REFACTOR_NODE;
             taskTitle = `Refactor Node.js File: ${fileName}`;
             taskDescription = `Split the large Node.js file ${fileName} (${fileInfo.lines} lines) into smaller, more maintainable modules.`;
         } else {
