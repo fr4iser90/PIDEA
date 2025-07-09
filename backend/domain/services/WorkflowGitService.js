@@ -242,15 +242,28 @@ class WorkflowGitService {
             const { stdout } = await execAsync('git branch -a', { cwd: projectPath });
             const branches = stdout.split('\n').map(b => b.trim().replace('* ', '').replace('remotes/origin/', ''));
 
-            // Check if branch exists locally or remotely
-            const branchExists = branches.includes(branchName) || branches.includes(`origin/${branchName}`);
+            // Check if branch exists locally
+            const localBranchExists = branches.includes(branchName);
+            
+            // Check if branch exists remotely
+            const remoteBranchExists = branches.includes(`origin/${branchName}`);
 
-            if (branchExists) {
-                this.logger.info(`WorkflowGitService: Branch ${branchName} already exists`);
+            if (localBranchExists) {
+                this.logger.info(`WorkflowGitService: Branch ${branchName} already exists locally`);
                 return branchName;
             }
 
-            // Branch doesn't exist - create it from main
+            if (remoteBranchExists) {
+                this.logger.info(`WorkflowGitService: Branch ${branchName} exists remotely, creating local tracking branch`);
+                
+                // Create local tracking branch from remote
+                await execAsync(`git checkout -b ${branchName} origin/${branchName}`, { cwd: projectPath });
+                
+                this.logger.info(`WorkflowGitService: Successfully created local tracking branch ${branchName}`);
+                return branchName;
+            }
+
+            // Branch doesn't exist locally or remotely - create it from main
             this.logger.info(`WorkflowGitService: Creating PIDEA branch ${branchName} from main`);
             
             // Create new branch from main
