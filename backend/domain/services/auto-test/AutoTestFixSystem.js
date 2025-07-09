@@ -496,19 +496,27 @@ class AutoTestFixSystem {
       // Validate task completion
       const validationResult = await this.validateTaskCompletion(task, aiResponse);
       
-      // Automatische Test-Validierung nach KI-Antwort
-      let testValidationResult = null;
+      // Execute Git workflow via Playwright after successful AI response
+      let gitWorkflowResult = null;
       if (validationResult.isValid) {
-        this.logger.info(`[AutoTestFixSystem] KI-Antwort valid, führe automatische Test-Validierung aus...`);
+        this.logger.info(`[AutoTestFixSystem] AI response valid, executing Git workflow via Playwright...`);
+        gitWorkflowResult = await this.executeGitWorkflowViaPlaywright(task, branchResult);
+      }
+      
+      // Automatische Test-Validierung nach Git Workflow
+      let testValidationResult = null;
+      if (validationResult.isValid && gitWorkflowResult?.success) {
+        this.logger.info(`[AutoTestFixSystem] Git workflow successful, running test validation...`);
         testValidationResult = await this.validateTestsWithExecution(task, branchResult);
       }
       
       const taskResult = {
         taskId: task.id,
         description: task.title,
-        success: validationResult.isValid && (!testValidationResult || testValidationResult.success),
+        success: validationResult.isValid && gitWorkflowResult?.success && (!testValidationResult || testValidationResult.success),
         aiResponse,
         validationResult,
+        gitWorkflowResult,
         testValidationResult,
         branchResult,
         completedAt: new Date()
@@ -531,7 +539,7 @@ class AutoTestFixSystem {
   }
 
   /**
-   * Build a prompt for task execution with proper Git workflow using WorkflowGitService
+   * Build a prompt for task execution (Git workflow handled by Playwright)
    * @param {Task} task - Task object
    * @returns {string} Task prompt
    */
@@ -584,14 +592,7 @@ General Task Instructions:
 - Test the changes if applicable`;
     }
     
-    // Get proper branch strategy from WorkflowGitService
-    const branchStrategy = this.workflowGitService.determineBranchStrategy(task.type, {});
-    const branchName = this.workflowGitService.generateBranchName(task, branchStrategy);
-    
-    // Build Git workflow based on branch strategy
-    const gitWorkflow = this.buildGitWorkflow(branchName, branchStrategy, task);
-    
-    return `Please complete the following test-related task with proper Git workflow:
+    return `Please complete the following test-related task:
 
 ${task.title}
 
@@ -599,48 +600,66 @@ ${task.description}
 
 ${specificInstructions}
 
-${gitWorkflow}
-
 Requirements:
 - Execute the task completely and accurately
 - Make all necessary changes to the code
 - Ensure the implementation is production-ready
 - Follow best practices and coding standards
 - Test the changes if applicable
-- ALWAYS use the Git workflow above
 - Confirm completion when finished
 
 Please proceed with the implementation and let me know when you're finished.`;
   }
 
   /**
-   * Build Git workflow instructions based on branch strategy
-   * @param {string} branchName - Branch name
-   * @param {Object} branchStrategy - Branch strategy
+   * Execute Git workflow via Playwright commands
    * @param {Object} task - Task object
-   * @returns {string} Git workflow instructions
+   * @param {Object} branchResult - Branch creation result
+   * @returns {Promise<Object>} Git workflow result
    */
-  buildGitWorkflow(branchName, branchStrategy, task) {
-    const projectPath = task.metadata?.projectPath || process.cwd();
-    const startPoint = branchStrategy.startPoint || 'main';
-    
-    return `GIT WORKFLOW (REQUIRED):
-1. Ensure you're on the correct starting branch: git checkout ${startPoint}
-2. Pull latest changes: git pull origin ${startPoint}
-3. Create and switch to new branch: git checkout -b ${branchName}
-4. Make the necessary code changes
-5. Test your changes: npm test
-6. Stage all changes: git add .
-7. Commit your changes: git commit -m "${task.title} (Task ID: ${task.id})"
-8. Push the branch: git push -u origin ${branchName}
-9. Confirm completion when finished
-
-Branch Strategy: ${branchStrategy.type} (${branchStrategy.prefix})
-Start Point: ${startPoint}
-Target Branch: ${branchStrategy.mergeTarget || 'main'}
-Protection Level: ${branchStrategy.protection}
-Auto-Merge: ${branchStrategy.autoMerge ? 'Enabled' : 'Disabled'}
-Requires Review: ${branchStrategy.requiresReview ? 'Yes' : 'No'}`;
+  async executeGitWorkflowViaPlaywright(task, branchResult) {
+    try {
+      this.logger.info(`[AutoTestFixSystem] Executing Git workflow via Playwright for task: ${task.id}`);
+      
+      if (!this.cursorIDE || !this.cursorIDE.browserManager) {
+        throw new Error('CursorIDE or browserManager not available for Git workflow');
+      }
+      
+      const projectPath = task.metadata?.projectPath || process.cwd();
+      const branchStrategy = this.workflowGitService.determineBranchStrategy(task.type, {});
+      const startPoint = branchStrategy.startPoint || 'main';
+      
+      // Execute Git commands via Playwright
+      const gitCommands = [
+        `git checkout ${startPoint}`,
+        `git pull origin ${startPoint}`,
+        `git checkout -b ${branchResult.branchName}`,
+        'npm test',
+        'git add .',
+        `git commit -m "${task.title} (Task ID: ${task.id}) - Auto-fixed by PIDEA"`,
+        `git push -u origin ${branchResult.branchName}`
+      ];
+      
+      for (const command of gitCommands) {
+        this.logger.info(`[AutoTestFixSystem] Executing Git command: ${command}`);
+        await this.cursorIDE.browserManager.executeTerminalCommand(command);
+        await new Promise(resolve => setTimeout(resolve, 1000)); // Wait between commands
+      }
+      
+      return {
+        success: true,
+        branchName: branchResult.branchName,
+        commands: gitCommands,
+        message: 'Git workflow executed successfully via Playwright'
+      };
+      
+    } catch (error) {
+      this.logger.error(`[AutoTestFixSystem] Git workflow failed: ${error.message}`);
+      return {
+        success: false,
+        error: error.message
+      };
+    }
   }
 
   /**

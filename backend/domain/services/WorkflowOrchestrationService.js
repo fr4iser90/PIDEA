@@ -1107,7 +1107,7 @@ class WorkflowOrchestrationService {
     }
 
     /**
-     * Build task prompt for IDE chat
+     * Build task prompt for IDE chat (Git workflow handled by Playwright)
      * @param {Object} task - Task object
      * @param {Object} options - Options
      * @returns {string} Task prompt
@@ -1130,6 +1130,8 @@ ${basePrompt}
 - **Type**: ${task.type?.value}
 - **Priority**: ${task.priority?.value}
 - **Project**: ${task.metadata?.projectPath || 'Current Project'}
+
+Note: Git operations will be handled automatically by the system.
 
 Please proceed with the task execution.
         `.trim();

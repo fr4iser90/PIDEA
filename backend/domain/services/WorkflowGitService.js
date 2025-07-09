@@ -49,7 +49,7 @@ class WorkflowGitService {
     }
 
     /**
-     * Create workflow-specific branch based on task type
+     * Create workflow-specific branch based on task type (Playwright-ready)
      * @param {string} projectPath - Project path
      * @param {Object} task - Task object
      * @param {Object} options - Workflow options
@@ -60,10 +60,7 @@ class WorkflowGitService {
             const branchStrategy = this.determineBranchStrategy(task.type, options);
             const branchName = this.generateBranchName(task, branchStrategy);
 
-            // Sicherstellen, dass der Startpunkt-Branch existiert
-            await this.ensureBranchExistsLocallyAndRemotely(projectPath, branchStrategy.startPoint || 'main', 'main');
-
-            this.logger.info('WorkflowGitService: Creating workflow branch', {
+            this.logger.info('WorkflowGitService: Preparing workflow branch for Playwright', {
                 projectPath,
                 taskId: task.id,
                 taskType: task.type?.value,
@@ -71,30 +68,25 @@ class WorkflowGitService {
                 branchName
             });
 
-            // Use GitService for actual Git operations
-            await this.gitService.createBranch(projectPath, branchName, {
-                startPoint: branchStrategy.startPoint || 'main'
-            });
-
-            // Apply branch-specific configurations
-            await this.applyBranchConfiguration(projectPath, branchName, branchStrategy);
-
+            // Prepare branch information for Playwright execution
             const result = {
                 branchName,
                 strategy: branchStrategy,
-                status: 'created',
-                message: `Created ${branchStrategy.type} branch: ${branchName}`,
+                status: 'prepared',
+                message: `Prepared ${branchStrategy.type} branch: ${branchName} for Playwright execution`,
                 metadata: {
                     taskId: task.id,
                     taskType: task.type?.value,
                     workflowType: branchStrategy.type,
+                    startPoint: branchStrategy.startPoint || 'main',
+                    mergeTarget: branchStrategy.mergeTarget || 'main',
                     timestamp: new Date()
                 }
             };
 
-            // Emit workflow branch created event
+            // Emit workflow branch prepared event
             if (this.eventBus) {
-                this.eventBus.publish('workflow.branch.created', {
+                this.eventBus.publish('workflow.branch.prepared', {
                     projectPath,
                     taskId: task.id,
                     branchName,
@@ -106,12 +98,12 @@ class WorkflowGitService {
             return result;
 
         } catch (error) {
-            this.logger.error('WorkflowGitService: Failed to create workflow branch', {
+            this.logger.error('WorkflowGitService: Failed to prepare workflow branch', {
                 projectPath,
                 taskId: task.id,
                 error: error.message
             });
-            throw new Error(`Workflow branch creation failed: ${error.message}`);
+            throw new Error(`Workflow branch preparation failed: ${error.message}`);
         }
     }
 
