@@ -7,6 +7,8 @@ const TestFixer = require('@/infrastructure/external/TestFixer');
 const CoverageAnalyzer = require('@/infrastructure/external/CoverageAnalyzer');
 const TestReportParser = require('@/domain/services/TestReportParser');
 const TestFixTaskGenerator = require('@/domain/services/TestFixTaskGenerator');
+const WorkflowGitService = require('@/domain/services/WorkflowGitService');
+const TaskType = require('@/domain/value-objects/TaskType');
 const { v4: uuidv4 } = require('uuid');
 
 class AutoTestFixSystem {
@@ -24,6 +26,13 @@ class AutoTestFixSystem {
     this.coverageAnalyzer = new CoverageAnalyzer();
     this.testReportParser = new TestReportParser();
     this.testFixTaskGenerator = new TestFixTaskGenerator(this.taskRepository);
+    
+    // Initialize WorkflowGitService for proper branch management
+    this.workflowGitService = new WorkflowGitService({
+      gitService: dependencies.gitService,
+      logger: dependencies.logger,
+      eventBus: dependencies.eventBus
+    });
     
     // Session management
     this.activeSessions = new Map(); // sessionId -> session data
@@ -235,7 +244,7 @@ class AutoTestFixSystem {
         id: taskId,
         title: `Auto Test Fix - ${analysisResult.totalIssues} Issues`,
         description: `Automated test correction and coverage improvement for ${analysisResult.projectPath}`,
-        type: { value: 'testing' },
+        type: { value: TaskType.TESTING }, // This will use the 'testing' branch strategy from WorkflowGitService
         priority: { value: 'high' },
         status: { value: 'pending' },
         projectId: options.projectId || 'system',
@@ -248,7 +257,8 @@ class AutoTestFixSystem {
           coverageTarget: this.config.coverageThreshold,
           maxFixAttempts: this.config.maxFixAttempts,
           autoCommit: this.config.autoCommitEnabled,
-          autoBranch: this.config.autoBranchEnabled
+          autoBranch: this.config.autoBranchEnabled,
+          taskType: 'test_fix_workflow' // Specific task type for test fixes
         },
         createdAt: new Date(),
         updatedAt: new Date()
@@ -441,7 +451,7 @@ class AutoTestFixSystem {
   }
 
   /**
-   * Process a single task using cursorIDE.postToCursor() like AutoFinishSystem
+   * Process a single task using cursorIDE.postToCursor() with proper Git workflow
    * @param {Task} task - Task to process
    * @param {Object} options - Processing options
    * @returns {Promise<Object>} Task result
@@ -453,8 +463,29 @@ class AutoTestFixSystem {
         this.logger.warn('[AutoTestFixSystem] cursorIDE not available, using fallback processing');
         return await this.processTaskFallback(task, options);
       }
+
+      // Immer neuen Chat für jeden Test-Task öffnen
+      if (task.type?.value === 'testing' && this.cursorIDE.browserManager) {
+        this.logger.info('🆕 [AutoTestFixSystem] Creating new chat for test task...');
+        await this.cursorIDE.browserManager.clickNewChat();
+        // Warte kurz, bis das neue Chatfeld bereit ist
+        await new Promise(resolve => setTimeout(resolve, 2000));
+      }
       
-      // Build task prompt like AutoFinishSystem
+      // Create proper workflow branch using WorkflowGitService
+      const projectPath = task.metadata?.projectPath || process.cwd();
+      let branchResult = null;
+      
+      try {
+        this.logger.info(`[AutoTestFixSystem] Creating workflow branch for task: ${task.id}`);
+        branchResult = await this.workflowGitService.createWorkflowBranch(projectPath, task, options);
+        this.logger.info(`[AutoTestFixSystem] Created branch: ${branchResult.branchName}`);
+      } catch (error) {
+        this.logger.warn(`[AutoTestFixSystem] Failed to create workflow branch: ${error.message}`);
+        // Continue without branch creation - the AI will handle it in the prompt
+      }
+      
+      // Build task prompt with proper Git workflow
       const idePrompt = this.buildTaskPrompt(task);
       
       this.logger.info(`[AutoTestFixSystem] Sending task to Cursor IDE: ${task.title}`);
@@ -465,12 +496,21 @@ class AutoTestFixSystem {
       // Validate task completion
       const validationResult = await this.validateTaskCompletion(task, aiResponse);
       
+      // Automatische Test-Validierung nach KI-Antwort
+      let testValidationResult = null;
+      if (validationResult.isValid) {
+        this.logger.info(`[AutoTestFixSystem] KI-Antwort valid, führe automatische Test-Validierung aus...`);
+        testValidationResult = await this.validateTestsWithExecution(task, branchResult);
+      }
+      
       const taskResult = {
         taskId: task.id,
         description: task.title,
-        success: validationResult.isValid,
+        success: validationResult.isValid && (!testValidationResult || testValidationResult.success),
         aiResponse,
         validationResult,
+        testValidationResult,
+        branchResult,
         completedAt: new Date()
       };
       
@@ -491,7 +531,7 @@ class AutoTestFixSystem {
   }
 
   /**
-   * Build a prompt for task execution like AutoFinishSystem
+   * Build a prompt for task execution with proper Git workflow using WorkflowGitService
    * @param {Task} task - Task object
    * @returns {string} Task prompt
    */
@@ -544,7 +584,14 @@ General Task Instructions:
 - Test the changes if applicable`;
     }
     
-    return `Please complete the following test-related task:
+    // Get proper branch strategy from WorkflowGitService
+    const branchStrategy = this.workflowGitService.determineBranchStrategy(task.type, {});
+    const branchName = this.workflowGitService.generateBranchName(task, branchStrategy);
+    
+    // Build Git workflow based on branch strategy
+    const gitWorkflow = this.buildGitWorkflow(branchName, branchStrategy, task);
+    
+    return `Please complete the following test-related task with proper Git workflow:
 
 ${task.title}
 
@@ -552,15 +599,48 @@ ${task.description}
 
 ${specificInstructions}
 
+${gitWorkflow}
+
 Requirements:
 - Execute the task completely and accurately
 - Make all necessary changes to the code
 - Ensure the implementation is production-ready
 - Follow best practices and coding standards
 - Test the changes if applicable
+- ALWAYS use the Git workflow above
 - Confirm completion when finished
 
 Please proceed with the implementation and let me know when you're finished.`;
+  }
+
+  /**
+   * Build Git workflow instructions based on branch strategy
+   * @param {string} branchName - Branch name
+   * @param {Object} branchStrategy - Branch strategy
+   * @param {Object} task - Task object
+   * @returns {string} Git workflow instructions
+   */
+  buildGitWorkflow(branchName, branchStrategy, task) {
+    const projectPath = task.metadata?.projectPath || process.cwd();
+    const startPoint = branchStrategy.startPoint || 'main';
+    
+    return `GIT WORKFLOW (REQUIRED):
+1. Ensure you're on the correct starting branch: git checkout ${startPoint}
+2. Pull latest changes: git pull origin ${startPoint}
+3. Create and switch to new branch: git checkout -b ${branchName}
+4. Make the necessary code changes
+5. Test your changes: npm test
+6. Stage all changes: git add .
+7. Commit your changes: git commit -m "${task.title} (Task ID: ${task.id})"
+8. Push the branch: git push -u origin ${branchName}
+9. Confirm completion when finished
+
+Branch Strategy: ${branchStrategy.type} (${branchStrategy.prefix})
+Start Point: ${startPoint}
+Target Branch: ${branchStrategy.mergeTarget || 'main'}
+Protection Level: ${branchStrategy.protection}
+Auto-Merge: ${branchStrategy.autoMerge ? 'Enabled' : 'Disabled'}
+Requires Review: ${branchStrategy.requiresReview ? 'Yes' : 'No'}`;
   }
 
   /**
@@ -901,6 +981,218 @@ Please proceed with the implementation and let me know when you're finished.`;
     });
     
     return true;
+  }
+
+  /**
+   * Validate tests by executing them and checking success rate
+   * @param {Task} task - Task object
+   * @param {Object} branchResult - Branch creation result
+   * @returns {Promise<Object>} Test validation result
+   */
+  async validateTestsWithExecution(task, branchResult) {
+    try {
+      this.logger.info(`[AutoTestFixSystem] Starting test validation for task: ${task.id}`);
+      
+      // Ensure terminal is open in IDE
+      if (this.cursorIDE && this.cursorIDE.browserManager) {
+        this.logger.info(`[AutoTestFixSystem] Opening terminal in IDE...`);
+        await this.cursorIDE.browserManager.ensureTerminalOpen();
+        await new Promise(resolve => setTimeout(resolve, 1000)); // Wait for terminal
+      }
+      
+      // Execute tests and capture output to log file
+      const testCommand = 'npm test > test-output.log 2>&1';
+      this.logger.info(`[AutoTestFixSystem] Executing: ${testCommand}`);
+      
+      if (this.cursorIDE && this.cursorIDE.browserManager) {
+        await this.cursorIDE.browserManager.executeTerminalCommand(testCommand);
+        // Wait for test execution to complete
+        await new Promise(resolve => setTimeout(resolve, 5000));
+      }
+      
+      // Read and parse test output
+      const fs = require('fs').promises;
+      const path = require('path');
+      const logFilePath = path.join(process.cwd(), 'test-output.log');
+      
+      let testOutput = '';
+      try {
+        testOutput = await fs.readFile(logFilePath, 'utf8');
+        this.logger.info(`[AutoTestFixSystem] Test output captured (${testOutput.length} chars)`);
+      } catch (error) {
+        this.logger.warn(`[AutoTestFixSystem] Could not read test output log: ${error.message}`);
+        return {
+          success: false,
+          error: 'Could not read test output',
+          successRate: 0
+        };
+      }
+      
+      // Parse test output
+      const testResult = this.parseTestOutput(testOutput);
+      this.logger.info(`[AutoTestFixSystem] Test parsing result: ${testResult.successRate}% success rate`);
+      
+      // Validate success rate (threshold: 80%)
+      const successThreshold = 80;
+      const isSuccessful = testResult.successRate >= successThreshold;
+      
+      if (isSuccessful) {
+        this.logger.info(`[AutoTestFixSystem] Tests passed (${testResult.successRate}% >= ${successThreshold}%), committing changes...`);
+        
+        // Commit and push changes
+        const commitResult = await this.commitAndPushChanges(task, branchResult);
+        
+        return {
+          success: true,
+          successRate: testResult.successRate,
+          testOutput: testOutput.substring(0, 500) + '...', // Truncated for logging
+          commitResult,
+          message: `Tests passed with ${testResult.successRate}% success rate, changes committed`
+        };
+      } else {
+        this.logger.warn(`[AutoTestFixSystem] Tests failed (${testResult.successRate}% < ${successThreshold}%)`);
+        
+        return {
+          success: false,
+          successRate: testResult.successRate,
+          testOutput: testOutput.substring(0, 500) + '...', // Truncated for logging
+          error: `Test success rate ${testResult.successRate}% below threshold ${successThreshold}%`,
+          message: `Tests failed with ${testResult.successRate}% success rate`
+        };
+      }
+      
+    } catch (error) {
+      this.logger.error(`[AutoTestFixSystem] Test validation failed: ${error.message}`);
+      return {
+        success: false,
+        error: error.message,
+        successRate: 0
+      };
+    }
+  }
+
+  /**
+   * Parse test output to calculate success rate
+   * @param {string} testOutput - Raw test output
+   * @returns {Object} Parsed test result
+   */
+  parseTestOutput(testOutput) {
+    try {
+      // Common test output patterns
+      const patterns = [
+        // Jest pattern: "Tests: 5 passed, 1 failed"
+        /Tests:\s*(\d+)\s*passed,\s*(\d+)\s*failed/,
+        // Jest pattern: "✓ 5 tests passed"
+        /✓\s*(\d+)\s*tests?\s*passed/,
+        // Mocha pattern: "5 passing (2s)"
+        /(\d+)\s*passing/,
+        // Generic pattern: "PASS" or "FAIL"
+        /PASS/,
+        /FAIL/
+      ];
+      
+      let totalTests = 0;
+      let passedTests = 0;
+      let failedTests = 0;
+      
+      // Try to extract test counts
+      for (const pattern of patterns) {
+        const match = testOutput.match(pattern);
+        if (match) {
+          if (pattern.source.includes('passed') && pattern.source.includes('failed')) {
+            // Jest format: "Tests: 5 passed, 1 failed"
+            passedTests = parseInt(match[1]) || 0;
+            failedTests = parseInt(match[2]) || 0;
+            totalTests = passedTests + failedTests;
+            break;
+          } else if (pattern.source.includes('passing')) {
+            // Mocha format: "5 passing"
+            passedTests = parseInt(match[1]) || 0;
+            totalTests = passedTests;
+            break;
+          } else if (pattern.source.includes('PASS')) {
+            // Generic PASS
+            passedTests = 1;
+            totalTests = 1;
+            break;
+          }
+        }
+      }
+      
+      // If no specific pattern found, try to estimate from output
+      if (totalTests === 0) {
+        const passMatches = testOutput.match(/✓|PASS|passed/gi);
+        const failMatches = testOutput.match(/✗|FAIL|failed/gi);
+        
+        passedTests = passMatches ? passMatches.length : 0;
+        failedTests = failMatches ? failMatches.length : 0;
+        totalTests = passedTests + failedTests;
+      }
+      
+      // Calculate success rate
+      const successRate = totalTests > 0 ? (passedTests / totalTests) * 100 : 0;
+      
+      return {
+        totalTests,
+        passedTests,
+        failedTests,
+        successRate: Math.round(successRate * 100) / 100, // Round to 2 decimal places
+        rawOutput: testOutput
+      };
+      
+    } catch (error) {
+      this.logger.error(`[AutoTestFixSystem] Error parsing test output: ${error.message}`);
+      return {
+        totalTests: 0,
+        passedTests: 0,
+        failedTests: 0,
+        successRate: 0,
+        error: error.message
+      };
+    }
+  }
+
+  /**
+   * Commit and push changes after successful test validation
+   * @param {Task} task - Task object
+   * @param {Object} branchResult - Branch creation result
+   * @returns {Promise<Object>} Commit result
+   */
+  async commitAndPushChanges(task, branchResult) {
+    try {
+      this.logger.info(`[AutoTestFixSystem] Committing and pushing changes for task: ${task.id}`);
+      
+      if (this.cursorIDE && this.cursorIDE.browserManager) {
+        // Execute git commands in terminal
+        const commands = [
+          'git add .',
+          `git commit -m "${task.title} (Task ID: ${task.id}) - Auto-fixed by PIDEA"`,
+          'git push'
+        ];
+        
+        for (const command of commands) {
+          this.logger.info(`[AutoTestFixSystem] Executing: ${command}`);
+          await this.cursorIDE.browserManager.executeTerminalCommand(command);
+          await new Promise(resolve => setTimeout(resolve, 1000)); // Wait between commands
+        }
+        
+        return {
+          success: true,
+          branchName: branchResult?.branchName,
+          commitMessage: `${task.title} (Task ID: ${task.id}) - Auto-fixed by PIDEA`,
+          message: 'Changes committed and pushed successfully'
+        };
+      } else {
+        throw new Error('CursorIDE or browserManager not available for git operations');
+      }
+      
+    } catch (error) {
+      this.logger.error(`[AutoTestFixSystem] Failed to commit and push changes: ${error.message}`);
+      return {
+        success: false,
+        error: error.message
+      };
+    }
   }
 }
 
