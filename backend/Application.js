@@ -319,6 +319,9 @@ class Application {
     // Get Workflow Orchestration Service
     this.workflowOrchestrationService = this.serviceRegistry.getService('workflowOrchestrationService');
 
+    // Get Git Service
+    this.gitService = this.serviceRegistry.getService('gitService');
+
     // Initialize Auto-Finish System
     this.taskSessionRepository = new TaskSessionRepository(this.databaseConnection);
     await this.taskSessionRepository.initialize();
@@ -339,6 +342,8 @@ class Application {
       webSocketManager: this.webSocketManager,
       taskRepository: this.taskRepository,
       workflowOrchestrationService: this.workflowOrchestrationService,
+      gitService: this.gitService,
+      eventBus: this.eventBus,
       logger: this.logger
     });
     await this.autoTestFixSystem.initialize();

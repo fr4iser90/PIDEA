@@ -254,6 +254,12 @@ class ServiceRegistry {
             return new DependencyAnalyzer({ monorepoStrategy, singleRepoStrategy });
         }, { singleton: true, dependencies: ['monorepoStrategy', 'singleRepoStrategy'] });
 
+        // Git service
+        this.container.register('gitService', (logger, eventBus) => {
+            const GitService = require('../external/GitService');
+            return new GitService({ logger, eventBus });
+        }, { singleton: true, dependencies: ['logger', 'eventBus'] });
+
         this.registeredServices.add('external');
     }
 

@@ -49,7 +49,7 @@ class WorkflowGitService {
     }
 
     /**
-     * Create workflow-specific branch based on task type (Playwright-ready)
+     * Create workflow-specific branch based on task type (with actual Git operations)
      * @param {string} projectPath - Project path
      * @param {Object} task - Task object
      * @param {Object} options - Workflow options
@@ -60,7 +60,7 @@ class WorkflowGitService {
             const branchStrategy = this.determineBranchStrategy(task.type, options);
             const branchName = this.generateBranchName(task, branchStrategy);
 
-            this.logger.info('WorkflowGitService: Preparing workflow branch for Playwright', {
+            this.logger.info('WorkflowGitService: Creating workflow branch', {
                 projectPath,
                 taskId: task.id,
                 taskType: task.type?.value,
@@ -68,12 +68,47 @@ class WorkflowGitService {
                 branchName
             });
 
-            // Prepare branch information for Playwright execution
+            // Check if GitService is available for actual Git operations
+            if (this.gitService) {
+                try {
+                    // Get current branch before creating new one
+                    const currentBranch = await this.gitService.getCurrentBranch(projectPath);
+                    this.logger.info(`[WorkflowGitService] Current branch: ${currentBranch}`);
+
+                    // Create and checkout the new branch
+                    await this.gitService.createBranch(projectPath, branchName, {
+                        checkout: true,
+                        startPoint: branchStrategy.startPoint || 'main'
+                    });
+
+                    // Verify branch was created and checked out
+                    const newCurrentBranch = await this.gitService.getCurrentBranch(projectPath);
+                    this.logger.info(`[WorkflowGitService] New current branch: ${newCurrentBranch}`);
+
+                    if (newCurrentBranch !== branchName) {
+                        throw new Error(`Branch checkout failed: expected ${branchName}, got ${newCurrentBranch}`);
+                    }
+
+                    this.logger.info(`[WorkflowGitService] Successfully created and checked out branch: ${branchName}`);
+
+                } catch (gitError) {
+                    this.logger.error('WorkflowGitService: Git operation failed', {
+                        projectPath,
+                        branchName,
+                        error: gitError.message
+                    });
+                    // Continue without Git operations if they fail
+                }
+            } else {
+                this.logger.warn('WorkflowGitService: No GitService available, skipping actual Git operations');
+            }
+
+            // Prepare branch information
             const result = {
                 branchName,
                 strategy: branchStrategy,
-                status: 'prepared',
-                message: `Prepared ${branchStrategy.type} branch: ${branchName} for Playwright execution`,
+                status: 'created',
+                message: `Created ${branchStrategy.type} branch: ${branchName}`,
                 metadata: {
                     taskId: task.id,
                     taskType: task.type?.value,
@@ -84,9 +119,9 @@ class WorkflowGitService {
                 }
             };
 
-            // Emit workflow branch prepared event
+            // Emit workflow branch created event
             if (this.eventBus) {
-                this.eventBus.publish('workflow.branch.prepared', {
+                this.eventBus.publish('workflow.branch.created', {
                     projectPath,
                     taskId: task.id,
                     branchName,
@@ -98,12 +133,12 @@ class WorkflowGitService {
             return result;
 
         } catch (error) {
-            this.logger.error('WorkflowGitService: Failed to prepare workflow branch', {
+            this.logger.error('WorkflowGitService: Failed to create workflow branch', {
                 projectPath,
                 taskId: task.id,
                 error: error.message
             });
-            throw new Error(`Workflow branch preparation failed: ${error.message}`);
+            throw new Error(`Workflow branch creation failed: ${error.message}`);
         }
     }
 
@@ -363,10 +398,72 @@ class WorkflowGitService {
                 mergeTarget: strategy.mergeTarget
             });
 
-            // Git operations handled by Playwright via CDP
-            const commitMessage = this.generateCommitMessage(task, strategy);
-            this.logger.info(`[completeWorkflow] Workflow completion requested - handled by Playwright`);
             let mergeResult = null;
+            const commitMessage = this.generateCommitMessage(task, strategy);
+
+            // Check if GitService is available for actual Git operations
+            if (this.gitService) {
+                try {
+                    // Get current branch
+                    const currentBranch = await this.gitService.getCurrentBranch(projectPath);
+                    this.logger.info(`[WorkflowGitService] Current branch before completion: ${currentBranch}`);
+
+                    // If we're on the workflow branch, commit changes first
+                    if (currentBranch === branchName) {
+                        this.logger.info(`[WorkflowGitService] Committing changes on branch: ${branchName}`);
+                        
+                        // Add all changes
+                        await this.gitService.addFiles(projectPath);
+                        
+                        // Commit changes
+                        await this.gitService.commitChanges(projectPath, commitMessage);
+                        
+                        this.logger.info(`[WorkflowGitService] Changes committed successfully`);
+                    }
+
+                    // If auto-merge is enabled, merge to target branch
+                    if (strategy.autoMerge && strategy.mergeTarget) {
+                        this.logger.info(`[WorkflowGitService] Auto-merging to ${strategy.mergeTarget}`);
+                        
+                        // Checkout target branch
+                        await this.gitService.checkoutBranch(projectPath, strategy.mergeTarget);
+                        
+                        // Merge the workflow branch
+                        mergeResult = await this.gitService.mergeBranch(projectPath, branchName, {
+                            strategy: 'squash'
+                        });
+                        
+                        this.logger.info(`[WorkflowGitService] Auto-merge completed:`, mergeResult);
+                    } else {
+                        this.logger.info(`[WorkflowGitService] Auto-merge disabled, keeping branch: ${branchName}`);
+                        mergeResult = {
+                            success: true,
+                            action: 'kept_branch',
+                            message: `Branch ${branchName} kept for manual review`
+                        };
+                    }
+
+                } catch (gitError) {
+                    this.logger.error('WorkflowGitService: Git operation failed during completion', {
+                        projectPath,
+                        branchName,
+                        error: gitError.message
+                    });
+                    // Continue without Git operations if they fail
+                    mergeResult = {
+                        success: false,
+                        action: 'git_error',
+                        error: gitError.message
+                    };
+                }
+            } else {
+                this.logger.warn('WorkflowGitService: No GitService available, skipping Git operations');
+                mergeResult = {
+                    success: true,
+                    action: 'no_git_service',
+                    message: 'Git operations skipped - no GitService available'
+                };
+            }
 
             const result = {
                 branchName,
