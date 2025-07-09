@@ -730,14 +730,9 @@ General Task Instructions:
 - Test the changes if applicable`;
     }
     
-    // Get proper branch strategy from WorkflowGitService
-    const branchStrategy = this.workflowGitService.determineBranchStrategy(task.type, {});
-    const branchName = this.workflowGitService.generateBranchName(task, branchStrategy);
+
     
-    // Build Git workflow based on branch strategy
-    const gitWorkflow = this.buildGitWorkflow(branchName, branchStrategy, task);
-    
-    return `Please complete the following test-related task with proper Git workflow:
+    return `Please complete the following test-related task:
 
 ${task.title}
 
@@ -745,49 +740,18 @@ ${task.description}
 
 ${specificInstructions}
 
-${gitWorkflow}
-
 Requirements:
 - Execute the task completely and accurately
 - Make all necessary changes to the code
 - Ensure the implementation is production-ready
 - Follow best practices and coding standards
 - Test the changes if applicable
-- ALWAYS use the Git workflow above
 - Confirm completion when finished
 
 Please proceed with the implementation and let me know when you're finished.`;
   }
 
-  /**
-   * Build Git workflow instructions based on branch strategy
-   * @param {string} branchName - Branch name
-   * @param {Object} branchStrategy - Branch strategy
-   * @param {Object} task - Task object
-   * @returns {string} Git workflow instructions
-   */
-  buildGitWorkflow(branchName, branchStrategy, task) {
-    const projectPath = task.metadata?.projectPath || process.cwd();
-    const startPoint = branchStrategy.startPoint || 'main';
-    
-    return `GIT WORKFLOW (REQUIRED):
-1. Ensure you're on the correct starting branch: git checkout ${startPoint}
-2. Pull latest changes: git pull origin ${startPoint}
-3. Create and switch to new branch: git checkout -b ${branchName}
-4. Make the necessary code changes
-5. Test your changes: npm test
-6. Stage all changes: git add .
-7. Commit your changes: git commit -m "${task.title} (Task ID: ${task.id})"
-8. Push the branch: git push -u origin ${branchName}
-9. Confirm completion when finished
 
-Branch Strategy: ${branchStrategy.type} (${branchStrategy.prefix})
-Start Point: ${startPoint}
-Target Branch: ${branchStrategy.mergeTarget || 'main'}
-Protection Level: ${branchStrategy.protection}
-Auto-Merge: ${branchStrategy.autoMerge ? 'Enabled' : 'Disabled'}
-Requires Review: ${branchStrategy.requiresReview ? 'Yes' : 'No'}`;
-  }
 
   /**
    * Validate task completion like AutoFinishSystem
