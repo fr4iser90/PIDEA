@@ -108,18 +108,11 @@ module.exports = {
   moduleNameMapping: {
     '^@/(.*)$': '<rootDir>/$1',
     '^@/domain/(.*)$': '<rootDir>/domain/$1',
-    '^@/domain/(.*)$': '<rootDir>/domain/$1',
-    '^@/application/(.*)$': '<rootDir>/application/$1',
     '^@/application/(.*)$': '<rootDir>/application/$1',
     '^@/infrastructure/(.*)$': '<rootDir>/infrastructure/$1',
-    '^@/infrastructure/(.*)$': '<rootDir>/infrastructure/$1',
-    '^@/presentation/(.*)$': '<rootDir>/presentation/$1',
     '^@/presentation/(.*)$': '<rootDir>/presentation/$1',
     '^@/cli/(.*)$': '<rootDir>/cli/$1',
-    '^@/cli/(.*)$': '<rootDir>/cli/$1',
     '^@/scripts/(.*)$': '<rootDir>/scripts/$1',
-    '^@/scripts/(.*)$': '<rootDir>/scripts/$1',
-    '^@/tests/(.*)$': '<rootDir>/tests/$1',
     '^@/tests/(.*)$': '<rootDir>/tests/$1'
   },
   
@@ -152,7 +145,7 @@ module.exports = {
   detectOpenHandles: true,
   
   // Run tests in band for better coverage accuracy
-  runInBand: false,
+  runInBand: true,
   
   // Maximum workers
   maxWorkers: '50%',
