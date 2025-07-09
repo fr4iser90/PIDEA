@@ -32,9 +32,11 @@ class WorkflowGitService {
                 branchName
             });
 
-            // Create and checkout branch
+            // Intelligente Branch-Erstellung mit PIDEA-spezifischen Branches
+            const startPoint = await this.ensureBranchExists(projectPath, branchStrategy.startPoint);
+            
             await this.gitService.createBranch(projectPath, branchName, {
-                startPoint: branchStrategy.startPoint || 'main'
+                startPoint: startPoint
             });
 
             // Apply branch-specific configurations
@@ -85,10 +87,18 @@ class WorkflowGitService {
     determineBranchStrategy(taskType, options = {}) {
         // Handle both TaskType objects and plain objects with value property
         const taskTypeValue = taskType?.value || taskType;
-        
+        // Debug log
+        if (this.logger && typeof this.logger.info === 'function') {
+            this.logger.info('[WorkflowGitService] DEBUG TaskType:', { TaskType, taskTypeValue });
+        }
+        // Defensive: fallback for undefined TaskType constants
+        const safe = (v) => {
+            if (v === undefined || v === null) return '__undefined__';
+            return v;
+        };
         const strategies = {
             // Refactoring Workflows
-            [TaskType.REFACTORING.value]: {
+            [safe(TaskType.REFACTOR)]: {
                 type: 'refactor',
                 prefix: 'refactor',
                 startPoint: 'main',
@@ -97,7 +107,7 @@ class WorkflowGitService {
                 requiresReview: true,
                 mergeTarget: 'develop'
             },
-            [TaskType.CODE_REVIEW.value]: {
+            [safe(TaskType.ANALYSIS)]: {
                 type: 'review',
                 prefix: 'review',
                 startPoint: 'main',
@@ -107,28 +117,28 @@ class WorkflowGitService {
                 mergeTarget: 'main'
             },
 
-            // Feature Implementation Workflows
-            [TaskType.FEATURE.value]: {
+            // Feature Implementation Workflows - PIDEA Features Branch
+            [safe(TaskType.FEATURE)]: {
                 type: 'feature',
                 prefix: 'feature',
-                startPoint: 'develop',
+                startPoint: 'pidea-features',
                 protection: 'medium',
                 autoMerge: false,
                 requiresReview: true,
-                mergeTarget: 'develop'
+                mergeTarget: 'pidea-features'
             },
-            [TaskType.ENHANCEMENT.value]: {
+            [safe(TaskType.OPTIMIZATION)]: {
                 type: 'enhancement',
                 prefix: 'enhance',
-                startPoint: 'develop',
+                startPoint: 'pidea-features',
                 protection: 'medium',
                 autoMerge: false,
                 requiresReview: true,
-                mergeTarget: 'develop'
+                mergeTarget: 'pidea-features'
             },
 
             // Bug Fix Workflows
-            [TaskType.BUG_FIX.value]: {
+            [safe(TaskType.BUG)]: {
                 type: 'bugfix',
                 prefix: 'fix',
                 startPoint: 'main',
@@ -137,7 +147,7 @@ class WorkflowGitService {
                 requiresReview: true,
                 mergeTarget: 'main'
             },
-            [TaskType.HOTFIX.value]: {
+            [safe(TaskType.SECURITY)]: {
                 type: 'hotfix',
                 prefix: 'hotfix',
                 startPoint: 'main',
@@ -148,7 +158,7 @@ class WorkflowGitService {
             },
 
             // Analysis Workflows
-            [TaskType.ANALYSIS.value]: {
+            [safe(TaskType.ANALYSIS)]: {
                 type: 'analysis',
                 prefix: 'analyze',
                 startPoint: 'main',
@@ -157,7 +167,7 @@ class WorkflowGitService {
                 requiresReview: false,
                 mergeTarget: 'main'
             },
-            [TaskType.OPTIMIZATION.value]: {
+            [safe(TaskType.OPTIMIZATION)]: {
                 type: 'optimization',
                 prefix: 'optimize',
                 startPoint: 'develop',
@@ -167,19 +177,19 @@ class WorkflowGitService {
                 mergeTarget: 'develop'
             },
 
-            // Testing Workflows
-            [TaskType.TESTING.value]: {
+            // Testing Workflows - PIDEA Agent Branch
+            [safe(TaskType.TESTING)]: {
                 type: 'testing',
                 prefix: 'test',
-                startPoint: 'develop',
+                startPoint: 'pidea-agent',
                 protection: 'low',
                 autoMerge: true,
                 requiresReview: false,
-                mergeTarget: 'develop'
+                mergeTarget: 'pidea-agent'
             },
 
             // Documentation Workflows
-            [TaskType.DOCUMENTATION.value]: {
+            [safe(TaskType.DOCUMENTATION)]: {
                 type: 'documentation',
                 prefix: 'docs',
                 startPoint: 'main',
@@ -190,7 +200,7 @@ class WorkflowGitService {
             },
 
             // Debug Workflows
-            [TaskType.DEBUG.value]: {
+            [safe(TaskType.TEST_STATUS)]: {
                 type: 'debug',
                 prefix: 'debug',
                 startPoint: 'main',
@@ -213,6 +223,49 @@ class WorkflowGitService {
         };
 
         return strategies[taskTypeValue] || strategies.default;
+    }
+
+    /**
+     * Ensure branch exists, create if it doesn't
+     * @param {string} projectPath - Project path
+     * @param {string} branchName - Branch name to ensure exists
+     * @returns {Promise<string>} Branch name that exists
+     */
+    async ensureBranchExists(projectPath, branchName) {
+        try {
+            // Check if branch exists
+            const { exec } = require('child_process');
+            const util = require('util');
+            const execAsync = util.promisify(exec);
+
+            // List all branches
+            const { stdout } = await execAsync('git branch -a', { cwd: projectPath });
+            const branches = stdout.split('\n').map(b => b.trim().replace('* ', '').replace('remotes/origin/', ''));
+
+            // Check if branch exists locally or remotely
+            const branchExists = branches.includes(branchName) || branches.includes(`origin/${branchName}`);
+
+            if (branchExists) {
+                this.logger.info(`WorkflowGitService: Branch ${branchName} already exists`);
+                return branchName;
+            }
+
+            // Branch doesn't exist - create it from main
+            this.logger.info(`WorkflowGitService: Creating PIDEA branch ${branchName} from main`);
+            
+            // Create new branch from main
+            await execAsync(`git checkout -b ${branchName} main`, { cwd: projectPath });
+            
+            // Push to remote
+            await execAsync(`git push -u origin ${branchName}`, { cwd: projectPath });
+            
+            this.logger.info(`WorkflowGitService: Successfully created and pushed branch ${branchName}`);
+            return branchName;
+
+        } catch (error) {
+            this.logger.warn(`WorkflowGitService: Failed to create branch ${branchName}, falling back to main: ${error.message}`);
+            return 'main'; // Fallback to main if anything goes wrong
+        }
     }
 
     /**
