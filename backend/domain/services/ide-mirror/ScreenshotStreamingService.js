@@ -226,12 +226,18 @@ class ScreenshotStreamingService {
       }
     };
     
+    // COMMENTED OUT: Continuous frame capture causes filesystem/performance issues
+    // Use simple command-based screenshots instead
+    /*
     // Start the interval and store the ID
     const intervalId = setInterval(captureLoop, frameInterval);
     this.streamingIntervals.set(port, intervalId);
     
     // Start the loop immediately
     captureLoop();
+    */
+    
+    console.log(`[ScreenshotStreamingService] Frame capture setup complete (no continuous streaming to avoid filesystem errors) for port ${port}`);
   }
 
   /**
@@ -599,13 +605,16 @@ class ScreenshotStreamingService {
       
       streamingPort.resume();
       
-      // Restart streaming interval
+      // COMMENTED OUT: Restart streaming interval causes filesystem issues
+      // Use simple command-based capture instead
+      /*
       const intervalMs = 1000 / streamingPort.fps;
       const streamingInterval = setInterval(async () => {
         await this.captureAndStreamFrame(port);
       }, intervalMs);
       
       this.streamingIntervals.set(port, streamingInterval);
+      */
       
       console.log(`[ScreenshotStreamingService] Streaming resumed for port ${port}`);
       
@@ -758,6 +767,9 @@ class ScreenshotStreamingService {
         streamingPort.format = options.format;
       }
       
+      // COMMENTED OUT: Restart interval causes filesystem issues
+      // Use simple command-based capture instead
+      /*
       // Restart interval with new FPS if needed
       const interval = this.streamingIntervals.get(port);
       if (interval && options.fps !== undefined) {
@@ -768,6 +780,7 @@ class ScreenshotStreamingService {
         }, newIntervalMs);
         this.streamingIntervals.set(port, newStreamingInterval);
       }
+      */
       
       console.log(`[ScreenshotStreamingService] Updated configuration for port ${port}`);
       

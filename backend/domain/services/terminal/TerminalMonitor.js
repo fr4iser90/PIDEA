@@ -172,11 +172,15 @@ class TerminalMonitor {
       clearInterval(this.monitoringInterval);
     }
     
+    // COMMENTED OUT: Continuous monitoring causes filesystem/performance issues
+    // Use simple command-based logging instead as requested by user
+    /*
     this.monitoringInterval = setInterval(async () => {
       await this.monitorTerminalOutput();
     }, 2000); // Check every 2 seconds
+    */
     
-    console.log('[TerminalMonitor] Terminal monitoring started');
+    console.log('[TerminalMonitor] Terminal monitoring setup complete (no continuous monitoring to avoid filesystem errors)');
   }
 
   async stopTerminalMonitoring() {

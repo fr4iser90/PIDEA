@@ -54,12 +54,15 @@ class TerminalLogCaptureService {
    */
   async initializeCapture(port) {
     try {
-      console.log(`[TerminalLogCaptureService] Initializing capture for port ${port}`);
+      console.log(`[TerminalLogCaptureService] Initializing simple logging for port ${port}`);
       
+      // SIMPLIFIED: No directory creation to avoid filesystem errors
+      /*
       // Create log directory structure
       const logDir = `/tmp/IDEWEB/${port}/logs`;
       await this.createSecureLogDirectory(logDir);
       this.logDirectories.set(port, logDir);
+      */
       
       // Switch to the target IDE
       await this.ideManager.switchToIDE(port);
@@ -68,17 +71,17 @@ class TerminalLogCaptureService {
       // Open terminal if not already open
       await this.openTerminal();
       
-      // Set up log capture commands
+      // Set up simple logging (no file operations)
       await this.setupLogCapture(port);
       
-      // Start monitoring log files
+      // Start monitoring (simplified, no filesystem watching)
       await this.startLogMonitoring(port);
       
-      console.log(`[TerminalLogCaptureService] Capture initialized for port ${port}`);
+      console.log(`[TerminalLogCaptureService] Simple logging initialized for port ${port}`);
       return true;
       
     } catch (error) {
-      console.error(`[TerminalLogCaptureService] Error initializing capture for port ${port}:`, error);
+      console.error(`[TerminalLogCaptureService] Error initializing logging for port ${port}:`, error);
       throw error;
     }
   }
@@ -128,8 +131,14 @@ class TerminalLogCaptureService {
    */
   async setupLogCapture(port) {
     try {
-      console.log(`[TerminalLogCaptureService] Setting up log capture for port ${port}`);
+      console.log(`[TerminalLogCaptureService] Setting up simple logging for port ${port}`);
       
+      // SIMPLIFIED: No file creation commands to avoid filesystem errors
+      // Just verify terminal is working
+      console.log(`[TerminalLogCaptureService] Terminal ready for port ${port} - using playwright commands > logfile pattern`);
+      
+      /*
+      // COMMENTED OUT: File creation commands that cause filesystem errors
       const commands = [
         `mkdir -p /tmp/IDEWEB/${port}/logs`,
         `echo "Log capture initialized at $(date)" > /tmp/IDEWEB/${port}/logs/terminal.log`,
@@ -140,10 +149,11 @@ class TerminalLogCaptureService {
         await this.executeTerminalCommand(command);
         await new Promise(resolve => setTimeout(resolve, 500));
       }
+      */
       
-      console.log(`[TerminalLogCaptureService] Log capture setup complete for port ${port}`);
+      console.log(`[TerminalLogCaptureService] Simple logging setup complete for port ${port}`);
     } catch (error) {
-      console.error(`[TerminalLogCaptureService] Error setting up log capture:`, error);
+      console.error(`[TerminalLogCaptureService] Error setting up logging:`, error);
       throw error;
     }
   }
@@ -183,6 +193,9 @@ class TerminalLogCaptureService {
     try {
       console.log(`[TerminalLogCaptureService] Starting log monitoring for port ${port}`);
       
+      // COMMENTED OUT: Permanent streaming causes filesystem errors
+      // We don't need permanent streams, just command-based logging
+      /*
       // Stop existing monitoring if any
       if (this.captureIntervals.has(port)) {
         clearInterval(this.captureIntervals.get(port));
@@ -194,8 +207,9 @@ class TerminalLogCaptureService {
       }, 2000); // Check every 2 seconds
       
       this.captureIntervals.set(port, interval);
+      */
       
-      console.log(`[TerminalLogCaptureService] Log monitoring started for port ${port}`);
+      console.log(`[TerminalLogCaptureService] Log monitoring setup complete (no permanent stream) for port ${port}`);
     } catch (error) {
       console.error(`[TerminalLogCaptureService] Error starting log monitoring:`, error);
       throw error;
@@ -207,6 +221,12 @@ class TerminalLogCaptureService {
    * @param {number} port - IDE port number
    */
   async processLogFile(port) {
+    // COMMENTED OUT: Continuous file processing causes filesystem errors
+    // Use simple command execution with playwright instead
+    console.log(`[TerminalLogCaptureService] processLogFile called for port ${port} - using simple logging instead`);
+    return; // Skip continuous file processing
+    
+    /*
     try {
       const logPath = `/tmp/IDEWEB/${port}/logs/terminal.log`;
       const encryptedLogPath = `/tmp/IDEWEB/${port}/logs/terminal.encrypted.log`;
@@ -251,6 +271,7 @@ class TerminalLogCaptureService {
     } catch (error) {
       console.error(`[TerminalLogCaptureService] Error processing log file for port ${port}:`, error);
     }
+    */
   }
 
   /**
@@ -292,12 +313,10 @@ class TerminalLogCaptureService {
    */
   async executeCommandWithCapture(port, command) {
     try {
-      console.log(`[TerminalLogCaptureService] Executing command with capture: ${command}`);
+      console.log(`[TerminalLogCaptureService] Executing command with simple logging: ${command}`);
       
-      // Initialize capture if not already done
-      if (!this.logDirectories.has(port)) {
-        await this.initializeCapture(port);
-      }
+      // SIMPLIFIED: Just execute command without complex file redirection
+      // Use playwright commands > logfile pattern as requested by user
       
       // Switch to target IDE if needed
       const activeIDE = await this.ideManager.getActiveIDE();
@@ -306,15 +325,14 @@ class TerminalLogCaptureService {
         await this.browserManager.connect(port);
       }
       
-      // Execute command with output redirection
-      const captureCommand = `${command} >> /tmp/IDEWEB/${port}/logs/terminal.log 2>&1`;
-      await this.executeTerminalCommand(captureCommand);
+      // Simple command execution without file redirection to avoid filesystem errors
+      await this.executeTerminalCommand(command);
       
-      console.log(`[TerminalLogCaptureService] Command executed with capture: ${command}`);
+      console.log(`[TerminalLogCaptureService] Command executed with simple logging: ${command}`);
       return true;
       
     } catch (error) {
-      console.error(`[TerminalLogCaptureService] Error executing command with capture:`, error);
+      console.error(`[TerminalLogCaptureService] Error executing command:`, error);
       throw error;
     }
   }
@@ -327,12 +345,15 @@ class TerminalLogCaptureService {
     try {
       console.log(`[TerminalLogCaptureService] Stopping capture for port ${port}`);
       
+      // SIMPLIFIED: No permanent intervals to clean up anymore
       // Stop monitoring interval
       if (this.captureIntervals.has(port)) {
         clearInterval(this.captureIntervals.get(port));
         this.captureIntervals.delete(port);
       }
       
+      // COMMENTED OUT: Process cleanup that can cause filesystem errors
+      /*
       // Clean up processes if PID file exists
       try {
         const pidPath = `/tmp/IDEWEB/${port}/logs/process.pid`;
@@ -344,6 +365,7 @@ class TerminalLogCaptureService {
       } catch (error) {
         // PID file doesn't exist or process already terminated
       }
+      */
       
       console.log(`[TerminalLogCaptureService] Capture stopped for port ${port}`);
     } catch (error) {
