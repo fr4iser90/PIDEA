@@ -167,13 +167,33 @@ class ServiceRegistry {
       });
     }, { singleton: true, dependencies: ['cursorIDEService', 'autoFinishSystem', 'taskRepository', 'eventBus', 'logger'] });
 
-        // Cursor IDE service
+        // IDE Factory
+        this.container.register('ideFactory', () => {
+            const { getIDEFactory } = require('../../domain/services/ide/IDEFactory');
+            return getIDEFactory();
+        }, { singleton: true });
+
+        // IDE Service (unified interface)
+        this.container.register('ideService', (browserManager, ideManager, eventBus, ideFactory) => {
+            const { getIDEFactory } = require('../../domain/services/ide/IDEFactory');
+            const factory = getIDEFactory();
+            
+            // Create default IDE instance (Cursor)
+            const result = factory.createIDE('cursor', { browserManager, ideManager, eventBus });
+            if (result.success) {
+                return result.ide;
+            }
+            
+            throw new Error('Failed to create IDE service: ' + result.error);
+        }, { singleton: true, dependencies: ['browserManager', 'ideManager', 'eventBus', 'ideFactory'] });
+
+        // Legacy Cursor IDE service (for backward compatibility)
         this.container.register('cursorIDEService', (browserManager, ideManager, eventBus) => {
             const CursorIDEService = require('../../domain/services/CursorIDEService');
             return new CursorIDEService(browserManager, ideManager, eventBus);
         }, { singleton: true, dependencies: ['browserManager', 'ideManager', 'eventBus'] });
 
-        // VSCode service
+        // Legacy VSCode service (for backward compatibility)
         this.container.register('vscodeService', (browserManager, ideManager, eventBus) => {
             const VSCodeService = require('../../domain/services/VSCodeService');
             return new VSCodeService(browserManager, ideManager, eventBus);
