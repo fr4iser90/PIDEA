@@ -563,64 +563,14 @@ class AutoTestFixSystem {
         await new Promise(resolve => setTimeout(resolve, 2000));
       }
       
-      // Create proper workflow branch using GitService or direct commands
+      // Create proper workflow branch using WorkflowGitService
       const projectPath = task.metadata?.projectPath || process.cwd();
       let branchResult = null;
       
       try {
         this.logger.info(`[AutoTestFixSystem] Creating workflow branch for task: ${task.id}`);
-        
-        // Get branch strategy and name
-        const branchStrategy = this.workflowGitService.determineBranchStrategy(task.type, {});
-        const branchName = this.workflowGitService.generateBranchName(task, branchStrategy);
-        const startPoint = branchStrategy.startPoint || 'main';
-        
-        // Try to create branch via GitService first
-        if (this.workflowGitService.gitService) {
-          await this.workflowGitService.gitService.createBranch(projectPath, branchName, {
-            startPoint: startPoint
-          });
-          this.logger.info(`[AutoTestFixSystem] Git branch created successfully via GitService: ${branchName}`);
-        } else {
-          // Fallback: direct git command via Playwright
-          if (this.cursorIDE && this.cursorIDE.browserManager) {
-            const gitCommands = [
-              `git checkout ${startPoint}`,
-              `git pull origin ${startPoint}`,
-              `git checkout -b ${branchName}`
-            ];
-            
-            for (const command of gitCommands) {
-              this.logger.info(`[AutoTestFixSystem] Executing Git command: ${command}`);
-              await this.cursorIDE.browserManager.executeTerminalCommand(command);
-              await new Promise(resolve => setTimeout(resolve, 1000)); // Wait between commands
-            }
-            this.logger.info(`[AutoTestFixSystem] Git branch created via Playwright: ${branchName}`);
-          } else {
-            // Last fallback: direct execSync
-            const { execSync } = require('child_process');
-            execSync(`git checkout ${startPoint}`, { cwd: projectPath });
-            execSync(`git pull origin ${startPoint}`, { cwd: projectPath });
-            execSync(`git checkout -b ${branchName}`, { cwd: projectPath });
-            this.logger.info(`[AutoTestFixSystem] Git branch created via direct command: ${branchName}`);
-          }
-        }
-        
-        branchResult = {
-          branchName,
-          strategy: branchStrategy,
-          status: 'created',
-          message: `Created ${branchStrategy.type} branch: ${branchName}`,
-          metadata: {
-            taskId: task.id,
-            taskType: task.type?.value,
-            workflowType: branchStrategy.type,
-            startPoint: startPoint,
-            mergeTarget: branchStrategy.mergeTarget || 'main',
-            timestamp: new Date()
-          }
-        };
-        
+        branchResult = await this.workflowGitService.createWorkflowBranch(projectPath, task, options);
+        this.logger.info(`[AutoTestFixSystem] Created branch: ${branchResult.branchName}`);
       } catch (error) {
         this.logger.warn(`[AutoTestFixSystem] Failed to create workflow branch: ${error.message}`);
         // Continue without branch creation - the AI will handle it in the prompt
@@ -639,19 +589,6 @@ class AutoTestFixSystem {
       const maxConfirmationAttempts = 3;
       let confirmationResult = null;
       
-<<<<<<< HEAD
-      // Execute Git workflow via Playwright after successful AI response
-      let gitWorkflowResult = null;
-      if (validationResult.isValid) {
-        this.logger.info(`[AutoTestFixSystem] AI response valid, executing Git workflow via Playwright...`);
-        gitWorkflowResult = await this.executeGitWorkflowViaPlaywright(task, branchResult);
-      }
-      
-      // Automatische Test-Validierung nach Git Workflow
-      let testValidationResult = null;
-      if (validationResult.isValid && gitWorkflowResult?.success) {
-        this.logger.info(`[AutoTestFixSystem] Git workflow successful, running test validation...`);
-=======
       while (confirmationAttempts < maxConfirmationAttempts) {
         confirmationAttempts++;
         this.logger.info(`[AutoTestFixSystem] Confirmation attempt ${confirmationAttempts}/${maxConfirmationAttempts}`);
@@ -682,7 +619,6 @@ class AutoTestFixSystem {
       let testValidationResult = null;
       if (confirmationResult && confirmationResult.isValid) {
         this.logger.info(`[AutoTestFixSystem] Proceeding with test validation for task: ${task.id}`);
->>>>>>> pidea-agent
         testValidationResult = await this.validateTestsWithExecution(task, branchResult);
         
         // Log the outcome
@@ -715,16 +651,9 @@ class AutoTestFixSystem {
       const taskResult = {
         taskId: task.id,
         description: task.title,
-<<<<<<< HEAD
-        success: validationResult.isValid && gitWorkflowResult?.success && (!testValidationResult || testValidationResult.success),
-        aiResponse,
-        validationResult,
-        gitWorkflowResult,
-=======
         success: testValidationResult?.success || false,
         aiResponse,
         confirmationResult,
->>>>>>> pidea-agent
         testValidationResult,
         branchResult,
         taskStatus: testValidationResult?.taskStatus || 'unknown',
@@ -748,7 +677,7 @@ class AutoTestFixSystem {
   }
 
   /**
-   * Build a prompt for task execution (Git workflow handled by Playwright)
+   * Build a prompt for task execution with proper Git workflow using WorkflowGitService
    * @param {Task} task - Task object
    * @returns {string} Task prompt
    */
@@ -801,7 +730,14 @@ General Task Instructions:
 - Test the changes if applicable`;
     }
     
-    return `Please complete the following test-related task:
+    // Get proper branch strategy from WorkflowGitService
+    const branchStrategy = this.workflowGitService.determineBranchStrategy(task.type, {});
+    const branchName = this.workflowGitService.generateBranchName(task, branchStrategy);
+    
+    // Build Git workflow based on branch strategy
+    const gitWorkflow = this.buildGitWorkflow(branchName, branchStrategy, task);
+    
+    return `Please complete the following test-related task with proper Git workflow:
 
 ${task.title}
 
@@ -809,59 +745,48 @@ ${task.description}
 
 ${specificInstructions}
 
+${gitWorkflow}
+
 Requirements:
 - Execute the task completely and accurately
 - Make all necessary changes to the code
 - Ensure the implementation is production-ready
 - Follow best practices and coding standards
 - Test the changes if applicable
+- ALWAYS use the Git workflow above
 - Confirm completion when finished
 
 Please proceed with the implementation and let me know when you're finished.`;
   }
 
   /**
-   * Execute Git workflow via Playwright commands (branch already created)
+   * Build Git workflow instructions based on branch strategy
+   * @param {string} branchName - Branch name
+   * @param {Object} branchStrategy - Branch strategy
    * @param {Object} task - Task object
-   * @param {Object} branchResult - Branch creation result
-   * @returns {Promise<Object>} Git workflow result
+   * @returns {string} Git workflow instructions
    */
-  async executeGitWorkflowViaPlaywright(task, branchResult) {
-    try {
-      this.logger.info(`[AutoTestFixSystem] Executing Git workflow via Playwright for task: ${task.id}`);
-      
-      if (!this.cursorIDE || !this.cursorIDE.browserManager) {
-        throw new Error('CursorIDE or browserManager not available for Git workflow');
-      }
-      
-      // Branch is already created, just execute the remaining Git operations
-      const gitCommands = [
-        'npm test',
-        'git add .',
-        `git commit -m "${task.title} (Task ID: ${task.id}) - Auto-fixed by PIDEA"`,
-        `git push -u origin ${branchResult.branchName}`
-      ];
-      
-      for (const command of gitCommands) {
-        this.logger.info(`[AutoTestFixSystem] Executing Git command: ${command}`);
-        await this.cursorIDE.browserManager.executeTerminalCommand(command);
-        await new Promise(resolve => setTimeout(resolve, 1000)); // Wait between commands
-      }
-      
-      return {
-        success: true,
-        branchName: branchResult.branchName,
-        commands: gitCommands,
-        message: 'Git workflow executed successfully via Playwright'
-      };
-      
-    } catch (error) {
-      this.logger.error(`[AutoTestFixSystem] Git workflow failed: ${error.message}`);
-      return {
-        success: false,
-        error: error.message
-      };
-    }
+  buildGitWorkflow(branchName, branchStrategy, task) {
+    const projectPath = task.metadata?.projectPath || process.cwd();
+    const startPoint = branchStrategy.startPoint || 'main';
+    
+    return `GIT WORKFLOW (REQUIRED):
+1. Ensure you're on the correct starting branch: git checkout ${startPoint}
+2. Pull latest changes: git pull origin ${startPoint}
+3. Create and switch to new branch: git checkout -b ${branchName}
+4. Make the necessary code changes
+5. Test your changes: npm test
+6. Stage all changes: git add .
+7. Commit your changes: git commit -m "${task.title} (Task ID: ${task.id})"
+8. Push the branch: git push -u origin ${branchName}
+9. Confirm completion when finished
+
+Branch Strategy: ${branchStrategy.type} (${branchStrategy.prefix})
+Start Point: ${startPoint}
+Target Branch: ${branchStrategy.mergeTarget || 'main'}
+Protection Level: ${branchStrategy.protection}
+Auto-Merge: ${branchStrategy.autoMerge ? 'Enabled' : 'Disabled'}
+Requires Review: ${branchStrategy.requiresReview ? 'Yes' : 'No'}`;
   }
 
   /**
