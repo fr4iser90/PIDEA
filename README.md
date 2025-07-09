@@ -71,6 +71,8 @@ If you're not using an AppImage, adjust the command based on your installation:
 cursor \
   --user-data-dir="$HOME/.cursor-profile-dev" \
   --remote-debugging-port=9223
+vscode   
+  code --no-sandbox --remote-debugging-port=9232
 ```
 
 **For Windows:**

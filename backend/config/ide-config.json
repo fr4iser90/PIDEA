@@ -1,0 +1,63 @@
+{
+  "ideTypes": {
+    "cursor": {
+      "enabled": true,
+      "portRange": {
+        "start": 9222,
+        "end": 9231
+      },
+      "defaultOptions": {
+        "userDataDir": null,
+        "extensionsDir": null,
+        "disableExtensions": false,
+        "verbose": false
+      },
+      "startupTimeout": 3000,
+      "autoStart": false
+    },
+    "vscode": {
+      "enabled": true,
+      "portRange": {
+        "start": 9232,
+        "end": 9241
+      },
+      "defaultOptions": {
+        "userDataDir": null,
+        "extensionsDir": null,
+        "disableExtensions": false,
+        "verbose": false,
+        "newWindow": false
+      },
+      "startupTimeout": 5000,
+      "autoStart": false
+    },
+    "windsurf": {
+      "enabled": true,
+      "portRange": {
+        "start": 9242,
+        "end": 9251
+      },
+      "defaultOptions": {
+        "userDataDir": null,
+        "extensionsDir": null,
+        "disableExtensions": false,
+        "verbose": false,
+        "newWindow": false
+      },
+      "startupTimeout": 4000,
+      "autoStart": false
+    }
+  },
+  "global": {
+    "defaultIDE": "cursor",
+    "autoDetect": true,
+    "healthCheckInterval": 30000,
+    "maxConcurrentIDEs": 5,
+    "logLevel": "info"
+  },
+  "workspace": {
+    "rememberLastUsed": true,
+    "autoSwitch": false,
+    "defaultWorkspace": null
+  }
+}
