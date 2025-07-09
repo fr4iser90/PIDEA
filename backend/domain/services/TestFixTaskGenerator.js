@@ -136,6 +136,113 @@ class TestFixTaskGenerator {
   createLegacyTestTask(legacyTest, projectId, userId) {
     const taskId = `legacy-refactor-${uuidv4()}`;
     
+    // Determine specific refactor type based on file extension and project structure
+    let refactorType = TaskType.REFACTOR; // Default
+    let testType = TaskType.TEST; // Default
+    
+    if (legacyTest.fileName) {
+      // Frontend frameworks
+      if (legacyTest.fileName.includes('.jsx') || legacyTest.fileName.includes('.tsx')) {
+        refactorType = TaskType.REFACTOR_REACT;
+        testType = TaskType.TEST_JEST;
+      } else if (legacyTest.fileName.includes('.vue')) {
+        refactorType = TaskType.REFACTOR_VUE;
+        testType = TaskType.TEST_JEST;
+      } else if (legacyTest.fileName.includes('.svelte')) {
+        refactorType = TaskType.REFACTOR_SVELTE;
+        testType = TaskType.TEST_JEST;
+      } else if (legacyTest.fileName.includes('.ng.') || legacyTest.fileName.includes('angular')) {
+        refactorType = TaskType.REFACTOR_ANGULAR;
+        testType = TaskType.TEST_JEST;
+      }
+      // Backend languages
+      else if (legacyTest.fileName.includes('.py')) {
+        refactorType = TaskType.REFACTOR_PYTHON;
+        testType = TaskType.TEST_PYTEST;
+      } else if (legacyTest.fileName.includes('.java')) {
+        refactorType = TaskType.REFACTOR_JAVA;
+        testType = TaskType.TEST_JUNIT;
+      } else if (legacyTest.fileName.includes('.cs')) {
+        refactorType = TaskType.REFACTOR_C_SHARP;
+        testType = TaskType.TEST_JUNIT;
+      } else if (legacyTest.fileName.includes('.php')) {
+        refactorType = TaskType.REFACTOR_PHP;
+        testType = TaskType.TEST_PHPUNIT;
+      } else if (legacyTest.fileName.includes('.rb')) {
+        refactorType = TaskType.REFACTOR_RUBY;
+        testType = TaskType.TEST_RSPEC;
+      } else if (legacyTest.fileName.includes('.go')) {
+        refactorType = TaskType.REFACTOR_GO;
+        testType = TaskType.TEST_GO_TEST;
+      } else if (legacyTest.fileName.includes('.rs')) {
+        refactorType = TaskType.REFACTOR_RUST;
+        testType = TaskType.TEST_CARGO_TEST;
+      } else if (legacyTest.fileName.includes('.kt')) {
+        refactorType = TaskType.REFACTOR_KOTLIN;
+        testType = TaskType.TEST_GRADLE;
+      } else if (legacyTest.fileName.includes('.swift')) {
+        refactorType = TaskType.REFACTOR_SWIFT;
+        testType = TaskType.TEST_XCTEST;
+      } else if (legacyTest.fileName.includes('.dart')) {
+        refactorType = TaskType.REFACTOR_DART;
+        testType = TaskType.TEST_FLUTTER;
+      }
+      // Infrastructure and DevOps
+      else if (legacyTest.fileName.includes('Dockerfile') || legacyTest.fileName.includes('.docker')) {
+        refactorType = TaskType.REFACTOR_DOCKER;
+        testType = TaskType.TEST_INTEGRATION;
+      } else if (legacyTest.fileName.includes('.tf') || legacyTest.fileName.includes('terraform')) {
+        refactorType = TaskType.REFACTOR_TERRAFORM;
+        testType = TaskType.TEST_INTEGRATION;
+      } else if (legacyTest.fileName.includes('.yml') || legacyTest.fileName.includes('.yaml')) {
+        refactorType = TaskType.REFACTOR_KUBERNETES;
+        testType = TaskType.TEST_INTEGRATION;
+      }
+      // Generic JavaScript/TypeScript
+      else if (legacyTest.fileName.includes('.js') || legacyTest.fileName.includes('.ts')) {
+        refactorType = TaskType.REFACTOR_NODE;
+        testType = TaskType.TEST_JEST;
+      }
+    }
+    
+    // Additional detection based on project structure
+    if (legacyTest.filePath) {
+      if (legacyTest.filePath.includes('frontend/') || legacyTest.filePath.includes('client/')) {
+        refactorType = TaskType.REFACTOR_FRONTEND;
+      } else if (legacyTest.filePath.includes('backend/') || legacyTest.filePath.includes('server/')) {
+        refactorType = TaskType.REFACTOR_BACKEND;
+      } else if (legacyTest.filePath.includes('database/') || legacyTest.filePath.includes('db/')) {
+        refactorType = TaskType.REFACTOR_DATABASE;
+      } else if (legacyTest.filePath.includes('api/') || legacyTest.filePath.includes('routes/')) {
+        refactorType = TaskType.REFACTOR_API;
+      } else if (legacyTest.filePath.includes('microservices/') || legacyTest.filePath.includes('services/')) {
+        refactorType = TaskType.REFACTOR_MICROSERVICES;
+      }
+    }
+    
+    // Framework-specific detection based on file patterns
+    if (legacyTest.fileName) {
+      if (legacyTest.fileName.includes('next.config') || legacyTest.fileName.includes('pages/')) {
+        refactorType = TaskType.REFACTOR_NEXT;
+      } else if (legacyTest.fileName.includes('nuxt.config') || legacyTest.fileName.includes('layouts/')) {
+        refactorType = TaskType.REFACTOR_NUXT;
+      } else if (legacyTest.fileName.includes('settings.py') || legacyTest.fileName.includes('urls.py')) {
+        refactorType = TaskType.REFACTOR_DJANGO;
+      } else if (legacyTest.fileName.includes('app.py') || legacyTest.fileName.includes('flask')) {
+        refactorType = TaskType.REFACTOR_FLASK;
+      } else if (legacyTest.fileName.includes('Application.java') || legacyTest.fileName.includes('@SpringBootApplication')) {
+        refactorType = TaskType.REFACTOR_SPRING;
+      } else if (legacyTest.fileName.includes('artisan') || legacyTest.fileName.includes('Laravel')) {
+        refactorType = TaskType.REFACTOR_LARAVEL;
+      } else if (legacyTest.fileName.includes('Gemfile') || legacyTest.fileName.includes('rails')) {
+        refactorType = TaskType.REFACTOR_RAILS;
+      } else if (legacyTest.fileName.includes('app.js') || legacyTest.fileName.includes('express')) {
+        refactorType = TaskType.REFACTOR_EXPRESS;
+      } else if (legacyTest.fileName.includes('main.py') || legacyTest.fileName.includes('fastapi')) {
+        refactorType = TaskType.REFACTOR_FASTAPI;
+      }
+    }
+    
     return new Task(
       taskId,
       projectId,
@@ -143,7 +250,7 @@ class TestFixTaskGenerator {
       `Refactor the legacy test "${legacyTest.testName}" in ${legacyTest.fileName}. Legacy score: ${legacyTest.legacyScore || 'high'}`,
       TaskStatus.PENDING,
       TaskPriority.MEDIUM,
-      TaskType.REFACTOR,
+      refactorType,
       {
         testFile: legacyTest.fileName,
         testName: legacyTest.testName,
@@ -151,6 +258,7 @@ class TestFixTaskGenerator {
         healthScore: legacyTest.healthScore,
         source: legacyTest.source || 'test-report',
         taskType: 'legacy_test_refactor',
+        refactorType: refactorType,
         estimatedDuration: 900000, // 15 minutes
         autoFixEnabled: true
       }
@@ -167,6 +275,20 @@ class TestFixTaskGenerator {
   createComplexTestTask(complexTest, projectId, userId) {
     const taskId = `complex-refactor-${uuidv4()}`;
     
+    // Determine specific refactor type based on file extension
+    let refactorType = TaskType.REFACTOR; // Default
+    if (complexTest.fileName) {
+      if (complexTest.fileName.includes('.jsx') || complexTest.fileName.includes('.tsx')) {
+        refactorType = TaskType.REFACTOR_REACT;
+      } else if (complexTest.fileName.includes('.js') || complexTest.fileName.includes('.ts')) {
+        refactorType = TaskType.REFACTOR_NODE;
+      } else if (complexTest.fileName.includes('frontend/') || complexTest.fileName.includes('src/')) {
+        refactorType = TaskType.REFACTOR_FRONTEND;
+      } else if (complexTest.fileName.includes('backend/') || complexTest.fileName.includes('server/')) {
+        refactorType = TaskType.REFACTOR_BACKEND;
+      }
+    }
+    
     return new Task(
       taskId,
       projectId,
@@ -174,7 +296,7 @@ class TestFixTaskGenerator {
       `Refactor the complex test "${complexTest.testName}" in ${complexTest.fileName}. Complexity score: ${complexTest.complexityScore || 'high'}`,
       TaskStatus.PENDING,
       TaskPriority.MEDIUM,
-      TaskType.REFACTOR,
+      refactorType,
       {
         testFile: complexTest.fileName,
         testName: complexTest.testName,
@@ -182,6 +304,7 @@ class TestFixTaskGenerator {
         healthScore: complexTest.healthScore,
         source: complexTest.source || 'test-report',
         taskType: 'complex_test_refactor',
+        refactorType: refactorType,
         estimatedDuration: 900000, // 15 minutes
         autoFixEnabled: true
       }

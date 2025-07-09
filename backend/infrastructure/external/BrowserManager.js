@@ -82,6 +82,12 @@ class BrowserManager {
     await this.connect(port);
   }
 
+  async connectToPort(port) {
+    console.log(`[BrowserManager] Connecting to port ${port}...`);
+    this.currentPort = port;
+    await this.connect(port);
+  }
+
   getCurrentPort() {
     return this.currentPort;
   }

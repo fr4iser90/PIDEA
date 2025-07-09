@@ -304,3 +304,52 @@
 .task-selection-modal-content::-webkit-scrollbar-thumb:hover {
   background: #666;
 } 
+
+/* Test-specific styles */
+.test-status-badge {
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: bold;
+  color: white;
+  text-transform: uppercase;
+}
+
+.coverage-badge {
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: bold;
+  background-color: #4a90e2;
+  color: white;
+}
+
+.test-failures {
+  margin-top: 8px;
+  padding: 8px;
+  background-color: rgba(255, 68, 68, 0.1);
+  border-left: 3px solid #ff4444;
+  border-radius: 4px;
+}
+
+.test-failures h4 {
+  margin: 0 0 8px 0;
+  color: #ff4444;
+  font-size: 12px;
+  font-weight: bold;
+}
+
+.test-failures ul {
+  margin: 0;
+  padding-left: 16px;
+}
+
+.test-failure {
+  margin-bottom: 4px;
+  font-size: 11px;
+  color: #ffcccc;
+}
+
+.test-failure strong {
+  color: #ff6666;
+} 

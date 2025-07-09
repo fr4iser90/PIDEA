@@ -18,8 +18,8 @@ class StreamingPort {
     this.lastError = null;
     
     // Configuration
-    this.fps = options.fps || 10;
-    this.quality = options.quality || 0.8;
+    this.fps = options.fps !== undefined ? options.fps : 10;
+    this.quality = options.quality !== undefined ? options.quality : 0.8;
     this.format = options.format || 'jpeg';
     this.maxFrameSize = options.maxFrameSize || 50 * 1024; // 50KB
     this.enableRegionDetection = options.enableRegionDetection || false;

@@ -1,5 +1,6 @@
 /**
- * TaskType - Value object for task type
+ * TaskType - Frontend value object for task type
+ * Mirrors the backend TaskType definitions for consistency
  */
 class TaskType {
   static FEATURE = 'feature';
@@ -85,24 +86,62 @@ class TaskType {
     this.value = value;
   }
 
+  toString() {
+    return this.value;
+  }
+
+  equals(other) {
+    return this.value === other.value;
+  }
+
   requiresAI() {
-    return [TaskType.FEATURE, TaskType.BUG, TaskType.OPTIMIZATION, TaskType.SECURITY, TaskType.ANALYSIS, TaskType.TEST, TaskType.TESTING, TaskType.TEST_FIX, TaskType.TEST_COVERAGE, TaskType.TEST_REFACTOR, TaskType.REFACTOR, TaskType.REFACTOR_NODE, TaskType.REFACTOR_REACT, TaskType.REFACTOR_FRONTEND, TaskType.REFACTOR_BACKEND, TaskType.REFACTOR_DATABASE, TaskType.REFACTOR_API, TaskType.REFACTOR_PYTHON, TaskType.REFACTOR_JAVA, TaskType.REFACTOR_C_SHARP, TaskType.REFACTOR_PHP, TaskType.REFACTOR_RUBY, TaskType.REFACTOR_GO, TaskType.REFACTOR_RUST, TaskType.REFACTOR_KOTLIN, TaskType.REFACTOR_SWIFT, TaskType.REFACTOR_DART, TaskType.REFACTOR_VUE, TaskType.REFACTOR_ANGULAR, TaskType.REFACTOR_SVELTE, TaskType.REFACTOR_NEXT, TaskType.REFACTOR_NUXT, TaskType.REFACTOR_DJANGO, TaskType.REFACTOR_FLASK, TaskType.REFACTOR_SPRING, TaskType.REFACTOR_LARAVEL, TaskType.REFACTOR_RAILS, TaskType.REFACTOR_EXPRESS, TaskType.REFACTOR_FASTAPI, TaskType.REFACTOR_DOCKER, TaskType.REFACTOR_KUBERNETES, TaskType.REFACTOR_TERRAFORM, TaskType.REFACTOR_ANSIBLE, TaskType.REFACTOR_CLOUD, TaskType.REFACTOR_MICROSERVICES, TaskType.TEST_UNIT, TaskType.TEST_INTEGRATION, TaskType.TEST_E2E, TaskType.TEST_PERFORMANCE, TaskType.TEST_SECURITY, TaskType.TEST_JEST, TaskType.TEST_PYTEST, TaskType.TEST_JUNIT, TaskType.TEST_PHPUNIT, TaskType.TEST_RSPEC, TaskType.TEST_GO_TEST, TaskType.TEST_CARGO_TEST, TaskType.TEST_GRADLE, TaskType.TEST_XCTEST, TaskType.TEST_FLUTTER].includes(this.value);
+    return [
+      TaskType.FEATURE, TaskType.BUG, TaskType.OPTIMIZATION, TaskType.SECURITY, 
+      TaskType.ANALYSIS, TaskType.TEST, TaskType.TESTING, TaskType.TEST_FIX, 
+      TaskType.TEST_COVERAGE, TaskType.TEST_REFACTOR, TaskType.REFACTOR,
+      TaskType.REFACTOR_NODE, TaskType.REFACTOR_REACT, TaskType.REFACTOR_FRONTEND,
+      TaskType.REFACTOR_BACKEND, TaskType.REFACTOR_DATABASE, TaskType.REFACTOR_API,
+      TaskType.REFACTOR_PYTHON, TaskType.REFACTOR_JAVA, TaskType.REFACTOR_C_SHARP,
+      TaskType.REFACTOR_PHP, TaskType.REFACTOR_RUBY, TaskType.REFACTOR_GO,
+      TaskType.REFACTOR_RUST, TaskType.REFACTOR_KOTLIN, TaskType.REFACTOR_SWIFT,
+      TaskType.REFACTOR_DART, TaskType.REFACTOR_VUE, TaskType.REFACTOR_ANGULAR,
+      TaskType.REFACTOR_SVELTE, TaskType.REFACTOR_NEXT, TaskType.REFACTOR_NUXT,
+      TaskType.REFACTOR_DJANGO, TaskType.REFACTOR_FLASK, TaskType.REFACTOR_SPRING,
+      TaskType.REFACTOR_LARAVEL, TaskType.REFACTOR_RAILS, TaskType.REFACTOR_EXPRESS,
+      TaskType.REFACTOR_FASTAPI, TaskType.REFACTOR_DOCKER, TaskType.REFACTOR_KUBERNETES,
+      TaskType.REFACTOR_TERRAFORM, TaskType.REFACTOR_ANSIBLE, TaskType.REFACTOR_CLOUD,
+      TaskType.REFACTOR_MICROSERVICES, TaskType.TEST_UNIT, TaskType.TEST_INTEGRATION,
+      TaskType.TEST_E2E, TaskType.TEST_PERFORMANCE, TaskType.TEST_SECURITY,
+      TaskType.TEST_JEST, TaskType.TEST_PYTEST, TaskType.TEST_JUNIT,
+      TaskType.TEST_PHPUNIT, TaskType.TEST_RSPEC, TaskType.TEST_GO_TEST,
+      TaskType.TEST_CARGO_TEST, TaskType.TEST_GRADLE, TaskType.TEST_XCTEST,
+      TaskType.TEST_FLUTTER
+    ].includes(this.value);
   }
 
   requiresExecution() {
-    return [TaskType.FEATURE, TaskType.BUG, TaskType.REFACTOR, TaskType.OPTIMIZATION, TaskType.SECURITY, TaskType.DOCUMENTATION, TaskType.ANALYSIS, TaskType.TEST, TaskType.TESTING, TaskType.TEST_FIX, TaskType.TEST_COVERAGE, TaskType.TEST_REFACTOR, TaskType.TEST_STATUS, TaskType.TEST_REPORT, TaskType.REFACTOR_NODE, TaskType.REFACTOR_REACT, TaskType.REFACTOR_FRONTEND, TaskType.REFACTOR_BACKEND, TaskType.REFACTOR_DATABASE, TaskType.REFACTOR_API, TaskType.REFACTOR_PYTHON, TaskType.REFACTOR_JAVA, TaskType.REFACTOR_C_SHARP, TaskType.REFACTOR_PHP, TaskType.REFACTOR_RUBY, TaskType.REFACTOR_GO, TaskType.REFACTOR_RUST, TaskType.REFACTOR_KOTLIN, TaskType.REFACTOR_SWIFT, TaskType.REFACTOR_DART, TaskType.REFACTOR_VUE, TaskType.REFACTOR_ANGULAR, TaskType.REFACTOR_SVELTE, TaskType.REFACTOR_NEXT, TaskType.REFACTOR_NUXT, TaskType.REFACTOR_DJANGO, TaskType.REFACTOR_FLASK, TaskType.REFACTOR_SPRING, TaskType.REFACTOR_LARAVEL, TaskType.REFACTOR_RAILS, TaskType.REFACTOR_EXPRESS, TaskType.REFACTOR_FASTAPI, TaskType.REFACTOR_DOCKER, TaskType.REFACTOR_KUBERNETES, TaskType.REFACTOR_TERRAFORM, TaskType.REFACTOR_ANSIBLE, TaskType.REFACTOR_CLOUD, TaskType.REFACTOR_MICROSERVICES, TaskType.TEST_UNIT, TaskType.TEST_INTEGRATION, TaskType.TEST_E2E, TaskType.TEST_PERFORMANCE, TaskType.TEST_SECURITY, TaskType.TEST_JEST, TaskType.TEST_PYTEST, TaskType.TEST_JUNIT, TaskType.TEST_PHPUNIT, TaskType.TEST_RSPEC, TaskType.TEST_GO_TEST, TaskType.TEST_CARGO_TEST, TaskType.TEST_GRADLE, TaskType.TEST_XCTEST, TaskType.TEST_FLUTTER].includes(this.value);
-  }
-
-  requiresHumanReview() {
-    return [TaskType.SECURITY, TaskType.BUG, TaskType.TEST_SECURITY].includes(this.value);
-  }
-
-  isFeature() {
-    return this.value === TaskType.FEATURE;
-  }
-
-  isBug() {
-    return this.value === TaskType.BUG;
+    return [
+      TaskType.FEATURE, TaskType.BUG, TaskType.REFACTOR, TaskType.OPTIMIZATION,
+      TaskType.SECURITY, TaskType.DOCUMENTATION, TaskType.ANALYSIS, TaskType.TEST,
+      TaskType.TESTING, TaskType.TEST_FIX, TaskType.TEST_COVERAGE, TaskType.TEST_REFACTOR,
+      TaskType.TEST_STATUS, TaskType.TEST_REPORT, TaskType.REFACTOR_NODE,
+      TaskType.REFACTOR_REACT, TaskType.REFACTOR_FRONTEND, TaskType.REFACTOR_BACKEND,
+      TaskType.REFACTOR_DATABASE, TaskType.REFACTOR_API, TaskType.REFACTOR_PYTHON,
+      TaskType.REFACTOR_JAVA, TaskType.REFACTOR_C_SHARP, TaskType.REFACTOR_PHP,
+      TaskType.REFACTOR_RUBY, TaskType.REFACTOR_GO, TaskType.REFACTOR_RUST,
+      TaskType.REFACTOR_KOTLIN, TaskType.REFACTOR_SWIFT, TaskType.REFACTOR_DART,
+      TaskType.REFACTOR_VUE, TaskType.REFACTOR_ANGULAR, TaskType.REFACTOR_SVELTE,
+      TaskType.REFACTOR_NEXT, TaskType.REFACTOR_NUXT, TaskType.REFACTOR_DJANGO,
+      TaskType.REFACTOR_FLASK, TaskType.REFACTOR_SPRING, TaskType.REFACTOR_LARAVEL,
+      TaskType.REFACTOR_RAILS, TaskType.REFACTOR_EXPRESS, TaskType.REFACTOR_FASTAPI,
+      TaskType.REFACTOR_DOCKER, TaskType.REFACTOR_KUBERNETES, TaskType.REFACTOR_TERRAFORM,
+      TaskType.REFACTOR_ANSIBLE, TaskType.REFACTOR_CLOUD, TaskType.REFACTOR_MICROSERVICES,
+      TaskType.TEST_UNIT, TaskType.TEST_INTEGRATION, TaskType.TEST_E2E,
+      TaskType.TEST_PERFORMANCE, TaskType.TEST_SECURITY, TaskType.TEST_JEST,
+      TaskType.TEST_PYTEST, TaskType.TEST_JUNIT, TaskType.TEST_PHPUNIT,
+      TaskType.TEST_RSPEC, TaskType.TEST_GO_TEST, TaskType.TEST_CARGO_TEST,
+      TaskType.TEST_GRADLE, TaskType.TEST_XCTEST, TaskType.TEST_FLUTTER
+    ].includes(this.value);
   }
 
   isRefactor() {
@@ -172,28 +211,12 @@ class TaskType {
            this.value === TaskType.TEST_FLUTTER;
   }
 
-  isTesting() {
-    return this.value === TaskType.TESTING;
+  isFeature() {
+    return this.value === TaskType.FEATURE;
   }
 
-  isTestFix() {
-    return this.value === TaskType.TEST_FIX;
-  }
-
-  isTestCoverage() {
-    return this.value === TaskType.TEST_COVERAGE;
-  }
-
-  isTestRefactor() {
-    return this.value === TaskType.TEST_REFACTOR;
-  }
-
-  isTestStatus() {
-    return this.value === TaskType.TEST_STATUS;
-  }
-
-  isTestReport() {
-    return this.value === TaskType.TEST_REPORT;
+  isBug() {
+    return this.value === TaskType.BUG;
   }
 
   isOptimization() {
@@ -229,10 +252,126 @@ class TaskType {
     return this.value === TaskType.REFACTOR_DATABASE;
   }
 
-  isRefactorApi() {
+  isRefactorAPI() {
     return this.value === TaskType.REFACTOR_API;
   }
 
+  // Technology-specific helpers
+  isRefactorPython() {
+    return this.value === TaskType.REFACTOR_PYTHON;
+  }
+
+  isRefactorJava() {
+    return this.value === TaskType.REFACTOR_JAVA;
+  }
+
+  isRefactorCSharp() {
+    return this.value === TaskType.REFACTOR_C_SHARP;
+  }
+
+  isRefactorPHP() {
+    return this.value === TaskType.REFACTOR_PHP;
+  }
+
+  isRefactorRuby() {
+    return this.value === TaskType.REFACTOR_RUBY;
+  }
+
+  isRefactorGo() {
+    return this.value === TaskType.REFACTOR_GO;
+  }
+
+  isRefactorRust() {
+    return this.value === TaskType.REFACTOR_RUST;
+  }
+
+  isRefactorKotlin() {
+    return this.value === TaskType.REFACTOR_KOTLIN;
+  }
+
+  isRefactorSwift() {
+    return this.value === TaskType.REFACTOR_SWIFT;
+  }
+
+  isRefactorDart() {
+    return this.value === TaskType.REFACTOR_DART;
+  }
+
+  // Framework-specific helpers
+  isRefactorVue() {
+    return this.value === TaskType.REFACTOR_VUE;
+  }
+
+  isRefactorAngular() {
+    return this.value === TaskType.REFACTOR_ANGULAR;
+  }
+
+  isRefactorSvelte() {
+    return this.value === TaskType.REFACTOR_SVELTE;
+  }
+
+  isRefactorNext() {
+    return this.value === TaskType.REFACTOR_NEXT;
+  }
+
+  isRefactorNuxt() {
+    return this.value === TaskType.REFACTOR_NUXT;
+  }
+
+  isRefactorDjango() {
+    return this.value === TaskType.REFACTOR_DJANGO;
+  }
+
+  isRefactorFlask() {
+    return this.value === TaskType.REFACTOR_FLASK;
+  }
+
+  isRefactorSpring() {
+    return this.value === TaskType.REFACTOR_SPRING;
+  }
+
+  isRefactorLaravel() {
+    return this.value === TaskType.REFACTOR_LARAVEL;
+  }
+
+  isRefactorRails() {
+    return this.value === TaskType.REFACTOR_RAILS;
+  }
+
+  isRefactorExpress() {
+    return this.value === TaskType.REFACTOR_EXPRESS;
+  }
+
+  isRefactorFastAPI() {
+    return this.value === TaskType.REFACTOR_FASTAPI;
+  }
+
+  // Infrastructure helpers
+  isRefactorDocker() {
+    return this.value === TaskType.REFACTOR_DOCKER;
+  }
+
+  isRefactorKubernetes() {
+    return this.value === TaskType.REFACTOR_KUBERNETES;
+  }
+
+  isRefactorTerraform() {
+    return this.value === TaskType.REFACTOR_TERRAFORM;
+  }
+
+  isRefactorAnsible() {
+    return this.value === TaskType.REFACTOR_ANSIBLE;
+  }
+
+  isRefactorCloud() {
+    return this.value === TaskType.REFACTOR_CLOUD;
+  }
+
+  isRefactorMicroservices() {
+    return this.value === TaskType.REFACTOR_MICROSERVICES;
+  }
+
+  // Testing helpers
   isTestUnit() {
     return this.value === TaskType.TEST_UNIT;
   }
@@ -251,6 +390,47 @@ class TaskType {
 
   isTestSecurity() {
     return this.value === TaskType.TEST_SECURITY;
+  }
+
+  // Technology-specific testing helpers
+  isTestJest() {
+    return this.value === TaskType.TEST_JEST;
+  }
+
+  isTestPyTest() {
+    return this.value === TaskType.TEST_PYTEST;
+  }
+
+  isTestJUnit() {
+    return this.value === TaskType.TEST_JUNIT;
+  }
+
+  isTestPHPUnit() {
+    return this.value === TaskType.TEST_PHPUNIT;
+  }
+
+  isTestRSpec() {
+    return this.value === TaskType.TEST_RSPEC;
+  }
+
+  isTestGoTest() {
+    return this.value === TaskType.TEST_GO_TEST;
+  }
+
+  isTestCargoTest() {
+    return this.value === TaskType.TEST_CARGO_TEST;
+  }
+
+  isTestGradle() {
+    return this.value === TaskType.TEST_GRADLE;
+  }
+
+  isTestXCTest() {
+    return this.value === TaskType.TEST_XCTEST;
+  }
+
+  isTestFlutter() {
+    return this.value === TaskType.TEST_FLUTTER;
   }
 
   static isValid(type) {
@@ -390,6 +570,90 @@ class TaskType {
       TaskType.TEST_FLUTTER
     ];
   }
+
+  // Helper method to get display name
+  getDisplayName() {
+    const displayNames = {
+      [TaskType.FEATURE]: 'Feature',
+      [TaskType.BUG]: 'Bug Fix',
+      [TaskType.REFACTOR]: 'Refactor',
+      [TaskType.DOCUMENTATION]: 'Documentation',
+      [TaskType.TEST]: 'Test',
+      [TaskType.TESTING]: 'Testing',
+      [TaskType.TEST_FIX]: 'Test Fix',
+      [TaskType.TEST_COVERAGE]: 'Test Coverage',
+      [TaskType.TEST_REFACTOR]: 'Test Refactor',
+      [TaskType.TEST_STATUS]: 'Test Status',
+      [TaskType.TEST_REPORT]: 'Test Report',
+      [TaskType.OPTIMIZATION]: 'Optimization',
+      [TaskType.SECURITY]: 'Security',
+      [TaskType.ANALYSIS]: 'Analysis',
+      [TaskType.REFACTOR_NODE]: 'Node.js Refactor',
+      [TaskType.REFACTOR_REACT]: 'React Refactor',
+      [TaskType.REFACTOR_FRONTEND]: 'Frontend Refactor',
+      [TaskType.REFACTOR_BACKEND]: 'Backend Refactor',
+      [TaskType.REFACTOR_DATABASE]: 'Database Refactor',
+      [TaskType.REFACTOR_API]: 'API Refactor',
+      [TaskType.REFACTOR_PYTHON]: 'Python Refactor',
+      [TaskType.REFACTOR_JAVA]: 'Java Refactor',
+      [TaskType.REFACTOR_C_SHARP]: 'C# Refactor',
+      [TaskType.REFACTOR_PHP]: 'PHP Refactor',
+      [TaskType.REFACTOR_RUBY]: 'Ruby Refactor',
+      [TaskType.REFACTOR_GO]: 'Go Refactor',
+      [TaskType.REFACTOR_RUST]: 'Rust Refactor',
+      [TaskType.REFACTOR_KOTLIN]: 'Kotlin Refactor',
+      [TaskType.REFACTOR_SWIFT]: 'Swift Refactor',
+      [TaskType.REFACTOR_DART]: 'Dart Refactor',
+      [TaskType.REFACTOR_VUE]: 'Vue Refactor',
+      [TaskType.REFACTOR_ANGULAR]: 'Angular Refactor',
+      [TaskType.REFACTOR_SVELTE]: 'Svelte Refactor',
+      [TaskType.REFACTOR_NEXT]: 'Next.js Refactor',
+      [TaskType.REFACTOR_NUXT]: 'Nuxt.js Refactor',
+      [TaskType.REFACTOR_DJANGO]: 'Django Refactor',
+      [TaskType.REFACTOR_FLASK]: 'Flask Refactor',
+      [TaskType.REFACTOR_SPRING]: 'Spring Refactor',
+      [TaskType.REFACTOR_LARAVEL]: 'Laravel Refactor',
+      [TaskType.REFACTOR_RAILS]: 'Rails Refactor',
+      [TaskType.REFACTOR_EXPRESS]: 'Express Refactor',
+      [TaskType.REFACTOR_FASTAPI]: 'FastAPI Refactor',
+      [TaskType.REFACTOR_DOCKER]: 'Docker Refactor',
+      [TaskType.REFACTOR_KUBERNETES]: 'Kubernetes Refactor',
+      [TaskType.REFACTOR_TERRAFORM]: 'Terraform Refactor',
+      [TaskType.REFACTOR_ANSIBLE]: 'Ansible Refactor',
+      [TaskType.REFACTOR_CLOUD]: 'Cloud Refactor',
+      [TaskType.REFACTOR_MICROSERVICES]: 'Microservices Refactor',
+      [TaskType.TEST_UNIT]: 'Unit Test',
+      [TaskType.TEST_INTEGRATION]: 'Integration Test',
+      [TaskType.TEST_E2E]: 'E2E Test',
+      [TaskType.TEST_PERFORMANCE]: 'Performance Test',
+      [TaskType.TEST_SECURITY]: 'Security Test',
+      [TaskType.TEST_JEST]: 'Jest Test',
+      [TaskType.TEST_PYTEST]: 'PyTest',
+      [TaskType.TEST_JUNIT]: 'JUnit Test',
+      [TaskType.TEST_PHPUNIT]: 'PHPUnit Test',
+      [TaskType.TEST_RSPEC]: 'RSpec Test',
+      [TaskType.TEST_GO_TEST]: 'Go Test',
+      [TaskType.TEST_CARGO_TEST]: 'Cargo Test',
+      [TaskType.TEST_GRADLE]: 'Gradle Test',
+      [TaskType.TEST_XCTEST]: 'XCTest',
+      [TaskType.TEST_FLUTTER]: 'Flutter Test'
+    };
+    
+    return displayNames[this.value] || this.value;
+  }
+
+  // Helper method to get category
+  getCategory() {
+    if (this.isRefactor()) return 'refactoring';
+    if (this.isTest()) return 'testing';
+    if (this.isFeature()) return 'feature';
+    if (this.isBug()) return 'bugfix';
+    if (this.isDocumentation()) return 'documentation';
+    if (this.isOptimization()) return 'optimization';
+    if (this.isSecurity()) return 'security';
+    if (this.isAnalysis()) return 'analysis';
+    return 'other';
+  }
 }
 
-module.exports = TaskType; 
+export default TaskType; 

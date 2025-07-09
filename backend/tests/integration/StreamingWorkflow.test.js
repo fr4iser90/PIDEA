@@ -9,10 +9,11 @@ const StreamingController = require('@/presentation/api/StreamingController');
 const StartStreamingHandler = require('@/application/handlers/StartStreamingHandler');
 const StopStreamingHandler = require('@/application/handlers/StopStreamingHandler');
 const StreamingSessionRepository = require('@/infrastructure/database/StreamingSessionRepository');
+const StreamingSession = require('@/domain/entities/StreamingSession');
 
 // Mock external dependencies
-jest.mock('../../backend/infrastructure/external/BrowserManager');
-jest.mock('../../backend/presentation/websocket/WebSocketManager');
+jest.mock('@/infrastructure/external/BrowserManager');
+jest.mock('@/presentation/websocket/WebSocketManager');
 
 describe('StreamingWorkflow Integration', () => {
   let streamingService;
@@ -46,7 +47,8 @@ describe('StreamingWorkflow Integration', () => {
     };
 
     mockEventBus = {
-      emit: jest.fn()
+      emit: jest.fn(),
+      publish: jest.fn()
     };
 
     // Create repository

@@ -30,7 +30,7 @@ class StartStreamingHandler {
       }
       
       // Start streaming
-      const result = await this.screenshotStreamingService.startStreaming(
+      const result = await this.screenshotStreamingService.startStreamingSession(
         command.sessionId,
         command.port,
         command.options

@@ -1,6 +1,7 @@
 /**
  * ConfirmationSystem - Service for handling AI confirmation loops
  * Analyzes AI responses and manages confirmation workflows
+ * Can be used by AutoFinishSystem, AutoTestFixSystem, and other services
  */
 class ConfirmationSystem {
   constructor(cursorIDE) {
@@ -14,20 +15,40 @@ class ConfirmationSystem {
       'fr': ['fini', 'terminé', 'completé', 'prêt', 'ok', 'oui']
     };
     
-    // Incomplete indicators
-    this.incompleteKeywords = {
-      'en': ['not done', 'not finished', 'still working', 'in progress', 'waiting', 'need more'],
-      'de': ['nicht fertig', 'noch nicht', 'arbeitet noch', 'in bearbeitung', 'wartet', 'braucht mehr'],
-      'es': ['no listo', 'no terminado', 'todavía trabajando', 'en progreso', 'esperando', 'necesita más'],
-      'fr': ['pas fini', 'pas terminé', 'travaille encore', 'en cours', 'attend', 'a besoin de plus']
+    // Test-specific completion keywords
+    this.testCompletionKeywords = {
+      'en': ['test passes', 'test fixed', 'coverage improved', 'refactored', 'updated test', 'tests passing'],
+      'de': ['test bestanden', 'test gefixt', 'coverage verbessert', 'refactored', 'test aktualisiert'],
+      'es': ['test pasa', 'test arreglado', 'cobertura mejorada', 'refactorizado'],
+      'fr': ['test réussi', 'test corrigé', 'couverture améliorée', 'refactorisé']
     };
     
-    // Confirmation questions in multiple languages
+    // Refactoring-specific completion keywords
+    this.refactoringCompletionKeywords = {
+      'en': ['refactored', 'refactoring complete', 'code improved', 'restructured', 'optimized'],
+      'de': ['refactored', 'refactoring abgeschlossen', 'code verbessert', 'umstrukturiert', 'optimiert'],
+      'es': ['refactorizado', 'refactoring completado', 'código mejorado', 'reestructurado'],
+      'fr': ['refactorisé', 'refactoring terminé', 'code amélioré', 'restructuré']
+    };
+    
+    // Confirmation questions in multiple languages (structured format)
     this.confirmationQuestions = {
-      'en': ['Fertig?', 'Done?', 'Complete?', 'Ready?'],
-      'de': ['Fertig?', 'Erledigt?', 'Abgeschlossen?', 'Bereit?'],
-      'es': ['¿Listo?', '¿Terminado?', '¿Completado?', '¿Listo?'],
-      'fr': ['Fini?', 'Terminé?', 'Complété?', 'Prêt?']
+      'en': [
+        'Check your status against the task and respond with your status: completed/partially completed/need human. Also include test results: [PASSED] or [FAILED] with percentage.',
+        'Check your status against the task and respond with your status: completed/partially completed/need human.'
+      ],
+      'de': [
+        'Prüfe deinen Status gegen die Aufgabe und antworte mit deinem Status: completed/partially completed/need human. Füge auch Testergebnisse hinzu: [PASSED] oder [FAILED] mit Prozentsatz.',
+        'Prüfe deinen Status gegen die Aufgabe und antworte mit deinem Status: completed/partially completed/need human.'
+      ],
+      'es': [
+        'Verifica tu estado contra la tarea y responde con tu estado: completed/partially completed/need human. También incluye resultados de pruebas: [PASSED] o [FAILED] con porcentaje.',
+        'Verifica tu estado contra la tarea y responde con tu estado: completed/partially completed/need human.'
+      ],
+      'fr': [
+        'Vérifiez votre statut par rapport à la tâche et répondez avec votre statut: completed/partially completed/need human. Incluez également les résultats des tests: [PASSED] ou [FAILED] avec pourcentage.',
+        'Vérifiez votre statut par rapport à la tâche et répondez avec votre statut: completed/partially completed/need human.'
+      ]
     };
     
     // Response analysis patterns
@@ -51,8 +72,8 @@ class ConfirmationSystem {
     
     // Configuration
     this.config = {
-      maxAttempts: 10,
-      timeout: 30000, // 10 seconds
+      maxAttempts: 3,
+      timeout: 10000, // 10 seconds
       confidenceThreshold: 0.8,
       languageDetection: true,
       autoDetectLanguage: true
@@ -71,83 +92,140 @@ class ConfirmationSystem {
   }
 
   /**
-   * Ask for confirmation from AI
-   * @param {string} aiResponse - AI response to analyze
-   * @param {Object} options - Confirmation options
+   * Ask for explicit confirmation from AI
+   * @param {string} context - Context type (test, refactor, general)
    * @returns {Promise<Object>} Confirmation result
    */
-  async askConfirmation(aiResponse, options = {}) {
-    const startTime = Date.now();
-    
+  async askConfirmation(context = 'general') {
     try {
-      this.logger.info('[ConfirmationSystem] Analyzing AI response for confirmation...');
+      const questions = this.getConfirmationQuestions(context);
+      const question = questions[Math.floor(Math.random() * questions.length)];
       
-      // Analyze the AI response
-      const analysis = this.analyzeResponse(aiResponse);
+      this.logger.info(`[ConfirmationSystem] Asking for confirmation: "${question}"`);
       
-      // If response indicates completion, no confirmation needed
-      if (analysis.isComplete && analysis.confidence >= this.config.confidenceThreshold) {
-        this.logger.info('[ConfirmationSystem] Response indicates completion, no confirmation needed');
-        
-        return {
-          confirmed: true,
-          autoConfirmed: true,
-          confidence: analysis.confidence,
-          reason: 'auto_confirmed',
-          analysis,
-          duration: Date.now() - startTime
-        };
-      }
+      // Send structured status request
+      const response = await this.cursorIDE.postToCursor(question);
       
-      // If response indicates incompletion, continue automatically
-      if (analysis.isIncomplete && analysis.confidence >= this.config.confidenceThreshold) {
-        this.logger.info('[ConfirmationSystem] Response indicates incompletion, continuing automatically');
-        
-        return {
-          confirmed: false,
-          autoConfirmed: true,
-          confidence: analysis.confidence,
-          reason: 'auto_continued',
-          analysis,
-          duration: Date.now() - startTime
-        };
-      }
+      this.logger.info(`[ConfirmationSystem] AI response: ${response}`);
       
-      // Need explicit confirmation
-      this.logger.info('[ConfirmationSystem] Response ambiguous, requesting explicit confirmation');
-      
-      const confirmationResult = await this.requestExplicitConfirmation(options);
+      // Parse structured response
+      const validationResult = this.validateTaskCompletion(response);
       
       return {
-        confirmed: confirmationResult.confirmed,
-        autoConfirmed: false,
-        confidence: confirmationResult.confidence,
-        reason: 'explicit_confirmation',
-        analysis,
-        confirmationResponse: confirmationResult.response,
-        duration: Date.now() - startTime
+        isValid: validationResult.isValid,
+        response: response,
+        question: question,
+        confidence: validationResult.confidence,
+        status: validationResult.status,
+        testResults: validationResult.testResults,
+        rawResponse: validationResult.rawResponse
       };
-      
     } catch (error) {
-      this.logger.error('[ConfirmationSystem] Confirmation failed:', error.message);
-      
+      this.logger.error(`[ConfirmationSystem] Error asking confirmation: ${error.message}`);
       return {
-        confirmed: false,
-        autoConfirmed: false,
+        isValid: false,
+        response: '',
+        question: '',
         confidence: 0,
-        reason: 'error',
-        error: error.message,
-        duration: Date.now() - startTime
+        status: 'error',
+        testResults: null,
+        error: error.message
       };
     }
   }
 
   /**
+   * Validate task completion from AI response
+   * @param {string} response - AI response
+   * @returns {Object} Validation result
+   */
+  validateTaskCompletion(response) {
+    if (!response || typeof response !== 'string') {
+      return { isValid: false, confidence: 0, status: 'unknown', testResults: null };
+    }
+
+    const lowerResponse = response.toLowerCase();
+    
+    // Parse structured status response
+    const statusMatch = lowerResponse.match(/(completed|partially completed|need human)/);
+    const passedMatch = lowerResponse.match(/\[passed\]\s*(\d+)%/i);
+    const failedMatch = lowerResponse.match(/\[failed\]\s*(\d+)%/i);
+    
+    let status = 'unknown';
+    let testResults = null;
+    let isValid = false;
+    let confidence = 0;
+    
+    // Extract status
+    if (statusMatch) {
+      status = statusMatch[1];
+      
+      // Determine if task is completed
+      if (status === 'completed') {
+        isValid = true;
+        confidence = 0.9;
+      } else if (status === 'partially completed') {
+        isValid = false;
+        confidence = 0.7;
+      } else if (status === 'need human') {
+        isValid = false;
+        confidence = 0.8;
+      }
+    }
+    
+    // Extract test results
+    if (passedMatch) {
+      testResults = {
+        status: 'PASSED',
+        percentage: parseInt(passedMatch[1]),
+        raw: passedMatch[0]
+      };
+    } else if (failedMatch) {
+      testResults = {
+        status: 'FAILED',
+        percentage: parseInt(failedMatch[1]),
+        raw: failedMatch[0]
+      };
+    }
+    
+    // Fallback to old keyword-based validation if no structured response
+    if (status === 'unknown') {
+      // Check for completion keywords
+      const completionKeywords = [
+        'completed', 'done', 'finished', 'ready', 'complete',
+        'fertig', 'erledigt', 'abgeschlossen', 'bereit',
+        'listo', 'completado', 'terminado',
+        'fini', 'terminé', 'completé'
+      ];
+      
+      for (const keyword of completionKeywords) {
+        if (lowerResponse.includes(keyword)) {
+          status = 'completed';
+          isValid = true;
+          confidence = 0.6; // Lower confidence for keyword-based detection
+          break;
+        }
+      }
+    }
+    
+    this.logger.info(`[ConfirmationSystem] Parsed response: status=${status}, isValid=${isValid}, confidence=${confidence}, testResults=${JSON.stringify(testResults)}`);
+    
+    return {
+      isValid,
+      confidence,
+      status,
+      testResults,
+      rawResponse: response
+    };
+  }
+
+  /**
    * Analyze AI response for completion indicators
    * @param {string} response - AI response
+   * @param {string} context - Context type (test, refactor, general)
    * @returns {Object} Analysis result
    */
-  analyzeResponse(response) {
+  analyzeResponse(response, context = 'general') {
     if (!response || typeof response !== 'string') {
       return {
         isComplete: false,
@@ -166,7 +244,7 @@ class ConfirmationSystem {
     let completionScore = 0;
     let incompleteScore = 0;
     
-    // Check completion keywords
+    // Check general completion keywords
     for (const [lang, keywords] of Object.entries(this.completionKeywords)) {
       for (const keyword of keywords) {
         if (lowerResponse.includes(keyword.toLowerCase())) {
@@ -181,17 +259,33 @@ class ConfirmationSystem {
       }
     }
     
-    // Check incomplete keywords
-    for (const [lang, keywords] of Object.entries(this.incompleteKeywords)) {
-      for (const keyword of keywords) {
-        if (lowerResponse.includes(keyword.toLowerCase())) {
-          incompleteScore += 1;
-          indicators.push({
-            type: 'incomplete',
-            keyword,
-            language: lang,
-            confidence: 0.8
-          });
+    // Check context-specific completion keywords
+    if (context === 'test') {
+      for (const [lang, keywords] of Object.entries(this.testCompletionKeywords)) {
+        for (const keyword of keywords) {
+          if (lowerResponse.includes(keyword.toLowerCase())) {
+            completionScore += 1.5; // Higher weight for test-specific keywords
+            indicators.push({
+              type: 'test_completion',
+              keyword,
+              language: lang,
+              confidence: 0.9
+            });
+          }
+        }
+      }
+    } else if (context === 'refactor') {
+      for (const [lang, keywords] of Object.entries(this.refactoringCompletionKeywords)) {
+        for (const keyword of keywords) {
+          if (lowerResponse.includes(keyword.toLowerCase())) {
+            completionScore += 1.5; // Higher weight for refactoring-specific keywords
+            indicators.push({
+              type: 'refactoring_completion',
+              keyword,
+              language: lang,
+              confidence: 0.9
+            });
+          }
         }
       }
     }
@@ -244,42 +338,6 @@ class ConfirmationSystem {
   }
 
   /**
-   * Detect language from response
-   * @param {string} response - Response text
-   * @returns {string} Detected language
-   */
-  detectLanguage(response) {
-    if (!this.config.languageDetection) {
-      return 'en';
-    }
-    
-    const languageScores = {};
-    
-    // Count language-specific keywords
-    for (const [lang, keywords] of Object.entries(this.completionKeywords)) {
-      languageScores[lang] = 0;
-      for (const keyword of keywords) {
-        if (response.includes(keyword.toLowerCase())) {
-          languageScores[lang] += 1;
-        }
-      }
-    }
-    
-    // Find language with highest score
-    let maxScore = 0;
-    let detectedLanguage = 'en';
-    
-    for (const [lang, score] of Object.entries(languageScores)) {
-      if (score > maxScore) {
-        maxScore = score;
-        detectedLanguage = lang;
-      }
-    }
-    
-    return detectedLanguage;
-  }
-
-  /**
    * Request explicit confirmation from AI
    * @param {Object} options - Confirmation options
    * @returns {Promise<Object>} Confirmation result
@@ -294,30 +352,34 @@ class ConfirmationSystem {
         this.logger.info(`[ConfirmationSystem] Confirmation attempt ${attempt}/${maxAttempts}`);
         
         // Send confirmation question
-        const question = this.getConfirmationQuestion(options.language);
+        const question = this.getConfirmationQuestion(options.language, options.context);
         const confirmationResponse = await this.cursorIDE.postToCursor(question);
         
-        // Analyze confirmation response
-        const analysis = this.analyzeResponse(confirmationResponse);
+        // Parse structured response
+        const validationResult = this.validateTaskCompletion(confirmationResponse);
         
-        if (analysis.isComplete && analysis.confidence >= this.config.confidenceThreshold) {
+        if (validationResult.isValid && validationResult.confidence >= this.config.confidenceThreshold) {
           this.logger.info(`[ConfirmationSystem] Confirmation successful on attempt ${attempt}`);
           
           return {
             confirmed: true,
             response: confirmationResponse,
-            confidence: analysis.confidence,
+            confidence: validationResult.confidence,
+            status: validationResult.status,
+            testResults: validationResult.testResults,
             attempt
           };
         }
         
-        if (analysis.isIncomplete && analysis.confidence >= this.config.confidenceThreshold) {
-          this.logger.info(`[ConfirmationSystem] Confirmation indicates incompletion on attempt ${attempt}`);
+        if (!validationResult.isValid && validationResult.confidence >= this.config.confidenceThreshold) {
+          this.logger.info(`[ConfirmationSystem] Confirmation indicates incompletion on attempt ${attempt} (status: ${validationResult.status})`);
           
           return {
             confirmed: false,
             response: confirmationResponse,
-            confidence: analysis.confidence,
+            confidence: validationResult.confidence,
+            status: validationResult.status,
+            testResults: validationResult.testResults,
             attempt
           };
         }
@@ -346,19 +408,72 @@ class ConfirmationSystem {
       confirmed: false,
       response: null,
       confidence: 0,
+      status: 'max_attempts_exceeded',
+      testResults: null,
       attempt: maxAttempts,
       reason: 'max_attempts_exceeded'
     };
   }
 
   /**
-   * Get confirmation question in specified language
+   * Get confirmation question in specified language and context
    * @param {string} language - Language code
+   * @param {string} context - Context type (test, refactor, general)
    * @returns {string} Confirmation question
    */
-  getConfirmationQuestion(language = 'en') {
-    const questions = this.confirmationQuestions[language] || this.confirmationQuestions['en'];
+  getConfirmationQuestion(language = 'en', context = 'general') {
+    // Use the new structured questions from getConfirmationQuestions
+    const questions = this.getConfirmationQuestions(context);
+    
+    // Filter by language if needed (for now, return any question as they're multilingual)
     return questions[Math.floor(Math.random() * questions.length)];
+  }
+
+  /**
+   * Get confirmation questions for different contexts
+   * @param {string} context - Context type (test, refactor, general)
+   * @returns {Array} Array of confirmation questions
+   */
+  getConfirmationQuestions(context = 'general') {
+    const questions = {
+      'test': [
+        'Check your status against the task and respond with your status: completed/partially completed/need human. Also include test results: [PASSED] or [FAILED] with percentage.',
+        'Prüfe deinen Status gegen die Aufgabe und antworte mit deinem Status: completed/partially completed/need human. Füge auch Testergebnisse hinzu: [PASSED] oder [FAILED] mit Prozentsatz.',
+        'Verifica tu estado contra la tarea y responde con tu estado: completed/partially completed/need human. También incluye resultados de pruebas: [PASSED] o [FAILED] con porcentaje.',
+        'Vérifiez votre statut par rapport à la tâche et répondez avec votre statut: completed/partially completed/need human. Incluez également les résultats des tests: [PASSED] ou [FAILED] avec pourcentage.'
+      ],
+      'refactor': [
+        'Check your status against the task and respond with your status: completed/partially completed/need human.',
+        'Prüfe deinen Status gegen die Aufgabe und antworte mit deinem Status: completed/partially completed/need human.',
+        'Verifica tu estado contra la tarea y responde con tu estado: completed/partially completed/need human.',
+        'Vérifiez votre statut par rapport à la tâche et répondez avec votre statut: completed/partially completed/need human.'
+      ],
+      'general': [
+        'Check your status against the task and respond with your status: completed/partially completed/need human.',
+        'Prüfe deinen Status gegen die Aufgabe und antworte mit deinem Status: completed/partially completed/need human.',
+        'Verifica tu estado contra la tarea y responde con tu estado: completed/partially completed/need human.',
+        'Vérifiez votre statut par rapport à la tâche et répondez avec votre statut: completed/partially completed/need human.'
+      ]
+    };
+    
+    return questions[context] || questions['general'];
+  }
+
+  /**
+   * Detect language from text
+   * @param {string} text - Text to analyze
+   * @returns {string} Language code
+   */
+  detectLanguage(text) {
+    // Simple language detection based on common words
+    if (text.includes('fertig') || text.includes('erledigt') || text.includes('abgeschlossen')) {
+      return 'de';
+    } else if (text.includes('listo') || text.includes('completado') || text.includes('terminado')) {
+      return 'es';
+    } else if (text.includes('fini') || text.includes('terminé') || text.includes('completé')) {
+      return 'fr';
+    }
+    return 'en';
   }
 
   /**
@@ -465,20 +580,6 @@ class ConfirmationSystem {
   }
 
   /**
-   * Add custom incomplete keywords
-   * @param {string} language - Language code
-   * @param {Array} keywords - Keywords to add
-   */
-  addIncompleteKeywords(language, keywords) {
-    if (!this.incompleteKeywords[language]) {
-      this.incompleteKeywords[language] = [];
-    }
-    
-    this.incompleteKeywords[language].push(...keywords);
-    this.logger.info(`[ConfirmationSystem] Added incomplete keywords for language: ${language}`);
-  }
-
-  /**
    * Add custom confirmation questions
    * @param {string} language - Language code
    * @param {Array} questions - Questions to add
@@ -493,24 +594,20 @@ class ConfirmationSystem {
   }
 
   /**
-   * Get system statistics
-   * @returns {Object} System stats
+   * Set configuration
+   * @param {Object} config - Configuration object
    */
-  getStats() {
-    const totalLanguages = Object.keys(this.completionKeywords).length;
-    const totalCompletionKeywords = Object.values(this.completionKeywords).flat().length;
-    const totalIncompleteKeywords = Object.values(this.incompleteKeywords).flat().length;
-    const totalQuestions = Object.values(this.confirmationQuestions).flat().length;
-    
-    return {
-      languages: totalLanguages,
-      completionKeywords: totalCompletionKeywords,
-      incompleteKeywords: totalIncompleteKeywords,
-      confirmationQuestions: totalQuestions,
-      maxAttempts: this.config.maxAttempts,
-      timeout: this.config.timeout,
-      confidenceThreshold: this.config.confidenceThreshold
-    };
+  setConfig(config) {
+    this.config = { ...this.config, ...config };
+    this.logger.info('[ConfirmationSystem] Configuration updated');
+  }
+
+  /**
+   * Get current configuration
+   * @returns {Object} Current configuration
+   */
+  getConfig() {
+    return { ...this.config };
   }
 
   /**

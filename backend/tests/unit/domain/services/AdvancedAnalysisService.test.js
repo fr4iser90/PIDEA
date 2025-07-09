@@ -82,6 +82,9 @@ describe('AdvancedAnalysisService', () => {
         test('should perform comprehensive advanced analysis', async () => {
             const mockStandardAnalysis = {
                 projectStructure: { type: 'nodejs', files: ['package.json'] },
+                codeQuality: { issues: [] },
+                security: { vulnerabilities: [] },
+                performance: { issues: [], bundleSize: 500000, slowOperations: [] },
                 insights: ['Good project structure'],
                 recommendations: [{ title: 'Add tests', priority: 'medium' }]
             };
@@ -101,7 +104,11 @@ describe('AdvancedAnalysisService', () => {
                 overall: true,
                 businessLogic: { patterns: [], violations: [] },
                 errorHandling: { patterns: [], violations: [] },
-                security: { patterns: [], violations: [] },
+                security: { 
+                    patterns: [], 
+                    violations: [],
+                    metrics: { securityChecks: 5 }
+                },
                 dataFlow: { patterns: [], violations: [] },
                 violations: [],
                 metrics: { overallScore: 85 }
@@ -112,6 +119,12 @@ describe('AdvancedAnalysisService', () => {
             mockLogicValidationService.validateLogic.mockResolvedValue(mockLogicValidation);
 
             const result = await service.performAdvancedAnalysis(projectPath, options);
+
+            // Debug: Log the actual result to understand why overall is false
+            console.log('Debug - Result overall:', result.overall);
+            console.log('Debug - Result metrics:', result.metrics);
+            console.log('Debug - Layer validation overall:', result.layerValidation.overall);
+            console.log('Debug - Logic validation overall:', result.logicValidation.overall);
 
             expect(result.projectPath).toBe(projectPath);
             expect(result.timestamp).toBeInstanceOf(Date);

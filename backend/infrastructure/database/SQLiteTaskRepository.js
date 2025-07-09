@@ -60,10 +60,10 @@ class SQLiteTaskRepository extends TaskRepository {
       
       const sql = `
         INSERT OR REPLACE INTO ${this.tableName} (
-          id, title, description, type, priority, status, projectId, userId,
+          id, title, description, type, priority, status, projectId, userId, createdBy,
           estimatedDuration, metadata, createdAt, updatedAt, dependencies,
           tags, assignee, dueDate, startedAt, completedAt, executionHistory
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `;
 
       const params = [
@@ -75,6 +75,7 @@ class SQLiteTaskRepository extends TaskRepository {
         taskData.status,
         taskData.projectId,
         taskData.userId,
+        taskData.userId, // createdBy (use userId for now)
         taskData.estimatedDuration,
         JSON.stringify(taskData.metadata),
         taskData.createdAt,

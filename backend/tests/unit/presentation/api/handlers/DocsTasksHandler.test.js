@@ -38,8 +38,8 @@ describe('DocsTasksHandler', () => {
 
   describe('constructor', () => {
     it('should initialize with correct properties', () => {
-      expect(handler.featuresDir).toContain('docs/09_roadmap/features');
-      expect(handler.allowedExtensions).toEqual(['.md']);
+      expect(handler.getFeaturesDir()).toContain('docs/09_roadmap/features');
+      expect(handler.allowedExtensions).toEqual(['.md', '.markdown']);
       expect(handler.cache).toBeInstanceOf(Map);
       expect(handler.cacheTimeout).toBe(60000);
     });

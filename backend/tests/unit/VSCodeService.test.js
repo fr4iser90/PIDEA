@@ -4,15 +4,24 @@ const VSCodeExtensionManager = require('../../infrastructure/external/VSCodeExte
 // Mock dependencies
 jest.mock('../../infrastructure/external/VSCodeExtensionManager');
 
+// Mock fs module
+jest.mock('fs', () => ({
+  writeFileSync: jest.fn()
+}));
+
 describe('VSCodeService', () => {
   let vscodeService;
   let mockBrowserManager;
   let mockIDEManager;
   let mockEventBus;
+  let mockFs;
 
   beforeEach(() => {
     // Reset mocks
     jest.clearAllMocks();
+
+    // Get mocked fs module
+    mockFs = require('fs');
 
     // Create mock objects
     mockBrowserManager = {
@@ -275,6 +284,12 @@ describe('VSCodeService', () => {
       expect(result.taskId).toBe('task-123');
       expect(result).toHaveProperty('filePath');
       expect(result.message).toBe('Task sent to VSCode IDE successfully');
+      
+      // Verify that writeFileSync was called
+      expect(mockFs.writeFileSync).toHaveBeenCalledWith(
+        expect.stringContaining('task_task-123.md'),
+        expect.stringContaining('Task: Test Task')
+      );
     });
 
     it('should throw error when no workspace path available', async () => {

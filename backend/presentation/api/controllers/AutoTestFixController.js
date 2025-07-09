@@ -4,6 +4,7 @@
  */
 const AutoTestFixSystem = require('../../../domain/services/auto-test/AutoTestFixSystem');
 const TestCorrectionCommand = require('../../../application/commands/TestCorrectionCommand');
+const fs = require('fs'); // Added for fs.existsSync
 
 class AutoTestFixController {
   constructor(dependencies = {}) {
@@ -26,48 +27,60 @@ class AutoTestFixController {
    */
   async executeAutoTestFix(req, res) {
     try {
-      const { options = {} } = req.body;
-      const userId = req.user?.id;
       const projectId = req.params.projectId;
+      const userId = req.user?.id;
+      const {
+        projectPath,
+        clearExisting = false,
+        stopOnError = false,
+        loadExistingTasks = false, // New option to load existing tasks
+        taskStatus = null, // Optional status filter for existing tasks
+        ...otherOptions
+      } = req.body;
 
-      this.logger.info('[AutoTestFixController] Executing auto test fix workflow', {
-        userId,
+      this.logger.info('[AutoTestFixController] Executing auto test fix', {
         projectId,
-        options
+        userId,
+        projectPath,
+        clearExisting,
+        stopOnError,
+        loadExistingTasks,
+        taskStatus
       });
 
-      // Validate request
-      if (!projectId) {
+      // Validate project path
+      const validatedProjectPath = projectPath || process.cwd();
+      
+      if (!fs.existsSync(validatedProjectPath)) {
         return res.status(400).json({
           success: false,
-          error: 'projectId is required'
+          error: `Project path does not exist: ${validatedProjectPath}`
         });
       }
 
       // Execute workflow
       const result = await this.autoTestFixSystem.executeAutoTestFixWorkflow({
-        ...options,
-        userId,
+        projectPath: validatedProjectPath,
         projectId,
-        requestId: req.id,
-        userAgent: req.get('User-Agent'),
-        ipAddress: req.ip
-      });
-
-      this.logger.info('[AutoTestFixController] Auto test fix workflow completed', {
-        sessionId: result.sessionId,
-        duration: result.duration
+        userId,
+        clearExisting,
+        stopOnError,
+        loadExistingTasks, // Pass the new option
+        taskStatus, // Pass the status filter
+        ...otherOptions
       });
 
       return res.status(200).json({
         success: true,
-        sessionId: result.sessionId,
-        result: result,
-        duration: result.duration
+        data: {
+          sessionId: result.sessionId,
+          message: loadExistingTasks ? 'Processing existing tasks' : 'Generated and processing new tasks',
+          result: result
+        }
       });
 
     } catch (error) {
-      this.logger.error('[AutoTestFixController] Auto test fix workflow failed:', error.message);
+      this.logger.error('[AutoTestFixController] Auto test fix execution failed:', error.message);
 
       return res.status(500).json({
         success: false,
@@ -384,6 +397,49 @@ class AutoTestFixController {
 
     } catch (error) {
       this.logger.error('[AutoTestFixController] Failed to retry auto test task:', error.message);
+
+      return res.status(500).json({
+        success: false,
+        error: error.message,
+        timestamp: new Date().toISOString()
+      });
+    }
+  }
+
+  /**
+   * Load existing tasks without processing
+   * GET /api/projects/:projectId/auto/tests/load-tasks
+   */
+  async loadExistingTasks(req, res) {
+    try {
+      const projectId = req.params.projectId;
+      const userId = req.user?.id;
+      const { status } = req.query;
+
+      this.logger.info('[AutoTestFixController] Loading existing tasks', {
+        projectId,
+        userId,
+        status
+      });
+
+      // Load existing tasks
+      const tasks = await this.autoTestFixSystem.loadExistingTasks({
+        projectId,
+        userId,
+        status: status || null
+      });
+
+      return res.status(200).json({
+        success: true,
+        data: {
+          tasks: tasks,
+          count: tasks.length,
+          message: `Loaded ${tasks.length} existing tasks from database`
+        }
+      });
+
+    } catch (error) {
+      this.logger.error('[AutoTestFixController] Failed to load existing tasks:', error.message);
 
       return res.status(500).json({
         success: false,

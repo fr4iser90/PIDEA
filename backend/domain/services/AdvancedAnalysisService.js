@@ -9,8 +9,8 @@ const TaskAnalysisService = require('./TaskAnalysisService');
 class AdvancedAnalysisService {
     constructor(dependencies = {}) {
         this.logger = dependencies.logger || console;
-        this.layerValidationService = new LayerValidationService(this.logger);
-        this.logicValidationService = new LogicValidationService(this.logger);
+        this.layerValidationService = dependencies.layerValidationService || new LayerValidationService(this.logger);
+        this.logicValidationService = dependencies.logicValidationService || new LogicValidationService(this.logger);
         this.taskAnalysisService = dependencies.taskAnalysisService || new TaskAnalysisService();
     }
 
@@ -45,13 +45,23 @@ class AdvancedAnalysisService {
             this.logger.info('Phase 1: Performing standard analysis...');
             analysis.standardAnalysis = await this.taskAnalysisService.analyzeProject(projectPath, options);
 
-            // Phase 2: Layer Validation
-            this.logger.info('Phase 2: Performing layer validation...');
-            analysis.layerValidation = await this.layerValidationService.validateLayers(projectPath, options);
+            // Phase 2: Layer Validation (conditional)
+            if (options.includeLayerValidation !== false) {
+                this.logger.info('Phase 2: Performing layer validation...');
+                analysis.layerValidation = await this.layerValidationService.validateLayers(projectPath, options);
+            } else {
+                this.logger.info('Phase 2: Skipping layer validation (disabled)...');
+                analysis.layerValidation = {};
+            }
 
-            // Phase 3: Logic Validation
-            this.logger.info('Phase 3: Performing logic validation...');
-            analysis.logicValidation = await this.logicValidationService.validateLogic(projectPath, options);
+            // Phase 3: Logic Validation (conditional)
+            if (options.includeLogicValidation !== false) {
+                this.logger.info('Phase 3: Performing logic validation...');
+                analysis.logicValidation = await this.logicValidationService.validateLogic(projectPath, options);
+            } else {
+                this.logger.info('Phase 3: Skipping logic validation (disabled)...');
+                analysis.logicValidation = {};
+            }
 
             // Phase 4: Generate Integrated Insights
             this.logger.info('Phase 4: Generating integrated insights...');
@@ -65,10 +75,10 @@ class AdvancedAnalysisService {
             this.logger.info('Phase 6: Calculating overall metrics...');
             analysis.metrics = await this.calculateOverallMetrics(analysis);
 
-            // Determine overall validity
-            analysis.overall = analysis.layerValidation.overall && 
-                              analysis.logicValidation.overall && 
-                              analysis.metrics.overallScore >= 70;
+            // Determine overall validity (handle disabled phases)
+            const layerValid = options.includeLayerValidation !== false ? analysis.layerValidation.overall : true;
+            const logicValid = options.includeLogicValidation !== false ? analysis.logicValidation.overall : true;
+            analysis.overall = layerValid && logicValid && analysis.metrics.overallScore >= 70;
 
             this.logger.info('Advanced analysis completed successfully', {
                 overallScore: analysis.metrics.overallScore,
@@ -96,8 +106,8 @@ class AdvancedAnalysisService {
         const insights = [];
 
         // Cross-reference layer violations with logic violations
-        const layerViolations = analysis.layerValidation.violations || [];
-        const logicViolations = analysis.logicValidation.violations || [];
+        const layerViolations = analysis.layerValidation?.violations || [];
+        const logicViolations = analysis.logicValidation?.violations || [];
 
         // Find patterns where layer violations correlate with logic issues
         for (const layerViolation of layerViolations) {
@@ -174,10 +184,15 @@ class AdvancedAnalysisService {
         const layerValidation = analysis.layerValidation;
         const logicValidation = analysis.logicValidation;
 
+        // Check if layers information is available
+        if (!layerValidation?.layers) {
+            return instances;
+        }
+
         // Check presentation layer for business logic
         if (layerValidation.layers.presentation && layerValidation.layers.presentation.files) {
             for (const file of layerValidation.layers.presentation.files) {
-                const logicViolations = logicValidation.violations.filter(v => v.file === file);
+                const logicViolations = (logicValidation?.violations || []).filter(v => v.file === file);
                 if (logicViolations.length > 0) {
                     instances.push({
                         file: file,
@@ -192,7 +207,7 @@ class AdvancedAnalysisService {
         // Check infrastructure layer for business logic
         if (layerValidation.layers.infrastructure && layerValidation.layers.infrastructure.files) {
             for (const file of layerValidation.layers.infrastructure.files) {
-                const logicViolations = logicValidation.violations.filter(v => v.file === file);
+                const logicViolations = (logicValidation?.violations || []).filter(v => v.file === file);
                 if (logicViolations.length > 0) {
                     instances.push({
                         file: file,
@@ -215,6 +230,11 @@ class AdvancedAnalysisService {
     analyzeErrorHandlingPatterns(analysis) {
         const insights = [];
         const errorHandling = analysis.logicValidation.errorHandling;
+
+        // Defensive: If errorHandling or metrics is missing, skip
+        if (!errorHandling || !errorHandling.metrics) {
+            return insights;
+        }
 
         // Check for missing error handling in critical layers
         if (errorHandling.metrics.tryCatchBlocks === 0) {
@@ -252,7 +272,12 @@ class AdvancedAnalysisService {
      */
     analyzeSecurityPatterns(analysis) {
         const insights = [];
-        const security = analysis.logicValidation.security;
+        const security = analysis.logicValidation?.security;
+
+        // Defensive: If security or metrics is missing, skip security analysis
+        if (!security || !security.metrics) {
+            return insights;
+        }
 
         // Check for missing security measures
         if (security.metrics.securityChecks === 0) {
@@ -288,7 +313,12 @@ class AdvancedAnalysisService {
      */
     analyzeDataFlowPatterns(analysis) {
         const insights = [];
-        const dataFlow = analysis.logicValidation.dataFlow;
+        const dataFlow = analysis.logicValidation?.dataFlow;
+
+        // Defensive: If dataFlow or metrics is missing, skip data flow analysis
+        if (!dataFlow || !dataFlow.metrics) {
+            return insights;
+        }
 
         // Check for data transformation patterns
         if (dataFlow.metrics.dataTransformations === 0) {
@@ -325,8 +355,8 @@ class AdvancedAnalysisService {
 
         // Priority 1: Critical Issues
         const criticalViolations = [
-            ...(analysis.layerValidation.violations || []),
-            ...(analysis.logicValidation.violations || [])
+            ...(analysis.layerValidation?.violations || []),
+            ...(analysis.logicValidation?.violations || [])
         ].filter(v => v.severity === 'critical');
 
         if (criticalViolations.length > 0) {
@@ -343,8 +373,8 @@ class AdvancedAnalysisService {
 
         // Priority 2: High Priority Issues
         const highViolations = [
-            ...(analysis.layerValidation.violations || []),
-            ...(analysis.logicValidation.violations || [])
+            ...(analysis.layerValidation?.violations || []),
+            ...(analysis.logicValidation?.violations || [])
         ].filter(v => v.severity === 'high');
 
         if (highViolations.length > 0) {
@@ -374,7 +404,7 @@ class AdvancedAnalysisService {
         }
 
         // Priority 4: Code Quality Improvements
-        const logicRecommendations = analysis.logicValidation.recommendations || [];
+        const logicRecommendations = analysis.logicValidation?.recommendations || [];
         if (logicRecommendations.length > 0) {
             recommendations.push({
                 priority: 'medium',
@@ -388,7 +418,7 @@ class AdvancedAnalysisService {
         }
 
         // Priority 5: Performance Optimizations
-        if (analysis.standardAnalysis.performance) {
+        if (analysis.standardAnalysis?.performance) {
             const performanceIssues = this.extractPerformanceIssues(analysis.standardAnalysis.performance);
             if (performanceIssues.length > 0) {
                 recommendations.push({
@@ -455,12 +485,12 @@ class AdvancedAnalysisService {
         };
 
         // Calculate layer score
-        if (analysis.layerValidation.metrics) {
+        if (analysis.layerValidation?.metrics) {
             metrics.layerScore = analysis.layerValidation.metrics.overallScore || 0;
         }
 
         // Calculate logic score
-        if (analysis.logicValidation.metrics) {
+        if (analysis.logicValidation?.metrics) {
             metrics.logicScore = analysis.logicValidation.metrics.overallScore || 0;
         }
 
@@ -519,13 +549,13 @@ class AdvancedAnalysisService {
         let score = 100;
 
         // Deduct points for security violations
-        const securityViolations = analysis.logicValidation.security.violations || [];
+        const securityViolations = analysis.logicValidation?.security?.violations || [];
         score -= securityViolations.filter(v => v.severity === 'critical').length * 20;
         score -= securityViolations.filter(v => v.severity === 'high').length * 10;
         score -= securityViolations.filter(v => v.severity === 'medium').length * 5;
 
         // Add points for security measures
-        const securityChecks = analysis.logicValidation.security.metrics.securityChecks || 0;
+        const securityChecks = analysis.logicValidation?.security?.metrics?.securityChecks || 0;
         score += Math.min(securityChecks * 2, 20);
 
         return Math.max(0, Math.min(100, score));
@@ -539,7 +569,7 @@ class AdvancedAnalysisService {
     calculatePerformanceScore(analysis) {
         let score = 100;
 
-        if (analysis.standardAnalysis.performance) {
+        if (analysis.standardAnalysis?.performance) {
             const performance = analysis.standardAnalysis.performance;
 
             // Deduct points for performance issues

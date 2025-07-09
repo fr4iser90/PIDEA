@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import APIChatRepository from '@/infrastructure/repositories/APIChatRepository.jsx';
+import APIChatRepository, { apiCall } from '@/infrastructure/repositories/APIChatRepository.jsx';
 import TaskSelectionModal from '../modal/TaskSelectionModal.jsx';
+import TestFixTaskModal from '../modal/TestFixTaskModal.jsx';
 
 function AutoPanelComponent({ eventBus }) {
   const api = new APIChatRepository();
@@ -18,6 +19,11 @@ function AutoPanelComponent({ eventBus }) {
   const [showAutoRefactorModal, setShowAutoRefactorModal] = useState(false);
   const [refactoringTasks, setRefactoringTasks] = useState([]);
   const [isAutoRefactoring, setIsAutoRefactoring] = useState(false);
+
+  // Auto Test Fix Modal state
+  const [showAutoTestModal, setShowAutoTestModal] = useState(false);
+  const [testFixTasks, setTestFixTasks] = useState([]);
+  const [isAutoTesting, setIsAutoTesting] = useState(false);
 
   // VibeCoder Mode Handlers
   const handleVibeCoderStart = async () => { 
@@ -114,56 +120,103 @@ function AutoPanelComponent({ eventBus }) {
     }
   };
   
-  const handleAutoTest = async () => { 
-    setFeedback('Starting Auto Test Fix...');
+  const handleAutoTest = async () => {
+    setFeedback('Loading test fix tasks...');
     try {
       const projectId = await api.getCurrentProjectId();
-      console.log('[AutoPanelComponent] Starting auto test fix for project:', projectId);
+      console.log('[AutoPanelComponent] Loading test fix tasks for project:', projectId);
       
-      // Use the api object for the request
-      console.log('[AutoPanelComponent] Making API call...');
+      // First, check if there are existing tasks
+      let loadExistingTasks = false;
+      let existingTasks = [];
+      
       try {
-        // Import the apiCall function directly
-        const { apiCall } = await import('@/infrastructure/repositories/APIChatRepository.jsx');
-        
-        const response = await apiCall(`/api/projects/${projectId}/auto/tests/fix`, {
-          method: 'POST',
-          body: JSON.stringify({
-            options: {
-              coverageThreshold: 90,
-              autoCommit: true,
-              autoBranch: true,
-              maxFixAttempts: 3
-            }
-          })
-        });
-        
-        console.log('[AutoPanelComponent] Auto test fix response:', response);
+        const existingTasksResponse = await apiCall(`/api/projects/${projectId}/auto/tests/load-tasks?status=pending`);
+        if (existingTasksResponse.success && existingTasksResponse.data.count > 0) {
+          loadExistingTasks = true;
+          existingTasks = existingTasksResponse.data.tasks || [];
+          console.log(`[AutoPanelComponent] Found ${existingTasksResponse.data.count} existing tasks`);
+        }
       } catch (error) {
-        console.error('[AutoPanelComponent] API call failed:', error);
-        setFeedback('Error making API call: ' + error.message);
-        return;
+        console.log('[AutoPanelComponent] No existing tasks found or error loading them:', error.message);
       }
 
-      if (response.success) {
-        setAutoStatus('testing');
-        setFeedback('Auto Test Fix started successfully! Session ID: ' + response.sessionId);
-        if (eventBus) eventBus.emit('auto-test-fix-started', response);
-        
-        // Start polling for status
-        pollAutoTestStatus(response.sessionId, projectId);
+      // If we have existing tasks, show them in modal
+      if (existingTasks.length > 0) {
+        setTestFixTasks(existingTasks);
+        setShowAutoTestModal(true);
+        setFeedback(`Found ${existingTasks.length} existing test fix tasks!`);
       } else {
-        setFeedback('Failed to start Auto Test Fix: ' + response.error);
+        // No existing tasks, start fresh
+        setFeedback('No existing tasks found, starting fresh test fix...');
+        await startAutoTestFix(projectId, false);
       }
     } catch (err) {
-      setFeedback('Error starting Auto Test Fix: ' + (err.message || err));
+      setFeedback('Error loading test fix tasks: ' + (err.message || err));
     }
   };
 
+  const handleStartTestFix = async (selectedTasks) => {
+    setIsAutoTesting(true);
+    setFeedback('Starting test fix for selected tasks...');
+    
+    try {
+      const projectId = await api.getCurrentProjectId();
+      
+      // Execute test fix with selected tasks
+      await startAutoTestFix(projectId, true, selectedTasks);
+      
+      setShowAutoTestModal(false);
+      
+    } catch (err) {
+      setFeedback('Error starting test fix: ' + (err.message || err));
+    } finally {
+      setIsAutoTesting(false);
+    }
+  };
+
+  const startAutoTestFix = async (projectId, loadExistingTasks = false, selectedTasks = []) => {
+    try {
+      const response = await apiCall(`/api/projects/${projectId}/auto/tests/fix`, {
+        method: 'POST',
+        body: JSON.stringify({
+          loadExistingTasks: loadExistingTasks,
+          taskStatus: 'pending',
+          clearExisting: false,
+          stopOnError: false,
+          coverageThreshold: 90,
+          autoCommit: true,
+          autoBranch: true,
+          maxFixAttempts: 3,
+          selectedTaskIds: selectedTasks.map(task => task.id)
+        })
+      });
+      
+      console.log('[AutoPanelComponent] Auto test fix response:', response);
+      
+      if (response.success) {
+        setAutoStatus('testing');
+        const message = loadExistingTasks 
+          ? `Auto Test Fix started with ${selectedTasks.length} selected tasks! Session ID: ${response.data.sessionId}`
+          : `Auto Test Fix started successfully! Session ID: ${response.data.sessionId}`;
+        setFeedback(message);
+        if (eventBus) eventBus.emit('auto-test-fix-started', response);
+        
+        // Start polling for status
+        pollAutoTestStatus(response.data.sessionId, projectId);
+      } else {
+        setFeedback('Failed to start Auto Test Fix: ' + response.error);
+      }
+    } catch (error) {
+      console.error('[AutoPanelComponent] API call failed:', error);
+      setFeedback('Error making API call: ' + error.message);
+    }
+  };
+  
   const pollAutoTestStatus = async (sessionId, projectId) => {
     const pollInterval = setInterval(async () => {
       try {
-        const response = await api.apiCall(`/api/projects/${projectId}/auto/tests/status/${sessionId}`);
+        const response = await apiCall(`/api/projects/${projectId}/auto/tests/status/${sessionId}`);
 
         if (response.success) {
           const status = response.status;
@@ -289,6 +342,15 @@ function AutoPanelComponent({ eventBus }) {
         tasks={refactoringTasks}
         onStartRefactoring={handleStartRefactoring}
         isLoading={isAutoRefactoring}
+      />
+
+      {/* Auto Test Fix Modal */}
+      <TestFixTaskModal
+        isOpen={showAutoTestModal}
+        onClose={() => setShowAutoTestModal(false)}
+        tasks={testFixTasks}
+        onStartTestFix={handleStartTestFix}
+        isLoading={isAutoTesting}
       />
     </div>
   );

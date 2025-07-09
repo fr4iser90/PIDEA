@@ -93,9 +93,17 @@ class AdvancedAnalysisCommand {
             warnings.push('Analysis timeout is very high (over 30 minutes)');
         }
 
-        // Validate scheduled time
+        // Validate scheduled time - only check if it's explicitly provided and in the past
         if (this.scheduledAt && this.scheduledAt < new Date()) {
-            errors.push('Scheduled time cannot be in the past');
+            // Only validate if scheduledAt was explicitly provided (not defaulted)
+            // We can't easily check this, so we'll use a different approach
+            // For now, we'll allow immediate execution (scheduledAt = now)
+            // and only validate if it's significantly in the past
+            const now = new Date();
+            const timeDiff = now.getTime() - this.scheduledAt.getTime();
+            if (timeDiff > 60000) { // More than 1 minute in the past
+                errors.push('Scheduled time cannot be in the past');
+            }
         }
 
         // Validate export format
