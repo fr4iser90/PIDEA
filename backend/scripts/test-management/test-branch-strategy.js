@@ -109,23 +109,7 @@ function buildGitWorkflow(branchName, branchStrategy, task) {
   const projectPath = task.metadata?.projectPath || process.cwd();
   const startPoint = branchStrategy.startPoint || 'main';
   
-  return `GIT WORKFLOW (REQUIRED):
-1. Ensure you're on the correct starting branch: git checkout ${startPoint}
-2. Pull latest changes: git pull origin ${startPoint}
-3. Create and switch to new branch: git checkout -b ${branchName}
-4. Make the necessary code changes
-5. Test your changes: npm test
-6. Stage all changes: git add .
-7. Commit your changes: git commit -m "${task.title} (Task ID: ${task.id})"
-8. Push the branch: git push -u origin ${branchName}
-9. Confirm completion when finished
-
-Branch Strategy: ${branchStrategy.type} (${branchStrategy.prefix})
-Start Point: ${startPoint}
-Target Branch: ${branchStrategy.mergeTarget || 'main'}
-Protection Level: ${branchStrategy.protection}
-Auto-Merge: ${branchStrategy.autoMerge ? 'Enabled' : 'Disabled'}
-Requires Review: ${branchStrategy.requiresReview ? 'Yes' : 'No'}`;
+  return ``;
 }
 
 // Run the test
