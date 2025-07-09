@@ -39,7 +39,8 @@ class AutoTestFixSystem {
       autoBranchEnabled: true,
       stopOnError: false,
       parallelExecution: true,
-      maxParallelTests: 5
+      maxParallelTests: 5,
+      updateTaskStatus: true // Whether to update task status in database
     };
     
     this.logger = dependencies.logger || console;
@@ -353,8 +354,13 @@ class AutoTestFixSystem {
           
           // Update task status to in progress
           task.start();
-          if (this.taskRepository) {
-            await this.taskRepository.save(task);
+          if (this.taskRepository && this.config.updateTaskStatus) {
+            try {
+              await this.taskRepository.save(task);
+            } catch (error) {
+              this.logger.warn(`[AutoTestFixSystem] Failed to update task status for ${task.id}:`, error.message);
+              // Continue processing even if status update fails
+            }
           }
           
           // Process the task
@@ -371,7 +377,12 @@ class AutoTestFixSystem {
           }
           
           if (this.taskRepository) {
-            await this.taskRepository.save(task);
+            try {
+              await this.taskRepository.save(task);
+            } catch (error) {
+              this.logger.warn(`[AutoTestFixSystem] Failed to update task status for ${task.id}:`, error.message);
+              // Continue processing even if status update fails
+            }
           }
           
           // Stream task completion
@@ -396,7 +407,12 @@ class AutoTestFixSystem {
           
           task.fail(error.message);
           if (this.taskRepository) {
-            await this.taskRepository.save(task);
+            try {
+              await this.taskRepository.save(task);
+            } catch (error) {
+              this.logger.warn(`[AutoTestFixSystem] Failed to update task status for ${task.id}:`, error.message);
+              // Continue processing even if status update fails
+            }
           }
           
           result.failedTasks++;
