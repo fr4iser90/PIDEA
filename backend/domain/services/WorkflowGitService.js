@@ -13,6 +13,46 @@ class WorkflowGitService {
     }
 
     /**
+     * Ensure a branch exists locally and remotely, create from fallback if not
+     * @param {string} projectPath
+     * @param {string} branchName
+     * @param {string} fallbackBranch
+     */
+    async ensureBranchExistsLocallyAndRemotely(projectPath, branchName, fallbackBranch = 'main') {
+        const { exec } = require('child_process');
+        const util = require('util');
+        const execAsync = util.promisify(exec);
+        try {
+            // List all local branches
+            const { stdout: localStdout } = await execAsync('git branch', { cwd: projectPath });
+            const localBranches = localStdout.split('\n').map(b => b.trim().replace('* ', ''));
+            // List all remote branches
+            const { stdout: remoteStdout } = await execAsync('git branch -r', { cwd: projectPath });
+            const remoteBranches = remoteStdout.split('\n').map(b => b.trim().replace('origin/', ''));
+
+            const localExists = localBranches.includes(branchName);
+            const remoteExists = remoteBranches.includes(branchName);
+
+            if (localExists) {
+                this.logger.info(`[ensureBranchExistsLocallyAndRemotely] Branch ${branchName} exists locally.`);
+                return;
+            }
+            if (remoteExists) {
+                this.logger.info(`[ensureBranchExistsLocallyAndRemotely] Branch ${branchName} exists remotely, checking out locally.`);
+                await execAsync(`git checkout -b ${branchName} origin/${branchName}`, { cwd: projectPath });
+                return;
+            }
+            // Branch existiert weder lokal noch remote: von fallback erstellen
+            this.logger.info(`[ensureBranchExistsLocallyAndRemotely] Branch ${branchName} existiert nicht, erstelle von ${fallbackBranch}.`);
+            await execAsync(`git checkout -b ${branchName} ${fallbackBranch}`, { cwd: projectPath });
+            await execAsync(`git push -u origin ${branchName}`, { cwd: projectPath });
+        } catch (error) {
+            this.logger.error(`[ensureBranchExistsLocallyAndRemotely] Fehler beim Erstellen von ${branchName}: ${error.message}`);
+            throw error;
+        }
+    }
+
+    /**
      * Create workflow-specific branch based on task type
      * @param {string} projectPath - Project path
      * @param {Object} task - Task object
@@ -23,7 +63,10 @@ class WorkflowGitService {
         try {
             const branchStrategy = this.determineBranchStrategy(task.type, options);
             const branchName = this.generateBranchName(task, branchStrategy);
-            
+
+            // Sicherstellen, dass der Startpunkt-Branch existiert
+            await this.ensureBranchExistsLocallyAndRemotely(projectPath, branchStrategy.startPoint || 'main', 'main');
+
             this.logger.info('WorkflowGitService: Creating workflow branch', {
                 projectPath,
                 taskId: task.id,
@@ -32,11 +75,9 @@ class WorkflowGitService {
                 branchName
             });
 
-            // Intelligente Branch-Erstellung mit PIDEA-spezifischen Branches
-            const startPoint = await this.ensureBranchExists(projectPath, branchStrategy.startPoint);
-            
+            // Create and checkout branch
             await this.gitService.createBranch(projectPath, branchName, {
-                startPoint: startPoint
+                startPoint: branchStrategy.startPoint || 'main'
             });
 
             // Apply branch-specific configurations
