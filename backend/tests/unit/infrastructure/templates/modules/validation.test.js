@@ -3,8 +3,8 @@
  * Coverage target: 80%
  */
 
-const TemplateValidator = require('../../../../../infrastructure/templates/modules/validation');
-const { VALIDATION_RULES, TEMPLATE_CATEGORIES } = require('../../../../../infrastructure/templates/modules/constants');
+const TemplateValidator = require('@/infrastructure/templates/modules/validation');
+const { VALIDATION_RULES, TEMPLATE_CATEGORIES } = require('@/infrastructure/templates/modules/constants');
 
 describe('TemplateValidator', () => {
     describe('validateTemplate', () => {

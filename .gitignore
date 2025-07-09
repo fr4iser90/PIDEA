@@ -19,5 +19,8 @@ test-report-full.json
 logs
 backend/coverage
 backend/database
+backend/.jest-cache
+*.backup
+
 output/
 refactor_*.md

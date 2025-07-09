@@ -1,14 +1,14 @@
-const TerminalLogCaptureService = require('../../domain/services/TerminalLogCaptureService');
-const TerminalLogReader = require('../../domain/services/TerminalLogReader');
-const LogEncryptionService = require('../../infrastructure/security/LogEncryptionService');
-const LogPermissionManager = require('../../infrastructure/security/LogPermissionManager');
+const TerminalLogCaptureService = require('@/domain/services/TerminalLogCaptureService');
+const TerminalLogReader = require('@/domain/services/TerminalLogReader');
+const LogEncryptionService = require('@/infrastructure/security/LogEncryptionService');
+const LogPermissionManager = require('@/infrastructure/security/LogPermissionManager');
 const fs = require('fs').promises;
 const path = require('path');
 
 // Mock dependencies for integration testing
-jest.mock('../../infrastructure/external/IDEManager');
-jest.mock('../../infrastructure/external/BrowserManager');
-jest.mock('../../domain/services/IDEMirrorService');
+jest.mock('@/infrastructure/external/IDEManager');
+jest.mock('@/infrastructure/external/BrowserManager');
+jest.mock('@/domain/services/IDEMirrorService');
 jest.mock('fs', () => ({
   promises: {
     mkdir: jest.fn(),
@@ -41,9 +41,9 @@ describe('Terminal Log Capture Integration', () => {
     logPermissionManager = new LogPermissionManager();
     
     // Get mocked dependencies
-    mockIDEManager = require('../../infrastructure/external/IDEManager');
-    mockBrowserManager = require('../../infrastructure/external/BrowserManager');
-    mockIDEMirrorService = require('../../domain/services/IDEMirrorService');
+    mockIDEManager = require('@/infrastructure/external/IDEManager');
+    mockBrowserManager = require('@/infrastructure/external/BrowserManager');
+    mockIDEMirrorService = require('@/domain/services/IDEMirrorService');
     
     // Setup default mock implementations
     mockIDEManager.prototype.initialize = jest.fn().mockResolvedValue();

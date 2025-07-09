@@ -17,6 +17,12 @@ describe('ScreenshotStreamingService - Port-Based', () => {
   let mockBrowserManager;
   let mockWebSocketManager;
 
+  // Global cleanup after all tests
+  afterAll(() => {
+    // Clear any remaining timers and intervals
+    jest.clearAllTimers();
+  });
+
   beforeEach(() => {
     // Reset mocks
     jest.clearAllMocks();
@@ -34,6 +40,18 @@ describe('ScreenshotStreamingService - Port-Based', () => {
     
     // Create service instance
     service = new ScreenshotStreamingService(mockBrowserManager, mockWebSocketManager);
+  });
+
+  afterEach(async () => {
+    // Clean up any active streaming sessions
+    if (service) {
+      try {
+        // Use the service's built-in cleanup method
+        await service.cleanup();
+      } catch (error) {
+        console.warn('Error during test cleanup:', error.message);
+      }
+    }
   });
 
   describe('Port Management', () => {

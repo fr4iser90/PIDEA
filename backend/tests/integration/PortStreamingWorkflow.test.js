@@ -8,9 +8,9 @@ const request = require('supertest');
 const WebSocket = require('ws');
 
 // Import test utilities
-const { createTestServer } = require('../utils/testServer');
-const { createMockBrowserManager } = require('../utils/mockBrowserManager');
-const { createMockWebSocketManager } = require('../utils/mockWebSocketManager');
+const { createTestServer } = require('@/tests/utils/testServer');
+const { createMockBrowserManager } = require('@/tests/utils/mockBrowserManager');
+const { createMockWebSocketManager } = require('@/tests/utils/mockWebSocketManager');
 
 describe('PortStreamingWorkflow Integration', () => {
   let app;

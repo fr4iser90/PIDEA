@@ -1,7 +1,7 @@
 /**
  * End-to-End tests for VibeCoder Auto Mode
  */
-const Application = require('../../Application');
+const Application = require('@/Application');
 const path = require('path');
 const fs = require('fs').promises;
 const os = require('os');

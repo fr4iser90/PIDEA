@@ -1,5 +1,5 @@
-const CodeExplorerController = require('../../../../presentation/api/CodeExplorerController');
-const BrowserManager = require('../../../../infrastructure/external/BrowserManager');
+const CodeExplorerController = require('@/presentation/api/CodeExplorerController');
+const BrowserManager = require('@/infrastructure/external/BrowserManager');
 
 // Mock BrowserManager
 jest.mock('../../../../infrastructure/external/BrowserManager');

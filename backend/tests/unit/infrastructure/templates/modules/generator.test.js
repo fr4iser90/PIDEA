@@ -3,15 +3,15 @@
  * Coverage target: 80%
  */
 
-const TemplateGenerator = require('../../../../../infrastructure/templates/modules/generator');
+const TemplateGenerator = require('@/infrastructure/templates/modules/generator');
 
 // Mock the validation module
-jest.mock('../../../../../infrastructure/templates/modules/validation', () => ({
+jest.mock('@/infrastructure/templates/modules/validation', () => ({
     validateTemplate: jest.fn(),
     validateVariables: jest.fn()
 }));
 
-const TemplateValidator = require('../../../../../infrastructure/templates/modules/validation');
+const TemplateValidator = require('@/infrastructure/templates/modules/validation');
 
 describe('TemplateGenerator', () => {
     let mockEventBus;

@@ -1,28 +1,30 @@
 # Test Coverage Report
 
-**Generated:** 7/9/2025, 12:38:05 AM
+**Generated:** 7/9/2025, 7:48:06 PM
 
 ## 📊 Coverage Summary
 
-**Overall Coverage:** 13%
+**Overall Coverage:** 18%
 
-**Files Analyzed:** 304
-**Files with ≥80% Coverage:** 18
+**Files Analyzed:** 327
+**Files with ≥80% Coverage:** 40
 
 ## 📁 File Coverage Details
 
 | File | Functions | Lines | Branches | Average | Status |
 |------|-----------|-------|----------|---------|--------|
-| `Application.js` | 10% | 80% | 29% | 40% | ❌ |
-| `jest.config.js` | 100% | 0% | 0% | 33% | ❌ |
+| `Application.js` | 10% | 81% | 29% | 40% | ❌ |
+| `jest.simple.config.js` | 100% | 0% | 100% | 67% | ⚠️ |
 | `server.js` | 0% | 0% | 0% | 0% | ❌ |
+| `application/commands/AutoRefactorCommand.js` | 0% | 0% | 0% | 0% | ❌ |
 | `application/commands/CreateTaskCommand.js` | 50% | 52% | 65% | 56% | ⚠️ |
-| `application/commands/PortStreamingCommand.js` | 0% | 3% | 0% | 1% | ❌ |
-| `application/commands/ProcessTodoListCommand.js` | 0% | 4% | 0% | 1% | ❌ |
+| `application/commands/PortStreamingCommand.js` | 36% | 50% | 62% | 49% | ❌ |
+| `application/commands/ProcessTodoListCommand.js` | 40% | 64% | 69% | 58% | ⚠️ |
 | `application/commands/SendMessageCommand.js` | 0% | 13% | 0% | 4% | ❌ |
-| `application/commands/StartStreamingCommand.js` | 0% | 0% | 0% | 0% | ❌ |
-| `application/commands/StopStreamingCommand.js` | 0% | 0% | 0% | 0% | ❌ |
-| `application/commands/UpdateTestStatusCommand.js` | 50% | 79% | 64% | 64% | ⚠️ |
+| `application/commands/StartStreamingCommand.js` | 0% | 4% | 0% | 1% | ❌ |
+| `application/commands/StopStreamingCommand.js` | 0% | 7% | 0% | 2% | ❌ |
+| `application/commands/TestCorrectionCommand.js` | 0% | 5% | 0% | 2% | ❌ |
+| `application/commands/UpdateTestStatusCommand.js` | 0% | 5% | 0% | 2% | ❌ |
 | `application/commands/analyze/AdvancedAnalysisCommand.js` | 100% | 100% | 90% | 97% | ✅ |
 | `application/commands/analyze/AnalyzeArchitectureCommand.js` | 0% | 2% | 0% | 1% | ❌ |
 | `application/commands/analyze/AnalyzeCodeQualityCommand.js` | 0% | 2% | 0% | 1% | ❌ |
@@ -42,15 +44,17 @@
 | `application/commands/vibecoder/VibeCoderGenerateCommand.js` | 0% | 5% | 0% | 2% | ❌ |
 | `application/commands/vibecoder/VibeCoderModeCommand.js` | 0% | 1% | 0% | 0% | ❌ |
 | `application/commands/vibecoder/VibeCoderRefactorCommand.js` | 0% | 1% | 0% | 0% | ❌ |
-| `application/handlers/CreateTaskHandler.js` | 33% | 34% | 12% | 26% | ❌ |
+| `application/handlers/AutoTestFixHandler.js` | 0% | 0% | 0% | 0% | ❌ |
+| `application/handlers/CreateTaskHandler.js` | 33% | 43% | 22% | 33% | ❌ |
 | `application/handlers/GetChatHistoryHandler.js` | 6% | 7% | 0% | 4% | ❌ |
-| `application/handlers/PortStreamingHandler.js` | 11% | 8% | 0% | 6% | ❌ |
+| `application/handlers/PortStreamingHandler.js` | 33% | 32% | 14% | 26% | ❌ |
 | `application/handlers/ProcessTodoListHandler.js` | 20% | 23% | 4% | 16% | ❌ |
 | `application/handlers/SendMessageHandler.js` | 43% | 16% | 3% | 21% | ❌ |
-| `application/handlers/StartStreamingHandler.js` | 0% | 0% | 0% | 0% | ❌ |
-| `application/handlers/StopStreamingHandler.js` | 0% | 0% | 0% | 0% | ❌ |
-| `application/handlers/UpdateTestStatusHandler.js` | 50% | 32% | 22% | 35% | ❌ |
-| `application/handlers/analyze/AdvancedAnalysisHandler.js` | 93% | 88% | 89% | 90% | ✅ |
+| `application/handlers/StartStreamingHandler.js` | 50% | 67% | 22% | 46% | ❌ |
+| `application/handlers/StopStreamingHandler.js` | 25% | 17% | 0% | 14% | ❌ |
+| `application/handlers/TestCorrectionHandler.js` | 0% | 0% | 0% | 0% | ❌ |
+| `application/handlers/UpdateTestStatusHandler.js` | 25% | 14% | 0% | 13% | ❌ |
+| `application/handlers/analyze/AdvancedAnalysisHandler.js` | 93% | 100% | 97% | 97% | ✅ |
 | `application/handlers/analyze/AnalyzeArchitectureHandler.js` | 8% | 8% | 1% | 6% | ❌ |
 | `application/handlers/analyze/AnalyzeCodeQualityHandler.js` | 9% | 7% | 1% | 6% | ❌ |
 | `application/handlers/analyze/AnalyzeDependenciesHandler.js` | 10% | 9% | 1% | 7% | ❌ |
@@ -97,20 +101,27 @@
 | `application/queries/GetTaskExecutionQuery.js` | 0% | 0% | 0% | 0% | ❌ |
 | `application/queries/GetTaskSuggestionsQuery.js` | 0% | 0% | 0% | 0% | ❌ |
 | `application/queries/GetTasksQuery.js` | 0% | 0% | 0% | 0% | ❌ |
+| `cli/TaskCLI.js` | 0% | 0% | 0% | 0% | ❌ |
+| `cli/TaskCommands.js` | 0% | 0% | 0% | 0% | ❌ |
+| `cli/TaskInteractiveCLI.js` | 0% | 0% | 0% | 0% | ❌ |
+| `cli/TaskProgressUI.js` | 0% | 0% | 0% | 0% | ❌ |
+| `cli/index.js` | 0% | 0% | 0% | 0% | ❌ |
 | `domain/entities/AnalysisResult.js` | 0% | 9% | 0% | 3% | ❌ |
-| `domain/entities/ChatMessage.js` | 0% | 6% | 0% | 2% | ❌ |
+| `domain/entities/ChatMessage.js` | 24% | 47% | 43% | 38% | ❌ |
 | `domain/entities/ChatSession.js` | 0% | 6% | 0% | 2% | ❌ |
+| `domain/entities/CoverageTarget.js` | 0% | 0% | 0% | 0% | ❌ |
 | `domain/entities/FrameMetrics.js` | 0% | 1% | 0% | 0% | ❌ |
 | `domain/entities/GeneratedScript.js` | 0% | 2% | 0% | 1% | ❌ |
 | `domain/entities/ProjectAnalysis.js` | 0% | 9% | 0% | 3% | ❌ |
-| `domain/entities/StreamingPort.js` | 11% | 25% | 12% | 16% | ❌ |
-| `domain/entities/StreamingSession.js` | 0% | 1% | 0% | 0% | ❌ |
-| `domain/entities/Task.js` | 69% | 63% | 55% | 62% | ⚠️ |
+| `domain/entities/StreamingPort.js` | 72% | 71% | 49% | 64% | ⚠️ |
+| `domain/entities/StreamingSession.js` | 57% | 49% | 46% | 51% | ⚠️ |
+| `domain/entities/Task.js` | 69% | 60% | 56% | 62% | ⚠️ |
 | `domain/entities/TaskExecution.js` | 0% | 2% | 0% | 1% | ❌ |
 | `domain/entities/TaskSession.js` | 0% | 2% | 0% | 1% | ❌ |
 | `domain/entities/TaskSuggestion.js` | 0% | 4% | 0% | 1% | ❌ |
 | `domain/entities/TaskTemplate.js` | 0% | 3% | 0% | 1% | ❌ |
-| `domain/entities/TestMetadata.js` | 95% | 98% | 86% | 93% | ✅ |
+| `domain/entities/TestCorrection.js` | 0% | 0% | 0% | 0% | ❌ |
+| `domain/entities/TestMetadata.js` | 95% | 98% | 84% | 92% | ✅ |
 | `domain/entities/TodoTask.js` | 0% | 2% | 0% | 1% | ❌ |
 | `domain/entities/User.js` | 0% | 6% | 0% | 2% | ❌ |
 | `domain/entities/UserSession.js` | 0% | 6% | 0% | 2% | ❌ |
@@ -122,15 +133,16 @@
 | `domain/repositories/TaskRepository.js` | 0% | 9% | 0% | 3% | ❌ |
 | `domain/repositories/TaskSuggestionRepository.js` | 0% | 4% | 0% | 1% | ❌ |
 | `domain/repositories/TaskTemplateRepository.js` | 0% | 5% | 0% | 2% | ❌ |
-| `domain/repositories/TestMetadataRepository.js` | 74% | 69% | 53% | 65% | ⚠️ |
+| `domain/repositories/TestMetadataRepository.js` | 16% | 23% | 20% | 20% | ❌ |
 | `domain/repositories/UserRepository.js` | 0% | 8% | 0% | 3% | ❌ |
 | `domain/repositories/UserSessionRepository.js` | 0% | 7% | 0% | 2% | ❌ |
 | `domain/repositories/index.js` | 100% | 100% | 100% | 100% | ✅ |
-| `domain/services/AdvancedAnalysisService.js` | 83% | 68% | 57% | 69% | ⚠️ |
+| `domain/services/AdvancedAnalysisService.js` | 96% | 92% | 82% | 90% | ✅ |
 | `domain/services/AnalysisOutputService.js` | 3% | 16% | 0% | 6% | ❌ |
 | `domain/services/ArchitectureService.js` | 4% | 8% | 8% | 7% | ❌ |
 | `domain/services/AuthService.js` | 9% | 11% | 0% | 7% | ❌ |
 | `domain/services/CodeQualityService.js` | 7% | 12% | 11% | 10% | ❌ |
+| `domain/services/CoverageAnalyzerService.js` | 0% | 0% | 0% | 0% | ❌ |
 | `domain/services/CursorIDEService.js` | 3% | 7% | 1% | 4% | ❌ |
 | `domain/services/FileSystemService.js` | 13% | 9% | 5% | 9% | ❌ |
 | `domain/services/IDEMirrorService.js` | 3% | 3% | 0% | 2% | ❌ |
@@ -152,12 +164,15 @@
 | `domain/services/TaskService.js` | 3% | 4% | 1% | 3% | ❌ |
 | `domain/services/TaskSuggestionService.js` | 0% | 3% | 0% | 1% | ❌ |
 | `domain/services/TaskValidationService.js` | 2% | 5% | 0% | 2% | ❌ |
-| `domain/services/TerminalLogCaptureService.js` | 100% | 87% | 80% | 89% | ✅ |
+| `domain/services/TerminalLogCaptureService.js` | 100% | 87% | 83% | 90% | ✅ |
 | `domain/services/TerminalLogReader.js` | 38% | 33% | 21% | 31% | ❌ |
-| `domain/services/TestManagementService.js` | 42% | 58% | 62% | 54% | ⚠️ |
-| `domain/services/VSCodeService.js` | 55% | 50% | 36% | 47% | ❌ |
-| `domain/services/WorkflowGitService.js` | 0% | 0% | 0% | 0% | ❌ |
-| `domain/services/WorkflowOrchestrationService.js` | 0% | 0% | 0% | 0% | ❌ |
+| `domain/services/TestCorrectionService.js` | 0% | 0% | 0% | 0% | ❌ |
+| `domain/services/TestFixTaskGenerator.js` | 9% | 4% | 0% | 4% | ❌ |
+| `domain/services/TestManagementService.js` | 9% | 25% | 35% | 23% | ❌ |
+| `domain/services/TestReportParser.js` | 10% | 3% | 0% | 4% | ❌ |
+| `domain/services/VSCodeService.js` | 55% | 56% | 38% | 50% | ⚠️ |
+| `domain/services/WorkflowGitService.js` | 6% | 5% | 4% | 5% | ❌ |
+| `domain/services/WorkflowOrchestrationService.js` | 1% | 3% | 3% | 2% | ❌ |
 | `domain/services/index.js` | 100% | 100% | 100% | 100% | ✅ |
 | `domain/services/analysis-output/constants.js` | 100% | 100% | 100% | 100% | ✅ |
 | `domain/services/analysis-output/file-system-service.js` | 20% | 26% | 0% | 15% | ❌ |
@@ -167,19 +182,20 @@
 | `domain/services/analysis-output/report-generator.js` | 8% | 5% | 0% | 4% | ❌ |
 | `domain/services/analysis-output/security-aggregator.js` | 0% | 5% | 0% | 2% | ❌ |
 | `domain/services/analysis-output/utils.js` | 0% | 6% | 0% | 2% | ❌ |
-| `domain/services/auto-finish/AutoFinishSystem.js` | 17% | 22% | 3% | 14% | ❌ |
-| `domain/services/auto-finish/ConfirmationSystem.js` | 19% | 8% | 0% | 9% | ❌ |
-| `domain/services/auto-finish/FallbackDetection.js` | 16% | 9% | 0% | 8% | ❌ |
-| `domain/services/auto-finish/TaskSequencer.js` | 10% | 5% | 0% | 5% | ❌ |
-| `domain/services/auto-finish/TodoParser.js` | 14% | 9% | 0% | 8% | ❌ |
+| `domain/services/auto-finish/AutoFinishSystem.js` | 57% | 73% | 54% | 61% | ⚠️ |
+| `domain/services/auto-finish/ConfirmationSystem.js` | 33% | 25% | 11% | 23% | ❌ |
+| `domain/services/auto-finish/FallbackDetection.js` | 58% | 49% | 36% | 48% | ❌ |
+| `domain/services/auto-finish/TaskSequencer.js` | 67% | 75% | 55% | 66% | ⚠️ |
+| `domain/services/auto-finish/TodoParser.js` | 43% | 51% | 28% | 41% | ❌ |
+| `domain/services/auto-test/AutoTestFixSystem.js` | 6% | 8% | 0% | 5% | ❌ |
 | `domain/services/chat/ChatHistoryExtractor.js` | 14% | 7% | 0% | 7% | ❌ |
 | `domain/services/chat/ChatMessageHandler.js` | 17% | 4% | 0% | 7% | ❌ |
 | `domain/services/dev-server/CDPWorkspaceDetector.js` | 0% | 0% | 0% | 0% | ❌ |
 | `domain/services/dev-server/PackageJsonAnalyzer.js` | 11% | 4% | 0% | 5% | ❌ |
-| `domain/services/ide-mirror/CompressionEngine.js` | 17% | 16% | 4% | 12% | ❌ |
-| `domain/services/ide-mirror/FrameBuffer.js` | 14% | 13% | 10% | 12% | ❌ |
+| `domain/services/ide-mirror/CompressionEngine.js` | 33% | 20% | 4% | 19% | ❌ |
+| `domain/services/ide-mirror/FrameBuffer.js` | 45% | 42% | 38% | 42% | ❌ |
 | `domain/services/ide-mirror/RegionDetector.js` | 7% | 10% | 19% | 12% | ❌ |
-| `domain/services/ide-mirror/ScreenshotStreamingService.js` | 38% | 25% | 21% | 28% | ❌ |
+| `domain/services/ide-mirror/ScreenshotStreamingService.js` | 65% | 64% | 60% | 63% | ⚠️ |
 | `domain/services/terminal/TerminalContentExtractor.js` | 0% | 0% | 0% | 0% | ❌ |
 | `domain/services/terminal/TerminalMonitor.js` | 7% | 4% | 0% | 4% | ❌ |
 | `domain/services/terminal/TerminalUrlExtractor.js` | 0% | 0% | 0% | 0% | ❌ |
@@ -192,35 +208,36 @@
 | `domain/value-objects/ProjectType.js` | 0% | 16% | 0% | 5% | ❌ |
 | `domain/value-objects/TaskPriority.js` | 57% | 73% | 40% | 57% | ⚠️ |
 | `domain/value-objects/TaskStatus.js` | 73% | 84% | 0% | 52% | ⚠️ |
-| `domain/value-objects/TaskType.js` | 36% | 64% | 67% | 56% | ⚠️ |
+| `domain/value-objects/TaskType.js` | 16% | 73% | 3% | 31% | ❌ |
 | `domain/value-objects/index.js` | 100% | 100% | 100% | 100% | ✅ |
 | `infrastructure/auth/AuthMiddleware.js` | 11% | 4% | 0% | 5% | ❌ |
-| `infrastructure/auto/AutoSecurityManager.js` | 60% | 56% | 21% | 46% | ❌ |
+| `infrastructure/auto/AutoSecurityManager.js` | 67% | 58% | 21% | 49% | ❌ |
 | `infrastructure/database/DatabaseConnection.js` | 65% | 47% | 38% | 50% | ⚠️ |
 | `infrastructure/database/InMemoryAnalysisRepository.js` | 7% | 14% | 0% | 7% | ❌ |
 | `infrastructure/database/InMemoryChatRepository.js` | 7% | 19% | 0% | 9% | ❌ |
 | `infrastructure/database/InMemoryTaskExecutionRepository.js` | 3% | 2% | 0% | 2% | ❌ |
 | `infrastructure/database/InMemoryTaskRepository.js` | 0% | 5% | 0% | 2% | ❌ |
 | `infrastructure/database/PostgreSQLProjectAnalysisRepository.js` | 6% | 5% | 0% | 4% | ❌ |
-| `infrastructure/database/PostgreSQLTaskRepository.js` | 14% | 14% | 0% | 9% | ❌ |
+| `infrastructure/database/PostgreSQLTaskRepository.js` | 14% | 13% | 0% | 9% | ❌ |
 | `infrastructure/database/PostgreSQLUserRepository.js` | 9% | 6% | 0% | 5% | ❌ |
 | `infrastructure/database/PostgreSQLUserSessionRepository.js` | 8% | 7% | 0% | 5% | ❌ |
 | `infrastructure/database/SQLiteTaskExecutionRepository.js` | 0% | 0% | 0% | 0% | ❌ |
-| `infrastructure/database/SQLiteTaskRepository.js` | 3% | 3% | 0% | 2% | ❌ |
+| `infrastructure/database/SQLiteTaskRepository.js` | 9% | 10% | 12% | 10% | ❌ |
 | `infrastructure/database/SQLiteTaskSuggestionRepository.js` | 0% | 0% | 0% | 0% | ❌ |
 | `infrastructure/database/SQLiteTaskTemplateRepository.js` | 0% | 0% | 0% | 0% | ❌ |
-| `infrastructure/database/StreamingSessionRepository.js` | 0% | 0% | 0% | 0% | ❌ |
-| `infrastructure/database/TaskDatabase.js` | 79% | 60% | 39% | 59% | ⚠️ |
+| `infrastructure/database/StreamingSessionRepository.js` | 25% | 21% | 14% | 20% | ❌ |
+| `infrastructure/database/TaskDatabase.js` | 100% | 72% | 46% | 73% | ⚠️ |
 | `infrastructure/database/TaskSessionRepository.js` | 7% | 9% | 2% | 6% | ❌ |
 | `infrastructure/di/ApplicationIntegration.js` | 0% | 0% | 0% | 0% | ❌ |
 | `infrastructure/di/ProjectContextService.js` | 56% | 42% | 32% | 43% | ❌ |
 | `infrastructure/di/ServiceContainer.js` | 53% | 51% | 41% | 48% | ❌ |
-| `infrastructure/di/ServiceRegistry.js` | 90% | 95% | 100% | 95% | ✅ |
+| `infrastructure/di/ServiceRegistry.js` | 91% | 95% | 100% | 95% | ✅ |
 | `infrastructure/external/AIIntegrationManager.js` | 0% | 0% | 0% | 0% | ❌ |
 | `infrastructure/external/AIService.js` | 55% | 52% | 37% | 48% | ❌ |
 | `infrastructure/external/ArchitectureAnalyzer.js` | 3% | 2% | 0% | 2% | ❌ |
-| `infrastructure/external/BrowserManager.js` | 13% | 8% | 6% | 9% | ❌ |
+| `infrastructure/external/BrowserManager.js` | 9% | 6% | 4% | 6% | ❌ |
 | `infrastructure/external/CodeQualityAnalyzer.js` | 5% | 3% | 0% | 3% | ❌ |
+| `infrastructure/external/CoverageAnalyzer.js` | 8% | 5% | 0% | 4% | ❌ |
 | `infrastructure/external/DependencyAnalyzer.js` | 8% | 5% | 0% | 4% | ❌ |
 | `infrastructure/external/DockerService.js` | 0% | 0% | 0% | 0% | ❌ |
 | `infrastructure/external/FileSystemService.js` | 0% | 0% | 0% | 0% | ❌ |
@@ -234,7 +251,9 @@
 | `infrastructure/external/SecurityAnalyzer.js` | 5% | 3% | 0% | 3% | ❌ |
 | `infrastructure/external/TaskExecutionEngine.js` | 56% | 55% | 17% | 43% | ❌ |
 | `infrastructure/external/TechStackAnalyzer.js` | 6% | 3% | 0% | 3% | ❌ |
-| `infrastructure/external/VSCodeDetector.js` | 67% | 66% | 65% | 66% | ⚠️ |
+| `infrastructure/external/TestAnalyzer.js` | 11% | 7% | 0% | 6% | ❌ |
+| `infrastructure/external/TestFixer.js` | 11% | 6% | 0% | 6% | ❌ |
+| `infrastructure/external/VSCodeDetector.js` | 40% | 40% | 18% | 33% | ❌ |
 | `infrastructure/external/VSCodeExtensionManager.js` | 0% | 6% | 0% | 2% | ❌ |
 | `infrastructure/external/VSCodeStarter.js` | 12% | 16% | 0% | 9% | ❌ |
 | `infrastructure/external/task-execution/index.js` | 100% | 0% | 100% | 67% | ⚠️ |
@@ -252,8 +271,9 @@
 | `infrastructure/external/task-execution/utils/FileUtils.js` | 7% | 8% | 0% | 5% | ❌ |
 | `infrastructure/external/task-execution/utils/RefactoringUtils.js` | 8% | 7% | 0% | 5% | ❌ |
 | `infrastructure/external/task-execution/validators/TaskValidator.js` | 33% | 12% | 4% | 16% | ❌ |
+| `infrastructure/logging/logger.js` | 0% | 0% | 0% | 0% | ❌ |
 | `infrastructure/messaging/CommandBus.js` | 50% | 59% | 50% | 53% | ⚠️ |
-| `infrastructure/messaging/EventBus.js` | 56% | 44% | 30% | 43% | ❌ |
+| `infrastructure/messaging/EventBus.js` | 67% | 63% | 40% | 57% | ⚠️ |
 | `infrastructure/messaging/QueryBus.js` | 38% | 48% | 13% | 33% | ❌ |
 | `infrastructure/security/LogEncryptionService.js` | 33% | 42% | 50% | 42% | ❌ |
 | `infrastructure/security/LogPermissionManager.js` | 45% | 29% | 28% | 34% | ❌ |
@@ -264,55 +284,58 @@
 | `infrastructure/strategies/single-repo/services/dependencyAnalyzer.js` | 7% | 7% | 0% | 5% | ❌ |
 | `infrastructure/strategies/single-repo/services/deploymentAnalyzer.js` | 50% | 19% | 0% | 23% | ❌ |
 | `infrastructure/strategies/single-repo/services/lintingAnalyzer.js` | 50% | 24% | 0% | 25% | ❌ |
-| `infrastructure/strategies/single-repo/services/optimizationService.js` | 11% | 13% | 0% | 8% | ❌ |
-| `infrastructure/strategies/single-repo/services/performanceAnalyzer.js` | 25% | 21% | 0% | 15% | ❌ |
-| `infrastructure/strategies/single-repo/services/projectTypeAnalyzer.js` | 20% | 12% | 0% | 11% | ❌ |
+| `infrastructure/strategies/single-repo/services/optimizationService.js` | 100% | 100% | 100% | 100% | ✅ |
+| `infrastructure/strategies/single-repo/services/performanceAnalyzer.js` | 100% | 88% | 88% | 92% | ✅ |
+| `infrastructure/strategies/single-repo/services/projectTypeAnalyzer.js` | 100% | 100% | 100% | 100% | ✅ |
 | `infrastructure/strategies/single-repo/services/recommendationsService.js` | 50% | 12% | 0% | 21% | ❌ |
-| `infrastructure/strategies/single-repo/services/securityAnalyzer.js` | 25% | 21% | 0% | 15% | ❌ |
+| `infrastructure/strategies/single-repo/services/securityAnalyzer.js` | 100% | 91% | 100% | 97% | ✅ |
 | `infrastructure/strategies/single-repo/services/structureAnalyzer.js` | 50% | 35% | 0% | 28% | ❌ |
-| `infrastructure/strategies/single-repo/services/testingAnalyzer.js` | 17% | 21% | 0% | 13% | ❌ |
-| `infrastructure/strategies/single-repo/utils/directoryScanner.js` | 25% | 18% | 0% | 14% | ❌ |
-| `infrastructure/strategies/single-repo/utils/fileUtils.js` | 14% | 10% | 0% | 8% | ❌ |
+| `infrastructure/strategies/single-repo/services/testingAnalyzer.js` | 100% | 91% | 81% | 91% | ✅ |
+| `infrastructure/strategies/single-repo/utils/directoryScanner.js` | 100% | 100% | 95% | 98% | ✅ |
+| `infrastructure/strategies/single-repo/utils/fileUtils.js` | 100% | 100% | 90% | 97% | ✅ |
 | `infrastructure/strategies/single-repo/validators/repositoryTypeValidator.js` | 50% | 24% | 0% | 25% | ❌ |
-| `infrastructure/templates/AIPrompts.js` | 0% | 0% | 0% | 0% | ❌ |
-| `infrastructure/templates/ScriptTemplates.js` | 0% | 0% | 0% | 0% | ❌ |
-| `infrastructure/templates/TaskTemplates.js` | 0% | 0% | 0% | 0% | ❌ |
+| `infrastructure/templates/AIPrompts.js` | 100% | 100% | 94% | 98% | ✅ |
+| `infrastructure/templates/ScriptTemplates.js` | 100% | 95% | 83% | 93% | ✅ |
+| `infrastructure/templates/TaskTemplates.js` | 100% | 100% | 100% | 100% | ✅ |
 | `infrastructure/templates/modules/automationTemplates.js` | 0% | 0% | 100% | 33% | ❌ |
 | `infrastructure/templates/modules/buildTemplates.js` | 0% | 0% | 100% | 33% | ❌ |
-| `infrastructure/templates/modules/constants.js` | 100% | 0% | 100% | 67% | ⚠️ |
+| `infrastructure/templates/modules/constants.js` | 100% | 100% | 100% | 100% | ✅ |
 | `infrastructure/templates/modules/databaseTemplates.js` | 0% | 0% | 100% | 33% | ❌ |
 | `infrastructure/templates/modules/deployTemplates.js` | 0% | 0% | 100% | 33% | ❌ |
 | `infrastructure/templates/modules/developmentTemplates.js` | 0% | 0% | 100% | 33% | ❌ |
-| `infrastructure/templates/modules/generator.js` | 0% | 0% | 0% | 0% | ❌ |
+| `infrastructure/templates/modules/generator.js` | 100% | 100% | 96% | 99% | ✅ |
 | `infrastructure/templates/modules/index.js` | 100% | 0% | 100% | 67% | ⚠️ |
 | `infrastructure/templates/modules/maintenanceTemplates.js` | 0% | 0% | 100% | 33% | ❌ |
 | `infrastructure/templates/modules/monitoringTemplates.js` | 0% | 0% | 100% | 33% | ❌ |
-| `infrastructure/templates/modules/search.js` | 0% | 0% | 0% | 0% | ❌ |
+| `infrastructure/templates/modules/search.js` | 100% | 100% | 100% | 100% | ✅ |
 | `infrastructure/templates/modules/securityTemplates.js` | 0% | 0% | 100% | 33% | ❌ |
 | `infrastructure/templates/modules/testTemplates.js` | 0% | 0% | 100% | 33% | ❌ |
 | `infrastructure/templates/modules/utilityTemplates.js` | 0% | 0% | 100% | 33% | ❌ |
-| `infrastructure/templates/modules/validation.js` | 0% | 0% | 0% | 0% | ❌ |
-| `presentation/api/AnalysisController.js` | 7% | 7% | 4% | 6% | ❌ |
-| `presentation/api/AuthController.js` | 10% | 7% | 0% | 6% | ❌ |
-| `presentation/api/AutoFinishController.js` | 8% | 5% | 2% | 5% | ❌ |
-| `presentation/api/AutoModeController.js` | 13% | 6% | 1% | 7% | ❌ |
-| `presentation/api/ChatController.js` | 7% | 8% | 0% | 5% | ❌ |
-| `presentation/api/CodeExplorerController.js` | 0% | 0% | 0% | 0% | ❌ |
-| `presentation/api/ContentLibraryController.js` | 4% | 3% | 0% | 2% | ❌ |
-| `presentation/api/DocumentationController.js` | 2% | 2% | 0% | 1% | ❌ |
-| `presentation/api/GitController.js` | 10% | 3% | 4% | 6% | ❌ |
+| `infrastructure/templates/modules/validation.js` | 100% | 100% | 100% | 100% | ✅ |
+| `presentation/api/AnalysisController.js` | 87% | 98% | 82% | 89% | ✅ |
+| `presentation/api/AuthController.js` | 100% | 100% | 100% | 100% | ✅ |
+| `presentation/api/AutoFinishController.js` | 100% | 98% | 92% | 97% | ✅ |
+| `presentation/api/AutoModeController.js` | 100% | 100% | 91% | 97% | ✅ |
+| `presentation/api/ChatController.js` | 100% | 100% | 88% | 96% | ✅ |
+| `presentation/api/CodeExplorerController.js` | 100% | 100% | 70% | 90% | ✅ |
+| `presentation/api/ContentLibraryController.js` | 70% | 62% | 35% | 56% | ⚠️ |
+| `presentation/api/DocumentationController.js` | 88% | 88% | 74% | 83% | ✅ |
+| `presentation/api/GitController.js` | 10% | 3% | 2% | 5% | ❌ |
 | `presentation/api/IDEController.js` | 2% | 3% | 0% | 2% | ❌ |
 | `presentation/api/IDEMirrorController.js` | 8% | 21% | 7% | 12% | ❌ |
 | `presentation/api/ProjectAnalysisController.js` | 8% | 4% | 0% | 4% | ❌ |
 | `presentation/api/ScriptGenerationController.js` | 0% | 0% | 0% | 0% | ❌ |
-| `presentation/api/StreamingController.js` | 9% | 6% | 0% | 5% | ❌ |
+| `presentation/api/StreamingController.js` | 18% | 16% | 24% | 19% | ❌ |
 | `presentation/api/TaskAnalysisController.js` | 0% | 0% | 0% | 0% | ❌ |
 | `presentation/api/TaskController.js` | 4% | 5% | 0% | 3% | ❌ |
 | `presentation/api/TaskExecutionController.js` | 0% | 0% | 0% | 0% | ❌ |
 | `presentation/api/TaskSuggestionController.js` | 0% | 0% | 0% | 0% | ❌ |
 | `presentation/api/VibeCoderAutoRefactorController.js` | 50% | 29% | 25% | 35% | ❌ |
+| `presentation/api/controllers/AutoTestFixController.js` | 8% | 14% | 3% | 8% | ❌ |
+| `presentation/api/controllers/TestCorrectionController.js` | 0% | 0% | 0% | 0% | ❌ |
 | `presentation/api/controllers/TestManagementController.js` | 0% | 0% | 0% | 0% | ❌ |
 | `presentation/api/handlers/DocsTasksHandler.js` | 62% | 66% | 62% | 63% | ⚠️ |
+| `presentation/api/routes/test-correction.js` | 0% | 0% | 0% | 0% | ❌ |
 | `presentation/websocket/TaskNotificationService.js` | 0% | 0% | 0% | 0% | ❌ |
 | `presentation/websocket/TaskProgressTracker.js` | 0% | 0% | 0% | 0% | ❌ |
 | `presentation/websocket/TaskWebSocket.js` | 0% | 0% | 0% | 0% | ❌ |
@@ -323,36 +346,40 @@
 ### 🔴 High Priority
 
 - **Application.js** (40% → 80%)
-  - Current: Funcs 10%, Lines 80%, Branches 29%
+  - Current: Funcs 10%, Lines 81%, Branches 29%
   - Task: Improve test coverage for Application.js
-
-- **jest.config.js** (33% → 80%)
-  - Current: Funcs 100%, Lines 0%, Branches 0%
-  - Task: Improve test coverage for jest.config.js
 
 - **server.js** (0% → 80%)
   - Current: Funcs 0%, Lines 0%, Branches 0%
   - Task: Improve test coverage for server.js
 
-- **application/commands/PortStreamingCommand.js** (1% → 80%)
-  - Current: Funcs 0%, Lines 3%, Branches 0%
-  - Task: Improve test coverage for PortStreamingCommand.js
+- **application/commands/AutoRefactorCommand.js** (0% → 80%)
+  - Current: Funcs 0%, Lines 0%, Branches 0%
+  - Task: Improve test coverage for AutoRefactorCommand.js
 
-- **application/commands/ProcessTodoListCommand.js** (1% → 80%)
-  - Current: Funcs 0%, Lines 4%, Branches 0%
-  - Task: Improve test coverage for ProcessTodoListCommand.js
+- **application/commands/PortStreamingCommand.js** (49% → 80%)
+  - Current: Funcs 36%, Lines 50%, Branches 62%
+  - Task: Improve test coverage for PortStreamingCommand.js
 
 - **application/commands/SendMessageCommand.js** (4% → 80%)
   - Current: Funcs 0%, Lines 13%, Branches 0%
   - Task: Improve test coverage for SendMessageCommand.js
 
-- **application/commands/StartStreamingCommand.js** (0% → 80%)
-  - Current: Funcs 0%, Lines 0%, Branches 0%
+- **application/commands/StartStreamingCommand.js** (1% → 80%)
+  - Current: Funcs 0%, Lines 4%, Branches 0%
   - Task: Improve test coverage for StartStreamingCommand.js
 
-- **application/commands/StopStreamingCommand.js** (0% → 80%)
-  - Current: Funcs 0%, Lines 0%, Branches 0%
+- **application/commands/StopStreamingCommand.js** (2% → 80%)
+  - Current: Funcs 0%, Lines 7%, Branches 0%
   - Task: Improve test coverage for StopStreamingCommand.js
+
+- **application/commands/TestCorrectionCommand.js** (2% → 80%)
+  - Current: Funcs 0%, Lines 5%, Branches 0%
+  - Task: Improve test coverage for TestCorrectionCommand.js
+
+- **application/commands/UpdateTestStatusCommand.js** (2% → 80%)
+  - Current: Funcs 0%, Lines 5%, Branches 0%
+  - Task: Improve test coverage for UpdateTestStatusCommand.js
 
 - **application/commands/analyze/AnalyzeArchitectureCommand.js** (1% → 80%)
   - Current: Funcs 0%, Lines 2%, Branches 0%
@@ -426,16 +453,20 @@
   - Current: Funcs 0%, Lines 1%, Branches 0%
   - Task: Improve test coverage for VibeCoderRefactorCommand.js
 
-- **application/handlers/CreateTaskHandler.js** (26% → 80%)
-  - Current: Funcs 33%, Lines 34%, Branches 12%
+- **application/handlers/AutoTestFixHandler.js** (0% → 80%)
+  - Current: Funcs 0%, Lines 0%, Branches 0%
+  - Task: Improve test coverage for AutoTestFixHandler.js
+
+- **application/handlers/CreateTaskHandler.js** (33% → 80%)
+  - Current: Funcs 33%, Lines 43%, Branches 22%
   - Task: Improve test coverage for CreateTaskHandler.js
 
 - **application/handlers/GetChatHistoryHandler.js** (4% → 80%)
   - Current: Funcs 6%, Lines 7%, Branches 0%
   - Task: Improve test coverage for GetChatHistoryHandler.js
 
-- **application/handlers/PortStreamingHandler.js** (6% → 80%)
-  - Current: Funcs 11%, Lines 8%, Branches 0%
+- **application/handlers/PortStreamingHandler.js** (26% → 80%)
+  - Current: Funcs 33%, Lines 32%, Branches 14%
   - Task: Improve test coverage for PortStreamingHandler.js
 
 - **application/handlers/ProcessTodoListHandler.js** (16% → 80%)
@@ -446,16 +477,20 @@
   - Current: Funcs 43%, Lines 16%, Branches 3%
   - Task: Improve test coverage for SendMessageHandler.js
 
-- **application/handlers/StartStreamingHandler.js** (0% → 80%)
-  - Current: Funcs 0%, Lines 0%, Branches 0%
+- **application/handlers/StartStreamingHandler.js** (46% → 80%)
+  - Current: Funcs 50%, Lines 67%, Branches 22%
   - Task: Improve test coverage for StartStreamingHandler.js
 
-- **application/handlers/StopStreamingHandler.js** (0% → 80%)
-  - Current: Funcs 0%, Lines 0%, Branches 0%
+- **application/handlers/StopStreamingHandler.js** (14% → 80%)
+  - Current: Funcs 25%, Lines 17%, Branches 0%
   - Task: Improve test coverage for StopStreamingHandler.js
 
-- **application/handlers/UpdateTestStatusHandler.js** (35% → 80%)
-  - Current: Funcs 50%, Lines 32%, Branches 22%
+- **application/handlers/TestCorrectionHandler.js** (0% → 80%)
+  - Current: Funcs 0%, Lines 0%, Branches 0%
+  - Task: Improve test coverage for TestCorrectionHandler.js
+
+- **application/handlers/UpdateTestStatusHandler.js** (13% → 80%)
+  - Current: Funcs 25%, Lines 14%, Branches 0%
   - Task: Improve test coverage for UpdateTestStatusHandler.js
 
 - **application/handlers/analyze/AnalyzeArchitectureHandler.js** (6% → 80%)
@@ -622,17 +657,41 @@
   - Current: Funcs 0%, Lines 0%, Branches 0%
   - Task: Improve test coverage for GetTasksQuery.js
 
+- **cli/TaskCLI.js** (0% → 80%)
+  - Current: Funcs 0%, Lines 0%, Branches 0%
+  - Task: Improve test coverage for TaskCLI.js
+
+- **cli/TaskCommands.js** (0% → 80%)
+  - Current: Funcs 0%, Lines 0%, Branches 0%
+  - Task: Improve test coverage for TaskCommands.js
+
+- **cli/TaskInteractiveCLI.js** (0% → 80%)
+  - Current: Funcs 0%, Lines 0%, Branches 0%
+  - Task: Improve test coverage for TaskInteractiveCLI.js
+
+- **cli/TaskProgressUI.js** (0% → 80%)
+  - Current: Funcs 0%, Lines 0%, Branches 0%
+  - Task: Improve test coverage for TaskProgressUI.js
+
+- **cli/index.js** (0% → 80%)
+  - Current: Funcs 0%, Lines 0%, Branches 0%
+  - Task: Improve test coverage for index.js
+
 - **domain/entities/AnalysisResult.js** (3% → 80%)
   - Current: Funcs 0%, Lines 9%, Branches 0%
   - Task: Improve test coverage for AnalysisResult.js
 
-- **domain/entities/ChatMessage.js** (2% → 80%)
-  - Current: Funcs 0%, Lines 6%, Branches 0%
+- **domain/entities/ChatMessage.js** (38% → 80%)
+  - Current: Funcs 24%, Lines 47%, Branches 43%
   - Task: Improve test coverage for ChatMessage.js
 
 - **domain/entities/ChatSession.js** (2% → 80%)
   - Current: Funcs 0%, Lines 6%, Branches 0%
   - Task: Improve test coverage for ChatSession.js
+
+- **domain/entities/CoverageTarget.js** (0% → 80%)
+  - Current: Funcs 0%, Lines 0%, Branches 0%
+  - Task: Improve test coverage for CoverageTarget.js
 
 - **domain/entities/FrameMetrics.js** (0% → 80%)
   - Current: Funcs 0%, Lines 1%, Branches 0%
@@ -645,14 +704,6 @@
 - **domain/entities/ProjectAnalysis.js** (3% → 80%)
   - Current: Funcs 0%, Lines 9%, Branches 0%
   - Task: Improve test coverage for ProjectAnalysis.js
-
-- **domain/entities/StreamingPort.js** (16% → 80%)
-  - Current: Funcs 11%, Lines 25%, Branches 12%
-  - Task: Improve test coverage for StreamingPort.js
-
-- **domain/entities/StreamingSession.js** (0% → 80%)
-  - Current: Funcs 0%, Lines 1%, Branches 0%
-  - Task: Improve test coverage for StreamingSession.js
 
 - **domain/entities/TaskExecution.js** (1% → 80%)
   - Current: Funcs 0%, Lines 2%, Branches 0%
@@ -669,6 +720,10 @@
 - **domain/entities/TaskTemplate.js** (1% → 80%)
   - Current: Funcs 0%, Lines 3%, Branches 0%
   - Task: Improve test coverage for TaskTemplate.js
+
+- **domain/entities/TestCorrection.js** (0% → 80%)
+  - Current: Funcs 0%, Lines 0%, Branches 0%
+  - Task: Improve test coverage for TestCorrection.js
 
 - **domain/entities/TodoTask.js** (1% → 80%)
   - Current: Funcs 0%, Lines 2%, Branches 0%
@@ -710,6 +765,10 @@
   - Current: Funcs 0%, Lines 5%, Branches 0%
   - Task: Improve test coverage for TaskTemplateRepository.js
 
+- **domain/repositories/TestMetadataRepository.js** (20% → 80%)
+  - Current: Funcs 16%, Lines 23%, Branches 20%
+  - Task: Improve test coverage for TestMetadataRepository.js
+
 - **domain/repositories/UserRepository.js** (3% → 80%)
   - Current: Funcs 0%, Lines 8%, Branches 0%
   - Task: Improve test coverage for UserRepository.js
@@ -733,6 +792,10 @@
 - **domain/services/CodeQualityService.js** (10% → 80%)
   - Current: Funcs 7%, Lines 12%, Branches 11%
   - Task: Improve test coverage for CodeQualityService.js
+
+- **domain/services/CoverageAnalyzerService.js** (0% → 80%)
+  - Current: Funcs 0%, Lines 0%, Branches 0%
+  - Task: Improve test coverage for CoverageAnalyzerService.js
 
 - **domain/services/CursorIDEService.js** (4% → 80%)
   - Current: Funcs 3%, Lines 7%, Branches 1%
@@ -818,16 +881,28 @@
   - Current: Funcs 38%, Lines 33%, Branches 21%
   - Task: Improve test coverage for TerminalLogReader.js
 
-- **domain/services/VSCodeService.js** (47% → 80%)
-  - Current: Funcs 55%, Lines 50%, Branches 36%
-  - Task: Improve test coverage for VSCodeService.js
-
-- **domain/services/WorkflowGitService.js** (0% → 80%)
+- **domain/services/TestCorrectionService.js** (0% → 80%)
   - Current: Funcs 0%, Lines 0%, Branches 0%
+  - Task: Improve test coverage for TestCorrectionService.js
+
+- **domain/services/TestFixTaskGenerator.js** (4% → 80%)
+  - Current: Funcs 9%, Lines 4%, Branches 0%
+  - Task: Improve test coverage for TestFixTaskGenerator.js
+
+- **domain/services/TestManagementService.js** (23% → 80%)
+  - Current: Funcs 9%, Lines 25%, Branches 35%
+  - Task: Improve test coverage for TestManagementService.js
+
+- **domain/services/TestReportParser.js** (4% → 80%)
+  - Current: Funcs 10%, Lines 3%, Branches 0%
+  - Task: Improve test coverage for TestReportParser.js
+
+- **domain/services/WorkflowGitService.js** (5% → 80%)
+  - Current: Funcs 6%, Lines 5%, Branches 4%
   - Task: Improve test coverage for WorkflowGitService.js
 
-- **domain/services/WorkflowOrchestrationService.js** (0% → 80%)
-  - Current: Funcs 0%, Lines 0%, Branches 0%
+- **domain/services/WorkflowOrchestrationService.js** (2% → 80%)
+  - Current: Funcs 1%, Lines 3%, Branches 3%
   - Task: Improve test coverage for WorkflowOrchestrationService.js
 
 - **domain/services/analysis-output/file-system-service.js** (15% → 80%)
@@ -854,25 +929,21 @@
   - Current: Funcs 0%, Lines 6%, Branches 0%
   - Task: Improve test coverage for utils.js
 
-- **domain/services/auto-finish/AutoFinishSystem.js** (14% → 80%)
-  - Current: Funcs 17%, Lines 22%, Branches 3%
-  - Task: Improve test coverage for AutoFinishSystem.js
-
-- **domain/services/auto-finish/ConfirmationSystem.js** (9% → 80%)
-  - Current: Funcs 19%, Lines 8%, Branches 0%
+- **domain/services/auto-finish/ConfirmationSystem.js** (23% → 80%)
+  - Current: Funcs 33%, Lines 25%, Branches 11%
   - Task: Improve test coverage for ConfirmationSystem.js
 
-- **domain/services/auto-finish/FallbackDetection.js** (8% → 80%)
-  - Current: Funcs 16%, Lines 9%, Branches 0%
+- **domain/services/auto-finish/FallbackDetection.js** (48% → 80%)
+  - Current: Funcs 58%, Lines 49%, Branches 36%
   - Task: Improve test coverage for FallbackDetection.js
 
-- **domain/services/auto-finish/TaskSequencer.js** (5% → 80%)
-  - Current: Funcs 10%, Lines 5%, Branches 0%
-  - Task: Improve test coverage for TaskSequencer.js
-
-- **domain/services/auto-finish/TodoParser.js** (8% → 80%)
-  - Current: Funcs 14%, Lines 9%, Branches 0%
+- **domain/services/auto-finish/TodoParser.js** (41% → 80%)
+  - Current: Funcs 43%, Lines 51%, Branches 28%
   - Task: Improve test coverage for TodoParser.js
+
+- **domain/services/auto-test/AutoTestFixSystem.js** (5% → 80%)
+  - Current: Funcs 6%, Lines 8%, Branches 0%
+  - Task: Improve test coverage for AutoTestFixSystem.js
 
 - **domain/services/chat/ChatHistoryExtractor.js** (7% → 80%)
   - Current: Funcs 14%, Lines 7%, Branches 0%
@@ -890,21 +961,17 @@
   - Current: Funcs 11%, Lines 4%, Branches 0%
   - Task: Improve test coverage for PackageJsonAnalyzer.js
 
-- **domain/services/ide-mirror/CompressionEngine.js** (12% → 80%)
-  - Current: Funcs 17%, Lines 16%, Branches 4%
+- **domain/services/ide-mirror/CompressionEngine.js** (19% → 80%)
+  - Current: Funcs 33%, Lines 20%, Branches 4%
   - Task: Improve test coverage for CompressionEngine.js
 
-- **domain/services/ide-mirror/FrameBuffer.js** (12% → 80%)
-  - Current: Funcs 14%, Lines 13%, Branches 10%
+- **domain/services/ide-mirror/FrameBuffer.js** (42% → 80%)
+  - Current: Funcs 45%, Lines 42%, Branches 38%
   - Task: Improve test coverage for FrameBuffer.js
 
 - **domain/services/ide-mirror/RegionDetector.js** (12% → 80%)
   - Current: Funcs 7%, Lines 10%, Branches 19%
   - Task: Improve test coverage for RegionDetector.js
-
-- **domain/services/ide-mirror/ScreenshotStreamingService.js** (28% → 80%)
-  - Current: Funcs 38%, Lines 25%, Branches 21%
-  - Task: Improve test coverage for ScreenshotStreamingService.js
 
 - **domain/services/terminal/TerminalContentExtractor.js** (0% → 80%)
   - Current: Funcs 0%, Lines 0%, Branches 0%
@@ -946,12 +1013,16 @@
   - Current: Funcs 0%, Lines 16%, Branches 0%
   - Task: Improve test coverage for ProjectType.js
 
+- **domain/value-objects/TaskType.js** (31% → 80%)
+  - Current: Funcs 16%, Lines 73%, Branches 3%
+  - Task: Improve test coverage for TaskType.js
+
 - **infrastructure/auth/AuthMiddleware.js** (5% → 80%)
   - Current: Funcs 11%, Lines 4%, Branches 0%
   - Task: Improve test coverage for AuthMiddleware.js
 
-- **infrastructure/auto/AutoSecurityManager.js** (46% → 80%)
-  - Current: Funcs 60%, Lines 56%, Branches 21%
+- **infrastructure/auto/AutoSecurityManager.js** (49% → 80%)
+  - Current: Funcs 67%, Lines 58%, Branches 21%
   - Task: Improve test coverage for AutoSecurityManager.js
 
 - **infrastructure/database/InMemoryAnalysisRepository.js** (7% → 80%)
@@ -975,7 +1046,7 @@
   - Task: Improve test coverage for PostgreSQLProjectAnalysisRepository.js
 
 - **infrastructure/database/PostgreSQLTaskRepository.js** (9% → 80%)
-  - Current: Funcs 14%, Lines 14%, Branches 0%
+  - Current: Funcs 14%, Lines 13%, Branches 0%
   - Task: Improve test coverage for PostgreSQLTaskRepository.js
 
 - **infrastructure/database/PostgreSQLUserRepository.js** (5% → 80%)
@@ -990,8 +1061,8 @@
   - Current: Funcs 0%, Lines 0%, Branches 0%
   - Task: Improve test coverage for SQLiteTaskExecutionRepository.js
 
-- **infrastructure/database/SQLiteTaskRepository.js** (2% → 80%)
-  - Current: Funcs 3%, Lines 3%, Branches 0%
+- **infrastructure/database/SQLiteTaskRepository.js** (10% → 80%)
+  - Current: Funcs 9%, Lines 10%, Branches 12%
   - Task: Improve test coverage for SQLiteTaskRepository.js
 
 - **infrastructure/database/SQLiteTaskSuggestionRepository.js** (0% → 80%)
@@ -1002,8 +1073,8 @@
   - Current: Funcs 0%, Lines 0%, Branches 0%
   - Task: Improve test coverage for SQLiteTaskTemplateRepository.js
 
-- **infrastructure/database/StreamingSessionRepository.js** (0% → 80%)
-  - Current: Funcs 0%, Lines 0%, Branches 0%
+- **infrastructure/database/StreamingSessionRepository.js** (20% → 80%)
+  - Current: Funcs 25%, Lines 21%, Branches 14%
   - Task: Improve test coverage for StreamingSessionRepository.js
 
 - **infrastructure/database/TaskSessionRepository.js** (6% → 80%)
@@ -1034,13 +1105,17 @@
   - Current: Funcs 3%, Lines 2%, Branches 0%
   - Task: Improve test coverage for ArchitectureAnalyzer.js
 
-- **infrastructure/external/BrowserManager.js** (9% → 80%)
-  - Current: Funcs 13%, Lines 8%, Branches 6%
+- **infrastructure/external/BrowserManager.js** (6% → 80%)
+  - Current: Funcs 9%, Lines 6%, Branches 4%
   - Task: Improve test coverage for BrowserManager.js
 
 - **infrastructure/external/CodeQualityAnalyzer.js** (3% → 80%)
   - Current: Funcs 5%, Lines 3%, Branches 0%
   - Task: Improve test coverage for CodeQualityAnalyzer.js
+
+- **infrastructure/external/CoverageAnalyzer.js** (4% → 80%)
+  - Current: Funcs 8%, Lines 5%, Branches 0%
+  - Task: Improve test coverage for CoverageAnalyzer.js
 
 - **infrastructure/external/DependencyAnalyzer.js** (4% → 80%)
   - Current: Funcs 8%, Lines 5%, Branches 0%
@@ -1089,6 +1164,18 @@
 - **infrastructure/external/TechStackAnalyzer.js** (3% → 80%)
   - Current: Funcs 6%, Lines 3%, Branches 0%
   - Task: Improve test coverage for TechStackAnalyzer.js
+
+- **infrastructure/external/TestAnalyzer.js** (6% → 80%)
+  - Current: Funcs 11%, Lines 7%, Branches 0%
+  - Task: Improve test coverage for TestAnalyzer.js
+
+- **infrastructure/external/TestFixer.js** (6% → 80%)
+  - Current: Funcs 11%, Lines 6%, Branches 0%
+  - Task: Improve test coverage for TestFixer.js
+
+- **infrastructure/external/VSCodeDetector.js** (33% → 80%)
+  - Current: Funcs 40%, Lines 40%, Branches 18%
+  - Task: Improve test coverage for VSCodeDetector.js
 
 - **infrastructure/external/VSCodeExtensionManager.js** (2% → 80%)
   - Current: Funcs 0%, Lines 6%, Branches 0%
@@ -1150,9 +1237,9 @@
   - Current: Funcs 33%, Lines 12%, Branches 4%
   - Task: Improve test coverage for TaskValidator.js
 
-- **infrastructure/messaging/EventBus.js** (43% → 80%)
-  - Current: Funcs 56%, Lines 44%, Branches 30%
-  - Task: Improve test coverage for EventBus.js
+- **infrastructure/logging/logger.js** (0% → 80%)
+  - Current: Funcs 0%, Lines 0%, Branches 0%
+  - Task: Improve test coverage for logger.js
 
 - **infrastructure/messaging/QueryBus.js** (33% → 80%)
   - Current: Funcs 38%, Lines 48%, Branches 13%
@@ -1186,57 +1273,17 @@
   - Current: Funcs 50%, Lines 24%, Branches 0%
   - Task: Improve test coverage for lintingAnalyzer.js
 
-- **infrastructure/strategies/single-repo/services/optimizationService.js** (8% → 80%)
-  - Current: Funcs 11%, Lines 13%, Branches 0%
-  - Task: Improve test coverage for optimizationService.js
-
-- **infrastructure/strategies/single-repo/services/performanceAnalyzer.js** (15% → 80%)
-  - Current: Funcs 25%, Lines 21%, Branches 0%
-  - Task: Improve test coverage for performanceAnalyzer.js
-
-- **infrastructure/strategies/single-repo/services/projectTypeAnalyzer.js** (11% → 80%)
-  - Current: Funcs 20%, Lines 12%, Branches 0%
-  - Task: Improve test coverage for projectTypeAnalyzer.js
-
 - **infrastructure/strategies/single-repo/services/recommendationsService.js** (21% → 80%)
   - Current: Funcs 50%, Lines 12%, Branches 0%
   - Task: Improve test coverage for recommendationsService.js
-
-- **infrastructure/strategies/single-repo/services/securityAnalyzer.js** (15% → 80%)
-  - Current: Funcs 25%, Lines 21%, Branches 0%
-  - Task: Improve test coverage for securityAnalyzer.js
 
 - **infrastructure/strategies/single-repo/services/structureAnalyzer.js** (28% → 80%)
   - Current: Funcs 50%, Lines 35%, Branches 0%
   - Task: Improve test coverage for structureAnalyzer.js
 
-- **infrastructure/strategies/single-repo/services/testingAnalyzer.js** (13% → 80%)
-  - Current: Funcs 17%, Lines 21%, Branches 0%
-  - Task: Improve test coverage for testingAnalyzer.js
-
-- **infrastructure/strategies/single-repo/utils/directoryScanner.js** (14% → 80%)
-  - Current: Funcs 25%, Lines 18%, Branches 0%
-  - Task: Improve test coverage for directoryScanner.js
-
-- **infrastructure/strategies/single-repo/utils/fileUtils.js** (8% → 80%)
-  - Current: Funcs 14%, Lines 10%, Branches 0%
-  - Task: Improve test coverage for fileUtils.js
-
 - **infrastructure/strategies/single-repo/validators/repositoryTypeValidator.js** (25% → 80%)
   - Current: Funcs 50%, Lines 24%, Branches 0%
   - Task: Improve test coverage for repositoryTypeValidator.js
-
-- **infrastructure/templates/AIPrompts.js** (0% → 80%)
-  - Current: Funcs 0%, Lines 0%, Branches 0%
-  - Task: Improve test coverage for AIPrompts.js
-
-- **infrastructure/templates/ScriptTemplates.js** (0% → 80%)
-  - Current: Funcs 0%, Lines 0%, Branches 0%
-  - Task: Improve test coverage for ScriptTemplates.js
-
-- **infrastructure/templates/TaskTemplates.js** (0% → 80%)
-  - Current: Funcs 0%, Lines 0%, Branches 0%
-  - Task: Improve test coverage for TaskTemplates.js
 
 - **infrastructure/templates/modules/automationTemplates.js** (33% → 80%)
   - Current: Funcs 0%, Lines 0%, Branches 100%
@@ -1258,10 +1305,6 @@
   - Current: Funcs 0%, Lines 0%, Branches 100%
   - Task: Improve test coverage for developmentTemplates.js
 
-- **infrastructure/templates/modules/generator.js** (0% → 80%)
-  - Current: Funcs 0%, Lines 0%, Branches 0%
-  - Task: Improve test coverage for generator.js
-
 - **infrastructure/templates/modules/maintenanceTemplates.js** (33% → 80%)
   - Current: Funcs 0%, Lines 0%, Branches 100%
   - Task: Improve test coverage for maintenanceTemplates.js
@@ -1269,10 +1312,6 @@
 - **infrastructure/templates/modules/monitoringTemplates.js** (33% → 80%)
   - Current: Funcs 0%, Lines 0%, Branches 100%
   - Task: Improve test coverage for monitoringTemplates.js
-
-- **infrastructure/templates/modules/search.js** (0% → 80%)
-  - Current: Funcs 0%, Lines 0%, Branches 0%
-  - Task: Improve test coverage for search.js
 
 - **infrastructure/templates/modules/securityTemplates.js** (33% → 80%)
   - Current: Funcs 0%, Lines 0%, Branches 100%
@@ -1286,44 +1325,8 @@
   - Current: Funcs 0%, Lines 0%, Branches 100%
   - Task: Improve test coverage for utilityTemplates.js
 
-- **infrastructure/templates/modules/validation.js** (0% → 80%)
-  - Current: Funcs 0%, Lines 0%, Branches 0%
-  - Task: Improve test coverage for validation.js
-
-- **presentation/api/AnalysisController.js** (6% → 80%)
-  - Current: Funcs 7%, Lines 7%, Branches 4%
-  - Task: Improve test coverage for AnalysisController.js
-
-- **presentation/api/AuthController.js** (6% → 80%)
-  - Current: Funcs 10%, Lines 7%, Branches 0%
-  - Task: Improve test coverage for AuthController.js
-
-- **presentation/api/AutoFinishController.js** (5% → 80%)
-  - Current: Funcs 8%, Lines 5%, Branches 2%
-  - Task: Improve test coverage for AutoFinishController.js
-
-- **presentation/api/AutoModeController.js** (7% → 80%)
-  - Current: Funcs 13%, Lines 6%, Branches 1%
-  - Task: Improve test coverage for AutoModeController.js
-
-- **presentation/api/ChatController.js** (5% → 80%)
-  - Current: Funcs 7%, Lines 8%, Branches 0%
-  - Task: Improve test coverage for ChatController.js
-
-- **presentation/api/CodeExplorerController.js** (0% → 80%)
-  - Current: Funcs 0%, Lines 0%, Branches 0%
-  - Task: Improve test coverage for CodeExplorerController.js
-
-- **presentation/api/ContentLibraryController.js** (2% → 80%)
-  - Current: Funcs 4%, Lines 3%, Branches 0%
-  - Task: Improve test coverage for ContentLibraryController.js
-
-- **presentation/api/DocumentationController.js** (1% → 80%)
-  - Current: Funcs 2%, Lines 2%, Branches 0%
-  - Task: Improve test coverage for DocumentationController.js
-
-- **presentation/api/GitController.js** (6% → 80%)
-  - Current: Funcs 10%, Lines 3%, Branches 4%
+- **presentation/api/GitController.js** (5% → 80%)
+  - Current: Funcs 10%, Lines 3%, Branches 2%
   - Task: Improve test coverage for GitController.js
 
 - **presentation/api/IDEController.js** (2% → 80%)
@@ -1342,8 +1345,8 @@
   - Current: Funcs 0%, Lines 0%, Branches 0%
   - Task: Improve test coverage for ScriptGenerationController.js
 
-- **presentation/api/StreamingController.js** (5% → 80%)
-  - Current: Funcs 9%, Lines 6%, Branches 0%
+- **presentation/api/StreamingController.js** (19% → 80%)
+  - Current: Funcs 18%, Lines 16%, Branches 24%
   - Task: Improve test coverage for StreamingController.js
 
 - **presentation/api/TaskAnalysisController.js** (0% → 80%)
@@ -1366,9 +1369,21 @@
   - Current: Funcs 50%, Lines 29%, Branches 25%
   - Task: Improve test coverage for VibeCoderAutoRefactorController.js
 
+- **presentation/api/controllers/AutoTestFixController.js** (8% → 80%)
+  - Current: Funcs 8%, Lines 14%, Branches 3%
+  - Task: Improve test coverage for AutoTestFixController.js
+
+- **presentation/api/controllers/TestCorrectionController.js** (0% → 80%)
+  - Current: Funcs 0%, Lines 0%, Branches 0%
+  - Task: Improve test coverage for TestCorrectionController.js
+
 - **presentation/api/controllers/TestManagementController.js** (0% → 80%)
   - Current: Funcs 0%, Lines 0%, Branches 0%
   - Task: Improve test coverage for TestManagementController.js
+
+- **presentation/api/routes/test-correction.js** (0% → 80%)
+  - Current: Funcs 0%, Lines 0%, Branches 0%
+  - Task: Improve test coverage for test-correction.js
 
 - **presentation/websocket/TaskNotificationService.js** (0% → 80%)
   - Current: Funcs 0%, Lines 0%, Branches 0%
@@ -1388,26 +1403,38 @@
 
 ### 🟡 Medium Priority
 
+- **jest.simple.config.js** (67% → 80%)
+  - Task: Improve test coverage for jest.simple.config.js
+
 - **application/commands/CreateTaskCommand.js** (56% → 80%)
   - Task: Improve test coverage for CreateTaskCommand.js
 
-- **application/commands/UpdateTestStatusCommand.js** (64% → 80%)
-  - Task: Improve test coverage for UpdateTestStatusCommand.js
+- **application/commands/ProcessTodoListCommand.js** (58% → 80%)
+  - Task: Improve test coverage for ProcessTodoListCommand.js
 
 - **application/handlers/generate/index.js** (67% → 80%)
   - Task: Improve test coverage for index.js
 
+- **domain/entities/StreamingPort.js** (64% → 80%)
+  - Task: Improve test coverage for StreamingPort.js
+
+- **domain/entities/StreamingSession.js** (51% → 80%)
+  - Task: Improve test coverage for StreamingSession.js
+
 - **domain/entities/Task.js** (62% → 80%)
   - Task: Improve test coverage for Task.js
 
-- **domain/repositories/TestMetadataRepository.js** (65% → 80%)
-  - Task: Improve test coverage for TestMetadataRepository.js
+- **domain/services/VSCodeService.js** (50% → 80%)
+  - Task: Improve test coverage for VSCodeService.js
 
-- **domain/services/AdvancedAnalysisService.js** (69% → 80%)
-  - Task: Improve test coverage for AdvancedAnalysisService.js
+- **domain/services/auto-finish/AutoFinishSystem.js** (61% → 80%)
+  - Task: Improve test coverage for AutoFinishSystem.js
 
-- **domain/services/TestManagementService.js** (54% → 80%)
-  - Task: Improve test coverage for TestManagementService.js
+- **domain/services/auto-finish/TaskSequencer.js** (66% → 80%)
+  - Task: Improve test coverage for TaskSequencer.js
+
+- **domain/services/ide-mirror/ScreenshotStreamingService.js** (63% → 80%)
+  - Task: Improve test coverage for ScreenshotStreamingService.js
 
 - **domain/value-objects/TaskPriority.js** (57% → 80%)
   - Task: Improve test coverage for TaskPriority.js
@@ -1415,20 +1442,11 @@
 - **domain/value-objects/TaskStatus.js** (52% → 80%)
   - Task: Improve test coverage for TaskStatus.js
 
-- **domain/value-objects/TaskType.js** (56% → 80%)
-  - Task: Improve test coverage for TaskType.js
-
 - **infrastructure/database/DatabaseConnection.js** (50% → 80%)
   - Task: Improve test coverage for DatabaseConnection.js
 
-- **infrastructure/database/TaskDatabase.js** (59% → 80%)
-  - Task: Improve test coverage for TaskDatabase.js
-
 - **infrastructure/external/IDEDetector.js** (64% → 80%)
   - Task: Improve test coverage for IDEDetector.js
-
-- **infrastructure/external/VSCodeDetector.js** (66% → 80%)
-  - Task: Improve test coverage for VSCodeDetector.js
 
 - **infrastructure/external/task-execution/index.js** (67% → 80%)
   - Task: Improve test coverage for index.js
@@ -1436,15 +1454,23 @@
 - **infrastructure/messaging/CommandBus.js** (53% → 80%)
   - Task: Improve test coverage for CommandBus.js
 
+- **infrastructure/messaging/EventBus.js** (57% → 80%)
+  - Task: Improve test coverage for EventBus.js
+
 - **infrastructure/strategies/single-repo/services/buildToolsAnalyzer.js** (67% → 80%)
   - Task: Improve test coverage for buildToolsAnalyzer.js
-
-- **infrastructure/templates/modules/constants.js** (67% → 80%)
-  - Task: Improve test coverage for constants.js
 
 - **infrastructure/templates/modules/index.js** (67% → 80%)
   - Task: Improve test coverage for index.js
 
+- **presentation/api/ContentLibraryController.js** (56% → 80%)
+  - Task: Improve test coverage for ContentLibraryController.js
+
 - **presentation/api/handlers/DocsTasksHandler.js** (63% → 80%)
   - Task: Improve test coverage for DocsTasksHandler.js
+
+### 🟢 Low Priority
+
+- **infrastructure/database/TaskDatabase.js** (73% → 80%)
+  - Task: Improve test coverage for TaskDatabase.js
 

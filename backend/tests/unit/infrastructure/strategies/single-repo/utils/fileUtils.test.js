@@ -3,7 +3,7 @@
  */
 const path = require('path');
 const fs = require('fs').promises;
-const FileUtils = require('../../../../../../infrastructure/strategies/single-repo/utils/fileUtils');
+const FileUtils = require('@/infrastructure/strategies/single-repo/utils/fileUtils');
 
 // Mock fs.promises
 jest.mock('fs', () => ({

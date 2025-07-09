@@ -1,5 +1,5 @@
-const VSCodeService = require('../../domain/services/VSCodeService');
-const VSCodeExtensionManager = require('../../infrastructure/external/VSCodeExtensionManager');
+const VSCodeService = require('@/domain/services/VSCodeService');
+const VSCodeExtensionManager = require('@/infrastructure/external/VSCodeExtensionManager');
 
 // Mock dependencies
 jest.mock('../../infrastructure/external/VSCodeExtensionManager');

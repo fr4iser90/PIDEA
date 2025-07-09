@@ -3,8 +3,8 @@
  */
 const path = require('path');
 const fs = require('fs').promises;
-const DirectoryScanner = require('../../../../../../infrastructure/strategies/single-repo/utils/directoryScanner');
-const { SKIP_DIRECTORIES } = require('../../../../../../infrastructure/strategies/single-repo/constants');
+const DirectoryScanner = require('@/infrastructure/strategies/single-repo/utils/directoryScanner');
+const { SKIP_DIRECTORIES } = require('@/infrastructure/strategies/single-repo/constants');
 
 // Mock fs.promises
 jest.mock('fs', () => ({

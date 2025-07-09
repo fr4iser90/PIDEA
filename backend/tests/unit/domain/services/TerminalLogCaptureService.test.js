@@ -1,11 +1,11 @@
-const TerminalLogCaptureService = require('../../../../domain/services/TerminalLogCaptureService');
+const TerminalLogCaptureService = require('@/domain/services/TerminalLogCaptureService');
 const fs = require('fs').promises;
 const path = require('path');
 
 // Mock dependencies
-jest.mock('../../../../infrastructure/external/IDEManager');
-jest.mock('../../../../infrastructure/external/BrowserManager');
-jest.mock('../../../../domain/services/IDEMirrorService');
+jest.mock('@/infrastructure/external/IDEManager');
+jest.mock('@/infrastructure/external/BrowserManager');
+jest.mock('@/domain/services/IDEMirrorService');
 jest.mock('fs', () => ({
   promises: {
     mkdir: jest.fn(),
@@ -29,9 +29,9 @@ describe('TerminalLogCaptureService', () => {
     jest.clearAllMocks();
     
     // Get mocked dependencies
-    mockIDEManager = require('../../../../infrastructure/external/IDEManager');
-    mockBrowserManager = require('../../../../infrastructure/external/BrowserManager');
-    mockIDEMirrorService = require('../../../../domain/services/IDEMirrorService');
+    mockIDEManager = require('@/infrastructure/external/IDEManager');
+    mockBrowserManager = require('@/infrastructure/external/BrowserManager');
+    mockIDEMirrorService = require('@/domain/services/IDEMirrorService');
     
     // Setup default mock implementations
     mockIDEManager.prototype.initialize = jest.fn().mockResolvedValue();

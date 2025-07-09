@@ -20,7 +20,12 @@ const TARGET_DIRS = [testsDir];
 function getAliasMappings() {
   const mappings = [];
   for (const [alias, relPath] of Object.entries(aliasMap)) {
-    const absPath = path.resolve(path.join(__dirname, '../../', relPath));
+    let absPath;
+    if (path.isAbsolute(relPath)) {
+      absPath = relPath;
+    } else {
+      absPath = path.resolve(__dirname, '../../', relPath);
+    }
     mappings.push({ alias, absPath });
   }
   return mappings;
@@ -37,51 +42,62 @@ function findAliasFor(absImportPath, mappings) {
   return null;
 }
 
+// Hilfsfunktion: Konvertiere relativen Import zu Root-Alias @/
+function convertRelativeToAlias(relImport, filePath) {
+  // Berechne den absoluten Pfad der Import-Zieldatei
+  const absImportPath = path.resolve(path.dirname(filePath), relImport);
+  // Berechne den Pfad relativ zum backend-Ordner (Projekt-Root)
+  const backendRoot = path.resolve(__dirname, '../../');
+  let relToRoot = path.relative(backendRoot, absImportPath).replace(/\\/g, '/');
+  // Immer @/ verwenden
+  return `@/${relToRoot}`;
+}
+
 // Hauptfunktion: Durchsuche und passe Imports an
 function adjustImportsInFile(filePath, mappings, report) {
   let content = fs.readFileSync(filePath, 'utf8');
   let changed = false;
-  
+
   // Erweiterte Regex: Erkennt sowohl require(...) als auch import ... from ...
-  const importRegex = /(require\(['"](\.\.?\/[^'"]+)['"]\))|(import .* from ['"](\.\.?\/[^'"]+)['"])/g;
+  // und auch Alias-Imports wie @infrastructure/...
+  const importRegex = /(require\(['"](\.\.?\/[^'"]+)['"]\))|(import [^'"\n]+ from ['"](\.\.?\/[^'"]+)['"])|(require\(['"]@([^/'"]+)(\/[^'"]*)['"]\))|(import [^'"\n]+ from ['"]@([^/'"]+)(\/[^'"]*)['"])/g;
   let match;
   let newContent = content;
   let changes = [];
 
   while ((match = importRegex.exec(content)) !== null) {
-    // Extrahiere den relativen Pfad (entweder aus require oder import)
+    // 1. Relative require/import
     const relImport = match[2] || match[4];
-    if (!relImport) continue;
-    
-    // Spezielle Behandlung für Tests, die ../../backend/ verwenden
-    if (relImport.startsWith('../../backend/')) {
-      const cleanPath = relImport.replace('../../backend/', '');
-      const aliasImport = `@/${cleanPath}`;
-      
-      // Ersetze nur den Pfad, nicht das ganze Statement
-      newContent = newContent.replace(relImport, aliasImport);
-      changed = true;
-      changes.push({
-        from: relImport,
-        to: aliasImport,
-        line: content.substr(0, match.index).split('\n').length,
-        type: match[1] ? 'require' : 'import'
-      });
+    if (relImport) {
+      const aliasImport = convertRelativeToAlias(relImport, filePath);
+      if (aliasImport) {
+        newContent = newContent.replace(relImport, aliasImport);
+        changed = true;
+        changes.push({
+          from: relImport,
+          to: aliasImport,
+          line: content.substr(0, match.index).split('\n').length,
+          type: match[1] ? 'require' : 'import'
+        });
+      }
       continue;
     }
-    
-    // Normale Behandlung für andere relative Imports
-    const absImportPath = path.resolve(path.dirname(filePath), relImport);
-    const aliasImport = findAliasFor(absImportPath, mappings);
-    if (aliasImport) {
-      // Ersetze nur den Pfad, nicht das ganze Statement
-      newContent = newContent.replace(relImport, aliasImport);
+    // 2. Alias require/import (z.B. @infrastructure/..., @domain/...)
+    const aliasName = match[6] || match[8];
+    const aliasPath = match[7] || match[9];
+    if (aliasName && aliasPath) {
+      // Vereinheitliche auf @/ALIASNAME/...
+      const unified = `@/${aliasName}${aliasPath}`;
+      const fullMatch = match[0];
+      // Ersetze nur den Pfad im Statement
+      const oldImport = `@${aliasName}${aliasPath}`;
+      newContent = newContent.replace(oldImport, unified);
       changed = true;
       changes.push({
-        from: relImport,
-        to: aliasImport,
+        from: oldImport,
+        to: unified,
         line: content.substr(0, match.index).split('\n').length,
-        type: match[1] ? 'require' : 'import'
+        type: match[5] ? 'require' : 'import'
       });
     }
   }
@@ -92,7 +108,6 @@ function adjustImportsInFile(filePath, mappings, report) {
     if (!fs.existsSync(backupPath)) {
       fs.writeFileSync(backupPath, content, 'utf8');
     }
-    
     fs.writeFileSync(filePath, newContent, 'utf8');
     report.patched.push({ file: filePath, changes });
     console.log(`✅ Patched: ${path.relative(process.cwd(), filePath)}`);
@@ -123,20 +138,24 @@ function walk(dir, mappings, report) {
 
 function main() {
   const mappings = getAliasMappings();
+  console.log('🔍 Gefundene Aliase:', mappings.map(m => `${m.alias} -> ${m.absPath}`));
+  console.log('🎯 Ziel-Verzeichnisse:', TARGET_DIRS);
+  
   const report = { patched: [] };
   for (const dir of TARGET_DIRS) {
+    console.log(`\n📁 Durchsuche: ${dir}`);
     walk(dir, mappings, report);
   }
+  
+  console.log(`\n📊 Ergebnis: ${report.patched.length} Dateien geändert`);
+  
   // Schreibe Report als Markdown
   const reportPath = path.join(__dirname, 'import-adjust-report.md');
   let md = '# Import Adjust Report\n\n';
   for (const entry of report.patched) {
     md += `## ${path.relative(process.cwd(), entry.file)}\n`;
     for (const change of entry.changes) {
-      md += `- Zeile ${change.line}: \
-   aFrom: \
-   a a ${change.from}\n   aTo: \
-   a a ${change.to}\n`;
+      md += `- Zeile ${change.line}: ${change.type}\n   From: ${change.from}\n   To: ${change.to}\n`;
     }
     md += '\n';
   }

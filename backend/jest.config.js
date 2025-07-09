@@ -64,6 +64,24 @@ module.exports = {
   forceExit: true,
   detectOpenHandles: true,
   
+  // Memory Management für große Test-Suites
+  maxWorkers: 1,
+  runInBand: true,
+  
+  // Performance-Optimierungen
+  cache: true,
+  cacheDirectory: '<rootDir>/.jest-cache',
+  
+  // Zusätzliche Memory-Optimierungen
+  resetMocks: true,
+  clearMocks: true,
+  restoreMocks: true,
+  
+  // Test-Isolation verbessern
+  testEnvironmentOptions: {
+    url: 'http://localhost'
+  },
+  
   // Test Management Integration
   reporters: [
     'default',

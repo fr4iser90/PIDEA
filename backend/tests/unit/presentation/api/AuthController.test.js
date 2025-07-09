@@ -1,6 +1,6 @@
-const AuthController = require('../../../../presentation/api/AuthController');
-const User = require('../../../../domain/entities/User');
-const UserSession = require('../../../../domain/entities/UserSession');
+const AuthController = require('@/presentation/api/AuthController');
+const User = require('@/domain/entities/User');
+const UserSession = require('@/domain/entities/UserSession');
 const bcrypt = require('bcryptjs');
 
 // Mock bcrypt

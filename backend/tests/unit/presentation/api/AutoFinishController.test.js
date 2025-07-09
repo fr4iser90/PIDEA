@@ -1,6 +1,6 @@
-const AutoFinishController = require('../../../../presentation/api/AutoFinishController');
-const ProcessTodoListCommand = require('../../../../application/commands/ProcessTodoListCommand');
-const TaskSession = require('../../../../domain/entities/TaskSession');
+const AutoFinishController = require('@/presentation/api/AutoFinishController');
+const ProcessTodoListCommand = require('@/application/commands/ProcessTodoListCommand');
+const TaskSession = require('@/domain/entities/TaskSession');
 
 describe('AutoFinishController', () => {
   let controller;

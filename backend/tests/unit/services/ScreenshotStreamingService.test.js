@@ -73,7 +73,7 @@ describe('ScreenshotStreamingService', () => {
       expect(service.activePorts.size).toBe(0);
     });
 
-    test('should initialize with custom configuration', () => {
+    test('should initialize with custom configuration', async () => {
       const customService = new ScreenshotStreamingService(mockBrowserManager, mockWebSocketManager, {
         defaultFPS: 15,
         maxFPS: 60,
@@ -85,6 +85,9 @@ describe('ScreenshotStreamingService', () => {
       expect(customService.maxFPS).toBe(60);
       expect(customService.defaultQuality).toBe(0.9);
       expect(customService.maxFrameSize).toBe(100 * 1024);
+
+      // Clean up the custom service
+      await customService.cleanup();
     });
   });
 
@@ -509,7 +512,7 @@ describe('ScreenshotStreamingService', () => {
       expect(stats.activeSessions).toBeGreaterThanOrEqual(0);
     });
 
-    test('should handle missing dependencies gracefully', () => {
+    test('should handle missing dependencies gracefully', async () => {
       // Create service with missing dependencies
       const serviceWithoutDeps = new ScreenshotStreamingService(
         mockBrowserManager, 
@@ -528,6 +531,9 @@ describe('ScreenshotStreamingService', () => {
       expect(stats.buffer).toEqual({});
       expect(stats.ports).toEqual([]);
       expect(stats.sessions).toEqual([]);
+
+      // Clean up the service without deps
+      await serviceWithoutDeps.cleanup();
     });
   });
 

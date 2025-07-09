@@ -3,10 +3,10 @@
  * Coverage target: 80%
  */
 
-const ScriptTemplates = require('../../../../infrastructure/templates/ScriptTemplates');
+const ScriptTemplates = require('@/infrastructure/templates/ScriptTemplates');
 
 // Mock the modules
-jest.mock('../../../../infrastructure/templates/modules', () => {
+jest.mock('@/infrastructure/templates/modules', () => {
     const mockTemplates = {
         testTemplate: {
             name: 'Test Template',
@@ -157,7 +157,7 @@ describe('ScriptTemplates', () => {
             const result = scriptTemplates.getAllTemplates();
 
             // Get the mocked TEMPLATE_CATEGORIES
-            const { TEMPLATE_CATEGORIES } = require('../../../../infrastructure/templates/modules');
+            const { TEMPLATE_CATEGORIES } = require('@/infrastructure/templates/modules');
 
             expect(result).toHaveProperty(TEMPLATE_CATEGORIES.BUILD);
             expect(result).toHaveProperty(TEMPLATE_CATEGORIES.TEST);
@@ -180,7 +180,7 @@ describe('ScriptTemplates', () => {
         });
 
         it('should return null when template not found', () => {
-            const { TemplateSearch } = require('../../../../infrastructure/templates/modules');
+            const { TemplateSearch } = require('@/infrastructure/templates/modules');
             TemplateSearch.getTemplate.mockReturnValue(null);
 
             const result = scriptTemplates.getTemplate('build', 'nonexistent');
@@ -188,7 +188,7 @@ describe('ScriptTemplates', () => {
         });
 
         it('should handle empty category and name', () => {
-            const { TemplateSearch } = require('../../../../infrastructure/templates/modules');
+            const { TemplateSearch } = require('@/infrastructure/templates/modules');
             TemplateSearch.getTemplate.mockReturnValue(null);
 
             const result = scriptTemplates.getTemplate('', '');
@@ -204,7 +204,7 @@ describe('ScriptTemplates', () => {
         });
 
         it('should return empty object for invalid category', () => {
-            const { TemplateSearch } = require('../../../../infrastructure/templates/modules');
+            const { TemplateSearch } = require('@/infrastructure/templates/modules');
             TemplateSearch.searchByCategory.mockReturnValue({});
 
             const result = scriptTemplates.getTemplatesByCategory('invalid');
@@ -212,7 +212,7 @@ describe('ScriptTemplates', () => {
         });
 
         it('should handle empty category', () => {
-            const { TemplateSearch } = require('../../../../infrastructure/templates/modules');
+            const { TemplateSearch } = require('@/infrastructure/templates/modules');
             TemplateSearch.searchByCategory.mockReturnValue({});
 
             const result = scriptTemplates.getTemplatesByCategory('');
@@ -227,7 +227,7 @@ describe('ScriptTemplates', () => {
         });
 
         it('should throw error when template not found', () => {
-            const { TemplateSearch } = require('../../../../infrastructure/templates/modules');
+            const { TemplateSearch } = require('@/infrastructure/templates/modules');
             TemplateSearch.getTemplate.mockReturnValue(null);
 
             expect(() => {
@@ -247,7 +247,7 @@ describe('ScriptTemplates', () => {
             const mockResults = [
                 { category: 'build', name: 'test', template: {} }
             ];
-            const { TemplateSearch } = require('../../../../infrastructure/templates/modules');
+            const { TemplateSearch } = require('@/infrastructure/templates/modules');
             TemplateSearch.searchTemplates.mockReturnValue(mockResults);
 
             const result = scriptTemplates.searchTemplates('test');
@@ -295,7 +295,7 @@ describe('ScriptTemplates', () => {
         it('should return validation result with errors', () => {
             const mockTemplate = { name: 'Test Template' };
             const mockValidationResult = { isValid: false, errors: ['Name is required'] };
-            const { TemplateValidator } = require('../../../../infrastructure/templates/modules');
+            const { TemplateValidator } = require('@/infrastructure/templates/modules');
             TemplateValidator.validateTemplate.mockReturnValue(mockValidationResult);
 
             const result = scriptTemplates.validateTemplate(mockTemplate);
@@ -312,7 +312,7 @@ describe('ScriptTemplates', () => {
         });
 
         it('should return empty array when no categories exist', () => {
-            const { TemplateSearch } = require('../../../../infrastructure/templates/modules');
+            const { TemplateSearch } = require('@/infrastructure/templates/modules');
             TemplateSearch.getCategories.mockReturnValue([]);
 
             const result = scriptTemplates.getCategories();
@@ -327,7 +327,7 @@ describe('ScriptTemplates', () => {
         });
 
         it('should return empty object when no templates exist', () => {
-            const { TemplateSearch } = require('../../../../infrastructure/templates/modules');
+            const { TemplateSearch } = require('@/infrastructure/templates/modules');
             TemplateSearch.getTemplateCounts.mockReturnValue({});
 
             const result = scriptTemplates.getTemplateCounts();
@@ -337,7 +337,7 @@ describe('ScriptTemplates', () => {
 
     describe('error handling', () => {
         it('should handle errors in getAllTemplates gracefully', () => {
-            const { BuildTemplates } = require('../../../../infrastructure/templates/modules');
+            const { BuildTemplates } = require('@/infrastructure/templates/modules');
             BuildTemplates.getTemplates.mockImplementation(() => {
                 throw new Error('Template loading failed');
             });

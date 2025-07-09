@@ -1,8 +1,6 @@
 const ContentLibraryController = require('@/presentation/api/ContentLibraryController');
 const fs = require('fs').promises;
-const path = require('path');
 
-// Mock fs.promises
 jest.mock('fs', () => ({
   promises: {
     readdir: jest.fn(),
@@ -10,7 +8,7 @@ jest.mock('fs', () => ({
   }
 }));
 
-describe('ContentLibraryController', () => {
+describe('ContentLibraryController Templates', () => {
   let controller;
   let mockReq;
   let mockRes;
@@ -25,5 +23,18 @@ describe('ContentLibraryController', () => {
     jest.clearAllMocks();
   });
 
-  // Die Datei wird in mehrere kleinere Testdateien aufgeteilt, wie oben beschrieben.
-});
+  // getFrameworkTemplates
+  // ... (kopiere alle Tests für getFrameworkTemplates)
+
+  // getTemplates
+  // ... (kopiere alle Tests für getTemplates)
+
+  // getTemplatesByCategory
+  // ... (kopiere alle Tests für getTemplatesByCategory)
+
+  // getTemplateFile
+  // ... (kopiere alle Tests für getTemplateFile)
+
+  // getFrameworkTemplateFile
+  // ... (kopiere alle Tests für getFrameworkTemplateFile)
+}); 

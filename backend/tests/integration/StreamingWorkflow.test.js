@@ -16,6 +16,12 @@ jest.mock('@/infrastructure/external/BrowserManager');
 jest.mock('@/presentation/websocket/WebSocketManager');
 
 describe('StreamingWorkflow Integration', () => {
+  // Global cleanup after all tests
+  afterAll(() => {
+    // Clear any remaining timers and intervals
+    jest.clearAllTimers();
+  });
+
   let streamingService;
   let streamingController;
   let startHandler;
@@ -71,6 +77,17 @@ describe('StreamingWorkflow Integration', () => {
 
     // Initialize services
     await sessionRepository.initialize();
+  });
+
+  afterEach(async () => {
+    // Clean up streaming service to prevent open handles
+    if (streamingService) {
+      try {
+        await streamingService.cleanup();
+      } catch (error) {
+        console.warn('Error during streaming service cleanup:', error.message);
+      }
+    }
   });
 
   describe('Complete Streaming Workflow', () => {
