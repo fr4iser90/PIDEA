@@ -427,11 +427,11 @@ class VibeCoderAutoRefactorHandler {
         let taskDescription = '';
         
         if (fileExt === '.jsx' || fileExt === '.tsx') {
-            taskType = 'refactor-react';
+            taskType = 'refactor_react';
             taskTitle = `Refactor React Component: ${fileName}`;
             taskDescription = `Split the large React component ${fileName} (${fileInfo.lines} lines) into smaller, more maintainable files.`;
         } else if (fileExt === '.js' || fileExt === '.ts') {
-            taskType = 'refactor-node';
+            taskType = 'refactor_node';
             taskTitle = `Refactor Node.js File: ${fileName}`;
             taskDescription = `Split the large Node.js file ${fileName} (${fileInfo.lines} lines) into smaller, more maintainable modules.`;
         } else {
