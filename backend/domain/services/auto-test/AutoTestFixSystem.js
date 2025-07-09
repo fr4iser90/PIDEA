@@ -5,6 +5,8 @@
 const TestAnalyzer = require('@/infrastructure/external/TestAnalyzer');
 const TestFixer = require('@/infrastructure/external/TestFixer');
 const CoverageAnalyzer = require('@/infrastructure/external/CoverageAnalyzer');
+const TestReportParser = require('@/domain/services/TestReportParser');
+const TestFixTaskGenerator = require('@/domain/services/TestFixTaskGenerator');
 const { v4: uuidv4 } = require('uuid');
 
 class AutoTestFixSystem {
@@ -20,6 +22,8 @@ class AutoTestFixSystem {
     this.testAnalyzer = new TestAnalyzer();
     this.testFixer = new TestFixer();
     this.coverageAnalyzer = new CoverageAnalyzer();
+    this.testReportParser = new TestReportParser();
+    this.testFixTaskGenerator = new TestFixTaskGenerator(this.taskRepository);
     
     // Session management
     this.activeSessions = new Map(); // sessionId -> session data
@@ -84,56 +88,51 @@ class AutoTestFixSystem {
         progress: 0
       });
       
-      // Step 1: Analyze project and identify test issues
-      this.logger.info(`[AutoTestFixSystem] Step 1: Analyzing project for test issues`);
-      this.streamProgress(sessionId, 'phase', { phase: 'analysis', progress: 10 });
+      // Step 1: Parse existing test output files
+      this.logger.info(`[AutoTestFixSystem] Step 1: Parsing test output files`);
+      this.streamProgress(sessionId, 'phase', { phase: 'parsing', progress: 10 });
       
-      const analysisResult = await this.analyzeProjectTests(options.projectPath || process.cwd());
+      const parsedData = await this.testReportParser.parseAllTestOutputs(options.projectPath || process.cwd());
       
-      if (!analysisResult.hasIssues) {
-        this.logger.info(`[AutoTestFixSystem] No test issues found, workflow complete`);
+      if (!parsedData.failingTests.length && !parsedData.coverageIssues.length) {
+        this.logger.info(`[AutoTestFixSystem] No test issues found in output files`);
         return this.completeSession(sessionId, {
           success: true,
-          message: 'No test issues found',
-          analysisResult
+          message: 'No test issues found in output files',
+          parsedData
         });
       }
       
-      // Step 2: Create workflow task
-      this.logger.info(`[AutoTestFixSystem] Step 2: Creating workflow task`);
-      this.streamProgress(sessionId, 'phase', { phase: 'task-creation', progress: 20 });
+      // Step 2: Generate and save tasks to database
+      this.logger.info(`[AutoTestFixSystem] Step 2: Generating and saving tasks to database`);
+      this.streamProgress(sessionId, 'phase', { phase: 'task-generation', progress: 20 });
       
-      const task = await this.createTestFixTask(analysisResult, options);
-      
-      // Step 3: Execute workflow through orchestration service
-      this.logger.info(`[AutoTestFixSystem] Step 3: Executing workflow through orchestration`);
-      this.streamProgress(sessionId, 'phase', { phase: 'workflow-execution', progress: 30 });
-      
-      const workflowResult = await this.workflowOrchestrationService.executeWorkflow(task, {
-        ...options,
-        sessionId,
-        autoTestFix: true
+      const tasks = await this.testFixTaskGenerator.generateAndSaveTasks(parsedData, {
+        projectId: options.projectId || 'system',
+        userId: options.userId || 'system'
       });
       
-      // Step 4: Process results and improve coverage
-      this.logger.info(`[AutoTestFixSystem] Step 4: Processing results and improving coverage`);
-      this.streamProgress(sessionId, 'phase', { phase: 'coverage-improvement', progress: 70 });
+      this.logger.info(`[AutoTestFixSystem] Generated ${tasks.length} tasks in database`);
       
-      const coverageResult = await this.improveTestCoverage(analysisResult, workflowResult, options);
+      // Step 3: Process tasks sequentially
+      this.logger.info(`[AutoTestFixSystem] Step 3: Processing tasks sequentially`);
+      this.streamProgress(sessionId, 'phase', { phase: 'task-processing', progress: 30 });
       
-      // Step 5: Generate final report
-      this.logger.info(`[AutoTestFixSystem] Step 5: Generating final report`);
+      const processingResult = await this.processTasksSequentially(tasks, sessionId, options);
+      
+      // Step 4: Generate final report
+      this.logger.info(`[AutoTestFixSystem] Step 4: Generating final report`);
       this.streamProgress(sessionId, 'phase', { phase: 'report-generation', progress: 90 });
       
-      const report = await this.generateFinalReport(analysisResult, workflowResult, coverageResult);
+      const report = await this.generateFinalReport(parsedData, processingResult, options);
       
       // Complete session
       const finalResult = this.completeSession(sessionId, {
         success: true,
         sessionId,
-        analysisResult,
-        workflowResult,
-        coverageResult,
+        parsedData,
+        tasksGenerated: tasks.length,
+        processingResult,
         report,
         duration: Date.now() - startTime,
         startTime: new Date(startTime),
@@ -312,29 +311,408 @@ class AutoTestFixSystem {
   }
 
   /**
+   * Process tasks sequentially
+   * @param {Array<Task>} tasks - Tasks to process
+   * @param {string} sessionId - Session ID
+   * @param {Object} options - Processing options
+   * @returns {Promise<Object>} Processing result
+   */
+  async processTasksSequentially(tasks, sessionId, options = {}) {
+    try {
+      this.logger.info(`[AutoTestFixSystem] Processing ${tasks.length} tasks sequentially`);
+      
+      const result = {
+        totalTasks: tasks.length,
+        completedTasks: 0,
+        failedTasks: 0,
+        skippedTasks: 0,
+        results: [],
+        startTime: new Date(),
+        endTime: null,
+        duration: 0
+      };
+
+      // Sort tasks by priority (critical -> high -> medium -> low)
+      const sortedTasks = this.sortTasksByPriority(tasks);
+      
+      for (let i = 0; i < sortedTasks.length; i++) {
+        const task = sortedTasks[i];
+        
+        try {
+          this.logger.info(`[AutoTestFixSystem] Processing task ${i + 1}/${sortedTasks.length}: ${task.title}`);
+          
+          // Stream task start
+          this.streamProgress(sessionId, 'task-start', {
+            taskId: task.id,
+            taskTitle: task.title,
+            currentTask: i + 1,
+            totalTasks: sortedTasks.length,
+            progress: Math.round(((i + 1) / sortedTasks.length) * 100)
+          });
+          
+          // Update task status to in progress
+          task.start();
+          if (this.taskRepository) {
+            await this.taskRepository.save(task);
+          }
+          
+          // Process the task
+          const taskResult = await this.processSingleTask(task, options);
+          result.results.push(taskResult);
+          
+          // Update task status based on result
+          if (taskResult.success) {
+            task.complete(taskResult);
+            result.completedTasks++;
+          } else {
+            task.fail(taskResult.error);
+            result.failedTasks++;
+          }
+          
+          if (this.taskRepository) {
+            await this.taskRepository.save(task);
+          }
+          
+          // Stream task completion
+          this.streamProgress(sessionId, 'task-complete', {
+            taskId: task.id,
+            taskTitle: task.title,
+            success: taskResult.success,
+            result: taskResult,
+            completedTasks: result.completedTasks,
+            failedTasks: result.failedTasks,
+            progress: Math.round(((i + 1) / sortedTasks.length) * 100)
+          });
+          
+          // Check if we should stop on error
+          if (!taskResult.success && options.stopOnError) {
+            this.logger.warn(`[AutoTestFixSystem] Stopping on error as requested`);
+            break;
+          }
+          
+        } catch (error) {
+          this.logger.error(`[AutoTestFixSystem] Error processing task ${task.id}:`, error.message);
+          
+          task.fail(error.message);
+          if (this.taskRepository) {
+            await this.taskRepository.save(task);
+          }
+          
+          result.failedTasks++;
+          result.results.push({
+            taskId: task.id,
+            success: false,
+            error: error.message
+          });
+          
+          if (options.stopOnError) {
+            break;
+          }
+        }
+      }
+      
+      result.endTime = new Date();
+      result.duration = result.endTime - result.startTime;
+      
+      this.logger.info(`[AutoTestFixSystem] Sequential processing completed: ${result.completedTasks} completed, ${result.failedTasks} failed`);
+      return result;
+      
+    } catch (error) {
+      this.logger.error(`[AutoTestFixSystem] Sequential processing failed:`, error.message);
+      throw error;
+    }
+  }
+
+  /**
+   * Process a single task using cursorIDE.postToCursor() like AutoFinishSystem
+   * @param {Task} task - Task to process
+   * @param {Object} options - Processing options
+   * @returns {Promise<Object>} Task result
+   */
+  async processSingleTask(task, options = {}) {
+    try {
+      // Use cursorIDE.postToCursor() like AutoFinishSystem
+      if (!this.cursorIDE) {
+        this.logger.warn('[AutoTestFixSystem] cursorIDE not available, using fallback processing');
+        return await this.processTaskFallback(task, options);
+      }
+      
+      // Build task prompt like AutoFinishSystem
+      const idePrompt = this.buildTaskPrompt(task);
+      
+      this.logger.info(`[AutoTestFixSystem] Sending task to Cursor IDE: ${task.title}`);
+      
+      // Send to Cursor IDE via postToCursor()
+      const aiResponse = await this.cursorIDE.postToCursor(idePrompt);
+      
+      // Validate task completion
+      const validationResult = await this.validateTaskCompletion(task, aiResponse);
+      
+      const taskResult = {
+        taskId: task.id,
+        description: task.title,
+        success: validationResult.isValid,
+        aiResponse,
+        validationResult,
+        completedAt: new Date()
+      };
+      
+      this.logger.info(`[AutoTestFixSystem] Task ${task.id} processed via Cursor IDE`);
+      return taskResult;
+      
+    } catch (error) {
+      this.logger.error(`[AutoTestFixSystem] Task ${task.id} failed:`, error.message);
+      
+      return {
+        taskId: task.id,
+        description: task.title,
+        success: false,
+        error: error.message,
+        failedAt: new Date()
+      };
+    }
+  }
+
+  /**
+   * Build a prompt for task execution like AutoFinishSystem
+   * @param {Task} task - Task object
+   * @returns {string} Task prompt
+   */
+  buildTaskPrompt(task) {
+    const taskType = task.metadata?.taskType;
+    const metadata = task.metadata || {};
+    
+    let specificInstructions = '';
+    
+    switch (taskType) {
+      case 'failing_test_fix':
+        specificInstructions = `
+Specific Instructions for Failing Test Fix:
+- Test File: ${metadata.testFile || 'Unknown'}
+- Test Name: ${metadata.testName || 'Unknown'}
+- Error: ${metadata.error || 'Unknown'}
+- Fix the failing test by addressing the specific error
+- Ensure the test passes after the fix
+- Maintain test coverage and readability`;
+        break;
+        
+      case 'coverage_improvement':
+        specificInstructions = `
+Specific Instructions for Coverage Improvement:
+- File: ${metadata.file || 'Unknown'}
+- Current Coverage: ${metadata.currentCoverage || 'Unknown'}%
+- Target Coverage: ${metadata.targetCoverage || 80}%
+- Add missing test cases to improve coverage
+- Focus on uncovered code paths
+- Ensure tests are meaningful and not just for coverage`;
+        break;
+        
+      case 'legacy_test_refactor':
+        specificInstructions = `
+Specific Instructions for Legacy Test Refactor:
+- Test File: ${metadata.testFile || 'Unknown'}
+- Test Name: ${metadata.testName || 'Unknown'}
+- Refactor the legacy test to modern standards
+- Improve readability and maintainability
+- Use modern testing patterns and assertions
+- Remove deprecated testing approaches`;
+        break;
+        
+      default:
+        specificInstructions = `
+General Task Instructions:
+- Complete the task as described
+- Follow best practices and coding standards
+- Ensure the implementation is production-ready
+- Test the changes if applicable`;
+    }
+    
+    return `Please complete the following test-related task:
+
+${task.title}
+
+${task.description}
+
+${specificInstructions}
+
+Requirements:
+- Execute the task completely and accurately
+- Make all necessary changes to the code
+- Ensure the implementation is production-ready
+- Follow best practices and coding standards
+- Test the changes if applicable
+- Confirm completion when finished
+
+Please proceed with the implementation and let me know when you're finished.`;
+  }
+
+  /**
+   * Validate task completion like AutoFinishSystem
+   * @param {Task} task - Task object
+   * @param {string} aiResponse - AI response
+   * @returns {Promise<Object>} Validation result
+   */
+  async validateTaskCompletion(task, aiResponse) {
+    try {
+      // Basic validation - check for completion keywords
+      const completionKeywords = ['fertig', 'done', 'complete', 'finished', 'erledigt', 'abgeschlossen', 'fixed', 'resolved'];
+      const hasCompletionKeyword = completionKeywords.some(keyword => 
+        aiResponse.toLowerCase().includes(keyword)
+      );
+      
+      // Check for error indicators
+      const errorKeywords = ['error', 'failed', 'cannot', 'unable', 'problem', 'issue', 'failed to'];
+      const hasErrorKeyword = errorKeywords.some(keyword => 
+        aiResponse.toLowerCase().includes(keyword)
+      );
+      
+      // Check for test-specific completion indicators
+      const testCompletionKeywords = ['test passes', 'test fixed', 'coverage improved', 'refactored', 'updated test'];
+      const hasTestCompletionKeyword = testCompletionKeywords.some(keyword => 
+        aiResponse.toLowerCase().includes(keyword)
+      );
+      
+      return {
+        isValid: (hasCompletionKeyword || hasTestCompletionKeyword) && !hasErrorKeyword,
+        hasCompletionKeyword,
+        hasTestCompletionKeyword,
+        hasErrorKeyword,
+        confidence: (hasCompletionKeyword || hasTestCompletionKeyword) ? 0.9 : 0.3
+      };
+      
+    } catch (error) {
+      this.logger.error(`[AutoTestFixSystem] Task validation failed:`, error.message);
+      return {
+        isValid: false,
+        error: error.message,
+        confidence: 0.0
+      };
+    }
+  }
+
+  /**
+   * Refactor a test
+   * @param {Task} task - Task with test refactor data
+   * @param {Object} options - Processing options
+   * @returns {Promise<Object>} Refactor result
+   */
+  async refactorTest(task, options = {}) {
+    try {
+      const { testFile, testName } = task.metadata;
+      
+      this.logger.info(`[AutoTestFixSystem] Refactoring test: ${testName} in ${testFile}`);
+      
+      // Use existing TestFixer if available
+      if (this.testFixer) {
+        const refactorResult = await this.testFixer.applyRefactorFix(testFile, testName);
+        return {
+          taskId: task.id,
+          success: refactorResult.success,
+          result: refactorResult,
+          message: `Refactored test: ${testName}`
+        };
+      }
+      
+      // Fallback: mark as completed (manual refactor required)
+      return {
+        taskId: task.id,
+        success: true,
+        message: `Task created for manual refactor: ${testName}`,
+        requiresManualFix: true
+      };
+      
+    } catch (error) {
+      return {
+        taskId: task.id,
+        success: false,
+        error: error.message
+      };
+    }
+  }
+
+  /**
+   * Process task fallback when cursorIDE is not available
+   * @param {Task} task - Task to process
+   * @param {Object} options - Processing options
+   * @returns {Promise<Object>} Processing result
+   */
+  async processTaskFallback(task, options = {}) {
+    try {
+      this.logger.info(`[AutoTestFixSystem] Processing task fallback: ${task.title}`);
+      
+      // Use workflow orchestration if available
+      if (this.workflowOrchestrationService) {
+        const workflowResult = await this.workflowOrchestrationService.executeWorkflow(task, options);
+        return {
+          taskId: task.id,
+          success: workflowResult.success,
+          result: workflowResult,
+          message: `Processed task via workflow: ${task.title}`
+        };
+      }
+      
+      // Fallback: mark as completed (manual processing required)
+      return {
+        taskId: task.id,
+        success: true,
+        message: `Task created for manual processing: ${task.title}`,
+        requiresManualProcessing: true
+      };
+      
+    } catch (error) {
+      return {
+        taskId: task.id,
+        success: false,
+        error: error.message
+      };
+    }
+  }
+
+  /**
+   * Sort tasks by priority
+   * @param {Array<Task>} tasks - Tasks to sort
+   * @returns {Array<Task>} Sorted tasks
+   */
+  sortTasksByPriority(tasks) {
+    const priorityOrder = {
+      'critical': 0,
+      'high': 1,
+      'medium': 2,
+      'low': 3
+    };
+    
+    return tasks.sort((a, b) => {
+      const aPriority = priorityOrder[a.priority.value] || 2;
+      const bPriority = priorityOrder[b.priority.value] || 2;
+      return aPriority - bPriority;
+    });
+  }
+
+  /**
    * Generate final report
-   * @param {Object} analysisResult - Analysis result
-   * @param {Object} workflowResult - Workflow result
-   * @param {Object} coverageResult - Coverage result
+   * @param {Object} parsedData - Parsed test data
+   * @param {Object} processingResult - Processing result
+   * @param {Object} options - Options
    * @returns {Promise<Object>} Final report
    */
-  async generateFinalReport(analysisResult, workflowResult, coverageResult) {
+  async generateFinalReport(parsedData, processingResult, options) {
     try {
       this.logger.info(`[AutoTestFixSystem] Generating final report`);
       
       const report = {
         summary: {
-          totalIssues: analysisResult.totalIssues,
-          issuesFixed: workflowResult.success ? analysisResult.totalIssues : 0,
-          coverageImproved: coverageResult.success,
-          workflowSuccess: workflowResult.success
+          totalIssues: parsedData.failingTests.length + parsedData.coverageIssues.length,
+          tasksGenerated: processingResult.totalTasks,
+          tasksCompleted: processingResult.completedTasks,
+          tasksFailed: processingResult.failedTasks,
+          successRate: processingResult.totalTasks > 0 ? 
+            (processingResult.completedTasks / processingResult.totalTasks * 100).toFixed(1) : 0
         },
         details: {
-          analysis: analysisResult,
-          workflow: workflowResult,
-          coverage: coverageResult
+          parsedData,
+          processingResult
         },
-        recommendations: this.generateRecommendations(analysisResult, workflowResult, coverageResult),
+        recommendations: this.generateRecommendations(parsedData, processingResult),
         timestamp: new Date()
       };
       
@@ -347,42 +725,49 @@ class AutoTestFixSystem {
 
   /**
    * Generate recommendations based on results
-   * @param {Object} analysisResult - Analysis result
-   * @param {Object} workflowResult - Workflow result
-   * @param {Object} coverageResult - Coverage result
+   * @param {Object} parsedData - Parsed test data
+   * @param {Object} processingResult - Processing result
    * @returns {Array} Recommendations
    */
-  generateRecommendations(analysisResult, workflowResult, coverageResult) {
+  generateRecommendations(parsedData, processingResult) {
     const recommendations = [];
     
-    if (!workflowResult.success) {
+    if (processingResult.failedTasks > 0) {
       recommendations.push({
         type: 'error',
-        message: 'Workflow execution failed - review logs and retry',
+        message: `${processingResult.failedTasks} tasks failed - review logs and retry`,
         priority: 'high'
       });
     }
     
-    if (analysisResult.failingTests.count > 0) {
+    if (parsedData.failingTests.length > 0) {
       recommendations.push({
         type: 'warning',
-        message: `${analysisResult.failingTests.count} failing tests need manual review`,
+        message: `${parsedData.failingTests.length} failing tests need attention`,
+        priority: 'high'
+      });
+    }
+    
+    if (parsedData.coverageIssues.length > 0) {
+      recommendations.push({
+        type: 'info',
+        message: `${parsedData.coverageIssues.length} files need coverage improvement`,
         priority: 'medium'
       });
     }
     
-    if (analysisResult.legacyTests.count > 0) {
+    if (parsedData.legacyTests.length > 0) {
       recommendations.push({
         type: 'info',
-        message: `${analysisResult.legacyTests.count} legacy tests identified for modernization`,
+        message: `${parsedData.legacyTests.length} legacy tests identified for modernization`,
         priority: 'low'
       });
     }
     
-    if (coverageResult.currentCoverage < this.config.coverageThreshold) {
+    if (parsedData.complexTests.length > 0) {
       recommendations.push({
-        type: 'warning',
-        message: `Coverage target not met (${coverageResult.currentCoverage}% < ${this.config.coverageThreshold}%)`,
+        type: 'info',
+        message: `${parsedData.complexTests.length} complex tests need refactoring`,
         priority: 'medium'
       });
     }
