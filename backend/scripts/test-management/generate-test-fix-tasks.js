@@ -48,7 +48,8 @@ class TestFixTaskCLI {
       projectId: 'system',
       userId: 'system',
       stopOnError: false,
-      dryRun: false
+      dryRun: false,
+      clearExisting: false
     };
 
     for (let i = 0; i < args.length; i++) {
@@ -69,6 +70,9 @@ class TestFixTaskCLI {
           break;
         case '--dry-run':
           options.dryRun = true;
+          break;
+        case '--clear-existing':
+          options.clearExisting = true;
           break;
         case '--help':
           this.showHelp();
@@ -102,6 +106,7 @@ Options:
   --user-id <id>            User ID (default: 'system')
   --stop-on-error           Stop processing on first error
   --dry-run                 Only generate tasks, don't process them
+  --clear-existing          Clear existing tasks before generating new ones
   --help                    Show this help
 
 Examples:
@@ -110,6 +115,9 @@ Examples:
 
   # Generate tasks only (dry run)
   node scripts/test-management/generate-test-fix-tasks.js --dry-run
+
+  # Clear existing tasks and generate new ones
+  node scripts/test-management/generate-test-fix-tasks.js --clear-existing
 
   # Process with custom project settings
   node scripts/test-management/generate-test-fix-tasks.js --project-path /path/to/project --project-id my-project --user-id user123
@@ -213,6 +221,7 @@ Examples:
       this.logger.info(`[TestFixTaskCLI] Project ID: ${this.options.projectId}`);
       this.logger.info(`[TestFixTaskCLI] User ID: ${this.options.userId}`);
       this.logger.info(`[TestFixTaskCLI] Dry run: ${this.options.dryRun}`);
+      this.logger.info(`[TestFixTaskCLI] Clear existing: ${this.options.clearExisting}`);
 
       // Check output files
       if (!this.checkOutputFiles()) {
@@ -228,7 +237,8 @@ Examples:
         projectId: this.options.projectId,
         userId: this.options.userId,
         stopOnError: this.options.stopOnError,
-        dryRun: this.options.dryRun
+        dryRun: this.options.dryRun,
+        clearExisting: this.options.clearExisting
       });
 
       // Display results

@@ -212,7 +212,7 @@ class TestFixTaskGenerator {
   }
 
   /**
-   * Save tasks to database
+   * Save tasks to database with better error handling
    * @param {Array<Task>} tasks - Tasks to save
    * @returns {Promise<Array<Task>>} Saved tasks
    */
@@ -221,17 +221,44 @@ class TestFixTaskGenerator {
       this.logger.info(`[TestFixTaskGenerator] Saving ${tasks.length} tasks to database...`);
       
       const savedTasks = [];
+      let savedCount = 0;
+      let skippedCount = 0;
       
       for (const task of tasks) {
-        if (this.taskRepository) {
-          const savedTask = await this.taskRepository.save(task);
-          savedTasks.push(savedTask);
-        } else {
-          savedTasks.push(task);
+        try {
+          if (this.taskRepository) {
+            // Check if task already exists
+            const existingTask = await this.taskRepository.findById(task.id);
+            if (existingTask) {
+              this.logger.warn(`[TestFixTaskGenerator] Task ${task.id} already exists, skipping`);
+              savedTasks.push(existingTask);
+              skippedCount++;
+              continue;
+            }
+            
+            const savedTask = await this.taskRepository.save(task);
+            savedTasks.push(savedTask);
+            savedCount++;
+          } else {
+            savedTasks.push(task);
+            savedCount++;
+          }
+        } catch (error) {
+          this.logger.error(`[TestFixTaskGenerator] Failed to save task ${task.id}:`, error.message);
+          
+          // If it's a unique constraint error, skip this task
+          if (error.message.includes('UNIQUE constraint failed') || error.message.includes('already exists')) {
+            this.logger.warn(`[TestFixTaskGenerator] Task ${task.id} already exists, skipping`);
+            skippedCount++;
+            continue;
+          }
+          
+          // For other errors, re-throw
+          throw error;
         }
       }
       
-      this.logger.info(`[TestFixTaskGenerator] Successfully saved ${savedTasks.length} tasks`);
+      this.logger.info(`[TestFixTaskGenerator] Successfully saved ${savedCount} tasks, skipped ${skippedCount} existing tasks`);
       return savedTasks;
       
     } catch (error) {
@@ -247,8 +274,29 @@ class TestFixTaskGenerator {
    * @returns {Promise<Array<Task>>} Saved tasks
    */
   async generateAndSaveTasks(parsedData, options = {}) {
-    const tasks = await this.generateTasksFromTestData(parsedData, options);
-    return await this.saveTasks(tasks);
+    try {
+      this.logger.info('[TestFixTaskGenerator] Generating tasks from test data...');
+      
+      // Clear existing tasks if requested
+      if (options.clearExisting) {
+        this.logger.info('[TestFixTaskGenerator] Clearing existing tasks...');
+        if (this.taskRepository) {
+          await this.taskRepository.clear();
+        }
+      }
+      
+      // Generate tasks
+      const tasks = await this.generateTasksFromTestData(parsedData, options);
+      
+      // Save tasks to database
+      const savedTasks = await this.saveTasks(tasks);
+      
+      return savedTasks;
+      
+    } catch (error) {
+      this.logger.error('[TestFixTaskGenerator] Error generating and saving tasks:', error.message);
+      throw error;
+    }
   }
 }
 

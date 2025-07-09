@@ -109,7 +109,8 @@ class AutoTestFixSystem {
       
       const tasks = await this.testFixTaskGenerator.generateAndSaveTasks(parsedData, {
         projectId: options.projectId || 'system',
-        userId: options.userId || 'system'
+        userId: options.userId || 'system',
+        clearExisting: options.clearExisting || false
       });
       
       this.logger.info(`[AutoTestFixSystem] Generated ${tasks.length} tasks in database`);
