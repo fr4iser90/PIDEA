@@ -472,14 +472,64 @@ class AutoTestFixSystem {
         await new Promise(resolve => setTimeout(resolve, 2000));
       }
       
-      // Create proper workflow branch using WorkflowGitService
+      // Create proper workflow branch using GitService or direct commands
       const projectPath = task.metadata?.projectPath || process.cwd();
       let branchResult = null;
       
       try {
         this.logger.info(`[AutoTestFixSystem] Creating workflow branch for task: ${task.id}`);
-        branchResult = await this.workflowGitService.createWorkflowBranch(projectPath, task, options);
-        this.logger.info(`[AutoTestFixSystem] Created branch: ${branchResult.branchName}`);
+        
+        // Get branch strategy and name
+        const branchStrategy = this.workflowGitService.determineBranchStrategy(task.type, {});
+        const branchName = this.workflowGitService.generateBranchName(task, branchStrategy);
+        const startPoint = branchStrategy.startPoint || 'main';
+        
+        // Try to create branch via GitService first
+        if (this.workflowGitService.gitService) {
+          await this.workflowGitService.gitService.createBranch(projectPath, branchName, {
+            startPoint: startPoint
+          });
+          this.logger.info(`[AutoTestFixSystem] Git branch created successfully via GitService: ${branchName}`);
+        } else {
+          // Fallback: direct git command via Playwright
+          if (this.cursorIDE && this.cursorIDE.browserManager) {
+            const gitCommands = [
+              `git checkout ${startPoint}`,
+              `git pull origin ${startPoint}`,
+              `git checkout -b ${branchName}`
+            ];
+            
+            for (const command of gitCommands) {
+              this.logger.info(`[AutoTestFixSystem] Executing Git command: ${command}`);
+              await this.cursorIDE.browserManager.executeTerminalCommand(command);
+              await new Promise(resolve => setTimeout(resolve, 1000)); // Wait between commands
+            }
+            this.logger.info(`[AutoTestFixSystem] Git branch created via Playwright: ${branchName}`);
+          } else {
+            // Last fallback: direct execSync
+            const { execSync } = require('child_process');
+            execSync(`git checkout ${startPoint}`, { cwd: projectPath });
+            execSync(`git pull origin ${startPoint}`, { cwd: projectPath });
+            execSync(`git checkout -b ${branchName}`, { cwd: projectPath });
+            this.logger.info(`[AutoTestFixSystem] Git branch created via direct command: ${branchName}`);
+          }
+        }
+        
+        branchResult = {
+          branchName,
+          strategy: branchStrategy,
+          status: 'created',
+          message: `Created ${branchStrategy.type} branch: ${branchName}`,
+          metadata: {
+            taskId: task.id,
+            taskType: task.type?.value,
+            workflowType: branchStrategy.type,
+            startPoint: startPoint,
+            mergeTarget: branchStrategy.mergeTarget || 'main',
+            timestamp: new Date()
+          }
+        };
+        
       } catch (error) {
         this.logger.warn(`[AutoTestFixSystem] Failed to create workflow branch: ${error.message}`);
         // Continue without branch creation - the AI will handle it in the prompt
@@ -612,7 +662,7 @@ Please proceed with the implementation and let me know when you're finished.`;
   }
 
   /**
-   * Execute Git workflow via Playwright commands
+   * Execute Git workflow via Playwright commands (branch already created)
    * @param {Object} task - Task object
    * @param {Object} branchResult - Branch creation result
    * @returns {Promise<Object>} Git workflow result
@@ -625,15 +675,8 @@ Please proceed with the implementation and let me know when you're finished.`;
         throw new Error('CursorIDE or browserManager not available for Git workflow');
       }
       
-      const projectPath = task.metadata?.projectPath || process.cwd();
-      const branchStrategy = this.workflowGitService.determineBranchStrategy(task.type, {});
-      const startPoint = branchStrategy.startPoint || 'main';
-      
-      // Execute Git commands via Playwright
+      // Branch is already created, just execute the remaining Git operations
       const gitCommands = [
-        `git checkout ${startPoint}`,
-        `git pull origin ${startPoint}`,
-        `git checkout -b ${branchResult.branchName}`,
         'npm test',
         'git add .',
         `git commit -m "${task.title} (Task ID: ${task.id}) - Auto-fixed by PIDEA"`,
