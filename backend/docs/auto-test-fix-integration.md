@@ -528,3 +528,170 @@ logger.info('[AutoTestFixSystem] Starting auto test fix workflow', {
 ```
 
 Progress updates are broadcast via WebSocket for real-time monitoring. 
+
+# Auto Test Fix System - Task Loading and Filtering
+
+## Overview
+
+The Auto Test Fix System now supports loading existing tasks from the database instead of always generating new tasks. This prevents duplicate task generation and respects the `completedAt` flag.
+
+## Key Features
+
+### 1. Load Existing Tasks
+
+Instead of always generating new tasks from test reports, the system can now load existing tasks from the database:
+
+```javascript
+// Load existing tasks instead of generating new ones
+const result = await autoTestFixSystem.executeAutoTestFixWorkflow({
+  projectId: 'my-project',
+  userId: 'user123',
+  loadExistingTasks: true, // Load existing tasks
+  taskStatus: 'pending' // Optional: only load pending tasks
+});
+```
+
+### 2. Automatic completedAt Filtering
+
+The system automatically filters out tasks that have been completed:
+
+- **Tasks with `status: 'completed'`** are skipped
+- **Tasks with `completedAt` timestamp** are skipped
+- Only **pending** and **in_progress** tasks are processed
+
+### 3. API Endpoints
+
+#### Load Existing Tasks (GET)
+```
+GET /api/projects/:projectId/auto/tests/load-tasks?status=pending
+```
+
+Response:
+```json
+{
+  "success": true,
+  "data": {
+    "tasks": [...],
+    "count": 5,
+    "message": "Loaded 5 existing tasks from database"
+  }
+}
+```
+
+#### Execute with Existing Tasks (POST)
+```
+POST /api/projects/:projectId/auto/tests/fix
+```
+
+Request Body:
+```json
+{
+  "loadExistingTasks": true,
+  "taskStatus": "pending",
+  "projectPath": "/path/to/project",
+  "stopOnError": false
+}
+```
+
+## Workflow Options
+
+### Option 1: Generate New Tasks (Default)
+```javascript
+{
+  loadExistingTasks: false, // or omit this option
+  clearExisting: false // Keep existing tasks in database
+}
+```
+
+### Option 2: Load Existing Tasks
+```javascript
+{
+  loadExistingTasks: true,
+  taskStatus: 'pending' // Optional: filter by status
+}
+```
+
+### Option 3: Load Existing + Generate New (Fallback)
+```javascript
+{
+  loadExistingTasks: true,
+  clearExisting: false // If no existing tasks found, generate new ones
+}
+```
+
+## Task Status Filtering
+
+When loading existing tasks, you can filter by status:
+
+- `pending` - Only pending tasks
+- `in_progress` - Only in-progress tasks  
+- `['pending', 'in_progress']` - Both pending and in-progress (default)
+- `null` - All non-completed tasks
+
+## completedAt Behavior
+
+Tasks with `completedAt` are automatically excluded:
+
+```javascript
+// This task will be skipped
+{
+  id: 'task-123',
+  status: { value: 'completed' },
+  completedAt: '2024-01-15T10:30:00Z',
+  // ... other fields
+}
+
+// This task will be processed
+{
+  id: 'task-456', 
+  status: { value: 'pending' },
+  completedAt: null,
+  // ... other fields
+}
+```
+
+## Benefits
+
+1. **No Duplicate Processing**: Completed tasks are never processed again
+2. **Resume Work**: Can resume interrupted workflows
+3. **Selective Processing**: Only process tasks that need attention
+4. **Database Efficiency**: Respects existing task state
+
+## Example Usage
+
+### Frontend Integration
+```javascript
+// Check for existing tasks first
+const existingTasks = await fetch('/api/projects/my-project/auto/tests/load-tasks');
+const hasExistingTasks = existingTasks.data.count > 0;
+
+// Execute with appropriate option
+const result = await fetch('/api/projects/my-project/auto/tests/fix', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    loadExistingTasks: hasExistingTasks,
+    taskStatus: 'pending'
+  })
+});
+```
+
+### CLI Usage
+```bash
+# Load and process existing tasks
+node scripts/test-management/generate-test-fix-tasks.js \
+  --project-path /path/to/project \
+  --load-existing-tasks \
+  --task-status pending
+
+# Generate new tasks (default behavior)
+node scripts/test-management/generate-test-fix-tasks.js \
+  --project-path /path/to/project
+```
+
+## Migration Notes
+
+- Existing workflows continue to work unchanged
+- New `loadExistingTasks` option is opt-in
+- `completedAt` filtering is automatic and cannot be disabled
+- Database schema remains unchanged 

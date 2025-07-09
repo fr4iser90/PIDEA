@@ -967,6 +967,7 @@ class Application {
       });
       this.autoTestFixController.executeAutoTestFix(req, res);
     });
+    this.app.get('/api/projects/:projectId/auto/tests/load-tasks', (req, res) => this.autoTestFixController.loadExistingTasks(req, res));
     this.app.get('/api/projects/:projectId/auto/tests/status/:sessionId', (req, res) => this.autoTestFixController.getSessionStatus(req, res));
     this.app.post('/api/projects/:projectId/auto/tests/cancel/:sessionId', (req, res) => this.autoTestFixController.cancelSession(req, res));
     this.app.get('/api/projects/:projectId/auto/tests/stats', (req, res) => this.autoTestFixController.getStats(req, res));

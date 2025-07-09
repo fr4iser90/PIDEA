@@ -81,6 +81,67 @@ class AutoTestFixSystem {
   }
 
   /**
+   * Load existing tasks from database
+   * @param {Object} options - Options for loading tasks
+   * @returns {Promise<Array<Task>>} Loaded tasks
+   */
+  async loadExistingTasks(options = {}) {
+    try {
+      this.logger.info(`[AutoTestFixSystem] Loading existing tasks from database...`);
+      
+      if (!this.taskRepository) {
+        this.logger.warn(`[AutoTestFixSystem] No task repository available, cannot load existing tasks`);
+        return [];
+      }
+
+      const projectId = options.projectId || 'system';
+      const userId = options.userId || 'system';
+      
+      // Load tasks with filters
+      const filters = {
+        projectId: projectId,
+        userId: userId,
+        type: 'testing' // Only test-related tasks
+      };
+
+      // Add status filter if specified
+      if (options.status) {
+        filters.status = options.status;
+      } else {
+        // Default: only load pending and in_progress tasks (skip completed/failed)
+        filters.status = ['pending', 'in_progress'];
+      }
+
+      // Load tasks from database
+      const existingTasks = await this.taskRepository.findByProject(projectId, filters);
+      
+      // Filter out completed tasks (those with completedAt set)
+      const activeTasks = existingTasks.filter(task => {
+        // Skip tasks that are marked as completed
+        if (task.status?.value === 'completed') {
+          this.logger.debug(`[AutoTestFixSystem] Skipping completed task: ${task.id}`);
+          return false;
+        }
+        
+        // Skip tasks that have completedAt timestamp
+        if (task.completedAt) {
+          this.logger.debug(`[AutoTestFixSystem] Skipping task with completedAt: ${task.id}`);
+          return false;
+        }
+        
+        return true;
+      });
+
+      this.logger.info(`[AutoTestFixSystem] Loaded ${activeTasks.length} active tasks from database (filtered from ${existingTasks.length} total)`);
+      return activeTasks;
+
+    } catch (error) {
+      this.logger.error(`[AutoTestFixSystem] Failed to load existing tasks: ${error.message}`);
+      return [];
+    }
+  }
+
+  /**
    * Execute complete auto test fix workflow
    * @param {Object} options - Workflow options
    * @returns {Promise<Object>} Workflow result
@@ -103,33 +164,57 @@ class AutoTestFixSystem {
         phase: 'initializing',
         progress: 0
       });
+
+      let tasks = [];
       
-      // Step 1: Parse existing test output files
-      this.logger.info(`[AutoTestFixSystem] Step 1: Parsing test output files`);
-      this.streamProgress(sessionId, 'phase', { phase: 'parsing', progress: 10 });
-      
-      const parsedData = await this.testReportParser.parseAllTestOutputs(options.projectPath || process.cwd());
-      
-      if (!parsedData.failingTests.length && !parsedData.coverageIssues.length) {
-        this.logger.info(`[AutoTestFixSystem] No test issues found in output files`);
-        return this.completeSession(sessionId, {
-          success: true,
-          message: 'No test issues found in output files',
-          parsedData
+      // Check if we should load existing tasks or generate new ones
+      if (options.loadExistingTasks) {
+        // Step 1: Load existing tasks from database
+        this.logger.info(`[AutoTestFixSystem] Step 1: Loading existing tasks from database`);
+        this.streamProgress(sessionId, 'phase', { phase: 'loading-tasks', progress: 10 });
+        
+        tasks = await this.loadExistingTasks({
+          projectId: options.projectId || 'system',
+          userId: options.userId || 'system',
+          status: options.taskStatus // Optional status filter
         });
+        
+        if (tasks.length === 0) {
+          this.logger.info(`[AutoTestFixSystem] No existing tasks found, will generate new tasks`);
+          options.loadExistingTasks = false; // Fallback to generating new tasks
+        } else {
+          this.logger.info(`[AutoTestFixSystem] Loaded ${tasks.length} existing tasks from database`);
+        }
       }
       
-      // Step 2: Generate and save tasks to database
-      this.logger.info(`[AutoTestFixSystem] Step 2: Generating and saving tasks to database`);
-      this.streamProgress(sessionId, 'phase', { phase: 'task-generation', progress: 20 });
-      
-      const tasks = await this.testFixTaskGenerator.generateAndSaveTasks(parsedData, {
-        projectId: options.projectId || 'system',
-        userId: options.userId || 'system',
-        clearExisting: options.clearExisting || false
-      });
-      
-      this.logger.info(`[AutoTestFixSystem] Generated ${tasks.length} tasks in database`);
+      if (!options.loadExistingTasks || tasks.length === 0) {
+        // Step 1: Parse existing test output files
+        this.logger.info(`[AutoTestFixSystem] Step 1: Parsing test output files`);
+        this.streamProgress(sessionId, 'phase', { phase: 'parsing', progress: 10 });
+        
+        const parsedData = await this.testReportParser.parseAllTestOutputs(options.projectPath || process.cwd());
+        
+        if (!parsedData.failingTests.length && !parsedData.coverageIssues.length) {
+          this.logger.info(`[AutoTestFixSystem] No test issues found in output files`);
+          return this.completeSession(sessionId, {
+            success: true,
+            message: 'No test issues found in output files',
+            parsedData
+          });
+        }
+        
+        // Step 2: Generate and save tasks to database
+        this.logger.info(`[AutoTestFixSystem] Step 2: Generating and saving tasks to database`);
+        this.streamProgress(sessionId, 'phase', { phase: 'task-generation', progress: 20 });
+        
+        tasks = await this.testFixTaskGenerator.generateAndSaveTasks(parsedData, {
+          projectId: options.projectId || 'system',
+          userId: options.userId || 'system',
+          clearExisting: options.clearExisting || false
+        });
+        
+        this.logger.info(`[AutoTestFixSystem] Generated ${tasks.length} tasks in database`);
+      }
       
       // Step 3: Process tasks sequentially
       this.logger.info(`[AutoTestFixSystem] Step 3: Processing tasks sequentially`);
@@ -535,28 +620,47 @@ class AutoTestFixSystem {
       if (confirmationResult && confirmationResult.isValid) {
         this.logger.info(`[AutoTestFixSystem] Proceeding with test validation for task: ${task.id}`);
         testValidationResult = await this.validateTestsWithExecution(task, branchResult);
+        
+        // Log the outcome
+        if (testValidationResult.success) {
+          this.logger.info(`[AutoTestFixSystem] ✅ Task ${task.id} completed successfully - Tests passed, changes committed`);
+        } else {
+          this.logger.warn(`[AutoTestFixSystem] ⚠️ Task ${task.id} failed - Tests failed, changes discarded, marked for review`);
+        }
       } else {
         this.logger.warn(`[AutoTestFixSystem] Task not confirmed after ${maxConfirmationAttempts} attempts (final status: ${confirmationResult?.status}), skipping test validation`);
         testValidationResult = {
           success: false,
           reason: 'task_not_confirmed',
           successRate: 0,
-          threshold: 80
+          threshold: 80,
+          taskStatus: 'not_confirmed'
         };
+        
+        // Update task status in database
+        if (this.taskRepository) {
+          task.fail({
+            success: false,
+            error: 'Task not confirmed by AI',
+            message: `Task not confirmed after ${maxConfirmationAttempts} confirmation attempts`
+          });
+          await this.taskRepository.save(task);
+        }
       }
       
       const taskResult = {
         taskId: task.id,
         description: task.title,
-        success: (confirmationResult?.confirmed || options.forceTestValidation) && (!testValidationResult || testValidationResult.success),
+        success: testValidationResult?.success || false,
         aiResponse,
         confirmationResult,
         testValidationResult,
         branchResult,
+        taskStatus: testValidationResult?.taskStatus || 'unknown',
         completedAt: new Date()
       };
       
-      this.logger.info(`[AutoTestFixSystem] Task ${task.id} processed via Cursor IDE`);
+      this.logger.info(`[AutoTestFixSystem] Task ${task.id} processed via Cursor IDE - Status: ${taskResult.taskStatus}`);
       return taskResult;
       
     } catch (error) {
@@ -1078,41 +1182,100 @@ Requires Review: ${branchStrategy.requiresReview ? 'Yes' : 'No'}`;
       const successThreshold = 80;
       const isSuccessful = testResult.successRate >= successThreshold;
       
-      // ALWAYS commit changes, regardless of test success
-      this.logger.info(`[AutoTestFixSystem] Tests ${isSuccessful ? 'passed' : 'failed'} (${testResult.successRate}% ${isSuccessful ? '>=' : '<'} ${successThreshold}%), committing changes...`);
-      
-      // Commit and push changes with appropriate message
-      const commitResult = await this.commitAndPushChanges(task, branchResult, {
-        testSuccess: isSuccessful,
-        successRate: testResult.successRate,
-        threshold: successThreshold
-      });
+      let commitResult = null;
+      let taskStatus = 'unknown';
       
       if (isSuccessful) {
-        return {
-          success: true,
+        // ✅ TESTS PASSED - Commit to Git
+        this.logger.info(`[AutoTestFixSystem] ✅ Tests PASSED (${testResult.successRate}% >= ${successThreshold}%), committing to Git...`);
+        
+        commitResult = await this.commitAndPushChanges(task, branchResult, {
+          testSuccess: true,
           successRate: testResult.successRate,
-          testOutput: testOutput.substring(0, 500) + '...', // Truncated for logging
-          commitResult,
-          message: `Tests passed with ${testResult.successRate}% success rate, changes committed`
-        };
+          threshold: successThreshold
+        });
+        
+        taskStatus = 'completed';
+        
+        // Update task status in database
+        if (this.taskRepository) {
+          task.complete({
+            success: true,
+            successRate: testResult.successRate,
+            commitResult,
+            message: `Tests passed with ${testResult.successRate}% success rate, changes committed`
+          });
+          await this.taskRepository.save(task);
+        }
+        
       } else {
-        return {
+        // ❌ TESTS FAILED - Discard changes and mark for review
+        this.logger.info(`[AutoTestFixSystem] ❌ Tests FAILED (${testResult.successRate}% < ${successThreshold}%), discarding changes and marking for review...`);
+        
+        // Discard changes by resetting to clean state
+        if (this.cursorIDE && this.cursorIDE.browserManager) {
+          this.logger.info(`[AutoTestFixSystem] Discarding changes...`);
+          const discardCommands = [
+            'git reset --hard HEAD',
+            'git clean -fd'
+          ];
+          
+          for (const command of discardCommands) {
+            this.logger.info(`[AutoTestFixSystem] Executing: ${command}`);
+            await this.cursorIDE.browserManager.executeTerminalCommand(command);
+            await new Promise(resolve => setTimeout(resolve, 1000));
+          }
+        }
+        
+        taskStatus = 'needs_review';
+        
+        // Update task status in database
+        if (this.taskRepository) {
+          task.fail({
+            success: false,
+            successRate: testResult.successRate,
+            error: `Test success rate ${testResult.successRate}% below threshold ${successThreshold}%`,
+            message: `Tests failed with ${testResult.successRate}% success rate, task marked for manual review`
+          });
+          await this.taskRepository.save(task);
+        }
+        
+        commitResult = {
           success: false,
-          successRate: testResult.successRate,
-          testOutput: testOutput.substring(0, 500) + '...', // Truncated for logging
-          commitResult, // Still committed despite test failure
-          error: `Test success rate ${testResult.successRate}% below threshold ${successThreshold}%`,
-          message: `Tests failed with ${testResult.successRate}% success rate, but changes committed for review`
+          action: 'discarded',
+          message: 'Changes discarded due to test failure, task marked for review'
         };
       }
       
+      return {
+        success: isSuccessful,
+        successRate: testResult.successRate,
+        testOutput: testOutput.substring(0, 500) + '...', // Truncated for logging
+        commitResult,
+        taskStatus,
+        message: isSuccessful ? 
+          `Tests passed with ${testResult.successRate}% success rate, changes committed` : 
+          `Tests failed with ${testResult.successRate}% success rate, changes discarded and task marked for review`
+      };
+      
     } catch (error) {
       this.logger.error(`[AutoTestFixSystem] Test validation failed: ${error.message}`);
+      
+      // Update task status on error
+      if (this.taskRepository) {
+        task.fail({
+          success: false,
+          error: error.message,
+          message: 'Test validation failed due to system error'
+        });
+        await this.taskRepository.save(task);
+      }
+      
       return {
         success: false,
         error: error.message,
-        successRate: 0
+        successRate: 0,
+        taskStatus: 'error'
       };
     }
   }
@@ -1199,7 +1362,7 @@ Requires Review: ${branchStrategy.requiresReview ? 'Yes' : 'No'}`;
   }
 
   /**
-   * Commit and push changes after test validation
+   * Commit and push changes after test validation (only for successful tests)
    * @param {Task} task - Task object
    * @param {Object} branchResult - Branch creation result
    * @param {Object} testInfo - Test information (success, successRate, threshold)
@@ -1209,15 +1372,20 @@ Requires Review: ${branchStrategy.requiresReview ? 'Yes' : 'No'}`;
     try {
       this.logger.info(`[AutoTestFixSystem] Committing and pushing changes for task: ${task.id}`);
       
+      // Only commit if tests are successful
+      if (!testInfo.testSuccess) {
+        this.logger.warn(`[AutoTestFixSystem] Skipping commit - tests failed (${testInfo.successRate}%)`);
+        return {
+          success: false,
+          action: 'skipped',
+          reason: 'tests_failed',
+          message: 'Commit skipped due to test failure'
+        };
+      }
+      
       if (this.cursorIDE && this.cursorIDE.browserManager) {
-        // Build commit message based on test results
-        let commitMessage = '';
-        
-        if (testInfo.testSuccess) {
-          commitMessage = `${task.title} (Task ID: ${task.id}) - ✅ Tests PASSED (${testInfo.successRate}%) - Auto-fixed by PIDEA`;
-        } else {
-          commitMessage = `${task.title} (Task ID: ${task.id}) - ❌ Tests FAILED (${testInfo.successRate}%) - Auto-fixed by PIDEA`;
-        }
+        // Build commit message for successful tests
+        const commitMessage = `${task.title} (Task ID: ${task.id}) - ✅ Tests PASSED (${testInfo.successRate}%) - Auto-fixed by PIDEA`;
         
         this.logger.info(`[AutoTestFixSystem] Commit message: ${commitMessage}`);
         
@@ -1239,9 +1407,8 @@ Requires Review: ${branchStrategy.requiresReview ? 'Yes' : 'No'}`;
           commitMessage,
           testSuccess: testInfo.testSuccess,
           successRate: testInfo.successRate,
-          message: testInfo.testSuccess ? 
-            'Changes committed and pushed successfully - Tests passed' : 
-            'Changes committed and pushed successfully - Tests failed, review needed'
+          action: 'committed',
+          message: 'Changes committed and pushed successfully - Tests passed'
         };
       } else {
         throw new Error('CursorIDE or browserManager not available for git operations');
@@ -1251,7 +1418,9 @@ Requires Review: ${branchStrategy.requiresReview ? 'Yes' : 'No'}`;
       this.logger.error(`[AutoTestFixSystem] Failed to commit and push changes: ${error.message}`);
       return {
         success: false,
-        error: error.message
+        action: 'failed',
+        error: error.message,
+        message: 'Git operations failed'
       };
     }
   }

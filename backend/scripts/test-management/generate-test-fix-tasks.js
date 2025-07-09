@@ -34,96 +34,106 @@ const IDEManager = require('@/infrastructure/external/IDEManager');
 
 class TestFixTaskCLI {
   constructor() {
-    this.logger = console;
-    this.options = this.parseOptions();
-  }
-
-  /**
-   * Parse command line options
-   */
-  parseOptions() {
-    const args = process.argv.slice(2);
-    const options = {
+    this.options = {
       projectPath: process.cwd(),
       projectId: 'system',
       userId: 'system',
-      stopOnError: false,
       dryRun: false,
-      clearExisting: false
+      stopOnError: false,
+      clearExisting: false,
+      loadExistingTasks: false, // New option to load existing tasks
+      taskStatus: null, // Optional status filter
+      help: false
     };
+    
+    this.logger = console;
+    this.taskRepository = null;
+    this.autoTestFixSystem = null;
+  }
 
+  /**
+   * Parse command line arguments
+   */
+  parseArguments() {
+    const args = process.argv.slice(2);
+    
     for (let i = 0; i < args.length; i++) {
       const arg = args[i];
       
       switch (arg) {
         case '--project-path':
-          options.projectPath = args[++i];
+        case '-p':
+          this.options.projectPath = args[++i];
           break;
         case '--project-id':
-          options.projectId = args[++i];
+          this.options.projectId = args[++i];
           break;
         case '--user-id':
-          options.userId = args[++i];
-          break;
-        case '--stop-on-error':
-          options.stopOnError = true;
+          this.options.userId = args[++i];
           break;
         case '--dry-run':
-          options.dryRun = true;
+          this.options.dryRun = true;
+          break;
+        case '--stop-on-error':
+          this.options.stopOnError = true;
           break;
         case '--clear-existing':
-          options.clearExisting = true;
+          this.options.clearExisting = true;
+          break;
+        case '--load-existing-tasks':
+          this.options.loadExistingTasks = true;
+          break;
+        case '--task-status':
+          this.options.taskStatus = args[++i];
           break;
         case '--help':
-          this.showHelp();
-          process.exit(0);
+        case '-h':
+          this.options.help = true;
           break;
         default:
           if (arg.startsWith('--')) {
-            this.logger.error(`Unknown option: ${arg}`);
-            this.showHelp();
+            console.error(`Unknown option: ${arg}`);
             process.exit(1);
           }
       }
     }
-
-    return options;
   }
 
   /**
-   * Show help information
+   * Display help information
    */
   showHelp() {
     console.log(`
-CLI Script: Generate and Process Test Fix Tasks
+Test Fix Task Generator CLI
 
-Usage:
-  node scripts/test-management/generate-test-fix-tasks.js [options]
+Usage: node generate-test-fix-tasks.js [options]
 
 Options:
-  --project-path <path>     Project path (default: current directory)
-  --project-id <id>         Project ID (default: 'system')
-  --user-id <id>            User ID (default: 'system')
-  --stop-on-error           Stop processing on first error
-  --dry-run                 Only generate tasks, don't process them
-  --clear-existing          Clear existing tasks before generating new ones
-  --help                    Show this help
+  --project-path, -p <path>     Project path (default: current directory)
+  --project-id <id>             Project ID (default: 'system')
+  --user-id <id>                User ID (default: 'system')
+  --dry-run                     Run without making changes
+  --stop-on-error               Stop processing on first error
+  --clear-existing              Clear existing tasks before generating new ones
+  --load-existing-tasks         Load existing tasks instead of generating new ones
+  --task-status <status>        Filter existing tasks by status (pending, in_progress, etc.)
+  --help, -h                    Show this help message
 
 Examples:
-  # Generate and process tasks from current directory
-  node scripts/test-management/generate-test-fix-tasks.js
+  # Generate new tasks from test reports
+  node generate-test-fix-tasks.js --project-path /path/to/project
 
-  # Generate tasks only (dry run)
-  node scripts/test-management/generate-test-fix-tasks.js --dry-run
+  # Load existing pending tasks
+  node generate-test-fix-tasks.js --load-existing-tasks --task-status pending
+
+  # Load existing tasks with fallback to generating new ones
+  node generate-test-fix-tasks.js --load-existing-tasks
 
   # Clear existing tasks and generate new ones
-  node scripts/test-management/generate-test-fix-tasks.js --clear-existing
+  node generate-test-fix-tasks.js --clear-existing
 
-  # Process with custom project settings
-  node scripts/test-management/generate-test-fix-tasks.js --project-path /path/to/project --project-id my-project --user-id user123
-
-  # Stop on first error
-  node scripts/test-management/generate-test-fix-tasks.js --stop-on-error
+  # Dry run to see what would be generated
+  node generate-test-fix-tasks.js --dry-run
 `);
   }
 
@@ -134,9 +144,8 @@ Examples:
     try {
       this.logger.info('[TestFixTaskCLI] Initializing services...');
 
-      // Initialize database
+      // Initialize database - SQLiteTaskRepository doesn't need initialize()
       this.taskRepository = new SQLiteTaskRepository();
-      await this.taskRepository.initialize();
 
       // Initialize IDE services if not dry run
       if (!this.options.dryRun) {
@@ -216,15 +225,26 @@ Examples:
    */
   async run() {
     try {
+      // Parse command line arguments
+      this.parseArguments();
+      
+      // Show help if requested
+      if (this.options.help) {
+        this.showHelp();
+        return;
+      }
+
       this.logger.info('[TestFixTaskCLI] Starting test fix task generation...');
       this.logger.info(`[TestFixTaskCLI] Project path: ${this.options.projectPath}`);
       this.logger.info(`[TestFixTaskCLI] Project ID: ${this.options.projectId}`);
       this.logger.info(`[TestFixTaskCLI] User ID: ${this.options.userId}`);
       this.logger.info(`[TestFixTaskCLI] Dry run: ${this.options.dryRun}`);
       this.logger.info(`[TestFixTaskCLI] Clear existing: ${this.options.clearExisting}`);
+      this.logger.info(`[TestFixTaskCLI] Load existing tasks: ${this.options.loadExistingTasks}`);
+      this.logger.info(`[TestFixTaskCLI] Task status filter: ${this.options.taskStatus || 'none'}`);
 
-      // Check output files
-      if (!this.checkOutputFiles()) {
+      // Check output files only if not loading existing tasks
+      if (!this.options.loadExistingTasks && !this.checkOutputFiles()) {
         process.exit(1);
       }
 
@@ -238,7 +258,9 @@ Examples:
         userId: this.options.userId,
         stopOnError: this.options.stopOnError,
         dryRun: this.options.dryRun,
-        clearExisting: this.options.clearExisting
+        clearExisting: this.options.clearExisting,
+        loadExistingTasks: this.options.loadExistingTasks,
+        taskStatus: this.options.taskStatus
       });
 
       // Display results
