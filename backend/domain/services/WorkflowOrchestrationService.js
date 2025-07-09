@@ -110,34 +110,34 @@ class WorkflowOrchestrationService {
         const taskType = task.type?.value;
 
         switch (taskType) {
-            case TaskType.REFACTORING.value:
+            case TaskType.REFACTOR:
                 return await this.executeRefactoringWorkflow(task, options);
 
-            case TaskType.FEATURE.value:
+            case TaskType.FEATURE:
                 return await this.executeFeatureWorkflow(task, options);
 
-            case TaskType.BUG_FIX.value:
+            case TaskType.BUG:
                 return await this.executeBugFixWorkflow(task, options);
 
-            case TaskType.ANALYSIS.value:
+            case TaskType.ANALYSIS:
                 return await this.executeAnalysisWorkflow(task, options);
 
-            case TaskType.TESTING.value:
+            case TaskType.TESTING:
                 return await this.executeTestingWorkflow(task, options);
 
-            case TaskType.DOCUMENTATION.value:
+            case TaskType.DOCUMENTATION:
                 return await this.executeDocumentationWorkflow(task, options);
 
-            case TaskType.DEBUG.value:
+            case TaskType.TEST_STATUS:
                 return await this.executeDebugWorkflow(task, options);
 
-            case TaskType.OPTIMIZATION.value:
+            case TaskType.OPTIMIZATION:
                 return await this.executeOptimizationWorkflow(task, options);
 
-            case TaskType.CODE_REVIEW.value:
+            case TaskType.ANALYSIS:
                 return await this.executeCodeReviewWorkflow(task, options);
 
-            case TaskType.HOTFIX.value:
+            case TaskType.SECURITY:
                 return await this.executeHotfixWorkflow(task, options);
 
             default:
