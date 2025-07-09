@@ -19,7 +19,7 @@ class CodeExplorerController {
       console.error('[CodeExplorerController] Error getting file tree:', error);
       res.status(500).json({
         success: false,
-        error: error.message
+        error: error?.message || String(error)
       });
     }
   }
@@ -53,7 +53,7 @@ class CodeExplorerController {
       console.error('[CodeExplorerController] Error getting file content:', error);
       res.status(500).json({
         success: false,
-        error: error.message
+        error: error?.message || String(error)
       });
     }
   }
@@ -72,7 +72,7 @@ class CodeExplorerController {
       console.error('[CodeExplorerController] Error getting current file info:', error);
       res.status(500).json({
         success: false,
-        error: error.message
+        error: error?.message || String(error)
       });
     }
   }
@@ -91,7 +91,7 @@ class CodeExplorerController {
       console.error('[CodeExplorerController] Error refreshing explorer:', error);
       res.status(500).json({
         success: false,
-        error: error.message
+        error: error?.message || String(error)
       });
     }
   }

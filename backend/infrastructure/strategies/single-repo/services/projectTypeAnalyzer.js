@@ -55,10 +55,12 @@ class ProjectTypeAnalyzer {
 
             return 'node-app';
         } catch (error) {
-            this.logger.error('ProjectTypeAnalyzer: Failed to get project type', {
-                projectPath,
-                error: error.message
-            });
+            if (this.logger) {
+                this.logger.error('ProjectTypeAnalyzer: Failed to get project type', {
+                    projectPath,
+                    error: error.message
+                });
+            }
             return 'unknown';
         }
     }
@@ -69,6 +71,10 @@ class ProjectTypeAnalyzer {
      * @returns {string|null} Framework type or null
      */
     detectFrontendFramework(dependencies) {
+        if (!dependencies) {
+            return null;
+        }
+        
         for (const [dep, type] of Object.entries(FRONTEND_FRAMEWORKS)) {
             if (dependencies[dep]) {
                 return type;
@@ -83,6 +89,10 @@ class ProjectTypeAnalyzer {
      * @returns {string|null} Framework type or null
      */
     detectBackendFramework(dependencies) {
+        if (!dependencies) {
+            return null;
+        }
+        
         for (const [dep, type] of Object.entries(BACKEND_FRAMEWORKS)) {
             if (dependencies[dep]) {
                 return type;
@@ -99,9 +109,11 @@ class ProjectTypeAnalyzer {
      */
     async detectBuildTool(projectPath, dependencies) {
         // Check dependencies first
-        for (const [dep, type] of Object.entries(BUILD_TOOLS_DETECTION)) {
-            if (dependencies[dep]) {
-                return type;
+        if (dependencies) {
+            for (const [dep, type] of Object.entries(BUILD_TOOLS_DETECTION)) {
+                if (dependencies[dep]) {
+                    return type;
+                }
             }
         }
 
@@ -115,10 +127,15 @@ class ProjectTypeAnalyzer {
             'rollup.config.ts': 'rollup-app'
         };
 
-        for (const [configFile, type] of Object.entries(buildConfigs)) {
-            if (await this.fileUtils.fileExists(path.join(projectPath, configFile))) {
-                return type;
+        try {
+            for (const [configFile, type] of Object.entries(buildConfigs)) {
+                if (await this.fileUtils.fileExists(path.join(projectPath, configFile))) {
+                    return type;
+                }
             }
+        } catch (error) {
+            // Handle fileExists errors gracefully
+            return null;
         }
 
         return null;

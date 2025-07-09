@@ -13,11 +13,8 @@ const path = require('path');
 // Aliase aus package.json lesen
 const pkg = require('../../package.json');
 const aliasMap = pkg._moduleAliases || {};
-
-// Welche Verzeichnisse durchsuchen?
-const TARGET_DIRS = [
-  path.join(__dirname, '../../tests/'), // tests/
-];
+const testsDir = aliasMap['@tests'] ? path.resolve(__dirname, '../../', aliasMap['@tests']) : path.join(__dirname, '../../tests/');
+const TARGET_DIRS = [testsDir];
 
 // Hilfsfunktion: Erzeuge Mapping von absolutem Pfad zu Alias
 function getAliasMappings() {
@@ -44,27 +41,31 @@ function findAliasFor(absImportPath, mappings) {
 function adjustImportsInFile(filePath, mappings, report) {
   let content = fs.readFileSync(filePath, 'utf8');
   let changed = false;
-  const importRegex = /require\(['"](\.\.?\/[^'"]+)['"]\)/g;
+  
+  // Erweiterte Regex: Erkennt sowohl require(...) als auch import ... from ...
+  const importRegex = /(require\(['"](\.\.?\/[^'"]+)['"]\))|(import .* from ['"](\.\.?\/[^'"]+)['"])/g;
   let match;
   let newContent = content;
   let changes = [];
 
   while ((match = importRegex.exec(content)) !== null) {
-    const relImport = match[1];
+    // Extrahiere den relativen Pfad (entweder aus require oder import)
+    const relImport = match[2] || match[4];
+    if (!relImport) continue;
     
     // Spezielle Behandlung für Tests, die ../../backend/ verwenden
     if (relImport.startsWith('../../backend/')) {
       const cleanPath = relImport.replace('../../backend/', '');
       const aliasImport = `@/${cleanPath}`;
-      newContent = newContent.replace(
-        match[0],
-        `require('${aliasImport}')`
-      );
+      
+      // Ersetze nur den Pfad, nicht das ganze Statement
+      newContent = newContent.replace(relImport, aliasImport);
       changed = true;
       changes.push({
         from: relImport,
         to: aliasImport,
-        line: content.substr(0, match.index).split('\n').length
+        line: content.substr(0, match.index).split('\n').length,
+        type: match[1] ? 'require' : 'import'
       });
       continue;
     }
@@ -73,20 +74,25 @@ function adjustImportsInFile(filePath, mappings, report) {
     const absImportPath = path.resolve(path.dirname(filePath), relImport);
     const aliasImport = findAliasFor(absImportPath, mappings);
     if (aliasImport) {
-      newContent = newContent.replace(
-        match[0],
-        `require('${aliasImport}')`
-      );
+      // Ersetze nur den Pfad, nicht das ganze Statement
+      newContent = newContent.replace(relImport, aliasImport);
       changed = true;
       changes.push({
         from: relImport,
         to: aliasImport,
-        line: content.substr(0, match.index).split('\n').length
+        line: content.substr(0, match.index).split('\n').length,
+        type: match[1] ? 'require' : 'import'
       });
     }
   }
 
   if (changed) {
+    // Sichere Schreibweise: Backup erstellen
+    const backupPath = filePath + '.backup';
+    if (!fs.existsSync(backupPath)) {
+      fs.writeFileSync(backupPath, content, 'utf8');
+    }
+    
     fs.writeFileSync(filePath, newContent, 'utf8');
     report.patched.push({ file: filePath, changes });
     console.log(`✅ Patched: ${path.relative(process.cwd(), filePath)}`);

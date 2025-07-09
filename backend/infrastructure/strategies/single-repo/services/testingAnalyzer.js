@@ -1,6 +1,7 @@
 /**
  * Testing analyzer service for SingleRepoStrategy
  */
+const path = require('path');
 const { TEST_CONFIGS } = require('../constants');
 
 class TestingAnalyzer {
@@ -33,9 +34,16 @@ class TestingAnalyzer {
             testing.hasTests = testFiles.length > 0;
 
             // Check for test configurations
-            for (const config of TEST_CONFIGS) {
-                if (await this.fileUtils.fileExists(path.join(projectPath, config))) {
-                    testing.testConfigs.push(config);
+            if (this.fileUtils && this.fileUtils.fileExists) {
+                for (const config of TEST_CONFIGS) {
+                    try {
+                        if (await this.fileUtils.fileExists(path.join(projectPath, config))) {
+                            testing.testConfigs.push(config);
+                        }
+                    } catch (error) {
+                        // Continue checking other configs even if one fails
+                        continue;
+                    }
                 }
             }
 
@@ -46,10 +54,12 @@ class TestingAnalyzer {
 
             return testing;
         } catch (error) {
-            this.logger.error('TestingAnalyzer: Failed to analyze testing', {
-                projectPath,
-                error: error.message
-            });
+            if (this.logger && this.logger.error) {
+                this.logger.error('TestingAnalyzer: Failed to analyze testing', {
+                    projectPath,
+                    error: error.message
+                });
+            }
             return {};
         }
     }
@@ -64,12 +74,17 @@ class TestingAnalyzer {
 
         // Simple implementation - in production, use glob patterns
         try {
-            await this.directoryScanner.scanForTestFiles(projectPath, testFiles);
+            if (this.directoryScanner && this.directoryScanner.scanForTestFiles) {
+                const result = await this.directoryScanner.scanForTestFiles(projectPath, testFiles);
+                return result || testFiles;
+            }
         } catch (error) {
-            this.logger.warn('TestingAnalyzer: Failed to scan for test files', {
-                projectPath,
-                error: error.message
-            });
+            if (this.logger && this.logger.warn) {
+                this.logger.warn('TestingAnalyzer: Failed to scan for test files', {
+                    projectPath,
+                    error: error.message
+                });
+            }
         }
 
         return testFiles;

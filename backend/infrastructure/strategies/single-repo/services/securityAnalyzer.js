@@ -1,6 +1,7 @@
 /**
  * Security analyzer service for SingleRepoStrategy
  */
+const path = require('path');
 const { SECURITY_FILES, SECRETS_FILES, SECURITY_DEPENDENCIES } = require('../constants');
 
 class SecurityAnalyzer {
@@ -60,6 +61,9 @@ class SecurityAnalyzer {
      * @returns {boolean} True if any dependency exists
      */
     hasAnyDependency(dependencies, targetDeps) {
+        if (!dependencies || !targetDeps || targetDeps.length === 0) {
+            return false;
+        }
         return targetDeps.some(dep => dependencies[dep]);
     }
 }

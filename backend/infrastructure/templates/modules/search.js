@@ -13,6 +13,10 @@ class TemplateSearch {
             return [];
         }
 
+        if (!allTemplates || typeof allTemplates !== 'object') {
+            return [];
+        }
+
         const results = [];
         const searchTerm = keyword.toLowerCase();
 
@@ -45,7 +49,7 @@ class TemplateSearch {
         ];
 
         return searchableFields.some(field => 
-            field && field.toLowerCase().includes(searchTerm)
+            field && typeof field === 'string' && field.toLowerCase().includes(searchTerm)
         );
     }
 
@@ -56,7 +60,11 @@ class TemplateSearch {
      * @returns {Object} Templates in category
      */
     static searchByCategory(allTemplates, category) {
-        if (!category) {
+        if (!category || typeof category !== 'string') {
+            return {};
+        }
+
+        if (!allTemplates || typeof allTemplates !== 'object') {
             return {};
         }
 
@@ -71,7 +79,11 @@ class TemplateSearch {
      * @returns {Object|null} Template or null if not found
      */
     static getTemplate(allTemplates, category, name) {
-        if (!category || !name) {
+        if (!category || !name || typeof category !== 'string' || typeof name !== 'string') {
+            return null;
+        }
+
+        if (!allTemplates || typeof allTemplates !== 'object') {
             return null;
         }
 
@@ -84,6 +96,9 @@ class TemplateSearch {
      * @returns {Array} List of categories
      */
     static getCategories(allTemplates) {
+        if (!allTemplates || typeof allTemplates !== 'object') {
+            return [];
+        }
         return Object.keys(allTemplates);
     }
 
@@ -93,6 +108,10 @@ class TemplateSearch {
      * @returns {Object} Template counts by category
      */
     static getTemplateCounts(allTemplates) {
+        if (!allTemplates || typeof allTemplates !== 'object') {
+            return {};
+        }
+
         const counts = {};
 
         for (const [category, templates] of Object.entries(allTemplates)) {

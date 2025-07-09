@@ -123,10 +123,12 @@ class FileUtils {
             const content = await fs.readFile(filePath, 'utf8');
             return JSON.parse(content);
         } catch (error) {
-            this.logger.warn('FileUtils: Failed to read JSON file', {
-                filePath,
-                error: error.message
-            });
+            if (this.logger && typeof this.logger.warn === 'function') {
+                this.logger.warn('FileUtils: Failed to read JSON file', {
+                    filePath,
+                    error: error.message
+                });
+            }
             return null;
         }
     }

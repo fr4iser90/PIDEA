@@ -26,15 +26,17 @@ class TemplateGenerator {
         let script = template.template;
 
         // Substitute provided variables
-        for (const [key, value] of Object.entries(variables)) {
-            const placeholder = `{{${key}}}`;
-            script = script.replace(new RegExp(placeholder, 'g'), String(value));
+        if (variables) {
+            for (const [key, value] of Object.entries(variables)) {
+                const placeholder = `{{${key}}}`;
+                script = script.replace(new RegExp(placeholder, 'g'), String(value));
+            }
         }
 
         // Substitute default variables if not provided
         for (const [key, defaultValue] of Object.entries(template.variables || {})) {
             const placeholder = `{{${key}}}`;
-            if (!variables[key] && script.includes(placeholder)) {
+            if ((!variables || !variables[key]) && script.includes(placeholder)) {
                 script = script.replace(new RegExp(placeholder, 'g'), String(defaultValue));
             }
         }

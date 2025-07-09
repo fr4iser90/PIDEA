@@ -3,8 +3,8 @@
  */
 class TaskTemplates {
     constructor(dependencies = {}) {
-        this.logger = dependencies.logger || console;
-        this.eventBus = dependencies.eventBus;
+        this.logger = (dependencies && dependencies.logger) || console;
+        this.eventBus = dependencies && dependencies.eventBus;
     }
 
     /**
@@ -1011,11 +1011,18 @@ class TaskTemplates {
         const allTemplates = this.getAllTemplates();
         const results = [];
 
+        // Handle empty or undefined keyword
+        if (!keyword || keyword.trim() === '') {
+            return results;
+        }
+
+        const searchKeyword = keyword.toLowerCase();
+
         for (const [category, templates] of Object.entries(allTemplates)) {
             for (const [name, template] of Object.entries(templates)) {
-                if (template.name.toLowerCase().includes(keyword.toLowerCase()) ||
-                    template.description.toLowerCase().includes(keyword.toLowerCase()) ||
-                    template.category.toLowerCase().includes(keyword.toLowerCase())) {
+                if (template.name.toLowerCase().includes(searchKeyword) ||
+                    template.description.toLowerCase().includes(searchKeyword) ||
+                    template.category.toLowerCase().includes(searchKeyword)) {
                     results.push({
                         category,
                         name,
@@ -1100,6 +1107,15 @@ class TaskTemplates {
      */
     validateTemplate(template) {
         const errors = [];
+
+        // Handle null or undefined template
+        if (!template) {
+            errors.push('Template is required');
+            return {
+                isValid: false,
+                errors
+            };
+        }
 
         if (!template.name) {
             errors.push('Template name is required');

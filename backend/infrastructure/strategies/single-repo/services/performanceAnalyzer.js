@@ -1,6 +1,7 @@
 /**
  * Performance analyzer service for SingleRepoStrategy
  */
+const path = require('path');
 const { PERFORMANCE_FILES, PERFORMANCE_DEPENDENCIES } = require('../constants');
 
 class PerformanceAnalyzer {
@@ -25,29 +26,39 @@ class PerformanceAnalyzer {
 
             // Check for performance-related dependencies
             try {
-                const packageJsonPath = path.join(projectPath, 'package.json');
-                const packageJson = await this.fileUtils.readJsonFile(packageJsonPath);
-                
-                if (packageJson) {
-                    const allDeps = { ...packageJson.dependencies, ...packageJson.devDependencies };
+                if (projectPath && this.fileUtils) {
+                    const packageJsonPath = path.join(projectPath, 'package.json');
+                    const packageJson = await this.fileUtils.readJsonFile(packageJsonPath);
+                    
+                    if (packageJson) {
+                        const allDeps = { ...packageJson.dependencies, ...packageJson.devDependencies };
 
-                    performance.hasMonitoring = this.hasAnyDependency(allDeps, PERFORMANCE_DEPENDENCIES.monitoring);
-                    performance.hasCaching = this.hasAnyDependency(allDeps, PERFORMANCE_DEPENDENCIES.caching);
-                    performance.hasOptimization = this.hasAnyDependency(allDeps, PERFORMANCE_DEPENDENCIES.optimization);
+                        performance.hasMonitoring = this.hasAnyDependency(allDeps, PERFORMANCE_DEPENDENCIES.monitoring);
+                        performance.hasCaching = this.hasAnyDependency(allDeps, PERFORMANCE_DEPENDENCIES.caching);
+                        performance.hasOptimization = this.hasAnyDependency(allDeps, PERFORMANCE_DEPENDENCIES.optimization);
+                    }
                 }
             } catch {
                 // Ignore package.json errors
             }
 
             // Check for performance configuration files
-            performance.hasPerformanceConfig = await this.fileUtils.hasAnyFile(projectPath, PERFORMANCE_FILES);
+            try {
+                if (projectPath && this.fileUtils) {
+                    performance.hasPerformanceConfig = await this.fileUtils.hasAnyFile(projectPath, PERFORMANCE_FILES);
+                }
+            } catch {
+                // Ignore file system errors
+            }
 
             return performance;
         } catch (error) {
-            this.logger.error('PerformanceAnalyzer: Failed to analyze performance', {
-                projectPath,
-                error: error.message
-            });
+            if (this.logger) {
+                this.logger.error('PerformanceAnalyzer: Failed to analyze performance', {
+                    projectPath,
+                    error: error.message
+                });
+            }
             return {};
         }
     }
@@ -59,6 +70,9 @@ class PerformanceAnalyzer {
      * @returns {boolean} True if any dependency exists
      */
     hasAnyDependency(dependencies, targetDeps) {
+        if (!dependencies || !targetDeps || !Array.isArray(targetDeps)) {
+            return false;
+        }
         return targetDeps.some(dep => dependencies[dep]);
     }
 }
