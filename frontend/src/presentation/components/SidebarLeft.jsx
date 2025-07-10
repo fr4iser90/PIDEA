@@ -85,6 +85,41 @@ function SidebarLeft({ eventBus, activePort, onActivePortChange, mode = 'chat' }
     }
   };
 
+  // IDE Icons mapping
+  const getIDEIcon = (ideType) => {
+    switch (ideType?.toLowerCase()) {
+      case 'cursor':
+        return '🎯'; // Cursor icon
+      case 'vscode':
+        return '💻'; // VS Code icon
+      case 'windsurf':
+        return '🏄'; // Windsurf icon
+      case 'jetbrains':
+        return '🛠️'; // JetBrains icon
+      case 'sublime':
+        return '📝'; // Sublime icon
+      default:
+        return '🖥️'; // Default IDE icon
+    }
+  };
+
+  const getIDEName = (ideType) => {
+    switch (ideType?.toLowerCase()) {
+      case 'cursor':
+        return 'Cursor';
+      case 'vscode':
+        return 'VS Code';
+      case 'windsurf':
+        return 'Windsurf';
+      case 'jetbrains':
+        return 'JetBrains';
+      case 'sublime':
+        return 'Sublime';
+      default:
+        return 'IDE';
+    }
+  };
+
   const refreshIDEList = async () => {
     if (!isAuthenticated) return;
     try {
@@ -154,7 +189,9 @@ function SidebarLeft({ eventBus, activePort, onActivePortChange, mode = 'chat' }
               >
                 <div className="ide-info">
                   <div className="ide-title">
-                    Port {ide.port}
+                    <span className="ide-icon">{getIDEIcon(ide.ideType)}</span>
+                    <span className="ide-name">{getIDEName(ide.ideType)}</span>
+                    <span className="ide-port">Port {ide.port}</span>
                     <span className="ide-project-name">
                       {ide.projectName || (ide.workspacePath ? ide.workspacePath.split('/').pop() : 'Unbekanntes Projekt')}
                     </span>

@@ -124,6 +124,29 @@
   .ide-title {
     font-weight: 500;
     margin-bottom: 2px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+
+  .ide-icon {
+    font-size: 14px;
+    margin-right: 2px;
+  }
+
+  .ide-name {
+    font-weight: 600;
+    color: #4e8cff;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+  }
+
+  .ide-port {
+    color: #888888;
+    font-size: 10px;
+    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
   }
   
   .ide-meta {

@@ -199,6 +199,20 @@ class ServiceRegistry {
             return new VSCodeService(browserManager, ideManager, eventBus);
         }, { singleton: true, dependencies: ['browserManager', 'ideManager', 'eventBus'] });
 
+        // Windsurf IDE service (using new abstraction layer)
+        this.container.register('windsurfIDEService', (browserManager, ideManager, eventBus, ideFactory) => {
+            const { getIDEFactory } = require('../../domain/services/ide/IDEFactory');
+            const factory = getIDEFactory();
+            
+            // Create Windsurf IDE instance
+            const result = factory.createIDE('windsurf', { browserManager, ideManager, eventBus });
+            if (result.success) {
+                return result.ide;
+            }
+            
+            throw new Error('Failed to create Windsurf IDE service: ' + result.error);
+        }, { singleton: true, dependencies: ['browserManager', 'ideManager', 'eventBus', 'ideFactory'] });
+
         // Auth service
         this.container.register('authService', (userRepository, userSessionRepository) => {
             const AuthService = require('../../domain/services/AuthService');

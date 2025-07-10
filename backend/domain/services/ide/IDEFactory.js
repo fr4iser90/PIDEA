@@ -41,6 +41,10 @@ class IDEFactory {
       const VSCodeIDE = require('./implementations/VSCodeIDE');
       this.registerIDE(IDETypes.VSCODE, VSCodeIDE);
 
+      // Register Windsurf IDE implementation
+      const WindsurfIDE = require('./implementations/WindsurfIDE');
+      this.registerIDE(IDETypes.WINDSURF, WindsurfIDE);
+
       console.log('[IDEFactory] Default IDE implementations registered');
     } catch (error) {
       console.error('[IDEFactory] Failed to register default implementations:', error);
