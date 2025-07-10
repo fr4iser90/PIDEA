@@ -54,6 +54,15 @@ class TaskWebSocket {
         this.eventBus.on('auto:progress', this.handleAutoModeProgress.bind(this));
         this.eventBus.on('auto:complete', this.handleAutoModeComplete.bind(this));
         this.eventBus.on('auto:error', this.handleAutoModeError.bind(this));
+        
+        // IDE events
+        this.eventBus.on('ide:list:updated', this.handleIDEListUpdated.bind(this));
+        this.eventBus.on('ide:status:changed', this.handleIDEStatusChanged.bind(this));
+        this.eventBus.on('ide:switched', this.handleIDESwitched.bind(this));
+        this.eventBus.on('ide:features:updated', this.handleIDEFeaturesUpdated.bind(this));
+        this.eventBus.on('ide:mirror:status:changed', this.handleIDEMirrorStatusChanged.bind(this));
+        this.eventBus.on('ide:dom:updated', this.handleIDEDOMUpdated.bind(this));
+        this.eventBus.on('ide:element:interaction', this.handleIDEElementInteraction.bind(this));
     }
 
     /**
@@ -185,6 +194,36 @@ class TaskWebSocket {
         // Request execution logs
         socket.on('request:execution:logs', (data) => {
             this.handleExecutionLogsRequest(socket, user, data);
+        });
+
+        // Subscribe to IDE updates
+        socket.on('subscribe:ide', (data) => {
+            this.handleIDESubscription(socket, user, data);
+        });
+
+        // Unsubscribe from IDE updates
+        socket.on('unsubscribe:ide', (data) => {
+            this.handleIDEUnsubscription(socket, user, data);
+        });
+
+        // Subscribe to IDE mirror updates
+        socket.on('subscribe:ide:mirror', (data) => {
+            this.handleIDEMirrorSubscription(socket, user, data);
+        });
+
+        // Unsubscribe from IDE mirror updates
+        socket.on('unsubscribe:ide:mirror', (data) => {
+            this.handleIDEMirrorUnsubscription(socket, user, data);
+        });
+
+        // Request IDE status
+        socket.on('request:ide:status', (data) => {
+            this.handleIDEStatusRequest(socket, user, data);
+        });
+
+        // Request IDE features
+        socket.on('request:ide:features', (data) => {
+            this.handleIDEFeaturesRequest(socket, user, data);
         });
 
         // Disconnect handler
@@ -645,6 +684,220 @@ class TaskWebSocket {
 
     handleAutoModeError(data) {
         this.broadcastToRoom(`auto:${data.sessionId}`, 'auto:error', data);
+    }
+
+    // IDE Event Handlers
+    handleIDEListUpdated(data) {
+        this.broadcastToRoom('ide', 'ide:list:updated', data);
+    }
+
+    handleIDEStatusChanged(data) {
+        this.broadcastToRoom('ide', 'ide:status:changed', data);
+    }
+
+    handleIDESwitched(data) {
+        this.broadcastToRoom('ide', 'ide:switched', data);
+    }
+
+    handleIDEFeaturesUpdated(data) {
+        this.broadcastToRoom('ide', 'ide:features:updated', data);
+    }
+
+    handleIDEMirrorStatusChanged(data) {
+        this.broadcastToRoom(`ide:mirror:${data.port}`, 'ide:mirror:status:changed', data);
+    }
+
+    handleIDEDOMUpdated(data) {
+        this.broadcastToRoom(`ide:mirror:${data.port}`, 'ide:dom:updated', data);
+    }
+
+    handleIDEElementInteraction(data) {
+        this.broadcastToRoom(`ide:mirror:${data.port}`, 'ide:element:interaction', data);
+    }
+
+    // IDE Socket Event Handlers
+    handleIDESubscription(socket, user, data) {
+        try {
+            const roomName = 'ide';
+            socket.join(roomName);
+            
+            const client = this.connectedClients.get(socket.id);
+            if (client) {
+                client.subscriptions.add(roomName);
+            }
+
+            this.logger.info('TaskWebSocket: Client subscribed to IDE updates', {
+                socketId: socket.id,
+                userId: user.id,
+                roomName
+            });
+
+            socket.emit('subscribed:ide', {
+                message: 'Subscribed to IDE updates',
+                roomName,
+                timestamp: new Date().toISOString()
+            });
+        } catch (error) {
+            this.logger.error('TaskWebSocket: Failed to handle IDE subscription', {
+                socketId: socket.id,
+                userId: user.id,
+                error: error.message
+            });
+            socket.emit('error', { message: 'Failed to subscribe to IDE updates' });
+        }
+    }
+
+    handleIDEUnsubscription(socket, user, data) {
+        try {
+            const roomName = 'ide';
+            socket.leave(roomName);
+            
+            const client = this.connectedClients.get(socket.id);
+            if (client) {
+                client.subscriptions.delete(roomName);
+            }
+
+            this.logger.info('TaskWebSocket: Client unsubscribed from IDE updates', {
+                socketId: socket.id,
+                userId: user.id,
+                roomName
+            });
+
+            socket.emit('unsubscribed:ide', {
+                message: 'Unsubscribed from IDE updates',
+                roomName,
+                timestamp: new Date().toISOString()
+            });
+        } catch (error) {
+            this.logger.error('TaskWebSocket: Failed to handle IDE unsubscription', {
+                socketId: socket.id,
+                userId: user.id,
+                error: error.message
+            });
+            socket.emit('error', { message: 'Failed to unsubscribe from IDE updates' });
+        }
+    }
+
+    handleIDEMirrorSubscription(socket, user, data) {
+        try {
+            const port = data.port || 'default';
+            const roomName = `ide:mirror:${port}`;
+            socket.join(roomName);
+            
+            const client = this.connectedClients.get(socket.id);
+            if (client) {
+                client.subscriptions.add(roomName);
+            }
+
+            this.logger.info('TaskWebSocket: Client subscribed to IDE mirror updates', {
+                socketId: socket.id,
+                userId: user.id,
+                roomName,
+                port
+            });
+
+            socket.emit('subscribed:ide:mirror', {
+                message: 'Subscribed to IDE mirror updates',
+                roomName,
+                port,
+                timestamp: new Date().toISOString()
+            });
+        } catch (error) {
+            this.logger.error('TaskWebSocket: Failed to handle IDE mirror subscription', {
+                socketId: socket.id,
+                userId: user.id,
+                error: error.message
+            });
+            socket.emit('error', { message: 'Failed to subscribe to IDE mirror updates' });
+        }
+    }
+
+    handleIDEMirrorUnsubscription(socket, user, data) {
+        try {
+            const port = data.port || 'default';
+            const roomName = `ide:mirror:${port}`;
+            socket.leave(roomName);
+            
+            const client = this.connectedClients.get(socket.id);
+            if (client) {
+                client.subscriptions.delete(roomName);
+            }
+
+            this.logger.info('TaskWebSocket: Client unsubscribed from IDE mirror updates', {
+                socketId: socket.id,
+                userId: user.id,
+                roomName,
+                port
+            });
+
+            socket.emit('unsubscribed:ide:mirror', {
+                message: 'Unsubscribed from IDE mirror updates',
+                roomName,
+                port,
+                timestamp: new Date().toISOString()
+            });
+        } catch (error) {
+            this.logger.error('TaskWebSocket: Failed to handle IDE mirror unsubscription', {
+                socketId: socket.id,
+                userId: user.id,
+                error: error.message
+            });
+            socket.emit('error', { message: 'Failed to unsubscribe from IDE mirror updates' });
+        }
+    }
+
+    async handleIDEStatusRequest(socket, user, data) {
+        try {
+            const port = data.port;
+            if (!port) {
+                socket.emit('error', { message: 'Port is required for IDE status request' });
+                return;
+            }
+
+            // This would typically call an IDE service to get status
+            // For now, we'll send a mock response
+            socket.emit('ide:status:response', {
+                port,
+                status: 'connected',
+                timestamp: new Date().toISOString()
+            });
+        } catch (error) {
+            this.logger.error('TaskWebSocket: Failed to handle IDE status request', {
+                socketId: socket.id,
+                userId: user.id,
+                error: error.message
+            });
+            socket.emit('error', { message: 'Failed to get IDE status' });
+        }
+    }
+
+    async handleIDEFeaturesRequest(socket, user, data) {
+        try {
+            const port = data.port;
+            if (!port) {
+                socket.emit('error', { message: 'Port is required for IDE features request' });
+                return;
+            }
+
+            // This would typically call an IDE service to get features
+            // For now, we'll send a mock response
+            socket.emit('ide:features:response', {
+                port,
+                features: {
+                    chat: { available: true, enabled: true },
+                    terminal: { available: true, enabled: false },
+                    git: { available: true, enabled: true }
+                },
+                timestamp: new Date().toISOString()
+            });
+        } catch (error) {
+            this.logger.error('TaskWebSocket: Failed to handle IDE features request', {
+                socketId: socket.id,
+                userId: user.id,
+                error: error.message
+            });
+            socket.emit('error', { message: 'Failed to get IDE features' });
+        }
     }
 
     /**

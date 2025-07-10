@@ -11,6 +11,7 @@ import Header from '@/presentation/components/Header.jsx';
 import Footer from '@/presentation/components/Footer.jsx';
 import useAuthStore from '@/infrastructure/stores/AuthStore.jsx';
 import { apiCall } from '@/infrastructure/repositories/APIChatRepository.jsx';
+import { IDEProvider } from '@/presentation/components/ide/IDEContext.jsx';
 
 function App() {
   const [eventBus] = useState(() => new EventBus());
@@ -157,6 +158,16 @@ function App() {
         return <ChatComponent eventBus={eventBus} activePort={activePort} attachedPrompts={attachedPrompts} />;
       case 'ide-mirror':
         return <IDEMirrorComponent eventBus={eventBus} />;
+      case 'ide-selector':
+        return <div className="ide-selector-view">
+          <h2>IDE Selection</h2>
+          <p>Use the sidebar to select and manage IDEs</p>
+        </div>;
+      case 'ide-features':
+        return <div className="ide-features-view">
+          <h2>IDE Features</h2>
+          <p>Manage IDE features and capabilities</p>
+        </div>;
       case 'preview':
         return <PreviewComponent eventBus={eventBus} activePort={activePort} />;
       case 'git':
@@ -220,41 +231,43 @@ function App() {
 
   return (
     <AuthWrapper>
-      <div ref={containerRef} className="app-root">
-        <Header 
-          eventBus={eventBus}
-          currentView={currentView}
-          onNavigationClick={handleNavigationClick}
-          onLeftSidebarToggle={handleLeftSidebarToggle}
-          onRightSidebarToggle={handleRightSidebarToggle}
-        />
+      <IDEProvider eventBus={eventBus}>
+        <div ref={containerRef} className="app-root">
+          <Header 
+            eventBus={eventBus}
+            currentView={currentView}
+            onNavigationClick={handleNavigationClick}
+            onLeftSidebarToggle={handleLeftSidebarToggle}
+            onRightSidebarToggle={handleRightSidebarToggle}
+          />
 
-        {/* Main Content */}
-        <main className={`main-layout${isSplitView ? ' split-view' : ''}${!isLeftSidebarVisible ? ' sidebar-hidden' : ''}${!isRightSidebarVisible ? ' rightpanel-hidden' : ''}`}>
-          {/* Left Sidebar */}
-          {isLeftSidebarVisible && (
-            <SidebarLeft eventBus={eventBus} activePort={activePort} onActivePortChange={setActivePort} />
-          )}
-          
-          {/* Main View */}
-          <div className="main-content">
-            {renderView()}
-            {isSplitView && <PreviewComponent eventBus={eventBus} activePort={activePort} />}
-          </div>
-          
-          {/* Right Sidebar */}
-          {isRightSidebarVisible && <SidebarRight eventBus={eventBus} attachedPrompts={attachedPrompts} setAttachedPrompts={setAttachedPrompts} />}
-        </main>
+          {/* Main Content */}
+          <main className={`main-layout${isSplitView ? ' split-view' : ''}${!isLeftSidebarVisible ? ' sidebar-hidden' : ''}${!isRightSidebarVisible ? ' rightpanel-hidden' : ''}`}>
+            {/* Left Sidebar */}
+            {isLeftSidebarVisible && (
+              <SidebarLeft eventBus={eventBus} activePort={activePort} onActivePortChange={setActivePort} />
+            )}
+            
+            {/* Main View */}
+            <div className="main-content">
+              {renderView()}
+              {isSplitView && <PreviewComponent eventBus={eventBus} activePort={activePort} />}
+            </div>
+            
+            {/* Right Sidebar */}
+            {isRightSidebarVisible && <SidebarRight eventBus={eventBus} attachedPrompts={attachedPrompts} setAttachedPrompts={setAttachedPrompts} />}
+          </main>
 
-        <Footer 
-          eventBus={eventBus}
-          activePort={activePort}
-          gitStatus={gitStatus}
-          gitBranch={gitBranch}
-          version="1.0.0"
-          message="Welcome to PIDEA! Your AI development assistant is ready to help."
-        />
-      </div>
+          <Footer 
+            eventBus={eventBus}
+            activePort={activePort}
+            gitStatus={gitStatus}
+            gitBranch={gitBranch}
+            version="1.0.0"
+            message="Welcome to PIDEA! Your AI development assistant is ready to help."
+          />
+        </div>
+      </IDEProvider>
     </AuthWrapper>
   );
 }
