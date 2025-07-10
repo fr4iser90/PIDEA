@@ -29,7 +29,7 @@
 
 ### Files to Modify:
 - [ ] `backend/domain/services/CursorIDEService.js` - Refactor to implement IDE interface
-- [ ] `backend/domain/services/VSCodeService.js` - Refactor to implement IDE interface
+- [ ] `backend/domain/services/vscodeIDEService.js` - Refactor to implement IDE interface
 - [ ] `backend/infrastructure/di/ServiceRegistry.js` - Update to use IDE factory pattern
 
 ## 4. Implementation Steps
@@ -72,7 +72,7 @@
 - [ ] Create `implementations/VSCodeIDE.js`:
   - Extend BaseIDE class
   - Implement IDEInterface methods
-  - Migrate existing VSCodeService functionality
+  - Migrate existing vscodeIDEService functionality
   - Add VSCode-specific features
 
 ### Step 6: Update Service Registry (1 hour)

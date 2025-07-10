@@ -1,171 +1,137 @@
-const fs = require('fs');
-const path = require('path');
-
+/**
+ * VSCodeExtensionManager
+ * Manages VSCode extensions and their capabilities
+ */
 class VSCodeExtensionManager {
   constructor() {
-    this.extensionCache = new Map(); // port -> extensions
+    this.installedExtensions = new Map();
+    this.extensionCapabilities = new Map();
+    this.isInitialized = false;
   }
 
-  async detectExtensions(port) {
+  /**
+   * Initialize the extension manager
+   */
+  async initialize() {
     try {
-      console.log('[VSCodeExtensionManager] Detecting extensions for VSCode on port', port);
+      // Load installed extensions
+      await this.loadInstalledExtensions();
       
-      // Get VSCode user data directory
-      const userDataDir = path.join(process.cwd(), 'vscode-data-' + port);
-      const extensionsDir = path.join(userDataDir, 'extensions');
+      // Load extension capabilities
+      await this.loadExtensionCapabilities();
       
-      if (!fs.existsSync(extensionsDir)) {
-        console.log('[VSCodeExtensionManager] Extensions directory not found:', extensionsDir);
-        return {
-          port,
-          extensions: [],
-          detected: false,
-          message: 'Extensions directory not found'
-        };
-      }
-
-      const extensions = await this.scanExtensionsDirectory(extensionsDir);
-      
-      // Cache the results
-      this.extensionCache.set(port, extensions);
-      
-      console.log('[VSCodeExtensionManager] Detected', extensions.length, 'extensions for port', port);
-      
-      return {
-        port,
-        extensions,
-        detected: true,
-        count: extensions.length
-      };
-      
+      this.isInitialized = true;
+      console.log('[VSCodeExtensionManager] Initialized successfully');
     } catch (error) {
-      console.error('[VSCodeExtensionManager] Error detecting extensions:', error);
-      return {
-        port,
-        extensions: [],
-        detected: false,
-        error: error.message
-      };
+      console.error('[VSCodeExtensionManager] Failed to initialize:', error);
     }
   }
 
-  async scanExtensionsDirectory(extensionsDir) {
+  /**
+   * Load installed extensions
+   */
+  async loadInstalledExtensions() {
+    // Mock implementation - in real scenario, this would query VSCode API
+    this.installedExtensions.set('ms-vscode.vscode-json', {
+      id: 'ms-vscode.vscode-json',
+      name: 'JSON Language Features',
+      version: '1.0.0',
+      enabled: true
+    });
+    
+    this.installedExtensions.set('ms-vscode.vscode-typescript-next', {
+      id: 'ms-vscode.vscode-typescript-next',
+      name: 'TypeScript and JavaScript Language Features',
+      version: '1.0.0',
+      enabled: true
+    });
+  }
+
+  /**
+   * Load extension capabilities
+   */
+  async loadExtensionCapabilities() {
+    // Mock implementation - in real scenario, this would analyze extension manifests
+    this.extensionCapabilities.set('ms-vscode.vscode-json', {
+      languages: ['json'],
+      commands: ['json.validate'],
+      features: ['syntax-highlighting', 'validation']
+    });
+    
+    this.extensionCapabilities.set('ms-vscode.vscode-typescript-next', {
+      languages: ['typescript', 'javascript'],
+      commands: ['typescript.reloadProjects', 'typescript.restartTsServer'],
+      features: ['intellisense', 'refactoring', 'diagnostics']
+    });
+  }
+
+  /**
+   * Get installed extensions
+   */
+  getInstalledExtensions() {
+    return Array.from(this.installedExtensions.values());
+  }
+
+  /**
+   * Get extension capabilities
+   */
+  getExtensionCapabilities(extensionId) {
+    return this.extensionCapabilities.get(extensionId) || null;
+  }
+
+  /**
+   * Check if extension is installed
+   */
+  isExtensionInstalled(extensionId) {
+    return this.installedExtensions.has(extensionId);
+  }
+
+  /**
+   * Check if extension is enabled
+   */
+  isExtensionEnabled(extensionId) {
+    const extension = this.installedExtensions.get(extensionId);
+    return extension ? extension.enabled : false;
+  }
+
+  /**
+   * Get extensions for specific language
+   */
+  getExtensionsForLanguage(language) {
     const extensions = [];
     
-    try {
-      const extensionFolders = fs.readdirSync(extensionsDir);
-      
-      for (const folder of extensionFolders) {
-        const extensionPath = path.join(extensionsDir, folder);
-        const packageJsonPath = path.join(extensionPath, 'package.json');
-        
-        if (fs.existsSync(packageJsonPath)) {
-          try {
-            const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
-            extensions.push({
-              id: packageJson.name,
-              displayName: packageJson.displayName || packageJson.name,
-              version: packageJson.version,
-              description: packageJson.description,
-              publisher: packageJson.publisher,
-              path: extensionPath
-            });
-          } catch (parseError) {
-            console.warn('[VSCodeExtensionManager] Failed to parse package.json for extension:', folder);
-          }
-        }
+    for (const [id, capabilities] of this.extensionCapabilities) {
+      if (capabilities.languages && capabilities.languages.includes(language)) {
+        extensions.push({
+          id,
+          capabilities,
+          installed: this.isExtensionInstalled(id),
+          enabled: this.isExtensionEnabled(id)
+        });
       }
-    } catch (error) {
-      console.error('[VSCodeExtensionManager] Error scanning extensions directory:', error);
     }
     
     return extensions;
   }
 
-  async getExtensions(port) {
-    // Return cached extensions if available
-    if (this.extensionCache.has(port)) {
-      return this.extensionCache.get(port);
+  /**
+   * Get extensions with specific feature
+   */
+  getExtensionsWithFeature(feature) {
+    const extensions = [];
+    
+    for (const [id, capabilities] of this.extensionCapabilities) {
+      if (capabilities.features && capabilities.features.includes(feature)) {
+        extensions.push({
+          id,
+          capabilities,
+          installed: this.isExtensionInstalled(id),
+          enabled: this.isExtensionEnabled(id)
+        });
+      }
     }
     
-    // Otherwise detect them
-    const result = await this.detectExtensions(port);
-    return result.extensions;
-  }
-
-  async findExtension(port, extensionId) {
-    const extensions = await this.getExtensions(port);
-    return extensions.find(ext => ext.id === extensionId);
-  }
-
-  async hasExtension(port, extensionId) {
-    const extension = await this.findExtension(port, extensionId);
-    return extension !== undefined;
-  }
-
-  async getChatExtensions(port) {
-    const extensions = await this.getExtensions(port);
-    const chatExtensionIds = [
-      'github.copilot',
-      'github.copilot-chat',
-      'ms-vscode.vscode-json',
-      'ms-vscode.vscode-typescript-next',
-      'ms-vscode.vscode-javascript-debug',
-      'ms-vscode.vscode-json-language-features',
-      'ms-vscode.vscode-typescript-language-features'
-    ];
-    
-    return extensions.filter(ext => chatExtensionIds.includes(ext.id));
-  }
-
-  async getAIExtensions(port) {
-    const extensions = await this.getExtensions(port);
-    const aiExtensionIds = [
-      'github.copilot',
-      'github.copilot-chat',
-      'ms-vscode.vscode-json',
-      'ms-vscode.vscode-typescript-next',
-      'ms-vscode.vscode-javascript-debug',
-      'ms-vscode.vscode-json-language-features',
-      'ms-vscode.vscode-typescript-language-features',
-      'ms-vscode.vscode-python',
-      'ms-vscode.vscode-java',
-      'ms-vscode.vscode-cpptools'
-    ];
-    
-    return extensions.filter(ext => aiExtensionIds.includes(ext.id));
-  }
-
-  clearCache(port = null) {
-    if (port) {
-      this.extensionCache.delete(port);
-    } else {
-      this.extensionCache.clear();
-    }
-  }
-
-  async installExtension(port, extensionId) {
-    // This would require VSCode CLI or API integration
-    // For now, return a placeholder
-    console.log('[VSCodeExtensionManager] Extension installation not yet implemented');
-    return {
-      success: false,
-      message: 'Extension installation not yet implemented',
-      extensionId,
-      port
-    };
-  }
-
-  async uninstallExtension(port, extensionId) {
-    // This would require VSCode CLI or API integration
-    // For now, return a placeholder
-    console.log('[VSCodeExtensionManager] Extension uninstallation not yet implemented');
-    return {
-      success: false,
-      message: 'Extension uninstallation not yet implemented',
-      extensionId,
-      port
-    };
+    return extensions;
   }
 }
 

@@ -13,7 +13,7 @@
 - **Database Changes**: Extend tasks table to support VSCode-specific metadata
 - **API Changes**: New VSCode-specific endpoints, extend existing IDE endpoints
 - **Frontend Changes**: VSCode IDE selection UI, VSCode-specific controls
-- **Backend Changes**: VSCodeService, VSCodeDetector, VSCodeStarter, VSCodeExtensionManager
+- **Backend Changes**: vscodeIDEService, VSCodeDetector, VSCodeStarter, VSCodeExtensionManager
 
 ### 3. File Impact Analysis
 #### Files to Modify:
@@ -26,7 +26,7 @@
 - [ ] `frontend/src/infrastructure/repositories/APIChatRepository.jsx` - Add VSCode API endpoints
 
 #### Files to Create:
-- [ ] `backend/domain/services/VSCodeService.js` - VSCode-specific service implementation
+- [ ] `backend/domain/services/vscodeIDEService.js` - VSCode-specific service implementation
 - [ ] `backend/infrastructure/external/VSCodeDetector.js` - VSCode instance detection
 - [ ] `backend/infrastructure/external/VSCodeStarter.js` - VSCode startup management
 - [ ] `backend/infrastructure/external/VSCodeExtensionManager.js` - VSCode extension management
@@ -35,7 +35,7 @@
 - [ ] `docs/04_ide-support/vscode/editor-dom.md` - VSCode editor DOM documentation
 - [ ] `docs/04_ide-support/vscode/sidebar-dom.md` - VSCode sidebar DOM documentation
 - [ ] `docs/04_ide-support/vscode/selectors.js` - VSCode DOM selectors
-- [ ] `backend/tests/unit/VSCodeService.test.js` - VSCode service unit tests
+- [ ] `backend/tests/unit/vscodeIDEService.test.js` - VSCode service unit tests
 - [ ] `backend/tests/integration/VSCodeIntegration.test.js` - VSCode integration tests
 
 #### Files to Delete:
@@ -52,7 +52,7 @@
 - [x] Implement VSCode workspace detection via CDP
 
 #### Phase 2: VSCode Service Implementation (10 hours)
-- [x] Create VSCodeService extending base IDE functionality
+- [x] Create vscodeIDEService extending base IDE functionality
 - [x] Implement VSCode-specific chat integration (GitHub Copilot, ChatGPT extensions)
 - [x] Add VSCode workspace path detection
 - [x] Create VSCodeChatHandler for extension-specific chat interfaces
@@ -76,7 +76,7 @@
 - [ ] Implement VSCode extension management UI
 
 #### Phase 5: Testing & Documentation (4 hours)
-- [x] Write comprehensive unit tests for VSCodeService
+- [x] Write comprehensive unit tests for vscodeIDEService
 - [x] Create integration tests for VSCode workflow
 - [ ] Test with multiple VSCode extensions
 - [x] Update documentation with VSCode support
@@ -109,7 +109,7 @@
 ### 8. Testing Strategy
 
 #### Unit Tests:
-- [ ] Test file: `backend/tests/unit/VSCodeService.test.js`
+- [ ] Test file: `backend/tests/unit/vscodeIDEService.test.js`
 - [ ] Test cases: VSCode detection, startup, chat integration, workspace detection
 - [ ] Mock requirements: CDP connections, file system operations, extension APIs
 

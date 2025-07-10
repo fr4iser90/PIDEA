@@ -1,4 +1,4 @@
-const VSCodeService = require('@/domain/services/VSCodeService');
+const vscodeIDEService = require('@/domain/services/vscodeIDEService');
 const VSCodeDetector = require('@/infrastructure/external/VSCodeDetector');
 const VSCodeStarter = require('@/infrastructure/external/VSCodeStarter');
 const VSCodeExtensionManager = require('@/infrastructure/external/VSCodeExtensionManager');
@@ -11,7 +11,7 @@ jest.mock('../../infrastructure/external/VSCodeExtensionManager');
 jest.mock('../../infrastructure/external/IDEManager');
 
 describe('VSCode Integration Tests', () => {
-  let vscodeService;
+  let vscodeIDEService;
   let mockBrowserManager;
   let mockIDEManager;
   let mockEventBus;
@@ -42,7 +42,7 @@ describe('VSCode Integration Tests', () => {
       publish: jest.fn()
     };
 
-    vscodeService = new VSCodeService(mockBrowserManager, mockIDEManager, mockEventBus);
+    vscodeIDEService = new vscodeIDEService(mockBrowserManager, mockIDEManager, mockEventBus);
   });
 
   describe('VSCode Detection Integration', () => {
@@ -54,7 +54,7 @@ describe('VSCode Integration Tests', () => {
 
       mockIDEManager.getAvailableIDEs.mockResolvedValue(mockVSCodeInstances);
 
-      const result = await vscodeService.getAvailableIDEs();
+      const result = await vscodeIDEService.getAvailableIDEs();
 
       expect(result).toEqual(mockVSCodeInstances);
       expect(mockIDEManager.getAvailableIDEs).toHaveBeenCalled();
@@ -63,7 +63,7 @@ describe('VSCode Integration Tests', () => {
     it('should handle no VSCode instances found', async () => {
       mockIDEManager.getAvailableIDEs.mockResolvedValue([]);
 
-      const result = await vscodeService.getAvailableIDEs();
+      const result = await vscodeIDEService.getAvailableIDEs();
 
       expect(result).toEqual([]);
     });
@@ -81,7 +81,7 @@ describe('VSCode Integration Tests', () => {
 
       mockIDEManager.startNewIDE.mockResolvedValue(expectedResult);
 
-      const result = await vscodeService.startNewVSCode(workspacePath);
+      const result = await vscodeIDEService.startNewVSCode(workspacePath);
 
       expect(result).toEqual(expectedResult);
       expect(mockIDEManager.startNewIDE).toHaveBeenCalledWith(workspacePath, 'vscode');
@@ -93,7 +93,7 @@ describe('VSCode Integration Tests', () => {
 
       mockIDEManager.startNewIDE.mockRejectedValue(error);
 
-      await expect(vscodeService.startNewVSCode(workspacePath)).rejects.toThrow('Failed to start VSCode');
+      await expect(vscodeIDEService.startNewVSCode(workspacePath)).rejects.toThrow('Failed to start VSCode');
     });
   });
 
@@ -105,14 +105,14 @@ describe('VSCode Integration Tests', () => {
       ];
 
       mockIDEManager.getActiveIDE.mockResolvedValue({ port: 9232 });
-      vscodeService.extensionManager.detectExtensions = jest.fn().mockResolvedValue({
+      vscodeIDEService.extensionManager.detectExtensions = jest.fn().mockResolvedValue({
         port: 9232,
         extensions: mockExtensions,
         detected: true,
         count: 2
       });
 
-      const result = await vscodeService.detectExtensions();
+      const result = await vscodeIDEService.detectExtensions();
 
       expect(result.detected).toBe(true);
       expect(result.extensions).toEqual(mockExtensions);
@@ -125,22 +125,22 @@ describe('VSCode Integration Tests', () => {
       ];
 
       mockIDEManager.getActiveIDE.mockResolvedValue({ port: 9232 });
-      vscodeService.extensionManager.getChatExtensions = jest.fn().mockResolvedValue(mockChatExtensions);
+      vscodeIDEService.extensionManager.getChatExtensions = jest.fn().mockResolvedValue(mockChatExtensions);
 
-      const result = await vscodeService.getChatExtensions();
+      const result = await vscodeIDEService.getChatExtensions();
 
       expect(result).toEqual(mockChatExtensions);
-      expect(vscodeService.extensionManager.getChatExtensions).toHaveBeenCalledWith(9232);
+      expect(vscodeIDEService.extensionManager.getChatExtensions).toHaveBeenCalledWith(9232);
     });
 
     it('should check extension availability correctly', async () => {
       mockIDEManager.getActiveIDE.mockResolvedValue({ port: 9232 });
-      vscodeService.extensionManager.hasExtension = jest.fn().mockResolvedValue(true);
+      vscodeIDEService.extensionManager.hasExtension = jest.fn().mockResolvedValue(true);
 
-      const result = await vscodeService.hasExtension('github.copilot');
+      const result = await vscodeIDEService.hasExtension('github.copilot');
 
       expect(result).toBe(true);
-      expect(vscodeService.extensionManager.hasExtension).toHaveBeenCalledWith(9232, 'github.copilot');
+      expect(vscodeIDEService.extensionManager.hasExtension).toHaveBeenCalledWith(9232, 'github.copilot');
     });
   });
 
@@ -153,14 +153,14 @@ describe('VSCode Integration Tests', () => {
       mockIDEManager.getActivePort.mockReturnValue(9232);
       mockBrowserManager.getCurrentPort.mockReturnValue(9232);
 
-      vscodeService.chatMessageHandler = {
+      vscodeIDEService.chatMessageHandler = {
         sendMessage: jest.fn().mockResolvedValue({ success: true, message: 'Sent successfully' })
       };
 
-      const result = await vscodeService.sendMessage(message);
+      const result = await vscodeIDEService.sendMessage(message);
 
       expect(result.success).toBe(true);
-      expect(vscodeService.chatMessageHandler.sendMessage).toHaveBeenCalledWith(message, {});
+      expect(vscodeIDEService.chatMessageHandler.sendMessage).toHaveBeenCalledWith(message, {});
     });
 
     it('should handle browser port switching', async () => {
@@ -171,11 +171,11 @@ describe('VSCode Integration Tests', () => {
       mockIDEManager.getActivePort.mockReturnValue(9232);
       mockBrowserManager.getCurrentPort.mockReturnValue(9222);
 
-      vscodeService.chatMessageHandler = {
+      vscodeIDEService.chatMessageHandler = {
         sendMessage: jest.fn().mockResolvedValue({ success: true })
       };
 
-      await vscodeService.sendMessage(message);
+      await vscodeIDEService.sendMessage(message);
 
       expect(mockBrowserManager.switchToPort).toHaveBeenCalledWith(9232);
     });
@@ -183,11 +183,11 @@ describe('VSCode Integration Tests', () => {
     it('should post to VSCode successfully', async () => {
       const prompt = 'Test prompt';
 
-      vscodeService.chatMessageHandler = {
+      vscodeIDEService.chatMessageHandler = {
         sendMessage: jest.fn().mockResolvedValue({ success: true, response: 'AI response' })
       };
 
-      const result = await vscodeService.postToVSCode(prompt);
+      const result = await vscodeIDEService.postToVSCode(prompt);
 
       expect(result.success).toBe(true);
       expect(result.response).toBe('AI response');
@@ -239,7 +239,7 @@ describe('VSCode Integration Tests', () => {
       mockBrowserManager.getPage.mockResolvedValue(mockPage);
       mockIDEManager.getActiveIDE.mockResolvedValue({ port: 9232, workspacePath });
 
-      const result = await vscodeService.sendTaskToVSCode(task, workspacePath);
+      const result = await vscodeIDEService.sendTaskToVSCode(task, workspacePath);
 
       expect(result.success).toBe(true);
       expect(result.taskId).toBe('task-123');
@@ -265,7 +265,7 @@ describe('VSCode Integration Tests', () => {
       mockBrowserManager.getPage.mockResolvedValue(mockPage);
       mockIDEManager.getActiveIDE.mockResolvedValue({ port: 9232, workspacePath });
 
-      const result = await vscodeService.sendAutoModeTasksToVSCode(tasks, projectAnalysis, workspacePath);
+      const result = await vscodeIDEService.sendAutoModeTasksToVSCode(tasks, projectAnalysis, workspacePath);
 
       expect(result.success).toBe(true);
       expect(result.taskCount).toBe(2);
@@ -284,7 +284,7 @@ describe('VSCode Integration Tests', () => {
         status: 'running'
       });
 
-      const result = await vscodeService.getConnectionStatus(userId);
+      const result = await vscodeIDEService.getConnectionStatus(userId);
 
       expect(result.connected).toBe(true);
       expect(result.userId).toBe(userId);
@@ -296,7 +296,7 @@ describe('VSCode Integration Tests', () => {
 
       mockBrowserManager.getPage.mockRejectedValue(new Error('Connection failed'));
 
-      const result = await vscodeService.getConnectionStatus(userId);
+      const result = await vscodeIDEService.getConnectionStatus(userId);
 
       expect(result.connected).toBe(false);
       expect(result).toHaveProperty('error');
@@ -310,7 +310,7 @@ describe('VSCode Integration Tests', () => {
 
       mockIDEManager.getActivePort.mockReturnValue(currentPort);
 
-      await vscodeService.switchToPort(port);
+      await vscodeIDEService.switchToPort(port);
 
       expect(mockIDEManager.switchToIDE).toHaveBeenCalledWith(port);
       expect(mockBrowserManager.switchToPort).toHaveBeenCalledWith(port);
@@ -320,7 +320,7 @@ describe('VSCode Integration Tests', () => {
       const activePort = 9232;
       mockIDEManager.getActivePort.mockReturnValue(activePort);
 
-      const result = vscodeService.getActivePort();
+      const result = vscodeIDEService.getActivePort();
 
       expect(result).toBe(activePort);
     });
@@ -333,18 +333,18 @@ describe('VSCode Integration Tests', () => {
       mockBrowserManager.getPage.mockRejectedValue(new Error('Browser not available'));
       mockIDEManager.getActivePort.mockReturnValue(9232);
 
-      vscodeService.chatMessageHandler = {
+      vscodeIDEService.chatMessageHandler = {
         sendMessage: jest.fn().mockResolvedValue({ success: true })
       };
 
       // Should not throw error, but handle gracefully
-      await expect(vscodeService.sendMessage(message)).resolves.toBeDefined();
+      await expect(vscodeIDEService.sendMessage(message)).resolves.toBeDefined();
     });
 
     it('should handle IDE manager errors gracefully', async () => {
       mockIDEManager.getActiveIDE.mockRejectedValue(new Error('IDE not available'));
 
-      const result = await vscodeService.getConnectionStatus('test-user');
+      const result = await vscodeIDEService.getConnectionStatus('test-user');
 
       expect(result.connected).toBe(false);
       expect(result).toHaveProperty('error');

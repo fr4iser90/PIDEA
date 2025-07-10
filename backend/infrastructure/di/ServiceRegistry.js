@@ -194,7 +194,7 @@ class ServiceRegistry {
         }, { singleton: true, dependencies: ['browserManager', 'ideManager', 'eventBus'] });
 
         // Legacy VSCode service (for backward compatibility)
-        this.container.register('vscodeService', (browserManager, ideManager, eventBus) => {
+        this.container.register('vscodeIDEService', (browserManager, ideManager, eventBus) => {
             const VSCodeService = require('../../domain/services/VSCodeService');
             return new VSCodeService(browserManager, ideManager, eventBus);
         }, { singleton: true, dependencies: ['browserManager', 'ideManager', 'eventBus'] });
@@ -394,10 +394,10 @@ class ServiceRegistry {
         }, { singleton: true, dependencies: ['cursorIDEService', 'eventBus', 'logger'] });
 
         // Get chat history handler
-        this.container.register('getChatHistoryHandler', (chatRepository, cursorIDEService) => {
+        this.container.register('getChatHistoryHandler', (chatRepository, ideManager) => {
             const GetChatHistoryHandler = require('../../application/handlers/GetChatHistoryHandler');
-            return new GetChatHistoryHandler(chatRepository, cursorIDEService);
-        }, { singleton: true, dependencies: ['chatRepository', 'cursorIDEService'] });
+            return new GetChatHistoryHandler(chatRepository, ideManager, this);
+        }, { singleton: true, dependencies: ['chatRepository', 'ideManager'] });
 
         // Create task handler
         this.container.register('createTaskHandler', (taskRepository, taskValidationService, eventBus, logger) => {

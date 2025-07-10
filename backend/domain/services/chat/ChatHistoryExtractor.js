@@ -1,27 +1,321 @@
+const IDETypes = require('../ide/IDETypes');
+
 class ChatHistoryExtractor {
-  constructor(browserManager) {
+  constructor(browserManager, ideType = IDETypes.CURSOR) {
     this.browserManager = browserManager;
+    this.ideType = ideType;
+    this.selectors = IDETypes.getChatSelectors(ideType);
+    
+    if (!this.selectors) {
+      console.warn(`[ChatHistoryExtractor] No chat selectors found for IDE type: ${ideType}`);
+    }
   }
 
   async extractChatHistory() {
     try {
       const page = await this.browserManager.getPage();
       if (!page) {
-        throw new Error('No Cursor IDE page available');
+        throw new Error('No IDE page available');
+      }
+
+      if (!this.selectors) {
+        throw new Error(`No chat selectors available for IDE type: ${this.ideType}`);
+      }
+
+      // For VS Code, we need to navigate to the actual application window
+      if (this.ideType === IDETypes.VSCODE) {
+        await this.navigateToVSCodeApp(page);
       }
 
       // Wait for messages to load
       await page.waitForTimeout(1000);
 
-      const userMessageSelector = 'div.aislash-editor-input-readonly[contenteditable="false"][data-lexical-editor="true"]';
-      const aiMessageSelector = 'span.anysphere-markdown-container-root';
+      // Use IDE-specific extraction logic
+      const allMessages = await this.extractMessagesByIDEType(page);
 
-      // Extract all messages in chronological order
-      const allMessages = await page.evaluate(() => {
+      return allMessages;
+    } catch (error) {
+      console.error(`[ChatHistoryExtractor] Error extracting chat history from ${this.ideType}:`, error);
+      return [];
+    }
+  }
+
+  /**
+   * Navigate to the actual VS Code application window
+   * @param {Page} page - Playwright page object
+   */
+  async navigateToVSCodeApp(page) {
+    try {
+      console.log('[ChatHistoryExtractor][VSCode] Navigating to VS Code app...');
+      
+      // Get all targets (pages) available
+      const targets = await this.browserManager.browser.targets();
+      console.log('[ChatHistoryExtractor][VSCode] Available targets:', targets.length);
+      
+      // Find the VS Code application target (not DevTools)
+      let vscodeTarget = null;
+      for (const target of targets) {
+        const url = target.url();
+        console.log('[ChatHistoryExtractor][VSCode] Target URL:', url);
+        
+        // Skip DevTools targets
+        if (url.includes('devtools://') || url.includes('chrome-devtools://')) {
+          continue;
+        }
+        
+        // Look for VS Code application target
+        if (url.includes('file://') || url.includes('vscode://') || url === 'about:blank') {
+          vscodeTarget = target;
+          break;
+        }
+      }
+      
+      if (vscodeTarget) {
+        console.log('[ChatHistoryExtractor][VSCode] Found VS Code app target, navigating...');
+        const newPage = await vscodeTarget.page();
+        if (newPage) {
+          // Update the browser manager to use the new page
+          this.browserManager.currentPage = newPage;
+          console.log('[ChatHistoryExtractor][VSCode] Successfully navigated to VS Code app');
+          return;
+        }
+      }
+      
+      console.log('[ChatHistoryExtractor][VSCode] No VS Code app target found, staying on current page');
+    } catch (error) {
+      console.error('[ChatHistoryExtractor][VSCode] Error navigating to VS Code app:', error);
+    }
+  }
+
+  /**
+   * Extract messages using IDE-specific logic
+   * @param {Page} page - Playwright page object
+   * @returns {Promise<Array>} Array of messages
+   */
+  async extractMessagesByIDEType(page) {
+    switch (this.ideType) {
+      case IDETypes.CURSOR:
+        return await this.extractCursorMessages(page);
+      case IDETypes.VSCODE:
+        return await this.extractVSCodeMessages(page);
+      case IDETypes.WINDSURF:
+        return await this.extractWindsurfMessages(page);
+      default:
+        return await this.extractGenericMessages(page);
+    }
+  }
+
+  /**
+   * Extract messages from Cursor IDE
+   * @param {Page} page - Playwright page object
+   * @returns {Promise<Array>} Array of messages
+   */
+  async extractCursorMessages(page) {
+    return await page.evaluate((selectors) => {
+      const messages = [];
+      
+      // Find all User messages
+      const userElements = document.querySelectorAll(selectors.userMessages);
+      userElements.forEach((element, index) => {
+        const text = element.innerText || element.textContent || '';
+        if (text.trim()) {
+          messages.push({
+            sender: 'user',
+            type: text.includes('```') ? 'code' : 'text',
+            content: text.trim(),
+            element: element,
+            index: index
+          });
+        }
+      });
+      
+      // Find all AI messages
+      const aiElements = document.querySelectorAll(selectors.aiMessages);
+      aiElements.forEach((element, index) => {
+        const text = element.innerText || element.textContent || '';
+        if (text.trim()) {
+          messages.push({
+            sender: 'ai',
+            type: text.includes('```') ? 'code' : 'text',
+            content: text.trim(),
+            element: element,
+            index: index
+          });
+        }
+      });
+      
+      // Sort based on DOM position (top value)
+      messages.sort((a, b) => {
+        const aRect = a.element.getBoundingClientRect();
+        const bRect = b.element.getBoundingClientRect();
+        return aRect.top - bRect.top;
+      });
+      
+      return messages.map(msg => ({
+        sender: msg.sender,
+        type: msg.type,
+        content: msg.content
+      }));
+    }, this.selectors);
+  }
+
+  /**
+   * Extract messages from VSCode IDE (Copilot)
+   * @param {Page} page - Playwright page object
+   * @returns {Promise<Array>} Array of messages
+   */
+  async extractVSCodeMessages(page) {
+    console.log('[ChatHistoryExtractor][VSCode] extractVSCodeMessages called');
+    let result;
+    try {
+      result = await page.evaluate((selectors) => {
+        const debug = {
+          selectors,
+          messageRowsCount: 0,
+          userRows: 0,
+          aiRows: 0,
+          firstRowsHtml: [],
+          userFound: [],
+          aiFound: [],
+          // Enhanced debugging
+          allMonacoRows: 0,
+          allInteractiveItems: 0,
+          allChatContainers: 0,
+          pageTitle: document.title,
+          bodyClasses: document.body.className,
+          sampleBodyHTML: document.body.innerHTML.substring(0, 500)
+        };
         const messages = [];
         
-        // Find all User messages
-        const userElements = document.querySelectorAll('div.aislash-editor-input-readonly[contenteditable="false"][data-lexical-editor="true"]');
+        // Check for various possible selectors
+        const allMonacoRows = document.querySelectorAll('.monaco-list-row');
+        const allInteractiveItems = document.querySelectorAll('.interactive-item-container');
+        const allChatContainers = document.querySelectorAll('.chat-container, .interactive-session');
+        
+        debug.allMonacoRows = allMonacoRows.length;
+        debug.allInteractiveItems = allInteractiveItems.length;
+        debug.allChatContainers = allChatContainers.length;
+        
+        // Try the original selectors
+        const messageRows = document.querySelectorAll(selectors.messageRows || '.monaco-list-row');
+        debug.messageRowsCount = messageRows.length;
+        
+        messageRows.forEach((row, index) => {
+          if (index < 3) debug.firstRowsHtml.push(row.outerHTML.substring(0, 300));
+          // User
+          const userContainer = row.querySelector('.interactive-request');
+          if (userContainer) {
+            debug.userRows++;
+            debug.userFound.push(index);
+            const contentElement = userContainer.querySelector('.value .rendered-markdown');
+            if (contentElement) {
+              const text = contentElement.innerText || contentElement.textContent || '';
+              if (text.trim()) {
+                messages.push({
+                  sender: 'user',
+                  type: text.includes('```') ? 'code' : 'text',
+                  content: text.trim(),
+                  index: index
+                });
+              }
+            }
+          }
+          // AI
+          const aiContainer = row.querySelector('.interactive-response');
+          if (aiContainer) {
+            debug.aiRows++;
+            debug.aiFound.push(index);
+            const contentElement = aiContainer.querySelector('.value .rendered-markdown');
+            if (contentElement) {
+              const text = contentElement.innerText || contentElement.textContent || '';
+              if (text.trim()) {
+                messages.push({
+                  sender: 'ai',
+                  type: text.includes('```') ? 'code' : 'text',
+                  content: text.trim(),
+                  index: index
+                });
+              }
+            }
+          }
+        });
+        
+        return { debug, messages };
+      }, this.selectors);
+    } catch (error) {
+      console.error('[ChatHistoryExtractor][VSCode] page.evaluate error:', error);
+      result = { debug: { error: error.message }, messages: [] };
+    }
+    console.log('[ChatHistoryExtractor][VSCode] Debug:', JSON.stringify(result.debug, null, 2));
+    return result.messages;
+  }
+
+  /**
+   * Extract messages from Windsurf IDE
+   * @param {Page} page - Playwright page object
+   * @returns {Promise<Array>} Array of messages
+   */
+  async extractWindsurfMessages(page) {
+    return await page.evaluate((selectors) => {
+      const messages = [];
+      
+      // Find all User messages
+      const userElements = document.querySelectorAll(selectors.userMessages);
+      userElements.forEach((element, index) => {
+        const text = element.innerText || element.textContent || '';
+        if (text.trim()) {
+          messages.push({
+            sender: 'user',
+            type: text.includes('```') ? 'code' : 'text',
+            content: text.trim(),
+            element: element,
+            index: index
+          });
+        }
+      });
+      
+      // Find all AI messages
+      const aiElements = document.querySelectorAll(selectors.aiMessages);
+      aiElements.forEach((element, index) => {
+        const text = element.innerText || element.textContent || '';
+        if (text.trim()) {
+          messages.push({
+            sender: 'ai',
+            type: text.includes('```') ? 'code' : 'text',
+            content: text.trim(),
+            element: element,
+            index: index
+          });
+        }
+      });
+      
+      // Sort based on DOM position (top value)
+      messages.sort((a, b) => {
+        const aRect = a.element.getBoundingClientRect();
+        const bRect = b.element.getBoundingClientRect();
+        return aRect.top - bRect.top;
+      });
+      
+      return messages.map(msg => ({
+        sender: msg.sender,
+        type: msg.type,
+        content: msg.content
+      }));
+    }, this.selectors);
+  }
+
+  /**
+   * Extract messages using generic selectors
+   * @param {Page} page - Playwright page object
+   * @returns {Promise<Array>} Array of messages
+   */
+  async extractGenericMessages(page) {
+    return await page.evaluate((selectors) => {
+      const messages = [];
+      
+      // Try to find user messages
+      if (selectors.userMessages) {
+        const userElements = document.querySelectorAll(selectors.userMessages);
         userElements.forEach((element, index) => {
           const text = element.innerText || element.textContent || '';
           if (text.trim()) {
@@ -34,9 +328,11 @@ class ChatHistoryExtractor {
             });
           }
         });
-        
-        // Find all AI messages
-        const aiElements = document.querySelectorAll('span.anysphere-markdown-container-root');
+      }
+      
+      // Try to find AI messages
+      if (selectors.aiMessages) {
+        const aiElements = document.querySelectorAll(selectors.aiMessages);
         aiElements.forEach((element, index) => {
           const text = element.innerText || element.textContent || '';
           if (text.trim()) {
@@ -49,26 +345,37 @@ class ChatHistoryExtractor {
             });
           }
         });
-        
-        // Sort based on DOM position (top value)
-        messages.sort((a, b) => {
-          const aRect = a.element.getBoundingClientRect();
-          const bRect = b.element.getBoundingClientRect();
-          return aRect.top - bRect.top;
-        });
-        
-        return messages.map(msg => ({
-          sender: msg.sender,
-          type: msg.type,
-          content: msg.content
-        }));
+      }
+      
+      // Sort based on DOM position (top value)
+      messages.sort((a, b) => {
+        const aRect = a.element.getBoundingClientRect();
+        const bRect = b.element.getBoundingClientRect();
+        return aRect.top - bRect.top;
       });
+      
+      return messages.map(msg => ({
+        sender: msg.sender,
+        type: msg.type,
+        content: msg.content
+      }));
+    }, this.selectors);
+  }
 
-      return allMessages;
-    } catch (error) {
-      console.error('[ChatHistoryExtractor] Error extracting chat history:', error);
-      return [];
-    }
+  /**
+   * Get IDE type
+   * @returns {string} IDE type
+   */
+  getIDEType() {
+    return this.ideType;
+  }
+
+  /**
+   * Get current selectors
+   * @returns {Object} Current selectors
+   */
+  getSelectors() {
+    return this.selectors;
   }
 }
 

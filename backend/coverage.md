@@ -170,7 +170,7 @@
 | `domain/services/TestFixTaskGenerator.js` | 9% | 4% | 0% | 4% | ❌ |
 | `domain/services/TestManagementService.js` | 9% | 25% | 35% | 23% | ❌ |
 | `domain/services/TestReportParser.js` | 10% | 3% | 0% | 4% | ❌ |
-| `domain/services/VSCodeService.js` | 55% | 56% | 38% | 50% | ⚠️ |
+| `domain/services/vscodeIDEService.js` | 55% | 56% | 38% | 50% | ⚠️ |
 | `domain/services/WorkflowGitService.js` | 6% | 5% | 4% | 5% | ❌ |
 | `domain/services/WorkflowOrchestrationService.js` | 1% | 3% | 3% | 2% | ❌ |
 | `domain/services/index.js` | 100% | 100% | 100% | 100% | ✅ |
@@ -1424,8 +1424,8 @@
 - **domain/entities/Task.js** (62% → 80%)
   - Task: Improve test coverage for Task.js
 
-- **domain/services/VSCodeService.js** (50% → 80%)
-  - Task: Improve test coverage for VSCodeService.js
+- **domain/services/vscodeIDEService.js** (50% → 80%)
+  - Task: Improve test coverage for vscodeIDEService.js
 
 - **domain/services/auto-finish/AutoFinishSystem.js** (61% → 80%)
   - Task: Improve test coverage for AutoFinishSystem.js

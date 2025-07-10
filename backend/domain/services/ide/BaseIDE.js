@@ -48,7 +48,7 @@ class BaseIDE extends IDEInterface {
       this.terminalMonitor = new TerminalMonitor(this.browserManager, this.eventBus);
       this.packageJsonAnalyzer = new PackageJsonAnalyzer(this.eventBus);
       this.workspacePathDetector = new WorkspacePathDetector(this.browserManager, this.ideManager);
-      this.chatHistoryExtractor = new ChatHistoryExtractor(this.browserManager);
+      this.chatHistoryExtractor = new ChatHistoryExtractor(this.browserManager, this.ideType);
       
       console.log(`[BaseIDE] Common services initialized for ${this.ideType}`);
     } catch (error) {

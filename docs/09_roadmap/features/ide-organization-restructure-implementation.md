@@ -20,7 +20,7 @@
 
 ### Files to Modify:
 - [ ] `backend/domain/services/CursorIDEService.js` - Refactor to implement IDE interface
-- [ ] `backend/domain/services/VSCodeService.js` - Refactor to implement IDE interface
+- [ ] `backend/domain/services/vscodeIDEService.js` - Refactor to implement IDE interface
 - [ ] `backend/infrastructure/external/IDEManager.js` - Extend for multi-IDE support (already supports multiple IDEs)
 - [ ] `backend/infrastructure/external/IDEDetector.js` - Add IDE type detection (already supports Cursor/VSCode)
 - [ ] `backend/infrastructure/external/IDEStarter.js` - Add IDE-specific startup logic (already supports Cursor/VSCode)
@@ -393,7 +393,7 @@ PIDEA/
 
 ### Phase 2: Migrate Existing Code
 1. Refactor CursorIDEService to implement interface
-2. Refactor VSCodeService to implement interface
+2. Refactor vscodeIDEService to implement interface
 3. Update IDEManager to use factory pattern
 
 ### Phase 3: Add Windsurf Support
@@ -418,7 +418,7 @@ This structure provides a solid foundation for supporting multiple IDEs while ma
 ## Current State Analysis
 
 ### ✅ **Already Implemented**
-- **VSCode Support**: Full implementation with `VSCodeService.js`, `VSCodeDetector.js`, `VSCodeStarter.js`
+- **VSCode Support**: Full implementation with `vscodeIDEService.js`, `VSCodeDetector.js`, `VSCodeStarter.js`
 - **Multi-IDE Detection**: `IDEDetector.js` supports both Cursor and VSCode
 - **IDE Management**: `IDEManager.js` handles multiple IDE types
 - **IDE Controller**: `IDEController.js` has VSCode-specific endpoints

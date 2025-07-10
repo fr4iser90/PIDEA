@@ -35,7 +35,7 @@ PIDEA now supports Visual Studio Code (VSCode) in addition to Cursor IDE. The VS
 - Manages extension metadata
 - Provides extension filtering capabilities
 
-#### VSCodeService
+#### vscodeIDEService
 - Main service for VSCode integration
 - Handles communication with VSCode instances
 - Manages chat integration and task sending
@@ -98,10 +98,10 @@ curl -X POST http://localhost:3000/api/ide/start-vscode \
 
 #### Via Code
 ```javascript
-const vscodeService = container.resolve('vscodeService');
+const vscodeIDEService = container.resolve('vscodeIDEService');
 
 // Start new VSCode instance
-const ideInfo = await vscodeService.startNewVSCode('/path/to/workspace');
+const ideInfo = await vscodeIDEService.startNewVSCode('/path/to/workspace');
 console.log('VSCode started on port:', ideInfo.port);
 ```
 
@@ -119,25 +119,25 @@ const vscodeInstances = availableIDEs.filter(ide => ide.ideType === 'vscode');
 
 ```javascript
 // Get all extensions
-const extensions = await vscodeService.getExtensions(9232);
+const extensions = await vscodeIDEService.getExtensions(9232);
 
 // Get chat extensions only
-const chatExtensions = await vscodeService.getChatExtensions(9232);
+const chatExtensions = await vscodeIDEService.getChatExtensions(9232);
 
 // Check if specific extension is installed
-const hasCopilot = await vscodeService.hasExtension('github.copilot', 9232);
+const hasCopilot = await vscodeIDEService.hasExtension('github.copilot', 9232);
 ```
 
 ### Chat Integration
 
 ```javascript
 // Send message to GitHub Copilot
-const result = await vscodeService.sendMessage('Hello Copilot!', {
+const result = await vscodeIDEService.sendMessage('Hello Copilot!', {
   extensionType: 'githubCopilot'
 });
 
 // Send message to ChatGPT extension
-const result = await vscodeService.sendMessage('Explain this code', {
+const result = await vscodeIDEService.sendMessage('Explain this code', {
   extensionType: 'chatgpt'
 });
 ```
@@ -154,7 +154,7 @@ const task = {
   priority: 'high'
 };
 
-await vscodeService.sendTaskToVSCode(task, '/path/to/workspace');
+await vscodeIDEService.sendTaskToVSCode(task, '/path/to/workspace');
 
 // Send auto mode tasks
 const tasks = [task1, task2, task3];
@@ -163,7 +163,7 @@ const projectAnalysis = {
   complexity: 'medium'
 };
 
-await vscodeService.sendAutoModeTasksToVSCode(tasks, projectAnalysis, '/path/to/workspace');
+await vscodeIDEService.sendAutoModeTasksToVSCode(tasks, projectAnalysis, '/path/to/workspace');
 ```
 
 ## API Endpoints
@@ -278,7 +278,7 @@ const VSCodeSelectors = {
 ### Unit Tests
 ```bash
 # Run VSCode service unit tests
-npm test -- VSCodeService.test.js
+npm test -- vscodeIDEService.test.js
 ```
 
 ### Integration Tests
@@ -368,7 +368,7 @@ tail -f logs/vscode-detector.log
 
 ### Caching
 - Extension detection results are cached
-- Clear cache if extensions change: `vscodeService.extensionManager.clearCache()`
+- Clear cache if extensions change: `vscodeIDEService.extensionManager.clearCache()`
 
 ### Connection Management
 - Reuse browser connections when possible

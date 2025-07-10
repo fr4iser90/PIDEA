@@ -29,7 +29,7 @@ cp backend/config/ide-config.json backend/config/ide-config.json.backup
 
 # Backup current IDE services
 cp -r backend/domain/services/CursorIDEService.js backend/domain/services/CursorIDEService.js.backup
-cp -r backend/domain/services/VSCodeService.js backend/domain/services/VSCodeService.js.backup
+cp -r backend/domain/services/vscodeIDEService.js backend/domain/services/vscodeIDEService.js.backup
 ```
 
 ### 2. Verify Current Setup
@@ -54,7 +54,7 @@ The new IDE factory is automatically registered, but legacy services remain avai
 ```javascript
 // Old way (still works)
 const cursorService = container.getService('cursorIDEService');
-const vscodeService = container.getService('vscodeService');
+const vscodeIDEService = container.getService('vscodeIDEService');
 
 // New way (recommended)
 const ideFactory = container.getService('ideFactory');
@@ -240,7 +240,7 @@ cp backend/config/ide-config.json.backup backend/config/ide-config.json
 
 # Restore backup services
 cp backend/domain/services/CursorIDEService.js.backup backend/domain/services/CursorIDEService.js
-cp backend/domain/services/VSCodeService.js.backup backend/domain/services/VSCodeService.js
+cp backend/domain/services/vscodeIDEService.js.backup backend/domain/services/vscodeIDEService.js
 
 # Restart services
 npm run restart:services

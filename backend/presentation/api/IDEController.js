@@ -1064,7 +1064,7 @@ class IDEController {
       const port = parseInt(req.params.port);
       
       if (!this.cursorIDEService) {
-        throw new Error('VSCodeService not available');
+        throw new Error('vscodeIDEService not available');
       }
       
       const extensions = await this.cursorIDEService.getExtensions(port);
@@ -1087,7 +1087,7 @@ class IDEController {
       const port = parseInt(req.params.port);
       
       if (!this.cursorIDEService) {
-        throw new Error('VSCodeService not available');
+        throw new Error('vscodeIDEService not available');
       }
       
       const workspaceInfo = await this.ideManager.getWorkspaceInfo(port);
@@ -1110,7 +1110,7 @@ class IDEController {
       const { message, extensionType = 'githubCopilot', port } = req.body;
       
       if (!this.cursorIDEService) {
-        throw new Error('VSCodeService not available');
+        throw new Error('vscodeIDEService not available');
       }
       
       // Switch to specified port if provided
@@ -1138,7 +1138,7 @@ class IDEController {
       const port = parseInt(req.params.port);
       
       if (!this.cursorIDEService) {
-        throw new Error('VSCodeService not available');
+        throw new Error('vscodeIDEService not available');
       }
       
       const status = await this.cursorIDEService.getConnectionStatus('vscode-user');

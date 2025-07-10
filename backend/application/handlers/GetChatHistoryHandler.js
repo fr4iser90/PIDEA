@@ -1,10 +1,13 @@
 const GetChatHistoryQuery = require('@/application/queries/GetChatHistoryQuery');
 const ChatMessage = require('@/domain/entities/ChatMessage');
 
+const IDETypes = require('@/domain/services/ide/IDETypes');
+
 class GetChatHistoryHandler {
-  constructor(chatRepository, cursorIDEService = null) {
+  constructor(chatRepository, ideManager = null, serviceRegistry = null) {
     this.chatRepository = chatRepository;
-    this.cursorIDEService = cursorIDEService;
+    this.ideManager = ideManager;
+    this.serviceRegistry = serviceRegistry;
   }
 
   async handle(query) {
@@ -150,13 +153,20 @@ class GetChatHistoryHandler {
     // Try to extract live chat from IDE first
     let liveMessages = [];
     try {
-      if (this.cursorIDEService) {
-        console.log(`[GetChatHistoryHandler] Extracting live chat from IDE...`);
-        liveMessages = await this.cursorIDEService.extractChatHistory();
-        console.log(`[GetChatHistoryHandler] Extracted ${liveMessages.length} live messages`);
+      const ideService = await this.getIDEServiceForPort(port);
+      if (ideService) {
+        console.log(`[GetChatHistoryHandler] Extracting live chat from IDE on port ${port}...`);
+        console.log(`[GetChatHistoryHandler] IDE Service type:`, ideService.constructor.name);
+        console.log(`[GetChatHistoryHandler] IDE Service methods:`, Object.getOwnPropertyNames(Object.getPrototypeOf(ideService)));
+        
+        liveMessages = await ideService.extractChatHistory();
+        console.log(`[GetChatHistoryHandler] Extracted ${liveMessages.length} live messages:`, liveMessages);
+      } else {
+        console.log(`[GetChatHistoryHandler] No IDE service found for port ${port}`);
       }
     } catch (error) {
       console.log(`[GetChatHistoryHandler] Failed to extract live chat: ${error.message}`);
+      console.error(`[GetChatHistoryHandler] Full error:`, error);
     }
 
     // If we have live messages, return them
@@ -183,6 +193,63 @@ class GetChatHistoryHandler {
       totalCount: messages.length,
       hasMore: messages.length >= limit
     };
+  }
+
+  /**
+   * Get the appropriate IDE service for a given port
+   * @param {number} port - The IDE port
+   * @returns {Object|null} The IDE service or null if not found
+   */
+  async getIDEServiceForPort(port) {
+    try {
+      if (!this.ideManager) {
+        console.log('[GetChatHistoryHandler] No IDE manager available');
+        return null;
+      }
+
+      // Get available IDEs to determine the type
+      const availableIDEs = await this.ideManager.getAvailableIDEs();
+      console.log(`[GetChatHistoryHandler] Available IDEs:`, availableIDEs);
+      
+      const targetIDE = availableIDEs.find(ide => ide.port === port);
+      
+      if (!targetIDE) {
+        console.log(`[GetChatHistoryHandler] No IDE found for port ${port} in available IDEs:`, availableIDEs.map(ide => ({ port: ide.port, type: ide.ideType })));
+        // Fallback: determine IDE type based on port range anyway
+        console.log(`[GetChatHistoryHandler] Using port range fallback for port ${port}`);
+      }
+
+      // Determine IDE type based on port range
+      let ideType = IDETypes.CURSOR; // default
+      if (port >= 9222 && port <= 9231) {
+        ideType = IDETypes.CURSOR;
+      } else if (port >= 9232 && port <= 9241) {
+        ideType = IDETypes.VSCODE;
+      } else if (port >= 9242 && port <= 9251) {
+        ideType = IDETypes.WINDSURF;
+      }
+
+      console.log(`[GetChatHistoryHandler] Detected IDE type ${ideType} for port ${port}`);
+
+      // Get the appropriate service from registry
+      if (this.serviceRegistry) {
+        switch (ideType) {
+          case IDETypes.CURSOR:
+            return this.serviceRegistry.getService('cursorIDEService');
+          case IDETypes.VSCODE:
+            return this.serviceRegistry.getService('vscodeIDEService');
+          case IDETypes.WINDSURF:
+            return this.serviceRegistry.getService('windsurfIDEService');
+          default:
+            return this.serviceRegistry.getService('cursorIDEService'); // fallback
+        }
+      }
+
+      return null;
+    } catch (error) {
+      console.error(`[GetChatHistoryHandler] Error getting IDE service for port ${port}:`, error);
+      return null;
+    }
   }
 
   sanitizeMessage(message, includeUserData) {

@@ -107,6 +107,7 @@ const AuthMiddleware = require('./infrastructure/auth/AuthMiddleware');
 // Presentation
 const ChatController = require('./presentation/api/ChatController');
 const IDEController = require('./presentation/api/IDEController');
+const IDEFeatureController = require('./presentation/api/ide/IDEFeatureController');
 const IDEMirrorController = require('./presentation/api/IDEMirrorController');
 const ContentLibraryController = require('./presentation/api/ContentLibraryController');
 const AuthController = require('./presentation/api/AuthController');
@@ -599,6 +600,15 @@ class Application {
       this.taskRepository
     );
 
+    // Initialize IDE Feature Controller
+    const IDEFeatureController = require('./presentation/api/ide/IDEFeatureController');
+    this.ideFeatureController = new IDEFeatureController({
+      ideManager: this.ideManager,
+      eventBus: this.eventBus,
+      logger: this.logger,
+      serviceRegistry: this.serviceRegistry
+    });
+
     this.ideMirrorController = new IDEMirrorController();
 
     this.ContentLibraryController = new ContentLibraryController();
@@ -768,6 +778,7 @@ class Application {
     // IDE routes (protected)
     this.app.use('/api/ide', this.authMiddleware.authenticate());
     this.app.get('/api/ide/available', (req, res) => this.ideController.getAvailableIDEs(req, res));
+    this.app.get('/api/ide/features', (req, res) => this.ideFeatureController.getIDEFeatures(req, res));
     this.app.post('/api/ide/start', (req, res) => this.ideController.startIDE(req, res));
     this.app.post('/api/ide/switch/:port', (req, res) => this.ideController.switchIDE(req, res));
     this.app.delete('/api/ide/stop/:port', (req, res) => this.ideController.stopIDE(req, res));

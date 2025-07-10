@@ -256,7 +256,7 @@ class WorkflowAnalyzer {
         steps: [
           'IDEMirrorController',
           'IDEMirrorService',
-          'VSCodeService',
+          'vscodeIDEService',
           'CursorIDEService',
           'WebSocketManager'
         ]

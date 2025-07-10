@@ -10,8 +10,8 @@ class CursorIDE extends BaseIDE {
   constructor(browserManager, ideManager, eventBus = null) {
     super(browserManager, ideManager, eventBus, IDETypes.CURSOR);
     
-    // Initialize Cursor-specific services
-    this.chatMessageHandler = new ChatMessageHandler(browserManager);
+    // Initialize Cursor-specific services with IDE type
+    this.chatMessageHandler = new ChatMessageHandler(browserManager, IDETypes.CURSOR);
     
     // Cursor-specific properties
     this.cursorFeatures = [

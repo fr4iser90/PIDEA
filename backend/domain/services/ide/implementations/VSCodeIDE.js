@@ -4,16 +4,22 @@
  */
 const BaseIDE = require('../BaseIDE');
 const IDETypes = require('../IDETypes');
-const VSCodeChatHandler = require('../../vscode/VSCodeChatHandler');
-const VSCodeExtensionManager = require('../../../infrastructure/external/VSCodeExtensionManager');
+const ChatMessageHandler = require('../../chat/ChatMessageHandler');
+const VSCodeExtensionManager = require('@/infrastructure/external/VSCodeExtensionManager');
 
 class VSCodeIDE extends BaseIDE {
   constructor(browserManager, ideManager, eventBus = null) {
     super(browserManager, ideManager, eventBus, IDETypes.VSCODE);
     
-    // Initialize VSCode-specific services
-    this.chatMessageHandler = new VSCodeChatHandler(browserManager);
+    // Initialize VSCode-specific services with IDE type
+    this.chatMessageHandler = new ChatMessageHandler(browserManager, IDETypes.VSCODE);
     this.extensionManager = new VSCodeExtensionManager();
+    
+    // Ensure ChatHistoryExtractor is properly configured for VS Code
+    const ChatHistoryExtractor = require('../chat/ChatHistoryExtractor');
+    this.chatHistoryExtractor = new ChatHistoryExtractor(browserManager, IDETypes.VSCODE);
+    console.log('[VSCodeIDE] ChatHistoryExtractor created with IDE type:', this.chatHistoryExtractor.ideType);
+    console.log('[VSCodeIDE] ChatHistoryExtractor selectors:', this.chatHistoryExtractor.selectors);
     
     // VSCode-specific properties
     this.vscodeFeatures = [
@@ -249,6 +255,24 @@ class VSCodeIDE extends BaseIDE {
    */
   getActivePort() {
     return this.ideManager.getActivePort();
+  }
+
+  /**
+   * Extract chat history from VSCode
+   * @returns {Promise<Array>} Chat history
+   */
+  async extractChatHistory() {
+    console.log('[VSCodeIDE] extractChatHistory() called');
+    console.log('[VSCodeIDE] Using chatHistoryExtractor with IDE type:', this.chatHistoryExtractor?.ideType);
+    
+    if (this.chatHistoryExtractor) {
+      const result = await this.chatHistoryExtractor.extractChatHistory();
+      console.log('[VSCodeIDE] extractChatHistory() result:', result);
+      return result;
+    } else {
+      console.log('[VSCodeIDE] No chatHistoryExtractor available, using base class');
+      return await super.extractChatHistory();
+    }
   }
 
   /**

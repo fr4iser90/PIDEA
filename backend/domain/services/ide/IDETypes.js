@@ -16,51 +16,105 @@ class IDETypes {
       name: 'Cursor',
       displayName: 'Cursor IDE',
       description: 'AI-powered code editor',
-      defaultPort: 3000,
       supportedFeatures: ['chat', 'refactoring', 'terminal', 'git', 'extensions'],
       fileExtensions: ['.js', '.jsx', '.ts', '.tsx', '.json', '.md'],
       startupCommand: 'cursor',
-      detectionPatterns: ['cursor', 'Cursor']
+      detectionPatterns: ['cursor', 'Cursor'],
+      // Cursor-specific chat selectors
+      chatSelectors: {
+        input: '.aislash-editor-input[contenteditable="true"]',
+        inputContainer: '.aislash-editor-container',
+        userMessages: 'div.aislash-editor-input-readonly[contenteditable="false"][data-lexical-editor="true"]',
+        aiMessages: 'span.anysphere-markdown-container-root',
+        messagesContainer: '.chat-messages-container',
+        chatContainer: '.aislash-container',
+        isActive: '.aislash-container',
+        isInputReady: '.aislash-editor-input[contenteditable="true"]'
+      }
     },
     [IDETypes.VSCODE]: {
       name: 'VSCode',
       displayName: 'Visual Studio Code',
       description: 'Lightweight code editor',
-      defaultPort: 3001,
       supportedFeatures: ['chat', 'refactoring', 'terminal', 'git', 'extensions'],
       fileExtensions: ['.js', '.jsx', '.ts', '.tsx', '.json', '.md'],
       startupCommand: 'code',
-      detectionPatterns: ['vscode', 'VSCode', 'code']
+      detectionPatterns: ['vscode', 'VSCode', 'code'],
+      // VSCode-specific chat selectors (Copilot)
+      chatSelectors: {
+        input: 'textarea[data-testid="chat-input"], textarea[placeholder*="Copilot"], .chat-input-textarea',
+        inputContainer: '.chat-input-container, .chat-editor-container',
+        userMessages: '.interactive-item-container.interactive-request .value .rendered-markdown',
+        aiMessages: '.interactive-item-container.interactive-response .value .rendered-markdown',
+        messagesContainer: '.monaco-list-rows',
+        chatContainer: '.chat-container, .interactive-session',
+        isActive: '.chat-container, .interactive-session',
+        isInputReady: 'textarea[data-testid="chat-input"]:not([disabled])',
+        // VSCode-specific message rows
+        messageRows: '.monaco-list-row',
+        userMessageRow: '.monaco-list-row .interactive-request',
+        aiMessageRow: '.monaco-list-row .interactive-response'
+      }
     },
     [IDETypes.WINDSURF]: {
       name: 'Windsurf',
       displayName: 'Windsurf IDE',
       description: 'Modern development environment',
-      defaultPort: 3002,
       supportedFeatures: ['chat', 'refactoring', 'terminal', 'git'],
       fileExtensions: ['.js', '.jsx', '.ts', '.tsx', '.json', '.md'],
       startupCommand: 'windsurf',
-      detectionPatterns: ['windsurf', 'Windsurf']
+      detectionPatterns: ['windsurf', 'Windsurf'],
+      // Windsurf-specific chat selectors
+      chatSelectors: {
+        input: '[data-testid="chat-input"]',
+        inputContainer: '[data-testid="chat-container"]',
+        userMessages: '[data-testid="user-message"]',
+        aiMessages: '[data-testid="ai-message"]',
+        messagesContainer: '[data-testid="chat-messages"]',
+        chatContainer: '[data-testid="chat-panel"]',
+        isActive: '[data-testid="chat-panel"]',
+        isInputReady: '[data-testid="chat-input"]:not([disabled])'
+      }
     },
     [IDETypes.JETBRAINS]: {
       name: 'JetBrains',
       displayName: 'JetBrains IDEs',
       description: 'Professional development tools',
-      defaultPort: 3003,
       supportedFeatures: ['refactoring', 'terminal', 'git', 'extensions'],
       fileExtensions: ['.js', '.jsx', '.ts', '.tsx', '.java', '.py', '.php'],
       startupCommand: 'idea',
-      detectionPatterns: ['jetbrains', 'JetBrains', 'idea', 'IntelliJ']
+      detectionPatterns: ['jetbrains', 'JetBrains', 'idea', 'IntelliJ'],
+      // JetBrains-specific chat selectors (if available)
+      chatSelectors: {
+        input: '.chat-input, textarea[placeholder*="chat"]',
+        inputContainer: '.chat-container',
+        userMessages: '.chat-message.user, .user-message',
+        aiMessages: '.chat-message.assistant, .ai-message',
+        messagesContainer: '.chat-messages',
+        chatContainer: '.chat-panel, .ai-chat',
+        isActive: '.chat-panel, .ai-chat',
+        isInputReady: '.chat-input:not([disabled])'
+      }
     },
     [IDETypes.SUBLIME]: {
       name: 'Sublime',
       displayName: 'Sublime Text',
       description: 'Fast text editor',
-      defaultPort: 3004,
       supportedFeatures: ['refactoring', 'terminal', 'git'],
       fileExtensions: ['.js', '.jsx', '.ts', '.tsx', '.json', '.md'],
       startupCommand: 'subl',
-      detectionPatterns: ['sublime', 'Sublime']
+      detectionPatterns: ['sublime', 'Sublime'],
+      // Sublime-specific chat selectors (if available)
+      chatSelectors: {
+        input: '.chat-input, textarea[placeholder*="chat"]',
+        inputContainer: '.chat-container',
+        userMessages: '.chat-message.user, .user-message',
+        aiMessages: '.chat-message.assistant, .ai-message',
+        messagesContainer: '.chat-messages',
+        chatContainer: '.chat-panel, .ai-chat',
+        isActive: '.chat-panel, .ai-chat',
+        isInputReady: '.chat-input:not([disabled])'
+      }
     }
   };
 
@@ -88,16 +142,6 @@ class IDETypes {
    */
   static getMetadata(type) {
     return IDETypes.METADATA[type] || null;
-  }
-
-  /**
-   * Get default port for IDE type
-   * @param {string} type - IDE type
-   * @returns {number|null} Default port
-   */
-  static getDefaultPort(type) {
-    const metadata = IDETypes.getMetadata(type);
-    return metadata ? metadata.defaultPort : null;
   }
 
   /**
@@ -180,6 +224,26 @@ class IDETypes {
   static supportsFileExtension(type, extension) {
     const extensions = IDETypes.getSupportedFileExtensions(type);
     return extensions.includes(extension);
+  }
+
+  /**
+   * Get chat selectors for IDE type
+   * @param {string} type - IDE type
+   * @returns {Object|null} Chat selectors
+   */
+  static getChatSelectors(type) {
+    const metadata = IDETypes.getMetadata(type);
+    return metadata ? metadata.chatSelectors : null;
+  }
+
+  /**
+   * Check if IDE type has chat support
+   * @param {string} type - IDE type
+   * @returns {boolean} True if chat is supported
+   */
+  static hasChatSupport(type) {
+    const features = IDETypes.getSupportedFeatures(type);
+    return features.includes('chat');
   }
 }
 
