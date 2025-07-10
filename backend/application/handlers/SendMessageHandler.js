@@ -9,7 +9,10 @@ const ChatSession = require('@/domain/entities/ChatSession');
 class SendMessageHandler {
   constructor(dependencies = {}) {
     this.validateDependencies(dependencies);
-    this.messagingService = dependencies.messagingService;
+    this.cursorIDEService = dependencies.cursorIDEService;
+    this.vscodeIDEService = dependencies.vscodeIDEService;
+    this.windsurfIDEService = dependencies.windsurfIDEService;
+    this.ideManager = dependencies.ideManager;
     this.eventBus = dependencies.eventBus;
     this.logger = dependencies.logger;
     this.handlerId = this.generateHandlerId();
@@ -22,7 +25,10 @@ class SendMessageHandler {
    */
   validateDependencies(dependencies) {
     const required = [
-      'messagingService',
+      'cursorIDEService',
+      'vscodeIDEService',
+      'windsurfIDEService',
+      'ideManager',
       'eventBus',
       'logger'
     ];
@@ -30,6 +36,30 @@ class SendMessageHandler {
       if (!dependencies[dep]) {
         throw new Error(`Missing required dependency: ${dep}`);
       }
+    }
+  }
+
+  /**
+   * Get the appropriate IDE service based on active port
+   * @returns {Object} The appropriate IDE service
+   */
+  getActiveIDEService() {
+    const activePort = this.ideManager.getActivePort();
+    console.log('[SendMessageHandler] Active port:', activePort);
+    
+    // Determine IDE type based on port range
+    if (activePort >= 9222 && activePort <= 9231) {
+      console.log('[SendMessageHandler] Using Cursor IDE service');
+      return this.cursorIDEService;
+    } else if (activePort >= 9232 && activePort <= 9241) {
+      console.log('[SendMessageHandler] Using VSCode IDE service');
+      return this.vscodeIDEService;
+    } else if (activePort >= 9242 && activePort <= 9251) {
+      console.log('[SendMessageHandler] Using Windsurf IDE service');
+      return this.windsurfIDEService;
+    } else {
+      console.log('[SendMessageHandler] Defaulting to Cursor IDE service');
+      return this.cursorIDEService; // fallback
     }
   }
 
@@ -64,8 +94,9 @@ class SendMessageHandler {
         message: command.message,
         timestamp: new Date()
       });
-      // Call messaging service
-      const result = await this.messagingService.sendMessage(command.message, command.options || {});
+      // Get the appropriate IDE service and send message
+      const activeIDEService = this.getActiveIDEService();
+      const result = await activeIDEService.sendMessage(command.message, command.options || {});
       await this.eventBus.publish('message.sent', {
         commandId: command.commandId,
         requestedBy: command.requestedBy,
@@ -155,7 +186,7 @@ class SendMessageHandler {
         }
       } else {
         // Create new session for user
-        const activePort = this.cursorIDEService.getActivePort();
+        const activePort = this.ideManager.getActivePort();
         session = ChatSession.createSession(
           userId,
           'New Chat',
@@ -173,13 +204,16 @@ class SendMessageHandler {
       // Save to repository
       await this.chatRepository.saveSession(session);
 
+      // Get the appropriate IDE service
+      const activeIDEService = this.getActiveIDEService();
+
       // Switch to session's IDE if needed
       if (session.idePort) {
-        await this.cursorIDEService.switchToSession(session);
+        await activeIDEService.switchToSession(session);
       }
 
-      // Send to Cursor IDE
-      await this.cursorIDEService.sendMessage(content);
+      // Send to the appropriate IDE
+      await activeIDEService.sendMessage(content);
 
       // Publish events
       if (this.eventBus) {
@@ -226,7 +260,7 @@ class SendMessageHandler {
         }
       } else {
         // Create new session with IDE port assignment
-        const activePort = this.cursorIDEService.getActivePort();
+        const activePort = this.ideManager.getActivePort();
         session = new ChatSession(null, null, {}, activePort);
       }
 
@@ -236,13 +270,16 @@ class SendMessageHandler {
       // Save to repository
       await this.chatRepository.saveSession(session);
 
+      // Get the appropriate IDE service
+      const activeIDEService = this.getActiveIDEService();
+
       // Switch to session's IDE if needed
       if (session.idePort) {
-        await this.cursorIDEService.switchToSession(session);
+        await activeIDEService.switchToSession(session);
       }
 
-      // Send to Cursor IDE
-      await this.cursorIDEService.sendMessage(command.content);
+      // Send to the appropriate IDE
+      await activeIDEService.sendMessage(command.content);
 
       // Publish events
       if (this.eventBus) {

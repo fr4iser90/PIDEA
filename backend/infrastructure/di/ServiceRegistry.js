@@ -388,10 +388,17 @@ class ServiceRegistry {
         console.log('[ServiceRegistry] Registering application handlers...');
 
         // Send message handler
-        this.container.register('sendMessageHandler', (cursorIDEService, eventBus, logger) => {
+        this.container.register('sendMessageHandler', (cursorIDEService, vscodeIDEService, windsurfIDEService, ideManager, eventBus, logger) => {
             const SendMessageHandler = require('../../application/handlers/SendMessageHandler');
-            return new SendMessageHandler({ messagingService: cursorIDEService, eventBus, logger });
-        }, { singleton: true, dependencies: ['cursorIDEService', 'eventBus', 'logger'] });
+            return new SendMessageHandler({ 
+                cursorIDEService, 
+                vscodeIDEService, 
+                windsurfIDEService, 
+                ideManager, 
+                eventBus, 
+                logger 
+            });
+        }, { singleton: true, dependencies: ['cursorIDEService', 'vscodeIDEService', 'windsurfIDEService', 'ideManager', 'eventBus', 'logger'] });
 
         // Get chat history handler
         this.container.register('getChatHistoryHandler', (chatRepository, ideManager) => {

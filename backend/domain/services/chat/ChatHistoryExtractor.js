@@ -23,8 +23,12 @@ class ChatHistoryExtractor {
       }
 
       // For VS Code, we need to navigate to the actual application window
+      // Only if we're on DevTools page
       if (this.ideType === IDETypes.VSCODE) {
-        await this.navigateToVSCodeApp(page);
+        const pageTitle = await page.title();
+        if (pageTitle === 'DevTools') {
+          await this.navigateToVSCodeApp(page);
+        }
       }
 
       // Wait for messages to load

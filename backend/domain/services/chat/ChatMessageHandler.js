@@ -50,7 +50,6 @@ class ChatMessageHandler {
    * @returns {Promise<Object>} Response result
    */
   async waitForAIResponse(options = {}) {
-    const page = await this.browserManager.getPage();
     const timeout = options.timeout || 300000; // 5 minutes default
     const checkInterval = options.checkInterval || 5000; // Check every 5 seconds
     
@@ -63,6 +62,13 @@ class ChatMessageHandler {
     
     while (Date.now() - startTime < timeout) {
       try {
+        // Get fresh page reference in case it changed
+        const page = await this.browserManager.getPage();
+        if (!page) {
+          console.error(`[ChatMessageHandler] No page available for ${this.ideType}`);
+          break;
+        }
+        
         // Count current AI messages using IDE-specific selector
         const currentMessageCount = await page.evaluate((selector) => {
           const aiMessages = document.querySelectorAll(selector);
@@ -101,7 +107,18 @@ class ChatMessageHandler {
         
       } catch (error) {
         console.error(`[ChatMessageHandler] Error checking AI response in ${this.ideType}:`, error.message);
-        // Continue waiting despite error
+        
+        // If page is closed, try to get a fresh page reference
+        if (error.message.includes('Target page, context or browser has been closed')) {
+          console.log(`[ChatMessageHandler] Page was closed, trying to get fresh page reference...`);
+          try {
+            await this.browserManager.getPage(); // This will reconnect if needed
+            await page.waitForTimeout(1000); // Wait a bit before retrying
+          } catch (reconnectError) {
+            console.error(`[ChatMessageHandler] Failed to reconnect:`, reconnectError.message);
+            break;
+          }
+        }
       }
     }
     
@@ -126,7 +143,14 @@ class ChatMessageHandler {
    */
   async extractLatestAIResponse(page) {
     try {
-      const response = await page.evaluate((selector) => {
+      // Get fresh page reference in case it changed
+      const currentPage = await this.browserManager.getPage();
+      if (!currentPage) {
+        console.error(`[ChatMessageHandler] No page available for extracting AI response from ${this.ideType}`);
+        return '';
+      }
+      
+      const response = await currentPage.evaluate((selector) => {
         const aiMessages = document.querySelectorAll(selector);
         if (aiMessages.length === 0) {
           return '';

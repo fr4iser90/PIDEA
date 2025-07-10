@@ -89,9 +89,22 @@ class VSCodeChatHandler extends ChatMessageHandler {
     try {
       console.log('[VSCodeChatHandler] Sending message to VSCode with extension:', extensionType);
       
-      const page = await this.browserManager.getPage();
+      // Get fresh page reference in case it changed
+      let page = await this.browserManager.getPage();
       if (!page) {
         throw new Error('No browser page available');
+      }
+
+      // Check if we need to navigate to VS Code app (only if on DevTools page)
+      const pageTitle = await page.title();
+      if (pageTitle === 'DevTools') {
+        console.log('[VSCodeChatHandler] On DevTools page, navigating to VS Code app...');
+        await this.navigateToVSCodeApp();
+        // Get fresh page reference after navigation
+        page = await this.browserManager.getPage();
+        if (!page) {
+          throw new Error('No browser page available after navigation');
+        }
       }
 
       const selectors = this.extensionSelectors[extensionType];
@@ -99,12 +112,48 @@ class VSCodeChatHandler extends ChatMessageHandler {
         throw new Error(`Unsupported extension type: ${extensionType}`);
       }
 
-      // Wait for VSCode to be ready
-      await page.waitForSelector('.monaco-workbench', { timeout: 10000 });
+      // Wait for VSCode to be ready (with retry logic)
+      let vscodeReady = false;
+      for (let i = 0; i < 3; i++) {
+        try {
+          // Try multiple selectors for VS Code
+          const selectors = ['.monaco-workbench', 'body', 'html'];
+          for (const selector of selectors) {
+            try {
+              await page.waitForSelector(selector, { timeout: 2000 });
+              vscodeReady = true;
+              console.log(`[VSCodeChatHandler] VSCode ready with selector: ${selector}`);
+              break;
+            } catch (e) {
+              continue;
+            }
+          }
+          if (vscodeReady) break;
+        } catch (e) {
+          console.log(`[VSCodeChatHandler] VSCode not ready, attempt ${i + 1}/3`);
+          if (i === 2) {
+            console.log('[VSCodeChatHandler] VSCode not ready after 3 attempts, continuing anyway...');
+          }
+        }
+      }
 
       // Find chat input using multiple selectors
       let chatInput = null;
-      for (const selector of selectors.chatInput) {
+      const allSelectors = [
+        ...selectors.chatInput,
+        // Additional VS Code chat input selectors
+        'textarea[data-testid="chat-input"]',
+        'textarea[placeholder*="Ask"]',
+        'textarea[placeholder*="Type"]',
+        'textarea[placeholder*="chat"]',
+        '.chat-input textarea',
+        '.chat-editor textarea',
+        '.monaco-editor textarea',
+        'textarea.inputarea',
+        'textarea[data-mprt="7"]'
+      ];
+      
+      for (const selector of allSelectors) {
         try {
           chatInput = await page.$(selector);
           if (chatInput) {
@@ -117,38 +166,130 @@ class VSCodeChatHandler extends ChatMessageHandler {
       }
 
       if (!chatInput) {
-        throw new Error(`Could not find chat input for ${extensionType}`);
+        console.log('[VSCodeChatHandler] No chat input found, trying to find any textarea...');
+        // Try to find any textarea as fallback
+        const allTextareas = await page.$$('textarea');
+        if (allTextareas.length > 0) {
+          chatInput = allTextareas[0];
+          console.log(`[VSCodeChatHandler] Using fallback textarea (${allTextareas.length} found)`);
+        } else {
+          throw new Error(`Could not find chat input for ${extensionType}`);
+        }
       }
 
-      // Clear existing text and type the message
-      await chatInput.click();
-      await page.keyboard.down('Control');
-      await page.keyboard.press('KeyA');
-      await page.keyboard.up('Control');
-      await page.keyboard.press('Backspace');
-      await chatInput.type(message);
-
-      // Find and click send button
-      let sendButton = null;
-      for (const selector of selectors.sendButton) {
+      // First, try to ensure chat panel is open and visible
+      console.log('[VSCodeChatHandler] Ensuring chat panel is open...');
+      await this.ensureChatPanelOpen(page);
+      
+      // Clear existing text and type the message with retry logic
+      let retryCount = 0;
+      const maxRetries = 3;
+      let lastUsedSelector = null;
+      
+      // Store the selector that worked for chat input
+      for (const selector of allSelectors) {
         try {
-          sendButton = await page.$(selector);
-          if (sendButton) {
-            console.log(`[VSCodeChatHandler] Found send button with selector: ${selector}`);
+          const testInput = await page.$(selector);
+          if (testInput) {
+            lastUsedSelector = selector;
             break;
           }
         } catch (e) {
           // Continue to next selector
         }
       }
-
-      if (!sendButton) {
-        // Try pressing Enter as fallback
-        console.log('[VSCodeChatHandler] No send button found, trying Enter key...');
-        await page.keyboard.press('Enter');
-      } else {
-        await sendButton.click();
+      
+      while (retryCount < maxRetries) {
+        try {
+          // Try multiple strategies to interact with the input
+          console.log(`[VSCodeChatHandler] Attempting to type message (attempt ${retryCount + 1}/${maxRetries})`);
+          
+          // Strategy 1: Try clicking and typing
+          try {
+            await chatInput.click({ timeout: 5000 });
+            await page.keyboard.down('Control');
+            await page.keyboard.press('KeyA');
+            await page.keyboard.up('Control');
+            await page.keyboard.press('Backspace');
+            await chatInput.type(message, { delay: 100 });
+            console.log('[VSCodeChatHandler] Successfully typed message using click strategy');
+            break; // Success, exit retry loop
+          } catch (clickError) {
+            console.log('[VSCodeChatHandler] Click strategy failed, trying focus strategy...');
+            
+            // Strategy 2: Try focusing and typing
+            try {
+              await chatInput.focus();
+              await page.keyboard.down('Control');
+              await page.keyboard.press('KeyA');
+              await page.keyboard.up('Control');
+              await page.keyboard.press('Backspace');
+              await page.keyboard.type(message);
+              console.log('[VSCodeChatHandler] Successfully typed message using focus strategy');
+              break; // Success, exit retry loop
+            } catch (focusError) {
+              console.log('[VSCodeChatHandler] Focus strategy failed, trying fill strategy...');
+              
+              // Strategy 3: Try fill method
+              try {
+                await chatInput.fill(message);
+                console.log('[VSCodeChatHandler] Successfully typed message using fill strategy');
+                break; // Success, exit retry loop
+              } catch (fillError) {
+                console.log('[VSCodeChatHandler] Fill strategy failed, trying evaluate strategy...');
+                
+                // Strategy 4: Try JavaScript evaluation
+                try {
+                  await page.evaluate((selector, text) => {
+                    const element = document.querySelector(selector);
+                    if (element) {
+                      element.value = text;
+                      element.dispatchEvent(new Event('input', { bubbles: true }));
+                      element.dispatchEvent(new Event('change', { bubbles: true }));
+                    }
+                  }, lastUsedSelector, message);
+                  console.log('[VSCodeChatHandler] Successfully typed message using evaluate strategy');
+                  break; // Success, exit retry loop
+                } catch (evalError) {
+                  throw new Error(`All typing strategies failed: ${evalError.message}`);
+                }
+              }
+            }
+          }
+        } catch (error) {
+          retryCount++;
+          console.log(`[VSCodeChatHandler] Error typing message (attempt ${retryCount}/${maxRetries}):`, error.message);
+          
+          if (error.message.includes('Target page, context or browser has been closed')) {
+            if (retryCount < maxRetries) {
+              console.log('[VSCodeChatHandler] Page was closed, getting fresh page reference...');
+              // Get fresh page reference
+              page = await this.browserManager.getPage();
+              if (!page) {
+                throw new Error('No browser page available after page closure');
+              }
+              // Re-find chat input using the last working selector
+              if (lastUsedSelector) {
+                chatInput = await page.$(lastUsedSelector);
+                if (!chatInput) {
+                  throw new Error('Chat input not found after page refresh');
+                }
+              } else {
+                throw new Error('No selector available for chat input after page refresh');
+              }
+              continue;
+            }
+          }
+          
+          if (retryCount >= maxRetries) {
+            throw error;
+          }
+        }
       }
+
+      // Send message by pressing Enter (simpler and more reliable than clicking buttons)
+      console.log('[VSCodeChatHandler] Sending message by pressing Enter...');
+      await page.keyboard.press('Enter');
       
       console.log('[VSCodeChatHandler] Message sent successfully');
       
@@ -337,6 +478,159 @@ class VSCodeChatHandler extends ChatMessageHandler {
     } catch (error) {
       console.error('[VSCodeChatHandler] Error getting active extension:', error);
       return null;
+    }
+  }
+
+  /**
+   * Ensure the chat panel is open and visible
+   * @param {Page} page - Playwright page object
+   */
+  async ensureChatPanelOpen(page) {
+    try {
+      console.log('[VSCodeChatHandler] Checking if chat panel is open...');
+      
+      // Check if chat panel is already visible
+      const chatContainer = await page.$('.chat-container, .interactive-session, .copilot-chat');
+      if (chatContainer) {
+        const isVisible = await chatContainer.isVisible();
+        if (isVisible) {
+          console.log('[VSCodeChatHandler] Chat panel is already open and visible');
+          return;
+        }
+      }
+      
+      console.log('[VSCodeChatHandler] Chat panel not visible, trying to open it...');
+      
+      // Try to open chat panel using keyboard shortcuts
+      try {
+        // Try Ctrl+Shift+I (common VS Code chat shortcut)
+        await page.keyboard.down('Control');
+        await page.keyboard.down('Shift');
+        await page.keyboard.press('KeyI');
+        await page.keyboard.up('Shift');
+        await page.keyboard.up('Control');
+        await page.waitForTimeout(1000);
+        
+        // Check if chat panel opened
+        const chatPanel = await page.$('.chat-container, .interactive-session, .copilot-chat');
+        if (chatPanel && await chatPanel.isVisible()) {
+          console.log('[VSCodeChatHandler] Chat panel opened using Ctrl+Shift+I');
+          return;
+        }
+      } catch (e) {
+        console.log('[VSCodeChatHandler] Ctrl+Shift+I failed, trying alternative shortcuts...');
+      }
+      
+      // Try alternative shortcuts
+      const shortcuts = [
+        { key: 'KeyC', description: 'Ctrl+Shift+C' },
+        { key: 'KeyP', description: 'Ctrl+Shift+P' },
+        { key: 'KeyA', description: 'Ctrl+Shift+A' }
+      ];
+      
+      for (const shortcut of shortcuts) {
+        try {
+          await page.keyboard.down('Control');
+          await page.keyboard.down('Shift');
+          await page.keyboard.press(shortcut.key);
+          await page.keyboard.up('Shift');
+          await page.keyboard.up('Control');
+          await page.waitForTimeout(1000);
+          
+          // Check if chat panel opened
+          const chatPanel = await page.$('.chat-container, .interactive-session, .copilot-chat');
+          if (chatPanel && await chatPanel.isVisible()) {
+            console.log(`[VSCodeChatHandler] Chat panel opened using ${shortcut.description}`);
+            return;
+          }
+        } catch (e) {
+          console.log(`[VSCodeChatHandler] ${shortcut.description} failed`);
+        }
+      }
+      
+      // Try clicking on chat-related UI elements
+      const chatButtons = [
+        '.codicon-comment',
+        '.codicon-lightbulb',
+        '.codicon-symbol-color',
+        '[aria-label*="Chat"]',
+        '[aria-label*="Copilot"]',
+        '[title*="Chat"]',
+        '[title*="Copilot"]'
+      ];
+      
+      for (const buttonSelector of chatButtons) {
+        try {
+          const button = await page.$(buttonSelector);
+          if (button && await button.isVisible()) {
+            await button.click();
+            await page.waitForTimeout(1000);
+            
+            // Check if chat panel opened
+            const chatPanel = await page.$('.chat-container, .interactive-session, .copilot-chat');
+            if (chatPanel && await chatPanel.isVisible()) {
+              console.log(`[VSCodeChatHandler] Chat panel opened by clicking ${buttonSelector}`);
+              return;
+            }
+          }
+        } catch (e) {
+          // Continue to next button
+        }
+      }
+      
+      console.log('[VSCodeChatHandler] Could not open chat panel, continuing anyway...');
+      
+    } catch (error) {
+      console.error('[VSCodeChatHandler] Error ensuring chat panel is open:', error);
+      // Don't throw error, just log it and continue
+    }
+  }
+
+  /**
+   * Navigate to the actual VS Code application window
+   */
+  async navigateToVSCodeApp() {
+    try {
+      console.log('[VSCodeChatHandler] Navigating to VS Code app...');
+      
+      // Get all targets (pages) available
+      const targets = await this.browserManager.browser.targets();
+      console.log('[VSCodeChatHandler] Available targets:', targets.length);
+      
+      // Find the VS Code application target (not DevTools)
+      let vscodeTarget = null;
+      for (const target of targets) {
+        const url = target.url();
+        console.log('[VSCodeChatHandler] Target URL:', url);
+        
+        // Skip DevTools targets
+        if (url.includes('devtools://') || url.includes('chrome-devtools://')) {
+          continue;
+        }
+        
+        // Look for VS Code application target
+        if (url.includes('file://') || url.includes('vscode://') || url === 'about:blank') {
+          vscodeTarget = target;
+          break;
+        }
+      }
+      
+      if (vscodeTarget) {
+        console.log('[VSCodeChatHandler] Found VS Code app target, navigating...');
+        const newPage = await vscodeTarget.page();
+        if (newPage) {
+          // Update the browser manager to use the new page
+          this.browserManager.page = newPage;
+          console.log('[VSCodeChatHandler] Successfully navigated to VS Code app');
+          return;
+        }
+      }
+      
+      console.log('[VSCodeChatHandler] No VS Code app target found, staying on current page');
+      
+    } catch (error) {
+      console.error('[VSCodeChatHandler] Error navigating to VS Code app:', error);
+      // Don't throw error, just log it and continue with current page
     }
   }
 }
