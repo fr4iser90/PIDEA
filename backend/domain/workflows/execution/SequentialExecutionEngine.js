@@ -15,6 +15,11 @@ const ExecutionCache = require('./ExecutionCache');
 const ExecutionMetrics = require('./ExecutionMetrics');
 const ExecutionPredictor = require('./ExecutionPredictor');
 
+// New Optimization Components
+const { ExecutionOptimizer } = require('./optimization/ExecutionOptimizer');
+const { ExecutionMonitor } = require('./monitoring/ExecutionMonitor');
+const { ExecutionExceptionFactory } = require('./exceptions/ExecutionException');
+
 /**
  * Enhanced sequential execution engine for workflow execution
  */
@@ -73,12 +78,45 @@ class SequentialExecutionEngine {
       logger: options.logger
     });
     
+    // New Optimization Components
+    this.executionOptimizer = new ExecutionOptimizer({
+      enabled: options.enableAdvancedOptimization !== false,
+      stepCombination: options.enableStepCombination !== false,
+      stepReordering: options.enableStepReordering !== false,
+      parallelExecution: options.enableParallelExecution !== false,
+      resourceOptimization: options.enableResourceOptimization !== false,
+      predictiveOptimization: options.enablePredictiveOptimization !== false,
+      caching: options.enableOptimizationCaching !== false,
+      learningEnabled: options.enableOptimizationLearning !== false,
+      logger: options.logger
+    });
+    
+    this.executionMonitor = new ExecutionMonitor({
+      enabled: options.enableMonitoring !== false,
+      monitoringInterval: options.monitoringInterval || 1000,
+      metricsRetention: options.metricsRetention || 24 * 60 * 60 * 1000,
+      alertConfig: {
+        executionTimeout: options.executionTimeout || 300000,
+        memoryThreshold: options.memoryThreshold || 80,
+        cpuThreshold: options.cpuThreshold || 90,
+        errorThreshold: options.errorThreshold || 3,
+        stepFailureThreshold: options.stepFailureThreshold || 0.5,
+        performanceDegradationThreshold: options.performanceDegradationThreshold || 0.3
+      },
+      logger: options.logger
+    });
+    
     // Execution state
     this.activeExecutions = new Map();
     this.executionStrategies = new Map();
     
     // Initialize strategies
     this.initializeStrategies();
+    
+    // Start monitoring
+    if (options.enableMonitoring !== false) {
+      this.executionMonitor.start();
+    }
     
     this.logger = options.logger || console;
   }
@@ -149,13 +187,50 @@ class SequentialExecutionEngine {
         allocatedResources
       });
 
-      // Optimize workflow
-      const optimizedWorkflow = await this.workflowOptimizer.optimizeWorkflow(workflow, context);
+      // Register execution for monitoring
+      this.executionMonitor.registerExecution(executionId, {
+        workflowName: workflow.getMetadata().name,
+        stepCount: workflow.getMetadata().steps?.length || 0,
+        strategy: options.strategy || 'basic'
+      });
+
+      // Advanced workflow optimization
+      let optimizedWorkflow = workflow;
+      let optimizationResult = null;
       
-      this.logger.info('SequentialExecutionEngine: Workflow optimized', {
+      if (this.executionOptimizer.config.enabled) {
+        try {
+          const steps = this.getWorkflowSteps(workflow);
+          optimizationResult = await this.executionOptimizer.optimizeWorkflow(steps, context, options);
+          optimizedWorkflow = await this.applyOptimizationResult(workflow, optimizationResult, context);
+          
+          this.logger.info('SequentialExecutionEngine: Advanced workflow optimization completed', {
+            executionId,
+            originalSteps: steps.length,
+            optimizedSteps: optimizationResult.optimizedSteps.length,
+            estimatedSavings: optimizationResult.estimatedSavings,
+            confidence: optimizationResult.confidence,
+            appliedOptimizations: optimizationResult.appliedOptimizations.map(opt => opt.type)
+          });
+        } catch (error) {
+          this.logger.warn('SequentialExecutionEngine: Advanced optimization failed, using basic optimization', {
+            executionId,
+            error: error.message
+          });
+          
+          // Fallback to basic optimization
+          optimizedWorkflow = await this.workflowOptimizer.optimizeWorkflow(workflow, context);
+        }
+      } else {
+        // Use basic optimization
+        optimizedWorkflow = await this.workflowOptimizer.optimizeWorkflow(workflow, context);
+      }
+      
+      this.logger.info('SequentialExecutionEngine: Workflow optimization completed', {
         executionId,
         originalSteps: workflow.getMetadata().steps?.length || 0,
-        optimizedSteps: optimizedWorkflow.getMetadata().steps?.length || 0
+        optimizedSteps: optimizedWorkflow.getMetadata().steps?.length || 0,
+        optimizationType: optimizationResult ? 'advanced' : 'basic'
       });
 
       // Determine execution strategy
@@ -193,12 +268,36 @@ class SequentialExecutionEngine {
         });
       }
 
+      // Update monitoring with execution progress
+      this.executionMonitor.updateExecution(executionId, {
+        completedSteps: result.stepResults?.filter(r => r.success).length || 0,
+        failedSteps: result.stepResults?.filter(r => !r.success).length || 0,
+        cacheHits: result.cacheHits || 0,
+        cacheMisses: result.cacheMisses || 0,
+        retryAttempts: result.retryAttempts || 0
+      });
+
       // Learn from execution
       await this.executionPredictor.learnFromExecution(executionId, optimizedWorkflow, context, result, prediction);
       await this.workflowOptimizer.learnFromExecution(executionId, result);
+      
+      // Learn from optimization if available
+      if (optimizationResult) {
+        await this.executionOptimizer.learnFromOptimization(
+          this.getWorkflowSteps(workflow), 
+          optimizationResult, 
+          context
+        );
+      }
 
       // Record execution end in metrics
       this.executionMetrics.recordExecutionEnd(executionId, result);
+      
+      // Complete monitoring
+      this.executionMonitor.completeExecution(executionId, {
+        optimizationSavings: optimizationResult?.estimatedSavings?.time || 0,
+        parallelExecutionSavings: optimizationResult?.estimatedSavings?.time || 0
+      });
 
       return result;
 
@@ -265,6 +364,47 @@ class SequentialExecutionEngine {
    */
   generateExecutionId() {
     return `exec_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  }
+
+  /**
+   * Get workflow steps
+   * @param {IWorkflow} workflow - Workflow to get steps from
+   * @returns {Array} Workflow steps
+   */
+  getWorkflowSteps(workflow) {
+    // For composed workflows, get the steps
+    if (workflow._steps) {
+      return workflow._steps;
+    }
+    
+    // For other workflows, return single step
+    return [workflow];
+  }
+
+  /**
+   * Apply optimization result to workflow
+   * @param {IWorkflow} workflow - Original workflow
+   * @param {Object} optimizationResult - Optimization result
+   * @param {Object} context - Workflow context
+   * @returns {Promise<IWorkflow>} Optimized workflow
+   */
+  async applyOptimizationResult(workflow, optimizationResult, context) {
+    if (!optimizationResult || !optimizationResult.optimizedSteps) {
+      return workflow;
+    }
+
+    // Create optimized workflow with new steps
+    const ComposedWorkflow = require('../builder/ComposedWorkflow');
+    const optimizedWorkflow = new ComposedWorkflow(
+      optimizationResult.optimizedSteps,
+      workflow.getMetadata()
+    );
+
+    // Copy optimization metadata
+    optimizedWorkflow._optimizationResult = optimizationResult;
+    optimizedWorkflow._originalWorkflow = workflow;
+
+    return optimizedWorkflow;
   }
 
   /**
@@ -601,6 +741,66 @@ class SequentialExecutionEngine {
   }
 
   /**
+   * Get advanced optimization statistics
+   * @returns {Object} Advanced optimization statistics
+   */
+  getAdvancedOptimizationStatistics() {
+    return this.executionOptimizer.getStatistics();
+  }
+
+  /**
+   * Get execution monitoring statistics
+   * @returns {Object} Monitoring statistics
+   */
+  getMonitoringStatistics() {
+    return this.executionMonitor.getStatistics();
+  }
+
+  /**
+   * Get execution monitoring data
+   * @param {string} executionId - Execution ID
+   * @returns {Object} Monitoring data
+   */
+  getExecutionMonitoringData(executionId) {
+    return this.executionMonitor.getExecutionMetrics(executionId);
+  }
+
+  /**
+   * Get active executions with monitoring data
+   * @returns {Array} Active executions with monitoring data
+   */
+  getActiveExecutionsWithMonitoring() {
+    return this.executionMonitor.getActiveExecutions();
+  }
+
+  /**
+   * Get execution history with monitoring data
+   * @param {Object} filters - Filter options
+   * @returns {Array} Execution history with monitoring data
+   */
+  getExecutionHistoryWithMonitoring(filters = {}) {
+    return this.executionMonitor.getExecutionHistory(filters);
+  }
+
+  /**
+   * Get monitoring alerts
+   * @param {Object} filters - Filter options
+   * @returns {Array} Monitoring alerts
+   */
+  getMonitoringAlerts(filters = {}) {
+    return this.executionMonitor.getAlerts(filters);
+  }
+
+  /**
+   * Get performance baseline
+   * @param {string} workflowName - Workflow name
+   * @returns {Object} Performance baseline
+   */
+  getPerformanceBaseline(workflowName) {
+    return this.executionMonitor.getPerformanceBaseline(workflowName);
+  }
+
+  /**
    * Analyze workflow for optimization opportunities
    * @param {IWorkflow} workflow - Workflow to analyze
    * @param {WorkflowContext} context - Workflow context
@@ -648,6 +848,11 @@ class SequentialExecutionEngine {
   async shutdown() {
     this.logger.info('SequentialExecutionEngine: Shutting down');
     
+    // Stop monitoring
+    if (this.executionMonitor) {
+      this.executionMonitor.stop();
+    }
+    
     // Cancel all active executions
     for (const [executionId, execution] of this.activeExecutions.entries()) {
       this.cancelExecution(executionId);
@@ -667,6 +872,14 @@ class SequentialExecutionEngine {
     this.executionCache.shutdown();
     this.executionMetrics.shutdown();
     this.executionPredictor.shutdown();
+    
+    // Shutdown new optimization components
+    if (this.executionOptimizer) {
+      this.executionOptimizer.reset();
+    }
+    if (this.executionMonitor) {
+      this.executionMonitor.reset();
+    }
     
     this.logger.info('SequentialExecutionEngine: Shutdown complete');
   }
@@ -688,7 +901,9 @@ class SequentialExecutionEngine {
       resourceManagement: this.resourceManager.getResourceStatistics(),
       cache: this.executionCache.getStatistics(),
       metrics: this.executionMetrics.getMetricsSummary(),
-      prediction: this.executionPredictor.getPredictionStatistics()
+      prediction: this.executionPredictor.getPredictionStatistics(),
+      advancedOptimization: this.executionOptimizer ? this.executionOptimizer.getStatistics() : null,
+      monitoring: this.executionMonitor ? this.executionMonitor.getStatistics() : null
     };
   }
 }

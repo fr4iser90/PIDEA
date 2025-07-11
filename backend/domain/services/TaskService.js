@@ -5,6 +5,7 @@ const TaskType = require('@/domain/value-objects/TaskType');
 const GitWorkflowManager = require('../workflows/git/GitWorkflowManager');
 const GitWorkflowContext = require('../workflows/git/GitWorkflowContext');
 const { SequentialExecutionEngine } = require('../workflows/execution');
+const { UnifiedWorkflowHandler, utils: handlerUtils } = require('../workflows/handlers');
 
 /**
  * TaskService - Business logic for project-based task management
@@ -36,6 +37,12 @@ class TaskService {
       enableResourceManagement: true,
       enableDependencyResolution: true,
       enablePriorityScheduling: true
+    });
+
+    // Initialize unified workflow handler system
+    this.unifiedHandler = new UnifiedWorkflowHandler({
+      logger: console,
+      eventBus: null
     });
   }
 
@@ -219,6 +226,73 @@ class TaskService {
 
     } catch (error) {
       console.error('❌ [TaskService] Task execution failed:', error.message);
+      throw error;
+    }
+  }
+
+  /**
+   * Execute a task using unified handler system
+   * @param {string} taskId - Task ID
+   * @param {string} userId - User ID
+   * @param {Object} options - Execution options
+   * @returns {Promise<Object>} Execution result
+   */
+  async executeTaskWithUnifiedHandler(taskId, userId, options = {}) {
+    console.log('🔍 [TaskService] executeTaskWithUnifiedHandler called with:', { taskId, userId, options });
+    
+    try {
+      const task = await this.taskRepository.findById(taskId);
+      if (!task) {
+        throw new Error('Task not found');
+      }
+
+      console.log('🔍 [TaskService] Found task for unified handler execution:', task);
+
+      if (task.isCompleted()) {
+        throw new Error('Task is already completed');
+      }
+
+      // Create handler request
+      const request = {
+        type: 'task',
+        taskId: task.id,
+        taskType: task.type?.value,
+        task: task,
+        userId: userId,
+        options: options
+      };
+
+      // Create response object
+      const response = {};
+
+      // Execute using unified handler
+      const result = await this.unifiedHandler.handle(request, response, options);
+
+      console.log('✅ [TaskService] Unified handler task execution completed', {
+        taskId: task.id,
+        success: result.isSuccess(),
+        duration: result.getFormattedDuration()
+      });
+
+      return {
+        success: result.isSuccess(),
+        taskId: task.id,
+        taskType: task.type?.value,
+        result: result.getResult(),
+        message: result.isSuccess() ? 
+          `Task completed successfully: ${task.title}` :
+          `Task failed: ${task.title}`,
+        metadata: {
+          executionTime: result.getDuration(),
+          formattedDuration: result.getFormattedDuration(),
+          handlerId: result.getHandlerId(),
+          handlerName: result.getHandlerName(),
+          timestamp: result.getTimestamp()
+        }
+      };
+
+    } catch (error) {
+      console.error('❌ [TaskService] Unified handler task execution failed:', error.message);
       throw error;
     }
   }
@@ -1292,6 +1366,106 @@ ${task.description}
    */
   async shutdownExecutionEngine() {
     await this.executionEngine.shutdown();
+  }
+
+  /**
+   * Get unified handler statistics
+   * @returns {Promise<Object>} Handler statistics
+   */
+  async getUnifiedHandlerStatistics() {
+    try {
+      return await this.unifiedHandler.getHandlerStatistics();
+    } catch (error) {
+      console.error('❌ [TaskService] Failed to get unified handler statistics:', error.message);
+      throw error;
+    }
+  }
+
+  /**
+   * Get unified handler information
+   * @returns {Array<Object>} Handler information
+   */
+  getUnifiedHandlerInformation() {
+    try {
+      return this.unifiedHandler.getHandlerInformation();
+    } catch (error) {
+      console.error('❌ [TaskService] Failed to get unified handler information:', error.message);
+      throw error;
+    }
+  }
+
+  /**
+   * Register handler with unified handler system
+   * @param {string} type - Handler type
+   * @param {IHandler} handler - Handler instance
+   * @param {Object} metadata - Handler metadata
+   * @returns {boolean} True if registration successful
+   */
+  registerUnifiedHandler(type, handler, metadata = {}) {
+    try {
+      const success = this.unifiedHandler.registerHandler(type, handler, metadata);
+      if (success) {
+        console.log('✅ [TaskService] Unified handler registered:', {
+          type,
+          handlerName: handler.getMetadata().name
+        });
+      }
+      return success;
+    } catch (error) {
+      console.error('❌ [TaskService] Failed to register unified handler:', {
+        type,
+        error: error.message
+      });
+      throw error;
+    }
+  }
+
+  /**
+   * Get handler by type from unified handler system
+   * @param {string} type - Handler type
+   * @returns {IHandler|null} Handler instance
+   */
+  getUnifiedHandlerByType(type) {
+    try {
+      return this.unifiedHandler.getHandlerByType(type);
+    } catch (error) {
+      console.error('❌ [TaskService] Failed to get unified handler by type:', {
+        type,
+        error: error.message
+      });
+      throw error;
+    }
+  }
+
+  /**
+   * Initialize unified handler system with configuration
+   * @param {Object} config - Handler configuration
+   * @returns {Promise<void>} Initialization result
+   */
+  async initializeUnifiedHandler(config = {}) {
+    try {
+      await this.unifiedHandler.initialize(config);
+      console.log('✅ [TaskService] Unified handler system initialized:', {
+        config: Object.keys(config)
+      });
+    } catch (error) {
+      console.error('❌ [TaskService] Failed to initialize unified handler system:', error.message);
+      throw error;
+    }
+  }
+
+  /**
+   * Cleanup unified handler system
+   * @returns {Promise<void>} Cleanup result
+   */
+  async cleanupUnifiedHandler() {
+    try {
+      await this.unifiedHandler.cleanup();
+      console.log('✅ [TaskService] Unified handler system cleanup completed');
+    } catch (error) {
+      console.error('❌ [TaskService] Failed to cleanup unified handler system:', error.message);
+      throw error;
+    }
   }
 }
 

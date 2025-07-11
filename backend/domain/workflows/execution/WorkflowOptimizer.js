@@ -1,8 +1,11 @@
 /**
- * WorkflowOptimizer - Workflow optimization algorithms
- * Provides workflow optimization with step combination, reordering, and redundancy removal
+ * WorkflowOptimizer - Advanced workflow optimization algorithms
+ * Provides workflow optimization with step combination, reordering, redundancy removal,
+ * parallel execution, resource optimization, and predictive optimization
  */
 const crypto = require('crypto');
+const { ExecutionOptimizer } = require('./optimization/ExecutionOptimizer');
+const { ExecutionExceptionFactory } = require('./exceptions/ExecutionException');
 
 /**
  * Workflow optimizer for execution optimization
@@ -16,6 +19,27 @@ class WorkflowOptimizer {
     this.enableLearning = options.enableLearning !== false;
     this.enableCaching = options.enableCaching !== false;
     this.enableOptimization = options.enableOptimization !== false;
+    
+    // Advanced optimization features
+    this.enableAdvancedOptimization = options.enableAdvancedOptimization !== false;
+    this.enableParallelExecution = options.enableParallelExecution !== false;
+    this.enableResourceOptimization = options.enableResourceOptimization !== false;
+    this.enablePredictiveOptimization = options.enablePredictiveOptimization !== false;
+    
+    // Initialize advanced optimizer if enabled
+    if (this.enableAdvancedOptimization) {
+      this.executionOptimizer = new ExecutionOptimizer({
+        enabled: true,
+        stepCombination: options.enableStepCombination !== false,
+        stepReordering: options.enableStepReordering !== false,
+        parallelExecution: this.enableParallelExecution,
+        resourceOptimization: this.enableResourceOptimization,
+        predictiveOptimization: this.enablePredictiveOptimization,
+        caching: this.enableCaching,
+        learningEnabled: this.enableLearning,
+        logger: options.logger
+      });
+    }
     
     this.initializeOptimizationRules();
     
@@ -57,6 +81,30 @@ class WorkflowOptimizer {
       priority: 4,
       apply: (workflow, context) => this.optimizeParameters(workflow, context)
     });
+
+    // Rule 5: Enable parallel execution
+    this.optimizationRules.set('enable_parallel_execution', {
+      name: 'Enable Parallel Execution',
+      description: 'Identify and enable parallel execution of independent steps',
+      priority: 5,
+      apply: (workflow, context) => this.enableParallelExecution(workflow, context)
+    });
+
+    // Rule 6: Optimize resource allocation
+    this.optimizationRules.set('optimize_resource_allocation', {
+      name: 'Optimize Resource Allocation',
+      description: 'Optimize resource allocation for better performance',
+      priority: 6,
+      apply: (workflow, context) => this.optimizeResourceAllocation(workflow, context)
+    });
+
+    // Rule 7: Apply predictive optimization
+    this.optimizationRules.set('predictive_optimization', {
+      name: 'Predictive Optimization',
+      description: 'Apply predictive optimization based on historical data',
+      priority: 7,
+      apply: (workflow, context) => this.applyPredictiveOptimization(workflow, context)
+    });
   }
 
   /**
@@ -89,37 +137,78 @@ class WorkflowOptimizer {
       let optimizedWorkflow = workflow;
       const appliedRules = [];
 
-      // Sort rules by priority
-      const sortedRules = Array.from(this.optimizationRules.entries())
-        .sort(([, a], [, b]) => a.priority - b.priority);
-
-      // Apply optimization rules
-      for (const [ruleId, rule] of sortedRules) {
+      // Use advanced optimization if available
+      if (this.executionOptimizer && this.enableAdvancedOptimization) {
         try {
-          const beforeOptimization = this.getWorkflowMetrics(optimizedWorkflow);
-          optimizedWorkflow = await rule.apply(optimizedWorkflow, context);
-          const afterOptimization = this.getWorkflowMetrics(optimizedWorkflow);
+          this.logger.info('WorkflowOptimizer: Using advanced optimization', {
+            workflowId,
+            workflowName: workflow.getMetadata().name
+          });
 
-          if (this.hasImprovement(beforeOptimization, afterOptimization)) {
+          const steps = this.getWorkflowSteps(workflow);
+          const optimizationResult = await this.executionOptimizer.optimizeWorkflow(steps, context);
+          
+          if (optimizationResult && optimizationResult.optimizedSteps) {
+            optimizedWorkflow = await this.applyOptimizationResult(workflow, optimizationResult, context);
+            
             appliedRules.push({
-              ruleId,
-              ruleName: rule.name,
-              improvement: this.calculateImprovement(beforeOptimization, afterOptimization)
+              ruleId: 'advanced_optimization',
+              ruleName: 'Advanced Optimization',
+              improvement: optimizationResult.estimatedSavings,
+              confidence: optimizationResult.confidence,
+              appliedOptimizations: optimizationResult.appliedOptimizations.map(opt => opt.type)
             });
 
-            this.logger.info('WorkflowOptimizer: Rule applied successfully', {
+            this.logger.info('WorkflowOptimizer: Advanced optimization applied', {
               workflowId,
-              ruleId,
-              ruleName: rule.name,
-              improvement: this.calculateImprovement(beforeOptimization, afterOptimization)
+              originalSteps: steps.length,
+              optimizedSteps: optimizationResult.optimizedSteps.length,
+              estimatedSavings: optimizationResult.estimatedSavings,
+              confidence: optimizationResult.confidence
             });
           }
         } catch (error) {
-          this.logger.warn('WorkflowOptimizer: Rule failed', {
+          this.logger.warn('WorkflowOptimizer: Advanced optimization failed, falling back to basic rules', {
             workflowId,
-            ruleId,
             error: error.message
           });
+        }
+      }
+
+      // Apply basic optimization rules if advanced optimization failed or is disabled
+      if (appliedRules.length === 0) {
+        // Sort rules by priority
+        const sortedRules = Array.from(this.optimizationRules.entries())
+          .sort(([, a], [, b]) => a.priority - b.priority);
+
+        // Apply optimization rules
+        for (const [ruleId, rule] of sortedRules) {
+          try {
+            const beforeOptimization = this.getWorkflowMetrics(optimizedWorkflow);
+            optimizedWorkflow = await rule.apply(optimizedWorkflow, context);
+            const afterOptimization = this.getWorkflowMetrics(optimizedWorkflow);
+
+            if (this.hasImprovement(beforeOptimization, afterOptimization)) {
+              appliedRules.push({
+                ruleId,
+                ruleName: rule.name,
+                improvement: this.calculateImprovement(beforeOptimization, afterOptimization)
+              });
+
+              this.logger.info('WorkflowOptimizer: Rule applied successfully', {
+                workflowId,
+                ruleId,
+                ruleName: rule.name,
+                improvement: this.calculateImprovement(beforeOptimization, afterOptimization)
+              });
+            }
+          } catch (error) {
+            this.logger.warn('WorkflowOptimizer: Rule failed', {
+              workflowId,
+              ruleId,
+              error: error.message
+            });
+          }
         }
       }
 
@@ -720,6 +809,436 @@ class WorkflowOptimizer {
   clearHistory() {
     this.executionHistory.clear();
     this.logger.info('WorkflowOptimizer: History cleared');
+  }
+
+  /**
+   * Get workflow steps
+   * @param {IWorkflow} workflow - Workflow to get steps from
+   * @returns {Array} Workflow steps
+   */
+  getWorkflowSteps(workflow) {
+    // For composed workflows, get the steps
+    if (workflow._steps) {
+      return workflow._steps;
+    }
+    
+    // For other workflows, return single step
+    return [workflow];
+  }
+
+  /**
+   * Apply optimization result to workflow
+   * @param {IWorkflow} workflow - Original workflow
+   * @param {Object} optimizationResult - Optimization result
+   * @param {Object} context - Workflow context
+   * @returns {Promise<IWorkflow>} Optimized workflow
+   */
+  async applyOptimizationResult(workflow, optimizationResult, context) {
+    if (!optimizationResult || !optimizationResult.optimizedSteps) {
+      return workflow;
+    }
+
+    // Create optimized workflow with new steps
+    const ComposedWorkflow = require('../builder/ComposedWorkflow');
+    const optimizedWorkflow = new ComposedWorkflow(
+      optimizationResult.optimizedSteps,
+      workflow.getMetadata()
+    );
+
+    // Copy optimization metadata
+    optimizedWorkflow._optimizationResult = optimizationResult;
+    optimizedWorkflow._originalWorkflow = workflow;
+
+    return optimizedWorkflow;
+  }
+
+  /**
+   * Enable parallel execution
+   * @param {IWorkflow} workflow - Workflow to optimize
+   * @param {WorkflowContext} context - Workflow context
+   * @returns {IWorkflow} Optimized workflow
+   */
+  enableParallelExecution(workflow, context) {
+    if (!this.enableParallelExecution) {
+      return workflow;
+    }
+
+    const metadata = workflow.getMetadata();
+    const steps = metadata.steps || [];
+    
+    if (steps.length <= 1) {
+      return workflow;
+    }
+
+    // Identify parallel execution groups
+    const parallelGroups = this.identifyParallelGroups(steps, context);
+    
+    if (parallelGroups.length === 0) {
+      return workflow;
+    }
+
+    // Create parallel execution workflow
+    const optimizedSteps = this.createParallelExecutionSteps(steps, parallelGroups);
+    
+    return this.createOptimizedWorkflow(workflow, optimizedSteps, 'enable_parallel_execution');
+  }
+
+  /**
+   * Identify parallel execution groups
+   * @param {Array} steps - Steps to analyze
+   * @param {WorkflowContext} context - Workflow context
+   * @returns {Array} Parallel execution groups
+   */
+  identifyParallelGroups(steps, context) {
+    const groups = [];
+    const processed = new Set();
+
+    for (let i = 0; i < steps.length; i++) {
+      if (processed.has(i)) {
+        continue;
+      }
+
+      const currentStep = steps[i];
+      
+      if (this.canExecuteInParallel(currentStep, context)) {
+        const group = [i];
+        processed.add(i);
+
+        // Find other steps that can be executed in parallel
+        for (let j = i + 1; j < steps.length; j++) {
+          if (processed.has(j)) {
+            continue;
+          }
+
+          const nextStep = steps[j];
+          
+          if (this.canExecuteInParallel(nextStep, context) && 
+              this.areStepsIndependent(currentStep, nextStep, context)) {
+            group.push(j);
+            processed.add(j);
+          }
+        }
+
+        if (group.length > 1) {
+          groups.push(group);
+        }
+      }
+    }
+
+    return groups;
+  }
+
+  /**
+   * Check if step can execute in parallel
+   * @param {Object} step - Step to check
+   * @param {WorkflowContext} context - Workflow context
+   * @returns {boolean} Can execute in parallel
+   */
+  canExecuteInParallel(step, context) {
+    const metadata = step.getMetadata ? step.getMetadata() : {};
+    
+    // Steps with dependencies cannot execute in parallel
+    if (metadata.dependencies && metadata.dependencies.length > 0) {
+      return false;
+    }
+
+    // Steps with side effects might not be parallelizable
+    if (metadata.hasSideEffects) {
+      return false;
+    }
+
+    // Steps that modify shared resources are not parallelizable
+    if (metadata.modifiesSharedResources) {
+      return false;
+    }
+
+    return true;
+  }
+
+  /**
+   * Check if steps are independent
+   * @param {Object} step1 - First step
+   * @param {Object} step2 - Second step
+   * @param {WorkflowContext} context - Workflow context
+   * @returns {boolean} Are independent
+   */
+  areStepsIndependent(step1, step2, context) {
+    const metadata1 = step1.getMetadata ? step1.getMetadata() : {};
+    const metadata2 = step2.getMetadata ? step2.getMetadata() : {};
+    
+    // Check if steps modify the same resources
+    if (metadata1.modifiesResources && metadata2.modifiesResources) {
+      const resources1 = new Set(metadata1.modifiesResources);
+      const resources2 = new Set(metadata2.modifiesResources);
+      
+      for (const resource of resources1) {
+        if (resources2.has(resource)) {
+          return false;
+        }
+      }
+    }
+    
+    // Check if steps have conflicting side effects
+    if (metadata1.hasSideEffects && metadata2.hasSideEffects) {
+      return false;
+    }
+    
+    return true;
+  }
+
+  /**
+   * Create parallel execution steps
+   * @param {Array} steps - Original steps
+   * @param {Array} parallelGroups - Parallel execution groups
+   * @returns {Array} Optimized steps
+   */
+  createParallelExecutionSteps(steps, parallelGroups) {
+    const optimizedSteps = [];
+    const processed = new Set();
+
+    // Add parallel groups
+    for (const group of parallelGroups) {
+      const parallelSteps = group.map(index => steps[index]);
+      const parallelStep = this.createParallelStep(parallelSteps);
+      optimizedSteps.push(parallelStep);
+      
+      // Mark steps as processed
+      group.forEach(index => processed.add(index));
+    }
+
+    // Add remaining sequential steps
+    for (let i = 0; i < steps.length; i++) {
+      if (!processed.has(i)) {
+        optimizedSteps.push(steps[i]);
+      }
+    }
+
+    return optimizedSteps;
+  }
+
+  /**
+   * Create parallel step
+   * @param {Array} steps - Steps to execute in parallel
+   * @returns {Object} Parallel step
+   */
+  createParallelStep(steps) {
+    return {
+      getMetadata: () => ({
+        name: `parallel_${steps.length}_steps`,
+        type: 'parallel',
+        description: `Execute ${steps.length} steps in parallel`,
+        steps: steps.map(step => step.getMetadata?.()?.name || 'unknown'),
+        parallel: true
+      }),
+      
+      execute: async (context) => {
+        const results = await Promise.all(steps.map(step => step.execute(context)));
+        
+        return {
+          success: results.every(r => r.success),
+          results,
+          parallel: true,
+          stepCount: steps.length
+        };
+      }
+    };
+  }
+
+  /**
+   * Optimize resource allocation
+   * @param {IWorkflow} workflow - Workflow to optimize
+   * @param {WorkflowContext} context - Workflow context
+   * @returns {IWorkflow} Optimized workflow
+   */
+  optimizeResourceAllocation(workflow, context) {
+    if (!this.enableResourceOptimization) {
+      return workflow;
+    }
+
+    const metadata = workflow.getMetadata();
+    const steps = metadata.steps || [];
+    
+    if (steps.length === 0) {
+      return workflow;
+    }
+
+    // Optimize resource allocation for each step
+    const optimizedSteps = steps.map(step => this.optimizeStepResourceAllocation(step, context));
+    
+    return this.createOptimizedWorkflow(workflow, optimizedSteps, 'optimize_resource_allocation');
+  }
+
+  /**
+   * Optimize step resource allocation
+   * @param {Object} step - Step to optimize
+   * @param {WorkflowContext} context - Workflow context
+   * @returns {Object} Optimized step
+   */
+  optimizeStepResourceAllocation(step, context) {
+    const metadata = step.getMetadata ? step.getMetadata() : {};
+    
+    // Get available resources
+    const availableResources = this.getAvailableResources(context);
+    
+    // Optimize resource requirements
+    const optimizedResources = this.calculateOptimalResources(metadata, availableResources);
+    
+    // Create optimized step
+    return {
+      ...step,
+      getMetadata: () => ({
+        ...metadata,
+        resourceRequirements: optimizedResources
+      })
+    };
+  }
+
+  /**
+   * Get available resources
+   * @param {WorkflowContext} context - Workflow context
+   * @returns {Object} Available resources
+   */
+  getAvailableResources(context) {
+    // Default available resources
+    return {
+      memory: 1024, // 1GB
+      cpu: 100,     // 100% CPU
+      network: 100  // 100% network
+    };
+  }
+
+  /**
+   * Calculate optimal resources
+   * @param {Object} metadata - Step metadata
+   * @param {Object} availableResources - Available resources
+   * @returns {Object} Optimal resources
+   */
+  calculateOptimalResources(metadata, availableResources) {
+    const requirements = metadata.resourceRequirements || {};
+    
+    return {
+      memory: Math.min(requirements.memory || 64, availableResources.memory),
+      cpu: Math.min(requirements.cpu || 10, availableResources.cpu),
+      network: Math.min(requirements.network || 0, availableResources.network)
+    };
+  }
+
+  /**
+   * Apply predictive optimization
+   * @param {IWorkflow} workflow - Workflow to optimize
+   * @param {WorkflowContext} context - Workflow context
+   * @returns {IWorkflow} Optimized workflow
+   */
+  applyPredictiveOptimization(workflow, context) {
+    if (!this.enablePredictiveOptimization) {
+      return workflow;
+    }
+
+    const workflowName = workflow.getMetadata().name;
+    const historicalData = this.executionHistory.get(workflowName);
+
+    if (!historicalData || historicalData.length < 3) {
+      return workflow;
+    }
+
+    // Apply predictive optimizations based on historical data
+    const optimizedSteps = this.applyPredictiveOptimizations(workflow, historicalData, context);
+    
+    return this.createOptimizedWorkflow(workflow, optimizedSteps, 'predictive_optimization');
+  }
+
+  /**
+   * Apply predictive optimizations
+   * @param {IWorkflow} workflow - Workflow to optimize
+   * @param {Array} historicalData - Historical execution data
+   * @param {WorkflowContext} context - Workflow context
+   * @returns {Array} Optimized steps
+   */
+  applyPredictiveOptimizations(workflow, historicalData, context) {
+    const metadata = workflow.getMetadata();
+    const steps = metadata.steps || [];
+    
+    // Analyze historical performance
+    const performanceAnalysis = this.analyzeHistoricalPerformance(historicalData);
+    
+    // Apply optimizations based on analysis
+    return steps.map(step => this.applyPredictiveOptimizationToStep(step, performanceAnalysis, context));
+  }
+
+  /**
+   * Analyze historical performance
+   * @param {Array} historicalData - Historical execution data
+   * @returns {Object} Performance analysis
+   */
+  analyzeHistoricalPerformance(historicalData) {
+    const analysis = {
+      averageDuration: 0,
+      averageMemory: 0,
+      averageCpu: 0,
+      failureRate: 0,
+      optimizationOpportunities: []
+    };
+
+    if (historicalData.length === 0) {
+      return analysis;
+    }
+
+    // Calculate averages
+    const totalDuration = historicalData.reduce((sum, data) => sum + (data.duration || 0), 0);
+    const totalMemory = historicalData.reduce((sum, data) => sum + (data.memory || 0), 0);
+    const totalCpu = historicalData.reduce((sum, data) => sum + (data.cpu || 0), 0);
+    const failures = historicalData.filter(data => !data.success).length;
+
+    analysis.averageDuration = totalDuration / historicalData.length;
+    analysis.averageMemory = totalMemory / historicalData.length;
+    analysis.averageCpu = totalCpu / historicalData.length;
+    analysis.failureRate = failures / historicalData.length;
+
+    // Identify optimization opportunities
+    if (analysis.averageDuration > 5000) {
+      analysis.optimizationOpportunities.push('long_duration');
+    }
+    if (analysis.averageMemory > 512) {
+      analysis.optimizationOpportunities.push('high_memory');
+    }
+    if (analysis.failureRate > 0.1) {
+      analysis.optimizationOpportunities.push('high_failure_rate');
+    }
+
+    return analysis;
+  }
+
+  /**
+   * Apply predictive optimization to step
+   * @param {Object} step - Step to optimize
+   * @param {Object} performanceAnalysis - Performance analysis
+   * @param {WorkflowContext} context - Workflow context
+   * @returns {Object} Optimized step
+   */
+  applyPredictiveOptimizationToStep(step, performanceAnalysis, context) {
+    const metadata = step.getMetadata ? step.getMetadata() : {};
+    
+    // Apply optimizations based on performance analysis
+    const optimizations = [];
+
+    if (performanceAnalysis.optimizationOpportunities.includes('long_duration')) {
+      optimizations.push('timeout_increase');
+    }
+    if (performanceAnalysis.optimizationOpportunities.includes('high_memory')) {
+      optimizations.push('memory_optimization');
+    }
+    if (performanceAnalysis.optimizationOpportunities.includes('high_failure_rate')) {
+      optimizations.push('retry_increase');
+    }
+
+    // Create optimized step
+    return {
+      ...step,
+      getMetadata: () => ({
+        ...metadata,
+        predictiveOptimizations: optimizations
+      })
+    };
   }
 
   /**
