@@ -350,7 +350,7 @@ class AutomationResult {
       executionTime: this._executionTime,
       executionSteps: this._executionSteps,
       createdAt: this._createdAt.toISOString(),
-      completedAt: this._completedAt ? this._completedAt.toISOString(),
+      completedAt: this._completedAt ? this._completedAt.toISOString() : null,
       formattedExecutionTime: this.getFormattedExecutionTime()
     };
   }

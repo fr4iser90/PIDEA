@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+require('module-alias/register');
 
 /**
  * Git Workflow Deployment Validation Script

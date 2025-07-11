@@ -1,12 +1,13 @@
 /**
  * WorkflowOrchestrationService - Domain Service for Workflow Orchestration
  * Implements DDD patterns for coordinating different workflow types
- * Enhanced with GitWorkflowManager integration
+ * Enhanced with GitWorkflowManager integration and Core Execution Engine
  */
 const WorkflowGitService = require('./WorkflowGitService');
 const TaskType = require('../value-objects/TaskType');
 const GitWorkflowManager = require('../workflows/git/GitWorkflowManager');
 const GitWorkflowContext = require('../workflows/git/GitWorkflowContext');
+const { SequentialExecutionEngine } = require('../workflows/execution');
 
 class WorkflowOrchestrationService {
     constructor(dependencies = {}) {
@@ -22,6 +23,16 @@ class WorkflowOrchestrationService {
             gitService: this.workflowGitService.gitService,
             logger: this.logger,
             eventBus: this.eventBus
+        });
+        
+        // Initialize core execution engine
+        this.executionEngine = new SequentialExecutionEngine({
+            logger: this.logger,
+            enablePriority: true,
+            enableRetry: true,
+            enableResourceManagement: true,
+            enableDependencyResolution: true,
+            enablePriorityScheduling: true
         });
     }
 
@@ -60,6 +71,127 @@ class WorkflowOrchestrationService {
             // Fallback to legacy method if enhanced method fails
             return await this.executeWorkflowLegacy(task, options);
         }
+    }
+
+    /**
+     * Execute workflow using core execution engine
+     * @param {Object} task - Task object
+     * @param {Object} options - Workflow options
+     * @returns {Promise<Object>} Workflow execution result
+     */
+    async executeWorkflowWithEngine(task, options = {}) {
+        try {
+            this.logger.info('WorkflowOrchestrationService: Starting workflow execution with core engine', {
+                taskId: task.id,
+                taskType: task.type?.value
+            });
+
+            // Create workflow from task
+            const workflow = await this.createWorkflowFromTask(task, options);
+            
+            // Create workflow context
+            const context = this.createWorkflowContext(task, options);
+            
+            // Execute workflow using core execution engine
+            const result = await this.executionEngine.executeWorkflow(workflow, context, {
+                strategy: options.strategy || 'basic',
+                priority: options.priority || 'normal',
+                timeout: options.timeout || 300000,
+                ...options
+            });
+            
+            this.logger.info('WorkflowOrchestrationService: Core engine workflow execution completed', {
+                taskId: task.id,
+                taskType: task.type?.value,
+                success: result.isSuccess(),
+                duration: result.getFormattedDuration()
+            });
+
+            return {
+                success: result.isSuccess(),
+                taskId: task.id,
+                taskType: task.type?.value,
+                result: result.toJSON(),
+                message: result.isSuccess() ? 
+                    `Workflow completed successfully for task: ${task.title}` :
+                    `Workflow failed for task: ${task.title}`,
+                metadata: {
+                    executionTime: result.getDuration(),
+                    formattedDuration: result.getFormattedDuration(),
+                    strategy: result.getStrategy(),
+                    stepCount: result.getStepCount(),
+                    successRate: result.getSuccessRate(),
+                    timestamp: new Date()
+                }
+            };
+
+        } catch (error) {
+            this.logger.error('WorkflowOrchestrationService: Core engine workflow execution failed', {
+                taskId: task.id,
+                error: error.message
+            });
+
+            throw new Error(`Core engine workflow execution failed: ${error.message}`);
+        }
+    }
+
+    /**
+     * Create workflow from task
+     * @param {Object} task - Task object
+     * @param {Object} options - Workflow options
+     * @returns {Promise<IWorkflow>} Workflow
+     */
+    async createWorkflowFromTask(task, options = {}) {
+        // For now, create a simple workflow that delegates to the existing workflow methods
+        // This can be enhanced later to create proper workflow objects
+        const workflow = {
+            getMetadata: () => ({
+                id: task.id,
+                name: task.title,
+                type: task.type?.value || 'generic',
+                steps: []
+            }),
+            getType: () => task.type?.value || 'generic',
+            getVersion: () => '1.0.0',
+            getDependencies: () => [],
+            getSteps: () => [],
+            execute: async (context) => {
+                // Delegate to existing workflow execution method
+                return await this.executeWorkflowByType(task, options);
+            },
+            validate: async (context) => ({ isValid: true }),
+            canExecute: async (context) => true,
+            rollback: async (context, stepId) => ({ success: true })
+        };
+        
+        return workflow;
+    }
+
+    /**
+     * Create workflow context
+     * @param {Object} task - Task object
+     * @param {Object} options - Workflow options
+     * @returns {WorkflowContext} Workflow context
+     */
+    createWorkflowContext(task, options = {}) {
+        const { WorkflowContext, WorkflowState, WorkflowMetadata } = require('../workflows');
+        
+        return new WorkflowContext(
+            task.id,
+            task.type?.value || 'generic',
+            '1.0.0',
+            new WorkflowState('initialized'),
+            new WorkflowMetadata({
+                taskId: task.id,
+                taskType: task.type?.value,
+                projectPath: task.metadata?.projectPath
+            }),
+            {
+                task,
+                options,
+                projectPath: task.metadata?.projectPath
+            }
+        );
     }
 
     /**
@@ -1297,6 +1429,72 @@ Please proceed with the task execution.
         // Use existing TaskService buildTaskExecutionPrompt
         const taskService = new (require('./TaskService'))();
         return await taskService.buildTaskExecutionPrompt(task);
+    }
+
+    /**
+     * Get execution engine status
+     * @returns {Object} Execution engine status
+     */
+    getExecutionEngineStatus() {
+        return {
+            health: this.executionEngine.getHealthStatus(),
+            metrics: this.executionEngine.getSystemMetrics(),
+            configuration: this.executionEngine.getConfiguration()
+        };
+    }
+
+    /**
+     * Get execution engine statistics
+     * @returns {Object} Execution engine statistics
+     */
+    getExecutionEngineStatistics() {
+        return {
+            queue: this.executionEngine.getQueueStatistics(),
+            scheduler: this.executionEngine.getSchedulerStatistics(),
+            resourcePool: this.executionEngine.getResourcePoolStatus()
+        };
+    }
+
+    /**
+     * Get active executions
+     * @returns {Array} Active executions
+     */
+    getActiveExecutions() {
+        return this.executionEngine.getActiveExecutions();
+    }
+
+    /**
+     * Cancel execution
+     * @param {string} executionId - Execution ID
+     * @returns {boolean} True if cancelled
+     */
+    cancelExecution(executionId) {
+        return this.executionEngine.cancelExecution(executionId);
+    }
+
+    /**
+     * Get execution status
+     * @param {string} executionId - Execution ID
+     * @returns {Object} Execution status
+     */
+    getExecutionStatus(executionId) {
+        return this.executionEngine.getExecutionStatus(executionId);
+    }
+
+    /**
+     * Update execution engine configuration
+     * @param {Object} config - New configuration
+     */
+    updateExecutionEngineConfiguration(config) {
+        this.executionEngine.updateConfiguration(config);
+    }
+
+    /**
+     * Shutdown execution engine
+     * @returns {Promise<void>}
+     */
+    async shutdownExecutionEngine() {
+        await this.executionEngine.shutdown();
     }
 }
 
