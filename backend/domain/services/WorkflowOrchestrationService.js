@@ -1,9 +1,12 @@
 /**
  * WorkflowOrchestrationService - Domain Service for Workflow Orchestration
  * Implements DDD patterns for coordinating different workflow types
+ * Enhanced with GitWorkflowManager integration
  */
 const WorkflowGitService = require('./WorkflowGitService');
 const TaskType = require('../value-objects/TaskType');
+const GitWorkflowManager = require('../workflows/git/GitWorkflowManager');
+const GitWorkflowContext = require('../workflows/git/GitWorkflowContext');
 
 class WorkflowOrchestrationService {
     constructor(dependencies = {}) {
@@ -13,15 +16,59 @@ class WorkflowOrchestrationService {
         this.taskRepository = dependencies.taskRepository;
         this.logger = dependencies.logger || console;
         this.eventBus = dependencies.eventBus;
+        
+        // Initialize enhanced git workflow manager
+        this.gitWorkflowManager = new GitWorkflowManager({
+            gitService: this.workflowGitService.gitService,
+            logger: this.logger,
+            eventBus: this.eventBus
+        });
     }
 
     /**
-     * Execute workflow based on task type
+     * Execute workflow using enhanced git workflow manager
      * @param {Object} task - Task object
      * @param {Object} options - Workflow options
      * @returns {Promise<Object>} Workflow execution result
      */
     async executeWorkflow(task, options = {}) {
+        try {
+            // Use enhanced git workflow manager for workflow execution
+            const context = new GitWorkflowContext({
+                projectPath: task.metadata?.projectPath,
+                task,
+                options,
+                workflowType: 'workflow-execution'
+            });
+
+            const result = await this.gitWorkflowManager.executeWorkflow(context);
+            
+            this.logger.info('WorkflowOrchestrationService: Enhanced workflow execution completed', {
+                taskId: task.id,
+                taskType: task.type?.value,
+                result: result.status
+            });
+
+            return result;
+
+        } catch (error) {
+            this.logger.error('WorkflowOrchestrationService: Enhanced workflow execution failed', {
+                taskId: task.id,
+                error: error.message
+            });
+            
+            // Fallback to legacy method if enhanced method fails
+            return await this.executeWorkflowLegacy(task, options);
+        }
+    }
+
+    /**
+     * Legacy method for workflow execution (fallback)
+     * @param {Object} task - Task object
+     * @param {Object} options - Workflow options
+     * @returns {Promise<Object>} Workflow execution result
+     */
+    async executeWorkflowLegacy(task, options = {}) {
         let branchResult = null;
         
         try {

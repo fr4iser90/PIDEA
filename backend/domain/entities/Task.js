@@ -37,6 +37,7 @@ class Task {
     this._dueDate = null;
     this._startedAt = null;
     this._executionHistory = [];
+    this._workflowContext = null;
 
     this._validate();
   }
@@ -58,6 +59,7 @@ class Task {
   get startedAt() { return this._startedAt ? new Date(this._startedAt) : null; }
   get completedAt() { return this._completedAt ? new Date(this._completedAt) : null; }
   get executionHistory() { return [...this._executionHistory]; }
+  get workflowContext() { return this._workflowContext; }
 
   // Domain methods
   isPending() {
@@ -323,6 +325,60 @@ class Task {
   removeMetadata(key) {
     delete this._metadata[key];
     this._updatedAt = new Date();
+  }
+
+  // Workflow context management
+  setWorkflowContext(context) {
+    this._workflowContext = context;
+    this._updatedAt = new Date();
+    this._addExecutionHistory('workflow_context_set', { contextId: context?.id });
+  }
+
+  getWorkflowContext() {
+    return this._workflowContext;
+  }
+
+  hasWorkflowContext() {
+    return this._workflowContext !== null;
+  }
+
+  clearWorkflowContext() {
+    this._workflowContext = null;
+    this._updatedAt = new Date();
+    this._addExecutionHistory('workflow_context_cleared');
+  }
+
+  updateWorkflowContext(context) {
+    if (this._workflowContext) {
+      this._workflowContext = context;
+      this._updatedAt = new Date();
+      this._addExecutionHistory('workflow_context_updated', { contextId: context?.id });
+    }
+  }
+
+  // Workflow compatibility methods
+  getWorkflowType() {
+    return this._type.getWorkflowType();
+  }
+
+  getWorkflowSteps() {
+    return this._type.getWorkflowSteps();
+  }
+
+  getWorkflowDependencies() {
+    return this._type.getWorkflowDependencies();
+  }
+
+  getWorkflowMetadata() {
+    return this._type.getWorkflowMetadata();
+  }
+
+  getEstimatedDuration() {
+    return this._type.getEstimatedDuration();
+  }
+
+  getComplexity() {
+    return this._type.getComplexity();
   }
 
   // Duration and timing

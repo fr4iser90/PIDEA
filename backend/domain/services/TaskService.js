@@ -2,9 +2,12 @@ const Task = require('@/domain/entities/Task');
 const TaskStatus = require('@/domain/value-objects/TaskStatus');
 const TaskPriority = require('@/domain/value-objects/TaskPriority');
 const TaskType = require('@/domain/value-objects/TaskType');
+const GitWorkflowManager = require('../workflows/git/GitWorkflowManager');
+const GitWorkflowContext = require('../workflows/git/GitWorkflowContext');
 
 /**
  * TaskService - Business logic for project-based task management
+ * Enhanced with GitWorkflowManager integration
  */
 class TaskService {
   constructor(taskRepository, aiService, projectAnalyzer, cursorIDEService = null, autoFinishSystem, workflowGitService = null) {
@@ -14,6 +17,15 @@ class TaskService {
     this.cursorIDEService = cursorIDEService;
     this.autoFinishSystem = autoFinishSystem;
     this.workflowGitService = workflowGitService;
+    
+    // Initialize enhanced git workflow manager if workflowGitService is available
+    if (this.workflowGitService) {
+      this.gitWorkflowManager = new GitWorkflowManager({
+        gitService: this.workflowGitService.gitService,
+        logger: console,
+        eventBus: null
+      });
+    }
   }
 
   buildRefactoringPrompt(task) {
@@ -146,12 +158,67 @@ class TaskService {
   }
 
   /**
-   * Execute a task
+   * Execute a task using enhanced git workflow manager
    * @param {string} taskId - Task ID
    * @param {string} userId - User ID
    * @returns {Promise<Object>} Execution result
    */
   async executeTask(taskId, userId) {
+    console.log('🔍 [TaskService] executeTask called with:', { taskId, userId });
+    
+    try {
+      const task = await this.taskRepository.findById(taskId);
+      if (!task) {
+        throw new Error('Task not found');
+      }
+
+      console.log('🔍 [TaskService] Found task:', task);
+
+      if (task.isCompleted()) {
+        throw new Error('Task is already completed');
+      }
+
+      // Try to use enhanced git workflow manager if available
+      if (this.gitWorkflowManager) {
+        try {
+          const context = new GitWorkflowContext({
+            projectPath: task.metadata?.projectPath,
+            task,
+            options: { userId },
+            workflowType: 'task-execution'
+          });
+
+          const result = await this.gitWorkflowManager.executeWorkflow(context);
+          
+          console.log('✅ [TaskService] Enhanced task execution completed', {
+            taskId: task.id,
+            result: result.status
+          });
+
+          return result;
+
+        } catch (error) {
+          console.error('❌ [TaskService] Enhanced task execution failed, falling back to legacy method:', error.message);
+          // Fallback to legacy method
+        }
+      }
+
+      // Legacy task execution method
+      return await this.executeTaskLegacy(taskId, userId);
+
+    } catch (error) {
+      console.error('❌ [TaskService] Task execution failed:', error.message);
+      throw error;
+    }
+  }
+
+  /**
+   * Legacy method for task execution (fallback)
+   * @param {string} taskId - Task ID
+   * @param {string} userId - User ID
+   * @returns {Promise<Object>} Execution result
+   */
+  async executeTaskLegacy(taskId, userId) {
     console.log('🔍 [TaskService] executeTask called with:', { taskId, userId });
     
     try {

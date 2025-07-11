@@ -84,6 +84,40 @@ class DeploymentConfig {
           interval: 30000,
           timeout: 5000
         }
+      },
+
+      // Git Workflow Configuration
+      gitWorkflow: {
+        enabled: true,
+        autoMerge: false,
+        createPullRequests: true,
+        requireReview: true,
+        mergeStrategy: 'squash',
+        branchStrategies: {
+          feature: {
+            prefix: 'feature',
+            startPoint: 'pidea-features',
+            mergeTarget: 'pidea-features'
+          },
+          bug: {
+            prefix: 'hotfix',
+            startPoint: 'main',
+            mergeTarget: 'main'
+          },
+          refactor: {
+            prefix: 'refactor',
+            startPoint: 'main',
+            mergeTarget: 'develop'
+          }
+        },
+        metrics: {
+          enabled: true,
+          collectionInterval: 60000
+        },
+        audit: {
+          enabled: true,
+          retentionDays: 90
+        }
       }
     };
   }
@@ -158,6 +192,40 @@ class DeploymentConfig {
           enabled: true,
           interval: 60000,
           timeout: 10000
+        }
+      },
+
+      // Git Workflow Configuration
+      gitWorkflow: {
+        enabled: true,
+        autoMerge: false,
+        createPullRequests: true,
+        requireReview: true,
+        mergeStrategy: 'squash',
+        branchStrategies: {
+          feature: {
+            prefix: 'feature',
+            startPoint: 'pidea-features',
+            mergeTarget: 'pidea-features'
+          },
+          bug: {
+            prefix: 'hotfix',
+            startPoint: 'main',
+            mergeTarget: 'main'
+          },
+          refactor: {
+            prefix: 'refactor',
+            startPoint: 'main',
+            mergeTarget: 'develop'
+          }
+        },
+        metrics: {
+          enabled: true,
+          collectionInterval: 60000
+        },
+        audit: {
+          enabled: true,
+          retentionDays: 90
         }
       }
     };
@@ -234,6 +302,40 @@ class DeploymentConfig {
           enabled: true,
           interval: 120000,
           timeout: 15000
+        }
+      },
+
+      // Git Workflow Configuration
+      gitWorkflow: {
+        enabled: true,
+        autoMerge: false,
+        createPullRequests: true,
+        requireReview: true,
+        mergeStrategy: 'squash',
+        branchStrategies: {
+          feature: {
+            prefix: 'feature',
+            startPoint: 'pidea-features',
+            mergeTarget: 'pidea-features'
+          },
+          bug: {
+            prefix: 'hotfix',
+            startPoint: 'main',
+            mergeTarget: 'main'
+          },
+          refactor: {
+            prefix: 'refactor',
+            startPoint: 'main',
+            mergeTarget: 'develop'
+          }
+        },
+        metrics: {
+          enabled: true,
+          collectionInterval: 300000
+        },
+        audit: {
+          enabled: true,
+          retentionDays: 365
         }
       }
     };

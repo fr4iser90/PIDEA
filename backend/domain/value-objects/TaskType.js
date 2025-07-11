@@ -253,6 +253,143 @@ class TaskType {
     return this.value === TaskType.TEST_SECURITY;
   }
 
+  // Workflow compatibility methods
+  supportsWorkflow() {
+    return this.requiresExecution() || this.requiresAI();
+  }
+
+  getWorkflowType() {
+    if (this.isRefactor()) {
+      return 'refactoring';
+    } else if (this.isTest()) {
+      return 'testing';
+    } else if (this.isAnalysis()) {
+      return 'analysis';
+    } else if (this.isFeature()) {
+      return 'feature';
+    } else if (this.isBug()) {
+      return 'bugfix';
+    } else if (this.isDocumentation()) {
+      return 'documentation';
+    } else if (this.isOptimization()) {
+      return 'optimization';
+    } else if (this.isSecurity()) {
+      return 'security';
+    } else {
+      return 'generic';
+    }
+  }
+
+  getWorkflowSteps() {
+    const workflowType = this.getWorkflowType();
+    
+    switch (workflowType) {
+      case 'refactoring':
+        return ['analysis', 'refactoring', 'testing', 'documentation'];
+      case 'testing':
+        return ['setup', 'execution', 'validation', 'reporting'];
+      case 'analysis':
+        return ['data_collection', 'analysis', 'reporting'];
+      case 'feature':
+        return ['planning', 'implementation', 'testing', 'documentation'];
+      case 'bugfix':
+        return ['investigation', 'fix', 'testing', 'verification'];
+      case 'documentation':
+        return ['research', 'writing', 'review', 'publishing'];
+      case 'optimization':
+        return ['baseline', 'optimization', 'testing', 'validation'];
+      case 'security':
+        return ['assessment', 'mitigation', 'testing', 'validation'];
+      default:
+        return ['execution'];
+    }
+  }
+
+  getWorkflowDependencies() {
+    const workflowType = this.getWorkflowType();
+    
+    switch (workflowType) {
+      case 'refactoring':
+        return ['code_analyzer', 'refactoring_engine', 'test_runner'];
+      case 'testing':
+        return ['test_runner', 'coverage_analyzer'];
+      case 'analysis':
+        return ['code_analyzer', 'metrics_collector'];
+      case 'feature':
+        return ['code_generator', 'test_runner', 'documentation_generator'];
+      case 'bugfix':
+        return ['debugger', 'code_analyzer', 'test_runner'];
+      case 'documentation':
+        return ['documentation_generator', 'markdown_processor'];
+      case 'optimization':
+        return ['performance_analyzer', 'optimizer', 'test_runner'];
+      case 'security':
+        return ['security_scanner', 'vulnerability_analyzer'];
+      default:
+        return [];
+    }
+  }
+
+  getWorkflowMetadata() {
+    return {
+      type: this.getWorkflowType(),
+      steps: this.getWorkflowSteps(),
+      dependencies: this.getWorkflowDependencies(),
+      supportsRollback: this.isRefactor() || this.isTest(),
+      requiresValidation: this.requiresHumanReview(),
+      estimatedDuration: this.getEstimatedDuration(),
+      complexity: this.getComplexity()
+    };
+  }
+
+  getEstimatedDuration() {
+    // Return estimated duration in minutes
+    switch (this.value) {
+      case TaskType.FEATURE:
+        return 120; // 2 hours
+      case TaskType.BUG:
+        return 60; // 1 hour
+      case TaskType.REFACTOR:
+        return 90; // 1.5 hours
+      case TaskType.DOCUMENTATION:
+        return 45; // 45 minutes
+      case TaskType.TEST:
+        return 30; // 30 minutes
+      case TaskType.ANALYSIS:
+        return 60; // 1 hour
+      case TaskType.OPTIMIZATION:
+        return 120; // 2 hours
+      case TaskType.SECURITY:
+        return 90; // 1.5 hours
+      default:
+        return 60; // 1 hour default
+    }
+  }
+
+  getComplexity() {
+    // Return complexity level (1-5, where 1 is simple, 5 is complex)
+    switch (this.value) {
+      case TaskType.FEATURE:
+        return 4;
+      case TaskType.BUG:
+        return 3;
+      case TaskType.REFACTOR:
+        return 4;
+      case TaskType.DOCUMENTATION:
+        return 2;
+      case TaskType.TEST:
+        return 2;
+      case TaskType.ANALYSIS:
+        return 3;
+      case TaskType.OPTIMIZATION:
+        return 4;
+      case TaskType.SECURITY:
+        return 5;
+      default:
+        return 3;
+    }
+  }
+
   static isValid(type) {
     return [
       TaskType.FEATURE,

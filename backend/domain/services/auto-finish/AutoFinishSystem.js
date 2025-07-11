@@ -2,11 +2,14 @@ const TodoParser = require('./TodoParser');
 const ConfirmationSystem = require('./ConfirmationSystem');
 const FallbackDetection = require('./FallbackDetection');
 const TaskSequencer = require('./TaskSequencer');
+const GitWorkflowManager = require('../../workflows/git/GitWorkflowManager');
+const GitWorkflowContext = require('../../workflows/git/GitWorkflowContext');
 const { v4: uuidv4 } = require('uuid');
 
 /**
  * AutoFinishSystem - Core service for automated TODO processing and task completion
  * Handles TODO parsing, AI confirmation loops, fallback detection, and task sequencing
+ * Enhanced with GitWorkflowManager integration
  */
 class AutoFinishSystem {
   constructor(cursorIDE, browserManager, ideManager, webSocketManager = null) {
@@ -36,6 +39,31 @@ class AutoFinishSystem {
     };
     
     this.logger = console;
+    
+    // Initialize enhanced git workflow manager
+    this.gitWorkflowManager = null;
+    this.initializeGitWorkflowManager();
+  }
+
+  /**
+   * Initialize git workflow manager
+   */
+  initializeGitWorkflowManager() {
+    try {
+      // Initialize git workflow manager if git service is available
+      if (this.ideManager && this.ideManager.gitService) {
+        this.gitWorkflowManager = new GitWorkflowManager({
+          gitService: this.ideManager.gitService,
+          logger: this.logger,
+          eventBus: this.webSocketManager
+        });
+        this.logger.info('[AutoFinishSystem] Git workflow manager initialized');
+      } else {
+        this.logger.warn('[AutoFinishSystem] Git service not available, git workflow manager disabled');
+      }
+    } catch (error) {
+      this.logger.error('[AutoFinishSystem] Failed to initialize git workflow manager:', error.message);
+    }
   }
 
   /**
@@ -244,7 +272,37 @@ class AutoFinishSystem {
     try {
       this.logger.info(`[AutoFinishSystem] Processing task ${task.id}: ${task.description}`);
       
-      // Send task to Cursor IDE
+      // Try to use enhanced git workflow manager if available
+      if (this.gitWorkflowManager && task.metadata?.projectPath) {
+        try {
+          const context = new GitWorkflowContext({
+            projectPath: task.metadata.projectPath,
+            task,
+            options: { ...options, sessionId },
+            workflowType: 'auto-finish-task'
+          });
+
+          const result = await this.gitWorkflowManager.executeWorkflow(context);
+          
+          this.logger.info(`[AutoFinishSystem] Enhanced task processing completed for task ${task.id}`);
+          
+          return {
+            taskId: task.id,
+            description: task.description,
+            success: true,
+            result,
+            duration: Date.now() - taskStartTime,
+            completedAt: new Date(),
+            method: 'enhanced'
+          };
+
+        } catch (error) {
+          this.logger.error(`[AutoFinishSystem] Enhanced task processing failed for task ${task.id}:`, error.message);
+          // Fallback to legacy method
+        }
+      }
+      
+      // Legacy task processing method
       const idePrompt = this.buildTaskPrompt(task);
       const aiResponse = await this.cursorIDE.postToCursor(idePrompt);
       

@@ -38,6 +38,7 @@ class TaskExecution {
       memoryUsage: [],
       executionTime: 0
     };
+    this._workflowState = null;
 
     this._validate();
   }
@@ -58,6 +59,7 @@ class TaskExecution {
   get currentStep() { return this._currentStep; }
   get steps() { return [...this._steps]; }
   get performanceMetrics() { return { ...this._performanceMetrics }; }
+  get workflowState() { return this._workflowState; }
 
   // Domain methods
   isPending() {
@@ -315,6 +317,64 @@ class TaskExecution {
   removeMetadata(key) {
     delete this._metadata[key];
     this._updatedAt = new Date();
+  }
+
+  // Workflow state management
+  setWorkflowState(state) {
+    this._workflowState = state;
+    this._updatedAt = new Date();
+    this._addLog('info', 'Workflow state updated', { state: state?.status });
+  }
+
+  getWorkflowState() {
+    return this._workflowState;
+  }
+
+  hasWorkflowState() {
+    return this._workflowState !== null;
+  }
+
+  updateWorkflowState(state) {
+    if (this._workflowState) {
+      this._workflowState = state;
+      this._updatedAt = new Date();
+      this._addLog('info', 'Workflow state updated', { 
+        fromState: this._workflowState?.status,
+        toState: state?.status 
+      });
+    }
+  }
+
+  clearWorkflowState() {
+    this._workflowState = null;
+    this._updatedAt = new Date();
+    this._addLog('info', 'Workflow state cleared');
+  }
+
+  // Workflow compatibility methods
+  getWorkflowContext() {
+    return this._workflowState;
+  }
+
+  setWorkflowContext(context) {
+    this._workflowState = context;
+    this._updatedAt = new Date();
+  }
+
+  hasWorkflowContext() {
+    return this._workflowState !== null;
+  }
+
+  clearWorkflowContext() {
+    this._workflowState = null;
+    this._updatedAt = new Date();
+  }
+
+  updateWorkflowContext(context) {
+    if (this._workflowState) {
+      this._workflowState = { ...this._workflowState, ...context };
+      this._updatedAt = new Date();
+    }
   }
 
   // Business rules
