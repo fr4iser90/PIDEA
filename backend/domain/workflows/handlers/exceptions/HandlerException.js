@@ -12,7 +12,7 @@ class HandlerException extends Error {
    * @param {string} code - Error code
    * @param {string} type - Error type
    */
-  constructor(message, details = {}, code = 'HANDLER_ERROR', type = 'GENERAL') {
+  constructor(message, details = {}, code = 'HANDLER_ERROR', type = '') {
     super(message);
     
     this.name = 'HandlerException';

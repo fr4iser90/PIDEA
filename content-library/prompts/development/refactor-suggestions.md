@@ -14,7 +14,7 @@ Systematic approach to identifying and implementing code refactoring opportuniti
 - **Primitive Obsession**: Overuse of primitive types
 - **Switch Statements**: Complex conditional logic
 - **Lazy Class**: Classes with minimal functionality
-- **Speculative Generality**: Unused abstractions
+- **Speculative ity**: Unused abstractions
 - **Temporary Field**: Fields used only in certain circumstances
 
 ### Performance Issues

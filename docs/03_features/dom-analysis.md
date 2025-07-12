@@ -205,7 +205,7 @@ node scripts/selector-generator.js
 ```
 generated/
 ├── CursorIDE.js          # IDE-specific selectors
-└── selectors.js          # General selectors
+└── selectors.js          #  selectors
 ```
 
 ### Analysis Output

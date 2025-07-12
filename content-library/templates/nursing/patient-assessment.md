@@ -31,7 +31,7 @@
 - **Relieving Factors**: [Text Area: What provides relief]
 
 ### Physical Assessment
-- **General Appearance**: [Checkboxes: Alert, Oriented, Distressed, Pale, Cyanotic, Diaphoretic, Edema, Jaundice]
+- ** Appearance**: [Checkboxes: Alert, Oriented, Distressed, Pale, Cyanotic, Diaphoretic, Edema, Jaundice]
 - **Cardiovascular**: [Text Area: Heart sounds, pulses, edema, capillary refill]
 - **Respiratory**: [Text Area: Breath sounds, effort, cough, sputum]
 - **Gastrointestinal**: [Text Area: Bowel sounds, tenderness, nausea, vomiting]
@@ -87,7 +87,7 @@ Perform a comprehensive nursing assessment for a [AGE]-year-old [GENDER] patient
 - Relieving: [RELIEVING_FACTORS]
 
 **Physical Findings:**
-- General: [GENERAL_APPEARANCE]
+- : [_APPEARANCE]
 - Cardiovascular: [CARDIOVASCULAR]
 - Respiratory: [RESPIRATORY]
 - Gastrointestinal: [GASTROINTESTINAL]

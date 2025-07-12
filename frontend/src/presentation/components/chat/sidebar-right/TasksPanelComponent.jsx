@@ -37,7 +37,7 @@ const TASK_TYPES = [
   { value: 'custom', label: 'Custom' }
 ];
 
-function TasksPanelComponent({ eventBus }) {
+function TasksPanelComponent({ eventBus, activePort }) {
   const api = new APIChatRepository();
   // Regular Tasks
   const [showTaskModal, setShowTaskModal] = useState(false);
@@ -61,10 +61,16 @@ function TasksPanelComponent({ eventBus }) {
   const [refactoringTasks, setRefactoringTasks] = useState([]);
   const [isAutoRefactoring, setIsAutoRefactoring] = useState(false);
 
-  // Load docs tasks on mount
+  // Load docs tasks on mount AND when activePort changes
   useEffect(() => {
-    loadDocsTasks();
-  }, []);
+    if (activePort) {
+      console.log('[TasksPanelComponent] Loading docs tasks for port:', activePort);
+      loadDocsTasks();
+    } else {
+      console.log('[TasksPanelComponent] No active port, clearing docs tasks');
+      setDocsTasks([]);
+    }
+  }, [activePort]); // ← Jetzt lädt bei activePort Änderungen neu
 
   // Docs tasks functions
   const loadDocsTasks = async () => {
@@ -132,14 +138,29 @@ function TasksPanelComponent({ eventBus }) {
     setIsDocsTaskModalOpen(true);
     setSelectedDocsTask(null);
     try {
+      console.log('[TasksPanelComponent] Loading task details for:', task.id);
       const response = await api.getDocsTaskDetails(task.id);
-      if (response.success) {
+      if (response.success && response.data) {
+        console.log('[TasksPanelComponent] Task details loaded successfully:', response.data);
         setSelectedDocsTask(response.data);
       } else {
-        setFeedback('Failed to load task details: ' + response.error);
+        console.warn('[TasksPanelComponent] API returned no data, using task as fallback');
+        // Fallback: use the task data we already have
+        setSelectedDocsTask({
+          ...task,
+          description: getTaskDescription(task),
+          filename: getTaskFilename(task)
+        });
       }
     } catch (error) {
+      console.error('[TasksPanelComponent] Error loading task details:', error);
       setFeedback('Error loading task details: ' + error.message);
+      // Fallback: use the task data we already have
+      setSelectedDocsTask({
+        ...task,
+        description: getTaskDescription(task),
+        filename: getTaskFilename(task)
+      });
     } finally {
       setIsLoadingDocsTaskDetails(false);
     }
@@ -237,6 +258,27 @@ ${taskDetails.description}
       setFeedback('Failed to create task: ' + (err.message || err));
       throw err;
     }
+  };
+
+  // Helper function to get filename from task
+  const getTaskFilename = (task) => {
+    // Try different possible field names for filename
+    return task.metadata?.filename || 
+           task.metadata?.file || 
+           task.filename || 
+           task.file || 
+           task.source || 
+           task.metadata?.source || 
+           'Unknown file';
+  };
+
+  // Helper function to get task description
+  const getTaskDescription = (task) => {
+    return task.description || 
+           task.content || 
+           task.details || 
+           task.metadata?.description || 
+           'No description available';
   };
 
   // Helper
@@ -364,7 +406,7 @@ ${taskDetails.description}
                     </div>
                   </div>
                   <div className="flex justify-between items-center text-xs text-gray-400">
-                    <span className="font-mono">{task.metadata?.filename || 'Unknown file'}</span>
+                    <span className="font-mono">{getTaskFilename(task)}</span>
                     <span>{formatDate(task.updatedAt)}</span>
                   </div>
                   {task.estimatedDuration && (

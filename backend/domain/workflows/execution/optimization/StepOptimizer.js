@@ -185,7 +185,7 @@ class StepOptimizer {
         break;
         
       default:
-        // Apply general optimizations
+        // Apply  optimizations
         if (optimizedParameters.timeout) {
           optimizedParameters.timeout = Math.min(optimizedParameters.timeout, 300000);
         }

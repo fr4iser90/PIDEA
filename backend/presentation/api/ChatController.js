@@ -347,7 +347,7 @@ class ChatController {
   // Helper methods
   async getQuickPromptsForUser(userRole) {
     const basePrompts = [
-      { id: 'help', text: 'Help me with my code', category: 'general' },
+      { id: 'help', text: 'Help me with my code', category: '' },
       { id: 'debug', text: 'Debug this issue', category: 'development' },
       { id: 'explain', text: 'Explain this code', category: 'learning' }
     ];

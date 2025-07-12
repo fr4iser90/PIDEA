@@ -52,7 +52,7 @@ describe('Unified Workflow Foundation 1B', () => {
         )
         .addStep(
           WorkflowStepBuilder.refactoring({
-            type: 'general'
+            type: ''
           }).build()
         )
         .addStep(
@@ -89,7 +89,7 @@ describe('Unified Workflow Foundation 1B', () => {
 
     test('should create refactoring step', () => {
       const step = WorkflowStepBuilder.refactoring({
-        type: 'general',
+        type: '',
         generateCode: true
       }).build();
 
@@ -318,7 +318,7 @@ describe('Unified Workflow Foundation 1B', () => {
 
     test('should create refactoring workflow', () => {
       const workflow = service.createRefactoringWorkflow({
-        refactoringType: 'general',
+        refactoringType: '',
         generateCode: true
       });
 
@@ -376,7 +376,7 @@ describe('Unified Workflow Foundation 1B', () => {
         {
           name: 'Custom Workflow',
           analysis: { type: 'comprehensive' },
-          refactoring: { type: 'general' }
+          refactoring: { type: '' }
         }
       );
 
@@ -465,7 +465,7 @@ describe('Unified Workflow Foundation 1B', () => {
     test('should complete full workflow lifecycle', async () => {
       // Create workflow
       const workflow = service.createRefactoringWorkflow({
-        refactoringType: 'general',
+        refactoringType: '',
         generateCode: true
       });
 

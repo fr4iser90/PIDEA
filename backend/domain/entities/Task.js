@@ -16,6 +16,7 @@ class Task {
     status = TaskStatus.PENDING,
     priority = TaskPriority.getDefault(),
     type,
+    category,
     metadata = {},
     createdAt = new Date(),
     updatedAt = new Date()
@@ -27,6 +28,7 @@ class Task {
     this._status = new TaskStatus(status);
     this._priority = new TaskPriority(priority);
     this._type = new TaskType(type);
+    this._category = category;
     this._metadata = { ...metadata };
     this._createdAt = new Date(createdAt);
     this._updatedAt = new Date(updatedAt);
@@ -48,6 +50,7 @@ class Task {
   get status() { return this._status; }
   get priority() { return this._priority; }
   get type() { return this._type; }
+  get category() { return this._category; }
   get projectId() { return this._projectId; }
   get metadata() { return { ...this._metadata }; }
   get createdAt() { return new Date(this._createdAt); }
@@ -318,6 +321,11 @@ class Task {
     this._updatedAt = new Date();
   }
 
+  setCategory(category) {
+    this._category = category;
+    this._updatedAt = new Date();
+  }
+
   getMetadata(key) {
     return this._metadata[key];
   }
@@ -454,6 +462,7 @@ class Task {
       status: this._status.value,
       priority: this._priority.value,
       type: this._type.value,
+      category: this._category,
       metadata: this._metadata,
       createdAt: this._createdAt.toISOString(),
       updatedAt: this._updatedAt.toISOString(),
@@ -504,6 +513,7 @@ class Task {
       data.status,
       data.priority,
       data.type,
+      data.category,
       data.metadata,
       data.createdAt,
       data.updatedAt
@@ -559,6 +569,7 @@ class Task {
       TaskStatus.PENDING,
       priority,
       type,
+      metadata.category,
       metadata
     );
   }

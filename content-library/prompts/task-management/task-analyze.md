@@ -3,7 +3,8 @@
 ## Goal
 Generate a comprehensive analysis of what's missing, incomplete, or needs improvement in the current project state. Create actionable insights that can be parsed into database tasks for AI auto-implementation, tracking, and execution.
 
-Create new [Name]-analysis.md in docs/09_roadmap/features with the following structure:
+Create new [Name]-analysis.md in docs/09_roadmap/features/[category]/[name]/ with the following structure:
+**Note**: The system automatically creates a hierarchical folder structure: Category → Task Name → Analysis files
 
 ## Template Structure
 
@@ -210,7 +211,8 @@ Create new [Name]-analysis.md in docs/09_roadmap/features with the following str
 
 #### Task Database Fields:
 - **source_type**: 'markdown_doc'
-- **source_path**: 'docs/09_roadmap/features/[name]-analysis.md'
+- **source_path**: 'docs/09_roadmap/features/[category]/[name]/[name]-analysis.md'
+- **category**: '[category]' - Automatically set from Category field above
 - **automation_level**: 'semi_auto' | 'full_auto' | 'manual'
 - **confirmation_required**: true | false
 - **max_attempts**: 3 (default)
@@ -263,7 +265,7 @@ INSERT INTO tasks (
   '[Priority]', -- From section 1
   'pending', -- Initial status
   'markdown_doc', -- Source type
-  'docs/09_roadmap/features/[name]-analysis.md', -- Source path
+  'docs/09_roadmap/features/[category]/[name]/[name]-analysis.md', -- Source path with category
   '[Full markdown content]', -- For reference
   '[JSON with all metadata]', -- All analysis details
   '[Estimated Time in hours]' -- From section 1

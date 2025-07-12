@@ -8,11 +8,13 @@ const TaskPriority = require('@/domain/value-objects/TaskPriority');
 const TaskType = require('@/domain/value-objects/TaskType');
 
 class TaskController {
-    constructor(taskService, taskRepository, aiService, projectAnalyzer) {
+    constructor(taskService, taskRepository, aiService, projectAnalyzer, projectMappingService = null, ideManager = null) {
         this.taskService = taskService;
         this.taskRepository = taskRepository;
         this.aiService = aiService;
         this.projectAnalyzer = projectAnalyzer;
+        this.projectMappingService = projectMappingService;
+        this.ideManager = ideManager;
     }
 
     // Create task for a specific project
@@ -162,13 +164,19 @@ class TaskController {
         }
     }
 
-    // Execute task within a project
+    // Execute task within a project using unified workflow system
     async executeTask(req, res) {
         try {
             const { projectId, id } = req.params;
             const userId = req.user.id;
+            const options = req.body.options || {};
 
-            console.log('🔍 [TaskController] executeTask called:', { projectId, id, userId });
+            console.log('🚀 [TaskController] executeTask called with unified workflow system:', { 
+                projectId, 
+                id, 
+                userId,
+                options 
+            });
 
             const task = await this.taskRepository.findById(id);
             console.log('🔍 [TaskController] Found task:', task ? {
@@ -190,11 +198,18 @@ class TaskController {
                 });
             }
 
-            console.log('🔍 [TaskController] Found task, executing...');
+            console.log('🔍 [TaskController] Found task, executing with unified workflow system...');
 
-            const execution = await this.taskService.executeTask(id, userId);
+            // Execute task using unified workflow system (priority method)
+            const execution = await this.taskService.executeTask(id, userId, options);
 
-            console.log('✅ [TaskController] Task execution started:', execution);
+            console.log('✅ [TaskController] Task execution completed with unified workflow:', {
+                taskId: id,
+                success: execution.success,
+                executionMethod: execution.metadata?.executionMethod || 'unified_workflow',
+                workflowType: execution.metadata?.workflowType,
+                duration: execution.metadata?.formattedDuration
+            });
 
             res.json({
                 success: true,
@@ -458,18 +473,47 @@ class TaskController {
     // NEW: Sync docs tasks from markdown files to database
     async syncDocsTasks(req, res) {
         try {
+            console.log('🔄 [TaskController] syncDocsTasks called');
+            
             const { projectId } = req.params;
             const userId = req.user.id;
 
             console.log('🔄 [TaskController] Syncing docs tasks for project:', projectId);
 
-            // Robust path resolution for docs/09_roadmap/features
-            let docsTasksPath = path.join(process.cwd(), 'docs', '09_roadmap', 'features');
-            if (!fsSync.existsSync(docsTasksPath)) {
-                docsTasksPath = path.resolve(process.cwd(), '../docs/09_roadmap/features');
+            // Use database-driven path configuration - get workspace path from project mapping
+            let workspacePath = null;
+            
+            // Try to get workspace path from project mapping service
+            if (this.projectMappingService) {
+                workspacePath = this.projectMappingService.getWorkspaceFromProjectId(projectId);
+                console.log('🔍 [TaskController] Got workspace path from project mapping:', workspacePath);
             }
+            
+            // Fallback: Try to get from active IDE
+            if (!workspacePath && this.ideManager) {
+                try {
+                    const activeIDE = await this.ideManager.getActiveIDE();
+                    if (activeIDE && activeIDE.workspacePath) {
+                        workspacePath = activeIDE.workspacePath;
+                        console.log('🔍 [TaskController] Got workspace path from active IDE:', workspacePath);
+                    }
+                } catch (error) {
+                    console.warn('🔍 [TaskController] Failed to get workspace path from IDE:', error.message);
+                }
+            }
+            
+            // Final fallback: Use project root (one level up from backend)
+            if (!workspacePath) {
+                const currentDir = process.cwd();
+                workspacePath = path.resolve(currentDir, '..');
+                console.log('🔍 [TaskController] Using project root as fallback:', workspacePath);
+            }
+            
+            const docsTasksPath = path.join(workspacePath, 'docs', '09_roadmap', 'features');
+            console.log('🔍 [TaskController] Final docs tasks path:', docsTasksPath);
+            
             if (!fsSync.existsSync(docsTasksPath)) {
-                throw new Error('docs/09_roadmap/features directory not found!');
+                throw new Error(`Documentation path not found: ${docsTasksPath}`);
             }
 
             const importedTasks = [];
@@ -482,13 +526,17 @@ class TaskController {
                 const filePath = path.join(docsTasksPath, filename);
                 const content = await fs.readFile(filePath, 'utf8');
 
-                // Parse markdown content to extract task info
+                console.log(`🔍 [TaskController] Processing file: ${filename}`);
+                console.log(`🔍 [TaskController] File content preview: ${content.substring(0, 200)}...`);
+
+                // Parse markdown content to extract task info with category support
                 const taskInfo = this.parseDocsTaskFromMarkdown(content, filename);
 
                 console.log(`🔍 [TaskController] Parsed taskInfo for ${filename}:`, {
                     title: taskInfo?.title,
                     priority: taskInfo?.priority,
                     type: taskInfo?.type,
+                    category: taskInfo?.category,
                     hasContent: !!taskInfo
                 });
 
@@ -501,10 +549,11 @@ class TaskController {
                             projectId,
                             title: taskInfo.title,
                             priority: taskInfo.priority,
-                            type: taskInfo.type
+                            type: taskInfo.type,
+                            category: taskInfo.category
                         });
                         
-                        // Create new task in database
+                        // Create new task in database with category support
                         const task = await this.taskService.createTask(
                             projectId,
                             taskInfo.title,
@@ -518,6 +567,7 @@ class TaskController {
                                 importedBy: userId,
                                 importedAt: new Date(),
                                 content: content,
+                                category: taskInfo.category, // Add category support
                                 ...taskInfo.metadata
                             }
                         );
@@ -525,7 +575,7 @@ class TaskController {
                         if (task && !task.description) task.description = content;
 
                         importedTasks.push(task);
-                        console.log(`✅ [TaskController] Imported task: ${taskInfo.title}\nContent: ${content.substring(0, 500)}...`);
+                        console.log(`✅ [TaskController] Imported task: ${taskInfo.title} (Category: ${taskInfo.category})\nContent: ${content.substring(0, 500)}...`);
                     } else {
                         console.log(`⚠️ [TaskController] Task already exists: ${taskInfo.title}`);
                     }
@@ -551,7 +601,7 @@ class TaskController {
         }
     }
 
-    // Helper method to parse markdown content
+    // Helper method to parse markdown content with category support
     parseDocsTaskFromMarkdown(content, filename) {
         try {
             // Extract title from first line (usually # Task Name)
@@ -598,6 +648,19 @@ class TaskController {
                 TaskType_DOCUMENTATION: TaskType.DOCUMENTATION
             });
 
+            // Extract category from content or filename path
+            let category;
+            const categoryMatch = content.match(/category[:\s]+([^\n]+)/i);
+            if (categoryMatch) {
+                category = categoryMatch[1].trim();
+            } else {
+                // Try to extract from filename path (e.g., features/backend/task.md -> backend)
+                const pathParts = filename.split('/');
+                if (pathParts.length > 1) {
+                    category = pathParts[0];
+                }
+            }
+
             // Create description from content
             const description = content
                 .split('\n')
@@ -610,9 +673,11 @@ class TaskController {
                 description,
                 priority,
                 type,
+                category, // Add category support
                 metadata: {
                     originalFilename: filename,
-                    contentLength: content.length
+                    contentLength: content.length,
+                    category: category // Include in metadata
                 }
             };
         } catch (error) {
@@ -621,25 +686,24 @@ class TaskController {
         }
     }
 
-    // NEW: Clean docs tasks from database
+    // Clean docs tasks from database
     async cleanDocsTasks(req, res) {
         try {
+            console.log('🗑️ [TaskController] cleanDocsTasks called');
+            
             const { projectId } = req.params;
             const userId = req.user.id;
 
             console.log('🗑️ [TaskController] Cleaning docs tasks for project:', projectId);
 
-            // Get all docs-synced tasks
+            // Get all tasks and delete them (no filtering)
             const allTasks = await this.taskRepository.findByProject(projectId);
-            const docsTasksToDelete = allTasks.filter(task => 
-                task.metadata && task.metadata.source === 'docs_sync'
-            );
 
-            console.log(`🗑️ [TaskController] Found ${docsTasksToDelete.length} docs tasks to delete`);
+            console.log(`🗑️ [TaskController] Found ${allTasks.length} tasks to delete`);
 
-            // Delete all docs tasks
+            // Delete all tasks
             let deletedCount = 0;
-            for (const task of docsTasksToDelete) {
+            for (const task of allTasks) {
                 try {
                     await this.taskRepository.delete(task.id);
                     deletedCount++;
@@ -652,21 +716,22 @@ class TaskController {
             res.json({
                 success: true,
                 data: {
-                    deletedTasks: docsTasksToDelete,
-                    totalFound: docsTasksToDelete.length,
+                    deletedTasks: allTasks,
+                    totalFound: allTasks.length,
                     deletedCount: deletedCount
                 },
-                message: `Successfully deleted ${deletedCount} docs tasks`
+                message: `Successfully deleted ${deletedCount} tasks`
             });
 
         } catch (error) {
-            console.error('❌ [TaskController] Failed to clean docs tasks:', error);
+            console.error('❌ [TaskController] Failed to clean tasks:', error);
             res.status(500).json({
                 success: false,
                 error: error.message
             });
         }
     }
+
 }
 
 module.exports = TaskController; 

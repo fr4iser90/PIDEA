@@ -1,8 +1,8 @@
 /**
- * AutoModeController - REST API endpoints for VibeCoder auto mode
+ * AutoModeController - REST API endpoints for auto mode operations
  */
 const { validationResult } = require('express-validator');
-const VibeCoderModeCommand = require('../../application/commands/vibecoder/VibeCoderModeCommand');
+const { StepRegistry } = require('../../domain/workflows/steps');
 
 class AutoModeController {
     constructor(dependencies = {}) {
@@ -212,61 +212,64 @@ class AutoModeController {
                 }
             }
 
-            // Execute the actual auto mode analysis (VibeCoder)
-            const command = {
-                commandId: `auto-mode-${Date.now()}`,
+            // Execute using Unified Workflow Steps instead of legacy VibeCoder
+            const stepRegistry = new StepRegistry();
+            
+            let stepName;
+            let stepOptions = {
                 projectPath: workspacePath,
-                mode: mode,
-                options: {
-                    aiModel,
-                    autoExecute,
-                    ...options
-                },
-                metadata: {
-                    userId,
-                    projectId,
-                    timestamp: new Date()
-                }
+                aiModel,
+                autoExecute,
+                userId,
+                projectId,
+                ...options
             };
 
-            // Set correct operation flags based on mode
+            // Map modes to unified workflow steps
             if (mode === 'analysis') {
-                command.options.includeAnalyze = true;
-                command.options.includeRefactor = false;
-                command.options.includeGenerate = false;
-            }
-            if (mode === 'refactor') {
-                command.options.includeAnalyze = false;
-                command.options.includeRefactor = true;
-                command.options.includeGenerate = false;
-            }
-            if (mode === 'full') {
-                command.options.includeAnalyze = true;
-                command.options.includeRefactor = true;
-                command.options.includeGenerate = true;
+                stepName = 'AnalysisStep';
+                stepOptions.includeCodeQuality = true;
+                stepOptions.includeArchitecture = true;
+                stepOptions.includeTechStack = true;
+                stepOptions.includeDependencies = true;
+                stepOptions.includeRepoStructure = true;
+            } else if (mode === 'refactor') {
+                stepName = 'RefactoringStep';
+                stepOptions.includeCodeQuality = true;
+                stepOptions.includeArchitecture = true;
+            } else if (mode === 'test') {
+                stepName = 'TestingStep';
+                stepOptions.includeTestAnalysis = true;
+                stepOptions.includeTestGeneration = true;
+                stepOptions.includeTestFixing = true;
+            } else {
+                // Default to analysis
+                stepName = 'AnalysisStep';
+                stepOptions.includeCodeQuality = true;
+                stepOptions.includeArchitecture = true;
+                stepOptions.includeTechStack = true;
+                stepOptions.includeDependencies = true;
+                stepOptions.includeRepoStructure = true;
             }
 
-            this.logger.info('AutoModeController: Executing auto mode command', {
-                commandId: command.commandId,
+            this.logger.info('AutoModeController: Executing unified workflow step', {
+                stepName,
                 projectPath: workspacePath,
                 mode
             });
 
-            // FIX: Wrap command in VibeCoderModeCommand instance
-            const commandInstance = new VibeCoderModeCommand(command);
-
-            // Execute the command asynchronously
-            const result = await this.commandBus.execute('VibeCoderModeCommand', commandInstance);
+            // Execute the unified workflow step
+            const result = await stepRegistry.executeStep(stepName, stepOptions);
 
             this.logger.info('AutoModeController: Auto mode execution completed', {
-                commandId: command.commandId,
+                stepName,
                 success: true
             });
 
             // Emit event for real-time updates
             if (this.eventBus) {
                 this.eventBus.publish('autoMode:completed', {
-                    commandId: command.commandId,
+                    stepName,
                     projectId,
                     userId,
                     result
@@ -277,7 +280,7 @@ class AutoModeController {
                 success: true,
                 message: 'Auto mode execution completed successfully',
                 data: {
-                    commandId: command.commandId,
+                    stepName,
                     result: result
                 }
             });
@@ -527,6 +530,48 @@ class AutoModeController {
             res.status(500).json({
                 success: false,
                 error: 'Failed to get auto mode statistics',
+                message: error.message
+            });
+        }
+    }
+
+    /**
+     * Stop auto mode
+     * POST /api/auto/stop
+     */
+    async stopAutoMode(req, res) {
+        try {
+            const { sessionId } = req.body;
+            const userId = req.user?.id;
+
+            this.logger.info('AutoModeController: Stopping auto mode', {
+                sessionId,
+                userId
+            });
+
+            // Emit stop event
+            if (this.eventBus) {
+                this.eventBus.publish('autoMode:stopped', {
+                    sessionId,
+                    userId
+                });
+            }
+
+            res.json({
+                success: true,
+                message: 'Auto mode stopped successfully'
+            });
+
+        } catch (error) {
+            this.logger.error('AutoModeController: Failed to stop auto mode', {
+                sessionId: req.body.sessionId,
+                error: error.message,
+                userId: req.user?.id
+            });
+
+            res.status(500).json({
+                success: false,
+                error: 'Failed to stop auto mode',
                 message: error.message
             });
         }

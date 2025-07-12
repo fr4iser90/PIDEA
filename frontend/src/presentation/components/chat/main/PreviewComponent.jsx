@@ -141,13 +141,13 @@ function PreviewComponent({ eventBus, activePort }) {
           port = result.data.port;
           workspacePath = result.data.workspacePath;
         } else {
-          console.log('No user app URL found for port, trying general endpoint...');
+          console.log('No user app URL found for port, trying  endpoint...');
         }
       }
       
-      // Fallback to general user app URL if port-specific failed
+      // Fallback to  user app URL if port-specific failed
       if (!previewUrl) {
-        console.log('Trying general user app URL...');
+        console.log('Trying  user app URL...');
         const result = await apiRepository.getUserAppUrl();
         
         if (result.success && result.data && result.data.url) {

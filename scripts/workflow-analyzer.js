@@ -896,7 +896,7 @@ class WorkflowAnalyzer {
     if (className.includes('Generate')) return 'generation';
     if (className.includes('Refactor')) return 'refactoring';
     if (className.includes('VibeCoder')) return 'vibecoder';
-    return 'general';
+    return '';
   }
 
   categorizeHandler(className) {
@@ -904,7 +904,7 @@ class WorkflowAnalyzer {
     if (className.includes('Generate')) return 'generation';
     if (className.includes('Refactor')) return 'refactoring';
     if (className.includes('VibeCoder')) return 'vibecoder';
-    return 'general';
+    return '';
   }
 
   categorizeService(className) {
@@ -913,7 +913,7 @@ class WorkflowAnalyzer {
     if (className.includes('Analysis')) return 'analysis';
     if (className.includes('Security')) return 'security';
     if (className.includes('Performance')) return 'performance';
-    return 'general';
+    return '';
   }
 
   categorizeComponent(className) {
@@ -921,7 +921,7 @@ class WorkflowAnalyzer {
     if (className.includes('Task')) return 'task';
     if (className.includes('Auth')) return 'auth';
     if (className.includes('Sidebar')) return 'navigation';
-    return 'general';
+    return '';
   }
 }
 

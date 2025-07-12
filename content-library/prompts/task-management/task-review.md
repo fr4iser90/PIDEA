@@ -300,3 +300,72 @@ npm run db:validate
 
 ## Example Usage
 > Review and validate the user authentication implementation against the current codebase. Analyze the auth-implementation.md file, check all planned files exist, verify API endpoints work, assess if the 12-hour task needs splitting into smaller subtasks, and update the implementation file with any gaps, improvements, or subtask breakdown found.
+
+## Phase File Creation for Subtasks
+
+### Phase File Structure
+When a task needs to be split into subtasks, create individual phase files following this structure:
+
+**File Path Pattern:**
+```
+docs/09_roadmap/features/[category]/[name]/[name]-phase-[number].md
+```
+
+**Example:**
+```
+docs/09_roadmap/features/backend/unified-workflow-legacy-migration/unified-workflow-legacy-migration-phase-1.md
+docs/09_roadmap/features/backend/unified-workflow-legacy-migration/unified-workflow-legacy-migration-phase-2.md
+docs/09_roadmap/features/backend/unified-workflow-legacy-migration/unified-workflow-legacy-migration-phase-3.md
+```
+
+### Phase File Content Template
+Each phase file should contain:
+
+```markdown
+# [Task Name] – Phase [Number]: [Phase Title]
+
+## Overview
+Brief description of what this phase accomplishes.
+
+## Objectives
+- [ ] Objective 1
+- [ ] Objective 2
+- [ ] Objective 3
+
+## Deliverables
+- File: `path/to/file.js` - Description
+- API: `/api/endpoint` - Description
+- Test: `tests/unit/feature.test.js` - Description
+
+## Dependencies
+- Requires: Phase X completion
+- Blocks: Phase Y start
+
+## Estimated Time
+X hours
+
+## Success Criteria
+- [ ] All objectives completed
+- [ ] All deliverables created
+- [ ] Tests passing
+- [ ] Documentation updated
+```
+
+### Integration with Parent Task
+In the parent task's implementation file, add a section linking to all phase files:
+
+```markdown
+### 📋 Task Splitting Recommendations
+- **Subtask 1**: [task-name-phase-1.md](./task-name-phase-1.md) – Phase 1 Title
+- **Subtask 2**: [task-name-phase-2.md](./task-name-phase-2.md) – Phase 2 Title
+- **Subtask 3**: [task-name-phase-3.md](./task-name-phase-3.md) – Phase 3 Title
+```
+
+### Automatic Phase File Creation
+The review system should automatically:
+1. Detect when a task exceeds size/complexity limits
+2. Create the appropriate number of phase files
+3. Generate phase content based on task analysis
+4. Update the parent task with phase file references
+5. Ensure all phase files follow the naming convention
+6. Maintain proper category and name extraction from file paths

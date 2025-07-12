@@ -962,7 +962,7 @@ describe('AutoFinishController', () => {
       });
     });
 
-    it('should handle general error', async () => {
+    it('should handle  error', async () => {
       // Create a new controller instance with a mock that throws
       const mockLoggerWithError = {
         info: jest.fn(),

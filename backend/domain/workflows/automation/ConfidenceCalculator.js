@@ -75,7 +75,7 @@ class ConfidenceCalculator {
     const lineScore = Math.min(codeLines / 1000, 1);
     const depScore = Math.min(dependencies / 20, 1);
     const projectScore = this.getProjectSizeScore(projectSize);
-    const typeScore = this.getTaskTypeComplexityScore(task.type?.value || 'general');
+    const typeScore = this.getTaskTypeComplexityScore(task.type?.value || '');
 
     return (
       fileScore * complexityFactors.fileCount +
@@ -100,7 +100,7 @@ class ConfidenceCalculator {
 
     try {
       // Get historical tasks of same type
-      const historicalTasks = await taskRepository.findByType(task.type?.value || 'general', {
+      const historicalTasks = await taskRepository.findByType(task.type?.value || '', {
         limit: 50,
         status: 'completed'
       });

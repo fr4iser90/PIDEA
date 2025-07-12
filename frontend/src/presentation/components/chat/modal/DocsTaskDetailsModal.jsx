@@ -21,7 +21,13 @@ const DocsTaskDetailsModal = ({
   const [executePromptContent, setExecutePromptContent] = useState('');
 
   useEffect(() => {
-    const content = taskDetails?.content || taskDetails?.description;
+    const content = taskDetails?.content || 
+                   taskDetails?.description || 
+                   taskDetails?.details || 
+                   taskDetails?.htmlContent ||
+                   taskDetails?.metadata?.content ||
+                   taskDetails?.metadata?.description;
+    
     if (taskDetails && content) {
       try {
         // Configure marked for security and proper rendering
@@ -40,8 +46,10 @@ const DocsTaskDetailsModal = ({
         setHtmlContent(html);
       } catch (error) {
         console.error('Error rendering markdown:', error);
-        setHtmlContent(`<p class="error">Error rendering markdown: ${error.message}</p>`);
+        setHtmlContent(`<p class="error">Error rendering markdown: ${error.message}</p><pre>${content}</pre>`);
       }
+    } else {
+      setHtmlContent('');
     }
   }, [taskDetails]);
 
@@ -199,15 +207,33 @@ ${taskDetails.content || taskDetails.description}`;
           </div>
         )}
 
+        {/* Error State */}
+        {!isLoading && !taskDetails && (
+          <div className="modal-error">
+            <p>❌ No task details available</p>
+            <p className="error-details">
+              The task details could not be loaded. This might be due to:
+            </p>
+            <ul className="error-list">
+              <li>• Task not found in database</li>
+              <li>• Network connection issue</li>
+              <li>• Backend service unavailable</li>
+            </ul>
+            <button className="btn-secondary" onClick={handleClose}>
+              Close
+            </button>
+          </div>
+        )}
+
         {/* Content */}
         {!isLoading && taskDetails && (
           <div className="modal-content">
             {/* File Info */}
             <div className="file-info">
               <div className="file-details">
-                <span className="file-name">📄 {taskDetails.filename}</span>
+                <span className="file-name">📄 {taskDetails.filename || taskDetails.metadata?.filename || 'Unknown file'}</span>
                 <span className="file-modified">
-                  Last modified: {formatDate(taskDetails.lastModified)}
+                  Last modified: {formatDate(taskDetails.lastModified || taskDetails.updatedAt || taskDetails.createdAt)}
                 </span>
               </div>
             </div>
@@ -232,28 +258,28 @@ ${taskDetails.content || taskDetails.description}`;
             <div className="tab-content">
               {activeTab === 'rendered' && (
                 <div className="rendered-content">
-                  <div 
-                    className="markdown-content"
-                    dangerouslySetInnerHTML={{ __html: htmlContent }}
-                  />
+                  {htmlContent ? (
+                    <div 
+                      className="markdown-content"
+                      dangerouslySetInnerHTML={{ __html: htmlContent }}
+                    />
+                  ) : (
+                    <div className="no-content">
+                      <p>No content available for rendering.</p>
+                      <p>Task description: {taskDetails.description || taskDetails.content || 'No description available'}</p>
+                    </div>
+                  )}
                 </div>
               )}
               
               {activeTab === 'raw' && (
                 <div className="raw-content">
                   <pre className="markdown-raw">
-                    <code>{taskDetails.content}</code>
+                    <code>{taskDetails.content || taskDetails.description || 'No content available'}</code>
                   </pre>
                 </div>
               )}
             </div>
-          </div>
-        )}
-
-        {/* Error State */}
-        {!isLoading && !taskDetails && (
-          <div className="modal-error">
-            <p>❌ No task details available</p>
           </div>
         )}
 

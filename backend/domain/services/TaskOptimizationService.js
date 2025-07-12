@@ -65,7 +65,7 @@ class TaskOptimizationService {
                     optimizationResult = await this.optimizeTaskDependencies(task, executions, options);
                     break;
                 default:
-                    optimizationResult = await this.optimizeTaskGeneral(task, executions, optimizationType, options);
+                    optimizationResult = await this.optimizeTask(task, executions, optimizationType, options);
                     break;
             }
 
@@ -227,16 +227,16 @@ class TaskOptimizationService {
     }
 
     /**
-     * General task optimization
+     *  task optimization
      * @param {Task} task - Task object
      * @param {Array<TaskExecution>} executions - Task executions
      * @param {string} optimizationType - Optimization type
      * @param {Object} options - Optimization options
-     * @returns {Promise<Object>} General optimization result
+     * @returns {Promise<Object>}  optimization result
      */
-    async optimizeTaskGeneral(task, executions, optimizationType, options) {
+    async optimizeTask(task, executions, optimizationType, options) {
         // Generate AI optimization suggestions
-        const aiPrompt = this.buildGeneralOptimizationPrompt(task, executions, optimizationType, options);
+        const aiPrompt = this.buildOptimizationPrompt(task, executions, optimizationType, options);
         const aiResponse = await this.cursorIDEService.postToCursor(aiPrompt);
         
         const optimizations = this.parseAIOptimizationResponse(aiResponse);
@@ -244,8 +244,8 @@ class TaskOptimizationService {
         return {
             type: optimizationType,
             optimizations,
-            recommendations: this.generateGeneralRecommendations(optimizations),
-            confidence: this.calculateGeneralConfidence(optimizations)
+            recommendations: this.generateRecommendations(optimizations),
+            confidence: this.calculateConfidence(optimizations)
         };
     }
 
@@ -752,11 +752,11 @@ Provide specific optimization recommendations in JSON format:
     }
 
     /**
-     * Generate general recommendations
+     * Generate  recommendations
      * @param {Object} optimizations - Optimizations
      * @returns {Array<string>} Recommendations
      */
-    generateGeneralRecommendations(optimizations) {
+    generateRecommendations(optimizations) {
         const recommendations = [];
         
         if (optimizations.recommendations) {
@@ -767,11 +767,11 @@ Provide specific optimization recommendations in JSON format:
     }
 
     /**
-     * Calculate general confidence
+     * Calculate  confidence
      * @param {Object} optimizations - Optimizations
      * @returns {number} Confidence score
      */
-    calculateGeneralConfidence(optimizations) {
+    calculateConfidence(optimizations) {
         // Base confidence on optimization quality
         let confidence = 0.5;
         
@@ -787,14 +787,14 @@ Provide specific optimization recommendations in JSON format:
     }
 
     /**
-     * Build general optimization prompt
+     * Build  optimization prompt
      * @param {Task} task - Task object
      * @param {Array<TaskExecution>} executions - Task executions
      * @param {string} optimizationType - Optimization type
      * @param {Object} options - Optimization options
      * @returns {string} AI prompt
      */
-    buildGeneralOptimizationPrompt(task, executions, optimizationType, options) {
+    buildOptimizationPrompt(task, executions, optimizationType, options) {
         return `
 Optimize this task for: ${optimizationType}
 

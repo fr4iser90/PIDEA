@@ -60,7 +60,7 @@ const workflow = new WorkflowBuilder()
   )
   .addStep(
     WorkflowStepBuilder.refactoring({
-      type: 'general',
+      type: '',
       improveQuality: true
     }).build()
   )
@@ -129,7 +129,7 @@ const analysisStep = new AnalysisStep('comprehensive', {
 Handles code refactoring and generation:
 
 ```javascript
-const refactoringStep = new RefactoringStep('general', {
+const refactoringStep = new RefactoringStep('', {
   generateCode: true,
   improveQuality: true,
   maintainTests: true
@@ -137,7 +137,7 @@ const refactoringStep = new RefactoringStep('general', {
 ```
 
 **Supported Refactoring Types:**
-- `general` - General code refactoring
+- `` -  code refactoring
 - `code-generation` - Code generation
 - `feature-implementation` - Feature implementation
 
@@ -327,7 +327,7 @@ const analysisWorkflow = service.createAnalysisWorkflow({
 });
 
 const refactoringWorkflow = service.createRefactoringWorkflow({
-  refactoringType: 'general',
+  refactoringType: '',
   generateCode: true
 });
 
@@ -368,7 +368,7 @@ const workflow = service.createCustomWorkflow(
   {
     name: 'Custom Code Improvement Workflow',
     analysis: { type: 'code-analysis' },
-    refactoring: { type: 'general' },
+    refactoring: { type: '' },
     testing: { runTests: true },
     documentation: { generateDocs: true }
   }
@@ -427,7 +427,7 @@ const analysisOptions = {
 
 // Refactoring options
 const refactoringOptions = {
-  type: 'general',
+  type: '',
   generateCode: true,
   improveQuality: true,
   maintainTests: true

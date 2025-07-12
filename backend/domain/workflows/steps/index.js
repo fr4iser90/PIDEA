@@ -1,14 +1,10 @@
 /**
- * Unified Workflow Foundation - Workflow Steps
- * 
- * This module provides all workflow step implementations and the step registry.
- * It includes base step classes, specific step implementations, and step management.
+ * Unified Workflow Steps - Module exports
+ * Includes all base steps and migrated legacy handlers
  */
 
-// Base Step
+// Base workflow steps
 const BaseWorkflowStep = require('./BaseWorkflowStep');
-
-// Specific Step Implementations
 const AnalysisStep = require('./AnalysisStep');
 const RefactoringStep = require('./RefactoringStep');
 const TestingStep = require('./TestingStep');
@@ -18,15 +14,28 @@ const DeploymentStep = require('./DeploymentStep');
 const SecurityStep = require('./SecurityStep');
 const OptimizationStep = require('./OptimizationStep');
 
-// Step Registry
+// Migrated legacy handlers as unified steps
+const AnalysisStep_AnalyzeArchitectureHandler = require('./AnalysisStep_AnalyzeArchitectureHandler');
+const AnalysisStep_AnalyzeCodeQualityHandler = require('./AnalysisStep_AnalyzeCodeQualityHandler');
+const AnalysisStep_AnalyzeTechStackHandler = require('./AnalysisStep_AnalyzeTechStackHandler');
+const AnalysisStep_AnalyzeRepoStructureHandler = require('./AnalysisStep_AnalyzeRepoStructureHandler');
+const AnalysisStep_AnalyzeDependenciesHandler = require('./AnalysisStep_AnalyzeDependenciesHandler');
+
+const DocumentationStep_GenerateScriptHandler = require('./DocumentationStep_GenerateScriptHandler');
+const DocumentationStep_GenerateScriptsHandler = require('./DocumentationStep_GenerateScriptsHandler');
+
+const TestingStep_AutoTestFixHandler = require('./TestingStep_AutoTestFixHandler');
+const TestingStep_TestCorrectionHandler = require('./TestingStep_TestCorrectionHandler');
+
+// New workflow steps
+const IdeaToExecutionWorkflow = require('./IdeaToExecutionWorkflow');
+
+// Step registry
 const StepRegistry = require('./StepRegistry');
 
-// Module exports
 module.exports = {
-  // Base Step
+  // Base steps
   BaseWorkflowStep,
-
-  // Specific Step Implementations
   AnalysisStep,
   RefactoringStep,
   TestingStep,
@@ -35,22 +44,23 @@ module.exports = {
   DeploymentStep,
   SecurityStep,
   OptimizationStep,
-
-  // Step Registry
-  StepRegistry,
-
-  // Convenience exports
-  steps: {
-    AnalysisStep,
-    RefactoringStep,
-    TestingStep,
-    DocumentationStep,
-    ValidationStep,
-    DeploymentStep,
-    SecurityStep,
-    OptimizationStep
-  },
-
-  // Global registry instance
-  registry: StepRegistry
+  
+  // Migrated legacy handlers
+  AnalysisStep_AnalyzeArchitectureHandler,
+  AnalysisStep_AnalyzeCodeQualityHandler,
+  AnalysisStep_AnalyzeTechStackHandler,
+  AnalysisStep_AnalyzeRepoStructureHandler,
+  AnalysisStep_AnalyzeDependenciesHandler,
+  
+  DocumentationStep_GenerateScriptHandler,
+  DocumentationStep_GenerateScriptsHandler,
+  
+  TestingStep_AutoTestFixHandler,
+  TestingStep_TestCorrectionHandler,
+  
+  // New workflow steps
+  IdeaToExecutionWorkflow,
+  
+  // Registry
+  StepRegistry
 }; 

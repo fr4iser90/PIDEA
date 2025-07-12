@@ -283,7 +283,7 @@ describe('PerformanceAnalyzer', () => {
       });
     });
 
-    it('should handle general errors and return empty object', async () => {
+    it('should handle  errors and return empty object', async () => {
       // Mock both methods to throw errors to trigger the main catch block
       mockFileUtils.readJsonFile.mockRejectedValue(new Error('Unexpected error'));
       mockFileUtils.hasAnyFile.mockRejectedValue(new Error('File system error'));

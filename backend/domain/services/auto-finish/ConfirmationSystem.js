@@ -93,10 +93,10 @@ class ConfirmationSystem {
 
   /**
    * Ask for explicit confirmation from AI
-   * @param {string} context - Context type (test, refactor, general)
+   * @param {string} context - Context type (test, refactor, )
    * @returns {Promise<Object>} Confirmation result
    */
-  async askConfirmation(context = 'general') {
+  async askConfirmation(context = '') {
     try {
       const questions = this.getConfirmationQuestions(context);
       const question = questions[Math.floor(Math.random() * questions.length)];
@@ -222,10 +222,10 @@ class ConfirmationSystem {
   /**
    * Analyze AI response for completion indicators
    * @param {string} response - AI response
-   * @param {string} context - Context type (test, refactor, general)
+   * @param {string} context - Context type (test, refactor, )
    * @returns {Object} Analysis result
    */
-  analyzeResponse(response, context = 'general') {
+  analyzeResponse(response, context = '') {
     if (!response || typeof response !== 'string') {
       return {
         isComplete: false,
@@ -244,7 +244,7 @@ class ConfirmationSystem {
     let completionScore = 0;
     let incompleteScore = 0;
     
-    // Check general completion keywords
+    // Check  completion keywords
     for (const [lang, keywords] of Object.entries(this.completionKeywords)) {
       for (const keyword of keywords) {
         if (lowerResponse.includes(keyword.toLowerCase())) {
@@ -418,10 +418,10 @@ class ConfirmationSystem {
   /**
    * Get confirmation question in specified language and context
    * @param {string} language - Language code
-   * @param {string} context - Context type (test, refactor, general)
+   * @param {string} context - Context type (test, refactor, )
    * @returns {string} Confirmation question
    */
-  getConfirmationQuestion(language = 'en', context = 'general') {
+  getConfirmationQuestion(language = 'en', context = '') {
     // Use the new structured questions from getConfirmationQuestions
     const questions = this.getConfirmationQuestions(context);
     
@@ -431,10 +431,10 @@ class ConfirmationSystem {
 
   /**
    * Get confirmation questions for different contexts
-   * @param {string} context - Context type (test, refactor, general)
+   * @param {string} context - Context type (test, refactor, )
    * @returns {Array} Array of confirmation questions
    */
-  getConfirmationQuestions(context = 'general') {
+  getConfirmationQuestions(context = '') {
     const questions = {
       'test': [
         'Check your status against the task and respond with your status: completed/partially completed/need human. Also include test results: [PASSED] or [FAILED] with percentage.',
@@ -448,7 +448,7 @@ class ConfirmationSystem {
         'Verifica tu estado contra la tarea y responde con tu estado: completed/partially completed/need human.',
         'Vérifiez votre statut par rapport à la tâche et répondez avec votre statut: completed/partially completed/need human.'
       ],
-      'general': [
+      '': [
         'Check your status against the task and respond with your status: completed/partially completed/need human.',
         'Prüfe deinen Status gegen die Aufgabe und antworte mit deinem Status: completed/partially completed/need human.',
         'Verifica tu estado contra la tarea y responde con tu estado: completed/partially completed/need human.',
@@ -456,7 +456,7 @@ class ConfirmationSystem {
       ]
     };
     
-    return questions[context] || questions['general'];
+    return questions[context] || questions[''];
   }
 
   /**

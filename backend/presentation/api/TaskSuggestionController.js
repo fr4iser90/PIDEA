@@ -29,7 +29,6 @@ class TaskSuggestionController {
             const {
                 context,
                 projectPath,
-                suggestionType = 'general',
                 aiModel = 'gpt-4',
                 options = {},
                 maxSuggestions = 10
@@ -40,7 +39,6 @@ class TaskSuggestionController {
             const command = {
                 context,
                 projectPath,
-                suggestionType,
                 aiModel,
                 options,
                 maxSuggestions,

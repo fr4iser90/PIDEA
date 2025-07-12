@@ -17,7 +17,7 @@ CREATE TABLE IF NOT EXISTS site_owner (
 );
 
 -- THEMES
--- Themes are general and can be selected by the site owner for the portfolio.
+-- Themes are  and can be selected by the site owner for the portfolio.
 CREATE TABLE IF NOT EXISTS themes (
     id SERIAL PRIMARY KEY,
     name VARCHAR(100) UNIQUE NOT NULL,
@@ -134,10 +134,10 @@ CREATE TABLE IF NOT EXISTS projects (
 );
 
 -- POSTS
--- Flexible table for all types of blog posts (project updates, general posts, etc.)
+-- Flexible table for all types of blog posts (project updates,  posts, etc.)
 CREATE TABLE IF NOT EXISTS posts (
     id SERIAL PRIMARY KEY,
-    type VARCHAR(50) NOT NULL DEFAULT 'general' CHECK (type IN ('general', 'project', 'update', 'tutorial', 'news', 'review', 'interview', 'case-study')),
+    type VARCHAR(50) NOT NULL DEFAULT '' CHECK (type IN ('', 'project', 'update', 'tutorial', 'news', 'review', 'interview', 'case-study')),
     project_id INTEGER REFERENCES projects(id) ON DELETE SET NULL, -- Optional: Link to a project
     section_id INTEGER REFERENCES sections(id) ON DELETE SET NULL, -- Optional: Link to a section
     

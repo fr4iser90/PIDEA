@@ -128,10 +128,11 @@ class TaskService {
    * @param {string} description - Task description
    * @param {string} priority - Task priority
    * @param {string} type - Task type
+   * @param {string} category - Task category
    * @param {Object} metadata - Additional metadata
    * @returns {Promise<Task>} Created task
    */
-  async createTask(projectId, title, description, priority = TaskPriority.MEDIUM, type = TaskType.FEATURE, metadata = {}) {
+      async createTask(projectId, title, description, priority = TaskPriority.MEDIUM, type = TaskType.FEATURE, category, metadata = {}) {
     if (!projectId) {
       throw new Error('Project ID is required');
     }
@@ -140,7 +141,7 @@ class TaskService {
       throw new Error('Task title is required');
     }
 
-    const task = Task.create(projectId, title, description, priority, type, metadata);
+    const task = Task.create(projectId, title, description, priority, type, { ...metadata, category });
     return await this.taskRepository.create(task);
   }
 
@@ -176,13 +177,14 @@ class TaskService {
   }
 
   /**
-   * Execute a task using enhanced git workflow manager
+   * Execute a task using unified workflow system (PRIORITY METHOD)
    * @param {string} taskId - Task ID
    * @param {string} userId - User ID
+   * @param {Object} options - Execution options
    * @returns {Promise<Object>} Execution result
    */
-  async executeTask(taskId, userId) {
-    console.log('🔍 [TaskService] executeTask called with:', { taskId, userId });
+  async executeTask(taskId, userId, options = {}) {
+    console.log('🔍 [TaskService] executeTask called with:', { taskId, userId, options });
     
     try {
       const task = await this.taskRepository.findById(taskId);
@@ -196,37 +198,180 @@ class TaskService {
         throw new Error('Task is already completed');
       }
 
-      // Try to use enhanced git workflow manager if available
-      if (this.gitWorkflowManager) {
+      // PRIORITY: Use unified workflow system first
+      try {
+        return await this.executeTaskWithUnifiedWorkflow(task, userId, options);
+      } catch (error) {
+        console.warn('⚠️ [TaskService] Unified workflow failed, trying core execution engine:', error.message);
+        
+        // Fallback to core execution engine
         try {
-          const context = new GitWorkflowContext({
-            projectPath: task.metadata?.projectPath,
-            task,
-            options: { userId },
-            workflowType: 'task-execution'
-          });
-
-          const result = await this.gitWorkflowManager.executeWorkflow(context);
+          return await this.executeTaskWithEngine(taskId, userId, options);
+        } catch (engineError) {
+          console.warn('⚠️ [TaskService] Core engine failed, trying git workflow manager:', engineError.message);
           
-          console.log('✅ [TaskService] Enhanced task execution completed', {
-            taskId: task.id,
-            result: result.status
-          });
+          // Fallback to git workflow manager
+          if (this.gitWorkflowManager) {
+            try {
+              const context = new GitWorkflowContext({
+                projectPath: task.metadata?.projectPath,
+                task,
+                options: { userId },
+                workflowType: 'task-execution'
+              });
 
-          return result;
+              const result = await this.gitWorkflowManager.executeWorkflow(context);
+              
+              console.log('✅ [TaskService] Git workflow manager execution completed', {
+                taskId: task.id,
+                result: result.status
+              });
 
-        } catch (error) {
-          console.error('❌ [TaskService] Enhanced task execution failed, falling back to legacy method:', error.message);
-          // Fallback to legacy method
+              return result;
+            } catch (gitError) {
+              console.error('❌ [TaskService] Git workflow manager failed:', gitError.message);
+            }
+          }
+          
+          // Final fallback to legacy method
+          console.warn('⚠️ [TaskService] All modern methods failed, using legacy execution');
+          return await this.executeTaskLegacy(taskId, userId);
         }
       }
-
-      // Legacy task execution method
-      return await this.executeTaskLegacy(taskId, userId);
 
     } catch (error) {
       console.error('❌ [TaskService] Task execution failed:', error.message);
       throw error;
+    }
+  }
+
+  /**
+   * Execute task using unified workflow system (NEW PRIORITY METHOD)
+   * @param {Object} task - Task object
+   * @param {string} userId - User ID
+   * @param {Object} options - Execution options
+   * @returns {Promise<Object>} Execution result
+   */
+  async executeTaskWithUnifiedWorkflow(task, userId, options = {}) {
+    console.log('🚀 [TaskService] Using unified workflow system for task:', task.id);
+    
+    try {
+      // Create workflow from task using WorkflowBuilder
+      const { WorkflowBuilder, WorkflowStepBuilder } = require('../workflows');
+      
+      // Determine workflow type based on task type
+      const workflowType = this.determineWorkflowType(task);
+      
+      // Build unified workflow
+      const workflow = new WorkflowBuilder()
+        .setMetadata({
+          name: `Task: ${task.title}`,
+          description: task.description,
+          type: workflowType,
+          version: '1.0.0',
+          taskId: task.id,
+          userId: userId
+        })
+        .addStep(
+          WorkflowStepBuilder.analysis({
+            type: 'comprehensive',
+            includeMetrics: true,
+            task: task
+          }).build()
+        );
+
+      // Add additional steps based on task type
+      if (workflowType === 'refactoring') {
+        workflow.addStep(
+          WorkflowStepBuilder.refactoring({
+            type: '',
+            improveQuality: true,
+            task: task
+          }).build()
+        );
+      } else if (workflowType === 'testing') {
+        workflow.addStep(
+          WorkflowStepBuilder.testing({
+            type: 'comprehensive',
+            task: task
+          }).build()
+        );
+      } else if (workflowType === 'documentation') {
+        workflow.addStep(
+          WorkflowStepBuilder.documentation({
+            type: 'comprehensive',
+            task: task
+          }).build()
+        );
+      }
+
+      // Build the final workflow
+      const composedWorkflow = workflow.build();
+      
+      // Execute using unified handler system
+      const result = await this.unifiedHandler.handle({
+        type: 'workflow',
+        workflow: composedWorkflow,
+        task: task,
+        userId: userId,
+        options: options
+      }, {}, options);
+
+      console.log('✅ [TaskService] Unified workflow execution completed', {
+        taskId: task.id,
+        success: result.isSuccess(),
+        duration: result.getFormattedDuration()
+      });
+
+      return {
+        success: result.isSuccess(),
+        taskId: task.id,
+        taskType: task.type?.value,
+        result: result.getResult(),
+        message: result.isSuccess() ? 
+          `Task completed successfully using unified workflow: ${task.title}` :
+          `Task failed: ${task.title}`,
+        metadata: {
+          executionMethod: 'unified_workflow',
+          executionTime: result.getDuration(),
+          formattedDuration: result.getFormattedDuration(),
+          handlerId: result.getHandlerId(),
+          handlerName: result.getHandlerName(),
+          workflowType: workflowType,
+          timestamp: result.getTimestamp()
+        }
+      };
+
+    } catch (error) {
+      console.error('❌ [TaskService] Unified workflow execution failed:', error.message);
+      throw error;
+    }
+  }
+
+  /**
+   * Determine workflow type based on task type
+   * @param {Object} task - Task object
+   * @returns {string} Workflow type
+   */
+  determineWorkflowType(task) {
+    const taskType = task.type?.value?.toLowerCase() || '';
+    
+    if (taskType.includes('refactor') || taskType.includes('refactoring')) {
+      return 'refactoring';
+    } else if (taskType.includes('test') || taskType.includes('testing')) {
+      return 'testing';
+    } else if (taskType.includes('generate') || taskType.includes('documentation')) {
+      return 'documentation';
+    } else if (taskType.includes('analyze') || taskType.includes('analysis')) {
+      return 'analysis';
+    } else if (taskType.includes('deploy') || taskType.includes('deployment')) {
+      return 'deployment';
+    } else if (taskType.includes('security')) {
+      return 'security';
+    } else if (taskType.includes('optimize') || taskType.includes('optimization')) {
+      return 'optimization';
+    } else {
+      return 'analysis'; // Default fallback
     }
   }
 
@@ -622,9 +767,9 @@ class TaskService {
             try {
                 console.log('🔄 [TaskService] Refreshing analysis data after refactoring task completion...');
                 
-                // Get the VibeCoderAutoRefactorHandler to refresh analysis data
-                const VibeCoderAutoRefactorHandler = require('../application/handlers/vibecoder/VibeCoderAutoRefactorHandler');
-                const autoRefactorHandler = new VibeCoderAutoRefactorHandler({
+                    // Get the unified workflow handler to refresh analysis data
+    const { UnifiedWorkflowHandler } = require('../workflows/handlers');
+    const unifiedHandler = new UnifiedWorkflowHandler({
                     taskRepository: this.taskRepository,
                     projectAnalysisRepository: this.projectAnalysisRepository
                 });

@@ -182,8 +182,8 @@ class StepRegistry {
     });
 
     // Refactoring templates
-    this.registerTemplate('general-refactoring', (options = {}) => {
-      return new RefactoringStep('general', options);
+    this.registerTemplate('-refactoring', (options = {}) => {
+      return new RefactoringStep('', options);
     });
 
     this.registerTemplate('code-generation', (options = {}) => {

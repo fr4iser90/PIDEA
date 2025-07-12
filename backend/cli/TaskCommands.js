@@ -74,7 +74,7 @@ class TaskCommands {
             for (const file of files) {
                 const content = await fs.readFile(file, 'utf8');
                 const analysis = await this.aiService.optimizeCode(content, {
-                    description: `Analyze ${path.basename(file)} for ${options.quality ? 'quality' : options.performance ? 'performance' : 'general improvements'}`,
+                    description: `Analyze ${path.basename(file)} for ${options.quality ? 'quality' : options.performance ? 'performance' : ' improvements'}`,
                     requirements: []
                 });
                 

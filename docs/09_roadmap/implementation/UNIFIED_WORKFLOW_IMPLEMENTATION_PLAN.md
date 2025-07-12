@@ -539,7 +539,7 @@ module.exports = AnalysisStep;
 class RefactoringStep extends IWorkflowStep {
   constructor(options = {}) {
     super();
-    this.refactoringType = options.refactoringType || 'general';
+    this.refactoringType = options.refactoringType || '';
     this.autoApply = options.autoApply || false;
   }
 

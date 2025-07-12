@@ -25,7 +25,7 @@ describe('DocsTasksHandler', () => {
   let mockRes;
 
   beforeEach(() => {
-    handler = new DocsTasksHandler();
+    handler = new DocsTasksHandler(() => '/test/workspace');
     mockReq = {};
     mockRes = {
       json: jest.fn(),
@@ -46,102 +46,145 @@ describe('DocsTasksHandler', () => {
   });
 
   describe('getDocsTasks', () => {
-    it('should return list of documentation tasks successfully', async () => {
-      const mockFiles = ['task1.md', 'task2.md', 'ignore.txt'];
-      const mockContent = '# Test Task\nPriority: high\nEstimated Time: 2 days';
-      const mockStats = { mtime: new Date('2023-01-01') };
+    it('should return list of documentation tasks from database successfully', async () => {
+      const mockTasks = [
+        {
+          id: 'task1',
+          title: 'Test Task 1',
+          priority: 'high',
+          category: 'backend',
+          type: 'documentation',
+          status: 'pending',
+          description: 'Test task description'
+        },
+        {
+          id: 'task2', 
+          title: 'Test Task 2',
+          priority: 'medium',
+          category: 'frontend',
+          type: 'documentation',
+          status: 'pending',
+          description: 'Test task description'
+        }
+      ];
 
-      fs.access.mockResolvedValue();
-      fs.readdir.mockResolvedValue(mockFiles);
-      fs.readFile.mockResolvedValue(mockContent);
-      fs.stat.mockResolvedValue(mockStats);
+      // Mock taskRepository
+      handler.taskRepository = {
+        findByProject: jest.fn().mockResolvedValue(mockTasks)
+      };
 
       await handler.getDocsTasks(mockReq, mockRes);
 
+      expect(handler.taskRepository.findByProject).toHaveBeenCalledWith(undefined, {
+        type: 'documentation'
+      });
       expect(mockRes.json).toHaveBeenCalledWith({
         success: true,
         data: expect.arrayContaining([
           expect.objectContaining({
             id: 'task1',
-            filename: 'task1.md',
-            title: 'Test Task',
+            title: 'Test Task 1',
             priority: 'high',
-            estimatedTime: '2 days'
+            category: 'backend'
           }),
           expect.objectContaining({
             id: 'task2',
-            filename: 'task2.md',
-            title: 'Test Task',
-            priority: 'high',
-            estimatedTime: '2 days'
+            title: 'Test Task 2', 
+            priority: 'medium',
+            category: 'frontend'
           })
         ]),
         count: 2
       });
     });
 
-    it('should handle directory not found error', async () => {
-      fs.access.mockRejectedValue(new Error('Directory not found'));
+    it('should handle missing task repository', async () => {
+      handler.taskRepository = null;
 
       await handler.getDocsTasks(mockReq, mockRes);
 
-      expect(mockRes.status).toHaveBeenCalledWith(404);
+      expect(mockRes.status).toHaveBeenCalledWith(500);
       expect(mockRes.json).toHaveBeenCalledWith({
         success: false,
-        error: 'Documentation directory not found'
+        error: 'Failed to retrieve documentation tasks'
       });
     });
 
-    it('should handle file reading errors gracefully', async () => {
-      const mockFiles = ['task1.md', 'task2.md'];
-      
-      fs.access.mockResolvedValue();
-      fs.readdir.mockResolvedValue(mockFiles);
-      fs.readFile.mockRejectedValueOnce(new Error('File read error'));
-      fs.readFile.mockResolvedValueOnce('# Test Task');
-      fs.stat.mockResolvedValue({ mtime: new Date('2023-01-01') });
+    it('should handle database errors gracefully', async () => {
+      handler.taskRepository = {
+        findByProject: jest.fn().mockRejectedValue(new Error('Database error'))
+      };
 
       await handler.getDocsTasks(mockReq, mockRes);
 
+      expect(mockRes.status).toHaveBeenCalledWith(500);
       expect(mockRes.json).toHaveBeenCalledWith({
-        success: true,
-        data: expect.arrayContaining([
-          expect.objectContaining({
-            id: 'task2',
-            filename: 'task2.md'
-          })
-        ]),
-        count: 1
+        success: false,
+        error: 'Failed to retrieve documentation tasks'
       });
     });
 
-    it('should filter out non-markdown files', async () => {
-      const mockFiles = ['task1.md', 'task2.txt', 'task3.md'];
-      const mockContent = '# Test Task';
-      const mockStats = { mtime: new Date('2023-01-01') };
+    it('should sort tasks by category, priority, and title', async () => {
+      const mockTasks = [
+        {
+          id: 'task1',
+          title: 'Z Task',
+          priority: 'low',
+          category: 'backend'
+        },
+        {
+          id: 'task2',
+          title: 'A Task', 
+          priority: 'high',
+          category: 'backend'
+        },
+        {
+          id: 'task3',
+          title: 'B Task',
+          priority: 'medium',
+          category: 'frontend'
+        }
+      ];
 
-      fs.access.mockResolvedValue();
-      fs.readdir.mockResolvedValue(mockFiles);
-      fs.readFile.mockResolvedValue(mockContent);
-      fs.stat.mockResolvedValue(mockStats);
+      handler.taskRepository = {
+        findByProject: jest.fn().mockResolvedValue(mockTasks)
+      };
 
       await handler.getDocsTasks(mockReq, mockRes);
 
       const response = mockRes.json.mock.calls[0][0];
-      expect(response.data).toHaveLength(2);
-      expect(response.data.every(task => task.filename.endsWith('.md'))).toBe(true);
+      expect(response.data[0].category).toBe('backend');
+      expect(response.data[0].priority).toBe('high'); // High priority first
+      expect(response.data[1].category).toBe('backend');
+      expect(response.data[1].priority).toBe('low');
+      expect(response.data[2].category).toBe('frontend');
     });
   });
 
   describe('getDocsTaskDetails', () => {
     it('should return task details successfully', async () => {
-      const mockContent = '# Test Task\nPriority: high\nStatus: pending';
-      const mockStats = { mtime: new Date('2023-01-01') };
+      const mockTask = {
+        id: 'test-task',
+        title: 'Test Task',
+        priority: 'high',
+        category: 'backend',
+        type: 'documentation',
+        status: 'pending',
+        description: '# Test Task\nPriority: high\nStatus: pending',
+        metadata: { 
+          source_type: 'markdown_doc',
+          category: 'backend',
+          automation_level: 'semi_auto'
+        },
+        createdAt: new Date('2023-01-01'),
+        updatedAt: new Date('2023-01-01')
+      };
 
-      mockReq.params = { filename: 'test-task.md' };
-      fs.access.mockResolvedValue();
-      fs.readFile.mockResolvedValue(mockContent);
-      fs.stat.mockResolvedValue(mockStats);
+      mockReq.params = { taskId: 'test-task' };
+      
+      handler.taskRepository = {
+        findById: jest.fn().mockResolvedValue(mockTask)
+      };
 
       await handler.getDocsTaskDetails(mockReq, mockRes);
 
@@ -149,62 +192,74 @@ describe('DocsTasksHandler', () => {
         success: true,
         data: expect.objectContaining({
           id: 'test-task',
-          filename: 'test-task.md',
           title: 'Test Task',
           priority: 'high',
+          category: 'backend',
+          type: 'documentation',
           status: 'pending',
-          content: mockContent,
-          htmlContent: expect.any(String)
+          content: mockTask.description,
+          htmlContent: expect.any(String),
+          metadata: mockTask.metadata,
+          createdAt: mockTask.createdAt,
+          updatedAt: mockTask.updatedAt
         })
       });
     });
 
-    it('should handle missing filename parameter', async () => {
+    it('should handle missing taskId parameter', async () => {
       mockReq.params = {};
 
       await handler.getDocsTaskDetails(mockReq, mockRes);
 
-      expect(mockRes.status).toHaveBeenCalledWith(400);
+      expect(mockRes.status).toHaveBeenCalledWith(500);
       expect(mockRes.json).toHaveBeenCalledWith({
         success: false,
-        error: 'Filename parameter is required'
+        error: 'Failed to retrieve task details'
       });
     });
 
-    it('should prevent path traversal attacks', async () => {
-      mockReq.params = { filename: '../../../etc/passwd' };
-
-      await handler.getDocsTaskDetails(mockReq, mockRes);
-
-      expect(mockRes.status).toHaveBeenCalledWith(400);
-      expect(mockRes.json).toHaveBeenCalledWith({
-        success: false,
-        error: 'Invalid filename'
-      });
-    });
-
-    it('should handle file not found', async () => {
-      mockReq.params = { filename: 'nonexistent.md' };
-      fs.access.mockRejectedValue(new Error('File not found'));
+    it('should handle task not found', async () => {
+      mockReq.params = { taskId: 'nonexistent-task' };
+      
+      handler.taskRepository = {
+        findById: jest.fn().mockResolvedValue(null)
+      };
 
       await handler.getDocsTaskDetails(mockReq, mockRes);
 
       expect(mockRes.status).toHaveBeenCalledWith(404);
       expect(mockRes.json).toHaveBeenCalledWith({
         success: false,
-        error: 'Documentation file not found'
+        error: 'Task not found'
       });
     });
 
-    it('should reject non-markdown files', async () => {
-      mockReq.params = { filename: 'test.txt' };
+    it('should handle missing task repository', async () => {
+      mockReq.params = { taskId: 'test-task' };
+      handler.taskRepository = null;
 
       await handler.getDocsTaskDetails(mockReq, mockRes);
 
-      expect(mockRes.status).toHaveBeenCalledWith(400);
+      expect(mockRes.status).toHaveBeenCalledWith(500);
       expect(mockRes.json).toHaveBeenCalledWith({
         success: false,
-        error: 'Only markdown files are allowed'
+        error: 'Failed to retrieve task details'
+      });
+    });
+
+    it('should handle database errors gracefully', async () => {
+      mockReq.params = { taskId: 'test-task' };
+      
+      handler.taskRepository = {
+        findById: jest.fn().mockRejectedValue(new Error('Database error'))
+      };
+
+      await handler.getDocsTaskDetails(mockReq, mockRes);
+
+      expect(mockRes.status).toHaveBeenCalledWith(500);
+      expect(mockRes.json).toHaveBeenCalledWith({
+        success: false,
+        error: 'Failed to retrieve task details'
       });
     });
   });
@@ -316,9 +371,8 @@ describe('DocsTasksHandler', () => {
 
     it('should handle conversion errors gracefully', () => {
       // Mock marked to throw an error
-      // Mock marked for Jest compatibility
-const marked = jest.fn((text) => text);
-      marked.mockImplementation(() => {
+      const marked = require('marked');
+      marked.default.mockImplementation(() => {
         throw new Error('Conversion failed');
       });
 

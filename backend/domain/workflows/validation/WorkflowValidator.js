@@ -434,7 +434,7 @@ class WorkflowValidator extends IWorkflowValidator {
     const validator = new WorkflowValidator();
     errors.forEach(error => {
       if (typeof error === 'string') {
-        validator.addError('general', error);
+        validator.addError('', error);
       } else {
         validator.addError(error.field, error.message, error.code, error.data);
       }
@@ -446,7 +446,7 @@ class WorkflowValidator extends IWorkflowValidator {
     const validator = new WorkflowValidator();
     warnings.forEach(warning => {
       if (typeof warning === 'string') {
-        validator.addWarning('general', warning);
+        validator.addWarning('', warning);
       } else {
         validator.addWarning(warning.field, warning.message, warning.code, warning.data);
       }

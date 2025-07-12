@@ -17,7 +17,7 @@ class TestFixer {
       type: this.fixTypeIssue.bind(this),
       undefined: this.fixUndefinedIssue.bind(this),
       null: this.fixNullIssue.bind(this),
-      general: this.fixGeneralIssue.bind(this)
+      general: this.fixIssue.bind(this)
     };
   }
 
@@ -44,7 +44,7 @@ class TestFixer {
       const content = await fs.readFile(testData.filePath, 'utf8');
       
       // Determine fix strategy based on failure type
-      const failureType = testData.metadata?.failureType || 'general';
+      const failureType = testData.metadata?.failureType || '';
       const fixStrategy = this.fixStrategies[failureType];
       
       if (!fixStrategy) {
@@ -341,17 +341,17 @@ class TestFixer {
   }
 
   /**
-   * Fix general issues
+   * Fix  issues
    * @param {string} content - Test file content
    * @param {Object} testData - Test data
    * @param {Object} options - Fix options
    * @returns {Promise<string>} Fixed content
    */
-  async fixGeneralIssue(content, testData, options) {
+  async fixIssue(content, testData, options) {
     let fixedContent = content;
     
-    // Apply general fixes
-    const generalFixes = [
+    // Apply  fixes
+    const Fixes = [
       // Fix common test patterns
       [/expect\(([^)]+)\)\.toBe\(([^)]+)\)/g, 'expect($1).toBe($2)'],
       
@@ -362,7 +362,7 @@ class TestFixer {
       [/assert\(([^)]+)\)/g, 'expect($1).toBeTruthy()']
     ];
     
-    for (const [pattern, replacement] of generalFixes) {
+    for (const [pattern, replacement] of Fixes) {
       fixedContent = fixedContent.replace(pattern, replacement);
     }
     

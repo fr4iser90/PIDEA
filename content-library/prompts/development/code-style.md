@@ -1,6 +1,6 @@
 # Code Style Guidelines
 
-## General Principles
+##  Principles
 
 ### Readability
 - Write code for humans, not machines

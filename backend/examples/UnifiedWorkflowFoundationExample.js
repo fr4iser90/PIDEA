@@ -66,7 +66,7 @@ class UnifiedWorkflowFoundationExample {
 
     // Create refactoring workflow using the service
     const refactoringWorkflow = this.unifiedWorkflowService.createRefactoringWorkflow({
-      refactoringType: 'general',
+      refactoringType: '',
       generateCode: true,
       improveQuality: true,
       maintainTests: true
@@ -140,7 +140,7 @@ class UnifiedWorkflowFoundationExample {
           includeMetrics: true
         },
         refactoring: {
-          type: 'general',
+          type: '',
           improveQuality: true
         },
         testing: {
@@ -372,7 +372,7 @@ class UnifiedWorkflowFoundationExample {
 
     // Step 1: Create workflow
     const workflow = this.unifiedWorkflowService.createRefactoringWorkflow({
-      refactoringType: 'general',
+      refactoringType: '',
       generateCode: true,
       improveQuality: true,
       maintainTests: true

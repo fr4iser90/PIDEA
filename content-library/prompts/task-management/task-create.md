@@ -3,13 +3,15 @@
 ## Goal
 Generate a complete, actionable development plan that will be parsed into a database task with all necessary details for AI auto-implementation, tracking, and execution.
 
-Create new [Name]-implementation.md in docs/09_roadmap/features with the following structure:
+Create new [Name]-implementation.md in docs/09_roadmap/features/[category]/[name]/ with the following structure:
+**Note**: The system automatically creates a hierarchical folder structure: Category → Task Name → Implementation files
 
 ## Template Structure
 
 ### 1. Project Overview
 - **Feature/Component Name**: [Exact name for task.title]
 - **Priority**: [High/Medium/Low - maps to task.priority]
+- **Category**: [ai/automation/backend/frontend/ide/migration/performance/security/testing/documentation/ - maps to task.category]
 - **Estimated Time**: [X hours/days - maps to task.metadata.estimated_hours]
 - **Dependencies**: [List prerequisites - maps to task.dependencies]
 - **Related Issues**: [Link to existing issues/tickets]
@@ -173,7 +175,8 @@ Create new [Name]-implementation.md in docs/09_roadmap/features with the followi
 
 #### Task Database Fields:
 - **source_type**: 'markdown_doc'
-- **source_path**: 'docs/09_roadmap/features/[name]-implementation.md'
+- **source_path**: 'docs/09_roadmap/features/[category]/[name]/[name]-implementation.md'
+- **category**: '[category]' - Automatically set from Category field above
 - **automation_level**: 'semi_auto' | 'full_auto' | 'manual'
 - **confirmation_required**: true | false
 - **max_attempts**: 3 (default)
@@ -222,11 +225,12 @@ INSERT INTO tasks (
   '[Feature/Component Name]', -- From section 1
   '[Full markdown content]', -- Complete description
   '[Derived from Technical Requirements]', -- 'feature'|'bug'|'refactor'|etc
-  '[Derived from context]', -- 'frontend'|'backend'|'database'|etc
+  '[Category]', -- From section 1 Category field
   '[Priority]', -- From section 1
   'pending', -- Initial status
   'markdown_doc', -- Source type
-  'docs/09_roadmap/features/[name]-implementation.md', -- Source path
+  'docs/09_roadmap/features/[category]/[name]/[name]-implementation.md', -- Main implementation file
+  'docs/09_roadmap/features/[category]/[name]/[name]-phase-[number].md', -- Individual phase files
   '[Full markdown content]', -- For reference
   '[JSON with all metadata]', -- All technical details
   '[Estimated Time in hours]' -- From section 1
@@ -242,6 +246,54 @@ INSERT INTO tasks (
 5. **List all dependencies** - Enables proper task sequencing
 6. **Include success criteria** - Enables automatic completion detection
 7. **Provide detailed phases** - Enables progress tracking
+8. **Set correct category** - Automatically organizes tasks into category folders
+9. **Use category-specific paths** - Tasks are automatically placed in correct folders
+
+## Automatic Category Organization
+
+When you specify a **Category** in section 1, the system automatically:
+
+1. **Creates category folder** if it doesn't exist: `docs/09_roadmap/features/[category]/`
+2. **Creates task folder** for each task: `docs/09_roadmap/features/[category]/[name]/`
+3. **Places main implementation file**: `docs/09_roadmap/features/[category]/[name]/[name]-implementation.md`
+4. **Creates phase files** for subtasks: `docs/09_roadmap/features/[category]/[name]/[name]-phase-[number].md`
+5. **Sets database category** field to the specified category
+6. **Organizes tasks hierarchically** for better management
+
+### Available Categories:
+- **ai** - AI-related features and machine learning
+- **automation** - Automation and workflow features
+- **backend** - Backend development and services
+- **frontend** - Frontend development and UI
+- **ide** - IDE integration and development tools
+- **migration** - System migrations and data transfers
+- **performance** - Performance optimization and monitoring
+- **security** - Security features and improvements
+- **testing** - Testing infrastructure and test automation
+- **documentation** - Documentation and guides
+- **** -  tasks that don't fit other categories
+
+### Example Folder Structure:
+```
+docs/09_roadmap/features/
+├── backend/
+│   ├── user-authentication/
+│   │   ├── user-authentication-implementation.md
+│   │   ├── user-authentication-phase-1.md
+│   │   ├── user-authentication-phase-2.md
+│   │   └── user-authentication-phase-3.md
+│   └── database-migration/
+│       ├── database-migration-implementation.md
+│       └── database-migration-phase-1.md
+├── frontend/
+│   └── ui-redesign/
+│       ├── ui-redesign-implementation.md
+│       └── ui-redesign-phase-1.md
+└── ide/
+    └── vscode-integration/
+        ├── vscode-integration-implementation.md
+        └── vscode-integration-phase-1.md
+```
 
 ## Example Usage
 

@@ -255,7 +255,7 @@ function App() {
             </div>
             
             {/* Right Sidebar */}
-            {isRightSidebarVisible && <SidebarRight eventBus={eventBus} attachedPrompts={attachedPrompts} setAttachedPrompts={setAttachedPrompts} />}
+            {isRightSidebarVisible && <SidebarRight eventBus={eventBus} attachedPrompts={attachedPrompts} setAttachedPrompts={setAttachedPrompts} activePort={activePort} />}
           </main>
 
           <Footer 

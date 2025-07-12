@@ -12,7 +12,7 @@ class TodoTask {
     this.lineNumber = data.lineNumber || 0;
     this.pattern = data.pattern || '';
     this.priority = data.priority || 1;
-    this.type = data.type || 'general';
+    this.type = data.type || '';
     this.status = data.status || 'pending'; // pending, running, completed, failed, skipped
     this.dependencies = data.dependencies || [];
     this.dependents = data.dependents || [];
@@ -256,9 +256,9 @@ class TodoTask {
       'security': 'Security',
       'performance': 'Performance',
       'refactor': 'Refactoring',
-      'general': 'General'
+      '': ''
     };
-    return categories[this.type] || 'General';
+    return categories[this.type] || '';
   }
 
   /**

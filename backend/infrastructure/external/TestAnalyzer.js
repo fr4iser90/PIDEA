@@ -417,7 +417,7 @@ class TestAnalyzer {
     if (message.includes('undefined')) return 'undefined';
     if (message.includes('null')) return 'null';
     
-    return 'general';
+    return '';
   }
 
   /**

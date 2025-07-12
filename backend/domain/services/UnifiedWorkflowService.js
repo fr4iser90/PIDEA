@@ -89,7 +89,7 @@ class UnifiedWorkflowService {
       )
       .addStep(
         WorkflowStepBuilder.refactoring({
-          type: options.refactoringType || 'general',
+          type: options.refactoringType || '',
           generateCode: options.generateCode !== false,
           improveQuality: options.improveQuality !== false,
           maintainTests: options.maintainTests !== false

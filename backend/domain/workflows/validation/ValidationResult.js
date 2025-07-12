@@ -97,7 +97,7 @@ class ValidationResult {
         id: this._generateMessageId(),
         field: error,
         message: message,
-        code: code || 'GENERAL_ERROR',
+        code: code || '_ERROR',
         level: 'error',
         timestamp: new Date()
       });
@@ -107,18 +107,18 @@ class ValidationResult {
     if (typeof error === 'string') {
       this._errors.push({
         id: this._generateMessageId(),
-        field: 'general',
+        field: '',
         message: error,
-        code: 'GENERAL_ERROR',
+        code: '_ERROR',
         level: 'error',
         timestamp: new Date()
       });
     } else {
       this._errors.push({
         id: this._generateMessageId(),
-        field: error.field || 'general',
+        field: error.field || '',
         message: error.message || error.field || 'Unknown error',
-        code: error.code || 'GENERAL_ERROR',
+        code: error.code || '_ERROR',
         data: error.data,
         level: error.level || 'error',
         timestamp: new Date()
@@ -133,7 +133,7 @@ class ValidationResult {
         id: this._generateMessageId(),
         field: warning,
         message: message,
-        code: code || 'GENERAL_WARNING',
+        code: code || '_WARNING',
         level: 'warning',
         timestamp: new Date()
       });
@@ -142,18 +142,18 @@ class ValidationResult {
     if (typeof warning === 'string') {
       this._warnings.push({
         id: this._generateMessageId(),
-        field: 'general',
+        field: '',
         message: warning,
-        code: 'GENERAL_WARNING',
+        code: '_WARNING',
         level: 'warning',
         timestamp: new Date()
       });
     } else {
       this._warnings.push({
         id: this._generateMessageId(),
-        field: warning.field || 'general',
+        field: warning.field || '',
         message: warning.message || warning.field || 'Unknown warning',
-        code: warning.code || 'GENERAL_WARNING',
+        code: warning.code || '_WARNING',
         data: warning.data,
         level: warning.level || 'warning',
         timestamp: new Date()

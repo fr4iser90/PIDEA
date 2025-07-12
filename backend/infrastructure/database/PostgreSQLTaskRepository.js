@@ -26,6 +26,7 @@ class PostgreSQLTaskRepository extends TaskRepository {
         title TEXT NOT NULL,
         description TEXT NOT NULL,
         type TEXT NOT NULL,
+        category TEXT,
         priority TEXT NOT NULL,
         status TEXT NOT NULL,
         projectId TEXT,
@@ -40,7 +41,18 @@ class PostgreSQLTaskRepository extends TaskRepository {
         dueDate TEXT,
         startedAt TEXT,
         completedAt TEXT,
-        executionHistory TEXT
+        executionHistory TEXT,
+        parentTaskId TEXT,
+        childTaskIds TEXT,
+        phase TEXT,
+        stage TEXT,
+        phaseOrder INTEGER,
+        taskLevel INTEGER,
+        rootTaskId TEXT,
+        isPhaseTask BOOLEAN,
+        progress INTEGER,
+        phaseProgress TEXT,
+        blockedBy TEXT
       )
     `;
 
@@ -69,10 +81,12 @@ class PostgreSQLTaskRepository extends TaskRepository {
     try {
       const sql = `
         INSERT INTO ${this.tableName} (
-          id, title, description, type, priority, status, projectId, userId,
+          id, title, description, type, category, priority, status, projectId, userId,
           estimatedDuration, metadata, createdAt, updatedAt, dependencies,
-          tags, assignee, dueDate, startedAt, completedAt, executionHistory
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          tags, assignee, dueDate, startedAt, completedAt, executionHistory,
+          parentTaskId, childTaskIds, phase, stage, phaseOrder, taskLevel, rootTaskId,
+          isPhaseTask, progress, phaseProgress, blockedBy
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `;
 
       // Extract string values from value objects
@@ -85,6 +99,7 @@ class PostgreSQLTaskRepository extends TaskRepository {
         task.title,
         task.description,
         taskType,
+        task.category || null,
         taskPriority,
         taskStatus,
         task.projectId,
@@ -99,7 +114,18 @@ class PostgreSQLTaskRepository extends TaskRepository {
         task.dueDate ? task.dueDate.toISOString() : null,
         task.startedAt ? task.startedAt.toISOString() : null,
         task.completedAt ? task.completedAt.toISOString() : null,
-        JSON.stringify(task.executionHistory || [])
+        JSON.stringify(task.executionHistory || []),
+        task.parentTaskId || null,
+        JSON.stringify(task.childTaskIds || []),
+        task.phase || null,
+        task.stage || null,
+        task.phaseOrder || null,
+        task.taskLevel || 0,
+        task.rootTaskId || null,
+        task.isPhaseTask || false,
+        task.progress || 0,
+        JSON.stringify(task.phaseProgress || {}),
+        JSON.stringify(task.blockedBy || [])
       ];
 
       await this.databaseConnection.execute(sql, params);
@@ -213,10 +239,12 @@ class PostgreSQLTaskRepository extends TaskRepository {
     try {
       const sql = `
         UPDATE ${this.tableName} SET
-          title = ?, description = ?, type = ?, priority = ?, status = ?,
+          title = ?, description = ?, type = ?, category = ?, priority = ?, status = ?,
           projectId = ?, userId = ?, estimatedDuration = ?, metadata = ?,
           updatedAt = ?, dependencies = ?, tags = ?, assignee = ?, dueDate = ?,
-          startedAt = ?, completedAt = ?, executionHistory = ?
+          startedAt = ?, completedAt = ?, executionHistory = ?, parentTaskId = ?,
+          childTaskIds = ?, phase = ?, stage = ?, phaseOrder = ?, taskLevel = ?,
+          rootTaskId = ?, isPhaseTask = ?, progress = ?, phaseProgress = ?, blockedBy = ?
         WHERE id = ?
       `;
 
@@ -229,6 +257,7 @@ class PostgreSQLTaskRepository extends TaskRepository {
         task.title,
         task.description,
         taskType,
+        task.category || null,
         taskPriority,
         taskStatus,
         task.projectId,
@@ -243,6 +272,17 @@ class PostgreSQLTaskRepository extends TaskRepository {
         task.startedAt ? task.startedAt.toISOString() : null,
         task.completedAt ? task.completedAt.toISOString() : null,
         JSON.stringify(task.executionHistory || []),
+        task.parentTaskId || null,
+        JSON.stringify(task.childTaskIds || []),
+        task.phase || null,
+        task.stage || null,
+        task.phaseOrder || null,
+        task.taskLevel || 0,
+        task.rootTaskId || null,
+        task.isPhaseTask || false,
+        task.progress || 0,
+        JSON.stringify(task.phaseProgress || {}),
+        JSON.stringify(task.blockedBy || []),
         task.id
       ];
 
@@ -287,12 +327,14 @@ class PostgreSQLTaskRepository extends TaskRepository {
         row.status || 'pending',
         row.priority || 'medium',
         row.type || 'feature',
+        row.category || null,
         row.metadata ? JSON.parse(row.metadata) : {},
         row.createdAt ? new Date(row.createdAt) : new Date(),
         row.updatedAt ? new Date(row.updatedAt) : new Date()
       );
 
       // Set additional properties that aren't in the constructor
+
       if (row.dependencies) {
         const deps = JSON.parse(row.dependencies);
         deps.forEach(dep => task.addDependency(dep));
@@ -321,6 +363,47 @@ class PostgreSQLTaskRepository extends TaskRepository {
 
       if (row.executionHistory) {
         task._executionHistory = JSON.parse(row.executionHistory);
+      }
+
+      // Store phase/hierarchy properties in metadata since they're not part of the core Task entity
+      const phaseMetadata = {};
+      if (row.parentTaskId) {
+        phaseMetadata.parentTaskId = row.parentTaskId;
+      }
+      if (row.childTaskIds) {
+        phaseMetadata.childTaskIds = JSON.parse(row.childTaskIds);
+      }
+      if (row.phase) {
+        phaseMetadata.phase = row.phase;
+      }
+      if (row.stage) {
+        phaseMetadata.stage = row.stage;
+      }
+      if (row.phaseOrder) {
+        phaseMetadata.phaseOrder = row.phaseOrder;
+      }
+      if (row.taskLevel) {
+        phaseMetadata.taskLevel = row.taskLevel;
+      }
+      if (row.rootTaskId) {
+        phaseMetadata.rootTaskId = row.rootTaskId;
+      }
+      if (row.isPhaseTask) {
+        phaseMetadata.isPhaseTask = row.isPhaseTask;
+      }
+      if (row.progress) {
+        phaseMetadata.progress = row.progress;
+      }
+      if (row.phaseProgress) {
+        phaseMetadata.phaseProgress = JSON.parse(row.phaseProgress);
+      }
+      if (row.blockedBy) {
+        phaseMetadata.blockedBy = JSON.parse(row.blockedBy);
+      }
+      
+      // Add phase metadata to task metadata
+      if (Object.keys(phaseMetadata).length > 0) {
+        Object.assign(task._metadata, phaseMetadata);
       }
 
       return task;

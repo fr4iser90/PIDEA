@@ -885,7 +885,7 @@ class WorkflowAnalyzer {
     
     let score = 0;
     let suggestions = [];
-    let primaryArea = 'general';
+    let primaryArea = '';
 
     // Score based on type
     switch (stepType) {

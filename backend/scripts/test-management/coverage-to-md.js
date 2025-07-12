@@ -210,7 +210,7 @@ class CoverageToMarkdown {
    */
   generateFallbackTasks() {
     let md = '## 🎯 Recommended Coverage Tasks\n\n';
-    md += 'Since no coverage data is available, here are general coverage improvement tasks:\n\n';
+    md += 'Since no coverage data is available, here are  coverage improvement tasks:\n\n';
     
     // Common directories that should have tests
     const commonDirs = [

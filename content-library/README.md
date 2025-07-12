@@ -45,14 +45,14 @@ Pre-configured technology stacks for different platforms and use cases.
   - `android-stack.md` - Android development with modern tools
   - `ios-stack.md` - iOS development stack
 
-### 📁 **General** - Development Guidelines
-General development practices and AI agent instructions.
+### 📁 **** - Development Guidelines
+ development practices and AI agent instructions.
 
 - `accessibility.md` - Web accessibility standards and implementation
 - `code-style.md` - Code style guidelines and conventions
 - `code-only.md` - AI agent instruction for direct code changes
 - `doc-code.md` - AI agent instruction for code documentation
-- `doc-general.md` - AI agent instruction for general documentation
+- `doc-.md` - AI agent instruction for  documentation
 
 ### 📁 **DevOps** - Deployment & CI/CD
 Modern DevOps practices and deployment strategies.
@@ -123,13 +123,13 @@ Advanced frontend patterns and modern development techniques.
 1. **Choose your domain** - Start with the appropriate application type
 2. **Select patterns** - Apply relevant architectural and design patterns
 3. **Pick tech stack** - Use pre-configured technology combinations
-4. **Follow guidelines** - Implement best practices from general guidelines
+4. **Follow guidelines** - Implement best practices from  guidelines
 5. **Add infrastructure** - Apply DevOps, testing, and security patterns
 
 ### For AI Agents
 - Use `code-only.md` for direct code modifications without explanations
 - Use `doc-code.md` for code-related documentation tasks
-- Use `doc-general.md` for general project documentation
+- Use `doc-.md` for  project documentation
 - Follow patterns and guidelines in respective folders for consistent implementation
 
 ## Best Practices

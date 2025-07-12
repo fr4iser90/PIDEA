@@ -18,7 +18,7 @@ const HandlerContext = require('./HandlerContext');
 const HandlerResult = require('./HandlerResult');
 
 // Adapters
-const LegacyHandlerAdapter = require('./adapters/LegacyHandlerAdapter');
+// Legacy adapters removed - system now uses unified workflow steps
 const CommandHandlerAdapter = require('./adapters/CommandHandlerAdapter');
 const ServiceHandlerAdapter = require('./adapters/ServiceHandlerAdapter');
 
@@ -28,7 +28,7 @@ const HandlerAudit = require('./HandlerAudit');
 const HandlerOptimizer = require('./HandlerOptimizer');
 
 // Migration Utilities
-const HandlerMigrationUtility = require('./HandlerMigrationUtility');
+// HandlerMigrationUtility removed - migration completed
 
 // Exceptions
 const HandlerException = require('./exceptions/HandlerException');
@@ -48,7 +48,7 @@ module.exports = {
   HandlerResult,
 
   // Adapters
-  LegacyHandlerAdapter,
+  // LegacyHandlerAdapter removed - system now uses unified workflow steps
   CommandHandlerAdapter,
   ServiceHandlerAdapter,
 
@@ -58,7 +58,7 @@ module.exports = {
   HandlerOptimizer,
 
   // Migration Utilities
-  HandlerMigrationUtility,
+  // HandlerMigrationUtility removed - migration completed
 
   // Exceptions
   HandlerException,
@@ -79,7 +79,7 @@ module.exports = {
   },
 
   adapters: {
-    LegacyHandlerAdapter,
+    // LegacyHandlerAdapter removed - system now uses unified workflow steps
     CommandHandlerAdapter,
     ServiceHandlerAdapter
   },
@@ -91,7 +91,7 @@ module.exports = {
   },
 
   migration: {
-    HandlerMigrationUtility
+    // HandlerMigrationUtility removed - migration completed
   },
 
   exceptions: {

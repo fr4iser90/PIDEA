@@ -723,7 +723,7 @@ Specific Instructions for Legacy Test Refactor:
         
       default:
         specificInstructions = `
-General Task Instructions:
+ Task Instructions:
 - Complete the task as described
 - Follow best practices and coding standards
 - Ensure the implementation is production-ready

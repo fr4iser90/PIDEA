@@ -44,61 +44,38 @@ class DocsTasksHandler {
   }
 
   /**
-   * Get list of all available documentation tasks
+   * Get list of all available documentation tasks from database
    * @param {Object} req - Express request object
    * @param {Object} res - Express response object
    */
   async getDocsTasks(req, res) {
     try {
-      // Sync docs tasks to repository if available
-      if (this.taskRepository) {
-        await this.syncDocsTasksToRepository();
-      }
-
-      const featuresDir = this.getFeaturesDir();
-      console.log('[DocsTasksHandler] Getting docs tasks list from:', featuresDir);
+      const projectId = req.params.projectId || req.query.projectId;
       
-      // Check if directory exists
-      try {
-        await fs.access(featuresDir);
-      } catch (error) {
-        console.error('[DocsTasksHandler] Features directory not found:', featuresDir);
-        return res.status(404).json({
+      if (!this.taskRepository) {
+        return res.status(500).json({
           success: false,
-          error: 'Documentation directory not found'
+          error: 'Task repository not available'
         });
       }
 
-      // Read directory contents
-      const files = await fs.readdir(featuresDir);
+      // Get tasks from database (already imported by TaskController)
+      const tasks = await this.taskRepository.findByProject(projectId);
       
-      // Filter markdown files and extract metadata
-      const tasks = [];
-      for (const file of files) {
-        if (this.isValidMarkdownFile(file)) {
-          try {
-            const filePath = path.join(featuresDir, file);
-            const content = await fs.readFile(filePath, 'utf8');
-            const metadata = this.extractTaskMetadata(content, file);
-            
-            tasks.push({
-              id: path.parse(file).name,
-              filename: file,
-              title: metadata.title,
-              priority: metadata.priority,
-              estimatedTime: metadata.estimatedTime,
-              status: metadata.status,
-              lastModified: (await fs.stat(filePath)).mtime.toISOString()
-            });
-          } catch (error) {
-            console.error(`[DocsTasksHandler] Error reading file ${file}:`, error);
-            // Continue with other files
-          }
-        }
-      }
+      // Return ALL tasks - no filtering
+      const docsTasks = tasks;
 
-      // Sort by priority and title
+      // Sort by category, priority, and title
       tasks.sort((a, b) => {
+        // First sort by category
+        const aCategory = a.category;
+        const bCategory = b.category;
+        
+        if (aCategory !== bCategory) {
+          return aCategory.localeCompare(bCategory);
+        }
+        
+        // Then by priority
         const priorityOrder = { high: 3, medium: 2, low: 1 };
         const aPriority = priorityOrder[a.priority] || 0;
         const bPriority = priorityOrder[b.priority] || 0;
@@ -106,10 +83,12 @@ class DocsTasksHandler {
         if (aPriority !== bPriority) {
           return bPriority - aPriority;
         }
+        
+        // Finally by title
         return a.title.localeCompare(b.title);
       });
 
-      console.log(`[DocsTasksHandler] Found ${tasks.length} documentation tasks`);
+      console.log(`[DocsTasksHandler] Found ${tasks.length} documentation tasks from database`);
       
       res.json({
         success: true,
@@ -126,73 +105,57 @@ class DocsTasksHandler {
   }
 
   /**
-   * Get specific documentation task content
+   * Get specific documentation task content from database
    * @param {Object} req - Express request object
    * @param {Object} res - Express response object
    */
   async getDocsTaskDetails(req, res) {
     try {
-      const { filename } = req.params;
+      const { taskId } = req.params;
+      const projectId = req.params.projectId || req.query.projectId;
       
-      if (!filename) {
+      if (!taskId) {
         return res.status(400).json({
           success: false,
-          error: 'Filename parameter is required'
+          error: 'Task ID parameter is required'
         });
       }
 
-      const featuresDir = this.getFeaturesDir();
-      console.log(`[DocsTasksHandler] Getting details for file: ${filename}`);
-      console.log(`[DocsTasksHandler] Features directory: ${featuresDir}`);
-
-      // Validate filename to prevent path traversal
-      const safeFilename = this.validateFilename(filename);
-      if (!safeFilename) {
-        return res.status(400).json({
+      if (!this.taskRepository) {
+        return res.status(500).json({
           success: false,
-          error: 'Invalid filename'
+          error: 'Task repository not available'
         });
       }
 
-      const filePath = path.join(featuresDir, safeFilename);
+      // Get task from database
+      const task = await this.taskRepository.findById(taskId);
       
-      // Check if it's a valid markdown file first
-      if (!this.isValidMarkdownFile(safeFilename)) {
-        return res.status(400).json({
-          success: false,
-          error: 'Only markdown files are allowed'
-        });
-      }
-
-      // Check if file exists and is accessible
-      try {
-        await fs.access(filePath);
-      } catch (error) {
+      if (!task) {
         return res.status(404).json({
           success: false,
-          error: 'Documentation file not found'
+          error: 'Task not found'
         });
       }
 
-      // Read file content
-      const content = await fs.readFile(filePath, 'utf8');
-      const metadata = this.extractTaskMetadata(content, safeFilename);
-      const htmlContent = this.convertMarkdownToHtml(content);
+      // Convert markdown content to HTML
+      const htmlContent = this.convertMarkdownToHtml(task.description || '');
 
       const taskDetails = {
-        id: path.parse(safeFilename).name,
-        filename: safeFilename,
-        title: metadata.title,
-        priority: metadata.priority,
-        estimatedTime: metadata.estimatedTime,
-        status: metadata.status,
-        content: content,
+        id: task.id,
+        title: task.title,
+        priority: task.priority,
+        category: task.category,
+        type: task.type,
+        status: task.status,
+        content: task.description,
         htmlContent: htmlContent,
-        metadata: metadata,
-        lastModified: (await fs.stat(filePath)).mtime.toISOString()
+        metadata: task.metadata,
+        createdAt: task.createdAt,
+        updatedAt: task.updatedAt
       };
 
-      console.log(`[DocsTasksHandler] Successfully retrieved details for: ${safeFilename}`);
+      console.log(`[DocsTasksHandler] Successfully retrieved task details for: ${task.title}`);
       
       res.json({
         success: true,
@@ -337,68 +300,11 @@ class DocsTasksHandler {
   }
 
   /**
-   * Sync documentation tasks to repository
+   * Sync documentation tasks to repository (now handled by TaskController)
    */
   async syncDocsTasksToRepository() {
-    if (!this.taskRepository) {
-      console.log('[DocsTasksHandler] No task repository available, skipping sync');
-      return;
-    }
-
-    try {
-      const featuresDir = this.getFeaturesDir();
-      const allDocFiles = this._findAllMarkdownFiles(featuresDir);
-      const existingTasks = await this.taskRepository.findAllByType('documentation');
-      const existingTaskMap = new Map(existingTasks.map(t => [t.metadata && t.metadata.filePath, t]));
-      const foundPaths = new Set();
-
-      for (const filePath of allDocFiles) {
-        foundPaths.add(filePath);
-        const content = fsSync.readFileSync(filePath, 'utf-8');
-        const id = this._generateId(filePath, content);
-        const title = this._extractTitle(content, filePath);
-        const metadata = { 
-          filePath, 
-          hash: this._hashContent(content),
-          projectPath: this.getWorkspacePath()
-        };
-        let task = existingTaskMap.get(filePath);
-        
-        if (!task) {
-          task = new Task({
-            id,
-            title,
-            description: title,
-            type: 'documentation',
-            status: 'open',
-            metadata,
-          });
-          await this.taskRepository.save(task);
-          console.log(`[DocsTasksHandler] Created new task: ${title}`);
-        } else {
-          // Update if hash/content changed
-          if (task.metadata.hash !== metadata.hash) {
-            task._title = title;
-            task._description = title;
-            task._metadata = metadata;
-            await this.taskRepository.save(task);
-            console.log(`[DocsTasksHandler] Updated task: ${title}`);
-          }
-        }
-      }
-
-      // Remove tasks for deleted files
-      for (const [filePath, task] of existingTaskMap.entries()) {
-        if (!foundPaths.has(filePath)) {
-          await this.taskRepository.delete(task.id);
-          console.log(`[DocsTasksHandler] Removed task: ${task.title}`);
-        }
-      }
-
-      console.log(`[DocsTasksHandler] Sync completed: ${allDocFiles.length} files processed`);
-    } catch (error) {
-      console.error('[DocsTasksHandler] Error syncing docs tasks:', error);
-    }
+    console.log('[DocsTasksHandler] Sync is now handled by TaskController - skipping');
+    return;
   }
 
   _findAllMarkdownFiles(dir) {

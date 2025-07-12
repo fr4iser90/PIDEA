@@ -19,7 +19,7 @@ import TemplatesPanelComponent from './chat/sidebar-right/TemplatesPanelComponen
 import TasksPanelComponent from './chat/sidebar-right/TasksPanelComponent.jsx';
 import '@/css/global/sidebar-right.css';
 
-function SidebarRight({ eventBus, attachedPrompts, setAttachedPrompts }) {
+function SidebarRight({ eventBus, attachedPrompts, setAttachedPrompts, activePort }) {
   const [currentTab, setCurrentTab] = useState('tasks');
   const [isVisible, setIsVisible] = useState(true);
 
@@ -40,7 +40,7 @@ function SidebarRight({ eventBus, attachedPrompts, setAttachedPrompts }) {
         <button id="toggleSidebarRightBtn" className="btn-icon" title="Panel ein-/ausblenden" onClick={() => setIsVisible(v => !v)}>◀</button>
       </div>
       <div className="panel-content">
-        {currentTab === 'tasks' && <TasksPanelComponent eventBus={eventBus} />}
+        {currentTab === 'tasks' && <TasksPanelComponent eventBus={eventBus} activePort={activePort} />}
         {currentTab === 'auto' && <AutoPanelComponent eventBus={eventBus} />}
         {currentTab === 'frameworks' && <FrameworksPanelComponent />}
         {currentTab === 'prompts' && <PromptsPanelComponent attachedPrompts={attachedPrompts} setAttachedPrompts={setAttachedPrompts} />}

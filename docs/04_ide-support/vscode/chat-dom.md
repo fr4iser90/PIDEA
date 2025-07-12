@@ -97,7 +97,7 @@ const messages = await page.$$eval('.chat-message', elements => {
 
 ### **ChatGPT Extension**
 - Selectors: `.chatgpt-container`, `.chatgpt-input`
-- Features: General AI assistance
+- Features:  AI assistance
 
 ### **CodeGPT**
 - Selectors: `.codegpt-chat`, `.codegpt-input`

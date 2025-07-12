@@ -662,17 +662,12 @@ class IDEController {
         });
       }
       
-      // Get all tasks from database for this project that were synced from docs
+      // Get all tasks from database for this project (no filtering)
       const tasks = await this.taskRepository.findByProject(projectId);
-      
-      // Filter only docs-synced tasks
-      const docsTasks = tasks.filter(task => 
-        task.metadata && task.metadata.source === 'docs_sync'
-      );
       
       res.json({
         success: true,
-        data: docsTasks
+        data: tasks
       });
     } catch (error) {
       console.error('[IDEController] Error in getDocsTasks:', error);
@@ -702,14 +697,6 @@ class IDEController {
       const task = await this.taskRepository.findById(id);
       
       if (!task || task.projectId !== projectId) {
-        return res.status(404).json({
-          success: false,
-          error: 'Task not found'
-        });
-      }
-      
-      // Only return docs-synced tasks
-      if (!task.metadata || task.metadata.source !== 'docs_sync') {
         return res.status(404).json({
           success: false,
           error: 'Task not found'

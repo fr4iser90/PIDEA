@@ -41,48 +41,13 @@ const CreateTaskHandler = require('./application/handlers/CreateTaskHandler');
 const ProcessTodoListCommand = require('./application/commands/ProcessTodoListCommand');
 const ProcessTodoListHandler = require('./application/handlers/ProcessTodoListHandler');
 
-// Analyze Commands and Handlers
-const AnalyzeArchitectureCommand = require('./application/commands/analyze/AnalyzeArchitectureCommand');
-const AnalyzeCodeQualityCommand = require('./application/commands/analyze/AnalyzeCodeQualityCommand');
-const AnalyzeDependenciesCommand = require('./application/commands/analyze/AnalyzeDependenciesCommand');
-const VibeCoderAnalyzeCommand = require('./application/commands/vibecoder/VibeCoderAnalyzeCommand');
+// Legacy handlers removed - using Unified Workflow System instead
 
-const AnalyzeArchitectureHandler = require('./application/handlers/analyze/AnalyzeArchitectureHandler');
-const AnalyzeCodeQualityHandler = require('./application/handlers/analyze/AnalyzeCodeQualityHandler');
-const AnalyzeDependenciesHandler = require('./application/handlers/analyze/AnalyzeDependenciesHandler');
-const AnalyzeRepoStructureHandler = require('./application/handlers/analyze/AnalyzeRepoStructureHandler');
-const AnalyzeTechStackHandler = require('./application/handlers/analyze/AnalyzeTechStackHandler');
-const VibeCoderAnalyzeHandler = require('./application/handlers/vibecoder/VibeCoderAnalyzeHandler');
+// Legacy refactor handlers removed - using Unified Workflow System instead
 
-// Refactor Commands and Handlers
-const SplitLargeFilesCommand = require('./application/commands/refactor/SplitLargeFilesCommand');
-const OrganizeModulesCommand = require('./application/commands/refactor/OrganizeModulesCommand');
-const CleanDependenciesCommand = require('./application/commands/refactor/CleanDependenciesCommand');
-const RestructureArchitectureCommand = require('./application/commands/refactor/RestructureArchitectureCommand');
-const VibeCoderRefactorCommand = require('./application/commands/vibecoder/VibeCoderRefactorCommand');
+// Legacy generate handlers removed - using Unified Workflow System instead
 
-const SplitLargeFilesHandler = require('./application/handlers/refactor/SplitLargeFilesHandler');
-const OrganizeModulesHandler = require('./application/handlers/refactor/OrganizeModulesHandler');
-const CleanDependenciesHandler = require('./application/handlers/refactor/CleanDependenciesHandler');
-const RestructureArchitectureHandler = require('./application/handlers/refactor/RestructureArchitectureHandler');
-const VibeCoderRefactorHandler = require('./application/handlers/vibecoder/VibeCoderRefactorHandler');
-
-// Generate Commands and Handlers
-const GenerateTestsCommand = require('./application/commands/generate/GenerateTestsCommand');
-const GenerateDocumentationCommand = require('./application/commands/generate/GenerateDocumentationCommand');
-const GenerateConfigsCommand = require('./application/commands/generate/GenerateConfigsCommand');
-const GenerateScriptsCommand = require('./application/commands/generate/GenerateScriptsCommand');
-const VibeCoderGenerateCommand = require('./application/commands/vibecoder/VibeCoderGenerateCommand');
-
-const GenerateTestsHandler = require('./application/handlers/generate/GenerateTestsHandler');
-const GenerateDocumentationHandler = require('./application/handlers/generate/GenerateDocumentationHandler');
-const GenerateConfigsHandler = require('./application/handlers/generate/GenerateConfigsHandler');
-const GenerateScriptsHandler = require('./application/handlers/generate/GenerateScriptsHandler');
-const VibeCoderGenerateHandler = require('./application/handlers/vibecoder/VibeCoderGenerateHandler');
-
-// VibeCoder Mode Command and Handler
-const VibeCoderModeCommand = require('./application/commands/vibecoder/VibeCoderModeCommand');
-const VibeCoderModeHandler = require('./application/handlers/vibecoder/VibeCoderModeHandler');
+// Legacy VibeCoder handlers removed - using Unified Workflow System instead
 
 // Infrastructure
 const BrowserManager = require('./infrastructure/external/BrowserManager');
@@ -382,144 +347,9 @@ class Application {
     this.getChatHistoryHandler = this.serviceRegistry.getService('getChatHistoryHandler');
     this.createTaskHandler = this.serviceRegistry.getService('createTaskHandler');
 
-    // Initialize Analyze Handlers
-    this.analyzeArchitectureHandler = new AnalyzeArchitectureHandler({
-      eventBus: this.eventBus,
-      analysisRepository: this.analysisRepository,
-      architectureAnalyzer: this.architectureAnalyzer,
-      cursorIDEService: this.cursorIDEService,
-      taskRepository: this.taskRepository,
-      fileSystemService: this.fileSystemService,
-      logger: this.logger
-    });
-
-    this.analyzeCodeQualityHandler = new AnalyzeCodeQualityHandler({
-      eventBus: this.eventBus,
-      analysisRepository: this.analysisRepository,
-      codeQualityAnalyzer: this.codeQualityAnalyzer,
-      cursorIDEService: this.cursorIDEService,
-      taskRepository: this.taskRepository,
-      fileSystemService: this.fileSystemService,
-      logger: this.logger
-    });
-
-    this.analyzeDependenciesHandler = new AnalyzeDependenciesHandler({
-      eventBus: this.eventBus,
-      analysisRepository: this.analysisRepository,
-      dependencyAnalyzer: this.dependencyAnalyzer,
-      cursorIDEService: this.cursorIDEService,
-      taskRepository: this.taskRepository,
-      fileSystemService: this.fileSystemService,
-      logger: this.logger
-    });
-
-    this.analyzeRepoStructureHandler = new AnalyzeRepoStructureHandler({
-      eventBus: this.eventBus,
-      analysisRepository: this.analysisRepository,
-      projectAnalyzer: this.projectAnalyzer,
-      cursorIDEService: this.cursorIDEService,
-      taskRepository: this.taskRepository,
-      fileSystemService: this.fileSystemService,
-      logger: this.logger
-    });
-
-    this.analyzeTechStackHandler = new AnalyzeTechStackHandler({
-      eventBus: this.eventBus,
-      analysisRepository: this.analysisRepository,
-      projectAnalyzer: this.projectAnalyzer,
-      cursorIDEService: this.cursorIDEService,
-      taskRepository: this.taskRepository,
-      fileSystemService: this.fileSystemService,
-      logger: this.logger
-    });
-
-    // Initialize Refactor Handlers
-    this.splitLargeFilesHandler = new SplitLargeFilesHandler({
-      eventBus: this.eventBus,
-      analysisRepository: this.analysisRepository,
-      logger: this.logger
-    });
-
-    this.organizeModulesHandler = new OrganizeModulesHandler({
-      eventBus: this.eventBus,
-      analysisRepository: this.analysisRepository,
-      logger: this.logger
-    });
-
-    this.cleanDependenciesHandler = new CleanDependenciesHandler({
-      eventBus: this.eventBus,
-      analysisRepository: this.analysisRepository,
-      logger: this.logger
-    });
-
-    this.restructureArchitectureHandler = new RestructureArchitectureHandler({
-      eventBus: this.eventBus,
-      analysisRepository: this.analysisRepository,
-      logger: this.logger
-    });
-
-    // Initialize Generate Handlers
-    this.generateTestsHandler = new GenerateTestsHandler({
-      eventBus: this.eventBus,
-      analysisRepository: this.analysisRepository,
-      logger: this.logger
-    });
-
-    this.generateDocumentationHandler = new GenerateDocumentationHandler({
-      eventBus: this.eventBus,
-      analysisRepository: this.analysisRepository,
-      logger: this.logger
-    });
-
-    this.generateConfigsHandler = new GenerateConfigsHandler({
-      eventBus: this.eventBus,
-      analysisRepository: this.analysisRepository,
-      logger: this.logger
-    });
-
-    this.generateScriptsHandler = new GenerateScriptsHandler({
-      eventBus: this.eventBus,
-      analysisRepository: this.analysisRepository,
-      logger: this.logger
-    });
-
-    // Initialize VibeCoder Wrapper Handlers
-    this.vibeCoderAnalyzeHandler = new VibeCoderAnalyzeHandler({
-      eventBus: this.eventBus,
-      analysisRepository: this.analysisRepository,
-      commandBus: this.commandBus,
-      taskRepository: this.taskRepository,
-      cursorIDEService: this.cursorIDEService,
-      logger: this.logger
-    });
-
-    this.vibeCoderRefactorHandler = new VibeCoderRefactorHandler({
-      eventBus: this.eventBus,
-      analysisRepository: this.analysisRepository,
-      commandBus: this.commandBus,
-      logger: this.logger
-    });
-
-    this.vibeCoderGenerateHandler = new VibeCoderGenerateHandler({
-      eventBus: this.eventBus,
-      analysisRepository: this.analysisRepository,
-      commandBus: this.commandBus,
-      logger: this.logger
-    });
-
-    this.vibeCoderModeHandler = new VibeCoderModeHandler({
-      eventBus: this.eventBus,
-      analysisRepository: this.analysisRepository,
-      commandBus: this.commandBus,
-      logger: this.logger,
-      analysisOutputService: this.analysisOutputService,
-      projectAnalyzer: this.projectAnalyzer,
-      cursorIDEService: this.cursorIDEService,
-      taskRepository: this.taskRepository,
-      fileSystemService: this.fileSystemService
-    });
-
-    // Initialize Auto-Finish Handler
+    // Legacy handlers removed - using Unified Workflow System instead
+    
+    // Initialize Auto-Finish Handler (still needed)
     this.processTodoListHandler = new ProcessTodoListHandler({
       autoFinishSystem: this.autoFinishSystem,
       cursorIDE: this.cursorIDEService,
@@ -530,8 +360,6 @@ class Application {
       eventBus: this.eventBus,
       logger: this.logger
     });
-
-    this.vibeCoderAutoRefactorHandler = this.serviceRegistry.getService('vibeCoderAutoRefactorHandler');
 
     this.taskExecutionEngine = new (require('./infrastructure/external/TaskExecutionEngine'))({
       aiService: this.aiService,
@@ -545,36 +373,10 @@ class Application {
       eventBus: this.eventBus
     });
 
-    // Register all command handlers
-    this.commandBus.register('AnalyzeArchitectureCommand', this.analyzeArchitectureHandler);
-    this.commandBus.register('AnalyzeCodeQualityCommand', this.analyzeCodeQualityHandler);
-    this.commandBus.register('AnalyzeDependenciesCommand', this.analyzeDependenciesHandler);
-    this.commandBus.register('AnalyzeRepoStructureCommand', this.analyzeRepoStructureHandler);
-    this.commandBus.register('AnalyzeTechStackCommand', this.analyzeTechStackHandler);
-    this.commandBus.register('VibeCoderAnalyzeCommand', this.vibeCoderAnalyzeHandler);
-
-    // Register Refactor Commands
-    this.commandBus.register('SplitLargeFilesCommand', this.splitLargeFilesHandler);
-    this.commandBus.register('OrganizeModulesCommand', this.organizeModulesHandler);
-    this.commandBus.register('CleanDependenciesCommand', this.cleanDependenciesHandler);
-    this.commandBus.register('RestructureArchitectureCommand', this.restructureArchitectureHandler);
-    this.commandBus.register('VibeCoderRefactorCommand', this.vibeCoderRefactorHandler);
-
-    // Register Generate Commands
-    this.commandBus.register('GenerateTestsCommand', this.generateTestsHandler);
-    this.commandBus.register('GenerateDocumentationCommand', this.generateDocumentationHandler);
-    this.commandBus.register('GenerateConfigsCommand', this.generateConfigsHandler);
-    this.commandBus.register('GenerateScriptsCommand', this.generateScriptsHandler);
-    this.commandBus.register('VibeCoderGenerateCommand', this.vibeCoderGenerateHandler);
-
-    // Register VibeCoder Mode Command
-    this.commandBus.register('VibeCoderModeCommand', this.vibeCoderModeHandler);
-    this.commandBus.register('VibeCoderAutoRefactorCommand', this.vibeCoderAutoRefactorHandler);
-
-    // Register Auto-Finish Commands
+    // Register only non-legacy command handlers
     this.commandBus.register('ProcessTodoListCommand', this.processTodoListHandler);
 
-    this.logger.info('[Application] Application handlers initialized');
+    this.logger.info('[Application] Application handlers initialized (legacy removed)');
   }
 
   async initializePresentationLayer() {
@@ -617,7 +419,9 @@ class Application {
       this.taskService,
       this.taskRepository,
       this.aiService,
-      this.projectAnalyzer
+      this.projectAnalyzer,
+      this.projectMappingService,
+      this.ideManager
     );
 
     this.autoModeController = new AutoModeController({
@@ -629,7 +433,7 @@ class Application {
       ideManager: this.ideManager
     });
 
-    this.vibeCoderAutoRefactorController = new (require('./presentation/api/VibeCoderAutoRefactorController'))(this.commandBus);
+
 
     this.projectAnalysisController = new (require('./presentation/api/ProjectAnalysisController'))(
       this.serviceRegistry.getService('projectAnalysisRepository'),
@@ -885,16 +689,6 @@ class Application {
     this.app.get('/api/projects/:projectId/analysis/:analysisId', (req, res) => this.taskController.getProjectAnalysis(req, res));
     this.app.post('/api/projects/:projectId/analysis/ai', (req, res) => this.taskController.aiAnalysis(req, res));
 
-    // Auto Mode routes (protected) - PROJECT-BASED
-    this.app.use('/api/projects/:projectId/auto', this.authMiddleware.authenticate());
-    this.app.post('/api/projects/:projectId/auto/execute', (req, res) => this.autoModeController.executeAutoMode(req, res));
-    this.app.get('/api/projects/:projectId/auto/status', (req, res) => this.autoModeController.getAutoModeStatus(req, res));
-    this.app.post('/api/projects/:projectId/auto/stop', (req, res) => this.autoModeController.stopAutoMode(req, res));
-
-    // VibeCoder Auto Refactor routes (protected) - PROJECT-BASED
-    this.app.use('/api/projects/:projectId/auto-refactor', this.authMiddleware.authenticate());
-    this.app.post('/api/projects/:projectId/auto-refactor/execute', (req, res) => this.vibeCoderAutoRefactorController.startAutoRefactor(req, res));
-
     // Project analysis routes (protected)
     this.app.use('/api/projects/:projectId/analyses', this.authMiddleware.authenticate());
     this.app.get('/api/projects/:projectId/analyses', (req, res) => this.projectAnalysisController.getProjectAnalyses(req, res));
@@ -990,6 +784,16 @@ class Application {
     this.app.get('/api/projects/:projectId/auto/tests/tasks', (req, res) => this.autoTestFixController.getAutoTestTasks(req, res));
     this.app.get('/api/projects/:projectId/auto/tests/tasks/:taskId', (req, res) => this.autoTestFixController.getAutoTestTaskDetails(req, res));
     this.app.post('/api/projects/:projectId/auto/tests/tasks/:taskId/retry', (req, res) => this.autoTestFixController.retryAutoTestTask(req, res));
+
+    // Auto Refactor routes (protected) - PROJECT-BASED
+    this.app.use('/api/projects/:projectId/auto-refactor', this.authMiddleware.authenticate());
+    this.app.post('/api/projects/:projectId/auto-refactor/execute', (req, res) => this.autoModeController.executeAutoMode(req, res));
+
+    // Auto Mode routes (protected) - PROJECT-BASED
+    this.app.use('/api/projects/:projectId/auto', this.authMiddleware.authenticate());
+    this.app.post('/api/projects/:projectId/auto/execute', (req, res) => this.autoModeController.executeAutoMode(req, res));
+    this.app.get('/api/projects/:projectId/auto/status', (req, res) => this.autoModeController.getAutoModeStatus(req, res));
+    this.app.post('/api/projects/:projectId/auto/stop', (req, res) => this.autoModeController.stopAutoMode(req, res));
 
     // Error handling middleware
     this.app.use((error, req, res, next) => {

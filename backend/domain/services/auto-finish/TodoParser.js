@@ -216,7 +216,7 @@ class TodoParser {
       }
     }
     
-    return 'general';
+    return '';
   }
 
   /**

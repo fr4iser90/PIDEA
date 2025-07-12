@@ -8,7 +8,7 @@ const BaseWorkflowStep = require('./BaseWorkflowStep');
  * Refactoring workflow step
  */
 class RefactoringStep extends BaseWorkflowStep {
-  constructor(refactoringType = 'general', options = {}) {
+  constructor(refactoringType = '', options = {}) {
     super('RefactoringStep', `Performs ${refactoringType} refactoring`, 'refactoring');
     this._refactoringType = refactoringType;
     this._options = { ...options };
@@ -34,8 +34,8 @@ class RefactoringStep extends BaseWorkflowStep {
 
     // Perform refactoring based on type
     switch (this._refactoringType) {
-      case 'general':
-        return await this._performGeneralRefactoring(context, projectPath);
+      case '':
+        return await this._performRefactoring(context, projectPath);
       case 'code-generation':
         return await this._performCodeGeneration(context, projectPath);
       case 'feature-implementation':
@@ -56,12 +56,12 @@ class RefactoringStep extends BaseWorkflowStep {
   }
 
   /**
-   * Perform general refactoring
+   * Perform  refactoring
    * @param {IWorkflowContext} context - Workflow context
    * @param {string} projectPath - Project path
    * @returns {Promise<Object>} Refactoring result
    */
-  async _performGeneralRefactoring(context, projectPath) {
+  async _performRefactoring(context, projectPath) {
     const refactoringService = context.get('refactoringService');
     const task = context.get('task');
     
@@ -273,7 +273,7 @@ class RefactoringStep extends BaseWorkflowStep {
 
     // Validate refactoring type
     const validTypes = [
-      'general', 'code-generation', 'feature-implementation', 'bug-fix',
+      '', 'code-generation', 'feature-implementation', 'bug-fix',
       'optimization', 'cleanup', 'restructure', 'modernize'
     ];
 

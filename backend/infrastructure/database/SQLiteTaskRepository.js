@@ -24,6 +24,7 @@ class SQLiteTaskRepository extends TaskRepository {
         title TEXT NOT NULL,
         description TEXT NOT NULL,
         type TEXT NOT NULL,
+        category TEXT,
         priority TEXT NOT NULL,
         status TEXT NOT NULL,
         projectId TEXT,
@@ -38,7 +39,18 @@ class SQLiteTaskRepository extends TaskRepository {
         dueDate TEXT,
         startedAt TEXT,
         completedAt TEXT,
-        executionHistory TEXT
+        executionHistory TEXT,
+        parentTaskId TEXT,
+        childTaskIds TEXT,
+        phase TEXT,
+        stage TEXT,
+        phaseOrder INTEGER,
+        taskLevel INTEGER,
+        rootTaskId TEXT,
+        isPhaseTask BOOLEAN,
+        progress INTEGER,
+        phaseProgress TEXT,
+        blockedBy TEXT
       )
     `;
 
@@ -60,10 +72,12 @@ class SQLiteTaskRepository extends TaskRepository {
       
       const sql = `
         INSERT OR REPLACE INTO ${this.tableName} (
-          id, title, description, type, priority, status, projectId, userId, createdBy,
+          id, title, description, type, category, priority, status, projectId, userId,
           estimatedDuration, metadata, createdAt, updatedAt, dependencies,
-          tags, assignee, dueDate, startedAt, completedAt, executionHistory
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          tags, assignee, dueDate, startedAt, completedAt, executionHistory,
+          parentTaskId, childTaskIds, phase, stage, phaseOrder, taskLevel, rootTaskId,
+          isPhaseTask, progress, phaseProgress, blockedBy
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `;
 
       const params = [
@@ -71,11 +85,11 @@ class SQLiteTaskRepository extends TaskRepository {
         taskData.title,
         taskData.description,
         taskData.type,
+        taskData.category || null,
         taskData.priority,
         taskData.status,
         taskData.projectId,
         taskData.userId,
-        taskData.userId, // createdBy (use userId for now)
         taskData.estimatedDuration,
         JSON.stringify(taskData.metadata),
         taskData.createdAt,
@@ -86,7 +100,18 @@ class SQLiteTaskRepository extends TaskRepository {
         taskData.dueDate,
         taskData.startedAt,
         taskData.completedAt,
-        JSON.stringify(taskData.executionHistory)
+        JSON.stringify(taskData.executionHistory),
+        taskData.parentTaskId || null,
+        JSON.stringify(taskData.childTaskIds || []),
+        taskData.phase || null,
+        taskData.stage || null,
+        taskData.phaseOrder || null,
+        taskData.taskLevel || 0,
+        taskData.rootTaskId || null,
+        taskData.isPhaseTask || false,
+        taskData.progress || 0,
+        JSON.stringify(taskData.phaseProgress || {}),
+        JSON.stringify(taskData.blockedBy || [])
       ];
 
       await this.database.run(sql, params);
@@ -988,6 +1013,7 @@ class SQLiteTaskRepository extends TaskRepository {
         title: row.title,
         description: row.description,
         type: row.type,
+        category: row.category,
         priority: row.priority,
         status: row.status,
         projectId: row.projectId,
@@ -1002,7 +1028,18 @@ class SQLiteTaskRepository extends TaskRepository {
         dueDate: row.dueDate,
         startedAt: row.startedAt,
         completedAt: row.completedAt,
-        executionHistory: JSON.parse(row.executionHistory || '[]')
+        executionHistory: JSON.parse(row.executionHistory || '[]'),
+        parentTaskId: row.parentTaskId,
+        childTaskIds: JSON.parse(row.childTaskIds || '[]'),
+        phase: row.phase,
+        stage: row.stage,
+        phaseOrder: row.phaseOrder,
+        taskLevel: row.taskLevel,
+        rootTaskId: row.rootTaskId,
+        isPhaseTask: row.isPhaseTask,
+        progress: row.progress,
+        phaseProgress: JSON.parse(row.phaseProgress || '{}'),
+        blockedBy: JSON.parse(row.blockedBy || '[]')
       });
     } catch (error) {
       throw new Error(`Failed to convert row to task: ${error.message}`);

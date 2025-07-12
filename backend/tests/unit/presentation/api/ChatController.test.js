@@ -594,7 +594,7 @@ describe('ChatController', () => {
         success: true,
         data: {
           prompts: [
-            { id: 'help', text: 'Help me with my code', category: 'general' },
+            { id: 'help', text: 'Help me with my code', category: '' },
             { id: 'debug', text: 'Debug this issue', category: 'development' },
             { id: 'explain', text: 'Explain this code', category: 'learning' }
           ]
@@ -611,7 +611,7 @@ describe('ChatController', () => {
         success: true,
         data: {
           prompts: [
-            { id: 'help', text: 'Help me with my code', category: 'general' },
+            { id: 'help', text: 'Help me with my code', category: '' },
             { id: 'debug', text: 'Debug this issue', category: 'development' },
             { id: 'explain', text: 'Explain this code', category: 'learning' },
             { id: 'admin-help', text: 'Show admin commands', category: 'admin' },
@@ -753,7 +753,7 @@ describe('ChatController', () => {
       const prompts = await controller.getQuickPromptsForUser('user');
 
       expect(prompts).toEqual([
-        { id: 'help', text: 'Help me with my code', category: 'general' },
+        { id: 'help', text: 'Help me with my code', category: '' },
         { id: 'debug', text: 'Debug this issue', category: 'development' },
         { id: 'explain', text: 'Explain this code', category: 'learning' }
       ]);
@@ -763,7 +763,7 @@ describe('ChatController', () => {
       const prompts = await controller.getQuickPromptsForUser('admin');
 
       expect(prompts).toEqual([
-        { id: 'help', text: 'Help me with my code', category: 'general' },
+        { id: 'help', text: 'Help me with my code', category: '' },
         { id: 'debug', text: 'Debug this issue', category: 'development' },
         { id: 'explain', text: 'Explain this code', category: 'learning' },
         { id: 'admin-help', text: 'Show admin commands', category: 'admin' },

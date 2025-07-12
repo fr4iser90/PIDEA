@@ -42,6 +42,13 @@ docs/
 │   └── troubleshooting.md
 ├── 09_roadmap/
 │   ├── features/
+│   │   ├── [category]/
+│   │   │   ├── [task-name]/
+│   │   │   │   ├── [name]-implementation.md
+│   │   │   │   ├── [name]-analysis.md
+│   │   │   │   └── [name]-phase-[number].md
+│   │   │   └── [another-task]/
+│   │   └── [another-category]/
 │   └── overview.md
 ├── 10_maintenance/
 │   ├── updates.md
@@ -52,6 +59,8 @@ docs/
 │   └── icons/
 └── README.md
 ```
+
+**Note**: The 09_roadmap/features/ section now uses hierarchical organization: Category → Task Name → Implementation files
 
 **FIRST STEP: Always create this folder structure before writing any documentation!**
 
@@ -88,6 +97,7 @@ mkdir -p docs/06_deployment
 mkdir -p docs/07_testing
 mkdir -p docs/08_reference
 mkdir -p docs/09_roadmap/features
+# Note: Category and task-specific folders will be created automatically when tasks are created
 mkdir -p docs/10_maintenance
 mkdir -p docs/assets/diagrams
 mkdir -p docs/assets/screenshots

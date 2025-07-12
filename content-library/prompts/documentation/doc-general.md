@@ -1,4 +1,4 @@
-# Prompt: Update general project documentation in `docs/` folder
+# Prompt: Update  project documentation in `docs/` folder
 
 ## Goal:
 Keep all `.md` files in the `docs/` folder clear, well-structured, and aligned with the project's current state.
