@@ -3,11 +3,19 @@
 ## Overview
 Create new React components for displaying grouped tasks by phases and implement phase execution functionality.
 
+## Current State Analysis
+- **TasksPanelComponent.jsx**: Exists at `frontend/src/presentation/components/chat/sidebar-right/TasksPanelComponent.jsx`
+- **Current Functionality**: Handles docs tasks but not phase grouping
+- **Component Structure**: Uses React hooks and functional components
+- **Styling**: Basic CSS exists but needs phase-specific styling
+- **Missing Components**: PhaseGroupComponent and PhaseExecutionButton don't exist
+
 ## Tasks
 
 ### 1. Create PhaseGroupComponent for displaying grouped tasks
 **File**: `frontend/src/presentation/components/PhaseGroupComponent.jsx`
 **Time**: 45 minutes
+**Status**: ❌ Not implemented
 
 ```jsx
 import React, { useState } from 'react';
@@ -162,6 +170,7 @@ export default PhaseGroupComponent;
 ### 2. Create PhaseExecutionButton component
 **File**: `frontend/src/presentation/components/PhaseExecutionButton.jsx`
 **Time**: 30 minutes
+**Status**: ❌ Not implemented
 
 ```jsx
 import React, { useState } from 'react';
@@ -262,34 +271,38 @@ export default PhaseExecutionButton;
 ```
 
 ### 3. Modify TasksPanelComponent to use grouped data
-**File**: `frontend/src/presentation/components/TasksPanelComponent.jsx`
+**File**: `frontend/src/presentation/components/chat/sidebar-right/TasksPanelComponent.jsx`
 **Time**: 60 minutes
+**Status**: ❌ Not implemented
 
 ```jsx
 import React, { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
-import PhaseGroupComponent from './PhaseGroupComponent';
-import PhaseExecutionButton from './PhaseExecutionButton';
-import { useAPIChatRepository } from '@/infrastructure/api/APIChatRepository';
+import PhaseGroupComponent from '../../PhaseGroupComponent';
+import PhaseExecutionButton from '../../PhaseExecutionButton';
+import APIChatRepository from '@/infrastructure/repositories/APIChatRepository';
 import './TasksPanelComponent.css';
 
-const TasksPanelComponent = ({ projectId, onTaskSelect }) => {
+const TasksPanelComponent = ({ eventBus, activePort }) => {
   const [groupedTasks, setGroupedTasks] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [executingPhases, setExecutingPhases] = useState(new Set());
   
-  const apiRepository = useAPIChatRepository();
+  const apiRepository = new APIChatRepository();
 
   useEffect(() => {
-    loadGroupedTasks();
-  }, [projectId]);
+    if (activePort) {
+      loadGroupedTasks();
+    }
+  }, [activePort]);
 
   const loadGroupedTasks = async () => {
     setLoading(true);
     setError(null);
     
     try {
+      const projectId = await apiRepository.getCurrentProjectId();
       const phases = await apiRepository.getTasksByPhases(projectId);
       setGroupedTasks(phases);
     } catch (err) {
@@ -301,9 +314,8 @@ const TasksPanelComponent = ({ projectId, onTaskSelect }) => {
   };
 
   const handleTaskClick = (task) => {
-    if (onTaskSelect) {
-      onTaskSelect(task);
-    }
+    // Handle task selection - can be extended for task details
+    console.log('Selected task:', task);
   };
 
   const handleExecutePhase = async (phaseName) => {
@@ -312,6 +324,7 @@ const TasksPanelComponent = ({ projectId, onTaskSelect }) => {
     setExecutingPhases(prev => new Set(prev).add(phaseName));
     
     try {
+      const projectId = await apiRepository.getCurrentProjectId();
       const result = await apiRepository.executePhase(projectId, phaseName);
       console.log(`Phase ${phaseName} execution result:`, result);
       
@@ -337,6 +350,7 @@ const TasksPanelComponent = ({ projectId, onTaskSelect }) => {
     if (phaseNames.length === 0) return;
 
     try {
+      const projectId = await apiRepository.getCurrentProjectId();
       const result = await apiRepository.executePhases(projectId, phaseNames);
       console.log('All phases execution result:', result);
       
@@ -453,8 +467,8 @@ const TasksPanelComponent = ({ projectId, onTaskSelect }) => {
 };
 
 TasksPanelComponent.propTypes = {
-  projectId: PropTypes.string.isRequired,
-  onTaskSelect: PropTypes.func
+  eventBus: PropTypes.object,
+  activePort: PropTypes.string
 };
 
 export default TasksPanelComponent;
@@ -463,6 +477,7 @@ export default TasksPanelComponent;
 ### 4. Add phase group styling and animations
 **File**: `frontend/src/presentation/css/PhaseGroupComponent.css`
 **Time**: 30 minutes
+**Status**: ❌ Not implemented
 
 ```css
 .phase-group {
@@ -603,15 +618,10 @@ export default TasksPanelComponent;
 }
 
 .phase-content {
-  padding: 0;
-  max-height: 0;
-  overflow: hidden;
-  transition: all 0.3s ease;
-}
-
-.phase-group.expanded .phase-content {
   padding: 20px;
   max-height: 1000px;
+  overflow: hidden;
+  transition: all 0.3s ease;
 }
 
 .phase-tasks {
@@ -780,6 +790,7 @@ export default TasksPanelComponent;
 ### 5. Implement phase execution UI feedback
 **File**: `frontend/src/presentation/css/PhaseExecutionButton.css`
 **Time**: 15 minutes
+**Status**: ❌ Not implemented
 
 ```css
 .phase-execution-button {
@@ -916,8 +927,14 @@ export default TasksPanelComponent;
 ## Dependencies
 - React hooks (useState, useEffect)
 - PropTypes for type checking
-- Existing APIChatRepository
+- Existing APIChatRepository (from Phase 2)
 - CSS animations and transitions
+
+## Integration with Existing Systems
+- **APIChatRepository**: Uses phase grouping methods from Phase 2
+- **Event Bus**: Integrates with existing event system
+- **Project Management**: Uses existing project ID management
+- **Error Handling**: Extends existing error handling patterns
 
 ## Notes
 - Uses modern React patterns with hooks
@@ -925,4 +942,5 @@ export default TasksPanelComponent;
 - Provides comprehensive visual feedback for all states
 - Includes responsive design for mobile devices
 - Uses CSS animations for smooth user experience
-- Implements proper accessibility features 
+- Implements proper accessibility features
+- Depends on Phase 1 and Phase 2 being completed first 
