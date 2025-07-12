@@ -241,6 +241,25 @@ ${taskDetails.description}
     return matchesSearch && matchesFilter;
   });
 
+  // Group tasks by summary and implementation
+  const groupedList = filteredDocsTasks.reduce((acc, task) => {
+    const summary = acc.find(g => g.summary?.id === task.id);
+    if (summary) {
+      // If summary exists, add implementation to its group
+      summary.implementation = task;
+    } else {
+      // Otherwise, create a new group for the summary
+      acc.push({
+        summary: task,
+        implementation: null
+      });
+    }
+    return acc;
+  }, []);
+
+  // Only show groups with a summary task
+  const groupedSummaryList = groupedList.filter(group => group.summary);
+
   // Task creation logic
   const handleCreateTask = () => {
     setModalType('feature');
@@ -374,44 +393,39 @@ ${taskDetails.description}
               <div className="loading-spinner mr-3"></div>
               <span className="text-gray-400">Loading documentation tasks...</span>
             </div>
-          ) : filteredDocsTasks.length > 0 ? (
+          ) : groupedSummaryList.length > 0 ? (
             <div className="space-y-2">
-              {filteredDocsTasks.map((task) => (
-                <div 
-                  key={task.id}
+              {groupedSummaryList.map((group) => (
+                <div
+                  key={group.summary.id}
                   className="docs-task-item p-3 bg-gray-800 rounded border border-gray-700 hover:border-gray-600 cursor-pointer transition-colors"
-                  onClick={() => handleDocsTaskClick(task)}
+                  onClick={() => handleDocsTaskClick(group.summary)}
                 >
                   <div className="flex justify-between items-start mb-2">
                     <h4 className="font-medium text-white text-sm line-clamp-2">
-                      {task.title}
+                      {group.summary.title}
                     </h4>
                     <div className="flex gap-1 flex-shrink-0 ml-2">
-                      <span 
+                      <span
                         className="priority-badge text-xs px-2 py-1 rounded"
-                        style={{ backgroundColor: getPriorityColor(task.priority) }}
+                        style={{ backgroundColor: getPriorityColor(group.summary.priority) }}
                       >
-                        {task.priority}
+                        {group.summary.priority}
                       </span>
-                      {task.status && (
-                        <span 
+                      {group.summary.status && (
+                        <span
                           className="status-badge text-xs px-2 py-1 rounded"
-                          style={{ backgroundColor: getStatusColor(task.status) }}
+                          style={{ backgroundColor: getStatusColor(group.summary.status) }}
                         >
-                          {task.status}
+                          {group.summary.status}
                         </span>
                       )}
                     </div>
                   </div>
                   <div className="flex justify-between items-center text-xs text-gray-400">
-                    <span className="font-mono">{getTaskFilename(task)}</span>
-                    <span>{formatDate(task.updatedAt)}</span>
+                    <span className="font-mono">{getTaskFilename(group.summary)}</span>
+                    <span>{formatDate(group.summary.updatedAt)}</span>
                   </div>
-                  {task.estimatedDuration && (
-                    <div className="mt-1 text-xs text-gray-500">
-                      ⏱️ {Math.round(task.estimatedDuration / 60)}min
-                    </div>
-                  )}
                 </div>
               ))}
             </div>

@@ -8,6 +8,12 @@ Create new [Name]-implementation.md in docs/09_roadmap/features/[category]/[name
 
 ## Template Structure
 
+> **File Pattern Requirement:**  
+> All implementation and phase files must always be created using this pattern:  
+> - Implementation: docs/09_roadmap/features/[category]/[name]/[name]-implementation.md  
+> - Phase: docs/09_roadmap/features/[category]/[name]/[name]-phase-[number].md  
+> If a file is missing, it must be created automatically. This pattern is required for orchestration and grouping in the system.
+
 ### 1. Project Overview
 - **Feature/Component Name**: [Exact name for task.title]
 - **Priority**: [High/Medium/Low - maps to task.priority]
@@ -96,8 +102,7 @@ Create new [Name]-implementation.md in docs/09_roadmap/features/[category]/[name
 ### 8. Testing Strategy
 
 #### Unit Tests:
-- [ ] Test file: `tests/unit/[ComponentName].test.js`
-- [ ] Test cases: [List specific scenarios to test]
+- [ ] Test file: `tests/unit/[ComponentName].test.js`- [ ] Test cases: [List specific scenarios to test]
 - [ ] Mock requirements: [External dependencies to mock]
 
 #### Integration Tests:
@@ -302,3 +307,4 @@ docs/09_roadmap/features/
 ---
 
 **Note**: This template is optimized for database-first task architecture where markdown docs serve as specifications that get parsed into trackable, executable database tasks with full AI auto-implementation support.
+

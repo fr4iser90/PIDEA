@@ -3,6 +3,12 @@
 ## Goal
 Review, validate, and improve development tasks against the actual codebase. Analyze implementation files, verify code existence, identify gaps, and enhance task documentation with real-world findings.
 
+> **File Pattern Requirement:**  
+> All implementation and phase files must always be created using this pattern:  
+> - Implementation: docs/09_roadmap/features/[category]/[name]/[name]-implementation.md  
+> - Phase: docs/09_roadmap/features/[category]/[name]/[name]-phase-[number].md  
+> If a file is missing, it must be created automatically. This pattern is required for orchestration and grouping in the system.
+
 ## Core Review Process
 
 ### Phase 1: Codebase Analysis
