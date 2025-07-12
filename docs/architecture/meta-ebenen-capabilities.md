@@ -23,7 +23,7 @@ graph TB
         
         PA_CAP["Agent Capabilities:
 • Project-Specific Code Analysis
-• IDE Integration (1:1)
+• IDE Integration 1:1
 • Browser Automation
 • File System Access
 • Git Operations
@@ -113,7 +113,7 @@ graph TB
         P3[Project: api-refactor]
     end
     
-    subgraph "IDE Agents (1:1 mit IDE)"
+    subgraph "IDE Agents 1:1 mit IDE"
         CURSOR1[Cursor Agent 1]
         CURSOR2[Cursor Agent 2]
         VSCODE1[VSCode Agent 1]
@@ -220,7 +220,7 @@ graph LR
     
     subgraph "IDE Agent Capabilities"
         AG_CODE[Code Analysis]
-        AG_IDE[IDE Integration (1:1)]
+        AG_IDE["IDE Integration (1:1)"]
         AG_BROWSER[Browser Control]
         AG_FS[File System]
         AG_GIT[Git Operations]
@@ -298,10 +298,10 @@ graph TD
     end
     
     subgraph "Level 3: IDE Agents"
-        IA[IDE Agents (1:1)]
+        IA["IDE Agents (1:1)"]
         IA_CAPS["Project Capabilities:
 • Code Analysis
-• IDE Integration (1:1)
+• IDE Integration 1:1
 • Browser Control
 • File System Access
 • Git Operations
