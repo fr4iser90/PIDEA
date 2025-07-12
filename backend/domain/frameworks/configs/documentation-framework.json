@@ -1,0 +1,65 @@
+{
+  "name": "Documentation Framework",
+  "version": "1.0.0",
+  "description": "Comprehensive documentation generation and management framework",
+  "category": "documentation",
+  "author": "PIDEA Team",
+  "dependencies": ["markdown", "jsdoc"],
+  "settings": {
+    "outputFormat": "markdown",
+    "includeExamples": true,
+    "generateTOC": true,
+    "autoUpdate": false
+  },
+  "steps": [
+    {
+      "name": "analyze_project_structure",
+      "type": "analysis",
+      "description": "Analyze project structure to identify documentation needs",
+      "order": 1,
+      "required": true,
+      "settings": {
+        "scanDepth": 3,
+        "includeHidden": false
+      }
+    },
+    {
+      "name": "generate_api_docs",
+      "type": "generation",
+      "description": "Generate API documentation from code comments",
+      "order": 2,
+      "required": true,
+      "settings": {
+        "format": "markdown",
+        "includeExamples": true
+      }
+    },
+    {
+      "name": "create_user_guides",
+      "type": "generation",
+      "description": "Create user guides and tutorials",
+      "order": 3,
+      "required": false,
+      "settings": {
+        "includeScreenshots": true,
+        "stepByStep": true
+      }
+    },
+    {
+      "name": "validate_documentation",
+      "type": "validation",
+      "description": "Validate documentation completeness and accuracy",
+      "order": 4,
+      "required": true,
+      "settings": {
+        "checkLinks": true,
+        "validateExamples": true
+      }
+    }
+  ],
+  "properties": {
+    "supportsMultipleFormats": true,
+    "autoGeneration": true,
+    "versionControl": true
+  }
+} 

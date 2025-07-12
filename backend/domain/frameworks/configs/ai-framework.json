@@ -1,0 +1,65 @@
+{
+  "name": "AI Framework",
+  "version": "1.0.0",
+  "description": "AI-powered development assistance and automation framework",
+  "category": "ai",
+  "author": "PIDEA Team",
+  "dependencies": ["openai", "langchain", "vectorstore"],
+  "settings": {
+    "modelProvider": "openai",
+    "temperature": 0.7,
+    "maxTokens": 4000,
+    "enableStreaming": true
+  },
+  "steps": [
+    {
+      "name": "analyze_context",
+      "type": "analysis",
+      "description": "Analyze current development context and requirements",
+      "order": 1,
+      "required": true,
+      "settings": {
+        "contextWindow": 8000,
+        "includeCodebase": true
+      }
+    },
+    {
+      "name": "generate_suggestions",
+      "type": "generation",
+      "description": "Generate AI-powered suggestions and recommendations",
+      "order": 2,
+      "required": true,
+      "settings": {
+        "suggestionTypes": ["code", "architecture", "optimization"],
+        "maxSuggestions": 5
+      }
+    },
+    {
+      "name": "implement_automation",
+      "type": "automation",
+      "description": "Implement automated code generation and refactoring",
+      "order": 3,
+      "required": false,
+      "settings": {
+        "autoApply": false,
+        "reviewRequired": true
+      }
+    },
+    {
+      "name": "validate_ai_output",
+      "type": "validation",
+      "description": "Validate AI-generated code and suggestions",
+      "order": 4,
+      "required": true,
+      "settings": {
+        "runTests": true,
+        "checkQuality": true
+      }
+    }
+  ],
+  "properties": {
+    "supportsMultipleModels": true,
+    "contextAware": true,
+    "learningEnabled": true
+  }
+} 

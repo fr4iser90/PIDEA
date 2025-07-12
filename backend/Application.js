@@ -305,6 +305,12 @@ class Application {
     });
     await this.autoTestFixSystem.initialize();
 
+    // Initialize Step Registry
+    const { initializeSteps } = require('./domain/steps');
+    await initializeSteps();
+    this.stepRegistry = require('./domain/steps').getStepRegistry();
+    this.logger.info('[Application] Step Registry initialized');
+
     this.logger.info('[Application] Domain services initialized with DI');
   }
 

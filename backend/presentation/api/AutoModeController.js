@@ -2,7 +2,7 @@
  * AutoModeController - REST API endpoints for auto mode operations
  */
 const { validationResult } = require('express-validator');
-const { StepRegistry } = require('@workflows/steps');
+const { getStepRegistry } = require('@steps');
 
 class AutoModeController {
     constructor(dependencies = {}) {
@@ -265,7 +265,7 @@ class AutoModeController {
             }
 
             // Execute using Unified Workflow Steps instead of legacy VibeCoder
-            const stepRegistry = new StepRegistry();
+            const stepRegistry = getStepRegistry();
             
             let stepName;
             let stepOptions = {
@@ -286,11 +286,11 @@ class AutoModeController {
                 stepOptions.includeDependencies = true;
                 stepOptions.includeRepoStructure = true;
             } else if (mode === 'refactor') {
-                stepName = 'RefactoringStep';
+                stepName = 'RefactorCode';
                 stepOptions.includeCodeQuality = true;
                 stepOptions.includeArchitecture = true;
             } else if (mode === 'test') {
-                stepName = 'TestingStep';
+                stepName = 'RunUnitTests';
                 stepOptions.includeTestAnalysis = true;
                 stepOptions.includeTestGeneration = true;
                 stepOptions.includeTestFixing = true;
