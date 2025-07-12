@@ -4,17 +4,17 @@
 - **Feature/Component Name**: JSON-Based Framework System with Content-Library Integration
 - **Priority**: High
 - **Category**: architecture
-- **Estimated Time**: 6 hours (reduced from 16 hours)
+- **Estimated Time**: 12 hours (increased from 6 hours to include modular Commands and Handlers)
 - **Dependencies**: Existing Content-Library Frameworks, Workflow Infrastructure
 - **Related Issues**: Integration of JSON-based frameworks with existing prompts and workflow system
 
 ## 2. Technical Requirements
 - **Tech Stack**: Node.js, JavaScript, Jest, ESLint
-- **Architecture Pattern**: JSON-based Framework Definitions with Content-Library Integration
+- **Architecture Pattern**: JSON-based Framework Definitions with Content-Library Integration + Modular Commands/Handlers
 - **Database Changes**: None (preserve existing)
 - **API Changes**: Add Content-Library API endpoints
 - **Frontend Changes**: None
-- **Backend Changes**: Add framework system that uses existing prompts and workflow infrastructure
+- **Backend Changes**: Add framework system that uses existing prompts and workflow infrastructure + modular Commands/Handlers
 
 ## 3. File Impact Analysis
 
@@ -33,6 +33,24 @@
 - ✅ `backend/domain/frameworks/configs/ios-framework.json` - iOS framework config
 - ✅ `backend/domain/frameworks/configs/android-framework.json` - Android framework config
 
+### Files to Create (Modular Commands System):
+- 🆕 `backend/application/commands/CommandRegistry.js` - Command management
+- 🆕 `backend/application/commands/CommandBuilder.js` - Command builder
+- 🆕 `backend/application/commands/index.js` - Export
+- 🆕 `backend/application/commands/categories/analysis/` - Analysis commands
+- 🆕 `backend/application/commands/categories/generate/` - Generate commands
+- 🆕 `backend/application/commands/categories/refactor/` - Refactor commands
+- 🆕 `backend/application/commands/categories/management/` - Management commands
+
+### Files to Create (Modular Handlers System):
+- 🆕 `backend/application/handlers/HandlerRegistry.js` - Handler management
+- 🆕 `backend/application/handlers/HandlerBuilder.js` - Handler builder
+- 🆕 `backend/application/handlers/index.js` - Export
+- 🆕 `backend/application/handlers/categories/analysis/` - Analysis handlers
+- 🆕 `backend/application/handlers/categories/generate/` - Generate handlers
+- 🆕 `backend/application/handlers/categories/refactor/` - Refactor handlers
+- 🆕 `backend/application/handlers/categories/management/` - Management handlers
+
 ### Files to Create (API Endpoints):
 - ✅ `backend/presentation/api/ContentLibraryController.js` - Content-Library API
 - ✅ `backend/presentation/api/FrameworkController.js` - Framework API
@@ -47,11 +65,13 @@
 ## 4. Implementation Phases
 
 ### 📋 Task Splitting Recommendations
-Due to the streamlined approach, this task has been reduced to 2 SEQUENTIAL subtasks:
+Due to the expanded approach including modular Commands and Handlers, this task has been expanded to 4 SEQUENTIAL subtasks:
 
 **EXECUTION ORDER:**
 1. **Subtask 1**: [meta-level-restructure-phase-1-core-system.md](./meta-level-restructure-phase-1-core-system.md) – Core Framework System (3 hours)
 2. **Subtask 2**: [meta-level-restructure-phase-2-integration.md](./meta-level-restructure-phase-2-integration.md) – Integration & APIs (3 hours) - REQUIRES Subtask 1 completion
+3. **Subtask 3**: [meta-level-restructure-phase-3-modular-commands.md](./meta-level-restructure-phase-3-modular-commands.md) – Modular Commands System (3 hours) - REQUIRES Subtask 2 completion
+4. **Subtask 4**: [meta-level-restructure-phase-4-modular-handlers.md](./meta-level-restructure-phase-4-modular-handlers.md) – Modular Handlers System (3 hours) - REQUIRES Subtask 3 completion
 
 **NO PARALLEL EXECUTION - SEQUENTIAL ONLY**
 
@@ -69,6 +89,22 @@ Due to the streamlined approach, this task has been reduced to 2 SEQUENTIAL subt
 - [ ] Integrate with existing `WorkflowOrchestrationService`
 - [ ] Create framework execution endpoints
 - [ ] Add comprehensive testing
+
+### Phase 3: Modular Commands System (3 hours) - SUBTASK 3
+- [ ] Create `backend/application/commands/` modular structure
+- [ ] Implement `CommandRegistry.js` - Command management
+- [ ] Implement `CommandBuilder.js` - Command builder
+- [ ] Organize commands into categories (analysis, generate, refactor, management)
+- [ ] Create command validation and error handling
+- [ ] Integrate with existing CommandBus
+
+### Phase 4: Modular Handlers System (3 hours) - SUBTASK 4
+- [ ] Create `backend/application/handlers/` modular structure
+- [ ] Implement `HandlerRegistry.js` - Handler management
+- [ ] Implement `HandlerBuilder.js` - Handler builder
+- [ ] Organize handlers into categories (analysis, generate, refactor, management)
+- [ ] Create handler validation and error handling
+- [ ] Integrate with existing HandlerBus
 
 ## 5. Architecture Design
 
@@ -164,6 +200,102 @@ class PromptService {
 }
 ```
 
+### Modular Commands Integration:
+```javascript
+// CommandRegistry verwaltet Commands modular
+class CommandRegistry {
+  constructor() {
+    this.commands = new Map();
+    this.categories = new Map();
+  }
+
+  register(commandName, commandClass, category = 'default') {
+    this.commands.set(commandName, commandClass);
+    
+    if (!this.categories.has(category)) {
+      this.categories.set(category, new Set());
+    }
+    this.categories.get(category).add(commandName);
+  }
+
+  getByCategory(category) {
+    return Array.from(this.categories.get(category) || []);
+  }
+}
+
+// CommandBuilder erstellt Commands mit Validierung
+class CommandBuilder {
+  constructor(registry) {
+    this.registry = registry;
+  }
+
+  build(commandName, params = {}) {
+    const CommandClass = this.registry.get(commandName);
+    
+    if (!CommandClass) {
+      throw new Error(`Command not found: ${commandName}`);
+    }
+
+    const command = new CommandClass(params);
+    
+    // Validate command
+    if (typeof command.validateParams === 'function') {
+      command.validateParams(params);
+    }
+
+    return command;
+  }
+}
+```
+
+### Modular Handlers Integration:
+```javascript
+// HandlerRegistry verwaltet Handlers modular
+class HandlerRegistry {
+  constructor() {
+    this.handlers = new Map();
+    this.categories = new Map();
+  }
+
+  register(handlerName, handlerClass, category = 'default') {
+    this.handlers.set(handlerName, handlerClass);
+    
+    if (!this.categories.has(category)) {
+      this.categories.set(category, new Set());
+    }
+    this.categories.get(category).add(handlerName);
+  }
+
+  getByCategory(category) {
+    return Array.from(this.categories.get(category) || []);
+  }
+}
+
+// HandlerBuilder erstellt Handlers mit Validierung
+class HandlerBuilder {
+  constructor(registry) {
+    this.registry = registry;
+  }
+
+  build(handlerName, dependencies = {}) {
+    const HandlerClass = this.registry.get(handlerName);
+    
+    if (!HandlerClass) {
+      throw new Error(`Handler not found: ${handlerName}`);
+    }
+
+    const handler = new HandlerClass(dependencies);
+    
+    // Validate handler
+    if (typeof handler.validateDependencies === 'function') {
+      handler.validateDependencies(dependencies);
+    }
+
+    return handler;
+  }
+}
+```
+
 ## 6. Code Standards & Patterns
 - **Coding Style**: ESLint with existing rules, Prettier Formatting
 - **Naming Conventions**: camelCase for variables/functions, PascalCase for classes, kebab-case for folders
@@ -173,6 +305,7 @@ class PromptService {
 - **Documentation**: JSDoc for all public methods, README updates
 - **JSON Schema**: Validate framework configurations with JSON schemas
 - **DDD Compliance**: Framework components follow DDD patterns while integrating with existing services
+- **Modular Architecture**: Commands and Handlers follow modular patterns with Registry and Builder
 
 ## 7. Security Considerations
 - [ ] Input validation for JSON framework configurations
@@ -181,6 +314,7 @@ class PromptService {
 - [ ] Rate limiting for framework executions
 - [ ] Audit logging for all framework operations
 - [ ] Content-Library API security (CORS, authentication)
+- [ ] Command and Handler validation and sanitization
 
 ## 8. Performance Requirements
 - **Response Time**: < 100ms for framework executions
@@ -188,6 +322,7 @@ class PromptService {
 - **Memory Usage**: < 256MB for framework services (reduced from 512MB)
 - **Database Queries**: No additional database queries (uses existing)
 - **Caching Strategy**: Prompt caching for 1 hour, framework config caching for 24 hours
+- **Command/Handler Performance**: < 50ms for command/handler operations
 
 ## 9. Testing Strategy
 
@@ -196,16 +331,24 @@ class PromptService {
 - [ ] Test file: `tests/unit/domain/frameworks/FrameworkRegistry.test.js`
 - [ ] Test file: `tests/unit/infrastructure/external/PromptService.test.js`
 - [ ] Test file: `tests/unit/presentation/api/ContentLibraryController.test.js`
+- [ ] Test file: `tests/unit/application/commands/CommandRegistry.test.js`
+- [ ] Test file: `tests/unit/application/commands/CommandBuilder.test.js`
+- [ ] Test file: `tests/unit/application/handlers/HandlerRegistry.test.js`
+- [ ] Test file: `tests/unit/application/handlers/HandlerBuilder.test.js`
 
 ### Integration Tests:
 - [ ] Test file: `tests/integration/domain/framework-integration.test.js`
 - [ ] Test scenarios: Framework integration with existing workflow infrastructure
 - [ ] Test data: Mock content-library responses
+- [ ] Test file: `tests/integration/application/command-handler-integration.test.js`
+- [ ] Test scenarios: Command and Handler integration with existing CommandBus
 
 ### E2E Tests:
 - [ ] Test file: `tests/e2e/framework-execution.test.js`
 - [ ] User flows: Framework execution with content-library prompts
 - [ ] API testing: Content-Library and Framework endpoints
+- [ ] Test file: `tests/e2e/command-handler-execution.test.js`
+- [ ] User flows: Command and Handler execution flows
 
 ## 10. Documentation Requirements
 
@@ -214,12 +357,18 @@ class PromptService {
 - [ ] README for JSON-based framework architecture
 - [ ] API documentation for Content-Library and Framework endpoints
 - [ ] Architecture diagrams for framework integration
+- [ ] JSDoc comments for all command and handler methods
+- [ ] README for modular Commands and Handlers architecture
+- [ ] API documentation for Command and Handler endpoints
 
 ### User Documentation:
 - [ ] Framework Configuration Guide
 - [ ] Content-Library Integration Guide
 - [ ] JSON Schema Documentation
 - [ ] Framework Creation Guide
+- [ ] Command Creation Guide
+- [ ] Handler Creation Guide
+- [ ] Modular Architecture Guide
 
 ## 11. Deployment Checklist
 
@@ -228,6 +377,7 @@ class PromptService {
 - [ ] JSON configurations validated against schemas
 - [ ] Content-Library API endpoints functional
 - [ ] Framework integration with existing workflow infrastructure working
+- [ ] Command and Handler modular system functional
 - [ ] Code review completed and approved
 - [ ] Documentation updated and reviewed
 - [ ] Security scan passed
@@ -237,6 +387,7 @@ class PromptService {
 - [ ] Framework services deployed
 - [ ] Content-Library API deployed
 - [ ] Framework configurations deployed
+- [ ] Command and Handler modular system deployed
 - [ ] Integration with existing services verified
 - [ ] Service restarts if needed
 - [ ] Health checks configured
@@ -244,6 +395,7 @@ class PromptService {
 ### Post-deployment:
 - [ ] Monitor logs for errors
 - [ ] Verify framework execution with content-library prompts
+- [ ] Verify command and handler execution
 - [ ] Performance monitoring active
 - [ ] User feedback collection enabled
 
@@ -251,6 +403,7 @@ class PromptService {
 - [ ] Backup of existing workflow infrastructure before framework addition
 - [ ] Rollback script for framework components
 - [ ] Content-Library API rollback procedure
+- [ ] Command and Handler modular system rollback procedure
 - [ ] Communication plan for stakeholders
 
 ## 13. Success Criteria
@@ -258,8 +411,11 @@ class PromptService {
 ### Overall Success Criteria
 - [ ] JSON-based framework system functional
 - [ ] Content-Library integration working
+- [ ] Modular Commands system functional
+- [ ] Modular Handlers system functional
 - [ ] All existing functionality maintained
 - [ ] Framework execution with prompts working
+- [ ] Command and Handler execution working
 - [ ] Performance requirements met
 - [ ] Security requirements met
 - [ ] Documentation complete and accurate
@@ -278,15 +434,31 @@ class PromptService {
   - [ ] Integration with existing WorkflowOrchestrationService working
   - [ ] All API endpoints tested and functional
 
+- **Subtask 3**: Modular Commands System (REQUIRES Subtask 2 completion)
+  - [ ] CommandRegistry.js implemented with category management
+  - [ ] CommandBuilder.js implemented with validation
+  - [ ] Commands organized into categories (analysis, generate, refactor, management)
+  - [ ] Integration with existing CommandBus working
+  - [ ] All command operations tested and functional
+
+- **Subtask 4**: Modular Handlers System (REQUIRES Subtask 3 completion)
+  - [ ] HandlerRegistry.js implemented with category management
+  - [ ] HandlerBuilder.js implemented with validation
+  - [ ] Handlers organized into categories (analysis, generate, refactor, management)
+  - [ ] Integration with existing HandlerBus working
+  - [ ] All handler operations tested and functional
+
 ## 14. Risk Assessment
 
 ### Low Risk:
 - [ ] Content-Library integration - Mitigation: API-based approach
 - [ ] Performance impact - Mitigation: Caching and optimization
+- [ ] Command/Handler modularity - Mitigation: Registry and Builder patterns
 
 ### Medium Risk:
 - [ ] JSON configuration complexity - Mitigation: Schema validation
 - [ ] Framework execution errors - Mitigation: Comprehensive error handling
+- [ ] Command/Handler integration - Mitigation: Extensive testing
 
 ### High Risk:
 - [ ] Breaking existing functionality - Mitigation: Extensive testing and rollback plan
@@ -315,10 +487,14 @@ class PromptService {
   "execution_order": "SEQUENTIAL_ONLY",
   "subtask_execution": {
     "subtask_1": "meta-level-restructure-phase-1-core-system.md",
-    "subtask_2": "meta-level-restructure-phase-2-integration.md"
+    "subtask_2": "meta-level-restructure-phase-2-integration.md",
+    "subtask_3": "meta-level-restructure-phase-3-modular-commands.md",
+    "subtask_4": "meta-level-restructure-phase-4-modular-handlers.md"
   },
   "dependencies": {
-    "subtask_2": ["subtask_1"]
+    "subtask_2": ["subtask_1"],
+    "subtask_3": ["subtask_2"],
+    "subtask_4": ["subtask_3"]
   }
 }
 ```
@@ -327,6 +503,9 @@ class PromptService {
 - [ ] JSON-based framework system created
 - [ ] Content-Library integration working
 - [ ] Framework execution functional
+- [ ] Modular Commands system created
+- [ ] Modular Handlers system created
+- [ ] Command and Handler execution functional
 - [ ] Tests passing
 - [ ] No build errors
 - [ ] Code follows standards
@@ -335,8 +514,8 @@ class PromptService {
 ## 16. References & Resources
 - **Technical Documentation**: JSON-Based Framework Architecture Docs
 - **API References**: Content-Library API Structure
-- **Design Patterns**: Adapter Pattern, Configuration Pattern
-- **Best Practices**: JSON Schema Validation, API Design
+- **Design Patterns**: Adapter Pattern, Configuration Pattern, Registry Pattern, Builder Pattern
+- **Best Practices**: JSON Schema Validation, API Design, Modular Architecture
 - **Similar Implementations**: Existing Content-Library Frameworks
 
 ---
@@ -388,6 +567,66 @@ backend/presentation/api/          # 🆕 NEW: API endpoints
 └── FrameworkController.js         # 🆕 Framework API
 ```
 
+### New Modular Commands System:
+```
+backend/application/commands/       # 🆕 NEW: Modular commands system
+├── CommandRegistry.js             # 🆕 Command management
+├── CommandBuilder.js              # 🆕 Command builder
+├── index.js                       # 🆕 Export
+└── categories/                    # 🆕 Command categories
+    ├── analysis/                  # 🆕 Analysis commands
+    │   ├── AnalyzeArchitectureCommand.js
+    │   ├── AnalyzeCodeQualityCommand.js
+    │   ├── AnalyzeDependenciesCommand.js
+    │   ├── AnalyzeRepoStructureCommand.js
+    │   └── AnalyzeTechStackCommand.js
+    ├── generate/                  # 🆕 Generate commands
+    │   ├── GenerateConfigsCommand.js
+    │   ├── GenerateDocumentationCommand.js
+    │   ├── GenerateScriptsCommand.js
+    │   └── GenerateTestsCommand.js
+    ├── refactor/                  # 🆕 Refactor commands
+    │   ├── OrganizeModulesCommand.js
+    │   ├── RestructureArchitectureCommand.js
+    │   ├── SplitLargeFilesCommand.js
+    │   └── CleanDependenciesCommand.js
+    └── management/                # 🆕 Management commands
+        ├── CreateTaskCommand.js
+        ├── ProcessTodoListCommand.js
+        ├── SendMessageCommand.js
+        └── UpdateTestStatusCommand.js
+```
+
+### New Modular Handlers System:
+```
+backend/application/handlers/       # 🆕 NEW: Modular handlers system
+├── HandlerRegistry.js             # 🆕 Handler management
+├── HandlerBuilder.js              # 🆕 Handler builder
+├── index.js                       # 🆕 Export
+└── categories/                    # 🆕 Handler categories
+    ├── analysis/                  # 🆕 Analysis handlers
+    │   ├── AnalyzeArchitectureHandler.js
+    │   ├── AnalyzeCodeQualityHandler.js
+    │   ├── AnalyzeDependenciesHandler.js
+    │   ├── AnalyzeRepoStructureHandler.js
+    │   └── AnalyzeTechStackHandler.js
+    ├── generate/                  # 🆕 Generate handlers
+    │   ├── GenerateConfigsHandler.js
+    │   ├── GenerateDocumentationHandler.js
+    │   ├── GenerateScriptsHandler.js
+    │   └── GenerateTestsHandler.js
+    ├── refactor/                  # 🆕 Refactor handlers
+    │   ├── OrganizeModulesHandler.js
+    │   ├── RestructureArchitectureHandler.js
+    │   ├── SplitLargeFilesHandler.js
+    │   └── CleanDependenciesHandler.js
+    └── management/                # 🆕 Management handlers
+        ├── SendMessageHandler.js
+        ├── GetChatHistoryHandler.js
+        ├── CreateTaskHandler.js
+        └── ProcessTodoListHandler.js
+```
+
 ### Integration Points:
 ```javascript
 // Framework nutzt bestehende Workflow Infrastructure
@@ -432,6 +671,22 @@ class PromptService {
     return await response.text();
   }
 }
+
+// CommandRegistry verwaltet Commands modular
+class CommandRegistry {
+  register(commandName, commandClass, category = 'default') {
+    this.commands.set(commandName, commandClass);
+    // Category management
+  }
+}
+
+// HandlerRegistry verwaltet Handlers modular
+class HandlerRegistry {
+  register(handlerName, handlerClass, category = 'default') {
+    this.handlers.set(handlerName, handlerClass);
+    // Category management
+  }
+}
 ```
 
-This JSON-Based Framework Architecture creates a lightweight framework system that integrates with existing Content-Library prompts and Workflow Infrastructure! 🚀 
+This JSON-Based Framework Architecture creates a lightweight framework system that integrates with existing Content-Library prompts and Workflow Infrastructure, plus modular Commands and Handlers systems! 🚀 

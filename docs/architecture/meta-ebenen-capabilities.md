@@ -27,21 +27,47 @@ graph TB
     end
     
     subgraph "Ebene 1: Workflows"
-        W1["System Health Check"]
-        W2["Code Generation"]
-        W3["Testing Pipeline"]
-        W4["Deployment"]
+        W1["WorkflowRegistry.js"]
+        W2["WorkflowBuilder.js"]
+        W3["System Health Check"]
+        W4["Code Generation"]
+        W5["Testing Pipeline"]
+        W6["Deployment"]
         
         WF_CAP["Workflow Capabilities:<br/>• Step Orchestration<br/>• Context Management<br/>• Error Handling<br/>• Result Aggregation"]
     end
     
     subgraph "Ebene 0: Steps"
-        S1["check_container_status"]
-        S2["generate_response"]
-        S3["apply_config"]
-        S4["run_tests"]
+        S1["StepRegistry.js"]
+        S2["StepBuilder.js"]
+        S3["check_container_status"]
+        S4["generate_response"]
+        S5["apply_config"]
+        S6["run_tests"]
         
         STEP_CAP["Step Capabilities:<br/>• Atomic Operations<br/>• Tool Integration<br/>• Framework Access<br/>• Result Reporting"]
+    end
+    
+    subgraph "Application Layer: Commands"
+        C1["CommandRegistry.js"]
+        C2["CommandBuilder.js"]
+        C3["Analysis Commands"]
+        C4["Generate Commands"]
+        C5["Refactor Commands"]
+        C6["Management Commands"]
+        
+        CMD_CAP["Command Capabilities:<br/>• Business Actions<br/>• Parameter Validation<br/>• Category Management<br/>• Registry Integration"]
+    end
+    
+    subgraph "Application Layer: Handlers"
+        H1["HandlerRegistry.js"]
+        H2["HandlerBuilder.js"]
+        H3["Analysis Handlers"]
+        H4["Generate Handlers"]
+        H5["Refactor Handlers"]
+        H6["Management Handlers"]
+        
+        HND_CAP["Handler Capabilities:<br/>• Use Case Orchestration<br/>• Dependency Management<br/>• Category Management<br/>• Registry Integration"]
     end
     
     %% Connections
@@ -54,21 +80,33 @@ graph TB
     PA2 --> F3
     PA3 --> F4
     
-    F1 --> W1
-    F2 --> W2
-    F3 --> W3
+    F1 --> W3
+    F2 --> W6
+    F3 --> W5
     F4 --> W4
     
-    W1 --> S1
-    W2 --> S2
     W3 --> S3
     W4 --> S4
+    W5 --> S5
+    W6 --> S6
+    
+    C3 --> H3
+    C4 --> H4
+    C5 --> H5
+    C6 --> H6
+    
+    H3 --> F1
+    H4 --> F4
+    H5 --> F2
+    H6 --> F3
     
     %% Capability flows
     SO_CAP -.-> PA_CAP
     PA_CAP -.-> FW_CAP
     FW_CAP -.-> WF_CAP
     WF_CAP -.-> STEP_CAP
+    CMD_CAP -.-> HND_CAP
+    HND_CAP -.-> FW_CAP
 ```
 
 ## IDE Agent Relationship
@@ -217,6 +255,20 @@ graph LR
         ST_FW["Framework Access"]
         ST_REP["Result Reporting"]
     end
+    
+    subgraph "Command Capabilities"
+        CMD_BUSINESS["Business Actions"]
+        CMD_PARAM["Parameter Validation"]
+        CMD_CAT["Category Management"]
+        CMD_REG["Registry Integration"]
+    end
+    
+    subgraph "Handler Capabilities"
+        HND_USECASE["Use Case Orchestration"]
+        HND_DEP["Dependency Management"]
+        HND_CAT["Category Management"]
+        HND_REG["Registry Integration"]
+    end
 ```
 
 ## Framework Execution Flow
@@ -228,17 +280,23 @@ sequenceDiagram
     participant FW as Framework
     participant WF as Workflow
     participant ST as Step
+    participant CMD as Command
+    participant HND as Handler
     
     SO->>SO: Analyze Project Backlog
     SO->>PA: Create Project Run (1-zu-1 IDE)
     SO->>PA: Assign Frameworks
     
-    PA->>FW: Execute Framework
+    PA->>CMD: Create Command from Category
+    CMD->>HND: Create Handler from Category
+    HND->>FW: Execute Framework
     FW->>WF: Select and Run Workflow
     WF->>ST: Run Step
     ST-->>WF: Step Complete
     WF-->>FW: Workflow Complete
-    FW-->>PA: Framework Complete
+    FW-->>HND: Framework Complete
+    HND-->>CMD: Handler Complete
+    CMD-->>PA: Command Complete
     PA-->>SO: Project Status Update
     
     Note over SO: System Orchestrator can start multiple projects, monitor all agents, make decisions, coordinate resources, and resolve IDE conflicts.
@@ -273,15 +331,29 @@ graph TD
         ST_CAPS["Atomic Capabilities:\n• Atomic Operations\n• Tool Integration\n• Framework Access\n• Result Reporting"]
     end
     
+    subgraph "Application Layer: Commands"
+        CMD["Commands"]
+        CMD_CAPS["Business Capabilities:\n• Business Actions\n• Parameter Validation\n• Category Management\n• Registry Integration"]
+    end
+    
+    subgraph "Application Layer: Handlers"
+        HND["Handlers"]
+        HND_CAPS["Use Case Capabilities:\n• Use Case Orchestration\n• Dependency Management\n• Category Management\n• Registry Integration"]
+    end
+    
     SO --> IA
     IA --> FW
     FW --> WF
     WF --> ST
+    CMD --> HND
+    HND --> FW
     
     SO_CAPS --> IA_CAPS
     IA_CAPS --> FW_CAPS
     FW_CAPS --> WF_CAPS
     WF_CAPS --> ST_CAPS
+    CMD_CAPS --> HND_CAPS
+    HND_CAPS --> FW_CAPS
 ```
 
 ## Updated Meta-Levels Table
@@ -293,6 +365,8 @@ graph TD
 | 2 | Framework | Strategie und Workflow-Auswahl | "Analyze Framework" |
 | 1 | Workflow | Reihenfolge von ausführbaren Steps | "System-Analyse" |
 | 0 | Step | Einzelne Aktionen | "check_gpu_usage" |
+| App | Commands | Business Actions | "AnalyzeArchitectureCommand" |
+| App | Handlers | Use Cases | "AnalyzeArchitectureHandler" |
 
 ## Key Insights
 
@@ -352,6 +426,8 @@ graph TD
 - **Frameworks (Level 2)**: Strategy Capabilities + Workflow Selection
 - **Workflows (Level 1)**: Execution Capabilities + Step Orchestration
 - **Steps (Level 0)**: Atomic Capabilities + Tool Integration
+- **Commands (Application)**: Business Action Capabilities + Parameter Validation
+- **Handlers (Application)**: Use Case Capabilities + Dependency Management
 
 ### Multi-IDE Coordination
 - **Analyze Tools** analysieren Affected Files vorher
@@ -372,6 +448,8 @@ graph TD
 - **Steps** führen atomare Aktionen aus (Level 0)
 - **IDE Agents** führen Frameworks aus (Level 3)
 - **System Orchestrator** koordiniert alles (Level 4)
+- **Commands** definieren Business Actions (Application Layer)
+- **Handlers** orchestrieren Use Cases (Application Layer)
 
 ### Projekt-spezifische Beispiele
 
@@ -381,6 +459,8 @@ graph TD
 - **Analyze Framework**: "Wähle System Health Workflow"
 - **System Health Workflow**: "Orchestriere check_container_status"
 - **check_container_status Step**: "Prüfe pidea-backend Container"
+- **AnalyzeArchitectureCommand**: "Business Action definieren"
+- **AnalyzeArchitectureHandler**: "Use Case orchestrieren"
 
 **NixOSControlCenter Projekt:**
 - **System Orchestrator**: "NixOSControlCenter braucht Tests"
@@ -388,5 +468,32 @@ graph TD
 - **Test Framework**: "Wähle Automation Workflow"
 - **Automation Workflow**: "Orchestriere validate_nix_config"
 - **validate_nix_config Step**: "Validiere /etc/nixos/configuration.nix"
+- **TestCorrectionCommand**: "Business Action definieren"
+- **TestCorrectionHandler**: "Use Case orchestrieren"
 
-Diese 5-Ebenen-Architektur ist jetzt vollständig und konsistent! 🚀 
+### Modular Architecture Benefits
+
+**Registry Pattern:**
+- **CommandRegistry**: Zentrale Verwaltung aller Commands
+- **HandlerRegistry**: Zentrale Verwaltung aller Handlers
+- **StepRegistry**: Zentrale Verwaltung aller Steps
+- **WorkflowRegistry**: Zentrale Verwaltung aller Workflows
+- **FrameworkRegistry**: Zentrale Verwaltung aller Frameworks
+
+**Builder Pattern:**
+- **CommandBuilder**: Dynamische Command-Erstellung
+- **HandlerBuilder**: Dynamische Handler-Erstellung
+- **StepBuilder**: Dynamische Step-Erstellung
+- **WorkflowBuilder**: Dynamische Workflow-Erstellung
+- **FrameworkBuilder**: Dynamische Framework-Erstellung
+
+**Category Pattern:**
+- **analysis**: Analyse-bezogene Komponenten
+- **generate**: Generierung-bezogene Komponenten
+- **refactor**: Refactoring-bezogene Komponenten
+- **management**: Management-bezogene Komponenten
+- **testing**: Testing-bezogene Komponenten
+
+Diese 7-Ebenen-Architektur ist jetzt vollständig und konsistent! 🚀
+
+**KOMPLETTE MODULARE ARCHITEKTUR:** Commands, Handlers, Steps, Workflows, Frameworks, Agents, Orchestrator - ALLES mit Registry, Builder, Categories! 🚀 

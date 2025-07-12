@@ -68,6 +68,8 @@ sequenceDiagram
     participant PA1 as 🖥️ Cursor Agent (PIDEA)
     participant PA2 as 🖥️ VSCode Agent (NixOSControlCenter)
     participant PA3 as 🖥️ Cursor Agent (NCC-HomeLab)
+    participant CMD as 📝 Commands (Application Layer)
+    participant HND as 🔧 Handlers (Application Layer)
     participant FW as 🔧 Security Framework (Level 2)
     participant WF as 📋 Security Workflow (Level 1)
     participant ST as ⚡ Security Steps (Level 0)
@@ -88,36 +90,48 @@ sequenceDiagram
     SO->>PA3: "Execute Security Framework on NCC-HomeLab"
     
     Note over PA1: PIDEA Agent Execution
-    PA1->>FW: "Run Security Framework"
+    PA1->>CMD: "Create SecurityCommand from Category"
+    CMD->>HND: "Create SecurityHandler from Category"
+    HND->>FW: "Run Security Framework"
     FW->>WF: "Select Security Workflow"
     WF->>ST: "Execute Security Steps"
     ST->>Git: "Create Security Branch"
     Git-->>ST: "Branch Created"
     ST-->>WF: "Security Scan Complete"
     WF-->>FW: "Workflow Complete"
-    FW-->>PA1: "Framework Complete"
+    FW-->>HND: "Framework Complete"
+    HND-->>CMD: "Handler Complete"
+    CMD-->>PA1: "Command Complete"
     PA1-->>SO: "PIDEA Security Complete"
     
     Note over PA2: NixOSControlCenter Agent Execution
-    PA2->>FW: "Run Security Framework"
+    PA2->>CMD: "Create SecurityCommand from Category"
+    CMD->>HND: "Create SecurityHandler from Category"
+    HND->>FW: "Run Security Framework"
     FW->>WF: "Select Security Workflow"
     WF->>ST: "Execute Security Steps"
     ST->>Git: "Create Security Branch"
     Git-->>ST: "Branch Created"
     ST-->>WF: "Security Scan Complete"
     WF-->>FW: "Workflow Complete"
-    FW-->>PA2: "Framework Complete"
+    FW-->>HND: "Framework Complete"
+    HND-->>CMD: "Handler Complete"
+    CMD-->>PA2: "Command Complete"
     PA2-->>SO: "NixOSControlCenter Security Complete"
     
     Note over PA3: NCC-HomeLab Agent Execution
-    PA3->>FW: "Run Security Framework"
+    PA3->>CMD: "Create SecurityCommand from Category"
+    CMD->>HND: "Create SecurityHandler from Category"
+    HND->>FW: "Run Security Framework"
     FW->>WF: "Select Security Workflow"
     WF->>ST: "Execute Security Steps"
     ST->>Git: "Create Security Branch"
     Git-->>ST: "Branch Created"
     ST-->>WF: "Security Scan Complete"
     WF-->>FW: "Workflow Complete"
-    FW-->>PA3: "Framework Complete"
+    FW-->>HND: "Framework Complete"
+    HND-->>CMD: "Handler Complete"
+    CMD-->>PA3: "Command Complete"
     PA3-->>SO: "NCC-HomeLab Security Complete"
     
     Note over SO: Result Aggregation (Mensch oder LLM)
@@ -212,32 +226,32 @@ class CursorAgent {
     // Load project context
     const projectContext = await this.loadProjectContext(project);
     
-    // Execute appropriate framework
-    switch (frameworkType) {
-      case "SecurityFramework":
-        return await this.executeSecurityFramework(projectContext, frameworkOptions);
-      case "AnalysisFramework":
-        return await this.executeAnalysisFramework(projectContext, frameworkOptions);
-      // ... other frameworks
-    }
-  }
-  
-  async executeSecurityFramework(projectContext, options) {
-    // Framework Level (2) - WAS will ich machen?
-    const securityFramework = new SecurityFramework({
-      project: projectContext.name,
-      type: "comprehensive",
+    // Create Command from Category
+    const commandRegistry = new CommandRegistry();
+    const securityCommand = commandRegistry.buildFromCategory('security', 'SecurityCheckCommand', {
+      projectPath: projectContext.path,
+      securityType: "comprehensive",
       includeVulnerabilityScan: true,
       includeDependencyCheck: true
     });
     
-    // Execute framework
-    const result = await securityFramework.execute(projectContext, options);
+    // Create Handler from Category
+    const handlerRegistry = new HandlerRegistry();
+    const securityHandler = handlerRegistry.buildFromCategory('security', 'SecurityCheckHandler', {
+      framework: frameworkType,
+      workflow: 'security',
+      step: 'vulnerability_scan'
+    });
+    
+    // Execute Handler with Command
+    const result = await securityHandler.handle(securityCommand);
     
     return {
       project: projectContext.name,
       agent: "Cursor Agent",
-      framework: "SecurityFramework",
+      framework: frameworkType,
+      command: securityCommand,
+      handler: securityHandler,
       result: result,
       timestamp: new Date()
     };
@@ -245,19 +259,95 @@ class CursorAgent {
 }
 ```
 
-### **4. Framework Execution:**
+### **4. Command Implementation:**
+```javascript
+// SecurityCheckCommand (Application Layer) - Business Action
+class SecurityCheckCommand {
+  constructor(params) {
+    this.registry = new CommandRegistry();
+    this.builder = new CommandBuilder();
+    this.projectPath = params.projectPath;
+    this.securityType = params.securityType;
+    this.includeVulnerabilityScan = params.includeVulnerabilityScan;
+    this.includeDependencyCheck = params.includeDependencyCheck;
+  }
+  
+  static fromCategory(category, name, params) {
+    return this.registry.buildFromCategory(category, name, params);
+  }
+  
+  validate() {
+    // Parameter validation
+    if (!this.projectPath) {
+      throw new Error('Project path is required');
+    }
+    if (!this.securityType) {
+      throw new Error('Security type is required');
+    }
+    return true;
+  }
+}
+```
+
+### **5. Handler Implementation:**
+```javascript
+// SecurityCheckHandler (Application Layer) - Use Case Orchestration
+class SecurityCheckHandler {
+  constructor(dependencies) {
+    this.registry = new HandlerRegistry();
+    this.builder = new HandlerBuilder();
+    this.framework = dependencies.framework;
+    this.workflow = dependencies.workflow;
+    this.step = dependencies.step;
+  }
+  
+  async handle(command) {
+    // Validate command
+    command.validate();
+    
+    // Use Case Orchestration
+    const framework = this.framework;
+    const workflow = this.workflow;
+    const step = this.step;
+    
+    // Execute framework with workflow and step
+    const result = await framework.execute(workflow, step, command);
+    
+    return {
+      success: true,
+      command: command.constructor.name,
+      handler: this.constructor.name,
+      result: result,
+      timestamp: new Date()
+    };
+  }
+  
+  static fromCategory(category, name, dependencies) {
+    return this.registry.buildFromCategory(category, name, dependencies);
+  }
+}
+```
+
+### **6. Framework Execution:**
 ```javascript
 // Security Framework (Level 2) - WAS will ich machen?
 class SecurityFramework {
-  async execute(projectContext, options) {
+  async execute(workflowType, stepType, command) {
     // Select appropriate workflow based on project type
-    const workflow = this.selectSecurityWorkflow(projectContext);
+    const workflowRegistry = new WorkflowRegistry();
+    const workflow = workflowRegistry.getByCategory(workflowType);
+    
+    // Select appropriate step
+    const stepRegistry = new StepRegistry();
+    const step = stepRegistry.getByCategory(stepType);
     
     // Create workflow context
     const workflowContext = new WorkflowContext({
-      project: projectContext,
+      project: command.projectPath,
       framework: "SecurityFramework",
-      options: options
+      workflow: workflow,
+      step: step,
+      command: command
     });
     
     // Execute workflow
@@ -265,32 +355,22 @@ class SecurityFramework {
     
     return result;
   }
-  
-  selectSecurityWorkflow(projectContext) {
-    // Choose workflow based on project characteristics
-    if (projectContext.type === "backend") {
-      return new BackendSecurityWorkflow();
-    } else if (projectContext.type === "frontend") {
-      return new FrontendSecurityWorkflow();
-    } else {
-      return new GeneralSecurityWorkflow();
-    }
-  }
 }
 ```
 
-### **5. Workflow Execution:**
+### **7. Workflow Execution:**
 ```javascript
 // Security Workflow (Level 1) - WELCHE Schritte brauche ich?
-class BackendSecurityWorkflow {
+class SecurityWorkflow {
   async execute(context) {
+    const stepRegistry = new StepRegistry();
     const steps = [
-      new CreateSecurityBranchStep(),
-      new VulnerabilityScanStep(),
-      new DependencyCheckStep(),
-      new CodeSecurityAnalysisStep(),
-      new CreateSecurityReportStep(),
-      new CreatePullRequestStep()
+      stepRegistry.getByCategory('security', 'CreateSecurityBranchStep'),
+      stepRegistry.getByCategory('security', 'VulnerabilityScanStep'),
+      stepRegistry.getByCategory('security', 'DependencyCheckStep'),
+      stepRegistry.getByCategory('security', 'CodeSecurityAnalysisStep'),
+      stepRegistry.getByCategory('security', 'CreateSecurityReportStep'),
+      stepRegistry.getByCategory('security', 'CreatePullRequestStep')
     ];
     
     const results = [];
@@ -305,7 +385,7 @@ class BackendSecurityWorkflow {
     
     return {
       success: true,
-      workflow: "BackendSecurityWorkflow",
+      workflow: "SecurityWorkflow",
       steps: results,
       summary: this.generateSummary(results)
     };
@@ -313,20 +393,20 @@ class BackendSecurityWorkflow {
 }
 ```
 
-### **6. Step Execution:**
+### **8. Step Execution:**
 ```javascript
 // Vulnerability Scan Step (Level 0) - WIE mache ich es konkret?
 class VulnerabilityScanStep {
   async execute(context) {
-    const { project } = context;
+    const { project, command } = context;
     
     // Step Level (0) - WIE mache ich es konkret?
     const vulnerabilityScanner = new VulnerabilityScanner();
     
     const scanResult = await vulnerabilityScanner.scan({
-      projectPath: project.path,
-      scanType: "comprehensive",
-      includeDependencies: true,
+      projectPath: project,
+      scanType: command.securityType,
+      includeDependencies: command.includeDependencyCheck,
       includeCodeAnalysis: true
     });
     
@@ -334,7 +414,7 @@ class VulnerabilityScanStep {
     if (scanResult.vulnerabilities.length > 0) {
       const gitWorkflow = new GitWorkflowManager();
       const branchResult = await gitWorkflow.createBranch({
-        projectPath: project.path,
+        projectPath: project,
         branchName: `security/fix-vulnerabilities-${Date.now()}`,
         baseBranch: "main"
       });
@@ -424,7 +504,7 @@ class SystemOrchestrator {
 
 **User sagt:** "Run Security Checks on PIDEA, NixOSControlCenter, NCC-HomeLab Projects"
 
-**System Orchestrator (4) - OPTIONAL!** → **IDE Agents (3)** → **Security Framework (2)** → **Security Workflow (1)** → **Security Steps (0)** → **Git Workflow** → **Ergebnis-Aggregation** → **Chat Response**
+**System Orchestrator (4) - OPTIONAL!** → **IDE Agents (3)** → **Commands (App)** → **Handlers (App)** → **Security Framework (2)** → **Security Workflow (1)** → **Security Steps (0)** → **Git Workflow** → **Ergebnis-Aggregation** → **Chat Response**
 
 **Das ist die komplette Meta-Ebenen Architektur in Aktion!** 🚀
 
@@ -435,4 +515,6 @@ class SystemOrchestrator {
 1. **👤 Du als System Orchestrator**: Direkte Kontrolle, sofort verfügbar
 2. **🤖 LLM + MCP Server als System Orchestrator**: Optional für Multi-Device Management
 
-**Deine Frameworks, Workflows und Steps funktionieren bereits!** Du kannst sie direkt nutzen! 🚀 
+**Deine Frameworks, Workflows, Steps, Commands und Handlers funktionieren bereits!** Du kannst sie direkt nutzen! 🚀
+
+**KOMPLETTE MODULARE ARCHITEKTUR:** Commands, Handlers, Steps, Workflows, Frameworks, Agents, Orchestrator - ALLES mit Registry, Builder, Categories! 🚀 
