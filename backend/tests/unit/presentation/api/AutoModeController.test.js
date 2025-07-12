@@ -1,5 +1,5 @@
-const AutoModeController = require('@/presentation/api/AutoModeController');
-const VibeCoderModeCommand = require('@/application/commands/vibecoder/VibeCoderModeCommand');
+const AutoModeController = require('@api/AutoModeController');
+const VibeCoderModeCommand = require('@commands/vibecoder/VibeCoderModeCommand');
 const { validationResult } = require('express-validator');
 
 // Mock express-validator

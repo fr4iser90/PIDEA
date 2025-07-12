@@ -9,8 +9,8 @@ const {
   WorkflowComposer,
   WorkflowTemplateRegistry,
   StepRegistry
-} = require('@/domain/workflows');
-const UnifiedWorkflowService = require('@/domain/services/UnifiedWorkflowService');
+} = require('@domain/workflows');
+const UnifiedWorkflowService = require('@services/UnifiedWorkflowService');
 
 describe('Unified Workflow Foundation 1B', () => {
   let service;

@@ -2,7 +2,7 @@
  * TestMetadata Entity Unit Tests
  */
 
-const TestMetadata = require('@/domain/entities/TestMetadata');
+const TestMetadata = require('@entities/TestMetadata');
 
 describe('TestMetadata Entity', () => {
   let testMetadata;

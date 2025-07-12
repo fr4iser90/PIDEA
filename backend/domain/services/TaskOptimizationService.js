@@ -1,6 +1,6 @@
-const { Task, TaskExecution } = require('@/domain/entities');
-const { TaskStatus, TaskPriority, TaskType } = require('@/domain/value-objects');
-const { TaskRepository, TaskExecutionRepository } = require('@/domain/repositories');
+const { Task, TaskExecution } = require('@domain/entities');
+const { TaskStatus, TaskPriority, TaskType } = require('@domain/value-objects');
+const { TaskRepository, TaskExecutionRepository } = require('@domain/repositories');
 
 /**
  * TaskOptimizationService - Provides AI-powered optimization algorithms

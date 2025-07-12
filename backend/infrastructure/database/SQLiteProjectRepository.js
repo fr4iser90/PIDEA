@@ -1,4 +1,4 @@
-const ProjectRepository = require('@/domain/repositories/ProjectRepository');
+const ProjectRepository = require('@repositories/ProjectRepository');
 const path = require('path');
 
 class SQLiteProjectRepository extends ProjectRepository {

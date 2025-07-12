@@ -6,7 +6,7 @@ const fs = require('fs');
 const rateLimit = require('express-rate-limit');
 const helmet = require('helmet');
 const cors = require('cors');
-const winston = require('winston');
+
 
 // Auto-Security
 const AutoSecurityManager = require('./infrastructure/auto/AutoSecurityManager');
@@ -104,25 +104,16 @@ class Application {
   }
 
   setupLogger() {
-    return winston.createLogger({
-      level: this.autoSecurityManager.isProduction() ? 'info' : 'debug',
-      format: winston.format.combine(
-        winston.format.timestamp(),
-        winston.format.errors({ stack: true }),
-        winston.format.json()
-      ),
-      defaultMeta: { service: 'cursor-chat-agent' },
-      transports: [
-        new winston.transports.File({ filename: 'logs/error.log', level: 'error' }),
-        new winston.transports.File({ filename: 'logs/combined.log' }),
-        new winston.transports.Console({
-          format: winston.format.combine(
-            winston.format.colorize(),
-            winston.format.simple()
-          )
-        })
-      ]
-    });
+    return {
+      info: (message, ...args) => console.log(`[INFO] ${message}`, ...args),
+      error: (message, ...args) => console.error(`[ERROR] ${message}`, ...args),
+      debug: (message, ...args) => {
+        if (!this.autoSecurityManager.isProduction()) {
+          console.log(`[DEBUG] ${message}`, ...args);
+        }
+      },
+      warn: (message, ...args) => console.warn(`[WARN] ${message}`, ...args)
+    };
   }
 
   async initialize() {

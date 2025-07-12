@@ -5,11 +5,11 @@ require('module-alias/register');
 const path = require('path');
 const fs = require('fs-extra');
 const { execSync } = require('child_process');
-const TestCorrectionService = require('@/domain/services/TestCorrectionService');
-const TestAnalyzer = require('@/infrastructure/external/TestAnalyzer');
-const TestFixer = require('@/infrastructure/external/TestFixer');
-const CoverageAnalyzerService = require('@/domain/services/CoverageAnalyzerService');
-const logger = require('@/infrastructure/logging/logger');
+const TestCorrectionService = require('@services/TestCorrectionService');
+const TestAnalyzer = require('@external/TestAnalyzer');
+const TestFixer = require('@external/TestFixer');
+const CoverageAnalyzerService = require('@services/CoverageAnalyzerService');
+const logger = require('@logging/logger');
 
 class AutoFixTests {
   constructor(options = {}) {

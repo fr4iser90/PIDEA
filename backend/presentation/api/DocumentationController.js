@@ -1650,7 +1650,7 @@ ${lowPriorityTasks.map((task, index) => `
         // Speichere die Response in die ChatRepository - KORREKT mit ChatMessage Objekt
         if (this.chatRepository) {
             try {
-                const ChatMessage = require('@/domain/entities/ChatMessage');
+                const ChatMessage = require('@entities/ChatMessage');
                 
                 // Erstelle ein richtiges ChatMessage Objekt mit Factory-Methode
                 const message = ChatMessage.createAIMessage(

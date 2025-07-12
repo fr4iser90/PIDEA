@@ -1,7 +1,7 @@
 /**
  * Unit tests for ExecutionContext
  */
-const ExecutionContext = require('@/domain/workflows/execution/ExecutionContext');
+const ExecutionContext = require('@workflows/execution/ExecutionContext');
 
 describe('ExecutionContext', () => {
   let mockWorkflow;

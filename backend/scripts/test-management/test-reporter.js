@@ -8,7 +8,7 @@ require('module-alias/register');
 
 const fs = require('fs');
 const path = require('path');
-const TestManagementService = require('@/domain/services/TestManagementService');
+const TestManagementService = require('@services/TestManagementService');
 
 /**
  * Strip ANSI color codes from text
@@ -54,8 +54,8 @@ async function main() {
 
   if (testData && Array.isArray(testData)) {
     // Wenn Testdaten aus Datei geladen wurden, erstelle einen Dummy-Repo
-    const TestMetadata = require('@/domain/entities/TestMetadata');
-    const TestMetadataRepository = require('@/domain/repositories/TestMetadataRepository');
+    const TestMetadata = require('@entities/TestMetadata');
+    const TestMetadataRepository = require('@repositories/TestMetadataRepository');
     const repo = new TestMetadataRepository();
     for (const t of testData) {
       try {

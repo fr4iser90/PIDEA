@@ -1,6 +1,6 @@
-const TaskTemplate = require('@/domain/entities/TaskTemplate');
-const TaskType = require('@/domain/value-objects/TaskType');
-const TaskPriority = require('@/domain/value-objects/TaskPriority');
+const TaskTemplate = require('@entities/TaskTemplate');
+const TaskType = require('@value-objects/TaskType');
+const TaskPriority = require('@value-objects/TaskPriority');
 
 /**
  * SQLiteTaskTemplateRepository - SQLite implementation of TaskTemplateRepository

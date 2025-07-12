@@ -95,7 +95,7 @@ class CreateTaskHandler {
             }
 
             // Create task entity directly (since taskGenerationService is null)
-            const Task = require('@/domain/entities/Task');
+            const Task = require('@entities/Task');
             const task = Task.create(
                 command.projectId,
                 command.title,

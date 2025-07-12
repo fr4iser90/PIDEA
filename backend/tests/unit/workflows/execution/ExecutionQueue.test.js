@@ -1,7 +1,7 @@
 /**
  * Unit tests for ExecutionQueue
  */
-const ExecutionQueue = require('@/domain/workflows/execution/ExecutionQueue');
+const ExecutionQueue = require('@workflows/execution/ExecutionQueue');
 
 describe('ExecutionQueue', () => {
   let executionQueue;

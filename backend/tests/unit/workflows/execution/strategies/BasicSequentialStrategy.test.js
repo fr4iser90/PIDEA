@@ -1,8 +1,8 @@
 /**
  * Unit tests for BasicSequentialStrategy
  */
-const BasicSequentialStrategy = require('@/domain/workflows/execution/strategies/BasicSequentialStrategy');
-const { StepExecutionException } = require('@/domain/workflows/execution/exceptions/ExecutionException');
+const BasicSequentialStrategy = require('@workflows/execution/strategies/BasicSequentialStrategy');
+const { StepExecutionException } = require('@workflows/execution/exceptions/ExecutionException');
 
 describe('BasicSequentialStrategy', () => {
   let strategy;

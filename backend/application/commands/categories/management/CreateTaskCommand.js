@@ -1,5 +1,5 @@
-const TaskPriority = require('@/domain/value-objects/TaskPriority');
-const TaskType = require('@/domain/value-objects/TaskType');
+const TaskPriority = require('@value-objects/TaskPriority');
+const TaskType = require('@value-objects/TaskType');
 
 /**
  * CreateTaskCommand - Command for creating new project-based tasks

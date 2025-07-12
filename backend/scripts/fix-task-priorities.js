@@ -8,9 +8,9 @@
  */
 
 require('module-alias/register');
-const DatabaseConnection = require('@/infrastructure/database/DatabaseConnection');
-const AutoSecurityManager = require('@/infrastructure/auto/AutoSecurityManager');
-const TaskPriority = require('@/domain/value-objects/TaskPriority');
+const DatabaseConnection = require('@database/DatabaseConnection');
+const AutoSecurityManager = require('@auto/AutoSecurityManager');
+const TaskPriority = require('@value-objects/TaskPriority');
 
 class TaskPriorityFixer {
   constructor() {

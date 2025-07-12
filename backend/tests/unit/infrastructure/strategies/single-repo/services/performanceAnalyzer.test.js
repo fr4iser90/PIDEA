@@ -1,5 +1,5 @@
-const PerformanceAnalyzer = require('@/infrastructure/strategies/single-repo/services/performanceAnalyzer');
-const { PERFORMANCE_FILES, PERFORMANCE_DEPENDENCIES } = require('@/infrastructure/strategies/single-repo/constants');
+const PerformanceAnalyzer = require('@strategies/single-repo/services/performanceAnalyzer');
+const { PERFORMANCE_FILES, PERFORMANCE_DEPENDENCIES } = require('@strategies/single-repo/constants');
 
 describe('PerformanceAnalyzer', () => {
   let performanceAnalyzer;

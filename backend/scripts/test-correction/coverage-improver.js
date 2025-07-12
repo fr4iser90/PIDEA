@@ -5,9 +5,9 @@ require('module-alias/register');
 const path = require('path');
 const fs = require('fs-extra');
 const { execSync } = require('child_process');
-const CoverageAnalyzerService = require('@/domain/services/CoverageAnalyzerService');
-const TestCorrectionService = require('@/domain/services/TestCorrectionService');
-const logger = require('@/infrastructure/logging/logger');
+const CoverageAnalyzerService = require('@services/CoverageAnalyzerService');
+const TestCorrectionService = require('@services/TestCorrectionService');
+const logger = require('@logging/logger');
 
 class CoverageImprover {
   constructor(options = {}) {

@@ -1,4 +1,4 @@
-const DocumentationController = require('@/presentation/api/DocumentationController');
+const DocumentationController = require('@api/DocumentationController');
 const path = require('path');
 const fs = require('fs');
 

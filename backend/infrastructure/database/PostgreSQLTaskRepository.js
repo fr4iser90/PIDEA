@@ -2,11 +2,11 @@
  * PostgreSQLTaskRepository
  * PostgreSQL/SQLite implementation of TaskRepository interface using DatabaseConnection
  */
-const TaskRepository = require('@/domain/repositories/TaskRepository');
-const Task = require('@/domain/entities/Task');
-const TaskStatus = require('@/domain/value-objects/TaskStatus');
-const TaskPriority = require('@/domain/value-objects/TaskPriority');
-const TaskType = require('@/domain/value-objects/TaskType');
+const TaskRepository = require('@repositories/TaskRepository');
+const Task = require('@entities/Task');
+const TaskStatus = require('@value-objects/TaskStatus');
+const TaskPriority = require('@value-objects/TaskPriority');
+const TaskType = require('@value-objects/TaskType');
 
 class PostgreSQLTaskRepository extends TaskRepository {
   constructor(databaseConnection) {

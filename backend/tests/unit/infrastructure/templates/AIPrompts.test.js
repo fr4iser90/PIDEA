@@ -1,4 +1,4 @@
-const AIPrompts = require('@/infrastructure/templates/AIPrompts');
+const AIPrompts = require('@templates/AIPrompts');
 
 describe('AIPrompts', () => {
     let aiPrompts;

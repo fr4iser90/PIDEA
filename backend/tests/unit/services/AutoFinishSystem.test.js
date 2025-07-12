@@ -1,8 +1,8 @@
-const AutoFinishSystem = require('@/domain/services/auto-finish/AutoFinishSystem');
-const TodoParser = require('@/domain/services/auto-finish/TodoParser');
-const ConfirmationSystem = require('@/domain/services/auto-finish/ConfirmationSystem');
-const FallbackDetection = require('@/domain/services/auto-finish/FallbackDetection');
-const TaskSequencer = require('@/domain/services/auto-finish/TaskSequencer');
+const AutoFinishSystem = require('@services/auto-finish/AutoFinishSystem');
+const TodoParser = require('@services/auto-finish/TodoParser');
+const ConfirmationSystem = require('@services/auto-finish/ConfirmationSystem');
+const FallbackDetection = require('@services/auto-finish/FallbackDetection');
+const TaskSequencer = require('@services/auto-finish/TaskSequencer');
 
 // Mock dependencies
 const mockCursorIDE = {

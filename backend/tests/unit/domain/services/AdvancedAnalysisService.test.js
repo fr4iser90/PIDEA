@@ -1,10 +1,10 @@
 /**
  * Unit tests for AdvancedAnalysisService
  */
-const AdvancedAnalysisService = require('@/domain/services/AdvancedAnalysisService');
-const LayerValidationService = require('@/domain/services/LayerValidationService');
-const LogicValidationService = require('@/domain/services/LogicValidationService');
-const TaskAnalysisService = require('@/domain/services/TaskAnalysisService');
+const AdvancedAnalysisService = require('@services/AdvancedAnalysisService');
+const LayerValidationService = require('@services/LayerValidationService');
+const LogicValidationService = require('@services/LogicValidationService');
+const TaskAnalysisService = require('@services/TaskAnalysisService');
 
 // Mock dependencies
 jest.mock('@/domain/services/LayerValidationService');

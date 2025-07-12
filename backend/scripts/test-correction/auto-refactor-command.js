@@ -6,7 +6,7 @@ const fs = require('fs-extra');
 const axios = require('axios');
 const { program } = require('commander');
 const AutoRefactorCommand = require('@categories/management/AutoRefactorCommand');
-const logger = require('@/infrastructure/logging/logger');
+const logger = require('@logging/logger');
 
 // Config
 const AGENT_ENDPOINT = process.env.KI_AGENT_ENDPOINT || 'http://localhost:5001/api/agent/tasks';

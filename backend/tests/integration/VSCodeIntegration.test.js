@@ -1,8 +1,8 @@
-const vscodeIDEService = require('@/domain/services/vscodeIDEService');
-const VSCodeDetector = require('@/infrastructure/external/VSCodeDetector');
-const VSCodeStarter = require('@/infrastructure/external/VSCodeStarter');
-const VSCodeExtensionManager = require('@/infrastructure/external/VSCodeExtensionManager');
-const IDEManager = require('@/infrastructure/external/IDEManager');
+const vscodeIDEService = require('@services/vscodeIDEService');
+const VSCodeDetector = require('@external/VSCodeDetector');
+const VSCodeStarter = require('@external/VSCodeStarter');
+const VSCodeExtensionManager = require('@external/VSCodeExtensionManager');
+const IDEManager = require('@external/IDEManager');
 
 // Mock dependencies
 jest.mock('../../infrastructure/external/VSCodeDetector');

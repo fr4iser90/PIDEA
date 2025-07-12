@@ -1,6 +1,6 @@
-const { Task, TaskTemplate, TaskSuggestion } = require('@/domain/entities');
-const { TaskStatus, TaskPriority, TaskType, ProjectType } = require('@/domain/value-objects');
-const { TaskRepository, TaskTemplateRepository, TaskSuggestionRepository } = require('@/domain/repositories');
+const { Task, TaskTemplate, TaskSuggestion } = require('@domain/entities');
+const { TaskStatus, TaskPriority, TaskType, ProjectType } = require('@domain/value-objects');
+const { TaskRepository, TaskTemplateRepository, TaskSuggestionRepository } = require('@domain/repositories');
 
 /**
  * TaskGenerationService - Handles human/AI task creation and generation

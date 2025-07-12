@@ -1,4 +1,4 @@
-const ChatMessage = require('@/domain/entities/ChatMessage');
+const ChatMessage = require('@entities/ChatMessage');
 
 class ChatRepository {
   constructor() {

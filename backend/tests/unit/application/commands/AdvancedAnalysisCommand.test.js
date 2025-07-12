@@ -1,7 +1,7 @@
 /**
  * Unit tests for AdvancedAnalysisCommand
  */
-const AdvancedAnalysisCommand = require('@/application/commands/categories/analysis/AdvancedAnalysisCommand');
+const AdvancedAnalysisCommand = require('@commands/categories/analysis/AdvancedAnalysisCommand');
 
 describe('AdvancedAnalysisCommand', () => {
     let command;

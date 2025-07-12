@@ -3,9 +3,9 @@
  */
 const CreateTaskCommand = require('@categories/management/CreateTaskCommand');
 const CreateTaskHandler = require('@handler-categories/management/CreateTaskHandler');
-const SQLiteTaskRepository = require('@/infrastructure/database/SQLiteTaskRepository');
-const TaskDatabase = require('@/infrastructure/database/TaskDatabase');
-const EventBus = require('@/infrastructure/messaging/EventBus');
+const SQLiteTaskRepository = require('@database/SQLiteTaskRepository');
+const TaskDatabase = require('@database/TaskDatabase');
+const EventBus = require('@messaging/EventBus');
 
 describe('CreateTaskCommand Integration', () => {
     let taskRepository;

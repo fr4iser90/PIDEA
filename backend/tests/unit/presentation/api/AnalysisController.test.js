@@ -1,4 +1,4 @@
-const AnalysisController = require('@/presentation/api/AnalysisController');
+const AnalysisController = require('@api/AnalysisController');
 
 describe('AnalysisController', () => {
   let controller;

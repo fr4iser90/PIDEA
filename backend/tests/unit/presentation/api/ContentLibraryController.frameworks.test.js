@@ -1,4 +1,4 @@
-const ContentLibraryController = require('@/presentation/api/ContentLibraryController');
+const ContentLibraryController = require('@api/ContentLibraryController');
 const fs = require('fs').promises;
 const path = require('path');
 

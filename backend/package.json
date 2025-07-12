@@ -112,7 +112,6 @@
         "task": "./cli/index.js"
     },
     "_moduleAliases": {
-        "@": ".",
         "@domain": "./domain",
         "@application": "./application",
         "@infrastructure": "./infrastructure",

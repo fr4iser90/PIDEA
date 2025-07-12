@@ -5,8 +5,8 @@ require('module-alias/register');
  * Terminal-Output über Files in /tmp/IDEWEB/{port}/
  */
 
-const BrowserManager = require('@/infrastructure/external/BrowserManager');
-const FileBasedWorkspaceDetector = require('@/domain/services/workspace/FileBasedWorkspaceDetector');
+const BrowserManager = require('@external/BrowserManager');
+const FileBasedWorkspaceDetector = require('@services/workspace/FileBasedWorkspaceDetector');
 
 async function testFileBasedDetection() {
   console.log('🚀 TEST: File-Based Workspace Detection');

@@ -1,7 +1,7 @@
 /**
  * Unit tests for HandlerContext
  */
-const HandlerContext = require('@/domain/workflows/handlers/HandlerContext');
+const HandlerContext = require('@workflows/handlers/HandlerContext');
 
 describe('HandlerContext', () => {
   let context;

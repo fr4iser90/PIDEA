@@ -6,7 +6,7 @@ require('module-alias/register');
  * Tracks test execution status and provides analytics
  */
 
-const TestManagementService = require('@/domain/services/TestManagementService');
+const TestManagementService = require('@services/TestManagementService');
 const path = require('path');
 const fs = require('fs').promises;
 const { exec } = require('child_process');

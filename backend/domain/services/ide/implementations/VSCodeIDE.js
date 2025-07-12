@@ -5,7 +5,7 @@
 const BaseIDE = require('../BaseIDE');
 const IDETypes = require('../IDETypes');
 const ChatMessageHandler = require('../../chat/ChatMessageHandler');
-const VSCodeExtensionManager = require('@/infrastructure/external/VSCodeExtensionManager');
+const VSCodeExtensionManager = require('@external/VSCodeExtensionManager');
 
 class VSCodeIDE extends BaseIDE {
   constructor(browserManager, ideManager, eventBus = null) {

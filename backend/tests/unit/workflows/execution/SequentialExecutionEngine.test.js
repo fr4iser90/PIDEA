@@ -1,10 +1,10 @@
 /**
  * Unit tests for SequentialExecutionEngine
  */
-const SequentialExecutionEngine = require('@/domain/workflows/execution/SequentialExecutionEngine');
-const ExecutionContext = require('@/domain/workflows/execution/ExecutionContext');
-const ExecutionResult = require('@/domain/workflows/execution/ExecutionResult');
-const { ExecutionException } = require('@/domain/workflows/execution/exceptions/ExecutionException');
+const SequentialExecutionEngine = require('@workflows/execution/SequentialExecutionEngine');
+const ExecutionContext = require('@workflows/execution/ExecutionContext');
+const ExecutionResult = require('@workflows/execution/ExecutionResult');
+const { ExecutionException } = require('@workflows/execution/exceptions/ExecutionException');
 
 describe('SequentialExecutionEngine', () => {
   let executionEngine;

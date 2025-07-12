@@ -1,9 +1,9 @@
 /**
  * Unit tests for AdvancedAnalysisHandler
  */
-const AdvancedAnalysisHandler = require('@/application/handlers/analyze/AdvancedAnalysisHandler');
-const AdvancedAnalysisCommand = require('@/application/commands/categories/analysis/AdvancedAnalysisCommand');
-const AdvancedAnalysisService = require('@/domain/services/AdvancedAnalysisService');
+const AdvancedAnalysisHandler = require('@handlers/analyze/AdvancedAnalysisHandler');
+const AdvancedAnalysisCommand = require('@commands/categories/analysis/AdvancedAnalysisCommand');
+const AdvancedAnalysisService = require('@services/AdvancedAnalysisService');
 
 // Mock dependencies
 jest.mock('@/domain/services/AdvancedAnalysisService');

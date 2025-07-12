@@ -4,9 +4,9 @@
  * Tests for the core streaming service functionality including
  * session management, frame capture, compression, and streaming.
  */
-const ScreenshotStreamingService = require('@/domain/services/ide-mirror/ScreenshotStreamingService');
-const StreamingSession = require('@/domain/entities/StreamingSession');
-const FrameMetrics = require('@/domain/entities/FrameMetrics');
+const ScreenshotStreamingService = require('@services/ide-mirror/ScreenshotStreamingService');
+const StreamingSession = require('@entities/StreamingSession');
+const FrameMetrics = require('@entities/FrameMetrics');
 
 // Mock dependencies
 jest.mock('@/infrastructure/external/BrowserManager');

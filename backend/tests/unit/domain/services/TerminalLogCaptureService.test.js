@@ -1,4 +1,4 @@
-const TerminalLogCaptureService = require('@/domain/services/TerminalLogCaptureService');
+const TerminalLogCaptureService = require('@services/TerminalLogCaptureService');
 const fs = require('fs').promises;
 const path = require('path');
 
@@ -29,9 +29,9 @@ describe('TerminalLogCaptureService', () => {
     jest.clearAllMocks();
     
     // Get mocked dependencies
-    mockIDEManager = require('@/infrastructure/external/IDEManager');
-    mockBrowserManager = require('@/infrastructure/external/BrowserManager');
-    mockIDEMirrorService = require('@/domain/services/IDEMirrorService');
+    mockIDEManager = require('@external/IDEManager');
+    mockBrowserManager = require('@external/BrowserManager');
+    mockIDEMirrorService = require('@services/IDEMirrorService');
     
     // Setup default mock implementations
     mockIDEManager.prototype.initialize = jest.fn().mockResolvedValue();

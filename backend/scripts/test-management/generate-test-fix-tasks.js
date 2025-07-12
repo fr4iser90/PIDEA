@@ -24,13 +24,13 @@ const backendPath = path.resolve(__dirname, '..', '..');
 require('module').globalPaths.push(backendPath);
 
 // Import services
-const TestReportParser = require('@/domain/services/TestReportParser');
-const TestFixTaskGenerator = require('@/domain/services/TestFixTaskGenerator');
-const AutoTestFixSystem = require('@/domain/services/auto-test/AutoTestFixSystem');
-const SQLiteTaskRepository = require('@/infrastructure/database/SQLiteTaskRepository');
-const CursorIDEService = require('@/domain/services/CursorIDEService');
-const BrowserManager = require('@/infrastructure/external/BrowserManager');
-const IDEManager = require('@/infrastructure/external/IDEManager');
+const TestReportParser = require('@services/TestReportParser');
+const TestFixTaskGenerator = require('@services/TestFixTaskGenerator');
+const AutoTestFixSystem = require('@services/auto-test/AutoTestFixSystem');
+const SQLiteTaskRepository = require('@database/SQLiteTaskRepository');
+const CursorIDEService = require('@services/CursorIDEService');
+const BrowserManager = require('@external/BrowserManager');
+const IDEManager = require('@external/IDEManager');
 
 class TestFixTaskCLI {
   constructor() {

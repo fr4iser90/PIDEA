@@ -1,5 +1,5 @@
-const TestingAnalyzer = require('@/infrastructure/strategies/single-repo/services/testingAnalyzer');
-const { TEST_CONFIGS } = require('@/infrastructure/strategies/single-repo/constants');
+const TestingAnalyzer = require('@strategies/single-repo/services/testingAnalyzer');
+const { TEST_CONFIGS } = require('@strategies/single-repo/constants');
 const path = require('path');
 
 describe('TestingAnalyzer', () => {

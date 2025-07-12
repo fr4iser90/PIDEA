@@ -1,6 +1,6 @@
 const fs = require('fs').promises;
 const path = require('path');
-const DocsTasksHandler = require('@/presentation/api/handlers/DocsTasksHandler');
+const DocsTasksHandler = require('@api/handlers/DocsTasksHandler');
 
 // Mock fs module
 jest.mock('fs', () => ({

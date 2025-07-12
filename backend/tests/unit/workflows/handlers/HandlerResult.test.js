@@ -1,7 +1,7 @@
 /**
  * Unit tests for HandlerResult
  */
-const HandlerResult = require('@/domain/workflows/handlers/HandlerResult');
+const HandlerResult = require('@workflows/handlers/HandlerResult');
 
 describe('HandlerResult', () => {
   describe('constructor', () => {

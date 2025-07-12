@@ -1,7 +1,7 @@
 /**
  * Unit tests for ExecutionResult
  */
-const ExecutionResult = require('@/domain/workflows/execution/ExecutionResult');
+const ExecutionResult = require('@workflows/execution/ExecutionResult');
 
 describe('ExecutionResult', () => {
   let mockResult;

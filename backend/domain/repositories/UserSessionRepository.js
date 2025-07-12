@@ -1,4 +1,4 @@
-const UserSession = require('@/domain/entities/UserSession');
+const UserSession = require('@entities/UserSession');
 
 class UserSessionRepository {
   async save(session) {

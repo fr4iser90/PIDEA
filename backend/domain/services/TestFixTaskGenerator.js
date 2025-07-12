@@ -2,10 +2,10 @@
  * TestFixTaskGenerator - Generate Task entities from parsed test data
  * Converts failing tests, coverage issues, and legacy tests into database tasks
  */
-const Task = require('@/domain/entities/Task');
-const TaskType = require('@/domain/value-objects/TaskType');
-const TaskPriority = require('@/domain/value-objects/TaskPriority');
-const TaskStatus = require('@/domain/value-objects/TaskStatus');
+const Task = require('@entities/Task');
+const TaskType = require('@value-objects/TaskType');
+const TaskPriority = require('@value-objects/TaskPriority');
+const TaskStatus = require('@value-objects/TaskStatus');
 const { v4: uuidv4 } = require('uuid');
 
 class TestFixTaskGenerator {

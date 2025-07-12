@@ -17,7 +17,7 @@ const {
   WorkflowException,
   ValidationException,
   ContextException
-} = require('@/domain/workflows');
+} = require('@domain/workflows');
 
 describe('Unified Workflow Foundation', () => {
   describe('Core Interfaces', () => {

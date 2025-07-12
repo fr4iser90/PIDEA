@@ -1,6 +1,6 @@
 const SendMessageCommand = require('@categories/management/SendMessageCommand');
-const ChatMessage = require('@/domain/entities/ChatMessage');
-const ChatSession = require('@/domain/entities/ChatSession');
+const ChatMessage = require('@entities/ChatMessage');
+const ChatSession = require('@entities/ChatSession');
 
 /**
  * SendMessageHandler - Handles task/AI messaging commands

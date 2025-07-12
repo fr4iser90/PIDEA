@@ -2,8 +2,8 @@ const path = require('path');
 const fs = require('fs-extra');
 const TestCorrectionCommand = require('@categories/management/TestCorrectionCommand');
 const TestCorrectionHandler = require('@handler-categories/management/TestCorrectionHandler');
-const TestCorrectionService = require('@/domain/services/TestCorrectionService');
-const CoverageAnalyzerService = require('@/domain/services/CoverageAnalyzerService');
+const TestCorrectionService = require('@services/TestCorrectionService');
+const CoverageAnalyzerService = require('@services/CoverageAnalyzerService');
 
 describe('Test Correction System Integration', () => {
   let testCorrectionService;

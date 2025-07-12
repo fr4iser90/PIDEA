@@ -1,7 +1,7 @@
-const GetChatHistoryQuery = require('@/application/queries/GetChatHistoryQuery');
-const ChatMessage = require('@/domain/entities/ChatMessage');
+const GetChatHistoryQuery = require('@application/queries/GetChatHistoryQuery');
+const ChatMessage = require('@entities/ChatMessage');
 
-const IDETypes = require('@/domain/services/ide/IDETypes');
+const IDETypes = require('@services/ide/IDETypes');
 
 class GetChatHistoryHandler {
   constructor(chatRepository, ideManager = null, serviceRegistry = null) {

@@ -4,12 +4,12 @@
  * End-to-end tests for the complete IDE screenshot streaming workflow
  * including session management, frame capture, compression, and delivery.
  */
-const ScreenshotStreamingService = require('@/domain/services/ide-mirror/ScreenshotStreamingService');
-const StreamingController = require('@/presentation/api/StreamingController');
+const ScreenshotStreamingService = require('@services/ide-mirror/ScreenshotStreamingService');
+const StreamingController = require('@api/StreamingController');
 const StartStreamingHandler = require('@handler-categories/management/StartStreamingHandler');
 const StopStreamingHandler = require('@handler-categories/management/StopStreamingHandler');
-const StreamingSessionRepository = require('@/infrastructure/database/StreamingSessionRepository');
-const StreamingSession = require('@/domain/entities/StreamingSession');
+const StreamingSessionRepository = require('@database/StreamingSessionRepository');
+const StreamingSession = require('@entities/StreamingSession');
 
 // Mock external dependencies
 jest.mock('@/infrastructure/external/BrowserManager');

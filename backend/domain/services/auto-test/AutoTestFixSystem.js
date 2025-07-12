@@ -2,14 +2,14 @@
  * AutoTestFixSystem - Core service for automated test correction and coverage improvement
  * Handles test analysis, AI-powered fixes, coverage improvement, and autonomous workflow execution
  */
-const TestAnalyzer = require('@/infrastructure/external/TestAnalyzer');
-const TestFixer = require('@/infrastructure/external/TestFixer');
-const CoverageAnalyzer = require('@/infrastructure/external/CoverageAnalyzer');
-const TestReportParser = require('@/domain/services/TestReportParser');
-const TestFixTaskGenerator = require('@/domain/services/TestFixTaskGenerator');
-const WorkflowGitService = require('@/domain/services/WorkflowGitService');
-const ConfirmationSystem = require('@/domain/services/auto-finish/ConfirmationSystem');
-const TaskType = require('@/domain/value-objects/TaskType');
+const TestAnalyzer = require('@external/TestAnalyzer');
+const TestFixer = require('@external/TestFixer');
+const CoverageAnalyzer = require('@external/CoverageAnalyzer');
+const TestReportParser = require('@services/TestReportParser');
+const TestFixTaskGenerator = require('@services/TestFixTaskGenerator');
+const WorkflowGitService = require('@services/WorkflowGitService');
+const ConfirmationSystem = require('@services/auto-finish/ConfirmationSystem');
+const TaskType = require('@value-objects/TaskType');
 const { v4: uuidv4 } = require('uuid');
 
 class AutoTestFixSystem {

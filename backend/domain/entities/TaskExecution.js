@@ -3,7 +3,7 @@
  * Tracks task execution with comprehensive monitoring and logging
  */
 const { v4: uuidv4 } = require('uuid');
-const TaskStatus = require('@/domain/value-objects/TaskStatus');
+const TaskStatus = require('@value-objects/TaskStatus');
 
 class TaskExecution {
   constructor(

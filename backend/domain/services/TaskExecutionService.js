@@ -1,6 +1,6 @@
-const { Task, TaskExecution } = require('@/domain/entities');
-const { TaskStatus, TaskType } = require('@/domain/value-objects');
-const { TaskRepository, TaskExecutionRepository } = require('@/domain/repositories');
+const { Task, TaskExecution } = require('@domain/entities');
+const { TaskStatus, TaskType } = require('@domain/value-objects');
+const { TaskRepository, TaskExecutionRepository } = require('@domain/repositories');
 
 /**
  * TaskExecutionService - Handles task execution orchestration

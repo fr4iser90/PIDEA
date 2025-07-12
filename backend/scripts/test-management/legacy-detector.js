@@ -6,7 +6,7 @@ require('module-alias/register');
  * Scans test files for legacy indicators and provides recommendations
  */
 
-const TestManagementService = require('@/domain/services/TestManagementService');
+const TestManagementService = require('@services/TestManagementService');
 const path = require('path');
 const fs = require('fs').promises;
 const { exec } = require('child_process');

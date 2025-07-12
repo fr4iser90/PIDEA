@@ -1,4 +1,4 @@
-const OptimizationService = require('@/infrastructure/strategies/single-repo/services/optimizationService');
+const OptimizationService = require('@strategies/single-repo/services/optimizationService');
 
 describe('OptimizationService', () => {
   let optimizationService;

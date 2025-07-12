@@ -1,4 +1,4 @@
-const AuthService = require('@/domain/services/AuthService');
+const AuthService = require('@services/AuthService');
 
 class AuthMiddleware {
   constructor(authService) {

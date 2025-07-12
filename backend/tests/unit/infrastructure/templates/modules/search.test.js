@@ -3,7 +3,7 @@
  * Coverage target: 80%
  */
 
-const TemplateSearch = require('@/infrastructure/templates/modules/search');
+const TemplateSearch = require('@templates/modules/search');
 
 describe('TemplateSearch', () => {
     let mockTemplates;

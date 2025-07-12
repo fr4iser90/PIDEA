@@ -1,5 +1,5 @@
-const SecurityAnalyzer = require('@/infrastructure/strategies/single-repo/services/securityAnalyzer');
-const { SECURITY_FILES, SECRETS_FILES, SECURITY_DEPENDENCIES } = require('@/infrastructure/strategies/single-repo/constants');
+const SecurityAnalyzer = require('@strategies/single-repo/services/securityAnalyzer');
+const { SECURITY_FILES, SECRETS_FILES, SECURITY_DEPENDENCIES } = require('@strategies/single-repo/constants');
 
 describe('SecurityAnalyzer', () => {
   let securityAnalyzer;

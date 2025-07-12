@@ -1,4 +1,4 @@
-const ChatController = require('@/presentation/api/ChatController');
+const ChatController = require('@api/ChatController');
 
 describe('ChatController', () => {
   let controller;

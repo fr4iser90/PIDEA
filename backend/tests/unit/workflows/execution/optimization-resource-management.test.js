@@ -11,7 +11,7 @@ const {
   WorkflowAnalyzer,
   ResourceAllocator,
   ResourceMonitor
-} = require('@/domain/workflows/execution');
+} = require('@workflows/execution');
 
 describe('Optimization and Resource Management Components', () => {
   let workflowOptimizer, resourceManager, executionCache, executionMetrics, executionPredictor;

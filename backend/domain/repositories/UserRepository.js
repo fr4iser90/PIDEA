@@ -1,4 +1,4 @@
-const User = require('@/domain/entities/User');
+const User = require('@entities/User');
 
 class UserRepository {
   async save(user) {

@@ -2,8 +2,8 @@
  * TestManagementService - Core service for test management operations
  * Handles test metadata management, legacy detection, versioning, and analytics
  */
-const TestMetadata = require('@/domain/entities/TestMetadata');
-const TestMetadataRepository = require('@/domain/repositories/TestMetadataRepository');
+const TestMetadata = require('@entities/TestMetadata');
+const TestMetadataRepository = require('@repositories/TestMetadataRepository');
 const fs = require('fs').promises;
 const path = require('path');
 const { exec } = require('child_process');

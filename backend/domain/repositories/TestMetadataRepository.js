@@ -2,7 +2,7 @@
  * TestMetadataRepository - Repository for managing test metadata
  * Provides data access methods for test metadata storage and retrieval
  */
-const TestMetadata = require('@/domain/entities/TestMetadata');
+const TestMetadata = require('@entities/TestMetadata');
 
 class TestMetadataRepository {
   constructor() {

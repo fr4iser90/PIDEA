@@ -1,10 +1,10 @@
 /**
  * Unit tests for Task entity
  */
-const Task = require('@/domain/entities/Task');
-const TaskStatus = require('@/domain/value-objects/TaskStatus');
-const TaskPriority = require('@/domain/value-objects/TaskPriority');
-const TaskType = require('@/domain/value-objects/TaskType');
+const Task = require('@entities/Task');
+const TaskStatus = require('@value-objects/TaskStatus');
+const TaskPriority = require('@value-objects/TaskPriority');
+const TaskType = require('@value-objects/TaskType');
 
 describe('Task Entity', () => {
     let validTaskData;

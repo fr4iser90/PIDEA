@@ -3,7 +3,7 @@
  * Coverage target: 80%
  */
 
-const TaskTemplates = require('@/infrastructure/templates/TaskTemplates');
+const TaskTemplates = require('@templates/TaskTemplates');
 
 describe('TaskTemplates', () => {
     let taskTemplates;

@@ -1,9 +1,9 @@
-const ProjectTypeAnalyzer = require('@/infrastructure/strategies/single-repo/services/projectTypeAnalyzer');
+const ProjectTypeAnalyzer = require('@strategies/single-repo/services/projectTypeAnalyzer');
 const { 
     FRONTEND_FRAMEWORKS, 
     BACKEND_FRAMEWORKS, 
     BUILD_TOOLS_DETECTION 
-} = require('@/infrastructure/strategies/single-repo/constants');
+} = require('@strategies/single-repo/constants');
 const path = require('path');
 
 describe('ProjectTypeAnalyzer', () => {

@@ -16,7 +16,7 @@ jest.setTimeout(30000);
 
 // Test Management Integration
 if (process.env.TEST_MANAGEMENT_ENABLED !== 'false') {
-  const TestManagementService = require('@/domain/services/TestManagementService');
+  const TestManagementService = require('@services/TestManagementService');
   
   // Initialize test management service
   global.testManagementService = new TestManagementService();

@@ -1,6 +1,6 @@
 const SendMessageHandler = require('@handler-categories/management/SendMessageHandler');
 const GetChatHistoryHandler = require('@handler-categories/management/GetChatHistoryHandler');
-const AuthService = require('@/domain/services/AuthService');
+const AuthService = require('@services/AuthService');
 
 class ChatController {
   constructor(sendMessageHandler, getChatHistoryHandler, cursorIDEService, authService) {
