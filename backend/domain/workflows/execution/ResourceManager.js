@@ -433,13 +433,13 @@ class ResourceManager {
     }
 
     // Log resource usage periodically
-    this.logger.debug('ResourceManager: Resource monitoring', {
-      utilization: {
-        memory: utilization.allocated.memory.percentage,
-        cpu: utilization.allocated.cpu.percentage,
-        concurrent: utilization.allocated.concurrent.percentage
-      }
-    });
+    // this.logger.debug('ResourceManager: Resource monitoring', {
+    //   utilization: {
+    //     memory: utilization.allocated.memory.percentage,
+    //     cpu: utilization.allocated.cpu.percentage,
+    //     concurrent: utilization.allocated.concurrent.percentage
+    //   }
+    // });
   }
 
   /**

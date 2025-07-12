@@ -1,5 +1,5 @@
 {
-  "name": "Documentation Framework",
+  "name": "Documentation Framework - PIDEA (Numerical Prefix Naming)",
   "version": "1.0.0",
   "description": "Comprehensive documentation generation and management framework",
   "category": "documentation",
@@ -15,6 +15,7 @@
     {
       "name": "analyze_project_structure",
       "type": "analysis",
+      "interaction-type": "script",
       "description": "Analyze project structure to identify documentation needs",
       "order": 1,
       "required": true,
@@ -24,9 +25,11 @@
       }
     },
     {
-      "name": "generate_api_docs",
+      "name": "generate_structure_docs",
       "type": "generation",
-      "description": "Generate API documentation from code comments",
+      "interaction-type": "script",
+      "framework-script": "pidea_docs_structure_numerical_prefix_v1",
+      "description": "Generate structure documentation from script",
       "order": 2,
       "required": true,
       "settings": {
@@ -35,9 +38,11 @@
       }
     },
     {
-      "name": "create_user_guides",
+      "name": "generate_code_docs",
       "type": "generation",
-      "description": "Create user guides and tutorials",
+      "interaction-type": "ai-chat",
+      "framework-prompt": "pidea_docs_code_numerical_prefix_v1",
+      "description": "Generate code documentation from AI analysis",
       "order": 3,
       "required": false,
       "settings": {
@@ -48,6 +53,8 @@
     {
       "name": "validate_documentation",
       "type": "validation",
+      "interaction-type": "ai-chat",
+      "framework-prompt": "pidea_docs_validate_numerical_prefix_v1",
       "description": "Validate documentation completeness and accuracy",
       "order": 4,
       "required": true,
