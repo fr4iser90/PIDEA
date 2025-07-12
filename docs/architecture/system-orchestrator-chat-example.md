@@ -24,9 +24,9 @@
 ```mermaid
 graph TB
     subgraph "System Orchestrator (OPTIONAL - LLM + MCP Server)"
-        LLM["🧠 LLM\n• Command Parsing\n• Natural Language Understanding\n• Decision Making\n• Response Generation"]
-        MCP["🔧 MCP Server\n• Tool Coordination\n• Agent Management\n• Framework Orchestration\n• Resource Management"]
-        ORCH["🎯 Orchestrator\n• Multi-Project Management\n• Result Aggregation\n• Conflict Resolution\n• State Management\n• Multi-Device Management"]
+        LLM["🧠 LLM<br/>• Command Parsing<br/>• Natural Language Understanding<br/>• Decision Making<br/>• Response Generation"]
+        MCP["🔧 MCP Server<br/>• Tool Coordination<br/>• Agent Management<br/>• Framework Orchestration<br/>• Resource Management"]
+        ORCH["🎯 Orchestrator<br/>• Multi-Project Management<br/>• Result Aggregation<br/>• Conflict Resolution<br/>• State Management<br/>• Multi-Device Management"]
     end
     
     subgraph "Tools & Agents"

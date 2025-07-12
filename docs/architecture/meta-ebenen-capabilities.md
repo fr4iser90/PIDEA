@@ -5,16 +5,16 @@
 ```mermaid
 graph TB
     subgraph "Ebene 4: System Orchestrator (OPTIONAL!)"
-        SO[System Orchestrator\n(Mensch oder LLM+MCP)]
-        SO_CAP["Capabilities:\n• Computer Control\n• Browser Automation\n• Multi-Project Management\n• IDE Agent Coordination\n• Framework Orchestration\n• Decision Making\n• Conflict Resolution\n\n⚠️ OPTIONAL: Kann auch ein Mensch sein!"]
+        SO["System Orchestrator<br/>(Mensch oder LLM+MCP)"]
+        SO_CAP["Capabilities:<br/>• Computer Control<br/>• Browser Automation<br/>• Multi-Project Management<br/>• IDE Agent Coordination<br/>• Framework Orchestration<br/>• Decision Making<br/>• Conflict Resolution<br/><br/>⚠️ OPTIONAL: Kann auch ein Mensch sein!"]
     end
     
     subgraph "Ebene 3: IDE Agents 1-zu-1 mit IDE"
-        PA1["Cursor Agent\nProject: PIDEA"]
-        PA2["VSCode Agent\nProject: NixOSControlCenter"]
-        PA3["Cursor Agent\nProject: NCC-HomeLab"]
+        PA1["Cursor Agent<br/>Project: PIDEA"]
+        PA2["VSCode Agent<br/>Project: NixOSControlCenter"]
+        PA3["Cursor Agent<br/>Project: NCC-HomeLab"]
         
-        PA_CAP["Agent Capabilities:\n• Project-Specific Code Analysis\n• IDE Integration 1-zu-1\n• Browser Automation\n• File System Access\n• Git Operations\n• Framework Execution\n• Conflict Detection"]
+        PA_CAP["Agent Capabilities:<br/>• Project-Specific Code Analysis<br/>• IDE Integration 1-zu-1<br/>• Browser Automation<br/>• File System Access<br/>• Git Operations<br/>• Framework Execution<br/>• Conflict Detection"]
     end
     
     subgraph "Ebene 2: Frameworks"
@@ -23,7 +23,7 @@ graph TB
         F3["Test Framework"]
         F4["Generate Framework"]
         
-        FW_CAP["Framework Capabilities:\n• Strategy Definition\n• Workflow Selection\n• Context Management\n• Result Aggregation"]
+        FW_CAP["Framework Capabilities:<br/>• Strategy Definition<br/>• Workflow Selection<br/>• Context Management<br/>• Result Aggregation"]
     end
     
     subgraph "Ebene 1: Workflows"
@@ -32,7 +32,7 @@ graph TB
         W3["Testing Pipeline"]
         W4["Deployment"]
         
-        WF_CAP["Workflow Capabilities:\n• Step Orchestration\n• Context Management\n• Error Handling\n• Result Aggregation"]
+        WF_CAP["Workflow Capabilities:<br/>• Step Orchestration<br/>• Context Management<br/>• Error Handling<br/>• Result Aggregation"]
     end
     
     subgraph "Ebene 0: Steps"
@@ -41,7 +41,7 @@ graph TB
         S3["apply_config"]
         S4["run_tests"]
         
-        STEP_CAP["Step Capabilities:\n• Atomic Operations\n• Tool Integration\n• Framework Access\n• Result Reporting"]
+        STEP_CAP["Step Capabilities:<br/>• Atomic Operations<br/>• Tool Integration<br/>• Framework Access<br/>• Result Reporting"]
     end
     
     %% Connections
@@ -92,9 +92,9 @@ graph TB
     end
     
     subgraph "IDE Instances"
-        IDE1["Cursor IDE\nProject: PIDEA"]
-        IDE2["VSCode IDE\nProject: NixOSControlCenter"]
-        IDE3["Cursor IDE\nProject: NCC-HomeLab"]
+        IDE1["Cursor IDE<br/>Project: PIDEA"]
+        IDE2["VSCode IDE<br/>Project: NixOSControlCenter"]
+        IDE3["Cursor IDE<br/>Project: NCC-HomeLab"]
     end
     
     %% 1:1 Relationships
@@ -124,7 +124,7 @@ graph TB
         M_VSCODE_IDE --> M_PROJECT
         
         %% Conflict Resolution
-        M_CONFLICT["Conflict Resolution\n• Affected Files Analysis\n• Coordination Protocols\n• Isolation Strategies"]
+        M_CONFLICT["Conflict Resolution<br/>• Affected Files Analysis<br/>• Coordination Protocols<br/>• Isolation Strategies"]
         M_CURSOR -.-> M_CONFLICT
         M_VSCODE -.-> M_CONFLICT
     end

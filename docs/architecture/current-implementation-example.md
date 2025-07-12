@@ -218,8 +218,8 @@ const result = await generateScriptHandler.execute({
 ```mermaid
 graph TB
     subgraph "Ebene 4: System Orchestrator (❌ Fehlt - OPTIONAL!)"
-        SO[System Orchestrator\n(OPTIONAL - Mensch oder LLM+MCP)]
-        SO_CAP["Capabilities:\n• Multi-Project Management\n• IDE Agent Coordination\n• Framework Orchestration\n• Decision Making\n• Conflict Resolution\n\n⚠️ OPTIONAL: Kann auch ein Mensch sein!"]
+        SO["System Orchestrator<br/>(OPTIONAL - Mensch oder LLM+MCP)"]
+        SO_CAP["Capabilities:<br/>• Multi-Project Management<br/>• IDE Agent Coordination<br/>• Framework Orchestration<br/>• Decision Making<br/>• Conflict Resolution<br/><br/>⚠️ OPTIONAL: Kann auch ein Mensch sein!"]
     end
     
     subgraph "Ebene 3: IDE Agents (🟡 Teilweise)"
