@@ -186,9 +186,8 @@ class AutoModeController {
                     const taskService = this.application?.taskService;
                     if (taskService) {
                         // Execute task using TaskService with existing task ID
-                        const taskResult = await taskService.executeTask(taskOptions.taskId, {
+                        const taskResult = await taskService.executeTask(taskOptions.taskId, userId, {
                             projectPath: workspacePath,
-                            userId,
                             projectId
                         });
                         
