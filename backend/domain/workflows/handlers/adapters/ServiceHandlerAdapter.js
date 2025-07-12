@@ -126,7 +126,8 @@ class ServiceHandlerAdapter extends IHandlerAdapter {
       'test_correction': 'TestCorrectionService',
       'workflow_orchestration': 'WorkflowOrchestrationService',
       'task_execution': 'TaskExecutionService',
-      'unified_workflow': 'UnifiedWorkflowService'
+      'unified_workflow': 'UnifiedWorkflowService',
+      'workflow': 'UnifiedWorkflowService'  // Add support for 'workflow' type
     };
     
     return serviceMap[request.type] || null;
@@ -153,7 +154,8 @@ class ServiceHandlerAdapter extends IHandlerAdapter {
       'test_correction': 'correctTests',
       'workflow_orchestration': 'executeWorkflow',
       'task_execution': 'executeTask',
-      'unified_workflow': 'executeWorkflow'
+      'unified_workflow': 'executeWorkflow',
+      'workflow': 'executeWorkflow'  // Add support for 'workflow' type
     };
     
     return methodMap[request.type] || null;
@@ -397,7 +399,8 @@ class ServiceHandlerAdapter extends IHandlerAdapter {
         'test_correction',
         'workflow_orchestration',
         'task_execution',
-        'unified_workflow'
+        'unified_workflow',
+        'workflow'
       ]
     };
   }
@@ -489,7 +492,8 @@ class ServiceHandlerAdapter extends IHandlerAdapter {
       'test_correction',
       'workflow_orchestration',
       'task_execution',
-      'unified_workflow'
+      'unified_workflow',
+      'workflow'
     ];
   }
 

@@ -79,14 +79,12 @@ class HandlerFactory {
    * @returns {IHandlerAdapter|null} Compatible adapter
    */
   findCompatibleAdapter(request) {
-    // Load real adapters
-    const LegacyHandlerAdapter = require('./adapters/LegacyHandlerAdapter');
+    // Load only existing adapters
     const CommandHandlerAdapter = require('./adapters/CommandHandlerAdapter');
     const ServiceHandlerAdapter = require('./adapters/ServiceHandlerAdapter');
 
-    // Create adapter instances
+    // Create adapter instances for existing adapters only
     const adapters = [
-      new LegacyHandlerAdapter(),
       new CommandHandlerAdapter(),
       new ServiceHandlerAdapter()
     ];
@@ -107,11 +105,6 @@ class HandlerFactory {
    * @returns {string} Handler type
    */
   determineHandlerType(request) {
-    // Check for legacy handler patterns
-    if (request.handlerClass || request.handlerPath) {
-      return 'legacy';
-    }
-    
     // Check for command handler patterns
     if (request.command || request.commandType) {
       return 'command';
@@ -132,8 +125,8 @@ class HandlerFactory {
       return request.type;
     }
     
-    // Default to legacy
-    return 'legacy';
+    // Default to service for unknown types
+    return 'service';
   }
 
   /**

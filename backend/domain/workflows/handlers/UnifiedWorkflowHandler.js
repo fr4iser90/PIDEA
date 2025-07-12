@@ -265,8 +265,7 @@ class UnifiedWorkflowHandler {
    * Initialize default adapters
    */
   initializeDefaultAdapters() {
-    // Register default adapters
-    this.registerAdapter('legacy', this.handlerFactory.createLegacyAdapter());
+    // Register only working adapters
     this.registerAdapter('command', this.handlerFactory.createCommandAdapter());
     this.registerAdapter('service', this.handlerFactory.createServiceAdapter());
   }
