@@ -6,7 +6,14 @@
 graph TB
     subgraph "Ebene 4: System Orchestrator"
         SO[System Orchestrator]
-        SO_CAP[Capabilities:<br/>• Computer Control<br/>• Browser Automation<br/>• Multi-Project Management<br/>• IDE Agent Coordination<br/>• Workflow Orchestration<br/>• Decision Making<br/>• Conflict Resolution]
+        SO_CAP["Capabilities:
+• Computer Control
+• Browser Automation
+• Multi-Project Management
+• IDE Agent Coordination
+• Workflow Orchestration
+• Decision Making
+• Conflict Resolution"]
     end
     
     subgraph "Ebene 3: IDE Agents (1:1 mit IDE)"
@@ -14,7 +21,14 @@ graph TB
         PA2[VSCode Agent<br/>Project: web-init]
         PA3[Cursor Agent<br/>Project: api-refactor]
         
-        PA_CAP[Agent Capabilities:<br/>• Project-Specific Code Analysis<br/>• IDE Integration (1:1)<br/>• Browser Automation<br/>• File System Access<br/>• Git Operations<br/>• Workflow Execution<br/>• Conflict Detection]
+        PA_CAP["Agent Capabilities:
+• Project-Specific Code Analysis
+• IDE Integration (1:1)
+• Browser Automation
+• File System Access
+• Git Operations
+• Workflow Execution
+• Conflict Detection"]
     end
     
     subgraph "Ebene 2: Workflows"
@@ -23,7 +37,11 @@ graph TB
         W3[Testing Pipeline]
         W4[Deployment]
         
-        WF_CAP[Workflow Capabilities:<br/>• Step Orchestration<br/>• Context Management<br/>• Error Handling<br/>• Result Aggregation]
+        WF_CAP["Workflow Capabilities:
+• Step Orchestration
+• Context Management
+• Error Handling
+• Result Aggregation"]
     end
     
     subgraph "Ebene 1: Steps"
@@ -32,7 +50,11 @@ graph TB
         S3[apply_config]
         S4[run_tests]
         
-        STEP_CAP[Step Capabilities:<br/>• Atomic Operations<br/>• Tool Integration<br/>• Framework Access<br/>• Result Reporting]
+        STEP_CAP["Step Capabilities:
+• Atomic Operations
+• Tool Integration
+• Framework Access
+• Result Reporting"]
     end
     
     subgraph "Ebene 0: Frameworks"
@@ -43,7 +65,11 @@ graph TB
         F5[test_runner]
         F6[deployment_service]
         
-        FW_CAP[Framework Capabilities:<br/>• Tool Integration<br/>• API Access<br/>• System Interaction<br/>• Data Processing]
+        FW_CAP["Framework Capabilities:
+• Tool Integration
+• API Access
+• System Interaction
+• Data Processing"]
     end
     
     %% Connections
@@ -126,7 +152,10 @@ graph TB
         M_VSCODE_IDE --> M_PROJECT
         
         %% Conflict Resolution
-        M_CONFLICT[Conflict Resolution<br/>• Affected Files Analysis<br/>• Coordination Protocols<br/>• Isolation Strategies]
+        M_CONFLICT["Conflict Resolution
+• Affected Files Analysis
+• Coordination Protocols
+• Isolation Strategies"]
         M_CURSOR -.-> M_CONFLICT
         M_VSCODE -.-> M_CONFLICT
     end
@@ -243,7 +272,12 @@ sequenceDiagram
     WF-->>PA: Workflow Complete
     PA-->>SO: Project Status Update
     
-    Note over SO: System Orchestrator can:<br/>• Start multiple projects<br/>• Monitor all agents<br/>• Make decisions<br/>• Coordinate resources<br/>• Resolve IDE conflicts
+    Note over SO: System Orchestrator can:
+• Start multiple projects
+• Monitor all agents
+• Make decisions
+• Coordinate resources
+• Resolve IDE conflicts
 ```
 
 ## Capability Inheritance
@@ -252,27 +286,57 @@ sequenceDiagram
 graph TD
     subgraph "Level 4: System Orchestrator"
         SO[System Orchestrator]
-        SO_CAPS[All Capabilities:<br/>• Computer Control<br/>• Browser Automation<br/>• Multi-Project Management<br/>• IDE Agent Coordination<br/>• Workflow Orchestration<br/>• Decision Making<br/>• Conflict Resolution<br/>• + All Lower Level Capabilities]
+        SO_CAPS["All Capabilities:
+• Computer Control
+• Browser Automation
+• Multi-Project Management
+• IDE Agent Coordination
+• Workflow Orchestration
+• Decision Making
+• Conflict Resolution
+• + All Lower Level Capabilities"]
     end
     
     subgraph "Level 3: IDE Agents"
         IA[IDE Agents (1:1)]
-        IA_CAPS[Project Capabilities:<br/>• Code Analysis<br/>• IDE Integration (1:1)<br/>• Browser Control<br/>• File System Access<br/>• Git Operations<br/>• Workflow Execution<br/>• Conflict Detection<br/>• + All Lower Level Capabilities]
+        IA_CAPS["Project Capabilities:
+• Code Analysis
+• IDE Integration (1:1)
+• Browser Control
+• File System Access
+• Git Operations
+• Workflow Execution
+• Conflict Detection
+• + All Lower Level Capabilities"]
     end
     
     subgraph "Level 2: Workflows"
         WF[Workflows]
-        WF_CAPS[Execution Capabilities:<br/>• Step Orchestration<br/>• Context Management<br/>• Error Handling<br/>• Result Aggregation<br/>• + All Lower Level Capabilities]
+        WF_CAPS["Execution Capabilities:
+• Step Orchestration
+• Context Management
+• Error Handling
+• Result Aggregation
+• + All Lower Level Capabilities"]
     end
     
     subgraph "Level 1: Steps"
         ST[Steps]
-        ST_CAPS[Atomic Capabilities:<br/>• Atomic Operations<br/>• Tool Integration<br/>• Framework Access<br/>• Result Reporting<br/>• + All Lower Level Capabilities]
+        ST_CAPS["Atomic Capabilities:
+• Atomic Operations
+• Tool Integration
+• Framework Access
+• Result Reporting
+• + All Lower Level Capabilities"]
     end
     
     subgraph "Level 0: Frameworks"
         FW[Frameworks]
-        FW_CAPS[Base Capabilities:<br/>• Tool Integration<br/>• API Access<br/>• System Interaction<br/>• Data Processing]
+        FW_CAPS["Base Capabilities:
+• Tool Integration
+• API Access
+• System Interaction
+• Data Processing"]
     end
     
     SO --> IA
