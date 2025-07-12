@@ -10,7 +10,6 @@ const HandlerFactory = require('./HandlerFactory');
 const HandlerValidator = require('./HandlerValidator');
 const HandlerContext = require('./HandlerContext');
 const HandlerResult = require('./HandlerResult');
-
 class UnifiedWorkflowHandler {
   /**
    * Create a new unified workflow handler
@@ -22,11 +21,9 @@ class UnifiedWorkflowHandler {
     this.handlerValidator = dependencies.handlerValidator || new HandlerValidator();
     this.logger = dependencies.logger || console;
     this.eventBus = dependencies.eventBus;
-    
     // Initialize with default adapters
     this.initializeDefaultAdapters();
   }
-
   /**
    * Handle workflow execution
    * @param {Object} request - Handler request
@@ -37,51 +34,40 @@ class UnifiedWorkflowHandler {
   async handle(request, response, options = {}) {
     const startTime = Date.now();
     const handlerId = this.generateHandlerId();
-    
     try {
       this.logger.info('UnifiedWorkflowHandler: Starting workflow handling', {
         handlerId,
         requestType: request?.type,
         taskId: request?.taskId
       });
-
       // Create handler context
       const context = new HandlerContext(request, response, handlerId, options);
-      
       // Validate request
       const validationResult = await this.handlerValidator.validateRequest(request);
       if (!validationResult.isValid) {
         throw new Error(`Request validation failed: ${validationResult.errors.join(', ')}`);
       }
-
       // Get appropriate handler
       const handler = await this.getHandler(request, context);
-      
       // Execute handler
       const result = await this.executeHandler(handler, context);
-      
       // Update registry statistics
       if (request?.type) {
         this.handlerRegistry.updateStatistics(request.type, result);
       }
-
       this.logger.info('UnifiedWorkflowHandler: Workflow handling completed', {
         handlerId,
         success: result.isSuccess(),
         duration: result.getFormattedDuration()
       });
-
       return result;
-
     } catch (error) {
       const duration = Date.now() - startTime;
-      
       this.logger.error('UnifiedWorkflowHandler: Handler execution failed', {
         handlerId,
         error: error.message,
         duration
       });
-
       return HandlerResult.error(error.message, {
         handlerId,
         handlerName: 'UnifiedWorkflowHandler',
@@ -90,7 +76,6 @@ class UnifiedWorkflowHandler {
       });
     }
   }
-
   /**
    * Get appropriate handler for request
    * @param {Object} request - Handler request
@@ -102,21 +87,78 @@ class UnifiedWorkflowHandler {
     if (request?.type) {
       const registeredHandler = this.handlerRegistry.getHandler(request.type);
       if (registeredHandler) {
+        // Add migration metadata to context
+        this.addMigrationMetadata(context, registeredHandler);
         return registeredHandler;
       }
     }
-
     // Create handler using factory
     const handler = await this.handlerFactory.createHandler(request, context);
-    
+    // Add migration metadata to context
+    this.addMigrationMetadata(context, handler);
     // Register handler for future use if it has a type
     if (request?.type) {
       this.handlerRegistry.registerHandler(request.type, handler);
     }
-    
     return handler;
   }
-
+  /**
+   * Add migration metadata to context
+   * @param {HandlerContext} context - Handler context
+   * @param {IHandler} handler - Handler instance
+   */
+  addMigrationMetadata(context, handler) {
+    // Get migration metadata from handler or adapter
+    const migrationMetadata = this.getMigrationMetadata(handler);
+    // Add to context
+    context.setMigrationMetadata(migrationMetadata);
+    // Log migration information
+    this.logger.info('UnifiedWorkflowHandler: Migration metadata added', {
+      handlerType: handler.getType(),
+      migrationStatus: migrationMetadata?.migrationStatus,
+      automationLevel: migrationMetadata?.automationLevel
+    });
+  }
+  /**
+   * Get migration metadata from handler
+   * @param {IHandler} handler - Handler instance
+   * @returns {Object} Migration metadata
+   */
+  getMigrationMetadata(handler) {
+    // Check if handler has direct migration metadata
+    if (handler.getMigrationMetadata) {
+      return handler.getMigrationMetadata();
+    }
+    // Check if handler has integration metadata (from adapter)
+    if (handler.integrationMetadata) {
+      return {
+        migrationStatus: handler.integrationMetadata.migrationStatus,
+        migrationDate: handler.integrationMetadata.migrationDate,
+        automationLevel: handler.integrationMetadata.automationLevel,
+        type: handler.integrationMetadata.type,
+        priority: handler.integrationMetadata.priority
+      };
+    }
+    // Check handler metadata for migration info
+    const metadata = handler.getMetadata();
+    if (metadata.migrationStatus) {
+      return {
+        migrationStatus: metadata.migrationStatus,
+        migrationDate: metadata.migrationDate,
+        automationLevel: metadata.automationLevel || 'basic',
+        type: metadata.type,
+        priority: metadata.priority || 3
+      };
+    }
+    // Default migration metadata
+    return {
+      migrationStatus: 'unknown',
+      migrationDate: null,
+      automationLevel: 'basic',
+      type: '',
+      priority: 3
+    };
+  }
   /**
    * Execute handler
    * @param {IHandler} handler - Handler to execute
@@ -125,20 +167,17 @@ class UnifiedWorkflowHandler {
    */
   async executeHandler(handler, context) {
     const startTime = Date.now();
-    
     try {
       // Validate handler
       const validationResult = await this.handlerValidator.validateHandler(handler, context);
       if (!validationResult.isValid) {
         throw new Error(`Handler validation failed: ${validationResult.errors.join(', ')}`);
       }
-
       // Validate context
       const contextValidation = await this.handlerValidator.validateContext(context);
       if (!contextValidation.isValid) {
         throw new Error(`Context validation failed: ${contextValidation.errors.join(', ')}`);
       }
-
       // Emit execution started event
       if (this.eventBus) {
         this.eventBus.emit('handler:execution:started', {
@@ -147,12 +186,9 @@ class UnifiedWorkflowHandler {
           request: context.getRequest()
         });
       }
-
       // Execute handler
       const result = await handler.execute(context);
-      
       const duration = Date.now() - startTime;
-      
       // Create handler result
       const handlerResult = new HandlerResult({
         success: true,
@@ -162,7 +198,6 @@ class UnifiedWorkflowHandler {
         duration,
         timestamp: new Date()
       });
-
       // Emit execution completed event
       if (this.eventBus) {
         this.eventBus.emit('handler:execution:completed', {
@@ -171,12 +206,9 @@ class UnifiedWorkflowHandler {
           result: handlerResult.toObject()
         });
       }
-
       return handlerResult;
-
     } catch (error) {
       const duration = Date.now() - startTime;
-      
       // Create error result
       const errorResult = new HandlerResult({
         success: false,
@@ -186,7 +218,6 @@ class UnifiedWorkflowHandler {
         duration,
         timestamp: new Date()
       });
-
       // Emit execution failed event
       if (this.eventBus) {
         this.eventBus.emit('handler:execution:failed', {
@@ -196,11 +227,9 @@ class UnifiedWorkflowHandler {
           result: errorResult.toObject()
         });
       }
-
       return errorResult;
     }
   }
-
   /**
    * Register handler
    * @param {string} type - Handler type
@@ -211,7 +240,6 @@ class UnifiedWorkflowHandler {
   registerHandler(type, handler, metadata = {}) {
     return this.handlerRegistry.registerHandler(type, handler, metadata);
   }
-
   /**
    * Get handler by type
    * @param {string} type - Handler type
@@ -220,7 +248,6 @@ class UnifiedWorkflowHandler {
   getHandlerByType(type) {
     return this.handlerRegistry.getHandler(type);
   }
-
   /**
    * Register adapter
    * @param {string} type - Adapter type
@@ -229,7 +256,6 @@ class UnifiedWorkflowHandler {
   registerAdapter(type, adapter) {
     this.handlerFactory.registerAdapter(type, adapter);
   }
-
   /**
    * Get handler statistics
    * @returns {Promise<Object>} Handler statistics
@@ -243,7 +269,6 @@ class UnifiedWorkflowHandler {
       adapters: this.handlerFactory.listAdapters()
     };
   }
-
   /**
    * Get handler information
    * @returns {Array<Object>} Handler information
@@ -251,7 +276,6 @@ class UnifiedWorkflowHandler {
   getHandlerInformation() {
     return this.handlerRegistry.listHandlers();
   }
-
   /**
    * Find handlers by criteria
    * @param {Object} criteria - Search criteria
@@ -260,17 +284,15 @@ class UnifiedWorkflowHandler {
   findHandlers(criteria) {
     return this.handlerRegistry.findHandlers(criteria);
   }
-
   /**
    * Initialize default adapters
    */
   initializeDefaultAdapters() {
     // Register default adapters
-    this.registerAdapter('legacy', this.handlerFactory.createLegacyAdapter());
+    this.registerAdapter('default', this.handlerFactory.createAdapter());
     this.registerAdapter('command', this.handlerFactory.createCommandAdapter());
     this.registerAdapter('service', this.handlerFactory.createServiceAdapter());
   }
-
   /**
    * Generate handler ID
    * @returns {string} Handler ID
@@ -278,7 +300,6 @@ class UnifiedWorkflowHandler {
   generateHandlerId() {
     return `handler_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
   }
-
   /**
    * Get handler metadata
    * @returns {Object} Handler metadata
@@ -291,7 +312,6 @@ class UnifiedWorkflowHandler {
       type: 'unified-workflow'
     };
   }
-
   /**
    * Get handler dependencies
    * @returns {Array<string>} Handler dependencies
@@ -299,7 +319,6 @@ class UnifiedWorkflowHandler {
   getDependencies() {
     return ['handlerRegistry', 'handlerFactory', 'handlerValidator'];
   }
-
   /**
    * Get handler version
    * @returns {string} Handler version
@@ -307,7 +326,6 @@ class UnifiedWorkflowHandler {
   getVersion() {
     return '1.0.0';
   }
-
   /**
    * Get handler type
    * @returns {string} Handler type
@@ -315,7 +333,6 @@ class UnifiedWorkflowHandler {
   getType() {
     return 'unified-workflow';
   }
-
   /**
    * Initialize handler with configuration
    * @param {Object} config - Handler configuration
@@ -326,21 +343,17 @@ class UnifiedWorkflowHandler {
     if (config.registry) {
       this.handlerRegistry.setOptions(config.registry);
     }
-
     if (config.factory) {
       this.handlerFactory.setOptions(config.factory);
     }
-
     if (config.validator) {
       this.handlerValidator.setOptions(config.validator);
     }
-
     this.logger.info('UnifiedWorkflowHandler: Initialized with configuration', {
       registryHandlers: this.handlerRegistry.getHandlerCount(),
       factoryAdapters: this.handlerFactory.listAdapters()
     });
   }
-
   /**
    * Cleanup handler resources
    * @returns {Promise<void>} Cleanup result
@@ -348,14 +361,11 @@ class UnifiedWorkflowHandler {
   async cleanup() {
     // Clear caches
     this.handlerFactory.clearCache();
-    
     // Clear registries
     this.handlerRegistry.clearHandlers();
     this.handlerFactory.clearAdapters();
-
     this.logger.info('UnifiedWorkflowHandler: Cleanup completed');
   }
-
   /**
    * Get handler statistics
    * @returns {Object} Handler statistics
@@ -368,7 +378,6 @@ class UnifiedWorkflowHandler {
       totalAdapters: this.handlerFactory.listAdapters().length
     };
   }
-
   /**
    * Check if handler is healthy
    * @returns {Promise<boolean>} True if handler is healthy
@@ -378,13 +387,11 @@ class UnifiedWorkflowHandler {
       // Check if all components are available
       const registryHealthy = this.handlerRegistry.getHandlerCount() >= 0;
       const factoryHealthy = this.handlerFactory.listAdapters().length > 0;
-      
       return registryHealthy && factoryHealthy;
     } catch (error) {
       return false;
     }
   }
-
   /**
    * Validate handler
    * @param {HandlerContext} context - Handler context
@@ -393,7 +400,6 @@ class UnifiedWorkflowHandler {
   async validate(context) {
     return await this.handlerValidator.validateContext(context);
   }
-
   /**
    * Check if handler can handle the given request
    * @param {Object} request - Request object to check
@@ -404,5 +410,4 @@ class UnifiedWorkflowHandler {
     return !!(request && (request.type || request.handlerClass || request.command || request.service));
   }
 }
-
 module.exports = UnifiedWorkflowHandler; 

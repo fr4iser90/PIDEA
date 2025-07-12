@@ -1,5 +1,4 @@
 const { v4: uuidv4 } = require('uuid');
-
 class AutoRefactorCommand {
   constructor({
     id = uuidv4(),
@@ -27,10 +26,8 @@ class AutoRefactorCommand {
     this.metadata = metadata;
     this.createdAt = new Date();
     this.updatedAt = new Date();
-
     this.validate();
   }
-
   validate() {
     if (!this.projectPath) {
       throw new Error('Project path is required');
@@ -38,7 +35,7 @@ class AutoRefactorCommand {
     if (!this.requestedBy) {
       throw new Error('Requested by is required');
     }
-    if (!['complex_tests', 'legacy_tests', 'slow_tests', 'all'].includes(this.refactorType)) {
+    if (!['complex_tests', '_tests', 'slow_tests', 'all'].includes(this.refactorType)) {
       throw new Error('Invalid refactor type');
     }
     if (!['all', 'unit', 'integration', 'e2e'].includes(this.scope)) {
@@ -54,33 +51,26 @@ class AutoRefactorCommand {
       throw new Error('Max concurrent must be between 1 and 10');
     }
   }
-
   // Status management
   isPending() {
     return this.status === 'pending';
   }
-
   isInProgress() {
     return this.status === 'in_progress';
   }
-
   isCompleted() {
     return this.status === 'completed';
   }
-
   isFailed() {
     return this.status === 'failed';
   }
-
   // Priority management
   isHighPriority() {
     return this.priority === 'high' || this.priority === 'critical';
   }
-
   isCriticalPriority() {
     return this.priority === 'critical';
   }
-
   // Refactor type management
   getRefactorStrategies() {
     const strategies = {
@@ -90,7 +80,7 @@ class AutoRefactorCommand {
         'simplify_assertions',
         'reduce_mocking_complexity'
       ],
-      legacy_tests: [
+      _tests: [
         'update_jest_syntax',
         'modernize_test_structure',
         'improve_test_organization',
@@ -113,39 +103,30 @@ class AutoRefactorCommand {
         'reduce_external_dependencies'
       ]
     };
-
     return strategies[this.refactorType] || strategies.all;
   }
-
   // Metadata management
   addMetadata(key, value) {
     this.metadata[key] = value;
     this.updatedAt = new Date();
   }
-
   getMetadata(key) {
     return this.metadata[key];
   }
-
   // Business rules validation
   validateBusinessRules() {
     const errors = [];
-
     if (this.scheduledFor && this.scheduledFor < new Date()) {
       errors.push('Scheduled time cannot be in the past');
     }
-
     if (this.timeout > 3600000 && this.priority === 'critical') {
       errors.push('Critical priority tasks should not have timeout longer than 1 hour');
     }
-
     if (this.maxConcurrent > 5 && this.refactorType === 'complex_tests') {
       errors.push('Complex test refactoring should not exceed 5 concurrent operations');
     }
-
     return errors;
   }
-
   // Resource requirements
   getResourceRequirements() {
     return {
@@ -155,72 +136,58 @@ class AutoRefactorCommand {
       network: this.calculateNetworkRequirement()
     };
   }
-
   calculateMemoryRequirement() {
     let baseMemory = 512; // MB
-    
     switch (this.refactorType) {
       case 'complex_tests':
         baseMemory *= 2;
         break;
-      case 'legacy_tests':
+      case '_tests':
         baseMemory *= 1.5;
         break;
       case 'slow_tests':
         baseMemory *= 1.2;
         break;
     }
-
     baseMemory *= this.maxConcurrent;
-    
     return Math.min(baseMemory, 4096); // Cap at 4GB
   }
-
   calculateCpuRequirement() {
     let cpuCores = 1;
-    
     if (this.maxConcurrent > 3) {
       cpuCores = 2;
     }
-    
     if (this.refactorType === 'complex_tests') {
       cpuCores = Math.max(cpuCores, 2);
     }
-    
     return cpuCores;
   }
-
   calculateDiskRequirement() {
     let diskSpace = 100; // MB
-    
     switch (this.refactorType) {
       case 'complex_tests':
         diskSpace *= 3;
         break;
-      case 'legacy_tests':
+      case '_tests':
         diskSpace *= 2;
         break;
       case 'slow_tests':
         diskSpace *= 1.5;
         break;
     }
-    
     return diskSpace;
   }
-
   calculateNetworkRequirement() {
     return this.refactorType === 'all' ? 'medium' : 'low';
   }
-
   // Estimated duration
   getEstimatedDuration() {
     let baseDuration = 300000; // 5 minutes
-    
     switch (this.refactorType) {
       case 'complex_tests':
         baseDuration *= 3;
         break;
-      case 'legacy_tests':
+      case '_tests':
         baseDuration *= 2;
         break;
       case 'slow_tests':
@@ -230,61 +197,48 @@ class AutoRefactorCommand {
         baseDuration *= 4;
         break;
     }
-    
     baseDuration *= this.maxConcurrent;
-    
     return Math.min(baseDuration, this.timeout);
   }
-
   // Dependencies
   getDependencies() {
     return this.metadata.dependencies || [];
   }
-
   addDependency(dependency) {
     if (!this.metadata.dependencies) {
       this.metadata.dependencies = [];
     }
-    
     if (!this.metadata.dependencies.includes(dependency)) {
       this.metadata.dependencies.push(dependency);
       this.updatedAt = new Date();
     }
   }
-
   removeDependency(dependency) {
     if (this.metadata.dependencies) {
       this.metadata.dependencies = this.metadata.dependencies.filter(d => d !== dependency);
       this.updatedAt = new Date();
     }
   }
-
   // Tags
   getTags() {
     const tags = ['auto-refactor', this.refactorType, this.scope];
-    
     if (this.dryRun) {
       tags.push('dry-run');
     }
-    
     if (this.isHighPriority()) {
       tags.push('high-priority');
     }
-    
     return tags;
   }
-
   // Description
   getDescription() {
     const strategies = this.getRefactorStrategies().join(', ');
     return `Auto-refactor ${this.refactorType} tests in ${this.scope} scope using strategies: ${strategies}`;
   }
-
   // Priority calculation
   getPriority() {
     return this.priority;
   }
-
   // Serialization
   toJSON() {
     return {
@@ -303,11 +257,9 @@ class AutoRefactorCommand {
       updatedAt: this.updatedAt
     };
   }
-
   static fromJSON(data) {
     return new AutoRefactorCommand(data);
   }
-
   // Clone with new parameters
   clone(newParams = {}) {
     return new AutoRefactorCommand({
@@ -318,7 +270,6 @@ class AutoRefactorCommand {
       updatedAt: undefined // Reset update time
     });
   }
-
   // Static factory methods
   static createForComplexTests(projectPath, requestedBy, options = {}) {
     return new AutoRefactorCommand({
@@ -330,18 +281,16 @@ class AutoRefactorCommand {
       ...options
     });
   }
-
-  static createForLegacyTests(projectPath, requestedBy, options = {}) {
+  static createForTests(projectPath, requestedBy, options = {}) {
     return new AutoRefactorCommand({
       projectPath,
-      refactorType: 'legacy_tests',
+      refactorType: '_tests',
       requestedBy,
       priority: 'normal',
       maxConcurrent: 2,
       ...options
     });
   }
-
   static createForSlowTests(projectPath, requestedBy, options = {}) {
     return new AutoRefactorCommand({
       projectPath,
@@ -352,7 +301,6 @@ class AutoRefactorCommand {
       ...options
     });
   }
-
   static createForAllTests(projectPath, requestedBy, options = {}) {
     return new AutoRefactorCommand({
       projectPath,
@@ -364,16 +312,13 @@ class AutoRefactorCommand {
       ...options
     });
   }
-
   // Utility methods
   static validateRefactorType(refactorType) {
-    return ['complex_tests', 'legacy_tests', 'slow_tests', 'all'].includes(refactorType);
+    return ['complex_tests', '_tests', 'slow_tests', 'all'].includes(refactorType);
   }
-
   static validateScope(scope) {
     return ['all', 'unit', 'integration', 'e2e'].includes(scope);
   }
-
   static getDefaultTimeout(refactorType) {
     const timeouts = {
       complex_tests: 900000, // 15 minutes
@@ -381,20 +326,16 @@ class AutoRefactorCommand {
       slow_tests: 450000,    // 7.5 minutes
       all: 1800000           // 30 minutes
     };
-    
     return timeouts[refactorType] || 900000;
   }
-
   static getDefaultMaxConcurrent(refactorType) {
     const concurrent = {
       complex_tests: 3,
-      legacy_tests: 2,
+      _tests: 2,
       slow_tests: 4,
       all: 2
     };
-    
     return concurrent[refactorType] || 3;
   }
 }
-
 module.exports = AutoRefactorCommand; 

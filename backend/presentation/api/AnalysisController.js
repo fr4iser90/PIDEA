@@ -1,8 +1,9 @@
 /**
  * AnalysisController - API controller for specialized analysis endpoints
+ * Updated to use unified workflow system with AnalysisStepAdapter
  */
 class AnalysisController {
-  constructor(codeQualityService, securityService, performanceService, architectureService, logger, analysisOutputService, analysisRepository) {
+  constructor(codeQualityService, securityService, performanceService, architectureService, logger, analysisOutputService, analysisRepository, handlerFactory) {
     this.codeQualityService = codeQualityService;
     this.securityService = securityService;
     this.performanceService = performanceService;
@@ -10,10 +11,11 @@ class AnalysisController {
     this.logger = logger || { info: () => {}, error: () => {} };
     this.analysisOutputService = analysisOutputService;
     this.analysisRepository = analysisRepository;
+    this.handlerFactory = handlerFactory;
   }
 
   /**
-   * Analyze code quality
+   * Analyze code quality using unified workflow system
    * @param {Object} req - Express request
    * @param {Object} res - Express response
    */
@@ -24,24 +26,51 @@ class AnalysisController {
 
       this.logger.info(`[AnalysisController] Code quality analysis requested for: ${projectPath}`);
 
-      const analysis = await this.codeQualityService.analyzeCodeQuality(projectPath, options);
-      const score = this.codeQualityService.getQualityScore(analysis);
-      const level = this.codeQualityService.getQualityLevel(score);
-
-      res.json({
-        success: true,
-        data: {
-          analysis,
-          score,
-          level,
-          summary: {
-            overallScore: score,
-            issues: analysis.issues.length,
-            recommendations: analysis.recommendations.length,
-            configuration: analysis.configuration
-          }
+      // Use unified workflow system
+      const request = {
+        type: 'analyze_code_quality',
+        projectPath,
+        options: {
+          linting: options.linting !== false,
+          complexity: options.complexity !== false,
+          maintainability: options.maintainability !== false,
+          testCoverage: options.testCoverage !== false,
+          codeDuplication: options.codeDuplication !== false,
+          codeStyle: options.codeStyle !== false,
+          documentation: options.documentation !== false,
+          performance: options.performance !== false,
+          ...options
         }
-      });
+      };
+
+      const context = {
+        projectPath,
+        codeQualityAnalyzer: this.codeQualityService,
+        fileSystemService: null, // Will be provided by step if needed
+        logger: this.logger
+      };
+
+      const handler = await this.handlerFactory.createHandler(request, context);
+      const result = await handler.execute(context);
+
+      if (result.success) {
+        res.json({
+          success: true,
+          data: {
+            analysis: result.analysis,
+            score: result.metrics.qualityScore,
+            level: this.codeQualityService.getQualityLevel(result.metrics.qualityScore),
+            summary: {
+              overallScore: result.metrics.qualityScore,
+              issues: result.analysis.issues?.length || 0,
+              recommendations: result.recommendations?.length || 0,
+              configuration: result.analysis.analysisOptions
+            }
+          }
+        });
+      } else {
+        throw new Error(result.error || 'Analysis failed');
+      }
 
     } catch (error) {
       this.logger.error(`[AnalysisController] Code quality analysis failed:`, error);
@@ -127,7 +156,7 @@ class AnalysisController {
   }
 
   /**
-   * Analyze architecture
+   * Analyze architecture using unified workflow system
    * @param {Object} req - Express request
    * @param {Object} res - Express response
    */
@@ -138,23 +167,42 @@ class AnalysisController {
 
       this.logger.info(`[AnalysisController] Architecture analysis requested for: ${projectPath}`);
 
-      const analysis = await this.architectureService.analyzeArchitecture(projectPath, options);
-      const score = this.architectureService.getArchitectureScore(analysis);
-      const level = this.architectureService.getArchitectureLevel(score);
-      const isWellStructured = this.architectureService.isWellStructured(analysis);
-      const hasCircularDependencies = this.architectureService.hasCircularDependencies(analysis);
-
-      res.json({
-        success: true,
-        data: {
-          analysis,
-          score,
-          level,
-          isWellStructured,
-          hasCircularDependencies,
-          summary: this.architectureService.getArchitectureSummary(analysis)
+      // Use unified workflow system
+      const request = {
+        type: 'analyze_architecture',
+        projectPath,
+        options: {
+          detectPatterns: options.detectPatterns !== false,
+          analyzeDependencies: options.analyzeDependencies !== false,
+          complexityAnalysis: options.complexityAnalysis !== false,
+          ...options
         }
-      });
+      };
+
+      const context = {
+        projectPath,
+        architectureAnalyzer: this.architectureService,
+        logger: this.logger
+      };
+
+      const handler = await this.handlerFactory.createHandler(request, context);
+      const result = await handler.execute(context);
+
+      if (result.success) {
+        res.json({
+          success: true,
+          data: {
+            analysis: result.analysis,
+            score: result.metrics.architectureScore,
+            level: this.architectureService.getArchitectureLevel(result.metrics.architectureScore),
+            isWellStructured: result.analysis.isWellStructured,
+            hasCircularDependencies: result.analysis.hasCircularDependencies,
+            summary: this.architectureService.getArchitectureSummary(result.analysis)
+          }
+        });
+      } else {
+        throw new Error(result.error || 'Analysis failed');
+      }
 
     } catch (error) {
       this.logger.error(`[AnalysisController] Architecture analysis failed:`, error);
@@ -257,6 +305,72 @@ class AnalysisController {
   }
 
   /**
+   * Analyze tech stack using unified workflow system
+   * @param {Object} req - Express request
+   * @param {Object} res - Express response
+   */
+  async analyzeTechStack(req, res) {
+    try {
+      const { projectPath } = req.params;
+      const options = req.body || {};
+
+      this.logger.info(`[AnalysisController] Tech stack analysis requested for: ${projectPath}`);
+
+      // Use unified workflow system
+      const request = {
+        type: 'analyze_tech_stack',
+        projectPath,
+        options: {
+          detectFrameworks: options.detectFrameworks !== false,
+          detectLibraries: options.detectLibraries !== false,
+          detectTools: options.detectTools !== false,
+          detectLanguages: options.detectLanguages !== false,
+          detectDatabases: options.detectDatabases !== false,
+          detectInfrastructure: options.detectInfrastructure !== false,
+          detectDevOps: options.detectDevOps !== false,
+          detectSecurity: options.detectSecurity !== false,
+          ...options
+        }
+      };
+
+      const context = {
+        projectPath,
+        techStackAnalyzer: this.architectureService, // Using architecture service for tech stack analysis
+        logger: this.logger
+      };
+
+      const handler = await this.handlerFactory.createHandler(request, context);
+      const result = await handler.execute(context);
+
+      if (result.success) {
+        res.json({
+          success: true,
+          data: {
+            analysis: result.analysis,
+            metrics: result.metrics,
+            recommendations: result.recommendations,
+            summary: {
+              totalTechnologies: result.metrics.totalTechnologies,
+              frameworks: result.analysis.frameworks?.length || 0,
+              libraries: result.analysis.libraries?.length || 0,
+              tools: result.analysis.tools?.length || 0
+            }
+          }
+        });
+      } else {
+        throw new Error(result.error || 'Analysis failed');
+      }
+
+    } catch (error) {
+      this.logger.error(`[AnalysisController] Tech stack analysis failed:`, error);
+      res.status(500).json({
+        success: false,
+        error: error.message
+      });
+    }
+  }
+
+  /**
    * Get analysis status
    * @param {Object} req - Express request
    * @param {Object} res - Express response
@@ -274,9 +388,15 @@ class AnalysisController {
             'security',
             'performance',
             'architecture',
+            'tech-stack',
+            'repo-structure',
+            'dependencies',
+            'advanced',
             'comprehensive'
           ],
-          status: 'ready'
+          status: 'ready',
+          migrationStatus: 'completed', // Indicate migration is complete
+          workflowSystem: 'unified' // Indicate using unified workflow
         }
       });
 

@@ -50,6 +50,18 @@ const {
   StepRegistry
 } = require('./steps');
 
+// Migration Infrastructure
+const {
+  MigrationManager,
+  MigrationTracker,
+  MigrationRollback,
+  MigrationValidator,
+  MigrationMetrics,
+  MigrationInfrastructureFactory,
+  MigrationConfigBuilder,
+  MigrationUtils
+} = require('./migration');
+
 // Module exports
 module.exports = {
   // Core Interfaces
@@ -91,6 +103,16 @@ module.exports = {
   SecurityStep,
   OptimizationStep,
   StepRegistry,
+
+  // Migration Infrastructure
+  MigrationManager,
+  MigrationTracker,
+  MigrationRollback,
+  MigrationValidator,
+  MigrationMetrics,
+  MigrationInfrastructureFactory,
+  MigrationConfigBuilder,
+  MigrationUtils,
 
   // Convenience exports
   interfaces: {
@@ -137,5 +159,16 @@ module.exports = {
     SecurityStep,
     OptimizationStep,
     StepRegistry
+  },
+
+  migration: {
+    MigrationManager,
+    MigrationTracker,
+    MigrationRollback,
+    MigrationValidator,
+    MigrationMetrics,
+    MigrationInfrastructureFactory,
+    MigrationConfigBuilder,
+    MigrationUtils
   }
 }; 

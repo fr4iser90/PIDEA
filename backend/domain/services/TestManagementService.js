@@ -1,6 +1,6 @@
 /**
  * TestManagementService - Core service for test management operations
- * Handles test metadata management, legacy detection, versioning, and analytics
+ * Handles test metadata management,  detection, versioning, and analytics
  */
 const TestMetadata = require('@/domain/entities/TestMetadata');
 const TestMetadataRepository = require('@/domain/repositories/TestMetadataRepository');
@@ -8,18 +8,16 @@ const fs = require('fs').promises;
 const path = require('path');
 const { exec } = require('child_process');
 const { promisify } = require('util');
-
 const execAsync = promisify(exec);
-
 class TestManagementService {
   constructor(testMetadataRepository = new TestMetadataRepository()) {
     this.testMetadataRepository = testMetadataRepository;
-    this.legacyDetectionRules = [
-      { pattern: /describe\(['"`].*legacy.*['"`]/i, score: 30 },
+    this.DetectionRules = [
+      { pattern: /describe\(['"`].*.*['"`]/i, score: 30 },
       { pattern: /test\(['"`].*old.*['"`]/i, score: 25 },
       { pattern: /it\(['"`].*deprecated.*['"`]/i, score: 40 },
-      { pattern: /TODO.*legacy/i, score: 20 },
-      { pattern: /FIXME.*legacy/i, score: 20 },
+      { pattern: /TODO.*/i, score: 20 },
+      { pattern: /FIXME.*/i, score: 20 },
       { pattern: /@deprecated/i, score: 50 },
       { pattern: /console\.log\(/g, score: 5 },
       { pattern: /console\.warn\(/g, score: 5 },
@@ -30,7 +28,6 @@ class TestManagementService {
       { pattern: /new Function\(/g, score: 40 }
     ];
   }
-
   /**
    * Register a test file with metadata
    * @param {string} filePath - Path to the test file
@@ -41,28 +38,21 @@ class TestManagementService {
   async registerTest(filePath, testName, metadata = {}) {
     try {
       const fileName = path.basename(filePath);
-      
       // Check if test already exists
       const existingTest = await this.testMetadataRepository.findByFilePathAndTestName(filePath, testName);
       if (existingTest) {
         return existingTest;
       }
-      
       // Create new test metadata
       const testMetadata = TestMetadata.create(filePath, fileName, testName, metadata);
-      
-      // Analyze legacy indicators immediately
-      await this.analyzeLegacyIndicators(testMetadata);
-      
+      await this.analyzeIndicators(testMetadata);
       // Save to repository
       await this.testMetadataRepository.save(testMetadata);
-      
       return testMetadata;
     } catch (error) {
       throw new Error(`Failed to register test: ${error.message}`);
     }
   }
-
   /**
    * Update test status after execution
    * @param {string} filePath - Path to the test file
@@ -75,12 +65,10 @@ class TestManagementService {
   async updateTestStatus(filePath, testName, status, duration = 0, error = null) {
     try {
       let testMetadata = await this.testMetadataRepository.findByFilePathAndTestName(filePath, testName);
-      
       if (!testMetadata) {
         // Create new test metadata if it doesn't exist
         testMetadata = await this.registerTest(filePath, testName);
       }
-      
       // Update status based on result
       switch (status.toLowerCase()) {
         case 'passing':
@@ -100,76 +88,61 @@ class TestManagementService {
         default:
           throw new Error(`Invalid test status: ${status}`);
       }
-      
       return await this.testMetadataRepository.save(testMetadata);
     } catch (error) {
       throw new Error(`Failed to update test status: ${error.message}`);
     }
   }
-
   /**
-   * Analyze test file for legacy indicators
+   * Analyze test file for  indicators
    * @param {TestMetadata} testMetadata - The test metadata to analyze
    * @returns {Promise<void>}
    */
-  async analyzeLegacyIndicators(testMetadata) {
+  async analyzeIndicators(testMetadata) {
     try {
-      console.log(`🔍 Analyzing legacy indicators for: ${testMetadata.filePath}`);
+      console.log(`🔍 Analyzing  indicators for: ${testMetadata.filePath}`);
       const content = await fs.readFile(testMetadata.filePath, 'utf8');
-      let legacyScore = 0;
       let complexityScore = 0;
       let maintenanceScore = 0;
-      
-      // Check for legacy patterns
-      this.legacyDetectionRules.forEach(rule => {
+      this.DetectionRules.forEach(rule => {
         const matches = content.match(rule.pattern);
         if (matches) {
-          legacyScore += rule.score * matches.length;
+          Score += rule.score * matches.length;
         }
       });
-      
       // Calculate complexity score based on file metrics
       const lines = content.split('\n').length;
       const functions = (content.match(/function\s+\w+|=>\s*{/g) || []).length;
       const imports = (content.match(/require\(|import\s+/g) || []).length;
-      
       complexityScore = Math.min(100, (lines * 0.5) + (functions * 5) + (imports * 3));
-      
       // Calculate maintenance score
       const hasComments = content.includes('//') || content.includes('/*');
       const hasDocumentation = content.includes('/**') || content.includes('@param') || content.includes('@return');
       const hasErrorHandling = content.includes('try') && content.includes('catch');
       const hasLogging = content.includes('console.log') || content.includes('console.warn') || content.includes('console.error');
-      
       maintenanceScore = 100;
       if (!hasComments) maintenanceScore -= 20;
       if (!hasDocumentation) maintenanceScore -= 30;
       if (!hasErrorHandling) maintenanceScore -= 25;
       if (hasLogging) maintenanceScore -= 15;
-      
-      console.log(`📊 Scores calculated - Legacy: ${legacyScore}, Complexity: ${complexityScore}, Maintenance: ${maintenanceScore}`);
-      
+      console.log(`📊 Scores calculated - : ${Score}, Complexity: ${complexityScore}, Maintenance: ${maintenanceScore}`);
       // Update test metadata with scores
       testMetadata.setComplexityScore(complexityScore);
       testMetadata.setMaintenanceScore(maintenanceScore);
-      
-      if (legacyScore > 50) {
-        testMetadata.markAsLegacy(legacyScore);
+      if (Score > 50) {
+        testMetadata.markAs(Score);
       }
-      
       // Add tags based on analysis
-      if (legacyScore > 30) testMetadata.addTag('legacy');
+      if (Score > 30) testMetadata.addTag('');
       if (complexityScore > 70) testMetadata.addTag('complex');
       if (maintenanceScore < 50) testMetadata.addTag('needs-maintenance');
       if (hasErrorHandling) testMetadata.addTag('error-handled');
       if (hasDocumentation) testMetadata.addTag('documented');
-      
       console.log(`✅ Analysis complete for: ${testMetadata.filePath}`);
     } catch (error) {
-      console.warn(`Failed to analyze legacy indicators for ${testMetadata.filePath}: ${error.message}`);
+      console.warn(`Failed to analyze  indicators for ${testMetadata.filePath}: ${error.message}`);
     }
   }
-
   /**
    * Scan directory for test files and register them
    * @param {string} directory - Directory to scan
@@ -180,14 +153,11 @@ class TestManagementService {
     try {
       const { stdout } = await execAsync(`find ${directory} -name "*.test.js" -o -name "*.spec.js"`);
       const testFiles = stdout.trim().split('\n').filter(file => file.length > 0);
-      
       const registeredTests = [];
-      
       for (const filePath of testFiles) {
         try {
           const content = await fs.readFile(filePath, 'utf8');
           const testNames = this.extractTestNames(content);
-          
           for (const testName of testNames) {
             const testMetadata = await this.registerTest(filePath, testName);
             registeredTests.push(testMetadata);
@@ -196,13 +166,11 @@ class TestManagementService {
           console.warn(`Failed to process test file ${filePath}: ${error.message}`);
         }
       }
-      
       return registeredTests;
     } catch (error) {
       throw new Error(`Failed to scan and register tests: ${error.message}`);
     }
   }
-
   /**
    * Extract test names from test file content
    * @param {string} content - Test file content
@@ -210,7 +178,6 @@ class TestManagementService {
    */
   extractTestNames(content) {
     const testNames = [];
-    
     // Extract describe blocks
     const describeMatches = content.match(/describe\(['"`]([^'"`]+)['"`]/g);
     if (describeMatches) {
@@ -219,7 +186,6 @@ class TestManagementService {
         testNames.push(name);
       });
     }
-    
     // Extract test/it blocks
     const testMatches = content.match(/(?:test|it)\(['"`]([^'"`]+)['"`]/g);
     if (testMatches) {
@@ -228,15 +194,12 @@ class TestManagementService {
         testNames.push(name);
       });
     }
-    
     // If no specific test names found, use file name
     if (testNames.length === 0) {
       testNames.push('default');
     }
-    
     return testNames;
   }
-
   /**
    * Get test statistics and analytics
    * @returns {Promise<Object>} - Statistics object
@@ -244,12 +207,10 @@ class TestManagementService {
   async getTestStatistics() {
     try {
       const stats = await this.testMetadataRepository.getStatistics();
-      const legacyTests = await this.testMetadataRepository.findLegacyTests();
       const maintenanceTests = await this.testMetadataRepository.findNeedingMaintenance();
-      
       return {
         ...stats,
-        legacyCount: legacyTests.length,
+        Count: Tests.length,
         maintenanceCount: maintenanceTests.length,
         healthDistribution: await this.getHealthDistribution(),
         complexityDistribution: await this.getComplexityDistribution(),
@@ -259,7 +220,6 @@ class TestManagementService {
       throw new Error(`Failed to get test statistics: ${error.message}`);
     }
   }
-
   /**
    * Get health score distribution
    * @returns {Promise<Object>} - Health distribution
@@ -273,7 +233,6 @@ class TestManagementService {
       poor: 0,      // 30-49
       critical: 0   // 0-29
     };
-    
     allTests.forEach(test => {
       const healthScore = test.getHealthScore();
       if (healthScore >= 90) distribution.excellent++;
@@ -282,10 +241,8 @@ class TestManagementService {
       else if (healthScore >= 30) distribution.poor++;
       else distribution.critical++;
     });
-    
     return distribution;
   }
-
   /**
    * Get complexity distribution
    * @returns {Promise<Object>} - Complexity distribution
@@ -294,14 +251,12 @@ class TestManagementService {
     const low = await this.testMetadataRepository.findByComplexity('low');
     const medium = await this.testMetadataRepository.findByComplexity('medium');
     const high = await this.testMetadataRepository.findByComplexity('high');
-    
     return {
       low: low.length,
       medium: medium.length,
       high: high.length
     };
   }
-
   /**
    * Generate recommendations based on test analysis
    * @returns {Promise<Object[]>} - Array of recommendations
@@ -309,18 +264,14 @@ class TestManagementService {
   async generateRecommendations() {
     const recommendations = [];
     const allTests = await this.testMetadataRepository.findAll();
-    
-    // Legacy test recommendations
-    const legacyTests = allTests.filter(test => test.isLegacy);
-    if (legacyTests.length > 0) {
+    if (Tests.length > 0) {
       recommendations.push({
-        type: 'legacy',
+        type: '',
         priority: 'high',
-        message: `${legacyTests.length} legacy tests detected. Consider refactoring or removing these tests.`,
-        affectedTests: legacyTests.map(test => test.filePath)
+        message: `${Tests.length}  tests detected. Consider refactoring or removing these tests.`,
+        affectedTests: Tests.map(test => test.filePath)
       });
     }
-    
     // Maintenance recommendations
     const maintenanceTests = allTests.filter(test => test.needsMaintenance());
     if (maintenanceTests.length > 0) {
@@ -331,7 +282,6 @@ class TestManagementService {
         affectedTests: maintenanceTests.map(test => test.filePath)
       });
     }
-    
     // Failing test recommendations
     const failingTests = allTests.filter(test => test.isFailing());
     if (failingTests.length > 0) {
@@ -342,7 +292,6 @@ class TestManagementService {
         affectedTests: failingTests.map(test => test.filePath)
       });
     }
-    
     // High complexity recommendations
     const complexTests = allTests.filter(test => test.isHighComplexity());
     if (complexTests.length > 0) {
@@ -353,10 +302,8 @@ class TestManagementService {
         affectedTests: complexTests.map(test => test.filePath)
       });
     }
-    
     return recommendations;
   }
-
   /**
    * Generate comprehensive health report
    * @returns {Promise<Object>} - Health report with statistics and recommendations
@@ -367,20 +314,17 @@ class TestManagementService {
       const healthDistribution = await this.getHealthDistribution();
       const complexityDistribution = await this.getComplexityDistribution();
       const recommendations = await this.generateRecommendations();
-      
       const allTests = await this.testMetadataRepository.findAll();
-      const legacyTests = allTests.filter(test => test.isLegacy);
       const failingTests = allTests.filter(test => test.isFailing());
       const maintenanceTests = allTests.filter(test => test.needsMaintenance());
       const complexTests = allTests.filter(test => test.isHighComplexity());
-      
       const healthReport = {
         generatedAt: new Date().toISOString(),
         summary: {
           totalTests: statistics.total,
           overallHealthScore: statistics.averageHealthScore,
           criticalIssues: failingTests.length,
-          warnings: legacyTests.length + maintenanceTests.length + complexTests.length
+          warnings: Tests.length + maintenanceTests.length + complexTests.length
         },
         statistics,
         healthDistribution,
@@ -392,10 +336,10 @@ class TestManagementService {
           healthScore: test.getHealthScore(),
           lastError: test.getMetadata('lastError')
         })),
-        legacyTests: legacyTests.map(test => ({
+        Tests: Tests.map(test => ({
           filePath: test.filePath,
           testName: test.testName,
-          legacyScore: test.legacyScore,
+          Score: test.Score,
           healthScore: test.getHealthScore()
         })),
         maintenanceNeeded: maintenanceTests.map(test => ({
@@ -414,13 +358,11 @@ class TestManagementService {
           unstableTests: allTests.filter(test => !test.isStable() && test.hasBeenRun()).length
         }
       };
-      
       return healthReport;
     } catch (error) {
       throw new Error(`Failed to generate health report: ${error.message}`);
     }
   }
-
   /**
    * Version a test file
    * @param {string} filePath - Path to the test file
@@ -433,14 +375,12 @@ class TestManagementService {
       if (!testMetadata) {
         throw new Error(`Test metadata not found for file: ${filePath}`);
       }
-      
       testMetadata.updateVersion(version);
       return await this.testMetadataRepository.save(testMetadata);
     } catch (error) {
       throw new Error(`Failed to version test: ${error.message}`);
     }
   }
-
   /**
    * Get test metadata by various filters
    * @param {Object} filters - Filter options
@@ -449,27 +389,21 @@ class TestManagementService {
   async getTestsByFilters(filters = {}) {
     try {
       let tests = await this.testMetadataRepository.findAll();
-      
       if (filters.status) {
         tests = tests.filter(test => test.status === filters.status);
       }
-      
-      if (filters.isLegacy !== undefined) {
-        tests = tests.filter(test => test.isLegacy === filters.isLegacy);
+      if (filters.is !== undefined) {
+        tests = tests.filter(test => test.is === filters.is);
       }
-      
       if (filters.tag) {
         tests = tests.filter(test => test.hasTag(filters.tag));
       }
-      
       if (filters.minHealthScore !== undefined) {
         tests = tests.filter(test => test.getHealthScore() >= filters.minHealthScore);
       }
-      
       if (filters.maxHealthScore !== undefined) {
         tests = tests.filter(test => test.getHealthScore() <= filters.maxHealthScore);
       }
-      
       if (filters.complexity) {
         tests = tests.filter(test => {
           const score = test.complexityScore;
@@ -481,13 +415,11 @@ class TestManagementService {
           }
         });
       }
-      
       return tests;
     } catch (error) {
       throw new Error(`Failed to get tests by filters: ${error.message}`);
     }
   }
-
   /**
    * Export test metadata to JSON
    * @param {string} filePath - Output file path
@@ -501,13 +433,11 @@ class TestManagementService {
         totalTests: allTests.length,
         tests: allTests.map(test => test.toJSON())
       };
-      
       await fs.writeFile(filePath, JSON.stringify(exportData, null, 2));
     } catch (error) {
       throw new Error(`Failed to export test metadata: ${error.message}`);
     }
   }
-
   /**
    * Import test metadata from JSON
    * @param {string} filePath - Input file path
@@ -517,9 +447,7 @@ class TestManagementService {
     try {
       const content = await fs.readFile(filePath, 'utf8');
       const importData = JSON.parse(content);
-      
       let importedCount = 0;
-      
       for (const testData of importData.tests) {
         try {
           const testMetadata = TestMetadata.fromJSON(testData);
@@ -529,12 +457,10 @@ class TestManagementService {
           console.warn(`Failed to import test metadata: ${error.message}`);
         }
       }
-      
       return importedCount;
     } catch (error) {
       throw new Error(`Failed to import test metadata: ${error.message}`);
     }
   }
 }
-
 module.exports = TestManagementService; 

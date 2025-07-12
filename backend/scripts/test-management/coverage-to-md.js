@@ -1,21 +1,17 @@
 #!/usr/bin/env node
 require('module-alias/register');
-
 /**
  * Coverage to Markdown Converter
  * Converts Jest coverage output to a comprehensive Markdown report
  * with task generation for uncovered code
  */
-
 const fs = require('fs');
 const path = require('path');
-
 class CoverageToMarkdown {
   constructor() {
     this.coverageData = null;
     this.reportDate = new Date().toLocaleString();
   }
-
   /**
    * Parse LCOV coverage data
    * @param {string} lcovContent - Raw LCOV content
@@ -26,7 +22,6 @@ class CoverageToMarkdown {
     const files = [];
     let currentFile = null;
     let summary = { overall: 0, files: 0, covered: 0 };
-
     for (const line of lines) {
       if (line.startsWith('SF:')) {
         // Source file
@@ -59,12 +54,10 @@ class CoverageToMarkdown {
         currentFile.branches.hit = parseInt(line.substring(4));
       }
     }
-
     // Calculate percentages and overall coverage
     let totalFunctions = 0, hitFunctions = 0;
     let totalLines = 0, hitLines = 0;
     let totalBranches = 0, hitBranches = 0;
-
     files.forEach(file => {
       file.functions.percentage = file.functions.found > 0 ? 
         Math.round((file.functions.hit / file.functions.found) * 100) : 100;
@@ -72,9 +65,7 @@ class CoverageToMarkdown {
         Math.round((file.lines.hit / file.lines.found) * 100) : 100;
       file.branches.percentage = file.branches.found > 0 ? 
         Math.round((file.branches.hit / file.branches.found) * 100) : 100;
-      
       file.average = Math.round((file.functions.percentage + file.lines.percentage + file.branches.percentage) / 3);
-
       totalFunctions += file.functions.found;
       hitFunctions += file.functions.hit;
       totalLines += file.lines.found;
@@ -82,13 +73,10 @@ class CoverageToMarkdown {
       totalBranches += file.branches.found;
       hitBranches += file.branches.hit;
     });
-
     summary.overall = totalLines > 0 ? Math.round((hitLines / totalLines) * 100) : 0;
     summary.covered = files.filter(f => f.average >= 80).length;
-
     return { summary, files };
   }
-
   /**
    * Generate tasks for uncovered code
    * @param {Array} files - Coverage data for files
@@ -96,7 +84,6 @@ class CoverageToMarkdown {
    */
   generateTasks(files) {
     const tasks = [];
-    
     files.forEach(file => {
       if (file.average < 80) {
         const priority = file.average < 50 ? 'HIGH' : file.average < 70 ? 'MEDIUM' : 'LOW';
@@ -115,13 +102,11 @@ class CoverageToMarkdown {
         tasks.push(task);
       }
     });
-
     return tasks.sort((a, b) => {
       const priorityOrder = { HIGH: 3, MEDIUM: 2, LOW: 1 };
       return priorityOrder[b.priority] - priorityOrder[a.priority];
     });
   }
-
   /**
    * Generate Markdown report
    * @param {Object} coverageData - Parsed coverage data
@@ -130,7 +115,6 @@ class CoverageToMarkdown {
   generateMarkdown(coverageData) {
     let md = '# Test Coverage Report\n\n';
     md += `**Generated:** ${this.reportDate}\n\n`;
-
     if (!coverageData || !coverageData.summary.overall) {
       md += '## ⚠️ Coverage Data Unavailable\n\n';
       md += 'No coverage data was generated. This could be due to:\n\n';
@@ -142,38 +126,30 @@ class CoverageToMarkdown {
       md += '2. **Enable coverage** - Add `--coverage` flag to Jest configuration\n';
       md += '3. **Check source files** - Verify that source files are being included in coverage\n';
       md += '4. **Run tests separately** - Try running `npm test -- --coverage` manually\n\n';
-      
       // Generate fallback tasks based on project structure
       md += this.generateFallbackTasks();
-      
       return md;
     }
-
     md += `## 📊 Coverage Summary\n\n`;
     md += `**Overall Coverage:** ${coverageData.summary.overall}%\n\n`;
     md += `**Files Analyzed:** ${coverageData.summary.files}\n`;
     md += `**Files with ≥80% Coverage:** ${coverageData.summary.covered}\n\n`;
-
     if (coverageData.files.length > 0) {
       md += '## 📁 File Coverage Details\n\n';
       md += '| File | Functions | Lines | Branches | Average | Status |\n';
       md += '|------|-----------|-------|----------|---------|--------|\n';
-      
       coverageData.files.forEach(file => {
         const status = file.average >= 80 ? '✅' : file.average >= 50 ? '⚠️' : '❌';
         md += `| \`${file.file}\` | ${file.functions.percentage}% | ${file.lines.percentage}% | ${file.branches.percentage}% | ${file.average}% | ${status} |\n`;
       });
       md += '\n';
-
       // Generate tasks
       const tasks = this.generateTasks(coverageData.files);
       if (tasks.length > 0) {
         md += '## 🎯 Coverage Improvement Tasks\n\n';
-        
         const highPriority = tasks.filter(t => t.priority === 'HIGH');
         const mediumPriority = tasks.filter(t => t.priority === 'MEDIUM');
         const lowPriority = tasks.filter(t => t.priority === 'LOW');
-
         if (highPriority.length > 0) {
           md += '### 🔴 High Priority\n\n';
           highPriority.forEach(task => {
@@ -182,7 +158,6 @@ class CoverageToMarkdown {
             md += `  - Task: ${task.description}\n\n`;
           });
         }
-
         if (mediumPriority.length > 0) {
           md += '### 🟡 Medium Priority\n\n';
           mediumPriority.forEach(task => {
@@ -190,7 +165,6 @@ class CoverageToMarkdown {
             md += `  - Task: ${task.description}\n\n`;
           });
         }
-
         if (lowPriority.length > 0) {
           md += '### 🟢 Low Priority\n\n';
           lowPriority.forEach(task => {
@@ -200,10 +174,8 @@ class CoverageToMarkdown {
         }
       }
     }
-
     return md;
   }
-
   /**
    * Generate fallback tasks when no coverage data is available
    * @returns {string} - Fallback tasks markdown
@@ -211,7 +183,6 @@ class CoverageToMarkdown {
   generateFallbackTasks() {
     let md = '## 🎯 Recommended Coverage Tasks\n\n';
     md += 'Since no coverage data is available, here are general coverage improvement tasks:\n\n';
-    
     // Common directories that should have tests
     const commonDirs = [
       'domain/entities',
@@ -222,32 +193,26 @@ class CoverageToMarkdown {
       'presentation/api/controllers',
       'presentation/api/handlers'
     ];
-
     md += '### 📁 Priority Areas for Coverage\n\n';
     commonDirs.forEach(dir => {
       md += `- **${dir}/** - Add unit tests for business logic\n`;
     });
-    
     md += '\n### 🔧 Coverage Setup Tasks\n\n';
     md += '1. **Configure Jest Coverage** - Update `jest.config.js` to include coverage settings\n';
     md += '2. **Add Coverage Thresholds** - Set minimum coverage requirements\n';
     md += '3. **Create Test Templates** - Standardize test structure for new files\n';
     md += '4. **Setup Coverage Reports** - Configure HTML and LCOV reports\n\n';
-
     return md;
   }
-
   /**
    * Main execution method
    */
   async run() {
     try {
       console.log('📊 Converting coverage to Markdown...');
-      
       // Try to read LCOV file first
       const lcovFile = path.join(process.cwd(), 'coverage', 'lcov.info');
       let coverageData = null;
-
       if (fs.existsSync(lcovFile)) {
         console.log('📁 Found LCOV file, parsing coverage data...');
         const lcovContent = fs.readFileSync(lcovFile, 'utf8');
@@ -258,18 +223,13 @@ class CoverageToMarkdown {
         const coverageFile = path.join(process.cwd(), 'coverage.txt');
         if (fs.existsSync(coverageFile)) {
           const coverageText = fs.readFileSync(coverageFile, 'utf8');
-          // Try to parse as Jest text output (legacy)
           coverageData = this.parseCoverageText(coverageText);
         }
       }
-
       const markdown = this.generateMarkdown(coverageData);
-      
       const outputFile = path.join(process.cwd(), 'coverage.md');
       fs.writeFileSync(outputFile, markdown, 'utf8');
-      
       console.log(`✅ Coverage report generated: ${outputFile}`);
-      
       if (coverageData && coverageData.summary.overall) {
         console.log(`📊 Overall coverage: ${coverageData.summary.overall}%`);
         console.log(`📁 Files analyzed: ${coverageData.summary.files}`);
@@ -277,10 +237,8 @@ class CoverageToMarkdown {
       } else {
         console.log('⚠️  No coverage data found - generated fallback report');
       }
-      
     } catch (error) {
       console.error('❌ Error generating coverage report:', error.message);
-      
       // Generate fallback report even on error
       const fallbackMd = this.generateMarkdown(null);
       const outputFile = path.join(process.cwd(), 'coverage.md');
@@ -288,9 +246,8 @@ class CoverageToMarkdown {
       console.log(`✅ Fallback coverage report generated: ${outputFile}`);
     }
   }
-
   /**
-   * Legacy method to parse Jest text output (kept for backward compatibility)
+   *  method to parse Jest text output (kept for backward compatibility)
    */
   parseCoverageText(coverageText) {
     const lines = coverageText.split('\n');
@@ -298,7 +255,6 @@ class CoverageToMarkdown {
     const files = [];
     let inTable = false;
     let headers = [];
-
     for (const line of lines) {
       // Parse summary section
       if (line.includes('All files')) {
@@ -327,7 +283,6 @@ class CoverageToMarkdown {
           const branch = parseFloat(parts[2]) || 0;
           const funcs = parseFloat(parts[3]) || 0;
           const lines = parseFloat(parts[4]) || 0;
-          
           if (filePath && filePath !== 'File') {
             files.push({
               file: filePath,
@@ -340,11 +295,9 @@ class CoverageToMarkdown {
         }
       }
     }
-
     return { summary, files };
   }
 }
-
 // Run the converter
 const converter = new CoverageToMarkdown();
 converter.run(); 

@@ -9,21 +9,17 @@ class PackageExtractor {
      */
     extractPackagesFromAnalysis(analysisResults) {
         const packages = [];
-        
         console.log('DEBUG: extractPackagesFromAnalysis called with:', Object.keys(analysisResults));
-        
         // Extract packages from dependencies analysis (multiple possible locations)
         if (analysisResults.Dependencies && analysisResults.Dependencies.data && analysisResults.Dependencies.data.packages) {
             console.log('DEBUG: Found packages in Dependencies.data.packages');
             packages.push(...analysisResults.Dependencies.data.packages);
         }
-        
         // Extract packages from structure analysis (where they actually are!)
         if (analysisResults.structure && analysisResults.structure.data && analysisResults.structure.data.dependenciesAnalysis && analysisResults.structure.data.dependenciesAnalysis.packages) {
             console.log('DEBUG: Found packages in structure.data.dependenciesAnalysis.packages');
             packages.push(...analysisResults.structure.data.dependenciesAnalysis.packages);
         }
-        
         // Extract packages from architecture analysis (new structure)
         if (analysisResults.Architecture && analysisResults.Architecture.data) {
             // Check for new monorepo structure
@@ -33,11 +29,10 @@ class PackageExtractor {
             }
             // Check for old structure
             else if (analysisResults.Architecture.data.packages) {
-                console.log('DEBUG: Found packages in Architecture.data.packages (legacy)');
+                console.log('DEBUG: Found packages in Architecture.data.packages ()');
                 packages.push(...analysisResults.Architecture.data.packages);
             }
         }
-        
         // Check all possible locations recursively
         const checkForPackages = (obj, path = '') => {
             if (obj && typeof obj === 'object') {
@@ -50,20 +45,15 @@ class PackageExtractor {
                 });
             }
         };
-        
         checkForPackages(analysisResults);
-        
         console.log('DEBUG: Total packages found:', packages.length);
-        
         // If no packages found, assume single package
         if (packages.length === 0) {
             console.log('DEBUG: No packages found, using single package');
             packages.push({ name: 'root', path: '.', relativePath: '.' });
         }
-        
         return packages;
     }
-
     /**
      * Filter analysis results for a specific package
      * @param {Object} analysisResults - Analysis results object
@@ -72,7 +62,6 @@ class PackageExtractor {
      */
     filterAnalysisResultsForPackage(analysisResults, pkg) {
         const packageResults = {};
-        
         // Filter each analysis type for this specific package
         Object.entries(analysisResults).forEach(([type, result]) => {
             if (result && result.data) {
@@ -122,7 +111,6 @@ class PackageExtractor {
                     if (result.data.isMonorepo && result.data.packageQualityAnalyses && result.data.packageQualityAnalyses[pkg.name]) {
                         const packageQuality = result.data.packageQualityAnalyses[pkg.name];
                         const qualityAnalysis = packageQuality.qualityAnalysis;
-                        
                         const packageQualityData = {
                             package: pkg.name,
                             packagePath: pkg.path,
@@ -147,7 +135,6 @@ class PackageExtractor {
                             complexityIssuesList: packageQuality.complexityIssuesList || [],
                             lintingIssuesList: packageQuality.lintingIssuesList || []
                         };
-                        
                         // Calculate package-specific metrics
                         packageQualityData.metrics = {
                             lintingIssues: packageQualityData.realMetrics.lintingIssues || 0,
@@ -160,7 +147,6 @@ class PackageExtractor {
                             performanceIssues: packageQualityData.realMetrics.performanceIssues || 0,
                             overallQualityScore: packageQualityData.realMetrics.overallQualityScore || 0
                         };
-                        
                         packageResults[type] = {
                             ...result,
                             data: packageQualityData
@@ -173,10 +159,8 @@ class PackageExtractor {
                     const securityData = analysisResults['Security'] || analysisResults['security'];
                     if (securityData && securityData.data && securityData.data.isMonorepo && 
                         securityData.data.packageSecurityAnalyses && securityData.data.packageSecurityAnalyses[pkg.name]) {
-                        
                         const packageSecurity = securityData.data.packageSecurityAnalyses[pkg.name];
                         const securityAnalysis = packageSecurity.securityAnalysis;
-                        
                         const packageSecurityData = {
                             package: pkg.name,
                             packagePath: pkg.path,
@@ -189,7 +173,6 @@ class PackageExtractor {
                             secrets: securityAnalysis.secrets || {},
                             recommendations: securityAnalysis.recommendations || []
                         };
-                        
                         // Calculate metrics for this package
                         packageSecurityData.metrics = {
                             vulnerabilityCount: packageSecurityData.vulnerabilities.length,
@@ -201,7 +184,6 @@ class PackageExtractor {
                             mediumVulnerabilities: this.countMediumVulnerabilities(packageSecurityData.vulnerabilities),
                             lowVulnerabilities: this.countLowVulnerabilities(packageSecurityData.vulnerabilities)
                         };
-                        
                         packageResults[type] = {
                             ...result,
                             data: packageSecurityData
@@ -237,10 +219,8 @@ class PackageExtractor {
                 }
             }
         });
-        
         return packageResults;
     }
-
     /**
      * Count critical vulnerabilities
      * @param {Array} vulnerabilities - Vulnerabilities array
@@ -249,7 +229,6 @@ class PackageExtractor {
     countCriticalVulnerabilities(vulnerabilities) {
         return vulnerabilities.filter(v => v.severity === 'critical').length;
     }
-
     /**
      * Count high vulnerabilities
      * @param {Array} vulnerabilities - Vulnerabilities array
@@ -258,7 +237,6 @@ class PackageExtractor {
     countHighVulnerabilities(vulnerabilities) {
         return vulnerabilities.filter(v => v.severity === 'high').length;
     }
-
     /**
      * Count medium vulnerabilities
      * @param {Array} vulnerabilities - Vulnerabilities array
@@ -267,7 +245,6 @@ class PackageExtractor {
     countMediumVulnerabilities(vulnerabilities) {
         return vulnerabilities.filter(v => v.severity === 'medium').length;
     }
-
     /**
      * Count low vulnerabilities
      * @param {Array} vulnerabilities - Vulnerabilities array
@@ -277,5 +254,4 @@ class PackageExtractor {
         return vulnerabilities.filter(v => v.severity === 'low').length;
     }
 }
-
 module.exports = PackageExtractor; 

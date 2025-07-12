@@ -11,7 +11,6 @@ const WorkflowGitService = require('@/domain/services/WorkflowGitService');
 const ConfirmationSystem = require('@/domain/services/auto-finish/ConfirmationSystem');
 const TaskType = require('@/domain/value-objects/TaskType');
 const { v4: uuidv4 } = require('uuid');
-
 class AutoTestFixSystem {
   constructor(dependencies = {}) {
     this.cursorIDE = dependencies.cursorIDE;
@@ -20,29 +19,24 @@ class AutoTestFixSystem {
     this.webSocketManager = dependencies.webSocketManager;
     this.taskRepository = dependencies.taskRepository;
     this.workflowOrchestrationService = dependencies.workflowOrchestrationService;
-    
     // Initialize subsystems
     this.testAnalyzer = new TestAnalyzer();
     this.testFixer = new TestFixer();
     this.coverageAnalyzer = new CoverageAnalyzer();
     this.testReportParser = new TestReportParser();
     this.testFixTaskGenerator = new TestFixTaskGenerator(this.taskRepository);
-    
     // Initialize ConfirmationSystem like AutoFinishSystem
     this.confirmationSystem = new ConfirmationSystem(this.cursorIDE);
-    
     // Initialize WorkflowGitService for proper branch management
     this.workflowGitService = new WorkflowGitService({
       gitService: dependencies.gitService,
       logger: dependencies.logger,
       eventBus: dependencies.eventBus
     });
-    
     // Session management
     this.activeSessions = new Map(); // sessionId -> session data
     this.maxConcurrentSessions = 3;
     this.sessionTimeout = 1800000; // 30 minutes
-    
     // Configuration
     this.config = {
       maxFixAttempts: 3,
@@ -57,29 +51,24 @@ class AutoTestFixSystem {
       maxConfirmationAttempts: 3, // Like AutoFinishSystem
       confirmationTimeout: 10000 // 10 seconds
     };
-    
     this.logger = dependencies.logger || console;
   }
-
   /**
    * Initialize the system
    */
   async initialize() {
     try {
       this.logger.info('[AutoTestFixSystem] Initializing...');
-      
       // Initialize subsystems
       await this.testAnalyzer.initialize();
       await this.testFixer.initialize();
       await this.coverageAnalyzer.initialize();
-      
       this.logger.info('[AutoTestFixSystem] Initialized successfully');
     } catch (error) {
       this.logger.error('[AutoTestFixSystem] Initialization failed:', error.message);
       throw error;
     }
   }
-
   /**
    * Load existing tasks from database
    * @param {Object} options - Options for loading tasks
@@ -88,22 +77,18 @@ class AutoTestFixSystem {
   async loadExistingTasks(options = {}) {
     try {
       this.logger.info(`[AutoTestFixSystem] Loading existing tasks from database...`);
-      
       if (!this.taskRepository) {
         this.logger.warn(`[AutoTestFixSystem] No task repository available, cannot load existing tasks`);
         return [];
       }
-
       const projectId = options.projectId || 'system';
       const userId = options.userId || 'system';
-      
       // Load tasks with filters
       const filters = {
         projectId: projectId,
         userId: userId,
         type: 'testing' // Only test-related tasks
       };
-
       // Add status filter if specified
       if (options.status) {
         filters.status = options.status;
@@ -111,10 +96,8 @@ class AutoTestFixSystem {
         // Default: only load pending and in_progress tasks (skip completed/failed)
         filters.status = ['pending', 'in_progress'];
       }
-
       // Load tasks from database
       const existingTasks = await this.taskRepository.findByProject(projectId, filters);
-      
       // Filter out completed tasks (those with completedAt set)
       const activeTasks = existingTasks.filter(task => {
         // Skip tasks that are marked as completed
@@ -122,25 +105,20 @@ class AutoTestFixSystem {
           this.logger.debug(`[AutoTestFixSystem] Skipping completed task: ${task.id}`);
           return false;
         }
-        
         // Skip tasks that have completedAt timestamp
         if (task.completedAt) {
           this.logger.debug(`[AutoTestFixSystem] Skipping task with completedAt: ${task.id}`);
           return false;
         }
-        
         return true;
       });
-
       this.logger.info(`[AutoTestFixSystem] Loaded ${activeTasks.length} active tasks from database (filtered from ${existingTasks.length} total)`);
       return activeTasks;
-
     } catch (error) {
       this.logger.error(`[AutoTestFixSystem] Failed to load existing tasks: ${error.message}`);
       return [];
     }
   }
-
   /**
    * Execute complete auto test fix workflow
    * @param {Object} options - Workflow options
@@ -149,14 +127,11 @@ class AutoTestFixSystem {
   async executeAutoTestFixWorkflow(options = {}) {
     const sessionId = uuidv4();
     const startTime = Date.now();
-    
     try {
       this.logger.info(`[AutoTestFixSystem] Starting auto test fix workflow ${sessionId}`);
-      
       // Create session
       const session = this.createSession(sessionId, options);
       this.activeSessions.set(sessionId, session);
-      
       // Stream session start
       this.streamProgress(sessionId, 'start', {
         sessionId,
@@ -164,21 +139,17 @@ class AutoTestFixSystem {
         phase: 'initializing',
         progress: 0
       });
-
       let tasks = [];
-      
       // Check if we should load existing tasks or generate new ones
       if (options.loadExistingTasks) {
         // Step 1: Load existing tasks from database
         this.logger.info(`[AutoTestFixSystem] Step 1: Loading existing tasks from database`);
         this.streamProgress(sessionId, 'phase', { phase: 'loading-tasks', progress: 10 });
-        
         tasks = await this.loadExistingTasks({
           projectId: options.projectId || 'system',
           userId: options.userId || 'system',
           status: options.taskStatus // Optional status filter
         });
-        
         if (tasks.length === 0) {
           this.logger.info(`[AutoTestFixSystem] No existing tasks found, will generate new tasks`);
           options.loadExistingTasks = false; // Fallback to generating new tasks
@@ -186,14 +157,11 @@ class AutoTestFixSystem {
           this.logger.info(`[AutoTestFixSystem] Loaded ${tasks.length} existing tasks from database`);
         }
       }
-      
       if (!options.loadExistingTasks || tasks.length === 0) {
         // Step 1: Parse existing test output files
         this.logger.info(`[AutoTestFixSystem] Step 1: Parsing test output files`);
         this.streamProgress(sessionId, 'phase', { phase: 'parsing', progress: 10 });
-        
         const parsedData = await this.testReportParser.parseAllTestOutputs(options.projectPath || process.cwd());
-        
         if (!parsedData.failingTests.length && !parsedData.coverageIssues.length) {
           this.logger.info(`[AutoTestFixSystem] No test issues found in output files`);
           return this.completeSession(sessionId, {
@@ -202,32 +170,24 @@ class AutoTestFixSystem {
             parsedData
           });
         }
-        
         // Step 2: Generate and save tasks to database
         this.logger.info(`[AutoTestFixSystem] Step 2: Generating and saving tasks to database`);
         this.streamProgress(sessionId, 'phase', { phase: 'task-generation', progress: 20 });
-        
         tasks = await this.testFixTaskGenerator.generateAndSaveTasks(parsedData, {
           projectId: options.projectId || 'system',
           userId: options.userId || 'system',
           clearExisting: options.clearExisting || false
         });
-        
         this.logger.info(`[AutoTestFixSystem] Generated ${tasks.length} tasks in database`);
       }
-      
       // Step 3: Process tasks sequentially
       this.logger.info(`[AutoTestFixSystem] Step 3: Processing tasks sequentially`);
       this.streamProgress(sessionId, 'phase', { phase: 'task-processing', progress: 30 });
-      
       const processingResult = await this.processTasksSequentially(tasks, sessionId, options);
-      
       // Step 4: Generate final report
       this.logger.info(`[AutoTestFixSystem] Step 4: Generating final report`);
       this.streamProgress(sessionId, 'phase', { phase: 'report-generation', progress: 90 });
-      
       const report = await this.generateFinalReport(parsedData, processingResult, options);
-      
       // Complete session
       const finalResult = this.completeSession(sessionId, {
         success: true,
@@ -240,13 +200,10 @@ class AutoTestFixSystem {
         startTime: new Date(startTime),
         endTime: new Date()
       });
-      
       this.logger.info(`[AutoTestFixSystem] Auto test fix workflow completed successfully: ${sessionId}`);
       return finalResult;
-      
     } catch (error) {
       this.logger.error(`[AutoTestFixSystem] Auto test fix workflow failed: ${error.message}`);
-      
       // Update session status
       const session = this.activeSessions.get(sessionId);
       if (session) {
@@ -255,18 +212,15 @@ class AutoTestFixSystem {
         session.endTime = new Date();
         this.activeSessions.set(sessionId, session);
       }
-      
       // Stream error
       this.streamProgress(sessionId, 'error', {
         sessionId,
         error: error.message,
         duration: Date.now() - startTime
       });
-      
       throw error;
     }
   }
-
   /**
    * Analyze project for test issues
    * @param {string} projectPath - Project path
@@ -275,28 +229,21 @@ class AutoTestFixSystem {
   async analyzeProjectTests(projectPath) {
     try {
       this.logger.info(`[AutoTestFixSystem] Analyzing project tests: ${projectPath}`);
-      
       // Analyze failing tests
       const failingTests = await this.testAnalyzer.analyzeFailingTests(projectPath);
-      
-      // Analyze legacy tests
-      const legacyTests = await this.testAnalyzer.analyzeLegacyTests(projectPath);
-      
       // Analyze complex tests
       const complexTests = await this.testAnalyzer.analyzeComplexTests(projectPath);
-      
       // Get current coverage
       const coverage = await this.coverageAnalyzer.getCurrentCoverage(projectPath);
-      
       const result = {
         projectPath,
         failingTests: {
           count: failingTests.length,
           tests: failingTests
         },
-        legacyTests: {
-          count: legacyTests.length,
-          tests: legacyTests
+        Tests: {
+          count: Tests.length,
+          tests: Tests
         },
         complexTests: {
           count: complexTests.length,
@@ -307,20 +254,17 @@ class AutoTestFixSystem {
           target: this.config.coverageThreshold,
           needsImprovement: coverage.current < this.config.coverageThreshold
         },
-        hasIssues: failingTests.length > 0 || legacyTests.length > 0 || 
+        hasIssues: failingTests.length > 0 || Tests.length > 0 || 
                    complexTests.length > 0 || coverage.current < this.config.coverageThreshold,
-        totalIssues: failingTests.length + legacyTests.length + complexTests.length,
+        totalIssues: failingTests.length + Tests.length + complexTests.length,
         timestamp: new Date()
       };
-      
       this.logger.info(`[AutoTestFixSystem] Analysis complete: ${result.totalIssues} issues found`);
       return result;
-      
     } catch (error) {
       throw new Error(`Test analysis failed: ${error.message}`);
     }
   }
-
   /**
    * Create test fix task for workflow orchestration
    * @param {Object} analysisResult - Analysis result
@@ -330,7 +274,6 @@ class AutoTestFixSystem {
   async createTestFixTask(analysisResult, options) {
     try {
       const taskId = uuidv4();
-      
       const task = {
         id: taskId,
         title: `Auto Test Fix - ${analysisResult.totalIssues} Issues`,
@@ -354,20 +297,16 @@ class AutoTestFixSystem {
         createdAt: new Date(),
         updatedAt: new Date()
       };
-      
       // Save task if repository is available
       if (this.taskRepository) {
         await this.taskRepository.save(task);
       }
-      
       this.logger.info(`[AutoTestFixSystem] Created test fix task: ${taskId}`);
       return task;
-      
     } catch (error) {
       throw new Error(`Failed to create test fix task: ${error.message}`);
     }
   }
-
   /**
    * Improve test coverage
    * @param {Object} analysisResult - Analysis result
@@ -378,7 +317,6 @@ class AutoTestFixSystem {
   async improveTestCoverage(analysisResult, workflowResult, options) {
     try {
       this.logger.info(`[AutoTestFixSystem] Improving test coverage`);
-      
       if (!analysisResult.coverage.needsImprovement) {
         this.logger.info(`[AutoTestFixSystem] Coverage target already met`);
         return {
@@ -388,7 +326,6 @@ class AutoTestFixSystem {
           targetCoverage: analysisResult.coverage.target
         };
       }
-      
       // Generate additional tests to improve coverage
       const coverageImprovement = await this.coverageAnalyzer.improveCoverage(
         analysisResult.projectPath,
@@ -398,7 +335,6 @@ class AutoTestFixSystem {
           maxAttempts: 3
         }
       );
-      
       return {
         success: coverageImprovement.success,
         message: coverageImprovement.message,
@@ -407,12 +343,10 @@ class AutoTestFixSystem {
         improvement: coverageImprovement.improvement,
         newTests: coverageImprovement.newTests
       };
-      
     } catch (error) {
       throw new Error(`Coverage improvement failed: ${error.message}`);
     }
   }
-
   /**
    * Process tasks sequentially
    * @param {Array<Task>} tasks - Tasks to process
@@ -423,7 +357,6 @@ class AutoTestFixSystem {
   async processTasksSequentially(tasks, sessionId, options = {}) {
     try {
       this.logger.info(`[AutoTestFixSystem] Processing ${tasks.length} tasks sequentially`);
-      
       const result = {
         totalTasks: tasks.length,
         completedTasks: 0,
@@ -434,16 +367,12 @@ class AutoTestFixSystem {
         endTime: null,
         duration: 0
       };
-
       // Sort tasks by priority (critical -> high -> medium -> low)
       const sortedTasks = this.sortTasksByPriority(tasks);
-      
       for (let i = 0; i < sortedTasks.length; i++) {
         const task = sortedTasks[i];
-        
         try {
           this.logger.info(`[AutoTestFixSystem] Processing task ${i + 1}/${sortedTasks.length}: ${task.title}`);
-          
           // Stream task start
           this.streamProgress(sessionId, 'task-start', {
             taskId: task.id,
@@ -452,7 +381,6 @@ class AutoTestFixSystem {
             totalTasks: sortedTasks.length,
             progress: Math.round(((i + 1) / sortedTasks.length) * 100)
           });
-          
           // Update task status to in progress
           task.start();
           if (this.taskRepository && this.config.updateTaskStatus) {
@@ -463,11 +391,9 @@ class AutoTestFixSystem {
               // Continue processing even if status update fails
             }
           }
-          
           // Process the task
           const taskResult = await this.processSingleTask(task, options);
           result.results.push(taskResult);
-          
           // Update task status based on result
           if (taskResult.success) {
             task.complete(taskResult);
@@ -476,7 +402,6 @@ class AutoTestFixSystem {
             task.fail(taskResult.error);
             result.failedTasks++;
           }
-          
           if (this.taskRepository) {
             try {
               await this.taskRepository.save(task);
@@ -485,7 +410,6 @@ class AutoTestFixSystem {
               // Continue processing even if status update fails
             }
           }
-          
           // Stream task completion
           this.streamProgress(sessionId, 'task-complete', {
             taskId: task.id,
@@ -496,16 +420,13 @@ class AutoTestFixSystem {
             failedTasks: result.failedTasks,
             progress: Math.round(((i + 1) / sortedTasks.length) * 100)
           });
-          
           // Check if we should stop on error
           if (!taskResult.success && options.stopOnError) {
             this.logger.warn(`[AutoTestFixSystem] Stopping on error as requested`);
             break;
           }
-          
         } catch (error) {
           this.logger.error(`[AutoTestFixSystem] Error processing task ${task.id}:`, error.message);
-          
           task.fail(error.message);
           if (this.taskRepository) {
             try {
@@ -515,32 +436,26 @@ class AutoTestFixSystem {
               // Continue processing even if status update fails
             }
           }
-          
           result.failedTasks++;
           result.results.push({
             taskId: task.id,
             success: false,
             error: error.message
           });
-          
           if (options.stopOnError) {
             break;
           }
         }
       }
-      
       result.endTime = new Date();
       result.duration = result.endTime - result.startTime;
-      
       this.logger.info(`[AutoTestFixSystem] Sequential processing completed: ${result.completedTasks} completed, ${result.failedTasks} failed`);
       return result;
-      
     } catch (error) {
       this.logger.error(`[AutoTestFixSystem] Sequential processing failed:`, error.message);
       throw error;
     }
   }
-
   /**
    * Process a single task using cursorIDE.postToCursor() with proper Git workflow
    * @param {Task} task - Task to process
@@ -554,7 +469,6 @@ class AutoTestFixSystem {
         this.logger.warn('[AutoTestFixSystem] cursorIDE not available, using fallback processing');
         return await this.processTaskFallback(task, options);
       }
-
       // Immer neuen Chat für jeden Test-Task öffnen
       if (task.type?.value === 'testing' && this.cursorIDE.browserManager) {
         this.logger.info('🆕 [AutoTestFixSystem] Creating new chat for test task...');
@@ -562,11 +476,9 @@ class AutoTestFixSystem {
         // Warte kurz, bis das neue Chatfeld bereit ist
         await new Promise(resolve => setTimeout(resolve, 2000));
       }
-      
       // Create proper workflow branch using WorkflowGitService
       const projectPath = task.metadata?.projectPath || process.cwd();
       let branchResult = null;
-      
       try {
         this.logger.info(`[AutoTestFixSystem] Creating workflow branch for task: ${task.id}`);
         branchResult = await this.workflowGitService.createWorkflowBranch(projectPath, task, options);
@@ -575,52 +487,40 @@ class AutoTestFixSystem {
         this.logger.warn(`[AutoTestFixSystem] Failed to create workflow branch: ${error.message}`);
         // Continue without branch creation - the AI will handle it in the prompt
       }
-      
       // Build task prompt with proper Git workflow
       const idePrompt = this.buildTaskPrompt(task);
-      
       this.logger.info(`[AutoTestFixSystem] Sending task to Cursor IDE: ${task.title}`);
-      
       // Send to Cursor IDE via postToCursor()
       let aiResponse = await this.cursorIDE.postToCursor(idePrompt);
-      
       // Confirmation loop like AutoFinishSystem
       let confirmationAttempts = 0;
       const maxConfirmationAttempts = 3;
       let confirmationResult = null;
-      
       while (confirmationAttempts < maxConfirmationAttempts) {
         confirmationAttempts++;
         this.logger.info(`[AutoTestFixSystem] Confirmation attempt ${confirmationAttempts}/${maxConfirmationAttempts}`);
-        
         // Ask for explicit confirmation
         confirmationResult = await this.confirmationSystem.askConfirmation('test');
-        
         this.logger.info(`[AutoTestFixSystem] Confirmation result: status=${confirmationResult.status}, isValid=${confirmationResult.isValid}, confidence=${confirmationResult.confidence}`);
-        
         if (confirmationResult.testResults) {
           this.logger.info(`[AutoTestFixSystem] Test results from AI: ${confirmationResult.testResults.status} ${confirmationResult.testResults.percentage}%`);
         }
-        
         if (confirmationResult.isValid) {
           this.logger.info(`[AutoTestFixSystem] ✅ Task confirmed as complete on attempt ${confirmationAttempts}`);
           break;
         } else {
           this.logger.info(`[AutoTestFixSystem] ❌ Task not confirmed (status: ${confirmationResult.status}), attempt ${confirmationAttempts}/${maxConfirmationAttempts}`);
-          
           if (confirmationAttempts < maxConfirmationAttempts) {
             // Wait a bit before next attempt
             await new Promise(resolve => setTimeout(resolve, 2000));
           }
         }
       }
-      
       // If we got confirmation, proceed with test validation
       let testValidationResult = null;
       if (confirmationResult && confirmationResult.isValid) {
         this.logger.info(`[AutoTestFixSystem] Proceeding with test validation for task: ${task.id}`);
         testValidationResult = await this.validateTestsWithExecution(task, branchResult);
-        
         // Log the outcome
         if (testValidationResult.success) {
           this.logger.info(`[AutoTestFixSystem] ✅ Task ${task.id} completed successfully - Tests passed, changes committed`);
@@ -636,7 +536,6 @@ class AutoTestFixSystem {
           threshold: 80,
           taskStatus: 'not_confirmed'
         };
-        
         // Update task status in database
         if (this.taskRepository) {
           task.fail({
@@ -647,7 +546,6 @@ class AutoTestFixSystem {
           await this.taskRepository.save(task);
         }
       }
-      
       const taskResult = {
         taskId: task.id,
         description: task.title,
@@ -659,13 +557,10 @@ class AutoTestFixSystem {
         taskStatus: testValidationResult?.taskStatus || 'unknown',
         completedAt: new Date()
       };
-      
       this.logger.info(`[AutoTestFixSystem] Task ${task.id} processed via Cursor IDE - Status: ${taskResult.taskStatus}`);
       return taskResult;
-      
     } catch (error) {
       this.logger.error(`[AutoTestFixSystem] Task ${task.id} failed:`, error.message);
-      
       return {
         taskId: task.id,
         description: task.title,
@@ -675,7 +570,6 @@ class AutoTestFixSystem {
       };
     }
   }
-
   /**
    * Build a prompt for task execution with proper Git workflow using WorkflowGitService
    * @param {Task} task - Task object
@@ -684,9 +578,7 @@ class AutoTestFixSystem {
   buildTaskPrompt(task) {
     const taskType = task.metadata?.taskType;
     const metadata = task.metadata || {};
-    
     let specificInstructions = '';
-    
     switch (taskType) {
       case 'failing_test_fix':
         specificInstructions = `
@@ -698,7 +590,6 @@ Specific Instructions for Failing Test Fix:
 - Ensure the test passes after the fix
 - Maintain test coverage and readability`;
         break;
-        
       case 'coverage_improvement':
         specificInstructions = `
 Specific Instructions for Coverage Improvement:
@@ -709,18 +600,16 @@ Specific Instructions for Coverage Improvement:
 - Focus on uncovered code paths
 - Ensure tests are meaningful and not just for coverage`;
         break;
-        
-      case 'legacy_test_refactor':
+      case '_test_refactor':
         specificInstructions = `
-Specific Instructions for Legacy Test Refactor:
+Specific Instructions for  Test Refactor:
 - Test File: ${metadata.testFile || 'Unknown'}
 - Test Name: ${metadata.testName || 'Unknown'}
-- Refactor the legacy test to modern standards
+- Refactor the  test to modern standards
 - Improve readability and maintainability
 - Use modern testing patterns and assertions
 - Remove deprecated testing approaches`;
         break;
-        
       default:
         specificInstructions = `
 General Task Instructions:
@@ -729,17 +618,10 @@ General Task Instructions:
 - Ensure the implementation is production-ready
 - Test the changes if applicable`;
     }
-    
-
-    
     return `Please complete the following test-related task:
-
 ${task.title}
-
 ${task.description}
-
 ${specificInstructions}
-
 Requirements:
 - Execute the task completely and accurately
 - Make all necessary changes to the code
@@ -747,12 +629,8 @@ Requirements:
 - Follow best practices and coding standards
 - Test the changes if applicable
 - Confirm completion when finished
-
 Please proceed with the implementation and let me know when you're finished.`;
   }
-
-
-
   /**
    * Validate task completion like AutoFinishSystem
    * @param {Task} task - Task object
@@ -766,19 +644,16 @@ Please proceed with the implementation and let me know when you're finished.`;
       const hasCompletionKeyword = completionKeywords.some(keyword => 
         aiResponse.toLowerCase().includes(keyword)
       );
-      
       // Check for error indicators
       const errorKeywords = ['error', 'failed', 'cannot', 'unable', 'problem', 'issue', 'failed to'];
       const hasErrorKeyword = errorKeywords.some(keyword => 
         aiResponse.toLowerCase().includes(keyword)
       );
-      
       // Check for test-specific completion indicators
       const testCompletionKeywords = ['test passes', 'test fixed', 'coverage improved', 'refactored', 'updated test'];
       const hasTestCompletionKeyword = testCompletionKeywords.some(keyword => 
         aiResponse.toLowerCase().includes(keyword)
       );
-      
       return {
         isValid: (hasCompletionKeyword || hasTestCompletionKeyword) && !hasErrorKeyword,
         hasCompletionKeyword,
@@ -786,7 +661,6 @@ Please proceed with the implementation and let me know when you're finished.`;
         hasErrorKeyword,
         confidence: (hasCompletionKeyword || hasTestCompletionKeyword) ? 0.9 : 0.3
       };
-      
     } catch (error) {
       this.logger.error(`[AutoTestFixSystem] Task validation failed:`, error.message);
       return {
@@ -796,7 +670,6 @@ Please proceed with the implementation and let me know when you're finished.`;
       };
     }
   }
-
   /**
    * Refactor a test
    * @param {Task} task - Task with test refactor data
@@ -806,9 +679,7 @@ Please proceed with the implementation and let me know when you're finished.`;
   async refactorTest(task, options = {}) {
     try {
       const { testFile, testName } = task.metadata;
-      
       this.logger.info(`[AutoTestFixSystem] Refactoring test: ${testName} in ${testFile}`);
-      
       // Use existing TestFixer if available
       if (this.testFixer) {
         const refactorResult = await this.testFixer.applyRefactorFix(testFile, testName);
@@ -819,7 +690,6 @@ Please proceed with the implementation and let me know when you're finished.`;
           message: `Refactored test: ${testName}`
         };
       }
-      
       // Fallback: mark as completed (manual refactor required)
       return {
         taskId: task.id,
@@ -827,7 +697,6 @@ Please proceed with the implementation and let me know when you're finished.`;
         message: `Task created for manual refactor: ${testName}`,
         requiresManualFix: true
       };
-      
     } catch (error) {
       return {
         taskId: task.id,
@@ -836,7 +705,6 @@ Please proceed with the implementation and let me know when you're finished.`;
       };
     }
   }
-
   /**
    * Process task fallback when cursorIDE is not available
    * @param {Task} task - Task to process
@@ -846,7 +714,6 @@ Please proceed with the implementation and let me know when you're finished.`;
   async processTaskFallback(task, options = {}) {
     try {
       this.logger.info(`[AutoTestFixSystem] Processing task fallback: ${task.title}`);
-      
       // Use workflow orchestration if available
       if (this.workflowOrchestrationService) {
         const workflowResult = await this.workflowOrchestrationService.executeWorkflow(task, options);
@@ -857,7 +724,6 @@ Please proceed with the implementation and let me know when you're finished.`;
           message: `Processed task via workflow: ${task.title}`
         };
       }
-      
       // Fallback: mark as completed (manual processing required)
       return {
         taskId: task.id,
@@ -865,7 +731,6 @@ Please proceed with the implementation and let me know when you're finished.`;
         message: `Task created for manual processing: ${task.title}`,
         requiresManualProcessing: true
       };
-      
     } catch (error) {
       return {
         taskId: task.id,
@@ -874,7 +739,6 @@ Please proceed with the implementation and let me know when you're finished.`;
       };
     }
   }
-
   /**
    * Sort tasks by priority
    * @param {Array<Task>} tasks - Tasks to sort
@@ -887,14 +751,12 @@ Please proceed with the implementation and let me know when you're finished.`;
       'medium': 2,
       'low': 3
     };
-    
     return tasks.sort((a, b) => {
       const aPriority = priorityOrder[a.priority.value] || 2;
       const bPriority = priorityOrder[b.priority.value] || 2;
       return aPriority - bPriority;
     });
   }
-
   /**
    * Generate final report
    * @param {Object} parsedData - Parsed test data
@@ -905,7 +767,6 @@ Please proceed with the implementation and let me know when you're finished.`;
   async generateFinalReport(parsedData, processingResult, options) {
     try {
       this.logger.info(`[AutoTestFixSystem] Generating final report`);
-      
       const report = {
         summary: {
           totalIssues: parsedData.failingTests.length + parsedData.coverageIssues.length,
@@ -922,14 +783,11 @@ Please proceed with the implementation and let me know when you're finished.`;
         recommendations: this.generateRecommendations(parsedData, processingResult),
         timestamp: new Date()
       };
-      
       return report;
-      
     } catch (error) {
       throw new Error(`Report generation failed: ${error.message}`);
     }
   }
-
   /**
    * Generate recommendations based on results
    * @param {Object} parsedData - Parsed test data
@@ -938,7 +796,6 @@ Please proceed with the implementation and let me know when you're finished.`;
    */
   generateRecommendations(parsedData, processingResult) {
     const recommendations = [];
-    
     if (processingResult.failedTasks > 0) {
       recommendations.push({
         type: 'error',
@@ -946,7 +803,6 @@ Please proceed with the implementation and let me know when you're finished.`;
         priority: 'high'
       });
     }
-    
     if (parsedData.failingTests.length > 0) {
       recommendations.push({
         type: 'warning',
@@ -954,7 +810,6 @@ Please proceed with the implementation and let me know when you're finished.`;
         priority: 'high'
       });
     }
-    
     if (parsedData.coverageIssues.length > 0) {
       recommendations.push({
         type: 'info',
@@ -962,15 +817,13 @@ Please proceed with the implementation and let me know when you're finished.`;
         priority: 'medium'
       });
     }
-    
-    if (parsedData.legacyTests.length > 0) {
+    if (parsedData.Tests.length > 0) {
       recommendations.push({
         type: 'info',
-        message: `${parsedData.legacyTests.length} legacy tests identified for modernization`,
+        message: `${parsedData.Tests.length}  tests identified for modernization`,
         priority: 'low'
       });
     }
-    
     if (parsedData.complexTests.length > 0) {
       recommendations.push({
         type: 'info',
@@ -978,10 +831,8 @@ Please proceed with the implementation and let me know when you're finished.`;
         priority: 'medium'
       });
     }
-    
     return recommendations;
   }
-
   /**
    * Create session
    * @param {string} sessionId - Session ID
@@ -998,7 +849,6 @@ Please proceed with the implementation and let me know when you're finished.`;
       logs: []
     };
   }
-
   /**
    * Complete session
    * @param {string} sessionId - Session ID
@@ -1014,17 +864,13 @@ Please proceed with the implementation and let me know when you're finished.`;
       session.progress = 100;
       this.activeSessions.set(sessionId, session);
     }
-    
     this.streamProgress(sessionId, 'complete', result);
-    
     // Schedule cleanup
     setTimeout(() => {
       this.activeSessions.delete(sessionId);
     }, 300000); // 5 minutes
-    
     return result;
   }
-
   /**
    * Stream progress updates
    * @param {string} sessionId - Session ID
@@ -1040,14 +886,12 @@ Please proceed with the implementation and let me know when you're finished.`;
         timestamp: new Date()
       });
     }
-    
     // Log progress
     this.logger.info(`[AutoTestFixSystem] Progress: ${event}`, {
       sessionId,
       ...data
     });
   }
-
   /**
    * Get session status
    * @param {string} sessionId - Session ID
@@ -1058,7 +902,6 @@ Please proceed with the implementation and let me know when you're finished.`;
     if (!session) {
       return { status: 'not_found' };
     }
-    
     return {
       sessionId,
       status: session.status,
@@ -1069,7 +912,6 @@ Please proceed with the implementation and let me know when you're finished.`;
       error: session.error
     };
   }
-
   /**
    * Cancel session
    * @param {string} sessionId - Session ID
@@ -1080,19 +922,15 @@ Please proceed with the implementation and let me know when you're finished.`;
     if (!session) {
       return false;
     }
-    
     session.status = 'cancelled';
     session.endTime = new Date();
     this.activeSessions.set(sessionId, session);
-    
     this.streamProgress(sessionId, 'cancelled', {
       sessionId,
       reason: 'user_cancelled'
     });
-    
     return true;
   }
-
   /**
    * Validate tests by executing them and checking success rate
    * @param {Task} task - Task object
@@ -1102,18 +940,15 @@ Please proceed with the implementation and let me know when you're finished.`;
   async validateTestsWithExecution(task, branchResult) {
     try {
       this.logger.info(`[AutoTestFixSystem] Starting test validation for task: ${task.id}`);
-      
       // Ensure terminal is open in IDE
       if (this.cursorIDE) {
         this.logger.info(`[AutoTestFixSystem] Opening terminal in IDE...`);
         await this.cursorIDE.ensureTerminalOpen();
         await new Promise(resolve => setTimeout(resolve, 1000)); // Wait for terminal
       }
-      
       // Execute tests and capture output to log file
       const testCommand = 'npm test > test-output.log 2>&1';
       this.logger.info(`[AutoTestFixSystem] Executing: ${testCommand}`);
-      
       if (this.ideManager) {
         const currentPort = this.browserManager?.getCurrentPort?.();
         if (currentPort) {
@@ -1124,12 +959,10 @@ Please proceed with the implementation and let me know when you're finished.`;
           this.logger.warn(`[AutoTestFixSystem] No current port available for test execution`);
         }
       }
-      
       // Read and parse test output
       const fs = require('fs').promises;
       const path = require('path');
       const logFilePath = path.join(process.cwd(), 'test-output.log');
-      
       let testOutput = '';
       try {
         testOutput = await fs.readFile(logFilePath, 'utf8');
@@ -1142,30 +975,23 @@ Please proceed with the implementation and let me know when you're finished.`;
           successRate: 0
         };
       }
-      
       // Parse test output
       const testResult = this.parseTestOutput(testOutput);
       this.logger.info(`[AutoTestFixSystem] Test parsing result: ${testResult.successRate}% success rate`);
-      
       // Validate success rate (threshold: 80%)
       const successThreshold = 80;
       const isSuccessful = testResult.successRate >= successThreshold;
-      
       let commitResult = null;
       let taskStatus = 'unknown';
-      
       if (isSuccessful) {
         // ✅ TESTS PASSED - Commit to Git
         this.logger.info(`[AutoTestFixSystem] ✅ Tests PASSED (${testResult.successRate}% >= ${successThreshold}%), committing to Git...`);
-        
         commitResult = await this.commitAndPushChanges(task, branchResult, {
           testSuccess: true,
           successRate: testResult.successRate,
           threshold: successThreshold
         });
-        
         taskStatus = 'completed';
-        
         // Update task status in database
         if (this.taskRepository) {
           task.complete({
@@ -1176,11 +1002,9 @@ Please proceed with the implementation and let me know when you're finished.`;
           });
           await this.taskRepository.save(task);
         }
-        
       } else {
         // ❌ TESTS FAILED - Discard changes and mark for review
         this.logger.info(`[AutoTestFixSystem] ❌ Tests FAILED (${testResult.successRate}% < ${successThreshold}%), discarding changes and marking for review...`);
-        
         // Discard changes by resetting to clean state
         if (this.ideManager) {
           this.logger.info(`[AutoTestFixSystem] Discarding changes...`);
@@ -1190,7 +1014,6 @@ Please proceed with the implementation and let me know when you're finished.`;
               'git reset --hard HEAD',
               'git clean -fd'
             ];
-            
             for (const command of discardCommands) {
               this.logger.info(`[AutoTestFixSystem] Executing: ${command}`);
               await this.ideManager.executeTerminalCommand(currentPort, command);
@@ -1200,9 +1023,7 @@ Please proceed with the implementation and let me know when you're finished.`;
             this.logger.warn(`[AutoTestFixSystem] No current port available for discard commands`);
           }
         }
-        
         taskStatus = 'needs_review';
-        
         // Update task status in database
         if (this.taskRepository) {
           task.fail({
@@ -1213,14 +1034,12 @@ Please proceed with the implementation and let me know when you're finished.`;
           });
           await this.taskRepository.save(task);
         }
-        
         commitResult = {
           success: false,
           action: 'discarded',
           message: 'Changes discarded due to test failure, task marked for review'
         };
       }
-      
       return {
         success: isSuccessful,
         successRate: testResult.successRate,
@@ -1231,10 +1050,8 @@ Please proceed with the implementation and let me know when you're finished.`;
           `Tests passed with ${testResult.successRate}% success rate, changes committed` : 
           `Tests failed with ${testResult.successRate}% success rate, changes discarded and task marked for review`
       };
-      
     } catch (error) {
       this.logger.error(`[AutoTestFixSystem] Test validation failed: ${error.message}`);
-      
       // Update task status on error
       if (this.taskRepository) {
         task.fail({
@@ -1244,7 +1061,6 @@ Please proceed with the implementation and let me know when you're finished.`;
         });
         await this.taskRepository.save(task);
       }
-      
       return {
         success: false,
         error: error.message,
@@ -1253,7 +1069,6 @@ Please proceed with the implementation and let me know when you're finished.`;
       };
     }
   }
-
   /**
    * Parse test output to calculate success rate
    * @param {string} testOutput - Raw test output
@@ -1273,11 +1088,9 @@ Please proceed with the implementation and let me know when you're finished.`;
         /PASS/,
         /FAIL/
       ];
-      
       let totalTests = 0;
       let passedTests = 0;
       let failedTests = 0;
-      
       // Try to extract test counts
       for (const pattern of patterns) {
         const match = testOutput.match(pattern);
@@ -1301,20 +1114,16 @@ Please proceed with the implementation and let me know when you're finished.`;
           }
         }
       }
-      
       // If no specific pattern found, try to estimate from output
       if (totalTests === 0) {
         const passMatches = testOutput.match(/✓|PASS|passed/gi);
         const failMatches = testOutput.match(/✗|FAIL|failed/gi);
-        
         passedTests = passMatches ? passMatches.length : 0;
         failedTests = failMatches ? failMatches.length : 0;
         totalTests = passedTests + failedTests;
       }
-      
       // Calculate success rate
       const successRate = totalTests > 0 ? (passedTests / totalTests) * 100 : 0;
-      
       return {
         totalTests,
         passedTests,
@@ -1322,7 +1131,6 @@ Please proceed with the implementation and let me know when you're finished.`;
         successRate: Math.round(successRate * 100) / 100, // Round to 2 decimal places
         rawOutput: testOutput
       };
-      
     } catch (error) {
       this.logger.error(`[AutoTestFixSystem] Error parsing test output: ${error.message}`);
       return {
@@ -1334,7 +1142,6 @@ Please proceed with the implementation and let me know when you're finished.`;
       };
     }
   }
-
   /**
    * Commit and push changes after test validation (only for successful tests)
    * @param {Task} task - Task object
@@ -1345,7 +1152,6 @@ Please proceed with the implementation and let me know when you're finished.`;
   async commitAndPushChanges(task, branchResult, testInfo = {}) {
     try {
       this.logger.info(`[AutoTestFixSystem] Committing and pushing changes for task: ${task.id}`);
-      
       // Only commit if tests are successful
       if (!testInfo.testSuccess) {
         this.logger.warn(`[AutoTestFixSystem] Skipping commit - tests failed (${testInfo.successRate}%)`);
@@ -1356,13 +1162,10 @@ Please proceed with the implementation and let me know when you're finished.`;
           message: 'Commit skipped due to test failure'
         };
       }
-      
       if (this.ideManager) {
         // Build commit message for successful tests
         const commitMessage = `${task.title} (Task ID: ${task.id}) - ✅ Tests PASSED (${testInfo.successRate}%) - Auto-fixed by PIDEA`;
-        
         this.logger.info(`[AutoTestFixSystem] Commit message: ${commitMessage}`);
-        
         const currentPort = this.browserManager?.getCurrentPort?.();
         if (currentPort) {
           const commands = [
@@ -1370,13 +1173,11 @@ Please proceed with the implementation and let me know when you're finished.`;
             `git commit -m "${commitMessage}"`,
             'git push'
           ];
-          
           for (const command of commands) {
             this.logger.info(`[AutoTestFixSystem] Executing: ${command}`);
             await this.ideManager.executeTerminalCommand(currentPort, command);
             await new Promise(resolve => setTimeout(resolve, 1000)); // Wait between commands
           }
-          
           return {
             success: true,
             branchName: branchResult?.branchName,
@@ -1392,7 +1193,6 @@ Please proceed with the implementation and let me know when you're finished.`;
       } else {
         throw new Error('IDEManager not available for git operations');
       }
-      
     } catch (error) {
       this.logger.error(`[AutoTestFixSystem] Failed to commit and push changes: ${error.message}`);
       return {
@@ -1404,5 +1204,4 @@ Please proceed with the implementation and let me know when you're finished.`;
     }
   }
 }
-
 module.exports = AutoTestFixSystem; 

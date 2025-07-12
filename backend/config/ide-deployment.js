@@ -5,15 +5,12 @@
  * It includes environment-specific settings, performance optimizations, and
  * deployment validation checks.
  */
-
 const path = require('path');
-
 // Environment detection
 const NODE_ENV = process.env.NODE_ENV || 'development';
 const isProduction = NODE_ENV === 'production';
 const isStaging = NODE_ENV === 'staging';
 const isDevelopment = NODE_ENV === 'development';
-
 // Base configuration
 const baseConfig = {
   // API Configuration
@@ -32,13 +29,12 @@ const baseConfig = {
       max: isProduction ? 100 : 1000, // requests per windowMs
       message: 'Too many requests from this IP, please try again later.',
       standardHeaders: true,
-      legacyHeaders: false
+      Headers: false
     },
     timeout: parseInt(process.env.API_TIMEOUT) || 30000,
     compression: isProduction,
     helmet: isProduction
   },
-
   // WebSocket Configuration
   websocket: {
     port: parseInt(process.env.WS_PORT) || 3001,
@@ -49,7 +45,6 @@ const baseConfig = {
     perMessageDeflate: isProduction,
     clientTracking: true
   },
-
   // IDE Service Configuration
   ide: {
     maxInstances: parseInt(process.env.MAX_IDE_INSTANCES) || 10,
@@ -63,7 +58,6 @@ const baseConfig = {
     retryAttempts: parseInt(process.env.IDE_RETRY_ATTEMPTS) || 3,
     retryDelay: parseInt(process.env.IDE_RETRY_DELAY) || 1000
   },
-
   // Database Configuration
   database: {
     url: process.env.DATABASE_URL || 'mongodb://localhost:27017/pidea',
@@ -76,7 +70,6 @@ const baseConfig = {
       bufferMaxEntries: 0
     }
   },
-
   // Logging Configuration
   logging: {
     level: process.env.LOG_LEVEL || (isProduction ? 'info' : 'debug'),
@@ -95,7 +88,6 @@ const baseConfig = {
       }
     }
   },
-
   // Security Configuration
   security: {
     jwt: {
@@ -124,7 +116,6 @@ const baseConfig = {
       }
     }
   },
-
   // Performance Configuration
   performance: {
     compression: {
@@ -142,7 +133,6 @@ const baseConfig = {
       workers: parseInt(process.env.CLUSTER_WORKERS) || require('os').cpus().length
     }
   },
-
   // Monitoring Configuration
   monitoring: {
     enabled: isProduction,
@@ -162,7 +152,6 @@ const baseConfig = {
     }
   }
 };
-
 // Environment-specific overrides
 const environmentConfigs = {
   development: {
@@ -189,7 +178,6 @@ const environmentConfigs = {
       }
     }
   },
-
   staging: {
     api: {
       cors: {
@@ -215,7 +203,6 @@ const environmentConfigs = {
       }
     }
   },
-
   production: {
     api: {
       cors: {
@@ -244,7 +231,6 @@ const environmentConfigs = {
     }
   }
 };
-
 // Merge configurations
 const config = {
   ...baseConfig,
@@ -254,56 +240,45 @@ const config = {
   isStaging,
   isDevelopment
 };
-
 // Validation function
 function validateConfig() {
   const errors = [];
-
   // Required environment variables
   const requiredEnvVars = [
     'JWT_SECRET',
     'DATABASE_URL'
   ];
-
   if (isProduction) {
     requiredEnvVars.push('ERROR_TRACKING_DSN');
   }
-
   for (const envVar of requiredEnvVars) {
     if (!process.env[envVar]) {
       errors.push(`Missing required environment variable: ${envVar}`);
     }
   }
-
   // Validate port ranges
   if (config.ide.portRange.min >= config.ide.portRange.max) {
     errors.push('IDE port range min must be less than max');
   }
-
   // Validate timeouts
   if (config.api.timeout < 1000) {
     errors.push('API timeout must be at least 1000ms');
   }
-
   if (config.ide.connectionTimeout < 1000) {
     errors.push('IDE connection timeout must be at least 1000ms');
   }
-
   // Validate rate limits
   if (config.api.rateLimit.max < 1) {
     errors.push('Rate limit max must be at least 1');
   }
-
   if (errors.length > 0) {
     console.error('Configuration validation failed:');
     errors.forEach(error => console.error(`  - ${error}`));
     process.exit(1);
   }
-
   console.log(`Configuration loaded for environment: ${NODE_ENV}`);
   return true;
 }
-
 // Health check configuration
 const healthChecks = {
   database: async () => {
@@ -314,7 +289,6 @@ const healthChecks = {
       return { status: 'unhealthy', error: error.message, timestamp: new Date().toISOString() };
     }
   },
-
   ideService: async () => {
     try {
       // Add IDE service health check logic
@@ -323,7 +297,6 @@ const healthChecks = {
       return { status: 'unhealthy', error: error.message, timestamp: new Date().toISOString() };
     }
   },
-
   websocket: async () => {
     try {
       // Add WebSocket health check logic
@@ -333,7 +306,6 @@ const healthChecks = {
     }
   }
 };
-
 // Performance monitoring
 const performanceMetrics = {
   requestCount: 0,
@@ -341,27 +313,21 @@ const performanceMetrics = {
   averageResponseTime: 0,
   activeConnections: 0,
   ideInstances: 0,
-
   incrementRequest() {
     this.requestCount++;
   },
-
   incrementError() {
     this.errorCount++;
   },
-
   updateResponseTime(time) {
     this.averageResponseTime = (this.averageResponseTime + time) / 2;
   },
-
   setActiveConnections(count) {
     this.activeConnections = count;
   },
-
   setIDEInstances(count) {
     this.ideInstances = count;
   },
-
   getMetrics() {
     return {
       requestCount: this.requestCount,
@@ -374,22 +340,18 @@ const performanceMetrics = {
     };
   }
 };
-
 // Deployment utilities
 const deploymentUtils = {
   // Graceful shutdown
   async gracefulShutdown(signal) {
     console.log(`Received ${signal}. Starting graceful shutdown...`);
-    
     // Close database connections
     // Close WebSocket connections
     // Stop accepting new requests
     // Wait for ongoing requests to complete
-    
     console.log('Graceful shutdown completed');
     process.exit(0);
   },
-
   // Memory usage monitoring
   getMemoryUsage() {
     const usage = process.memoryUsage();
@@ -401,13 +363,11 @@ const deploymentUtils = {
       timestamp: new Date().toISOString()
     };
   },
-
   // CPU usage monitoring
   async getCPUUsage() {
     const startUsage = process.cpuUsage();
     await new Promise(resolve => setTimeout(resolve, 100));
     const endUsage = process.cpuUsage(startUsage);
-    
     return {
       user: Math.round(endUsage.user / 1000), // ms
       system: Math.round(endUsage.system / 1000), // ms
@@ -415,7 +375,6 @@ const deploymentUtils = {
     };
   }
 };
-
 // Export configuration and utilities
 module.exports = {
   config,

@@ -6,7 +6,6 @@ const GitWorkflowManager = require('../workflows/git/GitWorkflowManager');
 const GitWorkflowContext = require('../workflows/git/GitWorkflowContext');
 const { SequentialExecutionEngine } = require('../workflows/execution');
 const { UnifiedWorkflowHandler, utils: handlerUtils } = require('../workflows/handlers');
-
 /**
  * TaskService - Business logic for project-based task management
  * Enhanced with GitWorkflowManager integration
@@ -19,7 +18,6 @@ class TaskService {
     this.cursorIDEService = cursorIDEService;
     this.autoFinishSystem = autoFinishSystem;
     this.workflowGitService = workflowGitService;
-    
     // Initialize enhanced git workflow manager if workflowGitService is available
     if (this.workflowGitService) {
       this.gitWorkflowManager = new GitWorkflowManager({
@@ -28,7 +26,6 @@ class TaskService {
         eventBus: null
       });
     }
-    
     // Initialize core execution engine
     this.executionEngine = new SequentialExecutionEngine({
       logger: console,
@@ -38,14 +35,12 @@ class TaskService {
       enableDependencyResolution: true,
       enablePriorityScheduling: true
     });
-
     // Initialize unified workflow handler system
     this.unifiedHandler = new UnifiedWorkflowHandler({
       logger: console,
       eventBus: null
     });
   }
-
   buildRefactoringPrompt(task) {
     const file = task.metadata?.filePath || task.metadata?.originalFile || 'UNKNOWN FILE';
     const title = task.title || 'Refactor File';
@@ -65,7 +60,6 @@ class TaskService {
     prompt += `Apply all changes directly in the IDE. Do not output explanations.\n`;
     return prompt;
   }
-
   async buildTaskExecutionPrompt(task) {
     console.log('🔍 [TaskService] buildTaskExecutionPrompt called for task:', {
       id: task.id,
@@ -73,14 +67,12 @@ class TaskService {
       type: task.type?.value,
       hasTaskFilePath: !!task.metadata?.taskFilePath
     });
-    
     // Lade task-execute.md Prompt über neue API
     let taskExecutePrompt = '';
     try {
       console.log('🔍 [TaskService] Loading task-execute.md via new API...');
       const response = await fetch('http://localhost:3000/api/prompts/task-management/task-execute.md');
       console.log('🔍 [TaskService] API response status:', response.status);
-      
       if (response.ok) {
         const data = await response.json();
         if (data.success && data.data.content) {
@@ -96,13 +88,11 @@ class TaskService {
       console.error('❌ [TaskService] Error reading task-execute.md via API:', error);
       taskExecutePrompt = 'Execute the following task:\n\n';
     }
-
     // Für Doc Tasks: Verwende den Markdown-Inhalt der Datei als Prompt
     if (task.metadata?.taskFilePath) {
       try {
         const taskFilePath = path.resolve(task.metadata.taskFilePath);
         const markdownContent = fs.readFileSync(taskFilePath, 'utf8');
-        
         // Kombiniere: task-execute.md + Task-Inhalt
         const finalPrompt = `${taskExecutePrompt}\n\n${markdownContent}`;
         console.log('✅ [TaskService] Final prompt for doc task (first 500 chars):', finalPrompt.substring(0, 500));
@@ -114,13 +104,11 @@ class TaskService {
         return fallbackPrompt;
       }
     }
-    
     // Für normale Tasks: Verwende task-execute.md + Task-Details
     const finalPrompt = `${taskExecutePrompt}\n\n${task.title}\n\n${task.description || ''}`;
     console.log('✅ [TaskService] Final prompt for normal task (first 500 chars):', finalPrompt.substring(0, 500));
     return finalPrompt;
   }
-
   /**
    * Create a new task for a project
    * @param {string} projectId - Project ID
@@ -135,15 +123,12 @@ class TaskService {
     if (!projectId) {
       throw new Error('Project ID is required');
     }
-
     if (!title || title.trim().length === 0) {
       throw new Error('Task title is required');
     }
-
     const task = Task.create(projectId, title, description, priority, type, metadata);
     return await this.taskRepository.create(task);
   }
-
   /**
    * Update an existing task
    * @param {string} taskId - Task ID
@@ -155,7 +140,6 @@ class TaskService {
     if (!task) {
       throw new Error('Task not found');
     }
-
     if (updates.title) {
       task.title = updates.title;
     }
@@ -171,10 +155,8 @@ class TaskService {
     if (updates.metadata) {
       task.updateMetadata(updates.metadata);
     }
-
     return await this.taskRepository.update(taskId, task);
   }
-
   /**
    * Execute a task using enhanced git workflow manager
    * @param {string} taskId - Task ID
@@ -183,19 +165,15 @@ class TaskService {
    */
   async executeTask(taskId, userId) {
     console.log('🔍 [TaskService] executeTask called with:', { taskId, userId });
-    
     try {
       const task = await this.taskRepository.findById(taskId);
       if (!task) {
         throw new Error('Task not found');
       }
-
       console.log('🔍 [TaskService] Found task:', task);
-
       if (task.isCompleted()) {
         throw new Error('Task is already completed');
       }
-
       // Try to use enhanced git workflow manager if available
       if (this.gitWorkflowManager) {
         try {
@@ -205,31 +183,22 @@ class TaskService {
             options: { userId },
             workflowType: 'task-execution'
           });
-
           const result = await this.gitWorkflowManager.executeWorkflow(context);
-          
           console.log('✅ [TaskService] Enhanced task execution completed', {
             taskId: task.id,
             result: result.status
           });
-
           return result;
-
         } catch (error) {
-          console.error('❌ [TaskService] Enhanced task execution failed, falling back to legacy method:', error.message);
-          // Fallback to legacy method
+          console.error('❌ [TaskService] Enhanced task execution failed, falling back to  method:', error.message);
         }
       }
-
-      // Legacy task execution method
-      return await this.executeTaskLegacy(taskId, userId);
-
+      return await this.executeTask(taskId, userId);
     } catch (error) {
       console.error('❌ [TaskService] Task execution failed:', error.message);
       throw error;
     }
   }
-
   /**
    * Execute a task using unified handler system
    * @param {string} taskId - Task ID
@@ -239,19 +208,15 @@ class TaskService {
    */
   async executeTaskWithUnifiedHandler(taskId, userId, options = {}) {
     console.log('🔍 [TaskService] executeTaskWithUnifiedHandler called with:', { taskId, userId, options });
-    
     try {
       const task = await this.taskRepository.findById(taskId);
       if (!task) {
         throw new Error('Task not found');
       }
-
       console.log('🔍 [TaskService] Found task for unified handler execution:', task);
-
       if (task.isCompleted()) {
         throw new Error('Task is already completed');
       }
-
       // Create handler request
       const request = {
         type: 'task',
@@ -261,19 +226,15 @@ class TaskService {
         userId: userId,
         options: options
       };
-
       // Create response object
       const response = {};
-
       // Execute using unified handler
       const result = await this.unifiedHandler.handle(request, response, options);
-
       console.log('✅ [TaskService] Unified handler task execution completed', {
         taskId: task.id,
         success: result.isSuccess(),
         duration: result.getFormattedDuration()
       });
-
       return {
         success: result.isSuccess(),
         taskId: task.id,
@@ -290,13 +251,11 @@ class TaskService {
           timestamp: result.getTimestamp()
         }
       };
-
     } catch (error) {
       console.error('❌ [TaskService] Unified handler task execution failed:', error.message);
       throw error;
     }
   }
-
   /**
    * Execute a task using core execution engine
    * @param {string} taskId - Task ID
@@ -306,25 +265,19 @@ class TaskService {
    */
   async executeTaskWithEngine(taskId, userId, options = {}) {
     console.log('🔍 [TaskService] executeTaskWithEngine called with:', { taskId, userId, options });
-    
     try {
       const task = await this.taskRepository.findById(taskId);
       if (!task) {
         throw new Error('Task not found');
       }
-
       console.log('🔍 [TaskService] Found task for engine execution:', task);
-
       if (task.isCompleted()) {
         throw new Error('Task is already completed');
       }
-
       // Create workflow from task
       const workflow = await this.createWorkflowFromTask(task, options);
-      
       // Create workflow context
       const context = this.createWorkflowContext(task, options);
-      
       // Execute workflow using core execution engine
       const result = await this.executionEngine.executeWorkflow(workflow, context, {
         strategy: options.strategy || 'basic',
@@ -333,13 +286,11 @@ class TaskService {
         userId,
         ...options
       });
-      
       console.log('✅ [TaskService] Core engine task execution completed', {
         taskId: task.id,
         success: result.isSuccess(),
         duration: result.getFormattedDuration()
       });
-
       return {
         success: result.isSuccess(),
         taskId: task.id,
@@ -357,13 +308,11 @@ class TaskService {
           timestamp: new Date()
         }
       };
-
     } catch (error) {
       console.error('❌ [TaskService] Core engine task execution failed:', error.message);
       throw error;
     }
   }
-
   /**
    * Create workflow from task
    * @param {Object} task - Task object
@@ -385,16 +334,14 @@ class TaskService {
       getSteps: () => [],
       execute: async (context) => {
         // Delegate to existing task execution method
-        return await this.executeTaskLegacy(task.id, context.getData('userId'));
+        return await this.executeTask(task.id, context.getData('userId'));
       },
       validate: async (context) => ({ isValid: true }),
       canExecute: async (context) => true,
       rollback: async (context, stepId) => ({ success: true })
     };
-    
     return workflow;
   }
-
   /**
    * Create workflow context
    * @param {Object} task - Task object
@@ -403,7 +350,6 @@ class TaskService {
    */
   createWorkflowContext(task, options = {}) {
     const { WorkflowContext, WorkflowState, WorkflowMetadata } = require('../workflows');
-    
     return new WorkflowContext(
       task.id,
       task.type?.value || 'generic',
@@ -422,28 +368,23 @@ class TaskService {
       }
     );
   }
-
   /**
-   * Legacy method for task execution (fallback)
+   *  method for task execution (fallback)
    * @param {string} taskId - Task ID
    * @param {string} userId - User ID
    * @returns {Promise<Object>} Execution result
    */
-  async executeTaskLegacy(taskId, userId) {
+  async executeTask(taskId, userId) {
     console.log('🔍 [TaskService] executeTask called with:', { taskId, userId });
-    
     try {
       const task = await this.taskRepository.findById(taskId);
       if (!task) {
         throw new Error('Task not found');
       }
-
       console.log('🔍 [TaskService] Found task:', task);
-
       if (task.isCompleted()) {
         throw new Error('Task is already completed');
       }
-
       // CRITICAL: Create new chat ONLY at the start of task execution
       if (this.cursorIDEService && this.cursorIDEService.browserManager) {
         console.log('🆕 [TaskService] Creating new chat for task execution...');
@@ -451,13 +392,10 @@ class TaskService {
         // Wait for new chat to be ready
         await new Promise(resolve => setTimeout(resolve, 2000));
       }
-
       // Update task status to in progress
       task.updateStatus(TaskStatus.IN_PROGRESS);
       await this.taskRepository.update(taskId, task);
-
       console.log('🔍 [TaskService] Starting automated refactoring workflow...');
-
       const execution = {
         taskId,
         userId,
@@ -466,13 +404,11 @@ class TaskService {
         progress: 0,
         steps: []
       };
-
       try {
               // Step 1: Create Git Branch for Refactoring
       console.log('🔧 [TaskService] Step 1: Creating Git branch...');
       // Get projectPath from userId parameter OR task metadata (fallback)
       const projectPath = userId.projectPath || task.metadata.projectPath;
-      
       console.log('🔍 [TaskService] Task details:', {
         id: task.id,
         title: task.title,
@@ -480,16 +416,12 @@ class TaskService {
         filePath: task.metadata.filePath,
         type: task.type.value
       });
-      
       execution.steps.push({ step: 'git_branch', status: 'running', message: 'Creating refactoring branch' });
-      
       if (!projectPath) {
         throw new Error('Task has no projectPath in metadata - cannot create Git branch');
       }
-      
       const branchName = `refactor/${task.type.value}-${taskId}-${Date.now()}`;
       const gitResult = await this.createRefactoringBranch(projectPath, branchName);
-        
         execution.steps[execution.steps.length - 1] = { 
           step: 'git_branch', 
           status: 'completed', 
@@ -497,33 +429,25 @@ class TaskService {
           data: gitResult
         };
         execution.progress = 20;
-
         // Step 2: AI-Powered Refactoring with Validation Loop
         console.log('🤖 [TaskService] Step 2: AI-powered refactoring with validation...');
         execution.steps.push({ step: 'ai_refactoring', status: 'running', message: 'Executing AI refactoring' });
-        
         let refactoringResult;
         let buildValid = false;
         let attemptCount = 0;
         const maxAttempts = 3;
-        
         while (!buildValid && attemptCount < maxAttempts) {
           attemptCount++;
           console.log(`🔄 [TaskService] Refactoring attempt ${attemptCount}/${maxAttempts}`);
-          
           // Execute AI refactoring
           refactoringResult = await this.executeAIRefactoringWithAutoFinish(task);
-          
           if (!refactoringResult.success) {
             throw new Error(`AI refactoring failed: ${refactoringResult.error}`);
           }
-          
           // Step 3: Validate Build
           console.log('🔍 [TaskService] Step 3: Validating build...');
           execution.steps.push({ step: 'build_validation', status: 'running', message: `Validating build (attempt ${attemptCount})` });
-          
           const buildResult = await this.validateBuild(task.metadata.projectPath);
-          
           if (buildResult.success) {
             console.log('✅ [TaskService] Build validation successful!');
             buildValid = true;
@@ -541,7 +465,6 @@ class TaskService {
               message: `Build validation failed (attempt ${attemptCount})`,
               data: buildResult
             };
-            
             // Send error back to AI for fixing
             if (attemptCount < maxAttempts) {
               console.log('🔄 [TaskService] Sending error to AI for fixing...');
@@ -553,11 +476,9 @@ class TaskService {
             }
           }
         }
-        
         if (!buildValid) {
           throw new Error(`Build validation failed after ${maxAttempts} attempts`);
         }
-        
         execution.steps[execution.steps.length - 1] = { 
           step: 'ai_refactoring', 
           status: 'completed', 
@@ -565,13 +486,10 @@ class TaskService {
           data: refactoringResult
         };
         execution.progress = 80;
-
         // Step 4: Commit and push changes to Git branch
         console.log('🔧 [TaskService] Step 4: Committing and pushing changes to Git branch...');
         execution.steps.push({ step: 'git_commit_push', status: 'running', message: 'Committing and pushing refactored code' });
-        
         const commitResult = await this.commitAndPushChanges(projectPath, branchName, task);
-        
         execution.steps[execution.steps.length - 1] = { 
           step: 'git_commit_push', 
           status: 'completed', 
@@ -579,11 +497,9 @@ class TaskService {
           data: commitResult
         };
         execution.progress = 90;
-
         // Step 5: Create merge request (optional)
         console.log('🔧 [TaskService] Step 5: Creating merge request...');
         execution.steps.push({ step: 'merge_request', status: 'running', message: 'Creating merge request for review' });
-        
         let mergeRequestResult = null;
         try {
           mergeRequestResult = await this.createMergeRequest(projectPath, branchName, task);
@@ -603,67 +519,53 @@ class TaskService {
           };
         }
         execution.progress = 95;
-
         // Step 6: Task completed successfully (ONLY after Git operations)
         console.log('✅ [TaskService] Step 6: Task completed successfully with Git operations');
         execution.steps.push({ step: 'completion', status: 'completed', message: 'Task completed with successful Git operations' });
         execution.progress = 100;
-
         // Mark task as completed (ONLY after successful Git operations)
         task.updateStatus(TaskStatus.COMPLETED);
         await this.taskRepository.update(taskId, task);
-
         execution.status = 'completed';
         execution.endTime = new Date();
         execution.duration = execution.endTime - execution.startedAt;
-
         // Refresh analysis data after task completion
         if (task.metadata?.projectPath && task.type?.value?.includes('refactor')) {
             try {
                 console.log('🔄 [TaskService] Refreshing analysis data after refactoring task completion...');
-                
                 // Get the VibeCoderAutoRefactorHandler to refresh analysis data
                 const VibeCoderAutoRefactorHandler = require('../application/handlers/vibecoder/VibeCoderAutoRefactorHandler');
                 const autoRefactorHandler = new VibeCoderAutoRefactorHandler({
                     taskRepository: this.taskRepository,
                     projectAnalysisRepository: this.projectAnalysisRepository
                 });
-                
                 await autoRefactorHandler.refreshAnalysisDataAfterTaskCompletion(
                     task.metadata.projectPath, 
                     taskId
                 );
-                
                 console.log('✅ [TaskService] Analysis data refreshed after task completion');
             } catch (error) {
                 console.warn('⚠️ [TaskService] Failed to refresh analysis data after task completion:', error.message);
             }
         }
-
         console.log('✅ [TaskService] Automated refactoring workflow completed successfully');
         return execution;
-
       } catch (error) {
         console.error('❌ [TaskService] Refactoring workflow failed:', error);
-        
         // Update execution with error
         execution.status = 'failed';
         execution.error = error.message;
         execution.endTime = new Date();
-        
         // Mark task as failed
         task.updateStatus(TaskStatus.FAILED);
         await this.taskRepository.update(taskId, task);
-        
         throw error;
       }
-
     } catch (error) {
       console.error('❌ [TaskService] Error in executeTask:', error);
       throw error;
     }
   }
-
   /**
    * Create Git branch for refactoring
    * @param {string} projectPath - Project path
@@ -679,24 +581,19 @@ class TaskService {
         type: { value: 'refactoring' },
         metadata: { projectPath }
       };
-      
       return await this.workflowGitService.createWorkflowBranch(projectPath, tempTask, {
         customBranchName: branchName
       });
     }
-
     // Fallback to direct Git operations
     const { exec } = require('child_process');
     const util = require('util');
     const execAsync = util.promisify(exec);
-
     try {
       // Check if we're in a git repository
       await execAsync('git status', { cwd: projectPath });
-      
       // Create and checkout new branch
       await execAsync(`git checkout -b ${branchName}`, { cwd: projectPath });
-      
       return {
         branchName,
         status: 'created',
@@ -706,7 +603,6 @@ class TaskService {
       throw new Error(`Failed to create git branch: ${error.message}`);
     }
   }
-
   /**
    * Execute AI-powered refactoring with Auto-Finish System integration
    * @param {Object} task - Task object
@@ -716,11 +612,9 @@ class TaskService {
     try {
       // Build AI prompt for task execution
       const aiPrompt = await this.buildTaskExecutionPrompt(task);
-      
       // Use Auto-Finish System if available
       if (this.autoFinishSystem && this.cursorIDEService) {
         console.log('🤖 [TaskService] Using Auto-Finish System for AI refactoring...');
-        
         // Create temporary task for Auto-Finish processing
         const tempTask = {
           id: task.id,
@@ -728,7 +622,6 @@ class TaskService {
           type: task.type?.value || 'refactoring',
           metadata: task.metadata || {}
         };
-        
         // Process with Auto-Finish confirmation loops and fallback detection
         const autoFinishResult = await this.autoFinishSystem.processTask(tempTask, `task-${task.id}`, {
           stopOnError: false,
@@ -736,22 +629,18 @@ class TaskService {
           confirmationTimeout: 10000,
           fallbackDetectionEnabled: true
         });
-        
         console.log('✅ [TaskService] Auto-Finish processing completed:', {
           success: autoFinishResult.success,
           status: autoFinishResult.status,
           duration: autoFinishResult.duration
         });
-        
         // Handle different Auto-Finish results
         if (autoFinishResult.status === 'paused') {
           throw new Error(`Task requires user input: ${autoFinishResult.reason}`);
         }
-        
         if (!autoFinishResult.success) {
           throw new Error(`Auto-Finish processing failed: ${autoFinishResult.error || 'Unknown error'}`);
         }
-        
         return {
           success: true,
           prompt: aiPrompt,
@@ -761,7 +650,6 @@ class TaskService {
           timestamp: new Date(),
           autoFinishResult: autoFinishResult
         };
-        
       } else {
         // Fallback to original simple approach
         console.log('⚠️ [TaskService] Auto-Finish System not available, using fallback approach...');
@@ -771,7 +659,6 @@ class TaskService {
       throw new Error(`AI refactoring with Auto-Finish failed: ${error.message}`);
     }
   }
-
   /**
    * Execute AI-powered refactoring
    * @param {Object} task - Task object
@@ -781,7 +668,6 @@ class TaskService {
     try {
       // Build AI prompt for task execution (uses markdown content for doc tasks)
       const aiPrompt = await this.buildTaskExecutionPrompt(task);
-      
       // Use the same working chat mechanism as the frontend
       if (this.cursorIDEService) {
         // Try to send via ChatMessageHandler first
@@ -792,13 +678,11 @@ class TaskService {
             timeout: 120000, // 2 minutes timeout
             checkInterval: 2000 // Check every 2 seconds
           });
-          
           console.log('✅ [TaskService] AI finished editing:', {
             success: result.success,
             responseLength: result.response?.length || 0,
             duration: result.duration
           });
-          
           return {
             success: result.success,
             prompt: aiPrompt,
@@ -811,7 +695,6 @@ class TaskService {
           // Fallback: use the sendMessage method directly
           await this.cursorIDEService.sendMessage(aiPrompt);
           console.log('✅ [TaskService] Refactoring prompt sent via sendMessage (no response waiting)');
-          
           return {
             success: true,
             prompt: aiPrompt,
@@ -827,7 +710,6 @@ class TaskService {
       throw new Error(`AI refactoring failed: ${error.message}`);
     }
   }
-
   /**
    * Process AI refactoring response
    * @param {string} aiResponse - AI response
@@ -844,7 +726,6 @@ class TaskService {
       timestamp: new Date()
     };
   }
-
   /**
    * Integrate with Cursor IDE via Playwright
    * @param {Object} task - Task object
@@ -855,22 +736,18 @@ class TaskService {
     try {
       // WE ARE CURSOR IDE! So we'll apply the changes directly to the file
       console.log('🎭 [TaskService] Applying refactoring changes directly to file...');
-      
       const fs = require('fs');
       const path = require('path');
-      
       // Create backup of original file
       const backupPath = `${task.metadata.filePath}.backup.${Date.now()}`;
       fs.copyFileSync(task.metadata.filePath, backupPath);
       console.log('📦 [TaskService] Created backup:', backupPath);
-      
       // Apply the refactored code to the file
       if (!refactoringResult.refactoredCode) {
         throw new Error('Refactored code is undefined - cannot write to file');
       }
       fs.writeFileSync(task.metadata.filePath, refactoringResult.refactoredCode);
       console.log('✅ [TaskService] Applied refactored code to:', task.metadata.filePath);
-      
       return {
         success: true,
         backupPath,
@@ -881,7 +758,6 @@ class TaskService {
       throw new Error(`File integration failed: ${error.message}`);
     }
   }
-
   /**
    * Validate build after AI refactoring
    * @param {string} projectPath - Project path
@@ -892,9 +768,7 @@ class TaskService {
       const { exec } = require('child_process');
       const util = require('util');
       const execAsync = util.promisify(exec);
-
       console.log('🔍 [TaskService] Running build validation...');
-
       // Try common build commands
       const buildCommands = [
         'npm run build',
@@ -904,9 +778,7 @@ class TaskService {
         'npm run lint',
         'yarn lint'
       ];
-
       let buildResult = { success: false, error: 'No build commands found' };
-
       for (const command of buildCommands) {
         try {
           console.log(`🔍 [TaskService] Trying: ${command}`);
@@ -914,7 +786,6 @@ class TaskService {
             cwd: projectPath, 
             timeout: 60000 // 1 minute timeout
           });
-          
           buildResult = { 
             success: true, 
             command,
@@ -930,9 +801,7 @@ class TaskService {
           // Continue to next command
         }
       }
-
       return buildResult;
-
     } catch (error) {
       console.error('❌ [TaskService] Build validation error:', error);
       return {
@@ -942,7 +811,6 @@ class TaskService {
       };
     }
   }
-
   /**
    * Build error fix prompt for AI
    * @param {Object} task - Task object
@@ -951,20 +819,15 @@ class TaskService {
    */
   buildErrorFixPrompt(task, error) {
     return `The build validation failed with the following error:
-
 ${error}
-
 Please fix the issues in the code and ensure the build passes. Focus on:
 1. Syntax errors
 2. Import/export issues  
 3. Missing dependencies
 4. Type errors (if using TypeScript)
-
 The file being refactored is: ${task.metadata.filePath}
-
 Please fix the issues and let me know when you're done.`;
   }
-
   /**
    * Commit and push changes
    * @param {string} projectPath - Project path
@@ -976,18 +839,14 @@ Please fix the issues and let me know when you're done.`;
     const { exec } = require('child_process');
     const util = require('util');
     const execAsync = util.promisify(exec);
-
     try {
       // Add all changes
       await execAsync('git add .', { cwd: projectPath });
-      
       // Commit changes
       const commitMessage = `refactor: ${task.title}\n\n- ${task.description}\n- Task ID: ${task.id}\n- Automated refactoring`;
       await execAsync(`git commit -m "${commitMessage}"`, { cwd: projectPath });
-      
       // Push branch
       await execAsync(`git push origin ${branchName}`, { cwd: projectPath });
-      
       return {
         branchName,
         commitMessage,
@@ -998,7 +857,6 @@ Please fix the issues and let me know when you're done.`;
       throw new Error(`Failed to commit and push changes: ${error.message}`);
     }
   }
-
   /**
    * Rollback changes if validation fails
    * @param {string} projectPath - Project path
@@ -1009,17 +867,13 @@ Please fix the issues and let me know when you're done.`;
     const { exec } = require('child_process');
     const util = require('util');
     const execAsync = util.promisify(exec);
-
     try {
       // Reset to previous commit
       await execAsync('git reset --hard HEAD~1', { cwd: projectPath });
-      
       // Switch back to main branch
       await execAsync('git checkout main', { cwd: projectPath });
-      
       // Delete the refactoring branch
       await execAsync(`git branch -D ${branchName}`, { cwd: projectPath });
-      
       return {
         status: 'rolled_back',
         message: `Successfully rolled back changes and deleted branch: ${branchName}`
@@ -1032,7 +886,6 @@ Please fix the issues and let me know when you're done.`;
       };
     }
   }
-
   /**
    * Create merge request for refactored code
    * @param {string} projectPath - Project path
@@ -1051,7 +904,6 @@ Please fix the issues and let me know when you're done.`;
           targetBranch: 'main'
         });
       }
-
       // Fallback: Just log the merge request info
       const mergeRequestInfo = {
         title: `Refactor: ${task.title}`,
@@ -1061,15 +913,12 @@ Please fix the issues and let me know when you're done.`;
         status: 'manual_creation_required',
         message: 'Please create merge request manually in your Git platform'
       };
-
       console.log('📋 [TaskService] Merge request info:', mergeRequestInfo);
-      
       return mergeRequestInfo;
     } catch (error) {
       throw new Error(`Failed to create merge request: ${error.message}`);
     }
   }
-
   /**
    * Build merge request description
    * @param {Task} task - Task object
@@ -1078,35 +927,28 @@ Please fix the issues and let me know when you're done.`;
   buildMergeRequestDescription(task) {
     return `
 ## Refactoring Task: ${task.title}
-
 ### Description
 ${task.description}
-
 ### Changes Made
 - Refactored file: \`${task.metadata.filePath}\`
 - Original lines: ${task.metadata.lines}
 - Target: <500 lines per file
 - Refactoring type: ${task.metadata.refactoringType}
-
 ### Files Modified
 - \`${task.metadata.filePath}\` - Main refactored file
-
 ### Testing
 - ✅ Build validation passed
 - ✅ Code structure improved
 - ✅ No business logic changes
-
 ### Review Checklist
 - [ ] Code follows project conventions
 - [ ] No breaking changes introduced
 - [ ] All imports/exports updated correctly
 - [ ] File size reduced as expected
-
 ---
 *Auto-generated by PIDEA Refactoring System*
     `.trim();
   }
-
   /**
    * Get task execution status
    * @param {string} taskId - Task ID
@@ -1117,7 +959,6 @@ ${task.description}
     if (!task) {
       throw new Error('Task not found');
     }
-
     return {
       taskId,
       status: task.status,
@@ -1126,7 +967,6 @@ ${task.description}
       completedAt: task.completedAt
     };
   }
-
   /**
    * Cancel task execution
    * @param {string} taskId - Task ID
@@ -1138,17 +978,13 @@ ${task.description}
     if (!task) {
       throw new Error('Task not found');
     }
-
     if (task.isCompleted()) {
       throw new Error('Cannot cancel completed task');
     }
-
     task.updateStatus(TaskStatus.CANCELLED);
     await this.taskRepository.update(taskId, task);
-
     return true;
   }
-
   /**
    * Analyze project and generate tasks
    * @param {string} projectId - Project ID
@@ -1159,10 +995,8 @@ ${task.description}
   async analyzeProjectAndGenerateTasks(projectId, projectPath, options = {}) {
     // Analyze project structure
     const projectAnalysis = await this.projectAnalyzer.analyzeProject(projectPath);
-    
     // Generate AI-powered suggestions
     const aiSuggestions = await this.aiService.generateTaskSuggestions(projectAnalysis, options);
-    
     // Convert suggestions to tasks
     const tasks = [];
     for (const suggestion of aiSuggestions.suggestions) {
@@ -1180,7 +1014,6 @@ ${task.description}
       );
       tasks.push(task);
     }
-
     return {
       projectId,
       projectPath,
@@ -1190,7 +1023,6 @@ ${task.description}
       timestamp: new Date()
     };
   }
-
   /**
    * Get project analysis
    * @param {string} analysisId - Analysis ID
@@ -1206,7 +1038,6 @@ ${task.description}
       suggestions: []
     };
   }
-
   /**
    * Execute auto mode for a project
    * @param {string} projectId - Project ID
@@ -1221,7 +1052,6 @@ ${task.description}
     // 3. Execute tasks automatically
     // 4. Monitor progress
     // 5. Generate reports
-
     return {
       projectId,
       projectPath,
@@ -1231,7 +1061,6 @@ ${task.description}
       startedAt: new Date()
     };
   }
-
   /**
    * Get auto mode status
    * @param {string} projectId - Project ID
@@ -1246,7 +1075,6 @@ ${task.description}
       totalRuns: 0
     };
   }
-
   /**
    * Stop auto mode
    * @param {string} projectId - Project ID
@@ -1256,7 +1084,6 @@ ${task.description}
     // Mock implementation
     return true;
   }
-
   /**
    * Generate script for a task
    * @param {string} projectId - Project ID
@@ -1270,10 +1097,8 @@ ${task.description}
     if (!task || !task.belongsToProject(projectId)) {
       throw new Error('Task not found or does not belong to project');
     }
-
     return await this.aiService.generateScript(task, context, options);
   }
-
   /**
    * Get generated scripts for a project
    * @param {string} projectId - Project ID
@@ -1283,7 +1108,6 @@ ${task.description}
     // Mock implementation
     return [];
   }
-
   /**
    * Execute script for a project
    * @param {string} projectId - Project ID
@@ -1301,7 +1125,6 @@ ${task.description}
       result: 'Script executed successfully'
     };
   }
-
   /**
    * Get execution engine status
    * @returns {Object} Execution engine status
@@ -1313,7 +1136,6 @@ ${task.description}
       configuration: this.executionEngine.getConfiguration()
     };
   }
-
   /**
    * Get execution engine statistics
    * @returns {Object} Execution engine statistics
@@ -1325,7 +1147,6 @@ ${task.description}
       resourcePool: this.executionEngine.getResourcePoolStatus()
     };
   }
-
   /**
    * Get active executions
    * @returns {Array} Active executions
@@ -1333,7 +1154,6 @@ ${task.description}
   getActiveExecutions() {
     return this.executionEngine.getActiveExecutions();
   }
-
   /**
    * Cancel execution
    * @param {string} executionId - Execution ID
@@ -1342,7 +1162,6 @@ ${task.description}
   cancelExecution(executionId) {
     return this.executionEngine.cancelExecution(executionId);
   }
-
   /**
    * Get execution status
    * @param {string} executionId - Execution ID
@@ -1351,7 +1170,6 @@ ${task.description}
   getExecutionStatus(executionId) {
     return this.executionEngine.getExecutionStatus(executionId);
   }
-
   /**
    * Update execution engine configuration
    * @param {Object} config - New configuration
@@ -1359,7 +1177,6 @@ ${task.description}
   updateExecutionEngineConfiguration(config) {
     this.executionEngine.updateConfiguration(config);
   }
-
   /**
    * Shutdown execution engine
    * @returns {Promise<void>}
@@ -1367,7 +1184,6 @@ ${task.description}
   async shutdownExecutionEngine() {
     await this.executionEngine.shutdown();
   }
-
   /**
    * Get unified handler statistics
    * @returns {Promise<Object>} Handler statistics
@@ -1380,7 +1196,6 @@ ${task.description}
       throw error;
     }
   }
-
   /**
    * Get unified handler information
    * @returns {Array<Object>} Handler information
@@ -1393,7 +1208,6 @@ ${task.description}
       throw error;
     }
   }
-
   /**
    * Register handler with unified handler system
    * @param {string} type - Handler type
@@ -1419,7 +1233,6 @@ ${task.description}
       throw error;
     }
   }
-
   /**
    * Get handler by type from unified handler system
    * @param {string} type - Handler type
@@ -1436,7 +1249,6 @@ ${task.description}
       throw error;
     }
   }
-
   /**
    * Initialize unified handler system with configuration
    * @param {Object} config - Handler configuration
@@ -1453,7 +1265,6 @@ ${task.description}
       throw error;
     }
   }
-
   /**
    * Cleanup unified handler system
    * @returns {Promise<void>} Cleanup result
@@ -1468,5 +1279,4 @@ ${task.description}
     }
   }
 }
-
 module.exports = TaskService; 

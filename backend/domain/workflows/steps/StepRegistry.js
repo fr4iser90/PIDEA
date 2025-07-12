@@ -11,6 +11,33 @@ const DeploymentStep = require('./DeploymentStep');
 const SecurityStep = require('./SecurityStep');
 const OptimizationStep = require('./OptimizationStep');
 
+// Import analysis steps
+const {
+  ArchitectureAnalysisStep,
+  CodeQualityAnalysisStep,
+  TechStackAnalysisStep,
+  RepoStructureAnalysisStep,
+  DependenciesAnalysisStep,
+  AdvancedAnalysisStep
+} = require('./analysis');
+
+// Import VibeCoder steps
+const {
+  VibeCoderAnalyzeStep,
+  VibeCoderGenerateStep,
+  VibeCoderRefactorStep,
+  VibeCoderModeStep
+} = require('./vibecoder');
+
+// Import generate steps
+const {
+  GenerateScriptStep,
+  GenerateScriptsStep,
+  GenerateDocumentationStep,
+  GenerateTestsStep,
+  GenerateConfigsStep
+} = require('./generate');
+
 /**
  * Step registry for workflow step management
  */
@@ -156,6 +183,27 @@ class StepRegistry {
     this.registerStep('security', SecurityStep);
     this.registerStep('optimization', OptimizationStep);
 
+    // Register specialized analysis steps
+    this.registerStep('architecture-analysis', ArchitectureAnalysisStep);
+    this.registerStep('code-quality-analysis', CodeQualityAnalysisStep);
+    this.registerStep('tech-stack-analysis', TechStackAnalysisStep);
+    this.registerStep('repo-structure-analysis', RepoStructureAnalysisStep);
+    this.registerStep('dependencies-analysis', DependenciesAnalysisStep);
+    this.registerStep('advanced-analysis', AdvancedAnalysisStep);
+
+    // Register VibeCoder steps
+    this.registerStep('vibecoder-analyze', VibeCoderAnalyzeStep);
+    this.registerStep('vibecoder-generate', VibeCoderGenerateStep);
+    this.registerStep('vibecoder-refactor', VibeCoderRefactorStep);
+    this.registerStep('vibecoder-mode', VibeCoderModeStep);
+
+    // Register generate steps
+    this.registerStep('generate-script', GenerateScriptStep);
+    this.registerStep('generate-scripts', GenerateScriptsStep);
+    this.registerStep('generate-documentation', GenerateDocumentationStep);
+    this.registerStep('generate-tests', GenerateTestsStep);
+    this.registerStep('generate-configs', GenerateConfigsStep);
+
     // Register step templates
     this._initializeStepTemplates();
   }
@@ -270,6 +318,23 @@ class StepRegistry {
 
     this.registerTemplate('test-optimization', (options = {}) => {
       return new OptimizationStep('test-optimization', options);
+    });
+
+    // VibeCoder templates
+    this.registerTemplate('vibecoder-comprehensive', (options = {}) => {
+      return new VibeCoderModeStep('comprehensive', options);
+    });
+
+    this.registerTemplate('vibecoder-analyze-only', (options = {}) => {
+      return new VibeCoderAnalyzeStep('analyze', options);
+    });
+
+    this.registerTemplate('vibecoder-generate-only', (options = {}) => {
+      return new VibeCoderGenerateStep('generate', options);
+    });
+
+    this.registerTemplate('vibecoder-refactor-only', (options = {}) => {
+      return new VibeCoderRefactorStep('refactor', options);
     });
   }
 
@@ -488,7 +553,5 @@ class StepRegistry {
   }
 }
 
-// Global step registry instance
-const stepRegistry = new StepRegistry();
-
-module.exports = stepRegistry; 
+// Export the class for instantiation
+module.exports = StepRegistry; 

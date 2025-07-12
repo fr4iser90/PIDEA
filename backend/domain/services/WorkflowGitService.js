@@ -8,13 +8,11 @@ const TaskType = require('../value-objects/TaskType');
 const GitWorkflowManager = require('../workflows/git/GitWorkflowManager');
 const GitWorkflowContext = require('../workflows/git/GitWorkflowContext');
 const GitWorkflowResult = require('../workflows/git/GitWorkflowResult');
-
 class WorkflowGitService {
     constructor(dependencies = {}) {
         this.gitService = dependencies.gitService || new GitService(dependencies);
         this.logger = dependencies.logger || console;
         this.eventBus = dependencies.eventBus;
-        
         // Initialize enhanced git workflow manager
         this.gitWorkflowManager = new GitWorkflowManager({
             gitService: this.gitService,
@@ -22,7 +20,6 @@ class WorkflowGitService {
             eventBus: this.eventBus
         });
     }
-
     /**
      * Ensure a branch exists locally and remotely, create from fallback if not
      * @param {string} projectPath
@@ -35,30 +32,25 @@ class WorkflowGitService {
             // Check if branch exists
             const branches = await this.gitService.getBranches(projectPath);
             const localBranch = await this.gitService.getCurrentBranch(projectPath);
-            
             if (branches.includes(branchName) || localBranch === branchName) {
                 this.logger.info(`[ensureBranchExistsLocallyAndRemotely] Branch ${branchName} exists`);
                 return branchName;
             }
-            
             // Create branch from fallback
             await this.gitService.createBranch(projectPath, branchName, {
                 startPoint: fallbackBranch
             });
-            
             // Push to remote
             await this.gitService.pushChanges(projectPath, {
                 branch: branchName,
                 setUpstream: true
             });
-            
             return branchName;
         } catch (error) {
             this.logger.error(`[ensureBranchExistsLocallyAndRemotely] Error: ${error.message}`);
             throw error;
         }
     }
-
     /**
      * Create workflow-specific branch using enhanced git workflow manager
      * @param {string} projectPath - Project path
@@ -75,42 +67,34 @@ class WorkflowGitService {
                 options,
                 workflowType: 'branch-creation'
             });
-
             const result = await this.gitWorkflowManager.createBranch(context);
-            
             this.logger.info('WorkflowGitService: Enhanced branch creation completed', {
                 projectPath,
                 taskId: task.id,
                 branchName: result.branchName,
                 strategy: result.strategy
             });
-
             return result;
-
         } catch (error) {
             this.logger.error('WorkflowGitService: Enhanced branch creation failed', {
                 projectPath,
                 taskId: task.id,
                 error: error.message
             });
-            
-            // Fallback to legacy method if enhanced method fails
-            return await this.createWorkflowBranchLegacy(projectPath, task, options);
+            return await this.createWorkflowBranch(projectPath, task, options);
         }
     }
-
     /**
-     * Legacy method for workflow-specific branch creation (fallback)
+     *  method for workflow-specific branch creation (fallback)
      * @param {string} projectPath - Project path
      * @param {Object} task - Task object
      * @param {Object} options - Workflow options
      * @returns {Promise<Object>} Branch creation result
      */
-    async createWorkflowBranchLegacy(projectPath, task, options = {}) {
+    async createWorkflowBranch(projectPath, task, options = {}) {
         try {
             const branchStrategy = this.determineBranchStrategy(task.type, options);
             const branchName = this.generateBranchName(task, branchStrategy);
-
             this.logger.info('WorkflowGitService: Creating workflow branch', {
                 projectPath,
                 taskId: task.id,
@@ -118,30 +102,24 @@ class WorkflowGitService {
                 branchStrategy: branchStrategy.type,
                 branchName
             });
-
             // Check if GitService is available for actual Git operations
             if (this.gitService) {
                 try {
                     // Get current branch before creating new one
                     const currentBranch = await this.gitService.getCurrentBranch(projectPath);
                     this.logger.info(`[WorkflowGitService] Current branch: ${currentBranch}`);
-
                     // Create and checkout the new branch
                     await this.gitService.createBranch(projectPath, branchName, {
                         checkout: true,
                         startPoint: branchStrategy.startPoint || 'main'
                     });
-
                     // Verify branch was created and checked out
                     const newCurrentBranch = await this.gitService.getCurrentBranch(projectPath);
                     this.logger.info(`[WorkflowGitService] New current branch: ${newCurrentBranch}`);
-
                     if (newCurrentBranch !== branchName) {
                         throw new Error(`Branch checkout failed: expected ${branchName}, got ${newCurrentBranch}`);
                     }
-
                     this.logger.info(`[WorkflowGitService] Successfully created and checked out branch: ${branchName}`);
-
                 } catch (gitError) {
                     this.logger.error('WorkflowGitService: Git operation failed', {
                         projectPath,
@@ -153,7 +131,6 @@ class WorkflowGitService {
             } else {
                 this.logger.warn('WorkflowGitService: No GitService available, skipping actual Git operations');
             }
-
             // Prepare branch information
             const result = {
                 branchName,
@@ -169,7 +146,6 @@ class WorkflowGitService {
                     timestamp: new Date()
                 }
             };
-
             // Emit workflow branch created event
             if (this.eventBus) {
                 this.eventBus.publish('workflow.branch.created', {
@@ -180,9 +156,7 @@ class WorkflowGitService {
                     timestamp: new Date()
                 });
             }
-
             return result;
-
         } catch (error) {
             this.logger.error('WorkflowGitService: Failed to create workflow branch', {
                 projectPath,
@@ -192,7 +166,6 @@ class WorkflowGitService {
             throw new Error(`Workflow branch creation failed: ${error.message}`);
         }
     }
-
     /**
      * Determine branch strategy based on task type
      * @param {TaskType} taskType - Task type
@@ -231,7 +204,6 @@ class WorkflowGitService {
                 requiresReview: true,
                 mergeTarget: 'main'
             },
-
             // Feature Implementation Workflows - PIDEA Features Branch
             [safe(TaskType.FEATURE)]: {
                 type: 'feature',
@@ -251,7 +223,6 @@ class WorkflowGitService {
                 requiresReview: true,
                 mergeTarget: 'pidea-features'
             },
-
             // Bug Fix Workflows
             [safe(TaskType.BUG)]: {
                 type: 'bugfix',
@@ -271,7 +242,6 @@ class WorkflowGitService {
                 requiresReview: true,
                 mergeTarget: 'main'
             },
-
             // Analysis Workflows
             [safe(TaskType.ANALYSIS)]: {
                 type: 'analysis',
@@ -291,7 +261,6 @@ class WorkflowGitService {
                 requiresReview: true,
                 mergeTarget: 'develop'
             },
-
             // Testing Workflows 
             [safe(TaskType.TESTING)]: {
                 type: 'testing',
@@ -302,7 +271,6 @@ class WorkflowGitService {
                 requiresReview: false,
                 mergeTarget: 'pidea-agent'
             },
-
             // Documentation Workflows
             [safe(TaskType.DOCUMENTATION)]: {
                 type: 'documentation',
@@ -313,7 +281,6 @@ class WorkflowGitService {
                 requiresReview: false,
                 mergeTarget: 'main'
             },
-
             // Debug Workflows
             [safe(TaskType.TEST_STATUS)]: {
                 type: 'debug',
@@ -324,7 +291,6 @@ class WorkflowGitService {
                 requiresReview: false,
                 mergeTarget: 'main'
             },
-
             // Default strategy
             default: {
                 type: 'task',
@@ -336,10 +302,8 @@ class WorkflowGitService {
                 mergeTarget: 'main'
             }
         };
-
         return strategies[taskTypeValue] || strategies.default;
     }
-
     /**
      * Ensure branch exists, create if it doesn't
      * @param {string} projectPath - Project path
@@ -351,7 +315,6 @@ class WorkflowGitService {
         this.logger.info(`[ensureBranchExists] Branch ${branchName} operation requested - handled by Playwright`);
         return branchName;
     }
-
     /**
      * Generate branch name based on task and strategy
      * @param {Object} task - Task object
@@ -362,17 +325,14 @@ class WorkflowGitService {
         const timestamp = Date.now();
         const taskId = task.id || 'unknown';
         const taskTitle = task.title || task.description || 'task';
-        
         // Clean task title for branch name
         const cleanTitle = taskTitle
             .toLowerCase()
             .replace(/[^a-z0-9\s-]/g, '')
             .replace(/\s+/g, '-')
             .substring(0, 30);
-
         return `${strategy.prefix}/${cleanTitle}-${taskId}-${timestamp}`;
     }
-
     /**
      * Apply branch-specific configuration
      * @param {string} projectPath - Project path
@@ -384,7 +344,6 @@ class WorkflowGitService {
         // Git operations handled by Playwright via CDP
         this.logger.info(`[applyBranchConfiguration] Branch ${branchName} configuration requested - handled by Playwright`);
     }
-
     /**
      * Apply critical protection to branch
      * @param {string} projectPath - Project path
@@ -395,7 +354,6 @@ class WorkflowGitService {
         // Git operations handled by Playwright via CDP
         this.logger.info(`[applyCriticalProtection] Branch ${branchName} protection requested - handled by Playwright`);
     }
-
     /**
      * Apply high protection to branch
      * @param {string} projectPath - Project path
@@ -406,7 +364,6 @@ class WorkflowGitService {
         // Git operations handled by Playwright via CDP
         this.logger.info(`[applyHighProtection] Branch ${branchName} protection requested - handled by Playwright`);
     }
-
     /**
      * Apply medium protection to branch
      * @param {string} projectPath - Project path
@@ -417,7 +374,6 @@ class WorkflowGitService {
         // Git operations handled by Playwright via CDP
         this.logger.info(`[applyMediumProtection] Branch ${branchName} protection requested - handled by Playwright`);
     }
-
     /**
      * Setup auto-merge for branch
      * @param {string} projectPath - Project path
@@ -429,7 +385,6 @@ class WorkflowGitService {
         // Git operations handled by Playwright via CDP
         this.logger.info(`[setupAutoMerge] Branch ${branchName} auto-merge requested - handled by Playwright`);
     }
-
     /**
      * Complete workflow using enhanced git workflow manager
      * @param {string} projectPath - Project path
@@ -448,18 +403,14 @@ class WorkflowGitService {
                 workflowType: 'workflow-completion',
                 branchName
             });
-
             const result = await this.gitWorkflowManager.completeWorkflow(context);
-            
             this.logger.info('WorkflowGitService: Enhanced workflow completion completed', {
                 projectPath,
                 taskId: task.id,
                 branchName,
                 result: result.status
             });
-
             return result;
-
         } catch (error) {
             this.logger.error('WorkflowGitService: Enhanced workflow completion failed', {
                 projectPath,
@@ -467,140 +418,8 @@ class WorkflowGitService {
                 branchName,
                 error: error.message
             });
-            
-            // Fallback to legacy method if enhanced method fails
-            return await this.completeWorkflowLegacy(projectPath, branchName, task, options);
         }
     }
-
-    /**
-     * Legacy method for workflow completion (fallback)
-     * @param {string} projectPath - Project path
-     * @param {string} branchName - Branch name
-     * @param {Object} task - Task object
-     * @param {Object} options - Merge options
-     * @returns {Promise<Object>} Merge result
-     */
-    async completeWorkflowLegacy(projectPath, branchName, task, options = {}) {
-        try {
-            const strategy = this.determineBranchStrategy(task.type, options);
-            
-            this.logger.info('WorkflowGitService: Completing workflow', {
-                projectPath,
-                branchName,
-                taskId: task.id,
-                mergeTarget: strategy.mergeTarget
-            });
-
-            let mergeResult = null;
-            const commitMessage = this.generateCommitMessage(task, strategy);
-
-            // Check if GitService is available for actual Git operations
-            if (this.gitService) {
-                try {
-                    // Get current branch
-                    const currentBranch = await this.gitService.getCurrentBranch(projectPath);
-                    this.logger.info(`[WorkflowGitService] Current branch before completion: ${currentBranch}`);
-
-                    // If we're on the workflow branch, commit changes first
-                    if (currentBranch === branchName) {
-                        this.logger.info(`[WorkflowGitService] Committing changes on branch: ${branchName}`);
-                        
-                        // Add all changes
-                        await this.gitService.addFiles(projectPath);
-                        
-                        // Commit changes
-                        await this.gitService.commitChanges(projectPath, commitMessage);
-                        
-                        this.logger.info(`[WorkflowGitService] Changes committed successfully`);
-                    }
-
-                    // If auto-merge is enabled, merge to target branch
-                    if (strategy.autoMerge && strategy.mergeTarget) {
-                        this.logger.info(`[WorkflowGitService] Auto-merging to ${strategy.mergeTarget}`);
-                        
-                        // Checkout target branch
-                        await this.gitService.checkoutBranch(projectPath, strategy.mergeTarget);
-                        
-                        // Merge the workflow branch
-                        mergeResult = await this.gitService.mergeBranch(projectPath, branchName, {
-                            strategy: 'squash'
-                        });
-                        
-                        this.logger.info(`[WorkflowGitService] Auto-merge completed:`, mergeResult);
-                    } else {
-                        this.logger.info(`[WorkflowGitService] Auto-merge disabled, keeping branch: ${branchName}`);
-                        mergeResult = {
-                            success: true,
-                            action: 'kept_branch',
-                            message: `Branch ${branchName} kept for manual review`
-                        };
-                    }
-
-                } catch (gitError) {
-                    this.logger.error('WorkflowGitService: Git operation failed during completion', {
-                        projectPath,
-                        branchName,
-                        error: gitError.message
-                    });
-                    // Continue without Git operations if they fail
-                    mergeResult = {
-                        success: false,
-                        action: 'git_error',
-                        error: gitError.message
-                    };
-                }
-            } else {
-                this.logger.warn('WorkflowGitService: No GitService available, skipping Git operations');
-                mergeResult = {
-                    success: true,
-                    action: 'no_git_service',
-                    message: 'Git operations skipped - no GitService available'
-                };
-            }
-
-            const result = {
-                branchName,
-                strategy: strategy,
-                commitMessage,
-                mergeResult,
-                status: 'completed',
-                message: `Workflow completed for branch: ${branchName}`,
-                metadata: {
-                    taskId: task.id,
-                    taskType: task.type?.value,
-                    workflowType: strategy.type,
-                    autoMerged: strategy.autoMerge,
-                    mergeTarget: strategy.mergeTarget,
-                    timestamp: new Date()
-                }
-            };
-
-            // Emit workflow completed event
-            if (this.eventBus) {
-                this.eventBus.publish('workflow.completed', {
-                    projectPath,
-                    taskId: task.id,
-                    branchName,
-                    strategy: strategy,
-                    mergeResult,
-                    timestamp: new Date()
-                });
-            }
-
-            return result;
-
-        } catch (error) {
-            this.logger.error('WorkflowGitService: Failed to complete workflow', {
-                projectPath,
-                branchName,
-                taskId: task.id,
-                error: error.message
-            });
-            throw new Error(`Workflow completion failed: ${error.message}`);
-        }
-    }
-
     /**
      * Auto-merge branch to target
      * @param {string} projectPath - Project path
@@ -619,7 +438,6 @@ class WorkflowGitService {
             message: `Auto-merge requested for ${branchName} to ${targetBranch}`
         };
     }
-
     /**
      * Generate commit message based on task and strategy
      * @param {Object} task - Task object
@@ -630,10 +448,8 @@ class WorkflowGitService {
         const taskTitle = task.title || task.description || 'Task';
         const taskId = task.id || 'unknown';
         const workflowType = strategy.type;
-
         return `${workflowType}: ${taskTitle}\n\n- Task ID: ${taskId}\n- Workflow Type: ${workflowType}\n- Automated workflow execution\n- Timestamp: ${new Date().toISOString()}`;
     }
-
     /**
      * Rollback workflow branch
      * @param {string} projectPath - Project path
@@ -648,10 +464,8 @@ class WorkflowGitService {
                 branchName,
                 taskId: task.id
             });
-
             // Git operations handled by Playwright via CDP
             this.logger.info(`[rollbackWorkflow] Rollback requested - handled by Playwright`);
-
             const result = {
                 branchName,
                 status: 'rolled_back',
@@ -662,7 +476,6 @@ class WorkflowGitService {
                     timestamp: new Date()
                 }
             };
-
             // Emit workflow rollback event
             if (this.eventBus) {
                 this.eventBus.publish('workflow.rolled_back', {
@@ -672,9 +485,7 @@ class WorkflowGitService {
                     timestamp: new Date()
                 });
             }
-
             return result;
-
         } catch (error) {
             this.logger.error('WorkflowGitService: Failed to rollback workflow', {
                 projectPath,
@@ -685,7 +496,6 @@ class WorkflowGitService {
             throw new Error(`Workflow rollback failed: ${error.message}`);
         }
     }
-
     /**
      * Merge current branch to target branch
      * @param {string} projectPath - Project path
@@ -702,12 +512,10 @@ class WorkflowGitService {
                 taskId: task.id,
                 taskType: task.type?.value
             });
-
             // Git operations handled by Playwright via CDP
             this.logger.info(`[mergeToBranch] Merge requested - handled by Playwright`);
             const currentBranch = 'current-branch'; // Placeholder
             const mergeResult = { success: true };
-            
             const result = {
                 success: true,
                 sourceBranch: currentBranch,
@@ -721,7 +529,6 @@ class WorkflowGitService {
                     timestamp: new Date()
                 }
             };
-            
             // Emit merge completed event
             if (this.eventBus) {
                 this.eventBus.publish('workflow.merge.completed', {
@@ -733,9 +540,7 @@ class WorkflowGitService {
                     timestamp: new Date()
                 });
             }
-            
             return result;
-            
         } catch (error) {
             this.logger.error('WorkflowGitService: Failed to merge to target branch', {
                 projectPath,
@@ -743,7 +548,6 @@ class WorkflowGitService {
                 taskId: task.id,
                 error: error.message
             });
-            
             // Emit merge failed event
             if (this.eventBus) {
                 this.eventBus.publish('workflow.merge.failed', {
@@ -754,11 +558,9 @@ class WorkflowGitService {
                     timestamp: new Date()
                 });
             }
-            
             throw new Error(`Merge to ${targetBranch} failed: ${error.message}`);
         }
     }
-
     /**
      * Create pull request using enhanced git workflow manager
      * @param {string} projectPath - Project path
@@ -777,18 +579,14 @@ class WorkflowGitService {
                 workflowType: 'pull-request-creation',
                 branchName
             });
-
             const result = await this.gitWorkflowManager.createPullRequest(context);
-            
             this.logger.info('WorkflowGitService: Enhanced pull request creation completed', {
                 projectPath,
                 taskId: task.id,
                 branchName,
                 prUrl: result.prUrl
             });
-
             return result;
-
         } catch (error) {
             this.logger.error('WorkflowGitService: Enhanced pull request creation failed', {
                 projectPath,
@@ -796,23 +594,20 @@ class WorkflowGitService {
                 branchName,
                 error: error.message
             });
-            
-            // Fallback to legacy method if enhanced method fails
-            return await this.createPullRequestLegacy(projectPath, branchName, task, options);
+            return await this.createPullRequest(projectPath, branchName, task, options);
         }
     }
-
     /**
-     * Legacy method for pull request creation (fallback)
+     *  method for pull request creation (fallback)
      * @param {string} projectPath - Project path
      * @param {string} branchName - Branch name
      * @param {Object} task - Task object
      * @param {Object} options - PR options
      * @returns {Promise<Object>} Pull request result
      */
-    async createPullRequestLegacy(projectPath, branchName, task, options = {}) {
+    async createPullRequest(projectPath, branchName, task, options = {}) {
         // Git operations handled by Playwright via CDP
-        this.logger.info(`[createPullRequestLegacy] Pull request creation requested - handled by Playwright`);
+        this.logger.info(`[createPullRequest] Pull request creation requested - handled by Playwright`);
         return {
             success: true,
             branchName,
@@ -820,7 +615,6 @@ class WorkflowGitService {
             message: `Pull request created for ${branchName}`
         };
     }
-
     /**
      * Generate merge commit message
      * @param {Object} task - Task object
@@ -831,16 +625,12 @@ class WorkflowGitService {
         const taskTitle = task.title || 'Unknown Task';
         const taskType = task.type?.value || 'unknown';
         const taskId = task.id || 'unknown';
-        
         return `Merge task ${taskId} (${taskType}) into ${targetBranch}
-
 Task: ${taskTitle}
 Type: ${taskType}
 ID: ${taskId}
-
 Automatically merged by PIDEA Workflow System
         `.trim();
     }
 }
-
 module.exports = WorkflowGitService; 

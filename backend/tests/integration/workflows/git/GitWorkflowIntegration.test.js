@@ -2,14 +2,12 @@
  * Integration tests for Git Workflow System
  * Tests the complete workflow from branch creation to completion
  */
-
 const GitWorkflowManager = require('../../../domain/workflows/git/GitWorkflowManager');
 const GitWorkflowContext = require('../../../domain/workflows/git/GitWorkflowContext');
 const WorkflowGitService = require('../../../domain/services/WorkflowGitService');
 const WorkflowOrchestrationService = require('../../../domain/services/WorkflowOrchestrationService');
 const TaskService = require('../../../domain/services/TaskService');
 const AutoFinishSystem = require('../../../domain/services/auto-finish/AutoFinishSystem');
-
 describe('Git Workflow Integration', () => {
   let gitWorkflowManager;
   let workflowGitService;
@@ -19,7 +17,6 @@ describe('Git Workflow Integration', () => {
   let mockGitService;
   let mockLogger;
   let mockEventBus;
-
   beforeEach(() => {
     // Create mock dependencies
     mockGitService = {
@@ -32,37 +29,31 @@ describe('Git Workflow Integration', () => {
       mergeBranch: jest.fn().mockResolvedValue({ success: true }),
       getBranches: jest.fn().mockResolvedValue(['main', 'develop'])
     };
-
     mockLogger = {
       info: jest.fn(),
       error: jest.fn(),
       warn: jest.fn(),
       debug: jest.fn()
     };
-
     mockEventBus = {
       publish: jest.fn()
     };
-
     // Initialize services
     workflowGitService = new WorkflowGitService({
       gitService: mockGitService,
       logger: mockLogger,
       eventBus: mockEventBus
     });
-
     gitWorkflowManager = new GitWorkflowManager({
       gitService: mockGitService,
       logger: mockLogger,
       eventBus: mockEventBus
     });
-
     workflowOrchestrationService = new WorkflowOrchestrationService({
       workflowGitService,
       logger: mockLogger,
       eventBus: mockEventBus
     });
-
     taskService = new TaskService(
       { findById: jest.fn(), create: jest.fn(), update: jest.fn() },
       { generateResponse: jest.fn() },
@@ -71,7 +62,6 @@ describe('Git Workflow Integration', () => {
       null,
       workflowGitService
     );
-
     autoFinishSystem = new AutoFinishSystem(
       { sendMessage: jest.fn() },
       { clickNewChat: jest.fn() },
@@ -79,7 +69,6 @@ describe('Git Workflow Integration', () => {
       mockEventBus
     );
   });
-
   describe('Complete Workflow Integration', () => {
     it('should execute a complete feature workflow', async () => {
       const task = {
@@ -92,17 +81,14 @@ describe('Git Workflow Integration', () => {
           filePath: '/test/project/src/auth/AuthService.js'
         }
       };
-
       const context = new GitWorkflowContext({
         projectPath: task.metadata.projectPath,
         task,
         options: { autoMerge: true },
         workflowType: 'workflow-execution'
       });
-
       // Execute complete workflow
       const result = await gitWorkflowManager.executeWorkflow(context);
-
       expect(result.success).toBe(true);
       expect(result.workflowType).toBe('workflow-execution');
       expect(result.branchName).toMatch(/feature\/add-user-authentication/);
@@ -111,7 +97,6 @@ describe('Git Workflow Integration', () => {
       expect(mockGitService.commitChanges).toHaveBeenCalled();
       expect(mockEventBus.publish).toHaveBeenCalledWith('git.workflow.executed', expect.any(Object));
     });
-
     it('should handle workflow with pull request creation', async () => {
       const task = {
         id: 'feature-task-2',
@@ -123,17 +108,14 @@ describe('Git Workflow Integration', () => {
           filePath: '/test/project/src/payment/PaymentService.js'
         }
       };
-
       const context = new GitWorkflowContext({
         projectPath: task.metadata.projectPath,
         task,
         options: { createPullRequest: true, autoMerge: false },
         workflowType: 'workflow-execution'
       });
-
       // Execute workflow
       const workflowResult = await gitWorkflowManager.executeWorkflow(context);
-
       // Create pull request
       const prContext = new GitWorkflowContext({
         projectPath: task.metadata.projectPath,
@@ -142,16 +124,13 @@ describe('Git Workflow Integration', () => {
         workflowType: 'pull-request-creation',
         branchName: workflowResult.branchName
       });
-
       const prResult = await gitWorkflowManager.createPullRequest(prContext);
-
       expect(workflowResult.success).toBe(true);
       expect(prResult.success).toBe(true);
       expect(prResult.prUrl).toBeDefined();
       expect(mockEventBus.publish).toHaveBeenCalledWith('git.workflow.pull_request.created', expect.any(Object));
     });
   });
-
   describe('Service Integration', () => {
     it('should integrate WorkflowGitService with GitWorkflowManager', async () => {
       const task = {
@@ -163,19 +142,16 @@ describe('Git Workflow Integration', () => {
           projectPath: '/test/project'
         }
       };
-
       // Use WorkflowGitService (which internally uses GitWorkflowManager)
       const branchResult = await workflowGitService.createWorkflowBranch(
         task.metadata.projectPath,
         task,
         { autoMerge: false }
       );
-
       expect(branchResult.success).toBe(true);
       expect(branchResult.branchName).toMatch(/refactor\/refactor-database-layer/);
       expect(mockGitService.createBranch).toHaveBeenCalled();
     });
-
     it('should integrate WorkflowOrchestrationService with enhanced git workflow', async () => {
       const task = {
         id: 'bugfix-task-1',
@@ -186,18 +162,15 @@ describe('Git Workflow Integration', () => {
           projectPath: '/test/project'
         }
       };
-
       // Use WorkflowOrchestrationService (which internally uses GitWorkflowManager)
       const result = await workflowOrchestrationService.executeWorkflow(task, {
         autoMerge: true
       });
-
       expect(result.success).toBe(true);
       expect(result.branch).toBeDefined();
       expect(result.workflow).toBeDefined();
       expect(result.completion).toBeDefined();
     });
-
     it('should integrate TaskService with enhanced git workflow', async () => {
       const mockTaskRepository = {
         findById: jest.fn().mockResolvedValue({
@@ -209,7 +182,6 @@ describe('Git Workflow Integration', () => {
         }),
         update: jest.fn().mockResolvedValue(true)
       };
-
       const enhancedTaskService = new TaskService(
         mockTaskRepository,
         { generateResponse: jest.fn() },
@@ -218,13 +190,10 @@ describe('Git Workflow Integration', () => {
         null,
         workflowGitService
       );
-
       const result = await enhancedTaskService.executeTask('task-1', { projectPath: '/test/project' });
-
       expect(result.success).toBe(true);
       expect(mockGitService.createBranch).toHaveBeenCalled();
     });
-
     it('should integrate AutoFinishSystem with enhanced git workflow', async () => {
       const task = {
         id: 'auto-task-1',
@@ -233,25 +202,20 @@ describe('Git Workflow Integration', () => {
           projectPath: '/test/project'
         }
       };
-
       // Mock cursor IDE response
       autoFinishSystem.cursorIDE.sendMessage = jest.fn().mockResolvedValue('Task completed successfully');
-
       const result = await autoFinishSystem.processTask(task, 'session-1', {
         autoMerge: true
       });
-
       expect(result.success).toBe(true);
       expect(result.method).toBe('enhanced');
       expect(mockGitService.createBranch).toHaveBeenCalled();
     });
   });
-
   describe('Error Handling Integration', () => {
     it('should handle git service failures gracefully across all services', async () => {
       // Mock git service to fail
       mockGitService.createBranch.mockRejectedValue(new Error('Git service unavailable'));
-
       const task = {
         id: 'error-task-1',
         title: 'Test error handling',
@@ -260,22 +224,18 @@ describe('Git Workflow Integration', () => {
           projectPath: '/test/project'
         }
       };
-
       // Test WorkflowGitService fallback
       const branchResult = await workflowGitService.createWorkflowBranch(
         task.metadata.projectPath,
         task,
         {}
       );
-
-      expect(branchResult.success).toBe(true); // Should fallback to legacy method
+      expect(branchResult.success).toBe(true); 
       expect(mockLogger.error).toHaveBeenCalled();
-
       // Test WorkflowOrchestrationService fallback
       const orchestrationResult = await workflowOrchestrationService.executeWorkflow(task, {});
-      expect(orchestrationResult.success).toBe(true); // Should fallback to legacy method
+      expect(orchestrationResult.success).toBe(true); 
     });
-
     it('should handle invalid task data across all services', async () => {
       const invalidTask = {
         id: 'invalid-task',
@@ -283,20 +243,17 @@ describe('Git Workflow Integration', () => {
         type: null,
         metadata: {}
       };
-
       const context = new GitWorkflowContext({
         projectPath: '',
         task: invalidTask,
         options: {},
         workflowType: 'workflow-execution'
       });
-
       // Should throw GitWorkflowException
       await expect(gitWorkflowManager.executeWorkflow(context))
         .rejects.toThrow();
     });
   });
-
   describe('Event System Integration', () => {
     it('should publish events for all workflow operations', async () => {
       const task = {
@@ -307,29 +264,24 @@ describe('Git Workflow Integration', () => {
           projectPath: '/test/project'
         }
       };
-
       const context = new GitWorkflowContext({
         projectPath: task.metadata.projectPath,
         task,
         options: { createPullRequest: true },
         workflowType: 'workflow-execution'
       });
-
       // Execute workflow
       await gitWorkflowManager.executeWorkflow(context);
-
       // Verify events were published
       expect(mockEventBus.publish).toHaveBeenCalledWith('git.workflow.branch.created', expect.any(Object));
       expect(mockEventBus.publish).toHaveBeenCalledWith('git.workflow.executed', expect.any(Object));
       expect(mockEventBus.publish).toHaveBeenCalledWith('git.workflow.pull_request.created', expect.any(Object));
     });
-
     it('should handle event bus failures gracefully', async () => {
       // Mock event bus to fail
       mockEventBus.publish.mockImplementation(() => {
         throw new Error('Event bus error');
       });
-
       const task = {
         id: 'event-error-task-1',
         title: 'Test event error handling',
@@ -338,21 +290,18 @@ describe('Git Workflow Integration', () => {
           projectPath: '/test/project'
         }
       };
-
       const context = new GitWorkflowContext({
         projectPath: task.metadata.projectPath,
         task,
         options: {},
         workflowType: 'workflow-execution'
       });
-
       // Should not throw error, just log it
       const result = await gitWorkflowManager.executeWorkflow(context);
       expect(result.success).toBe(true);
       expect(mockLogger.error).toHaveBeenCalled();
     });
   });
-
   describe('Performance Integration', () => {
     it('should handle concurrent workflow executions', async () => {
       const tasks = [
@@ -375,26 +324,22 @@ describe('Git Workflow Integration', () => {
           metadata: { projectPath: '/test/project' }
         }
       ];
-
       const contexts = tasks.map(task => new GitWorkflowContext({
         projectPath: task.metadata.projectPath,
         task,
         options: {},
         workflowType: 'workflow-execution'
       }));
-
       // Execute workflows concurrently
       const startTime = Date.now();
       const results = await Promise.all(
         contexts.map(context => gitWorkflowManager.executeWorkflow(context))
       );
       const endTime = Date.now();
-
       // Verify all workflows completed successfully
       results.forEach(result => {
         expect(result.success).toBe(true);
       });
-
       // Verify performance (should complete within reasonable time)
       expect(endTime - startTime).toBeLessThan(5000); // 5 seconds
     });

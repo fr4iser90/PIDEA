@@ -1,12 +1,10 @@
 # Unified Workflow Performance 3B: Unified Handler System
-
 ## 1. Project Overview
 - **Feature/Component Name**: Unified Handler System
 - **Priority**: High
 - **Estimated Time**: 80 hours (2 weeks)
 - **Dependencies**: Foundation 1A (Core Interfaces & Context), Foundation 1B (Builder Pattern & Common Steps), Automation 2A (Automation Level System), Automation 2B (Enhanced Git Integration), Performance 3A (Sequential Workflow Optimization)
 - **Related Issues**: Fragmented handlers, code duplication, inconsistent patterns, limited reusability
-
 ## 2. Technical Requirements
 - **Tech Stack**: Node.js, JavaScript ES6+, Domain-Driven Design, Handler patterns
 - **Architecture Pattern**: DDD with unified handler system
@@ -14,9 +12,7 @@
 - **API Changes**: New unified handler endpoints
 - **Frontend Changes**: None (backend system)
 - **Backend Changes**: Unified handler system and migration utilities
-
 ## 3. Implementation Files
-
 #### Files to Create:
 - [ ] `backend/domain/workflows/handlers/UnifiedWorkflowHandler.js` - Main unified workflow handler
 - [ ] `backend/domain/workflows/handlers/WorkflowStepHandler.js` - Individual step handler
@@ -28,12 +24,11 @@
 - [ ] `backend/domain/workflows/handlers/HandlerMetrics.js` - Handler metrics
 - [ ] `backend/domain/workflows/handlers/HandlerAudit.js` - Handler audit
 - [ ] `backend/domain/workflows/handlers/HandlerOptimizer.js` - Handler optimization
-- [ ] `backend/domain/workflows/handlers/adapters/LegacyHandlerAdapter.js` - Legacy handler adapter
+- [ ] `backend/domain/workflows/handlers/adapters/HandlerAdapter.js` -  handler adapter
 - [ ] `backend/domain/workflows/handlers/adapters/CommandHandlerAdapter.js` - Command handler adapter
 - [ ] `backend/domain/workflows/handlers/adapters/ServiceHandlerAdapter.js` - Service handler adapter
 - [ ] `backend/domain/workflows/handlers/exceptions/HandlerException.js` - Handler exceptions
 - [ ] `backend/domain/workflows/handlers/index.js` - Module exports
-
 #### Files to Modify:
 - [ ] `backend/application/handlers/AnalyzeArchitectureHandler.js` - Migrate to unified handler
 - [ ] `backend/application/handlers/VibeCoderAnalyzeHandler.js` - Migrate to unified handler
@@ -42,32 +37,26 @@
 - [ ] `backend/application/handlers/AutoRefactorCommand.js` - Migrate to unified handler
 - [ ] `backend/domain/services/WorkflowOrchestrationService.js` - Use unified handlers
 - [ ] `backend/domain/services/TaskService.js` - Use unified handlers
-
 ## 4. Implementation Phases
-
 #### Phase 1: Core Handler System (30 hours)
 - [ ] Implement UnifiedWorkflowHandler with workflow orchestration
 - [ ] Create WorkflowStepHandler with individual step handling
 - [ ] Implement HandlerRegistry with handler management
 - [ ] Create HandlerFactory with handler creation
 - [ ] Add HandlerContext with handler execution context
-
 #### Phase 2: Adapters & Migration (30 hours)
-- [ ] Implement LegacyHandlerAdapter for existing handlers
+- [ ] Implement HandlerAdapter for existing handlers
 - [ ] Create CommandHandlerAdapter for command handlers
 - [ ] Implement ServiceHandlerAdapter for service handlers
 - [ ] Create migration utilities for existing handlers
 - [ ] Add HandlerValidator with handler validation
-
 #### Phase 3: Integration & Optimization (20 hours)
 - [ ] Create handler metrics and audit system
 - [ ] Implement HandlerOptimizer with optimization algorithms
 - [ ] Integrate unified handler system with existing services
 - [ ] Update WorkflowOrchestrationService to use unified handlers
 - [ ] Add module exports and documentation
-
 ## 5. Unified Handler System Design
-
 #### UnifiedWorkflowHandler Implementation
 ```javascript
 /**
@@ -83,7 +72,6 @@ class UnifiedWorkflowHandler {
     this.handlerOptimizer = dependencies.handlerOptimizer || new HandlerOptimizer();
     this.logger = dependencies.logger || console;
   }
-
   /**
    * Handle workflow execution
    * @param {Object} request - Handler request
@@ -93,29 +81,23 @@ class UnifiedWorkflowHandler {
   async handle(request, response) {
     const startTime = Date.now();
     const handlerId = this.generateHandlerId();
-    
     try {
       this.logger.info('UnifiedWorkflowHandler: Starting workflow handling', {
         handlerId,
         requestType: request.type,
         taskId: request.taskId
       });
-
       // Create handler context
       const context = new HandlerContext(request, response, handlerId);
-      
       // Validate request
       const validationResult = await this.handlerValidator.validateRequest(request);
       if (!validationResult.isValid) {
         throw new HandlerException('Request validation failed', validationResult);
       }
-
       // Get appropriate handler
       const handler = await this.getHandler(request, context);
-      
       // Execute handler
       const result = await this.executeHandler(handler, context);
-      
       // Record metrics
       await this.handlerMetrics.recordHandlerExecution(handlerId, {
         request,
@@ -123,39 +105,31 @@ class UnifiedWorkflowHandler {
         duration: Date.now() - startTime,
         result
       });
-
       // Audit handler execution
       await this.handlerAudit.auditHandlerExecution(handlerId, {
         request,
         handler: handler.getMetadata(),
         result
       });
-
       // Optimize future executions
       await this.handlerOptimizer.optimize(handlerId, result);
-
       return result;
-
     } catch (error) {
       const duration = Date.now() - startTime;
-      
       this.logger.error('UnifiedWorkflowHandler: Handler execution failed', {
         handlerId,
         error: error.message,
         duration
       });
-
       // Record failure metrics
       await this.handlerMetrics.recordHandlerFailure(handlerId, {
         request,
         error,
         duration
       });
-
       throw new HandlerException('Handler execution failed', error);
     }
   }
-
   /**
    * Get appropriate handler for request
    * @param {Object} request - Handler request
@@ -168,16 +142,12 @@ class UnifiedWorkflowHandler {
     if (registeredHandler) {
       return registeredHandler;
     }
-
     // Create handler using factory
     const handler = await this.handlerFactory.createHandler(request, context);
-    
     // Register handler for future use
     this.handlerRegistry.registerHandler(request.type, handler);
-    
     return handler;
   }
-
   /**
    * Execute handler
    * @param {IHandler} handler - Handler to execute
@@ -186,19 +156,15 @@ class UnifiedWorkflowHandler {
    */
   async executeHandler(handler, context) {
     const startTime = Date.now();
-    
     try {
       // Validate handler
       const validationResult = await this.handlerValidator.validateHandler(handler, context);
       if (!validationResult.isValid) {
         throw new HandlerException('Handler validation failed', validationResult);
       }
-
       // Execute handler
       const result = await handler.execute(context);
-      
       const duration = Date.now() - startTime;
-      
       return new HandlerResult({
         success: true,
         handlerId: context.handlerId,
@@ -207,10 +173,8 @@ class UnifiedWorkflowHandler {
         duration,
         timestamp: new Date()
       });
-
     } catch (error) {
       const duration = Date.now() - startTime;
-      
       return new HandlerResult({
         success: false,
         handlerId: context.handlerId,
@@ -221,7 +185,6 @@ class UnifiedWorkflowHandler {
       });
     }
   }
-
   /**
    * Generate handler ID
    * @returns {string} Handler ID
@@ -229,7 +192,6 @@ class UnifiedWorkflowHandler {
   generateHandlerId() {
     return `handler_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
   }
-
   /**
    * Get handler statistics
    * @returns {Promise<Object>} Handler statistics
@@ -244,7 +206,6 @@ class UnifiedWorkflowHandler {
   }
 }
 ```
-
 #### HandlerRegistry Implementation
 ```javascript
 /**
@@ -256,7 +217,6 @@ class HandlerRegistry {
     this.handlerTypes = new Map();
     this.handlerMetadata = new Map();
   }
-
   /**
    * Register handler
    * @param {string} type - Handler type
@@ -272,7 +232,6 @@ class HandlerRegistry {
       registeredAt: new Date()
     });
   }
-
   /**
    * Get handler by type
    * @param {string} type - Handler type
@@ -281,7 +240,6 @@ class HandlerRegistry {
   getHandler(type) {
     return this.handlers.get(type) || null;
   }
-
   /**
    * Check if handler exists
    * @param {string} type - Handler type
@@ -290,7 +248,6 @@ class HandlerRegistry {
   hasHandler(type) {
     return this.handlers.has(type);
   }
-
   /**
    * Get handler metadata
    * @param {string} type - Handler type
@@ -299,7 +256,6 @@ class HandlerRegistry {
   getHandlerMetadata(type) {
     return this.handlerMetadata.get(type) || null;
   }
-
   /**
    * Get handler count
    * @returns {number} Number of registered handlers
@@ -307,7 +263,6 @@ class HandlerRegistry {
   getHandlerCount() {
     return this.handlers.size;
   }
-
   /**
    * Get handler types
    * @returns {Array<string>} Handler types
@@ -315,14 +270,12 @@ class HandlerRegistry {
   getHandlerTypes() {
     return Array.from(this.handlers.keys());
   }
-
   /**
    * List all handlers
    * @returns {Array<Object>} Handler information
    */
   listHandlers() {
     const handlers = [];
-    
     for (const [type, handler] of this.handlers) {
       handlers.push({
         type,
@@ -332,10 +285,8 @@ class HandlerRegistry {
         registeredAt: this.handlerMetadata.get(type)?.registeredAt
       });
     }
-    
     return handlers;
   }
-
   /**
    * Unregister handler
    * @param {string} type - Handler type
@@ -343,16 +294,13 @@ class HandlerRegistry {
    */
   unregisterHandler(type) {
     const wasRegistered = this.handlers.has(type);
-    
     if (wasRegistered) {
       this.handlers.delete(type);
       this.handlerTypes.delete(type);
       this.handlerMetadata.delete(type);
     }
-    
     return wasRegistered;
   }
-
   /**
    * Clear all handlers
    */
@@ -363,7 +311,6 @@ class HandlerRegistry {
   }
 }
 ```
-
 #### HandlerFactory Implementation
 ```javascript
 /**
@@ -374,16 +321,14 @@ class HandlerFactory {
     this.adapters = new Map();
     this.initializeAdapters();
   }
-
   /**
    * Initialize adapters
    */
   initializeAdapters() {
-    this.adapters.set('legacy', new LegacyHandlerAdapter());
+    this.adapters.set('', new HandlerAdapter());
     this.adapters.set('command', new CommandHandlerAdapter());
     this.adapters.set('service', new ServiceHandlerAdapter());
   }
-
   /**
    * Create handler for request
    * @param {Object} request - Handler request
@@ -393,42 +338,33 @@ class HandlerFactory {
   async createHandler(request, context) {
     // Determine handler type
     const handlerType = this.determineHandlerType(request);
-    
     // Get appropriate adapter
     const adapter = this.adapters.get(handlerType);
     if (!adapter) {
       throw new Error(`No adapter found for handler type: ${handlerType}`);
     }
-    
     // Create handler using adapter
     return await adapter.createHandler(request, context);
   }
-
   /**
    * Determine handler type from request
    * @param {Object} request - Handler request
    * @returns {string} Handler type
    */
   determineHandlerType(request) {
-    // Check for legacy handler patterns
     if (request.handlerClass || request.handlerPath) {
-      return 'legacy';
+      return '';
     }
-    
     // Check for command handler patterns
     if (request.command || request.commandType) {
       return 'command';
     }
-    
     // Check for service handler patterns
     if (request.service || request.serviceMethod) {
       return 'service';
     }
-    
-    // Default to legacy
-    return 'legacy';
+    return '';
   }
-
   /**
    * Register adapter
    * @param {string} type - Adapter type
@@ -437,7 +373,6 @@ class HandlerFactory {
   registerAdapter(type, adapter) {
     this.adapters.set(type, adapter);
   }
-
   /**
    * Get adapter
    * @param {string} type - Adapter type
@@ -446,7 +381,6 @@ class HandlerFactory {
   getAdapter(type) {
     return this.adapters.get(type) || null;
   }
-
   /**
    * List available adapters
    * @returns {Array<string>} Adapter types
@@ -456,49 +390,37 @@ class HandlerFactory {
   }
 }
 ```
-
 ## 6. Handler Adapters
-
-#### LegacyHandlerAdapter Implementation
+#### HandlerAdapter Implementation
 ```javascript
 /**
- * Legacy handler adapter for existing handlers
+ *  handler adapter for existing handlers
  */
-class LegacyHandlerAdapter {
   constructor() {
     this.handlerCache = new Map();
   }
-
   /**
-   * Create handler from legacy handler
+   * Create handler from  handler
    * @param {Object} request - Handler request
    * @param {HandlerContext} context - Handler context
    * @returns {Promise<IHandler>} Handler instance
    */
   async createHandler(request, context) {
     const handlerClass = request.handlerClass || this.determineHandlerClass(request);
-    
     if (!handlerClass) {
       throw new Error('Could not determine handler class');
     }
-    
     // Check cache first
     if (this.handlerCache.has(handlerClass)) {
       return this.handlerCache.get(handlerClass);
     }
-    
     // Create handler instance
     const handler = new handlerClass();
-    
     // Wrap with unified handler interface
-    const unifiedHandler = this.wrapLegacyHandler(handler, request);
-    
     // Cache handler
     this.handlerCache.set(handlerClass, unifiedHandler);
-    
     return unifiedHandler;
   }
-
   /**
    * Determine handler class from request
    * @param {Object} request - Handler request
@@ -513,17 +435,15 @@ class LegacyHandlerAdapter {
       'auto_test_fix': require('@/application/handlers/AutoTestFixHandler'),
       'auto_refactor': require('@/application/handlers/AutoRefactorCommand')
     };
-    
     return handlerMap[request.type] || null;
   }
-
   /**
-   * Wrap legacy handler with unified interface
-   * @param {Object} legacyHandler - Legacy handler instance
+   * Wrap  handler with unified interface
+   * @param {Object} Handler -  handler instance
    * @param {Object} request - Handler request
    * @returns {IHandler} Unified handler
    */
-  wrapLegacyHandler(legacyHandler, request) {
+  wrapHandler(Handler, request) {
     return {
       /**
        * Execute handler
@@ -532,51 +452,42 @@ class LegacyHandlerAdapter {
        */
       async execute(context) {
         try {
-          // Call legacy handler method
-          const result = await legacyHandler.handle(context.request, context.response);
-          
           return {
             success: true,
             data: result,
             metadata: {
-              legacyHandler: true,
+              Handler: true,
               handlerClass: legacyHandler.constructor.name
             }
           };
-          
         } catch (error) {
           return {
             success: false,
             error: error.message,
             metadata: {
-              legacyHandler: true,
+              Handler: true,
               handlerClass: legacyHandler.constructor.name
             }
           };
         }
       },
-
       /**
        * Get handler metadata
        * @returns {Object} Handler metadata
        */
       getMetadata() {
         return {
-          name: legacyHandler.constructor.name,
-          description: 'Legacy handler adapter',
-          type: 'legacy',
+          description: ' handler adapter',
+          type: '',
           version: '1.0.0',
-          originalHandler: legacyHandler.constructor.name
         };
       },
-
       /**
        * Validate handler
        * @param {HandlerContext} context - Handler context
        * @returns {Promise<ValidationResult>} Validation result
        */
       async validate(context) {
-        // Basic validation for legacy handlers
         return {
           isValid: true,
           errors: []
@@ -586,7 +497,6 @@ class LegacyHandlerAdapter {
   }
 }
 ```
-
 #### CommandHandlerAdapter Implementation
 ```javascript
 /**
@@ -596,7 +506,6 @@ class CommandHandlerAdapter {
   constructor() {
     this.commandBus = null; // Will be injected
   }
-
   /**
    * Create handler from command
    * @param {Object} request - Handler request
@@ -605,7 +514,6 @@ class CommandHandlerAdapter {
    */
   async createHandler(request, context) {
     const command = request.command || this.createCommand(request);
-    
     return {
       /**
        * Execute command handler
@@ -616,7 +524,6 @@ class CommandHandlerAdapter {
         try {
           // Execute command through command bus
           const result = await this.commandBus.execute(command);
-          
           return {
             success: true,
             data: result,
@@ -625,7 +532,6 @@ class CommandHandlerAdapter {
               commandType: command.constructor.name
             }
           };
-          
         } catch (error) {
           return {
             success: false,
@@ -637,7 +543,6 @@ class CommandHandlerAdapter {
           };
         }
       },
-
       /**
        * Get handler metadata
        * @returns {Object} Handler metadata
@@ -651,7 +556,6 @@ class CommandHandlerAdapter {
           commandType: command.constructor.name
         };
       },
-
       /**
        * Validate command handler
        * @param {HandlerContext} context - Handler context
@@ -664,7 +568,6 @@ class CommandHandlerAdapter {
       }
     };
   }
-
   /**
    * Create command from request
    * @param {Object} request - Handler request
@@ -673,16 +576,13 @@ class CommandHandlerAdapter {
   createCommand(request) {
     const commandType = request.commandType;
     const commandData = request.commandData || {};
-    
     // Create command instance
     const CommandClass = require(`@/application/commands/${commandType}`);
     return new CommandClass(commandData);
   }
 }
 ```
-
 ## 7. Migration Utilities
-
 #### Migration Utility Implementation
 ```javascript
 /**
@@ -693,7 +593,6 @@ class HandlerMigrationUtility {
     this.migrationRegistry = new Map();
     this.migrationHistory = new Map();
   }
-
   /**
    * Migrate existing handler to unified system
    * @param {string} handlerType - Handler type
@@ -703,33 +602,26 @@ class HandlerMigrationUtility {
   async migrateHandler(handlerType, handlerConfig) {
     const migrationId = this.generateMigrationId();
     const startTime = Date.now();
-    
     try {
       this.logger.info('HandlerMigrationUtility: Starting handler migration', {
         migrationId,
         handlerType,
         handlerConfig
       });
-
       // Create migration plan
       const migrationPlan = this.createMigrationPlan(handlerType, handlerConfig);
-      
       // Execute migration steps
       const results = [];
       for (const step of migrationPlan.steps) {
         const stepResult = await this.executeMigrationStep(step);
         results.push(stepResult);
-        
         if (!stepResult.success) {
           throw new Error(`Migration step failed: ${stepResult.error}`);
         }
       }
-      
       // Register migrated handler
       const migratedHandler = await this.registerMigratedHandler(handlerType, handlerConfig);
-      
       const duration = Date.now() - startTime;
-      
       const result = {
         success: true,
         migrationId,
@@ -738,22 +630,17 @@ class HandlerMigrationUtility {
         results,
         migratedHandler: migratedHandler.getMetadata()
       };
-      
       // Record migration history
       this.migrationHistory.set(migrationId, result);
-      
       return result;
-      
     } catch (error) {
       const duration = Date.now() - startTime;
-      
       this.logger.error('HandlerMigrationUtility: Handler migration failed', {
         migrationId,
         handlerType,
         error: error.message,
         duration
       });
-      
       return {
         success: false,
         migrationId,
@@ -763,7 +650,6 @@ class HandlerMigrationUtility {
       };
     }
   }
-
   /**
    * Create migration plan
    * @param {string} handlerType - Handler type
@@ -793,14 +679,12 @@ class HandlerMigrationUtility {
         execute: () => this.registerMigratedHandler(handlerType, handlerConfig)
       }
     ];
-    
     return {
       handlerType,
       steps,
       estimatedDuration: steps.length * 5000 // 5 seconds per step
     };
   }
-
   /**
    * Execute migration step
    * @param {Object} step - Migration step
@@ -808,10 +692,8 @@ class HandlerMigrationUtility {
    */
   async executeMigrationStep(step) {
     const startTime = Date.now();
-    
     try {
       const result = await step.execute();
-      
       return {
         success: true,
         stepName: step.name,
@@ -819,7 +701,6 @@ class HandlerMigrationUtility {
         result,
         duration: Date.now() - startTime
       };
-      
     } catch (error) {
       return {
         success: false,
@@ -830,7 +711,6 @@ class HandlerMigrationUtility {
       };
     }
   }
-
   /**
    * Generate migration ID
    * @returns {string} Migration ID
@@ -838,7 +718,6 @@ class HandlerMigrationUtility {
   generateMigrationId() {
     return `migration_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
   }
-
   /**
    * Get migration history
    * @returns {Array<Object>} Migration history
@@ -846,7 +725,6 @@ class HandlerMigrationUtility {
   getMigrationHistory() {
     return Array.from(this.migrationHistory.values());
   }
-
   /**
    * Get migration statistics
    * @returns {Object} Migration statistics
@@ -856,7 +734,6 @@ class HandlerMigrationUtility {
     const successful = history.filter(m => m.success).length;
     const failed = history.filter(m => !m.success).length;
     const total = history.length;
-    
     return {
       total,
       successful,
@@ -868,7 +745,6 @@ class HandlerMigrationUtility {
   }
 }
 ```
-
 ## 8. Code Standards & Patterns
 - **Coding Style**: ESLint with existing project rules, Prettier formatting
 - **Naming Conventions**: camelCase for variables/functions, PascalCase for classes, kebab-case for files
@@ -876,23 +752,18 @@ class HandlerMigrationUtility {
 - **Logging**: Winston logger with structured logging, different levels for operations
 - **Testing**: Jest framework, 95% coverage requirement
 - **Documentation**: JSDoc for all public methods, README updates
-
 ## 9. Testing Strategy
-
 #### Unit Tests: 15 test files (1 per implementation file)
 - **Core Handlers**: 5 test files for unified handler system
 - **Adapters**: 3 test files for handler adapters
 - **Registry & Factory**: 3 test files for registry and factory
 - **Migration**: 2 test files for migration utilities
 - **Integration**: 2 test files for integration scenarios
-
 #### Test Coverage Requirements:
 - **Line Coverage**: 95% minimum
 - **Branch Coverage**: 90% minimum
 - **Function Coverage**: 100% minimum
-
 ## 10. Success Criteria
-
 #### Technical Metrics:
 - [ ] Unified handler system fully functional
 - [ ] Handler adapters working correctly
@@ -900,29 +771,22 @@ class HandlerMigrationUtility {
 - [ ] Handler registry and factory working
 - [ ] 95% test coverage achieved
 - [ ] Zero breaking changes to existing APIs
-
 #### Migration Metrics:
 - [ ] All existing handlers successfully migrated
 - [ ] Handler performance improved
 - [ ] Code duplication reduced by 40%
 - [ ] All existing functionality preserved
-
 ## 11. Risk Assessment
-
 #### High Risk:
 - [ ] Handler migration breaking changes - Mitigation: Adapter pattern and backward compatibility
 - [ ] Performance impact of unified system - Mitigation: Performance testing and optimization
-
 #### Medium Risk:
 - [ ] Adapter complexity - Mitigation: Comprehensive testing and documentation
 - [ ] Migration conflicts - Mitigation: Clear migration procedures and rollback
-
 #### Low Risk:
 - [ ] API endpoint design - Mitigation: Early API review
 - [ ] Documentation completeness - Mitigation: Automated documentation generation
-
 ## 12. AI Auto-Implementation Instructions
-
 #### Task Database Fields:
 - **source_type**: 'markdown_doc'
 - **source_path**: 'docs/09_roadmap/features/unified-workflow-performance-3b-unified-handlers.md'
@@ -931,7 +795,6 @@ class HandlerMigrationUtility {
 - **max_attempts**: 3
 - **git_branch_required**: true
 - **new_chat_required**: true
-
 #### AI Execution Context:
 ```json
 {
@@ -943,7 +806,6 @@ class HandlerMigrationUtility {
   "timeout_seconds": 1800
 }
 ```
-
 #### Success Indicators:
 - [ ] All 15 new files created with proper JSDoc
 - [ ] All 7 existing files modified correctly
@@ -955,20 +817,15 @@ class HandlerMigrationUtility {
 - [ ] No build errors
 - [ ] Code follows standards
 - [ ] Documentation updated
-
 ## 13. References & Resources
 - **Technical Documentation**: Handler patterns, Adapter patterns, Migration strategies
 - **API References**: Existing PIDEA handler patterns and conventions
 - **Design Patterns**: Adapter pattern, Factory pattern, Registry pattern
 - **Best Practices**: Handler design patterns, Migration best practices
 - **Similar Implementations**: Existing handler patterns in PIDEA
-
 ---
-
 ## Database Task Creation Instructions
-
 This subtask will be parsed into a database task with the following mapping:
-
 ```sql
 INSERT INTO tasks (
   id, project_id, title, description, type, category, priority, status,

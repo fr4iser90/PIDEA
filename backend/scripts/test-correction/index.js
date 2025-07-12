@@ -1,25 +1,21 @@
 #!/usr/bin/env node
-
 require('module-alias/register');
-
 const path = require('path');
 const { program } = require('commander');
 const AutoFixTests = require('./auto-fix-tests');
 const CoverageImprover = require('./coverage-improver');
 const AutoRefactorCommand = require('./auto-refactor-command');
-
 // Set up command line interface
 program
   .name('test-correction')
   .description('Automated test correction and coverage improvement system')
   .version('1.0.0');
-
 // Auto-fix tests command
 program
   .command('auto-fix')
-  .description('Automatically fix failing, legacy, and complex tests')
+  .description('Automatically fix failing, , and complex tests')
   .option('-w, --watch', 'Watch mode - continuously monitor and fix tests')
-  .option('-l, --legacy', 'Focus on legacy tests only')
+  .option('-l, --', 'Focus on  tests only')
   .option('-c, --complex', 'Focus on complex tests only')
   .option('-d, --dry-run', 'Dry run mode - show what would be fixed without making changes')
   .option('-m, --max-concurrent <number>', 'Maximum concurrent fixes', '5')
@@ -28,17 +24,15 @@ program
   .action(async (options) => {
     const autoFix = new AutoFixTests({
       watch: options.watch,
-      legacy: options.legacy,
+      : options.,
       complex: options.complex,
       dryRun: options.dryRun,
       maxConcurrent: parseInt(options.maxConcurrent),
       retryAttempts: parseInt(options.retryAttempts),
       coverageTarget: parseInt(options.coverageTarget)
     });
-    
     await autoFix.run();
   });
-
 // Coverage improvement command
 program
   .command('coverage-improve')
@@ -54,16 +48,14 @@ program
       dryRun: options.dryRun,
       focusAreas: options.focus ? options.focus.split(',') : undefined
     });
-    
     await coverageImprover.run();
   });
-
 // Refactor command
 program
   .command('refactor')
   .description('Refactor tests for better maintainability and performance')
   .option('-c, --complex', 'Focus on complex tests only')
-  .option('-l, --legacy', 'Focus on legacy tests only')
+  .option('-l, --', 'Focus on  tests only')
   .option('-s, --slow', 'Focus on slow tests only')
   .option('-a, --all', 'Refactor all test types')
   .option('-d, --dry-run', 'Dry run mode - show what would be refactored')
@@ -71,16 +63,14 @@ program
   .action(async (options) => {
     const refactorCommand = new AutoRefactorCommand({
       complex: options.complex,
-      legacy: options.legacy,
+      : options.,
       slow: options.slow,
       all: options.all,
       dryRun: options.dryRun,
       maxConcurrent: parseInt(options.maxConcurrent)
     });
-    
     await refactorCommand.execute();
   });
-
 // Status command
 program
   .command('status')
@@ -89,7 +79,6 @@ program
     const autoFix = new AutoFixTests();
     await autoFix.showStatus();
   });
-
 // Report command
 program
   .command('report')
@@ -103,10 +92,8 @@ program
       outputFile: options.output
     });
   });
-
 // Parse command line arguments
 program.parse(process.argv);
-
 // If no command is provided, show help
 if (!process.argv.slice(2).length) {
   program.outputHelp();

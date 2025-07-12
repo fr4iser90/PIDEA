@@ -87,6 +87,44 @@ class HandlerContext {
   }
 
   /**
+   * Set migration metadata
+   * @param {Object} metadata - Migration metadata
+   */
+  setMigrationMetadata(metadata) {
+    this.migrationMetadata = {
+      ...this.migrationMetadata,
+      ...metadata,
+      timestamp: new Date()
+    };
+  }
+
+  /**
+   * Get migration metadata
+   * @returns {Object} Migration metadata
+   */
+  getMigrationMetadata() {
+    return this.migrationMetadata || {};
+  }
+
+  /**
+   * Check if handler is migrated
+   * @returns {boolean} True if handler is migrated
+   */
+  isMigrated() {
+    const metadata = this.getMigrationMetadata();
+    return metadata.migrationStatus === 'completed' || metadata.migrationStatus === 'validated';
+  }
+
+  /**
+   * Get automation level
+   * @returns {string} Automation level
+   */
+  getAutomationLevel() {
+    const metadata = this.getMigrationMetadata();
+    return metadata.automationLevel || 'basic';
+  }
+
+  /**
    * Get metadata from context
    * @param {string} key - Metadata key
    * @returns {*} Metadata value

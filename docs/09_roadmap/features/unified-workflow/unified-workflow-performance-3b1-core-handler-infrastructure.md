@@ -1,12 +1,10 @@
 # Unified Workflow Performance 3B.1: Core Handler Infrastructure
-
 ## 1. Project Overview
 - **Feature/Component Name**: Core Handler Infrastructure
 - **Priority**: High
 - **Estimated Time**: 20 hours (2.5 days)
 - **Dependencies**: Foundation 1A (Core Interfaces & Context), Foundation 1B (Builder Pattern & Common Steps)
 - **Related Issues**: Fragmented handlers, no unified handler system, inconsistent patterns
-
 ## 2. Technical Requirements
 - **Tech Stack**: Node.js, JavaScript ES6+, Domain-Driven Design, Handler patterns
 - **Architecture Pattern**: DDD with unified handler system foundation
@@ -14,9 +12,7 @@
 - **API Changes**: None (foundation only)
 - **Frontend Changes**: None (backend foundation)
 - **Backend Changes**: Core handler infrastructure
-
 ## 3. Implementation Files
-
 #### Files to Create:
 - [ ] `backend/domain/workflows/handlers/UnifiedWorkflowHandler.js` - Basic unified workflow handler
 - [ ] `backend/domain/workflows/handlers/HandlerRegistry.js` - Handler registry and management
@@ -27,34 +23,27 @@
 - [ ] `backend/domain/workflows/handlers/interfaces/IHandler.js` - Handler interface
 - [ ] `backend/domain/workflows/handlers/interfaces/IHandlerAdapter.js` - Handler adapter interface
 - [ ] `backend/domain/workflows/handlers/index.js` - Module exports
-
 #### Files to Modify:
 - [ ] `backend/domain/services/WorkflowOrchestrationService.js` - Add unified handler integration
 - [ ] `backend/domain/services/TaskService.js` - Add unified handler support
-
 ## 4. Implementation Phases
-
 #### Phase 1: Core Infrastructure (8 hours)
 - [ ] Create `backend/domain/workflows/handlers/` directory structure
 - [ ] Implement basic `UnifiedWorkflowHandler.js` with core functionality
 - [ ] Create `HandlerRegistry.js` with handler management
 - [ ] Implement `HandlerFactory.js` with handler creation
 - [ ] Add `HandlerContext.js` and `HandlerResult.js`
-
 #### Phase 2: Interfaces & Validation (6 hours)
 - [ ] Create `IHandler.js` interface for handlers
 - [ ] Implement `IHandlerAdapter.js` interface for adapters
 - [ ] Add `HandlerValidator.js` with basic validation
 - [ ] Create handler metadata and configuration
-
 #### Phase 3: Integration & Testing (6 hours)
 - [ ] Integrate unified handler system with `WorkflowOrchestrationService`
 - [ ] Update `TaskService` to use unified handlers
 - [ ] Add basic unit tests
 - [ ] Create module exports
-
 ## 5. Core Handler Infrastructure Design
-
 #### UnifiedWorkflowHandler Implementation
 ```javascript
 /**
@@ -67,7 +56,6 @@ class UnifiedWorkflowHandler {
     this.handlerValidator = dependencies.handlerValidator || new HandlerValidator();
     this.logger = dependencies.logger || console;
   }
-
   /**
    * Handle workflow execution
    * @param {Object} request - Handler request
@@ -77,44 +65,34 @@ class UnifiedWorkflowHandler {
   async handle(request, response) {
     const startTime = Date.now();
     const handlerId = this.generateHandlerId();
-    
     try {
       this.logger.info('UnifiedWorkflowHandler: Starting workflow handling', {
         handlerId,
         requestType: request.type,
         taskId: request.taskId
       });
-
       // Create handler context
       const context = new HandlerContext(request, response, handlerId);
-      
       // Validate request
       const validationResult = await this.handlerValidator.validateRequest(request);
       if (!validationResult.isValid) {
         throw new Error(`Request validation failed: ${validationResult.errors.join(', ')}`);
       }
-
       // Get appropriate handler
       const handler = await this.getHandler(request, context);
-      
       // Execute handler
       const result = await this.executeHandler(handler, context);
-      
       return result;
-
     } catch (error) {
       const duration = Date.now() - startTime;
-      
       this.logger.error('UnifiedWorkflowHandler: Handler execution failed', {
         handlerId,
         error: error.message,
         duration
       });
-
       throw new Error(`Handler execution failed: ${error.message}`);
     }
   }
-
   /**
    * Get appropriate handler for request
    * @param {Object} request - Handler request
@@ -127,16 +105,12 @@ class UnifiedWorkflowHandler {
     if (registeredHandler) {
       return registeredHandler;
     }
-
     // Create handler using factory
     const handler = await this.handlerFactory.createHandler(request, context);
-    
     // Register handler for future use
     this.handlerRegistry.registerHandler(request.type, handler);
-    
     return handler;
   }
-
   /**
    * Execute handler
    * @param {IHandler} handler - Handler to execute
@@ -145,19 +119,15 @@ class UnifiedWorkflowHandler {
    */
   async executeHandler(handler, context) {
     const startTime = Date.now();
-    
     try {
       // Validate handler
       const validationResult = await this.handlerValidator.validateHandler(handler, context);
       if (!validationResult.isValid) {
         throw new Error(`Handler validation failed: ${validationResult.errors.join(', ')}`);
       }
-
       // Execute handler
       const result = await handler.execute(context);
-      
       const duration = Date.now() - startTime;
-      
       return new HandlerResult({
         success: true,
         handlerId: context.handlerId,
@@ -166,10 +136,8 @@ class UnifiedWorkflowHandler {
         duration,
         timestamp: new Date()
       });
-
     } catch (error) {
       const duration = Date.now() - startTime;
-      
       return new HandlerResult({
         success: false,
         handlerId: context.handlerId,
@@ -180,7 +148,6 @@ class UnifiedWorkflowHandler {
       });
     }
   }
-
   /**
    * Generate handler ID
    * @returns {string} Handler ID
@@ -188,7 +155,6 @@ class UnifiedWorkflowHandler {
   generateHandlerId() {
     return `handler_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
   }
-
   /**
    * Get handler statistics
    * @returns {Promise<Object>} Handler statistics
@@ -201,7 +167,6 @@ class UnifiedWorkflowHandler {
   }
 }
 ```
-
 #### HandlerRegistry Implementation
 ```javascript
 /**
@@ -213,7 +178,6 @@ class HandlerRegistry {
     this.handlerTypes = new Map();
     this.handlerMetadata = new Map();
   }
-
   /**
    * Register handler
    * @param {string} type - Handler type
@@ -229,7 +193,6 @@ class HandlerRegistry {
       registeredAt: new Date()
     });
   }
-
   /**
    * Get handler by type
    * @param {string} type - Handler type
@@ -238,7 +201,6 @@ class HandlerRegistry {
   getHandler(type) {
     return this.handlers.get(type) || null;
   }
-
   /**
    * Check if handler exists
    * @param {string} type - Handler type
@@ -247,7 +209,6 @@ class HandlerRegistry {
   hasHandler(type) {
     return this.handlers.has(type);
   }
-
   /**
    * Get handler metadata
    * @param {string} type - Handler type
@@ -256,7 +217,6 @@ class HandlerRegistry {
   getHandlerMetadata(type) {
     return this.handlerMetadata.get(type) || null;
   }
-
   /**
    * Get handler count
    * @returns {number} Number of registered handlers
@@ -264,7 +224,6 @@ class HandlerRegistry {
   getHandlerCount() {
     return this.handlers.size;
   }
-
   /**
    * Get handler types
    * @returns {Array<string>} Handler types
@@ -272,14 +231,12 @@ class HandlerRegistry {
   getHandlerTypes() {
     return Array.from(this.handlers.keys());
   }
-
   /**
    * List all handlers
    * @returns {Array<Object>} Handler information
    */
   listHandlers() {
     const handlers = [];
-    
     for (const [type, handler] of this.handlers) {
       handlers.push({
         type,
@@ -289,10 +246,8 @@ class HandlerRegistry {
         registeredAt: this.handlerMetadata.get(type)?.registeredAt
       });
     }
-    
     return handlers;
   }
-
   /**
    * Unregister handler
    * @param {string} type - Handler type
@@ -300,16 +255,13 @@ class HandlerRegistry {
    */
   unregisterHandler(type) {
     const wasRegistered = this.handlers.has(type);
-    
     if (wasRegistered) {
       this.handlers.delete(type);
       this.handlerTypes.delete(type);
       this.handlerMetadata.delete(type);
     }
-    
     return wasRegistered;
   }
-
   /**
    * Clear all handlers
    */
@@ -320,7 +272,6 @@ class HandlerRegistry {
   }
 }
 ```
-
 #### HandlerFactory Implementation
 ```javascript
 /**
@@ -331,7 +282,6 @@ class HandlerFactory {
     this.adapters = new Map();
     this.handlerCache = new Map();
   }
-
   /**
    * Create handler for request
    * @param {Object} request - Handler request
@@ -341,53 +291,41 @@ class HandlerFactory {
   async createHandler(request, context) {
     // Determine handler type
     const handlerType = this.determineHandlerType(request);
-    
     // Check cache first
     const cacheKey = this.generateCacheKey(request, handlerType);
     if (this.handlerCache.has(cacheKey)) {
       return this.handlerCache.get(cacheKey);
     }
-    
     // Get appropriate adapter
     const adapter = this.adapters.get(handlerType);
     if (!adapter) {
       throw new Error(`No adapter found for handler type: ${handlerType}`);
     }
-    
     // Create handler using adapter
     const handler = await adapter.createHandler(request, context);
-    
     // Cache handler
     this.handlerCache.set(cacheKey, handler);
-    
     return handler;
   }
-
   /**
    * Determine handler type from request
    * @param {Object} request - Handler request
    * @returns {string} Handler type
    */
   determineHandlerType(request) {
-    // Check for legacy handler patterns
     if (request.handlerClass || request.handlerPath) {
-      return 'legacy';
+      return '';
     }
-    
     // Check for command handler patterns
     if (request.command || request.commandType) {
       return 'command';
     }
-    
     // Check for service handler patterns
     if (request.service || request.serviceMethod) {
       return 'service';
     }
-    
-    // Default to legacy
-    return 'legacy';
+    return '';
   }
-
   /**
    * Register adapter
    * @param {string} type - Adapter type
@@ -396,7 +334,6 @@ class HandlerFactory {
   registerAdapter(type, adapter) {
     this.adapters.set(type, adapter);
   }
-
   /**
    * Get adapter
    * @param {string} type - Adapter type
@@ -405,7 +342,6 @@ class HandlerFactory {
   getAdapter(type) {
     return this.adapters.get(type) || null;
   }
-
   /**
    * List available adapters
    * @returns {Array<string>} Adapter types
@@ -413,7 +349,6 @@ class HandlerFactory {
   listAdapters() {
     return Array.from(this.adapters.keys());
   }
-
   /**
    * Generate cache key
    * @param {Object} request - Handler request
@@ -424,7 +359,6 @@ class HandlerFactory {
     const requestStr = JSON.stringify(request);
     return `${handlerType}_${require('crypto').createHash('md5').update(requestStr).digest('hex')}`;
   }
-
   /**
    * Clear cache
    */
@@ -433,7 +367,6 @@ class HandlerFactory {
   }
 }
 ```
-
 #### HandlerContext Implementation
 ```javascript
 /**
@@ -448,7 +381,6 @@ class HandlerContext {
     this.metadata = new Map();
     this.createdAt = new Date();
   }
-
   /**
    * Set data
    * @param {string} key - Data key
@@ -457,7 +389,6 @@ class HandlerContext {
   set(key, value) {
     this.data.set(key, value);
   }
-
   /**
    * Get data
    * @param {string} key - Data key
@@ -466,7 +397,6 @@ class HandlerContext {
   get(key) {
     return this.data.get(key);
   }
-
   /**
    * Check if data exists
    * @param {string} key - Data key
@@ -475,7 +405,6 @@ class HandlerContext {
   has(key) {
     return this.data.has(key);
   }
-
   /**
    * Delete data
    * @param {string} key - Data key
@@ -484,7 +413,6 @@ class HandlerContext {
   delete(key) {
     return this.data.delete(key);
   }
-
   /**
    * Get all data
    * @returns {Object} All data
@@ -496,7 +424,6 @@ class HandlerContext {
     }
     return result;
   }
-
   /**
    * Set metadata
    * @param {string} key - Metadata key
@@ -505,7 +432,6 @@ class HandlerContext {
   setMetadata(key, value) {
     this.metadata.set(key, value);
   }
-
   /**
    * Get metadata
    * @param {string} key - Metadata key
@@ -514,7 +440,6 @@ class HandlerContext {
   getMetadata(key) {
     return this.metadata.get(key);
   }
-
   /**
    * Get all metadata
    * @returns {Object} All metadata
@@ -526,7 +451,6 @@ class HandlerContext {
     }
     return result;
   }
-
   /**
    * Get context age
    * @returns {number} Age in milliseconds
@@ -536,7 +460,6 @@ class HandlerContext {
   }
 }
 ```
-
 #### HandlerResult Implementation
 ```javascript
 /**
@@ -553,7 +476,6 @@ class HandlerResult {
     this.timestamp = data.timestamp || new Date();
     this.metadata = data.metadata || {};
   }
-
   /**
    * Check if result is successful
    * @returns {boolean} True if successful
@@ -561,7 +483,6 @@ class HandlerResult {
   isSuccess() {
     return this.success === true;
   }
-
   /**
    * Check if result has error
    * @returns {boolean} True if has error
@@ -569,7 +490,6 @@ class HandlerResult {
   hasError() {
     return this.error !== null && this.error !== undefined;
   }
-
   /**
    * Get error message
    * @returns {string|null} Error message
@@ -577,7 +497,6 @@ class HandlerResult {
   getErrorMessage() {
     return this.error;
   }
-
   /**
    * Get execution duration
    * @returns {number} Duration in milliseconds
@@ -585,7 +504,6 @@ class HandlerResult {
   getDuration() {
     return this.duration;
   }
-
   /**
    * Get result data
    * @returns {*} Result data
@@ -593,7 +511,6 @@ class HandlerResult {
   getResult() {
     return this.result;
   }
-
   /**
    * Get metadata
    * @returns {Object} Metadata
@@ -601,7 +518,6 @@ class HandlerResult {
   getMetadata() {
     return this.metadata;
   }
-
   /**
    * Set metadata
    * @param {string} key - Metadata key
@@ -610,7 +526,6 @@ class HandlerResult {
   setMetadata(key, value) {
     this.metadata[key] = value;
   }
-
   /**
    * Convert to plain object
    * @returns {Object} Plain object
@@ -627,7 +542,6 @@ class HandlerResult {
       metadata: this.metadata
     };
   }
-
   /**
    * Create success result
    * @param {Object} data - Result data
@@ -639,7 +553,6 @@ class HandlerResult {
       ...data
     });
   }
-
   /**
    * Create error result
    * @param {string} error - Error message
@@ -655,9 +568,7 @@ class HandlerResult {
   }
 }
 ```
-
 ## 6. Interfaces
-
 #### IHandler Interface
 ```javascript
 /**
@@ -672,7 +583,6 @@ class IHandler {
   async execute(context) {
     throw new Error('execute method must be implemented');
   }
-
   /**
    * Get handler metadata
    * @returns {Object} Handler metadata
@@ -680,7 +590,6 @@ class IHandler {
   getMetadata() {
     throw new Error('getMetadata method must be implemented');
   }
-
   /**
    * Validate handler
    * @param {HandlerContext} context - Handler context
@@ -691,7 +600,6 @@ class IHandler {
   }
 }
 ```
-
 #### IHandlerAdapter Interface
 ```javascript
 /**
@@ -707,7 +615,6 @@ class IHandlerAdapter {
   async createHandler(request, context) {
     throw new Error('createHandler method must be implemented');
   }
-
   /**
    * Check if adapter can handle request
    * @param {Object} request - Handler request
@@ -718,7 +625,6 @@ class IHandlerAdapter {
   }
 }
 ```
-
 ## 7. Code Standards & Patterns
 - **Coding Style**: ESLint with existing project rules, Prettier formatting
 - **Naming Conventions**: camelCase for variables/functions, PascalCase for classes, kebab-case for files
@@ -726,47 +632,36 @@ class IHandlerAdapter {
 - **Logging**: Winston logger with structured logging, different levels for operations
 - **Testing**: Jest framework, 90% coverage requirement
 - **Documentation**: JSDoc for all public methods, README updates
-
 ## 8. Testing Strategy
-
 #### Unit Tests: 9 test files (1 per implementation file)
 - **Core Handlers**: 3 test files for unified handler system
 - **Registry & Factory**: 2 test files for registry and factory
 - **Context & Results**: 2 test files for context and result classes
 - **Interfaces**: 2 test files for interfaces
-
 #### Test Coverage Requirements:
 - **Line Coverage**: 90% minimum
 - **Branch Coverage**: 85% minimum
 - **Function Coverage**: 100% minimum
-
 ## 9. Success Criteria
-
 #### Technical Metrics:
 - [ ] Core handler infrastructure fully functional
 - [ ] Handler registry and factory working
 - [ ] Handler context and result classes implemented
 - [ ] 90% test coverage achieved
 - [ ] Zero breaking changes to existing APIs
-
 #### Integration Metrics:
 - [ ] Integration with WorkflowOrchestrationService working
 - [ ] TaskService can use unified handlers
 - [ ] Basic handler system functional
 - [ ] All existing functionality preserved
-
 ## 10. Risk Assessment
-
 #### Medium Risk:
 - [ ] Integration complexity - Mitigation: Gradual integration with existing services
 - [ ] Handler compatibility - Mitigation: Adapter pattern for backward compatibility
-
 #### Low Risk:
 - [ ] API design - Mitigation: Follow existing patterns
 - [ ] Documentation completeness - Mitigation: Comprehensive JSDoc
-
 ## 11. AI Auto-Implementation Instructions
-
 #### Task Database Fields:
 - **source_type**: 'markdown_doc'
 - **source_path**: 'docs/09_roadmap/features/unified-workflow-performance-3b1-core-handler-infrastructure.md'
@@ -775,7 +670,6 @@ class IHandlerAdapter {
 - **max_attempts**: 3
 - **git_branch_required**: true
 - **new_chat_required**: true
-
 #### AI Execution Context:
 ```json
 {
@@ -787,7 +681,6 @@ class IHandlerAdapter {
   "timeout_seconds": 1800
 }
 ```
-
 #### Success Indicators:
 - [ ] All 9 new files created with proper JSDoc
 - [ ] All 2 existing files modified correctly
@@ -798,20 +691,15 @@ class IHandlerAdapter {
 - [ ] No build errors
 - [ ] Code follows standards
 - [ ] Documentation updated
-
 ## 12. References & Resources
 - **Technical Documentation**: Handler patterns, Registry patterns, Factory patterns
 - **API References**: Existing PIDEA handler patterns and conventions
 - **Design Patterns**: Registry pattern, Factory pattern, Strategy pattern
 - **Best Practices**: Handler design patterns, Context management
 - **Similar Implementations**: Existing handler patterns in PIDEA
-
 ---
-
 ## Database Task Creation Instructions
-
 This subtask will be parsed into a database task with the following mapping:
-
 ```sql
 INSERT INTO tasks (
   id, project_id, title, description, type, category, priority, status,

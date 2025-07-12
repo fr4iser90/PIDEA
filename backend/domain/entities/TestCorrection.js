@@ -1,5 +1,4 @@
 const { v4: uuidv4 } = require('uuid');
-
 class TestCorrection {
   constructor({
     id = uuidv4(),
@@ -39,10 +38,8 @@ class TestCorrection {
     this.completedAt = completedAt;
     this.metadata = metadata;
     this.tags = tags;
-
     this.validate();
   }
-
   validate() {
     if (!this.testFile) {
       throw new Error('Test file is required');
@@ -57,47 +54,37 @@ class TestCorrection {
       throw new Error('Fix strategy is required');
     }
   }
-
   // Status management
   isPending() {
     return this.status === 'pending';
   }
-
   isInProgress() {
     return this.status === 'in_progress';
   }
-
   isCompleted() {
     return this.status === 'completed';
   }
-
   isFailed() {
     return this.status === 'failed';
   }
-
   isSkipped() {
     return this.status === 'skipped';
   }
-
   // Priority management
   isHighPriority() {
     return this.priority === 'high';
   }
-
   isCriticalPriority() {
     return this.priority === 'critical';
   }
-
   // Attempt management
   canRetry() {
     return this.attempts < this.maxAttempts;
   }
-
   incrementAttempts() {
     this.attempts++;
     this.updatedAt = new Date();
   }
-
   // Status transitions
   start() {
     if (!this.isPending()) {
@@ -106,7 +93,6 @@ class TestCorrection {
     this.status = 'in_progress';
     this.updatedAt = new Date();
   }
-
   complete(fixApplied) {
     if (!this.isInProgress()) {
       throw new Error(`Cannot complete test correction with status: ${this.status}`);
@@ -116,49 +102,40 @@ class TestCorrection {
     this.completedAt = new Date();
     this.updatedAt = new Date();
   }
-
   fail(error) {
     this.status = 'failed';
     this.metadata.lastError = error;
     this.updatedAt = new Date();
   }
-
   skip(reason) {
     this.status = 'skipped';
     this.metadata.skipReason = reason;
     this.updatedAt = new Date();
   }
-
   // Time tracking
   setActualTime(timeInMs) {
     this.actualTime = timeInMs;
     this.updatedAt = new Date();
   }
-
   getTimeDifference() {
     return this.actualTime - this.estimatedTime;
   }
-
   // Complexity assessment
   setComplexity(complexity) {
     this.complexity = Math.max(0, Math.min(100, complexity));
     this.updatedAt = new Date();
   }
-
   isComplex() {
     return this.complexity > 70;
   }
-
   // Metadata management
   addMetadata(key, value) {
     this.metadata[key] = value;
     this.updatedAt = new Date();
   }
-
   getMetadata(key) {
     return this.metadata[key];
   }
-
   // Tag management
   addTag(tag) {
     if (!this.tags.includes(tag)) {
@@ -166,16 +143,13 @@ class TestCorrection {
       this.updatedAt = new Date();
     }
   }
-
   removeTag(tag) {
     this.tags = this.tags.filter(t => t !== tag);
     this.updatedAt = new Date();
   }
-
   hasTag(tag) {
     return this.tags.includes(tag);
   }
-
   // Serialization
   toJSON() {
     return {
@@ -199,11 +173,9 @@ class TestCorrection {
       tags: this.tags
     };
   }
-
   static fromJSON(data) {
     return new TestCorrection(data);
   }
-
   // Factory methods
   static createForFailingTest(testFile, testName, error, fixStrategy) {
     return new TestCorrection({
@@ -216,20 +188,18 @@ class TestCorrection {
       estimatedTime: TestCorrection.estimateTime(fixStrategy)
     });
   }
-
-  static createForLegacyTest(testFile, testName) {
+  static createForTest(testFile, testName) {
     return new TestCorrection({
       testFile,
       testName,
-      originalError: 'Legacy test pattern detected',
+      originalError: ' test pattern detected',
       fixStrategy: 'migrate',
       priority: 'medium',
       complexity: 50,
       estimatedTime: 300000, // 5 minutes
-      tags: ['legacy']
+      tags: ['']
     });
   }
-
   static createForComplexTest(testFile, testName, complexity) {
     return new TestCorrection({
       testFile,
@@ -242,11 +212,9 @@ class TestCorrection {
       tags: ['complex']
     });
   }
-
   // Utility methods
   static assessComplexity(error, fixStrategy) {
     let complexity = 0;
-    
     // Error complexity
     if (error.includes('TypeError') || error.includes('ReferenceError')) {
       complexity += 20;
@@ -257,7 +225,6 @@ class TestCorrection {
     if (error.includes('expect(received)')) {
       complexity += 15;
     }
-    
     // Strategy complexity
     switch (fixStrategy) {
       case 'simple_fix':
@@ -276,10 +243,8 @@ class TestCorrection {
         complexity += 70;
         break;
     }
-    
     return Math.min(100, complexity);
   }
-
   static estimateTime(fixStrategy) {
     const timeEstimates = {
       simple_fix: 60000,      // 1 minute
@@ -288,9 +253,7 @@ class TestCorrection {
       migrate: 600000,        // 10 minutes
       rewrite: 900000         // 15 minutes
     };
-    
     return timeEstimates[fixStrategy] || 120000;
   }
 }
-
 module.exports = TestCorrection; 

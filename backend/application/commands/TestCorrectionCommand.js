@@ -1,6 +1,5 @@
 const TaskPriority = require('@/domain/value-objects/TaskPriority');
 const TaskType = require('@/domain/value-objects/TaskType');
-
 /**
  * TestCorrectionCommand - Command for triggering automated test correction and coverage improvement
  */
@@ -14,7 +13,7 @@ class TestCorrectionCommand {
             this.correctionType = data.correctionType || 'auto-fix';
             this.options = {
                 watch: false,
-                legacy: false,
+                flaky: false,
                 complex: false,
                 dryRun: false,
                 maxConcurrent: 5,
@@ -37,13 +36,12 @@ class TestCorrectionCommand {
             if (!projectId) {
                 throw new Error('Project ID is required for test correction command');
             }
-            
             this.commandId = `test_correction_${projectId}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
             this.projectId = projectId;
             this.correctionType = correctionType;
             this.options = {
                 watch: false,
-                legacy: false,
+                flaky: false,
                 complex: false,
                 dryRun: false,
                 maxConcurrent: 5,
@@ -62,31 +60,24 @@ class TestCorrectionCommand {
             this.timestamp = new Date();
         }
     }
-
     static create(projectId, correctionType = 'auto-fix', options = {}) {
         return new TestCorrectionCommand(projectId, correctionType, options);
     }
-
     static createAutoFix(projectId, options = {}) {
         return new TestCorrectionCommand(projectId, 'auto-fix', options);
     }
-
     static createCoverageImprove(projectId, options = {}) {
         return new TestCorrectionCommand(projectId, 'coverage-improve', options);
     }
-
     static createRefactor(projectId, options = {}) {
         return new TestCorrectionCommand(projectId, 'refactor', options);
     }
-
     static createStatus(projectId, options = {}) {
         return new TestCorrectionCommand(projectId, 'status', options);
     }
-
     static createReport(projectId, options = {}) {
         return new TestCorrectionCommand(projectId, 'report', options);
     }
-
     toJSON() {
         return {
             commandId: this.commandId,
@@ -97,7 +88,6 @@ class TestCorrectionCommand {
             timestamp: this.timestamp
         };
     }
-
     getMetadata() {
         return {
             correctionType: this.correctionType,
@@ -105,7 +95,6 @@ class TestCorrectionCommand {
             requestedBy: this.requestedBy
         };
     }
-
     /**
      * Get the corresponding task type for this correction command
      */
@@ -125,22 +114,18 @@ class TestCorrectionCommand {
                 return TaskType.TEST_FIX;
         }
     }
-
     /**
      * Get the task priority based on correction type and options
      */
     getTaskPriority() {
-        if (this.options.watch || this.options.legacy) {
+        if (this.options.watch || this.options.flaky) {
             return TaskPriority.HIGH;
         }
-        
         if (this.options.complex || this.options.coverageTarget > 95) {
             return TaskPriority.MEDIUM;
         }
-        
         return TaskPriority.LOW;
     }
-
     /**
      * Get a human-readable title for the task
      */
@@ -152,48 +137,37 @@ class TestCorrectionCommand {
             'status': 'Test Correction Status',
             'report': 'Generate Test Report'
         };
-        
         const baseTitle = typeMap[this.correctionType] || 'Test Correction';
-        
-        if (this.options.legacy) {
-            return `${baseTitle} - Legacy Tests`;
+        if (this.options.flaky) {
+            return `${baseTitle} - Flaky Tests`;
         }
-        
         if (this.options.complex) {
             return `${baseTitle} - Complex Tests`;
         }
-        
         if (this.options.watch) {
             return `${baseTitle} - Watch Mode`;
         }
-        
         return baseTitle;
     }
-
     /**
      * Get a description for the task
      */
     getTaskDescription() {
         const descriptions = {
-            'auto-fix': 'Automatically fix failing, legacy, and complex tests to improve test reliability and coverage.',
+            'auto-fix': 'Automatically fix failing, flaky, and complex tests to improve test reliability and coverage.',
             'coverage-improve': 'Generate missing tests and improve existing test coverage to meet target coverage goals.',
             'refactor': 'Refactor tests for better maintainability, performance, and readability.',
             'status': 'Check current status of test correction tasks and progress.',
             'report': 'Generate detailed report of test correction activities and results.'
         };
-        
         let description = descriptions[this.correctionType] || 'Perform test correction and improvement tasks.';
-        
         if (this.options.dryRun) {
             description += ' (Dry run mode - no actual changes will be made)';
         }
-        
         if (this.options.coverageTarget) {
             description += ` Target coverage: ${this.options.coverageTarget}%`;
         }
-        
         return description;
     }
 }
-
 module.exports = TestCorrectionCommand; 

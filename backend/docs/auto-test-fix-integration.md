@@ -1,34 +1,26 @@
 # Auto Test Fix System Integration Guide
-
 ## Overview
-
 The Auto Test Fix System is a unified workflow that integrates with your existing `WorkflowOrchestrationService` and follows the same pattern as `auto-finish` and `auto-refactor`. It provides automated test correction and coverage improvement through AI-powered analysis and fixes.
-
 ## API Endpoints
-
 ### Base URL
 ```
 /api/projects/:projectId/auto/tests
 ```
-
 ### Available Endpoints
-
 #### 1. Analyze Project Tests
 ```http
 POST /api/projects/:projectId/auto/tests/analyze
 ```
-
 **Request Body:**
 ```json
 {
   "options": {
     "projectPath": "/path/to/project",
-    "includeLegacy": true,
+    "include": true,
     "includeComplex": true
   }
 }
 ```
-
 **Response:**
 ```json
 {
@@ -39,7 +31,7 @@ POST /api/projects/:projectId/auto/tests/analyze
       "count": 149,
       "tests": [...]
     },
-    "legacyTests": {
+    "Tests": {
       "count": 32,
       "tests": [...]
     },
@@ -57,12 +49,10 @@ POST /api/projects/:projectId/auto/tests/analyze
   }
 }
 ```
-
 #### 2. Execute Auto Test Fix Workflow
 ```http
 POST /api/projects/:projectId/auto/tests/fix
 ```
-
 **Request Body:**
 ```json
 {
@@ -78,7 +68,6 @@ POST /api/projects/:projectId/auto/tests/fix
   }
 }
 ```
-
 **Response:**
 ```json
 {
@@ -96,12 +85,10 @@ POST /api/projects/:projectId/auto/tests/fix
   "duration": 1800000
 }
 ```
-
 #### 3. Get Session Status
 ```http
 GET /api/projects/:projectId/auto/tests/status/:sessionId
 ```
-
 **Response:**
 ```json
 {
@@ -117,12 +104,10 @@ GET /api/projects/:projectId/auto/tests/status/:sessionId
   }
 }
 ```
-
 #### 4. Cancel Session
 ```http
 POST /api/projects/:projectId/auto/tests/cancel/:sessionId
 ```
-
 **Response:**
 ```json
 {
@@ -131,12 +116,10 @@ POST /api/projects/:projectId/auto/tests/cancel/:sessionId
   "sessionId": "uuid-session-id"
 }
 ```
-
 #### 5. Get Statistics
 ```http
 GET /api/projects/:projectId/auto/tests/stats
 ```
-
 **Response:**
 ```json
 {
@@ -162,12 +145,10 @@ GET /api/projects/:projectId/auto/tests/stats
   }
 }
 ```
-
 #### 6. Get Auto Test Tasks
 ```http
 GET /api/projects/:projectId/auto/tests/tasks?status=completed&limit=10&offset=0
 ```
-
 **Response:**
 ```json
 {
@@ -183,12 +164,10 @@ GET /api/projects/:projectId/auto/tests/tasks?status=completed&limit=10&offset=0
   }
 }
 ```
-
 #### 7. Get Auto Test Task Details
 ```http
 GET /api/projects/:projectId/auto/tests/tasks/:taskId
 ```
-
 **Response:**
 ```json
 {
@@ -207,12 +186,10 @@ GET /api/projects/:projectId/auto/tests/tasks/:taskId
   }
 }
 ```
-
 #### 8. Retry Failed Auto Test Task
 ```http
 POST /api/projects/:projectId/auto/tests/tasks/:taskId/retry
 ```
-
 **Response:**
 ```json
 {
@@ -224,11 +201,8 @@ POST /api/projects/:projectId/auto/tests/tasks/:taskId/retry
   }
 }
 ```
-
 ## Frontend Integration
-
 ### JavaScript/React Example
-
 ```javascript
 // Auto Test Fix Button Component
 const AutoTestFixButton = ({ projectId }) => {
@@ -236,12 +210,10 @@ const AutoTestFixButton = ({ projectId }) => {
   const [sessionId, setSessionId] = useState(null);
   const [progress, setProgress] = useState(0);
   const [status, setStatus] = useState('idle');
-
   const handleAutoTestFix = async () => {
     try {
       setIsRunning(true);
       setStatus('starting');
-
       // Step 1: Analyze project tests
       const analysisResponse = await fetch(`/api/projects/${projectId}/auto/tests/analyze`, {
         method: 'POST',
@@ -255,19 +227,15 @@ const AutoTestFixButton = ({ projectId }) => {
           }
         })
       });
-
       const analysisResult = await analysisResponse.json();
-      
       if (!analysisResult.success) {
         throw new Error(analysisResult.error);
       }
-
       if (!analysisResult.result.hasIssues) {
         setStatus('completed');
         alert('No test issues found!');
         return;
       }
-
       // Step 2: Execute auto test fix workflow
       const fixResponse = await fetch(`/api/projects/${projectId}/auto/tests/fix`, {
         method: 'POST',
@@ -284,19 +252,14 @@ const AutoTestFixButton = ({ projectId }) => {
           }
         })
       });
-
       const fixResult = await fixResponse.json();
-      
       if (!fixResult.success) {
         throw new Error(fixResult.error);
       }
-
       setSessionId(fixResult.sessionId);
       setStatus('running');
-
       // Step 3: Poll for status updates
       pollSessionStatus(fixResult.sessionId);
-
     } catch (error) {
       console.error('Auto test fix failed:', error);
       setStatus('error');
@@ -305,7 +268,6 @@ const AutoTestFixButton = ({ projectId }) => {
       setIsRunning(false);
     }
   };
-
   const pollSessionStatus = async (sessionId) => {
     const pollInterval = setInterval(async () => {
       try {
@@ -314,14 +276,11 @@ const AutoTestFixButton = ({ projectId }) => {
             'Authorization': `Bearer ${getAuthToken()}`
           }
         });
-
         const result = await response.json();
-        
         if (result.success) {
           const sessionStatus = result.status;
           setProgress(sessionStatus.progress);
           setStatus(sessionStatus.status);
-
           if (sessionStatus.status === 'completed') {
             clearInterval(pollInterval);
             showResults(sessionStatus.result);
@@ -336,7 +295,6 @@ const AutoTestFixButton = ({ projectId }) => {
       }
     }, 5000); // Poll every 5 seconds
   };
-
   const showResults = (result) => {
     const report = result.report;
     alert(`Auto test fix completed!\n\n` +
@@ -344,10 +302,8 @@ const AutoTestFixButton = ({ projectId }) => {
           `Coverage Improved: ${report.summary.coverageImproved ? 'Yes' : 'No'}\n` +
           `Duration: ${Math.round(result.duration / 1000)}s`);
   };
-
   const handleCancel = async () => {
     if (!sessionId) return;
-
     try {
       const response = await fetch(`/api/projects/${projectId}/auto/tests/cancel/${sessionId}`, {
         method: 'POST',
@@ -355,9 +311,7 @@ const AutoTestFixButton = ({ projectId }) => {
           'Authorization': `Bearer ${getAuthToken()}`
         }
       });
-
       const result = await response.json();
-      
       if (result.success && result.cancelled) {
         setStatus('cancelled');
         setSessionId(null);
@@ -367,7 +321,6 @@ const AutoTestFixButton = ({ projectId }) => {
       console.error('Failed to cancel session:', error);
     }
   };
-
   return (
     <div className="auto-test-fix-container">
       <button 
@@ -377,7 +330,6 @@ const AutoTestFixButton = ({ projectId }) => {
       >
         {isRunning ? 'Auto Test Fix Running...' : 'Auto Test Fix'}
       </button>
-
       {isRunning && (
         <div className="progress-container">
           <div className="progress-bar">
@@ -396,18 +348,14 @@ const AutoTestFixButton = ({ projectId }) => {
   );
 };
 ```
-
 ### HTML Button Example
-
 ```html
 <button class="btn-vibecoder" onclick="startAutoTestFix()">
   Auto Test Fix
 </button>
-
 <script>
 async function startAutoTestFix() {
   const projectId = 'your-project-id';
-  
   try {
     // Execute auto test fix workflow
     const response = await fetch(`/api/projects/${projectId}/auto/tests/fix`, {
@@ -424,9 +372,7 @@ async function startAutoTestFix() {
         }
       })
     });
-
     const result = await response.json();
-    
     if (result.success) {
       console.log('Auto test fix started:', result.sessionId);
       // Poll for status updates
@@ -439,10 +385,8 @@ async function startAutoTestFix() {
     alert('Auto test fix failed: ' + error.message);
   }
 }
-
 async function pollStatus(sessionId) {
   const projectId = 'your-project-id';
-  
   const interval = setInterval(async () => {
     try {
       const response = await fetch(`/api/projects/${projectId}/auto/tests/status/${sessionId}`, {
@@ -450,13 +394,10 @@ async function pollStatus(sessionId) {
           'Authorization': `Bearer ${getAuthToken()}`
         }
       });
-
       const result = await response.json();
-      
       if (result.success) {
         const status = result.status;
         console.log(`Status: ${status.status}, Progress: ${status.progress}%`);
-        
         if (status.status === 'completed') {
           clearInterval(interval);
           console.log('Auto test fix completed!', status.result);
@@ -473,19 +414,14 @@ async function pollStatus(sessionId) {
 }
 </script>
 ```
-
 ## Workflow Steps
-
-1. **Analysis Phase**: Analyzes project for failing, legacy, and complex tests
+1. **Analysis Phase**: Analyzes project for failing, , and complex tests
 2. **Task Creation**: Creates a workflow task for the orchestration service
 3. **Workflow Execution**: Executes through `WorkflowOrchestrationService` with AI agent integration
 4. **Coverage Improvement**: Improves test coverage to meet threshold
 5. **Report Generation**: Generates comprehensive report with recommendations
-
 ## Configuration
-
 The system can be configured through the `options` parameter:
-
 - `coverageThreshold`: Target coverage percentage (default: 90)
 - `maxFixAttempts`: Maximum attempts per test fix (default: 3)
 - `autoCommit`: Auto-commit changes (default: true)
@@ -493,32 +429,23 @@ The system can be configured through the `options` parameter:
 - `stopOnError`: Stop workflow on first error (default: false)
 - `parallelExecution`: Enable parallel test execution (default: true)
 - `maxParallelTests`: Maximum parallel tests (default: 5)
-
 ## Integration with Existing Systems
-
 The Auto Test Fix System integrates seamlessly with:
-
 - **WorkflowOrchestrationService**: Uses existing workflow patterns
 - **AutoFinishSystem**: Leverages confirmation and fallback detection
 - **TaskRepository**: Stores and tracks test fix tasks
 - **WebSocketManager**: Real-time progress updates
 - **GitService**: Branch management and commits
 - **AIService**: AI-powered test analysis and fixes
-
 ## Error Handling
-
 The system includes comprehensive error handling:
-
 - **Session Management**: Tracks active sessions with timeout
 - **Progress Tracking**: Real-time progress updates via WebSocket
 - **Cancellation Support**: Ability to cancel running sessions
 - **Fallback Detection**: Detects when user input is needed
 - **Retry Logic**: Automatic retry for failed test fixes
-
 ## Monitoring and Logging
-
 All operations are logged with structured logging:
-
 ```javascript
 logger.info('[AutoTestFixSystem] Starting auto test fix workflow', {
   sessionId,
@@ -526,21 +453,13 @@ logger.info('[AutoTestFixSystem] Starting auto test fix workflow', {
   options
 });
 ```
-
 Progress updates are broadcast via WebSocket for real-time monitoring. 
-
 # Auto Test Fix System - Task Loading and Filtering
-
 ## Overview
-
 The Auto Test Fix System now supports loading existing tasks from the database instead of always generating new tasks. This prevents duplicate task generation and respects the `completedAt` flag.
-
 ## Key Features
-
 ### 1. Load Existing Tasks
-
 Instead of always generating new tasks from test reports, the system can now load existing tasks from the database:
-
 ```javascript
 // Load existing tasks instead of generating new ones
 const result = await autoTestFixSystem.executeAutoTestFixWorkflow({
@@ -550,22 +469,16 @@ const result = await autoTestFixSystem.executeAutoTestFixWorkflow({
   taskStatus: 'pending' // Optional: only load pending tasks
 });
 ```
-
 ### 2. Automatic completedAt Filtering
-
 The system automatically filters out tasks that have been completed:
-
 - **Tasks with `status: 'completed'`** are skipped
 - **Tasks with `completedAt` timestamp** are skipped
 - Only **pending** and **in_progress** tasks are processed
-
 ### 3. API Endpoints
-
 #### Load Existing Tasks (GET)
 ```
 GET /api/projects/:projectId/auto/tests/load-tasks?status=pending
 ```
-
 Response:
 ```json
 {
@@ -577,12 +490,10 @@ Response:
   }
 }
 ```
-
 #### Execute with Existing Tasks (POST)
 ```
 POST /api/projects/:projectId/auto/tests/fix
 ```
-
 Request Body:
 ```json
 {
@@ -592,9 +503,7 @@ Request Body:
   "stopOnError": false
 }
 ```
-
 ## Workflow Options
-
 ### Option 1: Generate New Tasks (Default)
 ```javascript
 {
@@ -602,7 +511,6 @@ Request Body:
   clearExisting: false // Keep existing tasks in database
 }
 ```
-
 ### Option 2: Load Existing Tasks
 ```javascript
 {
@@ -610,7 +518,6 @@ Request Body:
   taskStatus: 'pending' // Optional: filter by status
 }
 ```
-
 ### Option 3: Load Existing + Generate New (Fallback)
 ```javascript
 {
@@ -618,20 +525,14 @@ Request Body:
   clearExisting: false // If no existing tasks found, generate new ones
 }
 ```
-
 ## Task Status Filtering
-
 When loading existing tasks, you can filter by status:
-
 - `pending` - Only pending tasks
 - `in_progress` - Only in-progress tasks  
 - `['pending', 'in_progress']` - Both pending and in-progress (default)
 - `null` - All non-completed tasks
-
 ## completedAt Behavior
-
 Tasks with `completedAt` are automatically excluded:
-
 ```javascript
 // This task will be skipped
 {
@@ -640,7 +541,6 @@ Tasks with `completedAt` are automatically excluded:
   completedAt: '2024-01-15T10:30:00Z',
   // ... other fields
 }
-
 // This task will be processed
 {
   id: 'task-456', 
@@ -649,22 +549,17 @@ Tasks with `completedAt` are automatically excluded:
   // ... other fields
 }
 ```
-
 ## Benefits
-
 1. **No Duplicate Processing**: Completed tasks are never processed again
 2. **Resume Work**: Can resume interrupted workflows
 3. **Selective Processing**: Only process tasks that need attention
 4. **Database Efficiency**: Respects existing task state
-
 ## Example Usage
-
 ### Frontend Integration
 ```javascript
 // Check for existing tasks first
 const existingTasks = await fetch('/api/projects/my-project/auto/tests/load-tasks');
 const hasExistingTasks = existingTasks.data.count > 0;
-
 // Execute with appropriate option
 const result = await fetch('/api/projects/my-project/auto/tests/fix', {
   method: 'POST',
@@ -675,7 +570,6 @@ const result = await fetch('/api/projects/my-project/auto/tests/fix', {
   })
 });
 ```
-
 ### CLI Usage
 ```bash
 # Load and process existing tasks
@@ -683,14 +577,11 @@ node scripts/test-management/generate-test-fix-tasks.js \
   --project-path /path/to/project \
   --load-existing-tasks \
   --task-status pending
-
 # Generate new tasks (default behavior)
 node scripts/test-management/generate-test-fix-tasks.js \
   --project-path /path/to/project
 ```
-
 ## Migration Notes
-
 - Existing workflows continue to work unchanged
 - New `loadExistingTasks` option is opt-in
 - `completedAt` filtering is automatic and cannot be disabled

@@ -1,19 +1,15 @@
 #!/usr/bin/env node
 require('module-alias/register');
-
 /**
  * Test Status Tracker
  * Tracks test execution status and provides analytics
  */
-
 const TestManagementService = require('@/domain/services/TestManagementService');
 const path = require('path');
 const fs = require('fs').promises;
 const { exec } = require('child_process');
 const { promisify } = require('util');
-
 const execAsync = promisify(exec);
-
 class TestStatusTracker {
   constructor() {
     this.testManagementService = new TestManagementService();
@@ -27,7 +23,6 @@ class TestStatusTracker {
       totalDuration: 0
     };
   }
-
   /**
    * Track test execution results
    * @param {Object} testResults - Jest test results
@@ -35,7 +30,6 @@ class TestStatusTracker {
    */
   async trackTestResults(testResults) {
     console.log('📊 Tracking test execution results...');
-    
     const trackingResults = {
       totalTests: 0,
       trackedTests: 0,
@@ -44,16 +38,13 @@ class TestStatusTracker {
       errors: 0,
       summary: {}
     };
-
     try {
       // Process test results
       if (testResults.testResults) {
         for (const result of testResults.testResults) {
           const filePath = result.testFilePath;
           const fileName = path.basename(filePath);
-          
           trackingResults.totalTests += result.numPassingTests + result.numFailingTests + result.numPendingTests;
-          
           // Process individual test cases
           if (result.testResults) {
             for (const testCase of result.testResults) {
@@ -62,23 +53,18 @@ class TestStatusTracker {
           }
         }
       }
-
       // Update execution metrics
       this.updateExecutionMetrics(trackingResults);
-      
       // Generate summary
       trackingResults.summary = await this.generateSummary();
-      
       console.log('✅ Test tracking completed successfully!');
       this.printTrackingSummary(trackingResults);
-      
       return trackingResults;
     } catch (error) {
       console.error(`❌ Error tracking test results: ${error.message}`);
       throw error;
     }
   }
-
   /**
    * Process individual test case
    * @param {Object} testCase - Jest test case result
@@ -92,9 +78,7 @@ class TestStatusTracker {
       const status = this.mapJestStatus(testCase.status);
       const duration = testCase.duration || 0;
       const error = testCase.failureMessages ? testCase.failureMessages.join('\n') : null;
-      
       trackingResults.trackedTests++;
-      
       // Update test metadata
       const testMetadata = await this.testManagementService.updateTestStatus(
         filePath,
@@ -103,23 +87,18 @@ class TestStatusTracker {
         duration,
         error
       );
-      
       if (testMetadata) {
         trackingResults.updatedTests++;
-        
         // Track status history
         this.trackStatusHistory(filePath, testName, status, duration, error);
-        
         // Log significant events
         this.logSignificantEvents(testMetadata, status);
       }
-      
     } catch (error) {
       console.warn(`⚠️  Failed to process test case: ${error.message}`);
       trackingResults.errors++;
     }
   }
-
   /**
    * Map Jest status to internal status
    * @param {string} jestStatus - Jest test status
@@ -140,7 +119,6 @@ class TestStatusTracker {
         return 'unknown';
     }
   }
-
   /**
    * Track status history for a test
    * @param {string} filePath - Test file path
@@ -152,25 +130,21 @@ class TestStatusTracker {
   trackStatusHistory(filePath, testName, status, duration, error) {
     const key = `${filePath}:${testName}`;
     const timestamp = new Date();
-    
     if (!this.statusHistory.has(key)) {
       this.statusHistory.set(key, []);
     }
-    
     this.statusHistory.get(key).push({
       timestamp,
       status,
       duration,
       error
     });
-    
     // Keep only last 10 entries
     const history = this.statusHistory.get(key);
     if (history.length > 10) {
       history.splice(0, history.length - 10);
     }
   }
-
   /**
    * Log significant test events
    * @param {TestMetadata} testMetadata - Test metadata
@@ -179,27 +153,21 @@ class TestStatusTracker {
   logSignificantEvents(testMetadata, status) {
     const fileName = testMetadata.fileName;
     const testName = testMetadata.testName;
-    
     // Log status changes
     if (status === 'failing' && testMetadata.getSuccessRate() > 80) {
       console.log(`🚨 Previously stable test now failing: ${fileName} - ${testName}`);
     }
-    
     if (status === 'passing' && testMetadata.failureCount > 5) {
       console.log(`✅ Previously failing test now passing: ${fileName} - ${testName}`);
     }
-    
     // Log performance issues
     if (testMetadata.averageDuration > 5000) {
       console.log(`🐌 Slow test detected: ${fileName} - ${testName} (${Math.round(testMetadata.averageDuration)}ms avg)`);
     }
-    
-    // Log legacy tests
-    if (testMetadata.isLegacy && status === 'failing') {
-      console.log(`⚠️  Legacy test failing: ${fileName} - ${testName}`);
+    if (testMetadata.is && status === 'failing') {
+      console.log(`⚠️   test failing: ${fileName} - ${testName}`);
     }
   }
-
   /**
    * Update execution metrics
    * @param {Object} trackingResults - Tracking results
@@ -209,7 +177,6 @@ class TestStatusTracker {
     this.executionMetrics.totalDuration += trackingResults.summary?.totalDuration || 0;
     this.executionMetrics.averageDuration = this.executionMetrics.totalDuration / this.executionMetrics.totalRuns;
   }
-
   /**
    * Generate tracking summary
    * @returns {Promise<Object>} - Summary object
@@ -218,7 +185,6 @@ class TestStatusTracker {
     try {
       const stats = await this.testManagementService.getTestStatistics();
       const allTests = await this.testManagementService.testMetadataRepository.findAll();
-      
       const summary = {
         ...stats,
         totalDuration: 0,
@@ -227,11 +193,9 @@ class TestStatusTracker {
         stableTests: [],
         recentFailures: []
       };
-      
       // Calculate total duration and identify slow tests
       allTests.forEach(test => {
         summary.totalDuration += test.averageDuration * test.executionCount;
-        
         if (test.averageDuration > 3000) {
           summary.slowTests.push({
             filePath: test.filePath,
@@ -239,7 +203,6 @@ class TestStatusTracker {
             averageDuration: test.averageDuration
           });
         }
-        
         // Identify flaky tests (high failure rate but not 100%)
         if (test.executionCount > 10 && test.getFailureRate() > 20 && test.getFailureRate() < 80) {
           summary.flakyTests.push({
@@ -249,7 +212,6 @@ class TestStatusTracker {
             executionCount: test.executionCount
           });
         }
-        
         // Identify stable tests
         if (test.executionCount > 5 && test.getSuccessRate() > 95) {
           summary.stableTests.push({
@@ -259,7 +221,6 @@ class TestStatusTracker {
             executionCount: test.executionCount
           });
         }
-        
         // Recent failures
         if (test.isFailing() && test.lastRunAt) {
           const hoursSinceLastRun = (new Date() - test.lastRunAt) / (1000 * 60 * 60);
@@ -273,20 +234,17 @@ class TestStatusTracker {
           }
         }
       });
-      
       // Sort lists
       summary.slowTests.sort((a, b) => b.averageDuration - a.averageDuration);
       summary.flakyTests.sort((a, b) => b.failureRate - a.failureRate);
       summary.stableTests.sort((a, b) => b.successRate - a.successRate);
       summary.recentFailures.sort((a, b) => new Date(b.lastRunAt) - new Date(a.lastRunAt));
-      
       return summary;
     } catch (error) {
       console.warn(`Warning: Could not generate summary: ${error.message}`);
       return {};
     }
   }
-
   /**
    * Print tracking summary
    * @param {Object} trackingResults - Tracking results
@@ -299,7 +257,6 @@ class TestStatusTracker {
     console.log(`🔄 Updated tests: ${trackingResults.updatedTests}`);
     console.log(`🆕 New tests: ${trackingResults.newTests}`);
     console.log(`❌ Errors: ${trackingResults.errors}`);
-    
     if (trackingResults.summary) {
       const summary = trackingResults.summary;
       console.log('\n📈 Test Statistics');
@@ -308,12 +265,11 @@ class TestStatusTracker {
       console.log(`✅ Passing: ${summary.passing || 0}`);
       console.log(`❌ Failing: ${summary.failing || 0}`);
       console.log(`⏭️  Skipped: ${summary.skipped || 0}`);
-      console.log(`⚠️  Legacy: ${summary.legacy || 0}`);
+      console.log(`⚠️  : ${summary. || 0}`);
       console.log(`🐌 Slow tests: ${summary.slowTests?.length || 0}`);
       console.log(`🎲 Flaky tests: ${summary.flakyTests?.length || 0}`);
       console.log(`🛡️  Stable tests: ${summary.stableTests?.length || 0}`);
       console.log(`🚨 Recent failures: ${summary.recentFailures?.length || 0}`);
-      
       if (summary.slowTests && summary.slowTests.length > 0) {
         console.log('\n🐌 Top 5 Slowest Tests');
         console.log('=====================');
@@ -321,7 +277,6 @@ class TestStatusTracker {
           console.log(`${index + 1}. ${path.basename(test.filePath)} - ${test.testName} (${Math.round(test.averageDuration)}ms)`);
         });
       }
-      
       if (summary.flakyTests && summary.flakyTests.length > 0) {
         console.log('\n🎲 Top 5 Flakiest Tests');
         console.log('======================');
@@ -331,7 +286,6 @@ class TestStatusTracker {
       }
     }
   }
-
   /**
    * Get test status history
    * @param {string} filePath - Test file path
@@ -342,7 +296,6 @@ class TestStatusTracker {
     const key = `${filePath}:${testName}`;
     return this.statusHistory.get(key) || [];
   }
-
   /**
    * Export tracking data
    * @param {string} outputPath - Output file path
@@ -356,14 +309,12 @@ class TestStatusTracker {
         statusHistory: Object.fromEntries(this.statusHistory),
         summary: await this.generateSummary()
       };
-      
       await fs.writeFile(outputPath, JSON.stringify(exportData, null, 2));
       console.log(`📄 Tracking data exported to: ${outputPath}`);
     } catch (error) {
       console.error(`❌ Failed to export tracking data: ${error.message}`);
     }
   }
-
   /**
    * Generate test health report
    * @returns {Promise<Object>} - Health report
@@ -381,7 +332,7 @@ class TestStatusTracker {
           critical: 0
         },
         categories: {
-          legacy: [],
+          : [],
           slow: [],
           flaky: [],
           failing: [],
@@ -389,13 +340,10 @@ class TestStatusTracker {
         },
         recommendations: []
       };
-      
       let totalHealthScore = 0;
-      
       allTests.forEach(test => {
         const healthScore = test.getHealthScore();
         totalHealthScore += healthScore;
-        
         // Categorize tests
         if (healthScore >= 80) {
           report.testCounts.healthy++;
@@ -409,16 +357,14 @@ class TestStatusTracker {
         } else {
           report.testCounts.critical++;
         }
-        
-        if (test.isLegacy) {
-          report.categories.legacy.push({
+        if (test.is) {
+          report.categories..push({
             filePath: test.filePath,
             testName: test.testName,
             healthScore,
-            legacyScore: test.legacyScore
+            Score: test.Score
           });
         }
-        
         if (test.averageDuration > 3000) {
           report.categories.slow.push({
             filePath: test.filePath,
@@ -426,7 +372,6 @@ class TestStatusTracker {
             averageDuration: test.averageDuration
           });
         }
-        
         if (test.executionCount > 10 && test.getFailureRate() > 20 && test.getFailureRate() < 80) {
           report.categories.flaky.push({
             filePath: test.filePath,
@@ -434,7 +379,6 @@ class TestStatusTracker {
             failureRate: test.getFailureRate()
           });
         }
-        
         if (test.isFailing()) {
           report.categories.failing.push({
             filePath: test.filePath,
@@ -443,19 +387,16 @@ class TestStatusTracker {
           });
         }
       });
-      
       report.overallHealth = allTests.length > 0 ? Math.round(totalHealthScore / allTests.length) : 0;
-      
       // Generate recommendations
-      if (report.categories.legacy.length > 0) {
+      if (report.categories..length > 0) {
         report.recommendations.push({
-          type: 'legacy',
+          type: '',
           priority: 'high',
-          message: `Refactor ${report.categories.legacy.length} legacy tests`,
-          count: report.categories.legacy.length
+          message: `Refactor ${report.categories..length}  tests`,
+          count: report.categories..length
         });
       }
-      
       if (report.categories.slow.length > 0) {
         report.recommendations.push({
           type: 'performance',
@@ -464,7 +405,6 @@ class TestStatusTracker {
           count: report.categories.slow.length
         });
       }
-      
       if (report.categories.flaky.length > 0) {
         report.recommendations.push({
           type: 'reliability',
@@ -473,7 +413,6 @@ class TestStatusTracker {
           count: report.categories.flaky.length
         });
       }
-      
       if (report.categories.failing.length > 0) {
         report.recommendations.push({
           type: 'failing',
@@ -482,7 +421,6 @@ class TestStatusTracker {
           count: report.categories.failing.length
         });
       }
-      
       return report;
     } catch (error) {
       console.error(`❌ Error generating health report: ${error.message}`);
@@ -490,12 +428,10 @@ class TestStatusTracker {
     }
   }
 }
-
 // CLI interface
 async function main() {
   const args = process.argv.slice(2);
   const tracker = new TestStatusTracker();
-  
   if (args.length === 0) {
     console.log('Usage: node test-status-tracker.js <command> [options]');
     console.log('');
@@ -511,9 +447,7 @@ async function main() {
     console.log('  node test-status-tracker.js export tracking-data.json');
     return;
   }
-  
   const command = args[0];
-  
   try {
     switch (command) {
       case 'track':
@@ -525,12 +459,10 @@ async function main() {
         const results = JSON.parse(await fs.readFile(resultsFile, 'utf8'));
         await tracker.trackTestResults(results);
         break;
-        
       case 'health':
         const healthReport = await tracker.generateHealthReport();
         console.log(JSON.stringify(healthReport, null, 2));
         break;
-        
       case 'export':
         if (args.length < 2) {
           console.error('❌ Output file path required');
@@ -538,7 +470,6 @@ async function main() {
         }
         await tracker.exportTrackingData(args[1]);
         break;
-        
       case 'history':
         if (args.length < 3) {
           console.error('❌ File path and test name required');
@@ -547,7 +478,6 @@ async function main() {
         const history = tracker.getStatusHistory(args[1], args[2]);
         console.log(JSON.stringify(history, null, 2));
         break;
-        
       default:
         console.error(`❌ Unknown command: ${command}`);
         process.exit(1);
@@ -557,10 +487,8 @@ async function main() {
     process.exit(1);
   }
 }
-
 // Run if called directly
 if (require.main === module) {
   main();
 }
-
 module.exports = TestStatusTracker; 

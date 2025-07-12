@@ -5,7 +5,6 @@
  * unified handler system, including validation, testing, and rollback capabilities.
  */
 const HandlerException = require('./exceptions/HandlerException');
-
 class HandlerMigrationUtility {
   /**
    * Create a new handler migration utility
@@ -24,7 +23,6 @@ class HandlerMigrationUtility {
       ...options
     };
   }
-
   /**
    * Migrate existing handler to unified system
    * @param {string} handlerType - Handler type
@@ -34,33 +32,26 @@ class HandlerMigrationUtility {
   async migrateHandler(handlerType, handlerConfig) {
     const migrationId = this.generateMigrationId();
     const startTime = Date.now();
-    
     try {
       console.log('HandlerMigrationUtility: Starting handler migration', {
         migrationId,
         handlerType,
         handlerConfig
       });
-
       // Create migration plan
       const migrationPlan = this.createMigrationPlan(handlerType, handlerConfig);
-      
       // Execute migration steps
       const results = [];
       for (const step of migrationPlan.steps) {
         const stepResult = await this.executeMigrationStep(step);
         results.push(stepResult);
-        
         if (!stepResult.success) {
           throw new Error(`Migration step failed: ${stepResult.error}`);
         }
       }
-      
       // Register migrated handler
       const migratedHandler = await this.registerMigratedHandler(handlerType, handlerConfig);
-      
       const duration = Date.now() - startTime;
-      
       const result = {
         success: true,
         migrationId,
@@ -69,28 +60,22 @@ class HandlerMigrationUtility {
         results,
         migratedHandler: migratedHandler.getMetadata()
       };
-      
       // Record migration history
       this.migrationHistory.set(migrationId, result);
-      
       console.log('HandlerMigrationUtility: Handler migration completed successfully', {
         migrationId,
         handlerType,
         duration
       });
-      
       return result;
-      
     } catch (error) {
       const duration = Date.now() - startTime;
-      
       console.error('HandlerMigrationUtility: Handler migration failed', {
         migrationId,
         handlerType,
         error: error.message,
         duration
       });
-      
       return {
         success: false,
         migrationId,
@@ -100,7 +85,6 @@ class HandlerMigrationUtility {
       };
     }
   }
-
   /**
    * Create migration plan
    * @param {string} handlerType - Handler type
@@ -135,14 +119,12 @@ class HandlerMigrationUtility {
         execute: () => this.registerMigratedHandler(handlerType, handlerConfig)
       }
     ];
-    
     return {
       handlerType,
       steps,
       estimatedDuration: steps.length * 5000 // 5 seconds per step
     };
   }
-
   /**
    * Execute migration step
    * @param {Object} step - Migration step
@@ -150,10 +132,8 @@ class HandlerMigrationUtility {
    */
   async executeMigrationStep(step) {
     const startTime = Date.now();
-    
     try {
       const result = await step.execute();
-      
       return {
         success: true,
         stepName: step.name,
@@ -161,7 +141,6 @@ class HandlerMigrationUtility {
         result,
         duration: Date.now() - startTime
       };
-      
     } catch (error) {
       return {
         success: false,
@@ -172,7 +151,6 @@ class HandlerMigrationUtility {
       };
     }
   }
-
   /**
    * Validate existing handler
    * @param {string} handlerType - Handler type
@@ -183,36 +161,30 @@ class HandlerMigrationUtility {
     if (!this.options.enableValidation) {
       return { validated: true, reason: 'Validation disabled' };
     }
-
     try {
       // Check if handler class exists
       const handlerClass = this.loadHandlerClass(handlerType);
       if (!handlerClass) {
         throw new Error(`Handler class not found: ${handlerType}`);
       }
-
       // Check if handler has required methods
       const handler = new handlerClass();
       const requiredMethods = ['handle'];
       const missingMethods = requiredMethods.filter(method => typeof handler[method] !== 'function');
-
       if (missingMethods.length > 0) {
         throw new Error(`Handler missing required methods: ${missingMethods.join(', ')}`);
       }
-
       // Validate handler configuration
       const configValidation = this.validateHandlerConfig(handlerConfig);
       if (!configValidation.isValid) {
         throw new Error(`Handler configuration invalid: ${configValidation.errors.join(', ')}`);
       }
-
       return {
         validated: true,
         handlerClass: handlerClass.name,
         methods: Object.getOwnPropertyNames(handlerClass.prototype),
         config: configValidation
       };
-
     } catch (error) {
       throw new HandlerException.validationError(
         `Handler validation failed: ${error.message}`,
@@ -220,7 +192,6 @@ class HandlerMigrationUtility {
       );
     }
   }
-
   /**
    * Create handler backup
    * @param {string} handlerType - Handler type
@@ -231,7 +202,6 @@ class HandlerMigrationUtility {
     if (!this.options.enableBackup) {
       return { backedUp: true, reason: 'Backup disabled' };
     }
-
     try {
       const backupId = this.generateBackupId();
       const backupData = {
@@ -241,16 +211,13 @@ class HandlerMigrationUtility {
         timestamp: new Date(),
         originalHandler: this.loadHandlerClass(handlerType)
       };
-
       // Store backup
       this.migrationRegistry.set(backupId, backupData);
-
       return {
         backedUp: true,
         backupId,
         timestamp: backupData.timestamp
       };
-
     } catch (error) {
       throw new HandlerException.migrationError(
         `Handler backup failed: ${error.message}`,
@@ -258,7 +225,6 @@ class HandlerMigrationUtility {
       );
     }
   }
-
   /**
    * Create handler adapter
    * @param {string} handlerType - Handler type
@@ -269,23 +235,19 @@ class HandlerMigrationUtility {
     try {
       // Determine adapter type based on handler characteristics
       const adapterType = this.determineAdapterType(handlerType, handlerConfig);
-      
       // Create adapter instance
       const adapter = this.createAdapterInstance(adapterType, handlerConfig);
-      
       // Test adapter
       const adapterTest = await this.testAdapter(adapter, handlerType);
       if (!adapterTest.success) {
         throw new Error(`Adapter test failed: ${adapterTest.error}`);
       }
-
       return {
         adapterCreated: true,
         adapterType,
         adapter: adapter.getMetadata(),
         testResult: adapterTest
       };
-
     } catch (error) {
       throw new HandlerException.migrationError(
         `Handler adapter creation failed: ${error.message}`,
@@ -293,7 +255,6 @@ class HandlerMigrationUtility {
       );
     }
   }
-
   /**
    * Test migrated handler
    * @param {string} handlerType - Handler type
@@ -304,27 +265,22 @@ class HandlerMigrationUtility {
     if (!this.options.enableTesting) {
       return { tested: true, reason: 'Testing disabled' };
     }
-
     try {
       // Create test request
       const testRequest = this.createTestRequest(handlerType, handlerConfig);
-      
       // Execute test
       const testResult = await this.executeHandlerTest(handlerType, testRequest);
-      
       // Validate test result
       const validationResult = this.validateTestResult(testResult);
       if (!validationResult.isValid) {
         throw new Error(`Test validation failed: ${validationResult.errors.join(', ')}`);
       }
-
       return {
         tested: true,
         testRequest,
         testResult,
         validation: validationResult
       };
-
     } catch (error) {
       throw new HandlerException.migrationError(
         `Handler test failed: ${error.message}`,
@@ -332,7 +288,6 @@ class HandlerMigrationUtility {
       );
     }
   }
-
   /**
    * Register migrated handler
    * @param {string} handlerType - Handler type
@@ -343,16 +298,12 @@ class HandlerMigrationUtility {
     try {
       // Create unified handler
       const unifiedHandler = this.createUnifiedHandler(handlerType, handlerConfig);
-      
       // Register with registry
       const registrationResult = await this.registerHandler(handlerType, unifiedHandler);
-      
       if (!registrationResult.success) {
         throw new Error(`Handler registration failed: ${registrationResult.error}`);
       }
-
       return unifiedHandler;
-
     } catch (error) {
       throw new HandlerException.migrationError(
         `Handler registration failed: ${error.message}`,
@@ -360,7 +311,6 @@ class HandlerMigrationUtility {
       );
     }
   }
-
   /**
    * Load handler class
    * @param {string} handlerType - Handler type
@@ -375,23 +325,13 @@ class HandlerMigrationUtility {
         'analyze_tech_stack': require('@/application/handlers/analyze/AnalyzeTechStackHandler'),
         'analyze_repo_structure': require('@/application/handlers/analyze/AnalyzeRepoStructureHandler'),
         'analyze_dependencies': require('@/application/handlers/analyze/AnalyzeDependenciesHandler'),
-        'vibecoder_analyze': require('@/application/handlers/vibecoder/VibeCoderAnalyzeHandler'),
-        'vibecoder_generate': require('@/application/handlers/vibecoder/VibeCoderGenerateHandler'),
-        'vibecoder_refactor': require('@/application/handlers/vibecoder/VibeCoderRefactorHandler'),
-        'vibecoder_mode': require('@/application/handlers/vibecoder/VibeCoderModeHandler'),
-        'generate_script': require('@/application/handlers/generate/GenerateScriptHandler'),
-        'generate_scripts': require('@/application/handlers/generate/GenerateScriptsHandler'),
-        'auto_test_fix': require('@/application/handlers/AutoTestFixHandler'),
-        'test_correction': require('@/application/handlers/TestCorrectionHandler')
       };
-      
       return handlerMap[handlerType] || null;
     } catch (error) {
       console.warn(`Failed to load handler class ${handlerType}:`, error.message);
       return null;
     }
   }
-
   /**
    * Validate handler configuration
    * @param {Object} handlerConfig - Handler configuration
@@ -400,7 +340,6 @@ class HandlerMigrationUtility {
   validateHandlerConfig(handlerConfig) {
     const errors = [];
     const warnings = [];
-
     if (!handlerConfig) {
       errors.push('Handler configuration is required');
     } else {
@@ -408,19 +347,16 @@ class HandlerMigrationUtility {
       if (handlerConfig.dependencies && !Array.isArray(handlerConfig.dependencies)) {
         errors.push('Dependencies must be an array');
       }
-
       if (handlerConfig.options && typeof handlerConfig.options !== 'object') {
         errors.push('Options must be an object');
       }
     }
-
     return {
       isValid: errors.length === 0,
       errors,
       warnings
     };
   }
-
   /**
    * Determine adapter type
    * @param {string} handlerType - Handler type
@@ -434,10 +370,9 @@ class HandlerMigrationUtility {
     } else if (handlerConfig.serviceBased) {
       return 'service';
     } else {
-      return 'legacy';
+      return '';
     }
   }
-
   /**
    * Create adapter instance
    * @param {string} adapterType - Adapter type
@@ -446,19 +381,15 @@ class HandlerMigrationUtility {
    */
   createAdapterInstance(adapterType, handlerConfig) {
     const adapterClasses = {
-      'legacy': require('./adapters/LegacyHandlerAdapter'),
       'command': require('./adapters/CommandHandlerAdapter'),
       'service': require('./adapters/ServiceHandlerAdapter')
     };
-
     const AdapterClass = adapterClasses[adapterType];
     if (!AdapterClass) {
       throw new Error(`Unknown adapter type: ${adapterType}`);
     }
-
     return new AdapterClass(handlerConfig);
   }
-
   /**
    * Test adapter
    * @param {Object} adapter - Adapter instance
@@ -470,30 +401,25 @@ class HandlerMigrationUtility {
       // Test adapter interface
       const requiredMethods = ['createHandler', 'canHandle', 'getMetadata'];
       const missingMethods = requiredMethods.filter(method => typeof adapter[method] !== 'function');
-
       if (missingMethods.length > 0) {
         throw new Error(`Adapter missing required methods: ${missingMethods.join(', ')}`);
       }
-
       // Test adapter metadata
       const metadata = adapter.getMetadata();
       if (!metadata || typeof metadata !== 'object') {
         throw new Error('Adapter metadata is invalid');
       }
-
       // Test adapter can handle the handler type
       const testRequest = { type: handlerType };
       const canHandle = adapter.canHandle(testRequest);
       if (!canHandle) {
         throw new Error(`Adapter cannot handle handler type: ${handlerType}`);
       }
-
       return {
         success: true,
         metadata,
         canHandle
       };
-
     } catch (error) {
       return {
         success: false,
@@ -501,7 +427,6 @@ class HandlerMigrationUtility {
       };
     }
   }
-
   /**
    * Create test request
    * @param {string} handlerType - Handler type
@@ -516,7 +441,6 @@ class HandlerMigrationUtility {
       config: handlerConfig
     };
   }
-
   /**
    * Execute handler test
    * @param {string} handlerType - Handler type
@@ -530,19 +454,15 @@ class HandlerMigrationUtility {
       if (!handlerClass) {
         throw new Error(`Handler class not found: ${handlerType}`);
       }
-
       // Create handler instance
       const handler = new handlerClass();
-      
       // Execute test
       const result = await handler.handle(testRequest, {});
-      
       return {
         success: true,
         result,
         duration: Date.now() - testRequest.timestamp.getTime()
       };
-
     } catch (error) {
       return {
         success: false,
@@ -550,7 +470,6 @@ class HandlerMigrationUtility {
       };
     }
   }
-
   /**
    * Validate test result
    * @param {Object} testResult - Test result
@@ -559,26 +478,22 @@ class HandlerMigrationUtility {
   validateTestResult(testResult) {
     const errors = [];
     const warnings = [];
-
     if (!testResult.success) {
       errors.push(`Test execution failed: ${testResult.error}`);
     } else {
       if (testResult.duration > 10000) { // 10 seconds
         warnings.push('Test execution time is high');
       }
-
       if (!testResult.result) {
         warnings.push('Test result is empty');
       }
     }
-
     return {
       isValid: errors.length === 0,
       errors,
       warnings
     };
   }
-
   /**
    * Create unified handler
    * @param {string} handlerType - Handler type
@@ -604,7 +519,6 @@ class HandlerMigrationUtility {
       }
     };
   }
-
   /**
    * Register handler
    * @param {string} handlerType - Handler type
@@ -627,7 +541,6 @@ class HandlerMigrationUtility {
       };
     }
   }
-
   /**
    * Generate migration ID
    * @returns {string} Migration ID
@@ -635,7 +548,6 @@ class HandlerMigrationUtility {
   generateMigrationId() {
     return `migration_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
   }
-
   /**
    * Generate backup ID
    * @returns {string} Backup ID
@@ -643,7 +555,6 @@ class HandlerMigrationUtility {
   generateBackupId() {
     return `backup_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
   }
-
   /**
    * Get migration history
    * @returns {Array<Object>} Migration history
@@ -651,7 +562,6 @@ class HandlerMigrationUtility {
   getMigrationHistory() {
     return Array.from(this.migrationHistory.values());
   }
-
   /**
    * Get migration statistics
    * @returns {Object} Migration statistics
@@ -661,7 +571,6 @@ class HandlerMigrationUtility {
     const successful = history.filter(m => m.success).length;
     const failed = history.filter(m => !m.success).length;
     const total = history.length;
-    
     return {
       total,
       successful,
@@ -671,7 +580,6 @@ class HandlerMigrationUtility {
         history.reduce((sum, m) => sum + m.duration, 0) / total : 0
     };
   }
-
   /**
    * Rollback migration
    * @param {string} migrationId - Migration ID
@@ -681,13 +589,11 @@ class HandlerMigrationUtility {
     if (!this.options.enableRollback) {
       return { rolledBack: false, reason: 'Rollback disabled' };
     }
-
     try {
       const migration = this.migrationHistory.get(migrationId);
       if (!migration) {
         throw new Error(`Migration not found: ${migrationId}`);
       }
-
       // Restore from backup
       const backup = this.migrationRegistry.get(migrationId);
       if (backup) {
@@ -699,12 +605,10 @@ class HandlerMigrationUtility {
           restored: true
         };
       }
-
       return {
         rolledBack: false,
         reason: 'No backup available'
       };
-
     } catch (error) {
       return {
         rolledBack: false,
@@ -713,5 +617,4 @@ class HandlerMigrationUtility {
     }
   }
 }
-
 module.exports = HandlerMigrationUtility; 

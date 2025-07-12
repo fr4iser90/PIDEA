@@ -4,11 +4,9 @@
  * This module provides exports for the unified workflow handler system,
  * including interfaces, core components, and utilities.
  */
-
 // Interfaces
 const IHandler = require('./interfaces/IHandler');
 const IHandlerAdapter = require('./interfaces/IHandlerAdapter');
-
 // Core Components
 const UnifiedWorkflowHandler = require('./UnifiedWorkflowHandler');
 const HandlerRegistry = require('./HandlerRegistry');
@@ -16,29 +14,26 @@ const HandlerFactory = require('./HandlerFactory');
 const HandlerValidator = require('./HandlerValidator');
 const HandlerContext = require('./HandlerContext');
 const HandlerResult = require('./HandlerResult');
-
 // Adapters
-const LegacyHandlerAdapter = require('./adapters/LegacyHandlerAdapter');
 const CommandHandlerAdapter = require('./adapters/CommandHandlerAdapter');
 const ServiceHandlerAdapter = require('./adapters/ServiceHandlerAdapter');
-
+const AnalysisStepAdapter = require('./adapters/AnalysisStepAdapter');
+const VibeCoderStepAdapter = require('./adapters/VibeCoderStepAdapter');
+const VibeCoderHandlerAdapter = require('./adapters/VibeCoderHandlerAdapter');
+const GenerateStepAdapter = require('./adapters/GenerateStepAdapter');
 // Advanced Components
 const HandlerMetrics = require('./HandlerMetrics');
 const HandlerAudit = require('./HandlerAudit');
 const HandlerOptimizer = require('./HandlerOptimizer');
-
 // Migration Utilities
 const HandlerMigrationUtility = require('./HandlerMigrationUtility');
-
 // Exceptions
 const HandlerException = require('./exceptions/HandlerException');
-
 // Module exports
 module.exports = {
   // Interfaces
   IHandler,
   IHandlerAdapter,
-
   // Core Components
   UnifiedWorkflowHandler,
   HandlerRegistry,
@@ -46,29 +41,26 @@ module.exports = {
   HandlerValidator,
   HandlerContext,
   HandlerResult,
-
   // Adapters
-  LegacyHandlerAdapter,
   CommandHandlerAdapter,
   ServiceHandlerAdapter,
-
+  AnalysisStepAdapter,
+  VibeCoderStepAdapter,
+  VibeCoderHandlerAdapter,
+  GenerateStepAdapter,
   // Advanced Components
   HandlerMetrics,
   HandlerAudit,
   HandlerOptimizer,
-
   // Migration Utilities
   HandlerMigrationUtility,
-
   // Exceptions
   HandlerException,
-
   // Convenience exports
   interfaces: {
     IHandler,
     IHandlerAdapter
   },
-
   core: {
     UnifiedWorkflowHandler,
     HandlerRegistry,
@@ -77,52 +69,44 @@ module.exports = {
     HandlerContext,
     HandlerResult
   },
-
   adapters: {
-    LegacyHandlerAdapter,
     CommandHandlerAdapter,
-    ServiceHandlerAdapter
+    ServiceHandlerAdapter,
+    AnalysisStepAdapter,
+    VibeCoderStepAdapter,
+    VibeCoderHandlerAdapter,
+    GenerateStepAdapter
   },
-
   advanced: {
     HandlerMetrics,
     HandlerAudit,
     HandlerOptimizer
   },
-
   migration: {
     HandlerMigrationUtility
   },
-
   exceptions: {
     HandlerException
   },
-
   // Factory functions for easy instantiation
   createUnifiedHandler: (dependencies = {}) => {
     return new UnifiedWorkflowHandler(dependencies);
   },
-
   createHandlerRegistry: (options = {}) => {
     return new HandlerRegistry(options);
   },
-
   createHandlerFactory: (options = {}) => {
     return new HandlerFactory(options);
   },
-
   createHandlerValidator: (options = {}) => {
     return new HandlerValidator(options);
   },
-
   createHandlerContext: (request, response, handlerId, options = {}) => {
     return new HandlerContext(request, response, handlerId, options);
   },
-
   createHandlerResult: (data = {}) => {
     return new HandlerResult(data);
   },
-
   // Utility functions
   utils: {
     /**
@@ -134,7 +118,6 @@ module.exports = {
       const registry = new HandlerRegistry(options.registry || {});
       const factory = new HandlerFactory(options.factory || {});
       const validator = new HandlerValidator(options.validator || {});
-      
       return new UnifiedWorkflowHandler({
         handlerRegistry: registry,
         handlerFactory: factory,
@@ -143,7 +126,6 @@ module.exports = {
         eventBus: options.eventBus
       });
     },
-
     /**
      * Validate handler system configuration
      * @param {Object} config - Configuration to validate
@@ -152,40 +134,34 @@ module.exports = {
     validateConfiguration: (config) => {
       const errors = [];
       const warnings = [];
-
       if (!config) {
         errors.push('Configuration is required');
         return { isValid: false, errors, warnings };
       }
-
       // Validate registry configuration
       if (config.registry) {
         if (config.registry.maxHandlers && config.registry.maxHandlers < 1) {
           errors.push('Registry maxHandlers must be at least 1');
         }
       }
-
       // Validate factory configuration
       if (config.factory) {
         if (config.factory.cacheSize && config.factory.cacheSize < 1) {
           errors.push('Factory cacheSize must be at least 1');
         }
       }
-
       // Validate validator configuration
       if (config.validator) {
         if (config.validator.maxRequestSize && config.validator.maxRequestSize < 1024) {
           warnings.push('Validator maxRequestSize is very small');
         }
       }
-
       return {
         isValid: errors.length === 0,
         errors,
         warnings
       };
     },
-
     /**
      * Get handler system version
      * @returns {string} System version
@@ -193,7 +169,6 @@ module.exports = {
     getVersion: () => {
       return '1.0.0';
     },
-
     /**
      * Get handler system information
      * @returns {Object} System information

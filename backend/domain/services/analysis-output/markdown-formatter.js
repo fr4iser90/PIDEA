@@ -1,6 +1,5 @@
 const CONSTANTS = require('./constants');
 const UTILS = require('./utils');
-
 /**
  * Markdown formatter service for analysis reports
  */
@@ -14,23 +13,18 @@ class MarkdownFormatter {
      */
     formatCodeQualityData(data, metrics = null, recommendations = null) {
         let md = '';
-        
         // Use provided metrics or extract from data
         const qualityMetrics = metrics || data.metrics || {};
         const qualityRecommendations = recommendations || data.recommendations || [];
-            
         md += '### Code Quality Analysis\n\n';
-        
         // Overall Score
         if (data.overallScore !== undefined) {
             md += `**Overall Quality Score:** ${data.overallScore}/100\n\n`;
         }
-        
         // Metrics Table
         if (qualityMetrics && Object.keys(qualityMetrics).length > 0) {
             md += '### Quality Metrics\n\n';
             md += CONSTANTS.MARKDOWN_TEMPLATES.TABLE_HEADER;
-            
             Object.entries(qualityMetrics).forEach(([metric, value]) => {
                 if (value !== null && value !== undefined) {
                     if (typeof value === 'object') {
@@ -47,7 +41,6 @@ class MarkdownFormatter {
             });
             md += '\n';
         }
-        
         // Issues
         if (data.issues && data.issues.length > 0) {
             md += '### Issues Found\n\n';
@@ -59,7 +52,6 @@ class MarkdownFormatter {
                 md += '\n';
             });
         }
-        
         // Detailed Issues from Real Metrics
         if (data.largeFiles && data.largeFiles.length > 0) {
             md += '### Large Files (>500 LOC)\n\n';
@@ -68,7 +60,6 @@ class MarkdownFormatter {
             });
             md += '\n';
         }
-        
         if (data.magicNumberFiles && data.magicNumberFiles.length > 0) {
             md += '### Files with Many Magic Numbers (>20)\n\n';
             data.magicNumberFiles.forEach(file => {
@@ -76,7 +67,6 @@ class MarkdownFormatter {
             });
             md += '\n';
         }
-        
         if (data.complexityIssuesList && data.complexityIssuesList.length > 0) {
             md += '### Complexity Issues\n\n';
             data.complexityIssuesList.forEach(issue => {
@@ -84,7 +74,6 @@ class MarkdownFormatter {
             });
             md += '\n';
         }
-        
         if (data.lintingIssuesList && data.lintingIssuesList.length > 0) {
             md += '### Linting Issues\n\n';
             data.lintingIssuesList.forEach(issue => {
@@ -95,11 +84,9 @@ class MarkdownFormatter {
             });
             md += '\n';
         }
-        
         // Configuration
         if (data.configuration) {
             md += '### Configuration\n\n';
-            
             if (data.configuration.linting) {
                 md += '#### Linting\n';
                 md += `- ESLint: ${data.configuration.linting.hasESLint ? 'Yes' : 'No'}\n`;
@@ -108,7 +95,6 @@ class MarkdownFormatter {
                 md += `- Lint-staged: ${data.configuration.linting.hasLintStaged ? 'Yes' : 'No'}\n`;
                 md += '\n';
             }
-
             if (data.configuration.formatting) {
                 md += '#### Formatting\n';
                 md += `- Prettier: ${data.configuration.formatting.hasPrettier ? 'Yes' : 'No'}\n`;
@@ -117,7 +103,6 @@ class MarkdownFormatter {
                 md += '\n';
             }
         }
-        
         // Coverage
         if (data.coverage && Object.keys(data.coverage).length > 0) {
             md += '### Test Coverage\n\n';
@@ -126,7 +111,6 @@ class MarkdownFormatter {
             });
             md += '\n';
         }
-        
         // Recommendations
         if (qualityRecommendations && qualityRecommendations.length > 0) {
             md += '### Recommendations\n\n';
@@ -141,10 +125,8 @@ class MarkdownFormatter {
                 md += '\n';
             });
         }
-        
         return md;
     }
-
     /**
      * Format security data
      * @param {Object} data - Security data
@@ -157,7 +139,6 @@ class MarkdownFormatter {
         let securityData = data;
         let securityMetrics = metrics;
         let securityRecommendations = recommendations;
-
         // Wrapper-Handling
         if (data && data.result && typeof data.result === 'object') {
             securityData = data.result;
@@ -180,15 +161,12 @@ class MarkdownFormatter {
         if (!securityRecommendations) {
             securityRecommendations = securityData.recommendations || [];
         }
-
         // Security Score
         if (securityData.securityScore !== undefined) {
             md += `**Security Score:** ${securityData.securityScore}/100\n\n`;
         }
-
         // Security Configuration
         md += '### Security Configuration\n\n';
-        
         // Present security middleware
         if (securityData.configuration && Array.isArray(securityData.configuration.securityMiddleware)) {
             if (securityData.configuration.securityMiddleware.length > 0) {
@@ -203,7 +181,6 @@ class MarkdownFormatter {
         } else {
             md += '**Keine Sicherheitsfeatures gefunden**\n\n';
         }
-        
         // Missing security middleware
         if (securityData.configuration && Array.isArray(securityData.configuration.missingSecurity)) {
             if (securityData.configuration.missingSecurity.length > 0) {
@@ -218,7 +195,6 @@ class MarkdownFormatter {
         } else {
             md += '**Keine fehlenden Sicherheitsfeatures**\n\n';
         }
-
         // Dependency Vulnerabilities
         if (securityData.dependencies) {
             const deps = securityData.dependencies;
@@ -234,7 +210,6 @@ class MarkdownFormatter {
                 md += '✅ **No vulnerable dependencies found**\n\n';
             }
         }
-        
         // Code Security Issues
         if (securityData.codeIssues && securityData.codeIssues.length > 0) {
             md += '### Code Security Issues\n\n';
@@ -247,7 +222,6 @@ class MarkdownFormatter {
             md += '### Code Security Issues\n\n';
             md += '✅ **No security issues found in code**\n\n';
         }
-        
         // Secrets Analysis
         if (securityData.secrets) {
             md += '### Secrets Analysis\n\n';
@@ -269,7 +243,6 @@ class MarkdownFormatter {
                 md += '\n';
             }
         }
-        
         // Metrics Table
         if (securityMetrics && Object.keys(securityMetrics).length > 0) {
             md += '### Security Metrics\n\n';
@@ -281,7 +254,6 @@ class MarkdownFormatter {
             });
             md += '\n';
         }
-        
         // Recommendations
         if (securityRecommendations && securityRecommendations.length > 0) {
             md += '### Security Recommendations\n\n';
@@ -296,10 +268,8 @@ class MarkdownFormatter {
                 md += '\n';
             });
         }
-        
         return md;
     }
-
     /**
      * Format performance data
      * @param {Object} data - Performance data
@@ -309,25 +279,20 @@ class MarkdownFormatter {
      */
     formatPerformanceData(data, metrics = null, recommendations = null) {
         let md = '';
-        
         // Use provided metrics or extract from data
         const perfMetrics = metrics || data.metrics || {};
         const perfRecommendations = recommendations || data.recommendations || [];
-        
         if (perfMetrics && Object.keys(perfMetrics).length > 0) {
             md += '### Performance Metrics\n\n';
             md += CONSTANTS.MARKDOWN_TEMPLATES.TABLE_HEADER_WITH_STATUS;
-            
             Object.entries(perfMetrics).forEach(([metric, value]) => {
                 let status = 'Good';
                 if (metric.includes('time') && value > CONSTANTS.PERFORMANCE_THRESHOLDS.SLOW_TIME_MS) status = 'Slow';
                 else if (metric.includes('size') && value > CONSTANTS.PERFORMANCE_THRESHOLDS.LARGE_SIZE_BYTES) status = 'Large';
-                
                 md += `| ${metric} | ${value} | ${status} |\n`;
             });
             md += '\n';
         }
-
         if (data.bottlenecks && data.bottlenecks.length > 0) {
             md += '### Performance Bottlenecks\n\n';
             data.bottlenecks.forEach(bottleneck => {
@@ -336,7 +301,6 @@ class MarkdownFormatter {
                 md += '\n';
             });
         }
-        
         // Recommendations
         if (perfRecommendations && perfRecommendations.length > 0) {
             md += '### Performance Recommendations\n\n';
@@ -351,10 +315,8 @@ class MarkdownFormatter {
                 md += '\n';
             });
         }
-
         return md;
     }
-
     /**
      * Format architecture data
      * @param {Object} data - Architecture data
@@ -364,23 +326,18 @@ class MarkdownFormatter {
      */
     formatArchitectureData(data, metrics = null, recommendations = null) {
         let md = '';
-        
         // Use package-specific metrics from data if available, otherwise use passed metrics
         const archMetrics = data.metrics || metrics || {};
         const archRecommendations = recommendations || data.recommendations || [];
-            
         md += '### Architecture Analysis\n\n';
-        
         // Architecture Score
         if (data.architectureScore !== undefined) {
             md += `**Architecture Score:** ${data.architectureScore}/100\n\n`;
         }
-        
         // Metrics Table
         if (archMetrics && Object.keys(archMetrics).length > 0) {
             md += '### Architecture Metrics\n\n';
             md += CONSTANTS.MARKDOWN_TEMPLATES.TABLE_HEADER;
-            
             Object.entries(archMetrics).forEach(([metric, value]) => {
                 if (value !== null && value !== undefined) {
                     md += `| ${metric} | ${value} |\n`;
@@ -388,7 +345,6 @@ class MarkdownFormatter {
             });
             md += '\n';
         }
-        
         // Patterns
         if (data.detectedPatterns && data.detectedPatterns.length > 0) {
             md += '### Detected Patterns\n\n';
@@ -403,15 +359,12 @@ class MarkdownFormatter {
                 md += '\n';
             });
         }
-        
         // Structure
         if (data.structure) {
             md += '### Project Structure\n\n';
-            
             if (data.structure.organization) {
                 md += `**Organization Pattern:** ${data.structure.organization}\n\n`;
             }
-            
             if (data.structure.layers && data.structure.layers.length > 0) {
                 md += '#### Layers\n\n';
                 data.structure.layers.forEach(layer => {
@@ -419,7 +372,6 @@ class MarkdownFormatter {
                 });
                 md += '\n';
             }
-            
             if (data.structure.modules && data.structure.modules.length > 0) {
                 md += '#### Modules\n\n';
                 data.structure.modules.forEach(module => {
@@ -427,7 +379,6 @@ class MarkdownFormatter {
                 });
                 md += '\n';
             }
-            
             if (data.structure.utilities && data.structure.utilities.length > 0) {
                 md += '#### Utilities\n\n';
                 data.structure.utilities.forEach(util => {
@@ -436,7 +387,6 @@ class MarkdownFormatter {
                 md += '\n';
             }
         }
-        
         // Coupling Analysis
         if (data.coupling && Object.keys(data.coupling).length > 0) {
             md += '### Coupling Analysis\n\n';
@@ -453,7 +403,6 @@ class MarkdownFormatter {
             });
             md += '\n';
         }
-        
         // Cohesion Analysis
         if (data.cohesion && Object.keys(data.cohesion).length > 0) {
             md += '### Cohesion Analysis\n\n';
@@ -470,7 +419,6 @@ class MarkdownFormatter {
             });
             md += '\n';
         }
-        
         // Violations
         if (data.violations && data.violations.length > 0) {
             md += '### Architecture Violations\n\n';
@@ -480,7 +428,6 @@ class MarkdownFormatter {
                 md += '\n';
             });
         }
-        
         // Recommendations
         if (archRecommendations && archRecommendations.length > 0) {
             md += '### Architectural Recommendations\n\n';
@@ -495,10 +442,8 @@ class MarkdownFormatter {
                 md += '\n';
             });
         }
-
         return md;
     }
-
     /**
      * Format project structure data
      * @param {Object} data - Project structure data
@@ -508,14 +453,11 @@ class MarkdownFormatter {
      */
     formatProjectStructureData(data, metrics = null, recommendations = null) {
         let md = '';
-        
         // Use provided metrics or extract from data
         const structureMetrics = metrics || data.metrics || {};
         const structureRecommendations = recommendations || data.recommendations || [];
-        
         if (data.structure) {
             md += '### Project Structure\n\n';
-            
             // Handle array of files structure
             if (data.structure.files && Array.isArray(data.structure.files)) {
                 md += '#### Files\n\n';
@@ -526,14 +468,12 @@ class MarkdownFormatter {
                 });
                 md += '\n';
             }
-            
             // Handle nested tree structure
             if (typeof data.structure === 'object' && !data.structure.files) {
                 md += '```\n';
                 md += UTILS.formatTree(data.structure);
                 md += '\n```\n\n';
             }
-            
             // File type distribution
             if (data.structure.fileTypes && Object.keys(data.structure.fileTypes).length > 0) {
                 md += '#### File Type Distribution\n\n';
@@ -544,7 +484,6 @@ class MarkdownFormatter {
                 });
                 md += '\n';
             }
-            
             // Largest files
             if (data.structure.largestFiles && data.structure.largestFiles.length > 0) {
                 md += '#### Largest Files\n\n';
@@ -555,22 +494,18 @@ class MarkdownFormatter {
                 md += '\n';
             }
         }
-
         if (data.statistics) {
             md += '### Project Statistics\n\n';
             md += CONSTANTS.MARKDOWN_TEMPLATES.TABLE_HEADER;
-            
             Object.entries(data.statistics).forEach(([metric, value]) => {
                 md += `| ${metric} | ${value} |\n`;
             });
             md += '\n';
         }
-
         // Metrics Table
         if (structureMetrics && Object.keys(structureMetrics).length > 0) {
             md += '### Structure Metrics\n\n';
             md += CONSTANTS.MARKDOWN_TEMPLATES.TABLE_HEADER;
-            
             Object.entries(structureMetrics).forEach(([metric, value]) => {
                 if (value !== null && value !== undefined) {
                     if (typeof value === 'object') {
@@ -582,7 +517,6 @@ class MarkdownFormatter {
             });
             md += '\n';
         }
-
         if (data.dependencies) {
             md += '### Dependencies\n\n';
             md += '#### Production Dependencies\n';
@@ -595,7 +529,6 @@ class MarkdownFormatter {
             });
             md += '\n';
         }
-        
         // Recommendations
         if (structureRecommendations && structureRecommendations.length > 0) {
             md += '### Structure Recommendations\n\n';
@@ -610,10 +543,8 @@ class MarkdownFormatter {
                 md += '\n';
             });
         }
-
         return md;
     }
-
     /**
      * Format dependencies data
      * @param {Object} data - Dependencies data
@@ -623,11 +554,9 @@ class MarkdownFormatter {
      */
     formatDependenciesData(data, metrics = null, recommendations = null) {
         let md = '';
-        
         // Use provided metrics or extract from data
         const depsMetrics = metrics || data.metrics || {};
         const depsRecommendations = recommendations || data.recommendations || [];
-        
         // Show packages if available (for monorepo detection)
         if (data.packages && data.packages.length > 0) {
             md += '### Packages\n\n';
@@ -639,7 +568,6 @@ class MarkdownFormatter {
             });
             md += '\n';
         }
-        
         // Also check in dependenciesAnalysis.packages
         if (data.dependenciesAnalysis && data.dependenciesAnalysis.packages && data.dependenciesAnalysis.packages.length > 0) {
             md += '### Packages\n\n';
@@ -651,15 +579,12 @@ class MarkdownFormatter {
             });
             md += '\n';
         }
-        
         if (data.dependenciesAnalysis) {
             const deps = data.dependenciesAnalysis;
-            
             // Metrics Table
             if (depsMetrics && Object.keys(depsMetrics).length > 0) {
                 md += '### Dependencies Metrics\n\n';
                 md += CONSTANTS.MARKDOWN_TEMPLATES.TABLE_HEADER;
-                
                 Object.entries(depsMetrics).forEach(([metric, value]) => {
                     if (value !== null && value !== undefined) {
                         md += `| ${metric} | ${value} |\n`;
@@ -667,7 +592,6 @@ class MarkdownFormatter {
                 });
                 md += '\n';
             }
-            
             if (deps.directDependencies && deps.directDependencies.length > 0) {
                 md += '### Direct Dependencies\n\n';
                 md += '| Package | Version |\n';
@@ -677,7 +601,6 @@ class MarkdownFormatter {
                 });
                 md += '\n';
             }
-
             if (deps.vulnerabilities && deps.vulnerabilities.length > 0) {
                 md += '### Security Vulnerabilities\n\n';
                 md += '| Severity | Package | Description |\n';
@@ -688,7 +611,6 @@ class MarkdownFormatter {
                 md += '\n';
             }
         }
-        
         // Recommendations
         if (depsRecommendations && depsRecommendations.length > 0) {
             md += '### Dependencies Recommendations\n\n';
@@ -703,10 +625,8 @@ class MarkdownFormatter {
                 md += '\n';
             });
         }
-
         return md;
     }
-
     /**
      * Format tech stack data
      * @param {Object} data - Tech stack data
@@ -714,10 +634,8 @@ class MarkdownFormatter {
      */
     formatTechStackData(data) {
         let md = '';
-        
         if (data.techStack) {
             const tech = data.techStack;
-            
             if (tech.frameworks && tech.frameworks.length > 0) {
                 md += '### Frameworks\n\n';
                 tech.frameworks.forEach(framework => {
@@ -725,7 +643,6 @@ class MarkdownFormatter {
                 });
                 md += '\n';
             }
-
             if (tech.libraries && tech.libraries.length > 0) {
                 md += '### Libraries\n\n';
                 tech.libraries.forEach(lib => {
@@ -733,7 +650,6 @@ class MarkdownFormatter {
                 });
                 md += '\n';
             }
-
             if (tech.tools && tech.tools.length > 0) {
                 md += '### Development Tools\n\n';
                 tech.tools.forEach(tool => {
@@ -742,7 +658,6 @@ class MarkdownFormatter {
                 md += '\n';
             }
         }
-
         if (data.metrics) {
             md += '### Tech Stack Metrics\n\n';
             md += CONSTANTS.MARKDOWN_TEMPLATES.TABLE_HEADER;
@@ -751,7 +666,6 @@ class MarkdownFormatter {
             });
             md += '\n';
         }
-
         if (data.recommendations && data.recommendations.length > 0) {
             md += '### Recommendations\n\n';
             data.recommendations.forEach(rec => {
@@ -759,10 +673,8 @@ class MarkdownFormatter {
             });
             md += '\n';
         }
-
         return md;
     }
-
     /**
      * Format refactoring data
      * @param {Object} data - Refactoring data
@@ -770,7 +682,6 @@ class MarkdownFormatter {
      */
     formatRefactoringData(data) {
         let md = '';
-        
         if (data.operations && data.operations.length > 0) {
             md += '### Refactoring Operations\n\n';
             data.operations.forEach(op => {
@@ -784,7 +695,6 @@ class MarkdownFormatter {
                 md += '\n';
             });
         }
-
         if (data.metrics) {
             md += '### Refactoring Metrics\n\n';
             md += '| Metric | Before | After | Improvement |\n';
@@ -800,7 +710,6 @@ class MarkdownFormatter {
             });
             md += '\n';
         }
-
         if (data.recommendations && data.recommendations.length > 0) {
             md += '### Refactoring Recommendations\n\n';
             data.recommendations.forEach(rec => {
@@ -808,10 +717,8 @@ class MarkdownFormatter {
             });
             md += '\n';
         }
-
         return md;
     }
-
     /**
      * Format generation data
      * @param {Object} data - Generation data
@@ -819,7 +726,6 @@ class MarkdownFormatter {
      */
     formatGenerationData(data) {
         let md = '';
-        
         if (data.generated && data.generated.length > 0) {
             md += '### Generated Assets\n\n';
             data.generated.forEach(asset => {
@@ -830,7 +736,6 @@ class MarkdownFormatter {
                 md += '\n';
             });
         }
-
         if (data.metrics) {
             md += '### Generation Metrics\n\n';
             md += CONSTANTS.MARKDOWN_TEMPLATES.TABLE_HEADER;
@@ -839,7 +744,6 @@ class MarkdownFormatter {
             });
             md += '\n';
         }
-
         if (data.recommendations && data.recommendations.length > 0) {
             md += '### Generation Recommendations\n\n';
             data.recommendations.forEach(rec => {
@@ -847,10 +751,8 @@ class MarkdownFormatter {
             });
             md += '\n';
         }
-
         return md;
     }
-
     /**
      * Format generic analysis data
      * @param {string} type - Analysis type
@@ -859,9 +761,7 @@ class MarkdownFormatter {
      */
     formatGenericAnalysisData(type, data) {
         let md = '';
-        
         md += `### ${UTILS.formatAnalysisType(type)} Analysis\n\n`;
-        
         if (data.metrics) {
             md += '#### Metrics\n\n';
             md += CONSTANTS.MARKDOWN_TEMPLATES.TABLE_HEADER;
@@ -870,7 +770,6 @@ class MarkdownFormatter {
             });
             md += '\n';
         }
-
         if (data.recommendations && data.recommendations.length > 0) {
             md += '#### Recommendations\n\n';
             data.recommendations.forEach(rec => {
@@ -878,7 +777,6 @@ class MarkdownFormatter {
             });
             md += '\n';
         }
-
         if (data.issues && data.issues.length > 0) {
             md += '#### Issues\n\n';
             data.issues.forEach(issue => {
@@ -888,10 +786,8 @@ class MarkdownFormatter {
                 md += '\n';
             });
         }
-
         return md;
     }
-
     /**
      * Format analysis data based on type
      * @param {string} type - Analysis type
@@ -905,7 +801,6 @@ class MarkdownFormatter {
             const analysisData = data.data;
             const metrics = data.metrics;
             const recommendations = data.recommendations;
-            
             switch (type) {
                 case 'codeQuality':
                 case 'Code Quality':
@@ -934,8 +829,6 @@ class MarkdownFormatter {
                     return this.formatGenericAnalysisData(type, analysisData, metrics, recommendations);
             }
         }
-        
-        // Handle legacy data structure
         switch (type) {
             case 'codeQuality':
             case 'Code Quality':
@@ -965,5 +858,4 @@ class MarkdownFormatter {
         }
     }
 }
-
 module.exports = MarkdownFormatter; 

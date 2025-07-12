@@ -1,10 +1,8 @@
 -- This application is designed for a single administrative user/owner.
 -- All content and configurations are managed by this single owner.
 -- Public visitors do not have accounts and only view the presented content.
-
 -- Enable UUID extension
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
-
 -- SITE OWNER (Single Admin User)
 -- This table stores the credentials and basic info for the single site owner.
 CREATE TABLE IF NOT EXISTS site_owner (
@@ -15,7 +13,6 @@ CREATE TABLE IF NOT EXISTS site_owner (
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
-
 -- THEMES
 -- Themes are general and can be selected by the site owner for the portfolio.
 CREATE TABLE IF NOT EXISTS themes (
@@ -31,7 +28,6 @@ CREATE TABLE IF NOT EXISTS themes (
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
-
 -- SECTIONS
 -- Sections are predefined content blocks/types that the owner can use to build their page.
 CREATE TABLE IF NOT EXISTS sections (
@@ -48,7 +44,6 @@ CREATE TABLE IF NOT EXISTS sections (
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
-
 -- PROJECTS
 -- These are the projects showcased by the site owner. They inherently belong to the owner.
 CREATE TABLE IF NOT EXISTS projects (
@@ -76,7 +71,6 @@ CREATE TABLE IF NOT EXISTS projects (
     last_updated TIMESTAMP WITH TIME ZONE,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-
     -- 📄 Beschreibungen
     own_description TEXT,
     short_description TEXT,
@@ -87,13 +81,11 @@ CREATE TABLE IF NOT EXISTS projects (
     custom_tags TEXT[],
     use_own_description BOOLEAN DEFAULT FALSE,
     use_short_description BOOLEAN DEFAULT FALSE,
-
     -- 📽 Medien
     video_url VARCHAR(255),
     video_host VARCHAR(50),
     gallery_urls TEXT[],
     gif_urls TEXT[],
-
     -- 🧠 Inhalte für Modal
     testimonials TEXT[],
     deployment_notes TEXT,
@@ -102,14 +94,12 @@ CREATE TABLE IF NOT EXISTS projects (
     timeline JSONB,
     releases JSONB,
     changelog TEXT,
-
     -- 🔧 Technik & Details
     tech_stack JSONB,
     ci_tools TEXT[],
     uptime_percentage NUMERIC(5,2),
     bug_count INTEGER,
     analytics JSONB,
-
     -- 👥 Beteiligung
     is_open_source BOOLEAN DEFAULT FALSE,
     contribution_notes TEXT,
@@ -118,21 +108,17 @@ CREATE TABLE IF NOT EXISTS projects (
     sponsors TEXT[],
     team TEXT[],
     team_roles JSONB,
-
     -- 🌍 Internationalisierung
     translations JSONB,
-
     -- 🔗 Weitere
     related_projects TEXT[],
     demo_credentials JSONB,
     roadmap JSONB,
     license TEXT,
     blog_url VARCHAR(255),
-
     -- 🎨 UI Konfiguration
     ui_config JSONB DEFAULT '{}'::jsonb  -- Speichert UI-spezifische Einstellungen wie Sichtbarkeit von Feldern
 );
-
 -- POSTS
 -- Flexible table for all types of blog posts (project updates, general posts, etc.)
 CREATE TABLE IF NOT EXISTS posts (
@@ -140,14 +126,12 @@ CREATE TABLE IF NOT EXISTS posts (
     type VARCHAR(50) NOT NULL DEFAULT 'general' CHECK (type IN ('general', 'project', 'update', 'tutorial', 'news', 'review', 'interview', 'case-study')),
     project_id INTEGER REFERENCES projects(id) ON DELETE SET NULL, -- Optional: Link to a project
     section_id INTEGER REFERENCES sections(id) ON DELETE SET NULL, -- Optional: Link to a section
-    
     -- 📝 Basic Content
     slug VARCHAR(255) UNIQUE NOT NULL,
     title VARCHAR(255) NOT NULL,
     subtitle TEXT,
     content_markdown TEXT,
     excerpt TEXT, -- Short summary for previews
-    
     -- 🖼 Media
     cover_image_url VARCHAR(255),
     cover_image_alt TEXT,
@@ -157,7 +141,6 @@ CREATE TABLE IF NOT EXISTS posts (
     audio_url VARCHAR(255),
     audio_duration INTEGER, -- Duration in seconds
     audio_transcript TEXT, -- For accessibility
-    
     -- 📊 SEO & Stats
     seo_title VARCHAR(255),
     seo_description TEXT,
@@ -166,14 +149,12 @@ CREATE TABLE IF NOT EXISTS posts (
     view_count INTEGER DEFAULT 0,
     like_count INTEGER DEFAULT 0,
     comment_count INTEGER DEFAULT 0,
-    
     -- 🏷 Organization
     author TEXT,
     tags TEXT[],
     categories TEXT[],
     series TEXT, -- For multi-part posts
     related_posts INTEGER[], -- References to other posts
-    
     -- 📅 Publishing
     published_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
@@ -181,47 +162,38 @@ CREATE TABLE IF NOT EXISTS posts (
     is_public BOOLEAN DEFAULT TRUE,
     is_featured BOOLEAN DEFAULT FALSE,
     is_pinned BOOLEAN DEFAULT FALSE,
-    
     -- 🌍 Internationalization
     language VARCHAR(10) DEFAULT 'en',
     translations JSONB, -- Store translations for other languages
-    
     -- 🔒 Access Control
     access_level VARCHAR(20) DEFAULT 'public' CHECK (access_level IN ('public', 'private', 'premium')),
-    
     -- 📈 Analytics
     analytics JSONB, -- Store additional analytics data
-    
     -- 🎨 Customization
     custom_css TEXT,
     custom_js TEXT,
     layout_variant VARCHAR(50) DEFAULT 'default',
-    
     -- 📚 Tutorial Specific
     difficulty_level VARCHAR(20) CHECK (difficulty_level IN ('beginner', 'intermediate', 'advanced', 'expert')),
     estimated_completion_time INTEGER, -- In minutes
     prerequisites TEXT[], -- Required knowledge/skills
     learning_objectives TEXT[], -- What will be learned
     resources JSONB, -- Additional resources, links, downloads
-    
     -- 📝 Content Management
     revision_history JSONB, -- Track changes and versions
     last_reviewed_at TIMESTAMPTZ,
     last_reviewed_by TEXT,
     content_status VARCHAR(20) DEFAULT 'draft' CHECK (content_status IN ('draft', 'review', 'approved', 'published', 'archived')),
-    
     -- 🎯 Engagement
     target_audience TEXT[],
     engagement_metrics JSONB, -- Store likes, shares, comments details
     feedback JSONB, -- Store user feedback and ratings
-    
     -- 🔄 Workflow
     assigned_to TEXT,
     review_notes TEXT,
     publication_schedule TIMESTAMPTZ,
     expiration_date TIMESTAMPTZ
 );
-
 -- SKILLS
 -- These are the skills showcased by the site owner. They inherently belong to the owner.
 CREATE TABLE IF NOT EXISTS skills (
@@ -235,7 +207,6 @@ CREATE TABLE IF NOT EXISTS skills (
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
-
 -- AI GENERATED CONTENT
 -- Stores content generated by AI, associated with the owner and optionally a page layout section.
 CREATE TABLE IF NOT EXISTS ai_generated_content (
@@ -250,8 +221,6 @@ CREATE TABLE IF NOT EXISTS ai_generated_content (
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
-
-
 CREATE TABLE IF NOT EXISTS files (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     name VARCHAR(255) NOT NULL,
@@ -267,7 +236,6 @@ CREATE TABLE IF NOT EXISTS files (
     -- weitere Metadaten nach Bedarf
     UNIQUE (parent_id, name)
 );
-
 CREATE TABLE IF NOT EXISTS layouts (
     id SERIAL PRIMARY KEY,
     page VARCHAR(255) NOT NULL DEFAULT 'home',
@@ -278,7 +246,7 @@ CREATE TABLE IF NOT EXISTS layouts (
     is_public BOOLEAN DEFAULT TRUE,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    -- Legacy fields for backward compatibility (not used in new implementation)
+    --  fields for backward compatibility (not used in new implementation)
     name VARCHAR(255),
     description TEXT,
     grid_config JSONB,
@@ -289,6 +257,5 @@ CREATE TABLE IF NOT EXISTS layouts (
     sidebar_position VARCHAR(50),
     content JSONB
 );
-
 -- Index for efficient page-based queries
 CREATE INDEX IF NOT EXISTS idx_layouts_page ON layouts(page);

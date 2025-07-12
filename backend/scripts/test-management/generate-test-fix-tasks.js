@@ -1,6 +1,5 @@
 #!/usr/bin/env node
 require('module-alias/register');
-
 /**
  * CLI Script: Generate and Process Test Fix Tasks
  * 
@@ -15,14 +14,11 @@ require('module-alias/register');
  *   --dry-run                 Only generate tasks, don't process them
  *   --help                    Show this help
  */
-
 const path = require('path');
 const fs = require('fs');
-
 // Add backend to module path
 const backendPath = path.resolve(__dirname, '..', '..');
 require('module').globalPaths.push(backendPath);
-
 // Import services
 const TestReportParser = require('@/domain/services/TestReportParser');
 const TestFixTaskGenerator = require('@/domain/services/TestFixTaskGenerator');
@@ -31,7 +27,6 @@ const SQLiteTaskRepository = require('@/infrastructure/database/SQLiteTaskReposi
 const CursorIDEService = require('@/domain/services/CursorIDEService');
 const BrowserManager = require('@/infrastructure/external/BrowserManager');
 const IDEManager = require('@/infrastructure/external/IDEManager');
-
 class TestFixTaskCLI {
   constructor() {
     this.options = {
@@ -45,21 +40,17 @@ class TestFixTaskCLI {
       taskStatus: null, // Optional status filter
       help: false
     };
-    
     this.logger = console;
     this.taskRepository = null;
     this.autoTestFixSystem = null;
   }
-
   /**
    * Parse command line arguments
    */
   parseArguments() {
     const args = process.argv.slice(2);
-    
     for (let i = 0; i < args.length; i++) {
       const arg = args[i];
-      
       switch (arg) {
         case '--project-path':
         case '-p':
@@ -98,16 +89,13 @@ class TestFixTaskCLI {
       }
     }
   }
-
   /**
    * Display help information
    */
   showHelp() {
     console.log(`
 Test Fix Task Generator CLI
-
 Usage: node generate-test-fix-tasks.js [options]
-
 Options:
   --project-path, -p <path>     Project path (default: current directory)
   --project-id <id>             Project ID (default: 'system')
@@ -118,41 +106,32 @@ Options:
   --load-existing-tasks         Load existing tasks instead of generating new ones
   --task-status <status>        Filter existing tasks by status (pending, in_progress, etc.)
   --help, -h                    Show this help message
-
 Examples:
   # Generate new tasks from test reports
   node generate-test-fix-tasks.js --project-path /path/to/project
-
   # Load existing pending tasks
   node generate-test-fix-tasks.js --load-existing-tasks --task-status pending
-
   # Load existing tasks with fallback to generating new ones
   node generate-test-fix-tasks.js --load-existing-tasks
-
   # Clear existing tasks and generate new ones
   node generate-test-fix-tasks.js --clear-existing
-
   # Dry run to see what would be generated
   node generate-test-fix-tasks.js --dry-run
 `);
   }
-
   /**
    * Initialize services
    */
   async initializeServices() {
     try {
       this.logger.info('[TestFixTaskCLI] Initializing services...');
-
       // Initialize database - SQLiteTaskRepository doesn't need initialize()
       this.taskRepository = new SQLiteTaskRepository();
-
       // Initialize IDE services if not dry run
       if (!this.options.dryRun) {
         this.browserManager = new BrowserManager();
         this.ideManager = new IDEManager(this.browserManager);
         this.cursorIDE = new CursorIDEService(this.browserManager, this.ideManager);
-        
         // Try to connect to existing IDE
         try {
           const availableIDEs = await this.ideManager.getAvailableIDEs();
@@ -169,7 +148,6 @@ Examples:
           this.cursorIDE = null;
         }
       }
-
       // Initialize AutoTestFixSystem
       this.autoTestFixSystem = new AutoTestFixSystem({
         taskRepository: this.taskRepository,
@@ -177,18 +155,14 @@ Examples:
         webSocketManager: null, // No WebSocket for CLI
         logger: this.logger
       });
-
       await this.autoTestFixSystem.initialize();
-
       this.logger.info('[TestFixTaskCLI] Services initialized successfully');
       return true;
-
     } catch (error) {
       this.logger.error('[TestFixTaskCLI] Failed to initialize services:', error.message);
       throw error;
     }
   }
-
   /**
    * Check if output files exist
    */
@@ -199,27 +173,22 @@ Examples:
       'coverage.md',
       'test-analysis-full.json'
     ];
-
     const missingFiles = [];
-    
     for (const file of requiredFiles) {
       const filePath = path.join(this.options.projectPath, file);
       if (!fs.existsSync(filePath)) {
         missingFiles.push(file);
       }
     }
-
     if (missingFiles.length > 0) {
       this.logger.error('[TestFixTaskCLI] Missing required output files:');
       missingFiles.forEach(file => this.logger.error(`  - ${file}`));
       this.logger.error('\nPlease run "npm run test:full" first to generate the required output files.');
       return false;
     }
-
     this.logger.info('[TestFixTaskCLI] All required output files found');
     return true;
   }
-
   /**
    * Run the test fix workflow
    */
@@ -227,13 +196,11 @@ Examples:
     try {
       // Parse command line arguments
       this.parseArguments();
-      
       // Show help if requested
       if (this.options.help) {
         this.showHelp();
         return;
       }
-
       this.logger.info('[TestFixTaskCLI] Starting test fix task generation...');
       this.logger.info(`[TestFixTaskCLI] Project path: ${this.options.projectPath}`);
       this.logger.info(`[TestFixTaskCLI] Project ID: ${this.options.projectId}`);
@@ -242,15 +209,12 @@ Examples:
       this.logger.info(`[TestFixTaskCLI] Clear existing: ${this.options.clearExisting}`);
       this.logger.info(`[TestFixTaskCLI] Load existing tasks: ${this.options.loadExistingTasks}`);
       this.logger.info(`[TestFixTaskCLI] Task status filter: ${this.options.taskStatus || 'none'}`);
-
       // Check output files only if not loading existing tasks
       if (!this.options.loadExistingTasks && !this.checkOutputFiles()) {
         process.exit(1);
       }
-
       // Initialize services
       await this.initializeServices();
-
       // Execute workflow
       const result = await this.autoTestFixSystem.executeAutoTestFixWorkflow({
         projectPath: this.options.projectPath,
@@ -262,19 +226,15 @@ Examples:
         loadExistingTasks: this.options.loadExistingTasks,
         taskStatus: this.options.taskStatus
       });
-
       // Display results
       this.displayResults(result);
-
       this.logger.info('[TestFixTaskCLI] Test fix task generation completed successfully');
       return result;
-
     } catch (error) {
       this.logger.error('[TestFixTaskCLI] Test fix task generation failed:', error.message);
       process.exit(1);
     }
   }
-
   /**
    * Display results
    */
@@ -282,22 +242,18 @@ Examples:
     console.log('\n' + '='.repeat(60));
     console.log('TEST FIX TASK GENERATION RESULTS');
     console.log('='.repeat(60));
-    
     console.log(`\nSession ID: ${result.sessionId}`);
     console.log(`Duration: ${result.duration}ms`);
     console.log(`Success: ${result.success ? 'Yes' : 'No'}`);
-    
     if (result.parsedData) {
       console.log('\nParsed Data:');
       console.log(`  - Failing Tests: ${result.parsedData.failingTests.length}`);
       console.log(`  - Coverage Issues: ${result.parsedData.coverageIssues.length}`);
-      console.log(`  - Legacy Tests: ${result.parsedData.legacyTests.length}`);
+      console.log(`  -  Tests: ${result.parsedData.Tests.length}`);
     }
-    
     if (result.tasksGenerated) {
       console.log(`\nTasks Generated: ${result.tasksGenerated}`);
     }
-    
     if (result.processingResult) {
       const pr = result.processingResult;
       console.log('\nProcessing Results:');
@@ -306,17 +262,14 @@ Examples:
       console.log(`  - Failed: ${pr.failedTasks}`);
       console.log(`  - Success Rate: ${pr.totalTasks > 0 ? Math.round((pr.completedTasks / pr.totalTasks) * 100) : 0}%`);
     }
-    
     if (result.report && result.report.recommendations) {
       console.log('\nRecommendations:');
       result.report.recommendations.forEach((rec, index) => {
         console.log(`  ${index + 1}. [${rec.priority.toUpperCase()}] ${rec.message}`);
       });
     }
-    
     console.log('\n' + '='.repeat(60));
   }
-
   /**
    * Cleanup resources
    */
@@ -325,22 +278,18 @@ Examples:
       if (this.autoTestFixSystem) {
         await this.autoTestFixSystem.cleanup();
       }
-      
       if (this.taskRepository) {
         await this.taskRepository.close();
       }
-      
       this.logger.info('[TestFixTaskCLI] Cleanup completed');
     } catch (error) {
       this.logger.error('[TestFixTaskCLI] Cleanup failed:', error.message);
     }
   }
 }
-
 // Main execution
 async function main() {
   const cli = new TestFixTaskCLI();
-  
   try {
     await cli.run();
   } catch (error) {
@@ -350,10 +299,8 @@ async function main() {
     await cli.cleanup();
   }
 }
-
 // Run if called directly
 if (require.main === module) {
   main();
 }
-
 module.exports = TestFixTaskCLI; 

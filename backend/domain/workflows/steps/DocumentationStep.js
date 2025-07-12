@@ -12,6 +12,17 @@ class DocumentationStep extends BaseWorkflowStep {
     super('DocumentationStep', `Performs ${documentationType} documentation`, 'documentation');
     this._documentationType = documentationType;
     this._options = { ...options };
+    
+    // Initialize generate step components if available
+    this._generateStepFactory = null;
+    this._generateStepRegistry = null;
+    this._generateServiceAdapter = null;
+    this._generateComplexityManager = null;
+    this._generateValidationService = null;
+    this._generatePerformanceOptimizer = null;
+    
+    // Try to load generate step components
+    this._loadGenerateStepComponents();
   }
 
   /**
@@ -48,6 +59,12 @@ class DocumentationStep extends BaseWorkflowStep {
         return await this._formatDocumentation(context, projectPath);
       case 'include-api':
         return await this._includeApiDocumentation(context, projectPath);
+      case 'generate-script':
+        return await this._generateScript(context, projectPath);
+      case 'generate-scripts':
+        return await this._generateScripts(context, projectPath);
+      case 'generate-documentation':
+        return await this._generateDocumentationStep(context, projectPath);
       default:
         throw new Error(`Unknown documentation type: ${this._documentationType}`);
     }
@@ -184,6 +201,115 @@ class DocumentationStep extends BaseWorkflowStep {
   }
 
   /**
+   * Generate script using generate step
+   * @param {IWorkflowContext} context - Workflow context
+   * @param {string} projectPath - Project path
+   * @returns {Promise<Object>} Script generation result
+   */
+  async _generateScript(context, projectPath) {
+    if (!this._generateStepFactory) {
+      throw new Error('Generate step components not available');
+    }
+
+    const task = context.get('task');
+    const generateStep = this._generateStepFactory.createGenerateScriptStep(task, this._options);
+    
+    // Validate step
+    if (this._generateValidationService) {
+      const validationResult = await this._generateValidationService.validateGenerateScriptStep(generateStep, context);
+      if (!validationResult.isValid) {
+        throw new Error(`Generate script validation failed: ${validationResult.errors.join(', ')}`);
+      }
+    }
+
+    // Execute step with performance optimization
+    if (this._generatePerformanceOptimizer) {
+      return await this._generatePerformanceOptimizer.executeWithOptimization(generateStep, context);
+    } else {
+      return await generateStep.execute(context);
+    }
+  }
+
+  /**
+   * Generate scripts using generate step
+   * @param {IWorkflowContext} context - Workflow context
+   * @param {string} projectPath - Project path
+   * @returns {Promise<Object>} Scripts generation result
+   */
+  async _generateScripts(context, projectPath) {
+    if (!this._generateStepFactory) {
+      throw new Error('Generate step components not available');
+    }
+
+    const task = context.get('task');
+    const generateStep = this._generateStepFactory.createGenerateScriptsStep(task, this._options);
+    
+    // Validate step
+    if (this._generateValidationService) {
+      const validationResult = await this._generateValidationService.validateGenerateScriptsStep(generateStep, context);
+      if (!validationResult.isValid) {
+        throw new Error(`Generate scripts validation failed: ${validationResult.errors.join(', ')}`);
+      }
+    }
+
+    // Execute step with performance optimization
+    if (this._generatePerformanceOptimizer) {
+      return await this._generatePerformanceOptimizer.executeWithOptimization(generateStep, context);
+    } else {
+      return await generateStep.execute(context);
+    }
+  }
+
+  /**
+   * Generate documentation using generate step
+   * @param {IWorkflowContext} context - Workflow context
+   * @param {string} projectPath - Project path
+   * @returns {Promise<Object>} Documentation generation result
+   */
+  async _generateDocumentationStep(context, projectPath) {
+    if (!this._generateStepFactory) {
+      throw new Error('Generate step components not available');
+    }
+
+    const task = context.get('task');
+    const generateStep = this._generateStepFactory.createGenerateDocumentationStep(task, this._options);
+    
+    // Validate step
+    if (this._generateValidationService) {
+      const validationResult = await this._generateValidationService.validateGenerateDocumentationStep(generateStep, context);
+      if (!validationResult.isValid) {
+        throw new Error(`Generate documentation validation failed: ${validationResult.errors.join(', ')}`);
+      }
+    }
+
+    // Execute step with performance optimization
+    if (this._generatePerformanceOptimizer) {
+      return await this._generatePerformanceOptimizer.executeWithOptimization(generateStep, context);
+    } else {
+      return await generateStep.execute(context);
+    }
+  }
+
+  /**
+   * Load generate step components
+   */
+  _loadGenerateStepComponents() {
+    try {
+      const generateSteps = require('./generate');
+      
+      this._generateStepFactory = generateSteps.GenerateStepFactory;
+      this._generateStepRegistry = generateSteps.GenerateStepRegistry;
+      this._generateServiceAdapter = generateSteps.GenerateServiceAdapter;
+      this._generateComplexityManager = generateSteps.GenerateComplexityManager;
+      this._generateValidationService = generateSteps.GenerateValidationService;
+      this._generatePerformanceOptimizer = generateSteps.GeneratePerformanceOptimizer;
+    } catch (error) {
+      // Generate step components not available, continue without them
+      console.warn('Generate step components not available:', error.message);
+    }
+  }
+
+  /**
    * Get documentation type
    * @returns {string} Documentation type
    */
@@ -256,7 +382,7 @@ class DocumentationStep extends BaseWorkflowStep {
     // Validate documentation type
     const validTypes = [
       'generate-docs', 'generate-report', 'update-readme', 'generate-api-docs',
-      'validate-docs', 'format-docs', 'include-api'
+      'validate-docs', 'format-docs', 'include-api', 'generate-script', 'generate-scripts', 'generate-documentation'
     ];
 
     if (!validTypes.includes(this._documentationType)) {

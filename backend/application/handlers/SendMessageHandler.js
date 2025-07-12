@@ -1,7 +1,6 @@
 const SendMessageCommand = require('@/application/commands/SendMessageCommand');
 const ChatMessage = require('@/domain/entities/ChatMessage');
 const ChatSession = require('@/domain/entities/ChatSession');
-
 /**
  * SendMessageHandler - Handles task/AI messaging commands
  * Implements the Command Handler pattern for messaging
@@ -17,7 +16,6 @@ class SendMessageHandler {
     this.logger = dependencies.logger;
     this.handlerId = this.generateHandlerId();
   }
-
   /**
    * Validate handler dependencies
    * @param {Object} dependencies - Handler dependencies
@@ -38,7 +36,6 @@ class SendMessageHandler {
       }
     }
   }
-
   /**
    * Get the appropriate IDE service based on active port
    * @returns {Object} The appropriate IDE service
@@ -46,7 +43,6 @@ class SendMessageHandler {
   getActiveIDEService() {
     const activePort = this.ideManager.getActivePort();
     console.log('[SendMessageHandler] Active port:', activePort);
-    
     // Determine IDE type based on port range
     if (activePort >= 9222 && activePort <= 9231) {
       console.log('[SendMessageHandler] Using Cursor IDE service');
@@ -62,7 +58,6 @@ class SendMessageHandler {
       return this.cursorIDEService; // fallback
     }
   }
-
   /**
    * Generate unique handler ID
    * @returns {string} Unique handler ID
@@ -70,7 +65,6 @@ class SendMessageHandler {
   generateHandlerId() {
     return `send_message_handler_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
   }
-
   /**
    * Handle SendMessageCommand
    * @param {SendMessageCommand} command - Messaging command
@@ -128,7 +122,6 @@ class SendMessageHandler {
       throw error;
     }
   }
-
   /**
    * Validate command
    * @param {SendMessageCommand} command - Messaging command
@@ -150,20 +143,16 @@ class SendMessageHandler {
       warnings
     };
   }
-
   async handleUserSpecificCommand(command) {
     const { content, userId, sessionId, timestamp, metadata = {} } = command;
-
     try {
       // Validate input
       if (!content || content.trim().length === 0) {
         throw new Error('Message content is required');
       }
-
       if (!userId) {
         throw new Error('User ID is required');
       }
-
       // Create message entity
       const type = content.includes('```') ? 'code' : 'text';
       const message = ChatMessage.createUserMessage(content, type, {
@@ -171,7 +160,6 @@ class SendMessageHandler {
         userId: userId,
         timestamp: timestamp
       });
-
       // Get or create session
       let session;
       if (sessionId) {
@@ -179,7 +167,6 @@ class SendMessageHandler {
         if (!session) {
           throw new Error('Session not found');
         }
-        
         // Check if user can access this session
         if (!session.belongsToUser(userId)) {
           throw new Error('Access denied to this session');
@@ -197,24 +184,18 @@ class SendMessageHandler {
           }
         );
       }
-
       // Add message to session
       session.addMessage(message);
-
       // Save to repository
       await this.chatRepository.saveSession(session);
-
       // Get the appropriate IDE service
       const activeIDEService = this.getActiveIDEService();
-
       // Switch to session's IDE if needed
       if (session.idePort) {
         await activeIDEService.switchToSession(session);
       }
-
       // Send to the appropriate IDE
       await activeIDEService.sendMessage(content);
-
       // Publish events
       if (this.eventBus) {
         await this.eventBus.publish('MessageSent', {
@@ -227,7 +208,6 @@ class SendMessageHandler {
           timestamp: message.timestamp
         });
       }
-
       return {
         success: true,
         sessionId: session.id,
@@ -235,22 +215,18 @@ class SendMessageHandler {
         response: 'Message sent successfully',
         timestamp: new Date()
       };
-
     } catch (error) {
       console.error('[SendMessageHandler] Error:', error);
       throw error;
     }
   }
-
-  async handleLegacyCommand(command) {
+  async handleCommand(command) {
     // Validate command
     command.validate();
-
     try {
       // Create message entity
       const type = command.content.includes('```') ? 'code' : 'text';
       const message = ChatMessage.createUserMessage(command.content, type);
-
       // Get or create session
       let session;
       if (command.sessionId) {
@@ -263,24 +239,18 @@ class SendMessageHandler {
         const activePort = this.ideManager.getActivePort();
         session = new ChatSession(null, null, {}, activePort);
       }
-
       // Add message to session
       session.addMessage(message);
-
       // Save to repository
       await this.chatRepository.saveSession(session);
-
       // Get the appropriate IDE service
       const activeIDEService = this.getActiveIDEService();
-
       // Switch to session's IDE if needed
       if (session.idePort) {
         await activeIDEService.switchToSession(session);
       }
-
       // Send to the appropriate IDE
       await activeIDEService.sendMessage(command.content);
-
       // Publish events
       if (this.eventBus) {
         await this.eventBus.publish('MessageSent', {
@@ -292,19 +262,16 @@ class SendMessageHandler {
           timestamp: message.timestamp
         });
       }
-
       return {
         success: true,
         sessionId: session.id,
         messageId: message.id,
         message: message
       };
-
     } catch (error) {
       console.error('[SendMessageHandler] Error:', error);
       throw error;
     }
   }
 }
-
 module.exports = SendMessageHandler; 

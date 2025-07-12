@@ -4,13 +4,11 @@
 const TestManagementService = require('@/domain/services/TestManagementService');
 const UpdateTestStatusCommand = require('@/application/commands/UpdateTestStatusCommand');
 const UpdateTestStatusHandler = require('@/application/handlers/UpdateTestStatusHandler');
-
 class TestManagementController {
     constructor() {
         this.testManagementService = new TestManagementService();
         this.updateTestStatusHandler = new UpdateTestStatusHandler(this.testManagementService);
     }
-
     /**
      * Get test statistics
      * @param {Object} req - Express request object
@@ -32,7 +30,6 @@ class TestManagementController {
             });
         }
     }
-
     /**
      * Get all test metadata with optional filters
      * @param {Object} req - Express request object
@@ -42,7 +39,6 @@ class TestManagementController {
         try {
             const filters = req.query;
             const tests = await this.testManagementService.getTestsByFilters(filters);
-            
             res.json({
                 success: true,
                 data: tests.map(test => test.toJSON()),
@@ -57,7 +53,6 @@ class TestManagementController {
             });
         }
     }
-
     /**
      * Get test metadata by ID
      * @param {Object} req - Express request object
@@ -67,7 +62,6 @@ class TestManagementController {
         try {
             const { id } = req.params;
             const testMetadata = await this.testManagementService.testMetadataRepository.findById(id);
-            
             if (!testMetadata) {
                 return res.status(404).json({
                     success: false,
@@ -75,7 +69,6 @@ class TestManagementController {
                     timestamp: new Date()
                 });
             }
-            
             res.json({
                 success: true,
                 data: testMetadata.toJSON(),
@@ -89,7 +82,6 @@ class TestManagementController {
             });
         }
     }
-
     /**
      * Update test status
      * @param {Object} req - Express request object
@@ -98,7 +90,6 @@ class TestManagementController {
     async updateTestStatus(req, res) {
         try {
             const { filePath, testName, status, duration, error, metadata } = req.body;
-            
             const command = UpdateTestStatusCommand.create(
                 filePath,
                 testName,
@@ -107,9 +98,7 @@ class TestManagementController {
                 error || null,
                 metadata || {}
             );
-            
             const result = await this.updateTestStatusHandler.handle(command);
-            
             if (result.success) {
                 res.json({
                     success: true,
@@ -133,7 +122,6 @@ class TestManagementController {
             });
         }
     }
-
     /**
      * Register a new test
      * @param {Object} req - Express request object
@@ -142,7 +130,6 @@ class TestManagementController {
     async registerTest(req, res) {
         try {
             const { filePath, testName, metadata } = req.body;
-            
             if (!filePath || !testName) {
                 return res.status(400).json({
                     success: false,
@@ -150,13 +137,11 @@ class TestManagementController {
                     timestamp: new Date()
                 });
             }
-            
             const testMetadata = await this.testManagementService.registerTest(
                 filePath,
                 testName,
                 metadata || {}
             );
-            
             res.json({
                 success: true,
                 data: testMetadata.toJSON(),
@@ -171,7 +156,6 @@ class TestManagementController {
             });
         }
     }
-
     /**
      * Scan and register tests in directory
      * @param {Object} req - Express request object
@@ -180,7 +164,6 @@ class TestManagementController {
     async scanAndRegisterTests(req, res) {
         try {
             const { directory, pattern } = req.body;
-            
             if (!directory) {
                 return res.status(400).json({
                     success: false,
@@ -188,12 +171,10 @@ class TestManagementController {
                     timestamp: new Date()
                 });
             }
-            
             const registeredTests = await this.testManagementService.scanAndRegisterTests(
                 directory,
                 pattern || '**/*.test.js'
             );
-            
             res.json({
                 success: true,
                 data: registeredTests.map(test => test.toJSON()),
@@ -209,20 +190,17 @@ class TestManagementController {
             });
         }
     }
-
     /**
-     * Get legacy tests
+     * Get  tests
      * @param {Object} req - Express request object
      * @param {Object} res - Express response object
      */
-    async getLegacyTests(req, res) {
+    async getTests(req, res) {
         try {
-            const legacyTests = await this.testManagementService.testMetadataRepository.findLegacyTests();
-            
             res.json({
                 success: true,
-                data: legacyTests.map(test => test.toJSON()),
-                count: legacyTests.length,
+                data: Tests.map(test => test.toJSON()),
+                count: Tests.length,
                 timestamp: new Date()
             });
         } catch (error) {
@@ -233,7 +211,6 @@ class TestManagementController {
             });
         }
     }
-
     /**
      * Get tests needing maintenance
      * @param {Object} req - Express request object
@@ -242,7 +219,6 @@ class TestManagementController {
     async getTestsNeedingMaintenance(req, res) {
         try {
             const maintenanceTests = await this.testManagementService.testMetadataRepository.findNeedingMaintenance();
-            
             res.json({
                 success: true,
                 data: maintenanceTests.map(test => test.toJSON()),
@@ -257,7 +233,6 @@ class TestManagementController {
             });
         }
     }
-
     /**
      * Get tests by status
      * @param {Object} req - Express request object
@@ -267,7 +242,6 @@ class TestManagementController {
         try {
             const { status } = req.params;
             const tests = await this.testManagementService.testMetadataRepository.findByStatus(status);
-            
             res.json({
                 success: true,
                 data: tests.map(test => test.toJSON()),
@@ -283,7 +257,6 @@ class TestManagementController {
             });
         }
     }
-
     /**
      * Get tests by tag
      * @param {Object} req - Express request object
@@ -293,7 +266,6 @@ class TestManagementController {
         try {
             const { tag } = req.params;
             const tests = await this.testManagementService.testMetadataRepository.findByTag(tag);
-            
             res.json({
                 success: true,
                 data: tests.map(test => test.toJSON()),
@@ -309,7 +281,6 @@ class TestManagementController {
             });
         }
     }
-
     /**
      * Get test health report
      * @param {Object} req - Express request object
@@ -318,7 +289,6 @@ class TestManagementController {
     async getHealthReport(req, res) {
         try {
             const healthReport = await this.testManagementService.generateHealthReport();
-            
             res.json({
                 success: true,
                 data: healthReport,
@@ -332,7 +302,6 @@ class TestManagementController {
             });
         }
     }
-
     /**
      * Get test recommendations
      * @param {Object} req - Express request object
@@ -341,7 +310,6 @@ class TestManagementController {
     async getRecommendations(req, res) {
         try {
             const recommendations = await this.testManagementService.generateRecommendations();
-            
             res.json({
                 success: true,
                 data: recommendations,
@@ -356,7 +324,6 @@ class TestManagementController {
             });
         }
     }
-
     /**
      * Export test metadata
      * @param {Object} req - Express request object
@@ -365,7 +332,6 @@ class TestManagementController {
     async exportTestMetadata(req, res) {
         try {
             const { filePath } = req.body;
-            
             if (!filePath) {
                 return res.status(400).json({
                     success: false,
@@ -373,9 +339,7 @@ class TestManagementController {
                     timestamp: new Date()
                 });
             }
-            
             await this.testManagementService.exportTestMetadata(filePath);
-            
             res.json({
                 success: true,
                 message: `Test metadata exported to ${filePath}`,
@@ -389,7 +353,6 @@ class TestManagementController {
             });
         }
     }
-
     /**
      * Import test metadata
      * @param {Object} req - Express request object
@@ -398,7 +361,6 @@ class TestManagementController {
     async importTestMetadata(req, res) {
         try {
             const { filePath } = req.body;
-            
             if (!filePath) {
                 return res.status(400).json({
                     success: false,
@@ -406,9 +368,7 @@ class TestManagementController {
                     timestamp: new Date()
                 });
             }
-            
             const importedCount = await this.testManagementService.importTestMetadata(filePath);
-            
             res.json({
                 success: true,
                 data: { importedCount },
@@ -423,7 +383,6 @@ class TestManagementController {
             });
         }
     }
-
     /**
      * Delete test metadata
      * @param {Object} req - Express request object
@@ -433,7 +392,6 @@ class TestManagementController {
         try {
             const { id } = req.params;
             const deleted = await this.testManagementService.testMetadataRepository.deleteById(id);
-            
             if (!deleted) {
                 return res.status(404).json({
                     success: false,
@@ -441,7 +399,6 @@ class TestManagementController {
                     timestamp: new Date()
                 });
             }
-            
             res.json({
                 success: true,
                 message: 'Test metadata deleted successfully',
@@ -455,7 +412,6 @@ class TestManagementController {
             });
         }
     }
-
     /**
      * Get paginated test metadata
      * @param {Object} req - Express request object
@@ -465,9 +421,7 @@ class TestManagementController {
         try {
             const page = parseInt(req.query.page) || 1;
             const limit = parseInt(req.query.limit) || 20;
-            
             const result = await this.testManagementService.testMetadataRepository.findWithPagination(page, limit);
-            
             res.json({
                 success: true,
                 data: result.data.map(test => test.toJSON()),
@@ -488,5 +442,4 @@ class TestManagementController {
         }
     }
 }
-
 module.exports = TestManagementController; 
