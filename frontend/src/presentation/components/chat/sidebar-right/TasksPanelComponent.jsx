@@ -262,14 +262,12 @@ ${taskDetails.description}
 
   // Helper function to get filename from task
   const getTaskFilename = (task) => {
-    // Try different possible field names for filename
-    return task.metadata?.filename || 
-           task.metadata?.file || 
-           task.filename || 
-           task.file || 
-           task.source || 
-           task.metadata?.source || 
-           'Unknown file';
+    return (
+      task.metadata?.filename ||
+      task.filename ||
+      (task.metadata?.category && task.metadata.category.filename) ||
+      'Unknown file'
+    );
   };
 
   // Helper function to get task description
