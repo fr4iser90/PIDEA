@@ -67,14 +67,37 @@ function AutoPanelComponent({ eventBus }) {
   const handleAutoRefactor = async () => {
     setFeedback('Loading refactoring tasks...');
     try {
-      // Get refactoring tasks from the auto-refactor endpoint
+      // Get refactoring tasks from the unified auto mode with refactor mode
       const projectId = await api.getCurrentProjectId();
       const response = await api.startAutoRefactor(projectId);
       
-      if (response.success && response.data && response.data.tasks) {
-        setRefactoringTasks(response.data.tasks);
+      console.log('[AutoPanelComponent] Auto refactor response:', response);
+      console.log('[AutoPanelComponent] Response data:', response.data);
+      console.log('[AutoPanelComponent] Response data.result:', response.data?.result);
+      console.log('[AutoPanelComponent] Response data.result.results:', response.data?.result?.results);
+      console.log('[AutoPanelComponent] Response data.result.result:', response.data?.result?.result);
+      console.log('[AutoPanelComponent] Response data.result.result.results:', response.data?.result?.result?.results);
+      
+      // Check for tasks in different possible locations
+      let tasks = null;
+
+      if (
+        response &&
+        response.data &&
+        response.data.result &&
+        response.data.result.result &&
+        Array.isArray(response.data.result.result.tasks)
+      ) {
+        tasks = response.data.result.result.tasks;
+        console.log('[AutoPanelComponent] Found tasks in response.data.result.result.tasks:', tasks);
+      } else {
+        console.log('[AutoPanelComponent] No tasks found in any location');
+      }
+      
+      if (tasks && tasks.length > 0) {
+        setRefactoringTasks(tasks);
         setShowAutoRefactorModal(true);
-        setFeedback('Refactoring tasks loaded successfully!');
+        setFeedback(`Refactoring tasks loaded successfully! Found ${tasks.length} tasks.`);
       } else {
         setFeedback('No refactoring tasks found or failed to load tasks');
       }

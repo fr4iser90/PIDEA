@@ -413,9 +413,13 @@ export default class APIChatRepository extends ChatRepository {
       throw new Error('No active IDE with workspace path found');
     }
     
-    return apiCall(API_CONFIG.endpoints.tasks.autoRefactor.execute(currentProjectId), {
+    // Use the unified auto mode with refactor mode
+    return apiCall(API_CONFIG.endpoints.tasks.autoMode.start(currentProjectId), {
       method: 'POST',
-      body: JSON.stringify({ projectPath: activeIDE.workspacePath })
+      body: JSON.stringify({ 
+        mode: 'refactor',
+        projectPath: activeIDE.workspacePath 
+      })
     });
   }
 

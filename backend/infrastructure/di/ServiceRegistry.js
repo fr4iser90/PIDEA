@@ -237,6 +237,30 @@ class ServiceRegistry {
             return new TaskValidationService(taskRepository, taskExecutionRepository, cursorIDEService, eventBus, fileSystemService);
         }, { singleton: true, dependencies: ['taskRepository', 'taskExecutionRepository', 'cursorIDEService', 'eventBus', 'fileSystemService'] });
 
+        // Code quality service (Domain Service)
+        this.container.register('codeQualityService', (codeQualityAnalyzer, eventBus, logger, analysisOutputService, analysisRepository) => {
+            const CodeQualityService = require('@services/CodeQualityService');
+            return new CodeQualityService(codeQualityAnalyzer, eventBus, logger, analysisOutputService, analysisRepository);
+        }, { singleton: true, dependencies: ['codeQualityAnalyzer', 'eventBus', 'logger', 'analysisOutputService', 'analysisRepository'] });
+
+        // Security service (Domain Service)
+        this.container.register('securityService', (securityAnalyzer, eventBus, logger) => {
+            const SecurityService = require('@services/SecurityService');
+            return new SecurityService(securityAnalyzer, eventBus, logger);
+        }, { singleton: true, dependencies: ['securityAnalyzer', 'eventBus', 'logger'] });
+
+        // Performance service (Domain Service)
+        this.container.register('performanceService', (performanceAnalyzer, eventBus, logger) => {
+            const PerformanceService = require('@services/PerformanceService');
+            return new PerformanceService(performanceAnalyzer, eventBus, logger);
+        }, { singleton: true, dependencies: ['performanceAnalyzer', 'eventBus', 'logger'] });
+
+        // Architecture service (Domain Service)
+        this.container.register('architectureService', (architectureAnalyzer, eventBus, logger) => {
+            const ArchitectureService = require('@services/ArchitectureService');
+            return new ArchitectureService(architectureAnalyzer, eventBus, logger);
+        }, { singleton: true, dependencies: ['architectureAnalyzer', 'eventBus', 'logger'] });
+
         this.registeredServices.add('domain');
     }
 

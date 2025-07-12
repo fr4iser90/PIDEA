@@ -129,7 +129,7 @@ const TaskSelectionModal = ({
                           >
                             {task.priority}
                           </span>
-                          <span className="file-size">{formatFileSize(task.lines)}</span>
+                          <span className="file-size">{formatFileSize(task.metadata?.lineCount || task.lines)}</span>
                         </div>
                       </div>
                       
