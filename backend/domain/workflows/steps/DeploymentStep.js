@@ -266,7 +266,7 @@ class DeploymentStep extends BaseWorkflowStep {
     // Check if project path exists
     const projectPath = context.get('projectPath');
     if (!projectPath) {
-      return new ValidationResult(false, ['Project path is required for deployment']);
+      return new ValidationResult(undefined, false, ['Project path is required for deployment'], [], {});
     }
 
     // Check if required service is available
@@ -274,7 +274,7 @@ class DeploymentStep extends BaseWorkflowStep {
     const dockerService = context.get('dockerService');
     
     if (!deploymentService && !dockerService) {
-      return new ValidationResult(false, ['Deployment service or docker service is required for deployment']);
+      return new ValidationResult(undefined, false, ['Deployment service or docker service is required for deployment'], [], {});
     }
 
     // Validate deployment type
@@ -285,10 +285,10 @@ class DeploymentStep extends BaseWorkflowStep {
     ];
 
     if (!validTypes.includes(this._deploymentType)) {
-      return new ValidationResult(false, [`Invalid deployment type: ${this._deploymentType}`]);
+      return new ValidationResult(undefined, false, [`Invalid deployment type: ${this._deploymentType}`], [], {});
     }
 
-    return new ValidationResult(true, []);
+    return new ValidationResult(undefined, true, [], [], {});
   }
 
   /**

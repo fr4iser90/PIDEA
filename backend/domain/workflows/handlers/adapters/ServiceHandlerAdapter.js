@@ -198,6 +198,9 @@ class ServiceHandlerAdapter extends IHandlerAdapter {
    * @returns {IHandler} Unified handler
    */
   wrapServiceHandler(service, request) {
+    // Store adapter methods for use in wrapped handler
+    const adapter = this;
+    
     return {
       /**
        * Execute service handler
@@ -208,6 +211,7 @@ class ServiceHandlerAdapter extends IHandlerAdapter {
         try {
           const serviceInstance = service.instance;
           const serviceMethod = service.method;
+          const request = context.getRequest();
 
           if (!serviceInstance) {
             throw new Error('Service instance not available');
@@ -215,11 +219,24 @@ class ServiceHandlerAdapter extends IHandlerAdapter {
 
           let result;
           if (serviceMethod && typeof serviceInstance[serviceMethod] === 'function') {
-            // Call specific service method
-            result = await serviceInstance[serviceMethod](context.getRequest(), context.getResponse());
+            // Special handling for workflow execution
+            if (serviceMethod === 'executeWorkflow' && request.workflow) {
+              // Pass the workflow object directly to the service method
+              result = await serviceInstance[serviceMethod](request.workflow, {
+                metadata: request.metadata || {},
+                data: request.data || {},
+                task: request.task,
+                taskId: request.taskId,
+                userId: request.userId,
+                options: request.options
+              });
+            } else {
+              // Call specific service method with request and response
+              result = await serviceInstance[serviceMethod](request, context.getResponse());
+            }
           } else {
             // Call default execute method
-            result = await serviceInstance.execute(context.getRequest(), context.getResponse());
+            result = await serviceInstance.execute(request, context.getResponse());
           }
           
           return {
@@ -229,7 +246,7 @@ class ServiceHandlerAdapter extends IHandlerAdapter {
               serviceHandler: true,
               serviceName: service.name,
               serviceMethod: service.method,
-              originalRequest: context.getRequest()
+              originalRequest: request
             }
           };
           
@@ -320,7 +337,7 @@ class ServiceHandlerAdapter extends IHandlerAdapter {
        */
       canHandle(request) {
         return !!(request && (request.service || request.serviceName || 
-                  (request.type && this.determineServiceName(request))));
+                  (request.type && adapter.determineServiceName(request))));
       },
 
       /**

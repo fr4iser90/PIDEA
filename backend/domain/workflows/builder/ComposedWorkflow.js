@@ -112,7 +112,7 @@ class ComposedWorkflow extends IWorkflow {
           isValid = false;
         }
       } catch (error) {
-        results.push(new ValidationResult(false, [error.message]));
+        results.push(new ValidationResult(undefined, false, [error.message], [], {}));
         isValid = false;
       }
     }
@@ -127,12 +127,12 @@ class ComposedWorkflow extends IWorkflow {
           isValid = false;
         }
       } catch (error) {
-        results.push(new ValidationResult(false, [error.message]));
+        results.push(new ValidationResult(undefined, false, [error.message], [], {}));
         isValid = false;
       }
     }
 
-    return new ValidationResult(isValid, results);
+    return new ValidationResult(undefined, isValid, results, [], {});
   }
 
   /**

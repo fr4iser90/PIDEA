@@ -266,7 +266,7 @@ class TestingStep extends BaseWorkflowStep {
     // Check if project path exists
     const projectPath = context.get('projectPath');
     if (!projectPath) {
-      return new ValidationResult(false, ['Project path is required for testing']);
+      return new ValidationResult(undefined, false, ['Project path is required for testing'], [], {});
     }
 
     // Check if required service is available
@@ -275,7 +275,7 @@ class TestingStep extends BaseWorkflowStep {
     const aiService = context.get('aiService');
     
     if (!testingService && !scriptExecutor && !aiService) {
-      return new ValidationResult(false, ['Testing service, script executor, or AI service is required for testing']);
+      return new ValidationResult(undefined, false, ['Testing service, script executor, or AI service is required for testing'], [], {});
     }
 
     // Validate testing type
@@ -285,10 +285,10 @@ class TestingStep extends BaseWorkflowStep {
     ];
 
     if (!validTypes.includes(this._testingType)) {
-      return new ValidationResult(false, [`Invalid testing type: ${this._testingType}`]);
+      return new ValidationResult(undefined, false, [`Invalid testing type: ${this._testingType}`], [], {});
     }
 
-    return new ValidationResult(true, []);
+    return new ValidationResult(undefined, true, [], [], {});
   }
 
   /**

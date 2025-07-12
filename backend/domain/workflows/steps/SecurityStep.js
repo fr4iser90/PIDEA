@@ -262,7 +262,7 @@ class SecurityStep extends BaseWorkflowStep {
     // Check if project path exists
     const projectPath = context.get('projectPath');
     if (!projectPath) {
-      return new ValidationResult(false, ['Project path is required for security']);
+      return new ValidationResult(undefined, false, ['Project path is required for security'], [], {});
     }
 
     // Check if required service is available
@@ -270,7 +270,7 @@ class SecurityStep extends BaseWorkflowStep {
     const vulnerabilityService = context.get('vulnerabilityService');
     
     if (!securityService && !vulnerabilityService) {
-      return new ValidationResult(false, ['Security service or vulnerability service is required for security']);
+      return new ValidationResult(undefined, false, ['Security service or vulnerability service is required for security'], [], {});
     }
 
     // Validate security type
@@ -280,10 +280,10 @@ class SecurityStep extends BaseWorkflowStep {
     ];
 
     if (!validTypes.includes(this._securityType)) {
-      return new ValidationResult(false, [`Invalid security type: ${this._securityType}`]);
+      return new ValidationResult(undefined, false, [`Invalid security type: ${this._securityType}`], [], {});
     }
 
-    return new ValidationResult(true, []);
+    return new ValidationResult(undefined, true, [], [], {});
   }
 
   /**

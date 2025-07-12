@@ -260,7 +260,7 @@ class RefactoringStep extends BaseWorkflowStep {
     // Check if project path exists
     const projectPath = context.get('projectPath');
     if (!projectPath) {
-      return new ValidationResult(false, ['Project path is required for refactoring']);
+      return new ValidationResult(undefined, false, ['Project path is required for refactoring'], [], {});
     }
 
     // Check if required service is available
@@ -268,7 +268,7 @@ class RefactoringStep extends BaseWorkflowStep {
     const aiService = context.get('aiService');
     
     if (!refactoringService && !aiService) {
-      return new ValidationResult(false, ['Refactoring service or AI service is required for refactoring']);
+      return new ValidationResult(undefined, false, ['Refactoring service or AI service is required for refactoring'], [], {});
     }
 
     // Validate refactoring type
@@ -278,10 +278,10 @@ class RefactoringStep extends BaseWorkflowStep {
     ];
 
     if (!validTypes.includes(this._refactoringType)) {
-      return new ValidationResult(false, [`Invalid refactoring type: ${this._refactoringType}`]);
+      return new ValidationResult(undefined, false, [`Invalid refactoring type: ${this._refactoringType}`], [], {});
     }
 
-    return new ValidationResult(true, []);
+    return new ValidationResult(undefined, true, [], [], {});
   }
 
   /**

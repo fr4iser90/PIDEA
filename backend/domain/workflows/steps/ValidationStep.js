@@ -304,7 +304,7 @@ class ValidationStep extends BaseWorkflowStep {
     // Check if project path exists
     const projectPath = context.get('projectPath');
     if (!projectPath) {
-      return new ValidationResult(false, ['Project path is required for validation']);
+      return new ValidationResult(undefined, false, ['Project path is required for validation'], [], {});
     }
 
     // Check if required service is available
@@ -312,7 +312,7 @@ class ValidationStep extends BaseWorkflowStep {
     const qualityService = context.get('qualityService');
     
     if (!validationService && !qualityService) {
-      return new ValidationResult(false, ['Validation service or quality service is required for validation']);
+      return new ValidationResult(undefined, false, ['Validation service or quality service is required for validation'], [], {});
     }
 
     // Validate validation type
@@ -323,10 +323,10 @@ class ValidationStep extends BaseWorkflowStep {
     ];
 
     if (!validTypes.includes(this._validationType)) {
-      return new ValidationResult(false, [`Invalid validation type: ${this._validationType}`]);
+      return new ValidationResult(undefined, false, [`Invalid validation type: ${this._validationType}`], [], {});
     }
 
-    return new ValidationResult(true, []);
+    return new ValidationResult(undefined, true, [], [], {});
   }
 
   /**

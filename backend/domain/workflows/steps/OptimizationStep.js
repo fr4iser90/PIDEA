@@ -264,7 +264,7 @@ class OptimizationStep extends BaseWorkflowStep {
     // Check if project path exists
     const projectPath = context.get('projectPath');
     if (!projectPath) {
-      return new ValidationResult(false, ['Project path is required for optimization']);
+      return new ValidationResult(undefined, false, ['Project path is required for optimization'], [], {});
     }
 
     // Check if required service is available
@@ -272,7 +272,7 @@ class OptimizationStep extends BaseWorkflowStep {
     const performanceService = context.get('performanceService');
     
     if (!optimizationService && !performanceService) {
-      return new ValidationResult(false, ['Optimization service or performance service is required for optimization']);
+      return new ValidationResult(undefined, false, ['Optimization service or performance service is required for optimization'], [], {});
     }
 
     // Validate optimization type
@@ -283,10 +283,10 @@ class OptimizationStep extends BaseWorkflowStep {
     ];
 
     if (!validTypes.includes(this._optimizationType)) {
-      return new ValidationResult(false, [`Invalid optimization type: ${this._optimizationType}`]);
+      return new ValidationResult(undefined, false, [`Invalid optimization type: ${this._optimizationType}`], [], {});
     }
 
-    return new ValidationResult(true, []);
+    return new ValidationResult(undefined, true, [], [], {});
   }
 
   /**

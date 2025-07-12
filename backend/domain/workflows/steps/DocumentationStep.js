@@ -242,7 +242,7 @@ class DocumentationStep extends BaseWorkflowStep {
     // Check if project path exists
     const projectPath = context.get('projectPath');
     if (!projectPath) {
-      return new ValidationResult(false, ['Project path is required for documentation']);
+      return new ValidationResult(undefined, false, ['Project path is required for documentation'], [], {});
     }
 
     // Check if required service is available
@@ -250,7 +250,7 @@ class DocumentationStep extends BaseWorkflowStep {
     const aiService = context.get('aiService');
     
     if (!documentationService && !aiService) {
-      return new ValidationResult(false, ['Documentation service or AI service is required for documentation']);
+      return new ValidationResult(undefined, false, ['Documentation service or AI service is required for documentation'], [], {});
     }
 
     // Validate documentation type
@@ -260,10 +260,10 @@ class DocumentationStep extends BaseWorkflowStep {
     ];
 
     if (!validTypes.includes(this._documentationType)) {
-      return new ValidationResult(false, [`Invalid documentation type: ${this._documentationType}`]);
+      return new ValidationResult(undefined, false, [`Invalid documentation type: ${this._documentationType}`], [], {});
     }
 
-    return new ValidationResult(true, []);
+    return new ValidationResult(undefined, true, [], [], {});
   }
 
   /**

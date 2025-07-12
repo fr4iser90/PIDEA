@@ -121,13 +121,13 @@ class AnalysisStep extends BaseWorkflowStep {
     // Check if project path exists
     const projectPath = context.get('projectPath');
     if (!projectPath) {
-      return new ValidationResult(false, ['Project path is required for analysis']);
+      return new ValidationResult(undefined, false, ['Project path is required for analysis'], [], {});
     }
 
     // Check if analysis service is available
     const analysisService = context.get('analysisService');
     if (!analysisService) {
-      return new ValidationResult(false, ['Analysis service is required for analysis']);
+      return new ValidationResult(undefined, false, ['Analysis service is required for analysis'], [], {});
     }
 
     // Validate analysis type
@@ -138,10 +138,10 @@ class AnalysisStep extends BaseWorkflowStep {
     ];
 
     if (!validTypes.includes(this._analysisType)) {
-      return new ValidationResult(false, [`Invalid analysis type: ${this._analysisType}`]);
+      return new ValidationResult(undefined, false, [`Invalid analysis type: ${this._analysisType}`], [], {});
     }
 
-    return new ValidationResult(true, []);
+    return new ValidationResult(undefined, true, [], [], {});
   }
 
   /**
