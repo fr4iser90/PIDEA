@@ -29,16 +29,18 @@ async function createTestUser() {
 
     const insertSQL = `
       INSERT INTO users (
-        id, email, password_hash, role, created_at, updated_at, metadata
-      ) VALUES (?, ?, ?, ?, ?, ?, ?)
+        id, email, username, password_hash, role, status, created_at, updated_at, metadata
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
 
     await new Promise((resolve, reject) => {
       db.run(insertSQL, [
-        userId,
+        'me', // Single user ID
         email,
+        'testuser', // Username
         passwordHash,
-        'user',
+        'admin', // Role
+        'active', // Status
         now,
         now,
         '{}'

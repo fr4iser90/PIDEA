@@ -225,6 +225,12 @@ class ServiceRegistry {
             return new TaskService(taskRepository, aiService, projectAnalyzer, cursorIDEService, autoFinishSystem);
         }, { singleton: true, dependencies: ['taskRepository', 'aiService', 'projectAnalyzer', 'cursorIDEService', 'autoFinishSystem'] });
 
+        // Docs import service
+        this.container.register('docsImportService', (browserManager, taskService, taskRepository) => {
+            const DocsImportService = require('@services/DocsImportService');
+            return new DocsImportService(browserManager, taskService, taskRepository);
+        }, { singleton: true, dependencies: ['browserManager', 'taskService', 'taskRepository'] });
+
         // Task validation service
         this.container.register('taskValidationService', (taskRepository, taskExecutionRepository, cursorIDEService, eventBus, fileSystemService) => {
             const TaskValidationService = require('@services/TaskValidationService');
@@ -376,6 +382,12 @@ class ServiceRegistry {
         this.container.register('projectAnalysisRepository', (databaseConnection) => {
             const PostgreSQLProjectAnalysisRepository = require('../database/PostgreSQLProjectAnalysisRepository');
             return new PostgreSQLProjectAnalysisRepository(databaseConnection);
+        }, { singleton: true, dependencies: ['databaseConnection'] });
+
+        // Project repository
+        this.container.register('projectRepository', (databaseConnection) => {
+            const SQLiteProjectRepository = require('../database/SQLiteProjectRepository');
+            return new SQLiteProjectRepository(databaseConnection);
         }, { singleton: true, dependencies: ['databaseConnection'] });
 
         this.registeredServices.add('repositories');

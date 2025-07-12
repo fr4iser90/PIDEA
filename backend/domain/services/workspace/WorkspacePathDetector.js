@@ -104,12 +104,24 @@ class WorkspacePathDetector {
         // Method 1: Try to execute pwd command in terminal to get actual working directory
         console.log(`[WorkspacePathDetector] Trying to get pwd from terminal for port ${port}...`);
         
-        // Use Playwright's keyboard API to open terminal (Ctrl+Shift+`)
-        await page.keyboard.down('Control');
-        await page.keyboard.down('Shift');
-        await page.keyboard.press('`');
-        await page.keyboard.up('Shift');
-        await page.keyboard.up('Control');
+        // Determine IDE type and use appropriate terminal shortcut
+        const ideType = this.ideManager.getIDEType(port) || 'cursor';
+        console.log(`[WorkspacePathDetector] Detected IDE type: ${ideType}`);
+        
+        // Use appropriate terminal shortcut based on IDE type
+        if (ideType === 'vscode') {
+          // VSCode: Ctrl+` to open terminal
+          await page.keyboard.down('Control');
+          await page.keyboard.press('`');
+          await page.keyboard.up('Control');
+        } else {
+          // Cursor: Ctrl+Shift+` to open terminal
+          await page.keyboard.down('Control');
+          await page.keyboard.down('Shift');
+          await page.keyboard.press('`');
+          await page.keyboard.up('Shift');
+          await page.keyboard.up('Control');
+        }
         
         // Wait for terminal to open
         await page.waitForTimeout(1000);

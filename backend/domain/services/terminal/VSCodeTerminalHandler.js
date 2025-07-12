@@ -93,12 +93,10 @@ class VSCodeTerminalHandler {
     console.log('🔧 Opening VSCode terminal...');
     
     try {
-      // Method 1: Use keyboard shortcut Ctrl+Shift+`
-      console.log('  ⌨️ Using keyboard shortcut Ctrl+Shift+`...');
+      // Method 1: Use keyboard shortcut Ctrl+` (VSCode terminal toggle)
+      console.log('  ⌨️ Using keyboard shortcut Ctrl+`...');
       await page.keyboard.down('Control');
-      await page.keyboard.down('Shift');
       await page.keyboard.press('`');
-      await page.keyboard.up('Shift');
       await page.keyboard.up('Control');
       
       await this.wait(2000);

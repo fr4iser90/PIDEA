@@ -13,7 +13,8 @@ class PostgreSQLTaskRepository extends TaskRepository {
     super();
     this.databaseConnection = databaseConnection;
     this.tableName = 'tasks';
-    this.init();
+    // Disable init() to prevent overriding the correct schema from DatabaseConnection.js
+    // this.init();
   }
 
   /**
@@ -81,12 +82,9 @@ class PostgreSQLTaskRepository extends TaskRepository {
     try {
       const sql = `
         INSERT INTO ${this.tableName} (
-          id, title, description, type, category, priority, status, projectId, userId,
-          estimatedDuration, metadata, createdAt, updatedAt, dependencies,
-          tags, assignee, dueDate, startedAt, completedAt, executionHistory,
-          parentTaskId, childTaskIds, phase, stage, phaseOrder, taskLevel, rootTaskId,
-          isPhaseTask, progress, phaseProgress, blockedBy
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          id, title, description, type, category, priority, status, project_id,
+          estimated_time, metadata, created_at, updated_at, completed_at, due_date, tags
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `;
 
       // Extract string values from value objects
@@ -102,30 +100,14 @@ class PostgreSQLTaskRepository extends TaskRepository {
         task.category || null,
         taskPriority,
         taskStatus,
-        task.projectId,
-        task.userId,
-        task.estimatedDuration,
+        task.projectId, // camelCase property
+        task.estimatedTime || null,
         JSON.stringify(task.metadata || {}),
         task.createdAt ? task.createdAt.toISOString() : new Date().toISOString(),
         task.updatedAt ? task.updatedAt.toISOString() : new Date().toISOString(),
-        JSON.stringify(task.dependencies || []),
-        JSON.stringify(task.tags || []),
-        task.assignee,
-        task.dueDate ? task.dueDate.toISOString() : null,
-        task.startedAt ? task.startedAt.toISOString() : null,
         task.completedAt ? task.completedAt.toISOString() : null,
-        JSON.stringify(task.executionHistory || []),
-        task.parentTaskId || null,
-        JSON.stringify(task.childTaskIds || []),
-        task.phase || null,
-        task.stage || null,
-        task.phaseOrder || null,
-        task.taskLevel || 0,
-        task.rootTaskId || null,
-        task.isPhaseTask || false,
-        task.progress || 0,
-        JSON.stringify(task.phaseProgress || {}),
-        JSON.stringify(task.blockedBy || [])
+        task.dueDate ? task.dueDate.toISOString() : null,
+        JSON.stringify(task.tags || [])
       ];
 
       await this.databaseConnection.execute(sql, params);
@@ -202,12 +184,12 @@ class PostgreSQLTaskRepository extends TaskRepository {
       }
 
       if (filters.projectId) {
-        conditions.push('projectId = ?');
+        conditions.push('project_id = ?');
         params.push(filters.projectId);
       }
 
       if (filters.userId) {
-        conditions.push('userId = ?');
+        conditions.push('user_id = ?');
         params.push(filters.userId);
       }
 
@@ -221,7 +203,7 @@ class PostgreSQLTaskRepository extends TaskRepository {
       }
 
       // Add sorting
-      sql += ' ORDER BY createdAt DESC';
+      sql += ' ORDER BY created_at DESC';
 
       const rows = await this.databaseConnection.query(sql, params);
       return rows.map(row => this._rowToTask(row));
@@ -240,11 +222,8 @@ class PostgreSQLTaskRepository extends TaskRepository {
       const sql = `
         UPDATE ${this.tableName} SET
           title = ?, description = ?, type = ?, category = ?, priority = ?, status = ?,
-          projectId = ?, userId = ?, estimatedDuration = ?, metadata = ?,
-          updatedAt = ?, dependencies = ?, tags = ?, assignee = ?, dueDate = ?,
-          startedAt = ?, completedAt = ?, executionHistory = ?, parentTaskId = ?,
-          childTaskIds = ?, phase = ?, stage = ?, phaseOrder = ?, taskLevel = ?,
-          rootTaskId = ?, isPhaseTask = ?, progress = ?, phaseProgress = ?, blockedBy = ?
+          project_id = ?, user_id = ?, estimated_time = ?, metadata = ?,
+          updated_at = ?, tags = ?, due_date = ?, completed_at = ?
         WHERE id = ?
       `;
 
@@ -260,29 +239,14 @@ class PostgreSQLTaskRepository extends TaskRepository {
         task.category || null,
         taskPriority,
         taskStatus,
-        task.projectId,
-        task.userId,
-        task.estimatedDuration,
+        task.projectId, // camelCase property
+        task.userId, // camelCase property
+        task.estimatedTime || null,
         JSON.stringify(task.metadata || {}),
         task.updatedAt ? task.updatedAt.toISOString() : new Date().toISOString(),
-        JSON.stringify(task.dependencies || []),
         JSON.stringify(task.tags || []),
-        task.assignee,
         task.dueDate ? task.dueDate.toISOString() : null,
-        task.startedAt ? task.startedAt.toISOString() : null,
         task.completedAt ? task.completedAt.toISOString() : null,
-        JSON.stringify(task.executionHistory || []),
-        task.parentTaskId || null,
-        JSON.stringify(task.childTaskIds || []),
-        task.phase || null,
-        task.stage || null,
-        task.phaseOrder || null,
-        task.taskLevel || 0,
-        task.rootTaskId || null,
-        task.isPhaseTask || false,
-        task.progress || 0,
-        JSON.stringify(task.phaseProgress || {}),
-        JSON.stringify(task.blockedBy || []),
         task.id
       ];
 
@@ -319,9 +283,10 @@ class PostgreSQLTaskRepository extends TaskRepository {
       const title = row.title || 'Untitled Task';
       
       // Use Task constructor with parameters in correct order
+      // Map snake_case database columns to camelCase properties
       const task = new Task(
         row.id || '',
-        row.projectId || null,
+        row.project_id || null, // snake_case from DB
         title,
         row.description || '',
         row.status || 'pending',
@@ -329,8 +294,8 @@ class PostgreSQLTaskRepository extends TaskRepository {
         row.type || 'feature',
         row.category || null,
         row.metadata ? JSON.parse(row.metadata) : {},
-        row.createdAt ? new Date(row.createdAt) : new Date(),
-        row.updatedAt ? new Date(row.updatedAt) : new Date()
+        row.created_at ? new Date(row.created_at) : new Date(), // snake_case from DB
+        row.updated_at ? new Date(row.updated_at) : new Date() // snake_case from DB
       );
 
       // Set additional properties that aren't in the constructor
@@ -349,62 +314,60 @@ class PostgreSQLTaskRepository extends TaskRepository {
         task.assign(row.assignee);
       }
 
-      if (row.dueDate) {
-        task.setDueDate(new Date(row.dueDate));
+      if (row.due_date) {
+        task.setDueDate(new Date(row.due_date));
       }
 
-      if (row.startedAt) {
-        task._startedAt = new Date(row.startedAt);
+      if (row.completed_at) {
+        task._completedAt = new Date(row.completed_at);
       }
 
-      if (row.completedAt) {
-        task._completedAt = new Date(row.completedAt);
-      }
+      // Note: executionHistory is not in the current schema, so we skip it
+      // if (row.execution_history) {
+      //   task._executionHistory = JSON.parse(row.execution_history);
+      // }
 
-      if (row.executionHistory) {
-        task._executionHistory = JSON.parse(row.executionHistory);
-      }
-
+      // Note: Phase properties are not in the current schema, so we skip them
       // Store phase/hierarchy properties in metadata since they're not part of the core Task entity
-      const phaseMetadata = {};
-      if (row.parentTaskId) {
-        phaseMetadata.parentTaskId = row.parentTaskId;
-      }
-      if (row.childTaskIds) {
-        phaseMetadata.childTaskIds = JSON.parse(row.childTaskIds);
-      }
-      if (row.phase) {
-        phaseMetadata.phase = row.phase;
-      }
-      if (row.stage) {
-        phaseMetadata.stage = row.stage;
-      }
-      if (row.phaseOrder) {
-        phaseMetadata.phaseOrder = row.phaseOrder;
-      }
-      if (row.taskLevel) {
-        phaseMetadata.taskLevel = row.taskLevel;
-      }
-      if (row.rootTaskId) {
-        phaseMetadata.rootTaskId = row.rootTaskId;
-      }
-      if (row.isPhaseTask) {
-        phaseMetadata.isPhaseTask = row.isPhaseTask;
-      }
-      if (row.progress) {
-        phaseMetadata.progress = row.progress;
-      }
-      if (row.phaseProgress) {
-        phaseMetadata.phaseProgress = JSON.parse(row.phaseProgress);
-      }
-      if (row.blockedBy) {
-        phaseMetadata.blockedBy = JSON.parse(row.blockedBy);
-      }
+      // const phaseMetadata = {};
+      // if (row.parent_task_id) {
+      //   phaseMetadata.parentTaskId = row.parent_task_id;
+      // }
+      // if (row.child_task_ids) {
+      //   phaseMetadata.childTaskIds = JSON.parse(row.child_task_ids);
+      // }
+      // if (row.phase) {
+      //   phaseMetadata.phase = row.phase;
+      // }
+      // if (row.stage) {
+      //   phaseMetadata.stage = row.stage;
+      // }
+      // if (row.phase_order) {
+      //   phaseMetadata.phaseOrder = row.phase_order;
+      // }
+      // if (row.task_level) {
+      //   phaseMetadata.taskLevel = row.task_level;
+      // }
+      // if (row.root_task_id) {
+      //   phaseMetadata.rootTaskId = row.root_task_id;
+      // }
+      // if (row.is_phase_task) {
+      //   phaseMetadata.isPhaseTask = row.is_phase_task;
+      // }
+      // if (row.progress) {
+      //   phaseMetadata.progress = row.progress;
+      // }
+      // if (row.phase_progress) {
+      //   phaseMetadata.phaseProgress = JSON.parse(row.phase_progress);
+      // }
+      // if (row.blocked_by) {
+      //   phaseMetadata.blockedBy = JSON.parse(row.blocked_by);
+      // }
       
       // Add phase metadata to task metadata
-      if (Object.keys(phaseMetadata).length > 0) {
-        Object.assign(task._metadata, phaseMetadata);
-      }
+      // if (Object.keys(phaseMetadata).length > 0) {
+      //   Object.assign(task._metadata, phaseMetadata);
+      // }
 
       return task;
     } catch (error) {

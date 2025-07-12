@@ -8,13 +8,14 @@ const TaskPriority = require('@/domain/value-objects/TaskPriority');
 const TaskType = require('@/domain/value-objects/TaskType');
 
 class TaskController {
-    constructor(taskService, taskRepository, aiService, projectAnalyzer, projectMappingService = null, ideManager = null) {
+    constructor(taskService, taskRepository, aiService, projectAnalyzer, projectMappingService = null, ideManager = null, docsImportService = null) {
         this.taskService = taskService;
         this.taskRepository = taskRepository;
         this.aiService = aiService;
         this.projectAnalyzer = projectAnalyzer;
         this.projectMappingService = projectMappingService;
         this.ideManager = ideManager;
+        this.docsImportService = docsImportService;
     }
 
     // Create task for a specific project
@@ -470,7 +471,7 @@ class TaskController {
         }
     }
 
-    // NEW: Sync docs tasks from markdown files to database
+    // NEW: Sync docs tasks using TEMP logic and DocsImportService
     async syncDocsTasks(req, res) {
         try {
             console.log('🔄 [TaskController] syncDocsTasks called');
@@ -480,116 +481,39 @@ class TaskController {
 
             console.log('🔄 [TaskController] Syncing docs tasks for project:', projectId);
 
-            // Use database-driven path configuration - get workspace path from project mapping
-            let workspacePath = null;
-            
-            // Try to get workspace path from project mapping service
-            if (this.projectMappingService) {
-                workspacePath = this.projectMappingService.getWorkspaceFromProjectId(projectId);
-                console.log('🔍 [TaskController] Got workspace path from project mapping:', workspacePath);
+            // Use DocsImportService for TEMP logic
+            if (!this.docsImportService) {
+                throw new Error('DocsImportService not available');
             }
-            
-            // Fallback: Try to get from active IDE
-            if (!workspacePath && this.ideManager) {
+
+            // Get port from IDE manager or use default
+            let port = 9222; // Default Cursor port
+            if (this.ideManager) {
                 try {
                     const activeIDE = await this.ideManager.getActiveIDE();
-                    if (activeIDE && activeIDE.workspacePath) {
-                        workspacePath = activeIDE.workspacePath;
-                        console.log('🔍 [TaskController] Got workspace path from active IDE:', workspacePath);
+                    if (activeIDE && activeIDE.port) {
+                        port = activeIDE.port;
                     }
                 } catch (error) {
-                    console.warn('🔍 [TaskController] Failed to get workspace path from IDE:', error.message);
+                    console.warn('🔍 [TaskController] Failed to get active IDE port, using default:', error.message);
                 }
             }
-            
-            // Final fallback: Use project root (one level up from backend)
-            if (!workspacePath) {
-                const currentDir = process.cwd();
-                workspacePath = path.resolve(currentDir, '..');
-                console.log('🔍 [TaskController] Using project root as fallback:', workspacePath);
-            }
-            
-            const docsTasksPath = path.join(workspacePath, 'docs', '09_roadmap', 'features');
-            console.log('🔍 [TaskController] Final docs tasks path:', docsTasksPath);
-            
-            if (!fsSync.existsSync(docsTasksPath)) {
-                throw new Error(`Documentation path not found: ${docsTasksPath}`);
-            }
 
-            const importedTasks = [];
+            console.log(`🔄 [TaskController] Using port ${port} for docs import`);
 
-            // Read all markdown files in the features directory
-            const files = await fs.readdir(docsTasksPath);
-            const markdownFiles = files.filter(file => file.endsWith('.md'));
+            // Use DocsImportService to handle TEMP logic and import
+            const result = await this.docsImportService.importDocsFromTemp(projectId, port);
 
-            for (const filename of markdownFiles) {
-                const filePath = path.join(docsTasksPath, filename);
-                const content = await fs.readFile(filePath, 'utf8');
-
-                console.log(`🔍 [TaskController] Processing file: ${filename}`);
-                console.log(`🔍 [TaskController] File content preview: ${content.substring(0, 200)}...`);
-
-                // Parse markdown content to extract task info with category support
-                const taskInfo = this.parseDocsTaskFromMarkdown(content, filename);
-
-                console.log(`🔍 [TaskController] Parsed taskInfo for ${filename}:`, {
-                    title: taskInfo?.title,
-                    priority: taskInfo?.priority,
-                    type: taskInfo?.type,
-                    category: taskInfo?.category,
-                    hasContent: !!taskInfo
-                });
-
-                if (taskInfo) {
-                    // Check if task already exists (by title or filename)
-                    const existingTask = await this.taskRepository.findByTitle(taskInfo.title);
-                    
-                    if (!existingTask) {
-                        console.log(`🔍 [TaskController] Creating task with:`, {
-                            projectId,
-                            title: taskInfo.title,
-                            priority: taskInfo.priority,
-                            type: taskInfo.type,
-                            category: taskInfo.category
-                        });
-                        
-                        // Create new task in database with category support
-                        const task = await this.taskService.createTask(
-                            projectId,
-                            taskInfo.title,
-                            content,
-                            taskInfo.priority,
-                            taskInfo.type,
-                            {
-                                source: 'docs_sync',
-                                filename: filename,
-                                filePath: filePath,
-                                importedBy: userId,
-                                importedAt: new Date(),
-                                content: content,
-                                category: taskInfo.category, // Add category support
-                                ...taskInfo.metadata
-                            }
-                        );
-                        if (task && !task.filename) task.filename = filename;
-                        if (task && !task.description) task.description = content;
-
-                        importedTasks.push(task);
-                        console.log(`✅ [TaskController] Imported task: ${taskInfo.title} (Category: ${taskInfo.category})\nContent: ${content.substring(0, 500)}...`);
-                    } else {
-                        console.log(`⚠️ [TaskController] Task already exists: ${taskInfo.title}`);
-                    }
-                }
-            }
+            console.log(`✅ [TaskController] Docs import completed:`, {
+                importedCount: result.importedCount,
+                totalFiles: result.totalFiles,
+                workspacePath: result.workspacePath
+            });
 
             res.json({
                 success: true,
-                data: {
-                    importedTasks,
-                    totalFiles: markdownFiles.length,
-                    importedCount: importedTasks.length
-                },
-                message: `Successfully imported ${importedTasks.length} docs tasks`
+                data: result,
+                message: `Successfully imported ${result.importedCount} docs tasks from TEMP data`
             });
 
         } catch (error) {

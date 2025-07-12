@@ -1,294 +1,464 @@
--- This application is designed for a single administrative user/owner.
--- All content and configurations are managed by this single owner.
--- Public visitors do not have accounts and only view the presented content.
+-- PIDEA Database Schema
+-- Single-User IDE Management System
+-- This application is designed for a single user managing their local IDEs (Cursor, VSCode, etc.)
 
 -- Enable UUID extension
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
--- SITE OWNER (Single Admin User)
--- This table stores the credentials and basic info for the single site owner.
-CREATE TABLE IF NOT EXISTS site_owner (
-    id VARCHAR(255) PRIMARY KEY DEFAULT 'me' CHECK (id = 'me'), -- Enforces that the only ID is 'me'
-    email VARCHAR(255) UNIQUE NOT NULL,
-    hashed_password VARCHAR(255) NOT NULL,
-    source_username VARCHAR(255), -- Optional: For GitHub/GitLab integration if the owner links their account
-    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+-- ============================================================================
+-- CORE TABLES (Single User System)
+-- ============================================================================
+
+-- SINGLE USER (You - the IDE manager)
+CREATE TABLE IF NOT EXISTS users (
+    id TEXT PRIMARY KEY DEFAULT 'me' CHECK (id = 'me'), -- Only one user: YOU
+    email TEXT UNIQUE NOT NULL,
+    username TEXT UNIQUE NOT NULL,
+    password_hash TEXT NOT NULL,
+    role TEXT NOT NULL DEFAULT 'admin', -- You are the admin
+    status TEXT NOT NULL DEFAULT 'active',
+    metadata TEXT, -- JSON for your settings
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    last_login TEXT
 );
 
--- THEMES
--- Themes are  and can be selected by the site owner for the portfolio.
-CREATE TABLE IF NOT EXISTS themes (
-    id SERIAL PRIMARY KEY,
-    name VARCHAR(100) UNIQUE NOT NULL,
-    description TEXT,
-    style_properties JSONB NOT NULL,
-    custom_css TEXT,
-    custom_js TEXT,
-    is_active BOOLEAN DEFAULT FALSE,
-    is_visible BOOLEAN DEFAULT TRUE,
-    is_public BOOLEAN DEFAULT TRUE,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+-- USER SESSIONS (Your login sessions)
+CREATE TABLE IF NOT EXISTS user_sessions (
+    id TEXT PRIMARY KEY,
+    user_id TEXT NOT NULL DEFAULT 'me',
+    access_token_start TEXT NOT NULL, -- First 20 chars of token
+    refresh_token TEXT,
+    expires_at TEXT NOT NULL,
+    is_active BOOLEAN NOT NULL DEFAULT true,
+    metadata TEXT, -- JSON for session metadata
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users (id)
 );
 
--- SECTIONS
--- Sections are predefined content blocks/types that the owner can use to build their page.
-CREATE TABLE IF NOT EXISTS sections (
-    id SERIAL PRIMARY KEY,
-    name VARCHAR(64) UNIQUE NOT NULL, -- e.g., 'hero', 'about', 'projects_list', 'contact_form'
-    title VARCHAR(128) NOT NULL,    -- Default title for this section type
-    type VARCHAR(32) NOT NULL DEFAULT 'text', -- Underlying type, e.g., 'text', 'gallery', 'custom_html'
-    content JSONB,                  -- Default or template content for this section type
-    display_order INTEGER NOT NULL DEFAULT 0, -- Default order if used in a generic list of section types
-    is_visible BOOLEAN DEFAULT TRUE,
-    is_public BOOLEAN DEFAULT TRUE,
-    theme_id INTEGER REFERENCES themes(id) ON DELETE SET NULL, -- Optional: a default theme association
-    section_metadata JSONB,         -- Additional metadata about the section type
-    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-);
-
--- PROJECTS
--- These are the projects showcased by the site owner. They inherently belong to the owner.
+-- PROJECTS (Your local projects)
 CREATE TABLE IF NOT EXISTS projects (
-    id SERIAL PRIMARY KEY,
-    name VARCHAR(255) NOT NULL,
+    id TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
     description TEXT,
-    status VARCHAR(50) DEFAULT 'WIP' CHECK (status IN ('ACTIVE', 'WIP', 'ARCHIVED', 'DEPRECATED')),
-    source_type VARCHAR(50) DEFAULT 'manual' CHECK (source_type IN ('manual', 'github', 'gitlab')),
-    source_username VARCHAR(255),
-    source_repo VARCHAR(255),
-    source_url VARCHAR(255),
-    live_url VARCHAR(255),
-    homepage_url VARCHAR(255),
-    thumbnail_url VARCHAR(255),
-    display_order INTEGER DEFAULT 0,
-    is_visible BOOLEAN DEFAULT TRUE,
-    is_public BOOLEAN DEFAULT TRUE,
-    stars_count INTEGER DEFAULT 0,
-    forks_count INTEGER DEFAULT 0,
-    watchers_count INTEGER DEFAULT 0,
-    open_issues_count INTEGER DEFAULT 0,
-    language VARCHAR(50),
-    topics TEXT[],
-    default_branch VARCHAR(50),
-    last_updated TIMESTAMP WITH TIME ZONE,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-
-    -- 📄 Beschreibungen
-    own_description TEXT,
-    short_description TEXT,
-    highlight TEXT,
-    learnings TEXT,
-    challenges TEXT,
-    role TEXT,
-    custom_tags TEXT[],
-    use_own_description BOOLEAN DEFAULT FALSE,
-    use_short_description BOOLEAN DEFAULT FALSE,
-
-    -- 📽 Medien
-    video_url VARCHAR(255),
-    video_host VARCHAR(50),
-    gallery_urls TEXT[],
-    gif_urls TEXT[],
-
-    -- 🧠 Inhalte für Modal
-    testimonials TEXT[],
-    deployment_notes TEXT,
-    achievements TEXT[],
-    duration TEXT,
-    timeline JSONB,
-    releases JSONB,
-    changelog TEXT,
-
-    -- 🔧 Technik & Details
-    tech_stack JSONB,
-    ci_tools TEXT[],
-    uptime_percentage NUMERIC(5,2),
-    bug_count INTEGER,
-    analytics JSONB,
-
-    -- 👥 Beteiligung
-    is_open_source BOOLEAN DEFAULT FALSE,
-    contribution_notes TEXT,
-    owner_type TEXT,
-    partners TEXT[],
-    sponsors TEXT[],
-    team TEXT[],
-    team_roles JSONB,
-
-    -- 🌍 Internationalisierung
-    translations JSONB,
-
-    -- 🔗 Weitere
-    related_projects TEXT[],
-    demo_credentials JSONB,
-    roadmap JSONB,
-    license TEXT,
-    blog_url VARCHAR(255),
-
-    -- 🎨 UI Konfiguration
-    ui_config JSONB DEFAULT '{}'::jsonb  -- Speichert UI-spezifische Einstellungen wie Sichtbarkeit von Feldern
+    workspace_path TEXT NOT NULL, -- Path on YOUR computer
+    ide_type TEXT NOT NULL, -- 'cursor', 'vscode', 'windsurf'
+    port INTEGER NOT NULL, -- IDE Port (9222, 9232, etc.)
+    status TEXT NOT NULL DEFAULT 'active', -- 'active', 'archived', 'deleted'
+    metadata TEXT, -- JSON for project-specific settings
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
--- POSTS
--- Flexible table for all types of blog posts (project updates,  posts, etc.)
-CREATE TABLE IF NOT EXISTS posts (
-    id SERIAL PRIMARY KEY,
-    type VARCHAR(50) NOT NULL DEFAULT '' CHECK (type IN ('', 'project', 'update', 'tutorial', 'news', 'review', 'interview', 'case-study')),
-    project_id INTEGER REFERENCES projects(id) ON DELETE SET NULL, -- Optional: Link to a project
-    section_id INTEGER REFERENCES sections(id) ON DELETE SET NULL, -- Optional: Link to a section
-    
-    -- 📝 Basic Content
-    slug VARCHAR(255) UNIQUE NOT NULL,
-    title VARCHAR(255) NOT NULL,
-    subtitle TEXT,
-    content_markdown TEXT,
-    excerpt TEXT, -- Short summary for previews
-    
-    -- 🖼 Media
-    cover_image_url VARCHAR(255),
-    cover_image_alt TEXT,
-    gallery_urls TEXT[],
-    video_url VARCHAR(255),
-    video_host VARCHAR(50),
-    audio_url VARCHAR(255),
-    audio_duration INTEGER, -- Duration in seconds
-    audio_transcript TEXT, -- For accessibility
-    
-    -- 📊 SEO & Stats
-    seo_title VARCHAR(255),
-    seo_description TEXT,
-    seo_keywords TEXT[],
-    reading_time INTEGER, -- Estimated reading time in minutes
-    view_count INTEGER DEFAULT 0,
-    like_count INTEGER DEFAULT 0,
-    comment_count INTEGER DEFAULT 0,
-    
-    -- 🏷 Organization
-    author TEXT,
-    tags TEXT[],
-    categories TEXT[],
-    series TEXT, -- For multi-part posts
-    related_posts INTEGER[], -- References to other posts
-    
-    -- 📅 Publishing
-    published_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    is_visible BOOLEAN DEFAULT TRUE,
-    is_public BOOLEAN DEFAULT TRUE,
-    is_featured BOOLEAN DEFAULT FALSE,
-    is_pinned BOOLEAN DEFAULT FALSE,
-    
-    -- 🌍 Internationalization
-    language VARCHAR(10) DEFAULT 'en',
-    translations JSONB, -- Store translations for other languages
-    
-    -- 🔒 Access Control
-    access_level VARCHAR(20) DEFAULT 'public' CHECK (access_level IN ('public', 'private', 'premium')),
-    
-    -- 📈 Analytics
-    analytics JSONB, -- Store additional analytics data
-    
-    -- 🎨 Customization
-    custom_css TEXT,
-    custom_js TEXT,
-    layout_variant VARCHAR(50) DEFAULT 'default',
-    
-    -- 📚 Tutorial Specific
-    difficulty_level VARCHAR(20) CHECK (difficulty_level IN ('beginner', 'intermediate', 'advanced', 'expert')),
-    estimated_completion_time INTEGER, -- In minutes
-    prerequisites TEXT[], -- Required knowledge/skills
-    learning_objectives TEXT[], -- What will be learned
-    resources JSONB, -- Additional resources, links, downloads
-    
-    -- 📝 Content Management
-    revision_history JSONB, -- Track changes and versions
-    last_reviewed_at TIMESTAMPTZ,
-    last_reviewed_by TEXT,
-    content_status VARCHAR(20) DEFAULT 'draft' CHECK (content_status IN ('draft', 'review', 'approved', 'published', 'archived')),
-    
-    -- 🎯 Engagement
-    target_audience TEXT[],
-    engagement_metrics JSONB, -- Store likes, shares, comments details
-    feedback JSONB, -- Store user feedback and ratings
-    
-    -- 🔄 Workflow
+-- TASKS (Your tasks for each project)
+CREATE TABLE IF NOT EXISTS tasks (
+    id TEXT PRIMARY KEY,
+    project_id TEXT NOT NULL,
+    title TEXT NOT NULL,
+    description TEXT,
+    type TEXT NOT NULL, -- 'feature', 'bug', 'refactor', 'test', 'documentation'
+    priority TEXT NOT NULL, -- 'low', 'medium', 'high', 'critical'
+    status TEXT NOT NULL DEFAULT 'pending', -- 'pending', 'in_progress', 'completed', 'failed', 'cancelled'
+    category TEXT, -- 'analysis', 'generate', 'refactor', 'test', 'deploy'
+    metadata TEXT, -- JSON for extended data
+    created_by TEXT NOT NULL DEFAULT 'me',
     assigned_to TEXT,
-    review_notes TEXT,
-    publication_schedule TIMESTAMPTZ,
-    expiration_date TIMESTAMPTZ
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    completed_at TEXT,
+    due_date TEXT,
+    started_at TEXT,
+    estimated_hours REAL,
+    actual_hours REAL,
+    estimated_duration REAL,
+    tags TEXT, -- JSON array
+    dependencies TEXT, -- JSON array
+    assignee TEXT,
+    execution_history TEXT, -- JSON array
+    parent_task_id TEXT,
+    child_task_ids TEXT, -- JSON array
+    phase TEXT,
+    stage TEXT,
+    phase_order INTEGER,
+    task_level INTEGER DEFAULT 0,
+    root_task_id TEXT,
+    is_phase_task BOOLEAN DEFAULT false,
+    progress INTEGER DEFAULT 0,
+    phase_progress TEXT, -- JSON object
+    blocked_by TEXT, -- JSON array
+    FOREIGN KEY (project_id) REFERENCES projects (id),
+    FOREIGN KEY (created_by) REFERENCES users (id)
 );
 
--- SKILLS
--- These are the skills showcased by the site owner. They inherently belong to the owner.
-CREATE TABLE IF NOT EXISTS skills (
-    id SERIAL PRIMARY KEY,
-    category VARCHAR(64) NOT NULL,
+-- ============================================================================
+-- META-EBENEN TABLES (PIDEA Architecture)
+-- ============================================================================
+
+-- FRAMEWORKS (Ebene 2: Strategy and Workflow Selection)
+CREATE TABLE IF NOT EXISTS frameworks (
+    id TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    category TEXT NOT NULL, -- 'analysis', 'generate', 'refactor', 'test', 'deploy'
     description TEXT,
-    items JSONB NOT NULL,
-    display_order INTEGER NOT NULL DEFAULT 0,
-    is_visible BOOLEAN DEFAULT TRUE,
-    is_public BOOLEAN DEFAULT TRUE,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    version TEXT NOT NULL DEFAULT '1.0.0',
+    status TEXT NOT NULL DEFAULT 'active', -- 'active', 'deprecated', 'experimental'
+    capabilities TEXT, -- JSON Array of available capabilities
+    configuration TEXT, -- JSON for framework-specific settings
+    metadata TEXT, -- JSON for extended data
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
--- AI GENERATED CONTENT
--- Stores content generated by AI, associated with the owner and optionally a page layout section.
-CREATE TABLE IF NOT EXISTS ai_generated_content (
-    id SERIAL PRIMARY KEY,
-    owner_id VARCHAR(255) NOT NULL DEFAULT 'me' REFERENCES site_owner(id) ON DELETE CASCADE CHECK (owner_id = 'me'),
-    source_url VARCHAR(2048),       -- URL of the source data if applicable
-    source_type VARCHAR(50) NOT NULL, -- e.g., 'github_readme', 'linkedin_profile', 'manual_input'
-    summary TEXT NOT NULL,          -- The AI-generated summary or content
-    raw_data_input JSONB,           -- The raw input data provided to the AI
-    generation_parameters JSONB,    -- Parameters used for the AI generation
-    is_visible BOOLEAN DEFAULT TRUE,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-);
-
-
-CREATE TABLE IF NOT EXISTS files (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    name VARCHAR(255) NOT NULL,
-    path VARCHAR(1024) NOT NULL, -- z.B. "2024/06/01/xyz.jpg"
-    parent_id UUID REFERENCES files(id) ON DELETE CASCADE, -- für Ordnerstruktur
-    is_folder BOOLEAN DEFAULT FALSE,
-    size BIGINT,
-    mime_type VARCHAR(100),
-    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    tags TEXT[],
-    used_in JSONB, -- z.B. Referenzen auf Projekte, Posts etc.
-    -- weitere Metadaten nach Bedarf
-    UNIQUE (parent_id, name)
-);
-
-CREATE TABLE IF NOT EXISTS layouts (
-    id SERIAL PRIMARY KEY,
-    page VARCHAR(255) NOT NULL DEFAULT 'home',
-    elements JSONB NOT NULL DEFAULT '[]',
-    layout_config JSONB NOT NULL DEFAULT '{}',
-    is_active BOOLEAN DEFAULT FALSE,
-    is_visible BOOLEAN DEFAULT TRUE,
-    is_public BOOLEAN DEFAULT TRUE,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    -- Legacy fields for backward compatibility (not used in new implementation)
-    name VARCHAR(255),
+-- WORKFLOWS (Ebene 1: Step Orchestration)
+CREATE TABLE IF NOT EXISTS workflows (
+    id TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    framework_id TEXT NOT NULL,
+    category TEXT NOT NULL, -- 'analysis', 'generate', 'refactor', 'test', 'deploy'
     description TEXT,
-    grid_config JSONB,
-    layout_variant VARCHAR(50),
-    sections_order JSONB,
-    layout_type VARCHAR(50),
-    show_sidebar BOOLEAN,
-    sidebar_position VARCHAR(50),
-    content JSONB
+    version TEXT NOT NULL DEFAULT '1.0.0',
+    status TEXT NOT NULL DEFAULT 'active',
+    steps TEXT, -- JSON Array of step configurations
+    configuration TEXT, -- JSON for workflow-specific settings
+    metadata TEXT, -- JSON for extended data
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (framework_id) REFERENCES frameworks (id)
 );
 
--- Index for efficient page-based queries
-CREATE INDEX IF NOT EXISTS idx_layouts_page ON layouts(page);
+-- STEPS (Ebene 0: Atomic Operations)
+CREATE TABLE IF NOT EXISTS steps (
+    id TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    category TEXT NOT NULL, -- 'analysis', 'generate', 'refactor', 'test', 'deploy'
+    description TEXT,
+    version TEXT NOT NULL DEFAULT '1.0.0',
+    status TEXT NOT NULL DEFAULT 'active',
+    capabilities TEXT, -- JSON Array of available capabilities
+    configuration TEXT, -- JSON for step-specific settings
+    metadata TEXT, -- JSON for extended data
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+-- COMMANDS (Application Layer: Business Actions)
+CREATE TABLE IF NOT EXISTS commands (
+    id TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    category TEXT NOT NULL, -- 'analysis', 'generate', 'refactor', 'test', 'deploy'
+    description TEXT,
+    version TEXT NOT NULL DEFAULT '1.0.0',
+    status TEXT NOT NULL DEFAULT 'active',
+    parameters TEXT, -- JSON Schema for parameters
+    capabilities TEXT, -- JSON Array of available capabilities
+    configuration TEXT, -- JSON for command-specific settings
+    metadata TEXT, -- JSON for extended data
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+-- HANDLERS (Application Layer: Use Case Orchestration)
+CREATE TABLE IF NOT EXISTS handlers (
+    id TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    category TEXT NOT NULL, -- 'analysis', 'generate', 'refactor', 'test', 'deploy'
+    description TEXT,
+    version TEXT NOT NULL DEFAULT '1.0.0',
+    status TEXT NOT NULL DEFAULT 'active',
+    command_id TEXT,
+    framework_id TEXT,
+    capabilities TEXT, -- JSON Array of available capabilities
+    configuration TEXT, -- JSON for handler-specific settings
+    metadata TEXT, -- JSON for extended data
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (command_id) REFERENCES commands (id),
+    FOREIGN KEY (framework_id) REFERENCES frameworks (id)
+);
+
+-- ============================================================================
+-- IDE AGENTS (Ebene 3: IDE Integration)
+-- ============================================================================
+
+-- IDE AGENTS (Your running IDE instances)
+CREATE TABLE IF NOT EXISTS ide_agents (
+    id TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    ide_type TEXT NOT NULL, -- 'cursor', 'vscode', 'windsurf'
+    project_id TEXT NOT NULL,
+    port INTEGER NOT NULL,
+    status TEXT NOT NULL DEFAULT 'running', -- 'running', 'stopped', 'error'
+    workspace_path TEXT NOT NULL,
+    capabilities TEXT, -- JSON Array of available capabilities
+    configuration TEXT, -- JSON for IDE-specific settings
+    metadata TEXT, -- JSON for extended data
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    last_heartbeat TEXT,
+    FOREIGN KEY (project_id) REFERENCES projects (id)
+);
+
+-- ============================================================================
+-- EXECUTION TABLES (Task and Workflow Execution)
+-- ============================================================================
+
+-- TASK EXECUTIONS (Your task runs)
+CREATE TABLE IF NOT EXISTS task_executions (
+    id TEXT PRIMARY KEY,
+    task_id TEXT NOT NULL,
+    user_id TEXT NOT NULL DEFAULT 'me',
+    status TEXT NOT NULL DEFAULT 'pending', -- 'pending', 'running', 'completed', 'failed', 'cancelled'
+    execution_method TEXT NOT NULL, -- 'unified_workflow', 'core_engine', 'git_workflow', 'legacy'
+    framework_id TEXT,
+    workflow_id TEXT,
+    handler_id TEXT,
+    command_id TEXT,
+    result TEXT, -- JSON for execution results
+    error TEXT, -- JSON for error details
+    metadata TEXT, -- JSON for extended data
+    started_at TEXT,
+    completed_at TEXT,
+    duration_ms INTEGER,
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (task_id) REFERENCES tasks (id),
+    FOREIGN KEY (user_id) REFERENCES users (id),
+    FOREIGN KEY (framework_id) REFERENCES frameworks (id),
+    FOREIGN KEY (workflow_id) REFERENCES workflows (id),
+    FOREIGN KEY (handler_id) REFERENCES handlers (id),
+    FOREIGN KEY (command_id) REFERENCES commands (id)
+);
+
+-- STEP EXECUTIONS (Individual step runs)
+CREATE TABLE IF NOT EXISTS step_executions (
+    id TEXT PRIMARY KEY,
+    task_execution_id TEXT NOT NULL,
+    step_id TEXT NOT NULL,
+    workflow_id TEXT NOT NULL,
+    status TEXT NOT NULL DEFAULT 'pending', -- 'pending', 'running', 'completed', 'failed', 'skipped'
+    result TEXT, -- JSON for step results
+    error TEXT, -- JSON for error details
+    metadata TEXT, -- JSON for extended data
+    started_at TEXT,
+    completed_at TEXT,
+    duration_ms INTEGER,
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (task_execution_id) REFERENCES task_executions (id),
+    FOREIGN KEY (step_id) REFERENCES steps (id),
+    FOREIGN KEY (workflow_id) REFERENCES workflows (id)
+);
+
+-- EXECUTION HISTORY (Execution tracking)
+CREATE TABLE IF NOT EXISTS execution_history (
+    id TEXT PRIMARY KEY,
+    task_execution_id TEXT NOT NULL,
+    action TEXT NOT NULL, -- 'started', 'step_completed', 'step_failed', 'completed', 'cancelled'
+    data TEXT, -- JSON for action details
+    metadata TEXT, -- JSON for extended data
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (task_execution_id) REFERENCES task_executions (id)
+);
+
+-- ============================================================================
+-- RELATIONSHIP TABLES
+-- ============================================================================
+
+-- TASK DEPENDENCIES (Task relationships)
+CREATE TABLE IF NOT EXISTS task_dependencies (
+    id TEXT PRIMARY KEY,
+    task_id TEXT NOT NULL,
+    dependency_id TEXT NOT NULL,
+    type TEXT NOT NULL, -- 'blocks', 'requires', 'related'
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (task_id) REFERENCES tasks (id),
+    FOREIGN KEY (dependency_id) REFERENCES tasks (id)
+);
+
+-- FRAMEWORK DEPENDENCIES (Framework relationships)
+CREATE TABLE IF NOT EXISTS framework_dependencies (
+    id TEXT PRIMARY KEY,
+    framework_id TEXT NOT NULL,
+    dependency_id TEXT NOT NULL,
+    type TEXT NOT NULL, -- 'requires', 'optional', 'conflicts'
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (framework_id) REFERENCES frameworks (id),
+    FOREIGN KEY (dependency_id) REFERENCES frameworks (id)
+);
+
+-- WORKFLOW STEPS (Workflow-step relationships)
+CREATE TABLE IF NOT EXISTS workflow_steps (
+    id TEXT PRIMARY KEY,
+    workflow_id TEXT NOT NULL,
+    step_id TEXT NOT NULL,
+    order_index INTEGER NOT NULL,
+    configuration TEXT, -- JSON for step-specific configuration in workflow
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (workflow_id) REFERENCES workflows (id),
+    FOREIGN KEY (step_id) REFERENCES steps (id)
+);
+
+-- ============================================================================
+-- REGISTRY TABLES (Modular Management)
+-- ============================================================================
+
+-- REGISTRIES (For modular management)
+CREATE TABLE IF NOT EXISTS registries (
+    id TEXT PRIMARY KEY,
+    name TEXT NOT NULL, -- 'command', 'handler', 'step', 'workflow', 'framework'
+    type TEXT NOT NULL, -- 'command', 'handler', 'step', 'workflow', 'framework'
+    status TEXT NOT NULL DEFAULT 'active',
+    configuration TEXT, -- JSON for registry-specific settings
+    metadata TEXT, -- JSON for extended data
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+-- REGISTRY ITEMS (Dynamic registration)
+CREATE TABLE IF NOT EXISTS registry_items (
+    id TEXT PRIMARY KEY,
+    registry_id TEXT NOT NULL,
+    item_id TEXT NOT NULL, -- Reference to commands.id, handlers.id, etc.
+    item_type TEXT NOT NULL, -- 'command', 'handler', 'step', 'workflow', 'framework'
+    category TEXT NOT NULL, -- 'analysis', 'generate', 'refactor', 'test', 'deploy'
+    status TEXT NOT NULL DEFAULT 'active',
+    priority INTEGER DEFAULT 0,
+    configuration TEXT, -- JSON for item-specific settings
+    metadata TEXT, -- JSON for extended data
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (registry_id) REFERENCES registries (id)
+);
+
+-- ============================================================================
+-- CONFIGURATION TABLES
+-- ============================================================================
+
+-- PROJECT CONFIGURATIONS (Your project settings)
+CREATE TABLE IF NOT EXISTS project_configurations (
+    id TEXT PRIMARY KEY,
+    project_id TEXT NOT NULL,
+    key TEXT NOT NULL,
+    value TEXT NOT NULL,
+    type TEXT NOT NULL DEFAULT 'string', -- 'string', 'number', 'boolean', 'json'
+    description TEXT,
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (project_id) REFERENCES projects (id),
+    UNIQUE(project_id, key)
+);
+
+-- GLOBAL CONFIGURATIONS (System-wide settings)
+CREATE TABLE IF NOT EXISTS global_configurations (
+    id TEXT PRIMARY KEY,
+    key TEXT UNIQUE NOT NULL,
+    value TEXT NOT NULL,
+    type TEXT NOT NULL DEFAULT 'string', -- 'string', 'number', 'boolean', 'json'
+    description TEXT,
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+-- ============================================================================
+-- ANALYTICS & MONITORING TABLES
+-- ============================================================================
+
+-- PERFORMANCE METRICS (Execution metrics)
+CREATE TABLE IF NOT EXISTS performance_metrics (
+    id TEXT PRIMARY KEY,
+    task_execution_id TEXT,
+    metric_name TEXT NOT NULL, -- 'execution_time', 'memory_usage', 'cpu_usage'
+    metric_value REAL NOT NULL,
+    unit TEXT NOT NULL, -- 'ms', 'MB', '%'
+    metadata TEXT, -- JSON for extended data
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (task_execution_id) REFERENCES task_executions (id)
+);
+
+-- SYSTEM HEALTH (System monitoring)
+CREATE TABLE IF NOT EXISTS system_health (
+    id TEXT PRIMARY KEY,
+    component TEXT NOT NULL, -- 'database', 'ide_agent', 'framework', 'workflow'
+    status TEXT NOT NULL, -- 'healthy', 'warning', 'error', 'critical'
+    message TEXT,
+    metadata TEXT, -- JSON for extended data
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+-- ============================================================================
+-- INDEXES FOR PERFORMANCE
+-- ============================================================================
+
+-- Task indexes
+CREATE INDEX IF NOT EXISTS idx_tasks_project_id ON tasks(project_id);
+CREATE INDEX IF NOT EXISTS idx_tasks_status ON tasks(status);
+CREATE INDEX IF NOT EXISTS idx_tasks_category ON tasks(category);
+CREATE INDEX IF NOT EXISTS idx_tasks_priority ON tasks(priority);
+CREATE INDEX IF NOT EXISTS idx_tasks_created_at ON tasks(created_at);
+
+-- Framework indexes
+CREATE INDEX IF NOT EXISTS idx_frameworks_category ON frameworks(category);
+CREATE INDEX IF NOT EXISTS idx_frameworks_status ON frameworks(status);
+
+-- Workflow indexes
+CREATE INDEX IF NOT EXISTS idx_workflows_framework_id ON workflows(framework_id);
+CREATE INDEX IF NOT EXISTS idx_workflows_category ON workflows(category);
+
+-- Step indexes
+CREATE INDEX IF NOT EXISTS idx_steps_category ON steps(category);
+CREATE INDEX IF NOT EXISTS idx_steps_status ON steps(status);
+
+-- Command indexes
+CREATE INDEX IF NOT EXISTS idx_commands_category ON commands(category);
+CREATE INDEX IF NOT EXISTS idx_commands_status ON commands(status);
+
+-- Handler indexes
+CREATE INDEX IF NOT EXISTS idx_handlers_category ON handlers(category);
+CREATE INDEX IF NOT EXISTS idx_handlers_command_id ON handlers(command_id);
+CREATE INDEX IF NOT EXISTS idx_handlers_framework_id ON handlers(framework_id);
+
+-- IDE Agent indexes
+CREATE INDEX IF NOT EXISTS idx_ide_agents_project_id ON ide_agents(project_id);
+CREATE INDEX IF NOT EXISTS idx_ide_agents_ide_type ON ide_agents(ide_type);
+CREATE INDEX IF NOT EXISTS idx_ide_agents_status ON ide_agents(status);
+
+-- Task Execution indexes
+CREATE INDEX IF NOT EXISTS idx_task_executions_task_id ON task_executions(task_id);
+CREATE INDEX IF NOT EXISTS idx_task_executions_status ON task_executions(status);
+CREATE INDEX IF NOT EXISTS idx_task_executions_created_at ON task_executions(created_at);
+
+-- Step Execution indexes
+CREATE INDEX IF NOT EXISTS idx_step_executions_task_execution_id ON step_executions(task_execution_id);
+CREATE INDEX IF NOT EXISTS idx_step_executions_status ON step_executions(status);
+
+-- Registry indexes
+CREATE INDEX IF NOT EXISTS idx_registry_items_registry_id ON registry_items(registry_id);
+CREATE INDEX IF NOT EXISTS idx_registry_items_category ON registry_items(category);
+
+-- ============================================================================
+-- INITIAL DATA
+-- ============================================================================
+
+-- Insert default user (YOU)
+INSERT OR IGNORE INTO users (id, email, username, password_hash, role, status) 
+VALUES ('me', 'admin@pidea.local', 'admin', 'default_hash_change_me', 'admin', 'active');
+
+-- Insert default global configurations
+INSERT OR IGNORE INTO global_configurations (key, value, type, description) VALUES
+('system_name', 'PIDEA', 'string', 'System name'),
+('system_version', '1.0.0', 'string', 'System version'),
+('default_ide_port_start', '9222', 'number', 'Default starting port for IDE detection'),
+('max_concurrent_executions', '5', 'number', 'Maximum concurrent task executions'),
+('auto_cleanup_days', '30', 'number', 'Days to keep execution history'),
+('enable_analytics', 'true', 'boolean', 'Enable performance analytics'),
+('log_level', 'info', 'string', 'System log level');
+
+-- ============================================================================
+-- COMMENTS
+-- ============================================================================
+
+-- This is the PIDEA database schema for single-user IDE management
+-- All tables are designed for one user managing multiple IDEs and projects
+-- The meta-ebenen architecture supports: Commands -> Handlers -> Frameworks -> Workflows -> Steps
+-- Each level has its own capabilities and can be dynamically registered via registries

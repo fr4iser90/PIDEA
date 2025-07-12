@@ -421,7 +421,8 @@ class Application {
       this.aiService,
       this.projectAnalyzer,
       this.projectMappingService,
-      this.ideManager
+      this.ideManager,
+      this.serviceRegistry.getService('docsImportService')
     );
 
     this.autoModeController = new AutoModeController({
