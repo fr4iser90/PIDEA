@@ -80,8 +80,7 @@ class FileBasedWorkspaceDetector {
       const handler = new VSCodeTerminalHandler();
       await handler.initialize(port);
       // File-Struktur erstellen
-      await handler.executeCommand(`mkdir -p /tmp/IDEWEB/${port}`);
-      await handler.executeCommand(`rm -f /tmp/IDEWEB/${port}/*.txt`);
+      await handler.executeCommand(`mkdir -p /tmp/IDEWEB/${port}/projects`);
       await handler.cleanup();
       return;
     }
@@ -100,8 +99,7 @@ class FileBasedWorkspaceDetector {
 
       // File-Struktur erstellen
       const commands = [
-        `mkdir -p /tmp/IDEWEB/${port}`,
-        `rm -f /tmp/IDEWEB/${port}/*.txt` // Alte Files löschen
+        `mkdir -p /tmp/IDEWEB/${port}/projects`
       ];
 
       for (const command of commands) {
@@ -141,34 +139,56 @@ class FileBasedWorkspaceDetector {
 
   /**
    * Terminal-Befehle ausführen und Output in Files umleiten
+   * NEW: Project-based structure
    */
   async _executeTerminalCommands(page, port) {
     // VSCode: use handler
     if (this._isVSCodePort(port)) {
       const handler = new VSCodeTerminalHandler();
       await handler.initialize(port);
+      
+      // Get current workspace and project name
+      const workspacePath = await handler.executeCommand('pwd');
+      const projectName = this._extractProjectName(workspacePath);
+      
+      // Create project directory and files
+      const projectDir = `/tmp/IDEWEB/${port}/projects/${projectName}`;
       const commands = [
-        `pwd > /tmp/IDEWEB/${port}/workspace.txt`,
-        `ls -la > /tmp/IDEWEB/${port}/files.txt`,
-        `git status > /tmp/IDEWEB/${port}/git-status.txt 2>&1`,
-        `pwd && ls -la && git status > /tmp/IDEWEB/${port}/info.txt 2>&1`,
-        `echo "Terminal session started at $(date)" > /tmp/IDEWEB/${port}/terminal-session.txt`
+        `mkdir -p ${projectDir}`,
+        `pwd > ${projectDir}/workspace.txt`,
+        `ls -la > ${projectDir}/files.txt`,
+        `git status > ${projectDir}/git-status.txt 2>&1`,
+        `pwd && ls -la && git status > ${projectDir}/info.txt 2>&1`,
+        `echo "Terminal session started at $(date)" > ${projectDir}/terminal-session.txt`,
+        `echo "${projectName}" > /tmp/IDEWEB/${port}/current-project.txt`
       ];
+      
       for (const command of commands) {
         await handler.executeCommand(command);
       }
       await handler.cleanup();
       return;
     }
+    
     try {
       console.log(`[FileBasedWorkspaceDetector] Executing terminal commands for port ${port}...`);
 
+      // Get current workspace and project name
+      const workspacePath = await this._getCurrentWorkspace(page);
+      const projectName = this._extractProjectName(workspacePath);
+      
+      console.log(`[FileBasedWorkspaceDetector] Detected project: ${projectName} at ${workspacePath}`);
+      
+      // Create project directory and files
+      const projectDir = `/tmp/IDEWEB/${port}/projects/${projectName}`;
       const commands = [
-        `pwd > /tmp/IDEWEB/${port}/workspace.txt`,
-        `ls -la > /tmp/IDEWEB/${port}/files.txt`,
-        `git status > /tmp/IDEWEB/${port}/git-status.txt 2>&1`,
-        `pwd && ls -la && git status > /tmp/IDEWEB/${port}/info.txt 2>&1`,
-        `echo "Terminal session started at $(date)" > /tmp/IDEWEB/${port}/terminal-session.txt`
+        `mkdir -p ${projectDir}`,
+        `pwd > ${projectDir}/workspace.txt`,
+        `ls -la > ${projectDir}/files.txt`,
+        `git status > ${projectDir}/git-status.txt 2>&1`,
+        `pwd && ls -la && git status > ${projectDir}/info.txt 2>&1`,
+        `echo "Terminal session started at $(date)" > ${projectDir}/terminal-session.txt`,
+        `echo "${projectName}" > /tmp/IDEWEB/${port}/current-project.txt`
       ];
 
       for (const command of commands) {
@@ -177,7 +197,7 @@ class FileBasedWorkspaceDetector {
         await page.waitForTimeout(800); // Warten bis Output geschrieben ist
       }
 
-      console.log(`[FileBasedWorkspaceDetector] Terminal commands executed for port ${port}`);
+      console.log(`[FileBasedWorkspaceDetector] Terminal commands executed for port ${port}, project ${projectName}`);
 
     } catch (error) {
       console.error('[FileBasedWorkspaceDetector] Error executing terminal commands:', error);
@@ -185,7 +205,55 @@ class FileBasedWorkspaceDetector {
   }
 
   /**
+   * Get current workspace path from terminal
+   */
+  async _getCurrentWorkspace(page) {
+    try {
+      // Create temporary file to capture pwd output
+      const tempFile = `/tmp/IDEWEB/pwd_temp_${Date.now()}.txt`;
+      
+      await page.keyboard.type(`pwd > ${tempFile}`);
+      await page.keyboard.press('Enter');
+      await page.waitForTimeout(500);
+      
+      // Read the file
+      if (fs.existsSync(tempFile)) {
+        const workspacePath = fs.readFileSync(tempFile, 'utf8').trim();
+        fs.unlinkSync(tempFile); // Clean up
+        return workspacePath;
+      }
+      
+      return process.cwd(); // Fallback
+    } catch (error) {
+      console.error('[FileBasedWorkspaceDetector] Error getting current workspace:', error);
+      return process.cwd(); // Fallback
+    }
+  }
+
+  /**
+   * Extract project name from workspace path
+   */
+  _extractProjectName(workspacePath) {
+    try {
+      if (!workspacePath) return 'unknown-project';
+      
+      // Get the last directory name from the path
+      const pathParts = workspacePath.split('/').filter(part => part.trim());
+      const projectName = pathParts[pathParts.length - 1] || 'unknown-project';
+      
+      // Clean the project name (remove special characters)
+      const cleanName = projectName.replace(/[^a-zA-Z0-9_-]/g, '-').toLowerCase();
+      
+      return cleanName || 'unknown-project';
+    } catch (error) {
+      console.error('[FileBasedWorkspaceDetector] Error extracting project name:', error);
+      return 'unknown-project';
+    }
+  }
+
+  /**
    * Prüfe ob bereits Files vorhanden sind ohne Terminal zu öffnen
+   * NEW: Check project-based structure
    */
   async _checkExistingFiles(port) {
     try {
@@ -196,20 +264,49 @@ class FileBasedWorkspaceDetector {
         return null;
       }
 
-      // Prüfe ob workspace.txt existiert und nicht leer ist
-      const workspaceFile = `${basePath}/workspace.txt`;
-      if (!fs.existsSync(workspaceFile)) {
+      // Check current project
+      const currentProjectFile = `${basePath}/current-project.txt`;
+      let currentProject = null;
+      
+      if (fs.existsSync(currentProjectFile)) {
+        currentProject = fs.readFileSync(currentProjectFile, 'utf8').trim();
+        console.log(`[FileBasedWorkspaceDetector] Current project: ${currentProject}`);
+      }
+
+      // If no current project, try to find any project with data
+      if (!currentProject) {
+        const projectsDir = `${basePath}/projects`;
+        if (fs.existsSync(projectsDir)) {
+          const projects = fs.readdirSync(projectsDir).filter(dir => {
+            const projectPath = path.join(projectsDir, dir);
+            return fs.statSync(projectPath).isDirectory();
+          });
+          
+          if (projects.length > 0) {
+            currentProject = projects[0]; // Use first available project
+            console.log(`[FileBasedWorkspaceDetector] Using first available project: ${currentProject}`);
+          }
+        }
+      }
+
+      if (!currentProject) {
         return null;
       }
 
-      const workspaceContent = fs.readFileSync(workspaceFile, 'utf8').trim();
+      // Check project-specific workspace file
+      const projectWorkspaceFile = `${basePath}/projects/${currentProject}/workspace.txt`;
+      if (!fs.existsSync(projectWorkspaceFile)) {
+        return null;
+      }
+
+      const workspaceContent = fs.readFileSync(projectWorkspaceFile, 'utf8').trim();
       if (!workspaceContent) {
         return null;
       }
 
       // Wenn workspace.txt existiert und Inhalt hat, alle Files auslesen
-      console.log(`[FileBasedWorkspaceDetector] Found existing files for port ${port}, reading them...`);
-      return await this._readWorkspaceFiles(port);
+      console.log(`[FileBasedWorkspaceDetector] Found existing files for port ${port}, project ${currentProject}, reading them...`);
+      return await this._readWorkspaceFiles(port, currentProject);
 
     } catch (error) {
       console.error('[FileBasedWorkspaceDetector] Error checking existing files:', error);
@@ -219,14 +316,29 @@ class FileBasedWorkspaceDetector {
 
   /**
    * Files auslesen und verarbeiten
+   * NEW: Project-based file reading
    */
-  async _readWorkspaceFiles(port) {
+  async _readWorkspaceFiles(port, projectName = null) {
     try {
-      console.log(`[FileBasedWorkspaceDetector] Reading workspace files for port ${port}...`);
+      // If no project name provided, try to get current project
+      if (!projectName) {
+        const currentProjectFile = `/tmp/IDEWEB/${port}/current-project.txt`;
+        if (fs.existsSync(currentProjectFile)) {
+          projectName = fs.readFileSync(currentProjectFile, 'utf8').trim();
+        }
+      }
 
-      const basePath = `/tmp/IDEWEB/${port}`;
+      if (!projectName) {
+        console.error('[FileBasedWorkspaceDetector] No project name available for reading files');
+        return null;
+      }
+
+      console.log(`[FileBasedWorkspaceDetector] Reading workspace files for port ${port}, project ${projectName}...`);
+
+      const basePath = `/tmp/IDEWEB/${port}/projects/${projectName}`;
       const workspaceInfo = {
         port: port,
+        projectName: projectName,
         workspace: null,
         files: [],
         gitStatus: null,
@@ -281,7 +393,7 @@ class FileBasedWorkspaceDetector {
         console.error('[FileBasedWorkspaceDetector] Error reading terminal-session.txt:', error);
       }
 
-      console.log(`[FileBasedWorkspaceDetector] Workspace files read for port ${port}`);
+      console.log(`[FileBasedWorkspaceDetector] Workspace files read for port ${port}, project ${projectName}`);
       return workspaceInfo;
 
     } catch (error) {
@@ -316,24 +428,38 @@ class FileBasedWorkspaceDetector {
 
   /**
    * Terminal-Befehl ausführen und Output in File umleiten
+   * NEW: Project-based command execution
    */
   async executeCommand(port, command, outputFile = null) {
     // VSCode: use handler
     if (this._isVSCodePort(port)) {
       const handler = new VSCodeTerminalHandler();
       await handler.initialize(port);
+      
+      // Get current project
+      const currentProjectFile = `/tmp/IDEWEB/${port}/current-project.txt`;
+      let projectName = 'unknown-project';
+      
+      if (fs.existsSync(currentProjectFile)) {
+        projectName = fs.readFileSync(currentProjectFile, 'utf8').trim();
+      }
+      
+      const projectDir = `/tmp/IDEWEB/${port}/projects/${projectName}`;
+      
       let result = await handler.executeCommand(outputFile 
-        ? `${command} > /tmp/IDEWEB/${port}/${outputFile} 2>&1`
+        ? `${command} > ${projectDir}/${outputFile} 2>&1`
         : command);
       await handler.cleanup();
+      
       if (outputFile) {
-        const filePath = `/tmp/IDEWEB/${port}/${outputFile}`;
+        const filePath = `${projectDir}/${outputFile}`;
         if (fs.existsSync(filePath)) {
           return fs.readFileSync(filePath, 'utf8').trim();
         }
       }
       return result;
     }
+    
     try {
       const page = await this.browserManager.getPage();
       if (!page) return null;
@@ -341,9 +467,19 @@ class FileBasedWorkspaceDetector {
       // File-Struktur sicherstellen
       await this._setupTerminalAndFiles(page, port);
 
+      // Get current project
+      const currentProjectFile = `/tmp/IDEWEB/${port}/current-project.txt`;
+      let projectName = 'unknown-project';
+      
+      if (fs.existsSync(currentProjectFile)) {
+        projectName = fs.readFileSync(currentProjectFile, 'utf8').trim();
+      }
+      
+      const projectDir = `/tmp/IDEWEB/${port}/projects/${projectName}`;
+
       // Befehl ausführen
       const fullCommand = outputFile 
-        ? `${command} > /tmp/IDEWEB/${port}/${outputFile} 2>&1`
+        ? `${command} > ${projectDir}/${outputFile} 2>&1`
         : command;
 
       await page.keyboard.type(fullCommand);
@@ -352,7 +488,7 @@ class FileBasedWorkspaceDetector {
 
       // Output lesen falls File angegeben
       if (outputFile) {
-        const filePath = `/tmp/IDEWEB/${port}/${outputFile}`;
+        const filePath = `${projectDir}/${outputFile}`;
         if (fs.existsSync(filePath)) {
           const output = fs.readFileSync(filePath, 'utf8').trim();
           

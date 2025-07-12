@@ -471,7 +471,7 @@ class TaskController {
         }
     }
 
-    // NEW: Sync docs tasks using TEMP logic and DocsImportService
+    // NEW: Sync docs tasks using workspace path and DocsImportService
     async syncDocsTasks(req, res) {
         try {
             console.log('🔄 [TaskController] syncDocsTasks called');
@@ -481,28 +481,35 @@ class TaskController {
 
             console.log('🔄 [TaskController] Syncing docs tasks for project:', projectId);
 
-            // Use DocsImportService for TEMP logic
+            // Use DocsImportService for workspace import
             if (!this.docsImportService) {
                 throw new Error('DocsImportService not available');
             }
 
-            // Get port from IDE manager or use default
-            let port = 9222; // Default Cursor port
+            // Get workspace path from IDE manager or use default
+            let workspacePath = null;
             if (this.ideManager) {
                 try {
                     const activeIDE = await this.ideManager.getActiveIDE();
                     if (activeIDE && activeIDE.port) {
-                        port = activeIDE.port;
+                        // Get workspace path from IDE manager
+                        workspacePath = await this.ideManager.detectWorkspacePath(activeIDE.port);
                     }
                 } catch (error) {
-                    console.warn('🔍 [TaskController] Failed to get active IDE port, using default:', error.message);
+                    console.warn('🔍 [TaskController] Failed to get workspace path, using fallback:', error.message);
                 }
             }
 
-            console.log(`🔄 [TaskController] Using port ${port} for docs import`);
+            // Fallback: use current working directory
+            if (!workspacePath) {
+                workspacePath = process.cwd();
+                console.log(`🔄 [TaskController] Using fallback workspace path: ${workspacePath}`);
+            }
 
-            // Use DocsImportService to handle TEMP logic and import
-            const result = await this.docsImportService.importDocsFromTemp(projectId, port);
+            console.log(`🔄 [TaskController] Using workspace path: ${workspacePath}`);
+
+            // Use DocsImportService to import from workspace
+            const result = await this.docsImportService.importDocsFromWorkspace(projectId, workspacePath);
 
             console.log(`✅ [TaskController] Docs import completed:`, {
                 importedCount: result.importedCount,
@@ -513,7 +520,7 @@ class TaskController {
             res.json({
                 success: true,
                 data: result,
-                message: `Successfully imported ${result.importedCount} docs tasks from TEMP data`
+                message: `Successfully imported ${result.importedCount} docs tasks from workspace`
             });
 
         } catch (error) {

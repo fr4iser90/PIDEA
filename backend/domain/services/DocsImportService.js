@@ -1,48 +1,28 @@
 /**
- * DocsImportService - Importiert Docs aus TEMP-Dateien in die Datenbank
- * Verwendet FileBasedWorkspaceDetector für TEMP-Logik
+ * DocsImportService - Importiert Docs direkt aus dem Workspace in die Datenbank
+ * DATABASE ONLY - Keine TEMP-Logik!
  */
 const fs = require('fs').promises;
 const path = require('path');
-const FileBasedWorkspaceDetector = require('./workspace/FileBasedWorkspaceDetector');
 
 class DocsImportService {
     constructor(browserManager, taskService, taskRepository) {
         this.browserManager = browserManager;
         this.taskService = taskService;
         this.taskRepository = taskRepository;
-        this.fileDetector = new FileBasedWorkspaceDetector(browserManager);
     }
 
     /**
-     * HAUPTMETHODE: Importiere Docs aus TEMP oder erstelle TEMP mit Playwright
+     * HAUPTMETHODE: Importiere Docs direkt aus Workspace in die Datenbank
      * @param {string} projectId - Projekt ID
-     * @param {number} port - IDE Port
+     * @param {string} workspacePath - Workspace Pfad
      * @returns {Promise<Object>} Import Ergebnis
      */
-    async importDocsFromTemp(projectId, port = 9222) {
-        console.log(`🔄 [DocsImportService] Starting docs import for project ${projectId} on port ${port}`);
+    async importDocsFromWorkspace(projectId, workspacePath) {
+        console.log(`🔄 [DocsImportService] Starting docs import for project ${projectId} from workspace: ${workspacePath}`);
         
         try {
-            // 1. TEMP-Dateien checken
-            const tempData = await this._checkTempFiles(port);
-            
-            if (tempData) {
-                console.log(`✅ [DocsImportService] Found existing TEMP data for port ${port}`);
-                return await this._importFromTempData(tempData, projectId);
-            }
-            
-            // 2. TEMP nicht da → Playwright machen lassen
-            console.log(`🔄 [DocsImportService] No TEMP data found, creating with Playwright...`);
-            const newTempData = await this._createTempWithPlaywright(port);
-            
-            if (newTempData) {
-                console.log(`✅ [DocsImportService] Created TEMP data with Playwright`);
-                return await this._importFromTempData(newTempData, projectId);
-            }
-            
-            throw new Error('Failed to create TEMP data with Playwright');
-            
+            return await this._importFromWorkspace(workspacePath, projectId);
         } catch (error) {
             console.error(`❌ [DocsImportService] Import failed:`, error);
             throw error;
@@ -50,215 +30,100 @@ class DocsImportService {
     }
 
     /**
-     * Checke ob TEMP-Dateien vorhanden sind
+     * Importiere aus Workspace direkt in die Datenbank
      */
-    async _checkTempFiles(port) {
+    async _importFromWorkspace(workspacePath, projectId) {
         try {
-            const basePath = `/tmp/IDEWEB/${port}`;
-            
-            // Prüfe ob Verzeichnis existiert
-            try {
-                await fs.access(basePath);
-            } catch {
-                return null; // Verzeichnis existiert nicht
+            console.log(`🔄 [DocsImportService] Importing from workspace to database: ${workspacePath}`);
+            if (!workspacePath) {
+                throw new Error('No workspace path provided');
             }
-            
-            // Prüfe ob workspace.txt existiert und nicht leer ist
-            const workspaceFile = `${basePath}/workspace.txt`;
-            try {
-                const workspaceContent = await fs.readFile(workspaceFile, 'utf8');
-                if (!workspaceContent.trim()) {
-                    return null; // Datei ist leer
-                }
-                
-                console.log(`✅ [DocsImportService] Found existing TEMP files for port ${port}`);
-                return await this._readTempFiles(port);
-                
-            } catch {
-                return null; // Datei existiert nicht
-            }
-            
-        } catch (error) {
-            console.error(`❌ [DocsImportService] Error checking TEMP files:`, error);
-            return null;
-        }
-    }
-
-    /**
-     * Erstelle TEMP-Dateien mit Playwright
-     */
-    async _createTempWithPlaywright(port) {
-        try {
-            console.log(`🔄 [DocsImportService] Creating TEMP files with Playwright for port ${port}...`);
-            
-            // Verwende FileBasedWorkspaceDetector für Playwright-Logik
-            const workspaceInfo = await this.fileDetector.getWorkspaceInfo(port);
-            
-            if (workspaceInfo && workspaceInfo.workspace) {
-                console.log(`✅ [DocsImportService] Created TEMP data:`, workspaceInfo.workspace);
-                return workspaceInfo;
-            }
-            
-            throw new Error('FileBasedWorkspaceDetector failed to create TEMP data');
-            
-        } catch (error) {
-            console.error(`❌ [DocsImportService] Error creating TEMP with Playwright:`, error);
-            throw error;
-        }
-    }
-
-    /**
-     * Lese TEMP-Dateien
-     */
-    async _readTempFiles(port) {
-        try {
-            const basePath = `/tmp/IDEWEB/${port}`;
-            const workspaceInfo = {
-                port: port,
-                workspace: null,
-                files: [],
-                gitStatus: null,
-                info: null,
-                session: null,
-                timestamp: new Date().toISOString()
-            };
-
-            // Workspace-Pfad lesen
-            try {
-                const workspaceContent = await fs.readFile(`${basePath}/workspace.txt`, 'utf8');
-                workspaceInfo.workspace = workspaceContent.trim();
-            } catch (error) {
-                console.error(`❌ [DocsImportService] Error reading workspace.txt:`, error);
-            }
-
-            // Files-Liste lesen
-            try {
-                const filesContent = await fs.readFile(`${basePath}/files.txt`, 'utf8');
-                workspaceInfo.files = filesContent.split('\n').filter(line => line.trim());
-            } catch (error) {
-                console.error(`❌ [DocsImportService] Error reading files.txt:`, error);
-            }
-
-            // Git-Status lesen
-            try {
-                const gitContent = await fs.readFile(`${basePath}/git-status.txt`, 'utf8');
-                workspaceInfo.gitStatus = gitContent.trim();
-            } catch (error) {
-                console.error(`❌ [DocsImportService] Error reading git-status.txt:`, error);
-            }
-
-            // Info-File lesen
-            try {
-                const infoContent = await fs.readFile(`${basePath}/info.txt`, 'utf8');
-                workspaceInfo.info = infoContent.trim();
-            } catch (error) {
-                console.error(`❌ [DocsImportService] Error reading info.txt:`, error);
-            }
-
-            // Session-Info lesen
-            try {
-                const sessionContent = await fs.readFile(`${basePath}/terminal-session.txt`, 'utf8');
-                workspaceInfo.session = sessionContent.trim();
-            } catch (error) {
-                console.error(`❌ [DocsImportService] Error reading terminal-session.txt:`, error);
-            }
-
-            return workspaceInfo;
-            
-        } catch (error) {
-            console.error(`❌ [DocsImportService] Error reading TEMP files:`, error);
-            throw error;
-        }
-    }
-
-    /**
-     * Importiere aus TEMP-Daten in die Datenbank
-     */
-    async _importFromTempData(tempData, projectId) {
-        try {
-            console.log(`🔄 [DocsImportService] Importing from TEMP data to database...`);
-            
-            if (!tempData.workspace) {
-                throw new Error('No workspace path in TEMP data');
-            }
-            
-            const workspacePath = tempData.workspace;
-            const docsTasksPath = path.join(workspacePath, 'docs', '09_roadmap', 'features');
-            
-            console.log(`🔍 [DocsImportService] Looking for docs at: ${docsTasksPath}`);
-            
-            // Prüfe ob docs-Verzeichnis existiert
-            try {
-                await fs.access(docsTasksPath);
-            } catch {
-                throw new Error(`Documentation path not found: ${docsTasksPath}`);
-            }
-            
-            const importedTasks = [];
-            
-            // Lese alle markdown-Dateien
-            const files = await fs.readdir(docsTasksPath);
-            const markdownFiles = files.filter(file => file.endsWith('.md'));
-            
-            console.log(`📁 [DocsImportService] Found ${markdownFiles.length} markdown files`);
-            
-            for (const filename of markdownFiles) {
-                const filePath = path.join(docsTasksPath, filename);
-                const content = await fs.readFile(filePath, 'utf8');
-                
-                console.log(`🔍 [DocsImportService] Processing file: ${filename}`);
-                
-                // Parse markdown content
-                const taskInfo = this._parseDocsTaskFromMarkdown(content, filename);
-                
-                if (taskInfo) {
-                    // Prüfe ob Task bereits existiert
-                    const existingTask = await this.taskRepository.findByTitle(taskInfo.title);
-                    
-                    if (!existingTask) {
-                        console.log(`✅ [DocsImportService] Creating task: ${taskInfo.title}`);
-                        
-                        // Erstelle Task in Datenbank
-                        const task = await this.taskService.createTask(
-                            projectId,
-                            taskInfo.title,
-                            content,
-                            taskInfo.priority,
-                            taskInfo.type,
-                            {
-                                source: 'docs_sync',
-                                filename: filename,
-                                filePath: filePath,
-                                importedAt: new Date(),
-                                content: content,
-                                category: taskInfo.category,
-                                ...taskInfo.metadata
-                            }
-                        );
-                        
-                        if (task) {
-                            importedTasks.push(task);
-                            console.log(`✅ [DocsImportService] Imported task: ${taskInfo.title}`);
-                        }
-                    } else {
-                        console.log(`⚠️ [DocsImportService] Task already exists: ${taskInfo.title}`);
+            const featuresDir = path.join(workspacePath, 'docs/09_roadmap/features');
+            // Hilfsfunktion: rekursiv alle .md-Dateien finden
+            async function getAllMarkdownFiles(dir) {
+                let results = [];
+                const list = await fs.readdir(dir);
+                for (const file of list) {
+                    const filePath = path.join(dir, file);
+                    const stat = await fs.stat(filePath);
+                    if (stat.isDirectory()) {
+                        results = results.concat(await getAllMarkdownFiles(filePath));
+                    } else if (file.endsWith('.md')) {
+                        results.push(filePath);
                     }
                 }
+                return results;
             }
-            
-            console.log(`✅ [DocsImportService] Import completed: ${importedTasks.length} tasks imported`);
-            
+            const allFiles = await getAllMarkdownFiles(featuresDir);
+            const importedTasks = [];
+            for (const filePath of allFiles) {
+                // category = Ordner unter features, name = Ordner unter category
+                const rel = path.relative(featuresDir, filePath);
+                const parts = rel.split(path.sep);
+                if (parts.length < 3) continue; // category/name/file
+                const category = parts[0];
+                const name = parts[1];
+                const filename = parts[2];
+                let type = 'feature_summary', phase = null;
+                if (filename.endsWith('-implementation.md')) {
+                    type = 'feature_implementation';
+                } else if (filename.match(/-phase-(\d+)\.md$/)) {
+                    type = 'feature_phase';
+                    phase = filename.match(/-phase-(\d+)\.md$/)[1];
+                }
+                const content = await fs.readFile(filePath, 'utf8');
+                
+                // Erstelle einen eindeutigen Identifier für das Feature
+                const featureId = `${category}_${name}`;
+                
+                // Titel: name + ggf. Phase
+                const title = `${name}${type==='feature_phase'?` Phase ${phase}`:''}`.replace(/-/g, ' ');
+                
+                // Prüfe ob Task schon existiert (nach title+category+type+phase)
+                const existing = await this.taskRepository.findByTitle(title);
+                if (!existing) {
+                    // Erstelle Task mit Gruppierungs-Metadaten
+                    const taskMetadata = {
+                        category,
+                        name,
+                        phase,
+                        filename,
+                        filePath,
+                        importedAt: new Date(),
+                        featureId, // Eindeutige ID für das Feature
+                        featureGroup: `${category}/${name}`, // Gruppierungs-Key
+                    };
+                    
+                    // Füge Phase-spezifische Metadaten hinzu
+                    if (type === 'feature_phase') {
+                        taskMetadata.phaseNumber = parseInt(phase);
+                        taskMetadata.isPhaseTask = true;
+                    } else if (type === 'feature_implementation') {
+                        taskMetadata.isImplementationTask = true;
+                    } else if (type === 'feature_summary') {
+                        taskMetadata.isSummaryTask = true;
+                    }
+                    
+                    const task = await this.taskService.createTask(
+                        projectId,
+                        title,
+                        content,
+                        'medium', // Priority kann aus content extrahiert werden
+                        type,
+                        taskMetadata
+                    );
+                    importedTasks.push(task);
+                }
+            }
             return {
                 success: true,
                 importedTasks,
-                totalFiles: markdownFiles.length,
+                totalFiles: allFiles.length,
                 importedCount: importedTasks.length,
-                workspacePath: workspacePath,
-                tempData: tempData
+                workspacePath
             };
-            
         } catch (error) {
-            console.error(`❌ [DocsImportService] Import from TEMP failed:`, error);
+            console.error(`❌ [DocsImportService] Import from workspace failed:`, error);
             throw error;
         }
     }
