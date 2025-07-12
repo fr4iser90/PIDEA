@@ -36,7 +36,7 @@ class HandlerValidator {
       // Basic request validation
       if (!request) {
         errors.push('Request is required');
-        return new ValidationResult(false, errors, warnings);
+        return new ValidationResult(undefined, false, errors, warnings);
       }
 
       // Validate request type
@@ -73,7 +73,7 @@ class HandlerValidator {
       errors.push(`Validation error: ${error.message}`);
     }
 
-    return new ValidationResult(errors.length === 0, errors, warnings);
+    return new ValidationResult(undefined, errors.length === 0, errors, warnings);
   }
 
   /**
@@ -90,7 +90,7 @@ class HandlerValidator {
       // Basic handler validation
       if (!handler) {
         errors.push('Handler is required');
-        return new ValidationResult(false, errors, warnings);
+        return new ValidationResult(undefined, false, errors, warnings);
       }
 
       // Validate handler interface compliance
@@ -129,7 +129,7 @@ class HandlerValidator {
       errors.push(`Handler validation error: ${error.message}`);
     }
 
-    return new ValidationResult(errors.length === 0, errors, warnings);
+    return new ValidationResult(undefined, errors.length === 0, errors, warnings);
   }
 
   /**
@@ -145,7 +145,7 @@ class HandlerValidator {
       // Basic context validation
       if (!context) {
         errors.push('Context is required');
-        return new ValidationResult(false, errors, warnings);
+        return new ValidationResult(undefined, false, errors, warnings);
       }
 
       // Validate context structure
@@ -178,7 +178,7 @@ class HandlerValidator {
       errors.push(`Context validation error: ${error.message}`);
     }
 
-    return new ValidationResult(errors.length === 0, errors, warnings);
+    return new ValidationResult(undefined, errors.length === 0, errors, warnings);
   }
 
   /**
@@ -227,7 +227,7 @@ class HandlerValidator {
         break;
     }
 
-    return new ValidationResult(errors.length === 0, errors, warnings);
+    return new ValidationResult(undefined, errors.length === 0, errors, warnings);
   }
 
   /**
@@ -253,7 +253,7 @@ class HandlerValidator {
       }
     }
 
-    return new ValidationResult(errors.length === 0, errors, warnings);
+    return new ValidationResult(undefined, errors.length === 0, errors, warnings);
   }
 
   /**
@@ -281,7 +281,7 @@ class HandlerValidator {
       }
     }
 
-    return new ValidationResult(errors.length === 0, errors, warnings);
+    return new ValidationResult(undefined, errors.length === 0, errors, warnings);
   }
 
   /**
@@ -298,7 +298,7 @@ class HandlerValidator {
 
       if (!metadata) {
         errors.push('Handler metadata is required');
-        return new ValidationResult(false, errors, warnings);
+        return new ValidationResult(undefined, false, errors, warnings);
       }
 
       if (!metadata.name) {
@@ -317,7 +317,7 @@ class HandlerValidator {
       errors.push(`Metadata validation error: ${error.message}`);
     }
 
-    return new ValidationResult(errors.length === 0, errors, warnings);
+    return new ValidationResult(undefined, errors.length === 0, errors, warnings);
   }
 
   /**
@@ -335,7 +335,7 @@ class HandlerValidator {
 
       if (!Array.isArray(dependencies)) {
         errors.push('Handler dependencies must be an array');
-        return new ValidationResult(false, errors, warnings);
+        return new ValidationResult(undefined, false, errors, warnings);
       }
 
       // Check if dependencies are available in context
@@ -349,7 +349,7 @@ class HandlerValidator {
       errors.push(`Dependency validation error: ${error.message}`);
     }
 
-    return new ValidationResult(errors.length === 0, errors, warnings);
+    return new ValidationResult(undefined, errors.length === 0, errors, warnings);
   }
 
   /**
@@ -372,7 +372,7 @@ class HandlerValidator {
       warnings.push(`Health check error: ${error.message}`);
     }
 
-    return new ValidationResult(errors.length === 0, errors, warnings);
+    return new ValidationResult(undefined, errors.length === 0, errors, warnings);
   }
 
   /**
@@ -404,7 +404,7 @@ class HandlerValidator {
       errors.push(`Context data validation error: ${error.message}`);
     }
 
-    return new ValidationResult(errors.length === 0, errors, warnings);
+    return new ValidationResult(undefined, errors.length === 0, errors, warnings);
   }
 
   /**
