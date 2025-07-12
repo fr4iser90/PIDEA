@@ -1,5 +1,5 @@
-const IDEMirrorService = require('../../domain/services/IDEMirrorService');
-const ScreenshotStreamingService = require('../../domain/services/ide-mirror/ScreenshotStreamingService');
+const IDEMirrorService = require('@services/IDEMirrorService');
+const ScreenshotStreamingService = require('@services/ide-mirror/ScreenshotStreamingService');
 const StreamingController = require('./StreamingController');
 
 class IDEMirrorController {
@@ -11,7 +11,7 @@ class IDEMirrorController {
         // Register IDE mirror service if not already registered
         if (!registry.getContainer().factories.has('ideMirrorService')) {
             registry.getContainer().register('ideMirrorService', () => {
-                const IDEMirrorService = require('../../domain/services/IDEMirrorService');
+                const IDEMirrorService = require('@services/IDEMirrorService');
                 return new IDEMirrorService();
             }, { singleton: true });
         }

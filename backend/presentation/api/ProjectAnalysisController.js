@@ -1,4 +1,4 @@
-const ProjectAnalysis = require('../../domain/entities/ProjectAnalysis');
+const ProjectAnalysis = require('@entities/ProjectAnalysis');
 
 class ProjectAnalysisController {
     constructor(projectAnalysisRepository, logger) {

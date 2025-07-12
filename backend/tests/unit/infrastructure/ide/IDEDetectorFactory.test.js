@@ -2,16 +2,16 @@
  * Unit tests for IDEDetectorFactory
  */
 
-const IDEDetectorFactory = require('../../../../infrastructure/external/ide/IDEDetectorFactory');
+const IDEDetectorFactory = require('@external/ide/IDEDetectorFactory');
 
 // Mock the detector classes
 jest.mock('../../../../infrastructure/external/ide/detectors/CursorDetector');
 jest.mock('../../../../infrastructure/external/ide/detectors/VSCodeDetector');
 jest.mock('../../../../infrastructure/external/ide/detectors/WindsurfDetector');
 
-const CursorDetector = require('../../../../infrastructure/external/ide/detectors/CursorDetector');
-const VSCodeDetector = require('../../../../infrastructure/external/ide/detectors/VSCodeDetector');
-const WindsurfDetector = require('../../../../infrastructure/external/ide/detectors/WindsurfDetector');
+const CursorDetector = require('@external/ide/detectors/CursorDetector');
+const VSCodeDetector = require('@external/ide/detectors/VSCodeDetector');
+const WindsurfDetector = require('@external/ide/detectors/WindsurfDetector');
 
 describe('IDEDetectorFactory', () => {
   let factory;

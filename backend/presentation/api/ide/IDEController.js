@@ -2,7 +2,7 @@
  * Unified IDE Controller
  * Provides unified API endpoints for IDE management across all IDE types
  */
-const IDETypes = require('../../../domain/services/ide/IDETypes');
+const IDETypes = require('@services/ide/IDETypes');
 
 class IDEController {
   constructor(dependencies = {}) {

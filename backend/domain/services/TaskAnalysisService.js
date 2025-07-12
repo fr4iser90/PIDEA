@@ -6,8 +6,8 @@ const ProjectType = require('../value-objects/ProjectType');
 const TaskType = require('../value-objects/TaskType');
 const TaskPriority = require('../value-objects/TaskPriority');
 const AISuggestion = require('../value-objects/AISuggestion');
-const AIService = require('../../infrastructure/external/AIService');
-const ProjectAnalyzer = require('../../infrastructure/external/ProjectAnalyzer');
+const AIService = require('@external/AIService');
+const ProjectAnalyzer = require('@external/ProjectAnalyzer');
 const Task = require('../entities/Task');
 
 class TaskAnalysisService {

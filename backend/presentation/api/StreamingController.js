@@ -4,8 +4,8 @@
  * REST API controller for IDE screenshot streaming operations.
  * Updated to use port-based architecture instead of session-based.
  */
-const PortStreamingCommand = require('../../application/commands/PortStreamingCommand');
-const PortStreamingHandler = require('../../application/handlers/PortStreamingHandler');
+const PortStreamingCommand = require('@commands/categories/management/PortStreamingCommand');
+const PortStreamingHandler = require('@handlers/categories/management/PortStreamingHandler');
 
 class StreamingController {
   constructor(screenshotStreamingService, eventBus = null) {

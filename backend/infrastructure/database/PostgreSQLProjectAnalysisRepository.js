@@ -1,5 +1,5 @@
-const ProjectAnalysisRepository = require('../../domain/repositories/ProjectAnalysisRepository');
-const ProjectAnalysis = require('../../domain/entities/ProjectAnalysis');
+const ProjectAnalysisRepository = require('@repositories/ProjectAnalysisRepository');
+const ProjectAnalysis = require('@entities/ProjectAnalysis');
 
 class PostgreSQLProjectAnalysisRepository extends ProjectAnalysisRepository {
   constructor(databaseConnection) {

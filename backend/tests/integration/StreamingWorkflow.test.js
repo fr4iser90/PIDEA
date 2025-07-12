@@ -6,8 +6,8 @@
  */
 const ScreenshotStreamingService = require('@/domain/services/ide-mirror/ScreenshotStreamingService');
 const StreamingController = require('@/presentation/api/StreamingController');
-const StartStreamingHandler = require('@/application/handlers/StartStreamingHandler');
-const StopStreamingHandler = require('@/application/handlers/StopStreamingHandler');
+const StartStreamingHandler = require('@handler-categories/management/StartStreamingHandler');
+const StopStreamingHandler = require('@handler-categories/management/StopStreamingHandler');
 const StreamingSessionRepository = require('@/infrastructure/database/StreamingSessionRepository');
 const StreamingSession = require('@/domain/entities/StreamingSession');
 

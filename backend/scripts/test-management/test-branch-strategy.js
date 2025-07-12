@@ -6,8 +6,8 @@ require('module-alias/register');
  * Tests that the system uses correct branches for different task types
  */
 
-const WorkflowGitService = require('../../domain/services/WorkflowGitService');
-const TaskType = require('../../domain/value-objects/TaskType');
+const WorkflowGitService = require('@services/WorkflowGitService');
+const TaskType = require('@value-objects/TaskType');
 
 async function testBranchStrategy() {
   console.log('🧪 Testing WorkflowGitService Branch Strategy...\n');

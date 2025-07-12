@@ -3,7 +3,7 @@ const WorkspacePathDetector = require('./workspace/WorkspacePathDetector');
 const VSCodeChatHandler = require('./vscode/VSCodeChatHandler');
 const ChatHistoryExtractor = require('./chat/ChatHistoryExtractor');
 const PackageJsonAnalyzer = require('./dev-server/PackageJsonAnalyzer');
-const VSCodeExtensionManager = require('../../infrastructure/external/VSCodeExtensionManager');
+const VSCodeExtensionManager = require('@external/VSCodeExtensionManager');
 
 class vscodeIDEService {
   constructor(browserManager, ideManager, eventBus = null) {

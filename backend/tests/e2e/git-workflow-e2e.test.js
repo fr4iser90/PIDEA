@@ -3,12 +3,12 @@
  * Tests complete user scenarios from task creation to deployment
  */
 
-const GitWorkflowManager = require('../../domain/workflows/git/GitWorkflowManager');
-const GitWorkflowContext = require('../../domain/workflows/git/GitWorkflowContext');
-const WorkflowGitService = require('../../domain/services/WorkflowGitService');
-const WorkflowOrchestrationService = require('../../domain/services/WorkflowOrchestrationService');
-const TaskService = require('../../domain/services/TaskService');
-const AutoFinishSystem = require('../../domain/services/auto-finish/AutoFinishSystem');
+const GitWorkflowManager = require('@workflows/git/GitWorkflowManager');
+const GitWorkflowContext = require('@workflows/git/GitWorkflowContext');
+const WorkflowGitService = require('@services/WorkflowGitService');
+const WorkflowOrchestrationService = require('@services/WorkflowOrchestrationService');
+const TaskService = require('@services/TaskService');
+const AutoFinishSystem = require('@services/auto-finish/AutoFinishSystem');
 
 describe('Git Workflow E2E Scenarios', () => {
   let gitWorkflowManager;

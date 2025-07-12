@@ -1,8 +1,8 @@
 /**
  * Integration tests for CreateTaskCommand
  */
-const CreateTaskCommand = require('@/application/commands/CreateTaskCommand');
-const CreateTaskHandler = require('@/application/handlers/CreateTaskHandler');
+const CreateTaskCommand = require('@categories/management/CreateTaskCommand');
+const CreateTaskHandler = require('@handler-categories/management/CreateTaskHandler');
 const SQLiteTaskRepository = require('@/infrastructure/database/SQLiteTaskRepository');
 const TaskDatabase = require('@/infrastructure/database/TaskDatabase');
 const EventBus = require('@/infrastructure/messaging/EventBus');

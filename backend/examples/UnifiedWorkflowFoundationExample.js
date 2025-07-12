@@ -5,7 +5,7 @@
  * including the builder pattern and common workflow steps.
  */
 
-const UnifiedWorkflowService = require('../domain/services/UnifiedWorkflowService');
+const UnifiedWorkflowService = require('@services/UnifiedWorkflowService');
 const {
   WorkflowBuilder,
   WorkflowStepBuilder,

@@ -1,5 +1,5 @@
-const SendMessageHandler = require('@/application/handlers/SendMessageHandler');
-const GetChatHistoryHandler = require('../../application/handlers/GetChatHistoryHandler');
+const SendMessageHandler = require('@handler-categories/management/SendMessageHandler');
+const GetChatHistoryHandler = require('@handler-categories/management/GetChatHistoryHandler');
 const AuthService = require('@/domain/services/AuthService');
 
 class ChatController {

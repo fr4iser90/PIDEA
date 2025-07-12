@@ -4,8 +4,8 @@
  * Repository for managing streaming session persistence and retrieval.
  * Supports both in-memory and database storage for streaming sessions.
  */
-const StreamingSession = require('../../domain/entities/StreamingSession');
-const FrameMetrics = require('../../domain/entities/FrameMetrics');
+const StreamingSession = require('@entities/StreamingSession');
+const FrameMetrics = require('@entities/FrameMetrics');
 
 class StreamingSessionRepository {
   constructor(databaseConnection = null) {

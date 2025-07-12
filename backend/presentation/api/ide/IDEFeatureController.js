@@ -2,7 +2,7 @@
  * IDE Feature Controller
  * Manages IDE-specific features and capabilities
  */
-const IDETypes = require('../../../domain/services/ide/IDETypes');
+const IDETypes = require('@services/ide/IDETypes');
 
 class IDEFeatureController {
   constructor(dependencies = {}) {

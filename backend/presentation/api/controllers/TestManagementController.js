@@ -2,8 +2,8 @@
  * TestManagementController - API controller for test management operations
  */
 const TestManagementService = require('@/domain/services/TestManagementService');
-const UpdateTestStatusCommand = require('@/application/commands/UpdateTestStatusCommand');
-const UpdateTestStatusHandler = require('@/application/handlers/UpdateTestStatusHandler');
+const UpdateTestStatusCommand = require('@categories/management/UpdateTestStatusCommand');
+const UpdateTestStatusHandler = require('@handler-categories/management/UpdateTestStatusHandler');
 
 class TestManagementController {
     constructor() {

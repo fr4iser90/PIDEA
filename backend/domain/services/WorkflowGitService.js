@@ -3,7 +3,7 @@
  * Implements DDD patterns for different workflow types and branch strategies
  * Enhanced with GitWorkflowManager integration
  */
-const GitService = require('../../infrastructure/external/GitService');
+const GitService = require('@external/GitService');
 const TaskType = require('../value-objects/TaskType');
 const GitWorkflowManager = require('../workflows/git/GitWorkflowManager');
 const GitWorkflowContext = require('../workflows/git/GitWorkflowContext');

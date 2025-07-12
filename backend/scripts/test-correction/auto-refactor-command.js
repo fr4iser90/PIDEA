@@ -5,7 +5,7 @@ const path = require('path');
 const fs = require('fs-extra');
 const axios = require('axios');
 const { program } = require('commander');
-const AutoRefactorCommand = require('@/application/commands/AutoRefactorCommand');
+const AutoRefactorCommand = require('@categories/management/AutoRefactorCommand');
 const logger = require('@/infrastructure/logging/logger');
 
 // Config

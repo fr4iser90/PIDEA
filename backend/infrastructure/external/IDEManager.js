@@ -1,6 +1,6 @@
 const IDEDetector = require('./IDEDetector');
 const IDEStarter = require('./IDEStarter');
-const FileBasedWorkspaceDetector = require('../../domain/services/workspace/FileBasedWorkspaceDetector');
+const FileBasedWorkspaceDetector = require('@services/workspace/FileBasedWorkspaceDetector');
 const fs = require('fs');
 const path = require('path');
 

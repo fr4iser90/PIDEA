@@ -1,5 +1,5 @@
 const TestCorrectionService = require('@/domain/services/TestCorrectionService');
-const AutoRefactorCommand = require('@/application/commands/AutoRefactorCommand');
+const AutoRefactorCommand = require('@categories/management/AutoRefactorCommand');
 const CoverageAnalyzerService = require('@/domain/services/CoverageAnalyzerService');
 const logger = require('@/infrastructure/logging/logger');
 const fs = require('fs-extra');
@@ -344,7 +344,7 @@ class TestCorrectionController {
         });
       } else {
         // Fallback to direct execution
-        const AutoRefactorService = require('../../../domain/services/AutoRefactorService');
+        const AutoRefactorService = require('@services/AutoRefactorService');
         const refactorService = new AutoRefactorService();
         const result = await refactorService.refactorTests(command);
         

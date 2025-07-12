@@ -2,7 +2,7 @@
  * AutoModeController - REST API endpoints for auto mode operations
  */
 const { validationResult } = require('express-validator');
-const { StepRegistry } = require('../../domain/workflows/steps');
+const { StepRegistry } = require('@workflows/steps');
 
 class AutoModeController {
     constructor(dependencies = {}) {

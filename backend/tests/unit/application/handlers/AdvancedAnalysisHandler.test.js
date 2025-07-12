@@ -2,7 +2,7 @@
  * Unit tests for AdvancedAnalysisHandler
  */
 const AdvancedAnalysisHandler = require('@/application/handlers/analyze/AdvancedAnalysisHandler');
-const AdvancedAnalysisCommand = require('@/application/commands/analyze/AdvancedAnalysisCommand');
+const AdvancedAnalysisCommand = require('@/application/commands/categories/analysis/AdvancedAnalysisCommand');
 const AdvancedAnalysisService = require('@/domain/services/AdvancedAnalysisService');
 
 // Mock dependencies

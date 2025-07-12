@@ -1,4 +1,4 @@
-const ProcessTodoListCommand = require('../../application/commands/ProcessTodoListCommand');
+const ProcessTodoListCommand = require('@commands/categories/management/ProcessTodoListCommand');
 
 /**
  * AutoFinishController - Controller for auto-finish system API endpoints

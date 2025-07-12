@@ -1,7 +1,7 @@
 /**
  * GitController - Handles Git management operations
  */
-const GitService = require('../../infrastructure/external/GitService');
+const GitService = require('@external/GitService');
 
 class GitController {
     constructor(dependencies = {}) {

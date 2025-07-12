@@ -14,7 +14,7 @@ const RefactoringUtils = require('./utils/RefactoringUtils');
 const TaskValidator = require('./validators/TaskValidator');
 
 // Handlers
-const EventHandlers = require('./handlers/EventHandlers');
+const EventHandlers = require('@handlers/EventHandlers');
 
 // Services
 const AnalysisService = require('./services/AnalysisService');

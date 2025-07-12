@@ -1,8 +1,8 @@
 /**
  * Unit tests for IDEFactory
  */
-const { IDEFactory, getIDEFactory, setIDEFactory } = require('../../../domain/services/ide/IDEFactory');
-const IDETypes = require('../../../domain/services/ide/IDETypes');
+const { IDEFactory, getIDEFactory, setIDEFactory } = require('@services/ide/IDEFactory');
+const IDETypes = require('@services/ide/IDETypes');
 
 // Mock IDE implementations
 class MockCursorIDE {

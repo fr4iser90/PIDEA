@@ -33,13 +33,13 @@ const TaskSessionRepository = require('./infrastructure/database/TaskSessionRepo
 const AutoTestFixSystem = require('./domain/services/auto-test/AutoTestFixSystem');
 
 // Application
-const SendMessageCommand = require('./application/commands/SendMessageCommand');
-const GetChatHistoryQuery = require('./application/queries/GetChatHistoryQuery');
-const SendMessageHandler = require('./application/handlers/SendMessageHandler');
-const GetChatHistoryHandler = require('./application/handlers/GetChatHistoryHandler');
-const CreateTaskHandler = require('./application/handlers/CreateTaskHandler');
-const ProcessTodoListCommand = require('./application/commands/ProcessTodoListCommand');
-const ProcessTodoListHandler = require('./application/handlers/ProcessTodoListHandler');
+const SendMessageCommand = require('@categories/management/SendMessageCommand');
+const GetChatHistoryQuery = require('@application/queries/GetChatHistoryQuery');
+const SendMessageHandler = require('@handler-categories/management/SendMessageHandler');
+const GetChatHistoryHandler = require('@handler-categories/management/GetChatHistoryHandler');
+const CreateTaskHandler = require('@handler-categories/management/CreateTaskHandler');
+const ProcessTodoListCommand = require('@categories/management/ProcessTodoListCommand');
+const ProcessTodoListHandler = require('@handler-categories/management/ProcessTodoListHandler');
 
 // Legacy handlers removed - using Unified Workflow System instead
 

@@ -1,7 +1,7 @@
 /**
  * Unit tests for IDEInterface
  */
-const IDEInterface = require('../../../domain/services/ide/IDEInterface');
+const IDEInterface = require('@services/ide/IDEInterface');
 
 describe('IDEInterface', () => {
   let ideInterface;

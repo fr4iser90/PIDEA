@@ -1,4 +1,4 @@
-const BrowserManager = require('../../infrastructure/external/BrowserManager');
+const BrowserManager = require('@external/BrowserManager');
 
 class CodeExplorerController {
   constructor() {

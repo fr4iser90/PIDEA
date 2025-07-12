@@ -1,4 +1,4 @@
-const IDEHealthMonitor = require('../../../../infrastructure/external/ide/IDEHealthMonitor');
+const IDEHealthMonitor = require('@external/ide/IDEHealthMonitor');
 
 describe('IDEHealthMonitor', () => {
   let monitor;

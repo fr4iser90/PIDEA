@@ -2,8 +2,8 @@
  * AutoTestFixController - Controller for auto test fix system
  * Handles API endpoints for automated test correction and coverage improvement
  */
-const AutoTestFixSystem = require('../../../domain/services/auto-test/AutoTestFixSystem');
-const TestCorrectionCommand = require('../../../application/commands/TestCorrectionCommand');
+const AutoTestFixSystem = require('@services/auto-test/AutoTestFixSystem');
+const TestCorrectionCommand = require('@commands/categories/management/TestCorrectionCommand');
 const fs = require('fs'); // Added for fs.existsSync
 
 class AutoTestFixController {

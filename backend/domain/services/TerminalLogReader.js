@@ -1,7 +1,7 @@
 const fs = require('fs').promises;
 const path = require('path');
-const LogEncryptionService = require('../../infrastructure/security/LogEncryptionService');
-const LogPermissionManager = require('../../infrastructure/security/LogPermissionManager');
+const LogEncryptionService = require('@security/LogEncryptionService');
+const LogPermissionManager = require('@security/LogPermissionManager');
 
 /**
  * Terminal Log Reader Service

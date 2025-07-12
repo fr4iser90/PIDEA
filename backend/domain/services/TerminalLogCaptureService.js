@@ -1,8 +1,8 @@
 const fs = require('fs').promises;
 const path = require('path');
 const crypto = require('crypto');
-const IDEManager = require('../../infrastructure/external/IDEManager');
-const BrowserManager = require('../../infrastructure/external/BrowserManager');
+const IDEManager = require('@external/IDEManager');
+const BrowserManager = require('@external/BrowserManager');
 const IDEMirrorService = require('./IDEMirrorService');
 
 /**

@@ -1,5 +1,5 @@
 const AutoFinishController = require('@/presentation/api/AutoFinishController');
-const ProcessTodoListCommand = require('@/application/commands/ProcessTodoListCommand');
+const ProcessTodoListCommand = require('@categories/management/ProcessTodoListCommand');
 const TaskSession = require('@/domain/entities/TaskSession');
 
 describe('AutoFinishController', () => {

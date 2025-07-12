@@ -3,10 +3,10 @@
  * Tests all major functionality including branch creation, workflow execution, and error handling
  */
 
-const GitWorkflowManager = require('../../../domain/workflows/git/GitWorkflowManager');
-const GitWorkflowContext = require('../../../domain/workflows/git/GitWorkflowContext');
-const GitWorkflowResult = require('../../../domain/workflows/git/GitWorkflowResult');
-const GitWorkflowException = require('../../../domain/workflows/git/exceptions/GitWorkflowException');
+const GitWorkflowManager = require('@workflows/git/GitWorkflowManager');
+const GitWorkflowContext = require('@workflows/git/GitWorkflowContext');
+const GitWorkflowResult = require('@workflows/git/GitWorkflowResult');
+const GitWorkflowException = require('@workflows/git/exceptions/GitWorkflowException');
 
 describe('GitWorkflowManager', () => {
   let gitWorkflowManager;

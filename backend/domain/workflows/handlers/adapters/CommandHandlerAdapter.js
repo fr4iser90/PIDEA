@@ -125,9 +125,9 @@ class CommandHandlerAdapter extends IHandlerAdapter {
       // Try different command paths
       const commandPaths = [
         `@/application/commands/${commandType}`,
-        `@/application/commands/analyze/${commandType}`,
-        `@/application/commands/generate/${commandType}`,
-        `@/application/commands/refactor/${commandType}`,
+        `@/application/commands/categories/analysis/${commandType}`,
+        `@/application/commands/categories/generate/${commandType}`,
+        `@/application/commands/categories/refactor/${commandType}`,
         `@/application/commands/vibecoder/${commandType}`
       ];
 

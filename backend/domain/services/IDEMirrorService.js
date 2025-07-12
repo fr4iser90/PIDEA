@@ -1,5 +1,5 @@
-const IDEManager = require('../../infrastructure/external/IDEManager');
-const BrowserManager = require('../../infrastructure/external/BrowserManager');
+const IDEManager = require('@external/IDEManager');
+const BrowserManager = require('@external/BrowserManager');
 
 class IDEMirrorService {
     constructor() {

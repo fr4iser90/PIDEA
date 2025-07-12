@@ -9,7 +9,7 @@ const IDEStarterFactory = require('./IDEStarterFactory');
 const IDEConfigManager = require('./IDEConfigManager');
 const IDEHealthMonitor = require('./IDEHealthMonitor');
 const path = require('path');
-const FileBasedWorkspaceDetector = require('../../../domain/services/workspace/FileBasedWorkspaceDetector');
+const FileBasedWorkspaceDetector = require('@services/workspace/FileBasedWorkspaceDetector');
 
 class IDEManager {
   constructor(browserManager = null) {

@@ -1,4 +1,4 @@
-const TaskSession = require('../../domain/entities/TaskSession');
+const TaskSession = require('@entities/TaskSession');
 
 /**
  * TaskSessionRepository - Repository for managing task session persistence

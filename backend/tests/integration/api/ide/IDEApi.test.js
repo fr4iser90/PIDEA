@@ -12,10 +12,10 @@ const app = express();
 app.use(express.json());
 
 // Import controllers
-const IDEController = require('../../../presentation/api/ide/IDEController');
-const IDESelectionController = require('../../../presentation/api/ide/IDESelectionController');
-const IDEMirrorController = require('../../../presentation/api/ide/IDEMirrorController');
-const IDEFeatureController = require('../../../presentation/api/ide/IDEFeatureController');
+const IDEController = require('@api/ide/IDEController');
+const IDESelectionController = require('@api/ide/IDESelectionController');
+const IDEMirrorController = require('@api/ide/IDEMirrorController');
+const IDEFeatureController = require('@api/ide/IDEFeatureController');
 
 // Mock services
 const mockIDEService = {

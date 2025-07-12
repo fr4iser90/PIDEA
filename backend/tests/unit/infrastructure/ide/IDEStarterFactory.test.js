@@ -1,7 +1,7 @@
-const IDEStarterFactory = require('../../../../infrastructure/external/ide/IDEStarterFactory');
-const CursorStarter = require('../../../../infrastructure/external/ide/starters/CursorStarter');
-const VSCodeStarter = require('../../../../infrastructure/external/ide/starters/VSCodeStarter');
-const WindsurfStarter = require('../../../../infrastructure/external/ide/starters/WindsurfStarter');
+const IDEStarterFactory = require('@external/ide/IDEStarterFactory');
+const CursorStarter = require('@external/ide/starters/CursorStarter');
+const VSCodeStarter = require('@external/ide/starters/VSCodeStarter');
+const WindsurfStarter = require('@external/ide/starters/WindsurfStarter');
 
 describe('IDEStarterFactory', () => {
   let factory;

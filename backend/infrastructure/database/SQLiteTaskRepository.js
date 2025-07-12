@@ -4,7 +4,7 @@
  */
 const TaskRepository = require('@/domain/repositories/TaskRepository');
 const Task = require('@/domain/entities/Task');
-const TaskStatus = require('../../domain/value-objects/TaskStatus');
+const TaskStatus = require('@value-objects/TaskStatus');
 
 class SQLiteTaskRepository extends TaskRepository {
   constructor(database) {

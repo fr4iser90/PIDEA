@@ -2,10 +2,10 @@
  * Integration tests for IDEManager with factory integration
  */
 
-const IDEManager = require('../../../infrastructure/external/ide/IDEManager');
-const IDEDetectorFactory = require('../../../infrastructure/external/ide/IDEDetectorFactory');
-const IDEStarterFactory = require('../../../infrastructure/external/ide/IDEStarterFactory');
-const IDEConfigManager = require('../../../infrastructure/external/ide/IDEConfigManager');
+const IDEManager = require('@external/ide/IDEManager');
+const IDEDetectorFactory = require('@external/ide/IDEDetectorFactory');
+const IDEStarterFactory = require('@external/ide/IDEStarterFactory');
+const IDEConfigManager = require('@external/ide/IDEConfigManager');
 
 // Mock the workspace detector
 jest.mock('../../../domain/services/workspace/FileBasedWorkspaceDetector');

@@ -1,6 +1,6 @@
-const DocsTasksHandler = require('./handlers/DocsTasksHandler');
-const TerminalLogCaptureService = require('../../domain/services/TerminalLogCaptureService');
-const TerminalLogReader = require('../../domain/services/TerminalLogReader');
+const DocsTasksHandler = require('@handlers/categories/management/DocsTasksHandler');
+const TerminalLogCaptureService = require('@services/TerminalLogCaptureService');
+const TerminalLogReader = require('@services/TerminalLogReader');
 
 class IDEController {
   constructor(ideManager, eventBus, cursorIDEService = null, taskRepository = null) {

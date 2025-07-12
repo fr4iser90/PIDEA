@@ -4,8 +4,8 @@
 
 const TestManagementService = require('@/domain/services/TestManagementService');
 const TestMetadataRepository = require('@/domain/repositories/TestMetadataRepository');
-const UpdateTestStatusCommand = require('@/application/commands/UpdateTestStatusCommand');
-const UpdateTestStatusHandler = require('@/application/handlers/UpdateTestStatusHandler');
+const UpdateTestStatusCommand = require('@categories/management/UpdateTestStatusCommand');
+const UpdateTestStatusHandler = require('@handler-categories/management/UpdateTestStatusHandler');
 const TestStatusTracker = require('@/scripts/test-management/test-status-tracker');
 const LegacyDetector = require('@/scripts/test-management/legacy-detector');
 const TestVersioner = require('@/scripts/test-management/test-versioner');
