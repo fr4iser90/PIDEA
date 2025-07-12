@@ -4,9 +4,9 @@
 
 ```mermaid
 graph TB
-    subgraph "Ebene 4: System Orchestrator"
-        SO[System Orchestrator]
-        SO_CAP["Capabilities:\n• Computer Control\n• Browser Automation\n• Multi-Project Management\n• IDE Agent Coordination\n• Framework Orchestration\n• Decision Making\n• Conflict Resolution"]
+    subgraph "Ebene 4: System Orchestrator (OPTIONAL!)"
+        SO[System Orchestrator\n(Mensch oder LLM+MCP)]
+        SO_CAP["Capabilities:\n• Computer Control\n• Browser Automation\n• Multi-Project Management\n• IDE Agent Coordination\n• Framework Orchestration\n• Decision Making\n• Conflict Resolution\n\n⚠️ OPTIONAL: Kann auch ein Mensch sein!"]
     end
     
     subgraph "Ebene 3: IDE Agents 1-zu-1 mit IDE"
@@ -310,6 +310,16 @@ graph TD
 ### System Orchestrator Frameworks
 **JA!** Der System Orchestrator hat definitiv seine eigenen Frameworks:
 
+**WICHTIG:** Der System Orchestrator ist **OPTIONAL** und kann sein:
+1. **👤 Mensch** (einfach, direkt, vollständige Kontrolle)
+2. **🤖 LLM + MCP Server** (automatisiert, skalierbar, für Multi-Device Management)
+
+**LLM + MCP Server würde sein:**
+- **🧠 LLM**: Versteht natürliche Sprache, parst Commands, trifft Entscheidungen
+- **🔧 MCP Server**: Koordiniert Tools, Agents, Frameworks
+- **🎯 Orchestrator**: Multi-Project Management, Result Aggregation
+- **🖥️ Multi-Device**: Verwaltet mehrere Geräte/Systeme gleichzeitig
+
 1. **Project Management Frameworks**
    - `start_new_projects`
    - `monitor_all_agents`
@@ -336,6 +346,8 @@ graph TD
 ### Capability Distribution
 
 - **System Orchestrator (Level 4)**: Hat ALLE Capabilities + Meta-Management + Conflict Resolution
+  - **👤 Mensch**: Direkte Kontrolle, Entscheidungen, Koordination
+  - **🤖 LLM + MCP Server**: Automatisierte Koordination, Multi-Device Management
 - **IDE Agents (Level 3)**: Projekt-spezifische Capabilities + Framework Execution + Conflict Detection
 - **Frameworks (Level 2)**: Strategy Capabilities + Workflow Selection
 - **Workflows (Level 1)**: Execution Capabilities + Step Orchestration

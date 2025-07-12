@@ -176,4 +176,8 @@ Test Framework → Automation Workflow → validate_nix_config Step
 - Workflows für die Orchestrierung
 - Steps für die Ausführung
 
+**WICHTIG:** Diese drei Ebenen funktionieren bereits! Du kannst sie sofort nutzen!
+
+**Optional:** Du kannst später einen System Orchestrator (Ebene 4) hinzufügen für Multi-Device Management, aber das ist NICHT erforderlich!
+
 Diese Trennung macht dein System maximal flexibel und skalierbar! 🚀 
