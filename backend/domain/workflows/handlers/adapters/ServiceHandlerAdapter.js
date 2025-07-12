@@ -126,8 +126,8 @@ class ServiceHandlerAdapter extends IHandlerAdapter {
       'test_correction': 'TestCorrectionService',
       'workflow_orchestration': 'WorkflowOrchestrationService',
       'task_execution': 'TaskExecutionService',
-      'unified_workflow': 'UnifiedWorkflowService',
-      'workflow': 'UnifiedWorkflowService'  // Add support for 'workflow' type
+      'unified_workflow': 'unifiedWorkflowService',
+      'workflow': 'unifiedWorkflowService'  // Add support for 'workflow' type
     };
     
     return serviceMap[request.type] || null;
@@ -234,9 +234,21 @@ class ServiceHandlerAdapter extends IHandlerAdapter {
               // Call specific service method with request and response
               result = await serviceInstance[serviceMethod](request, context.getResponse());
             }
-          } else {
+          } else if (typeof serviceInstance.execute === 'function') {
             // Call default execute method
             result = await serviceInstance.execute(request, context.getResponse());
+          } else if (typeof serviceInstance.executeWorkflow === 'function' && request.workflow) {
+            // Fallback for UnifiedWorkflowService
+            result = await serviceInstance.executeWorkflow(request.workflow, {
+              metadata: request.metadata || {},
+              data: request.data || {},
+              task: request.task,
+              taskId: request.taskId,
+              userId: request.userId,
+              options: request.options
+            });
+          } else {
+            throw new Error(`No suitable execution method found for service ${service.name}`);
           }
           
           return {

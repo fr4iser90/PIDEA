@@ -20,6 +20,9 @@ logs
 backend/coverage
 backend/database
 backend/.jest-cache
+
+frontend/coverage
+frontend/.jest-cache
 *.backup
 
 output/

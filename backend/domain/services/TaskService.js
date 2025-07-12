@@ -256,6 +256,42 @@ class TaskService {
     console.log('🚀 [TaskService] Using unified workflow system for task:', task.id);
     
     try {
+      // Build task execution prompt
+      const taskPrompt = await this.buildTaskExecutionPrompt(task);
+      console.log('📝 [TaskService] Built task prompt (first 200 chars):', taskPrompt.substring(0, 200));
+      
+      // Send prompt to Cursor IDE if available
+      if (this.cursorIDEService) {
+        try {
+          console.log('🤖 [TaskService] Sending task prompt to Cursor IDE...');
+          await this.cursorIDEService.postToCursor(taskPrompt);
+          console.log('✅ [TaskService] Task prompt sent to Cursor IDE successfully');
+          
+          return {
+            success: true,
+            taskId: task.id,
+            taskType: task.type?.value,
+            result: { promptSent: true },
+            message: `Task prompt sent to Cursor IDE: ${task.title}`,
+            metadata: {
+              executionMethod: 'cursor_ide_prompt',
+              executionTime: 0,
+              formattedDuration: '0ms',
+              handlerId: 'task_service',
+              handlerName: 'TaskService',
+              workflowType: 'prompt_send',
+              timestamp: new Date()
+            }
+          };
+        } catch (promptError) {
+          console.error('❌ [TaskService] Failed to send prompt to Cursor IDE:', promptError.message);
+          // Continue with unified workflow as fallback
+        }
+      }
+      
+      // Fallback to unified workflow system
+      console.log('🔄 [TaskService] Falling back to unified workflow system...');
+      
       // Create workflow from task using WorkflowBuilder
       const { WorkflowBuilder, WorkflowStepBuilder } = require('../workflows');
       

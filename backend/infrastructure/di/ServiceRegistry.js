@@ -167,6 +167,15 @@ class ServiceRegistry {
       });
     }, { singleton: true, dependencies: ['cursorIDEService', 'autoFinishSystem', 'taskRepository', 'eventBus', 'logger'] });
 
+    // Unified Workflow Service
+    this.container.register('unifiedWorkflowService', (eventBus, logger) => {
+      const UnifiedWorkflowService = require('@services/UnifiedWorkflowService');
+      return new UnifiedWorkflowService({
+        eventBus,
+        logger
+      });
+    }, { singleton: true, dependencies: ['eventBus', 'logger'] });
+
         // IDE Factory
         this.container.register('ideFactory', () => {
             const { getIDEFactory } = require('@services/ide/IDEFactory');
