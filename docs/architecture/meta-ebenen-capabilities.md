@@ -6,70 +6,44 @@
 graph TB
     subgraph "Ebene 4: System Orchestrator"
         SO[System Orchestrator]
-        SO_CAP["Capabilities:
-• Computer Control
-• Browser Automation
-• Multi-Project Management
-• IDE Agent Coordination
-• Workflow Orchestration
-• Decision Making
-• Conflict Resolution"]
+        SO_CAP["Capabilities:\n• Computer Control\n• Browser Automation\n• Multi-Project Management\n• IDE Agent Coordination\n• Workflow Orchestration\n• Decision Making\n• Conflict Resolution"]
     end
     
-    subgraph "Ebene 3: IDE Agents (1:1 mit IDE)"
-        PA1[Cursor Agent<br/>Project: bot-setup]
-        PA2[VSCode Agent<br/>Project: web-init]
-        PA3[Cursor Agent<br/>Project: api-refactor]
+    subgraph "Ebene 3: IDE Agents 1-zu-1 mit IDE"
+        PA1["Cursor Agent\nProject: bot-setup"]
+        PA2["VSCode Agent\nProject: web-init"]
+        PA3["Cursor Agent\nProject: api-refactor"]
         
-        PA_CAP["Agent Capabilities:
-• Project-Specific Code Analysis
-• IDE Integration 1:1
-• Browser Automation
-• File System Access
-• Git Operations
-• Workflow Execution
-• Conflict Detection"]
+        PA_CAP["Agent Capabilities:\n• Project-Specific Code Analysis\n• IDE Integration 1-zu-1\n• Browser Automation\n• File System Access\n• Git Operations\n• Workflow Execution\n• Conflict Detection"]
     end
     
     subgraph "Ebene 2: Workflows"
-        W1[System Health Check]
-        W2[Code Generation]
-        W3[Testing Pipeline]
-        W4[Deployment]
+        W1["System Health Check"]
+        W2["Code Generation"]
+        W3["Testing Pipeline"]
+        W4["Deployment"]
         
-        WF_CAP["Workflow Capabilities:
-• Step Orchestration
-• Context Management
-• Error Handling
-• Result Aggregation"]
+        WF_CAP["Workflow Capabilities:\n• Step Orchestration\n• Context Management\n• Error Handling\n• Result Aggregation"]
     end
     
     subgraph "Ebene 1: Steps"
-        S1[check_container_status]
-        S2[generate_response]
-        S3[apply_config]
-        S4[run_tests]
+        S1["check_container_status"]
+        S2["generate_response"]
+        S3["apply_config"]
+        S4["run_tests"]
         
-        STEP_CAP["Step Capabilities:
-• Atomic Operations
-• Tool Integration
-• Framework Access
-• Result Reporting"]
+        STEP_CAP["Step Capabilities:\n• Atomic Operations\n• Tool Integration\n• Framework Access\n• Result Reporting"]
     end
     
     subgraph "Ebene 0: Frameworks"
-        F1[docker_engine]
-        F2[monitor_agent]
-        F3[ai_service]
-        F4[config_manager]
-        F5[test_runner]
-        F6[deployment_service]
+        F1["docker_engine"]
+        F2["monitor_agent"]
+        F3["ai_service"]
+        F4["config_manager"]
+        F5["test_runner"]
+        F6["deployment_service"]
         
-        FW_CAP["Framework Capabilities:
-• Tool Integration
-• API Access
-• System Interaction
-• Data Processing"]
+        FW_CAP["Framework Capabilities:\n• Tool Integration\n• API Access\n• System Interaction\n• Data Processing"]
     end
     
     %% Connections
@@ -108,21 +82,21 @@ graph TB
     end
     
     subgraph "Projects"
-        P1[Project: bot-setup]
-        P2[Project: web-init]
-        P3[Project: api-refactor]
+        P1["Project: bot-setup"]
+        P2["Project: web-init"]
+        P3["Project: api-refactor"]
     end
     
-    subgraph "IDE Agents 1:1 mit IDE"
-        CURSOR1[Cursor Agent 1]
-        CURSOR2[Cursor Agent 2]
-        VSCODE1[VSCode Agent 1]
+    subgraph "IDE Agents 1-zu-1 mit IDE"
+        CURSOR1["Cursor Agent 1"]
+        CURSOR2["Cursor Agent 2"]
+        VSCODE1["VSCode Agent 1"]
     end
     
     subgraph "IDE Instances"
-        IDE1[Cursor IDE<br/>Project: bot-setup]
-        IDE2[VSCode IDE<br/>Project: web-init]
-        IDE3[Cursor IDE<br/>Project: api-refactor]
+        IDE1["Cursor IDE\nProject: bot-setup"]
+        IDE2["VSCode IDE\nProject: web-init"]
+        IDE3["Cursor IDE\nProject: api-refactor"]
     end
     
     %% 1:1 Relationships
@@ -140,11 +114,11 @@ graph TB
     
     %% Multi-IDE Scenario
     subgraph "Multi-IDE Scenario"
-        M_PROJECT[Project: complex-app]
-        M_CURSOR[Cursor Agent]
-        M_VSCODE[VSCode Agent]
-        M_CURSOR_IDE[Cursor IDE]
-        M_VSCODE_IDE[VSCode IDE]
+        M_PROJECT["Project: complex-app"]
+        M_CURSOR["Cursor Agent"]
+        M_VSCODE["VSCode Agent"]
+        M_CURSOR_IDE["Cursor IDE"]
+        M_VSCODE_IDE["VSCode IDE"]
         
         M_CURSOR --> M_CURSOR_IDE
         M_VSCODE --> M_VSCODE_IDE
@@ -152,10 +126,7 @@ graph TB
         M_VSCODE_IDE --> M_PROJECT
         
         %% Conflict Resolution
-        M_CONFLICT["Conflict Resolution
-• Affected Files Analysis
-• Coordination Protocols
-• Isolation Strategies"]
+        M_CONFLICT["Conflict Resolution\n• Affected Files Analysis\n• Coordination Protocols\n• Isolation Strategies"]
         M_CURSOR -.-> M_CONFLICT
         M_VSCODE -.-> M_CONFLICT
     end
@@ -209,44 +180,44 @@ sequenceDiagram
 ```mermaid
 graph LR
     subgraph "System Orchestrator Capabilities"
-        SO_COMP[Computer Control]
-        SO_BROWSER[Browser Automation]
-        SO_MULTI[Multi-Project Management]
-        SO_IDE[IDE Agent Coordination]
-        SO_WF[Workflow Orchestration]
-        SO_DEC[Decision Making]
-        SO_CONFLICT[Conflict Resolution]
+        SO_COMP["Computer Control"]
+        SO_BROWSER["Browser Automation"]
+        SO_MULTI["Multi-Project Management"]
+        SO_IDE["IDE Agent Coordination"]
+        SO_WF["Workflow Orchestration"]
+        SO_DEC["Decision Making"]
+        SO_CONFLICT["Conflict Resolution"]
     end
     
     subgraph "IDE Agent Capabilities"
-        AG_CODE[Code Analysis]
-        AG_IDE["IDE Integration (1:1)"]
-        AG_BROWSER[Browser Control]
-        AG_FS[File System]
-        AG_GIT[Git Operations]
-        AG_WF[Workflow Execution]
-        AG_CONFLICT[Conflict Detection]
+        AG_CODE["Code Analysis"]
+        AG_IDE["IDE Integration 1-zu-1"]
+        AG_BROWSER["Browser Control"]
+        AG_FS["File System"]
+        AG_GIT["Git Operations"]
+        AG_WF["Workflow Execution"]
+        AG_CONFLICT["Conflict Detection"]
     end
     
     subgraph "Workflow Capabilities"
-        WF_STEPS[Step Orchestration]
-        WF_CTX[Context Management]
-        WF_ERR[Error Handling]
-        WF_RES[Result Aggregation]
+        WF_STEPS["Step Orchestration"]
+        WF_CTX["Context Management"]
+        WF_ERR["Error Handling"]
+        WF_RES["Result Aggregation"]
     end
     
     subgraph "Step Capabilities"
-        ST_ATOMIC[Atomic Operations]
-        ST_TOOL[Tool Integration]
-        ST_FW[Framework Access]
-        ST_REP[Result Reporting]
+        ST_ATOMIC["Atomic Operations"]
+        ST_TOOL["Tool Integration"]
+        ST_FW["Framework Access"]
+        ST_REP["Result Reporting"]
     end
     
     subgraph "Framework Capabilities"
-        FW_TOOL[Tool Integration]
-        FW_API[API Access]
-        FW_SYS[System Interaction]
-        FW_DATA[Data Processing]
+        FW_TOOL["Tool Integration"]
+        FW_API["API Access"]
+        FW_SYS["System Interaction"]
+        FW_DATA["Data Processing"]
     end
 ```
 
@@ -261,7 +232,7 @@ sequenceDiagram
     participant FW as Framework
     
     SO->>SO: Analyze Project Backlog
-    SO->>PA: Create Project Run (1:1 IDE)
+    SO->>PA: Create Project Run (1-zu-1 IDE)
     SO->>PA: Assign Workflows
     
     PA->>WF: Execute Workflow
@@ -273,11 +244,11 @@ sequenceDiagram
     PA-->>SO: Project Status Update
     
     Note over SO: System Orchestrator can:
-• Start multiple projects
-• Monitor all agents
-• Make decisions
-• Coordinate resources
-• Resolve IDE conflicts
+    • Start multiple projects
+    • Monitor all agents
+    • Make decisions
+    • Coordinate resources
+    • Resolve IDE conflicts
 ```
 
 ## Capability Inheritance
@@ -286,57 +257,27 @@ sequenceDiagram
 graph TD
     subgraph "Level 4: System Orchestrator"
         SO[System Orchestrator]
-        SO_CAPS["All Capabilities:
-• Computer Control
-• Browser Automation
-• Multi-Project Management
-• IDE Agent Coordination
-• Workflow Orchestration
-• Decision Making
-• Conflict Resolution
-• + All Lower Level Capabilities"]
+        SO_CAPS["All Capabilities:\n• Computer Control\n• Browser Automation\n• Multi-Project Management\n• IDE Agent Coordination\n• Workflow Orchestration\n• Decision Making\n• Conflict Resolution\n• + All Lower Level Capabilities"]
     end
     
-    subgraph "Level 3: IDE Agents"
-        IA["IDE Agents (1:1)"]
-        IA_CAPS["Project Capabilities:
-• Code Analysis
-• IDE Integration 1:1
-• Browser Control
-• File System Access
-• Git Operations
-• Workflow Execution
-• Conflict Detection
-• + All Lower Level Capabilities"]
+    subgraph "Level 3: IDE Agents 1-zu-1"
+        IA["IDE Agents 1-zu-1"]
+        IA_CAPS["Project Capabilities:\n• Code Analysis\n• IDE Integration 1-zu-1\n• Browser Control\n• File System Access\n• Git Operations\n• Workflow Execution\n• Conflict Detection\n• + All Lower Level Capabilities"]
     end
     
     subgraph "Level 2: Workflows"
-        WF[Workflows]
-        WF_CAPS["Execution Capabilities:
-• Step Orchestration
-• Context Management
-• Error Handling
-• Result Aggregation
-• + All Lower Level Capabilities"]
+        WF["Workflows"]
+        WF_CAPS["Execution Capabilities:\n• Step Orchestration\n• Context Management\n• Error Handling\n• Result Aggregation\n• + All Lower Level Capabilities"]
     end
     
     subgraph "Level 1: Steps"
-        ST[Steps]
-        ST_CAPS["Atomic Capabilities:
-• Atomic Operations
-• Tool Integration
-• Framework Access
-• Result Reporting
-• + All Lower Level Capabilities"]
+        ST["Steps"]
+        ST_CAPS["Atomic Capabilities:\n• Atomic Operations\n• Tool Integration\n• Framework Access\n• Result Reporting\n• + All Lower Level Capabilities"]
     end
     
     subgraph "Level 0: Frameworks"
-        FW[Frameworks]
-        FW_CAPS["Base Capabilities:
-• Tool Integration
-• API Access
-• System Interaction
-• Data Processing"]
+        FW["Frameworks"]
+        FW_CAPS["Base Capabilities:\n• Tool Integration\n• API Access\n• System Interaction\n• Data Processing"]
     end
     
     SO --> IA
@@ -355,7 +296,7 @@ graph TD
 | Ebene | Name | Inhalt / Zweck | Beispiel |
 |-------|------|----------------|----------|
 | 4 | System-Orchestrator | KI-Manager für viele Projekte | "Manage all Project-IDs" |
-| 3 | IDE Agent | Workflows für ein Projekt/IDE (1:1) | "Cursor Agent für bot-setup" |
+| 3 | IDE Agent | Workflows für ein Projekt/IDE (1-zu-1) | "Cursor Agent für bot-setup" |
 | 2 | Workflow | Reihenfolge von ausführbaren Steps | "System-Analyse" |
 | 1 | Step | Einzelne Aktionen | "check_gpu_usage" |
 | 0 | Framework | Werkzeugkästen und Tools | "docker_engine" |
