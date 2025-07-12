@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { marked } from 'marked';
 import '@/css/modal/task-selection-modal.css';
 
 const TaskSelectionModal = ({ 
@@ -10,11 +11,13 @@ const TaskSelectionModal = ({
 }) => {
   const [selectedTasks, setSelectedTasks] = useState(new Set());
   const [selectAll, setSelectAll] = useState(false);
+  const [expandedPlans, setExpandedPlans] = useState(new Set());
 
   useEffect(() => {
     if (isOpen && tasks.length > 0) {
       setSelectedTasks(new Set());
       setSelectAll(false);
+      setExpandedPlans(new Set());
     }
   }, [isOpen, tasks]);
 
@@ -44,6 +47,16 @@ const TaskSelectionModal = ({
     onStartRefactoring(selectedTaskList);
   };
 
+  const togglePlanExpansion = (taskId) => {
+    const newExpanded = new Set(expandedPlans);
+    if (newExpanded.has(taskId)) {
+      newExpanded.delete(taskId);
+    } else {
+      newExpanded.add(taskId);
+    }
+    setExpandedPlans(newExpanded);
+  };
+
   const getPriorityColor = (priority) => {
     switch (priority) {
       case 'high': return '#ff4444';
@@ -67,7 +80,7 @@ const TaskSelectionModal = ({
     }
     
     if (lineCount > 1000) {
-      return `${(lineCount / 1000).toFixed(1)}k lines`;
+      return `${lineCount} lines`;
     }
     
     return `${lineCount} lines`;
@@ -129,7 +142,7 @@ const TaskSelectionModal = ({
                           >
                             {task.priority}
                           </span>
-                          <span className="file-size">{formatFileSize(task.metadata?.lineCount || task.lines)}</span>
+                          <span className="file-size">{formatFileSize(task.metadata?.lines)}</span>
                         </div>
                       </div>
                       
@@ -138,15 +151,59 @@ const TaskSelectionModal = ({
                         <p className="task-description">{task.description}</p>
                       </div>
 
-                      <div className="task-steps">
-                        <h4>Refactoring Steps:</h4>
-                        <ol>
-                          {(task.metadata?.refactoringSteps || task.refactoringSteps || task.steps || []).map((step, index) => (
-                            <li key={index}>{step}</li>
-                          ))}
-                        </ol>
-                        {(!task.metadata?.refactoringSteps && !task.refactoringSteps && !task.steps) && (
-                          <p className="no-steps">No specific steps provided</p>
+                      <div className="task-plan">
+                        <h4>Refactoring Plan:</h4>
+                        {task.metadata?.refactoringPlan ? (
+                          <div className="refactoring-plan-preview">
+                            <div className="plan-header">
+                              <strong>File:</strong> {task.metadata?.filePath || task.filePath}
+                              <br />
+                              <strong>Current Size:</strong> {task.metadata?.lines || 'unknown'} lines
+                              <br />
+                              <strong>Target Size:</strong> &lt;500 lines per file
+                              <br />
+                              <strong>Priority:</strong> {task.priority}
+                              <br />
+                              <strong>Estimated Time:</strong> {task.metadata?.estimatedTime || 'unknown'}
+                            </div>
+                            <div className="plan-summary">
+                              <p><strong>Strategy:</strong> Split large file into smaller, maintainable modules without changing logic.</p>
+                              <p><strong>Risk Level:</strong> Low - no logic changes, only structure improvements.</p>
+                            </div>
+                            
+                            {expandedPlans.has(task.id) ? (
+                              <div className="expanded-plan">
+                                <div className="markdown-content" dangerouslySetInnerHTML={{ __html: marked.parse(task.metadata.refactoringPlan) }} />
+                                <button 
+                                  className="collapse-plan-btn"
+                                  onClick={() => togglePlanExpansion(task.id)}
+                                >
+                                  📋 Collapse Full Plan
+                                </button>
+                              </div>
+                            ) : (
+                              <div className="plan-actions">
+                                <button 
+                                  className="expand-plan-btn"
+                                  onClick={() => togglePlanExpansion(task.id)}
+                                >
+                                  📋 Expand Full Refactoring Plan
+                                </button>
+                              </div>
+                            )}
+                          </div>
+                        ) : (
+                          <div className="fallback-steps">
+                            <h5>Refactoring Steps:</h5>
+                            <ol>
+                              {(task.metadata?.refactoringSteps || task.refactoringSteps || task.steps || []).map((step, index) => (
+                                <li key={index}>{step}</li>
+                              ))}
+                            </ol>
+                            {(!task.metadata?.refactoringSteps && !task.refactoringSteps && !task.steps) && (
+                              <p className="no-steps">No specific steps provided</p>
+                            )}
+                          </div>
                         )}
                       </div>
                     </div>
