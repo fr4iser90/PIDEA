@@ -313,6 +313,7 @@ class TaskService {
         type: 'workflow',
         workflow: composedWorkflow,
         task: task,
+        taskId: task.id, // Add the missing taskId
         userId: userId,
         options: options
       }, {}, options);
