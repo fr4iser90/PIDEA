@@ -243,12 +243,7 @@ sequenceDiagram
     WF-->>PA: Workflow Complete
     PA-->>SO: Project Status Update
     
-    Note over SO: System Orchestrator can:
-    • Start multiple projects
-    • Monitor all agents
-    • Make decisions
-    • Coordinate resources
-    • Resolve IDE conflicts
+    Note over SO: System Orchestrator can start multiple projects, monitor all agents, make decisions, coordinate resources, and resolve IDE conflicts.
 ```
 
 ## Capability Inheritance
