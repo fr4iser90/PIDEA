@@ -184,7 +184,19 @@ class AutoModeController {
                 // Execute task using TaskService
                 try {
                     const taskService = this.application?.taskService;
+                    this.logger.info('AutoModeController: TaskService available', {
+                        hasTaskService: !!taskService,
+                        taskId: taskOptions.taskId
+                    });
+                    
                     if (taskService) {
+                        this.logger.info('AutoModeController: Starting task execution', {
+                            taskId: taskOptions.taskId,
+                            userId,
+                            projectPath: workspacePath,
+                            projectId
+                        });
+                        
                         // Execute task using TaskService with existing task ID
                         const taskResult = await taskService.executeTask(taskOptions.taskId, userId, {
                             projectPath: workspacePath,
@@ -192,7 +204,8 @@ class AutoModeController {
                         });
                         
                         this.logger.info('AutoModeController: Task executed successfully', {
-                            taskId: taskOptions.taskId
+                            taskId: taskOptions.taskId,
+                            result: taskResult
                         });
 
                         res.json({
@@ -206,11 +219,14 @@ class AutoModeController {
                             }
                         });
                         return;
+                    } else {
+                        throw new Error('TaskService not available');
                     }
                 } catch (error) {
                     this.logger.error('AutoModeController: Failed to execute task', {
                         error: error.message,
-                        taskId: taskOptions.taskId
+                        taskId: taskOptions.taskId,
+                        stack: error.stack
                     });
                     
                     res.status(500).json({
