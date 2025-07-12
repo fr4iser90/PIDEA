@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import useNotificationStore from './NotificationStore.jsx';
 
 const useAuthStore = create(
   persist(
@@ -10,6 +11,9 @@ const useAuthStore = create(
       isAuthenticated: false,
       isLoading: false,
       error: null,
+      redirectToLogin: false,
+      lastAuthCheck: null,
+      authCheckInterval: 5 * 60 * 1000, // 5 minutes
 
       // Actions
       login: async (email, password) => {
@@ -49,6 +53,8 @@ const useAuthStore = create(
             isAuthenticated: true,
             isLoading: false,
             error: null,
+            redirectToLogin: false,
+            lastAuthCheck: new Date()
           });
 
           console.log('✅ [AuthStore] Login successful, state updated');
@@ -91,6 +97,8 @@ const useAuthStore = create(
             isAuthenticated: true,
             isLoading: false,
             error: null,
+            redirectToLogin: false,
+            lastAuthCheck: new Date()
           });
 
           return { success: true };
@@ -110,6 +118,8 @@ const useAuthStore = create(
           isAuthenticated: false,
           isLoading: false,
           error: null,
+          redirectToLogin: false,
+          lastAuthCheck: null
         });
       },
 
@@ -124,13 +134,21 @@ const useAuthStore = create(
         return token ? { Authorization: `Bearer ${token}` } : {};
       },
 
-      // Check if token is valid
+      // Enhanced token validation with instant auto-redirect
       validateToken: async () => {
-        const { token } = get();
+        const { token, lastAuthCheck, authCheckInterval } = get();
+        
         if (!token) {
           console.log('🔍 [AuthStore] No token found for validation');
           set({ isAuthenticated: false });
           return false;
+        }
+
+        // Check if we need to validate (avoid too frequent checks)
+        const now = new Date();
+        if (lastAuthCheck && (now - lastAuthCheck) < authCheckInterval) {
+          console.log('🔍 [AuthStore] Skipping validation, too recent');
+          return true;
         }
 
         try {
@@ -145,19 +163,54 @@ const useAuthStore = create(
 
           if (!response.ok) {
             console.log('❌ [AuthStore] Token validation failed:', response.status);
-            set({ isAuthenticated: false, token: null, user: null });
+            await get().handleAuthFailure('Token validation failed');
             return false;
           }
 
           const data = await response.json();
           console.log('✅ [AuthStore] Token validation successful');
-          set({ user: data.user, isAuthenticated: true });
+          set({ 
+            user: data.user, 
+            isAuthenticated: true, 
+            lastAuthCheck: now,
+            redirectToLogin: false
+          });
           return true;
         } catch (error) {
           console.error('❌ [AuthStore] Token validation error:', error);
-          set({ isAuthenticated: false, token: null, user: null });
+          await get().handleAuthFailure('Authentication check failed');
           return false;
         }
+      },
+
+      // Handle authentication failures with instant redirect
+      handleAuthFailure: async (reason = 'Session expired') => {
+        const { showWarning } = useNotificationStore.getState();
+        
+        console.log('🔐 [AuthStore] Handling auth failure:', reason);
+        
+        set({ 
+          isAuthenticated: false, 
+          token: null, 
+          user: null,
+          redirectToLogin: true,
+          lastAuthCheck: new Date()
+        });
+
+        // Show notification
+        showWarning(
+          'Your session has expired. Redirecting to login...',
+          'Session Expired',
+          false
+        );
+
+        // Instant redirect - no countdown
+        window.location.href = '/login';
+      },
+
+      // Reset redirect flag
+      resetRedirectFlag: () => {
+        set({ redirectToLogin: false });
       },
 
       // Refresh token if needed

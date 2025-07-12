@@ -1,10 +1,21 @@
 import React, { useState, useEffect } from 'react';
 import useAuthStore from '@/infrastructure/stores/AuthStore.jsx';
+import useNotificationStore from '@/infrastructure/stores/NotificationStore.jsx';
 import LoginComponent from './LoginComponent.jsx';
 import RegisterComponent from './RegisterComponent.jsx';
 
 const AuthWrapper = ({ children }) => {
-  const { isAuthenticated, validateToken, isLoading, token } = useAuthStore();
+  const { 
+    isAuthenticated, 
+    validateToken, 
+    isLoading, 
+    token, 
+    redirectToLogin,
+    resetRedirectFlag 
+  } = useAuthStore();
+  
+  const { showInfo, showWarning } = useNotificationStore();
+  
   const [authMode, setAuthMode] = useState('login');
   const [isValidating, setIsValidating] = useState(true);
   const [validationError, setValidationError] = useState(null);
@@ -21,12 +32,15 @@ const AuthWrapper = ({ children }) => {
         if (!isValid) {
           console.log('❌ [AuthWrapper] Token validation failed');
           setValidationError('Session expired. Please log in again.');
+          showWarning('Your session has expired. Please log in again.', 'Session Expired');
         } else {
           console.log('✅ [AuthWrapper] Token validation successful');
+          showInfo('Welcome back!', 'Authentication Successful');
         }
       } catch (error) {
         console.error('❌ [AuthWrapper] Token validation error:', error);
         setValidationError('Authentication check failed. Please log in again.');
+        showWarning('Authentication check failed. Please log in again.', 'Authentication Error');
       } finally {
         setIsValidating(false);
       }
@@ -39,7 +53,16 @@ const AuthWrapper = ({ children }) => {
       console.log('🔍 [AuthWrapper] No token found, skipping validation');
       setIsValidating(false);
     }
-  }, [validateToken, token]);
+  }, [validateToken, token, showWarning, showInfo]);
+
+  // Handle redirect to login
+  useEffect(() => {
+    if (redirectToLogin && !isValidating) {
+      console.log('🔄 [AuthWrapper] Redirecting to login...');
+      resetRedirectFlag();
+      // The redirect is handled by AuthStore.handleAuthFailure
+    }
+  }, [redirectToLogin, isValidating, resetRedirectFlag]);
 
   const handleSwitchToRegister = () => {
     setAuthMode('register');
@@ -67,10 +90,26 @@ const AuthWrapper = ({ children }) => {
 
   // Show auth forms if not authenticated
   if (!isAuthenticated) {
-    return authMode === 'login' ? (
-      <LoginComponent onSwitchToRegister={handleSwitchToRegister} />
-    ) : (
-      <RegisterComponent onSwitchToLogin={handleSwitchToLogin} />
+    return (
+      <div className="auth-container">
+        {validationError && (
+          <div className="auth-error-banner">
+            <span>⚠️ {validationError}</span>
+          </div>
+        )}
+        
+        {authMode === 'login' ? (
+          <LoginComponent 
+            onSwitchToRegister={handleSwitchToRegister}
+            validationError={validationError}
+          />
+        ) : (
+          <RegisterComponent 
+            onSwitchToLogin={handleSwitchToLogin}
+            validationError={validationError}
+          />
+        )}
+      </div>
     );
   }
 

@@ -11,7 +11,7 @@ Create a compact, non-intrusive error display component that shows errors in a s
 ```javascript
 import React, { useState, useEffect } from 'react';
 import useNotificationStore from '@/infrastructure/stores/NotificationStore.jsx';
-import './ErrorDisplay.css';
+import '@/css/components/error-display.css';
 
 const ErrorDisplay = ({ 
   error, 

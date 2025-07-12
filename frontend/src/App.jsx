@@ -9,6 +9,7 @@ import GitManagementComponent from '@/presentation/components/git/main/GitManage
 import AuthWrapper from '@/presentation/components/auth/AuthWrapper.jsx';
 import Header from '@/presentation/components/Header.jsx';
 import Footer from '@/presentation/components/Footer.jsx';
+import NotificationSystem from '@/presentation/components/common/NotificationSystem.jsx';
 import useAuthStore from '@/infrastructure/stores/AuthStore.jsx';
 import { apiCall } from '@/infrastructure/repositories/APIChatRepository.jsx';
 import { IDEProvider } from '@/presentation/components/ide/IDEContext.jsx';
@@ -266,6 +267,9 @@ function App() {
             version="1.0.0"
             message="Welcome to PIDEA! Your AI development assistant is ready to help."
           />
+
+          {/* Global Notification System */}
+          <NotificationSystem />
         </div>
       </IDEProvider>
     </AuthWrapper>

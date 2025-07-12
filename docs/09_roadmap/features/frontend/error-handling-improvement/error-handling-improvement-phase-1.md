@@ -100,7 +100,7 @@ export default useNotificationStore;
 ```javascript
 import React, { useEffect, useRef } from 'react';
 import useNotificationStore from '@/infrastructure/stores/NotificationStore.jsx';
-import './NotificationSystem.css';
+import '@/css/NotificationSystem.css';
 
 const NotificationSystem = () => {
   const { notifications, dismissNotification } = useNotificationStore();
