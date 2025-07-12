@@ -1,15 +1,5 @@
 # Framework vs Workflow Relationship
 
-## ❌ **Falsche Vorstellung:**
-```
-Workflow → Framework → Step
-```
-
-## ✅ **Korrekte Architektur:**
-```
-Framework → Workflow → Step
-```
-
 ## 🔄 **Detaillierte Beziehung**
 
 ```mermaid
