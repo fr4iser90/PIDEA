@@ -158,10 +158,21 @@ class AutoModeController {
                     try {
                         const activeIDE = await this.ideManager.getActiveIDE();
                         if (activeIDE && activeIDE.port) {
-                            await this.ideManager.clickNewChat(activeIDE.port);
-                            this.logger.info('AutoModeController: New chat clicked', {
-                                port: activeIDE.port
-                            });
+                            // Use browserManager instead of ideManager for clickNewChat
+                            const browserManager = this.application?.browserManager;
+                            if (browserManager) {
+                                await browserManager.switchToPort(activeIDE.port);
+                                const success = await browserManager.clickNewChat();
+                                if (success) {
+                                    this.logger.info('AutoModeController: New chat clicked', {
+                                        port: activeIDE.port
+                                    });
+                                } else {
+                                    throw new Error('Failed to click New Chat button');
+                                }
+                            } else {
+                                throw new Error('Browser manager not available');
+                            }
                         }
                     } catch (error) {
                         this.logger.error('AutoModeController: Failed to click new chat', {
