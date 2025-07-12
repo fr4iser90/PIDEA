@@ -156,15 +156,36 @@ class AutoModeController {
                 // Click new chat if requested
                 if (taskOptions.clickNewChat) {
                     try {
+                        this.logger.info('AutoModeController: Starting New Chat click process');
+                        
                         const activeIDE = await this.ideManager.getActiveIDE();
+                        this.logger.info('AutoModeController: Active IDE found', {
+                            hasActiveIDE: !!activeIDE,
+                            port: activeIDE?.port
+                        });
+                        
                         if (activeIDE && activeIDE.port) {
                             // Use browserManager instead of ideManager for clickNewChat
                             const browserManager = this.application?.browserManager;
+                            this.logger.info('AutoModeController: BrowserManager available', {
+                                hasBrowserManager: !!browserManager
+                            });
+                            
                             if (browserManager) {
+                                this.logger.info('AutoModeController: Switching to port', { port: activeIDE.port });
                                 await browserManager.switchToPort(activeIDE.port);
-                                const success = await browserManager.clickNewChat();
+                                
+                                this.logger.info('AutoModeController: Clicking New Chat with timeout');
+                                // Add timeout to prevent hanging
+                                const clickPromise = browserManager.clickNewChat();
+                                const timeoutPromise = new Promise((_, reject) => 
+                                    setTimeout(() => reject(new Error('New Chat click timeout')), 10000)
+                                );
+                                
+                                const success = await Promise.race([clickPromise, timeoutPromise]);
+                                
                                 if (success) {
-                                    this.logger.info('AutoModeController: New chat clicked', {
+                                    this.logger.info('AutoModeController: New chat clicked successfully', {
                                         port: activeIDE.port
                                     });
                                 } else {
@@ -173,13 +194,18 @@ class AutoModeController {
                             } else {
                                 throw new Error('Browser manager not available');
                             }
+                        } else {
+                            this.logger.warn('AutoModeController: No active IDE found for New Chat');
                         }
                     } catch (error) {
                         this.logger.error('AutoModeController: Failed to click new chat', {
-                            error: error.message
+                            error: error.message,
+                            stack: error.stack
                         });
                     }
                 }
+                
+                this.logger.info('AutoModeController: New Chat process completed, proceeding to task execution');
 
                 // Execute task using TaskService
                 try {
