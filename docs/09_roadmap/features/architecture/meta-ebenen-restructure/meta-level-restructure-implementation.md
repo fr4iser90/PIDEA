@@ -80,45 +80,41 @@
 
 ## 4. Implementation Phases
 
-### Phase 1: Preserve DDD Architecture (2 hours)
-- [ ] Document current DDD structure
-- [ ] Ensure all domain entities are preserved
-- [ ] Verify value objects remain intact
-- [ ] Confirm repository pattern is maintained
-- [ ] Validate application layer structure
+### 📋 Task Splitting Recommendations
+Due to the complexity and size of this task (16 hours, 34 files), it has been split into three SEQUENTIAL subtasks:
 
-### Phase 2A: Core Frameworks (3 hours)
+**EXECUTION ORDER:**
+1. **Subtask 1**: [meta-level-restructure-phase-1-core-frameworks.md](./meta-level-restructure-phase-1-core-frameworks.md) – Core Framework Infrastructure (6 hours)
+2. **Subtask 2**: [meta-level-restructure-phase-2-testing-refactoring.md](./meta-level-restructure-phase-2-testing-refactoring.md) – Testing & Refactoring Frameworks (5 hours) - REQUIRES Subtask 1 completion
+3. **Subtask 3**: [meta-level-restructure-phase-3-deployment-integration.md](./meta-level-restructure-phase-3-deployment-integration.md) – Deployment Frameworks & Integration (5 hours) - REQUIRES Subtask 1 & 2 completion
+
+**NO PARALLEL EXECUTION - SEQUENTIAL ONLY**
+
+### Phase 1: Preserve DDD Architecture (2 hours) - COMPLETED
+- [x] Document current DDD structure
+- [x] Ensure all domain entities are preserved
+- [x] Verify value objects remain intact
+- [x] Confirm repository pattern is maintained
+- [x] Validate application layer structure
+
+### Phase 2: Core Framework Infrastructure (6 hours) - SUBTASK 1
 - [ ] Create `backend/domain/frameworks/` directory
-- [ ] Implement `AnalysisFramework.js` - Level 2 analysis
-- [ ] Implement `RefactoringFramework.js` - Level 2 refactoring
-- [ ] Implement `TestingFramework.js` - Level 2 testing
-- [ ] Create basic framework integration
+- [ ] Implement `FrameworkRegistry.js` - Haupt-Registry
+- [ ] Implement `FrameworkBuilder.js` - Haupt-Builder
+- [ ] Implement Analysis frameworks (CodeQuality, Architecture, Security, Performance)
+- [ ] Create basic framework integration with existing DDD services
 
-### Phase 2B: Advanced Frameworks (3 hours)
-- [ ] Implement `DeploymentFramework.js` - Level 2 deployment
-- [ ] Implement `FrameworkRegistry.js` - Level 2 registry
-- [ ] Add advanced framework capabilities
-- [ ] Validate framework integration
+### Phase 3: Testing & Refactoring Frameworks (5 hours) - SUBTASK 2
+- [ ] Implement Testing frameworks (Unit, Integration, E2E, Performance)
+- [ ] Implement Refactoring frameworks (Code, Structure, Dependency)
+- [ ] Enhance framework integration with existing services
+- [ ] Validate framework coordination and execution
 
-### Phase 3: Core Workflows (4 hours)
-- [ ] Create `backend/domain/workflows/` directory
-- [ ] Implement AnalysisWorkflows (CodeQuality, Architecture, Security)
-- [ ] Implement TestingWorkflows (Unit, Integration, E2E)
-- [ ] Implement RefactoringWorkflows (Code, Structure)
-
-### Phase 4: Core Steps (4 hours)
-- [ ] Create `backend/domain/steps/` directory
-- [ ] Implement AnalysisSteps (check_container_status, analyze_code_quality, validate_architecture)
-- [ ] Implement TestingSteps (run_tests, validate_coverage, check_performance)
-- [ ] Implement RefactoringSteps (refactor_code, optimize_structure, clean_dependencies)
-
-### Phase 5: Integration Layer (4 hours)
-- [ ] Integrate frameworks with existing DDD services
-- [ ] Integrate workflows with existing DDD services
-- [ ] Integrate steps with workflows
-- [ ] Create coordination between frameworks, workflows and steps
-- [ ] Implement event coordination between layers
-- [ ] Validate complete integration
+### Phase 4: Deployment Frameworks & Integration (5 hours) - SUBTASK 3
+- [ ] Implement Deployment frameworks (Docker, Kubernetes, Serverless)
+- [ ] Create comprehensive integration layer
+- [ ] Implement framework coordination and orchestration
+- [ ] Validate complete framework ecosystem
 
 ## 5. Code Standards & Patterns
 - **Coding Style**: ESLint with existing rules, Prettier Formatting
@@ -208,16 +204,35 @@
 - [ ] Communication plan for stakeholders
 
 ## 12. Success Criteria
+
+### Overall Success Criteria
 - [ ] DDD architecture fully preserved and unchanged
 - [ ] Framework components created as separate entities
-- [ ] Step components created as separate entities
 - [ ] All existing functionality maintained
 - [ ] Framework execution working
-- [ ] Step execution working
 - [ ] Performance requirements met
 - [ ] Security requirements met
 - [ ] Documentation complete and accurate
 - [ ] User acceptance testing passed
+
+### Subtask Success Criteria (SEQUENTIAL EXECUTION)
+- **Subtask 1**: Core Framework Infrastructure (MUST COMPLETE FIRST)
+  - [ ] FrameworkRegistry.js implemented with DDD service integration
+  - [ ] FrameworkBuilder.js implemented with fluent interface
+  - [ ] All 4 analysis frameworks implemented and functional
+  - [ ] Integration with existing TaskService and WorkflowOrchestrationService working
+
+- **Subtask 2**: Testing & Refactoring Frameworks (REQUIRES Subtask 1 completion)
+  - [ ] All 4 testing frameworks implemented and functional
+  - [ ] All 3 refactoring frameworks implemented and functional
+  - [ ] Integration with existing test management services working
+  - [ ] Framework coordination through FrameworkRegistry working
+
+- **Subtask 3**: Deployment Frameworks & Integration (REQUIRES Subtask 1 & 2 completion)
+  - [ ] All 3 deployment frameworks implemented and functional
+  - [ ] FrameworkOrchestrator implemented with unified interface
+  - [ ] Complete integration with all existing DDD services
+  - [ ] All frameworks properly registered and validated
 
 ## 13. Risk Assessment
 
@@ -252,7 +267,17 @@
   "confirmation_keywords": ["done", "complete", "finished"],
   "fallback_detection": true,
   "max_confirmation_attempts": 3,
-  "timeout_seconds": 300
+  "timeout_seconds": 300,
+  "execution_order": "SEQUENTIAL_ONLY",
+  "subtask_execution": {
+    "subtask_1": "meta-level-restructure-phase-1-core-frameworks.md",
+    "subtask_2": "meta-level-restructure-phase-2-testing-refactoring.md", 
+    "subtask_3": "meta-level-restructure-phase-3-deployment-integration.md"
+  },
+  "dependencies": {
+    "subtask_2": ["subtask_1"],
+    "subtask_3": ["subtask_1", "subtask_2"]
+  }
 }
 ```
 
