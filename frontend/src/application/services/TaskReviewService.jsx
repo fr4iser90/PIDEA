@@ -14,7 +14,7 @@ class TaskReviewService {
    */
   async generateReviewPlan(taskData) {
     try {
-      const prompt = this.buildReviewPrompt(taskData);
+      const prompt = await this.buildReviewPrompt(taskData);
       
       const response = await this.apiChatRepository.sendMessage(prompt);
 
@@ -44,24 +44,41 @@ class TaskReviewService {
    * @param {Object} taskData - Task information
    * @returns {String} Formatted prompt
    */
-  buildReviewPrompt(taskData) {
-    return `Please create a detailed implementation plan for the following task:
+  async buildReviewPrompt(taskData) {
+    // Load the task-review.md prompt from content library for REVIEW
+    const response = await fetch('/api/prompts/task-management/task-review');
+    if (!response.ok) {
+      throw new Error('Failed to load task-review prompt from content library');
+    }
+    
+    const data = await response.json();
+    const taskReviewPrompt = data.content;
 
-**Task Description:** ${taskData.description}
-**Category:** ${taskData.category}
-**Priority:** ${taskData.priority}
-**Estimated Hours:** ${taskData.estimatedHours}
+    return `${taskReviewPrompt}
 
-Please provide a comprehensive plan that includes:
+---
 
-1. **Phase Breakdown** - Break down the implementation into logical phases with time estimates
-2. **File Analysis** - Identify all files that need to be created, modified, or deleted
-3. **Technical Approach** - Describe the technical implementation strategy
-4. **Dependencies** - List any dependencies or prerequisites
-5. **Risk Assessment** - Identify potential risks and mitigation strategies
-6. **Testing Strategy** - Outline testing approach and validation steps
+# TASK TO REVIEW: ${taskData.title || 'New Task'}
 
-Format the response in Markdown with clear sections and actionable steps.`;
+## Task Details
+- **Description:** ${taskData.description}
+- **Category:** ${taskData.category}
+- **Priority:** ${taskData.priority}
+- **Estimated Hours:** ${taskData.estimatedHours || 'Not specified'}
+
+## Review Instructions
+**Review this task and create a detailed analysis plan using the above task-review.md framework. The plan should be ready for validation and approval.**
+
+Please provide a comprehensive review analysis that includes:
+
+1. **Requirements Analysis** - Validate and clarify task requirements
+2. **Technical Feasibility** - Assess technical complexity and approach
+3. **Resource Assessment** - Evaluate time, effort, and dependencies
+4. **Risk Analysis** - Identify potential risks and mitigation strategies
+5. **Quality Assurance** - Define testing and validation criteria
+6. **Implementation Strategy** - Outline the best approach for execution
+
+Format the response in Markdown with clear sections and actionable insights.`;
   }
 
   /**
@@ -405,9 +422,39 @@ Provide a complete, updated implementation plan.`;
    */
   async executeTask(reviewData) {
     try {
-      // Start the workflow execution
+      // Load the task-execute.md prompt from content library for EXECUTION
+      const response = await fetch('/api/prompts/task-management/task-execute');
+      if (!response.ok) {
+        throw new Error('Failed to load task-execute prompt from content library');
+      }
+      
+      const data = await response.json();
+      const taskExecutePrompt = data.content;
+
+      // Create execution prompt with task data
+      const executionPrompt = `${taskExecutePrompt}
+
+---
+
+# TASK TO EXECUTE: ${reviewData.taskData.title || 'New Task'}
+
+## Task Details
+- **Description:** ${reviewData.taskData.description}
+- **Category:** ${reviewData.taskData.category}
+- **Priority:** ${reviewData.taskData.priority}
+- **Estimated Hours:** ${reviewData.estimatedHours || 'Not specified'}
+
+## Review Analysis
+${reviewData.plan}
+
+## Execute Instructions
+**Execute this task using the above task-execute.md framework. The task has been reviewed and approved for execution.**
+
+Please execute the task according to the review analysis and provide real-time progress updates.`;
+
+      // Start the workflow execution with task-execute.md prompt
       const workflowResult = await this.taskWorkflowRepository.executeWorkflow({
-        todoInput: reviewData.taskData.description,
+        todoInput: executionPrompt,
         options: {
           workflowId: `task-execution-${Date.now()}`,
           taskData: reviewData.taskData,

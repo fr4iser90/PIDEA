@@ -22,7 +22,7 @@ export default class TaskCreationService {
       logger.log('[TaskCreationService] Starting task creation workflow:', { workflowId, taskData });
 
       // Step 1: Generate AI prompt
-      const prompt = this.generateTaskPrompt(taskData);
+      const prompt = await this.generateTaskPrompt(taskData);
       
       // Step 2: Send to IDE chat
       const chatResult = await this.sendToIDEChat(prompt, options);
@@ -56,42 +56,47 @@ export default class TaskCreationService {
   /**
    * Generate AI prompt for task creation
    * @param {Object} taskData - Task form data
-   * @returns {string} Generated prompt
+   * @returns {Promise<string>} Generated prompt
    */
-  generateTaskPrompt(taskData) {
+  async generateTaskPrompt(taskData) {
     const { title, description, category, priority, type, estimatedTime } = taskData;
     
-    return `# AI Task Creation Request
+    // Load the task-create.md prompt from content library
+    const response = await fetch('/api/prompts/task-management/task-create');
+    if (!response.ok) {
+      throw new Error('Failed to load task-create prompt from content library');
+    }
+    
+    const data = await response.json();
+    const taskCreatePrompt = data.content;
+
+    return `${taskCreatePrompt}
+
+---
+
+# TASK TO CREATE: ${title || 'New Task'}
 
 ## Task Details
-- **Title**: ${title}
-- **Description**: ${description}
-- **Category**: ${category}
-- **Priority**: ${priority}
-- **Type**: ${type}
-- **Estimated Time**: ${estimatedTime || 'Not specified'} hours
+- **Description:** ${description}
+- **Category:** ${category}
+- **Priority:** ${priority}
+- **Type:** ${type}
+- **Estimated Hours:** ${estimatedTime || 'Not specified'}
 
-## Instructions
-Please create a comprehensive implementation plan for this task using the task-execute.md framework. Follow these steps:
+## Create Instructions
+**Create a comprehensive implementation plan using the above task-create.md framework. The plan should be ready for database parsing and execution.**
 
-1. **Analyze Requirements**: Understand the task requirements and scope
-2. **Create Implementation Plan**: Generate a detailed plan following the template structure
-3. **Define Phases**: Break down the implementation into logical phases
-4. **Estimate Resources**: Provide accurate time and resource estimates
-5. **Identify Dependencies**: List any prerequisites or dependencies
-6. **Plan Testing**: Include testing strategy and validation criteria
+Please provide a complete implementation plan that includes:
 
-## Framework Requirements
-- Use the task-execute.md template structure
-- Include all required sections (Project Overview, Technical Requirements, etc.)
-- Create implementation and phase files in the correct directory structure
-- Set appropriate automation levels and execution context
-- Include success criteria and risk assessment
+1. **Project Overview** - Clear project description and goals
+2. **Technical Requirements** - Detailed technical specifications
+3. **Implementation Strategy** - Step-by-step implementation approach
+4. **File Structure** - Complete file organization plan
+5. **Dependencies** - All required dependencies and prerequisites
+6. **Testing Strategy** - Comprehensive testing approach
+7. **Success Criteria** - Clear success metrics and validation
 
-## Output Format
-Please provide the complete implementation plan in markdown format, ready to be parsed into database tasks and executed by the AI system.
-
-**Important**: This plan will be automatically executed, so ensure all details are comprehensive and accurate.`;
+Format the response in Markdown with clear sections and actionable steps.`;
   }
 
   /**

@@ -2,11 +2,12 @@ import React, { useState, useEffect } from 'react';
 import TaskCreationForm from './TaskCreationForm';
 import TaskWorkflowProgress from './TaskWorkflowProgress';
 import TaskReviewModal from './TaskReviewModal';
+import TaskCreationService from '@/application/services/TaskCreationService';
 import TaskReviewService from '@/application/services/TaskReviewService';
 import '@/css/modal/task-creation-modal.css';
 
 const TaskCreationModal = ({ isOpen, onClose, onTaskCreated }) => {
-  const [currentStep, setCurrentStep] = useState('form'); // 'form', 'review', 'progress', 'complete'
+  const [currentStep, setCurrentStep] = useState('form'); // 'form', 'create', 'review', 'progress', 'complete'
   const [formData, setFormData] = useState({});
   const [validation, setValidation] = useState({});
   const [workflowId, setWorkflowId] = useState(null);
@@ -15,7 +16,9 @@ const TaskCreationModal = ({ isOpen, onClose, onTaskCreated }) => {
   const [reviewData, setReviewData] = useState(null);
   const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
   const [isGeneratingPlan, setIsGeneratingPlan] = useState(false);
+  const [createdTask, setCreatedTask] = useState(null);
 
+  const taskCreationService = new TaskCreationService();
   const taskReviewService = new TaskReviewService();
 
   useEffect(() => {
@@ -34,21 +37,28 @@ const TaskCreationModal = ({ isOpen, onClose, onTaskCreated }) => {
     setReviewData(null);
     setIsReviewModalOpen(false);
     setIsGeneratingPlan(false);
+    setCreatedTask(null);
   };
 
   const handleFormSubmit = async (data) => {
     try {
       setFormData(data);
-      setCurrentStep('review');
+      setCurrentStep('create');
       setIsGeneratingPlan(true);
 
-      // Generate review plan
+      // STEP 1: CREATE - Create task using TaskCreationService with task-create.md
+      const createdTaskResult = await taskCreationService.startTaskCreationWorkflow(data);
+      setCreatedTask(createdTaskResult);
+      
+      // STEP 2: REVIEW - Generate review plan using TaskReviewService with task-review.md
       const reviewPlan = await taskReviewService.generateReviewPlan(data);
       setReviewData(reviewPlan);
+      
+      setCurrentStep('review');
       setIsReviewModalOpen(true);
       setIsGeneratingPlan(false);
     } catch (error) {
-      console.error('Error generating review plan:', error);
+      console.error('Error in task creation workflow:', error);
       setErrors([error.message]);
       setIsGeneratingPlan(false);
     }

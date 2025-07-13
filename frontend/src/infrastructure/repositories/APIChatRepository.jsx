@@ -226,16 +226,15 @@ export default class APIChatRepository extends ChatRepository {
     if (!data.success || !data.data) throw new Error('Invalid response');
     
     // Create a ChatMessage from the response data
-    const chatMessage = new ChatMessage({
-      id: data.data.messageId,
-      content: message,
-      sender: 'user',
-      type: message.includes('```') ? 'code' : 'text',
-      timestamp: data.data.timestamp,
-      metadata: {
-        sessionId: data.data.sessionId
+    const chatMessage = new ChatMessage(
+      message,
+      message.includes('```') ? 'code' : 'text',
+      {
+        id: data.data.messageId,
+        sessionId: data.data.sessionId,
+        timestamp: data.data.timestamp
       }
-    });
+    );
     
     return chatMessage;
   }
