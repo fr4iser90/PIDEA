@@ -2,7 +2,7 @@
  * Unit tests for UnifiedWorkflowHandler
  */
 const UnifiedWorkflowHandler = require('@workflows/handlers/UnifiedWorkflowHandler');
-const HandlerRegistry = require('@workflows/handlers/HandlerRegistry');
+const UnifiedHandlerRegistry = require('@workflows/handlers/UnifiedHandlerRegistry');
 const HandlerFactory = require('@workflows/handlers/HandlerFactory');
 const HandlerValidator = require('@workflows/handlers/HandlerValidator');
 const HandlerContext = require('@workflows/handlers/HandlerContext');

@@ -6,12 +6,13 @@
  */
 
 // Interfaces
-const IHandler = require('./interfaces/IHandler');
-const IHandlerAdapter = require('./interfaces/IHandlerAdapter');
+const IHandler = require('../../../domain/interfaces/IHandler');
+const IHandlerAdapter = require('../../../domain/interfaces/IHandlerAdapter');
 
 // Core Components
 const UnifiedWorkflowHandler = require('./UnifiedWorkflowHandler');
-const HandlerRegistry = require('./HandlerRegistry');
+const UnifiedHandlerRegistry = require('../UnifiedHandlerRegistry');
+const HandlerRegistry = UnifiedHandlerRegistry; // Backward compatibility
 const HandlerFactory = require('./HandlerFactory');
 const HandlerValidator = require('./HandlerValidator');
 const HandlerContext = require('./HandlerContext');
@@ -41,6 +42,7 @@ module.exports = {
 
   // Core Components
   UnifiedWorkflowHandler,
+  UnifiedHandlerRegistry,
   HandlerRegistry,
   HandlerFactory,
   HandlerValidator,
@@ -71,6 +73,7 @@ module.exports = {
 
   core: {
     UnifiedWorkflowHandler,
+    UnifiedHandlerRegistry,
     HandlerRegistry,
     HandlerFactory,
     HandlerValidator,
@@ -104,7 +107,7 @@ module.exports = {
   },
 
   createHandlerRegistry: (options = {}) => {
-    return new HandlerRegistry(options);
+    return new UnifiedHandlerRegistry(options);
   },
 
   createHandlerFactory: (options = {}) => {

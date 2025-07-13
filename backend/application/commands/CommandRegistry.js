@@ -31,11 +31,11 @@ class CommandRegistry {
         GenerateScriptsCommand: require('./categories/generate/GenerateScriptsCommand'),
         GenerateTestsCommand: require('./categories/generate/GenerateTestsCommand')
       },
-      refactor: {
-        OrganizeModulesCommand: require('./categories/refactor/OrganizeModulesCommand'),
-        RestructureArchitectureCommand: require('./categories/refactor/RestructureArchitectureCommand'),
-        SplitLargeFilesCommand: require('./categories/refactor/SplitLargeFilesCommand'),
-        CleanDependenciesCommand: require('./categories/refactor/CleanDependenciesCommand')
+      refactoring: {
+        OrganizeModulesCommand: require('./categories/refactoring/OrganizeModulesCommand'),
+        RestructureArchitectureCommand: require('./categories/refactoring/RestructureArchitectureCommand'),
+        SplitLargeFilesCommand: require('./categories/refactoring/SplitLargeFilesCommand'),
+        CleanDependenciesCommand: require('./categories/refactoring/CleanDependenciesCommand')
       },
       management: {
         AutoRefactorCommand: require('./categories/management/AutoRefactorCommand'),

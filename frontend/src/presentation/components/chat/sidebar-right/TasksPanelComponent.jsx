@@ -258,6 +258,7 @@ ${taskDetails.description}
   }, []);
 
   // Only show groups with a summary task
+  // Fix: Removed reference to undefined 'phases' variable
   const groupedSummaryList = groupedList.filter(group => group.summary);
 
   // Task creation logic

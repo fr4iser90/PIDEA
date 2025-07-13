@@ -26,11 +26,11 @@ class HandlerRegistry {
         GenerateScriptsHandler: require('./categories/generate/GenerateScriptsHandler'),
         GenerateTestsHandler: require('./categories/generate/GenerateTestsHandler')
       },
-      refactor: {
-        OrganizeModulesHandler: require('./categories/refactor/OrganizeModulesHandler'),
-        RestructureArchitectureHandler: require('./categories/refactor/RestructureArchitectureHandler'),
-        SplitLargeFilesHandler: require('./categories/refactor/SplitLargeFilesHandler'),
-        CleanDependenciesHandler: require('./categories/refactor/CleanDependenciesHandler')
+      refactoring: {
+        OrganizeModulesHandler: require('./categories/refactoring/OrganizeModulesHandler'),
+        RestructureArchitectureHandler: require('./categories/refactoring/RestructureArchitectureHandler'),
+        SplitLargeFilesHandler: require('./categories/refactoring/SplitLargeFilesHandler'),
+        CleanDependenciesHandler: require('./categories/refactoring/CleanDependenciesHandler')
       },
       management: {
         CreateTaskHandler: require('./categories/management/CreateTaskHandler'),
@@ -64,7 +64,7 @@ class HandlerRegistry {
         'GenerateScriptsHandler',
         'GenerateTestsHandler'
       ],
-      refactor: [
+      refactoring: [
         'OrganizeModulesHandler',
         'RestructureArchitectureHandler',
         'SplitLargeFilesHandler',

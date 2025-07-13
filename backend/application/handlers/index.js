@@ -1,22 +1,23 @@
 /**
  * Handlers Module - Application Layer
- * Exports all handlers organized by categories with registry and builder
+ * Exports all handlers organized by categories with unified registry and builder
  */
-const HandlerRegistry = require('./HandlerRegistry');
+const UnifiedHandlerRegistry = require('./UnifiedHandlerRegistry');
 const HandlerBuilder = require('./HandlerBuilder');
 
-// Export registry and builder
+// Export unified registry and builder
 module.exports = {
-  HandlerRegistry,
+  UnifiedHandlerRegistry,
+  HandlerRegistry: UnifiedHandlerRegistry, // Backward compatibility
   HandlerBuilder,
   
   // Export category methods
-  buildFromCategory: HandlerBuilder.buildFromCategory,
-  getByCategory: HandlerRegistry.getByCategory,
+  buildFromCategory: UnifiedHandlerRegistry.buildFromCategory,
+  getByCategory: UnifiedHandlerRegistry.getByCategory,
   
   // Export categories
-  analysis: HandlerRegistry.getByCategory('analysis'),
-  generate: HandlerRegistry.getByCategory('generate'),
-  refactor: HandlerRegistry.getByCategory('refactor'),
-  management: HandlerRegistry.getByCategory('management')
+  analysis: UnifiedHandlerRegistry.getByCategory('analysis'),
+  generate: UnifiedHandlerRegistry.getByCategory('generate'),
+  refactoring: UnifiedHandlerRegistry.getByCategory('refactoring'), // Updated from 'refactor'
+  management: UnifiedHandlerRegistry.getByCategory('management')
 };

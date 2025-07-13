@@ -5,7 +5,7 @@
  * orchestrating handler execution using the registry, factory, and validator
  * components. It integrates with existing workflow patterns.
  */
-const HandlerRegistry = require('./HandlerRegistry');
+const UnifiedHandlerRegistry = require('../UnifiedHandlerRegistry');
 const HandlerFactory = require('./HandlerFactory');
 const HandlerValidator = require('./HandlerValidator');
 const HandlerContext = require('./HandlerContext');
@@ -17,7 +17,7 @@ class UnifiedWorkflowHandler {
    * @param {Object} dependencies - Handler dependencies
    */
   constructor(dependencies = {}) {
-    this.handlerRegistry = dependencies.handlerRegistry || new HandlerRegistry();
+    this.handlerRegistry = dependencies.handlerRegistry || new UnifiedHandlerRegistry();
     this.handlerFactory = dependencies.handlerFactory || new HandlerFactory();
     this.handlerValidator = dependencies.handlerValidator || new HandlerValidator();
     this.logger = dependencies.logger || console;

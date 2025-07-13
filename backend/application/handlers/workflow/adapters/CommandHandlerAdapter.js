@@ -5,7 +5,7 @@
  * allowing command handlers to be executed through the unified
  * handler system.
  */
-const IHandlerAdapter = require('../interfaces/IHandlerAdapter');
+const IHandlerAdapter = require('../../../../domain/interfaces/IHandlerAdapter');
 
 class CommandHandlerAdapter extends IHandlerAdapter {
   /**
@@ -127,7 +127,7 @@ class CommandHandlerAdapter extends IHandlerAdapter {
         `@/application/commands/${commandType}`,
         `@/application/commands/categories/analysis/${commandType}`,
         `@/application/commands/categories/generate/${commandType}`,
-        `@/application/commands/categories/refactor/${commandType}`,
+        `@/application/commands/categories/refactoring/${commandType}`,
         `@/application/commands/vibecoder/${commandType}`
       ];
 

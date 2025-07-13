@@ -5,7 +5,7 @@
  * allowing service methods to be executed through the unified
  * handler system with dependency injection support.
  */
-const IHandlerAdapter = require('../interfaces/IHandlerAdapter');
+const IHandlerAdapter = require('../../../../domain/interfaces/IHandlerAdapter');
 
 class ServiceHandlerAdapter extends IHandlerAdapter {
   /**
