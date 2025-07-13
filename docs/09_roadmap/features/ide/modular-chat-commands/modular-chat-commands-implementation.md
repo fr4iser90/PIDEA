@@ -1,28 +1,12 @@
-# Modular Chat Commands Implementation Plan
+# Modular IDE Commands Implementation Plan
 
 ## 1. Project Overview
 - **Feature/Component Name**: Modular IDE Commands System (Chat, Terminal, Analysis, Browser)
 - **Priority**: High
 - **Category**: ide
-- **Estimated Time**: 4 hours
+- **Estimated Time**: 6 hours
 - **Dependencies**: Existing Command/Handler architecture, IDETypes, BrowserManager, CursorIDEService, TerminalMonitor, WorkspacePathDetector
 - **Related Issues**: Poor chat session management, missing selector integration, scattered IDE automation functions
-
-## Validation Results - [2025-01-27]
-### ✅ Completed Items
-- [x] **Category Structure**: `ide` category exists in `STANDARD_CATEGORIES`
-- [x] **Command/Handler Pattern**: Existing architecture supports modular commands
-- [x] **IDETypes Integration**: Comprehensive IDE selector system exists
-- [x] **BrowserManager**: Chat automation capabilities implemented
-- [x] **WorkflowController**: Current chat management exists
-
-### ⚠️ Issues Found & Fixed
-- [x] **Missing IDE Category**: Added to `STANDARD_CATEGORIES`
-- [x] **Command Conflicts**: Resolved with dedicated IDE category
-- [x] **File Structure**: Updated to use `categories/ide/` structure
-- [x] **Integration Points**: Properly identified existing services
-- [x] **Selector Integration**: Will use existing IDETypes and BrowserManager selectors
-- [x] **Chat Management**: Simplified to browser-tab-like approach
 
 ## 2. Technical Requirements
 - **Tech Stack**: Node.js, Playwright, existing Command/Handler pattern
@@ -73,8 +57,18 @@
 - [ ] `backend/application/handlers/categories/ide/GetChatHistoryHandler.js` - Handle history retrieval
 - [ ] `backend/application/handlers/categories/ide/OpenTerminalHandler.js` - Handle terminal operations with selectors
 - [ ] `backend/application/handlers/categories/ide/ExecuteTerminalHandler.js` - Handle command execution with selectors
+- [ ] `backend/application/handlers/categories/ide/MonitorTerminalOutputHandler.js` - Handle terminal monitoring
+- [ ] `backend/application/handlers/categories/ide/RestartUserAppHandler.js` - Handle app restart
+- [ ] `backend/application/handlers/categories/ide/TerminalLogCaptureHandler.js` - Handle log capture
 - [ ] `backend/application/handlers/categories/ide/AnalyzeProjectHandler.js` - Handle project analysis
-- [ ] `backend/application/handlers/categories/ide/BrowserActionHandler.js` - Handle browser actions with selectors
+- [ ] `backend/application/handlers/categories/ide/AnalyzeAgainHandler.js` - Handle re-analysis
+- [ ] `backend/application/handlers/categories/ide/GetWorkspaceInfoHandler.js` - Handle workspace info
+- [ ] `backend/application/handlers/categories/ide/DetectPackageJsonHandler.js` - Handle package.json detection
+- [ ] `backend/application/handlers/categories/ide/SwitchIDEPortHandler.js` - Handle IDE port switching
+- [ ] `backend/application/handlers/categories/ide/OpenFileExplorerHandler.js` - Handle file explorer
+- [ ] `backend/application/handlers/categories/ide/OpenCommandPaletteHandler.js` - Handle command palette
+- [ ] `backend/application/handlers/categories/ide/ExecuteIDEActionHandler.js` - Handle IDE actions
+- [ ] `backend/application/handlers/categories/ide/GetIDESelectorsHandler.js` - Handle selector retrieval
 
 **Domain Services:**
 - [ ] `backend/domain/services/ChatSessionService.js` - Chat session management (like browser tabs)
@@ -91,27 +85,37 @@
 ## 4. Implementation Phases
 
 #### Phase 1: Chat Commands Foundation (1.5 hours)
-- [ ] Create ide command category structure
+- [ ] Create backend/application/commands/categories/ide/ directory first
+- [ ] Create backend/application/handlers/categories/ide/ directory first
 - [ ] Implement CreateChatCommand with selector integration
 - [ ] Implement SwitchChatCommand (like browser tabs)
 - [ ] Implement SendMessageCommand with selector integration
 - [ ] Create command validation and error handling
 
-#### Phase 2: Terminal & Analysis Commands (1.5 hours)
+#### Phase 2: Terminal Commands (1.5 hours)
 - [ ] Implement OpenTerminalCommand with selector integration
 - [ ] Implement ExecuteTerminalCommand with selector integration
-- [ ] Implement AnalyzeProjectCommand with existing analysis logic
-- [ ] Implement ListChatsCommand for chat management
+- [ ] Implement MonitorTerminalOutputCommand with selector integration
+- [ ] Implement RestartUserAppCommand with selector integration
+- [ ] Implement TerminalLogCaptureCommand with selector integration
 - [ ] Add terminal monitoring and log capture
 
-#### Phase 3: Browser/IDE Commands (1 hour)
+#### Phase 3: Analysis Commands (1.5 hours)
+- [ ] Implement AnalyzeProjectCommand with existing analysis logic
+- [ ] Implement AnalyzeAgainCommand with existing analysis logic
+- [ ] Implement GetWorkspaceInfoCommand with existing analysis logic
+- [ ] Implement DetectPackageJsonCommand with existing analysis logic
+- [ ] Add analysis monitoring and result capture
+
+#### Phase 4: Browser/IDE Commands (1 hour)
 - [ ] Implement SwitchIDEPortCommand with selector integration
 - [ ] Implement OpenFileExplorerCommand with selector integration
 - [ ] Implement OpenCommandPaletteCommand with selector integration
 - [ ] Implement ExecuteIDEActionCommand with selector integration
+- [ ] Implement GetIDESelectorsCommand with selector integration
 - [ ] Add IDE selector detection and management
 
-#### Phase 4: Handlers & Services Integration (1 hour)
+#### Phase 5: Handlers & Services Integration (1 hour)
 - [ ] Create all handlers with selector integration
 - [ ] Create ChatSessionService for browser-tab-like management
 - [ ] Create IDEAutomationService with selector integration
@@ -143,7 +147,7 @@
 ## 8. Testing Strategy
 
 #### Unit Tests:
-- [ ] Test file: `tests/unit/application/commands/ide/NewChatCommand.test.js`
+- [ ] Test file: `tests/unit/application/commands/ide/CreateChatCommand.test.js`
 - [ ] Test cases: Command validation, parameter handling, error scenarios
 - [ ] Mock requirements: BrowserManager, IDETypes, Logger
 
@@ -192,45 +196,29 @@
 - [ ] Communication plan for stakeholders
 
 ## 12. Success Criteria
-- [x] Chat session management like browser tabs - **ACHIEVABLE** with SwitchChatCommand
-- [x] All chat operations use modular commands - **VALIDATED** with existing architecture
-- [x] Chat session management working correctly - **SUPPORTED** by existing services
-- [x] IDE type detection and selector usage working - **CONFIRMED** with IDETypes system
-- [x] Terminal operations use modular commands - **INTEGRATED** with existing TerminalMonitor
-- [x] Analysis operations use modular commands - **INTEGRATED** with existing analysis services
-- [x] Browser automation uses modular commands - **INTEGRATED** with existing BrowserManager
-- [x] Performance requirements met - **FEASIBLE** with existing infrastructure
-- [x] All tests passing - **PATTERN EXISTS** for comprehensive testing
-
-### 📊 Validation Metrics
-- **Architecture Compliance**: 95% (follows existing patterns)
-- **Dependency Validation**: 95% (uses existing services + new integrations)
-- **File Structure**: 90% (needs IDE category creation)
-- **Integration Points**: 100% (properly identified)
-- **Feature Coverage**: 100% (includes all existing BrowserManager functions)
-- **Selector Integration**: 100% (uses existing IDETypes and BrowserManager)
-- **Risk Assessment**: **LOW** - Uses proven existing systems
+- [ ] Chat session management like browser tabs
+- [ ] All chat operations use modular commands
+- [ ] Chat session management working correctly
+- [ ] IDE type detection and selector usage working
+- [ ] Terminal operations use modular commands
+- [ ] Analysis operations use modular commands
+- [ ] Browser automation uses modular commands
+- [ ] Performance requirements met
+- [ ] All tests passing
 
 ## 13. Risk Assessment
 
-#### High Risk - MITIGATED:
-- [x] Browser automation failures - **MITIGATED**: Uses existing BrowserManager with proven reliability
-- [x] IDE selector changes - **MITIGATED**: Uses dynamic IDETypes system with fallback selectors
+#### High Risk:
+- [ ] Browser automation failures - Mitigation: Use existing BrowserManager with proven reliability
+- [ ] IDE selector changes - Mitigation: Use dynamic IDETypes system with fallback selectors
 
-#### Medium Risk - ADDRESSED:
-- [x] Chat session conflicts - **ADDRESSED**: Browser-tab-like management with proper isolation
-- [x] Performance degradation - **ADDRESSED**: Caching and optimization using existing patterns
+#### Medium Risk:
+- [ ] Chat session conflicts - Mitigation: Browser-tab-like management with proper isolation
+- [ ] Performance degradation - Mitigation: Caching and optimization using existing patterns
 
-#### Low Risk - CONFIRMED:
-- [x] Command registration issues - **CONFIRMED**: Uses existing CommandRegistry patterns
-- [x] Integration complexity - **CONFIRMED**: Leverages existing WorkflowController integration
-
-### 🛡️ Risk Mitigation Status
-- **Browser Automation**: ✅ Uses proven BrowserManager with 2+ years of reliability
-- **IDE Detection**: ✅ Uses comprehensive IDETypes system with multiple fallbacks
-- **Session Management**: ✅ Uses browser-tab-like approach with proper isolation
-- **Selector Integration**: ✅ Uses existing IDETypes and BrowserManager selectors
-- **Performance**: ✅ Uses existing caching patterns and optimization strategies
+#### Low Risk:
+- [ ] Command registration issues - Mitigation: Use existing CommandRegistry patterns
+- [ ] Integration complexity - Mitigation: Leverage existing WorkflowController integration
 
 ## 14. AI Auto-Implementation Instructions
 
@@ -258,46 +246,20 @@
 
 #### Success Indicators:
 - [ ] All chat commands created and functional with selector integration
+- [ ] All terminal commands created and functional with selector integration
+- [ ] All analysis commands created and functional with selector integration
+- [ ] All browser/IDE commands created and functional with selector integration
 - [ ] All chat handlers implemented with selector integration
+- [ ] All terminal handlers implemented with selector integration
+- [ ] All analysis handlers implemented with selector integration
+- [ ] All browser/IDE handlers implemented with selector integration
 - [ ] Domain services integrated with selector integration
 - [ ] Controllers updated to use new commands
 - [ ] Chat management works like browser tabs
 - [ ] Tests passing
 - [ ] No build errors
 
-## 15. Corrected Approach
-
-### Why the Original Approach Was Wrong
-1. **ReuseChatCommand was unnecessary complexity** - Trying to be "smart" about reusing chats made things worse
-2. **Missing selector integration** - Not using your existing IDETypes and BrowserManager systems
-3. **Overcomplicated session management** - Should be simple like browser tabs
-
-### The Correct Approach
-1. **Browser-Tab-Like Chat Management**:
-   - `CreateChatCommand` - Open new tab
-   - `SwitchChatCommand` - Switch between tabs
-   - `ListChatsCommand` - Show all tabs
-   - `CloseChatCommand` - Close tab
-
-2. **Selector Integration**:
-   - All commands use your existing `IDETypes` system
-   - All handlers use your existing `BrowserManager` selectors
-   - No custom selector logic - leverage proven systems
-
-3. **Simple Session Management**:
-   - Track active chat like active browser tab
-   - Switch between chats like switching tabs
-   - No complex "reuse" logic needed
-
-### Key Changes Made
-- ❌ Removed `ReuseChatCommand` (unnecessary complexity)
-- ✅ Added `SwitchChatCommand` (like browser tabs)
-- ✅ Added `ListChatsCommand` (show available chats)
-- ✅ All commands integrate with your selectors
-- ✅ Simplified from 6 hours to 4 hours
-- ✅ Browser-tab-like approach instead of complex reuse logic
-
-## 16. References & Resources
+## 15. References & Resources
 - **Technical Documentation**: Existing Command/Handler architecture
 - **API References**: IDETypes.js, BrowserManager.js, CursorIDEService.js, TerminalMonitor.js, WorkspacePathDetector.js
 - **Design Patterns**: Command pattern, Handler pattern, Domain Services
@@ -309,66 +271,101 @@
 
 ---
 
-## Database Task Creation Instructions
+## Validation Results - 2024-12-19
 
-This markdown will be parsed into a database task with the following mapping:
+### ✅ Completed Items
+- [x] **BrowserManager Integration**: All required BrowserManager functions exist and are functional
+  - `clickNewChat()` - ✅ Implemented with comprehensive selector fallbacks
+  - `executeTerminalCommand()` - ✅ Available via IDEManager
+  - `switchToPort()` - ✅ Fully implemented with port switching
+  - `typeMessage()` - ✅ Implemented with IDE-specific selectors
+  - `openTerminal()` - ✅ Available via keyboard shortcuts
+- [x] **IDETypes System**: Comprehensive IDE type detection and selector management
+  - Cursor, VSCode, Windsurf support with specific selectors
+  - Dynamic selector resolution based on IDE type
+  - Fallback mechanisms for selector changes
+- [x] **Existing Services**: All required services are available and functional
+  - TerminalMonitor - ✅ Fully implemented with package.json analysis
+  - WorkspacePathDetector - ✅ Multi-method detection (CDP, terminal, API)
+  - PackageJsonAnalyzer - ✅ Comprehensive analysis with scoring
+  - ChatMessageHandler - ✅ IDE-specific implementations
+- [x] **Command/Handler Architecture**: Solid foundation exists
+  - CommandRegistry with category support - ✅ Implemented
+  - HandlerRegistry with category support - ✅ Implemented
+  - Standard categories defined - ✅ ANALYSIS, GENERATE, REFACTORING, MANAGEMENT
+- [x] **IDE Services**: All major IDE services are implemented
+  - CursorIDEService - ✅ Full implementation
+  - VSCodeIDEService - ✅ Full implementation  
+  - WindsurfIDEService - ✅ Full implementation
+  - ServiceRegistry integration - ✅ Properly configured
 
-```sql
-INSERT INTO tasks (
-  id, project_id, title, description, type, category, priority, status,
-  source_type, source_path, source_content, metadata, estimated_hours
-) VALUES (
-  uuid(), -- Generated
-  'pidea', -- From context
-  'Modular Chat Commands System', -- From section 1
-  '[Full markdown content]', -- Complete description
-  'feature', -- Derived from Technical Requirements
-  'ide', -- From section 1 Category field
-  'high', -- From section 1
-  'pending', -- Initial status
-  'markdown_doc', -- Source type
-  'docs/09_roadmap/features/ide/modular-chat-commands/modular-chat-commands-implementation.md', -- Main implementation file
-  'docs/09_roadmap/features/ide/modular-chat-commands/modular-chat-commands-phase-[number].md', -- Individual phase files
-  '[Full markdown content]', -- For reference
-  '[JSON with all metadata]', -- All technical details
-  6 -- From section 1
-);
-```
+### ⚠️ Issues Found
+- [ ] **Missing IDE Category**: The 'ide' category is not defined in STANDARD_CATEGORIES
+  - Current categories: analysis, testing, refactoring, deployment, generate, management, security, validation, optimization, documentation, task, application, analyze
+  - **Solution**: Add 'ide' category to Categories.js
+- [ ] **Empty IDE Directories**: Both command and handler IDE directories exist but are empty
+  - `backend/application/commands/categories/ide/` - ✅ Directory exists, needs files
+  - `backend/application/handlers/categories/ide/` - ✅ Directory exists, needs files
+- [ ] **Command/Handler Registry Updates**: Need to add IDE category to registries
+  - CommandRegistry.buildFromCategory() needs 'ide' category mapping
+  - HandlerRegistry.buildFromCategory() needs 'ide' category mapping
+  - getByCategory() methods need IDE command/handler lists
 
-## Usage Instructions
+### 🔧 Improvements Made
+- **Enhanced Implementation Plan**: Added comprehensive validation results
+- **Real-world Integration**: All planned commands leverage existing, proven services
+- **Selector Integration**: All commands will use the robust IDETypes selector system
+- **Error Handling**: Leverage existing error handling patterns from BrowserManager
+- **Performance Optimization**: Use existing caching and optimization patterns
 
-1. **Fill in all sections completely** - Every field maps to database columns
-2. **Be specific with file paths** - Enables precise file tracking
-3. **Include exact time estimates** - Critical for project planning
-4. **Specify AI execution requirements** - Automation level, confirmation needs
-5. **List all dependencies** - Enables proper task sequencing
-6. **Include success criteria** - Enables automatic completion detection
-7. **Provide detailed phases** - Enables progress tracking
-8. **Set correct category** - Automatically organizes tasks into category folders
-9. **Use category-specific paths** - Tasks are automatically placed in correct folders
+### 📊 Code Quality Metrics
+- **Existing Code Quality**: Excellent (proven BrowserManager, IDETypes, services)
+- **Architecture Consistency**: High (follows established Command/Handler patterns)
+- **Integration Complexity**: Low (all dependencies exist and are functional)
+- **Risk Level**: Low (builds on proven infrastructure)
 
-## Automatic Category Organization
+### 🚀 Next Steps
+1. **Add IDE Category**: Update Categories.js to include 'ide' category
+2. **Update Registries**: Add IDE category mappings to CommandRegistry and HandlerRegistry
+3. **Create Commands**: Implement all planned IDE commands with selector integration
+4. **Create Handlers**: Implement all planned IDE handlers with selector integration
+5. **Create Services**: Implement ChatSessionService, IDEAutomationService, WorkflowExecutionService
+6. **Update Controllers**: Modify WorkflowController and TaskService to use new commands
 
-When you specify a **Category** in section 1, the system automatically:
+### 📋 Task Splitting Recommendations
+**Current Task Size**: 6 hours (within 8-hour limit) ✅
+**File Count**: 25 files to create (exceeds 10-file limit) ⚠️
+**Phase Count**: 5 phases (within 5-phase limit) ✅
+**Complexity**: High (multiple IDE types, selector integration) ⚠️
 
-1. **Creates category folder** if it doesn't exist: `docs/09_roadmap/features/ide/`
-2. **Creates task folder** for each task: `docs/09_roadmap/features/ide/modular-chat-commands/`
-3. **Places main implementation file**: `docs/09_roadmap/features/ide/modular-chat-commands/modular-chat-commands-implementation.md`
-4. **Creates phase files** for subtasks: `docs/09_roadmap/features/ide/modular-chat-commands/modular-chat-commands-phase-[number].md`
-5. **Sets database category** field to the specified category
-6. **Organizes tasks hierarchically** for better management
+**Recommended Split**: 3 subtasks of 2 hours each
 
-### Example Folder Structure:
-```
-docs/09_roadmap/features/ide/
-└── modular-chat-commands/
-    ├── modular-chat-commands-implementation.md
-    ├── modular-chat-commands-phase-1.md
-    ├── modular-chat-commands-phase-2.md
-    ├── modular-chat-commands-phase-3.md
-    └── modular-chat-commands-phase-4.md
-```
+**Subtask 1**: [modular-chat-commands-phase-1.md](./modular-chat-commands-phase-1.md) – Foundation & Chat Commands
+- Add IDE category to Categories.js
+- Update CommandRegistry and HandlerRegistry
+- Create chat commands (CreateChat, SendMessage, SwitchChat, ListChats, CloseChat, GetChatHistory)
+- Create corresponding handlers
+- Create ChatSessionService
 
----
+**Subtask 2**: [modular-chat-commands-phase-2.md](./modular-chat-commands-phase-2.md) – Terminal & Analysis Commands
+- Create terminal commands (OpenTerminal, ExecuteTerminal, MonitorTerminal, RestartUserApp, TerminalLogCapture)
+- Create analysis commands (AnalyzeProject, AnalyzeAgain, GetWorkspaceInfo, DetectPackageJson)
+- Create corresponding handlers
+- Create IDEAutomationService
 
-**Note**: This template is optimized for database-first task architecture where markdown docs serve as specifications that get parsed into trackable, executable database tasks with full AI auto-implementation support. 
+**Subtask 3**: [modular-chat-commands-phase-3.md](./modular-chat-commands-phase-3.md) – Browser/IDE Commands & Integration
+- Create browser/IDE commands (SwitchIDEPort, OpenFileExplorer, OpenCommandPalette, ExecuteIDEAction, GetIDESelectors)
+- Create corresponding handlers
+- Create WorkflowExecutionService
+- Update WorkflowController and TaskService
+- Integration testing and validation
+
+### 🎯 Success Indicators
+- [ ] IDE category added to Categories.js
+- [ ] CommandRegistry and HandlerRegistry updated with IDE category
+- [ ] All 25 planned files created with proper selector integration
+- [ ] All commands use existing BrowserManager and IDETypes systems
+- [ ] Chat session management works like browser tabs
+- [ ] All IDE types (Cursor, VSCode, Windsurf) supported
+- [ ] Tests passing with 90%+ coverage
+- [ ] No build errors or integration issues 
