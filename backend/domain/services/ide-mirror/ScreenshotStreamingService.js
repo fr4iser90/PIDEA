@@ -12,7 +12,8 @@ const FrameMetrics = require('../../entities/FrameMetrics');
 const CompressionEngine = require('./CompressionEngine');
 const FrameBuffer = require('./FrameBuffer');
 const RegionDetector = require('./RegionDetector');
-const { logger } = require('@infrastructure/logging/Logger');
+const Logger = require('@logging/Logger');
+const logger = new Logger('Logger');
 
 class ScreenshotStreamingService {
   constructor(browserManager, webSocketManager, options = {}) {

@@ -7,7 +7,8 @@ const {
     DEPENDENCY_CATEGORIES,
     SECURITY_DEPENDENCIES 
 } = require('../constants');
-const { logger } = require('@infrastructure/logging/Logger');
+const Logger = require('@logging/Logger');
+const logger = new Logger('Logger');
 
 class DependencyAnalyzer {
     constructor(logger, fileUtils) {

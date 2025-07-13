@@ -697,7 +697,8 @@ class AutoRefactorHandler {
     async getTopLevelDirectories(projectPath) {
         const fs = require('fs').promises;
         const path = require('path');
-const { logger } = require('@infrastructure/logging/Logger');
+const Logger = require('@logging/Logger');
+const logger = new Logger('Logger');
 
         try {
             const entries = await fs.readdir(projectPath, { withFileTypes: true });

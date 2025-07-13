@@ -78,7 +78,8 @@ class TaskExecutionEngine {
 
         // Use DI system for service creation
         const { getServiceRegistry } = require('../di/ServiceRegistry');
-const { logger } = require('@infrastructure/logging/Logger');
+const Logger = require('@logging/Logger');
+const logger = new Logger('Logger');
         const registry = getServiceRegistry();
         
         // Register serviceDependencies in DI container if not already present

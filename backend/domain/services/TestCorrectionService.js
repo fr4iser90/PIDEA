@@ -1,7 +1,8 @@
 const TestCorrection = require('@entities/TestCorrection');
 const TestAnalyzer = require('@external/TestAnalyzer');
 const TestFixer = require('@external/TestFixer');
-const { logger } = require('@infrastructure/logging/Logger');
+const Logger = require('@logging/Logger');
+const logger = new Logger('Logger');
 
 class TestCorrectionService {
   constructor({

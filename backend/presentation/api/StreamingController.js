@@ -7,7 +7,8 @@
  */
 const PortStreamingCommand = require('@commands/categories/management/PortStreamingCommand');
 const PortStreamingHandler = require('@handlers/categories/management/PortStreamingHandler');
-const { logger } = require('@infrastructure/logging/Logger');
+const Logger = require('@logging/Logger');
+const logger = new Logger('Logger');
 
 class StreamingController {
   constructor(screenshotStreamingService, eventBus = null) {

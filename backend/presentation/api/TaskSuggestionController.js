@@ -2,7 +2,8 @@
  * TaskSuggestionController - REST API endpoints for AI task suggestions
  */
 const { validationResult } = require('express-validator');
-const { logger } = require('@infrastructure/logging/Logger');
+const Logger = require('@logging/Logger');
+const logger = new Logger('Logger');
 
 class TaskSuggestionController {
     constructor(dependencies = {}) {

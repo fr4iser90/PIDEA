@@ -7,7 +7,8 @@ const fs = require('fs').promises;
 const fsSync = require('fs');
 const TaskPriority = require('@value-objects/TaskPriority');
 const TaskType = require('@value-objects/TaskType');
-const { logger } = require('@infrastructure/logging/Logger');
+const Logger = require('@logging/Logger');
+const logger = new Logger('Logger');
 
 class TaskController {
     constructor(taskService, taskRepository, aiService, projectAnalyzer, projectMappingService = null, ideManager = null, docsImportService = null) {

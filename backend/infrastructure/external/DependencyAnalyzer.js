@@ -2,7 +2,8 @@ const fs = require('fs');
 const fsPromises = require('fs').promises;
 const path = require('path');
 const semver = require('semver');
-const { logger } = require('@infrastructure/logging/Logger');
+const Logger = require('@logging/Logger');
+const logger = new Logger('Logger');
 
 
 class DependencyAnalyzer {

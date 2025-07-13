@@ -4,7 +4,8 @@
 const { execSync, spawn } = require('child_process');
 const path = require('path');
 const fs = require('fs').promises;
-const { logger } = require('@infrastructure/logging/Logger');
+const Logger = require('@logging/Logger');
+const logger = new Logger('Logger');
 
 class DockerService {
     constructor(dependencies = {}) {

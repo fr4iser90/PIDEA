@@ -1,4 +1,5 @@
-const { logger } = require('@infrastructure/logging/Logger');
+const Logger = require('@logging/Logger');
+const logger = new Logger('Logger');
 const TestCorrectionService = require('@services/TestCorrectionService');
 const AutoRefactorCommand = require('@categories/management/AutoRefactorCommand');
 const CoverageAnalyzerService = require('@services/CoverageAnalyzerService');

@@ -10,7 +10,8 @@ require('module-alias/register');
 const fs = require('fs');
 const path = require('path');
 const { execSync } = require('child_process');
-const { logger } = require('@infrastructure/logging/Logger');
+const Logger = require('@logging/Logger');
+const logger = new Logger('Logger');
 
 async function main() {
   logger.debug('🚀 Generating test reports...');

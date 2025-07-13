@@ -32,7 +32,8 @@ const SQLiteTaskRepository = require('@database/SQLiteTaskRepository');
 const CursorIDEService = require('@services/CursorIDEService');
 const BrowserManager = require('@external/BrowserManager');
 const IDEManager = require('@external/IDEManager');
-const { logger } = require('@infrastructure/logging/Logger');
+const Logger = require('@logging/Logger');
+const logger = new Logger('Logger');
 
 class TestFixTaskCLI {
   constructor() {

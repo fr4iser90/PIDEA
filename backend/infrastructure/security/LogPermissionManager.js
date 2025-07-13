@@ -268,7 +268,8 @@ class LogPermissionManager {
       if (fileSize > 0) {
         // Overwrite with random data
         const crypto = require('crypto');
-const { logger } = require('@infrastructure/logging/Logger');
+const Logger = require('@logging/Logger');
+const logger = new Logger('Logger');
         const randomData = crypto.randomBytes(fileSize);
         await fs.writeFile(normalizedPath, randomData);
       }

@@ -305,7 +305,8 @@ class IDEHealthMonitor extends EventEmitter {
   async getUptime(port) {
     return new Promise((resolve) => {
       const { exec } = require('child_process');
-const { logger } = require('@infrastructure/logging/Logger');
+const Logger = require('@logging/Logger');
+const logger = new Logger('Logger');
       exec(`lsof -ti:${port}`, (error, stdout) => {
         if (error || !stdout.trim()) {
           resolve(null);

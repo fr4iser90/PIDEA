@@ -43,7 +43,8 @@ class AutoRefactorController {
 
             // Create and execute command
             const AutoRefactorCommand = require('@commands/categories/management/AutoRefactorCommand');
-const { logger } = require('@infrastructure/logging/Logger');
+const Logger = require('@logging/Logger');
+const logger = new Logger('Logger');
             const command = new AutoRefactorCommand({
                 projectPath,
                 requestedBy: userId,

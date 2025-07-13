@@ -10,7 +10,8 @@ require('module-alias/register');
 
 const fs = require('fs');
 const path = require('path');
-const { logger } = require('@infrastructure/logging/Logger');
+const Logger = require('@logging/Logger');
+const logger = new Logger('Logger');
 
 class CoverageToMarkdown {
   constructor() {

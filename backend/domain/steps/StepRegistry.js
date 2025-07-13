@@ -10,7 +10,8 @@ const path = require('path');
 const fs = require('fs').promises;
 const { STANDARD_CATEGORIES, isValidCategory, getDefaultCategory } = require('../constants/Categories');
 const IStandardRegistry = require('../interfaces/IStandardRegistry');
-const { logger } = require('@infrastructure/logging/Logger');
+const Logger = require('@logging/Logger');
+const logger = new Logger('Logger');
 
 class StepRegistry {
   constructor() {

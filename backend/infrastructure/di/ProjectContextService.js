@@ -6,7 +6,8 @@
 const path = require('path');
 const fs = require('fs').promises;
 const { getServiceContainer } = require('./ServiceContainer');
-const { logger } = require('@infrastructure/logging/Logger');
+const Logger = require('@logging/Logger');
+const logger = new Logger('Logger');
 
 class ProjectContextService {
     constructor() {

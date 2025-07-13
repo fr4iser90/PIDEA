@@ -3,7 +3,8 @@
  * Provides caching for workflow results to improve performance
  */
 const crypto = require('crypto');
-const { logger } = require('@infrastructure/logging/Logger');
+const Logger = require('@logging/Logger');
+const logger = new Logger('Logger');
 
 /**
  * Execution cache for workflow results

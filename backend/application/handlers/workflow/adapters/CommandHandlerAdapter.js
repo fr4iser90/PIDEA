@@ -135,7 +135,8 @@ class CommandHandlerAdapter extends IHandlerAdapter {
       for (const path of commandPaths) {
         try {
           return require(path);
-const { logger } = require('@infrastructure/logging/Logger');
+const Logger = require('@logging/Logger');
+const logger = new Logger('Logger');
         } catch (error) {
           // Continue to next path
         }

@@ -3,7 +3,8 @@
  * Provides optimization for individual workflow steps
  */
 const crypto = require('crypto');
-const { logger } = require('@infrastructure/logging/Logger');
+const Logger = require('@logging/Logger');
+const logger = new Logger('Logger');
 
 /**
  * Step optimizer for workflow execution

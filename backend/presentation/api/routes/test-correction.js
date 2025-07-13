@@ -3,7 +3,8 @@ const TestCorrectionController = require('../controllers/TestCorrectionControlle
 const AuthMiddleware = require('../../middleware/AuthMiddleware');
 const ValidationMiddleware = require('../../middleware/ValidationMiddleware');
 const RateLimitMiddleware = require('../../middleware/RateLimitMiddleware');
-const { logger } = require('@infrastructure/logging/Logger');
+const Logger = require('@logging/Logger');
+const logger = new Logger('Logger');
 
 const router = express.Router();
 

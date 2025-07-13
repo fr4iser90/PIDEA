@@ -33,7 +33,8 @@ class PerformanceService {
         // Save to database
         if (this.analysisRepository) {
           const AnalysisResult = require('@entities/AnalysisResult');
-const { logger } = require('@infrastructure/logging/Logger');
+const Logger = require('@logging/Logger');
+const logger = new Logger('Logger');
           const analysisResult = AnalysisResult.create(
             projectId, 
             'performance', 

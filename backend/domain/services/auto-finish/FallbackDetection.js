@@ -1,4 +1,5 @@
-const { logger } = require('@infrastructure/logging/Logger');
+const Logger = require('@logging/Logger');
+const logger = new Logger('Logger');
 /**
  * FallbackDetection - Service for detecting when user input is needed
  * Analyzes AI responses and IDE state to determine if automation should continue or pause

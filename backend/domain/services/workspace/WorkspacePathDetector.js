@@ -61,7 +61,8 @@ class WorkspacePathDetector {
     for (const file of projectFiles) {
       try {
         const fs = require('fs');
-const { logger } = require('@infrastructure/logging/Logger');
+const Logger = require('@logging/Logger');
+const logger = new Logger('Logger');
         const filePath = path + '/' + file;
         if (fs.existsSync(filePath)) {
           return true;

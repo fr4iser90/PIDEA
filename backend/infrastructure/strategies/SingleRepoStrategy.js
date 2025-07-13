@@ -56,7 +56,8 @@ class SingleRepoStrategy {
             // Fallback to direct instantiation if services not registered
             const RecommendationsService = require('./single-repo/services/recommendationsService');
             const OptimizationService = require('./single-repo/services/optimizationService');
-const { logger } = require('@infrastructure/logging/Logger');
+const Logger = require('@logging/Logger');
+const logger = new Logger('Logger');
             this.recommendationsService = new RecommendationsService(this.logger);
             this.optimizationService = new OptimizationService(this.logger);
         }

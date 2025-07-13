@@ -2,7 +2,8 @@
  * TaskWebSocket - Real-time task updates and communication
  */
 const EventEmitter = require('events');
-const { logger } = require('@infrastructure/logging/Logger');
+const Logger = require('@logging/Logger');
+const logger = new Logger('Logger');
 
 class TaskWebSocket {
     constructor(dependencies = {}) {

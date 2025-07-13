@@ -3,7 +3,8 @@
  */
 const path = require('path');
 const { SECURITY_FILES, SECRETS_FILES, SECURITY_DEPENDENCIES } = require('../constants');
-const { logger } = require('@infrastructure/logging/Logger');
+const Logger = require('@logging/Logger');
+const logger = new Logger('Logger');
 
 class SecurityAnalyzer {
     constructor(logger, fileUtils) {

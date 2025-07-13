@@ -8,7 +8,8 @@ const Task = require('@entities/Task');
 const TaskStatus = require('@value-objects/TaskStatus');
 const TaskPriority = require('@value-objects/TaskPriority');
 const TaskType = require('@value-objects/TaskType');
-const { logger } = require('@infrastructure/logging/Logger');
+const Logger = require('@logging/Logger');
+const logger = new Logger('Logger');
 
 class PostgreSQLTaskRepository extends TaskRepository {
   constructor(databaseConnection) {

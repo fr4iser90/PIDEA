@@ -1,4 +1,5 @@
-const { logger } = require('@infrastructure/logging/Logger');
+const Logger = require('@logging/Logger');
+const logger = new Logger('Logger');
 /**
  * TaskSequencer - Service for sequencing tasks based on dependencies
  * Implements topological sorting for task dependency resolution

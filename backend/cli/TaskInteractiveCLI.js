@@ -11,7 +11,8 @@ const Table = require('cli-table3');
 const fs = require('fs').promises;
 const path = require('path');
 const EventEmitter = require('events');
-const { logger } = require('@infrastructure/logging/Logger');
+const Logger = require('@logging/Logger');
+const logger = new Logger('Logger');
 
 class TaskInteractiveCLI extends EventEmitter {
     constructor(dependencies = {}) {

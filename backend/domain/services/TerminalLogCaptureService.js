@@ -4,7 +4,8 @@ const crypto = require('crypto');
 const IDEManager = require('@external/IDEManager');
 const BrowserManager = require('@external/BrowserManager');
 const IDEMirrorService = require('./IDEMirrorService');
-const { logger } = require('@infrastructure/logging/Logger');
+const Logger = require('@logging/Logger');
+const logger = new Logger('Logger');
 
 
 /**

@@ -1,5 +1,6 @@
 const { v4: uuidv4 } = require('uuid');
-const { logger } = require('@infrastructure/logging/Logger');
+const Logger = require('@logging/Logger');
+const logger = new Logger('Logger');
 
 /**
  * TodoParser - Service for parsing TODO lists from various formats

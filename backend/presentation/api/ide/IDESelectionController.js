@@ -1,4 +1,5 @@
-const { logger } = require('@infrastructure/logging/Logger');
+const Logger = require('@logging/Logger');
+const logger = new Logger('Logger');
 /**
  * IDE Selection Controller
  * Manages IDE selection state and provides selection-related API endpoints

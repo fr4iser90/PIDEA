@@ -1,7 +1,8 @@
 const SendMessageCommand = require('@categories/management/SendMessageCommand');
 const ChatMessage = require('@entities/ChatMessage');
 const ChatSession = require('@entities/ChatSession');
-const { logger } = require('@infrastructure/logging/Logger');
+const Logger = require('@logging/Logger');
+const logger = new Logger('Logger');
 
 
 /**

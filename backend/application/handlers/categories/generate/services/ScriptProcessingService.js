@@ -10,7 +10,8 @@ const {
     LOGGING_TEMPLATE,
     SCRIPT_METADATA_TEMPLATE
 } = require('../constants/ScriptGenerationConstants');
-const { logger } = require('@infrastructure/logging/Logger');
+const Logger = require('@logging/Logger');
+const logger = new Logger('Logger');
 
 class ScriptProcessingService {
     constructor(dependencies = {}) {

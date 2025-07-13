@@ -12,7 +12,8 @@ const inquirer = require('inquirer');
 const Table = require('cli-table3');
 const fs = require('fs').promises;
 const path = require('path');
-const { logger } = require('@infrastructure/logging/Logger');
+const Logger = require('@logging/Logger');
+const logger = new Logger('Logger');
 
 class TaskCLI {
     constructor(dependencies = {}) {

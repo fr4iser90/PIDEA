@@ -1,6 +1,7 @@
 const ProjectAnalysisRepository = require('@repositories/ProjectAnalysisRepository');
 const ProjectAnalysis = require('@entities/ProjectAnalysis');
-const { logger } = require('@infrastructure/logging/Logger');
+const Logger = require('@logging/Logger');
+const logger = new Logger('Logger');
 
 
 class PostgreSQLProjectAnalysisRepository extends ProjectAnalysisRepository {

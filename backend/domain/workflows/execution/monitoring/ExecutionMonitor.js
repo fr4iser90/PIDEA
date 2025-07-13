@@ -3,7 +3,8 @@
  * Provides comprehensive monitoring capabilities for workflow execution
  */
 const EventEmitter = require('events');
-const { logger } = require('@infrastructure/logging/Logger');
+const Logger = require('@logging/Logger');
+const logger = new Logger('Logger');
 
 /**
  * Execution metrics data structure

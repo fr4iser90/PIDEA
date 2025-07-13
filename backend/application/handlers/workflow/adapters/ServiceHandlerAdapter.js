@@ -177,7 +177,8 @@ class ServiceHandlerAdapter extends IHandlerAdapter {
       for (const path of servicePaths) {
         try {
           const ServiceClass = require(path);
-const { logger } = require('@infrastructure/logging/Logger');
+const Logger = require('@logging/Logger');
+const logger = new Logger('Logger');
           return new ServiceClass();
         } catch (error) {
           // Continue to next path

@@ -3,7 +3,8 @@
  * Provides resource management with allocation, monitoring, and limits
  */
 const os = require('os');
-const { logger } = require('@infrastructure/logging/Logger');
+const Logger = require('@logging/Logger');
+const logger = new Logger('Logger');
 
 /**
  * Resource manager for workflow execution

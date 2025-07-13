@@ -372,7 +372,8 @@ class BaseIDE extends IDEInterface {
   async readFile(filePath) {
     try {
       const fs = require('fs');
-const { logger } = require('@infrastructure/logging/Logger');
+const Logger = require('@logging/Logger');
+const logger = new Logger('Logger');
       
       if (!fs.existsSync(filePath)) {
         throw new Error(`File not found: ${filePath}`);

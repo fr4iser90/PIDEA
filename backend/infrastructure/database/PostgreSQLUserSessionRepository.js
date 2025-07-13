@@ -1,6 +1,7 @@
 const UserSessionRepository = require('@repositories/UserSessionRepository');
 const UserSession = require('@entities/UserSession');
-const { logger } = require('@infrastructure/logging/Logger');
+const Logger = require('@logging/Logger');
+const logger = new Logger('Logger');
 
 
 class PostgreSQLUserSessionRepository extends UserSessionRepository {

@@ -4,7 +4,8 @@
  */
 
 const { CONFIG_FILE_MAPPING } = require('../constants/ScriptGenerationConstants');
-const { logger } = require('@infrastructure/logging/Logger');
+const Logger = require('@logging/Logger');
+const logger = new Logger('Logger');
 
 class ProjectAnalysisService {
     constructor(dependencies = {}) {

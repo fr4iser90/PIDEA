@@ -13,7 +13,8 @@ try {
 }
 const crypto = require('crypto');
 const Task = require('@entities/Task');
-const { logger } = require('@infrastructure/logging/Logger');
+const Logger = require('@logging/Logger');
+const logger = new Logger('Logger');
 
 /**
  * Handler for managing documentation tasks from markdown files

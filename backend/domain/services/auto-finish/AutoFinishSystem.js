@@ -5,7 +5,8 @@ const TaskSequencer = require('./TaskSequencer');
 const GitWorkflowManager = require('../../workflows/categories/git/GitWorkflowManager');
 const GitWorkflowContext = require('../../workflows/categories/git/GitWorkflowContext');
 const { v4: uuidv4 } = require('uuid');
-const { logger } = require('@infrastructure/logging/Logger');
+const Logger = require('@logging/Logger');
+const logger = new Logger('Logger');
 
 /**
  * AutoFinishSystem - Core service for automated TODO processing and task completion

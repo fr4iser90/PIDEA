@@ -3,7 +3,8 @@
  * Service for managing workflow event handling and processing
  */
 const { v4: uuidv4 } = require('uuid');
-const { logger } = require('@infrastructure/logging/Logger');
+const Logger = require('@logging/Logger');
+const logger = new Logger('Logger');
 
 class WorkflowEventHandlers {
   constructor(workflowRepository, eventBus, logger = console) {

@@ -4,7 +4,8 @@
  */
 const { getServiceContainer } = require('./ServiceContainer');
 const { getProjectContextService } = require('./ProjectContextService');
-const { logger } = require('@infrastructure/logging/Logger');
+const Logger = require('@logging/Logger');
+const logger = new Logger('Logger');
 
 class ServiceRegistry {
     constructor() {
@@ -214,10 +215,10 @@ class ServiceRegistry {
         }, { singleton: true, dependencies: ['browserManager', 'ideManager', 'eventBus'] });
 
         // Auth service
-        this.container.register('authService', (userRepository, userSessionRepository, eventBus, logger) => {
+        this.container.register('authService', (userRepository, userSessionRepository) => {
             const AuthService = require('@domain/services/AuthService');
-            return new AuthService(userRepository, userSessionRepository, eventBus, logger);
-        }, { singleton: true, dependencies: ['userRepository', 'userSessionRepository', 'eventBus', 'logger'] });
+            return new AuthService(userRepository, userSessionRepository, 'simple-jwt-secret', 'simple-refresh-secret');
+        }, { singleton: true, dependencies: ['userRepository', 'userSessionRepository'] });
 
         // Task service
         this.container.register('taskService', (taskRepository, aiService, projectAnalyzer, cursorIDEService, autoFinishSystem) => {

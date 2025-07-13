@@ -982,7 +982,8 @@ Please fix the issues and let me know when you're done.`;
   async rollbackChanges(projectPath, branchName) {
     const { exec } = require('child_process');
     const util = require('util');
-const { logger } = require('@infrastructure/logging/Logger');
+const Logger = require('@logging/Logger');
+const logger = new Logger('Logger');
     const execAsync = util.promisify(exec);
 
     try {

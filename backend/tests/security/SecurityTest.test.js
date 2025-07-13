@@ -384,7 +384,8 @@ describe('Task Management System Security Tests', () => {
                 'require("fs").writeFileSync("/tmp/test", "hacked")', // Should not write to system
                 'require("child_process").execSync("whoami")', // Should not execute system commands
                 'require("os").platform()' // Should be allowed (read-only)
-const { logger } = require('@infrastructure/logging/Logger');
+const Logger = require('@logging/Logger');
+const logger = new Logger('Logger');
             ];
 
             for (const script of systemAccessScripts) {

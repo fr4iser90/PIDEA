@@ -11,7 +11,8 @@ const IDEConfigManager = require('./IDEConfigManager');
 const IDEHealthMonitor = require('./IDEHealthMonitor');
 const path = require('path');
 const FileBasedWorkspaceDetector = require('@services/workspace/FileBasedWorkspaceDetector');
-const { logger } = require('@infrastructure/logging/Logger');
+const Logger = require('@logging/Logger');
+const logger = new Logger('Logger');
 
 class IDEManager {
   constructor(browserManager = null) {

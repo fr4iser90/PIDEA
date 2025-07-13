@@ -2,7 +2,8 @@
  * ScriptGenerationController - REST API endpoints for script generation
  */
 const { validationResult } = require('express-validator');
-const { logger } = require('@infrastructure/logging/Logger');
+const Logger = require('@logging/Logger');
+const logger = new Logger('Logger');
 
 class ScriptGenerationController {
     constructor(dependencies = {}) {

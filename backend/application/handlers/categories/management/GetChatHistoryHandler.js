@@ -3,7 +3,8 @@ const ChatMessage = require('@entities/ChatMessage');
 
 
 const IDETypes = require('@services/ide/IDETypes');
-const { logger } = require('@infrastructure/logging/Logger');
+const Logger = require('@logging/Logger');
+const logger = new Logger('Logger');
 
 class GetChatHistoryHandler {
   constructor(chatRepository, ideManager = null, serviceRegistry = null) {

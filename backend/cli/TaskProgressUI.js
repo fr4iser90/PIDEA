@@ -8,7 +8,8 @@ const cliProgress = require('cli-progress');
 const ora = require('ora');
 const Table = require('cli-table3');
 const EventEmitter = require('events');
-const { logger } = require('@infrastructure/logging/Logger');
+const Logger = require('@logging/Logger');
+const logger = new Logger('Logger');
 
 class TaskProgressUI extends EventEmitter {
     constructor(options = {}) {

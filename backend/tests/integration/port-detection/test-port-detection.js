@@ -4,7 +4,8 @@ require('module-alias/register');
 const IDEDetector = require('@external/IDEDetector');
 const IDEManager = require('@external/IDEManager');
 const BrowserManager = require('@external/BrowserManager');
-const { logger } = require('@infrastructure/logging/Logger');
+const Logger = require('@logging/Logger');
+const logger = new Logger('Logger');
 
 async function testPortDetection() {
   logger.debug('🔍 Testing Port Detection...\n');

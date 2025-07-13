@@ -194,7 +194,8 @@ class CursorStarter {
   async getVersion() {
     return new Promise((resolve) => {
       const { spawn } = require('child_process');
-const { logger } = require('@infrastructure/logging/Logger');
+const Logger = require('@logging/Logger');
+const logger = new Logger('Logger');
       const process = spawn('cursor', ['--version'], { stdio: 'pipe' });
       
       let output = '';

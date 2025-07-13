@@ -9,7 +9,8 @@ require('module-alias/register');
 
 const WorkflowGitService = require('@services/WorkflowGitService');
 const TaskType = require('@value-objects/TaskType');
-const { logger } = require('@infrastructure/logging/Logger');
+const Logger = require('@logging/Logger');
+const logger = new Logger('Logger');
 
 async function testBranchStrategy() {
   logger.debug('🧪 Testing WorkflowGitService Branch Strategy...\n');

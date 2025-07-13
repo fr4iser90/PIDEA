@@ -2,7 +2,8 @@
  * AIIntegrationManager - Manages AI model selection and integration
  */
 const EventEmitter = require('events');
-const { logger } = require('@infrastructure/logging/Logger');
+const Logger = require('@logging/Logger');
+const logger = new Logger('Logger');
 
 class AIIntegrationManager {
     constructor(dependencies = {}) {

@@ -1,7 +1,8 @@
 const crypto = require('crypto');
 const fs = require('fs');
 const path = require('path');
-const { logger } = require('@infrastructure/logging/Logger');
+const Logger = require('@logging/Logger');
+const logger = new Logger('AutoSecurityManager');
 
 
 class AutoSecurityManager {

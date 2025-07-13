@@ -1,7 +1,8 @@
 
 require('module-alias/register');
 const Application = require('./Application');
-const { logger } = require('@infrastructure/logging/Logger');
+const Logger = require('@logging/Logger');
+const logger = new Logger('Logger');
 
 async function main() {
   const app = new Application({

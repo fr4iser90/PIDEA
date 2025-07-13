@@ -21,7 +21,8 @@ const TaskProgressUI = require('./TaskProgressUI');
 
 // Import backend services (these would be initialized in a real app)
 const Application = require('../Application');
-const { logger } = require('@infrastructure/logging/Logger');
+const Logger = require('@logging/Logger');
+const logger = new Logger('Logger');
 
 class TaskCLIMain {
     constructor() {

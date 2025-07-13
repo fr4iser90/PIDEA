@@ -627,7 +627,8 @@ Complete all generated tasks and provide a comprehensive summary.
       // Create file in workspace via Playwright
       const fs = require('fs');
       const path = require('path');
-const { logger } = require('@infrastructure/logging/Logger');
+const Logger = require('@logging/Logger');
+const logger = new Logger('Logger');
       
       // Use real workspace path, not backend path
       const autoModeFilePath = path.join(workspacePath, 'auto_mode_tasks.md');

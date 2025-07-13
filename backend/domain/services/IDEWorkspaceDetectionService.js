@@ -121,7 +121,8 @@ class IDEWorkspaceDetectionService {
 
       // Extract project name from workspace path
       const path = require('path');
-const { logger } = require('@infrastructure/logging/Logger');
+const Logger = require('@logging/Logger');
+const logger = new Logger('Logger');
       const projectName = path.basename(workspacePath);
       
       // Generate project ID

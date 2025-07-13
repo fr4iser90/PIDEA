@@ -6,7 +6,8 @@
 
 const FrameworkRegistry = require('./FrameworkRegistry');
 const FrameworkBuilder = require('./FrameworkBuilder');
-const { logger } = require('@infrastructure/logging/Logger');
+const Logger = require('@logging/Logger');
+const logger = new Logger('Logger');
 
 // Create singleton instances
 const frameworkRegistry = new FrameworkRegistry();

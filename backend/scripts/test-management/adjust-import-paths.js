@@ -60,7 +60,8 @@ function adjustImportsInFile(filePath, mappings, report) {
   let changed = false;
 
   // Erweiterte Regex: Erkennt sowohl require(...) als auch import ... from ...
-const { logger } = require('@infrastructure/logging/Logger');
+const Logger = require('@logging/Logger');
+const logger = new Logger('Logger');
   // und auch Alias-Imports wie @infrastructure/...
   const importRegex = /(require\(['"](\.\.?\/[^'"]+)['"]\))|(import [^'"\n]+ from ['"](\.\.?\/[^'"]+)['"])|(require\(['"]@([^/'"]+)(\/[^'"]*)['"]\))|(import [^'"\n]+ from ['"]@([^/'"]+)(\/[^'"]*)['"])/g;
   let match;

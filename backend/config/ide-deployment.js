@@ -141,7 +141,8 @@ const baseConfig = {
     clustering: {
       enabled: isProduction,
       workers: parseInt(process.env.CLUSTER_WORKERS) || require('os').cpus().length
-const { logger } = require('@infrastructure/logging/Logger');
+const Logger = require('@logging/Logger');
+const logger = new Logger('Logger');
     }
   },
 

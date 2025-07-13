@@ -1128,7 +1128,8 @@ Please proceed with the implementation and let me know when you're finished.`;
       // Read and parse test output
       const fs = require('fs').promises;
       const path = require('path');
-const { logger } = require('@infrastructure/logging/Logger');
+const Logger = require('@logging/Logger');
+const logger = new Logger('Logger');
       const logFilePath = path.join(process.cwd(), 'test-output.log');
       
       let testOutput = '';

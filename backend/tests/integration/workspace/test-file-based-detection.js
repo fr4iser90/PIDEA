@@ -8,7 +8,8 @@ require('module-alias/register');
 
 const BrowserManager = require('@external/BrowserManager');
 const FileBasedWorkspaceDetector = require('@services/workspace/FileBasedWorkspaceDetector');
-const { logger } = require('@infrastructure/logging/Logger');
+const Logger = require('@logging/Logger');
+const logger = new Logger('Logger');
 
 async function testFileBasedDetection() {
   logger.debug('🚀 TEST: File-Based Workspace Detection');

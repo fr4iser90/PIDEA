@@ -7,7 +7,8 @@ const ConfidenceCalculator = require('./ConfidenceCalculator');
 const UserPreferenceManager = require('./UserPreferenceManager');
 const ProjectAutomationSettings = require('./ProjectAutomationSettings');
 const AutomationRuleEngine = require('./AutomationRuleEngine');
-const { logger } = require('@infrastructure/logging/Logger');
+const Logger = require('@logging/Logger');
+const logger = new Logger('Logger');
 
 class AutomationManager {
   constructor(options = {}) {

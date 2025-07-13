@@ -587,7 +587,8 @@ async function createTestProject() {
 async function cleanupTestProject(projectPath) {
     try {
         const fs = require('fs').promises;
-const { logger } = require('@infrastructure/logging/Logger');
+const Logger = require('@logging/Logger');
+const logger = new Logger('Logger');
         await fs.rm(projectPath, { recursive: true, force: true });
     } catch (error) {
         // Ignore cleanup errors

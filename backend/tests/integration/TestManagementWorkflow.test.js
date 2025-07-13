@@ -13,7 +13,8 @@ const TestVersioner = require('@/scripts/test-management/test-versioner');
 const TestReporter = require('@/scripts/test-management/test-reporter');
 const fs = require('fs').promises;
 const path = require('path');
-const { logger } = require('@infrastructure/logging/Logger');
+const Logger = require('@logging/Logger');
+const logger = new Logger('Logger');
 
 describe('Test Management Workflow Integration', () => {
   let testManagementService;

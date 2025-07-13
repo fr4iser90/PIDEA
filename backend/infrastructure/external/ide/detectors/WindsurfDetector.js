@@ -6,6 +6,8 @@
 
 const http = require('http');
 const net = require('net');
+const Logger = require('@logging/Logger');
+const logger = new Logger('WindsurfDetector');
 
 class WindsurfDetector {
   constructor() {
@@ -196,7 +198,6 @@ class WindsurfDetector {
     for (const path of commonPaths) {
       try {
         require('fs').accessSync(path, require('fs').constants.X_OK);
-const { logger } = require('@infrastructure/logging/Logger');
         return path;
       } catch (error) {
         // Continue to next path

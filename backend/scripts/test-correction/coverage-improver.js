@@ -5,7 +5,8 @@ require('module-alias/register');
 const path = require('path');
 const fs = require('fs-extra');
 const { execSync } = require('child_process');
-const { logger } = require('@infrastructure/logging/Logger');
+const Logger = require('@logging/Logger');
+const logger = new Logger('Logger');
 const CoverageAnalyzerService = require('@services/CoverageAnalyzerService');
 const TestCorrectionService = require('@services/TestCorrectionService');
 

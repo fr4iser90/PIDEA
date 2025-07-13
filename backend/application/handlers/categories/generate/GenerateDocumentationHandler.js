@@ -7,7 +7,8 @@ const fs = require('fs').promises;
 const path = require('path');
 const EventBus = require('@messaging/EventBus');
 const AnalysisRepository = require('@repositories/AnalysisRepository');
-const { logger } = require('@infrastructure/logging/Logger');
+const Logger = require('@logging/Logger');
+const logger = new Logger('Logger');
 
 class GenerateDocumentationHandler {
     constructor(dependencies = {}) {

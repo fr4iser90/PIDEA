@@ -6,7 +6,8 @@ const path = require('path');
 const fs = require('fs');
 const fsPromises = require('fs').promises;
 const { execSync } = require('child_process');
-const { logger } = require('@infrastructure/logging/Logger');
+const Logger = require('@logging/Logger');
+const logger = new Logger('Logger');
 
 class CodeQualityAnalyzer {
     constructor() {

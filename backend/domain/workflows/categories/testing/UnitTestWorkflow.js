@@ -1,6 +1,7 @@
 const BaseWorkflowStep = require('@workflows/BaseWorkflowStep');
 const StepRegistry = require('@steps/StepRegistry');
-const { logger } = require('@infrastructure/logging/Logger');
+const Logger = require('@logging/Logger');
+const logger = new Logger('Logger');
 
 
 class UnitTestWorkflow extends BaseWorkflowStep {

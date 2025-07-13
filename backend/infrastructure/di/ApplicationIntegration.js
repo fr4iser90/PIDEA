@@ -6,7 +6,8 @@
 
 const { getServiceRegistry } = require('./ServiceRegistry');
 const { getProjectContextService } = require('./ProjectContextService');
-const { logger } = require('@infrastructure/logging/Logger');
+const Logger = require('@logging/Logger');
+const logger = new Logger('Logger');
 
 class ApplicationIntegration {
     constructor() {

@@ -3,7 +3,8 @@
  * Provides intelligent step optimization, caching, and resource management
  */
 const crypto = require('crypto');
-const { logger } = require('@infrastructure/logging/Logger');
+const Logger = require('@logging/Logger');
+const logger = new Logger('Logger');
 
 /**
  * Optimized sequential execution strategy

@@ -1,5 +1,6 @@
 const ProjectAnalysis = require('@entities/ProjectAnalysis');
-const { logger } = require('@infrastructure/logging/Logger');
+const Logger = require('@logging/Logger');
+const logger = new Logger('Logger');
 
 class ProjectAnalysisController {
     constructor(projectAnalysisRepository, logger) {

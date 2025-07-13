@@ -2,7 +2,8 @@
  * GitController - Handles Git management operations
  */
 const GitService = require('@external/GitService');
-const { logger } = require('@infrastructure/logging/Logger');
+const Logger = require('@logging/Logger');
+const logger = new Logger('Logger');
 
 class GitController {
     constructor(dependencies = {}) {

@@ -47,7 +47,8 @@ function fixImports() {
             for (const pattern of patterns) {
                 const regex = new RegExp(`require\\('${pattern.from.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}([^']+)'\\)`, 'g');
                 const newContent = content.replace(regex, `require('${pattern.to}$1')`);
-const { logger } = require('@infrastructure/logging/Logger');
+const Logger = require('@logging/Logger');
+const logger = new Logger('Logger');
                 
                 if (newContent !== content) {
                     content = newContent;

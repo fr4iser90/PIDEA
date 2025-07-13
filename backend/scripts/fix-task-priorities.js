@@ -12,7 +12,8 @@ require('module-alias/register');
 const DatabaseConnection = require('@database/DatabaseConnection');
 const AutoSecurityManager = require('@auto/AutoSecurityManager');
 const TaskPriority = require('@value-objects/TaskPriority');
-const { logger } = require('@infrastructure/logging/Logger');
+const Logger = require('@logging/Logger');
+const logger = new Logger('Logger');
 
 class TaskPriorityFixer {
   constructor() {

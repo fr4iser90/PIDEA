@@ -6,7 +6,8 @@
 const TaskRepository = require('@repositories/TaskRepository');
 const Task = require('@entities/Task');
 const TaskStatus = require('@value-objects/TaskStatus');
-const { logger } = require('@infrastructure/logging/Logger');
+const Logger = require('@logging/Logger');
+const logger = new Logger('Logger');
 
 class SQLiteTaskRepository extends TaskRepository {
   constructor(database) {

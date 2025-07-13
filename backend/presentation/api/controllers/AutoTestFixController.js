@@ -5,7 +5,8 @@
 const AutoTestFixSystem = require('@services/auto-test/AutoTestFixSystem');
 const TestCorrectionCommand = require('@commands/categories/management/TestCorrectionCommand');
 const fs = require('fs'); // Added for fs.existsSync
-const { logger } = require('@infrastructure/logging/Logger');
+const Logger = require('@logging/Logger');
+const logger = new Logger('Logger');
 
 class AutoTestFixController {
   constructor(dependencies = {}) {

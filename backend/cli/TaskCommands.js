@@ -877,7 +877,8 @@ class TaskCommands {
     // Helper methods
     createSpinner(text) {
         const ora = require('ora');
-const { logger } = require('@infrastructure/logging/Logger');
+const Logger = require('@logging/Logger');
+const logger = new Logger('Logger');
         return ora(text).start();
     }
 

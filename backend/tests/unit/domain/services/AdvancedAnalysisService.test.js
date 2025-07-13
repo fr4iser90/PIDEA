@@ -6,7 +6,8 @@ const AdvancedAnalysisService = require('@services/AdvancedAnalysisService');
 const LayerValidationService = require('@services/LayerValidationService');
 const LogicValidationService = require('@services/LogicValidationService');
 const TaskAnalysisService = require('@services/TaskAnalysisService');
-const { logger } = require('@infrastructure/logging/Logger');
+const Logger = require('@logging/Logger');
+const logger = new Logger('Logger');
 
 // Mock dependencies
 jest.mock('@/domain/services/LayerValidationService');

@@ -184,7 +184,8 @@ class GitWorkflowDeploymentValidator {
       for (const module of requiredModules) {
         try {
           require(module);
-const { logger } = require('@infrastructure/logging/Logger');
+const Logger = require('@logging/Logger');
+const logger = new Logger('Logger');
           this.addPass(`Module loaded successfully: ${module}`);
         } catch (error) {
           this.addError(`Failed to load module ${module}: ${error.message}`);

@@ -3,7 +3,8 @@
  */
 const EXECUTION_CONSTANTS = require('../constants/ExecutionConstants');
 const RefactoringUtils = require('../utils/RefactoringUtils');
-const { logger } = require('@infrastructure/logging/Logger');
+const Logger = require('@logging/Logger');
+const logger = new Logger('Logger');
 
 class RefactoringService {
     constructor(dependencies = {}, logger = console) {

@@ -709,7 +709,8 @@ class ArchitectureAnalyzer {
 
             // Cross-layer dependencies
             if (line.includes('require(') || line.includes('import')) {
-const { logger } = require('@infrastructure/logging/Logger');
+const Logger = require('@logging/Logger');
+const logger = new Logger('Logger');
                 const importPath = line.match(/['"]([^'"]+)['"]/)?.[1];
                 if (importPath) {
                     if (filePath.includes('model') && importPath.includes('controller')) {

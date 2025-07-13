@@ -3,7 +3,8 @@
  * Uses machine learning and historical data to make optimal execution decisions
  */
 const crypto = require('crypto');
-const { logger } = require('@infrastructure/logging/Logger');
+const Logger = require('@logging/Logger');
+const logger = new Logger('Logger');
 
 /**
  * Smart sequential execution strategy

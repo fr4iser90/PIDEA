@@ -200,7 +200,8 @@ class ModuleAliasEnsurer {
             const content = fs.readFileSync(fullPath, 'utf8');
             if (content.includes("require('module-alias/register')") || 
                 content.includes('require("module-alias/register")')) {
-const { logger } = require('@infrastructure/logging/Logger');
+const Logger = require('@logging/Logger');
+const logger = new Logger('Logger');
               alreadyPatched.push(fullPath);
             } else {
               needsPatching.push(fullPath);

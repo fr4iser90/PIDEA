@@ -108,7 +108,8 @@ class WorkflowController {
             // Final fallback: Use project root (one level up from backend)
             if (!workspacePath) {
                 const path = require('path');
-const { logger } = require('@infrastructure/logging/Logger');
+const Logger = require('@logging/Logger');
+const logger = new Logger('Logger');
                 const currentDir = process.cwd();
                 workspacePath = path.resolve(currentDir, '..');
                 this.logger.info('WorkflowController: Using project root as final fallback', {

@@ -1,4 +1,5 @@
-const { logger } = require('@infrastructure/logging/Logger');
+const Logger = require('@logging/Logger');
+const logger = new Logger('Logger');
 /**
  * Unified IDE Mirror Controller
  * Provides IDE-agnostic mirror functionality for all supported IDEs

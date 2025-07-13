@@ -205,7 +205,8 @@ class TestManagementReporter {
       };
       
       const fs = require('fs').promises;
-const { logger } = require('@infrastructure/logging/Logger');
+const Logger = require('@logging/Logger');
+const logger = new Logger('Logger');
       await fs.writeFile(filePath, JSON.stringify(exportData, null, 2));
       logger.debug(`📄 Test results exported to: ${filePath}`);
     } catch (error) {

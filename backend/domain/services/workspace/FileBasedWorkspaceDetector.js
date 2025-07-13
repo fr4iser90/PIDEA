@@ -6,7 +6,8 @@
 const fs = require('fs');
 const path = require('path');
 const VSCodeTerminalHandler = require('../terminal/VSCodeTerminalHandler');
-const { logger } = require('@infrastructure/logging/Logger');
+const Logger = require('@logging/Logger');
+const logger = new Logger('Logger');
 
 class FileBasedWorkspaceDetector {
   constructor(browserManager) {

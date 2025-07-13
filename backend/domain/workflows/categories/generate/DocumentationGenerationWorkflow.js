@@ -6,7 +6,8 @@
  * technical documentation, etc.).
  */
 const IWorkflow = require('../../../interfaces/IWorkflow');
-const { logger } = require('@infrastructure/logging/Logger');
+const Logger = require('@logging/Logger');
+const logger = new Logger('Logger');
 
 class DocumentationGenerationWorkflow extends IWorkflow {
   /**

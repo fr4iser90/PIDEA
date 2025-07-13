@@ -209,7 +209,8 @@ class DeploymentService {
     async deployApplication(target, environment, deploymentType, execution) {
         try {
             const { getProjectContextService } = require('../../../di/ProjectContextService');
-const { logger } = require('@infrastructure/logging/Logger');
+const Logger = require('@logging/Logger');
+const logger = new Logger('Logger');
             const projectContext = getProjectContextService();
             const projectPath = await projectContext.getProjectPath();
 

@@ -2,7 +2,8 @@
  * TaskAnalysisController - REST API endpoints for project analysis
  */
 const { validationResult } = require('express-validator');
-const { logger } = require('@infrastructure/logging/Logger');
+const Logger = require('@logging/Logger');
+const logger = new Logger('Logger');
 
 class TaskAnalysisController {
     constructor(dependencies = {}) {

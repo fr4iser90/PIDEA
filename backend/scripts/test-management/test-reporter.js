@@ -57,7 +57,8 @@ async function main() {
     // Wenn Testdaten aus Datei geladen wurden, erstelle einen Dummy-Repo
     const TestMetadata = require('@entities/TestMetadata');
     const TestMetadataRepository = require('@repositories/TestMetadataRepository');
-const { logger } = require('@infrastructure/logging/Logger');
+const Logger = require('@logging/Logger');
+const logger = new Logger('Logger');
     const repo = new TestMetadataRepository();
     for (const t of testData) {
       try {

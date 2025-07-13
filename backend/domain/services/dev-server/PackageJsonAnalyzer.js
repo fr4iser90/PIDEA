@@ -118,7 +118,8 @@ class PackageJsonAnalyzer {
   async parsePackageJson(packageJsonPath, folderPath) {
     try {
       const fs = require('fs');
-const { logger } = require('@infrastructure/logging/Logger');
+const Logger = require('@logging/Logger');
+const logger = new Logger('Logger');
       const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
       const scripts = packageJson.scripts || {};
       const devServerPorts = [];

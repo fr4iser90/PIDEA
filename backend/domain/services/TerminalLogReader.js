@@ -2,7 +2,8 @@ const fs = require('fs').promises;
 const path = require('path');
 const LogEncryptionService = require('@security/LogEncryptionService');
 const LogPermissionManager = require('@security/LogPermissionManager');
-const { logger } = require('@infrastructure/logging/Logger');
+const Logger = require('@logging/Logger');
+const logger = new Logger('Logger');
 
 
 /**

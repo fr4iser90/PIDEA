@@ -1,7 +1,8 @@
 const IDEMirrorService = require('@services/IDEMirrorService');
 const ScreenshotStreamingService = require('@services/ide-mirror/ScreenshotStreamingService');
 const StreamingController = require('./StreamingController');
-const { logger } = require('@infrastructure/logging/Logger');
+const Logger = require('@logging/Logger');
+const logger = new Logger('Logger');
 
 
 class IDEMirrorController {

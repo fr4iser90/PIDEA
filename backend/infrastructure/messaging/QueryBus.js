@@ -1,4 +1,5 @@
-const { logger } = require('@infrastructure/logging/Logger');
+const Logger = require('@logging/Logger');
+const logger = new Logger('Logger');
 /**
  * QueryBus - Handles query execution and routing
  * Implements the Query Bus pattern for CQRS architecture

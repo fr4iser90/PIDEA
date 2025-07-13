@@ -2,7 +2,8 @@ const User = require('@entities/User');
 const UserSession = require('@entities/UserSession');
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
-const { logger } = require('@infrastructure/logging/Logger');
+const Logger = require('@logging/Logger');
+const logger = new Logger('AuthService');
 
 
 class AuthService {

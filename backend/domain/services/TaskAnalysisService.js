@@ -9,7 +9,8 @@ const AISuggestion = require('../value-objects/AISuggestion');
 const AIService = require('@external/AIService');
 const ProjectAnalyzer = require('@external/ProjectAnalyzer');
 const Task = require('../entities/Task');
-const { logger } = require('@infrastructure/logging/Logger');
+const Logger = require('@logging/Logger');
+const logger = new Logger('Logger');
 
 class TaskAnalysisService {
   constructor(cursorIDEService, eventBus, logger, aiService, projectAnalyzer) {

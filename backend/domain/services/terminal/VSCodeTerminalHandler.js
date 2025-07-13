@@ -1,7 +1,8 @@
 const fs = require('fs');
 const path = require('path');
 const BrowserManager = require('@external/BrowserManager');
-const { logger } = require('@infrastructure/logging/Logger');
+const Logger = require('@logging/Logger');
+const logger = new Logger('Logger');
 
 
 class VSCodeTerminalHandler {

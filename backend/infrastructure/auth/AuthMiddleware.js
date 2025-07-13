@@ -1,5 +1,6 @@
 const AuthService = require('@services/AuthService');
-const { logger } = require('@infrastructure/logging/Logger');
+const Logger = require('@logging/Logger');
+const logger = new Logger('Logger');
 
 
 class AuthMiddleware {

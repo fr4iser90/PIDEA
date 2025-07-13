@@ -6,7 +6,8 @@
  * with automatic fallback and quality optimization.
  */
 const sharp = require('sharp');
-const { logger } = require('@infrastructure/logging/Logger');
+const Logger = require('@logging/Logger');
+const logger = new Logger('Logger');
 
 class CompressionEngine {
   constructor() {

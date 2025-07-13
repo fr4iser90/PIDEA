@@ -1,6 +1,7 @@
-
-#!/usr/bin/env node
 require('module-alias/register');
+
+const Logger = require('@logging/Logger');
+const logger = new Logger('DevSetup');
 
 const readline = require('readline');
 const { spawn } = require('child_process');
@@ -464,7 +465,6 @@ class DevSetup {
     
     // Check ports
     const { execSync } = require('child_process');
-const { logger } = require('@infrastructure/logging/Logger');
     try {
       const backendPort = execSync('lsof -i :3000', { encoding: 'utf8' });
       logger.log('✅ Backend: Running on port 3000');

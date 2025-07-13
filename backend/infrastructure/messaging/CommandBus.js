@@ -1,4 +1,5 @@
-const { logger } = require('@infrastructure/logging/Logger');
+const Logger = require('@logging/Logger');
+const logger = new Logger('Logger');
 /**
  * CommandBus - Handles command execution and routing
  * Implements the Command Bus pattern for CQRS architecture

@@ -19,7 +19,8 @@ jest.setTimeout(30000);
 if (process.env.TEST_MANAGEMENT_ENABLED !== 'false') {
   try {
     const TestManagementService = require('@services/TestManagementService');
-const { logger } = require('@infrastructure/logging/Logger');
+const Logger = require('@logging/Logger');
+const logger = new Logger('Logger');
     
     // Initialize test management service
     global.testManagementService = new TestManagementService();

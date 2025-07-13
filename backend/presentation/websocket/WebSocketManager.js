@@ -1,6 +1,7 @@
 const WebSocket = require('ws');
 const AuthMiddleware = require('@auth/AuthMiddleware');
-const { logger } = require('@infrastructure/logging/Logger');
+const Logger = require('@logging/Logger');
+const logger = new Logger('Logger');
 
 
 class WebSocketManager {

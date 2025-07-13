@@ -9,7 +9,7 @@ class Logger {
     _log(level, message, meta = {}) {
         const timestamp = new Date().toLocaleTimeString();
         const serviceTag = `[${this.serviceName}]`;
-        const metaStr = Object.keys(meta).length ? ` ${JSON.stringify(meta)}` : '';
+        const metaStr = (meta && Object.keys(meta).length) ? ` ${JSON.stringify(meta)}` : '';
         
         const colors = {
             info: '\x1b[36m',    // Cyan

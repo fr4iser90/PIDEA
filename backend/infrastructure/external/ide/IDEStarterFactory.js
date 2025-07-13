@@ -8,7 +8,8 @@
 const CursorStarter = require('./starters/CursorStarter');
 const VSCodeStarter = require('./starters/VSCodeStarter');
 const WindsurfStarter = require('./starters/WindsurfStarter');
-const { logger } = require('@infrastructure/logging/Logger');
+const Logger = require('@logging/Logger');
+const logger = new Logger('Logger');
 
 class IDEStarterFactory {
   constructor() {

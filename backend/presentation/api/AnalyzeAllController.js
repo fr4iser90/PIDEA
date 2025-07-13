@@ -1,7 +1,8 @@
 const FrameworkRegistry = require('@frameworks/FrameworkRegistry');
 const WorkflowRegistry = require('@workflows/WorkflowRegistry');
 const DocumentationWorkflow = require('@workflows/categories/documentation/DocumentationWorkflow');
-const { logger } = require('@infrastructure/logging/Logger');
+const Logger = require('@logging/Logger');
+const logger = new Logger('Logger');
 
 
 class AnalyzeAllController {

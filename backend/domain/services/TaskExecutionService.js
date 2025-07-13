@@ -1,7 +1,8 @@
 const { Task, TaskExecution } = require('@domain/entities');
 const { TaskStatus, TaskType } = require('@domain/value-objects');
 const { TaskRepository, TaskExecutionRepository } = require('@domain/repositories');
-const { logger } = require('@infrastructure/logging/Logger');
+const Logger = require('@logging/Logger');
+const logger = new Logger('Logger');
 
 
 /**

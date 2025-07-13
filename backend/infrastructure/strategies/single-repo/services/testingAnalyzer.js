@@ -3,7 +3,8 @@
  */
 const path = require('path');
 const { TEST_CONFIGS } = require('../constants');
-const { logger } = require('@infrastructure/logging/Logger');
+const Logger = require('@logging/Logger');
+const logger = new Logger('Logger');
 
 class TestingAnalyzer {
     constructor(logger, fileUtils, directoryScanner) {

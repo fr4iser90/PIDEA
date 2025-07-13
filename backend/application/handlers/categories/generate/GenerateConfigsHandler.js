@@ -587,7 +587,8 @@ class GenerateConfigsHandler {
         const hasTypeScript = projectStructure.techStack.languages.includes('typescript');
         
         let content = `const path = require('path');
-const { logger } = require('@infrastructure/logging/Logger');
+const Logger = require('@logging/Logger');
+const logger = new Logger('Logger');
 
 module.exports = {
   entry: './src/index.js',

@@ -89,7 +89,8 @@ class VSCodeWorkspaceDetector extends WorkspacePathDetector {
   findPathByFolderName(folderName) {
     const fs = require('fs');
     const path = require('path');
-const { logger } = require('@infrastructure/logging/Logger');
+const Logger = require('@logging/Logger');
+const logger = new Logger('Logger');
     
     // Common paths to search
     const searchPaths = [

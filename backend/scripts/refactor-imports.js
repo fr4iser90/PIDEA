@@ -103,7 +103,8 @@ function replaceAllImports(content) {
             if (relPath.startsWith(from)) {
                 changed = true;
                 return `= require('${relPath.replace(from, to)}')`;
-const { logger } = require('@infrastructure/logging/Logger');
+const Logger = require('@logging/Logger');
+const logger = new Logger('Logger');
             }
         }
         return match;

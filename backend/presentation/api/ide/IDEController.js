@@ -3,7 +3,8 @@
  * Provides unified API endpoints for IDE management across all IDE types
  */
 const IDETypes = require('@services/ide/IDETypes');
-const { logger } = require('@infrastructure/logging/Logger');
+const Logger = require('@logging/Logger');
+const logger = new Logger('Logger');
 
 class IDEController {
   constructor(dependencies = {}) {

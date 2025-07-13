@@ -8,7 +8,8 @@ const rateLimit = require('express-rate-limit');
 const helmet = require('helmet');
 const cors = require('cors');
 
-const { logger } = require('@infrastructure/logging/Logger');
+const Logger = require('@logging/Logger');
+const logger = new Logger('Logger');
 
 // Auto-Security
 const AutoSecurityManager = require('./infrastructure/auto/AutoSecurityManager');

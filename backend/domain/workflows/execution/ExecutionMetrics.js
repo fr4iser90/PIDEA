@@ -3,7 +3,8 @@
  * Provides comprehensive metrics collection and analysis for workflow performance
  */
 const { EventEmitter } = require('events');
-const { logger } = require('@infrastructure/logging/Logger');
+const Logger = require('@logging/Logger');
+const logger = new Logger('Logger');
 
 /**
  * Execution metrics for workflow performance tracking

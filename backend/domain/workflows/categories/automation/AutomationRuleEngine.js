@@ -3,7 +3,8 @@
  * Processes automation rules and determines automation levels
  */
 const AutomationRule = require('./AutomationRule');
-const { logger } = require('@infrastructure/logging/Logger');
+const Logger = require('@logging/Logger');
+const logger = new Logger('Logger');
 
 class AutomationRuleEngine {
   constructor(options = {}) {

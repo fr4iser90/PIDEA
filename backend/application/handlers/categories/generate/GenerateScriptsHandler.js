@@ -1,4 +1,5 @@
-const { logger } = require('@infrastructure/logging/Logger');
+const Logger = require('@logging/Logger');
+const logger = new Logger('Logger');
 /**
  * GenerateScriptHandler - Handles automatic script generation
  * Implements the Command Handler pattern for script generation

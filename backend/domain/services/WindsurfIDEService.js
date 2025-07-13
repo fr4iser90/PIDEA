@@ -3,7 +3,8 @@ const WorkspacePathDetector = require('./workspace/WorkspacePathDetector');
 const ChatMessageHandler = require('./chat/ChatMessageHandler');
 const ChatHistoryExtractor = require('./chat/ChatHistoryExtractor');
 const PackageJsonAnalyzer = require('./dev-server/PackageJsonAnalyzer');
-const { logger } = require('@infrastructure/logging/Logger');
+const Logger = require('@logging/Logger');
+const logger = new Logger('Logger');
 
 
 class WindsurfIDEService {

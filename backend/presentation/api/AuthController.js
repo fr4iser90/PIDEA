@@ -1,7 +1,8 @@
 const AuthService = require('@services/AuthService');
 const User = require('@entities/User');
 const bcrypt = require('bcryptjs');
-const { logger } = require('@infrastructure/logging/Logger');
+const Logger = require('@logging/Logger');
+const logger = new Logger('Logger');
 
 
 class AuthController {

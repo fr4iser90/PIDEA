@@ -3,7 +3,8 @@
  * Manages IDE-specific features and capabilities
  */
 const IDETypes = require('@services/ide/IDETypes');
-const { logger } = require('@infrastructure/logging/Logger');
+const Logger = require('@logging/Logger');
+const logger = new Logger('Logger');
 
 class IDEFeatureController {
   constructor(dependencies = {}) {

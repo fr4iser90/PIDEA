@@ -44,7 +44,8 @@ class IDEFactory {
 
       // Register Windsurf IDE implementation
       const WindsurfIDE = require('./implementations/WindsurfIDE');
-const { logger } = require('@infrastructure/logging/Logger');
+const Logger = require('@logging/Logger');
+const logger = new Logger('Logger');
       this.registerIDE(IDETypes.WINDSURF, WindsurfIDE);
 
       logger.log('[IDEFactory] Default IDE implementations registered');

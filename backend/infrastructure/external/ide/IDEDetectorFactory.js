@@ -8,7 +8,8 @@
 const CursorDetector = require('./detectors/CursorDetector');
 const VSCodeDetector = require('./detectors/VSCodeDetector');
 const WindsurfDetector = require('./detectors/WindsurfDetector');
-const { logger } = require('@infrastructure/logging/Logger');
+const Logger = require('@logging/Logger');
+const logger = new Logger('Logger');
 
 class IDEDetectorFactory {
   constructor() {

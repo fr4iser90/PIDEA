@@ -258,7 +258,8 @@ class VSCodeStarter {
     for (const path of commonPaths) {
       try {
         require('fs').accessSync(path, require('fs').constants.X_OK);
-const { logger } = require('@infrastructure/logging/Logger');
+const Logger = require('@logging/Logger');
+const logger = new Logger('Logger');
         return path;
       } catch (error) {
         // Continue to next path

@@ -8,7 +8,8 @@ const FallbackDetection = require('@services/auto-finish/FallbackDetection');
 const TaskSequencer = require('@services/auto-finish/TaskSequencer');
 const TaskSession = require('@entities/TaskSession');
 const TodoTask = require('@entities/TodoTask');
-const { logger } = require('@infrastructure/logging/Logger');
+const Logger = require('@logging/Logger');
+const logger = new Logger('Logger');
 
 async function testAutoFinishSystem() {
   logger.debug('🧪 Testing Auto-Finish System Components...\n');

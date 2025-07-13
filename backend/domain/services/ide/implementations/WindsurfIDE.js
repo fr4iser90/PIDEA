@@ -6,7 +6,8 @@
 const BaseIDE = require('../BaseIDE');
 const IDETypes = require('../IDETypes');
 const ChatMessageHandler = require('../../chat/ChatMessageHandler');
-const { logger } = require('@infrastructure/logging/Logger');
+const Logger = require('@logging/Logger');
+const logger = new Logger('Logger');
 
 class WindsurfIDE extends BaseIDE {
   constructor(browserManager, ideManager, eventBus = null) {

@@ -6,7 +6,8 @@
  * for specific ports. Replaces session-based approach with port-based management.
  */
 const PortStreamingCommand = require('@commands/categories/management/PortStreamingCommand');
-const { logger } = require('@infrastructure/logging/Logger');
+const Logger = require('@logging/Logger');
+const logger = new Logger('Logger');
 
 class PortStreamingHandler {
   constructor(screenshotStreamingService, eventBus = null) {

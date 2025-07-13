@@ -7,7 +7,8 @@
  */
 const StreamingSession = require('@entities/StreamingSession');
 const FrameMetrics = require('@entities/FrameMetrics');
-const { logger } = require('@infrastructure/logging/Logger');
+const Logger = require('@logging/Logger');
+const logger = new Logger('Logger');
 
 class StreamingSessionRepository {
   constructor(databaseConnection = null) {

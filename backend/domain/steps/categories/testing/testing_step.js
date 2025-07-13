@@ -193,7 +193,8 @@ class TestingStep {
 
       // Create test generation command
       const { GenerateTestsCommand } = require('@application/commands/GenerateTestsCommand');
-const { logger } = require('@infrastructure/logging/Logger');
+const Logger = require('@logging/Logger');
+const logger = new Logger('Logger');
       const command = new GenerateTestsCommand({
         projectPath: projectPath,
         generateUnitTests: true,

@@ -6,6 +6,8 @@
 
 const http = require('http');
 const net = require('net');
+const Logger = require('@logging/Logger');
+const logger = new Logger('VSCodeDetector');
 
 class VSCodeDetector {
   constructor() {
@@ -212,7 +214,8 @@ class VSCodeDetector {
     for (const path of commonPaths) {
       try {
         require('fs').accessSync(path, require('fs').constants.X_OK);
-const { logger } = require('@infrastructure/logging/Logger');
+const Logger = require('@logging/Logger');
+const logger = new Logger('Logger');
         return path;
       } catch (error) {
         // Continue to next path

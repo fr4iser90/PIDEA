@@ -83,7 +83,8 @@ class SecurityService {
      */
     async collectProjectData(target, execution) {
         const { getProjectContextService } = require('../../../di/ProjectContextService');
-const { logger } = require('@infrastructure/logging/Logger');
+const Logger = require('@logging/Logger');
+const logger = new Logger('Logger');
         const projectContext = getProjectContextService();
         const projectPath = await projectContext.getProjectPath();
         const files = await this.getTargetFiles(target, execution);

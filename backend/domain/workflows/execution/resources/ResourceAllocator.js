@@ -3,7 +3,8 @@
  * Provides intelligent resource allocation and management
  */
 const { EventEmitter } = require('events');
-const { logger } = require('@infrastructure/logging/Logger');
+const Logger = require('@logging/Logger');
+const logger = new Logger('Logger');
 
 /**
  * Resource allocator for workflow execution

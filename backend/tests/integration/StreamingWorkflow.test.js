@@ -11,7 +11,8 @@ const StartStreamingHandler = require('@handler-categories/management/StartStrea
 const StopStreamingHandler = require('@handler-categories/management/StopStreamingHandler');
 const StreamingSessionRepository = require('@database/StreamingSessionRepository');
 const StreamingSession = require('@entities/StreamingSession');
-const { logger } = require('@infrastructure/logging/Logger');
+const Logger = require('@logging/Logger');
+const logger = new Logger('Logger');
 
 // Mock external dependencies
 jest.mock('@/infrastructure/external/BrowserManager');

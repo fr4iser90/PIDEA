@@ -1,5 +1,6 @@
 const FrameworkBuilder = require('@frameworks/FrameworkBuilder');
-const { logger } = require('@infrastructure/logging/Logger');
+const Logger = require('@logging/Logger');
+const logger = new Logger('Logger');
 
 
 class DeploymentFramework {

@@ -26,7 +26,8 @@ class CodeQualityWorkflow extends BaseWorkflowStep {
       // Load frameworks and steps
       const { getFrameworkRegistry, getStepRegistry } = require('@/domain/frameworks');
       const { getStepRegistry: getStepsRegistry } = require('@/domain/steps');
-const { logger } = require('@infrastructure/logging/Logger');
+const Logger = require('@logging/Logger');
+const logger = new Logger('Logger');
       
       this.frameworkRegistry = getFrameworkRegistry();
       this.stepRegistry = getStepsRegistry();

@@ -5,7 +5,8 @@
  */
 
 const StepBuilder = require('@steps/StepBuilder');
-const { logger } = require('@infrastructure/logging/Logger');
+const Logger = require('@logging/Logger');
+const logger = new Logger('Logger');
 
 // Step configuration
 const config = {

@@ -6,7 +6,8 @@
 
 const StepRegistry = require('./StepRegistry');
 const StepBuilder = require('./StepBuilder');
-const { logger } = require('@infrastructure/logging/Logger');
+const Logger = require('@logging/Logger');
+const logger = new Logger('Logger');
 
 // Create singleton instances
 const stepRegistry = new StepRegistry();

@@ -11,7 +11,8 @@ const MergeStrategy = require('./MergeStrategy');
 const GitWorkflowValidator = require('./GitWorkflowValidator');
 const GitWorkflowMetrics = require('./GitWorkflowMetrics');
 const GitWorkflowAudit = require('./GitWorkflowAudit');
-const { logger } = require('@infrastructure/logging/Logger');
+const Logger = require('@logging/Logger');
+const logger = new Logger('Logger');
 
 class GitWorkflowManager {
   constructor(dependencies = {}) {

@@ -1,4 +1,5 @@
-const { logger } = require('@infrastructure/logging/Logger');
+const Logger = require('@logging/Logger');
+const logger = new Logger('Logger');
 /**
  * HotfixBranchStrategy - Strategy for hotfix branch creation and management
  * Implements hotfix branch naming conventions and validation for urgent bug fixes

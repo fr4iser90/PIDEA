@@ -1,5 +1,6 @@
 const IDEStarterFactory = require('./ide/IDEStarterFactory');
-const { logger } = require('@infrastructure/logging/Logger');
+const Logger = require('@logging/Logger');
+const logger = new Logger('Logger');
 
 
 class IDEStarter {

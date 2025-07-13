@@ -1,7 +1,8 @@
 const TaskTemplate = require('@entities/TaskTemplate');
 const TaskType = require('@value-objects/TaskType');
 const TaskPriority = require('@value-objects/TaskPriority');
-const { logger } = require('@infrastructure/logging/Logger');
+const Logger = require('@logging/Logger');
+const logger = new Logger('Logger');
 
 
 /**
