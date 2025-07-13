@@ -204,45 +204,35 @@ class TaskService {
         throw new Error('Task is already completed');
       }
 
-      // Use Categories-based execution
-      try {
-        return await this.executeTaskWithCategories(task, userId, options);
-      } catch (error) {
-        logger.warn('⚠️ [TaskService] Categories execution failed, trying core execution engine:', error.message);
+      // Simple task execution - just send the prompt to Cursor IDE
+      const taskPrompt = await this.buildTaskExecutionPrompt(task);
+      
+      if (this.cursorIDEService && this.cursorIDEService.chatMessageHandler) {
+        logger.log('🔍 [TaskService] Sending task prompt to Cursor IDE:', { taskId: task.id });
         
-        // Fallback to core execution engine
-        try {
-          return await this.executeTaskWithEngine(taskId, userId, options);
-        } catch (engineError) {
-          logger.warn('⚠️ [TaskService] Core engine failed, trying git workflow manager:', engineError.message);
-          
-          // Fallback to git workflow manager
-          if (this.gitWorkflowManager) {
-            try {
-              const context = new GitWorkflowContext({
-                projectPath: task.metadata?.projectPath,
-                task,
-                options: { userId },
-                workflowType: 'task-execution'
-              });
-
-              const result = await this.gitWorkflowManager.executeWorkflow(context);
-              
-              logger.log('✅ [TaskService] Git workflow manager execution completed', {
-                taskId: task.id,
-                result: result.status
-              });
-
-              return result;
-            } catch (gitError) {
-              logger.error('❌ [TaskService] Git workflow manager failed:', gitError.message);
-            }
+        const result = await this.cursorIDEService.chatMessageHandler.sendMessage(taskPrompt, {
+          waitForResponse: true,
+          timeout: 300000
+        });
+        
+        logger.log('✅ [TaskService] Task executed successfully via Cursor IDE', {
+          taskId: task.id,
+          result: result
+        });
+        
+        return {
+          success: true,
+          taskId: task.id,
+          taskType: task.type?.value,
+          result: result,
+          message: `Task completed successfully: ${task.title}`,
+          metadata: {
+            executionTime: Date.now(),
+            timestamp: new Date()
           }
-          
-          // No legacy fallback - throw error if all modern methods fail
-          logger.error('❌ [TaskService] All modern execution methods failed');
-          throw new Error('Task execution failed - all modern methods unavailable');
-        }
+        };
+      } else {
+        throw new Error('Cursor IDE service not available for task execution');
       }
 
     } catch (error) {
