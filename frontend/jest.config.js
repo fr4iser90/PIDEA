@@ -6,7 +6,7 @@ export default {
     '**/__tests__/**/*.js',
     '**/__tests__/**/*.jsx'
   ],
-  setupFilesAfterEnv: ['@testing-library/jest-dom/extend-expect'],
+  setupFilesAfterEnv: ['<rootDir>/tests/setup.js'],
   transform: {
     '^.+\\.[jt]sx?$': 'babel-jest'
   },
