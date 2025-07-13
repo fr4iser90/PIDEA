@@ -46,6 +46,28 @@ class HandlerRegistry {
         StartStreamingHandler: require('./categories/management/StartStreamingHandler'),
         StopStreamingHandler: require('./categories/management/StopStreamingHandler'),
         UpdateTestStatusHandler: require('./categories/management/UpdateTestStatusHandler')
+      },
+      ide: {
+        CreateChatHandler: require('./categories/ide/CreateChatHandler'),
+        SendMessageHandler: require('./categories/ide/SendMessageHandler'),
+        SwitchChatHandler: require('./categories/ide/SwitchChatHandler'),
+        ListChatsHandler: require('./categories/ide/ListChatsHandler'),
+        CloseChatHandler: require('./categories/ide/CloseChatHandler'),
+        GetChatHistoryHandler: require('./categories/ide/GetChatHistoryHandler'),
+        OpenTerminalHandler: require('./categories/ide/OpenTerminalHandler'),
+        ExecuteTerminalHandler: require('./categories/ide/ExecuteTerminalHandler'),
+        MonitorTerminalOutputHandler: require('./categories/ide/MonitorTerminalOutputHandler'),
+        RestartUserAppHandler: require('./categories/ide/RestartUserAppHandler'),
+        TerminalLogCaptureHandler: require('./categories/ide/TerminalLogCaptureHandler'),
+        AnalyzeProjectHandler: require('./categories/ide/AnalyzeProjectHandler'),
+        AnalyzeAgainHandler: require('./categories/ide/AnalyzeAgainHandler'),
+        GetWorkspaceInfoHandler: require('./categories/ide/GetWorkspaceInfoHandler'),
+        DetectPackageJsonHandler: require('./categories/ide/DetectPackageJsonHandler'),
+        SwitchIDEPortHandler: require('./categories/ide/SwitchIDEPortHandler'),
+        OpenFileExplorerHandler: require('./categories/ide/OpenFileExplorerHandler'),
+        OpenCommandPaletteHandler: require('./categories/ide/OpenCommandPaletteHandler'),
+        ExecuteIDEActionHandler: require('./categories/ide/ExecuteIDEActionHandler'),
+        GetIDESelectorsHandler: require('./categories/ide/GetIDESelectorsHandler')
       }
     };
     
@@ -89,6 +111,28 @@ class HandlerRegistry {
         'StartStreamingHandler',
         'StopStreamingHandler',
         'UpdateTestStatusHandler'
+      ],
+      [STANDARD_CATEGORIES.IDE]: [
+        'CreateChatHandler',
+        'SendMessageHandler',
+        'SwitchChatHandler',
+        'ListChatsHandler',
+        'CloseChatHandler',
+        'GetChatHistoryHandler',
+        'OpenTerminalHandler',
+        'ExecuteTerminalHandler',
+        'MonitorTerminalOutputHandler',
+        'RestartUserAppHandler',
+        'TerminalLogCaptureHandler',
+        'AnalyzeProjectHandler',
+        'AnalyzeAgainHandler',
+        'GetWorkspaceInfoHandler',
+        'DetectPackageJsonHandler',
+        'SwitchIDEPortHandler',
+        'OpenFileExplorerHandler',
+        'OpenCommandPaletteHandler',
+        'ExecuteIDEActionHandler',
+        'GetIDESelectorsHandler'
       ]
     };
     

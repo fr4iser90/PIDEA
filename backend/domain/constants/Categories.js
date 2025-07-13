@@ -21,7 +21,10 @@ const STANDARD_CATEGORIES = {
   // Specialized Categories
   TASK: 'task',
   APPLICATION: 'application',
-  ANALYZE: 'analyze' // Legacy support
+  ANALYZE: 'analyze', // Legacy support
+  
+  // IDE Categories
+  IDE: 'ide'
 };
 
 /**
@@ -40,7 +43,8 @@ const CATEGORY_DESCRIPTIONS = {
   [STANDARD_CATEGORIES.DOCUMENTATION]: 'Documentation generation, API documentation, user guides',
   [STANDARD_CATEGORIES.TASK]: 'Task execution, task management, task automation',
   [STANDARD_CATEGORIES.APPLICATION]: 'Application-specific operations, business logic',
-  [STANDARD_CATEGORIES.ANALYZE]: 'Legacy analysis operations (deprecated, use ANALYSIS)'
+  [STANDARD_CATEGORIES.ANALYZE]: 'Legacy analysis operations (deprecated, use ANALYSIS)',
+  [STANDARD_CATEGORIES.IDE]: 'IDE integration, chat commands, session management'
 };
 
 /**
@@ -93,6 +97,9 @@ function getCategoriesByType() {
       STANDARD_CATEGORIES.TASK,
       STANDARD_CATEGORIES.APPLICATION,
       STANDARD_CATEGORIES.ANALYZE
+    ],
+    ide: [
+      STANDARD_CATEGORIES.IDE
     ]
   };
 }

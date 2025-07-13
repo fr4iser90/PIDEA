@@ -1,0 +1,161 @@
+/**
+ * CreateChatHandler - Application Layer: IDE Chat Handlers
+ * Handler for creating new chat sessions with IDE integration
+ */
+
+const CreateChatCommand = require('@categories/ide/CreateChatCommand');
+const ChatSession = require('@entities/ChatSession');
+const Logger = require('@logging/Logger');
+const logger = new Logger('Logger');
+
+class CreateChatHandler {
+  constructor(dependencies = {}) {
+    this.validateDependencies(dependencies);
+    
+    this.chatSessionService = dependencies.chatSessionService;
+    this.ideManager = dependencies.ideManager;
+    this.eventBus = dependencies.eventBus;
+    this.logger = dependencies.logger || logger;
+    
+    this.handlerId = this.generateHandlerId();
+  }
+
+  /**
+   * Validate handler dependencies
+   * @param {Object} dependencies - Handler dependencies
+   * @throws {Error} If dependencies are invalid
+   */
+  validateDependencies(dependencies) {
+    const required = ['chatSessionService', 'ideManager', 'eventBus'];
+    for (const dep of required) {
+      if (!dependencies[dep]) {
+        throw new Error(`Missing required dependency: ${dep}`);
+      }
+    }
+  }
+
+  /**
+   * Generate unique handler ID
+   * @returns {string} Unique handler ID
+   */
+  generateHandlerId() {
+    return `create_chat_handler_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  }
+
+  /**
+   * Handle CreateChatCommand
+   * @param {CreateChatCommand} command - Chat creation command
+   * @param {Object} options - Execution options
+   * @returns {Promise<Object>} Creation result
+   */
+  async handle(command, options = {}) {
+    try {
+      // Validate command
+      const validationResult = await this.validateCommand(command);
+      if (!validationResult.isValid) {
+        throw new Error(`Command validation failed: ${validationResult.errors.join(', ')}`);
+      }
+
+      this.logger.info('[CreateChatHandler] Creating chat session', {
+        handlerId: this.handlerId,
+        commandId: command.commandId,
+        userId: command.userId,
+        title: command.title
+      });
+
+      // Publish event
+      await this.eventBus.publish('chat.creating', {
+        commandId: command.commandId,
+        userId: command.userId,
+        title: command.title,
+        timestamp: new Date()
+      });
+
+      // Create session using ChatSessionService
+      const session = await this.chatSessionService.createSession(
+        command.userId,
+        command.title,
+        command.metadata
+      );
+
+      // Publish success event
+      await this.eventBus.publish('chat.created', {
+        commandId: command.commandId,
+        userId: command.userId,
+        sessionId: session.id,
+        title: session.title,
+        timestamp: new Date()
+      });
+
+      this.logger.info('[CreateChatHandler] Chat session created successfully', {
+        handlerId: this.handlerId,
+        commandId: command.commandId,
+        sessionId: session.id
+      });
+
+      return {
+        success: true,
+        session: {
+          id: session.id,
+          title: session.title,
+          userId: session.userId,
+          status: session.status,
+          createdAt: session.createdAt,
+          metadata: session.metadata
+        },
+        commandId: command.commandId
+      };
+
+    } catch (error) {
+      this.logger.error('[CreateChatHandler] Failed to create chat session', {
+        handlerId: this.handlerId,
+        commandId: command.commandId,
+        error: error.message
+      });
+
+      // Publish failure event
+      await this.eventBus.publish('chat.creation.failed', {
+        commandId: command.commandId,
+        userId: command.userId,
+        error: error.message,
+        timestamp: new Date()
+      });
+
+      throw error;
+    }
+  }
+
+  /**
+   * Validate command
+   * @param {CreateChatCommand} command - Chat creation command
+   * @returns {Promise<Object>} Validation result
+   */
+  async validateCommand(command) {
+    const errors = [];
+    const warnings = [];
+
+    if (!command.userId) {
+      errors.push('User ID is required');
+    }
+
+    if (!command.title || command.title.trim().length === 0) {
+      errors.push('Chat title is required');
+    }
+
+    if (command.title && command.title.length > 200) {
+      errors.push('Chat title too long (max 200 characters)');
+    }
+
+    if (command.metadata && typeof command.metadata !== 'object') {
+      errors.push('Metadata must be an object');
+    }
+
+    return {
+      isValid: errors.length === 0,
+      errors,
+      warnings
+    };
+  }
+}
+
+module.exports = CreateChatHandler; 

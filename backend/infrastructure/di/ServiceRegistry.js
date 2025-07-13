@@ -178,6 +178,19 @@ class ServiceRegistry {
             });
         }, { singleton: true, dependencies: ['cursorIDEService', 'autoFinishSystem', 'taskRepository', 'eventBus', 'logger'] });
 
+        // Workflow Execution Service
+        this.container.register('workflowExecutionService', (chatSessionService, ideAutomationService, browserManager, ideManager, eventBus, logger) => {
+            const WorkflowExecutionService = require('@domain/services/WorkflowExecutionService');
+            return new WorkflowExecutionService({
+                chatSessionService,
+                ideAutomationService,
+                browserManager,
+                ideManager,
+                eventBus,
+                logger
+            });
+        }, { singleton: true, dependencies: ['chatSessionService', 'ideAutomationService', 'browserManager', 'ideManager', 'eventBus', 'logger'] });
+
 
 
         // IDE Factory

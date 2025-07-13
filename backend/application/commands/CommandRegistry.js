@@ -52,6 +52,28 @@ class CommandRegistry {
         StopStreamingCommand: require('./categories/management/StopStreamingCommand'),
         TestCorrectionCommand: require('./categories/management/TestCorrectionCommand'),
         UpdateTestStatusCommand: require('./categories/management/UpdateTestStatusCommand')
+      },
+      ide: {
+        CreateChatCommand: require('./categories/ide/CreateChatCommand'),
+        SendMessageCommand: require('./categories/ide/SendMessageCommand'),
+        SwitchChatCommand: require('./categories/ide/SwitchChatCommand'),
+        ListChatsCommand: require('./categories/ide/ListChatsCommand'),
+        CloseChatCommand: require('./categories/ide/CloseChatCommand'),
+        GetChatHistoryCommand: require('./categories/ide/GetChatHistoryCommand'),
+        OpenTerminalCommand: require('./categories/ide/OpenTerminalCommand'),
+        ExecuteTerminalCommand: require('./categories/ide/ExecuteTerminalCommand'),
+        MonitorTerminalOutputCommand: require('./categories/ide/MonitorTerminalOutputCommand'),
+        RestartUserAppCommand: require('./categories/ide/RestartUserAppCommand'),
+        TerminalLogCaptureCommand: require('./categories/ide/TerminalLogCaptureCommand'),
+        AnalyzeProjectCommand: require('./categories/ide/AnalyzeProjectCommand'),
+        AnalyzeAgainCommand: require('./categories/ide/AnalyzeAgainCommand'),
+        GetWorkspaceInfoCommand: require('./categories/ide/GetWorkspaceInfoCommand'),
+        DetectPackageJsonCommand: require('./categories/ide/DetectPackageJsonCommand'),
+        SwitchIDEPortCommand: require('./categories/ide/SwitchIDEPortCommand'),
+        OpenFileExplorerCommand: require('./categories/ide/OpenFileExplorerCommand'),
+        OpenCommandPaletteCommand: require('./categories/ide/OpenCommandPaletteCommand'),
+        ExecuteIDEActionCommand: require('./categories/ide/ExecuteIDEActionCommand'),
+        GetIDESelectorsCommand: require('./categories/ide/GetIDESelectorsCommand')
       }
     };
     
@@ -101,6 +123,28 @@ class CommandRegistry {
         'StopStreamingCommand',
         'TestCorrectionCommand',
         'UpdateTestStatusCommand'
+      ],
+      [STANDARD_CATEGORIES.IDE]: [
+        'CreateChatCommand',
+        'SendMessageCommand',
+        'SwitchChatCommand',
+        'ListChatsCommand',
+        'CloseChatCommand',
+        'GetChatHistoryCommand',
+        'OpenTerminalCommand',
+        'ExecuteTerminalCommand',
+        'MonitorTerminalOutputCommand',
+        'RestartUserAppCommand',
+        'TerminalLogCaptureCommand',
+        'AnalyzeProjectCommand',
+        'AnalyzeAgainCommand',
+        'GetWorkspaceInfoCommand',
+        'DetectPackageJsonCommand',
+        'SwitchIDEPortCommand',
+        'OpenFileExplorerCommand',
+        'OpenCommandPaletteCommand',
+        'ExecuteIDEActionCommand',
+        'GetIDESelectorsCommand'
       ]
     };
     

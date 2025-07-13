@@ -446,7 +446,20 @@ class TaskService {
             } else {
               logger.log('🆕 [TaskService] Creating new chat for task execution...');
               try {
-                await this.cursorIDEService.browserManager.clickNewChat();
+                // Use CreateChatCommand for new chat creation
+                const CreateChatCommand = require('@categories/ide/CreateChatCommand');
+                const createChatCommand = new CreateChatCommand({
+                  userId: userId,
+                  port: this.cursorIDEService.ideManager?.getActivePort() || 9222,
+                  message: '',
+                  options: { clickNewChat: true }
+                });
+                
+                await createChatCommand.execute({
+                  eventBus: this.cursorIDEService.eventBus,
+                  browserManager: this.cursorIDEService.browserManager
+                });
+                
                 // Wait for new chat to be ready
                 await new Promise(resolve => setTimeout(resolve, 2000));
               } catch (newChatError) {
