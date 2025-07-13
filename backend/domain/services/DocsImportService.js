@@ -95,6 +95,7 @@ class DocsImportService {
                         importedAt: new Date(),
                         featureId, // Eindeutige ID für das Feature
                         featureGroup: `${category}/${name}`, // Gruppierungs-Key
+                        projectPath: workspacePath, // ✅ Setze projectPath beim Import
                     };
                     
                     // Füge Phase-spezifische Metadaten hinzu
