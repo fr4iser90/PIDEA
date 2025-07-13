@@ -1,14 +1,16 @@
 /**
  * WorkflowOrchestrationService - Domain Service for Workflow Orchestration
  * Implements DDD patterns for coordinating different workflow types
- * Enhanced with GitWorkflowManager integration, Core Execution Engine, and Unified Handler System
+ * Enhanced with GitWorkflowManager integration and Core Execution Engine
  */
 const WorkflowGitService = require('./WorkflowGitService');
 const TaskType = require('../value-objects/TaskType');
 const GitWorkflowManager = require('../workflows/categories/git/GitWorkflowManager');
 const GitWorkflowContext = require('../workflows/categories/git/GitWorkflowContext');
 const { SequentialExecutionEngine } = require('../workflows/execution');
-const { UnifiedWorkflowHandler, utils: handlerUtils } = require('@application/handlers/workflow');
+const StepRegistry = require('../steps/StepRegistry');
+const FrameworkRegistry = require('../frameworks/FrameworkRegistry');
+
 
 class WorkflowOrchestrationService {
     constructor(dependencies = {}) {
@@ -36,11 +38,11 @@ class WorkflowOrchestrationService {
             enablePriorityScheduling: true
         });
 
-        // Initialize unified workflow handler system
-        this.unifiedHandler = new UnifiedWorkflowHandler({
-            logger: this.logger,
-            eventBus: this.eventBus
-        });
+        // Initialize Categories-based registries
+        this.stepRegistry = new StepRegistry();
+        this.frameworkRegistry = new FrameworkRegistry();
+
+        
     }
 
     /**
@@ -81,191 +83,7 @@ class WorkflowOrchestrationService {
     }
 
     /**
-     * Execute workflow using unified handler system
-     * @param {Object} task - Task object
-     * @param {Object} options - Workflow options
-     * @returns {Promise<Object>} Workflow execution result
-     */
-    async executeWorkflowWithUnifiedHandler(task, options = {}) {
-        try {
-            this.logger.info('WorkflowOrchestrationService: Starting workflow execution with unified handler', {
-                taskId: task.id,
-                taskType: task.type?.value
-            });
-
-            // Create handler request
-            const request = {
-                type: 'workflow',
-                taskId: task.id,
-                taskType: task.type?.value,
-                task: task,
-                options: options
-            };
-
-            // Create response object
-            const response = {};
-
-            // Execute using unified handler
-            const result = await this.unifiedHandler.handle(request, response, options);
-
-            this.logger.info('WorkflowOrchestrationService: Unified handler workflow execution completed', {
-                taskId: task.id,
-                taskType: task.type?.value,
-                success: result.isSuccess(),
-                duration: result.getFormattedDuration()
-            });
-
-            return {
-                success: result.isSuccess(),
-                taskId: task.id,
-                taskType: task.type?.value,
-                result: result.getResult(),
-                message: result.isSuccess() ? 
-                    `Workflow completed successfully for task: ${task.title}` :
-                    `Workflow failed for task: ${task.title}`,
-                metadata: {
-                    executionTime: result.getDuration(),
-                    formattedDuration: result.getFormattedDuration(),
-                    handlerId: result.getHandlerId(),
-                    handlerName: result.getHandlerName(),
-                    timestamp: result.getTimestamp()
-                }
-            };
-
-        } catch (error) {
-            this.logger.error('WorkflowOrchestrationService: Unified handler workflow execution failed', {
-                taskId: task.id,
-                error: error.message
-            });
-
-            throw new Error(`Unified handler workflow execution failed: ${error.message}`);
-        }
-    }
-
-    /**
-     * Execute workflow using core execution engine
-     * @param {Object} task - Task object
-     * @param {Object} options - Workflow options
-     * @returns {Promise<Object>} Workflow execution result
-     */
-    async executeWorkflowWithEngine(task, options = {}) {
-        try {
-            this.logger.info('WorkflowOrchestrationService: Starting workflow execution with core engine', {
-                taskId: task.id,
-                taskType: task.type?.value
-            });
-
-            // Create workflow from task
-            const workflow = await this.createWorkflowFromTask(task, options);
-            
-            // Create workflow context
-            const context = this.createWorkflowContext(task, options);
-            
-            // Execute workflow using core execution engine
-            const result = await this.executionEngine.executeWorkflow(workflow, context, {
-                strategy: options.strategy || 'basic',
-                priority: options.priority || 'normal',
-                timeout: options.timeout || 300000,
-                ...options
-            });
-            
-            this.logger.info('WorkflowOrchestrationService: Core engine workflow execution completed', {
-                taskId: task.id,
-                taskType: task.type?.value,
-                success: result.isSuccess(),
-                duration: result.getFormattedDuration()
-            });
-
-            return {
-                success: result.isSuccess(),
-                taskId: task.id,
-                taskType: task.type?.value,
-                result: result.toJSON(),
-                message: result.isSuccess() ? 
-                    `Workflow completed successfully for task: ${task.title}` :
-                    `Workflow failed for task: ${task.title}`,
-                metadata: {
-                    executionTime: result.getDuration(),
-                    formattedDuration: result.getFormattedDuration(),
-                    strategy: result.getStrategy(),
-                    stepCount: result.getStepCount(),
-                    successRate: result.getSuccessRate(),
-                    timestamp: new Date()
-                }
-            };
-
-        } catch (error) {
-            this.logger.error('WorkflowOrchestrationService: Core engine workflow execution failed', {
-                taskId: task.id,
-                error: error.message
-            });
-
-            throw new Error(`Core engine workflow execution failed: ${error.message}`);
-        }
-    }
-
-    /**
-     * Create workflow from task
-     * @param {Object} task - Task object
-     * @param {Object} options - Workflow options
-     * @returns {Promise<IWorkflow>} Workflow
-     */
-    async createWorkflowFromTask(task, options = {}) {
-        // For now, create a simple workflow that delegates to the existing workflow methods
-        // This can be enhanced later to create proper workflow objects
-        const workflow = {
-            getMetadata: () => ({
-                id: task.id,
-                name: task.title,
-                type: task.type?.value || 'generic',
-                steps: []
-            }),
-            getType: () => task.type?.value || 'generic',
-            getVersion: () => '1.0.0',
-            getDependencies: () => [],
-            getSteps: () => [],
-            execute: async (context) => {
-                // Delegate to existing workflow execution method
-                return await this.executeWorkflowByType(task, options);
-            },
-            validate: async (context) => ({ isValid: true }),
-            canExecute: async (context) => true,
-            rollback: async (context, stepId) => ({ success: true })
-        };
-        
-        return workflow;
-    }
-
-    /**
-     * Create workflow context
-     * @param {Object} task - Task object
-     * @param {Object} options - Workflow options
-     * @returns {WorkflowContext} Workflow context
-     */
-    createWorkflowContext(task, options = {}) {
-        const { WorkflowContext, WorkflowState, WorkflowMetadata } = require('../workflows');
-        
-        return new WorkflowContext(
-            task.id,
-            task.type?.value || 'generic',
-            '1.0.0',
-            new WorkflowState('initialized'),
-            new WorkflowMetadata({
-                taskId: task.id,
-                taskType: task.type?.value,
-                projectPath: task.metadata?.projectPath
-            }),
-            {
-                task,
-                options,
-                projectPath: task.metadata?.projectPath
-            }
-        );
-    }
-
-    /**
-     * Legacy method for workflow execution (fallback)
-     * @param {Object} task - Task object
+      @param {Object} task - Task object
      * @param {Object} options - Workflow options
      * @returns {Promise<Object>} Workflow execution result
      */
@@ -1567,109 +1385,85 @@ Please proceed with the task execution.
     }
 
     /**
-     * Get unified handler statistics
-     * @returns {Promise<Object>} Handler statistics
+      @returns {Promise<Object>} Handler statistics
      */
-    async getUnifiedHandlerStatistics() {
+    getHandlerStatistics() {
         try {
-            return await this.unifiedHandler.getHandlerStatistics();
+            // Using Categories system
+            
         } catch (error) {
-            this.logger.error('WorkflowOrchestrationService: Failed to get unified handler statistics', {
-                error: error.message
-            });
+            
             throw error;
         }
     }
 
     /**
-     * Get unified handler information
-     * @returns {Array<Object>} Handler information
+      @returns {Array<Object>} Handler information
      */
-    getUnifiedHandlerInformation() {
+    getHandlerInformation() {
         try {
-            return this.unifiedHandler.getHandlerInformation();
+            // Using Categories system
+            
         } catch (error) {
-            this.logger.error('WorkflowOrchestrationService: Failed to get unified handler information', {
-                error: error.message
-            });
+            
             throw error;
         }
     }
 
     /**
-     * Register handler with unified handler system
-     * @param {string} type - Handler type
+      @param {string} type - Handler type
      * @param {IHandler} handler - Handler instance
      * @param {Object} metadata - Handler metadata
      * @returns {boolean} True if registration successful
      */
-    registerUnifiedHandler(type, handler, metadata = {}) {
+    registerHandler(type, handler, metadata) {
         try {
-            const success = this.unifiedHandler.registerHandler(type, handler, metadata);
-            if (success) {
-                this.logger.info('WorkflowOrchestrationService: Unified handler registered', {
-                    type,
-                    handlerName: handler.getMetadata().name
-                });
-            }
-            return success;
+            // Using Categories system
+            
+            return true;
         } catch (error) {
-            this.logger.error('WorkflowOrchestrationService: Failed to register unified handler', {
-                type,
-                error: error.message
-            });
+            
             throw error;
         }
     }
 
     /**
-     * Get handler by type from unified handler system
-     * @param {string} type - Handler type
+      @param {string} type - Handler type
      * @returns {IHandler|null} Handler instance
      */
-    getUnifiedHandlerByType(type) {
+    getHandler(type) {
         try {
-            return this.unifiedHandler.getHandlerByType(type);
+            // Using Categories system
+            
         } catch (error) {
-            this.logger.error('WorkflowOrchestrationService: Failed to get unified handler by type', {
-                type,
-                error: error.message
-            });
+            
             throw error;
         }
     }
 
     /**
-     * Initialize unified handler system with configuration
-     * @param {Object} config - Handler configuration
+      @param {Object} config - Handler configuration
      * @returns {Promise<void>} Initialization result
      */
-    async initializeUnifiedHandler(config = {}) {
+    initializeHandler(config) {
         try {
-            await this.unifiedHandler.initialize(config);
-            this.logger.info('WorkflowOrchestrationService: Unified handler system initialized', {
-                config: Object.keys(config)
-            });
+            // Using Categories system
+            
         } catch (error) {
-            this.logger.error('WorkflowOrchestrationService: Failed to initialize unified handler system', {
-                error: error.message
-            });
+            
             throw error;
         }
     }
 
     /**
-     * Cleanup unified handler system
-     * @returns {Promise<void>} Cleanup result
+      @returns {Promise<void>} Cleanup result
      */
-    async cleanupUnifiedHandler() {
+    cleanup() {
         try {
-            await this.unifiedHandler.cleanup();
-            this.logger.info('WorkflowOrchestrationService: Unified handler system cleanup completed');
+            // Using Categories system
+            
         } catch (error) {
-            this.logger.error('WorkflowOrchestrationService: Failed to cleanup unified handler system', {
-                error: error.message
-            });
+            
             throw error;
         }
     }

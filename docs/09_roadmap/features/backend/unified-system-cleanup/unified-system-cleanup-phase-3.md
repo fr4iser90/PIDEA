@@ -1,12 +1,12 @@
 # Unified System Cleanup – Phase 3: Integration & Validation
 
 ## Overview
-This phase focuses on updating API controllers to use Categories-based patterns, cleaning up Application.js imports and service registrations, removing unified workflow dependencies, and creating comprehensive validation tests.
+This phase focuses on updating API controllers to use Categories-based patterns, cleaning up Application.js imports and service registrations, removing Categories system dependencies, and creating comprehensive validation tests.
 
 ## Objectives
 - [ ] Update API controllers to use Categories-based patterns
 - [ ] Update Application.js imports and service registration
-- [ ] Remove unified workflow dependencies from package.json
+- [ ] Remove Categories system dependencies from package.json
 - [ ] Create comprehensive validation tests
 - [ ] Update documentation and examples
 
@@ -405,7 +405,7 @@ class TaskController {
 
 ### 3. Updated Application.js
 ```javascript
-// backend/Application.js (updated - removed unified workflow imports)
+// backend/Application.js (updated - removed Categories system imports)
 require('module-alias/register');
 const express = require('express');
 const path = require('path');
@@ -503,13 +503,13 @@ class Application {
     }
 
     // ... rest of Application class implementation remains the same
-    // (removed unified workflow service registrations and imports)
+    // (removed Categories system service registrations and imports)
 }
 ```
 
 ### 4. Updated ServiceRegistry
 ```javascript
-// backend/infrastructure/di/ServiceRegistry.js (updated - removed unified workflow service)
+// backend/infrastructure/di/ServiceRegistry.js (updated - removed Categories system service)
 class ServiceRegistry {
     constructor() {
         this.container = new Map();
@@ -531,7 +531,7 @@ class ServiceRegistry {
             });
         }, { singleton: true, dependencies: ['cursorIDEService', 'autoFinishSystem', 'taskRepository', 'eventBus', 'logger'] });
 
-        // Unified Workflow Service - REMOVED (using Categories system instead)
+        // Categories system Service - REMOVED (using Categories system instead)
 
         // ... rest of service registrations remain the same
     }
@@ -597,20 +597,20 @@ describe('Categories System Integration Validation', () => {
     });
 
     describe('Service Dependencies', () => {
-        test('WorkflowOrchestrationService should not have unified workflow dependencies', () => {
+        test('WorkflowOrchestrationService should not have Categories system dependencies', () => {
             const WorkflowOrchestrationService = require('../../backend/domain/services/WorkflowOrchestrationService');
             const service = new WorkflowOrchestrationService();
             
-            expect(service.unifiedHandler).toBeUndefined();
+            expect(service.Categories).toBeUndefined();
             expect(service.stepRegistry).toBeDefined();
             expect(service.frameworkRegistry).toBeDefined();
         });
 
-        test('TaskService should not have unified workflow dependencies', () => {
+        test('TaskService should not have Categories system dependencies', () => {
             const TaskService = require('../../backend/domain/services/TaskService');
             const service = new TaskService();
             
-            expect(service.unifiedHandler).toBeUndefined();
+            expect(service.Categories).toBeUndefined();
             expect(service.stepRegistry).toBeDefined();
             expect(service.frameworkRegistry).toBeDefined();
         });
@@ -645,7 +645,7 @@ describe('Categories System Integration Validation', () => {
 # Categories-Only System Usage Guide
 
 ## Overview
-This guide explains how to use the Categories-based registry patterns after the unified workflow system has been removed.
+This guide explains how to use the Categories-based registry patterns after the Categories system system has been removed.
 
 ## Core Concepts
 
@@ -707,8 +707,8 @@ const result = await commandBus.execute('AnalyzeProjectCommand', {
 
 ### Before (Unified System)
 ```javascript
-const { UnifiedWorkflowHandler } = require('@application/handlers/workflow');
-const handler = new UnifiedWorkflowHandler();
+const { CategoriesHandler } = require('@application/handlers/workflow');
+const handler = new CategoriesHandler();
 const result = await handler.handle(request, response, options);
 ```
 
@@ -725,7 +725,7 @@ const result = await step.execute({ task, options });
 1. **Simplified Architecture**: Single pattern for all components
 2. **Better Performance**: Direct execution without extra orchestration
 3. **Easier Maintenance**: Consistent patterns across the system
-4. **Reduced Complexity**: No redundant unified workflow layer
+4. **Reduced Complexity**: No redundant Categories system layer
 5. **Better Testing**: Simpler component testing and validation
 
 ## Best Practices
@@ -762,11 +762,11 @@ console.log('Step validation:', validation);
 
 ## Success Criteria
 - [ ] API controllers updated to use Categories-only patterns
-- [ ] Application.js cleaned of unified workflow imports
-- [ ] ServiceRegistry updated without unified workflow service
+- [ ] Application.js cleaned of Categories system imports
+- [ ] ServiceRegistry updated without Categories system service
 - [ ] All integration validation tests passing
 - [ ] Categories-only usage guide created
-- [ ] No unified workflow dependencies in package.json
+- [ ] No Categories system dependencies in package.json
 - [ ] System fully functional with Categories-only patterns
 
 ## Risk Mitigation

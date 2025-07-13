@@ -2,7 +2,7 @@
   "name": "AI Framework",
   "version": "1.0.0",
   "description": "AI-powered development assistance and automation framework",
-  "category": "ai",
+  "category": "analysis",
   "author": "PIDEA Team",
   "dependencies": ["openai", "langchain", "vectorstore"],
   "settings": {

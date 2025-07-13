@@ -3,7 +3,7 @@
  * 
  * Handles StartStreamingCommand execution by starting IDE screenshot streaming.
  */
-const StartStreamingCommand = require('../commands/StartStreamingCommand');
+const StartStreamingCommand = require('@application/commands/categories/management/StartStreamingCommand');
 
 class StartStreamingHandler {
   constructor(screenshotStreamingService, eventBus = null) {

@@ -16,7 +16,7 @@ const FrameBuffer = require('./backend/domain/services/ide-mirror/FrameBuffer');
 const RegionDetector = require('./backend/domain/services/ide-mirror/RegionDetector');
 
 // Import commands and handlers
-const StartStreamingCommand = require('./backend/application/commands/StartStreamingCommand');
+const StartStreamingCommand = require('./backend/application/commands/categories/management/StartStreamingCommand');
 const StopStreamingCommand = require('./backend/application/commands/StopStreamingCommand');
 const StartStreamingHandler = require('./backend/application/handlers/StartStreamingHandler');
 const StopStreamingHandler = require('./backend/application/handlers/StopStreamingHandler');
@@ -138,7 +138,7 @@ async function validateStreamingSystem() {
        './backend/domain/services/ide-mirror/CompressionEngine.js',
        './backend/domain/services/ide-mirror/FrameBuffer.js',
        './backend/domain/services/ide-mirror/RegionDetector.js',
-       './backend/application/commands/StartStreamingCommand.js',
+       './backend/application/commands/categories/management/StartStreamingCommand.js',
        './backend/application/commands/StopStreamingCommand.js',
        './backend/application/handlers/StartStreamingHandler.js',
        './backend/application/handlers/StopStreamingHandler.js',

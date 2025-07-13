@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 /**
- * Unified IDE DOM Collector
+ * IDE DOM Collector
  * Collects DOM structures from all supported IDEs
  */
 
@@ -44,7 +44,7 @@ const IDE_CONFIGS = {
   }
 };
 
-class UnifiedDOMCollector {
+class DOMCollector {
   constructor() {
     this.outputDir = path.join(process.cwd(), 'generated', 'ide-dom');
     this.results = new Map();
@@ -308,7 +308,7 @@ class UnifiedDOMCollector {
    * Run complete DOM collection
    */
   async run() {
-    console.log('[DOMCollector] Starting unified DOM collection...');
+    console.log('[DOMCollector] Starting DOM collection...');
     
     try {
       // Initialize
@@ -349,8 +349,8 @@ class UnifiedDOMCollector {
 
 // CLI interface
 if (require.main === module) {
-  const collector = new UnifiedDOMCollector();
+  const collector = new DOMCollector();
   collector.run().catch(console.error);
 }
 
-module.exports = UnifiedDOMCollector; 
+module.exports = DOMCollector; 

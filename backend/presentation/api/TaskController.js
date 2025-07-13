@@ -165,14 +165,14 @@ class TaskController {
         }
     }
 
-    // Execute task within a project using unified workflow system
+    // Execute task within a project using Categories-based system
     async executeTask(req, res) {
         try {
             const { projectId, id } = req.params;
             const userId = req.user.id;
             const options = req.body.options || {};
 
-            console.log('🚀 [TaskController] executeTask called with unified workflow system:', { 
+            console.log('🚀 [TaskController] executeTask called with Categories system:', { 
                 projectId, 
                 id, 
                 userId,
@@ -199,28 +199,30 @@ class TaskController {
                 });
             }
 
-            console.log('🔍 [TaskController] Found task, executing with unified workflow system...');
+            console.log('🔍 [TaskController] Found task, executing with Categories system...');
 
-            // Execute task using unified workflow system (priority method)
+            // Execute task using Categories-based system
             const execution = await this.taskService.executeTask(id, userId, options);
 
-            console.log('✅ [TaskController] Task execution completed with unified workflow:', {
+            console.log('✅ [TaskController] Task execution completed with Categories:', {
                 taskId: id,
                 success: execution.success,
-                executionMethod: execution.metadata?.executionMethod || 'unified_workflow',
-                workflowType: execution.metadata?.workflowType,
-                duration: execution.metadata?.formattedDuration
+                executionMethod: execution.metadata?.executionMethod || 'categories',
+                stepType: execution.metadata?.stepType,
+                duration: execution.metadata?.duration
             });
 
             res.json({
                 success: true,
-                data: execution
+                data: execution,
+                message: 'Task executed successfully with Categories system'
             });
         } catch (error) {
-            console.error('❌ [TaskController] Error executing task:', error);
+            console.error('❌ [TaskController] Error executing task with Categories:', error);
             res.status(500).json({
                 success: false,
-                error: error.message
+                error: error.message,
+                message: 'Task execution failed with Categories system'
             });
         }
     }

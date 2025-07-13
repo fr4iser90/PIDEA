@@ -5,7 +5,9 @@ const TaskType = require('@value-objects/TaskType');
 const GitWorkflowManager = require('../workflows/categories/git/GitWorkflowManager');
 const GitWorkflowContext = require('../workflows/categories/git/GitWorkflowContext');
 const { SequentialExecutionEngine } = require('../workflows/execution');
-const { UnifiedWorkflowHandler, utils: handlerUtils } = require('@application/handlers/workflow');
+const StepRegistry = require('../steps/StepRegistry');
+const FrameworkRegistry = require('../frameworks/FrameworkRegistry');
+
 
 /**
  * TaskService - Business logic for project-based task management
@@ -31,19 +33,19 @@ class TaskService {
     
     // Initialize core execution engine
     this.executionEngine = new SequentialExecutionEngine({
-      logger: console,
-      enablePriority: true,
-      enableRetry: true,
-      enableResourceManagement: true,
-      enableDependencyResolution: true,
-      enablePriorityScheduling: true
-    });
+            logger: console,
+            enablePriority: true,
+            enableRetry: true,
+            enableResourceManagement: true,
+            enableDependencyResolution: true,
+            enablePriorityScheduling: true
+        });
 
-    // Initialize unified workflow handler system
-    this.unifiedHandler = new UnifiedWorkflowHandler({
-      logger: console,
-      eventBus: null
-    });
+        // Initialize Categories-based registries
+        this.stepRegistry = new StepRegistry();
+        this.frameworkRegistry = new FrameworkRegistry();
+
+    
   }
 
   buildRefactoringPrompt(task) {
@@ -177,8 +179,7 @@ class TaskService {
   }
 
   /**
-   * Execute a task using unified workflow system (PRIORITY METHOD)
-   * @param {string} taskId - Task ID
+    @param {string} taskId - Task ID
    * @param {string} userId - User ID
    * @param {Object} options - Execution options
    * @returns {Promise<Object>} Execution result
@@ -198,11 +199,11 @@ class TaskService {
         throw new Error('Task is already completed');
       }
 
-      // PRIORITY: Use unified workflow system first
+      // Use Categories-based execution
       try {
-        return await this.executeTaskWithUnifiedWorkflow(task, userId, options);
+        return await this.executeTaskWithCategories(task, userId, options);
       } catch (error) {
-        console.warn('⚠️ [TaskService] Unified workflow failed, trying core execution engine:', error.message);
+        console.warn('⚠️ [TaskService] Categories execution failed, trying core execution engine:', error.message);
         
         // Fallback to core execution engine
         try {
@@ -245,145 +246,7 @@ class TaskService {
     }
   }
 
-  /**
-   * Execute task using unified workflow system (NEW PRIORITY METHOD)
-   * @param {Object} task - Task object
-   * @param {string} userId - User ID
-   * @param {Object} options - Execution options
-   * @returns {Promise<Object>} Execution result
-   */
-  async executeTaskWithUnifiedWorkflow(task, userId, options = {}) {
-    console.log('🚀 [TaskService] Using unified workflow system for task:', task.id);
-    
-    try {
-      // Build task execution prompt
-      const taskPrompt = await this.buildTaskExecutionPrompt(task);
-      console.log('📝 [TaskService] Built task prompt (first 200 chars):', taskPrompt.substring(0, 200));
-      
-      // Send prompt to Cursor IDE if available
-      if (this.cursorIDEService) {
-        try {
-          console.log('🤖 [TaskService] Sending task prompt to Cursor IDE...');
-          await this.cursorIDEService.postToCursor(taskPrompt);
-          console.log('✅ [TaskService] Task prompt sent to Cursor IDE successfully');
-          
-          return {
-            success: true,
-            taskId: task.id,
-            taskType: task.type?.value,
-            result: { promptSent: true },
-            message: `Task prompt sent to Cursor IDE: ${task.title}`,
-            metadata: {
-              executionMethod: 'cursor_ide_prompt',
-              executionTime: 0,
-              formattedDuration: '0ms',
-              handlerId: 'task_service',
-              handlerName: 'TaskService',
-              workflowType: 'prompt_send',
-              timestamp: new Date()
-            }
-          };
-        } catch (promptError) {
-          console.error('❌ [TaskService] Failed to send prompt to Cursor IDE:', promptError.message);
-          // Continue with unified workflow as fallback
-        }
-      }
-      
-      // Fallback to unified workflow system
-      console.log('🔄 [TaskService] Falling back to unified workflow system...');
-      
-      // Create workflow from task using WorkflowBuilder
-      const { WorkflowBuilder, WorkflowStepBuilder } = require('../workflows');
-      
-      // Determine workflow type based on task type
-      const workflowType = this.determineWorkflowType(task);
-      
-      // Build unified workflow
-      const workflow = new WorkflowBuilder()
-        .setMetadata({
-          name: `Task: ${task.title}`,
-          description: task.description,
-          type: workflowType,
-          version: '1.0.0',
-          taskId: task.id,
-          userId: userId
-        })
-        .addStep(
-          WorkflowStepBuilder.analysis({
-            type: 'comprehensive',
-            includeMetrics: true,
-            task: task
-          }).build()
-        );
 
-      // Add additional steps based on task type
-      if (workflowType === 'refactoring') {
-        workflow.addStep(
-          WorkflowStepBuilder.refactoring({
-            type: '',
-            improveQuality: true,
-            task: task
-          }).build()
-        );
-      } else if (workflowType === 'testing') {
-        workflow.addStep(
-          WorkflowStepBuilder.testing({
-            type: 'comprehensive',
-            task: task
-          }).build()
-        );
-      } else if (workflowType === 'documentation') {
-        workflow.addStep(
-          WorkflowStepBuilder.documentation({
-            type: 'comprehensive',
-            task: task
-          }).build()
-        );
-      }
-
-      // Build the final workflow
-      const composedWorkflow = workflow.build();
-      
-      // Execute using unified handler system
-      const result = await this.unifiedHandler.handle({
-        type: 'workflow',
-        workflow: composedWorkflow,
-        task: task,
-        taskId: task.id, // Add the missing taskId
-        userId: userId,
-        options: options
-      }, {}, options);
-
-      console.log('✅ [TaskService] Unified workflow execution completed', {
-        taskId: task.id,
-        success: result.isSuccess(),
-        duration: result.getFormattedDuration()
-      });
-
-      return {
-        success: result.isSuccess(),
-        taskId: task.id,
-        taskType: task.type?.value,
-        result: result.getResult(),
-        message: result.isSuccess() ? 
-          `Task completed successfully using unified workflow: ${task.title}` :
-          `Task failed: ${task.title}`,
-        metadata: {
-          executionMethod: 'unified_workflow',
-          executionTime: result.getDuration(),
-          formattedDuration: result.getFormattedDuration(),
-          handlerId: result.getHandlerId(),
-          handlerName: result.getHandlerName(),
-          workflowType: workflowType,
-          timestamp: result.getTimestamp()
-        }
-      };
-
-    } catch (error) {
-      console.error('❌ [TaskService] Unified workflow execution failed:', error.message);
-      throw error;
-    }
-  }
 
   /**
    * Determine workflow type based on task type
@@ -409,73 +272,6 @@ class TaskService {
       return 'optimization';
     } else {
       return 'analysis'; // Default fallback
-    }
-  }
-
-  /**
-   * Execute a task using unified handler system
-   * @param {string} taskId - Task ID
-   * @param {string} userId - User ID
-   * @param {Object} options - Execution options
-   * @returns {Promise<Object>} Execution result
-   */
-  async executeTaskWithUnifiedHandler(taskId, userId, options = {}) {
-    console.log('🔍 [TaskService] executeTaskWithUnifiedHandler called with:', { taskId, userId, options });
-    
-    try {
-      const task = await this.taskRepository.findById(taskId);
-      if (!task) {
-        throw new Error('Task not found');
-      }
-
-      console.log('🔍 [TaskService] Found task for unified handler execution:', task);
-
-      if (task.isCompleted()) {
-        throw new Error('Task is already completed');
-      }
-
-      // Create handler request
-      const request = {
-        type: 'task',
-        taskId: task.id,
-        taskType: task.type?.value,
-        task: task,
-        userId: userId,
-        options: options
-      };
-
-      // Create response object
-      const response = {};
-
-      // Execute using unified handler
-      const result = await this.unifiedHandler.handle(request, response, options);
-
-      console.log('✅ [TaskService] Unified handler task execution completed', {
-        taskId: task.id,
-        success: result.isSuccess(),
-        duration: result.getFormattedDuration()
-      });
-
-      return {
-        success: result.isSuccess(),
-        taskId: task.id,
-        taskType: task.type?.value,
-        result: result.getResult(),
-        message: result.isSuccess() ? 
-          `Task completed successfully: ${task.title}` :
-          `Task failed: ${task.title}`,
-        metadata: {
-          executionTime: result.getDuration(),
-          formattedDuration: result.getFormattedDuration(),
-          handlerId: result.getHandlerId(),
-          handlerName: result.getHandlerName(),
-          timestamp: result.getTimestamp()
-        }
-      };
-
-    } catch (error) {
-      console.error('❌ [TaskService] Unified handler task execution failed:', error.message);
-      throw error;
     }
   }
 
@@ -804,12 +600,7 @@ class TaskService {
             try {
                 console.log('🔄 [TaskService] Refreshing analysis data after refactoring task completion...');
                 
-                    // Get the unified workflow handler to refresh analysis data
-    const { UnifiedWorkflowHandler } = require('@application/handlers/workflow');
-    const unifiedHandler = new UnifiedWorkflowHandler({
-                    taskRepository: this.taskRepository,
-                    projectAnalysisRepository: this.projectAnalysisRepository
-                });
+                    // Refresh analysis data after task completion
                 
                 await autoRefactorHandler.refreshAnalysisDataAfterTaskCompletion(
                     task.metadata.projectPath, 
@@ -1548,106 +1339,6 @@ ${task.description}
    */
   async shutdownExecutionEngine() {
     await this.executionEngine.shutdown();
-  }
-
-  /**
-   * Get unified handler statistics
-   * @returns {Promise<Object>} Handler statistics
-   */
-  async getUnifiedHandlerStatistics() {
-    try {
-      return await this.unifiedHandler.getHandlerStatistics();
-    } catch (error) {
-      console.error('❌ [TaskService] Failed to get unified handler statistics:', error.message);
-      throw error;
-    }
-  }
-
-  /**
-   * Get unified handler information
-   * @returns {Array<Object>} Handler information
-   */
-  getUnifiedHandlerInformation() {
-    try {
-      return this.unifiedHandler.getHandlerInformation();
-    } catch (error) {
-      console.error('❌ [TaskService] Failed to get unified handler information:', error.message);
-      throw error;
-    }
-  }
-
-  /**
-   * Register handler with unified handler system
-   * @param {string} type - Handler type
-   * @param {IHandler} handler - Handler instance
-   * @param {Object} metadata - Handler metadata
-   * @returns {boolean} True if registration successful
-   */
-  registerUnifiedHandler(type, handler, metadata = {}) {
-    try {
-      const success = this.unifiedHandler.registerHandler(type, handler, metadata);
-      if (success) {
-        console.log('✅ [TaskService] Unified handler registered:', {
-          type,
-          handlerName: handler.getMetadata().name
-        });
-      }
-      return success;
-    } catch (error) {
-      console.error('❌ [TaskService] Failed to register unified handler:', {
-        type,
-        error: error.message
-      });
-      throw error;
-    }
-  }
-
-  /**
-   * Get handler by type from unified handler system
-   * @param {string} type - Handler type
-   * @returns {IHandler|null} Handler instance
-   */
-  getUnifiedHandlerByType(type) {
-    try {
-      return this.unifiedHandler.getHandlerByType(type);
-    } catch (error) {
-      console.error('❌ [TaskService] Failed to get unified handler by type:', {
-        type,
-        error: error.message
-      });
-      throw error;
-    }
-  }
-
-  /**
-   * Initialize unified handler system with configuration
-   * @param {Object} config - Handler configuration
-   * @returns {Promise<void>} Initialization result
-   */
-  async initializeUnifiedHandler(config = {}) {
-    try {
-      await this.unifiedHandler.initialize(config);
-      console.log('✅ [TaskService] Unified handler system initialized:', {
-        config: Object.keys(config)
-      });
-    } catch (error) {
-      console.error('❌ [TaskService] Failed to initialize unified handler system:', error.message);
-      throw error;
-    }
-  }
-
-  /**
-   * Cleanup unified handler system
-   * @returns {Promise<void>} Cleanup result
-   */
-  async cleanupUnifiedHandler() {
-    try {
-      await this.unifiedHandler.cleanup();
-      console.log('✅ [TaskService] Unified handler system cleanup completed');
-    } catch (error) {
-      console.error('❌ [TaskService] Failed to cleanup unified handler system:', error.message);
-      throw error;
-    }
   }
 }
 

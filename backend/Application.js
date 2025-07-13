@@ -41,13 +41,7 @@ const CreateTaskHandler = require('@handler-categories/management/CreateTaskHand
 const ProcessTodoListCommand = require('@categories/management/ProcessTodoListCommand');
 const ProcessTodoListHandler = require('@handler-categories/management/ProcessTodoListHandler');
 
-// Legacy handlers removed - using Unified Workflow System instead
-
-// Legacy refactor handlers removed - using Unified Workflow System instead
-
-// Legacy generate handlers removed - using Unified Workflow System instead
-
-// Legacy VibeCoder handlers removed - using Unified Workflow System instead
+// Application handlers - Categories-based only
 
 // Infrastructure
 const BrowserManager = require('./infrastructure/external/BrowserManager');

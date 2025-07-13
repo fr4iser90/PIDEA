@@ -22,7 +22,7 @@ class TaskOrganizer {
       'performance': 'Performance optimization',
       'security': 'Security features',
       'testing': 'Testing infrastructure',
-      'unified-workflow': 'Unified workflow system',
+      ,
       'legacy': 'Legacy system tasks',
       'migration': 'Migration tasks',
       'documentation': 'Documentation tasks'
@@ -207,7 +207,7 @@ class TaskOrganizer {
       'performance': ['performance', 'optimization', 'speed', 'efficiency'],
       'security': ['security', 'auth', 'authentication', 'encryption'],
       'testing': ['test', 'testing', 'unit', 'integration', 'e2e'],
-      'unified-workflow': ['unified', 'workflow', 'unified-workflow'],
+      ,
       'migration': ['migration', 'migrate', 'legacy'],
       'documentation': ['documentation', 'docs', 'guide', 'manual']
     };

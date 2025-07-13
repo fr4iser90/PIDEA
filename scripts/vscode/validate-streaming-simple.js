@@ -16,7 +16,7 @@ const requiredFiles = [
   'backend/domain/services/ide-mirror/CompressionEngine.js',
   'backend/domain/services/ide-mirror/FrameBuffer.js',
   'backend/domain/services/ide-mirror/RegionDetector.js',
-  'backend/application/commands/StartStreamingCommand.js',
+  'backend/application/commands/categories/management/StartStreamingCommand.js',
   'backend/application/commands/StopStreamingCommand.js',
   'backend/application/handlers/StartStreamingHandler.js',
   'backend/application/handlers/StopStreamingHandler.js',

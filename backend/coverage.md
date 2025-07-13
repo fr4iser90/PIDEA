@@ -21,7 +21,7 @@
 | `application/commands/PortStreamingCommand.js` | 36% | 50% | 62% | 49% | ❌ |
 | `application/commands/ProcessTodoListCommand.js` | 40% | 64% | 69% | 58% | ⚠️ |
 | `application/commands/SendMessageCommand.js` | 0% | 13% | 0% | 4% | ❌ |
-| `application/commands/StartStreamingCommand.js` | 0% | 4% | 0% | 1% | ❌ |
+| `application/commands/categories/management/StartStreamingCommand.js` | 0% | 4% | 0% | 1% | ❌ |
 | `application/commands/StopStreamingCommand.js` | 0% | 7% | 0% | 2% | ❌ |
 | `application/commands/TestCorrectionCommand.js` | 0% | 5% | 0% | 2% | ❌ |
 | `application/commands/UpdateTestStatusCommand.js` | 0% | 5% | 0% | 2% | ❌ |
@@ -365,7 +365,7 @@
   - Current: Funcs 0%, Lines 13%, Branches 0%
   - Task: Improve test coverage for SendMessageCommand.js
 
-- **application/commands/StartStreamingCommand.js** (1% → 80%)
+- **application/commands/categories/management/StartStreamingCommand.js** (1% → 80%)
   - Current: Funcs 0%, Lines 4%, Branches 0%
   - Task: Improve test coverage for StartStreamingCommand.js
 

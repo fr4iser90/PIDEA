@@ -264,7 +264,7 @@ class AutoModeController {
                 }
             }
 
-            // Execute using Unified Workflow Steps instead of legacy VibeCoder
+            // Execute using Categories-based step registry
             const stepRegistry = getStepRegistry();
             
             let stepName;
@@ -277,7 +277,7 @@ class AutoModeController {
                 ...options
             };
 
-            // Map modes to unified workflow steps
+            // Map modes to Categories-based steps
             if (mode === 'analysis') {
                 stepName = 'AnalysisStep';
                 stepOptions.includeCodeQuality = true;
@@ -286,11 +286,11 @@ class AutoModeController {
                 stepOptions.includeDependencies = true;
                 stepOptions.includeRepoStructure = true;
             } else if (mode === 'refactor') {
-                stepName = 'RefactorCode';
+                stepName = 'RefactoringStep';
                 stepOptions.includeCodeQuality = true;
                 stepOptions.includeArchitecture = true;
             } else if (mode === 'test') {
-                stepName = 'RunUnitTests';
+                stepName = 'TestingStep';
                 stepOptions.includeTestAnalysis = true;
                 stepOptions.includeTestGeneration = true;
                 stepOptions.includeTestFixing = true;
@@ -304,18 +304,19 @@ class AutoModeController {
                 stepOptions.includeRepoStructure = true;
             }
 
-            this.logger.info('AutoModeController: Executing unified workflow step', {
+            this.logger.info('AutoModeController: Executing Categories-based step', {
                 stepName,
                 projectPath: workspacePath,
                 mode
             });
 
-            // Execute the unified workflow step
+            // Execute the Categories-based step
             const result = await stepRegistry.executeStep(stepName, stepOptions);
 
-            this.logger.info('AutoModeController: Auto mode execution completed', {
+            this.logger.info('AutoModeController: Auto mode execution completed with Categories', {
                 stepName,
-                success: true
+                success: true,
+                executionMethod: 'categories'
             });
 
             // Emit event for real-time updates
@@ -324,16 +325,20 @@ class AutoModeController {
                     stepName,
                     projectId,
                     userId,
-                    result
+                    result,
+                    executionMethod: 'categories'
                 });
             }
 
             res.json({
                 success: true,
-                message: 'Auto mode execution completed successfully',
+                message: 'Auto mode executed successfully with Categories system',
                 data: {
                     stepName,
-                    result: result
+                    result: result,
+                    projectPath: workspacePath,
+                    mode,
+                    executionMethod: 'categories'
                 }
             });
 

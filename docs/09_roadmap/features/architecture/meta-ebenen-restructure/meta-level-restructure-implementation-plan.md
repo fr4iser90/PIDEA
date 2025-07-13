@@ -169,7 +169,7 @@ mv backend/application/commands/CreateTaskCommand.js backend/application/command
 mv backend/application/commands/PortStreamingCommand.js backend/application/commands/categories/management/
 mv backend/application/commands/ProcessTodoListCommand.js backend/application/commands/categories/management/
 mv backend/application/commands/SendMessageCommand.js backend/application/commands/categories/management/
-mv backend/application/commands/StartStreamingCommand.js backend/application/commands/categories/management/
+mv backend/application/commands/categories/management/StartStreamingCommand.js backend/application/commands/categories/management/
 mv backend/application/commands/StopStreamingCommand.js backend/application/commands/categories/management/
 mv backend/application/commands/TestCorrectionCommand.js backend/application/commands/categories/management/
 mv backend/application/commands/UpdateTestStatusCommand.js backend/application/commands/categories/management/

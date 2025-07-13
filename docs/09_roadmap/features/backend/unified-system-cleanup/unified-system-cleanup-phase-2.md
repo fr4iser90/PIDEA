@@ -1,12 +1,12 @@
 # Unified System Cleanup – Phase 2: Core System Removal
 
 ## Overview
-This phase focuses on the systematic removal of all unified workflow system files and components, updating service dependencies to use Categories-only patterns, and cleaning up the codebase.
+This phase focuses on the systematic removal of all Categories system system files and components, updating service dependencies to use Categories-only patterns, and cleaning up the codebase.
 
 ## Objectives
-- [ ] Remove UnifiedWorkflowService.js and related files
-- [ ] Remove UnifiedWorkflowHandler.js and handler registry
-- [ ] Remove unified workflow tests and documentation
+- [ ] Remove CategoriesService.js and related files
+- [ ] Remove CategoriesHandler.js and handler registry
+- [ ] Remove Categories system tests and documentation
 - [ ] Remove migration scripts
 - [ ] Update service dependencies to use Categories only
 
@@ -36,14 +36,14 @@ const path = require('path');
 class UnifiedFileRemover {
   constructor() {
     this.filesToRemove = [
-      'backend/domain/services/UnifiedWorkflowService.js',
-      'backend/application/handlers/workflow/UnifiedWorkflowHandler.js',
-      'backend/application/handlers/UnifiedHandlerRegistry.js',
+      'backend/domain/services/CategoriesService.js',
+      'backend/application/handlers/workflow/CategoriesHandler.js',
+      'backend/application/handlers/CategoriesRegistry.js',
       'backend/application/handlers/workflow/index.js',
-      'backend/tests/unit/domain/workflows/UnifiedWorkflowFoundation.test.js',
-      'backend/tests/unit/workflows/handlers/UnifiedWorkflowHandler.test.js',
-      'backend/examples/UnifiedWorkflowFoundationExample.js',
-      'backend/docs/UnifiedWorkflowFoundation1B.md',
+      'backend/tests/unit/domain/workflows/CategoriesFoundation.test.js',
+      'backend/tests/unit/workflows/handlers/CategoriesHandler.test.js',
+      'backend/examples/CategoriesFoundationExample.js',
+      'backend/docs/CategoriesFoundation1B.md',
       'scripts/migration/start-unified-workflow-migration.js',
       'scripts/migration/complete-unified-workflow-migration.js'
     ];
@@ -141,15 +141,15 @@ class ServiceDependencyUpdater {
   updateFileContent(content, filename) {
     let updatedContent = content;
 
-    // Remove unified workflow imports
+    // Remove Categories system imports
     updatedContent = updatedContent.replace(
-      /const\s*{\s*UnifiedWorkflowHandler[^}]*}\s*=\s*require\([^)]+\);/g,
+      /const\s*{\s*CategoriesHandler[^}]*}\s*=\s*require\([^)]+\);/g,
       ''
     );
 
-    // Remove unified workflow service registrations
+    // Remove Categories system service registrations
     updatedContent = updatedContent.replace(
-      /this\.container\.register\('unifiedWorkflowService'[^}]+},?\s*{.*?}\);?\s*/gs,
+      /this\.container\.register\('CategoriesService'[^}]+},?\s*{.*?}\);?\s*/gs,
       ''
     );
 
@@ -169,13 +169,13 @@ class ServiceDependencyUpdater {
   updateWorkflowOrchestrationService(content) {
     // Remove unified handler initialization
     content = content.replace(
-      /\/\/ Initialize unified workflow handler system[\s\S]*?this\.unifiedHandler\s*=\s*new\s*UnifiedWorkflowHandler\([^)]+\);/g,
+      /\/\/ Initialize Categories system handler system[\s\S]*?this\.Categories\s*=\s*new\s*CategoriesHandler\([^)]+\);/g,
       ''
     );
 
     // Remove unified handler methods
     content = content.replace(
-      /async\s+executeWorkflowWithUnifiedHandler[\s\S]*?}/g,
+      /async\s+executeWorkflowWithCategories[\s\S]*?}/g,
       ''
     );
 
@@ -193,18 +193,18 @@ const FrameworkRegistry = require('../frameworks/FrameworkRegistry');`
   updateTaskService(content) {
     // Remove unified handler initialization
     content = content.replace(
-      /\/\/ Initialize unified workflow handler system[\s\S]*?this\.unifiedHandler\s*=\s*new\s*UnifiedWorkflowHandler\([^)]+\);/g,
+      /\/\/ Initialize Categories system handler system[\s\S]*?this\.Categories\s*=\s*new\s*CategoriesHandler\([^)]+\);/g,
       ''
     );
 
     // Remove unified handler methods
     content = content.replace(
-      /async\s+executeTaskWithUnifiedWorkflow[\s\S]*?}/g,
+      /async\s+executeTaskWithCategories[\s\S]*?}/g,
       ''
     );
 
     content = content.replace(
-      /async\s+executeTaskWithUnifiedHandler[\s\S]*?}/g,
+      /async\s+executeTaskWithCategories[\s\S]*?}/g,
       ''
     );
 
@@ -530,7 +530,7 @@ class TaskService {
 ```
 
 ## Success Criteria
-- [ ] All unified workflow files successfully removed
+- [ ] All Categories system files successfully removed
 - [ ] Service dependencies updated to use Categories only
 - [ ] WorkflowOrchestrationService updated and working
 - [ ] TaskService updated and working

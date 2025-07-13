@@ -3,7 +3,7 @@
  * 
  * Handles StopStreamingCommand execution by stopping IDE screenshot streaming.
  */
-const StopStreamingCommand = require('../commands/StopStreamingCommand');
+const StopStreamingCommand = require('@application/commands/categories/management/StopStreamingCommand');
 
 class StopStreamingHandler {
   constructor(screenshotStreamingService, eventBus = null) {
