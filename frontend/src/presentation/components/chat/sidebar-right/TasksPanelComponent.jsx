@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import APIChatRepository, { apiCall } from '@/infrastructure/repositories/APIChatRepository.jsx';
 import TaskSelectionModal from '../modal/TaskSelectionModal.jsx';
 import DocsTaskDetailsModal from '../modal/DocsTaskDetailsModal.jsx';
+import TaskCreationModal from '../modal/TaskCreationModal.jsx';
 
 // Import the SAME fetchPromptContent function that works everywhere
 async function fetchPromptContent(promptFile) {
@@ -61,6 +62,9 @@ function TasksPanelComponent({ eventBus, activePort }) {
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
   const [refactoringTasks, setRefactoringTasks] = useState([]);
   const [isAutoRefactoring, setIsAutoRefactoring] = useState(false);
+
+  // TaskCreationModal state
+  const [showTaskCreationModal, setShowTaskCreationModal] = useState(false);
 
   // Load docs tasks on mount AND when activePort changes
   useEffect(() => {
@@ -264,19 +268,32 @@ ${taskDetails.description}
 
   // Task creation logic
   const handleCreateTask = () => {
-    setModalType('feature');
-    setShowTaskModal(true);
+    setShowTaskCreationModal(true);
+  };
+
+  const handleCloseTaskCreationModal = () => {
+    setShowTaskCreationModal(false);
   };
 
   const handleTaskSubmit = async (taskData) => {
     setFeedback(null);
     try {
-      await api.createTask(taskData);
-      setFeedback('Task created successfully!');
-      setShowTaskModal(false);
-      // Optionally reload tasks here
+      logger.log('[TasksPanelComponent] Task submitted:', taskData);
+      
+      // If this is a workflow result, handle it differently
+      if (taskData.workflowId && taskData.workflowResult) {
+        setFeedback(`✅ AI Task "${taskData.title}" created and executed successfully! Workflow ID: ${taskData.workflowId}`);
+      } else {
+        // Handle regular task creation
+        await api.createTask(taskData);
+        setFeedback(`✅ Task "${taskData.title}" created successfully!`);
+      }
+      
+      setShowTaskCreationModal(false);
+      
     } catch (err) {
-      setFeedback('Failed to create task: ' + (err.message || err));
+      logger.error('[TasksPanelComponent] Error handling task submission:', err);
+      setFeedback('❌ Failed to create task: ' + (err.message || err));
       throw err;
     }
   };
@@ -481,6 +498,12 @@ ${taskDetails.description}
         tasks={refactoringTasks}
         onStartRefactoring={() => {}}
         isLoading={isAutoRefactoring}
+      />
+      <TaskCreationModal
+        isOpen={showTaskCreationModal}
+        onClose={handleCloseTaskCreationModal}
+        onSubmit={handleTaskSubmit}
+        eventBus={eventBus}
       />
       {feedback && <div className="text-sm text-blue-400">{feedback}</div>}
     </div>

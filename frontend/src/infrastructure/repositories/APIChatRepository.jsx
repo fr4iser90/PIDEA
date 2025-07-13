@@ -215,13 +215,29 @@ export default class APIChatRepository extends ChatRepository {
   }
 
   async sendMessage(message, sessionId) {
+    // Get user info for requestedBy field
+    const { user } = useAuthStore.getState();
+    const requestedBy = user?.email || user?.id || 'unknown';
+    
     const data = await apiCall(API_CONFIG.endpoints.chat.send, {
       method: 'POST',
-      body: JSON.stringify({ message, sessionId })
+      body: JSON.stringify({ message, requestedBy, sessionId })
     });
     if (!data.success || !data.data) throw new Error('Invalid response');
-    const msg = data.data.message;
-    return ChatMessage.fromJSON(msg);
+    
+    // Create a ChatMessage from the response data
+    const chatMessage = new ChatMessage({
+      id: data.data.messageId,
+      content: message,
+      sender: 'user',
+      type: message.includes('```') ? 'code' : 'text',
+      timestamp: data.data.timestamp,
+      metadata: {
+        sessionId: data.data.sessionId
+      }
+    });
+    
+    return chatMessage;
   }
 
   async getStatus() {

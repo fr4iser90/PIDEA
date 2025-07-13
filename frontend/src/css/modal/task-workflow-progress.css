@@ -1,0 +1,450 @@
+/* Task Workflow Progress Component Styles */
+
+.task-workflow-progress {
+  padding: 20px;
+  background: var(--modal-bg);
+  border-radius: 8px;
+  max-width: 800px;
+  width: 100%;
+}
+
+/* Header */
+.progress-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding-bottom: 15px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.progress-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.progress-meta {
+  display: flex;
+  gap: 15px;
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+}
+
+.elapsed-time,
+.estimated-time {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+/* Progress Bar */
+.progress-bar-container {
+  margin-bottom: 20px;
+}
+
+.progress-bar {
+  width: 100%;
+  height: 12px;
+  background: var(--border-color);
+  border-radius: 6px;
+  overflow: hidden;
+  margin-bottom: 8px;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #4488ff, #44aa44);
+  border-radius: 6px;
+  transition: width 0.3s ease;
+}
+
+.progress-text {
+  text-align: center;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+/* Status Display */
+.status-display {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  margin-bottom: 20px;
+  padding: 15px;
+  background: var(--bg-secondary);
+  border-radius: 6px;
+}
+
+.status-badge {
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.status-badge.status-starting {
+  background: #888888;
+  color: white;
+}
+
+.status-badge.status-running {
+  background: #4488ff;
+  color: white;
+}
+
+.status-badge.status-completed {
+  background: #44aa44;
+  color: white;
+}
+
+.status-badge.status-error {
+  background: #ff4444;
+  color: white;
+}
+
+.status-badge.status-cancelled {
+  background: #ffaa00;
+  color: white;
+}
+
+.status-details {
+  flex: 1;
+  font-size: 0.9rem;
+  color: var(--text-primary);
+}
+
+/* Error Display */
+.error-display {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-bottom: 20px;
+  padding: 15px;
+  background: #fff5f5;
+  border: 1px solid #ffcccc;
+  border-radius: 6px;
+}
+
+.error-icon {
+  font-size: 1.2rem;
+  color: #ff4444;
+  margin-top: 2px;
+}
+
+.error-message {
+  flex: 1;
+  color: #cc0000;
+  font-size: 0.9rem;
+}
+
+/* Progress Steps */
+.progress-steps {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 15px;
+  margin-bottom: 25px;
+}
+
+.progress-step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 15px;
+  background: var(--bg-secondary);
+  border-radius: 8px;
+  border: 2px solid transparent;
+  transition: all 0.3s ease;
+}
+
+.progress-step.active {
+  border-color: #4488ff;
+  background: #f0f8ff;
+  box-shadow: 0 2px 8px rgba(68, 136, 255, 0.2);
+}
+
+.progress-step.completed {
+  border-color: #44aa44;
+  background: #f0fff0;
+}
+
+.progress-step.upcoming {
+  opacity: 0.6;
+}
+
+.step-icon {
+  font-size: 1.5rem;
+  margin-bottom: 8px;
+}
+
+.step-label {
+  font-size: 0.8rem;
+  font-weight: 500;
+  text-align: center;
+  color: var(--text-primary);
+  margin-bottom: 5px;
+}
+
+.step-progress {
+  font-size: 0.7rem;
+  color: var(--text-secondary);
+  font-weight: 600;
+}
+
+/* Task Details */
+.task-details {
+  margin-bottom: 25px;
+  padding: 20px;
+  background: var(--bg-secondary);
+  border-radius: 8px;
+  border-left: 4px solid #4488ff;
+}
+
+.task-details h4 {
+  margin: 0 0 15px 0;
+  font-size: 1.1rem;
+  color: var(--text-primary);
+}
+
+.task-info {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 10px;
+}
+
+.task-field {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+}
+
+.task-field strong {
+  color: var(--text-primary);
+  margin-right: 5px;
+}
+
+/* Workflow Logs */
+.workflow-logs {
+  margin-bottom: 25px;
+}
+
+.workflow-logs h4 {
+  margin: 0 0 15px 0;
+  font-size: 1.1rem;
+  color: var(--text-primary);
+}
+
+.logs-container {
+  max-height: 200px;
+  overflow-y: auto;
+  background: var(--bg-secondary);
+  border-radius: 6px;
+  padding: 10px;
+}
+
+.log-entry {
+  display: flex;
+  gap: 10px;
+  padding: 8px;
+  margin-bottom: 5px;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+}
+
+.log-entry.log-info {
+  background: #f0f8ff;
+  color: #0066cc;
+}
+
+.log-entry.log-success {
+  background: #f0fff0;
+  color: #006600;
+}
+
+.log-entry.log-warning {
+  background: #fff8f0;
+  color: #cc6600;
+}
+
+.log-entry.log-error {
+  background: #fff0f0;
+  color: #cc0000;
+}
+
+.log-timestamp {
+  color: var(--text-secondary);
+  font-weight: 500;
+  min-width: 80px;
+}
+
+.log-message {
+  flex: 1;
+}
+
+/* Action Buttons */
+.progress-actions {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+  padding-top: 20px;
+  border-top: 1px solid var(--border-color);
+}
+
+.btn-primary,
+.btn-secondary,
+.btn-danger {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 120px;
+}
+
+.btn-primary {
+  background: #4488ff;
+  color: white;
+}
+
+.btn-primary:hover {
+  background: #3366cc;
+}
+
+.btn-secondary {
+  background: var(--border-color);
+  color: var(--text-primary);
+}
+
+.btn-secondary:hover {
+  background: var(--text-secondary);
+  color: white;
+}
+
+.btn-danger {
+  background: #ff4444;
+  color: white;
+}
+
+.btn-danger:hover {
+  background: #cc0000;
+}
+
+.btn-danger:disabled {
+  background: #cccccc;
+  cursor: not-allowed;
+}
+
+/* Loading Indicator */
+.loading-indicator {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 15px;
+  padding: 40px 20px;
+}
+
+.loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid var(--border-color);
+  border-top: 4px solid #4488ff;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.loading-indicator p {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  margin: 0;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .task-workflow-progress {
+    padding: 15px;
+  }
+
+  .progress-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .progress-meta {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .progress-steps {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .task-info {
+    grid-template-columns: 1fr;
+  }
+
+  .progress-actions {
+    flex-direction: column;
+  }
+
+  .btn-primary,
+  .btn-secondary,
+  .btn-danger {
+    width: 100%;
+  }
+}
+
+/* Dark Mode Support */
+@media (prefers-color-scheme: dark) {
+  .task-workflow-progress {
+    background: var(--modal-bg-dark, #2a2a2a);
+  }
+
+  .progress-step {
+    background: var(--bg-secondary-dark, #3a3a3a);
+  }
+
+  .progress-step.active {
+    background: var(--bg-active-dark, #1a3a5a);
+  }
+
+  .progress-step.completed {
+    background: var(--bg-completed-dark, #1a3a1a);
+  }
+
+  .task-details {
+    background: var(--bg-secondary-dark, #3a3a3a);
+  }
+
+  .logs-container {
+    background: var(--bg-secondary-dark, #3a3a3a);
+  }
+
+  .log-entry.log-info {
+    background: var(--bg-info-dark, #1a2a3a);
+  }
+
+  .log-entry.log-success {
+    background: var(--bg-success-dark, #1a2a1a);
+  }
+
+  .log-entry.log-warning {
+    background: var(--bg-warning-dark, #3a2a1a);
+  }
+
+  .log-entry.log-error {
+    background: var(--bg-error-dark, #3a1a1a);
+  }
+} 
