@@ -1,4 +1,4 @@
-# Task Phase Grouping Implementation
+# Task Phase Grouping Implementation - CORRECTED PLAN
 
 ## 1. Project Overview
 - **Feature/Component Name**: Task Phase Grouping
@@ -17,25 +17,26 @@
 - **Frontend Changes**: New grouping component, modified task display logic
 - **Backend Changes**: New service methods for phase grouping and execution
 
-## 3. File Impact Analysis
+## 3. File Impact Analysis - CORRECTED
+
 #### Files to Modify:
 - [ ] `frontend/src/presentation/components/chat/sidebar-right/TasksPanelComponent.jsx` - Add phase grouping logic
 - [ ] `frontend/src/infrastructure/repositories/APIChatRepository.jsx` - Add new API methods
-- [ ] `frontend/src/presentation/css/TasksPanel.css` - Add phase group styling
-- [ ] `backend/presentation/api/controllers/TaskController.js` - Add new endpoints
+- [ ] `frontend/src/css/global/sidebar-right.css` - Add phase group styling (CORRECTED PATH)
+- [ ] `backend/presentation/api/TaskController.js` - Add new endpoints
 - [ ] `backend/domain/services/TaskService.js` - Add phase grouping methods
 
 #### Files to Create:
 - [ ] `frontend/src/presentation/components/PhaseGroupComponent.jsx` - New component for phase display
 - [ ] `frontend/src/presentation/components/PhaseExecutionButton.jsx` - Button for executing entire phases
 - [ ] `backend/domain/services/PhaseExecutionService.js` - Service for phase execution logic
-- [ ] `frontend/src/presentation/css/PhaseGroupComponent.css` - Phase group styling
-- [ ] `frontend/src/presentation/css/PhaseExecutionButton.css` - Execution button styling
+- [ ] `frontend/src/css/components/PhaseGroupComponent.css` - Phase group styling (CORRECTED PATH)
+- [ ] `frontend/src/css/components/PhaseExecutionButton.css` - Execution button styling (CORRECTED PATH)
 
 #### Files to Delete:
 - [ ] None
 
-## 4. Implementation Phases
+## 4. Implementation Phases - CORRECTED
 
 #### Phase 1: Backend API Extension (2 hours)
 - [ ] Extend TaskService with getTasksByPhases method
@@ -64,13 +65,15 @@
 - [ ] Add error handling for phase operations
 - [ ] Performance testing with large task sets
 
-## 5. Code Standards & Patterns
+## 5. Code Standards & Patterns - CORRECTED
 - **Coding Style**: ESLint with existing project rules, Prettier formatting
 - **Naming Conventions**: camelCase for variables/functions, PascalCase for components
 - **Error Handling**: Try-catch with specific error types, user-friendly error messages
 - **Logging**: Winston logger with structured logging for phase operations
 - **Testing**: Jest framework, 90% coverage requirement
 - **Documentation**: JSDoc for all public methods, component documentation
+- **CSS Structure**: Follow existing patterns in `frontend/src/css/global/` and `frontend/src/css/components/`
+- **Import Paths**: Use `@/` alias for module imports (as per user preference)
 
 ## 6. Security Considerations
 - [ ] Validate project access permissions for phase operations
@@ -256,4 +259,90 @@ The phase grouping feature should be implemented by:
 - **Start with Backend**: Implement and test backend services first
 - **Incremental Development**: Build and test each phase before proceeding
 - **Leverage Existing Systems**: Use working auto-refactoring and validation systems
-- **Comprehensive Testing**: Test each component thoroughly before integration 
+- **Comprehensive Testing**: Test each component thoroughly before integration
+
+## 17. CORRECTED FILE PATHS
+
+### Frontend CSS Structure (CORRECTED):
+- **Global Styles**: `frontend/src/css/global/sidebar-right.css` - Add phase styles to existing file
+- **Component Styles**: `frontend/src/css/components/PhaseGroupComponent.css` - New component styles
+- **Component Styles**: `frontend/src/css/components/PhaseExecutionButton.css` - New button styles
+
+### Frontend Component Structure (CORRECTED):
+- **Main Component**: `frontend/src/presentation/components/PhaseGroupComponent.jsx`
+- **Button Component**: `frontend/src/presentation/components/PhaseExecutionButton.jsx`
+- **Integration**: Modify existing `frontend/src/presentation/components/chat/sidebar-right/TasksPanelComponent.jsx`
+
+### Backend Service Structure (CORRECTED):
+- **Service Extension**: Add methods to existing `backend/domain/services/TaskService.js`
+- **New Service**: `backend/domain/services/PhaseExecutionService.js`
+- **Controller Extension**: Add endpoints to existing `backend/presentation/api/TaskController.js`
+
+### API Repository Structure (CORRECTED):
+- **Repository Extension**: Add methods to existing `frontend/src/infrastructure/repositories/APIChatRepository.jsx`
+- **Error Handling**: Extend existing error handling patterns
+- **Authentication**: Use existing token management system
+
+## 18. CORRECTED IMPLEMENTATION APPROACH
+
+### Phase 1: Backend Foundation (2 hours)
+1. **Extend TaskService.js** - Add `getTasksByPhases()` and `executePhase()` methods
+2. **Create PhaseExecutionService.js** - New service leveraging existing Auto-Finish System
+3. **Extend TaskController.js** - Add `/api/projects/:projectId/tasks/phases` and `/api/projects/:projectId/phases/:phaseName/execute` endpoints
+4. **Add unit tests** - Test all new methods with 90%+ coverage
+
+### Phase 2: Frontend API Layer (1 hour)
+1. **Extend APIChatRepository.jsx** - Add `getTasksByPhases()` and `executePhase()` methods
+2. **Add error handling** - Phase-specific error handling following existing patterns
+3. **Test API integration** - Verify connectivity with backend endpoints
+
+### Phase 3: Frontend Components (3 hours)
+1. **Create PhaseGroupComponent.jsx** - React component for displaying grouped tasks
+2. **Create PhaseExecutionButton.jsx** - Button component for phase execution
+3. **Modify TasksPanelComponent.jsx** - Integrate phase grouping into existing component
+4. **Add CSS styling** - Phase styles in `frontend/src/css/components/` following existing patterns
+
+### Phase 4: Integration & Testing (2 hours)
+1. **Integrate components** - Connect all pieces in TasksPanelComponent
+2. **Add comprehensive tests** - Unit, integration, and E2E tests
+3. **Error handling** - Robust error boundaries and user feedback
+4. **Performance testing** - Test with large task sets
+
+## 19. CORRECTED SUCCESS CRITERIA
+
+### Backend Success Criteria:
+- [ ] `TaskService.getTasksByPhases()` returns properly grouped tasks
+- [ ] `TaskService.executePhase()` uses existing Auto-Finish System
+- [ ] New API endpoints return correct data format
+- [ ] PhaseExecutionService integrates with existing Git workflow
+- [ ] All unit tests pass with 90%+ coverage
+
+### Frontend Success Criteria:
+- [ ] PhaseGroupComponent displays tasks grouped by phases
+- [ ] PhaseExecutionButton provides execution functionality
+- [ ] TasksPanelComponent integrates phase grouping seamlessly
+- [ ] CSS styling follows existing design patterns
+- [ ] API integration works correctly with backend
+
+### Integration Success Criteria:
+- [ ] Complete phase grouping workflow works end-to-end
+- [ ] Error handling provides user-friendly messages
+- [ ] Performance requirements are met
+- [ ] All tests pass (unit, integration, E2E)
+- [ ] User experience is improved with grouped view
+
+## 20. CORRECTED RISK MITIGATION
+
+### Technical Risks:
+- **Backend Integration**: Start with Phase 1 and test thoroughly before proceeding
+- **Frontend Complexity**: Build components incrementally with testing
+- **API Compatibility**: Follow existing API patterns and error handling
+- **Performance**: Test with large datasets early in development
+
+### Process Risks:
+- **Dependencies**: Complete phases sequentially, don't skip ahead
+- **Testing**: Test each component before integration
+- **Documentation**: Update documentation as implementation progresses
+- **Rollback**: Maintain ability to rollback each phase independently
+
+**Overall Status**: ❌ **NOT IMPLEMENTED** - Ready for Phase 1 implementation 

@@ -1,11 +1,11 @@
-# Phase 1: Backend API Extension
+# Phase 1: Backend API Extension - CORRECTED
 
 ## Overview
 Extend the backend to support task phase grouping and phase execution functionality by leveraging existing working systems.
 
 ## Current State Analysis
-- **TaskService.js**: Exists but has no phase grouping methods
-- **TaskController.js**: Exists but has no phase endpoints
+- **TaskService.js**: Exists at `backend/domain/services/TaskService.js` but has no phase grouping methods
+- **TaskController.js**: Exists at `backend/presentation/api/TaskController.js` but has no phase endpoints
 - **PhaseExecutionService.js**: Does not exist
 - **Auto-Finish System**: ✅ Working and available for integration
 - **Git Workflow Manager**: ✅ Working and available for integration
@@ -48,7 +48,7 @@ async getTasksByPhases(projectId) {
     
     return grouped;
   } catch (error) {
-    this.logger.error('Error getting tasks by phases:', error);
+    console.error('Error getting tasks by phases:', error);
     throw new Error(`Failed to get tasks by phases: ${error.message}`);
   }
 }
@@ -123,7 +123,7 @@ async executePhase(projectId, phaseName) {
     
     return results;
   } catch (error) {
-    this.logger.error('Error executing phase:', error);
+    console.error('Error executing phase:', error);
     throw new Error(`Failed to execute phase ${phaseName}: ${error.message}`);
   }
 }
@@ -141,7 +141,7 @@ async getTasksByPhase(projectId, phaseName) {
 ```
 
 ### 3. Create new API endpoints in TaskController
-**File**: `backend/presentation/api/controllers/TaskController.js`
+**File**: `backend/presentation/api/TaskController.js`
 **Time**: 30 minutes
 **Status**: ❌ Not implemented
 
@@ -162,7 +162,7 @@ async getTasksByPhases(req, res) {
       }
     });
   } catch (error) {
-    this.logger.error('Error getting tasks by phases:', error);
+    console.error('Error getting tasks by phases:', error);
     res.status(500).json({
       success: false,
       error: 'Failed to get tasks by phases',
@@ -185,7 +185,7 @@ async executePhase(req, res) {
       data: results
     });
   } catch (error) {
-    this.logger.error('Error executing phase:', error);
+    console.error('Error executing phase:', error);
     res.status(500).json({
       success: false,
       error: 'Failed to execute phase',
@@ -217,7 +217,7 @@ async executePhases(req, res) {
       data: results
     });
   } catch (error) {
-    this.logger.error('Error executing phases:', error);
+    console.error('Error executing phases:', error);
     res.status(500).json({
       success: false,
       error: 'Failed to execute phases',
@@ -259,7 +259,7 @@ class PhaseExecutionService {
     
     for (const phaseName of phaseNames) {
       try {
-        logger.info(`Executing phase: ${phaseName} for project: ${projectId}`);
+        console.log(`Executing phase: ${phaseName} for project: ${projectId}`);
         
         // Use existing Git workflow if available
         if (this.gitWorkflowManager) {
@@ -286,7 +286,7 @@ class PhaseExecutionService {
           results.executedPhases++;
         }
       } catch (error) {
-        logger.error(`Failed to execute phase ${phaseName}:`, error);
+        console.error(`Failed to execute phase ${phaseName}:`, error);
         results.failedPhases++;
         results.phaseResults.push({
           phaseName,

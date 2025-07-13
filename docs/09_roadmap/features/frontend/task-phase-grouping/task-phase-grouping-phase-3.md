@@ -1,4 +1,4 @@
-# Phase 3: Frontend Component Development
+# Phase 3: Frontend Component Development - CORRECTED
 
 ## Overview
 Create new React components for displaying grouped tasks by phases and implement phase execution functionality.
@@ -7,7 +7,7 @@ Create new React components for displaying grouped tasks by phases and implement
 - **TasksPanelComponent.jsx**: Exists at `frontend/src/presentation/components/chat/sidebar-right/TasksPanelComponent.jsx`
 - **Current Functionality**: Handles docs tasks but not phase grouping
 - **Component Structure**: Uses React hooks and functional components
-- **Styling**: Basic CSS exists but needs phase-specific styling
+- **Styling**: CSS exists in `frontend/src/css/global/sidebar-right.css` but needs phase-specific styling
 - **Missing Components**: PhaseGroupComponent and PhaseExecutionButton don't exist
 
 ## Tasks
@@ -20,7 +20,7 @@ Create new React components for displaying grouped tasks by phases and implement
 ```jsx
 import React, { useState } from 'react';
 import PropTypes from 'prop-types';
-import './PhaseGroupComponent.css';
+import '@/css/components/PhaseGroupComponent.css';
 
 const PhaseGroupComponent = ({ 
   phaseName, 
@@ -175,7 +175,7 @@ export default PhaseGroupComponent;
 ```jsx
 import React, { useState } from 'react';
 import PropTypes from 'prop-types';
-import './PhaseExecutionButton.css';
+import '@/css/components/PhaseExecutionButton.css';
 
 const PhaseExecutionButton = ({ 
   phaseName, 
@@ -281,19 +281,33 @@ import PropTypes from 'prop-types';
 import PhaseGroupComponent from '../../PhaseGroupComponent';
 import PhaseExecutionButton from '../../PhaseExecutionButton';
 import APIChatRepository from '@/infrastructure/repositories/APIChatRepository';
-import './TasksPanelComponent.css';
+import '@/css/global/sidebar-right.css';
 
 const TasksPanelComponent = ({ eventBus, activePort }) => {
+  const api = new APIChatRepository();
   const [groupedTasks, setGroupedTasks] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [executingPhases, setExecutingPhases] = useState(new Set());
   
-  const apiRepository = new APIChatRepository();
+  // Existing state for docs tasks
+  const [docsTasks, setDocsTasks] = useState([]);
+  const [docsTaskFilter, setDocsTaskFilter] = useState('all');
+  const [docsTaskSearch, setDocsTaskSearch] = useState('');
+  const [selectedDocsTask, setSelectedDocsTask] = useState(null);
+  const [isDocsTaskModalOpen, setIsDocsTaskModalOpen] = useState(false);
+  const [isLoadingDocsTasks, setIsLoadingDocsTasks] = useState(false);
+  const [isLoadingDocsTaskDetails, setIsLoadingDocsTaskDetails] = useState(false);
 
   useEffect(() => {
     if (activePort) {
+      console.log('[TasksPanelComponent] Loading tasks for port:', activePort);
       loadGroupedTasks();
+      loadDocsTasks();
+    } else {
+      console.log('[TasksPanelComponent] No active port, clearing tasks');
+      setGroupedTasks({});
+      setDocsTasks([]);
     }
   }, [activePort]);
 
@@ -302,8 +316,8 @@ const TasksPanelComponent = ({ eventBus, activePort }) => {
     setError(null);
     
     try {
-      const projectId = await apiRepository.getCurrentProjectId();
-      const phases = await apiRepository.getTasksByPhases(projectId);
+      const projectId = await api.getCurrentProjectId();
+      const phases = await api.getTasksByPhases(projectId);
       setGroupedTasks(phases);
     } catch (err) {
       setError(err.message);
@@ -324,8 +338,8 @@ const TasksPanelComponent = ({ eventBus, activePort }) => {
     setExecutingPhases(prev => new Set(prev).add(phaseName));
     
     try {
-      const projectId = await apiRepository.getCurrentProjectId();
-      const result = await apiRepository.executePhase(projectId, phaseName);
+      const projectId = await api.getCurrentProjectId();
+      const result = await api.executePhase(projectId, phaseName);
       console.log(`Phase ${phaseName} execution result:`, result);
       
       // Reload tasks to get updated status
@@ -350,8 +364,8 @@ const TasksPanelComponent = ({ eventBus, activePort }) => {
     if (phaseNames.length === 0) return;
 
     try {
-      const projectId = await apiRepository.getCurrentProjectId();
-      const result = await apiRepository.executePhases(projectId, phaseNames);
+      const projectId = await api.getCurrentProjectId();
+      const result = await api.executePhases(projectId, phaseNames);
       console.log('All phases execution result:', result);
       
       // Reload tasks to get updated status
@@ -381,6 +395,25 @@ const TasksPanelComponent = ({ eventBus, activePort }) => {
     return totalTasks > 0 ? (completedTasks / totalTasks) * 100 : 0;
   };
 
+  // Existing docs tasks functions (keep existing implementation)
+  const loadDocsTasks = async () => {
+    setIsLoadingDocsTasks(true);
+    try {
+      const response = await api.getDocsTasks();
+      if (response.success) {
+        setDocsTasks(response.data || []);
+      } else {
+        setFeedback('Failed to load documentation tasks');
+      }
+    } catch (error) {
+      setFeedback('Error loading documentation tasks: ' + error.message);
+    } finally {
+      setIsLoadingDocsTasks(false);
+    }
+  };
+
+  // ... keep all existing docs tasks functions ...
+
   if (loading) {
     return (
       <div className="tasks-panel loading">
@@ -408,60 +441,96 @@ const TasksPanelComponent = ({ eventBus, activePort }) => {
   const totalProgress = getTotalProgress();
 
   return (
-    <div className="tasks-panel">
-      <div className="tasks-header">
-        <h2>Project Tasks</h2>
-        <div className="tasks-summary">
-          <div className="overall-progress">
-            <div className="progress-bar">
-              <div 
-                className="progress-fill" 
-                style={{ width: `${totalProgress}%` }}
-              />
-            </div>
-            <span className="progress-text">{Math.round(totalProgress)}% Complete</span>
-          </div>
-          
-          {phaseEntries.length > 0 && (
-            <button
-              className="execute-all-button"
-              onClick={handleExecuteAllPhases}
-              disabled={executingPhases.size > 0}
+    <div className="tasks-tab space-y-4 p-3">
+      {/* Phase Grouping Section */}
+      <div className="panel-block">
+        <div className="flex justify-between items-center mb-3">
+          <h3 className="font-semibold text-lg">📋 Project Phases</h3>
+          <div className="flex gap-2">
+            {phaseEntries.length > 0 && (
+              <button
+                className="btn-primary text-sm"
+                onClick={handleExecuteAllPhases}
+                disabled={executingPhases.size > 0}
+              >
+                Execute All Phases
+              </button>
+            )}
+            <button 
+              className="btn-secondary text-sm"
+              onClick={loadGroupedTasks}
+              disabled={loading}
             >
-              Execute All Phases
+              {loading ? 'Loading...' : '🔄 Refresh'}
             </button>
+          </div>
+        </div>
+        
+        <div className="overall-progress mb-4">
+          <div className="progress-bar">
+            <div 
+              className="progress-fill" 
+              style={{ width: `${totalProgress}%` }}
+            />
+          </div>
+          <span className="progress-text">{Math.round(totalProgress)}% Complete</span>
+        </div>
+
+        <div className="phases-container">
+          {phaseEntries.length === 0 ? (
+            <div className="no-tasks">
+              <p>No tasks found for this project.</p>
+            </div>
+          ) : (
+            phaseEntries.map(([phaseName, phaseData]) => (
+              <PhaseGroupComponent
+                key={phaseName}
+                phaseName={phaseName}
+                phaseData={phaseData}
+                onTaskClick={handleTaskClick}
+                onExecutePhase={handleExecutePhase}
+                isExecuting={executingPhases.has(phaseName)}
+              />
+            ))
           )}
         </div>
       </div>
 
-      <div className="phases-container">
-        {phaseEntries.length === 0 ? (
-          <div className="no-tasks">
-            <p>No tasks found for this project.</p>
+      {/* Existing Documentation Tasks Section */}
+      <div className="panel-block">
+        <div className="flex justify-between items-center mb-3">
+          <h3 className="font-semibold text-lg">📚 Documentation Tasks</h3>
+          <div className="flex gap-2">
+            <button 
+              className="btn-secondary text-sm"
+              onClick={handleSyncDocsTasks}
+              disabled={isLoadingDocsTasks}
+            >
+              {isLoadingDocsTasks ? 'Syncing...' : '🔄 Sync'}
+            </button>
+            <button 
+              className="btn-secondary text-sm"
+              onClick={handleCleanDocsTasks}
+              disabled={isLoadingDocsTasks}
+            >
+              {isLoadingDocsTasks ? 'Cleaning...' : '🗑️ Clean'}
+            </button>
+            <button 
+              className="btn-secondary text-sm"
+              onClick={loadDocsTasks}
+              disabled={isLoadingDocsTasks}
+            >
+              {isLoadingDocsTasks ? 'Loading...' : '🔄 Refresh'}
+            </button>
           </div>
-        ) : (
-          phaseEntries.map(([phaseName, phaseData]) => (
-            <PhaseGroupComponent
-              key={phaseName}
-              phaseName={phaseName}
-              phaseData={phaseData}
-              onTaskClick={handleTaskClick}
-              onExecutePhase={handleExecutePhase}
-              isExecuting={executingPhases.has(phaseName)}
-            />
-          ))
-        )}
+        </div>
+        
+        {/* Keep existing docs tasks implementation */}
+        {/* ... existing docs tasks filter and list ... */}
       </div>
 
-      <div className="tasks-footer">
-        <button 
-          className="refresh-button"
-          onClick={loadGroupedTasks}
-          disabled={loading}
-        >
-          Refresh Tasks
-        </button>
-      </div>
+      {/* Keep existing modals and feedback */}
+      {/* ... existing modals and feedback implementation ... */}
     </div>
   );
 };
@@ -475,7 +544,7 @@ export default TasksPanelComponent;
 ```
 
 ### 4. Add phase group styling and animations
-**File**: `frontend/src/presentation/css/PhaseGroupComponent.css`
+**File**: `frontend/src/css/components/PhaseGroupComponent.css`
 **Time**: 30 minutes
 **Status**: ❌ Not implemented
 
@@ -788,7 +857,7 @@ export default TasksPanelComponent;
 ```
 
 ### 5. Implement phase execution UI feedback
-**File**: `frontend/src/presentation/css/PhaseExecutionButton.css`
+**File**: `frontend/src/css/components/PhaseExecutionButton.css`
 **Time**: 15 minutes
 **Status**: ❌ Not implemented
 
@@ -917,7 +986,7 @@ export default TasksPanelComponent;
 ## Success Criteria
 - [ ] PhaseGroupComponent displays tasks grouped by phases
 - [ ] PhaseExecutionButton provides execution functionality with confirmation
-- [ ] TasksPanelComponent uses grouped data instead of flat list
+- [ ] TasksPanelComponent integrates phase grouping with existing docs tasks
 - [ ] Phase group styling includes animations and visual feedback
 - [ ] Phase execution provides real-time UI feedback
 - [ ] Components are responsive and accessible
@@ -935,6 +1004,7 @@ export default TasksPanelComponent;
 - **Event Bus**: Integrates with existing event system
 - **Project Management**: Uses existing project ID management
 - **Error Handling**: Extends existing error handling patterns
+- **Docs Tasks**: Maintains existing docs tasks functionality
 
 ## Notes
 - Uses modern React patterns with hooks
@@ -943,4 +1013,5 @@ export default TasksPanelComponent;
 - Includes responsive design for mobile devices
 - Uses CSS animations for smooth user experience
 - Implements proper accessibility features
+- Integrates with existing TasksPanelComponent without breaking docs tasks
 - Depends on Phase 1 and Phase 2 being completed first 

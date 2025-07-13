@@ -1,14 +1,14 @@
-# Phase 2: Frontend API Integration
+# Phase 2: Frontend API Integration - CORRECTED
 
 ## Overview
 Extend the frontend API layer to support the new phase grouping and execution endpoints.
 
 ## Current State Analysis
 - **APIChatRepository.jsx**: Exists at `frontend/src/infrastructure/repositories/APIChatRepository.jsx`
-- **Current Methods**: Has docs task methods but no phase grouping methods
+- **Current Methods**: Has comprehensive API infrastructure but no phase grouping methods
 - **Error Handling**: Basic error handling exists but needs enhancement for phase operations
 - **Authentication**: Token management is working
-- **API Integration**: Basic API call infrastructure is functional
+- **API Integration**: Comprehensive API call infrastructure is functional
 
 ## Tasks
 
@@ -25,7 +25,7 @@ Extend the frontend API layer to support the new phase grouping and execution en
  */
 async getTasksByPhases(projectId) {
   try {
-    const response = await this.apiCall(`/api/projects/${projectId}/tasks/phases`, {
+    const response = await apiCall(`/api/projects/${projectId}/tasks/phases`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -59,7 +59,7 @@ async getTasksByPhases(projectId) {
  */
 async executePhase(projectId, phaseName) {
   try {
-    const response = await this.apiCall(`/api/projects/${projectId}/phases/${phaseName}/execute`, {
+    const response = await apiCall(`/api/projects/${projectId}/phases/${phaseName}/execute`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -86,7 +86,7 @@ async executePhase(projectId, phaseName) {
  */
 async executePhases(projectId, phaseNames) {
   try {
-    const response = await this.apiCall(`/api/projects/${projectId}/phases/execute`, {
+    const response = await apiCall(`/api/projects/${projectId}/phases/execute`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
