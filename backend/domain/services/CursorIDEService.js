@@ -3,7 +3,8 @@ const WorkspacePathDetector = require('./workspace/WorkspacePathDetector');
 const ChatMessageHandler = require('./chat/ChatMessageHandler');
 const ChatHistoryExtractor = require('./chat/ChatHistoryExtractor');
 const PackageJsonAnalyzer = require('./dev-server/PackageJsonAnalyzer');
-
+const Logger = require('@logging/Logger');
+const logger = new Logger('CursorIDEService');
 
 class CursorIDEService {
   constructor(browserManager, ideManager, eventBus = null) {
@@ -627,8 +628,6 @@ Complete all generated tasks and provide a comprehensive summary.
       // Create file in workspace via Playwright
       const fs = require('fs');
       const path = require('path');
-const Logger = require('@logging/Logger');
-const logger = new Logger('Logger');
       
       // Use real workspace path, not backend path
       const autoModeFilePath = path.join(workspacePath, 'auto_mode_tasks.md');
