@@ -1,13 +1,12 @@
-# Prompt: Task Review & Validation System
+# Prompt: Task Phase Creation & Splitting System
 
 ## Goal
-Review, validate, and analyze development tasks against the actual codebase. Analyze implementation files, verify code existence, identify gaps, and create phase files for task splitting when needed. **DO NOT modify the docs/09_roadmap/features/[category]/[name]/[name]-implementation.md** - only analyze and create phase files.
+Analyze files to determine if task splitting is needed and create phase files for large or complex tasks. **DO NOT modify the implementation file directly** - only analyze and create phase files when splitting is required.
 
 > **File Pattern Requirement:**  
-> All implementation and phase files must always be created using this pattern:  
-> - Implementation: docs/09_roadmap/features/[category]/[name]/[name]-implementation.md  
+> All phase files must follow this pattern:  
 > - Phase: docs/09_roadmap/features/[category]/[name]/[name]-phase-[number].md  
-> If a file is missing, it must be created automatically. This pattern is required for orchestration and grouping in the system.
+> If splitting is needed, phase files must be created automatically. This pattern is required for orchestration and grouping in the system.
 
 ## Core Review Process
 - **Analyze Codebase**: Check Plan against codebase, collect all data u need.
@@ -15,6 +14,7 @@ Review, validate, and analyze development tasks against the actual codebase. Ana
 - **Zero User Input Required**: Update file, and add Validation marker.
 - **Error Recovery**: Handle failures and continue execution
 - **Validation**: Verify each phase completion before proceeding
+
 
 ### Phase 1: Codebase Analysis
 - [ ] Scan entire project structure for current state

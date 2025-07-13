@@ -3,8 +3,9 @@
 ## Goal
 Generate a complete, actionable development plan that will be parsed into a database task with all necessary details for AI auto-implementation, tracking, and execution.
 
+## Phase
 Check Plan against codebase, collect all data u need!
-Create new [Name]-implementation.md in docs/09_roadmap/features/[category]/[name]/ with the following structure:
+Create new Plan/Implementation [Name]-implementation.md in docs/09_roadmap/features/[category]/[name]/ with the following structure:
 **Note**: The system automatically creates a hierarchical folder structure: Category → Task Name → Implementation files
 
 ## Template Structure
