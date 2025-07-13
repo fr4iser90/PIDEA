@@ -41,12 +41,26 @@ module.exports = {
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/$1',
     '^@/domain/(.*)$': '<rootDir>/domain/$1',
+    '^@domain$': '<rootDir>/domain',
     '^@/application/(.*)$': '<rootDir>/application/$1',
+    '^@application$': '<rootDir>/application',
     '^@/infrastructure/(.*)$': '<rootDir>/infrastructure/$1',
+    '^@infrastructure$': '<rootDir>/infrastructure',
     '^@/presentation/(.*)$': '<rootDir>/presentation/$1',
+    '^@presentation$': '<rootDir>/presentation',
     '^@/cli/(.*)$': '<rootDir>/cli/$1',
+    '^@cli$': '<rootDir>/cli',
     '^@/scripts/(.*)$': '<rootDir>/scripts/$1',
-    '^@/tests/(.*)$': '<rootDir>/tests/$1'
+    '^@scripts$': '<rootDir>/scripts',
+    '^@/tests/(.*)$': '<rootDir>/tests/$1',
+    '^@tests$': '<rootDir>/tests',
+    '^@entities/(.*)$': '<rootDir>/domain/entities/$1',
+    '^@entities$': '<rootDir>/domain/entities',
+    '^@services/(.*)$': '<rootDir>/domain/services/$1',
+    '^@services$': '<rootDir>/domain/services',
+    '^@value-objects/(.*)$': '<rootDir>/domain/value-objects/$1',
+    '^@value-objects$': '<rootDir>/domain/value-objects',
+
   },
   
   transform: {
