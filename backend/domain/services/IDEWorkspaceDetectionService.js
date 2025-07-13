@@ -1,4 +1,7 @@
 
+const Logger = require('@logging/Logger');
+const logger = new Logger('IDEWorkspaceDetectionService');
+
 /**
  * IDE WORKSPACE DETECTION SERVICE
  * Domain Service für File-basierte Workspace-Erkennung
@@ -121,8 +124,6 @@ class IDEWorkspaceDetectionService {
 
       // Extract project name from workspace path
       const path = require('path');
-const Logger = require('@logging/Logger');
-const logger = new Logger('Logger');
       const projectName = path.basename(workspacePath);
       
       // Generate project ID
