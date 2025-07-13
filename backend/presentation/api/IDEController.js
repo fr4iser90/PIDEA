@@ -1,6 +1,8 @@
 const DocsTasksHandler = require('@handlers/categories/management/DocsTasksHandler');
 const TerminalLogCaptureService = require('@services/TerminalLogCaptureService');
 const TerminalLogReader = require('@services/TerminalLogReader');
+const Logger = require('@logging/Logger');
+const logger = new Logger('IDEController');
 
 
 class IDEController {

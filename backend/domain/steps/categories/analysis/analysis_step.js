@@ -90,70 +90,77 @@ class AnalysisStep {
       // 1. Project Analysis
       if (projectAnalyzer) {
         logger.log('🔍 Running project analysis...');
-        results.projectAnalysis = await projectAnalyzer.analyzeProject(projectPath, {
+        const projectAnalysis = await projectAnalyzer.analyzeProject(projectPath, {
           includeRepoStructure: context.includeRepoStructure !== false,
           includeDependencies: context.includeDependencies !== false
         });
+        results.projectAnalysis = this.cleanResult(projectAnalysis);
       }
 
       // 2. Code Quality Analysis
       if (codeQualityAnalyzer && context.includeCodeQuality !== false) {
         logger.log('🎯 Running code quality analysis...');
-        results.codeQuality = await codeQualityAnalyzer.analyzeCodeQuality(projectPath, {
+        const codeQuality = await codeQualityAnalyzer.analyzeCodeQuality(projectPath, {
           includeMetrics: true,
           includeIssues: true,
           includeSuggestions: true
         });
+        results.codeQuality = this.cleanResult(codeQuality);
       }
 
       // 3. Security Analysis
       if (securityAnalyzer && context.includeSecurity !== false) {
         logger.log('🔒 Running security analysis...');
-        results.security = await securityAnalyzer.analyzeSecurity(projectPath, {
+        const security = await securityAnalyzer.analyzeSecurity(projectPath, {
           includeVulnerabilities: true,
           includeBestPractices: true,
           includeDependencies: true
         });
+        results.security = this.cleanResult(security);
       }
 
       // 4. Performance Analysis
       if (performanceAnalyzer && context.includePerformance !== false) {
         logger.log('⚡ Running performance analysis...');
-        results.performance = await performanceAnalyzer.analyzePerformance(projectPath, {
+        const performance = await performanceAnalyzer.analyzePerformance(projectPath, {
           includeMetrics: true,
           includeOptimizations: true,
           includeBottlenecks: true
         });
+        results.performance = this.cleanResult(performance);
       }
 
       // 5. Architecture Analysis
       if (architectureAnalyzer && context.includeArchitecture !== false) {
         logger.log('🏗️ Running architecture analysis...');
-        results.architecture = await architectureAnalyzer.analyzeArchitecture(projectPath, {
+        const architecture = await architectureAnalyzer.analyzeArchitecture(projectPath, {
           includePatterns: true,
           includeStructure: true,
           includeRecommendations: true
         });
+        results.architecture = this.cleanResult(architecture);
       }
 
       // 6. Tech Stack Analysis
       if (techStackAnalyzer && context.includeTechStack !== false) {
         logger.log('🛠️ Running tech stack analysis...');
-        results.techStack = await techStackAnalyzer.analyzeTechStack(projectPath, {
+        const techStack = await techStackAnalyzer.analyzeTechStack(projectPath, {
           includeFrameworks: true,
           includeLibraries: true,
           includeTools: true
         });
+        results.techStack = this.cleanResult(techStack);
       }
 
       // 7. Dependency Analysis
       if (dependencyAnalyzer && context.includeDependencies !== false) {
         logger.log('📦 Running dependency analysis...');
-        results.dependencies = await dependencyAnalyzer.analyzeDependencies(projectPath, {
+        const dependencies = await dependencyAnalyzer.analyzeDependencies(projectPath, {
           includeOutdated: true,
           includeVulnerabilities: true,
           includeRecommendations: true
         });
+        results.dependencies = this.cleanResult(dependencies);
       }
 
       // Generate comprehensive summary
@@ -163,11 +170,11 @@ class AnalysisStep {
       if (analysisRepository) {
         const analysisId = await analysisRepository.save({
           projectPath,
-          results,
+          results: this.cleanResult(results),
           timestamp: new Date(),
           userId: context.userId || 'system'
         });
-        results.analysisId = analysisId;
+        // Don't add analysisId back to results to avoid circular reference
       }
 
       // Generate output using analysis output service
@@ -196,6 +203,45 @@ class AnalysisStep {
         timestamp: new Date().toISOString()
       };
     }
+  }
+
+  /**
+   * Clean result object to remove circular references and ensure serializability
+   * @param {Object} result - The result object to clean
+   * @returns {Object} Cleaned result object
+   */
+  cleanResult(result) {
+    if (!result || typeof result !== 'object') {
+      return result;
+    }
+
+    // Handle arrays
+    if (Array.isArray(result)) {
+      return result.map(item => this.cleanResult(item));
+    }
+
+    // Handle objects
+    const cleaned = {};
+    for (const [key, value] of Object.entries(result)) {
+      // Skip known circular reference properties
+      if (['parent', 'root', '__proto__', 'constructor', 'prototype'].includes(key)) {
+        continue;
+      }
+
+      // Skip functions
+      if (typeof value === 'function') {
+        continue;
+      }
+
+      // Recursively clean nested objects
+      if (value && typeof value === 'object') {
+        cleaned[key] = this.cleanResult(value);
+      } else {
+        cleaned[key] = value;
+      }
+    }
+
+    return cleaned;
   }
 
   generateSummary(results) {

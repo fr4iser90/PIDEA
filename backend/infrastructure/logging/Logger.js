@@ -5,18 +5,35 @@ const path = require('path');
 // Custom format für schöne Konsolen-Ausgabe
 const consoleFormat = printf(({ level, message, timestamp, service, ...meta }) => {
     const serviceTag = service ? `[${service}]` : '';
-    const metaStr = Object.keys(meta).length ? ` ${JSON.stringify(meta)}` : '';
+    let metaStr = '';
+    if (meta && Object.keys(meta).length) {
+        try {
+            metaStr = ` ${JSON.stringify(meta)}`;
+        } catch (e) {
+            metaStr = ' [meta: <circular structure>]';
+        }
+    }
     return `${timestamp} ${level.toUpperCase()} ${serviceTag} ${message}${metaStr}`;
 });
 
 // File format für strukturierte Logs
 const fileFormat = printf(({ level, message, timestamp, service, ...meta }) => {
+    let metaObj = {};
+    if (meta && Object.keys(meta).length) {
+        try {
+            // Test ob serialisierbar
+            JSON.stringify(meta);
+            metaObj = meta;
+        } catch (e) {
+            metaObj = { meta: '<circular structure>' };
+        }
+    }
     return JSON.stringify({
         timestamp,
         level,
         service,
         message,
-        ...meta
+        ...metaObj
     });
 });
 
