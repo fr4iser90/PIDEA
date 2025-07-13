@@ -46,13 +46,12 @@ class TaskReviewService {
    */
   async buildReviewPrompt(taskData) {
     // Load the task-review.md prompt from content library for REVIEW
-    const response = await fetch('/api/prompts/task-management/task-review');
-    if (!response.ok) {
+    const response = await this.apiChatRepository.apiCall('/api/prompts/task-management/task-review');
+    if (!response.success || !response.data) {
       throw new Error('Failed to load task-review prompt from content library');
     }
     
-    const data = await response.json();
-    const taskReviewPrompt = data.content;
+    const taskReviewPrompt = response.data.content;
 
     return `${taskReviewPrompt}
 
