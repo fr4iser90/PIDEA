@@ -1,7 +1,7 @@
 # Prompt: Task Review & Validation System
 
 ## Goal
-Review, validate, and improve development tasks against the actual codebase. Analyze implementation files, verify code existence, identify gaps, and enhance task documentation with real-world findings.
+Review, validate, and improve development tasks against the actual codebase. Analyze implementation files, verify code existence, identify gaps, and enhance task documentation with real-world findings. If needed, split in phases and delete afterwards implementation.
 
 > **File Pattern Requirement:**  
 > All implementation and phase files must always be created using this pattern:  
