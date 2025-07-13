@@ -54,7 +54,7 @@ export default class TaskCreationService {
   }
 
   /**
-   * Generate AI prompt for task creation
+   * Generate AI prompt for task creation with comprehensive analysis
    * @param {Object} taskData - Task form data
    * @returns {Promise<string>} Generated prompt
    */
@@ -70,6 +70,12 @@ export default class TaskCreationService {
     const data = await response.json();
     const taskCreatePrompt = data.content;
 
+    // Get comprehensive project analysis
+    const projectAnalysis = await this.getProjectAnalysis();
+    
+    // Get current project ID
+    const projectId = await this.api.getCurrentProjectId();
+
     return `${taskCreatePrompt}
 
 ---
@@ -83,18 +89,31 @@ export default class TaskCreationService {
 - **Type:** ${type}
 - **Estimated Hours:** ${estimatedTime || 'Not specified'}
 
+## Project Context Analysis
+${this.formatProjectAnalysis(projectAnalysis)}
+
 ## Create Instructions
 **Create a comprehensive implementation plan using the above task-create.md framework. The plan should be ready for database parsing and execution.**
+
+**IMPORTANT**: Use the project analysis above to:
+1. **Leverage existing patterns** - Follow the detected architecture patterns
+2. **Respect current structure** - Use the existing folder structure and naming conventions
+3. **Consider dependencies** - Account for existing dependencies and tech stack
+4. **Follow code standards** - Use the detected linting and formatting rules
+5. **Integrate with existing services** - Leverage existing services and utilities
+6. **Consider performance impact** - Account for current performance metrics
+7. **Address security context** - Follow existing security patterns
 
 Please provide a complete implementation plan that includes:
 
 1. **Project Overview** - Clear project description and goals
-2. **Technical Requirements** - Detailed technical specifications
-3. **Implementation Strategy** - Step-by-step implementation approach
-4. **File Structure** - Complete file organization plan
-5. **Dependencies** - All required dependencies and prerequisites
-6. **Testing Strategy** - Comprehensive testing approach
+2. **Technical Requirements** - Detailed technical specifications based on current tech stack
+3. **Implementation Strategy** - Step-by-step implementation approach using existing patterns
+4. **File Structure** - Complete file organization plan following current structure
+5. **Dependencies** - All required dependencies considering existing ones
+6. **Testing Strategy** - Comprehensive testing approach using existing test patterns
 7. **Success Criteria** - Clear success metrics and validation
+8. **Integration Points** - How this integrates with existing services and components
 
 Format the response in Markdown with clear sections and actionable steps.`;
   }
@@ -297,5 +316,141 @@ Format the response in Markdown with clear sections and actionable steps.`;
         logger.log('[TaskCreationService] Cleaned up workflow:', workflowId);
       }
     }
+  }
+
+  /**
+   * Get comprehensive project analysis
+   * @returns {Promise<Object>} Project analysis data
+   */
+  async getProjectAnalysis() {
+    try {
+      const projectId = await this.api.getCurrentProjectId();
+      
+      // Get workspace info to get project path
+      const workspaceInfo = await this.api.getWorkspaceInfo();
+      const projectPath = workspaceInfo?.data?.workspacePath;
+      
+      if (!projectPath) {
+        logger.warn('[TaskCreationService] No workspace path found, skipping analysis');
+        return {};
+      }
+      
+      // Get comprehensive analysis using existing API
+      const analysisResponse = await this.api.analyzeProject(projectPath, {
+        includeCodeQuality: true,
+        includeArchitecture: true,
+        includeTechStack: true,
+        includeDependencies: true,
+        includeSecurity: true,
+        includePerformance: true
+      });
+
+      return analysisResponse.data || {};
+    } catch (error) {
+      logger.error('[TaskCreationService] Failed to get project analysis:', error);
+      // Return empty analysis if failed
+      return {};
+    }
+  }
+
+  /**
+   * Format project analysis for prompt
+   * @param {Object} analysis - Project analysis data
+   * @returns {string} Formatted analysis text
+   */
+  formatProjectAnalysis(analysis) {
+    if (!analysis || Object.keys(analysis).length === 0) {
+      return '**No project analysis available** - Creating generic plan.';
+    }
+
+    let formatted = '';
+
+    // Project Type & Structure
+    if (analysis.projectType) {
+      formatted += `### Project Type: ${analysis.projectType}\n`;
+    }
+
+    // Tech Stack
+    if (analysis.techStack) {
+      formatted += `### Tech Stack:\n`;
+      if (analysis.techStack.frameworks) {
+        formatted += `- **Frameworks:** ${analysis.techStack.frameworks.join(', ')}\n`;
+      }
+      if (analysis.techStack.libraries) {
+        formatted += `- **Libraries:** ${analysis.techStack.libraries.join(', ')}\n`;
+      }
+      if (analysis.techStack.tools) {
+        formatted += `- **Tools:** ${analysis.techStack.tools.join(', ')}\n`;
+      }
+    }
+
+    // Architecture Patterns
+    if (analysis.architecture && analysis.architecture.detectedPatterns) {
+      formatted += `### Architecture Patterns:\n`;
+      analysis.architecture.detectedPatterns.forEach(pattern => {
+        formatted += `- **${pattern.name}:** ${pattern.description}\n`;
+      });
+    }
+
+    // Code Quality
+    if (analysis.codeQuality) {
+      formatted += `### Code Quality:\n`;
+      if (analysis.codeQuality.overallScore) {
+        formatted += `- **Overall Score:** ${analysis.codeQuality.overallScore}/100\n`;
+      }
+      if (analysis.codeQuality.metrics) {
+        formatted += `- **Complexity:** ${analysis.codeQuality.metrics.complexity || 'N/A'}\n`;
+        formatted += `- **Maintainability:** ${analysis.codeQuality.metrics.maintainability || 'N/A'}\n`;
+      }
+    }
+
+    // Dependencies
+    if (analysis.dependencies) {
+      formatted += `### Dependencies:\n`;
+      if (analysis.dependencies.outdated) {
+        formatted += `- **Outdated:** ${analysis.dependencies.outdated.length} packages\n`;
+      }
+      if (analysis.dependencies.vulnerabilities) {
+        formatted += `- **Vulnerabilities:** ${analysis.dependencies.vulnerabilities.length} found\n`;
+      }
+    }
+
+    // Security
+    if (analysis.security) {
+      formatted += `### Security:\n`;
+      if (analysis.security.issues) {
+        formatted += `- **Issues:** ${analysis.security.issues.length} found\n`;
+      }
+      if (analysis.security.score) {
+        formatted += `- **Score:** ${analysis.security.score}/100\n`;
+      }
+    }
+
+    // Performance
+    if (analysis.performance) {
+      formatted += `### Performance:\n`;
+      if (analysis.performance.metrics) {
+        formatted += `- **Response Time:** ${analysis.performance.metrics.responseTime || 'N/A'}\n`;
+        formatted += `- **Memory Usage:** ${analysis.performance.metrics.memoryUsage || 'N/A'}\n`;
+      }
+    }
+
+    // File Structure
+    if (analysis.structure) {
+      formatted += `### File Structure:\n`;
+      if (analysis.structure.folders) {
+        formatted += `- **Main Folders:** ${Object.keys(analysis.structure.folders).join(', ')}\n`;
+      }
+    }
+
+    // Recommendations
+    if (analysis.recommendations && analysis.recommendations.length > 0) {
+      formatted += `### Key Recommendations:\n`;
+      analysis.recommendations.slice(0, 5).forEach(rec => {
+        formatted += `- **${rec.priority}:** ${rec.description}\n`;
+      });
+    }
+
+    return formatted;
   }
 } 
