@@ -1,4 +1,6 @@
 const { chromium } = require('playwright');
+const { logger } = require('@infrastructure/logging/Logger');
+
 
 class BrowserManager {
   constructor() {
@@ -28,7 +30,7 @@ class BrowserManager {
     this.isConnecting = true;
 
     try {
-      console.log(`[BrowserManager] Connecting to Cursor IDE on port ${this.currentPort}...`);
+      logger.log(`[BrowserManager] Connecting to Cursor IDE on port ${this.currentPort}...`);
       
       // Disconnect existing connection if switching ports
       if (this.browser && port) {
@@ -43,11 +45,11 @@ class BrowserManager {
         throw new Error('No page found in Cursor IDE');
       }
 
-      console.log(`[BrowserManager] Successfully connected to Cursor IDE on port ${this.currentPort}`);
+      logger.log(`[BrowserManager] Successfully connected to Cursor IDE on port ${this.currentPort}`);
       return this.page;
 
     } catch (error) {
-      console.error(`[BrowserManager] Connection failed on port ${this.currentPort}:`, error.message);
+      logger.error(`[BrowserManager] Connection failed on port ${this.currentPort}:`, error.message);
       this.browser = null;
       this.page = null;
       throw error;
@@ -64,26 +66,26 @@ class BrowserManager {
       
       // Check if page is still valid
       if (this.page && this.page.isClosed && this.page.isClosed()) {
-        console.log('[BrowserManager] Page was closed, reconnecting...');
+        logger.log('[BrowserManager] Page was closed, reconnecting...');
         this.page = null;
         await this.connect();
       }
       
       return this.page;
     } catch (error) {
-      console.error('[BrowserManager] Error getting page:', error.message);
+      logger.error('[BrowserManager] Error getting page:', error.message);
       return null;
     }
   }
 
   async switchToPort(port) {
-    console.log(`[BrowserManager] Switching to port ${port}...`);
+    logger.log(`[BrowserManager] Switching to port ${port}...`);
     this.currentPort = port;
     await this.connect(port);
   }
 
   async connectToPort(port) {
-    console.log(`[BrowserManager] Connecting to port ${port}...`);
+    logger.log(`[BrowserManager] Connecting to port ${port}...`);
     this.currentPort = port;
     await this.connect(port);
   }
@@ -153,11 +155,11 @@ class BrowserManager {
           // Fallback: Wenn path leer ist und Root-Ordner, setze ihn auf den Namen
           if (!path && isDirectory && ariaLevel === 1) {
             path = name;
-            console.warn('[BrowserManager] WARN: Root-Ordner ohne Pfad, setze path auf name:', name);
+            logger.warn('[BrowserManager] WARN: Root-Ordner ohne Pfad, setze path auf name:', name);
           }
           if (!path) {
             path = name;
-            console.warn('[BrowserManager] WARN: Leerer Pfad für', name, ariaLabel);
+            logger.warn('[BrowserManager] WARN: Leerer Pfad für', name, ariaLabel);
           }
           return {
             name,
@@ -190,14 +192,14 @@ class BrowserManager {
       }
       return buildTree(flatFiles);
     } catch (error) {
-      console.error('[BrowserManager] Error reading file explorer tree:', error.message);
+      logger.error('[BrowserManager] Error reading file explorer tree:', error.message);
       return [];
     }
   }
 
   async openFile(filePath) {
     try {
-      console.log('[BrowserManager] openFile aufgerufen mit:', filePath);
+      logger.log('[BrowserManager] openFile aufgerufen mit:', filePath);
       const page = await this.getPage();
       if (!page) {
         throw new Error('No connection to Cursor IDE');
@@ -215,11 +217,11 @@ class BrowserManager {
         });
         return files;
       });
-      console.log('[BrowserManager] Available files in explorer:', debugInfo);
+      logger.debug('[BrowserManager] Available files in explorer:', debugInfo);
       
       // Find the file in the explorer and click it
       const fileName = filePath.split('/').pop();
-      console.log('[BrowserManager] Looking for file name:', fileName);
+      logger.log('[BrowserManager] Looking for file name:', fileName);
       
       // Try multiple selector strategies
       const rows = await page.$$('.explorer-folders-view .monaco-list-row');
@@ -230,13 +232,13 @@ class BrowserManager {
         const title = await row.getAttribute('title');
         const textContent = await row.evaluate(el => el.textContent?.trim());
         
-        console.log('[BrowserManager] Checking row:', { ariaLabel, title, textContent });
+        logger.log('[BrowserManager] Checking row:', { ariaLabel, title, textContent });
         
         // Check if this row matches our file
         if (ariaLabel && ariaLabel.includes(fileName) || 
             title && title.includes(fileName) || 
             textContent && textContent.includes(fileName)) {
-          console.log('[BrowserManager] Found matching file, clicking:', { ariaLabel, title, textContent });
+          logger.log('[BrowserManager] Found matching file, clicking:', { ariaLabel, title, textContent });
           await row.click();
           found = true;
           break;
@@ -244,7 +246,7 @@ class BrowserManager {
       }
       
       if (!found) {
-        console.error('[BrowserManager] File not found. Available files:', debugInfo);
+        logger.error('[BrowserManager] File not found. Available files:', debugInfo);
         throw new Error(`File not found in explorer: ${filePath}`);
       }
       
@@ -252,17 +254,17 @@ class BrowserManager {
       const tabSelector = `.tab[aria-label*="${fileName}"]`;
       try {
         await page.waitForSelector(tabSelector, { timeout: 5000 });
-        console.log('[BrowserManager] Editor-Tab gefunden für:', filePath);
+        logger.log('[BrowserManager] Editor-Tab gefunden für:', filePath);
       } catch (e) {
-        console.warn('[BrowserManager] WARN: Editor-Tab NICHT gefunden für:', filePath);
+        logger.warn('[BrowserManager] WARN: Editor-Tab NICHT gefunden für:', filePath);
       }
       
       // Wait for the file to open in the editor
       await page.waitForSelector('.monaco-editor', { timeout: 5000 });
-      console.log(`[BrowserManager] Opened file: ${filePath}`);
+      logger.log(`[BrowserManager] Opened file: ${filePath}`);
       return true;
     } catch (error) {
-      console.error(`[BrowserManager] Error opening file ${filePath}:`, error.message);
+      logger.error(`[BrowserManager] Error opening file ${filePath}:`, error.message);
       return false;
     }
   }
@@ -388,18 +390,18 @@ class BrowserManager {
         return { content, log };
       });
       
-      console.log('[BrowserManager] getCurrentFileContent: LOG:', result.log);
-      console.log('[BrowserManager] getCurrentFileContent: Inhalt (erster Teil):', result.content ? result.content.slice(0, 200) : '<leer>');
+      logger.log('[BrowserManager] getCurrentFileContent: LOG:', result.log);
+      logger.log('[BrowserManager] getCurrentFileContent: Inhalt (erster Teil):', result.content ? result.content.slice(0, 200) : '<leer>');
       return result.content;
     } catch (error) {
-      console.error('[BrowserManager] Error reading file content:', error.message);
+      logger.error('[BrowserManager] Error reading file content:', error.message);
       return '';
     }
   }
 
   async getFileContent(filePath) {
     try {
-      console.log('[BrowserManager] getFileContent aufgerufen mit:', filePath);
+      logger.log('[BrowserManager] getFileContent aufgerufen mit:', filePath);
       const page = await this.getPage();
       if (!page) {
         throw new Error('No connection to Cursor IDE');
@@ -413,10 +415,10 @@ class BrowserManager {
       await page.waitForTimeout(1000);
       // Get the content from the editor
       const content = await this.getCurrentFileContent();
-      console.log('[BrowserManager] Dateiinhalt geladen für:', filePath);
+      logger.log('[BrowserManager] Dateiinhalt geladen für:', filePath);
       return content;
     } catch (error) {
-      console.error(`[BrowserManager] Error getting file content for ${filePath}:`, error.message);
+      logger.error(`[BrowserManager] Error getting file content for ${filePath}:`, error.message);
       throw error;
     }
   }
@@ -446,7 +448,7 @@ class BrowserManager {
       return fileInfo;
 
     } catch (error) {
-      console.error('[BrowserManager] Error getting current file info:', error.message);
+      logger.error('[BrowserManager] Error getting current file info:', error.message);
       return null;
     }
   }
@@ -462,14 +464,14 @@ class BrowserManager {
       const refreshButton = await page.$('.explorer-folders-view .codicon-refresh');
       if (refreshButton) {
         await refreshButton.click();
-        console.log('[BrowserManager] Refreshed file explorer');
+        logger.log('[BrowserManager] Refreshed file explorer');
         return true;
       }
 
       return false;
 
     } catch (error) {
-      console.error('[BrowserManager] Error refreshing explorer:', error.message);
+      logger.error('[BrowserManager] Error refreshing explorer:', error.message);
       return false;
     }
   }
@@ -479,12 +481,12 @@ class BrowserManager {
       await this.browser.close();
       this.browser = null;
       this.page = null;
-      console.log('[BrowserManager] Disconnected from Cursor IDE');
+      logger.log('[BrowserManager] Disconnected from Cursor IDE');
     }
   }
 
   async reconnect() {
-    console.log('[BrowserManager] Reconnecting to Cursor IDE...');
+    logger.log('[BrowserManager] Reconnecting to Cursor IDE...');
     await this.disconnect();
     return await this.connect(this.currentPort);
   }
@@ -500,7 +502,7 @@ class BrowserManager {
         throw new Error('No connection to Cursor IDE');
       }
 
-      console.log('[BrowserManager] Clicking New Chat button...');
+      logger.log('[BrowserManager] Clicking New Chat button...');
 
       // Try multiple selectors for the New Chat button
       const selectors = [
@@ -527,13 +529,13 @@ class BrowserManager {
         try {
           const button = await page.$(selector);
           if (button) {
-            console.log(`[BrowserManager] Found New Chat button with selector: ${selector}`);
+            logger.log(`[BrowserManager] Found New Chat button with selector: ${selector}`);
             await button.click();
             buttonFound = true;
             break;
           }
         } catch (e) {
-          console.log(`[BrowserManager] Selector ${selector} not found, trying next...`);
+          logger.log(`[BrowserManager] Selector ${selector} not found, trying next...`);
         }
       }
 
@@ -549,7 +551,7 @@ class BrowserManager {
             
             // Check if this is the add-two button (New Chat/Tab)
             if (className && className.includes('codicon-add-two')) {
-              console.log(`[BrowserManager] Found add-two button with aria-label: ${ariaLabel}`);
+              logger.log(`[BrowserManager] Found add-two button with aria-label: ${ariaLabel}`);
               await button.click();
               buttonFound = true;
               break;
@@ -559,7 +561,7 @@ class BrowserManager {
             if (ariaLabel && (ariaLabel.includes('New Chat') || ariaLabel.includes('New Tab')) ||
                 title && (title.includes('New Chat') || title.includes('New Tab')) ||
                 textContent && (textContent.includes('New Chat') || textContent.includes('New Tab'))) {
-              console.log(`[BrowserManager] Found New Chat button by text: ${ariaLabel || title || textContent}`);
+              logger.log(`[BrowserManager] Found New Chat button by text: ${ariaLabel || title || textContent}`);
               await button.click();
               buttonFound = true;
               break;
@@ -582,14 +584,14 @@ class BrowserManager {
       if (modal) {
         await this.handleNewChatModal(page, modal);
       } else {
-        console.log('[BrowserManager] No New Chat modal detected, continuing immediately.');
+        logger.log('[BrowserManager] No New Chat modal detected, continuing immediately.');
       }
       
-      console.log('[BrowserManager] Successfully clicked New Chat button and handled modal');
+      logger.log('[BrowserManager] Successfully clicked New Chat button and handled modal');
       return true;
 
     } catch (error) {
-      console.error('[BrowserManager] Error clicking New Chat button:', error.message);
+      logger.error('[BrowserManager] Error clicking New Chat button:', error.message);
       return false;
     }
   }
@@ -601,7 +603,7 @@ class BrowserManager {
    */
   async handleNewChatModal(page, modal) {
     try {
-      console.log('[BrowserManager] Handling New Chat modal...');
+      logger.log('[BrowserManager] Handling New Chat modal...');
       // Look for buttons in the New Chat modal only
       const modalSelectors = [
         // Common modal buttons
@@ -641,7 +643,7 @@ class BrowserManager {
                 text?.includes('Close') || ariaLabel?.includes('Close')) {
               continue;
             }
-            console.log(`[BrowserManager] Clicking New Chat modal button: ${text || ariaLabel}`);
+            logger.log(`[BrowserManager] Clicking New Chat modal button: ${text || ariaLabel}`);
             await element.click();
             await page.waitForTimeout(200);
             return;
@@ -657,7 +659,7 @@ class BrowserManager {
           if (element) {
             const text = await element.textContent();
             const ariaLabel = await element.getAttribute('aria-label');
-            console.log(`[BrowserManager] Clicking any modal button: ${text || ariaLabel}`);
+            logger.log(`[BrowserManager] Clicking any modal button: ${text || ariaLabel}`);
             await element.click();
             await page.waitForTimeout(200);
             return;
@@ -669,9 +671,9 @@ class BrowserManager {
       // Last resort: try Escape key
       await page.keyboard.press('Escape');
       await page.waitForTimeout(200);
-      console.log('[BrowserManager] New Chat modal handled (or no modal found)');
+      logger.log('[BrowserManager] New Chat modal handled (or no modal found)');
     } catch (error) {
-      console.log(`[BrowserManager] New Chat modal handling failed: ${error.message}`);
+      logger.log(`[BrowserManager] New Chat modal handling failed: ${error.message}`);
     }
   }
 
@@ -688,7 +690,7 @@ class BrowserManager {
         throw new Error('No connection to Cursor IDE');
       }
 
-      console.log(`[BrowserManager] Typing message: ${message}`);
+      logger.log(`[BrowserManager] Typing message: ${message}`);
 
       // Wait for chat input to be ready
       await page.waitForTimeout(1000);
@@ -709,7 +711,7 @@ class BrowserManager {
         try {
           chatInput = await page.$(selector);
           if (chatInput) {
-            console.log(`[BrowserManager] Found chat input with selector: ${selector}`);
+            logger.log(`[BrowserManager] Found chat input with selector: ${selector}`);
             break;
           }
         } catch (e) {
@@ -728,7 +730,7 @@ class BrowserManager {
       // Clear existing content and type the message
       await chatInput.fill('');
       await chatInput.type(message);
-      console.log(`[BrowserManager] Message typed: ${message}`);
+      logger.log(`[BrowserManager] Message typed: ${message}`);
 
       if (send) {
         // Find and click send button
@@ -745,7 +747,7 @@ class BrowserManager {
           try {
             sendButton = await page.$(selector);
             if (sendButton) {
-              console.log(`[BrowserManager] Found send button with selector: ${selector}`);
+              logger.log(`[BrowserManager] Found send button with selector: ${selector}`);
               break;
             }
           } catch (e) {
@@ -755,18 +757,18 @@ class BrowserManager {
 
         if (sendButton) {
           await sendButton.click();
-          console.log(`[BrowserManager] Message sent: ${message}`);
+          logger.log(`[BrowserManager] Message sent: ${message}`);
         } else {
           // Fallback: Press Enter to send
           await chatInput.press('Enter');
-          console.log(`[BrowserManager] Message sent via Enter key: ${message}`);
+          logger.log(`[BrowserManager] Message sent via Enter key: ${message}`);
         }
       }
 
       return true;
 
     } catch (error) {
-      console.error('[BrowserManager] Error typing message:', error.message);
+      logger.error('[BrowserManager] Error typing message:', error.message);
       return false;
     }
   }
@@ -790,16 +792,16 @@ class BrowserManager {
         // Use the improved typeMessage method
         const messageSent = await this.typeMessage(message, true);
         if (messageSent) {
-          console.log('[BrowserManager] Message sent in new chat:', message);
+          logger.log('[BrowserManager] Message sent in new chat:', message);
         } else {
-          console.warn('[BrowserManager] Failed to send message in new chat');
+          logger.warn('[BrowserManager] Failed to send message in new chat');
         }
       }
 
       return true;
 
     } catch (error) {
-      console.error('[BrowserManager] Error creating new chat:', error.message);
+      logger.error('[BrowserManager] Error creating new chat:', error.message);
       return false;
     }
   }
@@ -815,7 +817,7 @@ class BrowserManager {
       await page.title();
       return true;
     } catch (error) {
-      console.error('[BrowserManager] Health check failed:', error.message);
+      logger.error('[BrowserManager] Health check failed:', error.message);
       // Reset connection on health check failure
       this.browser = null;
       this.page = null;

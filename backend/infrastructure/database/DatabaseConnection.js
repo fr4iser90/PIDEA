@@ -2,6 +2,8 @@ const { Pool } = require('pg');
 const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
 const fs = require('fs');
+const { logger } = require('@infrastructure/logging/Logger');
+
 
 class DatabaseConnection {
   constructor(config) {
@@ -12,7 +14,7 @@ class DatabaseConnection {
   }
 
   async connect() {
-    console.log('🗄️ [DatabaseConnection] Attempting to connect to database...');
+    logger.debug('🗄️ [DatabaseConnection] Attempting to connect to database...');
     
     try {
       if (this.config.type === 'postgresql') {
@@ -21,10 +23,10 @@ class DatabaseConnection {
         await this.connectSQLite();
       }
     } catch (error) {
-      console.warn(`⚠️ [DatabaseConnection] Primary connection failed: ${error.message}`);
+      logger.warn(`⚠️ [DatabaseConnection] Primary connection failed: ${error.message}`);
       
       if (this.config.fallback) {
-        console.log('🔄 [DatabaseConnection] Trying fallback database...');
+        logger.log('🔄 [DatabaseConnection] Trying fallback database...');
         await this.connectFallback();
       } else {
         throw error;
@@ -33,7 +35,7 @@ class DatabaseConnection {
   }
 
   async connectPostgreSQL() {
-    console.log('🐘 [DatabaseConnection] Connecting to PostgreSQL...');
+    logger.log('🐘 [DatabaseConnection] Connecting to PostgreSQL...');
     
     const pool = new Pool({
       host: this.config.host,
@@ -54,12 +56,12 @@ class DatabaseConnection {
     this.type = 'postgresql';
     this.isConnected = true;
     
-    console.log('✅ [DatabaseConnection] PostgreSQL connected successfully');
+    logger.log('✅ [DatabaseConnection] PostgreSQL connected successfully');
     await this.runMigrations();
   }
 
   async connectSQLite() {
-    console.log('💾 [DatabaseConnection] Connecting to SQLite...');
+    logger.log('💾 [DatabaseConnection] Connecting to SQLite...');
     
     const dbPath = this.config.database;
     const dbDir = path.dirname(dbPath);
@@ -79,7 +81,7 @@ class DatabaseConnection {
           db.run('PRAGMA foreign_keys = ON');
           try {
             await this.runMigrations();
-            console.log('✅ [DatabaseConnection] SQLite connected successfully');
+            logger.log('✅ [DatabaseConnection] SQLite connected successfully');
             resolve();
           } catch (error) {
             reject(error);
@@ -105,7 +107,7 @@ class DatabaseConnection {
             db.run('PRAGMA foreign_keys = ON');
             try {
               await this.runMigrations();
-              console.log('✅ [DatabaseConnection] Memory database connected successfully');
+              logger.log('✅ [DatabaseConnection] Memory database connected successfully');
               resolve();
             } catch (error) {
               reject(error);
@@ -117,7 +119,7 @@ class DatabaseConnection {
   }
 
   async runMigrations() {
-    console.log('🔄 [DatabaseConnection] Running migrations...');
+    logger.log('🔄 [DatabaseConnection] Running migrations...');
     
     const migrationsDir = path.join(__dirname, '../../migrations');
     if (!fs.existsSync(migrationsDir)) {
@@ -135,16 +137,16 @@ class DatabaseConnection {
       
       try {
         await this.execute(sql);
-        console.log(`✅ [DatabaseConnection] Migration applied: ${file}`);
+        logger.log(`✅ [DatabaseConnection] Migration applied: ${file}`);
       } catch (error) {
-        console.error(`❌ [DatabaseConnection] Migration failed: ${file}`, error.message);
+        logger.error(`❌ [DatabaseConnection] Migration failed: ${file}`, error.message);
         throw error;
       }
     }
   }
 
   async createTables() {
-    console.log('🏗️ [DatabaseConnection] Creating PIDEA tables...');
+    logger.log('🏗️ [DatabaseConnection] Creating PIDEA tables...');
     
     const isPostgreSQL = this.type === 'postgresql';
     const metadataType = isPostgreSQL ? 'JSONB' : 'TEXT DEFAULT \'{}\'';
@@ -362,14 +364,14 @@ class DatabaseConnection {
     for (const table of tables) {
       try {
         await this.execute(table);
-        console.log(`✅ [DatabaseConnection] Table created/verified`);
+        logger.log(`✅ [DatabaseConnection] Table created/verified`);
       } catch (error) {
-        console.error(`❌ [DatabaseConnection] Table creation failed:`, error.message);
+        logger.error(`❌ [DatabaseConnection] Table creation failed:`, error.message);
         throw error;
       }
     }
     
-    console.log('✅ [DatabaseConnection] All PIDEA tables created successfully');
+    logger.log('✅ [DatabaseConnection] All PIDEA tables created successfully');
   }
 
   async execute(sql, params = []) {
@@ -437,7 +439,7 @@ class DatabaseConnection {
         this.connection.close();
       }
       this.isConnected = false;
-      console.log('🔌 [DatabaseConnection] Database disconnected');
+      logger.log('🔌 [DatabaseConnection] Database disconnected');
     }
   }
 

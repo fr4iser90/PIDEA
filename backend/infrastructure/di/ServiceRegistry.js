@@ -4,6 +4,7 @@
  */
 const { getServiceContainer } = require('./ServiceContainer');
 const { getProjectContextService } = require('./ProjectContextService');
+const { logger } = require('@infrastructure/logging/Logger');
 
 class ServiceRegistry {
     constructor() {
@@ -16,7 +17,7 @@ class ServiceRegistry {
      * Register core infrastructure services
      */
     registerInfrastructureServices() {
-        console.log('[ServiceRegistry] Registering infrastructure services...');
+        logger.log('[ServiceRegistry] Registering infrastructure services...');
 
         // Database services
         this.container.register('databaseConnection', () => {
@@ -75,13 +76,19 @@ class ServiceRegistry {
      * Register domain services
      */
     registerDomainServices() {
-        console.log('[ServiceRegistry] Registering domain services...');
+        logger.log('[ServiceRegistry] Registering domain services...');
 
         // Project mapping service (korrekt)
         this.container.register('projectMappingService', (monorepoStrategy) => {
             const ProjectMappingService = require('@domain/services/ProjectMappingService');
             return new ProjectMappingService({ monorepoStrategy });
         }, { singleton: true, dependencies: ['monorepoStrategy'] });
+
+        // Logger service
+        this.container.register('logger', () => {
+            
+            return logger;
+        }, { singleton: true });
 
         // Workspace path detector (simplified)
         this.container.register('workspacePathDetector', () => {
@@ -231,7 +238,7 @@ class ServiceRegistry {
      * Register external services
      */
     registerExternalServices() {
-        console.log('[ServiceRegistry] Registering external services...');
+        logger.log('[ServiceRegistry] Registering external services...');
 
         // AI service
         this.container.register('aiService', () => {
@@ -336,7 +343,7 @@ class ServiceRegistry {
      * Register strategy services
      */
     registerStrategyServices() {
-        console.log('[ServiceRegistry] Registering strategy services...');
+        logger.log('[ServiceRegistry] Registering strategy services...');
 
         // Monorepo strategy
         this.container.register('monorepoStrategy', (logger, eventBus, fileSystemService) => {
@@ -369,7 +376,7 @@ class ServiceRegistry {
      * Register repository services
      */
     registerRepositoryServices() {
-        console.log('[ServiceRegistry] Registering repository services...');
+        logger.log('[ServiceRegistry] Registering repository services...');
 
         // Chat repository
         this.container.register('chatRepository', () => {
@@ -426,7 +433,7 @@ class ServiceRegistry {
      * Register application handlers
      */
     registerApplicationHandlers() {
-        console.log('[ServiceRegistry] Registering application handlers...');
+        logger.log('[ServiceRegistry] Registering application handlers...');
 
         // Send message handler
         this.container.register('sendMessageHandler', (cursorIDEService, vscodeIDEService, windsurfIDEService, ideManager, eventBus, logger) => {
@@ -471,7 +478,7 @@ class ServiceRegistry {
      * Register all services
      */
     registerAllServices() {
-        console.log('[ServiceRegistry] Registering all services...');
+        logger.log('[ServiceRegistry] Registering all services...');
 
         this.registerInfrastructureServices();
         this.registerRepositoryServices();
@@ -486,8 +493,8 @@ class ServiceRegistry {
             workspacePathDetector: this.container.resolve('workspacePathDetector')
         });
 
-        console.log('[ServiceRegistry] All services registered successfully');
-        console.log('[ServiceRegistry] Registered service categories:', Array.from(this.registeredServices));
+        logger.log('[ServiceRegistry] All services registered successfully');
+        logger.log('[ServiceRegistry] Registered service categories:', Array.from(this.registeredServices));
     }
 
     /**
@@ -529,7 +536,7 @@ class ServiceRegistry {
     clearAllServices() {
         this.container.clear();
         this.registeredServices.clear();
-        console.log('[ServiceRegistry] All services cleared');
+        logger.log('[ServiceRegistry] All services cleared');
     }
 }
 

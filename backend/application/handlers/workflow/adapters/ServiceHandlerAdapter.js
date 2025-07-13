@@ -1,3 +1,4 @@
+
 /**
  * ServiceHandlerAdapter - Adapter for service-based handlers
  * 
@@ -176,6 +177,7 @@ class ServiceHandlerAdapter extends IHandlerAdapter {
       for (const path of servicePaths) {
         try {
           const ServiceClass = require(path);
+const { logger } = require('@infrastructure/logging/Logger');
           return new ServiceClass();
         } catch (error) {
           // Continue to next path
@@ -184,7 +186,7 @@ class ServiceHandlerAdapter extends IHandlerAdapter {
 
       return null;
     } catch (error) {
-      console.warn(`Failed to create service instance ${serviceName}:`, error.message);
+      logger.warn(`Failed to create service instance ${serviceName}:`, error.message);
       return null;
     }
   }

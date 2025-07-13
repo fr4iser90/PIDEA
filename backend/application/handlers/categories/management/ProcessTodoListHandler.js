@@ -1,6 +1,7 @@
 const AutoFinishSystem = require('@services/auto-finish/AutoFinishSystem');
 const TaskSession = require('@entities/TaskSession');
 const TodoTask = require('@entities/TodoTask');
+const { logger } = require('@infrastructure/logging/Logger');
 
 /**
  * ProcessTodoListHandler - Handler for processing TODO lists with auto-finish system

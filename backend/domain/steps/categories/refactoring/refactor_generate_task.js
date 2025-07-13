@@ -1,3 +1,4 @@
+
 /**
  * RefactorGenerateTaskStep - Creates refactoring tasks based on analysis
  * Generates detailed refactoring tasks for large files identified in analysis
@@ -26,8 +27,8 @@ async function execute(context, options = {}) {
   if (!projectPath) throw new Error('Project path not found in context');
   if (!taskRepository) throw new Error('Task repository not found in context');
 
-  console.log('🔧 [RefactorGenerateTask] Creating refactoring tasks...');
-  console.log(`🔍 [RefactorGenerateTask] Received ${largeFiles.length} large files:`, largeFiles.slice(0, 3)); // Debug first 3 files
+  logger.log('🔧 [RefactorGenerateTask] Creating refactoring tasks...');
+  logger.log(`🔍 [RefactorGenerateTask] Received ${largeFiles.length} large files:`, largeFiles.slice(0, 3)); // Debug first 3 files
 
   try {
     const createdTasks = [];
@@ -39,11 +40,11 @@ async function execute(context, options = {}) {
           createdTasks.push(task);
         }
       } catch (error) {
-        console.error(`❌ [RefactorGenerateTask] Failed to create task for ${fileInfo.path}:`, error.message);
+        logger.error(`❌ [RefactorGenerateTask] Failed to create task for ${fileInfo.path}:`, error.message);
       }
     }
 
-    console.log(`✅ [RefactorGenerateTask] Successfully created ${createdTasks.length} refactoring tasks`);
+    logger.log(`✅ [RefactorGenerateTask] Successfully created ${createdTasks.length} refactoring tasks`);
 
     return {
       success: true,
@@ -57,7 +58,7 @@ async function execute(context, options = {}) {
     };
 
   } catch (error) {
-    console.error('❌ [RefactorGenerateTask] Task generation failed:', error);
+    logger.error('❌ [RefactorGenerateTask] Task generation failed:', error);
     throw error;
   }
 }
@@ -70,7 +71,7 @@ async function createRefactoringTask(fileInfo, projectPath, taskRepository, cont
       existingTasks = await taskRepository.findByProjectPath(projectPath);
     }
   } catch (error) {
-    console.warn('⚠️ [RefactorGenerateTask] Error checking existing tasks:', error.message);
+    logger.warn('⚠️ [RefactorGenerateTask] Error checking existing tasks:', error.message);
   }
 
   const existingTask = existingTasks.find(task => 
@@ -79,7 +80,7 @@ async function createRefactoringTask(fileInfo, projectPath, taskRepository, cont
   );
 
   if (existingTask) {
-    console.log(`⚠️ [RefactorGenerateTask] Task already exists for ${fileInfo.path}, skipping...`);
+    logger.log(`⚠️ [RefactorGenerateTask] Task already exists for ${fileInfo.path}, skipping...`);
     return existingTask;
   }
 
@@ -90,7 +91,7 @@ async function createRefactoringTask(fileInfo, projectPath, taskRepository, cont
   // Validate file info
   let lines = fileInfo.lines;
   if (!lines || lines <= 0) {
-    console.warn(`⚠️ [RefactorGenerateTask] Invalid line count for ${fileInfo.path}: ${lines}, skipping...`);
+    logger.warn(`⚠️ [RefactorGenerateTask] Invalid line count for ${fileInfo.path}: ${lines}, skipping...`);
     return null;
   }
 
@@ -135,10 +136,11 @@ async function createRefactoringTask(fileInfo, projectPath, taskRepository, cont
     try {
       // Try to get projectId from ProjectMappingService
       const { ProjectMappingService } = require('@services/ProjectMappingService');
+const { logger } = require('@infrastructure/logging/Logger');
       const projectMappingService = new ProjectMappingService();
       projectId = await projectMappingService.getProjectIdFromWorkspace(projectPath);
     } catch (error) {
-      console.warn('⚠️ [RefactorGenerateTask] Failed to get projectId from ProjectMappingService:', error.message);
+      logger.warn('⚠️ [RefactorGenerateTask] Failed to get projectId from ProjectMappingService:', error.message);
       // Fallback: use projectPath as projectId (temporary)
       projectId = projectPath;
     }
@@ -161,21 +163,21 @@ async function createRefactoringTask(fileInfo, projectPath, taskRepository, cont
     taskMetadata      // metadata
   );
   
-  console.log('🔍 [RefactorGenerateTask] Task created with projectId:', task.projectId);
+  logger.log('🔍 [RefactorGenerateTask] Task created with projectId:', task.projectId);
 
   // Save task to repository
   try {
     if (taskRepository && typeof taskRepository.create === 'function') {
       await taskRepository.create(task);
-      console.log(`✅ [RefactorGenerateTask] Task saved to repository: ${taskId}`);
+      logger.log(`✅ [RefactorGenerateTask] Task saved to repository: ${taskId}`);
     } else {
-      console.warn('⚠️ [RefactorGenerateTask] taskRepository.create not available, task created in memory only');
+      logger.warn('⚠️ [RefactorGenerateTask] taskRepository.create not available, task created in memory only');
     }
   } catch (error) {
-    console.error(`❌ [RefactorGenerateTask] Failed to save task ${taskId}:`, error.message);
+    logger.error(`❌ [RefactorGenerateTask] Failed to save task ${taskId}:`, error.message);
   }
 
-  console.log(`✅ [RefactorGenerateTask] Created refactoring task for ${fileInfo.path} (${fileInfo.lines} lines)`);
+  logger.log(`✅ [RefactorGenerateTask] Created refactoring task for ${fileInfo.path} (${fileInfo.lines} lines)`);
 
   return task;
 }

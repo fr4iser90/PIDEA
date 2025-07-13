@@ -1,3 +1,4 @@
+
 /**
  * TestingStep - Comprehensive Testing Workflow
  * Integrates all test analyzer tools and provides complete testing functionality
@@ -59,7 +60,7 @@ class TestingStep {
     const step = StepBuilder.build(config, context);
     
     try {
-      console.log(`🧪 Executing ${this.name}...`);
+      logger.log(`🧪 Executing ${this.name}...`);
       
       // Validate context
       this.validateContext(context);
@@ -74,42 +75,42 @@ class TestingStep {
         summary: null
       };
 
-      console.log(`📊 Starting comprehensive testing for: ${projectPath}`);
+      logger.debug(`📊 Starting comprehensive testing for: ${projectPath}`);
 
       // 1. Test Analysis
       if (context.includeTestAnalysis !== false) {
-        console.log('🔍 Running test analysis...');
+        logger.debug('🔍 Running test analysis...');
         results.testAnalysis = await this.runTestAnalysis(projectPath, context);
       }
 
       // 2. Test Generation
       if (context.includeTestGeneration !== false) {
-        console.log('📝 Running test generation...');
+        logger.debug('📝 Running test generation...');
         results.testGeneration = await this.runTestGeneration(projectPath, context);
       }
 
       // 3. Test Fixing
       if (context.includeTestFixing !== false) {
-        console.log('🔧 Running test fixing...');
+        logger.debug('🔧 Running test fixing...');
         results.testFixing = await this.runTestFixing(projectPath, context);
       }
 
       // 4. Coverage Analysis
       if (context.includeCoverageAnalysis !== false) {
-        console.log('📈 Running coverage analysis...');
+        logger.log('📈 Running coverage analysis...');
         results.coverageAnalysis = await this.runCoverageAnalysis(projectPath, context);
       }
 
       // 5. Auto Test Fix
       if (context.includeAutoTestFix !== false) {
-        console.log('🤖 Running auto test fix...');
+        logger.debug('🤖 Running auto test fix...');
         results.autoTestFix = await this.runAutoTestFix(projectPath, context);
       }
 
       // Generate comprehensive summary
       results.summary = this.generateSummary(results);
 
-      console.log(`✅ ${this.name} completed successfully`);
+      logger.log(`✅ ${this.name} completed successfully`);
       return {
         success: true,
         step: this.name,
@@ -117,7 +118,7 @@ class TestingStep {
         timestamp: new Date().toISOString()
       };
     } catch (error) {
-      console.error(`❌ ${this.name} failed:`, error.message);
+      logger.error(`❌ ${this.name} failed:`, error.message);
       return {
         success: false,
         step: this.name,
@@ -137,7 +138,7 @@ class TestingStep {
       const testAnalyzer = application?.testAnalyzer || application?.TestAnalyzer;
       
       if (!testAnalyzer) {
-        console.warn('⚠️ TestAnalyzer not available, skipping test analysis');
+        logger.warn('⚠️ TestAnalyzer not available, skipping test analysis');
         return { success: false, error: 'TestAnalyzer not available' };
       }
 
@@ -171,7 +172,7 @@ class TestingStep {
         totalIssues: failingTests.length + legacyTests.length + complexTests.length
       };
     } catch (error) {
-      console.error('❌ Test analysis failed:', error.message);
+      logger.error('❌ Test analysis failed:', error.message);
       return { success: false, error: error.message };
     }
   }
@@ -186,12 +187,13 @@ class TestingStep {
       const generateTestsHandler = application?.generateTestsHandler;
       
       if (!generateTestsHandler) {
-        console.warn('⚠️ GenerateTestsHandler not available, skipping test generation');
+        logger.warn('⚠️ GenerateTestsHandler not available, skipping test generation');
         return { success: false, error: 'GenerateTestsHandler not available' };
       }
 
       // Create test generation command
       const { GenerateTestsCommand } = require('@application/commands/GenerateTestsCommand');
+const { logger } = require('@infrastructure/logging/Logger');
       const command = new GenerateTestsCommand({
         projectPath: projectPath,
         generateUnitTests: true,
@@ -209,7 +211,7 @@ class TestingStep {
         testCount: result.generatedTests?.length || 0
       };
     } catch (error) {
-      console.error('❌ Test generation failed:', error.message);
+      logger.error('❌ Test generation failed:', error.message);
       return { success: false, error: error.message };
     }
   }
@@ -224,7 +226,7 @@ class TestingStep {
       const testCorrectionService = application?.testCorrectionService;
       
       if (!testCorrectionService) {
-        console.warn('⚠️ TestCorrectionService not available, skipping test fixing');
+        logger.warn('⚠️ TestCorrectionService not available, skipping test fixing');
         return { success: false, error: 'TestCorrectionService not available' };
       }
 
@@ -239,7 +241,7 @@ class TestingStep {
         correctionCount: corrections.length
       };
     } catch (error) {
-      console.error('❌ Test fixing failed:', error.message);
+      logger.error('❌ Test fixing failed:', error.message);
       return { success: false, error: error.message };
     }
   }
@@ -254,7 +256,7 @@ class TestingStep {
       const coverageAnalyzer = application?.coverageAnalyzer || application?.CoverageAnalyzer;
       
       if (!coverageAnalyzer) {
-        console.warn('⚠️ CoverageAnalyzer not available, skipping coverage analysis');
+        logger.warn('⚠️ CoverageAnalyzer not available, skipping coverage analysis');
         return { success: false, error: 'CoverageAnalyzer not available' };
       }
 
@@ -271,7 +273,7 @@ class TestingStep {
         needsImprovement: coverage.current < (context.coverageThreshold || 90)
       };
     } catch (error) {
-      console.error('❌ Coverage analysis failed:', error.message);
+      logger.error('❌ Coverage analysis failed:', error.message);
       return { success: false, error: error.message };
     }
   }
@@ -286,7 +288,7 @@ class TestingStep {
       const autoTestFixSystem = application?.autoTestFixSystem || application?.AutoTestFixSystem;
       
       if (!autoTestFixSystem) {
-        console.warn('⚠️ AutoTestFixSystem not available, skipping auto test fix');
+        logger.warn('⚠️ AutoTestFixSystem not available, skipping auto test fix');
         return { success: false, error: 'AutoTestFixSystem not available' };
       }
 
@@ -312,7 +314,7 @@ class TestingStep {
         result: result
       };
     } catch (error) {
-      console.error('❌ Auto test fix failed:', error.message);
+      logger.error('❌ Auto test fix failed:', error.message);
       return { success: false, error: error.message };
     }
   }

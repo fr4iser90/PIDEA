@@ -2,6 +2,7 @@
  * Refactoring utility functions for TaskExecutionEngine
  */
 const EXECUTION_CONSTANTS = require('../constants/ExecutionConstants');
+const { logger } = require('@infrastructure/logging/Logger');
 
 class RefactoringUtils {
     constructor(logger = console) {

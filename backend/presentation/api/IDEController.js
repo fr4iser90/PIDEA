@@ -2,6 +2,7 @@ const DocsTasksHandler = require('@handlers/categories/management/DocsTasksHandl
 const TerminalLogCaptureService = require('@services/TerminalLogCaptureService');
 const TerminalLogReader = require('@services/TerminalLogReader');
 
+
 class IDEController {
   constructor(ideManager, eventBus, cursorIDEService = null, taskRepository = null) {
     this.ideManager = ideManager;
@@ -10,9 +11,9 @@ class IDEController {
     this.taskRepository = taskRepository;
     this.docsTasksHandler = new DocsTasksHandler(() => {
       const activePath = this.ideManager.getActiveWorkspacePath();
-      console.log('[IDEController] Active workspace path:', activePath);
-      console.log('[IDEController] Active port:', this.ideManager.getActivePort());
-      console.log('[IDEController] Available workspaces:', Array.from(this.ideManager.ideWorkspaces.entries()));
+      logger.log('[IDEController] Active workspace path:', activePath);
+      logger.log('[IDEController] Active port:', this.ideManager.getActivePort());
+      logger.log('[IDEController] Available workspaces:', Array.from(this.ideManager.ideWorkspaces.entries()));
       
       if (!activePath) {
         throw new Error('No active workspace path available - IDE workspace detection failed');
@@ -33,7 +34,7 @@ class IDEController {
         data: availableIDEs
       });
     } catch (error) {
-      console.error('[IDEController] Error getting available IDEs:', error);
+      logger.error('[IDEController] Error getting available IDEs:', error);
       res.status(500).json({
         success: false,
         error: 'Failed to get available IDEs'
@@ -60,7 +61,7 @@ class IDEController {
         data: ideInfo
       });
     } catch (error) {
-      console.error('[IDEController] Error starting IDE:', error);
+      logger.error('[IDEController] Error starting IDE:', error);
       res.status(500).json({
         success: false,
         error: 'Failed to start IDE'
@@ -71,22 +72,22 @@ class IDEController {
   async switchIDE(req, res) {
     try {
       const port = parseInt(req.params.port);
-      console.log('[IDEController] switchIDE called with port:', port);
-      console.log('[IDEController] Current active port before switch:', this.ideManager.getActivePort());
+      logger.log('[IDEController] switchIDE called with port:', port);
+      logger.log('[IDEController] Current active port before switch:', this.ideManager.getActivePort());
       
       const result = await this.ideManager.switchToIDE(port);
-      console.log('[IDEController] ideManager.switchToIDE completed, result:', result);
-      console.log('[IDEController] New active port after switch:', this.ideManager.getActivePort());
+      logger.log('[IDEController] ideManager.switchToIDE completed, result:', result);
+      logger.log('[IDEController] New active port after switch:', this.ideManager.getActivePort());
       
       // Publish event
       if (this.eventBus) {
-        console.log('[IDEController] Publishing activeIDEChanged event:', { port, previousPort: this.ideManager.getActivePort() });
+        logger.log('[IDEController] Publishing activeIDEChanged event:', { port, previousPort: this.ideManager.getActivePort() });
         await this.eventBus.publish('activeIDEChanged', {
           port: port,
           previousPort: this.ideManager.getActivePort()
         });
       } else {
-        console.log('[IDEController] No eventBus available for publishing activeIDEChanged');
+        logger.log('[IDEController] No eventBus available for publishing activeIDEChanged');
       }
       
       res.json({
@@ -94,7 +95,7 @@ class IDEController {
         data: result
       });
     } catch (error) {
-      console.error('[IDEController] Error switching IDE:', error);
+      logger.error('[IDEController] Error switching IDE:', error);
       res.status(500).json({
         success: false,
         error: 'Failed to switch IDE'
@@ -119,7 +120,7 @@ class IDEController {
         data: result
       });
     } catch (error) {
-      console.error('[IDEController] Error stopping IDE:', error);
+      logger.error('[IDEController] Error stopping IDE:', error);
       res.status(500).json({
         success: false,
         error: 'Failed to stop IDE'
@@ -135,7 +136,7 @@ class IDEController {
         data: status
       });
     } catch (error) {
-      console.error('[IDEController] Error getting status:', error);
+      logger.error('[IDEController] Error getting status:', error);
       res.status(500).json({
         success: false,
         error: 'Failed to get IDE status'
@@ -152,7 +153,7 @@ class IDEController {
       await this.cursorIDEService.restartUserApp();
       res.json({ success: true });
     } catch (error) {
-      console.error('[IDEController] Error restarting user app:', error);
+      logger.error('[IDEController] Error restarting user app:', error);
       res.status(500).json({ 
         success: false, 
         error: error.message 
@@ -168,7 +169,7 @@ class IDEController {
       
       // Get ALL available IDEs and find frontend URLs in any of them
       const availableIDEs = await this.ideManager.getAvailableIDEs();
-      console.log('[IDEController] Searching for frontend URLs in', availableIDEs.length, 'IDEs');
+      logger.log('[IDEController] Searching for frontend URLs in', availableIDEs.length, 'IDEs');
       
       let foundUrl = null;
       let foundPort = null;
@@ -177,11 +178,11 @@ class IDEController {
       // Try each IDE workspace until we find a frontend
       for (const ide of availableIDEs) {
         if (ide.workspacePath && !ide.workspacePath.includes(':')) {
-          console.log('[IDEController] Checking IDE port', ide.port, 'workspace:', ide.workspacePath);
+          logger.log('[IDEController] Checking IDE port', ide.port, 'workspace:', ide.workspacePath);
           
           const url = await this.cursorIDEService.getUserAppUrlForPort(ide.port);
           if (url) {
-            console.log('[IDEController] Found frontend URL in IDE port', ide.port, ':', url);
+            logger.log('[IDEController] Found frontend URL in IDE port', ide.port, ':', url);
             foundUrl = url;
             foundPort = ide.port;
             foundWorkspacePath = ide.workspacePath;
@@ -199,7 +200,7 @@ class IDEController {
         } 
       });
     } catch (error) {
-      console.error('[IDEController] Error getting user app URL:', error);
+      logger.error('[IDEController] Error getting user app URL:', error);
       res.status(500).json({ 
         success: false, 
         error: error.message 
@@ -233,7 +234,7 @@ class IDEController {
         } 
       });
     } catch (error) {
-      console.error('[IDEController] Error getting user app URL for port:', error);
+      logger.error('[IDEController] Error getting user app URL for port:', error);
       res.status(500).json({ 
         success: false, 
         error: error.message 
@@ -253,7 +254,7 @@ class IDEController {
         data: { url: url } 
       });
     } catch (error) {
-      console.error('[IDEController] Error monitoring terminal:', error);
+      logger.error('[IDEController] Error monitoring terminal:', error);
       res.status(500).json({ 
         success: false, 
         error: error.message 
@@ -279,7 +280,7 @@ class IDEController {
       if (this.cursorIDEService) {
         const devServerUrl = await this.cursorIDEService.detectDevServerFromPackageJson(workspacePath);
         if (devServerUrl) {
-          console.log('[IDEController] Detected dev server for workspace:', devServerUrl);
+          logger.log('[IDEController] Detected dev server for workspace:', devServerUrl);
           // Broadcast the new dev server URL
           if (this.eventBus) {
             await this.eventBus.publish('userAppDetected', { url: devServerUrl });
@@ -295,7 +296,7 @@ class IDEController {
         }
       });
     } catch (error) {
-      console.error('[IDEController] Error setting workspace path:', error);
+      logger.error('[IDEController] Error setting workspace path:', error);
       res.status(500).json({
         success: false,
         error: 'Failed to set workspace path'
@@ -318,7 +319,7 @@ class IDEController {
         data: workspaceInfo
       });
     } catch (error) {
-      console.error('[IDEController] Error getting workspace info:', error);
+      logger.error('[IDEController] Error getting workspace info:', error);
       res.status(500).json({
         success: false,
         error: 'Failed to get workspace info'
@@ -328,7 +329,7 @@ class IDEController {
 
   async detectWorkspacePaths(req, res) {
     try {
-      console.log('[IDEController] Triggering workspace path detection for all IDEs');
+      logger.log('[IDEController] Triggering workspace path detection for all IDEs');
       await this.ideManager.detectWorkspacePathsForAllIDEs();
       
       // Get updated IDE list with workspace paths
@@ -347,7 +348,7 @@ class IDEController {
         }
       });
     } catch (error) {
-      console.error('[IDEController] Error detecting workspace paths:', error);
+      logger.error('[IDEController] Error detecting workspace paths:', error);
       res.status(500).json({
         success: false,
         error: 'Failed to detect workspace paths'
@@ -433,7 +434,7 @@ class IDEController {
         data: domInfo
       });
     } catch (error) {
-      console.error('[IDEController] Error debugging DOM:', error);
+      logger.error('[IDEController] Error debugging DOM:', error);
       res.status(500).json({
         success: false,
         error: error.message
@@ -457,7 +458,7 @@ class IDEController {
         stats: detectionService.getDetectionStats()
       });
     } catch (error) {
-      console.error('[IDEController] Error detecting workspaces:', error);
+      logger.error('[IDEController] Error detecting workspaces:', error);
       res.status(500).json({
         success: false,
         error: 'Failed to detect workspaces',
@@ -475,7 +476,7 @@ class IDEController {
       const { port } = req.params;
       const portNum = parseInt(port);
       
-      console.log(`[IDEController] Detecting workspace for port ${portNum}`);
+      logger.log(`[IDEController] Detecting workspace for port ${portNum}`);
       
       // Trigger workspace detection for this specific port
       await this.ideManager.detectWorkspacePath(portNum);
@@ -483,7 +484,7 @@ class IDEController {
       // Get the updated workspace path
       const workspacePath = this.ideManager.getWorkspacePath(portNum);
       
-      console.log(`[IDEController] Workspace detection completed for port ${portNum}:`, workspacePath);
+      logger.log(`[IDEController] Workspace detection completed for port ${portNum}:`, workspacePath);
       
       res.json({
         success: true,
@@ -492,7 +493,7 @@ class IDEController {
         message: 'Workspace detection completed'
       });
     } catch (error) {
-      console.error(`[IDEController] Error detecting workspace for port ${req.params.port}:`, error);
+      logger.error(`[IDEController] Error detecting workspace for port ${req.params.port}:`, error);
       res.status(500).json({
         success: false,
         error: 'Failed to detect workspace',
@@ -510,20 +511,21 @@ class IDEController {
       const { port } = req.params;
       const portNum = parseInt(port);
       
-      console.log(`[IDEController] Force detecting workspace for port ${portNum} (clearing cache)`);
+      logger.log(`[IDEController] Force detecting workspace for port ${portNum} (clearing cache)`);
       
       // Clear cached workspace path to force re-detection
       this.ideManager.ideWorkspaces.delete(portNum);
-      console.log(`[IDEController] Cleared cached workspace for port ${portNum}`);
+      logger.log(`[IDEController] Cleared cached workspace for port ${portNum}`);
       
       // Clear FileBasedWorkspaceDetector cache
       if (this.ideManager.fileDetector) {
         this.ideManager.fileDetector.clearCache();
-        console.log(`[IDEController] Cleared FileBasedWorkspaceDetector cache for port ${portNum}`);
+        logger.log(`[IDEController] Cleared FileBasedWorkspaceDetector cache for port ${portNum}`);
         
         // Also clear the actual files on disk
         const fs = require('fs');
         const path = require('path');
+const { logger } = require('@infrastructure/logging/Logger');
         const cacheDir = `/tmp/IDEWEB/${portNum}`;
         
         if (fs.existsSync(cacheDir)) {
@@ -533,11 +535,11 @@ class IDEController {
             for (const file of files) {
               const filePath = path.join(cacheDir, file);
               fs.unlinkSync(filePath);
-              console.log(`[IDEController] Deleted cached file: ${filePath}`);
+              logger.log(`[IDEController] Deleted cached file: ${filePath}`);
             }
-            console.log(`[IDEController] Cleared disk cache for port ${portNum}`);
+            logger.log(`[IDEController] Cleared disk cache for port ${portNum}`);
           } catch (error) {
-            console.error(`[IDEController] Error clearing disk cache for port ${portNum}:`, error);
+            logger.error(`[IDEController] Error clearing disk cache for port ${portNum}:`, error);
           }
         }
       }
@@ -548,7 +550,7 @@ class IDEController {
       // Get the updated workspace path
       const workspacePath = this.ideManager.getWorkspacePath(portNum);
       
-      console.log(`[IDEController] Force workspace detection completed for port ${portNum}:`, workspacePath);
+      logger.log(`[IDEController] Force workspace detection completed for port ${portNum}:`, workspacePath);
       
       res.json({
         success: true,
@@ -557,7 +559,7 @@ class IDEController {
         message: 'Workspace detection completed (cache cleared)'
       });
     } catch (error) {
-      console.error(`[IDEController] Error force detecting workspace for port ${req.params.port}:`, error);
+      logger.error(`[IDEController] Error force detecting workspace for port ${req.params.port}:`, error);
       res.status(500).json({
         success: false,
         error: 'Failed to detect workspace',
@@ -580,7 +582,7 @@ class IDEController {
         serviceStatus: detectionService.getServiceStatus()
       });
     } catch (error) {
-      console.error('[IDEController] Error getting detection stats:', error);
+      logger.error('[IDEController] Error getting detection stats:', error);
       res.status(500).json({
         success: false,
         error: 'Failed to get detection stats',
@@ -603,7 +605,7 @@ class IDEController {
         message: 'Detection results cleared'
       });
     } catch (error) {
-      console.error('[IDEController] Error clearing detection results:', error);
+      logger.error('[IDEController] Error clearing detection results:', error);
       res.status(500).json({
         success: false,
         error: 'Failed to clear detection results',
@@ -638,7 +640,7 @@ class IDEController {
         result: result
       });
     } catch (error) {
-      console.error(`[IDEController] Error executing terminal command for port ${req.params.port}:`, error);
+      logger.error(`[IDEController] Error executing terminal command for port ${req.params.port}:`, error);
       res.status(500).json({
         success: false,
         error: 'Failed to execute terminal command',
@@ -670,7 +672,7 @@ class IDEController {
         data: tasks
       });
     } catch (error) {
-      console.error('[IDEController] Error in getDocsTasks:', error);
+      logger.error('[IDEController] Error in getDocsTasks:', error);
       res.status(500).json({
         success: false,
         error: 'Failed to get documentation tasks'
@@ -708,7 +710,7 @@ class IDEController {
         data: task
       });
     } catch (error) {
-      console.error('[IDEController] Error in getDocsTaskDetails:', error);
+      logger.error('[IDEController] Error in getDocsTaskDetails:', error);
       res.status(500).json({
         success: false,
         error: 'Failed to get documentation task details'
@@ -721,7 +723,7 @@ class IDEController {
       const { port } = req.params;
       const { message } = req.body;
 
-      console.log(`[IDEController] Clicking New Chat for port ${port}${message ? ` with message: ${message}` : ''}`);
+      logger.log(`[IDEController] Clicking New Chat for port ${port}${message ? ` with message: ${message}` : ''}`);
 
       // Get the browser manager for the specified port
       const browserManager = this.ideManager.browserManager;
@@ -736,11 +738,11 @@ class IDEController {
       const success = await browserManager.clickNewChat();
       
       if (success) {
-        console.log(`[IDEController] Successfully clicked New Chat button on port ${port}`);
+        logger.log(`[IDEController] Successfully clicked New Chat button on port ${port}`);
         
         // If a message was provided, type it into the chat
         if (message) {
-          console.log(`[IDEController] Typing message: ${message}`);
+          logger.log(`[IDEController] Typing message: ${message}`);
           await browserManager.typeMessage(message);
         }
         
@@ -752,7 +754,7 @@ class IDEController {
         throw new Error('Failed to click New Chat button');
       }
     } catch (error) {
-      console.error('[IDEController] Error clicking New Chat:', error);
+      logger.error('[IDEController] Error clicking New Chat:', error);
       res.status(500).json({
         success: false,
         error: error.message
@@ -778,7 +780,7 @@ class IDEController {
         });
       }
 
-      console.log(`[IDEController] Executing terminal command with capture for port ${port}: ${command}`);
+      logger.log(`[IDEController] Executing terminal command with capture for port ${port}: ${command}`);
 
       // Initialize capture if not already done
       await this.terminalLogCaptureService.initialize();
@@ -795,7 +797,7 @@ class IDEController {
         message: 'Command executed and output captured'
       });
     } catch (error) {
-      console.error(`[IDEController] Error executing terminal command with capture for port ${req.params.port}:`, error);
+      logger.error(`[IDEController] Error executing terminal command with capture for port ${req.params.port}:`, error);
       res.status(500).json({
         success: false,
         error: 'Failed to execute terminal command with capture',
@@ -813,7 +815,7 @@ class IDEController {
       const { port } = req.params;
       const { lines = 50 } = req.query;
 
-      console.log(`[IDEController] Getting terminal logs for port ${port}, lines: ${lines}`);
+      logger.log(`[IDEController] Getting terminal logs for port ${port}, lines: ${lines}`);
 
       const logs = await this.terminalLogReader.getRecentLogs(parseInt(port), parseInt(lines));
 
@@ -825,7 +827,7 @@ class IDEController {
         count: logs.length
       });
     } catch (error) {
-      console.error(`[IDEController] Error getting terminal logs for port ${req.params.port}:`, error);
+      logger.error(`[IDEController] Error getting terminal logs for port ${req.params.port}:`, error);
       res.status(500).json({
         success: false,
         error: 'Failed to get terminal logs',
@@ -850,7 +852,7 @@ class IDEController {
         });
       }
 
-      console.log(`[IDEController] Searching terminal logs for port ${port}: "${searchText}"`);
+      logger.log(`[IDEController] Searching terminal logs for port ${port}: "${searchText}"`);
 
       const options = {
         caseSensitive: caseSensitive === 'true',
@@ -869,7 +871,7 @@ class IDEController {
         count: results.length
       });
     } catch (error) {
-      console.error(`[IDEController] Error searching terminal logs for port ${req.params.port}:`, error);
+      logger.error(`[IDEController] Error searching terminal logs for port ${req.params.port}:`, error);
       res.status(500).json({
         success: false,
         error: 'Failed to search terminal logs',
@@ -887,7 +889,7 @@ class IDEController {
       const { port } = req.params;
       const { format = 'json', lines, startTime, endTime } = req.query;
 
-      console.log(`[IDEController] Exporting terminal logs for port ${port} in ${format} format`);
+      logger.log(`[IDEController] Exporting terminal logs for port ${port} in ${format} format`);
 
       const options = {};
       if (lines) options.lines = parseInt(lines);
@@ -904,7 +906,7 @@ class IDEController {
       
       res.send(exportedData);
     } catch (error) {
-      console.error(`[IDEController] Error exporting terminal logs for port ${req.params.port}:`, error);
+      logger.error(`[IDEController] Error exporting terminal logs for port ${req.params.port}:`, error);
       res.status(500).json({
         success: false,
         error: 'Failed to export terminal logs',
@@ -921,7 +923,7 @@ class IDEController {
     try {
       const { port } = req.params;
 
-      console.log(`[IDEController] Deleting terminal logs for port ${port}`);
+      logger.log(`[IDEController] Deleting terminal logs for port ${port}`);
 
       // Stop capture if running
       await this.terminalLogCaptureService.stopCapture(parseInt(port));
@@ -935,7 +937,7 @@ class IDEController {
         message: 'Terminal logs deleted and capture stopped'
       });
     } catch (error) {
-      console.error(`[IDEController] Error deleting terminal logs for port ${req.params.port}:`, error);
+      logger.error(`[IDEController] Error deleting terminal logs for port ${req.params.port}:`, error);
       res.status(500).json({
         success: false,
         error: 'Failed to delete terminal logs',
@@ -952,7 +954,7 @@ class IDEController {
     try {
       const { port } = req.params;
 
-      console.log(`[IDEController] Getting capture status for port ${port}`);
+      logger.log(`[IDEController] Getting capture status for port ${port}`);
 
       const status = await this.terminalLogCaptureService.getCaptureStatus(parseInt(port));
       const statistics = await this.terminalLogReader.getLogStatistics(parseInt(port));
@@ -964,7 +966,7 @@ class IDEController {
         statistics: statistics
       });
     } catch (error) {
-      console.error(`[IDEController] Error getting capture status for port ${req.params.port}:`, error);
+      logger.error(`[IDEController] Error getting capture status for port ${req.params.port}:`, error);
       res.status(500).json({
         success: false,
         error: 'Failed to get capture status',
@@ -981,7 +983,7 @@ class IDEController {
     try {
       const { port } = req.params;
 
-      console.log(`[IDEController] Initializing terminal log capture for port ${port}`);
+      logger.log(`[IDEController] Initializing terminal log capture for port ${port}`);
 
       await this.terminalLogCaptureService.initialize();
       const result = await this.terminalLogCaptureService.initializeCapture(parseInt(port));
@@ -993,7 +995,7 @@ class IDEController {
         message: 'Terminal log capture initialized'
       });
     } catch (error) {
-      console.error(`[IDEController] Error initializing terminal log capture for port ${req.params.port}:`, error);
+      logger.error(`[IDEController] Error initializing terminal log capture for port ${req.params.port}:`, error);
       res.status(500).json({
         success: false,
         error: 'Failed to initialize terminal log capture',
@@ -1038,7 +1040,7 @@ class IDEController {
         data: ideInfo
       });
     } catch (error) {
-      console.error('[IDEController] Error starting VSCode:', error);
+      logger.error('[IDEController] Error starting VSCode:', error);
       res.status(500).json({
         success: false,
         error: 'Failed to start VSCode'
@@ -1061,7 +1063,7 @@ class IDEController {
         data: extensions
       });
     } catch (error) {
-      console.error('[IDEController] Error getting VSCode extensions:', error);
+      logger.error('[IDEController] Error getting VSCode extensions:', error);
       res.status(500).json({
         success: false,
         error: error.message
@@ -1084,7 +1086,7 @@ class IDEController {
         data: workspaceInfo
       });
     } catch (error) {
-      console.error('[IDEController] Error getting VSCode workspace info:', error);
+      logger.error('[IDEController] Error getting VSCode workspace info:', error);
       res.status(500).json({
         success: false,
         error: error.message
@@ -1112,7 +1114,7 @@ class IDEController {
         data: result
       });
     } catch (error) {
-      console.error('[IDEController] Error sending message to VSCode:', error);
+      logger.error('[IDEController] Error sending message to VSCode:', error);
       res.status(500).json({
         success: false,
         error: error.message
@@ -1135,7 +1137,7 @@ class IDEController {
         data: status
       });
     } catch (error) {
-      console.error('[IDEController] Error getting VSCode status:', error);
+      logger.error('[IDEController] Error getting VSCode status:', error);
       res.status(500).json({
         success: false,
         error: error.message

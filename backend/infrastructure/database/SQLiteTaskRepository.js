@@ -1,3 +1,4 @@
+
 /**
  * SQLiteTaskRepository
  * SQLite implementation of TaskRepository interface
@@ -5,6 +6,7 @@
 const TaskRepository = require('@repositories/TaskRepository');
 const Task = require('@entities/Task');
 const TaskStatus = require('@value-objects/TaskStatus');
+const { logger } = require('@infrastructure/logging/Logger');
 
 class SQLiteTaskRepository extends TaskRepository {
   constructor(database) {
@@ -21,7 +23,7 @@ class SQLiteTaskRepository extends TaskRepository {
   async init() {
     // The tasks table is created by DatabaseConnection.js with proper schema
     // This repository just uses the existing table
-    console.log('✅ [SQLiteTaskRepository] Using centralized tasks table from DatabaseConnection');
+    logger.log('✅ [SQLiteTaskRepository] Using centralized tasks table from DatabaseConnection');
   }
 
   /**

@@ -1,3 +1,4 @@
+import { logger } from "@/infrastructure/logging/Logger";
 import React, { useState, useEffect, useRef } from 'react';
 import EventBus from '@/infrastructure/events/EventBus.jsx';
 import ChatComponent from '@/presentation/components/chat/main/ChatComponent.jsx';
@@ -30,7 +31,7 @@ function App() {
   const { isAuthenticated } = useAuthStore();
 
   useEffect(() => {
-    console.log('🔄 App initializing...');
+    logger.log('🔄 App initializing...');
     setupEventListeners();
     initializeApp();
     fetchActivePort();
@@ -73,7 +74,7 @@ function App() {
   };
 
   const handleReady = () => {
-    console.log('✅ App ready');
+    logger.log('✅ App ready');
   };
 
   const fetchActivePort = async () => {
@@ -173,7 +174,7 @@ function App() {
         return <PreviewComponent eventBus={eventBus} activePort={activePort} />;
       case 'git':
         return <GitManagementComponent activePort={activePort} onGitOperation={(operation, result) => {
-          console.log('Git operation completed:', operation, result);
+          logger.log('Git operation completed:', operation, result);
           if (eventBus) {
             eventBus.emit('git-operation-completed', { operation, result });
           }

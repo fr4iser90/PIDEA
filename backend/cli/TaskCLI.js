@@ -1,3 +1,4 @@
+
 #!/usr/bin/env node
 require('module-alias/register');
 
@@ -11,6 +12,7 @@ const inquirer = require('inquirer');
 const Table = require('cli-table3');
 const fs = require('fs').promises;
 const path = require('path');
+const { logger } = require('@infrastructure/logging/Logger');
 
 class TaskCLI {
     constructor(dependencies = {}) {
@@ -368,7 +370,7 @@ class TaskCLI {
             const projectPath = options.project || await this.autoDetectProject();
             if (!projectPath) {
                 this.stopSpinner();
-                console.error(chalk.red('❌ No project found. Please specify a project path.'));
+                logger.error(chalk.red('❌ No project found. Please specify a project path.'));
                 process.exit(1);
             }
 
@@ -379,7 +381,7 @@ class TaskCLI {
                 this.stopSpinner();
                 const confirmed = await this.confirmAutoMode(projectPath, options.mode);
                 if (!confirmed) {
-                    console.log(chalk.yellow('⏹️  Auto mode cancelled.'));
+                    logger.log(chalk.yellow('⏹️  Auto mode cancelled.'));
                     return;
                 }
                 this.startSpinner('🚀 Executing VibeCoder Auto Mode...');
@@ -416,9 +418,9 @@ class TaskCLI {
 
         } catch (error) {
             this.stopSpinner();
-            console.error(chalk.red(`❌ Auto mode failed: ${error.message}`));
+            logger.error(chalk.red(`❌ Auto mode failed: ${error.message}`));
             if (this.program.opts().verbose) {
-                console.error(error.stack);
+                logger.error(error.stack);
             }
             process.exit(1);
         }
@@ -472,15 +474,15 @@ class TaskCLI {
     async confirmAutoMode(projectPath, mode) {
         const projectName = path.basename(projectPath);
         
-        console.log(chalk.blue('\n🤖 VibeCoder Auto Mode Configuration:'));
-        console.log(chalk.gray(`   Project: ${chalk.white(projectName)}`));
-        console.log(chalk.gray(`   Path: ${chalk.white(projectPath)}`));
-        console.log(chalk.gray(`   Mode: ${chalk.white(mode)}`));
-        console.log(chalk.gray('   This will analyze your project and automatically:'));
+        logger.log(chalk.blue('\n🤖 VibeCoder Auto Mode Configuration:'));
+        logger.log(chalk.gray(`   Project: ${chalk.white(projectName)}`));
+        logger.log(chalk.gray(`   Path: ${chalk.white(projectPath)}`));
+        logger.log(chalk.gray(`   Mode: ${chalk.white(mode)}`));
+        logger.log(chalk.gray('   This will analyze your project and automatically:'));
         
         const actions = this.getAutoModeActions(mode);
         actions.forEach(action => {
-            console.log(chalk.gray(`   • ${action}`));
+            logger.log(chalk.gray(`   • ${action}`));
         });
 
         const { confirmed } = await inquirer.prompt([
@@ -538,33 +540,33 @@ class TaskCLI {
     displayAutoModePreview(analysis, projectPath) {
         const projectName = path.basename(projectPath);
         
-        console.log(chalk.green('\n✅ VibeCoder Auto Mode Preview:'));
-        console.log(chalk.blue(`\n📁 Project: ${projectName}`));
+        logger.log(chalk.green('\n✅ VibeCoder Auto Mode Preview:'));
+        logger.log(chalk.blue(`\n📁 Project: ${projectName}`));
         
         // Display project structure
-        console.log(chalk.blue('\n🏗️  Project Structure:'));
-        console.log(chalk.gray(`   Type: ${chalk.white(analysis.projectStructure.type)}`));
-        console.log(chalk.gray(`   Files: ${chalk.white(analysis.projectStructure.files.length)}`));
-        console.log(chalk.gray(`   Dependencies: ${chalk.white(Object.keys(analysis.projectStructure.dependencies.dependencies || {}).length)}`));
+        logger.log(chalk.blue('\n🏗️  Project Structure:'));
+        logger.log(chalk.gray(`   Type: ${chalk.white(analysis.projectStructure.type)}`));
+        logger.log(chalk.gray(`   Files: ${chalk.white(analysis.projectStructure.files.length)}`));
+        logger.log(chalk.gray(`   Dependencies: ${chalk.white(Object.keys(analysis.projectStructure.dependencies.dependencies || {}).length)}`));
 
         // Display insights
         if (analysis.insights && analysis.insights.length > 0) {
-            console.log(chalk.blue('\n💡 Key Insights:'));
+            logger.log(chalk.blue('\n💡 Key Insights:'));
             analysis.insights.slice(0, 5).forEach((insight, index) => {
-                console.log(chalk.gray(`   ${index + 1}. ${chalk.white(insight)}`));
+                logger.log(chalk.gray(`   ${index + 1}. ${chalk.white(insight)}`));
             });
         }
 
         // Display recommendations
         if (analysis.recommendations && analysis.recommendations.length > 0) {
-            console.log(chalk.blue('\n🎯 Recommended Actions:'));
+            logger.log(chalk.blue('\n🎯 Recommended Actions:'));
             analysis.recommendations.slice(0, 5).forEach((rec, index) => {
-                console.log(chalk.gray(`   ${index + 1}. ${chalk.white(rec.title)}`));
-                console.log(chalk.gray(`      ${chalk.white(rec.description)}`));
+                logger.log(chalk.gray(`   ${index + 1}. ${chalk.white(rec.title)}`));
+                logger.log(chalk.gray(`      ${chalk.white(rec.description)}`));
             });
         }
 
-        console.log(chalk.yellow('\n💡 Run without --dry-run to execute these actions automatically.'));
+        logger.log(chalk.yellow('\n💡 Run without --dry-run to execute these actions automatically.'));
     }
 
     /**
@@ -575,44 +577,44 @@ class TaskCLI {
     displayAutoModeResults(result, projectPath) {
         const projectName = path.basename(projectPath);
         
-        console.log(chalk.green('\n✅ VibeCoder Auto Mode Completed Successfully!'));
-        console.log(chalk.blue(`\n📁 Project: ${projectName}`));
+        logger.log(chalk.green('\n✅ VibeCoder Auto Mode Completed Successfully!'));
+        logger.log(chalk.blue(`\n📁 Project: ${projectName}`));
 
         // Display session info
         if (result.session) {
-            console.log(chalk.blue('\n🔄 Session Information:'));
-            console.log(chalk.gray(`   Session ID: ${chalk.white(result.session.id)}`));
-            console.log(chalk.gray(`   Duration: ${chalk.white(result.session.duration)}ms`));
-            console.log(chalk.gray(`   Status: ${chalk.white(result.session.status)}`));
+            logger.log(chalk.blue('\n🔄 Session Information:'));
+            logger.log(chalk.gray(`   Session ID: ${chalk.white(result.session.id)}`));
+            logger.log(chalk.gray(`   Duration: ${chalk.white(result.session.duration)}ms`));
+            logger.log(chalk.gray(`   Status: ${chalk.white(result.session.status)}`));
         }
 
         // Display tasks executed
         if (result.tasks && result.tasks.length > 0) {
-            console.log(chalk.blue('\n📋 Tasks Executed:'));
+            logger.log(chalk.blue('\n📋 Tasks Executed:'));
             result.tasks.forEach((task, index) => {
                 const status = task.status === 'completed' ? '✅' : '❌';
-                console.log(chalk.gray(`   ${index + 1}. ${status} ${chalk.white(task.title)}`));
+                logger.log(chalk.gray(`   ${index + 1}. ${status} ${chalk.white(task.title)}`));
             });
         }
 
         // Display scripts generated
         if (result.scripts && result.scripts.length > 0) {
-            console.log(chalk.blue('\n🔧 Scripts Generated:'));
+            logger.log(chalk.blue('\n🔧 Scripts Generated:'));
             result.scripts.forEach((script, index) => {
-                console.log(chalk.gray(`   ${index + 1}. ${chalk.white(script.name)} (${script.type})`));
+                logger.log(chalk.gray(`   ${index + 1}. ${chalk.white(script.name)} (${script.type})`));
             });
         }
 
         // Display analysis summary
         if (result.analysis) {
-            console.log(chalk.blue('\n📊 Analysis Summary:'));
-            console.log(chalk.gray(`   Files analyzed: ${chalk.white(result.analysis.metrics?.filesAnalyzed || 0)}`));
-            console.log(chalk.gray(`   Issues found: ${chalk.white(result.analysis.insights?.length || 0)}`));
-            console.log(chalk.gray(`   Recommendations: ${chalk.white(result.analysis.recommendations?.length || 0)}`));
+            logger.log(chalk.blue('\n📊 Analysis Summary:'));
+            logger.log(chalk.gray(`   Files analyzed: ${chalk.white(result.analysis.metrics?.filesAnalyzed || 0)}`));
+            logger.log(chalk.gray(`   Issues found: ${chalk.white(result.analysis.insights?.length || 0)}`));
+            logger.log(chalk.gray(`   Recommendations: ${chalk.white(result.analysis.recommendations?.length || 0)}`));
         }
 
-        console.log(chalk.green('\n🎉 Your project has been automatically analyzed and optimized!'));
-        console.log(chalk.yellow('💡 Check the generated reports and scripts for details.'));
+        logger.log(chalk.green('\n🎉 Your project has been automatically analyzed and optimized!'));
+        logger.log(chalk.yellow('💡 Check the generated reports and scripts for details.'));
     }
 
     /**
@@ -651,9 +653,9 @@ class TaskCLI {
         try {
             await this.program.parseAsync(args);
         } catch (error) {
-            console.error(chalk.red(`❌ CLI Error: ${error.message}`));
+            logger.error(chalk.red(`❌ CLI Error: ${error.message}`));
             if (this.program.opts().verbose) {
-                console.error(error.stack);
+                logger.error(error.stack);
             }
             process.exit(1);
         }
@@ -661,103 +663,103 @@ class TaskCLI {
 
     // Placeholder methods for other commands
     async analyzeProject(projectPath, options) {
-        console.log(chalk.blue('🔍 Project analysis command - Implementation pending'));
+        logger.log(chalk.blue('🔍 Project analysis command - Implementation pending'));
     }
 
     async analyzeCode(codePath, options) {
-        console.log(chalk.blue('🔍 Code analysis command - Implementation pending'));
+        logger.log(chalk.blue('🔍 Code analysis command - Implementation pending'));
     }
 
     async listTasks(options) {
-        console.log(chalk.blue('📋 List tasks command - Implementation pending'));
+        logger.log(chalk.blue('📋 List tasks command - Implementation pending'));
     }
 
     async createTask(options) {
-        console.log(chalk.blue('➕ Create task command - Implementation pending'));
+        logger.log(chalk.blue('➕ Create task command - Implementation pending'));
     }
 
     async executeTask(taskId, options) {
-        console.log(chalk.blue('▶️  Execute task command - Implementation pending'));
+        logger.log(chalk.blue('▶️  Execute task command - Implementation pending'));
     }
 
     async showTaskInfo(taskId) {
-        console.log(chalk.blue('ℹ️  Task info command - Implementation pending'));
+        logger.log(chalk.blue('ℹ️  Task info command - Implementation pending'));
     }
 
     async generateScript(type, options) {
-        console.log(chalk.blue('🔧 Generate script command - Implementation pending'));
+        logger.log(chalk.blue('🔧 Generate script command - Implementation pending'));
     }
 
     async executeScript(scriptPath, options) {
-        console.log(chalk.blue('▶️  Execute script command - Implementation pending'));
+        logger.log(chalk.blue('▶️  Execute script command - Implementation pending'));
     }
 
     async listScripts() {
-        console.log(chalk.blue('📋 List scripts command - Implementation pending'));
+        logger.log(chalk.blue('📋 List scripts command - Implementation pending'));
     }
 
     async refactorCode(target, options) {
-        console.log(chalk.blue('🔨 Refactor code command - Implementation pending'));
+        logger.log(chalk.blue('🔨 Refactor code command - Implementation pending'));
     }
 
     async optimizeCode(target, options) {
-        console.log(chalk.blue('⚡ Optimize code command - Implementation pending'));
+        logger.log(chalk.blue('⚡ Optimize code command - Implementation pending'));
     }
 
     async securityAnalysis(target, options) {
-        console.log(chalk.blue('🔒 Security analysis command - Implementation pending'));
+        logger.log(chalk.blue('🔒 Security analysis command - Implementation pending'));
     }
 
     async runTests(scope, options) {
-        console.log(chalk.blue('🧪 Run tests command - Implementation pending'));
+        logger.debug(chalk.blue('🧪 Run tests command - Implementation pending'));
     }
 
     async deployApplication(environment, options) {
-        console.log(chalk.blue('🚀 Deploy application command - Implementation pending'));
+        logger.log(chalk.blue('🚀 Deploy application command - Implementation pending'));
     }
 
     async showStats() {
-        console.log(chalk.blue('📊 Show stats command - Implementation pending'));
+        logger.log(chalk.blue('📊 Show stats command - Implementation pending'));
     }
 
     async checkHealth() {
-        console.log(chalk.blue('🏥 Health check command - Implementation pending'));
+        logger.log(chalk.blue('🏥 Health check command - Implementation pending'));
     }
 
     async cleanupData(options) {
-        console.log(chalk.blue('🧹 Cleanup data command - Implementation pending'));
+        logger.log(chalk.blue('🧹 Cleanup data command - Implementation pending'));
     }
 
     async listTemplates() {
-        console.log(chalk.blue('📋 List templates command - Implementation pending'));
+        logger.debug(chalk.blue('📋 List templates command - Implementation pending'));
     }
 
     async createTemplate(name, options) {
-        console.log(chalk.blue('➕ Create template command - Implementation pending'));
+        logger.debug(chalk.blue('➕ Create template command - Implementation pending'));
     }
 
     async editTemplate(name) {
-        console.log(chalk.blue('✏️  Edit template command - Implementation pending'));
+        logger.debug(chalk.blue('✏️  Edit template command - Implementation pending'));
     }
 
     async listStrategies() {
-        console.log(chalk.blue('📋 List strategies command - Implementation pending'));
+        logger.log(chalk.blue('📋 List strategies command - Implementation pending'));
     }
 
     async applyStrategy(strategy, options) {
-        console.log(chalk.blue('🎯 Apply strategy command - Implementation pending'));
+        logger.log(chalk.blue('🎯 Apply strategy command - Implementation pending'));
     }
 
     async configureAI() {
-        console.log(chalk.blue('🤖 Configure AI command - Implementation pending'));
+        logger.log(chalk.blue('🤖 Configure AI command - Implementation pending'));
     }
 
     async testAI() {
-        console.log(chalk.blue('🧪 Test AI command - Implementation pending'));
+        logger.debug(chalk.blue('🧪 Test AI command - Implementation pending'));
     }
 
     async listAIModels() {
-        console.log(chalk.blue('📋 List AI models command - Implementation pending'));
+        logger.log(chalk.blue('📋 List AI models command - Implementation pending'));
     }
 }
 

@@ -121,6 +121,7 @@ class TestingService {
     async runTests(target, testType, execution) {
         try {
             const { getProjectContextService } = require('../../../di/ProjectContextService');
+const { logger } = require('@infrastructure/logging/Logger');
             const projectContext = getProjectContextService();
             const projectPath = await projectContext.getProjectPath();
             let testCommand = '';

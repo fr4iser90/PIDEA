@@ -1,6 +1,8 @@
 const SendMessageHandler = require('@handler-categories/management/SendMessageHandler');
 const GetChatHistoryHandler = require('@handler-categories/management/GetChatHistoryHandler');
 const AuthService = require('@services/AuthService');
+const { logger } = require('@infrastructure/logging/Logger');
+
 
 class ChatController {
   constructor(sendMessageHandler, getChatHistoryHandler, cursorIDEService, authService) {
@@ -50,7 +52,7 @@ class ChatController {
         }
       });
     } catch (error) {
-      console.error('[ChatController] Send message error:', error);
+      logger.error('[ChatController] Send message error:', error);
       res.status(500).json({
         success: false,
         error: 'Failed to send message'
@@ -94,7 +96,7 @@ class ChatController {
         }
       });
     } catch (error) {
-      console.error('[ChatController] Get chat history error:', error);
+      logger.error('[ChatController] Get chat history error:', error);
       res.status(500).json({
         success: false,
         error: 'Failed to get chat history'
@@ -109,7 +111,7 @@ class ChatController {
       const { port } = req.params;
       const { limit = 50, offset = 0 } = req.query;
 
-      console.log(`[ChatController] Getting chat history for port ${port}, user ${userId}`);
+      logger.log(`[ChatController] Getting chat history for port ${port}, user ${userId}`);
 
       // Get chat history for specific port
       const result = await this.getChatHistoryHandler.getPortChatHistory(port, userId, {
@@ -128,7 +130,7 @@ class ChatController {
         }
       });
     } catch (error) {
-      console.error('[ChatController] Get port chat history error:', error);
+      logger.error('[ChatController] Get port chat history error:', error);
       res.status(500).json({
         success: false,
         error: 'Failed to get port chat history'
@@ -162,7 +164,7 @@ class ChatController {
         }
       });
     } catch (error) {
-      console.error('[ChatController] Get user sessions error:', error);
+      logger.error('[ChatController] Get user sessions error:', error);
       res.status(500).json({
         success: false,
         error: 'Failed to get user sessions'
@@ -198,7 +200,7 @@ class ChatController {
         }
       });
     } catch (error) {
-      console.error('[ChatController] Create session error:', error);
+      logger.error('[ChatController] Create session error:', error);
       res.status(500).json({
         success: false,
         error: 'Failed to create chat session'
@@ -228,7 +230,7 @@ class ChatController {
         message: 'Chat session deleted successfully'
       });
     } catch (error) {
-      console.error('[ChatController] Delete session error:', error);
+      logger.error('[ChatController] Delete session error:', error);
       res.status(500).json({
         success: false,
         error: 'Failed to delete chat session'
@@ -259,7 +261,7 @@ class ChatController {
         }
       });
     } catch (error) {
-      console.error('[ChatController] Get connection status error:', error);
+      logger.error('[ChatController] Get connection status error:', error);
       res.status(500).json({
         success: false,
         error: 'Failed to get connection status'
@@ -286,7 +288,7 @@ class ChatController {
         }
       });
     } catch (error) {
-      console.error('[ChatController] Get quick prompts error:', error);
+      logger.error('[ChatController] Get quick prompts error:', error);
       res.status(500).json({ success: false, message: error.message });
     }
   }
@@ -306,7 +308,7 @@ class ChatController {
         }
       });
     } catch (error) {
-      console.error('[ChatController] Get settings error:', error);
+      logger.error('[ChatController] Get settings error:', error);
       res.status(500).json({
         success: false,
         error: 'Failed to get settings'
@@ -336,7 +338,7 @@ class ChatController {
         message: 'Settings updated successfully'
       });
     } catch (error) {
-      console.error('[ChatController] Update settings error:', error);
+      logger.error('[ChatController] Update settings error:', error);
       res.status(500).json({
         success: false,
         error: 'Failed to update settings'
@@ -383,7 +385,7 @@ class ChatController {
   async updateUserSettings(userId, settings) {
     // Update user settings in database
     // This would typically involve a UserSettingsRepository
-    console.log(`[ChatController] Updating settings for user ${userId}:`, settings);
+    logger.log(`[ChatController] Updating settings for user ${userId}:`, settings);
   }
 }
 

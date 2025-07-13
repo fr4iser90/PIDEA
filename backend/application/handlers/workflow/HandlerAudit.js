@@ -1,3 +1,5 @@
+const { logger } = require('@infrastructure/logging/Logger');
+
 /**
  * HandlerAudit - Audit logging and tracking for handlers
  * 
@@ -80,7 +82,7 @@ class HandlerAudit {
       }
 
     } catch (error) {
-      console.error('HandlerAudit: Failed to audit handler execution', {
+      logger.error('HandlerAudit: Failed to audit handler execution', {
         handlerId,
         error: error.message
       });
@@ -123,7 +125,7 @@ class HandlerAudit {
       this.addAuditRecord(auditRecord);
 
     } catch (error) {
-      console.error('HandlerAudit: Failed to audit handler registration', {
+      logger.error('HandlerAudit: Failed to audit handler registration', {
         handlerId,
         error: error.message
       });
@@ -176,7 +178,7 @@ class HandlerAudit {
       }
 
     } catch (error) {
-      console.error('HandlerAudit: Failed to audit handler failure', {
+      logger.error('HandlerAudit: Failed to audit handler failure', {
         handlerId,
         error: error.message
       });
@@ -216,7 +218,7 @@ class HandlerAudit {
       this.addSecurityEvent(securityEvent);
 
     } catch (error) {
-      console.error('HandlerAudit: Failed to audit security event', {
+      logger.error('HandlerAudit: Failed to audit security event', {
         eventType,
         error: error.message
       });
@@ -427,7 +429,7 @@ class HandlerAudit {
       }
 
     } catch (error) {
-      console.error('HandlerAudit: Security event check failed', error.message);
+      logger.error('HandlerAudit: Security event check failed', error.message);
     }
   }
 
@@ -453,7 +455,7 @@ class HandlerAudit {
         this.complianceRecords.push(complianceRecord);
       }
     } catch (error) {
-      console.error('HandlerAudit: Compliance violation check failed', error.message);
+      logger.error('HandlerAudit: Compliance violation check failed', error.message);
     }
   }
 

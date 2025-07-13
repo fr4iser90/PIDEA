@@ -1,3 +1,4 @@
+import { logger } from "@/infrastructure/logging/Logger";
 import React, { useState, useEffect } from 'react';
 import APIChatRepository, { apiCall } from '@/infrastructure/repositories/APIChatRepository.jsx';
 import TaskSelectionModal from '../modal/TaskSelectionModal.jsx';
@@ -71,12 +72,12 @@ function AutoPanelComponent({ eventBus }) {
       const projectId = await api.getCurrentProjectId();
       const response = await api.startAutoRefactor(projectId);
       
-      console.log('[AutoPanelComponent] Auto refactor response:', response);
-      console.log('[AutoPanelComponent] Response data:', response.data);
-      console.log('[AutoPanelComponent] Response data.result:', response.data?.result);
-      console.log('[AutoPanelComponent] Response data.result.results:', response.data?.result?.results);
-      console.log('[AutoPanelComponent] Response data.result.result:', response.data?.result?.result);
-      console.log('[AutoPanelComponent] Response data.result.result.results:', response.data?.result?.result?.results);
+      logger.log('[AutoPanelComponent] Auto refactor response:', response);
+      logger.log('[AutoPanelComponent] Response data:', response.data);
+      logger.log('[AutoPanelComponent] Response data.result:', response.data?.result);
+      logger.log('[AutoPanelComponent] Response data.result.results:', response.data?.result?.results);
+      logger.log('[AutoPanelComponent] Response data.result.result:', response.data?.result?.result);
+      logger.log('[AutoPanelComponent] Response data.result.result.results:', response.data?.result?.result?.results);
       
       // Check for tasks in different possible locations
       let tasks = null;
@@ -84,31 +85,31 @@ function AutoPanelComponent({ eventBus }) {
       // Try multiple possible locations for tasks
       if (response?.data?.result?.result?.tasks && Array.isArray(response.data.result.result.tasks)) {
         tasks = response.data.result.result.tasks;
-        console.log('[AutoPanelComponent] Found tasks in response.data.result.result.tasks:', tasks);
+        logger.log('[AutoPanelComponent] Found tasks in response.data.result.result.tasks:', tasks);
       } else if (response?.data?.result?.tasks && Array.isArray(response.data.result.tasks)) {
         tasks = response.data.result.tasks;
-        console.log('[AutoPanelComponent] Found tasks in response.data.result.tasks:', tasks);
+        logger.log('[AutoPanelComponent] Found tasks in response.data.result.tasks:', tasks);
       } else if (response?.data?.tasks && Array.isArray(response.data.tasks)) {
         tasks = response.data.tasks;
-        console.log('[AutoPanelComponent] Found tasks in response.data.tasks:', tasks);
+        logger.log('[AutoPanelComponent] Found tasks in response.data.tasks:', tasks);
       } else if (response?.result?.tasks && Array.isArray(response.result.tasks)) {
         tasks = response.result.tasks;
-        console.log('[AutoPanelComponent] Found tasks in response.result.tasks:', tasks);
+        logger.log('[AutoPanelComponent] Found tasks in response.result.tasks:', tasks);
       } else {
-        console.log('[AutoPanelComponent] No tasks found in response, loading from database...');
+        logger.log('[AutoPanelComponent] No tasks found in response, loading from database...');
         
         // Load tasks from database
         try {
           const tasksResponse = await apiCall(`/api/projects/${projectId}/tasks?type=refactor&status=pending`);
           if (tasksResponse.success && tasksResponse.data && Array.isArray(tasksResponse.data)) {
             tasks = tasksResponse.data;
-            console.log('[AutoPanelComponent] Loaded tasks from database:', tasks);
+            logger.log('[AutoPanelComponent] Loaded tasks from database:', tasks);
           } else {
-            console.log('[AutoPanelComponent] No tasks found in database either');
-            console.log('[AutoPanelComponent] Full response structure:', JSON.stringify(response, null, 2));
+            logger.log('[AutoPanelComponent] No tasks found in database either');
+            logger.log('[AutoPanelComponent] Full response structure:', JSON.stringify(response, null, 2));
           }
         } catch (dbError) {
-          console.error('[AutoPanelComponent] Error loading tasks from database:', dbError);
+          logger.error('[AutoPanelComponent] Error loading tasks from database:', dbError);
         }
       }
       
@@ -165,7 +166,7 @@ function AutoPanelComponent({ eventBus }) {
     setFeedback('Loading test fix tasks...');
     try {
       const projectId = await api.getCurrentProjectId();
-      console.log('[AutoPanelComponent] Loading test fix tasks for project:', projectId);
+      logger.debug('[AutoPanelComponent] Loading test fix tasks for project:', projectId);
       
       // First, check if there are existing tasks
       let loadExistingTasks = false;
@@ -176,10 +177,10 @@ function AutoPanelComponent({ eventBus }) {
         if (existingTasksResponse.success && existingTasksResponse.data.count > 0) {
           loadExistingTasks = true;
           existingTasks = existingTasksResponse.data.tasks || [];
-          console.log(`[AutoPanelComponent] Found ${existingTasksResponse.data.count} existing tasks`);
+          logger.log(`[AutoPanelComponent] Found ${existingTasksResponse.data.count} existing tasks`);
         }
       } catch (error) {
-        console.log('[AutoPanelComponent] No existing tasks found or error loading them:', error.message);
+        logger.log('[AutoPanelComponent] No existing tasks found or error loading them:', error.message);
       }
 
       // If we have existing tasks, show them in modal
@@ -233,7 +234,7 @@ function AutoPanelComponent({ eventBus }) {
         })
       });
       
-      console.log('[AutoPanelComponent] Auto test fix response:', response);
+      logger.debug('[AutoPanelComponent] Auto test fix response:', response);
       
       if (response.success) {
         setAutoStatus('testing');
@@ -249,7 +250,7 @@ function AutoPanelComponent({ eventBus }) {
         setFeedback('Failed to start Auto Test Fix: ' + response.error);
       }
     } catch (error) {
-      console.error('[AutoPanelComponent] API call failed:', error);
+      logger.error('[AutoPanelComponent] API call failed:', error);
       setFeedback('Error making API call: ' + error.message);
     }
   };
@@ -275,7 +276,7 @@ function AutoPanelComponent({ eventBus }) {
           }
         }
       } catch (error) {
-        console.error('Failed to poll auto test status:', error);
+        logger.error('Failed to poll auto test status:', error);
         clearInterval(pollInterval);
       }
     }, 5000); // Poll every 5 seconds

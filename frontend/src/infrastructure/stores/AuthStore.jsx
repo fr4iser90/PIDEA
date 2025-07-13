@@ -1,3 +1,4 @@
+import { logger } from "@/infrastructure/logging/Logger";
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import useNotificationStore from './NotificationStore.jsx';
@@ -20,7 +21,7 @@ const useAuthStore = create(
         set({ isLoading: true, error: null });
         
         try {
-          console.log('🔍 [AuthStore] Attempting login for:', email);
+          logger.debug('🔍 [AuthStore] Attempting login for:', email);
           
           const response = await fetch('/api/auth/login', {
             method: 'POST',
@@ -31,7 +32,7 @@ const useAuthStore = create(
           });
 
           const data = await response.json();
-          console.log('🔍 [AuthStore] Login response:', data);
+          logger.log('🔍 [AuthStore] Login response:', data);
 
           if (!response.ok) {
             throw new Error(data.error || data.message || 'Login failed');
@@ -41,7 +42,7 @@ const useAuthStore = create(
           const userData = data.data || data;
           const token = userData.accessToken || userData.token;
 
-          console.log('🔍 [AuthStore] Extracted data:', {
+          logger.log('🔍 [AuthStore] Extracted data:', {
             user: userData.user,
             token: token ? token.substring(0, 20) + '...' : 'null',
             tokenLength: token ? token.length : 0
@@ -57,10 +58,10 @@ const useAuthStore = create(
             lastAuthCheck: new Date()
           });
 
-          console.log('✅ [AuthStore] Login successful, state updated');
+          logger.log('✅ [AuthStore] Login successful, state updated');
           return { success: true };
         } catch (error) {
-          console.error('❌ [AuthStore] Login failed:', error);
+          logger.error('❌ [AuthStore] Login failed:', error);
           set({
             isLoading: false,
             error: error.message,
@@ -130,7 +131,7 @@ const useAuthStore = create(
       // Getter for authenticated API calls
       getAuthHeaders: () => {
         const { token } = get();
-        console.log('🔍 [AuthStore] getAuthHeaders called, token:', token ? token.substring(0, 20) + '...' : 'null');
+        logger.log('🔍 [AuthStore] getAuthHeaders called, token:', token ? token.substring(0, 20) + '...' : 'null');
         return token ? { Authorization: `Bearer ${token}` } : {};
       },
 
@@ -139,7 +140,7 @@ const useAuthStore = create(
         const { token, lastAuthCheck, authCheckInterval } = get();
         
         if (!token) {
-          console.log('🔍 [AuthStore] No token found for validation');
+          logger.log('🔍 [AuthStore] No token found for validation');
           set({ isAuthenticated: false });
           return false;
         }
@@ -147,28 +148,28 @@ const useAuthStore = create(
         // Check if we need to validate (avoid too frequent checks)
         const now = new Date();
         if (lastAuthCheck && (now - lastAuthCheck) < authCheckInterval) {
-          console.log('🔍 [AuthStore] Skipping validation, too recent');
+          logger.log('🔍 [AuthStore] Skipping validation, too recent');
           return true;
         }
 
         try {
-          console.log('🔍 [AuthStore] Validating token...');
+          logger.log('🔍 [AuthStore] Validating token...');
           const response = await fetch('/api/auth/validate', {
             headers: {
               Authorization: `Bearer ${token}`,
             },
           });
 
-          console.log('🔍 [AuthStore] Validation response status:', response.status);
+          logger.log('🔍 [AuthStore] Validation response status:', response.status);
 
           if (!response.ok) {
-            console.log('❌ [AuthStore] Token validation failed:', response.status);
+            logger.log('❌ [AuthStore] Token validation failed:', response.status);
             await get().handleAuthFailure('Token validation failed');
             return false;
           }
 
           const data = await response.json();
-          console.log('✅ [AuthStore] Token validation successful');
+          logger.log('✅ [AuthStore] Token validation successful');
           set({ 
             user: data.user, 
             isAuthenticated: true, 
@@ -177,7 +178,7 @@ const useAuthStore = create(
           });
           return true;
         } catch (error) {
-          console.error('❌ [AuthStore] Token validation error:', error);
+          logger.error('❌ [AuthStore] Token validation error:', error);
           await get().handleAuthFailure('Authentication check failed');
           return false;
         }
@@ -187,7 +188,7 @@ const useAuthStore = create(
       handleAuthFailure: async (reason = 'Session expired') => {
         const { showWarning } = useNotificationStore.getState();
         
-        console.log('🔐 [AuthStore] Handling auth failure:', reason);
+        logger.log('🔐 [AuthStore] Handling auth failure:', reason);
         
         set({ 
           isAuthenticated: false, 
@@ -217,12 +218,12 @@ const useAuthStore = create(
       refreshToken: async () => {
         const { token } = get();
         if (!token) {
-          console.log('🔍 [AuthStore] No token to refresh');
+          logger.log('🔍 [AuthStore] No token to refresh');
           return false;
         }
 
         try {
-          console.log('🔍 [AuthStore] Refreshing token...');
+          logger.log('🔍 [AuthStore] Refreshing token...');
           const response = await fetch('/api/auth/refresh', {
             method: 'POST',
             headers: {
@@ -231,7 +232,7 @@ const useAuthStore = create(
           });
 
           if (!response.ok) {
-            console.log('❌ [AuthStore] Token refresh failed');
+            logger.log('❌ [AuthStore] Token refresh failed');
             set({ isAuthenticated: false, token: null, user: null });
             return false;
           }
@@ -239,11 +240,11 @@ const useAuthStore = create(
           const data = await response.json();
           const newToken = data.accessToken || data.token;
           
-          console.log('✅ [AuthStore] Token refreshed successfully');
+          logger.log('✅ [AuthStore] Token refreshed successfully');
           set({ token: newToken, isAuthenticated: true });
           return true;
         } catch (error) {
-          console.error('❌ [AuthStore] Token refresh error:', error);
+          logger.error('❌ [AuthStore] Token refresh error:', error);
           set({ isAuthenticated: false, token: null, user: null });
           return false;
         }

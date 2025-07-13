@@ -1,5 +1,7 @@
 const net = require('net');
 const http = require('http');
+const { logger } = require('@infrastructure/logging/Logger');
+
 
 class VSCodeDetector {
   constructor() {
@@ -8,7 +10,7 @@ class VSCodeDetector {
   }
 
   async scanForVSCodeInstances() {
-    console.log('[VSCodeDetector] Scanning for VSCode instances on ports', this.portRange.start, 'to', this.portRange.end);
+    logger.log('[VSCodeDetector] Scanning for VSCode instances on ports', this.portRange.start, 'to', this.portRange.end);
     
     const availableVSCodeInstances = [];
     const promises = [];
@@ -31,7 +33,7 @@ class VSCodeDetector {
       }
     });
 
-    console.log('[VSCodeDetector] Found', availableVSCodeInstances.length, 'running VSCode instances:', 
+    logger.log('[VSCodeDetector] Found', availableVSCodeInstances.length, 'running VSCode instances:', 
       availableVSCodeInstances.map(ide => ({ port: ide.port, status: ide.status, url: ide.url })));
     return availableVSCodeInstances;
   }
@@ -60,10 +62,10 @@ class VSCodeDetector {
               if (browserString.includes('code/') || 
                   userAgent.toLowerCase().includes('code/') ||
                   userAgent.toLowerCase().includes('electron')) {
-                console.log(`[VSCodeDetector] Found VSCode on port ${port}:`, json.Browser);
+                logger.log(`[VSCodeDetector] Found VSCode on port ${port}:`, json.Browser);
                 resolve(true);
               } else {
-                console.log(`[VSCodeDetector] Port ${port} has CDP but not VSCode:`, json.Browser);
+                logger.log(`[VSCodeDetector] Port ${port} has CDP but not VSCode:`, json.Browser);
                 resolve(false);
               }
             } else {
@@ -110,7 +112,7 @@ class VSCodeDetector {
         message: 'Extension detection not yet implemented'
       };
     } catch (error) {
-      console.error('[VSCodeDetector] Error detecting VSCode extensions:', error);
+      logger.error('[VSCodeDetector] Error detecting VSCode extensions:', error);
       return {
         port,
         extensions: [],

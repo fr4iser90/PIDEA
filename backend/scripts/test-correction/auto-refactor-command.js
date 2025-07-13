@@ -1,3 +1,4 @@
+
 #!/usr/bin/env node
 
 require('module-alias/register');
@@ -6,7 +7,7 @@ const fs = require('fs-extra');
 const axios = require('axios');
 const { program } = require('commander');
 const AutoRefactorCommand = require('@categories/management/AutoRefactorCommand');
-const logger = require('@logging/logger');
+const { logger } = require('@infrastructure/logging/Logger');
 
 // Config
 const AGENT_ENDPOINT = process.env.KI_AGENT_ENDPOINT || 'http://localhost:5001/api/agent/tasks';
@@ -48,11 +49,11 @@ program
     logger.info('Forwarding auto-refactor task to KI-Agent', { endpoint: AGENT_ENDPOINT });
     const response = await axios.post(AGENT_ENDPOINT, task);
     logger.success('Task forwarded successfully', { taskId: response.data.taskId || null, status: response.status });
-    console.log('KI-Agent response:', response.data);
+    logger.log('KI-Agent response:', response.data);
   } catch (error) {
     logger.error('Failed to forward auto-refactor task', { error: error.message });
     if (error.response) {
-      console.error('Agent response:', error.response.data);
+      logger.error('Agent response:', error.response.data);
     }
     process.exit(1);
   }

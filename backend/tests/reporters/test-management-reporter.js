@@ -1,3 +1,4 @@
+
 require('module-alias/register');
 /**
  * Test Management Reporter for Jest
@@ -19,7 +20,7 @@ class TestManagementReporter {
   onRunStart() {
     if (!this.enabled) return;
     
-    console.log('🔧 Test Management: Starting test run...');
+    logger.debug('🔧 Test Management: Starting test run...');
     this.testResults = [];
   }
 
@@ -42,7 +43,7 @@ class TestManagementReporter {
   async onRunComplete(contexts, results) {
     if (!this.enabled) return;
     
-    console.log('🔧 Test Management: Processing test results...');
+    logger.debug('🔧 Test Management: Processing test results...');
     
     // Track all test results
     await this.trackAllResults(results);
@@ -53,9 +54,9 @@ class TestManagementReporter {
     // Persist test metadata to disk
     const exportPath = path.join(process.cwd(), 'test-data.json');
     await this.testManagementService.exportTestMetadata(exportPath);
-    console.log(`💾 Test metadata exported to: ${exportPath}`);
+    logger.debug(`💾 Test metadata exported to: ${exportPath}`);
     
-    console.log('✅ Test Management: Test run completed');
+    logger.debug('✅ Test Management: Test run completed');
   }
 
   /**
@@ -72,7 +73,7 @@ class TestManagementReporter {
         testFramework: 'jest'
       });
     } catch (error) {
-      console.warn(`⚠️  Failed to register test: ${error.message}`);
+      logger.warn(`⚠️  Failed to register test: ${error.message}`);
     }
   }
 
@@ -110,7 +111,7 @@ class TestManagementReporter {
         });
       }
     } catch (error) {
-      console.warn(`⚠️  Failed to process test results: ${error.message}`);
+      logger.warn(`⚠️  Failed to process test results: ${error.message}`);
     }
   }
 
@@ -122,13 +123,13 @@ class TestManagementReporter {
     try {
       if (this.options.statusTracking !== false) {
         // Process all test results for tracking
-        console.log(`📊 Tracking ${this.testResults.length} test results...`);
+        logger.debug(`📊 Tracking ${this.testResults.length} test results...`);
         
         // The test results are already processed in processTestResults
         // Additional tracking logic can be added here if needed
       }
     } catch (error) {
-      console.warn(`⚠️  Failed to track test results: ${error.message}`);
+      logger.warn(`⚠️  Failed to track test results: ${error.message}`);
     }
   }
 
@@ -141,24 +142,24 @@ class TestManagementReporter {
       const stats = await this.testManagementService.getTestStatistics();
       const healthReport = await this.testManagementService.generateHealthReport();
       
-      console.log('\n📊 Test Management Summary');
-      console.log('========================');
-      console.log(`Total Tests: ${stats.total}`);
-      console.log(`Passing: ${stats.passing}`);
-      console.log(`Failing: ${stats.failing}`);
-      console.log(`Skipped: ${stats.skipped}`);
-      console.log(`Legacy: ${stats.legacy}`);
-      console.log(`Average Health Score: ${stats.averageHealthScore}%`);
+      logger.debug('\n📊 Test Management Summary');
+      logger.log('========================');
+      logger.debug(`Total Tests: ${stats.total}`);
+      logger.log(`Passing: ${stats.passing}`);
+      logger.log(`Failing: ${stats.failing}`);
+      logger.log(`Skipped: ${stats.skipped}`);
+      logger.log(`Legacy: ${stats.legacy}`);
+      logger.log(`Average Health Score: ${stats.averageHealthScore}%`);
       
       if (healthReport.recommendations && healthReport.recommendations.length > 0) {
-        console.log('\n💡 Recommendations:');
+        logger.log('\n💡 Recommendations:');
         healthReport.recommendations.forEach((rec, index) => {
-          console.log(`${index + 1}. [${rec.type.toUpperCase()}] ${rec.message}`);
+          logger.log(`${index + 1}. [${rec.type.toUpperCase()}] ${rec.message}`);
         });
       }
       
     } catch (error) {
-      console.warn(`⚠️  Failed to generate summary: ${error.message}`);
+      logger.warn(`⚠️  Failed to generate summary: ${error.message}`);
     }
   }
 
@@ -204,10 +205,11 @@ class TestManagementReporter {
       };
       
       const fs = require('fs').promises;
+const { logger } = require('@infrastructure/logging/Logger');
       await fs.writeFile(filePath, JSON.stringify(exportData, null, 2));
-      console.log(`📄 Test results exported to: ${filePath}`);
+      logger.debug(`📄 Test results exported to: ${filePath}`);
     } catch (error) {
-      console.error(`❌ Failed to export results: ${error.message}`);
+      logger.error(`❌ Failed to export results: ${error.message}`);
     }
   }
 }

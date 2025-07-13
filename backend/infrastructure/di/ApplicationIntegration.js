@@ -1,3 +1,4 @@
+
 /**
  * ApplicationIntegration - Example integration of DI system into Application.js
  * Shows how to migrate from manual dependency injection to the new DI system
@@ -5,6 +6,7 @@
 
 const { getServiceRegistry } = require('./ServiceRegistry');
 const { getProjectContextService } = require('./ProjectContextService');
+const { logger } = require('@infrastructure/logging/Logger');
 
 class ApplicationIntegration {
     constructor() {
@@ -16,7 +18,7 @@ class ApplicationIntegration {
      * Example: Migrate Application.js initializeInfrastructure method
      */
     async initializeInfrastructureWithDI() {
-        console.log('[ApplicationIntegration] Initializing infrastructure with DI...');
+        logger.log('[ApplicationIntegration] Initializing infrastructure with DI...');
 
         // Register all services through the registry
         this.serviceRegistry.registerAllServices();
@@ -35,14 +37,14 @@ class ApplicationIntegration {
         this.monorepoStrategy = this.serviceRegistry.getService('monorepoStrategy');
         this.singleRepoStrategy = this.serviceRegistry.getService('singleRepoStrategy');
 
-        console.log('[ApplicationIntegration] Infrastructure initialized with DI');
+        logger.log('[ApplicationIntegration] Infrastructure initialized with DI');
     }
 
     /**
      * Example: Migrate Application.js initializeDomainServices method
      */
     async initializeDomainServicesWithDI() {
-        console.log('[ApplicationIntegration] Initializing domain services with DI...');
+        logger.log('[ApplicationIntegration] Initializing domain services with DI...');
 
         // Get domain services through DI container
         this.cursorIDEService = this.serviceRegistry.getService('cursorIDEService');
@@ -70,14 +72,14 @@ class ApplicationIntegration {
         this.architectureService = this.serviceRegistry.getService('architectureService');
         this.dependencyAnalyzer = this.serviceRegistry.getService('dependencyAnalyzer');
 
-        console.log('[ApplicationIntegration] Domain services initialized with DI');
+        logger.log('[ApplicationIntegration] Domain services initialized with DI');
     }
 
     /**
      * Example: Migrate Application.js initializeApplicationHandlers method
      */
     async initializeApplicationHandlersWithDI() {
-        console.log('[ApplicationIntegration] Initializing application handlers with DI...');
+        logger.log('[ApplicationIntegration] Initializing application handlers with DI...');
 
         // Get handlers through DI container
         this.sendMessageHandler = this.serviceRegistry.getService('sendMessageHandler');
@@ -89,14 +91,14 @@ class ApplicationIntegration {
         // this.analyzeCodeQualityHandler = this.serviceRegistry.getService('analyzeCodeQualityHandler');
         // this.analyzeDependenciesHandler = this.serviceRegistry.getService('analyzeDependenciesHandler');
 
-        console.log('[ApplicationIntegration] Application handlers initialized with DI');
+        logger.log('[ApplicationIntegration] Application handlers initialized with DI');
     }
 
     /**
      * Example: Set up project context
      */
     async setupProjectContext() {
-        console.log('[ApplicationIntegration] Setting up project context...');
+        logger.log('[ApplicationIntegration] Setting up project context...');
 
         // Auto-detect project path
         const projectPath = await this.projectContext.autoDetectProjectPath();
@@ -111,12 +113,12 @@ class ApplicationIntegration {
         // Validate project context
         const validation = await this.projectContext.validateProjectContext();
         if (!validation.isValid) {
-            console.error('[ApplicationIntegration] Project context validation failed:', validation.errors);
+            logger.error('[ApplicationIntegration] Project context validation failed:', validation.errors);
         } else {
-            console.log('[ApplicationIntegration] Project context validated successfully');
+            logger.log('[ApplicationIntegration] Project context validated successfully');
         }
 
-        console.log('[ApplicationIntegration] Project context:', this.projectContext.getProjectContext());
+        logger.log('[ApplicationIntegration] Project context:', this.projectContext.getProjectContext());
     }
 
     /**
@@ -166,7 +168,7 @@ class ApplicationIntegration {
      * Example: Migration helper - compare old vs new approach
      */
     compareApproaches() {
-        console.log('[ApplicationIntegration] Comparing old vs new approach...');
+        logger.log('[ApplicationIntegration] Comparing old vs new approach...');
 
         // OLD APPROACH (Inconsistent)
         const oldApproach = {
@@ -234,7 +236,7 @@ class ApplicationIntegration {
      * Example: Cleanup with DI
      */
     async cleanup() {
-        console.log('[ApplicationIntegration] Cleaning up with DI...');
+        logger.log('[ApplicationIntegration] Cleaning up with DI...');
 
         // Clear project context
         this.projectContext.clearProjectContext();
@@ -242,7 +244,7 @@ class ApplicationIntegration {
         // Clear service registry
         this.serviceRegistry.clearAllServices();
 
-        console.log('[ApplicationIntegration] Cleanup completed');
+        logger.log('[ApplicationIntegration] Cleanup completed');
     }
 }
 

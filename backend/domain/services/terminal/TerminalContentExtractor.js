@@ -1,3 +1,5 @@
+const { logger } = require('@infrastructure/logging/Logger');
+
 class TerminalContentExtractor {
   constructor() {}
 
@@ -20,7 +22,7 @@ class TerminalContentExtractor {
         const elementText = element.innerText || element.textContent || '';
         if (elementText.trim() && !elementText.includes('.xterm-') && elementText.length > 10) {
           terminalText = elementText;
-          console.log('Found text in', selector);
+          logger.log('Found text in', selector);
           break;
         }
       }
@@ -37,7 +39,7 @@ class TerminalContentExtractor {
           }
         });
         if (terminalText.trim()) {
-          console.log('Found text in view-lines');
+          logger.log('Found text in view-lines');
         }
       }
     }
@@ -52,7 +54,7 @@ class TerminalContentExtractor {
         }
       });
       if (terminalText.trim()) {
-        console.log('Found text in terminal tabs');
+        logger.log('Found text in terminal tabs');
       }
     }
     
@@ -63,7 +65,7 @@ class TerminalContentExtractor {
         const areaText = terminalArea.innerText || terminalArea.textContent || '';
         if (areaText.trim() && !areaText.includes('.xterm-') && areaText.length > 10) {
           terminalText = areaText;
-          console.log('Found text in terminal area');
+          logger.log('Found text in terminal area');
         }
       }
     }

@@ -1,3 +1,4 @@
+
 /**
  * IDE Detector Factory
  * Manages IDE-specific detectors using the factory pattern
@@ -7,6 +8,7 @@
 const CursorDetector = require('./detectors/CursorDetector');
 const VSCodeDetector = require('./detectors/VSCodeDetector');
 const WindsurfDetector = require('./detectors/WindsurfDetector');
+const { logger } = require('@infrastructure/logging/Logger');
 
 class IDEDetectorFactory {
   constructor() {
@@ -72,7 +74,7 @@ class IDEDetectorFactory {
             return ides.map(ide => ({ ...ide, ideType: type }));
           })
           .catch(error => {
-            console.error(`[IDEDetectorFactory] Error detecting ${type} IDEs:`, error.message);
+            logger.error(`[IDEDetectorFactory] Error detecting ${type} IDEs:`, error.message);
             return [];
           })
       );
@@ -86,7 +88,7 @@ class IDEDetectorFactory {
       }
     });
 
-    console.log(`[IDEDetectorFactory] Detected ${allIDEs.length} IDEs total`);
+    logger.log(`[IDEDetectorFactory] Detected ${allIDEs.length} IDEs total`);
     return allIDEs;
   }
 

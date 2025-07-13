@@ -1,3 +1,4 @@
+const { logger } = require('@infrastructure/logging/Logger');
 /**
  * GitWorkflowAudit - Auditing and logging for Git workflow operations
  * Provides comprehensive audit trail and compliance logging

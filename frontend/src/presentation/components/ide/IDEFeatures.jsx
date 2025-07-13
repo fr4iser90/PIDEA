@@ -1,3 +1,4 @@
+import { logger } from "@/infrastructure/logging/Logger";
 import React, { useState, useEffect, useCallback } from 'react';
 import { apiCall } from '@/infrastructure/repositories/APIChatRepository.jsx';
 import '@/css/components/ide/ide-features.css';
@@ -105,7 +106,7 @@ const IDEFeatures = ({
         throw new Error(result.error || 'Failed to load features');
       }
     } catch (error) {
-      console.error('[IDEFeatures] Error loading features:', error);
+      logger.error('[IDEFeatures] Error loading features:', error);
       setError(error.message);
     } finally {
       setIsLoading(false);
@@ -195,7 +196,7 @@ const IDEFeatures = ({
         throw new Error(result.error || 'Failed to toggle feature');
       }
     } catch (error) {
-      console.error('[IDEFeatures] Error toggling feature:', error);
+      logger.error('[IDEFeatures] Error toggling feature:', error);
       setError(error.message);
     }
   };
@@ -373,7 +374,7 @@ const IDEFeatures = ({
         throw new Error(result.error || 'Action failed');
       }
     } catch (error) {
-      console.error('[IDEFeatures] Error executing feature action:', error);
+      logger.error('[IDEFeatures] Error executing feature action:', error);
       setError(error.message);
     }
   };

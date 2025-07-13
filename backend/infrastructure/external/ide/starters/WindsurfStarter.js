@@ -1,3 +1,4 @@
+
 /**
  * Windsurf IDE Starter
  * Starts Windsurf IDE instances and manages Windsurf-specific startup logic
@@ -29,7 +30,7 @@ class WindsurfStarter {
    * @returns {Promise<Object>} IDE startup information
    */
   async startIDE(port, workspacePath = null, options = {}) {
-    console.log('[WindsurfStarter] Starting Windsurf IDE on port', port);
+    logger.log('[WindsurfStarter] Starting Windsurf IDE on port', port);
     
     // Validate port is in range
     if (port < this.config.portRange.start || port > this.config.portRange.end) {
@@ -92,19 +93,19 @@ class WindsurfStarter {
 
       // Handle process events
       process.stdout.on('data', (data) => {
-        console.log(`[WindsurfStarter] Windsurf IDE ${port} stdout:`, data.toString().trim());
+        logger.log(`[WindsurfStarter] Windsurf IDE ${port} stdout:`, data.toString().trim());
       });
 
       process.stderr.on('data', (data) => {
-        console.log(`[WindsurfStarter] Windsurf IDE ${port} stderr:`, data.toString().trim());
+        logger.log(`[WindsurfStarter] Windsurf IDE ${port} stderr:`, data.toString().trim());
       });
 
       process.on('close', (code) => {
-        console.log(`[WindsurfStarter] Windsurf IDE ${port} process closed with code ${code}`);
+        logger.log(`[WindsurfStarter] Windsurf IDE ${port} process closed with code ${code}`);
       });
 
       process.on('error', (error) => {
-        console.error(`[WindsurfStarter] Windsurf IDE ${port} process error:`, error);
+        logger.error(`[WindsurfStarter] Windsurf IDE ${port} process error:`, error);
       });
 
       // Wait for Windsurf to start
@@ -122,7 +123,7 @@ class WindsurfStarter {
       };
 
     } catch (error) {
-      console.error('[WindsurfStarter] Failed to start Windsurf IDE:', error);
+      logger.error('[WindsurfStarter] Failed to start Windsurf IDE:', error);
       throw error;
     }
   }
@@ -133,7 +134,7 @@ class WindsurfStarter {
    * @returns {Promise<Object>} Stop result
    */
   async stopIDE(port) {
-    console.log('[WindsurfStarter] Stopping Windsurf IDE on port', port);
+    logger.log('[WindsurfStarter] Stopping Windsurf IDE on port', port);
     
     try {
       // Find and kill Windsurf processes on the specified port
@@ -155,7 +156,7 @@ class WindsurfStarter {
             return new Promise((resolveKill) => {
               exec(`kill -TERM ${pid}`, (killError) => {
                 if (killError) {
-                  console.error(`[WindsurfStarter] Error killing process ${pid}:`, killError);
+                  logger.error(`[WindsurfStarter] Error killing process ${pid}:`, killError);
                 }
                 resolveKill();
               });
@@ -173,7 +174,7 @@ class WindsurfStarter {
         });
       });
     } catch (error) {
-      console.error('[WindsurfStarter] Error stopping Windsurf IDE:', error);
+      logger.error('[WindsurfStarter] Error stopping Windsurf IDE:', error);
       throw error;
     }
   }
@@ -257,6 +258,7 @@ class WindsurfStarter {
     for (const path of commonPaths) {
       try {
         require('fs').accessSync(path, require('fs').constants.X_OK);
+const { logger } = require('@infrastructure/logging/Logger');
         return path;
       } catch (error) {
         // Continue to next path

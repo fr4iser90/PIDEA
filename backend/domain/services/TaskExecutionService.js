@@ -1,6 +1,8 @@
 const { Task, TaskExecution } = require('@domain/entities');
 const { TaskStatus, TaskType } = require('@domain/value-objects');
 const { TaskRepository, TaskExecutionRepository } = require('@domain/repositories');
+const { logger } = require('@infrastructure/logging/Logger');
+
 
 /**
  * TaskExecutionService - Handles task execution orchestration
@@ -538,7 +540,7 @@ class TaskExecutionService {
 
         } catch (handleError) {
             // Log error handling failure
-            console.error('Error handling execution error:', handleError);
+            logger.error('Error handling execution error:', handleError);
         }
     }
 

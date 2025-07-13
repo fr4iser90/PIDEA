@@ -3,6 +3,7 @@
  */
 const path = require('path');
 const { LINT_CONFIGS } = require('../constants');
+const { logger } = require('@infrastructure/logging/Logger');
 
 class LintingAnalyzer {
     constructor(logger, fileUtils) {

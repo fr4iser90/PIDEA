@@ -1,3 +1,4 @@
+const { logger } = require('@infrastructure/logging/Logger');
 /**
  * UserPreferenceManager - User preference management
  * Manages user automation preferences with persistence

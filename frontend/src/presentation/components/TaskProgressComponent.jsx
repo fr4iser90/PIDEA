@@ -1,3 +1,4 @@
+import { logger } from "@/infrastructure/logging/Logger";
 import React, { useState, useEffect } from 'react';
 import './TaskProgressComponent.css';
 
@@ -65,7 +66,7 @@ const TaskProgressComponent = ({ sessionId, onComplete, onError, onCancel }) => 
         throw new Error(data.error || 'Failed to load session');
       }
     } catch (error) {
-      console.error('Failed to initialize session:', error);
+      logger.error('Failed to initialize session:', error);
       setError(error.message);
     } finally {
       setIsLoading(false);
@@ -220,7 +221,7 @@ const TaskProgressComponent = ({ sessionId, onComplete, onError, onCancel }) => 
         throw new Error(data.error || 'Failed to cancel session');
       }
     } catch (error) {
-      console.error('Failed to cancel session:', error);
+      logger.error('Failed to cancel session:', error);
       setError(error.message);
     }
   };

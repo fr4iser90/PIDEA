@@ -1,3 +1,4 @@
+const { logger } = require('@infrastructure/logging/Logger');
 /**
  * HotfixBranchStrategy - Strategy for hotfix branch creation and management
  * Implements hotfix branch naming conventions and validation for urgent bug fixes

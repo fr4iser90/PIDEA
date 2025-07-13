@@ -1,3 +1,4 @@
+
 /**
  * WindsurfIDE - Windsurf IDE Implementation
  * Extends BaseIDE to provide Windsurf-specific functionality
@@ -5,6 +6,7 @@
 const BaseIDE = require('../BaseIDE');
 const IDETypes = require('../IDETypes');
 const ChatMessageHandler = require('../../chat/ChatMessageHandler');
+const { logger } = require('@infrastructure/logging/Logger');
 
 class WindsurfIDE extends BaseIDE {
   constructor(browserManager, ideManager, eventBus = null) {
@@ -40,7 +42,7 @@ class WindsurfIDE extends BaseIDE {
     ];
     
     this.isInitialized = true;
-    console.log('[WindsurfIDE] Windsurf IDE implementation initialized');
+    logger.log('[WindsurfIDE] Windsurf IDE implementation initialized');
   }
 
   /**
@@ -68,7 +70,7 @@ class WindsurfIDE extends BaseIDE {
 
       return { detected: false, port, error: 'Windsurf not detected' };
     } catch (error) {
-      console.error(`[WindsurfIDE] Error detecting Windsurf on port ${port}:`, error);
+      logger.error(`[WindsurfIDE] Error detecting Windsurf on port ${port}:`, error);
       return { detected: false, port, error: error.message };
     }
   }
@@ -107,7 +109,7 @@ class WindsurfIDE extends BaseIDE {
 
       return { version: version || 'unknown' };
     } catch (error) {
-      console.error('[WindsurfIDE] Error getting version:', error);
+      logger.error('[WindsurfIDE] Error getting version:', error);
       return { version: 'unknown', error: error.message };
     }
   }
@@ -117,7 +119,7 @@ class WindsurfIDE extends BaseIDE {
    */
   async executeCommand(command, options = {}) {
     try {
-      console.log(`[WindsurfIDE] Executing command: ${command}`);
+      logger.log(`[WindsurfIDE] Executing command: ${command}`);
       
       // Handle Windsurf-specific commands
       switch (command) {
@@ -132,7 +134,7 @@ class WindsurfIDE extends BaseIDE {
           return await super.executeCommand(command, options);
       }
     } catch (error) {
-      console.error(`[WindsurfIDE] Error executing command ${command}:`, error);
+      logger.error(`[WindsurfIDE] Error executing command ${command}:`, error);
       throw error;
     }
   }
@@ -160,7 +162,7 @@ class WindsurfIDE extends BaseIDE {
 
       return workspacePath;
     } catch (error) {
-      console.error('[WindsurfIDE] Error getting workspace path:', error);
+      logger.error('[WindsurfIDE] Error getting workspace path:', error);
       return null;
     }
   }
@@ -199,19 +201,19 @@ class WindsurfIDE extends BaseIDE {
 
       return messages;
     } catch (error) {
-      console.error('[WindsurfIDE] Error extracting chat history:', error);
+      logger.error('[WindsurfIDE] Error extracting chat history:', error);
       return [];
     }
   }
 
   // Required methods for IDE factory validation
   async start() {
-    console.log('[WindsurfIDE] Start method called');
+    logger.log('[WindsurfIDE] Start method called');
     return { success: true, ideType: IDETypes.WINDSURF };
   }
 
   async stop() {
-    console.log('[WindsurfIDE] Stop method called');
+    logger.log('[WindsurfIDE] Stop method called');
     return { success: true, ideType: IDETypes.WINDSURF };
   }
 
@@ -343,17 +345,17 @@ class WindsurfIDE extends BaseIDE {
   }
 
   async applyRefactoring(refactoringType, options = {}) {
-    console.log(`[WindsurfIDE] Applying refactoring: ${refactoringType}`);
+    logger.log(`[WindsurfIDE] Applying refactoring: ${refactoringType}`);
     return { success: true, refactoringType, ideType: IDETypes.WINDSURF };
   }
 
   async sendTask(task) {
-    console.log(`[WindsurfIDE] Sending task:`, task);
+    logger.log(`[WindsurfIDE] Sending task:`, task);
     return { success: true, task, ideType: IDETypes.WINDSURF };
   }
 
   async sendAutoModeTasks(tasks) {
-    console.log(`[WindsurfIDE] Sending auto mode tasks:`, tasks);
+    logger.log(`[WindsurfIDE] Sending auto mode tasks:`, tasks);
     return { success: true, tasks, ideType: IDETypes.WINDSURF };
   }
 }

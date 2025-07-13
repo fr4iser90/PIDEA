@@ -1,3 +1,4 @@
+
 #!/usr/bin/env node
 require('module-alias/register');
 
@@ -56,6 +57,7 @@ async function main() {
     // Wenn Testdaten aus Datei geladen wurden, erstelle einen Dummy-Repo
     const TestMetadata = require('@entities/TestMetadata');
     const TestMetadataRepository = require('@repositories/TestMetadataRepository');
+const { logger } = require('@infrastructure/logging/Logger');
     const repo = new TestMetadataRepository();
     for (const t of testData) {
       try {
@@ -69,16 +71,16 @@ async function main() {
   }
 
   if (args[0] === 'export') {
-    console.log('📦 Scanning and registering all test files...');
+    logger.debug('📦 Scanning and registering all test files...');
     await tms.scanAndRegisterTests(path.join(__dirname, '../../tests'));
-    console.log('📦 Exporting test metadata...');
+    logger.debug('📦 Exporting test metadata...');
     await tms.exportTestMetadata(dataFile);
-    console.log(`✅ Test metadata exported to: ${dataFile}`);
+    logger.debug(`✅ Test metadata exported to: ${dataFile}`);
     return;
   }
 
   if (args[0] === 'report') {
-    console.log('📊 Generating test report...');
+    logger.debug('📊 Generating test report...');
     const stats = await tms.getTestStatistics();
     const allTests = await tms.testMetadataRepository.findAll();
     
@@ -208,7 +210,7 @@ async function main() {
     }
 
     fs.writeFileSync(path.join(process.cwd(), output), md, 'utf8');
-    console.log(`📄 Report saved to: ${output}`);
+    logger.log(`📄 Report saved to: ${output}`);
 
     // Generate full output for task generation
     if (fullOutput) {
@@ -274,7 +276,7 @@ async function main() {
       };
       
       fs.writeFileSync(fullOutputPath, JSON.stringify(fullAnalysis, null, 2), 'utf8');
-      console.log(`📊 Full analysis saved to: ${fullOutputPath}`);
+      logger.log(`📊 Full analysis saved to: ${fullOutputPath}`);
 
       // Generate comprehensive Markdown report
       const fullMdPath = path.join(process.cwd(), 'test-report-full.md');
@@ -479,10 +481,10 @@ async function main() {
       }
 
       fs.writeFileSync(fullMdPath, fullMd, 'utf8');
-      console.log(`📄 Full Markdown report saved to: ${fullMdPath}`);
+      logger.log(`📄 Full Markdown report saved to: ${fullMdPath}`);
     }
 
-    console.log('✅ Report generated successfully!');
+    logger.log('✅ Report generated successfully!');
     return;
   }
 

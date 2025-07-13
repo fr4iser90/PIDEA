@@ -285,6 +285,7 @@ class CreateTaskHandler {
         };
 
         return new (require('@categories/management/CreateTaskCommand'))(mergedParams);
+const { logger } = require('@infrastructure/logging/Logger');
     }
 
     /**

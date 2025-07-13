@@ -3,6 +3,7 @@
  * Groups similar steps and processes them in batches for improved efficiency
  */
 const crypto = require('crypto');
+const { logger } = require('@infrastructure/logging/Logger');
 
 /**
  * Batch sequential execution strategy

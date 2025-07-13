@@ -1,3 +1,4 @@
+
 #!/usr/bin/env node
 
 /**
@@ -20,6 +21,7 @@ const TaskProgressUI = require('./TaskProgressUI');
 
 // Import backend services (these would be initialized in a real app)
 const Application = require('../Application');
+const { logger } = require('@infrastructure/logging/Logger');
 
 class TaskCLIMain {
     constructor() {
@@ -37,20 +39,20 @@ class TaskCLIMain {
      */
     setupErrorHandling() {
         process.on('uncaughtException', (error) => {
-            console.error('\n❌ Uncaught Exception:', error.message);
+            logger.error('\n❌ Uncaught Exception:', error.message);
             if (process.env.DEBUG) {
-                console.error(error.stack);
+                logger.error(error.stack);
             }
             process.exit(1);
         });
 
         process.on('unhandledRejection', (reason, promise) => {
-            console.error('\n❌ Unhandled Rejection at:', promise, 'reason:', reason);
+            logger.error('\n❌ Unhandled Rejection at:', promise, 'reason:', reason);
             process.exit(1);
         });
 
         process.on('SIGINT', () => {
-            console.log('\n👋 Thanks for using VibeCoder Task Management!');
+            logger.log('\n👋 Thanks for using VibeCoder Task Management!');
             this.cleanup();
             process.exit(0);
         });
@@ -61,7 +63,7 @@ class TaskCLIMain {
      */
     async initialize() {
         try {
-            console.log('🚀 Initializing VibeCoder Task Management CLI...');
+            logger.log('🚀 Initializing VibeCoder Task Management CLI...');
             
             // Initialize backend application
             this.application = new Application();
@@ -85,12 +87,12 @@ class TaskCLIMain {
             // Setup event forwarding
             this.setupEventForwarding();
 
-            console.log('✅ CLI initialized successfully!\n');
+            logger.log('✅ CLI initialized successfully!\n');
 
         } catch (error) {
-            console.error('❌ Failed to initialize CLI:', error.message);
+            logger.error('❌ Failed to initialize CLI:', error.message);
             if (process.env.DEBUG) {
-                console.error(error.stack);
+                logger.error(error.stack);
             }
             process.exit(1);
         }
@@ -172,9 +174,9 @@ class TaskCLIMain {
             await this.taskCLI.parse(args);
 
         } catch (error) {
-            console.error('❌ CLI execution failed:', error.message);
+            logger.error('❌ CLI execution failed:', error.message);
             if (process.env.DEBUG) {
-                console.error(error.stack);
+                logger.error(error.stack);
             }
             process.exit(1);
         }
@@ -184,8 +186,8 @@ class TaskCLIMain {
      * Run interactive mode
      */
     async runInteractiveMode() {
-        console.log(chalk.blue.bold('\n🤖 VibeCoder Interactive Task Management'));
-        console.log(chalk.gray('Welcome to the interactive CLI!\n'));
+        logger.log(chalk.blue.bold('\n🤖 VibeCoder Interactive Task Management'));
+        logger.log(chalk.gray('Welcome to the interactive CLI!\n'));
         
         await this.interactiveCLI.startInteractiveSession();
     }
@@ -195,8 +197,8 @@ class TaskCLIMain {
      * @param {Array} args - Additional arguments
      */
     async runAutoMode(args) {
-        console.log(chalk.blue.bold('\n🚀 VibeCoder Auto Mode'));
-        console.log(chalk.gray('Zero configuration, full automation\n'));
+        logger.log(chalk.blue.bold('\n🚀 VibeCoder Auto Mode'));
+        logger.log(chalk.gray('Zero configuration, full automation\n'));
 
         // Parse auto mode options
         const options = this.parseAutoModeOptions(args);
@@ -212,11 +214,11 @@ class TaskCLIMain {
             // Auto-detect project if not specified
             const projectPath = options.project || await this.autoDetectProject();
             if (!projectPath) {
-                console.error(chalk.red('❌ No project found. Please specify a project path.'));
+                logger.error(chalk.red('❌ No project found. Please specify a project path.'));
                 process.exit(1);
             }
 
-            console.log(chalk.green(`📁 Project: ${path.basename(projectPath)}`));
+            logger.log(chalk.green(`📁 Project: ${path.basename(projectPath)}`));
 
             // Execute auto mode
             const command = {
@@ -229,7 +231,7 @@ class TaskCLIMain {
             };
 
             if (options.dryRun) {
-                console.log(chalk.yellow('🔍 Running in dry-run mode...'));
+                logger.log(chalk.yellow('🔍 Running in dry-run mode...'));
                 const analysis = await this.application.commandBus.execute('AnalyzeProjectCommand', {
                     projectPath,
                     analysisType: 'full',
@@ -240,7 +242,7 @@ class TaskCLIMain {
                 return;
             }
 
-            console.log(chalk.blue('🤖 Starting AI-powered automation...'));
+            logger.log(chalk.blue('🤖 Starting AI-powered automation...'));
             const result = await this.application.commandBus.execute('AutoModeCommand', command);
 
             this.progressUI.stopSession();
@@ -248,9 +250,9 @@ class TaskCLIMain {
 
         } catch (error) {
             this.progressUI.stopSession();
-            console.error(chalk.red(`❌ Auto mode failed: ${error.message}`));
+            logger.error(chalk.red(`❌ Auto mode failed: ${error.message}`));
             if (process.env.DEBUG) {
-                console.error(error.stack);
+                logger.error(error.stack);
             }
             process.exit(1);
         }
@@ -260,8 +262,8 @@ class TaskCLIMain {
      * Run live dashboard
      */
     async runDashboard() {
-        console.log(chalk.blue.bold('\n📊 VibeCoder Live Dashboard'));
-        console.log(chalk.gray('Real-time task monitoring\n'));
+        logger.log(chalk.blue.bold('\n📊 VibeCoder Live Dashboard'));
+        logger.log(chalk.gray('Real-time task monitoring\n'));
 
         this.progressUI.showLiveDashboard();
     }
@@ -270,8 +272,8 @@ class TaskCLIMain {
      * Run demo mode
      */
     async runDemo() {
-        console.log(chalk.blue.bold('\n🎬 VibeCoder Demo Mode'));
-        console.log(chalk.gray('Demonstrating capabilities...\n'));
+        logger.log(chalk.blue.bold('\n🎬 VibeCoder Demo Mode'));
+        logger.log(chalk.gray('Demonstrating capabilities...\n'));
 
         // Start progress UI
         this.progressUI.startSession({
@@ -285,11 +287,11 @@ class TaskCLIMain {
             await this.runDemoTasks();
             
             this.progressUI.stopSession();
-            console.log(chalk.green('\n✅ Demo completed successfully!'));
+            logger.log(chalk.green('\n✅ Demo completed successfully!'));
 
         } catch (error) {
             this.progressUI.stopSession();
-            console.error(chalk.red(`❌ Demo failed: ${error.message}`));
+            logger.error(chalk.red(`❌ Demo failed: ${error.message}`));
         }
     }
 
@@ -380,32 +382,32 @@ class TaskCLIMain {
     displayAutoModePreview(analysis, projectPath) {
         const projectName = path.basename(projectPath);
         
-        console.log(chalk.green('\n✅ VibeCoder Auto Mode Preview:'));
-        console.log(chalk.blue(`\n📁 Project: ${projectName}`));
+        logger.log(chalk.green('\n✅ VibeCoder Auto Mode Preview:'));
+        logger.log(chalk.blue(`\n📁 Project: ${projectName}`));
         
         // Display project structure
-        console.log(chalk.blue('\n🏗️  Project Structure:'));
-        console.log(chalk.gray(`   Type: ${chalk.white(analysis.projectStructure?.type || 'Unknown')}`));
-        console.log(chalk.gray(`   Files: ${chalk.white(analysis.projectStructure?.files?.length || 0)}`));
+        logger.log(chalk.blue('\n🏗️  Project Structure:'));
+        logger.log(chalk.gray(`   Type: ${chalk.white(analysis.projectStructure?.type || 'Unknown')}`));
+        logger.log(chalk.gray(`   Files: ${chalk.white(analysis.projectStructure?.files?.length || 0)}`));
 
         // Display insights
         if (analysis.insights && analysis.insights.length > 0) {
-            console.log(chalk.blue('\n💡 Key Insights:'));
+            logger.log(chalk.blue('\n💡 Key Insights:'));
             analysis.insights.slice(0, 5).forEach((insight, index) => {
-                console.log(chalk.gray(`   ${index + 1}. ${chalk.white(insight)}`));
+                logger.log(chalk.gray(`   ${index + 1}. ${chalk.white(insight)}`));
             });
         }
 
         // Display recommendations
         if (analysis.recommendations && analysis.recommendations.length > 0) {
-            console.log(chalk.blue('\n🎯 Recommended Actions:'));
+            logger.log(chalk.blue('\n🎯 Recommended Actions:'));
             analysis.recommendations.slice(0, 5).forEach((rec, index) => {
-                console.log(chalk.gray(`   ${index + 1}. ${chalk.white(rec.title)}`));
-                console.log(chalk.gray(`      ${chalk.white(rec.description)}`));
+                logger.log(chalk.gray(`   ${index + 1}. ${chalk.white(rec.title)}`));
+                logger.log(chalk.gray(`      ${chalk.white(rec.description)}`));
             });
         }
 
-        console.log(chalk.yellow('\n💡 Run without --dry-run to execute these actions automatically.'));
+        logger.log(chalk.yellow('\n💡 Run without --dry-run to execute these actions automatically.'));
     }
 
     /**
@@ -416,44 +418,44 @@ class TaskCLIMain {
     displayAutoModeResults(result, projectPath) {
         const projectName = path.basename(projectPath);
         
-        console.log(chalk.green('\n✅ VibeCoder Auto Mode Completed Successfully!'));
-        console.log(chalk.blue(`\n📁 Project: ${projectName}`));
+        logger.log(chalk.green('\n✅ VibeCoder Auto Mode Completed Successfully!'));
+        logger.log(chalk.blue(`\n📁 Project: ${projectName}`));
 
         // Display session info
         if (result.session) {
-            console.log(chalk.blue('\n🔄 Session Information:'));
-            console.log(chalk.gray(`   Session ID: ${chalk.white(result.session.id)}`));
-            console.log(chalk.gray(`   Duration: ${chalk.white(result.session.duration)}ms`));
-            console.log(chalk.gray(`   Status: ${chalk.white(result.session.status)}`));
+            logger.log(chalk.blue('\n🔄 Session Information:'));
+            logger.log(chalk.gray(`   Session ID: ${chalk.white(result.session.id)}`));
+            logger.log(chalk.gray(`   Duration: ${chalk.white(result.session.duration)}ms`));
+            logger.log(chalk.gray(`   Status: ${chalk.white(result.session.status)}`));
         }
 
         // Display tasks executed
         if (result.tasks && result.tasks.length > 0) {
-            console.log(chalk.blue('\n📋 Tasks Executed:'));
+            logger.log(chalk.blue('\n📋 Tasks Executed:'));
             result.tasks.forEach((task, index) => {
                 const status = task.status === 'completed' ? '✅' : '❌';
-                console.log(chalk.gray(`   ${index + 1}. ${status} ${chalk.white(task.title)}`));
+                logger.log(chalk.gray(`   ${index + 1}. ${status} ${chalk.white(task.title)}`));
             });
         }
 
         // Display scripts generated
         if (result.scripts && result.scripts.length > 0) {
-            console.log(chalk.blue('\n🔧 Scripts Generated:'));
+            logger.log(chalk.blue('\n🔧 Scripts Generated:'));
             result.scripts.forEach((script, index) => {
-                console.log(chalk.gray(`   ${index + 1}. ${chalk.white(script.name)} (${script.type})`));
+                logger.log(chalk.gray(`   ${index + 1}. ${chalk.white(script.name)} (${script.type})`));
             });
         }
 
         // Display analysis summary
         if (result.analysis) {
-            console.log(chalk.blue('\n📊 Analysis Summary:'));
-            console.log(chalk.gray(`   Files analyzed: ${chalk.white(result.analysis.metrics?.filesAnalyzed || 0)}`));
-            console.log(chalk.gray(`   Issues found: ${chalk.white(result.analysis.insights?.length || 0)}`));
-            console.log(chalk.gray(`   Recommendations: ${chalk.white(result.analysis.recommendations?.length || 0)}`));
+            logger.log(chalk.blue('\n📊 Analysis Summary:'));
+            logger.log(chalk.gray(`   Files analyzed: ${chalk.white(result.analysis.metrics?.filesAnalyzed || 0)}`));
+            logger.log(chalk.gray(`   Issues found: ${chalk.white(result.analysis.insights?.length || 0)}`));
+            logger.log(chalk.gray(`   Recommendations: ${chalk.white(result.analysis.recommendations?.length || 0)}`));
         }
 
-        console.log(chalk.green('\n🎉 Your project has been automatically analyzed and optimized!'));
-        console.log(chalk.yellow('💡 Check the generated reports and scripts for details.'));
+        logger.log(chalk.green('\n🎉 Your project has been automatically analyzed and optimized!'));
+        logger.log(chalk.yellow('💡 Check the generated reports and scripts for details.'));
     }
 
     /**
@@ -461,8 +463,8 @@ class TaskCLIMain {
      * @param {Array} args - Additional arguments
      */
     async runSequentialMode(args) {
-        console.log(chalk.blue.bold('\n🔄 Sequential Task Execution Mode'));
-        console.log(chalk.gray('Execute tasks sequentially via IDE chat\n'));
+        logger.log(chalk.blue.bold('\n🔄 Sequential Task Execution Mode'));
+        logger.log(chalk.gray('Execute tasks sequentially via IDE chat\n'));
 
         // Parse sequential mode options
         const options = this.parseSequentialModeOptions(args);
@@ -483,7 +485,7 @@ class TaskCLIMain {
             this.displaySequentialModeResults(result);
             
         } catch (error) {
-            console.error('❌ Sequential mode failed:', error.message);
+            logger.error('❌ Sequential mode failed:', error.message);
             this.progressUI.emit('execution:error', { error: error.message });
         } finally {
             this.progressUI.endSession();
@@ -561,27 +563,27 @@ class TaskCLIMain {
      * Display sequential mode help
      */
     displaySequentialModeHelp() {
-        console.log(chalk.blue.bold('\n🔄 Sequential Task Execution Mode'));
-        console.log(chalk.gray('Execute tasks sequentially via IDE chat\n'));
+        logger.log(chalk.blue.bold('\n🔄 Sequential Task Execution Mode'));
+        logger.log(chalk.gray('Execute tasks sequentially via IDE chat\n'));
         
-        console.log(chalk.yellow('Usage:'));
-        console.log('  node cli/index.js sequential [options]\n');
+        logger.log(chalk.yellow('Usage:'));
+        logger.log('  node cli/index.js sequential [options]\n');
         
-        console.log(chalk.yellow('Options:'));
-        console.log('  --project, -p <path>     Project path (default: current directory)');
-        console.log('  --timeout, -t <seconds>  Timeout per task in seconds (default: 300)');
-        console.log('  --no-commit              Disable auto-commit after each task');
-        console.log('  --no-branch              Disable auto-branch creation');
-        console.log('  --verbose, -v            Show detailed results');
-        console.log('  --from-database          Get tasks from database');
-        console.log('  --from-test-reports      Get tasks from test reports');
-        console.log('  --from-coverage          Get tasks from coverage report');
-        console.log('  --help, -h               Show this help\n');
+        logger.log(chalk.yellow('Options:'));
+        logger.log('  --project, -p <path>     Project path (default: current directory)');
+        logger.log('  --timeout, -t <seconds>  Timeout per task in seconds (default: 300)');
+        logger.log('  --no-commit              Disable auto-commit after each task');
+        logger.log('  --no-branch              Disable auto-branch creation');
+        logger.log('  --verbose, -v            Show detailed results');
+        logger.log('  --from-database          Get tasks from database');
+        logger.debug('  --from-test-reports      Get tasks from test reports');
+        logger.log('  --from-coverage          Get tasks from coverage report');
+        logger.log('  --help, -h               Show this help\n');
         
-        console.log(chalk.yellow('Examples:'));
-        console.log('  node cli/index.js sequential');
-        console.log('  node cli/index.js sequential --verbose --timeout 600');
-        console.log('  node cli/index.js sequential --from-test-reports --project /path/to/project');
+        logger.log(chalk.yellow('Examples:'));
+        logger.log('  node cli/index.js sequential');
+        logger.log('  node cli/index.js sequential --verbose --timeout 600');
+        logger.debug('  node cli/index.js sequential --from-test-reports --project /path/to/project');
     }
 
     /**
@@ -589,33 +591,33 @@ class TaskCLIMain {
      * @param {Object} result - Execution result
      */
     displaySequentialModeResults(result) {
-        console.log(chalk.green.bold('\n🎉 Sequential Task Execution Completed!'));
+        logger.log(chalk.green.bold('\n🎉 Sequential Task Execution Completed!'));
         
-        console.log(chalk.blue('\n📊 Summary:'));
-        console.log(`  Total Tasks: ${result.totalTasks}`);
-        console.log(`  Successful: ${chalk.green(result.successful)}`);
-        console.log(`  Failed: ${chalk.red(result.failed)}`);
-        console.log(`  Total Duration: ${chalk.yellow(Math.round(result.totalDuration / 1000))}s`);
-        console.log(`  Average Duration: ${chalk.yellow(Math.round(result.averageDuration / 1000))}s per task`);
+        logger.log(chalk.blue('\n📊 Summary:'));
+        logger.log(`  Total Tasks: ${result.totalTasks}`);
+        logger.log(`  Successful: ${chalk.green(result.successful)}`);
+        logger.log(`  Failed: ${chalk.red(result.failed)}`);
+        logger.log(`  Total Duration: ${chalk.yellow(Math.round(result.totalDuration / 1000))}s`);
+        logger.log(`  Average Duration: ${chalk.yellow(Math.round(result.averageDuration / 1000))}s per task`);
         
         if (result.success) {
-            console.log(chalk.green('\n✅ All tasks completed successfully!'));
+            logger.log(chalk.green('\n✅ All tasks completed successfully!'));
         } else {
-            console.log(chalk.yellow('\n⚠️  Some tasks failed. Check the details above.'));
+            logger.log(chalk.yellow('\n⚠️  Some tasks failed. Check the details above.'));
         }
         
         // Show task details if verbose
         if (result.results && result.results.length > 0) {
-            console.log(chalk.blue('\n📝 Task Details:'));
+            logger.log(chalk.blue('\n📝 Task Details:'));
             result.results.forEach((taskResult, index) => {
                 const status = taskResult.success ? chalk.green('✅') : chalk.red('❌');
                 const duration = Math.round(taskResult.duration / 1000);
                 
-                console.log(`  ${status} Task ${index + 1}: ${taskResult.taskTitle}`);
-                console.log(`     Duration: ${chalk.yellow(duration)}s`);
+                logger.log(`  ${status} Task ${index + 1}: ${taskResult.taskTitle}`);
+                logger.log(`     Duration: ${chalk.yellow(duration)}s`);
                 
                 if (!taskResult.success && taskResult.error) {
-                    console.log(`     Error: ${chalk.red(taskResult.error)}`);
+                    logger.log(`     Error: ${chalk.red(taskResult.error)}`);
                 }
             });
         }
@@ -690,7 +692,7 @@ class TaskCLIMain {
 if (require.main === module) {
     const cli = new TaskCLIMain();
     cli.run(process.argv.slice(2)).catch(error => {
-        console.error('❌ CLI failed to start:', error.message);
+        logger.error('❌ CLI failed to start:', error.message);
         process.exit(1);
     });
 }

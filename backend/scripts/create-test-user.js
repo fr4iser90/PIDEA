@@ -1,21 +1,23 @@
+
 require('module-alias/register');
 const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
 const bcrypt = require('bcryptjs');
 const { v4: uuidv4 } = require('uuid');
+const { logger } = require('@infrastructure/logging/Logger');
 
 // Use the same database path as the application
 const dbPath = path.join(__dirname, '../database/PIDEA-dev.db');
 
-console.log('👤 [CreateTestUser] Creating test user...');
-console.log(`📁 Database path: ${dbPath}`);
+logger.debug('👤 [CreateTestUser] Creating test user...');
+logger.log(`📁 Database path: ${dbPath}`);
 
 const db = new sqlite3.Database(dbPath, (err) => {
   if (err) {
-    console.error('❌ Error opening database:', err.message);
+    logger.error('❌ Error opening database:', err.message);
     process.exit(1);
   }
-  console.log('✅ Database opened successfully');
+  logger.log('✅ Database opened successfully');
 });
 
 async function createTestUser() {
@@ -46,20 +48,20 @@ async function createTestUser() {
         '{}'
       ], function(err) {
         if (err) {
-          console.error('❌ Error creating user:', err.message);
+          logger.error('❌ Error creating user:', err.message);
           reject(err);
         } else {
-          console.log('✅ Test user created successfully!');
-          console.log(`📧 Email: ${email}`);
-          console.log(`🔑 Password: ${password}`);
-          console.log(`🆔 User ID: ${userId}`);
+          logger.debug('✅ Test user created successfully!');
+          logger.log(`📧 Email: ${email}`);
+          logger.log(`🔑 Password: ${password}`);
+          logger.log(`🆔 User ID: ${userId}`);
           resolve();
         }
       });
     });
 
   } catch (error) {
-    console.error('❌ Error creating test user:', error.message);
+    logger.error('❌ Error creating test user:', error.message);
     process.exit(1);
   } finally {
     db.close();

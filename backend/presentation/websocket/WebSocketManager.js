@@ -1,5 +1,7 @@
 const WebSocket = require('ws');
 const AuthMiddleware = require('@auth/AuthMiddleware');
+const { logger } = require('@infrastructure/logging/Logger');
+
 
 class WebSocketManager {
   constructor(server, eventBus, authMiddleware) {
@@ -18,7 +20,7 @@ class WebSocketManager {
   }
 
   initialize() {
-    console.log('[WebSocketManager] Initializing WebSocket server...');
+    logger.log('[WebSocketManager] Initializing WebSocket server...');
 
     this.wss = new WebSocket.Server({ 
       server: this.server,
@@ -30,15 +32,15 @@ class WebSocketManager {
     });
 
     this.wss.on('error', (error) => {
-      console.error('[WebSocketManager] WebSocket server error:', error);
+      logger.error('[WebSocketManager] WebSocket server error:', error);
     });
 
-    console.log('[WebSocketManager] WebSocket server initialized');
+    logger.log('[WebSocketManager] WebSocket server initialized');
   }
 
   async handleConnection(ws, req) {
     try {
-      console.log('[WebSocketManager] New WebSocket connection attempt');
+      logger.debug('[WebSocketManager] New WebSocket connection attempt');
 
       // Try to authenticate the connection, but don't require it initially
       const authResult = await this.authenticateConnection(ws, req);
@@ -72,12 +74,12 @@ class WebSocketManager {
           }
         });
 
-        console.log(`[WebSocketManager] User ${userId} connected (${this.getUserConnectionCount(userId)} connections)`);
+        logger.log(`[WebSocketManager] User ${userId} connected (${this.getUserConnectionCount(userId)} connections)`);
       } else {
         // Register as anonymous connection
         this.registerAnonymousConnection(ws);
-        console.log('[WebSocketManager] Anonymous connection established');
-        console.log('[WebSocketManager] Total clients after anonymous connection:', this.wss.clients.size);
+        logger.log('[WebSocketManager] Anonymous connection established');
+        logger.log('[WebSocketManager] Total clients after anonymous connection:', this.wss.clients.size);
       }
 
       // Setup message handling
@@ -96,7 +98,7 @@ class WebSocketManager {
 
       // Setup error handling
       ws.on('error', (error) => {
-        console.error(`[WebSocketManager] WebSocket error:`, error);
+        logger.error(`[WebSocketManager] WebSocket error:`, error);
         if (userId) {
           this.handleDisconnect(ws, userId, 1011, 'Internal error');
         } else {
@@ -111,7 +113,7 @@ class WebSocketManager {
       });
 
     } catch (error) {
-      console.error('[WebSocketManager] Connection setup error:', error);
+      logger.error('[WebSocketManager] Connection setup error:', error);
       ws.close(1011, 'Connection setup failed');
     }
   }
@@ -140,7 +142,7 @@ class WebSocketManager {
       return { authenticated: true, user, session };
 
     } catch (error) {
-      console.error('[WebSocketManager] Authentication error:', error);
+      logger.error('[WebSocketManager] Authentication error:', error);
       return { authenticated: false, error: 'Authentication failed' };
     }
   }
@@ -188,17 +190,17 @@ class WebSocketManager {
     // Store anonymous connection info
     this.userConnections.set(ws, { userId: null, sessionId: null });
     this.connectionCount++;
-    console.log('[WebSocketManager] Anonymous connection registered. Total connections:', this.connectionCount);
+    logger.log('[WebSocketManager] Anonymous connection registered. Total connections:', this.connectionCount);
   }
 
   handleAnonymousDisconnect(ws, code, reason) {
-    console.log(`[WebSocketManager] Anonymous connection disconnected (code: ${code}, reason: ${reason})`);
+    logger.log(`[WebSocketManager] Anonymous connection disconnected (code: ${code}, reason: ${reason})`);
     this.userConnections.delete(ws);
     this.connectionCount--;
   }
 
   handleDisconnect(ws, userId, code, reason) {
-    console.log(`[WebSocketManager] User ${userId} disconnected (code: ${code}, reason: ${reason})`);
+    logger.log(`[WebSocketManager] User ${userId} disconnected (code: ${code}, reason: ${reason})`);
 
     // Remove from user's connection set
     const userConnections = this.clients.get(userId);
@@ -252,7 +254,7 @@ class WebSocketManager {
       await this.routeMessage(ws, message, user);
 
     } catch (error) {
-      console.error('[WebSocketManager] Message handling error:', error);
+      logger.error('[WebSocketManager] Message handling error:', error);
       this.sendToClient(ws, 'error', {
         type: 'internal_error',
         message: 'Failed to process message'
@@ -408,7 +410,7 @@ class WebSocketManager {
       });
 
     } catch (error) {
-      console.error('[WebSocketManager] Authentication error:', error);
+      logger.error('[WebSocketManager] Authentication error:', error);
       this.sendToClient(ws, 'error', {
         type: 'authentication_failed',
         message: 'Authentication failed'
@@ -484,7 +486,7 @@ class WebSocketManager {
       timestamp: new Date().toISOString()
     });
 
-    console.log(`[WebSocketManager] Broadcasting ${event} to ${this.wss.clients.size} clients:`, data);
+    logger.log(`[WebSocketManager] Broadcasting ${event} to ${this.wss.clients.size} clients:`, data);
 
     this.wss.clients.forEach(client => {
       if (client.readyState === WebSocket.OPEN) {
@@ -549,7 +551,7 @@ class WebSocketManager {
 
   // Cleanup
   cleanup() {
-    console.log('[WebSocketManager] Cleaning up...');
+    logger.log('[WebSocketManager] Cleaning up...');
     
     this.wss.clients.forEach(client => {
       client.close(1000, 'Server shutdown');
@@ -590,13 +592,13 @@ class WebSocketManager {
           try {
             client.send(JSON.stringify(topicMessage));
           } catch (error) {
-            console.error('[WebSocketManager] Error sending topic message:', error.message);
+            logger.error('[WebSocketManager] Error sending topic message:', error.message);
           }
         }
       });
 
     } catch (error) {
-      console.error('[WebSocketManager] Error broadcasting to topic:', error.message);
+      logger.error('[WebSocketManager] Error broadcasting to topic:', error.message);
     }
   }
 
@@ -623,7 +625,7 @@ class WebSocketManager {
       this.broadcastToTopic(`mirror-${frameData.metadata.port}-frames`, message);
 
     } catch (error) {
-      console.error('[WebSocketManager] Error sending frame data:', error.message);
+      logger.error('[WebSocketManager] Error sending frame data:', error.message);
     }
   }
 

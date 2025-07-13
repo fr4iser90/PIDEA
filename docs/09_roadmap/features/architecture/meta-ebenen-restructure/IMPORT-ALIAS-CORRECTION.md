@@ -73,7 +73,7 @@ const BrowserManager = require('@external/BrowserManager');
 const DatabaseConnection = require('@database/DatabaseConnection');
 
 // Logging
-const logger = require('@logging/logger');
+const { logger } = require('@infrastructure/logging/Logger');
 ```
 
 ### **Neue Alias-Patterns (korrekt):**

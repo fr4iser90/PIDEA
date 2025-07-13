@@ -9,6 +9,7 @@ const StepRegistry = require('../steps/StepRegistry');
 const FrameworkRegistry = require('../frameworks/FrameworkRegistry');
 
 
+
 /**
  * TaskService - Business logic for project-based task management
  * Enhanced with GitWorkflowManager integration
@@ -69,7 +70,7 @@ class TaskService {
   }
 
   async buildTaskExecutionPrompt(task) {
-    console.log('🔍 [TaskService] buildTaskExecutionPrompt called for task:', {
+    logger.log('🔍 [TaskService] buildTaskExecutionPrompt called for task:', {
       id: task.id,
       title: task.title,
       type: task.type?.value,
@@ -79,15 +80,15 @@ class TaskService {
     // Lade task-execute.md Prompt über neue API
     let taskExecutePrompt = '';
     try {
-      console.log('🔍 [TaskService] Loading task-execute.md via new API...');
+      logger.log('🔍 [TaskService] Loading task-execute.md via new API...');
       const response = await fetch('http://localhost:3000/api/prompts/task-management/task-execute.md');
-      console.log('🔍 [TaskService] API response status:', response.status);
+      logger.log('🔍 [TaskService] API response status:', response.status);
       
       if (response.ok) {
         const data = await response.json();
         if (data.success && data.data.content) {
           taskExecutePrompt = data.data.content;
-          console.log('✅ [TaskService] Successfully loaded task-execute.md, length:', taskExecutePrompt.length);
+          logger.log('✅ [TaskService] Successfully loaded task-execute.md, length:', taskExecutePrompt.length);
         } else {
           throw new Error('Invalid API response format');
         }
@@ -95,7 +96,7 @@ class TaskService {
         throw new Error(`Failed to load task-execute.md: ${response.status}`);
       }
     } catch (error) {
-      console.error('❌ [TaskService] Error reading task-execute.md via API:', error);
+      logger.error('❌ [TaskService] Error reading task-execute.md via API:', error);
       taskExecutePrompt = 'Execute the following task:\n\n';
     }
 
@@ -107,19 +108,19 @@ class TaskService {
         
         // Kombiniere: task-execute.md + Task-Inhalt
         const finalPrompt = `${taskExecutePrompt}\n\n${markdownContent}`;
-        console.log('✅ [TaskService] Final prompt for doc task (first 500 chars):', finalPrompt.substring(0, 500));
+        logger.log('✅ [TaskService] Final prompt for doc task (first 500 chars):', finalPrompt.substring(0, 500));
         return finalPrompt;
       } catch (error) {
-        console.error('❌ [TaskService] Error reading task file:', error);
+        logger.error('❌ [TaskService] Error reading task file:', error);
         const fallbackPrompt = `${taskExecutePrompt}\n\n${task.title}\n\n${task.description || ''}`;
-        console.log('⚠️ [TaskService] Using fallback prompt for doc task');
+        logger.log('⚠️ [TaskService] Using fallback prompt for doc task');
         return fallbackPrompt;
       }
     }
     
     // Für normale Tasks: Verwende task-execute.md + Task-Details
     const finalPrompt = `${taskExecutePrompt}\n\n${task.title}\n\n${task.description || ''}`;
-    console.log('✅ [TaskService] Final prompt for normal task (first 500 chars):', finalPrompt.substring(0, 500));
+    logger.log('✅ [TaskService] Final prompt for normal task (first 500 chars):', finalPrompt.substring(0, 500));
     return finalPrompt;
   }
 
@@ -185,7 +186,7 @@ class TaskService {
    * @returns {Promise<Object>} Execution result
    */
   async executeTask(taskId, userId, options = {}) {
-    console.log('🔍 [TaskService] executeTask called with:', { taskId, userId, options });
+    logger.log('🔍 [TaskService] executeTask called with:', { taskId, userId, options });
     
     try {
       const task = await this.taskRepository.findById(taskId);
@@ -193,7 +194,7 @@ class TaskService {
         throw new Error('Task not found');
       }
 
-      console.log('🔍 [TaskService] Found task:', task);
+      logger.log('🔍 [TaskService] Found task:', task);
 
       if (task.isCompleted()) {
         throw new Error('Task is already completed');
@@ -203,13 +204,13 @@ class TaskService {
       try {
         return await this.executeTaskWithCategories(task, userId, options);
       } catch (error) {
-        console.warn('⚠️ [TaskService] Categories execution failed, trying core execution engine:', error.message);
+        logger.warn('⚠️ [TaskService] Categories execution failed, trying core execution engine:', error.message);
         
         // Fallback to core execution engine
         try {
           return await this.executeTaskWithEngine(taskId, userId, options);
         } catch (engineError) {
-          console.warn('⚠️ [TaskService] Core engine failed, trying git workflow manager:', engineError.message);
+          logger.warn('⚠️ [TaskService] Core engine failed, trying git workflow manager:', engineError.message);
           
           // Fallback to git workflow manager
           if (this.gitWorkflowManager) {
@@ -223,25 +224,25 @@ class TaskService {
 
               const result = await this.gitWorkflowManager.executeWorkflow(context);
               
-              console.log('✅ [TaskService] Git workflow manager execution completed', {
+              logger.log('✅ [TaskService] Git workflow manager execution completed', {
                 taskId: task.id,
                 result: result.status
               });
 
               return result;
             } catch (gitError) {
-              console.error('❌ [TaskService] Git workflow manager failed:', gitError.message);
+              logger.error('❌ [TaskService] Git workflow manager failed:', gitError.message);
             }
           }
           
           // Final fallback to legacy method
-          console.warn('⚠️ [TaskService] All modern methods failed, using legacy execution');
+          logger.warn('⚠️ [TaskService] All modern methods failed, using legacy execution');
           return await this.executeTaskLegacy(taskId, userId);
         }
       }
 
     } catch (error) {
-      console.error('❌ [TaskService] Task execution failed:', error.message);
+      logger.error('❌ [TaskService] Task execution failed:', error.message);
       throw error;
     }
   }
@@ -283,7 +284,7 @@ class TaskService {
    * @returns {Promise<Object>} Execution result
    */
   async executeTaskWithEngine(taskId, userId, options = {}) {
-    console.log('🔍 [TaskService] executeTaskWithEngine called with:', { taskId, userId, options });
+    logger.log('🔍 [TaskService] executeTaskWithEngine called with:', { taskId, userId, options });
     
     try {
       const task = await this.taskRepository.findById(taskId);
@@ -291,7 +292,7 @@ class TaskService {
         throw new Error('Task not found');
       }
 
-      console.log('🔍 [TaskService] Found task for engine execution:', task);
+      logger.log('🔍 [TaskService] Found task for engine execution:', task);
 
       if (task.isCompleted()) {
         throw new Error('Task is already completed');
@@ -312,7 +313,7 @@ class TaskService {
         ...options
       });
       
-      console.log('✅ [TaskService] Core engine task execution completed', {
+      logger.log('✅ [TaskService] Core engine task execution completed', {
         taskId: task.id,
         success: result.isSuccess(),
         duration: result.getFormattedDuration()
@@ -337,7 +338,7 @@ class TaskService {
       };
 
     } catch (error) {
-      console.error('❌ [TaskService] Core engine task execution failed:', error.message);
+      logger.error('❌ [TaskService] Core engine task execution failed:', error.message);
       throw error;
     }
   }
@@ -408,7 +409,7 @@ class TaskService {
    * @returns {Promise<Object>} Execution result
    */
   async executeTaskLegacy(taskId, userId) {
-    console.log('🔍 [TaskService] executeTask called with:', { taskId, userId });
+    logger.log('🔍 [TaskService] executeTask called with:', { taskId, userId });
     
     try {
       const task = await this.taskRepository.findById(taskId);
@@ -416,7 +417,7 @@ class TaskService {
         throw new Error('Task not found');
       }
 
-      console.log('🔍 [TaskService] Found task:', task);
+      logger.log('🔍 [TaskService] Found task:', task);
 
       if (task.isCompleted()) {
         throw new Error('Task is already completed');
@@ -424,7 +425,7 @@ class TaskService {
 
       // CRITICAL: Create new chat ONLY at the start of task execution
       if (this.cursorIDEService && this.cursorIDEService.browserManager) {
-        console.log('🆕 [TaskService] Creating new chat for task execution...');
+        logger.log('🆕 [TaskService] Creating new chat for task execution...');
         await this.cursorIDEService.browserManager.clickNewChat();
         // Wait for new chat to be ready
         await new Promise(resolve => setTimeout(resolve, 2000));
@@ -434,7 +435,7 @@ class TaskService {
       task.updateStatus(TaskStatus.IN_PROGRESS);
       await this.taskRepository.update(taskId, task);
 
-      console.log('🔍 [TaskService] Starting automated refactoring workflow...');
+      logger.log('🔍 [TaskService] Starting automated refactoring workflow...');
 
       const execution = {
         taskId,
@@ -447,11 +448,11 @@ class TaskService {
 
       try {
               // Step 1: Create Git Branch for Refactoring
-      console.log('🔧 [TaskService] Step 1: Creating Git branch...');
+      logger.log('🔧 [TaskService] Step 1: Creating Git branch...');
       // Get projectPath from userId parameter OR task metadata (fallback)
       const projectPath = userId.projectPath || task.metadata.projectPath;
       
-      console.log('🔍 [TaskService] Task details:', {
+      logger.log('🔍 [TaskService] Task details:', {
         id: task.id,
         title: task.title,
         projectPath: projectPath,
@@ -477,7 +478,7 @@ class TaskService {
         execution.progress = 20;
 
         // Step 2: AI-Powered Refactoring with Validation Loop
-        console.log('🤖 [TaskService] Step 2: AI-powered refactoring with validation...');
+        logger.log('🤖 [TaskService] Step 2: AI-powered refactoring with validation...');
         execution.steps.push({ step: 'ai_refactoring', status: 'running', message: 'Executing AI refactoring' });
         
         let refactoringResult;
@@ -487,7 +488,7 @@ class TaskService {
         
         while (!buildValid && attemptCount < maxAttempts) {
           attemptCount++;
-          console.log(`🔄 [TaskService] Refactoring attempt ${attemptCount}/${maxAttempts}`);
+          logger.debug(`🔄 [TaskService] Refactoring attempt ${attemptCount}/${maxAttempts}`);
           
           // Execute AI refactoring
           refactoringResult = await this.executeAIRefactoringWithAutoFinish(task);
@@ -497,13 +498,13 @@ class TaskService {
           }
           
           // Step 3: Validate Build
-          console.log('🔍 [TaskService] Step 3: Validating build...');
+          logger.log('🔍 [TaskService] Step 3: Validating build...');
           execution.steps.push({ step: 'build_validation', status: 'running', message: `Validating build (attempt ${attemptCount})` });
           
           const buildResult = await this.validateBuild(task.metadata.projectPath);
           
           if (buildResult.success) {
-            console.log('✅ [TaskService] Build validation successful!');
+            logger.log('✅ [TaskService] Build validation successful!');
             buildValid = true;
             execution.steps[execution.steps.length - 1] = { 
               step: 'build_validation', 
@@ -512,7 +513,7 @@ class TaskService {
               data: buildResult
             };
           } else {
-            console.log('❌ [TaskService] Build validation failed:', buildResult.error);
+            logger.log('❌ [TaskService] Build validation failed:', buildResult.error);
             execution.steps[execution.steps.length - 1] = { 
               step: 'build_validation', 
               status: 'failed', 
@@ -522,7 +523,7 @@ class TaskService {
             
             // Send error back to AI for fixing
             if (attemptCount < maxAttempts) {
-              console.log('🔄 [TaskService] Sending error to AI for fixing...');
+              logger.log('🔄 [TaskService] Sending error to AI for fixing...');
               const errorPrompt = this.buildErrorFixPrompt(task, buildResult.error);
               await this.cursorIDEService.chatMessageHandler.sendMessage(errorPrompt, {
                 waitForResponse: true,
@@ -545,7 +546,7 @@ class TaskService {
         execution.progress = 80;
 
         // Step 4: Commit and push changes to Git branch
-        console.log('🔧 [TaskService] Step 4: Committing and pushing changes to Git branch...');
+        logger.log('🔧 [TaskService] Step 4: Committing and pushing changes to Git branch...');
         execution.steps.push({ step: 'git_commit_push', status: 'running', message: 'Committing and pushing refactored code' });
         
         const commitResult = await this.commitAndPushChanges(projectPath, branchName, task);
@@ -559,7 +560,7 @@ class TaskService {
         execution.progress = 90;
 
         // Step 5: Create merge request (optional)
-        console.log('🔧 [TaskService] Step 5: Creating merge request...');
+        logger.log('🔧 [TaskService] Step 5: Creating merge request...');
         execution.steps.push({ step: 'merge_request', status: 'running', message: 'Creating merge request for review' });
         
         let mergeRequestResult = null;
@@ -572,7 +573,7 @@ class TaskService {
             data: mergeRequestResult
           };
         } catch (error) {
-          console.warn('⚠️ [TaskService] Failed to create merge request:', error.message);
+          logger.warn('⚠️ [TaskService] Failed to create merge request:', error.message);
           execution.steps[execution.steps.length - 1] = { 
             step: 'merge_request', 
             status: 'skipped', 
@@ -583,7 +584,7 @@ class TaskService {
         execution.progress = 95;
 
         // Step 6: Task completed successfully (ONLY after Git operations)
-        console.log('✅ [TaskService] Step 6: Task completed successfully with Git operations');
+        logger.log('✅ [TaskService] Step 6: Task completed successfully with Git operations');
         execution.steps.push({ step: 'completion', status: 'completed', message: 'Task completed with successful Git operations' });
         execution.progress = 100;
 
@@ -598,7 +599,7 @@ class TaskService {
         // Refresh analysis data after task completion
         if (task.metadata?.projectPath && task.type?.value?.includes('refactor')) {
             try {
-                console.log('🔄 [TaskService] Refreshing analysis data after refactoring task completion...');
+                logger.log('🔄 [TaskService] Refreshing analysis data after refactoring task completion...');
                 
                     // Refresh analysis data after task completion
                 
@@ -607,17 +608,17 @@ class TaskService {
                     taskId
                 );
                 
-                console.log('✅ [TaskService] Analysis data refreshed after task completion');
+                logger.log('✅ [TaskService] Analysis data refreshed after task completion');
             } catch (error) {
-                console.warn('⚠️ [TaskService] Failed to refresh analysis data after task completion:', error.message);
+                logger.warn('⚠️ [TaskService] Failed to refresh analysis data after task completion:', error.message);
             }
         }
 
-        console.log('✅ [TaskService] Automated refactoring workflow completed successfully');
+        logger.log('✅ [TaskService] Automated refactoring workflow completed successfully');
         return execution;
 
       } catch (error) {
-        console.error('❌ [TaskService] Refactoring workflow failed:', error);
+        logger.error('❌ [TaskService] Refactoring workflow failed:', error);
         
         // Update execution with error
         execution.status = 'failed';
@@ -632,7 +633,7 @@ class TaskService {
       }
 
     } catch (error) {
-      console.error('❌ [TaskService] Error in executeTask:', error);
+      logger.error('❌ [TaskService] Error in executeTask:', error);
       throw error;
     }
   }
@@ -692,7 +693,7 @@ class TaskService {
       
       // Use Auto-Finish System if available
       if (this.autoFinishSystem && this.cursorIDEService) {
-        console.log('🤖 [TaskService] Using Auto-Finish System for AI refactoring...');
+        logger.log('🤖 [TaskService] Using Auto-Finish System for AI refactoring...');
         
         // Create temporary task for Auto-Finish processing
         const tempTask = {
@@ -710,7 +711,7 @@ class TaskService {
           fallbackDetectionEnabled: true
         });
         
-        console.log('✅ [TaskService] Auto-Finish processing completed:', {
+        logger.log('✅ [TaskService] Auto-Finish processing completed:', {
           success: autoFinishResult.success,
           status: autoFinishResult.status,
           duration: autoFinishResult.duration
@@ -737,7 +738,7 @@ class TaskService {
         
       } else {
         // Fallback to original simple approach
-        console.log('⚠️ [TaskService] Auto-Finish System not available, using fallback approach...');
+        logger.log('⚠️ [TaskService] Auto-Finish System not available, using fallback approach...');
         return await this.executeAIRefactoring(task);
       }
     } catch (error) {
@@ -759,14 +760,14 @@ class TaskService {
       if (this.cursorIDEService) {
         // Try to send via ChatMessageHandler first
         if (this.cursorIDEService.chatMessageHandler) {
-          console.log('🤖 [TaskService] Sending refactoring prompt and waiting for AI to finish editing...');
+          logger.log('🤖 [TaskService] Sending refactoring prompt and waiting for AI to finish editing...');
           const result = await this.cursorIDEService.chatMessageHandler.sendMessage(aiPrompt, {
             waitForResponse: true,
             timeout: 120000, // 2 minutes timeout
             checkInterval: 2000 // Check every 2 seconds
           });
           
-          console.log('✅ [TaskService] AI finished editing:', {
+          logger.log('✅ [TaskService] AI finished editing:', {
             success: result.success,
             responseLength: result.response?.length || 0,
             duration: result.duration
@@ -783,7 +784,7 @@ class TaskService {
         } else {
           // Fallback: use the sendMessage method directly
           await this.cursorIDEService.sendMessage(aiPrompt);
-          console.log('✅ [TaskService] Refactoring prompt sent via sendMessage (no response waiting)');
+          logger.log('✅ [TaskService] Refactoring prompt sent via sendMessage (no response waiting)');
           
           return {
             success: true,
@@ -793,7 +794,7 @@ class TaskService {
           };
         }
       } else {
-        console.log('⚠️ [TaskService] CursorIDEService nicht verfügbar!');
+        logger.log('⚠️ [TaskService] CursorIDEService nicht verfügbar!');
         throw new Error('CursorIDEService not available');
       }
     } catch (error) {
@@ -827,7 +828,7 @@ class TaskService {
   async integrateWithCursorIDE(task, refactoringResult) {
     try {
       // WE ARE CURSOR IDE! So we'll apply the changes directly to the file
-      console.log('🎭 [TaskService] Applying refactoring changes directly to file...');
+      logger.log('🎭 [TaskService] Applying refactoring changes directly to file...');
       
       const fs = require('fs');
       const path = require('path');
@@ -835,14 +836,14 @@ class TaskService {
       // Create backup of original file
       const backupPath = `${task.metadata.filePath}.backup.${Date.now()}`;
       fs.copyFileSync(task.metadata.filePath, backupPath);
-      console.log('📦 [TaskService] Created backup:', backupPath);
+      logger.log('📦 [TaskService] Created backup:', backupPath);
       
       // Apply the refactored code to the file
       if (!refactoringResult.refactoredCode) {
         throw new Error('Refactored code is undefined - cannot write to file');
       }
       fs.writeFileSync(task.metadata.filePath, refactoringResult.refactoredCode);
-      console.log('✅ [TaskService] Applied refactored code to:', task.metadata.filePath);
+      logger.log('✅ [TaskService] Applied refactored code to:', task.metadata.filePath);
       
       return {
         success: true,
@@ -866,7 +867,7 @@ class TaskService {
       const util = require('util');
       const execAsync = util.promisify(exec);
 
-      console.log('🔍 [TaskService] Running build validation...');
+      logger.log('🔍 [TaskService] Running build validation...');
 
       // Try common build commands
       const buildCommands = [
@@ -882,7 +883,7 @@ class TaskService {
 
       for (const command of buildCommands) {
         try {
-          console.log(`🔍 [TaskService] Trying: ${command}`);
+          logger.log(`🔍 [TaskService] Trying: ${command}`);
           const { stdout, stderr } = await execAsync(command, { 
             cwd: projectPath, 
             timeout: 60000 // 1 minute timeout
@@ -896,10 +897,10 @@ class TaskService {
             message: `Build validation passed with ${command}`,
             timestamp: new Date()
           };
-          console.log(`✅ [TaskService] Build validation successful with ${command}`);
+          logger.log(`✅ [TaskService] Build validation successful with ${command}`);
           break;
         } catch (error) {
-          console.log(`❌ [TaskService] ${command} failed:`, error.message);
+          logger.log(`❌ [TaskService] ${command} failed:`, error.message);
           // Continue to next command
         }
       }
@@ -907,7 +908,7 @@ class TaskService {
       return buildResult;
 
     } catch (error) {
-      console.error('❌ [TaskService] Build validation error:', error);
+      logger.error('❌ [TaskService] Build validation error:', error);
       return {
         success: false,
         error: error.message,
@@ -981,6 +982,7 @@ Please fix the issues and let me know when you're done.`;
   async rollbackChanges(projectPath, branchName) {
     const { exec } = require('child_process');
     const util = require('util');
+const { logger } = require('@infrastructure/logging/Logger');
     const execAsync = util.promisify(exec);
 
     try {
@@ -998,7 +1000,7 @@ Please fix the issues and let me know when you're done.`;
         message: `Successfully rolled back changes and deleted branch: ${branchName}`
       };
     } catch (error) {
-      console.error('Failed to rollback changes:', error);
+      logger.error('Failed to rollback changes:', error);
       return {
         status: 'rollback_failed',
         error: error.message
@@ -1035,7 +1037,7 @@ Please fix the issues and let me know when you're done.`;
         message: 'Please create merge request manually in your Git platform'
       };
 
-      console.log('📋 [TaskService] Merge request info:', mergeRequestInfo);
+      logger.log('📋 [TaskService] Merge request info:', mergeRequestInfo);
       
       return mergeRequestInfo;
     } catch (error) {

@@ -1,3 +1,4 @@
+
 /**
  * FILE-BASIERTE WORKSPACE-ERKENNUNG
  * Terminal-Output über Files in /tmp/IDEWEB/{port}/
@@ -5,6 +6,7 @@
 const fs = require('fs');
 const path = require('path');
 const VSCodeTerminalHandler = require('../terminal/VSCodeTerminalHandler');
+const { logger } = require('@infrastructure/logging/Logger');
 
 class FileBasedWorkspaceDetector {
   constructor(browserManager) {
@@ -22,25 +24,25 @@ class FileBasedWorkspaceDetector {
     
     // 1. Prüfe Cache zuerst
     if (this._detectionCache.has(cacheKey)) {
-      console.log(`[FileBasedWorkspaceDetector] Using cached workspace info for port ${port}`);
+      logger.log(`[FileBasedWorkspaceDetector] Using cached workspace info for port ${port}`);
       return this._detectionCache.get(cacheKey);
     }
 
     // 2. Prüfe ob bereits Files vorhanden sind
     const existingData = await this._checkExistingFiles(port);
     if (existingData && existingData.workspace) {
-      console.log(`[FileBasedWorkspaceDetector] Found existing workspace data for port ${port}:`, existingData.workspace);
+      logger.log(`[FileBasedWorkspaceDetector] Found existing workspace data for port ${port}:`, existingData.workspace);
       this._detectionCache.set(cacheKey, existingData);
       return existingData;
     }
 
     // 3. Nur wenn keine Daten vorhanden sind, neue Detection starten
-    console.log(`[FileBasedWorkspaceDetector] No existing data found for port ${port}, starting new detection...`);
+    logger.log(`[FileBasedWorkspaceDetector] No existing data found for port ${port}, starting new detection...`);
 
     try {
       const page = await this.browserManager.getPage();
       if (!page) {
-        console.error('[FileBasedWorkspaceDetector] No page available');
+        logger.error('[FileBasedWorkspaceDetector] No page available');
         return null;
       }
 
@@ -57,16 +59,16 @@ class FileBasedWorkspaceDetector {
       await this._closeTerminal(page);
 
       if (workspaceInfo.workspace) {
-        console.log(`[FileBasedWorkspaceDetector] Workspace info found for port ${port}:`, workspaceInfo.workspace);
+        logger.log(`[FileBasedWorkspaceDetector] Workspace info found for port ${port}:`, workspaceInfo.workspace);
         this._detectionCache.set(cacheKey, workspaceInfo);
         return workspaceInfo;
       }
 
-      console.error('[FileBasedWorkspaceDetector] Failed to get workspace info');
+      logger.error('[FileBasedWorkspaceDetector] Failed to get workspace info');
       return null;
 
     } catch (error) {
-      console.error('[FileBasedWorkspaceDetector] Error in workspace detection:', error);
+      logger.error('[FileBasedWorkspaceDetector] Error in workspace detection:', error);
       return null;
     }
   }
@@ -85,7 +87,7 @@ class FileBasedWorkspaceDetector {
       return;
     }
     try {
-      console.log(`[FileBasedWorkspaceDetector] Setting up terminal and file structure for port ${port}...`);
+      logger.log(`[FileBasedWorkspaceDetector] Setting up terminal and file structure for port ${port}...`);
 
       // Terminal öffnen (Ctrl+Shift+`)
       await page.keyboard.down('Control');
@@ -108,10 +110,10 @@ class FileBasedWorkspaceDetector {
         await page.waitForTimeout(500);
       }
 
-      console.log(`[FileBasedWorkspaceDetector] File structure created for port ${port}`);
+      logger.log(`[FileBasedWorkspaceDetector] File structure created for port ${port}`);
 
     } catch (error) {
-      console.error('[FileBasedWorkspaceDetector] Error setting up terminal:', error);
+      logger.error('[FileBasedWorkspaceDetector] Error setting up terminal:', error);
     }
   }
 
@@ -120,7 +122,7 @@ class FileBasedWorkspaceDetector {
    */
   async _closeTerminal(page) {
     try {
-      console.log('[FileBasedWorkspaceDetector] Closing terminal...');
+      logger.log('[FileBasedWorkspaceDetector] Closing terminal...');
       
       // Terminal schließen (Ctrl+D oder Ctrl+W)
       await page.keyboard.down('Control');
@@ -130,10 +132,10 @@ class FileBasedWorkspaceDetector {
       // Alternative: Ctrl+W falls Ctrl+D nicht funktioniert
       await page.waitForTimeout(500);
       
-      console.log('[FileBasedWorkspaceDetector] Terminal closed');
+      logger.log('[FileBasedWorkspaceDetector] Terminal closed');
       
     } catch (error) {
-      console.error('[FileBasedWorkspaceDetector] Error closing terminal:', error);
+      logger.error('[FileBasedWorkspaceDetector] Error closing terminal:', error);
     }
   }
 
@@ -171,13 +173,13 @@ class FileBasedWorkspaceDetector {
     }
     
     try {
-      console.log(`[FileBasedWorkspaceDetector] Executing terminal commands for port ${port}...`);
+      logger.log(`[FileBasedWorkspaceDetector] Executing terminal commands for port ${port}...`);
 
       // Get current workspace and project name
       const workspacePath = await this._getCurrentWorkspace(page);
       const projectName = this._extractProjectName(workspacePath);
       
-      console.log(`[FileBasedWorkspaceDetector] Detected project: ${projectName} at ${workspacePath}`);
+      logger.log(`[FileBasedWorkspaceDetector] Detected project: ${projectName} at ${workspacePath}`);
       
       // Create project directory and files
       const projectDir = `/tmp/IDEWEB/${port}/projects/${projectName}`;
@@ -197,10 +199,10 @@ class FileBasedWorkspaceDetector {
         await page.waitForTimeout(800); // Warten bis Output geschrieben ist
       }
 
-      console.log(`[FileBasedWorkspaceDetector] Terminal commands executed for port ${port}, project ${projectName}`);
+      logger.log(`[FileBasedWorkspaceDetector] Terminal commands executed for port ${port}, project ${projectName}`);
 
     } catch (error) {
-      console.error('[FileBasedWorkspaceDetector] Error executing terminal commands:', error);
+      logger.error('[FileBasedWorkspaceDetector] Error executing terminal commands:', error);
     }
   }
 
@@ -225,7 +227,7 @@ class FileBasedWorkspaceDetector {
       
       return process.cwd(); // Fallback
     } catch (error) {
-      console.error('[FileBasedWorkspaceDetector] Error getting current workspace:', error);
+      logger.error('[FileBasedWorkspaceDetector] Error getting current workspace:', error);
       return process.cwd(); // Fallback
     }
   }
@@ -246,7 +248,7 @@ class FileBasedWorkspaceDetector {
       
       return cleanName || 'unknown-project';
     } catch (error) {
-      console.error('[FileBasedWorkspaceDetector] Error extracting project name:', error);
+      logger.error('[FileBasedWorkspaceDetector] Error extracting project name:', error);
       return 'unknown-project';
     }
   }
@@ -270,7 +272,7 @@ class FileBasedWorkspaceDetector {
       
       if (fs.existsSync(currentProjectFile)) {
         currentProject = fs.readFileSync(currentProjectFile, 'utf8').trim();
-        console.log(`[FileBasedWorkspaceDetector] Current project: ${currentProject}`);
+        logger.log(`[FileBasedWorkspaceDetector] Current project: ${currentProject}`);
       }
 
       // If no current project, try to find any project with data
@@ -284,7 +286,7 @@ class FileBasedWorkspaceDetector {
           
           if (projects.length > 0) {
             currentProject = projects[0]; // Use first available project
-            console.log(`[FileBasedWorkspaceDetector] Using first available project: ${currentProject}`);
+            logger.log(`[FileBasedWorkspaceDetector] Using first available project: ${currentProject}`);
           }
         }
       }
@@ -305,11 +307,11 @@ class FileBasedWorkspaceDetector {
       }
 
       // Wenn workspace.txt existiert und Inhalt hat, alle Files auslesen
-      console.log(`[FileBasedWorkspaceDetector] Found existing files for port ${port}, project ${currentProject}, reading them...`);
+      logger.log(`[FileBasedWorkspaceDetector] Found existing files for port ${port}, project ${currentProject}, reading them...`);
       return await this._readWorkspaceFiles(port, currentProject);
 
     } catch (error) {
-      console.error('[FileBasedWorkspaceDetector] Error checking existing files:', error);
+      logger.error('[FileBasedWorkspaceDetector] Error checking existing files:', error);
       return null;
     }
   }
@@ -329,11 +331,11 @@ class FileBasedWorkspaceDetector {
       }
 
       if (!projectName) {
-        console.error('[FileBasedWorkspaceDetector] No project name available for reading files');
+        logger.error('[FileBasedWorkspaceDetector] No project name available for reading files');
         return null;
       }
 
-      console.log(`[FileBasedWorkspaceDetector] Reading workspace files for port ${port}, project ${projectName}...`);
+      logger.log(`[FileBasedWorkspaceDetector] Reading workspace files for port ${port}, project ${projectName}...`);
 
       const basePath = `/tmp/IDEWEB/${port}/projects/${projectName}`;
       const workspaceInfo = {
@@ -353,7 +355,7 @@ class FileBasedWorkspaceDetector {
           workspaceInfo.workspace = fs.readFileSync(`${basePath}/workspace.txt`, 'utf8').trim();
         }
       } catch (error) {
-        console.error('[FileBasedWorkspaceDetector] Error reading workspace.txt:', error);
+        logger.error('[FileBasedWorkspaceDetector] Error reading workspace.txt:', error);
       }
 
       // Files-Liste lesen
@@ -363,7 +365,7 @@ class FileBasedWorkspaceDetector {
           workspaceInfo.files = filesContent.split('\n').filter(line => line.trim());
         }
       } catch (error) {
-        console.error('[FileBasedWorkspaceDetector] Error reading files.txt:', error);
+        logger.error('[FileBasedWorkspaceDetector] Error reading files.txt:', error);
       }
 
       // Git-Status lesen
@@ -372,7 +374,7 @@ class FileBasedWorkspaceDetector {
           workspaceInfo.gitStatus = fs.readFileSync(`${basePath}/git-status.txt`, 'utf8').trim();
         }
       } catch (error) {
-        console.error('[FileBasedWorkspaceDetector] Error reading git-status.txt:', error);
+        logger.error('[FileBasedWorkspaceDetector] Error reading git-status.txt:', error);
       }
 
       // Info-File lesen
@@ -381,7 +383,7 @@ class FileBasedWorkspaceDetector {
           workspaceInfo.info = fs.readFileSync(`${basePath}/info.txt`, 'utf8').trim();
         }
       } catch (error) {
-        console.error('[FileBasedWorkspaceDetector] Error reading info.txt:', error);
+        logger.error('[FileBasedWorkspaceDetector] Error reading info.txt:', error);
       }
 
       // Session-Info lesen
@@ -390,14 +392,14 @@ class FileBasedWorkspaceDetector {
           workspaceInfo.session = fs.readFileSync(`${basePath}/terminal-session.txt`, 'utf8').trim();
         }
       } catch (error) {
-        console.error('[FileBasedWorkspaceDetector] Error reading terminal-session.txt:', error);
+        logger.error('[FileBasedWorkspaceDetector] Error reading terminal-session.txt:', error);
       }
 
-      console.log(`[FileBasedWorkspaceDetector] Workspace files read for port ${port}, project ${projectName}`);
+      logger.log(`[FileBasedWorkspaceDetector] Workspace files read for port ${port}, project ${projectName}`);
       return workspaceInfo;
 
     } catch (error) {
-      console.error('[FileBasedWorkspaceDetector] Error reading workspace files:', error);
+      logger.error('[FileBasedWorkspaceDetector] Error reading workspace files:', error);
       return null;
     }
   }
@@ -505,7 +507,7 @@ class FileBasedWorkspaceDetector {
       return 'Command executed';
 
     } catch (error) {
-      console.error('[FileBasedWorkspaceDetector] Error executing command:', error);
+      logger.error('[FileBasedWorkspaceDetector] Error executing command:', error);
       return null;
     }
   }
@@ -515,7 +517,7 @@ class FileBasedWorkspaceDetector {
    */
   clearCache() {
     this._detectionCache.clear();
-    console.log('[FileBasedWorkspaceDetector] Cache cleared');
+    logger.log('[FileBasedWorkspaceDetector] Cache cleared');
   }
 
   /**

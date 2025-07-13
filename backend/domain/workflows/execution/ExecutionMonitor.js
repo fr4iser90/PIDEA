@@ -3,6 +3,7 @@
  * Provides comprehensive monitoring, alerting, and performance tracking
  */
 const EventEmitter = require('events');
+const { logger } = require('@infrastructure/logging/Logger');
 
 /**
  * Execution monitor for workflow execution

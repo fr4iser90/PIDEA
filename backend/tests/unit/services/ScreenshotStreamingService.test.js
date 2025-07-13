@@ -1,3 +1,4 @@
+
 /**
  * ScreenshotStreamingService Unit Tests
  * 
@@ -7,6 +8,7 @@
 const ScreenshotStreamingService = require('@services/ide-mirror/ScreenshotStreamingService');
 const StreamingSession = require('@entities/StreamingSession');
 const FrameMetrics = require('@entities/FrameMetrics');
+const { logger } = require('@infrastructure/logging/Logger');
 
 // Mock dependencies
 jest.mock('@/infrastructure/external/BrowserManager');
@@ -59,7 +61,7 @@ describe('ScreenshotStreamingService', () => {
         // Use the service's built-in cleanup method
         await service.cleanup();
       } catch (error) {
-        console.warn('Error during test cleanup:', error.message);
+        logger.warn('Error during test cleanup:', error.message);
       }
     }
   });
@@ -585,7 +587,7 @@ describe('ScreenshotStreamingService', () => {
 
         // Now test the service
         const result = await failingService.startStreaming(3000);
-        console.log('Test result:', result);
+        logger.debug('Test result:', result);
         expect(result.success).toBe(false);
         expect(result.error).toContain('Connection failed');
       } finally {
@@ -627,7 +629,7 @@ describe('ScreenshotStreamingService', () => {
         
         // Now test the actual service method
         const result = await freshService.startStreaming(3000);
-        console.log('Test result 2:', result);
+        logger.debug('Test result 2:', result);
         expect(result.success).toBe(false);
         expect(result.error).toContain('Connection failed');
       } finally {

@@ -1,3 +1,4 @@
+
 /**
  * Cursor IDE Detector
  * Detects Cursor IDE instances and manages Cursor-specific detection logic
@@ -24,7 +25,7 @@ class CursorDetector {
    * @returns {Promise<Array>} Array of detected Cursor IDEs
    */
   async scanForIDEs() {
-    console.log('[CursorDetector] Scanning for Cursor IDEs on ports', this.portRange.start, 'to', this.portRange.end);
+    logger.log('[CursorDetector] Scanning for Cursor IDEs on ports', this.portRange.start, 'to', this.portRange.end);
     
     const availableIDEs = [];
     const promises = [];
@@ -49,7 +50,7 @@ class CursorDetector {
       }
     });
 
-    console.log('[CursorDetector] Found', availableIDEs.length, 'running Cursor IDEs');
+    logger.log('[CursorDetector] Found', availableIDEs.length, 'running Cursor IDEs');
     return availableIDEs;
   }
 
@@ -142,6 +143,7 @@ class CursorDetector {
   async getVersion() {
     return new Promise((resolve) => {
       const { spawn } = require('child_process');
+const { logger } = require('@infrastructure/logging/Logger');
       const process = spawn('cursor', ['--version'], { stdio: 'pipe' });
       
       let output = '';

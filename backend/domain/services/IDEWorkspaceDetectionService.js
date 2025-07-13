@@ -1,3 +1,4 @@
+
 /**
  * IDE WORKSPACE DETECTION SERVICE
  * Domain Service für File-basierte Workspace-Erkennung
@@ -16,13 +17,13 @@ class IDEWorkspaceDetectionService {
    */
   async detectAllWorkspaces() {
     try {
-      console.log('[IDEWorkspaceDetectionService] Starting workspace detection for all IDEs...');
+      logger.log('[IDEWorkspaceDetectionService] Starting workspace detection for all IDEs...');
       
       // Verfügbare IDEs abrufen
       const availableIDEs = await this.ideManager.getAvailableIDEs();
       
       if (availableIDEs.length === 0) {
-        console.log('[IDEWorkspaceDetectionService] No IDEs available for workspace detection');
+        logger.log('[IDEWorkspaceDetectionService] No IDEs available for workspace detection');
         return this.detectionResults;
       }
       
@@ -30,22 +31,22 @@ class IDEWorkspaceDetectionService {
       const idesWithoutResults = availableIDEs.filter(ide => !this.detectionResults.has(ide.port));
       
       if (idesWithoutResults.length === 0) {
-        console.log('[IDEWorkspaceDetectionService] All IDEs already have detection results, skipping detection');
+        logger.log('[IDEWorkspaceDetectionService] All IDEs already have detection results, skipping detection');
         return this.detectionResults;
       }
       
-      console.log(`[IDEWorkspaceDetectionService] Found ${idesWithoutResults.length} IDEs for detection (${availableIDEs.length - idesWithoutResults.length} already have results)`);
+      logger.log(`[IDEWorkspaceDetectionService] Found ${idesWithoutResults.length} IDEs for detection (${availableIDEs.length - idesWithoutResults.length} already have results)`);
       
       // Nur für IDEs ohne Ergebnisse Workspace-Info sammeln
       for (const ide of idesWithoutResults) {
         await this.detectWorkspaceForIDE(ide.port);
       }
       
-      console.log('[IDEWorkspaceDetectionService] Workspace detection completed');
+      logger.log('[IDEWorkspaceDetectionService] Workspace detection completed');
       return this.detectionResults;
       
     } catch (error) {
-      console.error('[IDEWorkspaceDetectionService] Error during workspace detection:', error);
+      logger.error('[IDEWorkspaceDetectionService] Error during workspace detection:', error);
       throw error;
     }
   }
@@ -59,11 +60,11 @@ class IDEWorkspaceDetectionService {
       // Prüfe ob bereits Ergebnisse vorhanden sind
       if (this.detectionResults.has(port)) {
         const existingResult = this.detectionResults.get(port);
-        console.log(`[IDEWorkspaceDetectionService] Port ${port}: Using existing detection result:`, existingResult.workspace || existingResult.error);
+        logger.log(`[IDEWorkspaceDetectionService] Port ${port}: Using existing detection result:`, existingResult.workspace || existingResult.error);
         return existingResult;
       }
       
-      console.log(`[IDEWorkspaceDetectionService] Detecting workspace for IDE on port ${port}...`);
+      logger.log(`[IDEWorkspaceDetectionService] Detecting workspace for IDE on port ${port}...`);
       
       const workspaceInfo = await this.ideManager.getWorkspaceInfo(port);
       
@@ -77,7 +78,7 @@ class IDEWorkspaceDetectionService {
           timestamp: workspaceInfo.timestamp
         });
         
-        console.log(`[IDEWorkspaceDetectionService] Port ${port}: ${workspaceInfo.workspace}`);
+        logger.log(`[IDEWorkspaceDetectionService] Port ${port}: ${workspaceInfo.workspace}`);
         
         // AUTOMATISCH Projekt in der DB erstellen
         await this.createProjectInDatabase(workspaceInfo.workspace, port);
@@ -90,7 +91,7 @@ class IDEWorkspaceDetectionService {
           error: 'No workspace info found'
         });
         
-        console.log(`[IDEWorkspaceDetectionService] Port ${port}: No workspace info found`);
+        logger.log(`[IDEWorkspaceDetectionService] Port ${port}: No workspace info found`);
         return null;
       }
       
@@ -100,7 +101,7 @@ class IDEWorkspaceDetectionService {
         error: error.message
       });
       
-      console.log(`[IDEWorkspaceDetectionService] Port ${port}: ${error.message}`);
+      logger.log(`[IDEWorkspaceDetectionService] Port ${port}: ${error.message}`);
       throw error;
     }
   }
@@ -114,18 +115,19 @@ class IDEWorkspaceDetectionService {
     try {
       // Use injected project repository
       if (!this.projectRepository) {
-        console.warn('[IDEWorkspaceDetectionService] No project repository available, skipping project creation');
+        logger.warn('[IDEWorkspaceDetectionService] No project repository available, skipping project creation');
         return;
       }
 
       // Extract project name from workspace path
       const path = require('path');
+const { logger } = require('@infrastructure/logging/Logger');
       const projectName = path.basename(workspacePath);
       
       // Generate project ID
       const projectId = projectName.toLowerCase().replace(/[^a-z0-9]/g, '_');
       
-      console.log(`[IDEWorkspaceDetectionService] Creating project in database: ${projectId} (${projectName}) at ${workspacePath}`);
+      logger.log(`[IDEWorkspaceDetectionService] Creating project in database: ${projectId} (${projectName}) at ${workspacePath}`);
       
       // Create project using findOrCreateByWorkspacePath
       const project = await this.projectRepository.findOrCreateByWorkspacePath(workspacePath, {
@@ -140,10 +142,10 @@ class IDEWorkspaceDetectionService {
         }
       });
       
-      console.log(`[IDEWorkspaceDetectionService] Project created/found in database: ${project.id}`);
+      logger.log(`[IDEWorkspaceDetectionService] Project created/found in database: ${project.id}`);
       
     } catch (error) {
-      console.error('[IDEWorkspaceDetectionService] Failed to create project in database:', error.message);
+      logger.error('[IDEWorkspaceDetectionService] Failed to create project in database:', error.message);
     }
   }
 
@@ -155,7 +157,7 @@ class IDEWorkspaceDetectionService {
       const workspaceInfo = await this.ideManager.getWorkspacePath(port);
       return workspaceInfo;
     } catch (error) {
-      console.error(`[IDEWorkspaceDetectionService] Error getting workspace path for port ${port}:`, error);
+      logger.error(`[IDEWorkspaceDetectionService] Error getting workspace path for port ${port}:`, error);
       return null;
     }
   }
@@ -168,7 +170,7 @@ class IDEWorkspaceDetectionService {
       const filesList = await this.ideManager.getFilesList(port);
       return filesList;
     } catch (error) {
-      console.error(`[IDEWorkspaceDetectionService] Error getting files list for port ${port}:`, error);
+      logger.error(`[IDEWorkspaceDetectionService] Error getting files list for port ${port}:`, error);
       return [];
     }
   }
@@ -181,7 +183,7 @@ class IDEWorkspaceDetectionService {
       const gitStatus = await this.ideManager.getGitStatus(port);
       return gitStatus;
     } catch (error) {
-      console.error(`[IDEWorkspaceDetectionService] Error getting git status for port ${port}:`, error);
+      logger.error(`[IDEWorkspaceDetectionService] Error getting git status for port ${port}:`, error);
       return null;
     }
   }
@@ -194,7 +196,7 @@ class IDEWorkspaceDetectionService {
       const result = await this.ideManager.executeTerminalCommand(port, command, outputFile);
       return result;
     } catch (error) {
-      console.error(`[IDEWorkspaceDetectionService] Error executing terminal command for port ${port}:`, error);
+      logger.error(`[IDEWorkspaceDetectionService] Error executing terminal command for port ${port}:`, error);
       return null;
     }
   }
@@ -227,7 +229,7 @@ class IDEWorkspaceDetectionService {
    */
   clearDetectionResults() {
     this.detectionResults.clear();
-    console.log('[IDEWorkspaceDetectionService] Detection results cleared');
+    logger.log('[IDEWorkspaceDetectionService] Detection results cleared');
   }
 
   /**

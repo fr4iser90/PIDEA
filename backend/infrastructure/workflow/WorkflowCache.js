@@ -3,6 +3,7 @@
  * Service for managing workflow caching and performance optimization
  */
 const { v4: uuidv4 } = require('uuid');
+const { logger } = require('@infrastructure/logging/Logger');
 
 class WorkflowCache {
   constructor(options = {}) {

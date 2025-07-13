@@ -1,3 +1,4 @@
+
 /**
  * IDE Configuration Manager
  * Manages IDE configurations, settings, and preferences
@@ -5,6 +6,7 @@
 
 const fs = require('fs').promises;
 const path = require('path');
+const { logger } = require('@infrastructure/logging/Logger');
 
 class IDEConfigManager {
   constructor() {
@@ -83,17 +85,17 @@ class IDEConfigManager {
       // Merge with default config to ensure all required fields exist
       this.config = this.mergeWithDefaults(this.config);
       
-      console.log('[IDEConfigManager] Configuration loaded successfully');
+      logger.log('[IDEConfigManager] Configuration loaded successfully');
       return this.config;
     } catch (error) {
       if (error.code === 'ENOENT') {
         // Config file doesn't exist, create with defaults
-        console.log('[IDEConfigManager] No configuration file found, creating with defaults');
+        logger.log('[IDEConfigManager] No configuration file found, creating with defaults');
         this.config = this.defaultConfig;
         await this.saveConfig();
         return this.config;
       } else {
-        console.error('[IDEConfigManager] Error loading configuration:', error);
+        logger.error('[IDEConfigManager] Error loading configuration:', error);
         // Fallback to default config
         this.config = this.defaultConfig;
         return this.config;
@@ -118,9 +120,9 @@ class IDEConfigManager {
       await fs.writeFile(this.configPath, JSON.stringify(configToSave, null, 2), 'utf8');
       
       this.config = configToSave;
-      console.log('[IDEConfigManager] Configuration saved successfully');
+      logger.log('[IDEConfigManager] Configuration saved successfully');
     } catch (error) {
-      console.error('[IDEConfigManager] Error saving configuration:', error);
+      logger.error('[IDEConfigManager] Error saving configuration:', error);
       throw error;
     }
   }
@@ -289,7 +291,7 @@ class IDEConfigManager {
   async resetToDefaults() {
     this.config = this.defaultConfig;
     await this.saveConfig();
-    console.log('[IDEConfigManager] Configuration reset to defaults');
+    logger.log('[IDEConfigManager] Configuration reset to defaults');
   }
 
   /**

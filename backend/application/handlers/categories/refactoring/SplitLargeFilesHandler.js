@@ -399,6 +399,7 @@ class SplitLargeFilesHandler {
     async getAllFiles(dirPath) {
         const fs = require('fs').promises;
         const path = require('path');
+const { logger } = require('@infrastructure/logging/Logger');
         const files = [];
 
         const items = await fs.readdir(dirPath);

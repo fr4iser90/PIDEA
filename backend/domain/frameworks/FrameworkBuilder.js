@@ -1,9 +1,11 @@
+
 /**
  * Framework Builder - Domain Layer
  * Builds framework instances from configurations and handles framework customization
  */
 
 const path = require('path');
+const { logger } = require('@infrastructure/logging/Logger');
 
 class FrameworkBuilder {
   constructor(frameworkRegistry) {
@@ -24,7 +26,7 @@ class FrameworkBuilder {
       // Check cache first
       const cacheKey = this.getCacheKey(frameworkName, options);
       if (this.buildCache.has(cacheKey)) {
-        console.log(`📦 Using cached framework instance for "${frameworkName}"`);
+        logger.log(`📦 Using cached framework instance for "${frameworkName}"`);
         return this.buildCache.get(cacheKey);
       }
 
@@ -37,10 +39,10 @@ class FrameworkBuilder {
       // Cache the instance
       this.buildCache.set(cacheKey, instance);
 
-      console.log(`🔨 Framework "${frameworkName}" built successfully`);
+      logger.log(`🔨 Framework "${frameworkName}" built successfully`);
       return instance;
     } catch (error) {
-      console.error(`❌ Failed to build framework "${frameworkName}":`, error.message);
+      logger.error(`❌ Failed to build framework "${frameworkName}":`, error.message);
       throw error;
     }
   }
@@ -98,7 +100,7 @@ class FrameworkBuilder {
         const step = await this.buildStep(stepConfig, options);
         steps.push(step);
       } catch (error) {
-        console.error(`❌ Failed to build step "${stepConfig.name}":`, error.message);
+        logger.error(`❌ Failed to build step "${stepConfig.name}":`, error.message);
         
         // Continue with other steps if this one fails
         if (options.continueOnError !== false) {
@@ -211,11 +213,11 @@ class FrameworkBuilder {
         .filter(key => key.startsWith(frameworkName + ':'));
       
       keysToDelete.forEach(key => this.buildCache.delete(key));
-      console.log(`🗑️ Cleared cache for framework "${frameworkName}"`);
+      logger.log(`🗑️ Cleared cache for framework "${frameworkName}"`);
     } else {
       // Clear all cache
       this.buildCache.clear();
-      console.log('🗑️ Cleared all framework build cache');
+      logger.log('🗑️ Cleared all framework build cache');
     }
   }
 
@@ -254,7 +256,7 @@ class FrameworkBuilder {
         });
 
         if (options.continueOnError !== false) {
-          console.error(`❌ Failed to build framework "${frameworkName}":`, error.message);
+          logger.error(`❌ Failed to build framework "${frameworkName}":`, error.message);
           continue;
         } else {
           throw error;

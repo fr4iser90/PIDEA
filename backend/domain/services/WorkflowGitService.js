@@ -8,6 +8,7 @@ const TaskType = require('../value-objects/TaskType');
 const GitWorkflowManager = require('../workflows/categories/git/GitWorkflowManager');
 const GitWorkflowContext = require('../workflows/categories/git/GitWorkflowContext');
 const GitWorkflowResult = require('../workflows/categories/git/GitWorkflowResult');
+const { logger } = require('@infrastructure/logging/Logger');
 
 class WorkflowGitService {
     constructor(dependencies = {}) {

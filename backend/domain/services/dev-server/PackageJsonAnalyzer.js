@@ -1,3 +1,4 @@
+
 class PackageJsonAnalyzer {
   constructor(eventBus = null) {
     this.eventBus = eventBus;
@@ -11,51 +12,51 @@ class PackageJsonAnalyzer {
     try {
       const fs = require('fs');
       const path = require('path');
-      console.log('[PackageJsonAnalyzer] Analyzing package.json in path:', workspacePath);
+      logger.log('[PackageJsonAnalyzer] Analyzing package.json in path:', workspacePath);
       let candidates = [];
       
       // Helper: robust recursive search for ALL package.json files
       const allPackageJsons = [];
       const findAllPackageJsons = (dir, maxDepth = 5, currentDepth = 0) => {
         if (currentDepth > maxDepth) {
-          console.log('[PackageJsonAnalyzer] Max depth reached for:', dir);
+          logger.log('[PackageJsonAnalyzer] Max depth reached for:', dir);
           return;
         }
-        console.log('[PackageJsonAnalyzer] Searching in directory:', dir, 'depth:', currentDepth);
+        logger.log('[PackageJsonAnalyzer] Searching in directory:', dir, 'depth:', currentDepth);
         try {
           const files = fs.readdirSync(dir, { withFileTypes: true });
-          console.log('[PackageJsonAnalyzer] Found', files.length, 'items in:', dir);
+          logger.log('[PackageJsonAnalyzer] Found', files.length, 'items in:', dir);
           for (const file of files) {
             const fullPath = path.join(dir, file.name);
             if (file.isDirectory()) {
               // Skip only node_modules, not .git (to allow finding package.json in git repos)
               if (file.name === 'node_modules') {
-                console.log('[PackageJsonAnalyzer] Skipping node_modules:', fullPath);
+                logger.log('[PackageJsonAnalyzer] Skipping node_modules:', fullPath);
                 continue;
               }
-              console.log('[PackageJsonAnalyzer] Recursing into directory:', fullPath, 'depth:', currentDepth + 1);
+              logger.log('[PackageJsonAnalyzer] Recursing into directory:', fullPath, 'depth:', currentDepth + 1);
               findAllPackageJsons(fullPath, maxDepth, currentDepth + 1);
             } else if (file.isFile()) {
-              console.log('[PackageJsonAnalyzer] Found file:', fullPath);
+              logger.log('[PackageJsonAnalyzer] Found file:', fullPath);
               if (file.name === 'package.json') {
                 allPackageJsons.push(fullPath);
-                console.log('[PackageJsonAnalyzer] Found package.json:', fullPath);
+                logger.log('[PackageJsonAnalyzer] Found package.json:', fullPath);
               }
             }
           }
         } catch (e) {
-          console.error('[PackageJsonAnalyzer] Error reading directory:', dir, 'Error:', e.message);
+          logger.error('[PackageJsonAnalyzer] Error reading directory:', dir, 'Error:', e.message);
         }
       };
       
       findAllPackageJsons(workspacePath);
-      console.log('[PackageJsonAnalyzer] Total package.json files found:', allPackageJsons.length);
-      console.log('[PackageJsonAnalyzer] All package.json paths:', allPackageJsons);
+      logger.log('[PackageJsonAnalyzer] Total package.json files found:', allPackageJsons.length);
+      logger.log('[PackageJsonAnalyzer] All package.json paths:', allPackageJsons);
       
       for (const pkgPath of allPackageJsons) {
         const dir = path.dirname(pkgPath);
         const score = this.scoreFolder(dir);
-        console.log('[PackageJsonAnalyzer] Candidate:', { dir, score });
+        logger.log('[PackageJsonAnalyzer] Candidate:', { dir, score });
         candidates.push({ dir, score });
       }
       
@@ -65,7 +66,7 @@ class PackageJsonAnalyzer {
         for (const cand of candidates) {
           const pkgPath = path.join(cand.dir, 'package.json');
           // LOG: Show which package.json is being parsed
-          console.log('[PackageJsonAnalyzer] Checking package.json:', pkgPath);
+          logger.log('[PackageJsonAnalyzer] Checking package.json:', pkgPath);
           const techScore = await this.techstackScore(pkgPath);
           const totalScore = cand.score + techScore;
           if (!best || totalScore > bestScore) {
@@ -75,7 +76,7 @@ class PackageJsonAnalyzer {
           // LOG: Show all scripts in this package.json
           try {
             const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8'));
-            console.log('[PackageJsonAnalyzer] Scripts in', pkgPath, ':', Object.entries(pkg.scripts || {}));
+            logger.log('[PackageJsonAnalyzer] Scripts in', pkgPath, ':', Object.entries(pkg.scripts || {}));
           } catch (e) {}
         }
         if (best) {
@@ -84,7 +85,7 @@ class PackageJsonAnalyzer {
       }
       return null;
     } catch (error) {
-      console.error('[PackageJsonAnalyzer] Error analyzing path:', error.message);
+      logger.error('[PackageJsonAnalyzer] Error analyzing path:', error.message);
       return null;
     }
   }
@@ -117,6 +118,7 @@ class PackageJsonAnalyzer {
   async parsePackageJson(packageJsonPath, folderPath) {
     try {
       const fs = require('fs');
+const { logger } = require('@infrastructure/logging/Logger');
       const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
       const scripts = packageJson.scripts || {};
       const devServerPorts = [];
@@ -132,7 +134,7 @@ class PackageJsonAnalyzer {
       const devPatterns = [
         /dev/, /start/, /serve/, /vite/, /next/, /react/, /vue/, /svelte/, /nuxt/, /gatsby/, /astro/, /solid/, /preact/
       ];
-      console.log('[PackageJsonAnalyzer] Analyzing scripts:', Object.keys(scripts));
+      logger.log('[PackageJsonAnalyzer] Analyzing scripts:', Object.keys(scripts));
       
       for (const [scriptName, scriptCommand] of Object.entries(scripts)) {
         for (const pattern of devPatterns) {
@@ -140,7 +142,7 @@ class PackageJsonAnalyzer {
             // Port-Extraktion
             const portMatch = scriptCommand.match(/--port\s+(\d+)|-p\s+(\d+)|port\s*=\s*(\d+)|--port=(\d+)/i);
             const port = portMatch ? parseInt(portMatch[1] || portMatch[2] || portMatch[3] || portMatch[4]) : null;
-            console.log(`[PackageJsonAnalyzer] Script: ${scriptName}, Command: ${scriptCommand}, Port match:`, portMatch, 'Extracted port:', port);
+            logger.log(`[PackageJsonAnalyzer] Script: ${scriptName}, Command: ${scriptCommand}, Port match:`, portMatch, 'Extracted port:', port);
             if (port) {
               devServerPorts.push({
                 script: scriptName,
@@ -158,16 +160,16 @@ class PackageJsonAnalyzer {
       devServerPorts.sort((a, b) => b.techScore - a.techScore);
       if (devServerPorts.length > 0 && devServerPorts[0].techScore > 0) {
         const primaryServer = devServerPorts[0];
-        console.log('[PackageJsonAnalyzer] Primary dev server detected:', primaryServer.url);
+        logger.log('[PackageJsonAnalyzer] Primary dev server detected:', primaryServer.url);
         if (this.eventBus && typeof this.eventBus.emit === 'function') {
           this.eventBus.emit('userAppDetected', { url: primaryServer.url });
         }
         return primaryServer.url;
       }
-      console.log('[PackageJsonAnalyzer] No suitable frontend dev server found in package.json');
+      logger.log('[PackageJsonAnalyzer] No suitable frontend dev server found in package.json');
       return null;
     } catch (error) {
-      console.error('[PackageJsonAnalyzer] Error parsing package.json:', error.message);
+      logger.error('[PackageJsonAnalyzer] Error parsing package.json:', error.message);
       return null;
     }
   }

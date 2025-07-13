@@ -3,6 +3,7 @@
  */
 const path = require('path');
 const EXECUTION_CONSTANTS = require('../constants/ExecutionConstants');
+const { logger } = require('@infrastructure/logging/Logger');
 
 class OptimizationService {
     constructor(dependencies = {}, logger = console) {

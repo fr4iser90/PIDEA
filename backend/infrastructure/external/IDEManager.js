@@ -3,6 +3,8 @@ const IDEStarter = require('./IDEStarter');
 const FileBasedWorkspaceDetector = require('@services/workspace/FileBasedWorkspaceDetector');
 const fs = require('fs');
 const path = require('path');
+const { logger } = require('@infrastructure/logging/Logger');
+
 
 class IDEManager {
   constructor(browserManager = null) {
@@ -17,7 +19,7 @@ class IDEManager {
   }
 
   async initialize() {
-    console.log('[IDEManager] Initializing...');
+    logger.log('[IDEManager] Initializing...');
     
     // Scan for existing IDEs
     const existingIDEs = await this.detector.scanForIDEs();
@@ -28,28 +30,28 @@ class IDEManager {
     // Set first available IDE as active
     if (existingIDEs.length > 0) {
       this.activePort = existingIDEs[0].port;
-      console.log('[IDEManager] Set active IDE to port', this.activePort);
+      logger.log('[IDEManager] Set active IDE to port', this.activePort);
     }
 
     // Detect workspace paths ONCE during initialization
     if (existingIDEs.length > 0) {
-      console.log('[IDEManager] Detecting workspace paths for', existingIDEs.length, 'IDEs (ONCE during startup)');
+      logger.log('[IDEManager] Detecting workspace paths for', existingIDEs.length, 'IDEs (ONCE during startup)');
       for (const ide of existingIDEs) {
         if (!this.ideWorkspaces.has(ide.port)) {
           try {
             await this.detectWorkspacePath(ide.port);
             const workspacePath = this.ideWorkspaces.get(ide.port);
             if (workspacePath) {
-              console.log('[IDEManager] Detected workspace path for port', ide.port, ':', workspacePath);
+              logger.log('[IDEManager] Detected workspace path for port', ide.port, ':', workspacePath);
             }
           } catch (error) {
-            console.log('[IDEManager] Could not detect workspace path for port', ide.port, ':', error.message);
+            logger.log('[IDEManager] Could not detect workspace path for port', ide.port, ':', error.message);
           }
         }
       }
     }
 
-    console.log('[IDEManager] Initialization complete. Found', existingIDEs.length, 'IDEs');
+    logger.log('[IDEManager] Initialization complete. Found', existingIDEs.length, 'IDEs');
   }
 
   async getAvailableIDEs() {
@@ -83,14 +85,14 @@ class IDEManager {
   }
 
   async startNewIDE(workspacePath = null, ideType = 'cursor') {
-    console.log('[IDEManager] Starting new', ideType, 'IDE...');
+    logger.log('[IDEManager] Starting new', ideType, 'IDE...');
     
     // If no workspace path provided, use the project root (one level up from backend)
     if (!workspacePath) {
       const currentDir = process.cwd();
       const projectRoot = path.resolve(currentDir, '..');
       workspacePath = projectRoot;
-      console.log('[IDEManager] No workspace path provided, using project root:', workspacePath);
+      logger.log('[IDEManager] No workspace path provided, using project root:', workspacePath);
     }
     
     const availablePort = await this.detector.findAvailablePort(ideType);
@@ -101,7 +103,7 @@ class IDEManager {
     // Track workspace path and IDE type
     this.ideWorkspaces.set(availablePort, workspacePath);
     this.ideTypes.set(availablePort, ideType);
-    console.log('[IDEManager] Tracked workspace path for port', availablePort, ':', workspacePath, 'IDE type:', ideType);
+    logger.log('[IDEManager] Tracked workspace path for port', availablePort, ':', workspacePath, 'IDE type:', ideType);
     
     // Wait for IDE to be ready
     await this.waitForIDE(availablePort);
@@ -113,18 +115,18 @@ class IDEManager {
       this.activePort = availablePort;
     }
     
-    console.log('[IDEManager] New', ideType, 'IDE started on port', availablePort);
+    logger.log('[IDEManager] New', ideType, 'IDE started on port', availablePort);
     return ideInfo;
   }
 
   async switchToIDE(port) {
-    console.log('[IDEManager] Switching to IDE on port', port);
+    logger.log('[IDEManager] Switching to IDE on port', port);
     
     const availableIDEs = await this.getAvailableIDEs();
-    console.log('[IDEManager] Available IDEs:', availableIDEs.map(ide => ({ port: ide.port, status: ide.status, active: ide.active })));
+    logger.log('[IDEManager] Available IDEs:', availableIDEs.map(ide => ({ port: ide.port, status: ide.status, active: ide.active })));
     
     const targetIDE = availableIDEs.find(ide => ide.port === port);
-    console.log('[IDEManager] Target IDE found:', targetIDE ? { port: targetIDE.port, status: targetIDE.status } : 'NOT FOUND');
+    logger.log('[IDEManager] Target IDE found:', targetIDE ? { port: targetIDE.port, status: targetIDE.status } : 'NOT FOUND');
     
     if (!targetIDE) {
       throw new Error(`No IDE found on port ${port}`);
@@ -136,9 +138,9 @@ class IDEManager {
     
     const previousPort = this.activePort;
     this.activePort = port;
-    console.log('[IDEManager] Previous active port:', previousPort);
-    console.log('[IDEManager] New active port:', this.activePort);
-    console.log('[IDEManager] Successfully switched to IDE on port', port);
+    logger.log('[IDEManager] Previous active port:', previousPort);
+    logger.log('[IDEManager] New active port:', this.activePort);
+    logger.log('[IDEManager] Successfully switched to IDE on port', port);
     
     return {
       port: port,
@@ -149,7 +151,7 @@ class IDEManager {
   }
 
   async stopIDE(port) {
-    console.log('[IDEManager] Stopping IDE on port', port);
+    logger.log('[IDEManager] Stopping IDE on port', port);
     
     const ideType = this.ideTypes.get(port) || 'cursor';
     
@@ -166,10 +168,10 @@ class IDEManager {
       const availableIDEs = await this.getAvailableIDEs();
       if (availableIDEs.length > 0) {
         this.activePort = availableIDEs[0].port;
-        console.log('[IDEManager] Switched active IDE to port', this.activePort);
+        logger.log('[IDEManager] Switched active IDE to port', this.activePort);
       } else {
         this.activePort = null;
-        console.log('[IDEManager] No active IDE available');
+        logger.log('[IDEManager] No active IDE available');
       }
     }
     
@@ -177,14 +179,14 @@ class IDEManager {
   }
 
   async stopAllIDEs() {
-    console.log('[IDEManager] Stopping all IDEs...');
+    logger.log('[IDEManager] Stopping all IDEs...');
     
     await this.starter.stopAllIDEs();
     this.ideStatus.clear();
     this.ideWorkspaces.clear();
     this.activePort = null;
     
-    console.log('[IDEManager] All IDEs stopped');
+    logger.log('[IDEManager] All IDEs stopped');
   }
 
   getActivePort() {
@@ -217,17 +219,17 @@ class IDEManager {
 
   // New method to get active workspace path
   getActiveWorkspacePath() {
-    console.log('[IDEManager] getActiveWorkspacePath called');
-    console.log('[IDEManager] activePort:', this.activePort);
-    console.log('[IDEManager] ideWorkspaces entries:', Array.from(this.ideWorkspaces.entries()));
+    logger.log('[IDEManager] getActiveWorkspacePath called');
+    logger.log('[IDEManager] activePort:', this.activePort);
+    logger.log('[IDEManager] ideWorkspaces entries:', Array.from(this.ideWorkspaces.entries()));
     
     if (!this.activePort) {
-      console.log('[IDEManager] No active port set');
+      logger.log('[IDEManager] No active port set');
       return null;
     }
     
     const workspacePath = this.ideWorkspaces.get(this.activePort);
-    console.log('[IDEManager] Workspace path for active port', this.activePort, ':', workspacePath);
+    logger.log('[IDEManager] Workspace path for active port', this.activePort, ':', workspacePath);
     
     return workspacePath || null;
   }
@@ -238,11 +240,11 @@ class IDEManager {
     try {
       // Prüfe Cache zuerst
       if (this.ideWorkspaces.has(port)) {
-        console.log('[IDEManager] Workspace path already cached for port', port, ':', this.ideWorkspaces.get(port));
+        logger.log('[IDEManager] Workspace path already cached for port', port, ':', this.ideWorkspaces.get(port));
         return this.ideWorkspaces.get(port);
       }
       
-      console.log('[IDEManager] Starting file-based workspace detection for port', port);
+      logger.log('[IDEManager] Starting file-based workspace detection for port', port);
       
       // File-basierte Methode
       if (this.fileDetector) {
@@ -256,19 +258,19 @@ class IDEManager {
           const workspaceInfo = await this.fileDetector.getWorkspaceInfo(port);
           
           if (workspaceInfo && workspaceInfo.workspace) {
-            console.log('[IDEManager] File-based detected workspace path for port', port, ':', workspaceInfo.workspace);
+            logger.log('[IDEManager] File-based detected workspace path for port', port, ':', workspaceInfo.workspace);
             this.ideWorkspaces.set(port, workspaceInfo.workspace);
             return workspaceInfo.workspace;
           }
         } catch (error) {
-          console.log('[IDEManager] File-based detection failed for port', port, ':', error.message);
+          logger.log('[IDEManager] File-based detection failed for port', port, ':', error.message);
         }
       }
       
-      console.log('[IDEManager] No workspace path detected for port', port);
+      logger.log('[IDEManager] No workspace path detected for port', port);
       return null;
     } catch (error) {
-      console.log('[IDEManager] Error in workspace detection for port', port, ':', error.message);
+      logger.log('[IDEManager] Error in workspace detection for port', port, ':', error.message);
     }
     return null;
   }
@@ -276,13 +278,13 @@ class IDEManager {
   // New method to set workspace path for an IDE
   setWorkspacePath(port, workspacePath) {
     this.ideWorkspaces.set(port, workspacePath);
-    console.log('[IDEManager] Set workspace path for port', port, ':', workspacePath);
+    logger.log('[IDEManager] Set workspace path for port', port, ':', workspacePath);
   }
 
   // FILE-BASIERTE METHODEN
   async getWorkspaceInfo(port) {
     if (!this.fileDetector) {
-      console.error('[IDEManager] File detector not available');
+      logger.error('[IDEManager] File detector not available');
       return null;
     }
     
@@ -294,14 +296,14 @@ class IDEManager {
       
       return await this.fileDetector.getWorkspaceInfo(port);
     } catch (error) {
-      console.error('[IDEManager] Error getting workspace info for port', port, ':', error.message);
+      logger.error('[IDEManager] Error getting workspace info for port', port, ':', error.message);
       return null;
     }
   }
 
   async getFilesList(port) {
     if (!this.fileDetector) {
-      console.error('[IDEManager] File detector not available');
+      logger.error('[IDEManager] File detector not available');
       return [];
     }
     
@@ -313,14 +315,14 @@ class IDEManager {
       
       return await this.fileDetector.getFilesList(port);
     } catch (error) {
-      console.error('[IDEManager] Error getting files list for port', port, ':', error.message);
+      logger.error('[IDEManager] Error getting files list for port', port, ':', error.message);
       return [];
     }
   }
 
   async getGitStatus(port) {
     if (!this.fileDetector) {
-      console.error('[IDEManager] File detector not available');
+      logger.error('[IDEManager] File detector not available');
       return null;
     }
     
@@ -332,14 +334,14 @@ class IDEManager {
       
       return await this.fileDetector.getGitStatus(port);
     } catch (error) {
-      console.error('[IDEManager] Error getting git status for port', port, ':', error.message);
+      logger.error('[IDEManager] Error getting git status for port', port, ':', error.message);
       return null;
     }
   }
 
   async executeTerminalCommand(port, command, outputFile = null) {
     if (!this.fileDetector) {
-      console.error('[IDEManager] File detector not available');
+      logger.error('[IDEManager] File detector not available');
       return null;
     }
     
@@ -351,7 +353,7 @@ class IDEManager {
       
       return await this.fileDetector.executeCommand(port, command, outputFile);
     } catch (error) {
-      console.error('[IDEManager] Error executing terminal command for port', port, ':', error.message);
+      logger.error('[IDEManager] Error executing terminal command for port', port, ':', error.message);
       return null;
     }
   }
@@ -370,13 +372,13 @@ class IDEManager {
   }
 
   async waitForIDE(port, maxAttempts = 30) {
-    console.log('[IDEManager] Waiting for IDE on port', port, 'to be ready...');
+    logger.log('[IDEManager] Waiting for IDE on port', port, 'to be ready...');
     
     for (let attempt = 1; attempt <= maxAttempts; attempt++) {
       try {
         const isAvailable = await this.detector.checkPort(port);
         if (isAvailable) {
-          console.log('[IDEManager] IDE on port', port, 'is ready');
+          logger.log('[IDEManager] IDE on port', port, 'is ready');
           return true;
         }
       } catch (error) {
@@ -390,7 +392,7 @@ class IDEManager {
   }
 
   async refreshIDEList() {
-    console.log('[IDEManager] Refreshing IDE list...');
+    logger.log('[IDEManager] Refreshing IDE list...');
     
     const availableIDEs = await this.getAvailableIDEs();
     
@@ -402,7 +404,7 @@ class IDEManager {
     
     // Check if active IDE is still available
     if (this.activePort && !availableIDEs.find(ide => ide.port === this.activePort)) {
-      console.log('[IDEManager] Active IDE no longer available, switching...');
+      logger.log('[IDEManager] Active IDE no longer available, switching...');
       if (availableIDEs.length > 0) {
         this.activePort = availableIDEs[0].port;
       } else {
@@ -433,28 +435,28 @@ class IDEManager {
     const idesWithoutWorkspace = allIDEs.filter(ide => !this.ideWorkspaces.has(ide.port));
     
     if (idesWithoutWorkspace.length === 0) {
-      console.log('[IDEManager] All IDEs already have workspace paths, skipping detection');
+      logger.log('[IDEManager] All IDEs already have workspace paths, skipping detection');
       return;
     }
     
-    console.log(`[IDEManager] Detecting workspace paths for ${idesWithoutWorkspace.length} IDEs (${allIDEs.length - idesWithoutWorkspace.length} already have paths)`);
+    logger.log(`[IDEManager] Detecting workspace paths for ${idesWithoutWorkspace.length} IDEs (${allIDEs.length - idesWithoutWorkspace.length} already have paths)`);
     
     for (const ide of idesWithoutWorkspace) {
       try {
         await this.detectWorkspacePath(ide.port);
       } catch (error) {
-        console.log('[IDEManager] Could not detect workspace path for port', ide.port, ':', error.message);
+        logger.log('[IDEManager] Could not detect workspace path for port', ide.port, ':', error.message);
       }
     }
   }
 
   // Cleanup method for graceful shutdown
   async cleanup() {
-    console.log('[IDEManager] Cleaning up...');
+    logger.log('[IDEManager] Cleaning up...');
     try {
       await this.stopAllIDEs();
     } catch (error) {
-      console.log('[IDEManager] Error during cleanup:', error.message);
+      logger.log('[IDEManager] Error during cleanup:', error.message);
     }
   }
 }

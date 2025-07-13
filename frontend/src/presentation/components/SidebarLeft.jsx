@@ -1,3 +1,4 @@
+import { logger } from "@/infrastructure/logging/Logger";
 /**
  * SidebarLeft - Generic left sidebar container for different application modes
  * 
@@ -15,7 +16,7 @@ import ChatPanelComponent from './chat/sidebar-left/ChatPanelComponent.jsx';
 import '@/css/global/sidebar-left.css';
 
 function SidebarLeft({ eventBus, activePort, onActivePortChange, mode = 'chat' }) {
-  console.log('🔍 SidebarLeft RENDERING!');
+  logger.log('🔍 SidebarLeft RENDERING!');
   
   const [currentSessionId, setCurrentSessionId] = useState(null);
   const [availableIDEs, setAvailableIDEs] = useState([]);
@@ -42,9 +43,9 @@ function SidebarLeft({ eventBus, activePort, onActivePortChange, mode = 'chat' }
       if (sidebar) {
         const isVisible = sidebar.style.display !== 'none';
         sidebar.style.display = isVisible ? 'none' : 'flex';
-        console.log('Left Sidebar toggled:', isVisible ? 'hidden' : 'visible');
+        logger.log('Left Sidebar toggled:', isVisible ? 'hidden' : 'visible');
       } else {
-        console.log('Left Sidebar element not found');
+        logger.log('Left Sidebar element not found');
       }
     };
 
@@ -75,7 +76,7 @@ function SidebarLeft({ eventBus, activePort, onActivePortChange, mode = 'chat' }
       refreshIDEList();
       eventBus.emit('sidebar-left:ide-switched', { port });
     } catch (error) {
-      console.error('Fehler beim Umschalten der IDE:', error);
+      logger.error('Fehler beim Umschalten der IDE:', error);
     }
   };
   
@@ -129,7 +130,7 @@ function SidebarLeft({ eventBus, activePort, onActivePortChange, mode = 'chat' }
         setAvailableIDEs(result.data);
       }
     } catch (error) {
-      console.error('Error refreshing IDE list:', error);
+      logger.error('Error refreshing IDE list:', error);
     }
   };
 

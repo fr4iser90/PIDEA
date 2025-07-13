@@ -1,3 +1,4 @@
+
 /**
  * Framework Registry - Domain Layer
  * Manages framework configurations and provides framework validation
@@ -8,6 +9,7 @@ const path = require('path');
 const fs = require('fs').promises;
 const { STANDARD_CATEGORIES, isValidCategory, getDefaultCategory } = require('../constants/Categories');
 const IStandardRegistry = require('../interfaces/IStandardRegistry');
+const { logger } = require('@infrastructure/logging/Logger');
 
 class FrameworkRegistry {
   constructor() {
@@ -55,10 +57,10 @@ class FrameworkRegistry {
       }
       this.categories.get(finalCategory).add(name);
 
-      console.log(`✅ Framework "${name}" registered successfully in category "${finalCategory}"`);
+      logger.log(`✅ Framework "${name}" registered successfully in category "${finalCategory}"`);
       return true;
     } catch (error) {
-      console.error(`❌ Failed to register framework "${name}":`, error.message);
+      logger.error(`❌ Failed to register framework "${name}":`, error.message);
       throw error;
     }
   }
@@ -74,7 +76,7 @@ class FrameworkRegistry {
       try {
         await fs.access(configsDir);
       } catch {
-        console.log('📁 Creating configs directory...');
+        logger.log('📁 Creating configs directory...');
         await fs.mkdir(configsDir, { recursive: true });
         return;
       }
@@ -94,13 +96,13 @@ class FrameworkRegistry {
           await this.registerFramework(frameworkName, config, category);
           this.configs.set(frameworkName, configPath);
         } catch (error) {
-          console.error(`❌ Failed to load config "${file}":`, error.message);
+          logger.error(`❌ Failed to load config "${file}":`, error.message);
         }
       }
 
-      console.log(`📦 Loaded ${this.frameworks.size} framework configurations`);
+      logger.log(`📦 Loaded ${this.frameworks.size} framework configurations`);
     } catch (error) {
-      console.error('❌ Failed to load framework configs:', error.message);
+      logger.error('❌ Failed to load framework configs:', error.message);
       throw error;
     }
   }
@@ -155,7 +157,7 @@ class FrameworkRegistry {
     framework.config = { ...framework.config, ...newConfig };
     framework.updatedAt = new Date();
     
-    console.log(`✅ Framework "${name}" updated successfully`);
+    logger.log(`✅ Framework "${name}" updated successfully`);
     return framework;
   }
 
@@ -183,7 +185,7 @@ class FrameworkRegistry {
     // Remove config file reference
     this.configs.delete(name);
     
-    console.log(`🗑️ Framework "${name}" removed successfully`);
+    logger.log(`🗑️ Framework "${name}" removed successfully`);
     return true;
   }
 
@@ -242,7 +244,7 @@ class FrameworkRegistry {
     framework.status = status;
     framework.updatedAt = new Date();
     
-    console.log(`✅ Framework "${name}" status set to "${status}"`);
+    logger.log(`✅ Framework "${name}" status set to "${status}"`);
     return framework;
   }
 

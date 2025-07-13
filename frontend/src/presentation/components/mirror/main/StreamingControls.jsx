@@ -1,3 +1,4 @@
+import { logger } from "@/infrastructure/logging/Logger";
 import React, { useState, useEffect } from 'react';
 
 /**
@@ -57,7 +58,7 @@ const StreamingControls = ({
           }
         }
       } catch (error) {
-        console.error('[StreamingControls] Error fetching stats:', error.message);
+        logger.error('[StreamingControls] Error fetching stats:', error.message);
       }
     }, 1000);
 
@@ -90,7 +91,7 @@ const StreamingControls = ({
         }
       }
     } catch (error) {
-      console.error('[StreamingControls] Error starting streaming:', error.message);
+      logger.error('[StreamingControls] Error starting streaming:', error.message);
       setError(error.message);
     } finally {
       setIsLoading(false);
@@ -123,7 +124,7 @@ const StreamingControls = ({
         }
       }
     } catch (error) {
-      console.error('[StreamingControls] Error stopping streaming:', error.message);
+      logger.error('[StreamingControls] Error stopping streaming:', error.message);
       setError(error.message);
     } finally {
       setIsLoading(false);
@@ -147,7 +148,7 @@ const StreamingControls = ({
         }
       }
     } catch (error) {
-      console.error('[StreamingControls] Error pausing streaming:', error.message);
+      logger.error('[StreamingControls] Error pausing streaming:', error.message);
       setError(error.message);
     }
   };
@@ -169,7 +170,7 @@ const StreamingControls = ({
         }
       }
     } catch (error) {
-      console.error('[StreamingControls] Error resuming streaming:', error.message);
+      logger.error('[StreamingControls] Error resuming streaming:', error.message);
       setError(error.message);
     }
   };
@@ -200,7 +201,7 @@ const StreamingControls = ({
         }
       }
     } catch (error) {
-      console.error('[StreamingControls] Error updating config:', error.message);
+      logger.error('[StreamingControls] Error updating config:', error.message);
       setError(error.message);
     }
   };

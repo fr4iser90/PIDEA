@@ -1,9 +1,11 @@
+
 /**
  * Analysis Step - Analysis Workflow
  * Integrates all existing analysis services and components
  */
 
 const StepBuilder = require('@steps/StepBuilder');
+const { logger } = require('@infrastructure/logging/Logger');
 
 // Step configuration
 const config = {
@@ -47,7 +49,7 @@ class AnalysisStep {
     const step = StepBuilder.build(config, context);
     
     try {
-      console.log(`🔍 Executing ${this.name}...`);
+      logger.log(`🔍 Executing ${this.name}...`);
       
       // Validate context
       this.validateContext(context);
@@ -82,11 +84,11 @@ class AnalysisStep {
         summary: null
       };
 
-      console.log(`📊 Starting comprehensive analysis for: ${projectPath}`);
+      logger.log(`📊 Starting comprehensive analysis for: ${projectPath}`);
 
       // 1. Project Analysis
       if (projectAnalyzer) {
-        console.log('🔍 Running project analysis...');
+        logger.log('🔍 Running project analysis...');
         results.projectAnalysis = await projectAnalyzer.analyzeProject(projectPath, {
           includeRepoStructure: context.includeRepoStructure !== false,
           includeDependencies: context.includeDependencies !== false
@@ -95,7 +97,7 @@ class AnalysisStep {
 
       // 2. Code Quality Analysis
       if (codeQualityAnalyzer && context.includeCodeQuality !== false) {
-        console.log('🎯 Running code quality analysis...');
+        logger.log('🎯 Running code quality analysis...');
         results.codeQuality = await codeQualityAnalyzer.analyzeCodeQuality(projectPath, {
           includeMetrics: true,
           includeIssues: true,
@@ -105,7 +107,7 @@ class AnalysisStep {
 
       // 3. Security Analysis
       if (securityAnalyzer && context.includeSecurity !== false) {
-        console.log('🔒 Running security analysis...');
+        logger.log('🔒 Running security analysis...');
         results.security = await securityAnalyzer.analyzeSecurity(projectPath, {
           includeVulnerabilities: true,
           includeBestPractices: true,
@@ -115,7 +117,7 @@ class AnalysisStep {
 
       // 4. Performance Analysis
       if (performanceAnalyzer && context.includePerformance !== false) {
-        console.log('⚡ Running performance analysis...');
+        logger.log('⚡ Running performance analysis...');
         results.performance = await performanceAnalyzer.analyzePerformance(projectPath, {
           includeMetrics: true,
           includeOptimizations: true,
@@ -125,7 +127,7 @@ class AnalysisStep {
 
       // 5. Architecture Analysis
       if (architectureAnalyzer && context.includeArchitecture !== false) {
-        console.log('🏗️ Running architecture analysis...');
+        logger.log('🏗️ Running architecture analysis...');
         results.architecture = await architectureAnalyzer.analyzeArchitecture(projectPath, {
           includePatterns: true,
           includeStructure: true,
@@ -135,7 +137,7 @@ class AnalysisStep {
 
       // 6. Tech Stack Analysis
       if (techStackAnalyzer && context.includeTechStack !== false) {
-        console.log('🛠️ Running tech stack analysis...');
+        logger.log('🛠️ Running tech stack analysis...');
         results.techStack = await techStackAnalyzer.analyzeTechStack(projectPath, {
           includeFrameworks: true,
           includeLibraries: true,
@@ -145,7 +147,7 @@ class AnalysisStep {
 
       // 7. Dependency Analysis
       if (dependencyAnalyzer && context.includeDependencies !== false) {
-        console.log('📦 Running dependency analysis...');
+        logger.log('📦 Running dependency analysis...');
         results.dependencies = await dependencyAnalyzer.analyzeDependencies(projectPath, {
           includeOutdated: true,
           includeVulnerabilities: true,
@@ -177,7 +179,7 @@ class AnalysisStep {
         results.output = output;
       }
 
-      console.log(`✅ ${this.name} completed successfully`);
+      logger.log(`✅ ${this.name} completed successfully`);
       return {
         success: true,
         step: this.name,
@@ -185,7 +187,7 @@ class AnalysisStep {
         timestamp: new Date().toISOString()
       };
     } catch (error) {
-      console.error(`❌ ${this.name} failed:`, error.message);
+      logger.error(`❌ ${this.name} failed:`, error.message);
       return {
         success: false,
         step: this.name,

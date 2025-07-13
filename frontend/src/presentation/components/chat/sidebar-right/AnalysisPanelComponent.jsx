@@ -1,3 +1,4 @@
+import { logger } from "@/infrastructure/logging/Logger";
 import React, { useState, useEffect } from 'react';
 import APIChatRepository from '../../../../infrastructure/repositories/APIChatRepository';
 
@@ -24,7 +25,7 @@ const AnalysisPanelComponent = ({ projectId = null }) => {
       }
     } catch (err) {
       setError('Failed to load analysis history');
-      console.error('Analysis history error:', err);
+      logger.error('Analysis history error:', err);
     } finally {
       setLoading(false);
     }
@@ -40,7 +41,7 @@ const AnalysisPanelComponent = ({ projectId = null }) => {
       }
     } catch (err) {
       setError('Failed to load analysis file');
-      console.error('Analysis file error:', err);
+      logger.error('Analysis file error:', err);
     } finally {
       setLoading(false);
     }
@@ -55,7 +56,7 @@ const AnalysisPanelComponent = ({ projectId = null }) => {
       }
     } catch (err) {
       setError('Failed to generate report');
-      console.error('Report generation error:', err);
+      logger.error('Report generation error:', err);
     } finally {
       setLoading(false);
     }
@@ -98,7 +99,7 @@ const AnalysisPanelComponent = ({ projectId = null }) => {
     if (error) return <div className="text-red-500 text-center py-4">{error}</div>;
 
     if (!Array.isArray(analysisHistory)) {
-      console.warn('Analysis history is not an array:', analysisHistory);
+      logger.warn('Analysis history is not an array:', analysisHistory);
       return <div className="text-center py-4 text-red-500">Invalid data format</div>;
     }
 

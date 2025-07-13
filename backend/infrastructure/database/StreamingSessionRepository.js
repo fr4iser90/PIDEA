@@ -1,3 +1,4 @@
+
 /**
  * StreamingSessionRepository
  * 
@@ -6,6 +7,7 @@
  */
 const StreamingSession = require('@entities/StreamingSession');
 const FrameMetrics = require('@entities/FrameMetrics');
+const { logger } = require('@infrastructure/logging/Logger');
 
 class StreamingSessionRepository {
   constructor(databaseConnection = null) {
@@ -29,9 +31,9 @@ class StreamingSessionRepository {
         await this.createTables();
       }
       this.isInitialized = true;
-      console.log('[StreamingSessionRepository] Initialized successfully');
+      logger.log('[StreamingSessionRepository] Initialized successfully');
     } catch (error) {
-      console.error('[StreamingSessionRepository] Initialization error:', error.message);
+      logger.error('[StreamingSessionRepository] Initialization error:', error.message);
       throw error;
     }
   }
@@ -100,9 +102,9 @@ class StreamingSessionRepository {
     try {
       await this.databaseConnection.execute(createSessionsTable);
       await this.databaseConnection.execute(createMetricsTable);
-      console.log('[StreamingSessionRepository] Database tables created successfully');
+      logger.log('[StreamingSessionRepository] Database tables created successfully');
     } catch (error) {
-      console.error('[StreamingSessionRepository] Error creating tables:', error.message);
+      logger.error('[StreamingSessionRepository] Error creating tables:', error.message);
       throw error;
     }
   }
@@ -124,9 +126,9 @@ class StreamingSessionRepository {
         await this.saveSessionToDatabase(session);
       }
 
-      console.log(`[StreamingSessionRepository] Saved session ${session.id}`);
+      logger.log(`[StreamingSessionRepository] Saved session ${session.id}`);
     } catch (error) {
-      console.error(`[StreamingSessionRepository] Error saving session ${session.id}:`, error.message);
+      logger.error(`[StreamingSessionRepository] Error saving session ${session.id}:`, error.message);
       throw error;
     }
   }
@@ -191,7 +193,7 @@ class StreamingSessionRepository {
 
       return null;
     } catch (error) {
-      console.error(`[StreamingSessionRepository] Error getting session ${sessionId}:`, error.message);
+      logger.error(`[StreamingSessionRepository] Error getting session ${sessionId}:`, error.message);
       throw error;
     }
   }
@@ -267,7 +269,7 @@ class StreamingSessionRepository {
 
       return activeSessions;
     } catch (error) {
-      console.error('[StreamingSessionRepository] Error getting active sessions:', error.message);
+      logger.error('[StreamingSessionRepository] Error getting active sessions:', error.message);
       throw error;
     }
   }
@@ -321,9 +323,9 @@ class StreamingSessionRepository {
         await this.deleteSessionFromDatabase(sessionId);
       }
 
-      console.log(`[StreamingSessionRepository] Deleted session ${sessionId}`);
+      logger.log(`[StreamingSessionRepository] Deleted session ${sessionId}`);
     } catch (error) {
-      console.error(`[StreamingSessionRepository] Error deleting session ${sessionId}:`, error.message);
+      logger.error(`[StreamingSessionRepository] Error deleting session ${sessionId}:`, error.message);
       throw error;
     }
   }
@@ -358,7 +360,7 @@ class StreamingSessionRepository {
         await this.saveMetricsToDatabase(metrics);
       }
     } catch (error) {
-      console.error(`[StreamingSessionRepository] Error saving metrics for session ${metrics.sessionId}:`, error.message);
+      logger.error(`[StreamingSessionRepository] Error saving metrics for session ${metrics.sessionId}:`, error.message);
       throw error;
     }
   }
@@ -427,7 +429,7 @@ class StreamingSessionRepository {
 
       return memoryMetrics.slice(-limit);
     } catch (error) {
-      console.error(`[StreamingSessionRepository] Error getting metrics for session ${sessionId}:`, error.message);
+      logger.error(`[StreamingSessionRepository] Error getting metrics for session ${sessionId}:`, error.message);
       throw error;
     }
   }
@@ -526,7 +528,7 @@ class StreamingSessionRepository {
 
       return stats;
     } catch (error) {
-      console.error('[StreamingSessionRepository] Error getting stats:', error.message);
+      logger.error('[StreamingSessionRepository] Error getting stats:', error.message);
       throw error;
     }
   }
@@ -553,9 +555,9 @@ class StreamingSessionRepository {
         await this.deleteSession(sessionId);
       }
 
-      console.log(`[StreamingSessionRepository] Cleaned up ${sessionsToDelete.length} old sessions`);
+      logger.log(`[StreamingSessionRepository] Cleaned up ${sessionsToDelete.length} old sessions`);
     } catch (error) {
-      console.error('[StreamingSessionRepository] Error during cleanup:', error.message);
+      logger.error('[StreamingSessionRepository] Error during cleanup:', error.message);
       throw error;
     }
   }

@@ -1,6 +1,7 @@
 const fs = require('fs').promises;
 const path = require('path');
 
+
 /**
  * Log Permission Manager
  * 
@@ -42,9 +43,9 @@ class LogPermissionManager {
       
       await fs.chmod(normalizedPath, permissions);
       
-      console.log(`[LogPermissionManager] Set permissions ${permissions.toString(8)} for: ${normalizedPath}`);
+      logger.log(`[LogPermissionManager] Set permissions ${permissions.toString(8)} for: ${normalizedPath}`);
     } catch (error) {
-      console.error('[LogPermissionManager] Error setting permissions:', error);
+      logger.error('[LogPermissionManager] Error setting permissions:', error);
       throw error;
     }
   }
@@ -71,10 +72,10 @@ class LogPermissionManager {
         await this.setSecurePermissions(subDirPath, 'directory');
       }
       
-      console.log(`[LogPermissionManager] Created secure log directory: ${normalizedPath}`);
+      logger.log(`[LogPermissionManager] Created secure log directory: ${normalizedPath}`);
       return normalizedPath;
     } catch (error) {
-      console.error('[LogPermissionManager] Error creating secure log directory:', error);
+      logger.error('[LogPermissionManager] Error creating secure log directory:', error);
       throw error;
     }
   }
@@ -109,7 +110,7 @@ class LogPermissionManager {
       
       return resolvedPath;
     } catch (error) {
-      console.error('[LogPermissionManager] Path validation failed:', error);
+      logger.error('[LogPermissionManager] Path validation failed:', error);
       throw error;
     }
   }
@@ -170,7 +171,7 @@ class LogPermissionManager {
       
       return this.validateLogPath(filePath);
     } catch (error) {
-      console.error('[LogPermissionManager] Error getting secure file path:', error);
+      logger.error('[LogPermissionManager] Error getting secure file path:', error);
       throw error;
     }
   }
@@ -207,10 +208,10 @@ class LogPermissionManager {
       // Fix permissions if they don't match
       if (currentMode !== expectedMode) {
         await this.setSecurePermissions(normalizedPath, expectedType);
-        console.log(`[LogPermissionManager] Fixed permissions for: ${normalizedPath}`);
+        logger.log(`[LogPermissionManager] Fixed permissions for: ${normalizedPath}`);
       }
     } catch (error) {
-      console.error('[LogPermissionManager] Error ensuring secure permissions:', error);
+      logger.error('[LogPermissionManager] Error ensuring secure permissions:', error);
       throw error;
     }
   }
@@ -241,13 +242,13 @@ class LogPermissionManager {
           
           // Securely delete old file
           await this.secureDelete(filePath);
-          console.log(`[LogPermissionManager] Deleted old log file: ${filePath}`);
+          logger.log(`[LogPermissionManager] Deleted old log file: ${filePath}`);
         } catch (error) {
-          console.warn(`[LogPermissionManager] Could not process file ${file}:`, error.message);
+          logger.warn(`[LogPermissionManager] Could not process file ${file}:`, error.message);
         }
       }
     } catch (error) {
-      console.error('[LogPermissionManager] Error cleaning up old logs:', error);
+      logger.error('[LogPermissionManager] Error cleaning up old logs:', error);
       throw error;
     }
   }
@@ -267,6 +268,7 @@ class LogPermissionManager {
       if (fileSize > 0) {
         // Overwrite with random data
         const crypto = require('crypto');
+const { logger } = require('@infrastructure/logging/Logger');
         const randomData = crypto.randomBytes(fileSize);
         await fs.writeFile(normalizedPath, randomData);
       }
@@ -274,9 +276,9 @@ class LogPermissionManager {
       // Delete the file
       await fs.unlink(normalizedPath);
       
-      console.log(`[LogPermissionManager] Securely deleted: ${normalizedPath}`);
+      logger.log(`[LogPermissionManager] Securely deleted: ${normalizedPath}`);
     } catch (error) {
-      console.error('[LogPermissionManager] Error in secure delete:', error);
+      logger.error('[LogPermissionManager] Error in secure delete:', error);
       throw error;
     }
   }
@@ -330,7 +332,7 @@ class LogPermissionManager {
       
       return structure;
     } catch (error) {
-      console.error('[LogPermissionManager] Error getting directory structure:', error);
+      logger.error('[LogPermissionManager] Error getting directory structure:', error);
       throw error;
     }
   }
@@ -365,9 +367,9 @@ class LogPermissionManager {
         }
       }
       
-      console.log(`[LogPermissionManager] Validated and fixed permissions for port ${port}`);
+      logger.log(`[LogPermissionManager] Validated and fixed permissions for port ${port}`);
     } catch (error) {
-      console.error('[LogPermissionManager] Error validating permissions:', error);
+      logger.error('[LogPermissionManager] Error validating permissions:', error);
       throw error;
     }
   }

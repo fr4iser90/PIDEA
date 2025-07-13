@@ -1,3 +1,4 @@
+const { logger } = require('@infrastructure/logging/Logger');
 /**
  * FeatureBranchStrategy - Strategy for feature branch creation and management
  * Implements feature branch naming conventions and validation

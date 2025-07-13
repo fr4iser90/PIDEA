@@ -1,9 +1,11 @@
+
 /**
  * StartStreamingHandler
  * 
  * Handles StartStreamingCommand execution by starting IDE screenshot streaming.
  */
 const StartStreamingCommand = require('@application/commands/categories/management/StartStreamingCommand');
+const { logger } = require('@infrastructure/logging/Logger');
 
 class StartStreamingHandler {
   constructor(screenshotStreamingService, eventBus = null) {
@@ -18,7 +20,7 @@ class StartStreamingHandler {
    */
   async handle(command) {
     try {
-      console.log(`[StartStreamingHandler] Processing command: ${command.commandId}`);
+      logger.log(`[StartStreamingHandler] Processing command: ${command.commandId}`);
       
       // Validate command
       command.validate();
@@ -47,7 +49,7 @@ class StartStreamingHandler {
         });
       }
       
-      console.log(`[StartStreamingHandler] Successfully started streaming for session ${command.sessionId}`);
+      logger.log(`[StartStreamingHandler] Successfully started streaming for session ${command.sessionId}`);
       
       return {
         success: true,
@@ -58,7 +60,7 @@ class StartStreamingHandler {
       };
       
     } catch (error) {
-      console.error(`[StartStreamingHandler] Error handling command ${command.commandId}:`, error.message);
+      logger.error(`[StartStreamingHandler] Error handling command ${command.commandId}:`, error.message);
       
       // Emit error event if event bus is available
       if (this.eventBus) {

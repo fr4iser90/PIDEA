@@ -3,6 +3,7 @@
  * Service for managing workflow persistence operations and data management
  */
 const { v4: uuidv4 } = require('uuid');
+const { logger } = require('@infrastructure/logging/Logger');
 
 class WorkflowPersistenceService {
   constructor(workflowRepository, logger = console) {

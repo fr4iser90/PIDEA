@@ -1,3 +1,5 @@
+const { logger } = require('@infrastructure/logging/Logger');
+
 /**
  * HandlerMetrics - Metrics collection and analysis for handlers
  * 
@@ -78,7 +80,7 @@ class HandlerMetrics {
       this.storeExecutionRecord(handlerId, executionData);
 
     } catch (error) {
-      console.error('HandlerMetrics: Failed to record handler execution', {
+      logger.error('HandlerMetrics: Failed to record handler execution', {
         handlerId,
         error: error.message
       });
@@ -125,7 +127,7 @@ class HandlerMetrics {
       this.storeExecutionRecord(handlerId, failureData);
 
     } catch (error) {
-      console.error('HandlerMetrics: Failed to record handler failure', {
+      logger.error('HandlerMetrics: Failed to record handler failure', {
         handlerId,
         error: error.message
       });
@@ -442,7 +444,7 @@ class HandlerMetrics {
       );
 
     } catch (error) {
-      console.error('HandlerMetrics: Aggregation failed', error.message);
+      logger.error('HandlerMetrics: Aggregation failed', error.message);
     }
   }
 
@@ -520,7 +522,7 @@ class HandlerMetrics {
       }
 
     } catch (error) {
-      console.error('HandlerMetrics: Import failed', error.message);
+      logger.error('HandlerMetrics: Import failed', error.message);
     }
   }
 

@@ -1,4 +1,6 @@
 const TaskRepository = require('@repositories/TaskRepository');
+const { logger } = require('@infrastructure/logging/Logger');
+
 
 /**
  * InMemoryTaskRepository - In-memory implementation for testing and development
@@ -16,7 +18,7 @@ class InMemoryTaskRepository extends TaskRepository {
 
   async findById(id) {
     const task = this.tasks.get(id) || null;
-    console.log('🔍 [InMemoryTaskRepository] findById:', { 
+    logger.log('🔍 [InMemoryTaskRepository] findById:', { 
       requestedId: id, 
       found: !!task,
       totalTasks: this.tasks.size,

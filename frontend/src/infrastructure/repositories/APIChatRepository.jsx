@@ -1,3 +1,4 @@
+import { logger } from "@/infrastructure/logging/Logger";
 import ChatRepository from '@/domain/repositories/ChatRepository.jsx';
 import ChatMessage from '@/domain/entities/ChatMessage.jsx';
 import ChatSession from '@/domain/entities/ChatSession.jsx';
@@ -130,7 +131,7 @@ const API_CONFIG = {
 export const apiCall = async (endpoint, options = {}) => {
   const url = typeof endpoint === 'function' ? endpoint() : `${API_CONFIG.baseURL}${endpoint}`;
   
-  console.log('🔍 [APIChatRepository] Making API call to:', url);
+  logger.log('🔍 [APIChatRepository] Making API call to:', url);
   
   // Get authentication headers
   const { getAuthHeaders } = useAuthStore.getState();
@@ -145,7 +146,7 @@ export const apiCall = async (endpoint, options = {}) => {
     ...options
   };
 
-  console.log('🔍 [APIChatRepository] Request config:', {
+  logger.log('🔍 [APIChatRepository] Request config:', {
     method: config.method || 'GET',
     headers: config.headers,
     hasBody: !!config.body
@@ -154,11 +155,11 @@ export const apiCall = async (endpoint, options = {}) => {
   try {
     const response = await fetch(url, config);
     
-    console.log('🔍 [APIChatRepository] Response status:', response.status);
+    logger.log('🔍 [APIChatRepository] Response status:', response.status);
     
     if (!response.ok) {
       if (response.status === 401) {
-        console.log('❌ [APIChatRepository] 401 Unauthorized - logging out user');
+        logger.log('❌ [APIChatRepository] 401 Unauthorized - logging out user');
         // Token expired or invalid, logout user
         const { logout } = useAuthStore.getState();
         logout();
@@ -168,10 +169,10 @@ export const apiCall = async (endpoint, options = {}) => {
     }
     
     const data = await response.json();
-    console.log('✅ [APIChatRepository] API call successful');
+    logger.log('✅ [APIChatRepository] API call successful');
     return data;
   } catch (error) {
-    console.error(`❌ [APIChatRepository] API call failed for ${url}:`, error);
+    logger.error(`❌ [APIChatRepository] API call failed for ${url}:`, error);
     throw error;
   }
 };
@@ -192,12 +193,12 @@ export default class APIChatRepository extends ChatRepository {
         const activeIDE = ideList.data.find(ide => ide.active);
         if (activeIDE && activeIDE.workspacePath) {
           this.currentProjectId = getProjectIdFromWorkspace(activeIDE.workspacePath);
-          console.log('🔍 [APIChatRepository] Current project ID:', this.currentProjectId, 'from workspace:', activeIDE.workspacePath);
+          logger.log('🔍 [APIChatRepository] Current project ID:', this.currentProjectId, 'from workspace:', activeIDE.workspacePath);
           return this.currentProjectId;
         }
       }
     } catch (error) {
-      console.error('❌ [APIChatRepository] Error getting current project ID:', error);
+      logger.error('❌ [APIChatRepository] Error getting current project ID:', error);
     }
     
     // Fallback to default

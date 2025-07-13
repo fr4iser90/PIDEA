@@ -1,9 +1,11 @@
+
 /**
  * ProjectAnalyzer - Analyzes project structure and characteristics
  */
 const path = require('path');
 const fs = require('fs').promises;
 const { execSync } = require('child_process');
+const { logger } = require('@infrastructure/logging/Logger');
 
 class ProjectAnalyzer {
     constructor() {
@@ -176,7 +178,7 @@ class ProjectAnalyzer {
             structure.largestFiles.sort((a, b) => b.size - a.size);
             structure.largestFiles = structure.largestFiles.slice(0, 10);
         } catch (error) {
-            console.error('Error analyzing structure:', error);
+            logger.error('Error analyzing structure:', error);
         }
         return structure;
     }
@@ -419,7 +421,7 @@ class ProjectAnalyzer {
             }
             
         } catch (error) {
-            console.error('Error detecting issues:', error);
+            logger.error('Error detecting issues:', error);
         }
 
         return issues;
@@ -547,7 +549,7 @@ class ProjectAnalyzer {
             }
             
         } catch (error) {
-            console.error('Error generating suggestions:', error);
+            logger.error('Error generating suggestions:', error);
         }
 
         return suggestions;

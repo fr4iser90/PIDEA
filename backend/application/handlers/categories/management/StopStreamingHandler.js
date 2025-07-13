@@ -1,9 +1,11 @@
+
 /**
  * StopStreamingHandler
  * 
  * Handles StopStreamingCommand execution by stopping IDE screenshot streaming.
  */
 const StopStreamingCommand = require('@application/commands/categories/management/StopStreamingCommand');
+const { logger } = require('@infrastructure/logging/Logger');
 
 class StopStreamingHandler {
   constructor(screenshotStreamingService, eventBus = null) {
@@ -18,7 +20,7 @@ class StopStreamingHandler {
    */
   async handle(command) {
     try {
-      console.log(`[StopStreamingHandler] Processing command: ${command.commandId}`);
+      logger.log(`[StopStreamingHandler] Processing command: ${command.commandId}`);
       
       // Validate command
       command.validate();
@@ -45,7 +47,7 @@ class StopStreamingHandler {
         });
       }
       
-      console.log(`[StopStreamingHandler] Successfully stopped streaming for session ${command.sessionId}`);
+      logger.log(`[StopStreamingHandler] Successfully stopped streaming for session ${command.sessionId}`);
       
       return {
         success: true,
@@ -56,7 +58,7 @@ class StopStreamingHandler {
       };
       
     } catch (error) {
-      console.error(`[StopStreamingHandler] Error handling command ${command.commandId}:`, error.message);
+      logger.error(`[StopStreamingHandler] Error handling command ${command.commandId}:`, error.message);
       
       // Emit error event if event bus is available
       if (this.eventBus) {

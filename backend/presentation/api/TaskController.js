@@ -1,3 +1,4 @@
+
 /**
  * TaskController - Handles project-based task management
  */
@@ -6,6 +7,7 @@ const fs = require('fs').promises;
 const fsSync = require('fs');
 const TaskPriority = require('@value-objects/TaskPriority');
 const TaskType = require('@value-objects/TaskType');
+const { logger } = require('@infrastructure/logging/Logger');
 
 class TaskController {
     constructor(taskService, taskRepository, aiService, projectAnalyzer, projectMappingService = null, ideManager = null, docsImportService = null) {
@@ -25,7 +27,7 @@ class TaskController {
             const { title, description, priority, type, metadata } = req.body;
             const userId = req.user.id;
 
-            console.log('🔍 [TaskController] Creating task:', {
+            logger.log('🔍 [TaskController] Creating task:', {
                 projectId,
                 title,
                 description,
@@ -39,14 +41,14 @@ class TaskController {
                 createdBy: userId
             });
 
-            console.log('✅ [TaskController] Task created successfully:', task);
+            logger.log('✅ [TaskController] Task created successfully:', task);
 
             res.status(201).json({
                 success: true,
                 data: task
             });
         } catch (error) {
-            console.error('❌ [TaskController] Failed to create task:', error);
+            logger.error('❌ [TaskController] Failed to create task:', error);
             res.status(400).json({
                 success: false,
                 error: error.message
@@ -172,7 +174,7 @@ class TaskController {
             const userId = req.user.id;
             const options = req.body.options || {};
 
-            console.log('🚀 [TaskController] executeTask called with Categories system:', { 
+            logger.log('🚀 [TaskController] executeTask called with Categories system:', { 
                 projectId, 
                 id, 
                 userId,
@@ -180,7 +182,7 @@ class TaskController {
             });
 
             const task = await this.taskRepository.findById(id);
-            console.log('🔍 [TaskController] Found task:', task ? {
+            logger.log('🔍 [TaskController] Found task:', task ? {
                 id: task.id,
                 projectId: task.projectId,
                 title: task.title,
@@ -188,23 +190,23 @@ class TaskController {
             } : 'NOT FOUND');
             
             if (!task || !task.belongsToProject(projectId)) {
-                console.log('❌ [TaskController] Task not found or does not belong to project');
-                console.log('❌ [TaskController] Task exists:', !!task);
-                console.log('❌ [TaskController] Task projectId:', task?.projectId);
-                console.log('❌ [TaskController] Requested projectId:', projectId);
-                console.log('❌ [TaskController] belongsToProject result:', task?.belongsToProject(projectId));
+                logger.log('❌ [TaskController] Task not found or does not belong to project');
+                logger.log('❌ [TaskController] Task exists:', !!task);
+                logger.log('❌ [TaskController] Task projectId:', task?.projectId);
+                logger.log('❌ [TaskController] Requested projectId:', projectId);
+                logger.log('❌ [TaskController] belongsToProject result:', task?.belongsToProject(projectId));
                 return res.status(404).json({
                     success: false,
                     error: 'Task not found'
                 });
             }
 
-            console.log('🔍 [TaskController] Found task, executing with Categories system...');
+            logger.log('🔍 [TaskController] Found task, executing with Categories system...');
 
             // Execute task using Categories-based system
             const execution = await this.taskService.executeTask(id, userId, options);
 
-            console.log('✅ [TaskController] Task execution completed with Categories:', {
+            logger.log('✅ [TaskController] Task execution completed with Categories:', {
                 taskId: id,
                 success: execution.success,
                 executionMethod: execution.metadata?.executionMethod || 'categories',
@@ -218,7 +220,7 @@ class TaskController {
                 message: 'Task executed successfully with Categories system'
             });
         } catch (error) {
-            console.error('❌ [TaskController] Error executing task with Categories:', error);
+            logger.error('❌ [TaskController] Error executing task with Categories:', error);
             res.status(500).json({
                 success: false,
                 error: error.message,
@@ -476,12 +478,12 @@ class TaskController {
     // NEW: Sync docs tasks using workspace path and DocsImportService
     async syncDocsTasks(req, res) {
         try {
-            console.log('🔄 [TaskController] syncDocsTasks called');
+            logger.log('🔄 [TaskController] syncDocsTasks called');
             
             const { projectId } = req.params;
             const userId = req.user.id;
 
-            console.log('🔄 [TaskController] Syncing docs tasks for project:', projectId);
+            logger.log('🔄 [TaskController] Syncing docs tasks for project:', projectId);
 
             // Use DocsImportService for workspace import
             if (!this.docsImportService) {
@@ -498,22 +500,22 @@ class TaskController {
                         workspacePath = await this.ideManager.detectWorkspacePath(activeIDE.port);
                     }
                 } catch (error) {
-                    console.warn('🔍 [TaskController] Failed to get workspace path, using fallback:', error.message);
+                    logger.warn('🔍 [TaskController] Failed to get workspace path, using fallback:', error.message);
                 }
             }
 
             // Fallback: use current working directory
             if (!workspacePath) {
                 workspacePath = process.cwd();
-                console.log(`🔄 [TaskController] Using fallback workspace path: ${workspacePath}`);
+                logger.log(`🔄 [TaskController] Using fallback workspace path: ${workspacePath}`);
             }
 
-            console.log(`🔄 [TaskController] Using workspace path: ${workspacePath}`);
+            logger.log(`🔄 [TaskController] Using workspace path: ${workspacePath}`);
 
             // Use DocsImportService to import from workspace
             const result = await this.docsImportService.importDocsFromWorkspace(projectId, workspacePath);
 
-            console.log(`✅ [TaskController] Docs import completed:`, {
+            logger.log(`✅ [TaskController] Docs import completed:`, {
                 importedCount: result.importedCount,
                 totalFiles: result.totalFiles,
                 workspacePath: result.workspacePath
@@ -526,7 +528,7 @@ class TaskController {
             });
 
         } catch (error) {
-            console.error('❌ [TaskController] Failed to sync docs tasks:', error);
+            logger.error('❌ [TaskController] Failed to sync docs tasks:', error);
             res.status(500).json({
                 success: false,
                 error: error.message
@@ -551,7 +553,7 @@ class TaskController {
                 priority = TaskPriority.LOW;
             }
             
-            console.log('🔍 [TaskController] Priority parsing:', {
+            logger.log('🔍 [TaskController] Priority parsing:', {
                 content: content.substring(0, 200),
                 priority: priority,
                 TaskPriority_LOW: TaskPriority.LOW,
@@ -572,7 +574,7 @@ class TaskController {
                 type = TaskType.DOCUMENTATION;
             }
             
-            console.log('🔍 [TaskController] Type parsing:', {
+            logger.log('🔍 [TaskController] Type parsing:', {
                 type: type,
                 TaskType_FEATURE: TaskType.FEATURE,
                 TaskType_REFACTOR: TaskType.REFACTOR,
@@ -614,7 +616,7 @@ class TaskController {
                 }
             };
         } catch (error) {
-            console.error(`❌ [TaskController] Failed to parse markdown file ${filename}:`, error);
+            logger.error(`❌ [TaskController] Failed to parse markdown file ${filename}:`, error);
             return null;
         }
     }
@@ -622,17 +624,17 @@ class TaskController {
     // Clean docs tasks from database
     async cleanDocsTasks(req, res) {
         try {
-            console.log('🗑️ [TaskController] cleanDocsTasks called');
+            logger.log('🗑️ [TaskController] cleanDocsTasks called');
             
             const { projectId } = req.params;
             const userId = req.user.id;
 
-            console.log('🗑️ [TaskController] Cleaning docs tasks for project:', projectId);
+            logger.log('🗑️ [TaskController] Cleaning docs tasks for project:', projectId);
 
             // Get all tasks and delete them (no filtering)
             const allTasks = await this.taskRepository.findByProject(projectId);
 
-            console.log(`🗑️ [TaskController] Found ${allTasks.length} tasks to delete`);
+            logger.log(`🗑️ [TaskController] Found ${allTasks.length} tasks to delete`);
 
             // Delete all tasks
             let deletedCount = 0;
@@ -640,9 +642,9 @@ class TaskController {
                 try {
                     await this.taskRepository.delete(task.id);
                     deletedCount++;
-                    console.log(`🗑️ [TaskController] Deleted task: ${task.title}`);
+                    logger.log(`🗑️ [TaskController] Deleted task: ${task.title}`);
                 } catch (error) {
-                    console.error(`❌ [TaskController] Failed to delete task ${task.id}:`, error);
+                    logger.error(`❌ [TaskController] Failed to delete task ${task.id}:`, error);
                 }
             }
 
@@ -657,7 +659,7 @@ class TaskController {
             });
 
         } catch (error) {
-            console.error('❌ [TaskController] Failed to clean tasks:', error);
+            logger.error('❌ [TaskController] Failed to clean tasks:', error);
             res.status(500).json({
                 success: false,
                 error: error.message

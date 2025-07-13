@@ -1,7 +1,7 @@
+const { logger } = require('@infrastructure/logging/Logger');
 const TestCorrectionService = require('@services/TestCorrectionService');
 const AutoRefactorCommand = require('@categories/management/AutoRefactorCommand');
 const CoverageAnalyzerService = require('@services/CoverageAnalyzerService');
-const logger = require('@logging/logger');
 const fs = require('fs-extra');
 const path = require('path');
 

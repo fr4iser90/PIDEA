@@ -1,3 +1,5 @@
+const { logger } = require('@infrastructure/logging/Logger');
+
 // HandlerRegistry - zentrale Registry für Workflow-Handler
 // 
 // Diese Klasse stellt eine zentrale Registry für die Verwaltung von Workflow-Handlern bereit,
@@ -78,7 +80,7 @@ class HandlerRegistry {
       return true;
 
     } catch (error) {
-      console.error('Handler-Registrierung fehlgeschlagen:', error.message);
+      logger.error('Handler-Registrierung fehlgeschlagen:', error.message);
       return false;
     }
   }
@@ -393,7 +395,7 @@ class HandlerRegistry {
       
       return true;
     } catch (error) {
-      console.error('Registry-Zustand import fehlgeschlagen:', error.message);
+      logger.error('Registry-Zustand import fehlgeschlagen:', error.message);
       return false;
     }
   }

@@ -1,3 +1,4 @@
+
 /**
  * ArchitectureAnalyzer - Comprehensive architecture analysis
  */
@@ -708,6 +709,7 @@ class ArchitectureAnalyzer {
 
             // Cross-layer dependencies
             if (line.includes('require(') || line.includes('import')) {
+const { logger } = require('@infrastructure/logging/Logger');
                 const importPath = line.match(/['"]([^'"]+)['"]/)?.[1];
                 if (importPath) {
                     if (filePath.includes('model') && importPath.includes('controller')) {
@@ -908,7 +910,7 @@ class ArchitectureAnalyzer {
             
             await getFiles(projectPath);
         } catch (error) {
-            console.error('Error reading code files:', error);
+            logger.error('Error reading code files:', error);
         }
 
         return files;

@@ -4,6 +4,7 @@
 const path = require('path');
 const fs = require('fs').promises;
 const { execSync } = require('child_process');
+const { logger } = require('@infrastructure/logging/Logger');
 
 class SecurityAnalyzer {
     constructor() {

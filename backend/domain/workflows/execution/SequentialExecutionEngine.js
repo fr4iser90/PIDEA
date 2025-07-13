@@ -808,6 +808,7 @@ class SequentialExecutionEngine {
    */
   async analyzeWorkflow(workflow, context) {
     const WorkflowAnalyzer = require('./optimization/WorkflowAnalyzer');
+const { logger } = require('@infrastructure/logging/Logger');
     const analyzer = new WorkflowAnalyzer({
       enableAnalysis: true,
       logger: this.logger

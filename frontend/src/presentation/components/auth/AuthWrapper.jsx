@@ -1,3 +1,4 @@
+import { logger } from "@/infrastructure/logging/Logger";
 import React, { useState, useEffect } from 'react';
 import useAuthStore from '@/infrastructure/stores/AuthStore.jsx';
 import useNotificationStore from '@/infrastructure/stores/NotificationStore.jsx';
@@ -26,19 +27,19 @@ const AuthWrapper = ({ children }) => {
       setValidationError(null);
       
       try {
-        console.log('🔍 [AuthWrapper] Checking authentication...');
+        logger.log('🔍 [AuthWrapper] Checking authentication...');
         const isValid = await validateToken();
         
         if (!isValid) {
-          console.log('❌ [AuthWrapper] Token validation failed');
+          logger.log('❌ [AuthWrapper] Token validation failed');
           setValidationError('Session expired. Please log in again.');
           showWarning('Your session has expired. Please log in again.', 'Session Expired');
         } else {
-          console.log('✅ [AuthWrapper] Token validation successful');
+          logger.log('✅ [AuthWrapper] Token validation successful');
           showInfo('Welcome back!', 'Authentication Successful');
         }
       } catch (error) {
-        console.error('❌ [AuthWrapper] Token validation error:', error);
+        logger.error('❌ [AuthWrapper] Token validation error:', error);
         setValidationError('Authentication check failed. Please log in again.');
         showWarning('Authentication check failed. Please log in again.', 'Authentication Error');
       } finally {
@@ -50,7 +51,7 @@ const AuthWrapper = ({ children }) => {
     if (token) {
       checkAuth();
     } else {
-      console.log('🔍 [AuthWrapper] No token found, skipping validation');
+      logger.log('🔍 [AuthWrapper] No token found, skipping validation');
       setIsValidating(false);
     }
   }, [validateToken, token, showWarning, showInfo]);
@@ -58,7 +59,7 @@ const AuthWrapper = ({ children }) => {
   // Handle redirect to login
   useEffect(() => {
     if (redirectToLogin && !isValidating) {
-      console.log('🔄 [AuthWrapper] Redirecting to login...');
+      logger.log('🔄 [AuthWrapper] Redirecting to login...');
       resetRedirectFlag();
       // The redirect is handled by AuthStore.handleAuthFailure
     }

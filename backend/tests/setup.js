@@ -1,3 +1,4 @@
+
 // Test setup file
 process.env.NODE_ENV = 'test';
 
@@ -18,6 +19,7 @@ jest.setTimeout(30000);
 if (process.env.TEST_MANAGEMENT_ENABLED !== 'false') {
   try {
     const TestManagementService = require('@services/TestManagementService');
+const { logger } = require('@infrastructure/logging/Logger');
     
     // Initialize test management service
     global.testManagementService = new TestManagementService();
@@ -35,7 +37,7 @@ if (process.env.TEST_MANAGEMENT_ENABLED !== 'false') {
               { registeredBy: 'jest-setup', testFramework: 'jest' }
             );
           } catch (error) {
-            console.warn(`Failed to auto-register test: ${error.message}`);
+            logger.warn(`Failed to auto-register test: ${error.message}`);
           }
         }
       }
@@ -48,6 +50,6 @@ if (process.env.TEST_MANAGEMENT_ENABLED !== 'false') {
       }
     });
   } catch (error) {
-    console.warn('TestManagementService not available, skipping test management integration');
+    logger.warn('TestManagementService not available, skipping test management integration');
   }
 } 

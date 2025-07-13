@@ -23,6 +23,7 @@ class AnalysisService {
 
             // Get project path
             const { getProjectContextService } = require('../../../di/ProjectContextService');
+const { logger } = require('@infrastructure/logging/Logger');
             const projectContext = getProjectContextService();
             const projectPath = await projectContext.getProjectPath();
             if (!projectPath) {

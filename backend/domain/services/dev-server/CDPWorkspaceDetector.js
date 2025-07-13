@@ -1,3 +1,5 @@
+const { logger } = require('@infrastructure/logging/Logger');
+
 class CDPWorkspaceDetector {
   constructor(browserManager, packageJsonAnalyzer) {
     this.browserManager = browserManager;
@@ -8,7 +10,7 @@ class CDPWorkspaceDetector {
     try {
       const page = await this.browserManager.getPage();
       if (!page) {
-        console.log('[CDPWorkspaceDetector] No page available for CDP');
+        logger.log('[CDPWorkspaceDetector] No page available for CDP');
         return null;
       }
 
@@ -49,17 +51,17 @@ class CDPWorkspaceDetector {
 
       if (workspaceInfo.result?.value?.path) {
         const workspacePath = workspaceInfo.result.value.path;
-        console.log('[CDPWorkspaceDetector] CDP workspace path:', workspacePath);
+        logger.log('[CDPWorkspaceDetector] CDP workspace path:', workspacePath);
         
         // Now analyze package.json in this path
         return await this.packageJsonAnalyzer.analyzePackageJsonInPath(workspacePath);
       }
 
-      console.log('[CDPWorkspaceDetector] No workspace path found via CDP');
+      logger.log('[CDPWorkspaceDetector] No workspace path found via CDP');
       return null;
 
     } catch (error) {
-      console.error('[CDPWorkspaceDetector] CDP error:', error.message);
+      logger.error('[CDPWorkspaceDetector] CDP error:', error.message);
       return null;
     }
   }

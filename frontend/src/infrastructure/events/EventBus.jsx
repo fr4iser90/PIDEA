@@ -1,3 +1,4 @@
+import { logger } from "@/infrastructure/logging/Logger";
 class EventBus {
   constructor() {
     this.listeners = new Map();
@@ -28,7 +29,7 @@ class EventBus {
       try {
         callback(data);
       } catch (error) {
-        console.error(`Error in event listener for ${event}:`, error);
+        logger.error(`Error in event listener for ${event}:`, error);
       }
     });
   }

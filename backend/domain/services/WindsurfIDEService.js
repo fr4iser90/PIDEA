@@ -3,6 +3,8 @@ const WorkspacePathDetector = require('./workspace/WorkspacePathDetector');
 const ChatMessageHandler = require('./chat/ChatMessageHandler');
 const ChatHistoryExtractor = require('./chat/ChatHistoryExtractor');
 const PackageJsonAnalyzer = require('./dev-server/PackageJsonAnalyzer');
+const { logger } = require('@infrastructure/logging/Logger');
+
 
 class WindsurfIDEService {
   constructor(browserManager, ideManager, eventBus = null) {
@@ -20,17 +22,17 @@ class WindsurfIDEService {
     // Listen for IDE changes
     if (this.eventBus) {
       this.eventBus.subscribe('activeIDEChanged', async (eventData) => {
-        console.log('[WindsurfIDEService] IDE changed, resetting package.json cache');
-        console.log('[WindsurfIDEService] Event data:', eventData);
+        logger.log('[WindsurfIDEService] IDE changed, resetting package.json cache');
+        logger.log('[WindsurfIDEService] Event data:', eventData);
         
         // Switch browser connection to new IDE
         if (eventData.port) {
           try {
-            console.log('[WindsurfIDEService] Switching browser connection to port:', eventData.port);
+            logger.log('[WindsurfIDEService] Switching browser connection to port:', eventData.port);
             await this.browserManager.switchToPort(eventData.port);
-            console.log('[WindsurfIDEService] Successfully switched browser connection to port:', eventData.port);
+            logger.log('[WindsurfIDEService] Successfully switched browser connection to port:', eventData.port);
           } catch (error) {
-            console.error('[WindsurfIDEService] Failed to switch browser connection:', error.message);
+            logger.error('[WindsurfIDEService] Failed to switch browser connection:', error.message);
           }
         }
       });
@@ -40,20 +42,20 @@ class WindsurfIDEService {
   async sendMessage(message, options = {}) {
     // Ensure browser is connected to the active IDE port
     const activePort = this.getActivePort();
-    console.log('[WindsurfIDEService] sendMessage() - Active port:', activePort);
+    logger.log('[WindsurfIDEService] sendMessage() - Active port:', activePort);
     
     if (activePort) {
       try {
         // Switch browser to active port if needed
         const currentBrowserPort = this.browserManager.getCurrentPort();
-        console.log('[WindsurfIDEService] sendMessage() - Current browser port:', currentBrowserPort);
+        logger.log('[WindsurfIDEService] sendMessage() - Current browser port:', currentBrowserPort);
         
         if (currentBrowserPort !== activePort) {
-          console.log('[WindsurfIDEService] sendMessage() - Switching browser to active port:', activePort);
+          logger.log('[WindsurfIDEService] sendMessage() - Switching browser to active port:', activePort);
           await this.browserManager.switchToPort(activePort);
         }
       } catch (error) {
-        console.error('[WindsurfIDEService] sendMessage() - Failed to switch browser port:', error.message);
+        logger.error('[WindsurfIDEService] sendMessage() - Failed to switch browser port:', error.message);
       }
     }
     
@@ -63,20 +65,20 @@ class WindsurfIDEService {
   async extractChatHistory() {
     // Ensure browser is connected to the active IDE port
     const activePort = this.getActivePort();
-    console.log('[WindsurfIDEService] extractChatHistory() - Active port:', activePort);
+    logger.log('[WindsurfIDEService] extractChatHistory() - Active port:', activePort);
     
     if (activePort) {
       try {
         // Switch browser to active port if needed
         const currentBrowserPort = this.browserManager.getCurrentPort();
-        console.log('[WindsurfIDEService] extractChatHistory() - Current browser port:', currentBrowserPort);
+        logger.log('[WindsurfIDEService] extractChatHistory() - Current browser port:', currentBrowserPort);
         
         if (currentBrowserPort !== activePort) {
-          console.log('[WindsurfIDEService] extractChatHistory() - Switching browser to active port:', activePort);
+          logger.log('[WindsurfIDEService] extractChatHistory() - Switching browser to active port:', activePort);
           await this.browserManager.switchToPort(activePort);
         }
       } catch (error) {
-        console.error('[WindsurfIDEService] extractChatHistory() - Failed to switch browser port:', error.message);
+        logger.error('[WindsurfIDEService] extractChatHistory() - Failed to switch browser port:', error.message);
       }
     }
     
@@ -99,15 +101,15 @@ class WindsurfIDEService {
    */
   async postToWindsurf(prompt) {
     try {
-      console.log('[WindsurfIDEService] Sending prompt to Windsurf IDE:', prompt.substring(0, 100) + '...');
+      logger.log('[WindsurfIDEService] Sending prompt to Windsurf IDE:', prompt.substring(0, 100) + '...');
       
       // Use the chat message handler to send the prompt
       const result = await this.chatMessageHandler.sendMessage(prompt);
       
-      console.log('[WindsurfIDEService] Prompt sent successfully');
+      logger.log('[WindsurfIDEService] Prompt sent successfully');
       return result;
     } catch (error) {
-      console.error('[WindsurfIDEService] Error sending prompt to Windsurf:', error);
+      logger.error('[WindsurfIDEService] Error sending prompt to Windsurf:', error);
       throw error;
     }
   }
@@ -120,7 +122,7 @@ class WindsurfIDEService {
    */
   async applyRefactoring(filePath, refactoredCode) {
     try {
-      console.log('[WindsurfIDEService] Applying refactoring to file:', filePath);
+      logger.log('[WindsurfIDEService] Applying refactoring to file:', filePath);
       
       // Create a prompt to apply the refactored code
       const applyPrompt = `Please apply the following refactored code to the file ${filePath}:
@@ -140,7 +142,7 @@ After applying the changes, please confirm that the refactoring has been complet
       // Send the refactoring prompt to Windsurf IDE
       const result = await this.postToWindsurf(applyPrompt);
       
-      console.log('[WindsurfIDEService] Refactoring applied successfully');
+      logger.log('[WindsurfIDEService] Refactoring applied successfully');
       
       return {
         success: true,
@@ -150,7 +152,7 @@ After applying the changes, please confirm that the refactoring has been complet
         message: 'Refactoring applied to Windsurf IDE'
       };
     } catch (error) {
-      console.error('[WindsurfIDEService] Error applying refactoring:', error);
+      logger.error('[WindsurfIDEService] Error applying refactoring:', error);
       throw new Error(`Failed to apply refactoring: ${error.message}`);
     }
   }
@@ -183,23 +185,23 @@ After applying the changes, please confirm that the refactoring has been complet
 
   getActivePort() {
     const activePort = this.ideManager.getActivePort();
-    console.log('[WindsurfIDEService] getActivePort() called, returning:', activePort);
+    logger.log('[WindsurfIDEService] getActivePort() called, returning:', activePort);
     return activePort;
   }
 
   async switchToPort(port) {
     const currentActivePort = this.getActivePort();
-    console.log(`[WindsurfIDEService] switchToPort(${port}) called, current active port:`, currentActivePort);
+    logger.log(`[WindsurfIDEService] switchToPort(${port}) called, current active port:`, currentActivePort);
     
     if (currentActivePort === port) {
-      console.log(`[WindsurfIDEService] Already connected to port ${port}`);
+      logger.log(`[WindsurfIDEService] Already connected to port ${port}`);
       return;
     }
     
-    console.log(`[WindsurfIDEService] Switching to port ${port}`);
+    logger.log(`[WindsurfIDEService] Switching to port ${port}`);
     await this.ideManager.switchToIDE(port);
     await this.browserManager.switchToPort(port);
-    console.log(`[WindsurfIDEService] Successfully switched to port ${port}`);
+    logger.log(`[WindsurfIDEService] Successfully switched to port ${port}`);
   }
 
   // Terminal monitoring methods
@@ -262,7 +264,7 @@ After applying the changes, please confirm that the refactoring has been complet
       
       return result;
     } catch (error) {
-      console.error('[WindsurfIDEService] Error getting connection status:', error);
+      logger.error('[WindsurfIDEService] Error getting connection status:', error);
       return {
         connected: false,
         error: error.message,

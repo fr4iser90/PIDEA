@@ -5,9 +5,9 @@ require('module-alias/register');
 const path = require('path');
 const fs = require('fs-extra');
 const { execSync } = require('child_process');
+const { logger } = require('@infrastructure/logging/Logger');
 const CoverageAnalyzerService = require('@services/CoverageAnalyzerService');
 const TestCorrectionService = require('@services/TestCorrectionService');
-const logger = require('@logging/logger');
 
 class CoverageImprover {
   constructor(options = {}) {
@@ -38,7 +38,7 @@ class CoverageImprover {
    * Main entry point for coverage improvement
    */
   async run() {
-    console.log('🎯 Starting Coverage Improvement Process...');
+    logger.log('🎯 Starting Coverage Improvement Process...');
     this.results.startTime = new Date();
     
     try {
@@ -46,10 +46,10 @@ class CoverageImprover {
       const currentCoverage = await this.getCurrentCoverage();
       this.results.initialCoverage = currentCoverage;
       
-      console.log(`📊 Current Coverage: ${currentCoverage.toFixed(2)}%`);
+      logger.log(`📊 Current Coverage: ${currentCoverage.toFixed(2)}%`);
       
       if (currentCoverage >= this.options.targetCoverage) {
-        console.log(`✅ Target coverage (${this.options.targetCoverage}%) already achieved!`);
+        logger.log(`✅ Target coverage (${this.options.targetCoverage}%) already achieved!`);
         return { success: true, results: this.results };
       }
       
@@ -71,8 +71,8 @@ class CoverageImprover {
       await this.generateReport(testGenerationResults, testImprovementResults);
       
       this.results.endTime = new Date();
-      console.log(`✅ Coverage Improvement Completed!`);
-      console.log(`📈 Coverage improved from ${currentCoverage.toFixed(2)}% to ${finalCoverage.toFixed(2)}% (+${this.results.improvement.toFixed(2)}%)`);
+      logger.log(`✅ Coverage Improvement Completed!`);
+      logger.log(`📈 Coverage improved from ${currentCoverage.toFixed(2)}% to ${finalCoverage.toFixed(2)}% (+${this.results.improvement.toFixed(2)}%)`);
       
       return {
         success: true,
@@ -83,7 +83,7 @@ class CoverageImprover {
       
     } catch (error) {
       logger.error('Coverage improvement failed', { error: error.message });
-      console.error('❌ Coverage Improvement Failed:', error.message);
+      logger.error('❌ Coverage Improvement Failed:', error.message);
       
       return {
         success: false,
@@ -97,7 +97,7 @@ class CoverageImprover {
    * Get current test coverage
    */
   async getCurrentCoverage() {
-    console.log('📊 Collecting current coverage...');
+    logger.log('📊 Collecting current coverage...');
     
     try {
       const coverageOutput = execSync('npm test -- --coverage --json --silent', {
@@ -125,7 +125,7 @@ class CoverageImprover {
         return coverageMatch ? parseFloat(coverageMatch[1]) : 0;
         
       } catch (fallbackError) {
-        console.log('⚠️  Could not collect coverage, assuming 0%');
+        logger.log('⚠️  Could not collect coverage, assuming 0%');
         return 0;
       }
     }
@@ -135,7 +135,7 @@ class CoverageImprover {
    * Analyze coverage gaps to identify untested code
    */
   async analyzeCoverageGaps() {
-    console.log('🔍 Analyzing coverage gaps...');
+    logger.log('🔍 Analyzing coverage gaps...');
     
     const glob = require('glob');
     const coverageGaps = [];
@@ -174,7 +174,7 @@ class CoverageImprover {
     // Sort by priority (highest first)
     coverageGaps.sort((a, b) => b.priority - a.priority);
     
-    console.log(`📋 Found ${coverageGaps.length} files with coverage gaps`);
+    logger.log(`📋 Found ${coverageGaps.length} files with coverage gaps`);
     
     return coverageGaps;
   }
@@ -183,7 +183,7 @@ class CoverageImprover {
    * Generate missing tests for uncovered code
    */
   async generateMissingTests(coverageGaps) {
-    console.log('🧪 Generating missing tests...');
+    logger.debug('🧪 Generating missing tests...');
     
     const results = {
       total: coverageGaps.length,
@@ -195,7 +195,7 @@ class CoverageImprover {
     
     for (const gap of coverageGaps) {
       try {
-        console.log(`📝 Generating tests for ${gap.file} (coverage: ${gap.currentCoverage.toFixed(1)}%)`);
+        logger.debug(`📝 Generating tests for ${gap.file} (coverage: ${gap.currentCoverage.toFixed(1)}%)`);
         
         const testGenerationResult = await this.generateTestsForFile(gap);
         
@@ -203,10 +203,10 @@ class CoverageImprover {
           results.successful++;
           results.testsGenerated += testGenerationResult.testsGenerated;
           
-          console.log(`✅ Generated ${testGenerationResult.testsGenerated} tests for ${gap.file}`);
+          logger.debug(`✅ Generated ${testGenerationResult.testsGenerated} tests for ${gap.file}`);
         } else {
           results.failed++;
-          console.log(`❌ Failed to generate tests for ${gap.file}: ${testGenerationResult.error}`);
+          logger.debug(`❌ Failed to generate tests for ${gap.file}: ${testGenerationResult.error}`);
         }
         
         results.details.push({
@@ -234,7 +234,7 @@ class CoverageImprover {
     
     this.results.testsAdded = results.testsGenerated;
     
-    console.log(`📊 Test Generation Results: ${results.successful} successful, ${results.failed} failed, ${results.testsGenerated} tests generated`);
+    logger.debug(`📊 Test Generation Results: ${results.successful} successful, ${results.failed} failed, ${results.testsGenerated} tests generated`);
     
     return results;
   }
@@ -418,7 +418,7 @@ class CoverageImprover {
    * Improve existing tests to increase coverage
    */
   async improveExistingTests() {
-    console.log('🔧 Improving existing tests...');
+    logger.debug('🔧 Improving existing tests...');
     
     const glob = require('glob');
     const testFiles = glob.sync('**/*.test.js', { cwd: process.cwd() });
@@ -432,16 +432,16 @@ class CoverageImprover {
     
     for (const testFile of testFiles) {
       try {
-        console.log(`🔧 Improving ${testFile}`);
+        logger.debug(`🔧 Improving ${testFile}`);
         
         const improvementResult = await this.improveTestFile(testFile);
         
         if (improvementResult.success) {
           results.improved++;
-          console.log(`✅ Improved ${testFile}`);
+          logger.debug(`✅ Improved ${testFile}`);
         } else {
           results.failed++;
-          console.log(`❌ Failed to improve ${testFile}: ${improvementResult.error}`);
+          logger.debug(`❌ Failed to improve ${testFile}: ${improvementResult.error}`);
         }
         
         results.details.push({
@@ -469,7 +469,7 @@ class CoverageImprover {
     
     this.results.testsImproved = results.improved;
     
-    console.log(`📊 Test Improvement Results: ${results.improved} improved, ${results.failed} failed`);
+    logger.debug(`📊 Test Improvement Results: ${results.improved} improved, ${results.failed} failed`);
     
     return results;
   }
@@ -652,7 +652,7 @@ class CoverageImprover {
    * Generate comprehensive report
    */
   async generateReport(testGenerationResults, testImprovementResults) {
-    console.log('📊 Generating coverage improvement report...');
+    logger.log('📊 Generating coverage improvement report...');
     
     const report = {
       timestamp: new Date().toISOString(),
@@ -672,9 +672,9 @@ class CoverageImprover {
     const markdownPath = path.join(process.cwd(), 'coverage-improvement-report.md');
     await fs.writeFile(markdownPath, markdownReport);
     
-    console.log(`📄 Reports saved to:`);
-    console.log(`   - ${reportPath}`);
-    console.log(`   - ${markdownPath}`);
+    logger.log(`📄 Reports saved to:`);
+    logger.log(`   - ${reportPath}`);
+    logger.log(`   - ${markdownPath}`);
     
     return report;
   }
@@ -784,7 +784,7 @@ if (require.main === module) {
         options.focusAreas = args[++i].split(',');
         break;
       case '--help':
-        console.log(`
+        logger.log(`
 Usage: node coverage-improver.js [options]
 
 Options:
@@ -807,7 +807,7 @@ Options:
       }
     })
     .catch(error => {
-      console.error('Fatal error:', error.message);
+      logger.error('Fatal error:', error.message);
       process.exit(1);
     });
 }

@@ -1,3 +1,4 @@
+const { logger } = require('@infrastructure/logging/Logger');
 /**
  * ConfirmationSystem - Service for handling AI confirmation loops
  * Analyzes AI responses and manages confirmation workflows

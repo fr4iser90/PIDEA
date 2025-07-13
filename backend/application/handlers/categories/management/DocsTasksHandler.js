@@ -1,6 +1,7 @@
 const fs = require('fs').promises;
 const fsSync = require('fs');
 const path = require('path');
+
 // Mock marked for Jest compatibility
 let marked;
 try {
@@ -12,6 +13,7 @@ try {
 }
 const crypto = require('crypto');
 const Task = require('@entities/Task');
+const { logger } = require('@infrastructure/logging/Logger');
 
 /**
  * Handler for managing documentation tasks from markdown files
@@ -32,13 +34,13 @@ class DocsTasksHandler {
     const workspaceRoot = this.getWorkspacePath();
     
     if (!workspaceRoot) {
-      console.error('[DocsTasksHandler] Workspace path is undefined');
+      logger.error('[DocsTasksHandler] Workspace path is undefined');
       throw new Error('Workspace path is not available');
     }
     
-    console.log(`[DocsTasksHandler] Workspace root: ${workspaceRoot}`);
+    logger.log(`[DocsTasksHandler] Workspace root: ${workspaceRoot}`);
     const featuresDir = path.resolve(workspaceRoot, 'docs/09_roadmap/features');
-    console.log(`[DocsTasksHandler] Features directory resolved: ${featuresDir}`);
+    logger.log(`[DocsTasksHandler] Features directory resolved: ${featuresDir}`);
     
     return featuresDir;
   }
@@ -88,7 +90,7 @@ class DocsTasksHandler {
         return a.title.localeCompare(b.title);
       });
 
-      console.log(`[DocsTasksHandler] Found ${tasks.length} documentation tasks from database`);
+      logger.log(`[DocsTasksHandler] Found ${tasks.length} documentation tasks from database`);
       
       res.json({
         success: true,
@@ -96,7 +98,7 @@ class DocsTasksHandler {
         count: tasks.length
       });
     } catch (error) {
-      console.error('[DocsTasksHandler] Error getting docs tasks:', error);
+      logger.error('[DocsTasksHandler] Error getting docs tasks:', error);
       res.status(500).json({
         success: false,
         error: 'Failed to retrieve documentation tasks'
@@ -155,14 +157,14 @@ class DocsTasksHandler {
         updatedAt: task.updatedAt
       };
 
-      console.log(`[DocsTasksHandler] Successfully retrieved task details for: ${task.title}`);
+      logger.log(`[DocsTasksHandler] Successfully retrieved task details for: ${task.title}`);
       
       res.json({
         success: true,
         data: taskDetails
       });
     } catch (error) {
-      console.error('[DocsTasksHandler] Error getting task details:', error);
+      logger.error('[DocsTasksHandler] Error getting task details:', error);
       res.status(500).json({
         success: false,
         error: 'Failed to retrieve task details'
@@ -181,13 +183,13 @@ class DocsTasksHandler {
     
     // Check for path traversal attempts
     if (normalizedPath.includes('..') || normalizedPath.startsWith('/') || normalizedPath.startsWith('\\')) {
-      console.warn(`[DocsTasksHandler] Path traversal attempt detected: ${filename}`);
+      logger.warn(`[DocsTasksHandler] Path traversal attempt detected: ${filename}`);
       return null;
     }
     
     // Only allow alphanumeric, hyphens, underscores, and dots
     if (!/^[a-zA-Z0-9._-]+$/.test(normalizedPath)) {
-      console.warn(`[DocsTasksHandler] Invalid filename characters: ${filename}`);
+      logger.warn(`[DocsTasksHandler] Invalid filename characters: ${filename}`);
       return null;
     }
     
@@ -265,7 +267,7 @@ class DocsTasksHandler {
 
       return marked(markdown);
     } catch (error) {
-      console.error('[DocsTasksHandler] Error converting markdown to HTML:', error);
+      logger.error('[DocsTasksHandler] Error converting markdown to HTML:', error);
       return `<p>Error rendering markdown: ${error.message}</p>`;
     }
   }
@@ -296,14 +298,14 @@ class DocsTasksHandler {
    */
   clearCache() {
     this.cache.clear();
-    console.log('[DocsTasksHandler] Cache cleared');
+    logger.log('[DocsTasksHandler] Cache cleared');
   }
 
   /**
    * Sync documentation tasks to repository (now handled by TaskController)
    */
   async syncDocsTasksToRepository() {
-    console.log('[DocsTasksHandler] Sync is now handled by TaskController - skipping');
+    logger.log('[DocsTasksHandler] Sync is now handled by TaskController - skipping');
     return;
   }
 

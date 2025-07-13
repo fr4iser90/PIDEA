@@ -1,3 +1,5 @@
+const { logger } = require('@infrastructure/logging/Logger');
+
 /**
  * StreamingPort Entity
  * 
@@ -70,7 +72,7 @@ class StreamingPort {
     this.errorCount = 0;
     this.lastError = null;
     
-    console.log(`[StreamingPort] Started streaming for port ${this.port}`);
+    logger.log(`[StreamingPort] Started streaming for port ${this.port}`);
   }
 
   /**
@@ -84,7 +86,7 @@ class StreamingPort {
     this.status = 'stopped';
     this.stoppedAt = new Date();
     
-    console.log(`[StreamingPort] Stopped streaming for port ${this.port}`);
+    logger.log(`[StreamingPort] Stopped streaming for port ${this.port}`);
   }
 
   /**
@@ -96,7 +98,7 @@ class StreamingPort {
     }
     
     this.status = 'paused';
-    console.log(`[StreamingPort] Paused streaming for port ${this.port}`);
+    logger.log(`[StreamingPort] Paused streaming for port ${this.port}`);
   }
 
   /**
@@ -108,7 +110,7 @@ class StreamingPort {
     }
     
     this.status = 'active';
-    console.log(`[StreamingPort] Resumed streaming for port ${this.port}`);
+    logger.log(`[StreamingPort] Resumed streaming for port ${this.port}`);
   }
 
   /**
@@ -142,7 +144,7 @@ class StreamingPort {
     this.lastError = error;
     this.status = 'error';
     
-    console.error(`[StreamingPort] Error for port ${this.port}:`, error);
+    logger.error(`[StreamingPort] Error for port ${this.port}:`, error);
   }
 
   /**

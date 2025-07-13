@@ -1,3 +1,4 @@
+
 /**
  * Steps Module - Domain Layer
  * Exports step system components
@@ -5,6 +6,7 @@
 
 const StepRegistry = require('./StepRegistry');
 const StepBuilder = require('./StepBuilder');
+const { logger } = require('@infrastructure/logging/Logger');
 
 // Create singleton instances
 const stepRegistry = new StepRegistry();
@@ -15,18 +17,18 @@ const stepBuilder = new StepBuilder(stepRegistry);
  */
 async function initializeSteps() {
   try {
-    console.log('🚀 Initializing step system...');
+    logger.log('🚀 Initializing step system...');
     
     // Load steps from categories
     await stepRegistry.loadStepsFromCategories();
     
-    console.log('✅ Step system initialized successfully');
+    logger.log('✅ Step system initialized successfully');
     return {
       registry: stepRegistry,
       builder: stepBuilder
     };
   } catch (error) {
-    console.error('❌ Failed to initialize step system:', error.message);
+    logger.error('❌ Failed to initialize step system:', error.message);
     throw error;
   }
 }

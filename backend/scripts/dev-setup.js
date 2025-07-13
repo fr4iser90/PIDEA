@@ -1,3 +1,4 @@
+
 #!/usr/bin/env node
 require('module-alias/register');
 
@@ -23,15 +24,15 @@ class DevSetup {
 
   async showMenu() {
     console.clear();
-    console.log('🚀 PIDEA Development Setup');
-    console.log('==========================');
-    console.log('1. 📊 Database Management');
-    console.log('2. 👤 User Management');
-    console.log('3. 🔧 Service Management');
-    console.log('4. 🛠️  Quick Setup (All-in-one)');
-    console.log('5. 📋 Status Check');
-    console.log('0. ❌ Exit');
-    console.log('');
+    logger.log('🚀 PIDEA Development Setup');
+    logger.log('==========================');
+    logger.log('1. 📊 Database Management');
+    logger.log('2. 👤 User Management');
+    logger.log('3. 🔧 Service Management');
+    logger.log('4. 🛠️  Quick Setup (All-in-one)');
+    logger.log('5. 📋 Status Check');
+    logger.log('0. ❌ Exit');
+    logger.log('');
 
     const choice = await this.question('Select an option: ');
     await this.handleMenuChoice(choice);
@@ -55,25 +56,25 @@ class DevSetup {
         await this.statusCheck();
         break;
       case '0':
-        console.log('👋 Goodbye!');
+        logger.log('👋 Goodbye!');
         this.rl.close();
         process.exit(0);
         break;
       default:
-        console.log('❌ Invalid option. Please try again.');
+        logger.log('❌ Invalid option. Please try again.');
         await this.waitAndReturn();
     }
   }
 
   async databaseMenu() {
     console.clear();
-    console.log('📊 Database Management');
-    console.log('=====================');
-    console.log('1. 🔄 Reset Database');
-    console.log('2. 🗑️  Clear All Data');
-    console.log('3. 📋 Show Database Info');
-    console.log('0. ⬅️  Back to Main Menu');
-    console.log('');
+    logger.log('📊 Database Management');
+    logger.log('=====================');
+    logger.log('1. 🔄 Reset Database');
+    logger.log('2. 🗑️  Clear All Data');
+    logger.log('3. 📋 Show Database Info');
+    logger.log('0. ⬅️  Back to Main Menu');
+    logger.log('');
 
     const choice = await this.question('Select an option: ');
     
@@ -91,7 +92,7 @@ class DevSetup {
         await this.showMenu();
         return;
       default:
-        console.log('❌ Invalid option.');
+        logger.log('❌ Invalid option.');
     }
     
     await this.waitAndReturn();
@@ -100,14 +101,14 @@ class DevSetup {
 
   async userMenu() {
     console.clear();
-    console.log('👤 User Management');
-    console.log('==================');
-    console.log('1. ➕ Create Test User');
-    console.log('2. ➕ Create Custom User');
-    console.log('3. 🗑️  Clear All Users');
-    console.log('4. 📋 List Users');
-    console.log('0. ⬅️  Back to Main Menu');
-    console.log('');
+    logger.log('👤 User Management');
+    logger.log('==================');
+    logger.debug('1. ➕ Create Test User');
+    logger.log('2. ➕ Create Custom User');
+    logger.log('3. 🗑️  Clear All Users');
+    logger.log('4. 📋 List Users');
+    logger.log('0. ⬅️  Back to Main Menu');
+    logger.log('');
 
     const choice = await this.question('Select an option: ');
     
@@ -128,7 +129,7 @@ class DevSetup {
         await this.showMenu();
         return;
       default:
-        console.log('❌ Invalid option.');
+        logger.log('❌ Invalid option.');
     }
     
     await this.waitAndReturn();
@@ -137,15 +138,15 @@ class DevSetup {
 
   async serviceMenu() {
     console.clear();
-    console.log('🔧 Service Management');
-    console.log('====================');
-    console.log('1. 🚀 Start Backend');
-    console.log('2. 🚀 Start Frontend');
-    console.log('3. 🚀 Start Both Services');
-    console.log('4. 🛑 Stop All Services');
-    console.log('5. 🔄 Restart Backend');
-    console.log('0. ⬅️  Back to Main Menu');
-    console.log('');
+    logger.log('🔧 Service Management');
+    logger.log('====================');
+    logger.log('1. 🚀 Start Backend');
+    logger.log('2. 🚀 Start Frontend');
+    logger.log('3. 🚀 Start Both Services');
+    logger.log('4. 🛑 Stop All Services');
+    logger.log('5. 🔄 Restart Backend');
+    logger.log('0. ⬅️  Back to Main Menu');
+    logger.log('');
 
     const choice = await this.question('Select an option: ');
     
@@ -169,7 +170,7 @@ class DevSetup {
         await this.showMenu();
         return;
       default:
-        console.log('❌ Invalid option.');
+        logger.log('❌ Invalid option.');
     }
     
     await this.waitAndReturn();
@@ -177,30 +178,30 @@ class DevSetup {
   }
 
   async resetDatabase() {
-    console.log('🔄 Resetting database...');
+    logger.log('🔄 Resetting database...');
     try {
       const { execSync } = require('child_process');
       execSync('node scripts/reset-database.js', { 
         stdio: 'inherit',
         cwd: path.join(__dirname, '..')
       });
-      console.log('✅ Database reset successful!');
+      logger.log('✅ Database reset successful!');
     } catch (error) {
-      console.error('❌ Database reset failed:', error.message);
+      logger.error('❌ Database reset failed:', error.message);
     }
   }
 
   async clearDatabase() {
-    console.log('🗑️ Clearing all data...');
+    logger.log('🗑️ Clearing all data...');
     try {
       const { execSync } = require('child_process');
       execSync('node scripts/clean-invalid-users.js', { 
         stdio: 'inherit',
         cwd: path.join(__dirname, '..')
       });
-      console.log('✅ All data cleared!');
+      logger.log('✅ All data cleared!');
     } catch (error) {
-      console.error('❌ Clear failed:', error.message);
+      logger.error('❌ Clear failed:', error.message);
     }
   }
 
@@ -208,17 +209,17 @@ class DevSetup {
     const dbPath = path.join(__dirname, '../database/PIDEA-dev.db');
     if (fs.existsSync(dbPath)) {
       const stats = fs.statSync(dbPath);
-      console.log('📊 Database Info:');
-      console.log(`📁 Path: ${dbPath}`);
-      console.log(`📏 Size: ${(stats.size / 1024).toFixed(2)} KB`);
-      console.log(`📅 Modified: ${stats.mtime.toLocaleString()}`);
+      logger.log('📊 Database Info:');
+      logger.log(`📁 Path: ${dbPath}`);
+      logger.log(`📏 Size: ${(stats.size / 1024).toFixed(2)} KB`);
+      logger.log(`📅 Modified: ${stats.mtime.toLocaleString()}`);
     } else {
-      console.log('❌ Database file not found');
+      logger.log('❌ Database file not found');
     }
   }
 
   async createTestUser() {
-    console.log('👤 Creating test user...');
+    logger.debug('👤 Creating test user...');
     try {
       const { execSync } = require('child_process');
       execSync('node scripts/create-test-user.js', { 
@@ -226,20 +227,20 @@ class DevSetup {
         cwd: path.join(__dirname, '..')
       });
     } catch (error) {
-      console.error('❌ Failed to create test user:', error.message);
+      logger.error('❌ Failed to create test user:', error.message);
     }
   }
 
   async createCustomUser() {
-    console.log('👤 Create Custom User');
-    console.log('====================');
+    logger.log('👤 Create Custom User');
+    logger.log('====================');
     
     const email = await this.question('Email: ');
     const password = await this.question('Password: ');
     const username = await this.question('Username (optional): ');
     
     if (!email || !password) {
-      console.log('❌ Email and password are required!');
+      logger.log('❌ Email and password are required!');
       return;
     }
 
@@ -273,13 +274,13 @@ class DevSetup {
           JSON.stringify({ username: username || null })
         ], function(err) {
           if (err) {
-            console.error('❌ Error creating user:', err.message);
+            logger.error('❌ Error creating user:', err.message);
             reject(err);
           } else {
-            console.log('✅ User created successfully!');
-            console.log(`📧 Email: ${email}`);
-            console.log(`🔑 Password: ${password}`);
-            if (username) console.log(`👤 Username: ${username}`);
+            logger.log('✅ User created successfully!');
+            logger.log(`📧 Email: ${email}`);
+            logger.log(`🔑 Password: ${password}`);
+            if (username) logger.log(`👤 Username: ${username}`);
             resolve();
           }
         });
@@ -287,21 +288,21 @@ class DevSetup {
 
       db.close();
     } catch (error) {
-      console.error('❌ Failed to create user:', error.message);
+      logger.error('❌ Failed to create user:', error.message);
     }
   }
 
   async clearUsers() {
-    console.log('🗑️ Clearing all users...');
+    logger.log('🗑️ Clearing all users...');
     try {
       const { execSync } = require('child_process');
       execSync('node scripts/clean-invalid-users.js', { 
         stdio: 'inherit',
         cwd: path.join(__dirname, '..')
       });
-      console.log('✅ All users cleared!');
+      logger.log('✅ All users cleared!');
     } catch (error) {
-      console.error('❌ Clear failed:', error.message);
+      logger.error('❌ Clear failed:', error.message);
     }
   }
 
@@ -315,32 +316,32 @@ class DevSetup {
       
       db.all(sql, [], (err, rows) => {
         if (err) {
-          console.error('❌ Error listing users:', err.message);
+          logger.error('❌ Error listing users:', err.message);
         } else {
-          console.log('📋 Users:');
-          console.log('ID'.padEnd(38) + 'Email'.padEnd(25) + 'Role'.padEnd(10) + 'Created');
-          console.log('-'.repeat(80));
+          logger.log('📋 Users:');
+          logger.log('ID'.padEnd(38) + 'Email'.padEnd(25) + 'Role'.padEnd(10) + 'Created');
+          logger.log('-'.repeat(80));
           
           rows.forEach(row => {
             const id = row.id.substring(0, 8) + '...';
             const email = row.email.padEnd(25);
             const role = row.role.padEnd(10);
             const created = new Date(row.created_at).toLocaleDateString();
-            console.log(`${id} ${email} ${role} ${created}`);
+            logger.log(`${id} ${email} ${role} ${created}`);
           });
           
-          console.log(`\nTotal users: ${rows.length}`);
+          logger.log(`\nTotal users: ${rows.length}`);
         }
         db.close();
       });
     } catch (error) {
-      console.error('❌ Failed to list users:', error.message);
+      logger.error('❌ Failed to list users:', error.message);
     }
   }
 
   async startBackend() {
-    console.log('🚀 Starting backend...');
-    console.log('💡 Press Ctrl+C to stop');
+    logger.log('🚀 Starting backend...');
+    logger.log('💡 Press Ctrl+C to stop');
     
     const backendProcess = spawn('npm', ['run', 'dev:backend'], {
       cwd: this.projectRoot,
@@ -349,13 +350,13 @@ class DevSetup {
     });
 
     backendProcess.on('error', (error) => {
-      console.error('❌ Failed to start backend:', error.message);
+      logger.error('❌ Failed to start backend:', error.message);
     });
   }
 
   async startFrontend() {
-    console.log('🚀 Starting frontend...');
-    console.log('💡 Press Ctrl+C to stop');
+    logger.log('🚀 Starting frontend...');
+    logger.log('💡 Press Ctrl+C to stop');
     
     const frontendProcess = spawn('npm', ['run', 'dev:frontend'], {
       cwd: this.projectRoot,
@@ -364,13 +365,13 @@ class DevSetup {
     });
 
     frontendProcess.on('error', (error) => {
-      console.error('❌ Failed to start frontend:', error.message);
+      logger.error('❌ Failed to start frontend:', error.message);
     });
   }
 
   async startBothServices() {
-    console.log('🚀 Starting both services...');
-    console.log('💡 Press Ctrl+C to stop');
+    logger.log('🚀 Starting both services...');
+    logger.log('💡 Press Ctrl+C to stop');
     
     const bothProcess = spawn('npm', ['run', 'dev'], {
       cwd: this.projectRoot,
@@ -379,37 +380,37 @@ class DevSetup {
     });
 
     bothProcess.on('error', (error) => {
-      console.error('❌ Failed to start services:', error.message);
+      logger.error('❌ Failed to start services:', error.message);
     });
   }
 
   async stopServices() {
-    console.log('🛑 Stopping services...');
+    logger.log('🛑 Stopping services...');
     try {
       const { execSync } = require('child_process');
       execSync('pkill -f "node.*start"', { stdio: 'inherit' });
       execSync('pkill -f "npm.*dev"', { stdio: 'inherit' });
-      console.log('✅ Services stopped!');
+      logger.log('✅ Services stopped!');
     } catch (error) {
-      console.log('ℹ️ No services were running or already stopped');
+      logger.log('ℹ️ No services were running or already stopped');
     }
   }
 
   async restartBackend() {
-    console.log('🔄 Restarting backend...');
+    logger.log('🔄 Restarting backend...');
     await this.stopServices();
     await new Promise(resolve => setTimeout(resolve, 1000));
     await this.startBackend();
   }
 
   async quickSetup() {
-    console.log('🛠️ Quick Setup - All-in-one');
-    console.log('==========================');
-    console.log('This will:');
-    console.log('1. Reset the database');
-    console.log('2. Create a test user');
-    console.log('3. Show status');
-    console.log('');
+    logger.log('🛠️ Quick Setup - All-in-one');
+    logger.log('==========================');
+    logger.log('This will:');
+    logger.log('1. Reset the database');
+    logger.debug('2. Create a test user');
+    logger.log('3. Show status');
+    logger.log('');
     
     const confirm = await this.question('Continue? (y/N): ');
     if (confirm.toLowerCase() !== 'y') {
@@ -417,31 +418,31 @@ class DevSetup {
       return;
     }
 
-    console.log('🔄 Resetting database...');
+    logger.log('🔄 Resetting database...');
     await this.resetDatabase();
     
-    console.log('👤 Creating test user...');
+    logger.debug('👤 Creating test user...');
     await this.createTestUser();
     
-    console.log('📋 Checking status...');
+    logger.log('📋 Checking status...');
     await this.statusCheck();
     
-    console.log('✅ Quick setup completed!');
+    logger.log('✅ Quick setup completed!');
     await this.waitAndReturn();
     await this.showMenu();
   }
 
   async statusCheck() {
-    console.log('📋 System Status');
-    console.log('===============');
+    logger.log('📋 System Status');
+    logger.log('===============');
     
     // Check database
     const dbPath = path.join(__dirname, '../database/PIDEA-dev.db');
     if (fs.existsSync(dbPath)) {
       const stats = fs.statSync(dbPath);
-      console.log(`✅ Database: ${(stats.size / 1024).toFixed(2)} KB`);
+      logger.log(`✅ Database: ${(stats.size / 1024).toFixed(2)} KB`);
     } else {
-      console.log('❌ Database: Not found');
+      logger.log('❌ Database: Not found');
     }
     
     // Check users
@@ -451,43 +452,44 @@ class DevSetup {
       
       db.get('SELECT COUNT(*) as count FROM users', (err, row) => {
         if (err) {
-          console.log('❌ Users: Error checking');
+          logger.log('❌ Users: Error checking');
         } else {
-          console.log(`✅ Users: ${row.count} registered`);
+          logger.log(`✅ Users: ${row.count} registered`);
         }
         db.close();
       });
     } catch (error) {
-      console.log('❌ Users: Error checking');
+      logger.log('❌ Users: Error checking');
     }
     
     // Check ports
     const { execSync } = require('child_process');
+const { logger } = require('@infrastructure/logging/Logger');
     try {
       const backendPort = execSync('lsof -i :3000', { encoding: 'utf8' });
-      console.log('✅ Backend: Running on port 3000');
+      logger.log('✅ Backend: Running on port 3000');
     } catch {
-      console.log('❌ Backend: Not running');
+      logger.log('❌ Backend: Not running');
     }
     
     try {
       const frontendPort = execSync('lsof -i :4005', { encoding: 'utf8' });
-      console.log('✅ Frontend: Running on port 4005');
+      logger.log('✅ Frontend: Running on port 4005');
     } catch {
-      console.log('❌ Frontend: Not running');
+      logger.log('❌ Frontend: Not running');
     }
   }
 
   async waitAndReturn() {
-    console.log('');
+    logger.log('');
     await this.question('Press Enter to continue...');
   }
 
   async run() {
-    console.log('🚀 PIDEA Development Setup');
-    console.log('==========================');
-    console.log('Welcome to the PIDEA development setup!');
-    console.log('');
+    logger.log('🚀 PIDEA Development Setup');
+    logger.log('==========================');
+    logger.log('Welcome to the PIDEA development setup!');
+    logger.log('');
     
     await this.showMenu();
   }
@@ -495,4 +497,4 @@ class DevSetup {
 
 // Run the setup
 const setup = new DevSetup();
-setup.run().catch(console.error); 
+setup.run().catch(logger.error); 

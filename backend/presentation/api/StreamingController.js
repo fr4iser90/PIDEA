@@ -1,3 +1,4 @@
+
 /**
  * StreamingController
  * 
@@ -6,6 +7,7 @@
  */
 const PortStreamingCommand = require('@commands/categories/management/PortStreamingCommand');
 const PortStreamingHandler = require('@handlers/categories/management/PortStreamingHandler');
+const { logger } = require('@infrastructure/logging/Logger');
 
 class StreamingController {
   constructor(screenshotStreamingService, eventBus = null) {
@@ -61,7 +63,7 @@ class StreamingController {
       }
       
     } catch (error) {
-      console.error('[StreamingController] Error starting streaming:', error.message);
+      logger.error('[StreamingController] Error starting streaming:', error.message);
       res.status(500).json({
         success: false,
         error: 'Internal server error',
@@ -108,7 +110,7 @@ class StreamingController {
       }
       
     } catch (error) {
-      console.error('[StreamingController] Error stopping streaming:', error.message);
+      logger.error('[StreamingController] Error stopping streaming:', error.message);
       res.status(500).json({
         success: false,
         error: 'Internal server error',
@@ -151,7 +153,7 @@ class StreamingController {
       });
       
     } catch (error) {
-      console.error('[StreamingController] Error getting port status:', error.message);
+      logger.error('[StreamingController] Error getting port status:', error.message);
       res.status(500).json({
         success: false,
         error: 'Internal server error',
@@ -175,7 +177,7 @@ class StreamingController {
       });
       
     } catch (error) {
-      console.error('[StreamingController] Error getting all ports:', error.message);
+      logger.error('[StreamingController] Error getting all ports:', error.message);
       res.status(500).json({
         success: false,
         error: 'Internal server error',
@@ -229,7 +231,7 @@ class StreamingController {
       }
       
     } catch (error) {
-      console.error('[StreamingController] Error updating port config:', error.message);
+      logger.error('[StreamingController] Error updating port config:', error.message);
       res.status(500).json({
         success: false,
         error: 'Internal server error',
@@ -276,7 +278,7 @@ class StreamingController {
       }
       
     } catch (error) {
-      console.error('[StreamingController] Error pausing streaming:', error.message);
+      logger.error('[StreamingController] Error pausing streaming:', error.message);
       res.status(500).json({
         success: false,
         error: 'Internal server error',
@@ -323,7 +325,7 @@ class StreamingController {
       }
       
     } catch (error) {
-      console.error('[StreamingController] Error resuming streaming:', error.message);
+      logger.error('[StreamingController] Error resuming streaming:', error.message);
       res.status(500).json({
         success: false,
         error: 'Internal server error',
@@ -346,7 +348,7 @@ class StreamingController {
       });
       
     } catch (error) {
-      console.error('[StreamingController] Error getting stats:', error.message);
+      logger.error('[StreamingController] Error getting stats:', error.message);
       res.status(500).json({
         success: false,
         error: 'Internal server error',
@@ -370,7 +372,7 @@ class StreamingController {
       });
       
     } catch (error) {
-      console.error('[StreamingController] Error stopping all streaming:', error.message);
+      logger.error('[StreamingController] Error stopping all streaming:', error.message);
       res.status(500).json({
         success: false,
         error: 'Internal server error',
@@ -397,7 +399,7 @@ class StreamingController {
       });
       
     } catch (error) {
-      console.error('[StreamingController] Health check error:', error.message);
+      logger.error('[StreamingController] Health check error:', error.message);
       res.status(500).json({
         success: false,
         healthy: false,

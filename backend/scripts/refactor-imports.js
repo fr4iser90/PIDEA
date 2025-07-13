@@ -1,3 +1,4 @@
+
 #!/usr/bin/env node
 require('module-alias/register');
 
@@ -102,6 +103,7 @@ function replaceAllImports(content) {
             if (relPath.startsWith(from)) {
                 changed = true;
                 return `= require('${relPath.replace(from, to)}')`;
+const { logger } = require('@infrastructure/logging/Logger');
             }
         }
         return match;
@@ -115,10 +117,10 @@ function processFile(filePath) {
         const { content: newContent, changed } = replaceAllImports(content);
         if (changed) {
             fs.writeFileSync(filePath, newContent, 'utf8');
-            console.log(`✅ Updated ${filePath}`);
+            logger.log(`✅ Updated ${filePath}`);
         }
     } catch (e) {
-        console.error(`❌ Error in ${filePath}: ${e.message}`);
+        logger.error(`❌ Error in ${filePath}: ${e.message}`);
     }
 }
 
@@ -145,7 +147,7 @@ function main() {
     const rootDir = process.cwd();
     const files = findJavaScriptFiles(rootDir);
     files.forEach(processFile);
-    console.log('🚀 Alle relativen Imports wurden refactort!');
+    logger.log('🚀 Alle relativen Imports wurden refactort!');
 }
 
 if (require.main === module) {

@@ -1,5 +1,7 @@
 const UserRepository = require('@repositories/UserRepository');
 const User = require('@entities/User');
+const { logger } = require('@infrastructure/logging/Logger');
+
 
 class PostgreSQLUserRepository extends UserRepository {
   constructor(databaseConnection) {
@@ -65,7 +67,7 @@ class PostgreSQLUserRepository extends UserRepository {
       try {
         metadata = typeof row.metadata === 'string' ? JSON.parse(row.metadata) : row.metadata;
       } catch (error) {
-        console.warn('Failed to parse metadata for user:', id, error.message);
+        logger.warn('Failed to parse metadata for user:', id, error.message);
         metadata = {};
       }
     }
@@ -98,7 +100,7 @@ class PostgreSQLUserRepository extends UserRepository {
       try {
         metadata = typeof row.metadata === 'string' ? JSON.parse(row.metadata) : row.metadata;
       } catch (error) {
-        console.warn('Failed to parse metadata for user:', email, error.message);
+        logger.warn('Failed to parse metadata for user:', email, error.message);
         metadata = {};
       }
     }
@@ -126,7 +128,7 @@ class PostgreSQLUserRepository extends UserRepository {
         try {
           metadata = typeof row.metadata === 'string' ? JSON.parse(row.metadata) : row.metadata;
         } catch (error) {
-          console.warn('Failed to parse metadata for user:', row.id, error.message);
+          logger.warn('Failed to parse metadata for user:', row.id, error.message);
           metadata = {};
         }
       }
@@ -203,7 +205,7 @@ class PostgreSQLUserRepository extends UserRepository {
         try {
           metadata = typeof row.metadata === 'string' ? JSON.parse(row.metadata) : row.metadata;
         } catch (error) {
-          console.warn('Failed to parse metadata for user:', row.id, error.message);
+          logger.warn('Failed to parse metadata for user:', row.id, error.message);
           metadata = {};
         }
       }

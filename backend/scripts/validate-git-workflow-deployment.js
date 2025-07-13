@@ -1,3 +1,4 @@
+
 #!/usr/bin/env node
 require('module-alias/register');
 
@@ -26,7 +27,7 @@ class GitWorkflowDeploymentValidator {
    * Run all validation checks
    */
   async validate() {
-    console.log('🔍 Starting Git Workflow Deployment Validation...\n');
+    logger.log('🔍 Starting Git Workflow Deployment Validation...\n');
 
     try {
       // Validate configuration
@@ -60,7 +61,7 @@ class GitWorkflowDeploymentValidator {
       this.generateValidationReport();
       
     } catch (error) {
-      console.error('❌ Validation failed with error:', error.message);
+      logger.error('❌ Validation failed with error:', error.message);
       process.exit(1);
     }
   }
@@ -69,7 +70,7 @@ class GitWorkflowDeploymentValidator {
    * Validate deployment configuration
    */
   async validateConfiguration() {
-    console.log('📋 Validating deployment configuration...');
+    logger.log('📋 Validating deployment configuration...');
     
     const environments = ['development', 'staging', 'production'];
     
@@ -131,7 +132,7 @@ class GitWorkflowDeploymentValidator {
    * Validate file structure
    */
   async validateFileStructure() {
-    console.log('📁 Validating file structure...');
+    logger.log('📁 Validating file structure...');
     
     const requiredFiles = [
       'backend/domain/workflows/git/GitWorkflowManager.js',
@@ -169,7 +170,7 @@ class GitWorkflowDeploymentValidator {
    * Validate dependencies
    */
   async validateDependencies() {
-    console.log('📦 Validating dependencies...');
+    logger.log('📦 Validating dependencies...');
     
     try {
       // Check if required modules can be loaded
@@ -183,6 +184,7 @@ class GitWorkflowDeploymentValidator {
       for (const module of requiredModules) {
         try {
           require(module);
+const { logger } = require('@infrastructure/logging/Logger');
           this.addPass(`Module loaded successfully: ${module}`);
         } catch (error) {
           this.addError(`Failed to load module ${module}: ${error.message}`);
@@ -223,7 +225,7 @@ class GitWorkflowDeploymentValidator {
    * Validate integration points
    */
   async validateIntegrationPoints() {
-    console.log('🔗 Validating integration points...');
+    logger.log('🔗 Validating integration points...');
     
     const integrationFiles = [
       'backend/domain/services/WorkflowGitService.js',
@@ -267,7 +269,7 @@ class GitWorkflowDeploymentValidator {
    * Validate environment variables
    */
   async validateEnvironmentVariables() {
-    console.log('🌍 Validating environment variables...');
+    logger.log('🌍 Validating environment variables...');
     
     const requiredEnvVars = [
       'NODE_ENV',
@@ -308,7 +310,7 @@ class GitWorkflowDeploymentValidator {
    * Validate database schema
    */
   async validateDatabaseSchema() {
-    console.log('🗄️ Validating database schema...');
+    logger.log('🗄️ Validating database schema...');
     
     // Check if database migration files exist
     const migrationFiles = [
@@ -357,7 +359,7 @@ class GitWorkflowDeploymentValidator {
    * Validate security configuration
    */
   async validateSecurityConfiguration() {
-    console.log('🔒 Validating security configuration...');
+    logger.log('🔒 Validating security configuration...');
     
     const environments = ['development', 'staging', 'production'];
     
@@ -391,7 +393,7 @@ class GitWorkflowDeploymentValidator {
    * Validate performance configuration
    */
   async validatePerformanceConfiguration() {
-    console.log('⚡ Validating performance configuration...');
+    logger.log('⚡ Validating performance configuration...');
     
     const environments = ['development', 'staging', 'production'];
     
@@ -420,7 +422,7 @@ class GitWorkflowDeploymentValidator {
    * Validate monitoring setup
    */
   async validateMonitoringSetup() {
-    console.log('📊 Validating monitoring setup...');
+    logger.log('📊 Validating monitoring setup...');
     
     const environments = ['development', 'staging', 'production'];
     
@@ -455,7 +457,7 @@ class GitWorkflowDeploymentValidator {
    */
   addPass(message) {
     this.validationResults.passed++;
-    console.log(`✅ ${message}`);
+    logger.log(`✅ ${message}`);
   }
 
   /**
@@ -463,7 +465,7 @@ class GitWorkflowDeploymentValidator {
    */
   addWarning(message) {
     this.validationResults.warnings++;
-    console.log(`⚠️ ${message}`);
+    logger.log(`⚠️ ${message}`);
   }
 
   /**
@@ -472,47 +474,47 @@ class GitWorkflowDeploymentValidator {
   addError(message) {
     this.validationResults.failed++;
     this.validationResults.errors.push(message);
-    console.log(`❌ ${message}`);
+    logger.log(`❌ ${message}`);
   }
 
   /**
    * Generate validation report
    */
   generateValidationReport() {
-    console.log('\n📋 Validation Report');
-    console.log('==================');
-    console.log(`✅ Passed: ${this.validationResults.passed}`);
-    console.log(`⚠️ Warnings: ${this.validationResults.warnings}`);
-    console.log(`❌ Failed: ${this.validationResults.failed}`);
+    logger.log('\n📋 Validation Report');
+    logger.log('==================');
+    logger.log(`✅ Passed: ${this.validationResults.passed}`);
+    logger.log(`⚠️ Warnings: ${this.validationResults.warnings}`);
+    logger.log(`❌ Failed: ${this.validationResults.failed}`);
     
     if (this.validationResults.errors.length > 0) {
-      console.log('\n❌ Errors:');
+      logger.log('\n❌ Errors:');
       this.validationResults.errors.forEach((error, index) => {
-        console.log(`${index + 1}. ${error}`);
+        logger.log(`${index + 1}. ${error}`);
       });
     }
     
-    console.log('\n🎯 Deployment Readiness:');
+    logger.log('\n🎯 Deployment Readiness:');
     if (this.validationResults.failed === 0) {
-      console.log('✅ READY FOR DEPLOYMENT');
-      console.log('All critical validations passed. The enhanced git workflow system is ready for deployment.');
+      logger.log('✅ READY FOR DEPLOYMENT');
+      logger.log('All critical validations passed. The enhanced git workflow system is ready for deployment.');
     } else if (this.validationResults.failed <= 3) {
-      console.log('⚠️ DEPLOYMENT READY WITH WARNINGS');
-      console.log('Some non-critical validations failed. Review warnings before deployment.');
+      logger.log('⚠️ DEPLOYMENT READY WITH WARNINGS');
+      logger.log('Some non-critical validations failed. Review warnings before deployment.');
     } else {
-      console.log('❌ NOT READY FOR DEPLOYMENT');
-      console.log('Critical validations failed. Fix errors before deployment.');
+      logger.log('❌ NOT READY FOR DEPLOYMENT');
+      logger.log('Critical validations failed. Fix errors before deployment.');
       process.exit(1);
     }
     
-    console.log('\n📈 Recommendations:');
+    logger.log('\n📈 Recommendations:');
     if (this.validationResults.warnings > 0) {
-      console.log('- Review and address warnings for optimal configuration');
+      logger.log('- Review and address warnings for optimal configuration');
     }
     if (this.validationResults.failed === 0) {
-      console.log('- Consider running integration tests before deployment');
-      console.log('- Monitor system performance after deployment');
-      console.log('- Set up alerting for git workflow metrics');
+      logger.debug('- Consider running integration tests before deployment');
+      logger.log('- Monitor system performance after deployment');
+      logger.log('- Set up alerting for git workflow metrics');
     }
   }
 }
@@ -521,7 +523,7 @@ class GitWorkflowDeploymentValidator {
 if (require.main === module) {
   const validator = new GitWorkflowDeploymentValidator();
   validator.validate().catch(error => {
-    console.error('Validation script failed:', error);
+    logger.error('Validation script failed:', error);
     process.exit(1);
   });
 }

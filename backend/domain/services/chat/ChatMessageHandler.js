@@ -1,4 +1,6 @@
 const IDETypes = require('../ide/IDETypes');
+const { logger } = require('@infrastructure/logging/Logger');
+
 
 class ChatMessageHandler {
   constructor(browserManager, ideType = IDETypes.CURSOR) {
@@ -7,7 +9,7 @@ class ChatMessageHandler {
     this.selectors = IDETypes.getChatSelectors(ideType);
     
     if (!this.selectors) {
-      console.warn(`[ChatMessageHandler] No chat selectors found for IDE type: ${ideType}`);
+      logger.warn(`[ChatMessageHandler] No chat selectors found for IDE type: ${ideType}`);
     }
   }
 
@@ -39,7 +41,7 @@ class ChatMessageHandler {
         timestamp: new Date()
       };
     } catch (error) {
-      console.error(`[ChatMessageHandler] Error sending message to ${this.ideType}:`, error.message);
+      logger.error(`[ChatMessageHandler] Error sending message to ${this.ideType}:`, error.message);
       throw error;
     }
   }
@@ -53,7 +55,7 @@ class ChatMessageHandler {
     const timeout = options.timeout || 300000; // 5 minutes default
     const checkInterval = options.checkInterval || 5000; // Check every 5 seconds
     
-    console.log(`⏳ [ChatMessageHandler] Waiting for AI to finish editing in ${this.ideType}...`);
+    logger.log(`⏳ [ChatMessageHandler] Waiting for AI to finish editing in ${this.ideType}...`);
     
     const startTime = Date.now();
     let lastMessageCount = 0;
@@ -65,7 +67,7 @@ class ChatMessageHandler {
         // Get fresh page reference in case it changed
         const page = await this.browserManager.getPage();
         if (!page) {
-          console.error(`[ChatMessageHandler] No page available for ${this.ideType}`);
+          logger.error(`[ChatMessageHandler] No page available for ${this.ideType}`);
           break;
         }
         
@@ -78,13 +80,13 @@ class ChatMessageHandler {
         // Check if message count is stable (no new messages)
         if (currentMessageCount === lastMessageCount) {
           stableCount++;
-          console.log(`📊 [ChatMessageHandler] AI response stable in ${this.ideType}: ${currentMessageCount} messages (${stableCount}/${requiredStableChecks})`);
+          logger.log(`📊 [ChatMessageHandler] AI response stable in ${this.ideType}: ${currentMessageCount} messages (${stableCount}/${requiredStableChecks})`);
           
           if (stableCount >= requiredStableChecks) {
             // Get the latest AI response
             const latestResponse = await this.extractLatestAIResponse(page);
             
-            console.log(`✅ [ChatMessageHandler] AI finished editing in ${this.ideType}`);
+            logger.log(`✅ [ChatMessageHandler] AI finished editing in ${this.ideType}`);
             return {
               success: true,
               response: latestResponse,
@@ -97,7 +99,7 @@ class ChatMessageHandler {
         } else {
           // Reset stable count if new message detected
           stableCount = 0;
-          console.log(`📝 [ChatMessageHandler] AI still working in ${this.ideType}: ${currentMessageCount} messages`);
+          logger.log(`📝 [ChatMessageHandler] AI still working in ${this.ideType}: ${currentMessageCount} messages`);
         }
         
         lastMessageCount = currentMessageCount;
@@ -106,16 +108,16 @@ class ChatMessageHandler {
         await page.waitForTimeout(checkInterval);
         
       } catch (error) {
-        console.error(`[ChatMessageHandler] Error checking AI response in ${this.ideType}:`, error.message);
+        logger.error(`[ChatMessageHandler] Error checking AI response in ${this.ideType}:`, error.message);
         
         // If page is closed, try to get a fresh page reference
         if (error.message.includes('Target page, context or browser has been closed')) {
-          console.log(`[ChatMessageHandler] Page was closed, trying to get fresh page reference...`);
+          logger.log(`[ChatMessageHandler] Page was closed, trying to get fresh page reference...`);
           try {
             await this.browserManager.getPage(); // This will reconnect if needed
             await page.waitForTimeout(1000); // Wait a bit before retrying
           } catch (reconnectError) {
-            console.error(`[ChatMessageHandler] Failed to reconnect:`, reconnectError.message);
+            logger.error(`[ChatMessageHandler] Failed to reconnect:`, reconnectError.message);
             break;
           }
         }
@@ -123,7 +125,7 @@ class ChatMessageHandler {
     }
     
     // Timeout reached
-    console.log(`⏰ [ChatMessageHandler] Timeout reached in ${this.ideType}, extracting partial response`);
+    logger.log(`⏰ [ChatMessageHandler] Timeout reached in ${this.ideType}, extracting partial response`);
     const partialResponse = await this.extractLatestAIResponse(page);
     
     return {
@@ -146,7 +148,7 @@ class ChatMessageHandler {
       // Get fresh page reference in case it changed
       const currentPage = await this.browserManager.getPage();
       if (!currentPage) {
-        console.error(`[ChatMessageHandler] No page available for extracting AI response from ${this.ideType}`);
+        logger.error(`[ChatMessageHandler] No page available for extracting AI response from ${this.ideType}`);
         return '';
       }
       
@@ -163,7 +165,7 @@ class ChatMessageHandler {
       
       return response.trim();
     } catch (error) {
-      console.error(`[ChatMessageHandler] Error extracting AI response from ${this.ideType}:`, error.message);
+      logger.error(`[ChatMessageHandler] Error extracting AI response from ${this.ideType}:`, error.message);
       return '';
     }
   }

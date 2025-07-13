@@ -1,3 +1,5 @@
+const { logger } = require('@infrastructure/logging/Logger');
+
 /**
  * Code Quality Framework - Analysis Category
  * Provides comprehensive code quality analysis and reporting
@@ -94,7 +96,7 @@ const config = {
  */
 async function execute(context = {}, options = {}) {
   try {
-    console.log('🔍 Starting code quality analysis...');
+    logger.log('🔍 Starting code quality analysis...');
     
     const results = {
       framework: config.name,
@@ -112,7 +114,7 @@ async function execute(context = {}, options = {}) {
     // Execute each step in order
     for (const step of config.steps) {
       try {
-        console.log(`📋 Executing step: ${step.name}`);
+        logger.log(`📋 Executing step: ${step.name}`);
         
         const stepResult = await executeStep(step, context, options);
         results.steps.push(stepResult);
@@ -125,7 +127,7 @@ async function execute(context = {}, options = {}) {
         }
         
       } catch (error) {
-        console.error(`❌ Step "${step.name}" failed:`, error.message);
+        logger.error(`❌ Step "${step.name}" failed:`, error.message);
         
         if (step.required && options.failOnError !== false) {
           throw error;
@@ -143,11 +145,11 @@ async function execute(context = {}, options = {}) {
     // Calculate quality score
     results.summary.qualityScore = calculateQualityScore(results);
     
-    console.log(`✅ Code quality analysis completed. Score: ${results.summary.qualityScore}/100`);
+    logger.log(`✅ Code quality analysis completed. Score: ${results.summary.qualityScore}/100`);
     return results;
     
   } catch (error) {
-    console.error('❌ Code quality analysis failed:', error.message);
+    logger.error('❌ Code quality analysis failed:', error.message);
     throw error;
   }
 }

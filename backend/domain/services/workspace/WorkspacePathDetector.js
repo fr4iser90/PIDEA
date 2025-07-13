@@ -1,3 +1,4 @@
+
 class WorkspacePathDetector {
   constructor(browserManager, ideManager) {
     this.browserManager = browserManager;
@@ -60,6 +61,7 @@ class WorkspacePathDetector {
     for (const file of projectFiles) {
       try {
         const fs = require('fs');
+const { logger } = require('@infrastructure/logging/Logger');
         const filePath = path + '/' + file;
         if (fs.existsSync(filePath)) {
           return true;
@@ -83,13 +85,13 @@ class WorkspacePathDetector {
     // Prüfe Backend-Cache
     const cached = this.ideManager.getWorkspacePath(port);
     if (cached) {
-      console.log(`[WorkspacePathDetector] Workspace path for port ${port} already set/cached:`, cached);
+      logger.log(`[WorkspacePathDetector] Workspace path for port ${port} already set/cached:`, cached);
       return cached;
     }
     
     // Prüfe, ob bereits eine Erkennung läuft
     if (this._workspaceDetectionInProgress && this._workspaceDetectionInProgress[port]) {
-      console.log(`[WorkspacePathDetector] Workspace detection already in progress for port ${port}, waiting...`);
+      logger.log(`[WorkspacePathDetector] Workspace detection already in progress for port ${port}, waiting...`);
       await this._workspaceDetectionInProgress[port];
       return this.ideManager.getWorkspacePath(port);
     }
@@ -102,11 +104,11 @@ class WorkspacePathDetector {
         if (!page) throw new Error('No Cursor IDE page available');
         
         // Method 1: Try to execute pwd command in terminal to get actual working directory
-        console.log(`[WorkspacePathDetector] Trying to get pwd from terminal for port ${port}...`);
+        logger.log(`[WorkspacePathDetector] Trying to get pwd from terminal for port ${port}...`);
         
         // Determine IDE type and use appropriate terminal shortcut
         const ideType = this.ideManager.getIDEType(port) || 'cursor';
-        console.log(`[WorkspacePathDetector] Detected IDE type: ${ideType}`);
+        logger.log(`[WorkspacePathDetector] Detected IDE type: ${ideType}`);
         
         // Use appropriate terminal shortcut based on IDE type
         if (ideType === 'vscode') {
@@ -132,7 +134,7 @@ class WorkspacePathDetector {
                              await page.$('.xterm textarea');
         
         if (terminalInput) {
-          console.log('[WorkspacePathDetector] Found terminal input, sending pwd command...');
+          logger.log('[WorkspacePathDetector] Found terminal input, sending pwd command...');
           
           // Focus and send pwd command
           await terminalInput.focus();
@@ -148,14 +150,14 @@ class WorkspacePathDetector {
           
           if (terminalOutput) {
             const text = await terminalOutput.textContent();
-            console.log('[WorkspacePathDetector] Terminal output:', text);
+            logger.log('[WorkspacePathDetector] Terminal output:', text);
             
             // Find the path in the output
             const lines = text.split('\n');
             for (let i = lines.length - 1; i >= 0; i--) {
               const line = lines[i].trim();
               if (line && line.startsWith('/') && !line.includes('$') && !line.includes('>') && !line.includes('pwd')) {
-                console.log('[WorkspacePathDetector] Found path:', line);
+                logger.log('[WorkspacePathDetector] Found path:', line);
                 
                 // Close terminal with Ctrl+W
                 await page.keyboard.down('Control');
@@ -174,14 +176,14 @@ class WorkspacePathDetector {
           await page.keyboard.press('w');
           await page.keyboard.up('Control');
         } else {
-          console.log('[WorkspacePathDetector] No terminal input found');
+          logger.log('[WorkspacePathDetector] No terminal input found');
         }
         
         // If we get here, terminal method failed
         const actualPath = null;
         
         // Method 2: Fallback to VS Code API
-        console.log(`[WorkspacePathDetector] Terminal method failed, trying VS Code API for port ${port}...`);
+        logger.log(`[WorkspacePathDetector] Terminal method failed, trying VS Code API for port ${port}...`);
         const filePath = await page.evaluate(() => {
           try {
             // 1. VS Code API - Workspace Folders
@@ -214,10 +216,10 @@ class WorkspacePathDetector {
               }
             }
             
-            console.log('Could not detect workspace path from browser context');
+            logger.log('Could not detect workspace path from browser context');
             return null;
           } catch (error) {
-            console.error('Error getting workspace path:', error);
+            logger.error('Error getting workspace path:', error);
             return null;
           }
         });
@@ -229,19 +231,19 @@ class WorkspacePathDetector {
           if (workspacePath) {
             // Sende Workspace-Pfad an Server API
             this.ideManager.setWorkspacePath(port, workspacePath);
-            console.log(`[WorkspacePathDetector] Set workspace path for port ${port}:`, workspacePath);
+            logger.log(`[WorkspacePathDetector] Set workspace path for port ${port}:`, workspacePath);
             resolve(workspacePath);
           } else {
-            console.error('[WorkspacePathDetector] Could not extract project root from file path:', filePath);
+            logger.error('[WorkspacePathDetector] Could not extract project root from file path:', filePath);
             resolve(null);
           }
         } else {
-          console.error('[WorkspacePathDetector] Could not detect workspace path');
+          logger.error('[WorkspacePathDetector] Could not detect workspace path');
           resolve(null);
         }
         
       } catch (error) {
-        console.error('[WorkspacePathDetector] Error in workspace detection:', error);
+        logger.error('[WorkspacePathDetector] Error in workspace detection:', error);
         resolve(null);
       } finally {
         // Flag entfernen

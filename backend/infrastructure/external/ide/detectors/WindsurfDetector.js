@@ -1,3 +1,4 @@
+
 /**
  * Windsurf IDE Detector
  * Detects Windsurf IDE instances and manages Windsurf-specific detection logic
@@ -24,7 +25,7 @@ class WindsurfDetector {
    * @returns {Promise<Array>} Array of detected Windsurf IDEs
    */
   async scanForIDEs() {
-    console.log('[WindsurfDetector] Scanning for Windsurf IDEs on ports', this.portRange.start, 'to', this.portRange.end);
+    logger.log('[WindsurfDetector] Scanning for Windsurf IDEs on ports', this.portRange.start, 'to', this.portRange.end);
     
     const availableIDEs = [];
     const promises = [];
@@ -49,7 +50,7 @@ class WindsurfDetector {
       }
     });
 
-    console.log('[WindsurfDetector] Found', availableIDEs.length, 'running Windsurf IDEs');
+    logger.log('[WindsurfDetector] Found', availableIDEs.length, 'running Windsurf IDEs');
     return availableIDEs;
   }
 
@@ -195,6 +196,7 @@ class WindsurfDetector {
     for (const path of commonPaths) {
       try {
         require('fs').accessSync(path, require('fs').constants.X_OK);
+const { logger } = require('@infrastructure/logging/Logger');
         return path;
       } catch (error) {
         // Continue to next path

@@ -5,6 +5,7 @@
 const AISuggestion = require('@value-objects/AISuggestion');
 const TaskSuggestion = require('@entities/TaskSuggestion');
 const TaskType = require('@value-objects/TaskType');
+const { logger } = require('@infrastructure/logging/Logger');
 
 class TaskSuggestionService {
   constructor(cursorIDEService, eventBus, logger) {

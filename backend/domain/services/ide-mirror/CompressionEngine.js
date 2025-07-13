@@ -1,3 +1,4 @@
+
 /**
  * CompressionEngine Service
  * 
@@ -5,6 +6,7 @@
  * with automatic fallback and quality optimization.
  */
 const sharp = require('sharp');
+const { logger } = require('@infrastructure/logging/Logger');
 
 class CompressionEngine {
   constructor() {
@@ -139,7 +141,7 @@ class CompressionEngine {
         }
         
       } catch (error) {
-        console.warn(`[CompressionEngine] Attempt ${attempt + 1} failed:`, error.message);
+        logger.warn(`[CompressionEngine] Attempt ${attempt + 1} failed:`, error.message);
         
         // Switch to JPEG on error
         if (currentFormat === 'webp') {
@@ -175,7 +177,7 @@ class CompressionEngine {
         const batchResults = await Promise.all(batchPromises);
         results.push(...batchResults);
       } catch (error) {
-        console.error(`[CompressionEngine] Batch compression failed for batch ${i / batchSize}:`, error.message);
+        logger.error(`[CompressionEngine] Batch compression failed for batch ${i / batchSize}:`, error.message);
         // Continue with remaining batches
       }
     }

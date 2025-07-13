@@ -1,5 +1,7 @@
 const fs = require('fs').promises;
 const path = require('path');
+const { logger } = require('@infrastructure/logging/Logger');
+
 
 class TechStackAnalyzer {
     constructor() {}
@@ -56,7 +58,7 @@ class TechStackAnalyzer {
             this.generateRecommendations(techStack);
 
         } catch (error) {
-            console.error('Error analyzing tech stack:', error);
+            logger.error('Error analyzing tech stack:', error);
         }
 
         return techStack;

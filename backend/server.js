@@ -1,5 +1,7 @@
+
 require('module-alias/register');
 const Application = require('./Application');
+const { logger } = require('@infrastructure/logging/Logger');
 
 async function main() {
   const app = new Application({
@@ -8,13 +10,13 @@ async function main() {
 
   // Handle graceful shutdown
   process.on('SIGINT', async () => {
-    console.log('\n[SIGINT] Received, shutting down gracefully...');
+    logger.log('\n[SIGINT] Received, shutting down gracefully...');
     await app.stop();
     process.exit(0);
   });
 
   process.on('SIGTERM', async () => {
-    console.log('\n[SIGTERM] Received, shutting down gracefully...');
+    logger.log('\n[SIGTERM] Received, shutting down gracefully...');
     await app.stop();
     process.exit(0);
   });
@@ -22,7 +24,7 @@ async function main() {
   try {
     await app.start();
   } catch (error) {
-    console.error('[Main] Failed to start application:', error);
+    logger.error('[Main] Failed to start application:', error);
     process.exit(1);
   }
 }

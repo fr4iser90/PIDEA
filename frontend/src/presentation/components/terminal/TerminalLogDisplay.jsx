@@ -1,3 +1,4 @@
+import { logger } from "@/infrastructure/logging/Logger";
 import React, { useState, useEffect, useRef } from 'react';
 import './TerminalLogDisplay.css';
 
@@ -45,7 +46,7 @@ const TerminalLogDisplay = ({ port, onClose }) => {
         throw new Error(data.error || 'Failed to fetch logs');
       }
     } catch (err) {
-      console.error('Error fetching logs:', err);
+      logger.error('Error fetching logs:', err);
       setError(err.message);
     } finally {
       setLoading(false);
@@ -78,7 +79,7 @@ const TerminalLogDisplay = ({ port, onClose }) => {
         throw new Error(data.error || 'Search failed');
       }
     } catch (err) {
-      console.error('Error searching logs:', err);
+      logger.error('Error searching logs:', err);
       setError(err.message);
     } finally {
       setSearching(false);
@@ -97,7 +98,7 @@ const TerminalLogDisplay = ({ port, onClose }) => {
         setCaptureStatus(data.captureStatus);
       }
     } catch (err) {
-      console.error('Error fetching capture status:', err);
+      logger.error('Error fetching capture status:', err);
     }
   };
 
@@ -120,7 +121,7 @@ const TerminalLogDisplay = ({ port, onClose }) => {
         throw new Error(data.error || 'Failed to initialize capture');
       }
     } catch (err) {
-      console.error('Error initializing capture:', err);
+      logger.error('Error initializing capture:', err);
       setError(err.message);
     } finally {
       setLoading(false);
@@ -150,7 +151,7 @@ const TerminalLogDisplay = ({ port, onClose }) => {
         throw new Error(data.error || 'Failed to execute command');
       }
     } catch (err) {
-      console.error('Error executing command:', err);
+      logger.error('Error executing command:', err);
       setError(err.message);
     } finally {
       setLoading(false);
@@ -185,7 +186,7 @@ const TerminalLogDisplay = ({ port, onClose }) => {
         throw new Error('Export failed');
       }
     } catch (err) {
-      console.error('Error exporting logs:', err);
+      logger.error('Error exporting logs:', err);
       setError(err.message);
     } finally {
       setExporting(false);
@@ -216,7 +217,7 @@ const TerminalLogDisplay = ({ port, onClose }) => {
         throw new Error(data.error || 'Failed to clear logs');
       }
     } catch (err) {
-      console.error('Error clearing logs:', err);
+      logger.error('Error clearing logs:', err);
       setError(err.message);
     } finally {
       setLoading(false);

@@ -1,3 +1,4 @@
+
 /**
  * VSCode IDE Detector
  * Detects VSCode IDE instances and manages VSCode-specific detection logic
@@ -24,7 +25,7 @@ class VSCodeDetector {
    * @returns {Promise<Array>} Array of detected VSCode IDEs
    */
   async scanForIDEs() {
-    console.log('[VSCodeDetector] Scanning for VSCode IDEs on ports', this.portRange.start, 'to', this.portRange.end);
+    logger.log('[VSCodeDetector] Scanning for VSCode IDEs on ports', this.portRange.start, 'to', this.portRange.end);
     
     const availableIDEs = [];
     const promises = [];
@@ -49,7 +50,7 @@ class VSCodeDetector {
       }
     });
 
-    console.log('[VSCodeDetector] Found', availableIDEs.length, 'running VSCode IDEs');
+    logger.log('[VSCodeDetector] Found', availableIDEs.length, 'running VSCode IDEs');
     return availableIDEs;
   }
 
@@ -211,6 +212,7 @@ class VSCodeDetector {
     for (const path of commonPaths) {
       try {
         require('fs').accessSync(path, require('fs').constants.X_OK);
+const { logger } = require('@infrastructure/logging/Logger');
         return path;
       } catch (error) {
         // Continue to next path

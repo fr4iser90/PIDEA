@@ -4,6 +4,7 @@
  */
 const { EventEmitter } = require('events');
 const os = require('os');
+const { logger } = require('@infrastructure/logging/Logger');
 
 /**
  * Resource monitor for workflow execution

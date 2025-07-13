@@ -1,3 +1,4 @@
+
 /**
  * PortStreamingService Unit Tests
  * 
@@ -7,6 +8,7 @@
 const ScreenshotStreamingService = require('@services/ide-mirror/ScreenshotStreamingService');
 const StreamingPort = require('@entities/StreamingPort');
 const FrameMetrics = require('@entities/FrameMetrics');
+const { logger } = require('@infrastructure/logging/Logger');
 
 // Mock dependencies
 jest.mock('@/infrastructure/external/BrowserManager');
@@ -49,7 +51,7 @@ describe('ScreenshotStreamingService - Port-Based', () => {
         // Use the service's built-in cleanup method
         await service.cleanup();
       } catch (error) {
-        console.warn('Error during test cleanup:', error.message);
+        logger.warn('Error during test cleanup:', error.message);
       }
     }
   });

@@ -3,6 +3,7 @@
  * Provides comprehensive analysis of workflows to identify optimization potential
  */
 const crypto = require('crypto');
+const { logger } = require('@infrastructure/logging/Logger');
 
 /**
  * Workflow analyzer for optimization opportunities

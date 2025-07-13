@@ -1,3 +1,4 @@
+
 /**
  * Code Quality Workflow - Analysis Category
  * Orchestrates code quality analysis using frameworks and steps
@@ -20,11 +21,12 @@ class CodeQualityWorkflow extends BaseWorkflowStep {
    */
   async initialize(context) {
     try {
-      console.log('🚀 Initializing Code Quality Workflow...');
+      logger.log('🚀 Initializing Code Quality Workflow...');
       
       // Load frameworks and steps
       const { getFrameworkRegistry, getStepRegistry } = require('@/domain/frameworks');
       const { getStepRegistry: getStepsRegistry } = require('@/domain/steps');
+const { logger } = require('@infrastructure/logging/Logger');
       
       this.frameworkRegistry = getFrameworkRegistry();
       this.stepRegistry = getStepsRegistry();
@@ -32,10 +34,10 @@ class CodeQualityWorkflow extends BaseWorkflowStep {
       // Register workflow steps
       await this.registerWorkflowSteps();
       
-      console.log('✅ Code Quality Workflow initialized successfully');
+      logger.log('✅ Code Quality Workflow initialized successfully');
       return true;
     } catch (error) {
-      console.error('❌ Failed to initialize Code Quality Workflow:', error.message);
+      logger.error('❌ Failed to initialize Code Quality Workflow:', error.message);
       throw error;
     }
   }
@@ -89,7 +91,7 @@ class CodeQualityWorkflow extends BaseWorkflowStep {
    */
   async execute(context = {}, options = {}) {
     try {
-      console.log('🔍 Starting Code Quality Workflow execution...');
+      logger.log('🔍 Starting Code Quality Workflow execution...');
       
       const results = {
         workflow: this.name,
@@ -107,7 +109,7 @@ class CodeQualityWorkflow extends BaseWorkflowStep {
       // Execute each step in order
       for (const step of this.steps) {
         try {
-          console.log(`📋 Executing workflow step: ${step.name}`);
+          logger.log(`📋 Executing workflow step: ${step.name}`);
           
           const stepResult = await this.executeStep(step, context, options);
           results.steps.push(stepResult);
@@ -119,7 +121,7 @@ class CodeQualityWorkflow extends BaseWorkflowStep {
           }
           
         } catch (error) {
-          console.error(`❌ Workflow step "${step.name}" failed:`, error.message);
+          logger.error(`❌ Workflow step "${step.name}" failed:`, error.message);
           
           results.steps.push({
             name: step.name,
@@ -143,11 +145,11 @@ class CodeQualityWorkflow extends BaseWorkflowStep {
         results.summary.qualityScore = this.calculateOverallQualityScore(results.steps);
       }
       
-      console.log(`✅ Code Quality Workflow completed. Quality Score: ${results.summary.qualityScore}/100`);
+      logger.log(`✅ Code Quality Workflow completed. Quality Score: ${results.summary.qualityScore}/100`);
       return results;
       
     } catch (error) {
-      console.error('❌ Code Quality Workflow execution failed:', error.message);
+      logger.error('❌ Code Quality Workflow execution failed:', error.message);
       throw error;
     }
   }

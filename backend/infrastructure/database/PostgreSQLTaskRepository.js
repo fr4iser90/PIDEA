@@ -1,3 +1,4 @@
+
 /**
  * PostgreSQLTaskRepository
  * PostgreSQL/SQLite implementation of TaskRepository interface using DatabaseConnection
@@ -7,6 +8,7 @@ const Task = require('@entities/Task');
 const TaskStatus = require('@value-objects/TaskStatus');
 const TaskPriority = require('@value-objects/TaskPriority');
 const TaskType = require('@value-objects/TaskType');
+const { logger } = require('@infrastructure/logging/Logger');
 
 class PostgreSQLTaskRepository extends TaskRepository {
   constructor(databaseConnection) {
@@ -371,8 +373,8 @@ class PostgreSQLTaskRepository extends TaskRepository {
 
       return task;
     } catch (error) {
-      console.error('[PostgreSQLTaskRepository] Error converting row to task:', error);
-      console.error('[PostgreSQLTaskRepository] Row data:', row);
+      logger.error('[PostgreSQLTaskRepository] Error converting row to task:', error);
+      logger.error('[PostgreSQLTaskRepository] Row data:', row);
       throw new Error(`Failed to convert database row to Task: ${error.message}`);
     }
   }

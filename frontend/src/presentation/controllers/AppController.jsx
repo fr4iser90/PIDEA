@@ -1,3 +1,4 @@
+import { logger } from "@/infrastructure/logging/Logger";
 import ChatService from '@/application/services/ChatService.jsx';
 import APIChatRepository from '@/infrastructure/repositories/APIChatRepository.jsx';
 import EventBus from '@/infrastructure/events/EventBus.jsx';
@@ -43,7 +44,7 @@ class AppController {
       this.startPolling();
       await this.loadInitialIDEList();
     } catch (error) {
-      console.error('Failed to initialize app:', error);
+      logger.error('Failed to initialize app:', error);
       this.showError('Failed to initialize application');
     }
   }
@@ -75,7 +76,7 @@ class AppController {
         }));
       }
     } catch (e) {
-      console.error('Fehler beim Laden der Frameworks:', e);
+      logger.error('Fehler beim Laden der Frameworks:', e);
     }
     this.frameworkPanelComponent = new FrameworkPanelComponent(
       'frameworkPanelContainer',
@@ -94,22 +95,22 @@ class AppController {
     this.eventBus.on('chat:send:message', async (data) => {
       try {
         const activeFrameworks = this.frameworkPanelComponent?.getActiveFrameworks?.() || [];
-        console.log('Aktive Frameworks:', activeFrameworks);
+        logger.log('Aktive Frameworks:', activeFrameworks);
         let contextText = '';
         let contents = [];
         if (activeFrameworks.length > 0) {
           contents = await Promise.all(
             activeFrameworks.map(fw => fetch(`/framework/${fw.name}`).then(r => r.text()))
           );
-          console.log('Geladene Framework-Inhalte:', contents);
+          logger.log('Geladene Framework-Inhalte:', contents);
           contextText = contents.map((c, i) => `--- [${activeFrameworks[i].name}] ---\n${c}\n`).join('\n');
-          console.log('Kontexttext:', contextText);
+          logger.log('Kontexttext:', contextText);
         }
         const fullMessage = contextText + (data.content || '');
-        console.log('FullMessage an ChatService:', fullMessage);
+        logger.log('FullMessage an ChatService:', fullMessage);
         await this.chatService.sendMessage(fullMessage);
       } catch (error) {
-        console.error('Failed to send message:', error);
+        logger.error('Failed to send message:', error);
       }
     });
 
@@ -140,12 +141,12 @@ class AppController {
         });
         const result = await response.json();
         if (result.success) {
-          console.log('New IDE started:', result.data);
+          logger.log('New IDE started:', result.data);
         } else {
           throw new Error(result.error || 'Failed to start IDE');
         }
       } catch (error) {
-        console.error('Failed to start IDE:', error);
+        logger.error('Failed to start IDE:', error);
         this.showError('Failed to start IDE');
       }
     });
@@ -155,12 +156,12 @@ class AppController {
         const { apiCall } = await import('@/infrastructure/repositories/APIChatRepository.jsx');
         const result = await apiCall(`/api/ide/switch/${data.port}`, { method: 'POST' });
         if (result.success) {
-          console.log('Switched to IDE:', result.data);
+          logger.log('Switched to IDE:', result.data);
         } else {
           throw new Error(result.error || 'Failed to switch IDE');
         }
       } catch (error) {
-        console.error('Failed to switch IDE:', error);
+        logger.error('Failed to switch IDE:', error);
         this.showError('Failed to switch IDE');
       }
     });
@@ -172,12 +173,12 @@ class AppController {
         });
         const result = await response.json();
         if (result.success) {
-          console.log('IDE stopped:', result.data);
+          logger.log('IDE stopped:', result.data);
         } else {
           throw new Error(result.error || 'Failed to stop IDE');
         }
       } catch (error) {
-        console.error('Failed to stop IDE:', error);
+        logger.error('Failed to stop IDE:', error);
         this.showError('Failed to stop IDE');
       }
     });
@@ -225,12 +226,12 @@ class AppController {
             sessionId: result.data.sessionId 
           });
           
-          console.log(`Chat loaded for port ${data.port}: ${result.data.messages.length} messages`);
+          logger.log(`Chat loaded for port ${data.port}: ${result.data.messages.length} messages`);
         } else {
           throw new Error(result.error || 'Failed to load chat');
         }
       } catch (error) {
-        console.error('Failed to load chat for port:', error);
+        logger.error('Failed to load chat for port:', error);
         this.showError(`Failed to load chat for port ${data.port}: ${error.message}`);
       }
     });
@@ -254,8 +255,8 @@ class AppController {
 
     // Active IDE changed events
     this.eventBus.on('activeIDEChanged', (data) => {
-      console.log('🔄 [AppController] Active IDE changed event received:', data);
-      console.log('🔄 [AppController] Refreshing preview...');
+      logger.log('🔄 [AppController] Active IDE changed event received:', data);
+      logger.log('🔄 [AppController] Refreshing preview...');
       // Refresh preview when switching to a new IDE
       this.refreshPreview();
     });
@@ -264,9 +265,9 @@ class AppController {
     this.setupModeSwitching();
     
     // Code mode tab switching
-    console.log('🔧 About to setup code tab switching...');
+    logger.log('🔧 About to setup code tab switching...');
     this.setupCodeTabSwitching();
-    console.log('✅ Code tab switching setup completed');
+    logger.log('✅ Code tab switching setup completed');
     
     // Theme switching
     this.setupThemeSwitching();
@@ -289,14 +290,14 @@ class AppController {
     });
 
     codeModeBtn.addEventListener('click', () => {
-      console.log('🔘 IDE button clicked - switching to IDE Mirror');
+      logger.log('🔘 IDE button clicked - switching to IDE Mirror');
       this.switchMode('ide');
     });
   }
 
   setupCodeTabSwitching() {
     // No tabs needed - IDE Mirror is now a separate full-screen mode
-    console.log('🔧 Tab switching disabled - IDE Mirror is full-screen mode');
+    logger.log('🔧 Tab switching disabled - IDE Mirror is full-screen mode');
   }
 
   setupThemeSwitching() {
@@ -323,15 +324,15 @@ class AppController {
     // Listen for preview component events
     if (this.previewComponent) {
       this.previewComponent.container.addEventListener('preview:show', (e) => {
-        console.log('Preview shown:', e.detail);
+        logger.log('Preview shown:', e.detail);
       });
 
       this.previewComponent.container.addEventListener('preview:hide', (e) => {
-        console.log('Preview hidden');
+        logger.log('Preview hidden');
       });
 
       this.previewComponent.container.addEventListener('preview:contentChanged', (e) => {
-        console.log('Preview content changed:', e.detail);
+        logger.log('Preview content changed:', e.detail);
       });
 
       this.previewComponent.container.addEventListener('preview:refresh', (e) => {
@@ -353,7 +354,7 @@ class AppController {
   }
 
   switchMode(mode) {
-    console.log(`🔄 Switching to mode: ${mode}`);
+    logger.log(`🔄 Switching to mode: ${mode}`);
     const chatModeBtn = document.getElementById('chatModeBtn');
     const codeModeBtn = document.getElementById('codeModeBtn');
     const chatView = document.getElementById('chatView');
@@ -364,7 +365,7 @@ class AppController {
     const chatRightPanel = document.getElementById('chatRightPanel');
     const codeRightPanel = document.getElementById('codeRightPanel');
 
-    console.log('🔍 Found main mode elements:', {
+    logger.log('🔍 Found main mode elements:', {
       chatModeBtn: !!chatModeBtn,
       codeModeBtn: !!codeModeBtn,
       chatView: !!chatView,
@@ -384,7 +385,7 @@ class AppController {
       codeRightPanel.style.display = 'none';
       this.currentMode = 'chat';
     } else if (mode === 'ide') {
-      console.log('🖥️ Activating IDE Mirror - FULL SCREEN...');
+      logger.log('🖥️ Activating IDE Mirror - FULL SCREEN...');
       codeModeBtn.classList.add('active');
       chatModeBtn.classList.remove('active');
       chatView.style.display = 'none';
@@ -399,12 +400,12 @@ class AppController {
       
       // Initialize IDE Mirror Component
       if (!this.ideMirrorComponent) {
-        console.log('🔄 Creating IDEMirrorComponent...');
+        logger.log('🔄 Creating IDEMirrorComponent...');
         this.ideMirrorComponent = new IDEMirrorComponent('ideMirrorContainer', this.eventBus);
       }
-      console.log('✅ IDE Mirror activated');
+      logger.log('✅ IDE Mirror activated');
     } else {
-      console.log('🖥️ Activating code mode...');
+      logger.log('🖥️ Activating code mode...');
       codeModeBtn.classList.add('active');
       chatModeBtn.classList.remove('active');
       chatView.style.display = 'none';
@@ -415,7 +416,7 @@ class AppController {
       sidebarRight.style.display = 'none';
       codeRightPanel.style.display = '';
       this.currentMode = 'code';
-      console.log('✅ Code mode activated');
+      logger.log('✅ Code mode activated');
     }
   }
 
@@ -441,7 +442,7 @@ class AppController {
         throw new Error(result.error || 'Failed to load file tree');
       }
     } catch (error) {
-      console.error('Failed to load file tree:', error);
+      logger.error('Failed to load file tree:', error);
       this.showError('Failed to load file tree');
     }
   }
@@ -458,10 +459,10 @@ class AppController {
     try {
       const response = await fetch('/debug-dom');
       const data = await response.json();
-      console.log('DOM Analysis:', data);
+      logger.log('DOM Analysis:', data);
       alert('DOM analysis available in browser console (F12)');
     } catch (error) {
-      console.error('Debug error:', error);
+      logger.error('Debug error:', error);
       alert('Debug error: ' + error.message);
     }
   }
@@ -472,36 +473,36 @@ class AppController {
     const connectChatWebSocket = () => {
       chatWs = new WebSocket('ws://localhost:3000/ws');
       chatWs.onopen = () => {
-        console.log('[WebSocket] Connected for chat updates');
-        console.log('[WebSocket] Connection URL:', chatWs.url);
-        console.log('[WebSocket] Ready state:', chatWs.readyState);
+        logger.log('[WebSocket] Connected for chat updates');
+        logger.log('[WebSocket] Connection URL:', chatWs.url);
+        logger.log('[WebSocket] Ready state:', chatWs.readyState);
       };
       chatWs.onmessage = (event) => {
         const data = JSON.parse(event.data);
-        console.log('[WebSocket] Received message:', data);
+        logger.log('[WebSocket] Received message:', data);
         
         // Handle different message formats
         if (data.type === 'chatUpdate' || data.event === 'chatUpdate') {
-          console.log('[WebSocket] Chat update received');
+          logger.log('[WebSocket] Chat update received');
           this.chatService.loadMessages();
         }
         if (data.type === 'userAppUrl' || data.event === 'userAppUrl') {
-          console.log('[WebSocket] User app URL received:', data.data);
+          logger.log('[WebSocket] User app URL received:', data.data);
           this.handleUserAppUrl(data.data);
         }
         if (data.type === 'activeIDEChanged' || data.event === 'activeIDEChanged') {
-          console.log('[WebSocket] Active IDE changed:', data.data);
-          console.log('[WebSocket] Emitting activeIDEChanged event to eventBus');
+          logger.log('[WebSocket] Active IDE changed:', data.data);
+          logger.log('[WebSocket] Emitting activeIDEChanged event to eventBus');
           // Emit the event to trigger preview refresh
           this.eventBus.emit('activeIDEChanged', data.data);
         }
       };
       chatWs.onclose = () => {
-        console.log('[WebSocket] Chat WebSocket closed, reconnecting...');
+        logger.log('[WebSocket] Chat WebSocket closed, reconnecting...');
         setTimeout(connectChatWebSocket, 1000);
       };
       chatWs.onerror = (error) => {
-        console.error('[WebSocket] Chat WebSocket error:', error);
+        logger.error('[WebSocket] Chat WebSocket error:', error);
       };
     };
     connectChatWebSocket();
@@ -515,7 +516,7 @@ class AppController {
   }
 
   showError(message) {
-    console.error('App Error:', message);
+    logger.error('App Error:', message);
     // You could show a toast notification here
   }
 
@@ -527,7 +528,7 @@ class AppController {
         this.eventBus.emit('ideListUpdated', { ides: result.data });
       }
     } catch (error) {
-      console.error('Failed to load initial IDE list:', error);
+      logger.error('Failed to load initial IDE list:', error);
     }
   }
 
@@ -608,40 +609,40 @@ class AppController {
   }
 
   async refreshPreview() {
-    console.log('🔄 [AppController] refreshPreview() called');
+    logger.log('🔄 [AppController] refreshPreview() called');
     try {
       // Ask backend for current user app URL
       const result = await this.apiRepository.getUserAppUrl();
       
       if (result.success && result.data && result.data.url) {
-        console.log('Found user app URL:', result.data.url);
+        logger.log('Found user app URL:', result.data.url);
         this.handleUserAppUrl({ url: result.data.url });
       } else {
-        console.log('No user app URL found, checking terminal output...');
+        logger.log('No user app URL found, checking terminal output...');
         // Trigger terminal monitoring on backend
         const monitorResult = await this.apiRepository.monitorTerminal();
         
         if (monitorResult.success && monitorResult.data && monitorResult.data.url) {
-          console.log('Found URL from terminal monitoring:', monitorResult.data.url);
+          logger.log('Found URL from terminal monitoring:', monitorResult.data.url);
           this.handleUserAppUrl({ url: monitorResult.data.url });
         } else {
-          console.log('No URL found in terminal output, using default frontend dev server...');
+          logger.log('No URL found in terminal output, using default frontend dev server...');
           // Use the main server URL as fallback (not the WebSocket server)
           this.handleUserAppUrl({ url: 'http://localhost:3000' });
         }
       }
     } catch (error) {
-      console.error('Failed to refresh preview:', error);
+      logger.error('Failed to refresh preview:', error);
     }
   }
 
   exportPreview() {
-    console.log('Exporting preview...');
+    logger.log('Exporting preview...');
     // Add custom export logic here
   }
 
   sharePreview() {
-    console.log('Sharing preview...');
+    logger.log('Sharing preview...');
     // Add custom share logic here
   }
 
@@ -664,7 +665,7 @@ class AppController {
         throw new Error(result.error);
       }
     } catch (error) {
-      console.error('Failed to restart app:', error);
+      logger.error('Failed to restart app:', error);
       this.showError('Failed to restart app');
     }
   }

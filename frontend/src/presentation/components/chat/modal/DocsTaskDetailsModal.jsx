@@ -1,3 +1,4 @@
+import { logger } from "@/infrastructure/logging/Logger";
 import React, { useState, useEffect } from 'react';
 import { marked } from 'marked';
 import '@/css/modal/task-docs-details-modal.css';
@@ -45,7 +46,7 @@ const DocsTaskDetailsModal = ({
         const html = marked(content);
         setHtmlContent(html);
       } catch (error) {
-        console.error('Error rendering markdown:', error);
+        logger.error('Error rendering markdown:', error);
         setHtmlContent(`<p class="error">Error rendering markdown: ${error.message}</p><pre>${content}</pre>`);
       }
     } else {
@@ -67,7 +68,7 @@ const DocsTaskDetailsModal = ({
         setExecutePromptContent(data.content);
       }
     } catch (error) {
-      console.error('Failed to load execute prompt:', error);
+      logger.error('Failed to load execute prompt:', error);
     }
   };
 
@@ -78,7 +79,7 @@ const DocsTaskDetailsModal = ({
       setIsExecuting(true);
       await onExecuteTask(taskDetails);
     } catch (error) {
-      console.error('Error executing task:', error);
+      logger.error('Error executing task:', error);
     } finally {
       setIsExecuting(false);
     }

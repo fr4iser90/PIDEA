@@ -2,6 +2,7 @@
  * TaskExecutionController - REST API endpoints for task execution
  */
 const { validationResult } = require('express-validator');
+const { logger } = require('@infrastructure/logging/Logger');
 
 class TaskExecutionController {
     constructor(dependencies = {}) {

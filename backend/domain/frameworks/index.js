@@ -1,3 +1,4 @@
+
 /**
  * Frameworks Module - Domain Layer
  * Exports framework system components
@@ -5,6 +6,7 @@
 
 const FrameworkRegistry = require('./FrameworkRegistry');
 const FrameworkBuilder = require('./FrameworkBuilder');
+const { logger } = require('@infrastructure/logging/Logger');
 
 // Create singleton instances
 const frameworkRegistry = new FrameworkRegistry();
@@ -15,18 +17,18 @@ const frameworkBuilder = new FrameworkBuilder(frameworkRegistry);
  */
 async function initializeFrameworks() {
   try {
-    console.log('🚀 Initializing framework system...');
+    logger.log('🚀 Initializing framework system...');
     
     // Load framework configurations
     await frameworkRegistry.loadFrameworkConfigs();
     
-    console.log('✅ Framework system initialized successfully');
+    logger.log('✅ Framework system initialized successfully');
     return {
       registry: frameworkRegistry,
       builder: frameworkBuilder
     };
   } catch (error) {
-    console.error('❌ Failed to initialize framework system:', error.message);
+    logger.error('❌ Failed to initialize framework system:', error.message);
     throw error;
   }
 }

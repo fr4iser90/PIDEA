@@ -1,5 +1,7 @@
 const fs = require('fs').promises;
 const path = require('path');
+const { logger } = require('@infrastructure/logging/Logger');
+
 
 class ContentLibraryController {
   constructor() {
@@ -36,7 +38,7 @@ class ContentLibraryController {
         data: frameworkList
       });
     } catch (error) {
-      console.error('Error loading frameworks:', error);
+      logger.error('Error loading frameworks:', error);
       res.status(500).json({ 
         success: false,
         error: 'Failed to load frameworks',
@@ -70,7 +72,7 @@ class ContentLibraryController {
         }
       });
     } catch (error) {
-      console.error('Error loading framework prompts:', error);
+      logger.error('Error loading framework prompts:', error);
       res.status(500).json({ 
         success: false,
         error: 'Failed to load framework prompts',
@@ -104,7 +106,7 @@ class ContentLibraryController {
         }
       });
     } catch (error) {
-      console.error('Error loading framework templates:', error);
+      logger.error('Error loading framework templates:', error);
       res.status(500).json({ 
         success: false,
         error: 'Failed to load framework templates',
@@ -135,7 +137,7 @@ class ContentLibraryController {
         data: filteredPrompts
       });
     } catch (error) {
-      console.error('Error loading prompts:', error);
+      logger.error('Error loading prompts:', error);
       res.status(500).json({ 
         success: false,
         error: 'Failed to load prompts',
@@ -160,7 +162,7 @@ class ContentLibraryController {
         }
       });
     } catch (error) {
-      console.error('Error loading prompts by category:', error);
+      logger.error('Error loading prompts by category:', error);
       res.status(500).json({ 
         success: false,
         error: 'Failed to load prompts by category',
@@ -215,7 +217,7 @@ class ContentLibraryController {
         data: filteredTemplates
       });
     } catch (error) {
-      console.error('Error loading templates:', error);
+      logger.error('Error loading templates:', error);
       res.status(500).json({ 
         success: false,
         error: 'Failed to load templates',
@@ -240,7 +242,7 @@ class ContentLibraryController {
         }
       });
     } catch (error) {
-      console.error('Error loading templates by category:', error);
+      logger.error('Error loading templates by category:', error);
       res.status(500).json({ 
         success: false,
         error: 'Failed to load templates by category',
@@ -292,7 +294,7 @@ class ContentLibraryController {
         }
       });
     } catch (error) {
-      console.error('Error loading file:', error);
+      logger.error('Error loading file:', error);
       res.status(404).json({ 
         success: false,
         error: 'File not found',

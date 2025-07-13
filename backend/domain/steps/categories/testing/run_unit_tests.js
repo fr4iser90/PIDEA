@@ -1,4 +1,6 @@
 const StepBuilder = require('@steps/StepBuilder');
+const { logger } = require('@infrastructure/logging/Logger');
+
 
 class RunUnitTestsStep {
   constructor() {
@@ -33,7 +35,7 @@ class RunUnitTestsStep {
     const step = StepBuilder.build(config, context);
     
     try {
-      console.log(`🧪 Executing ${this.name}...`);
+      logger.log(`🧪 Executing ${this.name}...`);
       
       // Validate context
       this.validateContext(context);
@@ -47,7 +49,7 @@ class RunUnitTestsStep {
       // Validate results
       const validation = await this.validateResults(results, coverage);
       
-      console.log(`✅ ${this.name} completed successfully`);
+      logger.log(`✅ ${this.name} completed successfully`);
       return {
         success: true,
         step: this.name,
@@ -59,7 +61,7 @@ class RunUnitTestsStep {
         timestamp: new Date().toISOString()
       };
     } catch (error) {
-      console.error(`❌ ${this.name} failed:`, error.message);
+      logger.error(`❌ ${this.name} failed:`, error.message);
       return {
         success: false,
         step: this.name,

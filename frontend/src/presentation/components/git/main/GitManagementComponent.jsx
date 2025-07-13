@@ -1,3 +1,4 @@
+import { logger } from "@/infrastructure/logging/Logger";
 import React, { useState, useEffect } from 'react';
 import '@/css/main/git.css';
 import { apiCall } from '@/infrastructure/repositories/APIChatRepository.jsx';
@@ -47,7 +48,7 @@ const GitManagementComponent = ({ activePort, onGitOperation, onGitStatusChange 
         }
       }
     } catch (error) {
-      console.error('Failed to load workspace path:', error);
+      logger.error('Failed to load workspace path:', error);
     }
   };
 
@@ -69,7 +70,7 @@ const GitManagementComponent = ({ activePort, onGitOperation, onGitStatusChange 
         onGitStatusChange(data.data?.status);
       }
     } catch (error) {
-      console.error('Failed to load Git status:', error);
+      logger.error('Failed to load Git status:', error);
     } finally {
       setIsLoading(false);
     }
@@ -88,7 +89,7 @@ const GitManagementComponent = ({ activePort, onGitOperation, onGitStatusChange 
       });
       setBranches((data && data.data && data.data.branches) ? data.data.branches : []);
     } catch (error) {
-      console.error('Failed to load branches:', error);
+      logger.error('Failed to load branches:', error);
     }
   };
 

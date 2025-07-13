@@ -6,6 +6,7 @@
  * scripts, utility scripts, etc.).
  */
 const IWorkflow = require('../../../interfaces/IWorkflow');
+const { logger } = require('@infrastructure/logging/Logger');
 
 class ScriptGenerationWorkflow extends IWorkflow {
   /**

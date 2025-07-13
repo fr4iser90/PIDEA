@@ -1,3 +1,5 @@
+const { logger } = require('@infrastructure/logging/Logger');
+
 /**
  * VSCodeExtensionManager
  * Manages VSCode extensions and their capabilities
@@ -21,9 +23,9 @@ class VSCodeExtensionManager {
       await this.loadExtensionCapabilities();
       
       this.isInitialized = true;
-      console.log('[VSCodeExtensionManager] Initialized successfully');
+      logger.log('[VSCodeExtensionManager] Initialized successfully');
     } catch (error) {
-      console.error('[VSCodeExtensionManager] Failed to initialize:', error);
+      logger.error('[VSCodeExtensionManager] Failed to initialize:', error);
     }
   }
 

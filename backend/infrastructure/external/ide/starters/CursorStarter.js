@@ -1,3 +1,4 @@
+
 /**
  * Cursor IDE Starter
  * Starts Cursor IDE instances and manages Cursor-specific startup logic
@@ -29,7 +30,7 @@ class CursorStarter {
    * @returns {Promise<Object>} IDE startup information
    */
   async startIDE(port, workspacePath = null, options = {}) {
-    console.log('[CursorStarter] Starting Cursor IDE on port', port);
+    logger.log('[CursorStarter] Starting Cursor IDE on port', port);
     
     // Validate port is in range
     if (port < this.config.portRange.start || port > this.config.portRange.end) {
@@ -82,19 +83,19 @@ class CursorStarter {
 
       // Handle process events
       process.stdout.on('data', (data) => {
-        console.log(`[CursorStarter] Cursor IDE ${port} stdout:`, data.toString().trim());
+        logger.log(`[CursorStarter] Cursor IDE ${port} stdout:`, data.toString().trim());
       });
 
       process.stderr.on('data', (data) => {
-        console.log(`[CursorStarter] Cursor IDE ${port} stderr:`, data.toString().trim());
+        logger.log(`[CursorStarter] Cursor IDE ${port} stderr:`, data.toString().trim());
       });
 
       process.on('close', (code) => {
-        console.log(`[CursorStarter] Cursor IDE ${port} process closed with code ${code}`);
+        logger.log(`[CursorStarter] Cursor IDE ${port} process closed with code ${code}`);
       });
 
       process.on('error', (error) => {
-        console.error(`[CursorStarter] Cursor IDE ${port} process error:`, error);
+        logger.error(`[CursorStarter] Cursor IDE ${port} process error:`, error);
       });
 
       // Wait for IDE to start
@@ -111,7 +112,7 @@ class CursorStarter {
       };
 
     } catch (error) {
-      console.error('[CursorStarter] Failed to start Cursor IDE:', error);
+      logger.error('[CursorStarter] Failed to start Cursor IDE:', error);
       throw error;
     }
   }
@@ -122,7 +123,7 @@ class CursorStarter {
    * @returns {Promise<Object>} Stop result
    */
   async stopIDE(port) {
-    console.log('[CursorStarter] Stopping Cursor IDE on port', port);
+    logger.log('[CursorStarter] Stopping Cursor IDE on port', port);
     
     try {
       // Find and kill Cursor processes on the specified port
@@ -144,7 +145,7 @@ class CursorStarter {
             return new Promise((resolveKill) => {
               exec(`kill -TERM ${pid}`, (killError) => {
                 if (killError) {
-                  console.error(`[CursorStarter] Error killing process ${pid}:`, killError);
+                  logger.error(`[CursorStarter] Error killing process ${pid}:`, killError);
                 }
                 resolveKill();
               });
@@ -162,7 +163,7 @@ class CursorStarter {
         });
       });
     } catch (error) {
-      console.error('[CursorStarter] Error stopping Cursor IDE:', error);
+      logger.error('[CursorStarter] Error stopping Cursor IDE:', error);
       throw error;
     }
   }
@@ -193,6 +194,7 @@ class CursorStarter {
   async getVersion() {
     return new Promise((resolve) => {
       const { spawn } = require('child_process');
+const { logger } = require('@infrastructure/logging/Logger');
       const process = spawn('cursor', ['--version'], { stdio: 'pipe' });
       
       let output = '';

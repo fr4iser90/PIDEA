@@ -1,3 +1,5 @@
+const { logger } = require('@infrastructure/logging/Logger');
+
 /**
  * FrameBuffer Service
  * 
@@ -71,7 +73,7 @@ class FrameBuffer {
         // If still too large after cleanup, reject frame
         if (this.wouldExceedLimits(sessionId, frameSize)) {
           this.stats.bufferOverflows++;
-          console.warn(`[FrameBuffer] Buffer overflow for session ${sessionId}, frame rejected`);
+          logger.warn(`[FrameBuffer] Buffer overflow for session ${sessionId}, frame rejected`);
           return false;
         }
       }
@@ -89,7 +91,7 @@ class FrameBuffer {
       return true;
 
     } catch (error) {
-      console.error(`[FrameBuffer] Error adding frame for session ${sessionId}:`, error.message);
+      logger.error(`[FrameBuffer] Error adding frame for session ${sessionId}:`, error.message);
       return false;
     }
   }
@@ -109,7 +111,7 @@ class FrameBuffer {
       return sessionBuffer[sessionBuffer.length - 1];
 
     } catch (error) {
-      console.error(`[FrameBuffer] Error getting latest frame for session ${sessionId}:`, error.message);
+      logger.error(`[FrameBuffer] Error getting latest frame for session ${sessionId}:`, error.message);
       return null;
     }
   }
@@ -131,7 +133,7 @@ class FrameBuffer {
       return sessionBuffer.slice(startIndex);
 
     } catch (error) {
-      console.error(`[FrameBuffer] Error getting recent frames for session ${sessionId}:`, error.message);
+      logger.error(`[FrameBuffer] Error getting recent frames for session ${sessionId}:`, error.message);
       return [];
     }
   }
@@ -152,7 +154,7 @@ class FrameBuffer {
       return sessionBuffer.find(frame => frame.frameNumber === frameNumber) || null;
 
     } catch (error) {
-      console.error(`[FrameBuffer] Error getting frame by number for session ${sessionId}:`, error.message);
+      logger.error(`[FrameBuffer] Error getting frame by number for session ${sessionId}:`, error.message);
       return null;
     }
   }
@@ -172,13 +174,13 @@ class FrameBuffer {
         this.stats.totalFramesRemoved += sessionBuffer.length;
         
         this.buffers.delete(sessionId);
-        console.log(`[FrameBuffer] Cleared buffer for session ${sessionId}, freed ${removedSize} bytes`);
+        logger.log(`[FrameBuffer] Cleared buffer for session ${sessionId}, freed ${removedSize} bytes`);
         return true;
       }
       return false;
 
     } catch (error) {
-      console.error(`[FrameBuffer] Error clearing buffer for session ${sessionId}:`, error.message);
+      logger.error(`[FrameBuffer] Error clearing buffer for session ${sessionId}:`, error.message);
       return false;
     }
   }
@@ -198,11 +200,11 @@ class FrameBuffer {
         }
       }
 
-      console.log(`[FrameBuffer] Cleared all buffers, ${clearedCount} sessions affected`);
+      logger.log(`[FrameBuffer] Cleared all buffers, ${clearedCount} sessions affected`);
       return clearedCount;
 
     } catch (error) {
-      console.error('[FrameBuffer] Error clearing all buffers:', error.message);
+      logger.error('[FrameBuffer] Error clearing all buffers:', error.message);
       return 0;
     }
   }
@@ -235,13 +237,13 @@ class FrameBuffer {
         this.stats.totalFramesRemoved += removedCount;
         this.stats.cleanupOperations++;
         
-        console.log(`[FrameBuffer] Cleanup for session ${sessionId}: removed ${removedCount} frames, freed ${removedSize} bytes`);
+        logger.log(`[FrameBuffer] Cleanup for session ${sessionId}: removed ${removedCount} frames, freed ${removedSize} bytes`);
       }
 
       return removedCount;
 
     } catch (error) {
-      console.error(`[FrameBuffer] Error during cleanup for session ${sessionId}:`, error.message);
+      logger.error(`[FrameBuffer] Error during cleanup for session ${sessionId}:`, error.message);
       return 0;
     }
   }
@@ -312,11 +314,11 @@ class FrameBuffer {
       }
 
       if (totalRemoved > 0) {
-        console.log(`[FrameBuffer] Periodic cleanup completed: removed ${totalRemoved} frames`);
+        logger.log(`[FrameBuffer] Periodic cleanup completed: removed ${totalRemoved} frames`);
       }
 
     } catch (error) {
-      console.error('[FrameBuffer] Error during periodic cleanup:', error.message);
+      logger.error('[FrameBuffer] Error during periodic cleanup:', error.message);
     }
   }
 
@@ -368,7 +370,7 @@ class FrameBuffer {
       };
 
     } catch (error) {
-      console.error(`[FrameBuffer] Error getting stats for session ${sessionId}:`, error.message);
+      logger.error(`[FrameBuffer] Error getting stats for session ${sessionId}:`, error.message);
       return null;
     }
   }

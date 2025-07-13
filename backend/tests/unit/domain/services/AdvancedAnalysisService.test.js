@@ -1,3 +1,4 @@
+
 /**
  * Unit tests for AdvancedAnalysisService
  */
@@ -5,6 +6,7 @@ const AdvancedAnalysisService = require('@services/AdvancedAnalysisService');
 const LayerValidationService = require('@services/LayerValidationService');
 const LogicValidationService = require('@services/LogicValidationService');
 const TaskAnalysisService = require('@services/TaskAnalysisService');
+const { logger } = require('@infrastructure/logging/Logger');
 
 // Mock dependencies
 jest.mock('@/domain/services/LayerValidationService');
@@ -121,10 +123,10 @@ describe('AdvancedAnalysisService', () => {
             const result = await service.performAdvancedAnalysis(projectPath, options);
 
             // Debug: Log the actual result to understand why overall is false
-            console.log('Debug - Result overall:', result.overall);
-            console.log('Debug - Result metrics:', result.metrics);
-            console.log('Debug - Layer validation overall:', result.layerValidation.overall);
-            console.log('Debug - Logic validation overall:', result.logicValidation.overall);
+            logger.debug('Debug - Result overall:', result.overall);
+            logger.debug('Debug - Result metrics:', result.metrics);
+            logger.debug('Debug - Layer validation overall:', result.layerValidation.overall);
+            logger.debug('Debug - Logic validation overall:', result.logicValidation.overall);
 
             expect(result.projectPath).toBe(projectPath);
             expect(result.timestamp).toBeInstanceOf(Date);

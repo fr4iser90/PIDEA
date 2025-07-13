@@ -1,3 +1,4 @@
+
 /**
  * IDE API Deployment Configuration
  * 
@@ -140,6 +141,7 @@ const baseConfig = {
     clustering: {
       enabled: isProduction,
       workers: parseInt(process.env.CLUSTER_WORKERS) || require('os').cpus().length
+const { logger } = require('@infrastructure/logging/Logger');
     }
   },
 
@@ -295,12 +297,12 @@ function validateConfig() {
   }
 
   if (errors.length > 0) {
-    console.error('Configuration validation failed:');
-    errors.forEach(error => console.error(`  - ${error}`));
+    logger.error('Configuration validation failed:');
+    errors.forEach(error => logger.error(`  - ${error}`));
     process.exit(1);
   }
 
-  console.log(`Configuration loaded for environment: ${NODE_ENV}`);
+  logger.log(`Configuration loaded for environment: ${NODE_ENV}`);
   return true;
 }
 
@@ -379,14 +381,14 @@ const performanceMetrics = {
 const deploymentUtils = {
   // Graceful shutdown
   async gracefulShutdown(signal) {
-    console.log(`Received ${signal}. Starting graceful shutdown...`);
+    logger.log(`Received ${signal}. Starting graceful shutdown...`);
     
     // Close database connections
     // Close WebSocket connections
     // Stop accepting new requests
     // Wait for ongoing requests to complete
     
-    console.log('Graceful shutdown completed');
+    logger.log('Graceful shutdown completed');
     process.exit(0);
   },
 

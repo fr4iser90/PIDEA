@@ -1,3 +1,5 @@
+const { logger } = require('@infrastructure/logging/Logger');
+
 /**
  * Package extraction service for monorepo detection
  */
@@ -10,17 +12,17 @@ class PackageExtractor {
     extractPackagesFromAnalysis(analysisResults) {
         const packages = [];
         
-        console.log('DEBUG: extractPackagesFromAnalysis called with:', Object.keys(analysisResults));
+        logger.debug('DEBUG: extractPackagesFromAnalysis called with:', Object.keys(analysisResults));
         
         // Extract packages from dependencies analysis (multiple possible locations)
         if (analysisResults.Dependencies && analysisResults.Dependencies.data && analysisResults.Dependencies.data.packages) {
-            console.log('DEBUG: Found packages in Dependencies.data.packages');
+            logger.debug('DEBUG: Found packages in Dependencies.data.packages');
             packages.push(...analysisResults.Dependencies.data.packages);
         }
         
         // Extract packages from structure analysis (where they actually are!)
         if (analysisResults.structure && analysisResults.structure.data && analysisResults.structure.data.dependenciesAnalysis && analysisResults.structure.data.dependenciesAnalysis.packages) {
-            console.log('DEBUG: Found packages in structure.data.dependenciesAnalysis.packages');
+            logger.debug('DEBUG: Found packages in structure.data.dependenciesAnalysis.packages');
             packages.push(...analysisResults.structure.data.dependenciesAnalysis.packages);
         }
         
@@ -28,12 +30,12 @@ class PackageExtractor {
         if (analysisResults.Architecture && analysisResults.Architecture.data) {
             // Check for new monorepo structure
             if (analysisResults.Architecture.data.isMonorepo && analysisResults.Architecture.data.packages) {
-                console.log('DEBUG: Found packages in Architecture.data.packages (monorepo)');
+                logger.debug('DEBUG: Found packages in Architecture.data.packages (monorepo)');
                 packages.push(...analysisResults.Architecture.data.packages);
             }
             // Check for old structure
             else if (analysisResults.Architecture.data.packages) {
-                console.log('DEBUG: Found packages in Architecture.data.packages (legacy)');
+                logger.debug('DEBUG: Found packages in Architecture.data.packages (legacy)');
                 packages.push(...analysisResults.Architecture.data.packages);
             }
         }
@@ -42,7 +44,7 @@ class PackageExtractor {
         const checkForPackages = (obj, path = '') => {
             if (obj && typeof obj === 'object') {
                 if (obj.packages && Array.isArray(obj.packages)) {
-                    console.log(`DEBUG: Found packages in ${path}.packages`);
+                    logger.debug(`DEBUG: Found packages in ${path}.packages`);
                     packages.push(...obj.packages);
                 }
                 Object.entries(obj).forEach(([key, value]) => {
@@ -53,11 +55,11 @@ class PackageExtractor {
         
         checkForPackages(analysisResults);
         
-        console.log('DEBUG: Total packages found:', packages.length);
+        logger.debug('DEBUG: Total packages found:', packages.length);
         
         // If no packages found, assume single package
         if (packages.length === 0) {
-            console.log('DEBUG: No packages found, using single package');
+            logger.debug('DEBUG: No packages found, using single package');
             packages.push({ name: 'root', path: '.', relativePath: '.' });
         }
         
@@ -109,7 +111,7 @@ class PackageExtractor {
                 else if (type === 'Architecture' && result.data) {
                     // Check if this is a monorepo with package-specific architecture data
                     if (result.data.isMonorepo && result.data.packages) {
-                        console.log('DEBUG: Found packages in Architecture.data.packages (monorepo)');
+                        logger.debug('DEBUG: Found packages in Architecture.data.packages (monorepo)');
                         packageResults[type] = {
                             ...result,
                             data: result.data

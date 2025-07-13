@@ -4,6 +4,7 @@
  */
 
 const { ESTIMATED_TIMES } = require('../constants/ScriptGenerationConstants');
+const { logger } = require('@infrastructure/logging/Logger');
 
 class TaskManagementService {
     constructor(dependencies = {}) {

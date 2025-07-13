@@ -1,6 +1,8 @@
 const FrameworkRegistry = require('@frameworks/FrameworkRegistry');
 const WorkflowRegistry = require('@workflows/WorkflowRegistry');
 const DocumentationWorkflow = require('@workflows/categories/documentation/DocumentationWorkflow');
+const { logger } = require('@infrastructure/logging/Logger');
+
 
 class AnalyzeAllController {
   constructor() {
@@ -10,7 +12,7 @@ class AnalyzeAllController {
 
   async analyzeAll(req, res) {
     try {
-      console.log('🚀 Starting comprehensive analysis...');
+      logger.log('🚀 Starting comprehensive analysis...');
       
       const { projectPath, options = {} } = req.body;
       
@@ -43,7 +45,7 @@ class AnalyzeAllController {
         documentation: documentationResult
       });
       
-      console.log('✅ Comprehensive analysis completed successfully');
+      logger.log('✅ Comprehensive analysis completed successfully');
       
       return res.status(200).json({
         success: true,
@@ -53,7 +55,7 @@ class AnalyzeAllController {
       });
       
     } catch (error) {
-      console.error('❌ Analyze All failed:', error.message);
+      logger.error('❌ Analyze All failed:', error.message);
       return res.status(500).json({
         success: false,
         error: error.message,
@@ -74,7 +76,7 @@ class AnalyzeAllController {
       
       return frameworks;
     } catch (error) {
-      console.warn('⚠️ Could not retrieve all frameworks:', error.message);
+      logger.warn('⚠️ Could not retrieve all frameworks:', error.message);
       return [];
     }
   }
@@ -91,7 +93,7 @@ class AnalyzeAllController {
       
       return workflows;
     } catch (error) {
-      console.warn('⚠️ Could not retrieve all workflows:', error.message);
+      logger.warn('⚠️ Could not retrieve all workflows:', error.message);
       return [];
     }
   }
@@ -101,7 +103,7 @@ class AnalyzeAllController {
     
     for (const framework of frameworks) {
       try {
-        console.log(`🔧 Executing framework: ${framework.name}`);
+        logger.log(`🔧 Executing framework: ${framework.name}`);
         
         const result = await framework.execute({
           projectPath,
@@ -118,9 +120,9 @@ class AnalyzeAllController {
           timestamp: result.timestamp
         });
         
-        console.log(`✅ Framework ${framework.name} completed`);
+        logger.log(`✅ Framework ${framework.name} completed`);
       } catch (error) {
-        console.error(`❌ Framework ${framework.name} failed:`, error.message);
+        logger.error(`❌ Framework ${framework.name} failed:`, error.message);
         results.push({
           framework: framework.name,
           category: framework.category,
@@ -139,7 +141,7 @@ class AnalyzeAllController {
     
     for (const workflow of workflows) {
       try {
-        console.log(`🔄 Executing workflow: ${workflow.name}`);
+        logger.log(`🔄 Executing workflow: ${workflow.name}`);
         
         const result = await workflow.execute({
           projectPath,
@@ -156,9 +158,9 @@ class AnalyzeAllController {
           timestamp: result.timestamp
         });
         
-        console.log(`✅ Workflow ${workflow.name} completed`);
+        logger.log(`✅ Workflow ${workflow.name} completed`);
       } catch (error) {
-        console.error(`❌ Workflow ${workflow.name} failed:`, error.message);
+        logger.error(`❌ Workflow ${workflow.name} failed:`, error.message);
         results.push({
           workflow: workflow.name,
           category: workflow.category,
@@ -174,7 +176,7 @@ class AnalyzeAllController {
 
   async executeDocumentationWorkflow(projectPath, options) {
     try {
-      console.log('📚 Executing documentation workflow...');
+      logger.log('📚 Executing documentation workflow...');
       
       const result = await DocumentationWorkflow.executeForAnalyzeAll({
         projectPath,
@@ -192,7 +194,7 @@ class AnalyzeAllController {
         timestamp: result.timestamp
       };
     } catch (error) {
-      console.error('❌ Documentation workflow failed:', error.message);
+      logger.error('❌ Documentation workflow failed:', error.message);
       return {
         workflow: 'DocumentationWorkflow',
         category: 'documentation',

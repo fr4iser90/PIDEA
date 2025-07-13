@@ -1,3 +1,4 @@
+const { logger } = require('@infrastructure/logging/Logger');
 /**
  * AutoReviewService - Automated code review service
  * Provides AI-powered code review with different review depths and quality checks

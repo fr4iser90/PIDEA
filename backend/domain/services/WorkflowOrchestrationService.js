@@ -1315,6 +1315,7 @@ Please proceed with the task execution.
     async buildTaskExecutionPrompt(task) {
         // Use existing TaskService buildTaskExecutionPrompt
         const taskService = new (require('./TaskService'))();
+const { logger } = require('@infrastructure/logging/Logger');
         return await taskService.buildTaskExecutionPrompt(task);
     }
 

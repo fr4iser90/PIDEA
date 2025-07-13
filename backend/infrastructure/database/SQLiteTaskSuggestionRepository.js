@@ -1,6 +1,8 @@
 const TaskSuggestion = require('@entities/TaskSuggestion');
 const TaskType = require('@value-objects/TaskType')
 const TaskPriority = require('@value-objects/TaskPriority');
+const { logger } = require('@infrastructure/logging/Logger');
+
 
 /**
  * SQLiteTaskSuggestionRepository - SQLite implementation of TaskSuggestionRepository
@@ -26,7 +28,7 @@ class SQLiteTaskSuggestionRepository {
             await this.database.run(`CREATE INDEX IF NOT EXISTS idx_task_suggestions_created_at ON ${this.tableName} (createdAt)`);
         } catch (error) {
             // Indexes might already exist, ignore errors
-            console.log(`[SQLiteTaskSuggestionRepository] Index creation skipped: ${error.message}`);
+            logger.log(`[SQLiteTaskSuggestionRepository] Index creation skipped: ${error.message}`);
         }
     }
 

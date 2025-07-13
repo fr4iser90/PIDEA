@@ -1,3 +1,4 @@
+
 /**
  * GenerateDocumentationHandler - Handles documentation generation
  * Implements the Handler pattern for documentation generation
@@ -6,6 +7,7 @@ const fs = require('fs').promises;
 const path = require('path');
 const EventBus = require('@messaging/EventBus');
 const AnalysisRepository = require('@repositories/AnalysisRepository');
+const { logger } = require('@infrastructure/logging/Logger');
 
 class GenerateDocumentationHandler {
     constructor(dependencies = {}) {
@@ -669,7 +671,7 @@ import { ${func.name} } from '${func.file}';
 // Example usage:
 const result = ${func.name}(${func.params.map(p => p.name).join(', ')});
 
-console.log(result);
+logger.log(result);
 \`\`\`
 
 ## Parameters
@@ -700,7 +702,7 @@ import { ${cls.name} } from '${cls.file}';
 // TODO: Add example implementation
 const instance = new ${cls.name}();
 
-console.log(instance);
+logger.log(instance);
 \`\`\`
 
 ## Constructor

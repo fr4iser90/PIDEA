@@ -1,3 +1,4 @@
+import { logger } from "@/infrastructure/logging/Logger";
 import React from 'react';
 import UserMenu from './auth/UserMenu.jsx';
 
@@ -18,7 +19,7 @@ function Header({ eventBus, currentView, onNavigationClick, onLeftSidebarToggle,
   };
 
   const handleRightSidebarToggle = () => {
-    console.log('Header right sidebar button clicked');
+    logger.log('Header right sidebar button clicked');
     if (onRightSidebarToggle) {
       onRightSidebarToggle();
     }

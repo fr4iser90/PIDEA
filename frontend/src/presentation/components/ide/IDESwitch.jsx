@@ -1,3 +1,4 @@
+import { logger } from "@/infrastructure/logging/Logger";
 import React, { useState, useEffect, useCallback } from 'react';
 import { apiCall } from '@/infrastructure/repositories/APIChatRepository.jsx';
 import '@/css/components/ide/ide-switch.css';
@@ -188,7 +189,7 @@ const IDESwitch = ({
       }
 
     } catch (error) {
-      console.error('[IDESwitch] Error switching IDE:', error);
+      logger.error('[IDESwitch] Error switching IDE:', error);
       setError(error.message);
       setStatus('Switch failed');
 

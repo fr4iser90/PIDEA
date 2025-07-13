@@ -1,6 +1,8 @@
 const crypto = require('crypto');
 const fs = require('fs');
 const path = require('path');
+const { logger } = require('@infrastructure/logging/Logger');
+
 
 class AutoSecurityManager {
   constructor() {
@@ -10,7 +12,7 @@ class AutoSecurityManager {
   }
 
   initialize() {
-    console.log('🔐 [AutoSecurityManager] Initializing auto-security...');
+    logger.log('🔐 [AutoSecurityManager] Initializing auto-security...');
     
     // Auto-detect environment
     this.config.environment = this.detectEnvironment();
@@ -28,12 +30,12 @@ class AutoSecurityManager {
     // Auto-configure rate limiting
     this.config.rateLimiting = this.getRateLimitingConfig();
     
-    console.log('✅ [AutoSecurityManager] Auto-security initialized');
+    logger.log('✅ [AutoSecurityManager] Auto-security initialized');
   }
 
   detectEnvironment() {
     const env = process.env.NODE_ENV || 'development';
-    console.log(`🌍 [AutoSecurityManager] Detected environment: ${env}`);
+    logger.log(`🌍 [AutoSecurityManager] Detected environment: ${env}`);
     return env;
   }
 
@@ -44,11 +46,11 @@ class AutoSecurityManager {
       // Try to read existing secret
       if (fs.existsSync(secretsFile)) {
         const secret = fs.readFileSync(secretsFile, 'utf8').trim();
-        console.log(`🔑 [AutoSecurityManager] Loaded existing secret: ${key}`);
+        logger.log(`🔑 [AutoSecurityManager] Loaded existing secret: ${key}`);
         return secret;
       }
     } catch (error) {
-      console.warn(`⚠️ [AutoSecurityManager] Could not read secret file: ${error.message}`);
+      logger.warn(`⚠️ [AutoSecurityManager] Could not read secret file: ${error.message}`);
     }
 
     // Generate new secret
@@ -62,9 +64,9 @@ class AutoSecurityManager {
       
       // Save secret to file
       fs.writeFileSync(secretsFile, secret);
-      console.log(`🔑 [AutoSecurityManager] Generated new secret: ${key}`);
+      logger.log(`🔑 [AutoSecurityManager] Generated new secret: ${key}`);
     } catch (error) {
-      console.warn(`⚠️ [AutoSecurityManager] Could not save secret file: ${error.message}`);
+      logger.warn(`⚠️ [AutoSecurityManager] Could not save secret file: ${error.message}`);
     }
 
     return secret;
@@ -184,11 +186,11 @@ class AutoSecurityManager {
         
         if (stats.mtime.getTime() < thirtyDaysAgo) {
           fs.unlinkSync(filePath);
-          console.log(`🗑️ [AutoSecurityManager] Cleaned up old secret: ${file}`);
+          logger.log(`🗑️ [AutoSecurityManager] Cleaned up old secret: ${file}`);
         }
       }
     } catch (error) {
-      console.warn(`⚠️ [AutoSecurityManager] Could not cleanup old secrets: ${error.message}`);
+      logger.warn(`⚠️ [AutoSecurityManager] Could not cleanup old secrets: ${error.message}`);
     }
   }
 }

@@ -1,7 +1,9 @@
 const GetChatHistoryQuery = require('@application/queries/GetChatHistoryQuery');
 const ChatMessage = require('@entities/ChatMessage');
 
+
 const IDETypes = require('@services/ide/IDETypes');
+const { logger } = require('@infrastructure/logging/Logger');
 
 class GetChatHistoryHandler {
   constructor(chatRepository, ideManager = null, serviceRegistry = null) {
@@ -78,12 +80,12 @@ class GetChatHistoryHandler {
   async getMessagesByPort(port, userId = null, options = {}) {
     const { limit = 50, offset = 0 } = options;
     
-    console.log(`[GetChatHistoryHandler] getMessagesByPort called with port: ${port}, userId: ${userId}`);
+    logger.log(`[GetChatHistoryHandler] getMessagesByPort called with port: ${port}, userId: ${userId}`);
 
     // Use the new direct message method from ChatRepository
     const filteredMessages = await this.chatRepository.getMessagesByPort(port, userId);
     
-    console.log(`[GetChatHistoryHandler] Found ${filteredMessages.length} messages for port ${port}`);
+    logger.log(`[GetChatHistoryHandler] Found ${filteredMessages.length} messages for port ${port}`);
 
     // Sort by timestamp (newest first)
     filteredMessages.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
@@ -145,7 +147,7 @@ class GetChatHistoryHandler {
   async getPortChatHistory(port, userId, options = {}) {
     const { limit = 50, offset = 0 } = options;
     
-    console.log(`[GetChatHistoryHandler] getPortChatHistory called with port: ${port}, userId: ${userId}`);
+    logger.log(`[GetChatHistoryHandler] getPortChatHistory called with port: ${port}, userId: ${userId}`);
 
     // Get messages for this port and user
     const messages = await this.getMessagesByPort(port, userId, { limit, offset });
@@ -155,18 +157,18 @@ class GetChatHistoryHandler {
     try {
       const ideService = await this.getIDEServiceForPort(port);
       if (ideService) {
-        console.log(`[GetChatHistoryHandler] Extracting live chat from IDE on port ${port}...`);
-        console.log(`[GetChatHistoryHandler] IDE Service type:`, ideService.constructor.name);
-        console.log(`[GetChatHistoryHandler] IDE Service methods:`, Object.getOwnPropertyNames(Object.getPrototypeOf(ideService)));
+        logger.log(`[GetChatHistoryHandler] Extracting live chat from IDE on port ${port}...`);
+        logger.log(`[GetChatHistoryHandler] IDE Service type:`, ideService.constructor.name);
+        logger.log(`[GetChatHistoryHandler] IDE Service methods:`, Object.getOwnPropertyNames(Object.getPrototypeOf(ideService)));
         
         liveMessages = await ideService.extractChatHistory();
-        console.log(`[GetChatHistoryHandler] Extracted ${liveMessages.length} live messages:`, liveMessages);
+        logger.log(`[GetChatHistoryHandler] Extracted ${liveMessages.length} live messages:`, liveMessages);
       } else {
-        console.log(`[GetChatHistoryHandler] No IDE service found for port ${port}`);
+        logger.log(`[GetChatHistoryHandler] No IDE service found for port ${port}`);
       }
     } catch (error) {
-      console.log(`[GetChatHistoryHandler] Failed to extract live chat: ${error.message}`);
-      console.error(`[GetChatHistoryHandler] Full error:`, error);
+      logger.log(`[GetChatHistoryHandler] Failed to extract live chat: ${error.message}`);
+      logger.error(`[GetChatHistoryHandler] Full error:`, error);
     }
 
     // If we have live messages, return them
@@ -203,20 +205,20 @@ class GetChatHistoryHandler {
   async getIDEServiceForPort(port) {
     try {
       if (!this.ideManager) {
-        console.log('[GetChatHistoryHandler] No IDE manager available');
+        logger.log('[GetChatHistoryHandler] No IDE manager available');
         return null;
       }
 
       // Get available IDEs to determine the type
       const availableIDEs = await this.ideManager.getAvailableIDEs();
-      console.log(`[GetChatHistoryHandler] Available IDEs:`, availableIDEs);
+      logger.log(`[GetChatHistoryHandler] Available IDEs:`, availableIDEs);
       
       const targetIDE = availableIDEs.find(ide => ide.port === port);
       
       if (!targetIDE) {
-        console.log(`[GetChatHistoryHandler] No IDE found for port ${port} in available IDEs:`, availableIDEs.map(ide => ({ port: ide.port, type: ide.ideType })));
+        logger.log(`[GetChatHistoryHandler] No IDE found for port ${port} in available IDEs:`, availableIDEs.map(ide => ({ port: ide.port, type: ide.ideType })));
         // Fallback: determine IDE type based on port range anyway
-        console.log(`[GetChatHistoryHandler] Using port range fallback for port ${port}`);
+        logger.log(`[GetChatHistoryHandler] Using port range fallback for port ${port}`);
       }
 
       // Determine IDE type based on port range
@@ -229,7 +231,7 @@ class GetChatHistoryHandler {
         ideType = IDETypes.WINDSURF;
       }
 
-      console.log(`[GetChatHistoryHandler] Detected IDE type ${ideType} for port ${port}`);
+      logger.log(`[GetChatHistoryHandler] Detected IDE type ${ideType} for port ${port}`);
 
       // Get the appropriate service from registry
       if (this.serviceRegistry) {
@@ -247,7 +249,7 @@ class GetChatHistoryHandler {
 
       return null;
     } catch (error) {
-      console.error(`[GetChatHistoryHandler] Error getting IDE service for port ${port}:`, error);
+      logger.error(`[GetChatHistoryHandler] Error getting IDE service for port ${port}:`, error);
       return null;
     }
   }

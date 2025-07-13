@@ -146,6 +146,7 @@ class AdvancedAnalysisHandler {
      */
     async validateProjectPath(projectPath) {
         const fs = require('fs').promises;
+const { logger } = require('@infrastructure/logging/Logger');
         
         try {
             const stats = await fs.stat(projectPath);

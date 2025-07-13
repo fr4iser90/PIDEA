@@ -3,6 +3,7 @@
  */
 const path = require('path');
 const fs = require('fs').promises;
+const { logger } = require('@infrastructure/logging/Logger');
 
 class FileUtils {
     constructor(logger) {

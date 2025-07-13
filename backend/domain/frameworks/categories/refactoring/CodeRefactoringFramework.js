@@ -1,4 +1,6 @@
 const FrameworkBuilder = require('@frameworks/FrameworkBuilder');
+const { logger } = require('@infrastructure/logging/Logger');
+
 
 class CodeRefactoringFramework {
   constructor() {
@@ -65,11 +67,11 @@ class CodeRefactoringFramework {
     const framework = FrameworkBuilder.build(config, context);
     
     try {
-      console.log(`🚀 Executing ${this.name}...`);
+      logger.log(`🚀 Executing ${this.name}...`);
       
       const results = await framework.execute();
       
-      console.log(`✅ ${this.name} completed successfully`);
+      logger.log(`✅ ${this.name} completed successfully`);
       return {
         success: true,
         framework: this.name,
@@ -77,7 +79,7 @@ class CodeRefactoringFramework {
         timestamp: new Date().toISOString()
       };
     } catch (error) {
-      console.error(`❌ ${this.name} failed:`, error.message);
+      logger.error(`❌ ${this.name} failed:`, error.message);
       return {
         success: false,
         framework: this.name,

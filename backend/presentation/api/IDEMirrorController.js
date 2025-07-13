@@ -1,6 +1,8 @@
 const IDEMirrorService = require('@services/IDEMirrorService');
 const ScreenshotStreamingService = require('@services/ide-mirror/ScreenshotStreamingService');
 const StreamingController = require('./StreamingController');
+const { logger } = require('@infrastructure/logging/Logger');
+
 
 class IDEMirrorController {
     constructor() {
@@ -34,17 +36,17 @@ class IDEMirrorController {
      */
     initializeStreamingServices(registry) {
         try {
-            console.log('[IDEMirrorController] Initializing streaming services...');
+            logger.log('[IDEMirrorController] Initializing streaming services...');
             
             // Get required services
             const browserManager = registry.getService('browserManager');
-            console.log('[IDEMirrorController] Browser manager available:', !!browserManager);
+            logger.log('[IDEMirrorController] Browser manager available:', !!browserManager);
             
             const webSocketManager = registry.getService('webSocketManager');
-            console.log('[IDEMirrorController] WebSocket manager available:', !!webSocketManager);
+            logger.log('[IDEMirrorController] WebSocket manager available:', !!webSocketManager);
             
             const eventBus = registry.getService('eventBus');
-            console.log('[IDEMirrorController] Event bus available:', !!eventBus);
+            logger.log('[IDEMirrorController] Event bus available:', !!eventBus);
 
             if (!browserManager) {
                 throw new Error('Browser manager service not found');
@@ -81,11 +83,11 @@ class IDEMirrorController {
                 webSocketManager.setScreenshotStreamingService(this.screenshotStreamingService);
             }
 
-            console.log('[IDEMirrorController] Streaming services initialized successfully');
+            logger.log('[IDEMirrorController] Streaming services initialized successfully');
 
         } catch (error) {
-            console.error('[IDEMirrorController] Error initializing streaming services:', error.message);
-            console.error('[IDEMirrorController] Error stack:', error.stack);
+            logger.error('[IDEMirrorController] Error initializing streaming services:', error.message);
+            logger.error('[IDEMirrorController] Error stack:', error.stack);
         }
     }
 
@@ -104,7 +106,7 @@ class IDEMirrorController {
                 timestamp: Date.now()
             });
         } catch (error) {
-            console.error('❌ Failed to get IDE state:', error.message);
+            logger.error('❌ Failed to get IDE state:', error.message);
             res.status(500).json({
                 success: false,
                 error: error.message
@@ -128,7 +130,7 @@ class IDEMirrorController {
                 data: idesWithStatus
             });
         } catch (error) {
-            console.error('❌ Failed to get available IDEs:', error.message);
+            logger.error('❌ Failed to get available IDEs:', error.message);
             res.status(500).json({
                 success: false,
                 error: error.message
@@ -169,7 +171,7 @@ class IDEMirrorController {
                 target: selector || `${coordinates.x},${coordinates.y}`
             });
         } catch (error) {
-            console.error('❌ Failed to click element:', error.message);
+            logger.error('❌ Failed to click element:', error.message);
             res.status(500).json({
                 success: false,
                 error: error.message
@@ -200,7 +202,7 @@ class IDEMirrorController {
                 data: newState
             });
         } catch (error) {
-            console.error('❌ Failed to switch IDE:', error.message);
+            logger.error('❌ Failed to switch IDE:', error.message);
             res.status(500).json({
                 success: false,
                 error: error.message
@@ -219,7 +221,7 @@ class IDEMirrorController {
                 data: state
             });
         } catch (error) {
-            console.error('❌ Failed to connect to IDE:', error.message);
+            logger.error('❌ Failed to connect to IDE:', error.message);
             res.status(500).json({
                 success: false,
                 error: error.message
@@ -258,7 +260,7 @@ class IDEMirrorController {
                 text: text.substring(0, 50)
             });
         } catch (error) {
-            console.error('❌ Failed to type text:', error.message);
+            logger.error('❌ Failed to type text:', error.message);
             res.status(500).json({
                 success: false,
                 error: error.message
@@ -298,7 +300,7 @@ class IDEMirrorController {
                 text: text.substring(0, 50)
             });
         } catch (error) {
-            console.error('❌ Failed to focus and type:', error.message);
+            logger.error('❌ Failed to focus and type:', error.message);
             res.status(500).json({
                 success: false,
                 error: error.message
@@ -337,7 +339,7 @@ class IDEMirrorController {
                 message: message.substring(0, 50)
             });
         } catch (error) {
-            console.error('❌ Failed to send chat message:', error.message);
+            logger.error('❌ Failed to send chat message:', error.message);
             res.status(500).json({
                 success: false,
                 error: error.message
@@ -347,7 +349,7 @@ class IDEMirrorController {
 
     // WebSocket Event Handlers
     handleWebSocketConnection(ws) {
-        console.log('🔌 IDE Mirror client connected');
+        logger.log('🔌 IDE Mirror client connected');
         this.connectedClients.add(ws);
 
         ws.on('message', async (message) => {
@@ -355,7 +357,7 @@ class IDEMirrorController {
                 const data = JSON.parse(message);
                 await this.handleWebSocketMessage(ws, data);
             } catch (error) {
-                console.error('❌ WebSocket message error:', error.message);
+                logger.error('❌ WebSocket message error:', error.message);
                 ws.send(JSON.stringify({
                     type: 'error',
                     message: error.message
@@ -364,7 +366,7 @@ class IDEMirrorController {
         });
 
         ws.on('close', () => {
-            console.log('🔌 IDE Mirror client disconnected');
+            logger.log('🔌 IDE Mirror client disconnected');
             this.connectedClients.delete(ws);
         });
 
@@ -462,11 +464,11 @@ class IDEMirrorController {
                     }
                     
                 } catch (error) {
-                    console.error('❌ Queue processing error:', error.message);
+                    logger.error('❌ Queue processing error:', error.message);
                     
                     // If it's a connection error, clear the queue and stop
                     if (error.message.includes('closed') || error.message.includes('disconnected')) {
-                        console.log('🧹 Clearing message queue due to connection error');
+                        logger.log('🧹 Clearing message queue due to connection error');
                         this.messageQueue = [];
                         break;
                     }
@@ -476,7 +478,7 @@ class IDEMirrorController {
                 }
             }
             
-            console.log(`⚡ Processed ${processedCount} keystrokes in queue`);
+            logger.log(`⚡ Processed ${processedCount} keystrokes in queue`);
         } finally {
             this.isProcessingQueue = false;
         }
@@ -489,7 +491,7 @@ class IDEMirrorController {
             await this.ideMirrorService.connectToIDE();
         }
 
-        console.log(`🖱️ Processing click: ${selector}`);
+        logger.log(`🖱️ Processing click: ${selector}`);
         await this.ideMirrorService.clickElementInIDE(selector, coordinates);
         
         // Wait for UI changes
@@ -497,7 +499,7 @@ class IDEMirrorController {
         
         const newState = await this.ideMirrorService.captureCompleteIDEState();
         this.broadcastToClients('ide-state-updated', newState);
-        console.log(`📸 Screenshot updated after click: ${selector}`);
+        logger.log(`📸 Screenshot updated after click: ${selector}`);
     }
 
     async handleWebSocketType(ws, payload) {
@@ -507,7 +509,7 @@ class IDEMirrorController {
             await this.ideMirrorService.connectToIDE();
         }
 
-        console.log(`⌨️ Processing keystroke: ${key || text} for ${selector}`);
+        logger.log(`⌨️ Processing keystroke: ${key || text} for ${selector}`);
         await this.ideMirrorService.typeInIDE(text, selector, key, modifiers);
         
         // Smart screenshot timing - only when truly needed
@@ -527,9 +529,9 @@ class IDEMirrorController {
             
             const newState = await this.ideMirrorService.captureCompleteIDEState();
             this.broadcastToClients('ide-state-updated', newState);
-            console.log(`📸 Screenshot updated for key: ${key}`);
+            logger.log(`📸 Screenshot updated for key: ${key}`);
         } else {
-            console.log(`⏩ Skipping screenshot for: ${key || text}`);
+            logger.log(`⏩ Skipping screenshot for: ${key || text}`);
             
             // Send lightweight typing confirmation without screenshot
             this.broadcastToClients('typing-confirmed', {
@@ -547,7 +549,7 @@ class IDEMirrorController {
             await this.ideMirrorService.connectToIDE();
         }
 
-        console.log(`⚡ Processing batch: "${text}" (${text.length} chars) for ${selector}`);
+        logger.log(`⚡ Processing batch: "${text}" (${text.length} chars) for ${selector}`);
         
         // Send entire batch at once - much faster than individual keystrokes
         await this.ideMirrorService.typeInIDE(text, selector);
@@ -557,7 +559,7 @@ class IDEMirrorController {
         
         const newState = await this.ideMirrorService.captureCompleteIDEState();
         this.broadcastToClients('ide-state-updated', newState);
-        console.log(`📸 Screenshot updated after batch: "${text.substring(0, 20)}..."`);
+        logger.log(`📸 Screenshot updated after batch: "${text.substring(0, 20)}..."`);
     }
 
     isEndOfWord(text) {
@@ -632,8 +634,8 @@ class IDEMirrorController {
 
     // Route setup method
     setupRoutes(app) {
-        console.log('[IDEMirrorController] Setting up routes...');
-        console.log('[IDEMirrorController] Streaming controller available:', !!this.streamingController);
+        logger.log('[IDEMirrorController] Setting up routes...');
+        logger.log('[IDEMirrorController] Streaming controller available:', !!this.streamingController);
         
         // HTTP API Routes
         app.get('/api/ide-mirror/state', this.getIDEState.bind(this));
@@ -647,7 +649,7 @@ class IDEMirrorController {
 
         // Streaming endpoints (port-based)
         if (this.streamingController) {
-            console.log('[IDEMirrorController] Registering port-based streaming routes...');
+            logger.log('[IDEMirrorController] Registering port-based streaming routes...');
             
             // Port-specific streaming routes
             app.post('/api/ide-mirror/:port/stream/start', (req, res) => this.streamingController.startStreaming(req, res));
@@ -663,9 +665,9 @@ class IDEMirrorController {
             app.post('/api/ide-mirror/stream/stop-all', (req, res) => this.streamingController.stopAllStreaming(req, res));
             app.get('/api/ide-mirror/stream/health', (req, res) => this.streamingController.healthCheck(req, res));
             
-            console.log('[IDEMirrorController] Port-based streaming routes registered successfully');
+            logger.log('[IDEMirrorController] Port-based streaming routes registered successfully');
         } else {
-            console.log('[IDEMirrorController] Streaming controller not available, skipping streaming routes');
+            logger.log('[IDEMirrorController] Streaming controller not available, skipping streaming routes');
         }
     }
 }

@@ -1,3 +1,4 @@
+import { logger } from "@/infrastructure/logging/Logger";
 import useAuthStore from '@/infrastructure/stores/AuthStore.jsx';
 
 class WebSocketService {
@@ -25,12 +26,12 @@ class WebSocketService {
         const protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
         const wsUrl = `${protocol}//${location.host}/ws`;
         
-        console.log('🔌 WebSocketService: Connecting to:', wsUrl);
+        logger.log('🔌 WebSocketService: Connecting to:', wsUrl);
         
         this.ws = new WebSocket(wsUrl);
 
         this.ws.onopen = () => {
-          console.log('✅ WebSocketService: Connected');
+          logger.log('✅ WebSocketService: Connected');
           this.isConnected = true;
           this.reconnectAttempts = 0;
           
@@ -58,18 +59,18 @@ class WebSocketService {
               this.handleMessage(message);
             }
           } catch (error) {
-            console.error('❌ WebSocketService: Failed to parse message:', error);
+            logger.error('❌ WebSocketService: Failed to parse message:', error);
           }
         };
 
         this.ws.onclose = (event) => {
-          console.log('🔌 WebSocketService: Disconnected:', event.code, event.reason);
+          logger.log('🔌 WebSocketService: Disconnected:', event.code, event.reason);
           this.isConnected = false;
           this.connectionPromise = null;
           
           // Handle authentication failure
           if (event.code === 1008) {
-            console.log('🔐 WebSocketService: Authentication failed, logging out');
+            logger.log('🔐 WebSocketService: Authentication failed, logging out');
             const { logout } = useAuthStore.getState();
             logout();
             return;
@@ -78,21 +79,21 @@ class WebSocketService {
           // Attempt reconnection
           if (this.reconnectAttempts < this.maxReconnectAttempts) {
             this.reconnectAttempts++;
-            console.log(`🔄 WebSocketService: Reconnecting (${this.reconnectAttempts}/${this.maxReconnectAttempts})...`);
+            logger.debug(`🔄 WebSocketService: Reconnecting (${this.reconnectAttempts}/${this.maxReconnectAttempts})...`);
             setTimeout(() => this.connect(), this.reconnectDelay);
           } else {
-            console.error('❌ WebSocketService: Max reconnection attempts reached');
+            logger.error('❌ WebSocketService: Max reconnection attempts reached');
           }
         };
 
         this.ws.onerror = (error) => {
-          console.error('❌ WebSocketService: Error:', error);
+          logger.error('❌ WebSocketService: Error:', error);
           this.connectionPromise = null;
           reject(error);
         };
 
       } catch (error) {
-        console.error('❌ WebSocketService: Failed to create WebSocket:', error);
+        logger.error('❌ WebSocketService: Failed to create WebSocket:', error);
         this.connectionPromise = null;
         reject(error);
       }
@@ -113,7 +114,7 @@ class WebSocketService {
 
   send(data) {
     if (!this.ws || this.ws.readyState !== WebSocket.OPEN) {
-      console.warn('⚠️ WebSocketService: Cannot send message, not connected');
+      logger.warn('⚠️ WebSocketService: Cannot send message, not connected');
       return false;
     }
 
@@ -121,7 +122,7 @@ class WebSocketService {
       this.ws.send(JSON.stringify(data));
       return true;
     } catch (error) {
-      console.error('❌ WebSocketService: Failed to send message:', error);
+      logger.error('❌ WebSocketService: Failed to send message:', error);
       return false;
     }
   }
@@ -129,7 +130,7 @@ class WebSocketService {
   handleMessage(message) {
     const { event, data, timestamp, type, topic } = message;
     
-    console.log('📨 WebSocketService: Received message:', event || type, data);
+    logger.log('📨 WebSocketService: Received message:', event || type, data);
     
     // Handle topic messages for streaming
     if (type === 'topic' && topic) {
@@ -149,7 +150,7 @@ class WebSocketService {
         try {
           callback(data, timestamp);
         } catch (error) {
-          console.error('❌ WebSocketService: Error in event listener:', error);
+          logger.error('❌ WebSocketService: Error in event listener:', error);
         }
       });
     }
@@ -169,12 +170,12 @@ class WebSocketService {
       };
       reader.readAsDataURL(blob);
     } catch (error) {
-      console.error('❌ WebSocketService: Failed to handle binary message:', error);
+      logger.error('❌ WebSocketService: Failed to handle binary message:', error);
     }
   }
 
   handleTopicMessage(topic, data) {
-    console.log('📨 WebSocketService: Received topic message:', topic);
+    logger.log('📨 WebSocketService: Received topic message:', topic);
     
     // Emit topic-specific events
     if (this.eventListeners.has(topic)) {
@@ -182,7 +183,7 @@ class WebSocketService {
         try {
           callback(data);
         } catch (error) {
-          console.error('❌ WebSocketService: Error in topic listener:', error);
+          logger.error('❌ WebSocketService: Error in topic listener:', error);
         }
       });
     }
@@ -193,14 +194,14 @@ class WebSocketService {
         try {
           callback({ topic, data });
         } catch (error) {
-          console.error('❌ WebSocketService: Error in topic listener:', error);
+          logger.error('❌ WebSocketService: Error in topic listener:', error);
         }
       });
     }
   }
 
   handleFrameMessage(frameData) {
-    console.log('📨 WebSocketService: Received frame message:', frameData.frameNumber);
+    logger.log('📨 WebSocketService: Received frame message:', frameData.frameNumber);
     
     // Emit frame events
     if (this.eventListeners.has('frame')) {
@@ -208,7 +209,7 @@ class WebSocketService {
         try {
           callback(frameData);
         } catch (error) {
-          console.error('❌ WebSocketService: Error in frame listener:', error);
+          logger.error('❌ WebSocketService: Error in frame listener:', error);
         }
       });
     }

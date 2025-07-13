@@ -3,6 +3,7 @@
  * Manages different merge methods and automation levels for git workflow operations
  */
 const GitWorkflowException = require('./exceptions/GitWorkflowException');
+const { logger } = require('@infrastructure/logging/Logger');
 
 class MergeStrategy {
   constructor(config = {}) {

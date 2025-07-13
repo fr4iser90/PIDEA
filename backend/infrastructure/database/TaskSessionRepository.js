@@ -1,4 +1,5 @@
 const TaskSession = require('@entities/TaskSession');
+const { logger } = require('@infrastructure/logging/Logger');
 
 /**
  * TaskSessionRepository - Repository for managing task session persistence

@@ -1,3 +1,4 @@
+
 /**
  * IDE Health Monitor
  * Monitors IDE health, status, and performance
@@ -24,7 +25,7 @@ class IDEHealthMonitor extends EventEmitter {
    */
   async startMonitoring(interval = null) {
     if (this.monitoring) {
-      console.log('[IDEHealthMonitor] Monitoring already active');
+      logger.log('[IDEHealthMonitor] Monitoring already active');
       return;
     }
 
@@ -34,7 +35,7 @@ class IDEHealthMonitor extends EventEmitter {
         const globalConfig = this.configManager.getGlobalConfig();
         interval = globalConfig.healthCheckInterval || this.healthCheckInterval;
       } catch (error) {
-        console.warn('[IDEHealthMonitor] Could not get config, using default interval');
+        logger.warn('[IDEHealthMonitor] Could not get config, using default interval');
         interval = this.healthCheckInterval;
       }
     }
@@ -42,7 +43,7 @@ class IDEHealthMonitor extends EventEmitter {
     this.healthCheckInterval = interval || this.healthCheckInterval;
     this.monitoring = true;
 
-    console.log(`[IDEHealthMonitor] Starting health monitoring with ${this.healthCheckInterval}ms interval`);
+    logger.log(`[IDEHealthMonitor] Starting health monitoring with ${this.healthCheckInterval}ms interval`);
 
     // Start periodic health checks
     this.healthInterval = setInterval(() => {
@@ -58,7 +59,7 @@ class IDEHealthMonitor extends EventEmitter {
    */
   stopMonitoring() {
     if (!this.monitoring) {
-      console.log('[IDEHealthMonitor] Monitoring not active');
+      logger.log('[IDEHealthMonitor] Monitoring not active');
       return;
     }
 
@@ -69,7 +70,7 @@ class IDEHealthMonitor extends EventEmitter {
       this.healthInterval = null;
     }
 
-    console.log('[IDEHealthMonitor] Health monitoring stopped');
+    logger.log('[IDEHealthMonitor] Health monitoring stopped');
 
     // Emit stop event
     this.emit('monitoringStopped');
@@ -92,7 +93,7 @@ class IDEHealthMonitor extends EventEmitter {
             return result;
           })
           .catch(error => {
-            console.error(`[IDEHealthMonitor] Error checking health for port ${port}:`, error);
+            logger.error(`[IDEHealthMonitor] Error checking health for port ${port}:`, error);
             healthResults[port] = {
               port: port,
               status: 'error',
@@ -218,7 +219,7 @@ class IDEHealthMonitor extends EventEmitter {
       }
 
     } catch (error) {
-      console.warn(`[IDEHealthMonitor] Error getting additional metrics for port ${port}:`, error);
+      logger.warn(`[IDEHealthMonitor] Error getting additional metrics for port ${port}:`, error);
     }
 
     return metrics;
@@ -304,6 +305,7 @@ class IDEHealthMonitor extends EventEmitter {
   async getUptime(port) {
     return new Promise((resolve) => {
       const { exec } = require('child_process');
+const { logger } = require('@infrastructure/logging/Logger');
       exec(`lsof -ti:${port}`, (error, stdout) => {
         if (error || !stdout.trim()) {
           resolve(null);
@@ -360,7 +362,7 @@ class IDEHealthMonitor extends EventEmitter {
 
     this.healthHistory.set(port, []);
 
-    console.log(`[IDEHealthMonitor] Registered IDE ${ideType} on port ${port} for health monitoring`);
+    logger.log(`[IDEHealthMonitor] Registered IDE ${ideType} on port ${port} for health monitoring`);
     this.emit('ideRegistered', { port, ideType });
   }
 
@@ -372,7 +374,7 @@ class IDEHealthMonitor extends EventEmitter {
     this.ideHealth.delete(port);
     this.healthHistory.delete(port);
 
-    console.log(`[IDEHealthMonitor] Unregistered IDE on port ${port} from health monitoring`);
+    logger.log(`[IDEHealthMonitor] Unregistered IDE on port ${port} from health monitoring`);
     this.emit('ideUnregistered', { port });
   }
 
@@ -501,7 +503,7 @@ class IDEHealthMonitor extends EventEmitter {
     this.healthChecks = this.healthChecks || new Map();
     this.healthChecks.set(key, checkFunction);
 
-    console.log(`[IDEHealthMonitor] Added health check for ${ideType} on port ${port}`);
+    logger.log(`[IDEHealthMonitor] Added health check for ${ideType} on port ${port}`);
   }
 
   /**
@@ -510,7 +512,7 @@ class IDEHealthMonitor extends EventEmitter {
   clearHealthChecks() {
     this.healthChecks = this.healthChecks || new Map();
     this.healthChecks.clear();
-    console.log('[IDEHealthMonitor] Cleared all health checks');
+    logger.log('[IDEHealthMonitor] Cleared all health checks');
   }
 
   /**

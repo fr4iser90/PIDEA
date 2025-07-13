@@ -1,19 +1,21 @@
+
 require('module-alias/register');
 const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
+const { logger } = require('@infrastructure/logging/Logger');
 
 // Use the same database path as the application
 const dbPath = path.join(__dirname, '../database/PIDEA-dev.db');
 
-console.log('🗄️ [ResetDatabase] Starting database reset...');
-console.log(`📁 Database path: ${dbPath}`);
+logger.log('🗄️ [ResetDatabase] Starting database reset...');
+logger.log(`📁 Database path: ${dbPath}`);
 
 const db = new sqlite3.Database(dbPath, (err) => {
   if (err) {
-    console.error('❌ Error opening database:', err.message);
+    logger.error('❌ Error opening database:', err.message);
     process.exit(1);
   }
-  console.log('✅ Database opened successfully');
+  logger.log('✅ Database opened successfully');
 });
 
 // Drop existing tables (in reverse dependency order)
@@ -233,7 +235,7 @@ const createTables = [
 async function resetDatabase() {
   try {
     // Drop tables
-    console.log('🗑️ Dropping existing tables...');
+    logger.log('🗑️ Dropping existing tables...');
     for (const dropSql of dropTables) {
       await new Promise((resolve, reject) => {
         db.run(dropSql, (err) => {
@@ -242,10 +244,10 @@ async function resetDatabase() {
         });
       });
     }
-    console.log('✅ Tables dropped successfully');
+    logger.log('✅ Tables dropped successfully');
 
     // Create tables
-    console.log('🏗️ Creating new PIDEA tables...');
+    logger.log('🏗️ Creating new PIDEA tables...');
     for (const createSql of createTables) {
       await new Promise((resolve, reject) => {
         db.run(createSql, (err) => {
@@ -254,26 +256,26 @@ async function resetDatabase() {
         });
       });
     }
-    console.log('✅ PIDEA tables created successfully');
+    logger.log('✅ PIDEA tables created successfully');
 
-    console.log('🎉 Database reset completed successfully!');
-    console.log('📊 Created tables:');
-    console.log('  - users (with username, status)');
-    console.log('  - user_sessions');
-    console.log('  - projects');
-    console.log('  - tasks (with user_id, project_id)');
-    console.log('  - frameworks');
-    console.log('  - workflows');
-    console.log('  - steps');
-    console.log('  - commands');
-    console.log('  - handlers');
-    console.log('  - ide_agents');
-    console.log('  - workflow_executions');
-    console.log('  - chat_sessions');
-    console.log('  - chat_messages');
-    console.log('  - analysis_results');
+    logger.log('🎉 Database reset completed successfully!');
+    logger.log('📊 Created tables:');
+    logger.log('  - users (with username, status)');
+    logger.log('  - user_sessions');
+    logger.log('  - projects');
+    logger.log('  - tasks (with user_id, project_id)');
+    logger.log('  - frameworks');
+    logger.log('  - workflows');
+    logger.log('  - steps');
+    logger.log('  - commands');
+    logger.log('  - handlers');
+    logger.log('  - ide_agents');
+    logger.log('  - workflow_executions');
+    logger.log('  - chat_sessions');
+    logger.log('  - chat_messages');
+    logger.log('  - analysis_results');
   } catch (error) {
-    console.error('❌ Error resetting database:', error.message);
+    logger.error('❌ Error resetting database:', error.message);
     process.exit(1);
   } finally {
     db.close();

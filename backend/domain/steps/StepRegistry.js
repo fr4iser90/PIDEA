@@ -1,3 +1,4 @@
+
 /**
  * Step Registry - Domain Layer
  * Manages atomic steps and provides step validation
@@ -9,6 +10,7 @@ const path = require('path');
 const fs = require('fs').promises;
 const { STANDARD_CATEGORIES, isValidCategory, getDefaultCategory } = require('../constants/Categories');
 const IStandardRegistry = require('../interfaces/IStandardRegistry');
+const { logger } = require('@infrastructure/logging/Logger');
 
 class StepRegistry {
   constructor() {
@@ -65,10 +67,10 @@ class StepRegistry {
         this.executors.set(name, executor);
       }
 
-      console.log(`✅ Step "${name}" registered successfully in category "${finalCategory}"`);
+      logger.log(`✅ Step "${name}" registered successfully in category "${finalCategory}"`);
       return true;
     } catch (error) {
-      console.error(`❌ Failed to register step "${name}":`, error.message);
+      logger.error(`❌ Failed to register step "${name}":`, error.message);
       throw error;
     }
   }
@@ -84,12 +86,12 @@ class StepRegistry {
       try {
         await fs.access(categoriesDir);
       } catch {
-        console.log('📁 Categories directory not found, trying alternative path...');
+        logger.log('📁 Categories directory not found, trying alternative path...');
         // Try alternative path for development
         const altCategoriesDir = path.join(process.cwd(), 'domain', 'steps', 'categories');
         try {
           await fs.access(altCategoriesDir);
-          console.log('📁 Found categories in alternative path');
+          logger.log('📁 Found categories in alternative path');
           const categories = await fs.readdir(altCategoriesDir);
           
           for (const category of categories) {
@@ -101,10 +103,10 @@ class StepRegistry {
             }
           }
           
-          console.log(`📦 Loaded ${this.steps.size} steps from alternative categories path`);
+          logger.log(`📦 Loaded ${this.steps.size} steps from alternative categories path`);
           return;
         } catch {
-          console.log('📁 Creating categories directory...');
+          logger.log('📁 Creating categories directory...');
           await fs.mkdir(categoriesDir, { recursive: true });
           return;
         }
@@ -121,9 +123,9 @@ class StepRegistry {
         }
       }
 
-      console.log(`📦 Loaded ${this.steps.size} steps from categories`);
+      logger.log(`📦 Loaded ${this.steps.size} steps from categories`);
     } catch (error) {
-      console.error('❌ Failed to load steps from categories:', error.message);
+      logger.error('❌ Failed to load steps from categories:', error.message);
       throw error;
     }
   }
@@ -149,11 +151,11 @@ class StepRegistry {
           
           await this.registerStep(stepName, config, category, executor);
         } catch (error) {
-          console.error(`❌ Failed to load step "${file}" from category "${category}":`, error.message);
+          logger.error(`❌ Failed to load step "${file}" from category "${category}":`, error.message);
         }
       }
     } catch (error) {
-      console.error(`❌ Failed to load category "${category}":`, error.message);
+      logger.error(`❌ Failed to load category "${category}":`, error.message);
     }
   }
 
@@ -213,7 +215,7 @@ class StepRegistry {
       }
 
       // Execute step
-      console.log(`🚀 Executing step "${name}"...`);
+      logger.log(`🚀 Executing step "${name}"...`);
       const startTime = Date.now();
       
       const result = await executor(context, options);
@@ -226,7 +228,7 @@ class StepRegistry {
       step.lastExecuted = new Date();
       step.lastDuration = duration;
 
-      console.log(`✅ Step "${name}" executed successfully in ${duration}ms`);
+      logger.log(`✅ Step "${name}" executed successfully in ${duration}ms`);
       return {
         success: true,
         result,
@@ -235,7 +237,7 @@ class StepRegistry {
         timestamp: new Date()
       };
     } catch (error) {
-      console.error(`❌ Failed to execute step "${name}":`, error.message);
+      logger.error(`❌ Failed to execute step "${name}":`, error.message);
       
       // Update step statistics
       const step = this.steps.get(name);
@@ -313,7 +315,7 @@ class StepRegistry {
     step.config = { ...step.config, ...newConfig };
     step.updatedAt = new Date();
     
-    console.log(`✅ Step "${name}" updated successfully`);
+    logger.log(`✅ Step "${name}" updated successfully`);
     return step;
   }
 
@@ -341,7 +343,7 @@ class StepRegistry {
     // Remove executor
     this.executors.delete(name);
     
-    console.log(`🗑️ Step "${name}" removed successfully`);
+    logger.log(`🗑️ Step "${name}" removed successfully`);
     return true;
   }
 
@@ -396,7 +398,7 @@ class StepRegistry {
     step.status = status;
     step.updatedAt = new Date();
     
-    console.log(`✅ Step "${name}" status set to "${status}"`);
+    logger.log(`✅ Step "${name}" status set to "${status}"`);
     return step;
   }
 
@@ -624,7 +626,7 @@ class StepRegistry {
     if (data.executors) {
       data.executors.forEach(name => {
         // Note: Executors would need to be re-registered
-        console.warn(`Executor for step "${name}" needs to be re-registered`);
+        logger.warn(`Executor for step "${name}" needs to be re-registered`);
       });
     }
     

@@ -1,3 +1,4 @@
+
 /**
  * VSCode IDE Starter
  * Starts VSCode IDE instances and manages VSCode-specific startup logic
@@ -29,7 +30,7 @@ class VSCodeStarter {
    * @returns {Promise<Object>} IDE startup information
    */
   async startIDE(port, workspacePath = null, options = {}) {
-    console.log('[VSCodeStarter] Starting VSCode IDE on port', port);
+    logger.log('[VSCodeStarter] Starting VSCode IDE on port', port);
     
     // Validate port is in range
     if (port < this.config.portRange.start || port > this.config.portRange.end) {
@@ -92,19 +93,19 @@ class VSCodeStarter {
 
       // Handle process events
       process.stdout.on('data', (data) => {
-        console.log(`[VSCodeStarter] VSCode IDE ${port} stdout:`, data.toString().trim());
+        logger.log(`[VSCodeStarter] VSCode IDE ${port} stdout:`, data.toString().trim());
       });
 
       process.stderr.on('data', (data) => {
-        console.log(`[VSCodeStarter] VSCode IDE ${port} stderr:`, data.toString().trim());
+        logger.log(`[VSCodeStarter] VSCode IDE ${port} stderr:`, data.toString().trim());
       });
 
       process.on('close', (code) => {
-        console.log(`[VSCodeStarter] VSCode IDE ${port} process closed with code ${code}`);
+        logger.log(`[VSCodeStarter] VSCode IDE ${port} process closed with code ${code}`);
       });
 
       process.on('error', (error) => {
-        console.error(`[VSCodeStarter] VSCode IDE ${port} process error:`, error);
+        logger.error(`[VSCodeStarter] VSCode IDE ${port} process error:`, error);
       });
 
       // Wait for VSCode to start (longer timeout than Cursor)
@@ -122,7 +123,7 @@ class VSCodeStarter {
       };
 
     } catch (error) {
-      console.error('[VSCodeStarter] Failed to start VSCode IDE:', error);
+      logger.error('[VSCodeStarter] Failed to start VSCode IDE:', error);
       throw error;
     }
   }
@@ -133,7 +134,7 @@ class VSCodeStarter {
    * @returns {Promise<Object>} Stop result
    */
   async stopIDE(port) {
-    console.log('[VSCodeStarter] Stopping VSCode IDE on port', port);
+    logger.log('[VSCodeStarter] Stopping VSCode IDE on port', port);
     
     try {
       // Find and kill VSCode processes on the specified port
@@ -155,7 +156,7 @@ class VSCodeStarter {
             return new Promise((resolveKill) => {
               exec(`kill -TERM ${pid}`, (killError) => {
                 if (killError) {
-                  console.error(`[VSCodeStarter] Error killing process ${pid}:`, killError);
+                  logger.error(`[VSCodeStarter] Error killing process ${pid}:`, killError);
                 }
                 resolveKill();
               });
@@ -173,7 +174,7 @@ class VSCodeStarter {
         });
       });
     } catch (error) {
-      console.error('[VSCodeStarter] Error stopping VSCode IDE:', error);
+      logger.error('[VSCodeStarter] Error stopping VSCode IDE:', error);
       throw error;
     }
   }
@@ -257,6 +258,7 @@ class VSCodeStarter {
     for (const path of commonPaths) {
       try {
         require('fs').accessSync(path, require('fs').constants.X_OK);
+const { logger } = require('@infrastructure/logging/Logger');
         return path;
       } catch (error) {
         // Continue to next path

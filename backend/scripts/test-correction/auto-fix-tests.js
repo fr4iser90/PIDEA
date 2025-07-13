@@ -5,11 +5,11 @@ require('module-alias/register');
 const path = require('path');
 const fs = require('fs-extra');
 const { execSync } = require('child_process');
+const { logger } = require('@infrastructure/logging/Logger');
 const TestCorrectionService = require('@services/TestCorrectionService');
 const TestAnalyzer = require('@external/TestAnalyzer');
 const TestFixer = require('@external/TestFixer');
 const CoverageAnalyzerService = require('@services/CoverageAnalyzerService');
-const logger = require('@logging/logger');
 
 class AutoFixTests {
   constructor(options = {}) {
@@ -48,7 +48,7 @@ class AutoFixTests {
    * Main entry point for auto-fixing tests
    */
   async run() {
-    console.log('🚀 Starting Auto Test Fix Process...');
+    logger.debug('🚀 Starting Auto Test Fix Process...');
     this.results.startTime = new Date();
     
     try {
@@ -68,7 +68,7 @@ class AutoFixTests {
       await this.generateReport(fixResults, verificationResults);
       
       this.results.endTime = new Date();
-      console.log('✅ Auto Test Fix Process Completed!');
+      logger.debug('✅ Auto Test Fix Process Completed!');
       
       return {
         success: true,
@@ -79,7 +79,7 @@ class AutoFixTests {
       
     } catch (error) {
       logger.error('Auto fix process failed', { error: error.message });
-      console.error('❌ Auto Test Fix Process Failed:', error.message);
+      logger.error('❌ Auto Test Fix Process Failed:', error.message);
       
       return {
         success: false,
@@ -93,7 +93,7 @@ class AutoFixTests {
    * Run tests and collect results
    */
   async runTests() {
-    console.log('📊 Running tests to collect current status...');
+    logger.debug('📊 Running tests to collect current status...');
     
     try {
       const testOutput = execSync('npm test -- --json --silent', {
@@ -109,7 +109,7 @@ class AutoFixTests {
         .flatMap(result => result.assertionResults || [])
         .filter(test => test.status === 'failed');
       
-      console.log(`📈 Test Results: ${testResults.numPassedTests} passed, ${failing.length} failed`);
+      logger.debug(`📈 Test Results: ${testResults.numPassedTests} passed, ${failing.length} failed`);
       
       return {
         total: testResults.numTotalTests,
@@ -124,7 +124,7 @@ class AutoFixTests {
       
     } catch (error) {
       // If tests fail, try to parse the output anyway
-      console.log('⚠️  Tests failed, attempting to parse results...');
+      logger.debug('⚠️  Tests failed, attempting to parse results...');
       
       try {
         const testOutput = execSync('npm test -- --json --silent 2>&1', {
@@ -153,7 +153,7 @@ class AutoFixTests {
    * Analyze tests and create correction tasks
    */
   async analyzeTests(testResults) {
-    console.log('🔍 Analyzing failing tests...');
+    logger.debug('🔍 Analyzing failing tests...');
     
     const corrections = [];
     
@@ -181,7 +181,7 @@ class AutoFixTests {
       corrections.push(...complexCorrections);
     }
     
-    console.log(`📋 Created ${corrections.length} correction tasks`);
+    logger.log(`📋 Created ${corrections.length} correction tasks`);
     
     return corrections;
   }
@@ -191,14 +191,14 @@ class AutoFixTests {
    */
   async applyFixes(corrections) {
     if (corrections.length === 0) {
-      console.log('✅ No corrections needed');
+      logger.log('✅ No corrections needed');
       return [];
     }
     
-    console.log(`🔧 Applying fixes to ${corrections.length} tests...`);
+    logger.debug(`🔧 Applying fixes to ${corrections.length} tests...`);
     
     if (this.options.dryRun) {
-      console.log('🔍 DRY RUN MODE - No actual changes will be made');
+      logger.log('🔍 DRY RUN MODE - No actual changes will be made');
       return corrections.map(correction => ({
         success: true,
         correction,
@@ -209,12 +209,12 @@ class AutoFixTests {
     const results = await this.testCorrectionService.processCorrections(corrections, {
       maxConcurrent: this.options.maxConcurrent,
       onProgress: (progress) => {
-        console.log(`📈 Progress: ${progress.completed}/${progress.total} (${Math.round(progress.completed/progress.total*100)}%)`);
+        logger.log(`📈 Progress: ${progress.completed}/${progress.total} (${Math.round(progress.completed/progress.total*100)}%)`);
       },
       onComplete: (results) => {
         const successful = results.filter(r => r.success).length;
         const failed = results.filter(r => !r.success).length;
-        console.log(`✅ Fixes completed: ${successful} successful, ${failed} failed`);
+        logger.log(`✅ Fixes completed: ${successful} successful, ${failed} failed`);
       }
     });
     
@@ -228,7 +228,7 @@ class AutoFixTests {
    * Verify that fixes worked
    */
   async verifyFixes() {
-    console.log('🔍 Verifying fixes...');
+    logger.log('🔍 Verifying fixes...');
     
     try {
       const testOutput = execSync('npm test -- --json --silent', {
@@ -242,7 +242,7 @@ class AutoFixTests {
         .flatMap(result => result.assertionResults || [])
         .filter(test => test.status === 'failed');
       
-      console.log(`📊 Verification Results: ${testResults.numPassedTests} passed, ${failing.length} failed`);
+      logger.debug(`📊 Verification Results: ${testResults.numPassedTests} passed, ${failing.length} failed`);
       
       return {
         total: testResults.numTotalTests,
@@ -252,7 +252,7 @@ class AutoFixTests {
       };
       
     } catch (error) {
-      console.log('⚠️  Verification failed, some tests may still be broken');
+      logger.debug('⚠️  Verification failed, some tests may still be broken');
       return {
         total: 0,
         passed: 0,
@@ -430,7 +430,7 @@ class AutoFixTests {
    * Generate comprehensive report
    */
   async generateReport(fixResults, verificationResults) {
-    console.log('📊 Generating report...');
+    logger.log('📊 Generating report...');
     
     const report = {
       timestamp: new Date().toISOString(),
@@ -461,9 +461,9 @@ class AutoFixTests {
     const markdownPath = path.join(process.cwd(), 'test-correction-report.md');
     await fs.writeFile(markdownPath, markdownReport);
     
-    console.log(`📄 Reports saved to:`);
-    console.log(`   - ${reportPath}`);
-    console.log(`   - ${markdownPath}`);
+    logger.log(`📄 Reports saved to:`);
+    logger.log(`   - ${reportPath}`);
+    logger.log(`   - ${markdownPath}`);
     
     return report;
   }
@@ -589,7 +589,7 @@ if (require.main === module) {
         options.testPattern = args[++i];
         break;
       case '--help':
-        console.log(`
+        logger.log(`
 Usage: node auto-fix-tests.js [options]
 
 Options:
@@ -613,7 +613,7 @@ Options:
       }
     })
     .catch(error => {
-      console.error('Fatal error:', error.message);
+      logger.error('Fatal error:', error.message);
       process.exit(1);
     });
 }

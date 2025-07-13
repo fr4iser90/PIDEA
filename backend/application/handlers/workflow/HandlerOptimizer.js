@@ -1,3 +1,5 @@
+const { logger } = require('@infrastructure/logging/Logger');
+
 /**
  * HandlerOptimizer - Performance optimization and resource management for handlers
  * 
@@ -116,7 +118,7 @@ class HandlerOptimizer {
             optimizationResult.recommendations.push(...strategyResult.recommendations);
           }
         } catch (error) {
-          console.error(`HandlerOptimizer: Strategy ${strategyKey} failed`, error.message);
+          logger.error(`HandlerOptimizer: Strategy ${strategyKey} failed`, error.message);
         }
       }
 
@@ -126,7 +128,7 @@ class HandlerOptimizer {
       return optimizationResult;
 
     } catch (error) {
-      console.error('HandlerOptimizer: Optimization failed', {
+      logger.error('HandlerOptimizer: Optimization failed', {
         handlerId,
         error: error.message
       });
@@ -662,7 +664,7 @@ class HandlerOptimizer {
         }
       }
     } catch (error) {
-      console.error('HandlerOptimizer: Periodic optimization failed', error.message);
+      logger.error('HandlerOptimizer: Periodic optimization failed', error.message);
     }
   }
 

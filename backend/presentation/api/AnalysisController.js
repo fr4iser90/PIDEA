@@ -1,3 +1,4 @@
+const { logger } = require('@infrastructure/logging/Logger');
 /**
  * AnalysisController - API controller for specialized analysis endpoints
  */

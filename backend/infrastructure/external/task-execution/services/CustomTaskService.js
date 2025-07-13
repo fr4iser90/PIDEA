@@ -2,6 +2,7 @@
  * Custom task service for TaskExecutionEngine
  */
 const EXECUTION_CONSTANTS = require('../constants/ExecutionConstants');
+const { logger } = require('@infrastructure/logging/Logger');
 
 class CustomTaskService {
     constructor(dependencies = {}, logger = console) {

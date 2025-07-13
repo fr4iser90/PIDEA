@@ -2,6 +2,8 @@ const fs = require('fs');
 const fsPromises = require('fs').promises;
 const path = require('path');
 const semver = require('semver');
+const { logger } = require('@infrastructure/logging/Logger');
+
 
 class DependencyAnalyzer {
     constructor(dependencies = {}) {
@@ -12,7 +14,7 @@ class DependencyAnalyzer {
         const packages = await this.findPackages(projectPath);
         
         if (packages.length === 0) {
-            console.error('No package.json found in any expected location');
+            logger.error('No package.json found in any expected location');
             return this.getEmptyResult();
         }
 
@@ -96,9 +98,9 @@ class DependencyAnalyzer {
                     dependencies: packageJson.dependencies || {},
                     devDependencies: packageJson.devDependencies || {}
                 });
-                console.log(`Found root package.json: ${packageJson.name}`);
+                logger.log(`Found root package.json: ${packageJson.name}`);
             } catch (e) {
-                console.error('Failed to parse root package.json');
+                logger.error('Failed to parse root package.json');
             }
         }
 
@@ -118,9 +120,9 @@ class DependencyAnalyzer {
                         dependencies: packageJson.dependencies || {},
                         devDependencies: packageJson.devDependencies || {}
                     });
-                    console.log(`Found package.json in ${dir}: ${packageJson.name}`);
+                    logger.log(`Found package.json in ${dir}: ${packageJson.name}`);
                 } catch (e) {
-                    console.error(`Failed to parse package.json in ${dir}`);
+                    logger.error(`Failed to parse package.json in ${dir}`);
                 }
             }
         }

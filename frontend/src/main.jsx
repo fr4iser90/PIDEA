@@ -1,3 +1,4 @@
+import { logger } from "@/infrastructure/logging/Logger";
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App.jsx';
@@ -51,10 +52,10 @@ ReactDOM.createRoot(document.getElementById('root')).render(
 
 // Handle unhandled promise rejections
 window.addEventListener('unhandledrejection', (event) => {
-  console.error('Unhandled promise rejection:', event.reason);
+  logger.error('Unhandled promise rejection:', event.reason);
 });
 
 // Handle global errors
 window.addEventListener('error', (event) => {
-  console.error('Global error:', event.error);
+  logger.error('Global error:', event.error);
 }); 

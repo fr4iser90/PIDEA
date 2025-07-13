@@ -1,3 +1,4 @@
+import { logger } from "@/infrastructure/logging/Logger";
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { apiCall } from '@/infrastructure/repositories/APIChatRepository.jsx';
 
@@ -95,7 +96,7 @@ export const IDEProvider = ({ children, eventBus }) => {
         throw new Error(result.error || 'Failed to load IDEs');
       }
     } catch (error) {
-      console.error('[IDEContext] Error loading IDEs:', error);
+      logger.error('[IDEContext] Error loading IDEs:', error);
       setError(error.message);
     } finally {
       setIsLoading(false);
@@ -114,7 +115,7 @@ export const IDEProvider = ({ children, eventBus }) => {
         setIdeFeatures(result.data);
       }
     } catch (error) {
-      console.error('[IDEContext] Error loading IDE features:', error);
+      logger.error('[IDEContext] Error loading IDE features:', error);
     }
   };
 
@@ -130,7 +131,7 @@ export const IDEProvider = ({ children, eventBus }) => {
         setIdeStatus(result.data);
       }
     } catch (error) {
-      console.error('[IDEContext] Error loading IDE status:', error);
+      logger.error('[IDEContext] Error loading IDE status:', error);
     }
   };
 
@@ -160,7 +161,7 @@ export const IDEProvider = ({ children, eventBus }) => {
         throw new Error(result.error || 'Failed to switch IDE');
       }
     } catch (error) {
-      console.error('[IDEContext] Error switching IDE:', error);
+      logger.error('[IDEContext] Error switching IDE:', error);
       setError(error.message);
     } finally {
       setIsLoading(false);
@@ -192,7 +193,7 @@ export const IDEProvider = ({ children, eventBus }) => {
         throw new Error(result.error || 'Failed to start new IDE');
       }
     } catch (error) {
-      console.error('[IDEContext] Error starting new IDE:', error);
+      logger.error('[IDEContext] Error starting new IDE:', error);
       setError(error.message);
     } finally {
       setIsLoading(false);
@@ -226,7 +227,7 @@ export const IDEProvider = ({ children, eventBus }) => {
         throw new Error(result.error || 'Failed to stop IDE');
       }
     } catch (error) {
-      console.error('[IDEContext] Error stopping IDE:', error);
+      logger.error('[IDEContext] Error stopping IDE:', error);
       setError(error.message);
     } finally {
       setIsLoading(false);
@@ -293,7 +294,7 @@ export const IDEProvider = ({ children, eventBus }) => {
         throw new Error(result.error || 'Failed to toggle feature');
       }
     } catch (error) {
-      console.error('[IDEContext] Error toggling feature:', error);
+      logger.error('[IDEContext] Error toggling feature:', error);
       setError(error.message);
     }
   };

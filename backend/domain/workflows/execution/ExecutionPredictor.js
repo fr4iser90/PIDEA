@@ -3,6 +3,7 @@
  * Provides execution time and resource requirement predictions based on historical data
  */
 const crypto = require('crypto');
+const { logger } = require('@infrastructure/logging/Logger');
 
 /**
  * Execution predictor for workflow execution

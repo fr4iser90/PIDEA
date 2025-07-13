@@ -1,3 +1,4 @@
+
 /**
  * TestManagementService - Core service for test management operations
  * Handles test metadata management, legacy detection, versioning, and analytics
@@ -8,6 +9,7 @@ const fs = require('fs').promises;
 const path = require('path');
 const { exec } = require('child_process');
 const { promisify } = require('util');
+const { logger } = require('@infrastructure/logging/Logger');
 
 const execAsync = promisify(exec);
 
@@ -114,7 +116,7 @@ class TestManagementService {
    */
   async analyzeLegacyIndicators(testMetadata) {
     try {
-      console.log(`🔍 Analyzing legacy indicators for: ${testMetadata.filePath}`);
+      logger.debug(`🔍 Analyzing legacy indicators for: ${testMetadata.filePath}`);
       const content = await fs.readFile(testMetadata.filePath, 'utf8');
       let legacyScore = 0;
       let complexityScore = 0;
@@ -139,7 +141,7 @@ class TestManagementService {
       const hasComments = content.includes('//') || content.includes('/*');
       const hasDocumentation = content.includes('/**') || content.includes('@param') || content.includes('@return');
       const hasErrorHandling = content.includes('try') && content.includes('catch');
-      const hasLogging = content.includes('console.log') || content.includes('console.warn') || content.includes('console.error');
+      const hasLogging = content.includes('logger.log') || content.includes('logger.warn') || content.includes('console.error');
       
       maintenanceScore = 100;
       if (!hasComments) maintenanceScore -= 20;
@@ -147,7 +149,7 @@ class TestManagementService {
       if (!hasErrorHandling) maintenanceScore -= 25;
       if (hasLogging) maintenanceScore -= 15;
       
-      console.log(`📊 Scores calculated - Legacy: ${legacyScore}, Complexity: ${complexityScore}, Maintenance: ${maintenanceScore}`);
+      logger.log(`📊 Scores calculated - Legacy: ${legacyScore}, Complexity: ${complexityScore}, Maintenance: ${maintenanceScore}`);
       
       // Update test metadata with scores
       testMetadata.setComplexityScore(complexityScore);
@@ -164,9 +166,9 @@ class TestManagementService {
       if (hasErrorHandling) testMetadata.addTag('error-handled');
       if (hasDocumentation) testMetadata.addTag('documented');
       
-      console.log(`✅ Analysis complete for: ${testMetadata.filePath}`);
+      logger.debug(`✅ Analysis complete for: ${testMetadata.filePath}`);
     } catch (error) {
-      console.warn(`Failed to analyze legacy indicators for ${testMetadata.filePath}: ${error.message}`);
+      logger.warn(`Failed to analyze legacy indicators for ${testMetadata.filePath}: ${error.message}`);
     }
   }
 
@@ -193,7 +195,7 @@ class TestManagementService {
             registeredTests.push(testMetadata);
           }
         } catch (error) {
-          console.warn(`Failed to process test file ${filePath}: ${error.message}`);
+          logger.warn(`Failed to process test file ${filePath}: ${error.message}`);
         }
       }
       
@@ -526,7 +528,7 @@ class TestManagementService {
           await this.testMetadataRepository.save(testMetadata);
           importedCount++;
         } catch (error) {
-          console.warn(`Failed to import test metadata: ${error.message}`);
+          logger.warn(`Failed to import test metadata: ${error.message}`);
         }
       }
       

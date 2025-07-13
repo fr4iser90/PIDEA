@@ -1,5 +1,7 @@
 const ProjectAnalysisRepository = require('@repositories/ProjectAnalysisRepository');
 const ProjectAnalysis = require('@entities/ProjectAnalysis');
+const { logger } = require('@infrastructure/logging/Logger');
+
 
 class PostgreSQLProjectAnalysisRepository extends ProjectAnalysisRepository {
   constructor(databaseConnection) {
@@ -196,7 +198,7 @@ class PostgreSQLProjectAnalysisRepository extends ProjectAnalysisRepository {
       try {
         analysisData = typeof row.analysis_data === 'string' ? JSON.parse(row.analysis_data) : row.analysis_data;
       } catch (error) {
-        console.warn('Failed to parse analysis_data for analysis:', row.id, error.message);
+        logger.warn('Failed to parse analysis_data for analysis:', row.id, error.message);
         analysisData = {};
       }
     }
@@ -205,7 +207,7 @@ class PostgreSQLProjectAnalysisRepository extends ProjectAnalysisRepository {
       try {
         metadata = typeof row.metadata === 'string' ? JSON.parse(row.metadata) : row.metadata;
       } catch (error) {
-        console.warn('Failed to parse metadata for analysis:', row.id, error.message);
+        logger.warn('Failed to parse metadata for analysis:', row.id, error.message);
         metadata = {};
       }
     }

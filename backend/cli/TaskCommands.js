@@ -1,3 +1,4 @@
+
 require('module-alias/register');
 /**
  * TaskCommands - CLI command implementations
@@ -234,12 +235,12 @@ class TaskCommands {
             // Save script if output path specified
             if (options.output) {
                 await fs.writeFile(options.output, result.script);
-                console.log(chalk.green(`📁 Script saved to: ${options.output}`));
+                logger.log(chalk.green(`📁 Script saved to: ${options.output}`));
             } else {
-                console.log(chalk.blue('\n📜 Generated Script:'));
-                console.log(chalk.gray('```'));
-                console.log(result.script);
-                console.log(chalk.gray('```'));
+                logger.log(chalk.blue('\n📜 Generated Script:'));
+                logger.log(chalk.gray('```'));
+                logger.log(result.script);
+                logger.log(chalk.gray('```'));
             }
 
             this.displayScriptInfo(result);
@@ -546,17 +547,17 @@ class TaskCommands {
      */
     async executeSequentialTasks(options) {
         try {
-            console.log('🚀 Starting sequential task execution via IDE chat...');
+            logger.log('🚀 Starting sequential task execution via IDE chat...');
             
             // Get tasks from database or file
             const tasks = await this.getTasksForSequentialExecution(options);
             
             if (tasks.length === 0) {
-                console.log('❌ No tasks found for sequential execution');
+                logger.log('❌ No tasks found for sequential execution');
                 return;
             }
             
-            console.log(`📋 Found ${tasks.length} tasks to execute sequentially`);
+            logger.log(`📋 Found ${tasks.length} tasks to execute sequentially`);
             
             // Initialize services
             const workflowOrchestrationService = this.serviceContainer.get('workflowOrchestrationService');
@@ -575,33 +576,33 @@ class TaskCommands {
             });
             
             // Display results
-            console.log('\n📊 Sequential Task Execution Results:');
-            console.log(`✅ Successful: ${result.successful}/${result.totalTasks}`);
-            console.log(`❌ Failed: ${result.failed}/${result.totalTasks}`);
-            console.log(`⏱️  Total Duration: ${Math.round(result.totalDuration / 1000)}s`);
-            console.log(`📈 Average Duration: ${Math.round(result.averageDuration / 1000)}s per task`);
+            logger.log('\n📊 Sequential Task Execution Results:');
+            logger.log(`✅ Successful: ${result.successful}/${result.totalTasks}`);
+            logger.log(`❌ Failed: ${result.failed}/${result.totalTasks}`);
+            logger.log(`⏱️  Total Duration: ${Math.round(result.totalDuration / 1000)}s`);
+            logger.log(`📈 Average Duration: ${Math.round(result.averageDuration / 1000)}s per task`);
             
             if (result.success) {
-                console.log('\n🎉 All tasks completed successfully!');
+                logger.log('\n🎉 All tasks completed successfully!');
             } else {
-                console.log('\n⚠️  Some tasks failed. Check the results above.');
+                logger.log('\n⚠️  Some tasks failed. Check the results above.');
             }
             
             // Show detailed results
             if (options.verbose) {
-                console.log('\n📝 Detailed Results:');
+                logger.log('\n📝 Detailed Results:');
                 result.results.forEach((taskResult, index) => {
                     const status = taskResult.success ? '✅' : '❌';
-                    console.log(`${status} Task ${index + 1}: ${taskResult.taskTitle}`);
-                    console.log(`   Duration: ${Math.round(taskResult.duration / 1000)}s`);
+                    logger.log(`${status} Task ${index + 1}: ${taskResult.taskTitle}`);
+                    logger.log(`   Duration: ${Math.round(taskResult.duration / 1000)}s`);
                     if (!taskResult.success) {
-                        console.log(`   Error: ${taskResult.error}`);
+                        logger.log(`   Error: ${taskResult.error}`);
                     }
                 });
             }
             
         } catch (error) {
-            console.error('❌ Sequential task execution failed:', error.message);
+            logger.error('❌ Sequential task execution failed:', error.message);
             process.exit(1);
         }
     }
@@ -618,7 +619,7 @@ class TaskCommands {
             if (taskRepository) {
                 const tasks = await taskRepository.findByStatus('pending');
                 if (tasks.length > 0) {
-                    console.log(`📋 Found ${tasks.length} pending tasks in database`);
+                    logger.log(`📋 Found ${tasks.length} pending tasks in database`);
                     return tasks;
                 }
             }
@@ -628,7 +629,7 @@ class TaskCommands {
         if (options.fromTestReports) {
             const tasks = await this.getTasksFromTestReports(options);
             if (tasks.length > 0) {
-                console.log(`📋 Found ${tasks.length} tasks from test reports`);
+                logger.debug(`📋 Found ${tasks.length} tasks from test reports`);
                 return tasks;
             }
         }
@@ -637,13 +638,13 @@ class TaskCommands {
         if (options.fromCoverage) {
             const tasks = await this.getTasksFromCoverageReport(options);
             if (tasks.length > 0) {
-                console.log(`📋 Found ${tasks.length} tasks from coverage report`);
+                logger.log(`📋 Found ${tasks.length} tasks from coverage report`);
                 return tasks;
             }
         }
         
         // Default: create tasks from current test failures
-        console.log('📋 Creating tasks from current test failures...');
+        logger.debug('📋 Creating tasks from current test failures...');
         return await this.createTasksFromTestFailures(options);
     }
 
@@ -667,7 +668,7 @@ class TaskCommands {
                 const testReport = await fs.readFile(testReportPath, 'utf8');
                 tasks = this.parseTasksFromTestReport(testReport);
             } catch (error) {
-                console.log('No test-report.md found');
+                logger.debug('No test-report.md found');
             }
             
             // Try test-report-full.md
@@ -676,13 +677,13 @@ class TaskCommands {
                 const fullTasks = this.parseTasksFromTestReportFull(testReportFull);
                 tasks = [...tasks, ...fullTasks];
             } catch (error) {
-                console.log('No test-report-full.md found');
+                logger.debug('No test-report-full.md found');
             }
             
             return tasks;
             
         } catch (error) {
-            console.log('Failed to read test reports:', error.message);
+            logger.debug('Failed to read test reports:', error.message);
             return [];
         }
     }
@@ -702,7 +703,7 @@ class TaskCommands {
             return this.parseTasksFromCoverageReport(coverageReport);
             
         } catch (error) {
-            console.log('Failed to read coverage report:', error.message);
+            logger.log('Failed to read coverage report:', error.message);
             return [];
         }
     }
@@ -747,7 +748,7 @@ class TaskCommands {
             }));
             
         } catch (error) {
-            console.log('Failed to create tasks from test failures:', error.message);
+            logger.debug('Failed to create tasks from test failures:', error.message);
             return [];
         }
     }
@@ -876,13 +877,14 @@ class TaskCommands {
     // Helper methods
     createSpinner(text) {
         const ora = require('ora');
+const { logger } = require('@infrastructure/logging/Logger');
         return ora(text).start();
     }
 
     handleError(message, error) {
-        console.error(chalk.red(`❌ ${message}: ${error.message}`));
+        logger.error(chalk.red(`❌ ${message}: ${error.message}`));
         if (process.env.DEBUG) {
-            console.error(error.stack);
+            logger.error(error.stack);
         }
     }
 
@@ -1069,33 +1071,33 @@ class TaskCommands {
 
     // Display methods
     displayProjectAnalysis(result, projectPath, options) {
-        console.log(chalk.blue('\n📊 Project Analysis Results:'));
-        console.log(chalk.gray(`Project: ${path.basename(projectPath)}`));
+        logger.log(chalk.blue('\n📊 Project Analysis Results:'));
+        logger.log(chalk.gray(`Project: ${path.basename(projectPath)}`));
         
         if (result.analysis) {
-            console.log(chalk.blue('\n💡 Analysis:'));
-            console.log(result.analysis);
+            logger.log(chalk.blue('\n💡 Analysis:'));
+            logger.log(result.analysis);
         }
 
         if (result.insights && result.insights.length > 0) {
-            console.log(chalk.blue('\n🔍 Key Insights:'));
+            logger.log(chalk.blue('\n🔍 Key Insights:'));
             result.insights.forEach((insight, index) => {
-                console.log(chalk.gray(`${index + 1}. ${insight}`));
+                logger.log(chalk.gray(`${index + 1}. ${insight}`));
             });
         }
 
         if (result.recommendations && result.recommendations.length > 0) {
-            console.log(chalk.blue('\n🎯 Recommendations:'));
+            logger.log(chalk.blue('\n🎯 Recommendations:'));
             result.recommendations.forEach((rec, index) => {
-                console.log(chalk.gray(`${index + 1}. ${rec.title}`));
-                console.log(chalk.gray(`   ${rec.description}`));
+                logger.log(chalk.gray(`${index + 1}. ${rec.title}`));
+                logger.log(chalk.gray(`   ${rec.description}`));
             });
         }
     }
 
     displayTaskList(tasks, format = 'table') {
         if (format === 'json') {
-            console.log(JSON.stringify(tasks, null, 2));
+            logger.log(JSON.stringify(tasks, null, 2));
             return;
         }
 
@@ -1115,47 +1117,47 @@ class TaskCommands {
             ]);
         });
 
-        console.log(table.toString());
+        logger.log(table.toString());
     }
 
     displayTaskInfo(task) {
-        console.log(chalk.blue('\n📋 Task Information:'));
-        console.log(chalk.gray(`ID: ${chalk.white(task.id)}`));
-        console.log(chalk.gray(`Title: ${chalk.white(task.title)}`));
-        console.log(chalk.gray(`Description: ${chalk.white(task.description)}`));
-        console.log(chalk.gray(`Type: ${chalk.white(task.type)}`));
-        console.log(chalk.gray(`Status: ${chalk.white(task.status)}`));
-        console.log(chalk.gray(`Priority: ${chalk.white(task.priority)}`));
-        console.log(chalk.gray(`Created: ${chalk.white(new Date(task.createdAt).toLocaleString())}`));
+        logger.log(chalk.blue('\n📋 Task Information:'));
+        logger.log(chalk.gray(`ID: ${chalk.white(task.id)}`));
+        logger.log(chalk.gray(`Title: ${chalk.white(task.title)}`));
+        logger.log(chalk.gray(`Description: ${chalk.white(task.description)}`));
+        logger.log(chalk.gray(`Type: ${chalk.white(task.type)}`));
+        logger.log(chalk.gray(`Status: ${chalk.white(task.status)}`));
+        logger.log(chalk.gray(`Priority: ${chalk.white(task.priority)}`));
+        logger.log(chalk.gray(`Created: ${chalk.white(new Date(task.createdAt).toLocaleString())}`));
     }
 
     displayTaskExecution(result) {
-        console.log(chalk.blue('\n▶️  Task Execution Started:'));
-        console.log(chalk.gray(`Task ID: ${chalk.white(result.task.id)}`));
-        console.log(chalk.gray(`Execution ID: ${chalk.white(result.execution.id)}`));
-        console.log(chalk.gray(`Status: ${chalk.white(result.execution.status)}`));
+        logger.log(chalk.blue('\n▶️  Task Execution Started:'));
+        logger.log(chalk.gray(`Task ID: ${chalk.white(result.task.id)}`));
+        logger.log(chalk.gray(`Execution ID: ${chalk.white(result.execution.id)}`));
+        logger.log(chalk.gray(`Status: ${chalk.white(result.execution.status)}`));
     }
 
     displayScriptInfo(result) {
-        console.log(chalk.blue('\n🔧 Script Information:'));
-        console.log(chalk.gray(`Type: ${chalk.white(result.scriptType)}`));
-        console.log(chalk.gray(`Target: ${chalk.white(result.requirements.target)}`));
-        console.log(chalk.gray(`Generated: ${chalk.white(new Date(result.timestamp).toLocaleString())}`));
+        logger.log(chalk.blue('\n🔧 Script Information:'));
+        logger.log(chalk.gray(`Type: ${chalk.white(result.scriptType)}`));
+        logger.log(chalk.gray(`Target: ${chalk.white(result.requirements.target)}`));
+        logger.log(chalk.gray(`Generated: ${chalk.white(new Date(result.timestamp).toLocaleString())}`));
     }
 
     displayScriptExecution(result) {
-        console.log(chalk.blue('\n▶️  Script Execution Results:'));
-        console.log(chalk.gray(`Exit Code: ${chalk.white(result.exitCode)}`));
-        console.log(chalk.gray(`Duration: ${chalk.white(result.duration)}ms`));
+        logger.log(chalk.blue('\n▶️  Script Execution Results:'));
+        logger.log(chalk.gray(`Exit Code: ${chalk.white(result.exitCode)}`));
+        logger.log(chalk.gray(`Duration: ${chalk.white(result.duration)}ms`));
         
         if (result.output) {
-            console.log(chalk.blue('\n📤 Output:'));
-            console.log(result.output);
+            logger.log(chalk.blue('\n📤 Output:'));
+            logger.log(result.output);
         }
         
         if (result.error) {
-            console.log(chalk.red('\n❌ Error:'));
-            console.log(result.error);
+            logger.log(chalk.red('\n❌ Error:'));
+            logger.log(result.error);
         }
     }
 
@@ -1175,34 +1177,34 @@ class TaskCommands {
             ]);
         });
 
-        console.log(table.toString());
+        logger.log(table.toString());
     }
 
     // Placeholder methods for other functionality
     async applyRefactoring(refactoringResults) {
-        console.log(chalk.blue('🔨 Applying refactoring...'));
+        logger.log(chalk.blue('🔨 Applying refactoring...'));
     }
 
     displayRefactoringResults(results, options) {
-        console.log(chalk.blue('\n🔨 Refactoring Results:'));
+        logger.log(chalk.blue('\n🔨 Refactoring Results:'));
         results.forEach((result, index) => {
-            console.log(chalk.gray(`${index + 1}. ${path.basename(result.file)}`));
-            console.log(chalk.gray(`   Recommendations: ${result.recommendations.length}`));
+            logger.log(chalk.gray(`${index + 1}. ${path.basename(result.file)}`));
+            logger.log(chalk.gray(`   Recommendations: ${result.recommendations.length}`));
         });
     }
 
     displayOptimizationResults(results, options) {
-        console.log(chalk.blue('\n⚡ Optimization Results:'));
+        logger.log(chalk.blue('\n⚡ Optimization Results:'));
         results.forEach((result, index) => {
-            console.log(chalk.gray(`${index + 1}. ${path.basename(result.file)}`));
-            console.log(chalk.gray(`   Recommendations: ${result.recommendations.length}`));
+            logger.log(chalk.gray(`${index + 1}. ${path.basename(result.file)}`));
+            logger.log(chalk.gray(`   Recommendations: ${result.recommendations.length}`));
         });
     }
 
     displaySecurityResults(results, options) {
-        console.log(chalk.blue('\n🔒 Security Analysis Results:'));
-        console.log(chalk.gray(`Vulnerabilities found: ${results.vulnerabilities.length}`));
-        console.log(chalk.gray(`Recommendations: ${results.recommendations.length}`));
+        logger.log(chalk.blue('\n🔒 Security Analysis Results:'));
+        logger.log(chalk.gray(`Vulnerabilities found: ${results.vulnerabilities.length}`));
+        logger.log(chalk.gray(`Recommendations: ${results.recommendations.length}`));
     }
 
     async executeTests(targetPath, framework, options) {
@@ -1210,19 +1212,19 @@ class TaskCommands {
     }
 
     displayTestResults(results, options) {
-        console.log(chalk.blue('\n🧪 Test Results:'));
-        console.log(chalk.gray(`Total: ${chalk.white(results.total)}`));
-        console.log(chalk.green(`Passed: ${results.passed}`));
-        console.log(chalk.red(`Failed: ${results.failed}`));
-        console.log(chalk.blue(`Coverage: ${results.coverage}%`));
+        logger.debug(chalk.blue('\n🧪 Test Results:'));
+        logger.log(chalk.gray(`Total: ${chalk.white(results.total)}`));
+        logger.log(chalk.green(`Passed: ${results.passed}`));
+        logger.log(chalk.red(`Failed: ${results.failed}`));
+        logger.log(chalk.blue(`Coverage: ${results.coverage}%`));
     }
 
     async buildApplication(targetPath) {
-        console.log(chalk.blue('🔨 Building application...'));
+        logger.log(chalk.blue('🔨 Building application...'));
     }
 
     async runPreDeploymentTests(targetPath) {
-        console.log(chalk.blue('🧪 Running pre-deployment tests...'));
+        logger.debug(chalk.blue('🧪 Running pre-deployment tests...'));
     }
 
     async deployToEnvironment(targetPath, environment, options) {
@@ -1230,18 +1232,18 @@ class TaskCommands {
     }
 
     displayDeploymentResults(results) {
-        console.log(chalk.blue('\n🚀 Deployment Results:'));
-        console.log(chalk.gray(`Status: ${chalk.white(results.success ? 'Success' : 'Failed')}`));
+        logger.log(chalk.blue('\n🚀 Deployment Results:'));
+        logger.log(chalk.gray(`Status: ${chalk.white(results.success ? 'Success' : 'Failed')}`));
         if (results.url) {
-            console.log(chalk.gray(`URL: ${chalk.white(results.url)}`));
+            logger.log(chalk.gray(`URL: ${chalk.white(results.url)}`));
         }
     }
 
     displaySystemStats(stats) {
-        console.log(chalk.blue('\n📊 System Statistics:'));
-        console.log(chalk.gray(`Tasks: ${chalk.white(stats.tasks.total || 0)}`));
-        console.log(chalk.gray(`AI Models: ${chalk.white(stats.ai.models.length)}`));
-        console.log(chalk.gray(`Active Executions: ${chalk.white(stats.execution.activeExecutions)}`));
+        logger.log(chalk.blue('\n📊 System Statistics:'));
+        logger.log(chalk.gray(`Tasks: ${chalk.white(stats.tasks.total || 0)}`));
+        logger.log(chalk.gray(`AI Models: ${chalk.white(stats.ai.models.length)}`));
+        logger.log(chalk.gray(`Active Executions: ${chalk.white(stats.execution.activeExecutions)}`));
     }
 
     async checkDatabaseHealth() {
@@ -1253,10 +1255,10 @@ class TaskCommands {
     }
 
     displayHealthStatus(healthChecks) {
-        console.log(chalk.blue('\n🏥 System Health Status:'));
+        logger.log(chalk.blue('\n🏥 System Health Status:'));
         Object.entries(healthChecks).forEach(([service, health]) => {
             const status = health.status === 'healthy' ? chalk.green('✅') : chalk.red('❌');
-            console.log(chalk.gray(`${service}: ${status} ${health.status}`));
+            logger.log(chalk.gray(`${service}: ${status} ${health.status}`));
         });
     }
 
@@ -1265,10 +1267,10 @@ class TaskCommands {
     }
 
     displayCleanupResults(results) {
-        console.log(chalk.blue('\n🧹 Cleanup Results:'));
-        console.log(chalk.gray(`Deleted Tasks: ${chalk.white(results.deletedTasks)}`));
-        console.log(chalk.gray(`Deleted Executions: ${chalk.white(results.deletedExecutions)}`));
-        console.log(chalk.gray(`Freed Space: ${chalk.white(results.freedSpace)}`));
+        logger.log(chalk.blue('\n🧹 Cleanup Results:'));
+        logger.log(chalk.gray(`Deleted Tasks: ${chalk.white(results.deletedTasks)}`));
+        logger.log(chalk.gray(`Deleted Executions: ${chalk.white(results.deletedExecutions)}`));
+        logger.log(chalk.gray(`Freed Space: ${chalk.white(results.freedSpace)}`));
     }
 }
 

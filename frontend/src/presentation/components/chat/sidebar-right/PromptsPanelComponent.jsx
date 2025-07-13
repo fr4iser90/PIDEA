@@ -1,3 +1,4 @@
+import { logger } from "@/infrastructure/logging/Logger";
 import React, { useState, useEffect } from 'react';
 import { apiCall, API_CONFIG } from '@/infrastructure/repositories/APIChatRepository.jsx';
 import PromptDetailsModal from '../modal/PromptDetailsModal.jsx';
@@ -41,7 +42,7 @@ function PromptsPanelComponent({ onPromptClick, onQuickPrompt, attachedPrompts: 
         setPrompts(response.data || []);
       }
     } catch (error) {
-      console.error('Failed to load generic prompts:', error);
+      logger.error('Failed to load generic prompts:', error);
     } finally {
       setLoading(false);
     }
@@ -54,7 +55,7 @@ function PromptsPanelComponent({ onPromptClick, onQuickPrompt, attachedPrompts: 
         setFrameworks(response.data || []);
       }
     } catch (error) {
-      console.error('Failed to load frameworks:', error);
+      logger.error('Failed to load frameworks:', error);
     }
   };
 
@@ -70,7 +71,7 @@ function PromptsPanelComponent({ onPromptClick, onQuickPrompt, attachedPrompts: 
         setPrompts(response.data.prompts || []);
       }
     } catch (error) {
-      console.error('Failed to load framework prompts:', error);
+      logger.error('Failed to load framework prompts:', error);
     } finally {
       setLoading(false);
     }

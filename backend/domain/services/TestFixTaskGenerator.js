@@ -7,6 +7,7 @@ const TaskType = require('@value-objects/TaskType');
 const TaskPriority = require('@value-objects/TaskPriority');
 const TaskStatus = require('@value-objects/TaskStatus');
 const { v4: uuidv4 } = require('uuid');
+const { logger } = require('@infrastructure/logging/Logger');
 
 class TestFixTaskGenerator {
   constructor(taskRepository) {

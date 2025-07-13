@@ -1,4 +1,6 @@
 const IDETypes = require('../ide/IDETypes');
+const { logger } = require('@infrastructure/logging/Logger');
+
 
 class ChatHistoryExtractor {
   constructor(browserManager, ideType = IDETypes.CURSOR) {
@@ -7,7 +9,7 @@ class ChatHistoryExtractor {
     this.selectors = IDETypes.getChatSelectors(ideType);
     
     if (!this.selectors) {
-      console.warn(`[ChatHistoryExtractor] No chat selectors found for IDE type: ${ideType}`);
+      logger.warn(`[ChatHistoryExtractor] No chat selectors found for IDE type: ${ideType}`);
     }
   }
 
@@ -39,7 +41,7 @@ class ChatHistoryExtractor {
 
       return allMessages;
     } catch (error) {
-      console.error(`[ChatHistoryExtractor] Error extracting chat history from ${this.ideType}:`, error);
+      logger.error(`[ChatHistoryExtractor] Error extracting chat history from ${this.ideType}:`, error);
       return [];
     }
   }
@@ -50,17 +52,17 @@ class ChatHistoryExtractor {
    */
   async navigateToVSCodeApp(page) {
     try {
-      console.log('[ChatHistoryExtractor][VSCode] Navigating to VS Code app...');
+      logger.log('[ChatHistoryExtractor][VSCode] Navigating to VS Code app...');
       
       // Get all targets (pages) available
       const targets = await this.browserManager.browser.targets();
-      console.log('[ChatHistoryExtractor][VSCode] Available targets:', targets.length);
+      logger.log('[ChatHistoryExtractor][VSCode] Available targets:', targets.length);
       
       // Find the VS Code application target (not DevTools)
       let vscodeTarget = null;
       for (const target of targets) {
         const url = target.url();
-        console.log('[ChatHistoryExtractor][VSCode] Target URL:', url);
+        logger.log('[ChatHistoryExtractor][VSCode] Target URL:', url);
         
         // Skip DevTools targets
         if (url.includes('devtools://') || url.includes('chrome-devtools://')) {
@@ -75,19 +77,19 @@ class ChatHistoryExtractor {
       }
       
       if (vscodeTarget) {
-        console.log('[ChatHistoryExtractor][VSCode] Found VS Code app target, navigating...');
+        logger.log('[ChatHistoryExtractor][VSCode] Found VS Code app target, navigating...');
         const newPage = await vscodeTarget.page();
         if (newPage) {
           // Update the browser manager to use the new page
           this.browserManager.currentPage = newPage;
-          console.log('[ChatHistoryExtractor][VSCode] Successfully navigated to VS Code app');
+          logger.log('[ChatHistoryExtractor][VSCode] Successfully navigated to VS Code app');
           return;
         }
       }
       
-      console.log('[ChatHistoryExtractor][VSCode] No VS Code app target found, staying on current page');
+      logger.log('[ChatHistoryExtractor][VSCode] No VS Code app target found, staying on current page');
     } catch (error) {
-      console.error('[ChatHistoryExtractor][VSCode] Error navigating to VS Code app:', error);
+      logger.error('[ChatHistoryExtractor][VSCode] Error navigating to VS Code app:', error);
     }
   }
 
@@ -169,7 +171,7 @@ class ChatHistoryExtractor {
    * @returns {Promise<Array>} Array of messages
    */
   async extractVSCodeMessages(page) {
-    console.log('[ChatHistoryExtractor][VSCode] extractVSCodeMessages called');
+    logger.log('[ChatHistoryExtractor][VSCode] extractVSCodeMessages called');
     let result;
     try {
       result = await page.evaluate((selectors) => {
@@ -247,10 +249,10 @@ class ChatHistoryExtractor {
         return { debug, messages };
       }, this.selectors);
     } catch (error) {
-      console.error('[ChatHistoryExtractor][VSCode] page.evaluate error:', error);
+      logger.error('[ChatHistoryExtractor][VSCode] page.evaluate error:', error);
       result = { debug: { error: error.message }, messages: [] };
     }
-    console.log('[ChatHistoryExtractor][VSCode] Debug:', JSON.stringify(result.debug, null, 2));
+    logger.debug('[ChatHistoryExtractor][VSCode] Debug:', JSON.stringify(result.debug, null, 2));
     return result.messages;
   }
 

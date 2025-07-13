@@ -1,3 +1,4 @@
+import { logger } from "@/infrastructure/logging/Logger";
 import React, { useState, useEffect } from 'react';
 import { apiCall } from '@/infrastructure/repositories/APIChatRepository.jsx';
 import DocumentationFrameworkModal from './frameworks/DocumentationFrameworkModal.jsx';
@@ -29,7 +30,7 @@ function FrameworksPanelComponent({ onFrameworkSelect, onNavigateToPrompts, onNa
         setFrameworks(response.data || []);
       }
     } catch (error) {
-      console.error('Failed to load frameworks:', error);
+      logger.error('Failed to load frameworks:', error);
     } finally {
       setLoading(false);
     }
@@ -51,7 +52,7 @@ function FrameworksPanelComponent({ onFrameworkSelect, onNavigateToPrompts, onNa
         templates: templatesResponse.success ? templatesResponse.data.templates : []
       });
     } catch (error) {
-      console.error('Failed to load framework details:', error);
+      logger.error('Failed to load framework details:', error);
     } finally {
       setLoading(false);
     }

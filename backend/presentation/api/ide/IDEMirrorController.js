@@ -1,3 +1,4 @@
+const { logger } = require('@infrastructure/logging/Logger');
 /**
  * Unified IDE Mirror Controller
  * Provides IDE-agnostic mirror functionality for all supported IDEs

@@ -2,6 +2,7 @@
  * TaskProgressTracker - Real-time task progress monitoring and tracking
  */
 const EventEmitter = require('events');
+const { logger } = require('@infrastructure/logging/Logger');
 
 class TaskProgressTracker {
     constructor(dependencies = {}) {

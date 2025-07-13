@@ -1,3 +1,4 @@
+
 require('module-alias/register');
 const express = require('express');
 const path = require('path');
@@ -7,6 +8,7 @@ const rateLimit = require('express-rate-limit');
 const helmet = require('helmet');
 const cors = require('cors');
 
+const { logger } = require('@infrastructure/logging/Logger');
 
 // Auto-Security
 const AutoSecurityManager = require('./infrastructure/auto/AutoSecurityManager');
@@ -99,14 +101,14 @@ class Application {
 
   setupLogger() {
     return {
-      info: (message, ...args) => console.log(`[INFO] ${message}`, ...args),
-      error: (message, ...args) => console.error(`[ERROR] ${message}`, ...args),
+      info: (message, ...args) => logger.log(`[INFO] ${message}`, ...args),
+      error: (message, ...args) => logger.error(`[ERROR] ${message}`, ...args),
       debug: (message, ...args) => {
         if (!this.autoSecurityManager.isProduction()) {
-          console.log(`[DEBUG] ${message}`, ...args);
+          logger.debug(`[DEBUG] ${message}`, ...args);
         }
       },
-      warn: (message, ...args) => console.warn(`[WARN] ${message}`, ...args)
+      warn: (message, ...args) => logger.warn(`[WARN] ${message}`, ...args)
     };
   }
 

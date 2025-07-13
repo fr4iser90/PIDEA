@@ -1,3 +1,5 @@
+const { logger } = require('@infrastructure/logging/Logger');
+
 class EventBus {
   constructor() {
     this.handlers = new Map();
@@ -30,7 +32,7 @@ class EventBus {
 
   // Publish events
   async publish(eventName, eventData) {
-    console.log(`[EventBus] Publishing event: ${eventName}`, eventData);
+    logger.log(`[EventBus] Publishing event: ${eventName}`, eventData);
     
     // Apply middleware
     let processedEventData = eventData;
@@ -45,7 +47,7 @@ class EventBus {
         try {
           return handler(processedEventData);
         } catch (error) {
-          console.error(`[EventBus] Error in handler for ${eventName}:`, error);
+          logger.error(`[EventBus] Error in handler for ${eventName}:`, error);
           return Promise.resolve();
         }
       });

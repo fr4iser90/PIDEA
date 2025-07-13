@@ -1,3 +1,4 @@
+
 /**
  * Test Management Workflow Integration Tests
  */
@@ -12,6 +13,7 @@ const TestVersioner = require('@/scripts/test-management/test-versioner');
 const TestReporter = require('@/scripts/test-management/test-reporter');
 const fs = require('fs').promises;
 const path = require('path');
+const { logger } = require('@infrastructure/logging/Logger');
 
 describe('Test Management Workflow Integration', () => {
   let testManagementService;
@@ -69,7 +71,7 @@ describe('Test Management Workflow Integration', () => {
       await fs.writeFile(testFile2, `
         describe('Legacy Service', () => {
           it('should handle legacy functionality', () => {
-            console.log('legacy test');
+            logger.debug('legacy test');
             expect(true).toBe(true);
           });
         });
@@ -222,8 +224,8 @@ describe('Test Management Workflow Integration', () => {
       const legacyFile = path.join(tempDir, 'legacy-patterns.test.js');
       await fs.writeFile(legacyFile, `
         describe('Legacy Patterns', () => {
-          it('should use console.log', () => {
-            console.log('debug info');
+          it('should use logger.log', () => {
+            logger.debug('debug info');
             expect(true).toBe(true);
           });
           
@@ -233,7 +235,7 @@ describe('Test Management Workflow Integration', () => {
           });
           
           it('should use eval', () => {
-            eval('console.log("dangerous")');
+            eval('logger.log("dangerous")');
             expect(true).toBe(true);
           });
         });

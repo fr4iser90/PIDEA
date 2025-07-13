@@ -1,3 +1,4 @@
+
 require('module-alias/register');
 const fs = require('fs');
 const path = require('path');
@@ -20,7 +21,7 @@ function fixImports() {
 
     function processDirectory(dir) {
         const files = fs.readdirSync(dir);
-        console.log(`Processing directory: ${dir} (${files.length} items)`);
+        logger.log(`Processing directory: ${dir} (${files.length} items)`);
         
         for (const file of files) {
             const filePath = path.join(dir, file);
@@ -32,7 +33,7 @@ function fixImports() {
                     processDirectory(filePath);
                 }
             } else if (file.endsWith('.js')) {
-                console.log(`Checking file: ${filePath}`);
+                logger.log(`Checking file: ${filePath}`);
                 fixFileImports(filePath, patterns);
             }
         }
@@ -46,11 +47,12 @@ function fixImports() {
             for (const pattern of patterns) {
                 const regex = new RegExp(`require\\('${pattern.from.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}([^']+)'\\)`, 'g');
                 const newContent = content.replace(regex, `require('${pattern.to}$1')`);
+const { logger } = require('@infrastructure/logging/Logger');
                 
                 if (newContent !== content) {
                     content = newContent;
                     modified = true;
-                    console.log(`Fixed imports in: ${filePath}`);
+                    logger.log(`Fixed imports in: ${filePath}`);
                 }
             }
             
@@ -58,13 +60,13 @@ function fixImports() {
                 fs.writeFileSync(filePath, content, 'utf8');
             }
         } catch (error) {
-            console.error(`Error processing ${filePath}:`, error.message);
+            logger.error(`Error processing ${filePath}:`, error.message);
         }
     }
 
-    console.log('Starting import pattern fixes...');
+    logger.log('Starting import pattern fixes...');
     processDirectory(backendDir);
-    console.log('Import pattern fixes completed!');
+    logger.log('Import pattern fixes completed!');
 }
 
 if (require.main === module) {

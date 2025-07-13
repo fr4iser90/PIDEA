@@ -1,3 +1,4 @@
+
 /**
  * PortStreamingHandler
  * 
@@ -5,6 +6,7 @@
  * for specific ports. Replaces session-based approach with port-based management.
  */
 const PortStreamingCommand = require('@commands/categories/management/PortStreamingCommand');
+const { logger } = require('@infrastructure/logging/Logger');
 
 class PortStreamingHandler {
   constructor(screenshotStreamingService, eventBus = null) {
@@ -19,7 +21,7 @@ class PortStreamingHandler {
    */
   async handle(command) {
     try {
-      console.log(`[PortStreamingHandler] Processing command: ${command.commandId} for port ${command.port}`);
+      logger.log(`[PortStreamingHandler] Processing command: ${command.commandId} for port ${command.port}`);
       
       // Validate command
       command.validate();
@@ -59,7 +61,7 @@ class PortStreamingHandler {
         });
       }
       
-      console.log(`[PortStreamingHandler] Successfully executed ${command.action} for port ${command.port}`);
+      logger.log(`[PortStreamingHandler] Successfully executed ${command.action} for port ${command.port}`);
       
       return {
         success: true,
@@ -71,7 +73,7 @@ class PortStreamingHandler {
       };
       
     } catch (error) {
-      console.error(`[PortStreamingHandler] Error handling command ${command.commandId}:`, error.message);
+      logger.error(`[PortStreamingHandler] Error handling command ${command.commandId}:`, error.message);
       
       // Emit error event if event bus is available
       if (this.eventBus) {

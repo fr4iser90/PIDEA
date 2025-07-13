@@ -1,5 +1,7 @@
 const path = require('path');
 const fs = require('fs').promises;
+const { logger } = require('@infrastructure/logging/Logger');
+
 
 class ProjectMappingService {
     constructor(dependencies = {}) {
@@ -32,7 +34,7 @@ class ProjectMappingService {
                     }
                 }
             } catch (error) {
-                console.warn('ProjectMappingService: Failed to check monorepo status:', error.message);
+                logger.warn('ProjectMappingService: Failed to check monorepo status:', error.message);
             }
         }
         

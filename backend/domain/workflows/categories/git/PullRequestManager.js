@@ -3,6 +3,7 @@
  * Handles automated pull request creation with templates and validation
  */
 const GitWorkflowException = require('./exceptions/GitWorkflowException');
+const { logger } = require('@infrastructure/logging/Logger');
 
 class PullRequestManager {
   constructor(dependencies = {}) {

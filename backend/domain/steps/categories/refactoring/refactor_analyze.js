@@ -1,3 +1,5 @@
+const { logger } = require('@infrastructure/logging/Logger');
+
 /**
  * RefactorAnalyzeStep - Analyzes project for refactoring opportunities
  * Identifies large files and code quality issues that need refactoring
@@ -21,7 +23,7 @@ async function execute(context, options = {}) {
   if (!projectPath) throw new Error('Project path not found in context');
   if (!projectAnalyzer) throw new Error('Project analyzer not found in context');
 
-  console.log('🔍 [RefactorAnalyze] Starting project analysis for refactoring...');
+  logger.log('🔍 [RefactorAnalyze] Starting project analysis for refactoring...');
 
   try {
     // Run comprehensive analysis using available analyzers
@@ -33,7 +35,7 @@ async function execute(context, options = {}) {
 
     // 1. Project Analysis
     if (projectAnalyzer) {
-      console.log('📊 [RefactorAnalyze] Running project analysis...');
+      logger.log('📊 [RefactorAnalyze] Running project analysis...');
       analysisResults.projectAnalysis = await projectAnalyzer.analyzeProject(projectPath, {
         includeRepoStructure: true,
         includeDependencies: true,
@@ -43,7 +45,7 @@ async function execute(context, options = {}) {
 
     // 2. Code Quality Analysis
     if (codeQualityAnalyzer) {
-      console.log('🎯 [RefactorAnalyze] Running code quality analysis...');
+      logger.log('🎯 [RefactorAnalyze] Running code quality analysis...');
       analysisResults.codeQuality = await codeQualityAnalyzer.analyzeCodeQuality(projectPath, {
         includeMetrics: true,
         includeIssues: true,
@@ -54,7 +56,7 @@ async function execute(context, options = {}) {
 
     // 3. Architecture Analysis
     if (architectureAnalyzer) {
-      console.log('🏗️ [RefactorAnalyze] Running architecture analysis...');
+      logger.log('🏗️ [RefactorAnalyze] Running architecture analysis...');
       analysisResults.architecture = await architectureAnalyzer.analyzeArchitecture(projectPath, {
         includePatterns: true,
         includeViolations: true,
@@ -65,8 +67,8 @@ async function execute(context, options = {}) {
     // Extract large files from analysis
     const largeFiles = extractLargeFiles(analysisResults);
 
-    console.log(`✅ [RefactorAnalyze] Analysis completed. Found ${largeFiles.length} large files.`);
-    console.log(`🔍 [RefactorAnalyze] Sample large files:`, largeFiles.slice(0, 3)); // Debug first 3 files
+    logger.log(`✅ [RefactorAnalyze] Analysis completed. Found ${largeFiles.length} large files.`);
+    logger.log(`🔍 [RefactorAnalyze] Sample large files:`, largeFiles.slice(0, 3)); // Debug first 3 files
 
     const result = {
       success: true,
@@ -80,7 +82,7 @@ async function execute(context, options = {}) {
       }
     };
 
-    console.log(`🔍 [RefactorAnalyze] Returning result with largeFiles:`, {
+    logger.log(`🔍 [RefactorAnalyze] Returning result with largeFiles:`, {
       hasLargeFiles: !!result.largeFiles,
       largeFilesLength: result.largeFiles ? result.largeFiles.length : 0,
       resultKeys: Object.keys(result)
@@ -89,7 +91,7 @@ async function execute(context, options = {}) {
     return result;
 
   } catch (error) {
-    console.error('❌ [RefactorAnalyze] Analysis failed:', error);
+    logger.error('❌ [RefactorAnalyze] Analysis failed:', error);
     throw error;
   }
 }
@@ -98,7 +100,7 @@ function extractLargeFiles(analysisResults) {
   const largeFiles = [];
   const processedPaths = new Set();
 
-  console.log(`🔍 [RefactorAnalyze] Extracting large files from analysis results:`, {
+  logger.log(`🔍 [RefactorAnalyze] Extracting large files from analysis results:`, {
     hasProjectAnalysis: !!analysisResults.projectAnalysis,
     hasCodeQuality: !!analysisResults.codeQuality,
     hasArchitecture: !!analysisResults.architecture,
@@ -117,7 +119,7 @@ function extractLargeFiles(analysisResults) {
     analysisResults.analysis?.codeQuality?.data?.largeFiles
   ];
 
-  console.log(`🔍 [RefactorAnalyze] Checking possible sources:`, possibleSources.map((source, index) => ({
+  logger.log(`🔍 [RefactorAnalyze] Checking possible sources:`, possibleSources.map((source, index) => ({
     sourceIndex: index,
     hasData: !!source,
     isArray: Array.isArray(source),

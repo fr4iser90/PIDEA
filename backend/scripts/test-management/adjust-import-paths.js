@@ -1,3 +1,4 @@
+
 #!/usr/bin/env node
 require('module-alias/register');
 
@@ -59,6 +60,7 @@ function adjustImportsInFile(filePath, mappings, report) {
   let changed = false;
 
   // Erweiterte Regex: Erkennt sowohl require(...) als auch import ... from ...
+const { logger } = require('@infrastructure/logging/Logger');
   // und auch Alias-Imports wie @infrastructure/...
   const importRegex = /(require\(['"](\.\.?\/[^'"]+)['"]\))|(import [^'"\n]+ from ['"](\.\.?\/[^'"]+)['"])|(require\(['"]@([^/'"]+)(\/[^'"]*)['"]\))|(import [^'"\n]+ from ['"]@([^/'"]+)(\/[^'"]*)['"])/g;
   let match;
@@ -110,7 +112,7 @@ function adjustImportsInFile(filePath, mappings, report) {
     }
     fs.writeFileSync(filePath, newContent, 'utf8');
     report.patched.push({ file: filePath, changes });
-    console.log(`✅ Patched: ${path.relative(process.cwd(), filePath)}`);
+    logger.log(`✅ Patched: ${path.relative(process.cwd(), filePath)}`);
   }
 }
 
@@ -138,16 +140,16 @@ function walk(dir, mappings, report) {
 
 function main() {
   const mappings = getAliasMappings();
-  console.log('🔍 Gefundene Aliase:', mappings.map(m => `${m.alias} -> ${m.absPath}`));
-  console.log('🎯 Ziel-Verzeichnisse:', TARGET_DIRS);
+  logger.log('🔍 Gefundene Aliase:', mappings.map(m => `${m.alias} -> ${m.absPath}`));
+  logger.log('🎯 Ziel-Verzeichnisse:', TARGET_DIRS);
   
   const report = { patched: [] };
   for (const dir of TARGET_DIRS) {
-    console.log(`\n📁 Durchsuche: ${dir}`);
+    logger.log(`\n📁 Durchsuche: ${dir}`);
     walk(dir, mappings, report);
   }
   
-  console.log(`\n📊 Ergebnis: ${report.patched.length} Dateien geändert`);
+  logger.log(`\n📊 Ergebnis: ${report.patched.length} Dateien geändert`);
   
   // Schreibe Report als Markdown
   const reportPath = path.join(__dirname, 'import-adjust-report.md');
@@ -160,7 +162,7 @@ function main() {
     md += '\n';
   }
   fs.writeFileSync(reportPath, md, 'utf8');
-  console.log(`\n📄 Import-Adjust-Report geschrieben nach: ${reportPath}`);
+  logger.log(`\n📄 Import-Adjust-Report geschrieben nach: ${reportPath}`);
 }
 
 main(); 

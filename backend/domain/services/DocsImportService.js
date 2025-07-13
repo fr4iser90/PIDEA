@@ -1,9 +1,11 @@
+
 /**
  * DocsImportService - Importiert Docs direkt aus dem Workspace in die Datenbank
  * DATABASE ONLY - Keine TEMP-Logik!
  */
 const fs = require('fs').promises;
 const path = require('path');
+const { logger } = require('@infrastructure/logging/Logger');
 
 class DocsImportService {
     constructor(browserManager, taskService, taskRepository) {
@@ -19,12 +21,12 @@ class DocsImportService {
      * @returns {Promise<Object>} Import Ergebnis
      */
     async importDocsFromWorkspace(projectId, workspacePath) {
-        console.log(`🔄 [DocsImportService] Starting docs import for project ${projectId} from workspace: ${workspacePath}`);
+        logger.log(`🔄 [DocsImportService] Starting docs import for project ${projectId} from workspace: ${workspacePath}`);
         
         try {
             return await this._importFromWorkspace(workspacePath, projectId);
         } catch (error) {
-            console.error(`❌ [DocsImportService] Import failed:`, error);
+            logger.error(`❌ [DocsImportService] Import failed:`, error);
             throw error;
         }
     }
@@ -34,7 +36,7 @@ class DocsImportService {
      */
     async _importFromWorkspace(workspacePath, projectId) {
         try {
-            console.log(`🔄 [DocsImportService] Importing from workspace to database: ${workspacePath}`);
+            logger.log(`🔄 [DocsImportService] Importing from workspace to database: ${workspacePath}`);
             if (!workspacePath) {
                 throw new Error('No workspace path provided');
             }
@@ -123,7 +125,7 @@ class DocsImportService {
                 workspacePath
             };
         } catch (error) {
-            console.error(`❌ [DocsImportService] Import from workspace failed:`, error);
+            logger.error(`❌ [DocsImportService] Import from workspace failed:`, error);
             throw error;
         }
     }
@@ -180,7 +182,7 @@ class DocsImportService {
             };
             
         } catch (error) {
-            console.error(`❌ [DocsImportService] Error parsing markdown:`, error);
+            logger.error(`❌ [DocsImportService] Error parsing markdown:`, error);
             return null;
         }
     }

@@ -1,3 +1,4 @@
+
 #!/usr/bin/env node
 require('module-alias/register');
 
@@ -11,6 +12,7 @@ const path = require('path');
 const fs = require('fs').promises;
 const { exec } = require('child_process');
 const { promisify } = require('util');
+const { logger } = require('@infrastructure/logging/Logger');
 
 const execAsync = promisify(exec);
 
@@ -55,15 +57,15 @@ class LegacyDetector {
       includeDetails = true
     } = options;
 
-    console.log(`🔍 Scanning directory: ${directory}`);
-    console.log(`📋 File patterns: ${filePatterns.join(', ')}`);
-    console.log(`🎯 Minimum legacy score: ${minScore}`);
-    console.log('');
+    logger.log(`🔍 Scanning directory: ${directory}`);
+    logger.log(`📋 File patterns: ${filePatterns.join(', ')}`);
+    logger.log(`🎯 Minimum legacy score: ${minScore}`);
+    logger.log('');
 
     try {
       // Find test files
       const testFiles = await this.findTestFiles(directory, filePatterns, recursive);
-      console.log(`📁 Found ${testFiles.length} test files`);
+      logger.debug(`📁 Found ${testFiles.length} test files`);
 
       const results = {
         scannedFiles: testFiles.length,
@@ -91,7 +93,7 @@ class LegacyDetector {
 
       return results;
     } catch (error) {
-      console.error(`❌ Error scanning directory: ${error.message}`);
+      logger.error(`❌ Error scanning directory: ${error.message}`);
       throw error;
     }
   }
@@ -112,7 +114,7 @@ class LegacyDetector {
       const { stdout } = await execAsync(findCommand);
       return stdout.trim().split('\n').filter(file => file.length > 0);
     } catch (error) {
-      console.warn(`Warning: Could not use find command, falling back to manual search`);
+      logger.warn(`Warning: Could not use find command, falling back to manual search`);
       return this.findTestFilesManually(directory, patterns, recursive);
     }
   }
@@ -143,7 +145,7 @@ class LegacyDetector {
         }
       }
     } catch (error) {
-      console.warn(`Warning: Could not read directory ${directory}: ${error.message}`);
+      logger.warn(`Warning: Could not read directory ${directory}: ${error.message}`);
     }
     
     return files;
@@ -201,17 +203,17 @@ class LegacyDetector {
 
       // Only return if score meets minimum threshold
       if (result.legacyScore >= minScore) {
-        console.log(`⚠️  ${fileName} (Score: ${result.legacyScore})`);
+        logger.log(`⚠️  ${fileName} (Score: ${result.legacyScore})`);
         if (includeDetails && result.issues.length > 0) {
           result.issues.forEach(issue => {
-            console.log(`   - ${issue.description}: ${issue.occurrences} occurrences`);
+            logger.log(`   - ${issue.description}: ${issue.occurrences} occurrences`);
           });
         }
       }
 
       return result;
     } catch (error) {
-      console.warn(`Warning: Could not analyze file ${filePath}: ${error.message}`);
+      logger.warn(`Warning: Could not analyze file ${filePath}: ${error.message}`);
       return {
         filePath,
         fileName: path.basename(filePath),
@@ -249,7 +251,7 @@ class LegacyDetector {
     const hasComments = content.includes('//') || content.includes('/*');
     const hasDocumentation = content.includes('/**') || content.includes('@param') || content.includes('@return');
     const hasErrorHandling = content.includes('try') && content.includes('catch');
-    const hasLogging = content.includes('console.log') || content.includes('console.warn') || content.includes('console.error');
+    const hasLogging = content.includes('logger.log') || content.includes('logger.warn') || content.includes('logger.error');
     const hasTypeChecking = content.includes('typeof') || content.includes('instanceof') || content.includes('Array.isArray');
     const hasValidation = content.includes('validate') || content.includes('assert') || content.includes('expect');
     
@@ -338,25 +340,25 @@ class LegacyDetector {
    * @param {Object} results - Scan results
    */
   printSummary(results) {
-    console.log('\n📊 Scan Summary');
-    console.log('==============');
-    console.log(`📁 Total files scanned: ${results.scannedFiles}`);
-    console.log(`⚠️  Legacy files found: ${results.legacyFiles}`);
-    console.log(`🎯 Total legacy score: ${results.totalLegacyScore}`);
-    console.log(`📈 Average legacy score: ${results.legacyFiles > 0 ? Math.round(results.totalLegacyScore / results.legacyFiles) : 0}`);
+    logger.log('\n📊 Scan Summary');
+    logger.log('==============');
+    logger.log(`📁 Total files scanned: ${results.scannedFiles}`);
+    logger.log(`⚠️  Legacy files found: ${results.legacyFiles}`);
+    logger.log(`🎯 Total legacy score: ${results.totalLegacyScore}`);
+    logger.log(`📈 Average legacy score: ${results.legacyFiles > 0 ? Math.round(results.totalLegacyScore / results.legacyFiles) : 0}`);
     
     if (results.recommendations.length > 0) {
-      console.log('\n💡 Recommendations');
-      console.log('==================');
+      logger.log('\n💡 Recommendations');
+      logger.log('==================');
       results.recommendations.forEach((rec, index) => {
-        console.log(`${index + 1}. [${rec.type.toUpperCase()}] ${rec.message}`);
+        logger.log(`${index + 1}. [${rec.type.toUpperCase()}] ${rec.message}`);
         if (rec.files && rec.files.length > 0) {
-          console.log(`   Files: ${rec.files.join(', ')}`);
+          logger.log(`   Files: ${rec.files.join(', ')}`);
         }
       });
     }
     
-    console.log('\n✅ Scan completed successfully!');
+    logger.log('\n✅ Scan completed successfully!');
   }
 
   /**
@@ -372,9 +374,9 @@ class LegacyDetector {
       };
       
       await fs.writeFile(outputPath, JSON.stringify(exportData, null, 2));
-      console.log(`📄 Results exported to: ${outputPath}`);
+      logger.log(`📄 Results exported to: ${outputPath}`);
     } catch (error) {
-      console.error(`❌ Failed to export results: ${error.message}`);
+      logger.error(`❌ Failed to export results: ${error.message}`);
     }
   }
 }
@@ -385,17 +387,17 @@ async function main() {
   const detector = new LegacyDetector();
   
   if (args.length === 0) {
-    console.log('Usage: node legacy-detector.js <directory> [options]');
-    console.log('');
-    console.log('Options:');
-    console.log('  --min-score <number>    Minimum legacy score to report (default: 30)');
-    console.log('  --output <file>         Export results to JSON file');
-    console.log('  --no-recursive          Do not search subdirectories');
-    console.log('  --no-details            Do not include detailed analysis');
-    console.log('');
-    console.log('Examples:');
-    console.log('  node legacy-detector.js ./tests');
-    console.log('  node legacy-detector.js ./tests --min-score 50 --output results.json');
+    logger.log('Usage: node legacy-detector.js <directory> [options]');
+    logger.log('');
+    logger.log('Options:');
+    logger.log('  --min-score <number>    Minimum legacy score to report (default: 30)');
+    logger.log('  --output <file>         Export results to JSON file');
+    logger.log('  --no-recursive          Do not search subdirectories');
+    logger.log('  --no-details            Do not include detailed analysis');
+    logger.log('');
+    logger.log('Examples:');
+    logger.debug('  node legacy-detector.js ./tests');
+    logger.debug('  node legacy-detector.js ./tests --min-score 50 --output results.json');
     return;
   }
   
@@ -432,7 +434,7 @@ async function main() {
       await detector.exportResults(results, options.output);
     }
   } catch (error) {
-    console.error(`❌ Error: ${error.message}`);
+    logger.error(`❌ Error: ${error.message}`);
     process.exit(1);
   }
 }

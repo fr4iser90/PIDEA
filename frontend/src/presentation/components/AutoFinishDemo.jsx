@@ -1,3 +1,4 @@
+import { logger } from "@/infrastructure/logging/Logger";
 import React, { useState, useEffect } from 'react';
 import TaskProgressComponent from './TaskProgressComponent';
 import AutoFinishService from '../../application/services/AutoFinishService';
@@ -33,7 +34,7 @@ const AutoFinishDemo = () => {
       setSupportedPatterns(patterns);
       setTaskTypes(types);
     } catch (error) {
-      console.error('Failed to initialize Auto-Finish service:', error);
+      logger.error('Failed to initialize Auto-Finish service:', error);
       setError('Failed to initialize Auto-Finish service');
     }
   };
@@ -54,9 +55,9 @@ const AutoFinishDemo = () => {
       });
 
       setSessionId(result.sessionId);
-      console.log('TODO processing started:', result);
+      logger.log('TODO processing started:', result);
     } catch (error) {
-      console.error('Failed to process TODO list:', error);
+      logger.error('Failed to process TODO list:', error);
       setError(error.message || 'Failed to process TODO list');
     } finally {
       setIsProcessing(false);
@@ -64,19 +65,19 @@ const AutoFinishDemo = () => {
   };
 
   const handleComplete = (result) => {
-    console.log('TODO processing completed:', result);
+    logger.log('TODO processing completed:', result);
     setSessionId(null);
     setTodoInput('');
   };
 
   const handleError = (errorMessage) => {
-    console.error('TODO processing failed:', errorMessage);
+    logger.error('TODO processing failed:', errorMessage);
     setError(errorMessage);
     setSessionId(null);
   };
 
   const handleCancel = () => {
-    console.log('TODO processing cancelled');
+    logger.log('TODO processing cancelled');
     setSessionId(null);
   };
 

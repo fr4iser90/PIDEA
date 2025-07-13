@@ -1,3 +1,4 @@
+
 #!/usr/bin/env node
 require('module-alias/register');
 
@@ -78,12 +79,12 @@ class ModuleAliasEnsurer {
       if (modified) {
         fs.writeFileSync(filePath, newContent, 'utf8');
         this.processedFiles.push(filePath);
-        console.log(chalk.green(`✅ Patched: ${path.relative(process.cwd(), filePath)}`));
+        logger.log(chalk.green(`✅ Patched: ${path.relative(process.cwd(), filePath)}`));
       }
 
     } catch (error) {
       this.errors.push({ file: filePath, error: error.message });
-      console.log(chalk.red(`❌ Error processing ${filePath}: ${error.message}`));
+      logger.log(chalk.red(`❌ Error processing ${filePath}: ${error.message}`));
     }
   }
 
@@ -123,33 +124,33 @@ class ModuleAliasEnsurer {
    * Run the module alias ensurer
    */
   async run() {
-    console.log(chalk.blue('🔧 Ensuring module-alias/register in all entry points...\n'));
+    logger.log(chalk.blue('🔧 Ensuring module-alias/register in all entry points...\n'));
 
     for (const target of this.targetDirs) {
       this.walkDirectory(target);
     }
 
     // Print summary
-    console.log(chalk.blue('\n📊 Module Alias Ensurer Summary:'));
-    console.log(chalk.green(`✅ Processed: ${this.processedFiles.length} files`));
-    console.log(chalk.yellow(`⏭️  Skipped: ${this.skippedFiles.length} files (already patched)`));
-    console.log(chalk.red(`❌ Errors: ${this.errors.length} files`));
+    logger.log(chalk.blue('\n📊 Module Alias Ensurer Summary:'));
+    logger.log(chalk.green(`✅ Processed: ${this.processedFiles.length} files`));
+    logger.log(chalk.yellow(`⏭️  Skipped: ${this.skippedFiles.length} files (already patched)`));
+    logger.log(chalk.red(`❌ Errors: ${this.errors.length} files`));
 
     if (this.processedFiles.length > 0) {
-      console.log(chalk.green('\n🎉 Successfully patched the following files:'));
+      logger.log(chalk.green('\n🎉 Successfully patched the following files:'));
       this.processedFiles.forEach(file => {
-        console.log(chalk.green(`   - ${path.relative(process.cwd(), file)}`));
+        logger.log(chalk.green(`   - ${path.relative(process.cwd(), file)}`));
       });
     }
 
     if (this.errors.length > 0) {
-      console.log(chalk.red('\n⚠️  Errors occurred:'));
+      logger.log(chalk.red('\n⚠️  Errors occurred:'));
       this.errors.forEach(({ file, error }) => {
-        console.log(chalk.red(`   - ${path.relative(process.cwd(), file)}: ${error}`));
+        logger.log(chalk.red(`   - ${path.relative(process.cwd(), file)}: ${error}`));
       });
     }
 
-    console.log(chalk.blue('\n✨ Module alias registration complete!'));
+    logger.log(chalk.blue('\n✨ Module alias registration complete!'));
     
     return {
       processed: this.processedFiles.length,
@@ -163,7 +164,7 @@ class ModuleAliasEnsurer {
    * @returns {Object} Analysis results
    */
   async analyze() {
-    console.log(chalk.blue('🔍 Analyzing module-alias/register usage...\n'));
+    logger.log(chalk.blue('🔍 Analyzing module-alias/register usage...\n'));
 
     const needsPatching = [];
     const alreadyPatched = [];
@@ -199,6 +200,7 @@ class ModuleAliasEnsurer {
             const content = fs.readFileSync(fullPath, 'utf8');
             if (content.includes("require('module-alias/register')") || 
                 content.includes('require("module-alias/register")')) {
+const { logger } = require('@infrastructure/logging/Logger');
               alreadyPatched.push(fullPath);
             } else {
               needsPatching.push(fullPath);
@@ -210,14 +212,14 @@ class ModuleAliasEnsurer {
       walk(target);
     }
 
-    console.log(chalk.blue('📊 Analysis Results:'));
-    console.log(chalk.green(`✅ Already patched: ${alreadyPatched.length} files`));
-    console.log(chalk.yellow(`🔧 Needs patching: ${needsPatching.length} files`));
+    logger.log(chalk.blue('📊 Analysis Results:'));
+    logger.log(chalk.green(`✅ Already patched: ${alreadyPatched.length} files`));
+    logger.log(chalk.yellow(`🔧 Needs patching: ${needsPatching.length} files`));
 
     if (needsPatching.length > 0) {
-      console.log(chalk.yellow('\n📝 Files that need patching:'));
+      logger.log(chalk.yellow('\n📝 Files that need patching:'));
       needsPatching.forEach(file => {
-        console.log(chalk.yellow(`   - ${path.relative(process.cwd(), file)}`));
+        logger.log(chalk.yellow(`   - ${path.relative(process.cwd(), file)}`));
       });
     }
 
@@ -241,7 +243,7 @@ async function main() {
       await ensurer.run();
     }
   } catch (error) {
-    console.error(chalk.red(`❌ Fatal error: ${error.message}`));
+    logger.error(chalk.red(`❌ Fatal error: ${error.message}`));
     process.exit(1);
   }
 }

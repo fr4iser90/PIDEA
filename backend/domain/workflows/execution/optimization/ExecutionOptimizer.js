@@ -3,6 +3,7 @@
  * Provides step combination, reordering, resource allocation, parallel execution, and predictive optimization
  */
 const EventEmitter = require('events');
+const { logger } = require('@infrastructure/logging/Logger');
 
 /**
  * Optimization strategy configuration

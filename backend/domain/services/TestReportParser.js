@@ -4,6 +4,7 @@
  */
 const fs = require('fs');
 const path = require('path');
+const { logger } = require('@infrastructure/logging/Logger');
 
 class TestReportParser {
   constructor() {

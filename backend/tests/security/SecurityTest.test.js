@@ -1,3 +1,4 @@
+
 /**
  * Security tests for Task Management System
  */
@@ -279,16 +280,16 @@ describe('Task Management System Security Tests', () => {
             };
 
             // Capture console output
-            const originalLog = console.log;
+            const originalLog = logger.log;
             const logs = [];
-            console.log = jest.fn((...args) => {
+            logger.log = jest.fn((...args) => {
                 logs.push(args.join(' '));
             });
 
             await application.commandBus.execute('CreateTaskCommand', sensitiveTask);
 
-            // Restore console.log
-            console.log = originalLog;
+            // Restore logger.log
+            logger.log = originalLog;
 
             // Verify sensitive data is not logged
             const logString = logs.join(' ');
@@ -383,6 +384,7 @@ describe('Task Management System Security Tests', () => {
                 'require("fs").writeFileSync("/tmp/test", "hacked")', // Should not write to system
                 'require("child_process").execSync("whoami")', // Should not execute system commands
                 'require("os").platform()' // Should be allowed (read-only)
+const { logger } = require('@infrastructure/logging/Logger');
             ];
 
             for (const script of systemAccessScripts) {
@@ -437,7 +439,7 @@ describe('Task Management System Security Tests', () => {
             expect(failed).toBeGreaterThan(0);
             expect(successful).toBeLessThan(numRequests);
 
-            console.log(`Rate limiting: ${successful} successful, ${failed} rejected`);
+            logger.log(`Rate limiting: ${successful} successful, ${failed} rejected`);
         });
 
         test('should prevent AI service abuse', async () => {
@@ -459,7 +461,7 @@ describe('Task Management System Security Tests', () => {
             expect(failed).toBeGreaterThan(0);
             expect(successful).toBeLessThan(numRequests);
 
-            console.log(`AI rate limiting: ${successful} successful, ${failed} rejected`);
+            logger.log(`AI rate limiting: ${successful} successful, ${failed} rejected`);
         });
     });
 

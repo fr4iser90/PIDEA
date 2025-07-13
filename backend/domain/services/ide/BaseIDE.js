@@ -1,3 +1,4 @@
+
 /**
  * BaseIDE - Common IDE functionality
  * Provides shared functionality and utilities for all IDE implementations
@@ -50,9 +51,9 @@ class BaseIDE extends IDEInterface {
       this.workspacePathDetector = new WorkspacePathDetector(this.browserManager, this.ideManager);
       this.chatHistoryExtractor = new ChatHistoryExtractor(this.browserManager, this.ideType);
       
-      console.log(`[BaseIDE] Common services initialized for ${this.ideType}`);
+      logger.log(`[BaseIDE] Common services initialized for ${this.ideType}`);
     } catch (error) {
-      console.error(`[BaseIDE] Failed to initialize common services:`, error);
+      logger.error(`[BaseIDE] Failed to initialize common services:`, error);
       this.lastError = error;
     }
   }
@@ -63,17 +64,17 @@ class BaseIDE extends IDEInterface {
   setupEventListeners() {
     if (this.eventBus) {
       this.eventBus.subscribe('activeIDEChanged', async (eventData) => {
-        console.log(`[BaseIDE] IDE changed for ${this.ideType}, resetting cache`);
-        console.log(`[BaseIDE] Event data:`, eventData);
+        logger.log(`[BaseIDE] IDE changed for ${this.ideType}, resetting cache`);
+        logger.log(`[BaseIDE] Event data:`, eventData);
         
         // Switch browser connection to new IDE
         if (eventData.port) {
           try {
-            console.log(`[BaseIDE] Switching browser connection to port:`, eventData.port);
+            logger.log(`[BaseIDE] Switching browser connection to port:`, eventData.port);
             await this.browserManager.switchToPort(eventData.port);
-            console.log(`[BaseIDE] Successfully switched browser connection to port:`, eventData.port);
+            logger.log(`[BaseIDE] Successfully switched browser connection to port:`, eventData.port);
           } catch (error) {
-            console.error(`[BaseIDE] Failed to switch browser connection:`, error.message);
+            logger.error(`[BaseIDE] Failed to switch browser connection:`, error.message);
           }
         }
       });
@@ -99,7 +100,7 @@ class BaseIDE extends IDEInterface {
       stack: error.stack
     };
     
-    console.error(`[BaseIDE] Error in ${context}:`, error);
+    logger.error(`[BaseIDE] Error in ${context}:`, error);
     return errorResult;
   }
 
@@ -115,7 +116,7 @@ class BaseIDE extends IDEInterface {
       ...data
     };
     
-    console.log(`[BaseIDE] ${message}`, logData);
+    logger.log(`[BaseIDE] ${message}`, logData);
   }
 
   /**
@@ -371,6 +372,7 @@ class BaseIDE extends IDEInterface {
   async readFile(filePath) {
     try {
       const fs = require('fs');
+const { logger } = require('@infrastructure/logging/Logger');
       
       if (!fs.existsSync(filePath)) {
         throw new Error(`File not found: ${filePath}`);

@@ -1,3 +1,4 @@
+
 /**
  * CommandHandlerAdapter - Adapter for command-based handlers
  * 
@@ -134,6 +135,7 @@ class CommandHandlerAdapter extends IHandlerAdapter {
       for (const path of commandPaths) {
         try {
           return require(path);
+const { logger } = require('@infrastructure/logging/Logger');
         } catch (error) {
           // Continue to next path
         }
@@ -141,7 +143,7 @@ class CommandHandlerAdapter extends IHandlerAdapter {
 
       return null;
     } catch (error) {
-      console.warn(`Failed to load command class ${commandType}:`, error.message);
+      logger.warn(`Failed to load command class ${commandType}:`, error.message);
       return null;
     }
   }

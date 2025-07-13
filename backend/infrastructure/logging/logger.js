@@ -1,3 +1,5 @@
+const { logger } = require('@infrastructure/logging/Logger');
+
 /**
  * Simple logger module for the PIDEA backend
  * Provides structured logging with different levels
@@ -47,7 +49,7 @@ class Logger {
   error(message, data = {}) {
     if (this.currentLevel >= this.levels.ERROR) {
       const formattedMessage = this.formatMessage('ERROR', message, data);
-      console.error(formattedMessage);
+      logger.error(formattedMessage);
     }
   }
 
@@ -57,7 +59,7 @@ class Logger {
   warn(message, data = {}) {
     if (this.currentLevel >= this.levels.WARN) {
       const formattedMessage = this.formatMessage('WARN', message, data);
-      console.warn(formattedMessage);
+      logger.warn(formattedMessage);
     }
   }
 
@@ -67,7 +69,7 @@ class Logger {
   info(message, data = {}) {
     if (this.currentLevel >= this.levels.INFO) {
       const formattedMessage = this.formatMessage('INFO', message, data);
-      console.log(formattedMessage);
+      logger.log(formattedMessage);
     }
   }
 
@@ -77,7 +79,7 @@ class Logger {
   debug(message, data = {}) {
     if (this.currentLevel >= this.levels.DEBUG && this.isDevelopment) {
       const formattedMessage = this.formatMessage('DEBUG', message, data);
-      console.log(formattedMessage);
+      logger.log(formattedMessage);
     }
   }
 
@@ -87,7 +89,7 @@ class Logger {
   success(message, data = {}) {
     if (this.currentLevel >= this.levels.INFO) {
       const formattedMessage = this.formatMessage('SUCCESS', message, data);
-      console.log(`✅ ${formattedMessage}`);
+      logger.log(`✅ ${formattedMessage}`);
     }
   }
 
@@ -97,7 +99,7 @@ class Logger {
   progress(message, data = {}) {
     if (this.currentLevel >= this.levels.INFO) {
       const formattedMessage = this.formatMessage('PROGRESS', message, data);
-      console.log(`📊 ${formattedMessage}`);
+      logger.log(`📊 ${formattedMessage}`);
     }
   }
 
@@ -107,7 +109,7 @@ class Logger {
   start(message, data = {}) {
     if (this.currentLevel >= this.levels.INFO) {
       const formattedMessage = this.formatMessage('START', message, data);
-      console.log(`🚀 ${formattedMessage}`);
+      logger.log(`🚀 ${formattedMessage}`);
     }
   }
 
@@ -117,7 +119,7 @@ class Logger {
   complete(message, data = {}) {
     if (this.currentLevel >= this.levels.INFO) {
       const formattedMessage = this.formatMessage('COMPLETE', message, data);
-      console.log(`✅ ${formattedMessage}`);
+      logger.log(`✅ ${formattedMessage}`);
     }
   }
 
@@ -127,7 +129,7 @@ class Logger {
   fail(message, data = {}) {
     if (this.currentLevel >= this.levels.ERROR) {
       const formattedMessage = this.formatMessage('FAIL', message, data);
-      console.error(`❌ ${formattedMessage}`);
+      logger.error(`❌ ${formattedMessage}`);
     }
   }
 

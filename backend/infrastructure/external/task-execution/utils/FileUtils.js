@@ -5,6 +5,7 @@ const fs = require('fs').promises;
 const path = require('path');
 const { execSync } = require('child_process');
 const EXECUTION_CONSTANTS = require('../constants/ExecutionConstants');
+const { logger } = require('@infrastructure/logging/Logger');
 
 class FileUtils {
     constructor(logger = console) {

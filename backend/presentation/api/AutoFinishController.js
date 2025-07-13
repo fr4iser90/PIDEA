@@ -1,4 +1,5 @@
 const ProcessTodoListCommand = require('@commands/categories/management/ProcessTodoListCommand');
+const { logger } = require('@infrastructure/logging/Logger');
 
 /**
  * AutoFinishController - Controller for auto-finish system API endpoints

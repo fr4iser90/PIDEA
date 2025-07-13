@@ -1,3 +1,4 @@
+import { logger } from "@/infrastructure/logging/Logger";
 import React, { useState, useEffect, useCallback } from 'react';
 import { apiCall } from '@/infrastructure/repositories/APIChatRepository.jsx';
 import '@/css/components/ide/ide-selector.css';
@@ -72,7 +73,7 @@ const IDESelector = ({
         throw new Error(result.error || 'Failed to load IDEs');
       }
     } catch (error) {
-      console.error('[IDESelector] Error loading IDEs:', error);
+      logger.error('[IDESelector] Error loading IDEs:', error);
       setError(error.message);
     } finally {
       setIsLoading(false);
@@ -107,7 +108,7 @@ const IDESelector = ({
         throw new Error(result.error || 'Failed to select IDE');
       }
     } catch (error) {
-      console.error('[IDESelector] Error selecting IDE:', error);
+      logger.error('[IDESelector] Error selecting IDE:', error);
       setError(error.message);
     } finally {
       setIsLoading(false);
@@ -139,7 +140,7 @@ const IDESelector = ({
         throw new Error(result.error || 'Failed to start new IDE');
       }
     } catch (error) {
-      console.error('[IDESelector] Error starting new IDE:', error);
+      logger.error('[IDESelector] Error starting new IDE:', error);
       setError(error.message);
     } finally {
       setIsLoading(false);

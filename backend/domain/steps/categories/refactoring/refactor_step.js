@@ -1,3 +1,5 @@
+const { logger } = require('@infrastructure/logging/Logger');
+
 /**
  * RefactoringStep - Main refactoring orchestration step
  * Coordinates the refactoring process by calling analyze and generate task steps
@@ -18,11 +20,11 @@ async function execute(context, options = {}) {
   if (!projectPath) throw new Error('Project path not found in context');
   if (!stepRegistry) throw new Error('Step registry not found in context');
 
-  console.log('🚀 [RefactoringStep] Starting refactoring orchestration...');
+  logger.log('🚀 [RefactoringStep] Starting refactoring orchestration...');
 
   try {
     // Step 1: Analyze project for refactoring opportunities
-    console.log('📊 [RefactoringStep] Step 1: Analyzing project...');
+    logger.log('📊 [RefactoringStep] Step 1: Analyzing project...');
     const analyzeResult = await stepRegistry.executeStep('RefactorAnalyze', context, options);
     
     if (!analyzeResult.success) {
@@ -32,7 +34,7 @@ async function execute(context, options = {}) {
     // Extract largeFiles from the correct location in analyzeResult
     const largeFiles = analyzeResult.result?.largeFiles || analyzeResult.largeFiles || [];
     
-    console.log(`🔍 [RefactoringStep] Analysis result:`, {
+    logger.log(`🔍 [RefactoringStep] Analysis result:`, {
       success: analyzeResult.success,
       largeFilesCount: largeFiles.length,
       largeFilesSample: largeFiles.slice(0, 2),
@@ -41,13 +43,13 @@ async function execute(context, options = {}) {
     });
 
     // Step 2: Generate refactoring tasks
-    console.log('🔧 [RefactoringStep] Step 2: Generating refactoring tasks...');
+    logger.log('🔧 [RefactoringStep] Step 2: Generating refactoring tasks...');
     const taskContext = {
       ...context,
       largeFiles: largeFiles
     };
     
-    console.log(`🔍 [RefactoringStep] Task context:`, {
+    logger.log(`🔍 [RefactoringStep] Task context:`, {
       largeFilesCount: taskContext.largeFiles ? taskContext.largeFiles.length : 0,
       hasLargeFiles: !!taskContext.largeFiles
     });
@@ -60,9 +62,9 @@ async function execute(context, options = {}) {
 
     const taskCount = taskResult.result?.taskCount || taskResult.taskCount || 0;
     
-    console.log(`✅ [RefactoringStep] Refactoring orchestration completed successfully!`);
-    console.log(`📊 Analysis found ${largeFiles.length} large files`);
-    console.log(`🔧 Generated ${taskCount} refactoring tasks`);
+    logger.log(`✅ [RefactoringStep] Refactoring orchestration completed successfully!`);
+    logger.log(`📊 Analysis found ${largeFiles.length} large files`);
+    logger.log(`🔧 Generated ${taskCount} refactoring tasks`);
 
     return {
       success: true,
@@ -79,7 +81,7 @@ async function execute(context, options = {}) {
     };
 
   } catch (error) {
-    console.error('❌ [RefactoringStep] Refactoring orchestration failed:', error);
+    logger.error('❌ [RefactoringStep] Refactoring orchestration failed:', error);
     throw error;
   }
 }

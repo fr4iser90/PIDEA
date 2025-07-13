@@ -1,74 +1,76 @@
+
 require('module-alias/register');
 
 const IDEDetector = require('@external/IDEDetector');
 const IDEManager = require('@external/IDEManager');
 const BrowserManager = require('@external/BrowserManager');
+const { logger } = require('@infrastructure/logging/Logger');
 
 async function testPortDetection() {
-  console.log('🔍 Testing Port Detection...\n');
+  logger.debug('🔍 Testing Port Detection...\n');
 
   try {
     // 1. Test IDEDetector
-    console.log('1️⃣ Testing IDEDetector...');
+    logger.debug('1️⃣ Testing IDEDetector...');
     const detector = new IDEDetector();
     const availableIDEs = await detector.scanForIDEs();
-    console.log('Available IDEs found:', availableIDEs);
-    console.log('');
+    logger.log('Available IDEs found:', availableIDEs);
+    logger.log('');
 
     // 2. Test IDEManager
-    console.log('2️⃣ Testing IDEManager...');
+    logger.debug('2️⃣ Testing IDEManager...');
     const manager = new IDEManager();
     const managerIDEs = await manager.getAvailableIDEs();
-    console.log('IDEManager available IDEs:', managerIDEs);
-    console.log('IDEManager active port:', manager.getActivePort());
-    console.log('');
+    logger.log('IDEManager available IDEs:', managerIDEs);
+    logger.log('IDEManager active port:', manager.getActivePort());
+    logger.log('');
 
     // 3. Test BrowserManager
-    console.log('3️⃣ Testing BrowserManager...');
+    logger.debug('3️⃣ Testing BrowserManager...');
     const browserManager = new BrowserManager();
-    console.log('BrowserManager current port:', browserManager.getCurrentPort());
-    console.log('');
+    logger.log('BrowserManager current port:', browserManager.getCurrentPort());
+    logger.log('');
 
     // 4. Test switching between available IDEs
     if (availableIDEs.length > 1) {
-      console.log('4️⃣ Testing IDE switching...');
+      logger.debug('4️⃣ Testing IDE switching...');
       for (const ide of availableIDEs) {
-        console.log(`Switching to IDE on port ${ide.port}...`);
+        logger.log(`Switching to IDE on port ${ide.port}...`);
         try {
           await manager.switchToIDE(ide.port);
-          console.log(`✅ Successfully switched to port ${ide.port}`);
-          console.log(`Active port is now: ${manager.getActivePort()}`);
+          logger.log(`✅ Successfully switched to port ${ide.port}`);
+          logger.log(`Active port is now: ${manager.getActivePort()}`);
         } catch (error) {
-          console.log(`❌ Failed to switch to port ${ide.port}: ${error.message}`);
+          logger.log(`❌ Failed to switch to port ${ide.port}: ${error.message}`);
         }
-        console.log('');
+        logger.log('');
       }
     }
 
     // 5. Test BrowserManager connection
-    console.log('5️⃣ Testing BrowserManager connection...');
+    logger.debug('5️⃣ Testing BrowserManager connection...');
     if (availableIDEs.length > 0) {
       const firstIDE = availableIDEs[0];
-      console.log(`Attempting to connect to port ${firstIDE.port}...`);
+      logger.debug(`Attempting to connect to port ${firstIDE.port}...`);
       try {
         await browserManager.connect(firstIDE.port);
-        console.log(`✅ Successfully connected to port ${firstIDE.port}`);
-        console.log(`BrowserManager current port: ${browserManager.getCurrentPort()}`);
+        logger.log(`✅ Successfully connected to port ${firstIDE.port}`);
+        logger.log(`BrowserManager current port: ${browserManager.getCurrentPort()}`);
       } catch (error) {
-        console.log(`❌ Failed to connect to port ${firstIDE.port}: ${error.message}`);
+        logger.log(`❌ Failed to connect to port ${firstIDE.port}: ${error.message}`);
       }
     }
 
   } catch (error) {
-    console.error('❌ Test failed:', error);
+    logger.error('❌ Test failed:', error);
   }
 }
 
 // Run the test
 testPortDetection().then(() => {
-  console.log('✅ Port detection test completed');
+  logger.debug('✅ Port detection test completed');
   process.exit(0);
 }).catch((error) => {
-  console.error('❌ Test failed:', error);
+  logger.error('❌ Test failed:', error);
   process.exit(1);
 }); 

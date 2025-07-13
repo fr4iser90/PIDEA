@@ -1,4 +1,6 @@
 const AuthService = require('@services/AuthService');
+const { logger } = require('@infrastructure/logging/Logger');
+
 
 class AuthMiddleware {
   constructor(authService) {
@@ -9,26 +11,26 @@ class AuthMiddleware {
   authenticate() {
     return async (req, res, next) => {
       try {
-        console.log('🔍 [AuthMiddleware] Authenticating request to:', req.path);
-        console.log('🔍 [AuthMiddleware] Headers:', {
+        logger.log('🔍 [AuthMiddleware] Authenticating request to:', req.path);
+        logger.log('🔍 [AuthMiddleware] Headers:', {
           authorization: req.headers.authorization ? req.headers.authorization.substring(0, 20) + '...' : 'null',
           'content-type': req.headers['content-type']
         });
         
         const token = this.extractToken(req);
-        // console.log('🔍 [AuthMiddleware] Extracted token:', token ? token.substring(0, 20) + '...' : 'null');
+        // logger.log('🔍 [AuthMiddleware] Extracted token:', token ? token.substring(0, 20) + '...' : 'null');
         
         if (!token) {
-          console.log('❌ [AuthMiddleware] No token found');
+          logger.log('❌ [AuthMiddleware] No token found');
           return res.status(401).json({
             success: false,
             error: 'Access token required'
           });
         }
 
-        console.log('🔍 [AuthMiddleware] Validating token...');
+        logger.log('🔍 [AuthMiddleware] Validating token...');
         const { user, session } = await this.authService.validateAccessToken(token);
-        console.log('✅ [AuthMiddleware] Token validated successfully for user:', user.email);
+        logger.log('✅ [AuthMiddleware] Token validated successfully for user:', user.email);
         
         // Inject user context into request
         req.user = user;
@@ -36,7 +38,7 @@ class AuthMiddleware {
         
         next();
       } catch (error) {
-        console.error('❌ [AuthMiddleware] Authentication failed:', error.message);
+        logger.error('❌ [AuthMiddleware] Authentication failed:', error.message);
         return res.status(401).json({
           success: false,
           error: 'Invalid or expired access token'

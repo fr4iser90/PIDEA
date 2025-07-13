@@ -1,3 +1,4 @@
+
 #!/usr/bin/env node
 require('module-alias/register');
 
@@ -9,6 +10,7 @@ require('module-alias/register');
 
 const fs = require('fs');
 const path = require('path');
+const { logger } = require('@infrastructure/logging/Logger');
 
 class CoverageToMarkdown {
   constructor() {
@@ -242,18 +244,18 @@ class CoverageToMarkdown {
    */
   async run() {
     try {
-      console.log('📊 Converting coverage to Markdown...');
+      logger.log('📊 Converting coverage to Markdown...');
       
       // Try to read LCOV file first
       const lcovFile = path.join(process.cwd(), 'coverage', 'lcov.info');
       let coverageData = null;
 
       if (fs.existsSync(lcovFile)) {
-        console.log('📁 Found LCOV file, parsing coverage data...');
+        logger.log('📁 Found LCOV file, parsing coverage data...');
         const lcovContent = fs.readFileSync(lcovFile, 'utf8');
         coverageData = this.parseLcovData(lcovContent);
       } else {
-        console.log('⚠️  LCOV file not found, checking for coverage.txt...');
+        logger.log('⚠️  LCOV file not found, checking for coverage.txt...');
         // Fallback to coverage.txt if LCOV doesn't exist
         const coverageFile = path.join(process.cwd(), 'coverage.txt');
         if (fs.existsSync(coverageFile)) {
@@ -268,24 +270,24 @@ class CoverageToMarkdown {
       const outputFile = path.join(process.cwd(), 'coverage.md');
       fs.writeFileSync(outputFile, markdown, 'utf8');
       
-      console.log(`✅ Coverage report generated: ${outputFile}`);
+      logger.log(`✅ Coverage report generated: ${outputFile}`);
       
       if (coverageData && coverageData.summary.overall) {
-        console.log(`📊 Overall coverage: ${coverageData.summary.overall}%`);
-        console.log(`📁 Files analyzed: ${coverageData.summary.files}`);
-        console.log(`✅ Files with ≥80% coverage: ${coverageData.summary.covered}`);
+        logger.log(`📊 Overall coverage: ${coverageData.summary.overall}%`);
+        logger.log(`📁 Files analyzed: ${coverageData.summary.files}`);
+        logger.log(`✅ Files with ≥80% coverage: ${coverageData.summary.covered}`);
       } else {
-        console.log('⚠️  No coverage data found - generated fallback report');
+        logger.log('⚠️  No coverage data found - generated fallback report');
       }
       
     } catch (error) {
-      console.error('❌ Error generating coverage report:', error.message);
+      logger.error('❌ Error generating coverage report:', error.message);
       
       // Generate fallback report even on error
       const fallbackMd = this.generateMarkdown(null);
       const outputFile = path.join(process.cwd(), 'coverage.md');
       fs.writeFileSync(outputFile, fallbackMd, 'utf8');
-      console.log(`✅ Fallback coverage report generated: ${outputFile}`);
+      logger.log(`✅ Fallback coverage report generated: ${outputFile}`);
     }
   }
 

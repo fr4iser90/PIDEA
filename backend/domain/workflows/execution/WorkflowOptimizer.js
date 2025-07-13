@@ -840,6 +840,7 @@ class WorkflowOptimizer {
 
     // Create optimized workflow with new steps
     const ComposedWorkflow = require('../ComposedWorkflow');
+const { logger } = require('@infrastructure/logging/Logger');
     const optimizedWorkflow = new ComposedWorkflow(
       optimizationResult.optimizedSteps,
       workflow.getMetadata()

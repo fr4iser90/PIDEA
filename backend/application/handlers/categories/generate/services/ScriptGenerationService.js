@@ -1,3 +1,4 @@
+const { logger } = require('@infrastructure/logging/Logger');
 /**
  * Script Generation Service
  * Main service that orchestrates script generation process

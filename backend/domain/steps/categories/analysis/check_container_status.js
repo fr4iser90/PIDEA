@@ -1,3 +1,5 @@
+const { logger } = require('@infrastructure/logging/Logger');
+
 /**
  * Check Container Status - Analysis Step
  * Checks the status of Docker containers and related services
@@ -32,7 +34,7 @@ const config = {
  */
 async function execute(context = {}, options = {}) {
   try {
-    console.log('🐳 Checking container status...');
+    logger.log('🐳 Checking container status...');
     
     const stepOptions = { ...config.settings, ...options };
     const results = {
@@ -64,11 +66,11 @@ async function execute(context = {}, options = {}) {
     // Calculate overall health
     results.data.health = calculateHealth(results.data);
 
-    console.log(`✅ Container status check completed. Health: ${results.data.health.status}`);
+    logger.log(`✅ Container status check completed. Health: ${results.data.health.status}`);
     return results;
 
   } catch (error) {
-    console.error('❌ Container status check failed:', error.message);
+    logger.error('❌ Container status check failed:', error.message);
     
     return {
       step: config.name,

@@ -4,6 +4,7 @@
  */
 const path = require('path');
 const fs = require('fs').promises;
+const { logger } = require('@infrastructure/logging/Logger');
 
 class LayerValidationService {
     constructor(logger = console) {

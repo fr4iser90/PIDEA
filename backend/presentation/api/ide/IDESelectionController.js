@@ -1,3 +1,4 @@
+const { logger } = require('@infrastructure/logging/Logger');
 /**
  * IDE Selection Controller
  * Manages IDE selection state and provides selection-related API endpoints

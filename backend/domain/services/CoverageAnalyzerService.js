@@ -1,6 +1,6 @@
 const fs = require('fs-extra');
 const path = require('path');
-const logger = require('@logging/logger');
+const { logger } = require('@infrastructure/logging/Logger');
 
 /**
  * CoverageAnalyzerService - Analyzes and improves test coverage

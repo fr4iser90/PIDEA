@@ -1,5 +1,7 @@
 const BaseWorkflowStep = require('@workflows/BaseWorkflowStep');
 const StepRegistry = require('@steps/StepRegistry');
+const { logger } = require('@infrastructure/logging/Logger');
+
 
 class CodeRefactoringWorkflow extends BaseWorkflowStep {
   constructor() {
@@ -68,7 +70,7 @@ class CodeRefactoringWorkflow extends BaseWorkflowStep {
     const config = CodeRefactoringWorkflow.getConfig();
     
     try {
-      console.log(`🚀 Executing ${this.name}...`);
+      logger.log(`🚀 Executing ${this.name}...`);
       
       // Validate context
       this.validateContext(context);
@@ -93,7 +95,7 @@ class CodeRefactoringWorkflow extends BaseWorkflowStep {
       workflowState.duration = workflowState.endTime - workflowState.startTime;
       workflowState.validation = validation;
       
-      console.log(`✅ ${this.name} completed successfully`);
+      logger.log(`✅ ${this.name} completed successfully`);
       return {
         success: validation.overallSuccess,
         workflow: this.name,
@@ -101,7 +103,7 @@ class CodeRefactoringWorkflow extends BaseWorkflowStep {
         timestamp: new Date().toISOString()
       };
     } catch (error) {
-      console.error(`❌ ${this.name} failed:`, error.message);
+      logger.error(`❌ ${this.name} failed:`, error.message);
       return {
         success: false,
         workflow: this.name,
@@ -114,7 +116,7 @@ class CodeRefactoringWorkflow extends BaseWorkflowStep {
   async executeStepsSequential(steps, context, workflowState) {
     for (const stepConfig of steps) {
       try {
-        console.log(`📋 Executing step: ${stepConfig.name}`);
+        logger.log(`📋 Executing step: ${stepConfig.name}`);
         
         const step = await StepRegistry.get(stepConfig.step, stepConfig.category);
         const stepResult = await step.execute({
@@ -136,9 +138,9 @@ class CodeRefactoringWorkflow extends BaseWorkflowStep {
           throw new Error(`Required step ${stepConfig.name} failed: ${stepResult.error}`);
         }
         
-        console.log(`✅ Step ${stepConfig.name} completed`);
+        logger.log(`✅ Step ${stepConfig.name} completed`);
       } catch (error) {
-        console.error(`❌ Step ${stepConfig.name} failed:`, error.message);
+        logger.error(`❌ Step ${stepConfig.name} failed:`, error.message);
         workflowState.errors.push({
           step: stepConfig.name,
           error: error.message

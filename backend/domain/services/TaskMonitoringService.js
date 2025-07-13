@@ -1,6 +1,8 @@
 const { Task, TaskExecution } = require('@domain/entities');
 const { TaskStatus, TaskType } = require('@domain/value-objects');
 const { TaskRepository, TaskExecutionRepository } = require('@domain/repositories');
+const { logger } = require('@infrastructure/logging/Logger');
+
 
 /**
  * TaskMonitoringService - Provides real-time task monitoring and progress tracking
@@ -443,7 +445,7 @@ class TaskMonitoringService {
             });
 
         } catch (error) {
-            console.error('Error updating monitoring session:', error);
+            logger.error('Error updating monitoring session:', error);
         }
     }
 

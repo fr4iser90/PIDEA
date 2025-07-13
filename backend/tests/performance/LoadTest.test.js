@@ -1,3 +1,4 @@
+
 /**
  * Performance and Load Testing for Task Management System
  */
@@ -55,7 +56,7 @@ describe('Task Management System Performance Tests', () => {
             expect(duration).toBeLessThan(5000); // Should complete within 5 seconds
             expect(duration / numTasks).toBeLessThan(50); // Average time per task < 50ms
 
-            console.log(`Created ${numTasks} tasks in ${duration}ms (${duration / numTasks}ms per task)`);
+            logger.log(`Created ${numTasks} tasks in ${duration}ms (${duration / numTasks}ms per task)`);
         });
 
         test('should handle 500 concurrent task creations', async () => {
@@ -81,7 +82,7 @@ describe('Task Management System Performance Tests', () => {
             expect(results.every(result => result.success)).toBe(true);
             expect(duration).toBeLessThan(10000); // Should complete within 10 seconds
 
-            console.log(`Created ${numTasks} tasks in ${duration}ms (${duration / numTasks}ms per task)`);
+            logger.log(`Created ${numTasks} tasks in ${duration}ms (${duration / numTasks}ms per task)`);
         });
 
         test('should handle mixed priority concurrent task creation', async () => {
@@ -109,7 +110,7 @@ describe('Task Management System Performance Tests', () => {
             expect(results.every(result => result.success)).toBe(true);
             expect(duration).toBeLessThan(5000);
 
-            console.log(`Created ${numTasks} mixed priority tasks in ${duration}ms`);
+            logger.log(`Created ${numTasks} mixed priority tasks in ${duration}ms`);
         });
     });
 
@@ -147,7 +148,7 @@ describe('Task Management System Performance Tests', () => {
             expect(results.every(result => result.success)).toBe(true);
             expect(duration).toBeLessThan(15000); // Should complete within 15 seconds
 
-            console.log(`Executed ${numTasks} tasks in ${duration}ms (${duration / numTasks}ms per task)`);
+            logger.log(`Executed ${numTasks} tasks in ${duration}ms (${duration / numTasks}ms per task)`);
         });
 
         test('should handle concurrent task execution with different types', async () => {
@@ -185,7 +186,7 @@ describe('Task Management System Performance Tests', () => {
             expect(results.every(result => result.success)).toBe(true);
             expect(duration).toBeLessThan(20000);
 
-            console.log(`Executed ${numTasks} mixed type tasks in ${duration}ms`);
+            logger.log(`Executed ${numTasks} mixed type tasks in ${duration}ms`);
         });
     });
 
@@ -214,7 +215,7 @@ describe('Task Management System Performance Tests', () => {
             expect(results.every(result => result.session)).toBe(true);
             expect(duration).toBeLessThan(30000); // Should complete within 30 seconds
 
-            console.log(`Completed ${numOperations} auto mode operations in ${duration}ms`);
+            logger.log(`Completed ${numOperations} auto mode operations in ${duration}ms`);
         });
 
         test('should handle concurrent auto mode with different modes', async () => {
@@ -243,7 +244,7 @@ describe('Task Management System Performance Tests', () => {
             expect(results.every(result => result.session)).toBe(true);
             expect(duration).toBeLessThan(60000); // Should complete within 60 seconds
 
-            console.log(`Completed ${numOperations} mixed mode auto operations in ${duration}ms`);
+            logger.log(`Completed ${numOperations} mixed mode auto operations in ${duration}ms`);
         });
     });
 
@@ -280,7 +281,7 @@ describe('Task Management System Performance Tests', () => {
             expect(result.total).toBeGreaterThanOrEqual(numTasks);
             expect(duration).toBeLessThan(1000); // Should complete within 1 second
 
-            console.log(`Queried ${result.total} tasks in ${duration}ms`);
+            logger.log(`Queried ${result.total} tasks in ${duration}ms`);
         });
 
         test('should handle filtered queries efficiently', async () => {
@@ -317,7 +318,7 @@ describe('Task Management System Performance Tests', () => {
             expect(result.tasks.every(task => task.priority === 'high')).toBe(true);
             expect(duration).toBeLessThan(500); // Should complete within 500ms
 
-            console.log(`Filtered ${result.tasks.length} high priority tasks in ${duration}ms`);
+            logger.log(`Filtered ${result.tasks.length} high priority tasks in ${duration}ms`);
         });
     });
 
@@ -344,7 +345,7 @@ describe('Task Management System Performance Tests', () => {
             expect(results.every(result => result.analysis)).toBe(true);
             expect(duration).toBeLessThan(30000); // Should complete within 30 seconds
 
-            console.log(`Completed ${numRequests} AI analysis requests in ${duration}ms`);
+            logger.log(`Completed ${numRequests} AI analysis requests in ${duration}ms`);
         });
 
         test('should handle AI model switching efficiently', async () => {
@@ -371,7 +372,7 @@ describe('Task Management System Performance Tests', () => {
             expect(results.every(result => result.analysis)).toBe(true);
             expect(duration).toBeLessThan(45000); // Should complete within 45 seconds
 
-            console.log(`Completed ${numRequests} multi-model AI requests in ${duration}ms`);
+            logger.log(`Completed ${numRequests} multi-model AI requests in ${duration}ms`);
         });
     });
 
@@ -396,7 +397,7 @@ describe('Task Management System Performance Tests', () => {
             // Memory increase should be reasonable (less than 50MB)
             expect(memoryIncrease).toBeLessThan(50 * 1024 * 1024);
 
-            console.log(`Memory usage: ${Math.round(memoryIncrease / 1024 / 1024)}MB increase`);
+            logger.log(`Memory usage: ${Math.round(memoryIncrease / 1024 / 1024)}MB increase`);
         });
 
         test('should handle memory cleanup after large operations', async () => {
@@ -425,7 +426,7 @@ describe('Task Management System Performance Tests', () => {
             // Memory should be reasonable after cleanup
             expect(memoryIncrease).toBeLessThan(100 * 1024 * 1024);
 
-            console.log(`Memory after cleanup: ${Math.round(memoryIncrease / 1024 / 1024)}MB increase`);
+            logger.log(`Memory after cleanup: ${Math.round(memoryIncrease / 1024 / 1024)}MB increase`);
         });
     });
 
@@ -446,7 +447,7 @@ describe('Task Management System Performance Tests', () => {
 
             expect(duration).toBeLessThan(100); // Should respond within 100ms
 
-            console.log(`Simple query response time: ${duration}ms`);
+            logger.log(`Simple query response time: ${duration}ms`);
         });
 
         test('should respond to task creation within 200ms', async () => {
@@ -463,7 +464,7 @@ describe('Task Management System Performance Tests', () => {
 
             expect(duration).toBeLessThan(200); // Should respond within 200ms
 
-            console.log(`Task creation response time: ${duration}ms`);
+            logger.log(`Task creation response time: ${duration}ms`);
         });
 
         test('should respond to task execution within 500ms', async () => {
@@ -486,7 +487,7 @@ describe('Task Management System Performance Tests', () => {
 
             expect(duration).toBeLessThan(500); // Should respond within 500ms
 
-            console.log(`Task execution response time: ${duration}ms`);
+            logger.log(`Task execution response time: ${duration}ms`);
         });
     });
 
@@ -520,7 +521,7 @@ describe('Task Management System Performance Tests', () => {
                 expect(ratio).toBeLessThan(2); // Should not degrade more than 2x
             }
 
-            console.log('Scalability results:', results);
+            logger.log('Scalability results:', results);
         });
 
         test('should maintain performance under sustained load', async () => {
@@ -554,7 +555,7 @@ describe('Task Management System Performance Tests', () => {
 
             expect(maxAvg / minAvg).toBeLessThan(3); // Should not vary more than 3x
 
-            console.log('Sustained load results:', results);
+            logger.log('Sustained load results:', results);
         });
     });
 });
@@ -586,6 +587,7 @@ async function createTestProject() {
 async function cleanupTestProject(projectPath) {
     try {
         const fs = require('fs').promises;
+const { logger } = require('@infrastructure/logging/Logger');
         await fs.rm(projectPath, { recursive: true, force: true });
     } catch (error) {
         // Ignore cleanup errors

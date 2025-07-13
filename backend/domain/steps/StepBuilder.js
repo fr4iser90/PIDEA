@@ -1,9 +1,11 @@
+
 /**
  * Step Builder - Domain Layer
  * Builds step instances from configurations and handles step customization
  */
 
 const path = require('path');
+const { logger } = require('@infrastructure/logging/Logger');
 
 class StepBuilder {
   constructor(stepRegistry) {
@@ -24,7 +26,7 @@ class StepBuilder {
       // Check cache first
       const cacheKey = this.getCacheKey(stepName, options);
       if (this.buildCache.has(cacheKey)) {
-        console.log(`📦 Using cached step instance for "${stepName}"`);
+        logger.log(`📦 Using cached step instance for "${stepName}"`);
         return this.buildCache.get(cacheKey);
       }
 
@@ -37,10 +39,10 @@ class StepBuilder {
       // Cache the instance
       this.buildCache.set(cacheKey, instance);
 
-      console.log(`🔨 Step "${stepName}" built successfully`);
+      logger.log(`🔨 Step "${stepName}" built successfully`);
       return instance;
     } catch (error) {
-      console.error(`❌ Failed to build step "${stepName}":`, error.message);
+      logger.error(`❌ Failed to build step "${stepName}":`, error.message);
       throw error;
     }
   }
@@ -82,10 +84,10 @@ class StepBuilder {
         throw new Error('Step config must have a description');
       }
 
-      console.log(`🔨 Step "${instance.name}" built from config`);
+      logger.log(`🔨 Step "${instance.name}" built from config`);
       return instance;
     } catch (error) {
-      console.error(`❌ Failed to build step from config:`, error.message);
+      logger.error(`❌ Failed to build step from config:`, error.message);
       throw error;
     }
   }
@@ -141,7 +143,7 @@ class StepBuilder {
         const instance = await this.buildStep(stepName, options);
         instances.push(instance);
       } catch (error) {
-        console.error(`❌ Failed to build step "${stepName}":`, error.message);
+        logger.error(`❌ Failed to build step "${stepName}":`, error.message);
         
         // Continue with other steps if this one fails
         if (options.continueOnError !== false) {
@@ -234,11 +236,11 @@ class StepBuilder {
         .filter(key => key.startsWith(stepName + ':'));
       
       keysToDelete.forEach(key => this.buildCache.delete(key));
-      console.log(`🗑️ Cleared cache for step "${stepName}"`);
+      logger.log(`🗑️ Cleared cache for step "${stepName}"`);
     } else {
       // Clear all cache
       this.buildCache.clear();
-      console.log('🗑️ Cleared all step build cache');
+      logger.log('🗑️ Cleared all step build cache');
     }
   }
 

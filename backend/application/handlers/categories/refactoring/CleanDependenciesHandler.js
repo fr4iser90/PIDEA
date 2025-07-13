@@ -253,6 +253,7 @@ class CleanDependenciesHandler {
                     content.includes(`from "${depName}"`) ||
                     content.includes(`require('${depName}')`) ||
                     content.includes(`require("${depName}")`)) {
+const { logger } = require('@infrastructure/logging/Logger');
                     return true;
                 }
                 

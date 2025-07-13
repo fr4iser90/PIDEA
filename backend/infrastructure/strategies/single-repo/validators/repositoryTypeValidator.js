@@ -3,6 +3,7 @@
  */
 const path = require('path');
 const { MONOREPO_INDICATORS } = require('../constants');
+const { logger } = require('@infrastructure/logging/Logger');
 
 class RepositoryTypeValidator {
     constructor(logger, fileUtils) {

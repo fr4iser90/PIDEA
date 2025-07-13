@@ -2,6 +2,7 @@
  * Event handlers for TaskExecutionEngine
  */
 const EXECUTION_CONSTANTS = require('../constants/ExecutionConstants');
+const { logger } = require('@infrastructure/logging/Logger');
 
 class EventHandlers {
     constructor(taskExecutionEngine, logger = console) {

@@ -1,6 +1,8 @@
 const TaskTemplate = require('@entities/TaskTemplate');
 const TaskType = require('@value-objects/TaskType');
 const TaskPriority = require('@value-objects/TaskPriority');
+const { logger } = require('@infrastructure/logging/Logger');
+
 
 /**
  * SQLiteTaskTemplateRepository - SQLite implementation of TaskTemplateRepository
@@ -25,7 +27,7 @@ class SQLiteTaskTemplateRepository {
             await this.database.run(`CREATE INDEX IF NOT EXISTS idx_task_templates_version ON ${this.tableName} (version)`);
         } catch (error) {
             // Indexes might already exist, ignore errors
-            console.log(`[SQLiteTaskTemplateRepository] Index creation skipped: ${error.message}`);
+            logger.debug(`[SQLiteTaskTemplateRepository] Index creation skipped: ${error.message}`);
         }
     }
 
@@ -510,7 +512,7 @@ class SQLiteTaskTemplateRepository {
                 const savedTemplate = await this.save(template);
                 importedTemplates.push(savedTemplate);
             } catch (error) {
-                console.error(`Failed to import template ${templateData.name}:`, error);
+                logger.error(`Failed to import template ${templateData.name}:`, error);
             }
         }
 

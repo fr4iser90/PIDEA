@@ -1,3 +1,4 @@
+const { logger } = require('@infrastructure/logging/Logger');
 /**
  * ProjectAutomationSettings - Project-level automation settings
  * Manages project-specific automation configuration and preferences

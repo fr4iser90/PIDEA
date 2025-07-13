@@ -2,6 +2,7 @@
  * TaskNotificationService - Real-time task notifications and alerts
  */
 const EventEmitter = require('events');
+const { logger } = require('@infrastructure/logging/Logger');
 
 class TaskNotificationService {
     constructor(dependencies = {}) {

@@ -1,3 +1,4 @@
+import { logger } from "@/infrastructure/logging/Logger";
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { apiCall } from '@/infrastructure/repositories/APIChatRepository.jsx';
 import '@/css/components/ide/ide-mirror.css';
@@ -115,7 +116,7 @@ const IDEMirror = ({
         throw new Error(result.error || 'Failed to load DOM data');
       }
     } catch (error) {
-      console.error('[IDEMirror] Error loading DOM data:', error);
+      logger.error('[IDEMirror] Error loading DOM data:', error);
       setError(error.message);
       setMirrorStatus('error');
     } finally {
@@ -135,7 +136,7 @@ const IDEMirror = ({
         setMirrorStatus(result.data.status || 'unknown');
       }
     } catch (error) {
-      console.error('[IDEMirror] Error checking mirror status:', error);
+      logger.error('[IDEMirror] Error checking mirror status:', error);
       setMirrorStatus('error');
     }
   };
@@ -176,7 +177,7 @@ const IDEMirror = ({
         throw new Error(result.error || 'Interaction failed');
       }
     } catch (error) {
-      console.error('[IDEMirror] Error interacting with element:', error);
+      logger.error('[IDEMirror] Error interacting with element:', error);
       setError(error.message);
     }
   };

@@ -1,3 +1,4 @@
+
 /**
  * ProjectContextService - Centralized project context management
  * Provides consistent access to project path, ID, and workspace information
@@ -5,6 +6,7 @@
 const path = require('path');
 const fs = require('fs').promises;
 const { getServiceContainer } = require('./ServiceContainer');
+const { logger } = require('@infrastructure/logging/Logger');
 
 class ProjectContextService {
     constructor() {
@@ -144,7 +146,7 @@ class ProjectContextService {
                 ).length >= 2;
                 
                 if (hasMonorepoIndicators && hasMultipleSubdirs) {
-                    console.log('[ProjectContextService] Detected monorepo, using parent directory:', parentDir);
+                    logger.log('[ProjectContextService] Detected monorepo, using parent directory:', parentDir);
                     return parentDir;
                 }
             }
@@ -176,7 +178,7 @@ class ProjectContextService {
 
             return null;
         } catch (error) {
-            console.error('[ProjectContextService] Auto-detect failed:', error.message);
+            logger.error('[ProjectContextService] Auto-detect failed:', error.message);
             return null;
         }
     }

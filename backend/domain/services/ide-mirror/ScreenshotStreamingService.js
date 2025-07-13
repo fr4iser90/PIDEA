@@ -1,3 +1,4 @@
+
 /**
  * ScreenshotStreamingService
  * 
@@ -11,6 +12,7 @@ const FrameMetrics = require('../../entities/FrameMetrics');
 const CompressionEngine = require('./CompressionEngine');
 const FrameBuffer = require('./FrameBuffer');
 const RegionDetector = require('./RegionDetector');
+const { logger } = require('@infrastructure/logging/Logger');
 
 class ScreenshotStreamingService {
   constructor(browserManager, webSocketManager, options = {}) {
@@ -47,7 +49,7 @@ class ScreenshotStreamingService {
     this.maxRetries = options.maxRetries || 3;
     this.retryDelay = options.retryDelay || 1000;
     
-    console.log('[ScreenshotStreamingService] Initialized with port-based architecture, default FPS:', this.defaultFPS);
+    logger.log('[ScreenshotStreamingService] Initialized with port-based architecture, default FPS:', this.defaultFPS);
   }
 
   /**
@@ -57,7 +59,7 @@ class ScreenshotStreamingService {
    * @returns {Promise<Object>} Streaming port info
    */
   async startStreaming(port, options = {}) {
-    console.log(`[ScreenshotStreamingService] Starting streaming for port ${port}`);
+    logger.log(`[ScreenshotStreamingService] Starting streaming for port ${port}`);
     
     // Validate port number
     if (!port || typeof port !== 'number' || port < 1 || port > 65535) {
@@ -93,7 +95,7 @@ class ScreenshotStreamingService {
       
       // Start frame capture loop
       const frameInterval = 1000 / portOptions.fps;
-      console.log(`[ScreenshotStreamingService] Streaming started for port ${port} at ${portOptions.fps} FPS`);
+      logger.log(`[ScreenshotStreamingService] Streaming started for port ${port} at ${portOptions.fps} FPS`);
       
       // Publish streaming started event
       if (this.eventBus) {
@@ -122,7 +124,7 @@ class ScreenshotStreamingService {
       };
       
     } catch (error) {
-      console.error(`[ScreenshotStreamingService] Failed to start streaming for port ${port}:`, error.message);
+      logger.error(`[ScreenshotStreamingService] Failed to start streaming for port ${port}:`, error.message);
       
       // Re-throw validation errors to maintain proper error handling
       if (error.message.includes('FPS must be between') || 
@@ -149,7 +151,7 @@ class ScreenshotStreamingService {
    */
   async startStreamingSession(sessionId, port, options = {}) {
     try {
-      console.log(`[ScreenshotStreamingService] Starting streaming for session ${sessionId} on port ${port}`);
+      logger.log(`[ScreenshotStreamingService] Starting streaming for session ${sessionId} on port ${port}`);
       
       // Validate session ID
       if (!sessionId || typeof sessionId !== 'string') {
@@ -177,7 +179,7 @@ class ScreenshotStreamingService {
       return result;
       
     } catch (error) {
-      console.error(`[ScreenshotStreamingService] Error starting streaming for session ${sessionId}:`, error.message);
+      logger.error(`[ScreenshotStreamingService] Error starting streaming for session ${sessionId}:`, error.message);
       return { success: false, error: error.message };
     }
   }
@@ -207,22 +209,22 @@ class ScreenshotStreamingService {
   startFrameCaptureLoop(port, frameInterval) {
     const streamingPort = this.activePorts.get(port);
     if (!streamingPort) {
-      console.error(`[ScreenshotStreamingService] Port ${port} not found for frame capture loop`);
+      logger.error(`[ScreenshotStreamingService] Port ${port} not found for frame capture loop`);
       return;
     }
     
-    console.log(`[ScreenshotStreamingService] Starting frame capture loop for port ${port} with ${frameInterval}ms interval`);
+    logger.log(`[ScreenshotStreamingService] Starting frame capture loop for port ${port} with ${frameInterval}ms interval`);
     
     const captureLoop = async () => {
       if (!this.activePorts.has(port)) {
-        console.log(`[ScreenshotStreamingService] Port ${port} stopped, ending capture loop`);
+        logger.log(`[ScreenshotStreamingService] Port ${port} stopped, ending capture loop`);
         return;
       }
       
       try {
         await this.captureAndStreamFrame(port);
       } catch (error) {
-        console.error(`[ScreenshotStreamingService] Frame capture error in loop for port ${port}:`, error.message);
+        logger.error(`[ScreenshotStreamingService] Frame capture error in loop for port ${port}:`, error.message);
       }
     };
     
@@ -237,7 +239,7 @@ class ScreenshotStreamingService {
     captureLoop();
     */
     
-    console.log(`[ScreenshotStreamingService] Frame capture setup complete (no continuous streaming to avoid filesystem errors) for port ${port}`);
+    logger.log(`[ScreenshotStreamingService] Frame capture setup complete (no continuous streaming to avoid filesystem errors) for port ${port}`);
   }
 
   /**
@@ -248,7 +250,7 @@ class ScreenshotStreamingService {
   async captureAndStreamFrame(port) {
     const streamingPort = this.activePorts.get(port);
     if (!streamingPort) {
-      console.warn(`[ScreenshotStreamingService] Port ${port} not found for frame capture`);
+      logger.warn(`[ScreenshotStreamingService] Port ${port} not found for frame capture`);
       return false;
     }
     
@@ -287,7 +289,7 @@ class ScreenshotStreamingService {
       
       const bufferSuccess = this.frameBuffer.addFrame(port, frameData);
       if (!bufferSuccess) {
-        console.warn(`[ScreenshotStreamingService] Failed to add frame to buffer for port ${port}`);
+        logger.warn(`[ScreenshotStreamingService] Failed to add frame to buffer for port ${port}`);
       }
       
       // Stream via WebSocket
@@ -304,7 +306,7 @@ class ScreenshotStreamingService {
       return true;
       
     } catch (error) {
-      console.error(`[ScreenshotStreamingService] Frame capture error for port ${port}:`, error.message);
+      logger.error(`[ScreenshotStreamingService] Frame capture error for port ${port}:`, error.message);
       
       streamingPort.error(error.message);
       this.stats.totalErrors++;
@@ -330,7 +332,7 @@ class ScreenshotStreamingService {
       
       // Check if page is still connected
       if (page.isClosed && page.isClosed()) {
-        console.log('[ScreenshotStreamingService] Page closed, reconnecting...');
+        logger.log('[ScreenshotStreamingService] Page closed, reconnecting...');
         await this.browserManager.reconnect();
         const newPage = await this.browserManager.getPage();
         if (!newPage) {
@@ -348,7 +350,7 @@ class ScreenshotStreamingService {
       return screenshotBuffer;
       
     } catch (error) {
-      console.error(`[ScreenshotStreamingService] Screenshot capture failed for port ${port}:`, error.message);
+      logger.error(`[ScreenshotStreamingService] Screenshot capture failed for port ${port}:`, error.message);
       return null;
     }
   }
@@ -363,18 +365,18 @@ class ScreenshotStreamingService {
       const currentPort = this.browserManager.getCurrentPort();
       
       if (currentPort !== port) {
-        console.log(`[ScreenshotStreamingService] Switching browser from port ${currentPort} to ${port}`);
+        logger.log(`[ScreenshotStreamingService] Switching browser from port ${currentPort} to ${port}`);
         await this.browserManager.connectToPort(port);
       }
       
       // Ensure connection is active
       if (!this.browserManager.isConnected()) {
-        console.log(`[ScreenshotStreamingService] Reconnecting browser to port ${port}`);
+        logger.log(`[ScreenshotStreamingService] Reconnecting browser to port ${port}`);
         await this.browserManager.connectToPort(port);
       }
       
     } catch (error) {
-      console.error(`[ScreenshotStreamingService] Browser connection error for port ${port}:`, error.message);
+      logger.error(`[ScreenshotStreamingService] Browser connection error for port ${port}:`, error.message);
       throw error;
     }
   }
@@ -388,7 +390,7 @@ class ScreenshotStreamingService {
   async streamFrame(port, frameData) {
     try {
       if (!this.webSocketManager) {
-        console.warn('[ScreenshotStreamingService] WebSocket manager not available');
+        logger.warn('[ScreenshotStreamingService] WebSocket manager not available');
         return;
       }
       
@@ -408,7 +410,7 @@ class ScreenshotStreamingService {
       this.webSocketManager.broadcastToTopic(`mirror-${port}-frames`, message);
       
     } catch (error) {
-      console.error(`[ScreenshotStreamingService] WebSocket streaming error for port ${port}:`, error.message);
+      logger.error(`[ScreenshotStreamingService] WebSocket streaming error for port ${port}:`, error.message);
       throw error;
     }
   }
@@ -554,12 +556,12 @@ class ScreenshotStreamingService {
         this.streamingIntervals.delete(port);
       }
       
-      console.log(`[ScreenshotStreamingService] Streaming paused for port ${port}`);
+      logger.log(`[ScreenshotStreamingService] Streaming paused for port ${port}`);
       
       return { success: true, port, status: streamingPort.status };
       
     } catch (error) {
-      console.error(`[ScreenshotStreamingService] Error pausing streaming for port ${port}:`, error.message);
+      logger.error(`[ScreenshotStreamingService] Error pausing streaming for port ${port}:`, error.message);
       return { success: false, error: error.message };
     }
   }
@@ -616,12 +618,12 @@ class ScreenshotStreamingService {
       this.streamingIntervals.set(port, streamingInterval);
       */
       
-      console.log(`[ScreenshotStreamingService] Streaming resumed for port ${port}`);
+      logger.log(`[ScreenshotStreamingService] Streaming resumed for port ${port}`);
       
       return { success: true, port, status: streamingPort.status };
       
     } catch (error) {
-      console.error(`[ScreenshotStreamingService] Error resuming streaming for port ${port}:`, error.message);
+      logger.error(`[ScreenshotStreamingService] Error resuming streaming for port ${port}:`, error.message);
       return { success: false, error: error.message };
     }
   }
@@ -660,7 +662,7 @@ class ScreenshotStreamingService {
    */
   async stopStreamingPort(port) {
     try {
-      console.log(`[ScreenshotStreamingService] Stopping streaming for port ${port}`);
+      logger.log(`[ScreenshotStreamingService] Stopping streaming for port ${port}`);
       
       const streamingPort = this.activePorts.get(port);
       if (!streamingPort) {
@@ -685,7 +687,7 @@ class ScreenshotStreamingService {
       // Update statistics
       this.stats.activePorts = Math.max(0, this.stats.activePorts - 1);
       
-      console.log(`[ScreenshotStreamingService] Streaming stopped for port ${port}`);
+      logger.log(`[ScreenshotStreamingService] Streaming stopped for port ${port}`);
       
       return {
         success: true,
@@ -696,7 +698,7 @@ class ScreenshotStreamingService {
       };
       
     } catch (error) {
-      console.error(`[ScreenshotStreamingService] Error stopping streaming for port ${port}:`, error.message);
+      logger.error(`[ScreenshotStreamingService] Error stopping streaming for port ${port}:`, error.message);
       return { success: false, error: error.message };
     }
   }
@@ -782,12 +784,12 @@ class ScreenshotStreamingService {
       }
       */
       
-      console.log(`[ScreenshotStreamingService] Updated configuration for port ${port}`);
+      logger.log(`[ScreenshotStreamingService] Updated configuration for port ${port}`);
       
       return { success: true, port, config: streamingPort.toJSON() };
       
     } catch (error) {
-      console.error(`[ScreenshotStreamingService] Error updating port config for ${port}:`, error.message);
+      logger.error(`[ScreenshotStreamingService] Error updating port config for ${port}:`, error.message);
       return { success: false, error: error.message };
     }
   }
@@ -815,7 +817,7 @@ class ScreenshotStreamingService {
         compressionStats = this.compressionEngine.getStats() || {};
       }
     } catch (error) {
-      console.warn('[ScreenshotStreamingService] Error getting compression stats:', error.message);
+      logger.warn('[ScreenshotStreamingService] Error getting compression stats:', error.message);
       compressionStats = {};
     }
     
@@ -826,7 +828,7 @@ class ScreenshotStreamingService {
         bufferStats = this.frameBuffer.getStats() || {};
       }
     } catch (error) {
-      console.warn('[ScreenshotStreamingService] Error getting buffer stats:', error.message);
+      logger.warn('[ScreenshotStreamingService] Error getting buffer stats:', error.message);
       bufferStats = {};
     }
     
@@ -837,7 +839,7 @@ class ScreenshotStreamingService {
       ports = this.getAllPorts() || [];
       sessions = this.getAllSessions() || [];
     } catch (error) {
-      console.warn('[ScreenshotStreamingService] Error getting ports/sessions:', error.message);
+      logger.warn('[ScreenshotStreamingService] Error getting ports/sessions:', error.message);
     }
     
     return {
@@ -870,11 +872,11 @@ class ScreenshotStreamingService {
         }
       }
       
-      console.log(`[ScreenshotStreamingService] Stopped all streaming ports: ${stoppedCount} ports`);
+      logger.log(`[ScreenshotStreamingService] Stopped all streaming ports: ${stoppedCount} ports`);
       return stoppedCount;
       
     } catch (error) {
-      console.error('[ScreenshotStreamingService] Error stopping all streaming:', error.message);
+      logger.error('[ScreenshotStreamingService] Error stopping all streaming:', error.message);
       return 0;
     }
   }
@@ -884,7 +886,7 @@ class ScreenshotStreamingService {
    */
   async cleanup() {
     try {
-      console.log('[ScreenshotStreamingService] Cleaning up resources...');
+      logger.log('[ScreenshotStreamingService] Cleaning up resources...');
       
       // Stop all streaming
       await this.stopAllStreaming();
@@ -898,10 +900,10 @@ class ScreenshotStreamingService {
       this.streamingIntervals.clear();
       this.frameCounters.clear();
       
-      console.log('[ScreenshotStreamingService] Cleanup completed');
+      logger.log('[ScreenshotStreamingService] Cleanup completed');
       
     } catch (error) {
-      console.error('[ScreenshotStreamingService] Error during cleanup:', error.message);
+      logger.error('[ScreenshotStreamingService] Error during cleanup:', error.message);
     }
   }
 }

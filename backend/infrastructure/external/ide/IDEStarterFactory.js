@@ -1,3 +1,4 @@
+
 /**
  * IDE Starter Factory
  * Manages IDE-specific starters using the factory pattern
@@ -7,6 +8,7 @@
 const CursorStarter = require('./starters/CursorStarter');
 const VSCodeStarter = require('./starters/VSCodeStarter');
 const WindsurfStarter = require('./starters/WindsurfStarter');
+const { logger } = require('@infrastructure/logging/Logger');
 
 class IDEStarterFactory {
   constructor() {
@@ -82,12 +84,12 @@ class IDEStarterFactory {
         // Handle process events if the process has event emitter capabilities
         if (typeof ideInfo.process.on === 'function') {
           ideInfo.process.on('close', (code) => {
-            console.log(`[IDEStarterFactory] ${type} IDE ${port} process closed with code ${code}`);
+            logger.log(`[IDEStarterFactory] ${type} IDE ${port} process closed with code ${code}`);
             this.runningProcesses.delete(port);
           });
 
           ideInfo.process.on('error', (error) => {
-            console.error(`[IDEStarterFactory] ${type} IDE ${port} process error:`, error);
+            logger.error(`[IDEStarterFactory] ${type} IDE ${port} process error:`, error);
             this.runningProcesses.delete(port);
           });
         }
@@ -100,7 +102,7 @@ class IDEStarterFactory {
         workspacePath: workspacePath
       };
     } catch (error) {
-      console.error(`[IDEStarterFactory] Failed to start ${type} IDE:`, error);
+      logger.error(`[IDEStarterFactory] Failed to start ${type} IDE:`, error);
       throw error;
     }
   }
@@ -141,7 +143,7 @@ class IDEStarterFactory {
         ideType: type
       };
     } catch (error) {
-      console.error(`[IDEStarterFactory] Error stopping IDE on port ${port}:`, error);
+      logger.error(`[IDEStarterFactory] Error stopping IDE on port ${port}:`, error);
       throw error;
     }
   }
@@ -270,7 +272,7 @@ class IDEStarterFactory {
         this.stopIDE(parseInt(port))
           .then(result => stoppedIDEs.push(result))
           .catch(error => {
-            console.error(`[IDEStarterFactory] Error stopping IDE on port ${port}:`, error);
+            logger.error(`[IDEStarterFactory] Error stopping IDE on port ${port}:`, error);
           })
       );
     }

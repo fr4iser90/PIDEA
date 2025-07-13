@@ -1,3 +1,4 @@
+
 #!/usr/bin/env node
 require('module-alias/register');
 
@@ -11,6 +12,7 @@ const path = require('path');
 const fs = require('fs').promises;
 const { exec } = require('child_process');
 const { promisify } = require('util');
+const { logger } = require('@infrastructure/logging/Logger');
 
 const execAsync = promisify(exec);
 
@@ -34,7 +36,7 @@ class TestStatusTracker {
    * @returns {Promise<Object>} - Tracking results
    */
   async trackTestResults(testResults) {
-    console.log('📊 Tracking test execution results...');
+    logger.debug('📊 Tracking test execution results...');
     
     const trackingResults = {
       totalTests: 0,
@@ -69,12 +71,12 @@ class TestStatusTracker {
       // Generate summary
       trackingResults.summary = await this.generateSummary();
       
-      console.log('✅ Test tracking completed successfully!');
+      logger.debug('✅ Test tracking completed successfully!');
       this.printTrackingSummary(trackingResults);
       
       return trackingResults;
     } catch (error) {
-      console.error(`❌ Error tracking test results: ${error.message}`);
+      logger.error(`❌ Error tracking test results: ${error.message}`);
       throw error;
     }
   }
@@ -115,7 +117,7 @@ class TestStatusTracker {
       }
       
     } catch (error) {
-      console.warn(`⚠️  Failed to process test case: ${error.message}`);
+      logger.warn(`⚠️  Failed to process test case: ${error.message}`);
       trackingResults.errors++;
     }
   }
@@ -182,21 +184,21 @@ class TestStatusTracker {
     
     // Log status changes
     if (status === 'failing' && testMetadata.getSuccessRate() > 80) {
-      console.log(`🚨 Previously stable test now failing: ${fileName} - ${testName}`);
+      logger.debug(`🚨 Previously stable test now failing: ${fileName} - ${testName}`);
     }
     
     if (status === 'passing' && testMetadata.failureCount > 5) {
-      console.log(`✅ Previously failing test now passing: ${fileName} - ${testName}`);
+      logger.debug(`✅ Previously failing test now passing: ${fileName} - ${testName}`);
     }
     
     // Log performance issues
     if (testMetadata.averageDuration > 5000) {
-      console.log(`🐌 Slow test detected: ${fileName} - ${testName} (${Math.round(testMetadata.averageDuration)}ms avg)`);
+      logger.debug(`🐌 Slow test detected: ${fileName} - ${testName} (${Math.round(testMetadata.averageDuration)}ms avg)`);
     }
     
     // Log legacy tests
     if (testMetadata.isLegacy && status === 'failing') {
-      console.log(`⚠️  Legacy test failing: ${fileName} - ${testName}`);
+      logger.debug(`⚠️  Legacy test failing: ${fileName} - ${testName}`);
     }
   }
 
@@ -282,7 +284,7 @@ class TestStatusTracker {
       
       return summary;
     } catch (error) {
-      console.warn(`Warning: Could not generate summary: ${error.message}`);
+      logger.warn(`Warning: Could not generate summary: ${error.message}`);
       return {};
     }
   }
@@ -292,41 +294,41 @@ class TestStatusTracker {
    * @param {Object} trackingResults - Tracking results
    */
   printTrackingSummary(trackingResults) {
-    console.log('\n📊 Test Tracking Summary');
-    console.log('========================');
-    console.log(`📁 Total tests processed: ${trackingResults.totalTests}`);
-    console.log(`✅ Successfully tracked: ${trackingResults.trackedTests}`);
-    console.log(`🔄 Updated tests: ${trackingResults.updatedTests}`);
-    console.log(`🆕 New tests: ${trackingResults.newTests}`);
-    console.log(`❌ Errors: ${trackingResults.errors}`);
+    logger.debug('\n📊 Test Tracking Summary');
+    logger.log('========================');
+    logger.debug(`📁 Total tests processed: ${trackingResults.totalTests}`);
+    logger.debug(`✅ Successfully tracked: ${trackingResults.trackedTests}`);
+    logger.debug(`🔄 Updated tests: ${trackingResults.updatedTests}`);
+    logger.debug(`🆕 New tests: ${trackingResults.newTests}`);
+    logger.log(`❌ Errors: ${trackingResults.errors}`);
     
     if (trackingResults.summary) {
       const summary = trackingResults.summary;
-      console.log('\n📈 Test Statistics');
-      console.log('==================');
-      console.log(`📊 Total tests: ${summary.total || 0}`);
-      console.log(`✅ Passing: ${summary.passing || 0}`);
-      console.log(`❌ Failing: ${summary.failing || 0}`);
-      console.log(`⏭️  Skipped: ${summary.skipped || 0}`);
-      console.log(`⚠️  Legacy: ${summary.legacy || 0}`);
-      console.log(`🐌 Slow tests: ${summary.slowTests?.length || 0}`);
-      console.log(`🎲 Flaky tests: ${summary.flakyTests?.length || 0}`);
-      console.log(`🛡️  Stable tests: ${summary.stableTests?.length || 0}`);
-      console.log(`🚨 Recent failures: ${summary.recentFailures?.length || 0}`);
+      logger.debug('\n📈 Test Statistics');
+      logger.log('==================');
+      logger.debug(`📊 Total tests: ${summary.total || 0}`);
+      logger.log(`✅ Passing: ${summary.passing || 0}`);
+      logger.log(`❌ Failing: ${summary.failing || 0}`);
+      logger.log(`⏭️  Skipped: ${summary.skipped || 0}`);
+      logger.log(`⚠️  Legacy: ${summary.legacy || 0}`);
+      logger.debug(`🐌 Slow tests: ${summary.slowTests?.length || 0}`);
+      logger.debug(`🎲 Flaky tests: ${summary.flakyTests?.length || 0}`);
+      logger.debug(`🛡️  Stable tests: ${summary.stableTests?.length || 0}`);
+      logger.log(`🚨 Recent failures: ${summary.recentFailures?.length || 0}`);
       
       if (summary.slowTests && summary.slowTests.length > 0) {
-        console.log('\n🐌 Top 5 Slowest Tests');
-        console.log('=====================');
+        logger.debug('\n🐌 Top 5 Slowest Tests');
+        logger.log('=====================');
         summary.slowTests.slice(0, 5).forEach((test, index) => {
-          console.log(`${index + 1}. ${path.basename(test.filePath)} - ${test.testName} (${Math.round(test.averageDuration)}ms)`);
+          logger.debug(`${index + 1}. ${path.basename(test.filePath)} - ${test.testName} (${Math.round(test.averageDuration)}ms)`);
         });
       }
       
       if (summary.flakyTests && summary.flakyTests.length > 0) {
-        console.log('\n🎲 Top 5 Flakiest Tests');
-        console.log('======================');
+        logger.debug('\n🎲 Top 5 Flakiest Tests');
+        logger.log('======================');
         summary.flakyTests.slice(0, 5).forEach((test, index) => {
-          console.log(`${index + 1}. ${path.basename(test.filePath)} - ${test.testName} (${Math.round(test.failureRate)}% failure rate)`);
+          logger.debug(`${index + 1}. ${path.basename(test.filePath)} - ${test.testName} (${Math.round(test.failureRate)}% failure rate)`);
         });
       }
     }
@@ -358,9 +360,9 @@ class TestStatusTracker {
       };
       
       await fs.writeFile(outputPath, JSON.stringify(exportData, null, 2));
-      console.log(`📄 Tracking data exported to: ${outputPath}`);
+      logger.log(`📄 Tracking data exported to: ${outputPath}`);
     } catch (error) {
-      console.error(`❌ Failed to export tracking data: ${error.message}`);
+      logger.error(`❌ Failed to export tracking data: ${error.message}`);
     }
   }
 
@@ -485,7 +487,7 @@ class TestStatusTracker {
       
       return report;
     } catch (error) {
-      console.error(`❌ Error generating health report: ${error.message}`);
+      logger.error(`❌ Error generating health report: ${error.message}`);
       throw error;
     }
   }
@@ -497,18 +499,18 @@ async function main() {
   const tracker = new TestStatusTracker();
   
   if (args.length === 0) {
-    console.log('Usage: node test-status-tracker.js <command> [options]');
-    console.log('');
-    console.log('Commands:');
-    console.log('  track <results-file>     Track test results from JSON file');
-    console.log('  health                   Generate health report');
-    console.log('  export <output-file>     Export tracking data');
-    console.log('  history <file> <test>    Show status history for test');
-    console.log('');
-    console.log('Examples:');
-    console.log('  node test-status-tracker.js track jest-results.json');
-    console.log('  node test-status-tracker.js health');
-    console.log('  node test-status-tracker.js export tracking-data.json');
+    logger.debug('Usage: node test-status-tracker.js <command> [options]');
+    logger.log('');
+    logger.log('Commands:');
+    logger.debug('  track <results-file>     Track test results from JSON file');
+    logger.log('  health                   Generate health report');
+    logger.log('  export <output-file>     Export tracking data');
+    logger.debug('  history <file> <test>    Show status history for test');
+    logger.log('');
+    logger.log('Examples:');
+    logger.debug('  node test-status-tracker.js track jest-results.json');
+    logger.debug('  node test-status-tracker.js health');
+    logger.debug('  node test-status-tracker.js export tracking-data.json');
     return;
   }
   
@@ -518,7 +520,7 @@ async function main() {
     switch (command) {
       case 'track':
         if (args.length < 2) {
-          console.error('❌ Results file path required');
+          logger.error('❌ Results file path required');
           process.exit(1);
         }
         const resultsFile = args[1];
@@ -528,12 +530,12 @@ async function main() {
         
       case 'health':
         const healthReport = await tracker.generateHealthReport();
-        console.log(JSON.stringify(healthReport, null, 2));
+        logger.log(JSON.stringify(healthReport, null, 2));
         break;
         
       case 'export':
         if (args.length < 2) {
-          console.error('❌ Output file path required');
+          logger.error('❌ Output file path required');
           process.exit(1);
         }
         await tracker.exportTrackingData(args[1]);
@@ -541,19 +543,19 @@ async function main() {
         
       case 'history':
         if (args.length < 3) {
-          console.error('❌ File path and test name required');
+          logger.error('❌ File path and test name required');
           process.exit(1);
         }
         const history = tracker.getStatusHistory(args[1], args[2]);
-        console.log(JSON.stringify(history, null, 2));
+        logger.log(JSON.stringify(history, null, 2));
         break;
         
       default:
-        console.error(`❌ Unknown command: ${command}`);
+        logger.error(`❌ Unknown command: ${command}`);
         process.exit(1);
     }
   } catch (error) {
-    console.error(`❌ Error: ${error.message}`);
+    logger.error(`❌ Error: ${error.message}`);
     process.exit(1);
   }
 }

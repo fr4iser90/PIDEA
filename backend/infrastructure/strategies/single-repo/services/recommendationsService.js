@@ -1,3 +1,4 @@
+const { logger } = require('@infrastructure/logging/Logger');
 /**
  * Recommendations service for SingleRepoStrategy
  */

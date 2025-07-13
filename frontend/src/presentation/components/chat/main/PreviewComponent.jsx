@@ -1,3 +1,4 @@
+import { logger } from "@/infrastructure/logging/Logger";
 import React, { useState, useEffect, useRef } from 'react';
 import APIChatRepository from '@/infrastructure/repositories/APIChatRepository.jsx';
 import '@/css/main/preview.css';
@@ -14,7 +15,7 @@ function PreviewComponent({ eventBus, activePort }) {
   const apiRepository = new APIChatRepository();
 
   useEffect(() => {
-    console.log('🔄 PreviewComponent initializing...');
+    logger.log('🔄 PreviewComponent initializing...');
     setupEventListeners();
     initializePreview();
     
@@ -25,9 +26,9 @@ function PreviewComponent({ eventBus, activePort }) {
 
   // Lade Preview immer, wenn activePort sich ändert (React-Way)
   useEffect(() => {
-    console.log('[PreviewComponent] activePort changed:', activePort);
+    logger.log('[PreviewComponent] activePort changed:', activePort);
     if (activePort) {
-      console.log('[PreviewComponent] Loading preview for port:', activePort);
+      logger.log('[PreviewComponent] Loading preview for port:', activePort);
       handleRefresh();
     }
   }, [activePort]);
@@ -55,13 +56,13 @@ function PreviewComponent({ eventBus, activePort }) {
   };
 
   const handleIDEChanged = async (data) => {
-    console.log('🔄 [PreviewComponent] Active IDE changed:', data);
+    logger.log('🔄 [PreviewComponent] Active IDE changed:', data);
     // Refresh preview data when IDE changes
     await handleRefresh();
   };
 
   const handleUserAppUrl = (data) => {
-    console.log('🔄 [PreviewComponent] User app URL received:', data);
+    logger.log('🔄 [PreviewComponent] User app URL received:', data);
     if (data.url) {
       const previewData = {
         url: data.url,
@@ -83,7 +84,7 @@ function PreviewComponent({ eventBus, activePort }) {
       // Use existing IDE endpoints to get user app URL
         await loadPreviewData();
     } catch (error) {
-      console.error('❌ Failed to initialize preview:', error);
+      logger.error('❌ Failed to initialize preview:', error);
       setError('Failed to initialize preview');
     } finally {
       setIsLoading(false);
@@ -109,7 +110,7 @@ function PreviewComponent({ eventBus, activePort }) {
         }, 500);
       }
     } catch (error) {
-      console.error('❌ Failed to refresh preview:', error);
+      logger.error('❌ Failed to refresh preview:', error);
       setError('Failed to refresh preview');
     } finally {
       setIsLoading(false);
@@ -132,31 +133,31 @@ function PreviewComponent({ eventBus, activePort }) {
       
       // If we have activePort, try to get user app URL for that specific port
       if (activePort) {
-        console.log('[PreviewComponent] Getting user app URL for port:', activePort);
+        logger.log('[PreviewComponent] Getting user app URL for port:', activePort);
         const result = await apiRepository.getUserAppUrlForPort(activePort);
         
         if (result.success && result.data && result.data.url) {
-          console.log('Found user app URL for port:', result.data.url);
+          logger.log('Found user app URL for port:', result.data.url);
           previewUrl = result.data.url;
           port = result.data.port;
           workspacePath = result.data.workspacePath;
         } else {
-          console.log('No user app URL found for port, trying  endpoint...');
+          logger.log('No user app URL found for port, trying  endpoint...');
         }
       }
       
       // Fallback to  user app URL if port-specific failed
       if (!previewUrl) {
-        console.log('Trying  user app URL...');
+        logger.log('Trying  user app URL...');
         const result = await apiRepository.getUserAppUrl();
         
         if (result.success && result.data && result.data.url) {
-          console.log('Found user app URL:', result.data.url);
+          logger.log('Found user app URL:', result.data.url);
           previewUrl = result.data.url;
           port = result.data.port;
           workspacePath = result.data.workspacePath;
         } else {
-          console.log('No user app URL found in any IDE workspace');
+          logger.log('No user app URL found in any IDE workspace');
           throw new Error('No frontend URL found in any available IDE workspace');
         }
       }
@@ -171,7 +172,7 @@ function PreviewComponent({ eventBus, activePort }) {
 
       setPreviewData(previewData);
     } catch (error) {
-      console.error('❌ Failed to load preview data:', error);
+      logger.error('❌ Failed to load preview data:', error);
       throw error;
     }
   };

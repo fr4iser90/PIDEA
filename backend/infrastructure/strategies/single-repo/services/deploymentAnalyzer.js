@@ -2,6 +2,7 @@
  * Deployment analyzer service for SingleRepoStrategy
  */
 const { DEPLOYMENT_CONFIGS } = require('../constants');
+const { logger } = require('@infrastructure/logging/Logger');
 
 class DeploymentAnalyzer {
     constructor(logger, fileUtils) {

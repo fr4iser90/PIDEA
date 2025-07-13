@@ -452,6 +452,7 @@ describe('${testCase.name}', () => {
  */
 
 const { ${component.functions.map(f => f.name).join(', ')} } = require('${importPath}');
+const { logger } = require('@infrastructure/logging/Logger');
 
 ${testCases.map(testCase => `
 describe('${testCase.name}', () => {

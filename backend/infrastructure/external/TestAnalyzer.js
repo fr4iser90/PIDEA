@@ -7,6 +7,7 @@ const path = require('path');
 const { exec } = require('child_process');
 const { promisify } = require('util');
 const { clear } = require('console');
+const { logger } = require('@infrastructure/logging/Logger');
 
 const execAsync = promisify(exec);
 

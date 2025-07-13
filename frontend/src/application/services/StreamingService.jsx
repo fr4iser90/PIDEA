@@ -1,3 +1,4 @@
+import { logger } from "@/infrastructure/logging/Logger";
 /**
  * StreamingService
  * 
@@ -35,7 +36,7 @@ class StreamingService {
    */
   setupWebSocketHandlers() {
     if (!this.webSocketService) {
-      console.warn('[StreamingService] WebSocket service not available');
+      logger.warn('[StreamingService] WebSocket service not available');
       return;
     }
 
@@ -52,12 +53,12 @@ class StreamingService {
     // Handle connection events
     this.webSocketService.on('connection-established', () => {
       this.isConnected = true;
-      console.log('[StreamingService] WebSocket connection established');
+      logger.log('[StreamingService] WebSocket connection established');
     });
 
     this.webSocketService.on('disconnect', () => {
       this.isConnected = false;
-      console.log('[StreamingService] WebSocket connection lost');
+      logger.log('[StreamingService] WebSocket connection lost');
     });
   }
 
@@ -69,7 +70,7 @@ class StreamingService {
    */
   async startStreaming(port, options = {}) {
     try {
-      console.log(`[StreamingService] Starting streaming for port ${port}`);
+      logger.log(`[StreamingService] Starting streaming for port ${port}`);
       
       // Validate inputs
       if (!port) {
@@ -112,12 +113,12 @@ class StreamingService {
         lastFrameTime: null
       });
 
-      console.log(`[StreamingService] Streaming started for port ${port}`);
+      logger.log(`[StreamingService] Streaming started for port ${port}`);
       
       return data;
 
     } catch (error) {
-      console.error(`[StreamingService] Error starting streaming for port ${port}:`, error.message);
+      logger.error(`[StreamingService] Error starting streaming for port ${port}:`, error.message);
       throw error;
     }
   }
@@ -129,7 +130,7 @@ class StreamingService {
    */
   async stopStreaming(port) {
     try {
-      console.log(`[StreamingService] Stopping streaming for port ${port}`);
+      logger.log(`[StreamingService] Stopping streaming for port ${port}`);
       
       const session = this.activeStreams.get(port);
       if (!session) {
@@ -155,12 +156,12 @@ class StreamingService {
       this.frameHandlers.delete(port);
       this.errorHandlers.delete(port);
 
-      console.log(`[StreamingService] Streaming stopped for port ${port}`);
+      logger.log(`[StreamingService] Streaming stopped for port ${port}`);
       
       return data;
 
     } catch (error) {
-      console.error(`[StreamingService] Error stopping streaming for port ${port}:`, error.message);
+      logger.error(`[StreamingService] Error stopping streaming for port ${port}:`, error.message);
       throw error;
     }
   }
@@ -187,7 +188,7 @@ class StreamingService {
       session.status = 'paused';
       return data;
     } catch (error) {
-      console.error(`[StreamingService] Error pausing streaming for port ${port}:`, error.message);
+      logger.error(`[StreamingService] Error pausing streaming for port ${port}:`, error.message);
       throw error;
     }
   }
@@ -214,7 +215,7 @@ class StreamingService {
       session.status = 'active';
       return data;
     } catch (error) {
-      console.error(`[StreamingService] Error resuming streaming for port ${port}:`, error.message);
+      logger.error(`[StreamingService] Error resuming streaming for port ${port}:`, error.message);
       throw error;
     }
   }
@@ -246,7 +247,7 @@ class StreamingService {
       session.options = { ...session.options, ...config };
       return data;
     } catch (error) {
-      console.error(`[StreamingService] Error updating config for port ${port}:`, error.message);
+      logger.error(`[StreamingService] Error updating config for port ${port}:`, error.message);
       throw error;
     }
   }
@@ -258,15 +259,15 @@ class StreamingService {
    */
   registerFrameHandler(port, handler) {
     if (!port) {
-      console.error('[StreamingService] Port is required for registerFrameHandler');
+      logger.error('[StreamingService] Port is required for registerFrameHandler');
       return;
     }
     if (typeof handler !== 'function') {
-      console.error('[StreamingService] Handler must be a function');
+      logger.error('[StreamingService] Handler must be a function');
       return;
     }
     this.frameHandlers.set(String(port), handler);
-    console.log(`[StreamingService] Frame handler registered for port ${port}`);
+    logger.log(`[StreamingService] Frame handler registered for port ${port}`);
   }
 
   /**
@@ -276,7 +277,7 @@ class StreamingService {
    */
   registerErrorHandler(port, handler) {
     this.errorHandlers.set(String(port), handler);
-    console.log(`[StreamingService] Error handler registered for port ${port}`);
+    logger.log(`[StreamingService] Error handler registered for port ${port}`);
   }
 
   /**
@@ -287,7 +288,7 @@ class StreamingService {
     const { port, frameNumber, timestamp, format, size, data: frameData } = data;
     const session = this.activeStreams.get(port);
     if (!session) {
-      console.warn(`[StreamingService] Received frame for unknown port ${port}`);
+      logger.warn(`[StreamingService] Received frame for unknown port ${port}`);
       return;
     }
     // Update session statistics
@@ -300,7 +301,7 @@ class StreamingService {
       try {
         frameHandler({ port, frameNumber, timestamp, format, size, frameData });
       } catch (error) {
-        console.error(`[StreamingService] Error in frame handler for port ${port}:`, error.message);
+        logger.error(`[StreamingService] Error in frame handler for port ${port}:`, error.message);
         this.handleError(port, error);
       }
     }
@@ -312,7 +313,7 @@ class StreamingService {
    * @param {Error} error - Error object
    */
   handleError(port, error) {
-    console.error(`[StreamingService] Error for port ${port}:`, error.message);
+    logger.error(`[StreamingService] Error for port ${port}:`, error.message);
     this.stats.totalErrors++;
     const errorHandler = this.errorHandlers.get(String(port));
     if (errorHandler) {
@@ -344,20 +345,20 @@ class StreamingService {
   handleTopicMessage(data) {
     try {
       const { topic, data: topicData } = data;
-      console.log('[StreamingService] Processing topic:', topic, 'with data:', topicData);
+      logger.log('[StreamingService] Processing topic:', topic, 'with data:', topicData);
       
       // Handle mirror frame topics
       if (topic.startsWith('mirror-') && topic.endsWith('-frames')) {
         const port = topic.replace('mirror-', '').replace('-frames', '');
-        console.log(`[StreamingService] Received frame for port ${port}:`, topicData);
+        logger.log(`[StreamingService] Received frame for port ${port}:`, topicData);
         
         // Get port-based frame handler
         const frameHandler = this.frameHandlers.get(String(port));
-        console.log(`[StreamingService] Looking for handler for port: ${port}`);
-        console.log(`[StreamingService] Available handlers:`, Array.from(this.frameHandlers.keys()));
+        logger.log(`[StreamingService] Looking for handler for port: ${port}`);
+        logger.log(`[StreamingService] Available handlers:`, Array.from(this.frameHandlers.keys()));
         
         if (frameHandler) {
-          console.log(`[StreamingService] ✅ Found handler! Calling frame handler for port ${port} with frame:`, {
+          logger.log(`[StreamingService] ✅ Found handler! Calling frame handler for port ${port} with frame:`, {
             frameNumber: topicData.frameNumber,
             format: topicData.format,
             size: topicData.size,
@@ -365,12 +366,12 @@ class StreamingService {
           });
           frameHandler(topicData);
         } else {
-          console.error(`[StreamingService] ❌ NO HANDLER FOUND for port ${port}!`);
-          console.error(`[StreamingService] Available handlers:`, Array.from(this.frameHandlers.keys()));
+          logger.error(`[StreamingService] ❌ NO HANDLER FOUND for port ${port}!`);
+          logger.error(`[StreamingService] Available handlers:`, Array.from(this.frameHandlers.keys()));
         }
       }
     } catch (error) {
-      console.error('[StreamingService] Error handling topic message:', error);
+      logger.error('[StreamingService] Error handling topic message:', error);
     }
   }
 
@@ -425,15 +426,15 @@ class StreamingService {
           await this.stopStreaming(sessionId);
           stoppedCount++;
         } catch (error) {
-          console.error(`[StreamingService] Error stopping session ${sessionId}:`, error.message);
+          logger.error(`[StreamingService] Error stopping session ${sessionId}:`, error.message);
         }
       }
 
-      console.log(`[StreamingService] Stopped ${stoppedCount} streaming sessions`);
+      logger.log(`[StreamingService] Stopped ${stoppedCount} streaming sessions`);
       return stoppedCount;
 
     } catch (error) {
-      console.error('[StreamingService] Error stopping all streaming:', error.message);
+      logger.error('[StreamingService] Error stopping all streaming:', error.message);
       throw error;
     }
   }
@@ -443,7 +444,7 @@ class StreamingService {
    */
   cleanup() {
     try {
-      console.log('[StreamingService] Cleaning up resources...');
+      logger.log('[StreamingService] Cleaning up resources...');
       
       // Stop all sessions
       this.stopAllStreaming();
@@ -452,10 +453,10 @@ class StreamingService {
       this.frameHandlers.clear();
       this.errorHandlers.clear();
       
-      console.log('[StreamingService] Cleanup completed');
+      logger.log('[StreamingService] Cleanup completed');
       
     } catch (error) {
-      console.error('[StreamingService] Error during cleanup:', error.message);
+      logger.error('[StreamingService] Error during cleanup:', error.message);
     }
   }
 

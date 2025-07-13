@@ -1,9 +1,11 @@
+
 /**
  * ServiceContainer - Centralized Dependency Injection Container
  * Provides consistent service registration and resolution across the application
  */
 const path = require('path');
 const fs = require('fs').promises;
+const { logger } = require('@infrastructure/logging/Logger');
 
 class ServiceContainer {
     constructor() {
@@ -32,7 +34,7 @@ class ServiceContainer {
             dependencies
         });
         
-        console.log(`[ServiceContainer] Registered service: ${name} (singleton: ${singleton})`);
+        logger.log(`[ServiceContainer] Registered service: ${name} (singleton: ${singleton})`);
     }
 
     /**
@@ -42,7 +44,7 @@ class ServiceContainer {
      */
     registerSingleton(name, instance) {
         this.singletons.set(name, instance);
-        console.log(`[ServiceContainer] Registered singleton: ${name}`);
+        logger.log(`[ServiceContainer] Registered singleton: ${name}`);
     }
 
     /**
@@ -83,7 +85,7 @@ class ServiceContainer {
      */
     setProjectContext(context) {
         this.projectContext = { ...this.projectContext, ...context };
-        console.log(`[ServiceContainer] Project context updated:`, this.projectContext);
+        logger.log(`[ServiceContainer] Project context updated:`, this.projectContext);
     }
 
     /**
@@ -152,7 +154,7 @@ class ServiceContainer {
 
             return null;
         } catch (error) {
-            console.error('[ServiceContainer] Auto-detect failed:', error.message);
+            logger.error('[ServiceContainer] Auto-detect failed:', error.message);
             return null;
         }
     }
@@ -169,7 +171,7 @@ class ServiceContainer {
             projectId: null,
             workspacePath: null
         };
-        console.log('[ServiceContainer] All services cleared');
+        logger.log('[ServiceContainer] All services cleared');
     }
 
     /**

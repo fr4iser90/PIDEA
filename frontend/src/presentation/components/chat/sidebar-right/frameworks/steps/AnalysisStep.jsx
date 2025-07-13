@@ -1,3 +1,4 @@
+import { logger } from "@/infrastructure/logging/Logger";
 import React, { useState, useEffect } from 'react';
 import APIChatRepository, { apiCall } from '@/infrastructure/repositories/APIChatRepository.jsx';
 
@@ -47,8 +48,8 @@ function AnalysisStep({ framework, onAnalysisComplete, workflowData, setWorkflow
     
     try {
       // Use new documentation-specific analysis API
-      console.log('📊 [AnalysisStep] Starting documentation analysis for project:', currentProject.id);
-      console.log('📊 [AnalysisStep] Project path:', currentProject.path);
+      logger.log('📊 [AnalysisStep] Starting documentation analysis for project:', currentProject.id);
+      logger.log('📊 [AnalysisStep] Project path:', currentProject.path);
       
       const response = await apiCall(`/api/projects/${currentProject.id}/documentation/analyze`, {
         method: 'POST',
@@ -58,8 +59,8 @@ function AnalysisStep({ framework, onAnalysisComplete, workflowData, setWorkflow
       });
 
               if (response.success) {
-          console.log('✅ [AnalysisStep] Documentation analysis completed:', response.data);
-          console.log('✅ [AnalysisStep] Created tasks:', response.data.createdTasks);
+          logger.log('✅ [AnalysisStep] Documentation analysis completed:', response.data);
+          logger.log('✅ [AnalysisStep] Created tasks:', response.data.createdTasks);
           
           // Parse analysis results for documentation framework
           const results = parseAnalysisResults(response.data);
@@ -82,7 +83,7 @@ function AnalysisStep({ framework, onAnalysisComplete, workflowData, setWorkflow
           throw new Error(response.error || 'Documentation analysis failed');
         }
     } catch (error) {
-      console.error('❌ [AnalysisStep] Documentation analysis error:', error);
+      logger.error('❌ [AnalysisStep] Documentation analysis error:', error);
       setAnalysisError('Error during analysis: ' + error.message);
     } finally {
       setIsAnalyzing(false);
@@ -95,14 +96,14 @@ function AnalysisStep({ framework, onAnalysisComplete, workflowData, setWorkflow
     setBulkAnalysisResults(null);
     
     try {
-      console.log('🚀 [AnalysisStep] Starting bulk documentation analysis for all projects');
+      logger.log('🚀 [AnalysisStep] Starting bulk documentation analysis for all projects');
       
       const response = await apiCall('/api/projects/analyze-all/documentation', {
         method: 'POST'
       });
 
       if (response.success) {
-        console.log('✅ [AnalysisStep] Bulk documentation analysis completed:', response.data);
+        logger.log('✅ [AnalysisStep] Bulk documentation analysis completed:', response.data);
         
         setBulkAnalysisResults(response.data);
         
@@ -154,7 +155,7 @@ function AnalysisStep({ framework, onAnalysisComplete, workflowData, setWorkflow
         throw new Error(response.error || 'Bulk documentation analysis failed');
       }
     } catch (error) {
-      console.error('❌ [AnalysisStep] Bulk documentation analysis error:', error);
+      logger.error('❌ [AnalysisStep] Bulk documentation analysis error:', error);
       setAnalysisError('Error during bulk analysis: ' + error.message);
     } finally {
       setIsAnalyzingAll(false);

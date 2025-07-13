@@ -1,3 +1,4 @@
+const { logger } = require('@infrastructure/logging/Logger');
 /**
  * Event Publishing Service
  * Handles event publishing for script generation

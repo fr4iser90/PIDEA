@@ -3,6 +3,7 @@
  */
 const path = require('path');
 const { PERFORMANCE_FILES, PERFORMANCE_DEPENDENCIES } = require('../constants');
+const { logger } = require('@infrastructure/logging/Logger');
 
 class PerformanceAnalyzer {
     constructor(logger, fileUtils) {

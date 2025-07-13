@@ -1,3 +1,4 @@
+import { logger } from "@/infrastructure/logging/Logger";
 import React, { useState, useEffect } from 'react';
 import APIChatRepository, { apiCall } from '@/infrastructure/repositories/APIChatRepository.jsx';
 import TaskSelectionModal from '../modal/TaskSelectionModal.jsx';
@@ -64,10 +65,10 @@ function TasksPanelComponent({ eventBus, activePort }) {
   // Load docs tasks on mount AND when activePort changes
   useEffect(() => {
     if (activePort) {
-      console.log('[TasksPanelComponent] Loading docs tasks for port:', activePort);
+      logger.log('[TasksPanelComponent] Loading docs tasks for port:', activePort);
       loadDocsTasks();
     } else {
-      console.log('[TasksPanelComponent] No active port, clearing docs tasks');
+      logger.log('[TasksPanelComponent] No active port, clearing docs tasks');
       setDocsTasks([]);
     }
   }, [activePort]); // ← Jetzt lädt bei activePort Änderungen neu
@@ -92,7 +93,7 @@ function TasksPanelComponent({ eventBus, activePort }) {
   const handleSyncDocsTasks = async () => {
     setIsLoadingDocsTasks(true);
     try {
-      console.log('🔄 [TasksPanelComponent] Starting docs tasks sync...');
+      logger.log('🔄 [TasksPanelComponent] Starting docs tasks sync...');
       const response = await api.syncDocsTasks();
       if (response.success) {
         setFeedback(`✅ Successfully synced ${response.data.importedCount} docs tasks to database`);
@@ -102,7 +103,7 @@ function TasksPanelComponent({ eventBus, activePort }) {
         setFeedback('❌ Failed to sync documentation tasks: ' + response.error);
       }
     } catch (error) {
-      console.error('Error syncing docs tasks:', error);
+      logger.error('Error syncing docs tasks:', error);
       setFeedback('❌ Error syncing docs tasks: ' + error.message);
     } finally {
       setIsLoadingDocsTasks(false);
@@ -116,7 +117,7 @@ function TasksPanelComponent({ eventBus, activePort }) {
     
     setIsLoadingDocsTasks(true);
     try {
-      console.log('🗑️ [TasksPanelComponent] Starting docs tasks cleanup...');
+      logger.log('🗑️ [TasksPanelComponent] Starting docs tasks cleanup...');
       const response = await api.cleanDocsTasks();
       if (response.success) {
         setFeedback(`✅ Successfully deleted ${response.data.deletedCount} docs tasks from database`);
@@ -126,7 +127,7 @@ function TasksPanelComponent({ eventBus, activePort }) {
         setFeedback('❌ Failed to clean documentation tasks: ' + response.error);
       }
     } catch (error) {
-      console.error('Error cleaning docs tasks:', error);
+      logger.error('Error cleaning docs tasks:', error);
       setFeedback('❌ Error cleaning docs tasks: ' + error.message);
     } finally {
       setIsLoadingDocsTasks(false);
@@ -138,13 +139,13 @@ function TasksPanelComponent({ eventBus, activePort }) {
     setIsDocsTaskModalOpen(true);
     setSelectedDocsTask(null);
     try {
-      console.log('[TasksPanelComponent] Loading task details for:', task.id);
+      logger.log('[TasksPanelComponent] Loading task details for:', task.id);
       const response = await api.getDocsTaskDetails(task.id);
       if (response.success && response.data) {
-        console.log('[TasksPanelComponent] Task details loaded successfully:', response.data);
+        logger.log('[TasksPanelComponent] Task details loaded successfully:', response.data);
         setSelectedDocsTask(response.data);
       } else {
-        console.warn('[TasksPanelComponent] API returned no data, using task as fallback');
+        logger.warn('[TasksPanelComponent] API returned no data, using task as fallback');
         // Fallback: use the task data we already have
         setSelectedDocsTask({
           ...task,
@@ -153,7 +154,7 @@ function TasksPanelComponent({ eventBus, activePort }) {
         });
       }
     } catch (error) {
-      console.error('[TasksPanelComponent] Error loading task details:', error);
+      logger.error('[TasksPanelComponent] Error loading task details:', error);
       setFeedback('Error loading task details: ' + error.message);
       // Fallback: use the task data we already have
       setSelectedDocsTask({
@@ -228,7 +229,7 @@ ${taskDetails.description}
         throw new Error(autoModeResponse.error || 'Failed to start auto-mode');
       }
     } catch (error) {
-      console.error('Error executing task:', error);
+      logger.error('Error executing task:', error);
       setFeedback('Failed to execute task: ' + error.message);
     }
   };

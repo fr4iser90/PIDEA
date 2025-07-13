@@ -1,3 +1,4 @@
+
 /**
  * IDEFactory - Factory pattern for creating IDE instances
  * Manages IDE type registration and instance creation
@@ -19,13 +20,13 @@ class IDEFactory {
       return;
     }
 
-    console.log('[IDEFactory] Initializing IDE factory...');
+    logger.log('[IDEFactory] Initializing IDE factory...');
 
     // Register default IDE implementations
     this.registerDefaultImplementations();
 
     this.initialized = true;
-    console.log('[IDEFactory] IDE factory initialized');
+    logger.log('[IDEFactory] IDE factory initialized');
   }
 
   /**
@@ -43,11 +44,12 @@ class IDEFactory {
 
       // Register Windsurf IDE implementation
       const WindsurfIDE = require('./implementations/WindsurfIDE');
+const { logger } = require('@infrastructure/logging/Logger');
       this.registerIDE(IDETypes.WINDSURF, WindsurfIDE);
 
-      console.log('[IDEFactory] Default IDE implementations registered');
+      logger.log('[IDEFactory] Default IDE implementations registered');
     } catch (error) {
-      console.error('[IDEFactory] Failed to register default implementations:', error);
+      logger.error('[IDEFactory] Failed to register default implementations:', error);
     }
   }
 
@@ -89,11 +91,11 @@ class IDEFactory {
       }
 
       this.ideImplementations.set(type, implementation);
-      console.log(`[IDEFactory] Registered IDE implementation for type: ${type}`);
+      logger.log(`[IDEFactory] Registered IDE implementation for type: ${type}`);
       
       return true;
     } catch (error) {
-      console.error(`[IDEFactory] Failed to register IDE implementation for type ${type}:`, error);
+      logger.error(`[IDEFactory] Failed to register IDE implementation for type ${type}:`, error);
       return false;
     }
   }
@@ -140,7 +142,7 @@ class IDEFactory {
       // Create IDE instance
       const ideInstance = new Implementation(browserManager, ideManager, eventBus);
       
-      console.log(`[IDEFactory] Created IDE instance for type: ${type}`);
+      logger.log(`[IDEFactory] Created IDE instance for type: ${type}`);
       
       return {
         success: true,
@@ -150,7 +152,7 @@ class IDEFactory {
         timestamp: new Date()
       };
     } catch (error) {
-      console.error(`[IDEFactory] Failed to create IDE instance for type ${type}:`, error);
+      logger.error(`[IDEFactory] Failed to create IDE instance for type ${type}:`, error);
       return {
         success: false,
         error: error.message,
@@ -187,17 +189,17 @@ class IDEFactory {
    */
   setDefaultIDE(type) {
     if (!IDETypes.isValid(type)) {
-      console.error(`[IDEFactory] Cannot set invalid IDE type as default: ${type}`);
+      logger.error(`[IDEFactory] Cannot set invalid IDE type as default: ${type}`);
       return false;
     }
 
     if (!this.ideImplementations.has(type)) {
-      console.error(`[IDEFactory] Cannot set unregistered IDE type as default: ${type}`);
+      logger.error(`[IDEFactory] Cannot set unregistered IDE type as default: ${type}`);
       return false;
     }
 
     this.defaultIDEType = type;
-    console.log(`[IDEFactory] Set default IDE type to: ${type}`);
+    logger.log(`[IDEFactory] Set default IDE type to: ${type}`);
     return true;
   }
 
@@ -226,13 +228,13 @@ class IDEFactory {
    */
   unregisterIDE(type) {
     if (type === this.defaultIDEType) {
-      console.error(`[IDEFactory] Cannot unregister default IDE type: ${type}`);
+      logger.error(`[IDEFactory] Cannot unregister default IDE type: ${type}`);
       return false;
     }
 
     const removed = this.ideImplementations.delete(type);
     if (removed) {
-      console.log(`[IDEFactory] Unregistered IDE type: ${type}`);
+      logger.log(`[IDEFactory] Unregistered IDE type: ${type}`);
     }
     return removed;
   }
@@ -313,7 +315,7 @@ class IDEFactory {
 
     // Try default type as fallback
     if (preferredType !== this.defaultIDEType) {
-      console.log(`[IDEFactory] Falling back to default IDE type: ${this.defaultIDEType}`);
+      logger.log(`[IDEFactory] Falling back to default IDE type: ${this.defaultIDEType}`);
       result = this.createIDE(this.defaultIDEType, dependencies);
       
       if (result.success) {
@@ -341,7 +343,7 @@ class IDEFactory {
     this.ideImplementations.clear();
     this.defaultIDEType = IDETypes.CURSOR;
     this.initialized = false;
-    console.log('[IDEFactory] Cleared all IDE registrations');
+    logger.log('[IDEFactory] Cleared all IDE registrations');
   }
 }
 

@@ -1,3 +1,5 @@
+const { logger } = require('@infrastructure/logging/Logger');
+
 class TerminalMonitor {
   constructor(browserManager, eventBus = null) {
     this.browserManager = browserManager;
@@ -51,7 +53,7 @@ class TerminalMonitor {
       // Only log status changes
       const statusChanged = JSON.stringify(terminalExists) !== JSON.stringify(this.lastTerminalStatus);
       if (statusChanged) {
-        console.log('[TerminalMonitor] Terminal status:', terminalExists);
+        logger.log('[TerminalMonitor] Terminal status:', terminalExists);
         this.lastTerminalStatus = terminalExists;
       }
 
@@ -84,7 +86,7 @@ class TerminalMonitor {
             const elementText = element.innerText || element.textContent || '';
             if (elementText.trim() && !elementText.includes('.xterm-') && elementText.length > 10) {
               terminalText = elementText;
-              console.log('Found text in', selector);
+              logger.log('Found text in', selector);
               break;
             }
           }
@@ -101,7 +103,7 @@ class TerminalMonitor {
               }
             });
             if (terminalText.trim()) {
-              console.log('Found text in view-lines');
+              logger.log('Found text in view-lines');
             }
           }
         }
@@ -116,7 +118,7 @@ class TerminalMonitor {
             }
           });
           if (terminalText.trim()) {
-            console.log('Found text in terminal tabs');
+            logger.log('Found text in terminal tabs');
           }
         }
         
@@ -127,7 +129,7 @@ class TerminalMonitor {
             const areaText = terminalArea.innerText || terminalArea.textContent || '';
             if (areaText.trim() && !areaText.includes('.xterm-') && areaText.length > 10) {
               terminalText = areaText;
-              console.log('Found text in terminal area');
+              logger.log('Found text in terminal area');
             }
           }
         }
@@ -137,18 +139,18 @@ class TerminalMonitor {
 
       // Only log if content changed and is not empty
       if (terminalOutput && terminalOutput !== this.lastTerminalContent) {
-        console.log('[TerminalMonitor] Terminal content changed, length:', terminalOutput.length);
+        logger.log('[TerminalMonitor] Terminal content changed, length:', terminalOutput.length);
         
         // Show what we actually got
         if (terminalOutput && terminalOutput.length > 0) {
-          console.log('[TerminalMonitor] Content preview:', terminalOutput.substring(0, 200) + '...');
+          logger.log('[TerminalMonitor] Content preview:', terminalOutput.substring(0, 200) + '...');
         }
         
         this.lastTerminalContent = terminalOutput;
         
         const userAppUrl = this.extractUserAppUrl(terminalOutput);
         if (userAppUrl) {
-          console.log('[TerminalMonitor] User app URL detected:', userAppUrl);
+          logger.log('[TerminalMonitor] User app URL detected:', userAppUrl);
           // Emit event
           if (this.eventBus && typeof this.eventBus.emit === 'function') {
             this.eventBus.emit('userAppDetected', { url: userAppUrl });
@@ -159,10 +161,10 @@ class TerminalMonitor {
       
       // If no URL found in terminal, rely on package.json analysis instead
       // This is more reliable than trying to parse terminal output
-      console.log('[TerminalMonitor] No URL found in terminal, relying on package.json analysis');
+      logger.log('[TerminalMonitor] No URL found in terminal, relying on package.json analysis');
       return null;
     } catch (error) {
-      console.error('[TerminalMonitor] Error monitoring terminal:', error);
+      logger.error('[TerminalMonitor] Error monitoring terminal:', error);
       return null;
     }
   }
@@ -180,14 +182,14 @@ class TerminalMonitor {
     }, 2000); // Check every 2 seconds
     */
     
-    console.log('[TerminalMonitor] Terminal monitoring setup complete (no continuous monitoring to avoid filesystem errors)');
+    logger.log('[TerminalMonitor] Terminal monitoring setup complete (no continuous monitoring to avoid filesystem errors)');
   }
 
   async stopTerminalMonitoring() {
     if (this.monitoringInterval) {
       clearInterval(this.monitoringInterval);
       this.monitoringInterval = null;
-      console.log('[TerminalMonitor] Terminal monitoring stopped');
+      logger.log('[TerminalMonitor] Terminal monitoring stopped');
     }
   }
 
@@ -206,7 +208,7 @@ class TerminalMonitor {
       await page.fill('.xterm-helper-textarea', 'npm run dev');
       await page.keyboard.press('Enter');
       
-      console.log('[TerminalMonitor] Restart command sent to terminal');
+      logger.log('[TerminalMonitor] Restart command sent to terminal');
       
       // Monitor for new URL
       setTimeout(async () => {
@@ -214,7 +216,7 @@ class TerminalMonitor {
       }, 3000);
       
     } catch (error) {
-      console.error('[TerminalMonitor] Error restarting app:', error);
+      logger.error('[TerminalMonitor] Error restarting app:', error);
       throw error;
     }
   }
@@ -238,13 +240,13 @@ class TerminalMonitor {
       });
 
       if (!terminalStatus.terminalAvailable) {
-        console.log('[TerminalMonitor] No terminal available - will not create new terminal');
+        logger.log('[TerminalMonitor] No terminal available - will not create new terminal');
         throw new Error('No terminal available for monitoring');
       } else {
-        console.log('[TerminalMonitor] Terminal available for monitoring');
+        logger.log('[TerminalMonitor] Terminal available for monitoring');
       }
     } catch (error) {
-      console.error('[TerminalMonitor] Error checking terminal:', error);
+      logger.error('[TerminalMonitor] Error checking terminal:', error);
       throw error;
     }
   }
@@ -254,9 +256,9 @@ class TerminalMonitor {
     if (terminalOutput && terminalOutput.length > 0) {
       const lines = terminalOutput.split('\n');
       const previewLines = lines.length > 30 ? lines.slice(-30) : lines;
-      console.log('[TerminalMonitor] TerminalOutput (Preview):\n' + previewLines.join('\n'));
+      logger.log('[TerminalMonitor] TerminalOutput (Preview):\n' + previewLines.join('\n'));
     } else {
-      console.log('[TerminalMonitor] TerminalOutput: <leer oder undefined>');
+      logger.log('[TerminalMonitor] TerminalOutput: <leer oder undefined>');
     }
     // Parse common dev server patterns
     const patterns = [
@@ -286,7 +288,7 @@ class TerminalMonitor {
         if (!url.startsWith('http')) {
           url = 'http://' + url;
         }
-        console.log('[TerminalMonitor] URL pattern matched:', pattern, '->', url);
+        logger.log('[TerminalMonitor] URL pattern matched:', pattern, '->', url);
         return url;
       }
     }
@@ -295,11 +297,11 @@ class TerminalMonitor {
     const matches = terminalOutput.match(genericUrlRegex);
     if (matches && matches.length > 0) {
       const url = matches[0];
-      console.log('[TerminalMonitor] Generic URL pattern matched ->', url);
+      logger.log('[TerminalMonitor] Generic URL pattern matched ->', url);
       return url;
     }
     // ---
-    console.log('[TerminalMonitor] No URL patterns matched in terminal output');
+    logger.log('[TerminalMonitor] No URL patterns matched in terminal output');
     return null;
   }
 }

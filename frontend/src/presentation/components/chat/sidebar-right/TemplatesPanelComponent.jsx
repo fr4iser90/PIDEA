@@ -1,3 +1,4 @@
+import { logger } from "@/infrastructure/logging/Logger";
 import React, { useState, useEffect } from 'react';
 import { apiCall } from '@/infrastructure/repositories/APIChatRepository.jsx';
 
@@ -30,7 +31,7 @@ function TemplatesPanelComponent({ onTemplateClick, onTemplateUse }) {
         setTemplates(response.data || []);
       }
     } catch (error) {
-      console.error('Failed to load generic templates:', error);
+      logger.error('Failed to load generic templates:', error);
     } finally {
       setLoading(false);
     }
@@ -43,7 +44,7 @@ function TemplatesPanelComponent({ onTemplateClick, onTemplateUse }) {
         setFrameworks(response.data || []);
       }
     } catch (error) {
-      console.error('Failed to load frameworks:', error);
+      logger.error('Failed to load frameworks:', error);
     }
   };
 
@@ -59,7 +60,7 @@ function TemplatesPanelComponent({ onTemplateClick, onTemplateUse }) {
         setTemplates(response.data.templates || []);
       }
     } catch (error) {
-      console.error('Failed to load framework templates:', error);
+      logger.error('Failed to load framework templates:', error);
     } finally {
       setLoading(false);
     }
@@ -75,7 +76,7 @@ function TemplatesPanelComponent({ onTemplateClick, onTemplateUse }) {
         });
       }
     } catch (error) {
-      console.error('Failed to load template content:', error);
+      logger.error('Failed to load template content:', error);
     }
   };
 
@@ -89,7 +90,7 @@ function TemplatesPanelComponent({ onTemplateClick, onTemplateUse }) {
         });
       }
     } catch (error) {
-      console.error('Failed to load template content:', error);
+      logger.error('Failed to load template content:', error);
     }
   };
 

@@ -1,3 +1,4 @@
+
 #!/usr/bin/env node
 require('module-alias/register');
 
@@ -31,6 +32,7 @@ const SQLiteTaskRepository = require('@database/SQLiteTaskRepository');
 const CursorIDEService = require('@services/CursorIDEService');
 const BrowserManager = require('@external/BrowserManager');
 const IDEManager = require('@external/IDEManager');
+const { logger } = require('@infrastructure/logging/Logger');
 
 class TestFixTaskCLI {
   constructor() {
@@ -92,7 +94,7 @@ class TestFixTaskCLI {
           break;
         default:
           if (arg.startsWith('--')) {
-            console.error(`Unknown option: ${arg}`);
+            logger.error(`Unknown option: ${arg}`);
             process.exit(1);
           }
       }
@@ -103,7 +105,7 @@ class TestFixTaskCLI {
    * Display help information
    */
   showHelp() {
-    console.log(`
+    logger.log(`
 Test Fix Task Generator CLI
 
 Usage: node generate-test-fix-tasks.js [options]
@@ -279,42 +281,42 @@ Examples:
    * Display results
    */
   displayResults(result) {
-    console.log('\n' + '='.repeat(60));
-    console.log('TEST FIX TASK GENERATION RESULTS');
-    console.log('='.repeat(60));
+    logger.log('\n' + '='.repeat(60));
+    logger.debug('TEST FIX TASK GENERATION RESULTS');
+    logger.log('='.repeat(60));
     
-    console.log(`\nSession ID: ${result.sessionId}`);
-    console.log(`Duration: ${result.duration}ms`);
-    console.log(`Success: ${result.success ? 'Yes' : 'No'}`);
+    logger.log(`\nSession ID: ${result.sessionId}`);
+    logger.log(`Duration: ${result.duration}ms`);
+    logger.log(`Success: ${result.success ? 'Yes' : 'No'}`);
     
     if (result.parsedData) {
-      console.log('\nParsed Data:');
-      console.log(`  - Failing Tests: ${result.parsedData.failingTests.length}`);
-      console.log(`  - Coverage Issues: ${result.parsedData.coverageIssues.length}`);
-      console.log(`  - Legacy Tests: ${result.parsedData.legacyTests.length}`);
+      logger.log('\nParsed Data:');
+      logger.debug(`  - Failing Tests: ${result.parsedData.failingTests.length}`);
+      logger.log(`  - Coverage Issues: ${result.parsedData.coverageIssues.length}`);
+      logger.debug(`  - Legacy Tests: ${result.parsedData.legacyTests.length}`);
     }
     
     if (result.tasksGenerated) {
-      console.log(`\nTasks Generated: ${result.tasksGenerated}`);
+      logger.log(`\nTasks Generated: ${result.tasksGenerated}`);
     }
     
     if (result.processingResult) {
       const pr = result.processingResult;
-      console.log('\nProcessing Results:');
-      console.log(`  - Total Tasks: ${pr.totalTasks}`);
-      console.log(`  - Completed: ${pr.completedTasks}`);
-      console.log(`  - Failed: ${pr.failedTasks}`);
-      console.log(`  - Success Rate: ${pr.totalTasks > 0 ? Math.round((pr.completedTasks / pr.totalTasks) * 100) : 0}%`);
+      logger.log('\nProcessing Results:');
+      logger.log(`  - Total Tasks: ${pr.totalTasks}`);
+      logger.log(`  - Completed: ${pr.completedTasks}`);
+      logger.log(`  - Failed: ${pr.failedTasks}`);
+      logger.log(`  - Success Rate: ${pr.totalTasks > 0 ? Math.round((pr.completedTasks / pr.totalTasks) * 100) : 0}%`);
     }
     
     if (result.report && result.report.recommendations) {
-      console.log('\nRecommendations:');
+      logger.log('\nRecommendations:');
       result.report.recommendations.forEach((rec, index) => {
-        console.log(`  ${index + 1}. [${rec.priority.toUpperCase()}] ${rec.message}`);
+        logger.log(`  ${index + 1}. [${rec.priority.toUpperCase()}] ${rec.message}`);
       });
     }
     
-    console.log('\n' + '='.repeat(60));
+    logger.log('\n' + '='.repeat(60));
   }
 
   /**
@@ -344,7 +346,7 @@ async function main() {
   try {
     await cli.run();
   } catch (error) {
-    console.error('[TestFixTaskCLI] Fatal error:', error.message);
+    logger.error('[TestFixTaskCLI] Fatal error:', error.message);
     process.exit(1);
   } finally {
     await cli.cleanup();

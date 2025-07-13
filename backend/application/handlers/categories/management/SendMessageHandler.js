@@ -1,6 +1,8 @@
 const SendMessageCommand = require('@categories/management/SendMessageCommand');
 const ChatMessage = require('@entities/ChatMessage');
 const ChatSession = require('@entities/ChatSession');
+const { logger } = require('@infrastructure/logging/Logger');
+
 
 /**
  * SendMessageHandler - Handles task/AI messaging commands
@@ -45,20 +47,20 @@ class SendMessageHandler {
    */
   getActiveIDEService() {
     const activePort = this.ideManager.getActivePort();
-    console.log('[SendMessageHandler] Active port:', activePort);
+    logger.log('[SendMessageHandler] Active port:', activePort);
     
     // Determine IDE type based on port range
     if (activePort >= 9222 && activePort <= 9231) {
-      console.log('[SendMessageHandler] Using Cursor IDE service');
+      logger.log('[SendMessageHandler] Using Cursor IDE service');
       return this.cursorIDEService;
     } else if (activePort >= 9232 && activePort <= 9241) {
-      console.log('[SendMessageHandler] Using VSCode IDE service');
+      logger.log('[SendMessageHandler] Using VSCode IDE service');
       return this.vscodeIDEService;
     } else if (activePort >= 9242 && activePort <= 9251) {
-      console.log('[SendMessageHandler] Using Windsurf IDE service');
+      logger.log('[SendMessageHandler] Using Windsurf IDE service');
       return this.windsurfIDEService;
     } else {
-      console.log('[SendMessageHandler] Defaulting to Cursor IDE service');
+      logger.log('[SendMessageHandler] Defaulting to Cursor IDE service');
       return this.cursorIDEService; // fallback
     }
   }
@@ -237,7 +239,7 @@ class SendMessageHandler {
       };
 
     } catch (error) {
-      console.error('[SendMessageHandler] Error:', error);
+      logger.error('[SendMessageHandler] Error:', error);
       throw error;
     }
   }
@@ -301,7 +303,7 @@ class SendMessageHandler {
       };
 
     } catch (error) {
-      console.error('[SendMessageHandler] Error:', error);
+      logger.error('[SendMessageHandler] Error:', error);
       throw error;
     }
   }

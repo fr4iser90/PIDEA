@@ -3,6 +3,7 @@
  */
 const path = require('path');
 const { MAIN_DIRECTORIES } = require('../constants');
+const { logger } = require('@infrastructure/logging/Logger');
 
 class StructureAnalyzer {
     constructor(logger, fileUtils, directoryScanner) {
