@@ -364,6 +364,10 @@ class IDEManager {
           if (workspaceInfo && workspaceInfo.workspace) {
             logger.log('[IDEManager] File-based detected workspace path for port', port, ':', workspaceInfo.workspace);
             this.ideWorkspaces.set(port, workspaceInfo.workspace);
+            
+            // AUTOMATISCH Projekt in der DB erstellen
+            await this.createProjectInDatabase(workspaceInfo.workspace, port);
+            
             return workspaceInfo.workspace;
           }
         } catch (error) {
@@ -485,6 +489,54 @@ class IDEManager {
     }
     
     return availableIDEs;
+  }
+
+  /**
+   * AUTOMATISCH Projekt in der DB erstellen
+   * @param {string} workspacePath - Workspace path
+   * @param {number} port - IDE port
+   */
+  async createProjectInDatabase(workspacePath, port) {
+    try {
+      // Use injected project repository
+      if (!this.projectRepository) {
+        logger.warn('[IDEManager] No project repository available, skipping project creation');
+        return;
+      }
+
+      // Extract project name from workspace path
+      const path = require('path');
+      const projectName = path.basename(workspacePath);
+      
+      // Generate project ID
+      const projectId = projectName.toLowerCase().replace(/[^a-z0-9]/g, '_');
+      
+      logger.log(`[IDEManager] Creating project in database: ${projectId} (${projectName}) at ${workspacePath}`);
+      
+      // Get IDE type for this port
+      const ideType = this.ideTypes.get(port) || 'cursor';
+      
+      // Create project using findOrCreateByWorkspacePath
+      const project = await this.projectRepository.findOrCreateByWorkspacePath(workspacePath, {
+        id: projectId,
+        name: projectName,
+        description: `Project detected at ${workspacePath}`,
+        type: 'development',
+        ideType: ideType,
+        port: port,
+        metadata: {
+          detectedBy: 'IDEManager',
+          port: port,
+          ideType: ideType,
+          detectedAt: new Date().toISOString()
+        }
+      });
+      
+      logger.log(`[IDEManager] Project created/found in database: ${project.id}`);
+      
+    } catch (error) {
+      logger.error('[IDEManager] Failed to create project in database:', error.message);
+    }
   }
 
   /**

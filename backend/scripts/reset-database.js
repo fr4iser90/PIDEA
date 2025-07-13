@@ -7,7 +7,7 @@ const path = require('path');
  * Simply deletes the database file and lets the app recreate it automatically
  */
 
-const dbPath = path.join(__dirname, '../database.sqlite');
+const dbPath = path.join(__dirname, '../database/PIDEA-dev.db');
 
 console.log('🗑️  Resetting database...');
 

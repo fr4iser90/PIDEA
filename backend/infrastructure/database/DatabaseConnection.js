@@ -206,6 +206,7 @@ class DatabaseConnection {
         priority TEXT NOT NULL,
         status TEXT NOT NULL DEFAULT 'pending',
         project_id TEXT,
+        created_by TEXT NOT NULL DEFAULT 'me',
         metadata ${metadataType},
         created_at ${timestampType},
         updated_at ${timestampType},
@@ -214,7 +215,24 @@ class DatabaseConnection {
         estimated_time INTEGER,
         actual_time INTEGER,
         tags TEXT,
-        FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE
+        assignee TEXT,
+        started_at ${timestampType},
+        execution_history ${metadataType},
+        parent_task_id TEXT,
+        child_task_ids ${metadataType},
+        phase TEXT,
+        stage TEXT,
+        phase_order INTEGER,
+        task_level INTEGER DEFAULT 0,
+        root_task_id TEXT,
+        is_phase_task BOOLEAN DEFAULT FALSE,
+        progress INTEGER DEFAULT 0,
+        phase_progress ${metadataType},
+        blocked_by ${metadataType},
+        FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE,
+        FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE CASCADE,
+        FOREIGN KEY (parent_task_id) REFERENCES tasks(id) ON DELETE CASCADE,
+        FOREIGN KEY (root_task_id) REFERENCES tasks(id) ON DELETE CASCADE
       )`,
       
       // META-EBENEN TABLES (PIDEA Architecture)

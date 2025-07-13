@@ -48,10 +48,8 @@ class SQLiteTaskRepository extends TaskRepository {
       const sql = `
         INSERT OR REPLACE INTO ${this.tableName} (
           id, title, description, type, category, priority, status, project_id, created_by,
-          estimated_hours, metadata, created_at, updated_at, tags,
-          assignee, due_date, started_at, completed_at, execution_history,
-          parent_task_id, child_task_ids, phase, stage, phase_order, task_level, root_task_id,
-          is_phase_task, progress, phase_progress, blocked_by
+          metadata, created_at, updated_at, completed_at, due_date, estimated_time, actual_time, tags,
+          assignee, started_at, execution_history, parent_task_id, child_task_ids, phase, stage, phase_order, task_level, root_task_id, is_phase_task, progress, phase_progress, blocked_by
         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `;
 
@@ -65,15 +63,16 @@ class SQLiteTaskRepository extends TaskRepository {
         taskData.status,
         taskData.projectId,
         taskData.userId || 'me',
-        taskData.estimatedDuration,
         JSON.stringify(taskData.metadata),
         taskData.createdAt,
         taskData.updatedAt,
+        taskData.completedAt,
+        taskData.dueDate,
+        taskData.estimatedDuration,
+        taskData.actualDuration,
         JSON.stringify(taskData.tags),
         taskData.assignee,
-        taskData.dueDate,
         taskData.startedAt,
-        taskData.completedAt,
         JSON.stringify(taskData.executionHistory),
         taskData.parentTaskId || null,
         JSON.stringify(taskData.childTaskIds || []),

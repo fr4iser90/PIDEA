@@ -65,10 +65,13 @@ class ServiceRegistry {
         }, { singleton: true });
 
         // IDE manager
-        this.container.register('ideManager', (browserManager) => {
+        this.container.register('ideManager', (browserManager, projectRepository) => {
             const IDEManager = require('../external/IDEManager');
-            return new IDEManager(browserManager);
-        }, { singleton: true, dependencies: ['browserManager'] });
+            const manager = new IDEManager(browserManager);
+            // Inject project repository for automatic database operations
+            manager.projectRepository = projectRepository;
+            return manager;
+        }, { singleton: true, dependencies: ['browserManager', 'projectRepository'] });
 
         this.registeredServices.add('infrastructure');
     }
@@ -96,13 +99,14 @@ class ServiceRegistry {
             return { detect: () => process.cwd() };
         }, { singleton: true });
 
-    // IDE workspace detection service (simplified)
-    this.container.register('ideWorkspaceDetectionService', () => {
-      return {
-        detectWorkspace: () => process.cwd(),
-        getDetectionStats: () => ({ status: 'ok', detected: true }) // Dummy-Methode
-      };
-    }, { singleton: true });
+    // IDE workspace detection service
+    this.container.register('ideWorkspaceDetectionService', (ideManager, projectRepository) => {
+      const IDEWorkspaceDetectionService = require('@domain/services/IDEWorkspaceDetectionService');
+      const service = new IDEWorkspaceDetectionService(ideManager);
+      // Inject project repository for database operations
+      service.projectRepository = projectRepository;
+      return service;
+    }, { singleton: true, dependencies: ['ideManager', 'projectRepository'] });
 
             // Subproject detector (simplified)
         this.container.register('subprojectDetector', () => {
