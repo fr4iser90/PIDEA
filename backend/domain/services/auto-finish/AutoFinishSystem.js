@@ -2,8 +2,8 @@ const TodoParser = require('./TodoParser');
 const ConfirmationSystem = require('./ConfirmationSystem');
 const FallbackDetection = require('./FallbackDetection');
 const TaskSequencer = require('./TaskSequencer');
-const GitWorkflowManager = require('../../workflows/git/GitWorkflowManager');
-const GitWorkflowContext = require('../../workflows/git/GitWorkflowContext');
+const GitWorkflowManager = require('../../workflows/categories/git/GitWorkflowManager');
+const GitWorkflowContext = require('../../workflows/categories/git/GitWorkflowContext');
 const { v4: uuidv4 } = require('uuid');
 
 /**

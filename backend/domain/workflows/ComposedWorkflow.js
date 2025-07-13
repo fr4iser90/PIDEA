@@ -2,10 +2,10 @@
  * ComposedWorkflow - Implementation of IWorkflow for composed workflows
  * Manages execution of multiple workflow steps with validation, rollback, and error handling
  */
-const IWorkflow = require('../interfaces/IWorkflow');
-const WorkflowException = require('../exceptions/WorkflowException');
-const ValidationException = require('../exceptions/ValidationException');
-const ValidationResult = require('../validation/ValidationResult');
+const IWorkflow = require('./interfaces/IWorkflow');
+const WorkflowException = require('./exceptions/WorkflowException');
+const ValidationException = require('./exceptions/ValidationException');
+const ValidationResult = require('./validation/ValidationResult');
 
 /**
  * Composed workflow implementation

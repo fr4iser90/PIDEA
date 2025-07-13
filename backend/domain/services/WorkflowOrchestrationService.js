@@ -5,10 +5,10 @@
  */
 const WorkflowGitService = require('./WorkflowGitService');
 const TaskType = require('../value-objects/TaskType');
-const GitWorkflowManager = require('../workflows/git/GitWorkflowManager');
-const GitWorkflowContext = require('../workflows/git/GitWorkflowContext');
+const GitWorkflowManager = require('../workflows/categories/git/GitWorkflowManager');
+const GitWorkflowContext = require('../workflows/categories/git/GitWorkflowContext');
 const { SequentialExecutionEngine } = require('../workflows/execution');
-const { UnifiedWorkflowHandler, utils: handlerUtils } = require('../workflows/handlers');
+const { UnifiedWorkflowHandler, utils: handlerUtils } = require('@application/handlers/workflow');
 
 class WorkflowOrchestrationService {
     constructor(dependencies = {}) {

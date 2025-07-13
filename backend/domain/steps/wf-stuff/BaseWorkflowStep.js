@@ -4,7 +4,7 @@
  */
 const IWorkflowStep = require('../interfaces/IWorkflowStep');
 const ValidationException = require('../exceptions/ValidationException');
-const ValidationResult = require('../validation/ValidationResult');
+const ValidationResult = require('@domain/workflows/validation/ValidationResult');
 
 /**
  * Base workflow step implementation

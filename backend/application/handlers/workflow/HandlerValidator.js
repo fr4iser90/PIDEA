@@ -5,7 +5,7 @@
  * and contexts. It ensures that handlers are properly configured and
  * requests are valid before execution.
  */
-const ValidationResult = require('../validation/ValidationResult');
+const ValidationResult = require('@domain/workflows/validation/ValidationResult');
 
 class HandlerValidator {
   /**

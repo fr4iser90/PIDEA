@@ -15,7 +15,7 @@
       "@steps/*": ["./domain/steps/*"],
       "@workflows/*": ["./domain/workflows/*"],
       "@frameworks/*": ["./domain/frameworks/*"],
-      "@git/*": ["./domain/workflows/git/*"],
+      "@git/*": ["domain/workflows/categories/git/*"],
       "@categories/*": ["./application/commands/categories/*"],
       "@handler-categories/*": ["./application/handlers/categories/*"],
       "@step-categories/*": ["./domain/workflows/steps/categories/*"],

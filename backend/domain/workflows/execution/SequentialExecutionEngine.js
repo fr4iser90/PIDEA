@@ -394,7 +394,7 @@ class SequentialExecutionEngine {
     }
 
     // Create optimized workflow with new steps
-    const ComposedWorkflow = require('../builder/ComposedWorkflow');
+    const ComposedWorkflow = require('../ComposedWorkflow');
     const optimizedWorkflow = new ComposedWorkflow(
       optimizationResult.optimizedSteps,
       workflow.getMetadata()

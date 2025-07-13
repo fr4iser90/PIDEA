@@ -2,10 +2,10 @@ const Task = require('@entities/Task');
 const TaskStatus = require('@value-objects/TaskStatus');
 const TaskPriority = require('@value-objects/TaskPriority');
 const TaskType = require('@value-objects/TaskType');
-const GitWorkflowManager = require('../workflows/git/GitWorkflowManager');
-const GitWorkflowContext = require('../workflows/git/GitWorkflowContext');
+const GitWorkflowManager = require('../workflows/categories/git/GitWorkflowManager');
+const GitWorkflowContext = require('../workflows/categories/git/GitWorkflowContext');
 const { SequentialExecutionEngine } = require('../workflows/execution');
-const { UnifiedWorkflowHandler, utils: handlerUtils } = require('../workflows/handlers');
+const { UnifiedWorkflowHandler, utils: handlerUtils } = require('@application/handlers/workflow');
 
 /**
  * TaskService - Business logic for project-based task management
@@ -805,7 +805,7 @@ class TaskService {
                 console.log('🔄 [TaskService] Refreshing analysis data after refactoring task completion...');
                 
                     // Get the unified workflow handler to refresh analysis data
-    const { UnifiedWorkflowHandler } = require('../workflows/handlers');
+    const { UnifiedWorkflowHandler } = require('@application/handlers/workflow');
     const unifiedHandler = new UnifiedWorkflowHandler({
                     taskRepository: this.taskRepository,
                     projectAnalysisRepository: this.projectAnalysisRepository

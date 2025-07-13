@@ -3,7 +3,7 @@
  * Extends WorkflowException with validation result information
  */
 const WorkflowException = require('./WorkflowException');
-const ValidationResult = require('../validation/ValidationResult');
+const ValidationResult = require('@domain/workflows/validation/ValidationResult');
 
 class ValidationException extends WorkflowException {
   constructor(

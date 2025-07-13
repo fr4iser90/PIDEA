@@ -5,9 +5,9 @@
  */
 const GitService = require('@external/GitService');
 const TaskType = require('../value-objects/TaskType');
-const GitWorkflowManager = require('../workflows/git/GitWorkflowManager');
-const GitWorkflowContext = require('../workflows/git/GitWorkflowContext');
-const GitWorkflowResult = require('../workflows/git/GitWorkflowResult');
+const GitWorkflowManager = require('../workflows/categories/git/GitWorkflowManager');
+const GitWorkflowContext = require('../workflows/categories/git/GitWorkflowContext');
+const GitWorkflowResult = require('../workflows/categories/git/GitWorkflowResult');
 
 class WorkflowGitService {
     constructor(dependencies = {}) {
