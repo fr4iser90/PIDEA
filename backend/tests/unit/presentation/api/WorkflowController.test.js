@@ -1,4 +1,4 @@
-const AutoModeController = require('@api/AutoModeController');
+const WorkflowController = require('@api/WorkflowController');
 const VibeCoderModeCommand = require('@commands/vibecoder/VibeCoderModeCommand');
 const { validationResult } = require('express-validator');
 
@@ -10,7 +10,7 @@ jest.mock('express-validator', () => ({
 // Mock VibeCoderModeCommand
 jest.mock('../../../../application/commands/vibecoder/VibeCoderModeCommand');
 
-describe('AutoModeController', () => {
+describe('WorkflowController', () => {
   let controller;
   let mockCommandBus;
   let mockQueryBus;
@@ -60,7 +60,7 @@ describe('AutoModeController', () => {
     };
 
     // Create controller instance
-    controller = new AutoModeController({
+            controller = new WorkflowController({
       commandBus: mockCommandBus,
       queryBus: mockQueryBus,
       logger: mockLogger,
@@ -97,7 +97,7 @@ describe('AutoModeController', () => {
     });
 
     it('should use default logger when not provided', () => {
-      const controllerWithoutLogger = new AutoModeController({
+              const controllerWithoutLogger = new WorkflowController({
         commandBus: mockCommandBus,
         queryBus: mockQueryBus,
         eventBus: mockEventBus,
@@ -139,7 +139,7 @@ describe('AutoModeController', () => {
       });
     });
 
-    it('should execute auto mode successfully with full mode', async () => {
+    it('should execute workflow successfully with full mode', async () => {
       validationResult.mockReturnValue({
         isEmpty: () => true,
         array: () => []
@@ -173,7 +173,7 @@ describe('AutoModeController', () => {
       }));
       expect(mockRes.json).toHaveBeenCalledWith({
         success: true,
-        message: 'Auto mode execution completed successfully',
+                        message: 'Workflow execution completed successfully',
         data: expect.objectContaining({
           commandId: expect.stringContaining('auto-mode-'),
           result: { success: true }
@@ -181,7 +181,7 @@ describe('AutoModeController', () => {
       });
     });
 
-    it('should execute auto mode with analysis mode', async () => {
+    it('should execute workflow with analysis mode', async () => {
       validationResult.mockReturnValue({
         isEmpty: () => true,
         array: () => []
@@ -203,7 +203,7 @@ describe('AutoModeController', () => {
       }));
     });
 
-    it('should execute auto mode with refactor mode', async () => {
+    it('should execute workflow with refactor mode', async () => {
       validationResult.mockReturnValue({
         isEmpty: () => true,
         array: () => []
@@ -286,7 +286,7 @@ describe('AutoModeController', () => {
 
       await controller.executeAutoMode(mockReq, mockRes);
 
-      expect(mockLogger.warn).toHaveBeenCalledWith('AutoModeController: File-based detection failed, using project root', expect.any(Object));
+      expect(mockLogger.warn).toHaveBeenCalledWith('WorkflowController: File-based detection failed, using project root', expect.any(Object));
       expect(VibeCoderModeCommand).toHaveBeenCalledWith(expect.objectContaining({
         projectPath: expect.any(String)
       }));
@@ -350,7 +350,7 @@ describe('AutoModeController', () => {
 
       await controller.executeAutoMode(mockReq, mockRes);
 
-      expect(mockLogger.error).toHaveBeenCalledWith('AutoModeController: Failed to create Git branch', expect.any(Object));
+      expect(mockLogger.error).toHaveBeenCalledWith('WorkflowController: Failed to create Git branch', expect.any(Object));
       expect(mockApplication.taskService.executeTask).toHaveBeenCalled();
     });
 
@@ -372,7 +372,7 @@ describe('AutoModeController', () => {
 
       await controller.executeAutoMode(mockReq, mockRes);
 
-      expect(mockLogger.error).toHaveBeenCalledWith('AutoModeController: Failed to click new chat', expect.any(Object));
+      expect(mockLogger.error).toHaveBeenCalledWith('WorkflowController: Failed to click new chat', expect.any(Object));
       expect(mockApplication.taskService.executeTask).toHaveBeenCalled();
     });
 
@@ -387,7 +387,7 @@ describe('AutoModeController', () => {
 
       await controller.executeAutoMode(mockReq, mockRes);
 
-      expect(mockLogger.error).toHaveBeenCalledWith('AutoModeController: Failed to execute task', expect.any(Object));
+      expect(mockLogger.error).toHaveBeenCalledWith('WorkflowController: Failed to execute task', expect.any(Object));
       expect(mockRes.status).toHaveBeenCalledWith(500);
       expect(mockRes.json).toHaveBeenCalledWith({
         success: false,
@@ -408,7 +408,7 @@ describe('AutoModeController', () => {
 
       await controller.executeAutoMode(mockReq, mockRes);
 
-      expect(mockLogger.error).toHaveBeenCalledWith('AutoModeController: Failed to execute auto mode', expect.any(Object));
+      expect(mockLogger.error).toHaveBeenCalledWith('WorkflowController: Failed to execute workflow', expect.any(Object));
       expect(mockEventBus.publish).toHaveBeenCalledWith('autoMode:failed', expect.objectContaining({
         projectId: 'test-project',
         userId: 'user-123',
@@ -417,7 +417,7 @@ describe('AutoModeController', () => {
       expect(mockRes.status).toHaveBeenCalledWith(500);
       expect(mockRes.json).toHaveBeenCalledWith({
         success: false,
-        error: 'Failed to execute auto mode',
+        error: 'Failed to execute workflow',
         message: 'Command execution failed'
       });
     });
@@ -475,7 +475,7 @@ describe('AutoModeController', () => {
       mockReq.query = { sessionId: 'session-123' };
     });
 
-    it('should get auto mode status successfully', async () => {
+    it('should get workflow status successfully', async () => {
       const mockResult = { status: { state: 'completed', progress: 100 } };
       mockQueryBus.execute.mockResolvedValue(mockResult);
 
@@ -485,7 +485,7 @@ describe('AutoModeController', () => {
         sessionId: 'session-123',
         userId: 'user-123'
       });
-      expect(mockLogger.info).toHaveBeenCalledWith('AutoModeController: Auto mode status retrieved', {
+              expect(mockLogger.info).toHaveBeenCalledWith('WorkflowController: Workflow status retrieved', {
         sessionId: 'session-123',
         userId: 'user-123'
       });
@@ -500,7 +500,7 @@ describe('AutoModeController', () => {
 
       await controller.getAutoModeStatus(mockReq, mockRes);
 
-      expect(mockLogger.error).toHaveBeenCalledWith('AutoModeController: Failed to get auto mode status', {
+      expect(mockLogger.error).toHaveBeenCalledWith('WorkflowController: Failed to get workflow status', {
         sessionId: 'session-123',
         error: 'Query failed',
         userId: 'user-123'
@@ -508,7 +508,7 @@ describe('AutoModeController', () => {
       expect(mockRes.status).toHaveBeenCalledWith(500);
       expect(mockRes.json).toHaveBeenCalledWith({
         success: false,
-        error: 'Failed to get auto mode status',
+        error: 'Failed to get workflow status',
         message: 'Query failed'
       });
     });
@@ -532,7 +532,7 @@ describe('AutoModeController', () => {
       mockReq.query = { sessionId: 'session-123' };
     });
 
-    it('should get auto mode progress successfully', async () => {
+    it('should get workflow progress successfully', async () => {
       const mockResult = { progress: { current: 50, total: 100, percentage: 50 } };
       mockQueryBus.execute.mockResolvedValue(mockResult);
 
@@ -542,7 +542,7 @@ describe('AutoModeController', () => {
         sessionId: 'session-123',
         userId: 'user-123'
       });
-      expect(mockLogger.info).toHaveBeenCalledWith('AutoModeController: Auto mode progress retrieved', {
+              expect(mockLogger.info).toHaveBeenCalledWith('WorkflowController: Workflow progress retrieved', {
         sessionId: 'session-123',
         userId: 'user-123'
       });
@@ -557,7 +557,7 @@ describe('AutoModeController', () => {
 
       await controller.getAutoModeProgress(mockReq, mockRes);
 
-      expect(mockLogger.error).toHaveBeenCalledWith('AutoModeController: Failed to get auto mode progress', {
+      expect(mockLogger.error).toHaveBeenCalledWith('WorkflowController: Failed to get workflow progress', {
         sessionId: 'session-123',
         error: 'Query failed',
         userId: 'user-123'
@@ -565,7 +565,7 @@ describe('AutoModeController', () => {
       expect(mockRes.status).toHaveBeenCalledWith(500);
       expect(mockRes.json).toHaveBeenCalledWith({
         success: false,
-        error: 'Failed to get auto mode progress',
+        error: 'Failed to get workflow progress',
         message: 'Query failed'
       });
     });
@@ -576,7 +576,7 @@ describe('AutoModeController', () => {
       mockReq.query = { sessionId: 'session-123' };
     });
 
-    it('should get auto mode results successfully', async () => {
+    it('should get workflow results successfully', async () => {
       const mockResult = { results: { analysis: {}, refactor: {}, generate: {} } };
       mockQueryBus.execute.mockResolvedValue(mockResult);
 
@@ -586,7 +586,7 @@ describe('AutoModeController', () => {
         sessionId: 'session-123',
         userId: 'user-123'
       });
-      expect(mockLogger.info).toHaveBeenCalledWith('AutoModeController: Auto mode results retrieved', {
+              expect(mockLogger.info).toHaveBeenCalledWith('WorkflowController: Workflow results retrieved', {
         sessionId: 'session-123',
         userId: 'user-123'
       });
@@ -601,7 +601,7 @@ describe('AutoModeController', () => {
 
       await controller.getAutoModeResults(mockReq, mockRes);
 
-      expect(mockLogger.error).toHaveBeenCalledWith('AutoModeController: Failed to get auto mode results', {
+      expect(mockLogger.error).toHaveBeenCalledWith('WorkflowController: Failed to get workflow results', {
         sessionId: 'session-123',
         error: 'Query failed',
         userId: 'user-123'
@@ -609,7 +609,7 @@ describe('AutoModeController', () => {
       expect(mockRes.status).toHaveBeenCalledWith(500);
       expect(mockRes.json).toHaveBeenCalledWith({
         success: false,
-        error: 'Failed to get auto mode results',
+        error: 'Failed to get workflow results',
         message: 'Query failed'
       });
     });
@@ -627,7 +627,7 @@ describe('AutoModeController', () => {
       };
     });
 
-    it('should get auto mode sessions successfully', async () => {
+    it('should get workflow sessions successfully', async () => {
       const mockResult = {
         sessions: [{ id: 'session-1' }, { id: 'session-2' }],
         page: 1,
@@ -649,7 +649,7 @@ describe('AutoModeController', () => {
         },
         userId: 'user-123'
       });
-      expect(mockLogger.info).toHaveBeenCalledWith('AutoModeController: Auto mode sessions retrieved', {
+              expect(mockLogger.info).toHaveBeenCalledWith('WorkflowController: Workflow sessions retrieved', {
         count: 2,
         userId: 'user-123'
       });
@@ -697,14 +697,14 @@ describe('AutoModeController', () => {
 
       await controller.getAutoModeSessions(mockReq, mockRes);
 
-      expect(mockLogger.error).toHaveBeenCalledWith('AutoModeController: Failed to get auto mode sessions', {
+      expect(mockLogger.error).toHaveBeenCalledWith('WorkflowController: Failed to get workflow sessions', {
         error: 'Query failed',
         userId: 'user-123'
       });
       expect(mockRes.status).toHaveBeenCalledWith(500);
       expect(mockRes.json).toHaveBeenCalledWith({
         success: false,
-        error: 'Failed to get auto mode sessions',
+        error: 'Failed to get workflow sessions',
         message: 'Query failed'
       });
     });
@@ -718,7 +718,7 @@ describe('AutoModeController', () => {
       };
     });
 
-    it('should get auto mode statistics successfully', async () => {
+    it('should get workflow statistics successfully', async () => {
       const mockResult = { stats: { totalSessions: 10, successRate: 0.8 } };
       mockQueryBus.execute.mockResolvedValue(mockResult);
 
@@ -729,7 +729,7 @@ describe('AutoModeController', () => {
         mode: 'full',
         userId: 'user-123'
       });
-      expect(mockLogger.info).toHaveBeenCalledWith('AutoModeController: Auto mode statistics retrieved', {
+              expect(mockLogger.info).toHaveBeenCalledWith('WorkflowController: Workflow statistics retrieved', {
         userId: 'user-123'
       });
       expect(mockRes.json).toHaveBeenCalledWith({
@@ -743,14 +743,14 @@ describe('AutoModeController', () => {
 
       await controller.getAutoModeStats(mockReq, mockRes);
 
-      expect(mockLogger.error).toHaveBeenCalledWith('AutoModeController: Failed to get auto mode statistics', {
+      expect(mockLogger.error).toHaveBeenCalledWith('WorkflowController: Failed to get workflow statistics', {
         error: 'Query failed',
         userId: 'user-123'
       });
       expect(mockRes.status).toHaveBeenCalledWith(500);
       expect(mockRes.json).toHaveBeenCalledWith({
         success: false,
-        error: 'Failed to get auto mode statistics',
+        error: 'Failed to get workflow statistics',
         message: 'Query failed'
       });
     });
@@ -762,7 +762,7 @@ describe('AutoModeController', () => {
 
       expect(mockRes.json).toHaveBeenCalledWith({
         success: true,
-        message: 'Auto mode service is healthy',
+                  message: 'Workflow service is healthy',
         timestamp: expect.any(String)
       });
     });
@@ -779,7 +779,7 @@ describe('AutoModeController', () => {
       expect(mockRes.status).toHaveBeenCalledWith(500);
       expect(mockRes.json).toHaveBeenCalledWith({
         success: false,
-        error: 'Auto mode service is unhealthy',
+                  error: 'Workflow service is unhealthy',
         message: 'Date error'
       });
 
@@ -790,7 +790,7 @@ describe('AutoModeController', () => {
 
   describe('edge cases and error handling', () => {
     it('should handle missing dependencies gracefully', async () => {
-      const controllerWithMissingDeps = new AutoModeController({});
+              const controllerWithMissingDeps = new WorkflowController({});
       
       mockReq.params = { projectId: 'test-project' };
       mockReq.body = { projectPath: '/test/path' };

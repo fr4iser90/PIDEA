@@ -16,49 +16,12 @@ class SQLiteTaskRepository extends TaskRepository {
 
   /**
    * Initialize the tasks table
+   * Note: Table is created by DatabaseConnection.js with proper Foreign Key constraints
    */
   async init() {
-    const createTableSQL = `
-      CREATE TABLE IF NOT EXISTS ${this.tableName} (
-        id TEXT PRIMARY KEY,
-        title TEXT NOT NULL,
-        description TEXT NOT NULL,
-        type TEXT NOT NULL,
-        category TEXT,
-        priority TEXT NOT NULL,
-        status TEXT NOT NULL,
-        projectId TEXT,
-        userId TEXT,
-        estimatedDuration INTEGER,
-        metadata TEXT,
-        createdAt TEXT NOT NULL,
-        updatedAt TEXT NOT NULL,
-        dependencies TEXT,
-        tags TEXT,
-        assignee TEXT,
-        dueDate TEXT,
-        startedAt TEXT,
-        completedAt TEXT,
-        executionHistory TEXT,
-        parentTaskId TEXT,
-        childTaskIds TEXT,
-        phase TEXT,
-        stage TEXT,
-        phaseOrder INTEGER,
-        taskLevel INTEGER,
-        rootTaskId TEXT,
-        isPhaseTask BOOLEAN,
-        progress INTEGER,
-        phaseProgress TEXT,
-        blockedBy TEXT
-      )
-    `;
-
-    try {
-      await this.database.run(createTableSQL);
-    } catch (error) {
-      throw new Error(`Failed to initialize tasks table: ${error.message}`);
-    }
+    // The tasks table is created by DatabaseConnection.js with proper schema
+    // This repository just uses the existing table
+    console.log('✅ [SQLiteTaskRepository] Using centralized tasks table from DatabaseConnection');
   }
 
   /**
@@ -72,11 +35,11 @@ class SQLiteTaskRepository extends TaskRepository {
       
       const sql = `
         INSERT OR REPLACE INTO ${this.tableName} (
-          id, title, description, type, category, priority, status, projectId, userId,
-          estimatedDuration, metadata, createdAt, updatedAt, dependencies,
-          tags, assignee, dueDate, startedAt, completedAt, executionHistory,
-          parentTaskId, childTaskIds, phase, stage, phaseOrder, taskLevel, rootTaskId,
-          isPhaseTask, progress, phaseProgress, blockedBy
+          id, title, description, type, category, priority, status, project_id, user_id,
+          estimated_time, metadata, created_at, updated_at, tags,
+          assignee, due_date, started_at, completed_at, execution_history,
+          parent_task_id, child_task_ids, phase, stage, phase_order, task_level, root_task_id,
+          is_phase_task, progress, phase_progress, blocked_by
         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `;
 
@@ -94,7 +57,6 @@ class SQLiteTaskRepository extends TaskRepository {
         JSON.stringify(taskData.metadata),
         taskData.createdAt,
         taskData.updatedAt,
-        JSON.stringify(taskData.dependencies),
         JSON.stringify(taskData.tags),
         taskData.assignee,
         taskData.dueDate,

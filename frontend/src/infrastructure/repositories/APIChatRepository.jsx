@@ -81,12 +81,12 @@ const API_CONFIG = {
         ai: (projectId) => `/api/projects/${projectId}/analysis/ai`
       },
       autoMode: {
-        start: (projectId) => `/api/projects/${projectId}/auto/execute`,
-        stop: (projectId) => `/api/projects/${projectId}/auto/stop`,
-        status: (projectId) => `/api/projects/${projectId}/auto/status`
+        start: (projectId) => `/api/projects/${projectId}/workflow/execute`,
+          stop: (projectId) => `/api/projects/${projectId}/workflow/stop`,
+  status: (projectId) => `/api/projects/${projectId}/workflow/status`
       },
       autoRefactor: {
-        execute: (projectId) => `/api/projects/${projectId}/auto-refactor/execute`
+        execute: (projectId) => `/api/projects/${projectId}/workflow/execute`
       }
     },
     analysis: {
@@ -95,11 +95,11 @@ const API_CONFIG = {
       report: (projectId) => `/api/projects/${projectId}/analysis/report`
     },
     vibecoder: {
-      analyze: (projectId) => `/api/projects/${projectId}/auto/execute`,
-      refactor: (projectId) => `/api/projects/${projectId}/auto/execute`,
-      mode: (projectId) => `/api/projects/${projectId}/auto/execute`,
-      status: (projectId) => `/api/projects/${projectId}/auto/status`,
-      progress: (projectId) => `/api/projects/${projectId}/auto/status`
+        analyze: (projectId) => `/api/projects/${projectId}/workflow/execute`,
+  refactor: (projectId) => `/api/projects/${projectId}/workflow/execute`,
+  mode: (projectId) => `/api/projects/${projectId}/workflow/execute`,
+        status: (projectId) => `/api/projects/${projectId}/workflow/status`,
+  progress: (projectId) => `/api/projects/${projectId}/workflow/status`
     },
     git: {
       status: (projectId) => `/api/projects/${projectId}/git/status`,

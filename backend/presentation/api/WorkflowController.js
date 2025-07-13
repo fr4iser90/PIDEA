@@ -1,10 +1,10 @@
 /**
- * AutoModeController - REST API endpoints for auto mode operations
+ * WorkflowController - REST API endpoints for workflow operations
  */
 const { validationResult } = require('express-validator');
 const { getStepRegistry } = require('@steps');
 
-class AutoModeController {
+class WorkflowController {
     constructor(dependencies = {}) {
         this.commandBus = dependencies.commandBus;
         this.queryBus = dependencies.queryBus;
@@ -15,10 +15,10 @@ class AutoModeController {
     }
 
     /**
-     * Execute auto mode
-     * POST /api/auto/execute
+     * Execute workflow
+     * POST /api/workflow/execute
      */
-    async executeAutoMode(req, res) {
+    async executeWorkflow(req, res) {
         try {
             // Validate request
             const errors = validationResult(req);
@@ -43,7 +43,7 @@ class AutoModeController {
             } = req.body;
 
             // Debug logging
-            this.logger.info('AutoModeController: Received request body', {
+            this.logger.info('WorkflowController: Received request body', {
                 projectId,
                 projectPath,
                 mode,
@@ -64,7 +64,7 @@ class AutoModeController {
                 autoExecute: (req.body.options?.autoExecute || options.autoExecute) || true
             } : null;
 
-            this.logger.info('AutoModeController: Extracted taskOptions', {
+            this.logger.info('WorkflowController: Extracted taskOptions', {
                 taskOptions,
                 hasTask: !!taskOptions?.task
             });
@@ -91,7 +91,7 @@ class AutoModeController {
                             const workspaceInfo = await this.ideManager.getWorkspaceInfo(activeIDE.port);
                             if (workspaceInfo && workspaceInfo.workspace) {
                                 workspacePath = workspaceInfo.workspace;
-                                this.logger.info('AutoModeController: Using workspace path from File-based detection', {
+                                this.logger.info('WorkflowController: Using workspace path from File-based detection', {
                                     port: activeIDE.port,
                                     workspacePath
                                 });
@@ -99,7 +99,7 @@ class AutoModeController {
                         }
                     }
                 } catch (error) {
-                    this.logger.warn('AutoModeController: File-based detection failed, using project root', {
+                    this.logger.warn('WorkflowController: File-based detection failed, using project root', {
                         error: error.message
                     });
                 }
@@ -110,25 +110,25 @@ class AutoModeController {
                 const path = require('path');
                 const currentDir = process.cwd();
                 workspacePath = path.resolve(currentDir, '..');
-                this.logger.info('AutoModeController: Using project root as final fallback', {
+                this.logger.info('WorkflowController: Using project root as final fallback', {
                     workspacePath
                 });
             }
 
-            this.logger.info('AutoModeController: Using workspace path', {
+            this.logger.info('WorkflowController: Using workspace path', {
                 projectId,
                 workspacePath
             });
 
             // Check if this is a task execution request
-            this.logger.info('AutoModeController: Checking task execution request', {
+            this.logger.info('WorkflowController: Checking task execution request', {
                 taskOptionsExists: !!taskOptions,
                 taskOptions,
                 hasTaskId: !!taskOptions?.taskId
             });
             
             if (taskOptions && taskOptions.taskId) {
-                this.logger.info('AutoModeController: Processing task execution request', {
+                this.logger.info('WorkflowController: Processing task execution request', {
                     taskId: taskOptions.taskId,
                     createGitBranch: taskOptions.createGitBranch,
                     branchName: taskOptions.branchName,
@@ -141,12 +141,12 @@ class AutoModeController {
                         const gitService = this.application?.gitService;
                         if (gitService) {
                             await gitService.createBranch(workspacePath, taskOptions.branchName);
-                            this.logger.info('AutoModeController: Git branch created', {
+                            this.logger.info('WorkflowController: Git branch created', {
                                 branchName: taskOptions.branchName
                             });
                         }
                     } catch (error) {
-                        this.logger.error('AutoModeController: Failed to create Git branch', {
+                        this.logger.error('WorkflowController: Failed to create Git branch', {
                             error: error.message,
                             branchName: taskOptions.branchName
                         });
@@ -156,10 +156,10 @@ class AutoModeController {
                 // Click new chat if requested
                 if (taskOptions.clickNewChat) {
                     try {
-                        this.logger.info('AutoModeController: Starting New Chat click process');
+                        this.logger.info('WorkflowController: Starting New Chat click process');
                         
                         const activeIDE = await this.ideManager.getActiveIDE();
-                        this.logger.info('AutoModeController: Active IDE found', {
+                        this.logger.info('WorkflowController: Active IDE found', {
                             hasActiveIDE: !!activeIDE,
                             port: activeIDE?.port
                         });
@@ -167,15 +167,15 @@ class AutoModeController {
                         if (activeIDE && activeIDE.port) {
                             // Use browserManager instead of ideManager for clickNewChat
                             const browserManager = this.application?.browserManager;
-                            this.logger.info('AutoModeController: BrowserManager available', {
+                            this.logger.info('WorkflowController: BrowserManager available', {
                                 hasBrowserManager: !!browserManager
                             });
                             
                             if (browserManager) {
-                                this.logger.info('AutoModeController: Switching to port', { port: activeIDE.port });
+                                this.logger.info('WorkflowController: Switching to port', { port: activeIDE.port });
                                 await browserManager.switchToPort(activeIDE.port);
                                 
-                                this.logger.info('AutoModeController: Clicking New Chat with timeout');
+                                this.logger.info('WorkflowController: Clicking New Chat with timeout');
                                 // Add timeout to prevent hanging
                                 const clickPromise = browserManager.clickNewChat();
                                 const timeoutPromise = new Promise((_, reject) => 
@@ -185,7 +185,7 @@ class AutoModeController {
                                 const success = await Promise.race([clickPromise, timeoutPromise]);
                                 
                                 if (success) {
-                                    this.logger.info('AutoModeController: New chat clicked successfully', {
+                                    this.logger.info('WorkflowController: New chat clicked successfully', {
                                         port: activeIDE.port
                                     });
                                 } else {
@@ -195,28 +195,28 @@ class AutoModeController {
                                 throw new Error('Browser manager not available');
                             }
                         } else {
-                            this.logger.warn('AutoModeController: No active IDE found for New Chat');
+                            this.logger.warn('WorkflowController: No active IDE found for New Chat');
                         }
                     } catch (error) {
-                        this.logger.error('AutoModeController: Failed to click new chat', {
+                        this.logger.error('WorkflowController: Failed to click new chat', {
                             error: error.message,
                             stack: error.stack
                         });
                     }
                 }
                 
-                this.logger.info('AutoModeController: New Chat process completed, proceeding to task execution');
+                this.logger.info('WorkflowController: New Chat process completed, proceeding to task execution');
 
                 // Execute task using TaskService
                 try {
                     const taskService = this.application?.taskService;
-                    this.logger.info('AutoModeController: TaskService available', {
+                    this.logger.info('WorkflowController: TaskService available', {
                         hasTaskService: !!taskService,
                         taskId: taskOptions.taskId
                     });
                     
                     if (taskService) {
-                        this.logger.info('AutoModeController: Starting task execution', {
+                        this.logger.info('WorkflowController: Starting task execution', {
                             taskId: taskOptions.taskId,
                             userId,
                             projectPath: workspacePath,
@@ -229,7 +229,7 @@ class AutoModeController {
                             projectId
                         });
                         
-                        this.logger.info('AutoModeController: Task executed successfully', {
+                        this.logger.info('WorkflowController: Task executed successfully', {
                             taskId: taskOptions.taskId,
                             result: taskResult
                         });
@@ -249,7 +249,7 @@ class AutoModeController {
                         throw new Error('TaskService not available');
                     }
                 } catch (error) {
-                    this.logger.error('AutoModeController: Failed to execute task', {
+                    this.logger.error('WorkflowController: Failed to execute task', {
                         error: error.message,
                         taskId: taskOptions.taskId,
                         stack: error.stack
@@ -274,6 +274,25 @@ class AutoModeController {
                 autoExecute,
                 userId,
                 projectId,
+                // Add required services for steps
+                refactoringService: this.application?.refactoringService,
+                aiService: this.application?.aiService,
+                optimizationService: this.application?.optimizationService,
+                cleanupService: this.application?.cleanupService,
+                restructureService: this.application?.restructureService,
+                modernizeService: this.application?.modernizeService,
+                testingService: this.application?.testingService,
+                deploymentService: this.application?.deploymentService,
+                customTaskService: this.application?.customTaskService,
+                taskRepository: this.application?.taskRepository,
+                projectAnalysisRepository: this.application?.projectAnalysisRepository,
+                analysisOutputService: this.application?.analysisOutputService,
+                // Add analyzers for refactoring steps
+                projectAnalyzer: this.application?.projectAnalyzer,
+                codeQualityAnalyzer: this.application?.codeQualityAnalyzer,
+                architectureAnalyzer: this.application?.architectureAnalyzer,
+                // Add step registry for orchestration
+                stepRegistry: stepRegistry,
                 ...options
             };
 
@@ -304,7 +323,7 @@ class AutoModeController {
                 stepOptions.includeRepoStructure = true;
             }
 
-            this.logger.info('AutoModeController: Executing Categories-based step', {
+            this.logger.info('WorkflowController: Executing Categories-based step', {
                 stepName,
                 projectPath: workspacePath,
                 mode
@@ -313,7 +332,49 @@ class AutoModeController {
             // Execute the Categories-based step
             const result = await stepRegistry.executeStep(stepName, stepOptions);
 
-            this.logger.info('AutoModeController: Auto mode execution completed with Categories', {
+            // Save workflow execution to database for tracking
+            if (this.application?.workflowExecutionRepository) {
+                try {
+                    const executionData = {
+                        executionId: `auto_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+                        workflowId: stepName,
+                        workflowName: stepName,
+                        workflowVersion: '1.0.0',
+                        taskId: null,
+                        userId: userId || 'me',
+                        status: result.success ? 'completed' : 'failed',
+                        strategy: 'categories',
+                        priority: 1,
+                        estimatedDuration: null,
+                        actualDuration: result.duration || 0,
+                        startTime: new Date(Date.now() - (result.duration || 0)),
+                        endTime: new Date(),
+                        resultData: result.result || result,
+                        errorData: result.success ? null : { error: result.error },
+                        metadata: {
+                            projectPath: workspacePath,
+                            projectId,
+                            mode,
+                            executionMethod: 'categories',
+                            stepOptions: Object.keys(stepOptions)
+                        }
+                    };
+
+                    await this.application.workflowExecutionRepository.create(executionData);
+                    
+                    this.logger.info('WorkflowController: Workflow execution saved to database', {
+                        executionId: executionData.executionId,
+                        stepName
+                    });
+                } catch (dbError) {
+                    this.logger.warn('WorkflowController: Failed to save workflow execution to database', {
+                        error: dbError.message,
+                        stepName
+                    });
+                }
+            }
+
+            this.logger.info('WorkflowController: Workflow execution completed with Categories', {
                 stepName,
                 success: true,
                 executionMethod: 'categories'
@@ -321,7 +382,7 @@ class AutoModeController {
 
             // Emit event for real-time updates
             if (this.eventBus) {
-                this.eventBus.publish('autoMode:completed', {
+                this.eventBus.publish('workflow:completed', {
                     stepName,
                     projectId,
                     userId,
@@ -332,7 +393,7 @@ class AutoModeController {
 
             res.json({
                 success: true,
-                message: 'Auto mode executed successfully with Categories system',
+                message: 'Workflow executed successfully with Categories system',
                 data: {
                     stepName,
                     result: result,
@@ -343,7 +404,7 @@ class AutoModeController {
             });
 
         } catch (error) {
-            this.logger.error('AutoModeController: Failed to execute auto mode', {
+            this.logger.error('WorkflowController: Failed to execute workflow', {
                 projectPath: req.body.projectPath,
                 error: error.message,
                 userId: req.user?.id
@@ -351,7 +412,7 @@ class AutoModeController {
 
             // Emit error event
             if (this.eventBus) {
-                this.eventBus.publish('autoMode:failed', {
+                this.eventBus.publish('workflow:failed', {
                     projectId: req.params.projectId,
                     userId: req.user?.id,
                     error: error.message
@@ -360,17 +421,17 @@ class AutoModeController {
 
             res.status(500).json({
                 success: false,
-                error: 'Failed to execute auto mode',
+                error: 'Failed to execute workflow',
                 message: error.message
             });
         }
     }
 
     /**
-     * Get auto mode status
-     * GET /api/auto/status
+     * Get workflow status
+     * GET /api/workflow/status
      */
-    async getAutoModeStatus(req, res) {
+    async getWorkflowStatus(req, res) {
         try {
             const { sessionId } = req.query;
             const userId = req.user?.id;
@@ -380,9 +441,9 @@ class AutoModeController {
                 userId
             };
 
-            const result = await this.queryBus.execute('GetAutoModeStatusQuery', query);
+            const result = await this.queryBus.execute('GetWorkflowStatusQuery', query);
 
-            this.logger.info('AutoModeController: Auto mode status retrieved', {
+            this.logger.info('WorkflowController: Workflow status retrieved', {
                 sessionId,
                 userId
             });
@@ -393,7 +454,7 @@ class AutoModeController {
             });
 
         } catch (error) {
-            this.logger.error('AutoModeController: Failed to get auto mode status', {
+            this.logger.error('WorkflowController: Failed to get workflow status', {
                 sessionId: req.query.sessionId,
                 error: error.message,
                 userId: req.user?.id
@@ -401,17 +462,17 @@ class AutoModeController {
 
             res.status(500).json({
                 success: false,
-                error: 'Failed to get auto mode status',
+                error: 'Failed to get workflow status',
                 message: error.message
             });
         }
     }
 
     /**
-     * Get auto mode progress
-     * GET /api/auto/progress
+     * Get workflow progress
+     * GET /api/workflow/progress
      */
-    async getAutoModeProgress(req, res) {
+    async getWorkflowProgress(req, res) {
         try {
             const { sessionId } = req.query;
             const userId = req.user?.id;
@@ -421,9 +482,9 @@ class AutoModeController {
                 userId
             };
 
-            const result = await this.queryBus.execute('GetAutoModeProgressQuery', query);
+            const result = await this.queryBus.execute('GetWorkflowProgressQuery', query);
 
-            this.logger.info('AutoModeController: Auto mode progress retrieved', {
+            this.logger.info('WorkflowController: Workflow progress retrieved', {
                 sessionId,
                 userId
             });
@@ -434,7 +495,7 @@ class AutoModeController {
             });
 
         } catch (error) {
-            this.logger.error('AutoModeController: Failed to get auto mode progress', {
+            this.logger.error('WorkflowController: Failed to get workflow progress', {
                 sessionId: req.query.sessionId,
                 error: error.message,
                 userId: req.user?.id
@@ -442,17 +503,17 @@ class AutoModeController {
 
             res.status(500).json({
                 success: false,
-                error: 'Failed to get auto mode progress',
+                error: 'Failed to get workflow progress',
                 message: error.message
             });
         }
     }
 
     /**
-     * Get auto mode results
-     * GET /api/auto/results
+     * Get workflow results
+     * GET /api/workflow/results
      */
-    async getAutoModeResults(req, res) {
+    async getWorkflowResults(req, res) {
         try {
             const { sessionId } = req.query;
             const userId = req.user?.id;
@@ -462,9 +523,9 @@ class AutoModeController {
                 userId
             };
 
-            const result = await this.queryBus.execute('GetAutoModeResultsQuery', query);
+            const result = await this.queryBus.execute('GetWorkflowResultsQuery', query);
 
-            this.logger.info('AutoModeController: Auto mode results retrieved', {
+            this.logger.info('WorkflowController: Workflow results retrieved', {
                 sessionId,
                 userId
             });
@@ -475,7 +536,7 @@ class AutoModeController {
             });
 
         } catch (error) {
-            this.logger.error('AutoModeController: Failed to get auto mode results', {
+            this.logger.error('WorkflowController: Failed to get workflow results', {
                 sessionId: req.query.sessionId,
                 error: error.message,
                 userId: req.user?.id
@@ -483,17 +544,17 @@ class AutoModeController {
 
             res.status(500).json({
                 success: false,
-                error: 'Failed to get auto mode results',
+                error: 'Failed to get workflow results',
                 message: error.message
             });
         }
     }
 
     /**
-     * Get auto mode sessions
-     * GET /api/auto/sessions
+     * Get workflow sessions
+     * GET /api/workflow/sessions
      */
-    async getAutoModeSessions(req, res) {
+    async getWorkflowSessions(req, res) {
         try {
             const {
                 page = 1,
@@ -518,9 +579,9 @@ class AutoModeController {
                 userId
             };
 
-            const result = await this.queryBus.execute('GetAutoModeSessionsQuery', query);
+            const result = await this.queryBus.execute('GetWorkflowSessionsQuery', query);
 
-            this.logger.info('AutoModeController: Auto mode sessions retrieved', {
+            this.logger.info('WorkflowController: Workflow sessions retrieved', {
                 count: result.sessions.length,
                 userId
             });
@@ -539,24 +600,24 @@ class AutoModeController {
             });
 
         } catch (error) {
-            this.logger.error('AutoModeController: Failed to get auto mode sessions', {
+            this.logger.error('WorkflowController: Failed to get workflow sessions', {
                 error: error.message,
                 userId: req.user?.id
             });
 
             res.status(500).json({
                 success: false,
-                error: 'Failed to get auto mode sessions',
+                error: 'Failed to get workflow sessions',
                 message: error.message
             });
         }
     }
 
     /**
-     * Get auto mode statistics
-     * GET /api/auto/stats
+     * Get workflow statistics
+     * GET /api/workflow/stats
      */
-    async getAutoModeStats(req, res) {
+    async getWorkflowStats(req, res) {
         try {
             const { timeRange, mode } = req.query;
             const userId = req.user?.id;
@@ -567,9 +628,9 @@ class AutoModeController {
                 userId
             };
 
-            const result = await this.queryBus.execute('GetAutoModeStatsQuery', query);
+            const result = await this.queryBus.execute('GetWorkflowStatsQuery', query);
 
-            this.logger.info('AutoModeController: Auto mode statistics retrieved', {
+            this.logger.info('WorkflowController: Workflow statistics retrieved', {
                 userId
             });
 
@@ -579,36 +640,36 @@ class AutoModeController {
             });
 
         } catch (error) {
-            this.logger.error('AutoModeController: Failed to get auto mode statistics', {
+            this.logger.error('WorkflowController: Failed to get workflow statistics', {
                 error: error.message,
                 userId: req.user?.id
             });
 
             res.status(500).json({
                 success: false,
-                error: 'Failed to get auto mode statistics',
+                error: 'Failed to get workflow statistics',
                 message: error.message
             });
         }
     }
 
     /**
-     * Stop auto mode
-     * POST /api/auto/stop
+     * Stop workflow
+     * POST /api/workflow/stop
      */
-    async stopAutoMode(req, res) {
+    async stopWorkflow(req, res) {
         try {
             const { sessionId } = req.body;
             const userId = req.user?.id;
 
-            this.logger.info('AutoModeController: Stopping auto mode', {
+            this.logger.info('WorkflowController: Stopping workflow', {
                 sessionId,
                 userId
             });
 
             // Emit stop event
             if (this.eventBus) {
-                this.eventBus.publish('autoMode:stopped', {
+                this.eventBus.publish('workflow:stopped', {
                     sessionId,
                     userId
                 });
@@ -616,11 +677,11 @@ class AutoModeController {
 
             res.json({
                 success: true,
-                message: 'Auto mode stopped successfully'
+                message: 'Workflow stopped successfully'
             });
 
         } catch (error) {
-            this.logger.error('AutoModeController: Failed to stop auto mode', {
+            this.logger.error('WorkflowController: Failed to stop workflow', {
                 sessionId: req.body.sessionId,
                 error: error.message,
                 userId: req.user?.id
@@ -628,7 +689,7 @@ class AutoModeController {
 
             res.status(500).json({
                 success: false,
-                error: 'Failed to stop auto mode',
+                error: 'Failed to stop workflow',
                 message: error.message
             });
         }
@@ -636,23 +697,23 @@ class AutoModeController {
 
     /**
      * Health check endpoint
-     * GET /api/auto/health
+     * GET /api/workflow/health
      */
     async healthCheck(req, res) {
         try {
             res.json({
                 success: true,
-                message: 'Auto mode service is healthy',
+                message: 'Workflow service is healthy',
                 timestamp: new Date().toISOString()
             });
         } catch (error) {
             res.status(500).json({
                 success: false,
-                error: 'Auto mode service is unhealthy',
+                error: 'Workflow service is unhealthy',
                 message: error.message
             });
         }
     }
 }
 
-module.exports = AutoModeController; 
+module.exports = WorkflowController; 

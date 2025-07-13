@@ -5,6 +5,31 @@
 
 const StepBuilder = require('@steps/StepBuilder');
 
+// Step configuration
+const config = {
+  name: 'AnalysisStep',
+  type: 'analysis',
+  description: 'Comprehensive project analysis using all available services',
+  category: 'analysis',
+  version: '1.0.0',
+  dependencies: ['projectAnalyzer', 'codeQualityAnalyzer', 'securityAnalyzer', 'performanceAnalyzer', 'architectureAnalyzer', 'techStackAnalyzer'],
+  settings: {
+    timeout: 120000,
+    parallel: true,
+    includeCodeQuality: true,
+    includeArchitecture: true,
+    includeTechStack: true,
+    includeDependencies: true,
+    includeRepoStructure: true,
+    includeSecurity: true,
+    includePerformance: true
+  },
+  validation: {
+    requiredFiles: ['package.json'],
+    supportedProjects: ['nodejs', 'react', 'vue', 'angular', 'express', 'nest']
+  }
+};
+
 class AnalysisStep {
   constructor() {
     this.name = 'AnalysisStep';
@@ -14,28 +39,7 @@ class AnalysisStep {
   }
 
   static getConfig() {
-    return {
-      name: 'AnalysisStep',
-      type: 'analysis',
-      description: 'Comprehensive project analysis using all available services',
-      category: 'analysis',
-      dependencies: ['projectAnalyzer', 'codeQualityAnalyzer', 'securityAnalyzer', 'performanceAnalyzer', 'architectureAnalyzer', 'techStackAnalyzer'],
-      settings: {
-        timeout: 120000,
-        parallel: true,
-        includeCodeQuality: true,
-        includeArchitecture: true,
-        includeTechStack: true,
-        includeDependencies: true,
-        includeRepoStructure: true,
-        includeSecurity: true,
-        includePerformance: true
-      },
-      validation: {
-        requiredFiles: ['package.json'],
-        supportedProjects: ['nodejs', 'react', 'vue', 'angular', 'express', 'nest']
-      }
-    };
+    return config;
   }
 
   async execute(context = {}) {

@@ -81,17 +81,35 @@ function AutoPanelComponent({ eventBus }) {
       // Check for tasks in different possible locations
       let tasks = null;
 
-      if (
-        response &&
-        response.data &&
-        response.data.result &&
-        response.data.result.result &&
-        Array.isArray(response.data.result.result.tasks)
-      ) {
+      // Try multiple possible locations for tasks
+      if (response?.data?.result?.result?.tasks && Array.isArray(response.data.result.result.tasks)) {
         tasks = response.data.result.result.tasks;
         console.log('[AutoPanelComponent] Found tasks in response.data.result.result.tasks:', tasks);
+      } else if (response?.data?.result?.tasks && Array.isArray(response.data.result.tasks)) {
+        tasks = response.data.result.tasks;
+        console.log('[AutoPanelComponent] Found tasks in response.data.result.tasks:', tasks);
+      } else if (response?.data?.tasks && Array.isArray(response.data.tasks)) {
+        tasks = response.data.tasks;
+        console.log('[AutoPanelComponent] Found tasks in response.data.tasks:', tasks);
+      } else if (response?.result?.tasks && Array.isArray(response.result.tasks)) {
+        tasks = response.result.tasks;
+        console.log('[AutoPanelComponent] Found tasks in response.result.tasks:', tasks);
       } else {
-        console.log('[AutoPanelComponent] No tasks found in any location');
+        console.log('[AutoPanelComponent] No tasks found in response, loading from database...');
+        
+        // Load tasks from database
+        try {
+          const tasksResponse = await apiCall(`/api/projects/${projectId}/tasks?type=refactor&status=pending`);
+          if (tasksResponse.success && tasksResponse.data && Array.isArray(tasksResponse.data)) {
+            tasks = tasksResponse.data;
+            console.log('[AutoPanelComponent] Loaded tasks from database:', tasks);
+          } else {
+            console.log('[AutoPanelComponent] No tasks found in database either');
+            console.log('[AutoPanelComponent] Full response structure:', JSON.stringify(response, null, 2));
+          }
+        } catch (dbError) {
+          console.error('[AutoPanelComponent] Error loading tasks from database:', dbError);
+        }
       }
       
       if (tasks && tasks.length > 0) {

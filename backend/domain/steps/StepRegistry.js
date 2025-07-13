@@ -4,6 +4,7 @@
  * Implements IStandardRegistry interface for consistent patterns
  */
 
+require('module-alias/register');
 const path = require('path');
 const fs = require('fs').promises;
 const { STANDARD_CATEGORIES, isValidCategory, getDefaultCategory } = require('../constants/Categories');
@@ -83,9 +84,30 @@ class StepRegistry {
       try {
         await fs.access(categoriesDir);
       } catch {
-        console.log('📁 Creating categories directory...');
-        await fs.mkdir(categoriesDir, { recursive: true });
-        return;
+        console.log('📁 Categories directory not found, trying alternative path...');
+        // Try alternative path for development
+        const altCategoriesDir = path.join(process.cwd(), 'domain', 'steps', 'categories');
+        try {
+          await fs.access(altCategoriesDir);
+          console.log('📁 Found categories in alternative path');
+          const categories = await fs.readdir(altCategoriesDir);
+          
+          for (const category of categories) {
+            const categoryPath = path.join(altCategoriesDir, category);
+            const categoryStats = await fs.stat(categoryPath);
+            
+            if (categoryStats.isDirectory()) {
+              await this.loadStepsFromCategory(category, categoryPath);
+            }
+          }
+          
+          console.log(`📦 Loaded ${this.steps.size} steps from alternative categories path`);
+          return;
+        } catch {
+          console.log('📁 Creating categories directory...');
+          await fs.mkdir(categoriesDir, { recursive: true });
+          return;
+        }
       }
 
       const categories = await fs.readdir(categoriesDir);

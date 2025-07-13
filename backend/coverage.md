@@ -315,7 +315,7 @@
 | `presentation/api/AnalysisController.js` | 87% | 98% | 82% | 89% | ✅ |
 | `presentation/api/AuthController.js` | 100% | 100% | 100% | 100% | ✅ |
 | `presentation/api/AutoFinishController.js` | 100% | 98% | 92% | 97% | ✅ |
-| `presentation/api/AutoModeController.js` | 100% | 100% | 91% | 97% | ✅ |
+| `presentation/api/WorkflowController.js` | 100% | 100% | 91% | 97% | ✅ |
 | `presentation/api/ChatController.js` | 100% | 100% | 88% | 96% | ✅ |
 | `presentation/api/CodeExplorerController.js` | 100% | 100% | 70% | 90% | ✅ |
 | `presentation/api/ContentLibraryController.js` | 70% | 62% | 35% | 56% | ⚠️ |

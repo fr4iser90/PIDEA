@@ -96,10 +96,13 @@ class ServiceRegistry {
     });
 
     // IDE workspace detection service
-    this.container.register('ideWorkspaceDetectionService', (ideManager) => {
+    this.container.register('ideWorkspaceDetectionService', (ideManager, projectRepository) => {
       const IDEWorkspaceDetectionService = require('@services/IDEWorkspaceDetectionService');
-      return new IDEWorkspaceDetectionService(ideManager);
-    }, { singleton: true, dependencies: ['ideManager'] });
+      const service = new IDEWorkspaceDetectionService(ideManager);
+      // Inject project repository for automatic project creation
+      service.projectRepository = projectRepository;
+      return service;
+    }, { singleton: true, dependencies: ['ideManager', 'projectRepository'] });
 
     // Subproject detector
     this.container.register('subprojectDetector', () => {

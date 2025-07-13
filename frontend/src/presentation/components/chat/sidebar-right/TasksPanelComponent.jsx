@@ -208,7 +208,7 @@ ${taskDetails.description}
       const projectId = await api.getCurrentProjectId();
       
       // Start auto-mode with the task
-      const autoModeResponse = await apiCall(`/api/projects/${projectId}/auto/execute`, {
+      const autoModeResponse = await apiCall(`/api/projects/${projectId}/workflow/execute`, {
         method: 'POST',
         body: JSON.stringify({
           taskId: taskDetails.id,

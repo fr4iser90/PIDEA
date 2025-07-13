@@ -78,6 +78,10 @@ class IDEWorkspaceDetectionService {
         });
         
         console.log(`[IDEWorkspaceDetectionService] Port ${port}: ${workspaceInfo.workspace}`);
+        
+        // AUTOMATISCH Projekt in der DB erstellen
+        await this.createProjectInDatabase(workspaceInfo.workspace, port);
+        
         return workspaceInfo;
         
       } else {
@@ -98,6 +102,48 @@ class IDEWorkspaceDetectionService {
       
       console.log(`[IDEWorkspaceDetectionService] Port ${port}: ${error.message}`);
       throw error;
+    }
+  }
+
+  /**
+   * AUTOMATISCH Projekt in der DB erstellen
+   * @param {string} workspacePath - Workspace path
+   * @param {number} port - IDE port
+   */
+  async createProjectInDatabase(workspacePath, port) {
+    try {
+      // Use injected project repository
+      if (!this.projectRepository) {
+        console.warn('[IDEWorkspaceDetectionService] No project repository available, skipping project creation');
+        return;
+      }
+
+      // Extract project name from workspace path
+      const path = require('path');
+      const projectName = path.basename(workspacePath);
+      
+      // Generate project ID
+      const projectId = projectName.toLowerCase().replace(/[^a-z0-9]/g, '_');
+      
+      console.log(`[IDEWorkspaceDetectionService] Creating project in database: ${projectId} (${projectName}) at ${workspacePath}`);
+      
+      // Create project using findOrCreateByWorkspacePath
+      const project = await this.projectRepository.findOrCreateByWorkspacePath(workspacePath, {
+        id: projectId,
+        name: projectName,
+        description: `Project detected at ${workspacePath}`,
+        type: 'development',
+        metadata: {
+          detectedBy: 'IDEWorkspaceDetectionService',
+          port: port,
+          detectedAt: new Date().toISOString()
+        }
+      });
+      
+      console.log(`[IDEWorkspaceDetectionService] Project created/found in database: ${project.id}`);
+      
+    } catch (error) {
+      console.error('[IDEWorkspaceDetectionService] Failed to create project in database:', error.message);
     }
   }
 

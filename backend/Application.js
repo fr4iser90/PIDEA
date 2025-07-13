@@ -71,7 +71,7 @@ const IDEMirrorController = require('./presentation/api/IDEMirrorController');
 const ContentLibraryController = require('./presentation/api/ContentLibraryController');
 const AuthController = require('./presentation/api/AuthController');
 const TaskController = require('./presentation/api/TaskController');
-const AutoModeController = require('./presentation/api/AutoModeController');
+const WorkflowController = require('./presentation/api/WorkflowController');
 const AutoFinishController = require('./presentation/api/AutoFinishController');
 const AnalysisController = require('./presentation/api/AnalysisController');
 const GitController = require('./presentation/api/GitController');
@@ -416,7 +416,7 @@ class Application {
       this.serviceRegistry.getService('docsImportService')
     );
 
-    this.autoModeController = new AutoModeController({
+            this.workflowController = new WorkflowController({
       commandBus: this.commandBus,
       queryBus: this.queryBus,
       logger: this.logger,
@@ -777,15 +777,12 @@ class Application {
     this.app.get('/api/projects/:projectId/auto/tests/tasks/:taskId', (req, res) => this.autoTestFixController.getAutoTestTaskDetails(req, res));
     this.app.post('/api/projects/:projectId/auto/tests/tasks/:taskId/retry', (req, res) => this.autoTestFixController.retryAutoTestTask(req, res));
 
-    // Auto Refactor routes (protected) - PROJECT-BASED
-    this.app.use('/api/projects/:projectId/auto-refactor', this.authMiddleware.authenticate());
-    this.app.post('/api/projects/:projectId/auto-refactor/execute', (req, res) => this.autoModeController.executeAutoMode(req, res));
-
-    // Auto Mode routes (protected) - PROJECT-BASED
-    this.app.use('/api/projects/:projectId/auto', this.authMiddleware.authenticate());
-    this.app.post('/api/projects/:projectId/auto/execute', (req, res) => this.autoModeController.executeAutoMode(req, res));
-    this.app.get('/api/projects/:projectId/auto/status', (req, res) => this.autoModeController.getAutoModeStatus(req, res));
-    this.app.post('/api/projects/:projectId/auto/stop', (req, res) => this.autoModeController.stopAutoMode(req, res));
+    // Workflow routes (protected) - PROJECT-BASED
+    this.app.use('/api/projects/:projectId/workflow', this.authMiddleware.authenticate());
+    this.app.post('/api/projects/:projectId/workflow/execute', (req, res) => this.workflowController.executeWorkflow(req, res));
+    this.app.get('/api/projects/:projectId/workflow/status', (req, res) => this.workflowController.getWorkflowStatus(req, res));
+    this.app.post('/api/projects/:projectId/workflow/stop', (req, res) => this.workflowController.stopWorkflow(req, res));
+    this.app.get('/api/projects/:projectId/workflow/health', (req, res) => this.workflowController.healthCheck(req, res));
 
     // Error handling middleware
     this.app.use((error, req, res, next) => {
