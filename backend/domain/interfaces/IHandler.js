@@ -1,8 +1,8 @@
 /**
- * IHandler - Interface for unified workflow handlers
+ * IHandler - Interface for workflow handlers
  * 
  * This interface defines the contract that all handlers must implement
- * in the unified workflow system. It provides a consistent API for
+ * in the workflow system. It provides a consistent API for
  * handler execution, validation, and metadata access.
  */
 class IHandler {

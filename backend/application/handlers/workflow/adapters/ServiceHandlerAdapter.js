@@ -2,7 +2,7 @@
  * ServiceHandlerAdapter - Adapter for service-based handlers
  * 
  * This adapter provides integration with service-based handlers,
- * allowing service methods to be executed through the unified
+ * allowing service methods to be executed through the
  * handler system with dependency injection support.
  */
 const IHandlerAdapter = require('../../../../domain/interfaces/IHandlerAdapter');
@@ -47,16 +47,16 @@ class ServiceHandlerAdapter extends IHandlerAdapter {
         }
       }
 
-      // Create unified handler wrapper
-      const unifiedHandler = this.wrapServiceHandler(service, request);
+          // Create handler wrapper
+    const handler = this.wrapServiceHandler(service, request);
       
       // Cache handler
       if (this.options.enableCaching) {
         const cacheKey = this.generateCacheKey(request, service);
-        this.cacheHandler(cacheKey, unifiedHandler);
+        this.cacheHandler(cacheKey, handler);
       }
       
-      return unifiedHandler;
+      return handler;
 
     } catch (error) {
       throw new Error(`Service handler creation failed: ${error.message}`);
@@ -126,8 +126,7 @@ class ServiceHandlerAdapter extends IHandlerAdapter {
       'test_correction': 'TestCorrectionService',
       'workflow_orchestration': 'WorkflowOrchestrationService',
       'task_execution': 'TaskExecutionService',
-      'unified_workflow': 'unifiedWorkflowService',
-      'workflow': 'unifiedWorkflowService'  // Add support for 'workflow' type
+      'workflow': 'WorkflowService'  // Add support for 'workflow' type
     };
     
     return serviceMap[request.type] || null;
@@ -154,7 +153,6 @@ class ServiceHandlerAdapter extends IHandlerAdapter {
       'test_correction': 'correctTests',
       'workflow_orchestration': 'executeWorkflow',
       'task_execution': 'executeTask',
-      'unified_workflow': 'executeWorkflow',
       'workflow': 'executeWorkflow'  // Add support for 'workflow' type
     };
     
@@ -192,10 +190,10 @@ class ServiceHandlerAdapter extends IHandlerAdapter {
   }
 
   /**
-   * Wrap service handler with unified interface
+   * Wrap service handler with interface
    * @param {Object} service - Service object
    * @param {Object} request - Handler request
-   * @returns {IHandler} Unified handler
+   * @returns {IHandler} Handler
    */
   wrapServiceHandler(service, request) {
     // Store adapter methods for use in wrapped handler
@@ -238,7 +236,7 @@ class ServiceHandlerAdapter extends IHandlerAdapter {
             // Call default execute method
             result = await serviceInstance.execute(request, context.getResponse());
           } else if (typeof serviceInstance.executeWorkflow === 'function' && request.workflow) {
-            // Fallback for UnifiedWorkflowService
+            // Fallback for WorkflowService
             result = await serviceInstance.executeWorkflow(request.workflow, {
               metadata: request.metadata || {},
               data: request.data || {},
@@ -428,7 +426,7 @@ class ServiceHandlerAdapter extends IHandlerAdapter {
         'test_correction',
         'workflow_orchestration',
         'task_execution',
-        'unified_workflow',
+        'workflow',
         'workflow'
       ]
     };
@@ -521,7 +519,7 @@ class ServiceHandlerAdapter extends IHandlerAdapter {
       'test_correction',
       'workflow_orchestration',
       'task_execution',
-      'unified_workflow',
+      'workflow',
       'workflow'
     ];
   }

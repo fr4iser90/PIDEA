@@ -3,7 +3,7 @@
  * 
  * This class provides a factory pattern for creating handlers from
  * different sources using adapters. It supports legacy handlers,
- * external services, and new unified handlers.
+ * external services, and new handlers.
  */
 class HandlerFactory {
   /**

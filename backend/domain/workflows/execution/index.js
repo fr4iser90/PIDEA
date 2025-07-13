@@ -1,7 +1,7 @@
 /**
  * Execution Module - Core Execution Engine Foundation
  * 
- * This module provides the core execution engine foundation for unified workflow management in PIDEA.
+ * This module provides the core execution engine foundation for workflow management in PIDEA.
  * It includes execution engine, queue management, scheduling, context management, result handling,
  * execution strategies, and exception handling.
  */

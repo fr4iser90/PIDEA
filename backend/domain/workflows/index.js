@@ -1,7 +1,7 @@
 /**
- * Unified Workflow Foundation - Builder Pattern Components
+ * Workflow Foundation - Builder Pattern Components
  * 
- * This module provides the builder pattern implementation for unified workflow management.
+ * This module provides the builder pattern implementation for workflow management.
  * It includes workflow builders, step builders, composers, and template registries.
  */
 

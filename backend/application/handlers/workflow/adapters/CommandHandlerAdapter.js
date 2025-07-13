@@ -2,7 +2,7 @@
  * CommandHandlerAdapter - Adapter for command-based handlers
  * 
  * This adapter provides integration with the command bus pattern,
- * allowing command handlers to be executed through the unified
+ * allowing command handlers to be executed through the shared
  * handler system.
  */
 const IHandlerAdapter = require('../../../../domain/interfaces/IHandlerAdapter');
@@ -46,16 +46,16 @@ class CommandHandlerAdapter extends IHandlerAdapter {
         }
       }
 
-      // Create unified handler wrapper
-      const unifiedHandler = this.wrapCommandHandler(command, request);
+      // Create handler wrapper
+      const handler = this.wrapCommandHandler(command, request);
       
       // Cache handler
       if (this.options.enableCaching) {
         const cacheKey = this.generateCacheKey(request, command);
-        this.cacheHandler(cacheKey, unifiedHandler);
+        this.cacheHandler(cacheKey, handler);
       }
       
-      return unifiedHandler;
+      return handler;
 
     } catch (error) {
       throw new Error(`Command handler creation failed: ${error.message}`);
@@ -124,11 +124,11 @@ class CommandHandlerAdapter extends IHandlerAdapter {
     try {
       // Try different command paths
       const commandPaths = [
-        `@/application/commands/${commandType}`,
-        `@/application/commands/categories/analysis/${commandType}`,
-        `@/application/commands/categories/generate/${commandType}`,
-        `@/application/commands/categories/refactoring/${commandType}`,
-        `@/application/commands/vibecoder/${commandType}`
+        `@application/commands/${commandType}`,
+        `@application/commands/categories/analysis/${commandType}`,
+        `@application/commands/categories/generate/${commandType}`,
+        `@application/commands/categories/refactoring/${commandType}`,
+        `@application/commands/vibecoder/${commandType}`
       ];
 
       for (const path of commandPaths) {
@@ -147,10 +147,10 @@ class CommandHandlerAdapter extends IHandlerAdapter {
   }
 
   /**
-   * Wrap command handler with unified interface
+   * Wrap command handler with interface
    * @param {Object} command - Command instance
    * @param {Object} request - Handler request
-   * @returns {IHandler} Unified handler
+   * @returns {IHandler} Handler
    */
   wrapCommandHandler(command, request) {
     return {

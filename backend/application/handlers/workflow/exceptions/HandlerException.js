@@ -1,5 +1,5 @@
 /**
- * HandlerException - Exception class for unified handler errors
+ * HandlerException - Exception class for handler errors
  * 
  * This class provides a standardized exception type for handler-related
  * errors, including validation errors, execution errors, and system errors.

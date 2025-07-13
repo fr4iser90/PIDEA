@@ -1,7 +1,7 @@
 /**
- * HandlerContext - Execution context for handlers
+ * HandlerContext - Shared context for handler execution
  * 
- * This class provides a unified context for handler execution,
+ * This class provides a shared context for handler execution,
  * containing request data, response object, shared data, and metadata.
  * It follows the same patterns as the existing WorkflowContext.
  */

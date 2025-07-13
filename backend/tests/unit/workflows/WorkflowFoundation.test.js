@@ -1,5 +1,5 @@
 /**
- * Unit tests for Unified Workflow Foundation
+ * Unit tests for Workflow Foundation
  * Tests core interfaces, context management, validation system, and exception handling
  */
 
@@ -19,7 +19,7 @@ const {
   ContextException
 } = require('@domain/workflows');
 
-describe('Unified Workflow Foundation', () => {
+describe('Workflow Foundation', () => {
   describe('Core Interfaces', () => {
     describe('IWorkflow', () => {
       it('should define the workflow interface contract', () => {

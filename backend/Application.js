@@ -338,7 +338,7 @@ class Application {
     this.getChatHistoryHandler = this.serviceRegistry.getService('getChatHistoryHandler');
     this.createTaskHandler = this.serviceRegistry.getService('createTaskHandler');
 
-    // Legacy handlers removed - using Unified Workflow System instead
+    // Legacy handlers removed - using new workflow system instead
     
     // Initialize Auto-Finish Handler (still needed)
     this.processTodoListHandler = new ProcessTodoListHandler({

@@ -1,14 +1,12 @@
-/**
- * HandlerRegistry - Handler registration and management
- * 
- * This class provides a centralized registry for managing handlers,
- * including registration, lookup, lifecycle management, and metadata
- * tracking. It follows the registry pattern for handler management.
- */
+// HandlerRegistry - zentrale Registry für Workflow-Handler
+// 
+// Diese Klasse stellt eine zentrale Registry für die Verwaltung von Workflow-Handlern bereit,
+// einschließlich der Registrierung, Suche, Lebenszyklusverwaltung und Metadatenverfolgung.
+// Sie folgt dem Registry-Muster für die Handlerverwaltung.
 class HandlerRegistry {
   /**
-   * Create a new handler registry
-   * @param {Object} options - Registry options
+   * Erstelle eine neue Handler-Registry
+   * @param {Object} options - Registry-Optionen
    */
   constructor(options = {}) {
     this.handlers = new Map();
@@ -24,38 +22,38 @@ class HandlerRegistry {
   }
 
   /**
-   * Register handler
-   * @param {string} type - Handler type
-   * @param {IHandler} handler - Handler instance
-   * @param {Object} metadata - Handler metadata
-   * @returns {boolean} True if registration successful
+   * Registriere einen Handler
+   * @param {string} type - Handler-Typ
+   * @param {IHandler} handler - Handler-Instanz
+   * @param {Object} metadata - Handler-Metadaten
+   * @returns {boolean} True, wenn die Registrierung erfolgreich war
    */
   registerHandler(type, handler, metadata = {}) {
     try {
-      // Validate inputs
+      // Validiere Eingaben
       if (!type || typeof type !== 'string') {
-        throw new Error('Handler type must be a non-empty string');
+        throw new Error('Handler-Typ muss ein nicht-leerer String sein');
       }
 
       if (!handler) {
-        throw new Error('Handler instance is required');
+        throw new Error('Handler-Instanz ist erforderlich');
       }
 
-      // Check registry capacity
+      // Prüfe Registrierungskapazität
       if (this.handlers.size >= this.options.maxHandlers) {
-        throw new Error(`Registry capacity exceeded (max: ${this.options.maxHandlers})`);
+        throw new Error(`Registrierungskapazität überschritten (max: ${this.options.maxHandlers})`);
       }
 
-      // Validate handler if enabled
+      // Validiere Handler, falls aktiviert
       if (this.options.enableValidation) {
         this.validateHandlerForRegistration(handler);
       }
 
-      // Register handler
+      // Registriere Handler
       this.handlers.set(type, handler);
       this.handlerTypes.set(type, handler.constructor.name);
       
-      // Store metadata
+      // Speichere Metadaten
       const fullMetadata = {
         ...handler.getMetadata(),
         ...metadata,
@@ -65,7 +63,7 @@ class HandlerRegistry {
       };
       this.handlerMetadata.set(type, fullMetadata);
 
-      // Initialize statistics
+      // Initialisiere Statistiken
       if (this.options.enableStatistics) {
         this.handlerStatistics.set(type, {
           executions: 0,
@@ -80,57 +78,57 @@ class HandlerRegistry {
       return true;
 
     } catch (error) {
-      console.error('Handler registration failed:', error.message);
+      console.error('Handler-Registrierung fehlgeschlagen:', error.message);
       return false;
     }
   }
 
   /**
-   * Get handler by type
-   * @param {string} type - Handler type
-   * @returns {IHandler|null} Handler instance
+   * Hole Handler nach Typ
+   * @param {string} type - Handler-Typ
+   * @returns {IHandler|null} Handler-Instanz
    */
   getHandler(type) {
     return this.handlers.get(type) || null;
   }
 
   /**
-   * Check if handler exists
-   * @param {string} type - Handler type
-   * @returns {boolean} True if handler exists
+   * Prüfe, ob Handler existiert
+   * @param {string} type - Handler-Typ
+   * @returns {boolean} True, wenn Handler existiert
    */
   hasHandler(type) {
     return this.handlers.has(type);
   }
 
   /**
-   * Get handler metadata
-   * @param {string} type - Handler type
-   * @returns {Object|null} Handler metadata
+   * Hole Handler-Metadaten
+   * @param {string} type - Handler-Typ
+   * @returns {Object|null} Handler-Metadaten
    */
   getHandlerMetadata(type) {
     return this.handlerMetadata.get(type) || null;
   }
 
   /**
-   * Get handler count
-   * @returns {number} Number of registered handlers
+   * Hole Handler-Anzahl
+   * @returns {number} Anzahl der registrierten Handler
    */
   getHandlerCount() {
     return this.handlers.size;
   }
 
   /**
-   * Get handler types
-   * @returns {Array<string>} Handler types
+   * Hole Handler-Typen
+   * @returns {Array<string>} Handler-Typen
    */
   getHandlerTypes() {
     return Array.from(this.handlers.keys());
   }
 
   /**
-   * List all handlers
-   * @returns {Array<Object>} Handler information
+   * Liste alle Handler
+   * @returns {Array<Object>} Handler-Informationen
    */
   listHandlers() {
     const handlers = [];
@@ -153,9 +151,9 @@ class HandlerRegistry {
   }
 
   /**
-   * Unregister handler
-   * @param {string} type - Handler type
-   * @returns {boolean} True if handler was unregistered
+   * Entferne Handler
+   * @param {string} type - Handler-Typ
+   * @returns {boolean} True, wenn Handler entfernt wurde
    */
   unregisterHandler(type) {
     const wasRegistered = this.handlers.has(type);
@@ -171,7 +169,7 @@ class HandlerRegistry {
   }
 
   /**
-   * Clear all handlers
+   * Leere alle Handler
    */
   clearHandlers() {
     this.handlers.clear();
@@ -181,9 +179,9 @@ class HandlerRegistry {
   }
 
   /**
-   * Update handler statistics
-   * @param {string} type - Handler type
-   * @param {Object} result - Execution result
+   * Aktualisiere Handler-Statistiken
+   * @param {string} type - Handler-Typ
+   * @param {Object} result - Ausführungsergebnis
    */
   updateStatistics(type, result) {
     if (!this.options.enableStatistics) {
@@ -212,17 +210,17 @@ class HandlerRegistry {
   }
 
   /**
-   * Get handler statistics
-   * @param {string} type - Handler type
-   * @returns {Object|null} Handler statistics
+   * Hole Handler-Statistiken
+   * @param {string} type - Handler-Typ
+   * @returns {Object|null} Handler-Statistiken
    */
   getHandlerStatistics(type) {
     return this.handlerStatistics.get(type) || null;
   }
 
   /**
-   * Get all statistics
-   * @returns {Object} All handler statistics
+   * Hole alle Statistiken
+   * @returns {Object} Alle Handler-Statistiken
    */
   getAllStatistics() {
     const result = {};
@@ -235,12 +233,12 @@ class HandlerRegistry {
   }
 
   /**
-   * Find handlers by criteria
-   * @param {Object} criteria - Search criteria
-   * @param {string} criteria.name - Handler name pattern
-   * @param {string} criteria.type - Handler type pattern
-   * @param {string} criteria.version - Handler version
-   * @returns {Array<Object>} Matching handlers
+   * Finde Handler nach Kriterien
+   * @param {Object} criteria - Suchkriterien
+   * @param {string} criteria.name - Handler-Name-Muster
+   * @param {string} criteria.type - Handler-Typ-Muster
+   * @param {string} criteria.version - Handler-Version
+   * @returns {Array<Object>} Übereinstimmende Handler
    */
   findHandlers(criteria = {}) {
     const matches = [];
@@ -275,8 +273,8 @@ class HandlerRegistry {
   }
 
   /**
-   * Get registry summary
-   * @returns {Object} Registry summary
+   * Hole Registry-Zusammenfassung
+   * @returns {Object} Registry-Zusammenfassung
    */
   getSummary() {
     const totalExecutions = Array.from(this.handlerStatistics.values())
@@ -300,9 +298,9 @@ class HandlerRegistry {
   }
 
   /**
-   * Validate handler for registration
-   * @param {IHandler} handler - Handler to validate
-   * @throws {Error} If validation fails
+   * Validiere Handler für die Registrierung
+   * @param {IHandler} handler - Zu validierender Handler
+   * @throws {Error} Wenn die Validierung fehlschlägt
    */
   validateHandlerForRegistration(handler) {
     const requiredMethods = [
@@ -317,40 +315,40 @@ class HandlerRegistry {
 
     for (const method of requiredMethods) {
       if (typeof handler[method] !== 'function') {
-        throw new Error(`Handler must implement ${method} method`);
+        throw new Error(`Handler muss die ${method} Methode implementieren`);
       }
     }
 
-    // Validate metadata
+    // Validiere Metadaten
     try {
       const metadata = handler.getMetadata();
       if (!metadata || typeof metadata !== 'object') {
-        throw new Error('Handler must return valid metadata object');
+        throw new Error('Handler muss ein gültiges Metadatenobjekt zurückgeben');
       }
     } catch (error) {
-      throw new Error(`Handler metadata validation failed: ${error.message}`);
+      throw new Error(`Handler-Metadatenvalidierung fehlgeschlagen: ${error.message}`);
     }
   }
 
   /**
-   * Get registry options
-   * @returns {Object} Registry options
+   * Hole Registry-Optionen
+   * @returns {Object} Registry-Optionen
    */
   getOptions() {
     return { ...this.options };
   }
 
   /**
-   * Set registry options
-   * @param {Object} options - New options
+   * Setze Registry-Optionen
+   * @param {Object} options - Neue Optionen
    */
   setOptions(options) {
     this.options = { ...this.options, ...options };
   }
 
   /**
-   * Export registry state
-   * @returns {Object} Registry state
+   * Exportiere Registry-Zustand
+   * @returns {Object} Registry-Zustand
    */
   exportState() {
     const state = {
@@ -380,9 +378,9 @@ class HandlerRegistry {
   }
 
   /**
-   * Import registry state
-   * @param {Object} state - Registry state
-   * @returns {boolean} True if import successful
+   * Importiere Registry-Zustand
+   * @param {Object} state - Registry-Zustand
+   * @returns {boolean} True, wenn der Import erfolgreich war
    */
   importState(state) {
     try {
@@ -390,12 +388,12 @@ class HandlerRegistry {
         this.options = { ...this.options, ...state.options };
       }
 
-      // Note: This is a basic import. In a real implementation,
-      // you would need to reconstruct handler instances from the state.
+      // Hinweis: Dies ist eine grundlegende Import. In einer realen Implementierung
+      // müssten Sie Handler-Instanzen aus dem Zustand neu erstellen.
       
       return true;
     } catch (error) {
-      console.error('Registry state import failed:', error.message);
+      console.error('Registry-Zustand import fehlgeschlagen:', error.message);
       return false;
     }
   }

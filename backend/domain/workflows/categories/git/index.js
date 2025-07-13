@@ -1,6 +1,6 @@
 /**
  * Git Workflow Module - Enhanced Git Integration
- * Exports all git workflow components for unified workflow automation
+ * Exports all git workflow components for workflow automation
  */
 
 // Core components
@@ -127,5 +127,5 @@ module.exports = {
   
   // Version info
   version: '2.0.0',
-  description: 'Enhanced Git Integration for Unified Workflow Automation'
+  description: 'Enhanced Git Integration for Workflow Automation'
 }; 

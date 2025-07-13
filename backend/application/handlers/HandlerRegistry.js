@@ -1,5 +1,5 @@
 /**
- * HandlerRegistry - Application Layer: Handler management
+ * HandlerRegistry - zentrale Registry für alle Handler-Typen
  * Manages handler registration and retrieval with category support
  * Implements IStandardRegistry interface for consistent patterns
  */

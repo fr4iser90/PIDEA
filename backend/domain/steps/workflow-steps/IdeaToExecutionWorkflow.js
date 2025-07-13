@@ -121,7 +121,7 @@ class IdeaToExecutionWorkflow extends BaseWorkflowStep {
       'performance': ['performance', 'optimization', 'speed', 'efficiency', 'cache'],
       'security': ['security', 'auth', 'authentication', 'encryption', 'secure'],
       'testing': ['test', 'testing', 'unit', 'integration', 'e2e', 'cypress'],
-      'unified-workflow': ['unified', 'workflow', 'unified-workflow'],
+      'workflow': ['workflow', 'execution', 'automation'],
       'migration': ['migration', 'migrate', 'legacy'],
       'documentation': ['documentation', 'docs', 'guide', 'manual', 'readme']
     };

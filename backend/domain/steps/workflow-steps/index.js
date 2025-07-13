@@ -1,6 +1,6 @@
 /**
- * Unified Workflow Steps - Module exports
- * Includes all base steps and migrated legacy handlers
+ * Workflow Steps - Module exports
+ * Includes all base steps and workflow components
  */
 
 // Base workflow steps
@@ -14,8 +14,8 @@ const DeploymentStep = require('./DeploymentStep');
 const SecurityStep = require('./SecurityStep');
 const OptimizationStep = require('./OptimizationStep');
 
-// Note: Legacy handlers have been moved to application layer
-// All handlers are now properly located in backend/application/handlers/
+// Note: Handlers are located in application layer
+// All handlers are properly located in backend/application/handlers/
 
 // New workflow steps
 const IdeaToExecutionWorkflow = require('./IdeaToExecutionWorkflow');
@@ -35,8 +35,8 @@ module.exports = {
   SecurityStep,
   OptimizationStep,
   
-  // Note: Legacy handlers have been moved to application layer
-  // All handlers are now properly located in backend/application/handlers/
+  // Note: Handlers are located in application layer
+  // All handlers are properly located in backend/application/handlers/
   
   // New workflow steps
   IdeaToExecutionWorkflow,

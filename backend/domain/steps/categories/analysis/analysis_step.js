@@ -1,5 +1,5 @@
 /**
- * Analysis Step - Unified Analysis Workflow
+ * Analysis Step - Analysis Workflow
  * Integrates all existing analysis services and components
  */
 
