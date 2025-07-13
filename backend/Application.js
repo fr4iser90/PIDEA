@@ -30,7 +30,6 @@ const TaskValidationService = require('./domain/services/TaskValidationService')
 const AutoFinishSystem = require('./domain/services/auto-finish/AutoFinishSystem');
 const TaskSession = require('./domain/entities/TaskSession');
 const TodoTask = require('./domain/entities/TodoTask');
-const TaskSessionRepository = require('./infrastructure/database/TaskSessionRepository');
 
 // Auto Test Fix System
 const AutoTestFixSystem = require('./domain/services/auto-test/AutoTestFixSystem');
@@ -59,8 +58,7 @@ const IDEWorkspaceDetectionService = require('./domain/services/IDEWorkspaceDete
 const InMemoryChatRepository = require('./infrastructure/database/InMemoryChatRepository');
 const InMemoryTaskRepository = require('./infrastructure/database/InMemoryTaskRepository');
 const DatabaseConnection = require('./infrastructure/database/DatabaseConnection');
-const PostgreSQLUserRepository = require('./infrastructure/database/PostgreSQLUserRepository');
-const PostgreSQLUserSessionRepository = require('./infrastructure/database/PostgreSQLUserSessionRepository');
+// Repository imports werden jetzt über DI Container geladen
 const EventBus = require('./infrastructure/messaging/EventBus');
 const CommandBus = require('./infrastructure/messaging/CommandBus');
 const QueryBus = require('./infrastructure/messaging/QueryBus');
@@ -203,29 +201,34 @@ class Application {
     // Replace the DI container's database connection with the properly configured one
     this.serviceRegistry.getContainer().registerSingleton('databaseConnection', this.databaseConnection);
 
-    // Get services from DI container to ensure consistency
-    this.browserManager = this.serviceRegistry.getService('browserManager');
-    this.ideManager = this.serviceRegistry.getService('ideManager');
-    this.chatRepository = this.serviceRegistry.getService('chatRepository');
-    this.eventBus = this.serviceRegistry.getService('eventBus');
-    
-    // Initialize command and query buses
-    this.commandBus = this.serviceRegistry.getService('commandBus');
-    this.queryBus = this.serviceRegistry.getService('queryBus');
+    // Get services from DI container with consistent error handling
+    try {
+        this.browserManager = this.serviceRegistry.getService('browserManager');
+        this.ideManager = this.serviceRegistry.getService('ideManager');
+        this.chatRepository = this.serviceRegistry.getService('chatRepository');
+        this.eventBus = this.serviceRegistry.getService('eventBus');
+        
+        // Initialize command and query buses
+        this.commandBus = this.serviceRegistry.getService('commandBus');
+        this.queryBus = this.serviceRegistry.getService('queryBus');
 
-    // Initialize repositories
-    this.userRepository = this.serviceRegistry.getService('userRepository');
-    this.userSessionRepository = this.serviceRegistry.getService('userSessionRepository');
+        // Initialize repositories
+        this.userRepository = this.serviceRegistry.getService('userRepository');
+        this.userSessionRepository = this.serviceRegistry.getService('userSessionRepository');
 
-    // IDE Services
-    this.ideWorkspaceDetectionService = this.serviceRegistry.getService('ideWorkspaceDetectionService');
+        // IDE Services
+        this.ideWorkspaceDetectionService = this.serviceRegistry.getService('ideWorkspaceDetectionService');
 
-    // Initialize file system service for strategies
-    this.fileSystemService = this.serviceRegistry.getService('fileSystemService');
+        // Initialize file system service for strategies
+        this.fileSystemService = this.serviceRegistry.getService('fileSystemService');
 
-    // Get strategies through DI
-    this.monorepoStrategy = this.serviceRegistry.getService('monorepoStrategy');
-    this.singleRepoStrategy = this.serviceRegistry.getService('singleRepoStrategy');
+        // Get strategies through DI
+        this.monorepoStrategy = this.serviceRegistry.getService('monorepoStrategy');
+        this.singleRepoStrategy = this.serviceRegistry.getService('singleRepoStrategy');
+    } catch (error) {
+        this.logger.error('[Application] Failed to get infrastructure services:', error.message);
+        throw error; // Re-throw because these are critical services
+    }
 
     this.logger.info('[Application] Infrastructure initialized with DI');
   }
@@ -236,51 +239,78 @@ class Application {
     // Set up project context
     await this.setupProjectContext();
 
-    // Get services through DI container
-    this.cursorIDEService = this.serviceRegistry.getService('cursorIDEService');
-    this.authService = this.serviceRegistry.getService('authService');
-    this.aiService = this.serviceRegistry.getService('aiService');
-    this.projectAnalyzer = this.serviceRegistry.getService('projectAnalyzer');
-    this.codeQualityAnalyzer = this.serviceRegistry.getService('codeQualityAnalyzer');
-    this.securityAnalyzer = this.serviceRegistry.getService('securityAnalyzer');
-    this.performanceAnalyzer = this.serviceRegistry.getService('performanceAnalyzer');
-    this.architectureAnalyzer = this.serviceRegistry.getService('architectureAnalyzer');
-    this.techStackAnalyzer = this.serviceRegistry.getService('techStackAnalyzer');
-    this.subprojectDetector = this.serviceRegistry.getService('subprojectDetector');
-    this.analysisOutputService = this.serviceRegistry.getService('analysisOutputService');
-    this.analysisRepository = this.serviceRegistry.getService('analysisRepository');
-    this.projectMappingService = this.serviceRegistry.getService('projectMappingService');
-    this.taskRepository = this.serviceRegistry.getService('taskRepository');
-    this.taskExecutionRepository = this.serviceRegistry.getService('taskExecutionRepository');
-    this.taskService = this.serviceRegistry.getService('taskService');
-    this.taskExecutionService = this.serviceRegistry.getService('taskExecutionService');
-    this.taskValidationService = this.serviceRegistry.getService('taskValidationService');
-    this.taskAnalysisService = this.serviceRegistry.getService('taskAnalysisService');
-    this.codeQualityService = this.serviceRegistry.getService('codeQualityService');
-    this.securityService = this.serviceRegistry.getService('securityService');
-    this.performanceService = this.serviceRegistry.getService('performanceService');
-    this.architectureService = this.serviceRegistry.getService('architectureService');
-    this.dependencyAnalyzer = this.serviceRegistry.getService('dependencyAnalyzer');
-    this.monorepoStrategy = this.serviceRegistry.getService('monorepoStrategy');
-    this.singleRepoStrategy = this.serviceRegistry.getService('singleRepoStrategy');
+    // Get services through DI container with consistent error handling
+    try {
+        this.cursorIDEService = this.serviceRegistry.getService('cursorIDEService');
+        this.authService = this.serviceRegistry.getService('authService');
+        this.aiService = this.serviceRegistry.getService('aiService');
+        this.projectAnalyzer = this.serviceRegistry.getService('projectAnalyzer');
+        this.codeQualityAnalyzer = this.serviceRegistry.getService('codeQualityAnalyzer');
+        this.securityAnalyzer = this.serviceRegistry.getService('securityAnalyzer');
+        this.performanceAnalyzer = this.serviceRegistry.getService('performanceAnalyzer');
+        this.architectureAnalyzer = this.serviceRegistry.getService('architectureAnalyzer');
+        this.techStackAnalyzer = this.serviceRegistry.getService('techStackAnalyzer');
+        this.subprojectDetector = this.serviceRegistry.getService('subprojectDetector');
+        this.analysisOutputService = this.serviceRegistry.getService('analysisOutputService');
+        this.analysisRepository = this.serviceRegistry.getService('analysisRepository');
+        this.projectMappingService = this.serviceRegistry.getService('projectMappingService');
+        this.taskRepository = this.serviceRegistry.getService('taskRepository');
+        this.taskExecutionRepository = this.serviceRegistry.getService('taskExecutionRepository');
+        this.taskService = this.serviceRegistry.getService('taskService');
+        this.taskExecutionService = this.serviceRegistry.getService('taskExecutionService');
+        this.taskValidationService = this.serviceRegistry.getService('taskValidationService');
+        this.taskAnalysisService = this.serviceRegistry.getService('taskAnalysisService');
+        this.codeQualityService = this.serviceRegistry.getService('codeQualityService');
+        this.securityService = this.serviceRegistry.getService('securityService');
+        this.performanceService = this.serviceRegistry.getService('performanceService');
+        this.architectureService = this.serviceRegistry.getService('architectureService');
+        this.dependencyAnalyzer = this.serviceRegistry.getService('dependencyAnalyzer');
+        this.monorepoStrategy = this.serviceRegistry.getService('monorepoStrategy');
+        this.singleRepoStrategy = this.serviceRegistry.getService('singleRepoStrategy');
+    } catch (error) {
+        this.logger.error('[Application] Failed to get domain services:', error.message);
+        throw error; // Re-throw because these are critical services
+    }
 
     // Get Workflow Orchestration Service
-    this.workflowOrchestrationService = this.serviceRegistry.getService('workflowOrchestrationService');
+    try {
+        this.workflowOrchestrationService = this.serviceRegistry.getService('workflowOrchestrationService');
+    } catch (error) {
+        this.logger.warn('[Application] WorkflowOrchestrationService not available:', error.message);
+        this.workflowOrchestrationService = { orchestrate: () => ({}) };
+    }
 
     // Get Git Service
-    this.gitService = this.serviceRegistry.getService('gitService');
+    try {
+        this.gitService = this.serviceRegistry.getService('gitService');
+    } catch (error) {
+        this.logger.warn('[Application] GitService not available:', error.message);
+        this.gitService = { status: () => ({}) };
+    }
 
     // Get Test Analyzer Tools
-    this.testAnalyzer = this.serviceRegistry.getService('testAnalyzer');
-    this.testFixer = this.serviceRegistry.getService('testFixer');
-    this.coverageAnalyzer = this.serviceRegistry.getService('coverageAnalyzer');
-    this.testReportParser = this.serviceRegistry.getService('testReportParser');
-    this.testFixTaskGenerator = this.serviceRegistry.getService('testFixTaskGenerator');
-    this.testCorrectionService = this.serviceRegistry.getService('testCorrectionService');
-    this.generateTestsHandler = this.serviceRegistry.getService('generateTestsHandler');
+    try {
+        this.testAnalyzer = this.serviceRegistry.getService('testAnalyzer');
+        this.testFixer = this.serviceRegistry.getService('testFixer');
+        this.coverageAnalyzer = this.serviceRegistry.getService('coverageAnalyzer');
+        this.testReportParser = this.serviceRegistry.getService('testReportParser');
+        this.testFixTaskGenerator = this.serviceRegistry.getService('testFixTaskGenerator');
+        this.testCorrectionService = this.serviceRegistry.getService('testCorrectionService');
+        this.generateTestsHandler = this.serviceRegistry.getService('generateTestsHandler');
+    } catch (error) {
+        this.logger.warn('[Application] Some test services not available:', error.message);
+        // Create fallback services
+        this.testAnalyzer = { analyze: () => ({}) };
+        this.testFixer = { fix: () => ({}) };
+        this.coverageAnalyzer = { analyze: () => ({}) };
+        this.testReportParser = { parse: () => ({}) };
+        this.testFixTaskGenerator = { generate: () => ({}) };
+        this.testCorrectionService = { correct: () => ({}) };
+        this.generateTestsHandler = { handle: () => ({}) };
+    }
 
     // Initialize Auto-Finish System
-    this.taskSessionRepository = new TaskSessionRepository(this.databaseConnection);
+    this.taskSessionRepository = this.databaseConnection.getRepository('TaskSession');
     await this.taskSessionRepository.initialize();
     
     this.autoFinishSystem = new AutoFinishSystem(

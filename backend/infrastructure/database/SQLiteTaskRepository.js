@@ -28,9 +28,18 @@ class SQLiteTaskRepository extends TaskRepository {
   }
 
   /**
-   * Save a task
-   * @param {Task} task - The task to save
-   * @returns {Promise<Task>} The saved task
+   * Create a new task (alias for save)
+   * @param {Task} task - Task entity
+   * @returns {Promise<Task>} Created task
+   */
+  async create(task) {
+    return this.save(task);
+  }
+
+  /**
+   * Save a task (create or update)
+   * @param {Task} task - Task entity
+   * @returns {Promise<Task>} Saved task
    */
   async save(task) {
     try {
@@ -38,8 +47,8 @@ class SQLiteTaskRepository extends TaskRepository {
       
       const sql = `
         INSERT OR REPLACE INTO ${this.tableName} (
-          id, title, description, type, category, priority, status, project_id, user_id,
-          estimated_time, metadata, created_at, updated_at, tags,
+          id, title, description, type, category, priority, status, project_id, created_by,
+          estimated_hours, metadata, created_at, updated_at, tags,
           assignee, due_date, started_at, completed_at, execution_history,
           parent_task_id, child_task_ids, phase, stage, phase_order, task_level, root_task_id,
           is_phase_task, progress, phase_progress, blocked_by
@@ -55,7 +64,7 @@ class SQLiteTaskRepository extends TaskRepository {
         taskData.priority,
         taskData.status,
         taskData.projectId,
-        taskData.userId,
+        taskData.userId || 'me',
         taskData.estimatedDuration,
         JSON.stringify(taskData.metadata),
         taskData.createdAt,
@@ -79,7 +88,7 @@ class SQLiteTaskRepository extends TaskRepository {
         JSON.stringify(taskData.blockedBy || [])
       ];
 
-      await this.database.run(sql, params);
+      await this.database.execute(sql, params);
       return task;
     } catch (error) {
       throw new Error(`Failed to save task: ${error.message}`);
@@ -94,7 +103,7 @@ class SQLiteTaskRepository extends TaskRepository {
   async findById(id) {
     try {
       const sql = `SELECT * FROM ${this.tableName} WHERE id = ?`;
-      const row = await this.database.get(sql, [id]);
+      const row = await this.database.getOne(sql, [id]);
       
       if (!row) {
         return null;
@@ -114,7 +123,7 @@ class SQLiteTaskRepository extends TaskRepository {
   async findByTitle(title) {
     try {
       const sql = `SELECT * FROM ${this.tableName} WHERE title = ?`;
-      const row = await this.database.get(sql, [title]);
+      const row = await this.database.getOne(sql, [title]);
       
       if (!row) {
         return null;
@@ -154,12 +163,12 @@ class SQLiteTaskRepository extends TaskRepository {
       }
 
       if (filters.projectId) {
-        conditions.push('projectId = ?');
+        conditions.push('project_id = ?');
         params.push(filters.projectId);
       }
 
       if (filters.userId) {
-        conditions.push('userId = ?');
+        conditions.push('user_id = ?');
         params.push(filters.userId);
       }
 
@@ -173,9 +182,9 @@ class SQLiteTaskRepository extends TaskRepository {
       }
 
       // Add sorting
-      sql += ' ORDER BY createdAt DESC';
+      sql += ' ORDER BY created_at DESC';
 
-      const rows = await this.database.all(sql, params);
+      const rows = await this.database.query(sql, params);
       return rows.map(row => this._rowToTask(row));
     } catch (error) {
       throw new Error(`Failed to find tasks: ${error.message}`);
@@ -260,18 +269,18 @@ class SQLiteTaskRepository extends TaskRepository {
 
       // Apply additional filters
       if (filters.projectId) {
-        sql += ' AND projectId = ?';
+        sql += ' AND project_id = ?';
         params.push(filters.projectId);
       }
 
       if (filters.userId) {
-        sql += ' AND userId = ?';
+        sql += ' AND user_id = ?';
         params.push(filters.userId);
       }
 
       sql += ' ORDER BY dueDate ASC';
 
-      const rows = await this.database.all(sql, params);
+      const rows = await this.database.query(sql, params);
       return rows.map(row => this._rowToTask(row));
     } catch (error) {
       throw new Error(`Failed to find overdue tasks: ${error.message}`);
@@ -324,18 +333,18 @@ class SQLiteTaskRepository extends TaskRepository {
 
       // Apply additional filters
       if (filters.projectId) {
-        sql += ' AND projectId = ?';
+        sql += ' AND project_id = ?';
         params.push(filters.projectId);
       }
 
       if (filters.userId) {
-        sql += ' AND userId = ?';
+        sql += ' AND user_id = ?';
         params.push(filters.userId);
       }
 
       sql += ' ORDER BY createdAt DESC';
 
-      const rows = await this.database.all(sql, params);
+      const rows = await this.database.query(sql, params);
       return rows.map(row => this._rowToTask(row));
     } catch (error) {
       throw new Error(`Failed to find tasks by date range: ${error.message}`);
@@ -355,18 +364,18 @@ class SQLiteTaskRepository extends TaskRepository {
 
       // Apply additional filters
       if (filters.projectId) {
-        sql += ' AND projectId = ?';
+        sql += ' AND project_id = ?';
         params.push(filters.projectId);
       }
 
       if (filters.userId) {
-        sql += ' AND userId = ?';
+        sql += ' AND user_id = ?';
         params.push(filters.userId);
       }
 
       sql += ' ORDER BY createdAt DESC';
 
-      const rows = await this.database.all(sql, params);
+      const rows = await this.database.query(sql, params);
       return rows.map(row => this._rowToTask(row));
     } catch (error) {
       throw new Error(`Failed to find AI-required tasks: ${error.message}`);
@@ -386,18 +395,18 @@ class SQLiteTaskRepository extends TaskRepository {
 
       // Apply additional filters
       if (filters.projectId) {
-        sql += ' AND projectId = ?';
+        sql += ' AND project_id = ?';
         params.push(filters.projectId);
       }
 
       if (filters.userId) {
-        sql += ' AND userId = ?';
+        sql += ' AND user_id = ?';
         params.push(filters.userId);
       }
 
       sql += ' ORDER BY createdAt DESC';
 
-      const rows = await this.database.all(sql, params);
+      const rows = await this.database.query(sql, params);
       return rows.map(row => this._rowToTask(row));
     } catch (error) {
       throw new Error(`Failed to find execution-required tasks: ${error.message}`);
@@ -417,18 +426,18 @@ class SQLiteTaskRepository extends TaskRepository {
 
       // Apply additional filters
       if (filters.projectId) {
-        sql += ' AND projectId = ?';
+        sql += ' AND project_id = ?';
         params.push(filters.projectId);
       }
 
       if (filters.userId) {
-        sql += ' AND userId = ?';
+        sql += ' AND user_id = ?';
         params.push(filters.userId);
       }
 
       sql += ' ORDER BY createdAt DESC';
 
-      const rows = await this.database.all(sql, params);
+      const rows = await this.database.query(sql, params);
       return rows.map(row => this._rowToTask(row));
     } catch (error) {
       throw new Error(`Failed to find human-review-required tasks: ${error.message}`);
@@ -448,12 +457,12 @@ class SQLiteTaskRepository extends TaskRepository {
 
       // Apply filters
       if (filters.projectId) {
-        conditions.push('projectId = ?');
+        conditions.push('project_id = ?');
         params.push(filters.projectId);
       }
 
       if (filters.userId) {
-        conditions.push('userId = ?');
+        conditions.push('user_id = ?');
         params.push(filters.userId);
       }
 
@@ -463,7 +472,7 @@ class SQLiteTaskRepository extends TaskRepository {
 
       sql += ' GROUP BY status';
 
-      const rows = await this.database.all(sql, params);
+      const rows = await this.database.query(sql, params);
       const counts = {};
       rows.forEach(row => {
         counts[row.status] = row.count;
@@ -488,12 +497,12 @@ class SQLiteTaskRepository extends TaskRepository {
 
       // Apply filters
       if (filters.projectId) {
-        conditions.push('projectId = ?');
+        conditions.push('project_id = ?');
         params.push(filters.projectId);
       }
 
       if (filters.userId) {
-        conditions.push('userId = ?');
+        conditions.push('user_id = ?');
         params.push(filters.userId);
       }
 
@@ -503,7 +512,7 @@ class SQLiteTaskRepository extends TaskRepository {
 
       sql += ' GROUP BY type';
 
-      const rows = await this.database.all(sql, params);
+      const rows = await this.database.query(sql, params);
       const counts = {};
       rows.forEach(row => {
         counts[row.type] = row.count;
@@ -528,12 +537,12 @@ class SQLiteTaskRepository extends TaskRepository {
 
       // Apply filters
       if (filters.projectId) {
-        conditions.push('projectId = ?');
+        conditions.push('project_id = ?');
         params.push(filters.projectId);
       }
 
       if (filters.userId) {
-        conditions.push('userId = ?');
+        conditions.push('user_id = ?');
         params.push(filters.userId);
       }
 
@@ -543,7 +552,7 @@ class SQLiteTaskRepository extends TaskRepository {
 
       sql += ' GROUP BY priority';
 
-      const rows = await this.database.all(sql, params);
+      const rows = await this.database.query(sql, params);
       const counts = {};
       rows.forEach(row => {
         counts[row.priority] = row.count;
@@ -572,12 +581,12 @@ class SQLiteTaskRepository extends TaskRepository {
       const conditions = [];
 
       if (filters.projectId) {
-        conditions.push('projectId = ?');
+        conditions.push('project_id = ?');
         params.push(filters.projectId);
       }
 
       if (filters.userId) {
-        conditions.push('userId = ?');
+        conditions.push('user_id = ?');
         params.push(filters.userId);
       }
 
@@ -585,7 +594,7 @@ class SQLiteTaskRepository extends TaskRepository {
         sql += ' WHERE ' + conditions.join(' AND ');
       }
 
-      const totalRow = await this.database.get(sql, params);
+      const totalRow = await this.database.getOne(sql, params);
       const total = totalRow.total;
 
       return {
@@ -640,7 +649,7 @@ class SQLiteTaskRepository extends TaskRepository {
   async delete(id) {
     try {
       const sql = `DELETE FROM ${this.tableName} WHERE id = ?`;
-      const result = await this.database.run(sql, [id]);
+      const result = await this.database.execute(sql, [id]);
       return result.changes > 0;
     } catch (error) {
       throw new Error(`Failed to delete task: ${error.message}`);
@@ -654,8 +663,8 @@ class SQLiteTaskRepository extends TaskRepository {
    */
   async deleteByProjectId(projectId) {
     try {
-      const sql = `DELETE FROM ${this.tableName} WHERE projectId = ?`;
-      const result = await this.database.run(sql, [projectId]);
+      const sql = `DELETE FROM ${this.tableName} WHERE project_id = ?`;
+      const result = await this.database.execute(sql, [projectId]);
       return result.changes;
     } catch (error) {
       throw new Error(`Failed to delete tasks by project ID: ${error.message}`);
@@ -669,8 +678,8 @@ class SQLiteTaskRepository extends TaskRepository {
    */
   async deleteByUserId(userId) {
     try {
-      const sql = `DELETE FROM ${this.tableName} WHERE userId = ?`;
-      const result = await this.database.run(sql, [userId]);
+      const sql = `DELETE FROM ${this.tableName} WHERE user_id = ?`;
+      const result = await this.database.execute(sql, [userId]);
       return result.changes;
     } catch (error) {
       throw new Error(`Failed to delete tasks by user ID: ${error.message}`);
@@ -747,18 +756,18 @@ class SQLiteTaskRepository extends TaskRepository {
 
       // Apply additional filters
       if (filters.projectId) {
-        sql += ' AND projectId = ?';
+        sql += ' AND project_id = ?';
         params.push(filters.projectId);
       }
 
       if (filters.userId) {
-        sql += ' AND userId = ?';
+        sql += ' AND user_id = ?';
         params.push(filters.userId);
       }
 
       sql += ' ORDER BY createdAt DESC';
 
-      const rows = await this.database.all(sql, params);
+      const rows = await this.database.query(sql, params);
       return rows.map(row => this._rowToTask(row));
     } catch (error) {
       throw new Error(`Failed to search tasks: ${error.message}`);
@@ -793,12 +802,12 @@ class SQLiteTaskRepository extends TaskRepository {
       }
 
       if (filters.projectId) {
-        conditions.push('projectId = ?');
+        conditions.push('project_id = ?');
         params.push(filters.projectId);
       }
 
       if (filters.userId) {
-        conditions.push('userId = ?');
+        conditions.push('user_id = ?');
         params.push(filters.userId);
       }
 
@@ -815,7 +824,7 @@ class SQLiteTaskRepository extends TaskRepository {
       sql += ` LIMIT ? OFFSET ?`;
       params.push(limit, offset);
 
-      const rows = await this.database.all(sql, params);
+      const rows = await this.database.query(sql, params);
       const tasks = rows.map(row => this._rowToTask(row));
 
       // Get total count
@@ -823,7 +832,7 @@ class SQLiteTaskRepository extends TaskRepository {
       if (conditions.length > 0) {
         countSql += ' WHERE ' + conditions.join(' AND ');
       }
-      const countRow = await this.database.get(countSql, params.slice(0, -2));
+      const countRow = await this.database.getOne(countSql, params.slice(0, -2));
       const total = countRow.total;
 
       return {
@@ -850,7 +859,7 @@ class SQLiteTaskRepository extends TaskRepository {
   async exists(id) {
     try {
       const sql = `SELECT COUNT(*) as count FROM ${this.tableName} WHERE id = ?`;
-      const row = await this.database.get(sql, [id]);
+      const row = await this.database.getOne(sql, [id]);
       return row.count > 0;
     } catch (error) {
       throw new Error(`Failed to check task existence: ${error.message}`);
@@ -870,7 +879,7 @@ class SQLiteTaskRepository extends TaskRepository {
       }
 
       const sql = `SELECT * FROM ${this.tableName} WHERE id IN (${task.dependencies.map(() => '?').join(',')})`;
-      const rows = await this.database.all(sql, task.dependencies);
+      const rows = await this.database.query(sql, task.dependencies);
       return rows.map(row => this._rowToTask(row));
     } catch (error) {
       throw new Error(`Failed to get task dependencies: ${error.message}`);
@@ -885,7 +894,7 @@ class SQLiteTaskRepository extends TaskRepository {
   async getDependents(taskId) {
     try {
       const sql = `SELECT * FROM ${this.tableName} WHERE dependencies LIKE ?`;
-      const rows = await this.database.all(sql, [`%${taskId}%`]);
+      const rows = await this.database.query(sql, [`%${taskId}%`]);
       return rows.map(row => this._rowToTask(row));
     } catch (error) {
       throw new Error(`Failed to get task dependents: ${error.message}`);
@@ -959,7 +968,7 @@ class SQLiteTaskRepository extends TaskRepository {
   async clear() {
     try {
       const sql = `DELETE FROM ${this.tableName}`;
-      const result = await this.database.run(sql);
+      const result = await this.database.execute(sql);
       return result.changes;
     } catch (error) {
       throw new Error(`Failed to clear tasks: ${error.message}`);
@@ -981,30 +990,30 @@ class SQLiteTaskRepository extends TaskRepository {
         category: row.category,
         priority: row.priority,
         status: row.status,
-        projectId: row.projectId,
-        userId: row.userId,
-        estimatedDuration: row.estimatedDuration,
+        projectId: row.project_id,
+        userId: row.user_id,
+        estimatedDuration: row.estimated_hours,
         metadata: JSON.parse(row.metadata || '{}'),
-        createdAt: row.createdAt,
-        updatedAt: row.updatedAt,
+        createdAt: row.created_at,
+        updatedAt: row.updated_at,
         dependencies: JSON.parse(row.dependencies || '[]'),
         tags: JSON.parse(row.tags || '[]'),
         assignee: row.assignee,
-        dueDate: row.dueDate,
-        startedAt: row.startedAt,
-        completedAt: row.completedAt,
-        executionHistory: JSON.parse(row.executionHistory || '[]'),
-        parentTaskId: row.parentTaskId,
-        childTaskIds: JSON.parse(row.childTaskIds || '[]'),
+        dueDate: row.due_date,
+        startedAt: row.started_at,
+        completedAt: row.completed_at,
+        executionHistory: JSON.parse(row.execution_history || '[]'),
+        parentTaskId: row.parent_task_id,
+        childTaskIds: JSON.parse(row.child_task_ids || '[]'),
         phase: row.phase,
         stage: row.stage,
-        phaseOrder: row.phaseOrder,
-        taskLevel: row.taskLevel,
-        rootTaskId: row.rootTaskId,
-        isPhaseTask: row.isPhaseTask,
+        phaseOrder: row.phase_order,
+        taskLevel: row.task_level,
+        rootTaskId: row.root_task_id,
+        isPhaseTask: row.is_phase_task,
         progress: row.progress,
-        phaseProgress: JSON.parse(row.phaseProgress || '{}'),
-        blockedBy: JSON.parse(row.blockedBy || '[]')
+        phaseProgress: JSON.parse(row.phase_progress || '{}'),
+        blockedBy: JSON.parse(row.blocked_by || '[]')
       });
     } catch (error) {
       throw new Error(`Failed to convert row to task: ${error.message}`);

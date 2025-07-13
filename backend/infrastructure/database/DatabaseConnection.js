@@ -455,6 +455,74 @@ class DatabaseConnection {
   getConnectionStatus() {
     return this.isConnected;
   }
+
+  /**
+   * Get repository factory - centralizes repository creation based on database type
+   * @param {string} repositoryName - Name of the repository (e.g., 'Task', 'User', 'Project')
+   * @returns {Object} Repository instance
+   */
+  getRepository(repositoryName) {
+    const dbType = this.getType();
+    const isPostgreSQL = dbType === 'postgresql';
+    
+    const repositoryMap = {
+      // Core repositories with proper SQLite/PostgreSQL mapping
+      'Task': isPostgreSQL ? 
+        require('./PostgreSQLTaskRepository') : 
+        require('./SQLiteTaskRepository'),
+      'Project': isPostgreSQL ? 
+        require('./PostgreSQLProjectRepository') : 
+        require('./SQLiteProjectRepository'),
+      
+      // User repositories - use proper PostgreSQL/SQLite mapping
+      'User': isPostgreSQL ? 
+        require('./PostgreSQLUserRepository') : 
+        require('./SQLiteUserRepository'),
+      'UserSession': isPostgreSQL ? 
+        require('./PostgreSQLUserSessionRepository') : 
+        require('./SQLiteUserSessionRepository'),
+      
+      // Analysis repositories - use proper PostgreSQL/SQLite mapping
+      'Analysis': isPostgreSQL ? 
+        require('./PostgreSQLProjectAnalysisRepository') : 
+        require('./SQLiteAnalysisRepository'),
+      'ProjectAnalysis': isPostgreSQL ? 
+        require('./PostgreSQLProjectAnalysisRepository') : 
+        require('./SQLiteAnalysisRepository'),
+      
+      // Chat repositories - use proper PostgreSQL/SQLite mapping
+      'Chat': isPostgreSQL ? 
+        require('./PostgreSQLChatRepository') : 
+        require('./SQLiteChatRepository'),
+      
+      // Task execution repositories - use proper mapping
+      'TaskExecution': isPostgreSQL ? 
+        require('./PostgreSQLTaskExecutionRepository') : 
+        require('./SQLiteTaskExecutionRepository'),
+      
+      // Task suggestion repositories - use SQLite for both (only SQLite version exists)
+      'TaskSuggestion': require('./SQLiteTaskSuggestionRepository'),
+      
+      // Task template repositories - use SQLite for both (only SQLite version exists)
+      'TaskTemplate': require('./SQLiteTaskTemplateRepository'),
+      
+      // Session repositories - use proper mapping
+      'StreamingSession': isPostgreSQL ? 
+        require('./PostgreSQLStreamingSessionRepository') : 
+        require('./SQLiteStreamingSessionRepository'),
+
+      'TaskSession': isPostgreSQL ? 
+        require('./PostgreSQLTaskSessionRepository') : 
+        require('./SQLiteTaskSessionRepository')
+    };
+
+    const RepositoryClass = repositoryMap[repositoryName];
+    if (!RepositoryClass) {
+      throw new Error(`Repository '${repositoryName}' not found for database type '${dbType}'`);
+    }
+
+    return new RepositoryClass(this);
+  }
 }
 
 module.exports = DatabaseConnection; 

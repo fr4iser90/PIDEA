@@ -1,13 +1,15 @@
 const TaskExecution = require('@entities/TaskExecution');
 const TaskStatus = require('@value-objects/TaskStatus');
+const Logger = require('@logging/Logger');
+const logger = new Logger('Logger');
 
 /**
- * SQLiteTaskExecutionRepository - SQLite implementation of TaskExecutionRepository
- * Provides persistence for task execution records using SQLite database
+ * PostgreSQLTaskExecutionRepository - PostgreSQL implementation of TaskExecutionRepository
+ * Provides persistence for task execution records using PostgreSQL database
  */
-class SQLiteTaskExecutionRepository {
-    constructor(database) {
-        this.database = database;
+class PostgreSQLTaskExecutionRepository {
+    constructor(databaseConnection) {
+        this.databaseConnection = databaseConnection;
         this.tableName = 'task_executions';
         this.initTable();
     }
@@ -19,29 +21,29 @@ class SQLiteTaskExecutionRepository {
         const createTableSQL = `
             CREATE TABLE IF NOT EXISTS ${this.tableName} (
                 id TEXT PRIMARY KEY,
-                taskId TEXT NOT NULL,
+                task_id TEXT NOT NULL,
                 status TEXT NOT NULL,
-                startedAt TEXT NOT NULL,
-                completedAt TEXT,
-                executionTime INTEGER,
+                started_at TIMESTAMP NOT NULL,
+                completed_at TIMESTAMP,
+                execution_time INTEGER,
                 progress INTEGER DEFAULT 0,
-                result TEXT,
+                result JSONB,
                 error TEXT,
-                resourceUsage TEXT,
-                options TEXT,
-                metadata TEXT,
-                createdAt TEXT NOT NULL,
-                updatedAt TEXT NOT NULL,
-                FOREIGN KEY (taskId) REFERENCES tasks(id) ON DELETE CASCADE
+                resource_usage JSONB,
+                options JSONB,
+                metadata JSONB,
+                created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (task_id) REFERENCES tasks(id) ON DELETE CASCADE
             )
         `;
 
-        await this.database.execute(createTableSQL);
+        await this.databaseConnection.execute(createTableSQL);
         
         // Create indexes for better performance
-        await this.database.execute(`CREATE INDEX IF NOT EXISTS idx_task_executions_task_id ON ${this.tableName} (taskId)`);
-        await this.database.execute(`CREATE INDEX IF NOT EXISTS idx_task_executions_status ON ${this.tableName} (status)`);
-        await this.database.execute(`CREATE INDEX IF NOT EXISTS idx_task_executions_started_at ON ${this.tableName} (startedAt)`);
+        await this.databaseConnection.execute(`CREATE INDEX IF NOT EXISTS idx_task_executions_task_id ON ${this.tableName} (task_id)`);
+        await this.databaseConnection.execute(`CREATE INDEX IF NOT EXISTS idx_task_executions_status ON ${this.tableName} (status)`);
+        await this.databaseConnection.execute(`CREATE INDEX IF NOT EXISTS idx_task_executions_started_at ON ${this.tableName} (started_at)`);
     }
 
     /**
@@ -73,10 +75,10 @@ class SQLiteTaskExecutionRepository {
 
         const insertSQL = `
             INSERT INTO ${this.tableName} (
-                id, taskId, status, startedAt, completedAt, executionTime,
-                progress, result, error, resourceUsage, options, metadata,
-                createdAt, updatedAt
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                id, task_id, status, started_at, completed_at, execution_time,
+                progress, result, error, resource_usage, options, metadata,
+                created_at, updated_at
+            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
         `;
 
         const params = [
@@ -96,7 +98,7 @@ class SQLiteTaskExecutionRepository {
             now
         ];
 
-        await this.database.execute(insertSQL, params);
+        await this.databaseConnection.execute(insertSQL, params);
         return taskExecution;
     }
 
@@ -109,21 +111,22 @@ class SQLiteTaskExecutionRepository {
     async update(taskExecution, now) {
         const updateSQL = `
             UPDATE ${this.tableName} SET
-                status = ?,
-                startedAt = ?,
-                completedAt = ?,
-                executionTime = ?,
-                progress = ?,
-                result = ?,
-                error = ?,
-                resourceUsage = ?,
-                options = ?,
-                metadata = ?,
-                updatedAt = ?
-            WHERE id = ?
+                status = $2,
+                started_at = $3,
+                completed_at = $4,
+                execution_time = $5,
+                progress = $6,
+                result = $7,
+                error = $8,
+                resource_usage = $9,
+                options = $10,
+                metadata = $11,
+                updated_at = $12
+            WHERE id = $1
         `;
 
         const params = [
+            taskExecution.id,
             taskExecution.status.value,
             taskExecution.startedAt.toISOString(),
             taskExecution.completedAt ? taskExecution.completedAt.toISOString() : null,
@@ -134,11 +137,10 @@ class SQLiteTaskExecutionRepository {
             taskExecution.resourceUsage ? JSON.stringify(taskExecution.resourceUsage) : null,
             taskExecution.options ? JSON.stringify(taskExecution.options) : null,
             taskExecution.metadata ? JSON.stringify(taskExecution.metadata) : null,
-            now,
-            taskExecution.id
+            now
         ];
 
-        await this.database.execute(updateSQL, params);
+        await this.databaseConnection.execute(updateSQL, params);
         return taskExecution;
     }
 
@@ -148,8 +150,8 @@ class SQLiteTaskExecutionRepository {
      * @returns {Promise<TaskExecution|null>} Task execution or null
      */
     async findById(id) {
-        const selectSQL = `SELECT * FROM ${this.tableName} WHERE id = ?`;
-        const row = await this.database.getOne(selectSQL, [id]);
+        const selectSQL = `SELECT * FROM ${this.tableName} WHERE id = $1`;
+        const row = await this.databaseConnection.getOne(selectSQL, [id]);
         
         if (!row) {
             return null;
@@ -166,11 +168,11 @@ class SQLiteTaskExecutionRepository {
     async findByTaskId(taskId) {
         const selectSQL = `
             SELECT * FROM ${this.tableName} 
-            WHERE taskId = ? 
-            ORDER BY startedAt DESC
+            WHERE task_id = $1 
+            ORDER BY started_at DESC
         `;
         
-        const rows = await this.database.query(selectSQL, [taskId]);
+        const rows = await this.databaseConnection.query(selectSQL, [taskId]);
         return rows.map(row => this.mapRowToTaskExecution(row));
     }
 
@@ -182,12 +184,12 @@ class SQLiteTaskExecutionRepository {
     async findLatestByTaskId(taskId) {
         const selectSQL = `
             SELECT * FROM ${this.tableName} 
-            WHERE taskId = ? 
-            ORDER BY startedAt DESC 
+            WHERE task_id = $1 
+            ORDER BY started_at DESC 
             LIMIT 1
         `;
         
-        const row = await this.database.getOne(selectSQL, [taskId]);
+        const row = await this.databaseConnection.getOne(selectSQL, [taskId]);
         
         if (!row) {
             return null;
@@ -204,37 +206,11 @@ class SQLiteTaskExecutionRepository {
     async findByStatus(status) {
         const selectSQL = `
             SELECT * FROM ${this.tableName} 
-            WHERE status = ? 
-            ORDER BY startedAt DESC
+            WHERE status = $1 
+            ORDER BY started_at DESC
         `;
         
-        const rows = await this.database.query(selectSQL, [status]);
-        return rows.map(row => this.mapRowToTaskExecution(row));
-    }
-
-    /**
-     * Find task executions by date range
-     * @param {string} taskId - Task ID
-     * @param {Date} startDate - Start date
-     * @param {Date} endDate - End date
-     * @returns {Promise<Array<TaskExecution>>} Task executions
-     */
-    async findByTaskIdAndDateRange(taskId, startDate, endDate) {
-        const selectSQL = `
-            SELECT * FROM ${this.tableName} 
-            WHERE taskId = ? 
-            AND startedAt >= ? 
-            AND startedAt <= ? 
-            ORDER BY startedAt DESC
-        `;
-        
-        const params = [
-            taskId,
-            startDate.toISOString(),
-            endDate.toISOString()
-        ];
-        
-        const rows = await this.database.query(selectSQL, params);
+        const rows = await this.databaseConnection.query(selectSQL, [status]);
         return rows.map(row => this.mapRowToTaskExecution(row));
     }
 
@@ -254,12 +230,12 @@ class SQLiteTaskExecutionRepository {
     async findCompleted(limit = 100) {
         const selectSQL = `
             SELECT * FROM ${this.tableName} 
-            WHERE status = ? 
-            ORDER BY completedAt DESC 
-            LIMIT ?
+            WHERE status = $1 
+            ORDER BY completed_at DESC 
+            LIMIT $2
         `;
         
-        const rows = await this.database.query(selectSQL, [TaskStatus.COMPLETED.value, limit]);
+        const rows = await this.databaseConnection.query(selectSQL, [TaskStatus.COMPLETED.value, limit]);
         return rows.map(row => this.mapRowToTaskExecution(row));
     }
 
@@ -271,12 +247,12 @@ class SQLiteTaskExecutionRepository {
     async findFailed(limit = 100) {
         const selectSQL = `
             SELECT * FROM ${this.tableName} 
-            WHERE status = ? 
-            ORDER BY startedAt DESC 
-            LIMIT ?
+            WHERE status = $1 
+            ORDER BY started_at DESC 
+            LIMIT $2
         `;
         
-        const rows = await this.database.query(selectSQL, [TaskStatus.FAILED.value, limit]);
+        const rows = await this.databaseConnection.query(selectSQL, [TaskStatus.FAILED.value, limit]);
         return rows.map(row => this.mapRowToTaskExecution(row));
     }
 
@@ -286,9 +262,9 @@ class SQLiteTaskExecutionRepository {
      * @returns {Promise<boolean>} Success status
      */
     async deleteById(id) {
-        const deleteSQL = `DELETE FROM ${this.tableName} WHERE id = ?`;
-        const result = await this.database.execute(deleteSQL, [id]);
-        return result.changes > 0;
+        const deleteSQL = `DELETE FROM ${this.tableName} WHERE id = $1`;
+        const result = await this.databaseConnection.execute(deleteSQL, [id]);
+        return result.rowsAffected > 0;
     }
 
     /**
@@ -297,9 +273,9 @@ class SQLiteTaskExecutionRepository {
      * @returns {Promise<number>} Number of deleted executions
      */
     async deleteByTaskId(taskId) {
-        const deleteSQL = `DELETE FROM ${this.tableName} WHERE taskId = ?`;
-        const result = await this.database.execute(deleteSQL, [taskId]);
-        return result.changes;
+        const deleteSQL = `DELETE FROM ${this.tableName} WHERE task_id = $1`;
+        const result = await this.databaseConnection.execute(deleteSQL, [taskId]);
+        return result.rowsAffected;
     }
 
     /**
@@ -308,8 +284,8 @@ class SQLiteTaskExecutionRepository {
      * @returns {Promise<number>} Count of executions
      */
     async countByTaskId(taskId) {
-        const countSQL = `SELECT COUNT(*) as count FROM ${this.tableName} WHERE taskId = ?`;
-        const result = await this.database.getOne(countSQL, [taskId]);
+        const countSQL = `SELECT COUNT(*) as count FROM ${this.tableName} WHERE task_id = $1`;
+        const result = await this.databaseConnection.getOne(countSQL, [taskId]);
         return result.count;
     }
 
@@ -322,25 +298,25 @@ class SQLiteTaskExecutionRepository {
         const statsSQL = `
             SELECT 
                 COUNT(*) as total,
-                COUNT(CASE WHEN status = ? THEN 1 END) as completed,
-                COUNT(CASE WHEN status = ? THEN 1 END) as failed,
-                COUNT(CASE WHEN status = ? THEN 1 END) as running,
-                AVG(executionTime) as averageExecutionTime,
-                MIN(executionTime) as minExecutionTime,
-                MAX(executionTime) as maxExecutionTime,
-                AVG(progress) as averageProgress
+                COUNT(CASE WHEN status = $2 THEN 1 END) as completed,
+                COUNT(CASE WHEN status = $3 THEN 1 END) as failed,
+                COUNT(CASE WHEN status = $4 THEN 1 END) as running,
+                AVG(execution_time) as average_execution_time,
+                MIN(execution_time) as min_execution_time,
+                MAX(execution_time) as max_execution_time,
+                AVG(progress) as average_progress
             FROM ${this.tableName} 
-            WHERE taskId = ?
+            WHERE task_id = $1
         `;
 
         const params = [
+            taskId,
             TaskStatus.COMPLETED.value,
             TaskStatus.FAILED.value,
-            TaskStatus.RUNNING.value,
-            taskId
+            TaskStatus.RUNNING.value
         ];
 
-        const result = await this.database.getOne(statsSQL, params);
+        const result = await this.databaseConnection.getOne(statsSQL, params);
         
         return {
             total: result.total,
@@ -348,10 +324,10 @@ class SQLiteTaskExecutionRepository {
             failed: result.failed,
             running: result.running,
             successRate: result.total > 0 ? result.completed / result.total : 0,
-            averageExecutionTime: result.averageExecutionTime || 0,
-            minExecutionTime: result.minExecutionTime || 0,
-            maxExecutionTime: result.maxExecutionTime || 0,
-            averageProgress: result.averageProgress || 0
+            averageExecutionTime: result.average_execution_time || 0,
+            minExecutionTime: result.min_execution_time || 0,
+            maxExecutionTime: result.max_execution_time || 0,
+            averageProgress: result.average_progress || 0
         };
     }
 
@@ -363,34 +339,11 @@ class SQLiteTaskExecutionRepository {
     async getRecentExecutions(limit = 50) {
         const selectSQL = `
             SELECT * FROM ${this.tableName} 
-            ORDER BY startedAt DESC 
-            LIMIT ?
+            ORDER BY started_at DESC 
+            LIMIT $1
         `;
         
-        const rows = await this.database.query(selectSQL, [limit]);
-        return rows.map(row => this.mapRowToTaskExecution(row));
-    }
-
-    /**
-     * Get executions by date range
-     * @param {Date} startDate - Start date
-     * @param {Date} endDate - End date
-     * @returns {Promise<Array<TaskExecution>>} Executions in date range
-     */
-    async getExecutionsByDateRange(startDate, endDate) {
-        const selectSQL = `
-            SELECT * FROM ${this.tableName} 
-            WHERE startedAt >= ? 
-            AND startedAt <= ? 
-            ORDER BY startedAt DESC
-        `;
-        
-        const params = [
-            startDate.toISOString(),
-            endDate.toISOString()
-        ];
-        
-        const rows = await this.database.query(selectSQL, params);
+        const rows = await this.databaseConnection.query(selectSQL, [limit]);
         return rows.map(row => this.mapRowToTaskExecution(row));
     }
 
@@ -402,19 +355,19 @@ class SQLiteTaskExecutionRepository {
     mapRowToTaskExecution(row) {
         return new TaskExecution({
             id: row.id,
-            taskId: row.taskId,
+            taskId: row.task_id,
             status: TaskStatus.fromValue(row.status),
-            startedAt: new Date(row.startedAt),
-            completedAt: row.completedAt ? new Date(row.completedAt) : null,
-            executionTime: row.executionTime,
+            startedAt: new Date(row.started_at),
+            completedAt: row.completed_at ? new Date(row.completed_at) : null,
+            executionTime: row.execution_time,
             progress: row.progress,
             result: row.result ? JSON.parse(row.result) : null,
             error: row.error,
-            resourceUsage: row.resourceUsage ? JSON.parse(row.resourceUsage) : null,
+            resourceUsage: row.resource_usage ? JSON.parse(row.resource_usage) : null,
             options: row.options ? JSON.parse(row.options) : null,
             metadata: row.metadata ? JSON.parse(row.metadata) : null,
-            createdAt: new Date(row.createdAt),
-            updatedAt: new Date(row.updatedAt)
+            createdAt: new Date(row.created_at),
+            updatedAt: new Date(row.updated_at)
         });
     }
 
@@ -437,8 +390,8 @@ class SQLiteTaskExecutionRepository {
 
         const deleteSQL = `
             DELETE FROM ${this.tableName} 
-            WHERE startedAt < ? 
-            AND status IN (?, ?)
+            WHERE started_at < $1 
+            AND status IN ($2, $3)
         `;
 
         const params = [
@@ -447,27 +400,9 @@ class SQLiteTaskExecutionRepository {
             TaskStatus.FAILED.value
         ];
 
-        const result = await this.database.execute(deleteSQL, params);
-        return result.changes;
-    }
-
-    /**
-     * Get database size information
-     * @returns {Promise<Object>} Database size information
-     */
-    async getDatabaseInfo() {
-        const countSQL = `SELECT COUNT(*) as count FROM ${this.tableName}`;
-        const sizeSQL = `SELECT COUNT(*) as size FROM ${this.tableName}`;
-        
-        const countResult = await this.database.getOne(countSQL);
-        const sizeResult = await this.database.getOne(sizeSQL);
-        
-        return {
-            totalExecutions: countResult.count,
-            databaseSize: sizeResult.size,
-            tableName: this.tableName
-        };
+        const result = await this.databaseConnection.execute(deleteSQL, params);
+        return result.rowsAffected;
     }
 }
 
-module.exports = SQLiteTaskExecutionRepository; 
+module.exports = PostgreSQLTaskExecutionRepository; 

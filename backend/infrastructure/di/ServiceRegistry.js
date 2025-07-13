@@ -227,10 +227,10 @@ class ServiceRegistry {
         }, { singleton: true, dependencies: ['taskRepository', 'aiService', 'projectAnalyzer', 'cursorIDEService', 'autoFinishSystem'] });
 
         // Docs Import Service
-        this.container.register('docsImportService', () => {
+        this.container.register('docsImportService', (browserManager, taskService, taskRepository) => {
             const DocsImportService = require('@domain/services/DocsImportService');
-            return new DocsImportService();
-        }, { singleton: true });
+            return new DocsImportService(browserManager, taskService, taskRepository);
+        }, { singleton: true, dependencies: ['browserManager', 'taskService', 'taskRepository'] });
 
         this.registeredServices.add('domain');
     }
@@ -387,8 +387,7 @@ class ServiceRegistry {
 
         // Task repository
         this.container.register('taskRepository', (databaseConnection) => {
-            const PostgreSQLTaskRepository = require('../database/PostgreSQLTaskRepository');
-            return new PostgreSQLTaskRepository(databaseConnection);
+            return databaseConnection.getRepository('Task');
         }, { singleton: true, dependencies: ['databaseConnection'] });
 
         // Task execution repository
@@ -405,26 +404,22 @@ class ServiceRegistry {
 
         // User repository
         this.container.register('userRepository', (databaseConnection) => {
-            const PostgreSQLUserRepository = require('../database/PostgreSQLUserRepository');
-            return new PostgreSQLUserRepository(databaseConnection);
+            return databaseConnection.getRepository('User');
         }, { singleton: true, dependencies: ['databaseConnection'] });
 
         // User session repository
         this.container.register('userSessionRepository', (databaseConnection) => {
-            const PostgreSQLUserSessionRepository = require('../database/PostgreSQLUserSessionRepository');
-            return new PostgreSQLUserSessionRepository(databaseConnection);
+            return databaseConnection.getRepository('UserSession');
         }, { singleton: true, dependencies: ['databaseConnection'] });
 
         // Project analysis repository
         this.container.register('projectAnalysisRepository', (databaseConnection) => {
-            const PostgreSQLProjectAnalysisRepository = require('../database/PostgreSQLProjectAnalysisRepository');
-            return new PostgreSQLProjectAnalysisRepository(databaseConnection);
+            return databaseConnection.getRepository('ProjectAnalysis');
         }, { singleton: true, dependencies: ['databaseConnection'] });
 
         // Project repository
         this.container.register('projectRepository', (databaseConnection) => {
-            const SQLiteProjectRepository = require('../database/SQLiteProjectRepository');
-            return new SQLiteProjectRepository(databaseConnection);
+            return databaseConnection.getRepository('Project');
         }, { singleton: true, dependencies: ['databaseConnection'] });
 
         this.registeredServices.add('repositories');
@@ -481,18 +476,23 @@ class ServiceRegistry {
     registerAllServices() {
         logger.log('[ServiceRegistry] Registering all services...');
 
+        // ✅ CORRECT ORDER: Infrastructure first, then dependencies
         this.registerInfrastructureServices();
         this.registerRepositoryServices();
-        this.registerStrategyServices(); // ✅ MOVED BEFORE registerDomainServices
-        this.registerDomainServices();
-        this.registerExternalServices();
+        this.registerExternalServices();  // ✅ MOVED BEFORE domain services
+        this.registerStrategyServices();
+        this.registerDomainServices();    // ✅ Now all dependencies are available
         this.registerApplicationHandlers();
 
         // Initialize project context service after all services are registered
-        this.projectContextService.initialize({
-            projectMappingService: this.container.resolve('projectMappingService'),
-            workspacePathDetector: this.container.resolve('workspacePathDetector')
-        });
+        try {
+            this.projectContextService.initialize({
+                projectMappingService: this.container.resolve('projectMappingService'),
+                workspacePathDetector: this.container.resolve('workspacePathDetector')
+            });
+        } catch (error) {
+            logger.warn('[ServiceRegistry] Project context initialization failed:', error.message);
+        }
 
         logger.log('[ServiceRegistry] All services registered successfully');
         logger.log('[ServiceRegistry] Registered service categories:', Array.from(this.registeredServices));

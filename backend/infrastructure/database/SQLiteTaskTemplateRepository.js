@@ -22,10 +22,10 @@ class SQLiteTaskTemplateRepository {
     async initIndexes() {
         try {
             // Create indexes for better performance
-            await this.database.run(`CREATE INDEX IF NOT EXISTS idx_task_templates_name ON ${this.tableName} (name)`);
-            await this.database.run(`CREATE INDEX IF NOT EXISTS idx_task_templates_type ON ${this.tableName} (type)`);
-            await this.database.run(`CREATE INDEX IF NOT EXISTS idx_task_templates_active ON ${this.tableName} (isActive)`);
-            await this.database.run(`CREATE INDEX IF NOT EXISTS idx_task_templates_version ON ${this.tableName} (version)`);
+            await this.database.execute(`CREATE INDEX IF NOT EXISTS idx_task_templates_name ON ${this.tableName} (name)`);
+        await this.database.execute(`CREATE INDEX IF NOT EXISTS idx_task_templates_type ON ${this.tableName} (type)`);
+        await this.database.execute(`CREATE INDEX IF NOT EXISTS idx_task_templates_active ON ${this.tableName} (isActive)`);
+        await this.database.execute(`CREATE INDEX IF NOT EXISTS idx_task_templates_version ON ${this.tableName} (version)`);
         } catch (error) {
             // Indexes might already exist, ignore errors
             logger.debug(`[SQLiteTaskTemplateRepository] Index creation skipped: ${error.message}`);
@@ -85,7 +85,7 @@ class SQLiteTaskTemplateRepository {
             now
         ];
 
-        await this.database.run(insertSQL, params);
+        await this.database.execute(insertSQL, params);
         return taskTemplate;
     }
 
@@ -129,7 +129,7 @@ class SQLiteTaskTemplateRepository {
             taskTemplate.id
         ];
 
-        await this.database.run(updateSQL, params);
+        await this.database.execute(updateSQL, params);
         return taskTemplate;
     }
 
@@ -140,7 +140,7 @@ class SQLiteTaskTemplateRepository {
      */
     async findById(id) {
         const selectSQL = `SELECT * FROM ${this.tableName} WHERE id = ?`;
-        const row = await this.database.get(selectSQL, [id]);
+        const row = await this.database.getOne(selectSQL, [id]);
         
         if (!row) {
             return null;
@@ -156,7 +156,7 @@ class SQLiteTaskTemplateRepository {
      */
     async findByName(name) {
         const selectSQL = `SELECT * FROM ${this.tableName} WHERE name = ?`;
-        const row = await this.database.get(selectSQL, [name]);
+        const row = await this.database.getOne(selectSQL, [name]);
         
         if (!row) {
             return null;
@@ -177,7 +177,7 @@ class SQLiteTaskTemplateRepository {
             ORDER BY name ASC
         `;
         
-        const rows = await this.database.all(selectSQL, [type]);
+        const rows = await this.database.query(selectSQL, [type]);
         return rows.map(row => this.mapRowToTaskTemplate(row));
     }
 
@@ -192,7 +192,7 @@ class SQLiteTaskTemplateRepository {
             ORDER BY name ASC
         `;
         
-        const rows = await this.database.all(selectSQL);
+        const rows = await this.database.query(selectSQL);
         return rows.map(row => this.mapRowToTaskTemplate(row));
     }
 
@@ -217,7 +217,7 @@ class SQLiteTaskTemplateRepository {
         `;
         
         const params = [...tags, ...tags]; // For both placeholders and LIKE conditions
-        const rows = await this.database.all(selectSQL, params);
+        const rows = await this.database.query(selectSQL, params);
         return rows.map(row => this.mapRowToTaskTemplate(row));
     }
 
@@ -233,7 +233,7 @@ class SQLiteTaskTemplateRepository {
             ORDER BY createdAt DESC
         `;
         
-        const rows = await this.database.all(selectSQL, [createdBy]);
+        const rows = await this.database.query(selectSQL, [createdBy]);
         return rows.map(row => this.mapRowToTaskTemplate(row));
     }
 
@@ -257,7 +257,7 @@ class SQLiteTaskTemplateRepository {
         const searchPattern = `%${query}%`;
         const params = [searchPattern, searchPattern, searchPattern];
         
-        const rows = await this.database.all(selectSQL, params);
+        const rows = await this.database.query(selectSQL, params);
         return rows.map(row => this.mapRowToTaskTemplate(row));
     }
 
@@ -297,7 +297,7 @@ class SQLiteTaskTemplateRepository {
             params.push(options.limit);
         }
 
-        const rows = await this.database.all(selectSQL, params);
+        const rows = await this.database.query(selectSQL, params);
         return rows.map(row => this.mapRowToTaskTemplate(row));
     }
 
@@ -308,7 +308,7 @@ class SQLiteTaskTemplateRepository {
      */
     async deleteById(id) {
         const deleteSQL = `DELETE FROM ${this.tableName} WHERE id = ?`;
-        const result = await this.database.run(deleteSQL, [id]);
+        const result = await this.database.execute(deleteSQL, [id]);
         return result.changes > 0;
     }
 
@@ -319,7 +319,7 @@ class SQLiteTaskTemplateRepository {
      */
     async deleteByName(name) {
         const deleteSQL = `DELETE FROM ${this.tableName} WHERE name = ?`;
-        const result = await this.database.run(deleteSQL, [name]);
+        const result = await this.database.execute(deleteSQL, [name]);
         return result.changes > 0;
     }
 
@@ -330,7 +330,7 @@ class SQLiteTaskTemplateRepository {
      */
     async activate(id) {
         const updateSQL = `UPDATE ${this.tableName} SET isActive = 1, updatedAt = ? WHERE id = ?`;
-        const result = await this.database.run(updateSQL, [new Date().toISOString(), id]);
+        const result = await this.database.execute(updateSQL, [new Date().toISOString(), id]);
         return result.changes > 0;
     }
 
@@ -341,7 +341,7 @@ class SQLiteTaskTemplateRepository {
      */
     async deactivate(id) {
         const updateSQL = `UPDATE ${this.tableName} SET isActive = 0, updatedAt = ? WHERE id = ?`;
-        const result = await this.database.run(updateSQL, [new Date().toISOString(), id]);
+        const result = await this.database.execute(updateSQL, [new Date().toISOString(), id]);
         return result.changes > 0;
     }
 
@@ -353,7 +353,7 @@ class SQLiteTaskTemplateRepository {
      */
     async updateVersion(id, version) {
         const updateSQL = `UPDATE ${this.tableName} SET version = ?, updatedAt = ? WHERE id = ?`;
-        const result = await this.database.run(updateSQL, [version, new Date().toISOString(), id]);
+        const result = await this.database.execute(updateSQL, [version, new Date().toISOString(), id]);
         return result.changes > 0;
     }
 
@@ -384,7 +384,7 @@ class SQLiteTaskTemplateRepository {
             countSQL += ` WHERE ${filters.join(' AND ')}`;
         }
 
-        const result = await this.database.get(countSQL, params);
+        const result = await this.database.getOne(countSQL, params);
         return result.count;
     }
 
@@ -404,7 +404,7 @@ class SQLiteTaskTemplateRepository {
             FROM ${this.tableName}
         `;
 
-        const result = await this.database.get(statsSQL);
+        const result = await this.database.getOne(statsSQL);
         
         // Get type distribution
         const typeSQL = `
@@ -414,7 +414,7 @@ class SQLiteTaskTemplateRepository {
             GROUP BY type
         `;
         
-        const typeRows = await this.database.all(typeSQL);
+        const typeRows = await this.database.query(typeSQL);
         const typeDistribution = {};
         typeRows.forEach(row => {
             typeDistribution[row.type] = row.count;
@@ -443,7 +443,7 @@ class SQLiteTaskTemplateRepository {
             LIMIT ?
         `;
         
-        const rows = await this.database.all(selectSQL, [limit]);
+        const rows = await this.database.query(selectSQL, [limit]);
         return rows.map(row => this.mapRowToTaskTemplate(row));
     }
 
@@ -462,7 +462,7 @@ class SQLiteTaskTemplateRepository {
             LIMIT ?
         `;
         
-        const rows = await this.database.all(selectSQL, [limit]);
+        const rows = await this.database.query(selectSQL, [limit]);
         return rows.map(row => this.mapRowToTaskTemplate(row));
     }
 
@@ -538,8 +538,8 @@ class SQLiteTaskTemplateRepository {
         const countSQL = `SELECT COUNT(*) as count FROM ${this.tableName}`;
         const activeSQL = `SELECT COUNT(*) as active FROM ${this.tableName} WHERE isActive = 1`;
         
-        const countResult = await this.database.get(countSQL);
-        const activeResult = await this.database.get(activeSQL);
+        const countResult = await this.database.getOne(countSQL);
+        const activeResult = await this.database.getOne(activeSQL);
         
         return {
             totalTemplates: countResult.count,

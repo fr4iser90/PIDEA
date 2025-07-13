@@ -22,11 +22,11 @@ class SQLiteTaskSuggestionRepository {
     async initIndexes() {
         try {
             // Create indexes for better performance
-            await this.database.run(`CREATE INDEX IF NOT EXISTS idx_task_suggestions_status ON ${this.tableName} (status)`);
-            await this.database.run(`CREATE INDEX IF NOT EXISTS idx_task_suggestions_project ON ${this.tableName} (projectPath)`);
-            await this.database.run(`CREATE INDEX IF NOT EXISTS idx_task_suggestions_confidence ON ${this.tableName} (confidence)`);
-            await this.database.run(`CREATE INDEX IF NOT EXISTS idx_task_suggestions_approved ON ${this.tableName} (isApproved)`);
-            await this.database.run(`CREATE INDEX IF NOT EXISTS idx_task_suggestions_created_at ON ${this.tableName} (createdAt)`);
+            await this.database.execute(`CREATE INDEX IF NOT EXISTS idx_task_suggestions_status ON ${this.tableName} (status)`);
+            await this.database.execute(`CREATE INDEX IF NOT EXISTS idx_task_suggestions_project ON ${this.tableName} (projectPath)`);
+            await this.database.execute(`CREATE INDEX IF NOT EXISTS idx_task_suggestions_confidence ON ${this.tableName} (confidence)`);
+            await this.database.execute(`CREATE INDEX IF NOT EXISTS idx_task_suggestions_approved ON ${this.tableName} (isApproved)`);
+            await this.database.execute(`CREATE INDEX IF NOT EXISTS idx_task_suggestions_created_at ON ${this.tableName} (createdAt)`);
         } catch (error) {
             // Indexes might already exist, ignore errors
             logger.log(`[SQLiteTaskSuggestionRepository] Index creation skipped: ${error.message}`);
@@ -93,7 +93,7 @@ class SQLiteTaskSuggestionRepository {
             now
         ];
 
-        await this.database.run(insertSQL, params);
+        await this.database.execute(insertSQL, params);
         return taskSuggestion;
     }
 
@@ -151,7 +151,7 @@ class SQLiteTaskSuggestionRepository {
             taskSuggestion.id
         ];
 
-        await this.database.run(updateSQL, params);
+        await this.database.execute(updateSQL, params);
         return taskSuggestion;
     }
 
@@ -162,7 +162,7 @@ class SQLiteTaskSuggestionRepository {
      */
     async findById(id) {
         const selectSQL = `SELECT * FROM ${this.tableName} WHERE id = ?`;
-        const row = await this.database.get(selectSQL, [id]);
+        const row = await this.database.getOne(selectSQL, [id]);
         
         if (!row) {
             return null;
@@ -183,7 +183,7 @@ class SQLiteTaskSuggestionRepository {
             ORDER BY createdAt DESC
         `;
         
-        const rows = await this.database.all(selectSQL, [projectPath]);
+        const rows = await this.database.query(selectSQL, [projectPath]);
         return rows.map(row => this.mapRowToTaskSuggestion(row));
     }
 
@@ -199,7 +199,7 @@ class SQLiteTaskSuggestionRepository {
             ORDER BY createdAt DESC
         `;
         
-        const rows = await this.database.all(selectSQL, [status]);
+        const rows = await this.database.query(selectSQL, [status]);
         return rows.map(row => this.mapRowToTaskSuggestion(row));
     }
 
@@ -214,7 +214,7 @@ class SQLiteTaskSuggestionRepository {
             ORDER BY createdAt DESC
         `;
         
-        const rows = await this.database.all(selectSQL);
+        const rows = await this.database.query(selectSQL);
         return rows.map(row => this.mapRowToTaskSuggestion(row));
     }
 
@@ -229,7 +229,7 @@ class SQLiteTaskSuggestionRepository {
             ORDER BY createdAt DESC
         `;
         
-        const rows = await this.database.all(selectSQL);
+        const rows = await this.database.query(selectSQL);
         return rows.map(row => this.mapRowToTaskSuggestion(row));
     }
 
@@ -244,7 +244,7 @@ class SQLiteTaskSuggestionRepository {
             ORDER BY confidence DESC, createdAt DESC
         `;
         
-        const rows = await this.database.all(selectSQL);
+        const rows = await this.database.query(selectSQL);
         return rows.map(row => this.mapRowToTaskSuggestion(row));
     }
 
@@ -260,7 +260,7 @@ class SQLiteTaskSuggestionRepository {
             ORDER BY confidence DESC, createdAt DESC
         `;
         
-        const rows = await this.database.all(selectSQL, [minConfidence]);
+        const rows = await this.database.query(selectSQL, [minConfidence]);
         return rows.map(row => this.mapRowToTaskSuggestion(row));
     }
 
@@ -276,7 +276,7 @@ class SQLiteTaskSuggestionRepository {
             ORDER BY confidence DESC, createdAt DESC
         `;
         
-        const rows = await this.database.all(selectSQL, [taskType]);
+        const rows = await this.database.query(selectSQL, [taskType]);
         return rows.map(row => this.mapRowToTaskSuggestion(row));
     }
 
@@ -300,7 +300,7 @@ class SQLiteTaskSuggestionRepository {
         `;
         
         const params = [...tags]; // For LIKE conditions
-        const rows = await this.database.all(selectSQL, params);
+        const rows = await this.database.query(selectSQL, params);
         return rows.map(row => this.mapRowToTaskSuggestion(row));
     }
 
@@ -323,7 +323,7 @@ class SQLiteTaskSuggestionRepository {
         const searchPattern = `%${query}%`;
         const params = [searchPattern, searchPattern, searchPattern];
         
-        const rows = await this.database.all(selectSQL, params);
+        const rows = await this.database.query(selectSQL, params);
         return rows.map(row => this.mapRowToTaskSuggestion(row));
     }
 
@@ -377,7 +377,7 @@ class SQLiteTaskSuggestionRepository {
             params.push(options.limit);
         }
 
-        const rows = await this.database.all(selectSQL, params);
+        const rows = await this.database.query(selectSQL, params);
         return rows.map(row => this.mapRowToTaskSuggestion(row));
     }
 
@@ -393,7 +393,7 @@ class SQLiteTaskSuggestionRepository {
             SET isApproved = 1, isRejected = 0, status = 'approved', updatedAt = ? 
             WHERE id = ?
         `;
-        const result = await this.database.run(updateSQL, [new Date().toISOString(), id]);
+        const result = await this.database.execute(updateSQL, [new Date().toISOString(), id]);
         return result.changes > 0;
     }
 
@@ -409,7 +409,7 @@ class SQLiteTaskSuggestionRepository {
             SET isApproved = 0, isRejected = 1, status = 'rejected', updatedAt = ? 
             WHERE id = ?
         `;
-        const result = await this.database.run(updateSQL, [new Date().toISOString(), id]);
+        const result = await this.database.execute(updateSQL, [new Date().toISOString(), id]);
         return result.changes > 0;
     }
 
@@ -425,7 +425,7 @@ class SQLiteTaskSuggestionRepository {
             SET appliedAt = ?, appliedBy = ?, status = 'applied', updatedAt = ? 
             WHERE id = ?
         `;
-        const result = await this.database.run(updateSQL, [
+        const result = await this.database.execute(updateSQL, [
             new Date().toISOString(),
             appliedBy,
             new Date().toISOString(),
@@ -441,7 +441,7 @@ class SQLiteTaskSuggestionRepository {
      */
     async deleteById(id) {
         const deleteSQL = `DELETE FROM ${this.tableName} WHERE id = ?`;
-        const result = await this.database.run(deleteSQL, [id]);
+        const result = await this.database.execute(deleteSQL, [id]);
         return result.changes > 0;
     }
 
@@ -477,7 +477,7 @@ class SQLiteTaskSuggestionRepository {
             countSQL += ` WHERE ${filters.join(' AND ')}`;
         }
 
-        const result = await this.database.get(countSQL, params);
+        const result = await this.database.getOne(countSQL, params);
         return result.count;
     }
 
@@ -499,7 +499,7 @@ class SQLiteTaskSuggestionRepository {
             FROM ${this.tableName}
         `;
 
-        const result = await this.database.get(statsSQL);
+        const result = await this.database.getOne(statsSQL);
         
         // Get type distribution
         const typeSQL = `
@@ -508,7 +508,7 @@ class SQLiteTaskSuggestionRepository {
             GROUP BY taskType
         `;
         
-        const typeRows = await this.database.all(typeSQL);
+        const typeRows = await this.database.query(typeSQL);
         const typeDistribution = {};
         typeRows.forEach(row => {
             typeDistribution[row.taskType] = row.count;
@@ -527,7 +527,7 @@ class SQLiteTaskSuggestionRepository {
             GROUP BY confidence_level
         `;
         
-        const confidenceRows = await this.database.all(confidenceSQL);
+        const confidenceRows = await this.database.query(confidenceSQL);
         const confidenceDistribution = {};
         confidenceRows.forEach(row => {
             confidenceDistribution[row.confidence_level] = row.count;
@@ -560,7 +560,7 @@ class SQLiteTaskSuggestionRepository {
             LIMIT ?
         `;
         
-        const rows = await this.database.all(selectSQL, [limit]);
+        const rows = await this.database.query(selectSQL, [limit]);
         return rows.map(row => this.mapRowToTaskSuggestion(row));
     }
 
@@ -577,7 +577,7 @@ class SQLiteTaskSuggestionRepository {
             LIMIT ?
         `;
         
-        const rows = await this.database.all(selectSQL, [limit]);
+        const rows = await this.database.query(selectSQL, [limit]);
         return rows.map(row => this.mapRowToTaskSuggestion(row));
     }
 
@@ -636,7 +636,7 @@ class SQLiteTaskSuggestionRepository {
             AND isRejected = 0
         `;
 
-        const result = await this.database.run(deleteSQL, [cutoffDate.toISOString()]);
+        const result = await this.database.execute(deleteSQL, [cutoffDate.toISOString()]);
         return result.changes;
     }
 
@@ -648,8 +648,8 @@ class SQLiteTaskSuggestionRepository {
         const countSQL = `SELECT COUNT(*) as count FROM ${this.tableName}`;
         const pendingSQL = `SELECT COUNT(*) as pending FROM ${this.tableName} WHERE isApproved = 0 AND isRejected = 0`;
         
-        const countResult = await this.database.get(countSQL);
-        const pendingResult = await this.database.get(pendingSQL);
+        const countResult = await this.database.getOne(countSQL);
+        const pendingResult = await this.database.getOne(pendingSQL);
         
         return {
             totalSuggestions: countResult.count,

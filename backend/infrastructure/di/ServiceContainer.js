@@ -63,20 +63,28 @@ class ServiceContainer {
         if (this.factories.has(name)) {
             const { factory, singleton, dependencies } = this.factories.get(name);
             
-            // Resolve dependencies
-            const resolvedDependencies = dependencies.map(dep => this.resolve(dep));
-            
-            // Create instance
-            const instance = factory(...resolvedDependencies);
-            
-            // Store as singleton if needed
-            if (singleton) {
-                this.singletons.set(name, instance);
+            try {
+                // Resolve dependencies
+                const resolvedDependencies = dependencies.map(dep => this.resolve(dep));
+                
+                // Create instance
+                const instance = factory(...resolvedDependencies);
+                
+                // Store as singleton if needed
+                if (singleton) {
+                    this.singletons.set(name, instance);
+                }
+                
+                return instance;
+            } catch (error) {
+                logger.error(`[ServiceContainer] Failed to resolve service '${name}':`, error.message);
+                throw new Error(`Service resolution failed for '${name}': ${error.message}`);
             }
-            
-            return instance;
         }
 
+        // Log available services for debugging
+        const availableServices = Array.from(this.factories.keys()).join(', ');
+        logger.error(`[ServiceContainer] Service '${name}' not found. Available services: ${availableServices}`);
         throw new Error(`Service not found: ${name}`);
     }
 
