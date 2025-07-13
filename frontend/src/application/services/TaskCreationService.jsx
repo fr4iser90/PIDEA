@@ -1,5 +1,5 @@
 import { logger } from '@/infrastructure/logging/Logger';
-import APIChatRepository from '@/infrastructure/repositories/APIChatRepository.jsx';
+import APIChatRepository, { apiCall } from '@/infrastructure/repositories/APIChatRepository.jsx';
 import TaskWorkflowRepository from '@/infrastructure/repositories/TaskWorkflowRepository.jsx';
 
 export default class TaskCreationService {
@@ -62,7 +62,7 @@ export default class TaskCreationService {
     const { title, description, category, priority, type, estimatedTime } = taskData;
     
     // Load the task-create.md prompt from content library using API
-    const promptResponse = await this.api.apiCall('/api/prompts/task-management/task-create');
+    const promptResponse = await apiCall('/api/prompts/task-management/task-create');
     if (!promptResponse.success || !promptResponse.data) {
       throw new Error('Failed to load task-create prompt from content library');
     }

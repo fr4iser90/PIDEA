@@ -1,4 +1,4 @@
-import APIChatRepository from '@/infrastructure/repositories/APIChatRepository';
+import APIChatRepository, { apiCall } from '@/infrastructure/repositories/APIChatRepository';
 import TaskWorkflowRepository from '@/infrastructure/repositories/TaskWorkflowRepository';
 
 class TaskReviewService {
@@ -46,7 +46,7 @@ class TaskReviewService {
    */
   async buildReviewPrompt(taskData) {
     // Load the task-review.md prompt from content library for REVIEW
-    const response = await this.apiChatRepository.apiCall('/api/prompts/task-management/task-review');
+    const response = await apiCall('/api/prompts/task-management/task-review');
     if (!response.success || !response.data) {
       throw new Error('Failed to load task-review prompt from content library');
     }
@@ -422,13 +422,12 @@ Provide a complete, updated implementation plan.`;
   async executeTask(reviewData) {
     try {
       // Load the task-execute.md prompt from content library for EXECUTION
-      const response = await fetch('/api/prompts/task-management/task-execute');
-      if (!response.ok) {
+      const response = await apiCall('/api/prompts/task-management/task-execute');
+      if (!response.success || !response.data) {
         throw new Error('Failed to load task-execute prompt from content library');
       }
       
-      const data = await response.json();
-      const taskExecutePrompt = data.content;
+      const taskExecutePrompt = response.data.content;
 
       // Create execution prompt with task data
       const executionPrompt = `${taskExecutePrompt}
