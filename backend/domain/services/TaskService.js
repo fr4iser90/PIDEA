@@ -435,19 +435,23 @@ class TaskService {
         if (page) {
           try {
             // Check if there's already a chat input field visible
-            const existingChatInput = await page.$('.chat-input, .monaco-editor[data-testid="chat-input"], textarea[placeholder*="chat"], textarea[placeholder*="message"]');
+            const existingChatInput = await page.$('.aislash-editor-input[contenteditable="true"], .chat-input, .monaco-editor[data-testid="chat-input"], textarea[placeholder*="chat"], textarea[placeholder*="message"]');
             if (existingChatInput) {
               logger.log('🆕 [TaskService] Chat input already exists - WorkflowController already created new chat, skipping...');
             } else {
               logger.log('🆕 [TaskService] Creating new chat for task execution...');
-              await this.cursorIDEService.browserManager.clickNewChat();
-              // Wait for new chat to be ready
-              await new Promise(resolve => setTimeout(resolve, 2000));
+              try {
+                await this.cursorIDEService.browserManager.clickNewChat();
+                // Wait for new chat to be ready
+                await new Promise(resolve => setTimeout(resolve, 2000));
+              } catch (newChatError) {
+                logger.warn('⚠️ [TaskService] Failed to create new chat, will try to use existing chat:', newChatError.message);
+                // Continue without new chat - the message sending will handle fallbacks
+              }
             }
           } catch (error) {
-            logger.warn('⚠️ [TaskService] Error checking existing chat, creating new chat anyway:', error.message);
-            await this.cursorIDEService.browserManager.clickNewChat();
-            await new Promise(resolve => setTimeout(resolve, 2000));
+            logger.warn('⚠️ [TaskService] Error checking existing chat, will try to use existing chat:', error.message);
+            // Continue without new chat - the message sending will handle fallbacks
           }
         }
       }
@@ -782,26 +786,94 @@ class TaskService {
         // Try to send via ChatMessageHandler first
         if (this.cursorIDEService.chatMessageHandler) {
           logger.log('🤖 [TaskService] Sending refactoring prompt and waiting for AI to finish editing...');
-          const result = await this.cursorIDEService.chatMessageHandler.sendMessage(aiPrompt, {
-            waitForResponse: true,
-            timeout: 120000, // 2 minutes timeout
-            checkInterval: 2000 // Check every 2 seconds
-          });
           
-          logger.log('✅ [TaskService] AI finished editing:', {
-            success: result.success,
-            responseLength: result.response?.length || 0,
-            duration: result.duration
-          });
-          
-          return {
-            success: result.success,
-            prompt: aiPrompt,
-            aiResponse: result.response,
-            message: result.success ? 'AI finished editing codebase' : 'AI editing timed out',
-            duration: result.duration,
-            timestamp: new Date()
-          };
+          try {
+            const result = await this.cursorIDEService.chatMessageHandler.sendMessage(aiPrompt, {
+              waitForResponse: true,
+              timeout: 120000, // 2 minutes timeout
+              checkInterval: 2000 // Check every 2 seconds
+            });
+            
+            logger.log('✅ [TaskService] AI finished editing:', {
+              success: result.success,
+              responseLength: result.response?.length || 0,
+              duration: result.duration
+            });
+            
+            return {
+              success: result.success,
+              prompt: aiPrompt,
+              aiResponse: result.response,
+              message: result.success ? 'AI finished editing codebase' : 'AI editing timed out',
+              duration: result.duration,
+              timestamp: new Date()
+            };
+          } catch (chatError) {
+            logger.warn('⚠️ [TaskService] ChatMessageHandler failed, trying fallback methods:', chatError.message);
+            
+            // Fallback 1: Try direct sendMessage
+            try {
+              await this.cursorIDEService.sendMessage(aiPrompt);
+              logger.log('✅ [TaskService] Refactoring prompt sent via sendMessage (no response waiting)');
+              
+              return {
+                success: true,
+                prompt: aiPrompt,
+                message: 'Refactoring prompt sent to IDE chat (no response waiting)',
+                timestamp: new Date()
+              };
+            } catch (sendError) {
+              logger.warn('⚠️ [TaskService] Direct sendMessage failed, trying browser manager:', sendError.message);
+              
+              // Fallback 2: Try browser manager directly
+              if (this.cursorIDEService.browserManager) {
+                try {
+                  const page = await this.cursorIDEService.browserManager.getPage();
+                  if (page) {
+                    // Try multiple chat input selectors
+                    const chatSelectors = [
+                      '.aislash-editor-input[contenteditable="true"]',
+                      'textarea[placeholder*="chat"]',
+                      'textarea[placeholder*="message"]',
+                      '.chat-input textarea',
+                      '.composer-bar textarea'
+                    ];
+                    
+                    let messageSent = false;
+                    for (const selector of chatSelectors) {
+                      try {
+                        const input = await page.$(selector);
+                        if (input) {
+                          await input.click();
+                          await input.fill(aiPrompt);
+                          await page.keyboard.press('Enter');
+                          logger.log(`✅ [TaskService] Message sent via browser manager using selector: ${selector}`);
+                          messageSent = true;
+                          break;
+                        }
+                      } catch (e) {
+                        // Try next selector
+                      }
+                    }
+                    
+                    if (messageSent) {
+                      return {
+                        success: true,
+                        prompt: aiPrompt,
+                        message: 'Refactoring prompt sent via browser manager fallback',
+                        timestamp: new Date()
+                      };
+                    }
+                  }
+                } catch (browserError) {
+                  logger.error('❌ [TaskService] Browser manager fallback failed:', browserError.message);
+                }
+              }
+              
+              // If all methods fail, throw the original error
+              throw new Error(`All chat methods failed: ${chatError.message}`);
+            }
+          }
         } else {
           // Fallback: use the sendMessage method directly
           await this.cursorIDEService.sendMessage(aiPrompt);
