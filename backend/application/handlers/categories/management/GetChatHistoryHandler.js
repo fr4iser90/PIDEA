@@ -163,7 +163,7 @@ class GetChatHistoryHandler {
         logger.log(`[GetChatHistoryHandler] IDE Service methods:`, Object.getOwnPropertyNames(Object.getPrototypeOf(ideService)));
         
         liveMessages = await ideService.extractChatHistory();
-        logger.log(`[GetChatHistoryHandler] Extracted ${liveMessages.length} live messages:`, liveMessages);
+        //logger.log(`[GetChatHistoryHandler] Extracted ${liveMessages.length} live messages:`, liveMessages);
       } else {
         logger.log(`[GetChatHistoryHandler] No IDE service found for port ${port}`);
       }
@@ -214,10 +214,12 @@ class GetChatHistoryHandler {
       const availableIDEs = await this.ideManager.getAvailableIDEs();
       logger.log(`[GetChatHistoryHandler] Available IDEs:`, availableIDEs);
       
-      const targetIDE = availableIDEs.find(ide => ide.port === port);
+      // FIXED: Handle the correct data structure from IDEManager
+      // availableIDEs is an object with port as key, not an array
+      const targetIDE = availableIDEs[port] || Object.values(availableIDEs).find(ide => ide.port === port);
       
       if (!targetIDE) {
-        logger.log(`[GetChatHistoryHandler] No IDE found for port ${port} in available IDEs:`, availableIDEs.map(ide => ({ port: ide.port, type: ide.ideType })));
+        logger.log(`[GetChatHistoryHandler] No IDE found for port ${port} in available IDEs:`, availableIDEs);
         // Fallback: determine IDE type based on port range anyway
         logger.log(`[GetChatHistoryHandler] Using port range fallback for port ${port}`);
       }

@@ -1,13 +1,13 @@
-const IDEManager = require('@external/IDEManager');
+const IDEManager = require('@external/ide/IDEManager');
 const BrowserManager = require('@external/BrowserManager');
 const Logger = require('@logging/Logger');
 const logger = new Logger('Logger');
 
 
 class IDEMirrorService {
-    constructor() {
-        this.ideManager = new IDEManager();
-        this.browserManager = new BrowserManager();
+    constructor(dependencies = {}) {
+        this.ideManager = dependencies.ideManager;
+        this.browserManager = dependencies.browserManager;
         this.isInitialized = false;
         this.lastFocusedElement = null;
         this.lastFocusTime = 0;

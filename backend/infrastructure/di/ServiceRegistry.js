@@ -65,13 +65,13 @@ class ServiceRegistry {
         }, { singleton: true });
 
         // IDE manager
-        this.container.register('ideManager', (browserManager, projectRepository) => {
-            const IDEManager = require('../external/IDEManager');
-            const manager = new IDEManager(browserManager);
+        this.container.register('ideManager', (browserManager, projectRepository, eventBus) => {
+            const IDEManager = require('../external/ide/IDEManager');
+            const manager = new IDEManager(browserManager, eventBus);
             // Inject project repository for automatic database operations
             manager.projectRepository = projectRepository;
             return manager;
-        }, { singleton: true, dependencies: ['browserManager', 'projectRepository'] });
+        }, { singleton: true, dependencies: ['browserManager', 'projectRepository', 'eventBus'] });
 
         this.registeredServices.add('infrastructure');
     }
@@ -82,16 +82,40 @@ class ServiceRegistry {
     registerDomainServices() {
         logger.log('[ServiceRegistry] Registering domain services...');
 
+        // IDEMirrorService - FIXED: Use DI instead of new IDEManager()
+        this.container.register('ideMirrorService', (ideManager, browserManager) => {
+            const IDEMirrorService = require('@domain/services/IDEMirrorService');
+            return new IDEMirrorService({ ideManager, browserManager });
+        }, { singleton: true, dependencies: ['ideManager', 'browserManager'] });
+
+        // TerminalLogCaptureService - FIXED: Use DI instead of new IDEManager()
+        this.container.register('terminalLogCaptureService', (ideManager, browserManager, ideMirrorService) => {
+            const TerminalLogCaptureService = require('@domain/services/TerminalLogCaptureService');
+            return new TerminalLogCaptureService({ ideManager, browserManager, ideMirrorService });
+        }, { singleton: true, dependencies: ['ideManager', 'browserManager', 'ideMirrorService'] });
+
+        // TerminalLogReader - FIXED: Use DI instead of new instance
+        this.container.register('terminalLogReader', () => {
+            const TerminalLogReader = require('@domain/services/TerminalLogReader');
+            return new TerminalLogReader();
+        }, { singleton: true });
+
+        // IDEController - FIXED: Add missing dependencies
+        this.container.register('ideController', (ideManager, eventBus, cursorIDEService, taskRepository, terminalLogCaptureService, terminalLogReader) => {
+            const IDEController = require('@presentation/api/IDEController');
+            return new IDEController(ideManager, eventBus, cursorIDEService, taskRepository, terminalLogCaptureService, terminalLogReader);
+        }, { singleton: true, dependencies: ['ideManager', 'eventBus', 'cursorIDEService', 'taskRepository', 'terminalLogCaptureService', 'terminalLogReader'] });
+
         // Project mapping service (korrekt)
         this.container.register('projectMappingService', (monorepoStrategy) => {
             const ProjectMappingService = require('@domain/services/ProjectMappingService');
             return new ProjectMappingService({ monorepoStrategy });
         }, { singleton: true, dependencies: ['monorepoStrategy'] });
 
-        // Logger service
+        // Logger service - KORREKT wie IDEHealthMonitor
         this.container.register('logger', () => {
-            
-            return logger;
+            const Logger = require('@logging/Logger');
+            return new Logger('IDEController');
         }, { singleton: true });
 
         // Workspace path detector (simplified)

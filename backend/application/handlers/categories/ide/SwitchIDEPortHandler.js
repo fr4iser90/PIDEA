@@ -106,7 +106,7 @@ class SwitchIDEPortHandler {
       });
 
       // Update IDE manager with new active port
-      await this.ideManager.setActivePort(command.port);
+      await this.ideManager.switchToIDE(command.port);
 
       // Use IDEAutomationService for additional IDE-specific operations
       const automationResult = await this.ideAutomationService.switchIDEPort(command.port, {

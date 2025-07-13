@@ -1,7 +1,7 @@
 const fs = require('fs').promises;
 const path = require('path');
 const crypto = require('crypto');
-const IDEManager = require('@external/IDEManager');
+const IDEManager = require('@external/ide/IDEManager');
 const BrowserManager = require('@external/BrowserManager');
 const IDEMirrorService = require('./IDEMirrorService');
 const Logger = require('@logging/Logger');
@@ -9,17 +9,28 @@ const logger = new Logger('Logger');
 
 
 /**
- * Terminal Log Capture Service
- * 
- * Captures terminal output by using existing CDP functions to execute commands
+ * TerminalLogCaptureService - Captures terminal output from IDEs
  * that redirect output to encrypted log files. The terminal itself is a canvas
  * and cannot be read directly, so we use file-based capture.
  */
 class TerminalLogCaptureService {
-  constructor() {
-    this.ideManager = new IDEManager();
-    this.browserManager = new BrowserManager();
-    this.ideMirrorService = new IDEMirrorService();
+  constructor(dependencies = {}) {
+    // Use DI instead of creating new instances
+    this.ideManager = dependencies.ideManager;
+    this.browserManager = dependencies.browserManager;
+    this.ideMirrorService = dependencies.ideMirrorService;
+    
+    // Validate dependencies
+    if (!this.ideManager) {
+      throw new Error('IDEManager dependency is required');
+    }
+    if (!this.browserManager) {
+      throw new Error('BrowserManager dependency is required');
+    }
+    if (!this.ideMirrorService) {
+      throw new Error('IDEMirrorService dependency is required');
+    }
+    
     this.isInitialized = false;
     this.captureIntervals = new Map(); // port -> interval
     this.logDirectories = new Map(); // port -> log directory

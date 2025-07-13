@@ -34,7 +34,6 @@ function App() {
     logger.log('🔄 App initializing...');
     setupEventListeners();
     initializeApp();
-    fetchActivePort();
     return () => {
       // Cleanup if needed
     };
@@ -78,17 +77,35 @@ function App() {
   };
 
   const fetchActivePort = async () => {
-    if (!isAuthenticated) return;
     try {
       const result = await apiCall('/api/ide/available');
       if (result.success && result.data) {
-        const activeIDE = result.data.find(ide => ide.active);
-        if (activeIDE) setActivePort(activeIDE.port);
+        // Look for active IDE first, then fallback to first available
+        const activeIDE = result.data.find(ide => ide.active) || result.data[0];
+        if (activeIDE) {
+          setActivePort(activeIDE.port);
+          logger.log('✅ Active IDE port loaded:', activeIDE.port);
+        } else {
+          logger.log('⚠️ No IDE available');
+        }
       }
     } catch (e) {
-      setError('❌ Failed to load IDE list: ' + e.message);
+      logger.error('❌ Failed to load IDE list:', e.message);
+      // Don't set error for IDE loading - it's not critical
     }
   };
+
+  // Load active port on mount
+  useEffect(() => {
+    fetchActivePort();
+  }, []);
+
+  // Retry loading active port when authentication changes
+  useEffect(() => {
+    if (isAuthenticated) {
+      fetchActivePort();
+    }
+  }, [isAuthenticated]);
 
   useEffect(() => {
     if (!eventBus) return;

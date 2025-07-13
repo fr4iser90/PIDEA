@@ -446,21 +446,6 @@ class IDEController {
       config
     };
   }
-
-  /**
-   * Setup routes for this controller
-   */
-  setupRoutes(app) {
-    // IDE management routes
-    app.get('/api/ide/list', this.getIDEsList.bind(this));
-    app.get('/api/ide/status', this.getIDEStatus.bind(this));
-    app.post('/api/ide/start', this.startIDE.bind(this));
-    app.post('/api/ide/stop/:port', this.stopIDE.bind(this));
-    app.get('/api/ide/features', this.getIDEFeatures.bind(this));
-    app.post('/api/ide/switch/:port', this.switchIDE.bind(this));
-    app.get('/api/ide/config', this.getIDEConfig.bind(this));
-    app.put('/api/ide/config', this.updateIDEConfig.bind(this));
-  }
 }
 
 module.exports = IDEController; 

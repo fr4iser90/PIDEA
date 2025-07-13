@@ -5,6 +5,8 @@
  */
 
 const EventEmitter = require('events');
+const Logger = require('@logging/Logger');
+const logger = new Logger('IDEHealthMonitor');
 
 class IDEHealthMonitor extends EventEmitter {
   constructor(configManager = null) {
@@ -305,8 +307,6 @@ class IDEHealthMonitor extends EventEmitter {
   async getUptime(port) {
     return new Promise((resolve) => {
       const { exec } = require('child_process');
-const Logger = require('@logging/Logger');
-const logger = new Logger('Logger');
       exec(`lsof -ti:${port}`, (error, stdout) => {
         if (error || !stdout.trim()) {
           resolve(null);

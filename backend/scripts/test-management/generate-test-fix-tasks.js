@@ -31,7 +31,7 @@ const AutoTestFixSystem = require('@services/auto-test/AutoTestFixSystem');
 const SQLiteTaskRepository = require('@database/SQLiteTaskRepository');
 const CursorIDEService = require('@services/CursorIDEService');
 const BrowserManager = require('@external/BrowserManager');
-const IDEManager = require('@external/IDEManager');
+const IDEManager = require('@external/ide/IDEManager');
 const Logger = require('@logging/Logger');
 const logger = new Logger('Logger');
 

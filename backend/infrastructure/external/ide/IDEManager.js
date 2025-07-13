@@ -15,7 +15,7 @@ const Logger = require('@logging/Logger');
 const logger = new Logger('Logger');
 
 class IDEManager {
-  constructor(browserManager = null) {
+  constructor(browserManager = null, eventBus = null) {
     // Initialize factories
     this.detectorFactory = new IDEDetectorFactory();
     this.starterFactory = new IDEStarterFactory();
@@ -27,6 +27,7 @@ class IDEManager {
     // Initialize workspace detection (only if browserManager is provided)
     this.fileDetector = null;
     this.browserManager = browserManager;
+    this.eventBus = eventBus;
     
     if (browserManager) {
       try {
@@ -42,6 +43,29 @@ class IDEManager {
     this.ideWorkspaces = new Map(); // port -> workspace path
     this.ideTypes = new Map(); // port -> ide type
     this.initialized = false;
+    
+    // Setup event handlers
+    this.setupEventHandlers();
+  }
+  
+  /**
+   * Setup event handlers for IDE management
+   */
+  setupEventHandlers() {
+    if (this.eventBus) {
+      this.eventBus.subscribe('activeIDEChanged', async (eventData) => {
+        logger.log('[IDEManager] Received activeIDEChanged event:', eventData);
+        if (eventData.port) {
+          try {
+            logger.log('[IDEManager] Setting active port from event:', eventData.port);
+            this.activePort = eventData.port;
+            logger.log('[IDEManager] Active port set to:', this.activePort);
+          } catch (error) {
+            logger.error('[IDEManager] Failed to set active port from event:', error.message);
+          }
+        }
+      });
+    }
   }
 
   /**
@@ -252,6 +276,17 @@ class IDEManager {
     logger.log('[IDEManager] Previous active port:', previousPort);
     logger.log('[IDEManager] New active port:', this.activePort);
     logger.log('[IDEManager] Successfully switched to IDE on port', port);
+    logger.log('[IDEManager] Instance ID:', this.constructor.name + '_' + Math.random().toString(36).substr(2, 9));
+    
+    // Update the active status in ideStatus map
+    if (this.ideStatus.has(port)) {
+      // Set all IDEs as inactive first
+      for (const [idePort] of this.ideStatus) {
+        this.ideStatus.set(idePort, 'running');
+      }
+      // Set the target IDE as active
+      this.ideStatus.set(port, 'active');
+    }
     
     return {
       port: port,
@@ -601,6 +636,18 @@ class IDEManager {
    * @returns {number|null} Active port
    */
   getActivePort() {
+    // If activePort is not set, try to find it from ideStatus
+    if (!this.activePort) {
+      for (const [port, status] of this.ideStatus) {
+        if (status === 'active') {
+          this.activePort = port;
+          logger.log('[IDEManager] Found active port from ideStatus:', this.activePort);
+          break;
+        }
+      }
+    }
+    
+    logger.log('[IDEManager] getActivePort() called, returning:', this.activePort);
     return this.activePort;
   }
 

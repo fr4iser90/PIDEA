@@ -6,7 +6,7 @@ const logger = new Logger('IDEController');
 
 
 class IDEController {
-  constructor(ideManager, eventBus, cursorIDEService = null, taskRepository = null) {
+  constructor(ideManager, eventBus, cursorIDEService = null, taskRepository = null, terminalLogCaptureService = null, terminalLogReader = null) {
     this.ideManager = ideManager;
     this.eventBus = eventBus;
     this.cursorIDEService = cursorIDEService;
@@ -23,9 +23,9 @@ class IDEController {
       return activePath;
     }, this.taskRepository);
     
-    // Initialize terminal log services
-    this.terminalLogCaptureService = new TerminalLogCaptureService();
-    this.terminalLogReader = new TerminalLogReader();
+    // Use injected services instead of creating new instances
+    this.terminalLogCaptureService = terminalLogCaptureService;
+    this.terminalLogReader = terminalLogReader;
   }
 
   async getAvailableIDEs(req, res) {
@@ -73,9 +73,26 @@ class IDEController {
 
   async switchIDE(req, res) {
     try {
-      const port = parseInt(req.params.port);
-      logger.log('[IDEController] switchIDE called with port:', port);
+      logger.log('[IDEController] switchIDE called with req.params:', req.params);
+      logger.log('[IDEController] switchIDE called with req.url:', req.url);
+      logger.log('[IDEController] switchIDE called with req.path:', req.path);
+      
+      // Fix: Handle string port properly
+      const portParam = req.params.port;
+      logger.log('[IDEController] switchIDE called with portParam:', portParam);
       logger.log('[IDEController] Current active port before switch:', this.ideManager.getActivePort());
+      
+      // FIX: Use the port directly from params, not parsed
+      const port = parseInt(portParam);
+      logger.log('[IDEController] Parsed port:', port);
+      
+      if (!port || isNaN(port)) {
+        logger.error('[IDEController] Invalid port:', portParam);
+        return res.status(400).json({
+          success: false,
+          error: 'Invalid port parameter'
+        });
+      }
       
       const result = await this.ideManager.switchToIDE(port);
       logger.log('[IDEController] ideManager.switchToIDE completed, result:', result);

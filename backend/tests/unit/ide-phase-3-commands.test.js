@@ -51,7 +51,7 @@ describe('IDE Phase 3: Browser/IDE Commands & Handlers', () => {
         getIDESelectors: sinon.stub().resolves({ success: true })
       },
       ideManager: {
-        setActivePort: sinon.stub().resolves(),
+        switchToIDE: sinon.stub().resolves(),
         getActiveIDEType: sinon.stub().resolves('cursor'),
         getActivePort: sinon.stub().returns(9222)
       },
@@ -466,7 +466,7 @@ describe('IDE Phase 3: Browser/IDE Commands & Handlers', () => {
       expect(result.port).to.equal(9222);
       expect(result.ideType).to.equal('cursor');
       expect(mockDependencies.browserManager.switchToPort.called).to.be.true;
-      expect(mockDependencies.ideManager.setActivePort.called).to.be.true;
+              expect(mockDependencies.ideManager.switchToIDE.called).to.be.true;
       expect(mockDependencies.ideAutomationService.switchIDEPort.called).to.be.true;
     });
   });

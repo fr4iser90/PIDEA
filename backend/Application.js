@@ -45,28 +45,12 @@ const ProcessTodoListHandler = require('@handler-categories/management/ProcessTo
 
 // Application handlers - Categories-based only
 
-// Infrastructure
-const BrowserManager = require('./infrastructure/external/BrowserManager');
-const IDEManager = require('./infrastructure/external/IDEManager');
-const AIService = require('./infrastructure/external/AIService');
-const ProjectAnalyzer = require('./infrastructure/external/ProjectAnalyzer');
-const CodeQualityAnalyzer = require('./infrastructure/external/CodeQualityAnalyzer');
-const SecurityAnalyzer = require('./infrastructure/external/SecurityAnalyzer');
-const PerformanceAnalyzer = require('./infrastructure/external/PerformanceAnalyzer');
-const ArchitectureAnalyzer = require('./infrastructure/external/ArchitectureAnalyzer');
-const IDEWorkspaceDetectionService = require('./domain/services/IDEWorkspaceDetectionService');
-const InMemoryChatRepository = require('./infrastructure/database/InMemoryChatRepository');
-const InMemoryTaskRepository = require('./infrastructure/database/InMemoryTaskRepository');
+// Infrastructure - Only keep what's not in DI
 const DatabaseConnection = require('./infrastructure/database/DatabaseConnection');
-// Repository imports werden jetzt über DI Container geladen
-const EventBus = require('./infrastructure/messaging/EventBus');
-const CommandBus = require('./infrastructure/messaging/CommandBus');
-const QueryBus = require('./infrastructure/messaging/QueryBus');
 const AuthMiddleware = require('./infrastructure/auth/AuthMiddleware');
 
-// Presentation
+// Presentation - Only keep what's not in DI
 const ChatController = require('./presentation/api/ChatController');
-const IDEController = require('./presentation/api/IDEController');
 const IDEFeatureController = require('./presentation/api/ide/IDEFeatureController');
 const IDEMirrorController = require('./presentation/api/IDEMirrorController');
 const ContentLibraryController = require('./presentation/api/ContentLibraryController');
@@ -427,12 +411,8 @@ class Application {
       this.authService
     );
 
-    this.ideController = new IDEController(
-      this.ideManager,
-      this.eventBus,
-      this.cursorIDEService,
-      this.taskRepository
-    );
+    // Use DI container for IDEController
+    this.ideController = this.serviceRegistry.getService('ideController');
 
     // Initialize IDE Feature Controller
     const IDEFeatureController = require('./presentation/api/ide/IDEFeatureController');
