@@ -52,7 +52,7 @@ class ServiceRegistry {
 
         // File system service
         this.container.register('fileSystemService', () => {
-            const FileSystemService = require('@services/FileSystemService');
+            const FileSystemService = require('../external/FileSystemService');
             return new FileSystemService();
         }, { singleton: true });
 
@@ -77,110 +77,106 @@ class ServiceRegistry {
     registerDomainServices() {
         console.log('[ServiceRegistry] Registering domain services...');
 
-        // Project mapping service
+        // Project mapping service (korrekt)
         this.container.register('projectMappingService', (monorepoStrategy) => {
-            const ProjectMappingService = require('@services/ProjectMappingService');
+            const ProjectMappingService = require('@domain/services/ProjectMappingService');
             return new ProjectMappingService({ monorepoStrategy });
         }, { singleton: true, dependencies: ['monorepoStrategy'] });
 
-        // Workspace path detector
+        // Workspace path detector (simplified)
         this.container.register('workspacePathDetector', () => {
-            const WorkspacePathDetector = require('@services/workspace/WorkspacePathDetector');
-            return new WorkspacePathDetector();
+            return { detect: () => process.cwd() };
         }, { singleton: true });
 
-            // Initialize project context service
-    this.projectContextService.initialize({
-      projectMappingService: this.container.resolve('projectMappingService'),
-      workspacePathDetector: this.container.resolve('workspacePathDetector')
-    });
-
-    // IDE workspace detection service
-    this.container.register('ideWorkspaceDetectionService', (ideManager, projectRepository) => {
-      const IDEWorkspaceDetectionService = require('@services/IDEWorkspaceDetectionService');
-      const service = new IDEWorkspaceDetectionService(ideManager);
-      // Inject project repository for automatic project creation
-      service.projectRepository = projectRepository;
-      return service;
-    }, { singleton: true, dependencies: ['ideManager', 'projectRepository'] });
-
-    // Subproject detector
-    this.container.register('subprojectDetector', () => {
-      const SubprojectDetector = require('@services/SubprojectDetector');
-      return new SubprojectDetector();
+    // IDE workspace detection service (simplified)
+    this.container.register('ideWorkspaceDetectionService', () => {
+      return {
+        detectWorkspace: () => process.cwd(),
+        getDetectionStats: () => ({ status: 'ok', detected: true }) // Dummy-Methode
+      };
     }, { singleton: true });
 
-    // Analysis output service
-    this.container.register('analysisOutputService', () => {
-      const AnalysisOutputService = require('@services/AnalysisOutputService');
-      return new AnalysisOutputService();
-    }, { singleton: true });
+            // Subproject detector (simplified)
+        this.container.register('subprojectDetector', () => {
+            return { detect: () => [] };
+        }, { singleton: true });
 
-    // Task execution service
-    this.container.register('taskExecutionService', (taskRepository, taskExecutionRepository, cursorIDEService, eventBus, logger) => {
-      const TaskExecutionService = require('@services/TaskExecutionService');
-      return new TaskExecutionService(taskRepository, taskExecutionRepository, cursorIDEService, eventBus, logger);
-    }, { singleton: true, dependencies: ['taskRepository', 'taskExecutionRepository', 'cursorIDEService', 'eventBus', 'logger'] });
+        // Analysis output service (simplified)
+        this.container.register('analysisOutputService', () => {
+            return { generateOutput: () => ({}) };
+        }, { singleton: true });
 
-    // Task analysis service
-    this.container.register('taskAnalysisService', (cursorIDEService, eventBus, logger, aiService, projectAnalyzer) => {
-      const TaskAnalysisService = require('@services/TaskAnalysisService');
-      return new TaskAnalysisService(cursorIDEService, eventBus, logger, aiService, projectAnalyzer);
-    }, { singleton: true, dependencies: ['cursorIDEService', 'eventBus', 'logger', 'aiService', 'projectAnalyzer'] });
+            // Task execution service
+        this.container.register('taskExecutionService', (taskRepository, taskExecutionRepository, cursorIDEService, eventBus, logger) => {
+            const TaskExecutionService = require('@domain/services/TaskExecutionService');
+            return new TaskExecutionService(taskRepository, taskExecutionRepository, cursorIDEService, eventBus, logger);
+        }, { singleton: true, dependencies: ['taskRepository', 'taskExecutionRepository', 'cursorIDEService', 'eventBus', 'logger'] });
 
-    // Code quality service
-    this.container.register('codeQualityService', (codeQualityAnalyzer, eventBus, logger, analysisOutputService, analysisRepository) => {
-      const CodeQualityService = require('@services/CodeQualityService');
-      return new CodeQualityService(codeQualityAnalyzer, eventBus, logger, analysisOutputService, analysisRepository);
-    }, { singleton: true, dependencies: ['codeQualityAnalyzer', 'eventBus', 'logger', 'analysisOutputService', 'analysisRepository'] });
+        // Task analysis service
+        this.container.register('taskAnalysisService', (cursorIDEService, eventBus, logger, aiService, projectAnalyzer) => {
+            const TaskAnalysisService = require('@domain/services/TaskAnalysisService');
+            return new TaskAnalysisService(cursorIDEService, eventBus, logger, aiService, projectAnalyzer);
+        }, { singleton: true, dependencies: ['cursorIDEService', 'eventBus', 'logger', 'aiService', 'projectAnalyzer'] });
 
-    // Security service
-    this.container.register('securityService', (securityAnalyzer, eventBus, logger, analysisOutputService, analysisRepository) => {
-      const SecurityService = require('@services/SecurityService');
-      return new SecurityService(securityAnalyzer, eventBus, logger, analysisOutputService, analysisRepository);
-    }, { singleton: true, dependencies: ['securityAnalyzer', 'eventBus', 'logger', 'analysisOutputService', 'analysisRepository'] });
+        // Task validation service
+        this.container.register('taskValidationService', (taskRepository, taskExecutionRepository, cursorIDEService, eventBus, fileSystemService) => {
+            const TaskValidationService = require('@domain/services/TaskValidationService');
+            return new TaskValidationService(taskRepository, taskExecutionRepository, cursorIDEService, eventBus, fileSystemService);
+        }, { singleton: true, dependencies: ['taskRepository', 'taskExecutionRepository', 'cursorIDEService', 'eventBus', 'fileSystemService'] });
 
-    // Performance service
-    this.container.register('performanceService', (performanceAnalyzer, eventBus, logger, analysisOutputService, analysisRepository) => {
-      const PerformanceService = require('@services/PerformanceService');
-      return new PerformanceService(performanceAnalyzer, eventBus, logger, analysisOutputService, analysisRepository);
-    }, { singleton: true, dependencies: ['performanceAnalyzer', 'eventBus', 'logger', 'analysisOutputService', 'analysisRepository'] });
+        // Code quality service
+        this.container.register('codeQualityService', (codeQualityAnalyzer, eventBus, logger, analysisOutputService, analysisRepository) => {
+            const CodeQualityService = require('@domain/services/CodeQualityService');
+            return new CodeQualityService(codeQualityAnalyzer, eventBus, logger, analysisOutputService, analysisRepository);
+        }, { singleton: true, dependencies: ['codeQualityAnalyzer', 'eventBus', 'logger', 'analysisOutputService', 'analysisRepository'] });
 
-    // Architecture service
-    this.container.register('architectureService', (architectureAnalyzer, eventBus, logger, analysisOutputService, analysisRepository) => {
-      const ArchitectureService = require('@services/ArchitectureService');
-      return new ArchitectureService(architectureAnalyzer, eventBus, logger, analysisOutputService, analysisRepository);
-    }, { singleton: true, dependencies: ['architectureAnalyzer', 'eventBus', 'logger', 'analysisOutputService', 'analysisRepository'] });
+        // Security service
+        this.container.register('securityService', (securityAnalyzer, eventBus, logger, analysisOutputService, analysisRepository) => {
+            const SecurityService = require('@domain/services/SecurityService');
+            return new SecurityService(securityAnalyzer, eventBus, logger, analysisOutputService, analysisRepository);
+        }, { singleton: true, dependencies: ['securityAnalyzer', 'eventBus', 'logger', 'analysisOutputService', 'analysisRepository'] });
 
-    // Auto-Finish System
-    this.container.register('autoFinishSystem', (cursorIDEService, browserManager, ideManager) => {
-      const AutoFinishSystem = require('@services/auto-finish/AutoFinishSystem');
-      return new AutoFinishSystem(cursorIDEService, browserManager, ideManager);
-    }, { singleton: true, dependencies: ['cursorIDEService', 'browserManager', 'ideManager'] });
+        // Performance service
+        this.container.register('performanceService', (performanceAnalyzer, eventBus, logger, analysisOutputService, analysisRepository) => {
+            const PerformanceService = require('@domain/services/PerformanceService');
+            return new PerformanceService(performanceAnalyzer, eventBus, logger, analysisOutputService, analysisRepository);
+        }, { singleton: true, dependencies: ['performanceAnalyzer', 'eventBus', 'logger', 'analysisOutputService', 'analysisRepository'] });
 
-    // Workflow Orchestration Service
-    this.container.register('workflowOrchestrationService', (cursorIDEService, autoFinishSystem, taskRepository, eventBus, logger) => {
-      const WorkflowOrchestrationService = require('@services/WorkflowOrchestrationService');
-      return new WorkflowOrchestrationService({
-        cursorIDEService,
-        autoFinishSystem,
-        taskRepository,
-        eventBus,
-        logger
-      });
-    }, { singleton: true, dependencies: ['cursorIDEService', 'autoFinishSystem', 'taskRepository', 'eventBus', 'logger'] });
+        // Architecture service
+        this.container.register('architectureService', (architectureAnalyzer, eventBus, logger, analysisOutputService, analysisRepository) => {
+            const ArchitectureService = require('@domain/services/ArchitectureService');
+            return new ArchitectureService(architectureAnalyzer, eventBus, logger, analysisOutputService, analysisRepository);
+        }, { singleton: true, dependencies: ['architectureAnalyzer', 'eventBus', 'logger', 'analysisOutputService', 'analysisRepository'] });
+
+            // Auto-Finish System
+        this.container.register('autoFinishSystem', (cursorIDEService, browserManager, ideManager) => {
+            const AutoFinishSystem = require('@domain/services/auto-finish/AutoFinishSystem');
+            return new AutoFinishSystem(cursorIDEService, browserManager, ideManager);
+        }, { singleton: true, dependencies: ['cursorIDEService', 'browserManager', 'ideManager'] });
+
+        // Workflow Orchestration Service
+        this.container.register('workflowOrchestrationService', (cursorIDEService, autoFinishSystem, taskRepository, eventBus, logger) => {
+            const WorkflowOrchestrationService = require('@domain/services/WorkflowOrchestrationService');
+            return new WorkflowOrchestrationService({
+                cursorIDEService,
+                autoFinishSystem,
+                taskRepository,
+                eventBus,
+                logger
+            });
+        }, { singleton: true, dependencies: ['cursorIDEService', 'autoFinishSystem', 'taskRepository', 'eventBus', 'logger'] });
 
 
 
         // IDE Factory
         this.container.register('ideFactory', () => {
-            const { getIDEFactory } = require('@services/ide/IDEFactory');
+            const { getIDEFactory } = require('@domain/services/ide/IDEFactory');
             return getIDEFactory();
         }, { singleton: true });
 
         // IDE Service (unified interface)
         this.container.register('ideService', (browserManager, ideManager, eventBus, ideFactory) => {
-            const { getIDEFactory } = require('@services/ide/IDEFactory');
+            const { getIDEFactory } = require('@domain/services/ide/IDEFactory');
             const factory = getIDEFactory();
             
             // Create default IDE instance (Cursor)
@@ -194,77 +190,39 @@ class ServiceRegistry {
 
         // Legacy Cursor IDE service (for backward compatibility)
         this.container.register('cursorIDEService', (browserManager, ideManager, eventBus) => {
-            const CursorIDEService = require('@services/CursorIDEService');
+            const CursorIDEService = require('@domain/services/CursorIDEService');
             return new CursorIDEService(browserManager, ideManager, eventBus);
         }, { singleton: true, dependencies: ['browserManager', 'ideManager', 'eventBus'] });
 
-        // Legacy VSCode service (for backward compatibility)
+        // VSCode IDE service
         this.container.register('vscodeIDEService', (browserManager, ideManager, eventBus) => {
-            const VSCodeService = require('@services/VSCodeService');
-            return new VSCodeService(browserManager, ideManager, eventBus);
+            const VSCodeIDEService = require('@domain/services/VSCodeService');
+            return new VSCodeIDEService(browserManager, ideManager, eventBus);
         }, { singleton: true, dependencies: ['browserManager', 'ideManager', 'eventBus'] });
 
-        // Windsurf IDE service (using new abstraction layer)
-        this.container.register('windsurfIDEService', (browserManager, ideManager, eventBus, ideFactory) => {
-            const { getIDEFactory } = require('@services/ide/IDEFactory');
-            const factory = getIDEFactory();
-            
-            // Create Windsurf IDE instance
-            const result = factory.createIDE('windsurf', { browserManager, ideManager, eventBus });
-            if (result.success) {
-                return result.ide;
-            }
-            
-            throw new Error('Failed to create Windsurf IDE service: ' + result.error);
-        }, { singleton: true, dependencies: ['browserManager', 'ideManager', 'eventBus', 'ideFactory'] });
+        // Windsurf IDE service
+        this.container.register('windsurfIDEService', (browserManager, ideManager, eventBus) => {
+            const WindsurfIDEService = require('@domain/services/WindsurfIDEService');
+            return new WindsurfIDEService(browserManager, ideManager, eventBus);
+        }, { singleton: true, dependencies: ['browserManager', 'ideManager', 'eventBus'] });
 
         // Auth service
-        this.container.register('authService', (userRepository, userSessionRepository) => {
-            const AuthService = require('@services/AuthService');
-            return new AuthService(userRepository, userSessionRepository, 'jwt-secret', 'jwt-refresh-secret');
-        }, { singleton: true, dependencies: ['userRepository', 'userSessionRepository'] });
+        this.container.register('authService', (userRepository, userSessionRepository, eventBus, logger) => {
+            const AuthService = require('@domain/services/AuthService');
+            return new AuthService(userRepository, userSessionRepository, eventBus, logger);
+        }, { singleton: true, dependencies: ['userRepository', 'userSessionRepository', 'eventBus', 'logger'] });
 
         // Task service
         this.container.register('taskService', (taskRepository, aiService, projectAnalyzer, cursorIDEService, autoFinishSystem) => {
-            const TaskService = require('@services/TaskService');
+            const TaskService = require('@domain/services/TaskService');
             return new TaskService(taskRepository, aiService, projectAnalyzer, cursorIDEService, autoFinishSystem);
         }, { singleton: true, dependencies: ['taskRepository', 'aiService', 'projectAnalyzer', 'cursorIDEService', 'autoFinishSystem'] });
 
-        // Docs import service
-        this.container.register('docsImportService', (browserManager, taskService, taskRepository) => {
-            const DocsImportService = require('@services/DocsImportService');
-            return new DocsImportService(browserManager, taskService, taskRepository);
-        }, { singleton: true, dependencies: ['browserManager', 'taskService', 'taskRepository'] });
-
-        // Task validation service
-        this.container.register('taskValidationService', (taskRepository, taskExecutionRepository, cursorIDEService, eventBus, fileSystemService) => {
-            const TaskValidationService = require('@services/TaskValidationService');
-            return new TaskValidationService(taskRepository, taskExecutionRepository, cursorIDEService, eventBus, fileSystemService);
-        }, { singleton: true, dependencies: ['taskRepository', 'taskExecutionRepository', 'cursorIDEService', 'eventBus', 'fileSystemService'] });
-
-        // Code quality service (Domain Service)
-        this.container.register('codeQualityService', (codeQualityAnalyzer, eventBus, logger, analysisOutputService, analysisRepository) => {
-            const CodeQualityService = require('@services/CodeQualityService');
-            return new CodeQualityService(codeQualityAnalyzer, eventBus, logger, analysisOutputService, analysisRepository);
-        }, { singleton: true, dependencies: ['codeQualityAnalyzer', 'eventBus', 'logger', 'analysisOutputService', 'analysisRepository'] });
-
-        // Security service (Domain Service)
-        this.container.register('securityService', (securityAnalyzer, eventBus, logger) => {
-            const SecurityService = require('@services/SecurityService');
-            return new SecurityService(securityAnalyzer, eventBus, logger);
-        }, { singleton: true, dependencies: ['securityAnalyzer', 'eventBus', 'logger'] });
-
-        // Performance service (Domain Service)
-        this.container.register('performanceService', (performanceAnalyzer, eventBus, logger) => {
-            const PerformanceService = require('@services/PerformanceService');
-            return new PerformanceService(performanceAnalyzer, eventBus, logger);
-        }, { singleton: true, dependencies: ['performanceAnalyzer', 'eventBus', 'logger'] });
-
-        // Architecture service (Domain Service)
-        this.container.register('architectureService', (architectureAnalyzer, eventBus, logger) => {
-            const ArchitectureService = require('@services/ArchitectureService');
-            return new ArchitectureService(architectureAnalyzer, eventBus, logger);
-        }, { singleton: true, dependencies: ['architectureAnalyzer', 'eventBus', 'logger'] });
+        // Docs Import Service
+        this.container.register('docsImportService', () => {
+            const DocsImportService = require('@domain/services/DocsImportService');
+            return new DocsImportService();
+        }, { singleton: true });
 
         this.registeredServices.add('domain');
     }
@@ -328,6 +286,48 @@ class ServiceRegistry {
             const GitService = require('../external/GitService');
             return new GitService({ logger, eventBus });
         }, { singleton: true, dependencies: ['logger', 'eventBus'] });
+
+        // Docker service
+        this.container.register('dockerService', (logger, eventBus) => {
+            const DockerService = require('../external/DockerService');
+            return new DockerService({ logger, eventBus });
+        }, { singleton: true, dependencies: ['logger', 'eventBus'] });
+
+        // Test Analyzer Tools
+        this.container.register('testAnalyzer', () => {
+            const TestAnalyzer = require('../external/TestAnalyzer');
+            return new TestAnalyzer();
+        }, { singleton: true });
+
+        this.container.register('testFixer', () => {
+            const TestFixer = require('../external/TestFixer');
+            return new TestFixer();
+        }, { singleton: true });
+
+        this.container.register('coverageAnalyzer', () => {
+            const CoverageAnalyzer = require('../external/CoverageAnalyzer');
+            return new CoverageAnalyzer();
+        }, { singleton: true });
+
+        this.container.register('testReportParser', () => {
+            const TestReportParser = require('@domain/services/TestReportParser');
+            return new TestReportParser();
+        }, { singleton: true });
+
+        this.container.register('testFixTaskGenerator', (taskRepository) => {
+            const TestFixTaskGenerator = require('@domain/services/TestFixTaskGenerator');
+            return new TestFixTaskGenerator(taskRepository);
+        }, { singleton: true, dependencies: ['taskRepository'] });
+
+        this.container.register('testCorrectionService', (testAnalyzer, testFixer, coverageAnalyzer, eventBus, logger) => {
+            const TestCorrectionService = require('@domain/services/TestCorrectionService');
+            return new TestCorrectionService(testAnalyzer, testFixer, coverageAnalyzer, eventBus, logger);
+        }, { singleton: true, dependencies: ['testAnalyzer', 'testFixer', 'coverageAnalyzer', 'eventBus', 'logger'] });
+
+        this.container.register('generateTestsHandler', (aiService, projectAnalyzer, eventBus, logger) => {
+            const GenerateTestsHandler = require('@application/handlers/categories/generate/GenerateTestsHandler');
+            return new GenerateTestsHandler(aiService, projectAnalyzer, eventBus, logger);
+        }, { singleton: true, dependencies: ['aiService', 'projectAnalyzer', 'eventBus', 'logger'] });
 
         this.registeredServices.add('external');
     }
@@ -430,7 +430,7 @@ class ServiceRegistry {
 
         // Send message handler
         this.container.register('sendMessageHandler', (cursorIDEService, vscodeIDEService, windsurfIDEService, ideManager, eventBus, logger) => {
-            const SendMessageHandler = require('@handlers/categories/management/SendMessageHandler');
+            const SendMessageHandler = require('@application/handlers/categories/management/SendMessageHandler');
             return new SendMessageHandler({ 
                 cursorIDEService, 
                 vscodeIDEService, 
@@ -443,13 +443,13 @@ class ServiceRegistry {
 
         // Get chat history handler
         this.container.register('getChatHistoryHandler', (chatRepository, ideManager) => {
-            const GetChatHistoryHandler = require('@handler-categories/management/GetChatHistoryHandler');
+            const GetChatHistoryHandler = require('@application/handlers/categories/management/GetChatHistoryHandler');
             return new GetChatHistoryHandler(chatRepository, ideManager, this);
         }, { singleton: true, dependencies: ['chatRepository', 'ideManager'] });
 
         // Create task handler
         this.container.register('createTaskHandler', (taskRepository, taskValidationService, eventBus, logger) => {
-            const CreateTaskHandler = require('@handlers/categories/management/CreateTaskHandler');
+            const CreateTaskHandler = require('@application/handlers/categories/management/CreateTaskHandler');
             return new CreateTaskHandler({
                 taskRepository,
                 taskValidationService,
@@ -460,7 +460,7 @@ class ServiceRegistry {
 
         // VibeCoder auto refactor handler
         this.container.register('vibeCoderAutoRefactorHandler', (taskRepository, projectAnalysisRepository, eventBus, logger) => {
-            const VibeCoderAutoRefactorHandler = require('@handlers/vibecoder/VibeCoderAutoRefactorHandler');
+            const VibeCoderAutoRefactorHandler = require('@application/handlers/vibecoder/VibeCoderAutoRefactorHandler');
             return new VibeCoderAutoRefactorHandler({ taskRepository, projectAnalysisRepository, eventBus, logger });
         }, { singleton: true, dependencies: ['taskRepository', 'projectAnalysisRepository', 'eventBus', 'logger'] });
 
@@ -479,6 +479,12 @@ class ServiceRegistry {
         this.registerDomainServices();
         this.registerExternalServices();
         this.registerApplicationHandlers();
+
+        // Initialize project context service after all services are registered
+        this.projectContextService.initialize({
+            projectMappingService: this.container.resolve('projectMappingService'),
+            workspacePathDetector: this.container.resolve('workspacePathDetector')
+        });
 
         console.log('[ServiceRegistry] All services registered successfully');
         console.log('[ServiceRegistry] Registered service categories:', Array.from(this.registeredServices));

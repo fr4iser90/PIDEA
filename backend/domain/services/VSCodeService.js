@@ -5,7 +5,7 @@ const ChatHistoryExtractor = require('./chat/ChatHistoryExtractor');
 const PackageJsonAnalyzer = require('./dev-server/PackageJsonAnalyzer');
 const VSCodeExtensionManager = require('@external/VSCodeExtensionManager');
 
-class vscodeIDEService {
+class VSCodeIDEService {
   constructor(browserManager, ideManager, eventBus = null) {
     this.browserManager = browserManager;
     this.ideManager = ideManager;
@@ -592,4 +592,4 @@ Complete all generated tasks and provide a comprehensive summary.
   }
 }
 
-module.exports = vscodeIDEService; 
+module.exports = VSCodeIDEService; 

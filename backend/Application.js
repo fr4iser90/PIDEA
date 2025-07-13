@@ -220,12 +220,6 @@ class Application {
     // Initialize file system service for strategies
     this.fileSystemService = this.serviceRegistry.getService('fileSystemService');
 
-    // Register remaining services
-    this.serviceRegistry.registerRepositoryServices();
-    this.serviceRegistry.registerDomainServices();
-    this.serviceRegistry.registerExternalServices();
-    this.serviceRegistry.registerStrategyServices();
-
     // Get strategies through DI
     this.monorepoStrategy = this.serviceRegistry.getService('monorepoStrategy');
     this.singleRepoStrategy = this.serviceRegistry.getService('singleRepoStrategy');
@@ -273,6 +267,15 @@ class Application {
     // Get Git Service
     this.gitService = this.serviceRegistry.getService('gitService');
 
+    // Get Test Analyzer Tools
+    this.testAnalyzer = this.serviceRegistry.getService('testAnalyzer');
+    this.testFixer = this.serviceRegistry.getService('testFixer');
+    this.coverageAnalyzer = this.serviceRegistry.getService('coverageAnalyzer');
+    this.testReportParser = this.serviceRegistry.getService('testReportParser');
+    this.testFixTaskGenerator = this.serviceRegistry.getService('testFixTaskGenerator');
+    this.testCorrectionService = this.serviceRegistry.getService('testCorrectionService');
+    this.generateTestsHandler = this.serviceRegistry.getService('generateTestsHandler');
+
     // Initialize Auto-Finish System
     this.taskSessionRepository = new TaskSessionRepository(this.databaseConnection);
     await this.taskSessionRepository.initialize();
@@ -295,7 +298,12 @@ class Application {
       workflowOrchestrationService: this.workflowOrchestrationService,
       gitService: this.gitService,
       eventBus: this.eventBus,
-      logger: this.logger
+      logger: this.logger,
+      testAnalyzer: this.testAnalyzer,
+      testFixer: this.testFixer,
+      coverageAnalyzer: this.coverageAnalyzer,
+      testReportParser: this.testReportParser,
+      testFixTaskGenerator: this.testFixTaskGenerator
     });
     await this.autoTestFixSystem.initialize();
 
