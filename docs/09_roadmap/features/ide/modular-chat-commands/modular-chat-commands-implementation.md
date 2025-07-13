@@ -4,9 +4,9 @@
 - **Feature/Component Name**: Modular IDE Commands System (Chat, Terminal, Analysis, Browser)
 - **Priority**: High
 - **Category**: ide
-- **Estimated Time**: 6 hours
+- **Estimated Time**: 4 hours
 - **Dependencies**: Existing Command/Handler architecture, IDETypes, BrowserManager, CursorIDEService, TerminalMonitor, WorkspacePathDetector
-- **Related Issues**: Too many "New Chat" creations, lack of chat control, scattered IDE automation functions
+- **Related Issues**: Poor chat session management, missing selector integration, scattered IDE automation functions
 
 ## Validation Results - [2025-01-27]
 ### ✅ Completed Items
@@ -21,6 +21,8 @@
 - [x] **Command Conflicts**: Resolved with dedicated IDE category
 - [x] **File Structure**: Updated to use `categories/ide/` structure
 - [x] **Integration Points**: Properly identified existing services
+- [x] **Selector Integration**: Will use existing IDETypes and BrowserManager selectors
+- [x] **Chat Management**: Simplified to browser-tab-like approach
 
 ## 2. Technical Requirements
 - **Tech Stack**: Node.js, Playwright, existing Command/Handler pattern
@@ -35,13 +37,12 @@
 
 #### Files to Create:
 **Chat Commands:**
-- [ ] `backend/application/commands/categories/ide/NewChatCommand.js` - Create new chat session
+- [ ] `backend/application/commands/categories/ide/CreateChatCommand.js` - Create new chat session
 - [ ] `backend/application/commands/categories/ide/SendMessageCommand.js` - Send message to chat
-- [ ] `backend/application/commands/categories/ide/GetChatHistoryCommand.js` - Get chat history
-- [ ] `backend/application/commands/categories/ide/SwitchChatCommand.js` - Switch between chats
+- [ ] `backend/application/commands/categories/ide/SwitchChatCommand.js` - Switch between chats (like browser tabs)
+- [ ] `backend/application/commands/categories/ide/ListChatsCommand.js` - List available chats
 - [ ] `backend/application/commands/categories/ide/CloseChatCommand.js` - Close chat session
-- [ ] `backend/application/commands/categories/ide/ReuseChatCommand.js` - Reuse existing chat
-- [ ] `backend/application/commands/categories/ide/ChatManagementCommand.js` - Chat orchestration
+- [ ] `backend/application/commands/categories/ide/GetChatHistoryCommand.js` - Get chat history
 
 **Terminal Commands:**
 - [ ] `backend/application/commands/categories/ide/OpenTerminalCommand.js` - Open IDE terminal
@@ -64,22 +65,21 @@
 - [ ] `backend/application/commands/categories/ide/GetIDESelectorsCommand.js` - Get IDE selectors
 
 **Handlers:**
-- [ ] `backend/application/handlers/categories/ide/NewChatHandler.js` - Handle new chat creation
-- [ ] `backend/application/handlers/categories/ide/SendMessageHandler.js` - Handle message sending
-- [ ] `backend/application/handlers/categories/ide/GetChatHistoryHandler.js` - Handle history retrieval
-- [ ] `backend/application/handlers/categories/ide/SwitchChatHandler.js` - Handle chat switching
+- [ ] `backend/application/handlers/categories/ide/CreateChatHandler.js` - Handle new chat creation with selectors
+- [ ] `backend/application/handlers/categories/ide/SendMessageHandler.js` - Handle message sending with selectors
+- [ ] `backend/application/handlers/categories/ide/SwitchChatHandler.js` - Handle chat switching (like browser tabs)
+- [ ] `backend/application/handlers/categories/ide/ListChatsHandler.js` - Handle chat listing
 - [ ] `backend/application/handlers/categories/ide/CloseChatHandler.js` - Handle chat closing
-- [ ] `backend/application/handlers/categories/ide/ReuseChatHandler.js` - Handle chat reuse
-- [ ] `backend/application/handlers/categories/ide/ChatManagementHandler.js` - Handle chat orchestration
-- [ ] `backend/application/handlers/categories/ide/OpenTerminalHandler.js` - Handle terminal operations
-- [ ] `backend/application/handlers/categories/ide/ExecuteTerminalHandler.js` - Handle command execution
+- [ ] `backend/application/handlers/categories/ide/GetChatHistoryHandler.js` - Handle history retrieval
+- [ ] `backend/application/handlers/categories/ide/OpenTerminalHandler.js` - Handle terminal operations with selectors
+- [ ] `backend/application/handlers/categories/ide/ExecuteTerminalHandler.js` - Handle command execution with selectors
 - [ ] `backend/application/handlers/categories/ide/AnalyzeProjectHandler.js` - Handle project analysis
-- [ ] `backend/application/handlers/categories/ide/BrowserActionHandler.js` - Handle browser actions
+- [ ] `backend/application/handlers/categories/ide/BrowserActionHandler.js` - Handle browser actions with selectors
 
 **Domain Services:**
-- [ ] `backend/domain/services/ChatManagementService.js` - Central chat management
+- [ ] `backend/domain/services/ChatSessionService.js` - Chat session management (like browser tabs)
+- [ ] `backend/domain/services/IDEAutomationService.js` - IDE automation with selector integration
 - [ ] `backend/domain/services/WorkflowExecutionService.js` - Workflow execution with chat control
-- [ ] `backend/domain/services/IDEAutomationService.js` - IDE automation orchestration
 
 #### Files to Modify:
 - [ ] `backend/presentation/api/WorkflowController.js` - Use new chat commands
@@ -90,32 +90,32 @@
 
 ## 4. Implementation Phases
 
-#### Phase 1: Chat Commands Foundation (2 hours)
+#### Phase 1: Chat Commands Foundation (1.5 hours)
 - [ ] Create ide command category structure
-- [ ] Implement NewChatCommand with IDE type detection
-- [ ] Implement SendMessageCommand with session management
-- [ ] Implement ReuseChatCommand with timeout logic
+- [ ] Implement CreateChatCommand with selector integration
+- [ ] Implement SwitchChatCommand (like browser tabs)
+- [ ] Implement SendMessageCommand with selector integration
 - [ ] Create command validation and error handling
 
-#### Phase 2: Terminal & Analysis Commands (2 hours)
-- [ ] Implement OpenTerminalCommand with IDE-specific shortcuts
-- [ ] Implement ExecuteTerminalCommand with command execution
+#### Phase 2: Terminal & Analysis Commands (1.5 hours)
+- [ ] Implement OpenTerminalCommand with selector integration
+- [ ] Implement ExecuteTerminalCommand with selector integration
 - [ ] Implement AnalyzeProjectCommand with existing analysis logic
-- [ ] Implement AnalyzeAgainCommand for re-analysis
+- [ ] Implement ListChatsCommand for chat management
 - [ ] Add terminal monitoring and log capture
 
 #### Phase 3: Browser/IDE Commands (1 hour)
-- [ ] Implement SwitchIDEPortCommand for port switching
-- [ ] Implement OpenFileExplorerCommand for file navigation
-- [ ] Implement OpenCommandPaletteCommand for IDE actions
-- [ ] Implement ExecuteIDEActionCommand for general IDE operations
+- [ ] Implement SwitchIDEPortCommand with selector integration
+- [ ] Implement OpenFileExplorerCommand with selector integration
+- [ ] Implement OpenCommandPaletteCommand with selector integration
+- [ ] Implement ExecuteIDEActionCommand with selector integration
 - [ ] Add IDE selector detection and management
 
 #### Phase 4: Handlers & Services Integration (1 hour)
-- [ ] Create all handlers with existing service integration
-- [ ] Create ChatManagementService for centralized control
+- [ ] Create all handlers with selector integration
+- [ ] Create ChatSessionService for browser-tab-like management
+- [ ] Create IDEAutomationService with selector integration
 - [ ] Create WorkflowExecutionService for orchestrated execution
-- [ ] Create IDEAutomationService for IDE automation orchestration
 - [ ] Update WorkflowController and TaskService to use new commands
 
 ## 5. Code Standards & Patterns
@@ -192,7 +192,7 @@
 - [ ] Communication plan for stakeholders
 
 ## 12. Success Criteria
-- [x] 80% reduction in unnecessary "New Chat" creation - **ACHIEVABLE** with ReuseChatCommand
+- [x] Chat session management like browser tabs - **ACHIEVABLE** with SwitchChatCommand
 - [x] All chat operations use modular commands - **VALIDATED** with existing architecture
 - [x] Chat session management working correctly - **SUPPORTED** by existing services
 - [x] IDE type detection and selector usage working - **CONFIRMED** with IDETypes system
@@ -208,6 +208,7 @@
 - **File Structure**: 90% (needs IDE category creation)
 - **Integration Points**: 100% (properly identified)
 - **Feature Coverage**: 100% (includes all existing BrowserManager functions)
+- **Selector Integration**: 100% (uses existing IDETypes and BrowserManager)
 - **Risk Assessment**: **LOW** - Uses proven existing systems
 
 ## 13. Risk Assessment
@@ -217,7 +218,7 @@
 - [x] IDE selector changes - **MITIGATED**: Uses dynamic IDETypes system with fallback selectors
 
 #### Medium Risk - ADDRESSED:
-- [x] Chat session conflicts - **ADDRESSED**: Proper session isolation with existing ChatSession management
+- [x] Chat session conflicts - **ADDRESSED**: Browser-tab-like management with proper isolation
 - [x] Performance degradation - **ADDRESSED**: Caching and optimization using existing patterns
 
 #### Low Risk - CONFIRMED:
@@ -227,7 +228,8 @@
 ### 🛡️ Risk Mitigation Status
 - **Browser Automation**: ✅ Uses proven BrowserManager with 2+ years of reliability
 - **IDE Detection**: ✅ Uses comprehensive IDETypes system with multiple fallbacks
-- **Session Management**: ✅ Uses existing ChatSession entity with proper isolation
+- **Session Management**: ✅ Uses browser-tab-like approach with proper isolation
+- **Selector Integration**: ✅ Uses existing IDETypes and BrowserManager selectors
 - **Performance**: ✅ Uses existing caching patterns and optimization strategies
 
 ## 14. AI Auto-Implementation Instructions
@@ -255,14 +257,47 @@
 ```
 
 #### Success Indicators:
-- [ ] All chat commands created and functional
-- [ ] All chat handlers implemented
-- [ ] Domain services integrated
+- [ ] All chat commands created and functional with selector integration
+- [ ] All chat handlers implemented with selector integration
+- [ ] Domain services integrated with selector integration
 - [ ] Controllers updated to use new commands
+- [ ] Chat management works like browser tabs
 - [ ] Tests passing
 - [ ] No build errors
 
-## 15. References & Resources
+## 15. Corrected Approach
+
+### Why the Original Approach Was Wrong
+1. **ReuseChatCommand was unnecessary complexity** - Trying to be "smart" about reusing chats made things worse
+2. **Missing selector integration** - Not using your existing IDETypes and BrowserManager systems
+3. **Overcomplicated session management** - Should be simple like browser tabs
+
+### The Correct Approach
+1. **Browser-Tab-Like Chat Management**:
+   - `CreateChatCommand` - Open new tab
+   - `SwitchChatCommand` - Switch between tabs
+   - `ListChatsCommand` - Show all tabs
+   - `CloseChatCommand` - Close tab
+
+2. **Selector Integration**:
+   - All commands use your existing `IDETypes` system
+   - All handlers use your existing `BrowserManager` selectors
+   - No custom selector logic - leverage proven systems
+
+3. **Simple Session Management**:
+   - Track active chat like active browser tab
+   - Switch between chats like switching tabs
+   - No complex "reuse" logic needed
+
+### Key Changes Made
+- ❌ Removed `ReuseChatCommand` (unnecessary complexity)
+- ✅ Added `SwitchChatCommand` (like browser tabs)
+- ✅ Added `ListChatsCommand` (show available chats)
+- ✅ All commands integrate with your selectors
+- ✅ Simplified from 6 hours to 4 hours
+- ✅ Browser-tab-like approach instead of complex reuse logic
+
+## 16. References & Resources
 - **Technical Documentation**: Existing Command/Handler architecture
 - **API References**: IDETypes.js, BrowserManager.js, CursorIDEService.js, TerminalMonitor.js, WorkspacePathDetector.js
 - **Design Patterns**: Command pattern, Handler pattern, Domain Services
