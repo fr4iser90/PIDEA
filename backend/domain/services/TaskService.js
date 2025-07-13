@@ -428,11 +428,28 @@ class TaskService {
       }
 
       // CRITICAL: Create new chat ONLY at the start of task execution
+      // BUT: Skip if WorkflowController already created a new chat
       if (this.cursorIDEService && this.cursorIDEService.browserManager) {
-        logger.log('🆕 [TaskService] Creating new chat for task execution...');
-        await this.cursorIDEService.browserManager.clickNewChat();
-        // Wait for new chat to be ready
-        await new Promise(resolve => setTimeout(resolve, 2000));
+        // Check if we're already in a new chat (WorkflowController might have already clicked New Chat)
+        const page = await this.cursorIDEService.browserManager.getPage();
+        if (page) {
+          try {
+            // Check if there's already a chat input field visible
+            const existingChatInput = await page.$('.chat-input, .monaco-editor[data-testid="chat-input"], textarea[placeholder*="chat"], textarea[placeholder*="message"]');
+            if (existingChatInput) {
+              logger.log('🆕 [TaskService] Chat input already exists - WorkflowController already created new chat, skipping...');
+            } else {
+              logger.log('🆕 [TaskService] Creating new chat for task execution...');
+              await this.cursorIDEService.browserManager.clickNewChat();
+              // Wait for new chat to be ready
+              await new Promise(resolve => setTimeout(resolve, 2000));
+            }
+          } catch (error) {
+            logger.warn('⚠️ [TaskService] Error checking existing chat, creating new chat anyway:', error.message);
+            await this.cursorIDEService.browserManager.clickNewChat();
+            await new Promise(resolve => setTimeout(resolve, 2000));
+          }
+        }
       }
 
       // Update task status to in progress
