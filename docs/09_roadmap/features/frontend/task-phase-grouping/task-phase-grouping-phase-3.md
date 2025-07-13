@@ -1,892 +1,589 @@
-# Phase 3: Frontend Component Development - CORRECTED
+# Phase 3: Frontend Component Enhancement - CORRECTED
 
 ## Overview
-Create new React components for displaying grouped tasks by phases and implement phase execution functionality within the existing TasksPanelComponent.
+Enhance existing React components to support phase grouping and execution functionality without creating new modals or components.
 
 ## Current State Analysis
 - **TasksPanelComponent.jsx**: Exists at `frontend/src/presentation/components/chat/sidebar-right/TasksPanelComponent.jsx`
-- **Current Functionality**: Handles docs tasks but not phase grouping
+- **DocsTaskDetailsModal.jsx**: Exists at `frontend/src/presentation/components/chat/modal/DocsTaskDetailsModal.jsx`
+- **Current Functionality**: TasksPanelComponent handles docs tasks, DocsTaskDetailsModal shows task details
 - **Component Structure**: Uses React hooks and functional components
-- **Styling**: CSS exists in `frontend/src/css/global/sidebar-right.css` but needs phase-specific styling
-- **Missing Components**: PhaseAccordionSection and PhaseModal don't exist
+- **Styling**: CSS exists in existing files, needs enhancement for phase grouping
+- **Integration**: Both components work together for task display and execution
 
 ## Tasks
 
-### 1. Create PhaseAccordionSection for displaying grouped tasks
-**File**: `frontend/src/presentation/components/PhaseAccordionSection.jsx`
-**Time**: 45 minutes
+### 1. Enhance TasksPanelComponent with phase grouping
+**File**: `frontend/src/presentation/components/chat/sidebar-right/TasksPanelComponent.jsx`
+**Time**: 90 minutes
 **Status**: ❌ Not implemented
 
 ```jsx
-import React, { useState } from 'react';
-import PropTypes from 'prop-types';
-import '@/css/components/PhaseAccordionSection.css';
+// Add to existing state
+const [groupedTasks, setGroupedTasks] = useState({});
+const [loadingPhases, setLoadingPhases] = useState(false);
+const [executingPhases, setExecutingPhases] = useState(new Set());
+const [expandedPhases, setExpandedPhases] = useState(new Set());
 
-const PhaseAccordionSection = ({ 
-  phaseName, 
-  phaseData, 
-  onTaskClick, 
-  onExecutePhase,
-  isExecuting = false 
-}) => {
-  const [isExpanded, setIsExpanded] = useState(true);
-  const [isExecutingPhase, setIsExecutingPhase] = useState(false);
+// Add to existing useEffect
+useEffect(() => {
+  if (activePort) {
+    console.log('[TasksPanelComponent] Loading tasks for port:', activePort);
+    loadDocsTasks();
+    loadGroupedTasks(); // NEW: Load phase-grouped tasks
+  } else {
+    console.log('[TasksPanelComponent] No active port, clearing tasks');
+    setDocsTasks([]);
+    setGroupedTasks({}); // NEW: Clear phase tasks
+  }
+}, [activePort]);
 
-  const progressPercentage = phaseData.totalTasks > 0 
-    ? (phaseData.completedTasks / phaseData.totalTasks) * 100 
-    : 0;
-
-  const isPhaseComplete = phaseData.completedTasks === phaseData.totalTasks;
-
-  const handleExecutePhase = async () => {
-    if (isExecutingPhase || isPhaseComplete) return;
-    
-    setIsExecutingPhase(true);
-    try {
-      await onExecutePhase(phaseName);
-    } catch (error) {
-      console.error('Phase execution failed:', error);
-    } finally {
-      setIsExecutingPhase(false);
-    }
-  };
-
-  const getPhaseIcon = () => {
-    if (isPhaseComplete) return '✅';
-    if (isExecutingPhase) return '⏳';
-    if (progressPercentage > 0) return '🔄';
-    return '📋';
-  };
-
-  const getPhaseStatusClass = () => {
-    if (isPhaseComplete) return 'phase-complete';
-    if (isExecutingPhase) return 'phase-executing';
-    if (progressPercentage > 0) return 'phase-in-progress';
-    return 'phase-pending';
-  };
-
-  return (
-    <div className={`phase-accordion-section ${getPhaseStatusClass()}`}>
-      <div className="phase-header" onClick={() => setIsExpanded(!isExpanded)}>
-        <div className="phase-info">
-          <span className="phase-icon">{getPhaseIcon()}</span>
-          <h3 className="phase-name">{phaseData.name}</h3>
-          <span className="phase-count">
-            {phaseData.completedTasks}/{phaseData.totalTasks} tasks
-          </span>
-        </div>
-        
-        <div className="phase-actions">
-          <div className="phase-progress">
-            <div className="progress-bar">
-              <div 
-                className="progress-fill" 
-                style={{ width: `${progressPercentage}%` }}
-              />
-            </div>
-            <span className="progress-text">{Math.round(progressPercentage)}%</span>
-          </div>
-          
-          <button 
-            className="expand-button"
-            onClick={(e) => {
-              e.stopPropagation();
-              setIsExpanded(!isExpanded);
-            }}
-          >
-            {isExpanded ? '▼' : '▶'}
-          </button>
-        </div>
-      </div>
-
-      {isExpanded && (
-        <div className="phase-content">
-          <div className="phase-tasks">
-            {phaseData.tasks.map(task => (
-              <div 
-                key={task.id} 
-                className={`task-item task-${task.status}`}
-                onClick={() => onTaskClick(task)}
-              >
-                <div className="task-status">
-                  {task.status === 'completed' && '✅'}
-                  {task.status === 'in_progress' && '🔄'}
-                  {task.status === 'pending' && '⏳'}
-                  {task.status === 'failed' && '❌'}
-                </div>
-                <div className="task-info">
-                  <div className="task-title">{task.title}</div>
-                  {task.description && (
-                    <div className="task-description">{task.description}</div>
-                  )}
-                </div>
-                <div className="task-meta">
-                  {task.estimated_hours && (
-                    <span className="task-estimate">{task.estimated_hours}h</span>
-                  )}
-                  {task.priority && (
-                    <span className={`task-priority priority-${task.priority}`}>
-                      {task.priority}
-                    </span>
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
-
-          {!isPhaseComplete && (
-            <div className="phase-execution">
-              <button
-                className={`execute-phase-button ${isExecutingPhase ? 'executing' : ''}`}
-                onClick={handleExecutePhase}
-                disabled={isExecutingPhase || isExecuting}
-              >
-                {isExecutingPhase ? 'Executing...' : `Execute ${phaseName}`}
-              </button>
-            </div>
-          )}
-        </div>
-      )}
-    </div>
-  );
+// NEW: Load grouped tasks by phases
+const loadGroupedTasks = async () => {
+  setLoadingPhases(true);
+  try {
+    const projectId = await api.getCurrentProjectId();
+    const phases = await api.getTasksByPhases(projectId);
+    setGroupedTasks(phases);
+  } catch (error) {
+    console.error('Failed to load grouped tasks:', error);
+    setFeedback('Error loading phase groups: ' + error.message);
+  } finally {
+    setLoadingPhases(false);
+  }
 };
 
-PhaseAccordionSection.propTypes = {
-  phaseName: PropTypes.string.isRequired,
-  phaseData: PropTypes.shape({
-    name: PropTypes.string.isRequired,
-    tasks: PropTypes.array.isRequired,
-    totalTasks: PropTypes.number.isRequired,
-    completedTasks: PropTypes.number.isRequired
-  }).isRequired,
-  onTaskClick: PropTypes.func.isRequired,
-  onExecutePhase: PropTypes.func.isRequired,
-  isExecuting: PropTypes.bool
-};
+// NEW: Handle phase execution
+const handleExecutePhase = async (phaseName) => {
+  if (executingPhases.has(phaseName)) return;
 
-export default PhaseAccordionSection;
-```
-
-### 2. Create PhaseModal component for phase execution control
-**File**: `frontend/src/presentation/components/PhaseModal.jsx`
-**Time**: 30 minutes
-**Status**: ❌ Not implemented
-
-```jsx
-import React, { useState } from 'react';
-import PropTypes from 'prop-types';
-import '@/css/components/PhaseModal.css';
-
-const PhaseModal = ({ 
-  isOpen, 
-  onClose, 
-  phases, 
-  onExecutePhase,
-  onExecuteAllPhases,
-  isExecuting = false 
-}) => {
-  const [selectedPhase, setSelectedPhase] = useState(null);
-  const [isExecutingPhase, setIsExecutingPhase] = useState(false);
-
-  const handleExecutePhase = async (phaseName) => {
-    if (isExecutingPhase || isExecuting) return;
+  setExecutingPhases(prev => new Set(prev).add(phaseName));
+  
+  try {
+    const projectId = await api.getCurrentProjectId();
+    const result = await api.executePhase(projectId, phaseName);
+    console.log(`Phase ${phaseName} execution result:`, result);
     
-    setIsExecutingPhase(true);
-    try {
-      await onExecutePhase(phaseName);
-      setSelectedPhase(null);
-    } catch (error) {
-      console.error('Phase execution failed:', error);
-    } finally {
-      setIsExecutingPhase(false);
-    }
-  };
-
-  const handleExecuteAllPhases = async () => {
-    if (isExecutingPhase || isExecuting) return;
+    // Reload tasks to get updated status
+    await loadGroupedTasks();
+    await loadDocsTasks();
     
-    setIsExecutingPhase(true);
-    try {
-      const phaseNames = Object.keys(phases);
-      await onExecuteAllPhases(phaseNames);
-      onClose();
-    } catch (error) {
-      console.error('All phases execution failed:', error);
-    } finally {
-      setIsExecutingPhase(false);
-    }
-  };
-
-  const getTotalProgress = () => {
-    let totalTasks = 0;
-    let completedTasks = 0;
-    
-    Object.values(phases).forEach(phase => {
-      totalTasks += phase.totalTasks;
-      completedTasks += phase.completedTasks;
+    setFeedback(`✅ Phase ${phaseName} executed successfully`);
+  } catch (error) {
+    console.error(`Phase ${phaseName} execution failed:`, error);
+    setFeedback(`❌ Failed to execute phase ${phaseName}: ${error.message}`);
+  } finally {
+    setExecutingPhases(prev => {
+      const newSet = new Set(prev);
+      newSet.delete(phaseName);
+      return newSet;
     });
+  }
+};
+
+// NEW: Toggle phase expansion
+const togglePhaseExpansion = (phaseName) => {
+  setExpandedPhases(prev => {
+    const newSet = new Set(prev);
+    if (newSet.has(phaseName)) {
+      newSet.delete(phaseName);
+    } else {
+      newSet.add(phaseName);
+    }
+    return newSet;
+  });
+};
+
+// NEW: Get phase progress
+const getPhaseProgress = (phaseData) => {
+  return phaseData.totalTasks > 0 ? 
+    (phaseData.completedTasks / phaseData.totalTasks) * 100 : 0;
+};
+
+// NEW: Get phase status
+const getPhaseStatus = (phaseData) => {
+  if (phaseData.completedTasks === phaseData.totalTasks) return 'complete';
+  if (phaseData.completedTasks > 0) return 'in-progress';
+  return 'pending';
+};
+
+// NEW: Get phase icon
+const getPhaseIcon = (phaseData) => {
+  const status = getPhaseStatus(phaseData);
+  switch (status) {
+    case 'complete': return '✅';
+    case 'in-progress': return '🔄';
+    case 'pending': return '📋';
+    default: return '📋';
+  }
+};
+
+// Modify existing render to include phase grouping
+// Add this section after the existing docs tasks section:
+
+{/* Phase Grouping Section */}
+{Object.keys(groupedTasks).length > 0 && (
+  <div className="panel-block">
+    <div className="flex justify-between items-center mb-3">
+      <h3 className="font-semibold text-lg">📋 Project Phases</h3>
+      <div className="flex gap-2">
+        <button 
+          className="btn-secondary text-sm"
+          onClick={loadGroupedTasks}
+          disabled={loadingPhases}
+        >
+          {loadingPhases ? 'Loading...' : '🔄 Refresh'}
+        </button>
+      </div>
+    </div>
     
-    return totalTasks > 0 ? (completedTasks / totalTasks) * 100 : 0;
-  };
-
-  if (!isOpen) return null;
-
-  return (
-    <div className="phase-modal-overlay">
-      <div className="phase-modal">
-        <div className="modal-header">
-          <h2>📋 Project Phases</h2>
-          <button className="close-button" onClick={onClose}>×</button>
+    <div className="bg-gray-900 rounded p-3 min-h-[200px] max-h-[400px] overflow-y-auto">
+      {loadingPhases ? (
+        <div className="flex items-center justify-center py-8">
+          <div className="loading-spinner mr-3"></div>
+          <span className="text-gray-400">Loading phase groups...</span>
         </div>
-
-        <div className="modal-content">
-          <div className="overall-progress">
-            <div className="progress-bar">
+      ) : (
+        <div className="space-y-3">
+          {Object.entries(groupedTasks).map(([phaseName, phaseData]) => (
+            <div key={phaseName} className="phase-group border border-gray-700 rounded">
+              {/* Phase Header */}
               <div 
-                className="progress-fill" 
-                style={{ width: `${getTotalProgress()}%` }}
-              />
-            </div>
-            <span className="progress-text">{Math.round(getTotalProgress())}% Complete</span>
-          </div>
-
-          <div className="phases-list">
-            {Object.entries(phases).map(([phaseName, phaseData]) => (
-              <div key={phaseName} className="phase-item">
-                <div className="phase-summary">
-                  <div className="phase-info">
-                    <h3>{phaseData.name}</h3>
-                    <span className="task-count">
-                      {phaseData.completedTasks}/{phaseData.totalTasks} tasks
-                    </span>
+                className="phase-header p-3 bg-gray-800 cursor-pointer hover:bg-gray-750 transition-colors"
+                onClick={() => togglePhaseExpansion(phaseName)}
+              >
+                <div className="flex justify-between items-center">
+                  <div className="flex items-center gap-3">
+                    <span className="text-lg">{getPhaseIcon(phaseData)}</span>
+                    <div>
+                      <h4 className="font-medium text-white capitalize">{phaseData.name}</h4>
+                      <div className="flex items-center gap-2 text-sm text-gray-400">
+                        <span>{phaseData.completedTasks}/{phaseData.totalTasks} tasks</span>
+                        <span>•</span>
+                        <span>{Math.round(getPhaseProgress(phaseData))}% complete</span>
+                      </div>
+                    </div>
                   </div>
-                  <div className="phase-actions">
-                    <button
-                      className="execute-single-button"
-                      onClick={() => handleExecutePhase(phaseName)}
-                      disabled={isExecutingPhase || isExecuting || phaseData.completedTasks === phaseData.totalTasks}
-                    >
-                      Execute {phaseName}
+                  <div className="flex items-center gap-2">
+                    <div className="progress-bar w-16 h-2 bg-gray-700 rounded-full overflow-hidden">
+                      <div 
+                        className="progress-fill h-full bg-blue-500 transition-all duration-300"
+                        style={{ width: `${getPhaseProgress(phaseData)}%` }}
+                      />
+                    </div>
+                    <button className="expand-button text-gray-400 hover:text-white">
+                      {expandedPhases.has(phaseName) ? '▼' : '▶'}
                     </button>
                   </div>
                 </div>
-                
-                <div className="phase-tasks-preview">
+              </div>
+
+              {/* Phase Content */}
+              {expandedPhases.has(phaseName) && (
+                <div className="phase-content p-3 bg-gray-850">
+                  {/* Phase Tasks */}
+                  <div className="space-y-2 mb-3">
+                    {phaseData.tasks.map(task => (
+                      <div
+                        key={task.id}
+                        className="phase-task-item p-2 bg-gray-800 rounded border border-gray-700 hover:border-gray-600 cursor-pointer transition-colors"
+                        onClick={() => handleDocsTaskClick(task)}
+                      >
+                        <div className="flex justify-between items-start">
+                          <h5 className="font-medium text-white text-sm line-clamp-2">
+                            {task.title}
+                          </h5>
+                          <div className="flex gap-1 flex-shrink-0 ml-2">
+                            <span
+                              className="priority-badge text-xs px-2 py-1 rounded"
+                              style={{ backgroundColor: getPriorityColor(task.priority) }}
+                            >
+                              {task.priority}
+                            </span>
+                            {task.status && (
+                              <span
+                                className="status-badge text-xs px-2 py-1 rounded"
+                                style={{ backgroundColor: getStatusColor(task.status) }}
+                              >
+                                {task.status}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                        <div className="flex justify-between items-center text-xs text-gray-400 mt-1">
+                          <span className="font-mono">{getTaskFilename(task)}</span>
+                          <span>{formatDate(task.updatedAt)}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Phase Execution */}
+                  {getPhaseStatus(phaseData) !== 'complete' && (
+                    <div className="phase-execution border-t border-gray-700 pt-3">
+                      <button
+                        className={`execute-phase-button w-full py-2 px-4 rounded font-medium transition-all ${
+                          executingPhases.has(phaseName)
+                            ? 'bg-yellow-600 text-white cursor-not-allowed'
+                            : 'bg-blue-600 hover:bg-blue-700 text-white'
+                        }`}
+                        onClick={() => handleExecutePhase(phaseName)}
+                        disabled={executingPhases.has(phaseName)}
+                      >
+                        {executingPhases.has(phaseName) 
+                          ? `⏳ Executing ${phaseName}...` 
+                          : `▶ Execute ${phaseName} Phase`
+                        }
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  </div>
+)}
+```
+
+### 2. Enhance DocsTaskDetailsModal with phase execution view
+**File**: `frontend/src/presentation/components/chat/modal/DocsTaskDetailsModal.jsx`
+**Time**: 60 minutes
+**Status**: ❌ Not implemented
+
+```jsx
+// Add to existing state
+const [phaseData, setPhaseData] = useState(null);
+const [loadingPhases, setLoadingPhases] = useState(false);
+const [executingPhases, setExecutingPhases] = useState(new Set());
+
+// Add new tab option
+const [activeTab, setActiveTab] = useState('rendered'); // 'rendered', 'raw', 'phases'
+
+// Add to existing useEffect that loads task details
+useEffect(() => {
+  if (taskDetails && taskDetails.phase) {
+    loadPhaseData();
+  }
+}, [taskDetails]);
+
+// NEW: Load phase data for the current task
+const loadPhaseData = async () => {
+  if (!taskDetails?.phase) return;
+  
+  setLoadingPhases(true);
+  try {
+    const projectId = await api.getCurrentProjectId();
+    const phases = await api.getTasksByPhases(projectId);
+    setPhaseData(phases);
+  } catch (error) {
+    console.error('Failed to load phase data:', error);
+  } finally {
+    setLoadingPhases(false);
+  }
+};
+
+// NEW: Handle phase execution from modal
+const handleExecutePhase = async (phaseName) => {
+  if (executingPhases.has(phaseName)) return;
+
+  setExecutingPhases(prev => new Set(prev).add(phaseName));
+  
+  try {
+    const projectId = await api.getCurrentProjectId();
+    const result = await api.executePhase(projectId, phaseName);
+    console.log(`Phase ${phaseName} execution result:`, result);
+    
+    // Reload phase data
+    await loadPhaseData();
+    
+    // Show success message
+    setFeedback(`✅ Phase ${phaseName} executed successfully`);
+  } catch (error) {
+    console.error(`Phase ${phaseName} execution failed:`, error);
+    setFeedback(`❌ Failed to execute phase ${phaseName}: ${error.message}`);
+  } finally {
+    setExecutingPhases(prev => {
+      const newSet = new Set(prev);
+      newSet.delete(phaseName);
+      return newSet;
+    });
+  }
+};
+
+// NEW: Handle execute all phases
+const handleExecuteAllPhases = async () => {
+  if (!phaseData) return;
+  
+  try {
+    const projectId = await api.getCurrentProjectId();
+    const phaseNames = Object.keys(phaseData);
+    const result = await api.executePhases(projectId, phaseNames);
+    console.log('All phases execution result:', result);
+    
+    // Reload phase data
+    await loadPhaseData();
+    
+    setFeedback('✅ All phases executed successfully');
+  } catch (error) {
+    console.error('All phases execution failed:', error);
+    setFeedback(`❌ Failed to execute all phases: ${error.message}`);
+  }
+};
+
+// NEW: Get overall progress
+const getOverallProgress = () => {
+  if (!phaseData) return 0;
+  
+  let totalTasks = 0;
+  let completedTasks = 0;
+  
+  Object.values(phaseData).forEach(phase => {
+    totalTasks += phase.totalTasks;
+    completedTasks += phase.completedTasks;
+  });
+  
+  return totalTasks > 0 ? (completedTasks / totalTasks) * 100 : 0;
+};
+
+// Modify existing tab navigation to include phases tab
+// Add this to the existing tab navigation:
+
+{taskDetails?.phase && (
+  <button 
+    className={`tab-btn ${activeTab === 'phases' ? 'active' : ''}`}
+    onClick={() => setActiveTab('phases')}
+  >
+    📋 Phases
+  </button>
+)}
+
+// Add new tab content for phases
+// Add this to the existing tab content section:
+
+{activeTab === 'phases' && (
+  <div className="phases-content">
+    {loadingPhases ? (
+      <div className="flex items-center justify-center py-8">
+        <div className="loading-spinner mr-3"></div>
+        <span>Loading phase data...</span>
+      </div>
+    ) : phaseData ? (
+      <div className="space-y-4">
+        {/* Overall Progress */}
+        <div className="overall-progress bg-gray-100 p-4 rounded">
+          <div className="flex justify-between items-center mb-2">
+            <h4 className="font-semibold">Overall Project Progress</h4>
+            <span className="text-sm font-medium">{Math.round(getOverallProgress())}%</span>
+          </div>
+          <div className="progress-bar w-full h-3 bg-gray-300 rounded-full overflow-hidden">
+            <div 
+              className="progress-fill h-full bg-green-500 transition-all duration-300"
+              style={{ width: `${getOverallProgress()}%` }}
+            />
+          </div>
+        </div>
+
+        {/* Phase List */}
+        <div className="phases-list space-y-3">
+          {Object.entries(phaseData).map(([phaseName, phaseData]) => (
+            <div key={phaseName} className="phase-item border border-gray-300 rounded p-4">
+              <div className="flex justify-between items-start mb-3">
+                <div>
+                  <h5 className="font-semibold capitalize">{phaseData.name}</h5>
+                  <p className="text-sm text-gray-600">
+                    {phaseData.completedTasks}/{phaseData.totalTasks} tasks completed
+                  </p>
+                </div>
+                <div className="text-right">
+                  <span className="text-sm font-medium">
+                    {Math.round((phaseData.completedTasks / phaseData.totalTasks) * 100)}%
+                  </span>
+                  <div className="progress-bar w-20 h-2 bg-gray-300 rounded-full overflow-hidden mt-1">
+                    <div 
+                      className="progress-fill h-full bg-blue-500 transition-all duration-300"
+                      style={{ 
+                        width: `${(phaseData.completedTasks / phaseData.totalTasks) * 100}%` 
+                      }}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Phase Tasks Preview */}
+              <div className="phase-tasks-preview mb-3">
+                <h6 className="text-sm font-medium mb-2">Tasks in this phase:</h6>
+                <div className="space-y-1">
                   {phaseData.tasks.slice(0, 3).map(task => (
-                    <div key={task.id} className="task-preview">
-                      <span className={`task-status task-${task.status}`}>
-                        {task.status === 'completed' && '✅'}
-                        {task.status === 'pending' && '⏳'}
+                    <div key={task.id} className="task-preview flex items-center gap-2 text-sm">
+                      <span className={`task-status ${
+                        task.status === 'completed' ? 'text-green-600' : 'text-gray-500'
+                      }`}>
+                        {task.status === 'completed' ? '✅' : '⏳'}
                       </span>
-                      <span className="task-title">{task.title}</span>
+                      <span className="task-title truncate">{task.title}</span>
                     </div>
                   ))}
                   {phaseData.tasks.length > 3 && (
-                    <div className="more-tasks">
+                    <div className="text-sm text-gray-500 italic">
                       +{phaseData.tasks.length - 3} more tasks
                     </div>
                   )}
                 </div>
               </div>
-            ))}
-          </div>
-        </div>
 
-        <div className="modal-footer">
-          <button
-            className="execute-all-button"
-            onClick={handleExecuteAllPhases}
-            disabled={isExecutingPhase || isExecuting}
-          >
-            {isExecutingPhase ? 'Executing All Phases...' : 'Execute All Phases'}
-          </button>
-          <button className="cancel-button" onClick={onClose}>
-            Cancel
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-PhaseModal.propTypes = {
-  isOpen: PropTypes.bool.isRequired,
-  onClose: PropTypes.func.isRequired,
-  phases: PropTypes.object.isRequired,
-  onExecutePhase: PropTypes.func.isRequired,
-  onExecuteAllPhases: PropTypes.func.isRequired,
-  isExecuting: PropTypes.bool
-};
-
-export default PhaseModal;
-```
-
-### 3. Modify TasksPanelComponent to integrate phase grouping
-**File**: `frontend/src/presentation/components/chat/sidebar-right/TasksPanelComponent.jsx`
-**Time**: 60 minutes
-**Status**: ❌ Not implemented
-
-```jsx
-import React, { useState, useEffect } from 'react';
-import PropTypes from 'prop-types';
-import PhaseAccordionSection from '../../PhaseAccordionSection';
-import PhaseModal from '../../PhaseModal';
-import APIChatRepository from '@/infrastructure/repositories/APIChatRepository';
-import '@/css/global/sidebar-right.css';
-
-const TasksPanelComponent = ({ eventBus, activePort }) => {
-  const api = new APIChatRepository();
-  const [groupedTasks, setGroupedTasks] = useState({});
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [executingPhases, setExecutingPhases] = useState(new Set());
-  const [showPhaseModal, setShowPhaseModal] = useState(false);
-  
-  // Existing state for docs tasks
-  const [docsTasks, setDocsTasks] = useState([]);
-  const [docsTaskFilter, setDocsTaskFilter] = useState('all');
-  const [docsTaskSearch, setDocsTaskSearch] = useState('');
-  const [selectedDocsTask, setSelectedDocsTask] = useState(null);
-  const [isDocsTaskModalOpen, setIsDocsTaskModalOpen] = useState(false);
-  const [isLoadingDocsTasks, setIsLoadingDocsTasks] = useState(false);
-  const [isLoadingDocsTaskDetails, setIsLoadingDocsTaskDetails] = useState(false);
-
-  useEffect(() => {
-    if (activePort) {
-      console.log('[TasksPanelComponent] Loading tasks for port:', activePort);
-      loadGroupedTasks();
-      loadDocsTasks();
-    } else {
-      console.log('[TasksPanelComponent] No active port, clearing tasks');
-      setGroupedTasks({});
-      setDocsTasks([]);
-    }
-  }, [activePort]);
-
-  const loadGroupedTasks = async () => {
-    setLoading(true);
-    setError(null);
-    
-    try {
-      const projectId = await api.getCurrentProjectId();
-      const phases = await api.getTasksByPhases(projectId);
-      setGroupedTasks(phases);
-    } catch (err) {
-      setError(err.message);
-      console.error('Failed to load grouped tasks:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleTaskClick = (task) => {
-    // Handle task selection - can be extended for task details
-    console.log('Selected task:', task);
-  };
-
-  const handleExecutePhase = async (phaseName) => {
-    if (executingPhases.has(phaseName)) return;
-
-    setExecutingPhases(prev => new Set(prev).add(phaseName));
-    
-    try {
-      const projectId = await api.getCurrentProjectId();
-      const result = await api.executePhase(projectId, phaseName);
-      console.log(`Phase ${phaseName} execution result:`, result);
-      
-      // Reload tasks to get updated status
-      await loadGroupedTasks();
-      
-      // Show success notification
-      showNotification(`Phase ${phaseName} executed successfully`, 'success');
-    } catch (error) {
-      console.error(`Phase ${phaseName} execution failed:`, error);
-      showNotification(`Failed to execute phase ${phaseName}: ${error.message}`, 'error');
-    } finally {
-      setExecutingPhases(prev => {
-        const newSet = new Set(prev);
-        newSet.delete(phaseName);
-        return newSet;
-      });
-    }
-  };
-
-  const handleExecuteAllPhases = async (phaseNames) => {
-    try {
-      const projectId = await api.getCurrentProjectId();
-      const result = await api.executePhases(projectId, phaseNames);
-      console.log('All phases execution result:', result);
-      
-      // Reload tasks to get updated status
-      await loadGroupedTasks();
-      
-      showNotification('All phases executed successfully', 'success');
-    } catch (error) {
-      console.error('All phases execution failed:', error);
-      showNotification(`Failed to execute all phases: ${error.message}`, 'error');
-    }
-  };
-
-  const showNotification = (message, type) => {
-    // Implement notification system or use existing one
-    console.log(`${type.toUpperCase()}: ${message}`);
-  };
-
-  const getTotalProgress = () => {
-    let totalTasks = 0;
-    let completedTasks = 0;
-    
-    Object.values(groupedTasks).forEach(phase => {
-      totalTasks += phase.totalTasks;
-      completedTasks += phase.completedTasks;
-    });
-    
-    return totalTasks > 0 ? (completedTasks / totalTasks) * 100 : 0;
-  };
-
-  // Existing docs tasks functions (keep existing implementation)
-  const loadDocsTasks = async () => {
-    setIsLoadingDocsTasks(true);
-    try {
-      const response = await api.getDocsTasks();
-      if (response.success) {
-        setDocsTasks(response.data || []);
-      } else {
-        setFeedback('Failed to load documentation tasks');
-      }
-    } catch (error) {
-      setFeedback('Error loading documentation tasks: ' + error.message);
-    } finally {
-      setIsLoadingDocsTasks(false);
-    }
-  };
-
-  // ... keep all existing docs tasks functions ...
-
-  if (loading) {
-    return (
-      <div className="tasks-panel loading">
-        <div className="loading-spinner"></div>
-        <p>Loading tasks...</p>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="tasks-panel error">
-        <div className="error-message">
-          <h3>Error Loading Tasks</h3>
-          <p>{error}</p>
-          <button onClick={loadGroupedTasks} className="retry-button">
-            Retry
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  const phaseEntries = Object.entries(groupedTasks);
-  const totalProgress = getTotalProgress();
-
-  return (
-    <div className="tasks-tab space-y-4 p-3">
-      {/* Phase Grouping Section */}
-      <div className="panel-block">
-        <div className="flex justify-between items-center mb-3">
-          <h3 className="font-semibold text-lg">📋 Project Phases</h3>
-          <div className="flex gap-2">
-            {phaseEntries.length > 0 && (
-              <button
-                className="btn-primary text-sm"
-                onClick={() => setShowPhaseModal(true)}
-                disabled={executingPhases.size > 0}
-              >
-                Execute All Phases
-              </button>
-            )}
-            <button 
-              className="btn-secondary text-sm"
-              onClick={loadGroupedTasks}
-              disabled={loading}
-            >
-              {loading ? 'Loading...' : '🔄 Refresh'}
-            </button>
-          </div>
-        </div>
-        
-        <div className="overall-progress mb-4">
-          <div className="progress-bar">
-            <div 
-              className="progress-fill" 
-              style={{ width: `${totalProgress}%` }}
-            />
-          </div>
-          <span className="progress-text">{Math.round(totalProgress)}% Complete</span>
-        </div>
-
-        <div className="phases-container">
-          {phaseEntries.length === 0 ? (
-            <div className="no-tasks">
-              <p>No tasks found for this project.</p>
+              {/* Phase Execution */}
+              {phaseData.completedTasks < phaseData.totalTasks && (
+                <button
+                  className={`execute-phase-button w-full py-2 px-4 rounded font-medium transition-all ${
+                    executingPhases.has(phaseName)
+                      ? 'bg-yellow-600 text-white cursor-not-allowed'
+                      : 'bg-blue-600 hover:bg-blue-700 text-white'
+                  }`}
+                  onClick={() => handleExecutePhase(phaseName)}
+                  disabled={executingPhases.has(phaseName)}
+                >
+                  {executingPhases.has(phaseName) 
+                    ? `⏳ Executing ${phaseName}...` 
+                    : `▶ Execute ${phaseName} Phase`
+                  }
+                </button>
+              )}
             </div>
-          ) : (
-            phaseEntries.map(([phaseName, phaseData]) => (
-              <PhaseAccordionSection
-                key={phaseName}
-                phaseName={phaseName}
-                phaseData={phaseData}
-                onTaskClick={handleTaskClick}
-                onExecutePhase={handleExecutePhase}
-                isExecuting={executingPhases.has(phaseName)}
-              />
-            ))
-          )}
+          ))}
+        </div>
+
+        {/* Execute All Phases */}
+        <div className="execute-all-section border-t border-gray-300 pt-4">
+          <button
+            className="execute-all-button w-full py-3 px-4 bg-green-600 hover:bg-green-700 text-white rounded font-medium transition-all"
+            onClick={handleExecuteAllPhases}
+          >
+            🚀 Execute All Phases
+          </button>
         </div>
       </div>
-
-      {/* Existing Documentation Tasks Section */}
-      <div className="panel-block">
-        <div className="flex justify-between items-center mb-3">
-          <h3 className="font-semibold text-lg">📚 Documentation Tasks</h3>
-          <div className="flex gap-2">
-            <button 
-              className="btn-secondary text-sm"
-              onClick={handleSyncDocsTasks}
-              disabled={isLoadingDocsTasks}
-            >
-              {isLoadingDocsTasks ? 'Syncing...' : '🔄 Sync'}
-            </button>
-            <button 
-              className="btn-secondary text-sm"
-              onClick={handleCleanDocsTasks}
-              disabled={isLoadingDocsTasks}
-            >
-              {isLoadingDocsTasks ? 'Cleaning...' : '🗑️ Clean'}
-            </button>
-            <button 
-              className="btn-secondary text-sm"
-              onClick={loadDocsTasks}
-              disabled={isLoadingDocsTasks}
-            >
-              {isLoadingDocsTasks ? 'Loading...' : '🔄 Refresh'}
-            </button>
-          </div>
-        </div>
-        
-        {/* Keep existing docs tasks implementation */}
-        {/* ... existing docs tasks filter and list ... */}
+    ) : (
+      <div className="text-center py-8 text-gray-500">
+        <p>No phase data available for this task.</p>
+        <p className="text-sm">This task is not associated with any project phases.</p>
       </div>
-
-      {/* Phase Modal */}
-      <PhaseModal
-        isOpen={showPhaseModal}
-        onClose={() => setShowPhaseModal(false)}
-        phases={groupedTasks}
-        onExecutePhase={handleExecutePhase}
-        onExecuteAllPhases={handleExecuteAllPhases}
-        isExecuting={executingPhases.size > 0}
-      />
-
-      {/* Keep existing modals and feedback */}
-      {/* ... existing modals and feedback implementation ... */}
-    </div>
-  );
-};
-
-TasksPanelComponent.propTypes = {
-  eventBus: PropTypes.object,
-  activePort: PropTypes.string
-};
-
-export default TasksPanelComponent;
+    )}
+  </div>
+)}
 ```
 
-### 4. Add phase accordion styling
-**File**: `frontend/src/css/components/PhaseAccordionSection.css`
+### 3. Add CSS styling for phase grouping
+**File**: `frontend/src/css/global/sidebar-right.css`
 **Time**: 30 minutes
 **Status**: ❌ Not implemented
 
 ```css
-.phase-accordion-section {
-  border: 1px solid #e1e5e9;
-  border-radius: 8px;
-  margin-bottom: 16px;
-  background: #ffffff;
+/* Phase Grouping Styles - Add to existing sidebar-right.css */
+
+.phase-group {
   transition: all 0.3s ease;
-  overflow: hidden;
 }
 
-.phase-accordion-section:hover {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  transform: translateY(-2px);
-}
-
-.phase-accordion-section.phase-complete {
-  border-color: #28a745;
-  background: linear-gradient(135deg, #f8fff9 0%, #ffffff 100%);
-}
-
-.phase-accordion-section.phase-executing {
-  border-color: #ffc107;
-  background: linear-gradient(135deg, #fffbf0 0%, #ffffff 100%);
-  animation: pulse 2s infinite;
-}
-
-.phase-accordion-section.phase-in-progress {
-  border-color: #17a2b8;
-  background: linear-gradient(135deg, #f0f9ff 0%, #ffffff 100%);
-}
-
-.phase-accordion-section.phase-pending {
-  border-color: #6c757d;
-  background: #ffffff;
+.phase-group:hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 }
 
 .phase-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 16px 20px;
-  cursor: pointer;
-  user-select: none;
-  background: rgba(0, 0, 0, 0.02);
-  border-bottom: 1px solid #e1e5e9;
+  transition: background-color 0.2s ease;
 }
 
 .phase-header:hover {
-  background: rgba(0, 0, 0, 0.04);
-}
-
-.phase-info {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  flex: 1;
-}
-
-.phase-icon {
-  font-size: 20px;
-  width: 24px;
-  text-align: center;
-}
-
-.phase-name {
-  margin: 0;
-  font-size: 18px;
-  font-weight: 600;
-  color: #2c3e50;
-  text-transform: capitalize;
-}
-
-.phase-count {
-  font-size: 14px;
-  color: #6c757d;
-  background: #f8f9fa;
-  padding: 4px 8px;
-  border-radius: 12px;
-}
-
-.phase-actions {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-}
-
-.phase-progress {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  min-width: 120px;
-}
-
-.progress-bar {
-  flex: 1;
-  height: 6px;
-  background: #e9ecef;
-  border-radius: 3px;
-  overflow: hidden;
-}
-
-.progress-fill {
-  height: 100%;
-  background: linear-gradient(90deg, #007bff, #0056b3);
-  transition: width 0.3s ease;
-}
-
-.phase-complete .progress-fill {
-  background: linear-gradient(90deg, #28a745, #1e7e34);
-}
-
-.phase-executing .progress-fill {
-  background: linear-gradient(90deg, #ffc107, #e0a800);
-}
-
-.progress-text {
-  font-size: 12px;
-  font-weight: 600;
-  color: #495057;
-  min-width: 35px;
-}
-
-.expand-button {
-  background: none;
-  border: none;
-  font-size: 16px;
-  color: #6c757d;
-  cursor: pointer;
-  padding: 4px;
-  border-radius: 4px;
-  transition: all 0.2s ease;
-}
-
-.expand-button:hover {
-  background: rgba(0, 0, 0, 0.1);
-  color: #495057;
+  background-color: #374151 !important;
 }
 
 .phase-content {
-  padding: 20px;
   max-height: 1000px;
   overflow: hidden;
   transition: all 0.3s ease;
 }
 
-.phase-tasks {
-  margin-bottom: 16px;
-}
-
-.task-item {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 12px 16px;
-  margin-bottom: 8px;
-  border-radius: 6px;
-  cursor: pointer;
+.phase-task-item {
   transition: all 0.2s ease;
-  border: 1px solid transparent;
 }
 
-.task-item:hover {
-  background: #f8f9fa;
-  border-color: #dee2e6;
+.phase-task-item:hover {
+  transform: translateX(2px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-.task-item.task-completed {
-  background: #f8fff9;
-  border-color: #c3e6cb;
+.progress-bar {
+  transition: all 0.3s ease;
 }
 
-.task-item.task-in_progress {
-  background: #fffbf0;
-  border-color: #ffeaa7;
-}
-
-.task-item.task-failed {
-  background: #fff5f5;
-  border-color: #feb2b2;
-}
-
-.task-status {
-  font-size: 16px;
-  width: 20px;
-  text-align: center;
-}
-
-.task-info {
-  flex: 1;
-}
-
-.task-title {
-  font-weight: 500;
-  color: #2c3e50;
-  margin-bottom: 4px;
-}
-
-.task-description {
-  font-size: 14px;
-  color: #6c757d;
-  line-height: 1.4;
-}
-
-.task-meta {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-}
-
-.task-estimate {
-  font-size: 12px;
-  color: #6c757d;
-  background: #f8f9fa;
-  padding: 2px 6px;
-  border-radius: 4px;
-}
-
-.task-priority {
-  font-size: 11px;
-  font-weight: 600;
-  padding: 2px 6px;
-  border-radius: 4px;
-  text-transform: uppercase;
-}
-
-.priority-high {
-  background: #f8d7da;
-  color: #721c24;
-}
-
-.priority-medium {
-  background: #fff3cd;
-  color: #856404;
-}
-
-.priority-low {
-  background: #d1ecf1;
-  color: #0c5460;
-}
-
-.phase-execution {
-  border-top: 1px solid #e1e5e9;
-  padding-top: 16px;
-  text-align: center;
+.progress-fill {
+  transition: width 0.5s ease;
 }
 
 .execute-phase-button {
-  background: linear-gradient(135deg, #007bff, #0056b3);
-  color: white;
-  border: none;
-  padding: 12px 24px;
-  border-radius: 6px;
-  font-weight: 600;
-  cursor: pointer;
   transition: all 0.2s ease;
-  text-transform: capitalize;
 }
 
 .execute-phase-button:hover:not(:disabled) {
-  background: linear-gradient(135deg, #0056b3, #004085);
   transform: translateY(-1px);
-  box-shadow: 0 4px 8px rgba(0, 123, 255, 0.3);
+  box-shadow: 0 4px 8px rgba(59, 130, 246, 0.3);
 }
 
 .execute-phase-button:disabled {
-  background: #6c757d;
+  opacity: 0.7;
   cursor: not-allowed;
   transform: none;
   box-shadow: none;
 }
 
-.execute-phase-button.executing {
-  background: #ffc107;
-  color: #212529;
+.expand-button {
+  transition: transform 0.2s ease;
 }
 
-@keyframes pulse {
-  0% { box-shadow: 0 0 0 0 rgba(255, 193, 7, 0.4); }
-  70% { box-shadow: 0 0 0 10px rgba(255, 193, 7, 0); }
-  100% { box-shadow: 0 0 0 0 rgba(255, 193, 7, 0); }
+.expand-button:hover {
+  color: #ffffff;
+}
+
+/* Phase Modal Styles - Add to existing task-docs-details-modal.css */
+
+.phases-content {
+  max-height: 600px;
+  overflow-y: auto;
+}
+
+.overall-progress {
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+}
+
+.phase-item {
+  transition: all 0.2s ease;
+}
+
+.phase-item:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transform: translateY(-1px);
+}
+
+.task-preview {
+  transition: all 0.2s ease;
+}
+
+.task-preview:hover {
+  background-color: #f8f9fa;
+  border-radius: 4px;
+  padding: 2px 4px;
+  margin: -2px -4px;
+}
+
+.execute-all-button {
+  transition: all 0.2s ease;
+}
+
+.execute-all-button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(34, 197, 94, 0.3);
 }
 
 /* Responsive design */
@@ -897,317 +594,32 @@ export default TasksPanelComponent;
     gap: 12px;
   }
   
-  .phase-actions {
-    width: 100%;
-    justify-content: space-between;
+  .phase-content {
+    padding: 12px;
   }
   
-  .task-item {
+  .phase-task-item {
     flex-direction: column;
     align-items: flex-start;
     gap: 8px;
-  }
-  
-  .task-meta {
-    width: 100%;
-    justify-content: flex-start;
-  }
-}
-```
-
-### 5. Add phase modal styling
-**File**: `frontend/src/css/components/PhaseModal.css`
-**Time**: 15 minutes
-**Status**: ❌ Not implemented
-
-```css
-.phase-modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-}
-
-.phase-modal {
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-  max-width: 800px;
-  width: 90%;
-  max-height: 80vh;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-}
-
-.modal-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 24px 32px;
-  border-bottom: 1px solid #e1e5e9;
-  background: #f8f9fa;
-}
-
-.modal-header h2 {
-  margin: 0;
-  font-size: 24px;
-  font-weight: 600;
-  color: #2c3e50;
-}
-
-.close-button {
-  background: none;
-  border: none;
-  font-size: 24px;
-  color: #6c757d;
-  cursor: pointer;
-  padding: 4px;
-  border-radius: 4px;
-  transition: all 0.2s ease;
-}
-
-.close-button:hover {
-  background: rgba(0, 0, 0, 0.1);
-  color: #495057;
-}
-
-.modal-content {
-  padding: 32px;
-  overflow-y: auto;
-  flex: 1;
-}
-
-.overall-progress {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  margin-bottom: 32px;
-  padding: 16px;
-  background: #f8f9fa;
-  border-radius: 8px;
-}
-
-.overall-progress .progress-bar {
-  flex: 1;
-  height: 8px;
-  background: #e9ecef;
-  border-radius: 4px;
-  overflow: hidden;
-}
-
-.overall-progress .progress-fill {
-  height: 100%;
-  background: linear-gradient(90deg, #28a745, #1e7e34);
-  transition: width 0.3s ease;
-}
-
-.overall-progress .progress-text {
-  font-size: 16px;
-  font-weight: 600;
-  color: #495057;
-  min-width: 80px;
-}
-
-.phases-list {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-}
-
-.phase-item {
-  border: 1px solid #e1e5e9;
-  border-radius: 8px;
-  padding: 20px;
-  background: #ffffff;
-  transition: all 0.2s ease;
-}
-
-.phase-item:hover {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-}
-
-.phase-summary {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 16px;
-}
-
-.phase-info h3 {
-  margin: 0 0 8px 0;
-  font-size: 18px;
-  font-weight: 600;
-  color: #2c3e50;
-  text-transform: capitalize;
-}
-
-.task-count {
-  font-size: 14px;
-  color: #6c757d;
-  background: #f8f9fa;
-  padding: 4px 8px;
-  border-radius: 12px;
-}
-
-.execute-single-button {
-  background: linear-gradient(135deg, #007bff, #0056b3);
-  color: white;
-  border: none;
-  padding: 10px 20px;
-  border-radius: 6px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  text-transform: capitalize;
-}
-
-.execute-single-button:hover:not(:disabled) {
-  background: linear-gradient(135deg, #0056b3, #004085);
-  transform: translateY(-1px);
-  box-shadow: 0 4px 8px rgba(0, 123, 255, 0.3);
-}
-
-.execute-single-button:disabled {
-  background: #6c757d;
-  cursor: not-allowed;
-  transform: none;
-  box-shadow: none;
-}
-
-.phase-tasks-preview {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.task-preview {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 8px 12px;
-  background: #f8f9fa;
-  border-radius: 6px;
-  font-size: 14px;
-}
-
-.task-status {
-  font-size: 16px;
-  width: 20px;
-  text-align: center;
-}
-
-.task-title {
-  flex: 1;
-  color: #2c3e50;
-  font-weight: 500;
-}
-
-.more-tasks {
-  font-size: 12px;
-  color: #6c757d;
-  text-align: center;
-  padding: 8px;
-  font-style: italic;
-}
-
-.modal-footer {
-  display: flex;
-  gap: 12px;
-  justify-content: flex-end;
-  padding: 24px 32px;
-  border-top: 1px solid #e1e5e9;
-  background: #f8f9fa;
-}
-
-.execute-all-button {
-  background: linear-gradient(135deg, #28a745, #1e7e34);
-  color: white;
-  border: none;
-  padding: 12px 24px;
-  border-radius: 6px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.execute-all-button:hover:not(:disabled) {
-  background: linear-gradient(135deg, #1e7e34, #155724);
-  transform: translateY(-1px);
-  box-shadow: 0 4px 8px rgba(40, 167, 69, 0.3);
-}
-
-.execute-all-button:disabled {
-  background: #6c757d;
-  cursor: not-allowed;
-  transform: none;
-  box-shadow: none;
-}
-
-.cancel-button {
-  background: #6c757d;
-  color: white;
-  border: none;
-  padding: 12px 24px;
-  border-radius: 6px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.cancel-button:hover:not(:disabled) {
-  background: #5a6268;
-  transform: translateY(-1px);
-}
-
-/* Responsive design */
-@media (max-width: 768px) {
-  .phase-modal {
-    width: 95%;
-    max-height: 90vh;
-  }
-  
-  .modal-header {
-    padding: 16px 20px;
-  }
-  
-  .modal-content {
-    padding: 20px;
-  }
-  
-  .phase-summary {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 12px;
-  }
-  
-  .modal-footer {
-    flex-direction: column;
-    padding: 16px 20px;
   }
 }
 ```
 
 ## Success Criteria
-- [ ] PhaseAccordionSection displays tasks grouped by phases
-- [ ] PhaseModal provides execution functionality with single and bulk options
-- [ ] TasksPanelComponent integrates phase grouping with existing docs tasks
-- [ ] Phase accordion styling includes animations and visual feedback
-- [ ] Phase modal provides comprehensive execution control
-- [ ] Components are responsive and accessible
-- [ ] Error handling works correctly in all components
-- [ ] Loading states are properly managed
+- [ ] TasksPanelComponent displays tasks grouped by phase within existing task list
+- [ ] DocsTaskDetailsModal shows phase execution options when task has phases
+- [ ] Phase grouping integrates seamlessly with existing docs tasks functionality
+- [ ] Phase execution works correctly with existing Auto-Finish System
+- [ ] Loading and error states are handled correctly using existing patterns
+- [ ] No duplicate or separate blocks for phases - integrated into existing UI
+- [ ] Maintains existing task selection and execution workflows
+- [ ] Responsive design works on all screen sizes
 
 ## Dependencies
 - React hooks (useState, useEffect)
-- PropTypes for type checking
 - Existing APIChatRepository (from Phase 2)
+- Existing TasksPanelComponent and DocsTaskDetailsModal
 - CSS animations and transitions
 
 ## Integration with Existing Systems
@@ -1216,13 +628,16 @@ export default TasksPanelComponent;
 - **Project Management**: Uses existing project ID management
 - **Error Handling**: Extends existing error handling patterns
 - **Docs Tasks**: Maintains existing docs tasks functionality
+- **Auto-Finish System**: Integrates with existing task execution
 
 ## Notes
-- Uses modern React patterns with hooks
+- Uses existing React patterns with hooks
 - Implements proper error boundaries and loading states
 - Provides comprehensive visual feedback for all states
 - Includes responsive design for mobile devices
 - Uses CSS animations for smooth user experience
 - Implements proper accessibility features
-- Integrates with existing TasksPanelComponent without breaking docs tasks
-- Depends on Phase 1 and Phase 2 being completed first 
+- Integrates with existing components without breaking changes
+- Depends on Phase 1 and Phase 2 being completed first
+- **CORRECTED**: No new modals - enhances existing components
+- **CORRECTED**: Phase grouping within existing task display structure 

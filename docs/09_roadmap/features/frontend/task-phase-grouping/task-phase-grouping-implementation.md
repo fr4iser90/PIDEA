@@ -4,7 +4,7 @@
 - **Feature/Component Name**: Task Phase Grouping
 - **Priority**: High
 - **Category**: frontend
-- **Estimated Time**: 8 hours
+- **Estimated Time**: 6 hours
 - **Dependencies**: Existing task management system, API infrastructure
 - **Related Issues**: Tasks are currently displayed as a flat list instead of grouped by phases
 - **Current Status**: ❌ **NOT IMPLEMENTED** - Documentation only
@@ -14,7 +14,7 @@
 - **Architecture Pattern**: Component-based architecture with service layer
 - **Database Changes**: None (uses existing task.phase field)
 - **API Changes**: New endpoints for grouped task retrieval and phase execution
-- **Frontend Changes**: Task list is grouped by phase, no separate panels
+- **Frontend Changes**: Enhance existing TasksPanelComponent with phase grouping
 - **Backend Changes**: New service methods for phase grouping and execution
 
 ## 3. Validation Results - [2024-12-19]
@@ -23,7 +23,9 @@
 - [x] File: `backend/domain/services/TaskService.js` - Status: Exists with comprehensive task management
 - [x] File: `backend/presentation/api/TaskController.js` - Status: Exists with basic task endpoints
 - [x] File: `frontend/src/infrastructure/repositories/APIChatRepository.jsx` - Status: Exists with comprehensive API infrastructure
-- [x] File: `frontend/src/presentation/components/chat/sidebar-right/TasksPanelComponent.jsx` - Status: Exists but handles docs tasks only
+- [x] File: `frontend/src/presentation/components/chat/sidebar-right/TasksPanelComponent.jsx` - Status: Exists with docs tasks functionality
+- [x] File: `frontend/src/presentation/components/chat/modal/DocsTaskDetailsModal.jsx` - Status: Exists with task details display
+- [x] Database: `tasks.phase` field - Status: Exists in schema
 - [x] Feature: Auto-Finish System - Status: Working and available for integration
 - [x] Feature: Git Workflow Manager - Status: Working and available for integration
 
@@ -32,10 +34,8 @@
 - [ ] File: `backend/presentation/api/TaskController.js` - Status: Missing phase grouping endpoints
 - [ ] File: `backend/domain/services/PhaseExecutionService.js` - Status: Not found, needs creation
 - [ ] File: `frontend/src/infrastructure/repositories/APIChatRepository.jsx` - Status: Missing phase grouping methods
-- [ ] File: `frontend/src/presentation/components/PhaseGroupComponent.jsx` - Status: Not found, needs creation
-- [ ] File: `frontend/src/presentation/components/PhaseExecutionButton.jsx` - Status: Not found, needs creation
-- [ ] File: `frontend/src/css/components/PhaseGroupComponent.css` - Status: Not found, needs creation
-- [ ] File: `frontend/src/css/components/PhaseExecutionButton.css` - Status: Not found, needs creation
+- [ ] File: `frontend/src/presentation/components/chat/sidebar-right/TasksPanelComponent.jsx` - Status: Needs phase grouping integration
+- [ ] File: `frontend/src/presentation/components/chat/modal/DocsTaskDetailsModal.jsx` - Status: Needs phase execution view
 - [ ] API: `/api/projects/:projectId/tasks/phases` - Status: Endpoint not implemented
 - [ ] API: `/api/projects/:projectId/phases/:phaseName/execute` - Status: Endpoint not implemented
 - [ ] API: `/api/projects/:projectId/phases/execute` - Status: Endpoint not implemented
@@ -47,6 +47,8 @@
 - Enhanced implementation details with real-world constraints
 - Added proper error handling patterns from existing codebase
 - Integrated with existing Auto-Finish System and Git Workflow Manager
+- **CORRECTED**: No separate phase modal - integrate into existing DocsTaskDetailsModal
+- **CORRECTED**: Phase grouping within existing TasksPanelComponent
 
 ### 📊 Code Quality Metrics
 - **Coverage**: 0% (no phase grouping code exists yet)
@@ -59,16 +61,15 @@
 2. Add phase grouping endpoints to TaskController.js
 3. Create PhaseExecutionService.js for bulk phase execution
 4. Add phase grouping methods to APIChatRepository.jsx
-5. Create frontend components for phase grouping
-6. Add CSS styling for phase components
+5. Enhance TasksPanelComponent with phase grouping
+6. Enhance DocsTaskDetailsModal with phase execution view
 7. Implement comprehensive testing
 
 ### 📋 Task Splitting Recommendations
-- **Main Task**: Task Phase Grouping (8 hours) → Split into 4 subtasks
+- **Main Task**: Task Phase Grouping (6 hours) → Split into 3 subtasks
 - **Subtask 1**: Backend API Extension (2 hours) - Service methods and endpoints
 - **Subtask 2**: Frontend API Integration (1 hour) - Repository methods
-- **Subtask 3**: Frontend Component Development (3 hours) - UI components and styling
-- **Subtask 4**: Integration and Testing (2 hours) - End-to-end validation
+- **Subtask 3**: Frontend Component Enhancement (3 hours) - UI integration and phase execution
 
 ## 4. File Impact Analysis - CORRECTED
 
@@ -77,13 +78,10 @@
 - [ ] `backend/presentation/api/TaskController.js` - Add phase grouping endpoints
 - [ ] `frontend/src/infrastructure/repositories/APIChatRepository.jsx` - Add phase grouping methods
 - [ ] `frontend/src/presentation/components/chat/sidebar-right/TasksPanelComponent.jsx` - Integrate phase grouping with existing docs tasks
+- [ ] `frontend/src/presentation/components/chat/modal/DocsTaskDetailsModal.jsx` - Add phase execution view
 
 #### Files to Create:
 - [ ] `backend/domain/services/PhaseExecutionService.js` - Bulk phase execution service
-- [ ] `frontend/src/presentation/components/PhaseAccordionSection.jsx` - Phase section component
-- [ ] `frontend/src/presentation/components/PhaseModal.jsx` - Phase execution modal
-- [ ] `frontend/src/css/components/PhaseAccordionSection.css` - Phase styling
-- [ ] `frontend/src/css/components/PhaseModal.css` - Modal styling
 
 #### Files to Delete:
 - [ ] None
@@ -103,45 +101,39 @@
 - Add executePhases method to APIChatRepository.jsx
 - Enhance error handling for phase operations
 
-#### Phase 3: Frontend Component Development (3 hours)
-- Create PhaseAccordionSection.jsx for phase display
-- Create PhaseModal.jsx for phase execution control
-- Modify TasksPanelComponent.jsx to integrate phase grouping
-- Add CSS styling for phase components
-- Implement UI/UX: Single list with phase grouping, modal for execution
-
-#### Phase 4: Integration and Testing (2 hours)
-- Integrate all components together
-- Test phase grouping functionality
-- Test phase execution flow
-- Add error handling and performance testing
-- Validate with existing systems
+#### Phase 3: Frontend Component Enhancement (3 hours)
+- Enhance TasksPanelComponent.jsx to show phase grouping within existing task list
+- Enhance DocsTaskDetailsModal.jsx to show phase execution options when task has phases
+- Add CSS styling for phase grouping within existing components
+- Implement UI/UX: Phase grouping within existing task display, phase execution in existing modal
 
 ## 6. UI/UX CORRECTION
-- **NO separate phase panel!**
-- Task list is grouped by phase, all in a single list within TasksPanelComponent
-- Modal displays all phases, allows single-phase and all-phases execution
-- Loading and error states are handled cleanly
-- Integrates with existing docs tasks functionality
+- **NO separate phase panel or modal!**
+- **Phase grouping within existing TasksPanelComponent**: Show phases as collapsible sections within the existing docs tasks list
+- **Phase execution in existing DocsTaskDetailsModal**: Add a "Phase Execution" tab when viewing a task that has phases
+- **Single task list with phase grouping**: All tasks in one list, grouped by phase with expand/collapse
+- **Existing modal enhancement**: DocsTaskDetailsModal gets a new tab for phase execution when applicable
+- **Loading and error states**: Use existing patterns from TasksPanelComponent
 
 ## 7. Success Criteria (updated)
-- [ ] Task list displays tasks grouped by phase, no separate panels
-- [ ] Modal allows single-phase and all-phases execution
-- [ ] Loading and error states are handled correctly
-- [ ] No duplicate or separate blocks for phases
-- [ ] Integrates seamlessly with existing docs tasks
+- [ ] TasksPanelComponent displays tasks grouped by phase within existing task list
+- [ ] DocsTaskDetailsModal shows phase execution options when task has phases
+- [ ] Loading and error states are handled correctly using existing patterns
+- [ ] No duplicate or separate blocks for phases - integrated into existing UI
+- [ ] Integrates seamlessly with existing docs tasks functionality
 - [ ] Uses existing Auto-Finish System for task execution
 - [ ] Uses existing Git Workflow Manager for phase execution
+- [ ] Maintains existing task selection and execution workflows
 
 ## 8. Dependencies Analysis
 - **Existing Systems**: Auto-Finish System, Git Workflow Manager, TaskService, TaskController
-- **Frontend Infrastructure**: APIChatRepository, TasksPanelComponent, CSS framework
+- **Frontend Infrastructure**: APIChatRepository, TasksPanelComponent, DocsTaskDetailsModal
 - **Backend Infrastructure**: TaskRepository, Winston logger, Jest testing
 - **Integration Points**: Event bus, project management, authentication
 
 ## 9. Risk Assessment
 - **Low Risk**: Uses existing working systems (Auto-Finish, Git Workflow)
-- **Medium Risk**: UI integration with existing TasksPanelComponent
+- **Low Risk**: Integrates with existing UI components without breaking changes
 - **Low Risk**: API integration follows existing patterns
 - **Low Risk**: Error handling follows existing patterns
 
@@ -154,7 +146,9 @@
 - Provides detailed error reporting for failed executions
 - Follows existing code patterns and conventions
 - Maintains backward compatibility with existing functionality
+- **CORRECTED**: No new modals - enhances existing components
+- **CORRECTED**: Phase grouping within existing task display structure
 
 ---
 
-**This plan provides a realistic implementation approach based on the actual codebase state and existing working systems.** 
+**This plan provides a realistic implementation approach based on the actual codebase state and existing working systems, integrating phase grouping into existing UI components without creating unnecessary new modals.** 
