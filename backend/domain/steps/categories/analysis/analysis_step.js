@@ -85,11 +85,10 @@ class AnalysisStep {
         summary: null
       };
 
-      logger.log(`📊 Starting comprehensive analysis for: ${projectPath}`);
+      logger.log(`📊 Starting analysis for: ${projectPath}`);
 
       // 1. Project Analysis
       if (projectAnalyzer) {
-        logger.log('🔍 Running project analysis...');
         const projectAnalysis = await projectAnalyzer.analyzeProject(projectPath, {
           includeRepoStructure: context.includeRepoStructure !== false,
           includeDependencies: context.includeDependencies !== false
@@ -99,7 +98,6 @@ class AnalysisStep {
 
       // 2. Code Quality Analysis
       if (codeQualityAnalyzer && context.includeCodeQuality !== false) {
-        logger.log('🎯 Running code quality analysis...');
         const codeQuality = await codeQualityAnalyzer.analyzeCodeQuality(projectPath, {
           includeMetrics: true,
           includeIssues: true,
@@ -110,7 +108,6 @@ class AnalysisStep {
 
       // 3. Security Analysis
       if (securityAnalyzer && context.includeSecurity !== false) {
-        logger.log('🔒 Running security analysis...');
         const security = await securityAnalyzer.analyzeSecurity(projectPath, {
           includeVulnerabilities: true,
           includeBestPractices: true,
@@ -121,7 +118,6 @@ class AnalysisStep {
 
       // 4. Performance Analysis
       if (performanceAnalyzer && context.includePerformance !== false) {
-        logger.log('⚡ Running performance analysis...');
         const performance = await performanceAnalyzer.analyzePerformance(projectPath, {
           includeMetrics: true,
           includeOptimizations: true,
@@ -132,7 +128,6 @@ class AnalysisStep {
 
       // 5. Architecture Analysis
       if (architectureAnalyzer && context.includeArchitecture !== false) {
-        logger.log('🏗️ Running architecture analysis...');
         const architecture = await architectureAnalyzer.analyzeArchitecture(projectPath, {
           includePatterns: true,
           includeStructure: true,
@@ -143,7 +138,6 @@ class AnalysisStep {
 
       // 6. Tech Stack Analysis
       if (techStackAnalyzer && context.includeTechStack !== false) {
-        logger.log('🛠️ Running tech stack analysis...');
         const techStack = await techStackAnalyzer.analyzeTechStack(projectPath, {
           includeFrameworks: true,
           includeLibraries: true,
@@ -154,7 +148,6 @@ class AnalysisStep {
 
       // 7. Dependency Analysis
       if (dependencyAnalyzer && context.includeDependencies !== false) {
-        logger.log('📦 Running dependency analysis...');
         const dependencies = await dependencyAnalyzer.analyzeDependencies(projectPath, {
           includeOutdated: true,
           includeVulnerabilities: true,
