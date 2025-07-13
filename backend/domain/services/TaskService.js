@@ -239,9 +239,9 @@ class TaskService {
             }
           }
           
-          // Final fallback to legacy method
-          logger.warn('⚠️ [TaskService] All modern methods failed, using legacy execution');
-          return await this.executeTaskLegacy(taskId, userId);
+          // No legacy fallback - throw error if all modern methods fail
+          logger.error('❌ [TaskService] All modern execution methods failed');
+          throw new Error('Task execution failed - all modern methods unavailable');
         }
       }
 
@@ -367,8 +367,23 @@ class TaskService {
       getDependencies: () => [],
       getSteps: () => [],
       execute: async (context) => {
-        // Delegate to existing task execution method
-        return await this.executeTaskLegacy(task.id, context.getData('userId'));
+        // Execute task using modern methods
+        const taskPrompt = await this.buildTaskExecutionPrompt(task);
+        
+        if (this.cursorIDEService && this.cursorIDEService.chatMessageHandler) {
+          const result = await this.cursorIDEService.chatMessageHandler.sendMessage(taskPrompt, {
+            waitForResponse: true,
+            timeout: 300000
+          });
+          
+          return {
+            success: true,
+            result: result,
+            message: 'Task executed via Cursor IDE'
+          };
+        } else {
+          throw new Error('Cursor IDE service not available for task execution');
+        }
       },
       validate: async (context) => ({ isValid: true }),
       canExecute: async (context) => true,
@@ -412,8 +427,8 @@ class TaskService {
    * @param {string} userId - User ID
    * @returns {Promise<Object>} Execution result
    */
-  async executeTaskLegacy(taskId, userId) {
-    logger.log('🔍 [TaskService] executeTask called with:', { taskId, userId });
+  async executeTaskLegacy(taskId, userId, options = {}) {
+    logger.log('🔍 [TaskService] executeTaskLegacy called with:', { taskId, userId, options });
     
     try {
       const task = await this.taskRepository.findById(taskId);

@@ -6,7 +6,7 @@
 const fs = require('fs').promises;
 const path = require('path');
 const Logger = require('@logging/Logger');
-const logger = new Logger('Logger');
+const logger = new Logger('ImportService');
 
 class DocsImportService {
     constructor(browserManager, taskService, taskRepository) {
