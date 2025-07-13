@@ -81,26 +81,15 @@ class TaskService {
       hasTaskFilePath: !!task.metadata?.taskFilePath
     });
     
-    // Lade task-execute.md Prompt über neue API
+    // Lade task-execute.md Prompt direkt aus der Datei
     let taskExecutePrompt = '';
     try {
-      logger.log('🔍 [TaskService] Loading task-execute.md via new API...');
-      const response = await fetch('http://localhost:3000/api/prompts/task-management/task-execute.md');
-      logger.log('🔍 [TaskService] API response status:', response.status);
-      
-      if (response.ok) {
-        const data = await response.json();
-        if (data.success && data.data.content) {
-          taskExecutePrompt = data.data.content;
-          logger.log('✅ [TaskService] Successfully loaded task-execute.md, length:', taskExecutePrompt.length);
-        } else {
-          throw new Error('Invalid API response format');
-        }
-      } else {
-        throw new Error(`Failed to load task-execute.md: ${response.status}`);
-      }
+      logger.log('🔍 [TaskService] Loading task-execute.md directly from file...');
+      const taskExecutePath = path.join(process.cwd(), '../content-library/prompts/task-management/task-execute.md');
+      taskExecutePrompt = fs.readFileSync(taskExecutePath, 'utf8');
+      logger.log('✅ [TaskService] Successfully loaded task-execute.md, length:', taskExecutePrompt.length);
     } catch (error) {
-      logger.error('❌ [TaskService] Error reading task-execute.md via API:', error);
+      logger.error('❌ [TaskService] Error reading task-execute.md from file:', error);
       taskExecutePrompt = 'Execute the following task:\n\n';
     }
 

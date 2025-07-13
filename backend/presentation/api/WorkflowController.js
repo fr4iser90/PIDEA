@@ -184,21 +184,29 @@ const logger = new Logger('Logger');
                             
                             this.logger.info('WorkflowController: Port switched successfully', { port: activeIDE.port });
                             
-                            // Use CreateChatCommand to create new chat
+                            // Use CreateChatCommand with proper handler execution
                             const CreateChatCommand = require('@categories/ide/CreateChatCommand');
+                            const CreateChatHandler = require('@application/handlers/categories/ide/CreateChatHandler');
+                            
                             const createChatCommand = new CreateChatCommand({
                                 userId: userId,
-                                port: activeIDE.port,
-                                message: '',
-                                options: { clickNewChat: true }
+                                title: 'New Chat',
+                                clickNewChat: true,
+                                metadata: { port: activeIDE.port }
+                            });
+                            
+                            // Create handler with all required dependencies
+                            const createChatHandler = new CreateChatHandler({
+                                chatSessionService: this.application?.chatSessionService || this.application?.getChatHistoryHandler,
+                                ideManager: this.ideManager,
+                                browserManager: this.application?.browserManager,
+                                eventBus: this.eventBus,
+                                logger: this.logger
                             });
                             
                             this.logger.info('WorkflowController: Creating new chat with timeout');
                             // Add timeout to prevent hanging
-                            const clickPromise = createChatCommand.execute({
-                                eventBus: this.eventBus,
-                                browserManager: this.application?.browserManager
-                            });
+                            const clickPromise = createChatHandler.handle(createChatCommand);
                             const timeoutPromise = new Promise((_, reject) => 
                                 setTimeout(() => reject(new Error('New Chat creation timeout')), 10000)
                             );
@@ -208,7 +216,7 @@ const logger = new Logger('Logger');
                             if (result && result.success) {
                                 this.logger.info('WorkflowController: New chat created successfully', {
                                     port: activeIDE.port,
-                                    sessionId: result.sessionId
+                                    sessionId: result.session?.id
                                 });
                             } else {
                                 throw new Error('Failed to create new chat');

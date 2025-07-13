@@ -14,6 +14,7 @@ class CreateChatHandler {
     
     this.chatSessionService = dependencies.chatSessionService;
     this.ideManager = dependencies.ideManager;
+    this.browserManager = dependencies.browserManager;
     this.eventBus = dependencies.eventBus;
     this.logger = dependencies.logger || logger;
     
@@ -26,7 +27,7 @@ class CreateChatHandler {
    * @throws {Error} If dependencies are invalid
    */
   validateDependencies(dependencies) {
-    const required = ['chatSessionService', 'ideManager', 'eventBus'];
+    const required = ['chatSessionService', 'ideManager', 'eventBus', 'browserManager'];
     for (const dep of required) {
       if (!dependencies[dep]) {
         throw new Error(`Missing required dependency: ${dep}`);
@@ -71,7 +72,20 @@ class CreateChatHandler {
         timestamp: new Date()
       });
 
-      // Create session using ChatSessionService
+      // First, click New Chat button in the IDE using BrowserManager
+      this.logger.info('[CreateChatHandler] Clicking New Chat button in IDE...');
+      const browserResult = await this.browserManager.clickNewChat();
+      
+      if (!browserResult) {
+        throw new Error('Failed to click New Chat button in IDE');
+      }
+      
+      this.logger.info('[CreateChatHandler] New Chat button clicked successfully');
+      
+      // Wait a bit for the new chat to be ready
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // Then create session using ChatSessionService
       const session = await this.chatSessionService.createSession(
         command.userId,
         command.title,

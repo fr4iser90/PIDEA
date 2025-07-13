@@ -9,6 +9,7 @@ class CreateChatCommand {
     this.title = params.title || 'New Chat';
     this.metadata = params.metadata || {};
     this.options = params.options || {};
+    this.clickNewChat = params.clickNewChat !== false; // Default to true
     this.timestamp = new Date();
     this.commandId = this.generateCommandId();
   }
