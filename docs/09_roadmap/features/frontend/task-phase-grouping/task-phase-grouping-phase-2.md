@@ -26,11 +26,7 @@ Extend the frontend API layer to support the new phase grouping and execution en
 async getTasksByPhases(projectId) {
   try {
     const response = await apiCall(`/api/projects/${projectId}/tasks/phases`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${this.getAuthToken()}`
-      }
+      method: 'GET'
     });
 
     if (!response.success) {
@@ -60,11 +56,7 @@ async getTasksByPhases(projectId) {
 async executePhase(projectId, phaseName) {
   try {
     const response = await apiCall(`/api/projects/${projectId}/phases/${phaseName}/execute`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${this.getAuthToken()}`
-      }
+      method: 'POST'
     });
 
     if (!response.success) {
@@ -88,10 +80,6 @@ async executePhases(projectId, phaseNames) {
   try {
     const response = await apiCall(`/api/projects/${projectId}/phases/execute`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${this.getAuthToken()}`
-      },
       body: JSON.stringify({ phaseNames })
     });
 
@@ -211,15 +199,12 @@ describe('APIChatRepository - Phase Operations', () => {
 
       const result = await apiRepository.getTasksByPhases('project1');
 
-      expect(mockApiCall).toHaveBeenCalledWith(
-        '/api/projects/project1/tasks/phases',
-        expect.objectContaining({
-          method: 'GET',
-          headers: expect.objectContaining({
-            'Authorization': 'Bearer mock-token'
+              expect(mockApiCall).toHaveBeenCalledWith(
+          '/api/projects/project1/tasks/phases',
+          expect.objectContaining({
+            method: 'GET'
           })
-        })
-      );
+        );
 
       expect(result).toEqual(mockResponse.data.phases);
     });
@@ -260,15 +245,12 @@ describe('APIChatRepository - Phase Operations', () => {
 
       const result = await apiRepository.executePhase('project1', 'setup');
 
-      expect(mockApiCall).toHaveBeenCalledWith(
-        '/api/projects/project1/phases/setup/execute',
-        expect.objectContaining({
-          method: 'POST',
-          headers: expect.objectContaining({
-            'Authorization': 'Bearer mock-token'
+              expect(mockApiCall).toHaveBeenCalledWith(
+          '/api/projects/project1/phases/setup/execute',
+          expect.objectContaining({
+            method: 'POST'
           })
-        })
-      );
+        );
 
       expect(result).toEqual(mockResponse.data);
     });

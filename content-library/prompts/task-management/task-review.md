@@ -64,6 +64,9 @@ Review, validate, and improve development tasks against the actual codebase. Ana
 - **Error Handling**: Implement proper error handling throughout
 - **Security**: Validate input/output and authentication
 - **Performance**: Check for performance bottlenecks
+- **Pattern Validation**: Verify all functionality uses established patterns, never manual implementations
+- **Helper Usage**: Ensure all operations use established helpers for automatic handling
+- **No Hardcoded Values**: Never hardcode tokens, headers, or credentials - use established systems
 
 ### Integration Validation
 - **API Endpoints**: Verify all endpoints are properly connected
