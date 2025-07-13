@@ -2,7 +2,7 @@
  * WorkflowValidator - Implementation of IWorkflowValidator
  * Provides rule-based validation with detailed results
  */
-const IWorkflowValidator = require('../interfaces/IWorkflowValidator');
+const IWorkflowValidator = require('../../../application/handlers/workflow/interfaces/IWorkflowValidator');
 const ValidationResult = require('./ValidationResult');
 
 class WorkflowValidator extends IWorkflowValidator {
