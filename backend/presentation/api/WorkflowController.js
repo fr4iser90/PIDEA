@@ -167,61 +167,51 @@ const logger = new Logger('Logger');
                         });
                         
                         if (activeIDE && activeIDE.port) {
-                            // Use browserManager instead of ideManager for clickNewChat
-                            const browserManager = this.application?.browserManager;
-                            this.logger.info('WorkflowController: BrowserManager available', {
-                                hasBrowserManager: !!browserManager
+                            this.logger.info('WorkflowController: Using modular commands for IDE operations');
+                            
+                            // Use SwitchIDEPortCommand to switch to port
+                            const SwitchIDEPortCommand = require('@categories/ide/SwitchIDEPortCommand');
+                            const switchPortCommand = new SwitchIDEPortCommand({
+                                userId: userId,
+                                port: activeIDE.port,
+                                ideType: activeIDE.type || 'cursor'
                             });
                             
-                            if (browserManager) {
-                                this.logger.info('WorkflowController: Using modular commands for IDE operations');
-                                
-                                // Use SwitchIDEPortCommand to switch to port
-                                const SwitchIDEPortCommand = require('@categories/ide/SwitchIDEPortCommand');
-                                const switchPortCommand = new SwitchIDEPortCommand({
-                                    userId: userId,
+                            await switchPortCommand.execute({
+                                eventBus: this.eventBus,
+                                browserManager: this.application?.browserManager
+                            });
+                            
+                            this.logger.info('WorkflowController: Port switched successfully', { port: activeIDE.port });
+                            
+                            // Use CreateChatCommand to create new chat
+                            const CreateChatCommand = require('@categories/ide/CreateChatCommand');
+                            const createChatCommand = new CreateChatCommand({
+                                userId: userId,
+                                port: activeIDE.port,
+                                message: '',
+                                options: { clickNewChat: true }
+                            });
+                            
+                            this.logger.info('WorkflowController: Creating new chat with timeout');
+                            // Add timeout to prevent hanging
+                            const clickPromise = createChatCommand.execute({
+                                eventBus: this.eventBus,
+                                browserManager: this.application?.browserManager
+                            });
+                            const timeoutPromise = new Promise((_, reject) => 
+                                setTimeout(() => reject(new Error('New Chat creation timeout')), 10000)
+                            );
+                            
+                            const result = await Promise.race([clickPromise, timeoutPromise]);
+                            
+                            if (result && result.success) {
+                                this.logger.info('WorkflowController: New chat created successfully', {
                                     port: activeIDE.port,
-                                    ideType: activeIDE.type || 'cursor'
+                                    sessionId: result.sessionId
                                 });
-                                
-                                await switchPortCommand.execute({
-                                    eventBus: this.eventBus,
-                                    browserManager: browserManager
-                                });
-                                
-                                this.logger.info('WorkflowController: Port switched successfully', { port: activeIDE.port });
-                                
-                                // Use CreateChatCommand to create new chat
-                                const CreateChatCommand = require('@categories/ide/CreateChatCommand');
-                                const createChatCommand = new CreateChatCommand({
-                                    userId: userId,
-                                    port: activeIDE.port,
-                                    message: '',
-                                    options: { clickNewChat: true }
-                                });
-                                
-                                this.logger.info('WorkflowController: Creating new chat with timeout');
-                                // Add timeout to prevent hanging
-                                const clickPromise = createChatCommand.execute({
-                                    eventBus: this.eventBus,
-                                    browserManager: browserManager
-                                });
-                                const timeoutPromise = new Promise((_, reject) => 
-                                    setTimeout(() => reject(new Error('New Chat creation timeout')), 10000)
-                                );
-                                
-                                const result = await Promise.race([clickPromise, timeoutPromise]);
-                                
-                                if (result && result.success) {
-                                    this.logger.info('WorkflowController: New chat created successfully', {
-                                        port: activeIDE.port,
-                                        sessionId: result.sessionId
-                                    });
-                                } else {
-                                    throw new Error('Failed to create new chat');
-                                }
                             } else {
-                                throw new Error('Browser manager not available');
+                                throw new Error('Failed to create new chat');
                             }
                         } else {
                             this.logger.warn('WorkflowController: No active IDE found for New Chat');

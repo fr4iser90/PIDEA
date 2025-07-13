@@ -412,273 +412,14 @@ class TaskService {
   }
 
   /**
-   * Legacy method for task execution (fallback)
+   * @deprecated Legacy method for task execution - use executeTask instead
    * @param {string} taskId - Task ID
    * @param {string} userId - User ID
    * @returns {Promise<Object>} Execution result
    */
   async executeTaskLegacy(taskId, userId, options = {}) {
-    logger.log('🔍 [TaskService] executeTaskLegacy called with:', { taskId, userId, options });
-    
-    try {
-      const task = await this.taskRepository.findById(taskId);
-      if (!task) {
-        throw new Error('Task not found');
-      }
-
-      logger.log('🔍 [TaskService] Found task:', task);
-
-      if (task.isCompleted()) {
-        throw new Error('Task is already completed');
-      }
-
-      // CRITICAL: Create new chat ONLY at the start of task execution
-      // BUT: Skip if WorkflowController already created a new chat
-      if (this.cursorIDEService && this.cursorIDEService.browserManager) {
-        // Check if we're already in a new chat (WorkflowController might have already clicked New Chat)
-        const page = await this.cursorIDEService.browserManager.getPage();
-        if (page) {
-          try {
-            // Check if there's already a chat input field visible
-            const existingChatInput = await page.$('.aislash-editor-input[contenteditable="true"], .chat-input, .monaco-editor[data-testid="chat-input"], textarea[placeholder*="chat"], textarea[placeholder*="message"]');
-            if (existingChatInput) {
-              logger.log('🆕 [TaskService] Chat input already exists - WorkflowController already created new chat, skipping...');
-            } else {
-              logger.log('🆕 [TaskService] Creating new chat for task execution...');
-              try {
-                // Use CreateChatCommand for new chat creation
-                const CreateChatCommand = require('@categories/ide/CreateChatCommand');
-                const createChatCommand = new CreateChatCommand({
-                  userId: userId,
-                  port: this.cursorIDEService.ideManager?.getActivePort() || 9222,
-                  message: '',
-                  options: { clickNewChat: true }
-                });
-                
-                await createChatCommand.execute({
-                  eventBus: this.cursorIDEService.eventBus,
-                  browserManager: this.cursorIDEService.browserManager
-                });
-                
-                // Wait for new chat to be ready
-                await new Promise(resolve => setTimeout(resolve, 2000));
-              } catch (newChatError) {
-                logger.warn('⚠️ [TaskService] Failed to create new chat, will try to use existing chat:', newChatError.message);
-                // Continue without new chat - the message sending will handle fallbacks
-              }
-            }
-          } catch (error) {
-            logger.warn('⚠️ [TaskService] Error checking existing chat, will try to use existing chat:', error.message);
-            // Continue without new chat - the message sending will handle fallbacks
-          }
-        }
-      }
-
-      // Update task status to in progress
-      task.updateStatus(TaskStatus.IN_PROGRESS);
-      await this.taskRepository.update(taskId, task);
-
-      logger.log('🔍 [TaskService] Starting automated refactoring workflow...');
-
-      const execution = {
-        taskId,
-        userId,
-        status: 'running',
-        startedAt: new Date(),
-        progress: 0,
-        steps: []
-      };
-
-      try {
-              // Step 1: Create Git Branch for Refactoring
-      logger.log('🔧 [TaskService] Step 1: Creating Git branch...');
-      // Get projectPath from userId parameter OR task metadata (fallback)
-      const projectPath = userId.projectPath || task.metadata.projectPath;
-      
-      logger.log('🔍 [TaskService] Task details:', {
-        id: task.id,
-        title: task.title,
-        projectPath: projectPath,
-        filePath: task.metadata.filePath,
-        type: task.type.value
-      });
-      
-      execution.steps.push({ step: 'git_branch', status: 'running', message: 'Creating refactoring branch' });
-      
-      if (!projectPath) {
-        throw new Error('Task has no projectPath in metadata - cannot create Git branch');
-      }
-      
-      const branchName = `refactor/${task.type.value}-${taskId}-${Date.now()}`;
-      const gitResult = await this.createRefactoringBranch(projectPath, branchName);
-        
-        execution.steps[execution.steps.length - 1] = { 
-          step: 'git_branch', 
-          status: 'completed', 
-          message: `Created branch: ${branchName}`,
-          data: gitResult
-        };
-        execution.progress = 20;
-
-        // Step 2: AI-Powered Refactoring with Validation Loop
-        logger.log('🤖 [TaskService] Step 2: AI-powered refactoring with validation...');
-        execution.steps.push({ step: 'ai_refactoring', status: 'running', message: 'Executing AI refactoring' });
-        
-        let refactoringResult;
-        let buildValid = false;
-        let attemptCount = 0;
-        const maxAttempts = 3;
-        
-        while (!buildValid && attemptCount < maxAttempts) {
-          attemptCount++;
-          logger.debug(`🔄 [TaskService] Refactoring attempt ${attemptCount}/${maxAttempts}`);
-          
-          // Execute AI refactoring
-          refactoringResult = await this.executeAIRefactoringWithAutoFinish(task);
-          
-          if (!refactoringResult.success) {
-            throw new Error(`AI refactoring failed: ${refactoringResult.error}`);
-          }
-          
-          // Step 3: Validate Build
-          logger.log('🔍 [TaskService] Step 3: Validating build...');
-          execution.steps.push({ step: 'build_validation', status: 'running', message: `Validating build (attempt ${attemptCount})` });
-          
-          const buildResult = await this.validateBuild(task.metadata.projectPath);
-          
-          if (buildResult.success) {
-            logger.log('✅ [TaskService] Build validation successful!');
-            buildValid = true;
-            execution.steps[execution.steps.length - 1] = { 
-              step: 'build_validation', 
-              status: 'completed', 
-              message: 'Build validation successful',
-              data: buildResult
-            };
-          } else {
-            logger.log('❌ [TaskService] Build validation failed:', buildResult.error);
-            execution.steps[execution.steps.length - 1] = { 
-              step: 'build_validation', 
-              status: 'failed', 
-              message: `Build validation failed (attempt ${attemptCount})`,
-              data: buildResult
-            };
-            
-            // Send error back to AI for fixing
-            if (attemptCount < maxAttempts) {
-              logger.log('🔄 [TaskService] Sending error to AI for fixing...');
-              const errorPrompt = this.buildErrorFixPrompt(task, buildResult.error);
-              await this.cursorIDEService.chatMessageHandler.sendMessage(errorPrompt, {
-                waitForResponse: true,
-                timeout: 120000
-              });
-            }
-          }
-        }
-        
-        if (!buildValid) {
-          throw new Error(`Build validation failed after ${maxAttempts} attempts`);
-        }
-        
-        execution.steps[execution.steps.length - 1] = { 
-          step: 'ai_refactoring', 
-          status: 'completed', 
-          message: 'AI refactoring completed with successful build',
-          data: refactoringResult
-        };
-        execution.progress = 80;
-
-        // Step 4: Commit and push changes to Git branch
-        logger.log('🔧 [TaskService] Step 4: Committing and pushing changes to Git branch...');
-        execution.steps.push({ step: 'git_commit_push', status: 'running', message: 'Committing and pushing refactored code' });
-        
-        const commitResult = await this.commitAndPushChanges(projectPath, branchName, task);
-        
-        execution.steps[execution.steps.length - 1] = { 
-          step: 'git_commit_push', 
-          status: 'completed', 
-          message: 'Changes committed and pushed successfully',
-          data: commitResult
-        };
-        execution.progress = 90;
-
-        // Step 5: Create merge request (optional)
-        logger.log('🔧 [TaskService] Step 5: Creating merge request...');
-        execution.steps.push({ step: 'merge_request', status: 'running', message: 'Creating merge request for review' });
-        
-        let mergeRequestResult = null;
-        try {
-          mergeRequestResult = await this.createMergeRequest(projectPath, branchName, task);
-          execution.steps[execution.steps.length - 1] = { 
-            step: 'merge_request', 
-            status: 'completed', 
-            message: 'Merge request created successfully',
-            data: mergeRequestResult
-          };
-        } catch (error) {
-          logger.warn('⚠️ [TaskService] Failed to create merge request:', error.message);
-          execution.steps[execution.steps.length - 1] = { 
-            step: 'merge_request', 
-            status: 'skipped', 
-            message: 'Merge request creation skipped',
-            data: { error: error.message }
-          };
-        }
-        execution.progress = 95;
-
-        // Step 6: Task completed successfully (ONLY after Git operations)
-        logger.log('✅ [TaskService] Step 6: Task completed successfully with Git operations');
-        execution.steps.push({ step: 'completion', status: 'completed', message: 'Task completed with successful Git operations' });
-        execution.progress = 100;
-
-        // Mark task as completed (ONLY after successful Git operations)
-        task.updateStatus(TaskStatus.COMPLETED);
-        await this.taskRepository.update(taskId, task);
-
-        execution.status = 'completed';
-        execution.endTime = new Date();
-        execution.duration = execution.endTime - execution.startedAt;
-
-        // Refresh analysis data after task completion
-        if (task.metadata?.projectPath && task.type?.value?.includes('refactor')) {
-            try {
-                logger.log('🔄 [TaskService] Refreshing analysis data after refactoring task completion...');
-                
-                    // Refresh analysis data after task completion
-                
-                await autoRefactorHandler.refreshAnalysisDataAfterTaskCompletion(
-                    task.metadata.projectPath, 
-                    taskId
-                );
-                
-                logger.log('✅ [TaskService] Analysis data refreshed after task completion');
-            } catch (error) {
-                logger.warn('⚠️ [TaskService] Failed to refresh analysis data after task completion:', error.message);
-            }
-        }
-
-        logger.log('✅ [TaskService] Automated refactoring workflow completed successfully');
-        return execution;
-
-      } catch (error) {
-        logger.error('❌ [TaskService] Refactoring workflow failed:', error);
-        
-        // Update execution with error
-        execution.status = 'failed';
-        execution.error = error.message;
-        execution.endTime = new Date();
-        
-        // Mark task as failed
-        task.updateStatus(TaskStatus.FAILED);
-        await this.taskRepository.update(taskId, task);
-        
-        throw error;
-      }
-
-    } catch (error) {
-      logger.error('❌ [TaskService] Error in executeTask:', error);
-      throw error;
-    }
+    logger.warn('⚠️ [TaskService] executeTaskLegacy is deprecated - use executeTask instead');
+    return this.executeTask(taskId, userId, options);
   }
 
   /**
@@ -846,45 +587,32 @@ class TaskService {
               // Fallback 2: Try browser manager directly
               if (this.cursorIDEService.browserManager) {
                 try {
-                  const page = await this.cursorIDEService.browserManager.getPage();
-                  if (page) {
-                    // Try multiple chat input selectors
-                    const chatSelectors = [
-                      '.aislash-editor-input[contenteditable="true"]',
-                      'textarea[placeholder*="chat"]',
-                      'textarea[placeholder*="message"]',
-                      '.chat-input textarea',
-                      '.composer-bar textarea'
-                    ];
-                    
-                    let messageSent = false;
-                    for (const selector of chatSelectors) {
-                      try {
-                        const input = await page.$(selector);
-                        if (input) {
-                          await input.click();
-                          await input.fill(aiPrompt);
-                          await page.keyboard.press('Enter');
-                          logger.log(`✅ [TaskService] Message sent via browser manager using selector: ${selector}`);
-                          messageSent = true;
-                          break;
-                        }
-                      } catch (e) {
-                        // Try next selector
-                      }
-                    }
-                    
-                    if (messageSent) {
-                      return {
-                        success: true,
-                        prompt: aiPrompt,
-                        message: 'Refactoring prompt sent via browser manager fallback',
-                        timestamp: new Date()
-                      };
-                    }
+                  // Use ExecuteIDEActionCommand for sending message via browser
+                  const ExecuteIDEActionCommand = require('@categories/ide/ExecuteIDEActionCommand');
+                  const executeActionCommand = new ExecuteIDEActionCommand({
+                    userId: userId,
+                    port: this.cursorIDEService.ideManager?.getActivePort() || 9222,
+                    action: 'sendMessage',
+                    parameters: { message: aiPrompt },
+                    ideType: 'cursor'
+                  });
+                  
+                  const result = await executeActionCommand.execute({
+                    eventBus: this.cursorIDEService.eventBus,
+                    browserManager: this.cursorIDEService.browserManager
+                  });
+                  
+                  if (result && result.success) {
+                    logger.log('✅ [TaskService] Message sent via modular command fallback');
+                    return {
+                      success: true,
+                      prompt: aiPrompt,
+                      message: 'Refactoring prompt sent via modular command fallback',
+                      timestamp: new Date()
+                    };
                   }
                 } catch (browserError) {
-                  logger.error('❌ [TaskService] Browser manager fallback failed:', browserError.message);
+                  logger.error('❌ [TaskService] Modular command fallback failed:', browserError.message);
                 }
               }
               
