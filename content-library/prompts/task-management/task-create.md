@@ -14,6 +14,7 @@ Create new Plan/Implementation [Name]-implementation.md in docs/09_roadmap/featu
 > All implementation and phase files must always be created using this pattern:  
 > - Implementation: docs/09_roadmap/features/[category]/[name]/[name]-implementation.md  
 > - Phase: docs/09_roadmap/features/[category]/[name]/[name]-phase-[number].md  
+> - **Master Index**: docs/09_roadmap/features/[category]/[name]/[name]-index.md  
 > If a file is missing, it must be created automatically. This pattern is required for orchestration and grouping in the system.
 
 ### 1. Project Overview
@@ -218,6 +219,104 @@ Create new Plan/Implementation [Name]-implementation.md in docs/09_roadmap/featu
 
 ---
 
+## Master Index File Creation
+
+### Automatic Index File Generation
+When creating a task, automatically generate a master index file:
+
+**File Path**: `docs/09_roadmap/features/[category]/[name]/[name]-index.md`
+
+**Purpose**: Central overview and navigation hub for all task-related files
+
+### Index File Template
+```markdown
+# [Task Name] - Master Index
+
+## 📋 Task Overview
+- **Name**: [Task Name]
+- **Category**: [category]
+- **Priority**: [High/Medium/Low]
+- **Status**: [Planning/In Progress/Completed]
+- **Total Estimated Time**: [X hours]
+- **Created**: [Date]
+- **Last Updated**: [Date]
+
+## 📁 File Structure
+```
+docs/09_roadmap/features/[category]/[name]/
+├── [name]-index.md (this file)
+├── [name]-implementation.md
+├── [name]-phase-1.md
+├── [name]-phase-2.md
+└── [name]-phase-3.md
+```
+
+## 🎯 Main Implementation
+- **[Task Name Implementation](./[name]-implementation.md)** - Complete implementation plan and specifications
+
+## 📊 Phase Breakdown
+| Phase | File | Status | Time | Progress |
+|-------|------|--------|------|----------|
+| 1 | [Phase 1](./[name]-phase-1.md) | [Status] | [X]h | [X]% |
+| 2 | [Phase 2](./[name]-phase-2.md) | [Status] | [X]h | [X]% |
+| 3 | [Phase 3](./[name]-phase-3.md) | [Status] | [X]h | [X]% |
+
+## 🔄 Subtask Management
+### Active Subtasks
+- [ ] [Subtask Name](./[subtask-name].md) - [Status] - [Progress]%
+
+### Completed Subtasks
+- [x] [Completed Subtask](./[completed-subtask].md) - ✅ Done
+
+### Pending Subtasks
+- [ ] [Pending Subtask](./[pending-subtask].md) - ⏳ Waiting
+
+## 📈 Progress Tracking
+- **Overall Progress**: [X]% Complete
+- **Current Phase**: [Phase Number]
+- **Next Milestone**: [Description]
+- **Estimated Completion**: [Date]
+
+## 🔗 Related Tasks
+- **Dependencies**: [List of tasks this depends on]
+- **Dependents**: [List of tasks that depend on this]
+- **Related**: [List of related tasks]
+
+## 📝 Notes & Updates
+### [Date] - [Update Type]
+- [Description of update]
+- [Files modified]
+- [Progress made]
+
+### [Date] - [Update Type]
+- [Description of update]
+- [Files modified]
+- [Progress made]
+
+## 🚀 Quick Actions
+- [View Implementation Plan](./[name]-implementation.md)
+- [Start Phase 1](./[name]-phase-1.md)
+- [Review Progress](#progress-tracking)
+- [Update Status](#notes--updates)
+```
+
+### Index File Auto-Updates
+The index file should automatically update when:
+1. **New phases are created** - Add to phase breakdown table
+2. **Subtasks are split** - Add to subtask management section
+3. **Progress is made** - Update progress tracking
+4. **Status changes** - Update overall status
+5. **Files are modified** - Update last modified date
+
+### Index File Benefits
+- **Central Navigation**: One place to see all task files
+- **Progress Overview**: Quick status and progress check
+- **Dependency Tracking**: See what depends on what
+- **History**: Track changes and updates over time
+- **Quick Access**: Direct links to all related files
+
+---
+
 ## Database Task Creation Instructions
 
 This markdown will be parsed into a database task with the following mapping:
@@ -255,6 +354,7 @@ INSERT INTO tasks (
 7. **Provide detailed phases** - Enables progress tracking
 8. **Set correct category** - Automatically organizes tasks into category folders
 9. **Use category-specific paths** - Tasks are automatically placed in correct folders
+10. **Master Index Creation** - Automatically generates central overview file
 
 ## Automatic Category Organization
 
@@ -264,8 +364,9 @@ When you specify a **Category** in section 1, the system automatically:
 2. **Creates task folder** for each task: `docs/09_roadmap/features/[category]/[name]/`
 3. **Places main implementation file**: `docs/09_roadmap/features/[category]/[name]/[name]-implementation.md`
 4. **Creates phase files** for subtasks: `docs/09_roadmap/features/[category]/[name]/[name]-phase-[number].md`
-5. **Sets database category** field to the specified category
-6. **Organizes tasks hierarchically** for better management
+5. **Creates master index file**: `docs/09_roadmap/features/[category]/[name]/[name]-index.md`
+6. **Sets database category** field to the specified category
+7. **Organizes tasks hierarchically** for better management
 
 ### Available Categories:
 - **ai** - AI-related features and machine learning
@@ -285,19 +386,23 @@ When you specify a **Category** in section 1, the system automatically:
 docs/09_roadmap/features/
 ├── backend/
 │   ├── user-authentication/
+│   │   ├── user-authentication-index.md
 │   │   ├── user-authentication-implementation.md
 │   │   ├── user-authentication-phase-1.md
 │   │   ├── user-authentication-phase-2.md
 │   │   └── user-authentication-phase-3.md
 │   └── database-migration/
+│       ├── database-migration-index.md
 │       ├── database-migration-implementation.md
 │       └── database-migration-phase-1.md
 ├── frontend/
 │   └── ui-redesign/
+│       ├── ui-redesign-index.md
 │       ├── ui-redesign-implementation.md
 │       └── ui-redesign-phase-1.md
 └── ide/
     └── vscode-integration/
+        ├── vscode-integration-index.md
         ├── vscode-integration-implementation.md
         └── vscode-integration-phase-1.md
 ```
