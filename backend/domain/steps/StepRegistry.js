@@ -1,10 +1,13 @@
 /**
  * Step Registry - Domain Layer
  * Manages atomic steps and provides step validation
+ * Implements IStandardRegistry interface for consistent patterns
  */
 
 const path = require('path');
 const fs = require('fs').promises;
+const { STANDARD_CATEGORIES, isValidCategory, getDefaultCategory } = require('../constants/Categories');
+const IStandardRegistry = require('../interfaces/IStandardRegistry');
 
 class StepRegistry {
   constructor() {
@@ -20,8 +23,16 @@ class StepRegistry {
    * @param {string} category - Step category
    * @param {Function} executor - Step execution function
    */
-  async registerStep(name, config, category = 'general', executor = null) {
+  async registerStep(name, config, category = null, executor = null) {
     try {
+      // Use default category if not provided
+      const finalCategory = category || getDefaultCategory('step');
+      
+      // Validate category
+      if (!isValidCategory(finalCategory)) {
+        throw new Error(`Invalid category: ${finalCategory}. Valid categories: ${Object.values(STANDARD_CATEGORIES).join(', ')}`);
+      }
+      
       // Validate step configuration
       this.validateStepConfig(config);
       
@@ -29,26 +40,31 @@ class StepRegistry {
       this.steps.set(name, {
         name,
         config,
-        category,
+        category: finalCategory,
         executor,
         registeredAt: new Date(),
         status: 'active',
         executionCount: 0,
-        lastExecuted: null
+        lastExecuted: null,
+        metadata: {
+          type: 'step',
+          category: finalCategory,
+          version: config.version || '1.0.0'
+        }
       });
 
       // Add to category
-      if (!this.categories.has(category)) {
-        this.categories.set(category, new Set());
+      if (!this.categories.has(finalCategory)) {
+        this.categories.set(finalCategory, new Set());
       }
-      this.categories.get(category).add(name);
+      this.categories.get(finalCategory).add(name);
 
       // Store executor if provided
       if (executor && typeof executor === 'function') {
         this.executors.set(name, executor);
       }
 
-      console.log(`✅ Step "${name}" registered successfully in category "${category}"`);
+      console.log(`✅ Step "${name}" registered successfully in category "${finalCategory}"`);
       return true;
     } catch (error) {
       console.error(`❌ Failed to register step "${name}":`, error.message);
@@ -390,6 +406,207 @@ class StepRegistry {
       inactiveSteps: Array.from(this.steps.values()).filter(s => s.status === 'inactive').length,
       totalExecutions: Array.from(this.steps.values()).reduce((sum, step) => sum + step.executionCount, 0)
     };
+  }
+
+  // ==================== IStandardRegistry Interface Implementation ====================
+
+  /**
+   * Get component by category (IStandardRegistry interface)
+   * @param {string} category - Component category
+   * @returns {Array} Components in category
+   */
+  static getByCategory(category) {
+    const instance = new StepRegistry();
+    return instance.getStepsByCategory(category);
+  }
+
+  /**
+   * Build component from category (IStandardRegistry interface)
+   * @param {string} category - Component category
+   * @param {string} name - Component name
+   * @param {Object} params - Component parameters
+   * @returns {Object|null} Component instance
+   */
+  static buildFromCategory(category, name, params = {}) {
+    const instance = new StepRegistry();
+    const steps = instance.getStepsByCategory(category);
+    return steps.find(s => s.name === name) || null;
+  }
+
+  /**
+   * Register component (IStandardRegistry interface)
+   * @param {string} name - Component name
+   * @param {Object} config - Component configuration
+   * @param {string} category - Component category
+   * @param {Function} executor - Component executor (optional)
+   * @returns {Promise<boolean>} Registration success
+   */
+  static async register(name, config, category, executor = null) {
+    const instance = new StepRegistry();
+    return await instance.registerStep(name, config, category, executor);
+  }
+
+  /**
+   * Execute component (IStandardRegistry interface)
+   * @param {string} name - Component name
+   * @param {Object} context - Execution context
+   * @param {Object} options - Execution options
+   * @returns {Promise<Object>} Execution result
+   */
+  static async execute(name, context = {}, options = {}) {
+    const instance = new StepRegistry();
+    return await instance.executeStep(name, context, options);
+  }
+
+  /**
+   * Get all categories (IStandardRegistry interface)
+   * @returns {Array} All available categories
+   */
+  static getCategories() {
+    const instance = new StepRegistry();
+    return instance.getCategories();
+  }
+
+  /**
+   * Get component by name (IStandardRegistry interface)
+   * @param {string} name - Component name
+   * @returns {Object} Component instance
+   */
+  static get(name) {
+    const instance = new StepRegistry();
+    return instance.getStep(name);
+  }
+
+  /**
+   * Check if component exists (IStandardRegistry interface)
+   * @param {string} name - Component name
+   * @returns {boolean} True if exists
+   */
+  static has(name) {
+    const instance = new StepRegistry();
+    return instance.hasStep(name);
+  }
+
+  /**
+   * Remove component (IStandardRegistry interface)
+   * @param {string} name - Component name
+   * @returns {boolean} Removal success
+   */
+  static remove(name) {
+    const instance = new StepRegistry();
+    return instance.removeStep(name);
+  }
+
+  /**
+   * Validate component configuration (IStandardRegistry interface)
+   * @param {Object} config - Component configuration
+   * @returns {Object} Validation result
+   */
+  static validateConfig(config) {
+    const instance = new StepRegistry();
+    try {
+      instance.validateStepConfig(config);
+      return { isValid: true, errors: [] };
+    } catch (error) {
+      return { isValid: false, errors: [error.message] };
+    }
+  }
+
+  /**
+   * Get component metadata (IStandardRegistry interface)
+   * @param {string} name - Component name
+   * @returns {Object} Component metadata
+   */
+  static getMetadata(name) {
+    const instance = new StepRegistry();
+    const step = instance.getStep(name);
+    return step.metadata || {};
+  }
+
+  /**
+   * Update component metadata (IStandardRegistry interface)
+   * @param {string} name - Component name
+   * @param {Object} metadata - New metadata
+   * @returns {boolean} Update success
+   */
+  static updateMetadata(name, metadata) {
+    const instance = new StepRegistry();
+    const step = instance.getStep(name);
+    step.metadata = { ...step.metadata, ...metadata };
+    step.updatedAt = new Date();
+    return true;
+  }
+
+  /**
+   * Get component execution history (IStandardRegistry interface)
+   * @param {string} name - Component name
+   * @returns {Array} Execution history
+   */
+  static getExecutionHistory(name) {
+    const instance = new StepRegistry();
+    const step = instance.getStep(name);
+    return [{
+      step: step.name,
+      executionCount: step.executionCount,
+      lastExecuted: step.lastExecuted,
+      lastDuration: step.lastDuration,
+      lastError: step.lastError
+    }];
+  }
+
+  /**
+   * Clear registry (IStandardRegistry interface)
+   * @returns {boolean} Clear success
+   */
+  static clear() {
+    const instance = new StepRegistry();
+    instance.steps.clear();
+    instance.categories.clear();
+    instance.executors.clear();
+    return true;
+  }
+
+  /**
+   * Export registry data (IStandardRegistry interface)
+   * @returns {Object} Registry data
+   */
+  static export() {
+    const instance = new StepRegistry();
+    return {
+      steps: Array.from(instance.steps.entries()),
+      categories: Array.from(instance.categories.entries()),
+      executors: Array.from(instance.executors.keys())
+    };
+  }
+
+  /**
+   * Import registry data (IStandardRegistry interface)
+   * @param {Object} data - Registry data
+   * @returns {boolean} Import success
+   */
+  static import(data) {
+    const instance = new StepRegistry();
+    
+    if (data.steps) {
+      data.steps.forEach(([name, step]) => {
+        instance.steps.set(name, step);
+      });
+    }
+    
+    if (data.categories) {
+      data.categories.forEach(([category, names]) => {
+        instance.categories.set(category, new Set(names));
+      });
+    }
+    
+    if (data.executors) {
+      data.executors.forEach(name => {
+        // Note: Executors would need to be re-registered
+        console.warn(`Executor for step "${name}" needs to be re-registered`);
+      });
+    }
+    
+    return true;
   }
 }
 

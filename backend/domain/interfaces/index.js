@@ -13,6 +13,9 @@ const IWorkflowContext = require('./IWorkflowContext');
 const IHandler = require('./IHandler');
 const IHandlerAdapter = require('./IHandlerAdapter');
 
+// Registry Interfaces
+const IStandardRegistry = require('./IStandardRegistry');
+
 // Module exports
 module.exports = {
   // Workflow Interfaces
@@ -23,6 +26,9 @@ module.exports = {
   IHandler,
   IHandlerAdapter,
 
+  // Registry Interfaces
+  IStandardRegistry,
+
   // Convenience exports
   workflow: {
     IWorkflow,
@@ -32,5 +38,9 @@ module.exports = {
   handler: {
     IHandler,
     IHandlerAdapter
+  },
+
+  registry: {
+    IStandardRegistry
   }
 }; 

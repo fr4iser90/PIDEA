@@ -1,10 +1,13 @@
 /**
  * Framework Registry - Domain Layer
  * Manages framework configurations and provides framework validation
+ * Implements IStandardRegistry interface for consistent patterns
  */
 
 const path = require('path');
 const fs = require('fs').promises;
+const { STANDARD_CATEGORIES, isValidCategory, getDefaultCategory } = require('../constants/Categories');
+const IStandardRegistry = require('../interfaces/IStandardRegistry');
 
 class FrameworkRegistry {
   constructor() {
@@ -19,8 +22,16 @@ class FrameworkRegistry {
    * @param {Object} config - Framework configuration
    * @param {string} category - Framework category
    */
-  async registerFramework(name, config, category = 'general') {
+  async registerFramework(name, config, category = null) {
     try {
+      // Use default category if not provided
+      const finalCategory = category || getDefaultCategory('framework');
+      
+      // Validate category
+      if (!isValidCategory(finalCategory)) {
+        throw new Error(`Invalid category: ${finalCategory}. Valid categories: ${Object.values(STANDARD_CATEGORIES).join(', ')}`);
+      }
+      
       // Validate framework configuration
       this.validateFrameworkConfig(config);
       
@@ -28,18 +39,23 @@ class FrameworkRegistry {
       this.frameworks.set(name, {
         name,
         config,
-        category,
+        category: finalCategory,
         registeredAt: new Date(),
-        status: 'active'
+        status: 'active',
+        metadata: {
+          type: 'framework',
+          category: finalCategory,
+          version: config.version || '1.0.0'
+        }
       });
 
       // Add to category
-      if (!this.categories.has(category)) {
-        this.categories.set(category, new Set());
+      if (!this.categories.has(finalCategory)) {
+        this.categories.set(finalCategory, new Set());
       }
-      this.categories.get(category).add(name);
+      this.categories.get(finalCategory).add(name);
 
-      console.log(`✅ Framework "${name}" registered successfully in category "${category}"`);
+      console.log(`✅ Framework "${name}" registered successfully in category "${finalCategory}"`);
       return true;
     } catch (error) {
       console.error(`❌ Failed to register framework "${name}":`, error.message);
@@ -240,6 +256,208 @@ class FrameworkRegistry {
       activeFrameworks: Array.from(this.frameworks.values()).filter(f => f.status === 'active').length,
       inactiveFrameworks: Array.from(this.frameworks.values()).filter(f => f.status === 'inactive').length
     };
+  }
+
+  // ==================== IStandardRegistry Interface Implementation ====================
+
+  /**
+   * Get component by category (IStandardRegistry interface)
+   * @param {string} category - Component category
+   * @returns {Array} Components in category
+   */
+  static getByCategory(category) {
+    const instance = new FrameworkRegistry();
+    return instance.getFrameworksByCategory(category);
+  }
+
+  /**
+   * Build component from category (IStandardRegistry interface)
+   * @param {string} category - Component category
+   * @param {string} name - Component name
+   * @param {Object} params - Component parameters
+   * @returns {Object|null} Component instance
+   */
+  static buildFromCategory(category, name, params = {}) {
+    const instance = new FrameworkRegistry();
+    const frameworks = instance.getFrameworksByCategory(category);
+    return frameworks.find(f => f.name === name) || null;
+  }
+
+  /**
+   * Register component (IStandardRegistry interface)
+   * @param {string} name - Component name
+   * @param {Object} config - Component configuration
+   * @param {string} category - Component category
+   * @param {Function} executor - Component executor (optional)
+   * @returns {Promise<boolean>} Registration success
+   */
+  static async register(name, config, category, executor = null) {
+    const instance = new FrameworkRegistry();
+    return await instance.registerFramework(name, config, category);
+  }
+
+  /**
+   * Execute component (IStandardRegistry interface)
+   * @param {string} name - Component name
+   * @param {Object} context - Execution context
+   * @param {Object} options - Execution options
+   * @returns {Promise<Object>} Execution result
+   */
+  static async execute(name, context = {}, options = {}) {
+    const instance = new FrameworkRegistry();
+    const framework = instance.getFramework(name);
+    
+    // Framework execution logic would go here
+    return {
+      success: true,
+      framework: framework.name,
+      category: framework.category,
+      context,
+      options
+    };
+  }
+
+  /**
+   * Get all categories (IStandardRegistry interface)
+   * @returns {Array} All available categories
+   */
+  static getCategories() {
+    const instance = new FrameworkRegistry();
+    return instance.getCategories();
+  }
+
+  /**
+   * Get component by name (IStandardRegistry interface)
+   * @param {string} name - Component name
+   * @returns {Object} Component instance
+   */
+  static get(name) {
+    const instance = new FrameworkRegistry();
+    return instance.getFramework(name);
+  }
+
+  /**
+   * Check if component exists (IStandardRegistry interface)
+   * @param {string} name - Component name
+   * @returns {boolean} True if exists
+   */
+  static has(name) {
+    const instance = new FrameworkRegistry();
+    return instance.hasFramework(name);
+  }
+
+  /**
+   * Remove component (IStandardRegistry interface)
+   * @param {string} name - Component name
+   * @returns {boolean} Removal success
+   */
+  static remove(name) {
+    const instance = new FrameworkRegistry();
+    return instance.removeFramework(name);
+  }
+
+  /**
+   * Validate component configuration (IStandardRegistry interface)
+   * @param {Object} config - Component configuration
+   * @returns {Object} Validation result
+   */
+  static validateConfig(config) {
+    const instance = new FrameworkRegistry();
+    try {
+      instance.validateFrameworkConfig(config);
+      return { isValid: true, errors: [] };
+    } catch (error) {
+      return { isValid: false, errors: [error.message] };
+    }
+  }
+
+  /**
+   * Get component metadata (IStandardRegistry interface)
+   * @param {string} name - Component name
+   * @returns {Object} Component metadata
+   */
+  static getMetadata(name) {
+    const instance = new FrameworkRegistry();
+    const framework = instance.getFramework(name);
+    return framework.metadata || {};
+  }
+
+  /**
+   * Update component metadata (IStandardRegistry interface)
+   * @param {string} name - Component name
+   * @param {Object} metadata - New metadata
+   * @returns {boolean} Update success
+   */
+  static updateMetadata(name, metadata) {
+    const instance = new FrameworkRegistry();
+    const framework = instance.getFramework(name);
+    framework.metadata = { ...framework.metadata, ...metadata };
+    framework.updatedAt = new Date();
+    return true;
+  }
+
+  /**
+   * Get component execution history (IStandardRegistry interface)
+   * @param {string} name - Component name
+   * @returns {Array} Execution history
+   */
+  static getExecutionHistory(name) {
+    // Framework execution history would be implemented here
+    return [];
+  }
+
+  /**
+   * Clear registry (IStandardRegistry interface)
+   * @returns {boolean} Clear success
+   */
+  static clear() {
+    const instance = new FrameworkRegistry();
+    instance.frameworks.clear();
+    instance.categories.clear();
+    instance.configs.clear();
+    return true;
+  }
+
+  /**
+   * Export registry data (IStandardRegistry interface)
+   * @returns {Object} Registry data
+   */
+  static export() {
+    const instance = new FrameworkRegistry();
+    return {
+      frameworks: Array.from(instance.frameworks.entries()),
+      categories: Array.from(instance.categories.entries()),
+      configs: Array.from(instance.configs.entries())
+    };
+  }
+
+  /**
+   * Import registry data (IStandardRegistry interface)
+   * @param {Object} data - Registry data
+   * @returns {boolean} Import success
+   */
+  static import(data) {
+    const instance = new FrameworkRegistry();
+    
+    if (data.frameworks) {
+      data.frameworks.forEach(([name, framework]) => {
+        instance.frameworks.set(name, framework);
+      });
+    }
+    
+    if (data.categories) {
+      data.categories.forEach(([category, names]) => {
+        instance.categories.set(category, new Set(names));
+      });
+    }
+    
+    if (data.configs) {
+      data.configs.forEach(([name, configPath]) => {
+        instance.configs.set(name, configPath);
+      });
+    }
+    
+    return true;
   }
 }
 
