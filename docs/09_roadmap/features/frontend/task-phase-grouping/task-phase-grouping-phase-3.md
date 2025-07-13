@@ -1,28 +1,28 @@
 # Phase 3: Frontend Component Development - CORRECTED
 
 ## Overview
-Create new React components for displaying grouped tasks by phases and implement phase execution functionality.
+Create new React components for displaying grouped tasks by phases and implement phase execution functionality within the existing TasksPanelComponent.
 
 ## Current State Analysis
 - **TasksPanelComponent.jsx**: Exists at `frontend/src/presentation/components/chat/sidebar-right/TasksPanelComponent.jsx`
 - **Current Functionality**: Handles docs tasks but not phase grouping
 - **Component Structure**: Uses React hooks and functional components
 - **Styling**: CSS exists in `frontend/src/css/global/sidebar-right.css` but needs phase-specific styling
-- **Missing Components**: PhaseGroupComponent and PhaseExecutionButton don't exist
+- **Missing Components**: PhaseAccordionSection and PhaseModal don't exist
 
 ## Tasks
 
-### 1. Create PhaseGroupComponent for displaying grouped tasks
-**File**: `frontend/src/presentation/components/PhaseGroupComponent.jsx`
+### 1. Create PhaseAccordionSection for displaying grouped tasks
+**File**: `frontend/src/presentation/components/PhaseAccordionSection.jsx`
 **Time**: 45 minutes
 **Status**: ❌ Not implemented
 
 ```jsx
 import React, { useState } from 'react';
 import PropTypes from 'prop-types';
-import '@/css/components/PhaseGroupComponent.css';
+import '@/css/components/PhaseAccordionSection.css';
 
-const PhaseGroupComponent = ({ 
+const PhaseAccordionSection = ({ 
   phaseName, 
   phaseData, 
   onTaskClick, 
@@ -66,7 +66,7 @@ const PhaseGroupComponent = ({
   };
 
   return (
-    <div className={`phase-group ${getPhaseStatusClass()}`}>
+    <div className={`phase-accordion-section ${getPhaseStatusClass()}`}>
       <div className="phase-header" onClick={() => setIsExpanded(!isExpanded)}>
         <div className="phase-info">
           <span className="phase-icon">{getPhaseIcon()}</span>
@@ -151,7 +151,7 @@ const PhaseGroupComponent = ({
   );
 };
 
-PhaseGroupComponent.propTypes = {
+PhaseAccordionSection.propTypes = {
   phaseName: PropTypes.string.isRequired,
   phaseData: PropTypes.shape({
     name: PropTypes.string.isRequired,
@@ -164,113 +164,164 @@ PhaseGroupComponent.propTypes = {
   isExecuting: PropTypes.bool
 };
 
-export default PhaseGroupComponent;
+export default PhaseAccordionSection;
 ```
 
-### 2. Create PhaseExecutionButton component
-**File**: `frontend/src/presentation/components/PhaseExecutionButton.jsx`
+### 2. Create PhaseModal component for phase execution control
+**File**: `frontend/src/presentation/components/PhaseModal.jsx`
 **Time**: 30 minutes
 **Status**: ❌ Not implemented
 
 ```jsx
 import React, { useState } from 'react';
 import PropTypes from 'prop-types';
-import '@/css/components/PhaseExecutionButton.css';
+import '@/css/components/PhaseModal.css';
 
-const PhaseExecutionButton = ({ 
-  phaseName, 
-  onExecute, 
-  isDisabled = false,
-  showConfirmation = true 
+const PhaseModal = ({ 
+  isOpen, 
+  onClose, 
+  phases, 
+  onExecutePhase,
+  onExecuteAllPhases,
+  isExecuting = false 
 }) => {
-  const [isExecuting, setIsExecuting] = useState(false);
-  const [showConfirm, setShowConfirm] = useState(false);
+  const [selectedPhase, setSelectedPhase] = useState(null);
+  const [isExecutingPhase, setIsExecutingPhase] = useState(false);
 
-  const handleClick = async () => {
-    if (isDisabled || isExecuting) return;
-
-    if (showConfirmation) {
-      setShowConfirm(true);
-    } else {
-      await executePhase();
-    }
-  };
-
-  const executePhase = async () => {
-    setIsExecuting(true);
-    setShowConfirm(false);
+  const handleExecutePhase = async (phaseName) => {
+    if (isExecutingPhase || isExecuting) return;
     
+    setIsExecutingPhase(true);
     try {
-      await onExecute(phaseName);
+      await onExecutePhase(phaseName);
+      setSelectedPhase(null);
     } catch (error) {
       console.error('Phase execution failed:', error);
     } finally {
-      setIsExecuting(false);
+      setIsExecutingPhase(false);
     }
   };
 
-  const cancelExecution = () => {
-    setShowConfirm(false);
+  const handleExecuteAllPhases = async () => {
+    if (isExecutingPhase || isExecuting) return;
+    
+    setIsExecutingPhase(true);
+    try {
+      const phaseNames = Object.keys(phases);
+      await onExecuteAllPhases(phaseNames);
+      onClose();
+    } catch (error) {
+      console.error('All phases execution failed:', error);
+    } finally {
+      setIsExecutingPhase(false);
+    }
   };
 
-  if (showConfirm) {
-    return (
-      <div className="phase-execution-confirmation">
-        <div className="confirmation-content">
-          <p>Execute all tasks in phase "{phaseName}"?</p>
-          <div className="confirmation-actions">
-            <button 
-              className="confirm-button"
-              onClick={executePhase}
-              disabled={isExecuting}
-            >
-              {isExecuting ? 'Executing...' : 'Execute'}
-            </button>
-            <button 
-              className="cancel-button"
-              onClick={cancelExecution}
-              disabled={isExecuting}
-            >
-              Cancel
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  const getTotalProgress = () => {
+    let totalTasks = 0;
+    let completedTasks = 0;
+    
+    Object.values(phases).forEach(phase => {
+      totalTasks += phase.totalTasks;
+      completedTasks += phase.completedTasks;
+    });
+    
+    return totalTasks > 0 ? (completedTasks / totalTasks) * 100 : 0;
+  };
+
+  if (!isOpen) return null;
 
   return (
-    <button
-      className={`phase-execution-button ${isExecuting ? 'executing' : ''}`}
-      onClick={handleClick}
-      disabled={isDisabled || isExecuting}
-    >
-      {isExecuting ? (
-        <>
-          <span className="spinner"></span>
-          Executing...
-        </>
-      ) : (
-        <>
-          <span className="execute-icon">▶</span>
-          Execute {phaseName}
-        </>
-      )}
-    </button>
+    <div className="phase-modal-overlay">
+      <div className="phase-modal">
+        <div className="modal-header">
+          <h2>📋 Project Phases</h2>
+          <button className="close-button" onClick={onClose}>×</button>
+        </div>
+
+        <div className="modal-content">
+          <div className="overall-progress">
+            <div className="progress-bar">
+              <div 
+                className="progress-fill" 
+                style={{ width: `${getTotalProgress()}%` }}
+              />
+            </div>
+            <span className="progress-text">{Math.round(getTotalProgress())}% Complete</span>
+          </div>
+
+          <div className="phases-list">
+            {Object.entries(phases).map(([phaseName, phaseData]) => (
+              <div key={phaseName} className="phase-item">
+                <div className="phase-summary">
+                  <div className="phase-info">
+                    <h3>{phaseData.name}</h3>
+                    <span className="task-count">
+                      {phaseData.completedTasks}/{phaseData.totalTasks} tasks
+                    </span>
+                  </div>
+                  <div className="phase-actions">
+                    <button
+                      className="execute-single-button"
+                      onClick={() => handleExecutePhase(phaseName)}
+                      disabled={isExecutingPhase || isExecuting || phaseData.completedTasks === phaseData.totalTasks}
+                    >
+                      Execute {phaseName}
+                    </button>
+                  </div>
+                </div>
+                
+                <div className="phase-tasks-preview">
+                  {phaseData.tasks.slice(0, 3).map(task => (
+                    <div key={task.id} className="task-preview">
+                      <span className={`task-status task-${task.status}`}>
+                        {task.status === 'completed' && '✅'}
+                        {task.status === 'pending' && '⏳'}
+                      </span>
+                      <span className="task-title">{task.title}</span>
+                    </div>
+                  ))}
+                  {phaseData.tasks.length > 3 && (
+                    <div className="more-tasks">
+                      +{phaseData.tasks.length - 3} more tasks
+                    </div>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="modal-footer">
+          <button
+            className="execute-all-button"
+            onClick={handleExecuteAllPhases}
+            disabled={isExecutingPhase || isExecuting}
+          >
+            {isExecutingPhase ? 'Executing All Phases...' : 'Execute All Phases'}
+          </button>
+          <button className="cancel-button" onClick={onClose}>
+            Cancel
+          </button>
+        </div>
+      </div>
+    </div>
   );
 };
 
-PhaseExecutionButton.propTypes = {
-  phaseName: PropTypes.string.isRequired,
-  onExecute: PropTypes.func.isRequired,
-  isDisabled: PropTypes.bool,
-  showConfirmation: PropTypes.bool
+PhaseModal.propTypes = {
+  isOpen: PropTypes.bool.isRequired,
+  onClose: PropTypes.func.isRequired,
+  phases: PropTypes.object.isRequired,
+  onExecutePhase: PropTypes.func.isRequired,
+  onExecuteAllPhases: PropTypes.func.isRequired,
+  isExecuting: PropTypes.bool
 };
 
-export default PhaseExecutionButton;
+export default PhaseModal;
 ```
 
-### 3. Modify TasksPanelComponent to use grouped data
+### 3. Modify TasksPanelComponent to integrate phase grouping
 **File**: `frontend/src/presentation/components/chat/sidebar-right/TasksPanelComponent.jsx`
 **Time**: 60 minutes
 **Status**: ❌ Not implemented
@@ -278,8 +329,8 @@ export default PhaseExecutionButton;
 ```jsx
 import React, { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
-import PhaseGroupComponent from '../../PhaseGroupComponent';
-import PhaseExecutionButton from '../../PhaseExecutionButton';
+import PhaseAccordionSection from '../../PhaseAccordionSection';
+import PhaseModal from '../../PhaseModal';
 import APIChatRepository from '@/infrastructure/repositories/APIChatRepository';
 import '@/css/global/sidebar-right.css';
 
@@ -289,6 +340,7 @@ const TasksPanelComponent = ({ eventBus, activePort }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [executingPhases, setExecutingPhases] = useState(new Set());
+  const [showPhaseModal, setShowPhaseModal] = useState(false);
   
   // Existing state for docs tasks
   const [docsTasks, setDocsTasks] = useState([]);
@@ -359,10 +411,7 @@ const TasksPanelComponent = ({ eventBus, activePort }) => {
     }
   };
 
-  const handleExecuteAllPhases = async () => {
-    const phaseNames = Object.keys(groupedTasks);
-    if (phaseNames.length === 0) return;
-
+  const handleExecuteAllPhases = async (phaseNames) => {
     try {
       const projectId = await api.getCurrentProjectId();
       const result = await api.executePhases(projectId, phaseNames);
@@ -450,7 +499,7 @@ const TasksPanelComponent = ({ eventBus, activePort }) => {
             {phaseEntries.length > 0 && (
               <button
                 className="btn-primary text-sm"
-                onClick={handleExecuteAllPhases}
+                onClick={() => setShowPhaseModal(true)}
                 disabled={executingPhases.size > 0}
               >
                 Execute All Phases
@@ -483,7 +532,7 @@ const TasksPanelComponent = ({ eventBus, activePort }) => {
             </div>
           ) : (
             phaseEntries.map(([phaseName, phaseData]) => (
-              <PhaseGroupComponent
+              <PhaseAccordionSection
                 key={phaseName}
                 phaseName={phaseName}
                 phaseData={phaseData}
@@ -529,6 +578,16 @@ const TasksPanelComponent = ({ eventBus, activePort }) => {
         {/* ... existing docs tasks filter and list ... */}
       </div>
 
+      {/* Phase Modal */}
+      <PhaseModal
+        isOpen={showPhaseModal}
+        onClose={() => setShowPhaseModal(false)}
+        phases={groupedTasks}
+        onExecutePhase={handleExecutePhase}
+        onExecuteAllPhases={handleExecuteAllPhases}
+        isExecuting={executingPhases.size > 0}
+      />
+
       {/* Keep existing modals and feedback */}
       {/* ... existing modals and feedback implementation ... */}
     </div>
@@ -543,13 +602,13 @@ TasksPanelComponent.propTypes = {
 export default TasksPanelComponent;
 ```
 
-### 4. Add phase group styling and animations
-**File**: `frontend/src/css/components/PhaseGroupComponent.css`
+### 4. Add phase accordion styling
+**File**: `frontend/src/css/components/PhaseAccordionSection.css`
 **Time**: 30 minutes
 **Status**: ❌ Not implemented
 
 ```css
-.phase-group {
+.phase-accordion-section {
   border: 1px solid #e1e5e9;
   border-radius: 8px;
   margin-bottom: 16px;
@@ -558,28 +617,28 @@ export default TasksPanelComponent;
   overflow: hidden;
 }
 
-.phase-group:hover {
+.phase-accordion-section:hover {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   transform: translateY(-2px);
 }
 
-.phase-group.phase-complete {
+.phase-accordion-section.phase-complete {
   border-color: #28a745;
   background: linear-gradient(135deg, #f8fff9 0%, #ffffff 100%);
 }
 
-.phase-group.phase-executing {
+.phase-accordion-section.phase-executing {
   border-color: #ffc107;
   background: linear-gradient(135deg, #fffbf0 0%, #ffffff 100%);
   animation: pulse 2s infinite;
 }
 
-.phase-group.phase-in-progress {
+.phase-accordion-section.phase-in-progress {
   border-color: #17a2b8;
   background: linear-gradient(135deg, #f0f9ff 0%, #ffffff 100%);
 }
 
-.phase-group.phase-pending {
+.phase-accordion-section.phase-pending {
   border-color: #6c757d;
   background: #ffffff;
 }
@@ -856,66 +915,13 @@ export default TasksPanelComponent;
 }
 ```
 
-### 5. Implement phase execution UI feedback
-**File**: `frontend/src/css/components/PhaseExecutionButton.css`
+### 5. Add phase modal styling
+**File**: `frontend/src/css/components/PhaseModal.css`
 **Time**: 15 minutes
 **Status**: ❌ Not implemented
 
 ```css
-.phase-execution-button {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  background: linear-gradient(135deg, #28a745, #1e7e34);
-  color: white;
-  border: none;
-  padding: 10px 20px;
-  border-radius: 6px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  text-transform: capitalize;
-  font-size: 14px;
-}
-
-.phase-execution-button:hover:not(:disabled) {
-  background: linear-gradient(135deg, #1e7e34, #155724);
-  transform: translateY(-1px);
-  box-shadow: 0 4px 8px rgba(40, 167, 69, 0.3);
-}
-
-.phase-execution-button:disabled {
-  background: #6c757d;
-  cursor: not-allowed;
-  transform: none;
-  box-shadow: none;
-}
-
-.phase-execution-button.executing {
-  background: #ffc107;
-  color: #212529;
-  cursor: not-allowed;
-}
-
-.execute-icon {
-  font-size: 12px;
-}
-
-.spinner {
-  width: 16px;
-  height: 16px;
-  border: 2px solid transparent;
-  border-top: 2px solid currentColor;
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
-
-.phase-execution-confirmation {
+.phase-modal-overlay {
   position: fixed;
   top: 0;
   left: 0;
@@ -928,30 +934,130 @@ export default TasksPanelComponent;
   z-index: 1000;
 }
 
-.confirmation-content {
+.phase-modal {
   background: white;
-  padding: 24px;
-  border-radius: 8px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
-  max-width: 400px;
+  border-radius: 12px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  max-width: 800px;
   width: 90%;
-  text-align: center;
+  max-height: 80vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
-.confirmation-content p {
-  margin: 0 0 20px 0;
-  font-size: 16px;
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 24px 32px;
+  border-bottom: 1px solid #e1e5e9;
+  background: #f8f9fa;
+}
+
+.modal-header h2 {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 600;
   color: #2c3e50;
 }
 
-.confirmation-actions {
-  display: flex;
-  gap: 12px;
-  justify-content: center;
+.close-button {
+  background: none;
+  border: none;
+  font-size: 24px;
+  color: #6c757d;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  transition: all 0.2s ease;
 }
 
-.confirm-button {
-  background: #dc3545;
+.close-button:hover {
+  background: rgba(0, 0, 0, 0.1);
+  color: #495057;
+}
+
+.modal-content {
+  padding: 32px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.overall-progress {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 32px;
+  padding: 16px;
+  background: #f8f9fa;
+  border-radius: 8px;
+}
+
+.overall-progress .progress-bar {
+  flex: 1;
+  height: 8px;
+  background: #e9ecef;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.overall-progress .progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #28a745, #1e7e34);
+  transition: width 0.3s ease;
+}
+
+.overall-progress .progress-text {
+  font-size: 16px;
+  font-weight: 600;
+  color: #495057;
+  min-width: 80px;
+}
+
+.phases-list {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.phase-item {
+  border: 1px solid #e1e5e9;
+  border-radius: 8px;
+  padding: 20px;
+  background: #ffffff;
+  transition: all 0.2s ease;
+}
+
+.phase-item:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.phase-summary {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.phase-info h3 {
+  margin: 0 0 8px 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: #2c3e50;
+  text-transform: capitalize;
+}
+
+.task-count {
+  font-size: 14px;
+  color: #6c757d;
+  background: #f8f9fa;
+  padding: 4px 8px;
+  border-radius: 12px;
+}
+
+.execute-single-button {
+  background: linear-gradient(135deg, #007bff, #0056b3);
   color: white;
   border: none;
   padding: 10px 20px;
@@ -959,18 +1065,96 @@ export default TasksPanelComponent;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;
+  text-transform: capitalize;
 }
 
-.confirm-button:hover:not(:disabled) {
-  background: #c82333;
+.execute-single-button:hover:not(:disabled) {
+  background: linear-gradient(135deg, #0056b3, #004085);
   transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0, 123, 255, 0.3);
+}
+
+.execute-single-button:disabled {
+  background: #6c757d;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.phase-tasks-preview {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.task-preview {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 12px;
+  background: #f8f9fa;
+  border-radius: 6px;
+  font-size: 14px;
+}
+
+.task-status {
+  font-size: 16px;
+  width: 20px;
+  text-align: center;
+}
+
+.task-title {
+  flex: 1;
+  color: #2c3e50;
+  font-weight: 500;
+}
+
+.more-tasks {
+  font-size: 12px;
+  color: #6c757d;
+  text-align: center;
+  padding: 8px;
+  font-style: italic;
+}
+
+.modal-footer {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  padding: 24px 32px;
+  border-top: 1px solid #e1e5e9;
+  background: #f8f9fa;
+}
+
+.execute-all-button {
+  background: linear-gradient(135deg, #28a745, #1e7e34);
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.execute-all-button:hover:not(:disabled) {
+  background: linear-gradient(135deg, #1e7e34, #155724);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(40, 167, 69, 0.3);
+}
+
+.execute-all-button:disabled {
+  background: #6c757d;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
 }
 
 .cancel-button {
   background: #6c757d;
   color: white;
   border: none;
-  padding: 10px 20px;
+  padding: 12px 24px;
   border-radius: 6px;
   font-weight: 600;
   cursor: pointer;
@@ -981,14 +1165,41 @@ export default TasksPanelComponent;
   background: #5a6268;
   transform: translateY(-1px);
 }
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .phase-modal {
+    width: 95%;
+    max-height: 90vh;
+  }
+  
+  .modal-header {
+    padding: 16px 20px;
+  }
+  
+  .modal-content {
+    padding: 20px;
+  }
+  
+  .phase-summary {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  
+  .modal-footer {
+    flex-direction: column;
+    padding: 16px 20px;
+  }
+}
 ```
 
 ## Success Criteria
-- [ ] PhaseGroupComponent displays tasks grouped by phases
-- [ ] PhaseExecutionButton provides execution functionality with confirmation
+- [ ] PhaseAccordionSection displays tasks grouped by phases
+- [ ] PhaseModal provides execution functionality with single and bulk options
 - [ ] TasksPanelComponent integrates phase grouping with existing docs tasks
-- [ ] Phase group styling includes animations and visual feedback
-- [ ] Phase execution provides real-time UI feedback
+- [ ] Phase accordion styling includes animations and visual feedback
+- [ ] Phase modal provides comprehensive execution control
 - [ ] Components are responsive and accessible
 - [ ] Error handling works correctly in all components
 - [ ] Loading states are properly managed
