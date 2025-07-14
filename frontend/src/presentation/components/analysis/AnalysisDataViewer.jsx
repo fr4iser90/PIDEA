@@ -25,7 +25,8 @@ const AnalysisDataViewer = ({ projectId = null, eventBus = null }) => {
     issues: null,
     techStack: null,
     architecture: null,
-    recommendations: null
+    recommendations: null,
+    hasRecentData: false
   });
   const [filters, setFilters] = useState({
     dateRange: 'all',
@@ -51,6 +52,7 @@ const AnalysisDataViewer = ({ projectId = null, eventBus = null }) => {
     metrics: false,
     status: false,
     history: false,
+    charts: false,
     issues: false,
     techStack: false,
     architecture: false,
@@ -262,6 +264,19 @@ const AnalysisDataViewer = ({ projectId = null, eventBus = null }) => {
         logger.error('Failed to load recommendations data:', err);
       }
       updateLoadingState('recommendations', false);
+
+      // Load charts data
+      updateLoadingState('charts', true);
+      try {
+        const chartsResponse = await apiRepository.getAnalysisCharts?.(currentProjectId, 'trends') || Promise.resolve({ success: false, data: null });
+        setAnalysisData(prev => ({
+          ...prev,
+          charts: chartsResponse.success ? chartsResponse.data : null
+        }));
+      } catch (err) {
+        logger.error('Failed to load charts data:', err);
+      }
+      updateLoadingState('charts', false);
 
       // Check if we have recent analysis data
       const hasRecentData = await checkForRecentAnalysisData(historyResponse, currentProjectId);

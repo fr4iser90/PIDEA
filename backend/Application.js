@@ -725,6 +725,7 @@ class Application {
     this.app.get('/api/projects/:projectId/analysis/techstack', (req, res) => this.analysisController.getAnalysisTechStack(req, res));
     this.app.get('/api/projects/:projectId/analysis/architecture', (req, res) => this.analysisController.getAnalysisArchitecture(req, res));
     this.app.get('/api/projects/:projectId/analysis/recommendations', (req, res) => this.analysisController.getAnalysisRecommendations(req, res));
+    this.app.get('/api/projects/:projectId/analysis/charts/:type', (req, res) => this.analysisController.getAnalysisCharts(req, res));
     
     // Specialized Analysis routes (protected) - PROJECT-BASED
     this.app.post('/api/projects/:projectId/analysis/code-quality', (req, res) => this.analysisController.analyzeCodeQuality(req, res));

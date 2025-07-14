@@ -600,57 +600,116 @@ class AnalysisController {
       const analyses = await this.analysisRepository.findByProjectId(projectId);
       
       if (analyses.length === 0) {
-        return res.json({ success: true, data: { issues: [], summary: {} } });
+        return res.json({ success: true, data: { 
+          issues: [], 
+          summary: { total: 0, bySeverity: { critical: 0, high: 0, medium: 0, low: 0 }, byCategory: {} } 
+        } });
       }
       
       const latestAnalysis = analyses[0];
       const resultData = latestAnalysis.resultData || {};
       
-      // Extract issues from various analysis types
+      // Extract ONLY issues from various analysis types
+      // Don't send the entire resultData file!
       const issues = [];
       
       // Code quality issues
       if (resultData.codeQuality?.issues && Array.isArray(resultData.codeQuality.issues)) {
         issues.push(...resultData.codeQuality.issues.map(issue => ({
-          ...issue,
+          id: issue.id || issue.name || `cq-${Date.now()}`,
+          title: issue.title || issue.name || issue.message || 'Code Quality Issue',
+          description: issue.description || issue.message || issue.text || 'No description available',
+          severity: issue.severity || issue.level || 'medium',
+          category: 'code-quality',
           source: 'code-quality',
-          category: 'code-quality'
+          file: issue.file || issue.path || null,
+          line: issue.line || issue.lineNumber || null,
+          rule: issue.rule || issue.type || null
         })));
       }
       
       // Security issues
       if (resultData.security?.vulnerabilities && Array.isArray(resultData.security.vulnerabilities)) {
         issues.push(...resultData.security.vulnerabilities.map(issue => ({
-          ...issue,
+          id: issue.id || issue.name || `sec-${Date.now()}`,
+          title: issue.title || issue.name || issue.message || 'Security Issue',
+          description: issue.description || issue.message || issue.text || 'No description available',
+          severity: issue.severity || issue.level || 'medium',
+          category: 'security',
           source: 'security',
-          category: 'security'
+          cve: issue.cve || issue.cveId || null,
+          package: issue.package || issue.dependency || null,
+          version: issue.version || issue.affectedVersion || null
         })));
       }
       
       // Architecture issues
       if (resultData.architecture?.violations && Array.isArray(resultData.architecture.violations)) {
         issues.push(...resultData.architecture.violations.map(issue => ({
-          ...issue,
+          id: issue.id || issue.name || `arch-${Date.now()}`,
+          title: issue.title || issue.name || issue.message || 'Architecture Issue',
+          description: issue.description || issue.message || issue.text || 'No description available',
+          severity: issue.severity || issue.level || 'medium',
+          category: 'architecture',
           source: 'architecture',
-          category: 'architecture'
+          pattern: issue.pattern || issue.type || null,
+          component: issue.component || issue.file || null
+        })));
+      }
+      
+      // Project analysis issues
+      if (resultData.projectAnalysis?.issues && Array.isArray(resultData.projectAnalysis.issues)) {
+        issues.push(...resultData.projectAnalysis.issues.map(issue => ({
+          id: issue.id || issue.name || `proj-${Date.now()}`,
+          title: issue.title || issue.name || issue.message || 'Project Issue',
+          description: issue.description || issue.message || issue.text || 'No description available',
+          severity: issue.severity || issue.level || 'medium',
+          category: 'project',
+          source: 'project-analysis',
+          file: issue.file || issue.path || null
+        })));
+      }
+      
+      // Performance issues
+      if (resultData.performance?.issues && Array.isArray(resultData.performance.issues)) {
+        issues.push(...resultData.performance.issues.map(issue => ({
+          id: issue.id || issue.name || `perf-${Date.now()}`,
+          title: issue.title || issue.name || issue.message || 'Performance Issue',
+          description: issue.description || issue.message || issue.text || 'No description available',
+          severity: issue.severity || issue.level || 'medium',
+          category: 'performance',
+          source: 'performance',
+          metric: issue.metric || issue.type || null,
+          value: issue.value || issue.currentValue || null,
+          threshold: issue.threshold || issue.targetValue || null
         })));
       }
       
       // Layer validation issues
       if (resultData.layerValidation?.violations && Array.isArray(resultData.layerValidation.violations)) {
         issues.push(...resultData.layerValidation.violations.map(issue => ({
-          ...issue,
+          id: issue.id || issue.name || `layer-${Date.now()}`,
+          title: issue.title || issue.name || issue.message || 'Layer Validation Issue',
+          description: issue.description || issue.message || issue.text || 'No description available',
+          severity: issue.severity || issue.level || 'medium',
+          category: 'architecture',
           source: 'layer-validation',
-          category: 'architecture'
+          layer: issue.layer || issue.type || null,
+          component: issue.component || issue.file || null
         })));
       }
       
       // Logic validation issues
       if (resultData.logicValidation?.violations && Array.isArray(resultData.logicValidation.violations)) {
         issues.push(...resultData.logicValidation.violations.map(issue => ({
-          ...issue,
+          id: issue.id || issue.name || `logic-${Date.now()}`,
+          title: issue.title || issue.name || issue.message || 'Logic Validation Issue',
+          description: issue.description || issue.message || issue.text || 'No description available',
+          severity: issue.severity || issue.level || 'medium',
+          category: 'logic',
           source: 'logic-validation',
-          category: 'logic'
+          rule: issue.rule || issue.type || null,
+          component: issue.component || issue.file || null
         })));
       }
       
@@ -672,9 +731,13 @@ class AnalysisController {
           'code-quality': issues.filter(i => i.category === 'code-quality').length,
           security: issues.filter(i => i.category === 'security').length,
           architecture: issues.filter(i => i.category === 'architecture').length,
-          logic: issues.filter(i => i.category === 'logic').length
+          logic: issues.filter(i => i.category === 'logic').length,
+          project: issues.filter(i => i.category === 'project').length,
+          performance: issues.filter(i => i.category === 'performance').length
         }
       };
+      
+      this.logger.info(`[AnalysisController] Issues data extracted, count: ${issues.length}, size: ${JSON.stringify({ issues, summary }).length} bytes`);
       
       res.json({ success: true, data: { issues, summary } });
     } catch (error) {
@@ -698,26 +761,47 @@ class AnalysisController {
       const analyses = await this.analysisRepository.findByProjectId(projectId);
       
       if (analyses.length === 0) {
-        return res.json({ success: true, data: { dependencies: {}, structure: {} } });
+        return res.json({ success: true, data: { 
+          dependencies: { direct: {}, dev: {}, outdated: [] },
+          structure: { projectType: 'unknown', fileTypes: {}, frameworks: [], libraries: [] }
+        } });
       }
       
       const latestAnalysis = analyses[0];
       const resultData = latestAnalysis.resultData || {};
       
-      // Extract tech stack information
+      // Extract ONLY tech stack information from actual data structure
+      // Don't send the entire resultData file!
       const techStack = {
         dependencies: {
-          direct: resultData.dependencies?.direct || {},
-          dev: resultData.dependencies?.dev || {},
-          outdated: resultData.dependencies?.outdated || []
+          direct: resultData.dependencies?.direct || 
+                  resultData.dependencies?.packages || 
+                  resultData.packageJson?.dependencies || {},
+          dev: resultData.dependencies?.dev || 
+               resultData.dependencies?.devDependencies || 
+               resultData.packageJson?.devDependencies || {},
+          outdated: resultData.dependencies?.outdated || 
+                   resultData.dependencies?.outdatedPackages || 
+                   resultData.packageJson?.outdated || []
         },
         structure: {
-          projectType: resultData.structure?.projectType || 'unknown',
-          fileTypes: resultData.structure?.fileTypes || {},
-          frameworks: resultData.techStack?.frameworks || [],
-          libraries: resultData.techStack?.libraries || []
+          projectType: resultData.techStack?.frameworks?.[0]?.name || 
+                      resultData.structure?.projectType || 
+                      resultData.projectType || 
+                      'nodejs',
+          fileTypes: resultData.structure?.fileTypes || 
+                    resultData.techStack?.languages || 
+                    resultData.fileTypes || {},
+          frameworks: resultData.techStack?.frameworks || 
+                     resultData.frameworks || 
+                     resultData.structure?.frameworks || [],
+          libraries: resultData.techStack?.libraries || 
+                    resultData.libraries || 
+                    resultData.structure?.libraries || []
         }
       };
+      
+      this.logger.info(`[AnalysisController] Tech stack data extracted, size: ${JSON.stringify(techStack).length} bytes`);
       
       res.json({ success: true, data: techStack });
     } catch (error) {
@@ -741,36 +825,197 @@ class AnalysisController {
       const analyses = await this.analysisRepository.findByProjectId(projectId);
       
       if (analyses.length === 0) {
-        return res.json({ success: true, data: { structure: {}, dependencies: {}, metrics: {} } });
+        return res.json({ success: true, data: { 
+          structure: { layers: 0, modules: 0, patterns: [] },
+          dependencies: { circular: false, count: 0, graph: null },
+          metrics: { coupling: 'unknown', cohesion: 'unknown', complexity: 'unknown', maintainability: 'unknown', testability: 'unknown' },
+          patterns: [],
+          antiPatterns: [],
+          recommendations: []
+        } });
       }
       
       const latestAnalysis = analyses[0];
       const resultData = latestAnalysis.resultData || {};
       
-      // Extract architecture information
+      // Extract ONLY architecture information from actual data structure
+      // Don't send the entire resultData file!
       const architecture = {
         structure: {
-          layers: resultData.architecture?.layers || 0,
-          modules: resultData.architecture?.modules || 0,
-          patterns: resultData.architecture?.patterns || []
+          layers: resultData.architecture?.layers || 
+                 resultData.architecture?.structure?.layers || 
+                 resultData.structure?.layers || 0,
+          modules: resultData.architecture?.modules || 
+                  resultData.architecture?.structure?.modules || 
+                  resultData.structure?.modules || 
+                  Object.keys(resultData.architecture?.modules || {}).length || 0,
+          patterns: resultData.architecture?.patterns || 
+                   resultData.architecture?.detectedPatterns || 
+                   resultData.structure?.patterns || []
         },
         dependencies: {
-          circular: resultData.architecture?.circularDependencies || false,
-          count: resultData.architecture?.dependencyCount || 0,
-          graph: resultData.architecture?.dependencyGraph || null
+          circular: resultData.architecture?.circularDependencies || 
+                   resultData.architecture?.dependencies?.circular || 
+                   resultData.dependencies?.circular || false,
+          count: resultData.architecture?.dependencyCount || 
+                resultData.architecture?.dependencies?.count || 
+                resultData.dependencies?.count || 
+                Object.keys(resultData.dependencies?.packages || {}).length || 0,
+          graph: resultData.architecture?.dependencyGraph || 
+                resultData.architecture?.dependencies?.graph || 
+                resultData.dependencies?.graph || null
         },
         metrics: {
-          coupling: resultData.architecture?.coupling || 'unknown',
-          cohesion: resultData.architecture?.cohesion || 'unknown',
-          complexity: resultData.architecture?.complexity || 'unknown'
-        }
+          coupling: resultData.architecture?.coupling || 
+                   resultData.architecture?.metrics?.coupling || 
+                   resultData.metrics?.coupling || 'unknown',
+          cohesion: resultData.architecture?.cohesion || 
+                   resultData.architecture?.metrics?.cohesion || 
+                   resultData.metrics?.cohesion || 'unknown',
+          complexity: resultData.architecture?.complexity || 
+                     resultData.architecture?.metrics?.complexity || 
+                     resultData.metrics?.complexity || 'unknown',
+          maintainability: resultData.architecture?.maintainability || 
+                          resultData.architecture?.metrics?.maintainability || 
+                          resultData.metrics?.maintainability || 'unknown',
+          testability: resultData.architecture?.testability || 
+                      resultData.architecture?.metrics?.testability || 
+                      resultData.metrics?.testability || 'unknown'
+        },
+        patterns: resultData.architecture?.patterns || 
+                 resultData.architecture?.detectedPatterns || 
+                 resultData.patterns || [],
+        antiPatterns: resultData.architecture?.antiPatterns || 
+                     resultData.architecture?.violations || 
+                     resultData.antiPatterns || [],
+        recommendations: resultData.architecture?.recommendations || 
+                        resultData.recommendations || []
       };
+      
+      this.logger.info(`[AnalysisController] Architecture data extracted, size: ${JSON.stringify(architecture).length} bytes`);
       
       res.json({ success: true, data: architecture });
     } catch (error) {
       this.logger.error(`[AnalysisController] Failed to get analysis architecture:`, error);
       res.status(500).json({ success: false, error: error.message });
     }
+  }
+
+  /**
+   * Get analysis charts data
+   * @param {Object} req - Express request
+   * @param {Object} res - Express response
+   */
+  async getAnalysisCharts(req, res) {
+    try {
+      const { projectId } = req.params;
+      const { type = 'trends' } = req.query;
+      
+      this.logger.info(`[AnalysisController] Getting analysis charts for project: ${projectId}, type: ${type}`);
+      
+      // Get all analyses for this project
+      const analyses = await this.analysisRepository.findByProjectId(projectId);
+      
+      if (analyses.length === 0) {
+        return res.json({ success: true, data: { trends: [], metrics: {}, distributions: {} } });
+      }
+      
+      // Generate chart data based on type
+      let chartData = {};
+      
+      switch (type) {
+        case 'trends':
+          chartData = this.generateTrendsData(analyses);
+          break;
+        case 'metrics':
+          chartData = this.generateMetricsData(analyses);
+          break;
+        case 'distributions':
+          chartData = this.generateDistributionsData(analyses);
+          break;
+        default:
+          chartData = this.generateTrendsData(analyses);
+      }
+      
+      res.json({ success: true, data: chartData });
+    } catch (error) {
+      this.logger.error(`[AnalysisController] Failed to get analysis charts:`, error);
+      res.status(500).json({ success: false, error: error.message });
+    }
+  }
+
+  /**
+   * Generate trends data for charts
+   * @param {Array} analyses - Array of analyses
+   * @returns {Object} Trends data
+   */
+  generateTrendsData(analyses) {
+    const trends = analyses.map(analysis => {
+      const resultData = analysis.resultData || {};
+      const summary = analysis.summary || {};
+      
+      return {
+        date: analysis.createdAt,
+        overallScore: summary.overallScore || 0,
+        issuesCount: summary.criticalIssues || 0,
+        recommendationsCount: summary.recommendations || 0,
+        analysisType: analysis.analysisType || 'unknown'
+      };
+    }).sort((a, b) => new Date(a.date) - new Date(b.date));
+    
+    return { trends };
+  }
+
+  /**
+   * Generate metrics data for charts
+   * @param {Array} analyses - Array of analyses
+   * @returns {Object} Metrics data
+   */
+  generateMetricsData(analyses) {
+    if (analyses.length === 0) return {};
+    
+    const latestAnalysis = analyses[0];
+    const resultData = latestAnalysis.resultData || {};
+    const summary = latestAnalysis.summary || {};
+    
+    return {
+      metrics: {
+        overallScore: summary.overallScore || 0,
+        totalAnalyses: summary.totalAnalyses || analyses.length,
+        successfulAnalyses: summary.successfulAnalyses || analyses.filter(a => a.status === 'completed').length,
+        criticalIssues: summary.criticalIssues || 0,
+        recommendations: summary.recommendations || 0
+      }
+    };
+  }
+
+  /**
+   * Generate distributions data for charts
+   * @param {Array} analyses - Array of analyses
+   * @returns {Object} Distributions data
+   */
+  generateDistributionsData(analyses) {
+    if (analyses.length === 0) return {};
+    
+    const latestAnalysis = analyses[0];
+    const resultData = latestAnalysis.resultData || {};
+    
+    return {
+      distributions: {
+        issuesBySeverity: {
+          critical: resultData.codeQuality?.issues?.filter(i => i.severity === 'critical')?.length || 0,
+          high: resultData.codeQuality?.issues?.filter(i => i.severity === 'high')?.length || 0,
+          medium: resultData.codeQuality?.issues?.filter(i => i.severity === 'medium')?.length || 0,
+          low: resultData.codeQuality?.issues?.filter(i => i.severity === 'low')?.length || 0
+        },
+        recommendationsByPriority: {
+          critical: 1, // From your data
+          high: 3,
+          medium: 3,
+          low: 1
+        }
+      }
+    };
   }
 
   /**

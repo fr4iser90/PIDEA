@@ -1,12 +1,13 @@
-import { logger } from "@/infrastructure/logging/Logger";
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import mermaid from 'mermaid';
-import '@/css/components/analysis/analysis-architecture.css';
+import { Logger } from '@/infrastructure/logging/Logger';
+
+const logger = new Logger('AnalysisArchitecture');
 
 const AnalysisArchitecture = ({ architecture, loading, error }) => {
+  const [activeTab, setActiveTab] = useState('diagram');
   const [diagramSvg, setDiagramSvg] = useState(null);
   const [diagramError, setDiagramError] = useState(null);
-  const [activeTab, setActiveTab] = useState('diagram');
   const [zoomLevel, setZoomLevel] = useState(1);
   const diagramRef = useRef(null);
 
@@ -55,6 +56,47 @@ const AnalysisArchitecture = ({ architecture, loading, error }) => {
     renderDiagram();
   }, [architecture?.dependencies?.graph]);
 
+  // Safe render helper - ensures ANY value is safely converted to string
+  const safeRender = (value) => {
+    if (value == null || value === undefined) return '';
+    if (typeof value === 'string') return value;
+    if (typeof value === 'number') return value.toString();
+    if (typeof value === 'boolean') return value.toString();
+    if (Array.isArray(value)) {
+      return value.map(item => safeRender(item)).join(', ');
+    }
+    if (typeof value === 'object') {
+      // If object has specific properties, extract them
+      if (value.name) return value.name;
+      if (value.pattern) return value.pattern;
+      if (value.message) return value.message;
+      if (value.text) return value.text;
+      if (value.description) return value.description;
+      if (value.path) return value.path;
+      // Fallback to JSON string
+      return JSON.stringify(value);
+    }
+    return String(value);
+  };
+
+  // Safe string conversion helper
+  const safeString = (value) => {
+    if (typeof value === 'string') return value;
+    if (typeof value === 'number') return value.toString();
+    if (typeof value === 'boolean') return value.toString();
+    if (value && typeof value === 'object') {
+      return value.name || value.pattern || value.message || value.text || value.description || 'Unknown';
+    }
+    return 'Unknown';
+  };
+
+  // Safe array conversion helper
+  const safeArray = (value) => {
+    if (Array.isArray(value)) return value;
+    if (value && typeof value === 'object') return [value];
+    return [];
+  };
+
   // Process architecture data from backend structure
   const processedArchitecture = useMemo(() => {
     if (!architecture) return null;
@@ -63,7 +105,7 @@ const AnalysisArchitecture = ({ architecture, loading, error }) => {
       structure: {
         layers: architecture.structure?.layers || 0,
         modules: architecture.structure?.modules || 0,
-        patterns: architecture.structure?.patterns || []
+        patterns: safeArray(architecture.structure?.patterns)
       },
       dependencies: {
         circular: architecture.dependencies?.circular || false,
@@ -71,15 +113,15 @@ const AnalysisArchitecture = ({ architecture, loading, error }) => {
         graph: architecture.dependencies?.graph || null
       },
       metrics: {
-        coupling: architecture.metrics?.coupling || 'unknown',
-        cohesion: architecture.metrics?.cohesion || 'unknown',
-        complexity: architecture.metrics?.complexity || 'unknown',
-        maintainability: architecture.metrics?.maintainability || 'unknown',
-        testability: architecture.metrics?.testability || 'unknown'
+        coupling: safeString(architecture.metrics?.coupling),
+        cohesion: safeString(architecture.metrics?.cohesion),
+        complexity: safeString(architecture.metrics?.complexity),
+        maintainability: safeString(architecture.metrics?.maintainability),
+        testability: safeString(architecture.metrics?.testability)
       },
-      patterns: architecture.patterns || [],
-      antiPatterns: architecture.antiPatterns || [],
-      recommendations: architecture.recommendations || []
+      patterns: safeArray(architecture.patterns),
+      antiPatterns: safeArray(architecture.antiPatterns),
+      recommendations: safeArray(architecture.recommendations)
     };
   }, [architecture]);
 
@@ -132,7 +174,8 @@ const AnalysisArchitecture = ({ architecture, loading, error }) => {
   };
 
   const getPatternIcon = (pattern) => {
-    const patternLower = pattern.toLowerCase();
+    const patternStr = safeString(pattern);
+    const patternLower = patternStr.toLowerCase();
     if (patternLower.includes('mvc')) return '🎭';
     if (patternLower.includes('mvvm')) return '🔄';
     if (patternLower.includes('repository')) return '📚';
@@ -206,7 +249,7 @@ const AnalysisArchitecture = ({ architecture, loading, error }) => {
           <h3>🏗️ Architecture</h3>
           <div className="architecture-summary">
             <span className="summary-text">
-              {processedArchitecture.structure.layers} layers, {processedArchitecture.structure.modules} modules
+              {safeRender(processedArchitecture.structure.layers)} layers, {safeRender(processedArchitecture.structure.modules)} modules
             </span>
           </div>
         </div>
@@ -239,20 +282,20 @@ const AnalysisArchitecture = ({ architecture, loading, error }) => {
         <div className="stats-grid">
           <div className="stat-item">
             <span className="stat-label">Layers:</span>
-            <span className="stat-value">{processedArchitecture.structure.layers}</span>
+            <span className="stat-value">{safeRender(processedArchitecture.structure.layers)}</span>
           </div>
           <div className="stat-item">
             <span className="stat-label">Modules:</span>
-            <span className="stat-value">{processedArchitecture.structure.modules}</span>
+            <span className="stat-value">{safeRender(processedArchitecture.structure.modules)}</span>
           </div>
           <div className="stat-item">
             <span className="stat-label">Dependencies:</span>
-            <span className="stat-value">{processedArchitecture.dependencies.count}</span>
+            <span className="stat-value">{safeRender(processedArchitecture.dependencies.count)}</span>
           </div>
           <div className="stat-item">
             <span className="stat-label">Circular:</span>
             <span className={`stat-value ${processedArchitecture.dependencies.circular ? 'critical' : 'success'}`}>
-              {processedArchitecture.dependencies.circular ? 'Yes' : 'No'}
+              {safeRender(processedArchitecture.dependencies.circular ? 'Yes' : 'No')}
             </span>
           </div>
         </div>
@@ -328,7 +371,7 @@ const AnalysisArchitecture = ({ architecture, loading, error }) => {
                       {metric.charAt(0).toUpperCase() + metric.slice(1)}
                     </div>
                     <div className="metric-value">
-                      {typeof value === 'number' ? value.toFixed(2) : value}
+                      {safeRender(value)}
                     </div>
                     <div className="metric-status">
                       {getMetricColor(metric, value) === 'excellent' && 'Excellent'}
@@ -348,7 +391,9 @@ const AnalysisArchitecture = ({ architecture, loading, error }) => {
                 <div className="recommendations-list">
                   {processedArchitecture.recommendations.map((rec, index) => (
                     <div key={index} className="recommendation-item">
-                      <span className="recommendation-text">{rec}</span>
+                      <span className="recommendation-text">
+                        {safeRender(rec)}
+                      </span>
                     </div>
                   ))}
                 </div>
@@ -369,7 +414,9 @@ const AnalysisArchitecture = ({ architecture, loading, error }) => {
                         {getPatternIcon(pattern)}
                       </div>
                       <div className="pattern-info">
-                        <span className="pattern-name">{pattern}</span>
+                        <span className="pattern-name">
+                          {safeRender(pattern)}
+                        </span>
                         <span className="pattern-type">Architectural Pattern</span>
                       </div>
                     </div>
@@ -389,7 +436,9 @@ const AnalysisArchitecture = ({ architecture, loading, error }) => {
                   {processedArchitecture.antiPatterns.map((antiPattern, index) => (
                     <div key={index} className="anti-pattern-item">
                       <span className="anti-pattern-icon">⚠️</span>
-                      <span className="anti-pattern-text">{antiPattern}</span>
+                      <span className="anti-pattern-text">
+                        {safeRender(antiPattern)}
+                      </span>
                     </div>
                   ))}
                 </div>
