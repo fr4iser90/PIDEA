@@ -408,8 +408,8 @@ const AnalysisDataViewer = ({ projectId = null, eventBus = null }) => {
 
   return (
     <div className="analysis-data-viewer">
-      {/* Header */}
       <div className="analysis-header">
+        {/* Header content: title, status, actions */}
         <div className="analysis-title">
           <h2>📊 Analysis Dashboard</h2>
           <AnalysisStatus 
@@ -429,144 +429,145 @@ const AnalysisDataViewer = ({ projectId = null, eventBus = null }) => {
           </button>
         </div>
       </div>
-
-      {/* Filters */}
-      <AnalysisFilters 
-        filters={filters}
-        onFilterChange={handleFilterChange}
-        projectId={projectId}
-      />
-
-      {/* Metrics Section */}
-      <div className={`analysis-section ${expandedSections.metrics ? 'expanded' : 'collapsed'}`}>
-        <div className="section-header" onClick={() => toggleSection('metrics')}>
-          <h3>📊 Metrics</h3>
-          <span className="section-toggle">{expandedSections.metrics ? '▼' : '▶'}</span>
-        </div>
-        {expandedSections.metrics && (
-          <div className="section-content">
-            <AnalysisMetrics 
-              metrics={analysisData.metrics}
-              loading={loadingStates.metrics}
-            />
-          </div>
-        )}
-      </div>
-
-      {/* Charts Section */}
-      <div className={`analysis-section ${expandedSections.charts ? 'expanded' : 'collapsed'}`}>
-        <div className="section-header" onClick={() => toggleSection('charts')}>
-          <h3>📈 Charts</h3>
-          <span className="section-toggle">{expandedSections.charts ? '▼' : '▶'}</span>
-        </div>
-        {expandedSections.charts && (
-          <div className="section-content">
-            <AnalysisCharts 
-              data={analysisData.charts}
-              history={analysisData.history}
-              filters={filters}
-              loading={loadingStates.history}
-            />
-          </div>
-        )}
-      </div>
-
-      {/* History Section */}
-      <div className={`analysis-section ${expandedSections.history ? 'expanded' : 'collapsed'}`}>
-        <div className="section-header" onClick={() => toggleSection('history')}>
-          <h3>📋 History</h3>
-          <span className="section-toggle">{expandedSections.history ? '▼' : '▶'}</span>
-        </div>
-        {expandedSections.history && (
-          <div className="section-content">
-            <AnalysisHistory 
-              history={analysisData.history}
-              onAnalysisSelect={handleAnalysisSelect}
-              loading={loadingStates.history}
-            />
-          </div>
-        )}
-      </div>
-
-      {/* Issues Section */}
-      <div className={`analysis-section ${expandedSections.issues ? 'expanded' : 'collapsed'}`}>
-        <div className="section-header" onClick={() => toggleSection('issues')}>
-          <h3>⚠️ Issues</h3>
-          <span className="section-toggle">{expandedSections.issues ? '▼' : '▶'}</span>
-        </div>
-        {expandedSections.issues && (
-          <div className="section-content">
-            <AnalysisIssues 
-              issues={analysisData.issues}
-              loading={loadingStates.issues}
-              error={error}
-            />
-          </div>
-        )}
-      </div>
-
-      {/* Tech Stack Section */}
-      <div className={`analysis-section ${expandedSections.techStack ? 'expanded' : 'collapsed'}`}>
-        <div className="section-header" onClick={() => toggleSection('techStack')}>
-          <h3>🔧 Tech Stack</h3>
-          <span className="section-toggle">{expandedSections.techStack ? '▼' : '▶'}</span>
-        </div>
-        {expandedSections.techStack && (
-          <div className="section-content">
-            <AnalysisTechStack 
-              techStack={analysisData.techStack}
-              loading={loadingStates.techStack}
-              error={error}
-            />
-          </div>
-        )}
-      </div>
-
-      {/* Architecture Section */}
-      <div className={`analysis-section ${expandedSections.architecture ? 'expanded' : 'collapsed'}`}>
-        <div className="section-header" onClick={() => toggleSection('architecture')}>
-          <h3>🏗️ Architecture</h3>
-          <span className="section-toggle">{expandedSections.architecture ? '▼' : '▶'}</span>
-        </div>
-        {expandedSections.architecture && (
-          <div className="section-content">
-            <AnalysisArchitecture 
-              architecture={analysisData.architecture}
-              loading={loadingStates.architecture}
-              error={error}
-            />
-          </div>
-        )}
-      </div>
-
-      {/* Recommendations Section */}
-      <div className={`analysis-section ${expandedSections.recommendations ? 'expanded' : 'collapsed'}`}>
-        <div className="section-header" onClick={() => toggleSection('recommendations')}>
-          <h3>💡 Recommendations</h3>
-          <span className="section-toggle">{expandedSections.recommendations ? '▼' : '▶'}</span>
-        </div>
-        {expandedSections.recommendations && (
-          <div className="section-content">
-            <AnalysisRecommendations 
-              recommendations={analysisData.recommendations}
-              loading={loadingStates.recommendations}
-              error={error}
-            />
-          </div>
-        )}
-      </div>
-
-      {/* Modal */}
-      {showModal && selectedAnalysis && (
-        <AnalysisModal
-          analysis={selectedAnalysis}
-          onClose={() => {
-            setShowModal(false);
-            setSelectedAnalysis(null);
-          }}
+      <div className="analysis-content">
+        {/* Filters */}
+        <AnalysisFilters 
+          filters={filters}
+          onFilterChange={handleFilterChange}
           projectId={projectId}
         />
-      )}
+
+        {/* Metrics Section */}
+        <div className={`analysis-section ${expandedSections.metrics ? 'expanded' : 'collapsed'}`}>
+          <div className="section-header" onClick={() => toggleSection('metrics')}>
+            <h3>📊 Metrics</h3>
+            <span className="section-toggle">{expandedSections.metrics ? '▼' : '▶'}</span>
+          </div>
+          {expandedSections.metrics && (
+            <div className="section-content">
+              <AnalysisMetrics 
+                metrics={analysisData.metrics}
+                loading={loadingStates.metrics}
+              />
+            </div>
+          )}
+        </div>
+
+        {/* Charts Section */}
+        <div className={`analysis-section ${expandedSections.charts ? 'expanded' : 'collapsed'}`}>
+          <div className="section-header" onClick={() => toggleSection('charts')}>
+            <h3>📈 Charts</h3>
+            <span className="section-toggle">{expandedSections.charts ? '▼' : '▶'}</span>
+          </div>
+          {expandedSections.charts && (
+            <div className="section-content">
+              <AnalysisCharts 
+                data={analysisData.charts}
+                history={analysisData.history}
+                filters={filters}
+                loading={loadingStates.history}
+              />
+            </div>
+          )}
+        </div>
+
+        {/* History Section */}
+        <div className={`analysis-section ${expandedSections.history ? 'expanded' : 'collapsed'}`}>
+          <div className="section-header" onClick={() => toggleSection('history')}>
+            <h3>📋 History</h3>
+            <span className="section-toggle">{expandedSections.history ? '▼' : '▶'}</span>
+          </div>
+          {expandedSections.history && (
+            <div className="section-content">
+              <AnalysisHistory 
+                history={analysisData.history}
+                onAnalysisSelect={handleAnalysisSelect}
+                loading={loadingStates.history}
+              />
+            </div>
+          )}
+        </div>
+
+        {/* Issues Section */}
+        <div className={`analysis-section ${expandedSections.issues ? 'expanded' : 'collapsed'}`}>
+          <div className="section-header" onClick={() => toggleSection('issues')}>
+            <h3>⚠️ Issues</h3>
+            <span className="section-toggle">{expandedSections.issues ? '▼' : '▶'}</span>
+          </div>
+          {expandedSections.issues && (
+            <div className="section-content">
+              <AnalysisIssues 
+                issues={analysisData.issues}
+                loading={loadingStates.issues}
+                error={error}
+              />
+            </div>
+          )}
+        </div>
+
+        {/* Tech Stack Section */}
+        <div className={`analysis-section ${expandedSections.techStack ? 'expanded' : 'collapsed'}`}>
+          <div className="section-header" onClick={() => toggleSection('techStack')}>
+            <h3>🔧 Tech Stack</h3>
+            <span className="section-toggle">{expandedSections.techStack ? '▼' : '▶'}</span>
+          </div>
+          {expandedSections.techStack && (
+            <div className="section-content">
+              <AnalysisTechStack 
+                techStack={analysisData.techStack}
+                loading={loadingStates.techStack}
+                error={error}
+              />
+            </div>
+          )}
+        </div>
+
+        {/* Architecture Section */}
+        <div className={`analysis-section ${expandedSections.architecture ? 'expanded' : 'collapsed'}`}>
+          <div className="section-header" onClick={() => toggleSection('architecture')}>
+            <h3>🏗️ Architecture</h3>
+            <span className="section-toggle">{expandedSections.architecture ? '▼' : '▶'}</span>
+          </div>
+          {expandedSections.architecture && (
+            <div className="section-content">
+              <AnalysisArchitecture 
+                architecture={analysisData.architecture}
+                loading={loadingStates.architecture}
+                error={error}
+              />
+            </div>
+          )}
+        </div>
+
+        {/* Recommendations Section */}
+        <div className={`analysis-section ${expandedSections.recommendations ? 'expanded' : 'collapsed'}`}>
+          <div className="section-header" onClick={() => toggleSection('recommendations')}>
+            <h3>💡 Recommendations</h3>
+            <span className="section-toggle">{expandedSections.recommendations ? '▼' : '▶'}</span>
+          </div>
+          {expandedSections.recommendations && (
+            <div className="section-content">
+              <AnalysisRecommendations 
+                recommendations={analysisData.recommendations}
+                loading={loadingStates.recommendations}
+                error={error}
+              />
+            </div>
+          )}
+        </div>
+
+        {/* Modal */}
+        {showModal && selectedAnalysis && (
+          <AnalysisModal
+            analysis={selectedAnalysis}
+            onClose={() => {
+              setShowModal(false);
+              setSelectedAnalysis(null);
+            }}
+            projectId={projectId}
+          />
+        )}
+      </div>
     </div>
   );
 };

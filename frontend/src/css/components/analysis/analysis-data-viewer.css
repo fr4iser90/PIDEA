@@ -1,12 +1,33 @@
 /* Analysis Data Viewer - Main Component Styles */
 
+/* Sticky Header und Scrollable Content */
 .analysis-data-viewer {
+  height: 100vh;
   display: flex;
   flex-direction: column;
-  height: 100%;
-  background: var(--bg-primary, #ffffff);
-  color: var(--text-primary, #333333);
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  overflow: hidden;
+  background: var(--bg-primary, #181f2a);
+}
+
+.analysis-header {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  background: var(--bg-primary, #181f2a);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  padding-bottom: 8px;
+}
+
+.analysis-content {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  min-height: 0;
+  padding-bottom: 32px;
+}
+
+/* Optional: Passe die Sections an, falls nötig */
+.analysis-section {
+  margin-bottom: 24px;
 }
 
 /* Loading State */
@@ -76,15 +97,6 @@
 }
 
 /* Header Section */
-.analysis-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 1.5rem;
-  border-bottom: 1px solid var(--border-color, #e5e7eb);
-  background: var(--header-bg, #f9fafb);
-}
-
 .analysis-title {
   display: flex;
   align-items: center;
@@ -260,6 +272,13 @@
 
   .analysis-data-viewer > *:not(.analysis-header) {
     padding: 1rem;
+  }
+}
+
+/* Responsive Anpassungen */
+@media (max-width: 900px) {
+  .analysis-data-viewer {
+    height: 100dvh;
   }
 }
 
