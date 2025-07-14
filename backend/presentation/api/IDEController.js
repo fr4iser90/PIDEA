@@ -544,18 +544,25 @@ class IDEController {
         // Also clear the actual files on disk
         const fs = require('fs');
         const path = require('path');
-const Logger = require('@logging/Logger');
-const logger = new Logger('Logger');
         const cacheDir = `/tmp/IDEWEB/${portNum}`;
         
         if (fs.existsSync(cacheDir)) {
           try {
-            // Delete all files in the cache directory
+            // Delete all files and directories in the cache directory
             const files = fs.readdirSync(cacheDir);
             for (const file of files) {
               const filePath = path.join(cacheDir, file);
-              fs.unlinkSync(filePath);
-              logger.log(`[IDEController] Deleted cached file: ${filePath}`);
+              const stats = fs.statSync(filePath);
+              
+              if (stats.isDirectory()) {
+                // Recursively delete directory
+                fs.rmSync(filePath, { recursive: true, force: true });
+                logger.log(`[IDEController] Deleted cached directory: ${filePath}`);
+              } else {
+                // Delete file
+                fs.unlinkSync(filePath);
+                logger.log(`[IDEController] Deleted cached file: ${filePath}`);
+              }
             }
             logger.log(`[IDEController] Cleared disk cache for port ${portNum}`);
           } catch (error) {
