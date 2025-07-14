@@ -94,6 +94,18 @@ class IDEController {
         });
       }
       
+      // Validate port before switching
+      if (this.ideManager.portManager) {
+        const isValid = await this.ideManager.portManager.validatePort(port);
+        if (!isValid) {
+          logger.error('[IDEController] Port validation failed:', port);
+          return res.status(400).json({
+            success: false,
+            error: 'Port validation failed'
+          });
+        }
+      }
+      
       const result = await this.ideManager.switchToIDE(port);
       logger.log('[IDEController] ideManager.switchToIDE completed, result:', result);
       logger.log('[IDEController] New active port after switch:', this.ideManager.getActivePort());

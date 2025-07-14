@@ -1,5 +1,6 @@
 import { logger } from "@/infrastructure/logging/Logger";
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import React, { createContext, useContext, useEffect, useState } from 'react';
+import useIDEStore from '@/infrastructure/stores/IDEStore.jsx';
 import { apiCall } from '@/infrastructure/repositories/APIChatRepository.jsx';
 
 // Create IDE Context
@@ -7,10 +8,18 @@ const IDEContext = createContext();
 
 // IDE Context Provider
 export const IDEProvider = ({ children, eventBus }) => {
-  const [activePort, setActivePort] = useState(null);
-  const [availableIDEs, setAvailableIDEs] = useState([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState(null);
+  const {
+    activePort,
+    availableIDEs,
+    isLoading,
+    error,
+    loadActivePort,
+    loadAvailableIDEs,
+    switchIDE,
+    refresh,
+    clearError
+  } = useIDEStore();
+  
   const [ideFeatures, setIdeFeatures] = useState({});
   const [ideStatus, setIdeStatus] = useState({});
 
@@ -71,39 +80,6 @@ export const IDEProvider = ({ children, eventBus }) => {
   }, [eventBus, activePort]);
 
   /**
-   * Load available IDEs from API
-   */
-  const loadAvailableIDEs = async () => {
-    try {
-      setIsLoading(true);
-      setError(null);
-
-      const result = await apiCall('/api/ide/available');
-      if (result.success) {
-        const ides = result.data.ides || result.data || [];
-        setAvailableIDEs(ides);
-
-        // Set active IDE if none is selected
-        if (!activePort && ides.length > 0) {
-          const activeIDE = ides.find(ide => ide.active || ide.isSelected);
-          if (activeIDE) {
-            setActivePort(activeIDE.port);
-            loadIdeFeatures(activeIDE.port);
-            loadIdeStatus(activeIDE.port);
-          }
-        }
-      } else {
-        throw new Error(result.error || 'Failed to load IDEs');
-      }
-    } catch (error) {
-      logger.error('[IDEContext] Error loading IDEs:', error);
-      setError(error.message);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  /**
    * Load IDE features
    */
   const loadIdeFeatures = async (port) => {
@@ -136,46 +112,10 @@ export const IDEProvider = ({ children, eventBus }) => {
   };
 
   /**
-   * Switch to a different IDE
-   */
-  const switchIDE = async (port, reason = 'manual') => {
-    try {
-      setIsLoading(true);
-      setError(null);
-
-      const result = await apiCall('/api/ide/selection', {
-        method: 'POST',
-        body: JSON.stringify({ port, reason })
-      });
-
-      if (result.success) {
-        setActivePort(port);
-        loadIdeFeatures(port);
-        loadIdeStatus(port);
-
-        // Emit event
-        if (eventBus) {
-          eventBus.emit('ideSwitched', { fromPort: activePort, toPort: port, reason });
-        }
-      } else {
-        throw new Error(result.error || 'Failed to switch IDE');
-      }
-    } catch (error) {
-      logger.error('[IDEContext] Error switching IDE:', error);
-      setError(error.message);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  /**
    * Start a new IDE
    */
   const startNewIDE = async () => {
     try {
-      setIsLoading(true);
-      setError(null);
-
       const result = await apiCall('/api/ide/start', {
         method: 'POST',
         body: JSON.stringify({})
@@ -194,9 +134,7 @@ export const IDEProvider = ({ children, eventBus }) => {
       }
     } catch (error) {
       logger.error('[IDEContext] Error starting new IDE:', error);
-      setError(error.message);
-    } finally {
-      setIsLoading(false);
+      clearError();
     }
   };
 
@@ -205,9 +143,6 @@ export const IDEProvider = ({ children, eventBus }) => {
    */
   const stopIDE = async (port) => {
     try {
-      setIsLoading(true);
-      setError(null);
-
       const result = await apiCall('/api/ide/stop', {
         method: 'POST',
         body: JSON.stringify({ port })
@@ -219,7 +154,6 @@ export const IDEProvider = ({ children, eventBus }) => {
         
         // If we stopped the active IDE, clear it
         if (port === activePort) {
-          setActivePort(null);
           setIdeFeatures({});
           setIdeStatus({});
         }
@@ -228,9 +162,7 @@ export const IDEProvider = ({ children, eventBus }) => {
       }
     } catch (error) {
       logger.error('[IDEContext] Error stopping IDE:', error);
-      setError(error.message);
-    } finally {
-      setIsLoading(false);
+      clearError();
     }
   };
 

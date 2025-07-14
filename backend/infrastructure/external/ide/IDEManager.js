@@ -9,6 +9,7 @@ const IDEDetectorFactory = require('./IDEDetectorFactory');
 const IDEStarterFactory = require('./IDEStarterFactory');
 const IDEConfigManager = require('./IDEConfigManager');
 const IDEHealthMonitor = require('./IDEHealthMonitor');
+const IDEPortManager = require('@services/IDEPortManager');
 const path = require('path');
 const FileBasedWorkspaceDetector = require('@services/workspace/FileBasedWorkspaceDetector');
 const Logger = require('@logging/Logger');
@@ -23,6 +24,9 @@ class IDEManager {
     // Initialize configuration and health monitoring
     this.configManager = new IDEConfigManager();
     this.healthMonitor = new IDEHealthMonitor(this.configManager);
+    
+    // Initialize port manager
+    this.portManager = new IDEPortManager(this, eventBus);
     
     // Initialize workspace detection (only if browserManager is provided)
     this.fileDetector = null;
@@ -96,10 +100,11 @@ class IDEManager {
         }
       });
 
-      // Set first available IDE as active
+      // Use port manager to select active port
       if (existingIDEs.length > 0) {
-        this.activePort = existingIDEs[0].port;
-        logger.log('[IDEManager] Set active IDE to port', this.activePort);
+        await this.portManager.initialize();
+        this.activePort = this.portManager.getActivePort();
+        logger.log('[IDEManager] Port manager selected active IDE on port', this.activePort);
       }
 
       // Detect workspace paths for existing IDEs
@@ -257,26 +262,14 @@ class IDEManager {
 
     logger.log('[IDEManager] Switching to IDE on port', port);
     
-    const availableIDEs = await this.getAvailableIDEs();
-    logger.log('[IDEManager] Available IDEs:', availableIDEs.map(ide => ({ port: ide.port, status: ide.status, active: ide.active })));
-    
-    const targetIDE = availableIDEs.find(ide => ide.port === port);
-    logger.log('[IDEManager] Target IDE found:', targetIDE ? { port: targetIDE.port, status: targetIDE.status } : 'NOT FOUND');
-    
-    if (!targetIDE) {
-      throw new Error(`No IDE found on port ${port}`);
+    // Use port manager to validate and set active port
+    const success = await this.portManager.setActivePort(port);
+    if (!success) {
+      throw new Error(`Failed to switch to IDE on port ${port}`);
     }
     
-    if (targetIDE.status !== 'running') {
-      throw new Error(`IDE on port ${port} is not running`);
-    }
-    
-    const previousPort = this.activePort;
-    this.activePort = port;
-    logger.log('[IDEManager] Previous active port:', previousPort);
-    logger.log('[IDEManager] New active port:', this.activePort);
-    logger.log('[IDEManager] Successfully switched to IDE on port', port);
-    logger.log('[IDEManager] Instance ID:', this.constructor.name + '_' + Math.random().toString(36).substr(2, 9));
+    // Update local state
+    this.activePort = this.portManager.getActivePort();
     
     // Update the active status in ideStatus map
     if (this.ideStatus.has(port)) {
@@ -288,11 +281,23 @@ class IDEManager {
       this.ideStatus.set(port, 'active');
     }
     
+    // Switch browser manager to the new port
+    if (this.browserManager) {
+      try {
+        await this.browserManager.switchToPort(port);
+        logger.log('[IDEManager] Browser manager switched to port', port);
+      } catch (error) {
+        logger.warn('[IDEManager] Failed to switch browser manager to port', port, ':', error.message);
+      }
+    }
+    
+    logger.log('[IDEManager] Successfully switched to IDE on port', port);
+    
     return {
       port: port,
       status: 'active',
       workspacePath: this.ideWorkspaces.get(port) || null,
-      previousPort: previousPort
+      previousPort: this.activePort
     };
   }
 
@@ -636,7 +641,16 @@ class IDEManager {
    * @returns {number|null} Active port
    */
   getActivePort() {
-    // If activePort is not set, try to find it from ideStatus
+    // Use port manager as primary source
+    if (this.portManager) {
+      const portManagerPort = this.portManager.getActivePort();
+      if (portManagerPort) {
+        this.activePort = portManagerPort;
+        return this.activePort;
+      }
+    }
+    
+    // Fallback to local state
     if (!this.activePort) {
       for (const [port, status] of this.ideStatus) {
         if (status === 'active') {

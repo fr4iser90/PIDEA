@@ -12,6 +12,7 @@ import Header from '@/presentation/components/Header.jsx';
 import Footer from '@/presentation/components/Footer.jsx';
 import NotificationSystem from '@/presentation/components/common/NotificationSystem.jsx';
 import useAuthStore from '@/infrastructure/stores/AuthStore.jsx';
+import useIDEStore from '@/infrastructure/stores/IDEStore.jsx';
 import { apiCall } from '@/infrastructure/repositories/APIChatRepository.jsx';
 import { IDEProvider } from '@/presentation/components/ide/IDEContext.jsx';
 
@@ -20,7 +21,6 @@ function App() {
   const [currentView, setCurrentView] = useState('chat');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [activePort, setActivePort] = useState(null);
   const [isSplitView, setIsSplitView] = useState(false);
   const [isLeftSidebarVisible, setIsLeftSidebarVisible] = useState(true);
   const [isRightSidebarVisible, setIsRightSidebarVisible] = useState(true);
@@ -29,6 +29,19 @@ function App() {
   const [attachedPrompts, setAttachedPrompts] = useState([]);
   const containerRef = useRef(null);
   const { isAuthenticated } = useAuthStore();
+  
+  // Use IDEStore for port management
+  const {
+    activePort,
+    availableIDEs,
+    isLoading: ideLoading,
+    error: ideError,
+    loadActivePort,
+    loadAvailableIDEs,
+    setActivePort,
+    refresh: refreshIDE,
+    clearError: clearIDEError
+  } = useIDEStore();
 
   useEffect(() => {
     logger.log('🔄 App initializing...');
@@ -76,34 +89,15 @@ function App() {
     logger.log('✅ App ready');
   };
 
-  const fetchActivePort = async () => {
-    try {
-      const result = await apiCall('/api/ide/available');
-      if (result.success && result.data) {
-        // Look for active IDE first, then fallback to first available
-        const activeIDE = result.data.find(ide => ide.active) || result.data[0];
-        if (activeIDE) {
-          setActivePort(activeIDE.port);
-          logger.log('✅ Active IDE port loaded:', activeIDE.port);
-        } else {
-          logger.log('⚠️ No IDE available');
-        }
-      }
-    } catch (e) {
-      logger.error('❌ Failed to load IDE list:', e.message);
-      // Don't set error for IDE loading - it's not critical
-    }
-  };
-
   // Load active port on mount
   useEffect(() => {
-    fetchActivePort();
+    loadActivePort();
   }, []);
 
   // Retry loading active port when authentication changes
   useEffect(() => {
     if (isAuthenticated) {
-      fetchActivePort();
+      loadActivePort();
     }
   }, [isAuthenticated]);
 
@@ -111,7 +105,8 @@ function App() {
     if (!eventBus) return;
     const handleActiveIDEChanged = (data) => {
       if (data && data.port) {
-        setActivePort(data.port);
+        // IDEStore will handle the port change automatically
+        logger.log('[App] Active IDE changed event received:', data.port);
       }
     };
     eventBus.on('activeIDEChanged', handleActiveIDEChanged);
