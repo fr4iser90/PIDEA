@@ -29,8 +29,8 @@ Integrate the frontend analysis components with existing backend systems, connec
   - All analysis types are supported
 
 ### Task 2: Connect Analysis Data to Database Results (1 hour)
-- [ ] **File**: `frontend/src/hooks/useAnalysisData.js`
-- [ ] **Action**: Enhance custom hook to work with database results
+- [ ] **Files**: All analysis components
+- [ ] **Action**: Connect components to database results
 - [ ] **Details**:
   - Connect to analysis_results table data
   - Implement data transformation for frontend
@@ -139,21 +139,22 @@ class APIChatRepository {
 }
 ```
 
-### Enhanced Custom Hook
+### Component Data Integration
 ```javascript
-// useAnalysisData.js
-import { useState, useEffect, useCallback } from 'react';
+// AnalysisPanelComponent.jsx
+import React, { useState, useEffect } from 'react';
+import { logger } from '@/infrastructure/logging/Logger';
 import APIChatRepository from '@/infrastructure/repositories/APIChatRepository';
 
-export const useAnalysisData = (projectId) => {
-  const [data, setData] = useState(null);
+const AnalysisPanelComponent = ({ projectId = null }) => {
+  const [analysisData, setAnalysisData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [status, setStatus] = useState(null);
   
   const api = new APIChatRepository();
 
-  const fetchData = useCallback(async () => {
+  const fetchAnalysisData = async () => {
     if (!projectId) return;
     
     try {
@@ -162,18 +163,19 @@ export const useAnalysisData = (projectId) => {
       
       const response = await api.getAnalysisData(projectId);
       if (response.success) {
-        setData(response.data);
+        setAnalysisData(response.data);
       } else {
         setError(response.error);
       }
     } catch (err) {
       setError(err.message);
+      logger.error('[AnalysisPanelComponent] Failed to fetch data:', err);
     } finally {
       setLoading(false);
     }
-  }, [projectId]);
+  };
 
-  const pollStatus = useCallback(async () => {
+  const pollStatus = async () => {
     if (!projectId) return;
     
     try {
@@ -182,46 +184,63 @@ export const useAnalysisData = (projectId) => {
         setStatus(response.data);
       }
     } catch (err) {
-      console.error('Status polling error:', err);
+      logger.error('[AnalysisPanelComponent] Status polling error:', err);
     }
-  }, [projectId]);
+  };
 
   useEffect(() => {
-    fetchData();
+    fetchAnalysisData();
     
     // Set up status polling
     const interval = setInterval(pollStatus, 5000);
     return () => clearInterval(interval);
-  }, [fetchData, pollStatus]);
+  }, [projectId]);
 
-  return {
-    data,
-    loading,
-    error,
-    status,
-    refreshData: fetchData
-  };
+  return (
+    <div className="enhanced-analysis-panel">
+      <AnalysisStatus status={status} />
+      <AnalysisMetrics data={analysisData} loading={loading} error={error} />
+      <AnalysisCharts data={analysisData} loading={loading} error={error} />
+      <AnalysisHistory 
+        data={analysisData} 
+        loading={loading}
+        error={error}
+        onRefresh={fetchAnalysisData}
+      />
+    </div>
+  );
 };
 ```
 
 ### Sidebar Integration
 ```javascript
 // SidebarRight.jsx
-import EnhancedAnalysisPanel from './chat/sidebar-right/AnalysisPanelComponent';
+import React, { useState } from 'react';
+import AnalysisPanelComponent from './chat/sidebar-right/AnalysisPanelComponent.jsx';
 
 function SidebarRight({ eventBus, attachedPrompts, setAttachedPrompts, activePort }) {
-  // ... existing code ...
+  const [currentTab, setCurrentTab] = useState('tasks');
 
   return (
     <div className="sidebar-right-content">
-      {/* ... existing tabs ... */}
+      <div className="panel-header">
+        <div className="panel-tabs">
+          <button className={`tab-btn${currentTab === 'tasks' ? ' active' : ''}`} onClick={() => setCurrentTab('tasks')}>🗂️ Tasks</button>
+          <button className={`tab-btn${currentTab === 'auto' ? ' active' : ''}`} onClick={() => setCurrentTab('auto')}>🤖 Auto</button>
+          <button className={`tab-btn${currentTab === 'frameworks' ? ' active' : ''}`} onClick={() => setCurrentTab('frameworks')}>🧩 Frameworks</button>
+          <button className={`tab-btn${currentTab === 'prompts' ? ' active' : ''}`} onClick={() => setCurrentTab('prompts')}>💬 Prompts</button>
+          <button className={`tab-btn${currentTab === 'templates' ? ' active' : ''}`} onClick={() => setCurrentTab('templates')}>📋 Templates</button>
+          <button className={`tab-btn${currentTab === 'analysis' ? ' active' : ''}`} onClick={() => setCurrentTab('analysis')}>📊 Analysis</button>
+          <button className={`tab-btn${currentTab === 'settings' ? ' active' : ''}`} onClick={() => setCurrentTab('settings')}>⚙️ Settings</button>
+        </div>
+      </div>
       <div className="panel-content">
         {currentTab === 'tasks' && <TasksPanelComponent eventBus={eventBus} activePort={activePort} />}
         {currentTab === 'auto' && <AutoPanelComponent eventBus={eventBus} />}
         {currentTab === 'frameworks' && <FrameworksPanelComponent />}
         {currentTab === 'prompts' && <PromptsPanelComponent attachedPrompts={attachedPrompts} setAttachedPrompts={setAttachedPrompts} />}
         {currentTab === 'templates' && <TemplatesPanelComponent />}
-        {currentTab === 'analysis' && <EnhancedAnalysisPanel projectId={activePort} />}
+        {currentTab === 'analysis' && <AnalysisPanelComponent projectId={activePort} />}
         {currentTab === 'settings' && <div className="settings-tab">Settings Panel (TODO)</div>}
       </div>
     </div>
@@ -259,6 +278,7 @@ function SidebarRight({ eventBus, attachedPrompts, setAttachedPrompts, activePor
 - Consider implementing optimistic updates
 - Plan for offline functionality if needed
 - Monitor API rate limits and performance
+- Use existing logger for all logging operations
 
 ## 🚀 Next Phase
 After completing Phase 3, proceed to [Phase 4: Testing & Documentation](./analysis-data-viewer-phase-4.md) for comprehensive testing and documentation. 

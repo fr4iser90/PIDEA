@@ -5,7 +5,7 @@
 - **Category**: frontend
 - **Priority**: Medium
 - **Status**: Planning
-- **Total Estimated Time**: 16 hours
+- **Total Estimated Time**: 12 hours
 - **Created**: 2024-12-19
 - **Last Updated**: 2024-12-19
 
@@ -27,11 +27,11 @@ docs/09_roadmap/features/frontend/analysis-data-viewer/
 ## 📊 Phase Breakdown
 | Phase | File | Status | Time | Progress |
 |-------|------|--------|------|----------|
-| 1 | [Phase 1](./analysis-data-viewer-phase-1.md) | Planning | 4h | 0% |
-| 2 | [Phase 2](./analysis-data-viewer-phase-2.md) | Planning | 6h | 0% |
+| 1 | [Phase 1](./analysis-data-viewer-phase-1.md) | Planning | 3h | 0% |
+| 2 | [Phase 2](./analysis-data-viewer-phase-2.md) | Planning | 4h | 0% |
 | 3 | [Phase 3](./analysis-data-viewer-phase-3.md) | Planning | 3h | 0% |
-| 4 | [Phase 4](./analysis-data-viewer-phase-4.md) | Planning | 2h | 0% |
-| 5 | [Phase 5](./analysis-data-viewer-phase-5.md) | Planning | 1h | 0% |
+| 4 | [Phase 4](./analysis-data-viewer-phase-4.md) | Planning | 1.5h | 0% |
+| 5 | [Phase 5](./analysis-data-viewer-phase-5.md) | Planning | 0.5h | 0% |
 
 ## 🔄 Subtask Management
 ### Active Subtasks
@@ -78,10 +78,12 @@ docs/09_roadmap/features/frontend/analysis-data-viewer/
 - ✅ **API Endpoint Verification**: Confirmed existing analysis endpoints are functional
 - ✅ **Database Schema Validation**: Verified project_analyses table exists
 - ✅ **Component Analysis**: Found existing AnalysisPanelComponent that can be enhanced
-- ⚠️ **Missing Components Identified**: 8 new files need to be created
+- ⚠️ **Missing Components Identified**: 10 new files need to be created
 - ⚠️ **API Methods Missing**: 3 new methods need to be added to APIChatRepository
-- 📊 **Task Size Assessment**: 16-hour task is appropriately sized, no splitting needed
+- 📊 **Task Size Assessment**: 12-hour task is appropriately sized, no splitting needed
 - 🔧 **Implementation Plan Updated**: Corrected file paths and technical specifications
+- 🔧 **Time Estimates Adjusted**: Reduced from 16 to 12 hours based on actual complexity
+- 🔧 **Architecture Patterns Corrected**: Removed incorrect hook assumptions, aligned with existing patterns
 
 ## 🚀 Quick Actions
 - [View Implementation Plan](./analysis-data-viewer-implementation.md)
@@ -99,7 +101,7 @@ docs/09_roadmap/features/frontend/analysis-data-viewer/
 ## 🔧 Technical Stack
 - **Frontend**: React, JavaScript, CSS
 - **Charts**: Chart.js or similar visualization library
-- **State Management**: React hooks and context
+- **State Management**: React hooks and existing patterns
 - **API Integration**: Existing analysis endpoints
 - **Database**: Existing analysis_results table
 
