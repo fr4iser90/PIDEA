@@ -610,7 +610,7 @@ class AnalysisController {
       const issues = [];
       
       // Code quality issues
-      if (resultData.codeQuality?.issues) {
+      if (resultData.codeQuality?.issues && Array.isArray(resultData.codeQuality.issues)) {
         issues.push(...resultData.codeQuality.issues.map(issue => ({
           ...issue,
           source: 'code-quality',
@@ -619,7 +619,7 @@ class AnalysisController {
       }
       
       // Security issues
-      if (resultData.security?.vulnerabilities) {
+      if (resultData.security?.vulnerabilities && Array.isArray(resultData.security.vulnerabilities)) {
         issues.push(...resultData.security.vulnerabilities.map(issue => ({
           ...issue,
           source: 'security',
@@ -628,7 +628,7 @@ class AnalysisController {
       }
       
       // Architecture issues
-      if (resultData.architecture?.violations) {
+      if (resultData.architecture?.violations && Array.isArray(resultData.architecture.violations)) {
         issues.push(...resultData.architecture.violations.map(issue => ({
           ...issue,
           source: 'architecture',
@@ -637,7 +637,7 @@ class AnalysisController {
       }
       
       // Layer validation issues
-      if (resultData.layerValidation?.violations) {
+      if (resultData.layerValidation?.violations && Array.isArray(resultData.layerValidation.violations)) {
         issues.push(...resultData.layerValidation.violations.map(issue => ({
           ...issue,
           source: 'layer-validation',
@@ -646,7 +646,7 @@ class AnalysisController {
       }
       
       // Logic validation issues
-      if (resultData.logicValidation?.violations) {
+      if (resultData.logicValidation?.violations && Array.isArray(resultData.logicValidation.violations)) {
         issues.push(...resultData.logicValidation.violations.map(issue => ({
           ...issue,
           source: 'logic-validation',
@@ -799,7 +799,7 @@ class AnalysisController {
       const recommendations = [];
       
       // Code quality recommendations
-      if (resultData.codeQuality?.recommendations) {
+      if (resultData.codeQuality?.recommendations && Array.isArray(resultData.codeQuality.recommendations)) {
         recommendations.push(...resultData.codeQuality.recommendations.map(rec => ({
           ...rec,
           source: 'code-quality',
@@ -808,7 +808,7 @@ class AnalysisController {
       }
       
       // Security recommendations
-      if (resultData.security?.recommendations) {
+      if (resultData.security?.recommendations && Array.isArray(resultData.security.recommendations)) {
         recommendations.push(...resultData.security.recommendations.map(rec => ({
           ...rec,
           source: 'security',
@@ -817,7 +817,7 @@ class AnalysisController {
       }
       
       // Architecture recommendations
-      if (resultData.architecture?.recommendations) {
+      if (resultData.architecture?.recommendations && Array.isArray(resultData.architecture.recommendations)) {
         recommendations.push(...resultData.architecture.recommendations.map(rec => ({
           ...rec,
           source: 'architecture',
@@ -826,7 +826,7 @@ class AnalysisController {
       }
       
       // Summary recommendations
-      if (summary.recommendations) {
+      if (summary.recommendations && Array.isArray(summary.recommendations)) {
         recommendations.push(...summary.recommendations.map(rec => ({
           ...rec,
           source: 'summary',
@@ -842,7 +842,7 @@ class AnalysisController {
       
       // Extract insights
       const insights = [];
-      if (resultData.integratedInsights) {
+      if (resultData.integratedInsights && Array.isArray(resultData.integratedInsights)) {
         insights.push(...resultData.integratedInsights);
       }
       

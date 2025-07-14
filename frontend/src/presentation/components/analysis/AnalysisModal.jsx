@@ -12,7 +12,7 @@ const AnalysisModal = ({ analysis, onClose, projectId }) => {
   const apiRepository = new APIChatRepository();
 
   useEffect(() => {
-    if (analysis && analysis.filename) {
+    if (analysis) {
       loadAnalysisContent();
     }
   }, [analysis]);
@@ -22,13 +22,29 @@ const AnalysisModal = ({ analysis, onClose, projectId }) => {
       setLoading(true);
       setError(null);
       
-      const currentProjectId = projectId || await apiRepository.getCurrentProjectId();
-      const response = await apiRepository.getAnalysisFile(currentProjectId, analysis.filename);
+      // Use data directly from analysis object if available
+      if (analysis.data || analysis.report) {
+        setAnalysisContent({
+          data: analysis.data,
+          report: analysis.report,
+          metadata: analysis.metadata
+        });
+        setLoading(false);
+        return;
+      }
       
-      if (response.success) {
-        setAnalysisContent(response.data);
+      // Fallback: try to load from file if filename exists
+      if (analysis.filename) {
+        const currentProjectId = projectId || await apiRepository.getCurrentProjectId();
+        const response = await apiRepository.getAnalysisFile(currentProjectId, analysis.filename);
+        
+        if (response.success) {
+          setAnalysisContent(response.data);
+        } else {
+          setError('Failed to load analysis content');
+        }
       } else {
-        setError('Failed to load analysis content');
+        setError('No analysis data available');
       }
     } catch (err) {
       setError('Error loading analysis content: ' + err.message);
@@ -102,6 +118,30 @@ const AnalysisModal = ({ analysis, onClose, projectId }) => {
       return (
         <div className="content-text">
           <pre className="content-pre">{analysisContent}</pre>
+        </div>
+      );
+    } else if (analysisContent && typeof analysisContent === 'object') {
+      // Structured analysis content
+      return (
+        <div className="content-structured">
+          {analysisContent.data && (
+            <div className="content-section">
+              <h4>📊 Analysis Data</h4>
+              <pre className="json-pre">{JSON.stringify(analysisContent.data, null, 2)}</pre>
+            </div>
+          )}
+          {analysisContent.report && (
+            <div className="content-section">
+              <h4>📄 Report</h4>
+              <pre className="json-pre">{JSON.stringify(analysisContent.report, null, 2)}</pre>
+            </div>
+          )}
+          {analysisContent.metadata && (
+            <div className="content-section">
+              <h4>ℹ️ Metadata</h4>
+              <pre className="json-pre">{JSON.stringify(analysisContent.metadata, null, 2)}</pre>
+            </div>
+          )}
         </div>
       );
     } else {
