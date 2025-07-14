@@ -751,6 +751,12 @@ class Application {
     this.app.post('/api/projects/:projectId/git/merge', (req, res) => this.gitController.merge(req, res));
     this.app.post('/api/projects/:projectId/git/create-branch', (req, res) => this.gitController.createBranch(req, res));
     this.app.post('/api/projects/:projectId/git/info', (req, res) => this.gitController.getRepositoryInfo(req, res));
+    
+    // Pidea-Agent Git routes (protected) - PROJECT-BASED
+    this.app.post('/api/projects/:projectId/git/pull-pidea-agent', (req, res) => this.gitController.pullPideaAgent(req, res));
+    this.app.post('/api/projects/:projectId/git/merge-to-pidea-agent', (req, res) => this.gitController.mergeToPideaAgent(req, res));
+    this.app.post('/api/projects/:projectId/git/pidea-agent-status', (req, res) => this.gitController.getPideaAgentStatus(req, res));
+    this.app.post('/api/projects/:projectId/git/compare-pidea-agent', (req, res) => this.gitController.compareWithPideaAgent(req, res));
 
     // Terminal Log routes (protected)
     this.app.use('/api/terminal-logs/:port', this.authMiddleware.authenticate());

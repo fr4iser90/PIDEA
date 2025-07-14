@@ -2,6 +2,7 @@ import { logger } from "@/infrastructure/logging/Logger";
 import React, { useState, useEffect } from 'react';
 import '@/css/main/git.css';
 import { apiCall } from '@/infrastructure/repositories/APIChatRepository.jsx';
+import PideaAgentBranchComponent from '../pidea-agent/PideaAgentBranchComponent.jsx';
 
 // Utility function to convert workspace path to project ID
 const getProjectIdFromWorkspace = (workspacePath) => {
@@ -24,6 +25,7 @@ const GitManagementComponent = ({ activePort, onGitOperation, onGitStatusChange 
   const [showDiff, setShowDiff] = useState(false);
   const [diffContent, setDiffContent] = useState('');
   const [workspacePath, setWorkspacePath] = useState('');
+  const [showPideaAgent, setShowPideaAgent] = useState(false);
 
   useEffect(() => {
     if (activePort) {
@@ -266,6 +268,16 @@ const GitManagementComponent = ({ activePort, onGitOperation, onGitStatusChange 
             <span className="btn-icon">🔀</span>
             <span className="btn-text">Merge</span>
           </button>
+
+          <button
+            onClick={() => setShowPideaAgent(!showPideaAgent)}
+            className="git-btn pidea-agent-toggle-btn"
+            disabled={isLoading}
+            title="Toggle Pidea-Agent branch management"
+          >
+            <span className="btn-icon">🤖</span>
+            <span className="btn-text">Pidea-Agent</span>
+          </button>
         </div>
       </div>
 
@@ -345,6 +357,33 @@ const GitManagementComponent = ({ activePort, onGitOperation, onGitStatusChange 
               <pre className="diff-text">{diffContent}</pre>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* Pidea-Agent Branch Management */}
+      {showPideaAgent && (
+        <div className="pidea-agent-section">
+          <div className="pidea-agent-header">
+            <h3>🤖 Pidea-Agent Branch Management</h3>
+            <button 
+              className="close-btn"
+              onClick={() => setShowPideaAgent(false)}
+            >
+              ✕
+            </button>
+          </div>
+          <PideaAgentBranchComponent
+            activePort={activePort}
+            onPideaAgentOperation={(operation, result) => {
+              logger.info('Pidea-Agent operation completed:', operation, result);
+              // Refresh git status after pidea-agent operation
+              loadGitStatus();
+              loadBranches();
+            }}
+            onPideaAgentStatusChange={(status) => {
+              logger.info('Pidea-Agent status changed:', status);
+            }}
+          />
         </div>
       )}
 

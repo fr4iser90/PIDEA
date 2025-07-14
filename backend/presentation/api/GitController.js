@@ -675,6 +675,354 @@ class GitController {
             });
         }
     }
+
+    /**
+     * Pull from pidea-agent branch
+     * POST /api/projects/:projectId/git/pull-pidea-agent
+     */
+    async pullPideaAgent(req, res) {
+        try {
+            const projectId = req.params.projectId;
+            const { projectPath, remote = 'origin', force = false } = req.body;
+            const userId = req.user?.id;
+
+            if (!projectId) {
+                return res.status(400).json({
+                    success: false,
+                    error: 'Project ID is required'
+                });
+            }
+
+            if (!projectPath) {
+                return res.status(400).json({
+                    success: false,
+                    error: 'Project path is required'
+                });
+            }
+
+            this.logger.info('GitController: Pulling from pidea-agent branch', { 
+                projectId,
+                projectPath, 
+                remote, 
+                force, 
+                userId 
+            });
+
+            // Check current branch
+            const currentBranch = await this.gitService.getCurrentBranch(projectPath);
+            
+            // Switch to pidea-agent branch if needed
+            if (currentBranch !== 'pidea-agent') {
+                await this.gitService.checkoutBranch(projectPath, 'pidea-agent');
+            }
+
+            // Pull changes from pidea-agent branch
+            const result = await this.gitService.pullChanges(projectPath, {
+                remote,
+                branch: 'pidea-agent',
+                force
+            });
+
+            if (this.eventBus) {
+                this.eventBus.publish('git.pidea-agent.pull.completed', {
+                    projectPath,
+                    remote,
+                    force,
+                    result: result.success,
+                    userId,
+                    timestamp: new Date()
+                });
+            }
+
+            res.json({
+                success: true,
+                data: {
+                    output: result.output,
+                    branch: 'pidea-agent',
+                    remote,
+                    changes: result.changes || []
+                },
+                message: 'Successfully pulled from pidea-agent branch'
+            });
+
+        } catch (error) {
+            this.logger.error('GitController: Failed to pull from pidea-agent branch', {
+                projectPath: req.body.projectPath,
+                remote: req.body.remote,
+                error: error.message,
+                userId: req.user?.id
+            });
+
+            res.status(500).json({
+                success: false,
+                error: 'Failed to pull from pidea-agent branch',
+                message: error.message
+            });
+        }
+    }
+
+    /**
+     * Merge to pidea-agent branch
+     * POST /api/projects/:projectId/git/merge-to-pidea-agent
+     */
+    async mergeToPideaAgent(req, res) {
+        try {
+            const projectId = req.params.projectId;
+            const { projectPath, sourceBranch } = req.body;
+            const userId = req.user?.id;
+
+            if (!projectId) {
+                return res.status(400).json({
+                    success: false,
+                    error: 'Project ID is required'
+                });
+            }
+
+            if (!projectPath || !sourceBranch) {
+                return res.status(400).json({
+                    success: false,
+                    error: 'Project path and source branch are required'
+                });
+            }
+
+            this.logger.info('GitController: Merging to pidea-agent branch', { 
+                projectId,
+                projectPath, 
+                sourceBranch, 
+                userId 
+            });
+
+            // Check current branch
+            const currentBranch = await this.gitService.getCurrentBranch(projectPath);
+            
+            // Switch to pidea-agent branch
+            if (currentBranch !== 'pidea-agent') {
+                await this.gitService.checkoutBranch(projectPath, 'pidea-agent');
+            }
+
+            // Pull latest changes from pidea-agent
+            await this.gitService.pullChanges(projectPath, { branch: 'pidea-agent' });
+
+            // Merge source branch into pidea-agent
+            const result = await this.gitService.mergeBranch(projectPath, sourceBranch);
+
+            if (this.eventBus) {
+                this.eventBus.publish('git.pidea-agent.merge.completed', {
+                    projectPath,
+                    sourceBranch,
+                    result: result.success,
+                    userId,
+                    timestamp: new Date()
+                });
+            }
+
+            res.json({
+                success: true,
+                data: {
+                    output: result.output,
+                    sourceBranch,
+                    targetBranch: 'pidea-agent'
+                },
+                message: `Successfully merged ${sourceBranch} into pidea-agent branch`
+            });
+
+        } catch (error) {
+            this.logger.error('GitController: Failed to merge to pidea-agent branch', {
+                projectPath: req.body.projectPath,
+                sourceBranch: req.body.sourceBranch,
+                error: error.message,
+                userId: req.user?.id
+            });
+
+            res.status(500).json({
+                success: false,
+                error: 'Failed to merge to pidea-agent branch',
+                message: error.message
+            });
+        }
+    }
+
+    /**
+     * Get pidea-agent branch status
+     * POST /api/projects/:projectId/git/pidea-agent-status
+     */
+    async getPideaAgentStatus(req, res) {
+        try {
+            const projectId = req.params.projectId;
+            const { projectPath } = req.body;
+            const userId = req.user?.id;
+
+            if (!projectId) {
+                return res.status(400).json({
+                    success: false,
+                    error: 'Project ID is required'
+                });
+            }
+
+            if (!projectPath) {
+                return res.status(400).json({
+                    success: false,
+                    error: 'Project path is required'
+                });
+            }
+
+            this.logger.info('GitController: Getting pidea-agent branch status', { projectId, projectPath, userId });
+
+            // Check if pidea-agent branch exists
+            const branches = await this.gitService.getBranches(projectPath, { all: true });
+            const pideaAgentExists = branches.includes('pidea-agent') || branches.includes('remotes/origin/pidea-agent');
+
+            if (!pideaAgentExists) {
+                return res.status(404).json({
+                    success: false,
+                    error: 'Pidea-agent branch does not exist',
+                    message: 'The pidea-agent branch has not been created yet'
+                });
+            }
+
+            // Get current branch
+            const currentBranch = await this.gitService.getCurrentBranch(projectPath);
+            
+            // Get pidea-agent branch status
+            const pideaAgentStatus = await this.gitService.getStatus(projectPath, { branch: 'pidea-agent' });
+
+            // Get last commit info for pidea-agent branch
+            const lastCommit = await this.gitService.getLastCommit(projectPath, { branch: 'pidea-agent' });
+
+            if (this.eventBus) {
+                this.eventBus.publish('git.pidea-agent.status.retrieved', {
+                    projectPath,
+                    currentBranch,
+                    pideaAgentExists,
+                    userId,
+                    timestamp: new Date()
+                });
+            }
+
+            res.json({
+                success: true,
+                data: {
+                    pideaAgentExists,
+                    currentBranch,
+                    pideaAgentStatus,
+                    lastCommit,
+                    isOnPideaAgentBranch: currentBranch === 'pidea-agent'
+                },
+                message: 'Pidea-agent branch status retrieved successfully'
+            });
+
+        } catch (error) {
+            this.logger.error('GitController: Failed to get pidea-agent branch status', {
+                projectPath: req.body.projectPath,
+                error: error.message,
+                userId: req.user?.id
+            });
+
+            res.status(500).json({
+                success: false,
+                error: 'Failed to get pidea-agent branch status',
+                message: error.message
+            });
+        }
+    }
+
+    /**
+     * Compare with pidea-agent branch
+     * POST /api/projects/:projectId/git/compare-pidea-agent
+     */
+    async compareWithPideaAgent(req, res) {
+        try {
+            const projectId = req.params.projectId;
+            const { projectPath, sourceBranch } = req.body;
+            const userId = req.user?.id;
+
+            if (!projectId) {
+                return res.status(400).json({
+                    success: false,
+                    error: 'Project ID is required'
+                });
+            }
+
+            if (!projectPath || !sourceBranch) {
+                return res.status(400).json({
+                    success: false,
+                    error: 'Project path and source branch are required'
+                });
+            }
+
+            this.logger.info('GitController: Comparing with pidea-agent branch', { 
+                projectId,
+                projectPath, 
+                sourceBranch, 
+                userId 
+            });
+
+            // Check if pidea-agent branch exists
+            const branches = await this.gitService.getBranches(projectPath, { all: true });
+            const pideaAgentExists = branches.includes('pidea-agent') || branches.includes('remotes/origin/pidea-agent');
+
+            if (!pideaAgentExists) {
+                return res.status(404).json({
+                    success: false,
+                    error: 'Pidea-agent branch does not exist',
+                    message: 'The pidea-agent branch has not been created yet'
+                });
+            }
+
+            // Get diff between source branch and pidea-agent
+            const diff = await this.gitService.getDiff(projectPath, {
+                commit1: 'pidea-agent',
+                commit2: sourceBranch
+            });
+
+            // Get commit history for comparison
+            const sourceHistory = await this.gitService.getCommitHistory(projectPath, {
+                branch: sourceBranch,
+                limit: 5
+            });
+
+            const pideaAgentHistory = await this.gitService.getCommitHistory(projectPath, {
+                branch: 'pidea-agent',
+                limit: 5
+            });
+
+            if (this.eventBus) {
+                this.eventBus.publish('git.pidea-agent.comparison.completed', {
+                    projectPath,
+                    sourceBranch,
+                    diffLength: diff.length,
+                    userId,
+                    timestamp: new Date()
+                });
+            }
+
+            res.json({
+                success: true,
+                data: {
+                    diff,
+                    sourceHistory,
+                    pideaAgentHistory,
+                    sourceBranch,
+                    targetBranch: 'pidea-agent'
+                },
+                message: 'Comparison with pidea-agent branch completed successfully'
+            });
+
+        } catch (error) {
+            this.logger.error('GitController: Failed to compare with pidea-agent branch', {
+                projectPath: req.body.projectPath,
+                sourceBranch: req.body.sourceBranch,
+                error: error.message,
+                userId: req.user?.id
+            });
+
+            res.status(500).json({
+                success: false,
+                error: 'Failed to compare with pidea-agent branch',
+                message: error.message
+            });
+        }
+    }
 }
 
 module.exports = GitController; 

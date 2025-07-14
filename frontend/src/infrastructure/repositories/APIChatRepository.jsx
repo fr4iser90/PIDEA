@@ -111,7 +111,12 @@ const API_CONFIG = {
       checkout: (projectId) => `/api/projects/${projectId}/git/checkout`,
       merge: (projectId) => `/api/projects/${projectId}/git/merge`,
       createBranch: (projectId) => `/api/projects/${projectId}/git/create-branch`,
-      info: (projectId) => `/api/projects/${projectId}/git/info`
+      info: (projectId) => `/api/projects/${projectId}/git/info`,
+      // Pidea-Agent specific endpoints
+      pullPideaAgent: (projectId) => `/api/projects/${projectId}/git/pull-pidea-agent`,
+      mergeToPideaAgent: (projectId) => `/api/projects/${projectId}/git/merge-to-pidea-agent`,
+      pideaAgentStatus: (projectId) => `/api/projects/${projectId}/git/pidea-agent-status`,
+      comparePideaAgent: (projectId) => `/api/projects/${projectId}/git/compare-pidea-agent`
     },
     settings: '/api/settings',
     health: '/api/health',
@@ -584,6 +589,76 @@ export default class APIChatRepository extends ChatRepository {
       method: 'POST',
       body: JSON.stringify({ projectPath })
     });
+  }
+
+  // Pidea-Agent Git Management Methods
+  async pullPideaAgentBranch(projectId = null, projectPath = null, options = {}) {
+    const actualProjectId = projectId || await this.getCurrentProjectId();
+    const { remote = 'origin', force = false } = options;
+    
+    return apiCall(API_CONFIG.endpoints.git.pullPideaAgent(actualProjectId), {
+      method: 'POST',
+      body: JSON.stringify({ projectPath, remote, force })
+    });
+  }
+
+  async mergeToPideaAgentBranch(projectId = null, projectPath = null, sourceBranch = null) {
+    const actualProjectId = projectId || await this.getCurrentProjectId();
+    
+    if (!sourceBranch) {
+      throw new Error('Source branch is required for merging to pidea-agent branch');
+    }
+    
+    return apiCall(API_CONFIG.endpoints.git.mergeToPideaAgent(actualProjectId), {
+      method: 'POST',
+      body: JSON.stringify({ projectPath, sourceBranch })
+    });
+  }
+
+  async getPideaAgentBranchStatus(projectId = null, projectPath = null) {
+    const actualProjectId = projectId || await this.getCurrentProjectId();
+    
+    return apiCall(API_CONFIG.endpoints.git.pideaAgentStatus(actualProjectId), {
+      method: 'POST',
+      body: JSON.stringify({ projectPath })
+    });
+  }
+
+  async compareWithPideaAgentBranch(projectId = null, projectPath = null, sourceBranch = null) {
+    const actualProjectId = projectId || await this.getCurrentProjectId();
+    
+    if (!sourceBranch) {
+      throw new Error('Source branch is required for comparison with pidea-agent branch');
+    }
+    
+    return apiCall(API_CONFIG.endpoints.git.comparePideaAgent(actualProjectId), {
+      method: 'POST',
+      body: JSON.stringify({ projectPath, sourceBranch })
+    });
+  }
+
+  // Pidea-Agent Utility Methods
+  async isPideaAgentBranchAvailable(projectId = null, projectPath = null) {
+    try {
+      const status = await this.getPideaAgentBranchStatus(projectId, projectPath);
+      return status.success && status.data?.pideaAgentExists;
+    } catch (error) {
+      logger.error('Failed to check pidea-agent branch availability:', error);
+      return false;
+    }
+  }
+
+  async getCurrentBranchForPideaAgent(projectId = null, projectPath = null) {
+    try {
+      const status = await this.getPideaAgentBranchStatus(projectId, projectPath);
+      if (status.success && status.data) {
+        return status.data.currentBranch;
+      }
+      return null;
+    } catch (error) {
+      logger.error('Failed to get current branch for pidea-agent operations:', error);
+      return null;
+    }
   }
 }
 
