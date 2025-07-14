@@ -531,7 +531,7 @@ async function main() {
         
       case 'health':
         const healthReport = await tracker.generateHealthReport();
-        logger.info(JSON.stringify(healthReport, null, 2));
+        logger.info(`Health report generated: ${healthReport.testCounts.total} tests, ${healthReport.overallHealth}% overall health`);
         break;
         
       case 'export':
@@ -548,7 +548,7 @@ async function main() {
           process.exit(1);
         }
         const history = tracker.getStatusHistory(args[1], args[2]);
-        logger.info(JSON.stringify(history, null, 2));
+        logger.info(`Status history for ${args[2]}: ${history.length} entries`);
         break;
         
       default:

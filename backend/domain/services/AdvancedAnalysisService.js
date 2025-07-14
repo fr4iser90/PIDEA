@@ -82,12 +82,7 @@ class AdvancedAnalysisService {
             const logicValid = options.includeLogicValidation !== false ? analysis.logicValidation.overall : true;
             analysis.overall = layerValid && logicValid && analysis.metrics.overallScore >= 70;
 
-            this.logger.info('Advanced analysis completed successfully', {
-                overallScore: analysis.metrics.overallScore,
-                layerScore: analysis.metrics.layerScore,
-                logicScore: analysis.metrics.logicScore,
-                overallValid: analysis.overall
-            });
+            this.logger.info(`Advanced analysis completed successfully - Overall Score: ${analysis.metrics.overallScore}, Layer Score: ${analysis.metrics.layerScore}, Logic Score: ${analysis.metrics.logicScore}, Valid: ${analysis.overall}`);
 
             return analysis;
 

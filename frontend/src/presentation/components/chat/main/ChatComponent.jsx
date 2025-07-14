@@ -141,10 +141,10 @@ function ChatComponent({ eventBus, activePort, attachedPrompts = [] }) {
     }
     // Combine prompt contents and user message
     const finalMessage = `${promptContents.join('\n\n')}${promptContents.length > 0 ? '\n\n' : ''}${message}`;
-    // === DEBUG LOGS START ===
-    logger.info('==== PROMPT CONTENTS ====', promptContents);
-    logger.info('==== FAILED PROMPTS ====', failedPrompts);
-    logger.info('==== FINAL MESSAGE ====', finalMessage);
+    // === DEBUG LOGS REMOVED FOR SECURITY ===
+    // logger.info('==== PROMPT CONTENTS ====', promptContents);
+    // logger.info('==== FAILED PROMPTS ====', failedPrompts);
+    // logger.info('==== FINAL MESSAGE ====', finalMessage);
     // === DEBUG LOGS END ===
     const newMessage = normalizeMessage({
       id: Date.now(),

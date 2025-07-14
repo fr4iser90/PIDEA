@@ -654,7 +654,7 @@ class AnalysisController {
         return transformedAnalysis;
       });
       
-      this.logger.info(`Final history response:`, { success: true, data: history });
+      this.logger.info(`Analysis history prepared successfully`);
       
       res.json({ success: true, data: history });
     } catch (error) {
@@ -855,7 +855,7 @@ class AnalysisController {
         }
       };
       
-      this.logger.info(`Issues data extracted, count: ${issues.length}, size: ${JSON.stringify({ issues, summary }).length} bytes`);
+      this.logger.info(`Issues data extracted, count: ${issues.length}`);
       
       res.json({ success: true, data: { issues, summary } });
     } catch (error) {
@@ -945,7 +945,7 @@ class AnalysisController {
                     resultData.structure?.libraries || []
         }
       };
-      this.logger.info(`Tech stack data extracted, size: ${JSON.stringify(techStack).length} bytes`);
+      this.logger.info(`Tech stack data extracted successfully`);
       res.json({ success: true, data: techStack });
     } catch (error) {
       this.logger.error(`Failed to get analysis tech stack:`, error);
@@ -1035,7 +1035,7 @@ class AnalysisController {
                         resultData.recommendations || []
       };
       
-      this.logger.info(`Architecture data extracted, size: ${JSON.stringify(architecture).length} bytes`);
+      this.logger.info(`Architecture data extracted successfully`);
       
       res.json({ success: true, data: architecture });
     } catch (error) {

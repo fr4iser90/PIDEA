@@ -72,12 +72,12 @@ function AutoPanelComponent({ eventBus }) {
       const projectId = await api.getCurrentProjectId();
       const response = await api.startAutoRefactor(projectId);
       
-      logger.info('Auto refactor response:', response);
-      logger.info('Response data:', response.data);
-      logger.info('Response data.result:', response.data?.result);
-      logger.info('Response data.result.results:', response.data?.result?.results);
-      logger.info('Response data.result.result:', response.data?.result?.result);
-      logger.info('Response data.result.result.results:', response.data?.result?.result?.results);
+      logger.info('Auto refactor response received');
+      logger.info('Response data structure available');
+      logger.info('Response data.result structure available');
+      logger.info('Response data.result.results structure available');
+      logger.info('Response data.result.result structure available');
+      logger.info('Response data.result.result.results structure available');
       
       // Check for tasks in different possible locations
       let tasks = null;
@@ -85,28 +85,28 @@ function AutoPanelComponent({ eventBus }) {
       // Try multiple possible locations for tasks - including the deepest nested ones
       if (response?.data?.result?.result?.tasks && Array.isArray(response.data.result.result.tasks)) {
         tasks = response.data.result.result.tasks;
-        logger.info('Found tasks in response.data.result.result.tasks:', tasks);
+        logger.info(`Found ${tasks.length} tasks in response.data.result.result.tasks`);
       } else if (response?.data?.result?.result?.tasks?.tasks && Array.isArray(response.data.result.result.tasks.tasks)) {
         tasks = response.data.result.result.tasks.tasks;
-        logger.info('Found tasks in response.data.result.result.tasks.tasks:', tasks);
+        logger.info(`Found ${tasks.length} tasks in response.data.result.result.tasks.tasks`);
       } else if (response?.data?.result?.result?.result?.tasks && Array.isArray(response.data.result.result.result.tasks)) {
         tasks = response.data.result.result.result.tasks;
-        logger.info('Found tasks in response.data.result.result.result.tasks:', tasks);
+        logger.info(`Found ${tasks.length} tasks in response.data.result.result.result.tasks`);
       } else if (response?.data?.result?.tasks?.result?.tasks && Array.isArray(response.data.result.tasks.result.tasks)) {
         tasks = response.data.result.tasks.result.tasks;
-        logger.info('Found tasks in response.data.result.tasks.result.tasks:', tasks);
+        logger.info(`Found ${tasks.length} tasks in response.data.result.tasks.result.tasks`);
       } else if (response?.data?.result?.tasks?.tasks && Array.isArray(response.data.result.tasks.tasks)) {
         tasks = response.data.result.tasks.tasks;
-        logger.info('Found tasks in response.data.result.tasks.tasks:', tasks);
+        logger.info(`Found ${tasks.length} tasks in response.data.result.tasks.tasks`);
       } else if (response?.data?.result?.tasks && Array.isArray(response.data.result.tasks)) {
         tasks = response.data.result.tasks;
-        logger.info('Found tasks in response.data.result.tasks:', tasks);
+        logger.info(`Found ${tasks.length} tasks in response.data.result.tasks`);
       } else if (response?.data?.tasks && Array.isArray(response.data.tasks)) {
         tasks = response.data.tasks;
-        logger.info('Found tasks in response.data.tasks:', tasks);
+        logger.info(`Found ${tasks.length} tasks in response.data.tasks`);
       } else if (response?.result?.tasks && Array.isArray(response.result.tasks)) {
         tasks = response.result.tasks;
-        logger.info('Found tasks in response.result.tasks:', tasks);
+        logger.info(`Found ${tasks.length} tasks in response.result.tasks`);
       } else {
         logger.info('No tasks found in response, loading from database...');
         
@@ -115,13 +115,13 @@ function AutoPanelComponent({ eventBus }) {
           const tasksResponse = await apiCall(`/api/projects/${projectId}/tasks?type=refactor&status=pending`);
           if (tasksResponse.success && tasksResponse.data && Array.isArray(tasksResponse.data)) {
             tasks = tasksResponse.data;
-            logger.info('Loaded tasks from database:', tasks);
+            logger.info(`Loaded ${tasks.length} tasks from database`);
           } else {
             logger.info('No tasks found in database either');
-            logger.info('Full response structure:', JSON.stringify(response, null, 2));
+            logger.info('Response structure available but no tasks found');
           }
         } catch (dbError) {
-          logger.error('Error loading tasks from database:', dbError);
+          logger.error('Error loading tasks from database:', dbError.message);
         }
       }
       

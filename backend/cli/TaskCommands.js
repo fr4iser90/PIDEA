@@ -1098,7 +1098,7 @@ const logger = new Logger('Logger');
 
     displayTaskList(tasks, format = 'table') {
         if (format === 'json') {
-            logger.info(JSON.stringify(tasks, null, 2));
+            logger.info(`Found ${tasks.length} tasks (JSON format requested)`);
             return;
         }
 

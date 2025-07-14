@@ -543,7 +543,7 @@ async function main() {
         }
         const reason = args[3] || '';
         const result = await versioner.versionTest(args[1], args[2], reason);
-        logger.info(JSON.stringify(result, null, 2));
+        logger.info(`Test versioned successfully: ${args[1]} -> ${args[2]}`);
         break;
         
       case 'compare':
@@ -552,7 +552,7 @@ async function main() {
           process.exit(1);
         }
         const comparison = await versioner.compareVersions(args[1], args[2], args[3]);
-        logger.info(JSON.stringify(comparison, null, 2));
+        logger.info(`Version comparison completed: ${args[2]} vs ${args[3]}`);
         break;
         
       case 'rollback':
@@ -561,7 +561,7 @@ async function main() {
           process.exit(1);
         }
         const rollbackResult = await versioner.rollbackToVersion(args[1], args[2]);
-        logger.info(JSON.stringify(rollbackResult, null, 2));
+        logger.info(`Rollback completed: ${args[1]} -> ${args[2]}`);
         break;
         
       case 'migrate':
@@ -570,7 +570,7 @@ async function main() {
           process.exit(1);
         }
         const migrationResult = await versioner.migrateTest(args[1], args[2]);
-        logger.info(JSON.stringify(migrationResult, null, 2));
+        logger.info(`Migration completed: ${args[1]} -> ${args[2]}`);
         break;
         
       case 'history':
@@ -579,12 +579,12 @@ async function main() {
           process.exit(1);
         }
         const history = versioner.getVersionHistory(args[1]);
-        logger.info(JSON.stringify(history, null, 2));
+        logger.info(`Version history for ${args[1]}: ${history.length} versions`);
         break;
         
       case 'report':
         const report = await versioner.generateVersioningReport();
-        logger.info(JSON.stringify(report, null, 2));
+        logger.info(`Versioning report generated: ${report.totalFiles} files, ${report.totalVersions} versions`);
         break;
         
       case 'export':

@@ -319,7 +319,7 @@ class IDEMirrorService {
 
             // If it's a special key or key combination
             if (key && key.length > 1) {
-                logger.info(`⌨️ Sending special key: ${key} ${JSON.stringify(modifiers)}`);
+                logger.info(`⌨️ Sending special key: ${key}`);
                 
                 // Use direct CDP for special keys (more reliable)
                 const cdp = await page.context().newCDPSession(page);

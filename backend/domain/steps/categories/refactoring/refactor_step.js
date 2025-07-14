@@ -38,9 +38,7 @@ async function execute(context, options = {}) {
     logger.info(`🔍 [RefactoringStep] Analysis result:`, {
       success: analyzeResult.success,
       largeFilesCount: largeFiles.length,
-      largeFilesSample: largeFiles.slice(0, 2),
-      resultKeys: analyzeResult.result ? Object.keys(analyzeResult.result) : [],
-      analyzeResultKeys: Object.keys(analyzeResult)
+      resultKeys: analyzeResult.result ? Object.keys(analyzeResult.result).length : 0
     });
 
     // Step 2: Generate refactoring tasks

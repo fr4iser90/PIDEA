@@ -65,14 +65,13 @@ class BaseIDE extends IDEInterface {
     if (this.eventBus) {
       this.eventBus.subscribe('activeIDEChanged', async (eventData) => {
         logger.info(`IDE changed for ${this.ideType}, resetting cache`);
-        logger.info(`Event data:`, eventData);
         
         // Switch browser connection to new IDE
         if (eventData.port) {
           try {
-            logger.info(`Switching browser connection to port:`, eventData.port);
+            logger.info(`Switching browser connection to port: ${eventData.port}`);
             await this.browserManager.switchToPort(eventData.port);
-            logger.info(`Successfully switched browser connection to port:`, eventData.port);
+            logger.info(`Successfully switched browser connection to port: ${eventData.port}`);
           } catch (error) {
             logger.error(`Failed to switch browser connection:`, error.message);
           }

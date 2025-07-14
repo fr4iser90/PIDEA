@@ -50,7 +50,7 @@ program
     logger.info('Forwarding auto-refactor task to KI-Agent', { endpoint: AGENT_ENDPOINT });
     const response = await axios.post(AGENT_ENDPOINT, task);
     logger.success('Task forwarded successfully', { taskId: response.data.taskId || null, status: response.status });
-    logger.info('KI-Agent response:', response.data);
+    logger.info('KI-Agent response received successfully');
   } catch (error) {
     logger.error('Failed to forward auto-refactor task', { error: error.message });
     if (error.response) {

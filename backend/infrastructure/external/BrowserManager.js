@@ -392,7 +392,7 @@ class BrowserManager {
       });
       
       logger.info('getCurrentFileContent: LOG:', result.log);
-      logger.info('getCurrentFileContent: Inhalt (erster Teil):', result.content ? result.content.slice(0, 200) : '<leer>');
+      logger.info('getCurrentFileContent: Content length:', result.content ? result.content.length : 0);
       return result.content;
     } catch (error) {
       logger.error('Error reading file content:', error.message);

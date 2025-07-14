@@ -209,7 +209,7 @@ class ConfirmationSystem {
       }
     }
     
-    this.logger.info(`Parsed response: status=${status}, isValid=${isValid}, confidence=${confidence}, testResults=${JSON.stringify(testResults)}`);
+    this.logger.info(`Parsed response: status=${status}, isValid=${isValid}, confidence=${confidence}`);
     
     return {
       isValid,
