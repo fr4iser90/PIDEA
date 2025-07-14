@@ -1077,7 +1077,7 @@ const logger = new Logger('Logger');
         
         if (result.analysis) {
             logger.log(chalk.blue('\n💡 Analysis:'));
-            logger.log(result.analysis);
+            // logger.log(result.analysis); // Entfernt, um Spam zu verhindern
         }
 
         if (result.insights && result.insights.length > 0) {

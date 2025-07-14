@@ -143,9 +143,10 @@ class ServiceRegistry {
             return { detect: () => [] };
         }, { singleton: true });
 
-        // Analysis output service (simplified)
+        // Analysis output service
         this.container.register('analysisOutputService', () => {
-            return { generateOutput: () => ({}) };
+            const AnalysisOutputService = require('@domain/services/AnalysisOutputService');
+            return new AnalysisOutputService();
         }, { singleton: true });
 
             // Task execution service
@@ -207,6 +208,30 @@ class ServiceRegistry {
                 logger
             });
         }, { singleton: true, dependencies: ['cursorIDEService', 'autoFinishSystem', 'taskRepository', 'eventBus', 'logger'] });
+
+        // Advanced Analysis Service
+        this.container.register('advancedAnalysisService', (layerValidationService, logicValidationService, taskAnalysisService, eventBus, logger) => {
+            const AdvancedAnalysisService = require('@domain/services/AdvancedAnalysisService');
+            return new AdvancedAnalysisService({
+                layerValidationService,
+                logicValidationService,
+                taskAnalysisService,
+                eventBus,
+                logger
+            });
+        }, { singleton: true, dependencies: ['layerValidationService', 'logicValidationService', 'taskAnalysisService', 'eventBus', 'logger'] });
+
+        // Layer Validation Service
+        this.container.register('layerValidationService', (logger) => {
+            const LayerValidationService = require('@domain/services/LayerValidationService');
+            return new LayerValidationService(logger);
+        }, { singleton: true, dependencies: ['logger'] });
+
+        // Logic Validation Service
+        this.container.register('logicValidationService', (logger) => {
+            const LogicValidationService = require('@domain/services/LogicValidationService');
+            return new LogicValidationService(logger);
+        }, { singleton: true, dependencies: ['logger'] });
 
         // Workflow Execution Service
         this.container.register('workflowExecutionService', (chatSessionService, ideAutomationService, browserManager, ideManager, eventBus, logger) => {
@@ -444,10 +469,9 @@ class ServiceRegistry {
         }, { singleton: true });
 
         // Analysis repository
-        this.container.register('analysisRepository', () => {
-            const InMemoryAnalysisRepository = require('../database/InMemoryAnalysisRepository');
-            return new InMemoryAnalysisRepository();
-        }, { singleton: true });
+        this.container.register('analysisRepository', (databaseConnection) => {
+            return databaseConnection.getRepository('Analysis');
+        }, { singleton: true, dependencies: ['databaseConnection'] });
 
         // User repository
         this.container.register('userRepository', (databaseConnection) => {
@@ -514,6 +538,19 @@ class ServiceRegistry {
             const VibeCoderAutoRefactorHandler = require('@application/handlers/vibecoder/VibeCoderAutoRefactorHandler');
             return new VibeCoderAutoRefactorHandler({ taskRepository, projectAnalysisRepository, eventBus, logger });
         }, { singleton: true, dependencies: ['taskRepository', 'projectAnalysisRepository', 'eventBus', 'logger'] });
+
+        // Advanced Analysis Handler
+        this.container.register('advancedAnalysisHandler', (advancedAnalysisService, taskRepository, taskExecutionRepository, analysisRepository, eventBus, logger) => {
+            const AdvancedAnalysisHandler = require('@application/handlers/categories/analysis/AdvancedAnalysisHandler');
+            return new AdvancedAnalysisHandler({ 
+                advancedAnalysisService, 
+                taskRepository, 
+                taskExecutionRepository, 
+                analysisRepository,
+                eventBus, 
+                logger 
+            });
+        }, { singleton: true, dependencies: ['advancedAnalysisService', 'taskRepository', 'taskExecutionRepository', 'analysisRepository', 'eventBus', 'logger'] });
 
         this.registeredServices.add('handlers');
     }

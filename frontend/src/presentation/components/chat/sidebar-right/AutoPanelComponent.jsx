@@ -82,10 +82,22 @@ function AutoPanelComponent({ eventBus }) {
       // Check for tasks in different possible locations
       let tasks = null;
 
-      // Try multiple possible locations for tasks
+      // Try multiple possible locations for tasks - including the deepest nested ones
       if (response?.data?.result?.result?.tasks && Array.isArray(response.data.result.result.tasks)) {
         tasks = response.data.result.result.tasks;
         logger.log('[AutoPanelComponent] Found tasks in response.data.result.result.tasks:', tasks);
+      } else if (response?.data?.result?.result?.tasks?.tasks && Array.isArray(response.data.result.result.tasks.tasks)) {
+        tasks = response.data.result.result.tasks.tasks;
+        logger.log('[AutoPanelComponent] Found tasks in response.data.result.result.tasks.tasks:', tasks);
+      } else if (response?.data?.result?.result?.result?.tasks && Array.isArray(response.data.result.result.result.tasks)) {
+        tasks = response.data.result.result.result.tasks;
+        logger.log('[AutoPanelComponent] Found tasks in response.data.result.result.result.tasks:', tasks);
+      } else if (response?.data?.result?.tasks?.result?.tasks && Array.isArray(response.data.result.tasks.result.tasks)) {
+        tasks = response.data.result.tasks.result.tasks;
+        logger.log('[AutoPanelComponent] Found tasks in response.data.result.tasks.result.tasks:', tasks);
+      } else if (response?.data?.result?.tasks?.tasks && Array.isArray(response.data.result.tasks.tasks)) {
+        tasks = response.data.result.tasks.tasks;
+        logger.log('[AutoPanelComponent] Found tasks in response.data.result.tasks.tasks:', tasks);
       } else if (response?.data?.result?.tasks && Array.isArray(response.data.result.tasks)) {
         tasks = response.data.result.tasks;
         logger.log('[AutoPanelComponent] Found tasks in response.data.result.tasks:', tasks);

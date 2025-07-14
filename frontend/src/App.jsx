@@ -6,6 +6,7 @@ import SidebarLeft from '@/presentation/components/SidebarLeft.jsx';
 import SidebarRight from '@/presentation/components/SidebarRight.jsx';
 import IDEMirrorComponent from '@/presentation/components/mirror/main/IDEMirrorComponent.jsx';
 import PreviewComponent from '@/presentation/components/chat/main/PreviewComponent.jsx';
+import AnalysisDataViewer from '@/presentation/components/analysis/AnalysisDataViewer.jsx';
 import GitManagementComponent from '@/presentation/components/git/main/GitManagementComponent.jsx';
 import AuthWrapper from '@/presentation/components/auth/AuthWrapper.jsx';
 import Header from '@/presentation/components/Header.jsx';
@@ -184,6 +185,8 @@ function App() {
         </div>;
       case 'preview':
         return <PreviewComponent eventBus={eventBus} activePort={activePort} />;
+      case 'analyze':
+        return <AnalysisDataViewer eventBus={eventBus} />;
       case 'git':
         return <GitManagementComponent activePort={activePort} onGitOperation={(operation, result) => {
           logger.log('Git operation completed:', operation, result);

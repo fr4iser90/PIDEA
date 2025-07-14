@@ -462,6 +462,27 @@ export default class APIChatRepository extends ChatRepository {
     });
   }
 
+  // New analysis methods for enhanced data viewer
+  async getAnalysisMetrics(projectId = null) {
+    const currentProjectId = projectId || await this.getCurrentProjectId();
+    return apiCall(`/api/projects/${currentProjectId}/analysis/metrics`);
+  }
+
+  async getAnalysisStatus(projectId = null) {
+    const currentProjectId = projectId || await this.getCurrentProjectId();
+    return apiCall(`/api/projects/${currentProjectId}/analysis/status`);
+  }
+
+  async getAnalysisCharts(projectId = null, type = 'trends') {
+    const currentProjectId = projectId || await this.getCurrentProjectId();
+    return apiCall(`/api/projects/${currentProjectId}/analysis/charts/${type}`);
+  }
+
+  async getAnalysisHistory(projectId = null) {
+    const currentProjectId = projectId || await this.getCurrentProjectId();
+    return apiCall(`/api/projects/${currentProjectId}/analysis/history`);
+  }
+
   // Documentation Tasks Methods
   async getDocsTasks() {
     const projectId = await this.getCurrentProjectId();

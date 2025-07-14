@@ -699,7 +699,6 @@ class Application {
     // Project Analysis routes (protected) - PROJECT-BASED
     this.app.use('/api/projects/:projectId/analysis', this.authMiddleware.authenticate());
     this.app.post('/api/projects/:projectId/analysis', (req, res) => this.taskController.analyzeProject(req, res));
-    this.app.get('/api/projects/:projectId/analysis/:analysisId', (req, res) => this.taskController.getProjectAnalysis(req, res));
     this.app.post('/api/projects/:projectId/analysis/ai', (req, res) => this.taskController.aiAnalysis(req, res));
 
     // Project analysis routes (protected)
@@ -712,14 +711,24 @@ class Application {
     this.app.put('/api/projects/:projectId/analyses/:id', (req, res) => this.projectAnalysisController.updateAnalysis(req, res));
     this.app.delete('/api/projects/:projectId/analyses/:id', (req, res) => this.projectAnalysisController.deleteAnalysis(req, res));
 
-    // Specialized Analysis routes (protected) - PROJECT-BASED
+    // Analysis output and history routes (protected) - PROJECT-BASED
     this.app.use('/api/projects/:projectId/analysis', this.authMiddleware.authenticate());
+    this.app.get('/api/projects/:projectId/analysis/history', (req, res) => this.analysisController.getAnalysisHistory(req, res));
+    this.app.get('/api/projects/:projectId/analysis/metrics', (req, res) => this.analysisController.getAnalysisMetrics(req, res));
     this.app.get('/api/projects/:projectId/analysis/status', (req, res) => this.analysisController.getAnalysisStatus(req, res));
+    this.app.get('/api/projects/:projectId/analysis/files/:filename', (req, res) => this.analysisController.getAnalysisFile(req, res));
+    this.app.get('/api/projects/:projectId/analysis/database', (req, res) => this.analysisController.getAnalysisFromDatabase(req, res));
+    this.app.post('/api/projects/:projectId/analysis/report', (req, res) => this.analysisController.generateComprehensiveReport(req, res));
+    
+    // Specialized Analysis routes (protected) - PROJECT-BASED
     this.app.post('/api/projects/:projectId/analysis/code-quality', (req, res) => this.analysisController.analyzeCodeQuality(req, res));
     this.app.post('/api/projects/:projectId/analysis/security', (req, res) => this.analysisController.analyzeSecurity(req, res));
     this.app.post('/api/projects/:projectId/analysis/performance', (req, res) => this.analysisController.analyzePerformance(req, res));
     this.app.post('/api/projects/:projectId/analysis/architecture', (req, res) => this.analysisController.analyzeArchitecture(req, res));
     this.app.post('/api/projects/:projectId/analysis/comprehensive', (req, res) => this.analysisController.analyzeComprehensive(req, res));
+    
+    // GENERIC ROUTE MUST BE LAST - PROJECT-BASED
+    this.app.get('/api/projects/:projectId/analysis/:analysisId', (req, res) => this.taskController.getProjectAnalysis(req, res));
     
     // Documentation Framework routes (protected) - PROJECT-BASED
     this.app.post('/api/projects/:projectId/documentation/analyze', (req, res) => this.documentationController.analyzeDocumentation(req, res));
@@ -727,12 +736,6 @@ class Application {
     // Bulk Documentation Analysis route (protected)
     this.app.use('/api/projects/analyze-all', this.authMiddleware.authenticate());
     this.app.post('/api/projects/analyze-all/documentation', (req, res) => this.documentationController.analyzeAllProjects(req, res));
-    
-    // Analysis output and history routes
-    this.app.get('/api/projects/:projectId/analysis/history', (req, res) => this.analysisController.getAnalysisHistory(req, res));
-    this.app.get('/api/projects/:projectId/analysis/files/:filename', (req, res) => this.analysisController.getAnalysisFile(req, res));
-    this.app.get('/api/projects/:projectId/analysis/database', (req, res) => this.analysisController.getAnalysisFromDatabase(req, res));
-    this.app.post('/api/projects/:projectId/analysis/report', (req, res) => this.analysisController.generateComprehensiveReport(req, res));
 
     // Script Generation routes (protected) - PROJECT-BASED
     this.app.use('/api/projects/:projectId/scripts', this.authMiddleware.authenticate());

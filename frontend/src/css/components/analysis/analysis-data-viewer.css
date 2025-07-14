@@ -1,0 +1,217 @@
+/* Analysis Data Viewer - Main Component Styles */
+
+.analysis-data-viewer {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: var(--bg-primary, #ffffff);
+  color: var(--text-primary, #333333);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* Loading State */
+.analysis-data-viewer.loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid var(--border-color, #e5e7eb);
+  border-top: 4px solid var(--primary-color, #3b82f6);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Error State */
+.analysis-data-viewer.error {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 2rem;
+}
+
+.error-message {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 1rem;
+  background: var(--error-bg, #fef2f2);
+  border: 1px solid var(--error-border, #fecaca);
+  border-radius: 8px;
+  color: var(--error-text, #dc2626);
+  font-size: 0.875rem;
+}
+
+.error-icon {
+  font-size: 1.25rem;
+}
+
+.btn-retry {
+  padding: 0.5rem 1rem;
+  background: var(--primary-color, #3b82f6);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.875rem;
+  transition: background-color 0.2s ease;
+}
+
+.btn-retry:hover {
+  background: var(--primary-hover, #2563eb);
+}
+
+/* Header Section */
+.analysis-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.5rem;
+  border-bottom: 1px solid var(--border-color, #e5e7eb);
+  background: var(--header-bg, #f9fafb);
+}
+
+.analysis-title {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.analysis-title h2 {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--text-primary, #111827);
+}
+
+.analysis-actions {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.btn-refresh {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: var(--secondary-bg, #f3f4f6);
+  color: var(--text-secondary, #6b7280);
+  border: 1px solid var(--border-color, #d1d5db);
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.875rem;
+  transition: all 0.2s ease;
+}
+
+.btn-refresh:hover {
+  background: var(--secondary-hover, #e5e7eb);
+  color: var(--text-primary, #374151);
+}
+
+.btn-refresh:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Content Sections */
+.analysis-data-viewer > *:not(.analysis-header) {
+  padding: 1.5rem;
+}
+
+.analysis-data-viewer > *:not(.analysis-header):not(:last-child) {
+  border-bottom: 1px solid var(--border-color, #e5e7eb);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .analysis-header {
+    flex-direction: column;
+    gap: 1rem;
+    align-items: flex-start;
+  }
+
+  .analysis-title {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+
+  .analysis-actions {
+    width: 100%;
+    justify-content: flex-end;
+  }
+
+  .analysis-data-viewer > *:not(.analysis-header) {
+    padding: 1rem;
+  }
+}
+
+/* Dark Mode Support */
+@media (prefers-color-scheme: dark) {
+  .analysis-data-viewer {
+    background: var(--bg-primary-dark, #1f2937);
+    color: var(--text-primary-dark, #f9fafb);
+  }
+
+  .analysis-header {
+    background: var(--header-bg-dark, #111827);
+    border-bottom-color: var(--border-color-dark, #374151);
+  }
+
+  .analysis-title h2 {
+    color: var(--text-primary-dark, #f9fafb);
+  }
+
+  .btn-refresh {
+    background: var(--secondary-bg-dark, #374151);
+    color: var(--text-secondary-dark, #d1d5db);
+    border-color: var(--border-color-dark, #4b5563);
+  }
+
+  .btn-refresh:hover {
+    background: var(--secondary-hover-dark, #4b5563);
+    color: var(--text-primary-dark, #f9fafb);
+  }
+
+  .error-message {
+    background: var(--error-bg-dark, #7f1d1d);
+    border-color: var(--error-border-dark, #dc2626);
+    color: var(--error-text-dark, #fca5a5);
+  }
+
+  .analysis-data-viewer > *:not(.analysis-header):not(:last-child) {
+    border-bottom-color: var(--border-color-dark, #374151);
+  }
+}
+
+/* Print Styles */
+@media print {
+  .analysis-data-viewer {
+    background: white;
+    color: black;
+  }
+
+  .analysis-header {
+    background: white;
+    border-bottom: 1px solid #000;
+  }
+
+  .btn-refresh,
+  .btn-retry {
+    display: none;
+  }
+} 

@@ -3,193 +3,96 @@
 ## 📋 Phase Overview
 - **Phase**: 1
 - **Name**: Foundation Setup
+- **Status**: In Progress
 - **Estimated Time**: 3 hours
-- **Status**: Planning
 - **Progress**: 0%
 
 ## 🎯 Phase Goals
-Set up the foundational structure for the analysis data viewer enhancement, including routing, navigation, and basic component structure.
+1. Create implementation documentation structure
+2. Set up new component directories
+3. Create base CSS files
+4. Initialize core components
+5. Configure Chart.js dependencies
 
-## 📋 Tasks
+## 📁 Files to Create/Modify
 
-### Task 1: Create Analysis View Routing (0.5 hours)
-- [ ] **File**: `frontend/src/App.jsx`
-- [ ] **Action**: Add analyze view routing to the main app component
-- [ ] **Details**: 
-  - Add 'analyze' case to the renderView switch statement
-  - Import and integrate AnalyzeView component
-  - Ensure proper navigation state management
-- [ ] **Acceptance Criteria**:
-  - Analyze view renders when currentView === 'analyze'
-  - Navigation between views works correctly
-  - No console errors during navigation
+### New Directories
+- [ ] `frontend/src/presentation/components/analysis/`
+- [ ] `frontend/src/css/components/analysis/`
 
-### Task 2: Add Analyze Button to Header Navigation (0.5 hours)
-- [ ] **File**: `frontend/src/presentation/components/Header.jsx`
-- [ ] **Action**: Add Analyze button to the header navigation
-- [ ] **Details**:
-  - Add new button in the header-navigation section
-  - Use consistent styling with existing navigation buttons
-  - Include appropriate icon (📊)
-  - Handle click events properly
-- [ ] **Acceptance Criteria**:
-  - Analyze button visible in header navigation
-  - Button styling matches existing navigation buttons
-  - Clicking button navigates to analyze view
-  - Active state works correctly
+### New Files
+- [ ] `frontend/src/presentation/components/analysis/AnalysisDataViewer.jsx`
+- [ ] `frontend/src/presentation/components/analysis/AnalysisCharts.jsx`
+- [ ] `frontend/src/presentation/components/analysis/AnalysisMetrics.jsx`
+- [ ] `frontend/src/presentation/components/analysis/AnalysisFilters.jsx`
+- [ ] `frontend/src/presentation/components/analysis/AnalysisHistory.jsx`
+- [ ] `frontend/src/presentation/components/analysis/AnalysisStatus.jsx`
+- [ ] `frontend/src/presentation/components/analysis/AnalysisModal.jsx`
+- [ ] `frontend/src/css/components/analysis/analysis-data-viewer.css`
+- [ ] `frontend/src/css/components/analysis/analysis-charts.css`
+- [ ] `frontend/src/css/components/analysis/analysis-metrics.css`
 
-### Task 3: Create Basic Analysis View Component Structure (1 hour)
-- [ ] **File**: `frontend/src/presentation/components/analysis/AnalyzeView.jsx`
-- [ ] **Action**: Create the main analysis view component
-- [ ] **Details**:
-  - Create basic component structure with React hooks
-  - Include placeholder sections for dashboard, charts, and history
-  - Set up basic state management
-  - Add proper error boundaries
-  - Integrate with existing logger
-- [ ] **Acceptance Criteria**:
-  - Component renders without errors
-  - Basic layout structure is in place
-  - State management hooks are properly set up
-  - Error boundaries are implemented
-  - Logger integration works correctly
+### Files to Modify
+- [ ] `frontend/package.json` - Add Chart.js dependency
+- [ ] `frontend/src/presentation/components/Header.jsx` - Add Analyze button
 
-### Task 4: Create Analysis Dashboard Component (0.5 hours)
-- [ ] **File**: `frontend/src/presentation/components/analysis/AnalysisDashboard.jsx`
-- [ ] **Action**: Create the main dashboard component for analysis data
-- [ ] **Details**:
-  - Create dashboard layout with grid system
-  - Include placeholder sections for metrics and charts
-  - Add loading states and error handling
-  - Implement responsive design
-  - Follow existing component patterns
-- [ ] **Acceptance Criteria**:
-  - Dashboard component renders correctly
-  - Layout is responsive and well-organized
-  - Loading and error states are properly handled
-  - Design is consistent with existing UI
-  - Component follows project patterns
+## 🔧 Implementation Steps
 
-### Task 5: Set Up Analysis-Specific CSS Styles (0.5 hours)
-- [ ] **Files**: 
-  - `frontend/src/css/components/analysis/analysis-view.css`
-  - `frontend/src/css/components/analysis/analysis-dashboard.css`
-- [ ] **Action**: Create analysis-specific CSS styles
-- [ ] **Details**:
-  - Define analysis view layout styles
-  - Create styles for analysis dashboard components
-  - Set up responsive design considerations
-  - Ensure consistency with existing design system
-  - Use existing CSS variables and patterns
-- [ ] **Acceptance Criteria**:
-  - CSS files are created and properly structured
-  - Styles are consistent with existing design
-  - Responsive design considerations are included
-  - No CSS conflicts with existing styles
-  - CSS variables are used appropriately
-
-## 🔧 Technical Implementation Details
-
-### Routing Implementation
-```javascript
-// In App.jsx renderView function
-case 'analyze':
-  return <AnalyzeView eventBus={eventBus} activePort={activePort} />;
+### Step 1: Create Component Directories
+```bash
+mkdir -p frontend/src/presentation/components/analysis
+mkdir -p frontend/src/css/components/analysis
 ```
 
-### Header Navigation Button
-```javascript
-// In Header.jsx navigation section
-<button
-  onClick={() => handleNavigationClick('analyze')}
-  className={`mode-btn ${currentView === 'analyze' ? 'active' : ''}`}
->
-  📊 Analyze
-</button>
+### Step 2: Add Chart.js Dependency
+```json
+{
+  "dependencies": {
+    "chart.js": "^4.4.0",
+    "react-chartjs-2": "^5.2.0"
+  }
+}
 ```
 
-### Basic Component Structure
-```javascript
-// AnalyzeView.jsx
-import React, { useState, useEffect } from 'react';
-import { logger } from '@/infrastructure/logging/Logger';
-import AnalysisDashboard from './AnalysisDashboard';
+### Step 3: Create Base Components
+- AnalysisDataViewer.jsx - Main container component
+- AnalysisCharts.jsx - Chart rendering component
+- AnalysisMetrics.jsx - Metrics display component
+- AnalysisFilters.jsx - Filter controls component
+- AnalysisHistory.jsx - Enhanced history component
+- AnalysisStatus.jsx - Real-time status component
+- AnalysisModal.jsx - Detailed view modal
 
-const AnalyzeView = ({ eventBus, activePort }) => {
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
-  
-  useEffect(() => {
-    logger.log('[AnalyzeView] Component mounted');
-  }, []);
-  
-  return (
-    <div className="analyze-view">
-      <AnalysisDashboard activePort={activePort} />
-    </div>
-  );
-};
-```
+### Step 4: Create CSS Files
+- analysis-data-viewer.css - Main styling
+- analysis-charts.css - Chart-specific styling
+- analysis-metrics.css - Metrics styling
 
-### Dashboard Component Structure
-```javascript
-// AnalysisDashboard.jsx
-import React, { useState, useEffect } from 'react';
-import { logger } from '@/infrastructure/logging/Logger';
-
-const AnalysisDashboard = ({ activePort }) => {
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
-  
-  if (loading) return <div className="dashboard-loading">Loading...</div>;
-  if (error) return <div className="dashboard-error">{error}</div>;
-  
-  return (
-    <div className="analysis-dashboard">
-      <div className="dashboard-header">
-        <h2>Analysis Dashboard</h2>
-      </div>
-      
-      <div className="dashboard-grid">
-        <div className="metrics-section">
-          {/* Metrics will be added in Phase 2 */}
-        </div>
-        <div className="charts-section">
-          {/* Charts will be added in Phase 2 */}
-        </div>
-      </div>
-    </div>
-  );
-};
-```
-
-## 🧪 Testing Requirements
-- [ ] Test navigation between views
-- [ ] Test Analyze button functionality
-- [ ] Test basic component rendering
-- [ ] Test error boundary functionality
-- [ ] Test responsive design
+### Step 5: Update Header Component
+- Add "📊 Analyze" button to navigation
+- Implement click handler
+- Add proper styling
 
 ## 📊 Success Criteria
-- [ ] Analyze view is accessible via header navigation
-- [ ] Basic component structure is in place
-- [ ] CSS styles are properly applied
-- [ ] Dashboard component is functional
-- [ ] No console errors or warnings
-- [ ] Responsive design works correctly
+- [ ] All directories created successfully
+- [ ] Chart.js dependencies added to package.json
+- [ ] Base component files created with proper structure
+- [ ] CSS files created with initial styling
+- [ ] Header component updated with Analyze button
+- [ ] No build errors
+- [ ] Components render without errors
 
-## 🔄 Dependencies
-- Existing App.jsx routing system
-- Header component structure
-- React hooks system
-- CSS styling system
+## 🔍 Validation Checklist
+- [ ] Directory structure matches plan
+- [ ] All files have proper imports
+- [ ] Components follow React best practices
+- [ ] CSS follows existing patterns
+- [ ] Header button works correctly
+- [ ] No console errors
+- [ ] Build process completes successfully
 
 ## 📝 Notes
-- Ensure all new components follow existing naming conventions
-- Maintain consistency with existing design patterns
-- Consider accessibility requirements for navigation
-- Plan for future chart library integration
-- Use existing logger for all logging operations
-
-## 🚀 Next Phase
-After completing Phase 1, proceed to [Phase 2: Core Implementation](./analysis-data-viewer-phase-2.md) for building the main analysis functionality. 
+- Follow existing component patterns
+- Use consistent naming conventions
+- Maintain backward compatibility
+- Document any deviations from plan 

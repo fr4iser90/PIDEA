@@ -23,9 +23,9 @@ class SQLiteTaskTemplateRepository {
         try {
             // Create indexes for better performance
             await this.database.execute(`CREATE INDEX IF NOT EXISTS idx_task_templates_name ON ${this.tableName} (name)`);
-        await this.database.execute(`CREATE INDEX IF NOT EXISTS idx_task_templates_type ON ${this.tableName} (type)`);
-        await this.database.execute(`CREATE INDEX IF NOT EXISTS idx_task_templates_active ON ${this.tableName} (isActive)`);
-        await this.database.execute(`CREATE INDEX IF NOT EXISTS idx_task_templates_version ON ${this.tableName} (version)`);
+            await this.database.execute(`CREATE INDEX IF NOT EXISTS idx_task_templates_type ON ${this.tableName} (type)`);
+            await this.database.execute(`CREATE INDEX IF NOT EXISTS idx_task_templates_active ON ${this.tableName} (isActive)`);
+            await this.database.execute(`CREATE INDEX IF NOT EXISTS idx_task_templates_version ON ${this.tableName} (version)`);
         } catch (error) {
             // Indexes might already exist, ignore errors
             logger.debug(`[SQLiteTaskTemplateRepository] Index creation skipped: ${error.message}`);

@@ -211,16 +211,6 @@ class SQLiteTaskRepository extends TaskRepository {
   }
 
   /**
-   * Find tasks by user ID
-   * @param {string} userId - The user ID
-   * @param {Object} filters - Optional filters
-   * @returns {Promise<Task[]>} Array of tasks
-   */
-  async findByUserId(userId, filters = {}) {
-    return this.findAll({ ...filters, userId });
-  }
-
-  /**
    * Find tasks by status
    * @param {string} status - The task status
    * @param {Object} filters - Optional filters
@@ -991,7 +981,7 @@ class SQLiteTaskRepository extends TaskRepository {
         status: row.status,
         projectId: row.project_id,
         userId: row.user_id,
-        estimatedDuration: row.estimated_hours,
+        estimatedDuration: row.estimated_time,
         metadata: JSON.parse(row.metadata || '{}'),
         createdAt: row.created_at,
         updatedAt: row.updated_at,

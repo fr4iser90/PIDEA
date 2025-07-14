@@ -132,6 +132,13 @@ class DatabaseConnection {
       .filter(file => file.endsWith('.sql'))
       .sort();
 
+    // If no migration files exist, create tables
+    if (migrationFiles.length === 0) {
+      logger.log('🔄 [DatabaseConnection] No migration files found, creating tables...');
+      await this.createTables();
+      return;
+    }
+
     for (const file of migrationFiles) {
       const migrationPath = path.join(migrationsDir, file);
       const sql = fs.readFileSync(migrationPath, 'utf8');
@@ -188,12 +195,29 @@ class DatabaseConnection {
         name TEXT NOT NULL,
         description TEXT,
         workspace_path TEXT NOT NULL,
-        type TEXT NOT NULL,
+        type TEXT NOT NULL DEFAULT 'development',
+        ide_type TEXT NOT NULL DEFAULT 'cursor',
+        ide_port INTEGER,
+        ide_status TEXT DEFAULT 'inactive',
+        backend_port INTEGER,
+        frontend_port INTEGER,
+        database_port INTEGER,
+        start_command TEXT,
+        build_command TEXT,
+        dev_command TEXT,
+        test_command TEXT,
+        framework TEXT,
+        language TEXT,
+        package_manager TEXT,
         status TEXT NOT NULL DEFAULT 'active',
+        priority INTEGER DEFAULT 0,
+        last_accessed ${timestampType},
+        access_count INTEGER DEFAULT 0,
         metadata ${metadataType},
-        created_by TEXT NOT NULL DEFAULT 'me',
+        config ${metadataType},
         created_at ${timestampType},
         updated_at ${timestampType},
+        created_by TEXT NOT NULL DEFAULT 'me',
         FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE CASCADE
       )`,
       
@@ -225,7 +249,7 @@ class DatabaseConnection {
         phase_order INTEGER,
         task_level INTEGER DEFAULT 0,
         root_task_id TEXT,
-        is_phase_task BOOLEAN DEFAULT FALSE,
+        is_phase_task INTEGER DEFAULT 0,
         progress INTEGER DEFAULT 0,
         phase_progress ${metadataType},
         blocked_by ${metadataType},
@@ -361,9 +385,26 @@ class DatabaseConnection {
       `CREATE TABLE IF NOT EXISTS analysis_results (
         id TEXT PRIMARY KEY DEFAULT ${uuidFunction},
         project_id TEXT NOT NULL,
-        type TEXT NOT NULL,
-        result ${metadataType},
+        
+        -- ANALYSIS DATA
+        analysis_type TEXT NOT NULL,
+        result_data ${metadataType},
+        summary ${metadataType},
+        
+        -- BASIC STATUS
+        status TEXT NOT NULL DEFAULT 'completed',
+        started_at ${timestampType},
+        completed_at ${timestampType},
+        duration_ms INTEGER,
+        
+        -- BASIC METRICS
+        overall_score INTEGER DEFAULT 0,
+        critical_issues_count INTEGER DEFAULT 0,
+        warnings_count INTEGER DEFAULT 0,
+        recommendations_count INTEGER DEFAULT 0,
+        
         created_at ${timestampType},
+        
         FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE
       )`,
       

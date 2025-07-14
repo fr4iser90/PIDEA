@@ -54,6 +54,12 @@ function Header({ eventBus, currentView, onNavigationClick, onLeftSidebarToggle,
             👁️ Preview
           </button>
           <button
+            onClick={() => handleNavigationClick('analyze')}
+            className={`mode-btn ${currentView === 'analyze' ? 'active' : ''}`}
+          >
+            📊 Analyze
+          </button>
+          <button
             onClick={() => handleNavigationClick('git')}
             className={`mode-btn ${currentView === 'git' ? 'active' : ''}`}
           >

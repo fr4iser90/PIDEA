@@ -37,18 +37,50 @@ CREATE TABLE IF NOT EXISTS user_sessions (
     FOREIGN KEY (user_id) REFERENCES users (id)
 );
 
--- PROJECTS (Your local projects)
+-- PROJECTS (Your local projects) - EXTENDED VERSION
 CREATE TABLE IF NOT EXISTS projects (
     id TEXT PRIMARY KEY,
     name TEXT NOT NULL,
     description TEXT,
     workspace_path TEXT NOT NULL, -- Path on YOUR computer
-    ide_type TEXT NOT NULL, -- 'cursor', 'vscode', 'windsurf'
-    port INTEGER NOT NULL, -- IDE Port (9222, 9232, etc.)
+    type TEXT NOT NULL DEFAULT 'development', -- 'development', 'documentation', 'testing', 'deployment'
+    
+    -- IDE Configuration
+    ide_type TEXT NOT NULL DEFAULT 'cursor', -- 'cursor', 'vscode', 'windsurf'
+    ide_port INTEGER, -- IDE Port (9222, 9232, etc.)
+    ide_status TEXT DEFAULT 'inactive', -- 'active', 'inactive', 'starting', 'error'
+    
+    -- Development Server Configuration
+    backend_port INTEGER, -- Backend development server port
+    frontend_port INTEGER, -- Frontend development server port
+    database_port INTEGER, -- Database port if applicable
+    
+    -- Startup Configuration
+    start_command TEXT, -- npm start, yarn dev, etc.
+    build_command TEXT, -- npm run build, yarn build, etc.
+    dev_command TEXT, -- npm run dev, yarn dev, etc.
+    test_command TEXT, -- npm test, yarn test, etc.
+    
+    -- Project Metadata
+    framework TEXT, -- 'react', 'vue', 'angular', 'node', 'python', etc.
+    language TEXT, -- 'javascript', 'typescript', 'python', 'java', etc.
+    package_manager TEXT, -- 'npm', 'yarn', 'pnpm', 'pip', etc.
+    
+    -- Status and Management
     status TEXT NOT NULL DEFAULT 'active', -- 'active', 'archived', 'deleted'
-    metadata TEXT, -- JSON for project-specific settings
+    priority INTEGER DEFAULT 0, -- Project priority (0-10)
+    last_accessed TEXT, -- Last time project was opened
+    access_count INTEGER DEFAULT 0, -- How many times project was accessed
+    
+    -- Extended Metadata
+    metadata TEXT, -- JSON for additional project-specific settings
+    config TEXT, -- JSON for project configuration (ports, commands, etc.)
+    
+    -- Timestamps
     created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+    updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    created_by TEXT NOT NULL DEFAULT 'me',
+    FOREIGN KEY (created_by) REFERENCES users (id)
 );
 
 -- TASKS (Your tasks for each project)
@@ -92,373 +124,158 @@ CREATE TABLE IF NOT EXISTS tasks (
 );
 
 -- ============================================================================
--- META-EBENEN TABLES (PIDEA Architecture)
+-- ANALYSIS TABLES
 -- ============================================================================
 
--- FRAMEWORKS (Ebene 2: Strategy and Workflow Selection)
-CREATE TABLE IF NOT EXISTS frameworks (
+-- ANALYSIS RESULTS (Your project analysis data)
+CREATE TABLE IF NOT EXISTS analysis_results (
     id TEXT PRIMARY KEY,
-    name TEXT NOT NULL,
-    category TEXT NOT NULL, -- 'analysis', 'generate', 'refactor', 'test', 'deploy'
-    description TEXT,
-    version TEXT NOT NULL DEFAULT '1.0.0',
-    status TEXT NOT NULL DEFAULT 'active', -- 'active', 'deprecated', 'experimental'
-    capabilities TEXT, -- JSON Array of available capabilities
-    configuration TEXT, -- JSON for framework-specific settings
-    metadata TEXT, -- JSON for extended data
-    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
-);
-
--- WORKFLOWS (Ebene 1: Step Orchestration)
-CREATE TABLE IF NOT EXISTS workflows (
-    id TEXT PRIMARY KEY,
-    name TEXT NOT NULL,
-    framework_id TEXT NOT NULL,
-    category TEXT NOT NULL, -- 'analysis', 'generate', 'refactor', 'test', 'deploy'
-    description TEXT,
-    version TEXT NOT NULL DEFAULT '1.0.0',
-    status TEXT NOT NULL DEFAULT 'active',
-    steps TEXT, -- JSON Array of step configurations
-    configuration TEXT, -- JSON for workflow-specific settings
-    metadata TEXT, -- JSON for extended data
-    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (framework_id) REFERENCES frameworks (id)
-);
-
--- STEPS (Ebene 0: Atomic Operations)
-CREATE TABLE IF NOT EXISTS steps (
-    id TEXT PRIMARY KEY,
-    name TEXT NOT NULL,
-    category TEXT NOT NULL, -- 'analysis', 'generate', 'refactor', 'test', 'deploy'
-    description TEXT,
-    version TEXT NOT NULL DEFAULT '1.0.0',
-    status TEXT NOT NULL DEFAULT 'active',
-    capabilities TEXT, -- JSON Array of available capabilities
-    configuration TEXT, -- JSON for step-specific settings
-    metadata TEXT, -- JSON for extended data
-    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
-);
-
--- COMMANDS (Application Layer: Business Actions)
-CREATE TABLE IF NOT EXISTS commands (
-    id TEXT PRIMARY KEY,
-    name TEXT NOT NULL,
-    category TEXT NOT NULL, -- 'analysis', 'generate', 'refactor', 'test', 'deploy'
-    description TEXT,
-    version TEXT NOT NULL DEFAULT '1.0.0',
-    status TEXT NOT NULL DEFAULT 'active',
-    parameters TEXT, -- JSON Schema for parameters
-    capabilities TEXT, -- JSON Array of available capabilities
-    configuration TEXT, -- JSON for command-specific settings
-    metadata TEXT, -- JSON for extended data
-    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
-);
-
--- HANDLERS (Application Layer: Use Case Orchestration)
-CREATE TABLE IF NOT EXISTS handlers (
-    id TEXT PRIMARY KEY,
-    name TEXT NOT NULL,
-    category TEXT NOT NULL, -- 'analysis', 'generate', 'refactor', 'test', 'deploy'
-    description TEXT,
-    version TEXT NOT NULL DEFAULT '1.0.0',
-    status TEXT NOT NULL DEFAULT 'active',
-    command_id TEXT,
-    framework_id TEXT,
-    capabilities TEXT, -- JSON Array of available capabilities
-    configuration TEXT, -- JSON for handler-specific settings
-    metadata TEXT, -- JSON for extended data
-    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (command_id) REFERENCES commands (id),
-    FOREIGN KEY (framework_id) REFERENCES frameworks (id)
-);
-
--- ============================================================================
--- IDE AGENTS (Ebene 3: IDE Integration)
--- ============================================================================
-
--- IDE AGENTS (Your running IDE instances)
-CREATE TABLE IF NOT EXISTS ide_agents (
-    id TEXT PRIMARY KEY,
-    name TEXT NOT NULL,
-    ide_type TEXT NOT NULL, -- 'cursor', 'vscode', 'windsurf'
     project_id TEXT NOT NULL,
-    port INTEGER NOT NULL,
-    status TEXT NOT NULL DEFAULT 'running', -- 'running', 'stopped', 'error'
-    workspace_path TEXT NOT NULL,
-    capabilities TEXT, -- JSON Array of available capabilities
-    configuration TEXT, -- JSON for IDE-specific settings
-    metadata TEXT, -- JSON for extended data
+    analysis_type TEXT NOT NULL, -- 'code_quality', 'security', 'performance', 'architecture'
+    result_data TEXT NOT NULL, -- JSON analysis results
+    summary TEXT, -- JSON summary data
+    status TEXT NOT NULL DEFAULT 'completed', -- 'pending', 'running', 'completed', 'failed'
+    started_at TEXT NOT NULL,
+    completed_at TEXT,
+    duration_ms INTEGER,
+    overall_score REAL, -- 0-100 score
+    critical_issues_count INTEGER DEFAULT 0,
+    warnings_count INTEGER DEFAULT 0,
+    recommendations_count INTEGER DEFAULT 0,
     created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    last_heartbeat TEXT,
     FOREIGN KEY (project_id) REFERENCES projects (id)
 );
 
 -- ============================================================================
--- EXECUTION TABLES (Task and Workflow Execution)
+-- CHAT SYSTEM TABLES
 -- ============================================================================
 
--- TASK EXECUTIONS (Your task runs)
-CREATE TABLE IF NOT EXISTS task_executions (
+-- CHAT SESSIONS (Your chat conversations)
+CREATE TABLE IF NOT EXISTS chat_sessions (
     id TEXT PRIMARY KEY,
-    task_id TEXT NOT NULL,
-    user_id TEXT NOT NULL DEFAULT 'me',
-    status TEXT NOT NULL DEFAULT 'pending', -- 'pending', 'running', 'completed', 'failed', 'cancelled'
-    execution_method TEXT NOT NULL, -- 'unified_workflow', 'core_engine', 'git_workflow', 'legacy'
-    framework_id TEXT,
-    workflow_id TEXT,
-    handler_id TEXT,
-    command_id TEXT,
-    result TEXT, -- JSON for execution results
-    error TEXT, -- JSON for error details
-    metadata TEXT, -- JSON for extended data
-    started_at TEXT,
-    completed_at TEXT,
-    duration_ms INTEGER,
+    project_id TEXT,
+    title TEXT NOT NULL,
+    session_type TEXT NOT NULL DEFAULT 'general', -- 'general', 'analysis', 'refactoring', 'debugging'
+    status TEXT NOT NULL DEFAULT 'active', -- 'active', 'archived', 'deleted'
+    metadata TEXT, -- JSON for session metadata
+    created_by TEXT NOT NULL DEFAULT 'me',
     created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (task_id) REFERENCES tasks (id),
-    FOREIGN KEY (user_id) REFERENCES users (id),
-    FOREIGN KEY (framework_id) REFERENCES frameworks (id),
-    FOREIGN KEY (workflow_id) REFERENCES workflows (id),
-    FOREIGN KEY (handler_id) REFERENCES handlers (id),
-    FOREIGN KEY (command_id) REFERENCES commands (id)
-);
-
--- STEP EXECUTIONS (Individual step runs)
-CREATE TABLE IF NOT EXISTS step_executions (
-    id TEXT PRIMARY KEY,
-    task_execution_id TEXT NOT NULL,
-    step_id TEXT NOT NULL,
-    workflow_id TEXT NOT NULL,
-    status TEXT NOT NULL DEFAULT 'pending', -- 'pending', 'running', 'completed', 'failed', 'skipped'
-    result TEXT, -- JSON for step results
-    error TEXT, -- JSON for error details
-    metadata TEXT, -- JSON for extended data
-    started_at TEXT,
-    completed_at TEXT,
-    duration_ms INTEGER,
-    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (task_execution_id) REFERENCES task_executions (id),
-    FOREIGN KEY (step_id) REFERENCES steps (id),
-    FOREIGN KEY (workflow_id) REFERENCES workflows (id)
-);
-
--- EXECUTION HISTORY (Execution tracking)
-CREATE TABLE IF NOT EXISTS execution_history (
-    id TEXT PRIMARY KEY,
-    task_execution_id TEXT NOT NULL,
-    action TEXT NOT NULL, -- 'started', 'step_completed', 'step_failed', 'completed', 'cancelled'
-    data TEXT, -- JSON for action details
-    metadata TEXT, -- JSON for extended data
-    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (task_execution_id) REFERENCES task_executions (id)
-);
-
--- ============================================================================
--- RELATIONSHIP TABLES
--- ============================================================================
-
--- TASK DEPENDENCIES (Task relationships)
-CREATE TABLE IF NOT EXISTS task_dependencies (
-    id TEXT PRIMARY KEY,
-    task_id TEXT NOT NULL,
-    dependency_id TEXT NOT NULL,
-    type TEXT NOT NULL, -- 'blocks', 'requires', 'related'
-    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (task_id) REFERENCES tasks (id),
-    FOREIGN KEY (dependency_id) REFERENCES tasks (id)
-);
-
--- FRAMEWORK DEPENDENCIES (Framework relationships)
-CREATE TABLE IF NOT EXISTS framework_dependencies (
-    id TEXT PRIMARY KEY,
-    framework_id TEXT NOT NULL,
-    dependency_id TEXT NOT NULL,
-    type TEXT NOT NULL, -- 'requires', 'optional', 'conflicts'
-    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (framework_id) REFERENCES frameworks (id),
-    FOREIGN KEY (dependency_id) REFERENCES frameworks (id)
-);
-
--- WORKFLOW STEPS (Workflow-step relationships)
-CREATE TABLE IF NOT EXISTS workflow_steps (
-    id TEXT PRIMARY KEY,
-    workflow_id TEXT NOT NULL,
-    step_id TEXT NOT NULL,
-    order_index INTEGER NOT NULL,
-    configuration TEXT, -- JSON for step-specific configuration in workflow
-    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (workflow_id) REFERENCES workflows (id),
-    FOREIGN KEY (step_id) REFERENCES steps (id)
-);
-
--- ============================================================================
--- REGISTRY TABLES (Modular Management)
--- ============================================================================
-
--- REGISTRIES (For modular management)
-CREATE TABLE IF NOT EXISTS registries (
-    id TEXT PRIMARY KEY,
-    name TEXT NOT NULL, -- 'command', 'handler', 'step', 'workflow', 'framework'
-    type TEXT NOT NULL, -- 'command', 'handler', 'step', 'workflow', 'framework'
-    status TEXT NOT NULL DEFAULT 'active',
-    configuration TEXT, -- JSON for registry-specific settings
-    metadata TEXT, -- JSON for extended data
-    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
-);
-
--- REGISTRY ITEMS (Dynamic registration)
-CREATE TABLE IF NOT EXISTS registry_items (
-    id TEXT PRIMARY KEY,
-    registry_id TEXT NOT NULL,
-    item_id TEXT NOT NULL, -- Reference to commands.id, handlers.id, etc.
-    item_type TEXT NOT NULL, -- 'command', 'handler', 'step', 'workflow', 'framework'
-    category TEXT NOT NULL, -- 'analysis', 'generate', 'refactor', 'test', 'deploy'
-    status TEXT NOT NULL DEFAULT 'active',
-    priority INTEGER DEFAULT 0,
-    configuration TEXT, -- JSON for item-specific settings
-    metadata TEXT, -- JSON for extended data
-    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (registry_id) REFERENCES registries (id)
-);
-
--- ============================================================================
--- CONFIGURATION TABLES
--- ============================================================================
-
--- PROJECT CONFIGURATIONS (Your project settings)
-CREATE TABLE IF NOT EXISTS project_configurations (
-    id TEXT PRIMARY KEY,
-    project_id TEXT NOT NULL,
-    key TEXT NOT NULL,
-    value TEXT NOT NULL,
-    type TEXT NOT NULL DEFAULT 'string', -- 'string', 'number', 'boolean', 'json'
-    description TEXT,
-    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    last_message_at TEXT,
+    message_count INTEGER DEFAULT 0,
     FOREIGN KEY (project_id) REFERENCES projects (id),
-    UNIQUE(project_id, key)
+    FOREIGN KEY (created_by) REFERENCES users (id)
 );
 
--- GLOBAL CONFIGURATIONS (System-wide settings)
-CREATE TABLE IF NOT EXISTS global_configurations (
+-- CHAT MESSAGES (Your chat messages)
+CREATE TABLE IF NOT EXISTS chat_messages (
     id TEXT PRIMARY KEY,
-    key TEXT UNIQUE NOT NULL,
-    value TEXT NOT NULL,
-    type TEXT NOT NULL DEFAULT 'string', -- 'string', 'number', 'boolean', 'json'
+    session_id TEXT NOT NULL,
+    sender_type TEXT NOT NULL, -- 'user', 'assistant', 'system'
+    content TEXT NOT NULL,
+    message_type TEXT NOT NULL DEFAULT 'text', -- 'text', 'code', 'file', 'command'
+    metadata TEXT, -- JSON for message metadata
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    timestamp TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (session_id) REFERENCES chat_sessions (id) ON DELETE CASCADE
+);
+
+-- ============================================================================
+-- WORKFLOW TABLES
+-- ============================================================================
+
+-- WORKFLOWS (Your automated workflows)
+CREATE TABLE IF NOT EXISTS workflows (
+    id TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
     description TEXT,
+    project_id TEXT,
+    workflow_type TEXT NOT NULL, -- 'analysis', 'refactoring', 'testing', 'deployment'
+    status TEXT NOT NULL DEFAULT 'active', -- 'active', 'inactive', 'archived'
+    config TEXT NOT NULL, -- JSON workflow configuration
+    metadata TEXT, -- JSON for workflow metadata
+    created_by TEXT NOT NULL DEFAULT 'me',
     created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+    updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    last_executed_at TEXT,
+    execution_count INTEGER DEFAULT 0,
+    FOREIGN KEY (project_id) REFERENCES projects (id),
+    FOREIGN KEY (created_by) REFERENCES users (id)
 );
 
--- ============================================================================
--- ANALYTICS & MONITORING TABLES
--- ============================================================================
-
--- PERFORMANCE METRICS (Execution metrics)
-CREATE TABLE IF NOT EXISTS performance_metrics (
+-- WORKFLOW EXECUTIONS (Your workflow run history)
+CREATE TABLE IF NOT EXISTS workflow_executions (
     id TEXT PRIMARY KEY,
-    task_execution_id TEXT,
-    metric_name TEXT NOT NULL, -- 'execution_time', 'memory_usage', 'cpu_usage'
-    metric_value REAL NOT NULL,
-    unit TEXT NOT NULL, -- 'ms', 'MB', '%'
-    metadata TEXT, -- JSON for extended data
+    workflow_id TEXT NOT NULL,
+    project_id TEXT,
+    status TEXT NOT NULL, -- 'pending', 'running', 'completed', 'failed', 'cancelled'
+    started_at TEXT NOT NULL,
+    completed_at TEXT,
+    duration_ms INTEGER,
+    result_data TEXT, -- JSON execution results
+    error_message TEXT,
+    metadata TEXT, -- JSON for execution metadata
     created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (task_execution_id) REFERENCES task_executions (id)
-);
-
--- SYSTEM HEALTH (System monitoring)
-CREATE TABLE IF NOT EXISTS system_health (
-    id TEXT PRIMARY KEY,
-    component TEXT NOT NULL, -- 'database', 'ide_agent', 'framework', 'workflow'
-    status TEXT NOT NULL, -- 'healthy', 'warning', 'error', 'critical'
-    message TEXT,
-    metadata TEXT, -- JSON for extended data
-    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+    FOREIGN KEY (workflow_id) REFERENCES workflows (id),
+    FOREIGN KEY (project_id) REFERENCES projects (id)
 );
 
 -- ============================================================================
 -- INDEXES FOR PERFORMANCE
 -- ============================================================================
 
--- Task indexes
+-- Projects indexes
+CREATE INDEX IF NOT EXISTS idx_projects_workspace_path ON projects(workspace_path);
+CREATE INDEX IF NOT EXISTS idx_projects_ide_port ON projects(ide_port);
+CREATE INDEX IF NOT EXISTS idx_projects_status ON projects(status);
+CREATE INDEX IF NOT EXISTS idx_projects_type ON projects(type);
+CREATE INDEX IF NOT EXISTS idx_projects_framework ON projects(framework);
+CREATE INDEX IF NOT EXISTS idx_projects_last_accessed ON projects(last_accessed);
+
+-- Tasks indexes
 CREATE INDEX IF NOT EXISTS idx_tasks_project_id ON tasks(project_id);
 CREATE INDEX IF NOT EXISTS idx_tasks_status ON tasks(status);
-CREATE INDEX IF NOT EXISTS idx_tasks_category ON tasks(category);
 CREATE INDEX IF NOT EXISTS idx_tasks_priority ON tasks(priority);
-CREATE INDEX IF NOT EXISTS idx_tasks_created_at ON tasks(created_at);
+CREATE INDEX IF NOT EXISTS idx_tasks_type ON tasks(type);
+CREATE INDEX IF NOT EXISTS idx_tasks_created_by ON tasks(created_by);
+CREATE INDEX IF NOT EXISTS idx_tasks_due_date ON tasks(due_date);
 
--- Framework indexes
-CREATE INDEX IF NOT EXISTS idx_frameworks_category ON frameworks(category);
-CREATE INDEX IF NOT EXISTS idx_frameworks_status ON frameworks(status);
+-- Analysis indexes
+CREATE INDEX IF NOT EXISTS idx_analysis_project_id ON analysis_results(project_id);
+CREATE INDEX IF NOT EXISTS idx_analysis_type ON analysis_results(analysis_type);
+CREATE INDEX IF NOT EXISTS idx_analysis_status ON analysis_results(status);
+CREATE INDEX IF NOT EXISTS idx_analysis_created_at ON analysis_results(created_at);
+
+-- Chat indexes
+CREATE INDEX IF NOT EXISTS idx_chat_sessions_project_id ON chat_sessions(project_id);
+CREATE INDEX IF NOT EXISTS idx_chat_sessions_created_by ON chat_sessions(created_by);
+CREATE INDEX IF NOT EXISTS idx_chat_sessions_status ON chat_sessions(status);
+CREATE INDEX IF NOT EXISTS idx_chat_messages_session_id ON chat_messages(session_id);
+CREATE INDEX IF NOT EXISTS idx_chat_messages_created_at ON chat_messages(created_at);
 
 -- Workflow indexes
-CREATE INDEX IF NOT EXISTS idx_workflows_framework_id ON workflows(framework_id);
-CREATE INDEX IF NOT EXISTS idx_workflows_category ON workflows(category);
-
--- Step indexes
-CREATE INDEX IF NOT EXISTS idx_steps_category ON steps(category);
-CREATE INDEX IF NOT EXISTS idx_steps_status ON steps(status);
-
--- Command indexes
-CREATE INDEX IF NOT EXISTS idx_commands_category ON commands(category);
-CREATE INDEX IF NOT EXISTS idx_commands_status ON commands(status);
-
--- Handler indexes
-CREATE INDEX IF NOT EXISTS idx_handlers_category ON handlers(category);
-CREATE INDEX IF NOT EXISTS idx_handlers_command_id ON handlers(command_id);
-CREATE INDEX IF NOT EXISTS idx_handlers_framework_id ON handlers(framework_id);
-
--- IDE Agent indexes
-CREATE INDEX IF NOT EXISTS idx_ide_agents_project_id ON ide_agents(project_id);
-CREATE INDEX IF NOT EXISTS idx_ide_agents_ide_type ON ide_agents(ide_type);
-CREATE INDEX IF NOT EXISTS idx_ide_agents_status ON ide_agents(status);
-
--- Task Execution indexes
-CREATE INDEX IF NOT EXISTS idx_task_executions_task_id ON task_executions(task_id);
-CREATE INDEX IF NOT EXISTS idx_task_executions_status ON task_executions(status);
-CREATE INDEX IF NOT EXISTS idx_task_executions_created_at ON task_executions(created_at);
-
--- Step Execution indexes
-CREATE INDEX IF NOT EXISTS idx_step_executions_task_execution_id ON step_executions(task_execution_id);
-CREATE INDEX IF NOT EXISTS idx_step_executions_status ON step_executions(status);
-
--- Registry indexes
-CREATE INDEX IF NOT EXISTS idx_registry_items_registry_id ON registry_items(registry_id);
-CREATE INDEX IF NOT EXISTS idx_registry_items_category ON registry_items(category);
+CREATE INDEX IF NOT EXISTS idx_workflows_project_id ON workflows(project_id);
+CREATE INDEX IF NOT EXISTS idx_workflows_type ON workflows(workflow_type);
+CREATE INDEX IF NOT EXISTS idx_workflows_status ON workflows(status);
+CREATE INDEX IF NOT EXISTS idx_workflow_executions_workflow_id ON workflow_executions(workflow_id);
+CREATE INDEX IF NOT EXISTS idx_workflow_executions_status ON workflow_executions(status);
 
 -- ============================================================================
 -- INITIAL DATA
 -- ============================================================================
 
--- Insert default user (YOU)
+-- Insert default user if not exists
 INSERT OR IGNORE INTO users (id, email, username, password_hash, role, status) 
-VALUES ('me', 'admin@pidea.local', 'admin', 'default_hash_change_me', 'admin', 'active');
-
--- Insert default global configurations
-INSERT OR IGNORE INTO global_configurations (key, value, type, description) VALUES
-('system_name', 'PIDEA', 'string', 'System name'),
-('system_version', '1.0.0', 'string', 'System version'),
-('default_ide_port_start', '9222', 'number', 'Default starting port for IDE detection'),
-('max_concurrent_executions', '5', 'number', 'Maximum concurrent task executions'),
-('auto_cleanup_days', '30', 'number', 'Days to keep execution history'),
-('enable_analytics', 'true', 'boolean', 'Enable performance analytics'),
-('log_level', 'info', 'string', 'System log level');
+VALUES ('me', 'admin@pidea.local', 'admin', '$2b$10$default.hash.for.development', 'admin', 'active');
 
 -- ============================================================================
 -- COMMENTS
 -- ============================================================================
 
--- This is the PIDEA database schema for single-user IDE management
--- All tables are designed for one user managing multiple IDEs and projects
--- The meta-ebenen architecture supports: Commands -> Handlers -> Frameworks -> Workflows -> Steps
--- Each level has its own capabilities and can be dynamically registered via registries
+-- This schema supports a single-user IDE management system
+-- All tables use 'me' as the default user ID
+-- Projects can have multiple IDEs and development servers
+-- Tasks are organized by project and can have complex hierarchies
+-- Analysis results are stored per project and analysis type
+-- Chat sessions provide context-aware conversations
+-- Workflows enable automation of common development tasks

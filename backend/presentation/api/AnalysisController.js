@@ -265,29 +265,213 @@ class AnalysisController {
    */
   async getAnalysisStatus(req, res) {
     try {
-      const { projectPath } = req.params;
+      const { projectId } = req.params;
+      
+      this.logger.info(`[AnalysisController] Getting analysis status for project: ${projectId}`);
+      
+      // Get all analyses for this project
+      const analyses = await this.analysisRepository.findByProjectId(projectId);
+      
+      if (analyses.length === 0) {
+        // Return default status if no analyses exist
+        const defaultStatus = {
+          id: 'status',
+          projectType: 'unknown',
+          complexity: 'unknown',
+          issues: [],
+          suggestions: [],
+          status: 'no-data',
+          lastAnalysis: null,
+          isRunning: false,
+          progress: 0
+        };
+        
+        res.json({ success: true, data: defaultStatus });
+        return;
+      }
+      
+      // Get the latest analysis
+      const latestAnalysis = analyses[0];
+      const resultData = latestAnalysis.resultData || {};
+      const summary = latestAnalysis.summary || {};
+      
+      // Extract status information
+      const projectType = summary.metadata?.projectType || 
+                         resultData.techStack?.frameworks?.[0]?.name || 
+                         'nodejs';
+      
+      const complexity = summary.metadata?.complexity || 
+                        (resultData.codeQuality?.issues?.length > 100 ? 'high' : 
+                         resultData.codeQuality?.issues?.length > 50 ? 'medium' : 'low');
+      
+      // Extract issues and suggestions
+      const issues = [];
+      const suggestions = [];
+      
+      if (resultData.codeQuality?.issues) {
+        issues.push(...resultData.codeQuality.issues.slice(0, 5));
+      }
+      
+      if (summary.recommendations && Array.isArray(summary.recommendations)) {
+        suggestions.push(...summary.recommendations.slice(0, 5));
+      }
+      
+      // Determine current status
+      const isRunning = latestAnalysis.status === 'running';
+      const progress = isRunning ? 50 : 
+                      latestAnalysis.status === 'completed' ? 100 : 0;
+      
+      const status = {
+        id: 'status',
+        projectType,
+        complexity,
+        issues,
+        suggestions,
+        status: latestAnalysis.status,
+        lastAnalysis: latestAnalysis.createdAt,
+        isRunning,
+        progress,
+        projectId,
+        analysisId: latestAnalysis.id,
+        overallScore: summary.overallScore || 0,
+        criticalIssues: summary.criticalIssues || 0,
+        warnings: summary.warnings || 0,
+        recommendations: summary.recommendations?.length || 0
+      };
+      
+      this.logger.info(`[AnalysisController] Analysis status:`, status);
+      
+      res.json({ success: true, data: status });
+    } catch (error) {
+      this.logger.error(`[AnalysisController] Failed to get analysis status:`, error);
+      res.status(500).json({ success: false, error: error.message });
+    }
+  }
 
-      res.json({
-        success: true,
-        data: {
-          projectPath,
-          availableAnalyses: [
-            'code-quality',
-            'security',
-            'performance',
-            'architecture',
-            'comprehensive'
-          ],
-          status: 'ready'
+  /**
+   * Get analysis metrics
+   * @param {Object} req - Express request
+   * @param {Object} res - Express response
+   */
+  async getAnalysisMetrics(req, res) {
+    try {
+      const { projectId } = req.params;
+      
+      this.logger.info(`[AnalysisController] Getting analysis metrics for project: ${projectId}`);
+      
+      // Get all analyses for this project
+      const analyses = await this.analysisRepository.findByProjectId(projectId);
+      
+      this.logger.info(`[AnalysisController] Found ${analyses.length} analyses for project ${projectId}`);
+      
+      if (analyses.length === 0) {
+        // Return default metrics if no analyses exist
+        const defaultMetrics = {
+          id: 'metrics',
+          projectType: 'unknown',
+          complexity: 'unknown',
+          issues: [],
+          suggestions: [],
+          totalAnalyses: 0,
+          completedAnalyses: 0,
+          failedAnalyses: 0,
+          successRate: 0,
+          averageDuration: 0,
+          lastAnalysisDate: null,
+          analysisTypes: {}
+        };
+        
+        res.json({ success: true, data: defaultMetrics });
+        return;
+      }
+      
+      // Get the latest analysis for detailed metrics
+      const latestAnalysis = analyses[0]; // Already sorted by created_at DESC
+      const resultData = latestAnalysis.resultData || {};
+      const summary = latestAnalysis.summary || {};
+      
+      // Extract metrics from the latest analysis
+      const projectType = summary.metadata?.projectType || 
+                         resultData.techStack?.frameworks?.[0]?.name || 
+                         'nodejs';
+      
+      const complexity = summary.metadata?.complexity || 
+                        (resultData.codeQuality?.issues?.length > 100 ? 'high' : 
+                         resultData.codeQuality?.issues?.length > 50 ? 'medium' : 'low');
+      
+      // Extract issues and suggestions from the analysis
+      const issues = [];
+      const suggestions = [];
+      
+      // Add code quality issues
+      if (resultData.codeQuality?.issues) {
+        issues.push(...resultData.codeQuality.issues.slice(0, 10)); // Limit to 10 most important
+      }
+      
+      // Add security issues
+      if (resultData.security?.vulnerabilities) {
+        issues.push(...resultData.security.vulnerabilities.slice(0, 5));
+      }
+      
+      // Add performance issues
+      if (resultData.performance?.issues) {
+        issues.push(...resultData.performance.issues.slice(0, 5));
+      }
+      
+      // Add recommendations
+      if (summary.recommendations && Array.isArray(summary.recommendations)) {
+        suggestions.push(...summary.recommendations.slice(0, 10));
+      }
+      
+      // Calculate basic metrics
+      const totalAnalyses = analyses.length;
+      const completedAnalyses = analyses.filter(a => a.status === 'completed').length;
+      const failedAnalyses = analyses.filter(a => a.status === 'failed').length;
+      const successRate = totalAnalyses > 0 ? completedAnalyses / totalAnalyses : 0;
+      
+      // Calculate average duration
+      let totalDuration = 0;
+      let durationCount = 0;
+      analyses.forEach(analysis => {
+        if (analysis.durationMs) {
+          totalDuration += analysis.durationMs;
+          durationCount++;
         }
       });
-
-    } catch (error) {
-      this.logger.error(`[AnalysisController] Get analysis status failed:`, error);
-      res.status(500).json({
-        success: false,
-        error: error.message
+      const averageDuration = durationCount > 0 ? totalDuration / durationCount : 0;
+      
+      // Group by analysis type
+      const analysisTypes = {};
+      analyses.forEach(analysis => {
+        const type = analysis.analysisType || 'unknown';
+        analysisTypes[type] = (analysisTypes[type] || 0) + 1;
       });
+      
+      const metrics = {
+        id: 'metrics',
+        projectType,
+        complexity,
+        issues,
+        suggestions,
+        totalAnalyses,
+        completedAnalyses,
+        failedAnalyses,
+        successRate,
+        averageDuration,
+        lastAnalysisDate: latestAnalysis.createdAt,
+        analysisTypes,
+        overallScore: summary.overallScore || 0,
+        criticalIssues: summary.criticalIssues || 0,
+        warnings: summary.warnings || 0,
+        recommendations: summary.recommendations?.length || 0
+      };
+      
+      this.logger.info(`[AnalysisController] Calculated metrics:`, metrics);
+      
+      res.json({ success: true, data: metrics });
+    } catch (error) {
+      this.logger.error(`[AnalysisController] Failed to get analysis metrics:`, error);
+      res.status(500).json({ success: false, error: error.message });
     }
   }
 
@@ -299,7 +483,61 @@ class AnalysisController {
   async getAnalysisHistory(req, res) {
     try {
       const { projectId } = req.params;
-      const history = await this.analysisOutputService.getAnalysisHistory(projectId);
+      
+      this.logger.info(`[AnalysisController] Getting analysis history for project: ${projectId}`);
+      this.logger.info(`[AnalysisController] Request URL: ${req.url}`);
+      this.logger.info(`[AnalysisController] Request method: ${req.method}`);
+      this.logger.info(`[AnalysisController] AnalysisRepository type: ${this.analysisRepository.constructor.name}`);
+      
+      // Get analysis history from database
+      this.logger.info(`[AnalysisController] Calling analysisRepository.findByProjectId('${projectId}')`);
+      const analyses = await this.analysisRepository.findByProjectId(projectId);
+      
+      this.logger.info(`[AnalysisController] Found ${analyses.length} analyses from repository:`, analyses);
+      
+      // Transform to expected format (array of objects)
+      const history = analyses.map(analysis => {
+        // Extract data from the analysis result
+        const resultData = analysis.resultData || {};
+        const summary = analysis.summary || {};
+        
+        // Determine analysis type for display
+        const analysisType = analysis.analysisType || 'unknown';
+        const displayType = analysisType === 'advanced-analysis' ? 'analysis' : analysisType;
+        
+        // Calculate file size from data (if available)
+        const dataSize = JSON.stringify(resultData).length;
+        
+        // Get filename from metadata or generate one
+        const filename = summary.metadata?.filename || 
+                        summary.metadata?.projectPath?.split('/').pop() || 
+                        `${analysisType}-${analysis.id}.json`;
+        
+        const transformedAnalysis = {
+          id: analysis.id,
+          projectId: analysis.projectId,
+          analysisType: analysisType,
+          type: displayType, // Frontend expects 'type' field
+          timestamp: analysis.createdAt,
+          status: analysis.status,
+          data: resultData,
+          report: summary,
+          metadata: summary.metadata || {},
+          // Frontend-specific fields
+          filename: filename,
+          size: dataSize,
+          completed: analysis.status === 'completed',
+          error: analysis.status === 'failed' ? 'Analysis failed' : null,
+          progress: analysis.status === 'completed' ? 100 : 
+                   analysis.status === 'running' ? 50 : 0
+        };
+        
+        this.logger.info(`[AnalysisController] Transformed analysis:`, transformedAnalysis);
+        return transformedAnalysis;
+      });
+      
+      this.logger.info(`[AnalysisController] Final history response:`, { success: true, data: history });
+      
       res.json({ success: true, data: history });
     } catch (error) {
       this.logger.error(`[AnalysisController] Failed to get analysis history:`, error);

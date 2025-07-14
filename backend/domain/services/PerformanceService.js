@@ -20,6 +20,16 @@ class PerformanceService {
     try {
       this.logger.info(`[PerformanceService] Starting performance analysis for: ${projectPath}`);
 
+      // Check for existing recent analysis
+      const existingAnalysis = await this.checkExistingAnalysis(projectId, 'performance');
+      if (existingAnalysis && !options.forceRefresh) {
+        const shouldSkip = await this.shouldSkipAnalysis(existingAnalysis, 'performance');
+        if (shouldSkip) {
+          this.logger.info(`[PerformanceService] Recent performance analysis found, skipping: ${projectPath}`);
+          return existingAnalysis.data || existingAnalysis.result_data;
+        }
+      }
+
       const analysis = await this.performanceAnalyzer.analyzePerformance(projectPath, options);
 
       // Save to file
@@ -238,6 +248,55 @@ const logger = new Logger('Logger');
     }
 
     return issues;
+  }
+
+  /**
+   * Check if analysis already exists for this project
+   * @param {string} projectId - Project ID
+   * @param {string} analysisType - Analysis type
+   * @returns {Promise<Object|null>} Existing analysis or null
+   */
+  async checkExistingAnalysis(projectId, analysisType) {
+    try {
+      if (!this.analysisRepository) return null;
+      
+      const existingAnalyses = await this.analysisRepository.findByProjectIdAndType(projectId, analysisType);
+      return existingAnalyses.length > 0 ? existingAnalyses[0] : null;
+    } catch (error) {
+      this.logger.warn(`[PerformanceService] Failed to check existing analysis:`, error.message);
+      return null;
+    }
+  }
+
+  /**
+   * Determine if analysis should be skipped based on recency and data changes
+   * @param {Object} existingAnalysis - Existing analysis data
+   * @param {string} analysisType - Analysis type
+   * @returns {Promise<boolean>} Whether analysis should be skipped
+   */
+  async shouldSkipAnalysis(existingAnalysis, analysisType) {
+    if (!existingAnalysis) return false;
+
+    // Check if analysis is recent (within last 2 hours for performance)
+    const lastUpdate = new Date(existingAnalysis.timestamp || existingAnalysis.created_at);
+    const twoHoursAgo = new Date(Date.now() - 2 * 60 * 60 * 1000);
+    
+    if (lastUpdate > twoHoursAgo) {
+      this.logger.info(`[PerformanceService] Analysis is recent (${analysisType}), considering skip`, {
+        lastUpdate: lastUpdate.toISOString(),
+        analysisId: existingAnalysis.id
+      });
+      return true;
+    }
+
+    // Check if analysis is older than 24 hours (force refresh)
+    const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+    if (lastUpdate < oneDayAgo) {
+      this.logger.info(`[PerformanceService] Analysis is older than 24 hours (${analysisType}), forcing refresh`);
+      return false;
+    }
+
+    return false;
   }
 }
 

@@ -1,0 +1,338 @@
+/* Analysis Metrics - Metrics Component Styles */
+
+.analysis-metrics {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+/* Loading State */
+.analysis-metrics.loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 200px;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+/* Metrics Header */
+.metrics-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.metrics-header h3 {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--text-primary, #111827);
+}
+
+.metrics-summary {
+  display: flex;
+  align-items: center;
+}
+
+.summary-text {
+  font-size: 0.875rem;
+  color: var(--text-secondary, #6b7280);
+  background: var(--secondary-bg, #f3f4f6);
+  padding: 0.25rem 0.75rem;
+  border-radius: 12px;
+}
+
+/* Metrics Grid */
+.metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+}
+
+/* Metric Cards */
+.metric-card {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.25rem;
+  background: var(--card-bg, #ffffff);
+  border: 1px solid var(--border-color, #e5e7eb);
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.metric-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.metric-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: var(--primary-color, #3b82f6);
+}
+
+.metric-card.success::before {
+  background: var(--success-color, #10b981);
+}
+
+.metric-card.warning::before {
+  background: var(--warning-color, #f59e0b);
+}
+
+.metric-card.error::before {
+  background: var(--error-color, #ef4444);
+}
+
+.metric-card.neutral::before {
+  background: var(--neutral-color, #6b7280);
+}
+
+.metric-icon {
+  font-size: 2rem;
+  flex-shrink: 0;
+}
+
+.metric-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  flex: 1;
+}
+
+.metric-label {
+  font-size: 0.875rem;
+  color: var(--text-secondary, #6b7280);
+  font-weight: 500;
+}
+
+.metric-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--text-primary, #111827);
+  line-height: 1.2;
+}
+
+/* Metrics Details */
+.metrics-details {
+  margin-top: 1rem;
+}
+
+.analysis-types {
+  background: var(--card-bg, #ffffff);
+  border: 1px solid var(--border-color, #e5e7eb);
+  border-radius: 8px;
+  padding: 1.25rem;
+}
+
+.analysis-types h4 {
+  margin: 0 0 1rem 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-primary, #111827);
+}
+
+.types-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 0.75rem;
+}
+
+.type-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 0.75rem;
+  background: var(--secondary-bg, #f9fafb);
+  border-radius: 6px;
+  font-size: 0.875rem;
+}
+
+.type-name {
+  color: var(--text-primary, #374151);
+  font-weight: 500;
+}
+
+.type-count {
+  color: var(--text-secondary, #6b7280);
+  font-weight: 600;
+}
+
+/* No Data Messages */
+.no-data-message,
+.no-types-message {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  background: var(--secondary-bg, #f9fafb);
+  border: 1px solid var(--border-color, #e5e7eb);
+  border-radius: 8px;
+  color: var(--text-secondary, #6b7280);
+  font-size: 0.875rem;
+  text-align: center;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .metrics-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .metrics-grid {
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 0.75rem;
+  }
+
+  .metric-card {
+    padding: 1rem;
+  }
+
+  .metric-icon {
+    font-size: 1.5rem;
+  }
+
+  .metric-value {
+    font-size: 1.25rem;
+  }
+
+  .types-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 480px) {
+  .metrics-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .metric-card {
+    flex-direction: column;
+    text-align: center;
+    gap: 0.75rem;
+  }
+
+  .metric-icon {
+    font-size: 2rem;
+  }
+}
+
+/* Dark Mode Support */
+@media (prefers-color-scheme: dark) {
+  .metrics-header h3 {
+    color: var(--text-primary-dark, #f9fafb);
+  }
+
+  .summary-text {
+    background: var(--secondary-bg-dark, #374151);
+    color: var(--text-secondary-dark, #d1d5db);
+  }
+
+  .metric-card {
+    background: var(--card-bg-dark, #1f2937);
+    border-color: var(--border-color-dark, #374151);
+  }
+
+  .metric-card:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  }
+
+  .metric-label {
+    color: var(--text-secondary-dark, #9ca3af);
+  }
+
+  .metric-value {
+    color: var(--text-primary-dark, #f9fafb);
+  }
+
+  .analysis-types {
+    background: var(--card-bg-dark, #1f2937);
+    border-color: var(--border-color-dark, #374151);
+  }
+
+  .analysis-types h4 {
+    color: var(--text-primary-dark, #f9fafb);
+  }
+
+  .type-item {
+    background: var(--secondary-bg-dark, #374151);
+  }
+
+  .type-name {
+    color: var(--text-primary-dark, #f9fafb);
+  }
+
+  .type-count {
+    color: var(--text-secondary-dark, #9ca3af);
+  }
+
+  .no-data-message,
+  .no-types-message {
+    background: var(--secondary-bg-dark, #111827);
+    border-color: var(--border-color-dark, #374151);
+    color: var(--text-secondary-dark, #9ca3af);
+  }
+}
+
+/* Print Styles */
+@media print {
+  .metric-card {
+    break-inside: avoid;
+    border: 1px solid #000;
+    background: white;
+  }
+
+  .metric-card::before {
+    background: #000;
+  }
+
+  .analysis-types {
+    border: 1px solid #000;
+    background: white;
+  }
+
+  .type-item {
+    background: #f5f5f5;
+    border: 1px solid #ddd;
+  }
+}
+
+/* Animation for metric cards */
+.metric-card {
+  transition: all 0.2s ease;
+}
+
+.metric-card:hover {
+  transform: translateY(-2px);
+}
+
+/* Focus states for accessibility */
+.metric-card:focus-within {
+  outline: 2px solid var(--primary-color, #3b82f6);
+  outline-offset: 2px;
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .metric-card {
+    border-width: 2px;
+  }
+
+  .analysis-types {
+    border-width: 2px;
+  }
+
+  .type-item {
+    border: 1px solid #000;
+  }
+} 

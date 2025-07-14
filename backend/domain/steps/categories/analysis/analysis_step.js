@@ -7,6 +7,7 @@
 const StepBuilder = require('@steps/StepBuilder');
 const Logger = require('@logging/Logger');
 const logger = new Logger('Logger');
+const path = require('path'); // Added missing import for path
 
 // Step configuration
 const config = {
@@ -161,30 +162,57 @@ class AnalysisStep {
 
       // Save results to repository if available
       if (analysisRepository) {
-        const analysisId = await analysisRepository.save({
-          projectPath,
-          results: this.cleanResult(results),
-          timestamp: new Date(),
-          userId: context.userId || 'system'
-        });
-        // Don't add analysisId back to results to avoid circular reference
+        const AnalysisResult = require('@entities/AnalysisResult');
+        
+        const startTime = Date.now();
+        const endTime = Date.now();
+        const durationMs = endTime - startTime;
+        
+        const analysisResult = AnalysisResult.create(
+          context.projectId,
+          'comprehensive-analysis',
+          results,
+          results.summary,
+          {
+            status: 'completed',
+            startedAt: new Date(startTime).toISOString(),
+            completedAt: new Date(endTime).toISOString(),
+            durationMs: durationMs,
+            overallScore: results.summary?.overallScore || 0,
+            criticalIssuesCount: results.summary?.criticalIssues || 0,
+            warningsCount: results.summary?.warnings || 0,
+            recommendationsCount: results.summary?.recommendations || 0
+          }
+        );
+
+        await analysisRepository.save(analysisResult);
+        logger.log(`✅ Analysis results saved to repository with ID: ${analysisResult.id}`);
       }
 
       // Generate output using analysis output service
-      if (analysisOutputService) {
-        const output = await analysisOutputService.generateOutput(results, {
-          format: 'comprehensive',
-          includeRecommendations: true,
-          includeActionItems: true
-        });
-        results.output = output;
+      if (analysisOutputService && typeof analysisOutputService.generateOutput === 'function') {
+        try {
+          const output = await analysisOutputService.generateOutput(results, {
+            format: 'comprehensive',
+            includeRecommendations: true,
+            includeActionItems: true
+          });
+          results.output = output;
+        } catch (outputError) {
+          logger.warn(`⚠️ Analysis output generation failed: ${outputError.message}`);
+          // Continue without output generation
+        }
       }
 
       logger.log(`✅ ${this.name} completed successfully`);
       return {
         success: true,
         step: this.name,
-        results: results,
+        results: {
+          summary: results.summary,
+          totalAnalyses: results.summary?.totalAnalyses || 0,
+          overallScore: results.summary?.overallScore || 0
+        },
         timestamp: new Date().toISOString()
       };
     } catch (error) {

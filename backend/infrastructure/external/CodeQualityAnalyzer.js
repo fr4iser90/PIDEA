@@ -94,12 +94,6 @@ class CodeQualityAnalyzer {
             // Calculate overall score
             analysis.overallScore = realMetrics.overallQualityScore;
             
-            logger.log('DEBUG: Analysis with real metrics:', JSON.stringify({
-                realMetrics: analysis.realMetrics,
-                overallScore: analysis.overallScore,
-                metricsRealMetrics: analysis.metrics.realMetrics
-            }, null, 2));
-            
             // Generate recommendations
             analysis.recommendations = await this.generateRecommendations(analysis);
 

@@ -5,6 +5,7 @@ const AdvancedAnalysisCommand = require('@categories/analysis/AdvancedAnalysisCo
 const AdvancedAnalysisService = require('@services/AdvancedAnalysisService');
 const TaskRepository = require('@repositories/TaskRepository');
 const TaskExecutionRepository = require('@repositories/TaskExecutionRepository');
+const AnalysisRepository = require('@repositories/AnalysisRepository');
 
 class AdvancedAnalysisHandler {
     constructor(dependencies = {}) {
@@ -14,6 +15,7 @@ class AdvancedAnalysisHandler {
         this.advancedAnalysisService = dependencies.advancedAnalysisService || new AdvancedAnalysisService(dependencies);
         this.taskRepository = dependencies.taskRepository || new TaskRepository();
         this.executionRepository = dependencies.executionRepository || new TaskExecutionRepository();
+        this.analysisRepository = dependencies.analysisRepository || new AnalysisRepository();
     }
 
     /**
@@ -58,6 +60,9 @@ class AdvancedAnalysisHandler {
 
             // Update task status
             await this.updateTaskStatus(task, result);
+
+            // Save analysis result to repository
+            const savedAnalysis = await this.saveAnalysisResult(command, result);
 
             // Publish analysis completed event
             await this.publishAnalysisCompletedEvent(execution, result, command);
@@ -389,6 +394,169 @@ const logger = new Logger('Logger');
             step,
             timestamp: new Date()
         });
+    }
+
+    /**
+     * Save analysis result to repository
+     * @param {AdvancedAnalysisCommand} command - Advanced analysis command
+     * @param {Object} result - Analysis result
+     */
+    async saveAnalysisResult(command, result) {
+        try {
+            // Check if we already have recent analysis data
+            const existingAnalysis = await this.checkExistingAnalysis(command.projectPath, 'advanced-analysis');
+            
+            // Compare with existing data to see if update is needed
+            const needsUpdate = await this.shouldUpdateAnalysis(existingAnalysis, result);
+            
+            if (!needsUpdate) {
+                this.logger.info('AdvancedAnalysisHandler: Analysis data is up-to-date, skipping save', {
+                    handlerId: this.handlerId,
+                    commandId: command.commandId,
+                    projectPath: command.projectPath,
+                    existingAnalysisId: existingAnalysis?.id
+                });
+                return existingAnalysis;
+            }
+
+            const analysisResult = {
+                id: existingAnalysis?.id || `analysis-${command.commandId}`,
+                projectId: command.projectPath,
+                analysisType: 'advanced-analysis',
+                projectPath: command.projectPath,
+                commandId: command.commandId,
+                data: result.analysis,
+                report: result.report,
+                metadata: {
+                    handlerId: this.handlerId,
+                    executionId: result.metadata?.executionId,
+                    analysisOptions: command.getAnalysisOptions(),
+                    outputConfiguration: command.getOutputConfiguration(),
+                    duration: result.duration,
+                    overallScore: result.analysis.metrics?.overallScore || 0,
+                    violations: (result.analysis.layerValidation?.violations?.length || 0) + 
+                               (result.analysis.logicValidation?.violations?.length || 0),
+                    lastUpdated: new Date().toISOString(),
+                    updateReason: existingAnalysis ? 'data_changed' : 'new_analysis'
+                },
+                timestamp: new Date(),
+                status: 'completed'
+            };
+
+            await this.analysisRepository.save(analysisResult);
+
+            this.logger.info('AdvancedAnalysisHandler: Analysis result saved to repository', {
+                handlerId: this.handlerId,
+                analysisId: analysisResult.id,
+                commandId: command.commandId,
+                projectPath: command.projectPath,
+                isUpdate: !!existingAnalysis,
+                updateReason: analysisResult.metadata.updateReason
+            });
+
+            return analysisResult;
+
+        } catch (error) {
+            this.logger.error('AdvancedAnalysisHandler: Failed to save analysis result to repository', {
+                handlerId: this.handlerId,
+                commandId: command.commandId,
+                error: error.message
+            });
+            // Don't throw error to avoid breaking the main flow
+        }
+    }
+
+    /**
+     * Check if analysis already exists for this project
+     * @param {string} projectPath - Project path
+     * @param {string} analysisType - Analysis type
+     * @returns {Promise<Object|null>} Existing analysis or null
+     */
+    async checkExistingAnalysis(projectPath, analysisType) {
+        try {
+            const existingAnalyses = await this.analysisRepository.findByProjectIdAndType(projectPath, analysisType);
+            return existingAnalyses.length > 0 ? existingAnalyses[0] : null;
+        } catch (error) {
+            this.logger.warn('AdvancedAnalysisHandler: Failed to check existing analysis', {
+                projectPath,
+                analysisType,
+                error: error.message
+            });
+            return null;
+        }
+    }
+
+    /**
+     * Determine if analysis should be updated based on data changes
+     * @param {Object} existingAnalysis - Existing analysis data
+     * @param {Object} newResult - New analysis result
+     * @returns {Promise<boolean>} Whether update is needed
+     */
+    async shouldUpdateAnalysis(existingAnalysis, newResult) {
+        if (!existingAnalysis) {
+            return true; // No existing analysis, definitely need to save
+        }
+
+        // Check if analysis is recent (within last hour)
+        const lastUpdate = new Date(existingAnalysis.timestamp || existingAnalysis.created_at);
+        const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
+        
+        if (lastUpdate > oneHourAgo) {
+            this.logger.info('AdvancedAnalysisHandler: Analysis is recent, checking for data changes', {
+                lastUpdate: lastUpdate.toISOString(),
+                analysisId: existingAnalysis.id
+            });
+        }
+
+        // Compare key metrics to see if significant changes occurred
+        const existingData = existingAnalysis.data || existingAnalysis.result_data || {};
+        const newData = newResult.analysis;
+
+        // Compare overall score (if changed by more than 5 points, consider it significant)
+        const existingScore = existingData.metrics?.overallScore || 0;
+        const newScore = newData.metrics?.overallScore || 0;
+        const scoreDiff = Math.abs(newScore - existingScore);
+
+        if (scoreDiff > 5) {
+            this.logger.info('AdvancedAnalysisHandler: Significant score change detected, updating analysis', {
+                existingScore,
+                newScore,
+                scoreDiff
+            });
+            return true;
+        }
+
+        // Compare violation counts
+        const existingViolations = (existingData.layerValidation?.violations?.length || 0) + 
+                                  (existingData.logicValidation?.violations?.length || 0);
+        const newViolations = (newData.layerValidation?.violations?.length || 0) + 
+                             (newData.logicValidation?.violations?.length || 0);
+
+        if (existingViolations !== newViolations) {
+            this.logger.info('AdvancedAnalysisHandler: Violation count changed, updating analysis', {
+                existingViolations,
+                newViolations
+            });
+            return true;
+        }
+
+        // Check if analysis is older than 24 hours (force update)
+        const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+        if (lastUpdate < oneDayAgo) {
+            this.logger.info('AdvancedAnalysisHandler: Analysis is older than 24 hours, updating', {
+                lastUpdate: lastUpdate.toISOString()
+            });
+            return true;
+        }
+
+        this.logger.info('AdvancedAnalysisHandler: No significant changes detected, skipping update', {
+            existingScore,
+            newScore,
+            existingViolations,
+            newViolations
+        });
+
+        return false;
     }
 }
 

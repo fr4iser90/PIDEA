@@ -25,7 +25,7 @@ class PackageJsonAnalyzer {
         logger.log('[PackageJsonAnalyzer] Searching in directory:', dir, 'depth:', currentDepth);
         try {
           const files = fs.readdirSync(dir, { withFileTypes: true });
-          logger.log('[PackageJsonAnalyzer] Found', files.length, 'items in:', dir);
+          // logger.log('[PackageJsonAnalyzer] Found', files.length, 'items in:', dir);
           for (const file of files) {
             const fullPath = path.join(dir, file.name);
             if (file.isDirectory()) {
@@ -76,7 +76,7 @@ class PackageJsonAnalyzer {
           // LOG: Show all scripts in this package.json
           try {
             const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8'));
-            logger.log('[PackageJsonAnalyzer] Scripts in', pkgPath, ':', Object.entries(pkg.scripts || {}));
+            // logger.log('[PackageJsonAnalyzer] Scripts in', pkgPath, ':', Object.entries(pkg.scripts || {}));
           } catch (e) {}
         }
         if (best) {
