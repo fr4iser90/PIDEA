@@ -68,7 +68,7 @@ class IDEPortManager {
       // Strategy 2: First available port
       const firstAvailable = await this.tryFirstAvailablePort();
       if (firstAvailable) {
-        logger.log('[IDEPortManager] Using first available port:', firstAvailable);
+        logger.log(`[IDEPortManager] Using first available port: ${firstAvailable}`);
         return firstAvailable;
       }
 
@@ -108,7 +108,7 @@ class IDEPortManager {
       return this.activePort;
     }
 
-    logger.log('[IDEPortManager] Previously active port not available:', this.activePort);
+          logger.log(`[IDEPortManager] Previously active port not available: ${this.activePort}`);
     return null;
   }
 
@@ -125,10 +125,15 @@ class IDEPortManager {
         const sortedIDEs = availableIDEs.sort((a, b) => a.port - b.port);
         const firstIDE = sortedIDEs[0];
         
+        // Try validation first
         const isValid = await this.validatePort(firstIDE.port);
         if (isValid) {
           return firstIDE.port;
         }
+        
+        // If validation fails but IDE is detected, use it anyway
+        logger.log('[IDEPortManager] Port validation failed for first IDE, but using it anyway:', firstIDE.port);
+        return firstIDE.port;
       }
     } catch (error) {
       logger.error('[IDEPortManager] Error getting first available port:', error);
@@ -338,7 +343,7 @@ class IDEPortManager {
    */
   async setActivePort(port) {
     try {
-      logger.log('[IDEPortManager] Setting active port:', port);
+      logger.log(`[IDEPortManager] Setting active port: ${port}`);
       
       const isValid = await this.validatePort(port);
       if (!isValid) {
@@ -364,7 +369,7 @@ class IDEPortManager {
         });
       }
       
-      logger.log('[IDEPortManager] Active port set successfully:', port);
+      logger.log(`[IDEPortManager] Active port set successfully: ${port}`);
       return true;
     } catch (error) {
       logger.error('[IDEPortManager] Error setting active port:', error);

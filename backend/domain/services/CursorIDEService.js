@@ -43,13 +43,13 @@ class CursorIDEService {
   async sendMessage(message, options = {}) {
     // Ensure browser is connected to the active IDE port
     const activePort = this.getActivePort();
-    logger.log('[CursorIDEService] sendMessage() - Active port:', activePort);
+    logger.log(`[CursorIDEService] sendMessage() - Active port: ${activePort}`);
     
     if (activePort) {
       try {
         // Switch browser to active port if needed
         const currentBrowserPort = this.browserManager.getCurrentPort();
-        logger.log('[CursorIDEService] sendMessage() - Current browser port:', currentBrowserPort);
+        logger.log(`[CursorIDEService] sendMessage() - Current browser port: ${currentBrowserPort}`);
         
         if (currentBrowserPort !== activePort) {
           logger.log('[CursorIDEService] sendMessage() - Switching browser to active port:', activePort);
@@ -66,13 +66,13 @@ class CursorIDEService {
   async extractChatHistory() {
     // Ensure browser is connected to the active IDE port
     const activePort = this.getActivePort();
-    logger.log('[CursorIDEService] extractChatHistory() - Active port:', activePort);
+    logger.log(`[CursorIDEService] extractChatHistory() - Active port: ${activePort}`);
     
     if (activePort) {
       try {
         // Switch browser to active port if needed
         const currentBrowserPort = this.browserManager.getCurrentPort();
-        logger.log('[CursorIDEService] extractChatHistory() - Current browser port:', currentBrowserPort);
+        logger.log(`[CursorIDEService] extractChatHistory() - Current browser port: ${currentBrowserPort}`);
         
         if (currentBrowserPort !== activePort) {
           logger.log('[CursorIDEService] extractChatHistory() - Switching browser to active port:', activePort);
@@ -186,7 +186,7 @@ After applying the changes, please confirm that the refactoring has been complet
 
   getActivePort() {
     const activePort = this.ideManager.getActivePort();
-    logger.log('[CursorIDEService] getActivePort() called, returning:', activePort);
+    logger.log(`[CursorIDEService] getActivePort() called, returning: ${activePort}`);
     return activePort;
   }
 

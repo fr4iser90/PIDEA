@@ -58,7 +58,7 @@ class SendMessageHandler {
    */
   getActiveIDEService() {
     const activePort = this.ideManager.getActivePort();
-    this.logger.log('[SendMessageHandler] Active port:', activePort);
+    this.logger.log(`[SendMessageHandler] Active port: ${activePort}`);
     
     // Determine IDE type based on port range
     if (activePort >= 9222 && activePort <= 9231) {

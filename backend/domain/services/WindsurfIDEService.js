@@ -186,7 +186,7 @@ After applying the changes, please confirm that the refactoring has been complet
 
   getActivePort() {
     const activePort = this.ideManager.getActivePort();
-    logger.log('[WindsurfIDEService] getActivePort() called, returning:', activePort);
+    logger.log(`[WindsurfIDEService] getActivePort() called, returning: ${activePort}`);
     return activePort;
   }
 

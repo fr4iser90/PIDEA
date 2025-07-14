@@ -186,7 +186,7 @@ After applying the changes, please confirm that the refactoring has been complet
 
   getActivePort() {
     const activePort = this.ideManager.getActivePort();
-    logger.log('[vscodeIDEService] getActivePort() called, returning:', activePort);
+    logger.log(`[vscodeIDEService] getActivePort() called, returning: ${activePort}`);
     return activePort;
   }
 

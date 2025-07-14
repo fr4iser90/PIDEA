@@ -63,7 +63,7 @@ class IDEManager {
           try {
             logger.log('[IDEManager] Setting active port from event:', eventData.port);
             this.activePort = eventData.port;
-            logger.log('[IDEManager] Active port set to:', this.activePort);
+            logger.log(`[IDEManager] Active port set to: ${this.activePort}`);
           } catch (error) {
             logger.error('[IDEManager] Failed to set active port from event:', error.message);
           }
@@ -655,13 +655,13 @@ class IDEManager {
       for (const [port, status] of this.ideStatus) {
         if (status === 'active') {
           this.activePort = port;
-          logger.log('[IDEManager] Found active port from ideStatus:', this.activePort);
+          logger.log(`[IDEManager] Found active port from ideStatus: ${this.activePort}`);
           break;
         }
       }
     }
     
-    logger.log('[IDEManager] getActivePort() called, returning:', this.activePort);
+    logger.log(`[IDEManager] getActivePort() called, returning: ${this.activePort}`);
     return this.activePort;
   }
 
