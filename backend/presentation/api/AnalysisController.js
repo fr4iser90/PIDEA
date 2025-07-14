@@ -754,35 +754,62 @@ class AnalysisController {
   async getAnalysisTechStack(req, res) {
     try {
       const { projectId } = req.params;
-      
       this.logger.info(`[AnalysisController] Getting analysis tech stack for project: ${projectId}`);
-      
       // Get latest analysis for this project
       const analyses = await this.analysisRepository.findByProjectId(projectId);
-      
       if (analyses.length === 0) {
         return res.json({ success: true, data: { 
           dependencies: { direct: {}, dev: {}, outdated: [] },
           structure: { projectType: 'unknown', fileTypes: {}, frameworks: [], libraries: [] }
         } });
       }
-      
       const latestAnalysis = analyses[0];
       const resultData = latestAnalysis.resultData || {};
-      
-      // Extract ONLY tech stack information from actual data structure
-      // Don't send the entire resultData file!
+      // --- Merge all dependencies from all manifests (root, backend, frontend, etc.) ---
+      // Try to find all dependency objects in resultData
+      let allDeps = [];
+      if (resultData.dependencies?.allPackages) {
+        // If already collected as array
+        allDeps = resultData.dependencies.allPackages;
+      } else {
+        // Fallback: try to collect from known locations
+        allDeps = [];
+        if (resultData.dependencies?.packagesByContext) {
+          // e.g. { root: {...}, backend: {...}, frontend: {...} }
+          for (const ctx of Object.values(resultData.dependencies.packagesByContext)) {
+            allDeps.push(ctx);
+          }
+        } else {
+          // Try to find root/backend/frontend/dev
+          ['dependencies', 'devDependencies', 'packageJson'].forEach(key => {
+            if (resultData[key]) allDeps.push(resultData[key]);
+          });
+        }
+      }
+      // Merge all direct/dev dependencies
+      let mergedDirect = {};
+      let mergedDev = {};
+      let mergedOutdated = [];
+      for (const depObj of allDeps) {
+        if (depObj.dependencies) Object.assign(mergedDirect, depObj.dependencies);
+        if (depObj.devDependencies) Object.assign(mergedDev, depObj.devDependencies);
+        if (depObj.outdated) mergedOutdated = mergedOutdated.concat(depObj.outdated);
+      }
+      // Fallback: if nothing found, use old logic
+      if (Object.keys(mergedDirect).length === 0) {
+        mergedDirect = resultData.dependencies?.direct || resultData.dependencies?.packages || resultData.packageJson?.dependencies || {};
+      }
+      if (Object.keys(mergedDev).length === 0) {
+        mergedDev = resultData.dependencies?.dev || resultData.dependencies?.devDependencies || resultData.packageJson?.devDependencies || {};
+      }
+      if (mergedOutdated.length === 0) {
+        mergedOutdated = resultData.dependencies?.outdated || resultData.dependencies?.outdatedPackages || resultData.packageJson?.outdated || [];
+      }
       const techStack = {
         dependencies: {
-          direct: resultData.dependencies?.direct || 
-                  resultData.dependencies?.packages || 
-                  resultData.packageJson?.dependencies || {},
-          dev: resultData.dependencies?.dev || 
-               resultData.dependencies?.devDependencies || 
-               resultData.packageJson?.devDependencies || {},
-          outdated: resultData.dependencies?.outdated || 
-                   resultData.dependencies?.outdatedPackages || 
-                   resultData.packageJson?.outdated || []
+          direct: mergedDirect,
+          dev: mergedDev,
+          outdated: mergedOutdated
         },
         structure: {
           projectType: resultData.techStack?.frameworks?.[0]?.name || 
@@ -800,9 +827,7 @@ class AnalysisController {
                     resultData.structure?.libraries || []
         }
       };
-      
       this.logger.info(`[AnalysisController] Tech stack data extracted, size: ${JSON.stringify(techStack).length} bytes`);
-      
       res.json({ success: true, data: techStack });
     } catch (error) {
       this.logger.error(`[AnalysisController] Failed to get analysis tech stack:`, error);

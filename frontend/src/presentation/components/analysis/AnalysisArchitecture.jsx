@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import mermaid from 'mermaid';
+import { Network } from 'vis-network';
+import { DataSet } from 'vis-data';
 import { Logger } from '@/infrastructure/logging/Logger';
 
 const logger = new Logger('AnalysisArchitecture');
@@ -10,6 +12,8 @@ const AnalysisArchitecture = ({ architecture, loading, error }) => {
   const [diagramError, setDiagramError] = useState(null);
   const [zoomLevel, setZoomLevel] = useState(1);
   const diagramRef = useRef(null);
+  const [network, setNetwork] = useState(null);
+  const networkRef = useRef(null);
 
   // Initialize Mermaid
   useEffect(() => {
@@ -32,6 +36,39 @@ const AnalysisArchitecture = ({ architecture, loading, error }) => {
       }
     });
   }, []);
+
+  // Detect if graph is nodes/edges or Mermaid string
+  const isObjectGraph = useMemo(() => {
+    const g = architecture?.dependencies?.graph;
+    return g && typeof g === 'object' && Array.isArray(g.nodes) && Array.isArray(g.edges);
+  }, [architecture]);
+
+  // Render vis-network if nodes/edges object
+  useEffect(() => {
+    if (!isObjectGraph || !networkRef.current) return;
+    const { nodes, edges } = architecture.dependencies.graph;
+    const visNodes = new DataSet(nodes.map(n => ({ id: n.id, label: n.name, group: n.type })));
+    const visEdges = new DataSet(edges.map(e => ({ from: e.from, to: e.to, label: e.type })));
+    const data = { nodes: visNodes, edges: visEdges };
+    const options = {
+      nodes: { shape: 'box', font: { size: 14 } },
+      edges: { arrows: 'to', font: { align: 'middle' } },
+      groups: {
+        controller: { color: '#f39c12' },
+        service: { color: '#27ae60' },
+        model: { color: '#2980b9' },
+        repository: { color: '#8e44ad' },
+        utility: { color: '#7f8c8d' },
+        component: { color: '#95a5a6' }
+      },
+      layout: { hierarchical: false },
+      physics: { enabled: true }
+    };
+    if (network) network.destroy();
+    const net = new Network(networkRef.current, data, options);
+    setNetwork(net);
+    return () => net && net.destroy();
+  }, [isObjectGraph, architecture]);
 
   // Render Mermaid diagram
   useEffect(() => {
@@ -305,56 +342,62 @@ const AnalysisArchitecture = ({ architecture, loading, error }) => {
       <div className="architecture-content">
         {activeTab === 'diagram' && (
           <div className="diagram-view">
-            <div className="diagram-controls">
-              <div className="zoom-controls">
-                <button onClick={handleZoomOut} className="zoom-btn" title="Zoom Out">
-                  🔍-
-                </button>
-                <span className="zoom-level">{Math.round(zoomLevel * 100)}%</span>
-                <button onClick={handleZoomIn} className="zoom-btn" title="Zoom In">
-                  🔍+
-                </button>
-                <button onClick={handleResetZoom} className="reset-btn" title="Reset Zoom">
-                  🔄
-                </button>
-              </div>
-              <button 
-                onClick={downloadDiagram} 
-                className="download-btn"
-                disabled={!diagramSvg}
-                title="Download Diagram"
-              >
-                💾 Download
-              </button>
-            </div>
-
-            <div className="diagram-container" ref={diagramRef}>
-              {diagramError ? (
-                <div className="diagram-error">
-                  <div className="error-content">
-                    <span className="error-icon">⚠️</span>
-                    <h4>Diagram Rendering Failed</h4>
-                    <p>{diagramError}</p>
-                    <div className="fallback-content">
-                      <h5>Mermaid Diagram Code:</h5>
-                      <pre className="mermaid-code">
-                        {processedArchitecture.dependencies.graph}
-                      </pre>
-                    </div>
+            {isObjectGraph ? (
+              <div className="network-container" ref={networkRef} style={{ width: '100%', height: 500, border: '1px solid #ccc', borderRadius: 8, background: '#fff' }} />
+            ) : (
+              <>
+                <div className="diagram-controls">
+                  <div className="zoom-controls">
+                    <button onClick={handleZoomOut} className="zoom-btn" title="Zoom Out">
+                      🔍-
+                    </button>
+                    <span className="zoom-level">{Math.round(zoomLevel * 100)}%</span>
+                    <button onClick={handleZoomIn} className="zoom-btn" title="Zoom In">
+                      🔍+
+                    </button>
+                    <button onClick={handleResetZoom} className="reset-btn" title="Reset Zoom">
+                      🔄
+                    </button>
                   </div>
+                  <button 
+                    onClick={downloadDiagram} 
+                    className="download-btn"
+                    disabled={!diagramSvg}
+                    title="Download Diagram"
+                  >
+                    💾 Download
+                  </button>
                 </div>
-              ) : diagramSvg ? (
-                <div 
-                  className="diagram-wrapper"
-                  style={{ transform: `scale(${zoomLevel})` }}
-                  dangerouslySetInnerHTML={{ __html: diagramSvg }}
-                />
-              ) : (
-                <div className="no-diagram">
-                  <p>No architecture diagram available.</p>
+
+                <div className="diagram-container" ref={diagramRef}>
+                  {diagramError ? (
+                    <div className="diagram-error">
+                      <div className="error-content">
+                        <span className="error-icon">⚠️</span>
+                        <h4>Diagram Rendering Failed</h4>
+                        <p>{diagramError}</p>
+                        <div className="fallback-content">
+                          <h5>Mermaid Diagram Code:</h5>
+                          <pre className="mermaid-code">
+                            {processedArchitecture.dependencies.graph}
+                          </pre>
+                        </div>
+                      </div>
+                    </div>
+                  ) : diagramSvg ? (
+                    <div 
+                      className="diagram-wrapper"
+                      style={{ transform: `scale(${zoomLevel})` }}
+                      dangerouslySetInnerHTML={{ __html: diagramSvg }}
+                    />
+                  ) : (
+                    <div className="no-diagram">
+                      <p>No architecture diagram available.</p>
+                    </div>
+                  )}
                 </div>
-              )}
-            </div>
+              </>
+            )}
           </div>
         )}
 

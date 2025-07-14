@@ -155,6 +155,23 @@ class AnalysisStep {
           includeRecommendations: true
         });
         results.dependencies = this.cleanResult(dependencies);
+        // Store all found dependencies for merging in the controller
+        if (dependencies.packages && Array.isArray(dependencies.packages)) {
+          results.dependencies.allPackages = dependencies.packages.map(pkg => ({
+            context: pkg.path,
+            dependencies: pkg.dependencies,
+            devDependencies: pkg.devDependencies
+          }));
+          // Also as packagesByContext for easier merging
+          results.dependencies.packagesByContext = {};
+          for (const pkg of dependencies.packages) {
+            const ctx = pkg.path.replace(projectPath, '').replace(/^\/+/, '') || 'root';
+            results.dependencies.packagesByContext[ctx] = {
+              dependencies: pkg.dependencies,
+              devDependencies: pkg.devDependencies
+            };
+          }
+        }
       }
 
       // Generate comprehensive summary
