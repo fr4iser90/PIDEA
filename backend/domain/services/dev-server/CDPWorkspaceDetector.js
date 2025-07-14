@@ -11,7 +11,7 @@ class CDPWorkspaceDetector {
     try {
       const page = await this.browserManager.getPage();
       if (!page) {
-        logger.info('[CDPWorkspaceDetector] No page available for CDP');
+        logger.info('No page available for CDP');
         return null;
       }
 
@@ -52,17 +52,17 @@ class CDPWorkspaceDetector {
 
       if (workspaceInfo.result?.value?.path) {
         const workspacePath = workspaceInfo.result.value.path;
-        logger.info('[CDPWorkspaceDetector] CDP workspace path:', workspacePath);
+        logger.info('CDP workspace path:', workspacePath);
         
         // Now analyze package.json in this path
         return await this.packageJsonAnalyzer.analyzePackageJsonInPath(workspacePath);
       }
 
-      logger.info('[CDPWorkspaceDetector] No workspace path found via CDP');
+      logger.info('No workspace path found via CDP');
       return null;
 
     } catch (error) {
-      logger.error('[CDPWorkspaceDetector] CDP error:', error.message);
+      logger.error('CDP error:', error.message);
       return null;
     }
   }

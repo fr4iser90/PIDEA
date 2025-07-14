@@ -20,13 +20,13 @@ class IDEFactory {
       return;
     }
 
-    logger.info('[IDEFactory] Initializing IDE factory...');
+    logger.info('Initializing IDE factory...');
 
     // Register default IDE implementations
     this.registerDefaultImplementations();
 
     this.initialized = true;
-    logger.info('[IDEFactory] IDE factory initialized');
+    logger.info('IDE factory initialized');
   }
 
   /**
@@ -48,9 +48,9 @@ const Logger = require('@logging/Logger');
 const logger = new Logger('Logger');
       this.registerIDE(IDETypes.WINDSURF, WindsurfIDE);
 
-      logger.info('[IDEFactory] Default IDE implementations registered');
+      logger.info('Default IDE implementations registered');
     } catch (error) {
-      logger.error('[IDEFactory] Failed to register default implementations:', error);
+      logger.error('Failed to register default implementations:', error);
     }
   }
 
@@ -92,11 +92,11 @@ const logger = new Logger('Logger');
       }
 
       this.ideImplementations.set(type, implementation);
-      logger.info(`[IDEFactory] Registered IDE implementation for type: ${type}`);
+      logger.info(`Registered IDE implementation for type: ${type}`);
       
       return true;
     } catch (error) {
-      logger.error(`[IDEFactory] Failed to register IDE implementation for type ${type}:`, error);
+      logger.error(`Failed to register IDE implementation for type ${type}:`, error);
       return false;
     }
   }
@@ -143,7 +143,7 @@ const logger = new Logger('Logger');
       // Create IDE instance
       const ideInstance = new Implementation(browserManager, ideManager, eventBus);
       
-      logger.info(`[IDEFactory] Created IDE instance for type: ${type}`);
+      logger.info(`Created IDE instance for type: ${type}`);
       
       return {
         success: true,
@@ -153,7 +153,7 @@ const logger = new Logger('Logger');
         timestamp: new Date()
       };
     } catch (error) {
-      logger.error(`[IDEFactory] Failed to create IDE instance for type ${type}:`, error);
+      logger.error(`Failed to create IDE instance for type ${type}:`, error);
       return {
         success: false,
         error: error.message,
@@ -190,17 +190,17 @@ const logger = new Logger('Logger');
    */
   setDefaultIDE(type) {
     if (!IDETypes.isValid(type)) {
-      logger.error(`[IDEFactory] Cannot set invalid IDE type as default: ${type}`);
+      logger.error(`Cannot set invalid IDE type as default: ${type}`);
       return false;
     }
 
     if (!this.ideImplementations.has(type)) {
-      logger.error(`[IDEFactory] Cannot set unregistered IDE type as default: ${type}`);
+      logger.error(`Cannot set unregistered IDE type as default: ${type}`);
       return false;
     }
 
     this.defaultIDEType = type;
-    logger.info(`[IDEFactory] Set default IDE type to: ${type}`);
+    logger.info(`Set default IDE type to: ${type}`);
     return true;
   }
 
@@ -229,13 +229,13 @@ const logger = new Logger('Logger');
    */
   unregisterIDE(type) {
     if (type === this.defaultIDEType) {
-      logger.error(`[IDEFactory] Cannot unregister default IDE type: ${type}`);
+      logger.error(`Cannot unregister default IDE type: ${type}`);
       return false;
     }
 
     const removed = this.ideImplementations.delete(type);
     if (removed) {
-      logger.info(`[IDEFactory] Unregistered IDE type: ${type}`);
+      logger.info(`Unregistered IDE type: ${type}`);
     }
     return removed;
   }
@@ -316,7 +316,7 @@ const logger = new Logger('Logger');
 
     // Try default type as fallback
     if (preferredType !== this.defaultIDEType) {
-      logger.info(`[IDEFactory] Falling back to default IDE type: ${this.defaultIDEType}`);
+      logger.info(`Falling back to default IDE type: ${this.defaultIDEType}`);
       result = this.createIDE(this.defaultIDEType, dependencies);
       
       if (result.success) {
@@ -344,7 +344,7 @@ const logger = new Logger('Logger');
     this.ideImplementations.clear();
     this.defaultIDEType = IDETypes.CURSOR;
     this.initialized = false;
-    logger.info('[IDEFactory] Cleared all IDE registrations');
+    logger.info('Cleared all IDE registrations');
   }
 }
 

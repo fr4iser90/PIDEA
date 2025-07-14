@@ -22,7 +22,7 @@ class ProjectAutomationSettings {
    */
   async setProjectSetting(projectId, automationLevel, options = {}) {
     try {
-      this.logger.info(`[ProjectAutomationSettings] Setting automation for project ${projectId}: ${automationLevel}`);
+      this.logger.info(`Setting automation for project ${projectId}: ${automationLevel}`);
 
       const setting = {
         projectId,
@@ -59,7 +59,7 @@ class ProjectAutomationSettings {
 
       return setting;
     } catch (error) {
-      this.logger.error(`[ProjectAutomationSettings] Failed to set setting for project ${projectId}:`, error.message);
+      this.logger.error(`Failed to set setting for project ${projectId}:`, error.message);
       throw error;
     }
   }
@@ -109,7 +109,7 @@ class ProjectAutomationSettings {
 
       return setting;
     } catch (error) {
-      this.logger.error(`[ProjectAutomationSettings] Failed to get setting for project ${projectId}:`, error.message);
+      this.logger.error(`Failed to get setting for project ${projectId}:`, error.message);
       return null;
     }
   }
@@ -166,7 +166,7 @@ class ProjectAutomationSettings {
 
       return updatedSetting;
     } catch (error) {
-      this.logger.error(`[ProjectAutomationSettings] Failed to add rule for project ${projectId}:`, error.message);
+      this.logger.error(`Failed to add rule for project ${projectId}:`, error.message);
       throw error;
     }
   }
@@ -203,7 +203,7 @@ class ProjectAutomationSettings {
 
       return updatedSetting;
     } catch (error) {
-      this.logger.error(`[ProjectAutomationSettings] Failed to remove rule for project ${projectId}:`, error.message);
+      this.logger.error(`Failed to remove rule for project ${projectId}:`, error.message);
       throw error;
     }
   }
@@ -240,7 +240,7 @@ class ProjectAutomationSettings {
 
       return updatedSetting;
     } catch (error) {
-      this.logger.error(`[ProjectAutomationSettings] Failed to add exception for project ${projectId}:`, error.message);
+      this.logger.error(`Failed to add exception for project ${projectId}:`, error.message);
       throw error;
     }
   }
@@ -277,7 +277,7 @@ class ProjectAutomationSettings {
 
       return updatedSetting;
     } catch (error) {
-      this.logger.error(`[ProjectAutomationSettings] Failed to remove exception for project ${projectId}:`, error.message);
+      this.logger.error(`Failed to remove exception for project ${projectId}:`, error.message);
       throw error;
     }
   }
@@ -289,7 +289,7 @@ class ProjectAutomationSettings {
    */
   async deleteProjectSetting(projectId) {
     try {
-      this.logger.info(`[ProjectAutomationSettings] Deleting setting for project ${projectId}`);
+      this.logger.info(`Deleting setting for project ${projectId}`);
 
       // Remove from cache
       this.cache.delete(projectId);
@@ -313,7 +313,7 @@ class ProjectAutomationSettings {
 
       return true;
     } catch (error) {
-      this.logger.error(`[ProjectAutomationSettings] Failed to delete setting for project ${projectId}:`, error.message);
+      this.logger.error(`Failed to delete setting for project ${projectId}:`, error.message);
       return false;
     }
   }
@@ -331,7 +331,7 @@ class ProjectAutomationSettings {
 
       return await this.automationPreferencesRepository.getAllProjectSettings(options);
     } catch (error) {
-      this.logger.error('[ProjectAutomationSettings] Failed to get all project settings:', error.message);
+      this.logger.error('Failed to get all project settings:', error.message);
       return [];
     }
   }
@@ -349,7 +349,7 @@ class ProjectAutomationSettings {
 
       return await this.automationPreferencesRepository.getProjectsByAutomationLevel(automationLevel);
     } catch (error) {
-      this.logger.error(`[ProjectAutomationSettings] Failed to get projects by automation level ${automationLevel}:`, error.message);
+      this.logger.error(`Failed to get projects by automation level ${automationLevel}:`, error.message);
       return [];
     }
   }

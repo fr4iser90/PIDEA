@@ -36,7 +36,7 @@ export const useAnalysisCache = () => {
       const stats = analysisDataCache.getStats();
       setCacheStats(stats);
     } catch (error) {
-      logger.error('[useAnalysisCache] Failed to update cache stats:', error);
+      logger.error('Failed to update cache stats:', error);
     }
   }, []);
 
@@ -53,14 +53,14 @@ export const useAnalysisCache = () => {
       const data = analysisDataCache.get(cacheKey);
       
       if (data) {
-        logger.info(`[useAnalysisCache] Cache hit for ${dataType}:`, { projectId, filters });
+        logger.info(`Cache hit for ${dataType}:`, { projectId, filters });
       } else {
-        logger.info(`[useAnalysisCache] Cache miss for ${dataType}:`, { projectId, filters });
+        logger.info(`Cache miss for ${dataType}:`, { projectId, filters });
       }
       
       return data;
     } catch (error) {
-      logger.error('[useAnalysisCache] Failed to get cached data:', error);
+      logger.error('Failed to get cached data:', error);
       return null;
     }
   }, []);
@@ -79,7 +79,7 @@ export const useAnalysisCache = () => {
       
       analysisDataCache.set(cacheKey, data, ttl);
       
-      logger.info(`[useAnalysisCache] Cached ${dataType}:`, { 
+      logger.info(`Cached ${dataType}:`, { 
         projectId, 
         filters, 
         ttl: `${Math.round(ttl / 1000)}s`,
@@ -89,7 +89,7 @@ export const useAnalysisCache = () => {
       // Update stats after setting data
       updateCacheStats();
     } catch (error) {
-      logger.error('[useAnalysisCache] Failed to set cached data:', error);
+      logger.error('Failed to set cached data:', error);
     }
   }, [updateCacheStats]);
 
@@ -105,7 +105,7 @@ export const useAnalysisCache = () => {
       const cacheKey = analysisDataCache.getCacheKey(projectId, dataType, filters);
       return analysisDataCache.has(cacheKey);
     } catch (error) {
-      logger.error('[useAnalysisCache] Failed to check cached data:', error);
+      logger.error('Failed to check cached data:', error);
       return false;
     }
   }, []);
@@ -121,10 +121,10 @@ export const useAnalysisCache = () => {
       const cacheKey = analysisDataCache.getCacheKey(projectId, dataType, filters);
       analysisDataCache.delete(cacheKey);
       
-      logger.info(`[useAnalysisCache] Removed ${dataType} from cache:`, { projectId, filters });
+      logger.info(`Removed ${dataType} from cache:`, { projectId, filters });
       updateCacheStats();
     } catch (error) {
-      logger.error('[useAnalysisCache] Failed to remove cached data:', error);
+      logger.error('Failed to remove cached data:', error);
     }
   }, [updateCacheStats]);
 
@@ -142,16 +142,16 @@ export const useAnalysisCache = () => {
           analysisDataCache.delete(cacheKey);
         });
         
-        logger.info(`[useAnalysisCache] Cleared cache for project:`, { projectId });
+        logger.info(`Cleared cache for project:`, { projectId });
       } else {
         // Clear all cache
         analysisDataCache.clear();
-        logger.info('[useAnalysisCache] Cleared all cache');
+        logger.info('Cleared all cache');
       }
       
       updateCacheStats();
     } catch (error) {
-      logger.error('[useAnalysisCache] Failed to clear cache:', error);
+      logger.error('Failed to clear cache:', error);
     }
   }, [updateCacheStats]);
 
@@ -161,10 +161,10 @@ export const useAnalysisCache = () => {
   const clearAllCache = useCallback(() => {
     try {
       analysisDataCache.clear();
-      logger.info('[useAnalysisCache] Cleared all cache');
+      logger.info('Cleared all cache');
       updateCacheStats();
     } catch (error) {
-      logger.error('[useAnalysisCache] Failed to clear all cache:', error);
+      logger.error('Failed to clear all cache:', error);
     }
   }, [updateCacheStats]);
 
@@ -176,12 +176,12 @@ export const useAnalysisCache = () => {
     try {
       const cleanedCount = analysisDataCache.cleanup();
       if (cleanedCount > 0) {
-        logger.info(`[useAnalysisCache] Cleaned up ${cleanedCount} expired entries`);
+        logger.info(`Cleaned up ${cleanedCount} expired entries`);
         updateCacheStats();
       }
       return cleanedCount;
     } catch (error) {
-      logger.error('[useAnalysisCache] Failed to cleanup expired entries:', error);
+      logger.error('Failed to cleanup expired entries:', error);
       return 0;
     }
   }, [updateCacheStats]);
@@ -201,9 +201,9 @@ export const useAnalysisCache = () => {
   const updateCacheConfig = useCallback((config) => {
     try {
       analysisDataCache.setConfig(config);
-      logger.info('[useAnalysisCache] Updated cache configuration:', config);
+      logger.info('Updated cache configuration:', config);
     } catch (error) {
-      logger.error('[useAnalysisCache] Failed to update cache configuration:', error);
+      logger.error('Failed to update cache configuration:', error);
     }
   }, []);
 

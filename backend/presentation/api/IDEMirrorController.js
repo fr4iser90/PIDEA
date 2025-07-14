@@ -38,17 +38,17 @@ class IDEMirrorController {
      */
     initializeStreamingServices(registry) {
         try {
-            logger.info('[IDEMirrorController] Initializing streaming services...');
+            logger.info('Initializing streaming services...');
             
             // Get required services
             const browserManager = registry.getService('browserManager');
-            logger.info('[IDEMirrorController] Browser manager available:', !!browserManager);
+            logger.info('Browser manager available:', !!browserManager);
             
             const webSocketManager = registry.getService('webSocketManager');
-            logger.info('[IDEMirrorController] WebSocket manager available:', !!webSocketManager);
+            logger.info('WebSocket manager available:', !!webSocketManager);
             
             const eventBus = registry.getService('eventBus');
-            logger.info('[IDEMirrorController] Event bus available:', !!eventBus);
+            logger.info('Event bus available:', !!eventBus);
 
             if (!browserManager) {
                 throw new Error('Browser manager service not found');
@@ -85,11 +85,11 @@ class IDEMirrorController {
                 webSocketManager.setScreenshotStreamingService(this.screenshotStreamingService);
             }
 
-            logger.info('[IDEMirrorController] Streaming services initialized successfully');
+            logger.info('Streaming services initialized successfully');
 
         } catch (error) {
-            logger.error('[IDEMirrorController] Error initializing streaming services:', error.message);
-            logger.error('[IDEMirrorController] Error stack:', error.stack);
+            logger.error('Error initializing streaming services:', error.message);
+            logger.error('Error stack:', error.stack);
         }
     }
 
@@ -636,8 +636,8 @@ class IDEMirrorController {
 
     // Route setup method
     setupRoutes(app) {
-        logger.info('[IDEMirrorController] Setting up routes...');
-        logger.info('[IDEMirrorController] Streaming controller available:', !!this.streamingController);
+        logger.info('Setting up routes...');
+        logger.info('Streaming controller available:', !!this.streamingController);
         
         // HTTP API Routes
         app.get('/api/ide-mirror/state', this.getIDEState.bind(this));
@@ -651,7 +651,7 @@ class IDEMirrorController {
 
         // Streaming endpoints (port-based)
         if (this.streamingController) {
-            logger.info('[IDEMirrorController] Registering port-based streaming routes...');
+            logger.info('Registering port-based streaming routes...');
             
             // Port-specific streaming routes
             app.post('/api/ide-mirror/:port/stream/start', (req, res) => this.streamingController.startStreaming(req, res));
@@ -667,9 +667,9 @@ class IDEMirrorController {
             app.post('/api/ide-mirror/stream/stop-all', (req, res) => this.streamingController.stopAllStreaming(req, res));
             app.get('/api/ide-mirror/stream/health', (req, res) => this.streamingController.healthCheck(req, res));
             
-            logger.info('[IDEMirrorController] Port-based streaming routes registered successfully');
+            logger.info('Port-based streaming routes registered successfully');
         } else {
-            logger.info('[IDEMirrorController] Streaming controller not available, skipping streaming routes');
+            logger.info('Streaming controller not available, skipping streaming routes');
         }
     }
 }

@@ -13,7 +13,7 @@ class AutoSecurityManager {
   }
 
   initialize() {
-    logger.info('🔐 [AutoSecurityManager] Initializing auto-security...');
+    logger.info('🔐 Initializing auto-security...');
     
     // Auto-detect environment
     this.config.environment = this.detectEnvironment();
@@ -31,12 +31,12 @@ class AutoSecurityManager {
     // Auto-configure rate limiting
     this.config.rateLimiting = this.getRateLimitingConfig();
     
-    logger.info('✅ [AutoSecurityManager] Auto-security initialized');
+    logger.info('✅ Auto-security initialized');
   }
 
   detectEnvironment() {
     const env = process.env.NODE_ENV || 'development';
-    logger.info(`🌍 [AutoSecurityManager] Detected environment: ${env}`);
+    logger.info(`🌍 Detected environment: ${env}`);
     return env;
   }
 
@@ -47,11 +47,11 @@ class AutoSecurityManager {
       // Try to read existing secret
       if (fs.existsSync(secretsFile)) {
         const secret = fs.readFileSync(secretsFile, 'utf8').trim();
-        logger.info(`🔑 [AutoSecurityManager] Loaded existing secret: ${key}`);
+        logger.info(`🔑 Loaded existing secret: ${key}`);
         return secret;
       }
     } catch (error) {
-      logger.warn(`⚠️ [AutoSecurityManager] Could not read secret file: ${error.message}`);
+      logger.warn(`⚠️ Could not read secret file: ${error.message}`);
     }
 
     // Generate new secret

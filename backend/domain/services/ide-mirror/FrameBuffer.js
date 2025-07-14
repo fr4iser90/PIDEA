@@ -74,7 +74,7 @@ class FrameBuffer {
         // If still too large after cleanup, reject frame
         if (this.wouldExceedLimits(sessionId, frameSize)) {
           this.stats.bufferOverflows++;
-          logger.warn(`[FrameBuffer] Buffer overflow for session ${sessionId}, frame rejected`);
+          logger.warn(`Buffer overflow for session ${sessionId}, frame rejected`);
           return false;
         }
       }
@@ -92,7 +92,7 @@ class FrameBuffer {
       return true;
 
     } catch (error) {
-      logger.error(`[FrameBuffer] Error adding frame for session ${sessionId}:`, error.message);
+      logger.error(`Error adding frame for session ${sessionId}:`, error.message);
       return false;
     }
   }
@@ -112,7 +112,7 @@ class FrameBuffer {
       return sessionBuffer[sessionBuffer.length - 1];
 
     } catch (error) {
-      logger.error(`[FrameBuffer] Error getting latest frame for session ${sessionId}:`, error.message);
+      logger.error(`Error getting latest frame for session ${sessionId}:`, error.message);
       return null;
     }
   }
@@ -134,7 +134,7 @@ class FrameBuffer {
       return sessionBuffer.slice(startIndex);
 
     } catch (error) {
-      logger.error(`[FrameBuffer] Error getting recent frames for session ${sessionId}:`, error.message);
+      logger.error(`Error getting recent frames for session ${sessionId}:`, error.message);
       return [];
     }
   }
@@ -155,7 +155,7 @@ class FrameBuffer {
       return sessionBuffer.find(frame => frame.frameNumber === frameNumber) || null;
 
     } catch (error) {
-      logger.error(`[FrameBuffer] Error getting frame by number for session ${sessionId}:`, error.message);
+      logger.error(`Error getting frame by number for session ${sessionId}:`, error.message);
       return null;
     }
   }
@@ -175,13 +175,13 @@ class FrameBuffer {
         this.stats.totalFramesRemoved += sessionBuffer.length;
         
         this.buffers.delete(sessionId);
-        logger.info(`[FrameBuffer] Cleared buffer for session ${sessionId}, freed ${removedSize} bytes`);
+        logger.info(`Cleared buffer for session ${sessionId}, freed ${removedSize} bytes`);
         return true;
       }
       return false;
 
     } catch (error) {
-      logger.error(`[FrameBuffer] Error clearing buffer for session ${sessionId}:`, error.message);
+      logger.error(`Error clearing buffer for session ${sessionId}:`, error.message);
       return false;
     }
   }
@@ -201,11 +201,11 @@ class FrameBuffer {
         }
       }
 
-      logger.info(`[FrameBuffer] Cleared all buffers, ${clearedCount} sessions affected`);
+      logger.info(`Cleared all buffers, ${clearedCount} sessions affected`);
       return clearedCount;
 
     } catch (error) {
-      logger.error('[FrameBuffer] Error clearing all buffers:', error.message);
+      logger.error('Error clearing all buffers:', error.message);
       return 0;
     }
   }
@@ -238,13 +238,13 @@ class FrameBuffer {
         this.stats.totalFramesRemoved += removedCount;
         this.stats.cleanupOperations++;
         
-        logger.info(`[FrameBuffer] Cleanup for session ${sessionId}: removed ${removedCount} frames, freed ${removedSize} bytes`);
+        logger.info(`Cleanup for session ${sessionId}: removed ${removedCount} frames, freed ${removedSize} bytes`);
       }
 
       return removedCount;
 
     } catch (error) {
-      logger.error(`[FrameBuffer] Error during cleanup for session ${sessionId}:`, error.message);
+      logger.error(`Error during cleanup for session ${sessionId}:`, error.message);
       return 0;
     }
   }
@@ -315,11 +315,11 @@ class FrameBuffer {
       }
 
       if (totalRemoved > 0) {
-        logger.info(`[FrameBuffer] Periodic cleanup completed: removed ${totalRemoved} frames`);
+        logger.info(`Periodic cleanup completed: removed ${totalRemoved} frames`);
       }
 
     } catch (error) {
-      logger.error('[FrameBuffer] Error during periodic cleanup:', error.message);
+      logger.error('Error during periodic cleanup:', error.message);
     }
   }
 
@@ -371,7 +371,7 @@ class FrameBuffer {
       };
 
     } catch (error) {
-      logger.error(`[FrameBuffer] Error getting stats for session ${sessionId}:`, error.message);
+      logger.error(`Error getting stats for session ${sessionId}:`, error.message);
       return null;
     }
   }

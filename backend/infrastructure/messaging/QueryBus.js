@@ -1,5 +1,4 @@
-const Logger = require('@logging/Logger');
-const logger = new Logger('Logger');
+const ServiceLogger = require('@logging/ServiceLogger');
 /**
  * QueryBus - Handles query execution and routing
  * Implements the Query Bus pattern for CQRS architecture
@@ -8,7 +7,7 @@ class QueryBus {
   constructor() {
     this.handlers = new Map();
     this.middleware = [];
-    this.logger = console;
+    this.logger = new ServiceLogger('QueryBus');
   }
 
   /**
@@ -22,7 +21,7 @@ class QueryBus {
     }
     
     this.handlers.set(queryName, handler);
-    this.logger.info(`[QueryBus] Registered handler for query: ${queryName}`);
+    this.logger.info(`Registered handler for query: ${queryName}`);
   }
 
   /**
@@ -33,7 +32,7 @@ class QueryBus {
    */
   async execute(queryName, queryData) {
     try {
-      this.logger.info(`[QueryBus] Executing query: ${queryName}`, { queryData });
+      this.logger.info(`Executing query: ${queryName}`, { queryData });
 
       // Apply middleware
       let processedQueryData = queryData;
@@ -50,10 +49,10 @@ class QueryBus {
       // Execute handler
       const result = await handler.handle(processedQueryData);
       
-      this.logger.info(`[QueryBus] Query executed successfully: ${queryName}`);
+      this.logger.info(`Query executed successfully: ${queryName}`);
       return result;
     } catch (error) {
-      this.logger.error(`[QueryBus] Query execution failed: ${queryName}`, {
+      this.logger.error(`Query execution failed: ${queryName}`, {
         error: error.message,
         stack: error.stack
       });

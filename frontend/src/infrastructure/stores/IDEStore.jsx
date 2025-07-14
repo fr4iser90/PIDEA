@@ -25,7 +25,7 @@ const useIDEStore = create(
       setActivePort: async (port) => {
         try {
           set({ isLoading: true, error: null });
-          logger.info('[IDEStore] Setting active port:', port);
+          logger.info('Setting active port:', port);
 
           // Validate port
           const isValid = await get().validatePort(port);
@@ -55,9 +55,9 @@ const useIDEStore = create(
           }
 
           set({ portPreferences: [...portPreferences] });
-          logger.info('[IDEStore] Active port set successfully:', port);
+          logger.info('Active port set successfully:', port);
         } catch (error) {
-          logger.error('[IDEStore] Error setting active port:', error);
+          logger.error('Error setting active port:', error);
           set({ error: error.message });
           throw error;
         } finally {
@@ -68,14 +68,14 @@ const useIDEStore = create(
       loadActivePort: async () => {
         try {
           set({ isLoading: true, error: null });
-          logger.info('[IDEStore] Loading active port...');
+          logger.info('Loading active port...');
 
           // Strategy 1: Try previously active port
           const { activePort, portPreferences } = get();
           if (activePort) {
             const isValid = await get().validatePort(activePort);
             if (isValid) {
-              logger.info('[IDEStore] Using previously active port:', activePort);
+              logger.info('Using previously active port:', activePort);
               return activePort;
             }
           }
@@ -88,7 +88,7 @@ const useIDEStore = create(
           for (const preference of sortedPreferences) {
             const isValid = await get().validatePort(preference.port);
             if (isValid) {
-              logger.info('[IDEStore] Using preferred port:', preference.port);
+              logger.info('Using preferred port:', preference.port);
               set({ activePort: preference.port });
               return preference.port;
             }
@@ -100,15 +100,15 @@ const useIDEStore = create(
           
           if (availableIDEs.length > 0) {
             const firstIDE = availableIDEs[0];
-            logger.info('[IDEStore] Using first available port:', firstIDE.port);
+            logger.info('Using first available port:', firstIDE.port);
             set({ activePort: firstIDE.port });
             return firstIDE.port;
           }
 
-          logger.warn('[IDEStore] No active port could be loaded');
+          logger.warn('No active port could be loaded');
           return null;
         } catch (error) {
-          logger.error('[IDEStore] Error loading active port:', error);
+          logger.error('Error loading active port:', error);
           set({ error: error.message });
           return null;
         } finally {
@@ -119,7 +119,7 @@ const useIDEStore = create(
       loadAvailableIDEs: async () => {
         try {
           set({ isLoading: true, error: null });
-          logger.info('[IDEStore] Loading available IDEs...');
+          logger.info('Loading available IDEs...');
 
           const result = await apiCall('/api/ide/available');
           if (result.success) {
@@ -129,20 +129,20 @@ const useIDEStore = create(
               lastUpdate: new Date().toISOString(),
               retryCount: 0
             });
-            logger.info('[IDEStore] Loaded', ides.length, 'IDEs');
+            logger.info('Loaded', ides.length, 'IDEs');
             return ides;
           } else {
             throw new Error(result.error || 'Failed to load IDEs');
           }
         } catch (error) {
-          logger.error('[IDEStore] Error loading available IDEs:', error);
+          logger.error('Error loading available IDEs:', error);
           set({ error: error.message });
           
           // Retry logic
           const { retryCount, maxRetries } = get();
           if (retryCount < maxRetries) {
             set({ retryCount: retryCount + 1 });
-            logger.info('[IDEStore] Retrying...', retryCount + 1, 'of', maxRetries);
+            logger.info('Retrying...', retryCount + 1, 'of', maxRetries);
             setTimeout(() => get().loadAvailableIDEs(), 1000 * (retryCount + 1));
           }
           
@@ -154,11 +154,11 @@ const useIDEStore = create(
 
       validatePort: async (port) => {
         try {
-          logger.info('[IDEStore] Validating port:', port);
+          logger.info('Validating port:', port);
           
           // Check if port is in valid range
           if (!get().isValidPortRange(port)) {
-            logger.info('[IDEStore] Port not in valid range:', port);
+            logger.info('Port not in valid range:', port);
             return false;
           }
 
@@ -167,26 +167,26 @@ const useIDEStore = create(
           const ide = availableIDEs.find(ide => ide.port === port);
           
           if (!ide) {
-            logger.info('[IDEStore] IDE not found for port:', port);
+            logger.info('IDE not found for port:', port);
             return false;
           }
 
           // Check if IDE is running
           if (ide.status !== 'running' && ide.status !== 'active') {
-            logger.info('[IDEStore] IDE not running on port:', port);
+            logger.info('IDE not running on port:', port);
             return false;
           }
 
           // Check if IDE has workspace path
           if (!ide.workspacePath) {
-            logger.info('[IDEStore] IDE has no workspace path:', port);
+            logger.info('IDE has no workspace path:', port);
             return false;
           }
 
-          logger.info('[IDEStore] Port validation successful:', port);
+          logger.info('Port validation successful:', port);
           return true;
         } catch (error) {
-          logger.error('[IDEStore] Error validating port:', port, error);
+          logger.error('Error validating port:', port, error);
           return false;
         }
       },
@@ -204,7 +204,7 @@ const useIDEStore = create(
 
       handlePortFailure: async (port, reason = 'unknown') => {
         try {
-          logger.info('[IDEStore] Handling port failure:', port, reason);
+          logger.info('Handling port failure:', port, reason);
           
           // Remove failed port from preferences
           const { portPreferences } = get();
@@ -214,14 +214,14 @@ const useIDEStore = create(
           // If this was the active port, select a new one
           const { activePort } = get();
           if (activePort === port) {
-            logger.info('[IDEStore] Active port failed, selecting new port');
+            logger.info('Active port failed, selecting new port');
             const newPort = await get().loadActivePort();
             return newPort;
           }
           
           return null;
         } catch (error) {
-          logger.error('[IDEStore] Error handling port failure:', error);
+          logger.error('Error handling port failure:', error);
           return null;
         }
       },
@@ -229,7 +229,7 @@ const useIDEStore = create(
       switchIDE: async (port, reason = 'manual') => {
         try {
           set({ isLoading: true, error: null });
-          logger.info('[IDEStore] Switching to IDE:', port, reason);
+          logger.info('Switching to IDE:', port, reason);
 
           const result = await apiCall(`/api/ide/switch/${port}`, {
             method: 'POST'
@@ -239,13 +239,13 @@ const useIDEStore = create(
             await get().setActivePort(port);
             await get().loadAvailableIDEs(); // Refresh IDE list
             
-            logger.info('[IDEStore] Successfully switched to IDE:', port);
+            logger.info('Successfully switched to IDE:', port);
             return true;
           } else {
             throw new Error(result.error || 'Failed to switch IDE');
           }
         } catch (error) {
-          logger.error('[IDEStore] Error switching IDE:', error);
+          logger.error('Error switching IDE:', error);
           set({ error: error.message });
           return false;
         } finally {
@@ -255,7 +255,7 @@ const useIDEStore = create(
 
       refresh: async () => {
         try {
-          logger.info('[IDEStore] Refreshing...');
+          logger.info('Refreshing...');
           
           // Reload available IDEs
           await get().loadAvailableIDEs();
@@ -265,7 +265,7 @@ const useIDEStore = create(
           if (activePort) {
             const isValid = await get().validatePort(activePort);
             if (!isValid) {
-              logger.info('[IDEStore] Current active port invalid, selecting new one');
+              logger.info('Current active port invalid, selecting new one');
               await get().loadActivePort();
             }
           } else {
@@ -273,9 +273,9 @@ const useIDEStore = create(
             await get().loadActivePort();
           }
           
-          logger.info('[IDEStore] Refresh complete');
+          logger.info('Refresh complete');
         } catch (error) {
-          logger.error('[IDEStore] Error refreshing:', error);
+          logger.error('Error refreshing:', error);
           set({ error: error.message });
         }
       },
@@ -304,7 +304,7 @@ const useIDEStore = create(
       }),
       onRehydrateStorage: () => (state) => {
         if (state) {
-          logger.info('[IDEStore] State rehydrated:', {
+          logger.info('State rehydrated:', {
             activePort: state.activePort,
             preferencesCount: state.portPreferences.length
           });

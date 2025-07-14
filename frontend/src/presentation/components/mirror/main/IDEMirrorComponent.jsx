@@ -61,11 +61,11 @@ function IDEMirrorComponent({ eventBus }) {
     useEffect(() => {
         if (!currentPort) return;
         
-        logger.info(`[IDEMirrorComponent] Registering frame handler for port ${currentPort}`);
+        logger.info(`Registering frame handler for port ${currentPort}`);
         streamingService.registerFrameHandler(currentPort, handleStreamingFrame);
         
         return () => {
-            logger.info(`[IDEMirrorComponent] Cleaning up frame handler for port ${currentPort}`);
+            logger.info(`Cleaning up frame handler for port ${currentPort}`);
             streamingService.frameHandlers.delete(currentPort);
         };
     }, [currentPort, handleStreamingFrame]);

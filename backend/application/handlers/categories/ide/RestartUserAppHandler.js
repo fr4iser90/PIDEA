@@ -37,7 +37,7 @@ class RestartUserAppHandler {
    */
   async handle(command, context = {}) {
     try {
-      this.logger.info(`[RestartUserAppHandler] Handling command: ${command.commandId}`);
+      this.logger.info(`Handling command: ${command.commandId}`);
 
       // Validate command
       if (!command || command.type !== 'RestartUserAppCommand') {
@@ -60,7 +60,7 @@ class RestartUserAppHandler {
         timestamp: new Date()
       });
 
-      this.logger.info(`[RestartUserAppHandler] User app restarted successfully: ${command.appName || 'default'}`);
+      this.logger.info(`User app restarted successfully: ${command.appName || 'default'}`);
 
       return {
         success: true,
@@ -70,7 +70,7 @@ class RestartUserAppHandler {
       };
 
     } catch (error) {
-      this.logger.error(`[RestartUserAppHandler] Failed to restart user app:`, error);
+      this.logger.error(`Failed to restart user app:`, error);
 
       // Publish failure event
       await this.eventBus.publish('terminal.app.restart.failed', {

@@ -56,7 +56,7 @@ class IDEMirrorController {
         }
       });
     } catch (error) {
-      this.logger.error('[IDEMirrorController] Error getting IDE DOM:', error);
+      this.logger.error('Error getting IDE DOM:', error);
       res.status(500).json({
         success: false,
         error: 'Failed to get IDE DOM',
@@ -101,7 +101,7 @@ class IDEMirrorController {
         }
       });
     } catch (error) {
-      this.logger.error('[IDEMirrorController] Error interacting with IDE:', error);
+      this.logger.error('Error interacting with IDE:', error);
       res.status(500).json({
         success: false,
         error: 'Failed to interact with IDE',
@@ -149,7 +149,7 @@ class IDEMirrorController {
         data: status
       });
     } catch (error) {
-      this.logger.error('[IDEMirrorController] Error getting mirror status:', error);
+      this.logger.error('Error getting mirror status:', error);
       res.status(500).json({
         success: false,
         error: 'Failed to get mirror status',
@@ -211,7 +211,7 @@ class IDEMirrorController {
         }
       });
     } catch (error) {
-      this.logger.error('[IDEMirrorController] Error connecting to IDE mirror:', error);
+      this.logger.error('Error connecting to IDE mirror:', error);
       res.status(500).json({
         success: false,
         error: 'Failed to connect to IDE mirror',
@@ -256,7 +256,7 @@ class IDEMirrorController {
         }
       });
     } catch (error) {
-      this.logger.error('[IDEMirrorController] Error disconnecting from IDE mirror:', error);
+      this.logger.error('Error disconnecting from IDE mirror:', error);
       res.status(500).json({
         success: false,
         error: 'Failed to disconnect from IDE mirror',
@@ -304,7 +304,7 @@ class IDEMirrorController {
         data: mirrorData
       });
     } catch (error) {
-      this.logger.error('[IDEMirrorController] Error getting mirror data:', error);
+      this.logger.error('Error getting mirror data:', error);
       res.status(500).json({
         success: false,
         error: 'Failed to get mirror data',
@@ -356,7 +356,7 @@ class IDEMirrorController {
         }
       });
     } catch (error) {
-      this.logger.error('[IDEMirrorController] Error sending chat message:', error);
+      this.logger.error('Error sending chat message:', error);
       res.status(500).json({
         success: false,
         error: 'Failed to send chat message',
@@ -413,7 +413,7 @@ class IDEMirrorController {
         };
       }
     } catch (error) {
-      this.logger.error(`[IDEMirrorController] Error capturing DOM for port ${port}:`, error);
+      this.logger.error(`Error capturing DOM for port ${port}:`, error);
       throw error;
     }
   }
@@ -445,7 +445,7 @@ class IDEMirrorController {
           throw new Error(`Unknown action: ${action}`);
       }
     } catch (error) {
-      this.logger.error(`[IDEMirrorController] Error performing interaction for port ${port}:`, error);
+      this.logger.error(`Error performing interaction for port ${port}:`, error);
       throw error;
     }
   }
@@ -516,7 +516,7 @@ class IDEMirrorController {
         return { success: true, message: message, sent: true };
       }
     } catch (error) {
-      this.logger.error(`[IDEMirrorController] Error sending message to IDE port ${port}:`, error);
+      this.logger.error(`Error sending message to IDE port ${port}:`, error);
       throw error;
     }
   }

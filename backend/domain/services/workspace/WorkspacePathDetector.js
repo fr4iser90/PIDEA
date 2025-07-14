@@ -86,13 +86,13 @@ const logger = new Logger('Logger');
     // Prüfe Backend-Cache
     const cached = this.ideManager.getWorkspacePath(port);
     if (cached) {
-      logger.info(`[WorkspacePathDetector] Workspace path for port ${port} already set/cached:`, cached);
+      logger.info(`Workspace path for port ${port} already set/cached:`, cached);
       return cached;
     }
     
     // Prüfe, ob bereits eine Erkennung läuft
     if (this._workspaceDetectionInProgress && this._workspaceDetectionInProgress[port]) {
-      logger.info(`[WorkspacePathDetector] Workspace detection already in progress for port ${port}, waiting...`);
+      logger.info(`Workspace detection already in progress for port ${port}, waiting...`);
       await this._workspaceDetectionInProgress[port];
       return this.ideManager.getWorkspacePath(port);
     }
@@ -105,11 +105,11 @@ const logger = new Logger('Logger');
         if (!page) throw new Error('No Cursor IDE page available');
         
         // Method 1: Try to execute pwd command in terminal to get actual working directory
-        logger.info(`[WorkspacePathDetector] Trying to get pwd from terminal for port ${port}...`);
+        logger.info(`Trying to get pwd from terminal for port ${port}...`);
         
         // Determine IDE type and use appropriate terminal shortcut
         const ideType = this.ideManager.getIDEType(port) || 'cursor';
-        logger.info(`[WorkspacePathDetector] Detected IDE type: ${ideType}`);
+        logger.info(`Detected IDE type: ${ideType}`);
         
         // Use appropriate terminal shortcut based on IDE type
         if (ideType === 'vscode') {
@@ -135,7 +135,7 @@ const logger = new Logger('Logger');
                              await page.$('.xterm textarea');
         
         if (terminalInput) {
-          logger.info('[WorkspacePathDetector] Found terminal input, sending pwd command...');
+          logger.info('Found terminal input, sending pwd command...');
           
           // Focus and send pwd command
           await terminalInput.focus();
@@ -151,14 +151,14 @@ const logger = new Logger('Logger');
           
           if (terminalOutput) {
             const text = await terminalOutput.textContent();
-            logger.info('[WorkspacePathDetector] Terminal output:', text);
+            logger.info('Terminal output:', text);
             
             // Find the path in the output
             const lines = text.split('\n');
             for (let i = lines.length - 1; i >= 0; i--) {
               const line = lines[i].trim();
               if (line && line.startsWith('/') && !line.includes('$') && !line.includes('>') && !line.includes('pwd')) {
-                logger.info('[WorkspacePathDetector] Found path:', line);
+                logger.info('Found path:', line);
                 
                 // Close terminal with Ctrl+W
                 await page.keyboard.down('Control');
@@ -177,14 +177,14 @@ const logger = new Logger('Logger');
           await page.keyboard.press('w');
           await page.keyboard.up('Control');
         } else {
-          logger.info('[WorkspacePathDetector] No terminal input found');
+          logger.info('No terminal input found');
         }
         
         // If we get here, terminal method failed
         const actualPath = null;
         
         // Method 2: Fallback to VS Code API
-        logger.info(`[WorkspacePathDetector] Terminal method failed, trying VS Code API for port ${port}...`);
+        logger.info(`Terminal method failed, trying VS Code API for port ${port}...`);
         const filePath = await page.evaluate(() => {
           try {
             // 1. VS Code API - Workspace Folders
@@ -232,19 +232,19 @@ const logger = new Logger('Logger');
           if (workspacePath) {
             // Sende Workspace-Pfad an Server API
             this.ideManager.setWorkspacePath(port, workspacePath);
-            logger.info(`[WorkspacePathDetector] Set workspace path for port ${port}:`, workspacePath);
+            logger.info(`Set workspace path for port ${port}:`, workspacePath);
             resolve(workspacePath);
           } else {
-            logger.error('[WorkspacePathDetector] Could not extract project root from file path:', filePath);
+            logger.error('Could not extract project root from file path:', filePath);
             resolve(null);
           }
         } else {
-          logger.error('[WorkspacePathDetector] Could not detect workspace path');
+          logger.error('Could not detect workspace path');
           resolve(null);
         }
         
       } catch (error) {
-        logger.error('[WorkspacePathDetector] Error in workspace detection:', error);
+        logger.error('Error in workspace detection:', error);
         resolve(null);
       } finally {
         // Flag entfernen

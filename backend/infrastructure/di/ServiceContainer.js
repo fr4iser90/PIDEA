@@ -35,7 +35,7 @@ class ServiceContainer {
             dependencies
         });
         
-        logger.info(`[ServiceContainer] Registered service: ${name} (singleton: ${singleton})`);
+        logger.info(`Registered service: ${name} (singleton: ${singleton})`);
     }
 
     /**
@@ -45,7 +45,7 @@ class ServiceContainer {
      */
     registerSingleton(name, instance) {
         this.singletons.set(name, instance);
-        logger.info(`[ServiceContainer] Registered singleton: ${name}`);
+        logger.info(`Registered singleton: ${name}`);
     }
 
     /**
@@ -77,14 +77,14 @@ class ServiceContainer {
                 
                 return instance;
             } catch (error) {
-                logger.error(`[ServiceContainer] Failed to resolve service '${name}':`, error.message);
+                logger.error(`Failed to resolve service '${name}':`, error.message);
                 throw new Error(`Service resolution failed for '${name}': ${error.message}`);
             }
         }
 
         // Log available services for debugging
         const availableServices = Array.from(this.factories.keys()).join(', ');
-        logger.error(`[ServiceContainer] Service '${name}' not found. Available services: ${availableServices}`);
+        logger.error(`Service '${name}' not found. Available services: ${availableServices}`);
         throw new Error(`Service not found: ${name}`);
     }
 
@@ -94,7 +94,7 @@ class ServiceContainer {
      */
     setProjectContext(context) {
         this.projectContext = { ...this.projectContext, ...context };
-        logger.info(`[ServiceContainer] Project context updated:`, this.projectContext);
+        logger.info(`Project context updated:`, this.projectContext);
     }
 
     /**
@@ -163,7 +163,7 @@ class ServiceContainer {
 
             return null;
         } catch (error) {
-            logger.error('[ServiceContainer] Auto-detect failed:', error.message);
+            logger.error('Auto-detect failed:', error.message);
             return null;
         }
     }
@@ -180,7 +180,7 @@ class ServiceContainer {
             projectId: null,
             workspacePath: null
         };
-        logger.info('[ServiceContainer] All services cleared');
+        logger.info('All services cleared');
     }
 
     /**

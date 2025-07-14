@@ -374,8 +374,8 @@ class PostgreSQLTaskRepository extends TaskRepository {
 
       return task;
     } catch (error) {
-      logger.error('[PostgreSQLTaskRepository] Error converting row to task:', error);
-      logger.error('[PostgreSQLTaskRepository] Row data:', row);
+      logger.error('Error converting row to task:', error);
+      logger.error('Row data:', row);
       throw new Error(`Failed to convert database row to Task: ${error.message}`);
     }
   }

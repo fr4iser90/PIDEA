@@ -29,14 +29,14 @@ class AutomationManager {
    */
   async determineAutomationLevel(task, context) {
     try {
-      this.logger.info(`[AutomationManager] Determining automation level for task ${task.id}`);
+      this.logger.info(`Determining automation level for task ${task.id}`);
 
       // Check user preferences first
       const userId = context.get('userId');
       if (userId) {
         const userLevel = await this.userPreferences.getUserAutomationLevel(userId);
         if (userLevel) {
-          this.logger.info(`[AutomationManager] Using user preference: ${userLevel}`);
+          this.logger.info(`Using user preference: ${userLevel}`);
           return userLevel;
         }
       }
@@ -46,7 +46,7 @@ class AutomationManager {
       if (projectId) {
         const projectLevel = await this.projectSettings.getProjectAutomationLevel(projectId);
         if (projectLevel) {
-          this.logger.info(`[AutomationManager] Using project setting: ${projectLevel}`);
+          this.logger.info(`Using project setting: ${projectLevel}`);
           return projectLevel;
         }
       }
@@ -54,29 +54,29 @@ class AutomationManager {
       // Check task type requirements
       const taskLevel = this.getTaskTypeLevel(task.type?.value);
       if (taskLevel) {
-        this.logger.info(`[AutomationManager] Using task type level: ${taskLevel}`);
+        this.logger.info(`Using task type level: ${taskLevel}`);
         return taskLevel;
       }
 
       // Check AI confidence for adaptive automation
       const confidence = await this.calculateConfidence(task, context);
       if (confidence >= this.confidenceThreshold) {
-        this.logger.info(`[AutomationManager] Using full auto based on confidence: ${confidence}`);
+        this.logger.info(`Using full auto based on confidence: ${confidence}`);
         return AutomationLevel.FULL_AUTO;
       }
 
       // Apply automation rules
       const ruleLevel = await this.ruleEngine.evaluateRules(task, context);
       if (ruleLevel) {
-        this.logger.info(`[AutomationManager] Using rule-based level: ${ruleLevel}`);
+        this.logger.info(`Using rule-based level: ${ruleLevel}`);
         return ruleLevel;
       }
 
-      this.logger.info(`[AutomationManager] Using default level: ${this.defaultLevel}`);
+      this.logger.info(`Using default level: ${this.defaultLevel}`);
       return this.defaultLevel;
 
     } catch (error) {
-      this.logger.error(`[AutomationManager] Error determining automation level:`, error.message);
+      this.logger.error(`Error determining automation level:`, error.message);
       return this.defaultLevel;
     }
   }
@@ -91,7 +91,7 @@ class AutomationManager {
     try {
       return await this.confidenceCalculator.calculate(task, context);
     } catch (error) {
-      this.logger.error(`[AutomationManager] Error calculating confidence:`, error.message);
+      this.logger.error(`Error calculating confidence:`, error.message);
       return 0.5; // Default confidence
     }
   }
@@ -105,9 +105,9 @@ class AutomationManager {
   async setUserPreference(userId, level, options = {}) {
     try {
       await this.userPreferences.setUserPreference(userId, level, options);
-      this.logger.info(`[AutomationManager] Set user preference for ${userId}: ${level}`);
+      this.logger.info(`Set user preference for ${userId}: ${level}`);
     } catch (error) {
-      this.logger.error(`[AutomationManager] Failed to set user preference:`, error.message);
+      this.logger.error(`Failed to set user preference:`, error.message);
       throw error;
     }
   }
@@ -121,7 +121,7 @@ class AutomationManager {
     try {
       return await this.userPreferences.getUserPreference(userId);
     } catch (error) {
-      this.logger.error(`[AutomationManager] Failed to get user preference:`, error.message);
+      this.logger.error(`Failed to get user preference:`, error.message);
       return null;
     }
   }
@@ -135,9 +135,9 @@ class AutomationManager {
   async setProjectSetting(projectId, level, options = {}) {
     try {
       await this.projectSettings.setProjectSetting(projectId, level, options);
-      this.logger.info(`[AutomationManager] Set project setting for ${projectId}: ${level}`);
+      this.logger.info(`Set project setting for ${projectId}: ${level}`);
     } catch (error) {
-      this.logger.error(`[AutomationManager] Failed to set project setting:`, error.message);
+      this.logger.error(`Failed to set project setting:`, error.message);
       throw error;
     }
   }
@@ -151,7 +151,7 @@ class AutomationManager {
     try {
       return await this.projectSettings.getProjectSetting(projectId);
     } catch (error) {
-      this.logger.error(`[AutomationManager] Failed to get project setting:`, error.message);
+      this.logger.error(`Failed to get project setting:`, error.message);
       return null;
     }
   }
@@ -188,7 +188,7 @@ class AutomationManager {
       const level = await this.determineAutomationLevel(task, context);
       return AutomationLevel.requiresConfirmation(level);
     } catch (error) {
-      this.logger.error(`[AutomationManager] Error checking confirmation requirement:`, error.message);
+      this.logger.error(`Error checking confirmation requirement:`, error.message);
       return true; // Default to requiring confirmation
     }
   }
@@ -204,7 +204,7 @@ class AutomationManager {
       const level = await this.determineAutomationLevel(task, context);
       return AutomationLevel.requiresHumanReview(level);
     } catch (error) {
-      this.logger.error(`[AutomationManager] Error checking human review requirement:`, error.message);
+      this.logger.error(`Error checking human review requirement:`, error.message);
       return true; // Default to requiring human review
     }
   }
@@ -220,7 +220,7 @@ class AutomationManager {
       const level = await this.determineAutomationLevel(task, context);
       return AutomationLevel.isFullyAutomated(level);
     } catch (error) {
-      this.logger.error(`[AutomationManager] Error checking full automation:`, error.message);
+      this.logger.error(`Error checking full automation:`, error.message);
       return false; // Default to not fully automated
     }
   }
@@ -236,7 +236,7 @@ class AutomationManager {
       const level = await this.determineAutomationLevel(task, context);
       return AutomationLevel.getConfidenceThreshold(level);
     } catch (error) {
-      this.logger.error(`[AutomationManager] Error getting confidence threshold:`, error.message);
+      this.logger.error(`Error getting confidence threshold:`, error.message);
       return this.confidenceThreshold;
     }
   }

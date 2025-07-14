@@ -1,6 +1,5 @@
 const { v4: uuidv4 } = require('uuid');
-const Logger = require('@logging/Logger');
-const logger = new Logger('Logger');
+const ServiceLogger = require('@logging/ServiceLogger');
 
 /**
  * TodoParser - Service for parsing TODO lists from various formats
@@ -70,15 +69,15 @@ class TodoParser {
       'refactor': ['refactor', 'clean', 'organize', 'restructure', 'improve']
     };
     
-    this.logger = console;
+    this.logger = new ServiceLogger('TodoParser');
   }
 
   /**
    * Initialize the parser
    */
   async initialize() {
-    this.logger.info('[TodoParser] 📝 Initializing TODO parser...');
-    this.logger.info(`[TodoParser] Loaded ${this.patterns.length} parsing patterns`);
+    this.logger.info('📝 Initializing TODO parser...');
+    this.logger.info(`Loaded ${this.patterns.length} parsing patterns`);
     return true;
   }
 
@@ -89,7 +88,7 @@ class TodoParser {
    */
   async parse(input) {
     try {
-      this.logger.info('[TodoParser] Parsing TODO input...');
+      this.logger.info('Parsing TODO input...');
       
       if (!input || typeof input !== 'string') {
         throw new Error('Invalid input: must be a non-empty string');
@@ -126,11 +125,11 @@ class TodoParser {
         return a.lineNumber - b.lineNumber;
       });
       
-      this.logger.info(`[TodoParser] Parsed ${tasks.length} tasks from input`);
+      this.logger.info(`Parsed ${tasks.length} tasks from input`);
       return tasks;
       
     } catch (error) {
-      this.logger.error('[TodoParser] Parsing failed:', error.message);
+      this.logger.error('Parsing failed:', error.message);
       throw error;
     }
   }
@@ -197,7 +196,7 @@ class TodoParser {
       return task;
       
     } catch (error) {
-      this.logger.error('[TodoParser] Failed to create task:', error.message);
+      this.logger.error('Failed to create task:', error.message);
       return null;
     }
   }
@@ -357,7 +356,7 @@ class TodoParser {
     }
     
     this.patterns.push(pattern);
-    this.logger.info(`[TodoParser] Added custom pattern: ${pattern.name}`);
+    this.logger.info(`Added custom pattern: ${pattern.name}`);
   }
 
   /**
@@ -372,7 +371,7 @@ class TodoParser {
     }
     
     this.patterns.splice(index, 1);
-    this.logger.info(`[TodoParser] Removed pattern: ${patternName}`);
+    this.logger.info(`Removed pattern: ${patternName}`);
     return true;
   }
 
@@ -395,7 +394,7 @@ class TodoParser {
     }
     
     this.taskTypeKeywords[type].push(...keywords);
-    this.logger.info(`[TodoParser] Added keywords for task type: ${type}`);
+    this.logger.info(`Added keywords for task type: ${type}`);
   }
 
   /**
@@ -414,7 +413,7 @@ class TodoParser {
    * Cleanup resources
    */
   async cleanup() {
-    this.logger.info('[TodoParser] Cleaning up TODO parser...');
+    this.logger.info('Cleaning up TODO parser...');
     // No specific cleanup needed for parser
   }
 }

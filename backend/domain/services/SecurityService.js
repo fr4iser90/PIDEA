@@ -18,7 +18,7 @@ class SecurityService {
    */
   async analyzeSecurity(projectPath, options = {}, projectId = 'default') {
     try {
-      this.logger.info(`[SecurityService] Starting security analysis for: ${projectPath}`);
+      this.logger.info(`Starting security analysis for: ${projectPath}`);
 
       const analysis = await this.securityAnalyzer.analyzeSecurity(projectPath, options);
 
@@ -45,12 +45,12 @@ const logger = new Logger('Logger');
         }
       }
 
-      this.logger.info(`[SecurityService] Security analysis completed for: ${projectPath}`);
+      this.logger.info(`Security analysis completed for: ${projectPath}`);
       this.eventBus.emit('security:analysis:completed', { projectPath, analysis, projectId });
 
       return analysis;
     } catch (error) {
-      this.logger.error(`[SecurityService] Security analysis failed for ${projectPath}:`, error);
+      this.logger.error(`Security analysis failed for ${projectPath}:`, error);
       this.eventBus.emit('security:analysis:failed', { projectPath, error: error.message });
       throw error;
     }
@@ -65,7 +65,7 @@ const logger = new Logger('Logger');
     try {
       return await this.securityAnalyzer.analyzeDependencyVulnerabilities(projectPath);
     } catch (error) {
-      this.logger.error(`[SecurityService] Dependency vulnerability analysis failed:`, error);
+      this.logger.error(`Dependency vulnerability analysis failed:`, error);
       throw error;
     }
   }
@@ -79,7 +79,7 @@ const logger = new Logger('Logger');
     try {
       return await this.securityAnalyzer.analyzeSecurityConfiguration(projectPath);
     } catch (error) {
-      this.logger.error(`[SecurityService] Security configuration analysis failed:`, error);
+      this.logger.error(`Security configuration analysis failed:`, error);
       throw error;
     }
   }
@@ -93,7 +93,7 @@ const logger = new Logger('Logger');
     try {
       return await this.securityAnalyzer.analyzeCodeSecurity(projectPath);
     } catch (error) {
-      this.logger.error(`[SecurityService] Code security analysis failed:`, error);
+      this.logger.error(`Code security analysis failed:`, error);
       throw error;
     }
   }
@@ -107,7 +107,7 @@ const logger = new Logger('Logger');
     try {
       return await this.securityAnalyzer.analyzeSecrets(projectPath);
     } catch (error) {
-      this.logger.error(`[SecurityService] Secrets analysis failed:`, error);
+      this.logger.error(`Secrets analysis failed:`, error);
       throw error;
     }
   }
@@ -121,7 +121,7 @@ const logger = new Logger('Logger');
     try {
       return await this.securityAnalyzer.generateSecurityRecommendations(analysis);
     } catch (error) {
-      this.logger.error(`[SecurityService] Security recommendation generation failed:`, error);
+      this.logger.error(`Security recommendation generation failed:`, error);
       throw error;
     }
   }

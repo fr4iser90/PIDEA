@@ -40,7 +40,7 @@ class IDEAutomationService {
     // Event listeners
     this.setupEventListeners();
     
-    logger.info('[IDEAutomationService] Initialized');
+    logger.info('✅ IDE automation service initialized');
   }
 
   /**
@@ -103,7 +103,7 @@ class IDEAutomationService {
         throw new Error('No IDE page available');
       }
 
-      logger.info(`[IDEAutomationService] Opening terminal for ${context.ideType} on port ${context.port}`);
+      logger.info(`Opening terminal for ${context.ideType} on port ${context.port}`);
 
       // Use IDE-specific terminal shortcuts
       if (context.ideType === IDETypes.VSCODE) {
@@ -144,7 +144,7 @@ class IDEAutomationService {
         timestamp: new Date()
       });
 
-      logger.info(`[IDEAutomationService] Terminal opened: ${this.terminalStatus.isOpen}`);
+      logger.info(`Terminal opened: ${this.terminalStatus.isOpen}`);
 
       return {
         success: this.terminalStatus.isOpen,
@@ -154,7 +154,7 @@ class IDEAutomationService {
       };
 
     } catch (error) {
-      logger.error('[IDEAutomationService] Failed to open terminal:', error);
+      logger.error('Failed to open terminal:', error);
       await this.eventBus.publish('terminal.open.failed', {
         error: error.message,
         timestamp: new Date()
@@ -178,7 +178,7 @@ class IDEAutomationService {
         throw new Error('No IDE page available');
       }
 
-      logger.info(`[IDEAutomationService] Executing command: ${command}`);
+      logger.info(`Executing command: ${command}`);
 
       // Ensure terminal is open
       if (!this.terminalStatus.isOpen) {
@@ -211,7 +211,7 @@ class IDEAutomationService {
         timestamp: new Date()
       });
 
-      logger.info(`[IDEAutomationService] Command executed: ${command}`);
+      logger.info(`Command executed: ${command}`);
 
       return {
         success: true,
@@ -221,7 +221,7 @@ class IDEAutomationService {
       };
 
     } catch (error) {
-      logger.error('[IDEAutomationService] Failed to execute terminal command:', error);
+      logger.error('Failed to execute terminal command:', error);
       await this.eventBus.publish('terminal.command.failed', {
         command: command,
         error: error.message,
@@ -240,7 +240,7 @@ class IDEAutomationService {
     try {
       const context = await this.getIDEContext();
       
-      logger.info(`[IDEAutomationService] Monitoring terminal output for ${context.ideType}`);
+      logger.info(`Monitoring terminal output for ${context.ideType}`);
 
       // Use existing TerminalMonitor service
       const result = await this.terminalMonitor.monitorTerminalOutput();
@@ -256,7 +256,7 @@ class IDEAutomationService {
         timestamp: new Date()
       });
 
-      logger.info(`[IDEAutomationService] Terminal output monitored: ${result ? 'URL found' : 'No URL'}`);
+      logger.info(`Terminal output monitored: ${result ? 'URL found' : 'No URL'}`);
 
       return {
         success: true,
@@ -266,7 +266,7 @@ class IDEAutomationService {
       };
 
     } catch (error) {
-      logger.error('[IDEAutomationService] Failed to monitor terminal output:', error);
+      logger.error('Failed to monitor terminal output:', error);
       await this.eventBus.publish('terminal.output.monitoring.failed', {
         error: error.message,
         timestamp: new Date()
@@ -284,7 +284,7 @@ class IDEAutomationService {
     try {
       const context = await this.getIDEContext();
       
-      logger.info(`[IDEAutomationService] Restarting user app for ${context.ideType}`);
+      logger.info(`Restarting user app for ${context.ideType}`);
 
       // Use existing TerminalMonitor service
       const result = await this.terminalMonitor.restartUserApp();
@@ -297,7 +297,7 @@ class IDEAutomationService {
         timestamp: new Date()
       });
 
-      logger.info(`[IDEAutomationService] User app restarted: ${result ? 'Success' : 'Failed'}`);
+      logger.info(`User app restarted: ${result ? 'Success' : 'Failed'}`);
 
       return {
         success: !!result,
@@ -307,7 +307,7 @@ class IDEAutomationService {
       };
 
     } catch (error) {
-      logger.error('[IDEAutomationService] Failed to restart user app:', error);
+      logger.error('Failed to restart user app:', error);
       await this.eventBus.publish('terminal.app.restart.failed', {
         error: error.message,
         timestamp: new Date()
@@ -325,7 +325,7 @@ class IDEAutomationService {
     try {
       const context = await this.getIDEContext();
       
-      logger.info(`[IDEAutomationService] Capturing terminal logs for ${context.ideType}`);
+      logger.info(`Capturing terminal logs for ${context.ideType}`);
 
       // Get terminal output
       const output = await this.terminalMonitor.monitorTerminalOutput();
@@ -341,7 +341,7 @@ class IDEAutomationService {
         timestamp: new Date()
       });
 
-      logger.info(`[IDEAutomationService] Terminal logs captured: ${logs.length} entries`);
+      logger.info(`Terminal logs captured: ${logs.length} entries`);
 
       return {
         success: true,
@@ -352,7 +352,7 @@ class IDEAutomationService {
       };
 
     } catch (error) {
-      logger.error('[IDEAutomationService] Failed to capture terminal logs:', error);
+      logger.error('Failed to capture terminal logs:', error);
       await this.eventBus.publish('terminal.logs.capture.failed', {
         error: error.message,
         timestamp: new Date()
@@ -374,11 +374,11 @@ class IDEAutomationService {
       const cacheKey = `project_analysis_${context.workspacePath}`;
       const cached = this.analysisCache.get(cacheKey);
       if (cached && (Date.now() - cached.timestamp) < this.cacheTimeout) {
-        logger.info('[IDEAutomationService] Using cached project analysis');
+        logger.info('Using cached project analysis');
         return cached.result;
       }
 
-      logger.info(`[IDEAutomationService] Analyzing project for ${context.ideType}`);
+      logger.info(`Analyzing project for ${context.ideType}`);
 
       // Use existing PackageJsonAnalyzer service
       const analysis = await this.packageJsonAnalyzer.analyzePackageJsonInPath(context.workspacePath);
@@ -407,12 +407,12 @@ class IDEAutomationService {
         timestamp: new Date()
       });
 
-      logger.info(`[IDEAutomationService] Project analyzed`);
+      logger.info(`Project analyzed`);
 
       return result;
 
     } catch (error) {
-      logger.error('[IDEAutomationService] Failed to analyze project:', error);
+      logger.error('Failed to analyze project:', error);
       await this.eventBus.publish('project.analysis.failed', {
         error: error.message,
         timestamp: new Date()
@@ -434,7 +434,7 @@ class IDEAutomationService {
       const cacheKey = `project_analysis_${context.workspacePath}`;
       this.analysisCache.delete(cacheKey);
 
-      logger.info(`[IDEAutomationService] Re-analyzing project for ${context.ideType}`);
+      logger.info(`Re-analyzing project for ${context.ideType}`);
 
       // Perform fresh analysis
       const result = await this.analyzeProject(options);
@@ -448,12 +448,12 @@ class IDEAutomationService {
         timestamp: new Date()
       });
 
-      logger.info(`[IDEAutomationService] Project re-analyzed`);
+      logger.info(`Project re-analyzed`);
 
       return result;
 
     } catch (error) {
-      logger.error('[IDEAutomationService] Failed to re-analyze project:', error);
+      logger.error('Failed to re-analyze project:', error);
       await this.eventBus.publish('project.reanalysis.failed', {
         error: error.message,
         timestamp: new Date()
@@ -471,7 +471,7 @@ class IDEAutomationService {
     try {
       const context = await this.getIDEContext();
       
-      logger.info(`[IDEAutomationService] Getting workspace info for ${context.ideType}`);
+      logger.info(`Getting workspace info for ${context.ideType}`);
 
       // Use existing WorkspacePathDetector service
       const workspaceInfo = await this.workspacePathDetector.addWorkspacePathDetectionViaPlaywright();
@@ -494,12 +494,12 @@ class IDEAutomationService {
         timestamp: new Date()
       });
 
-      logger.info(`[IDEAutomationService] Workspace info retrieved: ${workspaceInfo ? 'Success' : 'No info'}`);
+      logger.info(`Workspace info retrieved: ${workspaceInfo ? 'Success' : 'No info'}`);
 
       return result;
 
     } catch (error) {
-      logger.error('[IDEAutomationService] Failed to get workspace info:', error);
+      logger.error('Failed to get workspace info:', error);
       await this.eventBus.publish('workspace.info.retrieval.failed', {
         error: error.message,
         timestamp: new Date()
@@ -517,7 +517,7 @@ class IDEAutomationService {
     try {
       const context = await this.getIDEContext();
       
-      logger.info(`[IDEAutomationService] Detecting package.json for ${context.ideType}`);
+      logger.info(`Detecting package.json for ${context.ideType}`);
 
       // Use existing PackageJsonAnalyzer service
       const packageJsonUrl = await this.packageJsonAnalyzer.analyzePackageJsonInPath(context.workspacePath);
@@ -540,12 +540,12 @@ class IDEAutomationService {
         timestamp: new Date()
       });
 
-      logger.info(`[IDEAutomationService] Package.json detected: ${packageJsonUrl ? 'Success' : 'No package.json'}`);
+      logger.info(`Package.json detected: ${packageJsonUrl ? 'Success' : 'No package.json'}`);
 
       return result;
 
     } catch (error) {
-      logger.error('[IDEAutomationService] Failed to detect package.json:', error);
+      logger.error('Failed to detect package.json:', error);
       await this.eventBus.publish('package.json.detection.failed', {
         error: error.message,
         timestamp: new Date()
@@ -606,9 +606,9 @@ class IDEAutomationService {
       this.ideType = context.ideType;
       this.workspacePath = context.workspacePath;
       
-      logger.info(`[IDEAutomationService] Port changed to ${port}, IDE type: ${this.ideType}`);
+      logger.info(`Port changed to ${port}, IDE type: ${this.ideType}`);
     } catch (error) {
-      logger.error('[IDEAutomationService] Failed to handle port change:', error);
+      logger.error('Failed to handle port change:', error);
     }
   }
 
@@ -621,9 +621,9 @@ class IDEAutomationService {
       const { output } = eventData;
       this.terminalStatus.lastOutput = output;
       
-      logger.info('[IDEAutomationService] Terminal output changed');
+      logger.info('Terminal output changed');
     } catch (error) {
-      logger.error('[IDEAutomationService] Failed to handle terminal output change:', error);
+      logger.error('Failed to handle terminal output change:', error);
     }
   }
 
@@ -647,7 +647,7 @@ class IDEAutomationService {
    */
   clearCache() {
     this.analysisCache.clear();
-    logger.info('[IDEAutomationService] Analysis cache cleared');
+    logger.info('Analysis cache cleared');
   }
 }
 

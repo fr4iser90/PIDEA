@@ -37,7 +37,7 @@ class OpenTerminalHandler {
    */
   async handle(command, context = {}) {
     try {
-      this.logger.info(`[OpenTerminalHandler] Handling command: ${command.commandId}`);
+      this.logger.info(`Handling command: ${command.commandId}`);
 
       // Validate command
       if (!command || command.type !== 'OpenTerminalCommand') {
@@ -58,7 +58,7 @@ class OpenTerminalHandler {
         timestamp: new Date()
       });
 
-      this.logger.info(`[OpenTerminalHandler] Terminal opened successfully: ${result.success}`);
+      this.logger.info(`Terminal opened successfully: ${result.success}`);
 
       return {
         success: true,
@@ -68,7 +68,7 @@ class OpenTerminalHandler {
       };
 
     } catch (error) {
-      this.logger.error(`[OpenTerminalHandler] Failed to open terminal:`, error);
+      this.logger.error(`Failed to open terminal:`, error);
 
       // Publish failure event
       await this.eventBus.publish('terminal.open.failed', {

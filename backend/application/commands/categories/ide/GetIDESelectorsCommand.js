@@ -68,7 +68,7 @@ class GetIDESelectorsCommand {
         errors: []
       };
     } catch (error) {
-      this.logger.error('[GetIDESelectorsCommand] Validation error:', error);
+      this.logger.error('Validation error:', error);
       return {
         isValid: false,
         errors: [error.message]
@@ -83,7 +83,7 @@ class GetIDESelectorsCommand {
    */
   async execute(context = {}) {
     try {
-      this.logger.info('[GetIDESelectorsCommand] Executing command', {
+      this.logger.info('Executing command', {
         commandId: this.commandId,
         userId: this.userId,
         ideType: this.ideType,
@@ -137,7 +137,7 @@ class GetIDESelectorsCommand {
         });
       }
 
-      this.logger.info('[GetIDESelectorsCommand] Command executed successfully', {
+      this.logger.info('Command executed successfully', {
         commandId: this.commandId,
         result: result
       });
@@ -145,7 +145,7 @@ class GetIDESelectorsCommand {
       return result;
 
     } catch (error) {
-      this.logger.error('[GetIDESelectorsCommand] Command execution failed:', error);
+      this.logger.error('Command execution failed:', error);
 
       // Publish failure event
       if (context.eventBus) {

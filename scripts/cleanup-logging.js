@@ -68,13 +68,13 @@ const logReplacements = [
     // Service Registrierungen reduzieren
     {
         pattern: /logger\.log\s*\(\s*['"`]\[ServiceContainer\] Registered service: ([^'"]+) \(singleton: true\)['"`]\s*\)/g,
-        replacement: 'logger.debug(`[ServiceContainer] Registered: $1`)'
+        replacement: 'logger.debug(`Registered: $1`)'
     },
     
     // Initialisierungs-Logs konsolidieren
     {
         pattern: /logger\.log\s*\(\s*['"`]\[([^\]]+)\] Initialized successfully['"`]\s*\)/g,
-        replacement: 'logger.success(`[$1] Initialized`)'
+        replacement: 'logger.success(`Initialized`)'
     },
     
     // System Events strukturieren

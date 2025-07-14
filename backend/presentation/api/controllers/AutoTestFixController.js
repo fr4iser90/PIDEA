@@ -40,7 +40,7 @@ class AutoTestFixController {
         ...otherOptions
       } = req.body;
 
-      this.logger.info('[AutoTestFixController] Executing auto test fix', {
+      this.logger.info('Executing auto test fix', {
         projectId,
         userId,
         projectPath,
@@ -82,7 +82,7 @@ class AutoTestFixController {
       });
 
     } catch (error) {
-      this.logger.error('[AutoTestFixController] Auto test fix execution failed:', error.message);
+      this.logger.error('Auto test fix execution failed:', error.message);
 
       return res.status(500).json({
         success: false,
@@ -101,7 +101,7 @@ class AutoTestFixController {
       const { options = {} } = req.body;
       const projectId = req.params.projectId;
 
-      this.logger.info('[AutoTestFixController] Analyzing project tests', {
+      this.logger.info('Analyzing project tests', {
         projectId,
         options
       });
@@ -119,7 +119,7 @@ class AutoTestFixController {
         options.projectPath || process.cwd()
       );
 
-      this.logger.info('[AutoTestFixController] Project test analysis completed', {
+      this.logger.info('Project test analysis completed', {
         totalIssues: result.totalIssues,
         hasIssues: result.hasIssues
       });
@@ -130,7 +130,7 @@ class AutoTestFixController {
       });
 
     } catch (error) {
-      this.logger.error('[AutoTestFixController] Project test analysis failed:', error.message);
+      this.logger.error('Project test analysis failed:', error.message);
 
       return res.status(500).json({
         success: false,
@@ -149,7 +149,7 @@ class AutoTestFixController {
       const { sessionId } = req.params;
       const projectId = req.params.projectId;
 
-      this.logger.info('[AutoTestFixController] Getting session status', {
+      this.logger.info('Getting session status', {
         sessionId,
         projectId
       });
@@ -163,7 +163,7 @@ class AutoTestFixController {
       });
 
     } catch (error) {
-      this.logger.error('[AutoTestFixController] Failed to get session status:', error.message);
+      this.logger.error('Failed to get session status:', error.message);
 
       return res.status(500).json({
         success: false,
@@ -182,7 +182,7 @@ class AutoTestFixController {
       const { sessionId } = req.params;
       const projectId = req.params.projectId;
 
-      this.logger.info('[AutoTestFixController] Cancelling session', {
+      this.logger.info('Cancelling session', {
         sessionId,
         projectId
       });
@@ -197,7 +197,7 @@ class AutoTestFixController {
       });
 
     } catch (error) {
-      this.logger.error('[AutoTestFixController] Failed to cancel session:', error.message);
+      this.logger.error('Failed to cancel session:', error.message);
 
       return res.status(500).json({
         success: false,
@@ -215,7 +215,7 @@ class AutoTestFixController {
     try {
       const projectId = req.params.projectId;
 
-      this.logger.info('[AutoTestFixController] Getting auto test fix statistics', {
+      this.logger.info('Getting auto test fix statistics', {
         projectId
       });
 
@@ -251,7 +251,7 @@ class AutoTestFixController {
       });
 
     } catch (error) {
-      this.logger.error('[AutoTestFixController] Failed to get statistics:', error.message);
+      this.logger.error('Failed to get statistics:', error.message);
 
       return res.status(500).json({
         success: false,
@@ -270,7 +270,7 @@ class AutoTestFixController {
       const projectId = req.params.projectId;
       const { status, limit = 50, offset = 0 } = req.query;
 
-      this.logger.info('[AutoTestFixController] Getting auto test tasks', {
+      this.logger.info('Getting auto test tasks', {
         projectId,
         status,
         limit,
@@ -300,7 +300,7 @@ class AutoTestFixController {
       });
 
     } catch (error) {
-      this.logger.error('[AutoTestFixController] Failed to get auto test tasks:', error.message);
+      this.logger.error('Failed to get auto test tasks:', error.message);
 
       return res.status(500).json({
         success: false,
@@ -318,7 +318,7 @@ class AutoTestFixController {
     try {
       const { projectId, taskId } = req.params;
 
-      this.logger.info('[AutoTestFixController] Getting auto test task details', {
+      this.logger.info('Getting auto test task details', {
         projectId,
         taskId
       });
@@ -345,7 +345,7 @@ class AutoTestFixController {
       });
 
     } catch (error) {
-      this.logger.error('[AutoTestFixController] Failed to get auto test task details:', error.message);
+      this.logger.error('Failed to get auto test task details:', error.message);
 
       return res.status(500).json({
         success: false,
@@ -364,7 +364,7 @@ class AutoTestFixController {
       const { projectId, taskId } = req.params;
       const userId = req.user?.id;
 
-      this.logger.info('[AutoTestFixController] Retrying auto test task', {
+      this.logger.info('Retrying auto test task', {
         projectId,
         taskId,
         userId
@@ -398,7 +398,7 @@ class AutoTestFixController {
       });
 
     } catch (error) {
-      this.logger.error('[AutoTestFixController] Failed to retry auto test task:', error.message);
+      this.logger.error('Failed to retry auto test task:', error.message);
 
       return res.status(500).json({
         success: false,
@@ -418,7 +418,7 @@ class AutoTestFixController {
       const userId = req.user?.id;
       const { status } = req.query;
 
-      this.logger.info('[AutoTestFixController] Loading existing tasks', {
+      this.logger.info('Loading existing tasks', {
         projectId,
         userId,
         status
@@ -441,7 +441,7 @@ class AutoTestFixController {
       });
 
     } catch (error) {
-      this.logger.error('[AutoTestFixController] Failed to load existing tasks:', error.message);
+      this.logger.error('Failed to load existing tasks:', error.message);
 
       return res.status(500).json({
         success: false,

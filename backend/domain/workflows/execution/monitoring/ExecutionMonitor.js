@@ -3,8 +3,7 @@
  * Provides comprehensive monitoring capabilities for workflow execution
  */
 const EventEmitter = require('events');
-const Logger = require('@logging/Logger');
-const logger = new Logger('Logger');
+const ServiceLogger = require('@logging/ServiceLogger');
 
 /**
  * Execution metrics data structure
@@ -212,7 +211,7 @@ class ExecutionMonitor extends EventEmitter {
     this.performanceBaseline = new Map(); // workflowName -> baseline metrics
     this.performanceThresholds = new Map(); // workflowName -> thresholds
     
-    this.logger = options.logger || console;
+    this.logger = options.logger || new ServiceLogger('ExecutionMonitor');
   }
 
   /**
@@ -228,7 +227,7 @@ class ExecutionMonitor extends EventEmitter {
       this.performMonitoring();
     }, this.monitoringInterval);
 
-    this.logger.info('ExecutionMonitor: Started monitoring');
+    this.logger.info('Started monitoring');
     this.emit('monitoring:started');
   }
 
@@ -246,7 +245,7 @@ class ExecutionMonitor extends EventEmitter {
       this.monitoringTimer = null;
     }
 
-    this.logger.info('ExecutionMonitor: Stopped monitoring');
+    this.logger.info('Stopped monitoring');
     this.emit('monitoring:stopped');
   }
 
@@ -268,7 +267,7 @@ class ExecutionMonitor extends EventEmitter {
 
     this.activeExecutions.set(executionId, metrics);
     
-    this.logger.info('ExecutionMonitor: Registered execution for monitoring', {
+    this.logger.info('Registered execution for monitoring', {
       executionId,
       workflowName: executionData.workflowName
     });
@@ -371,7 +370,7 @@ class ExecutionMonitor extends EventEmitter {
     // Cleanup old history
     this.cleanupOldHistory();
 
-    this.logger.info('ExecutionMonitor: Completed execution monitoring', {
+    this.logger.info('Completed execution monitoring', {
       executionId,
       duration: metrics.duration,
       successRate: metrics.getSummary().successRate
@@ -457,7 +456,7 @@ class ExecutionMonitor extends EventEmitter {
     const alert = new ExecutionAlert(type, message, data);
     this.alerts.push(alert);
 
-    this.logger.warn('ExecutionMonitor: Alert created', {
+    this.logger.warn('Alert created', {
       type: alert.type,
       message: alert.message,
       severity: alert.severity
@@ -644,7 +643,7 @@ class ExecutionMonitor extends EventEmitter {
     this.performanceBaseline.clear();
     this.performanceThresholds.clear();
 
-    this.logger.info('ExecutionMonitor: Reset all monitoring data');
+    this.logger.info('Reset all monitoring data');
     this.emit('monitoring:reset');
   }
 }

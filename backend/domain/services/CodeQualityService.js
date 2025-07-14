@@ -18,7 +18,7 @@ class CodeQualityService {
    */
   async analyzeCodeQuality(projectPath, options = {}, projectId = 'default') {
     try {
-      this.logger.info(`[CodeQualityService] Starting code quality analysis for: ${projectPath}`);
+      this.logger.info(`Starting code quality analysis for: ${projectPath}`);
 
       const analysis = await this.codeQualityAnalyzer.analyzeCodeQuality(projectPath, options);
 
@@ -45,12 +45,12 @@ const logger = new Logger('Logger');
         }
       }
 
-      this.logger.info(`[CodeQualityService] Code quality analysis completed for: ${projectPath}`);
+      this.logger.info(`Code quality analysis completed for: ${projectPath}`);
       this.eventBus.emit('code-quality:analysis:completed', { projectPath, analysis, projectId });
 
       return analysis;
     } catch (error) {
-      this.logger.error(`[CodeQualityService] Code quality analysis failed for ${projectPath}:`, error);
+      this.logger.error(`Code quality analysis failed for ${projectPath}:`, error);
       this.eventBus.emit('code-quality:analysis:failed', { projectPath, error: error.message });
       throw error;
     }
@@ -65,7 +65,7 @@ const logger = new Logger('Logger');
     try {
       return await this.codeQualityAnalyzer.analyzeLintingConfig(projectPath);
     } catch (error) {
-      this.logger.error(`[CodeQualityService] Linting config analysis failed:`, error);
+      this.logger.error(`Linting config analysis failed:`, error);
       throw error;
     }
   }
@@ -79,7 +79,7 @@ const logger = new Logger('Logger');
     try {
       return await this.codeQualityAnalyzer.analyzeFormattingConfig(projectPath);
     } catch (error) {
-      this.logger.error(`[CodeQualityService] Formatting config analysis failed:`, error);
+      this.logger.error(`Formatting config analysis failed:`, error);
       throw error;
     }
   }
@@ -93,7 +93,7 @@ const logger = new Logger('Logger');
     try {
       return await this.codeQualityAnalyzer.analyzeComplexity(projectPath);
     } catch (error) {
-      this.logger.error(`[CodeQualityService] Complexity analysis failed:`, error);
+      this.logger.error(`Complexity analysis failed:`, error);
       throw error;
     }
   }
@@ -107,7 +107,7 @@ const logger = new Logger('Logger');
     try {
       return await this.codeQualityAnalyzer.analyzeMaintainability(projectPath);
     } catch (error) {
-      this.logger.error(`[CodeQualityService] Maintainability analysis failed:`, error);
+      this.logger.error(`Maintainability analysis failed:`, error);
       throw error;
     }
   }
@@ -121,7 +121,7 @@ const logger = new Logger('Logger');
     try {
       return await this.codeQualityAnalyzer.runESLintAnalysis(projectPath);
     } catch (error) {
-      this.logger.error(`[CodeQualityService] ESLint analysis failed:`, error);
+      this.logger.error(`ESLint analysis failed:`, error);
       throw error;
     }
   }
@@ -135,7 +135,7 @@ const logger = new Logger('Logger');
     try {
       return await this.codeQualityAnalyzer.generateRecommendations(analysis);
     } catch (error) {
-      this.logger.error(`[CodeQualityService] Recommendation generation failed:`, error);
+      this.logger.error(`Recommendation generation failed:`, error);
       throw error;
     }
   }

@@ -49,7 +49,7 @@ class WorkflowExecutionService {
    */
   async executeWorkflow(workflow, context = {}) {
     try {
-      this.logger.info('[WorkflowExecutionService] Starting workflow execution', {
+      this.logger.info('Starting workflow execution', {
         serviceId: this.serviceId,
         workflowId: workflow.id,
         workflowType: workflow.type,
@@ -73,7 +73,7 @@ class WorkflowExecutionService {
           const stepResult = await this.executeWorkflowStep(step, context);
           results.push(stepResult);
         } catch (error) {
-          this.logger.error('[WorkflowExecutionService] Step execution failed:', error);
+          this.logger.error('Step execution failed:', error);
           results.push({
             success: false,
             step: step,
@@ -120,7 +120,7 @@ class WorkflowExecutionService {
         timestamp: new Date()
       });
 
-      this.logger.info('[WorkflowExecutionService] Workflow execution completed', {
+      this.logger.info('Workflow execution completed', {
         serviceId: this.serviceId,
         workflowId: workflow.id,
         success: result.success,
@@ -130,7 +130,7 @@ class WorkflowExecutionService {
       return result;
 
     } catch (error) {
-      this.logger.error('[WorkflowExecutionService] Workflow execution failed:', error);
+      this.logger.error('Workflow execution failed:', error);
 
       // Publish workflow failure event
       await this.eventBus.publish('workflow.execution.failed', {
@@ -153,7 +153,7 @@ class WorkflowExecutionService {
    */
   async executeWorkflowStep(step, context = {}) {
     try {
-      this.logger.info('[WorkflowExecutionService] Executing workflow step', {
+      this.logger.info('Executing workflow step', {
         serviceId: this.serviceId,
         stepId: step.id,
         stepType: step.type,
@@ -206,7 +206,7 @@ class WorkflowExecutionService {
       };
 
     } catch (error) {
-      this.logger.error('[WorkflowExecutionService] Step execution failed:', error);
+      this.logger.error('Step execution failed:', error);
 
       // Publish step failure event
       await this.eventBus.publish('workflow.step.failed', {

@@ -18,14 +18,14 @@ class PerformanceService {
    */
   async analyzePerformance(projectPath, options = {}, projectId = 'default') {
     try {
-      this.logger.info(`[PerformanceService] Starting performance analysis for: ${projectPath}`);
+      this.logger.info(`Starting performance analysis for: ${projectPath}`);
 
       // Check for existing recent analysis
       const existingAnalysis = await this.checkExistingAnalysis(projectId, 'performance');
       if (existingAnalysis && !options.forceRefresh) {
         const shouldSkip = await this.shouldSkipAnalysis(existingAnalysis, 'performance');
         if (shouldSkip) {
-          this.logger.info(`[PerformanceService] Recent performance analysis found, skipping: ${projectPath}`);
+          this.logger.info(`Recent performance analysis found, skipping: ${projectPath}`);
           return existingAnalysis.data || existingAnalysis.result_data;
         }
       }
@@ -55,12 +55,12 @@ const logger = new Logger('Logger');
         }
       }
 
-      this.logger.info(`[PerformanceService] Performance analysis completed for: ${projectPath}`);
+      this.logger.info(`Performance analysis completed for: ${projectPath}`);
       this.eventBus.emit('performance:analysis:completed', { projectPath, analysis, projectId });
 
       return analysis;
     } catch (error) {
-      this.logger.error(`[PerformanceService] Performance analysis failed for ${projectPath}:`, error);
+      this.logger.error(`Performance analysis failed for ${projectPath}:`, error);
       this.eventBus.emit('performance:analysis:failed', { projectPath, error: error.message });
       throw error;
     }
@@ -75,7 +75,7 @@ const logger = new Logger('Logger');
     try {
       return await this.performanceAnalyzer.analyzeBuildPerformance(projectPath);
     } catch (error) {
-      this.logger.error(`[PerformanceService] Build performance analysis failed:`, error);
+      this.logger.error(`Build performance analysis failed:`, error);
       throw error;
     }
   }
@@ -89,7 +89,7 @@ const logger = new Logger('Logger');
     try {
       return await this.performanceAnalyzer.analyzeBundleSize(projectPath);
     } catch (error) {
-      this.logger.error(`[PerformanceService] Bundle size analysis failed:`, error);
+      this.logger.error(`Bundle size analysis failed:`, error);
       throw error;
     }
   }
@@ -103,7 +103,7 @@ const logger = new Logger('Logger');
     try {
       return await this.performanceAnalyzer.analyzeRuntimePerformance(projectPath);
     } catch (error) {
-      this.logger.error(`[PerformanceService] Runtime performance analysis failed:`, error);
+      this.logger.error(`Runtime performance analysis failed:`, error);
       throw error;
     }
   }
@@ -117,7 +117,7 @@ const logger = new Logger('Logger');
     try {
       return await this.performanceAnalyzer.identifyOptimizations(projectPath);
     } catch (error) {
-      this.logger.error(`[PerformanceService] Optimization identification failed:`, error);
+      this.logger.error(`Optimization identification failed:`, error);
       throw error;
     }
   }
@@ -131,7 +131,7 @@ const logger = new Logger('Logger');
     try {
       return await this.performanceAnalyzer.identifyBottlenecks(projectPath);
     } catch (error) {
-      this.logger.error(`[PerformanceService] Bottleneck identification failed:`, error);
+      this.logger.error(`Bottleneck identification failed:`, error);
       throw error;
     }
   }
@@ -145,7 +145,7 @@ const logger = new Logger('Logger');
     try {
       return await this.performanceAnalyzer.generatePerformanceRecommendations(analysis);
     } catch (error) {
-      this.logger.error(`[PerformanceService] Performance recommendation generation failed:`, error);
+      this.logger.error(`Performance recommendation generation failed:`, error);
       throw error;
     }
   }
@@ -263,7 +263,7 @@ const logger = new Logger('Logger');
       const existingAnalyses = await this.analysisRepository.findByProjectIdAndType(projectId, analysisType);
       return existingAnalyses.length > 0 ? existingAnalyses[0] : null;
     } catch (error) {
-      this.logger.warn(`[PerformanceService] Failed to check existing analysis:`, error.message);
+      this.logger.warn(`Failed to check existing analysis:`, error.message);
       return null;
     }
   }
@@ -282,7 +282,7 @@ const logger = new Logger('Logger');
     const twoHoursAgo = new Date(Date.now() - 2 * 60 * 60 * 1000);
     
     if (lastUpdate > twoHoursAgo) {
-      this.logger.info(`[PerformanceService] Analysis is recent (${analysisType}), considering skip`, {
+      this.logger.info(`Analysis is recent (${analysisType}), considering skip`, {
         lastUpdate: lastUpdate.toISOString(),
         analysisId: existingAnalysis.id
       });
@@ -292,7 +292,7 @@ const logger = new Logger('Logger');
     // Check if analysis is older than 24 hours (force refresh)
     const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
     if (lastUpdate < oneDayAgo) {
-      this.logger.info(`[PerformanceService] Analysis is older than 24 hours (${analysisType}), forcing refresh`);
+      this.logger.info(`Analysis is older than 24 hours (${analysisType}), forcing refresh`);
       return false;
     }
 

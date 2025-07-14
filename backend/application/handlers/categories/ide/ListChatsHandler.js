@@ -55,7 +55,7 @@ class ListChatsHandler {
         throw new Error(`Command validation failed: ${validationResult.errors.join(', ')}`);
       }
 
-      this.logger.info('[ListChatsHandler] Listing chat sessions', {
+      this.logger.info('Listing chat sessions', {
         handlerId: this.handlerId,
         commandId: command.commandId,
         userId: command.userId,
@@ -88,7 +88,7 @@ class ListChatsHandler {
         timestamp: new Date()
       });
 
-      this.logger.info('[ListChatsHandler] Chat sessions listed successfully', {
+      this.logger.info('Chat sessions listed successfully', {
         handlerId: this.handlerId,
         commandId: command.commandId,
         sessionCount: sessions.length
@@ -115,7 +115,7 @@ class ListChatsHandler {
       };
 
     } catch (error) {
-      this.logger.error('[ListChatsHandler] Failed to list chat sessions', {
+      this.logger.error('Failed to list chat sessions', {
         handlerId: this.handlerId,
         commandId: command.commandId,
         error: error.message

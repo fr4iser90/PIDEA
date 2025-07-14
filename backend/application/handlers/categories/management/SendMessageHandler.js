@@ -48,20 +48,20 @@ class SendMessageHandler {
    */
   getActiveIDEService() {
     const activePort = this.ideManager.getActivePort();
-    logger.info(`[SendMessageHandler] Active port: ${activePort}`);
+    logger.info(`Active port: ${activePort}`);
     
     // Determine IDE type based on port range
     if (activePort >= 9222 && activePort <= 9231) {
-      logger.info('[SendMessageHandler] Using Cursor IDE service');
+      logger.info('Using Cursor IDE service');
       return this.cursorIDEService;
     } else if (activePort >= 9232 && activePort <= 9241) {
-      logger.info('[SendMessageHandler] Using VSCode IDE service');
+      logger.info('Using VSCode IDE service');
       return this.vscodeIDEService;
     } else if (activePort >= 9242 && activePort <= 9251) {
-      logger.info('[SendMessageHandler] Using Windsurf IDE service');
+      logger.info('Using Windsurf IDE service');
       return this.windsurfIDEService;
     } else {
-      logger.info('[SendMessageHandler] Defaulting to Cursor IDE service');
+      logger.info('Defaulting to Cursor IDE service');
       return this.cursorIDEService; // fallback
     }
   }
@@ -240,7 +240,7 @@ class SendMessageHandler {
       };
 
     } catch (error) {
-      logger.error('[SendMessageHandler] Error:', error);
+      logger.error('Error:', error);
       throw error;
     }
   }
@@ -304,7 +304,7 @@ class SendMessageHandler {
       };
 
     } catch (error) {
-      logger.error('[SendMessageHandler] Error:', error);
+      logger.error('Error:', error);
       throw error;
     }
   }

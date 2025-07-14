@@ -60,7 +60,7 @@ class SwitchIDEPortHandler {
       return validationResult;
 
     } catch (error) {
-      this.logger.error('[SwitchIDEPortHandler] Command validation error:', error);
+      this.logger.error('Command validation error:', error);
       return {
         isValid: false,
         errors: [error.message]
@@ -82,7 +82,7 @@ class SwitchIDEPortHandler {
         throw new Error(`Command validation failed: ${validationResult.errors.join(', ')}`);
       }
 
-      this.logger.info('[SwitchIDEPortHandler] Handling command', {
+      this.logger.info('Handling command', {
         handlerId: this.handlerId,
         commandId: command.commandId,
         userId: command.userId,
@@ -139,7 +139,7 @@ class SwitchIDEPortHandler {
         timestamp: new Date()
       });
 
-      this.logger.info('[SwitchIDEPortHandler] Command handled successfully', {
+      this.logger.info('Command handled successfully', {
         handlerId: this.handlerId,
         commandId: command.commandId,
         result: result
@@ -148,7 +148,7 @@ class SwitchIDEPortHandler {
       return result;
 
     } catch (error) {
-      this.logger.error('[SwitchIDEPortHandler] Command handling failed:', error);
+      this.logger.error('Command handling failed:', error);
 
       // Publish failure event
       await this.eventBus.publish('ide.port.switch.failed', {

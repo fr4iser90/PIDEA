@@ -55,7 +55,7 @@ class GetChatHistoryHandler {
         throw new Error(`Command validation failed: ${validationResult.errors.join(', ')}`);
       }
 
-      this.logger.info('[GetChatHistoryHandler] Retrieving chat history', {
+      this.logger.info('Retrieving chat history', {
         handlerId: this.handlerId,
         commandId: command.commandId,
         userId: command.userId,
@@ -91,7 +91,7 @@ class GetChatHistoryHandler {
         timestamp: new Date()
       });
 
-      this.logger.info('[GetChatHistoryHandler] Chat history retrieved successfully', {
+      this.logger.info('Chat history retrieved successfully', {
         handlerId: this.handlerId,
         commandId: command.commandId,
         sessionId: command.sessionId,
@@ -118,7 +118,7 @@ class GetChatHistoryHandler {
       };
 
     } catch (error) {
-      this.logger.error('[GetChatHistoryHandler] Failed to retrieve chat history', {
+      this.logger.error('Failed to retrieve chat history', {
         handlerId: this.handlerId,
         commandId: command.commandId,
         error: error.message

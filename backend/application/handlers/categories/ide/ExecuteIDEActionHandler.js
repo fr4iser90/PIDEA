@@ -60,7 +60,7 @@ class ExecuteIDEActionHandler {
       return validationResult;
 
     } catch (error) {
-      this.logger.error('[ExecuteIDEActionHandler] Command validation error:', error);
+      this.logger.error('Command validation error:', error);
       return {
         isValid: false,
         errors: [error.message]
@@ -82,7 +82,7 @@ class ExecuteIDEActionHandler {
         throw new Error(`Command validation failed: ${validationResult.errors.join(', ')}`);
       }
 
-      this.logger.info('[ExecuteIDEActionHandler] Handling command', {
+      this.logger.info('Handling command', {
         handlerId: this.handlerId,
         commandId: command.commandId,
         userId: command.userId,
@@ -153,7 +153,7 @@ class ExecuteIDEActionHandler {
         timestamp: new Date()
       });
 
-      this.logger.info('[ExecuteIDEActionHandler] Command handled successfully', {
+      this.logger.info('Command handled successfully', {
         handlerId: this.handlerId,
         commandId: command.commandId,
         result: result
@@ -162,7 +162,7 @@ class ExecuteIDEActionHandler {
       return result;
 
     } catch (error) {
-      this.logger.error('[ExecuteIDEActionHandler] Command handling failed:', error);
+      this.logger.error('Command handling failed:', error);
 
       // Publish failure event
       await this.eventBus.publish('ide.action.execution.failed', {

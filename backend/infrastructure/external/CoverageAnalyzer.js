@@ -6,14 +6,13 @@ const fs = require('fs').promises;
 const path = require('path');
 const { exec } = require('child_process');
 const { promisify } = require('util');
-const Logger = require('@logging/Logger');
-const logger = new Logger('Logger');
+const ServiceLogger = require('@logging/ServiceLogger');
 
 const execAsync = promisify(exec);
 
 class CoverageAnalyzer {
   constructor() {
-    this.logger = console;
+    this.logger = new ServiceLogger('CoverageAnalyzer');
     this.coverageThreshold = 90;
     this.ignoredPatterns = [
       'node_modules/**',
@@ -31,7 +30,7 @@ class CoverageAnalyzer {
    * Initialize the analyzer
    */
   async initialize() {
-    this.logger.info('[CoverageAnalyzer] Initialized');
+    this.logger.info('✅ Coverage analyzer initialized');
   }
 
   /**
@@ -41,14 +40,14 @@ class CoverageAnalyzer {
    */
   async getCurrentCoverage(projectPath) {
     try {
-      this.logger.info(`[CoverageAnalyzer] Getting current coverage for: ${projectPath}`);
+      this.logger.info(`Getting current coverage for: ${projectPath}`);
       
       // Check if Jest is configured
       const packageJsonPath = path.join(projectPath, 'package.json');
       const packageJson = JSON.parse(await fs.readFile(packageJsonPath, 'utf8'));
       
       if (!packageJson.scripts || !packageJson.scripts.test) {
-        this.logger.warn('[CoverageAnalyzer] No test script found in package.json');
+        this.logger.warn('No test script found in package.json');
         return {
           current: 0,
           target: this.coverageThreshold,
@@ -74,7 +73,7 @@ class CoverageAnalyzer {
       };
       
     } catch (error) {
-      this.logger.error(`[CoverageAnalyzer] Failed to get current coverage: ${error.message}`);
+      this.logger.error(`Failed to get current coverage: ${error.message}`);
       
       return {
         current: 0,
@@ -99,7 +98,7 @@ class CoverageAnalyzer {
    */
   async improveCoverage(projectPath, options = {}) {
     try {
-      this.logger.info(`[CoverageAnalyzer] Improving coverage for: ${projectPath}`);
+      this.logger.info(`Improving coverage for: ${projectPath}`);
       
       const startTime = Date.now();
       
@@ -144,7 +143,7 @@ class CoverageAnalyzer {
             totalImprovement += testResult.improvement || 0;
           }
         } catch (error) {
-          this.logger.warn(`[CoverageAnalyzer] Failed to generate test for ${file}: ${error.message}`);
+          this.logger.warn(`Failed to generate test for ${file}: ${error.message}`);
         }
       }
       
@@ -165,11 +164,11 @@ class CoverageAnalyzer {
         timestamp: new Date().toISOString()
       };
       
-      this.logger.info(`[CoverageAnalyzer] Coverage improvement completed: ${actualImprovement}% improvement`);
+      this.logger.info(`Coverage improvement completed: ${actualImprovement}% improvement`);
       return result;
       
     } catch (error) {
-      this.logger.error(`[CoverageAnalyzer] Failed to improve coverage: ${error.message}`);
+      this.logger.error(`Failed to improve coverage: ${error.message}`);
       
       return {
         success: false,
@@ -253,7 +252,7 @@ class CoverageAnalyzer {
         uncoveredFiles: this.extractUncoveredFilesFromJson(coverageData)
       };
     } catch (jsonError) {
-      this.logger.warn('[CoverageAnalyzer] Could not parse coverage output');
+      this.logger.warn('Could not parse coverage output');
       
       return {
         total: 0,
@@ -357,7 +356,7 @@ class CoverageAnalyzer {
           });
         }
       } catch (error) {
-        this.logger.warn(`[CoverageAnalyzer] Could not analyze file ${filePath}: ${error.message}`);
+        this.logger.warn(`Could not analyze file ${filePath}: ${error.message}`);
       }
     }
     
@@ -449,7 +448,7 @@ class CoverageAnalyzer {
    */
   async generateTestForFile(fileData, projectPath, options = {}) {
     try {
-      this.logger.info(`[CoverageAnalyzer] Generating test for: ${fileData.path}`);
+      this.logger.info(`Generating test for: ${fileData.path}`);
       
       const content = await fs.readFile(fileData.fullPath, 'utf8');
       const testContent = await this.generateTestContent(content, fileData, options);
@@ -479,7 +478,7 @@ class CoverageAnalyzer {
       };
       
     } catch (error) {
-      this.logger.error(`[CoverageAnalyzer] Failed to generate test for ${fileData.path}: ${error.message}`);
+      this.logger.error(`Failed to generate test for ${fileData.path}: ${error.message}`);
       
       return {
         success: false,

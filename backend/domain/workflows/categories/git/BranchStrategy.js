@@ -112,7 +112,7 @@ class BranchStrategy {
       logger: this.logger
     }));
 
-    this.logger.info('[BranchStrategy] Initialized branch strategies:', Array.from(this.strategies.keys()));
+    this.logger.info('Initialized branch strategies:', Array.from(this.strategies.keys()));
   }
 
   /**
@@ -144,7 +144,7 @@ class BranchStrategy {
       // Check explicit strategy in context
       const explicitStrategy = context.get('branchStrategy');
       if (explicitStrategy && this.strategies.has(explicitStrategy)) {
-        this.logger.info(`[BranchStrategy] Using explicit strategy: ${explicitStrategy}`);
+        this.logger.info(`Using explicit strategy: ${explicitStrategy}`);
         return explicitStrategy;
       }
 
@@ -152,7 +152,7 @@ class BranchStrategy {
       const taskType = task.type?.value || task.type;
       if (taskType && this.strategyMappings.taskTypeMappings[taskType]) {
         const strategy = this.strategyMappings.taskTypeMappings[taskType];
-        this.logger.info(`[BranchStrategy] Using task type strategy: ${strategy} (task type: ${taskType})`);
+        this.logger.info(`Using task type strategy: ${strategy} (task type: ${taskType})`);
         return strategy;
       }
 
@@ -160,23 +160,23 @@ class BranchStrategy {
       const priority = task.priority?.value || task.priority;
       if (priority && this.strategyMappings.priorityMappings[priority]) {
         const strategy = this.strategyMappings.priorityMappings[priority];
-        this.logger.info(`[BranchStrategy] Using priority strategy: ${strategy} (priority: ${priority})`);
+        this.logger.info(`Using priority strategy: ${strategy} (priority: ${priority})`);
         return strategy;
       }
 
       // Check keyword analysis
       const keywordStrategy = this.analyzeKeywords(task);
       if (keywordStrategy) {
-        this.logger.info(`[BranchStrategy] Using keyword strategy: ${keywordStrategy}`);
+        this.logger.info(`Using keyword strategy: ${keywordStrategy}`);
         return keywordStrategy;
       }
 
       // Use default strategy
-      this.logger.info(`[BranchStrategy] Using default strategy: ${this.defaultStrategy}`);
+      this.logger.info(`Using default strategy: ${this.defaultStrategy}`);
       return this.defaultStrategy;
 
     } catch (error) {
-      this.logger.error(`[BranchStrategy] Error determining strategy: ${error.message}`);
+      this.logger.error(`Error determining strategy: ${error.message}`);
       return this.defaultStrategy;
     }
   }
@@ -220,11 +220,11 @@ class BranchStrategy {
       const strategyName = this.determineStrategy(task, context);
       const strategy = this.getStrategy(strategyName);
       
-      this.logger.info(`[BranchStrategy] Generating branch name with strategy: ${strategyName}`);
+      this.logger.info(`Generating branch name with strategy: ${strategyName}`);
       
       const branchName = strategy.generateBranchName(task, context);
       
-      this.logger.info(`[BranchStrategy] Generated branch name: ${branchName}`);
+      this.logger.info(`Generated branch name: ${branchName}`);
       
       return branchName;
       
@@ -247,7 +247,7 @@ class BranchStrategy {
       const strategyName = this.determineStrategy(task, context);
       const strategy = this.getStrategy(strategyName);
       
-      this.logger.info(`[BranchStrategy] Validating task with strategy: ${strategyName}`);
+      this.logger.info(`Validating task with strategy: ${strategyName}`);
       
       const validation = strategy.validateTask(task, context);
       
@@ -255,12 +255,12 @@ class BranchStrategy {
       validation.strategy = strategyName;
       validation.strategyType = strategy.type;
       
-      this.logger.info(`[BranchStrategy] Validation result:`, validation);
+      this.logger.info(`Validation result:`, validation);
       
       return validation;
       
     } catch (error) {
-      this.logger.error(`[BranchStrategy] Validation error: ${error.message}`);
+      this.logger.error(`Validation error: ${error.message}`);
       
       return {
         isValid: false,
@@ -289,7 +289,7 @@ class BranchStrategy {
       return config;
       
     } catch (error) {
-      this.logger.error(`[BranchStrategy] Error getting configuration: ${error.message}`);
+      this.logger.error(`Error getting configuration: ${error.message}`);
       
       // Return default configuration
       const defaultStrategy = this.getStrategy(this.defaultStrategy);
@@ -315,7 +315,7 @@ class BranchStrategy {
       return strategy.getProtectionRules();
       
     } catch (error) {
-      this.logger.error(`[BranchStrategy] Error getting protection rules: ${error.message}`);
+      this.logger.error(`Error getting protection rules: ${error.message}`);
       
       // Return default protection rules
       const defaultStrategy = this.getStrategy(this.defaultStrategy);
@@ -337,7 +337,7 @@ class BranchStrategy {
       return strategy.getMergeStrategy();
       
     } catch (error) {
-      this.logger.error(`[BranchStrategy] Error getting merge strategy: ${error.message}`);
+      this.logger.error(`Error getting merge strategy: ${error.message}`);
       
       // Return default merge strategy
       const defaultStrategy = this.getStrategy(this.defaultStrategy);
@@ -352,11 +352,11 @@ class BranchStrategy {
    */
   addStrategy(name, strategy) {
     if (this.strategies.has(name)) {
-      this.logger.warn(`[BranchStrategy] Overwriting existing strategy: ${name}`);
+      this.logger.warn(`Overwriting existing strategy: ${name}`);
     }
     
     this.strategies.set(name, strategy);
-    this.logger.info(`[BranchStrategy] Added custom strategy: ${name}`);
+    this.logger.info(`Added custom strategy: ${name}`);
   }
 
   /**
@@ -370,7 +370,7 @@ class BranchStrategy {
     
     if (this.strategies.has(name)) {
       this.strategies.delete(name);
-      this.logger.info(`[BranchStrategy] Removed strategy: ${name}`);
+      this.logger.info(`Removed strategy: ${name}`);
     }
   }
 
@@ -400,7 +400,7 @@ class BranchStrategy {
       };
     }
     
-    this.logger.info(`[BranchStrategy] Updated strategy mappings`);
+    this.logger.info(`Updated strategy mappings`);
   }
 
   /**

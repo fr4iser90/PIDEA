@@ -30,7 +30,7 @@ class VSCodeStarter {
    * @returns {Promise<Object>} IDE startup information
    */
   async startIDE(port, workspacePath = null, options = {}) {
-    logger.info('[VSCodeStarter] Starting VSCode IDE on port', port);
+    logger.info('Starting VSCode IDE on port', port);
     
     // Validate port is in range
     if (port < this.config.portRange.start || port > this.config.portRange.end) {
@@ -93,19 +93,19 @@ class VSCodeStarter {
 
       // Handle process events
       process.stdout.on('data', (data) => {
-        logger.info(`[VSCodeStarter] VSCode IDE ${port} stdout:`, data.toString().trim());
+        logger.info(`VSCode IDE ${port} stdout:`, data.toString().trim());
       });
 
       process.stderr.on('data', (data) => {
-        logger.info(`[VSCodeStarter] VSCode IDE ${port} stderr:`, data.toString().trim());
+        logger.info(`VSCode IDE ${port} stderr:`, data.toString().trim());
       });
 
       process.on('close', (code) => {
-        logger.info(`[VSCodeStarter] VSCode IDE ${port} process closed with code ${code}`);
+        logger.info(`VSCode IDE ${port} process closed with code ${code}`);
       });
 
       process.on('error', (error) => {
-        logger.error(`[VSCodeStarter] VSCode IDE ${port} process error:`, error);
+        logger.error(`VSCode IDE ${port} process error:`, error);
       });
 
       // Wait for VSCode to start (longer timeout than Cursor)
@@ -123,7 +123,7 @@ class VSCodeStarter {
       };
 
     } catch (error) {
-      logger.error('[VSCodeStarter] Failed to start VSCode IDE:', error);
+      logger.error('Failed to start VSCode IDE:', error);
       throw error;
     }
   }
@@ -134,7 +134,7 @@ class VSCodeStarter {
    * @returns {Promise<Object>} Stop result
    */
   async stopIDE(port) {
-    logger.info('[VSCodeStarter] Stopping VSCode IDE on port', port);
+    logger.info('Stopping VSCode IDE on port', port);
     
     try {
       // Find and kill VSCode processes on the specified port
@@ -156,7 +156,7 @@ class VSCodeStarter {
             return new Promise((resolveKill) => {
               exec(`kill -TERM ${pid}`, (killError) => {
                 if (killError) {
-                  logger.error(`[VSCodeStarter] Error killing process ${pid}:`, killError);
+                  logger.error(`Error killing process ${pid}:`, killError);
                 }
                 resolveKill();
               });
@@ -174,7 +174,7 @@ class VSCodeStarter {
         });
       });
     } catch (error) {
-      logger.error('[VSCodeStarter] Error stopping VSCode IDE:', error);
+      logger.error('Error stopping VSCode IDE:', error);
       throw error;
     }
   }

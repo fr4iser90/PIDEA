@@ -39,7 +39,7 @@ class WorkflowGitService {
             const localBranch = await this.gitService.getCurrentBranch(projectPath);
             
             if (branches.includes(branchName) || localBranch === branchName) {
-                this.logger.info(`[ensureBranchExistsLocallyAndRemotely] Branch ${branchName} exists`);
+                this.logger.info(`Branch ${branchName} exists`);
                 return branchName;
             }
             
@@ -56,7 +56,7 @@ class WorkflowGitService {
             
             return branchName;
         } catch (error) {
-            this.logger.error(`[ensureBranchExistsLocallyAndRemotely] Error: ${error.message}`);
+            this.logger.error(`Error: ${error.message}`);
             throw error;
         }
     }
@@ -126,7 +126,7 @@ class WorkflowGitService {
                 try {
                     // Get current branch before creating new one
                     const currentBranch = await this.gitService.getCurrentBranch(projectPath);
-                    this.logger.info(`[WorkflowGitService] Current branch: ${currentBranch}`);
+                    this.logger.info(`Current branch: ${currentBranch}`);
 
                     // Create and checkout the new branch
                     await this.gitService.createBranch(projectPath, branchName, {
@@ -136,13 +136,13 @@ class WorkflowGitService {
 
                     // Verify branch was created and checked out
                     const newCurrentBranch = await this.gitService.getCurrentBranch(projectPath);
-                    this.logger.info(`[WorkflowGitService] New current branch: ${newCurrentBranch}`);
+                    this.logger.info(`New current branch: ${newCurrentBranch}`);
 
                     if (newCurrentBranch !== branchName) {
                         throw new Error(`Branch checkout failed: expected ${branchName}, got ${newCurrentBranch}`);
                     }
 
-                    this.logger.info(`[WorkflowGitService] Successfully created and checked out branch: ${branchName}`);
+                    this.logger.info(`Successfully created and checked out branch: ${branchName}`);
 
                 } catch (gitError) {
                     this.logger.error('WorkflowGitService: Git operation failed', {
@@ -206,7 +206,7 @@ class WorkflowGitService {
         const taskTypeValue = taskType?.value || taskType;
         // Debug log
         if (this.logger && typeof this.logger.info === 'function') {
-            this.logger.info('[WorkflowGitService] DEBUG TaskType:', { TaskType, taskTypeValue });
+            this.logger.info('DEBUG TaskType:', { TaskType, taskTypeValue });
         }
         // Defensive: fallback for undefined TaskType constants
         const safe = (v) => {
@@ -350,7 +350,7 @@ class WorkflowGitService {
      */
     async ensureBranchExists(projectPath, branchName) {
         // Git operations handled by Playwright via CDP
-        this.logger.info(`[ensureBranchExists] Branch ${branchName} operation requested - handled by Playwright`);
+        this.logger.info(`Branch ${branchName} operation requested - handled by Playwright`);
         return branchName;
     }
 
@@ -384,7 +384,7 @@ class WorkflowGitService {
      */
     async applyBranchConfiguration(projectPath, branchName, strategy) {
         // Git operations handled by Playwright via CDP
-        this.logger.info(`[applyBranchConfiguration] Branch ${branchName} configuration requested - handled by Playwright`);
+        this.logger.info(`Branch ${branchName} configuration requested - handled by Playwright`);
     }
 
     /**
@@ -395,7 +395,7 @@ class WorkflowGitService {
      */
     async applyCriticalProtection(projectPath, branchName) {
         // Git operations handled by Playwright via CDP
-        this.logger.info(`[applyCriticalProtection] Branch ${branchName} protection requested - handled by Playwright`);
+        this.logger.info(`Branch ${branchName} protection requested - handled by Playwright`);
     }
 
     /**
@@ -406,7 +406,7 @@ class WorkflowGitService {
      */
     async applyHighProtection(projectPath, branchName) {
         // Git operations handled by Playwright via CDP
-        this.logger.info(`[applyHighProtection] Branch ${branchName} protection requested - handled by Playwright`);
+        this.logger.info(`Branch ${branchName} protection requested - handled by Playwright`);
     }
 
     /**
@@ -417,7 +417,7 @@ class WorkflowGitService {
      */
     async applyMediumProtection(projectPath, branchName) {
         // Git operations handled by Playwright via CDP
-        this.logger.info(`[applyMediumProtection] Branch ${branchName} protection requested - handled by Playwright`);
+        this.logger.info(`Branch ${branchName} protection requested - handled by Playwright`);
     }
 
     /**
@@ -429,7 +429,7 @@ class WorkflowGitService {
      */
     async setupAutoMerge(projectPath, branchName, mergeTarget) {
         // Git operations handled by Playwright via CDP
-        this.logger.info(`[setupAutoMerge] Branch ${branchName} auto-merge requested - handled by Playwright`);
+        this.logger.info(`Branch ${branchName} auto-merge requested - handled by Playwright`);
     }
 
     /**
@@ -502,11 +502,11 @@ class WorkflowGitService {
                 try {
                     // Get current branch
                     const currentBranch = await this.gitService.getCurrentBranch(projectPath);
-                    this.logger.info(`[WorkflowGitService] Current branch before completion: ${currentBranch}`);
+                    this.logger.info(`Current branch before completion: ${currentBranch}`);
 
                     // If we're on the workflow branch, commit changes first
                     if (currentBranch === branchName) {
-                        this.logger.info(`[WorkflowGitService] Committing changes on branch: ${branchName}`);
+                        this.logger.info(`Committing changes on branch: ${branchName}`);
                         
                         // Add all changes
                         await this.gitService.addFiles(projectPath);
@@ -514,12 +514,12 @@ class WorkflowGitService {
                         // Commit changes
                         await this.gitService.commitChanges(projectPath, commitMessage);
                         
-                        this.logger.info(`[WorkflowGitService] Changes committed successfully`);
+                        this.logger.info(`Changes committed successfully`);
                     }
 
                     // If auto-merge is enabled, merge to target branch
                     if (strategy.autoMerge && strategy.mergeTarget) {
-                        this.logger.info(`[WorkflowGitService] Auto-merging to ${strategy.mergeTarget}`);
+                        this.logger.info(`Auto-merging to ${strategy.mergeTarget}`);
                         
                         // Checkout target branch
                         await this.gitService.checkoutBranch(projectPath, strategy.mergeTarget);
@@ -529,9 +529,9 @@ class WorkflowGitService {
                             strategy: 'squash'
                         });
                         
-                        this.logger.info(`[WorkflowGitService] Auto-merge completed:`, mergeResult);
+                        this.logger.info(`Auto-merge completed:`, mergeResult);
                     } else {
-                        this.logger.info(`[WorkflowGitService] Auto-merge disabled, keeping branch: ${branchName}`);
+                        this.logger.info(`Auto-merge disabled, keeping branch: ${branchName}`);
                         mergeResult = {
                             success: true,
                             action: 'kept_branch',
@@ -612,7 +612,7 @@ class WorkflowGitService {
      */
     async autoMergeBranch(projectPath, branchName, targetBranch) {
         // Git operations handled by Playwright via CDP
-        this.logger.info(`[autoMergeBranch] Auto-merge requested - handled by Playwright`);
+        this.logger.info(`Auto-merge requested - handled by Playwright`);
         return {
             success: true,
             targetBranch,
@@ -652,7 +652,7 @@ class WorkflowGitService {
             });
 
             // Git operations handled by Playwright via CDP
-            this.logger.info(`[rollbackWorkflow] Rollback requested - handled by Playwright`);
+            this.logger.info(`Rollback requested - handled by Playwright`);
 
             const result = {
                 branchName,
@@ -706,7 +706,7 @@ class WorkflowGitService {
             });
 
             // Git operations handled by Playwright via CDP
-            this.logger.info(`[mergeToBranch] Merge requested - handled by Playwright`);
+            this.logger.info(`Merge requested - handled by Playwright`);
             const currentBranch = 'current-branch'; // Placeholder
             const mergeResult = { success: true };
             
@@ -814,7 +814,7 @@ class WorkflowGitService {
      */
     async createPullRequestLegacy(projectPath, branchName, task, options = {}) {
         // Git operations handled by Playwright via CDP
-        this.logger.info(`[createPullRequestLegacy] Pull request creation requested - handled by Playwright`);
+        this.logger.info(`Pull request creation requested - handled by Playwright`);
         return {
             success: true,
             branchName,

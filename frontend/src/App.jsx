@@ -107,7 +107,7 @@ function App() {
     const handleActiveIDEChanged = (data) => {
       if (data && data.port) {
         // IDEStore will handle the port change automatically
-        logger.info('[App] Active IDE changed event received:', data.port);
+        logger.info('Active IDE changed event received:', data.port);
       }
     };
     eventBus.on('activeIDEChanged', handleActiveIDEChanged);

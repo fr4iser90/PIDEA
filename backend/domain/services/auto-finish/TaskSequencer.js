@@ -1,5 +1,4 @@
-const Logger = require('@logging/Logger');
-const logger = new Logger('Logger');
+const ServiceLogger = require('@logging/ServiceLogger');
 /**
  * TaskSequencer - Service for sequencing tasks based on dependencies
  * Implements topological sorting for task dependency resolution
@@ -65,15 +64,15 @@ class TaskSequencer {
       circularDependencyDetection: true
     };
     
-    this.logger = console;
+    this.logger = new ServiceLogger('TaskSequencer');
   }
 
   /**
    * Initialize the task sequencer
    */
   async initialize() {
-    this.logger.info('[TaskSequencer] ⚡ Initializing task sequencer...');
-    this.logger.info(`[TaskSequencer] Loaded ${this.dependencyPatterns.length} dependency patterns`);
+    this.logger.info('⚡ Initializing task sequencer...');
+    this.logger.info(`Loaded ${this.dependencyPatterns.length} dependency patterns`);
     return true;
   }
 
@@ -84,7 +83,7 @@ class TaskSequencer {
    */
   async sequence(tasks) {
     try {
-      this.logger.info(`[TaskSequencer] Sequencing ${tasks.length} tasks...`);
+      this.logger.info(`Sequencing ${tasks.length} tasks...`);
       
       if (!tasks || tasks.length === 0) {
         return [];
@@ -101,7 +100,7 @@ class TaskSequencer {
       if (this.config.circularDependencyDetection) {
         const circularDeps = this.detectCircularDependencies(dependencyGraph);
         if (circularDeps.length > 0) {
-          this.logger.warn('[TaskSequencer] Circular dependencies detected:', circularDeps);
+          this.logger.warn('Circular dependencies detected:', circularDeps);
           // Break circular dependencies by removing some edges
           this.breakCircularDependencies(dependencyGraph, circularDeps);
         }
@@ -115,15 +114,15 @@ class TaskSequencer {
         tasks.find(task => task.id === taskId)
       ).filter(Boolean);
       
-      this.logger.info(`[TaskSequencer] Successfully sequenced ${sequencedTasks.length} tasks`);
+      this.logger.info(`Successfully sequenced ${sequencedTasks.length} tasks`);
       
       return sequencedTasks;
       
     } catch (error) {
-      this.logger.error('[TaskSequencer] Sequencing failed:', error.message);
+      this.logger.error('Sequencing failed:', error.message);
       
       // Fallback: return tasks in original order
-      this.logger.warn('[TaskSequencer] Falling back to original task order');
+      this.logger.warn('Falling back to original task order');
       return tasks;
     }
   }
@@ -431,7 +430,7 @@ class TaskSequencer {
         const node = graph[edgeToRemove.from];
         if (node) {
           node.dependencies.delete(edgeToRemove.to);
-          this.logger.warn(`[TaskSequencer] Removed circular dependency: ${edgeToRemove.from} -> ${edgeToRemove.to}`);
+          this.logger.warn(`Removed circular dependency: ${edgeToRemove.from} -> ${edgeToRemove.to}`);
         }
       }
     }
@@ -543,7 +542,7 @@ class TaskSequencer {
    * Cleanup resources
    */
   async cleanup() {
-    this.logger.info('[TaskSequencer] Cleaning up task sequencer...');
+    this.logger.info('Cleaning up task sequencer...');
     // No specific cleanup needed for task sequencer
   }
 }

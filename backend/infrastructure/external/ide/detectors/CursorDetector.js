@@ -27,7 +27,7 @@ class CursorDetector {
    * @returns {Promise<Array>} Array of detected Cursor IDEs
    */
   async scanForIDEs() {
-    logger.info('[CursorDetector] 🔍 Scanning for Cursor IDEs on ports', this.portRange.start, 'to', this.portRange.end);
+    logger.info('🔍 Scanning for Cursor IDEs on ports', this.portRange.start, 'to', this.portRange.end);
     
     const availableIDEs = [];
     const promises = [];
@@ -52,7 +52,7 @@ class CursorDetector {
       }
     });
 
-    logger.info('[CursorDetector] ✅ Found', availableIDEs.length, 'running Cursor IDEs');
+    logger.info('✅ Found', availableIDEs.length, 'running Cursor IDEs');
     return availableIDEs;
   }
 

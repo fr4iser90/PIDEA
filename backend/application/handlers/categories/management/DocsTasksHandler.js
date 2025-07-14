@@ -35,13 +35,13 @@ class DocsTasksHandler {
     const workspaceRoot = this.getWorkspacePath();
     
     if (!workspaceRoot) {
-      logger.error('[DocsTasksHandler] Workspace path is undefined');
+      logger.error('Workspace path is undefined');
       throw new Error('Workspace path is not available');
     }
     
-    logger.info(`[DocsTasksHandler] Workspace root: ${workspaceRoot}`);
+    logger.info(`Workspace root: ${workspaceRoot}`);
     const featuresDir = path.resolve(workspaceRoot, 'docs/09_roadmap/features');
-    logger.info(`[DocsTasksHandler] Features directory resolved: ${featuresDir}`);
+    logger.info(`Features directory resolved: ${featuresDir}`);
     
     return featuresDir;
   }
@@ -91,7 +91,7 @@ class DocsTasksHandler {
         return a.title.localeCompare(b.title);
       });
 
-      logger.info(`[DocsTasksHandler] Found ${tasks.length} documentation tasks from database`);
+      logger.info(`Found ${tasks.length} documentation tasks from database`);
       
       res.json({
         success: true,
@@ -99,7 +99,7 @@ class DocsTasksHandler {
         count: tasks.length
       });
     } catch (error) {
-      logger.error('[DocsTasksHandler] Error getting docs tasks:', error);
+      logger.error('Error getting docs tasks:', error);
       res.status(500).json({
         success: false,
         error: 'Failed to retrieve documentation tasks'
@@ -158,14 +158,14 @@ class DocsTasksHandler {
         updatedAt: task.updatedAt
       };
 
-      logger.info(`[DocsTasksHandler] Successfully retrieved task details for: ${task.title}`);
+      logger.info(`Successfully retrieved task details for: ${task.title}`);
       
       res.json({
         success: true,
         data: taskDetails
       });
     } catch (error) {
-      logger.error('[DocsTasksHandler] Error getting task details:', error);
+      logger.error('Error getting task details:', error);
       res.status(500).json({
         success: false,
         error: 'Failed to retrieve task details'
@@ -184,13 +184,13 @@ class DocsTasksHandler {
     
     // Check for path traversal attempts
     if (normalizedPath.includes('..') || normalizedPath.startsWith('/') || normalizedPath.startsWith('\\')) {
-      logger.warn(`[DocsTasksHandler] Path traversal attempt detected: ${filename}`);
+      logger.warn(`Path traversal attempt detected: ${filename}`);
       return null;
     }
     
     // Only allow alphanumeric, hyphens, underscores, and dots
     if (!/^[a-zA-Z0-9._-]+$/.test(normalizedPath)) {
-      logger.warn(`[DocsTasksHandler] Invalid filename characters: ${filename}`);
+      logger.warn(`Invalid filename characters: ${filename}`);
       return null;
     }
     
@@ -268,7 +268,7 @@ class DocsTasksHandler {
 
       return marked(markdown);
     } catch (error) {
-      logger.error('[DocsTasksHandler] Error converting markdown to HTML:', error);
+      logger.error('Error converting markdown to HTML:', error);
       return `<p>Error rendering markdown: ${error.message}</p>`;
     }
   }
@@ -299,14 +299,14 @@ class DocsTasksHandler {
    */
   clearCache() {
     this.cache.clear();
-    logger.info('[DocsTasksHandler] Cache cleared');
+    logger.info('Cache cleared');
   }
 
   /**
    * Sync documentation tasks to repository (now handled by TaskController)
    */
   async syncDocsTasksToRepository() {
-    logger.info('[DocsTasksHandler] Sync is now handled by TaskController - skipping');
+    logger.info('Sync is now handled by TaskController - skipping');
     return;
   }
 

@@ -19,10 +19,10 @@ class SQLiteTaskSessionRepository {
   async initialize() {
     try {
       await this.initTable();
-      this.logger.info('[SQLiteTaskSessionRepository] Initialized successfully');
+      this.logger.info('Initialized successfully');
       return true;
     } catch (error) {
-      this.logger.error('[SQLiteTaskSessionRepository] Initialization failed:', error.message);
+      this.logger.error('Initialization failed:', error.message);
       throw error;
     }
   }
@@ -106,10 +106,10 @@ class SQLiteTaskSessionRepository {
       ];
 
       await this.db.execute(upsertSQL, values);
-      this.logger.debug(`[SQLiteTaskSessionRepository] Saved session: ${session.id}`);
+      this.logger.debug(`Saved session: ${session.id}`);
       return session;
     } catch (error) {
-      this.logger.error(`[SQLiteTaskSessionRepository] Failed to save session:`, error.message);
+      this.logger.error(`Failed to save session:`, error.message);
       throw error;
     }
   }
@@ -134,7 +134,7 @@ class SQLiteTaskSessionRepository {
 
       return this.mapRowToSession(row);
     } catch (error) {
-      this.logger.error(`[SQLiteTaskSessionRepository] Failed to find session ${id}:`, error.message);
+      this.logger.error(`Failed to find session ${id}:`, error.message);
       return null;
     }
   }
@@ -169,7 +169,7 @@ class SQLiteTaskSessionRepository {
       const rows = await this.db.query(selectSQL, params);
       return rows.map(row => this.mapRowToSession(row));
     } catch (error) {
-      this.logger.error(`[SQLiteTaskSessionRepository] Failed to find sessions by user ${userId}:`, error.message);
+      this.logger.error(`Failed to find sessions by user ${userId}:`, error.message);
       return [];
     }
   }
@@ -204,7 +204,7 @@ class SQLiteTaskSessionRepository {
       const rows = await this.db.query(selectSQL, params);
       return rows.map(row => this.mapRowToSession(row));
     } catch (error) {
-      this.logger.error(`[SQLiteTaskSessionRepository] Failed to find sessions by project ${projectId}:`, error.message);
+      this.logger.error(`Failed to find sessions by project ${projectId}:`, error.message);
       return [];
     }
   }
@@ -239,7 +239,7 @@ class SQLiteTaskSessionRepository {
       const rows = await this.db.query(selectSQL, params);
       return rows.map(row => this.mapRowToSession(row));
     } catch (error) {
-      this.logger.error(`[SQLiteTaskSessionRepository] Failed to find active sessions:`, error.message);
+      this.logger.error(`Failed to find active sessions:`, error.message);
       return [];
     }
   }
@@ -259,7 +259,7 @@ class SQLiteTaskSessionRepository {
       const result = await this.db.execute(deleteSQL, [id]);
       return result.rowsAffected > 0;
     } catch (error) {
-      this.logger.error(`[SQLiteTaskSessionRepository] Failed to delete session ${id}:`, error.message);
+      this.logger.error(`Failed to delete session ${id}:`, error.message);
       return false;
     }
   }
@@ -294,7 +294,7 @@ class SQLiteTaskSessionRepository {
         averageDuration: result.average_duration || 0
       };
     } catch (error) {
-      this.logger.error(`[SQLiteTaskSessionRepository] Failed to get stats:`, error.message);
+      this.logger.error(`Failed to get stats:`, error.message);
       return {
         total: 0,
         completed: 0,
@@ -339,7 +339,7 @@ class SQLiteTaskSessionRepository {
 
       return TaskSession.fromJSON(sessionData);
     } catch (error) {
-      this.logger.error(`[SQLiteTaskSessionRepository] Failed to map row to session:`, error.message);
+      this.logger.error(`Failed to map row to session:`, error.message);
       throw error;
     }
   }
@@ -360,7 +360,7 @@ class SQLiteTaskSessionRepository {
       const result = await this.db.execute(deleteSQL);
       return result.rowsAffected;
     } catch (error) {
-      this.logger.error(`[SQLiteTaskSessionRepository] Failed to cleanup old sessions:`, error.message);
+      this.logger.error(`Failed to cleanup old sessions:`, error.message);
       return 0;
     }
   }

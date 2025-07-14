@@ -22,18 +22,18 @@ class CursorIDEService {
     // Listen for IDE changes to reset package.json cache (optional, if you cache results)
     if (this.eventBus) {
       this.eventBus.subscribe('activeIDEChanged', async (eventData) => {
-        logger.info('[CursorIDEService] IDE changed, resetting package.json cache');
-        logger.info('[CursorIDEService] Event data:', eventData);
+        logger.info('IDE changed, resetting package.json cache');
+        logger.info('Event data:', eventData);
         // No cache in new analyzer, but if you add one, reset here
         // this.packageJsonAnalyzer.resetCache?.();
         // Switch browser connection to new IDE
         if (eventData.port) {
           try {
-            logger.info(`[CursorIDEService] Switching browser connection to port: ${eventData.port}`);
+            logger.info(`Switching browser connection to port: ${eventData.port}`);
             await this.browserManager.switchToPort(eventData.port);
-            logger.info(`[CursorIDEService] Successfully switched browser connection to port: ${eventData.port}`);
+            logger.info(`Successfully switched browser connection to port: ${eventData.port}`);
           } catch (error) {
-            logger.error('[CursorIDEService] Failed to switch browser connection:', error.message);
+            logger.error('Failed to switch browser connection:', error.message);
           }
         }
       });
@@ -43,20 +43,20 @@ class CursorIDEService {
   async sendMessage(message, options = {}) {
     // Ensure browser is connected to the active IDE port
     const activePort = this.getActivePort();
-    logger.info(`[CursorIDEService] sendMessage() - Active port: ${activePort}`);
+    logger.info(`sendMessage() - Active port: ${activePort}`);
     
     if (activePort) {
       try {
         // Switch browser to active port if needed
         const currentBrowserPort = this.browserManager.getCurrentPort();
-        logger.info(`[CursorIDEService] sendMessage() - Current browser port: ${currentBrowserPort}`);
+        logger.info(`sendMessage() - Current browser port: ${currentBrowserPort}`);
         
         if (currentBrowserPort !== activePort) {
-          logger.info('[CursorIDEService] sendMessage() - Switching browser to active port:', activePort);
+          logger.info('sendMessage() - Switching browser to active port:', activePort);
           await this.browserManager.switchToPort(activePort);
         }
       } catch (error) {
-        logger.error('[CursorIDEService] sendMessage() - Failed to switch browser port:', error.message);
+        logger.error('sendMessage() - Failed to switch browser port:', error.message);
       }
     }
     
@@ -66,20 +66,20 @@ class CursorIDEService {
   async extractChatHistory() {
     // Ensure browser is connected to the active IDE port
     const activePort = this.getActivePort();
-    logger.info(`[CursorIDEService] extractChatHistory() - Active port: ${activePort}`);
+    logger.info(`extractChatHistory() - Active port: ${activePort}`);
     
     if (activePort) {
       try {
         // Switch browser to active port if needed
         const currentBrowserPort = this.browserManager.getCurrentPort();
-        logger.info(`[CursorIDEService] extractChatHistory() - Current browser port: ${currentBrowserPort}`);
+        logger.info(`extractChatHistory() - Current browser port: ${currentBrowserPort}`);
         
         if (currentBrowserPort !== activePort) {
-          logger.info('[CursorIDEService] extractChatHistory() - Switching browser to active port:', activePort);
+          logger.info('extractChatHistory() - Switching browser to active port:', activePort);
           await this.browserManager.switchToPort(activePort);
         }
       } catch (error) {
-        logger.error('[CursorIDEService] extractChatHistory() - Failed to switch browser port:', error.message);
+        logger.error('extractChatHistory() - Failed to switch browser port:', error.message);
       }
     }
     
@@ -102,15 +102,15 @@ class CursorIDEService {
    */
   async postToCursor(prompt) {
     try {
-      logger.info('[CursorIDEService] Sending prompt to Cursor IDE:', prompt.substring(0, 100) + '...');
+      logger.info('Sending prompt to Cursor IDE:', prompt.substring(0, 100) + '...');
       
       // Use the chat message handler to send the prompt
       const result = await this.chatMessageHandler.sendMessage(prompt);
       
-      logger.info('[CursorIDEService] Prompt sent successfully');
+      logger.info('Prompt sent successfully');
       return result;
     } catch (error) {
-      logger.error('[CursorIDEService] Error sending prompt to Cursor:', error);
+      logger.error('Error sending prompt to Cursor:', error);
       throw error;
     }
   }
@@ -123,7 +123,7 @@ class CursorIDEService {
    */
   async applyRefactoring(filePath, refactoredCode) {
     try {
-      logger.info('[CursorIDEService] Applying refactoring to file:', filePath);
+      logger.info('Applying refactoring to file:', filePath);
       
       // Create a prompt to apply the refactored code
       const applyPrompt = `Please apply the following refactored code to the file ${filePath}:
@@ -143,7 +143,7 @@ After applying the changes, please confirm that the refactoring has been complet
       // Send the refactoring prompt to Cursor IDE
       const result = await this.postToCursor(applyPrompt);
       
-      logger.info('[CursorIDEService] Refactoring applied successfully');
+      logger.info('Refactoring applied successfully');
       
       return {
         success: true,
@@ -153,7 +153,7 @@ After applying the changes, please confirm that the refactoring has been complet
         message: 'Refactoring applied to Cursor IDE'
       };
     } catch (error) {
-      logger.error('[CursorIDEService] Error applying refactoring:', error);
+      logger.error('Error applying refactoring:', error);
       throw new Error(`Failed to apply refactoring: ${error.message}`);
     }
   }
@@ -186,27 +186,27 @@ After applying the changes, please confirm that the refactoring has been complet
 
   getActivePort() {
     const activePort = this.ideManager.getActivePort();
-    logger.info(`[CursorIDEService] getActivePort() called, returning: ${activePort}`);
+    logger.info(`getActivePort() called, returning: ${activePort}`);
     return activePort;
   }
 
   async switchToPort(port) {
     const currentActivePort = this.getActivePort();
-    logger.info(`[CursorIDEService] switchToPort(${port}) called, current active port:`, currentActivePort);
+    logger.info(`switchToPort(${port}) called, current active port:`, currentActivePort);
     
     if (currentActivePort === port) {
-      logger.info(`[CursorIDEService] Already connected to port ${port}`);
+      logger.info(`Already connected to port ${port}`);
       return;
     }
     
-    logger.info(`[CursorIDEService] Switching to port ${port}`);
+    logger.info(`Switching to port ${port}`);
     await this.browserManager.switchToPort(port);
     
     // Update active port in IDE manager
     if (this.ideManager.switchToIDE) {
-      logger.info(`[CursorIDEService] Calling ideManager.switchToIDE(${port})`);
+      logger.info(`Calling ideManager.switchToIDE(${port})`);
       await this.ideManager.switchToIDE(port);
-      logger.info(`[CursorIDEService] ideManager.switchToIDE(${port}) completed`);
+      logger.info(`ideManager.switchToIDE(${port}) completed`);
     }
   }
 
@@ -214,31 +214,31 @@ After applying the changes, please confirm that the refactoring has been complet
   async monitorTerminalOutput() {
     try {
       // First try package.json analysis (more reliable)
-      logger.info('[CursorIDEService] Trying package.json analysis first...');
+      logger.info('Trying package.json analysis first...');
       
       // Use the workspace path of the active IDE
       const activeIDE = await this.ideManager.getActiveIDE();
       let workspacePath = activeIDE?.workspacePath;
-      logger.info('[CursorIDEService] Using workspace path for package.json analysis:', workspacePath);
+      logger.info('Using workspace path for package.json analysis:', workspacePath);
       
       // If workspace path is virtual (like composer-code-block-anysphere:/), use project root as fallback
       if (workspacePath && workspacePath.includes(':')) {
         const path = require('path');
         const currentDir = process.cwd();
         workspacePath = path.resolve(currentDir, '..');
-        logger.info('[CursorIDEService] Virtual workspace detected, using project root as fallback:', workspacePath);
+        logger.info('Virtual workspace detected, using project root as fallback:', workspacePath);
       }
       
       const packageJsonUrl = await this.packageJsonAnalyzer.analyzePackageJsonInPath(workspacePath);
       if (packageJsonUrl) {
-        logger.info('[CursorIDEService] Dev server detected via package.json:', packageJsonUrl);
+        logger.info('Dev server detected via package.json:', packageJsonUrl);
         return packageJsonUrl;
       }
       // Fallback to terminal monitoring (less reliable due to CDP limitations)
-      logger.info('[CursorIDEService] Package.json analysis failed, trying terminal monitoring...');
+      logger.info('Package.json analysis failed, trying terminal monitoring...');
       return await this.terminalMonitor.monitorTerminalOutput();
     } catch (error) {
-      logger.error('[CursorIDEService] Error in enhanced terminal monitoring:', error);
+      logger.error('Error in enhanced terminal monitoring:', error);
       return null;
     }
   }
@@ -253,39 +253,39 @@ After applying the changes, please confirm that the refactoring has been complet
       }
       
       if (!port) {
-        logger.info('[CursorIDEService] No IDE port available');
+        logger.info('No IDE port available');
         return null;
       }
       
-      logger.info('[CursorIDEService] Getting user app URL for port:', port);
+      logger.info('Getting user app URL for port:', port);
       
       // Get workspace path for this specific port
       const workspacePath = this.ideManager.getWorkspacePath(port);
-      logger.info('[CursorIDEService] Workspace path for port', port, ':', workspacePath);
+      logger.info('Workspace path for port', port, ':', workspacePath);
       
       if (!workspacePath) {
-        logger.info('[CursorIDEService] No workspace path found for port', port);
+        logger.info('No workspace path found for port', port);
         return null;
       }
       
       // If workspace path is virtual (like composer-code-block-anysphere:/), skip
       if (workspacePath.includes(':')) {
-        logger.info('[CursorIDEService] Skipping virtual workspace for port', port, ':', workspacePath);
+        logger.info('Skipping virtual workspace for port', port, ':', workspacePath);
         return null;
       }
       
       // Try package.json analysis first
       const packageJsonUrl = await this.packageJsonAnalyzer.analyzePackageJsonInPath(workspacePath);
       if (packageJsonUrl) {
-        logger.info('[CursorIDEService] Dev server detected via package.json for port', port, ':', packageJsonUrl);
+        logger.info('Dev server detected via package.json for port', port, ':', packageJsonUrl);
         return packageJsonUrl;
       }
       
       // No frontend found in this workspace
-      logger.info('[CursorIDEService] No frontend found in workspace for port', port, ':', workspacePath);
+      logger.info('No frontend found in workspace for port', port, ':', workspacePath);
       return null;
     } catch (error) {
-      logger.error('[CursorIDEService] Error getting user app URL for port', port, ':', error);
+      logger.error('Error getting user app URL for port', port, ':', error);
       return null;
     }
   }
@@ -313,7 +313,7 @@ After applying the changes, please confirm that the refactoring has been complet
     if (!workspacePath) {
       const activeIDE = await this.ideManager.getActiveIDE();
       workspacePath = activeIDE?.workspacePath;
-      logger.info('[CursorIDEService] No workspace path provided, using active IDE workspace path:', workspacePath);
+      logger.info('No workspace path provided, using active IDE workspace path:', workspacePath);
     }
     
     // If workspace path is virtual (like composer-code-block-anysphere:/), use project root as fallback
@@ -321,7 +321,7 @@ After applying the changes, please confirm that the refactoring has been complet
       const path = require('path');
       const currentDir = process.cwd();
       workspacePath = path.resolve(currentDir, '..');
-      logger.info('[CursorIDEService] Virtual workspace detected, using project root as fallback:', workspacePath);
+      logger.info('Virtual workspace detected, using project root as fallback:', workspacePath);
     }
     
     return await this.packageJsonAnalyzer.analyzePackageJsonInPath(workspacePath);
@@ -351,7 +351,7 @@ After applying the changes, please confirm that the refactoring has been complet
         userId: userId
       };
     } catch (error) {
-      logger.error('[CursorIDEService] Error getting connection status:', error);
+      logger.error('Error getting connection status:', error);
       return {
         connected: false,
         activePort: null,

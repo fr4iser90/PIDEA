@@ -142,7 +142,7 @@ class CompressionEngine {
         }
         
       } catch (error) {
-        logger.warn(`[CompressionEngine] Attempt ${attempt + 1} failed:`, error.message);
+        logger.warn(`Attempt ${attempt + 1} failed:`, error.message);
         
         // Switch to JPEG on error
         if (currentFormat === 'webp') {
@@ -178,7 +178,7 @@ class CompressionEngine {
         const batchResults = await Promise.all(batchPromises);
         results.push(...batchResults);
       } catch (error) {
-        logger.error(`[CompressionEngine] Batch compression failed for batch ${i / batchSize}:`, error.message);
+        logger.error(`Batch compression failed for batch ${i / batchSize}:`, error.message);
         // Continue with remaining batches
       }
     }

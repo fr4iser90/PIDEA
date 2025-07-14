@@ -147,7 +147,7 @@ class ProjectContextService {
                 ).length >= 2;
                 
                 if (hasMonorepoIndicators && hasMultipleSubdirs) {
-                    logger.info('[ProjectContextService] 🏗️ Detected monorepo, using parent directory:', parentDir);
+                    logger.info('🏗️ Detected monorepo, using parent directory:', parentDir);
                     return parentDir;
                 }
             }
@@ -179,7 +179,7 @@ class ProjectContextService {
 
             return null;
         } catch (error) {
-            logger.error('[ProjectContextService] Auto-detect failed:', error.message);
+            logger.error('Auto-detect failed:', error.message);
             return null;
         }
     }

@@ -37,7 +37,7 @@ class AnalyzeProjectHandler {
    */
   async handle(command, context = {}) {
     try {
-      this.logger.info(`[AnalyzeProjectHandler] Handling command`);
+      this.logger.info(`Handling command`);
 
       // Validate command
       if (!command || command.type !== 'AnalyzeProjectCommand') {
@@ -61,7 +61,7 @@ class AnalyzeProjectHandler {
         timestamp: new Date()
       });
 
-      this.logger.info(`[AnalyzeProjectHandler] Project analyzed successfully`);
+      this.logger.info(`Project analyzed successfully`);
 
       return {
         success: true,
@@ -71,7 +71,7 @@ class AnalyzeProjectHandler {
       };
 
     } catch (error) {
-      this.logger.error(`[AnalyzeProjectHandler] Failed to analyze project:`, error);
+      this.logger.error(`Failed to analyze project:`, error);
 
       // Publish failure event
       await this.eventBus.publish('project.analysis.failed', {

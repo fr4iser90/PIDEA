@@ -30,7 +30,7 @@ class SplitLargeFilesHandler {
     }
 
     async handle(command) {
-        this.logger.info('[SplitLargeFilesHandler] Starting file splitting operation', {
+        this.logger.info('Starting file splitting operation', {
             handlerId: this.handlerId,
             commandId: command.commandId,
             projectPath: command.projectPath
@@ -66,7 +66,7 @@ class SplitLargeFilesHandler {
                 timestamp: new Date()
             });
 
-            this.logger.info('[SplitLargeFilesHandler] File splitting completed successfully', {
+            this.logger.info('File splitting completed successfully', {
                 handlerId: this.handlerId,
                 commandId: command.commandId,
                 filesProcessed: result.summary.filesProcessed,
@@ -76,7 +76,7 @@ class SplitLargeFilesHandler {
             return result;
 
         } catch (error) {
-            this.logger.error('[SplitLargeFilesHandler] File splitting failed', {
+            this.logger.error('File splitting failed', {
                 handlerId: this.handlerId,
                 commandId: command.commandId,
                 error: error.message,
@@ -100,7 +100,7 @@ class SplitLargeFilesHandler {
         const options = command.getRefactorOptions();
         const outputConfig = command.getOutputConfiguration();
 
-        this.logger.info('[SplitLargeFilesHandler] Executing file splitting', {
+        this.logger.info('Executing file splitting', {
             handlerId: this.handlerId,
             maxFileSize: options.maxFileSize,
             splitStrategy: options.splitStrategy,
@@ -166,7 +166,7 @@ class SplitLargeFilesHandler {
 
         await this.analysisRepository.save(analysisResult);
 
-        this.logger.info('[SplitLargeFilesHandler] Analysis result saved', {
+        this.logger.info('Analysis result saved', {
             handlerId: this.handlerId,
             analysisId: analysisResult.id,
             commandId: command.commandId
@@ -228,7 +228,7 @@ class SplitLargeFilesHandler {
                 }
             }
         } catch (error) {
-            this.logger.error('[SplitLargeFilesHandler] Error finding large files', {
+            this.logger.error('Error finding large files', {
                 error: error.message
             });
         }
@@ -277,7 +277,7 @@ class SplitLargeFilesHandler {
             return splitResult;
 
         } catch (error) {
-            this.logger.error('[SplitLargeFilesHandler] Error splitting file', {
+            this.logger.error('Error splitting file', {
                 filePath: filePath,
                 error: error.message
             });

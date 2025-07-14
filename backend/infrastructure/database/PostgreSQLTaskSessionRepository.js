@@ -19,10 +19,10 @@ class PostgreSQLTaskSessionRepository {
   async initialize() {
     try {
       await this.initTable();
-      this.logger.info('[PostgreSQLTaskSessionRepository] Initialized successfully');
+      this.logger.info('Initialized successfully');
       return true;
     } catch (error) {
-      this.logger.error('[PostgreSQLTaskSessionRepository] Initialization failed:', error.message);
+      this.logger.error('Initialization failed:', error.message);
       throw error;
     }
   }
@@ -125,10 +125,10 @@ class PostgreSQLTaskSessionRepository {
       ];
 
       await this.db.execute(upsertSQL, values);
-      this.logger.debug(`[PostgreSQLTaskSessionRepository] Saved session: ${session.id}`);
+      this.logger.debug(`Saved session: ${session.id}`);
       return session;
     } catch (error) {
-      this.logger.error(`[PostgreSQLTaskSessionRepository] Failed to save session:`, error.message);
+      this.logger.error(`Failed to save session:`, error.message);
       throw error;
     }
   }
@@ -153,7 +153,7 @@ class PostgreSQLTaskSessionRepository {
 
       return this.mapRowToSession(row);
     } catch (error) {
-      this.logger.error(`[PostgreSQLTaskSessionRepository] Failed to find session ${id}:`, error.message);
+      this.logger.error(`Failed to find session ${id}:`, error.message);
       return null;
     }
   }
@@ -188,7 +188,7 @@ class PostgreSQLTaskSessionRepository {
       const rows = await this.db.query(selectSQL, params);
       return rows.map(row => this.mapRowToSession(row));
     } catch (error) {
-      this.logger.error(`[PostgreSQLTaskSessionRepository] Failed to find sessions by user ${userId}:`, error.message);
+      this.logger.error(`Failed to find sessions by user ${userId}:`, error.message);
       return [];
     }
   }
@@ -223,7 +223,7 @@ class PostgreSQLTaskSessionRepository {
       const rows = await this.db.query(selectSQL, params);
       return rows.map(row => this.mapRowToSession(row));
     } catch (error) {
-      this.logger.error(`[PostgreSQLTaskSessionRepository] Failed to find sessions by project ${projectId}:`, error.message);
+      this.logger.error(`Failed to find sessions by project ${projectId}:`, error.message);
       return [];
     }
   }
@@ -258,7 +258,7 @@ class PostgreSQLTaskSessionRepository {
       const rows = await this.db.query(selectSQL, params);
       return rows.map(row => this.mapRowToSession(row));
     } catch (error) {
-      this.logger.error(`[PostgreSQLTaskSessionRepository] Failed to find active sessions:`, error.message);
+      this.logger.error(`Failed to find active sessions:`, error.message);
       return [];
     }
   }
@@ -278,7 +278,7 @@ class PostgreSQLTaskSessionRepository {
       const result = await this.db.execute(deleteSQL, [id]);
       return result.rowsAffected > 0;
     } catch (error) {
-      this.logger.error(`[PostgreSQLTaskSessionRepository] Failed to delete session ${id}:`, error.message);
+      this.logger.error(`Failed to delete session ${id}:`, error.message);
       return false;
     }
   }
@@ -313,7 +313,7 @@ class PostgreSQLTaskSessionRepository {
         averageDuration: result.average_duration || 0
       };
     } catch (error) {
-      this.logger.error(`[PostgreSQLTaskSessionRepository] Failed to get stats:`, error.message);
+      this.logger.error(`Failed to get stats:`, error.message);
       return {
         total: 0,
         completed: 0,
@@ -358,7 +358,7 @@ class PostgreSQLTaskSessionRepository {
 
       return TaskSession.fromJSON(sessionData);
     } catch (error) {
-      this.logger.error(`[PostgreSQLTaskSessionRepository] Failed to map row to session:`, error.message);
+      this.logger.error(`Failed to map row to session:`, error.message);
       throw error;
     }
   }
@@ -379,7 +379,7 @@ class PostgreSQLTaskSessionRepository {
       const result = await this.db.execute(deleteSQL);
       return result.rowsAffected;
     } catch (error) {
-      this.logger.error(`[PostgreSQLTaskSessionRepository] Failed to cleanup old sessions:`, error.message);
+      this.logger.error(`Failed to cleanup old sessions:`, error.message);
       return 0;
     }
   }

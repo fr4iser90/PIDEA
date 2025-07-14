@@ -28,7 +28,7 @@ class IDEHealthMonitor extends EventEmitter {
    */
   async startMonitoring(interval = null) {
     if (this.monitoring) {
-      logger.info('[IDEHealthMonitor] Monitoring already active');
+      logger.info('Monitoring already active');
       return;
     }
 
@@ -38,7 +38,7 @@ class IDEHealthMonitor extends EventEmitter {
         const globalConfig = this.configManager.getGlobalConfig();
         interval = globalConfig.healthCheckInterval || this.healthCheckInterval;
       } catch (error) {
-        logger.warn('[IDEHealthMonitor] Could not get config, using default interval');
+        logger.warn('Could not get config, using default interval');
         interval = this.healthCheckInterval;
       }
     }
@@ -46,7 +46,7 @@ class IDEHealthMonitor extends EventEmitter {
     this.healthCheckInterval = interval || this.healthCheckInterval;
     this.monitoring = true;
 
-    logger.info(`[IDEHealthMonitor] Starting health monitoring with ${this.healthCheckInterval}ms interval`);
+    logger.info(`Starting health monitoring with ${this.healthCheckInterval}ms interval`);
 
     // Start periodic health checks
     this.healthInterval = setInterval(() => {
@@ -62,7 +62,7 @@ class IDEHealthMonitor extends EventEmitter {
    */
   stopMonitoring() {
     if (!this.monitoring) {
-      logger.info('[IDEHealthMonitor] Monitoring not active');
+      logger.info('Monitoring not active');
       return;
     }
 
@@ -73,7 +73,7 @@ class IDEHealthMonitor extends EventEmitter {
       this.healthInterval = null;
     }
 
-    logger.info('[IDEHealthMonitor] Health monitoring stopped');
+    logger.info('Health monitoring stopped');
 
     // Emit stop event
     this.emit('monitoringStopped');
@@ -96,7 +96,7 @@ class IDEHealthMonitor extends EventEmitter {
             return result;
           })
           .catch(error => {
-            logger.error(`[IDEHealthMonitor] Error checking health for port ${port}:`, error);
+            logger.error(`Error checking health for port ${port}:`, error);
             healthResults[port] = {
               port: port,
               status: 'error',
@@ -222,7 +222,7 @@ class IDEHealthMonitor extends EventEmitter {
       }
 
     } catch (error) {
-      logger.warn(`[IDEHealthMonitor] Error getting additional metrics for port ${port}:`, error);
+      logger.warn(`Error getting additional metrics for port ${port}:`, error);
     }
 
     return metrics;
@@ -364,7 +364,7 @@ class IDEHealthMonitor extends EventEmitter {
 
     this.healthHistory.set(port, []);
 
-    logger.info(`[IDEHealthMonitor] Registered IDE ${ideType} on port ${port} for health monitoring`);
+    logger.info(`Registered IDE ${ideType} on port ${port} for health monitoring`);
     this.emit('ideRegistered', { port, ideType });
   }
 
@@ -376,7 +376,7 @@ class IDEHealthMonitor extends EventEmitter {
     this.ideHealth.delete(port);
     this.healthHistory.delete(port);
 
-    logger.info(`[IDEHealthMonitor] Unregistered IDE on port ${port} from health monitoring`);
+    logger.info(`Unregistered IDE on port ${port} from health monitoring`);
     this.emit('ideUnregistered', { port });
   }
 
@@ -505,7 +505,7 @@ class IDEHealthMonitor extends EventEmitter {
     this.healthChecks = this.healthChecks || new Map();
     this.healthChecks.set(key, checkFunction);
 
-    logger.info(`[IDEHealthMonitor] Added health check for ${ideType} on port ${port}`);
+    logger.info(`Added health check for ${ideType} on port ${port}`);
   }
 
   /**
@@ -514,7 +514,7 @@ class IDEHealthMonitor extends EventEmitter {
   clearHealthChecks() {
     this.healthChecks = this.healthChecks || new Map();
     this.healthChecks.clear();
-    logger.info('[IDEHealthMonitor] Cleared all health checks');
+    logger.info('Cleared all health checks');
   }
 
   /**

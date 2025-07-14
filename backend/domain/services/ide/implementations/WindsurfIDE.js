@@ -43,7 +43,7 @@ class WindsurfIDE extends BaseIDE {
     ];
     
     this.isInitialized = true;
-    logger.info('[WindsurfIDE] Windsurf IDE implementation initialized');
+    logger.info('Windsurf IDE implementation initialized');
   }
 
   /**
@@ -71,7 +71,7 @@ class WindsurfIDE extends BaseIDE {
 
       return { detected: false, port, error: 'Windsurf not detected' };
     } catch (error) {
-      logger.error(`[WindsurfIDE] Error detecting Windsurf on port ${port}:`, error);
+      logger.error(`Error detecting Windsurf on port ${port}:`, error);
       return { detected: false, port, error: error.message };
     }
   }
@@ -110,7 +110,7 @@ class WindsurfIDE extends BaseIDE {
 
       return { version: version || 'unknown' };
     } catch (error) {
-      logger.error('[WindsurfIDE] Error getting version:', error);
+      logger.error('Error getting version:', error);
       return { version: 'unknown', error: error.message };
     }
   }
@@ -120,7 +120,7 @@ class WindsurfIDE extends BaseIDE {
    */
   async executeCommand(command, options = {}) {
     try {
-      logger.info(`[WindsurfIDE] Executing command: ${command}`);
+      logger.info(`Executing command: ${command}`);
       
       // Handle Windsurf-specific commands
       switch (command) {
@@ -135,7 +135,7 @@ class WindsurfIDE extends BaseIDE {
           return await super.executeCommand(command, options);
       }
     } catch (error) {
-      logger.error(`[WindsurfIDE] Error executing command ${command}:`, error);
+      logger.error(`Error executing command ${command}:`, error);
       throw error;
     }
   }
@@ -163,7 +163,7 @@ class WindsurfIDE extends BaseIDE {
 
       return workspacePath;
     } catch (error) {
-      logger.error('[WindsurfIDE] Error getting workspace path:', error);
+      logger.error('Error getting workspace path:', error);
       return null;
     }
   }
@@ -202,19 +202,19 @@ class WindsurfIDE extends BaseIDE {
 
       return messages;
     } catch (error) {
-      logger.error('[WindsurfIDE] Error extracting chat history:', error);
+      logger.error('Error extracting chat history:', error);
       return [];
     }
   }
 
   // Required methods for IDE factory validation
   async start() {
-    logger.info('[WindsurfIDE] Start method called');
+    logger.info('Start method called');
     return { success: true, ideType: IDETypes.WINDSURF };
   }
 
   async stop() {
-    logger.info('[WindsurfIDE] Stop method called');
+    logger.info('Stop method called');
     return { success: true, ideType: IDETypes.WINDSURF };
   }
 
@@ -346,17 +346,17 @@ class WindsurfIDE extends BaseIDE {
   }
 
   async applyRefactoring(refactoringType, options = {}) {
-    logger.info(`[WindsurfIDE] Applying refactoring: ${refactoringType}`);
+    logger.info(`Applying refactoring: ${refactoringType}`);
     return { success: true, refactoringType, ideType: IDETypes.WINDSURF };
   }
 
   async sendTask(task) {
-    logger.info(`[WindsurfIDE] Sending task:`, task);
+    logger.info(`Sending task:`, task);
     return { success: true, task, ideType: IDETypes.WINDSURF };
   }
 
   async sendAutoModeTasks(tasks) {
-    logger.info(`[WindsurfIDE] Sending auto mode tasks:`, tasks);
+    logger.info(`Sending auto mode tasks:`, tasks);
     return { success: true, tasks, ideType: IDETypes.WINDSURF };
   }
 }

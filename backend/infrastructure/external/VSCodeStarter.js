@@ -10,7 +10,7 @@ class VSCodeStarter {
   }
 
   async startVSCode(port, workspacePath = null) {
-    logger.info('[VSCodeStarter] Starting VSCode on port', port);
+    logger.info('Starting VSCode on port', port);
     
     if (this.runningProcesses.has(port)) {
       throw new Error(`VSCode already running on port ${port}`);
@@ -40,20 +40,20 @@ class VSCodeStarter {
 
       // Handle process events
       process.stdout.on('data', (data) => {
-        logger.info(`[VSCodeStarter] VSCode ${port} stdout:`, data.toString().trim());
+        logger.info(`VSCode ${port} stdout:`, data.toString().trim());
       });
 
       process.stderr.on('data', (data) => {
-        logger.info(`[VSCodeStarter] VSCode ${port} stderr:`, data.toString().trim());
+        logger.info(`VSCode ${port} stderr:`, data.toString().trim());
       });
 
       process.on('close', (code) => {
-        logger.info(`[VSCodeStarter] VSCode ${port} process closed with code ${code}`);
+        logger.info(`VSCode ${port} process closed with code ${code}`);
         this.runningProcesses.delete(port);
       });
 
       process.on('error', (error) => {
-        logger.error(`[VSCodeStarter] VSCode ${port} process error:`, error);
+        logger.error(`VSCode ${port} process error:`, error);
         this.runningProcesses.delete(port);
       });
 
@@ -68,7 +68,7 @@ class VSCodeStarter {
       };
 
     } catch (error) {
-      logger.error('[VSCodeStarter] Failed to start VSCode:', error);
+      logger.error('Failed to start VSCode:', error);
       throw error;
     }
   }
@@ -90,7 +90,7 @@ class VSCodeStarter {
   }
 
   async stopVSCode(port) {
-    logger.info('[VSCodeStarter] Stopping VSCode on port', port);
+    logger.info('Stopping VSCode on port', port);
     
     const process = this.runningProcesses.get(port);
     if (!process) {
@@ -113,29 +113,29 @@ class VSCodeStarter {
       });
 
       this.runningProcesses.delete(port);
-      logger.info('[VSCodeStarter] VSCode stopped successfully on port', port);
+      logger.info('VSCode stopped successfully on port', port);
       
     } catch (error) {
-      logger.error('[VSCodeStarter] Error stopping VSCode:', error);
+      logger.error('Error stopping VSCode:', error);
       // Force kill if graceful shutdown fails
       try {
         process.kill('SIGKILL');
         this.runningProcesses.delete(port);
       } catch (killError) {
-        logger.error('[VSCodeStarter] Failed to force kill VSCode:', killError);
+        logger.error('Failed to force kill VSCode:', killError);
       }
       throw error;
     }
   }
 
   async stopAllVSCodeInstances() {
-    logger.info('[VSCodeStarter] Stopping all VSCode instances');
+    logger.info('Stopping all VSCode instances');
     
     const ports = Array.from(this.runningProcesses.keys());
     const promises = ports.map(port => this.stopVSCode(port));
     
     await Promise.allSettled(promises);
-    logger.info('[VSCodeStarter] All VSCode instances stopped');
+    logger.info('All VSCode instances stopped');
   }
 
   getRunningVSCodeInstances() {

@@ -28,7 +28,7 @@ class SQLiteTaskTemplateRepository {
             await this.database.execute(`CREATE INDEX IF NOT EXISTS idx_task_templates_version ON ${this.tableName} (version)`);
         } catch (error) {
             // Indexes might already exist, ignore errors
-            logger.debug(`[SQLiteTaskTemplateRepository] Index creation skipped: ${error.message}`);
+            logger.debug(`Index creation skipped: ${error.message}`);
         }
     }
 

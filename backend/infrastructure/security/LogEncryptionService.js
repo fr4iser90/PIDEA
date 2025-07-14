@@ -36,7 +36,7 @@ class LogEncryptionService {
       const key = crypto.randomBytes(this.keyLength);
       return key.toString('base64');
     } catch (error) {
-      logger.error('[LogEncryptionService] Error generating key:', error);
+      logger.error('Error generating key:', error);
       throw error;
     }
   }
@@ -73,7 +73,7 @@ class LogEncryptionService {
       
       return result.toString('base64');
     } catch (error) {
-      logger.error('[LogEncryptionService] Error encrypting log entry:', error);
+      logger.error('Error encrypting log entry:', error);
       throw error;
     }
   }
@@ -109,7 +109,7 @@ class LogEncryptionService {
       // Parse JSON
       return JSON.parse(decrypted.toString('utf8'));
     } catch (error) {
-      logger.error('[LogEncryptionService] Error decrypting log entry:', error);
+      logger.error('Error decrypting log entry:', error);
       throw error;
     }
   }
@@ -131,7 +131,7 @@ class LogEncryptionService {
       
       return encryptedEntries;
     } catch (error) {
-      logger.error('[LogEncryptionService] Error encrypting log entries:', error);
+      logger.error('Error encrypting log entries:', error);
       throw error;
     }
   }
@@ -151,14 +151,14 @@ class LogEncryptionService {
           const decrypted = await this.decryptLogEntry(encryptedData, key);
           decryptedEntries.push(decrypted);
         } catch (error) {
-          logger.warn('[LogEncryptionService] Failed to decrypt entry, skipping:', error.message);
+          logger.warn('Failed to decrypt entry, skipping:', error.message);
           // Continue with other entries
         }
       }
       
       return decryptedEntries;
     } catch (error) {
-      logger.error('[LogEncryptionService] Error decrypting log entries:', error);
+      logger.error('Error decrypting log entries:', error);
       throw error;
     }
   }
@@ -180,9 +180,9 @@ class LogEncryptionService {
       // Set secure permissions (600 - owner read/write only)
       await fs.chmod(filePath, 0o600);
       
-      logger.info(`[LogEncryptionService] Key saved to: ${filePath}`);
+      logger.info(`Key saved to: ${filePath}`);
     } catch (error) {
-      logger.error('[LogEncryptionService] Error saving key:', error);
+      logger.error('Error saving key:', error);
       throw error;
     }
   }
@@ -197,7 +197,7 @@ class LogEncryptionService {
       const key = await fs.readFile(filePath, 'utf8');
       return key.trim();
     } catch (error) {
-      logger.error('[LogEncryptionService] Error loading key:', error);
+      logger.error('Error loading key:', error);
       throw error;
     }
   }
@@ -215,10 +215,10 @@ class LogEncryptionService {
       
       await this.saveKey(key, keyPath);
       
-      logger.info(`[LogEncryptionService] Generated session key for: ${sessionId}`);
+      logger.info(`Generated session key for: ${sessionId}`);
       return key;
     } catch (error) {
-      logger.error('[LogEncryptionService] Error generating session key:', error);
+      logger.error('Error generating session key:', error);
       throw error;
     }
   }
@@ -234,7 +234,7 @@ class LogEncryptionService {
       const keyPath = path.join(baseDir, 'keys', `session-${sessionId}.key`);
       return await this.loadKey(keyPath);
     } catch (error) {
-      logger.error('[LogEncryptionService] Error loading session key:', error);
+      logger.error('Error loading session key:', error);
       throw error;
     }
   }

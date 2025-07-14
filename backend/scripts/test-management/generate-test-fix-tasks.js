@@ -32,8 +32,7 @@ const SQLiteTaskRepository = require('@database/SQLiteTaskRepository');
 const CursorIDEService = require('@services/CursorIDEService');
 const BrowserManager = require('@external/BrowserManager');
 const IDEManager = require('@external/ide/IDEManager');
-const Logger = require('@logging/Logger');
-const logger = new Logger('Logger');
+const ServiceLogger = require('@logging/ServiceLogger');
 
 class TestFixTaskCLI {
   constructor() {
@@ -49,7 +48,7 @@ class TestFixTaskCLI {
       help: false
     };
     
-    this.logger = console;
+    this.logger = new ServiceLogger('TestFixTaskCLI');
     this.taskRepository = null;
     this.autoTestFixSystem = null;
   }
@@ -95,7 +94,7 @@ class TestFixTaskCLI {
           break;
         default:
           if (arg.startsWith('--')) {
-            logger.error(`Unknown option: ${arg}`);
+            this.logger.error(`Unknown option: ${arg}`);
             process.exit(1);
           }
       }
@@ -106,7 +105,7 @@ class TestFixTaskCLI {
    * Display help information
    */
   showHelp() {
-    logger.info(`
+    this.logger.info(`
 Test Fix Task Generator CLI
 
 Usage: node generate-test-fix-tasks.js [options]
@@ -145,7 +144,7 @@ Examples:
    */
   async initializeServices() {
     try {
-      this.logger.info('[TestFixTaskCLI] Initializing services...');
+      this.logger.info('Initializing services...');
 
       // Initialize database - SQLiteTaskRepository doesn't need initialize()
       this.taskRepository = new SQLiteTaskRepository();
@@ -162,13 +161,13 @@ Examples:
           if (availableIDEs.length > 0) {
             const activeIDE = availableIDEs[0];
             await this.ideManager.switchToIDE(activeIDE.port);
-            this.logger.info(`[TestFixTaskCLI] Connected to IDE on port ${activeIDE.port}`);
+            this.logger.info(`Connected to IDE on port ${activeIDE.port}`);
           } else {
-            this.logger.warn('[TestFixTaskCLI] No IDE found, starting new one...');
+            this.logger.warn('No IDE found, starting new one...');
             await this.ideManager.startNewIDE(this.options.projectPath);
           }
         } catch (error) {
-          this.logger.warn('[TestFixTaskCLI] IDE connection failed, continuing without IDE:', error.message);
+          this.logger.warn('IDE connection failed, continuing without IDE:', error.message);
           this.cursorIDE = null;
         }
       }
@@ -183,11 +182,11 @@ Examples:
 
       await this.autoTestFixSystem.initialize();
 
-      this.logger.info('[TestFixTaskCLI] Services initialized successfully');
+      this.logger.info('Services initialized successfully');
       return true;
 
     } catch (error) {
-      this.logger.error('[TestFixTaskCLI] Failed to initialize services:', error.message);
+      this.logger.error('Failed to initialize services:', error.message);
       throw error;
     }
   }
@@ -213,13 +212,13 @@ Examples:
     }
 
     if (missingFiles.length > 0) {
-      this.logger.error('[TestFixTaskCLI] Missing required output files:');
+      this.logger.error('Missing required output files:');
       missingFiles.forEach(file => this.logger.error(`  - ${file}`));
       this.logger.error('\nPlease run "npm run test:full" first to generate the required output files.');
       return false;
     }
 
-    this.logger.info('[TestFixTaskCLI] All required output files found');
+    this.logger.info('All required output files found');
     return true;
   }
 
@@ -237,14 +236,14 @@ Examples:
         return;
       }
 
-      this.logger.info('[TestFixTaskCLI] Starting test fix task generation...');
-      this.logger.info(`[TestFixTaskCLI] Project path: ${this.options.projectPath}`);
-      this.logger.info(`[TestFixTaskCLI] Project ID: ${this.options.projectId}`);
-      this.logger.info(`[TestFixTaskCLI] User ID: ${this.options.userId}`);
-      this.logger.info(`[TestFixTaskCLI] Dry run: ${this.options.dryRun}`);
-      this.logger.info(`[TestFixTaskCLI] Clear existing: ${this.options.clearExisting}`);
-      this.logger.info(`[TestFixTaskCLI] Load existing tasks: ${this.options.loadExistingTasks}`);
-      this.logger.info(`[TestFixTaskCLI] Task status filter: ${this.options.taskStatus || 'none'}`);
+      this.logger.info('Starting test fix task generation...');
+      this.logger.info(`Project path: ${this.options.projectPath}`);
+      this.logger.info(`Project ID: ${this.options.projectId}`);
+      this.logger.info(`User ID: ${this.options.userId}`);
+      this.logger.info(`Dry run: ${this.options.dryRun}`);
+      this.logger.info(`Clear existing: ${this.options.clearExisting}`);
+      this.logger.info(`Load existing tasks: ${this.options.loadExistingTasks}`);
+      this.logger.info(`Task status filter: ${this.options.taskStatus || 'none'}`);
 
       // Check output files only if not loading existing tasks
       if (!this.options.loadExistingTasks && !this.checkOutputFiles()) {
@@ -269,11 +268,11 @@ Examples:
       // Display results
       this.displayResults(result);
 
-      this.logger.info('[TestFixTaskCLI] Test fix task generation completed successfully');
+      this.logger.info('Test fix task generation completed successfully');
       return result;
 
     } catch (error) {
-      this.logger.error('[TestFixTaskCLI] Test fix task generation failed:', error.message);
+      this.logger.error('Test fix task generation failed:', error.message);
       process.exit(1);
     }
   }
@@ -282,42 +281,42 @@ Examples:
    * Display results
    */
   displayResults(result) {
-    logger.info('\n' + '='.repeat(60));
-    logger.debug('TEST FIX TASK GENERATION RESULTS');
-    logger.info('='.repeat(60));
+    this.logger.info('\n' + '='.repeat(60));
+    this.logger.debug('TEST FIX TASK GENERATION RESULTS');
+    this.logger.info('='.repeat(60));
     
-    logger.info(`\nSession ID: ${result.sessionId}`);
-    logger.info(`Duration: ${result.duration}ms`);
-    logger.info(`Success: ${result.success ? 'Yes' : 'No'}`);
+    this.logger.info(`\nSession ID: ${result.sessionId}`);
+    this.logger.info(`Duration: ${result.duration}ms`);
+    this.logger.info(`Success: ${result.success ? 'Yes' : 'No'}`);
     
     if (result.parsedData) {
-      logger.info('\nParsed Data:');
-      logger.debug(`  - Failing Tests: ${result.parsedData.failingTests.length}`);
-      logger.info(`  - Coverage Issues: ${result.parsedData.coverageIssues.length}`);
-      logger.debug(`  - Legacy Tests: ${result.parsedData.legacyTests.length}`);
+      this.logger.info('\nParsed Data:');
+      this.logger.debug(`  - Failing Tests: ${result.parsedData.failingTests.length}`);
+      this.logger.info(`  - Coverage Issues: ${result.parsedData.coverageIssues.length}`);
+      this.logger.debug(`  - Legacy Tests: ${result.parsedData.legacyTests.length}`);
     }
     
     if (result.tasksGenerated) {
-      logger.info(`\nTasks Generated: ${result.tasksGenerated}`);
+      this.logger.info(`\nTasks Generated: ${result.tasksGenerated}`);
     }
     
     if (result.processingResult) {
       const pr = result.processingResult;
-      logger.info('\nProcessing Results:');
-      logger.info(`  - Total Tasks: ${pr.totalTasks}`);
-      logger.info(`  - Completed: ${pr.completedTasks}`);
-      logger.info(`  - Failed: ${pr.failedTasks}`);
-      logger.info(`  - Success Rate: ${pr.totalTasks > 0 ? Math.round((pr.completedTasks / pr.totalTasks) * 100) : 0}%`);
+      this.logger.info('\nProcessing Results:');
+      this.logger.info(`  - Total Tasks: ${pr.totalTasks}`);
+      this.logger.info(`  - Completed: ${pr.completedTasks}`);
+      this.logger.info(`  - Failed: ${pr.failedTasks}`);
+      this.logger.info(`  - Success Rate: ${pr.totalTasks > 0 ? Math.round((pr.completedTasks / pr.totalTasks) * 100) : 0}%`);
     }
     
     if (result.report && result.report.recommendations) {
-      logger.info('\nRecommendations:');
+      this.logger.info('\nRecommendations:');
       result.report.recommendations.forEach((rec, index) => {
-        logger.info(`  ${index + 1}. [${rec.priority.toUpperCase()}] ${rec.message}`);
+        this.logger.info(`  ${index + 1}. [${rec.priority.toUpperCase()}] ${rec.message}`);
       });
     }
     
-    logger.info('\n' + '='.repeat(60));
+    this.logger.info('\n' + '='.repeat(60));
   }
 
   /**
@@ -333,9 +332,9 @@ Examples:
         await this.taskRepository.close();
       }
       
-      this.logger.info('[TestFixTaskCLI] Cleanup completed');
+      this.logger.info('Cleanup completed');
     } catch (error) {
-      this.logger.error('[TestFixTaskCLI] Cleanup failed:', error.message);
+      this.logger.error('Cleanup failed:', error.message);
     }
   }
 }
@@ -347,7 +346,7 @@ async function main() {
   try {
     await cli.run();
   } catch (error) {
-    logger.error('[TestFixTaskCLI] Fatal error:', error.message);
+    cli.logger.error('Fatal error:', error.message);
     process.exit(1);
   } finally {
     await cli.cleanup();

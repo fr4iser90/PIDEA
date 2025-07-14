@@ -68,7 +68,7 @@ class OpenCommandPaletteCommand {
         errors: []
       };
     } catch (error) {
-      this.logger.error('[OpenCommandPaletteCommand] Validation error:', error);
+      this.logger.error('Validation error:', error);
       return {
         isValid: false,
         errors: [error.message]
@@ -83,7 +83,7 @@ class OpenCommandPaletteCommand {
    */
   async execute(context = {}) {
     try {
-      this.logger.info('[OpenCommandPaletteCommand] Executing command', {
+      this.logger.info('Executing command', {
         commandId: this.commandId,
         userId: this.userId,
         ideType: this.ideType,
@@ -133,7 +133,7 @@ class OpenCommandPaletteCommand {
         });
       }
 
-      this.logger.info('[OpenCommandPaletteCommand] Command executed successfully', {
+      this.logger.info('Command executed successfully', {
         commandId: this.commandId,
         result: result
       });
@@ -141,7 +141,7 @@ class OpenCommandPaletteCommand {
       return result;
 
     } catch (error) {
-      this.logger.error('[OpenCommandPaletteCommand] Command execution failed:', error);
+      this.logger.error('Command execution failed:', error);
 
       // Publish failure event
       if (context.eventBus) {

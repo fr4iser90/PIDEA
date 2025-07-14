@@ -3,14 +3,13 @@
  * Service for managing workflow persistence and operations
  */
 const { v4: uuidv4 } = require('uuid');
-const Logger = require('@logging/Logger');
-const logger = new Logger('Logger');
+const ServiceLogger = require('@logging/ServiceLogger');
 
 class WorkflowRepository {
   constructor(workflowExecutionRepository, workflowMetricsRepository) {
     this.executionRepository = workflowExecutionRepository;
     this.metricsRepository = workflowMetricsRepository;
-    this.logger = console;
+    this.logger = new ServiceLogger('WorkflowRepository');
   }
 
   /**

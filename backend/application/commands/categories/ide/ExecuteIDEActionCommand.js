@@ -87,7 +87,7 @@ class ExecuteIDEActionCommand {
         errors: []
       };
     } catch (error) {
-      this.logger.error('[ExecuteIDEActionCommand] Validation error:', error);
+      this.logger.error('Validation error:', error);
       return {
         isValid: false,
         errors: [error.message]
@@ -102,7 +102,7 @@ class ExecuteIDEActionCommand {
    */
   async execute(context = {}) {
     try {
-      this.logger.info('[ExecuteIDEActionCommand] Executing command', {
+      this.logger.info('Executing command', {
         commandId: this.commandId,
         userId: this.userId,
         ideType: this.ideType,
@@ -160,7 +160,7 @@ class ExecuteIDEActionCommand {
         });
       }
 
-      this.logger.info('[ExecuteIDEActionCommand] Command executed successfully', {
+      this.logger.info('Command executed successfully', {
         commandId: this.commandId,
         result: result
       });
@@ -168,7 +168,7 @@ class ExecuteIDEActionCommand {
       return result;
 
     } catch (error) {
-      this.logger.error('[ExecuteIDEActionCommand] Command execution failed:', error);
+      this.logger.error('Command execution failed:', error);
 
       // Publish failure event
       if (context.eventBus) {

@@ -106,7 +106,7 @@ const IDEFeatures = ({
         throw new Error(result.error || 'Failed to load features');
       }
     } catch (error) {
-      logger.error('[IDEFeatures] Error loading features:', error);
+      logger.error('Error loading features:', error);
       setError(error.message);
     } finally {
       setIsLoading(false);
@@ -196,7 +196,7 @@ const IDEFeatures = ({
         throw new Error(result.error || 'Failed to toggle feature');
       }
     } catch (error) {
-      logger.error('[IDEFeatures] Error toggling feature:', error);
+      logger.error('Error toggling feature:', error);
       setError(error.message);
     }
   };
@@ -374,7 +374,7 @@ const IDEFeatures = ({
         throw new Error(result.error || 'Action failed');
       }
     } catch (error) {
-      logger.error('[IDEFeatures] Error executing feature action:', error);
+      logger.error('Error executing feature action:', error);
       setError(error.message);
     }
   };

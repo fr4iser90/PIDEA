@@ -170,7 +170,7 @@ class MergeStrategy {
       // Check explicit method in context
       const explicitMethod = context.get('mergeMethod');
       if (explicitMethod && this.mergeMethods[explicitMethod]) {
-        this.logger.info(`[MergeStrategy] Using explicit merge method: ${explicitMethod}`);
+        this.logger.info(`Using explicit merge method: ${explicitMethod}`);
         return explicitMethod;
       }
 
@@ -178,7 +178,7 @@ class MergeStrategy {
       const taskType = task.type?.value || task.type;
       if (taskType && this.strategyMappings.taskTypeMappings[taskType]) {
         const method = this.strategyMappings.taskTypeMappings[taskType];
-        this.logger.info(`[MergeStrategy] Using task type merge method: ${method} (task type: ${taskType})`);
+        this.logger.info(`Using task type merge method: ${method} (task type: ${taskType})`);
         return method;
       }
 
@@ -186,16 +186,16 @@ class MergeStrategy {
       const branchType = context.get('branchType');
       if (branchType && this.strategyMappings.branchTypeMappings[branchType]) {
         const method = this.strategyMappings.branchTypeMappings[branchType];
-        this.logger.info(`[MergeStrategy] Using branch type merge method: ${method} (branch type: ${branchType})`);
+        this.logger.info(`Using branch type merge method: ${method} (branch type: ${branchType})`);
         return method;
       }
 
       // Use default method
-      this.logger.info(`[MergeStrategy] Using default merge method: ${this.defaultConfig.method}`);
+      this.logger.info(`Using default merge method: ${this.defaultConfig.method}`);
       return this.defaultConfig.method;
 
     } catch (error) {
-      this.logger.error(`[MergeStrategy] Error determining merge method: ${error.message}`);
+      this.logger.error(`Error determining merge method: ${error.message}`);
       return this.defaultConfig.method;
     }
   }
@@ -211,7 +211,7 @@ class MergeStrategy {
       // Check explicit level in context
       const explicitLevel = context.get('automationLevel');
       if (explicitLevel && this.automationLevels[explicitLevel]) {
-        this.logger.info(`[MergeStrategy] Using explicit automation level: ${explicitLevel}`);
+        this.logger.info(`Using explicit automation level: ${explicitLevel}`);
         return explicitLevel;
       }
 
@@ -219,16 +219,16 @@ class MergeStrategy {
       const priority = task.priority?.value || task.priority;
       if (priority && this.strategyMappings.priorityMappings[priority]) {
         const level = this.strategyMappings.priorityMappings[priority];
-        this.logger.info(`[MergeStrategy] Using priority automation level: ${level} (priority: ${priority})`);
+        this.logger.info(`Using priority automation level: ${level} (priority: ${priority})`);
         return level;
       }
 
       // Use default level
-      this.logger.info(`[MergeStrategy] Using default automation level: ${this.defaultConfig.automationLevel}`);
+      this.logger.info(`Using default automation level: ${this.defaultConfig.automationLevel}`);
       return this.defaultConfig.automationLevel;
 
     } catch (error) {
-      this.logger.error(`[MergeStrategy] Error determining automation level: ${error.message}`);
+      this.logger.error(`Error determining automation level: ${error.message}`);
       return this.defaultConfig.automationLevel;
     }
   }
@@ -258,7 +258,7 @@ class MergeStrategy {
         ...context.get('mergeConfig') || {}
       };
       
-      this.logger.info(`[MergeStrategy] Merge configuration:`, {
+      this.logger.info(`Merge configuration:`, {
         method: config.method,
         automationLevel: config.automationLevel,
         deleteSourceBranch: config.deleteSourceBranch
@@ -267,7 +267,7 @@ class MergeStrategy {
       return config;
       
     } catch (error) {
-      this.logger.error(`[MergeStrategy] Error getting merge configuration: ${error.message}`);
+      this.logger.error(`Error getting merge configuration: ${error.message}`);
       
       // Return default configuration
       return {
@@ -433,7 +433,7 @@ class MergeStrategy {
    */
   addMergeMethod(name, method) {
     if (this.mergeMethods[name]) {
-      this.logger.warn(`[MergeStrategy] Overwriting existing merge method: ${name}`);
+      this.logger.warn(`Overwriting existing merge method: ${name}`);
     }
     
     this.mergeMethods[name] = {
@@ -446,7 +446,7 @@ class MergeStrategy {
       ...method
     };
     
-    this.logger.info(`[MergeStrategy] Added custom merge method: ${name}`);
+    this.logger.info(`Added custom merge method: ${name}`);
   }
 
   /**
@@ -456,7 +456,7 @@ class MergeStrategy {
    */
   addAutomationLevel(name, level) {
     if (this.automationLevels[name]) {
-      this.logger.warn(`[MergeStrategy] Overwriting existing automation level: ${name}`);
+      this.logger.warn(`Overwriting existing automation level: ${name}`);
     }
     
     this.automationLevels[name] = {
@@ -469,7 +469,7 @@ class MergeStrategy {
       ...level
     };
     
-    this.logger.info(`[MergeStrategy] Added custom automation level: ${name}`);
+    this.logger.info(`Added custom automation level: ${name}`);
   }
 
   /**
@@ -498,7 +498,7 @@ class MergeStrategy {
       };
     }
     
-    this.logger.info(`[MergeStrategy] Updated strategy mappings`);
+    this.logger.info(`Updated strategy mappings`);
   }
 
   /**

@@ -91,7 +91,7 @@ export const IDEProvider = ({ children, eventBus }) => {
         setIdeFeatures(result.data);
       }
     } catch (error) {
-      logger.error('[IDEContext] Error loading IDE features:', error);
+      logger.error('Error loading IDE features:', error);
     }
   };
 
@@ -107,7 +107,7 @@ export const IDEProvider = ({ children, eventBus }) => {
         setIdeStatus(result.data);
       }
     } catch (error) {
-      logger.error('[IDEContext] Error loading IDE status:', error);
+      logger.error('Error loading IDE status:', error);
     }
   };
 
@@ -133,7 +133,7 @@ export const IDEProvider = ({ children, eventBus }) => {
         throw new Error(result.error || 'Failed to start new IDE');
       }
     } catch (error) {
-      logger.error('[IDEContext] Error starting new IDE:', error);
+      logger.error('Error starting new IDE:', error);
       clearError();
     }
   };
@@ -161,7 +161,7 @@ export const IDEProvider = ({ children, eventBus }) => {
         throw new Error(result.error || 'Failed to stop IDE');
       }
     } catch (error) {
-      logger.error('[IDEContext] Error stopping IDE:', error);
+      logger.error('Error stopping IDE:', error);
       clearError();
     }
   };
@@ -226,7 +226,7 @@ export const IDEProvider = ({ children, eventBus }) => {
         throw new Error(result.error || 'Failed to toggle feature');
       }
     } catch (error) {
-      logger.error('[IDEContext] Error toggling feature:', error);
+      logger.error('Error toggling feature:', error);
       setError(error.message);
     }
   };

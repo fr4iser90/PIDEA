@@ -25,12 +25,12 @@ class AnalysisController {
       const { projectPath } = req.params;
       const options = req.body || {};
 
-      this.logger.info(`[AnalysisController] Code quality analysis requested`);
+      this.logger.info(`Code quality analysis requested`);
 
       // Suche nach aktueller Analyse
       const latest = await this.analysisRepository.findLatestByProjectPath(projectPath, 'code-quality');
       if (latest && isAnalysisFresh(latest)) {
-        this.logger.info(`[AnalysisController] Returning cached code quality analysis`);
+        this.logger.info(`Returning cached code quality analysis`);
         const analysis = latest.resultData;
         const score = this.codeQualityService.getQualityScore(analysis);
         const level = this.codeQualityService.getQualityLevel(score);
@@ -73,7 +73,7 @@ class AnalysisController {
       });
 
     } catch (error) {
-      this.logger.error(`[AnalysisController] Code quality analysis failed:`, error);
+      this.logger.error(`Code quality analysis failed:`, error);
       res.status(500).json({
         success: false,
         error: error.message
@@ -91,12 +91,12 @@ class AnalysisController {
       const { projectPath } = req.params;
       const options = req.body || {};
 
-      this.logger.info(`[AnalysisController] Security analysis requested`);
+      this.logger.info(`Security analysis requested`);
 
       // Suche nach aktueller Analyse
       const latest = await this.analysisRepository.findLatestByProjectPath(projectPath, 'security');
       if (latest && isAnalysisFresh(latest)) {
-        this.logger.info(`[AnalysisController] Returning cached security analysis`);
+        this.logger.info(`Returning cached security analysis`);
         const analysis = latest.resultData;
         const score = this.securityService.getSecurityScore(analysis);
         const riskLevel = this.securityService.getOverallRiskLevel(analysis);
@@ -133,7 +133,7 @@ class AnalysisController {
       });
 
     } catch (error) {
-      this.logger.error(`[AnalysisController] Security analysis failed:`, error);
+      this.logger.error(`Security analysis failed:`, error);
       res.status(500).json({
         success: false,
         error: error.message
@@ -151,12 +151,12 @@ class AnalysisController {
       const { projectPath } = req.params;
       const options = req.body || {};
 
-      this.logger.info(`[AnalysisController] Performance analysis requested`);
+      this.logger.info(`Performance analysis requested`);
 
       // Suche nach aktueller Analyse
       const latest = await this.analysisRepository.findLatestByProjectPath(projectPath, 'performance');
       if (latest && isAnalysisFresh(latest)) {
-        this.logger.info(`[AnalysisController] Returning cached performance analysis`);
+        this.logger.info(`Returning cached performance analysis`);
         const analysis = latest.resultData;
         const score = this.performanceService.getPerformanceScore(analysis);
         const level = this.performanceService.getPerformanceLevel(score);
@@ -193,7 +193,7 @@ class AnalysisController {
       });
 
     } catch (error) {
-      this.logger.error(`[AnalysisController] Performance analysis failed:`, error);
+      this.logger.error(`Performance analysis failed:`, error);
       res.status(500).json({
         success: false,
         error: error.message
@@ -211,12 +211,12 @@ class AnalysisController {
       const { projectPath } = req.params;
       const options = req.body || {};
 
-      this.logger.info(`[AnalysisController] Architecture analysis requested`);
+      this.logger.info(`Architecture analysis requested`);
 
       // Suche nach aktueller Analyse
       const latest = await this.analysisRepository.findLatestByProjectPath(projectPath, 'architecture');
       if (latest && isAnalysisFresh(latest)) {
-        this.logger.info(`[AnalysisController] Returning cached architecture analysis`);
+        this.logger.info(`Returning cached architecture analysis`);
         const analysis = latest.resultData;
         const score = this.architectureService.getArchitectureScore(analysis);
         const level = this.architectureService.getArchitectureLevel(score);
@@ -257,7 +257,7 @@ class AnalysisController {
       });
 
     } catch (error) {
-      this.logger.error(`[AnalysisController] Architecture analysis failed:`, error);
+      this.logger.error(`Architecture analysis failed:`, error);
       res.status(500).json({
         success: false,
         error: error.message
@@ -275,12 +275,12 @@ class AnalysisController {
       const { projectPath } = req.params;
       const options = req.body || {};
 
-      this.logger.info(`[AnalysisController] Comprehensive analysis requested`);
+      this.logger.info(`Comprehensive analysis requested`);
 
       // Check for cached comprehensive analysis first
       const latest = await this.analysisRepository.findLatestByProjectPath(projectPath, 'comprehensive');
       if (latest && isAnalysisFresh(latest)) {
-        this.logger.info(`[AnalysisController] Returning cached comprehensive analysis`);
+        this.logger.info(`Returning cached comprehensive analysis`);
         const analysis = latest.resultData;
         
         res.json({
@@ -290,7 +290,7 @@ class AnalysisController {
         return;
       }
 
-      this.logger.info(`[AnalysisController] Running new comprehensive analysis`);
+      this.logger.info(`Running new comprehensive analysis`);
 
       // Run all analyses in parallel
       const [codeQuality, security, performance, architecture] = await Promise.all([
@@ -368,7 +368,7 @@ class AnalysisController {
       });
 
     } catch (error) {
-      this.logger.error(`[AnalysisController] Comprehensive analysis failed:`, error);
+      this.logger.error(`Comprehensive analysis failed:`, error);
       res.status(500).json({
         success: false,
         error: error.message
@@ -385,7 +385,7 @@ class AnalysisController {
     try {
       const { projectId } = req.params;
       
-      this.logger.info(`[AnalysisController] Getting analysis status for project: ${projectId}`);
+      this.logger.info(`Getting analysis status for project: ${projectId}`);
       
       // Get all analyses for this project
       const analyses = await this.analysisRepository.findByProjectId(projectId);
@@ -457,11 +457,11 @@ class AnalysisController {
         recommendations: summary.recommendations?.length || 0
       };
       
-      this.logger.info(`[AnalysisController] Analysis status:`, status);
+      this.logger.info(`Analysis status:`, status);
       
       res.json({ success: true, data: status });
     } catch (error) {
-      this.logger.error(`[AnalysisController] Failed to get analysis status:`, error);
+      this.logger.error(`Failed to get analysis status:`, error);
       res.status(500).json({ success: false, error: error.message });
     }
   }
@@ -475,12 +475,12 @@ class AnalysisController {
     try {
       const { projectId } = req.params;
       
-      this.logger.info(`[AnalysisController] Getting analysis metrics for project: ${projectId}`);
+      this.logger.info(`Getting analysis metrics for project: ${projectId}`);
       
       // Get all analyses for this project
       const analyses = await this.analysisRepository.findByProjectId(projectId);
       
-      this.logger.info(`[AnalysisController] Found ${analyses.length} analyses for project ${projectId}`);
+      this.logger.info(`Found ${analyses.length} analyses for project ${projectId}`);
       
       if (analyses.length === 0) {
         // Return default metrics if no analyses exist
@@ -584,11 +584,11 @@ class AnalysisController {
         recommendations: summary.recommendations?.length || 0
       };
       
-      this.logger.info(`[AnalysisController] Calculated metrics:`, metrics);
+      this.logger.info(`Calculated metrics:`, metrics);
       
       res.json({ success: true, data: metrics });
     } catch (error) {
-      this.logger.error(`[AnalysisController] Failed to get analysis metrics:`, error);
+      this.logger.error(`Failed to get analysis metrics:`, error);
       res.status(500).json({ success: false, error: error.message });
     }
   }
@@ -602,16 +602,16 @@ class AnalysisController {
     try {
       const { projectId } = req.params;
       
-      this.logger.info(`[AnalysisController] Getting analysis history for project: ${projectId}`);
-      this.logger.info(`[AnalysisController] Request URL: ${req.url}`);
-      this.logger.info(`[AnalysisController] Request method: ${req.method}`);
-      this.logger.info(`[AnalysisController] AnalysisRepository type: ${this.analysisRepository.constructor.name}`);
+      this.logger.info(`Getting analysis history for project: ${projectId}`);
+      this.logger.info(`Request URL: ${req.url}`);
+      this.logger.info(`Request method: ${req.method}`);
+      this.logger.info(`AnalysisRepository type: ${this.analysisRepository.constructor.name}`);
       
       // Get analysis history from database
-      this.logger.info(`[AnalysisController] Calling analysisRepository.findByProjectId('${projectId}')`);
+      this.logger.info(`Calling analysisRepository.findByProjectId('${projectId}')`);
       const analyses = await this.analysisRepository.findByProjectId(projectId);
       
-      this.logger.info(`[AnalysisController] Found ${analyses.length} analyses from repository:`, analyses);
+      this.logger.info(`Found ${analyses.length} analyses from repository:`, analyses);
       
       // Transform to expected format (array of objects)
       const history = analyses.map(analysis => {
@@ -650,15 +650,15 @@ class AnalysisController {
                    analysis.status === 'running' ? 50 : 0
         };
         
-        this.logger.info(`[AnalysisController] Transformed analysis:`, transformedAnalysis);
+        this.logger.info(`Transformed analysis:`, transformedAnalysis);
         return transformedAnalysis;
       });
       
-      this.logger.info(`[AnalysisController] Final history response:`, { success: true, data: history });
+      this.logger.info(`Final history response:`, { success: true, data: history });
       
       res.json({ success: true, data: history });
     } catch (error) {
-      this.logger.error(`[AnalysisController] Failed to get analysis history:`, error);
+      this.logger.error(`Failed to get analysis history:`, error);
       res.status(500).json({ success: false, error: error.message });
     }
   }
@@ -674,7 +674,7 @@ class AnalysisController {
       const content = await this.analysisOutputService.getAnalysisFile(projectId, filename);
       res.json({ success: true, data: content });
     } catch (error) {
-      this.logger.error(`[AnalysisController] Failed to get analysis file:`, error);
+      this.logger.error(`Failed to get analysis file:`, error);
       res.status(404).json({ success: false, error: error.message });
     }
   }
@@ -698,7 +698,7 @@ class AnalysisController {
       
       res.json({ success: true, data: analyses });
     } catch (error) {
-      this.logger.error(`[AnalysisController] Failed to get analysis from database:`, error);
+      this.logger.error(`Failed to get analysis from database:`, error);
       res.status(500).json({ success: false, error: error.message });
     }
   }
@@ -712,7 +712,7 @@ class AnalysisController {
     try {
       const { projectId } = req.params;
       
-      this.logger.info(`[AnalysisController] Getting analysis issues for project: ${projectId}`);
+      this.logger.info(`Getting analysis issues for project: ${projectId}`);
       
       // Get latest analysis for this project
       const analyses = await this.analysisRepository.findByProjectId(projectId);
@@ -855,11 +855,11 @@ class AnalysisController {
         }
       };
       
-      this.logger.info(`[AnalysisController] Issues data extracted, count: ${issues.length}, size: ${JSON.stringify({ issues, summary }).length} bytes`);
+      this.logger.info(`Issues data extracted, count: ${issues.length}, size: ${JSON.stringify({ issues, summary }).length} bytes`);
       
       res.json({ success: true, data: { issues, summary } });
     } catch (error) {
-      this.logger.error(`[AnalysisController] Failed to get analysis issues:`, error);
+      this.logger.error(`Failed to get analysis issues:`, error);
       res.status(500).json({ success: false, error: error.message });
     }
   }
@@ -872,7 +872,7 @@ class AnalysisController {
   async getAnalysisTechStack(req, res) {
     try {
       const { projectId } = req.params;
-      this.logger.info(`[AnalysisController] Getting analysis tech stack for project: ${projectId}`);
+      this.logger.info(`Getting analysis tech stack for project: ${projectId}`);
       // Get latest analysis for this project
       const analyses = await this.analysisRepository.findByProjectId(projectId);
       if (analyses.length === 0) {
@@ -945,10 +945,10 @@ class AnalysisController {
                     resultData.structure?.libraries || []
         }
       };
-      this.logger.info(`[AnalysisController] Tech stack data extracted, size: ${JSON.stringify(techStack).length} bytes`);
+      this.logger.info(`Tech stack data extracted, size: ${JSON.stringify(techStack).length} bytes`);
       res.json({ success: true, data: techStack });
     } catch (error) {
-      this.logger.error(`[AnalysisController] Failed to get analysis tech stack:`, error);
+      this.logger.error(`Failed to get analysis tech stack:`, error);
       res.status(500).json({ success: false, error: error.message });
     }
   }
@@ -962,7 +962,7 @@ class AnalysisController {
     try {
       const { projectId } = req.params;
       
-      this.logger.info(`[AnalysisController] Getting analysis architecture for project: ${projectId}`);
+      this.logger.info(`Getting analysis architecture for project: ${projectId}`);
       
       // Get latest analysis for this project
       const analyses = await this.analysisRepository.findByProjectId(projectId);
@@ -1035,11 +1035,11 @@ class AnalysisController {
                         resultData.recommendations || []
       };
       
-      this.logger.info(`[AnalysisController] Architecture data extracted, size: ${JSON.stringify(architecture).length} bytes`);
+      this.logger.info(`Architecture data extracted, size: ${JSON.stringify(architecture).length} bytes`);
       
       res.json({ success: true, data: architecture });
     } catch (error) {
-      this.logger.error(`[AnalysisController] Failed to get analysis architecture:`, error);
+      this.logger.error(`Failed to get analysis architecture:`, error);
       res.status(500).json({ success: false, error: error.message });
     }
   }
@@ -1054,7 +1054,7 @@ class AnalysisController {
       const { projectId } = req.params;
       const { type = 'trends' } = req.query;
       
-      this.logger.info(`[AnalysisController] Getting analysis charts for project: ${projectId}, type: ${type}`);
+      this.logger.info(`Getting analysis charts for project: ${projectId}, type: ${type}`);
       
       // Get all analyses for this project
       const analyses = await this.analysisRepository.findByProjectId(projectId);
@@ -1082,7 +1082,7 @@ class AnalysisController {
       
       res.json({ success: true, data: chartData });
     } catch (error) {
-      this.logger.error(`[AnalysisController] Failed to get analysis charts:`, error);
+      this.logger.error(`Failed to get analysis charts:`, error);
       res.status(500).json({ success: false, error: error.message });
     }
   }
@@ -1170,7 +1170,7 @@ class AnalysisController {
     try {
       const { projectId } = req.params;
       
-      this.logger.info(`[AnalysisController] Getting analysis recommendations for project: ${projectId}`);
+      this.logger.info(`Getting analysis recommendations for project: ${projectId}`);
       
       // Get latest analysis for this project
       const analyses = await this.analysisRepository.findByProjectId(projectId);
@@ -1236,7 +1236,7 @@ class AnalysisController {
       
       res.json({ success: true, data: { recommendations, insights } });
     } catch (error) {
-      this.logger.error(`[AnalysisController] Failed to get analysis recommendations:`, error);
+      this.logger.error(`Failed to get analysis recommendations:`, error);
       res.status(500).json({ success: false, error: error.message });
     }
   }
@@ -1277,7 +1277,7 @@ class AnalysisController {
         }
       });
     } catch (error) {
-      this.logger.error(`[AnalysisController] Failed to generate comprehensive report:`, error);
+      this.logger.error(`Failed to generate comprehensive report:`, error);
       res.status(500).json({ success: false, error: error.message });
     }
   }
@@ -1291,7 +1291,7 @@ class AnalysisController {
     try {
       const { projectPath } = req.params;
 
-      this.logger.info(`[AnalysisController] Getting code quality analysis data`);
+      this.logger.info(`Getting code quality analysis data`);
 
       // Get latest analysis from database
       const latest = await this.analysisRepository.findLatestByProjectPath(projectPath, 'code-quality');
@@ -1324,7 +1324,7 @@ class AnalysisController {
       });
 
     } catch (error) {
-      this.logger.error(`[AnalysisController] Failed to get code quality analysis:`, error);
+      this.logger.error(`Failed to get code quality analysis:`, error);
       res.status(500).json({
         success: false,
         error: error.message
@@ -1341,7 +1341,7 @@ class AnalysisController {
     try {
       const { projectPath } = req.params;
 
-      this.logger.info(`[AnalysisController] Getting security analysis data`);
+      this.logger.info(`Getting security analysis data`);
 
       // Get latest analysis from database
       const latest = await this.analysisRepository.findLatestByProjectPath(projectPath, 'security');
@@ -1371,7 +1371,7 @@ class AnalysisController {
       });
 
     } catch (error) {
-      this.logger.error(`[AnalysisController] Failed to get security analysis:`, error);
+      this.logger.error(`Failed to get security analysis:`, error);
       res.status(500).json({
         success: false,
         error: error.message
@@ -1388,7 +1388,7 @@ class AnalysisController {
     try {
       const { projectPath } = req.params;
 
-      this.logger.info(`[AnalysisController] Getting performance analysis data`);
+      this.logger.info(`Getting performance analysis data`);
 
       // Get latest analysis from database
       const latest = await this.analysisRepository.findLatestByProjectPath(projectPath, 'performance');
@@ -1418,7 +1418,7 @@ class AnalysisController {
       });
 
     } catch (error) {
-      this.logger.error(`[AnalysisController] Failed to get performance analysis:`, error);
+      this.logger.error(`Failed to get performance analysis:`, error);
       res.status(500).json({
         success: false,
         error: error.message
@@ -1435,7 +1435,7 @@ class AnalysisController {
     try {
       const { projectPath } = req.params;
 
-      this.logger.info(`[AnalysisController] Getting architecture analysis data`);
+      this.logger.info(`Getting architecture analysis data`);
 
       // Get latest analysis from database
       const latest = await this.analysisRepository.findLatestByProjectPath(projectPath, 'architecture');
@@ -1467,7 +1467,7 @@ class AnalysisController {
       });
 
     } catch (error) {
-      this.logger.error(`[AnalysisController] Failed to get architecture analysis:`, error);
+      this.logger.error(`Failed to get architecture analysis:`, error);
       res.status(500).json({
         success: false,
         error: error.message
@@ -1484,7 +1484,7 @@ class AnalysisController {
     try {
       const { projectPath } = req.params;
 
-      this.logger.info(`[AnalysisController] Getting comprehensive analysis data`);
+      this.logger.info(`Getting comprehensive analysis data`);
 
       // Get latest analysis from database
       const latest = await this.analysisRepository.findLatestByProjectPath(projectPath, 'comprehensive');
@@ -1507,7 +1507,7 @@ class AnalysisController {
       });
 
     } catch (error) {
-      this.logger.error(`[AnalysisController] Failed to get comprehensive analysis:`, error);
+      this.logger.error(`Failed to get comprehensive analysis:`, error);
       res.status(500).json({
         success: false,
         error: error.message

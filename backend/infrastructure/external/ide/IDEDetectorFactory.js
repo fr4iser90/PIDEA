@@ -75,7 +75,7 @@ class IDEDetectorFactory {
             return ides.map(ide => ({ ...ide, ideType: type }));
           })
           .catch(error => {
-            logger.error(`[IDEDetectorFactory] Error detecting ${type} IDEs:`, error.message);
+            logger.error(`Error detecting ${type} IDEs:`, error.message);
             return [];
           })
       );
@@ -89,7 +89,7 @@ class IDEDetectorFactory {
       }
     });
 
-    logger.info(`[IDEDetectorFactory] Detected ${allIDEs.length} IDEs total`);
+    logger.info(`Detected ${allIDEs.length} IDEs total`);
     return allIDEs;
   }
 

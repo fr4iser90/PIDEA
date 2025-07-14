@@ -30,7 +30,7 @@ class CursorStarter {
    * @returns {Promise<Object>} IDE startup information
    */
   async startIDE(port, workspacePath = null, options = {}) {
-    logger.info('[CursorStarter] Starting Cursor IDE on port', port);
+    logger.info('Starting Cursor IDE on port', port);
     
     // Validate port is in range
     if (port < this.config.portRange.start || port > this.config.portRange.end) {
@@ -83,19 +83,19 @@ class CursorStarter {
 
       // Handle process events
       process.stdout.on('data', (data) => {
-        logger.info(`[CursorStarter] Cursor IDE ${port} stdout:`, data.toString().trim());
+        logger.info(`Cursor IDE ${port} stdout:`, data.toString().trim());
       });
 
       process.stderr.on('data', (data) => {
-        logger.info(`[CursorStarter] Cursor IDE ${port} stderr:`, data.toString().trim());
+        logger.info(`Cursor IDE ${port} stderr:`, data.toString().trim());
       });
 
       process.on('close', (code) => {
-        logger.info(`[CursorStarter] Cursor IDE ${port} process closed with code ${code}`);
+        logger.info(`Cursor IDE ${port} process closed with code ${code}`);
       });
 
       process.on('error', (error) => {
-        logger.error(`[CursorStarter] Cursor IDE ${port} process error:`, error);
+        logger.error(`Cursor IDE ${port} process error:`, error);
       });
 
       // Wait for IDE to start
@@ -112,7 +112,7 @@ class CursorStarter {
       };
 
     } catch (error) {
-      logger.error('[CursorStarter] Failed to start Cursor IDE:', error);
+      logger.error('Failed to start Cursor IDE:', error);
       throw error;
     }
   }
@@ -123,7 +123,7 @@ class CursorStarter {
    * @returns {Promise<Object>} Stop result
    */
   async stopIDE(port) {
-    logger.info('[CursorStarter] Stopping Cursor IDE on port', port);
+    logger.info('Stopping Cursor IDE on port', port);
     
     try {
       // Find and kill Cursor processes on the specified port
@@ -145,7 +145,7 @@ class CursorStarter {
             return new Promise((resolveKill) => {
               exec(`kill -TERM ${pid}`, (killError) => {
                 if (killError) {
-                  logger.error(`[CursorStarter] Error killing process ${pid}:`, killError);
+                  logger.error(`Error killing process ${pid}:`, killError);
                 }
                 resolveKill();
               });
@@ -163,7 +163,7 @@ class CursorStarter {
         });
       });
     } catch (error) {
-      logger.error('[CursorStarter] Error stopping Cursor IDE:', error);
+      logger.error('Error stopping Cursor IDE:', error);
       throw error;
     }
   }

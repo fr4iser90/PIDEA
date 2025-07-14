@@ -69,10 +69,10 @@ function TasksPanelComponent({ eventBus, activePort }) {
   // Load docs tasks on mount AND when activePort changes
   useEffect(() => {
     if (activePort) {
-      logger.info('[TasksPanelComponent] Loading docs tasks for port:', activePort);
+      logger.info('Loading docs tasks for port:', activePort);
       loadDocsTasks();
     } else {
-      logger.info('[TasksPanelComponent] No active port, clearing docs tasks');
+      logger.info('No active port, clearing docs tasks');
       setDocsTasks([]);
     }
   }, [activePort]); // ← Jetzt lädt bei activePort Änderungen neu
@@ -143,13 +143,13 @@ function TasksPanelComponent({ eventBus, activePort }) {
     setIsDocsTaskModalOpen(true);
     setSelectedDocsTask(null);
     try {
-      logger.info('[TasksPanelComponent] Loading task details for:', task.id);
+      logger.info('Loading task details for:', task.id);
       const response = await api.getDocsTaskDetails(task.id);
       if (response.success && response.data) {
-        logger.info('[TasksPanelComponent] Task details loaded successfully:', response.data);
+        logger.info('Task details loaded successfully:', response.data);
         setSelectedDocsTask(response.data);
       } else {
-        logger.warn('[TasksPanelComponent] API returned no data, using task as fallback');
+        logger.warn('API returned no data, using task as fallback');
         // Fallback: use the task data we already have
         setSelectedDocsTask({
           ...task,
@@ -158,7 +158,7 @@ function TasksPanelComponent({ eventBus, activePort }) {
         });
       }
     } catch (error) {
-      logger.error('[TasksPanelComponent] Error loading task details:', error);
+      logger.error('Error loading task details:', error);
       setFeedback('Error loading task details: ' + error.message);
       // Fallback: use the task data we already have
       setSelectedDocsTask({
@@ -278,7 +278,7 @@ ${taskDetails.description}
   const handleTaskSubmit = async (taskData) => {
     setFeedback(null);
     try {
-      logger.info('[TasksPanelComponent] Task submitted:', taskData);
+      logger.info('Task submitted:', taskData);
       
       // If this is a workflow result, handle it differently
       if (taskData.workflowId && taskData.workflowResult) {
@@ -292,7 +292,7 @@ ${taskDetails.description}
       setShowTaskCreationModal(false);
       
     } catch (err) {
-      logger.error('[TasksPanelComponent] Error handling task submission:', err);
+      logger.error('Error handling task submission:', err);
       setFeedback('❌ Failed to create task: ' + (err.message || err));
       throw err;
     }

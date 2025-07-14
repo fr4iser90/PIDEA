@@ -33,7 +33,7 @@ class EventBus {
 
   // Publish events
   async publish(eventName, eventData) {
-    logger.info(`[EventBus] Publishing event: ${eventName}`, eventData);
+    logger.info(`Publishing event: ${eventName}`, eventData);
     
     // Apply middleware
     let processedEventData = eventData;
@@ -48,7 +48,7 @@ class EventBus {
         try {
           return handler(processedEventData);
         } catch (error) {
-          logger.error(`[EventBus] Error in handler for ${eventName}:`, error);
+          logger.error(`Error in handler for ${eventName}:`, error);
           return Promise.resolve();
         }
       });

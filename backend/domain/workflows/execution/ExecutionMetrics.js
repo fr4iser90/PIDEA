@@ -3,8 +3,7 @@
  * Provides comprehensive metrics collection and analysis for workflow performance
  */
 const { EventEmitter } = require('events');
-const Logger = require('@logging/Logger');
-const logger = new Logger('Logger');
+const ServiceLogger = require('@logging/ServiceLogger');
 
 /**
  * Execution metrics for workflow performance tracking
@@ -13,7 +12,7 @@ class ExecutionMetrics extends EventEmitter {
   constructor(options = {}) {
     super();
     
-    this.logger = options.logger || console;
+    this.logger = options.logger || new ServiceLogger('ExecutionMetrics');
     
     this.enableMetrics = options.enableMetrics !== false;
     this.enableRealTimeMetrics = options.enableRealTimeMetrics !== false;
@@ -90,7 +89,7 @@ class ExecutionMetrics extends EventEmitter {
     
     this.emit('executionStarted', { executionId, startTime, metadata });
     
-    this.logger.debug('ExecutionMetrics: Execution started', {
+    this.logger.debug('Execution started', {
       executionId,
       metadata: metadata.name || 'unknown'
     });
@@ -108,7 +107,7 @@ class ExecutionMetrics extends EventEmitter {
     const execution = this.executionMetrics.get(executionId);
     
     if (!execution) {
-      this.logger.warn('ExecutionMetrics: No execution found for end recording', {
+      this.logger.warn('No execution found for end recording', {
         executionId
       });
       return;
@@ -131,7 +130,7 @@ class ExecutionMetrics extends EventEmitter {
     
     this.emit('executionEnded', { executionId, duration, success, result });
     
-    this.logger.debug('ExecutionMetrics: Execution ended', {
+    this.logger.debug('Execution ended', {
       executionId,
       duration,
       success
@@ -190,7 +189,7 @@ class ExecutionMetrics extends EventEmitter {
     const step = this.stepMetrics.get(stepId);
     
     if (!step) {
-      this.logger.warn('ExecutionMetrics: No step found for end recording', {
+      this.logger.warn('No step found for end recording', {
         executionId,
         stepName,
         stepIndex
@@ -263,7 +262,7 @@ class ExecutionMetrics extends EventEmitter {
     
     this.emit('errorRecorded', errorRecord);
     
-    this.logger.debug('ExecutionMetrics: Error recorded', {
+    this.logger.debug('Error recorded', {
       executionId,
       source,
       error: error.message
@@ -353,7 +352,7 @@ class ExecutionMetrics extends EventEmitter {
       this.cleanupOldMetrics();
     }, this.collectionIntervalMs);
 
-    this.logger.info('ExecutionMetrics: Metrics collection started', {
+    this.logger.info('Metrics collection started', {
       interval: this.collectionIntervalMs
     });
   }
@@ -365,7 +364,7 @@ class ExecutionMetrics extends EventEmitter {
     if (this.collectionInterval) {
       clearInterval(this.collectionInterval);
       this.collectionInterval = null;
-      this.logger.info('ExecutionMetrics: Metrics collection stopped');
+      this.logger.info('Metrics collection stopped');
     }
   }
 
@@ -439,7 +438,7 @@ class ExecutionMetrics extends EventEmitter {
     this.limitMetricsHistory();
     
     if (cleanedCount > 0) {
-      this.logger.debug('ExecutionMetrics: Cleaned old metrics', {
+      this.logger.debug('Cleaned old metrics', {
         cleanedCount
       });
     }
@@ -601,14 +600,14 @@ class ExecutionMetrics extends EventEmitter {
       lastUpdated: Date.now()
     };
     
-    this.logger.info('ExecutionMetrics: All metrics cleared');
+    this.logger.info('All metrics cleared');
   }
 
   /**
    * Shutdown metrics
    */
   shutdown() {
-    this.logger.info('ExecutionMetrics: Shutting down');
+    this.logger.info('Shutting down');
     
     // Stop metrics collection
     this.stopMetricsCollection();
@@ -616,7 +615,7 @@ class ExecutionMetrics extends EventEmitter {
     // Clear metrics
     this.clearMetrics();
     
-    this.logger.info('ExecutionMetrics: Shutdown complete');
+    this.logger.info('Shutdown complete');
   }
 }
 

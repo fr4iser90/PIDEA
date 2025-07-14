@@ -33,7 +33,7 @@ class WebSocketManager {
     });
 
     this.wss.on('error', (error) => {
-      logger.error('[WebSocketManager] WebSocket server error:', error);
+      logger.error('WebSocket server error:', error);
     });
 
     logger.success('WebSocket server initialized');
@@ -41,7 +41,7 @@ class WebSocketManager {
 
   async handleConnection(ws, req) {
     try {
-      logger.debug('[WebSocketManager] New WebSocket connection attempt');
+      logger.debug('New WebSocket connection attempt');
 
       // Try to authenticate the connection, but don't require it initially
       const authResult = await this.authenticateConnection(ws, req);
@@ -99,7 +99,7 @@ class WebSocketManager {
 
       // Setup error handling
       ws.on('error', (error) => {
-        logger.error(`[WebSocketManager] WebSocket error:`, error);
+        logger.error(`WebSocket error:`, error);
         if (userId) {
           this.handleDisconnect(ws, userId, 1011, 'Internal error');
         } else {
@@ -114,7 +114,7 @@ class WebSocketManager {
       });
 
     } catch (error) {
-      logger.error('[WebSocketManager] Connection setup error:', error);
+      logger.error('Connection setup error:', error);
       ws.close(1011, 'Connection setup failed');
     }
   }
@@ -143,7 +143,7 @@ class WebSocketManager {
       return { authenticated: true, user, session };
 
     } catch (error) {
-      logger.error('[WebSocketManager] Authentication error:', error);
+      logger.error('Authentication error:', error);
       return { authenticated: false, error: 'Authentication failed' };
     }
   }
@@ -255,7 +255,7 @@ class WebSocketManager {
       await this.routeMessage(ws, message, user);
 
     } catch (error) {
-      logger.error('[WebSocketManager] Message handling error:', error);
+      logger.error('Message handling error:', error);
       this.sendToClient(ws, 'error', {
         type: 'internal_error',
         message: 'Failed to process message'
@@ -411,7 +411,7 @@ class WebSocketManager {
       });
 
     } catch (error) {
-      logger.error('[WebSocketManager] Authentication error:', error);
+      logger.error('Authentication error:', error);
       this.sendToClient(ws, 'error', {
         type: 'authentication_failed',
         message: 'Authentication failed'
@@ -593,13 +593,13 @@ class WebSocketManager {
           try {
             client.send(JSON.stringify(topicMessage));
           } catch (error) {
-            logger.error('[WebSocketManager] Error sending topic message:', error.message);
+            logger.error('Error sending topic message:', error.message);
           }
         }
       });
 
     } catch (error) {
-      logger.error('[WebSocketManager] Error broadcasting to topic:', error.message);
+      logger.error('Error broadcasting to topic:', error.message);
     }
   }
 
@@ -626,7 +626,7 @@ class WebSocketManager {
       this.broadcastToTopic(`mirror-${frameData.metadata.port}-frames`, message);
 
     } catch (error) {
-      logger.error('[WebSocketManager] Error sending frame data:', error.message);
+      logger.error('Error sending frame data:', error.message);
     }
   }
 

@@ -37,7 +37,7 @@ class GetWorkspaceInfoHandler {
    */
   async handle(command, context = {}) {
     try {
-      this.logger.info(`[GetWorkspaceInfoHandler] Handling command: ${command.commandId}`);
+      this.logger.info(`Handling command: ${command.commandId}`);
 
       // Validate command
       if (!command || command.type !== 'GetWorkspaceInfoCommand') {
@@ -60,7 +60,7 @@ class GetWorkspaceInfoHandler {
         timestamp: new Date()
       });
 
-      this.logger.info(`[GetWorkspaceInfoHandler] Workspace info retrieved successfully`);
+      this.logger.info(`Workspace info retrieved successfully`);
 
       return {
         success: true,
@@ -70,7 +70,7 @@ class GetWorkspaceInfoHandler {
       };
 
     } catch (error) {
-      this.logger.error(`[GetWorkspaceInfoHandler] Failed to get workspace info:`, error);
+      this.logger.error(`Failed to get workspace info:`, error);
 
       // Publish failure event
       await this.eventBus.publish('workspace.info.retrieval.failed', {

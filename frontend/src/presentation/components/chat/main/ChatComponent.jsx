@@ -73,7 +73,7 @@ function ChatComponent({ eventBus, activePort, attachedPrompts = [] }) {
   // Lade Chat immer, wenn activePort sich ändert (React-Way)
   const loadChatHistory = useCallback(async () => {
     if (!activePort) return;
-    logger.info('[ChatComponent] Lade Chat für Port:', activePort);
+    logger.info('Lade Chat für Port:', activePort);
     try {
       const data = await apiCall(API_CONFIG.endpoints.chat.portHistory(activePort));
       let msgs = [];
@@ -84,7 +84,7 @@ function ChatComponent({ eventBus, activePort, attachedPrompts = [] }) {
       } else if (Array.isArray(data)) {
         msgs = data;
       }
-      logger.info('[ChatComponent] Neue Nachrichten geladen:', msgs.length);
+      logger.info('Neue Nachrichten geladen:', msgs.length);
       setMessages(msgs.map(normalizeMessage));
     } catch (error) {
       setMessages([]);
@@ -93,11 +93,11 @@ function ChatComponent({ eventBus, activePort, attachedPrompts = [] }) {
   }, [activePort]);
 
   useEffect(() => {
-    logger.info('[ChatComponent] activePort changed:', activePort);
+    logger.info('activePort changed:', activePort);
     // Wenn sich der Port ändert, sofort leeren!
     setMessages([]);
     setError(null);
-    logger.info('[ChatComponent] setMessages([]) aufgerufen!');
+    logger.info('setMessages([]) aufgerufen!');
     loadChatHistory();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activePort]);
@@ -112,7 +112,7 @@ function ChatComponent({ eventBus, activePort, attachedPrompts = [] }) {
     
     const handleExternalMessage = (data) => {
       if (data && data.message) {
-        logger.info('[ChatComponent] Received external message:', data.message);
+        logger.info('Received external message:', data.message);
         sendMessage(data.message);
       }
     };

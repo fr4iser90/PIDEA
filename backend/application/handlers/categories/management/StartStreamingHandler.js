@@ -21,7 +21,7 @@ class StartStreamingHandler {
    */
   async handle(command) {
     try {
-      logger.info(`[StartStreamingHandler] Processing command: ${command.commandId}`);
+      logger.info(`Processing command: ${command.commandId}`);
       
       // Validate command
       command.validate();
@@ -50,7 +50,7 @@ class StartStreamingHandler {
         });
       }
       
-      logger.info(`[StartStreamingHandler] Successfully started streaming for session ${command.sessionId}`);
+      logger.info(`Successfully started streaming for session ${command.sessionId}`);
       
       return {
         success: true,
@@ -61,7 +61,7 @@ class StartStreamingHandler {
       };
       
     } catch (error) {
-      logger.error(`[StartStreamingHandler] Error handling command ${command.commandId}:`, error.message);
+      logger.error(`Error handling command ${command.commandId}:`, error.message);
       
       // Emit error event if event bus is available
       if (this.eventBus) {

@@ -73,7 +73,7 @@ const IDESelector = ({
         throw new Error(result.error || 'Failed to load IDEs');
       }
     } catch (error) {
-      logger.error('[IDESelector] Error loading IDEs:', error);
+      logger.error('Error loading IDEs:', error);
       setError(error.message);
     } finally {
       setIsLoading(false);
@@ -108,7 +108,7 @@ const IDESelector = ({
         throw new Error(result.error || 'Failed to select IDE');
       }
     } catch (error) {
-      logger.error('[IDESelector] Error selecting IDE:', error);
+      logger.error('Error selecting IDE:', error);
       setError(error.message);
     } finally {
       setIsLoading(false);
@@ -140,7 +140,7 @@ const IDESelector = ({
         throw new Error(result.error || 'Failed to start new IDE');
       }
     } catch (error) {
-      logger.error('[IDESelector] Error starting new IDE:', error);
+      logger.error('Error starting new IDE:', error);
       setError(error.message);
     } finally {
       setIsLoading(false);

@@ -77,7 +77,7 @@ class RegionDetector {
       };
 
     } catch (error) {
-      logger.error('[RegionDetector] Error detecting regions:', error.message);
+      logger.error('Error detecting regions:', error.message);
       this.stats.fullFrameFalls++;
       return { fullFrame: true, regions: [], reason: 'Detection error' };
     }
@@ -177,7 +177,7 @@ class RegionDetector {
    */
   setEnabled(enabled) {
     this.enableOptimization = enabled;
-    logger.info(`[RegionDetector] Region detection ${enabled ? 'enabled' : 'disabled'}`);
+    logger.info(`Region detection ${enabled ? 'enabled' : 'disabled'}`);
   }
 
   /**
@@ -190,7 +190,7 @@ class RegionDetector {
     }
     
     this.threshold = threshold;
-    logger.info(`[RegionDetector] Threshold updated to ${threshold}`);
+    logger.info(`Threshold updated to ${threshold}`);
   }
 
   /**
@@ -203,7 +203,7 @@ class RegionDetector {
     }
     
     this.minRegionSize = minSize;
-    logger.info(`[RegionDetector] Minimum region size updated to ${minSize} pixels`);
+    logger.info(`Minimum region size updated to ${minSize} pixels`);
   }
 
   /**
@@ -216,7 +216,7 @@ class RegionDetector {
     }
     
     this.maxRegions = maxRegions;
-    logger.info(`[RegionDetector] Maximum regions updated to ${maxRegions}`);
+    logger.info(`Maximum regions updated to ${maxRegions}`);
   }
 
   /**

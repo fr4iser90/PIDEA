@@ -40,7 +40,7 @@ class TaskAnalysisService {
    */
   async analyzeProject(projectPath, options = {}) {
     try {
-      this.logger.info(`[TaskAnalysisService] Starting project analysis for: ${projectPath}`);
+      this.logger.info(`Starting project analysis for: ${projectPath}`);
 
       const analysis = {
         projectPath,
@@ -83,12 +83,12 @@ class TaskAnalysisService {
       // Phase 9: Generate Metadata
       analysis.metadata = await this._generateMetadata(analysis);
 
-      this.logger.info(`[TaskAnalysisService] Project analysis completed for: ${projectPath}`);
+      this.logger.info(`Project analysis completed for: ${projectPath}`);
       this.eventBus.emit('project:analysis:completed', { projectPath, analysis });
 
       return analysis;
     } catch (error) {
-      this.logger.error(`[TaskAnalysisService] Project analysis failed for ${projectPath}:`, error);
+      this.logger.error(`Project analysis failed for ${projectPath}:`, error);
       this.eventBus.emit('project:analysis:failed', { projectPath, error: error.message });
       throw error;
     }
@@ -254,7 +254,7 @@ class TaskAnalysisService {
       const files = await this._getProjectFiles(projectPath);
       return ProjectType.detectFromFiles(files);
     } catch (error) {
-      this.logger.warn(`[TaskAnalysisService] Project type detection failed: ${error.message}`);
+      this.logger.warn(`Project type detection failed: ${error.message}`);
       return new ProjectType(ProjectType.UNKNOWN);
     }
   }
@@ -290,7 +290,7 @@ class TaskAnalysisService {
 
       return structure;
     } catch (error) {
-      this.logger.warn(`[TaskAnalysisService] Structure analysis failed: ${error.message}`);
+      this.logger.warn(`Structure analysis failed: ${error.message}`);
       return {};
     }
   }
@@ -324,7 +324,7 @@ class TaskAnalysisService {
 
       return dependencies;
     } catch (error) {
-      this.logger.warn(`[TaskAnalysisService] Dependencies analysis failed: ${error.message}`);
+      this.logger.warn(`Dependencies analysis failed: ${error.message}`);
       return {};
     }
   }
@@ -367,7 +367,7 @@ class TaskAnalysisService {
 
       return quality;
     } catch (error) {
-      this.logger.warn(`[TaskAnalysisService] Code quality analysis failed: ${error.message}`);
+      this.logger.warn(`Code quality analysis failed: ${error.message}`);
       return {};
     }
   }
@@ -402,7 +402,7 @@ class TaskAnalysisService {
 
       return security;
     } catch (error) {
-      this.logger.warn(`[TaskAnalysisService] Security analysis failed: ${error.message}`);
+      this.logger.warn(`Security analysis failed: ${error.message}`);
       return { riskLevel: 'unknown' };
     }
   }
@@ -437,7 +437,7 @@ class TaskAnalysisService {
 
       return performance;
     } catch (error) {
-      this.logger.warn(`[TaskAnalysisService] Performance analysis failed: ${error.message}`);
+      this.logger.warn(`Performance analysis failed: ${error.message}`);
       return {};
     }
   }
@@ -474,7 +474,7 @@ class TaskAnalysisService {
 
       return suggestions;
     } catch (error) {
-      this.logger.warn(`[TaskAnalysisService] AI suggestions generation failed: ${error.message}`);
+      this.logger.warn(`AI suggestions generation failed: ${error.message}`);
       return [];
     }
   }
@@ -507,7 +507,7 @@ class TaskAnalysisService {
 
       return tasks;
     } catch (error) {
-      this.logger.warn(`[TaskAnalysisService] Task generation failed: ${error.message}`);
+      this.logger.warn(`Task generation failed: ${error.message}`);
       return [];
     }
   }

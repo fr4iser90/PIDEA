@@ -55,7 +55,7 @@ class SwitchChatHandler {
         throw new Error(`Command validation failed: ${validationResult.errors.join(', ')}`);
       }
 
-      this.logger.info('[SwitchChatHandler] Switching chat session', {
+      this.logger.info('Switching chat session', {
         handlerId: this.handlerId,
         commandId: command.commandId,
         userId: command.userId,
@@ -85,7 +85,7 @@ class SwitchChatHandler {
         timestamp: new Date()
       });
 
-      this.logger.info('[SwitchChatHandler] Chat session switched successfully', {
+      this.logger.info('Chat session switched successfully', {
         handlerId: this.handlerId,
         commandId: command.commandId,
         sessionId: session.id
@@ -105,7 +105,7 @@ class SwitchChatHandler {
       };
 
     } catch (error) {
-      this.logger.error('[SwitchChatHandler] Failed to switch chat session', {
+      this.logger.error('Failed to switch chat session', {
         handlerId: this.handlerId,
         commandId: command.commandId,
         error: error.message

@@ -18,7 +18,7 @@ class ArchitectureService {
    */
   async analyzeArchitecture(projectPath, options = {}, projectId = 'default') {
     try {
-      this.logger.info(`[ArchitectureService] Starting architecture analysis for: ${projectPath}`);
+      this.logger.info(`Starting architecture analysis for: ${projectPath}`);
 
       const analysis = await this.architectureAnalyzer.analyzeArchitecture(projectPath, options);
 
@@ -45,12 +45,12 @@ const logger = new Logger('Logger');
         }
       }
 
-      this.logger.info(`[ArchitectureService] Architecture analysis completed for: ${projectPath}`);
+      this.logger.info(`Architecture analysis completed for: ${projectPath}`);
       this.eventBus.emit('architecture:analysis:completed', { projectPath, analysis, projectId });
 
       return analysis;
     } catch (error) {
-      this.logger.error(`[ArchitectureService] Architecture analysis failed for ${projectPath}:`, error);
+      this.logger.error(`Architecture analysis failed for ${projectPath}:`, error);
       this.eventBus.emit('architecture:analysis:failed', { projectPath, error: error.message });
       throw error;
     }
@@ -65,7 +65,7 @@ const logger = new Logger('Logger');
     try {
       return await this.architectureAnalyzer.analyzeProjectStructure(projectPath);
     } catch (error) {
-      this.logger.error(`[ArchitectureService] Project structure analysis failed:`, error);
+      this.logger.error(`Project structure analysis failed:`, error);
       throw error;
     }
   }
@@ -79,7 +79,7 @@ const logger = new Logger('Logger');
     try {
       return await this.architectureAnalyzer.detectDesignPatterns(projectPath);
     } catch (error) {
-      this.logger.error(`[ArchitectureService] Design pattern detection failed:`, error);
+      this.logger.error(`Design pattern detection failed:`, error);
       throw error;
     }
   }
@@ -93,7 +93,7 @@ const logger = new Logger('Logger');
     try {
       return await this.architectureAnalyzer.analyzeCoupling(projectPath);
     } catch (error) {
-      this.logger.error(`[ArchitectureService] Coupling analysis failed:`, error);
+      this.logger.error(`Coupling analysis failed:`, error);
       throw error;
     }
   }
@@ -107,7 +107,7 @@ const logger = new Logger('Logger');
     try {
       return await this.architectureAnalyzer.analyzeCohesion(projectPath);
     } catch (error) {
-      this.logger.error(`[ArchitectureService] Cohesion analysis failed:`, error);
+      this.logger.error(`Cohesion analysis failed:`, error);
       throw error;
     }
   }
@@ -121,7 +121,7 @@ const logger = new Logger('Logger');
     try {
       return await this.architectureAnalyzer.generateDependencyGraph(projectPath);
     } catch (error) {
-      this.logger.error(`[ArchitectureService] Dependency graph generation failed:`, error);
+      this.logger.error(`Dependency graph generation failed:`, error);
       throw error;
     }
   }
@@ -135,7 +135,7 @@ const logger = new Logger('Logger');
     try {
       return await this.architectureAnalyzer.detectArchitectureViolations(projectPath);
     } catch (error) {
-      this.logger.error(`[ArchitectureService] Architecture violation detection failed:`, error);
+      this.logger.error(`Architecture violation detection failed:`, error);
       throw error;
     }
   }
@@ -149,7 +149,7 @@ const logger = new Logger('Logger');
     try {
       return await this.architectureAnalyzer.generateArchitectureRecommendations(analysis);
     } catch (error) {
-      this.logger.error(`[ArchitectureService] Architecture recommendation generation failed:`, error);
+      this.logger.error(`Architecture recommendation generation failed:`, error);
       throw error;
     }
   }

@@ -25,7 +25,7 @@ async function main() {
   try {
     await app.start();
   } catch (error) {
-    logger.error('[Main] Failed to start application:', error);
+    logger.error('Failed to start application:', error);
     process.exit(1);
   }
 }

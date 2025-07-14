@@ -24,7 +24,7 @@ class TaskSuggestionService {
    */
   async generateSuggestions(projectPath, context = {}, options = {}) {
     try {
-      this.logger.info(`[TaskSuggestionService] Generating suggestions for: ${projectPath}`);
+      this.logger.info(`Generating suggestions for: ${projectPath}`);
 
       const suggestions = [];
 
@@ -51,12 +51,12 @@ class TaskSuggestionService {
       const filteredSuggestions = this._filterSuggestions(suggestions, options);
       const rankedSuggestions = this._rankSuggestions(filteredSuggestions);
 
-      this.logger.info(`[TaskSuggestionService] Generated ${rankedSuggestions.length} suggestions for: ${projectPath}`);
+      this.logger.info(`Generated ${rankedSuggestions.length} suggestions for: ${projectPath}`);
       this.eventBus.emit('suggestions:generated', { projectPath, suggestions: rankedSuggestions });
 
       return rankedSuggestions;
     } catch (error) {
-      this.logger.error(`[TaskSuggestionService] Suggestion generation failed for ${projectPath}:`, error);
+      this.logger.error(`Suggestion generation failed for ${projectPath}:`, error);
       this.eventBus.emit('suggestions:generation:failed', { projectPath, error: error.message });
       throw error;
     }
@@ -92,7 +92,7 @@ class TaskSuggestionService {
         });
       }
     } catch (error) {
-      this.logger.warn(`[TaskSuggestionService] Analysis suggestions generation failed: ${error.message}`);
+      this.logger.warn(`Analysis suggestions generation failed: ${error.message}`);
     }
 
     return suggestions;
@@ -128,7 +128,7 @@ class TaskSuggestionService {
         });
       }
     } catch (error) {
-      this.logger.warn(`[TaskSuggestionService] Optimization suggestions generation failed: ${error.message}`);
+      this.logger.warn(`Optimization suggestions generation failed: ${error.message}`);
     }
 
     return suggestions;
@@ -164,7 +164,7 @@ class TaskSuggestionService {
         });
       }
     } catch (error) {
-      this.logger.warn(`[TaskSuggestionService] Security suggestions generation failed: ${error.message}`);
+      this.logger.warn(`Security suggestions generation failed: ${error.message}`);
     }
 
     return suggestions;
@@ -200,7 +200,7 @@ class TaskSuggestionService {
         });
       }
     } catch (error) {
-      this.logger.warn(`[TaskSuggestionService] Refactoring suggestions generation failed: ${error.message}`);
+      this.logger.warn(`Refactoring suggestions generation failed: ${error.message}`);
     }
 
     return suggestions;
@@ -236,7 +236,7 @@ class TaskSuggestionService {
         });
       }
     } catch (error) {
-      this.logger.warn(`[TaskSuggestionService] Testing suggestions generation failed: ${error.message}`);
+      this.logger.warn(`Testing suggestions generation failed: ${error.message}`);
     }
 
     return suggestions;
@@ -272,7 +272,7 @@ class TaskSuggestionService {
         });
       }
     } catch (error) {
-      this.logger.warn(`[TaskSuggestionService] Documentation suggestions generation failed: ${error.message}`);
+      this.logger.warn(`Documentation suggestions generation failed: ${error.message}`);
     }
 
     return suggestions;
@@ -307,7 +307,7 @@ class TaskSuggestionService {
       
       return { suggestions: [] };
     } catch (error) {
-      this.logger.error(`[TaskSuggestionService] AI response failed: ${error.message}`);
+      this.logger.error(`AI response failed: ${error.message}`);
       throw error;
     }
   }

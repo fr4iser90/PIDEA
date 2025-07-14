@@ -58,7 +58,7 @@ const StreamingControls = ({
           }
         }
       } catch (error) {
-        logger.error('[StreamingControls] Error fetching stats:', error.message);
+        logger.error('Error fetching stats:', error.message);
       }
     }, 1000);
 
@@ -91,7 +91,7 @@ const StreamingControls = ({
         }
       }
     } catch (error) {
-      logger.error('[StreamingControls] Error starting streaming:', error.message);
+      logger.error('Error starting streaming:', error.message);
       setError(error.message);
     } finally {
       setIsLoading(false);
@@ -124,7 +124,7 @@ const StreamingControls = ({
         }
       }
     } catch (error) {
-      logger.error('[StreamingControls] Error stopping streaming:', error.message);
+      logger.error('Error stopping streaming:', error.message);
       setError(error.message);
     } finally {
       setIsLoading(false);
@@ -148,7 +148,7 @@ const StreamingControls = ({
         }
       }
     } catch (error) {
-      logger.error('[StreamingControls] Error pausing streaming:', error.message);
+      logger.error('Error pausing streaming:', error.message);
       setError(error.message);
     }
   };
@@ -170,7 +170,7 @@ const StreamingControls = ({
         }
       }
     } catch (error) {
-      logger.error('[StreamingControls] Error resuming streaming:', error.message);
+      logger.error('Error resuming streaming:', error.message);
       setError(error.message);
     }
   };
@@ -201,7 +201,7 @@ const StreamingControls = ({
         }
       }
     } catch (error) {
-      logger.error('[StreamingControls] Error updating config:', error.message);
+      logger.error('Error updating config:', error.message);
       setError(error.message);
     }
   };

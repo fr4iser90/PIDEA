@@ -1,5 +1,4 @@
-const Logger = require('@logging/Logger');
-const logger = new Logger('Logger');
+const ServiceLogger = require('@logging/ServiceLogger');
 /**
  * CommandBus - Handles command execution and routing
  * Implements the Command Bus pattern for CQRS architecture
@@ -8,7 +7,7 @@ class CommandBus {
   constructor() {
     this.handlers = new Map();
     this.middleware = [];
-    this.logger = console;
+    this.logger = new ServiceLogger('CommandBus');
   }
 
   /**
@@ -22,7 +21,7 @@ class CommandBus {
     }
     
     this.handlers.set(commandName, handler);
-    this.logger.info(`[CommandBus] Registered handler for command: ${commandName}`);
+    this.logger.info(`Registered handler for command: ${commandName}`);
   }
 
   /**
@@ -33,7 +32,7 @@ class CommandBus {
    */
   async execute(commandName, commandData) {
     try {
-      this.logger.info(`[CommandBus] Executing command: ${commandName}`, { commandData });
+      this.logger.info(`Executing command: ${commandName}`, { commandData });
 
       // Apply middleware
       let processedCommandData = commandData;
@@ -50,10 +49,10 @@ class CommandBus {
       // Execute handler
       const result = await handler.handle(processedCommandData);
       
-      this.logger.info(`[CommandBus] Command executed successfully: ${commandName}`);
+      this.logger.info(`Command executed successfully: ${commandName}`);
       return result;
     } catch (error) {
-      this.logger.error(`[CommandBus] Command execution failed: ${commandName}`, {
+      this.logger.error(`Command execution failed: ${commandName}`, {
         error: error.message,
         stack: error.stack
       });

@@ -19,8 +19,8 @@ class VSCodeIDE extends BaseIDE {
     // Ensure ChatHistoryExtractor is properly configured for VS Code
     const ChatHistoryExtractor = require('../chat/ChatHistoryExtractor');
     this.chatHistoryExtractor = new ChatHistoryExtractor(browserManager, IDETypes.VSCODE);
-    logger.info('[VSCodeIDE] ChatHistoryExtractor created with IDE type:', this.chatHistoryExtractor.ideType);
-    logger.info('[VSCodeIDE] ChatHistoryExtractor selectors:', this.chatHistoryExtractor.selectors);
+    logger.info('ChatHistoryExtractor created with IDE type:', this.chatHistoryExtractor.ideType);
+    logger.info('ChatHistoryExtractor selectors:', this.chatHistoryExtractor.selectors);
     
     // VSCode-specific properties
     this.vscodeFeatures = [
@@ -37,7 +37,7 @@ class VSCodeIDE extends BaseIDE {
     ];
     
     this.isInitialized = true;
-    logger.info('[VSCodeIDE] VSCode IDE implementation initialized');
+    logger.info('VSCode IDE implementation initialized');
   }
 
   /**
@@ -67,7 +67,7 @@ class VSCodeIDE extends BaseIDE {
    */
   async start(workspacePath = null, options = {}) {
     try {
-      logger.info('[VSCodeIDE] Starting VSCode IDE...');
+      logger.info('Starting VSCode IDE...');
       
       const ideInfo = await this.ideManager.startNewIDE(workspacePath, IDETypes.VSCODE);
       
@@ -97,7 +97,7 @@ class VSCodeIDE extends BaseIDE {
         throw new Error('No active VSCode IDE to stop');
       }
       
-      logger.info('[VSCodeIDE] Stopping VSCode IDE on port', activePort);
+      logger.info('Stopping VSCode IDE on port', activePort);
       
       const result = await this.ideManager.stopIDE(activePort);
       
@@ -215,10 +215,10 @@ class VSCodeIDE extends BaseIDE {
   async switchToPort(port) {
     try {
       const currentActivePort = this.getActivePort();
-      logger.info(`[VSCodeIDE] switchToPort(${port}) called, current active port:`, currentActivePort);
+      logger.info(`switchToPort(${port}) called, current active port:`, currentActivePort);
       
       if (currentActivePort === port) {
-        logger.info(`[VSCodeIDE] Already connected to port ${port}`);
+        logger.info(`Already connected to port ${port}`);
         return {
           success: true,
           port,
@@ -227,14 +227,14 @@ class VSCodeIDE extends BaseIDE {
         };
       }
       
-      logger.info(`[VSCodeIDE] Switching to port ${port}`);
+      logger.info(`Switching to port ${port}`);
       await this.browserManager.switchToPort(port);
       
       // Update active port in IDE manager
       if (this.ideManager.switchToIDE) {
-        logger.info(`[VSCodeIDE] Calling ideManager.switchToIDE(${port})`);
+        logger.info(`Calling ideManager.switchToIDE(${port})`);
         await this.ideManager.switchToIDE(port);
-        logger.info(`[VSCodeIDE] ideManager.switchToIDE(${port}) completed`);
+        logger.info(`ideManager.switchToIDE(${port}) completed`);
       }
       
       this.updateStatus('switched', { port, previousPort: currentActivePort });
@@ -263,15 +263,15 @@ class VSCodeIDE extends BaseIDE {
    * @returns {Promise<Array>} Chat history
    */
   async extractChatHistory() {
-    logger.info('[VSCodeIDE] extractChatHistory() called');
-    logger.info('[VSCodeIDE] Using chatHistoryExtractor with IDE type:', this.chatHistoryExtractor?.ideType);
+    logger.info('extractChatHistory() called');
+    logger.info('Using chatHistoryExtractor with IDE type:', this.chatHistoryExtractor?.ideType);
     
     if (this.chatHistoryExtractor) {
       const result = await this.chatHistoryExtractor.extractChatHistory();
-      logger.info('[VSCodeIDE] extractChatHistory() result:', result);
+      logger.info('extractChatHistory() result:', result);
       return result;
     } else {
-      logger.info('[VSCodeIDE] No chatHistoryExtractor available, using base class');
+      logger.info('No chatHistoryExtractor available, using base class');
       return await super.extractChatHistory();
     }
   }
@@ -286,20 +286,20 @@ class VSCodeIDE extends BaseIDE {
     try {
       // Ensure browser is connected to the active IDE port
       const activePort = this.getActivePort();
-      logger.info('[VSCodeIDE] sendMessage() - Active port:', activePort);
+      logger.info('sendMessage() - Active port:', activePort);
       
       if (activePort) {
         try {
           // Switch browser to active port if needed
           const currentBrowserPort = this.browserManager.getCurrentPort();
-          logger.info('[VSCodeIDE] sendMessage() - Current browser port:', currentBrowserPort);
+          logger.info('sendMessage() - Current browser port:', currentBrowserPort);
           
           if (currentBrowserPort !== activePort) {
-            logger.info('[VSCodeIDE] sendMessage() - Switching browser to active port:', activePort);
+            logger.info('sendMessage() - Switching browser to active port:', activePort);
             await this.browserManager.switchToPort(activePort);
           }
         } catch (error) {
-          logger.error('[VSCodeIDE] sendMessage() - Failed to switch browser port:', error.message);
+          logger.error('sendMessage() - Failed to switch browser port:', error.message);
         }
       }
       
@@ -327,36 +327,36 @@ class VSCodeIDE extends BaseIDE {
       }
       
       if (!port) {
-        logger.info('[VSCodeIDE] No IDE port available');
+        logger.info('No IDE port available');
         return null;
       }
       
-      logger.info('[VSCodeIDE] Getting user app URL for port:', port);
+      logger.info('Getting user app URL for port:', port);
       
       // Get workspace path for this specific port
       const workspacePath = this.ideManager.getWorkspacePath(port);
-      logger.info('[VSCodeIDE] Workspace path for port', port, ':', workspacePath);
+      logger.info('Workspace path for port', port, ':', workspacePath);
       
       if (!workspacePath) {
-        logger.info('[VSCodeIDE] No workspace path found for port', port);
+        logger.info('No workspace path found for port', port);
         return null;
       }
       
       // If workspace path is virtual (like composer-code-block-anysphere:/), skip
       if (workspacePath.includes(':')) {
-        logger.info('[VSCodeIDE] Skipping virtual workspace for port', port, ':', workspacePath);
+        logger.info('Skipping virtual workspace for port', port, ':', workspacePath);
         return null;
       }
       
       // Try package.json analysis first
       const packageJsonUrl = await this.packageJsonAnalyzer.analyzePackageJsonInPath(workspacePath);
       if (packageJsonUrl) {
-        logger.info('[VSCodeIDE] Dev server detected via package.json for port', port, ':', packageJsonUrl);
+        logger.info('Dev server detected via package.json for port', port, ':', packageJsonUrl);
         return packageJsonUrl;
       }
       
       // No frontend found in this workspace
-      logger.info('[VSCodeIDE] No frontend found in workspace for port', port, ':', workspacePath);
+      logger.info('No frontend found in workspace for port', port, ':', workspacePath);
       return null;
     } catch (error) {
       this.handleError(error, `getUserAppUrlForPort(${port})`);
@@ -372,7 +372,7 @@ class VSCodeIDE extends BaseIDE {
    */
   async applyRefactoring(filePath, refactoredCode) {
     try {
-      logger.info('[VSCodeIDE] Applying refactoring to file:', filePath);
+      logger.info('Applying refactoring to file:', filePath);
       
       // Create a prompt to apply the refactored code
       const applyPrompt = `Please apply the following refactored code to the file ${filePath}:
@@ -392,7 +392,7 @@ After applying the changes, please confirm that the refactoring has been complet
       // Send the refactoring prompt to VSCode IDE
       const result = await this.sendMessage(applyPrompt);
       
-      logger.info('[VSCodeIDE] Refactoring applied successfully');
+      logger.info('Refactoring applied successfully');
       
       this.updateStatus('refactoring_applied', { filePath });
       

@@ -22,7 +22,7 @@ class UserPreferenceManager {
    */
   async setUserPreference(userId, automationLevel, options = {}) {
     try {
-      this.logger.info(`[UserPreferenceManager] Setting preference for user ${userId}: ${automationLevel}`);
+      this.logger.info(`Setting preference for user ${userId}: ${automationLevel}`);
 
       const preference = {
         userId,
@@ -54,7 +54,7 @@ class UserPreferenceManager {
 
       return preference;
     } catch (error) {
-      this.logger.error(`[UserPreferenceManager] Failed to set preference for user ${userId}:`, error.message);
+      this.logger.error(`Failed to set preference for user ${userId}:`, error.message);
       throw error;
     }
   }
@@ -102,7 +102,7 @@ class UserPreferenceManager {
 
       return preference;
     } catch (error) {
-      this.logger.error(`[UserPreferenceManager] Failed to get preference for user ${userId}:`, error.message);
+      this.logger.error(`Failed to get preference for user ${userId}:`, error.message);
       return null;
     }
   }
@@ -159,7 +159,7 @@ class UserPreferenceManager {
 
       return updatedPreference;
     } catch (error) {
-      this.logger.error(`[UserPreferenceManager] Failed to update metadata for user ${userId}:`, error.message);
+      this.logger.error(`Failed to update metadata for user ${userId}:`, error.message);
       throw error;
     }
   }
@@ -171,7 +171,7 @@ class UserPreferenceManager {
    */
   async deleteUserPreference(userId) {
     try {
-      this.logger.info(`[UserPreferenceManager] Deleting preference for user ${userId}`);
+      this.logger.info(`Deleting preference for user ${userId}`);
 
       // Remove from cache
       this.cache.delete(userId);
@@ -193,7 +193,7 @@ class UserPreferenceManager {
 
       return true;
     } catch (error) {
-      this.logger.error(`[UserPreferenceManager] Failed to delete preference for user ${userId}:`, error.message);
+      this.logger.error(`Failed to delete preference for user ${userId}:`, error.message);
       return false;
     }
   }
@@ -211,7 +211,7 @@ class UserPreferenceManager {
 
       return await this.automationPreferencesRepository.getAllUserPreferences(options);
     } catch (error) {
-      this.logger.error('[UserPreferenceManager] Failed to get all user preferences:', error.message);
+      this.logger.error('Failed to get all user preferences:', error.message);
       return [];
     }
   }
@@ -229,7 +229,7 @@ class UserPreferenceManager {
 
       return await this.automationPreferencesRepository.getUsersByAutomationLevel(automationLevel);
     } catch (error) {
-      this.logger.error(`[UserPreferenceManager] Failed to get users by automation level ${automationLevel}:`, error.message);
+      this.logger.error(`Failed to get users by automation level ${automationLevel}:`, error.message);
       return [];
     }
   }

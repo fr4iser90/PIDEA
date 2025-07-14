@@ -70,7 +70,7 @@ class SwitchIDEPortCommand {
         errors: []
       };
     } catch (error) {
-      this.logger.error('[SwitchIDEPortCommand] Validation error:', error);
+      this.logger.error('Validation error:', error);
       return {
         isValid: false,
         errors: [error.message]
@@ -85,7 +85,7 @@ class SwitchIDEPortCommand {
    */
   async execute(context = {}) {
     try {
-      this.logger.info('[SwitchIDEPortCommand] Executing command', {
+      this.logger.info('Executing command', {
         commandId: this.commandId,
         port: this.port,
         ideType: this.ideType,
@@ -135,7 +135,7 @@ class SwitchIDEPortCommand {
         });
       }
 
-      this.logger.info('[SwitchIDEPortCommand] Command executed successfully', {
+      this.logger.info('Command executed successfully', {
         commandId: this.commandId,
         result: result
       });
@@ -143,7 +143,7 @@ class SwitchIDEPortCommand {
       return result;
 
     } catch (error) {
-      this.logger.error('[SwitchIDEPortCommand] Command execution failed:', error);
+      this.logger.error('Command execution failed:', error);
 
       // Publish failure event
       if (context.eventBus) {

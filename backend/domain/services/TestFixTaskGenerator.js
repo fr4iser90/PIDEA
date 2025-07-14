@@ -7,13 +7,12 @@ const TaskType = require('@value-objects/TaskType');
 const TaskPriority = require('@value-objects/TaskPriority');
 const TaskStatus = require('@value-objects/TaskStatus');
 const { v4: uuidv4 } = require('uuid');
-const Logger = require('@logging/Logger');
-const logger = new Logger('Logger');
+const ServiceLogger = require('@logging/ServiceLogger');
 
 class TestFixTaskGenerator {
   constructor(taskRepository) {
     this.taskRepository = taskRepository;
-    this.logger = console;
+    this.logger = new ServiceLogger('TestFixTaskGenerator');
   }
 
   /**
@@ -24,7 +23,7 @@ class TestFixTaskGenerator {
    */
   async generateTasksFromTestData(parsedData, options = {}) {
     try {
-      this.logger.info('[TestFixTaskGenerator] Generating tasks from test data...');
+      this.logger.info('Generating tasks from test data...');
       
       const tasks = [];
       const projectId = options.projectId || 'system';
@@ -34,7 +33,7 @@ class TestFixTaskGenerator {
       for (const failingTest of parsedData.failingTests) {
         const filePath = failingTest.testFile || failingTest.fileName;
         if (this.shouldSkipFile(filePath)) {
-          this.logger.debug(`[TestFixTaskGenerator] Skipping failing test file: ${filePath}`);
+          this.logger.debug(`Skipping failing test file: ${filePath}`);
           continue; // Skip non-code files!
         }
         const task = this.createFailingTestTask(failingTest, projectId, userId);
@@ -44,7 +43,7 @@ class TestFixTaskGenerator {
       // Generate tasks for coverage issues
       for (const coverageIssue of parsedData.coverageIssues) {
         if (this.shouldSkipFile(coverageIssue.file)) {
-          this.logger.debug(`[TestFixTaskGenerator] Skipping coverage file: ${coverageIssue.file}`);
+          this.logger.debug(`Skipping coverage file: ${coverageIssue.file}`);
           continue;
         }
         const task = this.createCoverageTask(coverageIssue, projectId, userId);
@@ -55,7 +54,7 @@ class TestFixTaskGenerator {
       for (const legacyTest of parsedData.legacyTests) {
         const filePath = legacyTest.testFile || legacyTest.fileName;
         if (this.shouldSkipFile(filePath)) {
-          this.logger.debug(`[TestFixTaskGenerator] Skipping legacy test file: ${filePath}`);
+          this.logger.debug(`Skipping legacy test file: ${filePath}`);
           continue;
         }
         const task = this.createLegacyTestTask(legacyTest, projectId, userId);
@@ -65,14 +64,14 @@ class TestFixTaskGenerator {
       // Generate tasks for complex tests
       for (const complexTest of parsedData.complexTests) {
         if (this.shouldSkipFile(complexTest.fileName)) {
-          this.logger.debug(`[TestFixTaskGenerator] Skipping complex test file: ${complexTest.fileName}`);
+          this.logger.debug(`Skipping complex test file: ${complexTest.fileName}`);
           continue;
         }
         const task = this.createComplexTestTask(complexTest, projectId, userId);
         tasks.push(task);
       }
 
-      this.logger.info(`[TestFixTaskGenerator] Generated ${tasks.length} tasks from test data`);
+      this.logger.info(`Generated ${tasks.length} tasks from test data`);
       
       // Log summary of what was processed
       const totalFailingTests = parsedData.failingTests?.length || 0;
@@ -80,12 +79,12 @@ class TestFixTaskGenerator {
       const totalLegacyTests = parsedData.legacyTests?.length || 0;
       const totalComplexTests = parsedData.complexTests?.length || 0;
       
-      this.logger.info(`[TestFixTaskGenerator] Summary: ${totalFailingTests} failing tests, ${totalCoverageIssues} coverage issues, ${totalLegacyTests} legacy tests, ${totalComplexTests} complex tests processed`);
+      this.logger.info(`Summary: ${totalFailingTests} failing tests, ${totalCoverageIssues} coverage issues, ${totalLegacyTests} legacy tests, ${totalComplexTests} complex tests processed`);
       
       return tasks;
 
     } catch (error) {
-      this.logger.error('[TestFixTaskGenerator] Error generating tasks:', error.message);
+      this.logger.error('Error generating tasks:', error.message);
       throw error;
     }
   }
@@ -431,7 +430,7 @@ class TestFixTaskGenerator {
    */
   async saveTasks(tasks) {
     try {
-      this.logger.info(`[TestFixTaskGenerator] Saving ${tasks.length} tasks to database...`);
+      this.logger.info(`Saving ${tasks.length} tasks to database...`);
       
       const savedTasks = [];
       let savedCount = 0;
@@ -443,7 +442,7 @@ class TestFixTaskGenerator {
             // Check if task already exists
             const existingTask = await this.taskRepository.findById(task.id);
             if (existingTask) {
-              this.logger.warn(`[TestFixTaskGenerator] Task ${task.id} already exists, skipping`);
+              this.logger.warn(`Task ${task.id} already exists, skipping`);
               savedTasks.push(existingTask);
               skippedCount++;
               continue;
@@ -457,11 +456,11 @@ class TestFixTaskGenerator {
             savedCount++;
           }
         } catch (error) {
-          this.logger.error(`[TestFixTaskGenerator] Failed to save task ${task.id}:`, error.message);
+          this.logger.error(`Failed to save task ${task.id}:`, error.message);
           
           // If it's a unique constraint error, skip this task
           if (error.message.includes('UNIQUE constraint failed') || error.message.includes('already exists')) {
-            this.logger.warn(`[TestFixTaskGenerator] Task ${task.id} already exists, skipping`);
+            this.logger.warn(`Task ${task.id} already exists, skipping`);
             skippedCount++;
             continue;
           }
@@ -471,11 +470,11 @@ class TestFixTaskGenerator {
         }
       }
       
-      this.logger.info(`[TestFixTaskGenerator] Successfully saved ${savedCount} tasks, skipped ${skippedCount} existing tasks`);
+      this.logger.info(`Successfully saved ${savedCount} tasks, skipped ${skippedCount} existing tasks`);
       return savedTasks;
       
     } catch (error) {
-      this.logger.error('[TestFixTaskGenerator] Error saving tasks:', error.message);
+      this.logger.error('Error saving tasks:', error.message);
       throw error;
     }
   }
@@ -488,11 +487,11 @@ class TestFixTaskGenerator {
    */
   async generateAndSaveTasks(parsedData, options = {}) {
     try {
-      this.logger.info('[TestFixTaskGenerator] Generating tasks from test data...');
+      this.logger.info('Generating tasks from test data...');
       
       // Clear existing tasks if requested
       if (options.clearExisting) {
-        this.logger.info('[TestFixTaskGenerator] Clearing existing tasks...');
+        this.logger.info('Clearing existing tasks...');
         if (this.taskRepository) {
           await this.taskRepository.clear();
         }
@@ -507,7 +506,7 @@ class TestFixTaskGenerator {
       return savedTasks;
       
     } catch (error) {
-      this.logger.error('[TestFixTaskGenerator] Error generating and saving tasks:', error.message);
+      this.logger.error('Error generating and saving tasks:', error.message);
       throw error;
     }
   }

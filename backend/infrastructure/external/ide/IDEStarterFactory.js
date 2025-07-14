@@ -85,12 +85,12 @@ class IDEStarterFactory {
         // Handle process events if the process has event emitter capabilities
         if (typeof ideInfo.process.on === 'function') {
           ideInfo.process.on('close', (code) => {
-            logger.info(`[IDEStarterFactory] ${type} IDE ${port} process closed with code ${code}`);
+            logger.info(`${type} IDE ${port} process closed with code ${code}`);
             this.runningProcesses.delete(port);
           });
 
           ideInfo.process.on('error', (error) => {
-            logger.error(`[IDEStarterFactory] ${type} IDE ${port} process error:`, error);
+            logger.error(`${type} IDE ${port} process error:`, error);
             this.runningProcesses.delete(port);
           });
         }
@@ -103,7 +103,7 @@ class IDEStarterFactory {
         workspacePath: workspacePath
       };
     } catch (error) {
-      logger.error(`[IDEStarterFactory] Failed to start ${type} IDE:`, error);
+      logger.error(`Failed to start ${type} IDE:`, error);
       throw error;
     }
   }
@@ -144,7 +144,7 @@ class IDEStarterFactory {
         ideType: type
       };
     } catch (error) {
-      logger.error(`[IDEStarterFactory] Error stopping IDE on port ${port}:`, error);
+      logger.error(`Error stopping IDE on port ${port}:`, error);
       throw error;
     }
   }
@@ -273,7 +273,7 @@ class IDEStarterFactory {
         this.stopIDE(parseInt(port))
           .then(result => stoppedIDEs.push(result))
           .catch(error => {
-            logger.error(`[IDEStarterFactory] Error stopping IDE on port ${port}:`, error);
+            logger.error(`Error stopping IDE on port ${port}:`, error);
           })
       );
     }

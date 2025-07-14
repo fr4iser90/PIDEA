@@ -8,6 +8,7 @@ const { SequentialExecutionEngine } = require('../workflows/execution');
 const StepRegistry = require('../steps/StepRegistry');
 const FrameworkRegistry = require('../frameworks/FrameworkRegistry');
 const Logger = require('@logging/Logger');
+const ServiceLogger = require('@logging/ServiceLogger');
 const logger = new Logger('TaskService');
 const fs = require('fs');
 const path = require('path');
@@ -31,14 +32,14 @@ class TaskService {
     if (this.workflowGitService) {
       this.gitWorkflowManager = new GitWorkflowManager({
         gitService: this.workflowGitService.gitService,
-        logger: console,
+        logger: new ServiceLogger('TaskService'),
         eventBus: null
       });
     }
     
     // Initialize core execution engine
     this.executionEngine = new SequentialExecutionEngine({
-            logger: console,
+            logger: new ServiceLogger('TaskService'),
             enablePriority: true,
             enableRetry: true,
             enableResourceManagement: true,

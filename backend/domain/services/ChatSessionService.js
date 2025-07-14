@@ -24,7 +24,7 @@ class ChatSessionService {
     // Event listeners
     this.setupEventListeners();
     
-    logger.info('[ChatSessionService] Initialized');
+    logger.info('✅ Chat session service initialized');
   }
 
   /**
@@ -97,10 +97,10 @@ class ChatSessionService {
         timestamp: new Date()
       });
 
-      logger.info(`[ChatSessionService] Created session ${session.id} for user ${userId}`);
+      logger.info(`Created session ${session.id} for user ${userId}`);
       return session;
     } catch (error) {
-      logger.error(`[ChatSessionService] Failed to create session for user ${userId}:`, error);
+      logger.error(`Failed to create session for user ${userId}:`, error);
       throw error;
     }
   }
@@ -136,10 +136,10 @@ class ChatSessionService {
         timestamp: new Date()
       });
 
-      logger.info(`[ChatSessionService] Switched to session ${sessionId} for user ${userId}`);
+      logger.info(`Switched to session ${sessionId} for user ${userId}`);
       return session;
     } catch (error) {
-      logger.error(`[ChatSessionService] Failed to switch to session ${sessionId}:`, error);
+      logger.error(`Failed to switch to session ${sessionId}:`, error);
       throw error;
     }
   }
@@ -160,7 +160,7 @@ class ChatSessionService {
 
       return activeSession;
     } catch (error) {
-      logger.error(`[ChatSessionService] Failed to get active session for user ${userId}:`, error);
+      logger.error(`Failed to get active session for user ${userId}:`, error);
       throw error;
     }
   }
@@ -191,7 +191,7 @@ class ChatSessionService {
 
       return sessions;
     } catch (error) {
-      logger.error(`[ChatSessionService] Failed to list sessions for user ${userId}:`, error);
+      logger.error(`Failed to list sessions for user ${userId}:`, error);
       throw error;
     }
   }
@@ -232,10 +232,10 @@ class ChatSessionService {
         timestamp: new Date()
       });
 
-      logger.info(`[ChatSessionService] Closed session ${sessionId} for user ${userId}`);
+      logger.info(`Closed session ${sessionId} for user ${userId}`);
       return true;
     } catch (error) {
-      logger.error(`[ChatSessionService] Failed to close session ${sessionId}:`, error);
+      logger.error(`Failed to close session ${sessionId}:`, error);
       throw error;
     }
   }
@@ -270,7 +270,7 @@ class ChatSessionService {
 
       return messages;
     } catch (error) {
-      logger.error(`[ChatSessionService] Failed to get chat history for session ${sessionId}:`, error);
+      logger.error(`Failed to get chat history for session ${sessionId}:`, error);
       throw error;
     }
   }
@@ -289,10 +289,10 @@ class ChatSessionService {
         activeSession.metadata.idePort = port;
         await this.chatRepository.saveSession(activeSession);
         
-        logger.info(`[ChatSessionService] Updated IDE port to ${port} for session ${activeSession.id}`);
+        logger.info(`Updated IDE port to ${port} for session ${activeSession.id}`);
       }
     } catch (error) {
-      logger.error('[ChatSessionService] Failed to handle port change:', error);
+      logger.error('Failed to handle port change:', error);
     }
   }
 
@@ -307,9 +307,9 @@ class ChatSessionService {
       // Clear active session
       this.activeSessions.delete(userId);
       
-      logger.info(`[ChatSessionService] Cleared active session for user ${userId}`);
+      logger.info(`Cleared active session for user ${userId}`);
     } catch (error) {
-      logger.error('[ChatSessionService] Failed to handle user logout:', error);
+      logger.error('Failed to handle user logout:', error);
     }
   }
 
@@ -331,7 +331,7 @@ class ChatSessionService {
 
       return stats;
     } catch (error) {
-      logger.error(`[ChatSessionService] Failed to get session stats for user ${userId}:`, error);
+      logger.error(`Failed to get session stats for user ${userId}:`, error);
       throw error;
     }
   }

@@ -27,10 +27,10 @@ class SQLiteStreamingSessionRepository {
     try {
       await this.createTables();
       this.isInitialized = true;
-      this.logger.info('[SQLiteStreamingSessionRepository] Initialized successfully');
+      this.logger.info('Initialized successfully');
       return true;
     } catch (error) {
-      this.logger.error('[SQLiteStreamingSessionRepository] Initialization error:', error.message);
+      this.logger.error('Initialization error:', error.message);
       throw error;
     }
   }
@@ -102,9 +102,9 @@ class SQLiteStreamingSessionRepository {
       await this.db.execute('CREATE INDEX IF NOT EXISTS idx_frame_metrics_session_id ON frame_metrics (session_id)');
       await this.db.execute('CREATE INDEX IF NOT EXISTS idx_frame_metrics_timestamp ON frame_metrics (timestamp)');
       
-      logger.info('[SQLiteStreamingSessionRepository] Database tables created successfully');
+      logger.info('Database tables created successfully');
     } catch (error) {
-      logger.error('[SQLiteStreamingSessionRepository] Error creating tables:', error.message);
+      logger.error('Error creating tables:', error.message);
       throw error;
     }
   }
@@ -124,9 +124,9 @@ class SQLiteStreamingSessionRepository {
       // Save to database
       await this.saveSessionToDatabase(session);
 
-      logger.info(`[SQLiteStreamingSessionRepository] Saved session ${session.id}`);
+      logger.info(`Saved session ${session.id}`);
     } catch (error) {
-      logger.error(`[SQLiteStreamingSessionRepository] Error saving session ${session.id}:`, error.message);
+      logger.error(`Error saving session ${session.id}:`, error.message);
       throw error;
     }
   }
@@ -187,7 +187,7 @@ class SQLiteStreamingSessionRepository {
       // Get from database
       return await this.getSessionFromDatabase(sessionId);
     } catch (error) {
-      logger.error(`[SQLiteStreamingSessionRepository] Error getting session ${sessionId}:`, error.message);
+      logger.error(`Error getting session ${sessionId}:`, error.message);
       throw error;
     }
   }
@@ -261,7 +261,7 @@ class SQLiteStreamingSessionRepository {
 
       return activeSessions;
     } catch (error) {
-      logger.error('[SQLiteStreamingSessionRepository] Error getting active sessions:', error.message);
+      logger.error('Error getting active sessions:', error.message);
       throw error;
     }
   }
@@ -313,9 +313,9 @@ class SQLiteStreamingSessionRepository {
       // Remove from database
       await this.deleteSessionFromDatabase(sessionId);
 
-      logger.info(`[SQLiteStreamingSessionRepository] Deleted session ${sessionId}`);
+      logger.info(`Deleted session ${sessionId}`);
     } catch (error) {
-      logger.error(`[SQLiteStreamingSessionRepository] Error deleting session ${sessionId}:`, error.message);
+      logger.error(`Error deleting session ${sessionId}:`, error.message);
       throw error;
     }
   }
@@ -348,7 +348,7 @@ class SQLiteStreamingSessionRepository {
       // Save to database
       await this.saveMetricsToDatabase(metrics);
     } catch (error) {
-      logger.error(`[SQLiteStreamingSessionRepository] Error saving metrics for session ${metrics.sessionId}:`, error.message);
+      logger.error(`Error saving metrics for session ${metrics.sessionId}:`, error.message);
       throw error;
     }
   }
@@ -413,7 +413,7 @@ class SQLiteStreamingSessionRepository {
       const dbMetrics = await this.getMetricsFromDatabase(sessionId, limit);
       return dbMetrics.length > 0 ? dbMetrics : memoryMetrics.slice(-limit);
     } catch (error) {
-      logger.error(`[SQLiteStreamingSessionRepository] Error getting metrics for session ${sessionId}:`, error.message);
+      logger.error(`Error getting metrics for session ${sessionId}:`, error.message);
       throw error;
     }
   }
@@ -512,7 +512,7 @@ class SQLiteStreamingSessionRepository {
 
       return stats;
     } catch (error) {
-      logger.error('[SQLiteStreamingSessionRepository] Error getting stats:', error.message);
+      logger.error('Error getting stats:', error.message);
       throw error;
     }
   }
@@ -536,9 +536,9 @@ class SQLiteStreamingSessionRepository {
       const result = await this.db.execute(query, [cutoffTime.toISOString()]);
       const deletedCount = result.rowsAffected || 0;
 
-      logger.info(`[SQLiteStreamingSessionRepository] Cleaned up ${deletedCount} old sessions`);
+      logger.info(`Cleaned up ${deletedCount} old sessions`);
     } catch (error) {
-      logger.error('[SQLiteStreamingSessionRepository] Error during cleanup:', error.message);
+      logger.error('Error during cleanup:', error.message);
       throw error;
     }
   }

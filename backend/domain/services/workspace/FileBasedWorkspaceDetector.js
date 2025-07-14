@@ -25,25 +25,25 @@ class FileBasedWorkspaceDetector {
     
     // 1. Prüfe Cache zuerst
     if (this._detectionCache.has(cacheKey)) {
-      logger.info(`[FileBasedWorkspaceDetector] Using cached workspace info for port ${port}`);
+      logger.info(`Using cached workspace info for port ${port}`);
       return this._detectionCache.get(cacheKey);
     }
 
     // 2. Prüfe ob bereits Files vorhanden sind
     const existingData = await this._checkExistingFiles(port);
     if (existingData && existingData.workspace) {
-      logger.info(`[FileBasedWorkspaceDetector] Found existing workspace data for port ${port}:`, existingData.workspace);
+      logger.info(`Found existing workspace data for port ${port}:`, existingData.workspace);
       this._detectionCache.set(cacheKey, existingData);
       return existingData;
     }
 
     // 3. Nur wenn keine Daten vorhanden sind, neue Detection starten
-    logger.info(`[FileBasedWorkspaceDetector] No existing data found for port ${port}, starting new detection...`);
+    logger.info(`No existing data found for port ${port}, starting new detection...`);
 
     try {
       const page = await this.browserManager.getPage();
       if (!page) {
-        logger.error('[FileBasedWorkspaceDetector] No page available');
+        logger.error('No page available');
         return null;
       }
 
@@ -60,16 +60,16 @@ class FileBasedWorkspaceDetector {
       await this._closeTerminal(page);
 
       if (workspaceInfo.workspace) {
-        logger.info(`[FileBasedWorkspaceDetector] Workspace info found for port ${port}:`, workspaceInfo.workspace);
+        logger.info(`Workspace info found for port ${port}:`, workspaceInfo.workspace);
         this._detectionCache.set(cacheKey, workspaceInfo);
         return workspaceInfo;
       }
 
-      logger.error('[FileBasedWorkspaceDetector] Failed to get workspace info');
+      logger.error('Failed to get workspace info');
       return null;
 
     } catch (error) {
-      logger.error('[FileBasedWorkspaceDetector] Error in workspace detection:', error);
+      logger.error('Error in workspace detection:', error);
       return null;
     }
   }
@@ -88,7 +88,7 @@ class FileBasedWorkspaceDetector {
       return;
     }
     try {
-      logger.info(`[FileBasedWorkspaceDetector] Setting up terminal and file structure for port ${port}...`);
+      logger.info(`Setting up terminal and file structure for port ${port}...`);
 
       // Terminal öffnen (Ctrl+Shift+`)
       await page.keyboard.down('Control');
@@ -111,10 +111,10 @@ class FileBasedWorkspaceDetector {
         await page.waitForTimeout(500);
       }
 
-      logger.info(`[FileBasedWorkspaceDetector] File structure created for port ${port}`);
+      logger.info(`File structure created for port ${port}`);
 
     } catch (error) {
-      logger.error('[FileBasedWorkspaceDetector] Error setting up terminal:', error);
+      logger.error('Error setting up terminal:', error);
     }
   }
 
@@ -123,7 +123,7 @@ class FileBasedWorkspaceDetector {
    */
   async _closeTerminal(page) {
     try {
-      logger.info('[FileBasedWorkspaceDetector] Closing terminal...');
+      logger.info('Closing terminal...');
       
       // Terminal schließen (Ctrl+D oder Ctrl+W)
       await page.keyboard.down('Control');
@@ -133,10 +133,10 @@ class FileBasedWorkspaceDetector {
       // Alternative: Ctrl+W falls Ctrl+D nicht funktioniert
       await page.waitForTimeout(500);
       
-      logger.info('[FileBasedWorkspaceDetector] Terminal closed');
+      logger.info('Terminal closed');
       
     } catch (error) {
-      logger.error('[FileBasedWorkspaceDetector] Error closing terminal:', error);
+      logger.error('Error closing terminal:', error);
     }
   }
 
@@ -174,13 +174,13 @@ class FileBasedWorkspaceDetector {
     }
     
     try {
-      logger.info(`[FileBasedWorkspaceDetector] Executing terminal commands for port ${port}...`);
+      logger.info(`Executing terminal commands for port ${port}...`);
 
       // Get current workspace and project name
       const workspacePath = await this._getCurrentWorkspace(page);
       const projectName = this._extractProjectName(workspacePath);
       
-      logger.info(`[FileBasedWorkspaceDetector] Detected project: ${projectName} at ${workspacePath}`);
+      logger.info(`Detected project: ${projectName} at ${workspacePath}`);
       
       // Create project directory and files
       const projectDir = `/tmp/IDEWEB/${port}/projects/${projectName}`;
@@ -200,10 +200,10 @@ class FileBasedWorkspaceDetector {
         await page.waitForTimeout(800); // Warten bis Output geschrieben ist
       }
 
-      logger.info(`[FileBasedWorkspaceDetector] Terminal commands executed for port ${port}, project ${projectName}`);
+      logger.info(`Terminal commands executed for port ${port}, project ${projectName}`);
 
     } catch (error) {
-      logger.error('[FileBasedWorkspaceDetector] Error executing terminal commands:', error);
+      logger.error('Error executing terminal commands:', error);
     }
   }
 
@@ -228,7 +228,7 @@ class FileBasedWorkspaceDetector {
       
       return process.cwd(); // Fallback
     } catch (error) {
-      logger.error('[FileBasedWorkspaceDetector] Error getting current workspace:', error);
+      logger.error('Error getting current workspace:', error);
       return process.cwd(); // Fallback
     }
   }
@@ -249,7 +249,7 @@ class FileBasedWorkspaceDetector {
       
       return cleanName || 'unknown-project';
     } catch (error) {
-      logger.error('[FileBasedWorkspaceDetector] Error extracting project name:', error);
+      logger.error('Error extracting project name:', error);
       return 'unknown-project';
     }
   }
@@ -273,7 +273,7 @@ class FileBasedWorkspaceDetector {
       
       if (fs.existsSync(currentProjectFile)) {
         currentProject = fs.readFileSync(currentProjectFile, 'utf8').trim();
-        logger.info(`[FileBasedWorkspaceDetector] Current project: ${currentProject}`);
+        logger.info(`Current project: ${currentProject}`);
       }
 
       // If no current project, try to find any project with data
@@ -287,7 +287,7 @@ class FileBasedWorkspaceDetector {
           
           if (projects.length > 0) {
             currentProject = projects[0]; // Use first available project
-            logger.info(`[FileBasedWorkspaceDetector] Using first available project: ${currentProject}`);
+            logger.info(`Using first available project: ${currentProject}`);
           }
         }
       }
@@ -308,11 +308,11 @@ class FileBasedWorkspaceDetector {
       }
 
       // Wenn workspace.txt existiert und Inhalt hat, alle Files auslesen
-      logger.info(`[FileBasedWorkspaceDetector] Found existing files for port ${port}, project ${currentProject}, reading them...`);
+      logger.info(`Found existing files for port ${port}, project ${currentProject}, reading them...`);
       return await this._readWorkspaceFiles(port, currentProject);
 
     } catch (error) {
-      logger.error('[FileBasedWorkspaceDetector] Error checking existing files:', error);
+      logger.error('Error checking existing files:', error);
       return null;
     }
   }
@@ -332,11 +332,11 @@ class FileBasedWorkspaceDetector {
       }
 
       if (!projectName) {
-        logger.error('[FileBasedWorkspaceDetector] No project name available for reading files');
+        logger.error('No project name available for reading files');
         return null;
       }
 
-      logger.info(`[FileBasedWorkspaceDetector] Reading workspace files for port ${port}, project ${projectName}...`);
+      logger.info(`Reading workspace files for port ${port}, project ${projectName}...`);
 
       const basePath = `/tmp/IDEWEB/${port}/projects/${projectName}`;
       const workspaceInfo = {
@@ -356,7 +356,7 @@ class FileBasedWorkspaceDetector {
           workspaceInfo.workspace = fs.readFileSync(`${basePath}/workspace.txt`, 'utf8').trim();
         }
       } catch (error) {
-        logger.error('[FileBasedWorkspaceDetector] Error reading workspace.txt:', error);
+        logger.error('Error reading workspace.txt:', error);
       }
 
       // Files-Liste lesen
@@ -366,7 +366,7 @@ class FileBasedWorkspaceDetector {
           workspaceInfo.files = filesContent.split('\n').filter(line => line.trim());
         }
       } catch (error) {
-        logger.error('[FileBasedWorkspaceDetector] Error reading files.txt:', error);
+        logger.error('Error reading files.txt:', error);
       }
 
       // Git-Status lesen
@@ -375,7 +375,7 @@ class FileBasedWorkspaceDetector {
           workspaceInfo.gitStatus = fs.readFileSync(`${basePath}/git-status.txt`, 'utf8').trim();
         }
       } catch (error) {
-        logger.error('[FileBasedWorkspaceDetector] Error reading git-status.txt:', error);
+        logger.error('Error reading git-status.txt:', error);
       }
 
       // Info-File lesen
@@ -384,7 +384,7 @@ class FileBasedWorkspaceDetector {
           workspaceInfo.info = fs.readFileSync(`${basePath}/info.txt`, 'utf8').trim();
         }
       } catch (error) {
-        logger.error('[FileBasedWorkspaceDetector] Error reading info.txt:', error);
+        logger.error('Error reading info.txt:', error);
       }
 
       // Session-Info lesen
@@ -393,14 +393,14 @@ class FileBasedWorkspaceDetector {
           workspaceInfo.session = fs.readFileSync(`${basePath}/terminal-session.txt`, 'utf8').trim();
         }
       } catch (error) {
-        logger.error('[FileBasedWorkspaceDetector] Error reading terminal-session.txt:', error);
+        logger.error('Error reading terminal-session.txt:', error);
       }
 
-      logger.info(`[FileBasedWorkspaceDetector] Workspace files read for port ${port}, project ${projectName}`);
+      logger.info(`Workspace files read for port ${port}, project ${projectName}`);
       return workspaceInfo;
 
     } catch (error) {
-      logger.error('[FileBasedWorkspaceDetector] Error reading workspace files:', error);
+      logger.error('Error reading workspace files:', error);
       return null;
     }
   }
@@ -508,7 +508,7 @@ class FileBasedWorkspaceDetector {
       return 'Command executed';
 
     } catch (error) {
-      logger.error('[FileBasedWorkspaceDetector] Error executing command:', error);
+      logger.error('Error executing command:', error);
       return null;
     }
   }
@@ -518,7 +518,7 @@ class FileBasedWorkspaceDetector {
    */
   clearCache() {
     this._detectionCache.clear();
-    logger.info('[FileBasedWorkspaceDetector] Cache cleared');
+    logger.info('Cache cleared');
   }
 
   /**

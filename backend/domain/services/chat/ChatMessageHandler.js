@@ -10,7 +10,7 @@ class ChatMessageHandler {
     this.selectors = IDETypes.getChatSelectors(ideType);
     
     if (!this.selectors) {
-      logger.warn(`[ChatMessageHandler] No chat selectors found for IDE type: ${ideType}`);
+      logger.warn(`No chat selectors found for IDE type: ${ideType}`);
     }
   }
 
@@ -42,7 +42,7 @@ class ChatMessageHandler {
         timestamp: new Date()
       };
     } catch (error) {
-      logger.error(`[ChatMessageHandler] Error sending message to ${this.ideType}:`, error.message);
+      logger.error(`Error sending message to ${this.ideType}:`, error.message);
       throw error;
     }
   }
@@ -68,7 +68,7 @@ class ChatMessageHandler {
         // Get fresh page reference in case it changed
         const page = await this.browserManager.getPage();
         if (!page) {
-          logger.error(`[ChatMessageHandler] No page available for ${this.ideType}`);
+          logger.error(`No page available for ${this.ideType}`);
           break;
         }
         
@@ -109,16 +109,16 @@ class ChatMessageHandler {
         await page.waitForTimeout(checkInterval);
         
       } catch (error) {
-        logger.error(`[ChatMessageHandler] Error checking AI response in ${this.ideType}:`, error.message);
+        logger.error(`Error checking AI response in ${this.ideType}:`, error.message);
         
         // If page is closed, try to get a fresh page reference
         if (error.message.includes('Target page, context or browser has been closed')) {
-          logger.info(`[ChatMessageHandler] Page was closed, trying to get fresh page reference...`);
+          logger.info(`Page was closed, trying to get fresh page reference...`);
           try {
             await this.browserManager.getPage(); // This will reconnect if needed
             await page.waitForTimeout(1000); // Wait a bit before retrying
           } catch (reconnectError) {
-            logger.error(`[ChatMessageHandler] Failed to reconnect:`, reconnectError.message);
+            logger.error(`Failed to reconnect:`, reconnectError.message);
             break;
           }
         }
@@ -149,7 +149,7 @@ class ChatMessageHandler {
       // Get fresh page reference in case it changed
       const currentPage = await this.browserManager.getPage();
       if (!currentPage) {
-        logger.error(`[ChatMessageHandler] No page available for extracting AI response from ${this.ideType}`);
+        logger.error(`No page available for extracting AI response from ${this.ideType}`);
         return '';
       }
       
@@ -166,7 +166,7 @@ class ChatMessageHandler {
       
       return response.trim();
     } catch (error) {
-      logger.error(`[ChatMessageHandler] Error extracting AI response from ${this.ideType}:`, error.message);
+      logger.error(`Error extracting AI response from ${this.ideType}:`, error.message);
       return '';
     }
   }

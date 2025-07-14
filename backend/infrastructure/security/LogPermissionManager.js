@@ -43,9 +43,9 @@ class LogPermissionManager {
       
       await fs.chmod(normalizedPath, permissions);
       
-      logger.info(`[LogPermissionManager] Set permissions ${permissions.toString(8)} for: ${normalizedPath}`);
+      logger.info(`Set permissions ${permissions.toString(8)} for: ${normalizedPath}`);
     } catch (error) {
-      logger.error('[LogPermissionManager] Error setting permissions:', error);
+      logger.error('Error setting permissions:', error);
       throw error;
     }
   }
@@ -72,10 +72,10 @@ class LogPermissionManager {
         await this.setSecurePermissions(subDirPath, 'directory');
       }
       
-      logger.info(`[LogPermissionManager] Created secure log directory: ${normalizedPath}`);
+      logger.info(`Created secure log directory: ${normalizedPath}`);
       return normalizedPath;
     } catch (error) {
-      logger.error('[LogPermissionManager] Error creating secure log directory:', error);
+      logger.error('Error creating secure log directory:', error);
       throw error;
     }
   }
@@ -110,7 +110,7 @@ class LogPermissionManager {
       
       return resolvedPath;
     } catch (error) {
-      logger.error('[LogPermissionManager] Path validation failed:', error);
+      logger.error('Path validation failed:', error);
       throw error;
     }
   }
@@ -171,7 +171,7 @@ class LogPermissionManager {
       
       return this.validateLogPath(filePath);
     } catch (error) {
-      logger.error('[LogPermissionManager] Error getting secure file path:', error);
+      logger.error('Error getting secure file path:', error);
       throw error;
     }
   }
@@ -208,10 +208,10 @@ class LogPermissionManager {
       // Fix permissions if they don't match
       if (currentMode !== expectedMode) {
         await this.setSecurePermissions(normalizedPath, expectedType);
-        logger.info(`[LogPermissionManager] Fixed permissions for: ${normalizedPath}`);
+        logger.info(`Fixed permissions for: ${normalizedPath}`);
       }
     } catch (error) {
-      logger.error('[LogPermissionManager] Error ensuring secure permissions:', error);
+      logger.error('Error ensuring secure permissions:', error);
       throw error;
     }
   }
@@ -242,13 +242,13 @@ class LogPermissionManager {
           
           // Securely delete old file
           await this.secureDelete(filePath);
-          logger.info(`[LogPermissionManager] Deleted old log file: ${filePath}`);
+          logger.info(`Deleted old log file: ${filePath}`);
         } catch (error) {
-          logger.warn(`[LogPermissionManager] Could not process file ${file}:`, error.message);
+          logger.warn(`Could not process file ${file}:`, error.message);
         }
       }
     } catch (error) {
-      logger.error('[LogPermissionManager] Error cleaning up old logs:', error);
+      logger.error('Error cleaning up old logs:', error);
       throw error;
     }
   }
@@ -277,9 +277,9 @@ const logger = new Logger('Logger');
       // Delete the file
       await fs.unlink(normalizedPath);
       
-      logger.info(`[LogPermissionManager] Securely deleted: ${normalizedPath}`);
+      logger.info(`Securely deleted: ${normalizedPath}`);
     } catch (error) {
-      logger.error('[LogPermissionManager] Error in secure delete:', error);
+      logger.error('Error in secure delete:', error);
       throw error;
     }
   }
@@ -333,7 +333,7 @@ const logger = new Logger('Logger');
       
       return structure;
     } catch (error) {
-      logger.error('[LogPermissionManager] Error getting directory structure:', error);
+      logger.error('Error getting directory structure:', error);
       throw error;
     }
   }
@@ -368,9 +368,9 @@ const logger = new Logger('Logger');
         }
       }
       
-      logger.info(`[LogPermissionManager] Validated and fixed permissions for port ${port}`);
+      logger.info(`Validated and fixed permissions for port ${port}`);
     } catch (error) {
-      logger.error('[LogPermissionManager] Error validating permissions:', error);
+      logger.error('Error validating permissions:', error);
       throw error;
     }
   }

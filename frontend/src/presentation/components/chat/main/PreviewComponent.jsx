@@ -26,9 +26,9 @@ function PreviewComponent({ eventBus, activePort }) {
 
   // Lade Preview immer, wenn activePort sich ändert (React-Way)
   useEffect(() => {
-    logger.info('[PreviewComponent] activePort changed:', activePort);
+    logger.info('activePort changed:', activePort);
     if (activePort) {
-      logger.info('[PreviewComponent] Loading preview for port:', activePort);
+      logger.info('Loading preview for port:', activePort);
       handleRefresh();
     }
   }, [activePort]);
@@ -133,7 +133,7 @@ function PreviewComponent({ eventBus, activePort }) {
       
       // If we have activePort, try to get user app URL for that specific port
       if (activePort) {
-        logger.info('[PreviewComponent] Getting user app URL for port:', activePort);
+        logger.info('Getting user app URL for port:', activePort);
         const result = await apiRepository.getUserAppUrlForPort(activePort);
         
         if (result.success && result.data && result.data.url) {

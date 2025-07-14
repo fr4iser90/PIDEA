@@ -52,7 +52,7 @@ class IDESelectionController {
         }
       });
     } catch (error) {
-      this.logger.error('[IDESelectionController] Error getting current selection:', error);
+      this.logger.error('Error getting current selection:', error);
       res.status(500).json({
         success: false,
         error: 'Failed to get current selection',
@@ -135,7 +135,7 @@ class IDESelectionController {
         }
       });
     } catch (error) {
-      this.logger.error('[IDESelectionController] Error setting selection:', error);
+      this.logger.error('Error setting selection:', error);
       res.status(500).json({
         success: false,
         error: 'Failed to set selection',
@@ -178,7 +178,7 @@ class IDESelectionController {
         }
       });
     } catch (error) {
-      this.logger.error('[IDESelectionController] Error getting available IDEs:', error);
+      this.logger.error('Error getting available IDEs:', error);
       res.status(500).json({
         success: false,
         error: 'Failed to get available IDEs',
@@ -209,7 +209,7 @@ class IDESelectionController {
         }
       });
     } catch (error) {
-      this.logger.error('[IDESelectionController] Error getting selection history:', error);
+      this.logger.error('Error getting selection history:', error);
       res.status(500).json({
         success: false,
         error: 'Failed to get selection history',
@@ -235,7 +235,7 @@ class IDESelectionController {
         }
       });
     } catch (error) {
-      this.logger.error('[IDESelectionController] Error clearing selection history:', error);
+      this.logger.error('Error clearing selection history:', error);
       res.status(500).json({
         success: false,
         error: 'Failed to clear selection history',
@@ -257,7 +257,7 @@ class IDESelectionController {
         data: stats
       });
     } catch (error) {
-      this.logger.error('[IDESelectionController] Error getting selection stats:', error);
+      this.logger.error('Error getting selection stats:', error);
       res.status(500).json({
         success: false,
         error: 'Failed to get selection stats',
@@ -323,7 +323,7 @@ class IDESelectionController {
         }
       });
     } catch (error) {
-      this.logger.error('[IDESelectionController] Error auto-selecting IDE:', error);
+      this.logger.error('Error auto-selecting IDE:', error);
       res.status(500).json({
         success: false,
         error: 'Failed to auto-select IDE',

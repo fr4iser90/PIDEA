@@ -17,7 +17,7 @@ class DocumentationController {
      */
     async analyzeAllProjects(req, res) {
         try {
-            this.logger.info('[DocumentationController] Starting bulk documentation analysis for all projects');
+            this.logger.info('Starting bulk documentation analysis for all projects');
 
             if (!this.ideManager) {
                 return res.status(500).json({
@@ -36,20 +36,20 @@ class DocumentationController {
                 });
             }
 
-            this.logger.info('[DocumentationController] Found IDEs for bulk analysis', {
+            this.logger.info('Found IDEs for bulk analysis', {
                 ideCount: availableIDEs.length,
                 ports: availableIDEs.map(ide => ide.port)
             });
 
             // 🚀 SEQUENTIAL SEND: Send prompts one by one with short delays (stable)
-            this.logger.info('[DocumentationController] Phase 1: Sending prompts sequentially (stable)');
+            this.logger.info('Phase 1: Sending prompts sequentially (stable)');
             
             const promptResults = [];
             
             for (const ide of availableIDEs) {
                 const workspacePath = this.ideManager.getWorkspacePath(ide.port);
                 if (!workspacePath || workspacePath.includes(':')) {
-                    this.logger.warn('[DocumentationController] Skipping IDE with invalid workspace', {
+                    this.logger.warn('Skipping IDE with invalid workspace', {
                         port: ide.port,
                         workspacePath
                     });
@@ -63,7 +63,7 @@ class DocumentationController {
                 const projectId = this.getProjectIdFromPath(workspacePath);
                 
                 try {
-                    this.logger.info('[DocumentationController] Sending prompt to IDE', {
+                    this.logger.info('Sending prompt to IDE', {
                         port: ide.port,
                         projectId,
                         remaining: availableIDEs.length - promptResults.length
@@ -79,12 +79,12 @@ class DocumentationController {
                     
                     // ⏰ SHORT DELAY: 250ms between IDEs for stability
                     if (promptResults.length < availableIDEs.length) {
-                        this.logger.info('[DocumentationController] Waiting 250ms before next IDE...');
+                        this.logger.info('Waiting 250ms before next IDE...');
                         await new Promise(resolve => setTimeout(resolve, 250));
                     }
                     
                 } catch (error) {
-                    this.logger.error('[DocumentationController] Failed to send prompt to IDE', {
+                    this.logger.error('Failed to send prompt to IDE', {
                         port: ide.port,
                         projectId,
                         error: error.message
@@ -97,19 +97,19 @@ class DocumentationController {
                 }
             }
             
-            this.logger.info('[DocumentationController] Phase 2: Waiting for AI responses (3 minutes)');
+            this.logger.info('Phase 2: Waiting for AI responses (3 minutes)');
             
             // 🕐 SMART WAIT: Give AI time to work on all projects
             await new Promise(resolve => setTimeout(resolve, 180000)); // 3 minutes for AI to work
             
-            this.logger.info('[DocumentationController] Phase 3: Processing each IDE completely (COLLECT → CREATE → EXECUTE)');
+            this.logger.info('Phase 3: Processing each IDE completely (COLLECT → CREATE → EXECUTE)');
             
             // 🎯 SEQUENTIAL PROCESSING: Handle each IDE completely before moving to next
             const results = [];
             
             for (const promptResult of promptResults) {
                 if (promptResult.status !== 'fulfilled' || !promptResult.value.success) {
-                    this.logger.warn('[DocumentationController] Skipping failed prompt result', {
+                    this.logger.warn('Skipping failed prompt result', {
                         port: promptResult.value?.ide?.port,
                         error: promptResult.value?.error
                     });
@@ -119,7 +119,7 @@ class DocumentationController {
                 const { ide, projectId, workspacePath } = promptResult.value;
                 
                 try {
-                    this.logger.info('[DocumentationController] Processing IDE completely', {
+                    this.logger.info('Processing IDE completely', {
                         port: ide.port,
                         projectId,
                         remaining: promptResults.length - results.length
@@ -132,7 +132,7 @@ class DocumentationController {
                     const responseResult = await this.collectResponseWithPolling(projectId, workspacePath, ide.port);
                     
                     if (responseResult.success) {
-                        this.logger.info('[DocumentationController] Successfully collected response, creating tasks', {
+                        this.logger.info('Successfully collected response, creating tasks', {
                             port: ide.port,
                             projectId,
                             responseLength: responseResult.response?.length || 0
@@ -167,7 +167,7 @@ class DocumentationController {
                             }
                         });
                         
-                        this.logger.info('[DocumentationController] Successfully processed IDE completely', {
+                        this.logger.info('Successfully processed IDE completely', {
                             port: ide.port,
                             projectId,
                             tasksCreated: taskResults.createdTasks?.length || 0,
@@ -176,7 +176,7 @@ class DocumentationController {
                         });
                         
                     } else {
-                        this.logger.warn('[DocumentationController] No response found for IDE', {
+                        this.logger.warn('No response found for IDE', {
                             port: ide.port,
                             projectId,
                             error: responseResult.error
@@ -196,12 +196,12 @@ class DocumentationController {
                     
                     // ⏰ SHORT DELAY: 500ms between complete IDE processing
                     if (results.length < promptResults.filter(r => r.status === 'fulfilled' && r.value.success).length) {
-                        this.logger.info('[DocumentationController] Waiting 500ms before next IDE processing...');
+                        this.logger.info('Waiting 500ms before next IDE processing...');
                         await new Promise(resolve => setTimeout(resolve, 500));
                     }
                     
                 } catch (error) {
-                    this.logger.error('[DocumentationController] Failed to process IDE completely', {
+                    this.logger.error('Failed to process IDE completely', {
                         port: ide.port,
                         projectId,
                         error: error.message
@@ -242,7 +242,7 @@ class DocumentationController {
                 }
             });
 
-            this.logger.info('[DocumentationController] Bulk analysis completed', {
+            this.logger.info('Bulk analysis completed', {
                 total: availableIDEs.length,
                 successful: successfulAnalyses.length,
                 failed: failedAnalyses.length,
@@ -265,7 +265,7 @@ class DocumentationController {
             });
 
         } catch (error) {
-            this.logger.error('[DocumentationController] Bulk documentation analysis failed', {
+            this.logger.error('Bulk documentation analysis failed', {
                 error: error.message
             });
 
@@ -282,7 +282,7 @@ class DocumentationController {
     async findProjectIDE(projectPath) {
         try {
             if (!this.ideManager) {
-                this.logger.warn('[DocumentationController] No IDE manager available, using active IDE');
+                this.logger.warn('No IDE manager available, using active IDE');
                 return { port: this.cursorIDEService.getActivePort() };
             }
 
@@ -293,7 +293,7 @@ class DocumentationController {
             for (const ide of availableIDEs) {
                 const workspacePath = this.ideManager.getWorkspacePath(ide.port);
                 if (workspacePath && projectPath.includes(workspacePath)) {
-                    this.logger.info('[DocumentationController] Found matching IDE', {
+                    this.logger.info('Found matching IDE', {
                         port: ide.port,
                         workspacePath,
                         projectPath
@@ -306,7 +306,7 @@ class DocumentationController {
             for (const ide of availableIDEs) {
                 const workspacePath = this.ideManager.getWorkspacePath(ide.port);
                 if (workspacePath && workspacePath.includes(projectPath.split('/').pop())) {
-                    this.logger.info('[DocumentationController] Found partial match IDE', {
+                    this.logger.info('Found partial match IDE', {
                         port: ide.port,
                         workspacePath,
                         projectPath
@@ -317,14 +317,14 @@ class DocumentationController {
 
             // Fallback to active IDE
             const activePort = this.cursorIDEService.getActivePort();
-            this.logger.warn('[DocumentationController] No matching IDE found, using active IDE', {
+            this.logger.warn('No matching IDE found, using active IDE', {
                 activePort,
                 projectPath
             });
             return { port: activePort };
 
         } catch (error) {
-            this.logger.error('[DocumentationController] Error finding project IDE', {
+            this.logger.error('Error finding project IDE', {
                 error: error.message,
                 projectPath
             });
@@ -341,7 +341,7 @@ class DocumentationController {
             const { projectId } = req.params;
             const { projectPath } = req.body;
             
-            this.logger.info('[DocumentationController] Starting documentation analysis', {
+            this.logger.info('Starting documentation analysis', {
                 projectId,
                 projectPath
             });
@@ -355,7 +355,7 @@ class DocumentationController {
                 });
             }
 
-            this.logger.info('[DocumentationController] Found project IDE', {
+            this.logger.info('Found project IDE', {
                 projectId,
                 projectPath,
                 idePort: projectIDE.port
@@ -364,7 +364,7 @@ class DocumentationController {
             // Switch to the correct IDE for this project
             const currentActivePort = this.cursorIDEService.getActivePort();
             if (currentActivePort !== projectIDE.port) {
-                this.logger.info('[DocumentationController] Switching to project IDE', {
+                this.logger.info('Switching to project IDE', {
                     from: currentActivePort,
                     to: projectIDE.port
                 });
@@ -406,7 +406,7 @@ class DocumentationController {
 **Please begin your analysis now:**`;
 
             // Send to Cursor IDE and wait for complete response
-            this.logger.info('[DocumentationController] Sending documentation analysis prompt to IDE', {
+            this.logger.info('Sending documentation analysis prompt to IDE', {
                 idePort: projectIDE.port,
                 promptLength: contextualizedPrompt.length
             });
@@ -417,7 +417,7 @@ class DocumentationController {
                 checkInterval: 5000
             });
 
-            this.logger.info('[DocumentationController] Received AI response', {
+            this.logger.info('Received AI response', {
                 success: ideResponse.success,
                 responseLength: ideResponse.response?.length || 0,
                 duration: ideResponse.duration
@@ -433,7 +433,7 @@ class DocumentationController {
             // Create tasks in database and execute them automatically
             const taskResults = await this.createTasksFromAnalysis(analysisResult, projectId);
             
-            this.logger.info('[DocumentationController] Created and executed tasks from analysis', {
+            this.logger.info('Created and executed tasks from analysis', {
                 taskCount: taskResults.createdTasks.length,
                 successful: taskResults.summary.successful,
                 failed: taskResults.summary.failed
@@ -457,7 +457,7 @@ class DocumentationController {
             });
 
         } catch (error) {
-            this.logger.error('[DocumentationController] Documentation analysis failed', {
+            this.logger.error('Documentation analysis failed', {
                 error: error.message,
                 projectId: req.params.projectId
             });
@@ -474,7 +474,7 @@ class DocumentationController {
      */
     processDocumentationAnalysis(analysisText, projectId) {
         try {
-            this.logger.info('[DocumentationController] Processing analysis response', {
+            this.logger.info('Processing analysis response', {
                 responseLength: analysisText?.length || 0,
                 projectId
             });
@@ -497,7 +497,7 @@ class DocumentationController {
             };
 
         } catch (error) {
-            this.logger.error('[DocumentationController] Failed to process analysis', {
+            this.logger.error('Failed to process analysis', {
                 error: error.message
             });
             
@@ -518,7 +518,7 @@ class DocumentationController {
         const tasks = [];
         
         // 🚨 DEBUG: Log the actual AI response to see what we're working with
-        this.logger.info('[DocumentationController] DEBUG: Full AI response text', {
+        this.logger.info('DEBUG: Full AI response text', {
             responseLength: analysisText?.length || 0,
             first500Chars: analysisText?.substring(0, 500) || 'NO TEXT',
             last500Chars: analysisText?.length > 500 ? analysisText.substring(analysisText.length - 500) : ''
@@ -549,7 +549,7 @@ class DocumentationController {
         
         // 🔍 FALLBACK: Simple task extraction if complex regex fails
         if (tasks.length === 0) {
-            this.logger.warn('[DocumentationController] Complex regex failed, using simple fallback');
+            this.logger.warn('Complex regex failed, using simple fallback');
             
             const simpleTaskRegex = /(?:Task|TASK):\s*([^\n]+)/gi;
             let simpleMatch;
@@ -574,7 +574,7 @@ class DocumentationController {
             index === self.findIndex(t => t.title.toLowerCase() === task.title.toLowerCase())
         );
         
-        this.logger.info('[DocumentationController] Extracted tasks from analysis', {
+        this.logger.info('Extracted tasks from analysis', {
             totalFound: tasks.length,
             uniqueTasks: uniqueTasks.length,
             complexRegexMatches: tasks.filter(t => t.estimatedTime > 2).length,
@@ -609,7 +609,7 @@ class DocumentationController {
     async saveChatMessage(sessionId, content, sender = 'assistant', type = 'documentation') {
         // For now, just log the message
         // TODO: Implement proper ChatRepository integration if needed
-        this.logger.info('[DocumentationController] Chat message saved', {
+        this.logger.info('Chat message saved', {
             sessionId,
             sender,
             type,
@@ -716,7 +716,7 @@ class DocumentationController {
         try {
             const tasks = analysisResult.tasks || [];
             
-            this.logger.info('[DocumentationController] Creating and executing tasks from analysis', {
+            this.logger.info('Creating and executing tasks from analysis', {
                 taskCount: tasks.length,
                 projectId,
                 workspacePath
@@ -750,7 +750,7 @@ class DocumentationController {
                     createdTasks.push(task);
 
                 } catch (taskError) {
-                    this.logger.error('[DocumentationController] Failed to create individual task', {
+                    this.logger.error('Failed to create individual task', {
                         error: taskError.message,
                         taskData: taskData
                     });
@@ -759,7 +759,7 @@ class DocumentationController {
 
             // ✅ EXECUTE ALL TASKS IN BATCH (not individually!)
             if (createdTasks.length > 0) {
-                this.logger.info('[DocumentationController] Executing all tasks in batch', {
+                this.logger.info('Executing all tasks in batch', {
                     taskCount: createdTasks.length,
                     projectId
                 });
@@ -775,13 +775,13 @@ class DocumentationController {
                         taskCount: createdTasks.length
                     });
 
-                    this.logger.info('[DocumentationController] Batch task execution completed', {
+                    this.logger.info('Batch task execution completed', {
                         taskCount: createdTasks.length,
                         status: batchExecutionResult.status
                     });
 
                 } catch (batchError) {
-                    this.logger.error('[DocumentationController] Batch task execution failed', {
+                    this.logger.error('Batch task execution failed', {
                         error: batchError.message,
                         taskCount: createdTasks.length
                     });
@@ -796,7 +796,7 @@ class DocumentationController {
                 }
             }
 
-            this.logger.info('[DocumentationController] Task creation and execution completed', {
+            this.logger.info('Task creation and execution completed', {
                 created: createdTasks.length,
                 total: tasks.length,
                 successful: executionResults.filter(r => r.success).length,
@@ -804,7 +804,7 @@ class DocumentationController {
             });
 
         } catch (error) {
-            this.logger.error('[DocumentationController] Failed to create tasks from analysis', {
+            this.logger.error('Failed to create tasks from analysis', {
                 error: error.message,
                 projectId
             });
@@ -850,7 +850,7 @@ class DocumentationController {
      * Run documentation analysis for a single project
      */
     async runSingleProjectAnalysis(projectId, workspacePath, idePort) {
-        this.logger.info('[DocumentationController] Running single project analysis', {
+        this.logger.info('Running single project analysis', {
             projectId,
             workspacePath,
             idePort
@@ -859,7 +859,7 @@ class DocumentationController {
         // Switch to the correct IDE
         const currentActivePort = this.cursorIDEService.getActivePort();
         if (currentActivePort !== idePort) {
-            this.logger.info('[DocumentationController] Switching to project IDE for analysis', {
+            this.logger.info('Switching to project IDE for analysis', {
                 from: currentActivePort,
                 to: idePort
             });
@@ -892,7 +892,7 @@ class DocumentationController {
 **IDE Port**: ${idePort}`;
 
         // Send to Cursor IDE and wait for complete response
-        this.logger.info('[DocumentationController] Sending analysis prompt to IDE', {
+        this.logger.info('Sending analysis prompt to IDE', {
             projectId,
             idePort,
             promptLength: contextualizedPrompt.length
@@ -904,7 +904,7 @@ class DocumentationController {
             checkInterval: 5000    // Check alle 5 Sekunden
         });
 
-        this.logger.info('[DocumentationController] Received AI response for project', {
+        this.logger.info('Received AI response for project', {
             projectId,
             idePort,
             success: ideResponse.success,
@@ -922,7 +922,7 @@ class DocumentationController {
         // Create tasks in database and execute them automatically
         const taskResults = await this.createTasksFromAnalysis(analysisResult, projectId, workspacePath);
         
-        this.logger.info('[DocumentationController] Created and executed tasks for project', {
+        this.logger.info('Created and executed tasks for project', {
             projectId,
             idePort,
             taskCount: taskResults.createdTasks.length,
@@ -948,7 +948,7 @@ class DocumentationController {
      * Send prompt quickly without waiting for response (Phase 1 of Smart Parallel)
      */
     async sendQuickPrompt(projectId, workspacePath, idePort) {
-        this.logger.info('[DocumentationController] Quick-sending prompt to IDE', {
+        this.logger.info('Quick-sending prompt to IDE', {
             projectId,
             workspacePath,
             idePort
@@ -957,7 +957,7 @@ class DocumentationController {
         // Switch to the correct IDE
         const currentActivePort = this.cursorIDEService.getActivePort();
         if (currentActivePort !== idePort) {
-            this.logger.info('[DocumentationController] Switching to project IDE for quick prompt', {
+            this.logger.info('Switching to project IDE for quick prompt', {
                 from: currentActivePort,
                 to: idePort
             });
@@ -990,7 +990,7 @@ class DocumentationController {
 **IDE Port**: ${idePort}`;
 
         // 🚀 FIRE AND FORGET: Send prompt without waiting
-        this.logger.info('[DocumentationController] Sending quick prompt to IDE', {
+        this.logger.info('Sending quick prompt to IDE', {
             projectId,
             idePort,
             promptLength: contextualizedPrompt.length
@@ -1004,7 +1004,7 @@ class DocumentationController {
             throw new Error(`Failed to send prompt to IDE ${idePort}`);
         }
 
-        this.logger.info('[DocumentationController] Quick prompt sent successfully', {
+        this.logger.info('Quick prompt sent successfully', {
             projectId,
             idePort
         });
@@ -1016,7 +1016,7 @@ class DocumentationController {
      * Collect AI response and create tasks (Phase 3 of Smart Parallel)
      */
     async collectResponseAndCreateTasks(projectId, workspacePath, idePort) {
-        this.logger.info('[DocumentationController] Collecting response from IDE', {
+        this.logger.info('Collecting response from IDE', {
             projectId,
             workspacePath,
             idePort
@@ -1025,7 +1025,7 @@ class DocumentationController {
         // Switch to the correct IDE to get response
         const currentActivePort = this.cursorIDEService.getActivePort();
         if (currentActivePort !== idePort) {
-            this.logger.info('[DocumentationController] Switching to project IDE for response collection', {
+            this.logger.info('Switching to project IDE for response collection', {
                 from: currentActivePort,
                 to: idePort
             });
@@ -1036,7 +1036,7 @@ class DocumentationController {
         // 📊 GET LATEST AI RESPONSE: Read from browser DOM and save to chat DB
         const ideResponse = await this.getLatestChatResponse(projectId, idePort);
 
-        this.logger.info('[DocumentationController] Collected AI response for project', {
+        this.logger.info('Collected AI response for project', {
             projectId,
             idePort,
             success: ideResponse.success,
@@ -1045,7 +1045,7 @@ class DocumentationController {
 
         if (!ideResponse.success || !ideResponse.response) {
             // Fallback: Try to get any response from the chat
-            this.logger.warn('[DocumentationController] No response found, using fallback method', {
+            this.logger.warn('No response found, using fallback method', {
                 projectId,
                 idePort
             });
@@ -1070,7 +1070,7 @@ class DocumentationController {
         // Create tasks in database and execute them automatically
         const taskResults = await this.createTasksFromAnalysis(analysisResult, projectId, workspacePath);
         
-        this.logger.info('[DocumentationController] Created and executed tasks for project', {
+        this.logger.info('Created and executed tasks for project', {
             projectId,
             idePort,
             taskCount: taskResults.createdTasks.length,
@@ -1097,7 +1097,7 @@ class DocumentationController {
      */
     async getLatestChatResponse(projectId, idePort) {
         try {
-            this.logger.info('[DocumentationController] Reading latest chat response from ChatRepository by port', {
+            this.logger.info('Reading latest chat response from ChatRepository by port', {
                 projectId,
                 idePort
             });
@@ -1111,7 +1111,7 @@ class DocumentationController {
             const portMessages = await this.chatRepository.getMessagesByPort(idePort);
             
             if (portMessages.length === 0) {
-                this.logger.warn('[DocumentationController] No messages found for port', {
+                this.logger.warn('No messages found for port', {
                     projectId,
                     idePort,
                     totalMessages: 0
@@ -1131,7 +1131,7 @@ class DocumentationController {
             const aiMessages = portMessages.filter(msg => msg.sender === 'assistant');
             
             if (aiMessages.length === 0) {
-                this.logger.warn('[DocumentationController] No AI messages found for port', {
+                this.logger.warn('No AI messages found for port', {
                     projectId,
                     idePort,
                     totalMessages: portMessages.length
@@ -1146,7 +1146,7 @@ class DocumentationController {
 
             const latestAIMessage = aiMessages[0]; // Already sorted newest first
 
-            this.logger.info('[DocumentationController] Successfully read chat response from ChatRepository by port', {
+            this.logger.info('Successfully read chat response from ChatRepository by port', {
                 projectId,
                 idePort,
                 responseLength: latestAIMessage.content.length,
@@ -1162,7 +1162,7 @@ class DocumentationController {
             };
 
         } catch (error) {
-            this.logger.error('[DocumentationController] Error reading chat response from ChatRepository by port', {
+            this.logger.error('Error reading chat response from ChatRepository by port', {
                 projectId,
                 idePort,
                 error: error.message
@@ -1180,7 +1180,7 @@ class DocumentationController {
      * Collect AI response only (without creating tasks)
      */
     async collectResponseOnly(projectId, workspacePath, idePort) {
-        this.logger.info('[DocumentationController] Collecting response only from IDE', {
+        this.logger.info('Collecting response only from IDE', {
             projectId,
             workspacePath,
             idePort
@@ -1189,7 +1189,7 @@ class DocumentationController {
         // Switch to the correct IDE to get response
         const currentActivePort = this.cursorIDEService.getActivePort();
         if (currentActivePort !== idePort) {
-            this.logger.info('[DocumentationController] Switching to project IDE for response collection', {
+            this.logger.info('Switching to project IDE for response collection', {
                 from: currentActivePort,
                 to: idePort
             });
@@ -1200,7 +1200,7 @@ class DocumentationController {
         // 📊 GET LATEST AI RESPONSE: Read from browser DOM and save to chat DB
         const ideResponse = await this.getLatestChatResponse(projectId, idePort);
 
-        this.logger.info('[DocumentationController] Collected AI response for project', {
+        this.logger.info('Collected AI response for project', {
             projectId,
             idePort,
             success: ideResponse.success,
@@ -1208,7 +1208,7 @@ class DocumentationController {
         });
 
         if (!ideResponse.success || !ideResponse.response) {
-            this.logger.warn('[DocumentationController] No response found', {
+            this.logger.warn('No response found', {
                 projectId,
                 idePort
             });
@@ -1235,13 +1235,13 @@ class DocumentationController {
      */
     async executeDocumentationTasksBatch(tasks, projectPath) {
         try {
-            this.logger.info('[DocumentationController] Executing documentation tasks in batch', {
+            this.logger.info('Executing documentation tasks in batch', {
                 taskCount: tasks.length,
                 projectPath
             });
 
             // ✅ STEP 1: Create Git Branch for Documentation
-            this.logger.info('[DocumentationController] Step 1: Creating Git branch for documentation tasks', {
+            this.logger.info('Step 1: Creating Git branch for documentation tasks', {
                 projectPath
             });
 
@@ -1255,19 +1255,19 @@ class DocumentationController {
                 // Use GitService if available
                 if (this.gitService) {
                     await this.gitService.createBranch(projectPath, branchName);
-                    this.logger.info('[DocumentationController] Git branch created successfully via GitService', {
+                    this.logger.info('Git branch created successfully via GitService', {
                         branchName
                     });
                 } else {
                     // Fallback: direct git command
                     const { execSync } = require('child_process');
                     execSync(`git checkout -b ${branchName}`, { cwd: projectPath });
-                    this.logger.info('[DocumentationController] Git branch created via direct command', {
+                    this.logger.info('Git branch created via direct command', {
                         branchName
                     });
                 }
             } catch (gitError) {
-                this.logger.warn('[DocumentationController] Failed to create Git branch, continuing without it', {
+                this.logger.warn('Failed to create Git branch, continuing without it', {
                     error: gitError.message,
                     branchName
                 });
@@ -1329,7 +1329,7 @@ ${lowPriorityTasks.map((task, index) => `
 `).join('\n')}`;
 
             // Send the batch prompt to Cursor IDE - ONLY ONE PROMPT FOR ALL TASKS!
-            this.logger.info('[DocumentationController] Sending batch execution prompt to IDE', {
+            this.logger.info('Sending batch execution prompt to IDE', {
                 taskCount: tasks.length,
                 promptLength: batchPrompt.length
             });
@@ -1338,7 +1338,7 @@ ${lowPriorityTasks.map((task, index) => `
                 waitForResponse: false // Fire and forget for batch execution
             });
 
-            this.logger.info('[DocumentationController] Batch execution prompt sent', {
+            this.logger.info('Batch execution prompt sent', {
                 taskCount: tasks.length,
                 success: ideResponse.success,
                 responseLength: ideResponse.response?.length || 0
@@ -1356,7 +1356,7 @@ ${lowPriorityTasks.map((task, index) => `
             };
 
         } catch (error) {
-            this.logger.error('[DocumentationController] Batch task execution failed', {
+            this.logger.error('Batch task execution failed', {
                 taskCount: tasks.length,
                 error: error.message
             });
@@ -1376,7 +1376,7 @@ ${lowPriorityTasks.map((task, index) => `
      */
     async executeDocumentationTask(task, projectPath) {
         try {
-            this.logger.info('[DocumentationController] Executing documentation task directly', {
+            this.logger.info('Executing documentation task directly', {
                 taskId: task.id,
                 title: task.title,
                 projectPath
@@ -1404,7 +1404,7 @@ ${lowPriorityTasks.map((task, index) => `
 **PROJECT**: ${projectPath}`;
 
             // Send to Cursor IDE for execution
-            this.logger.info('[DocumentationController] Sending doc-execute prompt to IDE', {
+            this.logger.info('Sending doc-execute prompt to IDE', {
                 taskId: task.id,
                 promptLength: contextualizedPrompt.length
             });
@@ -1413,7 +1413,7 @@ ${lowPriorityTasks.map((task, index) => `
                 waitForResponse: false // Fire and forget for now
             });
 
-            this.logger.info('[DocumentationController] Documentation task execution prompt sent', {
+            this.logger.info('Documentation task execution prompt sent', {
                 taskId: task.id,
                 success: ideResponse.success,
                 responseLength: ideResponse.response?.length || 0
@@ -1430,7 +1430,7 @@ ${lowPriorityTasks.map((task, index) => `
             };
 
         } catch (error) {
-            this.logger.error('[DocumentationController] Documentation task execution failed', {
+            this.logger.error('Documentation task execution failed', {
                 taskId: task.id,
                 error: error.message
             });
@@ -1456,7 +1456,7 @@ ${lowPriorityTasks.map((task, index) => `
             if (idePort) {
                 const currentActivePort = this.cursorIDEService.getActivePort();
                 if (currentActivePort !== idePort) {
-                    this.logger.info('[DocumentationController] Switching to project IDE for task execution', {
+                    this.logger.info('Switching to project IDE for task execution', {
                         from: currentActivePort,
                         to: idePort
                     });
@@ -1550,7 +1550,7 @@ ${lowPriorityTasks.map((task, index) => `
 *Generated by PIDEA Documentation Framework - ${new Date().toISOString()}*`;
 
             // Send the comprehensive prompt to Cursor IDE
-            this.logger.info('[DocumentationController] Sending task execution prompt to IDE', {
+            this.logger.info('Sending task execution prompt to IDE', {
                 taskCount: tasks.length,
                 highPriority: highPriorityTasks.length,
                 mediumPriority: mediumPriorityTasks.length,
@@ -1562,7 +1562,7 @@ ${lowPriorityTasks.map((task, index) => `
                 waitForResponse: false // Don't wait for response as tasks may take a long time
             });
 
-            this.logger.info('[DocumentationController] Task execution prompt sent to IDE', {
+            this.logger.info('Task execution prompt sent to IDE', {
                 success: ideResponse.success,
                 promptLength: taskExecutionPrompt.length,
                 idePort: idePort || this.cursorIDEService.getActivePort()
@@ -1583,7 +1583,7 @@ ${lowPriorityTasks.map((task, index) => `
                 };
 
         } catch (error) {
-            this.logger.error('[DocumentationController] Failed to send tasks to IDE', {
+            this.logger.error('Failed to send tasks to IDE', {
                 error: error.message,
                 taskCount: tasks.length
             });
@@ -1601,7 +1601,7 @@ ${lowPriorityTasks.map((task, index) => `
      * Pollt die aktive IDE und speichert die AI-Response in die DB
      */
     async collectResponseWithPolling(projectId, workspacePath, idePort) {
-        this.logger.info('[DocumentationController] Polling for AI response in IDE', {
+        this.logger.info('Polling for AI response in IDE', {
             projectId,
             workspacePath,
             idePort
@@ -1610,7 +1610,7 @@ ${lowPriorityTasks.map((task, index) => `
         // Switch to the correct IDE
         const currentActivePort = this.cursorIDEService.getActivePort();
         if (currentActivePort !== idePort) {
-            this.logger.info('[DocumentationController] Switching to project IDE for polling', {
+            this.logger.info('Switching to project IDE for polling', {
                 from: currentActivePort,
                 to: idePort
             });
@@ -1620,7 +1620,7 @@ ${lowPriorityTasks.map((task, index) => `
         // Nutze dein vorhandenes Polling-System (OHNE neue Nachricht zu senden!)
         const chatMessageHandler = this.cursorIDEService.chatMessageHandler;
         if (!chatMessageHandler) {
-            this.logger.error('[DocumentationController] ChatMessageHandler not available');
+            this.logger.error('ChatMessageHandler not available');
             return {
                 success: false,
                 response: null,
@@ -1635,7 +1635,7 @@ ${lowPriorityTasks.map((task, index) => `
         });
 
         if (!pollingResult.success || !pollingResult.response) {
-            this.logger.warn('[DocumentationController] No AI response found after polling', {
+            this.logger.warn('No AI response found after polling', {
                 projectId,
                 idePort,
                 error: pollingResult.error
@@ -1668,7 +1668,7 @@ const logger = new ServiceLogger('DocumentationController');
 
                 await this.chatRepository.saveMessage(message);
                 
-                this.logger.info('[DocumentationController] AI response saved to ChatRepository', {
+                this.logger.info('AI response saved to ChatRepository', {
                     projectId,
                     idePort,
                     messageId: message.id,
@@ -1676,7 +1676,7 @@ const logger = new ServiceLogger('DocumentationController');
                 });
                 
             } catch (saveError) {
-                this.logger.error('[DocumentationController] Failed to save message to ChatRepository', {
+                this.logger.error('Failed to save message to ChatRepository', {
                     projectId,
                     idePort,
                     error: saveError.message
@@ -1685,7 +1685,7 @@ const logger = new ServiceLogger('DocumentationController');
             }
         }
 
-        this.logger.info('[DocumentationController] AI response collected and saved', {
+        this.logger.info('AI response collected and saved', {
             projectId,
             idePort,
             responseLength: pollingResult.response.length,

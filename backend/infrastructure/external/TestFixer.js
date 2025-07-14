@@ -4,12 +4,11 @@
  */
 const fs = require('fs').promises;
 const path = require('path');
-const Logger = require('@logging/Logger');
-const logger = new Logger('Logger');
+const ServiceLogger = require('@logging/ServiceLogger');
 
 class TestFixer {
   constructor() {
-    this.logger = console;
+    this.logger = new ServiceLogger('TestFixer');
     this.fixStrategies = {
       timeout: this.fixTimeoutIssue.bind(this),
       async: this.fixAsyncIssue.bind(this),
@@ -27,7 +26,7 @@ class TestFixer {
    * Initialize the fixer
    */
   async initialize() {
-    this.logger.info('[TestFixer] Initialized');
+    this.logger.info('✅ Test fixer initialized');
   }
 
   /**
@@ -38,7 +37,7 @@ class TestFixer {
    */
   async fixTest(testData, options = {}) {
     try {
-      this.logger.info(`[TestFixer] Fixing test: ${testData.testName || testData.filePath}`);
+      this.logger.info(`Fixing test: ${testData.testName || testData.filePath}`);
       
       const startTime = Date.now();
       
@@ -73,11 +72,11 @@ class TestFixer {
         timestamp: new Date().toISOString()
       };
       
-      this.logger.info(`[TestFixer] Successfully fixed test in ${duration}ms`);
+      this.logger.info(`Successfully fixed test in ${duration}ms`);
       return result;
       
     } catch (error) {
-      this.logger.error(`[TestFixer] Failed to fix test: ${error.message}`);
+      this.logger.error(`Failed to fix test: ${error.message}`);
       
       return {
         success: false,

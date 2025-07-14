@@ -64,14 +64,14 @@ class SQLiteAnalysisRepository extends AnalysisRepository {
     }
 
     const sql = 'SELECT * FROM analysis_results WHERE project_id = ? ORDER BY created_at DESC';
-    logger.info(`[SQLiteAnalysisRepository] Executing query: ${sql} with projectId: ${projectId}`);
+    logger.info(`Executing query: ${sql} with projectId: ${projectId}`);
     
     const rows = await this.db.query(sql, [projectId]);
-    logger.info(`[SQLiteAnalysisRepository] Found ${rows.length} rows for projectId: ${projectId}`);
-    logger.info(`[SQLiteAnalysisRepository] Raw rows:`, rows);
+    logger.info(`Found ${rows.length} rows for projectId: ${projectId}`);
+    logger.info(`Raw rows:`, rows);
     
     const entities = rows.map(row => this.mapRowToEntity(row));
-    logger.info(`[SQLiteAnalysisRepository] Mapped to ${entities.length} entities`);
+    logger.info(`Mapped to ${entities.length} entities`);
     
     return entities;
   }

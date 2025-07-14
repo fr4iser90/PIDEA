@@ -23,9 +23,9 @@ class AutomationRuleEngine {
     try {
       const automationRule = rule instanceof AutomationRule ? rule : AutomationRule.fromJSON(rule);
       this.rules.set(automationRule.id, automationRule);
-      this.logger.info(`[AutomationRuleEngine] Added rule: ${automationRule.name}`);
+      this.logger.info(`Added rule: ${automationRule.name}`);
     } catch (error) {
-      this.logger.error(`[AutomationRuleEngine] Failed to add rule:`, error.message);
+      this.logger.error(`Failed to add rule:`, error.message);
       throw error;
     }
   }
@@ -38,7 +38,7 @@ class AutomationRuleEngine {
     const rule = this.rules.get(ruleId);
     if (rule) {
       this.rules.delete(ruleId);
-      this.logger.info(`[AutomationRuleEngine] Removed rule: ${rule.name}`);
+      this.logger.info(`Removed rule: ${rule.name}`);
     }
   }
 
@@ -84,14 +84,14 @@ class AutomationRuleEngine {
    */
   async evaluateRules(task, context) {
     try {
-      this.logger.info(`[AutomationRuleEngine] Evaluating rules for task ${task.id}`);
+      this.logger.info(`Evaluating rules for task ${task.id}`);
 
       // Get enabled rules sorted by priority (highest first)
       const enabledRules = this.getEnabledRules()
         .sort((a, b) => b.priority - a.priority);
 
       if (enabledRules.length === 0) {
-        this.logger.info(`[AutomationRuleEngine] No enabled rules found`);
+        this.logger.info(`No enabled rules found`);
         return null;
       }
 
@@ -100,7 +100,7 @@ class AutomationRuleEngine {
         const cacheKey = this._generateCacheKey(task, context);
         const cached = this.ruleCache.get(cacheKey);
         if (cached && (Date.now() - cached.timestamp) < this.cacheTimeout) {
-          this.logger.info(`[AutomationRuleEngine] Using cached result: ${cached.automationLevel}`);
+          this.logger.info(`Using cached result: ${cached.automationLevel}`);
           return cached.automationLevel;
         }
       }
@@ -111,7 +111,7 @@ class AutomationRuleEngine {
           const matches = await rule.evaluateConditions(task, context);
           
           if (matches) {
-            this.logger.info(`[AutomationRuleEngine] Rule matched: ${rule.name}`);
+            this.logger.info(`Rule matched: ${rule.name}`);
             
             // Execute rule actions
             const actionResults = await rule.executeActions(task, context);
@@ -133,21 +133,21 @@ class AutomationRuleEngine {
                 });
               }
               
-              this.logger.info(`[AutomationRuleEngine] Rule ${rule.name} set automation level to: ${automationLevel}`);
+              this.logger.info(`Rule ${rule.name} set automation level to: ${automationLevel}`);
               return automationLevel;
             }
           }
         } catch (error) {
-          this.logger.error(`[AutomationRuleEngine] Error evaluating rule ${rule.name}:`, error.message);
+          this.logger.error(`Error evaluating rule ${rule.name}:`, error.message);
           // Continue with next rule
         }
       }
 
-      this.logger.info(`[AutomationRuleEngine] No rules matched`);
+      this.logger.info(`No rules matched`);
       return null;
 
     } catch (error) {
-      this.logger.error(`[AutomationRuleEngine] Error evaluating rules:`, error.message);
+      this.logger.error(`Error evaluating rules:`, error.message);
       return null;
     }
   }
@@ -168,7 +168,7 @@ class AutomationRuleEngine {
     try {
       return await rule.evaluateConditions(task, context);
     } catch (error) {
-      this.logger.error(`[AutomationRuleEngine] Error evaluating rule ${ruleId}:`, error.message);
+      this.logger.error(`Error evaluating rule ${ruleId}:`, error.message);
       return false;
     }
   }
@@ -189,7 +189,7 @@ class AutomationRuleEngine {
     try {
       return await rule.executeActions(task, context);
     } catch (error) {
-      this.logger.error(`[AutomationRuleEngine] Error executing rule ${ruleId}:`, error.message);
+      this.logger.error(`Error executing rule ${ruleId}:`, error.message);
       return [];
     }
   }
@@ -202,7 +202,7 @@ class AutomationRuleEngine {
     const rule = this.getRule(ruleId);
     if (rule) {
       rule.enable();
-      this.logger.info(`[AutomationRuleEngine] Enabled rule: ${rule.name}`);
+      this.logger.info(`Enabled rule: ${rule.name}`);
     }
   }
 
@@ -214,7 +214,7 @@ class AutomationRuleEngine {
     const rule = this.getRule(ruleId);
     if (rule) {
       rule.disable();
-      this.logger.info(`[AutomationRuleEngine] Disabled rule: ${rule.name}`);
+      this.logger.info(`Disabled rule: ${rule.name}`);
     }
   }
 
@@ -227,7 +227,7 @@ class AutomationRuleEngine {
     const rule = this.getRule(ruleId);
     if (rule) {
       rule.setPriority(priority);
-      this.logger.info(`[AutomationRuleEngine] Set priority for rule ${rule.name}: ${priority}`);
+      this.logger.info(`Set priority for rule ${rule.name}: ${priority}`);
     }
   }
 
@@ -236,7 +236,7 @@ class AutomationRuleEngine {
    */
   clearRules() {
     this.rules.clear();
-    this.logger.info(`[AutomationRuleEngine] Cleared all rules`);
+    this.logger.info(`Cleared all rules`);
   }
 
   /**
@@ -250,11 +250,11 @@ class AutomationRuleEngine {
       try {
         this.addRule(ruleData);
       } catch (error) {
-        this.logger.error(`[AutomationRuleEngine] Failed to load rule:`, error.message);
+        this.logger.error(`Failed to load rule:`, error.message);
       }
     }
     
-    this.logger.info(`[AutomationRuleEngine] Loaded ${this.rules.size} rules`);
+    this.logger.info(`Loaded ${this.rules.size} rules`);
   }
 
   /**
@@ -294,7 +294,7 @@ class AutomationRuleEngine {
    */
   clearCache() {
     this.ruleCache.clear();
-    this.logger.info(`[AutomationRuleEngine] Cleared rule cache`);
+    this.logger.info(`Cleared rule cache`);
   }
 
   /**
@@ -381,7 +381,7 @@ class AutomationRuleEngine {
     documentationRule.setPriority(70);
     this.addRule(documentationRule);
 
-    this.logger.info(`[AutomationRuleEngine] Created ${this.rules.size} default rules`);
+    this.logger.info(`Created ${this.rules.size} default rules`);
   }
 }
 

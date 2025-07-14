@@ -86,17 +86,17 @@ class IDEConfigManager {
       // Merge with default config to ensure all required fields exist
       this.config = this.mergeWithDefaults(this.config);
       
-      logger.info('[IDEConfigManager] Configuration loaded successfully');
+      logger.info('Configuration loaded successfully');
       return this.config;
     } catch (error) {
       if (error.code === 'ENOENT') {
         // Config file doesn't exist, create with defaults
-        logger.info('[IDEConfigManager] No configuration file found, creating with defaults');
+        logger.info('No configuration file found, creating with defaults');
         this.config = this.defaultConfig;
         await this.saveConfig();
         return this.config;
       } else {
-        logger.error('[IDEConfigManager] Error loading configuration:', error);
+        logger.error('Error loading configuration:', error);
         // Fallback to default config
         this.config = this.defaultConfig;
         return this.config;
@@ -121,9 +121,9 @@ class IDEConfigManager {
       await fs.writeFile(this.configPath, JSON.stringify(configToSave, null, 2), 'utf8');
       
       this.config = configToSave;
-      logger.info('[IDEConfigManager] Configuration saved successfully');
+      logger.info('Configuration saved successfully');
     } catch (error) {
-      logger.error('[IDEConfigManager] Error saving configuration:', error);
+      logger.error('Error saving configuration:', error);
       throw error;
     }
   }
@@ -292,7 +292,7 @@ class IDEConfigManager {
   async resetToDefaults() {
     this.config = this.defaultConfig;
     await this.saveConfig();
-    logger.info('[IDEConfigManager] Configuration reset to defaults');
+    logger.info('Configuration reset to defaults');
   }
 
   /**

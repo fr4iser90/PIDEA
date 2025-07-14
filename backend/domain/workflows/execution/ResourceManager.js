@@ -3,15 +3,14 @@
  * Provides resource management with allocation, monitoring, and limits
  */
 const os = require('os');
-const Logger = require('@logging/Logger');
-const logger = new Logger('Logger');
+const ServiceLogger = require('@logging/ServiceLogger');
 
 /**
  * Resource manager for workflow execution
  */
 class ResourceManager {
   constructor(options = {}) {
-    this.logger = options.logger || console;
+    this.logger = options.logger || new ServiceLogger('ResourceManager');
     
     this.maxMemoryUsage = options.maxMemoryUsage || 512; // MB
     this.maxCpuUsage = options.maxCpuUsage || 80; // Percentage
@@ -57,7 +56,7 @@ class ResourceManager {
    */
   async allocateResources(executionId, requirements = {}) {
     try {
-      this.logger.info('ResourceManager: Allocating resources', {
+      this.logger.info('Allocating resources', {
         executionId,
         requirements
       });
@@ -87,7 +86,7 @@ class ResourceManager {
         lastUpdate: Date.now()
       });
 
-      this.logger.info('ResourceManager: Resources allocated', {
+      this.logger.info('Resources allocated', {
         executionId,
         allocatedResources
       });
@@ -95,7 +94,7 @@ class ResourceManager {
       return allocatedResources;
 
     } catch (error) {
-      this.logger.error('ResourceManager: Resource allocation failed', {
+      this.logger.error('Resource allocation failed', {
         executionId,
         error: error.message
       });
@@ -110,7 +109,7 @@ class ResourceManager {
    */
   async releaseResources(executionId) {
     try {
-      this.logger.info('ResourceManager: Releasing resources', {
+      this.logger.info('Releasing resources', {
         executionId
       });
 
@@ -133,7 +132,7 @@ class ResourceManager {
         });
       }
 
-      this.logger.info('ResourceManager: Resources released', {
+      this.logger.info('Resources released', {
         executionId,
         wasAllocated,
         duration: usage ? Date.now() - usage.startTime : 0
@@ -142,7 +141,7 @@ class ResourceManager {
       return wasAllocated;
 
     } catch (error) {
-      this.logger.error('ResourceManager: Resource release failed', {
+      this.logger.error('Resource release failed', {
         executionId,
         error: error.message
       });
@@ -267,7 +266,7 @@ class ResourceManager {
         uptime: os.uptime()
       };
     } catch (error) {
-      this.logger.error('ResourceManager: Failed to get system resource usage', {
+      this.logger.error('Failed to get system resource usage', {
         error: error.message
       });
       return {
@@ -394,13 +393,13 @@ class ResourceManager {
       try {
         await this.monitorResources();
       } catch (error) {
-        this.logger.error('ResourceManager: Resource monitoring failed', {
+        this.logger.error('Resource monitoring failed', {
           error: error.message
         });
       }
     }, this.monitoringIntervalMs);
 
-    this.logger.info('ResourceManager: Resource monitoring started', {
+    this.logger.info('Resource monitoring started', {
       interval: this.monitoringIntervalMs
     });
   }
@@ -412,7 +411,7 @@ class ResourceManager {
     if (this.monitoringInterval) {
       clearInterval(this.monitoringInterval);
       this.monitoringInterval = null;
-      this.logger.info('ResourceManager: Resource monitoring stopped');
+      this.logger.info('Resource monitoring stopped');
     }
   }
 
@@ -426,7 +425,7 @@ class ResourceManager {
     const violations = this.checkResourceViolations(utilization);
     
     if (violations.length > 0) {
-      this.logger.warn('ResourceManager: Resource violations detected', {
+      this.logger.warn('Resource violations detected', {
         violations
       });
       
@@ -513,7 +512,7 @@ class ResourceManager {
     
     if (executions.length > 0) {
       const [executionId] = executions[0];
-      this.logger.warn('ResourceManager: High memory usage detected', {
+      this.logger.warn('High memory usage detected', {
         executionId,
         violation: violation.message
       });
@@ -531,7 +530,7 @@ class ResourceManager {
     
     if (executions.length > 0) {
       const [executionId] = executions[0];
-      this.logger.warn('ResourceManager: High CPU usage detected', {
+      this.logger.warn('High CPU usage detected', {
         executionId,
         violation: violation.message
       });
@@ -543,7 +542,7 @@ class ResourceManager {
    * @param {Object} violation - Concurrent violation
    */
   async handleConcurrentViolation(violation) {
-    this.logger.warn('ResourceManager: High concurrent execution count', {
+    this.logger.warn('High concurrent execution count', {
       violation: violation.message,
       currentExecutions: this.allocatedResources.size
     });
@@ -589,7 +588,7 @@ class ResourceManager {
       }
     }
 
-    this.logger.info('ResourceManager: Resource limits updated', newLimits);
+    this.logger.info('Resource limits updated', newLimits);
   }
 
   /**
@@ -624,14 +623,14 @@ class ResourceManager {
    */
   clearHistory() {
     this.resourceHistory.clear();
-    this.logger.info('ResourceManager: Resource history cleared');
+    this.logger.info('Resource history cleared');
   }
 
   /**
    * Shutdown resource manager
    */
   async shutdown() {
-    this.logger.info('ResourceManager: Shutting down');
+    this.logger.info('Shutting down');
     
     // Stop monitoring
     this.stopResourceMonitoring();
@@ -642,7 +641,7 @@ class ResourceManager {
       await this.releaseResources(executionId);
     }
     
-    this.logger.info('ResourceManager: Shutdown complete');
+    this.logger.info('Shutdown complete');
   }
 }
 

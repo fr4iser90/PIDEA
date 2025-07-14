@@ -137,7 +137,7 @@ class Logger {
 
     // Service-spezifische Logs
     service(serviceName, message, meta = {}) {
-        this.logger.info(`[${serviceName}] ${message}`, meta);
+        this.logger.info(`${message}`, meta);
     }
 
     // User Action Logs

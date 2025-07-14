@@ -5,8 +5,7 @@ const TaskSequencer = require('./TaskSequencer');
 const GitWorkflowManager = require('../../workflows/categories/git/GitWorkflowManager');
 const GitWorkflowContext = require('../../workflows/categories/git/GitWorkflowContext');
 const { v4: uuidv4 } = require('uuid');
-const Logger = require('@logging/Logger');
-const logger = new Logger('Logger');
+const ServiceLogger = require('@logging/ServiceLogger');
 
 /**
  * AutoFinishSystem - Core service for automated TODO processing and task completion
@@ -40,7 +39,7 @@ class AutoFinishSystem {
       autoContinueThreshold: 0.8 // 80% confidence for auto-continue
     };
     
-    this.logger = console;
+    this.logger = new ServiceLogger('AutoFinishSystem');
     
     // Initialize enhanced git workflow manager
     this.gitWorkflowManager = null;
@@ -59,12 +58,12 @@ class AutoFinishSystem {
           logger: this.logger,
           eventBus: this.webSocketManager
         });
-        this.logger.info('[AutoFinishSystem] Git workflow manager initialized');
+        this.logger.info('Git workflow manager initialized');
       } else {
-        this.logger.warn('[AutoFinishSystem] ⚠️ Git service not available, git workflow manager disabled');
+        this.logger.warn('⚠️ Git service not available, git workflow manager disabled');
       }
     } catch (error) {
-      this.logger.error('[AutoFinishSystem] Failed to initialize git workflow manager:', error.message);
+      this.logger.error('Failed to initialize git workflow manager:', error.message);
     }
   }
 
@@ -73,7 +72,7 @@ class AutoFinishSystem {
    */
   async initialize() {
     try {
-      this.logger.info('[AutoFinishSystem] 🚀 Initializing auto-finish system...');
+      this.logger.info('🚀 Initializing auto-finish system...');
       
       // Initialize subsystems
       await this.todoParser.initialize();
@@ -84,10 +83,10 @@ class AutoFinishSystem {
       // Start session cleanup timer
       this.startSessionCleanup();
       
-      this.logger.info('[AutoFinishSystem] ✅ Auto-finish system initialized successfully');
+      this.logger.info('✅ Auto-finish system initialized successfully');
       return true;
     } catch (error) {
-      this.logger.error('[AutoFinishSystem] Initialization failed:', error.message);
+      this.logger.error('Initialization failed:', error.message);
       throw error;
     }
   }
@@ -103,7 +102,7 @@ class AutoFinishSystem {
     const startTime = Date.now();
     
     try {
-      this.logger.info(`[AutoFinishSystem] Starting TODO processing session ${sessionId}`);
+      this.logger.info(`Starting TODO processing session ${sessionId}`);
       
       // Validate input
       if (!todoInput || typeof todoInput !== 'string') {
@@ -124,7 +123,7 @@ class AutoFinishSystem {
       });
       
       // Parse TODO list
-      this.logger.info(`[AutoFinishSystem] Parsing TODO list for session ${sessionId}`);
+      this.logger.info(`Parsing TODO list for session ${sessionId}`);
       const tasks = await this.todoParser.parse(todoInput);
       
       if (tasks.length === 0) {
@@ -149,7 +148,7 @@ class AutoFinishSystem {
       });
       
       // Sequence tasks based on dependencies
-      this.logger.info(`[AutoFinishSystem] Sequencing ${tasks.length} tasks for session ${sessionId}`);
+      this.logger.info(`Sequencing ${tasks.length} tasks for session ${sessionId}`);
       const sequencedTasks = await this.taskSequencer.sequence(tasks);
       
       // Process tasks sequentially
@@ -158,7 +157,7 @@ class AutoFinishSystem {
       
       for (const task of sequencedTasks) {
         try {
-          this.logger.info(`[AutoFinishSystem] Processing task ${task.id}: ${task.description}`);
+          this.logger.info(`Processing task ${task.id}: ${task.description}`);
           
           // Stream task start
           this.streamProgress(sessionId, 'task-start', {
@@ -186,7 +185,7 @@ class AutoFinishSystem {
           });
           
         } catch (error) {
-          this.logger.error(`[AutoFinishSystem] Task ${task.id} failed:`, error.message);
+          this.logger.error(`Task ${task.id} failed:`, error.message);
           
           // Stream task error
           this.streamProgress(sessionId, 'task-error', {
@@ -234,12 +233,12 @@ class AutoFinishSystem {
       // Stream session completion
       this.streamProgress(sessionId, 'complete', finalResult);
       
-      this.logger.info(`[AutoFinishSystem] TODO processing completed for session ${sessionId}: ${completedTasks}/${tasks.length} tasks completed`);
+      this.logger.info(`TODO processing completed for session ${sessionId}: ${completedTasks}/${tasks.length} tasks completed`);
       
       return finalResult;
       
     } catch (error) {
-      this.logger.error(`[AutoFinishSystem] TODO processing failed for session ${sessionId}:`, error.message);
+      this.logger.error(`TODO processing failed for session ${sessionId}:`, error.message);
       
       // Update session status
       const session = this.activeSessions.get(sessionId);
@@ -272,7 +271,7 @@ class AutoFinishSystem {
     const taskStartTime = Date.now();
     
     try {
-      this.logger.info(`[AutoFinishSystem] Processing task ${task.id}: ${task.description}`);
+      this.logger.info(`Processing task ${task.id}: ${task.description}`);
       
       // Try to use enhanced git workflow manager if available
       if (this.gitWorkflowManager && task.metadata?.projectPath) {
@@ -286,7 +285,7 @@ class AutoFinishSystem {
 
           const result = await this.gitWorkflowManager.executeWorkflow(context);
           
-          this.logger.info(`[AutoFinishSystem] Enhanced task processing completed for task ${task.id}`);
+          this.logger.info(`Enhanced task processing completed for task ${task.id}`);
           
           return {
             taskId: task.id,
@@ -299,7 +298,7 @@ class AutoFinishSystem {
           };
 
         } catch (error) {
-          this.logger.error(`[AutoFinishSystem] Enhanced task processing failed for task ${task.id}:`, error.message);
+          this.logger.error(`Enhanced task processing failed for task ${task.id}:`, error.message);
           // Fallback to legacy method
         }
       }
@@ -315,7 +314,7 @@ class AutoFinishSystem {
       while (confirmationAttempts < this.config.maxConfirmationAttempts) {
         confirmationAttempts++;
         
-        this.logger.info(`[AutoFinishSystem] Confirmation attempt ${confirmationAttempts} for task ${task.id}`);
+        this.logger.info(`Confirmation attempt ${confirmationAttempts} for task ${task.id}`);
         
         // Ask for confirmation
         confirmationResult = await this.confirmationSystem.askConfirmation(aiResponse, {
@@ -324,7 +323,7 @@ class AutoFinishSystem {
         });
         
         if (confirmationResult.confirmed) {
-          this.logger.info(`[AutoFinishSystem] Task ${task.id} confirmed on attempt ${confirmationAttempts}`);
+          this.logger.info(`Task ${task.id} confirmed on attempt ${confirmationAttempts}`);
           break;
         }
         
@@ -333,7 +332,7 @@ class AutoFinishSystem {
           const fallbackAction = await this.fallbackDetection.detectUserInputNeed(aiResponse);
           
           if (fallbackAction === 'pause') {
-            this.logger.info(`[AutoFinishSystem] Task ${task.id} requires user input, pausing`);
+            this.logger.info(`Task ${task.id} requires user input, pausing`);
             
             // Stream pause event
             this.streamProgress(sessionId, 'task-pause', {
@@ -354,7 +353,7 @@ class AutoFinishSystem {
         }
         
         // Continue with next confirmation attempt
-        this.logger.info(`[AutoFinishSystem] Task ${task.id} not confirmed, continuing to next attempt`);
+        this.logger.info(`Task ${task.id} not confirmed, continuing to next attempt`);
       }
       
       // Check if task was confirmed
@@ -376,11 +375,11 @@ class AutoFinishSystem {
         completedAt: new Date()
       };
       
-      this.logger.info(`[AutoFinishSystem] Task ${task.id} completed successfully`);
+      this.logger.info(`Task ${task.id} completed successfully`);
       return taskResult;
       
     } catch (error) {
-      this.logger.error(`[AutoFinishSystem] Task ${task.id} failed:`, error.message);
+      this.logger.error(`Task ${task.id} failed:`, error.message);
       
       return {
         taskId: task.id,
@@ -441,7 +440,7 @@ Please proceed with the implementation and let me know when you're finished.`;
       };
       
     } catch (error) {
-      this.logger.error(`[AutoFinishSystem] Task validation failed:`, error.message);
+      this.logger.error(`Task validation failed:`, error.message);
       return {
         isValid: false,
         error: error.message,
@@ -492,7 +491,7 @@ Please proceed with the implementation and let me know when you're finished.`;
         timestamp: new Date().toISOString()
       });
     } catch (error) {
-      this.logger.error(`[AutoFinishSystem] Failed to stream progress for session ${sessionId}:`, error.message);
+      this.logger.error(`Failed to stream progress for session ${sessionId}:`, error.message);
     }
   }
 
@@ -533,7 +532,7 @@ Please proceed with the implementation and let me know when you're finished.`;
       reason: 'user_cancelled'
     });
     
-    this.logger.info(`[AutoFinishSystem] Session ${sessionId} cancelled`);
+    this.logger.info(`Session ${sessionId} cancelled`);
     return true;
   }
 
@@ -563,7 +562,7 @@ Please proceed with the implementation and let me know when you're finished.`;
     
     expiredSessions.forEach(sessionId => {
       this.activeSessions.delete(sessionId);
-      this.logger.info(`[AutoFinishSystem] Cleaned up expired session ${sessionId}`);
+      this.logger.info(`Cleaned up expired session ${sessionId}`);
     });
   }
 
@@ -591,7 +590,7 @@ Please proceed with the implementation and let me know when you're finished.`;
    * Cleanup resources
    */
   async cleanup() {
-    this.logger.info('[AutoFinishSystem] Cleaning up auto-finish system...');
+    this.logger.info('Cleaning up auto-finish system...');
     
     // Cancel all active sessions
     for (const sessionId of this.activeSessions.keys()) {
@@ -607,7 +606,7 @@ Please proceed with the implementation and let me know when you're finished.`;
     await this.fallbackDetection.cleanup();
     await this.taskSequencer.cleanup();
     
-    this.logger.info('[AutoFinishSystem] Cleanup completed');
+    this.logger.info('Cleanup completed');
   }
 }
 

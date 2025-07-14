@@ -21,7 +21,7 @@ class StopStreamingHandler {
    */
   async handle(command) {
     try {
-      logger.info(`[StopStreamingHandler] Processing command: ${command.commandId}`);
+      logger.info(`Processing command: ${command.commandId}`);
       
       // Validate command
       command.validate();
@@ -48,7 +48,7 @@ class StopStreamingHandler {
         });
       }
       
-      logger.info(`[StopStreamingHandler] Successfully stopped streaming for session ${command.sessionId}`);
+      logger.info(`Successfully stopped streaming for session ${command.sessionId}`);
       
       return {
         success: true,
@@ -59,7 +59,7 @@ class StopStreamingHandler {
       };
       
     } catch (error) {
-      logger.error(`[StopStreamingHandler] Error handling command ${command.commandId}:`, error.message);
+      logger.error(`Error handling command ${command.commandId}:`, error.message);
       
       // Emit error event if event bus is available
       if (this.eventBus) {

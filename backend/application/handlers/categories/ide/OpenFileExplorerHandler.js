@@ -60,7 +60,7 @@ class OpenFileExplorerHandler {
       return validationResult;
 
     } catch (error) {
-      this.logger.error('[OpenFileExplorerHandler] Command validation error:', error);
+      this.logger.error('Command validation error:', error);
       return {
         isValid: false,
         errors: [error.message]
@@ -82,7 +82,7 @@ class OpenFileExplorerHandler {
         throw new Error(`Command validation failed: ${validationResult.errors.join(', ')}`);
       }
 
-      this.logger.info('[OpenFileExplorerHandler] Handling command', {
+      this.logger.info('Handling command', {
         handlerId: this.handlerId,
         commandId: command.commandId,
         userId: command.userId,
@@ -141,7 +141,7 @@ class OpenFileExplorerHandler {
         timestamp: new Date()
       });
 
-      this.logger.info('[OpenFileExplorerHandler] Command handled successfully', {
+      this.logger.info('Command handled successfully', {
         handlerId: this.handlerId,
         commandId: command.commandId,
         result: result
@@ -150,7 +150,7 @@ class OpenFileExplorerHandler {
       return result;
 
     } catch (error) {
-      this.logger.error('[OpenFileExplorerHandler] Command handling failed:', error);
+      this.logger.error('Command handling failed:', error);
 
       // Publish failure event
       await this.eventBus.publish('ide.fileexplorer.open.failed', {

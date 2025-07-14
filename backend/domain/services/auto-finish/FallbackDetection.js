@@ -1,5 +1,4 @@
-const Logger = require('@logging/Logger');
-const logger = new Logger('Logger');
+const ServiceLogger = require('@logging/ServiceLogger');
 /**
  * FallbackDetection - Service for detecting when user input is needed
  * Analyzes AI responses and IDE state to determine if automation should continue or pause
@@ -108,15 +107,15 @@ class FallbackDetection {
       maxAnalysisTime: 5000 // 5 seconds
     };
     
-    this.logger = console;
+    this.logger = new ServiceLogger('FallbackDetection');
   }
 
   /**
    * Initialize the fallback detection system
    */
   async initialize() {
-    this.logger.info('[FallbackDetection] 🔄 Initializing fallback detection system...');
-    this.logger.info(`[FallbackDetection] Loaded ${Object.keys(this.userInputKeywords).length} languages`);
+    this.logger.info('🔄 Initializing fallback detection system...');
+    this.logger.info(`Loaded ${Object.keys(this.userInputKeywords).length} languages`);
     return true;
   }
 
@@ -130,7 +129,7 @@ class FallbackDetection {
     const startTime = Date.now();
     
     try {
-      this.logger.info('[FallbackDetection] Detecting user input need...');
+      this.logger.info('Detecting user input need...');
       
       if (!this.config.enabled) {
         return {
@@ -194,12 +193,12 @@ class FallbackDetection {
         duration: Date.now() - startTime
       };
       
-      this.logger.info(`[FallbackDetection] Detection result: ${result.action} (confidence: ${result.confidence.toFixed(2)})`);
+      this.logger.info(`Detection result: ${result.action} (confidence: ${result.confidence.toFixed(2)})`);
       
       return result;
       
     } catch (error) {
-      this.logger.error('[FallbackDetection] Detection failed:', error.message);
+      this.logger.error('Detection failed:', error.message);
       
       return {
         needsUserInput: true, // Default to safe side
@@ -344,7 +343,7 @@ class FallbackDetection {
           });
         }
       } catch (error) {
-        this.logger.warn('[FallbackDetection] Failed to check focused element:', error.message);
+        this.logger.warn('Failed to check focused element:', error.message);
       }
       
       const normalizedScore = Math.min(totalScore / 5, 1.0);
@@ -357,7 +356,7 @@ class FallbackDetection {
       };
       
     } catch (error) {
-      this.logger.error('[FallbackDetection] IDE state analysis failed:', error.message);
+      this.logger.error('IDE state analysis failed:', error.message);
       return {
         score: 0,
         confidence: 0,
@@ -438,7 +437,7 @@ class FallbackDetection {
       };
       
     } catch (error) {
-      this.logger.error('[FallbackDetection] File content analysis failed:', error.message);
+      this.logger.error('File content analysis failed:', error.message);
       return {
         score: 0,
         confidence: 0,
@@ -620,7 +619,7 @@ class FallbackDetection {
    * Cleanup resources
    */
   async cleanup() {
-    this.logger.info('[FallbackDetection] Cleaning up fallback detection system...');
+    this.logger.info('Cleaning up fallback detection system...');
     // No specific cleanup needed for fallback detection
   }
 }

@@ -11,7 +11,7 @@ class VSCodeDetector {
   }
 
   async scanForVSCodeInstances() {
-    logger.info('[VSCodeDetector] Scanning for VSCode instances on ports', this.portRange.start, 'to', this.portRange.end);
+    logger.info('Scanning for VSCode instances on ports', this.portRange.start, 'to', this.portRange.end);
     
     const availableVSCodeInstances = [];
     const promises = [];
@@ -34,7 +34,7 @@ class VSCodeDetector {
       }
     });
 
-    logger.info('[VSCodeDetector] Found', availableVSCodeInstances.length, 'running VSCode instances:', 
+    logger.info('Found', availableVSCodeInstances.length, 'running VSCode instances:', 
       availableVSCodeInstances.map(ide => ({ port: ide.port, status: ide.status, url: ide.url })));
     return availableVSCodeInstances;
   }
@@ -63,10 +63,10 @@ class VSCodeDetector {
               if (browserString.includes('code/') || 
                   userAgent.toLowerCase().includes('code/') ||
                   userAgent.toLowerCase().includes('electron')) {
-                logger.info(`[VSCodeDetector] Found VSCode on port ${port}:`, json.Browser);
+                logger.info(`Found VSCode on port ${port}:`, json.Browser);
                 resolve(true);
               } else {
-                logger.info(`[VSCodeDetector] Port ${port} has CDP but not VSCode:`, json.Browser);
+                logger.info(`Port ${port} has CDP but not VSCode:`, json.Browser);
                 resolve(false);
               }
             } else {
@@ -113,7 +113,7 @@ class VSCodeDetector {
         message: 'Extension detection not yet implemented'
       };
     } catch (error) {
-      logger.error('[VSCodeDetector] Error detecting VSCode extensions:', error);
+      logger.error('Error detecting VSCode extensions:', error);
       return {
         port,
         extensions: [],

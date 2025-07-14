@@ -23,17 +23,17 @@ class VSCodeIDEService {
     // Listen for IDE changes
     if (this.eventBus) {
       this.eventBus.subscribe('activeIDEChanged', async (eventData) => {
-        logger.info('[vscodeIDEService] IDE changed, resetting package.json cache');
-        logger.info('[vscodeIDEService] Event data:', eventData);
+        logger.info('IDE changed, resetting package.json cache');
+        logger.info('Event data:', eventData);
         
         // Switch browser connection to new IDE
         if (eventData.port) {
           try {
-            logger.info('[vscodeIDEService] Switching browser connection to port:', eventData.port);
+            logger.info('Switching browser connection to port:', eventData.port);
             await this.browserManager.switchToPort(eventData.port);
-            logger.info('[vscodeIDEService] Successfully switched browser connection to port:', eventData.port);
+            logger.info('Successfully switched browser connection to port:', eventData.port);
           } catch (error) {
-            logger.error('[vscodeIDEService] Failed to switch browser connection:', error.message);
+            logger.error('Failed to switch browser connection:', error.message);
           }
         }
       });
@@ -43,20 +43,20 @@ class VSCodeIDEService {
   async sendMessage(message, options = {}) {
     // Ensure browser is connected to the active IDE port
     const activePort = this.getActivePort();
-    logger.info('[vscodeIDEService] sendMessage() - Active port:', activePort);
+    logger.info('sendMessage() - Active port:', activePort);
     
     if (activePort) {
       try {
         // Switch browser to active port if needed
         const currentBrowserPort = this.browserManager.getCurrentPort();
-        logger.info('[vscodeIDEService] sendMessage() - Current browser port:', currentBrowserPort);
+        logger.info('sendMessage() - Current browser port:', currentBrowserPort);
         
         if (currentBrowserPort !== activePort) {
-          logger.info('[vscodeIDEService] sendMessage() - Switching browser to active port:', activePort);
+          logger.info('sendMessage() - Switching browser to active port:', activePort);
           await this.browserManager.switchToPort(activePort);
         }
       } catch (error) {
-        logger.error('[vscodeIDEService] sendMessage() - Failed to switch browser port:', error.message);
+        logger.error('sendMessage() - Failed to switch browser port:', error.message);
       }
     }
     
@@ -66,20 +66,20 @@ class VSCodeIDEService {
   async extractChatHistory() {
     // Ensure browser is connected to the active IDE port
     const activePort = this.getActivePort();
-    logger.info('[vscodeIDEService] extractChatHistory() - Active port:', activePort);
+    logger.info('extractChatHistory() - Active port:', activePort);
     
     if (activePort) {
       try {
         // Switch browser to active port if needed
         const currentBrowserPort = this.browserManager.getCurrentPort();
-        logger.info('[vscodeIDEService] extractChatHistory() - Current browser port:', currentBrowserPort);
+        logger.info('extractChatHistory() - Current browser port:', currentBrowserPort);
         
         if (currentBrowserPort !== activePort) {
-          logger.info('[vscodeIDEService] extractChatHistory() - Switching browser to active port:', activePort);
+          logger.info('extractChatHistory() - Switching browser to active port:', activePort);
           await this.browserManager.switchToPort(activePort);
         }
       } catch (error) {
-        logger.error('[vscodeIDEService] extractChatHistory() - Failed to switch browser port:', error.message);
+        logger.error('extractChatHistory() - Failed to switch browser port:', error.message);
       }
     }
     
@@ -102,15 +102,15 @@ class VSCodeIDEService {
    */
   async postToVSCode(prompt) {
     try {
-      logger.info('[vscodeIDEService] Sending prompt to VSCode IDE:', prompt.substring(0, 100) + '...');
+      logger.info('Sending prompt to VSCode IDE:', prompt.substring(0, 100) + '...');
       
       // Use the chat message handler to send the prompt
       const result = await this.chatMessageHandler.sendMessage(prompt);
       
-      logger.info('[vscodeIDEService] Prompt sent successfully');
+      logger.info('Prompt sent successfully');
       return result;
     } catch (error) {
-      logger.error('[vscodeIDEService] Error sending prompt to VSCode:', error);
+      logger.error('Error sending prompt to VSCode:', error);
       throw error;
     }
   }
@@ -123,7 +123,7 @@ class VSCodeIDEService {
    */
   async applyRefactoring(filePath, refactoredCode) {
     try {
-      logger.info('[vscodeIDEService] Applying refactoring to file:', filePath);
+      logger.info('Applying refactoring to file:', filePath);
       
       // Create a prompt to apply the refactored code
       const applyPrompt = `Please apply the following refactored code to the file ${filePath}:
@@ -143,7 +143,7 @@ After applying the changes, please confirm that the refactoring has been complet
       // Send the refactoring prompt to VSCode IDE
       const result = await this.postToVSCode(applyPrompt);
       
-      logger.info('[vscodeIDEService] Refactoring applied successfully');
+      logger.info('Refactoring applied successfully');
       
       return {
         success: true,
@@ -153,7 +153,7 @@ After applying the changes, please confirm that the refactoring has been complet
         message: 'Refactoring applied to VSCode IDE'
       };
     } catch (error) {
-      logger.error('[vscodeIDEService] Error applying refactoring:', error);
+      logger.error('Error applying refactoring:', error);
       throw new Error(`Failed to apply refactoring: ${error.message}`);
     }
   }
@@ -186,54 +186,54 @@ After applying the changes, please confirm that the refactoring has been complet
 
   getActivePort() {
     const activePort = this.ideManager.getActivePort();
-    logger.info(`[vscodeIDEService] getActivePort() called, returning: ${activePort}`);
+    logger.info(`getActivePort() called, returning: ${activePort}`);
     return activePort;
   }
 
   async switchToPort(port) {
     const currentActivePort = this.getActivePort();
-    logger.info(`[vscodeIDEService] switchToPort(${port}) called, current active port:`, currentActivePort);
+    logger.info(`switchToPort(${port}) called, current active port:`, currentActivePort);
     
     if (currentActivePort === port) {
-      logger.info(`[vscodeIDEService] Already connected to port ${port}`);
+      logger.info(`Already connected to port ${port}`);
       return;
     }
     
-    logger.info(`[vscodeIDEService] Switching to port ${port}`);
+    logger.info(`Switching to port ${port}`);
     await this.ideManager.switchToIDE(port);
     await this.browserManager.switchToPort(port);
-    logger.info(`[vscodeIDEService] Successfully switched to port ${port}`);
+    logger.info(`Successfully switched to port ${port}`);
   }
 
   // Enhanced terminal monitoring with package.json priority
   async monitorTerminalOutput() {
     try {
       // First try package.json analysis (more reliable)
-      logger.info('[vscodeIDEService] Trying package.json analysis first...');
+      logger.info('Trying package.json analysis first...');
       
       // Use the workspace path of the active IDE
       const activeIDE = await this.ideManager.getActiveIDE();
       let workspacePath = activeIDE?.workspacePath;
-      logger.info('[vscodeIDEService] Using workspace path for package.json analysis:', workspacePath);
+      logger.info('Using workspace path for package.json analysis:', workspacePath);
       
       // If workspace path is virtual (like composer-code-block-anysphere:/), use project root as fallback
       if (workspacePath && workspacePath.includes(':')) {
         const path = require('path');
         const currentDir = process.cwd();
         workspacePath = path.resolve(currentDir, '..');
-        logger.info('[vscodeIDEService] Virtual workspace detected, using project root as fallback:', workspacePath);
+        logger.info('Virtual workspace detected, using project root as fallback:', workspacePath);
       }
       
       const packageJsonUrl = await this.packageJsonAnalyzer.analyzePackageJsonInPath(workspacePath);
       if (packageJsonUrl) {
-        logger.info('[vscodeIDEService] Dev server detected via package.json:', packageJsonUrl);
+        logger.info('Dev server detected via package.json:', packageJsonUrl);
         return packageJsonUrl;
       }
       // Fallback to terminal monitoring (less reliable due to CDP limitations)
-      logger.info('[vscodeIDEService] Package.json analysis failed, trying terminal monitoring...');
+      logger.info('Package.json analysis failed, trying terminal monitoring...');
       return await this.terminalMonitor.monitorTerminalOutput();
     } catch (error) {
-      logger.error('[vscodeIDEService] Error in enhanced terminal monitoring:', error);
+      logger.error('Error in enhanced terminal monitoring:', error);
       return null;
     }
   }
@@ -248,39 +248,39 @@ After applying the changes, please confirm that the refactoring has been complet
       }
       
       if (!port) {
-        logger.info('[vscodeIDEService] No IDE port available');
+        logger.info('No IDE port available');
         return null;
       }
       
-      logger.info('[vscodeIDEService] Getting user app URL for port:', port);
+      logger.info('Getting user app URL for port:', port);
       
       // Get workspace path for this specific port
       const workspacePath = this.ideManager.getWorkspacePath(port);
-      logger.info('[vscodeIDEService] Workspace path for port', port, ':', workspacePath);
+      logger.info('Workspace path for port', port, ':', workspacePath);
       
       if (!workspacePath) {
-        logger.info('[vscodeIDEService] No workspace path found for port', port);
+        logger.info('No workspace path found for port', port);
         return null;
       }
       
       // If workspace path is virtual (like composer-code-block-anysphere:/), skip
       if (workspacePath.includes(':')) {
-        logger.info('[vscodeIDEService] Skipping virtual workspace for port', port, ':', workspacePath);
+        logger.info('Skipping virtual workspace for port', port, ':', workspacePath);
         return null;
       }
       
       // Try package.json analysis first
       const packageJsonUrl = await this.packageJsonAnalyzer.analyzePackageJsonInPath(workspacePath);
       if (packageJsonUrl) {
-        logger.info('[vscodeIDEService] Dev server detected via package.json for port', port, ':', packageJsonUrl);
+        logger.info('Dev server detected via package.json for port', port, ':', packageJsonUrl);
         return packageJsonUrl;
       }
       
       // No frontend found in this workspace
-      logger.info('[vscodeIDEService] No frontend found in workspace for port', port, ':', workspacePath);
+      logger.info('No frontend found in workspace for port', port, ':', workspacePath);
       return null;
     } catch (error) {
-      logger.error('[vscodeIDEService] Error getting user app URL for port', port, ':', error);
+      logger.error('Error getting user app URL for port', port, ':', error);
       return null;
     }
   }
@@ -411,7 +411,7 @@ After applying the changes, please confirm that the refactoring has been complet
       
       return result;
     } catch (error) {
-      logger.error('[vscodeIDEService] Error getting connection status:', error);
+      logger.error('Error getting connection status:', error);
       return {
         connected: false,
         error: error.message,

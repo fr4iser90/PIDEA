@@ -4,8 +4,7 @@
 const path = require('path');
 const fs = require('fs').promises;
 const { execSync } = require('child_process');
-const Logger = require('@logging/Logger');
-const logger = new Logger('Logger');
+const ServiceLogger = require('@logging/ServiceLogger');
 
 class SecurityAnalyzer {
     constructor() {
@@ -19,7 +18,7 @@ class SecurityAnalyzer {
         };
         
         // Add logger
-        this.logger = console;
+        this.logger = new ServiceLogger('SecurityAnalyzer');
     }
 
     /**

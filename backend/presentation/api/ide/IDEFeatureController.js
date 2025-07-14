@@ -46,7 +46,7 @@ class IDEFeatureController {
         data: features
       });
     } catch (error) {
-      this.logger.error('[IDEFeatureController] Error getting IDE features:', error);
+      this.logger.error('Error getting IDE features:', error);
       res.status(500).json({
         success: false,
         error: 'Failed to get IDE features',
@@ -85,7 +85,7 @@ class IDEFeatureController {
         data: capabilities
       });
     } catch (error) {
-      this.logger.error('[IDEFeatureController] Error getting feature capabilities:', error);
+      this.logger.error('Error getting feature capabilities:', error);
       res.status(500).json({
         success: false,
         error: 'Failed to get feature capabilities',
@@ -125,7 +125,7 @@ class IDEFeatureController {
         data: availability
       });
     } catch (error) {
-      this.logger.error('[IDEFeatureController] Error checking feature availability:', error);
+      this.logger.error('Error checking feature availability:', error);
       res.status(500).json({
         success: false,
         error: 'Failed to check feature availability',
@@ -164,7 +164,7 @@ class IDEFeatureController {
         data: config
       });
     } catch (error) {
-      this.logger.error('[IDEFeatureController] Error getting feature config:', error);
+      this.logger.error('Error getting feature config:', error);
       res.status(500).json({
         success: false,
         error: 'Failed to get feature config',
@@ -210,7 +210,7 @@ class IDEFeatureController {
         data: result
       });
     } catch (error) {
-      this.logger.error('[IDEFeatureController] Error updating feature config:', error);
+      this.logger.error('Error updating feature config:', error);
       res.status(500).json({
         success: false,
         error: 'Failed to update feature config',
@@ -245,7 +245,7 @@ class IDEFeatureController {
         data: stats
       });
     } catch (error) {
-      this.logger.error('[IDEFeatureController] Error getting feature stats:', error);
+      this.logger.error('Error getting feature stats:', error);
       res.status(500).json({
         success: false,
         error: 'Failed to get feature stats',

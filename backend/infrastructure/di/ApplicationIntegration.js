@@ -19,7 +19,7 @@ class ApplicationIntegration {
      * Example: Migrate Application.js initializeInfrastructure method
      */
     async initializeInfrastructureWithDI() {
-        logger.info('[ApplicationIntegration] Initializing infrastructure with DI...');
+        logger.info('Initializing infrastructure with DI...');
 
         // Register all services through the registry
         this.serviceRegistry.registerAllServices();
@@ -38,14 +38,14 @@ class ApplicationIntegration {
         this.monorepoStrategy = this.serviceRegistry.getService('monorepoStrategy');
         this.singleRepoStrategy = this.serviceRegistry.getService('singleRepoStrategy');
 
-        logger.info('[ApplicationIntegration] Infrastructure initialized with DI');
+        logger.info('Infrastructure initialized with DI');
     }
 
     /**
      * Example: Migrate Application.js initializeDomainServices method
      */
     async initializeDomainServicesWithDI() {
-        logger.info('[ApplicationIntegration] Initializing domain services with DI...');
+        logger.info('Initializing domain services with DI...');
 
         // Get domain services through DI container
         this.cursorIDEService = this.serviceRegistry.getService('cursorIDEService');
@@ -73,14 +73,14 @@ class ApplicationIntegration {
         this.architectureService = this.serviceRegistry.getService('architectureService');
         this.dependencyAnalyzer = this.serviceRegistry.getService('dependencyAnalyzer');
 
-        logger.info('[ApplicationIntegration] Domain services initialized with DI');
+        logger.info('Domain services initialized with DI');
     }
 
     /**
      * Example: Migrate Application.js initializeApplicationHandlers method
      */
     async initializeApplicationHandlersWithDI() {
-        logger.info('[ApplicationIntegration] Initializing application handlers with DI...');
+        logger.info('Initializing application handlers with DI...');
 
         // Get handlers through DI container
         this.sendMessageHandler = this.serviceRegistry.getService('sendMessageHandler');
@@ -92,14 +92,14 @@ class ApplicationIntegration {
         // this.analyzeCodeQualityHandler = this.serviceRegistry.getService('analyzeCodeQualityHandler');
         // this.analyzeDependenciesHandler = this.serviceRegistry.getService('analyzeDependenciesHandler');
 
-        logger.info('[ApplicationIntegration] Application handlers initialized with DI');
+        logger.info('Application handlers initialized with DI');
     }
 
     /**
      * Example: Set up project context
      */
     async setupProjectContext() {
-        logger.info('[ApplicationIntegration] Setting up project context...');
+        logger.info('Setting up project context...');
 
         // Auto-detect project path
         const projectPath = await this.projectContext.autoDetectProjectPath();
@@ -114,12 +114,12 @@ class ApplicationIntegration {
         // Validate project context
         const validation = await this.projectContext.validateProjectContext();
         if (!validation.isValid) {
-            logger.error('[ApplicationIntegration] Project context validation failed:', validation.errors);
+            logger.error('Project context validation failed:', validation.errors);
         } else {
-            logger.info('[ApplicationIntegration] Project context validated successfully');
+            logger.info('Project context validated successfully');
         }
 
-        logger.info('[ApplicationIntegration] Project context:', this.projectContext.getProjectContext());
+        logger.info('Project context:', this.projectContext.getProjectContext());
     }
 
     /**
@@ -169,7 +169,7 @@ class ApplicationIntegration {
      * Example: Migration helper - compare old vs new approach
      */
     compareApproaches() {
-        logger.info('[ApplicationIntegration] Comparing old vs new approach...');
+        logger.info('Comparing old vs new approach...');
 
         // OLD APPROACH (Inconsistent)
         const oldApproach = {
@@ -237,7 +237,7 @@ class ApplicationIntegration {
      * Example: Cleanup with DI
      */
     async cleanup() {
-        logger.info('[ApplicationIntegration] Cleaning up with DI...');
+        logger.info('Cleaning up with DI...');
 
         // Clear project context
         this.projectContext.clearProjectContext();
@@ -245,7 +245,7 @@ class ApplicationIntegration {
         // Clear service registry
         this.serviceRegistry.clearAllServices();
 
-        logger.info('[ApplicationIntegration] Cleanup completed');
+        logger.info('Cleanup completed');
     }
 }
 

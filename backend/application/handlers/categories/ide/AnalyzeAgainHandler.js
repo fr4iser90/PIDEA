@@ -37,7 +37,7 @@ class AnalyzeAgainHandler {
    */
   async handle(command, context = {}) {
     try {
-      this.logger.info(`[AnalyzeAgainHandler] Handling command`);
+      this.logger.info(`Handling command`);
 
       // Validate command
       if (!command || command.type !== 'AnalyzeAgainCommand') {
@@ -60,7 +60,7 @@ class AnalyzeAgainHandler {
         timestamp: new Date()
       });
 
-      this.logger.info(`[AnalyzeAgainHandler] Project re-analyzed successfully`);
+      this.logger.info(`Project re-analyzed successfully`);
 
       return {
         success: true,
@@ -70,7 +70,7 @@ class AnalyzeAgainHandler {
       };
 
     } catch (error) {
-      this.logger.error(`[AnalyzeAgainHandler] Failed to re-analyze project:`, error);
+      this.logger.error(`Failed to re-analyze project:`, error);
 
       // Publish failure event
       await this.eventBus.publish('project.reanalysis.failed', {

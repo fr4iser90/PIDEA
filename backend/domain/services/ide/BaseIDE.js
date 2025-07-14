@@ -51,9 +51,9 @@ class BaseIDE extends IDEInterface {
       this.workspacePathDetector = new WorkspacePathDetector(this.browserManager, this.ideManager);
       this.chatHistoryExtractor = new ChatHistoryExtractor(this.browserManager, this.ideType);
       
-      logger.info(`[BaseIDE] Common services initialized for ${this.ideType}`);
+      logger.info(`Common services initialized for ${this.ideType}`);
     } catch (error) {
-      logger.error(`[BaseIDE] Failed to initialize common services:`, error);
+      logger.error(`Failed to initialize common services:`, error);
       this.lastError = error;
     }
   }
@@ -64,17 +64,17 @@ class BaseIDE extends IDEInterface {
   setupEventListeners() {
     if (this.eventBus) {
       this.eventBus.subscribe('activeIDEChanged', async (eventData) => {
-        logger.info(`[BaseIDE] IDE changed for ${this.ideType}, resetting cache`);
-        logger.info(`[BaseIDE] Event data:`, eventData);
+        logger.info(`IDE changed for ${this.ideType}, resetting cache`);
+        logger.info(`Event data:`, eventData);
         
         // Switch browser connection to new IDE
         if (eventData.port) {
           try {
-            logger.info(`[BaseIDE] Switching browser connection to port:`, eventData.port);
+            logger.info(`Switching browser connection to port:`, eventData.port);
             await this.browserManager.switchToPort(eventData.port);
-            logger.info(`[BaseIDE] Successfully switched browser connection to port:`, eventData.port);
+            logger.info(`Successfully switched browser connection to port:`, eventData.port);
           } catch (error) {
-            logger.error(`[BaseIDE] Failed to switch browser connection:`, error.message);
+            logger.error(`Failed to switch browser connection:`, error.message);
           }
         }
       });
@@ -100,7 +100,7 @@ class BaseIDE extends IDEInterface {
       stack: error.stack
     };
     
-    logger.error(`[BaseIDE] Error in ${context}:`, error);
+    logger.error(`Error in ${context}:`, error);
     return errorResult;
   }
 
@@ -116,7 +116,7 @@ class BaseIDE extends IDEInterface {
       ...data
     };
     
-    logger.info(`[BaseIDE] ${message}`, logData);
+    logger.info(`${message}`, logData);
   }
 
   /**

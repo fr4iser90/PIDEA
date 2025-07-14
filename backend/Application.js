@@ -96,7 +96,7 @@ class Application {
   }
 
   async initialize() {
-    this.logger.info('[Application] 🔧 Initializing...');
+    this.logger.info('🔧 Initializing...');
 
     try {
       // Initialize database connection
@@ -142,7 +142,7 @@ class Application {
       try {
         await this.ideManager.initialize();
       } catch (error) {
-        this.logger.warn('[Application] IDE Manager initialization failed, continuing without IDE support:', error.message);
+        this.logger.warn('IDE Manager initialization failed, continuing without IDE support:', error.message);
       }
 
       // Setup event handlers
@@ -154,24 +154,24 @@ class Application {
       // Make application instance globally available
       global.application = this;
 
-      this.logger.info('[Application] ✅ Initialization complete');
+      this.logger.info('✅ Initialization complete');
     } catch (error) {
-      this.logger.error('[Application] Initialization failed:', error);
+      this.logger.error('Initialization failed:', error);
       throw error;
     }
   }
 
   async initializeDatabase() {
-    this.logger.info('[Application] 💾 Initializing database...');
+    this.logger.info('💾 Initializing database...');
     
     this.databaseConnection = new DatabaseConnection(this.securityConfig.database);
     await this.databaseConnection.connect();
     
-    this.logger.info(`[Application] ✅ Database connected: ${this.databaseConnection.getType()}`);
+    this.logger.info(`✅ Database connected: ${this.databaseConnection.getType()}`);
   }
 
   async initializeInfrastructure() {
-    this.logger.info('[Application] 🏗️ Initializing infrastructure...');
+    this.logger.info('🏗️ Initializing infrastructure...');
 
     // Initialize DI system first
     const { getServiceRegistry } = require('./infrastructure/di/ServiceRegistry');
@@ -214,15 +214,15 @@ class Application {
         this.monorepoStrategy = this.serviceRegistry.getService('monorepoStrategy');
         this.singleRepoStrategy = this.serviceRegistry.getService('singleRepoStrategy');
     } catch (error) {
-        this.logger.error('[Application] Failed to get infrastructure services:', error.message);
+        this.logger.error('Failed to get infrastructure services:', error.message);
         throw error; // Re-throw because these are critical services
     }
 
-    this.logger.info('[Application] ✅ Infrastructure initialized with DI');
+    this.logger.info('✅ Infrastructure initialized with DI');
   }
 
   async initializeDomainServices() {
-    this.logger.info('[Application] 🔧 Initializing domain services with DI...');
+    this.logger.info('🔧 Initializing domain services with DI...');
 
     // Set up project context
     await this.setupProjectContext();
@@ -256,7 +256,7 @@ class Application {
         this.monorepoStrategy = this.serviceRegistry.getService('monorepoStrategy');
         this.singleRepoStrategy = this.serviceRegistry.getService('singleRepoStrategy');
     } catch (error) {
-        this.logger.error('[Application] Failed to get domain services:', error.message);
+        this.logger.error('Failed to get domain services:', error.message);
         throw error; // Re-throw because these are critical services
     }
 
@@ -264,7 +264,7 @@ class Application {
     try {
         this.workflowOrchestrationService = this.serviceRegistry.getService('workflowOrchestrationService');
     } catch (error) {
-        this.logger.warn('[Application] WorkflowOrchestrationService not available:', error.message);
+        this.logger.warn('WorkflowOrchestrationService not available:', error.message);
         this.workflowOrchestrationService = { orchestrate: () => ({}) };
     }
 
@@ -272,7 +272,7 @@ class Application {
     try {
         this.gitService = this.serviceRegistry.getService('gitService');
     } catch (error) {
-        this.logger.warn('[Application] GitService not available:', error.message);
+        this.logger.warn('GitService not available:', error.message);
         this.gitService = { status: () => ({}) };
     }
 
@@ -286,7 +286,7 @@ class Application {
         this.testCorrectionService = this.serviceRegistry.getService('testCorrectionService');
         this.generateTestsHandler = this.serviceRegistry.getService('generateTestsHandler');
     } catch (error) {
-        this.logger.warn('[Application] Some test services not available:', error.message);
+        this.logger.warn('Some test services not available:', error.message);
         // Create fallback services
         this.testAnalyzer = { analyze: () => ({}) };
         this.testFixer = { fix: () => ({}) };
@@ -332,13 +332,13 @@ class Application {
     const { initializeSteps } = require('./domain/steps');
     await initializeSteps();
     this.stepRegistry = require('./domain/steps').getStepRegistry();
-    this.logger.info('[Application] Step Registry initialized');
+    this.logger.info('Step Registry initialized');
 
-    this.logger.info('[Application] Domain services initialized with DI');
+    this.logger.info('Domain services initialized with DI');
   }
 
   async setupProjectContext() {
-    this.logger.info('[Application] 📁 Setting up project context...');
+    this.logger.info('📁 Setting up project context...');
     
     // Auto-detect project path
     const projectPath = await this.projectContext.autoDetectProjectPath();
@@ -353,14 +353,14 @@ class Application {
     // Validate project context
     const validation = await this.projectContext.validateProjectContext();
     if (!validation.isValid) {
-      this.logger.warn('[Application] Project context validation warnings:', validation.warnings);
+      this.logger.warn('Project context validation warnings:', validation.warnings);
     } else {
-      this.logger.info('[Application] ✅ Project context validated successfully');
+      this.logger.info('✅ Project context validated successfully');
     }
   }
 
   async initializeApplicationHandlers() {
-    this.logger.info('[Application] Initializing application handlers with DI...');
+    this.logger.info('Initializing application handlers with DI...');
 
     // Get handlers through DI container
     this.sendMessageHandler = this.serviceRegistry.getService('sendMessageHandler');
@@ -396,11 +396,11 @@ class Application {
     // Register only non-legacy command handlers
     this.commandBus.register('ProcessTodoListCommand', this.processTodoListHandler);
 
-    this.logger.info('[Application] Application handlers initialized (legacy removed)');
+    this.logger.info('Application handlers initialized (legacy removed)');
   }
 
   async initializePresentationLayer() {
-    this.logger.info('[Application] Initializing presentation layer...');
+    this.logger.info('Initializing presentation layer...');
 
     // Initialize auth middleware
     this.authMiddleware = new AuthMiddleware(this.authService);
@@ -502,11 +502,11 @@ class Application {
       this.chatRepository
     );
 
-    this.logger.info('[Application] Presentation layer initialized');
+    this.logger.info('Presentation layer initialized');
   }
 
   setupMiddleware() {
-    this.logger.info('[Application] Setting up middleware...');
+    this.logger.info('Setting up middleware...');
 
     // Security middleware
     this.app.use(helmet(this.securityConfig.helmet));
@@ -545,7 +545,7 @@ class Application {
   }
 
   setupRoutes() {
-    this.logger.info('[Application] Setting up routes...');
+    this.logger.info('Setting up routes...');
 
     // Serve the main page
     this.app.get('/', (req, res) => {
@@ -638,7 +638,7 @@ class Application {
           data: fileTree
         });
       } catch (error) {
-        this.logger.error('[Application] Error getting file tree:', error);
+        this.logger.error('Error getting file tree:', error);
         res.status(500).json({
           success: false,
           error: 'Failed to get file tree'
@@ -649,7 +649,7 @@ class Application {
     this.app.get('/api/files/content', async (req, res) => {
       try {
         const filePath = req.query.path;
-        this.logger.info('[API] /api/files/content called with path:', filePath);
+        this.logger.info('/api/files/content called with path:', filePath);
         if (!filePath) {
           return res.status(400).json({
             success: false,
@@ -665,7 +665,7 @@ class Application {
           }
         });
       } catch (error) {
-        this.logger.error('[Application] Error getting file content:', error);
+        this.logger.error('Error getting file content:', error);
         res.status(500).json({
           success: false,
           error: 'Failed to get file content'
@@ -803,7 +803,7 @@ class Application {
     this.app.use('/api/projects/:projectId/auto/tests', this.authMiddleware.authenticate());
     this.app.post('/api/projects/:projectId/auto/tests/analyze', (req, res) => this.autoTestFixController.analyzeProjectTests(req, res));
     this.app.post('/api/projects/:projectId/auto/tests/fix', (req, res) => {
-      this.logger.info('[Application] Auto test fix route hit', { 
+      this.logger.info('Auto test fix route hit', { 
         projectId: req.params.projectId, 
         method: req.method,
         url: req.url 
@@ -827,89 +827,89 @@ class Application {
 
     // Error handling middleware
     this.app.use((error, req, res, next) => {
-      this.logger.error('[Application] Unhandled error:', error);
+      this.logger.error('Unhandled error:', error);
       res.status(500).json({
         success: false,
         error: this.autoSecurityManager.isProduction() ? 'Internal server error' : error.message
       });
     });
 
-    this.logger.info('[Application] Routes setup complete');
+    this.logger.info('Routes setup complete');
   }
 
   setupEventHandlers() {
-    this.logger.info('[Application] Setting up event handlers...');
+    this.logger.info('Setting up event handlers...');
 
     if (this.eventBus) {
-      this.logger.info('[Application] EventBus available, setting up subscriptions...');
+      this.logger.info('EventBus available, setting up subscriptions...');
       this.eventBus.subscribe('ide-started', (data) => {
-        this.logger.info('[Application] IDE started:', data);
+        this.logger.info('IDE started:', data);
         if (this.webSocketManager) {
           this.webSocketManager.broadcastToUser('ide-started', data);
         }
       });
 
       this.eventBus.subscribe('ide-stopped', (data) => {
-        this.logger.info('[Application] IDE stopped:', data);
+        this.logger.info('IDE stopped:', data);
         if (this.webSocketManager) {
           this.webSocketManager.broadcastToUser('ide-stopped', data);
         }
       });
 
       this.eventBus.subscribe('chat-message', (data) => {
-        this.logger.info('[Application] Chat message:', data);
+        this.logger.info('Chat message:', data);
         if (this.webSocketManager) {
           this.webSocketManager.broadcastToUser('chat-message', data);
         }
       });
 
       this.eventBus.subscribe('MessageSent', (data) => {
-        this.logger.info('[Application] Message sent event:', data);
+        this.logger.info('Message sent event:', data);
         if (this.webSocketManager) {
           this.webSocketManager.broadcastToUser('chat-message', data);
         }
       });
 
       this.eventBus.subscribe('ChatHistoryUpdated', (data) => {
-        this.logger.info('[Application] Chat history updated event:', data);
+        this.logger.info('Chat history updated event:', data);
         if (this.webSocketManager) {
           this.webSocketManager.broadcastToUser('chat-history-updated', data);
         }
       });
 
       this.eventBus.subscribe('userAppDetected', (data) => {
-        this.logger.info('[Application] User app detected event:', data);
+        this.logger.info('User app detected event:', data);
         if (this.webSocketManager) {
           this.webSocketManager.broadcastToAll('userAppUrl', data);
         }
       });
 
       this.eventBus.subscribe('activeIDEChanged', (data) => {
-        this.logger.info('[Application] Active IDE changed event:', data);
+        this.logger.info('Active IDE changed event:', data);
         if (this.webSocketManager) {
-          this.logger.info('[Application] Broadcasting activeIDEChanged to all clients');
+          this.logger.info('Broadcasting activeIDEChanged to all clients');
           this.webSocketManager.broadcastToAll('activeIDEChanged', data);
         } else {
-          this.logger.warn('[Application] No WebSocket manager available for broadcasting activeIDEChanged');
+          this.logger.warn('No WebSocket manager available for broadcasting activeIDEChanged');
         }
       });
     } else {
-      this.logger.warn('[Application] No EventBus available for setting up event handlers');
+      this.logger.warn('No EventBus available for setting up event handlers');
     }
 
-    this.logger.info('[Application] Event handlers setup complete');
+    this.logger.info('Event handlers setup complete');
   }
 
   setupCleanupTasks() {
-    this.logger.info('[Application] Setting up cleanup tasks...');
+    this.logger.info('Setting up cleanup tasks...');
 
     // Cleanup expired sessions every hour
     setInterval(async () => {
       try {
         await this.authService.cleanupExpiredSessions();
-        this.logger.info('[Application] Cleaned up expired sessions');
+        this.logger.info('Cleaned up expired sessions');
       } catch (error) {
-        this.logger.error('[Application] Failed to cleanup expired sessions:', error);
+        this.logger.error('Failed to cleanup expired sessions:', error);
       }
     }, 60 * 60 * 1000); // 1 hour
 
@@ -917,9 +917,9 @@ class Application {
     setInterval(async () => {
       try {
         await this.autoSecurityManager.cleanupOldSecrets();
-        this.logger.info('[Application] Cleaned up old secrets');
+        this.logger.info('Cleaned up old secrets');
       } catch (error) {
-        this.logger.error('[Application] Failed to cleanup old secrets:', error);
+        this.logger.error('Failed to cleanup old secrets:', error);
       }
     }, 24 * 60 * 60 * 1000); // 24 hours
 
@@ -928,19 +928,19 @@ class Application {
       try {
         if (this.taskSessionRepository) {
           await this.taskSessionRepository.cleanupOldSessions(7); // Keep sessions for 7 days
-          this.logger.info('[Application] Cleaned up old Auto-Finish sessions');
+          this.logger.info('Cleaned up old Auto-Finish sessions');
         }
       } catch (error) {
-        this.logger.error('[Application] Failed to cleanup old Auto-Finish sessions:', error);
+        this.logger.error('Failed to cleanup old Auto-Finish sessions:', error);
       }
     }, 6 * 60 * 60 * 1000); // 6 hours
 
-    this.logger.info('[Application] Cleanup tasks setup complete');
+    this.logger.info('Cleanup tasks setup complete');
   }
 
   async start() {
     try {
-      this.logger.info('[Application] Starting...');
+      this.logger.info('Starting...');
       
       if (!this.app) {
         await this.initialize();
@@ -948,26 +948,26 @@ class Application {
 
       this.server.listen(this.config.port, async () => {
         this.isRunning = true;
-        this.logger.info(`[Application] Server running on port ${this.config.port}`);
-        this.logger.info(`[Application] Environment: ${this.autoSecurityManager.getEnvironment()}`);
-        this.logger.info(`[Application] Database: ${this.databaseConnection.getType()}`);
-        this.logger.info(`[Application] Auto-security: ${this.autoSecurityManager.isProduction() ? 'Production' : 'Development'}`);
+        this.logger.info(`Server running on port ${this.config.port}`);
+        this.logger.info(`Environment: ${this.autoSecurityManager.getEnvironment()}`);
+        this.logger.info(`Database: ${this.databaseConnection.getType()}`);
+        this.logger.info(`Auto-security: ${this.autoSecurityManager.isProduction() ? 'Production' : 'Development'}`);
         
         // Start workspace detection after server is running (only if no existing data)
         try {
-          this.logger.info('[Application] Checking if workspace detection is needed...');
+          this.logger.info('Checking if workspace detection is needed...');
           const stats = this.ideWorkspaceDetectionService.getDetectionStats();
           
           if (stats.total === 0) {
-            this.logger.info('[Application] No existing detection data found, starting workspace detection...');
+            this.logger.info('No existing detection data found, starting workspace detection...');
             await this.ideWorkspaceDetectionService.detectAllWorkspaces();
             const newStats = this.ideWorkspaceDetectionService.getDetectionStats();
-            this.logger.info(`[Application] Workspace detection completed: ${newStats.successful}/${newStats.total} successful`);
+            this.logger.info(`Workspace detection completed: ${newStats.successful}/${newStats.total} successful`);
           } else {
-            this.logger.info(`[Application] Found existing detection data (${stats.total} results), skipping workspace detection`);
+            this.logger.info(`Found existing detection data (${stats.total} results), skipping workspace detection`);
           }
         } catch (error) {
-          this.logger.error('[Application] Workspace detection failed:', error);
+          this.logger.error('Workspace detection failed:', error);
         }
       });
 
@@ -976,13 +976,13 @@ class Application {
       process.on('SIGINT', () => this.stop());
 
     } catch (error) {
-      this.logger.error('[Application] Failed to start:', error);
+      this.logger.error('Failed to start:', error);
       throw error;
     }
   }
 
   async stop() {
-    this.logger.info('[Application] Stopping...');
+    this.logger.info('Stopping...');
     
     this.isRunning = false;
 
@@ -998,12 +998,12 @@ class Application {
       await this.ideManager.cleanup();
     }
 
-    this.logger.info('[Application] Stopped');
+    this.logger.info('Stopped');
     process.exit(0);
   }
 
   async cleanup() {
-    this.logger.info('[Application] Cleaning up...');
+    this.logger.info('Cleaning up...');
     
     this.isRunning = false;
 
@@ -1024,11 +1024,11 @@ class Application {
       await this.autoFinishSystem.cleanup();
     }
 
-    this.logger.info('[Application] Cleanup completed');
+    this.logger.info('Cleanup completed');
   }
 
   async reset() {
-    this.logger.info('[Application] Resetting for tests...');
+    this.logger.info('Resetting for tests...');
     
     // Reset task repository
     if (this.taskRepository && this.taskRepository.clear) {
@@ -1040,7 +1040,7 @@ class Application {
       await this.chatRepository.clear();
     }
 
-    this.logger.info('[Application] Reset completed');
+    this.logger.info('Reset completed');
   }
 
   getWebSocketManager() {

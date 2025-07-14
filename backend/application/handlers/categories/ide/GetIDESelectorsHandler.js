@@ -60,7 +60,7 @@ class GetIDESelectorsHandler {
       return validationResult;
 
     } catch (error) {
-      this.logger.error('[GetIDESelectorsHandler] Command validation error:', error);
+      this.logger.error('Command validation error:', error);
       return {
         isValid: false,
         errors: [error.message]
@@ -82,7 +82,7 @@ class GetIDESelectorsHandler {
         throw new Error(`Command validation failed: ${validationResult.errors.join(', ')}`);
       }
 
-      this.logger.info('[GetIDESelectorsHandler] Handling command', {
+      this.logger.info('Handling command', {
         handlerId: this.handlerId,
         commandId: command.commandId,
         userId: command.userId,
@@ -146,7 +146,7 @@ class GetIDESelectorsHandler {
         timestamp: new Date()
       });
 
-      this.logger.info('[GetIDESelectorsHandler] Command handled successfully', {
+      this.logger.info('Command handled successfully', {
         handlerId: this.handlerId,
         commandId: command.commandId,
         result: result
@@ -155,7 +155,7 @@ class GetIDESelectorsHandler {
       return result;
 
     } catch (error) {
-      this.logger.error('[GetIDESelectorsHandler] Command handling failed:', error);
+      this.logger.error('Command handling failed:', error);
 
       // Publish failure event
       await this.eventBus.publish('ide.selectors.retrieval.failed', {

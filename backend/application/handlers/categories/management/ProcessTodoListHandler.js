@@ -29,7 +29,7 @@ class ProcessTodoListHandler {
     const startTime = Date.now();
     
     try {
-      this.logger.info(`[ProcessTodoListHandler] Processing TODO list command: ${command.commandId}`);
+      this.logger.info(`Processing TODO list command: ${command.commandId}`);
       
       // Validate command
       if (!command.todoInput || typeof command.todoInput !== 'string') {
@@ -99,7 +99,7 @@ class ProcessTodoListHandler {
         duration: Date.now() - startTime
       });
       
-      this.logger.info(`[ProcessTodoListHandler] TODO list processing completed: ${session.id}`);
+      this.logger.info(`TODO list processing completed: ${session.id}`);
       
       return {
         success: true,
@@ -109,7 +109,7 @@ class ProcessTodoListHandler {
       };
       
     } catch (error) {
-      this.logger.error(`[ProcessTodoListHandler] TODO list processing failed:`, error.message);
+      this.logger.error(`TODO list processing failed:`, error.message);
       
       // Create error result
       const errorResult = {
@@ -134,7 +134,7 @@ class ProcessTodoListHandler {
             });
           }
         } catch (saveError) {
-          this.logger.error(`[ProcessTodoListHandler] Failed to save error state:`, saveError.message);
+          this.logger.error(`Failed to save error state:`, saveError.message);
         }
       }
       
@@ -189,7 +189,7 @@ class ProcessTodoListHandler {
         timestamp: new Date().toISOString()
       });
     } catch (error) {
-      this.logger.error(`[ProcessTodoListHandler] Failed to stream progress:`, error.message);
+      this.logger.error(`Failed to stream progress:`, error.message);
     }
   }
 

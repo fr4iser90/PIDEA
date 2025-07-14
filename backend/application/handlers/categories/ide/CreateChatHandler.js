@@ -57,7 +57,7 @@ class CreateChatHandler {
         throw new Error(`Command validation failed: ${validationResult.errors.join(', ')}`);
       }
 
-      this.logger.info('[CreateChatHandler] Creating chat session', {
+      this.logger.info('Creating chat session', {
         handlerId: this.handlerId,
         commandId: command.commandId,
         userId: command.userId,
@@ -73,14 +73,14 @@ class CreateChatHandler {
       });
 
       // First, click New Chat button in the IDE using BrowserManager
-      this.logger.info('[CreateChatHandler] Clicking New Chat button in IDE...');
+      this.logger.info('Clicking New Chat button in IDE...');
       const browserResult = await this.browserManager.clickNewChat();
       
       if (!browserResult) {
         throw new Error('Failed to click New Chat button in IDE');
       }
       
-      this.logger.info('[CreateChatHandler] New Chat button clicked successfully');
+      this.logger.info('New Chat button clicked successfully');
       
       // Wait a bit for the new chat to be ready
       await new Promise(resolve => setTimeout(resolve, 1000));
@@ -101,7 +101,7 @@ class CreateChatHandler {
         timestamp: new Date()
       });
 
-      this.logger.info('[CreateChatHandler] Chat session created successfully', {
+      this.logger.info('Chat session created successfully', {
         handlerId: this.handlerId,
         commandId: command.commandId,
         sessionId: session.id
@@ -121,7 +121,7 @@ class CreateChatHandler {
       };
 
     } catch (error) {
-      this.logger.error('[CreateChatHandler] Failed to create chat session', {
+      this.logger.error('Failed to create chat session', {
         handlerId: this.handlerId,
         commandId: command.commandId,
         error: error.message

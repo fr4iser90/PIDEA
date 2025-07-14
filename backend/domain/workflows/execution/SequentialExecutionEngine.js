@@ -7,6 +7,7 @@ const ExecutionResult = require('./ExecutionResult');
 const ExecutionQueue = require('./ExecutionQueue');
 const ExecutionScheduler = require('./ExecutionScheduler');
 const { ExecutionException } = require('./exceptions/ExecutionException');
+const ServiceLogger = require('@logging/ServiceLogger');
 
 // Optimization and Resource Management Components
 const WorkflowOptimizer = require('./WorkflowOptimizer');
@@ -118,7 +119,7 @@ class SequentialExecutionEngine {
       this.executionMonitor.start();
     }
     
-    this.logger = options.logger || console;
+    this.logger = options.logger || new ServiceLogger('SequentialExecutionEngine');
   }
 
   /**

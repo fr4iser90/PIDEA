@@ -59,7 +59,7 @@ const TaskWorkflowProgress = ({
 
     const handleProgress = (data) => {
       if (data.workflowId === workflowId) {
-        logger.info('[TaskWorkflowProgress] Progress update received:', data);
+        logger.info('Progress update received:', data);
         setProgress(prev => ({
           ...prev,
           ...data,
@@ -71,7 +71,7 @@ const TaskWorkflowProgress = ({
 
     const handleCompleted = (data) => {
       if (data.workflowId === workflowId) {
-        logger.info('[TaskWorkflowProgress] Workflow completed:', data);
+        logger.info('Workflow completed:', data);
         setProgress(prev => ({
           ...prev,
           status: 'completed',
@@ -91,7 +91,7 @@ const TaskWorkflowProgress = ({
 
     const handleError = (data) => {
       if (data.workflowId === workflowId) {
-        logger.error('[TaskWorkflowProgress] Workflow error:', data);
+        logger.error('Workflow error:', data);
         setProgress(prev => ({
           ...prev,
           status: 'error',
@@ -104,7 +104,7 @@ const TaskWorkflowProgress = ({
 
     const handleCancelled = (data) => {
       if (data.workflowId === workflowId) {
-        logger.info('[TaskWorkflowProgress] Workflow cancelled:', data);
+        logger.info('Workflow cancelled:', data);
         setProgress(prev => ({
           ...prev,
           status: 'cancelled',
@@ -157,7 +157,7 @@ const TaskWorkflowProgress = ({
       
       addLogEntry('Workflow cancelled successfully', 'success');
     } catch (error) {
-      logger.error('[TaskWorkflowProgress] Failed to cancel workflow:', error);
+      logger.error('Failed to cancel workflow:', error);
       addLogEntry(`Failed to cancel workflow: ${error.message}`, 'error');
     }
   }, [workflowId, progress.status, onCancel, onComplete, addLogEntry]);

@@ -11,7 +11,7 @@ class CodeExplorerController {
 
   async getFileTree(req, res) {
     try {
-      logger.info('[CodeExplorerController] Getting file tree...');
+      logger.info('Getting file tree...');
       
       const files = await this.browserManager.getFileExplorerTree();
       
@@ -20,7 +20,7 @@ class CodeExplorerController {
         data: files
       });
     } catch (error) {
-      logger.error('[CodeExplorerController] Error getting file tree:', error);
+      logger.error('Error getting file tree:', error);
       res.status(500).json({
         success: false,
         error: error?.message || String(error)
@@ -31,7 +31,7 @@ class CodeExplorerController {
   async getFileContent(req, res) {
     try {
       const { path } = req.params;
-      logger.info(`[CodeExplorerController] Getting file content for: ${path}`);
+      logger.info(`Getting file content for: ${path}`);
       
       // First open the file in Cursor IDE
       const opened = await this.browserManager.openFile(path);
@@ -54,7 +54,7 @@ class CodeExplorerController {
         }
       });
     } catch (error) {
-      logger.error('[CodeExplorerController] Error getting file content:', error);
+      logger.error('Error getting file content:', error);
       res.status(500).json({
         success: false,
         error: error?.message || String(error)
@@ -64,7 +64,7 @@ class CodeExplorerController {
 
   async getCurrentFileInfo(req, res) {
     try {
-      logger.info('[CodeExplorerController] Getting current file info...');
+      logger.info('Getting current file info...');
       
       const fileInfo = await this.browserManager.getCurrentFileInfo();
       
@@ -73,7 +73,7 @@ class CodeExplorerController {
         data: fileInfo
       });
     } catch (error) {
-      logger.error('[CodeExplorerController] Error getting current file info:', error);
+      logger.error('Error getting current file info:', error);
       res.status(500).json({
         success: false,
         error: error?.message || String(error)
@@ -83,7 +83,7 @@ class CodeExplorerController {
 
   async refreshExplorer(req, res) {
     try {
-      logger.info('[CodeExplorerController] Refreshing explorer...');
+      logger.info('Refreshing explorer...');
       
       const refreshed = await this.browserManager.refreshExplorer();
       
@@ -92,7 +92,7 @@ class CodeExplorerController {
         data: { refreshed }
       });
     } catch (error) {
-      logger.error('[CodeExplorerController] Error refreshing explorer:', error);
+      logger.error('Error refreshing explorer:', error);
       res.status(500).json({
         success: false,
         error: error?.message || String(error)

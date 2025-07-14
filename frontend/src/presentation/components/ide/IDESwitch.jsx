@@ -189,7 +189,7 @@ const IDESwitch = ({
       }
 
     } catch (error) {
-      logger.error('[IDESwitch] Error switching IDE:', error);
+      logger.error('Error switching IDE:', error);
       setError(error.message);
       setStatus('Switch failed');
 

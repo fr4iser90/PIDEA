@@ -37,7 +37,7 @@ class DetectPackageJsonHandler {
    */
   async handle(command, context = {}) {
     try {
-      this.logger.info(`[DetectPackageJsonHandler] Handling command: ${command.commandId}`);
+      this.logger.info(`Handling command: ${command.commandId}`);
 
       // Validate command
       if (!command || command.type !== 'DetectPackageJsonCommand') {
@@ -60,7 +60,7 @@ class DetectPackageJsonHandler {
         timestamp: new Date()
       });
 
-      this.logger.info(`[DetectPackageJsonHandler] Package.json detected successfully`);
+      this.logger.info(`Package.json detected successfully`);
 
       return {
         success: true,
@@ -70,7 +70,7 @@ class DetectPackageJsonHandler {
       };
 
     } catch (error) {
-      this.logger.error(`[DetectPackageJsonHandler] Failed to detect package.json:`, error);
+      this.logger.error(`Failed to detect package.json:`, error);
 
       // Publish failure event
       await this.eventBus.publish('package.json.detection.failed', {

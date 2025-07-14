@@ -41,7 +41,7 @@ class IDEController {
         timestamp: new Date().toISOString()
       });
     } catch (error) {
-      this.logger.error('[IDEController] Error getting IDE list:', error);
+      this.logger.error('Error getting IDE list:', error);
       res.status(500).json({
         success: false,
         error: 'Failed to get IDE list',
@@ -92,7 +92,7 @@ class IDEController {
         });
       }
     } catch (error) {
-      this.logger.error('[IDEController] Error getting IDE status:', error);
+      this.logger.error('Error getting IDE status:', error);
       res.status(500).json({
         success: false,
         error: 'Failed to get IDE status',
@@ -130,7 +130,7 @@ class IDEController {
         }
       });
     } catch (error) {
-      this.logger.error('[IDEController] Error starting IDE:', error);
+      this.logger.error('Error starting IDE:', error);
       res.status(500).json({
         success: false,
         error: 'Failed to start IDE',
@@ -163,7 +163,7 @@ class IDEController {
         data: result
       });
     } catch (error) {
-      this.logger.error('[IDEController] Error stopping IDE:', error);
+      this.logger.error('Error stopping IDE:', error);
       res.status(500).json({
         success: false,
         error: 'Failed to stop IDE',
@@ -208,7 +208,7 @@ class IDEController {
         data: features
       });
     } catch (error) {
-      this.logger.error('[IDEController] Error getting IDE features:', error);
+      this.logger.error('Error getting IDE features:', error);
       res.status(500).json({
         success: false,
         error: 'Failed to get IDE features',
@@ -245,7 +245,7 @@ class IDEController {
         }
       });
     } catch (error) {
-      this.logger.error('[IDEController] Error switching IDE:', error);
+      this.logger.error('Error switching IDE:', error);
       res.status(500).json({
         success: false,
         error: 'Failed to switch IDE',
@@ -287,7 +287,7 @@ class IDEController {
         data: config
       });
     } catch (error) {
-      this.logger.error('[IDEController] Error getting IDE config:', error);
+      this.logger.error('Error getting IDE config:', error);
       res.status(500).json({
         success: false,
         error: 'Failed to get IDE config',
@@ -320,7 +320,7 @@ class IDEController {
         });
       }
     } catch (error) {
-      this.logger.error('[IDEController] Error updating IDE config:', error);
+      this.logger.error('Error updating IDE config:', error);
       res.status(500).json({
         success: false,
         error: 'Failed to update IDE config',

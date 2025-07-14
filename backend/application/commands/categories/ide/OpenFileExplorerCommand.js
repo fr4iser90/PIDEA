@@ -68,7 +68,7 @@ class OpenFileExplorerCommand {
         errors: []
       };
     } catch (error) {
-      this.logger.error('[OpenFileExplorerCommand] Validation error:', error);
+      this.logger.error('Validation error:', error);
       return {
         isValid: false,
         errors: [error.message]
@@ -83,7 +83,7 @@ class OpenFileExplorerCommand {
    */
   async execute(context = {}) {
     try {
-      this.logger.info('[OpenFileExplorerCommand] Executing command', {
+      this.logger.info('Executing command', {
         commandId: this.commandId,
         userId: this.userId,
         ideType: this.ideType,
@@ -133,7 +133,7 @@ class OpenFileExplorerCommand {
         });
       }
 
-      this.logger.info('[OpenFileExplorerCommand] Command executed successfully', {
+      this.logger.info('Command executed successfully', {
         commandId: this.commandId,
         result: result
       });
@@ -141,7 +141,7 @@ class OpenFileExplorerCommand {
       return result;
 
     } catch (error) {
-      this.logger.error('[OpenFileExplorerCommand] Command execution failed:', error);
+      this.logger.error('Command execution failed:', error);
 
       // Publish failure event
       if (context.eventBus) {

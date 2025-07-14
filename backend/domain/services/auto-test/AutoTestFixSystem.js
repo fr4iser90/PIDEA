@@ -66,16 +66,16 @@ class AutoTestFixSystem {
    */
   async initialize() {
     try {
-      this.logger.info('[AutoTestFixSystem] 🧪 Initializing...');
+      this.logger.info('🧪 Initializing...');
       
       // Initialize subsystems
       await this.testAnalyzer.initialize();
       await this.testFixer.initialize();
       await this.coverageAnalyzer.initialize();
       
-      this.logger.info('[AutoTestFixSystem] ✅ Initialized successfully');
+      this.logger.info('✅ Initialized successfully');
     } catch (error) {
-      this.logger.error('[AutoTestFixSystem] Initialization failed:', error.message);
+      this.logger.error('Initialization failed:', error.message);
       throw error;
     }
   }
@@ -87,10 +87,10 @@ class AutoTestFixSystem {
    */
   async loadExistingTasks(options = {}) {
     try {
-      this.logger.info(`[AutoTestFixSystem] Loading existing tasks from database...`);
+      this.logger.info(`Loading existing tasks from database...`);
       
       if (!this.taskRepository) {
-        this.logger.warn(`[AutoTestFixSystem] No task repository available, cannot load existing tasks`);
+        this.logger.warn(`No task repository available, cannot load existing tasks`);
         return [];
       }
 
@@ -119,24 +119,24 @@ class AutoTestFixSystem {
       const activeTasks = existingTasks.filter(task => {
         // Skip tasks that are marked as completed
         if (task.status?.value === 'completed') {
-          this.logger.debug(`[AutoTestFixSystem] Skipping completed task: ${task.id}`);
+          this.logger.debug(`Skipping completed task: ${task.id}`);
           return false;
         }
         
         // Skip tasks that have completedAt timestamp
         if (task.completedAt) {
-          this.logger.debug(`[AutoTestFixSystem] Skipping task with completedAt: ${task.id}`);
+          this.logger.debug(`Skipping task with completedAt: ${task.id}`);
           return false;
         }
         
         return true;
       });
 
-      this.logger.info(`[AutoTestFixSystem] Loaded ${activeTasks.length} active tasks from database (filtered from ${existingTasks.length} total)`);
+      this.logger.info(`Loaded ${activeTasks.length} active tasks from database (filtered from ${existingTasks.length} total)`);
       return activeTasks;
 
     } catch (error) {
-      this.logger.error(`[AutoTestFixSystem] Failed to load existing tasks: ${error.message}`);
+      this.logger.error(`Failed to load existing tasks: ${error.message}`);
       return [];
     }
   }
@@ -151,7 +151,7 @@ class AutoTestFixSystem {
     const startTime = Date.now();
     
     try {
-      this.logger.info(`[AutoTestFixSystem] Starting auto test fix workflow ${sessionId}`);
+      this.logger.info(`Starting auto test fix workflow ${sessionId}`);
       
       // Create session
       const session = this.createSession(sessionId, options);
@@ -170,7 +170,7 @@ class AutoTestFixSystem {
       // Check if we should load existing tasks or generate new ones
       if (options.loadExistingTasks) {
         // Step 1: Load existing tasks from database
-        this.logger.info(`[AutoTestFixSystem] Step 1: Loading existing tasks from database`);
+        this.logger.info(`Step 1: Loading existing tasks from database`);
         this.streamProgress(sessionId, 'phase', { phase: 'loading-tasks', progress: 10 });
         
         tasks = await this.loadExistingTasks({
@@ -180,22 +180,22 @@ class AutoTestFixSystem {
         });
         
         if (tasks.length === 0) {
-          this.logger.info(`[AutoTestFixSystem] No existing tasks found, will generate new tasks`);
+          this.logger.info(`No existing tasks found, will generate new tasks`);
           options.loadExistingTasks = false; // Fallback to generating new tasks
         } else {
-          this.logger.info(`[AutoTestFixSystem] Loaded ${tasks.length} existing tasks from database`);
+          this.logger.info(`Loaded ${tasks.length} existing tasks from database`);
         }
       }
       
       if (!options.loadExistingTasks || tasks.length === 0) {
         // Step 1: Parse existing test output files
-        this.logger.info(`[AutoTestFixSystem] Step 1: Parsing test output files`);
+        this.logger.info(`Step 1: Parsing test output files`);
         this.streamProgress(sessionId, 'phase', { phase: 'parsing', progress: 10 });
         
         const parsedData = await this.testReportParser.parseAllTestOutputs(options.projectPath || process.cwd());
         
         if (!parsedData.failingTests.length && !parsedData.coverageIssues.length) {
-          this.logger.info(`[AutoTestFixSystem] No test issues found in output files`);
+          this.logger.info(`No test issues found in output files`);
           return this.completeSession(sessionId, {
             success: true,
             message: 'No test issues found in output files',
@@ -204,7 +204,7 @@ class AutoTestFixSystem {
         }
         
         // Step 2: Generate and save tasks to database
-        this.logger.info(`[AutoTestFixSystem] Step 2: Generating and saving tasks to database`);
+        this.logger.info(`Step 2: Generating and saving tasks to database`);
         this.streamProgress(sessionId, 'phase', { phase: 'task-generation', progress: 20 });
         
         tasks = await this.testFixTaskGenerator.generateAndSaveTasks(parsedData, {
@@ -213,17 +213,17 @@ class AutoTestFixSystem {
           clearExisting: options.clearExisting || false
         });
         
-        this.logger.info(`[AutoTestFixSystem] Generated ${tasks.length} tasks in database`);
+        this.logger.info(`Generated ${tasks.length} tasks in database`);
       }
       
       // Step 3: Process tasks sequentially
-      this.logger.info(`[AutoTestFixSystem] Step 3: Processing tasks sequentially`);
+      this.logger.info(`Step 3: Processing tasks sequentially`);
       this.streamProgress(sessionId, 'phase', { phase: 'task-processing', progress: 30 });
       
       const processingResult = await this.processTasksSequentially(tasks, sessionId, options);
       
       // Step 4: Generate final report
-      this.logger.info(`[AutoTestFixSystem] Step 4: Generating final report`);
+      this.logger.info(`Step 4: Generating final report`);
       this.streamProgress(sessionId, 'phase', { phase: 'report-generation', progress: 90 });
       
       const report = await this.generateFinalReport(parsedData, processingResult, options);
@@ -241,11 +241,11 @@ class AutoTestFixSystem {
         endTime: new Date()
       });
       
-      this.logger.info(`[AutoTestFixSystem] Auto test fix workflow completed successfully: ${sessionId}`);
+      this.logger.info(`Auto test fix workflow completed successfully: ${sessionId}`);
       return finalResult;
       
     } catch (error) {
-      this.logger.error(`[AutoTestFixSystem] Auto test fix workflow failed: ${error.message}`);
+      this.logger.error(`Auto test fix workflow failed: ${error.message}`);
       
       // Update session status
       const session = this.activeSessions.get(sessionId);
@@ -274,7 +274,7 @@ class AutoTestFixSystem {
    */
   async analyzeProjectTests(projectPath) {
     try {
-      this.logger.info(`[AutoTestFixSystem] Analyzing project tests: ${projectPath}`);
+      this.logger.info(`Analyzing project tests: ${projectPath}`);
       
       // Analyze failing tests
       const failingTests = await this.testAnalyzer.analyzeFailingTests(projectPath);
@@ -313,7 +313,7 @@ class AutoTestFixSystem {
         timestamp: new Date()
       };
       
-      this.logger.info(`[AutoTestFixSystem] Analysis complete: ${result.totalIssues} issues found`);
+      this.logger.info(`Analysis complete: ${result.totalIssues} issues found`);
       return result;
       
     } catch (error) {
@@ -360,7 +360,7 @@ class AutoTestFixSystem {
         await this.taskRepository.save(task);
       }
       
-      this.logger.info(`[AutoTestFixSystem] Created test fix task: ${taskId}`);
+      this.logger.info(`Created test fix task: ${taskId}`);
       return task;
       
     } catch (error) {
@@ -377,10 +377,10 @@ class AutoTestFixSystem {
    */
   async improveTestCoverage(analysisResult, workflowResult, options) {
     try {
-      this.logger.info(`[AutoTestFixSystem] Improving test coverage`);
+      this.logger.info(`Improving test coverage`);
       
       if (!analysisResult.coverage.needsImprovement) {
-        this.logger.info(`[AutoTestFixSystem] Coverage target already met`);
+        this.logger.info(`Coverage target already met`);
         return {
           success: true,
           message: 'Coverage target already met',
@@ -422,7 +422,7 @@ class AutoTestFixSystem {
    */
   async processTasksSequentially(tasks, sessionId, options = {}) {
     try {
-      this.logger.info(`[AutoTestFixSystem] Processing ${tasks.length} tasks sequentially`);
+      this.logger.info(`Processing ${tasks.length} tasks sequentially`);
       
       const result = {
         totalTasks: tasks.length,
@@ -442,7 +442,7 @@ class AutoTestFixSystem {
         const task = sortedTasks[i];
         
         try {
-          this.logger.info(`[AutoTestFixSystem] Processing task ${i + 1}/${sortedTasks.length}: ${task.title}`);
+          this.logger.info(`Processing task ${i + 1}/${sortedTasks.length}: ${task.title}`);
           
           // Stream task start
           this.streamProgress(sessionId, 'task-start', {
@@ -459,7 +459,7 @@ class AutoTestFixSystem {
             try {
               await this.taskRepository.save(task);
             } catch (error) {
-              this.logger.warn(`[AutoTestFixSystem] Failed to update task status for ${task.id}:`, error.message);
+              this.logger.warn(`Failed to update task status for ${task.id}:`, error.message);
               // Continue processing even if status update fails
             }
           }
@@ -481,7 +481,7 @@ class AutoTestFixSystem {
             try {
               await this.taskRepository.save(task);
             } catch (error) {
-              this.logger.warn(`[AutoTestFixSystem] Failed to update task status for ${task.id}:`, error.message);
+              this.logger.warn(`Failed to update task status for ${task.id}:`, error.message);
               // Continue processing even if status update fails
             }
           }
@@ -499,19 +499,19 @@ class AutoTestFixSystem {
           
           // Check if we should stop on error
           if (!taskResult.success && options.stopOnError) {
-            this.logger.warn(`[AutoTestFixSystem] Stopping on error as requested`);
+            this.logger.warn(`Stopping on error as requested`);
             break;
           }
           
         } catch (error) {
-          this.logger.error(`[AutoTestFixSystem] Error processing task ${task.id}:`, error.message);
+          this.logger.error(`Error processing task ${task.id}:`, error.message);
           
           task.fail(error.message);
           if (this.taskRepository) {
             try {
               await this.taskRepository.save(task);
             } catch (error) {
-              this.logger.warn(`[AutoTestFixSystem] Failed to update task status for ${task.id}:`, error.message);
+              this.logger.warn(`Failed to update task status for ${task.id}:`, error.message);
               // Continue processing even if status update fails
             }
           }
@@ -532,11 +532,11 @@ class AutoTestFixSystem {
       result.endTime = new Date();
       result.duration = result.endTime - result.startTime;
       
-      this.logger.info(`[AutoTestFixSystem] Sequential processing completed: ${result.completedTasks} completed, ${result.failedTasks} failed`);
+      this.logger.info(`Sequential processing completed: ${result.completedTasks} completed, ${result.failedTasks} failed`);
       return result;
       
     } catch (error) {
-      this.logger.error(`[AutoTestFixSystem] Sequential processing failed:`, error.message);
+      this.logger.error(`Sequential processing failed:`, error.message);
       throw error;
     }
   }
@@ -551,7 +551,7 @@ class AutoTestFixSystem {
     try {
       // Use cursorIDE.postToCursor() like AutoFinishSystem
       if (!this.cursorIDE) {
-        this.logger.warn('[AutoTestFixSystem] cursorIDE not available, using fallback processing');
+        this.logger.warn('cursorIDE not available, using fallback processing');
         return await this.processTaskFallback(task, options);
       }
 
@@ -568,18 +568,18 @@ class AutoTestFixSystem {
       let branchResult = null;
       
       try {
-        this.logger.info(`[AutoTestFixSystem] Creating workflow branch for task: ${task.id}`);
+        this.logger.info(`Creating workflow branch for task: ${task.id}`);
         branchResult = await this.workflowGitService.createWorkflowBranch(projectPath, task, options);
-        this.logger.info(`[AutoTestFixSystem] Created branch: ${branchResult.branchName}`);
+        this.logger.info(`Created branch: ${branchResult.branchName}`);
       } catch (error) {
-        this.logger.warn(`[AutoTestFixSystem] Failed to create workflow branch: ${error.message}`);
+        this.logger.warn(`Failed to create workflow branch: ${error.message}`);
         // Continue without branch creation - the AI will handle it in the prompt
       }
       
       // Build task prompt with proper Git workflow
       const idePrompt = this.buildTaskPrompt(task);
       
-      this.logger.info(`[AutoTestFixSystem] Sending task to Cursor IDE: ${task.title}`);
+      this.logger.info(`Sending task to Cursor IDE: ${task.title}`);
       
       // Send to Cursor IDE via postToCursor()
       let aiResponse = await this.cursorIDE.postToCursor(idePrompt);
@@ -591,22 +591,22 @@ class AutoTestFixSystem {
       
       while (confirmationAttempts < maxConfirmationAttempts) {
         confirmationAttempts++;
-        this.logger.info(`[AutoTestFixSystem] Confirmation attempt ${confirmationAttempts}/${maxConfirmationAttempts}`);
+        this.logger.info(`Confirmation attempt ${confirmationAttempts}/${maxConfirmationAttempts}`);
         
         // Ask for explicit confirmation
         confirmationResult = await this.confirmationSystem.askConfirmation('test');
         
-        this.logger.info(`[AutoTestFixSystem] Confirmation result: status=${confirmationResult.status}, isValid=${confirmationResult.isValid}, confidence=${confirmationResult.confidence}`);
+        this.logger.info(`Confirmation result: status=${confirmationResult.status}, isValid=${confirmationResult.isValid}, confidence=${confirmationResult.confidence}`);
         
         if (confirmationResult.testResults) {
-          this.logger.info(`[AutoTestFixSystem] Test results from AI: ${confirmationResult.testResults.status} ${confirmationResult.testResults.percentage}%`);
+          this.logger.info(`Test results from AI: ${confirmationResult.testResults.status} ${confirmationResult.testResults.percentage}%`);
         }
         
         if (confirmationResult.isValid) {
-          this.logger.info(`[AutoTestFixSystem] ✅ Task confirmed as complete on attempt ${confirmationAttempts}`);
+          this.logger.info(`✅ Task confirmed as complete on attempt ${confirmationAttempts}`);
           break;
         } else {
-          this.logger.info(`[AutoTestFixSystem] ❌ Task not confirmed (status: ${confirmationResult.status}), attempt ${confirmationAttempts}/${maxConfirmationAttempts}`);
+          this.logger.info(`❌ Task not confirmed (status: ${confirmationResult.status}), attempt ${confirmationAttempts}/${maxConfirmationAttempts}`);
           
           if (confirmationAttempts < maxConfirmationAttempts) {
             // Wait a bit before next attempt
@@ -618,17 +618,17 @@ class AutoTestFixSystem {
       // If we got confirmation, proceed with test validation
       let testValidationResult = null;
       if (confirmationResult && confirmationResult.isValid) {
-        this.logger.info(`[AutoTestFixSystem] Proceeding with test validation for task: ${task.id}`);
+        this.logger.info(`Proceeding with test validation for task: ${task.id}`);
         testValidationResult = await this.validateTestsWithExecution(task, branchResult);
         
         // Log the outcome
         if (testValidationResult.success) {
-          this.logger.info(`[AutoTestFixSystem] ✅ Task ${task.id} completed successfully - Tests passed, changes committed`);
+          this.logger.info(`✅ Task ${task.id} completed successfully - Tests passed, changes committed`);
         } else {
-          this.logger.warn(`[AutoTestFixSystem] ⚠️ Task ${task.id} failed - Tests failed, changes discarded, marked for review`);
+          this.logger.warn(`⚠️ Task ${task.id} failed - Tests failed, changes discarded, marked for review`);
         }
       } else {
-        this.logger.warn(`[AutoTestFixSystem] Task not confirmed after ${maxConfirmationAttempts} attempts (final status: ${confirmationResult?.status}), skipping test validation`);
+        this.logger.warn(`Task not confirmed after ${maxConfirmationAttempts} attempts (final status: ${confirmationResult?.status}), skipping test validation`);
         testValidationResult = {
           success: false,
           reason: 'task_not_confirmed',
@@ -660,11 +660,11 @@ class AutoTestFixSystem {
         completedAt: new Date()
       };
       
-      this.logger.info(`[AutoTestFixSystem] Task ${task.id} processed via Cursor IDE - Status: ${taskResult.taskStatus}`);
+      this.logger.info(`Task ${task.id} processed via Cursor IDE - Status: ${taskResult.taskStatus}`);
       return taskResult;
       
     } catch (error) {
-      this.logger.error(`[AutoTestFixSystem] Task ${task.id} failed:`, error.message);
+      this.logger.error(`Task ${task.id} failed:`, error.message);
       
       return {
         taskId: task.id,
@@ -788,7 +788,7 @@ Please proceed with the implementation and let me know when you're finished.`;
       };
       
     } catch (error) {
-      this.logger.error(`[AutoTestFixSystem] Task validation failed:`, error.message);
+      this.logger.error(`Task validation failed:`, error.message);
       return {
         isValid: false,
         error: error.message,
@@ -807,7 +807,7 @@ Please proceed with the implementation and let me know when you're finished.`;
     try {
       const { testFile, testName } = task.metadata;
       
-      this.logger.info(`[AutoTestFixSystem] Refactoring test: ${testName} in ${testFile}`);
+      this.logger.info(`Refactoring test: ${testName} in ${testFile}`);
       
       // Use existing TestFixer if available
       if (this.testFixer) {
@@ -845,7 +845,7 @@ Please proceed with the implementation and let me know when you're finished.`;
    */
   async processTaskFallback(task, options = {}) {
     try {
-      this.logger.info(`[AutoTestFixSystem] Processing task fallback: ${task.title}`);
+      this.logger.info(`Processing task fallback: ${task.title}`);
       
       // Use workflow orchestration if available
       if (this.workflowOrchestrationService) {
@@ -904,7 +904,7 @@ Please proceed with the implementation and let me know when you're finished.`;
    */
   async generateFinalReport(parsedData, processingResult, options) {
     try {
-      this.logger.info(`[AutoTestFixSystem] Generating final report`);
+      this.logger.info(`Generating final report`);
       
       const report = {
         summary: {
@@ -1042,7 +1042,7 @@ Please proceed with the implementation and let me know when you're finished.`;
     }
     
     // Log progress
-    this.logger.info(`[AutoTestFixSystem] Progress: ${event}`, {
+    this.logger.info(`Progress: ${event}`, {
       sessionId,
       ...data
     });
@@ -1101,18 +1101,18 @@ Please proceed with the implementation and let me know when you're finished.`;
    */
   async validateTestsWithExecution(task, branchResult) {
     try {
-      this.logger.info(`[AutoTestFixSystem] Starting test validation for task: ${task.id}`);
+      this.logger.info(`Starting test validation for task: ${task.id}`);
       
       // Ensure terminal is open in IDE
       if (this.cursorIDE) {
-        this.logger.info(`[AutoTestFixSystem] Opening terminal in IDE...`);
+        this.logger.info(`Opening terminal in IDE...`);
         await this.cursorIDE.ensureTerminalOpen();
         await new Promise(resolve => setTimeout(resolve, 1000)); // Wait for terminal
       }
       
       // Execute tests and capture output to log file
       const testCommand = 'npm test > test-output.log 2>&1';
-      this.logger.info(`[AutoTestFixSystem] Executing: ${testCommand}`);
+      this.logger.info(`Executing: ${testCommand}`);
       
       if (this.ideManager) {
         const currentPort = this.browserManager?.getCurrentPort?.();
@@ -1121,7 +1121,7 @@ Please proceed with the implementation and let me know when you're finished.`;
           // Wait for test execution to complete
           await new Promise(resolve => setTimeout(resolve, 5000));
         } else {
-          this.logger.warn(`[AutoTestFixSystem] No current port available for test execution`);
+          this.logger.warn(`No current port available for test execution`);
         }
       }
       
@@ -1135,9 +1135,9 @@ const logger = new Logger('Logger');
       let testOutput = '';
       try {
         testOutput = await fs.readFile(logFilePath, 'utf8');
-        this.logger.info(`[AutoTestFixSystem] Test output captured (${testOutput.length} chars)`);
+        this.logger.info(`Test output captured (${testOutput.length} chars)`);
       } catch (error) {
-        this.logger.warn(`[AutoTestFixSystem] Could not read test output log: ${error.message}`);
+        this.logger.warn(`Could not read test output log: ${error.message}`);
         return {
           success: false,
           error: 'Could not read test output',
@@ -1147,7 +1147,7 @@ const logger = new Logger('Logger');
       
       // Parse test output
       const testResult = this.parseTestOutput(testOutput);
-      this.logger.info(`[AutoTestFixSystem] Test parsing result: ${testResult.successRate}% success rate`);
+      this.logger.info(`Test parsing result: ${testResult.successRate}% success rate`);
       
       // Validate success rate (threshold: 80%)
       const successThreshold = 80;
@@ -1158,7 +1158,7 @@ const logger = new Logger('Logger');
       
       if (isSuccessful) {
         // ✅ TESTS PASSED - Commit to Git
-        this.logger.info(`[AutoTestFixSystem] ✅ Tests PASSED (${testResult.successRate}% >= ${successThreshold}%), committing to Git...`);
+        this.logger.info(`✅ Tests PASSED (${testResult.successRate}% >= ${successThreshold}%), committing to Git...`);
         
         commitResult = await this.commitAndPushChanges(task, branchResult, {
           testSuccess: true,
@@ -1181,11 +1181,11 @@ const logger = new Logger('Logger');
         
       } else {
         // ❌ TESTS FAILED - Discard changes and mark for review
-        this.logger.info(`[AutoTestFixSystem] ❌ Tests FAILED (${testResult.successRate}% < ${successThreshold}%), discarding changes and marking for review...`);
+        this.logger.info(`❌ Tests FAILED (${testResult.successRate}% < ${successThreshold}%), discarding changes and marking for review...`);
         
         // Discard changes by resetting to clean state
         if (this.ideManager) {
-          this.logger.info(`[AutoTestFixSystem] Discarding changes...`);
+          this.logger.info(`Discarding changes...`);
           const currentPort = this.browserManager?.getCurrentPort?.();
           if (currentPort) {
             const discardCommands = [
@@ -1194,12 +1194,12 @@ const logger = new Logger('Logger');
             ];
             
             for (const command of discardCommands) {
-              this.logger.info(`[AutoTestFixSystem] Executing: ${command}`);
+              this.logger.info(`Executing: ${command}`);
               await this.ideManager.executeTerminalCommand(currentPort, command);
               await new Promise(resolve => setTimeout(resolve, 1000));
             }
           } else {
-            this.logger.warn(`[AutoTestFixSystem] No current port available for discard commands`);
+            this.logger.warn(`No current port available for discard commands`);
           }
         }
         
@@ -1235,7 +1235,7 @@ const logger = new Logger('Logger');
       };
       
     } catch (error) {
-      this.logger.error(`[AutoTestFixSystem] Test validation failed: ${error.message}`);
+      this.logger.error(`Test validation failed: ${error.message}`);
       
       // Update task status on error
       if (this.taskRepository) {
@@ -1326,7 +1326,7 @@ const logger = new Logger('Logger');
       };
       
     } catch (error) {
-      this.logger.error(`[AutoTestFixSystem] Error parsing test output: ${error.message}`);
+      this.logger.error(`Error parsing test output: ${error.message}`);
       return {
         totalTests: 0,
         passedTests: 0,
@@ -1346,11 +1346,11 @@ const logger = new Logger('Logger');
    */
   async commitAndPushChanges(task, branchResult, testInfo = {}) {
     try {
-      this.logger.info(`[AutoTestFixSystem] Committing and pushing changes for task: ${task.id}`);
+      this.logger.info(`Committing and pushing changes for task: ${task.id}`);
       
       // Only commit if tests are successful
       if (!testInfo.testSuccess) {
-        this.logger.warn(`[AutoTestFixSystem] Skipping commit - tests failed (${testInfo.successRate}%)`);
+        this.logger.warn(`Skipping commit - tests failed (${testInfo.successRate}%)`);
         return {
           success: false,
           action: 'skipped',
@@ -1363,7 +1363,7 @@ const logger = new Logger('Logger');
         // Build commit message for successful tests
         const commitMessage = `${task.title} (Task ID: ${task.id}) - ✅ Tests PASSED (${testInfo.successRate}%) - Auto-fixed by PIDEA`;
         
-        this.logger.info(`[AutoTestFixSystem] Commit message: ${commitMessage}`);
+        this.logger.info(`Commit message: ${commitMessage}`);
         
         const currentPort = this.browserManager?.getCurrentPort?.();
         if (currentPort) {
@@ -1374,7 +1374,7 @@ const logger = new Logger('Logger');
           ];
           
           for (const command of commands) {
-            this.logger.info(`[AutoTestFixSystem] Executing: ${command}`);
+            this.logger.info(`Executing: ${command}`);
             await this.ideManager.executeTerminalCommand(currentPort, command);
             await new Promise(resolve => setTimeout(resolve, 1000)); // Wait between commands
           }
@@ -1396,7 +1396,7 @@ const logger = new Logger('Logger');
       }
       
     } catch (error) {
-      this.logger.error(`[AutoTestFixSystem] Failed to commit and push changes: ${error.message}`);
+      this.logger.error(`Failed to commit and push changes: ${error.message}`);
       return {
         success: false,
         action: 'failed',

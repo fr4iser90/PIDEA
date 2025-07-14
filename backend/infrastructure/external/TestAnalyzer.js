@@ -7,14 +7,13 @@ const path = require('path');
 const { exec } = require('child_process');
 const { promisify } = require('util');
 const { clear } = require('console');
-const Logger = require('@logging/Logger');
-const logger = new Logger('Logger');
+const ServiceLogger = require('@logging/ServiceLogger');
 
 const execAsync = promisify(exec);
 
 class TestAnalyzer {
   constructor() {
-    this.logger = console;
+    this.logger = new ServiceLogger('TestAnalyzer');
     this.testFilePatterns = [
       '**/*.test.js',
       '**/*.test.ts',
@@ -44,7 +43,7 @@ class TestAnalyzer {
    * Initialize the analyzer
    */
   async initialize() {
-    this.logger.info('[TestAnalyzer] Initialized');
+    this.logger.info('✅ Test analyzer initialized');
   }
 
   /**
@@ -54,7 +53,7 @@ class TestAnalyzer {
    */
   async analyzeFailingTests(projectPath) {
     try {
-      this.logger.info(`[TestAnalyzer] Analyzing failing tests in: ${projectPath}`);
+      this.logger.info(`Analyzing failing tests in: ${projectPath}`);
       
       const failingTests = [];
       
@@ -85,11 +84,11 @@ class TestAnalyzer {
         }
       }
       
-      this.logger.info(`[TestAnalyzer] Found ${failingTests.length} failing tests`);
+      this.logger.info(`Found ${failingTests.length} failing tests`);
       return failingTests;
       
     } catch (error) {
-      this.logger.error(`[TestAnalyzer] Failed to analyze failing tests: ${error.message}`);
+      this.logger.error(`Failed to analyze failing tests: ${error.message}`);
       return [];
     }
   }
@@ -101,7 +100,7 @@ class TestAnalyzer {
    */
   async analyzeLegacyTests(projectPath) {
     try {
-      this.logger.info(`[TestAnalyzer] Analyzing legacy tests in: ${projectPath}`);
+      this.logger.info(`Analyzing legacy tests in: ${projectPath}`);
       
       const legacyTests = [];
       const testFiles = await this.findTestFiles(projectPath);
@@ -126,11 +125,11 @@ class TestAnalyzer {
         }
       }
       
-      this.logger.info(`[TestAnalyzer] Found ${legacyTests.length} legacy tests`);
+      this.logger.info(`Found ${legacyTests.length} legacy tests`);
       return legacyTests;
       
     } catch (error) {
-      this.logger.error(`[TestAnalyzer] Failed to analyze legacy tests: ${error.message}`);
+      this.logger.error(`Failed to analyze legacy tests: ${error.message}`);
       return [];
     }
   }
@@ -142,7 +141,7 @@ class TestAnalyzer {
    */
   async analyzeComplexTests(projectPath) {
     try {
-      this.logger.info(`[TestAnalyzer] Analyzing complex tests in: ${projectPath}`);
+      this.logger.info(`Analyzing complex tests in: ${projectPath}`);
       
       const complexTests = [];
       const testFiles = await this.findTestFiles(projectPath);
@@ -168,11 +167,11 @@ class TestAnalyzer {
         }
       }
       
-      this.logger.info(`[TestAnalyzer] Found ${complexTests.length} complex tests`);
+      this.logger.info(`Found ${complexTests.length} complex tests`);
       return complexTests;
       
     } catch (error) {
-      this.logger.error(`[TestAnalyzer] Failed to analyze complex tests: ${error.message}`);
+      this.logger.error(`Failed to analyze complex tests: ${error.message}`);
       return [];
     }
   }
@@ -207,7 +206,7 @@ class TestAnalyzer {
         return this.parseTestOutput('', error.stderr);
       }
       
-      this.logger.warn(`[TestAnalyzer] Test execution failed: ${error.message}`);
+      this.logger.warn(`Test execution failed: ${error.message}`);
       return { failures: [] };
     }
   }
@@ -273,7 +272,7 @@ class TestAnalyzer {
       await findFiles(projectPath);
       
     } catch (error) {
-      this.logger.warn(`[TestAnalyzer] Error finding test files: ${error.message}`);
+      this.logger.warn(`Error finding test files: ${error.message}`);
     }
     
     return testFiles;

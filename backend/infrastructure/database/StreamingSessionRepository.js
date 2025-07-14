@@ -32,9 +32,9 @@ class StreamingSessionRepository {
         await this.createTables();
       }
       this.isInitialized = true;
-      logger.info('[StreamingSessionRepository] Initialized successfully');
+      logger.info('Initialized successfully');
     } catch (error) {
-      logger.error('[StreamingSessionRepository] Initialization error:', error.message);
+      logger.error('Initialization error:', error.message);
       throw error;
     }
   }
@@ -103,9 +103,9 @@ class StreamingSessionRepository {
     try {
       await this.databaseConnection.execute(createSessionsTable);
       await this.databaseConnection.execute(createMetricsTable);
-      logger.info('[StreamingSessionRepository] Database tables created successfully');
+      logger.info('Database tables created successfully');
     } catch (error) {
-      logger.error('[StreamingSessionRepository] Error creating tables:', error.message);
+      logger.error('Error creating tables:', error.message);
       throw error;
     }
   }
@@ -127,9 +127,9 @@ class StreamingSessionRepository {
         await this.saveSessionToDatabase(session);
       }
 
-      logger.info(`[StreamingSessionRepository] Saved session ${session.id}`);
+      logger.info(`Saved session ${session.id}`);
     } catch (error) {
-      logger.error(`[StreamingSessionRepository] Error saving session ${session.id}:`, error.message);
+      logger.error(`Error saving session ${session.id}:`, error.message);
       throw error;
     }
   }
@@ -194,7 +194,7 @@ class StreamingSessionRepository {
 
       return null;
     } catch (error) {
-      logger.error(`[StreamingSessionRepository] Error getting session ${sessionId}:`, error.message);
+      logger.error(`Error getting session ${sessionId}:`, error.message);
       throw error;
     }
   }
@@ -270,7 +270,7 @@ class StreamingSessionRepository {
 
       return activeSessions;
     } catch (error) {
-      logger.error('[StreamingSessionRepository] Error getting active sessions:', error.message);
+      logger.error('Error getting active sessions:', error.message);
       throw error;
     }
   }
@@ -324,9 +324,9 @@ class StreamingSessionRepository {
         await this.deleteSessionFromDatabase(sessionId);
       }
 
-      logger.info(`[StreamingSessionRepository] Deleted session ${sessionId}`);
+      logger.info(`Deleted session ${sessionId}`);
     } catch (error) {
-      logger.error(`[StreamingSessionRepository] Error deleting session ${sessionId}:`, error.message);
+      logger.error(`Error deleting session ${sessionId}:`, error.message);
       throw error;
     }
   }
@@ -361,7 +361,7 @@ class StreamingSessionRepository {
         await this.saveMetricsToDatabase(metrics);
       }
     } catch (error) {
-      logger.error(`[StreamingSessionRepository] Error saving metrics for session ${metrics.sessionId}:`, error.message);
+      logger.error(`Error saving metrics for session ${metrics.sessionId}:`, error.message);
       throw error;
     }
   }
@@ -430,7 +430,7 @@ class StreamingSessionRepository {
 
       return memoryMetrics.slice(-limit);
     } catch (error) {
-      logger.error(`[StreamingSessionRepository] Error getting metrics for session ${sessionId}:`, error.message);
+      logger.error(`Error getting metrics for session ${sessionId}:`, error.message);
       throw error;
     }
   }
@@ -529,7 +529,7 @@ class StreamingSessionRepository {
 
       return stats;
     } catch (error) {
-      logger.error('[StreamingSessionRepository] Error getting stats:', error.message);
+      logger.error('Error getting stats:', error.message);
       throw error;
     }
   }
@@ -556,9 +556,9 @@ class StreamingSessionRepository {
         await this.deleteSession(sessionId);
       }
 
-      logger.info(`[StreamingSessionRepository] Cleaned up ${sessionsToDelete.length} old sessions`);
+      logger.info(`Cleaned up ${sessionsToDelete.length} old sessions`);
     } catch (error) {
-      logger.error('[StreamingSessionRepository] Error during cleanup:', error.message);
+      logger.error('Error during cleanup:', error.message);
       throw error;
     }
   }

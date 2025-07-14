@@ -185,6 +185,6 @@ export const analysisDataCache = new AnalysisDataCache();
 setInterval(() => {
   const cleaned = analysisDataCache.cleanup();
   if (cleaned > 0) {
-    console.log(`[AnalysisDataCache] Cleaned up ${cleaned} expired entries`);
+    console.log(`Cleaned up ${cleaned} expired entries`);
   }
 }, 5 * 60 * 1000); 

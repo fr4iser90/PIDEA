@@ -20,10 +20,10 @@ const AdvancedAnalysisService = require('./backend/domain/services/AdvancedAnaly
 class AdvancedAnalysisTester {
     constructor() {
         this.logger = {
-            info: (message, data) => logger.info(`[INFO] ${message}`, data || ''),
-            error: (message, data) => console.error(`[ERROR] ${message}`, data || ''),
-            warn: (message, data) => console.warn(`[WARN] ${message}`, data || ''),
-            debug: (message, data) => console.debug(`[DEBUG] ${message}`, data || '')
+            info: (message, data) => logger.info(`${message}`, data || ''),
+            error: (message, data) => console.error(`${message}`, data || ''),
+            warn: (message, data) => console.warn(`${message}`, data || ''),
+            debug: (message, data) => console.debug(`${message}`, data || '')
         };
     }
 

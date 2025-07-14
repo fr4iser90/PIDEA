@@ -3,15 +3,14 @@
  * Provides caching for workflow results to improve performance
  */
 const crypto = require('crypto');
-const Logger = require('@logging/Logger');
-const logger = new Logger('Logger');
+const ServiceLogger = require('@logging/ServiceLogger');
 
 /**
  * Execution cache for workflow results
  */
 class ExecutionCache {
   constructor(options = {}) {
-    this.logger = options.logger || console;
+    this.logger = options.logger || new ServiceLogger('ExecutionCache');
     
     this.maxSize = options.maxSize || 1000;
     this.ttl = options.ttl || 3600000; // 1 hour
@@ -72,7 +71,7 @@ class ExecutionCache {
     this.accessTimes.set(cacheKey, Date.now());
     this.cacheStats.hits++;
     
-    this.logger.info('ExecutionCache: Cache hit', {
+    this.logger.info('Cache hit', {
       cacheKey: cacheKey.substring(0, 20) + '...',
       age: Date.now() - cachedItem.timestamp,
       hitRate: this.getHitRate()
@@ -98,7 +97,7 @@ class ExecutionCache {
     
     // Check if result is worth caching
     if (!this.isResultWorthCaching(result, options)) {
-      this.logger.debug('ExecutionCache: Result not worth caching', {
+      this.logger.debug('Result not worth caching', {
         cacheKey: cacheKey.substring(0, 20) + '...',
         reason: 'Below threshold'
       });
@@ -131,7 +130,7 @@ class ExecutionCache {
     this.cacheStats.sets++;
     this.cacheStats.totalSize += this.calculateResultSize(cachedResult);
 
-    this.logger.info('ExecutionCache: Result cached', {
+    this.logger.info('Result cached', {
       cacheKey: cacheKey.substring(0, 20) + '...',
       cacheSize: this.cache.size,
       resultSize: this.calculateResultSize(cachedResult)
@@ -264,7 +263,7 @@ class ExecutionCache {
       const contextStr = JSON.stringify(relevantData);
       return crypto.createHash('md5').update(contextStr).digest('hex');
     } catch (error) {
-      this.logger.warn('ExecutionCache: Failed to hash context', {
+      this.logger.warn('Failed to hash context', {
         error: error.message
       });
       return 'default';
@@ -293,7 +292,7 @@ class ExecutionCache {
       });
       return crypto.createHash('md5').update(workflowStr).digest('hex');
     } catch (error) {
-      this.logger.warn('ExecutionCache: Failed to hash workflow', {
+      this.logger.warn('Failed to hash workflow', {
         error: error.message
       });
       return 'default';
@@ -347,7 +346,7 @@ class ExecutionCache {
       this.accessTimes.delete(oldestKey);
       this.cacheStats.evictions++;
       
-      this.logger.info('ExecutionCache: Evicted oldest entry', {
+      this.logger.info('Evicted oldest entry', {
         cacheKey: oldestKey.substring(0, 20) + '...'
       });
     }
@@ -365,7 +364,7 @@ class ExecutionCache {
       this.cleanupExpiredEntries();
     }, this.cleanupIntervalMs);
 
-    this.logger.info('ExecutionCache: Cleanup interval started', {
+    this.logger.info('Cleanup interval started', {
       interval: this.cleanupIntervalMs
     });
   }
@@ -377,7 +376,7 @@ class ExecutionCache {
     if (this.cleanupInterval) {
       clearInterval(this.cleanupInterval);
       this.cleanupInterval = null;
-      this.logger.info('ExecutionCache: Cleanup interval stopped');
+      this.logger.info('Cleanup interval stopped');
     }
   }
 
@@ -398,7 +397,7 @@ class ExecutionCache {
     }
 
     if (cleanedCount > 0) {
-      this.logger.info('ExecutionCache: Cleaned expired entries', {
+      this.logger.info('Cleaned expired entries', {
         cleanedCount,
         remainingEntries: this.cache.size
       });
@@ -413,7 +412,7 @@ class ExecutionCache {
     this.accessTimes.clear();
     this.cacheStats.totalSize = 0;
     
-    this.logger.info('ExecutionCache: Cache cleared');
+    this.logger.info('Cache cleared');
   }
 
   /**
@@ -530,7 +529,7 @@ class ExecutionCache {
     }
     
     if (invalidatedCount > 0) {
-      this.logger.info('ExecutionCache: Invalidated entries', {
+      this.logger.info('Invalidated entries', {
         invalidatedCount
       });
     }
@@ -565,7 +564,7 @@ class ExecutionCache {
    * Shutdown cache
    */
   shutdown() {
-    this.logger.info('ExecutionCache: Shutting down');
+    this.logger.info('Shutting down');
     
     // Stop cleanup interval
     this.stopCleanupInterval();
@@ -573,7 +572,7 @@ class ExecutionCache {
     // Clear cache
     this.clear();
     
-    this.logger.info('ExecutionCache: Shutdown complete');
+    this.logger.info('Shutdown complete');
   }
 }
 

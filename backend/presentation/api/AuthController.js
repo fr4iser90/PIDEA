@@ -33,7 +33,7 @@ class AuthController {
       });
       res.status(201).json({ success: true, user: user.toJSON() });
     } catch (error) {
-      logger.error('[AuthController] Registration error:', error);
+      logger.error('Registration error:', error);
       res.status(500).json({ success: false, message: error.message });
     }
   }
@@ -85,7 +85,7 @@ class AuthController {
 
       res.json(responseData);
     } catch (error) {
-      logger.error('[AuthController] Login error:', error);
+      logger.error('Login error:', error);
       res.status(401).json({
         success: false,
         error: 'Invalid credentials'
@@ -119,7 +119,7 @@ class AuthController {
         }
       });
     } catch (error) {
-      logger.error('[AuthController] Refresh error:', error);
+      logger.error('Refresh error:', error);
       res.status(401).json({
         success: false,
         error: 'Invalid refresh token'
@@ -150,7 +150,7 @@ class AuthController {
         message: 'Logged out successfully'
       });
     } catch (error) {
-      logger.error('[AuthController] Logout error:', error);
+      logger.error('Logout error:', error);
       res.status(500).json({
         success: false,
         error: 'Logout failed'
@@ -175,7 +175,7 @@ class AuthController {
         }
       });
     } catch (error) {
-      logger.error('[AuthController] Get profile error:', error);
+      logger.error('Get profile error:', error);
       res.status(500).json({
         success: false,
         error: 'Failed to get profile'
@@ -201,7 +201,7 @@ class AuthController {
         }
       });
     } catch (error) {
-      logger.error('[AuthController] Token validation error:', error);
+      logger.error('Token validation error:', error);
       res.status(401).json({
         success: false,
         error: 'Token validation failed'
@@ -267,7 +267,7 @@ class AuthController {
         }
       });
     } catch (error) {
-      logger.error('[AuthController] Update profile error:', error);
+      logger.error('Update profile error:', error);
       res.status(500).json({
         success: false,
         error: 'Failed to update profile'
@@ -300,7 +300,7 @@ class AuthController {
         }
       });
     } catch (error) {
-      logger.error('[AuthController] Get sessions error:', error);
+      logger.error('Get sessions error:', error);
       res.status(500).json({
         success: false,
         error: 'Failed to get sessions'

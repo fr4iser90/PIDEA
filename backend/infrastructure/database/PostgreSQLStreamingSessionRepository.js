@@ -27,10 +27,10 @@ class PostgreSQLStreamingSessionRepository {
     try {
       await this.createTables();
       this.isInitialized = true;
-      this.logger.info('[PostgreSQLStreamingSessionRepository] Initialized successfully');
+      this.logger.info('Initialized successfully');
       return true;
     } catch (error) {
-      this.logger.error('[PostgreSQLStreamingSessionRepository] Initialization error:', error.message);
+      this.logger.error('Initialization error:', error.message);
       throw error;
     }
   }
@@ -104,9 +104,9 @@ class PostgreSQLStreamingSessionRepository {
       await this.db.execute('CREATE INDEX IF NOT EXISTS idx_frame_metrics_session_id ON frame_metrics (session_id)');
       await this.db.execute('CREATE INDEX IF NOT EXISTS idx_frame_metrics_timestamp ON frame_metrics (timestamp)');
       
-      logger.info('[PostgreSQLStreamingSessionRepository] Database tables created successfully');
+      logger.info('Database tables created successfully');
     } catch (error) {
-      logger.error('[PostgreSQLStreamingSessionRepository] Error creating tables:', error.message);
+      logger.error('Error creating tables:', error.message);
       throw error;
     }
   }
@@ -126,9 +126,9 @@ class PostgreSQLStreamingSessionRepository {
       // Save to database
       await this.saveSessionToDatabase(session);
 
-      logger.info(`[PostgreSQLStreamingSessionRepository] Saved session ${session.id}`);
+      logger.info(`Saved session ${session.id}`);
     } catch (error) {
-      logger.error(`[PostgreSQLStreamingSessionRepository] Error saving session ${session.id}:`, error.message);
+      logger.error(`Error saving session ${session.id}:`, error.message);
       throw error;
     }
   }
@@ -207,7 +207,7 @@ class PostgreSQLStreamingSessionRepository {
       // Get from database
       return await this.getSessionFromDatabase(sessionId);
     } catch (error) {
-      logger.error(`[PostgreSQLStreamingSessionRepository] Error getting session ${sessionId}:`, error.message);
+      logger.error(`Error getting session ${sessionId}:`, error.message);
       throw error;
     }
   }
@@ -281,7 +281,7 @@ class PostgreSQLStreamingSessionRepository {
 
       return activeSessions;
     } catch (error) {
-      logger.error('[PostgreSQLStreamingSessionRepository] Error getting active sessions:', error.message);
+      logger.error('Error getting active sessions:', error.message);
       throw error;
     }
   }
@@ -333,9 +333,9 @@ class PostgreSQLStreamingSessionRepository {
       // Remove from database
       await this.deleteSessionFromDatabase(sessionId);
 
-      logger.info(`[PostgreSQLStreamingSessionRepository] Deleted session ${sessionId}`);
+      logger.info(`Deleted session ${sessionId}`);
     } catch (error) {
-      logger.error(`[PostgreSQLStreamingSessionRepository] Error deleting session ${sessionId}:`, error.message);
+      logger.error(`Error deleting session ${sessionId}:`, error.message);
       throw error;
     }
   }
@@ -368,7 +368,7 @@ class PostgreSQLStreamingSessionRepository {
       // Save to database
       await this.saveMetricsToDatabase(metrics);
     } catch (error) {
-      logger.error(`[PostgreSQLStreamingSessionRepository] Error saving metrics for session ${metrics.sessionId}:`, error.message);
+      logger.error(`Error saving metrics for session ${metrics.sessionId}:`, error.message);
       throw error;
     }
   }
@@ -433,7 +433,7 @@ class PostgreSQLStreamingSessionRepository {
       const dbMetrics = await this.getMetricsFromDatabase(sessionId, limit);
       return dbMetrics.length > 0 ? dbMetrics : memoryMetrics.slice(-limit);
     } catch (error) {
-      logger.error(`[PostgreSQLStreamingSessionRepository] Error getting metrics for session ${sessionId}:`, error.message);
+      logger.error(`Error getting metrics for session ${sessionId}:`, error.message);
       throw error;
     }
   }
@@ -532,7 +532,7 @@ class PostgreSQLStreamingSessionRepository {
 
       return stats;
     } catch (error) {
-      logger.error('[PostgreSQLStreamingSessionRepository] Error getting stats:', error.message);
+      logger.error('Error getting stats:', error.message);
       throw error;
     }
   }
@@ -556,9 +556,9 @@ class PostgreSQLStreamingSessionRepository {
       const result = await this.db.execute(query, [cutoffTime.toISOString()]);
       const deletedCount = result.rowsAffected || 0;
 
-      logger.info(`[PostgreSQLStreamingSessionRepository] Cleaned up ${deletedCount} old sessions`);
+      logger.info(`Cleaned up ${deletedCount} old sessions`);
     } catch (error) {
-      logger.error('[PostgreSQLStreamingSessionRepository] Error during cleanup:', error.message);
+      logger.error('Error during cleanup:', error.message);
       throw error;
     }
   }

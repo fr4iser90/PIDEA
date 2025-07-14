@@ -473,36 +473,36 @@ class AppController {
     const connectChatWebSocket = () => {
       chatWs = new WebSocket('ws://localhost:3000/ws');
       chatWs.onopen = () => {
-        logger.info('[WebSocket] Connected for chat updates');
-        logger.info('[WebSocket] Connection URL:', chatWs.url);
-        logger.info('[WebSocket] Ready state:', chatWs.readyState);
+        logger.info('Connected for chat updates');
+        logger.info('Connection URL:', chatWs.url);
+        logger.info('Ready state:', chatWs.readyState);
       };
       chatWs.onmessage = (event) => {
         const data = JSON.parse(event.data);
-        logger.info('[WebSocket] Received message:', data);
+        logger.info('Received message:', data);
         
         // Handle different message formats
         if (data.type === 'chatUpdate' || data.event === 'chatUpdate') {
-          logger.info('[WebSocket] Chat update received');
+          logger.info('Chat update received');
           this.chatService.loadMessages();
         }
         if (data.type === 'userAppUrl' || data.event === 'userAppUrl') {
-          logger.info('[WebSocket] User app URL received:', data.data);
+          logger.info('User app URL received:', data.data);
           this.handleUserAppUrl(data.data);
         }
         if (data.type === 'activeIDEChanged' || data.event === 'activeIDEChanged') {
-          logger.info('[WebSocket] Active IDE changed:', data.data);
-          logger.info('[WebSocket] Emitting activeIDEChanged event to eventBus');
+          logger.info('Active IDE changed:', data.data);
+          logger.info('Emitting activeIDEChanged event to eventBus');
           // Emit the event to trigger preview refresh
           this.eventBus.emit('activeIDEChanged', data.data);
         }
       };
       chatWs.onclose = () => {
-        logger.info('[WebSocket] Chat WebSocket closed, reconnecting...');
+        logger.info('Chat WebSocket closed, reconnecting...');
         setTimeout(connectChatWebSocket, 1000);
       };
       chatWs.onerror = (error) => {
-        logger.error('[WebSocket] Chat WebSocket error:', error);
+        logger.error('Chat WebSocket error:', error);
       };
     };
     connectChatWebSocket();

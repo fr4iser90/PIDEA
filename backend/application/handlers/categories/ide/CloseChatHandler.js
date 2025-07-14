@@ -55,7 +55,7 @@ class CloseChatHandler {
         throw new Error(`Command validation failed: ${validationResult.errors.join(', ')}`);
       }
 
-      this.logger.info('[CloseChatHandler] Closing chat session', {
+      this.logger.info('Closing chat session', {
         handlerId: this.handlerId,
         commandId: command.commandId,
         userId: command.userId,
@@ -84,7 +84,7 @@ class CloseChatHandler {
         timestamp: new Date()
       });
 
-      this.logger.info('[CloseChatHandler] Chat session closed successfully', {
+      this.logger.info('Chat session closed successfully', {
         handlerId: this.handlerId,
         commandId: command.commandId,
         sessionId: command.sessionId
@@ -97,7 +97,7 @@ class CloseChatHandler {
       };
 
     } catch (error) {
-      this.logger.error('[CloseChatHandler] Failed to close chat session', {
+      this.logger.error('Failed to close chat session', {
         handlerId: this.handlerId,
         commandId: command.commandId,
         error: error.message

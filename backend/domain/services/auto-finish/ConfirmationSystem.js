@@ -1,5 +1,4 @@
-const Logger = require('@logging/Logger');
-const logger = new Logger('Logger');
+const ServiceLogger = require('@logging/ServiceLogger');
 /**
  * ConfirmationSystem - Service for handling AI confirmation loops
  * Analyzes AI responses and manages confirmation workflows
@@ -81,15 +80,15 @@ class ConfirmationSystem {
       autoDetectLanguage: true
     };
     
-    this.logger = console;
+    this.logger = new ServiceLogger('ConfirmationSystem');
   }
 
   /**
    * Initialize the confirmation system
    */
   async initialize() {
-    this.logger.info('[ConfirmationSystem] 🤖 Initializing confirmation system...');
-    this.logger.info(`[ConfirmationSystem] Loaded ${Object.keys(this.completionKeywords).length} languages`);
+    this.logger.info('🤖 Initializing confirmation system...');
+    this.logger.info(`Loaded ${Object.keys(this.completionKeywords).length} languages`);
     return true;
   }
 
@@ -103,12 +102,12 @@ class ConfirmationSystem {
       const questions = this.getConfirmationQuestions(context);
       const question = questions[Math.floor(Math.random() * questions.length)];
       
-      this.logger.info(`[ConfirmationSystem] Asking for confirmation: "${question}"`);
+      this.logger.info(`Asking for confirmation: "${question}"`);
       
       // Send structured status request
       const response = await this.cursorIDE.postToCursor(question);
       
-      this.logger.info(`[ConfirmationSystem] AI response: ${response}`);
+      this.logger.info(`AI response: ${response}`);
       
       // Parse structured response
       const validationResult = this.validateTaskCompletion(response);
@@ -123,7 +122,7 @@ class ConfirmationSystem {
         rawResponse: validationResult.rawResponse
       };
     } catch (error) {
-      this.logger.error(`[ConfirmationSystem] Error asking confirmation: ${error.message}`);
+      this.logger.error(`Error asking confirmation: ${error.message}`);
       return {
         isValid: false,
         response: '',
@@ -210,7 +209,7 @@ class ConfirmationSystem {
       }
     }
     
-    this.logger.info(`[ConfirmationSystem] Parsed response: status=${status}, isValid=${isValid}, confidence=${confidence}, testResults=${JSON.stringify(testResults)}`);
+    this.logger.info(`Parsed response: status=${status}, isValid=${isValid}, confidence=${confidence}, testResults=${JSON.stringify(testResults)}`);
     
     return {
       isValid,
@@ -351,7 +350,7 @@ class ConfirmationSystem {
     
     for (let attempt = 1; attempt <= maxAttempts; attempt++) {
       try {
-        this.logger.info(`[ConfirmationSystem] Confirmation attempt ${attempt}/${maxAttempts}`);
+        this.logger.info(`Confirmation attempt ${attempt}/${maxAttempts}`);
         
         // Send confirmation question
         const question = this.getConfirmationQuestion(options.language, options.context);
@@ -361,7 +360,7 @@ class ConfirmationSystem {
         const validationResult = this.validateTaskCompletion(confirmationResponse);
         
         if (validationResult.isValid && validationResult.confidence >= this.config.confidenceThreshold) {
-          this.logger.info(`[ConfirmationSystem] Confirmation successful on attempt ${attempt}`);
+          this.logger.info(`Confirmation successful on attempt ${attempt}`);
           
           return {
             confirmed: true,
@@ -374,7 +373,7 @@ class ConfirmationSystem {
         }
         
         if (!validationResult.isValid && validationResult.confidence >= this.config.confidenceThreshold) {
-          this.logger.info(`[ConfirmationSystem] Confirmation indicates incompletion on attempt ${attempt} (status: ${validationResult.status})`);
+          this.logger.info(`Confirmation indicates incompletion on attempt ${attempt} (status: ${validationResult.status})`);
           
           return {
             confirmed: false,
@@ -387,7 +386,7 @@ class ConfirmationSystem {
         }
         
         // If ambiguous, try again
-        this.logger.info(`[ConfirmationSystem] Confirmation response ambiguous on attempt ${attempt}, retrying...`);
+        this.logger.info(`Confirmation response ambiguous on attempt ${attempt}, retrying...`);
         
         // Wait before next attempt
         if (attempt < maxAttempts) {
@@ -395,7 +394,7 @@ class ConfirmationSystem {
         }
         
       } catch (error) {
-        this.logger.error(`[ConfirmationSystem] Confirmation attempt ${attempt} failed:`, error.message);
+        this.logger.error(`Confirmation attempt ${attempt} failed:`, error.message);
         
         if (attempt === maxAttempts) {
           throw error;
@@ -404,7 +403,7 @@ class ConfirmationSystem {
     }
     
     // All attempts failed
-    this.logger.warn(`[ConfirmationSystem] All ${maxAttempts} confirmation attempts failed`);
+    this.logger.warn(`All ${maxAttempts} confirmation attempts failed`);
     
     return {
       confirmed: false,
@@ -504,7 +503,7 @@ class ConfirmationSystem {
           confirmation: result
         });
       } catch (error) {
-        this.logger.error('[ConfirmationSystem] Batch confirmation failed for response:', error.message);
+        this.logger.error('Batch confirmation failed for response:', error.message);
         results.push({
           response,
           confirmation: {
@@ -578,7 +577,7 @@ class ConfirmationSystem {
     }
     
     this.completionKeywords[language].push(...keywords);
-    this.logger.info(`[ConfirmationSystem] Added completion keywords for language: ${language}`);
+    this.logger.info(`Added completion keywords for language: ${language}`);
   }
 
   /**
@@ -592,7 +591,7 @@ class ConfirmationSystem {
     }
     
     this.confirmationQuestions[language].push(...questions);
-    this.logger.info(`[ConfirmationSystem] Added confirmation questions for language: ${language}`);
+    this.logger.info(`Added confirmation questions for language: ${language}`);
   }
 
   /**
@@ -601,7 +600,7 @@ class ConfirmationSystem {
    */
   setConfig(config) {
     this.config = { ...this.config, ...config };
-    this.logger.info('[ConfirmationSystem] Configuration updated');
+    this.logger.info('Configuration updated');
   }
 
   /**
@@ -616,7 +615,7 @@ class ConfirmationSystem {
    * Cleanup resources
    */
   async cleanup() {
-    this.logger.info('[ConfirmationSystem] Cleaning up confirmation system...');
+    this.logger.info('Cleaning up confirmation system...');
     // No specific cleanup needed for confirmation system
   }
 }

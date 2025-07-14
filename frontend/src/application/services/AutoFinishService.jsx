@@ -16,7 +16,7 @@ class AutoFinishService {
    */
   async initialize() {
     try {
-      logger.info('[AutoFinishService] Initializing...');
+      logger.info('Initializing...');
       
       // Test connection
       await this.healthCheck();
@@ -24,10 +24,10 @@ class AutoFinishService {
       // Setup WebSocket connection
       this.setupWebSocket();
       
-      logger.info('[AutoFinishService] Initialized successfully');
+      logger.info('Initialized successfully');
       return true;
     } catch (error) {
-      logger.error('[AutoFinishService] Initialization failed:', error);
+      logger.error('Initialization failed:', error);
       throw error;
     }
   }
@@ -41,7 +41,7 @@ class AutoFinishService {
       if (window.autoFinishWebSocket) {
         this.webSocket = window.autoFinishWebSocket;
         this.isConnected = true;
-        logger.info('[AutoFinishService] Using existing WebSocket connection');
+        logger.info('Using existing WebSocket connection');
         return;
       }
 
@@ -53,7 +53,7 @@ class AutoFinishService {
       
       this.webSocket.onopen = () => {
         this.isConnected = true;
-        logger.info('[AutoFinishService] WebSocket connected');
+        logger.info('WebSocket connected');
         this.emit('connected');
       };
       
@@ -62,13 +62,13 @@ class AutoFinishService {
           const data = JSON.parse(event.data);
           this.handleWebSocketMessage(data);
         } catch (error) {
-          logger.error('[AutoFinishService] Failed to parse WebSocket message:', error);
+          logger.error('Failed to parse WebSocket message:', error);
         }
       };
       
       this.webSocket.onclose = () => {
         this.isConnected = false;
-        logger.info('[AutoFinishService] WebSocket disconnected');
+        logger.info('WebSocket disconnected');
         this.emit('disconnected');
         
         // Attempt to reconnect after 5 seconds
@@ -78,7 +78,7 @@ class AutoFinishService {
       };
       
       this.webSocket.onerror = (error) => {
-        logger.error('[AutoFinishService] WebSocket error:', error);
+        logger.error('WebSocket error:', error);
         this.emit('error', error);
       };
       
@@ -86,7 +86,7 @@ class AutoFinishService {
       window.autoFinishWebSocket = this.webSocket;
       
     } catch (error) {
-      logger.error('[AutoFinishService] Failed to setup WebSocket:', error);
+      logger.error('Failed to setup WebSocket:', error);
     }
   }
 
@@ -115,7 +115,7 @@ class AutoFinishService {
    */
   async processTodoList(todoInput, options = {}) {
     try {
-      logger.info('[AutoFinishService] Processing TODO list...');
+      logger.info('Processing TODO list...');
       
       const response = await fetch(`${this.baseUrl}/process`, {
         method: 'POST',
@@ -134,12 +134,12 @@ class AutoFinishService {
         throw new Error(data.error || 'Failed to process TODO list');
       }
       
-      logger.info('[AutoFinishService] TODO list processing started:', data.sessionId);
+      logger.info('TODO list processing started:', data.sessionId);
       
       return data;
       
     } catch (error) {
-      logger.error('[AutoFinishService] Failed to process TODO list:', error);
+      logger.error('Failed to process TODO list:', error);
       throw error;
     }
   }
@@ -161,7 +161,7 @@ class AutoFinishService {
       return data.session;
       
     } catch (error) {
-      logger.error('[AutoFinishService] Failed to get session status:', error);
+      logger.error('Failed to get session status:', error);
       throw error;
     }
   }
@@ -188,7 +188,7 @@ class AutoFinishService {
       return data.sessions;
       
     } catch (error) {
-      logger.error('[AutoFinishService] Failed to get user sessions:', error);
+      logger.error('Failed to get user sessions:', error);
       throw error;
     }
   }
@@ -216,7 +216,7 @@ class AutoFinishService {
       return data.sessions;
       
     } catch (error) {
-      logger.error('[AutoFinishService] Failed to get project sessions:', error);
+      logger.error('Failed to get project sessions:', error);
       throw error;
     }
   }
@@ -241,12 +241,12 @@ class AutoFinishService {
         throw new Error(data.error || 'Failed to cancel session');
       }
       
-      logger.info('[AutoFinishService] Session cancelled:', sessionId);
+      logger.info('Session cancelled:', sessionId);
       
       return data;
       
     } catch (error) {
-      logger.error('[AutoFinishService] Failed to cancel session:', error);
+      logger.error('Failed to cancel session:', error);
       throw error;
     }
   }
@@ -267,7 +267,7 @@ class AutoFinishService {
       return data.stats;
       
     } catch (error) {
-      logger.error('[AutoFinishService] Failed to get system stats:', error);
+      logger.error('Failed to get system stats:', error);
       throw error;
     }
   }
@@ -288,7 +288,7 @@ class AutoFinishService {
       return data.patterns;
       
     } catch (error) {
-      logger.error('[AutoFinishService] Failed to get supported patterns:', error);
+      logger.error('Failed to get supported patterns:', error);
       throw error;
     }
   }
@@ -309,7 +309,7 @@ class AutoFinishService {
       return data.taskTypes;
       
     } catch (error) {
-      logger.error('[AutoFinishService] Failed to get task type keywords:', error);
+      logger.error('Failed to get task type keywords:', error);
       throw error;
     }
   }
@@ -330,7 +330,7 @@ class AutoFinishService {
       return data.health;
       
     } catch (error) {
-      logger.error('[AutoFinishService] Health check failed:', error);
+      logger.error('Health check failed:', error);
       throw error;
     }
   }
@@ -395,7 +395,7 @@ class AutoFinishService {
         try {
           callback(data);
         } catch (error) {
-          logger.error('[AutoFinishService] Event callback error:', error);
+          logger.error('Event callback error:', error);
         }
       });
     }
@@ -417,7 +417,7 @@ class AutoFinishService {
    * Cleanup resources
    */
   cleanup() {
-    logger.info('[AutoFinishService] Cleaning up...');
+    logger.info('Cleaning up...');
     
     // Close WebSocket connection
     if (this.webSocket) {
