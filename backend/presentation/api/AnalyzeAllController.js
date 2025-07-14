@@ -13,7 +13,7 @@ class AnalyzeAllController {
 
   async analyzeAll(req, res) {
     try {
-      logger.log('🚀 Starting comprehensive analysis...');
+      logger.log('🚀 Starting comprehensive analysis');
       
       const { projectPath, options = {} } = req.body;
       
@@ -46,7 +46,7 @@ class AnalyzeAllController {
         documentation: documentationResult
       });
       
-      logger.log('✅ Comprehensive analysis completed successfully');
+      logger.log('✅ Comprehensive analysis completed');
       
       return res.status(200).json({
         success: true,

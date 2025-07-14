@@ -86,7 +86,7 @@ class AnalysisStep {
         summary: null
       };
 
-      logger.log(`📊 Starting analysis for: ${projectPath}`);
+      logger.log(`📊 Starting analysis`);
 
       // 1. Project Analysis
       if (projectAnalyzer) {

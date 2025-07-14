@@ -37,7 +37,7 @@ class AnalyzeAgainHandler {
    */
   async handle(command, context = {}) {
     try {
-      this.logger.log(`[AnalyzeAgainHandler] Handling command: ${command.commandId}`);
+      this.logger.log(`[AnalyzeAgainHandler] Handling command`);
 
       // Validate command
       if (!command || command.type !== 'AnalyzeAgainCommand') {

@@ -407,7 +407,7 @@ class IDEAutomationService {
         timestamp: new Date()
       });
 
-      logger.log(`[IDEAutomationService] Project analyzed: ${analysis ? 'Success' : 'No analysis'}`);
+      logger.log(`[IDEAutomationService] Project analyzed`);
 
       return result;
 
@@ -448,7 +448,7 @@ class IDEAutomationService {
         timestamp: new Date()
       });
 
-      logger.log(`[IDEAutomationService] Project re-analyzed: ${result.analysis ? 'Success' : 'No analysis'}`);
+      logger.log(`[IDEAutomationService] Project re-analyzed`);
 
       return result;
 

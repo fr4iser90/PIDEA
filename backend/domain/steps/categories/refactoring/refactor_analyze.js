@@ -24,7 +24,7 @@ async function execute(context, options = {}) {
   if (!projectPath) throw new Error('Project path not found in context');
   if (!projectAnalyzer) throw new Error('Project analyzer not found in context');
 
-  logger.log('🔍 [RefactorAnalyze] Starting project analysis for refactoring...');
+  logger.log('🔍 [RefactorAnalyze] Starting project analysis for refactoring');
 
   try {
     // Run comprehensive analysis using available analyzers
@@ -36,7 +36,7 @@ async function execute(context, options = {}) {
 
     // 1. Project Analysis
     if (projectAnalyzer) {
-      logger.log('📊 [RefactorAnalyze] Running project analysis...');
+      logger.log('📊 [RefactorAnalyze] Running project analysis');
       analysisResults.projectAnalysis = await projectAnalyzer.analyzeProject(projectPath, {
         includeRepoStructure: true,
         includeDependencies: true,
@@ -46,7 +46,7 @@ async function execute(context, options = {}) {
 
     // 2. Code Quality Analysis
     if (codeQualityAnalyzer) {
-      logger.log('🎯 [RefactorAnalyze] Running code quality analysis...');
+      logger.log('🎯 [RefactorAnalyze] Running code quality analysis');
       analysisResults.codeQuality = await codeQualityAnalyzer.analyzeCodeQuality(projectPath, {
         includeMetrics: true,
         includeIssues: true,
@@ -57,7 +57,7 @@ async function execute(context, options = {}) {
 
     // 3. Architecture Analysis
     if (architectureAnalyzer) {
-      logger.log('🏗️ [RefactorAnalyze] Running architecture analysis...');
+      logger.log('🏗️ [RefactorAnalyze] Running architecture analysis');
       analysisResults.architecture = await architectureAnalyzer.analyzeArchitecture(projectPath, {
         includePatterns: true,
         includeViolations: true,
@@ -68,8 +68,8 @@ async function execute(context, options = {}) {
     // Extract large files from analysis
     const largeFiles = extractLargeFiles(analysisResults);
 
-    logger.log(`✅ [RefactorAnalyze] Analysis completed. Found ${largeFiles.length} large files.`);
-    logger.log(`🔍 [RefactorAnalyze] Sample large files:`, largeFiles.slice(0, 3)); // Debug first 3 files
+    logger.log(`✅ [RefactorAnalyze] Analysis completed. Found ${largeFiles.length} large files`);
+    logger.log(`🔍 [RefactorAnalyze] Sample large files available`);
 
     const result = {
       success: true,
@@ -83,11 +83,7 @@ async function execute(context, options = {}) {
       }
     };
 
-    logger.log(`🔍 [RefactorAnalyze] Returning result with largeFiles:`, {
-      hasLargeFiles: !!result.largeFiles,
-      largeFilesLength: result.largeFiles ? result.largeFiles.length : 0,
-      resultKeys: Object.keys(result)
-    });
+    logger.log(`🔍 [RefactorAnalyze] Returning result with largeFiles`);
 
     return result;
 
@@ -101,14 +97,7 @@ function extractLargeFiles(analysisResults) {
   const largeFiles = [];
   const processedPaths = new Set();
 
-  logger.log(`🔍 [RefactorAnalyze] Extracting large files from analysis results:`, {
-    hasProjectAnalysis: !!analysisResults.projectAnalysis,
-    hasCodeQuality: !!analysisResults.codeQuality,
-    hasArchitecture: !!analysisResults.architecture,
-    projectAnalysisKeys: analysisResults.projectAnalysis ? Object.keys(analysisResults.projectAnalysis) : [],
-    codeQualityKeys: analysisResults.codeQuality ? Object.keys(analysisResults.codeQuality) : [],
-    architectureKeys: analysisResults.architecture ? Object.keys(analysisResults.architecture) : []
-  });
+  logger.log(`🔍 [RefactorAnalyze] Extracting large files from analysis results`);
 
   // Check multiple possible locations for large files data
   const possibleSources = [
@@ -120,12 +109,7 @@ function extractLargeFiles(analysisResults) {
     analysisResults.analysis?.codeQuality?.data?.largeFiles
   ];
 
-  logger.log(`🔍 [RefactorAnalyze] Checking possible sources:`, possibleSources.map((source, index) => ({
-    sourceIndex: index,
-    hasData: !!source,
-    isArray: Array.isArray(source),
-    length: Array.isArray(source) ? source.length : 'N/A'
-  })));
+  logger.log(`🔍 [RefactorAnalyze] Checking possible sources`);
 
   for (const source of possibleSources) {
     if (source && Array.isArray(source)) {

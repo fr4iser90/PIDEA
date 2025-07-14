@@ -146,7 +146,7 @@ async function execute(context = {}, options = {}) {
     // Calculate quality score
     results.summary.qualityScore = calculateQualityScore(results);
     
-    logger.log(`✅ Code quality analysis completed. Score: ${results.summary.qualityScore}/100`);
+    logger.log(`✅ Code quality analysis completed`);
     return results;
     
   } catch (error) {
