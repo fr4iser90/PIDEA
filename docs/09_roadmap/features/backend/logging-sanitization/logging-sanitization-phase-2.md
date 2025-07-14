@@ -7,7 +7,7 @@ Execute the automated migration of console.log and logger.log patterns across th
 - [ ] Enhance existing fix-logging.js script with comprehensive migration capabilities
 - [ ] Execute automated grep/regex scans for console.log and logger.log patterns
 - [ ] AI categorization of files: auto-migratable, manual review required, already compliant
-- [ ] Automated replacement of console.log → logger.info, warn, error; logger.log → logger.info
+- [ ] Automated replacement: console.log → logger.info, warn, error; logger.log → logger.info
 - [ ] Automated import insertion and standardization
 - [ ] Generate migration reports and TODOs for manual review
 

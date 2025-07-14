@@ -654,7 +654,7 @@ console.log('User logged in:', user.name);
 // After
 const Logger = require('@logging/Logger');
 const logger = new Logger('ServiceName');
-logger.info('User logged in', { userName: user.name, userId: user.id });
+logger.info('User logged in', { user: user.username, userId: user.id });
 ```
 
 ### Pattern 2: logger.log → logger.info
