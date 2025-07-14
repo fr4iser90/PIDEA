@@ -508,10 +508,10 @@ class TaskController {
             // Fallback: use current working directory
             if (!workspacePath) {
                 workspacePath = process.cwd();
-                logger.log(`🔄 [TaskController] Using fallback workspace path: ${workspacePath}`);
+                logger.log(`🔄 [TaskController] Using fallback workspace path`);
             }
 
-            logger.log(`🔄 [TaskController] Using workspace path: ${workspacePath}`);
+            logger.log(`🔄 [TaskController] Using workspace path`);
 
             // Use DocsImportService to import from workspace
             const result = await this.docsImportService.importDocsFromWorkspace(projectId, workspacePath);

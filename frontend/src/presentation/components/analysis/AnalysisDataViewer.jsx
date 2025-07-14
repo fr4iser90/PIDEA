@@ -367,6 +367,7 @@ const AnalysisDataViewer = ({ projectId = null, eventBus = null }) => {
   const handleStartAnalysis = async () => {
     try {
       setLoading(true);
+      setError(null);
       const currentProjectId = projectId || await apiRepository.getCurrentProjectId();
       
       // Check if we already have recent data
@@ -380,18 +381,16 @@ const AnalysisDataViewer = ({ projectId = null, eventBus = null }) => {
         }
       }
 
-      const response = await apiRepository.startAutoMode(currentProjectId, {
-        mode: 'analysis'
-      });
-      
+      // Start new analysis
+      const response = await apiRepository.startAutoMode(currentProjectId, { mode: 'analysis' });
       if (response.success) {
-        logger.log('Analysis started successfully');
-        // Data will be updated via real-time events
+        // Nach Abschluss neue Daten laden
+        await loadAnalysisData();
       } else {
-        setError('Failed to start analysis: ' + response.error);
+        setError('Analyse konnte nicht gestartet werden: ' + response.error);
       }
     } catch (err) {
-      setError('Error starting analysis: ' + err.message);
+      setError('Fehler beim Starten der Analyse: ' + err.message);
       logger.error('Analysis start error:', err);
     } finally {
       setLoading(false);
@@ -442,6 +441,7 @@ const AnalysisDataViewer = ({ projectId = null, eventBus = null }) => {
           >
             🔄 Refresh
           </button>
+          <button onClick={handleStartAnalysis} className="analyze-btn">Jetzt analysieren</button>
         </div>
       </div>
       <div className="analysis-content">

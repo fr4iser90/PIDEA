@@ -83,13 +83,13 @@ class ArchitectureAnalyzer {
     }
 
     /**
-     * Analyze project structure
+     * Analyze project structure (improved)
      * @param {string} projectPath - Project directory path
      * @returns {Promise<Object>} Project structure analysis
      */
     async analyzeProjectStructure(projectPath) {
         const structure = {
-            layers: [],
+            layers: [], // Array of { name, modules: [filePaths] }
             modules: [],
             components: [],
             services: [],
@@ -97,12 +97,13 @@ class ArchitectureAnalyzer {
             configuration: {},
             organization: 'unknown'
         };
-
+        const layerMap = {};
         try {
-            // Recursively analyze directory structure
-            await this.analyzeDirectoryRecursively(projectPath, structure, projectPath);
-            
-            // Determine organization pattern
+            // Recursively analyze directory structure and build layer-module mapping
+            await this.analyzeDirectoryForLayers(projectPath, structure, projectPath, layerMap);
+            // Convert layerMap to array
+            structure.layers = Object.entries(layerMap).map(([name, modules]) => ({ name, modules: Array.from(modules) }));
+            // Organization detection
             if (structure.layers.length > 0) {
                 structure.organization = 'layered';
             } else if (structure.modules.length > 0) {
@@ -112,61 +113,47 @@ class ArchitectureAnalyzer {
             } else {
                 structure.organization = 'flat';
             }
-
-        } catch (error) {
-            // Ignore errors
-        }
-
+        } catch (error) {}
         return structure;
     }
 
-    async analyzeDirectoryRecursively(dirPath, structure, projectPath, depth = 0) {
-        if (depth > 3) return; // Limit recursion depth
-        
+    async analyzeDirectoryForLayers(dirPath, structure, projectPath, layerMap, depth = 0) {
+        if (depth > 5) return;
         try {
             const items = await fsPromises.readdir(dirPath);
-            
             for (const item of items) {
                 const itemPath = path.join(dirPath, item);
                 const stats = await fsPromises.stat(itemPath);
-                
                 if (stats.isDirectory()) {
                     const relativePath = path.relative(projectPath, itemPath);
-                    
-                    // Detect common architectural layers
-                    if (item.toLowerCase().includes('controller') || item.toLowerCase().includes('api') || 
-                        item.toLowerCase().includes('presentation') || item.toLowerCase().includes('web')) {
-                        structure.layers.push({ name: 'presentation', path: relativePath });
+                    // Try to infer layer name from folder name or path
+                    let layerName = this.inferLayerName(item, relativePath, depth);
+                    if (layerName) {
+                        if (!layerMap[layerName]) layerMap[layerName] = new Set();
+                        // Add all JS/TS files in this folder to the layer
+                        const files = await this.getCodeFiles(itemPath);
+                        files.forEach(f => layerMap[layerName].add(f));
                     }
-                    if (item.toLowerCase().includes('service') || item.toLowerCase().includes('business') || 
-                        item.toLowerCase().includes('application') || item.toLowerCase().includes('domain')) {
-                        structure.layers.push({ name: 'business', path: relativePath });
-                        structure.services.push(relativePath);
-                    }
-                    if (item.toLowerCase().includes('model') || item.toLowerCase().includes('entity') || 
-                        item.toLowerCase().includes('data') || item.toLowerCase().includes('repository')) {
-                        structure.layers.push({ name: 'data', path: relativePath });
-                    }
-                    if (item.toLowerCase().includes('middleware') || item.toLowerCase().includes('interceptor') || 
-                        item.toLowerCase().includes('auth') || item.toLowerCase().includes('infrastructure')) {
-                        structure.layers.push({ name: 'cross-cutting', path: relativePath });
-                    }
-                    if (item.toLowerCase().includes('util') || item.toLowerCase().includes('helper') || 
-                        item.toLowerCase().includes('common') || item.toLowerCase().includes('shared')) {
-                        structure.utilities.push(relativePath);
-                    }
-                    if (item.toLowerCase().includes('config') || item.toLowerCase().includes('setting') || 
-                        item.toLowerCase().includes('conf')) {
-                        structure.configuration[relativePath] = await this.analyzeConfiguration(itemPath);
-                    }
-                    
                     // Recursively analyze subdirectories
-                    await this.analyzeDirectoryRecursively(itemPath, structure, projectPath, depth + 1);
+                    await this.analyzeDirectoryForLayers(itemPath, structure, projectPath, layerMap, depth + 1);
                 }
             }
-        } catch (error) {
-            // Ignore errors
-        }
+        } catch (error) {}
+    }
+
+    inferLayerName(folderName, relativePath, depth) {
+        // Try to infer layer name from folder name, path, or depth
+        const name = folderName.toLowerCase();
+        if (name.includes('controller') || name.includes('api') || name.includes('presentation') || name.includes('web')) return 'presentation';
+        if (name.includes('service') || name.includes('business') || name.includes('application') || name.includes('domain')) return 'business';
+        if (name.includes('model') || name.includes('entity') || name.includes('data') || name.includes('repository')) return 'data';
+        if (name.includes('middleware') || name.includes('interceptor') || name.includes('auth') || name.includes('infrastructure')) return 'cross-cutting';
+        if (name.includes('util') || name.includes('helper') || name.includes('common') || name.includes('shared')) return 'utility';
+        if (name.includes('config') || name.includes('setting') || name.includes('conf')) return 'configuration';
+        // Fallback: Use depth for generic projects
+        if (depth === 0) return 'root';
+        if (depth === 1) return 'feature';
+        return null;
     }
 
     /**
@@ -570,7 +557,7 @@ class ArchitectureAnalyzer {
     }
 
     /**
-     * Generate dependency graph
+     * Generate dependency graph (improved: add layer info to nodes)
      * @param {string} projectPath - Project directory path
      * @returns {Promise<Object>} Dependency graph
      */
@@ -581,25 +568,30 @@ class ArchitectureAnalyzer {
             cycles: [],
             circularDependencies: []
         };
-
         try {
             const files = await this.getCodeFiles(projectPath);
-            
-            // Create nodes
+            // Build layer mapping for all files
+            const structure = await this.analyzeProjectStructure(projectPath);
+            const fileToLayer = {};
+            for (const layer of structure.layers) {
+                for (const file of layer.modules) {
+                    fileToLayer[file] = layer.name;
+                }
+            }
+            // Create nodes with layer info
             for (const file of files) {
                 dependencies.nodes.push({
                     id: file,
                     name: path.basename(file),
-                    type: this.getFileType(file)
+                    type: this.getFileType(file),
+                    layer: fileToLayer[file] || null
                 });
             }
-            
-            // Create edges
+            // Create edges (wie bisher)
             for (const file of files) {
                 try {
                     const content = await fsPromises.readFile(file, 'utf8');
                     const imports = this.extractImports(content);
-                    
                     for (const importPath of imports) {
                         const targetFile = this.resolveImportPath(importPath, file, projectPath);
                         if (targetFile && files.includes(targetFile)) {
@@ -610,19 +602,11 @@ class ArchitectureAnalyzer {
                             });
                         }
                     }
-                } catch (error) {
-                    // Ignore file read errors
-                }
+                } catch (error) {}
             }
-            
-            // Detect cycles
             dependencies.cycles = this.detectCycles(dependencies.nodes, dependencies.edges);
             dependencies.circularDependencies = this.findCircularDependencies(dependencies.edges);
-
-        } catch (error) {
-            // Ignore errors
-        }
-
+        } catch (error) {}
         return dependencies;
     }
 

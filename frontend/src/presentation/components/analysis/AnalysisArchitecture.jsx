@@ -47,7 +47,11 @@ const AnalysisArchitecture = ({ architecture, loading, error }) => {
   useEffect(() => {
     if (!isObjectGraph || !networkRef.current) return;
     const { nodes, edges } = architecture.dependencies.graph;
-    const visNodes = new DataSet(nodes.map(n => ({ id: n.id, label: n.name, group: n.type })));
+    const visNodes = new DataSet(nodes.map(n => ({
+      id: n.id,
+      label: n.name,
+      group: n.layer || n.type || 'unknown',
+    })));
     const visEdges = new DataSet(edges.map(e => ({ from: e.from, to: e.to, label: e.type })));
     const data = { nodes: visNodes, edges: visEdges };
     const options = {
@@ -248,6 +252,39 @@ const AnalysisArchitecture = ({ architecture, loading, error }) => {
     a.download = 'architecture-diagram.svg';
     a.click();
     URL.revokeObjectURL(url);
+  };
+
+  // Add this helper to group nodes by layer for the diagram
+  const groupNodesByLayer = (nodes) => {
+    const groups = {};
+    nodes.forEach(node => {
+      const layer = node.layer || 'unknown';
+      if (!groups[layer]) groups[layer] = [];
+      groups[layer].push(node);
+    });
+    return groups;
+  };
+
+  // Render Layer/Module Table
+  const renderLayerModuleTable = () => {
+    const layers = architecture?.structure?.layers || [];
+    if (!Array.isArray(layers) || layers.length === 0) return <div>No layers detected.</div>;
+    return (
+      <div className="layer-module-table">
+        {layers.map(layer => (
+          <div key={layer.name} className="layer-block">
+            <div className="layer-title"><b>{layer.name}</b></div>
+            <ul className="module-list">
+              {Array.isArray(layer.modules) && layer.modules.length > 0 ? (
+                layer.modules.map(mod => <li key={mod}>{mod}</li>)
+              ) : (
+                <li><i>No modules</i></li>
+              )}
+            </ul>
+          </div>
+        ))}
+      </div>
+    );
   };
 
   if (loading) {

@@ -24,9 +24,35 @@ class AnalysisController {
       const { projectPath } = req.params;
       const options = req.body || {};
 
-      this.logger.info(`[AnalysisController] Code quality analysis requested for: ${projectPath}`);
+      this.logger.info(`[AnalysisController] Code quality analysis requested`);
+
+      // Suche nach aktueller Analyse
+      const latest = await this.analysisRepository.findLatestByProjectPath(projectPath, 'code-quality');
+      if (latest && isAnalysisFresh(latest)) {
+        this.logger.info(`[AnalysisController] Returning cached code quality analysis`);
+        const analysis = latest.resultData;
+        const score = this.codeQualityService.getQualityScore(analysis);
+        const level = this.codeQualityService.getQualityLevel(score);
+
+        res.json({
+          success: true,
+          data: {
+            analysis,
+            score,
+            level,
+            summary: {
+              overallScore: score,
+              issues: analysis.issues.length,
+              recommendations: analysis.recommendations.length,
+              configuration: analysis.configuration
+            }
+          }
+        });
+        return;
+      }
 
       const analysis = await this.codeQualityService.analyzeCodeQuality(projectPath, options);
+      await this.analysisRepository.saveAnalysis(projectPath, 'code-quality', analysis);
       const score = this.codeQualityService.getQualityScore(analysis);
       const level = this.codeQualityService.getQualityLevel(score);
 
@@ -64,9 +90,32 @@ class AnalysisController {
       const { projectPath } = req.params;
       const options = req.body || {};
 
-      this.logger.info(`[AnalysisController] Security analysis requested for: ${projectPath}`);
+      this.logger.info(`[AnalysisController] Security analysis requested`);
+
+      // Suche nach aktueller Analyse
+      const latest = await this.analysisRepository.findLatestByProjectPath(projectPath, 'security');
+      if (latest && isAnalysisFresh(latest)) {
+        this.logger.info(`[AnalysisController] Returning cached security analysis`);
+        const analysis = latest.resultData;
+        const score = this.securityService.getSecurityScore(analysis);
+        const riskLevel = this.securityService.getOverallRiskLevel(analysis);
+        const hasCriticalVulnerabilities = this.securityService.hasCriticalVulnerabilities(analysis);
+
+        res.json({
+          success: true,
+          data: {
+            analysis,
+            score,
+            riskLevel,
+            hasCriticalVulnerabilities,
+            summary: this.securityService.getVulnerabilitySummary(analysis)
+          }
+        });
+        return;
+      }
 
       const analysis = await this.securityService.analyzeSecurity(projectPath, options);
+      await this.analysisRepository.saveAnalysis(projectPath, 'security', analysis);
       const score = this.securityService.getSecurityScore(analysis);
       const riskLevel = this.securityService.getOverallRiskLevel(analysis);
       const hasCriticalVulnerabilities = this.securityService.hasCriticalVulnerabilities(analysis);
@@ -101,9 +150,32 @@ class AnalysisController {
       const { projectPath } = req.params;
       const options = req.body || {};
 
-      this.logger.info(`[AnalysisController] Performance analysis requested for: ${projectPath}`);
+      this.logger.info(`[AnalysisController] Performance analysis requested`);
+
+      // Suche nach aktueller Analyse
+      const latest = await this.analysisRepository.findLatestByProjectPath(projectPath, 'performance');
+      if (latest && isAnalysisFresh(latest)) {
+        this.logger.info(`[AnalysisController] Returning cached performance analysis`);
+        const analysis = latest.resultData;
+        const score = this.performanceService.getPerformanceScore(analysis);
+        const level = this.performanceService.getPerformanceLevel(score);
+        const criticalIssues = this.performanceService.getCriticalIssues(analysis);
+
+        res.json({
+          success: true,
+          data: {
+            analysis,
+            score,
+            level,
+            criticalIssues,
+            summary: this.performanceService.getPerformanceSummary(analysis)
+          }
+        });
+        return;
+      }
 
       const analysis = await this.performanceService.analyzePerformance(projectPath, options);
+      await this.analysisRepository.saveAnalysis(projectPath, 'performance', analysis);
       const score = this.performanceService.getPerformanceScore(analysis);
       const level = this.performanceService.getPerformanceLevel(score);
       const criticalIssues = this.performanceService.getCriticalIssues(analysis);
@@ -138,9 +210,34 @@ class AnalysisController {
       const { projectPath } = req.params;
       const options = req.body || {};
 
-      this.logger.info(`[AnalysisController] Architecture analysis requested for: ${projectPath}`);
+      this.logger.info(`[AnalysisController] Architecture analysis requested`);
+
+      // Suche nach aktueller Analyse
+      const latest = await this.analysisRepository.findLatestByProjectPath(projectPath, 'architecture');
+      if (latest && isAnalysisFresh(latest)) {
+        this.logger.info(`[AnalysisController] Returning cached architecture analysis`);
+        const analysis = latest.resultData;
+        const score = this.architectureService.getArchitectureScore(analysis);
+        const level = this.architectureService.getArchitectureLevel(score);
+        const isWellStructured = this.architectureService.isWellStructured(analysis);
+        const hasCircularDependencies = this.architectureService.hasCircularDependencies(analysis);
+
+        res.json({
+          success: true,
+          data: {
+            analysis,
+            score,
+            level,
+            isWellStructured,
+            hasCircularDependencies,
+            summary: this.architectureService.getArchitectureSummary(analysis)
+          }
+        });
+        return;
+      }
 
       const analysis = await this.architectureService.analyzeArchitecture(projectPath, options);
+      await this.analysisRepository.saveAnalysis(projectPath, 'architecture', analysis);
       const score = this.architectureService.getArchitectureScore(analysis);
       const level = this.architectureService.getArchitectureLevel(score);
       const isWellStructured = this.architectureService.isWellStructured(analysis);
@@ -177,7 +274,22 @@ class AnalysisController {
       const { projectPath } = req.params;
       const options = req.body || {};
 
-      this.logger.info(`[AnalysisController] Comprehensive analysis requested for: ${projectPath}`);
+      this.logger.info(`[AnalysisController] Comprehensive analysis requested`);
+
+      // Check for cached comprehensive analysis first
+      const latest = await this.analysisRepository.findLatestByProjectPath(projectPath, 'comprehensive');
+      if (latest && isAnalysisFresh(latest)) {
+        this.logger.info(`[AnalysisController] Returning cached comprehensive analysis`);
+        const analysis = latest.resultData;
+        
+        res.json({
+          success: true,
+          data: analysis
+        });
+        return;
+      }
+
+      this.logger.info(`[AnalysisController] Running new comprehensive analysis`);
 
       // Run all analyses in parallel
       const [codeQuality, security, performance, architecture] = await Promise.all([
@@ -217,36 +329,41 @@ class AnalysisController {
         });
       }
 
+      const comprehensiveResult = {
+        comprehensive: {
+          overallScore,
+          level: this.getOverallLevel(overallScore),
+          criticalIssues,
+          timestamp: new Date()
+        },
+        codeQuality: {
+          analysis: codeQuality,
+          score: codeQualityScore,
+          level: this.codeQualityService.getQualityLevel(codeQualityScore)
+        },
+        security: {
+          analysis: security,
+          score: securityScore,
+          riskLevel: this.securityService.getOverallRiskLevel(security)
+        },
+        performance: {
+          analysis: performance,
+          score: performanceScore,
+          level: this.performanceService.getPerformanceLevel(performanceScore)
+        },
+        architecture: {
+          analysis: architecture,
+          score: architectureScore,
+          level: this.architectureService.getArchitectureLevel(architectureScore)
+        }
+      };
+
+      // Save the comprehensive analysis result
+      await this.analysisRepository.saveAnalysis(projectPath, 'comprehensive', comprehensiveResult);
+
       res.json({
         success: true,
-        data: {
-          comprehensive: {
-            overallScore,
-            level: this.getOverallLevel(overallScore),
-            criticalIssues,
-            timestamp: new Date()
-          },
-          codeQuality: {
-            analysis: codeQuality,
-            score: codeQualityScore,
-            level: this.codeQualityService.getQualityLevel(codeQualityScore)
-          },
-          security: {
-            analysis: security,
-            score: securityScore,
-            riskLevel: this.securityService.getOverallRiskLevel(security)
-          },
-          performance: {
-            analysis: performance,
-            score: performanceScore,
-            level: this.performanceService.getPerformanceLevel(performanceScore)
-          },
-          architecture: {
-            analysis: architecture,
-            score: architectureScore,
-            level: this.architectureService.getArchitectureLevel(architectureScore)
-          }
-        }
+        data: comprehensiveResult
       });
 
     } catch (error) {
@@ -1165,6 +1282,239 @@ class AnalysisController {
   }
 
   /**
+   * Get code quality analysis data (GET - no analysis)
+   * @param {Object} req - Express request
+   * @param {Object} res - Express response
+   */
+  async getCodeQualityAnalysis(req, res) {
+    try {
+      const { projectPath } = req.params;
+
+      this.logger.info(`[AnalysisController] Getting code quality analysis data`);
+
+      // Get latest analysis from database
+      const latest = await this.analysisRepository.findLatestByProjectPath(projectPath, 'code-quality');
+      if (!latest) {
+        return res.status(404).json({
+          success: false,
+          error: 'No code quality analysis found'
+        });
+      }
+
+      const analysis = latest.resultData;
+      const score = this.codeQualityService.getQualityScore(analysis);
+      const level = this.codeQualityService.getQualityLevel(score);
+
+      res.json({
+        success: true,
+        data: {
+          analysis,
+          score,
+          level,
+          summary: {
+            overallScore: score,
+            issues: analysis.issues.length,
+            recommendations: analysis.recommendations.length,
+            configuration: analysis.configuration
+          },
+          cached: true,
+          timestamp: latest.createdAt
+        }
+      });
+
+    } catch (error) {
+      this.logger.error(`[AnalysisController] Failed to get code quality analysis:`, error);
+      res.status(500).json({
+        success: false,
+        error: error.message
+      });
+    }
+  }
+
+  /**
+   * Get security analysis data (GET - no analysis)
+   * @param {Object} req - Express request
+   * @param {Object} res - Express response
+   */
+  async getSecurityAnalysis(req, res) {
+    try {
+      const { projectPath } = req.params;
+
+      this.logger.info(`[AnalysisController] Getting security analysis data`);
+
+      // Get latest analysis from database
+      const latest = await this.analysisRepository.findLatestByProjectPath(projectPath, 'security');
+      if (!latest) {
+        return res.status(404).json({
+          success: false,
+          error: 'No security analysis found'
+        });
+      }
+
+      const analysis = latest.resultData;
+      const score = this.securityService.getSecurityScore(analysis);
+      const riskLevel = this.securityService.getOverallRiskLevel(analysis);
+      const hasCriticalVulnerabilities = this.securityService.hasCriticalVulnerabilities(analysis);
+
+      res.json({
+        success: true,
+        data: {
+          analysis,
+          score,
+          riskLevel,
+          hasCriticalVulnerabilities,
+          summary: this.securityService.getVulnerabilitySummary(analysis),
+          cached: true,
+          timestamp: latest.createdAt
+        }
+      });
+
+    } catch (error) {
+      this.logger.error(`[AnalysisController] Failed to get security analysis:`, error);
+      res.status(500).json({
+        success: false,
+        error: error.message
+      });
+    }
+  }
+
+  /**
+   * Get performance analysis data (GET - no analysis)
+   * @param {Object} req - Express request
+   * @param {Object} res - Express response
+   */
+  async getPerformanceAnalysis(req, res) {
+    try {
+      const { projectPath } = req.params;
+
+      this.logger.info(`[AnalysisController] Getting performance analysis data`);
+
+      // Get latest analysis from database
+      const latest = await this.analysisRepository.findLatestByProjectPath(projectPath, 'performance');
+      if (!latest) {
+        return res.status(404).json({
+          success: false,
+          error: 'No performance analysis found'
+        });
+      }
+
+      const analysis = latest.resultData;
+      const score = this.performanceService.getPerformanceScore(analysis);
+      const level = this.performanceService.getPerformanceLevel(score);
+      const criticalIssues = this.performanceService.getCriticalIssues(analysis);
+
+      res.json({
+        success: true,
+        data: {
+          analysis,
+          score,
+          level,
+          criticalIssues,
+          summary: this.performanceService.getPerformanceSummary(analysis),
+          cached: true,
+          timestamp: latest.createdAt
+        }
+      });
+
+    } catch (error) {
+      this.logger.error(`[AnalysisController] Failed to get performance analysis:`, error);
+      res.status(500).json({
+        success: false,
+        error: error.message
+      });
+    }
+  }
+
+  /**
+   * Get architecture analysis data (GET - no analysis)
+   * @param {Object} req - Express request
+   * @param {Object} res - Express response
+   */
+  async getArchitectureAnalysis(req, res) {
+    try {
+      const { projectPath } = req.params;
+
+      this.logger.info(`[AnalysisController] Getting architecture analysis data`);
+
+      // Get latest analysis from database
+      const latest = await this.analysisRepository.findLatestByProjectPath(projectPath, 'architecture');
+      if (!latest) {
+        return res.status(404).json({
+          success: false,
+          error: 'No architecture analysis found'
+        });
+      }
+
+      const analysis = latest.resultData;
+      const score = this.architectureService.getArchitectureScore(analysis);
+      const level = this.architectureService.getArchitectureLevel(score);
+      const isWellStructured = this.architectureService.isWellStructured(analysis);
+      const hasCircularDependencies = this.architectureService.hasCircularDependencies(analysis);
+
+      res.json({
+        success: true,
+        data: {
+          analysis,
+          score,
+          level,
+          isWellStructured,
+          hasCircularDependencies,
+          summary: this.architectureService.getArchitectureSummary(analysis),
+          cached: true,
+          timestamp: latest.createdAt
+        }
+      });
+
+    } catch (error) {
+      this.logger.error(`[AnalysisController] Failed to get architecture analysis:`, error);
+      res.status(500).json({
+        success: false,
+        error: error.message
+      });
+    }
+  }
+
+  /**
+   * Get comprehensive analysis data (GET - no analysis)
+   * @param {Object} req - Express request
+   * @param {Object} res - Express response
+   */
+  async getComprehensiveAnalysis(req, res) {
+    try {
+      const { projectPath } = req.params;
+
+      this.logger.info(`[AnalysisController] Getting comprehensive analysis data`);
+
+      // Get latest analysis from database
+      const latest = await this.analysisRepository.findLatestByProjectPath(projectPath, 'comprehensive');
+      if (!latest) {
+        return res.status(404).json({
+          success: false,
+          error: 'No comprehensive analysis found'
+        });
+      }
+
+      const analysis = latest.resultData;
+      
+      res.json({
+        success: true,
+        data: {
+          ...analysis,
+          cached: true,
+          timestamp: latest.createdAt
+        }
+      });
+
+    } catch (error) {
+      this.logger.error(`[AnalysisController] Failed to get comprehensive analysis:`, error);
+      res.status(500).json({
+        success: false,
+        error: error.message
+      });
+    }
+  }
+
+  /**
    * Get overall level based on score
    * @param {number} score - Overall score
    * @returns {string} Overall level
@@ -1176,6 +1526,14 @@ class AnalysisController {
     if (score >= 60) return 'poor';
     return 'critical';
   }
+}
+
+// Hilfsfunktion: Prüfe, ob Analyse aktuell ist (z.B. < 10 Minuten alt)
+function isAnalysisFresh(analysis, maxAgeMinutes = 10) {
+  if (!analysis || !analysis.timestamp) return false;
+  const now = Date.now();
+  const ts = new Date(analysis.timestamp).getTime();
+  return (now - ts) < maxAgeMinutes * 60 * 1000;
 }
 
 module.exports = AnalysisController; 
