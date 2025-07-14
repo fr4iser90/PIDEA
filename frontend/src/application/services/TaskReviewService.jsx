@@ -46,12 +46,12 @@ class TaskReviewService {
    */
   async buildReviewPrompt(taskData) {
     // Load the task-review.md prompt from content library for REVIEW
-    const response = await apiCall('/api/prompts/task-management/task-review');
-    if (!response.success || !response.data) {
+    const response = await apiCall('/api/prompts/task-management/task-review.md');
+    if (!response.success || !response.content) {
       throw new Error('Failed to load task-review prompt from content library');
     }
     
-    const taskReviewPrompt = response.data.content;
+    const taskReviewPrompt = response.content;
 
     return `${taskReviewPrompt}
 
@@ -422,12 +422,12 @@ Provide a complete, updated implementation plan.`;
   async executeTask(reviewData) {
     try {
       // Load the task-execute.md prompt from content library for EXECUTION
-      const response = await apiCall('/api/prompts/task-management/task-execute');
-      if (!response.success || !response.data) {
+      const response = await apiCall('/api/prompts/task-management/task-execute.md');
+      if (!response.success || !response.content) {
         throw new Error('Failed to load task-execute prompt from content library');
       }
       
-      const taskExecutePrompt = response.data.content;
+      const taskExecutePrompt = response.content;
 
       // Create execution prompt with task data
       const executionPrompt = `${taskExecutePrompt}

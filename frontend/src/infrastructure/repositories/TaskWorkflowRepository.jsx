@@ -56,6 +56,60 @@ export default class TaskWorkflowRepository {
   }
 
   /**
+   * Execute workflow (alias for startAutoFinishWorkflow for compatibility)
+   * @param {Object} workflowData - Workflow configuration with todoInput and options
+   * @returns {Promise<Object>} Workflow result
+   */
+  async executeWorkflow(workflowData) {
+    try {
+      logger.log('[TaskWorkflowRepository] Executing workflow:', workflowData);
+
+      const { todoInput, options } = workflowData;
+      const { workflowId, taskData, projectId } = options;
+
+      // Get current project ID if not provided
+      const currentProjectId = projectId || await this.api.getCurrentProjectId();
+
+      // Use existing auto-finish API pattern with todoInput
+      const response = await apiCall(`/api/projects/${currentProjectId}/auto-finish/process`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          workflowId,
+          type: 'task_execution',
+          priority: taskData?.priority || 'medium',
+          estimatedTime: options?.estimatedHours || 1,
+          taskData,
+          todoInput, // The actual execution prompt
+          autoExecute: true,
+          createBranch: true,
+          branchName: `task/${workflowId}-${Date.now()}`
+        })
+      });
+
+      if (!response.success) {
+        throw new Error(response.error || 'Failed to execute workflow');
+      }
+
+      logger.log('[TaskWorkflowRepository] Workflow executed successfully');
+      
+      return {
+        success: true,
+        workflowId,
+        status: 'executing',
+        projectId: currentProjectId,
+        response: response.data
+      };
+
+    } catch (error) {
+      logger.error('[TaskWorkflowRepository] Failed to execute workflow:', error);
+      throw new Error(`Failed to execute workflow: ${error.message}`);
+    }
+  }
+
+  /**
    * Get workflow status
    * @param {string} workflowId - Workflow ID
    * @returns {Promise<Object>} Workflow status

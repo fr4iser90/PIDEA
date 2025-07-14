@@ -62,12 +62,12 @@ export default class TaskCreationService {
     const { title, description, category, priority, type, estimatedTime } = taskData;
     
     // Load the task-create.md prompt from content library using API
-    const promptResponse = await apiCall('/api/prompts/task-management/task-create');
-    if (!promptResponse.success || !promptResponse.data) {
+    const promptResponse = await apiCall('/api/prompts/task-management/task-create.md');
+    if (!promptResponse.success || !promptResponse.content) {
       throw new Error('Failed to load task-create prompt from content library');
     }
     
-    const taskCreatePrompt = promptResponse.data.content;
+    const taskCreatePrompt = promptResponse.content;
 
     // Get comprehensive project analysis
     const projectAnalysis = await this.getProjectAnalysis();
