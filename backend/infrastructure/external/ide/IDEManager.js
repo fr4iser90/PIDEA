@@ -61,9 +61,9 @@ class IDEManager {
         logger.log('[IDEManager] Received activeIDEChanged event:', eventData);
         if (eventData.port) {
           try {
-            logger.log('[IDEManager] Setting active port from event:', eventData.port);
-            this.activePort = eventData.port;
-            logger.log(`[IDEManager] Active port set to: ${this.activePort}`);
+                    logger.log(`[IDEManager] Setting active port from event: ${eventData.port}`);
+        this.activePort = eventData.port;
+        logger.log(`[IDEManager] Active port set to: ${this.activePort}`);
           } catch (error) {
             logger.error('[IDEManager] Failed to set active port from event:', error.message);
           }
@@ -104,22 +104,22 @@ class IDEManager {
       if (existingIDEs.length > 0) {
         await this.portManager.initialize();
         this.activePort = this.portManager.getActivePort();
-        logger.log('[IDEManager] Port manager selected active IDE on port', this.activePort);
+        logger.log(`[IDEManager] Port manager selected active IDE on port ${this.activePort}`);
       }
 
       // Detect workspace paths for existing IDEs
       if (existingIDEs.length > 0) {
-        logger.log('[IDEManager] Detecting workspace paths for', existingIDEs.length, 'IDEs');
+        logger.log(`[IDEManager] Detecting workspace paths for ${existingIDEs.length} IDEs`);
         for (const ide of existingIDEs) {
           if (!this.ideWorkspaces.has(ide.port)) {
             try {
               await this.detectWorkspacePath(ide.port);
               const workspacePath = this.ideWorkspaces.get(ide.port);
               if (workspacePath) {
-                logger.log('[IDEManager] Detected workspace path for port', ide.port, ':', workspacePath);
+                logger.log(`[IDEManager] Detected workspace path for port ${ide.port}: ${workspacePath}`);
               }
             } catch (error) {
-              logger.log('[IDEManager] Could not detect workspace path for port', ide.port, ':', error.message);
+              logger.log(`[IDEManager] Could not detect workspace path for port ${ide.port}: ${error.message}`);
             }
           }
         }
@@ -129,7 +129,7 @@ class IDEManager {
       await this.healthMonitor.startMonitoring();
 
       this.initialized = true;
-      logger.log('[IDEManager] Initialization complete. Found', existingIDEs.length, 'IDEs');
+      logger.log(`[IDEManager] Initialization complete. Found ${existingIDEs.length} IDEs`);
     } catch (error) {
       logger.error('[IDEManager] Initialization failed:', error);
       throw error;
@@ -260,7 +260,7 @@ class IDEManager {
       await this.initialize();
     }
 
-    logger.log('[IDEManager] Switching to IDE on port', port);
+          logger.log(`[IDEManager] Switching to IDE on port ${port}`);
     
     // Use port manager to validate and set active port
     const success = await this.portManager.setActivePort(port);
@@ -285,13 +285,13 @@ class IDEManager {
     if (this.browserManager) {
       try {
         await this.browserManager.switchToPort(port);
-        logger.log('[IDEManager] Browser manager switched to port', port);
+        logger.log(`[IDEManager] Browser manager switched to port ${port}`);
       } catch (error) {
         logger.warn('[IDEManager] Failed to switch browser manager to port', port, ':', error.message);
       }
     }
     
-    logger.log('[IDEManager] Successfully switched to IDE on port', port);
+          logger.log(`[IDEManager] Successfully switched to IDE on port ${port}`);
     
     return {
       port: port,
@@ -388,7 +388,7 @@ class IDEManager {
         return this.ideWorkspaces.get(port);
       }
       
-      logger.log('[IDEManager] Starting file-based workspace detection for port', port);
+      logger.log(`[IDEManager] Starting file-based workspace detection for port ${port}`);
       
       // File-based method
       if (this.fileDetector) {
@@ -402,7 +402,7 @@ class IDEManager {
           const workspaceInfo = await this.fileDetector.getWorkspaceInfo(port);
           
           if (workspaceInfo && workspaceInfo.workspace) {
-            logger.log('[IDEManager] File-based detected workspace path for port', port, ':', workspaceInfo.workspace);
+            logger.log(`[IDEManager] File-based detected workspace path for port ${port}: ${workspaceInfo.workspace}`);
             this.ideWorkspaces.set(port, workspaceInfo.workspace);
             
             // AUTOMATISCH Projekt in der DB erstellen

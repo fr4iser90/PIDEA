@@ -49,7 +49,7 @@ class HandlerRegistry {
       },
       ide: {
         CreateChatHandler: require('./categories/ide/CreateChatHandler'),
-        SendMessageHandler: require('./categories/ide/SendMessageHandler'),
+        SendMessageHandler: require('./categories/management/SendMessageHandler'),
         SwitchChatHandler: require('./categories/ide/SwitchChatHandler'),
         ListChatsHandler: require('./categories/ide/ListChatsHandler'),
         CloseChatHandler: require('./categories/ide/CloseChatHandler'),

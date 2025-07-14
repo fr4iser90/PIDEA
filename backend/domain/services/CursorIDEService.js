@@ -29,9 +29,9 @@ class CursorIDEService {
         // Switch browser connection to new IDE
         if (eventData.port) {
           try {
-            logger.log('[CursorIDEService] Switching browser connection to port:', eventData.port);
+            logger.log(`[CursorIDEService] Switching browser connection to port: ${eventData.port}`);
             await this.browserManager.switchToPort(eventData.port);
-            logger.log('[CursorIDEService] Successfully switched browser connection to port:', eventData.port);
+            logger.log(`[CursorIDEService] Successfully switched browser connection to port: ${eventData.port}`);
           } catch (error) {
             logger.error('[CursorIDEService] Failed to switch browser connection:', error.message);
           }

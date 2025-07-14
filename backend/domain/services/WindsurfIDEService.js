@@ -29,9 +29,9 @@ class WindsurfIDEService {
         // Switch browser connection to new IDE
         if (eventData.port) {
           try {
-            logger.log('[WindsurfIDEService] Switching browser connection to port:', eventData.port);
+            logger.log(`[WindsurfIDEService] Switching browser connection to port: ${eventData.port}`);
             await this.browserManager.switchToPort(eventData.port);
-            logger.log('[WindsurfIDEService] Successfully switched browser connection to port:', eventData.port);
+            logger.log(`[WindsurfIDEService] Successfully switched browser connection to port: ${eventData.port}`);
           } catch (error) {
             logger.error('[WindsurfIDEService] Failed to switch browser connection:', error.message);
           }

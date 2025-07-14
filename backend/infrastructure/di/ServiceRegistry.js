@@ -73,6 +73,12 @@ class ServiceRegistry {
             return manager;
         }, { singleton: true, dependencies: ['browserManager', 'projectRepository', 'eventBus'] });
 
+        // IDE Port Manager
+        this.container.register('idePortManager', (ideManager, eventBus) => {
+            const IDEPortManager = require('@domain/services/IDEPortManager');
+            return new IDEPortManager(ideManager, eventBus);
+        }, { singleton: true, dependencies: ['ideManager', 'eventBus'] });
+
         this.registeredServices.add('infrastructure');
     }
 
@@ -473,17 +479,18 @@ class ServiceRegistry {
         logger.log('[ServiceRegistry] Registering application handlers...');
 
         // Send message handler
-        this.container.register('sendMessageHandler', (cursorIDEService, vscodeIDEService, windsurfIDEService, ideManager, eventBus, logger) => {
+        this.container.register('sendMessageHandler', (cursorIDEService, vscodeIDEService, windsurfIDEService, ideManager, idePortManager, eventBus, logger) => {
             const SendMessageHandler = require('@application/handlers/categories/management/SendMessageHandler');
             return new SendMessageHandler({ 
                 cursorIDEService, 
                 vscodeIDEService, 
                 windsurfIDEService, 
                 ideManager, 
+                idePortManager,
                 eventBus, 
                 logger 
             });
-        }, { singleton: true, dependencies: ['cursorIDEService', 'vscodeIDEService', 'windsurfIDEService', 'ideManager', 'eventBus', 'logger'] });
+        }, { singleton: true, dependencies: ['cursorIDEService', 'vscodeIDEService', 'windsurfIDEService', 'ideManager', 'idePortManager', 'eventBus', 'logger'] });
 
         // Get chat history handler
         this.container.register('getChatHistoryHandler', (chatRepository, ideManager) => {
