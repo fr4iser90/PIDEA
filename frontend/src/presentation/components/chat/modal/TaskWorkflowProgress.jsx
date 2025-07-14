@@ -59,7 +59,7 @@ const TaskWorkflowProgress = ({
 
     const handleProgress = (data) => {
       if (data.workflowId === workflowId) {
-        logger.log('[TaskWorkflowProgress] Progress update received:', data);
+        logger.info('[TaskWorkflowProgress] Progress update received:', data);
         setProgress(prev => ({
           ...prev,
           ...data,
@@ -71,7 +71,7 @@ const TaskWorkflowProgress = ({
 
     const handleCompleted = (data) => {
       if (data.workflowId === workflowId) {
-        logger.log('[TaskWorkflowProgress] Workflow completed:', data);
+        logger.info('[TaskWorkflowProgress] Workflow completed:', data);
         setProgress(prev => ({
           ...prev,
           status: 'completed',
@@ -104,7 +104,7 @@ const TaskWorkflowProgress = ({
 
     const handleCancelled = (data) => {
       if (data.workflowId === workflowId) {
-        logger.log('[TaskWorkflowProgress] Workflow cancelled:', data);
+        logger.info('[TaskWorkflowProgress] Workflow cancelled:', data);
         setProgress(prev => ({
           ...prev,
           status: 'cancelled',

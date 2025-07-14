@@ -15,7 +15,7 @@ function PreviewComponent({ eventBus, activePort }) {
   const apiRepository = new APIChatRepository();
 
   useEffect(() => {
-    logger.log('🔄 PreviewComponent initializing...');
+    logger.info('🔄 PreviewComponent initializing...');
     setupEventListeners();
     initializePreview();
     
@@ -26,9 +26,9 @@ function PreviewComponent({ eventBus, activePort }) {
 
   // Lade Preview immer, wenn activePort sich ändert (React-Way)
   useEffect(() => {
-    logger.log('[PreviewComponent] activePort changed:', activePort);
+    logger.info('[PreviewComponent] activePort changed:', activePort);
     if (activePort) {
-      logger.log('[PreviewComponent] Loading preview for port:', activePort);
+      logger.info('[PreviewComponent] Loading preview for port:', activePort);
       handleRefresh();
     }
   }, [activePort]);
@@ -56,13 +56,13 @@ function PreviewComponent({ eventBus, activePort }) {
   };
 
   const handleIDEChanged = async (data) => {
-    logger.log('🔄 [PreviewComponent] Active IDE changed:', data);
+    logger.info('🔄 [PreviewComponent] Active IDE changed:', data);
     // Refresh preview data when IDE changes
     await handleRefresh();
   };
 
   const handleUserAppUrl = (data) => {
-    logger.log('🔄 [PreviewComponent] User app URL received:', data);
+    logger.info('🔄 [PreviewComponent] User app URL received:', data);
     if (data.url) {
       const previewData = {
         url: data.url,
@@ -133,31 +133,31 @@ function PreviewComponent({ eventBus, activePort }) {
       
       // If we have activePort, try to get user app URL for that specific port
       if (activePort) {
-        logger.log('[PreviewComponent] Getting user app URL for port:', activePort);
+        logger.info('[PreviewComponent] Getting user app URL for port:', activePort);
         const result = await apiRepository.getUserAppUrlForPort(activePort);
         
         if (result.success && result.data && result.data.url) {
-          logger.log('Found user app URL for port:', result.data.url);
+          logger.info('Found user app URL for port:', result.data.url);
           previewUrl = result.data.url;
           port = result.data.port;
           workspacePath = result.data.workspacePath;
         } else {
-          logger.log('No user app URL found for port, trying  endpoint...');
+          logger.info('No user app URL found for port, trying  endpoint...');
         }
       }
       
       // Fallback to  user app URL if port-specific failed
       if (!previewUrl) {
-        logger.log('Trying  user app URL...');
+        logger.info('Trying  user app URL...');
         const result = await apiRepository.getUserAppUrl();
         
         if (result.success && result.data && result.data.url) {
-          logger.log('Found user app URL:', result.data.url);
+          logger.info('Found user app URL:', result.data.url);
           previewUrl = result.data.url;
           port = result.data.port;
           workspacePath = result.data.workspacePath;
         } else {
-          logger.log('No user app URL found in any IDE workspace');
+          logger.info('No user app URL found in any IDE workspace');
           throw new Error('No frontend URL found in any available IDE workspace');
         }
       }

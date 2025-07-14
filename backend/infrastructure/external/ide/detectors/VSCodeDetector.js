@@ -6,8 +6,8 @@
 
 const http = require('http');
 const net = require('net');
-const Logger = require('@logging/Logger');
-const logger = new Logger('VSCodeDetector');
+const ServiceLogger = require('@logging/ServiceLogger');
+const logger = new ServiceLogger('VSCodeDetector');
 
 class VSCodeDetector {
   constructor() {
@@ -27,7 +27,7 @@ class VSCodeDetector {
    * @returns {Promise<Array>} Array of detected VSCode IDEs
    */
   async scanForIDEs() {
-    logger.log('[VSCodeDetector] Scanning for VSCode IDEs on ports', this.portRange.start, 'to', this.portRange.end);
+    logger.info('[VSCodeDetector] 🔍 Scanning for VSCode IDEs on ports', this.portRange.start, 'to', this.portRange.end);
     
     const availableIDEs = [];
     const promises = [];
@@ -52,7 +52,7 @@ class VSCodeDetector {
       }
     });
 
-    logger.log('[VSCodeDetector] Found', availableIDEs.length, 'running VSCode IDEs');
+    logger.info('[VSCodeDetector] ✅ Found', availableIDEs.length, 'running VSCode IDEs');
     return availableIDEs;
   }
 
@@ -214,8 +214,6 @@ class VSCodeDetector {
     for (const path of commonPaths) {
       try {
         require('fs').accessSync(path, require('fs').constants.X_OK);
-const Logger = require('@logging/Logger');
-const logger = new Logger('Logger');
         return path;
       } catch (error) {
         // Continue to next path

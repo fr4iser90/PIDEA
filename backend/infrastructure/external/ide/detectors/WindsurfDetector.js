@@ -6,8 +6,8 @@
 
 const http = require('http');
 const net = require('net');
-const Logger = require('@logging/Logger');
-const logger = new Logger('WindsurfDetector');
+const ServiceLogger = require('@logging/ServiceLogger');
+const logger = new ServiceLogger('WindsurfDetector');
 
 class WindsurfDetector {
   constructor() {
@@ -27,7 +27,7 @@ class WindsurfDetector {
    * @returns {Promise<Array>} Array of detected Windsurf IDEs
    */
   async scanForIDEs() {
-    logger.log('[WindsurfDetector] Scanning for Windsurf IDEs on ports', this.portRange.start, 'to', this.portRange.end);
+    logger.info('[WindsurfDetector] 🔍 Scanning for Windsurf IDEs on ports', this.portRange.start, 'to', this.portRange.end);
     
     const availableIDEs = [];
     const promises = [];
@@ -52,7 +52,7 @@ class WindsurfDetector {
       }
     });
 
-    logger.log('[WindsurfDetector] Found', availableIDEs.length, 'running Windsurf IDEs');
+    logger.info('[WindsurfDetector] ✅ Found', availableIDEs.length, 'running Windsurf IDEs');
     return availableIDEs;
   }
 

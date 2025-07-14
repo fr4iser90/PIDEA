@@ -2,6 +2,10 @@ const fs = require('fs');
 const path = require('path');
 const { JSDOM } = require('jsdom');
 
+const Logger = require('@logging/Logger');
+
+const logger = new Logger('ServiceName');
+
 class TestEnhancedCoverage {
   constructor() {
     this.results = {
@@ -18,7 +22,7 @@ class TestEnhancedCoverage {
   ensureOutputDir() {
     if (!fs.existsSync(this.outputDir)) {
       fs.mkdirSync(this.outputDir, { recursive: true });
-      console.log(`📁 Created VSCode test coverage directory: ${this.outputDir}`);
+      logger.info(`📁 Created VSCode test coverage directory: ${this.outputDir}`);
     }
   }
 
@@ -38,7 +42,7 @@ class TestEnhancedCoverage {
         sources[`enhanced-${file}`] = htmlContent;
       });
       
-      console.log(`📁 Enhanced VSCode collection: ${enhancedFiles.length} files`);
+      logger.info(`📁 Enhanced VSCode collection: ${enhancedFiles.length} files`);
     }
     
     // Fallback to auto collection
@@ -53,14 +57,14 @@ class TestEnhancedCoverage {
         sources[`auto-${file}`] = htmlContent;
       });
       
-      console.log(`📁 Auto VSCode collection: ${autoFiles.length} files`);
+      logger.info(`📁 Auto VSCode collection: ${autoFiles.length} files`);
     }
     
     if (Object.keys(sources).length === 0) {
       throw new Error('No VSCode DOM files found for testing!');
     }
     
-    console.log(`📄 Total VSCode DOM files for testing: ${Object.keys(sources).length}`);
+    logger.info(`📄 Total VSCode DOM files for testing: ${Object.keys(sources).length}`);
     return sources;
   }
 
@@ -79,7 +83,7 @@ class TestEnhancedCoverage {
   }
 
   async testEnhancedCoverage() {
-    console.log('🧪 VSCode Enhanced Coverage Testing starting...\n');
+    logger.info('🧪 VSCode Enhanced Coverage Testing starting...\n');
 
     try {
       // 1. Load all DOM files
@@ -100,12 +104,12 @@ class TestEnhancedCoverage {
       // 6. Generate actionable recommendations
       this.generateTestRecommendations(testResults);
 
-      console.log('\n📊 VSCode ENHANCED COVERAGE TESTING COMPLETED!');
-      console.log(`📁 Output: ${this.outputDir}`);
-      console.log(`🧪 Tests Run: ${report.summary.totalTests}`);
-      console.log(`✅ Passed: ${report.summary.passedTests}`);
-      console.log(`❌ Failed: ${report.summary.failedTests}`);
-      console.log(`📈 Coverage Score: ${report.summary.coverageScore}%`);
+      logger.info('\n📊 VSCode ENHANCED COVERAGE TESTING COMPLETED!');
+      logger.info(`📁 Output: ${this.outputDir}`);
+      logger.info(`🧪 Tests Run: ${report.summary.totalTests}`);
+      logger.info(`✅ Passed: ${report.summary.passedTests}`);
+      logger.info(`❌ Failed: ${report.summary.failedTests}`);
+      logger.info(`📈 Coverage Score: ${report.summary.coverageScore}%`);
 
       return report;
 
@@ -366,7 +370,7 @@ class TestEnhancedCoverage {
   }
 
   runVSCodeTests(sources, testScenarios) {
-    console.log('🧪 Running VSCode feature tests across all sources...');
+    logger.info('🧪 Running VSCode feature tests across all sources...');
     
     const results = {
       tests: {},
@@ -409,9 +413,9 @@ class TestEnhancedCoverage {
     // Calculate coverage
     results.coverage = this.calculateVSCodeCoverage(results.tests);
     
-    console.log(`  ✅ Passed: ${results.summary.passedTests} VSCode tests`);
-    console.log(`  ❌ Failed: ${results.summary.failedTests} VSCode tests`);
-    console.log(`  📊 Coverage: ${results.coverage.overall}%`);
+    logger.info(`  ✅ Passed: ${results.summary.passedTests} VSCode tests`);
+    logger.info(`  ❌ Failed: ${results.summary.failedTests} VSCode tests`);
+    logger.info(`  📊 Coverage: ${results.coverage.overall}%`);
     
     return results;
   }
@@ -632,8 +636,8 @@ class TestEnhancedCoverage {
     const summary = this.generateSummaryReport(report);
     fs.writeFileSync(summaryFile, summary);
     
-    console.log(`📄 VSCode test coverage saved: ${outputFile}`);
-    console.log(`📄 VSCode test summary saved: ${summaryFile}`);
+    logger.info(`📄 VSCode test coverage saved: ${outputFile}`);
+    logger.info(`📄 VSCode test summary saved: ${summaryFile}`);
   }
 
   generateSummaryReport(report) {

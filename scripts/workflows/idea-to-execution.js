@@ -1,3 +1,7 @@
+const Logger = require('@logging/Logger');
+
+const logger = new Logger('ServiceName');
+
 #!/usr/bin/env node
 
 /**
@@ -24,8 +28,8 @@ class IdeaToExecutionCLI {
 
   async run() {
     try {
-      console.log('🚀 Idea to Execution Workflow');
-      console.log('================================');
+      logger.info('🚀 Idea to Execution Workflow');
+      logger.info('================================');
       
       const args = process.argv.slice(2);
       
@@ -45,18 +49,18 @@ class IdeaToExecutionCLI {
       } else if (args.length > 0) {
         idea = args.join(' ');
       } else {
-        console.log('❌ No idea provided. Use --interactive or provide idea as argument.');
+        logger.info('❌ No idea provided. Use --interactive or provide idea as argument.');
         this.showHelp();
         return;
       }
       
       if (!idea.trim()) {
-        console.log('❌ Idea cannot be empty');
+        logger.info('❌ Idea cannot be empty');
         return;
       }
       
-      console.log(`💡 Processing idea: "${idea}"`);
-      console.log('');
+      logger.info(`💡 Processing idea: "${idea}"`);
+      logger.info('');
       
       // Get project and user context
       const context = await this.getContext();
@@ -103,8 +107,8 @@ class IdeaToExecutionCLI {
   }
 
   async executeWorkflow(idea, context) {
-    console.log('🔄 Starting workflow execution...');
-    console.log('');
+    logger.info('🔄 Starting workflow execution...');
+    logger.info('');
     
     const workflowContext = {
       ...context,
@@ -115,56 +119,56 @@ class IdeaToExecutionCLI {
   }
 
   displayResults(result) {
-    console.log('');
-    console.log('✅ Workflow completed successfully!');
-    console.log('====================================');
-    console.log('');
+    logger.info('');
+    logger.info('✅ Workflow completed successfully!');
+    logger.info('====================================');
+    logger.info('');
     
-    console.log('📋 Results Summary:');
-    console.log(`   Original Idea: ${result.originalIdea}`);
-    console.log(`   Task ID: ${result.taskId}`);
-    console.log(`   Subtasks Created: ${result.splitTasks.length}`);
-    console.log(`   Execution Results: ${result.executionResults.length}`);
-    console.log('');
+    logger.info('📋 Results Summary:');
+    logger.info(`   Original Idea: ${result.originalIdea}`);
+    logger.info(`   Task ID: ${result.taskId}`);
+    logger.info(`   Subtasks Created: ${result.splitTasks.length}`);
+    logger.info(`   Execution Results: ${result.executionResults.length}`);
+    logger.info('');
     
-    console.log('📊 Execution Statistics:');
+    logger.info('📊 Execution Statistics:');
     const successful = result.executionResults.filter(r => r.success).length;
     const failed = result.executionResults.filter(r => !r.success).length;
-    console.log(`   Successful: ${successful}`);
-    console.log(`   Failed: ${failed}`);
-    console.log(`   Success Rate: ${((successful / result.executionResults.length) * 100).toFixed(1)}%`);
-    console.log('');
+    logger.info(`   Successful: ${successful}`);
+    logger.info(`   Failed: ${failed}`);
+    logger.info(`   Success Rate: ${((successful / result.executionResults.length) * 100).toFixed(1)}%`);
+    logger.info('');
     
     if (result.executionResults.some(r => !r.success)) {
-      console.log('⚠️  Failed Subtasks:');
+      logger.info('⚠️  Failed Subtasks:');
       result.executionResults
         .filter(r => !r.success)
         .forEach(r => {
-          console.log(`   - Subtask ${r.subtaskId}: ${r.error}`);
+          logger.info(`   - Subtask ${r.subtaskId}: ${r.error}`);
         });
-      console.log('');
+      logger.info('');
     }
     
-    console.log('🎉 All done! Your idea has been processed and executed.');
+    logger.info('🎉 All done! Your idea has been processed and executed.');
   }
 
   showHelp() {
-    console.log('Idea to Execution Workflow CLI');
-    console.log('');
-    console.log('Usage:');
-    console.log('  node scripts/workflows/idea-to-execution.js "Your idea here"');
-    console.log('  node scripts/workflows/idea-to-execution.js --interactive');
-    console.log('  node scripts/workflows/idea-to-execution.js --file idea.txt');
-    console.log('');
-    console.log('Options:');
-    console.log('  --interactive, -i    Run in interactive mode');
-    console.log('  --file, -f <file>    Read idea from file');
-    console.log('  --help, -h           Show this help');
-    console.log('');
-    console.log('Examples:');
-    console.log('  node scripts/workflows/idea-to-execution.js "Create a user authentication system"');
-    console.log('  node scripts/workflows/idea-to-execution.js --interactive');
-    console.log('  node scripts/workflows/idea-to-execution.js --file my-idea.txt');
+    logger.info('Idea to Execution Workflow CLI');
+    logger.info('');
+    logger.info('Usage:');
+    logger.info('  node scripts/workflows/idea-to-execution.js "Your idea here"');
+    logger.info('  node scripts/workflows/idea-to-execution.js --interactive');
+    logger.info('  node scripts/workflows/idea-to-execution.js --file idea.txt');
+    logger.info('');
+    logger.info('Options:');
+    logger.info('  --interactive, -i    Run in interactive mode');
+    logger.info('  --file, -f <file>    Read idea from file');
+    logger.info('  --help, -h           Show this help');
+    logger.info('');
+    logger.info('Examples:');
+    logger.info('  node scripts/workflows/idea-to-execution.js "Create a user authentication system"');
+    logger.info('  node scripts/workflows/idea-to-execution.js --interactive');
+    logger.info('  node scripts/workflows/idea-to-execution.js --file my-idea.txt');
   }
 }
 

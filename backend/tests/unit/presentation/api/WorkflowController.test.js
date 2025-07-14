@@ -105,7 +105,7 @@ describe('WorkflowController', () => {
         ideManager: mockIdeManager
       });
 
-      expect(controllerWithoutLogger.logger).toBe(console);
+      expect(controllerWithoutlogger.infoger).toBe(console);
     });
   });
 

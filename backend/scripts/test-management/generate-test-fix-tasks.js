@@ -106,7 +106,7 @@ class TestFixTaskCLI {
    * Display help information
    */
   showHelp() {
-    logger.log(`
+    logger.info(`
 Test Fix Task Generator CLI
 
 Usage: node generate-test-fix-tasks.js [options]
@@ -282,42 +282,42 @@ Examples:
    * Display results
    */
   displayResults(result) {
-    logger.log('\n' + '='.repeat(60));
+    logger.info('\n' + '='.repeat(60));
     logger.debug('TEST FIX TASK GENERATION RESULTS');
-    logger.log('='.repeat(60));
+    logger.info('='.repeat(60));
     
-    logger.log(`\nSession ID: ${result.sessionId}`);
-    logger.log(`Duration: ${result.duration}ms`);
-    logger.log(`Success: ${result.success ? 'Yes' : 'No'}`);
+    logger.info(`\nSession ID: ${result.sessionId}`);
+    logger.info(`Duration: ${result.duration}ms`);
+    logger.info(`Success: ${result.success ? 'Yes' : 'No'}`);
     
     if (result.parsedData) {
-      logger.log('\nParsed Data:');
+      logger.info('\nParsed Data:');
       logger.debug(`  - Failing Tests: ${result.parsedData.failingTests.length}`);
-      logger.log(`  - Coverage Issues: ${result.parsedData.coverageIssues.length}`);
+      logger.info(`  - Coverage Issues: ${result.parsedData.coverageIssues.length}`);
       logger.debug(`  - Legacy Tests: ${result.parsedData.legacyTests.length}`);
     }
     
     if (result.tasksGenerated) {
-      logger.log(`\nTasks Generated: ${result.tasksGenerated}`);
+      logger.info(`\nTasks Generated: ${result.tasksGenerated}`);
     }
     
     if (result.processingResult) {
       const pr = result.processingResult;
-      logger.log('\nProcessing Results:');
-      logger.log(`  - Total Tasks: ${pr.totalTasks}`);
-      logger.log(`  - Completed: ${pr.completedTasks}`);
-      logger.log(`  - Failed: ${pr.failedTasks}`);
-      logger.log(`  - Success Rate: ${pr.totalTasks > 0 ? Math.round((pr.completedTasks / pr.totalTasks) * 100) : 0}%`);
+      logger.info('\nProcessing Results:');
+      logger.info(`  - Total Tasks: ${pr.totalTasks}`);
+      logger.info(`  - Completed: ${pr.completedTasks}`);
+      logger.info(`  - Failed: ${pr.failedTasks}`);
+      logger.info(`  - Success Rate: ${pr.totalTasks > 0 ? Math.round((pr.completedTasks / pr.totalTasks) * 100) : 0}%`);
     }
     
     if (result.report && result.report.recommendations) {
-      logger.log('\nRecommendations:');
+      logger.info('\nRecommendations:');
       result.report.recommendations.forEach((rec, index) => {
-        logger.log(`  ${index + 1}. [${rec.priority.toUpperCase()}] ${rec.message}`);
+        logger.info(`  ${index + 1}. [${rec.priority.toUpperCase()}] ${rec.message}`);
       });
     }
     
-    logger.log('\n' + '='.repeat(60));
+    logger.info('\n' + '='.repeat(60));
   }
 
   /**

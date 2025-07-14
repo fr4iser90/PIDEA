@@ -30,7 +30,7 @@ class VSCodeStarter {
    * @returns {Promise<Object>} IDE startup information
    */
   async startIDE(port, workspacePath = null, options = {}) {
-    logger.log('[VSCodeStarter] Starting VSCode IDE on port', port);
+    logger.info('[VSCodeStarter] Starting VSCode IDE on port', port);
     
     // Validate port is in range
     if (port < this.config.portRange.start || port > this.config.portRange.end) {
@@ -93,15 +93,15 @@ class VSCodeStarter {
 
       // Handle process events
       process.stdout.on('data', (data) => {
-        logger.log(`[VSCodeStarter] VSCode IDE ${port} stdout:`, data.toString().trim());
+        logger.info(`[VSCodeStarter] VSCode IDE ${port} stdout:`, data.toString().trim());
       });
 
       process.stderr.on('data', (data) => {
-        logger.log(`[VSCodeStarter] VSCode IDE ${port} stderr:`, data.toString().trim());
+        logger.info(`[VSCodeStarter] VSCode IDE ${port} stderr:`, data.toString().trim());
       });
 
       process.on('close', (code) => {
-        logger.log(`[VSCodeStarter] VSCode IDE ${port} process closed with code ${code}`);
+        logger.info(`[VSCodeStarter] VSCode IDE ${port} process closed with code ${code}`);
       });
 
       process.on('error', (error) => {
@@ -134,7 +134,7 @@ class VSCodeStarter {
    * @returns {Promise<Object>} Stop result
    */
   async stopIDE(port) {
-    logger.log('[VSCodeStarter] Stopping VSCode IDE on port', port);
+    logger.info('[VSCodeStarter] Stopping VSCode IDE on port', port);
     
     try {
       // Find and kill VSCode processes on the specified port

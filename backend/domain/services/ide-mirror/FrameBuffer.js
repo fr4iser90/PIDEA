@@ -175,7 +175,7 @@ class FrameBuffer {
         this.stats.totalFramesRemoved += sessionBuffer.length;
         
         this.buffers.delete(sessionId);
-        logger.log(`[FrameBuffer] Cleared buffer for session ${sessionId}, freed ${removedSize} bytes`);
+        logger.info(`[FrameBuffer] Cleared buffer for session ${sessionId}, freed ${removedSize} bytes`);
         return true;
       }
       return false;
@@ -201,7 +201,7 @@ class FrameBuffer {
         }
       }
 
-      logger.log(`[FrameBuffer] Cleared all buffers, ${clearedCount} sessions affected`);
+      logger.info(`[FrameBuffer] Cleared all buffers, ${clearedCount} sessions affected`);
       return clearedCount;
 
     } catch (error) {
@@ -238,7 +238,7 @@ class FrameBuffer {
         this.stats.totalFramesRemoved += removedCount;
         this.stats.cleanupOperations++;
         
-        logger.log(`[FrameBuffer] Cleanup for session ${sessionId}: removed ${removedCount} frames, freed ${removedSize} bytes`);
+        logger.info(`[FrameBuffer] Cleanup for session ${sessionId}: removed ${removedCount} frames, freed ${removedSize} bytes`);
       }
 
       return removedCount;
@@ -315,7 +315,7 @@ class FrameBuffer {
       }
 
       if (totalRemoved > 0) {
-        logger.log(`[FrameBuffer] Periodic cleanup completed: removed ${totalRemoved} frames`);
+        logger.info(`[FrameBuffer] Periodic cleanup completed: removed ${totalRemoved} frames`);
       }
 
     } catch (error) {

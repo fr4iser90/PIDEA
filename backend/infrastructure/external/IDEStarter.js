@@ -1,6 +1,6 @@
 const IDEStarterFactory = require('./ide/IDEStarterFactory');
-const Logger = require('@logging/Logger');
-const logger = new Logger('Logger');
+const ServiceLogger = require('@logging/ServiceLogger');
+const logger = new ServiceLogger('IDEStarter');
 
 
 class IDEStarter {
@@ -9,37 +9,37 @@ class IDEStarter {
   }
 
   async startIDE(port, workspacePath = null, ideType = 'cursor') {
-    logger.log(`[IDEStarter] Starting ${ideType} IDE on port ${port} using factory`);
+    logger.info(`[IDEStarter] Starting ${ideType} IDE on port ${port} using factory`);
     return await this.factory.startIDE(ideType, port, workspacePath);
   }
 
   async startCursorIDE(port, workspacePath = null) {
-    logger.log(`[IDEStarter] Starting Cursor IDE on port ${port} using factory`);
+    logger.info(`[IDEStarter] Starting Cursor IDE on port ${port} using factory`);
     return await this.factory.startIDE('cursor', port, workspacePath);
   }
 
   async startVSCode(port, workspacePath = null) {
-    logger.log(`[IDEStarter] Starting VSCode IDE on port ${port} using factory`);
+    logger.info(`[IDEStarter] Starting VSCode IDE on port ${port} using factory`);
     return await this.factory.startIDE('vscode', port, workspacePath);
   }
 
   async startWindsurf(port, workspacePath = null) {
-    logger.log(`[IDEStarter] Starting Windsurf IDE on port ${port} using factory`);
+    logger.info(`[IDEStarter] Starting Windsurf IDE on port ${port} using factory`);
     return await this.factory.startIDE('windsurf', port, workspacePath);
   }
 
   async stopIDE(port, ideType = 'cursor') {
-    logger.log(`[IDEStarter] Stopping ${ideType} IDE on port ${port} using factory`);
+    logger.info(`[IDEStarter] Stopping ${ideType} IDE on port ${port} using factory`);
     return await this.factory.stopIDE(port, ideType);
   }
 
   async stopAllIDEs() {
-    logger.log('[IDEStarter] Stopping all IDEs using factory');
+    logger.info('[IDEStarter] Stopping all IDEs using factory');
     return await this.factory.stopAllIDEs();
   }
 
   getRunningIDEs() {
-    logger.log('[IDEStarter] Getting running IDEs using factory');
+    logger.info('[IDEStarter] Getting running IDEs using factory');
     return this.factory.getRunningIDEs();
   }
 

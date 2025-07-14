@@ -2,6 +2,10 @@ const fs = require('fs');
 const path = require('path');
 const { JSDOM } = require('jsdom');
 
+const Logger = require('@logging/Logger');
+
+const logger = new Logger('ServiceName');
+
 class DOMAnalyzer {
   constructor() {
     this.results = {
@@ -17,7 +21,7 @@ class DOMAnalyzer {
   ensureOutputDir() {
     if (!fs.existsSync(this.outputDir)) {
       fs.mkdirSync(this.outputDir, { recursive: true });
-      console.log(`📁 Created VSCode DOM analysis directory: ${this.outputDir}`);
+      logger.info(`📁 Created VSCode DOM analysis directory: ${this.outputDir}`);
     }
   }
 
@@ -28,7 +32,7 @@ class DOMAnalyzer {
     let sourcePath = enhancedPath;
     if (!fs.existsSync(enhancedPath)) {
       sourcePath = autoCollectedPath;
-      console.log(`⚠️ Enhanced collection not found, using fallback: ${autoCollectedPath}`);
+      logger.info(`⚠️ Enhanced collection not found, using fallback: ${autoCollectedPath}`);
     }
     
     if (!fs.existsSync(sourcePath)) {
@@ -38,8 +42,8 @@ class DOMAnalyzer {
     const allFiles = fs.readdirSync(sourcePath)
       .filter(file => file.endsWith('.md') && !file.includes('collection-report'));
     
-    console.log(`📁 VSCode DOM Analysis Source: ${sourcePath}`);
-    console.log(`📄 Found ${allFiles.length} VSCode DOM files`);
+    logger.info(`📁 VSCode DOM Analysis Source: ${sourcePath}`);
+    logger.info(`📄 Found ${allFiles.length} VSCode DOM files`);
     
     const sources = {};
     allFiles.forEach(file => {
@@ -48,7 +52,7 @@ class DOMAnalyzer {
       sources[file] = htmlContent;
       
       const elementCount = (htmlContent.match(/<[^>]*>/g) || []).length;
-      console.log(`📄 ${file}: ${elementCount} HTML elements`);
+      logger.info(`📄 ${file}: ${elementCount} HTML elements`);
     });
     
     return sources;
@@ -73,10 +77,10 @@ class DOMAnalyzer {
       const dom = new JSDOM(htmlContent);
       const document = dom.window.document;
       
-      console.log(`🔍 Analyzing VSCode DOM in ${sourceFile}...`);
+      logger.info(`🔍 Analyzing VSCode DOM in ${sourceFile}...`);
       
       const allElements = document.querySelectorAll('*:not(style):not(script):not(meta):not(link):not(title)');
-      console.log(`  └─ ${allElements.length} DOM elements found`);
+      logger.info(`  └─ ${allElements.length} DOM elements found`);
       
       this.extractVSCodeFeatures(document, sourceFile);
       this.extractVSCodeSelectors(document, sourceFile);
@@ -366,7 +370,7 @@ class DOMAnalyzer {
       totalElements += elements.length;
     });
     
-    console.log(`  └─ ${totalElements} VSCode feature elements detected`);
+    logger.info(`  └─ ${totalElements} VSCode feature elements detected`);
   }
 
   findElements(document, selectors) {
@@ -512,7 +516,7 @@ class DOMAnalyzer {
   }
 
   async analyze() {
-    console.log('🚀 VSCode DOM Analyzer starting...\n');
+    logger.info('🚀 VSCode DOM Analyzer starting...\n');
 
     try {
       // 1. Load DOM files
@@ -540,11 +544,11 @@ class DOMAnalyzer {
       // 5. Save results
       this.saveResults(stats, optimizedSelectors);
 
-      console.log('\n📊 VSCode DOM Analysis completed!');
-      console.log(`📁 Sources processed: ${successCount}/${Object.keys(sources).length}`);
-      console.log(`🔍 Total elements analyzed: ${stats.totalElements}`);
-      console.log(`🎯 Features detected: ${Object.keys(stats.featureCounts).length}`);
-      console.log(`🔧 Selectors generated: ${Object.keys(optimizedSelectors).length}`);
+      logger.info('\n📊 VSCode DOM Analysis completed!');
+      logger.info(`📁 Sources processed: ${successCount}/${Object.keys(sources).length}`);
+      logger.info(`🔍 Total elements analyzed: ${stats.totalElements}`);
+      logger.info(`🎯 Features detected: ${Object.keys(stats.featureCounts).length}`);
+      logger.info(`🔧 Selectors generated: ${Object.keys(optimizedSelectors).length}`);
 
       return {
         stats,
@@ -575,7 +579,7 @@ class DOMAnalyzer {
     // Generate summary report
     this.generateSummaryReport(stats, optimizedSelectors);
 
-    console.log(`📁 Results saved to: ${this.outputDir}`);
+    logger.info(`📁 Results saved to: ${this.outputDir}`);
   }
 
   generateSummaryReport(stats, optimizedSelectors) {
@@ -624,7 +628,7 @@ if (require.main === module) {
     const analyzer = new DOMAnalyzer();
     try {
       await analyzer.analyze();
-      console.log('\n🎉 VSCode DOM Analysis completed successfully!');
+      logger.info('\n🎉 VSCode DOM Analysis completed successfully!');
     } catch (error) {
       console.error('\n❌ VSCode DOM Analysis failed:', error.message);
       process.exit(1);

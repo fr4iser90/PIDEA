@@ -1,6 +1,10 @@
 const fs = require('fs');
 const path = require('path');
 
+const Logger = require('@logging/Logger');
+
+const logger = new Logger('ServiceName');
+
 class CoverageValidator {
   constructor() {
     this.outputDir = path.join(__dirname, '../output/coverage-validation');
@@ -66,7 +70,7 @@ class CoverageValidator {
   ensureOutputDir() {
     if (!fs.existsSync(this.outputDir)) {
       fs.mkdirSync(this.outputDir, { recursive: true });
-      console.log(`📁 Created VSCode coverage validation directory: ${this.outputDir}`);
+      logger.info(`📁 Created VSCode coverage validation directory: ${this.outputDir}`);
     }
   }
 
@@ -301,11 +305,11 @@ class CoverageValidator {
   }
 
   async validate() {
-    console.log('🚀 VSCode Coverage Validator starting...\n');
+    logger.info('🚀 VSCode Coverage Validator starting...\n');
 
     try {
       // 1. Load analysis results
-      console.log('📊 Loading analysis results...');
+      logger.info('📊 Loading analysis results...');
       const analysisResults = this.loadAnalysisResults();
       
       if (Object.keys(analysisResults).length === 0) {
@@ -313,7 +317,7 @@ class CoverageValidator {
       }
 
       // 2. Validate feature coverage
-      console.log('🔍 Validating VSCode feature coverage...');
+      logger.info('🔍 Validating VSCode feature coverage...');
       const coverage = this.validateFeatureCoverage(analysisResults);
 
       // 3. Save validation results
@@ -322,10 +326,10 @@ class CoverageValidator {
       // 4. Generate summary report
       this.generateSummaryReport(coverage);
 
-      console.log('\n✅ VSCode Coverage Validation completed!');
-      console.log(`📊 Overall Coverage: ${coverage.summary.coveragePercentage.toFixed(1)}%`);
-      console.log(`🎯 Critical Coverage: ${coverage.summary.criticalCoveragePercentage.toFixed(1)}%`);
-      console.log(`📁 Results saved to: ${this.outputDir}`);
+      logger.info('\n✅ VSCode Coverage Validation completed!');
+      logger.info(`📊 Overall Coverage: ${coverage.summary.coveragePercentage.toFixed(1)}%`);
+      logger.info(`🎯 Critical Coverage: ${coverage.summary.criticalCoveragePercentage.toFixed(1)}%`);
+      logger.info(`📁 Results saved to: ${this.outputDir}`);
 
       return coverage;
 
@@ -403,7 +407,7 @@ if (require.main === module) {
     const validator = new CoverageValidator();
     try {
       await validator.validate();
-      console.log('\n🎉 Coverage validation completed successfully!');
+      logger.info('\n🎉 Coverage validation completed successfully!');
     } catch (error) {
       console.error('\n❌ Coverage validation failed:', error.message);
       process.exit(1);

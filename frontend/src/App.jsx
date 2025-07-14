@@ -45,7 +45,7 @@ function App() {
   } = useIDEStore();
 
   useEffect(() => {
-    logger.log('🔄 App initializing...');
+    logger.info('🔄 App initializing...');
     setupEventListeners();
     initializeApp();
     return () => {
@@ -87,7 +87,7 @@ function App() {
   };
 
   const handleReady = () => {
-    logger.log('✅ App ready');
+    logger.info('✅ App ready');
   };
 
   // Load active port on mount
@@ -107,7 +107,7 @@ function App() {
     const handleActiveIDEChanged = (data) => {
       if (data && data.port) {
         // IDEStore will handle the port change automatically
-        logger.log('[App] Active IDE changed event received:', data.port);
+        logger.info('[App] Active IDE changed event received:', data.port);
       }
     };
     eventBus.on('activeIDEChanged', handleActiveIDEChanged);
@@ -189,7 +189,7 @@ function App() {
         return <AnalysisDataViewer eventBus={eventBus} />;
       case 'git':
         return <GitManagementComponent activePort={activePort} onGitOperation={(operation, result) => {
-          logger.log('Git operation completed:', operation, result);
+          logger.info('Git operation completed:', operation, result);
           if (eventBus) {
             eventBus.emit('git-operation-completed', { operation, result });
           }

@@ -79,12 +79,12 @@ class ModuleAliasEnsurer {
       if (modified) {
         fs.writeFileSync(filePath, newContent, 'utf8');
         this.processedFiles.push(filePath);
-        logger.log(chalk.green(`✅ Patched: ${path.relative(process.cwd(), filePath)}`));
+        logger.info(chalk.green(`✅ Patched: ${path.relative(process.cwd(), filePath)}`));
       }
 
     } catch (error) {
       this.errors.push({ file: filePath, error: error.message });
-      logger.log(chalk.red(`❌ Error processing ${filePath}: ${error.message}`));
+      logger.info(chalk.red(`❌ Error processing ${filePath}: ${error.message}`));
     }
   }
 
@@ -124,33 +124,33 @@ class ModuleAliasEnsurer {
    * Run the module alias ensurer
    */
   async run() {
-    logger.log(chalk.blue('🔧 Ensuring module-alias/register in all entry points...\n'));
+    logger.info(chalk.blue('🔧 Ensuring module-alias/register in all entry points...\n'));
 
     for (const target of this.targetDirs) {
       this.walkDirectory(target);
     }
 
     // Print summary
-    logger.log(chalk.blue('\n📊 Module Alias Ensurer Summary:'));
-    logger.log(chalk.green(`✅ Processed: ${this.processedFiles.length} files`));
-    logger.log(chalk.yellow(`⏭️  Skipped: ${this.skippedFiles.length} files (already patched)`));
-    logger.log(chalk.red(`❌ Errors: ${this.errors.length} files`));
+    logger.info(chalk.blue('\n📊 Module Alias Ensurer Summary:'));
+    logger.info(chalk.green(`✅ Processed: ${this.processedFiles.length} files`));
+    logger.info(chalk.yellow(`⏭️  Skipped: ${this.skippedFiles.length} files (already patched)`));
+    logger.info(chalk.red(`❌ Errors: ${this.errors.length} files`));
 
     if (this.processedFiles.length > 0) {
-      logger.log(chalk.green('\n🎉 Successfully patched the following files:'));
+      logger.info(chalk.green('\n🎉 Successfully patched the following files:'));
       this.processedFiles.forEach(file => {
-        logger.log(chalk.green(`   - ${path.relative(process.cwd(), file)}`));
+        logger.info(chalk.green(`   - ${path.relative(process.cwd(), file)}`));
       });
     }
 
     if (this.errors.length > 0) {
-      logger.log(chalk.red('\n⚠️  Errors occurred:'));
+      logger.info(chalk.red('\n⚠️  Errors occurred:'));
       this.errors.forEach(({ file, error }) => {
-        logger.log(chalk.red(`   - ${path.relative(process.cwd(), file)}: ${error}`));
+        logger.info(chalk.red(`   - ${path.relative(process.cwd(), file)}: ${error}`));
       });
     }
 
-    logger.log(chalk.blue('\n✨ Module alias registration complete!'));
+    logger.info(chalk.blue('\n✨ Module alias registration complete!'));
     
     return {
       processed: this.processedFiles.length,
@@ -164,7 +164,7 @@ class ModuleAliasEnsurer {
    * @returns {Object} Analysis results
    */
   async analyze() {
-    logger.log(chalk.blue('🔍 Analyzing module-alias/register usage...\n'));
+    logger.info(chalk.blue('🔍 Analyzing module-alias/register usage...\n'));
 
     const needsPatching = [];
     const alreadyPatched = [];
@@ -213,14 +213,14 @@ const logger = new Logger('Logger');
       walk(target);
     }
 
-    logger.log(chalk.blue('📊 Analysis Results:'));
-    logger.log(chalk.green(`✅ Already patched: ${alreadyPatched.length} files`));
-    logger.log(chalk.yellow(`🔧 Needs patching: ${needsPatching.length} files`));
+    logger.info(chalk.blue('📊 Analysis Results:'));
+    logger.info(chalk.green(`✅ Already patched: ${alreadyPatched.length} files`));
+    logger.info(chalk.yellow(`🔧 Needs patching: ${needsPatching.length} files`));
 
     if (needsPatching.length > 0) {
-      logger.log(chalk.yellow('\n📝 Files that need patching:'));
+      logger.info(chalk.yellow('\n📝 Files that need patching:'));
       needsPatching.forEach(file => {
-        logger.log(chalk.yellow(`   - ${path.relative(process.cwd(), file)}`));
+        logger.info(chalk.yellow(`   - ${path.relative(process.cwd(), file)}`));
       });
     }
 

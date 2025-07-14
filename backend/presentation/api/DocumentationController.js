@@ -1652,7 +1652,8 @@ ${lowPriorityTasks.map((task, index) => `
             try {
                 const ChatMessage = require('@entities/ChatMessage');
 const Logger = require('@logging/Logger');
-const logger = new Logger('Logger');
+const ServiceLogger = require('@logging/ServiceLogger');
+const logger = new ServiceLogger('DocumentationController');
                 
                 // Erstelle ein richtiges ChatMessage Objekt mit Factory-Methode
                 const message = ChatMessage.createAIMessage(

@@ -16,7 +16,7 @@ class AutoFinishService {
    */
   async initialize() {
     try {
-      logger.log('[AutoFinishService] Initializing...');
+      logger.info('[AutoFinishService] Initializing...');
       
       // Test connection
       await this.healthCheck();
@@ -24,7 +24,7 @@ class AutoFinishService {
       // Setup WebSocket connection
       this.setupWebSocket();
       
-      logger.log('[AutoFinishService] Initialized successfully');
+      logger.info('[AutoFinishService] Initialized successfully');
       return true;
     } catch (error) {
       logger.error('[AutoFinishService] Initialization failed:', error);
@@ -41,7 +41,7 @@ class AutoFinishService {
       if (window.autoFinishWebSocket) {
         this.webSocket = window.autoFinishWebSocket;
         this.isConnected = true;
-        logger.log('[AutoFinishService] Using existing WebSocket connection');
+        logger.info('[AutoFinishService] Using existing WebSocket connection');
         return;
       }
 
@@ -53,7 +53,7 @@ class AutoFinishService {
       
       this.webSocket.onopen = () => {
         this.isConnected = true;
-        logger.log('[AutoFinishService] WebSocket connected');
+        logger.info('[AutoFinishService] WebSocket connected');
         this.emit('connected');
       };
       
@@ -68,7 +68,7 @@ class AutoFinishService {
       
       this.webSocket.onclose = () => {
         this.isConnected = false;
-        logger.log('[AutoFinishService] WebSocket disconnected');
+        logger.info('[AutoFinishService] WebSocket disconnected');
         this.emit('disconnected');
         
         // Attempt to reconnect after 5 seconds
@@ -115,7 +115,7 @@ class AutoFinishService {
    */
   async processTodoList(todoInput, options = {}) {
     try {
-      logger.log('[AutoFinishService] Processing TODO list...');
+      logger.info('[AutoFinishService] Processing TODO list...');
       
       const response = await fetch(`${this.baseUrl}/process`, {
         method: 'POST',
@@ -134,7 +134,7 @@ class AutoFinishService {
         throw new Error(data.error || 'Failed to process TODO list');
       }
       
-      logger.log('[AutoFinishService] TODO list processing started:', data.sessionId);
+      logger.info('[AutoFinishService] TODO list processing started:', data.sessionId);
       
       return data;
       
@@ -241,7 +241,7 @@ class AutoFinishService {
         throw new Error(data.error || 'Failed to cancel session');
       }
       
-      logger.log('[AutoFinishService] Session cancelled:', sessionId);
+      logger.info('[AutoFinishService] Session cancelled:', sessionId);
       
       return data;
       
@@ -417,7 +417,7 @@ class AutoFinishService {
    * Cleanup resources
    */
   cleanup() {
-    logger.log('[AutoFinishService] Cleaning up...');
+    logger.info('[AutoFinishService] Cleaning up...');
     
     // Close WebSocket connection
     if (this.webSocket) {

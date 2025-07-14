@@ -72,7 +72,7 @@ class DocumentationWorkflow extends BaseWorkflowStep {
     const config = DocumentationWorkflow.getConfig();
     
     try {
-      logger.log(`🚀 Executing ${this.name}...`);
+      logger.info(`🚀 Executing ${this.name}...`);
       
       // Validate context
       this.validateContext(context);
@@ -109,7 +109,7 @@ class DocumentationWorkflow extends BaseWorkflowStep {
       workflowState.duration = workflowState.endTime - workflowState.startTime;
       workflowState.validation = validation;
       
-      logger.log(`✅ ${this.name} completed successfully`);
+      logger.info(`✅ ${this.name} completed successfully`);
       return {
         success: validation.overallSuccess,
         workflow: this.name,
@@ -132,7 +132,7 @@ class DocumentationWorkflow extends BaseWorkflowStep {
       const framework = await FrameworkRegistry.get('DocumentationFramework', 'documentation');
       if (framework) {
         context.framework = framework;
-        logger.log('📚 Documentation framework loaded successfully');
+        logger.info('📚 Documentation framework loaded successfully');
       }
     } catch (error) {
       logger.warn('⚠️ Could not load documentation framework, proceeding without it');
@@ -142,7 +142,7 @@ class DocumentationWorkflow extends BaseWorkflowStep {
   async executeStepsSequential(steps, context, workflowState) {
     for (const stepConfig of steps) {
       try {
-        logger.log(`📋 Executing step: ${stepConfig.name}`);
+        logger.info(`📋 Executing step: ${stepConfig.name}`);
         
         const step = await StepRegistry.get(stepConfig.step, stepConfig.category);
         const stepResult = await step.execute({
@@ -164,7 +164,7 @@ class DocumentationWorkflow extends BaseWorkflowStep {
           throw new Error(`Required step ${stepConfig.name} failed: ${stepResult.error}`);
         }
         
-        logger.log(`✅ Step ${stepConfig.name} completed`);
+        logger.info(`✅ Step ${stepConfig.name} completed`);
       } catch (error) {
         logger.error(`❌ Step ${stepConfig.name} failed:`, error.message);
         workflowState.errors.push({
@@ -182,7 +182,7 @@ class DocumentationWorkflow extends BaseWorkflowStep {
   async executeStepsParallel(steps, context, workflowState) {
     const stepPromises = steps.map(async (stepConfig) => {
       try {
-        logger.log(`📋 Executing step: ${stepConfig.name}`);
+        logger.info(`📋 Executing step: ${stepConfig.name}`);
         
         const step = await StepRegistry.get(stepConfig.step, stepConfig.category);
         const stepResult = await step.execute({

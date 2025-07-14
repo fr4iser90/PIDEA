@@ -8,8 +8,8 @@ const rateLimit = require('express-rate-limit');
 const helmet = require('helmet');
 const cors = require('cors');
 
-const Logger = require('@logging/Logger');
-const logger = new Logger('Logger');
+const ServiceLogger = require('@logging/ServiceLogger');
+const logger = new ServiceLogger('Application');
 
 // Auto-Security
 const AutoSecurityManager = require('./infrastructure/auto/AutoSecurityManager');
@@ -84,19 +84,19 @@ class Application {
 
   setupLogger() {
     return {
-      info: (message, ...args) => logger.log(`[INFO] ${message}`, ...args),
-      error: (message, ...args) => logger.error(`[ERROR] ${message}`, ...args),
+      info: (message, ...args) => logger.info(message, ...args),
+      error: (message, ...args) => logger.error(message, ...args),
       debug: (message, ...args) => {
         if (!this.autoSecurityManager.isProduction()) {
-          logger.debug(`[DEBUG] ${message}`, ...args);
+          logger.debug(message, ...args);
         }
       },
-      warn: (message, ...args) => logger.warn(`[WARN] ${message}`, ...args)
+      warn: (message, ...args) => logger.warn(message, ...args)
     };
   }
 
   async initialize() {
-    this.logger.info('[Application] Initializing...');
+    this.logger.info('[Application] 🔧 Initializing...');
 
     try {
       // Initialize database connection
@@ -139,7 +139,11 @@ class Application {
       this.ideMirrorController.setupRoutes(this.app);
 
       // Initialize IDE Manager
-      await this.ideManager.initialize();
+      try {
+        await this.ideManager.initialize();
+      } catch (error) {
+        this.logger.warn('[Application] IDE Manager initialization failed, continuing without IDE support:', error.message);
+      }
 
       // Setup event handlers
       this.setupEventHandlers();
@@ -150,7 +154,7 @@ class Application {
       // Make application instance globally available
       global.application = this;
 
-      this.logger.info('[Application] Initialization complete');
+      this.logger.info('[Application] ✅ Initialization complete');
     } catch (error) {
       this.logger.error('[Application] Initialization failed:', error);
       throw error;
@@ -158,16 +162,16 @@ class Application {
   }
 
   async initializeDatabase() {
-    this.logger.info('[Application] Initializing database...');
+    this.logger.info('[Application] 💾 Initializing database...');
     
     this.databaseConnection = new DatabaseConnection(this.securityConfig.database);
     await this.databaseConnection.connect();
     
-    this.logger.info(`[Application] Database connected: ${this.databaseConnection.getType()}`);
+    this.logger.info(`[Application] ✅ Database connected: ${this.databaseConnection.getType()}`);
   }
 
   async initializeInfrastructure() {
-    this.logger.info('[Application] Initializing infrastructure...');
+    this.logger.info('[Application] 🏗️ Initializing infrastructure...');
 
     // Initialize DI system first
     const { getServiceRegistry } = require('./infrastructure/di/ServiceRegistry');
@@ -214,11 +218,11 @@ class Application {
         throw error; // Re-throw because these are critical services
     }
 
-    this.logger.info('[Application] Infrastructure initialized with DI');
+    this.logger.info('[Application] ✅ Infrastructure initialized with DI');
   }
 
   async initializeDomainServices() {
-    this.logger.info('[Application] Initializing domain services with DI...');
+    this.logger.info('[Application] 🔧 Initializing domain services with DI...');
 
     // Set up project context
     await this.setupProjectContext();
@@ -334,7 +338,7 @@ class Application {
   }
 
   async setupProjectContext() {
-    this.logger.info('[Application] Setting up project context...');
+    this.logger.info('[Application] 📁 Setting up project context...');
     
     // Auto-detect project path
     const projectPath = await this.projectContext.autoDetectProjectPath();
@@ -351,7 +355,7 @@ class Application {
     if (!validation.isValid) {
       this.logger.warn('[Application] Project context validation warnings:', validation.warnings);
     } else {
-      this.logger.info('[Application] Project context validated successfully');
+      this.logger.info('[Application] ✅ Project context validated successfully');
     }
   }
 

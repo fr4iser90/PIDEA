@@ -1,6 +1,6 @@
 const IDEDetectorFactory = require('./ide/IDEDetectorFactory');
-const Logger = require('@logging/Logger');
-const logger = new Logger('Logger');
+const ServiceLogger = require('@logging/ServiceLogger');
+const logger = new ServiceLogger('IDEDetector');
 
 
 class IDEDetector {
@@ -9,32 +9,32 @@ class IDEDetector {
   }
 
   async scanForIDEs() {
-    logger.log('[IDEDetector] Scanning for all IDEs using factory pattern');
+    logger.info('[IDEDetector] Scanning for all IDEs using factory pattern');
     return await this.factory.detectAll();
   }
 
   async scanForCursorIDEs() {
-    logger.log('[IDEDetector] Scanning for Cursor IDEs using factory');
+    logger.info('[IDEDetector] Scanning for Cursor IDEs using factory');
     return await this.factory.detectByType('cursor');
   }
 
   async scanForVSCodeIDEs() {
-    logger.log('[IDEDetector] Scanning for VSCode IDEs using factory');
+    logger.info('[IDEDetector] Scanning for VSCode IDEs using factory');
     return await this.factory.detectByType('vscode');
   }
 
   async scanForWindsurfIDEs() {
-    logger.log('[IDEDetector] Scanning for Windsurf IDEs using factory');
+    logger.info('[IDEDetector] Scanning for Windsurf IDEs using factory');
     return await this.factory.detectByType('windsurf');
   }
 
   async findAvailablePort(ideType = 'cursor') {
-    logger.log(`[IDEDetector] Finding available port for ${ideType} using factory`);
+    logger.info(`[IDEDetector] Finding available port for ${ideType} using factory`);
     return await this.factory.findAvailablePort(ideType);
   }
 
   async isPortAvailable(port, ideType = 'cursor') {
-    logger.log(`[IDEDetector] Checking if port ${port} is available for ${ideType} using factory`);
+    logger.info(`[IDEDetector] Checking if port ${port} is available for ${ideType} using factory`);
     return await this.factory.checkPort(port, ideType);
   }
 

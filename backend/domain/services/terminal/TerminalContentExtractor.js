@@ -23,7 +23,7 @@ class TerminalContentExtractor {
         const elementText = element.innerText || element.textContent || '';
         if (elementText.trim() && !elementText.includes('.xterm-') && elementText.length > 10) {
           terminalText = elementText;
-          logger.log('Found text in', selector);
+          logger.info('Found text in', selector);
           break;
         }
       }
@@ -40,7 +40,7 @@ class TerminalContentExtractor {
           }
         });
         if (terminalText.trim()) {
-          logger.log('Found text in view-lines');
+          logger.info('Found text in view-lines');
         }
       }
     }
@@ -55,7 +55,7 @@ class TerminalContentExtractor {
         }
       });
       if (terminalText.trim()) {
-        logger.log('Found text in terminal tabs');
+        logger.info('Found text in terminal tabs');
       }
     }
     
@@ -66,7 +66,7 @@ class TerminalContentExtractor {
         const areaText = terminalArea.innerText || terminalArea.textContent || '';
         if (areaText.trim() && !areaText.includes('.xterm-') && areaText.length > 10) {
           terminalText = areaText;
-          logger.log('Found text in terminal area');
+          logger.info('Found text in terminal area');
         }
       }
     }

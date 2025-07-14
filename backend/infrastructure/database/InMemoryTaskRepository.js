@@ -19,7 +19,7 @@ class InMemoryTaskRepository extends TaskRepository {
 
   async findById(id) {
     const task = this.tasks.get(id) || null;
-    logger.log('🔍 [InMemoryTaskRepository] findById:', { 
+    logger.info('🔍 [InMemoryTaskRepository] findById:', { 
       requestedId: id, 
       found: !!task,
       totalTasks: this.tasks.size,

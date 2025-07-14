@@ -56,7 +56,7 @@ describe('Task Management System Performance Tests', () => {
             expect(duration).toBeLessThan(5000); // Should complete within 5 seconds
             expect(duration / numTasks).toBeLessThan(50); // Average time per task < 50ms
 
-            logger.log(`Created ${numTasks} tasks in ${duration}ms (${duration / numTasks}ms per task)`);
+            logger.info(`Created ${numTasks} tasks in ${duration}ms (${duration / numTasks}ms per task)`);
         });
 
         test('should handle 500 concurrent task creations', async () => {
@@ -82,7 +82,7 @@ describe('Task Management System Performance Tests', () => {
             expect(results.every(result => result.success)).toBe(true);
             expect(duration).toBeLessThan(10000); // Should complete within 10 seconds
 
-            logger.log(`Created ${numTasks} tasks in ${duration}ms (${duration / numTasks}ms per task)`);
+            logger.info(`Created ${numTasks} tasks in ${duration}ms (${duration / numTasks}ms per task)`);
         });
 
         test('should handle mixed priority concurrent task creation', async () => {
@@ -110,7 +110,7 @@ describe('Task Management System Performance Tests', () => {
             expect(results.every(result => result.success)).toBe(true);
             expect(duration).toBeLessThan(5000);
 
-            logger.log(`Created ${numTasks} mixed priority tasks in ${duration}ms`);
+            logger.info(`Created ${numTasks} mixed priority tasks in ${duration}ms`);
         });
     });
 
@@ -148,7 +148,7 @@ describe('Task Management System Performance Tests', () => {
             expect(results.every(result => result.success)).toBe(true);
             expect(duration).toBeLessThan(15000); // Should complete within 15 seconds
 
-            logger.log(`Executed ${numTasks} tasks in ${duration}ms (${duration / numTasks}ms per task)`);
+            logger.info(`Executed ${numTasks} tasks in ${duration}ms (${duration / numTasks}ms per task)`);
         });
 
         test('should handle concurrent task execution with different types', async () => {
@@ -186,7 +186,7 @@ describe('Task Management System Performance Tests', () => {
             expect(results.every(result => result.success)).toBe(true);
             expect(duration).toBeLessThan(20000);
 
-            logger.log(`Executed ${numTasks} mixed type tasks in ${duration}ms`);
+            logger.info(`Executed ${numTasks} mixed type tasks in ${duration}ms`);
         });
     });
 
@@ -215,7 +215,7 @@ describe('Task Management System Performance Tests', () => {
             expect(results.every(result => result.session)).toBe(true);
             expect(duration).toBeLessThan(30000); // Should complete within 30 seconds
 
-            logger.log(`Completed ${numOperations} auto mode operations in ${duration}ms`);
+            logger.info(`Completed ${numOperations} auto mode operations in ${duration}ms`);
         });
 
         test('should handle concurrent auto mode with different modes', async () => {
@@ -244,7 +244,7 @@ describe('Task Management System Performance Tests', () => {
             expect(results.every(result => result.session)).toBe(true);
             expect(duration).toBeLessThan(60000); // Should complete within 60 seconds
 
-            logger.log(`Completed ${numOperations} mixed mode auto operations in ${duration}ms`);
+            logger.info(`Completed ${numOperations} mixed mode auto operations in ${duration}ms`);
         });
     });
 
@@ -281,7 +281,7 @@ describe('Task Management System Performance Tests', () => {
             expect(result.total).toBeGreaterThanOrEqual(numTasks);
             expect(duration).toBeLessThan(1000); // Should complete within 1 second
 
-            logger.log(`Queried ${result.total} tasks in ${duration}ms`);
+            logger.info(`Queried ${result.total} tasks in ${duration}ms`);
         });
 
         test('should handle filtered queries efficiently', async () => {
@@ -318,7 +318,7 @@ describe('Task Management System Performance Tests', () => {
             expect(result.tasks.every(task => task.priority === 'high')).toBe(true);
             expect(duration).toBeLessThan(500); // Should complete within 500ms
 
-            logger.log(`Filtered ${result.tasks.length} high priority tasks in ${duration}ms`);
+            logger.info(`Filtered ${result.tasks.length} high priority tasks in ${duration}ms`);
         });
     });
 
@@ -345,7 +345,7 @@ describe('Task Management System Performance Tests', () => {
             expect(results.every(result => result.analysis)).toBe(true);
             expect(duration).toBeLessThan(30000); // Should complete within 30 seconds
 
-            logger.log(`Completed ${numRequests} AI analysis requests in ${duration}ms`);
+            logger.info(`Completed ${numRequests} AI analysis requests in ${duration}ms`);
         });
 
         test('should handle AI model switching efficiently', async () => {
@@ -372,7 +372,7 @@ describe('Task Management System Performance Tests', () => {
             expect(results.every(result => result.analysis)).toBe(true);
             expect(duration).toBeLessThan(45000); // Should complete within 45 seconds
 
-            logger.log(`Completed ${numRequests} multi-model AI requests in ${duration}ms`);
+            logger.info(`Completed ${numRequests} multi-model AI requests in ${duration}ms`);
         });
     });
 
@@ -397,7 +397,7 @@ describe('Task Management System Performance Tests', () => {
             // Memory increase should be reasonable (less than 50MB)
             expect(memoryIncrease).toBeLessThan(50 * 1024 * 1024);
 
-            logger.log(`Memory usage: ${Math.round(memoryIncrease / 1024 / 1024)}MB increase`);
+            logger.info(`Memory usage: ${Math.round(memoryIncrease / 1024 / 1024)}MB increase`);
         });
 
         test('should handle memory cleanup after large operations', async () => {
@@ -426,7 +426,7 @@ describe('Task Management System Performance Tests', () => {
             // Memory should be reasonable after cleanup
             expect(memoryIncrease).toBeLessThan(100 * 1024 * 1024);
 
-            logger.log(`Memory after cleanup: ${Math.round(memoryIncrease / 1024 / 1024)}MB increase`);
+            logger.info(`Memory after cleanup: ${Math.round(memoryIncrease / 1024 / 1024)}MB increase`);
         });
     });
 
@@ -447,7 +447,7 @@ describe('Task Management System Performance Tests', () => {
 
             expect(duration).toBeLessThan(100); // Should respond within 100ms
 
-            logger.log(`Simple query response time: ${duration}ms`);
+            logger.info(`Simple query response time: ${duration}ms`);
         });
 
         test('should respond to task creation within 200ms', async () => {
@@ -464,7 +464,7 @@ describe('Task Management System Performance Tests', () => {
 
             expect(duration).toBeLessThan(200); // Should respond within 200ms
 
-            logger.log(`Task creation response time: ${duration}ms`);
+            logger.info(`Task creation response time: ${duration}ms`);
         });
 
         test('should respond to task execution within 500ms', async () => {
@@ -487,7 +487,7 @@ describe('Task Management System Performance Tests', () => {
 
             expect(duration).toBeLessThan(500); // Should respond within 500ms
 
-            logger.log(`Task execution response time: ${duration}ms`);
+            logger.info(`Task execution response time: ${duration}ms`);
         });
     });
 
@@ -521,7 +521,7 @@ describe('Task Management System Performance Tests', () => {
                 expect(ratio).toBeLessThan(2); // Should not degrade more than 2x
             }
 
-            logger.log('Scalability results:', results);
+            logger.info('Scalability results:', results);
         });
 
         test('should maintain performance under sustained load', async () => {
@@ -555,7 +555,7 @@ describe('Task Management System Performance Tests', () => {
 
             expect(maxAvg / minAvg).toBeLessThan(3); // Should not vary more than 3x
 
-            logger.log('Sustained load results:', results);
+            logger.info('Sustained load results:', results);
         });
     });
 });

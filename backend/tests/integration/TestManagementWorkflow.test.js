@@ -225,7 +225,7 @@ describe('Test Management Workflow Integration', () => {
       const legacyFile = path.join(tempDir, 'legacy-patterns.test.js');
       await fs.writeFile(legacyFile, `
         describe('Legacy Patterns', () => {
-          it('should use logger.log', () => {
+          it('should use logger.info', () => {
             logger.debug('debug info');
             expect(true).toBe(true);
           });
@@ -236,7 +236,7 @@ describe('Test Management Workflow Integration', () => {
           });
           
           it('should use eval', () => {
-            eval('logger.log("dangerous")');
+            eval('logger.info("dangerous")');
             expect(true).toBe(true);
           });
         });

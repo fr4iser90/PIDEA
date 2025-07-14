@@ -71,7 +71,7 @@ class CodeRefactoringWorkflow extends BaseWorkflowStep {
     const config = CodeRefactoringWorkflow.getConfig();
     
     try {
-      logger.log(`🚀 Executing ${this.name}...`);
+      logger.info(`🚀 Executing ${this.name}...`);
       
       // Validate context
       this.validateContext(context);
@@ -96,7 +96,7 @@ class CodeRefactoringWorkflow extends BaseWorkflowStep {
       workflowState.duration = workflowState.endTime - workflowState.startTime;
       workflowState.validation = validation;
       
-      logger.log(`✅ ${this.name} completed successfully`);
+      logger.info(`✅ ${this.name} completed successfully`);
       return {
         success: validation.overallSuccess,
         workflow: this.name,
@@ -117,7 +117,7 @@ class CodeRefactoringWorkflow extends BaseWorkflowStep {
   async executeStepsSequential(steps, context, workflowState) {
     for (const stepConfig of steps) {
       try {
-        logger.log(`📋 Executing step: ${stepConfig.name}`);
+        logger.info(`📋 Executing step: ${stepConfig.name}`);
         
         const step = await StepRegistry.get(stepConfig.step, stepConfig.category);
         const stepResult = await step.execute({
@@ -139,7 +139,7 @@ class CodeRefactoringWorkflow extends BaseWorkflowStep {
           throw new Error(`Required step ${stepConfig.name} failed: ${stepResult.error}`);
         }
         
-        logger.log(`✅ Step ${stepConfig.name} completed`);
+        logger.info(`✅ Step ${stepConfig.name} completed`);
       } catch (error) {
         logger.error(`❌ Step ${stepConfig.name} failed:`, error.message);
         workflowState.errors.push({

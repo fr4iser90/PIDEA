@@ -1,3 +1,7 @@
+const Logger = require('@logging/Logger');
+
+const logger = new Logger('ServiceName');
+
 #!/usr/bin/env node
 
 /**
@@ -50,13 +54,13 @@ class TaskOrganizer {
     }
 
     if (args.length === 0) {
-      console.log('❌ No action specified. Use --organize, --validate, or --report');
+      logger.info('❌ No action specified. Use --organize, --validate, or --report');
       this.showHelp();
     }
   }
 
   async organizeTasks() {
-    console.log('🗂️  Organizing tasks...');
+    logger.info('🗂️  Organizing tasks...');
     
     const tasks = this.findTasks();
     const organized = this.categorizeTasks(tasks);
@@ -67,19 +71,19 @@ class TaskOrganizer {
       const categoryPath = path.join(this.roadmapPath, 'features', category);
       this.ensureDirectory(categoryPath);
       
-      console.log(`📁 Processing category: ${category} (${taskList.length} tasks)`);
+      logger.info(`📁 Processing category: ${category} (${taskList.length} tasks)`);
       
       for (const task of taskList) {
         const newPath = this.moveTaskToCategory(task, category);
-        console.log(`   ✅ Moved: ${path.basename(task)} → ${category}/`);
+        logger.info(`   ✅ Moved: ${path.basename(task)} → ${category}/`);
       }
     }
     
-    console.log('✅ Task organization completed!');
+    logger.info('✅ Task organization completed!');
   }
 
   async validateTasks() {
-    console.log('🔍 Validating task structure...');
+    logger.info('🔍 Validating task structure...');
     
     const tasks = this.findTasks();
     const issues = [];
@@ -89,24 +93,24 @@ class TaskOrganizer {
       const issues = this.validateTaskContent(content, task);
       
       if (issues.length > 0) {
-        console.log(`⚠️  ${path.basename(task)}:`);
-        issues.forEach(issue => console.log(`   - ${issue}`));
+        logger.info(`⚠️  ${path.basename(task)}:`);
+        issues.forEach(issue => logger.info(`   - ${issue}`));
       }
     }
     
     if (issues.length === 0) {
-      console.log('✅ All tasks are properly structured!');
+      logger.info('✅ All tasks are properly structured!');
     }
   }
 
   async generateReport() {
-    console.log('📊 Generating task report...');
+    logger.info('📊 Generating task report...');
     
     const tasks = this.findTasks();
     const organized = this.categorizeTasks(tasks);
     
-    console.log('\n📋 Task Report');
-    console.log('==============');
+    logger.info('\n📋 Task Report');
+    logger.info('==============');
     
     let totalTasks = 0;
     let totalHours = 0;
@@ -118,19 +122,19 @@ class TaskOrganizer {
       totalTasks += taskList.length;
       totalHours += categoryHours;
       
-      console.log(`\n${category.toUpperCase()} (${taskList.length} tasks, ${categoryHours}h):`);
-      console.log(`  ${this.categories[category] || 'Uncategorized'}`);
+      logger.info(`\n${category.toUpperCase()} (${taskList.length} tasks, ${categoryHours}h):`);
+      logger.info(`  ${this.categories[category] || 'Uncategorized'}`);
       
       for (const task of taskList) {
         const taskInfo = this.getTaskInfo(task);
-        console.log(`  - ${path.basename(task)} (${taskInfo.hours}h, ${taskInfo.priority})`);
+        logger.info(`  - ${path.basename(task)} (${taskInfo.hours}h, ${taskInfo.priority})`);
       }
     }
     
-    console.log(`\n📈 Summary:`);
-    console.log(`  Total Tasks: ${totalTasks}`);
-    console.log(`  Total Hours: ${totalHours}`);
-    console.log(`  Categories: ${Object.keys(organized).filter(cat => organized[cat].length > 0).length}`);
+    logger.info(`\n📈 Summary:`);
+    logger.info(`  Total Tasks: ${totalTasks}`);
+    logger.info(`  Total Hours: ${totalHours}`);
+    logger.info(`  Categories: ${Object.keys(organized).filter(cat => organized[cat].length > 0).length}`);
   }
 
   findTasks() {
@@ -277,22 +281,22 @@ class TaskOrganizer {
   }
 
   showHelp() {
-    console.log('Task Organizer');
-    console.log('');
-    console.log('Usage:');
-    console.log('  node scripts/task-organizer.js --organize');
-    console.log('  node scripts/task-organizer.js --validate');
-    console.log('  node scripts/task-organizer.js --report');
-    console.log('');
-    console.log('Options:');
-    console.log('  --organize, -o    Organize tasks into categories');
-    console.log('  --validate, -v    Validate task structure');
-    console.log('  --report, -r      Generate task report');
-    console.log('  --help, -h        Show this help');
-    console.log('');
-    console.log('Categories:');
+    logger.info('Task Organizer');
+    logger.info('');
+    logger.info('Usage:');
+    logger.info('  node scripts/task-organizer.js --organize');
+    logger.info('  node scripts/task-organizer.js --validate');
+    logger.info('  node scripts/task-organizer.js --report');
+    logger.info('');
+    logger.info('Options:');
+    logger.info('  --organize, -o    Organize tasks into categories');
+    logger.info('  --validate, -v    Validate task structure');
+    logger.info('  --report, -r      Generate task report');
+    logger.info('  --help, -h        Show this help');
+    logger.info('');
+    logger.info('Categories:');
     for (const [category, description] of Object.entries(this.categories)) {
-      console.log(`  ${category}: ${description}`);
+      logger.info(`  ${category}: ${description}`);
     }
   }
 }

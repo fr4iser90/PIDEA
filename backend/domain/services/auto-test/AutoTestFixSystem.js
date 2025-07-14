@@ -66,14 +66,14 @@ class AutoTestFixSystem {
    */
   async initialize() {
     try {
-      this.logger.info('[AutoTestFixSystem] Initializing...');
+      this.logger.info('[AutoTestFixSystem] 🧪 Initializing...');
       
       // Initialize subsystems
       await this.testAnalyzer.initialize();
       await this.testFixer.initialize();
       await this.coverageAnalyzer.initialize();
       
-      this.logger.info('[AutoTestFixSystem] Initialized successfully');
+      this.logger.info('[AutoTestFixSystem] ✅ Initialized successfully');
     } catch (error) {
       this.logger.error('[AutoTestFixSystem] Initialization failed:', error.message);
       throw error;

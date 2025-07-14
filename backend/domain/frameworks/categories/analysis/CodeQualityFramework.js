@@ -97,7 +97,7 @@ const config = {
  */
 async function execute(context = {}, options = {}) {
   try {
-    logger.log('🔍 Starting code quality analysis...');
+    logger.info('🔍 Starting code quality analysis...');
     
     const results = {
       framework: config.name,
@@ -115,7 +115,7 @@ async function execute(context = {}, options = {}) {
     // Execute each step in order
     for (const step of config.steps) {
       try {
-        logger.log(`📋 Executing step: ${step.name}`);
+        logger.info(`📋 Executing step: ${step.name}`);
         
         const stepResult = await executeStep(step, context, options);
         results.steps.push(stepResult);
@@ -146,7 +146,7 @@ async function execute(context = {}, options = {}) {
     // Calculate quality score
     results.summary.qualityScore = calculateQualityScore(results);
     
-    logger.log(`✅ Code quality analysis completed`);
+    logger.info(`✅ Code quality analysis completed`);
     return results;
     
   } catch (error) {

@@ -88,7 +88,7 @@ class ConfirmationSystem {
    * Initialize the confirmation system
    */
   async initialize() {
-    this.logger.info('[ConfirmationSystem] Initializing confirmation system...');
+    this.logger.info('[ConfirmationSystem] 🤖 Initializing confirmation system...');
     this.logger.info(`[ConfirmationSystem] Loaded ${Object.keys(this.completionKeywords).length} languages`);
     return true;
   }

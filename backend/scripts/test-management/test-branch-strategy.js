@@ -49,18 +49,18 @@ async function testBranchStrategy() {
     // Test branch strategy determination
     logger.debug('🌿 Testing Branch Strategy:');
     const branchStrategy = workflowGitService.determineBranchStrategy(testTask.type, {});
-    logger.log(`  Strategy Type: ${branchStrategy.type}`);
-    logger.log(`  Prefix: ${branchStrategy.prefix}`);
-    logger.log(`  Start Point: ${branchStrategy.startPoint}`);
-    logger.log(`  Merge Target: ${branchStrategy.mergeTarget}`);
-    logger.log(`  Protection: ${branchStrategy.protection}`);
-    logger.log(`  Auto-Merge: ${branchStrategy.autoMerge}`);
-    logger.log(`  Requires Review: ${branchStrategy.requiresReview}\n`);
+    logger.info(`  Strategy Type: ${branchStrategy.type}`);
+    logger.info(`  Prefix: ${branchStrategy.prefix}`);
+    logger.info(`  Start Point: ${branchStrategy.startPoint}`);
+    logger.info(`  Merge Target: ${branchStrategy.mergeTarget}`);
+    logger.info(`  Protection: ${branchStrategy.protection}`);
+    logger.info(`  Auto-Merge: ${branchStrategy.autoMerge}`);
+    logger.info(`  Requires Review: ${branchStrategy.requiresReview}\n`);
 
     // Test branch name generation
     logger.debug('🏷️  Testing Branch Name Generation:');
     const branchName = workflowGitService.generateBranchName(testTask, branchStrategy);
-    logger.log(`  Generated Branch: ${branchName}\n`);
+    logger.info(`  Generated Branch: ${branchName}\n`);
 
     // Test different task types
     logger.debug('🔄 Testing Different Task Types:');
@@ -76,23 +76,23 @@ async function testBranchStrategy() {
     for (const { type, expectedStrategy } of taskTypes) {
       const strategy = workflowGitService.determineBranchStrategy({ value: type }, {});
       const match = strategy.type === expectedStrategy;
-      logger.log(`  ${type}: ${strategy.type} (${match ? '✅' : '❌'})`);
+      logger.info(`  ${type}: ${strategy.type} (${match ? '✅' : '❌'})`);
     }
 
     // Test Git workflow generation
     logger.debug('\n📝 Testing Git Workflow Generation:');
     const gitWorkflow = buildGitWorkflow(branchName, branchStrategy, testTask);
-    logger.log('  Workflow includes start point: ' + (gitWorkflow.includes(branchStrategy.startPoint) ? '✅' : '❌'));
-    logger.log('  Workflow includes branch name: ' + (gitWorkflow.includes(branchName) ? '✅' : '❌'));
-    logger.log('  Workflow includes merge target: ' + (gitWorkflow.includes(branchStrategy.mergeTarget) ? '✅' : '❌'));
-    logger.log('  Workflow includes protection level: ' + (gitWorkflow.includes(branchStrategy.protection) ? '✅' : '❌'));
+    logger.info('  Workflow includes start point: ' + (gitWorkflow.includes(branchStrategy.startPoint) ? '✅' : '❌'));
+    logger.info('  Workflow includes branch name: ' + (gitWorkflow.includes(branchName) ? '✅' : '❌'));
+    logger.info('  Workflow includes merge target: ' + (gitWorkflow.includes(branchStrategy.mergeTarget) ? '✅' : '❌'));
+    logger.info('  Workflow includes protection level: ' + (gitWorkflow.includes(branchStrategy.protection) ? '✅' : '❌'));
 
     logger.debug('\n✅ Branch Strategy Test Completed Successfully!');
-    logger.log('\n📋 Summary:');
-    logger.log('  - WorkflowGitService correctly determines branch strategies');
-    logger.log('  - Branch names are generated with proper prefixes and structure');
+    logger.info('\n📋 Summary:');
+    logger.info('  - WorkflowGitService correctly determines branch strategies');
+    logger.info('  - Branch names are generated with proper prefixes and structure');
     logger.debug('  - Testing tasks use the correct "pidea-agent" branch strategy');
-    logger.log('  - Git workflow includes all necessary information');
+    logger.info('  - Git workflow includes all necessary information');
 
   } catch (error) {
     logger.error('❌ Test failed:', error.message);

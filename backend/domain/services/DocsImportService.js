@@ -22,7 +22,7 @@ class DocsImportService {
      * @returns {Promise<Object>} Import Ergebnis
      */
     async importDocsFromWorkspace(projectId, workspacePath) {
-        logger.log(`🔄 [DocsImportService] Starting docs import for project ${projectId} from workspace: ${workspacePath}`);
+        logger.info(`🔄 [DocsImportService] Starting docs import for project ${projectId} from workspace: ${workspacePath}`);
         
         try {
             return await this._importFromWorkspace(workspacePath, projectId);
@@ -37,7 +37,7 @@ class DocsImportService {
      */
     async _importFromWorkspace(workspacePath, projectId) {
         try {
-            logger.log(`🔄 [DocsImportService] Importing from workspace to database: ${workspacePath}`);
+            logger.info(`🔄 [DocsImportService] Importing from workspace to database: ${workspacePath}`);
             if (!workspacePath) {
                 throw new Error('No workspace path provided');
             }
@@ -274,7 +274,7 @@ class DocsImportService {
      */
     async updateIndexFileProgress(projectId, featureId, progressData) {
         try {
-            logger.log(`🔄 [DocsImportService] Updating index file progress for feature ${featureId}`);
+            logger.info(`🔄 [DocsImportService] Updating index file progress for feature ${featureId}`);
             
             // Finde das Index File für dieses Feature
             const indexTask = await this.taskRepository.findByMetadata({
@@ -299,7 +299,7 @@ class DocsImportService {
                 metadata: updatedMetadata
             });
             
-            logger.log(`✅ [DocsImportService] Index file progress updated for feature ${featureId}`);
+            logger.info(`✅ [DocsImportService] Index file progress updated for feature ${featureId}`);
             return true;
             
         } catch (error) {

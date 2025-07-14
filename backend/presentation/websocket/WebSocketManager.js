@@ -1,7 +1,7 @@
 const WebSocket = require('ws');
 const AuthMiddleware = require('@auth/AuthMiddleware');
-const Logger = require('@logging/Logger');
-const logger = new Logger('Logger');
+const ServiceLogger = require('@logging/ServiceLogger');
+const logger = new ServiceLogger('WebSocketManager');
 
 
 class WebSocketManager {
@@ -21,7 +21,7 @@ class WebSocketManager {
   }
 
   initialize() {
-    logger.log('[WebSocketManager] Initializing WebSocket server...');
+    logger.info('Initializing WebSocket server...');
 
     this.wss = new WebSocket.Server({ 
       server: this.server,
@@ -36,7 +36,7 @@ class WebSocketManager {
       logger.error('[WebSocketManager] WebSocket server error:', error);
     });
 
-    logger.log('[WebSocketManager] WebSocket server initialized');
+    logger.success('WebSocket server initialized');
   }
 
   async handleConnection(ws, req) {
@@ -75,12 +75,12 @@ class WebSocketManager {
           }
         });
 
-        logger.log(`[WebSocketManager] User ${userId} connected (${this.getUserConnectionCount(userId)} connections)`);
+        logger.info(`User ${userId} connected (${this.getUserConnectionCount(userId)} connections)`);
       } else {
         // Register as anonymous connection
         this.registerAnonymousConnection(ws);
-        logger.log('[WebSocketManager] Anonymous connection established');
-        logger.log('[WebSocketManager] Total clients after anonymous connection:', this.wss.clients.size);
+        logger.info('Anonymous connection established');
+        logger.debug('Total clients after anonymous connection:', this.wss.clients.size);
       }
 
       // Setup message handling
@@ -191,17 +191,17 @@ class WebSocketManager {
     // Store anonymous connection info
     this.userConnections.set(ws, { userId: null, sessionId: null });
     this.connectionCount++;
-    logger.log('[WebSocketManager] Anonymous connection registered. Total connections:', this.connectionCount);
+    logger.debug('Anonymous connection registered. Total connections:', this.connectionCount);
   }
 
   handleAnonymousDisconnect(ws, code, reason) {
-    logger.log(`[WebSocketManager] Anonymous connection disconnected (code: ${code}, reason: ${reason})`);
+    logger.info(`Anonymous connection disconnected (code: ${code}, reason: ${reason})`);
     this.userConnections.delete(ws);
     this.connectionCount--;
   }
 
   handleDisconnect(ws, userId, code, reason) {
-    logger.log(`[WebSocketManager] User ${userId} disconnected (code: ${code}, reason: ${reason})`);
+    logger.info(`User ${userId} disconnected (code: ${code}, reason: ${reason})`);
 
     // Remove from user's connection set
     const userConnections = this.clients.get(userId);
@@ -487,7 +487,7 @@ class WebSocketManager {
       timestamp: new Date().toISOString()
     });
 
-    logger.log(`[WebSocketManager] Broadcasting ${event} to ${this.wss.clients.size} clients:`, data);
+    logger.debug(`Broadcasting ${event} to ${this.wss.clients.size} clients:`, data);
 
     this.wss.clients.forEach(client => {
       if (client.readyState === WebSocket.OPEN) {
@@ -552,7 +552,7 @@ class WebSocketManager {
 
   // Cleanup
   cleanup() {
-    logger.log('[WebSocketManager] Cleaning up...');
+    logger.info('Cleaning up...');
     
     this.wss.clients.forEach(client => {
       client.close(1000, 'Server shutdown');

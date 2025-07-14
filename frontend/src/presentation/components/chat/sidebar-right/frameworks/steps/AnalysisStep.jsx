@@ -48,8 +48,8 @@ function AnalysisStep({ framework, onAnalysisComplete, workflowData, setWorkflow
     
     try {
       // Use new documentation-specific analysis API
-      logger.log('📊 [AnalysisStep] Starting documentation analysis for project:', currentProject.id);
-      logger.log('📊 [AnalysisStep] Project path:', currentProject.path);
+      logger.info('📊 [AnalysisStep] Starting documentation analysis for project:', currentProject.id);
+      logger.info('📊 [AnalysisStep] Project path:', currentProject.path);
       
       const response = await apiCall(`/api/projects/${currentProject.id}/documentation/analyze`, {
         method: 'POST',
@@ -59,8 +59,8 @@ function AnalysisStep({ framework, onAnalysisComplete, workflowData, setWorkflow
       });
 
               if (response.success) {
-          logger.log('✅ [AnalysisStep] Documentation analysis completed:', response.data);
-          logger.log('✅ [AnalysisStep] Created tasks:', response.data.createdTasks);
+          logger.info('✅ [AnalysisStep] Documentation analysis completed:', response.data);
+          logger.info('✅ [AnalysisStep] Created tasks:', response.data.createdTasks);
           
           // Parse analysis results for documentation framework
           const results = parseAnalysisResults(response.data);
@@ -96,14 +96,14 @@ function AnalysisStep({ framework, onAnalysisComplete, workflowData, setWorkflow
     setBulkAnalysisResults(null);
     
     try {
-      logger.log('🚀 [AnalysisStep] Starting bulk documentation analysis for all projects');
+      logger.info('🚀 [AnalysisStep] Starting bulk documentation analysis for all projects');
       
       const response = await apiCall('/api/projects/analyze-all/documentation', {
         method: 'POST'
       });
 
       if (response.success) {
-        logger.log('✅ [AnalysisStep] Bulk documentation analysis completed:', response.data);
+        logger.info('✅ [AnalysisStep] Bulk documentation analysis completed:', response.data);
         
         setBulkAnalysisResults(response.data);
         

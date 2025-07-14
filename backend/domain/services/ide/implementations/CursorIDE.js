@@ -27,7 +27,7 @@ class CursorIDE extends BaseIDE {
     ];
     
     this.isInitialized = true;
-    logger.log('[CursorIDE] Cursor IDE implementation initialized');
+    logger.info('[CursorIDE] Cursor IDE implementation initialized');
   }
 
   /**
@@ -57,7 +57,7 @@ class CursorIDE extends BaseIDE {
    */
   async start(workspacePath = null, options = {}) {
     try {
-      logger.log('[CursorIDE] Starting Cursor IDE...');
+      logger.info('[CursorIDE] Starting Cursor IDE...');
       
       const ideInfo = await this.ideManager.startNewIDE(workspacePath, IDETypes.CURSOR);
       
@@ -87,7 +87,7 @@ class CursorIDE extends BaseIDE {
         throw new Error('No active Cursor IDE to stop');
       }
       
-      logger.log('[CursorIDE] Stopping Cursor IDE on port', activePort);
+      logger.info('[CursorIDE] Stopping Cursor IDE on port', activePort);
       
       const result = await this.ideManager.stopIDE(activePort);
       
@@ -204,10 +204,10 @@ class CursorIDE extends BaseIDE {
   async switchToPort(port) {
     try {
       const currentActivePort = this.getActivePort();
-      logger.log(`[CursorIDE] switchToPort(${port}) called, current active port:`, currentActivePort);
+      logger.info(`[CursorIDE] switchToPort(${port}) called, current active port:`, currentActivePort);
       
       if (currentActivePort === port) {
-        logger.log(`[CursorIDE] Already connected to port ${port}`);
+        logger.info(`[CursorIDE] Already connected to port ${port}`);
         return {
           success: true,
           port,
@@ -216,14 +216,14 @@ class CursorIDE extends BaseIDE {
         };
       }
       
-      logger.log(`[CursorIDE] Switching to port ${port}`);
+      logger.info(`[CursorIDE] Switching to port ${port}`);
       await this.browserManager.switchToPort(port);
       
       // Update active port in IDE manager
       if (this.ideManager.switchToIDE) {
-        logger.log(`[CursorIDE] Calling ideManager.switchToIDE(${port})`);
+        logger.info(`[CursorIDE] Calling ideManager.switchToIDE(${port})`);
         await this.ideManager.switchToIDE(port);
-        logger.log(`[CursorIDE] ideManager.switchToIDE(${port}) completed`);
+        logger.info(`[CursorIDE] ideManager.switchToIDE(${port}) completed`);
       }
       
       this.updateStatus('switched', { port, previousPort: currentActivePort });
@@ -257,16 +257,16 @@ class CursorIDE extends BaseIDE {
     try {
       // Ensure browser is connected to the active IDE port
       const activePort = this.getActivePort();
-      logger.log('[CursorIDE] sendMessage() - Active port:', activePort);
+      logger.info('[CursorIDE] sendMessage() - Active port:', activePort);
       
       if (activePort) {
         try {
           // Switch browser to active port if needed
           const currentBrowserPort = this.browserManager.getCurrentPort();
-          logger.log('[CursorIDE] sendMessage() - Current browser port:', currentBrowserPort);
+          logger.info('[CursorIDE] sendMessage() - Current browser port:', currentBrowserPort);
           
           if (currentBrowserPort !== activePort) {
-            logger.log('[CursorIDE] sendMessage() - Switching browser to active port:', activePort);
+            logger.info('[CursorIDE] sendMessage() - Switching browser to active port:', activePort);
             await this.browserManager.switchToPort(activePort);
           }
         } catch (error) {
@@ -298,36 +298,36 @@ class CursorIDE extends BaseIDE {
       }
       
       if (!port) {
-        logger.log('[CursorIDE] No IDE port available');
+        logger.info('[CursorIDE] No IDE port available');
         return null;
       }
       
-      logger.log('[CursorIDE] Getting user app URL for port:', port);
+      logger.info('[CursorIDE] Getting user app URL for port:', port);
       
       // Get workspace path for this specific port
       const workspacePath = this.ideManager.getWorkspacePath(port);
-      logger.log('[CursorIDE] Workspace path for port', port, ':', workspacePath);
+      logger.info('[CursorIDE] Workspace path for port', port, ':', workspacePath);
       
       if (!workspacePath) {
-        logger.log('[CursorIDE] No workspace path found for port', port);
+        logger.info('[CursorIDE] No workspace path found for port', port);
         return null;
       }
       
       // If workspace path is virtual (like composer-code-block-anysphere:/), skip
       if (workspacePath.includes(':')) {
-        logger.log('[CursorIDE] Skipping virtual workspace for port', port, ':', workspacePath);
+        logger.info('[CursorIDE] Skipping virtual workspace for port', port, ':', workspacePath);
         return null;
       }
       
       // Try package.json analysis first
       const packageJsonUrl = await this.packageJsonAnalyzer.analyzePackageJsonInPath(workspacePath);
       if (packageJsonUrl) {
-        logger.log('[CursorIDE] Dev server detected via package.json for port', port, ':', packageJsonUrl);
+        logger.info('[CursorIDE] Dev server detected via package.json for port', port, ':', packageJsonUrl);
         return packageJsonUrl;
       }
       
       // No frontend found in this workspace
-      logger.log('[CursorIDE] No frontend found in workspace for port', port, ':', workspacePath);
+      logger.info('[CursorIDE] No frontend found in workspace for port', port, ':', workspacePath);
       return null;
     } catch (error) {
       this.handleError(error, `getUserAppUrlForPort(${port})`);
@@ -343,7 +343,7 @@ class CursorIDE extends BaseIDE {
    */
   async applyRefactoring(filePath, refactoredCode) {
     try {
-      logger.log('[CursorIDE] Applying refactoring to file:', filePath);
+      logger.info('[CursorIDE] Applying refactoring to file:', filePath);
       
       // Create a prompt to apply the refactored code
       const applyPrompt = `Please apply the following refactored code to the file ${filePath}:
@@ -363,7 +363,7 @@ After applying the changes, please confirm that the refactoring has been complet
       // Send the refactoring prompt to Cursor IDE
       const result = await this.sendMessage(applyPrompt);
       
-      logger.log('[CursorIDE] Refactoring applied successfully');
+      logger.info('[CursorIDE] Refactoring applied successfully');
       
       this.updateStatus('refactoring_applied', { filePath });
       
@@ -387,13 +387,13 @@ After applying the changes, please confirm that the refactoring has been complet
    */
   async sendTask(task, workspacePath = null) {
     try {
-      logger.log('🔍 [CursorIDE] Sending task to Cursor IDE:', task.title);
+      logger.info('🔍 [CursorIDE] Sending task to Cursor IDE:', task.title);
       
       // Get active IDE workspace path if not provided
       if (!workspacePath) {
         const activeIDE = await this.ideManager.getActiveIDE();
         workspacePath = activeIDE?.workspacePath;
-        logger.log('🔍 [CursorIDE] Using active IDE workspace path:', workspacePath);
+        logger.info('🔍 [CursorIDE] Using active IDE workspace path:', workspacePath);
       }
       
       if (!workspacePath) {
@@ -435,13 +435,13 @@ Please execute this task in Cursor IDE and provide a summary of what was accompl
       const taskFilePath = path.join(workspacePath, `task_${task.id}.md`);
       fs.writeFileSync(taskFilePath, taskContent);
       
-      logger.log('✅ [CursorIDE] Created task file at:', taskFilePath);
+      logger.info('✅ [CursorIDE] Created task file at:', taskFilePath);
       
       // Open file in Cursor IDE via Playwright
       await page.evaluate((filePath) => {
         // This would open the file in Cursor IDE
         // For now, we'll just log it
-        logger.log('Opening file in Cursor IDE:', filePath);
+        logger.info('Opening file in Cursor IDE:', filePath);
       }, taskFilePath);
       
       // Send message to Cursor chat
@@ -481,13 +481,13 @@ Please provide a summary when you complete the task.`;
    */
   async sendAutoModeTasks(tasks, projectAnalysis, workspacePath = null) {
     try {
-      logger.log('🔍 [CursorIDE] Sending auto mode tasks to Cursor IDE:', tasks.length, 'tasks');
+      logger.info('🔍 [CursorIDE] Sending auto mode tasks to Cursor IDE:', tasks.length, 'tasks');
       
       // Get active IDE workspace path if not provided
       if (!workspacePath) {
         const activeIDE = await this.ideManager.getActiveIDE();
         workspacePath = activeIDE?.workspacePath;
-        logger.log('🔍 [CursorIDE] Using active IDE workspace path:', workspacePath);
+        logger.info('🔍 [CursorIDE] Using active IDE workspace path:', workspacePath);
       }
       
       if (!workspacePath) {
@@ -539,7 +539,7 @@ const logger = new Logger('Logger');
       const autoModeFilePath = path.join(workspacePath, 'auto_mode_tasks.md');
       fs.writeFileSync(autoModeFilePath, autoModeContent);
       
-      logger.log('✅ [CursorIDE] Created auto mode file at:', autoModeFilePath);
+      logger.info('✅ [CursorIDE] Created auto mode file at:', autoModeFilePath);
       
       // Get browser page
       const page = await this.browserManager.getPage();
@@ -551,7 +551,7 @@ const logger = new Logger('Logger');
       await page.evaluate((filePath) => {
         // This would open the file in Cursor IDE
         // For now, we'll just log it
-        logger.log('Opening auto mode file in Cursor IDE:', filePath);
+        logger.info('Opening auto mode file in Cursor IDE:', filePath);
       }, autoModeFilePath);
       
       // Send message to Cursor chat

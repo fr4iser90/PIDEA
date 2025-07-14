@@ -18,7 +18,7 @@ class ServiceRegistry {
      * Register core infrastructure services
      */
     registerInfrastructureServices() {
-        logger.log('[ServiceRegistry] Registering infrastructure services...');
+        logger.info('[ServiceRegistry] Registering infrastructure services...');
 
         // Database services
         this.container.register('databaseConnection', () => {
@@ -86,7 +86,7 @@ class ServiceRegistry {
      * Register domain services
      */
     registerDomainServices() {
-        logger.log('[ServiceRegistry] Registering domain services...');
+        logger.info('[ServiceRegistry] Registering domain services...');
 
         // IDEMirrorService - FIXED: Use DI instead of new IDEManager()
         this.container.register('ideMirrorService', (ideManager, browserManager) => {
@@ -311,7 +311,7 @@ class ServiceRegistry {
      * Register external services
      */
     registerExternalServices() {
-        logger.log('[ServiceRegistry] Registering external services...');
+        logger.info('[ServiceRegistry] Registering external services...');
 
         // AI service
         this.container.register('aiService', () => {
@@ -416,7 +416,7 @@ class ServiceRegistry {
      * Register strategy services
      */
     registerStrategyServices() {
-        logger.log('[ServiceRegistry] Registering strategy services...');
+        logger.info('[ServiceRegistry] Registering strategy services...');
 
         // Monorepo strategy
         this.container.register('monorepoStrategy', (logger, eventBus, fileSystemService) => {
@@ -449,7 +449,7 @@ class ServiceRegistry {
      * Register repository services
      */
     registerRepositoryServices() {
-        logger.log('[ServiceRegistry] Registering repository services...');
+        logger.info('[ServiceRegistry] Registering repository services...');
 
         // Chat repository
         this.container.register('chatRepository', () => {
@@ -500,7 +500,7 @@ class ServiceRegistry {
      * Register application handlers
      */
     registerApplicationHandlers() {
-        logger.log('[ServiceRegistry] Registering application handlers...');
+        logger.info('[ServiceRegistry] Registering application handlers...');
 
         // Send message handler
         this.container.register('sendMessageHandler', (cursorIDEService, vscodeIDEService, windsurfIDEService, ideManager, idePortManager, eventBus, logger) => {
@@ -559,7 +559,7 @@ class ServiceRegistry {
      * Register all services
      */
     registerAllServices() {
-        logger.log('[ServiceRegistry] Registering all services...');
+        logger.info('[ServiceRegistry] 🔧 Registering all services...');
 
         // ✅ CORRECT ORDER: Infrastructure first, then dependencies
         this.registerInfrastructureServices();
@@ -579,8 +579,8 @@ class ServiceRegistry {
             logger.warn('[ServiceRegistry] Project context initialization failed:', error.message);
         }
 
-        logger.log('[ServiceRegistry] All services registered successfully');
-        logger.log('[ServiceRegistry] Registered service categories:', Array.from(this.registeredServices));
+        logger.info('[ServiceRegistry] ✅ All services registered successfully');
+        logger.info('[ServiceRegistry] Registered service categories:', Array.from(this.registeredServices));
     }
 
     /**
@@ -622,7 +622,7 @@ class ServiceRegistry {
     clearAllServices() {
         this.container.clear();
         this.registeredServices.clear();
-        logger.log('[ServiceRegistry] All services cleared');
+        logger.info('[ServiceRegistry] All services cleared');
     }
 }
 

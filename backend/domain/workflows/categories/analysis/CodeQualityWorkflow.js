@@ -21,7 +21,7 @@ class CodeQualityWorkflow extends BaseWorkflowStep {
    */
   async initialize(context) {
     try {
-      logger.log('🚀 Initializing Code Quality Workflow...');
+      logger.info('🚀 Initializing Code Quality Workflow...');
       
       // Load frameworks and steps
       const { getFrameworkRegistry, getStepRegistry } = require('@/domain/frameworks');
@@ -35,7 +35,7 @@ const logger = new Logger('Logger');
       // Register workflow steps
       await this.registerWorkflowSteps();
       
-      logger.log('✅ Code Quality Workflow initialized successfully');
+      logger.info('✅ Code Quality Workflow initialized successfully');
       return true;
     } catch (error) {
       logger.error('❌ Failed to initialize Code Quality Workflow:', error.message);
@@ -92,7 +92,7 @@ const logger = new Logger('Logger');
    */
   async execute(context = {}, options = {}) {
     try {
-      logger.log('🔍 Starting Code Quality Workflow execution...');
+      logger.info('🔍 Starting Code Quality Workflow execution...');
       
       const results = {
         workflow: this.name,
@@ -110,7 +110,7 @@ const logger = new Logger('Logger');
       // Execute each step in order
       for (const step of this.steps) {
         try {
-          logger.log(`📋 Executing workflow step: ${step.name}`);
+          logger.info(`📋 Executing workflow step: ${step.name}`);
           
           const stepResult = await this.executeStep(step, context, options);
           results.steps.push(stepResult);
@@ -146,7 +146,7 @@ const logger = new Logger('Logger');
         results.summary.qualityScore = this.calculateOverallQualityScore(results.steps);
       }
       
-      logger.log(`✅ Code Quality Workflow completed. Quality Score: ${results.summary.qualityScore}/100`);
+      logger.info(`✅ Code Quality Workflow completed. Quality Score: ${results.summary.qualityScore}/100`);
       return results;
       
     } catch (error) {

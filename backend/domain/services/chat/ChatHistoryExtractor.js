@@ -53,17 +53,17 @@ class ChatHistoryExtractor {
    */
   async navigateToVSCodeApp(page) {
     try {
-      logger.log('[ChatHistoryExtractor][VSCode] Navigating to VS Code app...');
+      logger.info('[ChatHistoryExtractor][VSCode] Navigating to VS Code app...');
       
       // Get all targets (pages) available
       const targets = await this.browserManager.browser.targets();
-      logger.log('[ChatHistoryExtractor][VSCode] Available targets:', targets.length);
+      logger.info('[ChatHistoryExtractor][VSCode] Available targets:', targets.length);
       
       // Find the VS Code application target (not DevTools)
       let vscodeTarget = null;
       for (const target of targets) {
         const url = target.url();
-        logger.log('[ChatHistoryExtractor][VSCode] Target URL:', url);
+        logger.info('[ChatHistoryExtractor][VSCode] Target URL:', url);
         
         // Skip DevTools targets
         if (url.includes('devtools://') || url.includes('chrome-devtools://')) {
@@ -78,17 +78,17 @@ class ChatHistoryExtractor {
       }
       
       if (vscodeTarget) {
-        logger.log('[ChatHistoryExtractor][VSCode] Found VS Code app target, navigating...');
+        logger.info('[ChatHistoryExtractor][VSCode] Found VS Code app target, navigating...');
         const newPage = await vscodeTarget.page();
         if (newPage) {
           // Update the browser manager to use the new page
           this.browserManager.currentPage = newPage;
-          logger.log('[ChatHistoryExtractor][VSCode] Successfully navigated to VS Code app');
+          logger.info('[ChatHistoryExtractor][VSCode] Successfully navigated to VS Code app');
           return;
         }
       }
       
-      logger.log('[ChatHistoryExtractor][VSCode] No VS Code app target found, staying on current page');
+      logger.info('[ChatHistoryExtractor][VSCode] No VS Code app target found, staying on current page');
     } catch (error) {
       logger.error('[ChatHistoryExtractor][VSCode] Error navigating to VS Code app:', error);
     }
@@ -172,7 +172,7 @@ class ChatHistoryExtractor {
    * @returns {Promise<Array>} Array of messages
    */
   async extractVSCodeMessages(page) {
-    logger.log('[ChatHistoryExtractor][VSCode] extractVSCodeMessages called');
+    logger.info('[ChatHistoryExtractor][VSCode] extractVSCodeMessages called');
     let result;
     try {
       result = await page.evaluate((selectors) => {

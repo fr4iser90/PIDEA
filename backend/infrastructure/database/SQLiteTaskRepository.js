@@ -24,7 +24,7 @@ class SQLiteTaskRepository extends TaskRepository {
   async init() {
     // The tasks table is created by DatabaseConnection.js with proper schema
     // This repository just uses the existing table
-    logger.log('✅ [SQLiteTaskRepository] Using centralized tasks table from DatabaseConnection');
+    logger.info('✅ [SQLiteTaskRepository] Using centralized tasks table from DatabaseConnection');
   }
 
   /**

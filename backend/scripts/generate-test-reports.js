@@ -32,9 +32,9 @@ async function main() {
     logger.debug('📊 Running test coverage...');
     try {
       execSync('npm run test:coverage', { stdio: 'inherit' });
-      logger.log('✅ Coverage generated successfully');
+      logger.info('✅ Coverage generated successfully');
     } catch (error) {
-      logger.log('⚠️ Coverage generation had issues, but continuing...');
+      logger.info('⚠️ Coverage generation had issues, but continuing...');
     }
 
     // Step 2: Export test data
@@ -65,16 +65,16 @@ async function main() {
     }
 
     // Step 5: Generate coverage markdown
-    logger.log('📄 Generating coverage markdown...');
+    logger.info('📄 Generating coverage markdown...');
     try {
       execSync('npm run test:coverage:md', { stdio: 'inherit' });
-      logger.log('✅ Coverage markdown generated successfully');
+      logger.info('✅ Coverage markdown generated successfully');
     } catch (error) {
-      logger.log('⚠️ Coverage markdown generation had issues, but continuing...');
+      logger.info('⚠️ Coverage markdown generation had issues, but continuing...');
     }
 
     // Step 6: Verify files exist
-    logger.log('🔍 Verifying generated files...');
+    logger.info('🔍 Verifying generated files...');
     const requiredFiles = [
       'coverage.md',
       'test-report.md',
@@ -89,18 +89,18 @@ async function main() {
       const filePath = path.join(projectRoot, file);
       if (fs.existsSync(filePath)) {
         existingFiles.push(file);
-        logger.log(`✅ ${file} exists`);
+        logger.info(`✅ ${file} exists`);
       } else {
         missingFiles.push(file);
-        logger.log(`❌ ${file} missing`);
+        logger.info(`❌ ${file} missing`);
       }
     }
 
-    logger.log('\n📊 Summary:');
-    logger.log(`✅ Generated: ${existingFiles.length}/${requiredFiles.length} files`);
+    logger.info('\n📊 Summary:');
+    logger.info(`✅ Generated: ${existingFiles.length}/${requiredFiles.length} files`);
     
     if (missingFiles.length > 0) {
-      logger.log(`❌ Missing: ${missingFiles.join(', ')}`);
+      logger.info(`❌ Missing: ${missingFiles.join(', ')}`);
     }
 
     if (existingFiles.length > 0) {

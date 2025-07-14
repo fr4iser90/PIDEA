@@ -14,7 +14,7 @@ class SQLiteUserSessionRepository extends UserSessionRepository {
       throw new Error('Invalid session entity');
     }
 
-    logger.log('🔍 [UserSessionRepository] Saving session:', {
+    logger.info('🔍 [UserSessionRepository] Saving session:', {
       id: session.id,
       userId: session.userId,
       accessTokenLength: session.accessToken.length,
@@ -27,7 +27,7 @@ class SQLiteUserSessionRepository extends UserSessionRepository {
     `;
 
     const sessionData = session.toJSON();
-    logger.log('🔍 [UserSessionRepository] Session data to save:', {
+    logger.info('🔍 [UserSessionRepository] Session data to save:', {
       id: sessionData.id,
       userId: sessionData.userId,
       accessTokenStart: sessionData.accessToken.substring(0, 20) + '...',
@@ -44,7 +44,7 @@ class SQLiteUserSessionRepository extends UserSessionRepository {
       JSON.stringify(sessionData.metadata)
     ]);
 
-    logger.log('✅ [UserSessionRepository] Session saved successfully');
+    logger.info('✅ [UserSessionRepository] Session saved successfully');
     return session;
   }
 
@@ -93,12 +93,12 @@ class SQLiteUserSessionRepository extends UserSessionRepository {
       throw new Error('Access token is required');
     }
 
-    logger.log('🔍 [UserSessionRepository] Finding session by access token:', accessToken.substring(0, 20) + '...');
+    logger.info('🔍 [UserSessionRepository] Finding session by access token:', accessToken.substring(0, 20) + '...');
 
     const sql = 'SELECT * FROM user_sessions WHERE access_token = ?';
     const row = await this.db.getOne(sql, [accessToken]);
     
-    logger.log('🔍 [UserSessionRepository] Database result:', row ? {
+    logger.info('🔍 [UserSessionRepository] Database result:', row ? {
       id: row.id,
       user_id: row.user_id,
       access_token_start: row.access_token.substring(0, 20) + '...',
@@ -117,7 +117,7 @@ class SQLiteUserSessionRepository extends UserSessionRepository {
       metadata: row.metadata ? JSON.parse(row.metadata) : {}
     });
 
-    logger.log('✅ [UserSessionRepository] Session found and reconstructed:', {
+    logger.info('✅ [UserSessionRepository] Session found and reconstructed:', {
       id: session.id,
       userId: session.userId,
       isActive: session.isActive()

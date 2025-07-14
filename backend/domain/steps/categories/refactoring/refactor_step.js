@@ -21,11 +21,11 @@ async function execute(context, options = {}) {
   if (!projectPath) throw new Error('Project path not found in context');
   if (!stepRegistry) throw new Error('Step registry not found in context');
 
-  logger.log('🚀 [RefactoringStep] Starting refactoring orchestration...');
+  logger.info('🚀 [RefactoringStep] Starting refactoring orchestration...');
 
   try {
     // Step 1: Analyze project for refactoring opportunities
-    logger.log('📊 [RefactoringStep] Step 1: Analyzing project...');
+    logger.info('📊 [RefactoringStep] Step 1: Analyzing project...');
     const analyzeResult = await stepRegistry.executeStep('RefactorAnalyze', context, options);
     
     if (!analyzeResult.success) {
@@ -35,7 +35,7 @@ async function execute(context, options = {}) {
     // Extract largeFiles from the correct location in analyzeResult
     const largeFiles = analyzeResult.result?.largeFiles || analyzeResult.largeFiles || [];
     
-    logger.log(`🔍 [RefactoringStep] Analysis result:`, {
+    logger.info(`🔍 [RefactoringStep] Analysis result:`, {
       success: analyzeResult.success,
       largeFilesCount: largeFiles.length,
       largeFilesSample: largeFiles.slice(0, 2),
@@ -44,13 +44,13 @@ async function execute(context, options = {}) {
     });
 
     // Step 2: Generate refactoring tasks
-    logger.log('🔧 [RefactoringStep] Step 2: Generating refactoring tasks...');
+    logger.info('🔧 [RefactoringStep] Step 2: Generating refactoring tasks...');
     const taskContext = {
       ...context,
       largeFiles: largeFiles
     };
     
-    logger.log(`🔍 [RefactoringStep] Task context:`, {
+    logger.info(`🔍 [RefactoringStep] Task context:`, {
       largeFilesCount: taskContext.largeFiles ? taskContext.largeFiles.length : 0,
       hasLargeFiles: !!taskContext.largeFiles
     });
@@ -63,9 +63,9 @@ async function execute(context, options = {}) {
 
     const taskCount = taskResult.result?.taskCount || taskResult.taskCount || 0;
     
-    logger.log(`✅ [RefactoringStep] Refactoring orchestration completed successfully!`);
-    logger.log(`📊 Analysis found ${largeFiles.length} large files`);
-    logger.log(`🔧 Generated ${taskCount} refactoring tasks`);
+    logger.info(`✅ [RefactoringStep] Refactoring orchestration completed successfully!`);
+    logger.info(`📊 Analysis found ${largeFiles.length} large files`);
+    logger.info(`🔧 Generated ${taskCount} refactoring tasks`);
 
     return {
       success: true,

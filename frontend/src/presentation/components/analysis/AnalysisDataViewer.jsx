@@ -114,7 +114,7 @@ const AnalysisDataViewer = ({ projectId = null, eventBus = null }) => {
         // Use cached data
         statusResponse = { success: true, data: cachedStatus };
         metricsResponse = { success: true, data: cachedMetrics };
-        logger.log('🔍 [AnalysisDataViewer] Using cached status and metrics');
+        logger.info('🔍 [AnalysisDataViewer] Using cached status and metrics');
       } else {
         // Load from API
         [statusResponse, metricsResponse] = await Promise.all([
@@ -149,7 +149,7 @@ const AnalysisDataViewer = ({ projectId = null, eventBus = null }) => {
       
       if (cachedHistory) {
         historyResponse = { success: true, data: cachedHistory };
-        logger.log('🔍 [AnalysisDataViewer] Using cached history');
+        logger.info('🔍 [AnalysisDataViewer] Using cached history');
       } else {
         historyResponse = await apiRepository.getAnalysisHistory(currentProjectId);
         if (historyResponse.success) {
@@ -173,7 +173,7 @@ const AnalysisDataViewer = ({ projectId = null, eventBus = null }) => {
         
         if (cachedIssues) {
           issuesResponse = { success: true, data: cachedIssues };
-          logger.log('🔍 [AnalysisDataViewer] Using cached issues');
+          logger.info('🔍 [AnalysisDataViewer] Using cached issues');
         } else {
           issuesResponse = await apiRepository.getAnalysisIssues?.(currentProjectId) || Promise.resolve({ success: false, data: null });
           if (issuesResponse.success) {
@@ -198,7 +198,7 @@ const AnalysisDataViewer = ({ projectId = null, eventBus = null }) => {
         
         if (cachedTechStack) {
           techStackResponse = { success: true, data: cachedTechStack };
-          logger.log('🔍 [AnalysisDataViewer] Using cached tech stack');
+          logger.info('🔍 [AnalysisDataViewer] Using cached tech stack');
         } else {
           techStackResponse = await apiRepository.getAnalysisTechStack?.(currentProjectId) || Promise.resolve({ success: false, data: null });
           if (techStackResponse.success) {
@@ -223,7 +223,7 @@ const AnalysisDataViewer = ({ projectId = null, eventBus = null }) => {
         
         if (cachedArchitecture) {
           architectureResponse = { success: true, data: cachedArchitecture };
-          logger.log('🔍 [AnalysisDataViewer] Using cached architecture');
+          logger.info('🔍 [AnalysisDataViewer] Using cached architecture');
         } else {
           architectureResponse = await apiRepository.getAnalysisArchitecture?.(currentProjectId) || Promise.resolve({ success: false, data: null });
           if (architectureResponse.success) {
@@ -248,7 +248,7 @@ const AnalysisDataViewer = ({ projectId = null, eventBus = null }) => {
         
         if (cachedRecommendations) {
           recommendationsResponse = { success: true, data: cachedRecommendations };
-          logger.log('🔍 [AnalysisDataViewer] Using cached recommendations');
+          logger.info('🔍 [AnalysisDataViewer] Using cached recommendations');
         } else {
           recommendationsResponse = await apiRepository.getAnalysisRecommendations?.(currentProjectId) || Promise.resolve({ success: false, data: null });
           if (recommendationsResponse.success) {
@@ -308,7 +308,7 @@ const AnalysisDataViewer = ({ projectId = null, eventBus = null }) => {
 
       const isRecent = analysisDate > oneHourAgo;
       
-      logger.log('🔍 [AnalysisDataViewer] Analysis data freshness check:', {
+      logger.info('🔍 [AnalysisDataViewer] Analysis data freshness check:', {
         latestAnalysisDate: analysisDate.toISOString(),
         oneHourAgo: oneHourAgo.toISOString(),
         isRecent,

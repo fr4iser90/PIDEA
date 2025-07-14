@@ -37,7 +37,7 @@ class GetWorkspaceInfoHandler {
    */
   async handle(command, context = {}) {
     try {
-      this.logger.log(`[GetWorkspaceInfoHandler] Handling command: ${command.commandId}`);
+      this.logger.info(`[GetWorkspaceInfoHandler] Handling command: ${command.commandId}`);
 
       // Validate command
       if (!command || command.type !== 'GetWorkspaceInfoCommand') {
@@ -60,7 +60,7 @@ class GetWorkspaceInfoHandler {
         timestamp: new Date()
       });
 
-      this.logger.log(`[GetWorkspaceInfoHandler] Workspace info retrieved successfully`);
+      this.logger.info(`[GetWorkspaceInfoHandler] Workspace info retrieved successfully`);
 
       return {
         success: true,

@@ -27,7 +27,7 @@ class SQLiteStreamingSessionRepository {
     try {
       await this.createTables();
       this.isInitialized = true;
-      this.logger.log('[SQLiteStreamingSessionRepository] Initialized successfully');
+      this.logger.info('[SQLiteStreamingSessionRepository] Initialized successfully');
       return true;
     } catch (error) {
       this.logger.error('[SQLiteStreamingSessionRepository] Initialization error:', error.message);
@@ -102,7 +102,7 @@ class SQLiteStreamingSessionRepository {
       await this.db.execute('CREATE INDEX IF NOT EXISTS idx_frame_metrics_session_id ON frame_metrics (session_id)');
       await this.db.execute('CREATE INDEX IF NOT EXISTS idx_frame_metrics_timestamp ON frame_metrics (timestamp)');
       
-      logger.log('[SQLiteStreamingSessionRepository] Database tables created successfully');
+      logger.info('[SQLiteStreamingSessionRepository] Database tables created successfully');
     } catch (error) {
       logger.error('[SQLiteStreamingSessionRepository] Error creating tables:', error.message);
       throw error;
@@ -124,7 +124,7 @@ class SQLiteStreamingSessionRepository {
       // Save to database
       await this.saveSessionToDatabase(session);
 
-      logger.log(`[SQLiteStreamingSessionRepository] Saved session ${session.id}`);
+      logger.info(`[SQLiteStreamingSessionRepository] Saved session ${session.id}`);
     } catch (error) {
       logger.error(`[SQLiteStreamingSessionRepository] Error saving session ${session.id}:`, error.message);
       throw error;
@@ -313,7 +313,7 @@ class SQLiteStreamingSessionRepository {
       // Remove from database
       await this.deleteSessionFromDatabase(sessionId);
 
-      logger.log(`[SQLiteStreamingSessionRepository] Deleted session ${sessionId}`);
+      logger.info(`[SQLiteStreamingSessionRepository] Deleted session ${sessionId}`);
     } catch (error) {
       logger.error(`[SQLiteStreamingSessionRepository] Error deleting session ${sessionId}:`, error.message);
       throw error;
@@ -536,7 +536,7 @@ class SQLiteStreamingSessionRepository {
       const result = await this.db.execute(query, [cutoffTime.toISOString()]);
       const deletedCount = result.rowsAffected || 0;
 
-      logger.log(`[SQLiteStreamingSessionRepository] Cleaned up ${deletedCount} old sessions`);
+      logger.info(`[SQLiteStreamingSessionRepository] Cleaned up ${deletedCount} old sessions`);
     } catch (error) {
       logger.error('[SQLiteStreamingSessionRepository] Error during cleanup:', error.message);
       throw error;

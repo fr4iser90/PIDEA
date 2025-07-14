@@ -39,9 +39,9 @@ class DocsTasksHandler {
       throw new Error('Workspace path is not available');
     }
     
-    logger.log(`[DocsTasksHandler] Workspace root: ${workspaceRoot}`);
+    logger.info(`[DocsTasksHandler] Workspace root: ${workspaceRoot}`);
     const featuresDir = path.resolve(workspaceRoot, 'docs/09_roadmap/features');
-    logger.log(`[DocsTasksHandler] Features directory resolved: ${featuresDir}`);
+    logger.info(`[DocsTasksHandler] Features directory resolved: ${featuresDir}`);
     
     return featuresDir;
   }
@@ -91,7 +91,7 @@ class DocsTasksHandler {
         return a.title.localeCompare(b.title);
       });
 
-      logger.log(`[DocsTasksHandler] Found ${tasks.length} documentation tasks from database`);
+      logger.info(`[DocsTasksHandler] Found ${tasks.length} documentation tasks from database`);
       
       res.json({
         success: true,
@@ -158,7 +158,7 @@ class DocsTasksHandler {
         updatedAt: task.updatedAt
       };
 
-      logger.log(`[DocsTasksHandler] Successfully retrieved task details for: ${task.title}`);
+      logger.info(`[DocsTasksHandler] Successfully retrieved task details for: ${task.title}`);
       
       res.json({
         success: true,
@@ -299,14 +299,14 @@ class DocsTasksHandler {
    */
   clearCache() {
     this.cache.clear();
-    logger.log('[DocsTasksHandler] Cache cleared');
+    logger.info('[DocsTasksHandler] Cache cleared');
   }
 
   /**
    * Sync documentation tasks to repository (now handled by TaskController)
    */
   async syncDocsTasksToRepository() {
-    logger.log('[DocsTasksHandler] Sync is now handled by TaskController - skipping');
+    logger.info('[DocsTasksHandler] Sync is now handled by TaskController - skipping');
     return;
   }
 

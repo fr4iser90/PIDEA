@@ -1,6 +1,10 @@
 const fs = require('fs');
 const path = require('path');
 
+const Logger = require('@logging/Logger');
+
+const logger = new Logger('ServiceName');
+
 class SelectorGenerator {
   constructor() {
     this.outputDir = path.join(__dirname, '../../generated');
@@ -10,12 +14,12 @@ class SelectorGenerator {
   ensureOutputDir() {
     if (!fs.existsSync(this.outputDir)) {
       fs.mkdirSync(this.outputDir, { recursive: true });
-      console.log(`📁 Created VSCode generated directory: ${this.outputDir}`);
+      logger.info(`📁 Created VSCode generated directory: ${this.outputDir}`);
     }
   }
 
   async generate() {
-    console.log('🔧 VSCode Selector Generator starting...\n');
+    logger.info('🔧 VSCode Selector Generator starting...\n');
 
     try {
       // 1. Load analysis results
@@ -30,9 +34,9 @@ class SelectorGenerator {
       // 4. Generate test files
       await this.generateVSCodeTests(optimizedSelectors);
       
-      console.log('\n✅ VSCode Selector Generation completed!');
-      console.log(`📁 Generated files in: ${this.outputDir}`);
-      console.log(`🎯 Total VSCode selectors: ${Object.keys(optimizedSelectors).length}`);
+      logger.info('\n✅ VSCode Selector Generation completed!');
+      logger.info(`📁 Generated files in: ${this.outputDir}`);
+      logger.info(`🎯 Total VSCode selectors: ${Object.keys(optimizedSelectors).length}`);
 
       return optimizedSelectors;
 
@@ -54,7 +58,7 @@ class SelectorGenerator {
       'coverage-validation-report.json'
     ];
     
-    console.log('📁 Loading VSCode analysis results...');
+    logger.info('📁 Loading VSCode analysis results...');
     
     analysisFiles.forEach(filename => {
       const filepath = path.join(outputDir, filename);
@@ -63,12 +67,12 @@ class SelectorGenerator {
           const content = fs.readFileSync(filepath, 'utf8');
           const data = JSON.parse(content);
           results[filename] = data;
-          console.log(`  ✅ ${filename}: ${Object.keys(data.optimizedSelectors || {}).length} selectors`);
+          logger.info(`  ✅ ${filename}: ${Object.keys(data.optimizedSelectors || {}).length} selectors`);
         } catch (error) {
           console.warn(`  ⚠️ Failed to load ${filename}: ${error.message}`);
         }
       } else {
-        console.log(`  ⚠️ ${filename}: Not found`);
+        logger.info(`  ⚠️ ${filename}: Not found`);
       }
     });
     
@@ -80,7 +84,7 @@ class SelectorGenerator {
   }
 
   generateOptimizedSelectors(analysisResults) {
-    console.log('\n🔄 Generating optimized VSCode selectors...');
+    logger.info('\n🔄 Generating optimized VSCode selectors...');
     
     // Start with comprehensive VSCode selector base
     const optimizedSelectors = {
@@ -445,7 +449,7 @@ class SelectorGenerator {
       ])
     };
     
-    console.log(`  ✅ Generated ${Object.keys(optimizedSelectors).length} VSCode selectors`);
+    logger.info(`  ✅ Generated ${Object.keys(optimizedSelectors).length} VSCode selectors`);
     
     return optimizedSelectors;
   }
@@ -463,30 +467,30 @@ class SelectorGenerator {
   }
 
   async generateVSCodeFiles(selectors) {
-    console.log('\n📄 Generating VSCode-specific files...');
+    logger.info('\n📄 Generating VSCode-specific files...');
     
     // 1. Generate VSCodeSelectors.js
     const jsContent = this.generateVSCodeJSModule(selectors);
     const jsFile = path.join(this.outputDir, 'VSCodeSelectors.js');
     fs.writeFileSync(jsFile, jsContent);
-    console.log(`  ✅ VSCodeSelectors.js`);
+    logger.info(`  ✅ VSCodeSelectors.js`);
     
     // 2. Generate VSCode selectors JSON
     const jsonFile = path.join(this.outputDir, 'vscode-selectors.json');
     fs.writeFileSync(jsonFile, JSON.stringify(selectors, null, 2));
-    console.log(`  ✅ vscode-selectors.json`);
+    logger.info(`  ✅ vscode-selectors.json`);
     
     // 3. Generate VSCode selectors summary
     const summaryContent = this.generateVSCodeSelectorSummary(selectors);
     const summaryFile = path.join(this.outputDir, 'vscode-selectors-summary.md');
     fs.writeFileSync(summaryFile, summaryContent);
-    console.log(`  ✅ vscode-selectors-summary.md`);
+    logger.info(`  ✅ vscode-selectors-summary.md`);
     
     // 4. Generate VSCode automation helper
     const helperContent = this.generateVSCodeAutomationHelper(selectors);
     const helperFile = path.join(this.outputDir, 'VSCodeAutomationHelper.js');
     fs.writeFileSync(helperFile, helperContent);
-    console.log(`  ✅ VSCodeAutomationHelper.js`);
+    logger.info(`  ✅ VSCodeAutomationHelper.js`);
   }
 
   generateVSCodeJSModule(selectors) {
@@ -672,7 +676,7 @@ class VSCodeAutomationHelper {
   // === VSCode CHAT AUTOMATION ===
   
   async startNewChat() {
-    console.log('🚀 Starting new VSCode chat...');
+    logger.info('🚀 Starting new VSCode chat...');
     
     try {
       // Try multiple strategies to find and click New Chat button
@@ -688,7 +692,7 @@ class VSCodeAutomationHelper {
           const element = await this.page.$(selector);
           if (element) {
             await element.click();
-            console.log(\`  ✅ Clicked New Chat button: \${selector}\`);
+            logger.info(\`  ✅ Clicked New Chat button: \${selector}\`);
             
             // Handle VSCode New Chat modal if it appears
             await this.handleNewChatModal();
@@ -729,7 +733,7 @@ class VSCodeAutomationHelper {
           const button = await this.page.$(buttonSelector);
           if (button) {
             const text = await button.textContent();
-            console.log(\`  ✅ Clicking VSCode modal button: \${text}\`);
+            logger.info(\`  ✅ Clicking VSCode modal button: \${text}\`);
             await button.click();
             await this.page.waitForTimeout(500);
             return;
@@ -744,12 +748,12 @@ class VSCodeAutomationHelper {
       await this.page.waitForTimeout(500);
       
     } catch (error) {
-      console.log(\`  ⚠️ VSCode New Chat modal handling failed: \${error.message}\`);
+      logger.info(\`  ⚠️ VSCode New Chat modal handling failed: \${error.message}\`);
     }
   }
 
   async sendChatMessage(message) {
-    console.log(\`📝 Sending VSCode chat message: "\${message}"\`);
+    logger.info(\`📝 Sending VSCode chat message: "\${message}"\`);
     
     try {
       // Focus chat input
@@ -775,7 +779,7 @@ class VSCodeAutomationHelper {
           const sendButton = await this.page.$(selector);
           if (sendButton) {
             await sendButton.click();
-            console.log(\`  ✅ Message sent via VSCode send button: \${selector}\`);
+            logger.info(\`  ✅ Message sent via VSCode send button: \${selector}\`);
             sent = true;
             break;
           }
@@ -787,7 +791,7 @@ class VSCodeAutomationHelper {
       if (!sent) {
         // Fallback: try Enter key
         await this.page.keyboard.press('Enter');
-        console.log(\`  ⚠️ Used Enter key fallback for VSCode\`);
+        logger.info(\`  ⚠️ Used Enter key fallback for VSCode\`);
       }
       
       return sent;
@@ -812,7 +816,7 @@ class VSCodeAutomationHelper {
         if (element) {
           await element.click();
           await element.focus();
-          console.log(\`  ✅ Found VSCode chat input: \${selector}\`);
+          logger.info(\`  ✅ Found VSCode chat input: \${selector}\`);
           return true;
         }
       } catch (e) {
@@ -820,19 +824,19 @@ class VSCodeAutomationHelper {
       }
     }
     
-    console.log(\`  ⚠️ No VSCode chat input found\`);
+    logger.info(\`  ⚠️ No VSCode chat input found\`);
     return false;
   }
 
   // === VSCode COMMAND AUTOMATION ===
   
   async openCommandPalette() {
-    console.log('🔧 Opening VSCode Command Palette...');
+    logger.info('🔧 Opening VSCode Command Palette...');
     
     try {
       await this.page.keyboard.press('Control+Shift+P');
       await this.page.waitForSelector(VSCodeSelectors.commandPalette, { timeout: 3000 });
-      console.log('  ✅ VSCode Command Palette opened');
+      logger.info('  ✅ VSCode Command Palette opened');
       return true;
     } catch (error) {
       console.error('❌ Failed to open Command Palette:', error.message);
@@ -841,7 +845,7 @@ class VSCodeAutomationHelper {
   }
 
   async executeCommand(command) {
-    console.log(\`🔧 Executing VSCode command: "\${command}"\`);
+    logger.info(\`🔧 Executing VSCode command: "\${command}"\`);
     
     try {
       await this.openCommandPalette();
@@ -852,7 +856,7 @@ class VSCodeAutomationHelper {
       
       // Press Enter to execute
       await this.page.keyboard.press('Enter');
-      console.log(\`  ✅ VSCode command executed: \${command}\`);
+      logger.info(\`  ✅ VSCode command executed: \${command}\`);
       return true;
     } catch (error) {
       console.error('❌ Failed to execute command:', error.message);
@@ -863,7 +867,7 @@ class VSCodeAutomationHelper {
   // === VSCode FILE EXPLORER AUTOMATION ===
   
   async openFileExplorer() {
-    console.log('📁 Opening VSCode File Explorer...');
+    logger.info('📁 Opening VSCode File Explorer...');
     
     try {
       const explorerSelectors = [
@@ -877,7 +881,7 @@ class VSCodeAutomationHelper {
           const element = await this.page.$(selector);
           if (element) {
             await element.click();
-            console.log(\`  ✅ VSCode File Explorer opened: \${selector}\`);
+            logger.info(\`  ✅ VSCode File Explorer opened: \${selector}\`);
             return true;
           }
         } catch (e) {
@@ -893,7 +897,7 @@ class VSCodeAutomationHelper {
   }
 
   async createNewFile() {
-    console.log('📄 Creating new VSCode file...');
+    logger.info('📄 Creating new VSCode file...');
     
     try {
       await this.openFileExplorer();
@@ -909,7 +913,7 @@ class VSCodeAutomationHelper {
           const element = await this.page.$(selector);
           if (element) {
             await element.click();
-            console.log(\`  ✅ VSCode New File button clicked: \${selector}\`);
+            logger.info(\`  ✅ VSCode New File button clicked: \${selector}\`);
             return true;
           }
         } catch (e) {
@@ -977,7 +981,7 @@ class VSCodeAutomationHelper {
     try {
       const url = await this.page.url();
       const title = await this.page.title();
-      console.log(\`  📍 Current VSCode state: \${title} (\${url})\`);
+      logger.info(\`  📍 Current VSCode state: \${title} (\${url})\`);
     } catch (e) {
       // Ignore state logging errors
     }
@@ -989,13 +993,13 @@ module.exports = VSCodeAutomationHelper;
   }
 
   async generateVSCodeTests(selectors) {
-    console.log('\n🧪 Generating VSCode test files...');
+    logger.info('\n🧪 Generating VSCode test files...');
     
     // Generate test file
     const testContent = this.generateVSCodeTestFile(selectors);
     const testFile = path.join(this.outputDir, 'VSCodeSelectors.test.js');
     fs.writeFileSync(testFile, testContent);
-    console.log(`  ✅ VSCodeSelectors.test.js`);
+    logger.info(`  ✅ VSCodeSelectors.test.js`);
   }
 
   generateVSCodeTestFile(selectors) {
@@ -1016,7 +1020,7 @@ describe('VSCode Selectors', () => {
   beforeAll(async () => {
     // Setup VSCode connection
     // This would typically connect to VSCode via CDP
-    console.log('🔧 Setting up VSCode test environment...');
+    logger.info('🔧 Setting up VSCode test environment...');
   });
 
   beforeEach(async () => {
@@ -1026,7 +1030,7 @@ describe('VSCode Selectors', () => {
 
   afterAll(async () => {
     // Cleanup VSCode connection
-    console.log('🧹 Cleaning up VSCode test environment...');
+    logger.info('🧹 Cleaning up VSCode test environment...');
   });
 
   describe('Critical VSCode Features', () => {

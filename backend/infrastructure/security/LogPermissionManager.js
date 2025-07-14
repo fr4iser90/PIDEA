@@ -43,7 +43,7 @@ class LogPermissionManager {
       
       await fs.chmod(normalizedPath, permissions);
       
-      logger.log(`[LogPermissionManager] Set permissions ${permissions.toString(8)} for: ${normalizedPath}`);
+      logger.info(`[LogPermissionManager] Set permissions ${permissions.toString(8)} for: ${normalizedPath}`);
     } catch (error) {
       logger.error('[LogPermissionManager] Error setting permissions:', error);
       throw error;
@@ -72,7 +72,7 @@ class LogPermissionManager {
         await this.setSecurePermissions(subDirPath, 'directory');
       }
       
-      logger.log(`[LogPermissionManager] Created secure log directory: ${normalizedPath}`);
+      logger.info(`[LogPermissionManager] Created secure log directory: ${normalizedPath}`);
       return normalizedPath;
     } catch (error) {
       logger.error('[LogPermissionManager] Error creating secure log directory:', error);
@@ -208,7 +208,7 @@ class LogPermissionManager {
       // Fix permissions if they don't match
       if (currentMode !== expectedMode) {
         await this.setSecurePermissions(normalizedPath, expectedType);
-        logger.log(`[LogPermissionManager] Fixed permissions for: ${normalizedPath}`);
+        logger.info(`[LogPermissionManager] Fixed permissions for: ${normalizedPath}`);
       }
     } catch (error) {
       logger.error('[LogPermissionManager] Error ensuring secure permissions:', error);
@@ -242,7 +242,7 @@ class LogPermissionManager {
           
           // Securely delete old file
           await this.secureDelete(filePath);
-          logger.log(`[LogPermissionManager] Deleted old log file: ${filePath}`);
+          logger.info(`[LogPermissionManager] Deleted old log file: ${filePath}`);
         } catch (error) {
           logger.warn(`[LogPermissionManager] Could not process file ${file}:`, error.message);
         }
@@ -277,7 +277,7 @@ const logger = new Logger('Logger');
       // Delete the file
       await fs.unlink(normalizedPath);
       
-      logger.log(`[LogPermissionManager] Securely deleted: ${normalizedPath}`);
+      logger.info(`[LogPermissionManager] Securely deleted: ${normalizedPath}`);
     } catch (error) {
       logger.error('[LogPermissionManager] Error in secure delete:', error);
       throw error;
@@ -368,7 +368,7 @@ const logger = new Logger('Logger');
         }
       }
       
-      logger.log(`[LogPermissionManager] Validated and fixed permissions for port ${port}`);
+      logger.info(`[LogPermissionManager] Validated and fixed permissions for port ${port}`);
     } catch (error) {
       logger.error('[LogPermissionManager] Error validating permissions:', error);
       throw error;

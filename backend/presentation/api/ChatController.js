@@ -2,7 +2,8 @@ const SendMessageHandler = require('@handler-categories/management/SendMessageHa
 const GetChatHistoryHandler = require('@handler-categories/management/GetChatHistoryHandler');
 const AuthService = require('@services/AuthService');
 const Logger = require('@logging/Logger');
-const logger = new Logger('Logger');
+const ServiceLogger = require('@logging/ServiceLogger');
+const logger = new ServiceLogger('ChatController');
 
 
 class ChatController {
@@ -112,7 +113,7 @@ class ChatController {
       const { port } = req.params;
       const { limit = 50, offset = 0 } = req.query;
 
-      logger.log(`[ChatController] Getting chat history for port ${port}, user ${userId}`);
+      logger.info(`[ChatController] Getting chat history for port ${port}, user ${userId}`);
 
       // Get chat history for specific port
       const result = await this.getChatHistoryHandler.getPortChatHistory(port, userId, {
@@ -386,7 +387,7 @@ class ChatController {
   async updateUserSettings(userId, settings) {
     // Update user settings in database
     // This would typically involve a UserSettingsRepository
-    logger.log(`[ChatController] Updating settings for user ${userId}:`, settings);
+    logger.info(`[ChatController] Updating settings for user ${userId}:`, settings);
   }
 }
 

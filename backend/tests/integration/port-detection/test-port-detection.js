@@ -15,36 +15,36 @@ async function testPortDetection() {
     logger.debug('1️⃣ Testing IDEDetector...');
     const detector = new IDEDetector();
     const availableIDEs = await detector.scanForIDEs();
-    logger.log('Available IDEs found:', availableIDEs);
-    logger.log('');
+    logger.info('Available IDEs found:', availableIDEs);
+    logger.info('');
 
     // 2. Test IDEManager
     logger.debug('2️⃣ Testing IDEManager...');
     const manager = new IDEManager();
     const managerIDEs = await manager.getAvailableIDEs();
-    logger.log('IDEManager available IDEs:', managerIDEs);
-    logger.log('IDEManager active port:', manager.getActivePort());
-    logger.log('');
+    logger.info('IDEManager available IDEs:', managerIDEs);
+    logger.info('IDEManager active port:', manager.getActivePort());
+    logger.info('');
 
     // 3. Test BrowserManager
     logger.debug('3️⃣ Testing BrowserManager...');
     const browserManager = new BrowserManager();
-    logger.log('BrowserManager current port:', browserManager.getCurrentPort());
-    logger.log('');
+    logger.info('BrowserManager current port:', browserManager.getCurrentPort());
+    logger.info('');
 
     // 4. Test switching between available IDEs
     if (availableIDEs.length > 1) {
       logger.debug('4️⃣ Testing IDE switching...');
       for (const ide of availableIDEs) {
-        logger.log(`Switching to IDE on port ${ide.port}...`);
+        logger.info(`Switching to IDE on port ${ide.port}...`);
         try {
           await manager.switchToIDE(ide.port);
-          logger.log(`✅ Successfully switched to port ${ide.port}`);
-          logger.log(`Active port is now: ${manager.getActivePort()}`);
+          logger.info(`✅ Successfully switched to port ${ide.port}`);
+          logger.info(`Active port is now: ${manager.getActivePort()}`);
         } catch (error) {
-          logger.log(`❌ Failed to switch to port ${ide.port}: ${error.message}`);
+          logger.info(`❌ Failed to switch to port ${ide.port}: ${error.message}`);
         }
-        logger.log('');
+        logger.info('');
       }
     }
 
@@ -55,10 +55,10 @@ async function testPortDetection() {
       logger.debug(`Attempting to connect to port ${firstIDE.port}...`);
       try {
         await browserManager.connect(firstIDE.port);
-        logger.log(`✅ Successfully connected to port ${firstIDE.port}`);
-        logger.log(`BrowserManager current port: ${browserManager.getCurrentPort()}`);
+        logger.info(`✅ Successfully connected to port ${firstIDE.port}`);
+        logger.info(`BrowserManager current port: ${browserManager.getCurrentPort()}`);
       } catch (error) {
-        logger.log(`❌ Failed to connect to port ${firstIDE.port}: ${error.message}`);
+        logger.info(`❌ Failed to connect to port ${firstIDE.port}: ${error.message}`);
       }
     }
 

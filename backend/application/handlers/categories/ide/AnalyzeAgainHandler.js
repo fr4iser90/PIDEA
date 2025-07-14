@@ -37,7 +37,7 @@ class AnalyzeAgainHandler {
    */
   async handle(command, context = {}) {
     try {
-      this.logger.log(`[AnalyzeAgainHandler] Handling command`);
+      this.logger.info(`[AnalyzeAgainHandler] Handling command`);
 
       // Validate command
       if (!command || command.type !== 'AnalyzeAgainCommand') {
@@ -60,7 +60,7 @@ class AnalyzeAgainHandler {
         timestamp: new Date()
       });
 
-      this.logger.log(`[AnalyzeAgainHandler] Project re-analyzed successfully`);
+      this.logger.info(`[AnalyzeAgainHandler] Project re-analyzed successfully`);
 
       return {
         success: true,

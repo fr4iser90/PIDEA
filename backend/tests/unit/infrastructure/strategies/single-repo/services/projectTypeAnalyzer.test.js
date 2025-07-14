@@ -39,7 +39,7 @@ describe('ProjectTypeAnalyzer', () => {
 
         it('should handle undefined logger gracefully', () => {
             const analyzerWithoutLogger = new ProjectTypeAnalyzer(undefined, mockFileUtils);
-            expect(analyzerWithoutLogger.logger).toBeUndefined();
+            expect(analyzerWithoutlogger.infoger).toBeUndefined();
             expect(analyzerWithoutLogger.fileUtils).toBe(mockFileUtils);
         });
 

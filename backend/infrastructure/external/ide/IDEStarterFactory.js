@@ -8,8 +8,8 @@
 const CursorStarter = require('./starters/CursorStarter');
 const VSCodeStarter = require('./starters/VSCodeStarter');
 const WindsurfStarter = require('./starters/WindsurfStarter');
-const Logger = require('@logging/Logger');
-const logger = new Logger('Logger');
+const ServiceLogger = require('@logging/ServiceLogger');
+const logger = new ServiceLogger('IDEStarterFactory');
 
 class IDEStarterFactory {
   constructor() {
@@ -85,7 +85,7 @@ class IDEStarterFactory {
         // Handle process events if the process has event emitter capabilities
         if (typeof ideInfo.process.on === 'function') {
           ideInfo.process.on('close', (code) => {
-            logger.log(`[IDEStarterFactory] ${type} IDE ${port} process closed with code ${code}`);
+            logger.info(`[IDEStarterFactory] ${type} IDE ${port} process closed with code ${code}`);
             this.runningProcesses.delete(port);
           });
 

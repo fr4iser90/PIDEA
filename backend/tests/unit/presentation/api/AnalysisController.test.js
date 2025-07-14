@@ -105,9 +105,9 @@ describe('AnalysisController', () => {
         mockArchitectureService
       );
       
-      expect(controllerWithoutLogger.logger).toBeDefined();
-      expect(typeof controllerWithoutLogger.logger.info).toBe('function');
-      expect(typeof controllerWithoutLogger.logger.error).toBe('function');
+      expect(controllerWithoutlogger.infoger).toBeDefined();
+      expect(typeof controllerWithoutlogger.infoger.info).toBe('function');
+      expect(typeof controllerWithoutlogger.infoger.error).toBe('function');
     });
   });
 

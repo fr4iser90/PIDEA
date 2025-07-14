@@ -29,7 +29,7 @@ class TerminalLogReader {
    */
   async getRecentLogs(port, lines = 50, key = null) {
     try {
-      logger.log(`[TerminalLogReader] Getting recent ${lines} logs for port ${port}`);
+      logger.info(`[TerminalLogReader] Getting recent ${lines} logs for port ${port}`);
       
       const encryptedLogPath = this.permissionManager.getSecureFilePath(port, 'encrypted');
       
@@ -37,7 +37,7 @@ class TerminalLogReader {
       try {
         await fs.stat(encryptedLogPath);
       } catch (error) {
-        logger.log(`[TerminalLogReader] No encrypted log file found for port ${port}`);
+        logger.info(`[TerminalLogReader] No encrypted log file found for port ${port}`);
         return [];
       }
       
@@ -55,7 +55,7 @@ class TerminalLogReader {
       // Decrypt log entries
       const decryptedEntries = await this.encryptionService.decryptLogEntries(recentEncryptedLines, key);
       
-      logger.log(`[TerminalLogReader] Retrieved ${decryptedEntries.length} log entries for port ${port}`);
+      logger.info(`[TerminalLogReader] Retrieved ${decryptedEntries.length} log entries for port ${port}`);
       return decryptedEntries;
       
     } catch (error) {
@@ -77,7 +77,7 @@ class TerminalLogReader {
    */
   async searchLogs(port, searchText, options = {}, key = null) {
     try {
-      logger.log(`[TerminalLogReader] Searching logs for port ${port}: "${searchText}"`);
+      logger.info(`[TerminalLogReader] Searching logs for port ${port}: "${searchText}"`);
       
       const {
         caseSensitive = false,
@@ -91,7 +91,7 @@ class TerminalLogReader {
       try {
         await fs.stat(encryptedLogPath);
       } catch (error) {
-        logger.log(`[TerminalLogReader] No encrypted log file found for port ${port}`);
+        logger.info(`[TerminalLogReader] No encrypted log file found for port ${port}`);
         return [];
       }
       
@@ -127,7 +127,7 @@ class TerminalLogReader {
         }
       }
       
-      logger.log(`[TerminalLogReader] Found ${matchingEntries.length} matching entries for port ${port}`);
+      logger.info(`[TerminalLogReader] Found ${matchingEntries.length} matching entries for port ${port}`);
       return matchingEntries;
       
     } catch (error) {
@@ -146,7 +146,7 @@ class TerminalLogReader {
    */
   async getLogsInTimeRange(port, startTime, endTime, key = null) {
     try {
-      logger.log(`[TerminalLogReader] Getting logs in time range for port ${port}: ${startTime} to ${endTime}`);
+      logger.info(`[TerminalLogReader] Getting logs in time range for port ${port}: ${startTime} to ${endTime}`);
       
       const encryptedLogPath = this.permissionManager.getSecureFilePath(port, 'encrypted');
       
@@ -154,7 +154,7 @@ class TerminalLogReader {
       try {
         await fs.stat(encryptedLogPath);
       } catch (error) {
-        logger.log(`[TerminalLogReader] No encrypted log file found for port ${port}`);
+        logger.info(`[TerminalLogReader] No encrypted log file found for port ${port}`);
         return [];
       }
       
@@ -175,7 +175,7 @@ class TerminalLogReader {
         return entryTime >= startTime && entryTime <= endTime;
       });
       
-      logger.log(`[TerminalLogReader] Found ${filteredEntries.length} entries in time range for port ${port}`);
+      logger.info(`[TerminalLogReader] Found ${filteredEntries.length} entries in time range for port ${port}`);
       return filteredEntries;
       
     } catch (error) {
@@ -197,7 +197,7 @@ class TerminalLogReader {
    */
   async exportLogs(port, format = 'json', options = {}, key = null) {
     try {
-      logger.log(`[TerminalLogReader] Exporting logs for port ${port} in ${format} format`);
+      logger.info(`[TerminalLogReader] Exporting logs for port ${port} in ${format} format`);
       
       const { lines, startTime, endTime } = options;
       
@@ -296,7 +296,7 @@ class TerminalLogReader {
    */
   async getLogStatistics(port, key = null) {
     try {
-      logger.log(`[TerminalLogReader] Getting log statistics for port ${port}`);
+      logger.info(`[TerminalLogReader] Getting log statistics for port ${port}`);
       
       const encryptedLogPath = this.permissionManager.getSecureFilePath(port, 'encrypted');
       
@@ -304,7 +304,7 @@ class TerminalLogReader {
       try {
         await fs.stat(encryptedLogPath);
       } catch (error) {
-        logger.log(`[TerminalLogReader] No encrypted log file found for port ${port}`);
+        logger.info(`[TerminalLogReader] No encrypted log file found for port ${port}`);
         return {
           port: port,
           totalEntries: 0,
@@ -369,7 +369,7 @@ class TerminalLogReader {
         levels: levels
       };
       
-      logger.log(`[TerminalLogReader] Statistics for port ${port}: ${allEntries.length} entries`);
+      logger.info(`[TerminalLogReader] Statistics for port ${port}: ${allEntries.length} entries`);
       return statistics;
       
     } catch (error) {
@@ -386,10 +386,10 @@ class TerminalLogReader {
     try {
       if (port) {
         this.cache.delete(port);
-        logger.log(`[TerminalLogReader] Cleared cache for port ${port}`);
+        logger.info(`[TerminalLogReader] Cleared cache for port ${port}`);
       } else {
         this.cache.clear();
-        logger.log('[TerminalLogReader] Cleared all cache');
+        logger.info('[TerminalLogReader] Cleared all cache');
       }
     } catch (error) {
       logger.error('[TerminalLogReader] Error clearing cache:', error);

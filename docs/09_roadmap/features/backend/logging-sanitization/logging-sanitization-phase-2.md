@@ -1,13 +1,13 @@
 # Logging-Sanitization Automated Migration – Phase 2: Automated Migration
 
 ## Overview
-Execute the automated migration of console.log and logger.log patterns across the entire codebase. This phase uses enhanced migration tools to systematically convert legacy logging patterns to the new standardized format.
+Execute the automated migration of console.log and logger.info patterns across the entire codebase. This phase uses enhanced migration tools to systematically convert legacy logging patterns to the new standardized format.
 
 ## Objectives
 - [ ] Enhance existing fix-logging.js script with comprehensive migration capabilities
-- [ ] Execute automated grep/regex scans for console.log and logger.log patterns
+- [ ] Execute automated grep/regex scans for console.log and logger.info patterns
 - [ ] AI categorization of files: auto-migratable, manual review required, already compliant
-- [ ] Automated replacement: console.log → logger.info, warn, error; logger.log → logger.info
+- [ ] Automated replacement: console.log → logger.info, warn, error; logger.info → logger.info
 - [ ] Automated import insertion and standardization
 - [ ] Generate migration reports and TODOs for manual review
 
@@ -152,9 +152,9 @@ class EnhancedLoggingMigration {
     const hasProperImport = content.includes('require(\'@logging/Logger\')') ||
                            content.includes('require("@logging/Logger")');
     
-    // No console.log or logger.log usage
+    // No console.log or logger.info usage
     const hasLegacyUsage = content.includes('console.log') ||
-                          content.includes('logger.log') ||
+                          content.includes('logger.info') ||
                           content.includes('this.logger = console');
     
     return hasProperImport && !hasLegacyUsage;
@@ -507,10 +507,10 @@ class LoggingMigrationValidator {
         result.issues.push('console.log usage found');
       }
       
-      // Check for logger.log usage (legacy)
-      if (content.includes('logger.log')) {
+      // Check for logger.info usage (legacy)
+      if (content.includes('logger.info')) {
         result.compliant = false;
-        result.issues.push('logger.log usage found (legacy pattern)');
+        result.issues.push('logger.info usage found (legacy pattern)');
       }
       
       // Check for direct console assignment
@@ -685,7 +685,7 @@ Generated: 2024-12-19T10:00:00.000Z
 - [ ] Migration report generated with detailed statistics
 - [ ] Manual review TODOs generated for complex cases
 - [ ] Validation script confirms migration success
-- [ ] No console.log or logger.log patterns remain in auto-migrated files
+- [ ] No console.log or logger.info patterns remain in auto-migrated files
 - [ ] All imports standardized to @logging/Logger pattern
 - [ ] Backup files created for all modified files
 - [ ] Migration documentation complete 

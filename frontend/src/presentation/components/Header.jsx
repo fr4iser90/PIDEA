@@ -19,7 +19,7 @@ function Header({ eventBus, currentView, onNavigationClick, onLeftSidebarToggle,
   };
 
   const handleRightSidebarToggle = () => {
-    logger.log('Header right sidebar button clicked');
+    logger.info('Header right sidebar button clicked');
     if (onRightSidebarToggle) {
       onRightSidebarToggle();
     }

@@ -25,15 +25,15 @@ class DevSetup {
 
   async showMenu() {
     console.clear();
-    logger.log('🚀 PIDEA Development Setup');
-    logger.log('==========================');
-    logger.log('1. 📊 Database Management');
-    logger.log('2. 👤 User Management');
-    logger.log('3. 🔧 Service Management');
-    logger.log('4. 🛠️  Quick Setup (All-in-one)');
-    logger.log('5. 📋 Status Check');
-    logger.log('0. ❌ Exit');
-    logger.log('');
+    logger.info('🚀 PIDEA Development Setup');
+    logger.info('==========================');
+    logger.info('1. 📊 Database Management');
+    logger.info('2. 👤 User Management');
+    logger.info('3. 🔧 Service Management');
+    logger.info('4. 🛠️  Quick Setup (All-in-one)');
+    logger.info('5. 📋 Status Check');
+    logger.info('0. ❌ Exit');
+    logger.info('');
 
     const choice = await this.question('Select an option: ');
     await this.handleMenuChoice(choice);
@@ -57,25 +57,25 @@ class DevSetup {
         await this.statusCheck();
         break;
       case '0':
-        logger.log('👋 Goodbye!');
+        logger.info('👋 Goodbye!');
         this.rl.close();
         process.exit(0);
         break;
       default:
-        logger.log('❌ Invalid option. Please try again.');
+        logger.info('❌ Invalid option. Please try again.');
         await this.waitAndReturn();
     }
   }
 
   async databaseMenu() {
     console.clear();
-    logger.log('📊 Database Management');
-    logger.log('=====================');
-    logger.log('1. 🔄 Reset Database');
-    logger.log('2. 🗑️  Clear All Data');
-    logger.log('3. 📋 Show Database Info');
-    logger.log('0. ⬅️  Back to Main Menu');
-    logger.log('');
+    logger.info('📊 Database Management');
+    logger.info('=====================');
+    logger.info('1. 🔄 Reset Database');
+    logger.info('2. 🗑️  Clear All Data');
+    logger.info('3. 📋 Show Database Info');
+    logger.info('0. ⬅️  Back to Main Menu');
+    logger.info('');
 
     const choice = await this.question('Select an option: ');
     
@@ -93,7 +93,7 @@ class DevSetup {
         await this.showMenu();
         return;
       default:
-        logger.log('❌ Invalid option.');
+        logger.info('❌ Invalid option.');
     }
     
     await this.waitAndReturn();
@@ -102,14 +102,14 @@ class DevSetup {
 
   async userMenu() {
     console.clear();
-    logger.log('👤 User Management');
-    logger.log('==================');
+    logger.info('👤 User Management');
+    logger.info('==================');
     logger.debug('1. ➕ Create Test User');
-    logger.log('2. ➕ Create Custom User');
-    logger.log('3. 🗑️  Clear All Users');
-    logger.log('4. 📋 List Users');
-    logger.log('0. ⬅️  Back to Main Menu');
-    logger.log('');
+    logger.info('2. ➕ Create Custom User');
+    logger.info('3. 🗑️  Clear All Users');
+    logger.info('4. 📋 List Users');
+    logger.info('0. ⬅️  Back to Main Menu');
+    logger.info('');
 
     const choice = await this.question('Select an option: ');
     
@@ -130,7 +130,7 @@ class DevSetup {
         await this.showMenu();
         return;
       default:
-        logger.log('❌ Invalid option.');
+        logger.info('❌ Invalid option.');
     }
     
     await this.waitAndReturn();
@@ -139,15 +139,15 @@ class DevSetup {
 
   async serviceMenu() {
     console.clear();
-    logger.log('🔧 Service Management');
-    logger.log('====================');
-    logger.log('1. 🚀 Start Backend');
-    logger.log('2. 🚀 Start Frontend');
-    logger.log('3. 🚀 Start Both Services');
-    logger.log('4. 🛑 Stop All Services');
-    logger.log('5. 🔄 Restart Backend');
-    logger.log('0. ⬅️  Back to Main Menu');
-    logger.log('');
+    logger.info('🔧 Service Management');
+    logger.info('====================');
+    logger.info('1. 🚀 Start Backend');
+    logger.info('2. 🚀 Start Frontend');
+    logger.info('3. 🚀 Start Both Services');
+    logger.info('4. 🛑 Stop All Services');
+    logger.info('5. 🔄 Restart Backend');
+    logger.info('0. ⬅️  Back to Main Menu');
+    logger.info('');
 
     const choice = await this.question('Select an option: ');
     
@@ -171,7 +171,7 @@ class DevSetup {
         await this.showMenu();
         return;
       default:
-        logger.log('❌ Invalid option.');
+        logger.info('❌ Invalid option.');
     }
     
     await this.waitAndReturn();
@@ -179,28 +179,28 @@ class DevSetup {
   }
 
   async resetDatabase() {
-    logger.log('🔄 Resetting database...');
+    logger.info('🔄 Resetting database...');
     try {
       const { execSync } = require('child_process');
       execSync('node scripts/reset-database.js', { 
         stdio: 'inherit',
         cwd: path.join(__dirname, '..')
       });
-      logger.log('✅ Database reset successful!');
+      logger.info('✅ Database reset successful!');
     } catch (error) {
       logger.error('❌ Database reset failed:', error.message);
     }
   }
 
   async clearDatabase() {
-    logger.log('🗑️ Clearing all data...');
+    logger.info('🗑️ Clearing all data...');
     try {
       const { execSync } = require('child_process');
       execSync('node scripts/clean-invalid-users.js', { 
         stdio: 'inherit',
         cwd: path.join(__dirname, '..')
       });
-      logger.log('✅ All data cleared!');
+      logger.info('✅ All data cleared!');
     } catch (error) {
       logger.error('❌ Clear failed:', error.message);
     }
@@ -210,12 +210,12 @@ class DevSetup {
     const dbPath = path.join(__dirname, '../database/PIDEA-dev.db');
     if (fs.existsSync(dbPath)) {
       const stats = fs.statSync(dbPath);
-      logger.log('📊 Database Info:');
-      logger.log(`📁 Path: ${dbPath}`);
-      logger.log(`📏 Size: ${(stats.size / 1024).toFixed(2)} KB`);
-      logger.log(`📅 Modified: ${stats.mtime.toLocaleString()}`);
+      logger.info('📊 Database Info:');
+      logger.info(`📁 Path: ${dbPath}`);
+      logger.info(`📏 Size: ${(stats.size / 1024).toFixed(2)} KB`);
+      logger.info(`📅 Modified: ${stats.mtime.toLocaleString()}`);
     } else {
-      logger.log('❌ Database file not found');
+      logger.info('❌ Database file not found');
     }
   }
 
@@ -233,15 +233,15 @@ class DevSetup {
   }
 
   async createCustomUser() {
-    logger.log('👤 Create Custom User');
-    logger.log('====================');
+    logger.info('👤 Create Custom User');
+    logger.info('====================');
     
     const email = await this.question('Email: ');
     const password = await this.question('Password: ');
     const username = await this.question('Username (optional): ');
     
     if (!email || !password) {
-      logger.log('❌ Email and password are required!');
+      logger.info('❌ Email and password are required!');
       return;
     }
 
@@ -278,10 +278,10 @@ class DevSetup {
             logger.error('❌ Error creating user:', err.message);
             reject(err);
           } else {
-            logger.log('✅ User created successfully!');
-            logger.log(`📧 Email: ${email}`);
-            logger.log(`🔑 Password: ${password}`);
-            if (username) logger.log(`👤 Username: ${username}`);
+            logger.info('✅ User created successfully!');
+            logger.info(`📧 Email: ${email}`);
+            logger.info(`🔑 Password: ${password}`);
+            if (username) logger.info(`👤 Username: ${username}`);
             resolve();
           }
         });
@@ -294,14 +294,14 @@ class DevSetup {
   }
 
   async clearUsers() {
-    logger.log('🗑️ Clearing all users...');
+    logger.info('🗑️ Clearing all users...');
     try {
       const { execSync } = require('child_process');
       execSync('node scripts/clean-invalid-users.js', { 
         stdio: 'inherit',
         cwd: path.join(__dirname, '..')
       });
-      logger.log('✅ All users cleared!');
+      logger.info('✅ All users cleared!');
     } catch (error) {
       logger.error('❌ Clear failed:', error.message);
     }
@@ -319,19 +319,19 @@ class DevSetup {
         if (err) {
           logger.error('❌ Error listing users:', err.message);
         } else {
-          logger.log('📋 Users:');
-          logger.log('ID'.padEnd(38) + 'Email'.padEnd(25) + 'Role'.padEnd(10) + 'Created');
-          logger.log('-'.repeat(80));
+          logger.info('📋 Users:');
+          logger.info('ID'.padEnd(38) + 'Email'.padEnd(25) + 'Role'.padEnd(10) + 'Created');
+          logger.info('-'.repeat(80));
           
           rows.forEach(row => {
             const id = row.id.substring(0, 8) + '...';
             const email = row.email.padEnd(25);
             const role = row.role.padEnd(10);
             const created = new Date(row.created_at).toLocaleDateString();
-            logger.log(`${id} ${email} ${role} ${created}`);
+            logger.info(`${id} ${email} ${role} ${created}`);
           });
           
-          logger.log(`\nTotal users: ${rows.length}`);
+          logger.info(`\nTotal users: ${rows.length}`);
         }
         db.close();
       });
@@ -341,8 +341,8 @@ class DevSetup {
   }
 
   async startBackend() {
-    logger.log('🚀 Starting backend...');
-    logger.log('💡 Press Ctrl+C to stop');
+    logger.info('🚀 Starting backend...');
+    logger.info('💡 Press Ctrl+C to stop');
     
     const backendProcess = spawn('npm', ['run', 'dev:backend'], {
       cwd: this.projectRoot,
@@ -356,8 +356,8 @@ class DevSetup {
   }
 
   async startFrontend() {
-    logger.log('🚀 Starting frontend...');
-    logger.log('💡 Press Ctrl+C to stop');
+    logger.info('🚀 Starting frontend...');
+    logger.info('💡 Press Ctrl+C to stop');
     
     const frontendProcess = spawn('npm', ['run', 'dev:frontend'], {
       cwd: this.projectRoot,
@@ -371,8 +371,8 @@ class DevSetup {
   }
 
   async startBothServices() {
-    logger.log('🚀 Starting both services...');
-    logger.log('💡 Press Ctrl+C to stop');
+    logger.info('🚀 Starting both services...');
+    logger.info('💡 Press Ctrl+C to stop');
     
     const bothProcess = spawn('npm', ['run', 'dev'], {
       cwd: this.projectRoot,
@@ -386,32 +386,32 @@ class DevSetup {
   }
 
   async stopServices() {
-    logger.log('🛑 Stopping services...');
+    logger.info('🛑 Stopping services...');
     try {
       const { execSync } = require('child_process');
       execSync('pkill -f "node.*start"', { stdio: 'inherit' });
       execSync('pkill -f "npm.*dev"', { stdio: 'inherit' });
-      logger.log('✅ Services stopped!');
+      logger.info('✅ Services stopped!');
     } catch (error) {
-      logger.log('ℹ️ No services were running or already stopped');
+      logger.info('ℹ️ No services were running or already stopped');
     }
   }
 
   async restartBackend() {
-    logger.log('🔄 Restarting backend...');
+    logger.info('🔄 Restarting backend...');
     await this.stopServices();
     await new Promise(resolve => setTimeout(resolve, 1000));
     await this.startBackend();
   }
 
   async quickSetup() {
-    logger.log('🛠️ Quick Setup - All-in-one');
-    logger.log('==========================');
-    logger.log('This will:');
-    logger.log('1. Reset the database');
+    logger.info('🛠️ Quick Setup - All-in-one');
+    logger.info('==========================');
+    logger.info('This will:');
+    logger.info('1. Reset the database');
     logger.debug('2. Create a test user');
-    logger.log('3. Show status');
-    logger.log('');
+    logger.info('3. Show status');
+    logger.info('');
     
     const confirm = await this.question('Continue? (y/N): ');
     if (confirm.toLowerCase() !== 'y') {
@@ -419,31 +419,31 @@ class DevSetup {
       return;
     }
 
-    logger.log('🔄 Resetting database...');
+    logger.info('🔄 Resetting database...');
     await this.resetDatabase();
     
     logger.debug('👤 Creating test user...');
     await this.createTestUser();
     
-    logger.log('📋 Checking status...');
+    logger.info('📋 Checking status...');
     await this.statusCheck();
     
-    logger.log('✅ Quick setup completed!');
+    logger.info('✅ Quick setup completed!');
     await this.waitAndReturn();
     await this.showMenu();
   }
 
   async statusCheck() {
-    logger.log('📋 System Status');
-    logger.log('===============');
+    logger.info('📋 System Status');
+    logger.info('===============');
     
     // Check database
     const dbPath = path.join(__dirname, '../database/PIDEA-dev.db');
     if (fs.existsSync(dbPath)) {
       const stats = fs.statSync(dbPath);
-      logger.log(`✅ Database: ${(stats.size / 1024).toFixed(2)} KB`);
+      logger.info(`✅ Database: ${(stats.size / 1024).toFixed(2)} KB`);
     } else {
-      logger.log('❌ Database: Not found');
+      logger.info('❌ Database: Not found');
     }
     
     // Check users
@@ -453,43 +453,43 @@ class DevSetup {
       
       db.get('SELECT COUNT(*) as count FROM users', (err, row) => {
         if (err) {
-          logger.log('❌ Users: Error checking');
+          logger.info('❌ Users: Error checking');
         } else {
-          logger.log(`✅ Users: ${row.count} registered`);
+          logger.info(`✅ Users: ${row.count} registered`);
         }
         db.close();
       });
     } catch (error) {
-      logger.log('❌ Users: Error checking');
+      logger.info('❌ Users: Error checking');
     }
     
     // Check ports
     const { execSync } = require('child_process');
     try {
       const backendPort = execSync('lsof -i :3000', { encoding: 'utf8' });
-      logger.log('✅ Backend: Running on port 3000');
+      logger.info('✅ Backend: Running on port 3000');
     } catch {
-      logger.log('❌ Backend: Not running');
+      logger.info('❌ Backend: Not running');
     }
     
     try {
       const frontendPort = execSync('lsof -i :4005', { encoding: 'utf8' });
-      logger.log('✅ Frontend: Running on port 4005');
+      logger.info('✅ Frontend: Running on port 4005');
     } catch {
-      logger.log('❌ Frontend: Not running');
+      logger.info('❌ Frontend: Not running');
     }
   }
 
   async waitAndReturn() {
-    logger.log('');
+    logger.info('');
     await this.question('Press Enter to continue...');
   }
 
   async run() {
-    logger.log('🚀 PIDEA Development Setup');
-    logger.log('==========================');
-    logger.log('Welcome to the PIDEA development setup!');
-    logger.log('');
+    logger.info('🚀 PIDEA Development Setup');
+    logger.info('==========================');
+    logger.info('Welcome to the PIDEA development setup!');
+    logger.info('');
     
     await this.showMenu();
   }

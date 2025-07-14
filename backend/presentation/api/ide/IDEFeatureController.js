@@ -4,7 +4,8 @@
  */
 const IDETypes = require('@services/ide/IDETypes');
 const Logger = require('@logging/Logger');
-const logger = new Logger('Logger');
+const ServiceLogger = require('@logging/ServiceLogger');
+const logger = new ServiceLogger('IDEFeatureController');
 
 class IDEFeatureController {
   constructor(dependencies = {}) {

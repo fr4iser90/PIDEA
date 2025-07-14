@@ -20,13 +20,13 @@ class IDEFactory {
       return;
     }
 
-    logger.log('[IDEFactory] Initializing IDE factory...');
+    logger.info('[IDEFactory] Initializing IDE factory...');
 
     // Register default IDE implementations
     this.registerDefaultImplementations();
 
     this.initialized = true;
-    logger.log('[IDEFactory] IDE factory initialized');
+    logger.info('[IDEFactory] IDE factory initialized');
   }
 
   /**
@@ -48,7 +48,7 @@ const Logger = require('@logging/Logger');
 const logger = new Logger('Logger');
       this.registerIDE(IDETypes.WINDSURF, WindsurfIDE);
 
-      logger.log('[IDEFactory] Default IDE implementations registered');
+      logger.info('[IDEFactory] Default IDE implementations registered');
     } catch (error) {
       logger.error('[IDEFactory] Failed to register default implementations:', error);
     }
@@ -92,7 +92,7 @@ const logger = new Logger('Logger');
       }
 
       this.ideImplementations.set(type, implementation);
-      logger.log(`[IDEFactory] Registered IDE implementation for type: ${type}`);
+      logger.info(`[IDEFactory] Registered IDE implementation for type: ${type}`);
       
       return true;
     } catch (error) {
@@ -143,7 +143,7 @@ const logger = new Logger('Logger');
       // Create IDE instance
       const ideInstance = new Implementation(browserManager, ideManager, eventBus);
       
-      logger.log(`[IDEFactory] Created IDE instance for type: ${type}`);
+      logger.info(`[IDEFactory] Created IDE instance for type: ${type}`);
       
       return {
         success: true,
@@ -200,7 +200,7 @@ const logger = new Logger('Logger');
     }
 
     this.defaultIDEType = type;
-    logger.log(`[IDEFactory] Set default IDE type to: ${type}`);
+    logger.info(`[IDEFactory] Set default IDE type to: ${type}`);
     return true;
   }
 
@@ -235,7 +235,7 @@ const logger = new Logger('Logger');
 
     const removed = this.ideImplementations.delete(type);
     if (removed) {
-      logger.log(`[IDEFactory] Unregistered IDE type: ${type}`);
+      logger.info(`[IDEFactory] Unregistered IDE type: ${type}`);
     }
     return removed;
   }
@@ -316,7 +316,7 @@ const logger = new Logger('Logger');
 
     // Try default type as fallback
     if (preferredType !== this.defaultIDEType) {
-      logger.log(`[IDEFactory] Falling back to default IDE type: ${this.defaultIDEType}`);
+      logger.info(`[IDEFactory] Falling back to default IDE type: ${this.defaultIDEType}`);
       result = this.createIDE(this.defaultIDEType, dependencies);
       
       if (result.success) {
@@ -344,7 +344,7 @@ const logger = new Logger('Logger');
     this.ideImplementations.clear();
     this.defaultIDEType = IDETypes.CURSOR;
     this.initialized = false;
-    logger.log('[IDEFactory] Cleared all IDE registrations');
+    logger.info('[IDEFactory] Cleared all IDE registrations');
   }
 }
 

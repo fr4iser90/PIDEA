@@ -19,7 +19,7 @@ db.run("DELETE FROM users", function (err) {
   if (err) {
     logger.error('❌ Fehler beim Löschen:', err.message);
   } else {
-    logger.log(`🗑️  Alle User gelöscht (${this.changes} Einträge entfernt).`);
+    logger.info(`🗑️  Alle User gelöscht (${this.changes} Einträge entfernt).`);
   }
   db.close();
 }); 

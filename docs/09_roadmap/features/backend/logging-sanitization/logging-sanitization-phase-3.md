@@ -130,7 +130,7 @@ describe('ServiceLogger', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     serviceLogger = new ServiceLogger('TestService');
-    mockLogger = serviceLogger.logger;
+    mockLogger = servicelogger.infoger;
   });
 
   describe('constructor', () => {
@@ -305,7 +305,7 @@ describe('Logging Integration', () => {
       });
 
       // Verify error is logged with stack trace
-      expect(serviceLogger.logger.error).toHaveBeenCalledWith(
+      expect(servicelogger.infoger.error).toHaveBeenCalledWith(
         '[connectDatabase] Database connection failed',
         expect.objectContaining({
           error: error.stack,
@@ -503,10 +503,10 @@ console.log('User logged in:', user);
 logger.info('User logged in', { user: user.username, userId: user.id });
 ```
 
-### From logger.log (legacy)
+### From logger.info (legacy)
 ```javascript
 // Old
-logger.log('Processing request');
+logger.info('Processing request');
 
 // New
 logger.info('Processing request');
@@ -570,7 +570,7 @@ node scripts/validate-logging-migration.js
 
 2. **Legacy Patterns**
    - Replace `console.log` with `logger.info`
-   - Replace `logger.log` with `logger.info`
+   - Replace `logger.info` with `logger.info`
    - Replace `this.logger = console` with ServiceLogger
 
 3. **Sensitive Data in Logs**
@@ -657,10 +657,10 @@ const logger = new Logger('ServiceName');
 logger.info('User logged in', { user: user.username, userId: user.id });
 ```
 
-### Pattern 2: logger.log → logger.info
+### Pattern 2: logger.info → logger.info
 ```javascript
 // Before
-logger.log('Processing request');
+logger.info('Processing request');
 
 // After
 logger.info('Processing request');
@@ -828,7 +828,7 @@ find . -name "*.backup" -exec sh -c 'cp "$1" "${1%.backup}"' _ {} \;
 ## Success Criteria
 
 - [ ] All console.log usage replaced
-- [ ] All logger.log usage replaced
+- [ ] All logger.info usage replaced
 - [ ] All direct console assignments replaced
 - [ ] All tests passing
 - [ ] Validation script reports 100% compliance

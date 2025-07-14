@@ -32,10 +32,10 @@ class IDEMirrorService {
         }
 
         const activeIDE = await this.ideManager.getActiveIDE();
-        logger.log(`🔌 Connecting to IDE on port ${activeIDE.port}...`);
+        logger.info(`🔌 Connecting to IDE on port ${activeIDE.port}...`);
         
         await this.browserManager.connect(activeIDE.port);
-        logger.log(`✅ Connected to IDE: Port ${activeIDE.port}`);
+        logger.info(`✅ Connected to IDE: Port ${activeIDE.port}`);
     }
 
     async captureCompleteIDEState() {
@@ -44,12 +44,12 @@ class IDEMirrorService {
             throw new Error('No IDE connection available');
         }
 
-        logger.log('🔍 Capturing complete IDE state...');
+        logger.info('🔍 Capturing complete IDE state...');
 
         try {
             // Check if page is still connected before evaluate
             if (page.isClosed()) {
-                logger.log('⚠️ Page is closed, reconnecting...');
+                logger.info('⚠️ Page is closed, reconnecting...');
                 await this.browserManager.reconnect();
                 const newPage = await this.browserManager.getPage();
                 if (!newPage) {
@@ -59,7 +59,7 @@ class IDEMirrorService {
             }
 
             // 1. Take screenshot first
-            logger.log('📸 Taking IDE screenshot...');
+            logger.info('📸 Taking IDE screenshot...');
             const screenshotBuffer = await page.screenshot({
                 type: 'png',
                 fullPage: false // Only visible area
@@ -90,10 +90,10 @@ class IDEMirrorService {
                                     const rules = Array.from(sheet.cssRules).map(rule => rule.cssText).join('\n');
                                     if (rules.trim()) {
                                         cssData.inline.push(rules);
-                                        logger.log('✅ Extracted CSS from Electron URL:', sheet.href);
+                                        logger.info('✅ Extracted CSS from Electron URL:', sheet.href);
                                     }
                                 } catch (e) {
-                                    logger.log('⚠️ Could not extract CSS from:', sheet.href);
+                                    logger.info('⚠️ Could not extract CSS from:', sheet.href);
                                 }
                             } else {
                                 cssData.external.push(sheet.href);
@@ -238,7 +238,7 @@ class IDEMirrorService {
             }
             
             const totalElements = countElements(domStructure.body);
-            logger.log(`📸✅ Captured IDE: Screenshot + ${totalElements} clickable elements`);
+            logger.info(`📸✅ Captured IDE: Screenshot + ${totalElements} clickable elements`);
             return domStructure;
         } catch (error) {
             logger.error('❌ Failed to capture IDE state:', error.message);
@@ -263,7 +263,7 @@ class IDEMirrorService {
         }
 
         const activeIDE = await this.ideManager.getActiveIDE();
-        logger.log(`🖱️ Clicking element on port ${activeIDE.port}: ${selector}`);
+        logger.info(`🖱️ Clicking element on port ${activeIDE.port}: ${selector}`);
 
         try {
             // Try clicking by selector first
@@ -272,7 +272,7 @@ class IDEMirrorService {
                 const isVisible = await element.isVisible();
                 if (isVisible) {
                     await element.click();
-                    logger.log(`✅ Clicked element by selector: ${selector}`);
+                    logger.info(`✅ Clicked element by selector: ${selector}`);
                     return true;
                 }
             }
@@ -280,7 +280,7 @@ class IDEMirrorService {
             // If selector doesn't work, try coordinates
             if (coordinates && coordinates.x >= 0 && coordinates.y >= 0) {
                 await page.mouse.click(coordinates.x, coordinates.y);
-                logger.log(`✅ Clicked at coordinates: ${coordinates.x}, ${coordinates.y}`);
+                logger.info(`✅ Clicked at coordinates: ${coordinates.x}, ${coordinates.y}`);
                 return true;
             }
 
@@ -319,7 +319,7 @@ class IDEMirrorService {
 
             // If it's a special key or key combination
             if (key && key.length > 1) {
-                logger.log(`⌨️ Sending special key: ${key} ${JSON.stringify(modifiers)}`);
+                logger.info(`⌨️ Sending special key: ${key} ${JSON.stringify(modifiers)}`);
                 
                 // Use direct CDP for special keys (more reliable)
                 const cdp = await page.context().newCDPSession(page);
@@ -342,13 +342,13 @@ class IDEMirrorService {
                     windowsVirtualKeyCode: this.getVirtualKeyCode(key)
                 });
                 
-                logger.log(`✅ Sent special key via CDP: ${key}`);
+                logger.info(`✅ Sent special key via CDP: ${key}`);
                 return true;
             }
             
             // Regular text input - try direct DOM insertion first
             if (text) {
-                logger.log(`⌨️ Typing "${text.substring(0, 50)}..." ${selector ? `in ${selector}` : 'at cursor'}`);
+                logger.info(`⌨️ Typing "${text.substring(0, 50)}..." ${selector ? `in ${selector}` : 'at cursor'}`);
                 
                 // Always focus for chat elements to ensure proper input target
                 const needsFocus = selector && (
@@ -358,7 +358,7 @@ class IDEMirrorService {
                 );
 
                 if (needsFocus) {
-                    logger.log(`🎯 Focusing before typing in: ${selector}`);
+                    logger.info(`🎯 Focusing before typing in: ${selector}`);
                     await this.focusElement(page, selector);
                     this.lastFocusedElement = selector;
                     this.lastFocusTime = Date.now();
@@ -366,10 +366,10 @@ class IDEMirrorService {
                 }
                 
                 // Skip DOM insertion - use real keyboard events for Cursor
-                logger.log(`⌨️ Using real keyboard events for Cursor compatibility`);
+                logger.info(`⌨️ Using real keyboard events for Cursor compatibility`);
                 await page.keyboard.type(text, { delay: 30 });
                 
-                logger.log(`✅ Typed text: ${text.substring(0, 50)}...`);
+                logger.info(`✅ Typed text: ${text.substring(0, 50)}...`);
                 return true;
             }
             
@@ -463,7 +463,7 @@ class IDEMirrorService {
                     }, chatSelector);
                     
                     if (elementInfo && elementInfo.visible) {
-                        logger.log(`🎯 Targeting input element: ${chatSelector} (${elementInfo.type})`);
+                        logger.info(`🎯 Targeting input element: ${chatSelector} (${elementInfo.type})`);
                         
                         // Prevent auto-scroll and click properly
                         await page.evaluate((sel) => {
@@ -493,7 +493,7 @@ class IDEMirrorService {
                         }, chatSelector);
                         
                         if (isFocused) {
-                            logger.log(`✅ Successfully focused: ${chatSelector}`);
+                            logger.info(`✅ Successfully focused: ${chatSelector}`);
                             return true;
                         } else {
                             // Try clicking as backup
@@ -520,11 +520,11 @@ class IDEMirrorService {
                 }, selector);
                 await this.safeWaitForTimeout(page, 100);
             } catch (e) {
-                logger.log(`⚠️ Standard focus failed for ${selector}, trying click`);
+                logger.info(`⚠️ Standard focus failed for ${selector}, trying click`);
                 try {
                     await page.click(selector);
                 } catch (clickError) {
-                    logger.log(`⚠️ Click also failed: ${clickError.message}`);
+                    logger.info(`⚠️ Click also failed: ${clickError.message}`);
                 }
             }
         }
@@ -536,7 +536,7 @@ class IDEMirrorService {
             throw new Error('No IDE connection available');
         }
 
-        logger.log(`🎯 Focus and type in ${selector}: "${text.substring(0, 50)}..."`);
+        logger.info(`🎯 Focus and type in ${selector}: "${text.substring(0, 50)}..."`);
 
         try {
             // Click to focus the element
@@ -554,7 +554,7 @@ class IDEMirrorService {
             // Type new content
             await page.keyboard.type(text, { delay: 30 });
             
-            logger.log(`✅ Focused and typed in ${selector}`);
+            logger.info(`✅ Focused and typed in ${selector}`);
             return true;
 
         } catch (error) {
@@ -569,7 +569,7 @@ class IDEMirrorService {
             throw new Error('No IDE connection available');
         }
 
-        logger.log(`💬 Sending chat message: "${message.substring(0, 50)}..."`);
+        logger.info(`💬 Sending chat message: "${message.substring(0, 50)}..."`);
 
         try {
             // Common chat input selectors in Cursor
@@ -589,7 +589,7 @@ class IDEMirrorService {
                     await page.waitForTimeout(200);
                     await page.keyboard.type(message, { delay: 30 });
                     await page.keyboard.press('Enter');
-                    logger.log(`✅ Chat message sent via ${selector}`);
+                    logger.info(`✅ Chat message sent via ${selector}`);
                     chatFound = true;
                     break;
                 } catch (e) {
@@ -617,7 +617,7 @@ class IDEMirrorService {
 
         try {
             await page.keyboard.press(keys);
-            logger.log(`✅ Sent keys: ${keys}`);
+            logger.info(`✅ Sent keys: ${keys}`);
         } catch (error) {
             logger.error(`❌ Failed to send keys: ${error.message}`);
             throw error;
@@ -625,10 +625,10 @@ class IDEMirrorService {
     }
 
     async switchToIDE(port) {
-        logger.log(`🔄 Switching to IDE on port ${port}...`);
+        logger.info(`🔄 Switching to IDE on port ${port}...`);
         await this.ideManager.switchToIDE(port);
         await this.browserManager.switchToPort(port);
-        logger.log(`✅ Switched to IDE on port ${port}`);
+        logger.info(`✅ Switched to IDE on port ${port}`);
     }
 
     async getAvailableIDEs() {
@@ -645,7 +645,7 @@ class IDEMirrorService {
 
     async disconnect() {
         await this.browserManager.disconnect();
-        logger.log('🔌 Disconnected from IDE');
+        logger.info('🔌 Disconnected from IDE');
     }
 
     isIDEConnected() {

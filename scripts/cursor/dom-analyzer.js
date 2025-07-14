@@ -2,6 +2,10 @@ const fs = require('fs');
 const path = require('path');
 const { JSDOM } = require('jsdom');
 
+const Logger = require('@logging/Logger');
+
+const logger = new Logger('ServiceName');
+
 class DOMAnalyzer {
   constructor() {
     this.results = {
@@ -24,21 +28,21 @@ class DOMAnalyzer {
     let sourceFiles;
     if (completeFile) {
       sourceFiles = [completeFile];
-      console.log(`📁 Verwende komplette DOM-Source: ${completeFile}`);
+      logger.info(`📁 Verwende komplette DOM-Source: ${completeFile}`);
     } else {
       // Fallback zu individuellen Dateien falls all-* nicht existiert
       sourceFiles = allFiles.filter(file => !file.startsWith('all-'));
-      console.log(`📁 Fallback zu individuellen Dateien: ${sourceFiles.length} gefunden`);
+      logger.info(`📁 Fallback zu individuellen Dateien: ${sourceFiles.length} gefunden`);
     }
     
-    console.log(`📁 Analyse-Dateien: ${sourceFiles.length}`);
+    logger.info(`📁 Analyse-Dateien: ${sourceFiles.length}`);
     
     const sources = {};
     sourceFiles.forEach(file => {
       const content = fs.readFileSync(path.join(docsPath, file), 'utf8');
       const htmlContent = this.extractHTML(content);
       sources[file] = htmlContent;
-      console.log(`📄 ${file}: ${htmlContent.length} Zeichen HTML`);
+      logger.info(`📄 ${file}: ${htmlContent.length} Zeichen HTML`);
     });
     
     return sources;
@@ -116,11 +120,11 @@ class DOMAnalyzer {
       const dom = new JSDOM(htmlContent);
       const document = dom.window.document;
       
-      console.log(`🔍 Analyzing ${sourceFile}...`);
+      logger.info(`🔍 Analyzing ${sourceFile}...`);
       
       // Alle Elemente finden (ABER style/script/meta Tags ignorieren)
       const allElements = document.querySelectorAll('*:not(style):not(script):not(meta):not(link):not(title)');
-      console.log(`  └─ ${allElements.length} DOM-Elemente gefunden`);
+      logger.info(`  └─ ${allElements.length} DOM-Elemente gefunden`);
       
       // Features extrahieren
       this.extractFeatures(document, sourceFile);
@@ -487,7 +491,7 @@ class DOMAnalyzer {
           count: elements.length,
           elements: elements.map(el => this.elementToSelector(el))
         });
-        console.log(`  ✅ ${featureName}: ${elements.length} Elemente`);
+        logger.info(`  ✅ ${featureName}: ${elements.length} Elemente`);
       }
     });
   }
@@ -689,9 +693,9 @@ class DOMAnalyzer {
     };
     
     fs.writeFileSync(outputPath, JSON.stringify(output, null, 2));
-    console.log(`\n📊 ANALYSE ABGESCHLOSSEN!`);
-    console.log(`📁 Output: ${outputPath}`);
-    console.log(`📈 Stats: ${stats.totalElements} Elemente, ${stats.featuresFound} Features`);
+    logger.info(`\n📊 ANALYSE ABGESCHLOSSEN!`);
+    logger.info(`📁 Output: ${outputPath}`);
+    logger.info(`📈 Stats: ${stats.totalElements} Elemente, ${stats.featuresFound} Features`);
     
     return output;
   }
@@ -699,19 +703,19 @@ class DOMAnalyzer {
   async runAutomaticWorkflow() {
     try {
       // 1. Coverage Validation
-      console.log('\n✅ [1/2] Coverage Validation...');
+      logger.info('\n✅ [1/2] Coverage Validation...');
       const CoverageValidator = require('./coverage-validator');
       const validator = new CoverageValidator();
       await validator.validate();
 
       // 2. Selector Generation
-      console.log('\n🔧 [2/2] Selector Generierung...');
+      logger.info('\n🔧 [2/2] Selector Generierung...');
       const SelectorGenerator = require('./selector-generator');
       const generator = new SelectorGenerator();
       await generator.generate();
 
-      console.log('\n🎉 VOLLSTÄNDIGE DOM-ANALYSE ABGESCHLOSSEN!');
-      console.log('📁 Alle Dateien generiert in: cursor-chat-agent/generated/');
+      logger.info('\n🎉 VOLLSTÄNDIGE DOM-ANALYSE ABGESCHLOSSEN!');
+      logger.info('📁 Alle Dateien generiert in: cursor-chat-agent/generated/');
 
     } catch (error) {
       console.error('❌ Automatischer Workflow fehlgeschlagen:', error.message);
@@ -721,7 +725,7 @@ class DOMAnalyzer {
 
   // Hauptanalysemethode
   async analyze() {
-    console.log('🚀 DOM-Analyzer gestartet...\n');
+    logger.info('🚀 DOM-Analyzer gestartet...\n');
     
     // 1. Lade DOM-Sources
     const sources = this.loadDOMSources();

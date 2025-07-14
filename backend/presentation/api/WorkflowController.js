@@ -109,7 +109,8 @@ class WorkflowController {
             if (!workspacePath) {
                 const path = require('path');
 const Logger = require('@logging/Logger');
-const logger = new Logger('Logger');
+const ServiceLogger = require('@logging/ServiceLogger');
+const logger = new ServiceLogger('WorkflowController');
                 const currentDir = process.cwd();
                 workspacePath = path.resolve(currentDir, '..');
                 this.logger.info('WorkflowController: Using project root as final fallback', {

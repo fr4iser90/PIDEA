@@ -37,7 +37,7 @@ class MonitorTerminalOutputHandler {
    */
   async handle(command, context = {}) {
     try {
-      this.logger.log(`[MonitorTerminalOutputHandler] Handling command: ${command.commandId}`);
+      this.logger.info(`[MonitorTerminalOutputHandler] Handling command: ${command.commandId}`);
 
       // Validate command
       if (!command || command.type !== 'MonitorTerminalOutputCommand') {
@@ -59,7 +59,7 @@ class MonitorTerminalOutputHandler {
         timestamp: new Date()
       });
 
-      this.logger.log(`[MonitorTerminalOutputHandler] Terminal output monitored successfully`);
+      this.logger.info(`[MonitorTerminalOutputHandler] Terminal output monitored successfully`);
 
       return {
         success: true,

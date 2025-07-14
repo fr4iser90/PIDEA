@@ -29,8 +29,8 @@ async function execute(context, options = {}) {
   if (!projectPath) throw new Error('Project path not found in context');
   if (!taskRepository) throw new Error('Task repository not found in context');
 
-  logger.log('🔧 [RefactorGenerateTask] Creating refactoring tasks...');
-  logger.log(`🔍 [RefactorGenerateTask] Received ${largeFiles.length} large files:`, largeFiles.slice(0, 3)); // Debug first 3 files
+  logger.info('🔧 [RefactorGenerateTask] Creating refactoring tasks...');
+  logger.info(`🔍 [RefactorGenerateTask] Received ${largeFiles.length} large files:`, largeFiles.slice(0, 3)); // Debug first 3 files
 
   try {
     const createdTasks = [];
@@ -46,7 +46,7 @@ async function execute(context, options = {}) {
       }
     }
 
-    logger.log(`✅ [RefactorGenerateTask] Successfully created ${createdTasks.length} refactoring tasks`);
+    logger.info(`✅ [RefactorGenerateTask] Successfully created ${createdTasks.length} refactoring tasks`);
 
     return {
       success: true,
@@ -82,7 +82,7 @@ async function createRefactoringTask(fileInfo, projectPath, taskRepository, cont
   );
 
   if (existingTask) {
-    logger.log(`⚠️ [RefactorGenerateTask] Task already exists for ${fileInfo.path}, skipping...`);
+    logger.info(`⚠️ [RefactorGenerateTask] Task already exists for ${fileInfo.path}, skipping...`);
     return existingTask;
   }
 
@@ -166,13 +166,13 @@ const logger = new Logger('Logger');
     taskMetadata      // metadata
   );
   
-  logger.log('🔍 [RefactorGenerateTask] Task created with projectId:', task.projectId);
+  logger.info('🔍 [RefactorGenerateTask] Task created with projectId:', task.projectId);
 
   // Save task to repository
   try {
     if (taskRepository && typeof taskRepository.create === 'function') {
       await taskRepository.create(task);
-      logger.log(`✅ [RefactorGenerateTask] Task saved to repository: ${taskId}`);
+      logger.info(`✅ [RefactorGenerateTask] Task saved to repository: ${taskId}`);
     } else {
       logger.warn('⚠️ [RefactorGenerateTask] taskRepository.create not available, task created in memory only');
     }
@@ -180,7 +180,7 @@ const logger = new Logger('Logger');
     logger.error(`❌ [RefactorGenerateTask] Failed to save task ${taskId}:`, error.message);
   }
 
-  logger.log(`✅ [RefactorGenerateTask] Created refactoring task for ${fileInfo.path} (${fileInfo.lines} lines)`);
+  logger.info(`✅ [RefactorGenerateTask] Created refactoring task for ${fileInfo.path} (${fileInfo.lines} lines)`);
 
   return task;
 }

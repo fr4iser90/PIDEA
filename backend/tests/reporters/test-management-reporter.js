@@ -143,18 +143,18 @@ class TestManagementReporter {
       const healthReport = await this.testManagementService.generateHealthReport();
       
       logger.debug('\n📊 Test Management Summary');
-      logger.log('========================');
+      logger.info('========================');
       logger.debug(`Total Tests: ${stats.total}`);
-      logger.log(`Passing: ${stats.passing}`);
-      logger.log(`Failing: ${stats.failing}`);
-      logger.log(`Skipped: ${stats.skipped}`);
-      logger.log(`Legacy: ${stats.legacy}`);
-      logger.log(`Average Health Score: ${stats.averageHealthScore}%`);
+      logger.info(`Passing: ${stats.passing}`);
+      logger.info(`Failing: ${stats.failing}`);
+      logger.info(`Skipped: ${stats.skipped}`);
+      logger.info(`Legacy: ${stats.legacy}`);
+      logger.info(`Average Health Score: ${stats.averageHealthScore}%`);
       
       if (healthReport.recommendations && healthReport.recommendations.length > 0) {
-        logger.log('\n💡 Recommendations:');
+        logger.info('\n💡 Recommendations:');
         healthReport.recommendations.forEach((rec, index) => {
-          logger.log(`${index + 1}. [${rec.type.toUpperCase()}] ${rec.message}`);
+          logger.info(`${index + 1}. [${rec.type.toUpperCase()}] ${rec.message}`);
         });
       }
       

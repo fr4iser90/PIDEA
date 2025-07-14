@@ -51,7 +51,7 @@ class AnalysisStep {
     const step = StepBuilder.build(config, context);
     
     try {
-      logger.log(`🔍 Executing ${this.name}...`);
+      logger.info(`🔍 Executing ${this.name}...`);
       
       // Validate context
       this.validateContext(context);
@@ -86,7 +86,7 @@ class AnalysisStep {
         summary: null
       };
 
-      logger.log(`📊 Starting analysis`);
+      logger.info(`📊 Starting analysis`);
 
       // 1. Project Analysis
       if (projectAnalyzer) {
@@ -203,7 +203,7 @@ class AnalysisStep {
         );
 
         await analysisRepository.save(analysisResult);
-        logger.log(`✅ Analysis results saved to repository with ID: ${analysisResult.id}`);
+        logger.info(`✅ Analysis results saved to repository with ID: ${analysisResult.id}`);
       }
 
       // Generate output using analysis output service
@@ -221,7 +221,7 @@ class AnalysisStep {
         }
       }
 
-      logger.log(`✅ ${this.name} completed successfully`);
+      logger.info(`✅ ${this.name} completed successfully`);
       return {
         success: true,
         step: this.name,

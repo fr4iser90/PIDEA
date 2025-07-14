@@ -142,7 +142,7 @@ class TestManagementService {
       const hasComments = content.includes('//') || content.includes('/*');
       const hasDocumentation = content.includes('/**') || content.includes('@param') || content.includes('@return');
       const hasErrorHandling = content.includes('try') && content.includes('catch');
-      const hasLogging = content.includes('logger.log') || content.includes('logger.warn') || content.includes('console.error');
+      const hasLogging = content.includes('logger.info') || content.includes('logger.warn') || content.includes('console.error');
       
       maintenanceScore = 100;
       if (!hasComments) maintenanceScore -= 20;
@@ -150,7 +150,7 @@ class TestManagementService {
       if (!hasErrorHandling) maintenanceScore -= 25;
       if (hasLogging) maintenanceScore -= 15;
       
-      logger.log(`📊 Scores calculated - Legacy: ${legacyScore}, Complexity: ${complexityScore}, Maintenance: ${maintenanceScore}`);
+      logger.info(`📊 Scores calculated - Legacy: ${legacyScore}, Complexity: ${complexityScore}, Maintenance: ${maintenanceScore}`);
       
       // Update test metadata with scores
       testMetadata.setComplexityScore(complexityScore);

@@ -1,5 +1,6 @@
 const Logger = require('@logging/Logger');
-const logger = new Logger('Logger');
+const ServiceLogger = require('@logging/ServiceLogger');
+const logger = new ServiceLogger('AnalysisController');
 /**
  * AnalysisController - API controller for specialized analysis endpoints
  */

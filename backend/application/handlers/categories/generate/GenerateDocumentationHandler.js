@@ -672,7 +672,7 @@ import { ${func.name} } from '${func.file}';
 // Example usage:
 const result = ${func.name}(${func.params.map(p => p.name).join(', ')});
 
-logger.log(result);
+logger.info(result);
 \`\`\`
 
 ## Parameters
@@ -703,7 +703,7 @@ import { ${cls.name} } from '${cls.file}';
 // TODO: Add example implementation
 const instance = new ${cls.name}();
 
-logger.log(instance);
+logger.info(instance);
 \`\`\`
 
 ## Constructor

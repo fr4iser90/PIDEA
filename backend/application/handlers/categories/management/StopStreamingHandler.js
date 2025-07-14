@@ -21,7 +21,7 @@ class StopStreamingHandler {
    */
   async handle(command) {
     try {
-      logger.log(`[StopStreamingHandler] Processing command: ${command.commandId}`);
+      logger.info(`[StopStreamingHandler] Processing command: ${command.commandId}`);
       
       // Validate command
       command.validate();
@@ -48,7 +48,7 @@ class StopStreamingHandler {
         });
       }
       
-      logger.log(`[StopStreamingHandler] Successfully stopped streaming for session ${command.sessionId}`);
+      logger.info(`[StopStreamingHandler] Successfully stopped streaming for session ${command.sessionId}`);
       
       return {
         success: true,

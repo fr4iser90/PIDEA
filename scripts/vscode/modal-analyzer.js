@@ -1,3 +1,7 @@
+const Logger = require('@logging/Logger');
+
+const logger = new Logger('ServiceName');
+
 #!/usr/bin/env node
 
 const fs = require('fs');
@@ -21,7 +25,7 @@ class ModalAnalyzer {
   ensureOutputDir() {
     if (!fs.existsSync(this.outputDir)) {
       fs.mkdirSync(this.outputDir, { recursive: true });
-      console.log(`📁 Created VSCode modal analysis directory: ${this.outputDir}`);
+      logger.info(`📁 Created VSCode modal analysis directory: ${this.outputDir}`);
     }
   }
 
@@ -33,7 +37,7 @@ class ModalAnalyzer {
     let sourcePath = enhancedPath;
     if (!fs.existsSync(enhancedPath)) {
       sourcePath = fallbackPath;
-      console.log(`⚠️ Enhanced collection not found, using fallback: ${fallbackPath}`);
+      logger.info(`⚠️ Enhanced collection not found, using fallback: ${fallbackPath}`);
     }
     
     if (!fs.existsSync(sourcePath)) {
@@ -49,8 +53,8 @@ class ModalAnalyzer {
     
     const filesToAnalyze = modalFiles.length > 0 ? modalFiles : allFiles;
     
-    console.log(`📁 VSCode Modal Analysis Source: ${sourcePath}`);
-    console.log(`📄 Found ${filesToAnalyze.length} VSCode DOM files for modal analysis`);
+    logger.info(`📁 VSCode Modal Analysis Source: ${sourcePath}`);
+    logger.info(`📄 Found ${filesToAnalyze.length} VSCode DOM files for modal analysis`);
     
     const sources = {};
     filesToAnalyze.forEach(file => {
@@ -59,7 +63,7 @@ class ModalAnalyzer {
       sources[file] = htmlContent;
       
       const elementCount = (htmlContent.match(/<[^>]*>/g) || []).length;
-      console.log(`📄 ${file}: ${elementCount} HTML elements`);
+      logger.info(`📄 ${file}: ${elementCount} HTML elements`);
     });
     
     return sources;
@@ -80,7 +84,7 @@ class ModalAnalyzer {
   }
 
   async analyze() {
-    console.log('🚀 VSCode Modal Analyzer starting...\n');
+    logger.info('🚀 VSCode Modal Analyzer starting...\n');
 
     try {
       // 1. Load DOM files
@@ -106,11 +110,11 @@ class ModalAnalyzer {
       // 5. Generate recommendations
       this.generateRecommendations();
 
-      console.log('\n📊 VSCode MODAL ANALYSIS COMPLETED!');
-      console.log(`📁 Output: ${this.outputDir}`);
-      console.log(`🎯 Modal Types Found: ${Object.keys(this.results.modals).length}`);
-      console.log(`🔍 Modal Issues: ${this.results.modalIssues.length}`);
-      console.log(`💡 Recommendations: ${this.results.recommendations.length}`);
+      logger.info('\n📊 VSCode MODAL ANALYSIS COMPLETED!');
+      logger.info(`📁 Output: ${this.outputDir}`);
+      logger.info(`🎯 Modal Types Found: ${Object.keys(this.results.modals).length}`);
+      logger.info(`🔍 Modal Issues: ${this.results.modalIssues.length}`);
+      logger.info(`💡 Recommendations: ${this.results.recommendations.length}`);
 
       return analysis;
 
@@ -125,7 +129,7 @@ class ModalAnalyzer {
       const dom = new JSDOM(htmlContent);
       const document = dom.window.document;
       
-      console.log(`🔍 Analyzing VSCode modal features in ${sourceFile}...`);
+      logger.info(`🔍 Analyzing VSCode modal features in ${sourceFile}...`);
       
       // Comprehensive VSCode modal detection
       const modalFeatures = {
@@ -296,7 +300,7 @@ class ModalAnalyzer {
             modalType: this.getModalType(featureName)
           });
           
-          console.log(`  ✅ ${featureName}: ${elements.length} elements`);
+          logger.info(`  ✅ ${featureName}: ${elements.length} elements`);
         } else {
           // Track missing modal features
           if (!this.results.modalIssues.find(issue => issue.feature === featureName)) {
@@ -659,8 +663,8 @@ async function interactWithVSCodeModal(page, modalType, action) {
     const summary = this.generateSummaryReport(analysis);
     fs.writeFileSync(summaryFile, summary);
     
-    console.log(`📄 VSCode modal analysis saved: ${outputFile}`);
-    console.log(`📄 VSCode modal summary saved: ${summaryFile}`);
+    logger.info(`📄 VSCode modal analysis saved: ${outputFile}`);
+    logger.info(`📄 VSCode modal summary saved: ${summaryFile}`);
   }
 
   generateSummaryReport(analysis) {

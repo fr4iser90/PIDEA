@@ -35,14 +35,14 @@ class IDEPortManager {
   setupEventHandlers() {
     if (this.eventBus) {
       this.eventBus.subscribe('idePortFailure', async (eventData) => {
-        logger.log('[IDEPortManager] Received idePortFailure event:', eventData);
+        logger.info('[IDEPortManager] Received idePortFailure event:', eventData);
         if (eventData.port) {
           await this.handlePortFailure(eventData.port, eventData.reason);
         }
       });
 
       this.eventBus.subscribe('ideHealthChanged', async (eventData) => {
-        logger.log('[IDEPortManager] Received ideHealthChanged event:', eventData);
+        logger.info('[IDEPortManager] Received ideHealthChanged event:', eventData);
         if (eventData.port) {
           this.portHealth.set(eventData.port, eventData.health);
         }
@@ -55,34 +55,34 @@ class IDEPortManager {
    * @returns {Promise<number|null>} Selected active port
    */
   async selectActivePort() {
-    logger.log('[IDEPortManager] Selecting active port...');
+    logger.info('[IDEPortManager] Selecting active port...');
     
     try {
       // Strategy 1: Previously active port
       const previouslyActive = await this.tryPreviouslyActivePort();
       if (previouslyActive) {
-        logger.log('[IDEPortManager] Using previously active port:', previouslyActive);
+        logger.info('[IDEPortManager] Using previously active port:', previouslyActive);
         return previouslyActive;
       }
 
       // Strategy 2: First available port
       const firstAvailable = await this.tryFirstAvailablePort();
       if (firstAvailable) {
-        logger.log(`[IDEPortManager] Using first available port: ${firstAvailable}`);
+        logger.info(`[IDEPortManager] Using first available port: ${firstAvailable}`);
         return firstAvailable;
       }
 
       // Strategy 3: Healthiest IDE
       const healthiest = await this.tryHealthiestIDE();
       if (healthiest) {
-        logger.log('[IDEPortManager] Using healthiest IDE port:', healthiest);
+        logger.info('[IDEPortManager] Using healthiest IDE port:', healthiest);
         return healthiest;
       }
 
       // Strategy 4: Default port range
       const defaultPort = await this.tryDefaultPortRange();
       if (defaultPort) {
-        logger.log('[IDEPortManager] Using default port range port:', defaultPort);
+        logger.info('[IDEPortManager] Using default port range port:', defaultPort);
         return defaultPort;
       }
 
@@ -108,7 +108,7 @@ class IDEPortManager {
       return this.activePort;
     }
 
-          logger.log(`[IDEPortManager] Previously active port not available: ${this.activePort}`);
+          logger.info(`[IDEPortManager] Previously active port not available: ${this.activePort}`);
     return null;
   }
 
@@ -132,7 +132,7 @@ class IDEPortManager {
         }
         
         // If validation fails but IDE is detected, use it anyway
-        logger.log('[IDEPortManager] Port validation failed for first IDE, but using it anyway:', firstIDE.port);
+        logger.info('[IDEPortManager] Port validation failed for first IDE, but using it anyway:', firstIDE.port);
         return firstIDE.port;
       }
     } catch (error) {
@@ -233,10 +233,10 @@ class IDEPortManager {
    * @returns {Promise<boolean>} True if valid, false otherwise
    */
   async validatePort(port) {
-    logger.log(`[IDEPortManager] Validating port: ${port}`);
+    logger.info(`[IDEPortManager] Validating port: ${port}`);
     try {
       const health = await this.performHealthCheck(port);
-      logger.log(`[IDEPortManager] Health check result for port ${port}:`, health);
+      logger.info(`[IDEPortManager] Health check result for port ${port}:`, health);
       if (health.healthy) {
         return true;
       } else {
@@ -275,7 +275,7 @@ class IDEPortManager {
       // Use direct detection to avoid circular dependency
       const availableIDEs = await this.ideManager.detectorFactory.detectAll() || [];
       const ide = availableIDEs.find(ide => ide.port === port);
-      logger.log(`[IDEPortManager] performHealthCheck: Looking for IDE on port ${port}. Found:`, !!ide);
+      logger.info(`[IDEPortManager] performHealthCheck: Looking for IDE on port ${port}. Found:`, !!ide);
       if (!ide) {
         logger.warn(`[IDEPortManager] performHealthCheck: IDE not found for port ${port}`);
         return { healthy: false, reason: 'IDE not found' };
@@ -284,7 +284,7 @@ class IDEPortManager {
       // If IDE is detected and running, consider it healthy
       // Workspace path will be assigned by IDEManager during initialization
       if (ide.status === 'running' || ide.status === 'active') {
-        logger.log(`[IDEPortManager] performHealthCheck: IDE on port ${port} is healthy (detected and running)`);
+        logger.info(`[IDEPortManager] performHealthCheck: IDE on port ${port} is healthy (detected and running)`);
         return { healthy: true, reason: 'IDE detected and running' };
       }
       
@@ -296,12 +296,12 @@ class IDEPortManager {
       
       // If we have a workspace path, that's a bonus
       if (ide.workspacePath) {
-        logger.log(`[IDEPortManager] performHealthCheck: IDE on port ${port} is healthy with workspace path`);
+        logger.info(`[IDEPortManager] performHealthCheck: IDE on port ${port} is healthy with workspace path`);
         return { healthy: true, reason: 'IDE with workspace path' };
       }
       
       // Default: if IDE is detected, consider it healthy
-      logger.log(`[IDEPortManager] performHealthCheck: IDE on port ${port} is healthy (detected)`);
+      logger.info(`[IDEPortManager] performHealthCheck: IDE on port ${port} is healthy (detected)`);
       return { healthy: true, reason: 'IDE detected' };
     } catch (error) {
       logger.error(`[IDEPortManager] performHealthCheck: Error for port ${port}:`, error);
@@ -316,7 +316,7 @@ class IDEPortManager {
    * @returns {Promise<number|null>} New active port
    */
   async handlePortFailure(port, reason = 'unknown') {
-    logger.log('[IDEPortManager] Handling port failure:', port, reason);
+    logger.info('[IDEPortManager] Handling port failure:', port, reason);
     
     // Remove failed port from preferences
     this.portPreferences.delete(port);
@@ -324,7 +324,7 @@ class IDEPortManager {
     
     // If this was the active port, select a new one
     if (this.activePort === port) {
-      logger.log('[IDEPortManager] Active port failed, selecting new port');
+      logger.info('[IDEPortManager] Active port failed, selecting new port');
       const newPort = await this.selectActivePort();
       
       if (newPort) {
@@ -343,7 +343,7 @@ class IDEPortManager {
    */
   async setActivePort(port) {
     try {
-      logger.log(`[IDEPortManager] Setting active port: ${port}`);
+      logger.info(`[IDEPortManager] Setting active port: ${port}`);
       
       const isValid = await this.validatePort(port);
       if (!isValid) {
@@ -369,7 +369,7 @@ class IDEPortManager {
         });
       }
       
-      logger.log(`[IDEPortManager] Active port set successfully: ${port}`);
+      logger.info(`[IDEPortManager] Active port set successfully: ${port}`);
       return true;
     } catch (error) {
       logger.error('[IDEPortManager] Error setting active port:', error);
@@ -408,7 +408,7 @@ class IDEPortManager {
   async initialize() {
     // Prevent multiple simultaneous initializations
     if (this.initializing) {
-      logger.log('[IDEPortManager] Initialization already in progress, waiting...');
+      logger.info('[IDEPortManager] Initialization already in progress, waiting...');
       // Wait for current initialization to complete
       while (this.initializing) {
         await new Promise(resolve => setTimeout(resolve, 100));
@@ -418,12 +418,12 @@ class IDEPortManager {
 
     // Check if already initialized
     if (this.initialized) {
-      logger.log('[IDEPortManager] Already initialized');
+      logger.info('[IDEPortManager] Already initialized');
       return;
     }
 
     this.initializing = true;
-    logger.log('[IDEPortManager] Initializing...');
+    logger.info('[IDEPortManager] Initializing...');
     
     try {
       // Select initial active port
@@ -433,7 +433,7 @@ class IDEPortManager {
       }
       
       this.initialized = true;
-      logger.log('[IDEPortManager] Initialization complete');
+      logger.info('[IDEPortManager] Initialization complete');
     } catch (error) {
       logger.error('[IDEPortManager] Initialization failed:', error);
       this.initialized = false;
@@ -447,14 +447,14 @@ class IDEPortManager {
    * @returns {Promise<void>}
    */
   async refresh() {
-    logger.log('[IDEPortManager] Refreshing...');
+    logger.info('[IDEPortManager] Refreshing...');
     
     try {
       // Re-validate current active port
       if (this.activePort) {
         const isValid = await this.validatePort(this.activePort);
         if (!isValid) {
-          logger.log('[IDEPortManager] Current active port invalid, selecting new one');
+          logger.info('[IDEPortManager] Current active port invalid, selecting new one');
           const newPort = await this.selectActivePort();
           if (newPort) {
             await this.setActivePort(newPort);
@@ -468,7 +468,7 @@ class IDEPortManager {
         }
       }
       
-      logger.log('[IDEPortManager] Refresh complete');
+      logger.info('[IDEPortManager] Refresh complete');
     } catch (error) {
       logger.error('[IDEPortManager] Refresh failed:', error);
     }

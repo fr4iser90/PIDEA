@@ -113,7 +113,7 @@ const logger = new Logger('Logger');
     }
     fs.writeFileSync(filePath, newContent, 'utf8');
     report.patched.push({ file: filePath, changes });
-    logger.log(`✅ Patched: ${path.relative(process.cwd(), filePath)}`);
+    logger.info(`✅ Patched: ${path.relative(process.cwd(), filePath)}`);
   }
 }
 
@@ -141,16 +141,16 @@ function walk(dir, mappings, report) {
 
 function main() {
   const mappings = getAliasMappings();
-  logger.log('🔍 Gefundene Aliase:', mappings.map(m => `${m.alias} -> ${m.absPath}`));
-  logger.log('🎯 Ziel-Verzeichnisse:', TARGET_DIRS);
+  logger.info('🔍 Gefundene Aliase:', mappings.map(m => `${m.alias} -> ${m.absPath}`));
+  logger.info('🎯 Ziel-Verzeichnisse:', TARGET_DIRS);
   
   const report = { patched: [] };
   for (const dir of TARGET_DIRS) {
-    logger.log(`\n📁 Durchsuche: ${dir}`);
+    logger.info(`\n📁 Durchsuche: ${dir}`);
     walk(dir, mappings, report);
   }
   
-  logger.log(`\n📊 Ergebnis: ${report.patched.length} Dateien geändert`);
+  logger.info(`\n📊 Ergebnis: ${report.patched.length} Dateien geändert`);
   
   // Schreibe Report als Markdown
   const reportPath = path.join(__dirname, 'import-adjust-report.md');
@@ -163,7 +163,7 @@ function main() {
     md += '\n';
   }
   fs.writeFileSync(reportPath, md, 'utf8');
-  logger.log(`\n📄 Import-Adjust-Report geschrieben nach: ${reportPath}`);
+  logger.info(`\n📄 Import-Adjust-Report geschrieben nach: ${reportPath}`);
 }
 
 main(); 

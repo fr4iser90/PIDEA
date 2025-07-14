@@ -363,7 +363,7 @@ const LogStandardizer = require('./LogStandardizer');
 
 /**
  * LogMigration - Utilities for migrating legacy logging patterns
- * Provides automated tools for converting console.log and logger.log usage
+ * Provides automated tools for converting console.log and logger.info usage
  */
 class LogMigration {
   constructor(options = {}) {
@@ -392,7 +392,7 @@ class LogMigration {
       'console.warn': 'logger.warn',
       'console.error': 'logger.error',
       'console.debug': 'logger.debug',
-      'logger.log': 'logger.info'
+      'logger.info': 'logger.info'
     };
   }
 

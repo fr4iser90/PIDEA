@@ -1,3 +1,7 @@
+const Logger = require('@logging/Logger');
+
+const logger = new Logger('ServiceName');
+
 #!/usr/bin/env node
 
 const fs = require('fs');
@@ -18,12 +22,12 @@ class EnhancedCoverageRunner {
   }
 
   async run() {
-    console.log('🚀 ENHANCED DOM COVERAGE TASK EXECUTION');
-    console.log('=' .repeat(60));
-    console.log('🎯 Goal: Improve IDE coverage from 72% to 95%+');
-    console.log('🎯 Focus: Fix chat functionality and modal detection');
-    console.log('⏰ Started:', new Date().toISOString());
-    console.log('');
+    logger.info('🚀 ENHANCED DOM COVERAGE TASK EXECUTION');
+    logger.info('=' .repeat(60));
+    logger.info('🎯 Goal: Improve IDE coverage from 72% to 95%+');
+    logger.info('🎯 Focus: Fix chat functionality and modal detection');
+    logger.info('⏰ Started:', new Date().toISOString());
+    logger.info('');
 
     try {
       // Phase 1: Pre-flight checks
@@ -57,8 +61,8 @@ class EnhancedCoverageRunner {
   }
 
   async runPreFlightChecks() {
-    console.log('🔍 Phase 1: Pre-flight Checks');
-    console.log('-'.repeat(40));
+    logger.info('🔍 Phase 1: Pre-flight Checks');
+    logger.info('-'.repeat(40));
     
     const phaseStart = Date.now();
     
@@ -72,9 +76,9 @@ class EnhancedCoverageRunner {
       for (const dep of dependencies) {
         try {
           require(dep);
-          console.log(`  ✅ ${dep} - Available`);
+          logger.info(`  ✅ ${dep} - Available`);
         } catch (e) {
-          console.log(`  ❌ ${dep} - Missing`);
+          logger.info(`  ❌ ${dep} - Missing`);
           throw new Error(`Missing dependency: ${dep}`);
         }
       }
@@ -90,9 +94,9 @@ class EnhancedCoverageRunner {
       for (const file of requiredFiles) {
         const filePath = path.join(__dirname, '..', file);
         if (fs.existsSync(filePath)) {
-          console.log(`  ✅ ${file} - Found`);
+          logger.info(`  ✅ ${file} - Found`);
         } else {
-          console.log(`  ❌ ${file} - Missing`);
+          logger.info(`  ❌ ${file} - Missing`);
           throw new Error(`Missing file: ${file}`);
         }
       }
@@ -108,9 +112,9 @@ class EnhancedCoverageRunner {
         const dirPath = path.join(__dirname, dir);
         if (!fs.existsSync(dirPath)) {
           fs.mkdirSync(dirPath, { recursive: true });
-          console.log(`  📁 ${dir} - Created`);
+          logger.info(`  📁 ${dir} - Created`);
         } else {
-          console.log(`  ✅ ${dir} - Exists`);
+          logger.info(`  ✅ ${dir} - Exists`);
         }
       }
       
@@ -122,7 +126,7 @@ class EnhancedCoverageRunner {
         timestamp: new Date().toISOString()
       });
       
-      console.log(`  ✅ Pre-flight checks completed in ${phaseTime}ms\n`);
+      logger.info(`  ✅ Pre-flight checks completed in ${phaseTime}ms\n`);
       
     } catch (error) {
       const phaseTime = Date.now() - phaseStart;
@@ -139,16 +143,16 @@ class EnhancedCoverageRunner {
   }
 
   async runEnhancedDOMCollection() {
-    console.log('📊 Phase 2: Enhanced DOM Collection');
-    console.log('-'.repeat(40));
+    logger.info('📊 Phase 2: Enhanced DOM Collection');
+    logger.info('-'.repeat(40));
     
     const phaseStart = Date.now();
     
     try {
       const collector = new EnhancedDOMCollector();
       
-      console.log('  🚀 Starting enhanced DOM collection...');
-      console.log(`  📋 Collecting ${collector.enhancedStateConfigs.length} IDE states`);
+      logger.info('  🚀 Starting enhanced DOM collection...');
+      logger.info(`  📋 Collecting ${collector.enhancedStateConfigs.length} IDE states`);
       
       await collector.collectAllEnhancedStates();
       
@@ -161,7 +165,7 @@ class EnhancedCoverageRunner {
         timestamp: new Date().toISOString()
       });
       
-      console.log(`  ✅ Enhanced DOM collection completed in ${phaseTime}ms\n`);
+      logger.info(`  ✅ Enhanced DOM collection completed in ${phaseTime}ms\n`);
       
     } catch (error) {
       const phaseTime = Date.now() - phaseStart;
@@ -178,15 +182,15 @@ class EnhancedCoverageRunner {
   }
 
   async runChatAnalysis() {
-    console.log('💬 Phase 3: Chat Analysis');
-    console.log('-'.repeat(40));
+    logger.info('💬 Phase 3: Chat Analysis');
+    logger.info('-'.repeat(40));
     
     const phaseStart = Date.now();
     
     try {
       const analyzer = new EnhancedChatAnalyzer();
       
-      console.log('  🔍 Analyzing chat functionality...');
+      logger.info('  🔍 Analyzing chat functionality...');
       
       const analysis = await analyzer.analyze();
       
@@ -201,10 +205,10 @@ class EnhancedCoverageRunner {
         timestamp: new Date().toISOString()
       });
       
-      console.log(`  ✅ Chat analysis completed in ${phaseTime}ms`);
-      console.log(`  📈 Coverage: ${analysis.summary.coverage}%`);
-      console.log(`  🎯 Features: ${Object.keys(analysis.optimizedSelectors).length}`);
-      console.log(`  ⚠️ Issues: ${analysis.issues.length}\n`);
+      logger.info(`  ✅ Chat analysis completed in ${phaseTime}ms`);
+      logger.info(`  📈 Coverage: ${analysis.summary.coverage}%`);
+      logger.info(`  🎯 Features: ${Object.keys(analysis.optimizedSelectors).length}`);
+      logger.info(`  ⚠️ Issues: ${analysis.issues.length}\n`);
       
     } catch (error) {
       const phaseTime = Date.now() - phaseStart;
@@ -221,8 +225,8 @@ class EnhancedCoverageRunner {
   }
 
   async runCoverageValidation() {
-    console.log('✅ Phase 4: Coverage Validation');
-    console.log('-'.repeat(40));
+    logger.info('✅ Phase 4: Coverage Validation');
+    logger.info('-'.repeat(40));
     
     const phaseStart = Date.now();
     
@@ -230,7 +234,7 @@ class EnhancedCoverageRunner {
       const CoverageValidator = require('./coverage-validator');
       const validator = new CoverageValidator();
       
-      console.log('  🔍 Validating coverage...');
+      logger.info('  🔍 Validating coverage...');
       
       const validation = await validator.validate();
       
@@ -245,9 +249,9 @@ class EnhancedCoverageRunner {
         timestamp: new Date().toISOString()
       });
       
-      console.log(`  ✅ Coverage validation completed in ${phaseTime}ms`);
-      console.log(`  📊 Overall Coverage: ${validation.coverage.overall.percentage}%`);
-      console.log(`  🎯 Features: ${validation.coverage.overall.found}/${validation.coverage.overall.total}\n`);
+      logger.info(`  ✅ Coverage validation completed in ${phaseTime}ms`);
+      logger.info(`  📊 Overall Coverage: ${validation.coverage.overall.percentage}%`);
+      logger.info(`  🎯 Features: ${validation.coverage.overall.found}/${validation.coverage.overall.total}\n`);
       
     } catch (error) {
       const phaseTime = Date.now() - phaseStart;
@@ -264,15 +268,15 @@ class EnhancedCoverageRunner {
   }
 
   async runTesting() {
-    console.log('🧪 Phase 5: Testing & Validation');
-    console.log('-'.repeat(40));
+    logger.info('🧪 Phase 5: Testing & Validation');
+    logger.info('-'.repeat(40));
     
     const phaseStart = Date.now();
     
     try {
       const tester = new EnhancedCoverageTester();
       
-      console.log('  🧪 Running test suite...');
+      logger.info('  🧪 Running test suite...');
       
       await tester.runAllTests();
       
@@ -287,10 +291,10 @@ class EnhancedCoverageRunner {
         timestamp: new Date().toISOString()
       });
       
-      console.log(`  ✅ Testing completed in ${phaseTime}ms`);
-      console.log(`  ✅ Passed: ${tester.testResults.passed}`);
-      console.log(`  ❌ Failed: ${tester.testResults.failed}`);
-      console.log(`  ⚠️ Warnings: ${tester.testResults.warnings}\n`);
+      logger.info(`  ✅ Testing completed in ${phaseTime}ms`);
+      logger.info(`  ✅ Passed: ${tester.testResults.passed}`);
+      logger.info(`  ❌ Failed: ${tester.testResults.failed}`);
+      logger.info(`  ⚠️ Warnings: ${tester.testResults.warnings}\n`);
       
     } catch (error) {
       const phaseTime = Date.now() - phaseStart;
@@ -307,8 +311,8 @@ class EnhancedCoverageRunner {
   }
 
   async generateFinalReport() {
-    console.log('📋 Phase 6: Final Report Generation');
-    console.log('-'.repeat(40));
+    logger.info('📋 Phase 6: Final Report Generation');
+    logger.info('-'.repeat(40));
     
     const totalTime = Date.now() - this.startTime;
     const successfulPhases = this.results.phases.filter(p => p.status === 'SUCCESS').length;
@@ -334,25 +338,25 @@ class EnhancedCoverageRunner {
     const markdownFile = path.join(__dirname, '../output/enhanced-coverage-summary.md');
     fs.writeFileSync(markdownFile, markdownReport);
     
-    console.log('  📄 Detailed report saved:', reportFile);
-    console.log('  📄 Summary report saved:', markdownFile);
-    console.log('');
+    logger.info('  📄 Detailed report saved:', reportFile);
+    logger.info('  📄 Summary report saved:', markdownFile);
+    logger.info('');
     
     // Display final summary
-    console.log('🎉 ENHANCED COVERAGE TASK COMPLETED!');
-    console.log('=' .repeat(60));
-    console.log(`⏱️ Total Duration: ${Math.round(totalTime / 1000)}s`);
-    console.log(`✅ Successful Phases: ${successfulPhases}/${totalPhases}`);
-    console.log(`📈 Success Rate: ${this.results.summary.successRate}%`);
-    console.log(`❌ Errors: ${this.results.errors.length}`);
-    console.log(`⚠️ Warnings: ${this.results.warnings.length}`);
+    logger.info('🎉 ENHANCED COVERAGE TASK COMPLETED!');
+    logger.info('=' .repeat(60));
+    logger.info(`⏱️ Total Duration: ${Math.round(totalTime / 1000)}s`);
+    logger.info(`✅ Successful Phases: ${successfulPhases}/${totalPhases}`);
+    logger.info(`📈 Success Rate: ${this.results.summary.successRate}%`);
+    logger.info(`❌ Errors: ${this.results.errors.length}`);
+    logger.info(`⚠️ Warnings: ${this.results.warnings.length}`);
     
     if (this.results.summary.successRate >= 80) {
-      console.log('\n🎉 TASK SUCCESSFUL - Enhanced coverage ready for production!');
+      logger.info('\n🎉 TASK SUCCESSFUL - Enhanced coverage ready for production!');
     } else if (this.results.summary.successRate >= 60) {
-      console.log('\n🟡 TASK PARTIALLY SUCCESSFUL - Some issues need attention');
+      logger.info('\n🟡 TASK PARTIALLY SUCCESSFUL - Some issues need attention');
     } else {
-      console.log('\n🔴 TASK FAILED - Significant issues need to be resolved');
+      logger.info('\n🔴 TASK FAILED - Significant issues need to be resolved');
     }
   }
 
@@ -418,13 +422,13 @@ ${summary.successRate >= 80 ? `
   }
 
   async cleanup() {
-    console.log('\n🧹 Cleaning up...');
+    logger.info('\n🧹 Cleaning up...');
     
     try {
       // Any cleanup tasks
-      console.log('  ✅ Cleanup completed');
+      logger.info('  ✅ Cleanup completed');
     } catch (error) {
-      console.log('  ⚠️ Cleanup warning:', error.message);
+      logger.info('  ⚠️ Cleanup warning:', error.message);
     }
   }
 }

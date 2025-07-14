@@ -13,7 +13,7 @@ class AutoSecurityManager {
   }
 
   initialize() {
-    logger.log('🔐 [AutoSecurityManager] Initializing auto-security...');
+    logger.info('🔐 [AutoSecurityManager] Initializing auto-security...');
     
     // Auto-detect environment
     this.config.environment = this.detectEnvironment();
@@ -31,12 +31,12 @@ class AutoSecurityManager {
     // Auto-configure rate limiting
     this.config.rateLimiting = this.getRateLimitingConfig();
     
-    logger.log('✅ [AutoSecurityManager] Auto-security initialized');
+    logger.info('✅ [AutoSecurityManager] Auto-security initialized');
   }
 
   detectEnvironment() {
     const env = process.env.NODE_ENV || 'development';
-    logger.log(`🌍 [AutoSecurityManager] Detected environment: ${env}`);
+    logger.info(`🌍 [AutoSecurityManager] Detected environment: ${env}`);
     return env;
   }
 
@@ -47,7 +47,7 @@ class AutoSecurityManager {
       // Try to read existing secret
       if (fs.existsSync(secretsFile)) {
         const secret = fs.readFileSync(secretsFile, 'utf8').trim();
-        logger.log(`🔑 [AutoSecurityManager] Loaded existing secret: ${key}`);
+        logger.info(`🔑 [AutoSecurityManager] Loaded existing secret: ${key}`);
         return secret;
       }
     } catch (error) {
@@ -65,7 +65,7 @@ class AutoSecurityManager {
       
       // Save secret to file
       fs.writeFileSync(secretsFile, secret);
-      logger.log(`🔑 [AutoSecurityManager] Generated new secret: ${key}`);
+      logger.info(`🔑 [AutoSecurityManager] Generated new secret: ${key}`);
     } catch (error) {
       logger.warn(`⚠️ [AutoSecurityManager] Could not save secret file: ${error.message}`);
     }
@@ -187,7 +187,7 @@ class AutoSecurityManager {
         
         if (stats.mtime.getTime() < thirtyDaysAgo) {
           fs.unlinkSync(filePath);
-          logger.log(`🗑️ [AutoSecurityManager] Cleaned up old secret: ${file}`);
+          logger.info(`🗑️ [AutoSecurityManager] Cleaned up old secret: ${file}`);
         }
       }
     } catch (error) {

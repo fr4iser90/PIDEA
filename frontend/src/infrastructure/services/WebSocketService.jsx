@@ -26,12 +26,12 @@ class WebSocketService {
         const protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
         const wsUrl = `${protocol}//${location.host}/ws`;
         
-        logger.log('🔌 WebSocketService: Connecting to:', wsUrl);
+        logger.info('🔌 WebSocketService: Connecting to:', wsUrl);
         
         this.ws = new WebSocket(wsUrl);
 
         this.ws.onopen = () => {
-          logger.log('✅ WebSocketService: Connected');
+          logger.info('✅ WebSocketService: Connected');
           this.isConnected = true;
           this.reconnectAttempts = 0;
           
@@ -64,13 +64,13 @@ class WebSocketService {
         };
 
         this.ws.onclose = (event) => {
-          logger.log('🔌 WebSocketService: Disconnected:', event.code, event.reason);
+          logger.info('🔌 WebSocketService: Disconnected:', event.code, event.reason);
           this.isConnected = false;
           this.connectionPromise = null;
           
           // Handle authentication failure
           if (event.code === 1008) {
-            logger.log('🔐 WebSocketService: Authentication failed, logging out');
+            logger.info('🔐 WebSocketService: Authentication failed, logging out');
             const { logout } = useAuthStore.getState();
             logout();
             return;
@@ -130,7 +130,7 @@ class WebSocketService {
   handleMessage(message) {
     const { event, data, timestamp, type, topic } = message;
     
-    logger.log('📨 WebSocketService: Received message:', event || type, data);
+    logger.info('📨 WebSocketService: Received message:', event || type, data);
     
     // Handle topic messages for streaming
     if (type === 'topic' && topic) {
@@ -175,7 +175,7 @@ class WebSocketService {
   }
 
   handleTopicMessage(topic, data) {
-    logger.log('📨 WebSocketService: Received topic message:', topic);
+    logger.info('📨 WebSocketService: Received topic message:', topic);
     
     // Emit topic-specific events
     if (this.eventListeners.has(topic)) {
@@ -201,7 +201,7 @@ class WebSocketService {
   }
 
   handleFrameMessage(frameData) {
-    logger.log('📨 WebSocketService: Received frame message:', frameData.frameNumber);
+    logger.info('📨 WebSocketService: Received frame message:', frameData.frameNumber);
     
     // Emit frame events
     if (this.eventListeners.has('frame')) {

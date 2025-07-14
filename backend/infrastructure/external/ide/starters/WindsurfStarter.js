@@ -30,7 +30,7 @@ class WindsurfStarter {
    * @returns {Promise<Object>} IDE startup information
    */
   async startIDE(port, workspacePath = null, options = {}) {
-    logger.log('[WindsurfStarter] Starting Windsurf IDE on port', port);
+    logger.info('[WindsurfStarter] Starting Windsurf IDE on port', port);
     
     // Validate port is in range
     if (port < this.config.portRange.start || port > this.config.portRange.end) {
@@ -93,15 +93,15 @@ class WindsurfStarter {
 
       // Handle process events
       process.stdout.on('data', (data) => {
-        logger.log(`[WindsurfStarter] Windsurf IDE ${port} stdout:`, data.toString().trim());
+        logger.info(`[WindsurfStarter] Windsurf IDE ${port} stdout:`, data.toString().trim());
       });
 
       process.stderr.on('data', (data) => {
-        logger.log(`[WindsurfStarter] Windsurf IDE ${port} stderr:`, data.toString().trim());
+        logger.info(`[WindsurfStarter] Windsurf IDE ${port} stderr:`, data.toString().trim());
       });
 
       process.on('close', (code) => {
-        logger.log(`[WindsurfStarter] Windsurf IDE ${port} process closed with code ${code}`);
+        logger.info(`[WindsurfStarter] Windsurf IDE ${port} process closed with code ${code}`);
       });
 
       process.on('error', (error) => {
@@ -134,7 +134,7 @@ class WindsurfStarter {
    * @returns {Promise<Object>} Stop result
    */
   async stopIDE(port) {
-    logger.log('[WindsurfStarter] Stopping Windsurf IDE on port', port);
+    logger.info('[WindsurfStarter] Stopping Windsurf IDE on port', port);
     
     try {
       // Find and kill Windsurf processes on the specified port

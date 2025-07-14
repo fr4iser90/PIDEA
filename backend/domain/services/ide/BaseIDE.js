@@ -51,7 +51,7 @@ class BaseIDE extends IDEInterface {
       this.workspacePathDetector = new WorkspacePathDetector(this.browserManager, this.ideManager);
       this.chatHistoryExtractor = new ChatHistoryExtractor(this.browserManager, this.ideType);
       
-      logger.log(`[BaseIDE] Common services initialized for ${this.ideType}`);
+      logger.info(`[BaseIDE] Common services initialized for ${this.ideType}`);
     } catch (error) {
       logger.error(`[BaseIDE] Failed to initialize common services:`, error);
       this.lastError = error;
@@ -64,15 +64,15 @@ class BaseIDE extends IDEInterface {
   setupEventListeners() {
     if (this.eventBus) {
       this.eventBus.subscribe('activeIDEChanged', async (eventData) => {
-        logger.log(`[BaseIDE] IDE changed for ${this.ideType}, resetting cache`);
-        logger.log(`[BaseIDE] Event data:`, eventData);
+        logger.info(`[BaseIDE] IDE changed for ${this.ideType}, resetting cache`);
+        logger.info(`[BaseIDE] Event data:`, eventData);
         
         // Switch browser connection to new IDE
         if (eventData.port) {
           try {
-            logger.log(`[BaseIDE] Switching browser connection to port:`, eventData.port);
+            logger.info(`[BaseIDE] Switching browser connection to port:`, eventData.port);
             await this.browserManager.switchToPort(eventData.port);
-            logger.log(`[BaseIDE] Successfully switched browser connection to port:`, eventData.port);
+            logger.info(`[BaseIDE] Successfully switched browser connection to port:`, eventData.port);
           } catch (error) {
             logger.error(`[BaseIDE] Failed to switch browser connection:`, error.message);
           }
@@ -116,7 +116,7 @@ class BaseIDE extends IDEInterface {
       ...data
     };
     
-    logger.log(`[BaseIDE] ${message}`, logData);
+    logger.info(`[BaseIDE] ${message}`, logData);
   }
 
   /**

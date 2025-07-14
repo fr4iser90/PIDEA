@@ -60,7 +60,7 @@ class TestingStep {
     const step = StepBuilder.build(config, context);
     
     try {
-      logger.log(`🧪 Executing ${this.name}...`);
+      logger.info(`🧪 Executing ${this.name}...`);
       
       // Validate context
       this.validateContext(context);
@@ -97,7 +97,7 @@ class TestingStep {
 
       // 4. Coverage Analysis
       if (context.includeCoverageAnalysis !== false) {
-        logger.log('📈 Running coverage analysis...');
+        logger.info('📈 Running coverage analysis...');
         results.coverageAnalysis = await this.runCoverageAnalysis(projectPath, context);
       }
 
@@ -110,7 +110,7 @@ class TestingStep {
       // Generate comprehensive summary
       results.summary = this.generateSummary(results);
 
-      logger.log(`✅ ${this.name} completed successfully`);
+      logger.info(`✅ ${this.name} completed successfully`);
       return {
         success: true,
         step: this.name,

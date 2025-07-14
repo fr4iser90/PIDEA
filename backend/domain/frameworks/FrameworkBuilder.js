@@ -27,7 +27,7 @@ class FrameworkBuilder {
       // Check cache first
       const cacheKey = this.getCacheKey(frameworkName, options);
       if (this.buildCache.has(cacheKey)) {
-        logger.log(`📦 Using cached framework instance for "${frameworkName}"`);
+        logger.info(`📦 Using cached framework instance for "${frameworkName}"`);
         return this.buildCache.get(cacheKey);
       }
 
@@ -40,7 +40,7 @@ class FrameworkBuilder {
       // Cache the instance
       this.buildCache.set(cacheKey, instance);
 
-      logger.log(`🔨 Framework "${frameworkName}" built successfully`);
+      logger.info(`🔨 Framework "${frameworkName}" built successfully`);
       return instance;
     } catch (error) {
       logger.error(`❌ Failed to build framework "${frameworkName}":`, error.message);
@@ -214,11 +214,11 @@ class FrameworkBuilder {
         .filter(key => key.startsWith(frameworkName + ':'));
       
       keysToDelete.forEach(key => this.buildCache.delete(key));
-      logger.log(`🗑️ Cleared cache for framework "${frameworkName}"`);
+      logger.info(`🗑️ Cleared cache for framework "${frameworkName}"`);
     } else {
       // Clear all cache
       this.buildCache.clear();
-      logger.log('🗑️ Cleared all framework build cache');
+      logger.info('🗑️ Cleared all framework build cache');
     }
   }
 

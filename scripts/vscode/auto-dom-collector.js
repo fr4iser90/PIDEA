@@ -3,6 +3,10 @@ const path = require('path');
 const BrowserManager = require('../../backend/infrastructure/external/BrowserManager');
 const IDEManager = require('../../backend/infrastructure/external/IDEManager');
 
+const Logger = require('@logging/Logger');
+
+const logger = new Logger('ServiceName');
+
 class AutoDOMCollector {
   constructor() {
     this.browserManager = new BrowserManager();
@@ -93,8 +97,8 @@ class AutoDOMCollector {
   }
 
   async initialize() {
-    console.log('🚀 Auto DOM Collector starting...');
-    console.log('📡 Connecting to VSCode IDE via CDP...\n');
+    logger.info('🚀 Auto DOM Collector starting...');
+    logger.info('📡 Connecting to VSCode IDE via CDP...\n');
 
     try {
       // Initialize IDE Manager
@@ -110,7 +114,7 @@ class AutoDOMCollector {
 
       // Connect Browser Manager to VSCode IDE
       await this.browserManager.connect(vscodeIDE.port);
-      console.log(`✅ Connected to VSCode IDE on port ${vscodeIDE.port}`);
+      logger.info(`✅ Connected to VSCode IDE on port ${vscodeIDE.port}`);
       
       return true;
     } catch (error) {
@@ -122,12 +126,12 @@ class AutoDOMCollector {
   async collectAllStates() {
     await this.initialize();
     
-    console.log(`\n🎯 Collecting ${this.stateConfigs.length} different VSCode IDE states...\n`);
+    logger.info(`\n🎯 Collecting ${this.stateConfigs.length} different VSCode IDE states...\n`);
 
     for (const [index, config] of this.stateConfigs.entries()) {
       try {
-        console.log(`📄 [${index + 1}/${this.stateConfigs.length}] ${config.name}`);
-        console.log(`   ${config.description}`);
+        logger.info(`📄 [${index + 1}/${this.stateConfigs.length}] ${config.name}`);
+        logger.info(`   ${config.description}`);
         
         // Activate state
         await config.action();
@@ -138,7 +142,7 @@ class AutoDOMCollector {
         // Short pause between states
         await this.wait(1500);
         
-        console.log(`   ✅ Successfully collected\n`);
+        logger.info(`   ✅ Successfully collected\n`);
         
       } catch (error) {
         console.error(`   ❌ Error in ${config.name}:`, error.message);
@@ -149,43 +153,43 @@ class AutoDOMCollector {
     await this.cleanup();
 
     // AUTOMATIC ANALYSIS START
-    console.log('\n🔄 Starting automatic analysis...');
+    logger.info('\n🔄 Starting automatic analysis...');
     await this.runAutomaticAnalysis();
   }
 
   async runAutomaticAnalysis() {
     try {
       // 1. Bulk DOM Analysis
-      console.log('\n📊 [1/5] Bulk DOM Analysis...');
+      logger.info('\n📊 [1/5] Bulk DOM Analysis...');
       const BulkDOMAnalyzer = require('./bulk-dom-analyzer');
       const bulkAnalyzer = new BulkDOMAnalyzer();
       await bulkAnalyzer.analyze();
 
       // 2. Original DOM Analysis
-      console.log('\n📊 [2/5] Original DOM Analysis...');
+      logger.info('\n📊 [2/5] Original DOM Analysis...');
       const DOMAnalyzer = require('./dom-analyzer');
       const domAnalyzer = new DOMAnalyzer();
       await domAnalyzer.analyze();
 
       // 3. Enhanced Chat Analysis
-      console.log('\n📊 [3/5] Enhanced Chat Analysis...');
+      logger.info('\n📊 [3/5] Enhanced Chat Analysis...');
       const EnhancedChatAnalyzer = require('./enhanced-chat-analyzer');
       const chatAnalyzer = new EnhancedChatAnalyzer();
       await chatAnalyzer.analyze();
 
       // 4. Merge Results
-      console.log('\n🔄 [4/5] Merge Analysis Results...');
+      logger.info('\n🔄 [4/5] Merge Analysis Results...');
       const { mergeAnalysisResults } = require('./merge-analysis-results');
       await mergeAnalysisResults();
 
       // 5. Coverage Validation
-      console.log('\n✅ [5/5] Coverage Validation...');
+      logger.info('\n✅ [5/5] Coverage Validation...');
       const CoverageValidator = require('./coverage-validator');
       const validator = new CoverageValidator();
       await validator.validate();
 
-      console.log('\n🎉 COMPLETE AUTOMATION FINISHED!');
-      console.log('📁 All files generated in: scripts/output/');
+      logger.info('\n🎉 COMPLETE AUTOMATION FINISHED!');
+      logger.info('📁 All files generated in: scripts/output/');
 
     } catch (error) {
       console.error('❌ Automatic analysis failed:', error.message);
@@ -254,7 +258,7 @@ ${html}
         await this.wait(1000);
       }
     } catch (error) {
-      console.log('   ⚠️ Chat activation failed, continuing...');
+      logger.info('   ⚠️ Chat activation failed, continuing...');
     }
   }
 
@@ -266,7 +270,7 @@ ${html}
       await page.keyboard.press('Control+Shift+P');
       await this.wait(1000);
     } catch (error) {
-      console.log('   ⚠️ Command palette failed, continuing...');
+      logger.info('   ⚠️ Command palette failed, continuing...');
     }
   }
 
@@ -278,7 +282,7 @@ ${html}
       await page.keyboard.press('Control+P');
       await this.wait(1000);
     } catch (error) {
-      console.log('   ⚠️ Quick open failed, continuing...');
+      logger.info('   ⚠️ Quick open failed, continuing...');
     }
   }
 
@@ -290,7 +294,7 @@ ${html}
       await page.keyboard.press('Control+Shift+F');
       await this.wait(1000);
     } catch (error) {
-      console.log('   ⚠️ Global search failed, continuing...');
+      logger.info('   ⚠️ Global search failed, continuing...');
     }
   }
 
@@ -302,7 +306,7 @@ ${html}
       await page.keyboard.press('Control+Shift+X');
       await this.wait(1000);
     } catch (error) {
-      console.log('   ⚠️ Extensions panel failed, continuing...');
+      logger.info('   ⚠️ Extensions panel failed, continuing...');
     }
   }
 
@@ -314,7 +318,7 @@ ${html}
       await page.keyboard.press('Control+Shift+D');
       await this.wait(1000);
     } catch (error) {
-      console.log('   ⚠️ Debug panel failed, continuing...');
+      logger.info('   ⚠️ Debug panel failed, continuing...');
     }
   }
 
@@ -326,7 +330,7 @@ ${html}
       await page.keyboard.press('Control+Shift+`');
       await this.wait(1000);
     } catch (error) {
-      console.log('   ⚠️ Terminal failed, continuing...');
+      logger.info('   ⚠️ Terminal failed, continuing...');
     }
   }
 
@@ -338,7 +342,7 @@ ${html}
       await page.keyboard.press('Control+Shift+M');
       await this.wait(1000);
     } catch (error) {
-      console.log('   ⚠️ Problems panel failed, continuing...');
+      logger.info('   ⚠️ Problems panel failed, continuing...');
     }
   }
 
@@ -350,7 +354,7 @@ ${html}
       await page.keyboard.press('Control+Shift+U');
       await this.wait(1000);
     } catch (error) {
-      console.log('   ⚠️ Output panel failed, continuing...');
+      logger.info('   ⚠️ Output panel failed, continuing...');
     }
   }
 
@@ -362,7 +366,7 @@ ${html}
       await page.keyboard.press('Control+,');
       await this.wait(1000);
     } catch (error) {
-      console.log('   ⚠️ Settings failed, continuing...');
+      logger.info('   ⚠️ Settings failed, continuing...');
     }
   }
 
@@ -374,7 +378,7 @@ ${html}
       await page.keyboard.press('Control+Shift+E');
       await this.wait(1000);
     } catch (error) {
-      console.log('   ⚠️ File explorer failed, continuing...');
+      logger.info('   ⚠️ File explorer failed, continuing...');
     }
   }
 
@@ -386,7 +390,7 @@ ${html}
       await page.keyboard.press('Control+Shift+G');
       await this.wait(1000);
     } catch (error) {
-      console.log('   ⚠️ Source control failed, continuing...');
+      logger.info('   ⚠️ Source control failed, continuing...');
     }
   }
 
@@ -398,7 +402,7 @@ ${html}
       await page.keyboard.press('Control+Shift+D');
       await this.wait(1000);
     } catch (error) {
-      console.log('   ⚠️ Run and debug failed, continuing...');
+      logger.info('   ⚠️ Run and debug failed, continuing...');
     }
   }
 
@@ -426,19 +430,19 @@ ${html}
     const reportPath = path.join(this.outputDir, 'collection-report.json');
     fs.writeFileSync(reportPath, JSON.stringify(report, null, 2));
     
-    console.log('\n📊 Collection Report Generated:');
-    console.log(`   📁 Directory: ${this.outputDir}`);
-    console.log(`   📄 States collected: ${this.collectedStates.size}/${this.stateConfigs.length}`);
-    console.log(`   🔢 Total elements: ${report.summary.totalElements}`);
-    console.log(`   📊 Average per state: ${Math.round(report.summary.averageElementsPerState)}`);
+    logger.info('\n📊 Collection Report Generated:');
+    logger.info(`   📁 Directory: ${this.outputDir}`);
+    logger.info(`   📄 States collected: ${this.collectedStates.size}/${this.stateConfigs.length}`);
+    logger.info(`   🔢 Total elements: ${report.summary.totalElements}`);
+    logger.info(`   📊 Average per state: ${Math.round(report.summary.averageElementsPerState)}`);
   }
 
   async cleanup() {
     try {
       await this.browserManager.disconnect();
-      console.log('✅ Browser connection closed');
+      logger.info('✅ Browser connection closed');
     } catch (error) {
-      console.log('⚠️ Cleanup warning:', error.message);
+      logger.info('⚠️ Cleanup warning:', error.message);
     }
   }
 }
@@ -449,7 +453,7 @@ if (require.main === module) {
     const collector = new AutoDOMCollector();
     try {
       await collector.collectAllStates();
-      console.log('\n🎉 Auto DOM Collection completed successfully!');
+      logger.info('\n🎉 Auto DOM Collection completed successfully!');
     } catch (error) {
       console.error('\n❌ Auto DOM Collection failed:', error.message);
       process.exit(1);

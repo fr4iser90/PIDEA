@@ -27,7 +27,7 @@ class PostgreSQLStreamingSessionRepository {
     try {
       await this.createTables();
       this.isInitialized = true;
-      this.logger.log('[PostgreSQLStreamingSessionRepository] Initialized successfully');
+      this.logger.info('[PostgreSQLStreamingSessionRepository] Initialized successfully');
       return true;
     } catch (error) {
       this.logger.error('[PostgreSQLStreamingSessionRepository] Initialization error:', error.message);
@@ -104,7 +104,7 @@ class PostgreSQLStreamingSessionRepository {
       await this.db.execute('CREATE INDEX IF NOT EXISTS idx_frame_metrics_session_id ON frame_metrics (session_id)');
       await this.db.execute('CREATE INDEX IF NOT EXISTS idx_frame_metrics_timestamp ON frame_metrics (timestamp)');
       
-      logger.log('[PostgreSQLStreamingSessionRepository] Database tables created successfully');
+      logger.info('[PostgreSQLStreamingSessionRepository] Database tables created successfully');
     } catch (error) {
       logger.error('[PostgreSQLStreamingSessionRepository] Error creating tables:', error.message);
       throw error;
@@ -126,7 +126,7 @@ class PostgreSQLStreamingSessionRepository {
       // Save to database
       await this.saveSessionToDatabase(session);
 
-      logger.log(`[PostgreSQLStreamingSessionRepository] Saved session ${session.id}`);
+      logger.info(`[PostgreSQLStreamingSessionRepository] Saved session ${session.id}`);
     } catch (error) {
       logger.error(`[PostgreSQLStreamingSessionRepository] Error saving session ${session.id}:`, error.message);
       throw error;
@@ -333,7 +333,7 @@ class PostgreSQLStreamingSessionRepository {
       // Remove from database
       await this.deleteSessionFromDatabase(sessionId);
 
-      logger.log(`[PostgreSQLStreamingSessionRepository] Deleted session ${sessionId}`);
+      logger.info(`[PostgreSQLStreamingSessionRepository] Deleted session ${sessionId}`);
     } catch (error) {
       logger.error(`[PostgreSQLStreamingSessionRepository] Error deleting session ${sessionId}:`, error.message);
       throw error;
@@ -556,7 +556,7 @@ class PostgreSQLStreamingSessionRepository {
       const result = await this.db.execute(query, [cutoffTime.toISOString()]);
       const deletedCount = result.rowsAffected || 0;
 
-      logger.log(`[PostgreSQLStreamingSessionRepository] Cleaned up ${deletedCount} old sessions`);
+      logger.info(`[PostgreSQLStreamingSessionRepository] Cleaned up ${deletedCount} old sessions`);
     } catch (error) {
       logger.error('[PostgreSQLStreamingSessionRepository] Error during cleanup:', error.message);
       throw error;

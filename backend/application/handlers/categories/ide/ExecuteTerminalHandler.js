@@ -37,7 +37,7 @@ class ExecuteTerminalHandler {
    */
   async handle(command, context = {}) {
     try {
-      this.logger.log(`[ExecuteTerminalHandler] Handling command: ${command.commandId}`);
+      this.logger.info(`[ExecuteTerminalHandler] Handling command: ${command.commandId}`);
 
       // Validate command
       if (!command || command.type !== 'ExecuteTerminalCommand') {
@@ -62,7 +62,7 @@ class ExecuteTerminalHandler {
         timestamp: new Date()
       });
 
-      this.logger.log(`[ExecuteTerminalHandler] Terminal command executed successfully: ${command.command}`);
+      this.logger.info(`[ExecuteTerminalHandler] Terminal command executed successfully: ${command.command}`);
 
       return {
         success: true,

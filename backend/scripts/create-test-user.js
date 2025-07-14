@@ -11,14 +11,14 @@ const logger = new Logger('Logger');
 const dbPath = path.join(__dirname, '../database/PIDEA-dev.db');
 
 logger.debug('👤 [CreateTestUser] Creating test user...');
-logger.log(`📁 Database path: ${dbPath}`);
+logger.info(`📁 Database path: ${dbPath}`);
 
 const db = new sqlite3.Database(dbPath, (err) => {
   if (err) {
     logger.error('❌ Error opening database:', err.message);
     process.exit(1);
   }
-  logger.log('✅ Database opened successfully');
+  logger.info('✅ Database opened successfully');
 });
 
 async function createTestUser() {
@@ -53,9 +53,9 @@ async function createTestUser() {
           reject(err);
         } else {
           logger.debug('✅ Test user created successfully!');
-          logger.log(`📧 Email: ${email}`);
-          logger.log(`🔑 Password: ${password}`);
-          logger.log(`🆔 User ID: ${userId}`);
+          logger.info(`📧 Email: ${email}`);
+          logger.info(`🔑 Password: ${password}`);
+          logger.info(`🆔 User ID: ${userId}`);
           resolve();
         }
       });

@@ -40,7 +40,7 @@ describe('TestingAnalyzer', () => {
 
         it('should handle undefined logger gracefully', () => {
             const analyzerWithoutLogger = new TestingAnalyzer(undefined, mockFileUtils, mockDirectoryScanner);
-            expect(analyzerWithoutLogger.logger).toBeUndefined();
+            expect(analyzerWithoutlogger.infoger).toBeUndefined();
             expect(analyzerWithoutLogger.fileUtils).toBe(mockFileUtils);
             expect(analyzerWithoutLogger.directoryScanner).toBe(mockDirectoryScanner);
         });

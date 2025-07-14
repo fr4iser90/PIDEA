@@ -147,7 +147,7 @@ class ProjectContextService {
                 ).length >= 2;
                 
                 if (hasMonorepoIndicators && hasMultipleSubdirs) {
-                    logger.log('[ProjectContextService] Detected monorepo, using parent directory:', parentDir);
+                    logger.info('[ProjectContextService] 🏗️ Detected monorepo, using parent directory:', parentDir);
                     return parentDir;
                 }
             }

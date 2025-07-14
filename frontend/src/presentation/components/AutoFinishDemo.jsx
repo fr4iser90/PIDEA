@@ -55,7 +55,7 @@ const AutoFinishDemo = () => {
       });
 
       setSessionId(result.sessionId);
-      logger.log('TODO processing started:', result);
+      logger.info('TODO processing started:', result);
     } catch (error) {
       logger.error('Failed to process TODO list:', error);
       setError(error.message || 'Failed to process TODO list');
@@ -65,7 +65,7 @@ const AutoFinishDemo = () => {
   };
 
   const handleComplete = (result) => {
-    logger.log('TODO processing completed:', result);
+    logger.info('TODO processing completed:', result);
     setSessionId(null);
     setTodoInput('');
   };
@@ -77,7 +77,7 @@ const AutoFinishDemo = () => {
   };
 
   const handleCancel = () => {
-    logger.log('TODO processing cancelled');
+    logger.info('TODO processing cancelled');
     setSessionId(null);
   };
 

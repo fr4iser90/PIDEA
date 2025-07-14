@@ -18,12 +18,12 @@ const stepBuilder = new StepBuilder(stepRegistry);
  */
 async function initializeSteps() {
   try {
-    logger.log('🚀 Initializing step system...');
+    logger.info('🚀 Initializing step system...');
     
     // Load steps from categories
     await stepRegistry.loadStepsFromCategories();
     
-    logger.log('✅ Step system initialized successfully');
+    logger.info('✅ Step system initialized successfully');
     return {
       registry: stepRegistry,
       builder: stepBuilder

@@ -1,3 +1,7 @@
+const Logger = require('@logging/Logger');
+
+const logger = new Logger('ServiceName');
+
 /**
  * Simple Streaming Service Validation Script
  * 
@@ -7,7 +11,7 @@
 const fs = require('fs');
 const path = require('path');
 
-console.log('🚀 Starting IDE Mirror System Streaming File Validation...\n');
+logger.info('🚀 Starting IDE Mirror System Streaming File Validation...\n');
 
 const requiredFiles = [
   'backend/domain/services/ide-mirror/ScreenshotStreamingService.js',
@@ -32,34 +36,34 @@ const requiredFiles = [
 let passed = 0;
 let failed = 0;
 
-console.log('📁 Checking Required Files...\n');
+logger.info('📁 Checking Required Files...\n');
 
 for (const file of requiredFiles) {
   if (fs.existsSync(file)) {
-    console.log(`✅ ${file}`);
+    logger.info(`✅ ${file}`);
     passed++;
   } else {
-    console.log(`❌ ${file} - File not found`);
+    logger.info(`❌ ${file} - File not found`);
     failed++;
   }
 }
 
-console.log('\n📊 Validation Summary:');
-console.log(`✅ Files Found: ${passed}`);
-console.log(`❌ Files Missing: ${failed}`);
-console.log(`📈 Success Rate: ${Math.round((passed / (passed + failed)) * 100)}%`);
+logger.info('\n📊 Validation Summary:');
+logger.info(`✅ Files Found: ${passed}`);
+logger.info(`❌ Files Missing: ${failed}`);
+logger.info(`📈 Success Rate: ${Math.round((passed / (passed + failed)) * 100)}%`);
 
 if (failed === 0) {
-  console.log('\n🎉 All required files exist! IDE Mirror System streaming implementation is complete.');
-  console.log('\n📋 Implementation Status:');
-  console.log('✅ Phase 1: Foundation Setup - COMPLETED');
-  console.log('✅ Phase 2: Core Implementation - COMPLETED');
-  console.log('✅ Phase 3: Integration - COMPLETED');
-  console.log('✅ Phase 4: Testing & Documentation - COMPLETED');
-  console.log('✅ Phase 5: Deployment & Validation - COMPLETED');
-  console.log('\n🚀 The IDE Mirror System streaming feature is ready for use!');
+  logger.info('\n🎉 All required files exist! IDE Mirror System streaming implementation is complete.');
+  logger.info('\n📋 Implementation Status:');
+  logger.info('✅ Phase 1: Foundation Setup - COMPLETED');
+  logger.info('✅ Phase 2: Core Implementation - COMPLETED');
+  logger.info('✅ Phase 3: Integration - COMPLETED');
+  logger.info('✅ Phase 4: Testing & Documentation - COMPLETED');
+  logger.info('✅ Phase 5: Deployment & Validation - COMPLETED');
+  logger.info('\n🚀 The IDE Mirror System streaming feature is ready for use!');
   process.exit(0);
 } else {
-  console.log('\n⚠️  Some files are missing. Please check the implementation.');
+  logger.info('\n⚠️  Some files are missing. Please check the implementation.');
   process.exit(1);
 } 

@@ -3,6 +3,10 @@ const path = require('path');
 const EnhancedDOMCollector = require('./enhanced-dom-collector');
 const EnhancedChatAnalyzer = require('./enhanced-chat-analyzer');
 
+const Logger = require('@logging/Logger');
+
+const logger = new Logger('ServiceName');
+
 class EnhancedCoverageTester {
   constructor() {
     this.testResults = {
@@ -14,8 +18,8 @@ class EnhancedCoverageTester {
   }
 
   async runAllTests() {
-    console.log('🧪 Enhanced Coverage Testing Suite\n');
-    console.log('=' .repeat(50));
+    logger.info('🧪 Enhanced Coverage Testing Suite\n');
+    logger.info('=' .repeat(50));
 
     try {
       // Test 1: Enhanced DOM Collection
@@ -43,7 +47,7 @@ class EnhancedCoverageTester {
   }
 
   async testEnhancedDOMCollection() {
-    console.log('\n📊 Test 1: Enhanced DOM Collection');
+    logger.info('\n📊 Test 1: Enhanced DOM Collection');
     
     try {
       const collector = new EnhancedDOMCollector();
@@ -95,7 +99,7 @@ class EnhancedCoverageTester {
   }
 
   async testChatAnalysis() {
-    console.log('\n💬 Test 2: Chat Analysis');
+    logger.info('\n💬 Test 2: Chat Analysis');
     
     try {
       const analyzer = new EnhancedChatAnalyzer();
@@ -135,7 +139,7 @@ class EnhancedCoverageTester {
   }
 
   async testCoverageValidation() {
-    console.log('\n✅ Test 3: Coverage Validation');
+    logger.info('\n✅ Test 3: Coverage Validation');
     
     try {
       const CoverageValidator = require('./coverage-validator');
@@ -179,7 +183,7 @@ class EnhancedCoverageTester {
   }
 
   async testSelectorGeneration() {
-    console.log('\n🔧 Test 4: Selector Generation');
+    logger.info('\n🔧 Test 4: Selector Generation');
     
     try {
       const SelectorGenerator = require('./selector-generator');
@@ -221,7 +225,7 @@ class EnhancedCoverageTester {
   }
 
   async testIntegration() {
-    console.log('\n🔗 Test 5: Integration Test');
+    logger.info('\n🔗 Test 5: Integration Test');
     
     try {
       // Test file structure
@@ -302,62 +306,62 @@ class EnhancedCoverageTester {
     switch (status) {
       case 'PASSED':
         this.testResults.passed++;
-        console.log(`  ✅ ${testName}`);
+        logger.info(`  ✅ ${testName}`);
         break;
       case 'FAILED':
         this.testResults.failed++;
-        console.log(`  ❌ ${testName}${details ? `: ${details}` : ''}`);
+        logger.info(`  ❌ ${testName}${details ? `: ${details}` : ''}`);
         break;
       case 'WARNING':
         this.testResults.warnings++;
-        console.log(`  ⚠️ ${testName}${details ? `: ${details}` : ''}`);
+        logger.info(`  ⚠️ ${testName}${details ? `: ${details}` : ''}`);
         break;
     }
   }
 
   generateTestReport() {
-    console.log('\n' + '='.repeat(50));
-    console.log('📊 TEST RESULTS SUMMARY');
-    console.log('='.repeat(50));
+    logger.info('\n' + '='.repeat(50));
+    logger.info('📊 TEST RESULTS SUMMARY');
+    logger.info('='.repeat(50));
     
     const total = this.testResults.passed + this.testResults.failed + this.testResults.warnings;
     const successRate = total > 0 ? Math.round((this.testResults.passed / total) * 100) : 0;
     
-    console.log(`✅ Passed: ${this.testResults.passed}`);
-    console.log(`❌ Failed: ${this.testResults.failed}`);
-    console.log(`⚠️ Warnings: ${this.testResults.warnings}`);
-    console.log(`📈 Success Rate: ${successRate}%`);
+    logger.info(`✅ Passed: ${this.testResults.passed}`);
+    logger.info(`❌ Failed: ${this.testResults.failed}`);
+    logger.info(`⚠️ Warnings: ${this.testResults.warnings}`);
+    logger.info(`📈 Success Rate: ${successRate}%`);
     
     if (this.testResults.failed > 0) {
-      console.log('\n❌ FAILED TESTS:');
+      logger.info('\n❌ FAILED TESTS:');
       this.testResults.details
         .filter(result => result.status === 'FAILED')
         .forEach(result => {
-          console.log(`  - ${result.test}: ${result.details}`);
+          logger.info(`  - ${result.test}: ${result.details}`);
         });
     }
     
     if (this.testResults.warnings > 0) {
-      console.log('\n⚠️ WARNINGS:');
+      logger.info('\n⚠️ WARNINGS:');
       this.testResults.details
         .filter(result => result.status === 'WARNING')
         .forEach(result => {
-          console.log(`  - ${result.test}: ${result.details}`);
+          logger.info(`  - ${result.test}: ${result.details}`);
         });
     }
     
     // Save detailed report
     const reportFile = path.join(__dirname, '../output/enhanced-coverage-test-report.json');
     fs.writeFileSync(reportFile, JSON.stringify(this.testResults, null, 2));
-    console.log(`\n📄 Detailed report saved: ${reportFile}`);
+    logger.info(`\n📄 Detailed report saved: ${reportFile}`);
     
     // Overall assessment
     if (this.testResults.failed === 0 && successRate >= 80) {
-      console.log('\n🎉 ENHANCED COVERAGE READY FOR PRODUCTION!');
+      logger.info('\n🎉 ENHANCED COVERAGE READY FOR PRODUCTION!');
     } else if (this.testResults.failed === 0) {
-      console.log('\n🟡 ENHANCED COVERAGE READY WITH WARNINGS');
+      logger.info('\n🟡 ENHANCED COVERAGE READY WITH WARNINGS');
     } else {
-      console.log('\n🔴 ENHANCED COVERAGE NEEDS FIXES');
+      logger.info('\n🔴 ENHANCED COVERAGE NEEDS FIXES');
     }
   }
 }

@@ -39,7 +39,7 @@ describe('FileUtils', () => {
 
         it('should handle undefined logger gracefully', () => {
             const fileUtilsWithoutLogger = new FileUtils(undefined);
-            expect(fileUtilsWithoutLogger.logger).toBeUndefined();
+            expect(fileUtilsWithoutlogger.infoger).toBeUndefined();
         });
     });
 

@@ -36,7 +36,7 @@ class RunUnitTestsStep {
     const step = StepBuilder.build(config, context);
     
     try {
-      logger.log(`🧪 Executing ${this.name}...`);
+      logger.info(`🧪 Executing ${this.name}...`);
       
       // Validate context
       this.validateContext(context);
@@ -50,7 +50,7 @@ class RunUnitTestsStep {
       // Validate results
       const validation = await this.validateResults(results, coverage);
       
-      logger.log(`✅ ${this.name} completed successfully`);
+      logger.info(`✅ ${this.name} completed successfully`);
       return {
         success: true,
         step: this.name,

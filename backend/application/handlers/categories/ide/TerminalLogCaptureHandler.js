@@ -37,7 +37,7 @@ class TerminalLogCaptureHandler {
    */
   async handle(command, context = {}) {
     try {
-      this.logger.log(`[TerminalLogCaptureHandler] Handling command: ${command.commandId}`);
+      this.logger.info(`[TerminalLogCaptureHandler] Handling command: ${command.commandId}`);
 
       // Validate command
       if (!command || command.type !== 'TerminalLogCaptureCommand') {
@@ -60,7 +60,7 @@ class TerminalLogCaptureHandler {
         timestamp: new Date()
       });
 
-      this.logger.log(`[TerminalLogCaptureHandler] Terminal logs captured successfully: ${result.count} entries`);
+      this.logger.info(`[TerminalLogCaptureHandler] Terminal logs captured successfully: ${result.count} entries`);
 
       return {
         success: true,

@@ -21,7 +21,7 @@ class StartStreamingHandler {
    */
   async handle(command) {
     try {
-      logger.log(`[StartStreamingHandler] Processing command: ${command.commandId}`);
+      logger.info(`[StartStreamingHandler] Processing command: ${command.commandId}`);
       
       // Validate command
       command.validate();
@@ -50,7 +50,7 @@ class StartStreamingHandler {
         });
       }
       
-      logger.log(`[StartStreamingHandler] Successfully started streaming for session ${command.sessionId}`);
+      logger.info(`[StartStreamingHandler] Successfully started streaming for session ${command.sessionId}`);
       
       return {
         success: true,

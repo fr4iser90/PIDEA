@@ -53,9 +53,9 @@ export const useAnalysisCache = () => {
       const data = analysisDataCache.get(cacheKey);
       
       if (data) {
-        logger.log(`[useAnalysisCache] Cache hit for ${dataType}:`, { projectId, filters });
+        logger.info(`[useAnalysisCache] Cache hit for ${dataType}:`, { projectId, filters });
       } else {
-        logger.log(`[useAnalysisCache] Cache miss for ${dataType}:`, { projectId, filters });
+        logger.info(`[useAnalysisCache] Cache miss for ${dataType}:`, { projectId, filters });
       }
       
       return data;
@@ -79,7 +79,7 @@ export const useAnalysisCache = () => {
       
       analysisDataCache.set(cacheKey, data, ttl);
       
-      logger.log(`[useAnalysisCache] Cached ${dataType}:`, { 
+      logger.info(`[useAnalysisCache] Cached ${dataType}:`, { 
         projectId, 
         filters, 
         ttl: `${Math.round(ttl / 1000)}s`,
@@ -121,7 +121,7 @@ export const useAnalysisCache = () => {
       const cacheKey = analysisDataCache.getCacheKey(projectId, dataType, filters);
       analysisDataCache.delete(cacheKey);
       
-      logger.log(`[useAnalysisCache] Removed ${dataType} from cache:`, { projectId, filters });
+      logger.info(`[useAnalysisCache] Removed ${dataType} from cache:`, { projectId, filters });
       updateCacheStats();
     } catch (error) {
       logger.error('[useAnalysisCache] Failed to remove cached data:', error);
@@ -142,11 +142,11 @@ export const useAnalysisCache = () => {
           analysisDataCache.delete(cacheKey);
         });
         
-        logger.log(`[useAnalysisCache] Cleared cache for project:`, { projectId });
+        logger.info(`[useAnalysisCache] Cleared cache for project:`, { projectId });
       } else {
         // Clear all cache
         analysisDataCache.clear();
-        logger.log('[useAnalysisCache] Cleared all cache');
+        logger.info('[useAnalysisCache] Cleared all cache');
       }
       
       updateCacheStats();
@@ -161,7 +161,7 @@ export const useAnalysisCache = () => {
   const clearAllCache = useCallback(() => {
     try {
       analysisDataCache.clear();
-      logger.log('[useAnalysisCache] Cleared all cache');
+      logger.info('[useAnalysisCache] Cleared all cache');
       updateCacheStats();
     } catch (error) {
       logger.error('[useAnalysisCache] Failed to clear all cache:', error);
@@ -176,7 +176,7 @@ export const useAnalysisCache = () => {
     try {
       const cleanedCount = analysisDataCache.cleanup();
       if (cleanedCount > 0) {
-        logger.log(`[useAnalysisCache] Cleaned up ${cleanedCount} expired entries`);
+        logger.info(`[useAnalysisCache] Cleaned up ${cleanedCount} expired entries`);
         updateCacheStats();
       }
       return cleanedCount;
@@ -201,7 +201,7 @@ export const useAnalysisCache = () => {
   const updateCacheConfig = useCallback((config) => {
     try {
       analysisDataCache.setConfig(config);
-      logger.log('[useAnalysisCache] Updated cache configuration:', config);
+      logger.info('[useAnalysisCache] Updated cache configuration:', config);
     } catch (error) {
       logger.error('[useAnalysisCache] Failed to update cache configuration:', error);
     }

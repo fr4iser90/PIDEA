@@ -27,7 +27,7 @@ class StepBuilder {
       // Check cache first
       const cacheKey = this.getCacheKey(stepName, options);
       if (this.buildCache.has(cacheKey)) {
-        logger.log(`📦 Using cached step instance for "${stepName}"`);
+        logger.info(`📦 Using cached step instance for "${stepName}"`);
         return this.buildCache.get(cacheKey);
       }
 
@@ -40,7 +40,7 @@ class StepBuilder {
       // Cache the instance
       this.buildCache.set(cacheKey, instance);
 
-      logger.log(`🔨 Step "${stepName}" built successfully`);
+      logger.info(`🔨 Step "${stepName}" built successfully`);
       return instance;
     } catch (error) {
       logger.error(`❌ Failed to build step "${stepName}":`, error.message);
@@ -85,7 +85,7 @@ class StepBuilder {
         throw new Error('Step config must have a description');
       }
 
-      logger.log(`🔨 Step "${instance.name}" built from config`);
+      logger.info(`🔨 Step "${instance.name}" built from config`);
       return instance;
     } catch (error) {
       logger.error(`❌ Failed to build step from config:`, error.message);
@@ -237,11 +237,11 @@ class StepBuilder {
         .filter(key => key.startsWith(stepName + ':'));
       
       keysToDelete.forEach(key => this.buildCache.delete(key));
-      logger.log(`🗑️ Cleared cache for step "${stepName}"`);
+      logger.info(`🗑️ Cleared cache for step "${stepName}"`);
     } else {
       // Clear all cache
       this.buildCache.clear();
-      logger.log('🗑️ Cleared all step build cache');
+      logger.info('🗑️ Cleared all step build cache');
     }
   }
 

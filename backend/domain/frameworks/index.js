@@ -18,12 +18,12 @@ const frameworkBuilder = new FrameworkBuilder(frameworkRegistry);
  */
 async function initializeFrameworks() {
   try {
-    logger.log('🚀 Initializing framework system...');
+    logger.info('🚀 Initializing framework system...');
     
     // Load framework configurations
     await frameworkRegistry.loadFrameworkConfigs();
     
-    logger.log('✅ Framework system initialized successfully');
+    logger.info('✅ Framework system initialized successfully');
     return {
       registry: frameworkRegistry,
       builder: frameworkBuilder

@@ -48,20 +48,20 @@ class SendMessageHandler {
    */
   getActiveIDEService() {
     const activePort = this.ideManager.getActivePort();
-    logger.log(`[SendMessageHandler] Active port: ${activePort}`);
+    logger.info(`[SendMessageHandler] Active port: ${activePort}`);
     
     // Determine IDE type based on port range
     if (activePort >= 9222 && activePort <= 9231) {
-      logger.log('[SendMessageHandler] Using Cursor IDE service');
+      logger.info('[SendMessageHandler] Using Cursor IDE service');
       return this.cursorIDEService;
     } else if (activePort >= 9232 && activePort <= 9241) {
-      logger.log('[SendMessageHandler] Using VSCode IDE service');
+      logger.info('[SendMessageHandler] Using VSCode IDE service');
       return this.vscodeIDEService;
     } else if (activePort >= 9242 && activePort <= 9251) {
-      logger.log('[SendMessageHandler] Using Windsurf IDE service');
+      logger.info('[SendMessageHandler] Using Windsurf IDE service');
       return this.windsurfIDEService;
     } else {
-      logger.log('[SendMessageHandler] Defaulting to Cursor IDE service');
+      logger.info('[SendMessageHandler] Defaulting to Cursor IDE service');
       return this.cursorIDEService; // fallback
     }
   }

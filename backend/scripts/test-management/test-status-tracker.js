@@ -296,30 +296,30 @@ class TestStatusTracker {
    */
   printTrackingSummary(trackingResults) {
     logger.debug('\n📊 Test Tracking Summary');
-    logger.log('========================');
+    logger.info('========================');
     logger.debug(`📁 Total tests processed: ${trackingResults.totalTests}`);
     logger.debug(`✅ Successfully tracked: ${trackingResults.trackedTests}`);
     logger.debug(`🔄 Updated tests: ${trackingResults.updatedTests}`);
     logger.debug(`🆕 New tests: ${trackingResults.newTests}`);
-    logger.log(`❌ Errors: ${trackingResults.errors}`);
+    logger.info(`❌ Errors: ${trackingResults.errors}`);
     
     if (trackingResults.summary) {
       const summary = trackingResults.summary;
       logger.debug('\n📈 Test Statistics');
-      logger.log('==================');
+      logger.info('==================');
       logger.debug(`📊 Total tests: ${summary.total || 0}`);
-      logger.log(`✅ Passing: ${summary.passing || 0}`);
-      logger.log(`❌ Failing: ${summary.failing || 0}`);
-      logger.log(`⏭️  Skipped: ${summary.skipped || 0}`);
-      logger.log(`⚠️  Legacy: ${summary.legacy || 0}`);
+      logger.info(`✅ Passing: ${summary.passing || 0}`);
+      logger.info(`❌ Failing: ${summary.failing || 0}`);
+      logger.info(`⏭️  Skipped: ${summary.skipped || 0}`);
+      logger.info(`⚠️  Legacy: ${summary.legacy || 0}`);
       logger.debug(`🐌 Slow tests: ${summary.slowTests?.length || 0}`);
       logger.debug(`🎲 Flaky tests: ${summary.flakyTests?.length || 0}`);
       logger.debug(`🛡️  Stable tests: ${summary.stableTests?.length || 0}`);
-      logger.log(`🚨 Recent failures: ${summary.recentFailures?.length || 0}`);
+      logger.info(`🚨 Recent failures: ${summary.recentFailures?.length || 0}`);
       
       if (summary.slowTests && summary.slowTests.length > 0) {
         logger.debug('\n🐌 Top 5 Slowest Tests');
-        logger.log('=====================');
+        logger.info('=====================');
         summary.slowTests.slice(0, 5).forEach((test, index) => {
           logger.debug(`${index + 1}. ${path.basename(test.filePath)} - ${test.testName} (${Math.round(test.averageDuration)}ms)`);
         });
@@ -327,7 +327,7 @@ class TestStatusTracker {
       
       if (summary.flakyTests && summary.flakyTests.length > 0) {
         logger.debug('\n🎲 Top 5 Flakiest Tests');
-        logger.log('======================');
+        logger.info('======================');
         summary.flakyTests.slice(0, 5).forEach((test, index) => {
           logger.debug(`${index + 1}. ${path.basename(test.filePath)} - ${test.testName} (${Math.round(test.failureRate)}% failure rate)`);
         });
@@ -361,7 +361,7 @@ class TestStatusTracker {
       };
       
       await fs.writeFile(outputPath, JSON.stringify(exportData, null, 2));
-      logger.log(`📄 Tracking data exported to: ${outputPath}`);
+      logger.info(`📄 Tracking data exported to: ${outputPath}`);
     } catch (error) {
       logger.error(`❌ Failed to export tracking data: ${error.message}`);
     }
@@ -501,14 +501,14 @@ async function main() {
   
   if (args.length === 0) {
     logger.debug('Usage: node test-status-tracker.js <command> [options]');
-    logger.log('');
-    logger.log('Commands:');
+    logger.info('');
+    logger.info('Commands:');
     logger.debug('  track <results-file>     Track test results from JSON file');
-    logger.log('  health                   Generate health report');
-    logger.log('  export <output-file>     Export tracking data');
+    logger.info('  health                   Generate health report');
+    logger.info('  export <output-file>     Export tracking data');
     logger.debug('  history <file> <test>    Show status history for test');
-    logger.log('');
-    logger.log('Examples:');
+    logger.info('');
+    logger.info('Examples:');
     logger.debug('  node test-status-tracker.js track jest-results.json');
     logger.debug('  node test-status-tracker.js health');
     logger.debug('  node test-status-tracker.js export tracking-data.json');
@@ -531,7 +531,7 @@ async function main() {
         
       case 'health':
         const healthReport = await tracker.generateHealthReport();
-        logger.log(JSON.stringify(healthReport, null, 2));
+        logger.info(JSON.stringify(healthReport, null, 2));
         break;
         
       case 'export':
@@ -548,7 +548,7 @@ async function main() {
           process.exit(1);
         }
         const history = tracker.getStatusHistory(args[1], args[2]);
-        logger.log(JSON.stringify(history, null, 2));
+        logger.info(JSON.stringify(history, null, 2));
         break;
         
       default:

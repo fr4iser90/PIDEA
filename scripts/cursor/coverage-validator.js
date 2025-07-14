@@ -1,6 +1,10 @@
 const fs = require('fs');
 const path = require('path');
 
+const Logger = require('@logging/Logger');
+
+const logger = new Logger('ServiceName');
+
 class CoverageValidator {
   constructor() {
     this.analysisFile = path.join(__dirname, '../output/dom-analysis-results.json');
@@ -74,14 +78,14 @@ class CoverageValidator {
     const outputDir = path.dirname(this.outputFile);
     if (!fs.existsSync(outputDir)) {
       fs.mkdirSync(outputDir, { recursive: true });
-      console.log(`📁 Created directory: ${outputDir}`);
+      logger.info(`📁 Created directory: ${outputDir}`);
     }
   }
 
   loadAnalysisResults() {
     if (!fs.existsSync(this.analysisFile)) {
-      console.log(`⚠️ Analysis file not found: ${this.analysisFile}`);
-      console.log('Creating empty analysis results...');
+      logger.info(`⚠️ Analysis file not found: ${this.analysisFile}`);
+      logger.info('Creating empty analysis results...');
       
       // Erstelle leere Analyse falls Datei nicht existiert
       const emptyResults = {
@@ -234,14 +238,14 @@ class CoverageValidator {
   }
 
   async validate() {
-    console.log('🔍 Validiere Feature Coverage...\n');
+    logger.info('🔍 Validiere Feature Coverage...\n');
 
     try {
       const analysisResults = this.loadAnalysisResults();
       const selectorCount = analysisResults.optimizedSelectors ? 
         Object.keys(analysisResults.optimizedSelectors).length : 0;
       
-      console.log(`📊 Analysiere ${selectorCount} gefundene Features`);
+      logger.info(`📊 Analysiere ${selectorCount} gefundene Features`);
 
       const coverage = this.validateCoverage(analysisResults);
       const recommendations = this.generateRecommendations(coverage);
@@ -278,7 +282,7 @@ class CoverageValidator {
   saveReport(report) {
     try {
       fs.writeFileSync(this.outputFile, JSON.stringify(report, null, 2));
-      console.log(`📄 Coverage Report: ${this.outputFile}`);
+      logger.info(`📄 Coverage Report: ${this.outputFile}`);
     } catch (error) {
       console.error(`❌ Failed to save report: ${error.message}`);
     }
@@ -287,45 +291,45 @@ class CoverageValidator {
   displaySummary(report) {
     const { coverage, summary, recommendations } = report;
 
-    console.log('\n📊 COVERAGE VALIDATION SUMMARY');
-    console.log('═'.repeat(50));
-    console.log(`Status: ${summary.status}`);
-    console.log(`Progress: ${summary.progress}`);
-    console.log(`Ready for Production: ${summary.readyForProduction ? '✅ YES' : '❌ NO'}`);
+    logger.info('\n📊 COVERAGE VALIDATION SUMMARY');
+    logger.info('═'.repeat(50));
+    logger.info(`Status: ${summary.status}`);
+    logger.info(`Progress: ${summary.progress}`);
+    logger.info(`Ready for Production: ${summary.readyForProduction ? '✅ YES' : '❌ NO'}`);
 
-    console.log('\n📈 BY CATEGORY:');
+    logger.info('\n📈 BY CATEGORY:');
     Object.entries(coverage.byCategory).forEach(([category, results]) => {
       const status = results.percentage >= 90 ? '✅' :
                     results.percentage >= 75 ? '🟡' : '❌';
-      console.log(`  ${status} ${category}: ${results.found.length}/${results.total} (${results.percentage}%)`);
+      logger.info(`  ${status} ${category}: ${results.found.length}/${results.total} (${results.percentage}%)`);
     });
 
     if (coverage.missingFeatures.length > 0) {
-      console.log('\n🎯 FEHLENDE FEATURES:');
+      logger.info('\n🎯 FEHLENDE FEATURES:');
       coverage.missingFeatures.slice(0, 10).forEach(missing => {
-        console.log(`  ❌ ${missing.feature} (${missing.category})`);
+        logger.info(`  ❌ ${missing.feature} (${missing.category})`);
       });
       
       if (coverage.missingFeatures.length > 10) {
-        console.log(`  ... und ${coverage.missingFeatures.length - 10} weitere`);
+        logger.info(`  ... und ${coverage.missingFeatures.length - 10} weitere`);
       }
 
-      console.log('\n🚀 TOP PRIORITÄTEN:');
+      logger.info('\n🚀 TOP PRIORITÄTEN:');
       recommendations.slice(0, 3).forEach((rec, i) => {
-        console.log(`  ${i + 1}. ${rec.category}: ${rec.missingFeatures.length} Features`);
+        logger.info(`  ${i + 1}. ${rec.category}: ${rec.missingFeatures.length} Features`);
         rec.requiredActions.slice(0, 2).forEach(action => {
-          console.log(`     • ${action}`);
+          logger.info(`     • ${action}`);
         });
       });
     } else {
-      console.log('\n🎉 ALL FEATURES DETECTED!');
-      console.log('Ready for selector generation and test creation.');
+      logger.info('\n🎉 ALL FEATURES DETECTED!');
+      logger.info('Ready for selector generation and test creation.');
     }
 
-    console.log('\n📋 NÄCHSTE SCHRITTE:');
-    console.log('  npm run auto-collect-dom     # Sammle fehlende DOM-States');
-    console.log('  npm run analyze-dom          # Vollständige Analyse');
-    console.log('  npm run quick-check          # Schnelle Coverage-Prüfung');
+    logger.info('\n📋 NÄCHSTE SCHRITTE:');
+    logger.info('  npm run auto-collect-dom     # Sammle fehlende DOM-States');
+    logger.info('  npm run analyze-dom          # Vollständige Analyse');
+    logger.info('  npm run quick-check          # Schnelle Coverage-Prüfung');
   }
 
   quickCheck() {
@@ -333,11 +337,11 @@ class CoverageValidator {
       const analysisResults = this.loadAnalysisResults();
       const coverage = this.validateCoverage(analysisResults);
       
-      console.log(`Coverage: ${coverage.overall.percentage}% (${coverage.overall.found}/${coverage.overall.total})`);
+      logger.info(`Coverage: ${coverage.overall.percentage}% (${coverage.overall.found}/${coverage.overall.total})`);
       
       if (coverage.missingFeatures.length > 0) {
         const missing = coverage.missingFeatures.map(f => f.feature).slice(0, 5);
-        console.log(`Missing: ${missing.join(', ')}${coverage.missingFeatures.length > 5 ? '...' : ''}`);
+        logger.info(`Missing: ${missing.join(', ')}${coverage.missingFeatures.length > 5 ? '...' : ''}`);
       }
       
       return coverage.overall.percentage;

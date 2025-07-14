@@ -13,7 +13,7 @@ export default class TaskWorkflowRepository {
    */
   async startAutoFinishWorkflow(workflowData) {
     try {
-      logger.log('[TaskWorkflowRepository] Starting auto-finish workflow:', workflowData);
+      logger.info('[TaskWorkflowRepository] Starting auto-finish workflow:', workflowData);
 
       const { workflowId, projectId, taskData, type, priority, estimatedTime } = workflowData;
 
@@ -39,7 +39,7 @@ export default class TaskWorkflowRepository {
         throw new Error(response.error || 'Failed to start auto-finish workflow');
       }
 
-      logger.log('[TaskWorkflowRepository] Auto-finish workflow started successfully');
+      logger.info('[TaskWorkflowRepository] Auto-finish workflow started successfully');
       
       return {
         success: true,
@@ -62,7 +62,7 @@ export default class TaskWorkflowRepository {
    */
   async executeWorkflow(workflowData) {
     try {
-      logger.log('[TaskWorkflowRepository] Executing workflow:', workflowData);
+      logger.info('[TaskWorkflowRepository] Executing workflow:', workflowData);
 
       const { todoInput, options } = workflowData;
       const { workflowId, taskData, projectId } = options;
@@ -93,7 +93,7 @@ export default class TaskWorkflowRepository {
         throw new Error(response.error || 'Failed to execute workflow');
       }
 
-      logger.log('[TaskWorkflowRepository] Workflow executed successfully');
+      logger.info('[TaskWorkflowRepository] Workflow executed successfully');
       
       return {
         success: true,
@@ -116,7 +116,7 @@ export default class TaskWorkflowRepository {
    */
   async getWorkflowStatus(workflowId) {
     try {
-      logger.log('[TaskWorkflowRepository] Getting workflow status:', workflowId);
+      logger.info('[TaskWorkflowRepository] Getting workflow status:', workflowId);
 
       const response = await apiCall(`/api/auto-finish/status/${workflowId}`, {
         method: 'GET'
@@ -126,7 +126,7 @@ export default class TaskWorkflowRepository {
         throw new Error(response.error || 'Failed to get workflow status');
       }
 
-      logger.log('[TaskWorkflowRepository] Workflow status retrieved successfully');
+      logger.info('[TaskWorkflowRepository] Workflow status retrieved successfully');
       
       return {
         success: true,
@@ -151,7 +151,7 @@ export default class TaskWorkflowRepository {
    */
   async cancelWorkflow(workflowId) {
     try {
-      logger.log('[TaskWorkflowRepository] Cancelling workflow:', workflowId);
+      logger.info('[TaskWorkflowRepository] Cancelling workflow:', workflowId);
 
       const response = await apiCall(`/api/auto-finish/cancel/${workflowId}`, {
         method: 'POST'
@@ -161,7 +161,7 @@ export default class TaskWorkflowRepository {
         throw new Error(response.error || 'Failed to cancel workflow');
       }
 
-      logger.log('[TaskWorkflowRepository] Workflow cancelled successfully');
+      logger.info('[TaskWorkflowRepository] Workflow cancelled successfully');
       
       return {
         success: true,
@@ -184,7 +184,7 @@ export default class TaskWorkflowRepository {
    */
   async updateWorkflow(workflowId, updateData) {
     try {
-      logger.log('[TaskWorkflowRepository] Updating workflow:', { workflowId, updateData });
+      logger.info('[TaskWorkflowRepository] Updating workflow:', { workflowId, updateData });
 
       const response = await apiCall(`/api/auto-finish/update/${workflowId}`, {
         method: 'PUT',
@@ -198,7 +198,7 @@ export default class TaskWorkflowRepository {
         throw new Error(response.error || 'Failed to update workflow');
       }
 
-      logger.log('[TaskWorkflowRepository] Workflow updated successfully');
+      logger.info('[TaskWorkflowRepository] Workflow updated successfully');
       
       return {
         success: true,
@@ -220,7 +220,7 @@ export default class TaskWorkflowRepository {
    */
   async getWorkflowHistory(workflowId) {
     try {
-      logger.log('[TaskWorkflowRepository] Getting workflow history:', workflowId);
+      logger.info('[TaskWorkflowRepository] Getting workflow history:', workflowId);
 
       const response = await apiCall(`/api/auto-finish/history/${workflowId}`, {
         method: 'GET'
@@ -230,7 +230,7 @@ export default class TaskWorkflowRepository {
         throw new Error(response.error || 'Failed to get workflow history');
       }
 
-      logger.log('[TaskWorkflowRepository] Workflow history retrieved successfully');
+      logger.info('[TaskWorkflowRepository] Workflow history retrieved successfully');
       
       return {
         success: true,
@@ -252,7 +252,7 @@ export default class TaskWorkflowRepository {
    */
   async getProjectWorkflows(projectId) {
     try {
-      logger.log('[TaskWorkflowRepository] Getting project workflows:', projectId);
+      logger.info('[TaskWorkflowRepository] Getting project workflows:', projectId);
 
       const response = await apiCall(`/api/projects/${projectId}/auto-finish/workflows`, {
         method: 'GET'
@@ -262,7 +262,7 @@ export default class TaskWorkflowRepository {
         throw new Error(response.error || 'Failed to get project workflows');
       }
 
-      logger.log('[TaskWorkflowRepository] Project workflows retrieved successfully');
+      logger.info('[TaskWorkflowRepository] Project workflows retrieved successfully');
       
       return {
         success: true,
@@ -284,7 +284,7 @@ export default class TaskWorkflowRepository {
    */
   async getWorkflowLogs(workflowId) {
     try {
-      logger.log('[TaskWorkflowRepository] Getting workflow logs:', workflowId);
+      logger.info('[TaskWorkflowRepository] Getting workflow logs:', workflowId);
 
       const response = await apiCall(`/api/auto-finish/logs/${workflowId}`, {
         method: 'GET'
@@ -294,7 +294,7 @@ export default class TaskWorkflowRepository {
         throw new Error(response.error || 'Failed to get workflow logs');
       }
 
-      logger.log('[TaskWorkflowRepository] Workflow logs retrieved successfully');
+      logger.info('[TaskWorkflowRepository] Workflow logs retrieved successfully');
       
       return {
         success: true,
@@ -316,7 +316,7 @@ export default class TaskWorkflowRepository {
    */
   async retryWorkflow(workflowId) {
     try {
-      logger.log('[TaskWorkflowRepository] Retrying workflow:', workflowId);
+      logger.info('[TaskWorkflowRepository] Retrying workflow:', workflowId);
 
       const response = await apiCall(`/api/auto-finish/retry/${workflowId}`, {
         method: 'POST'
@@ -326,7 +326,7 @@ export default class TaskWorkflowRepository {
         throw new Error(response.error || 'Failed to retry workflow');
       }
 
-      logger.log('[TaskWorkflowRepository] Workflow retry started successfully');
+      logger.info('[TaskWorkflowRepository] Workflow retry started successfully');
       
       return {
         success: true,

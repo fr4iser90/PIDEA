@@ -72,7 +72,7 @@ class TaskSequencer {
    * Initialize the task sequencer
    */
   async initialize() {
-    this.logger.info('[TaskSequencer] Initializing task sequencer...');
+    this.logger.info('[TaskSequencer] ⚡ Initializing task sequencer...');
     this.logger.info(`[TaskSequencer] Loaded ${this.dependencyPatterns.length} dependency patterns`);
     return true;
   }

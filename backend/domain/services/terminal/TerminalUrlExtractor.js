@@ -7,14 +7,14 @@ class TerminalUrlExtractor {
   extractUserAppUrl(terminalOutput) {
     // Simplified URL extraction - focus on most common patterns
     if (!terminalOutput || terminalOutput.length === 0) {
-      logger.log('[TerminalUrlExtractor] No terminal output to analyze');
+      logger.info('[TerminalUrlExtractor] No terminal output to analyze');
       return null;
     }
     
     // Log preview of terminal output
     const lines = terminalOutput.split('\n');
     const previewLines = lines.length > 10 ? lines.slice(-10) : lines;
-    logger.log('[TerminalUrlExtractor] TerminalOutput (Preview):\n' + previewLines.join('\n'));
+    logger.info('[TerminalUrlExtractor] TerminalOutput (Preview):\n' + previewLines.join('\n'));
     
     // Most common dev server patterns (simplified)
     const patterns = [
@@ -35,7 +35,7 @@ class TerminalUrlExtractor {
         if (!url.startsWith('http')) {
           url = 'http://' + url;
         }
-        logger.log('[TerminalUrlExtractor] URL pattern matched:', pattern, '->', url);
+        logger.info('[TerminalUrlExtractor] URL pattern matched:', pattern, '->', url);
         return url;
       }
     }
@@ -45,11 +45,11 @@ class TerminalUrlExtractor {
     const matches = terminalOutput.match(genericUrlRegex);
     if (matches && matches.length > 0) {
       const url = matches[0];
-      logger.log('[TerminalUrlExtractor] Generic URL pattern matched ->', url);
+      logger.info('[TerminalUrlExtractor] Generic URL pattern matched ->', url);
       return url;
     }
     
-    logger.log('[TerminalUrlExtractor] No URL patterns matched in terminal output');
+    logger.info('[TerminalUrlExtractor] No URL patterns matched in terminal output');
     return null;
   }
 }

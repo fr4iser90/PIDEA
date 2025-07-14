@@ -77,11 +77,11 @@ class TaskProgressUI extends EventEmitter {
     startSession(session) {
         this.currentSession = session;
         
-        logger.log(chalk.blue.bold('\n🚀 VibeCoder Task Management Session Started'));
-        logger.log(chalk.gray(`Session ID: ${session.id}`));
-        logger.log(chalk.gray(`Project: ${session.projectName || 'Unknown'}`));
-        logger.log(chalk.gray(`Mode: ${session.mode || 'Standard'}`));
-        logger.log(chalk.gray('Real-time monitoring active...\n'));
+        logger.info(chalk.blue.bold('\n🚀 VibeCoder Task Management Session Started'));
+        logger.info(chalk.gray(`Session ID: ${session.id}`));
+        logger.info(chalk.gray(`Project: ${session.projectName || 'Unknown'}`));
+        logger.info(chalk.gray(`Mode: ${session.mode || 'Standard'}`));
+        logger.info(chalk.gray('Real-time monitoring active...\n'));
 
         if (this.options.showRealTimeUpdates) {
             this.startRealTimeUpdates();
@@ -100,7 +100,7 @@ class TaskProgressUI extends EventEmitter {
         this.spinners.forEach(spinner => spinner.stop());
         this.spinners.clear();
 
-        logger.log(chalk.blue.bold('\n✅ Session Completed'));
+        logger.info(chalk.blue.bold('\n✅ Session Completed'));
         this.displaySessionSummary();
     }
 
@@ -372,7 +372,7 @@ class TaskProgressUI extends EventEmitter {
         process.stdout.write('\x1b[2K\x1b[1G');
         
         const progressBar = this.createMiniProgressBar(stats.avgProgress);
-        logger.log(chalk.gray(`📊 Tasks: ${stats.activeTasks}/${stats.totalTasks} | Executions: ${stats.activeExecutions}/${stats.totalExecutions} | Progress: ${progressBar} ${Math.round(stats.avgProgress)}%`));
+        logger.info(chalk.gray(`📊 Tasks: ${stats.activeTasks}/${stats.totalTasks} | Executions: ${stats.activeExecutions}/${stats.totalExecutions} | Progress: ${progressBar} ${Math.round(stats.avgProgress)}%`));
     }
 
     /**
@@ -394,28 +394,28 @@ class TaskProgressUI extends EventEmitter {
     displaySessionSummary() {
         const stats = this.getCurrentStats();
         
-        logger.log(chalk.blue.bold('\n📊 Session Summary:'));
+        logger.info(chalk.blue.bold('\n📊 Session Summary:'));
         
         // Task summary
-        logger.log(chalk.blue('\n📋 Tasks:'));
-        logger.log(chalk.gray(`   Total: ${chalk.white(stats.totalTasks)}`));
-        logger.log(chalk.gray(`   Active: ${chalk.yellow(stats.activeTasks)}`));
-        logger.log(chalk.gray(`   Completed: ${chalk.green(stats.completedTasks)}`));
-        logger.log(chalk.gray(`   Failed: ${chalk.red(stats.failedTasks)}`));
+        logger.info(chalk.blue('\n📋 Tasks:'));
+        logger.info(chalk.gray(`   Total: ${chalk.white(stats.totalTasks)}`));
+        logger.info(chalk.gray(`   Active: ${chalk.yellow(stats.activeTasks)}`));
+        logger.info(chalk.gray(`   Completed: ${chalk.green(stats.completedTasks)}`));
+        logger.info(chalk.gray(`   Failed: ${chalk.red(stats.failedTasks)}`));
 
         // Execution summary
-        logger.log(chalk.blue('\n▶️  Executions:'));
-        logger.log(chalk.gray(`   Total: ${chalk.white(stats.totalExecutions)}`));
-        logger.log(chalk.gray(`   Active: ${chalk.yellow(stats.activeExecutions)}`));
-        logger.log(chalk.gray(`   Completed: ${chalk.green(stats.completedExecutions)}`));
-        logger.log(chalk.gray(`   Failed: ${chalk.red(stats.failedExecutions)}`));
+        logger.info(chalk.blue('\n▶️  Executions:'));
+        logger.info(chalk.gray(`   Total: ${chalk.white(stats.totalExecutions)}`));
+        logger.info(chalk.gray(`   Active: ${chalk.yellow(stats.activeExecutions)}`));
+        logger.info(chalk.gray(`   Completed: ${chalk.green(stats.completedExecutions)}`));
+        logger.info(chalk.gray(`   Failed: ${chalk.red(stats.failedExecutions)}`));
 
         // Success rate
         const successRate = stats.totalExecutions > 0 
             ? (stats.completedExecutions / stats.totalExecutions) * 100 
             : 0;
-        logger.log(chalk.blue('\n📈 Success Rate:'));
-        logger.log(chalk.gray(`   ${chalk.white(successRate.toFixed(1))}%`));
+        logger.info(chalk.blue('\n📈 Success Rate:'));
+        logger.info(chalk.gray(`   ${chalk.white(successRate.toFixed(1))}%`));
 
         // Display recent tasks
         this.displayRecentTasks();
@@ -430,7 +430,7 @@ class TaskProgressUI extends EventEmitter {
             .slice(0, 5);
 
         if (tasks.length > 0) {
-            logger.log(chalk.blue('\n📋 Recent Tasks:'));
+            logger.info(chalk.blue('\n📋 Recent Tasks:'));
             
             const table = new Table({
                 head: ['Title', 'Type', 'Status', 'Created'],
@@ -447,7 +447,7 @@ class TaskProgressUI extends EventEmitter {
                 ]);
             });
 
-            logger.log(table.toString());
+            logger.info(table.toString());
         }
     }
 
@@ -473,28 +473,28 @@ class TaskProgressUI extends EventEmitter {
     showTaskDetails(taskId) {
         const task = this.tasks.get(taskId);
         if (!task) {
-            logger.log(chalk.red('Task not found'));
+            logger.info(chalk.red('Task not found'));
             return;
         }
 
-        logger.log(chalk.blue.bold('\n📋 Task Details:'));
-        logger.log(chalk.gray(`ID: ${chalk.white(task.id)}`));
-        logger.log(chalk.gray(`Title: ${chalk.white(task.title)}`));
-        logger.log(chalk.gray(`Description: ${chalk.white(task.description)}`));
-        logger.log(chalk.gray(`Type: ${chalk.white(task.type)}`));
-        logger.log(chalk.gray(`Status: ${chalk.white(task.status)}`));
-        logger.log(chalk.gray(`Priority: ${chalk.white(task.priority)}`));
-        logger.log(chalk.gray(`Created: ${chalk.white(new Date(task.createdAt).toLocaleString())}`));
+        logger.info(chalk.blue.bold('\n📋 Task Details:'));
+        logger.info(chalk.gray(`ID: ${chalk.white(task.id)}`));
+        logger.info(chalk.gray(`Title: ${chalk.white(task.title)}`));
+        logger.info(chalk.gray(`Description: ${chalk.white(task.description)}`));
+        logger.info(chalk.gray(`Type: ${chalk.white(task.type)}`));
+        logger.info(chalk.gray(`Status: ${chalk.white(task.status)}`));
+        logger.info(chalk.gray(`Priority: ${chalk.white(task.priority)}`));
+        logger.info(chalk.gray(`Created: ${chalk.white(new Date(task.createdAt).toLocaleString())}`));
 
         // Show related executions
         const executions = Array.from(this.executions.values())
             .filter(e => e.taskId === taskId);
 
         if (executions.length > 0) {
-            logger.log(chalk.blue('\n▶️  Executions:'));
+            logger.info(chalk.blue('\n▶️  Executions:'));
             executions.forEach(execution => {
                 const statusIcon = this.getStatusIcon(execution.status);
-                logger.log(chalk.gray(`   ${statusIcon} ${execution.id.substring(0, 8)} - ${execution.status}`));
+                logger.info(chalk.gray(`   ${statusIcon} ${execution.id.substring(0, 8)} - ${execution.status}`));
             });
         }
     }
@@ -506,24 +506,24 @@ class TaskProgressUI extends EventEmitter {
     showExecutionDetails(executionId) {
         const execution = this.executions.get(executionId);
         if (!execution) {
-            logger.log(chalk.red('Execution not found'));
+            logger.info(chalk.red('Execution not found'));
             return;
         }
 
-        logger.log(chalk.blue.bold('\n▶️  Execution Details:'));
-        logger.log(chalk.gray(`ID: ${chalk.white(execution.id)}`));
-        logger.log(chalk.gray(`Task: ${chalk.white(execution.taskTitle)}`));
-        logger.log(chalk.gray(`Status: ${chalk.white(execution.status)}`));
-        logger.log(chalk.gray(`Progress: ${chalk.white(execution.progress || 0)}%`));
-        logger.log(chalk.gray(`Current Step: ${chalk.white(execution.currentStep || 'N/A')}`));
-        logger.log(chalk.gray(`Started: ${chalk.white(new Date(execution.startedAt).toLocaleString())}`));
+        logger.info(chalk.blue.bold('\n▶️  Execution Details:'));
+        logger.info(chalk.gray(`ID: ${chalk.white(execution.id)}`));
+        logger.info(chalk.gray(`Task: ${chalk.white(execution.taskTitle)}`));
+        logger.info(chalk.gray(`Status: ${chalk.white(execution.status)}`));
+        logger.info(chalk.gray(`Progress: ${chalk.white(execution.progress || 0)}%`));
+        logger.info(chalk.gray(`Current Step: ${chalk.white(execution.currentStep || 'N/A')}`));
+        logger.info(chalk.gray(`Started: ${chalk.white(new Date(execution.startedAt).toLocaleString())}`));
 
         if (execution.completedAt) {
-            logger.log(chalk.gray(`Completed: ${chalk.white(new Date(execution.completedAt).toLocaleString())}`));
+            logger.info(chalk.gray(`Completed: ${chalk.white(new Date(execution.completedAt).toLocaleString())}`));
         }
 
         if (execution.error) {
-            logger.log(chalk.red(`Error: ${execution.error}`));
+            logger.info(chalk.red(`Error: ${execution.error}`));
         }
     }
 
@@ -531,8 +531,8 @@ class TaskProgressUI extends EventEmitter {
      * Show live dashboard
      */
     showLiveDashboard() {
-        logger.log(chalk.blue.bold('\n📊 Live Dashboard'));
-        logger.log(chalk.gray('Press Ctrl+C to exit\n'));
+        logger.info(chalk.blue.bold('\n📊 Live Dashboard'));
+        logger.info(chalk.gray('Press Ctrl+C to exit\n'));
 
         const updateDashboard = () => {
             const stats = this.getCurrentStats();
@@ -540,22 +540,22 @@ class TaskProgressUI extends EventEmitter {
             // Clear screen
             process.stdout.write('\x1b[2J\x1b[0f');
             
-            logger.log(chalk.blue.bold('📊 Live Dashboard'));
-            logger.log(chalk.gray(`Last updated: ${new Date().toLocaleTimeString()}\n`));
+            logger.info(chalk.blue.bold('📊 Live Dashboard'));
+            logger.info(chalk.gray(`Last updated: ${new Date().toLocaleTimeString()}\n`));
 
             // Tasks overview
-            logger.log(chalk.blue('📋 Tasks Overview:'));
+            logger.info(chalk.blue('📋 Tasks Overview:'));
             const taskProgressBar = this.createMiniProgressBar(
                 stats.totalTasks > 0 ? (stats.completedTasks / stats.totalTasks) * 100 : 0
             );
-            logger.log(chalk.gray(`   Progress: ${taskProgressBar} ${stats.completedTasks}/${stats.totalTasks}`));
-            logger.log(chalk.gray(`   Active: ${chalk.yellow(stats.activeTasks)} | Completed: ${chalk.green(stats.completedTasks)} | Failed: ${chalk.red(stats.failedTasks)}`));
+            logger.info(chalk.gray(`   Progress: ${taskProgressBar} ${stats.completedTasks}/${stats.totalTasks}`));
+            logger.info(chalk.gray(`   Active: ${chalk.yellow(stats.activeTasks)} | Completed: ${chalk.green(stats.completedTasks)} | Failed: ${chalk.red(stats.failedTasks)}`));
 
             // Executions overview
-            logger.log(chalk.blue('\n▶️  Executions Overview:'));
+            logger.info(chalk.blue('\n▶️  Executions Overview:'));
             const executionProgressBar = this.createMiniProgressBar(stats.avgProgress);
-            logger.log(chalk.gray(`   Progress: ${executionProgressBar} ${Math.round(stats.avgProgress)}%`));
-            logger.log(chalk.gray(`   Active: ${chalk.yellow(stats.activeExecutions)} | Completed: ${chalk.green(stats.completedExecutions)} | Failed: ${chalk.red(stats.failedExecutions)}`));
+            logger.info(chalk.gray(`   Progress: ${executionProgressBar} ${Math.round(stats.avgProgress)}%`));
+            logger.info(chalk.gray(`   Active: ${chalk.yellow(stats.activeExecutions)} | Completed: ${chalk.green(stats.completedExecutions)} | Failed: ${chalk.red(stats.failedExecutions)}`));
 
             // Recent activity
             this.displayRecentActivity();
@@ -568,7 +568,7 @@ class TaskProgressUI extends EventEmitter {
         // Handle Ctrl+C
         process.on('SIGINT', () => {
             clearInterval(interval);
-            logger.log(chalk.blue('\n👋 Dashboard closed'));
+            logger.info(chalk.blue('\n👋 Dashboard closed'));
             process.exit(0);
         });
     }
@@ -582,11 +582,11 @@ class TaskProgressUI extends EventEmitter {
             .slice(0, 3);
 
         if (recentExecutions.length > 0) {
-            logger.log(chalk.blue('\n🕒 Recent Activity:'));
+            logger.info(chalk.blue('\n🕒 Recent Activity:'));
             recentExecutions.forEach(execution => {
                 const statusIcon = this.getStatusIcon(execution.status);
                 const timeAgo = this.getTimeAgo(execution.startedAt);
-                logger.log(chalk.gray(`   ${statusIcon} ${execution.taskTitle} - ${timeAgo}`));
+                logger.info(chalk.gray(`   ${statusIcon} ${execution.taskTitle} - ${timeAgo}`));
             });
         }
     }

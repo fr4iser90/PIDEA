@@ -6,8 +6,8 @@
 
 const http = require('http');
 const net = require('net');
-const Logger = require('@logging/Logger');
-const logger = new Logger('CursorDetector');
+const ServiceLogger = require('@logging/ServiceLogger');
+const logger = new ServiceLogger('CursorDetector');
 
 class CursorDetector {
   constructor() {
@@ -27,7 +27,7 @@ class CursorDetector {
    * @returns {Promise<Array>} Array of detected Cursor IDEs
    */
   async scanForIDEs() {
-    logger.log('[CursorDetector] Scanning for Cursor IDEs on ports', this.portRange.start, 'to', this.portRange.end);
+    logger.info('[CursorDetector] 🔍 Scanning for Cursor IDEs on ports', this.portRange.start, 'to', this.portRange.end);
     
     const availableIDEs = [];
     const promises = [];
@@ -52,7 +52,7 @@ class CursorDetector {
       }
     });
 
-    logger.log('[CursorDetector] Found', availableIDEs.length, 'running Cursor IDEs');
+    logger.info('[CursorDetector] ✅ Found', availableIDEs.length, 'running Cursor IDEs');
     return availableIDEs;
   }
 

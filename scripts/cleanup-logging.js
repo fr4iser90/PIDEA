@@ -1,3 +1,7 @@
+const Logger = require('@logging/Logger');
+
+const logger = new Logger('ServiceName');
+
 #!/usr/bin/env node
 
 /**
@@ -26,7 +30,7 @@ const colors = {
 };
 
 function log(message, color = 'reset') {
-    console.log(`${colors[color]}${message}${colors.reset}`);
+    logger.info(`${colors[color]}${message}${colors.reset}`);
 }
 
 // Patterns für überflüssige Logs

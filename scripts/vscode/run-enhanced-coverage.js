@@ -1,3 +1,7 @@
+const Logger = require('@logging/Logger');
+
+const logger = new Logger('ServiceName');
+
 #!/usr/bin/env node
 
 const fs = require('fs');
@@ -20,7 +24,7 @@ class EnhancedCoverageRunner {
   ensureOutputDir() {
     if (!fs.existsSync(this.outputDir)) {
       fs.mkdirSync(this.outputDir, { recursive: true });
-      console.log(`📁 Created VSCode enhanced coverage directory: ${this.outputDir}`);
+      logger.info(`📁 Created VSCode enhanced coverage directory: ${this.outputDir}`);
     }
   }
 
@@ -40,7 +44,7 @@ class EnhancedCoverageRunner {
         sources[`enhanced-${file}`] = htmlContent;
       });
       
-      console.log(`📁 Enhanced VSCode collection: ${enhancedFiles.length} files`);
+      logger.info(`📁 Enhanced VSCode collection: ${enhancedFiles.length} files`);
     }
     
     // Fallback to auto collection
@@ -55,14 +59,14 @@ class EnhancedCoverageRunner {
         sources[`auto-${file}`] = htmlContent;
       });
       
-      console.log(`📁 Auto VSCode collection: ${autoFiles.length} files`);
+      logger.info(`📁 Auto VSCode collection: ${autoFiles.length} files`);
     }
     
     if (Object.keys(sources).length === 0) {
       throw new Error('No VSCode DOM files found for coverage analysis!');
     }
     
-    console.log(`📄 Total VSCode DOM files: ${Object.keys(sources).length}`);
+    logger.info(`📄 Total VSCode DOM files: ${Object.keys(sources).length}`);
     return sources;
   }
 
@@ -81,7 +85,7 @@ class EnhancedCoverageRunner {
   }
 
   async runEnhancedCoverage() {
-    console.log('🚀 VSCode Enhanced Coverage Analysis starting...\n');
+    logger.info('🚀 VSCode Enhanced Coverage Analysis starting...\n');
 
     try {
       // 1. Load all DOM files
@@ -102,11 +106,11 @@ class EnhancedCoverageRunner {
       // 6. Generate actionable recommendations
       this.generateActionableRecommendations(coverageResults);
 
-      console.log('\n📊 VSCode ENHANCED COVERAGE ANALYSIS COMPLETED!');
-      console.log(`📁 Output: ${this.outputDir}`);
-      console.log(`🎯 Coverage Score: ${report.summary.coverageScore}%`);
-      console.log(`❌ Missing Features: ${report.summary.missingFeatures}`);
-      console.log(`💡 Recommendations: ${report.summary.recommendations}`);
+      logger.info('\n📊 VSCode ENHANCED COVERAGE ANALYSIS COMPLETED!');
+      logger.info(`📁 Output: ${this.outputDir}`);
+      logger.info(`🎯 Coverage Score: ${report.summary.coverageScore}%`);
+      logger.info(`❌ Missing Features: ${report.summary.missingFeatures}`);
+      logger.info(`💡 Recommendations: ${report.summary.recommendations}`);
 
       return report;
 
@@ -304,7 +308,7 @@ class EnhancedCoverageRunner {
   }
 
   analyzeCoverage(sources, requiredFeatures) {
-    console.log('🔍 Analyzing VSCode feature coverage across all sources...');
+    logger.info('🔍 Analyzing VSCode feature coverage across all sources...');
     
     const coverage = {
       critical: {},
@@ -350,8 +354,8 @@ class EnhancedCoverageRunner {
       });
     });
     
-    console.log(`  ✅ Found: ${coverage.stats.foundFeatures} VSCode features`);
-    console.log(`  ❌ Missing: ${coverage.stats.missingFeatures} VSCode features`);
+    logger.info(`  ✅ Found: ${coverage.stats.foundFeatures} VSCode features`);
+    logger.info(`  ❌ Missing: ${coverage.stats.missingFeatures} VSCode features`);
     
     return coverage;
   }
@@ -590,8 +594,8 @@ class EnhancedCoverageRunner {
     const summary = this.generateSummaryReport(report);
     fs.writeFileSync(summaryFile, summary);
     
-    console.log(`📄 VSCode enhanced coverage saved: ${outputFile}`);
-    console.log(`📄 VSCode coverage summary saved: ${summaryFile}`);
+    logger.info(`📄 VSCode enhanced coverage saved: ${outputFile}`);
+    logger.info(`📄 VSCode coverage summary saved: ${summaryFile}`);
   }
 
   generateSummaryReport(report) {

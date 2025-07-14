@@ -182,7 +182,7 @@ class AutoFixTests {
       corrections.push(...complexCorrections);
     }
     
-    logger.log(`📋 Created ${corrections.length} correction tasks`);
+    logger.info(`📋 Created ${corrections.length} correction tasks`);
     
     return corrections;
   }
@@ -192,14 +192,14 @@ class AutoFixTests {
    */
   async applyFixes(corrections) {
     if (corrections.length === 0) {
-      logger.log('✅ No corrections needed');
+      logger.info('✅ No corrections needed');
       return [];
     }
     
     logger.debug(`🔧 Applying fixes to ${corrections.length} tests...`);
     
     if (this.options.dryRun) {
-      logger.log('🔍 DRY RUN MODE - No actual changes will be made');
+      logger.info('🔍 DRY RUN MODE - No actual changes will be made');
       return corrections.map(correction => ({
         success: true,
         correction,
@@ -210,12 +210,12 @@ class AutoFixTests {
     const results = await this.testCorrectionService.processCorrections(corrections, {
       maxConcurrent: this.options.maxConcurrent,
       onProgress: (progress) => {
-        logger.log(`📈 Progress: ${progress.completed}/${progress.total} (${Math.round(progress.completed/progress.total*100)}%)`);
+        logger.info(`📈 Progress: ${progress.completed}/${progress.total} (${Math.round(progress.completed/progress.total*100)}%)`);
       },
       onComplete: (results) => {
         const successful = results.filter(r => r.success).length;
         const failed = results.filter(r => !r.success).length;
-        logger.log(`✅ Fixes completed: ${successful} successful, ${failed} failed`);
+        logger.info(`✅ Fixes completed: ${successful} successful, ${failed} failed`);
       }
     });
     
@@ -229,7 +229,7 @@ class AutoFixTests {
    * Verify that fixes worked
    */
   async verifyFixes() {
-    logger.log('🔍 Verifying fixes...');
+    logger.info('🔍 Verifying fixes...');
     
     try {
       const testOutput = execSync('npm test -- --json --silent', {
@@ -431,7 +431,7 @@ class AutoFixTests {
    * Generate comprehensive report
    */
   async generateReport(fixResults, verificationResults) {
-    logger.log('📊 Generating report...');
+    logger.info('📊 Generating report...');
     
     const report = {
       timestamp: new Date().toISOString(),
@@ -462,9 +462,9 @@ class AutoFixTests {
     const markdownPath = path.join(process.cwd(), 'test-correction-report.md');
     await fs.writeFile(markdownPath, markdownReport);
     
-    logger.log(`📄 Reports saved to:`);
-    logger.log(`   - ${reportPath}`);
-    logger.log(`   - ${markdownPath}`);
+    logger.info(`📄 Reports saved to:`);
+    logger.info(`   - ${reportPath}`);
+    logger.info(`   - ${markdownPath}`);
     
     return report;
   }
@@ -590,7 +590,7 @@ if (require.main === module) {
         options.testPattern = args[++i];
         break;
       case '--help':
-        logger.log(`
+        logger.info(`
 Usage: node auto-fix-tests.js [options]
 
 Options:

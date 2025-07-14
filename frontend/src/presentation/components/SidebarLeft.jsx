@@ -16,7 +16,7 @@ import ChatPanelComponent from './chat/sidebar-left/ChatPanelComponent.jsx';
 import '@/css/global/sidebar-left.css';
 
 function SidebarLeft({ eventBus, activePort, onActivePortChange, mode = 'chat' }) {
-  logger.log('🔍 SidebarLeft RENDERING!');
+  logger.info('🔍 SidebarLeft RENDERING!');
   
   const [currentSessionId, setCurrentSessionId] = useState(null);
   const [availableIDEs, setAvailableIDEs] = useState([]);
@@ -43,9 +43,9 @@ function SidebarLeft({ eventBus, activePort, onActivePortChange, mode = 'chat' }
       if (sidebar) {
         const isVisible = sidebar.style.display !== 'none';
         sidebar.style.display = isVisible ? 'none' : 'flex';
-        logger.log('Left Sidebar toggled:', isVisible ? 'hidden' : 'visible');
+        logger.info('Left Sidebar toggled:', isVisible ? 'hidden' : 'visible');
       } else {
-        logger.log('Left Sidebar element not found');
+        logger.info('Left Sidebar element not found');
       }
     };
 

@@ -24,7 +24,7 @@ class ChatSessionService {
     // Event listeners
     this.setupEventListeners();
     
-    logger.log('[ChatSessionService] Initialized');
+    logger.info('[ChatSessionService] Initialized');
   }
 
   /**
@@ -97,7 +97,7 @@ class ChatSessionService {
         timestamp: new Date()
       });
 
-      logger.log(`[ChatSessionService] Created session ${session.id} for user ${userId}`);
+      logger.info(`[ChatSessionService] Created session ${session.id} for user ${userId}`);
       return session;
     } catch (error) {
       logger.error(`[ChatSessionService] Failed to create session for user ${userId}:`, error);
@@ -136,7 +136,7 @@ class ChatSessionService {
         timestamp: new Date()
       });
 
-      logger.log(`[ChatSessionService] Switched to session ${sessionId} for user ${userId}`);
+      logger.info(`[ChatSessionService] Switched to session ${sessionId} for user ${userId}`);
       return session;
     } catch (error) {
       logger.error(`[ChatSessionService] Failed to switch to session ${sessionId}:`, error);
@@ -232,7 +232,7 @@ class ChatSessionService {
         timestamp: new Date()
       });
 
-      logger.log(`[ChatSessionService] Closed session ${sessionId} for user ${userId}`);
+      logger.info(`[ChatSessionService] Closed session ${sessionId} for user ${userId}`);
       return true;
     } catch (error) {
       logger.error(`[ChatSessionService] Failed to close session ${sessionId}:`, error);
@@ -289,7 +289,7 @@ class ChatSessionService {
         activeSession.metadata.idePort = port;
         await this.chatRepository.saveSession(activeSession);
         
-        logger.log(`[ChatSessionService] Updated IDE port to ${port} for session ${activeSession.id}`);
+        logger.info(`[ChatSessionService] Updated IDE port to ${port} for session ${activeSession.id}`);
       }
     } catch (error) {
       logger.error('[ChatSessionService] Failed to handle port change:', error);
@@ -307,7 +307,7 @@ class ChatSessionService {
       // Clear active session
       this.activeSessions.delete(userId);
       
-      logger.log(`[ChatSessionService] Cleared active session for user ${userId}`);
+      logger.info(`[ChatSessionService] Cleared active session for user ${userId}`);
     } catch (error) {
       logger.error('[ChatSessionService] Failed to handle user logout:', error);
     }

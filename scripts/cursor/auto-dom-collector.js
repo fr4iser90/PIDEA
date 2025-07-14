@@ -3,6 +3,10 @@ const path = require('path');
 const BrowserManager = require('../../backend/infrastructure/external/BrowserManager');
 const IDEManager = require('../../backend/infrastructure/external/IDEManager');
 
+const Logger = require('@logging/Logger');
+
+const logger = new Logger('ServiceName');
+
 class AutoDOMCollector {
   constructor() {
     this.browserManager = new BrowserManager();
@@ -78,8 +82,8 @@ class AutoDOMCollector {
   }
 
   async initialize() {
-    console.log('🚀 Auto DOM Collector startet...');
-    console.log('📡 Verbinde mit Cursor IDE über CDP...\n');
+    logger.info('🚀 Auto DOM Collector startet...');
+    logger.info('📡 Verbinde mit Cursor IDE über CDP...\n');
 
     try {
       // IDE Manager initialisieren
@@ -92,7 +96,7 @@ class AutoDOMCollector {
       }
 
       await this.browserManager.connect(activePort);
-      console.log(`✅ Verbunden mit Cursor IDE auf Port ${activePort}`);
+      logger.info(`✅ Verbunden mit Cursor IDE auf Port ${activePort}`);
       
       return true;
     } catch (error) {
@@ -104,12 +108,12 @@ class AutoDOMCollector {
   async collectAllStates() {
     await this.initialize();
     
-    console.log(`\n🎯 Sammle ${this.stateConfigs.length} verschiedene IDE-Zustände...\n`);
+    logger.info(`\n🎯 Sammle ${this.stateConfigs.length} verschiedene IDE-Zustände...\n`);
 
     for (const [index, config] of this.stateConfigs.entries()) {
       try {
-        console.log(`📄 [${index + 1}/${this.stateConfigs.length}] ${config.name}`);
-        console.log(`   ${config.description}`);
+        logger.info(`📄 [${index + 1}/${this.stateConfigs.length}] ${config.name}`);
+        logger.info(`   ${config.description}`);
         
         // State aktivieren
         await config.action();
@@ -120,7 +124,7 @@ class AutoDOMCollector {
         // Kurze Pause zwischen States
         await this.wait(1500);
         
-        console.log(`   ✅ Erfolgreich gesammelt\n`);
+        logger.info(`   ✅ Erfolgreich gesammelt\n`);
         
       } catch (error) {
         console.error(`   ❌ Fehler bei ${config.name}:`, error.message);
@@ -131,43 +135,43 @@ class AutoDOMCollector {
     await this.cleanup();
 
     // AUTOMATISCH ANALYSE STARTEN
-    console.log('\n🔄 Starte automatische Analyse...');
+    logger.info('\n🔄 Starte automatische Analyse...');
     await this.runAutomaticAnalysis();
   }
 
   async runAutomaticAnalysis() {
     try {
       // 1. Bulk DOM Analyse
-      console.log('\n📊 [1/4] Bulk DOM Analyse...');
+      logger.info('\n📊 [1/4] Bulk DOM Analyse...');
       const BulkDOMAnalyzer = require('./bulk-dom-analyzer');
       const bulkAnalyzer = new BulkDOMAnalyzer();
       await bulkAnalyzer.analyze();
 
       // 2. Original DOM Analyse
-      console.log('\n📊 [2/4] Original DOM Analyse...');
+      logger.info('\n📊 [2/4] Original DOM Analyse...');
       const DOMAnalyzer = require('./dom-analyzer');
       const domAnalyzer = new DOMAnalyzer();
       await domAnalyzer.analyze();
 
       // 3. Merge Results
-      console.log('\n🔄 [3/4] Merge Analyse-Ergebnisse...');
+      logger.info('\n🔄 [3/4] Merge Analyse-Ergebnisse...');
       const { mergeAnalysisResults } = require('./merge-analysis-results');
       await mergeAnalysisResults();
 
       // 4. Coverage Validation
-      console.log('\n✅ [4/4] Coverage Validation...');
+      logger.info('\n✅ [4/4] Coverage Validation...');
       const CoverageValidator = require('./coverage-validator');
       const validator = new CoverageValidator();
       await validator.validate();
 
       // 5. Selector Generation
-      console.log('\n🔧 [5/5] Selector Generierung...');
+      logger.info('\n🔧 [5/5] Selector Generierung...');
       const SelectorGenerator = require('./selector-generator');
       const generator = new SelectorGenerator();
       await generator.generate();
 
-      console.log('\n🎉 VOLLSTÄNDIGE AUTOMATION ABGESCHLOSSEN!');
-      console.log('📁 Alle Dateien generiert in: cursor-chat-agent/generated/');
+      logger.info('\n🎉 VOLLSTÄNDIGE AUTOMATION ABGESCHLOSSEN!');
+      logger.info('📁 Alle Dateien generiert in: cursor-chat-agent/generated/');
 
     } catch (error) {
       console.error('❌ Automatische Analyse fehlgeschlagen:', error.message);
@@ -324,15 +328,15 @@ ${html}
     const reportPath = path.join(this.outputDir, 'collection-report.json');
     fs.writeFileSync(reportPath, JSON.stringify(report, null, 2));
 
-    console.log('\n📊 SAMMLUNG ERFOLGREICH!');
-    console.log(`📁 Verzeichnis: ${this.outputDir}`);
-    console.log(`📄 Dateien: ${this.collectedStates.size}`);
-    console.log(`📊 Report: ${reportPath}`);
+    logger.info('\n📊 SAMMLUNG ERFOLGREICH!');
+    logger.info(`📁 Verzeichnis: ${this.outputDir}`);
+    logger.info(`📄 Dateien: ${this.collectedStates.size}`);
+    logger.info(`📊 Report: ${reportPath}`);
     
     // File-Liste anzeigen
-    console.log('\n📋 GESAMMELTE DATEIEN:');
+    logger.info('\n📋 GESAMMELTE DATEIEN:');
     Array.from(this.collectedStates.entries()).forEach(([name, data]) => {
-      console.log(`  ✅ ${data.filename} (${data.elementCount} Elemente)`);
+      logger.info(`  ✅ ${data.filename} (${data.elementCount} Elemente)`);
     });
   }
 
@@ -340,7 +344,7 @@ ${html}
     try {
       await this.browserManager.disconnect();
     } catch (error) {
-      console.log('⚠️ Cleanup warning:', error.message);
+      logger.info('⚠️ Cleanup warning:', error.message);
     }
   }
 }

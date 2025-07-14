@@ -77,7 +77,7 @@ class TodoParser {
    * Initialize the parser
    */
   async initialize() {
-    this.logger.info('[TodoParser] Initializing TODO parser...');
+    this.logger.info('[TodoParser] 📝 Initializing TODO parser...');
     this.logger.info(`[TodoParser] Loaded ${this.patterns.length} parsing patterns`);
     return true;
   }

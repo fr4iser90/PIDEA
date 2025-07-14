@@ -115,7 +115,7 @@ class FallbackDetection {
    * Initialize the fallback detection system
    */
   async initialize() {
-    this.logger.info('[FallbackDetection] Initializing fallback detection system...');
+    this.logger.info('[FallbackDetection] 🔄 Initializing fallback detection system...');
     this.logger.info(`[FallbackDetection] Loaded ${Object.keys(this.userInputKeywords).length} languages`);
     return true;
   }

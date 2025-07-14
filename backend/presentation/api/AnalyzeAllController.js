@@ -2,7 +2,8 @@ const FrameworkRegistry = require('@frameworks/FrameworkRegistry');
 const WorkflowRegistry = require('@workflows/WorkflowRegistry');
 const DocumentationWorkflow = require('@workflows/categories/documentation/DocumentationWorkflow');
 const Logger = require('@logging/Logger');
-const logger = new Logger('Logger');
+const ServiceLogger = require('@logging/ServiceLogger');
+const logger = new ServiceLogger('AnalyzeAllController');
 
 
 class AnalyzeAllController {
@@ -13,7 +14,7 @@ class AnalyzeAllController {
 
   async analyzeAll(req, res) {
     try {
-      logger.log('🚀 Starting comprehensive analysis');
+      logger.info('🚀 Starting comprehensive analysis');
       
       const { projectPath, options = {} } = req.body;
       
@@ -46,7 +47,7 @@ class AnalyzeAllController {
         documentation: documentationResult
       });
       
-      logger.log('✅ Comprehensive analysis completed');
+      logger.info('✅ Comprehensive analysis completed');
       
       return res.status(200).json({
         success: true,
@@ -104,7 +105,7 @@ class AnalyzeAllController {
     
     for (const framework of frameworks) {
       try {
-        logger.log(`🔧 Executing framework: ${framework.name}`);
+        logger.info(`🔧 Executing framework: ${framework.name}`);
         
         const result = await framework.execute({
           projectPath,
@@ -121,7 +122,7 @@ class AnalyzeAllController {
           timestamp: result.timestamp
         });
         
-        logger.log(`✅ Framework ${framework.name} completed`);
+        logger.info(`✅ Framework ${framework.name} completed`);
       } catch (error) {
         logger.error(`❌ Framework ${framework.name} failed:`, error.message);
         results.push({
@@ -142,7 +143,7 @@ class AnalyzeAllController {
     
     for (const workflow of workflows) {
       try {
-        logger.log(`🔄 Executing workflow: ${workflow.name}`);
+        logger.info(`🔄 Executing workflow: ${workflow.name}`);
         
         const result = await workflow.execute({
           projectPath,
@@ -159,7 +160,7 @@ class AnalyzeAllController {
           timestamp: result.timestamp
         });
         
-        logger.log(`✅ Workflow ${workflow.name} completed`);
+        logger.info(`✅ Workflow ${workflow.name} completed`);
       } catch (error) {
         logger.error(`❌ Workflow ${workflow.name} failed:`, error.message);
         results.push({
@@ -177,7 +178,7 @@ class AnalyzeAllController {
 
   async executeDocumentationWorkflow(projectPath, options) {
     try {
-      logger.log('📚 Executing documentation workflow...');
+      logger.info('📚 Executing documentation workflow...');
       
       const result = await DocumentationWorkflow.executeForAnalyzeAll({
         projectPath,

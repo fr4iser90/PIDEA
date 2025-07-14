@@ -1,3 +1,7 @@
+const Logger = require('@logging/Logger');
+
+const logger = new Logger('ServiceName');
+
 #!/usr/bin/env node
 
 /**
@@ -16,7 +20,7 @@ const AdvancedAnalysisService = require('./backend/domain/services/AdvancedAnaly
 class AdvancedAnalysisTester {
     constructor() {
         this.logger = {
-            info: (message, data) => console.log(`[INFO] ${message}`, data || ''),
+            info: (message, data) => logger.info(`[INFO] ${message}`, data || ''),
             error: (message, data) => console.error(`[ERROR] ${message}`, data || ''),
             warn: (message, data) => console.warn(`[WARN] ${message}`, data || ''),
             debug: (message, data) => console.debug(`[DEBUG] ${message}`, data || '')
@@ -24,7 +28,7 @@ class AdvancedAnalysisTester {
     }
 
     async runTests() {
-        console.log('🚀 Starting Advanced Analysis Component Tests\n');
+        logger.info('🚀 Starting Advanced Analysis Component Tests\n');
 
         try {
             // Test 1: Command Creation and Validation
@@ -39,7 +43,7 @@ class AdvancedAnalysisTester {
             // Test 4: End-to-End Analysis
             await this.testEndToEndAnalysis();
 
-            console.log('\n✅ All tests completed successfully!');
+            logger.info('\n✅ All tests completed successfully!');
 
         } catch (error) {
             console.error('\n❌ Test failed:', error.message);
@@ -48,7 +52,7 @@ class AdvancedAnalysisTester {
     }
 
     async testCommandCreation() {
-        console.log('📋 Test 1: Command Creation and Validation');
+        logger.info('📋 Test 1: Command Creation and Validation');
         
         // Test valid command
         const validCommand = new AdvancedAnalysisCommand({
@@ -62,20 +66,20 @@ class AdvancedAnalysisTester {
             }
         });
 
-        console.log('  ✓ Command created successfully');
-        console.log(`  ✓ Command ID: ${validCommand.commandId}`);
-        console.log(`  ✓ Project Path: ${validCommand.projectPath}`);
-        console.log(`  ✓ Requested By: ${validCommand.requestedBy}`);
+        logger.info('  ✓ Command created successfully');
+        logger.info(`  ✓ Command ID: ${validCommand.commandId}`);
+        logger.info(`  ✓ Project Path: ${validCommand.projectPath}`);
+        logger.info(`  ✓ Requested By: ${validCommand.requestedBy}`);
 
         // Test validation
         const validation = validCommand.validateBusinessRules();
-        console.log(`  ✓ Validation: ${validation.isValid ? 'PASSED' : 'FAILED'}`);
+        logger.info(`  ✓ Validation: ${validation.isValid ? 'PASSED' : 'FAILED'}`);
         
         if (!validation.isValid) {
-            console.log(`  ✗ Errors: ${validation.errors.join(', ')}`);
+            logger.info(`  ✗ Errors: ${validation.errors.join(', ')}`);
         }
         if (validation.warnings.length > 0) {
-            console.log(`  ⚠ Warnings: ${validation.warnings.join(', ')}`);
+            logger.info(`  ⚠ Warnings: ${validation.warnings.join(', ')}`);
         }
 
         // Test invalid command
@@ -84,25 +88,25 @@ class AdvancedAnalysisTester {
         });
 
         const invalidValidation = invalidCommand.validateBusinessRules();
-        console.log(`  ✓ Invalid command validation: ${invalidValidation.isValid ? 'FAILED' : 'PASSED'}`);
+        logger.info(`  ✓ Invalid command validation: ${invalidValidation.isValid ? 'FAILED' : 'PASSED'}`);
 
-        console.log('  ✓ Command creation and validation tests completed\n');
+        logger.info('  ✓ Command creation and validation tests completed\n');
     }
 
     async testServiceIntegration() {
-        console.log('🔧 Test 2: Service Integration');
+        logger.info('🔧 Test 2: Service Integration');
 
         const service = new AdvancedAnalysisService({
             logger: this.logger
         });
 
-        console.log('  ✓ AdvancedAnalysisService created successfully');
+        logger.info('  ✓ AdvancedAnalysisService created successfully');
 
         // Test with a small project (current directory)
         const projectPath = process.cwd();
         
         try {
-            console.log(`  📁 Testing with project: ${projectPath}`);
+            logger.info(`  📁 Testing with project: ${projectPath}`);
             
             const result = await service.performAdvancedAnalysis(projectPath, {
                 includeLayerValidation: true,
@@ -111,47 +115,47 @@ class AdvancedAnalysisTester {
                 generateReport: true
             });
 
-            console.log('  ✓ Analysis completed successfully');
-            console.log(`  ✓ Overall Score: ${result.metrics.overallScore}`);
-            console.log(`  ✓ Layer Score: ${result.metrics.layerScore}`);
-            console.log(`  ✓ Logic Score: ${result.metrics.logicScore}`);
-            console.log(`  ✓ Overall Valid: ${result.overall}`);
-            console.log(`  ✓ Total Violations: ${(result.layerValidation.violations || []).length + (result.logicValidation.violations || []).length}`);
-            console.log(`  ✓ Insights Generated: ${result.integratedInsights.length}`);
-            console.log(`  ✓ Recommendations Generated: ${result.recommendations.length}`);
+            logger.info('  ✓ Analysis completed successfully');
+            logger.info(`  ✓ Overall Score: ${result.metrics.overallScore}`);
+            logger.info(`  ✓ Layer Score: ${result.metrics.layerScore}`);
+            logger.info(`  ✓ Logic Score: ${result.metrics.logicScore}`);
+            logger.info(`  ✓ Overall Valid: ${result.overall}`);
+            logger.info(`  ✓ Total Violations: ${(result.layerValidation.violations || []).length + (result.logicValidation.violations || []).length}`);
+            logger.info(`  ✓ Insights Generated: ${result.integratedInsights.length}`);
+            logger.info(`  ✓ Recommendations Generated: ${result.recommendations.length}`);
 
             // Generate report
             const report = service.generateAnalysisReport(result);
-            console.log('  ✓ Report generated successfully');
-            console.log(`  ✓ Report Summary: ${report.summary.overallScore}/100 score, ${report.summary.totalViolations} violations`);
+            logger.info('  ✓ Report generated successfully');
+            logger.info(`  ✓ Report Summary: ${report.summary.overallScore}/100 score, ${report.summary.totalViolations} violations`);
 
         } catch (error) {
-            console.log(`  ⚠ Analysis failed (this might be expected for some projects): ${error.message}`);
+            logger.info(`  ⚠ Analysis failed (this might be expected for some projects): ${error.message}`);
         }
 
-        console.log('  ✓ Service integration tests completed\n');
+        logger.info('  ✓ Service integration tests completed\n');
     }
 
     async testHandlerWorkflow() {
-        console.log('⚙️ Test 3: Handler Workflow');
+        logger.info('⚙️ Test 3: Handler Workflow');
 
         // Create mock dependencies
         const mockEventBus = {
             emit: (event, data) => {
-                console.log(`  📡 Event: ${event}`, data ? `(${Object.keys(data).length} properties)` : '');
+                logger.info(`  📡 Event: ${event}`, data ? `(${Object.keys(data).length} properties)` : '');
             }
         };
 
         const mockTaskRepository = {
             save: async (task) => {
-                console.log(`  💾 Task saved: ${task.title}`);
+                logger.info(`  💾 Task saved: ${task.title}`);
                 return task;
             }
         };
 
         const mockExecutionRepository = {
             save: async (execution) => {
-                console.log(`  💾 Execution saved: ${execution.id}`);
+                logger.info(`  💾 Execution saved: ${execution.id}`);
                 return execution;
             }
         };
@@ -163,7 +167,7 @@ class AdvancedAnalysisTester {
             executionRepository: mockExecutionRepository
         });
 
-        console.log('  ✓ Handler created successfully');
+        logger.info('  ✓ Handler created successfully');
 
         const command = new AdvancedAnalysisCommand({
             projectPath: process.cwd(),
@@ -177,23 +181,23 @@ class AdvancedAnalysisTester {
         });
 
         try {
-            console.log('  🔄 Starting handler workflow...');
+            logger.info('  🔄 Starting handler workflow...');
             const result = await handler.handle(command);
 
-            console.log('  ✓ Handler workflow completed successfully');
-            console.log(`  ✓ Execution ID: ${result.executionId}`);
-            console.log(`  ✓ Duration: ${result.duration}ms`);
-            console.log(`  ✓ Success: ${result.success}`);
+            logger.info('  ✓ Handler workflow completed successfully');
+            logger.info(`  ✓ Execution ID: ${result.executionId}`);
+            logger.info(`  ✓ Duration: ${result.duration}ms`);
+            logger.info(`  ✓ Success: ${result.success}`);
 
         } catch (error) {
-            console.log(`  ⚠ Handler workflow failed (this might be expected): ${error.message}`);
+            logger.info(`  ⚠ Handler workflow failed (this might be expected): ${error.message}`);
         }
 
-        console.log('  ✓ Handler workflow tests completed\n');
+        logger.info('  ✓ Handler workflow tests completed\n');
     }
 
     async testEndToEndAnalysis() {
-        console.log('🔄 Test 4: End-to-End Analysis');
+        logger.info('🔄 Test 4: End-to-End Analysis');
 
         // Create a simple test project structure
         const testProjectPath = path.join(process.cwd(), 'test-analysis-project');
@@ -217,30 +221,30 @@ class AdvancedAnalysisTester {
                 logger: this.logger
             });
 
-            console.log(`  📁 Testing with created project: ${testProjectPath}`);
+            logger.info(`  📁 Testing with created project: ${testProjectPath}`);
             
             const result = await handler.handle(command);
 
-            console.log('  ✓ End-to-end analysis completed successfully');
-            console.log(`  ✓ Overall Score: ${result.analysis.metrics.overallScore}`);
-            console.log(`  ✓ Analysis Duration: ${result.duration}ms`);
-            console.log(`  ✓ Report Generated: ${result.report ? 'Yes' : 'No'}`);
+            logger.info('  ✓ End-to-end analysis completed successfully');
+            logger.info(`  ✓ Overall Score: ${result.analysis.metrics.overallScore}`);
+            logger.info(`  ✓ Analysis Duration: ${result.duration}ms`);
+            logger.info(`  ✓ Report Generated: ${result.report ? 'Yes' : 'No'}`);
 
             // Clean up test project
             await this.cleanupTestProject(testProjectPath);
 
         } catch (error) {
-            console.log(`  ⚠ End-to-end test failed: ${error.message}`);
+            logger.info(`  ⚠ End-to-end test failed: ${error.message}`);
             
             // Clean up test project even if test failed
             try {
                 await this.cleanupTestProject(testProjectPath);
             } catch (cleanupError) {
-                console.log(`  ⚠ Cleanup failed: ${cleanupError.message}`);
+                logger.info(`  ⚠ Cleanup failed: ${cleanupError.message}`);
             }
         }
 
-        console.log('  ✓ End-to-end analysis tests completed\n');
+        logger.info('  ✓ End-to-end analysis tests completed\n');
     }
 
     async createTestProject(projectPath) {
@@ -286,7 +290,7 @@ app.get('/', (req, res) => {
 });
 
 app.listen(3000, () => {
-    console.log('Server running on port 3000');
+    logger.info('Server running on port 3000');
 });
 `;
 
@@ -311,7 +315,7 @@ module.exports = User;
 
             await fs.writeFile(path.join(projectPath, 'src/domain/User.js'), userJs);
 
-            console.log(`  ✓ Test project created at: ${projectPath}`);
+            logger.info(`  ✓ Test project created at: ${projectPath}`);
 
         } catch (error) {
             throw new Error(`Failed to create test project: ${error.message}`);
@@ -321,7 +325,7 @@ module.exports = User;
     async cleanupTestProject(projectPath) {
         try {
             await fs.rm(projectPath, { recursive: true, force: true });
-            console.log(`  ✓ Test project cleaned up: ${projectPath}`);
+            logger.info(`  ✓ Test project cleaned up: ${projectPath}`);
         } catch (error) {
             throw new Error(`Failed to cleanup test project: ${error.message}`);
         }

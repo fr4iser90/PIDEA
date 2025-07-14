@@ -2,7 +2,8 @@ const AuthService = require('@services/AuthService');
 const User = require('@entities/User');
 const bcrypt = require('bcryptjs');
 const Logger = require('@logging/Logger');
-const logger = new Logger('Logger');
+const ServiceLogger = require('@logging/ServiceLogger');
+const logger = new ServiceLogger('AuthController');
 
 
 class AuthController {
@@ -42,7 +43,7 @@ class AuthController {
     try {
       const { email, password } = req.body;
 
-      logger.log('🔍 [AuthController] Login request received:', {
+      logger.info('🔍 [AuthController] Login request received:', {
         email: email,
         passwordLength: password ? password.length : 0,
         hasEmail: !!email,
@@ -51,7 +52,7 @@ class AuthController {
 
       // Validate input
       if (!email || !password) {
-        logger.log('❌ [AuthController] Missing email or password');
+        logger.info('❌ [AuthController] Missing email or password');
         return res.status(400).json({
           success: false,
           error: 'Email and password are required'
@@ -74,7 +75,7 @@ class AuthController {
         }
       };
 
-      logger.log('✅ [AuthController] Login successful, sending response:', {
+      logger.info('✅ [AuthController] Login successful, sending response:', {
         success: responseData.success,
         userId: responseData.data.user.id,
         userEmail: responseData.data.user.email,

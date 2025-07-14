@@ -81,7 +81,7 @@ describe('AutoFinishController', () => {
         taskSessionRepository: mockTaskSessionRepository,
         autoFinishSystem: mockAutoFinishSystem
       });
-      expect(controllerWithoutLogger.logger).toBe(console);
+      expect(controllerWithoutlogger.infoger).toBe(console);
     });
   });
 

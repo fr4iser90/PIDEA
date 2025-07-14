@@ -2,6 +2,10 @@ const fs = require('fs');
 const path = require('path');
 const BrowserManager = require('../../backend/infrastructure/external/BrowserManager');
 
+const Logger = require('@logging/Logger');
+
+const logger = new Logger('ServiceName');
+
 class VSCodeChatHandler {
   constructor() {
     this.browserManager = new BrowserManager();
@@ -12,12 +16,12 @@ class VSCodeChatHandler {
   ensureOutputDir() {
     if (!fs.existsSync(this.outputDir)) {
       fs.mkdirSync(this.outputDir, { recursive: true });
-      console.log(`📁 Created VSCode chat directory: ${this.outputDir}`);
+      logger.info(`📁 Created VSCode chat directory: ${this.outputDir}`);
     }
   }
 
   async initialize(port = null) {
-    console.log(`🚀 VSCode Chat Handler starting...`);
+    logger.info(`🚀 VSCode Chat Handler starting...`);
     try {
       // If no port specified, find VSCode automatically
       if (!port) {
@@ -33,15 +37,15 @@ class VSCodeChatHandler {
         }
         
         port = vscodeIDE.port;
-        console.log(`🔍 Found VSCode IDE on port ${port}`);
+        logger.info(`🔍 Found VSCode IDE on port ${port}`);
       }
       
       await this.browserManager.connect(port);
-      console.log(`✅ Connected to VSCode CDP on port ${port}`);
+      logger.info(`✅ Connected to VSCode CDP on port ${port}`);
       // Use single page logic
       this.page = await this.findVSCodeAppPage();
       if (!this.page) throw new Error('Could not find VSCode app page!');
-      console.log(`✅ VSCode app page ready: ${this.page.url()}`);
+      logger.info(`✅ VSCode app page ready: ${this.page.url()}`);
       return true;
     } catch (error) {
       console.error('❌ Connection failed:', error.message);
@@ -52,21 +56,21 @@ class VSCodeChatHandler {
   async findVSCodeAppPage() {
     const page = await this.browserManager.getPage();
     let url = page.url();
-    console.log(`  🌐 Initial page URL: ${url}`);
+    logger.info(`  🌐 Initial page URL: ${url}`);
     // If not on VSCode app, navigate
     if (
       url.startsWith('devtools://') ||
       url === 'about:blank' ||
       url.includes('chrome-devtools')
     ) {
-      console.log('  🔄 Navigating to VSCode app on http://localhost:9232 ...');
+      logger.info('  🔄 Navigating to VSCode app on http://localhost:9232 ...');
       try {
         await page.goto('http://localhost:9232', { waitUntil: 'domcontentloaded' });
         await this.wait(3000);
         url = page.url();
-        console.log(`  🌐 After navigation: ${url}`);
+        logger.info(`  🌐 After navigation: ${url}`);
       } catch (e) {
-        console.log('  ⚠️ Navigation to VSCode app failed:', e.message);
+        logger.info('  ⚠️ Navigation to VSCode app failed:', e.message);
       }
     }
     // Heuristic: check for VSCode app
@@ -85,7 +89,7 @@ class VSCodeChatHandler {
   async sendChatMessage(message) {
     const page = this.page;
     if (!page) throw new Error('VSCode app page not available!');
-    console.log(`📝 Sending VSCode chat message: "${message}"`);
+    logger.info(`📝 Sending VSCode chat message: "${message}"`);
     
     // Step 1: Find and focus the chat input using the correct VSCode selectors
     const inputSelectors = [
@@ -105,7 +109,7 @@ class VSCodeChatHandler {
       try {
         inputElement = await page.$(selector);
         if (inputElement) {
-          console.log(`  ✅ Found chat input: ${selector}`);
+          logger.info(`  ✅ Found chat input: ${selector}`);
           break;
         }
       } catch (e) { continue; }
@@ -115,7 +119,7 @@ class VSCodeChatHandler {
       // Try to find the chat input container and click it
       const chatContainer = await page.$('.chat-editor-container');
       if (chatContainer) {
-        console.log(`  🔍 Found chat container, clicking to focus...`);
+        logger.info(`  🔍 Found chat container, clicking to focus...`);
         await chatContainer.click();
         await page.waitForTimeout(500);
         
@@ -124,7 +128,7 @@ class VSCodeChatHandler {
           try {
             inputElement = await page.$(selector);
             if (inputElement) {
-              console.log(`  ✅ Found chat input after container click: ${selector}`);
+              logger.info(`  ✅ Found chat input after container click: ${selector}`);
               break;
             }
           } catch (e) { continue; }
@@ -184,7 +188,7 @@ class VSCodeChatHandler {
               textarea.dispatchEvent(new Event('input', { bubbles: true }));
               return true;
             } catch (e) {
-              console.log(`Failed with selector ${selector}:`, e.message);
+              logger.info(`Failed with selector ${selector}:`, e.message);
               continue;
             }
           }
@@ -196,11 +200,11 @@ class VSCodeChatHandler {
         throw new Error('Could not set textarea value via JavaScript');
       }
       
-      console.log(`  📝 Typed message via JavaScript: "${message}"`);
+      logger.info(`  📝 Typed message via JavaScript: "${message}"`);
       await page.waitForTimeout(200);
       
     } catch (error) {
-      console.log(`  ⚠️ JavaScript method failed, trying keyboard method: ${error.message}`);
+      logger.info(`  ⚠️ JavaScript method failed, trying keyboard method: ${error.message}`);
       
       // Fallback to keyboard method
       await inputElement.focus();
@@ -215,7 +219,7 @@ class VSCodeChatHandler {
       
       // Type the message
       await page.keyboard.type(message);
-      console.log(`  📝 Typed message via keyboard: "${message}"`);
+      logger.info(`  📝 Typed message via keyboard: "${message}"`);
       await page.waitForTimeout(200);
     }
     
@@ -237,7 +241,7 @@ class VSCodeChatHandler {
         const sendButton = await page.$(selector);
         if (sendButton) {
           await sendButton.click();
-          console.log(`  ✅ Clicked send button: ${selector}`);
+          logger.info(`  ✅ Clicked send button: ${selector}`);
           sent = true;
           break;
         }
@@ -246,9 +250,9 @@ class VSCodeChatHandler {
     
     if (!sent) {
       // Fallback: try Enter key
-      console.log(`  ⚠️ Send button not found, trying Enter key...`);
+      logger.info(`  ⚠️ Send button not found, trying Enter key...`);
       await page.keyboard.press('Enter');
-      console.log(`  ⚠️ Used Enter key fallback`);
+      logger.info(`  ⚠️ Used Enter key fallback`);
     }
     
     return sent;
@@ -257,7 +261,7 @@ class VSCodeChatHandler {
   async getChatHistory() {
     const page = this.page;
     if (!page) throw new Error('VSCode app page not available!');
-    console.log('📋 Getting VSCode chat history...');
+    logger.info('📋 Getting VSCode chat history...');
     // Selektoren für Chat-Zeilen
     const chatRows = await page.$$('.monaco-list-row');
     const messages = [];
@@ -310,11 +314,11 @@ class VSCodeChatHandler {
   async analyzeVSCodeDOM() {
     const page = this.page;
     if (!page) throw new Error('VSCode app page not available!');
-    console.log('🔍 Analyzing VSCode DOM structure...');
+    logger.info('🔍 Analyzing VSCode DOM structure...');
     const title = await page.title();
     const url = page.url();
-    console.log(`  📄 Page title: ${title}`);
-    console.log(`  🌐 URL: ${url}`);
+    logger.info(`  📄 Page title: ${title}`);
+    logger.info(`  🌐 URL: ${url}`);
     const vscodeElements = await page.evaluate(() => {
       const elements = {
         // Updated selectors based on your VSCode HTML
@@ -338,14 +342,14 @@ class VSCodeChatHandler {
         vscodeElementCount: elements.vscodeElements
       };
     });
-    console.log('  📊 VSCode DOM Analysis:');
-    console.log(`    Chat Input: ${vscodeElements.hasChatInput ? '✅' : '❌'}`);
-    console.log(`    Chat Container: ${vscodeElements.hasChatContainer ? '✅' : '❌'}`);
-    console.log(`    Send Button: ${vscodeElements.hasSendButton ? '✅' : '❌'}`);
-    console.log(`    Monaco Editor: ${vscodeElements.hasMonacoEditor ? '✅' : '❌'}`);
-    console.log(`    Chat Input Container: ${vscodeElements.hasChatInputContainer ? '✅' : '❌'}`);
-    console.log(`    Interactive Input: ${vscodeElements.hasInteractiveInput ? '✅' : '❌'}`);
-    console.log(`    VSCode Elements: ${vscodeElements.vscodeElementCount}`);
+    logger.info('  📊 VSCode DOM Analysis:');
+    logger.info(`    Chat Input: ${vscodeElements.hasChatInput ? '✅' : '❌'}`);
+    logger.info(`    Chat Container: ${vscodeElements.hasChatContainer ? '✅' : '❌'}`);
+    logger.info(`    Send Button: ${vscodeElements.hasSendButton ? '✅' : '❌'}`);
+    logger.info(`    Monaco Editor: ${vscodeElements.hasMonacoEditor ? '✅' : '❌'}`);
+    logger.info(`    Chat Input Container: ${vscodeElements.hasChatInputContainer ? '✅' : '❌'}`);
+    logger.info(`    Interactive Input: ${vscodeElements.hasInteractiveInput ? '✅' : '❌'}`);
+    logger.info(`    VSCode Elements: ${vscodeElements.vscodeElementCount}`);
     return vscodeElements;
   }
 
@@ -356,9 +360,9 @@ class VSCodeChatHandler {
   async cleanup() {
     try {
       await this.browserManager.disconnect();
-      console.log('🧹 VSCode Chat Handler cleaned up');
+      logger.info('🧹 VSCode Chat Handler cleaned up');
     } catch (error) {
-      console.log('⚠️ Cleanup warning:', error.message);
+      logger.info('⚠️ Cleanup warning:', error.message);
     }
   }
 }
@@ -374,28 +378,28 @@ if (require.main === module) {
       const testMessage = 'Hello from PIDEA VSCode handler!';
       const sent = await handler.sendChatMessage(testMessage);
       if (sent) {
-        console.log('✅ VSCode chat message sent successfully!');
+        logger.info('✅ VSCode chat message sent successfully!');
       } else {
-        console.log('⚠️ Message sent with fallback method');
+        logger.info('⚠️ Message sent with fallback method');
       }
       await handler.wait(2000);
       const history = await handler.getChatHistory();
       if (history.length > 0) {
-        console.log(`📋 Found ${history.length} chat messages`);
+        logger.info(`📋 Found ${history.length} chat messages`);
         // Ausgabe aller Messages mit Selektoren
         history.forEach(msg => {
-          console.log(`---`);
-          console.log(`Type:      ${msg.type}`);
-          console.log(`Username:  ${msg.username}`);
-          console.log(`Text:      ${msg.text}`);
-          console.log(`Selector:  ${msg.selector}`);
-          console.log(`RowIndex:  ${msg.rowIndex}`);
+          logger.info(`---`);
+          logger.info(`Type:      ${msg.type}`);
+          logger.info(`Username:  ${msg.username}`);
+          logger.info(`Text:      ${msg.text}`);
+          logger.info(`Selector:  ${msg.selector}`);
+          logger.info(`RowIndex:  ${msg.rowIndex}`);
           // Optional: rawHtml für Debugging
-          // console.log(msg.rawHtml);
+          // logger.info(msg.rawHtml);
         });
-        console.log('---');
+        logger.info('---');
       } else {
-        console.log('📋 No chat history found');
+        logger.info('📋 No chat history found');
       }
     } catch (error) {
       console.error('❌ VSCode chat test failed:', error.message);

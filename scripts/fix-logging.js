@@ -17,15 +17,15 @@ const colors = {
 };
 
 function log(message, color = 'reset') {
-    console.log(`${colors[color]}${message}${colors.reset}`);
+    logger.info(`${colors[color]}${message}${colors.reset}`);
 }
 
 // Logger Import Statement
-const LOGGER_IMPORT = "const { logger } = require('@infrastructure/logging/Logger');";
+const LOGGER_IMPORT = "const { logger } = const Logger = require('@logging/Logger');";
 
 // Mapping für console.log → logger
 const consoleToLoggerMap = {
-    'console.log': 'logger.log',
+    'console.log': 'logger.info',
     'console.info': 'logger.info', 
     'console.warn': 'logger.warn',
     'console.error': 'logger.error',
@@ -54,7 +54,7 @@ function processFile(filePath) {
         let content = fs.readFileSync(filePath, 'utf8');
         let modified = false;
         let hasLoggerImport = content.includes('require(\'@infrastructure/logging/Logger\')') || 
-                             content.includes('require("@infrastructure/logging/Logger")');
+                             content.includes('const Logger = require('@logging/Logger')');
 
         // Alle console.* Statements finden und ersetzen
         Object.entries(consoleToLoggerMap).forEach(([consoleMethod, loggerMethod]) => {

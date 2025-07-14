@@ -32,7 +32,7 @@ const useAuthStore = create(
           });
 
           const data = await response.json();
-          logger.log('🔍 [AuthStore] Login response:', data);
+          logger.info('🔍 [AuthStore] Login response:', data);
 
           if (!response.ok) {
             throw new Error(data.error || data.message || 'Login failed');
@@ -42,7 +42,7 @@ const useAuthStore = create(
           const userData = data.data || data;
           const token = userData.accessToken || userData.token;
 
-          logger.log('🔍 [AuthStore] Extracted data:', {
+          logger.info('🔍 [AuthStore] Extracted data:', {
             user: userData.user,
             token: token ? token.substring(0, 20) + '...' : 'null',
             tokenLength: token ? token.length : 0
@@ -58,7 +58,7 @@ const useAuthStore = create(
             lastAuthCheck: new Date()
           });
 
-          logger.log('✅ [AuthStore] Login successful, state updated');
+          logger.info('✅ [AuthStore] Login successful, state updated');
           return { success: true };
         } catch (error) {
           logger.error('❌ [AuthStore] Login failed:', error);
@@ -131,7 +131,7 @@ const useAuthStore = create(
       // Getter for authenticated API calls
       getAuthHeaders: () => {
         const { token } = get();
-        logger.log('🔍 [AuthStore] getAuthHeaders called, token:', token ? token.substring(0, 20) + '...' : 'null');
+        logger.info('🔍 [AuthStore] getAuthHeaders called, token:', token ? token.substring(0, 20) + '...' : 'null');
         return token ? { Authorization: `Bearer ${token}` } : {};
       },
 
@@ -140,7 +140,7 @@ const useAuthStore = create(
         const { token, lastAuthCheck, authCheckInterval } = get();
         
         if (!token) {
-          logger.log('🔍 [AuthStore] No token found for validation');
+          logger.info('🔍 [AuthStore] No token found for validation');
           set({ isAuthenticated: false });
           return false;
         }
@@ -148,28 +148,28 @@ const useAuthStore = create(
         // Check if we need to validate (avoid too frequent checks)
         const now = new Date();
         if (lastAuthCheck && (now - lastAuthCheck) < authCheckInterval) {
-          logger.log('🔍 [AuthStore] Skipping validation, too recent');
+          logger.info('🔍 [AuthStore] Skipping validation, too recent');
           return true;
         }
 
         try {
-          logger.log('🔍 [AuthStore] Validating token...');
+          logger.info('🔍 [AuthStore] Validating token...');
           const response = await fetch('/api/auth/validate', {
             headers: {
               Authorization: `Bearer ${token}`,
             },
           });
 
-          logger.log('🔍 [AuthStore] Validation response status:', response.status);
+          logger.info('🔍 [AuthStore] Validation response status:', response.status);
 
           if (!response.ok) {
-            logger.log('❌ [AuthStore] Token validation failed:', response.status);
+            logger.info('❌ [AuthStore] Token validation failed:', response.status);
             await get().handleAuthFailure('Token validation failed');
             return false;
           }
 
           const data = await response.json();
-          logger.log('✅ [AuthStore] Token validation successful');
+          logger.info('✅ [AuthStore] Token validation successful');
           set({ 
             user: data.user, 
             isAuthenticated: true, 
@@ -188,7 +188,7 @@ const useAuthStore = create(
       handleAuthFailure: async (reason = 'Session expired') => {
         const { showWarning } = useNotificationStore.getState();
         
-        logger.log('🔐 [AuthStore] Handling auth failure:', reason);
+        logger.info('🔐 [AuthStore] Handling auth failure:', reason);
         
         set({ 
           isAuthenticated: false, 
@@ -218,12 +218,12 @@ const useAuthStore = create(
       refreshToken: async () => {
         const { token } = get();
         if (!token) {
-          logger.log('🔍 [AuthStore] No token to refresh');
+          logger.info('🔍 [AuthStore] No token to refresh');
           return false;
         }
 
         try {
-          logger.log('🔍 [AuthStore] Refreshing token...');
+          logger.info('🔍 [AuthStore] Refreshing token...');
           const response = await fetch('/api/auth/refresh', {
             method: 'POST',
             headers: {
@@ -232,7 +232,7 @@ const useAuthStore = create(
           });
 
           if (!response.ok) {
-            logger.log('❌ [AuthStore] Token refresh failed');
+            logger.info('❌ [AuthStore] Token refresh failed');
             set({ isAuthenticated: false, token: null, user: null });
             return false;
           }
@@ -240,7 +240,7 @@ const useAuthStore = create(
           const data = await response.json();
           const newToken = data.accessToken || data.token;
           
-          logger.log('✅ [AuthStore] Token refreshed successfully');
+          logger.info('✅ [AuthStore] Token refreshed successfully');
           set({ token: newToken, isAuthenticated: true });
           return true;
         } catch (error) {

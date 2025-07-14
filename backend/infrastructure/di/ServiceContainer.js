@@ -35,7 +35,7 @@ class ServiceContainer {
             dependencies
         });
         
-        logger.log(`[ServiceContainer] Registered service: ${name} (singleton: ${singleton})`);
+        logger.info(`[ServiceContainer] Registered service: ${name} (singleton: ${singleton})`);
     }
 
     /**
@@ -45,7 +45,7 @@ class ServiceContainer {
      */
     registerSingleton(name, instance) {
         this.singletons.set(name, instance);
-        logger.log(`[ServiceContainer] Registered singleton: ${name}`);
+        logger.info(`[ServiceContainer] Registered singleton: ${name}`);
     }
 
     /**
@@ -94,7 +94,7 @@ class ServiceContainer {
      */
     setProjectContext(context) {
         this.projectContext = { ...this.projectContext, ...context };
-        logger.log(`[ServiceContainer] Project context updated:`, this.projectContext);
+        logger.info(`[ServiceContainer] Project context updated:`, this.projectContext);
     }
 
     /**
@@ -180,7 +180,7 @@ class ServiceContainer {
             projectId: null,
             workspacePath: null
         };
-        logger.log('[ServiceContainer] All services cleared');
+        logger.info('[ServiceContainer] All services cleared');
     }
 
     /**

@@ -43,7 +43,7 @@ class WindsurfIDE extends BaseIDE {
     ];
     
     this.isInitialized = true;
-    logger.log('[WindsurfIDE] Windsurf IDE implementation initialized');
+    logger.info('[WindsurfIDE] Windsurf IDE implementation initialized');
   }
 
   /**
@@ -120,7 +120,7 @@ class WindsurfIDE extends BaseIDE {
    */
   async executeCommand(command, options = {}) {
     try {
-      logger.log(`[WindsurfIDE] Executing command: ${command}`);
+      logger.info(`[WindsurfIDE] Executing command: ${command}`);
       
       // Handle Windsurf-specific commands
       switch (command) {
@@ -209,12 +209,12 @@ class WindsurfIDE extends BaseIDE {
 
   // Required methods for IDE factory validation
   async start() {
-    logger.log('[WindsurfIDE] Start method called');
+    logger.info('[WindsurfIDE] Start method called');
     return { success: true, ideType: IDETypes.WINDSURF };
   }
 
   async stop() {
-    logger.log('[WindsurfIDE] Stop method called');
+    logger.info('[WindsurfIDE] Stop method called');
     return { success: true, ideType: IDETypes.WINDSURF };
   }
 
@@ -346,17 +346,17 @@ class WindsurfIDE extends BaseIDE {
   }
 
   async applyRefactoring(refactoringType, options = {}) {
-    logger.log(`[WindsurfIDE] Applying refactoring: ${refactoringType}`);
+    logger.info(`[WindsurfIDE] Applying refactoring: ${refactoringType}`);
     return { success: true, refactoringType, ideType: IDETypes.WINDSURF };
   }
 
   async sendTask(task) {
-    logger.log(`[WindsurfIDE] Sending task:`, task);
+    logger.info(`[WindsurfIDE] Sending task:`, task);
     return { success: true, task, ideType: IDETypes.WINDSURF };
   }
 
   async sendAutoModeTasks(tasks) {
-    logger.log(`[WindsurfIDE] Sending auto mode tasks:`, tasks);
+    logger.info(`[WindsurfIDE] Sending auto mode tasks:`, tasks);
     return { success: true, tasks, ideType: IDETypes.WINDSURF };
   }
 }

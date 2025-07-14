@@ -12,26 +12,26 @@ class AuthMiddleware {
   authenticate() {
     return async (req, res, next) => {
       try {
-        logger.log('🔍 [AuthMiddleware] Authenticating request to:', req.path);
-        logger.log('🔍 [AuthMiddleware] Headers:', {
+        logger.info('🔍 [AuthMiddleware] Authenticating request to:', req.path);
+        logger.info('🔍 [AuthMiddleware] Headers:', {
           authorization: req.headers.authorization ? req.headers.authorization.substring(0, 20) + '...' : 'null',
           'content-type': req.headers['content-type']
         });
         
         const token = this.extractToken(req);
-        // logger.log('🔍 [AuthMiddleware] Extracted token:', token ? token.substring(0, 20) + '...' : 'null');
+        // logger.info('🔍 [AuthMiddleware] Extracted token:', token ? token.substring(0, 20) + '...' : 'null');
         
         if (!token) {
-          logger.log('❌ [AuthMiddleware] No token found');
+          logger.info('❌ [AuthMiddleware] No token found');
           return res.status(401).json({
             success: false,
             error: 'Access token required'
           });
         }
 
-        logger.log('🔍 [AuthMiddleware] Validating token...');
+        logger.info('🔍 [AuthMiddleware] Validating token...');
         const { user, session } = await this.authService.validateAccessToken(token);
-        logger.log('✅ [AuthMiddleware] Token validated successfully for user:', user.email);
+        logger.info('✅ [AuthMiddleware] Token validated successfully for user:', user.email);
         
         // Inject user context into request
         req.user = user;

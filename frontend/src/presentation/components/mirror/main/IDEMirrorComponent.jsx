@@ -61,23 +61,23 @@ function IDEMirrorComponent({ eventBus }) {
     useEffect(() => {
         if (!currentPort) return;
         
-        logger.log(`[IDEMirrorComponent] Registering frame handler for port ${currentPort}`);
+        logger.info(`[IDEMirrorComponent] Registering frame handler for port ${currentPort}`);
         streamingService.registerFrameHandler(currentPort, handleStreamingFrame);
         
         return () => {
-            logger.log(`[IDEMirrorComponent] Cleaning up frame handler for port ${currentPort}`);
+            logger.info(`[IDEMirrorComponent] Cleaning up frame handler for port ${currentPort}`);
             streamingService.frameHandlers.delete(currentPort);
         };
     }, [currentPort, handleStreamingFrame]);
 
     // Define startStreaming function before useEffect
     const startStreaming = useCallback(async (port = 9222) => {
-        logger.log('🔍 startStreaming called with:', { port });
+        logger.info('🔍 startStreaming called with:', { port });
         
         try {
             setCurrentPort(port);
-            logger.log(`🚀 Starting streaming for port ${port}`);
-            logger.log('🔍 Streaming options:', {
+            logger.info(`🚀 Starting streaming for port ${port}`);
+            logger.info('🔍 Streaming options:', {
                 fps: 15,
                 quality: 0.8,
                 format: 'jpeg',
@@ -89,10 +89,10 @@ function IDEMirrorComponent({ eventBus }) {
                 format: 'jpeg',
                 maxFrameSize: 50 * 1024
             });
-            logger.log('🔍 streamingService.startStreaming result:', result);
+            logger.info('🔍 streamingService.startStreaming result:', result);
             setIsStreaming(true);
-            logger.log(`Streaming started on port ${port}`);
-            logger.log('✅ Streaming started successfully');
+            logger.info(`Streaming started on port ${port}`);
+            logger.info('✅ Streaming started successfully');
         } catch (error) {
             logger.error('❌ Failed to start streaming:', error);
             logger.error('❌ Error details:', error.stack);
@@ -104,7 +104,7 @@ function IDEMirrorComponent({ eventBus }) {
 
     // WebSocket setup
     useEffect(() => {
-        logger.log('🔄 IDEMirrorComponent initializing...');
+        logger.info('🔄 IDEMirrorComponent initializing...');
         
         setupWebSocket();
         
@@ -139,24 +139,24 @@ function IDEMirrorComponent({ eventBus }) {
     // Monitor streaming service availability
     useEffect(() => {
         if (streamingService) {
-            logger.log('✅ Streaming service is now available');
+            logger.info('✅ Streaming service is now available');
         }
     }, [streamingService]);
 
     // Auto-Start-Streaming, sobald StreamingService bereit ist
     useEffect(() => {
-        logger.log('🔍 Auto-start useEffect triggered with:', {
+        logger.info('🔍 Auto-start useEffect triggered with:', {
             streamingService: !!streamingService,
             isStreaming,
             currentPort
         });
         
         if (streamingService && !isStreaming && currentPort) {
-            logger.log('🚀 Auto-starting streaming in 2 seconds...');
+            logger.info('🚀 Auto-starting streaming in 2 seconds...');
             const timer = setTimeout(() => {
-                logger.log('🚀 Starting streaming now...');
-                logger.log('🔍 About to call startStreaming with port:', currentPort);
-                logger.log('🔍 startStreaming function exists:', typeof startStreaming);
+                logger.info('🚀 Starting streaming now...');
+                logger.info('🔍 About to call startStreaming with port:', currentPort);
+                logger.info('🔍 startStreaming function exists:', typeof startStreaming);
                 
                 if (typeof startStreaming === 'function') {
                     startStreaming(currentPort);
@@ -165,11 +165,11 @@ function IDEMirrorComponent({ eventBus }) {
                 }
             }, 2000);
             return () => {
-                logger.log('🔍 Clearing auto-start timer');
+                logger.info('🔍 Clearing auto-start timer');
                 clearTimeout(timer);
             };
         } else {
-            logger.log('❌ Auto-start conditions not met:', {
+            logger.info('❌ Auto-start conditions not met:', {
                 hasStreamingService: !!streamingService,
                 isStreaming,
                 currentPort
@@ -178,31 +178,31 @@ function IDEMirrorComponent({ eventBus }) {
     }, [streamingService, isStreaming, currentPort, startStreaming]);
 
     const setupWebSocket = () => {
-        logger.log('🔌 IDEMirrorComponent: Setting up WebSocket service...');
+        logger.info('🔌 IDEMirrorComponent: Setting up WebSocket service...');
         showStatus('Connecting to WebSocket...');
 
         // Connect to WebSocket service
         webSocketService.connect()
             .then(() => {
-                logger.log('✅ WebSocket service connected');
+                logger.info('✅ WebSocket service connected');
                 setIsConnected(true);
                 showStatus('Connected - Loading IDE...');
                 
                 // Listen for IDE state changes
                 webSocketService.onIDEStateChange((data) => {
-                    logger.log('📨 IDE state change received:', data);
+                    logger.info('📨 IDE state change received:', data);
                     renderIDEState(data);
                 });
                 
                 // Listen for streaming frames (handled by StreamingService now)
                 // webSocketService.on('frame', (frameData) => {
-                //     logger.log('📨 Streaming frame received:', frameData.frameNumber);
+                //     logger.info('📨 Streaming frame received:', frameData.frameNumber);
                 //     handleStreamingFrame(frameData);
                 // });
                 
                 // Listen for connection status
                 webSocketService.on('connection-established', (data) => {
-                    logger.log('✅ WebSocket connection established:', data);
+                    logger.info('✅ WebSocket connection established:', data);
                 });
                 
                 connectToIDE();
@@ -221,7 +221,7 @@ function IDEMirrorComponent({ eventBus }) {
             await streamingService.stopStreaming(currentPort);
             setIsStreaming(false);
             showStatus('Streaming stopped');
-            logger.log('✅ Streaming stopped successfully');
+            logger.info('✅ Streaming stopped successfully');
         } catch (error) {
             logger.error('❌ Failed to stop streaming:', error);
             showError(`Failed to stop streaming: ${error.message}`);
@@ -229,13 +229,13 @@ function IDEMirrorComponent({ eventBus }) {
     };
 
     const handleWebSocketMessage = (message) => {
-        logger.log('📥 WebSocket message:', message.type);
+        logger.info('📥 WebSocket message:', message.type);
         const { type, data } = message;
 
         switch (type) {
             case 'ide-state-updated':
             case 'ide-connected':
-                logger.log('🖥️ IDE state received, rendering...');
+                logger.info('🖥️ IDE state received, rendering...');
                 renderIDEState(data);
                 break;
             
@@ -281,7 +281,7 @@ function IDEMirrorComponent({ eventBus }) {
             }, 200);
         }
         
-        logger.log(`✅ Typing confirmed: ${data.key} at ${data.selector}`);
+        logger.info(`✅ Typing confirmed: ${data.key} at ${data.selector}`);
     };
 
     const connectToIDE = async () => {
@@ -290,10 +290,10 @@ function IDEMirrorComponent({ eventBus }) {
         try {
             // Try WebSocket first if available
             if (isConnected && webSocketService.getConnectionStatus().isConnected) {
-                logger.log('📡 Sending connect request via WebSocket...');
+                logger.info('📡 Sending connect request via WebSocket...');
                 webSocketService.sendIDEConnect();
             } else {
-                logger.log('📡 WebSocket not available, using API only...');
+                logger.info('📡 WebSocket not available, using API only...');
             }
             
             // Always try direct API call as fallback
@@ -308,7 +308,7 @@ function IDEMirrorComponent({ eventBus }) {
             
             const result = await response.json();
             if (result.success && result.data) {
-                logger.log('✅ IDE connected via API');
+                logger.info('✅ IDE connected via API');
                 renderIDEState(result.data);
             } else {
                 throw new Error(result.error || 'Failed to connect to IDE');
@@ -428,7 +428,7 @@ function IDEMirrorComponent({ eventBus }) {
 
             // Extract and cache clickable zones
             const zones = extractClickableZones(ideState.body);
-            logger.log(`🎯 Creating ${zones.length} clickable zones`);
+            logger.info(`🎯 Creating ${zones.length} clickable zones`);
 
             zones.forEach(zone => {
                 const clickZone = document.createElement('div');
@@ -523,7 +523,7 @@ function IDEMirrorComponent({ eventBus }) {
                     });
                     clickZone.appendChild(inputOverlay);
                     setTimeout(() => inputOverlay.focus(), 0);
-                    logger.log('💬 Overlay appended', inputOverlay);
+                    logger.info('💬 Overlay appended', inputOverlay);
                 }
 
                 // Tooltip with element type
@@ -543,12 +543,12 @@ function IDEMirrorComponent({ eventBus }) {
             containerRef.current.appendChild(header);
             containerRef.current.appendChild(viewport);
 
-            logger.log(`📸✅ Screenshot IDE rendered with ${zones.length} clickable overlays`);
+            logger.info(`📸✅ Screenshot IDE rendered with ${zones.length} clickable overlays`);
         }
     };
 
     const recalculateOverlayPositions = (viewport, overlay, ideState) => {
-        logger.log('🎯 Recalculating overlay positions...');
+        logger.info('🎯 Recalculating overlay positions...');
         
         // Get actual viewport and screenshot dimensions
         const viewportRect = viewport.getBoundingClientRect();
@@ -572,10 +572,10 @@ function IDEMirrorComponent({ eventBus }) {
         const scaleX = imgRect.width / (ideState.viewport?.width || imgRect.width);
         const scaleY = imgRect.height / (ideState.viewport?.height || imgRect.height);
         
-        logger.log(`📐 Scaling: ${scaleX.toFixed(2)}x, ${scaleY.toFixed(2)}y`);
-        logger.log(`📐 Viewport: ${viewportRect.width}x${viewportRect.height}`);
-        logger.log(`📐 Image: ${imgRect.width}x${imgRect.height}`);
-        logger.log(`📐 Original: ${ideState.viewport?.width}x${ideState.viewport?.height}`);
+        logger.info(`📐 Scaling: ${scaleX.toFixed(2)}x, ${scaleY.toFixed(2)}y`);
+        logger.info(`📐 Viewport: ${viewportRect.width}x${viewportRect.height}`);
+        logger.info(`📐 Image: ${imgRect.width}x${imgRect.height}`);
+        logger.info(`📐 Original: ${ideState.viewport?.width}x${ideState.viewport?.height}`);
         
         // Update all clickable zones with corrected positions
         const zones = overlay.querySelectorAll('.clickable-zone');
@@ -592,11 +592,11 @@ function IDEMirrorComponent({ eventBus }) {
                 zone.style.width = `${newWidth}px`;
                 zone.style.height = `${newHeight}px`;
                 
-                logger.log(`🎯 Zone ${index}: ${originalData.x},${originalData.y} → ${newX.toFixed(0)},${newY.toFixed(0)}`);
+                logger.info(`🎯 Zone ${index}: ${originalData.x},${originalData.y} → ${newX.toFixed(0)},${newY.toFixed(0)}`);
             }
         });
         
-        logger.log('✅ Overlay positions recalculated');
+        logger.info('✅ Overlay positions recalculated');
     };
 
     const extractClickableZones = (elementData, zones = []) => {
@@ -611,7 +611,7 @@ function IDEMirrorComponent({ eventBus }) {
         
         // Only log zones that are actually clickable or have issues
         if (elementData.isClickable || (className && typeof className === 'string' && className.includes('error'))) {
-            logger.log('ZONE:', { selector, className, tagName, backendElementType });
+            logger.info('ZONE:', { selector, className, tagName, backendElementType });
         }
 
         // Add clickable elements with valid positions
@@ -664,7 +664,7 @@ function IDEMirrorComponent({ eventBus }) {
         }
         
         const totalElements = countElements(ideState.body);
-        logger.log(`🎨 Rendering IDE state with ${totalElements} elements...`);
+        logger.info(`🎨 Rendering IDE state with ${totalElements} elements...`);
         
         const mirrorHTML = generateMirrorHTML(ideState.body);
         
@@ -690,7 +690,7 @@ function IDEMirrorComponent({ eventBus }) {
             // Add click handlers
             attachClickHandlers();
             
-            logger.log('✅ DOM IDE rendered successfully');
+            logger.info('✅ DOM IDE rendered successfully');
         }
     };
 
@@ -766,7 +766,7 @@ function IDEMirrorComponent({ eventBus }) {
     };
 
     const handleSmartClick = async (zone) => {
-        logger.log(`🎯 Smart click on ${zone.elementType}: ${zone.selector}`);
+        logger.info(`🎯 Smart click on ${zone.elementType}: ${zone.selector}`);
         
         try {
             // First click the element
@@ -783,7 +783,7 @@ function IDEMirrorComponent({ eventBus }) {
     };
 
     const handleElementClick = async (selector, position) => {
-        logger.log(`🖱️ Clicking element: ${selector}`, position);
+        logger.info(`🖱️ Clicking element: ${selector}`, position);
         
         try {
             // Visual feedback
@@ -814,7 +814,7 @@ function IDEMirrorComponent({ eventBus }) {
     };
 
     const activateTypingMode = (zone) => {
-        logger.log('🚀 Activating typing mode');
+        logger.info('🚀 Activating typing mode');
         
         // Remove existing highlights
         removeZoneHighlights();
@@ -835,7 +835,7 @@ function IDEMirrorComponent({ eventBus }) {
     };
 
     const stopTyping = () => {
-        logger.log('🛑 Stopping typing mode');
+        logger.info('🛑 Stopping typing mode');
         
         // Send any pending batch before stopping
         if (typingBuffer.current) {
@@ -848,7 +848,7 @@ function IDEMirrorComponent({ eventBus }) {
         // Stop keyboard listening
         stopKeyboardListening();
         
-        logger.log('✅ Typing mode stopped, pending batches sent');
+        logger.info('✅ Typing mode stopped, pending batches sent');
     };
 
     const removeZoneHighlights = () => {
@@ -889,16 +889,16 @@ function IDEMirrorComponent({ eventBus }) {
         document.addEventListener('keydown', listener);
         typingTimeout.current = setTimeout(() => {
             document.removeEventListener('keydown', listener);
-            logger.log('⌨️ Keyboard listening stopped');
+            logger.info('⌨️ Keyboard listening stopped');
         }, 1000);
-        logger.log('⌨️ Keyboard listening started');
+        logger.info('⌨️ Keyboard listening started');
     };
 
     const stopKeyboardListening = () => {
         if (typingTimeout.current) {
             clearTimeout(typingTimeout.current);
         }
-        logger.log('⌨️ Keyboard listening stopped');
+        logger.info('⌨️ Keyboard listening stopped');
     };
 
     const sendKeystrokeToIDE = (event) => {
@@ -906,7 +906,7 @@ function IDEMirrorComponent({ eventBus }) {
         
         // DON'T send keystrokes if we're in a chat zone (chat uses overlay input)
         if (currentState.elementType === 'chat') {
-            logger.log('💬 Chat zone detected - skipping keyboard events (using overlay input)');
+            logger.info('💬 Chat zone detected - skipping keyboard events (using overlay input)');
             return;
         }
         
@@ -914,7 +914,7 @@ function IDEMirrorComponent({ eventBus }) {
         
         // Special keys send immediately
         if (key.length > 1) {
-            logger.log(`⌨️ Sending special key immediately: ${key}`);
+            logger.info(`⌨️ Sending special key immediately: ${key}`);
             if (webSocketService) {
                 webSocketService.send(JSON.stringify({
                     type: 'type-text',
@@ -967,7 +967,7 @@ function IDEMirrorComponent({ eventBus }) {
         if (!typingBuffer.current || !currentState) return;
         
         const batchText = typingBuffer.current;
-        logger.log(`⚡ Sending batch: "${batchText}" (${batchText.length} chars)`);
+        logger.info(`⚡ Sending batch: "${batchText}" (${batchText.length} chars)`);
         
         // Send entire batch as one request
         if (webSocketService) {
@@ -984,7 +984,7 @@ function IDEMirrorComponent({ eventBus }) {
         typingBuffer.current = '';
         typingTimeout.current = null;
         
-        logger.log('✅ Batch sent successfully');
+        logger.info('✅ Batch sent successfully');
     };
 
     const showPredictiveText = (text) => {
@@ -1058,7 +1058,7 @@ function IDEMirrorComponent({ eventBus }) {
     };
 
     const handleChatSubmit = (message, selector) => {
-        logger.log(`📤 Sending chat message: "${message}" to ${selector}`);
+        logger.info(`📤 Sending chat message: "${message}" to ${selector}`);
         
         if (!message.trim()) return;
         
@@ -1099,7 +1099,7 @@ function IDEMirrorComponent({ eventBus }) {
     };
 
     const showStatus = (message) => {
-        logger.log(`📊 Status: ${message}`);
+        logger.info(`📊 Status: ${message}`);
         // You can add UI status display here if needed
     };
 
@@ -1110,13 +1110,13 @@ function IDEMirrorComponent({ eventBus }) {
 
     const showClickFeedback = () => {
         // Visual click feedback could be added here
-        logger.log('👆 Click registered');
+        logger.info('👆 Click registered');
     };
 
     const injectIDECSS = (cssData) => {
         if (!cssData) return;
         
-        logger.log('💄 Injecting IDE CSS...', cssData);
+        logger.info('💄 Injecting IDE CSS...', cssData);
         
         // Remove existing IDE CSS
         const existingCSS = document.querySelectorAll('.ide-mirror-css');
@@ -1127,7 +1127,7 @@ function IDEMirrorComponent({ eventBus }) {
             cssData.external.forEach((href, index) => {
                 // Skip Electron-specific URLs that browser can't load
                 if (href.includes('vscode-file://') || href.includes('electron://') || href.includes('app://')) {
-                    logger.log(`⚠️ Skipping Electron URL: ${href}`);
+                    logger.info(`⚠️ Skipping Electron URL: ${href}`);
                     return;
                 }
                 
@@ -1144,8 +1144,8 @@ function IDEMirrorComponent({ eventBus }) {
                 }
                 
                 link.className = 'ide-mirror-css';
-                link.onload = () => logger.log(`✅ Loaded external CSS: ${link.href}`);
-                link.onerror = () => logger.log(`❌ Failed to load CSS: ${link.href}`);
+                link.onload = () => logger.info(`✅ Loaded external CSS: ${link.href}`);
+                link.onerror = () => logger.info(`❌ Failed to load CSS: ${link.href}`);
                 document.head.appendChild(link);
             });
         }
@@ -1201,7 +1201,7 @@ function IDEMirrorComponent({ eventBus }) {
             href.includes('vscode-file://') || href.includes('electron://') || href.includes('app://')
         ).length || 0;
         
-        logger.log(`✅ CSS Injection Complete:
+        logger.info(`✅ CSS Injection Complete:
         - ${inlineCount} inline stylesheets ✅
         - ${externalCount - skippedElectron} external URLs ✅  
         - ${skippedElectron} Electron URLs skipped ⚠️`);

@@ -34,7 +34,7 @@ describe('PerformanceAnalyzer', () => {
 
     it('should handle undefined logger gracefully', () => {
       const analyzerWithoutLogger = new PerformanceAnalyzer(undefined, mockFileUtils);
-      expect(analyzerWithoutLogger.logger).toBeUndefined();
+      expect(analyzerWithoutlogger.infoger).toBeUndefined();
       expect(analyzerWithoutLogger.fileUtils).toBe(mockFileUtils);
     });
 

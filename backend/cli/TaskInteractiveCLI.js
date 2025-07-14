@@ -65,8 +65,8 @@ class TaskInteractiveCLI extends EventEmitter {
      * Start interactive CLI session
      */
     async startInteractiveSession() {
-        logger.log(chalk.blue.bold('\n🤖 VibeCoder Interactive Task Management'));
-        logger.log(chalk.gray('Type "help" for available commands or "exit" to quit\n'));
+        logger.info(chalk.blue.bold('\n🤖 VibeCoder Interactive Task Management'));
+        logger.info(chalk.gray('Type "help" for available commands or "exit" to quit\n'));
 
         await this.showMainMenu();
     }
@@ -144,13 +144,13 @@ class TaskInteractiveCLI extends EventEmitter {
      * Start VibeCoder Auto Mode interactively
      */
     async startAutoMode() {
-        logger.log(chalk.blue.bold('\n🚀 VibeCoder Auto Mode'));
-        logger.log(chalk.gray('Zero configuration, full automation\n'));
+        logger.info(chalk.blue.bold('\n🚀 VibeCoder Auto Mode'));
+        logger.info(chalk.gray('Zero configuration, full automation\n'));
 
         // Auto-detect project
         const projectPath = await this.autoDetectProject();
         if (!projectPath) {
-            logger.log(chalk.yellow('⚠️  No project detected in current directory.'));
+            logger.info(chalk.yellow('⚠️  No project detected in current directory.'));
             const { useCurrent } = await inquirer.prompt([
                 {
                     type: 'confirm',
@@ -166,7 +166,7 @@ class TaskInteractiveCLI extends EventEmitter {
         }
 
         const projectName = path.basename(projectPath || process.cwd());
-        logger.log(chalk.green(`📁 Project: ${projectName}`));
+        logger.info(chalk.green(`📁 Project: ${projectName}`));
 
         // Select auto mode type
         const { mode } = await inquirer.prompt([
@@ -209,7 +209,7 @@ class TaskInteractiveCLI extends EventEmitter {
         ]);
 
         if (!confirmed) {
-            logger.log(chalk.yellow('⏹️  Auto mode cancelled.'));
+            logger.info(chalk.yellow('⏹️  Auto mode cancelled.'));
             return;
         }
 
@@ -227,7 +227,7 @@ class TaskInteractiveCLI extends EventEmitter {
         const sessionId = `auto-${Date.now()}`;
         this.currentSession = { id: sessionId, type: 'auto', projectPath, mode };
 
-        logger.log(chalk.blue('\n🚀 Starting VibeCoder Auto Mode...\n'));
+        logger.info(chalk.blue('\n🚀 Starting VibeCoder Auto Mode...\n'));
 
         // Create progress bar
         const progressBar = new cliProgress.SingleBar({
@@ -487,8 +487,8 @@ class TaskInteractiveCLI extends EventEmitter {
      * Show help information
      */
     async showHelp() {
-        logger.log(chalk.blue.bold('\n❓ VibeCoder Task Management Help'));
-        logger.log(chalk.gray('\nAvailable Commands:'));
+        logger.info(chalk.blue.bold('\n❓ VibeCoder Task Management Help'));
+        logger.info(chalk.gray('\nAvailable Commands:'));
         
         const helpData = [
             { command: 'auto', description: 'Start VibeCoder Auto Mode (zero configuration)' },
@@ -511,10 +511,10 @@ class TaskInteractiveCLI extends EventEmitter {
             table.push([chalk.blue(item.command), item.description]);
         });
 
-        logger.log(table.toString());
+        logger.info(table.toString());
         
-        logger.log(chalk.yellow('\n💡 Tip: Use VibeCoder Auto Mode for the best experience!'));
-        logger.log(chalk.gray('Press Enter to continue...'));
+        logger.info(chalk.yellow('\n💡 Tip: Use VibeCoder Auto Mode for the best experience!'));
+        logger.info(chalk.gray('Press Enter to continue...'));
         
         await inquirer.prompt([{ type: 'input', name: 'continue', message: '' }]);
     }
@@ -533,7 +533,7 @@ class TaskInteractiveCLI extends EventEmitter {
         ]);
 
         if (confirmed) {
-            logger.log(chalk.blue('\n👋 Thanks for using VibeCoder Task Management!'));
+            logger.info(chalk.blue('\n👋 Thanks for using VibeCoder Task Management!'));
             process.exit(0);
         }
     }
@@ -740,89 +740,89 @@ class TaskInteractiveCLI extends EventEmitter {
 
     // Display methods
     displayAutoModeResults(result) {
-        logger.log(chalk.green.bold('\n✅ VibeCoder Auto Mode Completed Successfully!'));
+        logger.info(chalk.green.bold('\n✅ VibeCoder Auto Mode Completed Successfully!'));
         
         if (result.session) {
-            logger.log(chalk.blue(`\n🔄 Session: ${result.session.id}`));
-            logger.log(chalk.gray(`Duration: ${result.session.duration}ms`));
+            logger.info(chalk.blue(`\n🔄 Session: ${result.session.id}`));
+            logger.info(chalk.gray(`Duration: ${result.session.duration}ms`));
         }
 
         if (result.tasks && result.tasks.length > 0) {
-            logger.log(chalk.blue('\n📋 Tasks Executed:'));
+            logger.info(chalk.blue('\n📋 Tasks Executed:'));
             result.tasks.forEach((item, index) => {
                 const status = item.execution.status === 'completed' ? '✅' : '❌';
-                logger.log(chalk.gray(`${index + 1}. ${status} ${item.task.title}`));
+                logger.info(chalk.gray(`${index + 1}. ${status} ${item.task.title}`));
             });
         }
 
         if (result.scripts && result.scripts.length > 0) {
-            logger.log(chalk.blue('\n🔧 Scripts Generated:'));
+            logger.info(chalk.blue('\n🔧 Scripts Generated:'));
             result.scripts.forEach((script, index) => {
-                logger.log(chalk.gray(`${index + 1}. ${script.name} (${script.type})`));
+                logger.info(chalk.gray(`${index + 1}. ${script.name} (${script.type})`));
             });
         }
 
-        logger.log(chalk.green('\n🎉 Your project has been automatically optimized!'));
+        logger.info(chalk.green('\n🎉 Your project has been automatically optimized!'));
     }
 
     displayAnalysisResults(result, analysisType) {
-        logger.log(chalk.blue(`\n📊 ${analysisType.charAt(0).toUpperCase() + analysisType.slice(1)} Analysis Results:`));
+        logger.info(chalk.blue(`\n📊 ${analysisType.charAt(0).toUpperCase() + analysisType.slice(1)} Analysis Results:`));
         
         if (result.insights && result.insights.length > 0) {
-            logger.log(chalk.blue('\n💡 Key Insights:'));
+            logger.info(chalk.blue('\n💡 Key Insights:'));
             result.insights.slice(0, 5).forEach((insight, index) => {
-                logger.log(chalk.gray(`${index + 1}. ${insight}`));
+                logger.info(chalk.gray(`${index + 1}. ${insight}`));
             });
         }
 
         if (result.recommendations && result.recommendations.length > 0) {
-            logger.log(chalk.blue('\n🎯 Recommendations:'));
+            logger.info(chalk.blue('\n🎯 Recommendations:'));
             result.recommendations.slice(0, 5).forEach((rec, index) => {
-                logger.log(chalk.gray(`${index + 1}. ${rec.title}`));
-                logger.log(chalk.gray(`   ${rec.description}`));
+                logger.info(chalk.gray(`${index + 1}. ${rec.title}`));
+                logger.info(chalk.gray(`   ${rec.description}`));
             });
         }
     }
 
     // Placeholder methods for interactive features
     async listTasksInteractive() {
-        logger.log(chalk.blue('📋 Interactive task listing - Implementation pending'));
+        logger.info(chalk.blue('📋 Interactive task listing - Implementation pending'));
     }
 
     async createTaskInteractive() {
-        logger.log(chalk.blue('➕ Interactive task creation - Implementation pending'));
+        logger.info(chalk.blue('➕ Interactive task creation - Implementation pending'));
     }
 
     async executeTaskInteractive() {
-        logger.log(chalk.blue('▶️  Interactive task execution - Implementation pending'));
+        logger.info(chalk.blue('▶️  Interactive task execution - Implementation pending'));
     }
 
     async searchTasksInteractive() {
-        logger.log(chalk.blue('🔍 Interactive task search - Implementation pending'));
+        logger.info(chalk.blue('🔍 Interactive task search - Implementation pending'));
     }
 
     async showTaskStats() {
-        logger.log(chalk.blue('📊 Task statistics - Implementation pending'));
+        logger.info(chalk.blue('📊 Task statistics - Implementation pending'));
     }
 
     async generateScriptInteractive(type) {
-        logger.log(chalk.blue(`🔧 Interactive script generation (${type}) - Implementation pending`));
+        logger.info(chalk.blue(`🔧 Interactive script generation (${type}) - Implementation pending`));
     }
 
     async listScriptsInteractive() {
-        logger.log(chalk.blue('📋 Interactive script listing - Implementation pending'));
+        logger.info(chalk.blue('📋 Interactive script listing - Implementation pending'));
     }
 
     async quickRefactor(projectPath) {
-        logger.log(chalk.blue('🔨 Quick refactor - Implementation pending'));
+        logger.info(chalk.blue('🔨 Quick refactor - Implementation pending'));
     }
 
     async quickOptimize(projectPath) {
-        logger.log(chalk.blue('⚡ Quick optimize - Implementation pending'));
+        logger.info(chalk.blue('⚡ Quick optimize - Implementation pending'));
     }
 
     async quickSecurityScan(projectPath) {
-        logger.log(chalk.blue('🔒 Quick security scan - Implementation pending'));
+        logger.info(chalk.blue('🔒 Quick security scan - Implementation pending'));
     }
 
     async quickTest(projectPath) {
@@ -830,19 +830,19 @@ class TaskInteractiveCLI extends EventEmitter {
     }
 
     async quickDeploy(projectPath) {
-        logger.log(chalk.blue('🚀 Quick deploy - Implementation pending'));
+        logger.info(chalk.blue('🚀 Quick deploy - Implementation pending'));
     }
 
     async configureAI() {
-        logger.log(chalk.blue('🤖 AI configuration - Implementation pending'));
+        logger.info(chalk.blue('🤖 AI configuration - Implementation pending'));
     }
 
     async configureProject() {
-        logger.log(chalk.blue('📁 Project configuration - Implementation pending'));
+        logger.info(chalk.blue('📁 Project configuration - Implementation pending'));
     }
 
     async configureCLI() {
-        logger.log(chalk.blue('🔧 CLI configuration - Implementation pending'));
+        logger.info(chalk.blue('🔧 CLI configuration - Implementation pending'));
     }
 
     async getSystemStats() {
@@ -862,9 +862,9 @@ class TaskInteractiveCLI extends EventEmitter {
     }
 
     displayStatistics(stats, type) {
-        logger.log(chalk.blue(`\n📊 ${type.charAt(0).toUpperCase() + type.slice(1)} Statistics:`));
+        logger.info(chalk.blue(`\n📊 ${type.charAt(0).toUpperCase() + type.slice(1)} Statistics:`));
         Object.entries(stats).forEach(([key, value]) => {
-            logger.log(chalk.gray(`${key}: ${chalk.white(value)}`));
+            logger.info(chalk.gray(`${key}: ${chalk.white(value)}`));
         });
     }
 }

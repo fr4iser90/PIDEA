@@ -61,7 +61,7 @@ class AutoFinishSystem {
         });
         this.logger.info('[AutoFinishSystem] Git workflow manager initialized');
       } else {
-        this.logger.warn('[AutoFinishSystem] Git service not available, git workflow manager disabled');
+        this.logger.warn('[AutoFinishSystem] ⚠️ Git service not available, git workflow manager disabled');
       }
     } catch (error) {
       this.logger.error('[AutoFinishSystem] Failed to initialize git workflow manager:', error.message);
@@ -73,7 +73,7 @@ class AutoFinishSystem {
    */
   async initialize() {
     try {
-      this.logger.info('[AutoFinishSystem] Initializing auto-finish system...');
+      this.logger.info('[AutoFinishSystem] 🚀 Initializing auto-finish system...');
       
       // Initialize subsystems
       await this.todoParser.initialize();
@@ -84,7 +84,7 @@ class AutoFinishSystem {
       // Start session cleanup timer
       this.startSessionCleanup();
       
-      this.logger.info('[AutoFinishSystem] Auto-finish system initialized successfully');
+      this.logger.info('[AutoFinishSystem] ✅ Auto-finish system initialized successfully');
       return true;
     } catch (error) {
       this.logger.error('[AutoFinishSystem] Initialization failed:', error.message);

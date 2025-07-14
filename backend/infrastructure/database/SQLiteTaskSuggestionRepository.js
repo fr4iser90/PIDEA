@@ -29,7 +29,7 @@ class SQLiteTaskSuggestionRepository {
             await this.database.execute(`CREATE INDEX IF NOT EXISTS idx_task_suggestions_created_at ON ${this.tableName} (createdAt)`);
         } catch (error) {
             // Indexes might already exist, ignore errors
-            logger.log(`[SQLiteTaskSuggestionRepository] Index creation skipped: ${error.message}`);
+            logger.info(`[SQLiteTaskSuggestionRepository] Index creation skipped: ${error.message}`);
         }
     }
 

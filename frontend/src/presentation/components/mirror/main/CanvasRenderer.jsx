@@ -48,7 +48,7 @@ const CanvasRenderer = ({
         throw new Error('Could not get canvas context');
       }
       const img = new Image();
-      logger.log('[CanvasRenderer] renderFrame: Rendering Frame', { frameNumber, base64len: frameData?.length, base64start: frameData?.slice(0, 100) });
+      logger.info('[CanvasRenderer] renderFrame: Rendering Frame', { frameNumber, base64len: frameData?.length, base64start: frameData?.slice(0, 100) });
       return new Promise((resolve, reject) => {
         img.onload = () => {
           try {
@@ -127,7 +127,7 @@ const CanvasRenderer = ({
    */
   const base64ToBlob = (base64, mimeType) => {
     try {
-      logger.log('[CanvasRenderer] base64ToBlob: Converting base64 string', {
+      logger.info('[CanvasRenderer] base64ToBlob: Converting base64 string', {
         length: base64?.length,
         start: base64?.slice(0, 50),
         end: base64?.slice(-50),
@@ -159,7 +159,7 @@ const CanvasRenderer = ({
       const byteArray = new Uint8Array(byteNumbers);
       const blob = new Blob([byteArray], { type: mimeType });
       
-      logger.log('[CanvasRenderer] base64ToBlob: Successfully created blob', {
+      logger.info('[CanvasRenderer] base64ToBlob: Successfully created blob', {
         blobSize: blob.size,
         mimeType: blob.type
       });
@@ -243,7 +243,7 @@ const CanvasRenderer = ({
     if (screenshot && !isRenderingRef.current) {
       setError(null);
       isRenderingRef.current = true;
-      logger.log('[CanvasRenderer] useEffect: Neuer Frame', { frameNumber, base64len: screenshot?.length, base64start: screenshot?.slice(0, 100) });
+      logger.info('[CanvasRenderer] useEffect: Neuer Frame', { frameNumber, base64len: screenshot?.length, base64start: screenshot?.slice(0, 100) });
       renderFrame(screenshot)
         .catch((err) => {
           logger.error('[CanvasRenderer] Frame render error:', err.message, 'Base64 length:', screenshot?.length);

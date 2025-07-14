@@ -2,6 +2,10 @@ const fs = require('fs');
 const path = require('path');
 const { JSDOM } = require('jsdom');
 
+const Logger = require('@logging/Logger');
+
+const logger = new Logger('ServiceName');
+
 class BulkDOMAnalyzer {
   constructor() {
     this.results = {
@@ -23,8 +27,8 @@ class BulkDOMAnalyzer {
     const allFiles = fs.readdirSync(collectedPath)
       .filter(file => file.endsWith('.md') && file !== 'collection-report.json');
     
-    console.log(`📁 Auto-collected directory: ${collectedPath}`);
-    console.log(`📄 Found DOM files: ${allFiles.length}`);
+    logger.info(`📁 Auto-collected directory: ${collectedPath}`);
+    logger.info(`📄 Found DOM files: ${allFiles.length}`);
     
     const sources = {};
     allFiles.forEach(file => {
@@ -32,7 +36,7 @@ class BulkDOMAnalyzer {
       const htmlContent = this.extractHTML(content);
       sources[file] = htmlContent;
       const elementCount = (htmlContent.match(/<[^>]*>/g) || []).length;
-      console.log(`📄 ${file}: ${elementCount} HTML elements`);
+      logger.info(`📄 ${file}: ${elementCount} HTML elements`);
     });
     
     return sources;
@@ -58,10 +62,10 @@ class BulkDOMAnalyzer {
       const dom = new JSDOM(htmlContent);
       const document = dom.window.document;
       
-      console.log(`🔍 Analyzing ${sourceFile}...`);
+      logger.info(`🔍 Analyzing ${sourceFile}...`);
       
       const allElements = document.querySelectorAll('*:not(style):not(script):not(meta):not(link):not(title)');
-      console.log(`  └─ ${allElements.length} DOM elements found`);
+      logger.info(`  └─ ${allElements.length} DOM elements found`);
       
       this.extractFeatures(document, sourceFile);
       this.extractSelectors(document, sourceFile);
@@ -358,7 +362,7 @@ class BulkDOMAnalyzer {
       totalElements += elements.length;
     });
     
-    console.log(`  └─ ${totalElements} feature elements detected`);
+    logger.info(`  └─ ${totalElements} feature elements detected`);
   }
 
   findElements(document, selectors) {
@@ -504,7 +508,7 @@ class BulkDOMAnalyzer {
   }
 
   async analyze(targetDir) {
-    console.log('🚀 Bulk DOM Analyzer starting...\n');
+    logger.info('🚀 Bulk DOM Analyzer starting...\n');
 
     try {
       // 1. Load DOM files
@@ -532,11 +536,11 @@ class BulkDOMAnalyzer {
       // 5. Save results
       this.saveResults(stats, optimizedSelectors);
 
-      console.log('\n📊 BULK DOM ANALYSIS COMPLETED!');
-      console.log(`📁 Sources processed: ${successCount}/${Object.keys(sources).length}`);
-      console.log(`🔍 Total elements analyzed: ${stats.totalElements}`);
-      console.log(`🎯 Features detected: ${Object.keys(stats.featureCounts).length}`);
-      console.log(`🔧 Selectors generated: ${Object.keys(optimizedSelectors).length}`);
+      logger.info('\n📊 BULK DOM ANALYSIS COMPLETED!');
+      logger.info(`📁 Sources processed: ${successCount}/${Object.keys(sources).length}`);
+      logger.info(`🔍 Total elements analyzed: ${stats.totalElements}`);
+      logger.info(`🎯 Features detected: ${Object.keys(stats.featureCounts).length}`);
+      logger.info(`🔧 Selectors generated: ${Object.keys(optimizedSelectors).length}`);
 
       return {
         stats,
@@ -572,7 +576,7 @@ class BulkDOMAnalyzer {
     // Generate summary report
     this.generateSummaryReport(stats, optimizedSelectors, outputDir);
 
-    console.log(`📁 Results saved to: ${outputDir}`);
+    logger.info(`📁 Results saved to: ${outputDir}`);
   }
 
   generateSummaryReport(stats, optimizedSelectors, outputDir) {
@@ -621,7 +625,7 @@ if (require.main === module) {
     const analyzer = new BulkDOMAnalyzer();
     try {
       await analyzer.analyze();
-      console.log('\n🎉 Bulk DOM Analysis completed successfully!');
+      logger.info('\n🎉 Bulk DOM Analysis completed successfully!');
     } catch (error) {
       console.error('\n❌ Bulk DOM Analysis failed:', error.message);
       process.exit(1);

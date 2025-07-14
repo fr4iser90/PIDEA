@@ -19,7 +19,7 @@ export default class TaskCreationService {
     const workflowId = `task-creation-${Date.now()}`;
     
     try {
-      logger.log('[TaskCreationService] Starting task creation workflow:', { workflowId, taskData });
+      logger.info('[TaskCreationService] Starting task creation workflow:', { workflowId, taskData });
 
       // Step 1: Generate AI prompt
       const prompt = await this.generateTaskPrompt(taskData);
@@ -125,7 +125,7 @@ Format the response in Markdown with clear sections and actionable steps.`;
    */
   async sendToIDEChat(prompt, options = {}) {
     try {
-      logger.log('[TaskCreationService] Sending prompt to IDE chat');
+      logger.info('[TaskCreationService] Sending prompt to IDE chat');
 
       // Get current project ID
       const projectId = await this.api.getCurrentProjectId();
@@ -133,7 +133,7 @@ Format the response in Markdown with clear sections and actionable steps.`;
       // Send message to chat using existing APIChatRepository
       const result = await this.api.sendMessage(prompt);
       
-      logger.log('[TaskCreationService] Chat message sent successfully');
+      logger.info('[TaskCreationService] Chat message sent successfully');
       
       return {
         success: true,
@@ -156,7 +156,7 @@ Format the response in Markdown with clear sections and actionable steps.`;
    */
   async startAutoFinishMonitoring(workflowId, taskData) {
     try {
-      logger.log('[TaskCreationService] Starting auto-finish monitoring:', workflowId);
+      logger.info('[TaskCreationService] Starting auto-finish monitoring:', workflowId);
 
       // Get current project ID
       const projectId = await this.api.getCurrentProjectId();
@@ -179,7 +179,7 @@ Format the response in Markdown with clear sections and actionable steps.`;
         projectId
       });
 
-      logger.log('[TaskCreationService] Auto-finish monitoring started successfully');
+      logger.info('[TaskCreationService] Auto-finish monitoring started successfully');
       
       return {
         success: true,
@@ -219,7 +219,7 @@ Format the response in Markdown with clear sections and actionable steps.`;
         });
       }
 
-      logger.log('[TaskCreationService] Progress tracked:', { workflowId, progressData });
+      logger.info('[TaskCreationService] Progress tracked:', { workflowId, progressData });
 
     } catch (error) {
       logger.error('[TaskCreationService] Failed to track progress:', error);
@@ -260,7 +260,7 @@ Format the response in Markdown with clear sections and actionable steps.`;
    */
   async cancelWorkflow(workflowId) {
     try {
-      logger.log('[TaskCreationService] Cancelling workflow:', workflowId);
+      logger.info('[TaskCreationService] Cancelling workflow:', workflowId);
 
       // Cancel via API
       const result = await this.workflowApi.cancelWorkflow(workflowId);
@@ -276,7 +276,7 @@ Format the response in Markdown with clear sections and actionable steps.`;
         });
       }
 
-      logger.log('[TaskCreationService] Workflow cancelled successfully');
+      logger.info('[TaskCreationService] Workflow cancelled successfully');
       
       return {
         success: true,
@@ -312,7 +312,7 @@ Format the response in Markdown with clear sections and actionable steps.`;
       const age = now - workflow.startTime;
       if (age > maxAge || workflow.status === 'completed' || workflow.status === 'failed') {
         this.activeWorkflows.delete(workflowId);
-        logger.log('[TaskCreationService] Cleaned up workflow:', workflowId);
+        logger.info('[TaskCreationService] Cleaned up workflow:', workflowId);
       }
     }
   }

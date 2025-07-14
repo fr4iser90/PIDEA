@@ -280,16 +280,16 @@ describe('Task Management System Security Tests', () => {
             };
 
             // Capture console output
-            const originalLog = logger.log;
+            const originalLog = logger.info;
             const logs = [];
-            logger.log = jest.fn((...args) => {
+            logger.info = jest.fn((...args) => {
                 logs.push(args.join(' '));
             });
 
             await application.commandBus.execute('CreateTaskCommand', sensitiveTask);
 
-            // Restore logger.log
-            logger.log = originalLog;
+            // Restore logger.info
+            logger.info = originalLog;
 
             // Verify sensitive data is not logged
             const logString = logs.join(' ');
@@ -440,7 +440,7 @@ const logger = new Logger('Logger');
             expect(failed).toBeGreaterThan(0);
             expect(successful).toBeLessThan(numRequests);
 
-            logger.log(`Rate limiting: ${successful} successful, ${failed} rejected`);
+            logger.info(`Rate limiting: ${successful} successful, ${failed} rejected`);
         });
 
         test('should prevent AI service abuse', async () => {
@@ -462,7 +462,7 @@ const logger = new Logger('Logger');
             expect(failed).toBeGreaterThan(0);
             expect(successful).toBeLessThan(numRequests);
 
-            logger.log(`AI rate limiting: ${successful} successful, ${failed} rejected`);
+            logger.info(`AI rate limiting: ${successful} successful, ${failed} rejected`);
         });
     });
 

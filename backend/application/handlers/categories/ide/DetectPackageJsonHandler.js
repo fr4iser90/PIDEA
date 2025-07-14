@@ -37,7 +37,7 @@ class DetectPackageJsonHandler {
    */
   async handle(command, context = {}) {
     try {
-      this.logger.log(`[DetectPackageJsonHandler] Handling command: ${command.commandId}`);
+      this.logger.info(`[DetectPackageJsonHandler] Handling command: ${command.commandId}`);
 
       // Validate command
       if (!command || command.type !== 'DetectPackageJsonCommand') {
@@ -60,7 +60,7 @@ class DetectPackageJsonHandler {
         timestamp: new Date()
       });
 
-      this.logger.log(`[DetectPackageJsonHandler] Package.json detected successfully`);
+      this.logger.info(`[DetectPackageJsonHandler] Package.json detected successfully`);
 
       return {
         success: true,

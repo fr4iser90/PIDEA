@@ -303,7 +303,7 @@ function validateConfig() {
     process.exit(1);
   }
 
-  logger.log(`Configuration loaded for environment: ${NODE_ENV}`);
+  logger.info(`Configuration loaded for environment: ${NODE_ENV}`);
   return true;
 }
 
@@ -382,14 +382,14 @@ const performanceMetrics = {
 const deploymentUtils = {
   // Graceful shutdown
   async gracefulShutdown(signal) {
-    logger.log(`Received ${signal}. Starting graceful shutdown...`);
+    logger.info(`Received ${signal}. Starting graceful shutdown...`);
     
     // Close database connections
     // Close WebSocket connections
     // Stop accepting new requests
     // Wait for ongoing requests to complete
     
-    logger.log('Graceful shutdown completed');
+    logger.info('Graceful shutdown completed');
     process.exit(0);
   },
 

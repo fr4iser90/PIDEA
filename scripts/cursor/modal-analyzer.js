@@ -1,3 +1,7 @@
+const Logger = require('@logging/Logger');
+
+const logger = new Logger('ServiceName');
+
 #!/usr/bin/env node
 
 const fs = require('fs');
@@ -70,7 +74,7 @@ class ModalAnalyzer {
       const dom = new JSDOM(htmlContent);
       const document = dom.window.document;
       
-      console.log(`🔍 Analyzing modals in ${sourceFile}...`);
+      logger.info(`🔍 Analyzing modals in ${sourceFile}...`);
       
       const modalAnalysis = {
         modals: [],
@@ -277,8 +281,8 @@ class ModalAnalyzer {
       const summary = this.generateSummary(analysis);
       fs.writeFileSync(summaryFile, summary);
       
-      console.log(`📄 Modal analysis saved: ${analysisFile}`);
-      console.log(`📄 Summary saved: ${summaryFile}`);
+      logger.info(`📄 Modal analysis saved: ${analysisFile}`);
+      logger.info(`📄 Summary saved: ${summaryFile}`);
       
       return { analysisFile, summaryFile };
       

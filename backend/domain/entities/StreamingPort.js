@@ -73,7 +73,7 @@ class StreamingPort {
     this.errorCount = 0;
     this.lastError = null;
     
-    logger.log(`[StreamingPort] Started streaming for port ${this.port}`);
+    logger.info(`[StreamingPort] Started streaming for port ${this.port}`);
   }
 
   /**
@@ -87,7 +87,7 @@ class StreamingPort {
     this.status = 'stopped';
     this.stoppedAt = new Date();
     
-    logger.log(`[StreamingPort] Stopped streaming for port ${this.port}`);
+    logger.info(`[StreamingPort] Stopped streaming for port ${this.port}`);
   }
 
   /**
@@ -99,7 +99,7 @@ class StreamingPort {
     }
     
     this.status = 'paused';
-    logger.log(`[StreamingPort] Paused streaming for port ${this.port}`);
+    logger.info(`[StreamingPort] Paused streaming for port ${this.port}`);
   }
 
   /**
@@ -111,7 +111,7 @@ class StreamingPort {
     }
     
     this.status = 'active';
-    logger.log(`[StreamingPort] Resumed streaming for port ${this.port}`);
+    logger.info(`[StreamingPort] Resumed streaming for port ${this.port}`);
   }
 
   /**

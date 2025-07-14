@@ -63,7 +63,7 @@ class TestVersioner {
         testMetadata: testMetadata.toJSON()
       };
       
-      logger.log(`✅ Successfully versioned to ${version}`);
+      logger.info(`✅ Successfully versioned to ${version}`);
       return result;
       
     } catch (error) {
@@ -87,7 +87,7 @@ class TestVersioner {
     const backupPath = path.join(dir, `${name}.v${version}.${timestamp}${ext}`);
     
     await fs.copyFile(filePath, backupPath);
-    logger.log(`💾 Backup created: ${path.basename(backupPath)}`);
+    logger.info(`💾 Backup created: ${path.basename(backupPath)}`);
     
     return backupPath;
   }
@@ -216,7 +216,7 @@ class TestVersioner {
    * @returns {Promise<Object>} - Rollback result
    */
   async rollbackToVersion(filePath, version) {
-    logger.log(`🔄 Rolling back ${path.basename(filePath)} to version ${version}`);
+    logger.info(`🔄 Rolling back ${path.basename(filePath)} to version ${version}`);
     
     try {
       const history = this.getVersionHistory(filePath);
@@ -263,7 +263,7 @@ class TestVersioner {
         testMetadata: testMetadata.toJSON()
       };
       
-      logger.log(`✅ Successfully rolled back to version ${version}`);
+      logger.info(`✅ Successfully rolled back to version ${version}`);
       return result;
       
     } catch (error) {
@@ -280,7 +280,7 @@ class TestVersioner {
    * @returns {Promise<Object>} - Migration result
    */
   async migrateTest(filePath, targetFramework, migrationRules = {}) {
-    logger.log(`🔄 Migrating ${path.basename(filePath)} to ${targetFramework}`);
+    logger.info(`🔄 Migrating ${path.basename(filePath)} to ${targetFramework}`);
     
     try {
       const content = await fs.readFile(filePath, 'utf8');
@@ -334,7 +334,7 @@ class TestVersioner {
         }
       };
       
-      logger.log(`✅ Successfully migrated to ${targetFramework}`);
+      logger.info(`✅ Successfully migrated to ${targetFramework}`);
       return result;
       
     } catch (error) {
@@ -461,7 +461,7 @@ class TestVersioner {
       };
       
       await fs.writeFile(outputPath, JSON.stringify(exportData, null, 2));
-      logger.log(`📄 Versioning data exported to: ${outputPath}`);
+      logger.info(`📄 Versioning data exported to: ${outputPath}`);
     } catch (error) {
       logger.error(`❌ Failed to export versioning data: ${error.message}`);
     }
@@ -515,17 +515,17 @@ async function main() {
   
   if (args.length === 0) {
     logger.debug('Usage: node test-versioner.js <command> [options]');
-    logger.log('');
-    logger.log('Commands:');
+    logger.info('');
+    logger.info('Commands:');
     logger.debug('  version <file> <version> [reason]     Version a test file');
-    logger.log('  compare <file> <v1> <v2>             Compare two versions');
-    logger.log('  rollback <file> <version>             Rollback to version');
-    logger.log('  migrate <file> <framework>            Migrate to framework');
-    logger.log('  history <file>                        Show version history');
-    logger.log('  report                                 Generate versioning report');
-    logger.log('  export <output-file>                  Export versioning data');
-    logger.log('');
-    logger.log('Examples:');
+    logger.info('  compare <file> <v1> <v2>             Compare two versions');
+    logger.info('  rollback <file> <version>             Rollback to version');
+    logger.info('  migrate <file> <framework>            Migrate to framework');
+    logger.info('  history <file>                        Show version history');
+    logger.info('  report                                 Generate versioning report');
+    logger.info('  export <output-file>                  Export versioning data');
+    logger.info('');
+    logger.info('Examples:');
     logger.debug('  node test-versioner.js version test.js 2.0.0 "Major refactor"');
     logger.debug('  node test-versioner.js migrate test.js jest');
     logger.debug('  node test-versioner.js rollback test.js 1.0.0');
@@ -543,7 +543,7 @@ async function main() {
         }
         const reason = args[3] || '';
         const result = await versioner.versionTest(args[1], args[2], reason);
-        logger.log(JSON.stringify(result, null, 2));
+        logger.info(JSON.stringify(result, null, 2));
         break;
         
       case 'compare':
@@ -552,7 +552,7 @@ async function main() {
           process.exit(1);
         }
         const comparison = await versioner.compareVersions(args[1], args[2], args[3]);
-        logger.log(JSON.stringify(comparison, null, 2));
+        logger.info(JSON.stringify(comparison, null, 2));
         break;
         
       case 'rollback':
@@ -561,7 +561,7 @@ async function main() {
           process.exit(1);
         }
         const rollbackResult = await versioner.rollbackToVersion(args[1], args[2]);
-        logger.log(JSON.stringify(rollbackResult, null, 2));
+        logger.info(JSON.stringify(rollbackResult, null, 2));
         break;
         
       case 'migrate':
@@ -570,7 +570,7 @@ async function main() {
           process.exit(1);
         }
         const migrationResult = await versioner.migrateTest(args[1], args[2]);
-        logger.log(JSON.stringify(migrationResult, null, 2));
+        logger.info(JSON.stringify(migrationResult, null, 2));
         break;
         
       case 'history':
@@ -579,12 +579,12 @@ async function main() {
           process.exit(1);
         }
         const history = versioner.getVersionHistory(args[1]);
-        logger.log(JSON.stringify(history, null, 2));
+        logger.info(JSON.stringify(history, null, 2));
         break;
         
       case 'report':
         const report = await versioner.generateVersioningReport();
-        logger.log(JSON.stringify(report, null, 2));
+        logger.info(JSON.stringify(report, null, 2));
         break;
         
       case 'export':

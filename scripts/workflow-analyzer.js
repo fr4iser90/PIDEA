@@ -1,3 +1,7 @@
+const Logger = require('@logging/Logger');
+
+const logger = new Logger('ServiceName');
+
 #!/usr/bin/env node
 
 const fs = require('fs');
@@ -35,7 +39,7 @@ class WorkflowAnalyzer {
   }
 
   async analyze() {
-    console.log('🚀 Starting PIDEA Workflow Analysis...\n');
+    logger.info('🚀 Starting PIDEA Workflow Analysis...\n');
     
     // Ensure output directory exists
     if (!fs.existsSync(this.outputDir)) {
@@ -57,11 +61,11 @@ class WorkflowAnalyzer {
     // Generate HTML report
     await this.generateHTMLReport();
     
-    console.log('✅ Analysis complete! Check the output directory for results.');
+    logger.info('✅ Analysis complete! Check the output directory for results.');
   }
 
   async analyzeCommands() {
-    console.log('📋 Analyzing Commands...');
+    logger.info('📋 Analyzing Commands...');
     const commandsDir = path.join(this.projectRoot, 'backend', 'application', 'commands');
     
     if (fs.existsSync(commandsDir)) {
@@ -89,7 +93,7 @@ class WorkflowAnalyzer {
   }
 
   async analyzeHandlers() {
-    console.log('🎯 Analyzing Handlers...');
+    logger.info('🎯 Analyzing Handlers...');
     const handlersDir = path.join(this.projectRoot, 'backend', 'application', 'handlers');
     
     if (fs.existsSync(handlersDir)) {
@@ -117,7 +121,7 @@ class WorkflowAnalyzer {
   }
 
   async analyzeServices() {
-    console.log('⚙️  Analyzing Services...');
+    logger.info('⚙️  Analyzing Services...');
     const servicesDir = path.join(this.projectRoot, 'backend', 'domain', 'services');
     
     if (fs.existsSync(servicesDir)) {
@@ -145,7 +149,7 @@ class WorkflowAnalyzer {
   }
 
   async analyzeControllers() {
-    console.log('🎮 Analyzing Controllers...');
+    logger.info('🎮 Analyzing Controllers...');
     const controllersDir = path.join(this.projectRoot, 'backend', 'presentation', 'api');
     
     if (fs.existsSync(controllersDir)) {
@@ -173,7 +177,7 @@ class WorkflowAnalyzer {
   }
 
   async analyzeComponents() {
-    console.log('🧩 Analyzing Frontend Components...');
+    logger.info('🧩 Analyzing Frontend Components...');
     const componentsDir = path.join(this.projectRoot, 'frontend', 'src', 'presentation', 'components');
     
     if (fs.existsSync(componentsDir)) {
@@ -202,7 +206,7 @@ class WorkflowAnalyzer {
   }
 
   async analyzeWorkflows() {
-    console.log('🔄 Analyzing Workflows...');
+    logger.info('🔄 Analyzing Workflows...');
     
     // Define main workflows based on command-handler relationships
     const workflows = [
@@ -267,7 +271,7 @@ class WorkflowAnalyzer {
   }
 
   async analyzeArchitecture() {
-    console.log('🏗️  Analyzing Architecture...');
+    logger.info('🏗️  Analyzing Architecture...');
     
     this.analysisResults.architecture = {
       layers: {
@@ -303,7 +307,7 @@ class WorkflowAnalyzer {
   }
 
   async generateDiagrams() {
-    console.log('📊 Generating Mermaid Diagrams...');
+    logger.info('📊 Generating Mermaid Diagrams...');
     
     // Generate different types of diagrams
     await this.generateArchitectureDiagram();
@@ -447,7 +451,7 @@ class WorkflowAnalyzer {
   }
 
   async generateHTMLReport() {
-    console.log('📄 Generating HTML Report...');
+    logger.info('📄 Generating HTML Report...');
     
     const html = this.generateHTMLContent();
     fs.writeFileSync(path.join(this.outputDir, 'workflow-analysis.html'), html);

@@ -72,12 +72,12 @@ function AutoPanelComponent({ eventBus }) {
       const projectId = await api.getCurrentProjectId();
       const response = await api.startAutoRefactor(projectId);
       
-      logger.log('[AutoPanelComponent] Auto refactor response:', response);
-      logger.log('[AutoPanelComponent] Response data:', response.data);
-      logger.log('[AutoPanelComponent] Response data.result:', response.data?.result);
-      logger.log('[AutoPanelComponent] Response data.result.results:', response.data?.result?.results);
-      logger.log('[AutoPanelComponent] Response data.result.result:', response.data?.result?.result);
-      logger.log('[AutoPanelComponent] Response data.result.result.results:', response.data?.result?.result?.results);
+      logger.info('[AutoPanelComponent] Auto refactor response:', response);
+      logger.info('[AutoPanelComponent] Response data:', response.data);
+      logger.info('[AutoPanelComponent] Response data.result:', response.data?.result);
+      logger.info('[AutoPanelComponent] Response data.result.results:', response.data?.result?.results);
+      logger.info('[AutoPanelComponent] Response data.result.result:', response.data?.result?.result);
+      logger.info('[AutoPanelComponent] Response data.result.result.results:', response.data?.result?.result?.results);
       
       // Check for tasks in different possible locations
       let tasks = null;
@@ -85,40 +85,40 @@ function AutoPanelComponent({ eventBus }) {
       // Try multiple possible locations for tasks - including the deepest nested ones
       if (response?.data?.result?.result?.tasks && Array.isArray(response.data.result.result.tasks)) {
         tasks = response.data.result.result.tasks;
-        logger.log('[AutoPanelComponent] Found tasks in response.data.result.result.tasks:', tasks);
+        logger.info('[AutoPanelComponent] Found tasks in response.data.result.result.tasks:', tasks);
       } else if (response?.data?.result?.result?.tasks?.tasks && Array.isArray(response.data.result.result.tasks.tasks)) {
         tasks = response.data.result.result.tasks.tasks;
-        logger.log('[AutoPanelComponent] Found tasks in response.data.result.result.tasks.tasks:', tasks);
+        logger.info('[AutoPanelComponent] Found tasks in response.data.result.result.tasks.tasks:', tasks);
       } else if (response?.data?.result?.result?.result?.tasks && Array.isArray(response.data.result.result.result.tasks)) {
         tasks = response.data.result.result.result.tasks;
-        logger.log('[AutoPanelComponent] Found tasks in response.data.result.result.result.tasks:', tasks);
+        logger.info('[AutoPanelComponent] Found tasks in response.data.result.result.result.tasks:', tasks);
       } else if (response?.data?.result?.tasks?.result?.tasks && Array.isArray(response.data.result.tasks.result.tasks)) {
         tasks = response.data.result.tasks.result.tasks;
-        logger.log('[AutoPanelComponent] Found tasks in response.data.result.tasks.result.tasks:', tasks);
+        logger.info('[AutoPanelComponent] Found tasks in response.data.result.tasks.result.tasks:', tasks);
       } else if (response?.data?.result?.tasks?.tasks && Array.isArray(response.data.result.tasks.tasks)) {
         tasks = response.data.result.tasks.tasks;
-        logger.log('[AutoPanelComponent] Found tasks in response.data.result.tasks.tasks:', tasks);
+        logger.info('[AutoPanelComponent] Found tasks in response.data.result.tasks.tasks:', tasks);
       } else if (response?.data?.result?.tasks && Array.isArray(response.data.result.tasks)) {
         tasks = response.data.result.tasks;
-        logger.log('[AutoPanelComponent] Found tasks in response.data.result.tasks:', tasks);
+        logger.info('[AutoPanelComponent] Found tasks in response.data.result.tasks:', tasks);
       } else if (response?.data?.tasks && Array.isArray(response.data.tasks)) {
         tasks = response.data.tasks;
-        logger.log('[AutoPanelComponent] Found tasks in response.data.tasks:', tasks);
+        logger.info('[AutoPanelComponent] Found tasks in response.data.tasks:', tasks);
       } else if (response?.result?.tasks && Array.isArray(response.result.tasks)) {
         tasks = response.result.tasks;
-        logger.log('[AutoPanelComponent] Found tasks in response.result.tasks:', tasks);
+        logger.info('[AutoPanelComponent] Found tasks in response.result.tasks:', tasks);
       } else {
-        logger.log('[AutoPanelComponent] No tasks found in response, loading from database...');
+        logger.info('[AutoPanelComponent] No tasks found in response, loading from database...');
         
         // Load tasks from database
         try {
           const tasksResponse = await apiCall(`/api/projects/${projectId}/tasks?type=refactor&status=pending`);
           if (tasksResponse.success && tasksResponse.data && Array.isArray(tasksResponse.data)) {
             tasks = tasksResponse.data;
-            logger.log('[AutoPanelComponent] Loaded tasks from database:', tasks);
+            logger.info('[AutoPanelComponent] Loaded tasks from database:', tasks);
           } else {
-            logger.log('[AutoPanelComponent] No tasks found in database either');
-            logger.log('[AutoPanelComponent] Full response structure:', JSON.stringify(response, null, 2));
+            logger.info('[AutoPanelComponent] No tasks found in database either');
+            logger.info('[AutoPanelComponent] Full response structure:', JSON.stringify(response, null, 2));
           }
         } catch (dbError) {
           logger.error('[AutoPanelComponent] Error loading tasks from database:', dbError);
@@ -189,10 +189,10 @@ function AutoPanelComponent({ eventBus }) {
         if (existingTasksResponse.success && existingTasksResponse.data.count > 0) {
           loadExistingTasks = true;
           existingTasks = existingTasksResponse.data.tasks || [];
-          logger.log(`[AutoPanelComponent] Found ${existingTasksResponse.data.count} existing tasks`);
+          logger.info(`[AutoPanelComponent] Found ${existingTasksResponse.data.count} existing tasks`);
         }
       } catch (error) {
-        logger.log('[AutoPanelComponent] No existing tasks found or error loading them:', error.message);
+        logger.info('[AutoPanelComponent] No existing tasks found or error loading them:', error.message);
       }
 
       // If we have existing tasks, show them in modal

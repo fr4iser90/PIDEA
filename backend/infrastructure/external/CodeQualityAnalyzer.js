@@ -465,7 +465,7 @@ class CodeQualityAnalyzer {
             // Hardcoded URLs
             if ((content.match(/['"]https?:\/\//g) || []).length > 0) smells.push({ file, type: 'hardcoded-url', message: 'Hardcoded URL found' });
             // Console.log
-            if (content.includes('logger.log')) smells.push({ file, type: 'console-log', message: 'console.log found' });
+            if (content.includes('logger.info')) smells.push({ file, type: 'console-log', message: 'console.log found' });
         }
         return smells;
     }
@@ -482,7 +482,7 @@ class CodeQualityAnalyzer {
         if (analysis.metrics.complexity && Object.values(analysis.metrics.complexity.cyclomaticComplexity).some(v => v > 10)) recs.push({ title: 'Reduce complexity', description: 'Some files have high cyclomatic complexity', priority: 'high', category: 'complexity' });
         if (analysis.metrics.maintainability && analysis.metrics.maintainability.largeFiles.length > 0) recs.push({ title: 'Split large files', description: 'Some files are too large', priority: 'medium', category: 'maintainability' });
         if (analysis.metrics.testability && !analysis.metrics.testability.hasTests) recs.push({ title: 'Add tests', description: 'No test files found', priority: 'high', category: 'testing' });
-        if (analysis.issues && analysis.issues.some(i => i.type === 'console-log')) recs.push({ title: 'Remove logger.log', description: 'console.log found in code', priority: 'low', category: 'smell' });
+        if (analysis.issues && analysis.issues.some(i => i.type === 'console-log')) recs.push({ title: 'Remove logger.info', description: 'console.log found in code', priority: 'low', category: 'smell' });
         return recs;
     }
 
@@ -528,12 +528,12 @@ class CodeQualityAnalyzer {
                 // Count linting issues with line details
                 const contentLines = content.split('\n');
                 contentLines.forEach((line, lineNumber) => {
-                    if (line.includes('logger.log')) {
+                    if (line.includes('logger.info')) {
                         lintingIssues++;
                         lintingIssuesList.push({ 
                             file, 
                             line: lineNumber + 1,
-                            issue: 'logger.log found',
+                            issue: 'logger.info found',
                             code: line.trim()
                         });
                     }

@@ -32,7 +32,7 @@ class StreamingSessionRepository {
         await this.createTables();
       }
       this.isInitialized = true;
-      logger.log('[StreamingSessionRepository] Initialized successfully');
+      logger.info('[StreamingSessionRepository] Initialized successfully');
     } catch (error) {
       logger.error('[StreamingSessionRepository] Initialization error:', error.message);
       throw error;
@@ -103,7 +103,7 @@ class StreamingSessionRepository {
     try {
       await this.databaseConnection.execute(createSessionsTable);
       await this.databaseConnection.execute(createMetricsTable);
-      logger.log('[StreamingSessionRepository] Database tables created successfully');
+      logger.info('[StreamingSessionRepository] Database tables created successfully');
     } catch (error) {
       logger.error('[StreamingSessionRepository] Error creating tables:', error.message);
       throw error;
@@ -127,7 +127,7 @@ class StreamingSessionRepository {
         await this.saveSessionToDatabase(session);
       }
 
-      logger.log(`[StreamingSessionRepository] Saved session ${session.id}`);
+      logger.info(`[StreamingSessionRepository] Saved session ${session.id}`);
     } catch (error) {
       logger.error(`[StreamingSessionRepository] Error saving session ${session.id}:`, error.message);
       throw error;
@@ -324,7 +324,7 @@ class StreamingSessionRepository {
         await this.deleteSessionFromDatabase(sessionId);
       }
 
-      logger.log(`[StreamingSessionRepository] Deleted session ${sessionId}`);
+      logger.info(`[StreamingSessionRepository] Deleted session ${sessionId}`);
     } catch (error) {
       logger.error(`[StreamingSessionRepository] Error deleting session ${sessionId}:`, error.message);
       throw error;
@@ -556,7 +556,7 @@ class StreamingSessionRepository {
         await this.deleteSession(sessionId);
       }
 
-      logger.log(`[StreamingSessionRepository] Cleaned up ${sessionsToDelete.length} old sessions`);
+      logger.info(`[StreamingSessionRepository] Cleaned up ${sessionsToDelete.length} old sessions`);
     } catch (error) {
       logger.error('[StreamingSessionRepository] Error during cleanup:', error.message);
       throw error;

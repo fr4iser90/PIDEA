@@ -11,7 +11,7 @@ class VSCodeDetector {
   }
 
   async scanForVSCodeInstances() {
-    logger.log('[VSCodeDetector] Scanning for VSCode instances on ports', this.portRange.start, 'to', this.portRange.end);
+    logger.info('[VSCodeDetector] Scanning for VSCode instances on ports', this.portRange.start, 'to', this.portRange.end);
     
     const availableVSCodeInstances = [];
     const promises = [];
@@ -34,7 +34,7 @@ class VSCodeDetector {
       }
     });
 
-    logger.log('[VSCodeDetector] Found', availableVSCodeInstances.length, 'running VSCode instances:', 
+    logger.info('[VSCodeDetector] Found', availableVSCodeInstances.length, 'running VSCode instances:', 
       availableVSCodeInstances.map(ide => ({ port: ide.port, status: ide.status, url: ide.url })));
     return availableVSCodeInstances;
   }
@@ -63,10 +63,10 @@ class VSCodeDetector {
               if (browserString.includes('code/') || 
                   userAgent.toLowerCase().includes('code/') ||
                   userAgent.toLowerCase().includes('electron')) {
-                logger.log(`[VSCodeDetector] Found VSCode on port ${port}:`, json.Browser);
+                logger.info(`[VSCodeDetector] Found VSCode on port ${port}:`, json.Browser);
                 resolve(true);
               } else {
-                logger.log(`[VSCodeDetector] Port ${port} has CDP but not VSCode:`, json.Browser);
+                logger.info(`[VSCodeDetector] Port ${port} has CDP but not VSCode:`, json.Browser);
                 resolve(false);
               }
             } else {

@@ -20,7 +20,7 @@ class VSCodeWorkspaceDetector extends WorkspacePathDetector {
    */
   async detectVSCodeWorkspacePath(port) {
     try {
-      logger.log('[VSCodeWorkspaceDetector] Detecting workspace path for VSCode on port', port);
+      logger.info('[VSCodeWorkspaceDetector] Detecting workspace path for VSCode on port', port);
       
       const page = await this.browserManager.getPage();
       if (!page) {
@@ -37,17 +37,17 @@ class VSCodeWorkspaceDetector extends WorkspacePathDetector {
       }, this.vscodeSelectors.workspaceName);
       
       if (!workspaceName) {
-        logger.log('[VSCodeWorkspaceDetector] No workspace name found in title');
+        logger.info('[VSCodeWorkspaceDetector] No workspace name found in title');
         return null;
       }
       
-      logger.log('[VSCodeWorkspaceDetector] Detected workspace name:', workspaceName);
+      logger.info('[VSCodeWorkspaceDetector] Detected workspace name:', workspaceName);
       
       // Try to extract path from workspace name
       const workspacePath = this.extractPathFromWorkspaceName(workspaceName);
       
       if (workspacePath) {
-        logger.log('[VSCodeWorkspaceDetector] Extracted workspace path:', workspacePath);
+        logger.info('[VSCodeWorkspaceDetector] Extracted workspace path:', workspacePath);
         return workspacePath;
       }
       
@@ -135,7 +135,7 @@ const logger = new Logger('Logger');
       }, this.vscodeSelectors.fileTree);
       
       if (firstItem) {
-        logger.log('[VSCodeWorkspaceDetector] Found first item in file explorer:', firstItem);
+        logger.info('[VSCodeWorkspaceDetector] Found first item in file explorer:', firstItem);
         return this.findPathByFolderName(firstItem);
       }
       
@@ -154,7 +154,7 @@ const logger = new Logger('Logger');
    */
   async getVSCodeWorkspaceInfo(port) {
     try {
-      logger.log('[VSCodeWorkspaceDetector] Getting workspace info for VSCode on port', port);
+      logger.info('[VSCodeWorkspaceDetector] Getting workspace info for VSCode on port', port);
       
       const workspacePath = await this.detectVSCodeWorkspacePath(port);
       
@@ -195,7 +195,7 @@ const logger = new Logger('Logger');
    */
   async getOpenFiles(port) {
     try {
-      logger.log('[VSCodeWorkspaceDetector] Getting open files for VSCode on port', port);
+      logger.info('[VSCodeWorkspaceDetector] Getting open files for VSCode on port', port);
       
       const page = await this.browserManager.getPage();
       if (!page) {
@@ -215,7 +215,7 @@ const logger = new Logger('Logger');
         }));
       }, this.vscodeSelectors.editorTabs);
       
-      logger.log('[VSCodeWorkspaceDetector] Found', openFiles.length, 'open files');
+      logger.info('[VSCodeWorkspaceDetector] Found', openFiles.length, 'open files');
       
       return openFiles;
       
@@ -232,7 +232,7 @@ const logger = new Logger('Logger');
    */
   async getVSCodeStatus(port) {
     try {
-      logger.log('[VSCodeWorkspaceDetector] Getting status for VSCode on port', port);
+      logger.info('[VSCodeWorkspaceDetector] Getting status for VSCode on port', port);
       
       const page = await this.browserManager.getPage();
       if (!page) {
@@ -259,7 +259,7 @@ const logger = new Logger('Logger');
         return statusInfo;
       }, this.vscodeSelectors.statusBar);
       
-      logger.log('[VSCodeWorkspaceDetector] Retrieved VSCode status');
+      logger.info('[VSCodeWorkspaceDetector] Retrieved VSCode status');
       
       return {
         port,

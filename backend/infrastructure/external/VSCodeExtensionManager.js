@@ -24,7 +24,7 @@ class VSCodeExtensionManager {
       await this.loadExtensionCapabilities();
       
       this.isInitialized = true;
-      logger.log('[VSCodeExtensionManager] Initialized successfully');
+      logger.info('[VSCodeExtensionManager] Initialized successfully');
     } catch (error) {
       logger.error('[VSCodeExtensionManager] Failed to initialize:', error);
     }

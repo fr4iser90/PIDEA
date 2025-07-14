@@ -35,7 +35,7 @@ const config = {
  */
 async function execute(context = {}, options = {}) {
   try {
-    logger.log('🐳 Checking container status...');
+    logger.info('🐳 Checking container status...');
     
     const stepOptions = { ...config.settings, ...options };
     const results = {
@@ -67,7 +67,7 @@ async function execute(context = {}, options = {}) {
     // Calculate overall health
     results.data.health = calculateHealth(results.data);
 
-    logger.log(`✅ Container status check completed. Health: ${results.data.health.status}`);
+    logger.info(`✅ Container status check completed. Health: ${results.data.health.status}`);
     return results;
 
   } catch (error) {

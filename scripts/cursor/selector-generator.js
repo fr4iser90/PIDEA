@@ -1,6 +1,10 @@
 const fs = require('fs');
 const path = require('path');
 
+const Logger = require('@logging/Logger');
+
+const logger = new Logger('ServiceName');
+
 class SelectorGenerator {
   constructor() {
     this.analysisFile = path.join(__dirname, '../output/dom-analysis-results.json');
@@ -11,7 +15,7 @@ class SelectorGenerator {
   ensureDirectories() {
     if (!fs.existsSync(this.outputDir)) {
       fs.mkdirSync(this.outputDir, { recursive: true });
-      console.log(`📁 Created directory: ${this.outputDir}`);
+      logger.info(`📁 Created directory: ${this.outputDir}`);
     }
     
     const outputBaseDir = path.join(__dirname, '../output');
@@ -249,13 +253,13 @@ module.exports = { CursorIDE };`;
   }
 
   async generate() {
-    console.log('🔧 Generating Playwright files...\n');
+    logger.info('🔧 Generating Playwright files...\n');
 
     try {
       const analysisResults = this.loadAnalysisResults();
       const selectors = analysisResults.optimizedSelectors;
       
-      console.log(`📊 Using ${Object.keys(selectors).length} features from analysis`);
+      logger.info(`📊 Using ${Object.keys(selectors).length} features from analysis`);
 
       const files = {
         'selectors.js': this.generateSelectorsFile(selectors),
@@ -265,13 +269,13 @@ module.exports = { CursorIDE };`;
       Object.entries(files).forEach(([filename, content]) => {
         const filepath = path.join(this.outputDir, filename);
         fs.writeFileSync(filepath, content);
-        console.log(`✅ Generated: ${filename}`);
+        logger.info(`✅ Generated: ${filename}`);
       });
 
-      console.log(`\n🎉 Generated ${Object.keys(files).length} files in ${this.outputDir}`);
+      logger.info(`\n🎉 Generated ${Object.keys(files).length} files in ${this.outputDir}`);
       
       const featureCount = Object.keys(selectors).length;
-      console.log(`📈 Total Features: ${featureCount}`);
+      logger.info(`📈 Total Features: ${featureCount}`);
       
       const categories = {
         chat: Object.keys(selectors).filter(f => f.includes('chat') || f.includes('message') || f.includes('ai')).length,
@@ -281,10 +285,10 @@ module.exports = { CursorIDE };`;
         panels: Object.keys(selectors).filter(f => f.includes('Panel') || f.includes('debug') || f.includes('output') || f.includes('problems')).length
       };
 
-      console.log('\n📋 FEATURES BY CATEGORY:');
+      logger.info('\n📋 FEATURES BY CATEGORY:');
       Object.entries(categories).forEach(([category, count]) => {
         if (count > 0) {
-          console.log(`  🎯 ${category}: ${count} features`);
+          logger.info(`  🎯 ${category}: ${count} features`);
         }
       });
 

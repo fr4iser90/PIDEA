@@ -74,7 +74,7 @@ class TaskService {
   }
 
   async buildTaskExecutionPrompt(task) {
-    logger.log('🔍 [TaskService] buildTaskExecutionPrompt called for task:', {
+    logger.info('🔍 [TaskService] buildTaskExecutionPrompt called for task:', {
       id: task.id,
       title: task.title,
       type: task.type?.value,
@@ -84,10 +84,10 @@ class TaskService {
     // Lade task-execute.md Prompt direkt aus der Datei
     let taskExecutePrompt = '';
     try {
-      logger.log('🔍 [TaskService] Loading task-execute.md directly from file...');
+      logger.info('🔍 [TaskService] Loading task-execute.md directly from file...');
       const taskExecutePath = path.join(process.cwd(), '../content-library/prompts/task-management/task-execute.md');
       taskExecutePrompt = fs.readFileSync(taskExecutePath, 'utf8');
-      logger.log('✅ [TaskService] Successfully loaded task-execute.md, length:', taskExecutePrompt.length);
+      logger.info('✅ [TaskService] Successfully loaded task-execute.md, length:', taskExecutePrompt.length);
     } catch (error) {
       logger.error('❌ [TaskService] Error reading task-execute.md from file:', error);
       taskExecutePrompt = 'Execute the following task:\n\n';
@@ -101,19 +101,19 @@ class TaskService {
         
         // Kombiniere: task-execute.md + Task-Inhalt
         const finalPrompt = `${taskExecutePrompt}\n\n${markdownContent}`;
-        logger.log('✅ [TaskService] Final prompt for doc task (first 500 chars):', finalPrompt.substring(0, 500));
+        logger.info('✅ [TaskService] Final prompt for doc task (first 500 chars):', finalPrompt.substring(0, 500));
         return finalPrompt;
       } catch (error) {
         logger.error('❌ [TaskService] Error reading task file:', error);
         const fallbackPrompt = `${taskExecutePrompt}\n\n${task.title}\n\n${task.description || ''}`;
-        logger.log('⚠️ [TaskService] Using fallback prompt for doc task');
+        logger.info('⚠️ [TaskService] Using fallback prompt for doc task');
         return fallbackPrompt;
       }
     }
     
     // Für normale Tasks: Verwende task-execute.md + Task-Details
     const finalPrompt = `${taskExecutePrompt}\n\n${task.title}\n\n${task.description || ''}`;
-    logger.log('✅ [TaskService] Final prompt for normal task (first 500 chars):', finalPrompt.substring(0, 500));
+    logger.info('✅ [TaskService] Final prompt for normal task (first 500 chars):', finalPrompt.substring(0, 500));
     return finalPrompt;
   }
 
@@ -179,7 +179,7 @@ class TaskService {
    * @returns {Promise<Object>} Execution result
    */
   async executeTask(taskId, userId, options = {}) {
-    logger.log('🔍 [TaskService] executeTask called with:', { taskId, userId, options });
+    logger.info('🔍 [TaskService] executeTask called with:', { taskId, userId, options });
     
     try {
       const task = await this.taskRepository.findById(taskId);
@@ -187,7 +187,7 @@ class TaskService {
         throw new Error('Task not found');
       }
 
-      logger.log('🔍 [TaskService] Found task:', task);
+      logger.info('🔍 [TaskService] Found task:', task);
 
       if (task.isCompleted()) {
         throw new Error('Task is already completed');
@@ -197,14 +197,14 @@ class TaskService {
       const taskPrompt = await this.buildTaskExecutionPrompt(task);
       
       if (this.cursorIDEService && this.cursorIDEService.chatMessageHandler) {
-        logger.log('🔍 [TaskService] Sending task prompt to Cursor IDE:', { taskId: task.id });
+        logger.info('🔍 [TaskService] Sending task prompt to Cursor IDE:', { taskId: task.id });
         
         const result = await this.cursorIDEService.chatMessageHandler.sendMessage(taskPrompt, {
           waitForResponse: true,
           timeout: 300000
         });
         
-        logger.log('✅ [TaskService] Task executed successfully via Cursor IDE', {
+        logger.info('✅ [TaskService] Task executed successfully via Cursor IDE', {
           taskId: task.id,
           result: result
         });
@@ -267,7 +267,7 @@ class TaskService {
    * @returns {Promise<Object>} Execution result
    */
   async executeTaskWithEngine(taskId, userId, options = {}) {
-    logger.log('🔍 [TaskService] executeTaskWithEngine called with:', { taskId, userId, options });
+    logger.info('🔍 [TaskService] executeTaskWithEngine called with:', { taskId, userId, options });
     
     try {
       const task = await this.taskRepository.findById(taskId);
@@ -275,7 +275,7 @@ class TaskService {
         throw new Error('Task not found');
       }
 
-      logger.log('🔍 [TaskService] Found task for engine execution:', task);
+      logger.info('🔍 [TaskService] Found task for engine execution:', task);
 
       if (task.isCompleted()) {
         throw new Error('Task is already completed');
@@ -296,7 +296,7 @@ class TaskService {
         ...options
       });
       
-      logger.log('✅ [TaskService] Core engine task execution completed', {
+      logger.info('✅ [TaskService] Core engine task execution completed', {
         taskId: task.id,
         success: result.isSuccess(),
         duration: result.getFormattedDuration()
@@ -466,7 +466,7 @@ class TaskService {
       
       // Use Auto-Finish System if available
       if (this.autoFinishSystem && this.cursorIDEService) {
-        logger.log('🤖 [TaskService] Using Auto-Finish System for AI refactoring...');
+        logger.info('🤖 [TaskService] Using Auto-Finish System for AI refactoring...');
         
         // Create temporary task for Auto-Finish processing
         const tempTask = {
@@ -484,7 +484,7 @@ class TaskService {
           fallbackDetectionEnabled: true
         });
         
-        logger.log('✅ [TaskService] Auto-Finish processing completed:', {
+        logger.info('✅ [TaskService] Auto-Finish processing completed:', {
           success: autoFinishResult.success,
           status: autoFinishResult.status,
           duration: autoFinishResult.duration
@@ -511,7 +511,7 @@ class TaskService {
         
       } else {
         // Fallback to original simple approach
-        logger.log('⚠️ [TaskService] Auto-Finish System not available, using fallback approach...');
+        logger.info('⚠️ [TaskService] Auto-Finish System not available, using fallback approach...');
         return await this.executeAIRefactoring(task);
       }
     } catch (error) {
@@ -533,7 +533,7 @@ class TaskService {
       if (this.cursorIDEService) {
         // Try to send via ChatMessageHandler first
         if (this.cursorIDEService.chatMessageHandler) {
-          logger.log('🤖 [TaskService] Sending refactoring prompt and waiting for AI to finish editing...');
+          logger.info('🤖 [TaskService] Sending refactoring prompt and waiting for AI to finish editing...');
           
           try {
             const result = await this.cursorIDEService.chatMessageHandler.sendMessage(aiPrompt, {
@@ -542,7 +542,7 @@ class TaskService {
               checkInterval: 2000 // Check every 2 seconds
             });
             
-            logger.log('✅ [TaskService] AI finished editing:', {
+            logger.info('✅ [TaskService] AI finished editing:', {
               success: result.success,
               responseLength: result.response?.length || 0,
               duration: result.duration
@@ -562,7 +562,7 @@ class TaskService {
             // Fallback 1: Try direct sendMessage
             try {
               await this.cursorIDEService.sendMessage(aiPrompt);
-              logger.log('✅ [TaskService] Refactoring prompt sent via sendMessage (no response waiting)');
+              logger.info('✅ [TaskService] Refactoring prompt sent via sendMessage (no response waiting)');
               
               return {
                 success: true,
@@ -592,7 +592,7 @@ class TaskService {
                   });
                   
                   if (result && result.success) {
-                    logger.log('✅ [TaskService] Message sent via modular command fallback');
+                    logger.info('✅ [TaskService] Message sent via modular command fallback');
                     return {
                       success: true,
                       prompt: aiPrompt,
@@ -612,7 +612,7 @@ class TaskService {
         } else {
           // Fallback: use the sendMessage method directly
           await this.cursorIDEService.sendMessage(aiPrompt);
-          logger.log('✅ [TaskService] Refactoring prompt sent via sendMessage (no response waiting)');
+          logger.info('✅ [TaskService] Refactoring prompt sent via sendMessage (no response waiting)');
           
           return {
             success: true,
@@ -622,7 +622,7 @@ class TaskService {
           };
         }
       } else {
-        logger.log('⚠️ [TaskService] CursorIDEService nicht verfügbar!');
+        logger.info('⚠️ [TaskService] CursorIDEService nicht verfügbar!');
         throw new Error('CursorIDEService not available');
       }
     } catch (error) {
@@ -656,7 +656,7 @@ class TaskService {
   async integrateWithCursorIDE(task, refactoringResult) {
     try {
       // WE ARE CURSOR IDE! So we'll apply the changes directly to the file
-      logger.log('🎭 [TaskService] Applying refactoring changes directly to file...');
+      logger.info('🎭 [TaskService] Applying refactoring changes directly to file...');
       
       const fs = require('fs');
       const path = require('path');
@@ -664,14 +664,14 @@ class TaskService {
       // Create backup of original file
       const backupPath = `${task.metadata.filePath}.backup.${Date.now()}`;
       fs.copyFileSync(task.metadata.filePath, backupPath);
-      logger.log('📦 [TaskService] Created backup:', backupPath);
+      logger.info('📦 [TaskService] Created backup:', backupPath);
       
       // Apply the refactored code to the file
       if (!refactoringResult.refactoredCode) {
         throw new Error('Refactored code is undefined - cannot write to file');
       }
       fs.writeFileSync(task.metadata.filePath, refactoringResult.refactoredCode);
-      logger.log('✅ [TaskService] Applied refactored code to:', task.metadata.filePath);
+      logger.info('✅ [TaskService] Applied refactored code to:', task.metadata.filePath);
       
       return {
         success: true,
@@ -695,7 +695,7 @@ class TaskService {
       const util = require('util');
       const execAsync = util.promisify(exec);
 
-      logger.log('🔍 [TaskService] Running build validation...');
+      logger.info('🔍 [TaskService] Running build validation...');
 
       // Try common build commands
       const buildCommands = [
@@ -711,7 +711,7 @@ class TaskService {
 
       for (const command of buildCommands) {
         try {
-          logger.log(`🔍 [TaskService] Trying: ${command}`);
+          logger.info(`🔍 [TaskService] Trying: ${command}`);
           const { stdout, stderr } = await execAsync(command, { 
             cwd: projectPath, 
             timeout: 60000 // 1 minute timeout
@@ -725,10 +725,10 @@ class TaskService {
             message: `Build validation passed with ${command}`,
             timestamp: new Date()
           };
-          logger.log(`✅ [TaskService] Build validation successful with ${command}`);
+          logger.info(`✅ [TaskService] Build validation successful with ${command}`);
           break;
         } catch (error) {
-          logger.log(`❌ [TaskService] ${command} failed:`, error.message);
+          logger.info(`❌ [TaskService] ${command} failed:`, error.message);
           // Continue to next command
         }
       }
@@ -866,7 +866,7 @@ const logger = new Logger('Logger');
         message: 'Please create merge request manually in your Git platform'
       };
 
-      logger.log('📋 [TaskService] Merge request info:', mergeRequestInfo);
+      logger.info('📋 [TaskService] Merge request info:', mergeRequestInfo);
       
       return mergeRequestInfo;
     } catch (error) {

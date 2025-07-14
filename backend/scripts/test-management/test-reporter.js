@@ -211,7 +211,7 @@ const logger = new Logger('Logger');
     }
 
     fs.writeFileSync(path.join(process.cwd(), output), md, 'utf8');
-    logger.log(`📄 Report saved to: ${output}`);
+    logger.info(`📄 Report saved to: ${output}`);
 
     // Generate full output for task generation
     if (fullOutput) {
@@ -277,7 +277,7 @@ const logger = new Logger('Logger');
       };
       
       fs.writeFileSync(fullOutputPath, JSON.stringify(fullAnalysis, null, 2), 'utf8');
-      logger.log(`📊 Full analysis saved to: ${fullOutputPath}`);
+      logger.info(`📊 Full analysis saved to: ${fullOutputPath}`);
 
       // Generate comprehensive Markdown report
       const fullMdPath = path.join(process.cwd(), 'test-report-full.md');
@@ -482,10 +482,10 @@ const logger = new Logger('Logger');
       }
 
       fs.writeFileSync(fullMdPath, fullMd, 'utf8');
-      logger.log(`📄 Full Markdown report saved to: ${fullMdPath}`);
+      logger.info(`📄 Full Markdown report saved to: ${fullMdPath}`);
     }
 
-    logger.log('✅ Report generated successfully!');
+    logger.info('✅ Report generated successfully!');
     return;
   }
 

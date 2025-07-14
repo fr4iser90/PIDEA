@@ -8,7 +8,8 @@ const fsSync = require('fs');
 const TaskPriority = require('@value-objects/TaskPriority');
 const TaskType = require('@value-objects/TaskType');
 const Logger = require('@logging/Logger');
-const logger = new Logger('Logger');
+const ServiceLogger = require('@logging/ServiceLogger');
+const logger = new ServiceLogger('TaskController');
 
 class TaskController {
     constructor(taskService, taskRepository, aiService, projectAnalyzer, projectMappingService = null, ideManager = null, docsImportService = null) {
@@ -28,7 +29,7 @@ class TaskController {
             const { title, description, priority, type, metadata } = req.body;
             const userId = req.user.id;
 
-            logger.log('🔍 [TaskController] Creating task:', {
+            logger.info('🔍 [TaskController] Creating task:', {
                 projectId,
                 title,
                 description,
@@ -42,7 +43,7 @@ class TaskController {
                 createdBy: userId
             });
 
-            logger.log('✅ [TaskController] Task created successfully:', task);
+            logger.info('✅ [TaskController] Task created successfully:', task);
 
             res.status(201).json({
                 success: true,
@@ -175,7 +176,7 @@ class TaskController {
             const userId = req.user.id;
             const options = req.body.options || {};
 
-            logger.log('🚀 [TaskController] executeTask called with Categories system:', { 
+            logger.info('🚀 [TaskController] executeTask called with Categories system:', { 
                 projectId, 
                 id, 
                 userId,
@@ -183,7 +184,7 @@ class TaskController {
             });
 
             const task = await this.taskRepository.findById(id);
-            logger.log('🔍 [TaskController] Found task:', task ? {
+            logger.info('🔍 [TaskController] Found task:', task ? {
                 id: task.id,
                 projectId: task.projectId,
                 title: task.title,
@@ -191,23 +192,23 @@ class TaskController {
             } : 'NOT FOUND');
             
             if (!task || !task.belongsToProject(projectId)) {
-                logger.log('❌ [TaskController] Task not found or does not belong to project');
-                logger.log('❌ [TaskController] Task exists:', !!task);
-                logger.log('❌ [TaskController] Task projectId:', task?.projectId);
-                logger.log('❌ [TaskController] Requested projectId:', projectId);
-                logger.log('❌ [TaskController] belongsToProject result:', task?.belongsToProject(projectId));
+                logger.info('❌ [TaskController] Task not found or does not belong to project');
+                logger.info('❌ [TaskController] Task exists:', !!task);
+                logger.info('❌ [TaskController] Task projectId:', task?.projectId);
+                logger.info('❌ [TaskController] Requested projectId:', projectId);
+                logger.info('❌ [TaskController] belongsToProject result:', task?.belongsToProject(projectId));
                 return res.status(404).json({
                     success: false,
                     error: 'Task not found'
                 });
             }
 
-            logger.log('🔍 [TaskController] Found task, executing with Categories system...');
+            logger.info('🔍 [TaskController] Found task, executing with Categories system...');
 
             // Execute task using Categories-based system
             const execution = await this.taskService.executeTask(id, userId, options);
 
-            logger.log('✅ [TaskController] Task execution completed with Categories:', {
+            logger.info('✅ [TaskController] Task execution completed with Categories:', {
                 taskId: id,
                 success: execution.success,
                 executionMethod: execution.metadata?.executionMethod || 'categories',
@@ -479,12 +480,12 @@ class TaskController {
     // NEW: Sync docs tasks using workspace path and DocsImportService
     async syncDocsTasks(req, res) {
         try {
-            logger.log('🔄 [TaskController] syncDocsTasks called');
+            logger.info('🔄 [TaskController] syncDocsTasks called');
             
             const { projectId } = req.params;
             const userId = req.user.id;
 
-            logger.log('🔄 [TaskController] Syncing docs tasks for project:', projectId);
+            logger.info('🔄 [TaskController] Syncing docs tasks for project:', projectId);
 
             // Use DocsImportService for workspace import
             if (!this.docsImportService) {
@@ -508,15 +509,15 @@ class TaskController {
             // Fallback: use current working directory
             if (!workspacePath) {
                 workspacePath = process.cwd();
-                logger.log(`🔄 [TaskController] Using fallback workspace path`);
+                logger.info(`🔄 [TaskController] Using fallback workspace path`);
             }
 
-            logger.log(`🔄 [TaskController] Using workspace path`);
+            logger.info(`🔄 [TaskController] Using workspace path`);
 
             // Use DocsImportService to import from workspace
             const result = await this.docsImportService.importDocsFromWorkspace(projectId, workspacePath);
 
-            logger.log(`✅ [TaskController] Docs import completed:`, {
+            logger.info(`✅ [TaskController] Docs import completed:`, {
                 importedCount: result.importedCount,
                 totalFiles: result.totalFiles,
                 workspacePath: result.workspacePath
@@ -554,7 +555,7 @@ class TaskController {
                 priority = TaskPriority.LOW;
             }
             
-            logger.log('🔍 [TaskController] Priority parsing:', {
+            logger.info('🔍 [TaskController] Priority parsing:', {
                 content: content.substring(0, 200),
                 priority: priority,
                 TaskPriority_LOW: TaskPriority.LOW,
@@ -575,7 +576,7 @@ class TaskController {
                 type = TaskType.DOCUMENTATION;
             }
             
-            logger.log('🔍 [TaskController] Type parsing:', {
+            logger.info('🔍 [TaskController] Type parsing:', {
                 type: type,
                 TaskType_FEATURE: TaskType.FEATURE,
                 TaskType_REFACTOR: TaskType.REFACTOR,
@@ -625,17 +626,17 @@ class TaskController {
     // Clean docs tasks from database
     async cleanDocsTasks(req, res) {
         try {
-            logger.log('🗑️ [TaskController] cleanDocsTasks called');
+            logger.info('🗑️ [TaskController] cleanDocsTasks called');
             
             const { projectId } = req.params;
             const userId = req.user.id;
 
-            logger.log('🗑️ [TaskController] Cleaning docs tasks for project:', projectId);
+            logger.info('🗑️ [TaskController] Cleaning docs tasks for project:', projectId);
 
             // Get all tasks and delete them (no filtering)
             const allTasks = await this.taskRepository.findByProject(projectId);
 
-            logger.log(`🗑️ [TaskController] Found ${allTasks.length} tasks to delete`);
+            logger.info(`🗑️ [TaskController] Found ${allTasks.length} tasks to delete`);
 
             // Delete all tasks
             let deletedCount = 0;
@@ -643,7 +644,7 @@ class TaskController {
                 try {
                     await this.taskRepository.delete(task.id);
                     deletedCount++;
-                    logger.log(`🗑️ [TaskController] Deleted task: ${task.title}`);
+                    logger.info(`🗑️ [TaskController] Deleted task: ${task.title}`);
                 } catch (error) {
                     logger.error(`❌ [TaskController] Failed to delete task ${task.id}:`, error);
                 }

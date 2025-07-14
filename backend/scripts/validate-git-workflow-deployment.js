@@ -27,7 +27,7 @@ class GitWorkflowDeploymentValidator {
    * Run all validation checks
    */
   async validate() {
-    logger.log('🔍 Starting Git Workflow Deployment Validation...\n');
+    logger.info('🔍 Starting Git Workflow Deployment Validation...\n');
 
     try {
       // Validate configuration
@@ -70,7 +70,7 @@ class GitWorkflowDeploymentValidator {
    * Validate deployment configuration
    */
   async validateConfiguration() {
-    logger.log('📋 Validating deployment configuration...');
+    logger.info('📋 Validating deployment configuration...');
     
     const environments = ['development', 'staging', 'production'];
     
@@ -132,7 +132,7 @@ class GitWorkflowDeploymentValidator {
    * Validate file structure
    */
   async validateFileStructure() {
-    logger.log('📁 Validating file structure...');
+    logger.info('📁 Validating file structure...');
     
     const requiredFiles = [
       'backend/domain/workflows/git/GitWorkflowManager.js',
@@ -170,7 +170,7 @@ class GitWorkflowDeploymentValidator {
    * Validate dependencies
    */
   async validateDependencies() {
-    logger.log('📦 Validating dependencies...');
+    logger.info('📦 Validating dependencies...');
     
     try {
       // Check if required modules can be loaded
@@ -226,7 +226,7 @@ const logger = new Logger('Logger');
    * Validate integration points
    */
   async validateIntegrationPoints() {
-    logger.log('🔗 Validating integration points...');
+    logger.info('🔗 Validating integration points...');
     
     const integrationFiles = [
       'backend/domain/services/WorkflowGitService.js',
@@ -270,7 +270,7 @@ const logger = new Logger('Logger');
    * Validate environment variables
    */
   async validateEnvironmentVariables() {
-    logger.log('🌍 Validating environment variables...');
+    logger.info('🌍 Validating environment variables...');
     
     const requiredEnvVars = [
       'NODE_ENV',
@@ -311,7 +311,7 @@ const logger = new Logger('Logger');
    * Validate database schema
    */
   async validateDatabaseSchema() {
-    logger.log('🗄️ Validating database schema...');
+    logger.info('🗄️ Validating database schema...');
     
     // Check if database migration files exist
     const migrationFiles = [
@@ -360,7 +360,7 @@ const logger = new Logger('Logger');
    * Validate security configuration
    */
   async validateSecurityConfiguration() {
-    logger.log('🔒 Validating security configuration...');
+    logger.info('🔒 Validating security configuration...');
     
     const environments = ['development', 'staging', 'production'];
     
@@ -394,7 +394,7 @@ const logger = new Logger('Logger');
    * Validate performance configuration
    */
   async validatePerformanceConfiguration() {
-    logger.log('⚡ Validating performance configuration...');
+    logger.info('⚡ Validating performance configuration...');
     
     const environments = ['development', 'staging', 'production'];
     
@@ -423,7 +423,7 @@ const logger = new Logger('Logger');
    * Validate monitoring setup
    */
   async validateMonitoringSetup() {
-    logger.log('📊 Validating monitoring setup...');
+    logger.info('📊 Validating monitoring setup...');
     
     const environments = ['development', 'staging', 'production'];
     
@@ -458,7 +458,7 @@ const logger = new Logger('Logger');
    */
   addPass(message) {
     this.validationResults.passed++;
-    logger.log(`✅ ${message}`);
+    logger.info(`✅ ${message}`);
   }
 
   /**
@@ -466,7 +466,7 @@ const logger = new Logger('Logger');
    */
   addWarning(message) {
     this.validationResults.warnings++;
-    logger.log(`⚠️ ${message}`);
+    logger.info(`⚠️ ${message}`);
   }
 
   /**
@@ -475,47 +475,47 @@ const logger = new Logger('Logger');
   addError(message) {
     this.validationResults.failed++;
     this.validationResults.errors.push(message);
-    logger.log(`❌ ${message}`);
+    logger.info(`❌ ${message}`);
   }
 
   /**
    * Generate validation report
    */
   generateValidationReport() {
-    logger.log('\n📋 Validation Report');
-    logger.log('==================');
-    logger.log(`✅ Passed: ${this.validationResults.passed}`);
-    logger.log(`⚠️ Warnings: ${this.validationResults.warnings}`);
-    logger.log(`❌ Failed: ${this.validationResults.failed}`);
+    logger.info('\n📋 Validation Report');
+    logger.info('==================');
+    logger.info(`✅ Passed: ${this.validationResults.passed}`);
+    logger.info(`⚠️ Warnings: ${this.validationResults.warnings}`);
+    logger.info(`❌ Failed: ${this.validationResults.failed}`);
     
     if (this.validationResults.errors.length > 0) {
-      logger.log('\n❌ Errors:');
+      logger.info('\n❌ Errors:');
       this.validationResults.errors.forEach((error, index) => {
-        logger.log(`${index + 1}. ${error}`);
+        logger.info(`${index + 1}. ${error}`);
       });
     }
     
-    logger.log('\n🎯 Deployment Readiness:');
+    logger.info('\n🎯 Deployment Readiness:');
     if (this.validationResults.failed === 0) {
-      logger.log('✅ READY FOR DEPLOYMENT');
-      logger.log('All critical validations passed. The enhanced git workflow system is ready for deployment.');
+      logger.info('✅ READY FOR DEPLOYMENT');
+      logger.info('All critical validations passed. The enhanced git workflow system is ready for deployment.');
     } else if (this.validationResults.failed <= 3) {
-      logger.log('⚠️ DEPLOYMENT READY WITH WARNINGS');
-      logger.log('Some non-critical validations failed. Review warnings before deployment.');
+      logger.info('⚠️ DEPLOYMENT READY WITH WARNINGS');
+      logger.info('Some non-critical validations failed. Review warnings before deployment.');
     } else {
-      logger.log('❌ NOT READY FOR DEPLOYMENT');
-      logger.log('Critical validations failed. Fix errors before deployment.');
+      logger.info('❌ NOT READY FOR DEPLOYMENT');
+      logger.info('Critical validations failed. Fix errors before deployment.');
       process.exit(1);
     }
     
-    logger.log('\n📈 Recommendations:');
+    logger.info('\n📈 Recommendations:');
     if (this.validationResults.warnings > 0) {
-      logger.log('- Review and address warnings for optimal configuration');
+      logger.info('- Review and address warnings for optimal configuration');
     }
     if (this.validationResults.failed === 0) {
       logger.debug('- Consider running integration tests before deployment');
-      logger.log('- Monitor system performance after deployment');
-      logger.log('- Set up alerting for git workflow metrics');
+      logger.info('- Monitor system performance after deployment');
+      logger.info('- Set up alerting for git workflow metrics');
     }
   }
 }

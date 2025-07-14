@@ -3,6 +3,10 @@ const path = require('path');
 const BrowserManager = require('../../backend/infrastructure/external/BrowserManager');
 const IDEManager = require('../../backend/infrastructure/external/IDEManager');
 
+const Logger = require('@logging/Logger');
+
+const logger = new Logger('ServiceName');
+
 class EnhancedDOMCollector {
   constructor() {
     this.browserManager = new BrowserManager();
@@ -159,13 +163,13 @@ class EnhancedDOMCollector {
   ensureOutputDir() {
     if (!fs.existsSync(this.outputDir)) {
       fs.mkdirSync(this.outputDir, { recursive: true });
-      console.log(`📁 Created enhanced collection directory: ${this.outputDir}`);
+      logger.info(`📁 Created enhanced collection directory: ${this.outputDir}`);
     }
   }
 
   async initialize() {
-    console.log('🚀 Enhanced DOM Collector starting...');
-    console.log('📡 Connecting to Cursor IDE via CDP...\n');
+    logger.info('🚀 Enhanced DOM Collector starting...');
+    logger.info('📡 Connecting to Cursor IDE via CDP...\n');
 
     try {
       await this.ideManager.initialize();
@@ -176,7 +180,7 @@ class EnhancedDOMCollector {
       }
 
       await this.browserManager.connect(activePort);
-      console.log(`✅ Connected to Cursor IDE on port ${activePort}`);
+      logger.info(`✅ Connected to Cursor IDE on port ${activePort}`);
       
       return true;
     } catch (error) {
@@ -188,12 +192,12 @@ class EnhancedDOMCollector {
   async collectAllEnhancedStates() {
     await this.initialize();
     
-    console.log(`\n🎯 Collecting ${this.enhancedStateConfigs.length} enhanced IDE states...\n`);
+    logger.info(`\n🎯 Collecting ${this.enhancedStateConfigs.length} enhanced IDE states...\n`);
 
     for (const [index, config] of this.enhancedStateConfigs.entries()) {
       try {
-        console.log(`📄 [${index + 1}/${this.enhancedStateConfigs.length}] ${config.name}`);
-        console.log(`   ${config.description}`);
+        logger.info(`📄 [${index + 1}/${this.enhancedStateConfigs.length}] ${config.name}`);
+        logger.info(`   ${config.description}`);
         
         // Activate state
         await config.action();
@@ -204,7 +208,7 @@ class EnhancedDOMCollector {
         // Wait between states
         await this.wait(2000);
         
-        console.log(`   ✅ Successfully collected\n`);
+        logger.info(`   ✅ Successfully collected\n`);
         
       } catch (error) {
         console.error(`   ❌ Error in ${config.name}:`, error.message);
@@ -215,44 +219,44 @@ class EnhancedDOMCollector {
     await this.cleanup();
 
     // Start enhanced analysis
-    console.log('\n🔄 Starting enhanced analysis...');
+    logger.info('\n🔄 Starting enhanced analysis...');
     await this.runEnhancedAnalysis();
   }
 
   async runEnhancedAnalysis() {
     try {
       // 1. Enhanced Chat Analysis
-      console.log('\n📊 [1/5] Enhanced Chat Analysis...');
+      logger.info('\n📊 [1/5] Enhanced Chat Analysis...');
       const EnhancedChatAnalyzer = require('./enhanced-chat-analyzer');
       const chatAnalyzer = new EnhancedChatAnalyzer();
       await chatAnalyzer.analyze();
 
       // 2. Modal Analysis
-      console.log('\n📊 [2/5] Modal Analysis...');
+      logger.info('\n📊 [2/5] Modal Analysis...');
       const ModalAnalyzer = require('./modal-analyzer');
       const modalAnalyzer = new ModalAnalyzer();
       await modalAnalyzer.analyze();
 
       // 3. Bulk DOM Analysis
-      console.log('\n📊 [3/5] Bulk DOM Analysis...');
+      logger.info('\n📊 [3/5] Bulk DOM Analysis...');
       const BulkDOMAnalyzer = require('./bulk-dom-analyzer');
       const bulkAnalyzer = new BulkDOMAnalyzer();
       await bulkAnalyzer.analyze();
 
       // 4. Coverage Validation
-      console.log('\n✅ [4/5] Enhanced Coverage Validation...');
+      logger.info('\n✅ [4/5] Enhanced Coverage Validation...');
       const CoverageValidator = require('./coverage-validator');
       const validator = new CoverageValidator();
       await validator.validate();
 
       // 5. Enhanced Selector Generation
-      console.log('\n🔧 [5/5] Enhanced Selector Generation...');
+      logger.info('\n🔧 [5/5] Enhanced Selector Generation...');
       const SelectorGenerator = require('./selector-generator');
       const generator = new SelectorGenerator();
       await generator.generate();
 
-      console.log('\n🎉 ENHANCED AUTOMATION COMPLETED!');
-      console.log('📁 All files generated in: cursor-chat-agent/generated/');
+      logger.info('\n🎉 ENHANCED AUTOMATION COMPLETED!');
+      logger.info('📁 All files generated in: cursor-chat-agent/generated/');
 
     } catch (error) {
       console.error('❌ Enhanced analysis failed:', error.message);
@@ -483,7 +487,7 @@ ${html}
               continue;
             }
             
-            console.log(`  ✅ Clicking New Chat modal button: ${text || ariaLabel}`);
+            logger.info(`  ✅ Clicking New Chat modal button: ${text || ariaLabel}`);
             await element.click();
             await this.wait(500);
             return;
@@ -500,7 +504,7 @@ ${html}
           if (element) {
             const text = await element.textContent();
             const ariaLabel = await element.getAttribute('aria-label');
-            console.log(`  ⚠️ Clicking any modal button: ${text || ariaLabel}`);
+            logger.info(`  ⚠️ Clicking any modal button: ${text || ariaLabel}`);
             await element.click();
             await this.wait(500);
             return;
@@ -515,7 +519,7 @@ ${html}
       await this.wait(500);
       
     } catch (error) {
-      console.log(`  ⚠️ New Chat modal handling failed: ${error.message}`);
+      logger.info(`  ⚠️ New Chat modal handling failed: ${error.message}`);
     }
   }
 
@@ -553,7 +557,7 @@ ${html}
         if (element) {
           await element.click();
           await element.focus();
-          console.log(`  ✅ Found chat input with selector: ${selector} (${ideType})`);
+          logger.info(`  ✅ Found chat input with selector: ${selector} (${ideType})`);
           return;
         }
       } catch (e) {
@@ -561,7 +565,7 @@ ${html}
       }
     }
     
-    console.log(`  ⚠️ No chat input found for ${ideType}`);
+    logger.info(`  ⚠️ No chat input found for ${ideType}`);
   }
 
   async triggerChatLoading() {
@@ -592,7 +596,7 @@ ${html}
           const sendButton = await page.$(selector);
           if (sendButton) {
             await sendButton.click();
-            console.log(`  ✅ Clicked VSCode send button: ${selector}`);
+            logger.info(`  ✅ Clicked VSCode send button: ${selector}`);
             break;
           }
         } catch (e) {
@@ -821,7 +825,7 @@ ${html}
     await this.activateChat();
     
     // The modal should now be visible - don't close it, just collect DOM
-    console.log('  📋 Collecting New Chat modal DOM...');
+    logger.info('  📋 Collecting New Chat modal DOM...');
     await this.wait(1000);
   }
 
@@ -839,7 +843,7 @@ ${html}
       throw new Error('VSCode not detected on current port');
     }
     
-    console.log(`📝 Sending VSCode chat message: "${message}"`);
+    logger.info(`📝 Sending VSCode chat message: "${message}"`);
     
     // Focus chat input
     await this.focusChatInput();
@@ -864,7 +868,7 @@ ${html}
         const sendButton = await page.$(selector);
         if (sendButton) {
           await sendButton.click();
-          console.log(`  ✅ Message sent via VSCode send button: ${selector}`);
+          logger.info(`  ✅ Message sent via VSCode send button: ${selector}`);
           sent = true;
           break;
         }
@@ -876,7 +880,7 @@ ${html}
     if (!sent) {
       // Fallback: try Enter key
       await page.keyboard.press('Enter');
-      console.log(`  ⚠️ Used Enter key fallback for VSCode`);
+      logger.info(`  ⚠️ Used Enter key fallback for VSCode`);
     }
     
     return sent;
@@ -909,16 +913,16 @@ ${html}
     const reportPath = path.join(this.outputDir, 'enhanced-collection-report.json');
     fs.writeFileSync(reportPath, JSON.stringify(report, null, 2));
 
-    console.log('\n📊 ENHANCED COLLECTION SUCCESSFUL!');
-    console.log(`📁 Directory: ${this.outputDir}`);
-    console.log(`📄 Files: ${this.collectedStates.size}`);
-    console.log(`📊 Report: ${reportPath}`);
+    logger.info('\n📊 ENHANCED COLLECTION SUCCESSFUL!');
+    logger.info(`📁 Directory: ${this.outputDir}`);
+    logger.info(`📄 Files: ${this.collectedStates.size}`);
+    logger.info(`📊 Report: ${reportPath}`);
     
     // Show file breakdown
-    console.log('\n📋 COLLECTED FILES BY TYPE:');
+    logger.info('\n📋 COLLECTED FILES BY TYPE:');
     const stateTypes = this.getStateTypeBreakdown();
     Object.entries(stateTypes).forEach(([type, count]) => {
-      console.log(`  ✅ ${type}: ${count} files`);
+      logger.info(`  ✅ ${type}: ${count} files`);
     });
   }
 
@@ -935,7 +939,7 @@ ${html}
     try {
       await this.browserManager.disconnect();
     } catch (error) {
-      console.log('⚠️ Cleanup warning:', error.message);
+      logger.info('⚠️ Cleanup warning:', error.message);
     }
   }
 }

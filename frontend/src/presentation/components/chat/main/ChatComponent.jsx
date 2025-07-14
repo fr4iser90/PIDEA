@@ -73,7 +73,7 @@ function ChatComponent({ eventBus, activePort, attachedPrompts = [] }) {
   // Lade Chat immer, wenn activePort sich ändert (React-Way)
   const loadChatHistory = useCallback(async () => {
     if (!activePort) return;
-    logger.log('[ChatComponent] Lade Chat für Port:', activePort);
+    logger.info('[ChatComponent] Lade Chat für Port:', activePort);
     try {
       const data = await apiCall(API_CONFIG.endpoints.chat.portHistory(activePort));
       let msgs = [];
@@ -84,7 +84,7 @@ function ChatComponent({ eventBus, activePort, attachedPrompts = [] }) {
       } else if (Array.isArray(data)) {
         msgs = data;
       }
-      logger.log('[ChatComponent] Neue Nachrichten geladen:', msgs.length);
+      logger.info('[ChatComponent] Neue Nachrichten geladen:', msgs.length);
       setMessages(msgs.map(normalizeMessage));
     } catch (error) {
       setMessages([]);
@@ -93,11 +93,11 @@ function ChatComponent({ eventBus, activePort, attachedPrompts = [] }) {
   }, [activePort]);
 
   useEffect(() => {
-    logger.log('[ChatComponent] activePort changed:', activePort);
+    logger.info('[ChatComponent] activePort changed:', activePort);
     // Wenn sich der Port ändert, sofort leeren!
     setMessages([]);
     setError(null);
-    logger.log('[ChatComponent] setMessages([]) aufgerufen!');
+    logger.info('[ChatComponent] setMessages([]) aufgerufen!');
     loadChatHistory();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activePort]);
@@ -112,7 +112,7 @@ function ChatComponent({ eventBus, activePort, attachedPrompts = [] }) {
     
     const handleExternalMessage = (data) => {
       if (data && data.message) {
-        logger.log('[ChatComponent] Received external message:', data.message);
+        logger.info('[ChatComponent] Received external message:', data.message);
         sendMessage(data.message);
       }
     };
@@ -142,9 +142,9 @@ function ChatComponent({ eventBus, activePort, attachedPrompts = [] }) {
     // Combine prompt contents and user message
     const finalMessage = `${promptContents.join('\n\n')}${promptContents.length > 0 ? '\n\n' : ''}${message}`;
     // === DEBUG LOGS START ===
-    logger.log('==== PROMPT CONTENTS ====', promptContents);
-    logger.log('==== FAILED PROMPTS ====', failedPrompts);
-    logger.log('==== FINAL MESSAGE ====', finalMessage);
+    logger.info('==== PROMPT CONTENTS ====', promptContents);
+    logger.info('==== FAILED PROMPTS ====', failedPrompts);
+    logger.info('==== FINAL MESSAGE ====', finalMessage);
     // === DEBUG LOGS END ===
     const newMessage = normalizeMessage({
       id: Date.now(),

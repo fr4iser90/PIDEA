@@ -62,11 +62,11 @@ class UnitTestFramework {
     const framework = FrameworkBuilder.build(config, context);
     
     try {
-      logger.log(`🚀 Executing ${this.name}...`);
+      logger.info(`🚀 Executing ${this.name}...`);
       
       const results = await framework.execute();
       
-      logger.log(`✅ ${this.name} completed successfully`);
+      logger.info(`✅ ${this.name} completed successfully`);
       return {
         success: true,
         framework: this.name,

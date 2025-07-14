@@ -99,7 +99,7 @@ class DependencyAnalyzer {
                     dependencies: packageJson.dependencies || {},
                     devDependencies: packageJson.devDependencies || {}
                 });
-                logger.log(`Found root package.json: ${packageJson.name}`);
+                logger.info(`Found root package.json: ${packageJson.name}`);
             } catch (e) {
                 logger.error('Failed to parse root package.json');
             }
@@ -121,7 +121,7 @@ class DependencyAnalyzer {
                         dependencies: packageJson.dependencies || {},
                         devDependencies: packageJson.devDependencies || {}
                     });
-                    logger.log(`Found package.json in ${dir}: ${packageJson.name}`);
+                    logger.info(`Found package.json in ${dir}: ${packageJson.name}`);
                 } catch (e) {
                     logger.error(`Failed to parse package.json in ${dir}`);
                 }

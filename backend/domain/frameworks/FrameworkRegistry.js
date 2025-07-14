@@ -58,7 +58,7 @@ class FrameworkRegistry {
       }
       this.categories.get(finalCategory).add(name);
 
-      logger.log(`✅ Framework "${name}" registered successfully in category "${finalCategory}"`);
+      logger.info(`✅ Framework "${name}" registered successfully in category "${finalCategory}"`);
       return true;
     } catch (error) {
       logger.error(`❌ Failed to register framework "${name}":`, error.message);
@@ -77,7 +77,7 @@ class FrameworkRegistry {
       try {
         await fs.access(configsDir);
       } catch {
-        logger.log('📁 Creating configs directory...');
+        logger.info('📁 Creating configs directory...');
         await fs.mkdir(configsDir, { recursive: true });
         return;
       }
@@ -101,7 +101,7 @@ class FrameworkRegistry {
         }
       }
 
-      logger.log(`📦 Loaded ${this.frameworks.size} framework configurations`);
+      logger.info(`📦 Loaded ${this.frameworks.size} framework configurations`);
     } catch (error) {
       logger.error('❌ Failed to load framework configs:', error.message);
       throw error;
@@ -158,7 +158,7 @@ class FrameworkRegistry {
     framework.config = { ...framework.config, ...newConfig };
     framework.updatedAt = new Date();
     
-    logger.log(`✅ Framework "${name}" updated successfully`);
+    logger.info(`✅ Framework "${name}" updated successfully`);
     return framework;
   }
 
@@ -186,7 +186,7 @@ class FrameworkRegistry {
     // Remove config file reference
     this.configs.delete(name);
     
-    logger.log(`🗑️ Framework "${name}" removed successfully`);
+    logger.info(`🗑️ Framework "${name}" removed successfully`);
     return true;
   }
 
@@ -245,7 +245,7 @@ class FrameworkRegistry {
     framework.status = status;
     framework.updatedAt = new Date();
     
-    logger.log(`✅ Framework "${name}" status set to "${status}"`);
+    logger.info(`✅ Framework "${name}" status set to "${status}"`);
     return framework;
   }
 

@@ -21,7 +21,7 @@ function fixImports() {
 
     function processDirectory(dir) {
         const files = fs.readdirSync(dir);
-        logger.log(`Processing directory: ${dir} (${files.length} items)`);
+        logger.info(`Processing directory: ${dir} (${files.length} items)`);
         
         for (const file of files) {
             const filePath = path.join(dir, file);
@@ -33,7 +33,7 @@ function fixImports() {
                     processDirectory(filePath);
                 }
             } else if (file.endsWith('.js')) {
-                logger.log(`Checking file: ${filePath}`);
+                logger.info(`Checking file: ${filePath}`);
                 fixFileImports(filePath, patterns);
             }
         }
@@ -53,7 +53,7 @@ const logger = new Logger('Logger');
                 if (newContent !== content) {
                     content = newContent;
                     modified = true;
-                    logger.log(`Fixed imports in: ${filePath}`);
+                    logger.info(`Fixed imports in: ${filePath}`);
                 }
             }
             
@@ -65,9 +65,9 @@ const logger = new Logger('Logger');
         }
     }
 
-    logger.log('Starting import pattern fixes...');
+    logger.info('Starting import pattern fixes...');
     processDirectory(backendDir);
-    logger.log('Import pattern fixes completed!');
+    logger.info('Import pattern fixes completed!');
 }
 
 if (require.main === module) {

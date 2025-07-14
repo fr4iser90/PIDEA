@@ -245,18 +245,18 @@ class CoverageToMarkdown {
    */
   async run() {
     try {
-      logger.log('📊 Converting coverage to Markdown...');
+      logger.info('📊 Converting coverage to Markdown...');
       
       // Try to read LCOV file first
       const lcovFile = path.join(process.cwd(), 'coverage', 'lcov.info');
       let coverageData = null;
 
       if (fs.existsSync(lcovFile)) {
-        logger.log('📁 Found LCOV file, parsing coverage data...');
+        logger.info('📁 Found LCOV file, parsing coverage data...');
         const lcovContent = fs.readFileSync(lcovFile, 'utf8');
         coverageData = this.parseLcovData(lcovContent);
       } else {
-        logger.log('⚠️  LCOV file not found, checking for coverage.txt...');
+        logger.info('⚠️  LCOV file not found, checking for coverage.txt...');
         // Fallback to coverage.txt if LCOV doesn't exist
         const coverageFile = path.join(process.cwd(), 'coverage.txt');
         if (fs.existsSync(coverageFile)) {
@@ -271,14 +271,14 @@ class CoverageToMarkdown {
       const outputFile = path.join(process.cwd(), 'coverage.md');
       fs.writeFileSync(outputFile, markdown, 'utf8');
       
-      logger.log(`✅ Coverage report generated: ${outputFile}`);
+      logger.info(`✅ Coverage report generated: ${outputFile}`);
       
       if (coverageData && coverageData.summary.overall) {
-        logger.log(`📊 Overall coverage: ${coverageData.summary.overall}%`);
-        logger.log(`📁 Files analyzed: ${coverageData.summary.files}`);
-        logger.log(`✅ Files with ≥80% coverage: ${coverageData.summary.covered}`);
+        logger.info(`📊 Overall coverage: ${coverageData.summary.overall}%`);
+        logger.info(`📁 Files analyzed: ${coverageData.summary.files}`);
+        logger.info(`✅ Files with ≥80% coverage: ${coverageData.summary.covered}`);
       } else {
-        logger.log('⚠️  No coverage data found - generated fallback report');
+        logger.info('⚠️  No coverage data found - generated fallback report');
       }
       
     } catch (error) {
@@ -288,7 +288,7 @@ class CoverageToMarkdown {
       const fallbackMd = this.generateMarkdown(null);
       const outputFile = path.join(process.cwd(), 'coverage.md');
       fs.writeFileSync(outputFile, fallbackMd, 'utf8');
-      logger.log(`✅ Fallback coverage report generated: ${outputFile}`);
+      logger.info(`✅ Fallback coverage report generated: ${outputFile}`);
     }
   }
 

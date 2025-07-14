@@ -39,7 +39,7 @@ class CoverageImprover {
    * Main entry point for coverage improvement
    */
   async run() {
-    logger.log('🎯 Starting Coverage Improvement Process...');
+    logger.info('🎯 Starting Coverage Improvement Process...');
     this.results.startTime = new Date();
     
     try {
@@ -47,10 +47,10 @@ class CoverageImprover {
       const currentCoverage = await this.getCurrentCoverage();
       this.results.initialCoverage = currentCoverage;
       
-      logger.log(`📊 Current Coverage: ${currentCoverage.toFixed(2)}%`);
+      logger.info(`📊 Current Coverage: ${currentCoverage.toFixed(2)}%`);
       
       if (currentCoverage >= this.options.targetCoverage) {
-        logger.log(`✅ Target coverage (${this.options.targetCoverage}%) already achieved!`);
+        logger.info(`✅ Target coverage (${this.options.targetCoverage}%) already achieved!`);
         return { success: true, results: this.results };
       }
       
@@ -72,8 +72,8 @@ class CoverageImprover {
       await this.generateReport(testGenerationResults, testImprovementResults);
       
       this.results.endTime = new Date();
-      logger.log(`✅ Coverage Improvement Completed!`);
-      logger.log(`📈 Coverage improved from ${currentCoverage.toFixed(2)}% to ${finalCoverage.toFixed(2)}% (+${this.results.improvement.toFixed(2)}%)`);
+      logger.info(`✅ Coverage Improvement Completed!`);
+      logger.info(`📈 Coverage improved from ${currentCoverage.toFixed(2)}% to ${finalCoverage.toFixed(2)}% (+${this.results.improvement.toFixed(2)}%)`);
       
       return {
         success: true,
@@ -98,7 +98,7 @@ class CoverageImprover {
    * Get current test coverage
    */
   async getCurrentCoverage() {
-    logger.log('📊 Collecting current coverage...');
+    logger.info('📊 Collecting current coverage...');
     
     try {
       const coverageOutput = execSync('npm test -- --coverage --json --silent', {
@@ -126,7 +126,7 @@ class CoverageImprover {
         return coverageMatch ? parseFloat(coverageMatch[1]) : 0;
         
       } catch (fallbackError) {
-        logger.log('⚠️  Could not collect coverage, assuming 0%');
+        logger.info('⚠️  Could not collect coverage, assuming 0%');
         return 0;
       }
     }
@@ -136,7 +136,7 @@ class CoverageImprover {
    * Analyze coverage gaps to identify untested code
    */
   async analyzeCoverageGaps() {
-    logger.log('🔍 Analyzing coverage gaps...');
+    logger.info('🔍 Analyzing coverage gaps...');
     
     const glob = require('glob');
     const coverageGaps = [];
@@ -175,7 +175,7 @@ class CoverageImprover {
     // Sort by priority (highest first)
     coverageGaps.sort((a, b) => b.priority - a.priority);
     
-    logger.log(`📋 Found ${coverageGaps.length} files with coverage gaps`);
+    logger.info(`📋 Found ${coverageGaps.length} files with coverage gaps`);
     
     return coverageGaps;
   }
@@ -653,7 +653,7 @@ class CoverageImprover {
    * Generate comprehensive report
    */
   async generateReport(testGenerationResults, testImprovementResults) {
-    logger.log('📊 Generating coverage improvement report...');
+    logger.info('📊 Generating coverage improvement report...');
     
     const report = {
       timestamp: new Date().toISOString(),
@@ -673,9 +673,9 @@ class CoverageImprover {
     const markdownPath = path.join(process.cwd(), 'coverage-improvement-report.md');
     await fs.writeFile(markdownPath, markdownReport);
     
-    logger.log(`📄 Reports saved to:`);
-    logger.log(`   - ${reportPath}`);
-    logger.log(`   - ${markdownPath}`);
+    logger.info(`📄 Reports saved to:`);
+    logger.info(`   - ${reportPath}`);
+    logger.info(`   - ${markdownPath}`);
     
     return report;
   }
@@ -785,7 +785,7 @@ if (require.main === module) {
         options.focusAreas = args[++i].split(',');
         break;
       case '--help':
-        logger.log(`
+        logger.info(`
 Usage: node coverage-improver.js [options]
 
 Options:

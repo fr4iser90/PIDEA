@@ -118,7 +118,7 @@ function processFile(filePath) {
         const { content: newContent, changed } = replaceAllImports(content);
         if (changed) {
             fs.writeFileSync(filePath, newContent, 'utf8');
-            logger.log(`✅ Updated ${filePath}`);
+            logger.info(`✅ Updated ${filePath}`);
         }
     } catch (e) {
         logger.error(`❌ Error in ${filePath}: ${e.message}`);
@@ -148,7 +148,7 @@ function main() {
     const rootDir = process.cwd();
     const files = findJavaScriptFiles(rootDir);
     files.forEach(processFile);
-    logger.log('🚀 Alle relativen Imports wurden refactort!');
+    logger.info('🚀 Alle relativen Imports wurden refactort!');
 }
 
 if (require.main === module) {

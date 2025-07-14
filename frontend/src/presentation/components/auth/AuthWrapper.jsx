@@ -27,15 +27,15 @@ const AuthWrapper = ({ children }) => {
       setValidationError(null);
       
       try {
-        logger.log('🔍 [AuthWrapper] Checking authentication...');
+        logger.info('🔍 [AuthWrapper] Checking authentication...');
         const isValid = await validateToken();
         
         if (!isValid) {
-          logger.log('❌ [AuthWrapper] Token validation failed');
+          logger.info('❌ [AuthWrapper] Token validation failed');
           setValidationError('Session expired. Please log in again.');
           showWarning('Your session has expired. Please log in again.', 'Session Expired');
         } else {
-          logger.log('✅ [AuthWrapper] Token validation successful');
+          logger.info('✅ [AuthWrapper] Token validation successful');
           showInfo('Welcome back!', 'Authentication Successful');
         }
       } catch (error) {
@@ -51,7 +51,7 @@ const AuthWrapper = ({ children }) => {
     if (token) {
       checkAuth();
     } else {
-      logger.log('🔍 [AuthWrapper] No token found, skipping validation');
+      logger.info('🔍 [AuthWrapper] No token found, skipping validation');
       setIsValidating(false);
     }
   }, [validateToken, token, showWarning, showInfo]);
@@ -59,7 +59,7 @@ const AuthWrapper = ({ children }) => {
   // Handle redirect to login
   useEffect(() => {
     if (redirectToLogin && !isValidating) {
-      logger.log('🔄 [AuthWrapper] Redirecting to login...');
+      logger.info('🔄 [AuthWrapper] Redirecting to login...');
       resetRedirectFlag();
       // The redirect is handled by AuthStore.handleAuthFailure
     }

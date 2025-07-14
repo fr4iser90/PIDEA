@@ -69,10 +69,10 @@ function TasksPanelComponent({ eventBus, activePort }) {
   // Load docs tasks on mount AND when activePort changes
   useEffect(() => {
     if (activePort) {
-      logger.log('[TasksPanelComponent] Loading docs tasks for port:', activePort);
+      logger.info('[TasksPanelComponent] Loading docs tasks for port:', activePort);
       loadDocsTasks();
     } else {
-      logger.log('[TasksPanelComponent] No active port, clearing docs tasks');
+      logger.info('[TasksPanelComponent] No active port, clearing docs tasks');
       setDocsTasks([]);
     }
   }, [activePort]); // ← Jetzt lädt bei activePort Änderungen neu
@@ -97,7 +97,7 @@ function TasksPanelComponent({ eventBus, activePort }) {
   const handleSyncDocsTasks = async () => {
     setIsLoadingDocsTasks(true);
     try {
-      logger.log('🔄 [TasksPanelComponent] Starting docs tasks sync...');
+      logger.info('🔄 [TasksPanelComponent] Starting docs tasks sync...');
       const response = await api.syncDocsTasks();
       if (response.success) {
         setFeedback(`✅ Successfully synced ${response.data.importedCount} docs tasks to database`);
@@ -121,7 +121,7 @@ function TasksPanelComponent({ eventBus, activePort }) {
     
     setIsLoadingDocsTasks(true);
     try {
-      logger.log('🗑️ [TasksPanelComponent] Starting docs tasks cleanup...');
+      logger.info('🗑️ [TasksPanelComponent] Starting docs tasks cleanup...');
       const response = await api.cleanDocsTasks();
       if (response.success) {
         setFeedback(`✅ Successfully deleted ${response.data.deletedCount} docs tasks from database`);
@@ -143,10 +143,10 @@ function TasksPanelComponent({ eventBus, activePort }) {
     setIsDocsTaskModalOpen(true);
     setSelectedDocsTask(null);
     try {
-      logger.log('[TasksPanelComponent] Loading task details for:', task.id);
+      logger.info('[TasksPanelComponent] Loading task details for:', task.id);
       const response = await api.getDocsTaskDetails(task.id);
       if (response.success && response.data) {
-        logger.log('[TasksPanelComponent] Task details loaded successfully:', response.data);
+        logger.info('[TasksPanelComponent] Task details loaded successfully:', response.data);
         setSelectedDocsTask(response.data);
       } else {
         logger.warn('[TasksPanelComponent] API returned no data, using task as fallback');
@@ -278,7 +278,7 @@ ${taskDetails.description}
   const handleTaskSubmit = async (taskData) => {
     setFeedback(null);
     try {
-      logger.log('[TasksPanelComponent] Task submitted:', taskData);
+      logger.info('[TasksPanelComponent] Task submitted:', taskData);
       
       // If this is a workflow result, handle it differently
       if (taskData.workflowId && taskData.workflowResult) {

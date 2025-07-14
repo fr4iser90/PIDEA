@@ -1,3 +1,7 @@
+const Logger = require('@logging/Logger');
+
+const logger = new Logger('ServiceName');
+
 /**
  * Streaming Service Validation Script
  * 
@@ -28,13 +32,13 @@ class VSCodeStreamingValidator {
   ensureOutputDir() {
     if (!fs.existsSync(this.outputDir)) {
       fs.mkdirSync(this.outputDir, { recursive: true });
-      console.log(`📁 Created VSCode streaming validation directory: ${this.outputDir}`);
+      logger.info(`📁 Created VSCode streaming validation directory: ${this.outputDir}`);
     }
   }
 
   async initialize() {
-    console.log('🚀 VSCode Streaming Validator starting...');
-    console.log('📡 Connecting to VSCode IDE via CDP...\n');
+    logger.info('🚀 VSCode Streaming Validator starting...');
+    logger.info('📡 Connecting to VSCode IDE via CDP...\n');
 
     try {
       await this.ideManager.initialize();
@@ -49,7 +53,7 @@ class VSCodeStreamingValidator {
 
       // Connect Browser Manager to VSCode IDE
       await this.browserManager.connect(vscodeIDE.port);
-      console.log(`✅ Connected to VSCode IDE on port ${vscodeIDE.port}`);
+      logger.info(`✅ Connected to VSCode IDE on port ${vscodeIDE.port}`);
       
       return true;
     } catch (error) {
@@ -61,7 +65,7 @@ class VSCodeStreamingValidator {
   async validateStreaming() {
     await this.initialize();
     
-    console.log('🧪 Starting VSCode streaming validation tests...\n');
+    logger.info('🧪 Starting VSCode streaming validation tests...\n');
 
     try {
       // 1. Test VSCode chat activation
@@ -82,11 +86,11 @@ class VSCodeStreamingValidator {
       // 6. Save results
       this.saveResults(report);
 
-      console.log('\n📊 VSCode STREAMING VALIDATION COMPLETED!');
-      console.log(`📁 Output: ${this.outputDir}`);
-      console.log(`🧪 Tests Run: ${this.results.tests.length}`);
-      console.log(`✅ Passed: ${this.results.tests.filter(t => t.passed).length}`);
-      console.log(`❌ Failed: ${this.results.tests.filter(t => !t.passed).length}`);
+      logger.info('\n📊 VSCode STREAMING VALIDATION COMPLETED!');
+      logger.info(`📁 Output: ${this.outputDir}`);
+      logger.info(`🧪 Tests Run: ${this.results.tests.length}`);
+      logger.info(`✅ Passed: ${this.results.tests.filter(t => t.passed).length}`);
+      logger.info(`❌ Failed: ${this.results.tests.filter(t => !t.passed).length}`);
 
       await this.cleanup();
       return report;
@@ -99,7 +103,7 @@ class VSCodeStreamingValidator {
   }
 
   async testVSCodeChatActivation() {
-    console.log('🔍 Testing VSCode chat activation...');
+    logger.info('🔍 Testing VSCode chat activation...');
     
     const test = {
       name: 'VSCode Chat Activation',
@@ -130,7 +134,7 @@ class VSCodeStreamingValidator {
           const element = await page.$(selector);
           if (element) {
             await element.click();
-            console.log(`  ✅ Clicked VSCode New Chat button: ${selector}`);
+            logger.info(`  ✅ Clicked VSCode New Chat button: ${selector}`);
             
             // Handle VSCode New Chat modal if it appears
             await this.handleVSCodeNewChatModal(page);
@@ -158,10 +162,10 @@ class VSCodeStreamingValidator {
       if (chatContainer) {
         test.passed = true;
         test.details.chatContainerFound = true;
-        console.log('  ✅ VSCode chat container found');
+        logger.info('  ✅ VSCode chat container found');
       } else {
         test.error = 'VSCode chat container not found after activation';
-        console.log('  ❌ VSCode chat container not found');
+        logger.info('  ❌ VSCode chat container not found');
       }
       
     } catch (error) {
@@ -221,7 +225,7 @@ class VSCodeStreamingValidator {
               continue;
             }
             
-            console.log(`  ✅ Clicking VSCode New Chat modal button: ${text || ariaLabel}`);
+            logger.info(`  ✅ Clicking VSCode New Chat modal button: ${text || ariaLabel}`);
             await element.click();
             await this.wait(500);
             return;
@@ -238,7 +242,7 @@ class VSCodeStreamingValidator {
           if (element) {
             const text = await element.textContent();
             const ariaLabel = await element.getAttribute('aria-label');
-            console.log(`  ⚠️ Clicking any VSCode modal button: ${text || ariaLabel}`);
+            logger.info(`  ⚠️ Clicking any VSCode modal button: ${text || ariaLabel}`);
             await element.click();
             await this.wait(500);
             return;
@@ -253,12 +257,12 @@ class VSCodeStreamingValidator {
       await this.wait(500);
       
     } catch (error) {
-      console.log(`  ⚠️ VSCode New Chat modal handling failed: ${error.message}`);
+      logger.info(`  ⚠️ VSCode New Chat modal handling failed: ${error.message}`);
     }
   }
 
   async testVSCodeMessageSending() {
-    console.log('📝 Testing VSCode message sending...');
+    logger.info('📝 Testing VSCode message sending...');
     
     const test = {
       name: 'VSCode Message Sending',
@@ -289,7 +293,7 @@ class VSCodeStreamingValidator {
           if (element) {
             await element.click();
             await element.focus();
-            console.log(`  ✅ Found VSCode chat input: ${selector}`);
+            logger.info(`  ✅ Found VSCode chat input: ${selector}`);
             test.details.inputSelector = selector;
             inputFocused = true;
             break;
@@ -301,7 +305,7 @@ class VSCodeStreamingValidator {
       
       if (!inputFocused) {
         test.error = 'VSCode chat input not found';
-        console.log('  ❌ VSCode chat input not found');
+        logger.info('  ❌ VSCode chat input not found');
         this.results.tests.push(test);
         return;
       }
@@ -310,7 +314,7 @@ class VSCodeStreamingValidator {
       const testMessage = 'Hello VSCode! This is a test message for streaming validation.';
       await page.keyboard.type(testMessage);
       test.details.messageTyped = testMessage;
-      console.log(`  ✅ Typed test message: "${testMessage}"`);
+      logger.info(`  ✅ Typed test message: "${testMessage}"`);
       
       // Find and click VSCode send button
       const sendSelectors = [
@@ -328,7 +332,7 @@ class VSCodeStreamingValidator {
           const sendButton = await page.$(selector);
           if (sendButton) {
             await sendButton.click();
-            console.log(`  ✅ Clicked VSCode send button: ${selector}`);
+            logger.info(`  ✅ Clicked VSCode send button: ${selector}`);
             test.details.sendSelector = selector;
             messageSent = true;
             break;
@@ -341,7 +345,7 @@ class VSCodeStreamingValidator {
       if (!messageSent) {
         // Fallback: try Enter key
         await page.keyboard.press('Enter');
-        console.log('  ⚠️ Used Enter key fallback for VSCode');
+        logger.info('  ⚠️ Used Enter key fallback for VSCode');
         test.details.usedEnterKey = true;
         messageSent = true;
       }
@@ -357,7 +361,7 @@ class VSCodeStreamingValidator {
   }
 
   async testVSCodeAIResponseDetection() {
-    console.log('🤖 Testing VSCode AI response detection...');
+    logger.info('🤖 Testing VSCode AI response detection...');
     
     const test = {
       name: 'VSCode AI Response Detection',
@@ -371,7 +375,7 @@ class VSCodeStreamingValidator {
       const page = await this.browserManager.getPage();
       
       // Wait for AI response to start
-      console.log('  ⏳ Waiting for VSCode AI response...');
+      logger.info('  ⏳ Waiting for VSCode AI response...');
       await this.wait(3000);
       
       // Look for AI response indicators
@@ -391,7 +395,7 @@ class VSCodeStreamingValidator {
           const element = await page.$(selector);
           if (element) {
             const text = await element.textContent();
-            console.log(`  ✅ Found VSCode AI response: ${selector}`);
+            logger.info(`  ✅ Found VSCode AI response: ${selector}`);
             test.details.responseSelector = selector;
             test.details.responseText = text?.substring(0, 100) + '...';
             responseFound = true;
@@ -417,7 +421,7 @@ class VSCodeStreamingValidator {
         try {
           const element = await page.$(selector);
           if (element) {
-            console.log(`  ✅ Found VSCode loading indicator: ${selector}`);
+            logger.info(`  ✅ Found VSCode loading indicator: ${selector}`);
             test.details.loadingSelector = selector;
             loadingFound = true;
             break;
@@ -430,7 +434,7 @@ class VSCodeStreamingValidator {
       test.passed = responseFound || loadingFound;
       if (!test.passed) {
         test.error = 'VSCode AI response not detected';
-        console.log('  ❌ VSCode AI response not detected');
+        logger.info('  ❌ VSCode AI response not detected');
       }
       
     } catch (error) {
@@ -442,7 +446,7 @@ class VSCodeStreamingValidator {
   }
 
   async testVSCodeStreamingStates() {
-    console.log('🔄 Testing VSCode streaming states...');
+    logger.info('🔄 Testing VSCode streaming states...');
     
     const test = {
       name: 'VSCode Streaming States',
@@ -479,10 +483,10 @@ class VSCodeStreamingValidator {
       test.passed = hasStreaming;
       
       if (hasStreaming) {
-        console.log(`  ✅ VSCode streaming detected across ${states.length} states`);
+        logger.info(`  ✅ VSCode streaming detected across ${states.length} states`);
       } else {
         test.error = 'VSCode streaming not detected';
-        console.log('  ❌ VSCode streaming not detected');
+        logger.info('  ❌ VSCode streaming not detected');
       }
       
     } catch (error) {
@@ -657,8 +661,8 @@ class VSCodeStreamingValidator {
     const summary = this.generateSummaryReport(report);
     fs.writeFileSync(summaryFile, summary);
     
-    console.log(`📄 VSCode streaming validation saved: ${outputFile}`);
-    console.log(`📄 VSCode streaming summary saved: ${summaryFile}`);
+    logger.info(`📄 VSCode streaming validation saved: ${outputFile}`);
+    logger.info(`📄 VSCode streaming summary saved: ${summaryFile}`);
   }
 
   generateSummaryReport(report) {
@@ -706,7 +710,7 @@ ${report.recommendations.map(rec =>
     try {
       await this.browserManager.disconnect();
     } catch (error) {
-      console.log('⚠️ VSCode cleanup warning:', error.message);
+      logger.info('⚠️ VSCode cleanup warning:', error.message);
     }
   }
 }

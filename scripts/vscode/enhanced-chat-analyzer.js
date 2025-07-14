@@ -2,6 +2,10 @@ const fs = require('fs');
 const path = require('path');
 const { JSDOM } = require('jsdom');
 
+const Logger = require('@logging/Logger');
+
+const logger = new Logger('ServiceName');
+
 class EnhancedChatAnalyzer {
   constructor() {
     this.results = {
@@ -19,7 +23,7 @@ class EnhancedChatAnalyzer {
   ensureOutputDir() {
     if (!fs.existsSync(this.outputDir)) {
       fs.mkdirSync(this.outputDir, { recursive: true });
-      console.log(`📁 Created VSCode chat analysis directory: ${this.outputDir}`);
+      logger.info(`📁 Created VSCode chat analysis directory: ${this.outputDir}`);
     }
   }
 
@@ -31,7 +35,7 @@ class EnhancedChatAnalyzer {
     let sourcePath = enhancedPath;
     if (!fs.existsSync(enhancedPath)) {
       sourcePath = fallbackPath;
-      console.log(`⚠️ Enhanced collection not found, using fallback: ${fallbackPath}`);
+      logger.info(`⚠️ Enhanced collection not found, using fallback: ${fallbackPath}`);
     }
     
     if (!fs.existsSync(sourcePath)) {
@@ -41,8 +45,8 @@ class EnhancedChatAnalyzer {
     const allFiles = fs.readdirSync(sourcePath)
       .filter(file => file.endsWith('.md') && !file.includes('collection-report'));
     
-    console.log(`📁 VSCode Chat Analysis Source: ${sourcePath}`);
-    console.log(`📄 Found ${allFiles.length} VSCode DOM files`);
+    logger.info(`📁 VSCode Chat Analysis Source: ${sourcePath}`);
+    logger.info(`📄 Found ${allFiles.length} VSCode DOM files`);
     
     const sources = {};
     allFiles.forEach(file => {
@@ -51,7 +55,7 @@ class EnhancedChatAnalyzer {
       sources[file] = htmlContent;
       
       const elementCount = (htmlContent.match(/<[^>]*>/g) || []).length;
-      console.log(`📄 ${file}: ${elementCount} HTML elements`);
+      logger.info(`📄 ${file}: ${elementCount} HTML elements`);
     });
     
     return sources;
@@ -72,7 +76,7 @@ class EnhancedChatAnalyzer {
   }
 
   async analyze() {
-    console.log('🚀 Enhanced VSCode Chat Analyzer starting...\n');
+    logger.info('🚀 Enhanced VSCode Chat Analyzer starting...\n');
 
     try {
       // 1. Load DOM files
@@ -98,11 +102,11 @@ class EnhancedChatAnalyzer {
       // 5. Generate recommendations
       this.generateRecommendations();
 
-      console.log('\n📊 ENHANCED VSCode CHAT ANALYSIS COMPLETED!');
-      console.log(`📁 Output: ${this.outputDir}`);
-      console.log(`🎯 Chat Features Found: ${Object.keys(this.results.chatFeatures).length}`);
-      console.log(`🔍 Issues Identified: ${this.results.chatIssues.length}`);
-      console.log(`💡 Recommendations: ${this.results.recommendations.length}`);
+      logger.info('\n📊 ENHANCED VSCode CHAT ANALYSIS COMPLETED!');
+      logger.info(`📁 Output: ${this.outputDir}`);
+      logger.info(`🎯 Chat Features Found: ${Object.keys(this.results.chatFeatures).length}`);
+      logger.info(`🔍 Issues Identified: ${this.results.chatIssues.length}`);
+      logger.info(`💡 Recommendations: ${this.results.recommendations.length}`);
 
       return analysis;
 
@@ -117,7 +121,7 @@ class EnhancedChatAnalyzer {
       const dom = new JSDOM(htmlContent);
       const document = dom.window.document;
       
-      console.log(`🔍 Analyzing VSCode chat features in ${sourceFile}...`);
+      logger.info(`🔍 Analyzing VSCode chat features in ${sourceFile}...`);
       
       // Comprehensive VSCode chat feature detection
       const chatFeatures = {
@@ -301,7 +305,7 @@ class EnhancedChatAnalyzer {
             attributes: elements.map(el => this.getElementAttributes(el))
           });
           
-          console.log(`  ✅ ${featureName}: ${elements.length} elements`);
+          logger.info(`  ✅ ${featureName}: ${elements.length} elements`);
         } else {
           // Track missing features
           if (!this.results.chatIssues.find(issue => issue.feature === featureName)) {
@@ -673,8 +677,8 @@ async function detectNewChatButton(page) {
     const summary = this.generateSummaryReport(analysis);
     fs.writeFileSync(summaryFile, summary);
     
-    console.log(`📄 VSCode analysis saved: ${outputFile}`);
-    console.log(`📄 VSCode summary saved: ${summaryFile}`);
+    logger.info(`📄 VSCode analysis saved: ${outputFile}`);
+    logger.info(`📄 VSCode summary saved: ${summaryFile}`);
   }
 
   generateSummaryReport(analysis) {

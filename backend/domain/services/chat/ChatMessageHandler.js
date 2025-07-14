@@ -56,7 +56,7 @@ class ChatMessageHandler {
     const timeout = options.timeout || 300000; // 5 minutes default
     const checkInterval = options.checkInterval || 5000; // Check every 5 seconds
     
-    logger.log(`⏳ [ChatMessageHandler] Waiting for AI to finish editing in ${this.ideType}...`);
+    logger.info(`⏳ [ChatMessageHandler] Waiting for AI to finish editing in ${this.ideType}...`);
     
     const startTime = Date.now();
     let lastMessageCount = 0;
@@ -81,13 +81,13 @@ class ChatMessageHandler {
         // Check if message count is stable (no new messages)
         if (currentMessageCount === lastMessageCount) {
           stableCount++;
-          logger.log(`📊 [ChatMessageHandler] AI response stable in ${this.ideType}: ${currentMessageCount} messages (${stableCount}/${requiredStableChecks})`);
+          logger.info(`📊 [ChatMessageHandler] AI response stable in ${this.ideType}: ${currentMessageCount} messages (${stableCount}/${requiredStableChecks})`);
           
           if (stableCount >= requiredStableChecks) {
             // Get the latest AI response
             const latestResponse = await this.extractLatestAIResponse(page);
             
-            logger.log(`✅ [ChatMessageHandler] AI finished editing in ${this.ideType}`);
+            logger.info(`✅ [ChatMessageHandler] AI finished editing in ${this.ideType}`);
             return {
               success: true,
               response: latestResponse,
@@ -100,7 +100,7 @@ class ChatMessageHandler {
         } else {
           // Reset stable count if new message detected
           stableCount = 0;
-          logger.log(`📝 [ChatMessageHandler] AI still working in ${this.ideType}: ${currentMessageCount} messages`);
+          logger.info(`📝 [ChatMessageHandler] AI still working in ${this.ideType}: ${currentMessageCount} messages`);
         }
         
         lastMessageCount = currentMessageCount;
@@ -113,7 +113,7 @@ class ChatMessageHandler {
         
         // If page is closed, try to get a fresh page reference
         if (error.message.includes('Target page, context or browser has been closed')) {
-          logger.log(`[ChatMessageHandler] Page was closed, trying to get fresh page reference...`);
+          logger.info(`[ChatMessageHandler] Page was closed, trying to get fresh page reference...`);
           try {
             await this.browserManager.getPage(); // This will reconnect if needed
             await page.waitForTimeout(1000); // Wait a bit before retrying
@@ -126,7 +126,7 @@ class ChatMessageHandler {
     }
     
     // Timeout reached
-    logger.log(`⏰ [ChatMessageHandler] Timeout reached in ${this.ideType}, extracting partial response`);
+    logger.info(`⏰ [ChatMessageHandler] Timeout reached in ${this.ideType}, extracting partial response`);
     const partialResponse = await this.extractLatestAIResponse(page);
     
     return {

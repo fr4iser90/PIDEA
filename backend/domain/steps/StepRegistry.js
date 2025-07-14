@@ -68,7 +68,7 @@ class StepRegistry {
         this.executors.set(name, executor);
       }
 
-      logger.log(`✅ Step "${name}" registered successfully in category "${finalCategory}"`);
+      logger.info(`✅ Step "${name}" registered successfully in category "${finalCategory}"`);
       return true;
     } catch (error) {
       logger.error(`❌ Failed to register step "${name}":`, error.message);
@@ -87,12 +87,12 @@ class StepRegistry {
       try {
         await fs.access(categoriesDir);
       } catch {
-        logger.log('📁 Categories directory not found, trying alternative path...');
+        logger.info('📁 Categories directory not found, trying alternative path...');
         // Try alternative path for development
         const altCategoriesDir = path.join(process.cwd(), 'domain', 'steps', 'categories');
         try {
           await fs.access(altCategoriesDir);
-          logger.log('📁 Found categories in alternative path');
+          logger.info('📁 Found categories in alternative path');
           const categories = await fs.readdir(altCategoriesDir);
           
           for (const category of categories) {
@@ -104,10 +104,10 @@ class StepRegistry {
             }
           }
           
-          logger.log(`📦 Loaded ${this.steps.size} steps from alternative categories path`);
+          logger.info(`📦 Loaded ${this.steps.size} steps from alternative categories path`);
           return;
         } catch {
-          logger.log('📁 Creating categories directory...');
+          logger.info('📁 Creating categories directory...');
           await fs.mkdir(categoriesDir, { recursive: true });
           return;
         }
@@ -124,7 +124,7 @@ class StepRegistry {
         }
       }
 
-      logger.log(`📦 Loaded ${this.steps.size} steps from categories`);
+      logger.info(`📦 Loaded ${this.steps.size} steps from categories`);
     } catch (error) {
       logger.error('❌ Failed to load steps from categories:', error.message);
       throw error;
@@ -216,7 +216,7 @@ class StepRegistry {
       }
 
       // Execute step
-      logger.log(`🚀 Executing step "${name}"...`);
+      logger.info(`🚀 Executing step "${name}"...`);
       const startTime = Date.now();
       
       const result = await executor(context, options);
@@ -229,7 +229,7 @@ class StepRegistry {
       step.lastExecuted = new Date();
       step.lastDuration = duration;
 
-      logger.log(`✅ Step "${name}" executed successfully in ${duration}ms`);
+      logger.info(`✅ Step "${name}" executed successfully in ${duration}ms`);
       return {
         success: true,
         result,
@@ -316,7 +316,7 @@ class StepRegistry {
     step.config = { ...step.config, ...newConfig };
     step.updatedAt = new Date();
     
-    logger.log(`✅ Step "${name}" updated successfully`);
+    logger.info(`✅ Step "${name}" updated successfully`);
     return step;
   }
 
@@ -344,7 +344,7 @@ class StepRegistry {
     // Remove executor
     this.executors.delete(name);
     
-    logger.log(`🗑️ Step "${name}" removed successfully`);
+    logger.info(`🗑️ Step "${name}" removed successfully`);
     return true;
   }
 
@@ -399,7 +399,7 @@ class StepRegistry {
     step.status = status;
     step.updatedAt = new Date();
     
-    logger.log(`✅ Step "${name}" status set to "${status}"`);
+    logger.info(`✅ Step "${name}" status set to "${status}"`);
     return step;
   }
 

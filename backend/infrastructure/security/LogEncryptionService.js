@@ -180,7 +180,7 @@ class LogEncryptionService {
       // Set secure permissions (600 - owner read/write only)
       await fs.chmod(filePath, 0o600);
       
-      logger.log(`[LogEncryptionService] Key saved to: ${filePath}`);
+      logger.info(`[LogEncryptionService] Key saved to: ${filePath}`);
     } catch (error) {
       logger.error('[LogEncryptionService] Error saving key:', error);
       throw error;
@@ -215,7 +215,7 @@ class LogEncryptionService {
       
       await this.saveKey(key, keyPath);
       
-      logger.log(`[LogEncryptionService] Generated session key for: ${sessionId}`);
+      logger.info(`[LogEncryptionService] Generated session key for: ${sessionId}`);
       return key;
     } catch (error) {
       logger.error('[LogEncryptionService] Error generating session key:', error);

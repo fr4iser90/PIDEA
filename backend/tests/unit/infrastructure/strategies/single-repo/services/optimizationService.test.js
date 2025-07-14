@@ -25,7 +25,7 @@ describe('OptimizationService', () => {
 
     it('should handle undefined logger gracefully', () => {
       const serviceWithoutLogger = new OptimizationService();
-      expect(serviceWithoutLogger.logger).toBeUndefined();
+      expect(serviceWithoutlogger.infoger).toBeUndefined();
     });
   });
 

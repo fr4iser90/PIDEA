@@ -1,3 +1,7 @@
+const Logger = require('@logging/Logger');
+
+const logger = new Logger('ServiceName');
+
 /**
  * Streaming Service Validation Script
  * 
@@ -27,7 +31,7 @@ const StreamingController = require('./backend/presentation/api/StreamingControl
 // Import repositories
 const StreamingSessionRepository = require('./backend/infrastructure/database/StreamingSessionRepository');
 
-console.log('🚀 Starting IDE Mirror System Streaming Validation...\n');
+logger.info('🚀 Starting IDE Mirror System Streaming Validation...\n');
 
 async function validateStreamingSystem() {
   const results = {
@@ -41,16 +45,16 @@ async function validateStreamingSystem() {
     results.tests.push(test);
     if (passed) {
       results.passed++;
-      console.log(`✅ ${name}`);
+      logger.info(`✅ ${name}`);
     } else {
       results.failed++;
-      console.log(`❌ ${name}: ${error}`);
+      logger.info(`❌ ${name}: ${error}`);
     }
   }
 
   try {
     // Test 1: Validate domain entities
-    console.log('📋 Testing Domain Entities...');
+    logger.info('📋 Testing Domain Entities...');
     
     try {
       const session = StreamingSession.create('test-session', 3000, { fps: 10 });
@@ -63,7 +67,7 @@ async function validateStreamingSystem() {
     }
 
     // Test 2: Validate core services
-    console.log('\n🔧 Testing Core Services...');
+    logger.info('\n🔧 Testing Core Services...');
     
     try {
       const compressionEngine = new CompressionEngine();
@@ -79,7 +83,7 @@ async function validateStreamingSystem() {
     }
 
     // Test 3: Validate commands
-    console.log('\n📝 Testing Commands...');
+    logger.info('\n📝 Testing Commands...');
     
     try {
       const startCommand = new StartStreamingCommand('test-session', 3000, { fps: 10 });
@@ -92,7 +96,7 @@ async function validateStreamingSystem() {
     }
 
     // Test 4: Validate handlers
-    console.log('\n🎯 Testing Handlers...');
+    logger.info('\n🎯 Testing Handlers...');
     
     try {
       const mockStreamingService = { startStreaming: () => Promise.resolve({ success: true }) };
@@ -106,7 +110,7 @@ async function validateStreamingSystem() {
     }
 
     // Test 5: Validate controller
-    console.log('\n🎮 Testing Controllers...');
+    logger.info('\n🎮 Testing Controllers...');
     
     try {
       const mockStreamingService = { startStreaming: () => Promise.resolve({ success: true }) };
@@ -118,7 +122,7 @@ async function validateStreamingSystem() {
     }
 
     // Test 6: Validate repository
-    console.log('\n💾 Testing Repositories...');
+    logger.info('\n💾 Testing Repositories...');
     
     try {
       const repository = new StreamingSessionRepository();
@@ -128,7 +132,7 @@ async function validateStreamingSystem() {
     }
 
     // Test 7: Validate file structure
-    console.log('\n📁 Testing File Structure...');
+    logger.info('\n📁 Testing File Structure...');
     
     const fs = require('fs');
          const requiredFiles = [
@@ -161,7 +165,7 @@ async function validateStreamingSystem() {
     }
 
     // Test 8: Validate integration
-    console.log('\n🔗 Testing Integration...');
+    logger.info('\n🔗 Testing Integration...');
     
     try {
       // Mock dependencies for integration test
@@ -189,16 +193,16 @@ async function validateStreamingSystem() {
   }
 
   // Print summary
-  console.log('\n📊 Validation Summary:');
-  console.log(`✅ Passed: ${results.passed}`);
-  console.log(`❌ Failed: ${results.failed}`);
-  console.log(`📈 Success Rate: ${Math.round((results.passed / (results.passed + results.failed)) * 100)}%`);
+  logger.info('\n📊 Validation Summary:');
+  logger.info(`✅ Passed: ${results.passed}`);
+  logger.info(`❌ Failed: ${results.failed}`);
+  logger.info(`📈 Success Rate: ${Math.round((results.passed / (results.passed + results.failed)) * 100)}%`);
 
   if (results.failed === 0) {
-    console.log('\n🎉 All tests passed! IDE Mirror System streaming is ready for use.');
+    logger.info('\n🎉 All tests passed! IDE Mirror System streaming is ready for use.');
     return true;
   } else {
-    console.log('\n⚠️  Some tests failed. Please review the errors above.');
+    logger.info('\n⚠️  Some tests failed. Please review the errors above.');
     return false;
   }
 }

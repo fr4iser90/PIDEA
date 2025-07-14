@@ -30,7 +30,7 @@ class CursorStarter {
    * @returns {Promise<Object>} IDE startup information
    */
   async startIDE(port, workspacePath = null, options = {}) {
-    logger.log('[CursorStarter] Starting Cursor IDE on port', port);
+    logger.info('[CursorStarter] Starting Cursor IDE on port', port);
     
     // Validate port is in range
     if (port < this.config.portRange.start || port > this.config.portRange.end) {
@@ -83,15 +83,15 @@ class CursorStarter {
 
       // Handle process events
       process.stdout.on('data', (data) => {
-        logger.log(`[CursorStarter] Cursor IDE ${port} stdout:`, data.toString().trim());
+        logger.info(`[CursorStarter] Cursor IDE ${port} stdout:`, data.toString().trim());
       });
 
       process.stderr.on('data', (data) => {
-        logger.log(`[CursorStarter] Cursor IDE ${port} stderr:`, data.toString().trim());
+        logger.info(`[CursorStarter] Cursor IDE ${port} stderr:`, data.toString().trim());
       });
 
       process.on('close', (code) => {
-        logger.log(`[CursorStarter] Cursor IDE ${port} process closed with code ${code}`);
+        logger.info(`[CursorStarter] Cursor IDE ${port} process closed with code ${code}`);
       });
 
       process.on('error', (error) => {
@@ -123,7 +123,7 @@ class CursorStarter {
    * @returns {Promise<Object>} Stop result
    */
   async stopIDE(port) {
-    logger.log('[CursorStarter] Stopping Cursor IDE on port', port);
+    logger.info('[CursorStarter] Stopping Cursor IDE on port', port);
     
     try {
       // Find and kill Cursor processes on the specified port

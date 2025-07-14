@@ -2,6 +2,10 @@ const fs = require('fs');
 const path = require('path');
 const { JSDOM } = require('jsdom');
 
+const Logger = require('@logging/Logger');
+
+const logger = new Logger('ServiceName');
+
 class BulkDOMAnalyzer {
   constructor() {
     this.results = {
@@ -23,8 +27,8 @@ class BulkDOMAnalyzer {
     const allFiles = fs.readdirSync(collectedPath)
       .filter(file => file.endsWith('.md') && file !== 'collection-report.json');
     
-    console.log(`📁 Auto-collected Verzeichnis: ${collectedPath}`);
-    console.log(`📄 Gefundene DOM-Dateien: ${allFiles.length}`);
+    logger.info(`📁 Auto-collected Verzeichnis: ${collectedPath}`);
+    logger.info(`📄 Gefundene DOM-Dateien: ${allFiles.length}`);
     
     const sources = {};
     allFiles.forEach(file => {
@@ -32,7 +36,7 @@ class BulkDOMAnalyzer {
       const htmlContent = this.extractHTML(content);
       sources[file] = htmlContent;
       const elementCount = (htmlContent.match(/<[^>]*>/g) || []).length;
-      console.log(`📄 ${file}: ${elementCount} HTML-Elemente`);
+      logger.info(`📄 ${file}: ${elementCount} HTML-Elemente`);
     });
     
     return sources;
@@ -58,10 +62,10 @@ class BulkDOMAnalyzer {
       const dom = new JSDOM(htmlContent);
       const document = dom.window.document;
       
-      console.log(`🔍 Analyzing ${sourceFile}...`);
+      logger.info(`🔍 Analyzing ${sourceFile}...`);
       
       const allElements = document.querySelectorAll('*:not(style):not(script):not(meta):not(link):not(title)');
-      console.log(`  └─ ${allElements.length} DOM-Elemente gefunden`);
+      logger.info(`  └─ ${allElements.length} DOM-Elemente gefunden`);
       
       this.extractFeatures(document, sourceFile);
       this.extractSelectors(document, sourceFile);
@@ -161,7 +165,7 @@ class BulkDOMAnalyzer {
           elements: elements.map(el => this.generateSelectorsForElement(el))
         });
         
-        console.log(`  ✅ ${featureName}: ${elements.length} Elemente`);
+        logger.info(`  ✅ ${featureName}: ${elements.length} Elemente`);
       }
     });
   }
@@ -279,7 +283,7 @@ class BulkDOMAnalyzer {
   }
 
   analyze(targetDir) {
-    console.log('🚀 Bulk DOM-Analyzer gestartet...\n');
+    logger.info('🚀 Bulk DOM-Analyzer gestartet...\n');
 
     try {
       // 1. Lade auto-collected DOM-Dateien
@@ -318,17 +322,17 @@ class BulkDOMAnalyzer {
       const outputPath = path.join(__dirname, '../output/bulk-analysis-results.json');
       fs.writeFileSync(outputPath, JSON.stringify(finalResults, null, 2));
 
-      console.log('\n📊 BULK-ANALYSE ABGESCHLOSSEN!');
-      console.log(`📁 Output: ${outputPath}`);
-      console.log(`📈 Features gefunden: ${stats.totalFeatures}`);
-      console.log(`📄 Dateien analysiert: ${Object.keys(sources).length}`);
+      logger.info('\n📊 BULK-ANALYSE ABGESCHLOSSEN!');
+      logger.info(`📁 Output: ${outputPath}`);
+      logger.info(`📈 Features gefunden: ${stats.totalFeatures}`);
+      logger.info(`📄 Dateien analysiert: ${Object.keys(sources).length}`);
       
       // Features Übersicht
-      console.log('\n🎯 GEFUNDENE FEATURES:');
+      logger.info('\n🎯 GEFUNDENE FEATURES:');
       Object.entries(this.results.features).forEach(([feature, sources]) => {
         if (sources.length > 0) {
           const totalElements = sources.reduce((sum, source) => sum + source.count, 0);
-          console.log(`  ✅ ${feature}: ${totalElements} Elemente`);
+          logger.info(`  ✅ ${feature}: ${totalElements} Elemente`);
         }
       });
 

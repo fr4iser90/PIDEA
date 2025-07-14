@@ -191,7 +191,7 @@ const AnalysisStatus = ({ projectId }) => {
   
   useEffect(() => {
     // Status polling logic will be implemented
-    logger.log('[AnalysisStatus] Component mounted');
+    logger.info('[AnalysisStatus] Component mounted');
   }, [projectId]);
   
   return (

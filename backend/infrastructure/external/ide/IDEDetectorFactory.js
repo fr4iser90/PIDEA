@@ -8,8 +8,8 @@
 const CursorDetector = require('./detectors/CursorDetector');
 const VSCodeDetector = require('./detectors/VSCodeDetector');
 const WindsurfDetector = require('./detectors/WindsurfDetector');
-const Logger = require('@logging/Logger');
-const logger = new Logger('Logger');
+const ServiceLogger = require('@logging/ServiceLogger');
+const logger = new ServiceLogger('IDEDetectorFactory');
 
 class IDEDetectorFactory {
   constructor() {
@@ -89,7 +89,7 @@ class IDEDetectorFactory {
       }
     });
 
-    logger.log(`[IDEDetectorFactory] Detected ${allIDEs.length} IDEs total`);
+    logger.info(`[IDEDetectorFactory] Detected ${allIDEs.length} IDEs total`);
     return allIDEs;
   }
 

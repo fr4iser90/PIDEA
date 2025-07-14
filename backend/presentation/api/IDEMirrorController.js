@@ -2,7 +2,8 @@ const IDEMirrorService = require('@services/IDEMirrorService');
 const ScreenshotStreamingService = require('@services/ide-mirror/ScreenshotStreamingService');
 const StreamingController = require('./StreamingController');
 const Logger = require('@logging/Logger');
-const logger = new Logger('Logger');
+const ServiceLogger = require('@logging/ServiceLogger');
+const logger = new ServiceLogger('IDEMirrorController');
 
 
 class IDEMirrorController {
@@ -37,17 +38,17 @@ class IDEMirrorController {
      */
     initializeStreamingServices(registry) {
         try {
-            logger.log('[IDEMirrorController] Initializing streaming services...');
+            logger.info('[IDEMirrorController] Initializing streaming services...');
             
             // Get required services
             const browserManager = registry.getService('browserManager');
-            logger.log('[IDEMirrorController] Browser manager available:', !!browserManager);
+            logger.info('[IDEMirrorController] Browser manager available:', !!browserManager);
             
             const webSocketManager = registry.getService('webSocketManager');
-            logger.log('[IDEMirrorController] WebSocket manager available:', !!webSocketManager);
+            logger.info('[IDEMirrorController] WebSocket manager available:', !!webSocketManager);
             
             const eventBus = registry.getService('eventBus');
-            logger.log('[IDEMirrorController] Event bus available:', !!eventBus);
+            logger.info('[IDEMirrorController] Event bus available:', !!eventBus);
 
             if (!browserManager) {
                 throw new Error('Browser manager service not found');
@@ -84,7 +85,7 @@ class IDEMirrorController {
                 webSocketManager.setScreenshotStreamingService(this.screenshotStreamingService);
             }
 
-            logger.log('[IDEMirrorController] Streaming services initialized successfully');
+            logger.info('[IDEMirrorController] Streaming services initialized successfully');
 
         } catch (error) {
             logger.error('[IDEMirrorController] Error initializing streaming services:', error.message);
@@ -350,7 +351,7 @@ class IDEMirrorController {
 
     // WebSocket Event Handlers
     handleWebSocketConnection(ws) {
-        logger.log('🔌 IDE Mirror client connected');
+        logger.info('🔌 IDE Mirror client connected');
         this.connectedClients.add(ws);
 
         ws.on('message', async (message) => {
@@ -367,7 +368,7 @@ class IDEMirrorController {
         });
 
         ws.on('close', () => {
-            logger.log('🔌 IDE Mirror client disconnected');
+            logger.info('🔌 IDE Mirror client disconnected');
             this.connectedClients.delete(ws);
         });
 
@@ -469,7 +470,7 @@ class IDEMirrorController {
                     
                     // If it's a connection error, clear the queue and stop
                     if (error.message.includes('closed') || error.message.includes('disconnected')) {
-                        logger.log('🧹 Clearing message queue due to connection error');
+                        logger.info('🧹 Clearing message queue due to connection error');
                         this.messageQueue = [];
                         break;
                     }
@@ -479,7 +480,7 @@ class IDEMirrorController {
                 }
             }
             
-            logger.log(`⚡ Processed ${processedCount} keystrokes in queue`);
+            logger.info(`⚡ Processed ${processedCount} keystrokes in queue`);
         } finally {
             this.isProcessingQueue = false;
         }
@@ -492,7 +493,7 @@ class IDEMirrorController {
             await this.ideMirrorService.connectToIDE();
         }
 
-        logger.log(`🖱️ Processing click: ${selector}`);
+        logger.info(`🖱️ Processing click: ${selector}`);
         await this.ideMirrorService.clickElementInIDE(selector, coordinates);
         
         // Wait for UI changes
@@ -500,7 +501,7 @@ class IDEMirrorController {
         
         const newState = await this.ideMirrorService.captureCompleteIDEState();
         this.broadcastToClients('ide-state-updated', newState);
-        logger.log(`📸 Screenshot updated after click: ${selector}`);
+        logger.info(`📸 Screenshot updated after click: ${selector}`);
     }
 
     async handleWebSocketType(ws, payload) {
@@ -510,7 +511,7 @@ class IDEMirrorController {
             await this.ideMirrorService.connectToIDE();
         }
 
-        logger.log(`⌨️ Processing keystroke: ${key || text} for ${selector}`);
+        logger.info(`⌨️ Processing keystroke: ${key || text} for ${selector}`);
         await this.ideMirrorService.typeInIDE(text, selector, key, modifiers);
         
         // Smart screenshot timing - only when truly needed
@@ -530,9 +531,9 @@ class IDEMirrorController {
             
             const newState = await this.ideMirrorService.captureCompleteIDEState();
             this.broadcastToClients('ide-state-updated', newState);
-            logger.log(`📸 Screenshot updated for key: ${key}`);
+            logger.info(`📸 Screenshot updated for key: ${key}`);
         } else {
-            logger.log(`⏩ Skipping screenshot for: ${key || text}`);
+            logger.info(`⏩ Skipping screenshot for: ${key || text}`);
             
             // Send lightweight typing confirmation without screenshot
             this.broadcastToClients('typing-confirmed', {
@@ -550,7 +551,7 @@ class IDEMirrorController {
             await this.ideMirrorService.connectToIDE();
         }
 
-        logger.log(`⚡ Processing batch: "${text}" (${text.length} chars) for ${selector}`);
+        logger.info(`⚡ Processing batch: "${text}" (${text.length} chars) for ${selector}`);
         
         // Send entire batch at once - much faster than individual keystrokes
         await this.ideMirrorService.typeInIDE(text, selector);
@@ -560,7 +561,7 @@ class IDEMirrorController {
         
         const newState = await this.ideMirrorService.captureCompleteIDEState();
         this.broadcastToClients('ide-state-updated', newState);
-        logger.log(`📸 Screenshot updated after batch: "${text.substring(0, 20)}..."`);
+        logger.info(`📸 Screenshot updated after batch: "${text.substring(0, 20)}..."`);
     }
 
     isEndOfWord(text) {
@@ -635,8 +636,8 @@ class IDEMirrorController {
 
     // Route setup method
     setupRoutes(app) {
-        logger.log('[IDEMirrorController] Setting up routes...');
-        logger.log('[IDEMirrorController] Streaming controller available:', !!this.streamingController);
+        logger.info('[IDEMirrorController] Setting up routes...');
+        logger.info('[IDEMirrorController] Streaming controller available:', !!this.streamingController);
         
         // HTTP API Routes
         app.get('/api/ide-mirror/state', this.getIDEState.bind(this));
@@ -650,7 +651,7 @@ class IDEMirrorController {
 
         // Streaming endpoints (port-based)
         if (this.streamingController) {
-            logger.log('[IDEMirrorController] Registering port-based streaming routes...');
+            logger.info('[IDEMirrorController] Registering port-based streaming routes...');
             
             // Port-specific streaming routes
             app.post('/api/ide-mirror/:port/stream/start', (req, res) => this.streamingController.startStreaming(req, res));
@@ -666,9 +667,9 @@ class IDEMirrorController {
             app.post('/api/ide-mirror/stream/stop-all', (req, res) => this.streamingController.stopAllStreaming(req, res));
             app.get('/api/ide-mirror/stream/health', (req, res) => this.streamingController.healthCheck(req, res));
             
-            logger.log('[IDEMirrorController] Port-based streaming routes registered successfully');
+            logger.info('[IDEMirrorController] Port-based streaming routes registered successfully');
         } else {
-            logger.log('[IDEMirrorController] Streaming controller not available, skipping streaming routes');
+            logger.info('[IDEMirrorController] Streaming controller not available, skipping streaming routes');
         }
     }
 }

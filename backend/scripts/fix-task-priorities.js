@@ -28,7 +28,7 @@ class TaskPriorityFixer {
       
       this.databaseConnection = new DatabaseConnection(dbConfig);
       await this.databaseConnection.connect();
-      logger.log('✅ Database connection established');
+      logger.info('✅ Database connection established');
     } catch (error) {
       logger.error('❌ Failed to connect to database:', error.message);
       throw error;
@@ -40,9 +40,9 @@ class TaskPriorityFixer {
       const sql = `SELECT id, title, priority FROM tasks WHERE priority = '[object Object]' OR priority IS NULL`;
       const rows = await this.databaseConnection.query(sql);
       
-      logger.log(`🔍 Found ${rows.length} tasks with invalid priorities:`);
+      logger.info(`🔍 Found ${rows.length} tasks with invalid priorities:`);
       rows.forEach(row => {
-        logger.log(`  - ${row.id}: "${row.title}" (priority: ${row.priority})`);
+        logger.info(`  - ${row.id}: "${row.title}" (priority: ${row.priority})`);
       });
       
       return rows;
@@ -58,7 +58,7 @@ class TaskPriorityFixer {
       const params = [newPriority, new Date().toISOString(), taskId];
       
       await this.databaseConnection.execute(sql, params);
-      logger.log(`✅ Fixed task ${taskId} priority to: ${newPriority}`);
+      logger.info(`✅ Fixed task ${taskId} priority to: ${newPriority}`);
     } catch (error) {
       logger.error(`❌ Failed to fix task ${taskId}:`, error.message);
       throw error;
@@ -70,11 +70,11 @@ class TaskPriorityFixer {
       const invalidTasks = await this.findInvalidPriorities();
       
       if (invalidTasks.length === 0) {
-        logger.log('✅ No tasks with invalid priorities found');
+        logger.info('✅ No tasks with invalid priorities found');
         return;
       }
 
-      logger.log(`\n🔧 Fixing ${invalidTasks.length} tasks...`);
+      logger.info(`\n🔧 Fixing ${invalidTasks.length} tasks...`);
       
       for (const task of invalidTasks) {
         // Try to determine priority from task title or description
@@ -94,7 +94,7 @@ class TaskPriorityFixer {
         await this.fixTaskPriority(task.id, priority);
       }
       
-      logger.log(`\n✅ Successfully fixed ${invalidTasks.length} tasks`);
+      logger.info(`\n✅ Successfully fixed ${invalidTasks.length} tasks`);
     } catch (error) {
       logger.error('❌ Failed to fix invalid priorities:', error.message);
       throw error;
@@ -107,9 +107,9 @@ class TaskPriorityFixer {
       const result = await this.databaseConnection.getOne(sql);
       
       if (result.count === 0) {
-        logger.log('✅ Validation passed: No tasks with invalid priorities found');
+        logger.info('✅ Validation passed: No tasks with invalid priorities found');
       } else {
-        logger.log(`⚠️  Validation warning: ${result.count} tasks still have invalid priorities`);
+        logger.info(`⚠️  Validation warning: ${result.count} tasks still have invalid priorities`);
       }
       
       return result.count === 0;
@@ -122,7 +122,7 @@ class TaskPriorityFixer {
   async close() {
     if (this.databaseConnection) {
       await this.databaseConnection.disconnect();
-      logger.log('✅ Database connection closed');
+      logger.info('✅ Database connection closed');
     }
   }
 }
@@ -131,13 +131,13 @@ async function main() {
   const fixer = new TaskPriorityFixer();
   
   try {
-    logger.log('🚀 Starting task priority fix...\n');
+    logger.info('🚀 Starting task priority fix...\n');
     
     await fixer.init();
     await fixer.fixAllInvalidPriorities();
     await fixer.validateFix();
     
-    logger.log('\n🎉 Task priority fix completed successfully!');
+    logger.info('\n🎉 Task priority fix completed successfully!');
   } catch (error) {
     logger.error('\n💥 Task priority fix failed:', error.message);
     process.exit(1);

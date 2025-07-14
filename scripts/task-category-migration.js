@@ -1,3 +1,7 @@
+const Logger = require('@logging/Logger');
+
+const logger = new Logger('ServiceName');
+
 #!/usr/bin/env node
 
 /**
@@ -39,16 +43,16 @@ class TaskCategoryMigration {
       return;
     }
 
-    console.log('🔄 Task Category Migration');
-    console.log('==========================');
-    console.log(`Mode: ${isDryRun ? 'DRY RUN' : shouldUpdate ? 'UPDATE' : 'ANALYSIS'}`);
-    console.log('');
+    logger.info('🔄 Task Category Migration');
+    logger.info('==========================');
+    logger.info(`Mode: ${isDryRun ? 'DRY RUN' : shouldUpdate ? 'UPDATE' : 'ANALYSIS'}`);
+    logger.info('');
 
     try {
       // Find all task files
       const taskFiles = this.findTaskFiles();
-      console.log(`📁 Found ${taskFiles.length} task files`);
-      console.log('');
+      logger.info(`📁 Found ${taskFiles.length} task files`);
+      logger.info('');
 
       // Analyze and categorize tasks
       const categorizedTasks = this.categorizeTasks(taskFiles);
@@ -151,8 +155,8 @@ class TaskCategoryMigration {
   }
 
   displayResults(categorizedTasks, isDryRun) {
-    console.log('📊 Categorization Results:');
-    console.log('==========================');
+    logger.info('📊 Categorization Results:');
+    logger.info('==========================');
     
     let totalTasks = 0;
     
@@ -160,38 +164,38 @@ class TaskCategoryMigration {
       if (taskList.length === 0) continue;
       
       totalTasks += taskList.length;
-      console.log(`\n${category.toUpperCase()} (${taskList.length} tasks):`);
-      console.log(`  ${this.categories[category] || 'Uncategorized'}`);
+      logger.info(`\n${category.toUpperCase()} (${taskList.length} tasks):`);
+      logger.info(`  ${this.categories[category] || 'Uncategorized'}`);
       
       for (const task of taskList) {
         const relativePath = path.relative('docs/09_roadmap', task);
-        console.log(`  - ${relativePath}`);
+        logger.info(`  - ${relativePath}`);
       }
     }
     
-    console.log(`\n📈 Summary:`);
-    console.log(`  Total Tasks: ${totalTasks}`);
-    console.log(`  Categories Used: ${Object.keys(categorizedTasks).filter(cat => categorizedTasks[cat].length > 0).length}`);
+    logger.info(`\n📈 Summary:`);
+    logger.info(`  Total Tasks: ${totalTasks}`);
+    logger.info(`  Categories Used: ${Object.keys(categorizedTasks).filter(cat => categorizedTasks[cat].length > 0).length}`);
     
     if (isDryRun) {
-      console.log('\n💡 This was a dry run. Use --update to actually modify files.');
+      logger.info('\n💡 This was a dry run. Use --update to actually modify files.');
     }
   }
 
   async updateTaskFiles(categorizedTasks) {
-    console.log('\n🔄 Updating task files...');
+    logger.info('\n🔄 Updating task files...');
     
     for (const [category, taskList] of Object.entries(categorizedTasks)) {
       if (taskList.length === 0) continue;
       
-      console.log(`\n📁 Processing ${category} (${taskList.length} tasks):`);
+      logger.info(`\n📁 Processing ${category} (${taskList.length} tasks):`);
       
       for (const taskFile of taskList) {
         await this.updateTaskFile(taskFile, category);
       }
     }
     
-    console.log('\n✅ Task files updated successfully!');
+    logger.info('\n✅ Task files updated successfully!');
   }
 
   async updateTaskFile(taskFile, category) {
@@ -202,10 +206,10 @@ class TaskCategoryMigration {
       if (content !== updatedContent) {
         fs.writeFileSync(taskFile, updatedContent, 'utf8');
         const relativePath = path.relative('docs/09_roadmap', taskFile);
-        console.log(`  ✅ Updated: ${relativePath} → ${category}`);
+        logger.info(`  ✅ Updated: ${relativePath} → ${category}`);
       } else {
         const relativePath = path.relative('docs/09_roadmap', taskFile);
-        console.log(`  ⚠️  No changes needed: ${relativePath}`);
+        logger.info(`  ⚠️  No changes needed: ${relativePath}`);
       }
     } catch (error) {
       console.error(`  ❌ Failed to update ${taskFile}: ${error.message}`);
@@ -251,20 +255,20 @@ class TaskCategoryMigration {
   }
 
   showHelp() {
-    console.log('Task Category Migration');
-    console.log('');
-    console.log('Usage:');
-    console.log('  node scripts/task-category-migration.js --dry-run');
-    console.log('  node scripts/task-category-migration.js --update');
-    console.log('');
-    console.log('Options:');
-    console.log('  --dry-run    Analyze tasks without making changes');
-    console.log('  --update     Update task files with categories');
-    console.log('  --help, -h   Show this help');
-    console.log('');
-    console.log('Categories:');
+    logger.info('Task Category Migration');
+    logger.info('');
+    logger.info('Usage:');
+    logger.info('  node scripts/task-category-migration.js --dry-run');
+    logger.info('  node scripts/task-category-migration.js --update');
+    logger.info('');
+    logger.info('Options:');
+    logger.info('  --dry-run    Analyze tasks without making changes');
+    logger.info('  --update     Update task files with categories');
+    logger.info('  --help, -h   Show this help');
+    logger.info('');
+    logger.info('Categories:');
     for (const [category, description] of Object.entries(this.categories)) {
-      console.log(`  ${category}: ${description}`);
+      logger.info(`  ${category}: ${description}`);
     }
   }
 }

@@ -1,3 +1,7 @@
+const Logger = require('@logging/Logger');
+
+const logger = new Logger('ServiceName');
+
 #!/usr/bin/env node
 
 /**
@@ -74,7 +78,7 @@ class PerformanceTest {
   }
 
   async warmup() {
-    console.log('🔥 Warming up...');
+    logger.info('🔥 Warming up...');
     const warmupPromises = [];
     
     for (let i = 0; i < CONFIG.performance.warmupRequests; i++) {
@@ -82,7 +86,7 @@ class PerformanceTest {
     }
     
     await Promise.all(warmupPromises);
-    console.log('✅ Warmup completed');
+    logger.info('✅ Warmup completed');
   }
 
   async testEndpoint(endpointName, method = 'GET', data = null) {
@@ -119,7 +123,7 @@ class PerformanceTest {
   }
 
   async runLoadTest(endpointName, method = 'GET', data = null) {
-    console.log(`\n🚀 Testing ${endpointName} endpoint...`);
+    logger.info(`\n🚀 Testing ${endpointName} endpoint...`);
     
     const responseTimes = [];
     const startTime = performance.now();
@@ -186,17 +190,17 @@ class PerformanceTest {
       };
     }
     
-    console.log(`✅ ${endpointName} test completed`);
+    logger.info(`✅ ${endpointName} test completed`);
   }
 
   async runConcurrencyTest() {
-    console.log('\n🔄 Running concurrency test...');
+    logger.info('\n🔄 Running concurrency test...');
     
     const concurrencyLevels = [1, 5, 10, 25, 50, 100];
     const concurrencyResults = {};
     
     for (const concurrency of concurrencyLevels) {
-      console.log(`Testing with ${concurrency} concurrent requests...`);
+      logger.info(`Testing with ${concurrency} concurrent requests...`);
       
       const startTime = performance.now();
       const promises = [];
@@ -228,7 +232,7 @@ class PerformanceTest {
   }
 
   async runStressTest() {
-    console.log('\n💥 Running stress test...');
+    logger.info('\n💥 Running stress test...');
     
     const stressResults = {
       maxRequests: 0,
@@ -266,33 +270,33 @@ class PerformanceTest {
   }
 
   generateReport() {
-    console.log('\n📊 Performance Test Report');
-    console.log('=' .repeat(50));
+    logger.info('\n📊 Performance Test Report');
+    logger.info('=' .repeat(50));
     
     // Summary
-    console.log('\n📈 Summary:');
-    console.log(`Total Requests: ${results.summary.totalRequests}`);
-    console.log(`Successful: ${results.summary.successfulRequests}`);
-    console.log(`Failed: ${results.summary.failedRequests}`);
-    console.log(`Success Rate: ${((results.summary.successfulRequests / results.summary.totalRequests) * 100).toFixed(2)}%`);
+    logger.info('\n📈 Summary:');
+    logger.info(`Total Requests: ${results.summary.totalRequests}`);
+    logger.info(`Successful: ${results.summary.successfulRequests}`);
+    logger.info(`Failed: ${results.summary.failedRequests}`);
+    logger.info(`Success Rate: ${((results.summary.successfulRequests / results.summary.totalRequests) * 100).toFixed(2)}%`);
     
     // Endpoint details
-    console.log('\n🔍 Endpoint Performance:');
+    logger.info('\n🔍 Endpoint Performance:');
     for (const [endpoint, data] of Object.entries(results.endpoints)) {
       if (data.stats) {
-        console.log(`\n${endpoint}:`);
-        console.log(`  Average: ${formatDuration(data.stats.average)}`);
-        console.log(`  Min: ${formatDuration(data.stats.min)}`);
-        console.log(`  Max: ${formatDuration(data.stats.max)}`);
-        console.log(`  P50: ${formatDuration(data.stats.p50)}`);
-        console.log(`  P95: ${formatDuration(data.stats.p95)}`);
-        console.log(`  P99: ${formatDuration(data.stats.p99)}`);
-        console.log(`  Success Rate: ${((data.successfulRequests / data.totalRequests) * 100).toFixed(2)}%`);
+        logger.info(`\n${endpoint}:`);
+        logger.info(`  Average: ${formatDuration(data.stats.average)}`);
+        logger.info(`  Min: ${formatDuration(data.stats.min)}`);
+        logger.info(`  Max: ${formatDuration(data.stats.max)}`);
+        logger.info(`  P50: ${formatDuration(data.stats.p50)}`);
+        logger.info(`  P95: ${formatDuration(data.stats.p95)}`);
+        logger.info(`  P99: ${formatDuration(data.stats.p99)}`);
+        logger.info(`  Success Rate: ${((data.successfulRequests / data.totalRequests) * 100).toFixed(2)}%`);
       }
     }
     
     // Performance validation
-    console.log('\n✅ Performance Validation:');
+    logger.info('\n✅ Performance Validation:');
     let allPassed = true;
     
     for (const [endpoint, data] of Object.entries(results.endpoints)) {
@@ -300,14 +304,14 @@ class PerformanceTest {
         const p95 = data.stats.p95;
         const passed = p95 <= CONFIG.performance.maxResponseTime;
         const status = passed ? '✅' : '❌';
-        console.log(`${status} ${endpoint} P95: ${formatDuration(p95)} (target: ${CONFIG.performance.maxResponseTime}ms)`);
+        logger.info(`${status} ${endpoint} P95: ${formatDuration(p95)} (target: ${CONFIG.performance.maxResponseTime}ms)`);
         if (!passed) allPassed = false;
       }
     }
     
     // Errors
     if (results.errors.length > 0) {
-      console.log('\n❌ Errors:');
+      logger.info('\n❌ Errors:');
       const errorCounts = {};
       results.errors.forEach(error => {
         const key = `${error.endpoint}: ${error.error}`;
@@ -315,11 +319,11 @@ class PerformanceTest {
       });
       
       for (const [error, count] of Object.entries(errorCounts)) {
-        console.log(`  ${error} (${count} times)`);
+        logger.info(`  ${error} (${count} times)`);
       }
     }
     
-    console.log(`\n${allPassed ? '🎉 All performance targets met!' : '⚠️  Some performance targets not met'}`);
+    logger.info(`\n${allPassed ? '🎉 All performance targets met!' : '⚠️  Some performance targets not met'}`);
     
     return allPassed;
   }
@@ -327,11 +331,11 @@ class PerformanceTest {
 
 // Main execution
 async function main() {
-  console.log('🚀 PIDEA Agent Branch Performance Test');
-  console.log('=' .repeat(50));
-  console.log(`Base URL: ${CONFIG.baseURL}`);
-  console.log(`Test Duration: ${CONFIG.performance.testDuration / 1000}s`);
-  console.log(`Max Response Time: ${CONFIG.performance.maxResponseTime}ms`);
+  logger.info('🚀 PIDEA Agent Branch Performance Test');
+  logger.info('=' .repeat(50));
+  logger.info(`Base URL: ${CONFIG.baseURL}`);
+  logger.info(`Test Duration: ${CONFIG.performance.testDuration / 1000}s`);
+  logger.info(`Max Response Time: ${CONFIG.performance.maxResponseTime}ms`);
   
   const test = new PerformanceTest();
   
@@ -347,17 +351,17 @@ async function main() {
     
     // Concurrency test
     const concurrencyResults = await test.runConcurrencyTest();
-    console.log('\n🔄 Concurrency Test Results:');
+    logger.info('\n🔄 Concurrency Test Results:');
     for (const [concurrency, data] of Object.entries(concurrencyResults)) {
-      console.log(`${concurrency} concurrent: ${data.throughput.toFixed(2)} req/s, ${formatDuration(data.averageResponseTime)} avg`);
+      logger.info(`${concurrency} concurrent: ${data.throughput.toFixed(2)} req/s, ${formatDuration(data.averageResponseTime)} avg`);
     }
     
     // Stress test
     const stressResults = await test.runStressTest();
-    console.log('\n💥 Stress Test Results:');
-    console.log(`Max Requests: ${stressResults.maxRequests}`);
+    logger.info('\n💥 Stress Test Results:');
+    logger.info(`Max Requests: ${stressResults.maxRequests}`);
     if (stressResults.breakingPoint) {
-      console.log(`Breaking Point: ${stressResults.breakingPoint} requests`);
+      logger.info(`Breaking Point: ${stressResults.breakingPoint} requests`);
     }
     
     // Generate report
@@ -374,7 +378,7 @@ async function main() {
 
 // Handle graceful shutdown
 process.on('SIGINT', () => {
-  console.log('\n⏹️  Performance test interrupted');
+  logger.info('\n⏹️  Performance test interrupted');
   process.exit(0);
 });
 

@@ -40,7 +40,7 @@ class IDEAutomationService {
     // Event listeners
     this.setupEventListeners();
     
-    logger.log('[IDEAutomationService] Initialized');
+    logger.info('[IDEAutomationService] Initialized');
   }
 
   /**
@@ -103,7 +103,7 @@ class IDEAutomationService {
         throw new Error('No IDE page available');
       }
 
-      logger.log(`[IDEAutomationService] Opening terminal for ${context.ideType} on port ${context.port}`);
+      logger.info(`[IDEAutomationService] Opening terminal for ${context.ideType} on port ${context.port}`);
 
       // Use IDE-specific terminal shortcuts
       if (context.ideType === IDETypes.VSCODE) {
@@ -144,7 +144,7 @@ class IDEAutomationService {
         timestamp: new Date()
       });
 
-      logger.log(`[IDEAutomationService] Terminal opened: ${this.terminalStatus.isOpen}`);
+      logger.info(`[IDEAutomationService] Terminal opened: ${this.terminalStatus.isOpen}`);
 
       return {
         success: this.terminalStatus.isOpen,
@@ -178,7 +178,7 @@ class IDEAutomationService {
         throw new Error('No IDE page available');
       }
 
-      logger.log(`[IDEAutomationService] Executing command: ${command}`);
+      logger.info(`[IDEAutomationService] Executing command: ${command}`);
 
       // Ensure terminal is open
       if (!this.terminalStatus.isOpen) {
@@ -211,7 +211,7 @@ class IDEAutomationService {
         timestamp: new Date()
       });
 
-      logger.log(`[IDEAutomationService] Command executed: ${command}`);
+      logger.info(`[IDEAutomationService] Command executed: ${command}`);
 
       return {
         success: true,
@@ -240,7 +240,7 @@ class IDEAutomationService {
     try {
       const context = await this.getIDEContext();
       
-      logger.log(`[IDEAutomationService] Monitoring terminal output for ${context.ideType}`);
+      logger.info(`[IDEAutomationService] Monitoring terminal output for ${context.ideType}`);
 
       // Use existing TerminalMonitor service
       const result = await this.terminalMonitor.monitorTerminalOutput();
@@ -256,7 +256,7 @@ class IDEAutomationService {
         timestamp: new Date()
       });
 
-      logger.log(`[IDEAutomationService] Terminal output monitored: ${result ? 'URL found' : 'No URL'}`);
+      logger.info(`[IDEAutomationService] Terminal output monitored: ${result ? 'URL found' : 'No URL'}`);
 
       return {
         success: true,
@@ -284,7 +284,7 @@ class IDEAutomationService {
     try {
       const context = await this.getIDEContext();
       
-      logger.log(`[IDEAutomationService] Restarting user app for ${context.ideType}`);
+      logger.info(`[IDEAutomationService] Restarting user app for ${context.ideType}`);
 
       // Use existing TerminalMonitor service
       const result = await this.terminalMonitor.restartUserApp();
@@ -297,7 +297,7 @@ class IDEAutomationService {
         timestamp: new Date()
       });
 
-      logger.log(`[IDEAutomationService] User app restarted: ${result ? 'Success' : 'Failed'}`);
+      logger.info(`[IDEAutomationService] User app restarted: ${result ? 'Success' : 'Failed'}`);
 
       return {
         success: !!result,
@@ -325,7 +325,7 @@ class IDEAutomationService {
     try {
       const context = await this.getIDEContext();
       
-      logger.log(`[IDEAutomationService] Capturing terminal logs for ${context.ideType}`);
+      logger.info(`[IDEAutomationService] Capturing terminal logs for ${context.ideType}`);
 
       // Get terminal output
       const output = await this.terminalMonitor.monitorTerminalOutput();
@@ -341,7 +341,7 @@ class IDEAutomationService {
         timestamp: new Date()
       });
 
-      logger.log(`[IDEAutomationService] Terminal logs captured: ${logs.length} entries`);
+      logger.info(`[IDEAutomationService] Terminal logs captured: ${logs.length} entries`);
 
       return {
         success: true,
@@ -374,11 +374,11 @@ class IDEAutomationService {
       const cacheKey = `project_analysis_${context.workspacePath}`;
       const cached = this.analysisCache.get(cacheKey);
       if (cached && (Date.now() - cached.timestamp) < this.cacheTimeout) {
-        logger.log('[IDEAutomationService] Using cached project analysis');
+        logger.info('[IDEAutomationService] Using cached project analysis');
         return cached.result;
       }
 
-      logger.log(`[IDEAutomationService] Analyzing project for ${context.ideType}`);
+      logger.info(`[IDEAutomationService] Analyzing project for ${context.ideType}`);
 
       // Use existing PackageJsonAnalyzer service
       const analysis = await this.packageJsonAnalyzer.analyzePackageJsonInPath(context.workspacePath);
@@ -407,7 +407,7 @@ class IDEAutomationService {
         timestamp: new Date()
       });
 
-      logger.log(`[IDEAutomationService] Project analyzed`);
+      logger.info(`[IDEAutomationService] Project analyzed`);
 
       return result;
 
@@ -434,7 +434,7 @@ class IDEAutomationService {
       const cacheKey = `project_analysis_${context.workspacePath}`;
       this.analysisCache.delete(cacheKey);
 
-      logger.log(`[IDEAutomationService] Re-analyzing project for ${context.ideType}`);
+      logger.info(`[IDEAutomationService] Re-analyzing project for ${context.ideType}`);
 
       // Perform fresh analysis
       const result = await this.analyzeProject(options);
@@ -448,7 +448,7 @@ class IDEAutomationService {
         timestamp: new Date()
       });
 
-      logger.log(`[IDEAutomationService] Project re-analyzed`);
+      logger.info(`[IDEAutomationService] Project re-analyzed`);
 
       return result;
 
@@ -471,7 +471,7 @@ class IDEAutomationService {
     try {
       const context = await this.getIDEContext();
       
-      logger.log(`[IDEAutomationService] Getting workspace info for ${context.ideType}`);
+      logger.info(`[IDEAutomationService] Getting workspace info for ${context.ideType}`);
 
       // Use existing WorkspacePathDetector service
       const workspaceInfo = await this.workspacePathDetector.addWorkspacePathDetectionViaPlaywright();
@@ -494,7 +494,7 @@ class IDEAutomationService {
         timestamp: new Date()
       });
 
-      logger.log(`[IDEAutomationService] Workspace info retrieved: ${workspaceInfo ? 'Success' : 'No info'}`);
+      logger.info(`[IDEAutomationService] Workspace info retrieved: ${workspaceInfo ? 'Success' : 'No info'}`);
 
       return result;
 
@@ -517,7 +517,7 @@ class IDEAutomationService {
     try {
       const context = await this.getIDEContext();
       
-      logger.log(`[IDEAutomationService] Detecting package.json for ${context.ideType}`);
+      logger.info(`[IDEAutomationService] Detecting package.json for ${context.ideType}`);
 
       // Use existing PackageJsonAnalyzer service
       const packageJsonUrl = await this.packageJsonAnalyzer.analyzePackageJsonInPath(context.workspacePath);
@@ -540,7 +540,7 @@ class IDEAutomationService {
         timestamp: new Date()
       });
 
-      logger.log(`[IDEAutomationService] Package.json detected: ${packageJsonUrl ? 'Success' : 'No package.json'}`);
+      logger.info(`[IDEAutomationService] Package.json detected: ${packageJsonUrl ? 'Success' : 'No package.json'}`);
 
       return result;
 
@@ -606,7 +606,7 @@ class IDEAutomationService {
       this.ideType = context.ideType;
       this.workspacePath = context.workspacePath;
       
-      logger.log(`[IDEAutomationService] Port changed to ${port}, IDE type: ${this.ideType}`);
+      logger.info(`[IDEAutomationService] Port changed to ${port}, IDE type: ${this.ideType}`);
     } catch (error) {
       logger.error('[IDEAutomationService] Failed to handle port change:', error);
     }
@@ -621,7 +621,7 @@ class IDEAutomationService {
       const { output } = eventData;
       this.terminalStatus.lastOutput = output;
       
-      logger.log('[IDEAutomationService] Terminal output changed');
+      logger.info('[IDEAutomationService] Terminal output changed');
     } catch (error) {
       logger.error('[IDEAutomationService] Failed to handle terminal output change:', error);
     }
@@ -647,7 +647,7 @@ class IDEAutomationService {
    */
   clearCache() {
     this.analysisCache.clear();
-    logger.log('[IDEAutomationService] Analysis cache cleared');
+    logger.info('[IDEAutomationService] Analysis cache cleared');
   }
 }
 

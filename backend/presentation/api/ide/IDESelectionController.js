@@ -1,5 +1,6 @@
 const Logger = require('@logging/Logger');
-const logger = new Logger('Logger');
+const ServiceLogger = require('@logging/ServiceLogger');
+const logger = new ServiceLogger('IDESelectionController');
 /**
  * IDE Selection Controller
  * Manages IDE selection state and provides selection-related API endpoints

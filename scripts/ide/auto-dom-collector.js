@@ -1,3 +1,7 @@
+const Logger = require('@logging/Logger');
+
+const logger = new Logger('ServiceName');
+
 #!/usr/bin/env node
 
 /**
@@ -56,7 +60,7 @@ class DOMCollector {
   async initialize() {
     try {
       await fs.mkdir(this.outputDir, { recursive: true });
-      console.log(`[DOMCollector] Output directory: ${this.outputDir}`);
+      logger.info(`[DOMCollector] Output directory: ${this.outputDir}`);
     } catch (error) {
       console.error('[DOMCollector] Failed to create output directory:', error);
       throw error;
@@ -70,7 +74,7 @@ class DOMCollector {
     const runningIDEs = [];
 
     for (const [ideType, config] of Object.entries(IDE_CONFIGS)) {
-      console.log(`[DOMCollector] Detecting ${config.name}...`);
+      logger.info(`[DOMCollector] Detecting ${config.name}...`);
       
       for (let port = config.portRange.start; port <= config.portRange.end; port++) {
         const isRunning = await this.checkPort(port);
@@ -80,7 +84,7 @@ class DOMCollector {
             port: port,
             config: config
           });
-          console.log(`[DOMCollector] Found ${config.name} on port ${port}`);
+          logger.info(`[DOMCollector] Found ${config.name} on port ${port}`);
         }
       }
     }
@@ -122,7 +126,7 @@ class DOMCollector {
   async collectDOMFromIDE(ideInfo) {
     const { type, port, config } = ideInfo;
     
-    console.log(`[DOMCollector] Collecting DOM from ${config.name} on port ${port}...`);
+    logger.info(`[DOMCollector] Collecting DOM from ${config.name} on port ${port}...`);
     
     try {
       // Use Playwright to collect DOM
@@ -152,7 +156,7 @@ class DOMCollector {
         timestamp: new Date()
       });
       
-      console.log(`[DOMCollector] DOM collected from ${config.name}: ${filepath}`);
+      logger.info(`[DOMCollector] DOM collected from ${config.name}: ${filepath}`);
       
       await browser.close();
       
@@ -215,7 +219,7 @@ class DOMCollector {
       .filter(([key, result]) => result.success);
 
     if (ideResults.length === 0) {
-      console.log(`[DOMCollector] No successful DOM collections for ${ideType}`);
+      logger.info(`[DOMCollector] No successful DOM collections for ${ideType}`);
       return;
     }
 
@@ -240,7 +244,7 @@ class DOMCollector {
     const selectorContent = `module.exports = ${JSON.stringify(selectors, null, 2)};`;
     
     await fs.writeFile(selectorFile, selectorContent);
-    console.log(`[DOMCollector] Selectors saved: ${selectorFile}`);
+    logger.info(`[DOMCollector] Selectors saved: ${selectorFile}`);
   }
 
   /**
@@ -299,7 +303,7 @@ class DOMCollector {
     const coverageFile = path.join(this.outputDir, 'coverage-report.json');
     await fs.writeFile(coverageFile, JSON.stringify(report, null, 2));
     
-    console.log(`[DOMCollector] Coverage report saved: ${coverageFile}`);
+    logger.info(`[DOMCollector] Coverage report saved: ${coverageFile}`);
     
     return report;
   }
@@ -308,7 +312,7 @@ class DOMCollector {
    * Run complete DOM collection
    */
   async run() {
-    console.log('[DOMCollector] Starting DOM collection...');
+    logger.info('[DOMCollector] Starting DOM collection...');
     
     try {
       // Initialize
@@ -318,11 +322,11 @@ class DOMCollector {
       const runningIDEs = await this.detectRunningIDEs();
       
       if (runningIDEs.length === 0) {
-        console.log('[DOMCollector] No running IDEs detected');
+        logger.info('[DOMCollector] No running IDEs detected');
         return;
       }
       
-      console.log(`[DOMCollector] Found ${runningIDEs.length} running IDE(s)`);
+      logger.info(`[DOMCollector] Found ${runningIDEs.length} running IDE(s)`);
       
       // Collect DOM from each IDE
       for (const ideInfo of runningIDEs) {
@@ -337,8 +341,8 @@ class DOMCollector {
       // Generate coverage report
       const coverageReport = await this.generateCoverageReport();
       
-      console.log('[DOMCollector] DOM collection completed successfully');
-      console.log(`[DOMCollector] Summary: ${coverageReport.successfulCollections} successful, ${coverageReport.failedCollections} failed`);
+      logger.info('[DOMCollector] DOM collection completed successfully');
+      logger.info(`[DOMCollector] Summary: ${coverageReport.successfulCollections} successful, ${coverageReport.failedCollections} failed`);
       
     } catch (error) {
       console.error('[DOMCollector] DOM collection failed:', error);

@@ -44,7 +44,7 @@ describe('DirectoryScanner', () => {
 
         it('should handle undefined logger gracefully', () => {
             const scannerWithoutLogger = new DirectoryScanner(undefined, mockFileUtils);
-            expect(scannerWithoutLogger.logger).toBeUndefined();
+            expect(scannerWithoutlogger.infoger).toBeUndefined();
             expect(scannerWithoutLogger.fileUtils).toBe(mockFileUtils);
         });
 

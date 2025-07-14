@@ -136,7 +136,7 @@ const API_CONFIG = {
 export const apiCall = async (endpoint, options = {}) => {
   const url = typeof endpoint === 'function' ? endpoint() : `${API_CONFIG.baseURL}${endpoint}`;
   
-  logger.log('🔍 [APIChatRepository] Making API call to:', url);
+  logger.info('🔍 [APIChatRepository] Making API call to:', url);
   
   // Get authentication headers
   const { getAuthHeaders } = useAuthStore.getState();
@@ -151,7 +151,7 @@ export const apiCall = async (endpoint, options = {}) => {
     ...options
   };
 
-  logger.log('🔍 [APIChatRepository] Request config:', {
+  logger.info('🔍 [APIChatRepository] Request config:', {
     method: config.method || 'GET',
     headers: config.headers,
     hasBody: !!config.body
@@ -160,11 +160,11 @@ export const apiCall = async (endpoint, options = {}) => {
   try {
     const response = await fetch(url, config);
     
-    logger.log('🔍 [APIChatRepository] Response status:', response.status);
+    logger.info('🔍 [APIChatRepository] Response status:', response.status);
     
     if (!response.ok) {
       if (response.status === 401) {
-        logger.log('❌ [APIChatRepository] 401 Unauthorized - logging out user');
+        logger.info('❌ [APIChatRepository] 401 Unauthorized - logging out user');
         // Token expired or invalid, logout user
         const { logout } = useAuthStore.getState();
         logout();
@@ -174,7 +174,7 @@ export const apiCall = async (endpoint, options = {}) => {
     }
     
     const data = await response.json();
-    logger.log('✅ [APIChatRepository] API call successful');
+    logger.info('✅ [APIChatRepository] API call successful');
     return data;
   } catch (error) {
     logger.error(`❌ [APIChatRepository] API call failed for ${url}:`, error);
@@ -198,7 +198,7 @@ export default class APIChatRepository extends ChatRepository {
         const activeIDE = ideList.data.find(ide => ide.active);
         if (activeIDE && activeIDE.workspacePath) {
           this.currentProjectId = getProjectIdFromWorkspace(activeIDE.workspacePath);
-          logger.log('🔍 [APIChatRepository] Current project ID:', this.currentProjectId, 'from workspace:', activeIDE.workspacePath);
+          logger.info('🔍 [APIChatRepository] Current project ID:', this.currentProjectId, 'from workspace:', activeIDE.workspacePath);
           return this.currentProjectId;
         }
       }

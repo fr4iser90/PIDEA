@@ -177,7 +177,7 @@ class RegionDetector {
    */
   setEnabled(enabled) {
     this.enableOptimization = enabled;
-    logger.log(`[RegionDetector] Region detection ${enabled ? 'enabled' : 'disabled'}`);
+    logger.info(`[RegionDetector] Region detection ${enabled ? 'enabled' : 'disabled'}`);
   }
 
   /**
@@ -190,7 +190,7 @@ class RegionDetector {
     }
     
     this.threshold = threshold;
-    logger.log(`[RegionDetector] Threshold updated to ${threshold}`);
+    logger.info(`[RegionDetector] Threshold updated to ${threshold}`);
   }
 
   /**
@@ -203,7 +203,7 @@ class RegionDetector {
     }
     
     this.minRegionSize = minSize;
-    logger.log(`[RegionDetector] Minimum region size updated to ${minSize} pixels`);
+    logger.info(`[RegionDetector] Minimum region size updated to ${minSize} pixels`);
   }
 
   /**
@@ -216,7 +216,7 @@ class RegionDetector {
     }
     
     this.maxRegions = maxRegions;
-    logger.log(`[RegionDetector] Maximum regions updated to ${maxRegions}`);
+    logger.info(`[RegionDetector] Maximum regions updated to ${maxRegions}`);
   }
 
   /**

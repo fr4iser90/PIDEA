@@ -1,6 +1,7 @@
 const BrowserManager = require('@external/BrowserManager');
 const Logger = require('@logging/Logger');
-const logger = new Logger('Logger');
+const ServiceLogger = require('@logging/ServiceLogger');
+const logger = new ServiceLogger('CodeExplorerController');
 
 
 class CodeExplorerController {
@@ -10,7 +11,7 @@ class CodeExplorerController {
 
   async getFileTree(req, res) {
     try {
-      logger.log('[CodeExplorerController] Getting file tree...');
+      logger.info('[CodeExplorerController] Getting file tree...');
       
       const files = await this.browserManager.getFileExplorerTree();
       
@@ -30,7 +31,7 @@ class CodeExplorerController {
   async getFileContent(req, res) {
     try {
       const { path } = req.params;
-      logger.log(`[CodeExplorerController] Getting file content for: ${path}`);
+      logger.info(`[CodeExplorerController] Getting file content for: ${path}`);
       
       // First open the file in Cursor IDE
       const opened = await this.browserManager.openFile(path);
@@ -63,7 +64,7 @@ class CodeExplorerController {
 
   async getCurrentFileInfo(req, res) {
     try {
-      logger.log('[CodeExplorerController] Getting current file info...');
+      logger.info('[CodeExplorerController] Getting current file info...');
       
       const fileInfo = await this.browserManager.getCurrentFileInfo();
       
@@ -82,7 +83,7 @@ class CodeExplorerController {
 
   async refreshExplorer(req, res) {
     try {
-      logger.log('[CodeExplorerController] Refreshing explorer...');
+      logger.info('[CodeExplorerController] Refreshing explorer...');
       
       const refreshed = await this.browserManager.refreshExplorer();
       

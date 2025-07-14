@@ -10,7 +10,7 @@ class VSCodeStarter {
   }
 
   async startVSCode(port, workspacePath = null) {
-    logger.log('[VSCodeStarter] Starting VSCode on port', port);
+    logger.info('[VSCodeStarter] Starting VSCode on port', port);
     
     if (this.runningProcesses.has(port)) {
       throw new Error(`VSCode already running on port ${port}`);
@@ -40,15 +40,15 @@ class VSCodeStarter {
 
       // Handle process events
       process.stdout.on('data', (data) => {
-        logger.log(`[VSCodeStarter] VSCode ${port} stdout:`, data.toString().trim());
+        logger.info(`[VSCodeStarter] VSCode ${port} stdout:`, data.toString().trim());
       });
 
       process.stderr.on('data', (data) => {
-        logger.log(`[VSCodeStarter] VSCode ${port} stderr:`, data.toString().trim());
+        logger.info(`[VSCodeStarter] VSCode ${port} stderr:`, data.toString().trim());
       });
 
       process.on('close', (code) => {
-        logger.log(`[VSCodeStarter] VSCode ${port} process closed with code ${code}`);
+        logger.info(`[VSCodeStarter] VSCode ${port} process closed with code ${code}`);
         this.runningProcesses.delete(port);
       });
 
@@ -90,7 +90,7 @@ class VSCodeStarter {
   }
 
   async stopVSCode(port) {
-    logger.log('[VSCodeStarter] Stopping VSCode on port', port);
+    logger.info('[VSCodeStarter] Stopping VSCode on port', port);
     
     const process = this.runningProcesses.get(port);
     if (!process) {
@@ -113,7 +113,7 @@ class VSCodeStarter {
       });
 
       this.runningProcesses.delete(port);
-      logger.log('[VSCodeStarter] VSCode stopped successfully on port', port);
+      logger.info('[VSCodeStarter] VSCode stopped successfully on port', port);
       
     } catch (error) {
       logger.error('[VSCodeStarter] Error stopping VSCode:', error);
@@ -129,13 +129,13 @@ class VSCodeStarter {
   }
 
   async stopAllVSCodeInstances() {
-    logger.log('[VSCodeStarter] Stopping all VSCode instances');
+    logger.info('[VSCodeStarter] Stopping all VSCode instances');
     
     const ports = Array.from(this.runningProcesses.keys());
     const promises = ports.map(port => this.stopVSCode(port));
     
     await Promise.allSettled(promises);
-    logger.log('[VSCodeStarter] All VSCode instances stopped');
+    logger.info('[VSCodeStarter] All VSCode instances stopped');
   }
 
   getRunningVSCodeInstances() {

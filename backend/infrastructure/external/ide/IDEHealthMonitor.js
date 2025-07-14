@@ -5,8 +5,9 @@
  */
 
 const EventEmitter = require('events');
-const Logger = require('@logging/Logger');
-const logger = new Logger('IDEHealthMonitor');
+
+const ServiceLogger = require('@logging/ServiceLogger');
+const logger = new ServiceLogger('IDEHealthMonitor');
 
 class IDEHealthMonitor extends EventEmitter {
   constructor(configManager = null) {
@@ -27,7 +28,7 @@ class IDEHealthMonitor extends EventEmitter {
    */
   async startMonitoring(interval = null) {
     if (this.monitoring) {
-      logger.log('[IDEHealthMonitor] Monitoring already active');
+      logger.info('[IDEHealthMonitor] Monitoring already active');
       return;
     }
 
@@ -45,7 +46,7 @@ class IDEHealthMonitor extends EventEmitter {
     this.healthCheckInterval = interval || this.healthCheckInterval;
     this.monitoring = true;
 
-    logger.log(`[IDEHealthMonitor] Starting health monitoring with ${this.healthCheckInterval}ms interval`);
+    logger.info(`[IDEHealthMonitor] Starting health monitoring with ${this.healthCheckInterval}ms interval`);
 
     // Start periodic health checks
     this.healthInterval = setInterval(() => {
@@ -61,7 +62,7 @@ class IDEHealthMonitor extends EventEmitter {
    */
   stopMonitoring() {
     if (!this.monitoring) {
-      logger.log('[IDEHealthMonitor] Monitoring not active');
+      logger.info('[IDEHealthMonitor] Monitoring not active');
       return;
     }
 
@@ -72,7 +73,7 @@ class IDEHealthMonitor extends EventEmitter {
       this.healthInterval = null;
     }
 
-    logger.log('[IDEHealthMonitor] Health monitoring stopped');
+    logger.info('[IDEHealthMonitor] Health monitoring stopped');
 
     // Emit stop event
     this.emit('monitoringStopped');
@@ -363,7 +364,7 @@ class IDEHealthMonitor extends EventEmitter {
 
     this.healthHistory.set(port, []);
 
-    logger.log(`[IDEHealthMonitor] Registered IDE ${ideType} on port ${port} for health monitoring`);
+    logger.info(`[IDEHealthMonitor] Registered IDE ${ideType} on port ${port} for health monitoring`);
     this.emit('ideRegistered', { port, ideType });
   }
 
@@ -375,7 +376,7 @@ class IDEHealthMonitor extends EventEmitter {
     this.ideHealth.delete(port);
     this.healthHistory.delete(port);
 
-    logger.log(`[IDEHealthMonitor] Unregistered IDE on port ${port} from health monitoring`);
+    logger.info(`[IDEHealthMonitor] Unregistered IDE on port ${port} from health monitoring`);
     this.emit('ideUnregistered', { port });
   }
 
@@ -504,7 +505,7 @@ class IDEHealthMonitor extends EventEmitter {
     this.healthChecks = this.healthChecks || new Map();
     this.healthChecks.set(key, checkFunction);
 
-    logger.log(`[IDEHealthMonitor] Added health check for ${ideType} on port ${port}`);
+    logger.info(`[IDEHealthMonitor] Added health check for ${ideType} on port ${port}`);
   }
 
   /**
@@ -513,7 +514,7 @@ class IDEHealthMonitor extends EventEmitter {
   clearHealthChecks() {
     this.healthChecks = this.healthChecks || new Map();
     this.healthChecks.clear();
-    logger.log('[IDEHealthMonitor] Cleared all health checks');
+    logger.info('[IDEHealthMonitor] Cleared all health checks');
   }
 
   /**
