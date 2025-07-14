@@ -720,6 +720,12 @@ class Application {
     this.app.get('/api/projects/:projectId/analysis/database', (req, res) => this.analysisController.getAnalysisFromDatabase(req, res));
     this.app.post('/api/projects/:projectId/analysis/report', (req, res) => this.analysisController.generateComprehensiveReport(req, res));
     
+    // New analysis component routes (protected) - PROJECT-BASED
+    this.app.get('/api/projects/:projectId/analysis/issues', (req, res) => this.analysisController.getAnalysisIssues(req, res));
+    this.app.get('/api/projects/:projectId/analysis/techstack', (req, res) => this.analysisController.getAnalysisTechStack(req, res));
+    this.app.get('/api/projects/:projectId/analysis/architecture', (req, res) => this.analysisController.getAnalysisArchitecture(req, res));
+    this.app.get('/api/projects/:projectId/analysis/recommendations', (req, res) => this.analysisController.getAnalysisRecommendations(req, res));
+    
     // Specialized Analysis routes (protected) - PROJECT-BASED
     this.app.post('/api/projects/:projectId/analysis/code-quality', (req, res) => this.analysisController.analyzeCodeQuality(req, res));
     this.app.post('/api/projects/:projectId/analysis/security', (req, res) => this.analysisController.analyzeSecurity(req, res));

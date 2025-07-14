@@ -483,6 +483,27 @@ export default class APIChatRepository extends ChatRepository {
     return apiCall(`/api/projects/${currentProjectId}/analysis/history`);
   }
 
+  // Enhanced analysis methods for new dashboard components
+  async getAnalysisIssues(projectId = null) {
+    const currentProjectId = projectId || await this.getCurrentProjectId();
+    return apiCall(`/api/projects/${currentProjectId}/analysis/issues`);
+  }
+
+  async getAnalysisTechStack(projectId = null) {
+    const currentProjectId = projectId || await this.getCurrentProjectId();
+    return apiCall(`/api/projects/${currentProjectId}/analysis/techstack`);
+  }
+
+  async getAnalysisArchitecture(projectId = null) {
+    const currentProjectId = projectId || await this.getCurrentProjectId();
+    return apiCall(`/api/projects/${currentProjectId}/analysis/architecture`);
+  }
+
+  async getAnalysisRecommendations(projectId = null) {
+    const currentProjectId = projectId || await this.getCurrentProjectId();
+    return apiCall(`/api/projects/${currentProjectId}/analysis/recommendations`);
+  }
+
   // Documentation Tasks Methods
   async getDocsTasks() {
     const projectId = await this.getCurrentProjectId();

@@ -586,6 +586,274 @@ class AnalysisController {
   }
 
   /**
+   * Get analysis issues
+   * @param {Object} req - Express request
+   * @param {Object} res - Express response
+   */
+  async getAnalysisIssues(req, res) {
+    try {
+      const { projectId } = req.params;
+      
+      this.logger.info(`[AnalysisController] Getting analysis issues for project: ${projectId}`);
+      
+      // Get latest analysis for this project
+      const analyses = await this.analysisRepository.findByProjectId(projectId);
+      
+      if (analyses.length === 0) {
+        return res.json({ success: true, data: { issues: [], summary: {} } });
+      }
+      
+      const latestAnalysis = analyses[0];
+      const resultData = latestAnalysis.resultData || {};
+      
+      // Extract issues from various analysis types
+      const issues = [];
+      
+      // Code quality issues
+      if (resultData.codeQuality?.issues) {
+        issues.push(...resultData.codeQuality.issues.map(issue => ({
+          ...issue,
+          source: 'code-quality',
+          category: 'code-quality'
+        })));
+      }
+      
+      // Security issues
+      if (resultData.security?.vulnerabilities) {
+        issues.push(...resultData.security.vulnerabilities.map(issue => ({
+          ...issue,
+          source: 'security',
+          category: 'security'
+        })));
+      }
+      
+      // Architecture issues
+      if (resultData.architecture?.violations) {
+        issues.push(...resultData.architecture.violations.map(issue => ({
+          ...issue,
+          source: 'architecture',
+          category: 'architecture'
+        })));
+      }
+      
+      // Layer validation issues
+      if (resultData.layerValidation?.violations) {
+        issues.push(...resultData.layerValidation.violations.map(issue => ({
+          ...issue,
+          source: 'layer-validation',
+          category: 'architecture'
+        })));
+      }
+      
+      // Logic validation issues
+      if (resultData.logicValidation?.violations) {
+        issues.push(...resultData.logicValidation.violations.map(issue => ({
+          ...issue,
+          source: 'logic-validation',
+          category: 'logic'
+        })));
+      }
+      
+      // Sort by severity
+      issues.sort((a, b) => {
+        const severityOrder = { critical: 0, high: 1, medium: 2, low: 3 };
+        return (severityOrder[a.severity] || 4) - (severityOrder[b.severity] || 4);
+      });
+      
+      const summary = {
+        total: issues.length,
+        bySeverity: {
+          critical: issues.filter(i => i.severity === 'critical').length,
+          high: issues.filter(i => i.severity === 'high').length,
+          medium: issues.filter(i => i.severity === 'medium').length,
+          low: issues.filter(i => i.severity === 'low').length
+        },
+        byCategory: {
+          'code-quality': issues.filter(i => i.category === 'code-quality').length,
+          security: issues.filter(i => i.category === 'security').length,
+          architecture: issues.filter(i => i.category === 'architecture').length,
+          logic: issues.filter(i => i.category === 'logic').length
+        }
+      };
+      
+      res.json({ success: true, data: { issues, summary } });
+    } catch (error) {
+      this.logger.error(`[AnalysisController] Failed to get analysis issues:`, error);
+      res.status(500).json({ success: false, error: error.message });
+    }
+  }
+
+  /**
+   * Get analysis tech stack
+   * @param {Object} req - Express request
+   * @param {Object} res - Express response
+   */
+  async getAnalysisTechStack(req, res) {
+    try {
+      const { projectId } = req.params;
+      
+      this.logger.info(`[AnalysisController] Getting analysis tech stack for project: ${projectId}`);
+      
+      // Get latest analysis for this project
+      const analyses = await this.analysisRepository.findByProjectId(projectId);
+      
+      if (analyses.length === 0) {
+        return res.json({ success: true, data: { dependencies: {}, structure: {} } });
+      }
+      
+      const latestAnalysis = analyses[0];
+      const resultData = latestAnalysis.resultData || {};
+      
+      // Extract tech stack information
+      const techStack = {
+        dependencies: {
+          direct: resultData.dependencies?.direct || {},
+          dev: resultData.dependencies?.dev || {},
+          outdated: resultData.dependencies?.outdated || []
+        },
+        structure: {
+          projectType: resultData.structure?.projectType || 'unknown',
+          fileTypes: resultData.structure?.fileTypes || {},
+          frameworks: resultData.techStack?.frameworks || [],
+          libraries: resultData.techStack?.libraries || []
+        }
+      };
+      
+      res.json({ success: true, data: techStack });
+    } catch (error) {
+      this.logger.error(`[AnalysisController] Failed to get analysis tech stack:`, error);
+      res.status(500).json({ success: false, error: error.message });
+    }
+  }
+
+  /**
+   * Get analysis architecture
+   * @param {Object} req - Express request
+   * @param {Object} res - Express response
+   */
+  async getAnalysisArchitecture(req, res) {
+    try {
+      const { projectId } = req.params;
+      
+      this.logger.info(`[AnalysisController] Getting analysis architecture for project: ${projectId}`);
+      
+      // Get latest analysis for this project
+      const analyses = await this.analysisRepository.findByProjectId(projectId);
+      
+      if (analyses.length === 0) {
+        return res.json({ success: true, data: { structure: {}, dependencies: {}, metrics: {} } });
+      }
+      
+      const latestAnalysis = analyses[0];
+      const resultData = latestAnalysis.resultData || {};
+      
+      // Extract architecture information
+      const architecture = {
+        structure: {
+          layers: resultData.architecture?.layers || 0,
+          modules: resultData.architecture?.modules || 0,
+          patterns: resultData.architecture?.patterns || []
+        },
+        dependencies: {
+          circular: resultData.architecture?.circularDependencies || false,
+          count: resultData.architecture?.dependencyCount || 0,
+          graph: resultData.architecture?.dependencyGraph || null
+        },
+        metrics: {
+          coupling: resultData.architecture?.coupling || 'unknown',
+          cohesion: resultData.architecture?.cohesion || 'unknown',
+          complexity: resultData.architecture?.complexity || 'unknown'
+        }
+      };
+      
+      res.json({ success: true, data: architecture });
+    } catch (error) {
+      this.logger.error(`[AnalysisController] Failed to get analysis architecture:`, error);
+      res.status(500).json({ success: false, error: error.message });
+    }
+  }
+
+  /**
+   * Get analysis recommendations
+   * @param {Object} req - Express request
+   * @param {Object} res - Express response
+   */
+  async getAnalysisRecommendations(req, res) {
+    try {
+      const { projectId } = req.params;
+      
+      this.logger.info(`[AnalysisController] Getting analysis recommendations for project: ${projectId}`);
+      
+      // Get latest analysis for this project
+      const analyses = await this.analysisRepository.findByProjectId(projectId);
+      
+      if (analyses.length === 0) {
+        return res.json({ success: true, data: { recommendations: [], insights: [] } });
+      }
+      
+      const latestAnalysis = analyses[0];
+      const resultData = latestAnalysis.resultData || {};
+      const summary = latestAnalysis.summary || {};
+      
+      // Extract recommendations from various sources
+      const recommendations = [];
+      
+      // Code quality recommendations
+      if (resultData.codeQuality?.recommendations) {
+        recommendations.push(...resultData.codeQuality.recommendations.map(rec => ({
+          ...rec,
+          source: 'code-quality',
+          category: 'code-quality'
+        })));
+      }
+      
+      // Security recommendations
+      if (resultData.security?.recommendations) {
+        recommendations.push(...resultData.security.recommendations.map(rec => ({
+          ...rec,
+          source: 'security',
+          category: 'security'
+        })));
+      }
+      
+      // Architecture recommendations
+      if (resultData.architecture?.recommendations) {
+        recommendations.push(...resultData.architecture.recommendations.map(rec => ({
+          ...rec,
+          source: 'architecture',
+          category: 'architecture'
+        })));
+      }
+      
+      // Summary recommendations
+      if (summary.recommendations) {
+        recommendations.push(...summary.recommendations.map(rec => ({
+          ...rec,
+          source: 'summary',
+          category: rec.category || 'general'
+        })));
+      }
+      
+      // Sort by priority
+      recommendations.sort((a, b) => {
+        const priorityOrder = { critical: 0, high: 1, medium: 2, low: 3 };
+        return (priorityOrder[a.priority] || 4) - (priorityOrder[b.priority] || 4);
+      });
+      
+      // Extract insights
+      const insights = [];
+      if (resultData.integratedInsights) {
+        insights.push(...resultData.integratedInsights);
+      }
+      
+      res.json({ success: true, data: { recommendations, insights } });
+    } catch (error) {
+      this.logger.error(`[AnalysisController] Failed to get analysis recommendations:`, error);
+      res.status(500).json({ success: false, error: error.message });
+    }
+  }
+
+  /**
    * Generate comprehensive report
    * @param {Object} req - Express request
    * @param {Object} res - Express response
