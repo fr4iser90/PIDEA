@@ -4,7 +4,7 @@
 const path = require('path');
 const fs = require('fs').promises;
 const Logger = require('@logging/Logger');
-const logger = new Logger('Logger');
+const logger = new Logger('MonorepoStrategy');
 
 class MonorepoStrategy {
     constructor(dependencies = {}) {

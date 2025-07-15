@@ -8,7 +8,7 @@ class WorkflowController {
     constructor(dependencies = {}) {
         this.commandBus = dependencies.commandBus;
         this.queryBus = dependencies.queryBus;
-        this.logger = dependencies.logger || console;
+        this.logger = dependencies.logger || new Logger('WorkflowController');
         this.eventBus = dependencies.eventBus;
         this.application = dependencies.application;
         this.ideManager = dependencies.ideManager;
@@ -91,7 +91,7 @@ class WorkflowController {
                             const workspaceInfo = await this.ideManager.getWorkspaceInfo(activeIDE.port);
                             if (workspaceInfo && workspaceInfo.workspace) {
                                 workspacePath = workspaceInfo.workspace;
-                                this.logger.info('WorkflowController: Using workspace path from File-based detection', {
+                                this.logger.info('🔍 Using workspace path from File-based detection', {
                                     port: activeIDE.port,
                                     workspacePath
                                 });
@@ -99,7 +99,7 @@ class WorkflowController {
                         }
                     }
                 } catch (error) {
-                    this.logger.warn('WorkflowController: File-based detection failed, using project root', {
+                    this.logger.warn('🔍 File-based detection failed, using project root', {
                         error: error.message
                     });
                 }
