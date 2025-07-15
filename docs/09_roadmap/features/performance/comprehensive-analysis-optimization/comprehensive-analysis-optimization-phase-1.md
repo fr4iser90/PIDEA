@@ -1,72 +1,220 @@
-# Comprehensive Analysis Optimization – Phase 1: Analysis Queue System
+# Comprehensive Analysis Optimization – Phase 1: Memory Management Integration
 
 ## Overview
-Implement a robust queue system for managing analysis jobs with prioritization, cancellation, and monitoring capabilities. This phase focuses on creating the foundation for handling multiple concurrent analyses without OOM crashes.
+Integrate existing MemoryOptimizedAnalysisService with current analysis services and modify AnalysisController to prevent OOM crashes by using sequential execution instead of parallel Promise.all. **NEW**: Integrate with existing ExecutionQueue system for project isolation and queue management.
 
 ## Objectives
-- [ ] Create AnalysisQueueService with Redis/In-Memory backend
-- [ ] Implement analysis job queuing and prioritization
-- [ ] Add analysis cancellation and pause/resume functionality
-- [ ] Create queue monitoring and management endpoints
-- [ ] Integrate queue system with existing analysis controllers
+- [ ] Integrate MemoryOptimizedAnalysisService with existing analysis services
+- [ ] Add memory monitoring to AnalysisController.analyzeComprehensive
+- [ ] Implement sequential analysis execution instead of Promise.all
+- [ ] Add memory cleanup between analysis types
+- [ ] Add memory usage logging and monitoring
+- [ ] **NEW**: Integrate with existing ExecutionQueue system
+- [ ] **NEW**: Create project-specific analysis queues
+- [ ] **NEW**: Add queue status tracking and progress monitoring
 
 ## Deliverables
-- File: `backend/domain/services/AnalysisQueueService.js` - Core queue management service
-- File: `backend/infrastructure/queue/AnalysisQueue.js` - Queue implementation with Redis/In-Memory support
-- File: `backend/domain/services/AnalysisProgressTracker.js` - Progress tracking for queued jobs
-- API: `/api/projects/:projectId/analysis/queue/status` - Queue status endpoint
-- API: `/api/projects/:projectId/analysis/queue/jobs` - Queue jobs management
-- API: `/api/projects/:projectId/analysis/queue/clear` - Queue clearing endpoint
-- API: `/api/projects/:projectId/analysis/queue/priority` - Priority management
-- Test: `tests/unit/AnalysisQueueService.test.js` - Unit tests for queue functionality
+- Modified: `backend/presentation/api/AnalysisController.js` - Add memory monitoring and sequential execution
+- Enhanced: `backend/domain/services/MemoryOptimizedAnalysisService.js` - Integration with other services
+- **NEW**: `backend/domain/services/AnalysisQueueService.js` - Queue management service
+- Test: `tests/unit/AnalysisControllerMemory.test.js` - Memory management tests
+- **NEW**: Test: `tests/unit/AnalysisQueueService.test.js` - Queue management tests
+- Script: `scripts/analysis-oom-prevention-test.js` - OOM prevention testing
 
 ## Dependencies
-- Requires: Existing analysis services (TaskAnalysisService, AdvancedAnalysisService)
-- Blocks: Phase 2 start (Progressive Analysis Implementation)
+- Requires: Existing analysis services (TaskAnalysisService, AdvancedAnalysisService, MemoryOptimizedAnalysisService)
+- Requires: Existing queue infrastructure (ExecutionQueue, ExecutionScheduler, SequentialExecutionEngine)
+- Blocks: Phase 2 start (OOM Prevention Implementation)
 
 ## Estimated Time
 4 hours
 
 ## Technical Implementation
 
-### AnalysisQueueService Features
-- Job prioritization (high, medium, low)
-- Concurrent job limits (configurable)
-- Job timeout management
-- Memory usage monitoring
-- Job cancellation and pause/resume
-- Queue persistence (Redis or in-memory)
+### Memory Management Integration
+- Replace Promise.all with sequential forEach execution
+- Add memory usage checks before each analysis
+- Implement garbage collection between analyses
+- Add timeout limits for each analysis type
+- Memory threshold monitoring (256MB per analysis)
 
-### Queue Management Endpoints
+### Sequential Analysis Execution
 ```javascript
-// Queue status
-GET /api/projects/:projectId/analysis/queue/status
-Response: { active: 2, queued: 5, completed: 10, failed: 1 }
-
-// Queue jobs
-GET /api/projects/:projectId/analysis/queue/jobs
-Response: { jobs: [{ id, type, status, priority, progress }] }
-
-// Clear queue
-POST /api/projects/:projectId/analysis/queue/clear
-Response: { cleared: 5, message: "Queue cleared successfully" }
-
-// Set priority
-PUT /api/projects/:projectId/analysis/queue/priority
-Body: { jobId, priority: "high"|"medium"|"low" }
+// Instead of Promise.all, use sequential execution
+const analyses = [];
+for (const analysisType of ['codeQuality', 'security', 'performance', 'architecture']) {
+  // Check memory before each analysis
+  await this.checkMemoryUsage();
+  
+  // Run analysis with timeout
+  const result = await this.runAnalysisWithTimeout(analysisType, projectPath, options);
+  analyses.push(result);
+  
+  // Cleanup after each analysis
+  await this.cleanupAfterAnalysis();
+}
 ```
 
-### Integration Points
-- Modify existing AnalysisController to use queue
-- Add queue status to analysis endpoints
-- Integrate with existing memory monitoring
-- Connect to existing event system
+### Memory Safety Features
+- Memory usage monitoring before each analysis
+- Automatic garbage collection triggers
+- Analysis cancellation on memory threshold
+- Timeout limits (5 minutes per analysis)
+- Fallback to partial results if memory limit exceeded
+
+### **NEW**: Queue Management Integration
+```javascript
+// Integrate with existing ExecutionQueue
+class AnalysisQueueService {
+  constructor() {
+    this.projectQueues = new Map(); // projectId -> ExecutionQueue
+    this.activeAnalyses = new Map(); // projectId -> active analysis info
+    this.executionEngine = new SequentialExecutionEngine({
+      enablePriority: true,
+      enableRetry: true,
+      enableResourceManagement: true,
+      maxConcurrentExecutions: 3 // Max 3 concurrent analyses per project
+    });
+  }
+  
+  async processAnalysisRequest(projectId, analysisTypes, options) {
+    // Check if analysis is already running for this project
+    const activeAnalysis = this.activeAnalyses.get(projectId);
+    
+    if (activeAnalysis) {
+      // Analysis is running - automatically queue the request
+      return this.queueAnalysisRequest(projectId, analysisTypes, options);
+    } else {
+      // No analysis running - start immediately
+      return this.startAnalysisImmediately(projectId, analysisTypes, options);
+    }
+  }
+  
+  async queueAnalysisRequest(projectId, analysisTypes, options) {
+    const queue = this.getProjectQueue(projectId);
+    const job = {
+      id: uuidv4(),
+      projectId,
+      analysisTypes,
+      options,
+      priority: options.priority || 'normal',
+      createdAt: new Date()
+    };
+    
+    const success = queue.enqueue(job);
+    if (success) {
+      return {
+        jobId: job.id,
+        status: 'queued',
+        analysisTypes,
+        position: queue.queue.length,
+        estimatedWaitTime: this.estimateWaitTime(queue.queue.length),
+        message: `Analysis queued - ${queue.queue.length - 1} jobs ahead`
+      };
+    } else {
+      throw new Error('Queue is full');
+    }
+  }
+  
+  async startAnalysisImmediately(projectId, analysisTypes, options) {
+    const jobId = uuidv4();
+    
+    // Mark analysis as active
+    this.activeAnalyses.set(projectId, {
+      jobId,
+      analysisTypes,
+      startTime: new Date(),
+      status: 'running'
+    });
+    
+    return {
+      jobId,
+      status: 'running',
+      analysisTypes,
+      estimatedTime: this.estimateAnalysisTime(analysisTypes),
+      message: 'Analysis started'
+    };
+  }
+  
+  getProjectQueue(projectId) {
+    if (!this.projectQueues.has(projectId)) {
+      this.projectQueues.set(projectId, new ExecutionQueue({
+        maxSize: 10,
+        enablePriority: true,
+        enableRetry: true,
+        maxRetries: 2,
+        defaultTimeout: 300000 // 5 minutes
+      }));
+    }
+    return this.projectQueues.get(projectId);
+  }
+  
+  estimateWaitTime(queuePosition) {
+    const avgTimePerJob = 3 * 60 * 1000; // 3 minutes average
+    return Math.round(queuePosition * avgTimePerJob / 60000); // Return in minutes
+  }
+}
+```
+
+### **AUTOMATIC Queue Integration** (No Extra Controllers):
+```javascript
+// Enhanced existing AnalysisController with automatic queueing
+class AnalysisController {
+  async analyzeComprehensive(req, res) {
+    const { projectId } = req.params;
+    const { types, exclude, priority, timeout } = req.query;
+    
+    try {
+      // Parse analysis types from query parameters
+      const analysisTypes = this.parseAnalysisTypes(types, exclude);
+      
+      // Process request with automatic queueing
+      const result = await this.analysisQueueService.processAnalysisRequest(
+        projectId,
+        analysisTypes,
+        { priority, timeout }
+      );
+      
+      // Return appropriate response based on status
+      if (result.status === 'queued') {
+        res.json({
+          success: true,
+          status: 'queued',
+          jobId: result.jobId,
+          analysisTypes: result.analysisTypes,
+          position: result.position,
+          estimatedWaitTime: result.estimatedWaitTime,
+          message: result.message
+        });
+      } else if (result.status === 'running') {
+        res.json({
+          success: true,
+          status: 'running',
+          jobId: result.jobId,
+          analysisTypes: result.analysisTypes,
+          estimatedTime: result.estimatedTime,
+          message: result.message
+        });
+      }
+      
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        error: error.message
+      });
+    }
+  }
+}
+```
 
 ## Success Criteria
 - [ ] All objectives completed
-- [ ] All deliverables created
-- [ ] Queue system handles 50+ concurrent jobs
-- [ ] Job cancellation works reliably
-- [ ] Memory usage stays under limits
-- [ ] Tests passing with >90% coverage
-- [ ] Documentation updated 
+- [ ] Memory usage stays under 256MB per analysis
+- [ ] No OOM crashes during comprehensive analysis
+- [ ] Sequential execution working correctly
+- [ ] Memory cleanup effective between analyses
+- [ ] Tests passing with large repositories
+- [ ] **NEW**: Queue system integrated with existing ExecutionQueue
+- [ ] **NEW**: Project isolation working correctly
+- [ ] **NEW**: Queue status tracking functional
+- [ ] **NEW**: Progress monitoring working 

@@ -1,84 +1,226 @@
-# Comprehensive Analysis Optimization – Phase 2: Progressive Analysis Implementation
+# Comprehensive Analysis Optimization – Phase 2: OOM Prevention Implementation
 
 ## Overview
-Implement progressive analysis with chunking, streaming, and memory management to handle large repositories without OOM crashes. This phase builds on the existing MemoryOptimizedAnalysisService and adds queue integration.
+Add comprehensive OOM prevention mechanisms to existing analysis services, including memory monitoring, analysis cancellation, and fallback mechanisms for memory-intensive operations. **NEW**: Implement queue-based analysis execution to prevent multiple projects from interfering.
 
 ## Objectives
-- [ ] Implement ProgressiveAnalysisService with chunking
-- [ ] Add memory monitoring and cleanup during analysis
-- [ ] Create analysis batching and parallel processing limits
-- [ ] Implement analysis result streaming and partial results
-- [ ] Integrate with queue system from Phase 1
+- [ ] Add memory usage checks before each analysis
+- [ ] Implement analysis cancellation on memory threshold
+- [ ] Add garbage collection triggers during analysis
+- [ ] Create memory-safe analysis execution wrapper
+- [ ] Add timeout limits and fallback mechanisms
+- [ ] **NEW**: Implement queue-based analysis execution
+- [ ] **NEW**: Add project isolation and resource limits
+- [ ] **NEW**: Implement analysis job cancellation and retry logic
 
 ## Deliverables
-- File: `backend/domain/services/ProgressiveAnalysisService.js` - Progressive analysis with chunking
-- File: `backend/domain/services/AnalysisMemoryManager.js` - Enhanced memory management
-- API: `/api/projects/:projectId/analysis/:type/start` - Individual analysis start endpoints
-- API: `/api/projects/:projectId/analysis/:type/status` - Analysis status monitoring
-- API: `/api/projects/:projectId/analysis/:type/progress` - Real-time progress updates
-- API: `/api/projects/:projectId/analysis/:type/cancel` - Analysis cancellation
-- Test: `tests/integration/ProgressiveAnalysis.test.js` - Integration tests
+- Enhanced: `backend/domain/services/MemoryOptimizedAnalysisService.js` - Add cancellation and fallback
+- Modified: `backend/presentation/api/AnalysisController.js` - Add memory-safe execution wrapper
+- Enhanced: All existing analysis services - Add memory monitoring
+- **NEW**: Enhanced: `backend/domain/services/AnalysisQueueService.js` - Add queue-based execution
+- **NEW**: Modified: `backend/presentation/api/AnalysisQueueController.js` - Add job management
+- Test: `tests/integration/OOMPrevention.test.js` - OOM prevention integration tests
+- **NEW**: Test: `tests/integration/QueueBasedAnalysis.test.js` - Queue-based analysis tests
+- Script: `scripts/test-memory-optimized-analysis.js` - Enhanced memory testing
 
 ## Dependencies
-- Requires: Phase 1 completion (Analysis Queue System)
-- Blocks: Phase 3 start (Frontend Integration & Testing)
+- Requires: Phase 1 completion (Memory Management Integration)
+- Requires: Existing queue infrastructure (ExecutionQueue, ExecutionScheduler)
+- Blocks: Phase 3 start (Resource Management Enhancement)
 
 ## Estimated Time
 4 hours
 
 ## Technical Implementation
 
-### ProgressiveAnalysisService Features
-- File chunking (configurable batch sizes)
-- Memory usage monitoring and cleanup
-- Streaming analysis results
-- Partial result delivery
-- Progress tracking and reporting
-- Integration with existing analysis services
+### OOM Prevention Features
+- Memory threshold monitoring (256MB per analysis)
+- Automatic analysis cancellation on memory limit
+- Garbage collection triggers during analysis
+- Timeout limits (5 minutes per analysis type)
+- Fallback to partial results if memory exceeded
 
-### Individual Analysis Endpoints
+### Memory-Safe Analysis Execution
 ```javascript
-// Start analysis
-POST /api/projects/:projectId/analysis/code-quality/start
-Body: { options: { chunkSize: 100, maxMemory: 256 } }
-Response: { jobId: "job-123", status: "queued" }
-
-// Analysis status
-GET /api/projects/:projectId/analysis/code-quality/status
-Response: { status: "running", progress: 45, memoryUsage: 180 }
-
-// Analysis progress
-GET /api/projects/:projectId/analysis/code-quality/progress
-Response: { progress: 45, currentFile: "src/components/Button.js", filesProcessed: 450 }
-
-// Cancel analysis
-POST /api/projects/:projectId/analysis/code-quality/cancel
-Response: { cancelled: true, message: "Analysis cancelled successfully" }
+// Memory-safe analysis wrapper
+async runAnalysisWithMemoryProtection(analysisType, projectPath, options) {
+  const startMemory = process.memoryUsage().heapUsed;
+  const maxMemory = 256 * 1024 * 1024; // 256MB
+  
+  try {
+    // Check memory before starting
+    if (process.memoryUsage().heapUsed > maxMemory * 0.8) {
+      await this.forceGarbageCollection();
+    }
+    
+    // Run analysis with timeout
+    const result = await Promise.race([
+      this.runAnalysis(analysisType, projectPath, options),
+      this.createTimeout(5 * 60 * 1000) // 5 minutes
+    ]);
+    
+    return result;
+  } catch (error) {
+    if (error.name === 'TimeoutError') {
+      return { error: 'Analysis timeout', partial: true };
+    }
+    throw error;
+  }
+}
 ```
 
-### Memory Management Features
-- Real-time memory monitoring
-- Automatic garbage collection triggers
-- Memory limit enforcement
-- Resource cleanup on cancellation
-- Memory usage reporting
+### Memory Monitoring Integration
+- Real-time memory usage tracking
+- Memory threshold alerts
+- Automatic cleanup triggers
+- Memory usage logging
+- Performance impact monitoring
 
-### Analysis Types Supported
-1. Code Quality Analysis
-2. Security Analysis  
-3. Performance Analysis
-4. Architecture Analysis
-5. Dependencies Analysis
-6. Tech Stack Analysis
-7. Documentation Analysis
-8. Test Coverage Analysis
+### Fallback Mechanisms
+- Return partial results if memory limit exceeded
+- Skip heavy analysis types if memory low
+- Use lightweight analysis modes
+- Implement progressive degradation
+
+### **NEW**: Queue-Based Analysis Execution
+```javascript
+// Queue-based analysis execution
+class QueueBasedAnalysisExecutor {
+  constructor(analysisQueueService) {
+    this.analysisQueueService = analysisQueueService;
+    this.activeJobs = new Map(); // jobId -> job info
+    this.maxConcurrentPerProject = 3;
+  }
+  
+  async executeAnalysisFromQueue(job) {
+    const { projectId, analysisTypes, options } = job;
+    
+    // Check project limits
+    const activeJobs = this.getActiveJobsForProject(projectId);
+    if (activeJobs.length >= this.maxConcurrentPerProject) {
+      throw new Error('Project analysis limit reached');
+    }
+    
+    // Start analysis with memory protection
+    const jobId = job.id;
+    this.activeJobs.set(jobId, {
+      projectId,
+      analysisTypes,
+      status: 'running',
+      startTime: new Date(),
+      memoryUsage: process.memoryUsage()
+    });
+    
+    try {
+      const results = {};
+      
+      // Execute analyses sequentially with memory protection
+      for (const analysisType of analysisTypes) {
+        const result = await this.runAnalysisWithMemoryProtection(
+          analysisType, 
+          job.projectPath, 
+          options
+        );
+        results[analysisType] = result;
+        
+        // Check memory after each analysis
+        if (process.memoryUsage().heapUsed > 256 * 1024 * 1024) {
+          await this.forceGarbageCollection();
+        }
+      }
+      
+      this.activeJobs.set(jobId, {
+        ...this.activeJobs.get(jobId),
+        status: 'completed',
+        endTime: new Date(),
+        results
+      });
+      
+      return results;
+    } catch (error) {
+      this.activeJobs.set(jobId, {
+        ...this.activeJobs.get(jobId),
+        status: 'failed',
+        error: error.message,
+        endTime: new Date()
+      });
+      throw error;
+    }
+  }
+  
+  async cancelAnalysis(jobId) {
+    const job = this.activeJobs.get(jobId);
+    if (job && job.status === 'running') {
+      // Cancel running analysis
+      job.status = 'cancelled';
+      job.endTime = new Date();
+      return true;
+    }
+    return false;
+  }
+}
+```
+
+### **NEW**: Project Isolation and Resource Limits
+```javascript
+// Project-specific resource management
+class ProjectResourceManager {
+  constructor() {
+    this.projectResources = new Map(); // projectId -> resource usage
+    this.maxMemoryPerProject = 512 * 1024 * 1024; // 512MB per project
+    this.maxConcurrentAnalyses = 3;
+  }
+  
+  async checkProjectResources(projectId) {
+    const currentUsage = this.projectResources.get(projectId) || {
+      memory: 0,
+      concurrentAnalyses: 0
+    };
+    
+    const availableMemory = this.maxMemoryPerProject - currentUsage.memory;
+    const canStartAnalysis = currentUsage.concurrentAnalyses < this.maxConcurrentAnalyses;
+    
+    return {
+      canStart: canStartAnalysis && availableMemory > 256 * 1024 * 1024,
+      availableMemory,
+      concurrentAnalyses: currentUsage.concurrentAnalyses,
+      maxConcurrentAnalyses: this.maxConcurrentAnalyses
+    };
+  }
+  
+  async allocateProjectResources(projectId, estimatedMemory) {
+    const current = this.projectResources.get(projectId) || {
+      memory: 0,
+      concurrentAnalyses: 0
+    };
+    
+    this.projectResources.set(projectId, {
+      memory: current.memory + estimatedMemory,
+      concurrentAnalyses: current.concurrentAnalyses + 1
+    });
+  }
+  
+  async releaseProjectResources(projectId, usedMemory) {
+    const current = this.projectResources.get(projectId);
+    if (current) {
+      this.projectResources.set(projectId, {
+        memory: Math.max(0, current.memory - usedMemory),
+        concurrentAnalyses: Math.max(0, current.concurrentAnalyses - 1)
+      });
+    }
+  }
+}
+```
 
 ## Success Criteria
 - [ ] All objectives completed
-- [ ] All deliverables created
-- [ ] Memory usage stays under 256MB per analysis
-- [ ] Large repositories (>10k files) process without OOM
+- [ ] Memory usage never exceeds 256MB per analysis
 - [ ] Analysis cancellation works reliably
-- [ ] Progress tracking is real-time and accurate
-- [ ] Tests passing with large test datasets
-- [ ] Integration with queue system working 
+- [ ] Fallback mechanisms provide partial results
+- [ ] No OOM crashes in any scenario
+- [ ] Performance impact < 10% compared to current
+- [ ] Tests passing with memory-intensive scenarios
+- [ ] **NEW**: Queue-based execution working correctly
+- [ ] **NEW**: Project isolation preventing interference
+- [ ] **NEW**: Resource limits enforced per project
+- [ ] **NEW**: Job cancellation and retry working 
