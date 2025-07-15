@@ -105,10 +105,10 @@ const LoginComponent = ({ onSwitchToRegister }) => {
             {isLoading ? 'Signing in...' : 'Sign in'}
           </button>
         </form>
-        <div className="auth-footer">
+        {/* <div className="auth-footer">
           <span>Don't have an account? </span>
           <span className="auth-link" onClick={onSwitchToRegister}>Sign up</span>
-        </div>
+        </div> */}
       </div>
     </div>
   );
