@@ -11,11 +11,12 @@ Create new Plan/Implementation [Name]-implementation.md in docs/09_roadmap/featu
 ## Template Structure
 
 > **File Pattern Requirement:**  
-> All implementation and phase files must always be created using this pattern:  
-> - Implementation: docs/09_roadmap/features/[category]/[name]/[name]-implementation.md  
-> - Phase: docs/09_roadmap/features/[category]/[name]/[name]-phase-[number].md  
-> - **Master Index**: docs/09_roadmap/features/[category]/[name]/[name]-index.md  
-> If a file is missing, it must be created automatically. This pattern is required for orchestration and grouping in the system.
+> All Index, Implementation and Phase files must always be created using this pattern:
+> - **Index**: docs/09_roadmap/features/[category]/[name]/[name]-index.md  
+> If a file is missing, it must be created automatically. This pattern is required for orchestration and grouping in the system.  
+> - **Implementation**: docs/09_roadmap/features/[category]/[name]/[name]-implementation.md  
+> - **Phase**: docs/09_roadmap/features/[category]/[name]/[name]-phase-[number].md  
+
 
 ### 1. Project Overview
 - **Feature/Component Name**: [Exact name for task.title]
