@@ -105,7 +105,7 @@ class AutomationManager {
   async setUserPreference(userId, level, options = {}) {
     try {
       await this.userPreferences.setUserPreference(userId, level, options);
-      this.logger.info(`Set user preference for ${userId}: ${level}`);
+      this.logger.info(`Set user preference: ${level}`);
     } catch (error) {
       this.logger.error(`Failed to set user preference:`, error.message);
       throw error;

@@ -237,9 +237,9 @@ Examples:
       }
 
       this.logger.info('Starting test fix task generation...');
-      this.logger.info(`Project path: ${this.options.projectPath}`);
+      this.logger.info(`Project path configured`);
       this.logger.info(`Project ID: ${this.options.projectId}`);
-      this.logger.info(`User ID: ${this.options.userId}`);
+      this.logger.info(`User ID configured`);
       this.logger.info(`Dry run: ${this.options.dryRun}`);
       this.logger.info(`Clear existing: ${this.options.clearExisting}`);
       this.logger.info(`Load existing tasks: ${this.options.loadExistingTasks}`);

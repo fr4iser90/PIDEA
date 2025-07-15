@@ -82,7 +82,7 @@ const logger = new Logger('Logger');
      */
     async analyzeSingleRepo(projectPath) {
         try {
-            this.logger.info('SingleRepoStrategy: Analyzing single repository', { projectPath });
+            this.logger.info('SingleRepoStrategy: Analyzing single repository');
 
             const analysis = {
                 isSingleRepo: true, // Skip the check to avoid infinite loop
@@ -128,7 +128,7 @@ const logger = new Logger('Logger');
      */
     async optimizeSingleRepo(projectPath, options = {}) {
         try {
-            this.logger.info('SingleRepoStrategy: Optimizing single repository', { projectPath });
+            this.logger.info('SingleRepoStrategy: Optimizing single repository');
 
             const optimizations = await this.optimizationService.optimizeSingleRepo(projectPath, options);
 

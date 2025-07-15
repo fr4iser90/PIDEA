@@ -15,7 +15,7 @@ class GenerateTestsHandler {
     }
 
     async handle(command) {
-        this.logger.info(`Starting test generation for project: ${command.projectPath}`);
+        this.logger.info(`Starting test generation for project`);
 
         try {
             const validation = command.validateBusinessRules();
@@ -85,7 +85,7 @@ class GenerateTestsHandler {
             // Step 10: Save results
             await this.saveResults(command, output);
 
-            this.logger.info(`Test generation completed successfully for project: ${command.projectPath}`);
+            this.logger.info(`Test generation completed successfully for project`);
             
             return {
                 success: true,

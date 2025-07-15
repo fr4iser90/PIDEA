@@ -40,7 +40,7 @@ class CoverageAnalyzer {
    */
   async getCurrentCoverage(projectPath) {
     try {
-      this.logger.info(`Getting current coverage for: ${projectPath}`);
+      this.logger.info(`Getting current coverage for project`);
       
       // Check if Jest is configured
       const packageJsonPath = path.join(projectPath, 'package.json');
@@ -98,7 +98,7 @@ class CoverageAnalyzer {
    */
   async improveCoverage(projectPath, options = {}) {
     try {
-      this.logger.info(`Improving coverage for: ${projectPath}`);
+      this.logger.info(`Improving coverage for project`);
       
       const startTime = Date.now();
       
@@ -448,7 +448,7 @@ class CoverageAnalyzer {
    */
   async generateTestForFile(fileData, projectPath, options = {}) {
     try {
-      this.logger.info(`Generating test for: ${fileData.path}`);
+      this.logger.info(`Generating test for file`);
       
       const content = await fs.readFile(fileData.fullPath, 'utf8');
       const testContent = await this.generateTestContent(content, fileData, options);

@@ -32,7 +32,7 @@ class CommandBus {
    */
   async execute(commandName, commandData) {
     try {
-      this.logger.info(`Executing command: ${commandName}`, { commandData });
+      this.logger.info(`Executing command: ${commandName}`);
 
       // Apply middleware
       let processedCommandData = commandData;

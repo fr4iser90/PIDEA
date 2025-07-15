@@ -25,12 +25,12 @@ class AnalysisController {
       const { projectPath } = req.params;
       const options = req.body || {};
 
-      this.logger.info(`Code quality analysis requested`);
+      this.logger.info(`Code quality analysis requested for project`);
 
       // Suche nach aktueller Analyse
       const latest = await this.analysisRepository.findLatestByProjectPath(projectPath, 'code-quality');
       if (latest && isAnalysisFresh(latest)) {
-        this.logger.info(`Returning cached code quality analysis`);
+        this.logger.info(`Returning cached code quality analysis for project`);
         const analysis = latest.resultData;
         const score = this.codeQualityService.getQualityScore(analysis);
         const level = this.codeQualityService.getQualityLevel(score);
@@ -91,12 +91,12 @@ class AnalysisController {
       const { projectPath } = req.params;
       const options = req.body || {};
 
-      this.logger.info(`Security analysis requested`);
+      this.logger.info(`Security analysis requested for project`);
 
       // Suche nach aktueller Analyse
       const latest = await this.analysisRepository.findLatestByProjectPath(projectPath, 'security');
       if (latest && isAnalysisFresh(latest)) {
-        this.logger.info(`Returning cached security analysis`);
+        this.logger.info(`Returning cached security analysis for project`);
         const analysis = latest.resultData;
         const score = this.securityService.getSecurityScore(analysis);
         const riskLevel = this.securityService.getOverallRiskLevel(analysis);
@@ -151,12 +151,12 @@ class AnalysisController {
       const { projectPath } = req.params;
       const options = req.body || {};
 
-      this.logger.info(`Performance analysis requested`);
+      this.logger.info(`Performance analysis requested for project`);
 
       // Suche nach aktueller Analyse
       const latest = await this.analysisRepository.findLatestByProjectPath(projectPath, 'performance');
       if (latest && isAnalysisFresh(latest)) {
-        this.logger.info(`Returning cached performance analysis`);
+        this.logger.info(`Returning cached performance analysis for project`);
         const analysis = latest.resultData;
         const score = this.performanceService.getPerformanceScore(analysis);
         const level = this.performanceService.getPerformanceLevel(score);
@@ -211,12 +211,12 @@ class AnalysisController {
       const { projectPath } = req.params;
       const options = req.body || {};
 
-      this.logger.info(`Architecture analysis requested`);
+      this.logger.info(`Architecture analysis requested for project`);
 
       // Suche nach aktueller Analyse
       const latest = await this.analysisRepository.findLatestByProjectPath(projectPath, 'architecture');
       if (latest && isAnalysisFresh(latest)) {
-        this.logger.info(`Returning cached architecture analysis`);
+        this.logger.info(`Returning cached architecture analysis for project`);
         const analysis = latest.resultData;
         const score = this.architectureService.getArchitectureScore(analysis);
         const level = this.architectureService.getArchitectureLevel(score);
@@ -275,12 +275,12 @@ class AnalysisController {
       const { projectPath } = req.params;
       const options = req.body || {};
 
-      this.logger.info(`Comprehensive analysis requested`);
+      this.logger.info(`Comprehensive analysis requested for project`);
 
       // Check for cached comprehensive analysis first
       const latest = await this.analysisRepository.findLatestByProjectPath(projectPath, 'comprehensive');
       if (latest && isAnalysisFresh(latest)) {
-        this.logger.info(`Returning cached comprehensive analysis`);
+        this.logger.info(`Returning cached comprehensive analysis for project`);
         const analysis = latest.resultData;
         
         res.json({
@@ -290,7 +290,7 @@ class AnalysisController {
         return;
       }
 
-      this.logger.info(`Running new comprehensive analysis`);
+      this.logger.info(`Running new comprehensive analysis for project`);
 
       // Run all analyses in parallel
       const [codeQuality, security, performance, architecture] = await Promise.all([
@@ -385,7 +385,7 @@ class AnalysisController {
     try {
       const { projectId } = req.params;
       
-      this.logger.info(`Getting analysis status for project: ${projectId}`);
+      this.logger.info(`Getting analysis status for project`);
       
       // Get all analyses for this project
       const analyses = await this.analysisRepository.findByProjectId(projectId);
@@ -457,7 +457,7 @@ class AnalysisController {
         recommendations: summary.recommendations?.length || 0
       };
       
-      this.logger.info(`Analysis status:`, status);
+      this.logger.info(`Analysis status retrieved successfully`);
       
       res.json({ success: true, data: status });
     } catch (error) {
@@ -475,12 +475,12 @@ class AnalysisController {
     try {
       const { projectId } = req.params;
       
-      this.logger.info(`Getting analysis metrics for project: ${projectId}`);
+      this.logger.info(`Getting analysis metrics for project`);
       
       // Get all analyses for this project
       const analyses = await this.analysisRepository.findByProjectId(projectId);
       
-      this.logger.info(`Found ${analyses.length} analyses for project ${projectId}`);
+      this.logger.info(`Found ${analyses.length} analyses for project`);
       
       if (analyses.length === 0) {
         // Return default metrics if no analyses exist
@@ -584,7 +584,7 @@ class AnalysisController {
         recommendations: summary.recommendations?.length || 0
       };
       
-      this.logger.info(`Calculated metrics:`, metrics);
+      this.logger.info(`Calculated metrics successfully`);
       
       res.json({ success: true, data: metrics });
     } catch (error) {
@@ -602,7 +602,7 @@ class AnalysisController {
     try {
       const { projectId } = req.params;
       
-      this.logger.info(`Getting analysis history for project: ${projectId}`);
+      this.logger.info(`Getting analysis history for project`);
       this.logger.info(`Request URL: ${req.url}`);
       this.logger.info(`Request method: ${req.method}`);
       this.logger.info(`AnalysisRepository type: ${this.analysisRepository.constructor.name}`);
@@ -611,7 +611,7 @@ class AnalysisController {
       this.logger.info(`Calling analysisRepository.findByProjectId('${projectId}')`);
       const analyses = await this.analysisRepository.findByProjectId(projectId);
       
-      this.logger.info(`Found ${analyses.length} analyses from repository:`, analyses);
+      this.logger.info(`Found ${analyses.length} analyses from repository`);
       
       // Transform to expected format (array of objects)
       const history = analyses.map(analysis => {
@@ -650,7 +650,7 @@ class AnalysisController {
                    analysis.status === 'running' ? 50 : 0
         };
         
-        this.logger.info(`Transformed analysis:`, transformedAnalysis);
+        this.logger.info(`Transformed analysis successfully`);
         return transformedAnalysis;
       });
       
@@ -872,7 +872,7 @@ class AnalysisController {
   async getAnalysisTechStack(req, res) {
     try {
       const { projectId } = req.params;
-      this.logger.info(`Getting analysis tech stack for project: ${projectId}`);
+      this.logger.info(`Getting analysis tech stack for project`);
       // Get latest analysis for this project
       const analyses = await this.analysisRepository.findByProjectId(projectId);
       if (analyses.length === 0) {
@@ -962,7 +962,7 @@ class AnalysisController {
     try {
       const { projectId } = req.params;
       
-      this.logger.info(`Getting analysis architecture for project: ${projectId}`);
+      this.logger.info(`Getting analysis architecture for project`);
       
       // Get latest analysis for this project
       const analyses = await this.analysisRepository.findByProjectId(projectId);
@@ -1054,7 +1054,7 @@ class AnalysisController {
       const { projectId } = req.params;
       const { type = 'trends' } = req.query;
       
-      this.logger.info(`Getting analysis charts for project: ${projectId}, type: ${type}`);
+      this.logger.info(`Getting analysis charts for project, type: ${type}`);
       
       // Get all analyses for this project
       const analyses = await this.analysisRepository.findByProjectId(projectId);
@@ -1170,7 +1170,7 @@ class AnalysisController {
     try {
       const { projectId } = req.params;
       
-      this.logger.info(`Getting analysis recommendations for project: ${projectId}`);
+      this.logger.info(`Getting analysis recommendations for project`);
       
       // Get latest analysis for this project
       const analyses = await this.analysisRepository.findByProjectId(projectId);

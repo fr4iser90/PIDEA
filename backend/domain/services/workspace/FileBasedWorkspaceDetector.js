@@ -32,7 +32,7 @@ class FileBasedWorkspaceDetector {
     // 2. Prüfe ob bereits Files vorhanden sind
     const existingData = await this._checkExistingFiles(port);
     if (existingData && existingData.workspace) {
-      logger.info(`Found existing workspace data for port ${port}:`, existingData.workspace);
+      logger.info(`Found existing workspace data for port ${port}`);
       this._detectionCache.set(cacheKey, existingData);
       return existingData;
     }

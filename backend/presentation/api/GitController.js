@@ -37,7 +37,7 @@ class GitController {
                 });
             }
 
-            this.logger.info('GitController: Getting Git status', { projectId, projectPath, userId });
+            this.logger.info('GitController: Getting Git status', { projectId, userId });
 
             // Check if it's a Git repository
             const isGitRepo = await this.gitService.isGitRepository(projectPath);
@@ -118,7 +118,7 @@ class GitController {
                 });
             }
 
-            this.logger.info('GitController: Getting branches', { projectId, projectPath, userId });
+            this.logger.info('GitController: Getting branches', { projectId, userId });
 
             const branches = await this.gitService.getBranches(projectPath, { all: true });
             const currentBranch = await this.gitService.getCurrentBranch(projectPath);
@@ -171,7 +171,7 @@ class GitController {
                 });
             }
 
-            this.logger.info('GitController: Validating changes', { projectId, projectPath, userId });
+            this.logger.info('GitController: Validating changes', { projectId, userId });
 
             // Get status to check for changes
             const status = await this.gitService.getStatus(projectPath);
@@ -652,7 +652,7 @@ class GitController {
                 });
             }
 
-            this.logger.info('GitController: Getting repository info', { projectId, projectPath, userId });
+            this.logger.info('GitController: Getting repository info', { projectId, userId });
 
             const info = await this.gitService.getRepositoryInfo(projectPath);
 
@@ -867,7 +867,7 @@ class GitController {
                 });
             }
 
-            this.logger.info('GitController: Getting pidea-agent branch status', { projectId, projectPath, userId });
+            this.logger.info('GitController: Getting pidea-agent branch status', { projectId, userId });
 
             // Check if pidea-agent branch exists
             const branches = await this.gitService.getBranches(projectPath, { all: true });

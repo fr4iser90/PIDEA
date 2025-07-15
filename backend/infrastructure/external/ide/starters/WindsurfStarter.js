@@ -93,11 +93,11 @@ class WindsurfStarter {
 
       // Handle process events
       process.stdout.on('data', (data) => {
-        logger.info(`Windsurf IDE ${port} stdout:`, data.toString().trim());
+        logger.info(`Windsurf IDE ${port} stdout received`);
       });
 
       process.stderr.on('data', (data) => {
-        logger.info(`Windsurf IDE ${port} stderr:`, data.toString().trim());
+        logger.info(`Windsurf IDE ${port} stderr received`);
       });
 
       process.on('close', (code) => {

@@ -523,9 +523,9 @@ class Application {
     // Request logging
     this.app.use((req, res, next) => {
       this.logger.info(`${req.method} ${req.path}`, {
-        ip: req.ip,
-        userAgent: req.get('User-Agent'),
-        userId: req.user?.id
+        ip: '[REDACTED_IP]',
+        userAgent: '[REDACTED_USER_AGENT]',
+        userId: req.user?.id ? '[REDACTED_USER_ID]' : null
       });
       next();
     });
@@ -649,7 +649,7 @@ class Application {
     this.app.get('/api/files/content', async (req, res) => {
       try {
         const filePath = req.query.path;
-        this.logger.info('/api/files/content called with path:', filePath);
+        this.logger.info('/api/files/content called with path:', '[REDACTED_FILE_PATH]');
         if (!filePath) {
           return res.status(400).json({
             success: false,
@@ -803,11 +803,11 @@ class Application {
     this.app.use('/api/projects/:projectId/auto/tests', this.authMiddleware.authenticate());
     this.app.post('/api/projects/:projectId/auto/tests/analyze', (req, res) => this.autoTestFixController.analyzeProjectTests(req, res));
     this.app.post('/api/projects/:projectId/auto/tests/fix', (req, res) => {
-      this.logger.info('Auto test fix route hit', { 
-        projectId: req.params.projectId, 
-        method: req.method,
-        url: req.url 
-      });
+          this.logger.info('Auto test fix route hit', {
+      projectId: '[REDACTED_PROJECT_ID]', 
+      method: req.method,
+      url: '[REDACTED_URL]' 
+    });
       this.autoTestFixController.executeAutoTestFix(req, res);
     });
     this.app.get('/api/projects/:projectId/auto/tests/load-tasks', (req, res) => this.autoTestFixController.loadExistingTasks(req, res));
@@ -843,49 +843,49 @@ class Application {
     if (this.eventBus) {
       this.logger.info('EventBus available, setting up subscriptions...');
       this.eventBus.subscribe('ide-started', (data) => {
-        this.logger.info('IDE started:', data);
+        this.logger.info('IDE started:', '[REDACTED_IDE_DATA]');
         if (this.webSocketManager) {
           this.webSocketManager.broadcastToUser('ide-started', data);
         }
       });
 
       this.eventBus.subscribe('ide-stopped', (data) => {
-        this.logger.info('IDE stopped:', data);
+        this.logger.info('IDE stopped:', '[REDACTED_IDE_DATA]');
         if (this.webSocketManager) {
           this.webSocketManager.broadcastToUser('ide-stopped', data);
         }
       });
 
       this.eventBus.subscribe('chat-message', (data) => {
-        this.logger.info('Chat message:', data);
+        this.logger.info('Chat message:', '[REDACTED_CHAT_DATA]');
         if (this.webSocketManager) {
           this.webSocketManager.broadcastToUser('chat-message', data);
         }
       });
 
       this.eventBus.subscribe('MessageSent', (data) => {
-        this.logger.info('Message sent event:', data);
+        this.logger.info('Message sent event:', '[REDACTED_MESSAGE_DATA]');
         if (this.webSocketManager) {
           this.webSocketManager.broadcastToUser('chat-message', data);
         }
       });
 
       this.eventBus.subscribe('ChatHistoryUpdated', (data) => {
-        this.logger.info('Chat history updated event:', data);
+        this.logger.info('Chat history updated event:', '[REDACTED_HISTORY_DATA]');
         if (this.webSocketManager) {
           this.webSocketManager.broadcastToUser('chat-history-updated', data);
         }
       });
 
       this.eventBus.subscribe('userAppDetected', (data) => {
-        this.logger.info('User app detected event:', data);
+        this.logger.info('User app detected event:', '[REDACTED_APP_DATA]');
         if (this.webSocketManager) {
           this.webSocketManager.broadcastToAll('userAppUrl', data);
         }
       });
 
       this.eventBus.subscribe('activeIDEChanged', (data) => {
-        this.logger.info('Active IDE changed event:', data);
+        this.logger.info('Active IDE changed event:', '[REDACTED_IDE_DATA]');
         if (this.webSocketManager) {
           this.logger.info('Broadcasting activeIDEChanged to all clients');
           this.webSocketManager.broadcastToAll('activeIDEChanged', data);

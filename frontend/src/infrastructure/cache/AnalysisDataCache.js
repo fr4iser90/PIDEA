@@ -1,21 +1,70 @@
 /**
  * AnalysisDataCache - Client-side caching for analysis data with TTL support
  * Provides efficient caching for large analysis datasets to improve performance
+ * Now persists data in localStorage to survive browser refreshes
  */
 
 export class AnalysisDataCache {
   constructor() {
     this.cache = new Map();
     this.timestamps = new Map();
+    this.storageKey = 'pidea_analysis_cache';
     this.config = {
-      metrics: { ttl: 5 * 60 * 1000 }, // 5 minutes
-      status: { ttl: 30 * 1000 }, // 30 seconds
-      history: { ttl: 10 * 60 * 1000 }, // 10 minutes
-      issues: { ttl: 15 * 60 * 1000 }, // 15 minutes
-      techStack: { ttl: 30 * 60 * 1000 }, // 30 minutes
-      architecture: { ttl: 60 * 60 * 1000 }, // 1 hour
-      recommendations: { ttl: 15 * 60 * 1000 } // 15 minutes
+      metrics: { ttl: 30 * 60 * 1000 }, // 30 minutes (increased)
+      status: { ttl: 5 * 60 * 1000 }, // 5 minutes (increased)
+      history: { ttl: 60 * 60 * 1000 }, // 1 hour (increased)
+      issues: { ttl: 60 * 60 * 1000 }, // 1 hour (increased)
+      techStack: { ttl: 120 * 60 * 1000 }, // 2 hours (increased)
+      architecture: { ttl: 180 * 60 * 1000 }, // 3 hours (increased)
+      recommendations: { ttl: 60 * 60 * 1000 } // 1 hour (increased)
     };
+    
+    // Load cached data from localStorage on initialization
+    this.loadFromStorage();
+  }
+
+  /**
+   * Load cached data from localStorage
+   */
+  loadFromStorage() {
+    try {
+      const stored = localStorage.getItem(this.storageKey);
+      if (stored) {
+        const data = JSON.parse(stored);
+        if (data.cache && data.timestamps) {
+          // Only load non-expired entries
+          const now = Date.now();
+          for (const [key, timestamp] of Object.entries(data.timestamps)) {
+            if (now <= timestamp) {
+              this.cache.set(key, data.cache[key]);
+              this.timestamps.set(key, timestamp);
+            }
+          }
+          console.log(`Loaded ${this.cache.size} cached entries from localStorage`);
+        }
+      }
+    } catch (error) {
+      console.warn('Failed to load cache from localStorage:', error);
+      // Clear corrupted localStorage data
+      localStorage.removeItem(this.storageKey);
+    }
+  }
+
+  /**
+   * Save cached data to localStorage
+   */
+  saveToStorage() {
+    try {
+      const data = {
+        cache: Object.fromEntries(this.cache),
+        timestamps: Object.fromEntries(this.timestamps)
+      };
+      localStorage.setItem(this.storageKey, JSON.stringify(data));
+    } catch (error) {
+      console.warn('Failed to save cache to localStorage:', error);
+      // If localStorage is full, clear old entries
+      this.cleanup();
+    }
   }
 
   /**
@@ -27,6 +76,7 @@ export class AnalysisDataCache {
   set(key, data, ttl) {
     this.cache.set(key, data);
     this.timestamps.set(key, Date.now() + ttl);
+    this.saveToStorage();
   }
 
   /**
@@ -39,6 +89,7 @@ export class AnalysisDataCache {
     if (!timestamp || Date.now() > timestamp) {
       this.cache.delete(key);
       this.timestamps.delete(key);
+      this.saveToStorage();
       return null;
     }
     return this.cache.get(key);
@@ -54,6 +105,7 @@ export class AnalysisDataCache {
     if (!timestamp || Date.now() > timestamp) {
       this.cache.delete(key);
       this.timestamps.delete(key);
+      this.saveToStorage();
       return false;
     }
     return this.cache.has(key);
@@ -66,6 +118,7 @@ export class AnalysisDataCache {
   delete(key) {
     this.cache.delete(key);
     this.timestamps.delete(key);
+    this.saveToStorage();
   }
 
   /**
@@ -74,6 +127,7 @@ export class AnalysisDataCache {
   clear() {
     this.cache.clear();
     this.timestamps.clear();
+    localStorage.removeItem(this.storageKey);
   }
 
   /**
@@ -115,6 +169,11 @@ export class AnalysisDataCache {
         this.timestamps.delete(key);
         cleanedCount++;
       }
+    }
+
+    // Save to localStorage after cleanup
+    if (cleanedCount > 0) {
+      this.saveToStorage();
     }
 
     return cleanedCount;

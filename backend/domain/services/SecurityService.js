@@ -18,7 +18,7 @@ class SecurityService {
    */
   async analyzeSecurity(projectPath, options = {}, projectId = 'default') {
     try {
-      this.logger.info(`Starting security analysis for: ${projectPath}`);
+      this.logger.info(`Starting security analysis for project`);
 
       const analysis = await this.securityAnalyzer.analyzeSecurity(projectPath, options);
 
@@ -45,12 +45,12 @@ const logger = new Logger('Logger');
         }
       }
 
-      this.logger.info(`Security analysis completed for: ${projectPath}`);
+      this.logger.info(`Security analysis completed for project`);
       this.eventBus.emit('security:analysis:completed', { projectPath, analysis, projectId });
 
       return analysis;
     } catch (error) {
-      this.logger.error(`Security analysis failed for ${projectPath}:`, error);
+      this.logger.error(`Security analysis failed:`, error.message);
       this.eventBus.emit('security:analysis:failed', { projectPath, error: error.message });
       throw error;
     }

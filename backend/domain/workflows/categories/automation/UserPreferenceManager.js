@@ -22,7 +22,7 @@ class UserPreferenceManager {
    */
   async setUserPreference(userId, automationLevel, options = {}) {
     try {
-      this.logger.info(`Setting preference for user ${userId}: ${automationLevel}`);
+      this.logger.info(`Setting user preference: ${automationLevel}`);
 
       const preference = {
         userId,
@@ -171,7 +171,7 @@ class UserPreferenceManager {
    */
   async deleteUserPreference(userId) {
     try {
-      this.logger.info(`Deleting preference for user ${userId}`);
+      this.logger.info(`Deleting user preference`);
 
       // Remove from cache
       this.cache.delete(userId);

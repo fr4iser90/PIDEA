@@ -37,7 +37,7 @@ class TestFixer {
    */
   async fixTest(testData, options = {}) {
     try {
-      this.logger.info(`Fixing test: ${testData.testName || testData.filePath}`);
+      this.logger.info(`Fixing test`);
       
       const startTime = Date.now();
       

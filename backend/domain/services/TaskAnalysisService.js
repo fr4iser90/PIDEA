@@ -40,7 +40,7 @@ class TaskAnalysisService {
    */
   async analyzeProject(projectPath, options = {}) {
     try {
-      this.logger.info(`Starting project analysis for: ${projectPath}`);
+      this.logger.info(`Starting project analysis for project`);
 
       const analysis = {
         projectPath,
@@ -83,12 +83,12 @@ class TaskAnalysisService {
       // Phase 9: Generate Metadata
       analysis.metadata = await this._generateMetadata(analysis);
 
-      this.logger.info(`Project analysis completed for: ${projectPath}`);
+      this.logger.info(`Project analysis completed for project`);
       this.eventBus.emit('project:analysis:completed', { projectPath, analysis });
 
       return analysis;
     } catch (error) {
-      this.logger.error(`Project analysis failed for ${projectPath}:`, error);
+      this.logger.error(`Project analysis failed:`, error.message);
       this.eventBus.emit('project:analysis:failed', { projectPath, error: error.message });
       throw error;
     }

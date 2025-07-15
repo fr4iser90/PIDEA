@@ -444,12 +444,6 @@ export default class APIChatRepository extends ChatRepository {
     });
   }
 
-  // Analysis output methods
-  async getAnalysisHistory(projectId = null) {
-    const currentProjectId = projectId || await this.getCurrentProjectId();
-    return apiCall(API_CONFIG.endpoints.analysis.history(currentProjectId));
-  }
-
   async getAnalysisFile(projectId, filename) {
     const currentProjectId = projectId || await this.getCurrentProjectId();
     return apiCall(API_CONFIG.endpoints.analysis.file(currentProjectId, filename));

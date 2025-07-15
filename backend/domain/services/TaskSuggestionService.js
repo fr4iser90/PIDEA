@@ -24,7 +24,7 @@ class TaskSuggestionService {
    */
   async generateSuggestions(projectPath, context = {}, options = {}) {
     try {
-      this.logger.info(`Generating suggestions for: ${projectPath}`);
+      this.logger.info(`Generating suggestions for project`);
 
       const suggestions = [];
 
@@ -51,7 +51,7 @@ class TaskSuggestionService {
       const filteredSuggestions = this._filterSuggestions(suggestions, options);
       const rankedSuggestions = this._rankSuggestions(filteredSuggestions);
 
-      this.logger.info(`Generated ${rankedSuggestions.length} suggestions for: ${projectPath}`);
+              this.logger.info(`Generated ${rankedSuggestions.length} suggestions for project`);
       this.eventBus.emit('suggestions:generated', { projectPath, suggestions: rankedSuggestions });
 
       return rankedSuggestions;

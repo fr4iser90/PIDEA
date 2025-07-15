@@ -83,11 +83,11 @@ class CursorStarter {
 
       // Handle process events
       process.stdout.on('data', (data) => {
-        logger.info(`Cursor IDE ${port} stdout:`, data.toString().trim());
+        logger.info(`Cursor IDE ${port} stdout received`);
       });
 
       process.stderr.on('data', (data) => {
-        logger.info(`Cursor IDE ${port} stderr:`, data.toString().trim());
+        logger.info(`Cursor IDE ${port} stderr received`);
       });
 
       process.on('close', (code) => {

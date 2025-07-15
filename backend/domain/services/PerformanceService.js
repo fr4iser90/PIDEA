@@ -18,14 +18,14 @@ class PerformanceService {
    */
   async analyzePerformance(projectPath, options = {}, projectId = 'default') {
     try {
-      this.logger.info(`Starting performance analysis for: ${projectPath}`);
+      this.logger.info(`Starting performance analysis for project`);
 
       // Check for existing recent analysis
       const existingAnalysis = await this.checkExistingAnalysis(projectId, 'performance');
       if (existingAnalysis && !options.forceRefresh) {
         const shouldSkip = await this.shouldSkipAnalysis(existingAnalysis, 'performance');
         if (shouldSkip) {
-          this.logger.info(`Recent performance analysis found, skipping: ${projectPath}`);
+          this.logger.info(`Recent performance analysis found, skipping`);
           return existingAnalysis.data || existingAnalysis.result_data;
         }
       }
@@ -55,12 +55,12 @@ const logger = new Logger('Logger');
         }
       }
 
-      this.logger.info(`Performance analysis completed for: ${projectPath}`);
+      this.logger.info(`Performance analysis completed for project`);
       this.eventBus.emit('performance:analysis:completed', { projectPath, analysis, projectId });
 
       return analysis;
     } catch (error) {
-      this.logger.error(`Performance analysis failed for ${projectPath}:`, error);
+      this.logger.error(`Performance analysis failed:`, error.message);
       this.eventBus.emit('performance:analysis:failed', { projectPath, error: error.message });
       throw error;
     }
@@ -282,10 +282,7 @@ const logger = new Logger('Logger');
     const twoHoursAgo = new Date(Date.now() - 2 * 60 * 60 * 1000);
     
     if (lastUpdate > twoHoursAgo) {
-      this.logger.info(`Analysis is recent (${analysisType}), considering skip`, {
-        lastUpdate: lastUpdate.toISOString(),
-        analysisId: existingAnalysis.id
-      });
+      this.logger.info(`Analysis is recent (${analysisType}), considering skip`);
       return true;
     }
 

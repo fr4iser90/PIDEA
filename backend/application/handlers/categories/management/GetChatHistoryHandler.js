@@ -81,7 +81,7 @@ class GetChatHistoryHandler {
   async getMessagesByPort(port, userId = null, options = {}) {
     const { limit = 50, offset = 0 } = options;
     
-    logger.info(`getMessagesByPort called with port: ${port}, userId: ${userId}`);
+          logger.info(`getMessagesByPort called with port: ${port}`);
 
     // Use the new direct message method from ChatRepository
     const filteredMessages = await this.chatRepository.getMessagesByPort(port, userId);
@@ -148,7 +148,7 @@ class GetChatHistoryHandler {
   async getPortChatHistory(port, userId, options = {}) {
     const { limit = 50, offset = 0 } = options;
     
-    logger.info(`getPortChatHistory called with port: ${port}, userId: ${userId}`);
+          logger.info(`getPortChatHistory called with port: ${port}`);
 
     // Get messages for this port and user
     const messages = await this.getMessagesByPort(port, userId, { limit, offset });

@@ -32,7 +32,7 @@ class QueryBus {
    */
   async execute(queryName, queryData) {
     try {
-      this.logger.info(`Executing query: ${queryName}`, { queryData });
+      this.logger.info(`Executing query: ${queryName}`);
 
       // Apply middleware
       let processedQueryData = queryData;

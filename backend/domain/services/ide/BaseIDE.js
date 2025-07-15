@@ -115,7 +115,7 @@ class BaseIDE extends IDEInterface {
       ...data
     };
     
-    logger.info(`${message}`, logData);
+          logger.info(`${message}`);
   }
 
   /**

@@ -33,7 +33,7 @@ class EventBus {
 
   // Publish events
   async publish(eventName, eventData) {
-    logger.info(`Publishing event: ${eventName}`, eventData);
+          logger.info(`Publishing event: ${eventName}`);
     
     // Apply middleware
     let processedEventData = eventData;

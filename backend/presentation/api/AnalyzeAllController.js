@@ -14,7 +14,7 @@ class AnalyzeAllController {
 
   async analyzeAll(req, res) {
     try {
-      logger.info('🚀 Starting comprehensive analysis');
+      logger.info('🚀 Starting comprehensive analysis for project');
       
       const { projectPath, options = {} } = req.body;
       
@@ -105,7 +105,7 @@ class AnalyzeAllController {
     
     for (const framework of frameworks) {
       try {
-        logger.info(`🔧 Executing framework: ${framework.name}`);
+        logger.info(`🔧 Executing framework: ${framework.name} for project`);
         
         const result = await framework.execute({
           projectPath,
@@ -122,7 +122,7 @@ class AnalyzeAllController {
           timestamp: result.timestamp
         });
         
-        logger.info(`✅ Framework ${framework.name} completed`);
+        logger.info(`✅ Framework ${framework.name} completed successfully`);
       } catch (error) {
         logger.error(`❌ Framework ${framework.name} failed:`, error.message);
         results.push({
@@ -143,7 +143,7 @@ class AnalyzeAllController {
     
     for (const workflow of workflows) {
       try {
-        logger.info(`🔄 Executing workflow: ${workflow.name}`);
+        logger.info(`🔄 Executing workflow: ${workflow.name} for project`);
         
         const result = await workflow.execute({
           projectPath,
@@ -160,7 +160,7 @@ class AnalyzeAllController {
           timestamp: result.timestamp
         });
         
-        logger.info(`✅ Workflow ${workflow.name} completed`);
+        logger.info(`✅ Workflow ${workflow.name} completed successfully`);
       } catch (error) {
         logger.error(`❌ Workflow ${workflow.name} failed:`, error.message);
         results.push({
@@ -178,7 +178,7 @@ class AnalyzeAllController {
 
   async executeDocumentationWorkflow(projectPath, options) {
     try {
-      logger.info('📚 Executing documentation workflow...');
+      logger.info('📚 Executing documentation workflow for project');
       
       const result = await DocumentationWorkflow.executeForAnalyzeAll({
         projectPath,

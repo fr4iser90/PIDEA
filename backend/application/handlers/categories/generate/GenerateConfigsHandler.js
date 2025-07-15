@@ -15,7 +15,7 @@ class GenerateConfigsHandler {
     }
 
     async handle(command) {
-        this.logger.info(`Starting configuration generation for project: ${command.projectPath}`);
+        this.logger.info(`Starting configuration generation for project`);
 
         try {
             const validation = command.validateBusinessRules();
@@ -126,7 +126,7 @@ class GenerateConfigsHandler {
             // Step 14: Save results
             await this.saveResults(command, output);
 
-            this.logger.info(`Configuration generation completed successfully for project: ${command.projectPath}`);
+            this.logger.info(`Configuration generation completed successfully for project`);
             
             return {
                 success: true,

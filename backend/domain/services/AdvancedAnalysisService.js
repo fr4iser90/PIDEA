@@ -23,7 +23,7 @@ class AdvancedAnalysisService {
      * @returns {Promise<Object>} Comprehensive analysis results
      */
     async performAdvancedAnalysis(projectPath, options = {}) {
-        this.logger.info('Starting advanced analysis with layer and logic validation...');
+        this.logger.info('Starting advanced analysis with layer and logic validation for project');
         
         const analysis = {
             projectPath,
@@ -44,37 +44,37 @@ class AdvancedAnalysisService {
 
         try {
             // Phase 1: Standard Analysis (existing capabilities)
-            this.logger.info('Phase 1: Performing standard analysis...');
+            this.logger.info('Phase 1: Performing standard analysis for project');
             analysis.standardAnalysis = await this.taskAnalysisService.analyzeProject(projectPath, options);
 
             // Phase 2: Layer Validation (conditional)
             if (options.includeLayerValidation !== false) {
-                this.logger.info('Phase 2: Performing layer validation...');
+                this.logger.info('Phase 2: Performing layer validation for project');
                 analysis.layerValidation = await this.layerValidationService.validateLayers(projectPath, options);
             } else {
-                this.logger.info('Phase 2: Skipping layer validation (disabled)...');
+                this.logger.info('Phase 2: Skipping layer validation (disabled) for project');
                 analysis.layerValidation = {};
             }
 
             // Phase 3: Logic Validation (conditional)
             if (options.includeLogicValidation !== false) {
-                this.logger.info('Phase 3: Performing logic validation...');
+                this.logger.info('Phase 3: Performing logic validation for project');
                 analysis.logicValidation = await this.logicValidationService.validateLogic(projectPath, options);
             } else {
-                this.logger.info('Phase 3: Skipping logic validation (disabled)...');
+                this.logger.info('Phase 3: Skipping logic validation (disabled) for project');
                 analysis.logicValidation = {};
             }
 
             // Phase 4: Generate Integrated Insights
-            this.logger.info('Phase 4: Generating integrated insights...');
+            this.logger.info('Phase 4: Generating integrated insights for project');
             analysis.integratedInsights = await this.generateIntegratedInsights(analysis);
 
             // Phase 5: Generate Comprehensive Recommendations
-            this.logger.info('Phase 5: Generating comprehensive recommendations...');
+            this.logger.info('Phase 5: Generating comprehensive recommendations for project');
             analysis.recommendations = await this.generateComprehensiveRecommendations(analysis);
 
             // Phase 6: Calculate Overall Metrics
-            this.logger.info('Phase 6: Calculating overall metrics...');
+            this.logger.info('Phase 6: Calculating overall metrics for project');
             analysis.metrics = await this.calculateOverallMetrics(analysis);
 
             // Determine overall validity (handle disabled phases)
@@ -82,12 +82,12 @@ class AdvancedAnalysisService {
             const logicValid = options.includeLogicValidation !== false ? analysis.logicValidation.overall : true;
             analysis.overall = layerValid && logicValid && analysis.metrics.overallScore >= 70;
 
-            this.logger.info(`Advanced analysis completed successfully - Overall Score: ${analysis.metrics.overallScore}, Layer Score: ${analysis.metrics.layerScore}, Logic Score: ${analysis.metrics.logicScore}, Valid: ${analysis.overall}`);
+            this.logger.info(`Advanced analysis completed successfully - Overall Score: ${analysis.metrics.overallScore}, Layer Score: ${analysis.metrics.layerScore}, Logic Score: ${analysis.metrics.logicScore}, Valid: ${analysis.overall} for project`);
 
             return analysis;
 
         } catch (error) {
-            this.logger.error('Advanced analysis failed:', error);
+            this.logger.error('Advanced analysis failed for project:', error.message);
             analysis.overall = false;
             analysis.error = error.message;
             return analysis;

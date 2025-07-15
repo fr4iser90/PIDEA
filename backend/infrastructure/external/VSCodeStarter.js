@@ -40,11 +40,11 @@ class VSCodeStarter {
 
       // Handle process events
       process.stdout.on('data', (data) => {
-        logger.info(`VSCode ${port} stdout:`, data.toString().trim());
+        logger.info(`VSCode ${port} stdout received`);
       });
 
       process.stderr.on('data', (data) => {
-        logger.info(`VSCode ${port} stderr:`, data.toString().trim());
+        logger.info(`VSCode ${port} stderr received`);
       });
 
       process.on('close', (code) => {

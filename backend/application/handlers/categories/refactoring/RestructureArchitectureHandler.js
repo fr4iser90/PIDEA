@@ -17,7 +17,7 @@ class RestructureArchitectureHandler {
     }
 
     async handle(command) {
-        this.logger.info(`Starting architecture restructuring for project: ${command.projectPath}`);
+        this.logger.info(`Starting architecture restructuring for project`);
 
         try {
             const validation = command.validateBusinessRules();
@@ -87,7 +87,7 @@ class RestructureArchitectureHandler {
             // Step 10: Save results
             await this.saveResults(command, output);
 
-            this.logger.info(`Architecture restructuring completed successfully for project: ${command.projectPath}`);
+            this.logger.info(`Architecture restructuring completed successfully for project`);
             
             return {
                 success: true,

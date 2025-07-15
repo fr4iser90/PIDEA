@@ -504,7 +504,7 @@ Description: ${task.description}
 Type: ${task.type.value}
 Project Path: ${task.projectPath}
 
-Metadata: ${JSON.stringify(task.metadata, null, 2)}
+Metadata: [REDACTED]
 
 Focus on:
 - Command injection vulnerabilities

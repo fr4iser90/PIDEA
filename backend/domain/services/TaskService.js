@@ -180,7 +180,7 @@ class TaskService {
    * @returns {Promise<Object>} Execution result
    */
   async executeTask(taskId, userId, options = {}) {
-    logger.info('🔍 [TaskService] executeTask called with:', { taskId, userId, options });
+          logger.info('🔍 [TaskService] executeTask called with:', { taskId, options });
     
     try {
       const task = await this.taskRepository.findById(taskId);
@@ -268,7 +268,7 @@ class TaskService {
    * @returns {Promise<Object>} Execution result
    */
   async executeTaskWithEngine(taskId, userId, options = {}) {
-    logger.info('🔍 [TaskService] executeTaskWithEngine called with:', { taskId, userId, options });
+          logger.info('🔍 [TaskService] executeTaskWithEngine called with:', { taskId, options });
     
     try {
       const task = await this.taskRepository.findById(taskId);

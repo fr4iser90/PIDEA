@@ -18,7 +18,7 @@ class ArchitectureService {
    */
   async analyzeArchitecture(projectPath, options = {}, projectId = 'default') {
     try {
-      this.logger.info(`Starting architecture analysis for: ${projectPath}`);
+      this.logger.info(`Starting architecture analysis for project`);
 
       const analysis = await this.architectureAnalyzer.analyzeArchitecture(projectPath, options);
 
@@ -45,7 +45,7 @@ const logger = new Logger('Logger');
         }
       }
 
-      this.logger.info(`Architecture analysis completed for: ${projectPath}`);
+      this.logger.info(`Architecture analysis completed for project`);
       this.eventBus.emit('architecture:analysis:completed', { projectPath, analysis, projectId });
 
       return analysis;

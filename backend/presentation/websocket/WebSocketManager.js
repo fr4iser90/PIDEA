@@ -75,7 +75,7 @@ class WebSocketManager {
           }
         });
 
-        logger.info(`User ${userId} connected (${this.getUserConnectionCount(userId)} connections)`);
+        logger.info(`User connected (${this.getUserConnectionCount(userId)} connections)`);
       } else {
         // Register as anonymous connection
         this.registerAnonymousConnection(ws);
@@ -201,7 +201,7 @@ class WebSocketManager {
   }
 
   handleDisconnect(ws, userId, code, reason) {
-    logger.info(`User ${userId} disconnected (code: ${code}, reason: ${reason})`);
+          logger.info(`User disconnected (code: ${code}, reason: ${reason})`);
 
     // Remove from user's connection set
     const userConnections = this.clients.get(userId);

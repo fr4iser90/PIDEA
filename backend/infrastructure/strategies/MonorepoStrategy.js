@@ -95,7 +95,7 @@ class MonorepoStrategy {
      */
     async analyzeMonorepo(projectPath) {
         try {
-            this.logger.info('MonorepoStrategy: Analyzing monorepo', { projectPath });
+            this.logger.info('MonorepoStrategy: Analyzing monorepo');
 
             const analysis = {
                 isMonorepo: true, // Skip the check to avoid infinite loop
@@ -555,7 +555,7 @@ class MonorepoStrategy {
      */
     async optimizeMonorepo(projectPath, options = {}) {
         try {
-            this.logger.info('MonorepoStrategy: Optimizing monorepo', { projectPath });
+            this.logger.info('MonorepoStrategy: Optimizing monorepo');
 
             const optimizations = {
                 sharedConfigs: await this.createSharedConfigs(projectPath, options),

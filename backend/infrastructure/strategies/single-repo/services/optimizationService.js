@@ -16,7 +16,7 @@ class OptimizationService {
      */
     async optimizeSingleRepo(projectPath, options = {}) {
         try {
-            this.logger.info('OptimizationService: Optimizing single repository', { projectPath });
+            this.logger.info('OptimizationService: Optimizing single repository');
 
             const optimizations = {
                 structure: await this.optimizeStructure(projectPath, options),

@@ -99,7 +99,7 @@ class AutoFinishController {
       const { sessionId } = req.params;
       const userId = req.user?.id;
 
-      this.logger.info('Getting session status', { sessionId, userId });
+      this.logger.info('Getting session status', { sessionId });
 
       if (!sessionId) {
         return res.status(400).json({
@@ -151,7 +151,7 @@ class AutoFinishController {
       const userId = req.user?.id;
       const { limit = 20, offset = 0, status } = req.query;
 
-      this.logger.info('Getting user sessions', { userId, limit, offset, status });
+      this.logger.info('Getting user sessions', { limit, offset, status });
 
       if (!userId) {
         return res.status(401).json({
@@ -198,7 +198,7 @@ class AutoFinishController {
       const userId = req.user?.id;
       const { limit = 20, offset = 0, status } = req.query;
 
-      this.logger.info('Getting project sessions', { projectId, userId, limit, offset, status });
+      this.logger.info('Getting project sessions', { projectId, limit, offset, status });
 
       if (!projectId) {
         return res.status(400).json({
@@ -244,7 +244,7 @@ class AutoFinishController {
       const { sessionId } = req.params;
       const userId = req.user?.id;
 
-      this.logger.info('Cancelling session', { sessionId, userId });
+      this.logger.info('Cancelling session', { sessionId });
 
       if (!sessionId) {
         return res.status(400).json({
@@ -314,7 +314,7 @@ class AutoFinishController {
     try {
       const userId = req.user?.id;
 
-      this.logger.info('Getting system stats', { userId });
+      this.logger.info('Getting system stats');
 
       const stats = {
         repository: await this.taskSessionRepository.getStats(),

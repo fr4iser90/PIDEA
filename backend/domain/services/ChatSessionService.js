@@ -97,7 +97,7 @@ class ChatSessionService {
         timestamp: new Date()
       });
 
-      logger.info(`Created session ${session.id} for user ${userId}`);
+      logger.info(`Created session ${session.id} for user`);
       return session;
     } catch (error) {
       logger.error(`Failed to create session for user ${userId}:`, error);
@@ -136,7 +136,7 @@ class ChatSessionService {
         timestamp: new Date()
       });
 
-      logger.info(`Switched to session ${sessionId} for user ${userId}`);
+      logger.info(`Switched to session ${sessionId} for user`);
       return session;
     } catch (error) {
       logger.error(`Failed to switch to session ${sessionId}:`, error);
@@ -232,7 +232,7 @@ class ChatSessionService {
         timestamp: new Date()
       });
 
-      logger.info(`Closed session ${sessionId} for user ${userId}`);
+      logger.info(`Closed session ${sessionId} for user`);
       return true;
     } catch (error) {
       logger.error(`Failed to close session ${sessionId}:`, error);
@@ -307,7 +307,7 @@ class ChatSessionService {
       // Clear active session
       this.activeSessions.delete(userId);
       
-      logger.info(`Cleared active session for user ${userId}`);
+      logger.info(`Cleared active session for user`);
     } catch (error) {
       logger.error('Failed to handle user logout:', error);
     }

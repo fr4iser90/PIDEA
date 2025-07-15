@@ -18,7 +18,7 @@ class CodeQualityService {
    */
   async analyzeCodeQuality(projectPath, options = {}, projectId = 'default') {
     try {
-      this.logger.info(`Starting code quality analysis for: ${projectPath}`);
+      this.logger.info(`Starting code quality analysis for project`);
 
       const analysis = await this.codeQualityAnalyzer.analyzeCodeQuality(projectPath, options);
 
@@ -45,7 +45,7 @@ const logger = new Logger('Logger');
         }
       }
 
-      this.logger.info(`Code quality analysis completed for: ${projectPath}`);
+      this.logger.info(`Code quality analysis completed for project`);
       this.eventBus.emit('code-quality:analysis:completed', { projectPath, analysis, projectId });
 
       return analysis;

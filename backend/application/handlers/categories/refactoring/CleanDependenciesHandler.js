@@ -15,7 +15,7 @@ class CleanDependenciesHandler {
     }
 
     async handle(command) {
-        this.logger.info(`Starting dependency cleaning for project: ${command.projectPath}`);
+        this.logger.info(`Starting dependency cleaning for project`);
 
         try {
             const validation = command.validateBusinessRules();
@@ -85,7 +85,7 @@ class CleanDependenciesHandler {
             // Step 10: Save results
             await this.saveResults(command, output);
 
-            this.logger.info(`Dependency cleaning completed successfully for project: ${command.projectPath}`);
+            this.logger.info(`Dependency cleaning completed successfully for project`);
             
             return {
                 success: true,

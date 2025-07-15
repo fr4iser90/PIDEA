@@ -19,10 +19,10 @@ class PackageJsonAnalyzer {
       const allPackageJsons = [];
       const findAllPackageJsons = (dir, maxDepth = 5, currentDepth = 0) => {
         if (currentDepth > maxDepth) {
-          logger.info('Max depth reached for:', dir);
+          logger.info('Max depth reached');
           return;
         }
-        logger.info('Searching in directory:', dir, 'depth:', currentDepth);
+        logger.info('Searching in directory, depth:', currentDepth);
         try {
           const files = fs.readdirSync(dir, { withFileTypes: true });
           // logger.info('Found', files.length, 'items in:', dir);
@@ -31,16 +31,16 @@ class PackageJsonAnalyzer {
             if (file.isDirectory()) {
               // Skip only node_modules, not .git (to allow finding package.json in git repos)
               if (file.name === 'node_modules') {
-                logger.info('Skipping node_modules:', fullPath);
+                logger.info('Skipping node_modules directory');
                 continue;
               }
-              logger.info('Recursing into directory:', fullPath, 'depth:', currentDepth + 1);
+              logger.info('Recursing into subdirectory, depth:', currentDepth + 1);
               findAllPackageJsons(fullPath, maxDepth, currentDepth + 1);
             } else if (file.isFile()) {
-              logger.info('Found file:', fullPath);
+              logger.info('Found file in directory');
               if (file.name === 'package.json') {
                 allPackageJsons.push(fullPath);
-                logger.info('Found package.json:', fullPath);
+                logger.info('Found package.json file');
               }
             }
           }
@@ -51,12 +51,12 @@ class PackageJsonAnalyzer {
       
       findAllPackageJsons(workspacePath);
       logger.info('Total package.json files found:', allPackageJsons.length);
-      logger.info('All package.json paths:', allPackageJsons);
+      logger.info('Total package.json files found:', allPackageJsons.length);
       
       for (const pkgPath of allPackageJsons) {
         const dir = path.dirname(pkgPath);
         const score = this.scoreFolder(dir);
-        logger.info('Candidate:', { dir, score });
+        logger.info('Candidate found with score:', score);
         candidates.push({ dir, score });
       }
       
@@ -66,7 +66,7 @@ class PackageJsonAnalyzer {
         for (const cand of candidates) {
           const pkgPath = path.join(cand.dir, 'package.json');
           // LOG: Show which package.json is being parsed
-          logger.info('Checking package.json:', pkgPath);
+          logger.info('Checking package.json file');
           const techScore = await this.techstackScore(pkgPath);
           const totalScore = cand.score + techScore;
           if (!best || totalScore > bestScore) {
@@ -143,7 +143,7 @@ const logger = new Logger('Logger');
             // Port-Extraktion
             const portMatch = scriptCommand.match(/--port\s+(\d+)|-p\s+(\d+)|port\s*=\s*(\d+)|--port=(\d+)/i);
             const port = portMatch ? parseInt(portMatch[1] || portMatch[2] || portMatch[3] || portMatch[4]) : null;
-            logger.info(`Script: ${scriptName}, Command: ${scriptCommand}, Port match:`, portMatch, 'Extracted port:', port);
+            logger.info(`Script: ${scriptName}, Port extracted:`, port);
             if (port) {
               devServerPorts.push({
                 script: scriptName,

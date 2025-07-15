@@ -113,7 +113,7 @@ class ChatController {
       const { port } = req.params;
       const { limit = 50, offset = 0 } = req.query;
 
-      logger.info(`Getting chat history for port ${port}, user ${userId}`);
+      logger.info(`Getting chat history for port ${port}`);
 
       // Get chat history for specific port
       const result = await this.getChatHistoryHandler.getPortChatHistory(port, userId, {
@@ -387,7 +387,7 @@ class ChatController {
   async updateUserSettings(userId, settings) {
     // Update user settings in database
     // This would typically involve a UserSettingsRepository
-    logger.info(`Updating settings for user ${userId}:`, settings);
+          logger.info(`Updating user settings`);
   }
 }
 

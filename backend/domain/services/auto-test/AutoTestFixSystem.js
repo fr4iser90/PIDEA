@@ -274,7 +274,7 @@ class AutoTestFixSystem {
    */
   async analyzeProjectTests(projectPath) {
     try {
-      this.logger.info(`Analyzing project tests: ${projectPath}`);
+      this.logger.info(`Analyzing project tests`);
       
       // Analyze failing tests
       const failingTests = await this.testAnalyzer.analyzeFailingTests(projectPath);

@@ -18,7 +18,7 @@ class GenerateDocumentationHandler {
     }
 
     async handle(command) {
-        this.logger.info(`Starting documentation generation for project: ${command.projectPath}`);
+        this.logger.info(`Starting documentation generation for project`);
 
         try {
             const validation = command.validateBusinessRules();
@@ -102,7 +102,7 @@ class GenerateDocumentationHandler {
             // Step 11: Save results
             await this.saveResults(command, output);
 
-            this.logger.info(`Documentation generation completed successfully for project: ${command.projectPath}`);
+            this.logger.info(`Documentation generation completed successfully for project`);
             
             return {
                 success: true,

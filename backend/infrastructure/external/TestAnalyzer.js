@@ -53,7 +53,7 @@ class TestAnalyzer {
    */
   async analyzeFailingTests(projectPath) {
     try {
-      this.logger.info(`Analyzing failing tests in: ${projectPath}`);
+      this.logger.info(`Analyzing failing tests in project`);
       
       const failingTests = [];
       
@@ -100,7 +100,7 @@ class TestAnalyzer {
    */
   async analyzeLegacyTests(projectPath) {
     try {
-      this.logger.info(`Analyzing legacy tests in: ${projectPath}`);
+      this.logger.info(`Analyzing legacy tests in project`);
       
       const legacyTests = [];
       const testFiles = await this.findTestFiles(projectPath);
@@ -141,7 +141,7 @@ class TestAnalyzer {
    */
   async analyzeComplexTests(projectPath) {
     try {
-      this.logger.info(`Analyzing complex tests in: ${projectPath}`);
+      this.logger.info(`Analyzing complex tests in project`);
       
       const complexTests = [];
       const testFiles = await this.findTestFiles(projectPath);
