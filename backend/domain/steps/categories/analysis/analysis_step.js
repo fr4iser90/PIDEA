@@ -6,7 +6,7 @@
 
 const StepBuilder = require('@steps/StepBuilder');
 const Logger = require('@logging/Logger');
-const logger = new Logger('Logger');
+const logger = new Logger('analysis_step');
 const path = require('path'); // Added missing import for path
 
 // Step configuration
@@ -247,6 +247,19 @@ class AnalysisStep {
 
         await analysisRepository.save(analysisResult);
         logger.info(`✅ Analysis results saved to repository with ID: ${analysisResult.id}`);
+        
+        // Emit event to notify frontend about new analysis
+        const application = global.application;
+        if (application && application.eventBus) {
+          application.eventBus.publish('analysis:completed', {
+            projectId: context.projectId,
+            analysisId: analysisResult.id,
+            analysisType: 'comprehensive-analysis',
+            timestamp: new Date().toISOString(),
+            summary: results.summary
+          });
+          logger.info(`📡 Analysis completion event published for project: ${context.projectId}`);
+        }
       }
 
       // Generate output using analysis output service

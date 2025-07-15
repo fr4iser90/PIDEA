@@ -77,19 +77,29 @@ export const useAnalysisCache = () => {
       const cacheKey = analysisDataCache.getCacheKey(projectId, dataType, filters);
       const ttl = analysisDataCache.getTTL(dataType);
       
-      analysisDataCache.set(cacheKey, data, ttl);
+      const success = analysisDataCache.set(cacheKey, data, ttl);
       
-      logger.info(`Cached ${dataType}:`, { 
-        projectId, 
-        filters, 
-        ttl: `${Math.round(ttl / 1000)}s`,
-        dataSize: JSON.stringify(data).length
-      });
+      if (success) {
+        logger.info(`Cached ${dataType}:`, { 
+          projectId, 
+          filters, 
+          ttl: `${Math.round(ttl / 1000)}s`,
+          dataSize: JSON.stringify(data).length
+        });
+      } else {
+        logger.warn(`Failed to cache ${dataType} (data too large):`, { 
+          projectId, 
+          filters,
+          dataSize: JSON.stringify(data).length
+        });
+      }
       
       // Update stats after setting data
       updateCacheStats();
+      return success;
     } catch (error) {
       logger.error('Failed to set cached data:', error);
+      return false;
     }
   }, [updateCacheStats]);
 

@@ -74,11 +74,13 @@ const AnalysisDataViewer = ({ projectId = null, eventBus = null }) => {
     eventBus.on('analysis-status-update', handleAnalysisStatusUpdate);
     eventBus.on('analysis-completed', handleAnalysisCompleted);
     eventBus.on('analysis-progress', handleAnalysisProgress);
+    eventBus.on('analysis:completed', handleAnalysisCompleted);
 
     return () => {
       eventBus.off('analysis-status-update', handleAnalysisStatusUpdate);
       eventBus.off('analysis-completed', handleAnalysisCompleted);
       eventBus.off('analysis-progress', handleAnalysisProgress);
+      eventBus.off('analysis:completed', handleAnalysisCompleted);
     };
   };
 
@@ -93,7 +95,7 @@ const AnalysisDataViewer = ({ projectId = null, eventBus = null }) => {
     }));
   };
 
-  const loadAnalysisData = async () => {
+  const loadAnalysisData = async (forceRefresh = false) => {
     try {
       setLoading(true);
       setError(null);
@@ -110,7 +112,7 @@ const AnalysisDataViewer = ({ projectId = null, eventBus = null }) => {
       
       let statusResponse, metricsResponse;
       
-      if (cachedStatus && cachedMetrics) {
+      if (cachedStatus && cachedMetrics && !forceRefresh) {
         // Use cached data
         statusResponse = { success: true, data: cachedStatus };
         metricsResponse = { success: true, data: cachedMetrics };
@@ -122,12 +124,18 @@ const AnalysisDataViewer = ({ projectId = null, eventBus = null }) => {
           apiRepository.getAnalysisMetrics?.(currentProjectId) || Promise.resolve({ success: false, data: null })
         ]);
         
-        // Cache the results
+        // Cache the results (only if successful)
         if (statusResponse.success) {
-          setCachedData(currentProjectId, 'status', statusResponse.data);
+          const cached = setCachedData(currentProjectId, 'status', statusResponse.data);
+          if (!cached) {
+            logger.warn('Failed to cache status data (too large)');
+          }
         }
         if (metricsResponse.success) {
-          setCachedData(currentProjectId, 'metrics', metricsResponse.data);
+          const cached = setCachedData(currentProjectId, 'metrics', metricsResponse.data);
+          if (!cached) {
+            logger.warn('Failed to cache metrics data (too large)');
+          }
         }
       }
 
@@ -147,13 +155,16 @@ const AnalysisDataViewer = ({ projectId = null, eventBus = null }) => {
       const cachedHistory = getCachedData(currentProjectId, 'history');
       let historyResponse;
       
-      if (cachedHistory) {
+      if (cachedHistory && !forceRefresh) {
         historyResponse = { success: true, data: cachedHistory };
         logger.info('🔍 [AnalysisDataViewer] Using cached history');
       } else {
         historyResponse = await apiRepository.getAnalysisHistory(currentProjectId);
         if (historyResponse.success) {
-          setCachedData(currentProjectId, 'history', historyResponse.data || []);
+          const cached = setCachedData(currentProjectId, 'history', historyResponse.data || []);
+          if (!cached) {
+            logger.warn('Failed to cache history data (too large)');
+          }
         }
       }
       
@@ -171,13 +182,16 @@ const AnalysisDataViewer = ({ projectId = null, eventBus = null }) => {
         const cachedIssues = getCachedData(currentProjectId, 'issues');
         let issuesResponse;
         
-        if (cachedIssues) {
+        if (cachedIssues && !forceRefresh) {
           issuesResponse = { success: true, data: cachedIssues };
           logger.info('🔍 [AnalysisDataViewer] Using cached issues');
         } else {
           issuesResponse = await apiRepository.getAnalysisIssues?.(currentProjectId) || Promise.resolve({ success: false, data: null });
           if (issuesResponse.success) {
-            setCachedData(currentProjectId, 'issues', issuesResponse.data);
+            const cached = setCachedData(currentProjectId, 'issues', issuesResponse.data);
+            if (!cached) {
+              logger.warn('Failed to cache issues data (too large)');
+            }
           }
         }
         
@@ -196,7 +210,7 @@ const AnalysisDataViewer = ({ projectId = null, eventBus = null }) => {
         const cachedTechStack = getCachedData(currentProjectId, 'techStack');
         let techStackResponse;
         
-        if (cachedTechStack) {
+        if (cachedTechStack && !forceRefresh) {
           techStackResponse = { success: true, data: cachedTechStack };
           logger.info('🔍 [AnalysisDataViewer] Using cached tech stack');
         } else {
@@ -221,7 +235,7 @@ const AnalysisDataViewer = ({ projectId = null, eventBus = null }) => {
         const cachedArchitecture = getCachedData(currentProjectId, 'architecture');
         let architectureResponse;
         
-        if (cachedArchitecture) {
+        if (cachedArchitecture && !forceRefresh) {
           architectureResponse = { success: true, data: cachedArchitecture };
           logger.info('🔍 [AnalysisDataViewer] Using cached architecture');
         } else {
@@ -246,7 +260,7 @@ const AnalysisDataViewer = ({ projectId = null, eventBus = null }) => {
         const cachedRecommendations = getCachedData(currentProjectId, 'recommendations');
         let recommendationsResponse;
         
-        if (cachedRecommendations) {
+        if (cachedRecommendations && !forceRefresh) {
           recommendationsResponse = { success: true, data: cachedRecommendations };
           logger.info('🔍 [AnalysisDataViewer] Using cached recommendations');
         } else {
@@ -333,8 +347,8 @@ const AnalysisDataViewer = ({ projectId = null, eventBus = null }) => {
 
   const handleAnalysisCompleted = (data) => {
     if (data.projectId === (projectId || analysisData.status?.projectId)) {
-      // Refresh data when analysis completes
-      loadAnalysisData();
+      // Force fresh data when analysis completes
+      loadAnalysisData(true); // forceRefresh = true
     }
   };
 
@@ -361,7 +375,8 @@ const AnalysisDataViewer = ({ projectId = null, eventBus = null }) => {
   };
 
   const handleRefresh = () => {
-    loadAnalysisData();
+    // Force fresh data without clearing cache
+    loadAnalysisData(true); // forceRefresh = true
   };
 
   const handleStartAnalysis = async () => {

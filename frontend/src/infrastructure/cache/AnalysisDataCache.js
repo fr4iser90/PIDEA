@@ -9,14 +9,16 @@ export class AnalysisDataCache {
     this.cache = new Map();
     this.timestamps = new Map();
     this.storageKey = 'pidea_analysis_cache';
+    this.maxCacheSize = 10 * 1024 * 1024; // 10MB total limit
+    this.maxEntrySize = 2 * 1024 * 1024; // 2MB per entry limit
     this.config = {
-      metrics: { ttl: 30 * 60 * 1000 }, // 30 minutes (increased)
-      status: { ttl: 5 * 60 * 1000 }, // 5 minutes (increased)
-      history: { ttl: 60 * 60 * 1000 }, // 1 hour (increased)
-      issues: { ttl: 60 * 60 * 1000 }, // 1 hour (increased)
-      techStack: { ttl: 120 * 60 * 1000 }, // 2 hours (increased)
-      architecture: { ttl: 180 * 60 * 1000 }, // 3 hours (increased)
-      recommendations: { ttl: 60 * 60 * 1000 } // 1 hour (increased)
+      metrics: { ttl: 30 * 60 * 1000, maxSize: 100 * 1024 }, // 30 min, 100KB
+      status: { ttl: 5 * 60 * 1000, maxSize: 50 * 1024 }, // 5 min, 50KB
+      history: { ttl: 60 * 60 * 1000, maxSize: 500 * 1024 }, // 1 hour, 500KB
+      issues: { ttl: 60 * 60 * 1000, maxSize: 1 * 1024 * 1024 }, // 1 hour, 1MB
+      techStack: { ttl: 120 * 60 * 1000, maxSize: 1 * 1024 * 1024 }, // 2 hours, 1MB
+      architecture: { ttl: 180 * 60 * 1000, maxSize: 2 * 1024 * 1024 }, // 3 hours, 2MB
+      recommendations: { ttl: 60 * 60 * 1000, maxSize: 500 * 1024 } // 1 hour, 500KB
     };
     
     // Load cached data from localStorage on initialization
@@ -59,12 +61,50 @@ export class AnalysisDataCache {
         cache: Object.fromEntries(this.cache),
         timestamps: Object.fromEntries(this.timestamps)
       };
-      localStorage.setItem(this.storageKey, JSON.stringify(data));
+      
+      // Check if data is too large
+      const dataSize = JSON.stringify(data).length;
+      const maxSize = 5 * 1024 * 1024; // 5MB limit
+      
+      if (dataSize > maxSize) {
+        console.warn('Cache data too large, clearing old entries');
+        this.clearOldEntries();
+        
+        // Try again with reduced data
+        const reducedData = {
+          cache: Object.fromEntries(this.cache),
+          timestamps: Object.fromEntries(this.timestamps)
+        };
+        localStorage.setItem(this.storageKey, JSON.stringify(reducedData));
+      } else {
+        localStorage.setItem(this.storageKey, JSON.stringify(data));
+      }
     } catch (error) {
       console.warn('Failed to save cache to localStorage:', error);
-      // If localStorage is full, clear old entries
-      this.cleanup();
+      // Clear cache if storage fails
+      this.clear();
     }
+  }
+  
+  clearOldEntries() {
+    const entries = Array.from(this.cache.entries());
+    const sortedEntries = entries.sort((a, b) => {
+      const aTimestamp = this.timestamps.get(a[0]) || 0;
+      const bTimestamp = this.timestamps.get(b[0]) || 0;
+      return aTimestamp - bTimestamp;
+    });
+    
+    // Keep only the 5 most recent entries to save space
+    const toKeep = sortedEntries.slice(-5);
+    this.cache.clear();
+    this.timestamps.clear();
+    
+    for (const [key, value] of toKeep) {
+      this.cache.set(key, value);
+      this.timestamps.set(key, Date.now());
+    }
+    
+    console.log(`Cleared cache, kept ${toKeep.length} most recent entries`);
   }
 
   /**
@@ -74,9 +114,41 @@ export class AnalysisDataCache {
    * @param {number} ttl - Time to live in milliseconds
    */
   set(key, data, ttl) {
+    // Check if data is too large for this entry type
+    const dataSize = JSON.stringify(data).length;
+    const dataType = this.getDataTypeFromKey(key);
+    const maxSize = this.config[dataType]?.maxSize || this.maxEntrySize;
+    
+    if (dataSize > maxSize) {
+      console.warn(`Data too large for ${dataType} (${dataSize} bytes > ${maxSize} bytes), not caching`);
+      return false;
+    }
+    
+    // Check total cache size before adding
+    const currentSize = this.getCurrentCacheSize();
+    if (currentSize + dataSize > this.maxCacheSize) {
+      console.warn('Cache full, clearing old entries');
+      this.clearOldEntries();
+    }
+    
     this.cache.set(key, data);
     this.timestamps.set(key, Date.now() + ttl);
     this.saveToStorage();
+    return true;
+  }
+  
+  getDataTypeFromKey(key) {
+    // Extract data type from cache key (e.g., "pidea:history:{}" -> "history")
+    const parts = key.split(':');
+    return parts[1] || 'unknown';
+  }
+  
+  getCurrentCacheSize() {
+    let totalSize = 0;
+    for (const [key, value] of this.cache) {
+      totalSize += JSON.stringify(value).length;
+    }
+    return totalSize;
   }
 
   /**

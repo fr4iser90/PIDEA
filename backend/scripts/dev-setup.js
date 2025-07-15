@@ -104,7 +104,7 @@ class DevSetup {
     console.clear();
     logger.info('👤 User Management');
     logger.info('==================');
-    logger.debug('1. ➕ Create Test User');
+    logger.info('1. ➕ Create Test User');
     logger.info('2. ➕ Create Custom User');
     logger.info('3. 🗑️  Clear All Users');
     logger.info('4. 📋 List Users');

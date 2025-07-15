@@ -496,6 +496,12 @@ class AppController {
           // Emit the event to trigger preview refresh
           this.eventBus.emit('activeIDEChanged', data.data);
         }
+        if (data.type === 'analysis:completed' || data.event === 'analysis:completed') {
+          logger.info('Analysis completed:', data.data);
+          logger.info('Emitting analysis:completed event to eventBus');
+          // Emit the event to trigger analysis data refresh
+          this.eventBus.emit('analysis:completed', data.data);
+        }
       };
       chatWs.onclose = () => {
         logger.info('Chat WebSocket closed, reconnecting...');

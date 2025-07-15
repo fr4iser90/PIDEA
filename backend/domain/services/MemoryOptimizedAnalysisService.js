@@ -8,7 +8,7 @@ const fs = require('fs').promises;
 const { createReadStream } = require('fs');
 const { Transform, PassThrough } = require('stream');
 const Logger = require('@logging/Logger');
-const logger = new Logger('Logger');
+const logger = new Logger('MemoryOptimizedAnalysisService');
 
 class MemoryOptimizedAnalysisService {
     constructor(options = {}) {

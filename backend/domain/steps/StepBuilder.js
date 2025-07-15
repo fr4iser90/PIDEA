@@ -6,7 +6,7 @@
 
 const path = require('path');
 const Logger = require('@logging/Logger');
-const logger = new Logger('Logger');
+const logger = new Logger('StepBuilder');
 
 class StepBuilder {
   constructor(stepRegistry) {

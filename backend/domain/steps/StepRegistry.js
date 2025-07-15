@@ -11,7 +11,7 @@ const fs = require('fs').promises;
 const { STANDARD_CATEGORIES, isValidCategory, getDefaultCategory } = require('../constants/Categories');
 const IStandardRegistry = require('../interfaces/IStandardRegistry');
 const Logger = require('@logging/Logger');
-const logger = new Logger('Logger');
+const logger = new Logger('StepRegistry');
 
 class StepRegistry {
   constructor() {

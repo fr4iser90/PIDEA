@@ -121,6 +121,14 @@ class IDEWorkspaceDetectionService {
         logger.warn('No project repository available, skipping project creation');
         return;
       }
+      
+      logger.info('Project repository available:', typeof this.projectRepository);
+      logger.info('Project repository methods:', Object.getOwnPropertyNames(this.projectRepository));
+      
+      if (!this.projectRepository.findOrCreateByWorkspacePath) {
+        logger.warn('Project repository missing findOrCreateByWorkspacePath method, skipping project creation');
+        return;
+      }
 
       // Extract project name from workspace path
       const path = require('path');
@@ -147,7 +155,8 @@ class IDEWorkspaceDetectionService {
       logger.info(`Project created/found in database: ${project.id}`);
       
     } catch (error) {
-      logger.error('Failed to create project in database:', error.message);
+      logger.error('Failed to create project in database:', error.message || error);
+      logger.error('Error details:', error);
     }
   }
 

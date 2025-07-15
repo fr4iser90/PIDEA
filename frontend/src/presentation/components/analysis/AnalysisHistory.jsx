@@ -39,8 +39,9 @@ const AnalysisHistory = ({ history, onAnalysisSelect, loading }) => {
   const getAnalysisStatus = (analysis) => {
     // Determine status based on analysis properties
     if (analysis.error) return { status: 'failed', icon: '❌', color: 'error' };
-    if (analysis.completed) return { status: 'completed', icon: '✅', color: 'success' };
-    if (analysis.progress > 0) return { status: 'running', icon: '🔄', color: 'warning' };
+    if (analysis.status === 'completed' || analysis.completed) return { status: 'completed', icon: '✅', color: 'success' };
+    if (analysis.status === 'failed') return { status: 'failed', icon: '❌', color: 'error' };
+    if (analysis.status === 'running' || analysis.progress > 0) return { status: 'running', icon: '🔄', color: 'warning' };
     return { status: 'pending', icon: '⏳', color: 'neutral' };
   };
 
@@ -64,20 +65,20 @@ const AnalysisHistory = ({ history, onAnalysisSelect, loading }) => {
       
       switch (sortBy) {
         case 'timestamp':
-          aValue = new Date(a.timestamp);
-          bValue = new Date(b.timestamp);
+          aValue = new Date(a.timestamp || a.created_at);
+          bValue = new Date(b.timestamp || b.created_at);
           break;
         case 'size':
           aValue = a.size || 0;
           bValue = b.size || 0;
           break;
         case 'type':
-          aValue = a.type || '';
-          bValue = b.type || '';
+          aValue = a.type || a.analysisType || '';
+          bValue = b.type || b.analysisType || '';
           break;
         case 'filename':
-          aValue = a.filename || '';
-          bValue = b.filename || '';
+          aValue = a.filename || a.id || '';
+          bValue = b.filename || b.id || '';
           break;
         default:
           aValue = a[sortBy] || '';
@@ -101,6 +102,7 @@ const AnalysisHistory = ({ history, onAnalysisSelect, loading }) => {
     const term = searchTerm.toLowerCase();
     return historyArray.filter(item => 
       (item.filename && item.filename.toLowerCase().includes(term)) ||
+      (item.id && item.id.toLowerCase().includes(term)) ||
       (item.type && item.type.toLowerCase().includes(term)) ||
       (item.analysisType && item.analysisType.toLowerCase().includes(term))
     );
@@ -201,25 +203,22 @@ const AnalysisHistory = ({ history, onAnalysisSelect, loading }) => {
                 >
                   <div className="cell timestamp">
                     <span className="timestamp-text">
-                      {formatTimestamp(analysis.timestamp)}
+                      {formatTimestamp(analysis.timestamp || analysis.created_at)}
                     </span>
                   </div>
                   
                   <div className="cell type">
                     <span className="type-icon">
-                      {getAnalysisIcon(analysis.type)}
+                      {getAnalysisIcon(analysis.type || 'analysis')}
                     </span>
                     <span className="type-text">
-                      {analysis.type === 'analysis' 
-                        ? `${analysis.analysisType || 'Analysis'}`
-                        : analysis.type || 'Unknown'
-                      }
+                      {analysis.analysisType || analysis.type || 'Analysis'}
                     </span>
                   </div>
                   
                   <div className="cell filename">
-                    <span className="filename-text" title={analysis.filename}>
-                      {analysis.filename || 'Unknown'}
+                    <span className="filename-text" title={analysis.filename || analysis.id}>
+                      {analysis.filename || analysis.id || 'Unknown'}
                     </span>
                   </div>
                   

@@ -168,6 +168,33 @@ class Application {
     await this.databaseConnection.connect();
     
     this.logger.info(`✅ Database connected: ${this.databaseConnection.getType()}`);
+    
+    // Check if default user exists
+    await this.checkDefaultUser();
+  }
+
+  async checkDefaultUser() {
+    try {
+      const userRepository = this.databaseConnection.getRepository('User');
+      const defaultUser = await userRepository.findById('me');
+      
+      if (!defaultUser) {
+        this.logger.error('❌ No default user found in database!');
+        this.logger.error('📝 To create the default user, run:');
+        this.logger.error('   node setup.js');
+        this.logger.error('   or');
+        this.logger.error('   npm run setup:user');
+        this.logger.error('');
+        this.logger.error('🛑 Server cannot start without default user due to foreign key constraints.');
+        process.exit(0);
+      } else {
+        this.logger.info('✅ Default user found in database');
+      }
+    } catch (error) {
+      this.logger.error('❌ Could not check for default user:', error.message);
+      this.logger.error('🛑 Server cannot start. Please run: node scripts/create-default-user.js');
+      process.exit(0);
+    }
   }
 
   async initializeInfrastructure() {
@@ -891,6 +918,16 @@ class Application {
           this.webSocketManager.broadcastToAll('activeIDEChanged', data);
         } else {
           this.logger.warn('No WebSocket manager available for broadcasting activeIDEChanged');
+        }
+      });
+
+      this.eventBus.subscribe('analysis:completed', (data) => {
+        this.logger.info('Analysis completed event:', '[REDACTED_ANALYSIS_DATA]');
+        if (this.webSocketManager) {
+          this.logger.info('Broadcasting analysis:completed to all clients');
+          this.webSocketManager.broadcastToAll('analysis:completed', data);
+        } else {
+          this.logger.warn('No WebSocket manager available for broadcasting analysis:completed');
         }
       });
     } else {
