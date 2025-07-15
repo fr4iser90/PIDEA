@@ -892,28 +892,97 @@ class AnalysisController {
         suggestions.push(...summary.recommendations.slice(0, 10));
       }
       
-      // Calculate basic metrics
-      const totalAnalyses = analyses.length;
-      const completedAnalyses = analyses.filter(a => a.status === 'completed').length;
-      const failedAnalyses = analyses.filter(a => a.status === 'failed').length;
+      // Calculate basic metrics - count individual analyses from summary data
+      let totalAnalyses = 0;
+      let completedAnalyses = 0;
+      let failedAnalyses = 0;
+      
+      this.logger.info(`Processing ${analyses.length} workflow executions for metrics calculation`);
+      
+      // Count individual analyses from each workflow execution
+      analyses.forEach((analysis, index) => {
+        const summary = analysis.summary || {};
+        const resultData = analysis.resultData || {};
+        
+        // Always use fallback method - count individual analysis types in resultData
+        const analysisTypes = ['projectAnalysis', 'codeQuality', 'security', 'performance', 'architecture', 'techStack', 'dependencies'];
+        let foundTypes = 0;
+        analysisTypes.forEach(type => {
+          if (resultData[type]) {
+            totalAnalyses++;
+            foundTypes++;
+            if (resultData[type].status === 'failed' || resultData[type].error) {
+              failedAnalyses++;
+            } else {
+              completedAnalyses++;
+            }
+          }
+        });
+        this.logger.info(`Analysis ${index + 1}: Found ${foundTypes} analysis types in resultData`);
+      });
+      
+      this.logger.info(`Final metrics: totalAnalyses=${totalAnalyses}, completedAnalyses=${completedAnalyses}, failedAnalyses=${failedAnalyses}`);
+      
       const successRate = totalAnalyses > 0 ? completedAnalyses / totalAnalyses : 0;
       
-      // Calculate average duration
+      // Calculate average duration per individual analysis
       let totalDuration = 0;
       let durationCount = 0;
       analyses.forEach(analysis => {
         if (analysis.durationMs) {
-          totalDuration += analysis.durationMs;
-          durationCount++;
+          const summary = analysis.summary || {};
+          const resultData = analysis.resultData || {};
+          
+          // Count individual analyses for this workflow
+          let individualAnalysisCount = 0;
+          if (summary.totalAnalyses) {
+            individualAnalysisCount = summary.totalAnalyses;
+          } else {
+            // Fallback: count individual analysis types
+            const analysisTypes = ['projectAnalysis', 'codeQuality', 'security', 'performance', 'architecture', 'techStack', 'dependencies'];
+            individualAnalysisCount = analysisTypes.filter(type => resultData[type]).length;
+          }
+          
+          if (individualAnalysisCount > 0) {
+            // Distribute workflow duration across individual analyses
+            const durationPerAnalysis = analysis.durationMs / individualAnalysisCount;
+            totalDuration += durationPerAnalysis * individualAnalysisCount;
+            durationCount += individualAnalysisCount;
+          }
         }
       });
       const averageDuration = durationCount > 0 ? totalDuration / durationCount : 0;
       
-      // Group by analysis type
+      // Group by individual analysis types
       const analysisTypes = {};
       analyses.forEach(analysis => {
-        const type = analysis.analysisType || 'unknown';
-        analysisTypes[type] = (analysisTypes[type] || 0) + 1;
+        const resultData = analysis.resultData || {};
+        const summary = analysis.summary || {};
+        
+        // Count individual analysis types from resultData
+        const individualTypes = ['projectAnalysis', 'codeQuality', 'security', 'performance', 'architecture', 'techStack', 'dependencies'];
+        individualTypes.forEach(type => {
+          if (resultData[type]) {
+            const displayName = type === 'projectAnalysis' ? 'Project Analysis' :
+                              type === 'codeQuality' ? 'Code Quality' :
+                              type === 'techStack' ? 'Tech Stack' :
+                              type.charAt(0).toUpperCase() + type.slice(1);
+            
+            analysisTypes[displayName] = (analysisTypes[displayName] || 0) + 1;
+          }
+        });
+        
+        // Also count from summary categories if available
+        if (summary.categories) {
+          Object.keys(summary.categories).forEach(category => {
+            const displayName = category === 'projectAnalysis' ? 'Project Analysis' :
+                              category === 'codeQuality' ? 'Code Quality' :
+                              category === 'techStack' ? 'Tech Stack' :
+                              category.charAt(0).toUpperCase() + category.slice(1);
+            
+            analysisTypes[displayName] = (analysisTypes[displayName] || 0) + 1;
+          });
+        }
       });
       
       const metrics = {

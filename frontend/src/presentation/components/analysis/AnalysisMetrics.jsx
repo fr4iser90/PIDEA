@@ -13,8 +13,9 @@ const AnalysisMetrics = ({ metrics, loading }) => {
     return `${(num * 100).toFixed(1)}%`;
   };
 
-  const formatDuration = (seconds) => {
-    if (!seconds) return '0s';
+  const formatDuration = (milliseconds) => {
+    if (!milliseconds) return '0s';
+    const seconds = Math.round(milliseconds / 1000);
     if (seconds < 60) return `${seconds}s`;
     if (seconds < 3600) return `${Math.floor(seconds / 60)}m ${seconds % 60}s`;
     return `${Math.floor(seconds / 3600)}h ${Math.floor((seconds % 3600) / 60)}m`;
