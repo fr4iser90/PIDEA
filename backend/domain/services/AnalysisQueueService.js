@@ -19,7 +19,7 @@ class AnalysisQueueService {
     // Memory management
     this.memoryOptimizedService = new MemoryOptimizedAnalysisService({
       logger: this.logger,
-      maxMemoryUsage: options.maxMemoryUsage || 256, // 256MB per analysis
+      maxMemoryUsage: options.maxMemoryUsage || 512, // 512MB per analysis (increased for large codebases)
       enableGarbageCollection: true,
       enableStreaming: true
     });
@@ -27,7 +27,7 @@ class AnalysisQueueService {
     // Configuration
     this.config = {
       maxConcurrentPerProject: options.maxConcurrentPerProject || 3,
-      maxMemoryPerAnalysis: options.maxMemoryPerAnalysis || 256 * 1024 * 1024, // 256MB
+      maxMemoryPerAnalysis: options.maxMemoryPerAnalysis || 512 * 1024 * 1024, // 512MB (increased for large codebases)
       analysisTimeout: options.analysisTimeout || 5 * 60 * 1000, // 5 minutes
       cacheTTL: options.cacheTTL || 3600000, // 1 hour
       enableSelectiveAnalysis: options.enableSelectiveAnalysis !== false,

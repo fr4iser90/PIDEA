@@ -15,7 +15,7 @@ class MemoryOptimizedAnalysisService {
         this.logger = options.logger || console;
         
         // Memory management settings
-        this.maxMemoryUsage = options.maxMemoryUsage || 256; // MB - Reduced for OOM prevention
+        this.maxMemoryUsage = options.maxMemoryUsage || 512; // MB - Increased for large codebases
         this.maxFileSize = options.maxFileSize || 10 * 1024 * 1024; // 10MB
         this.maxFilesPerBatch = options.maxFilesPerBatch || 50; // Reduced for memory safety
         this.maxDirectoryDepth = options.maxDirectoryDepth || 8;

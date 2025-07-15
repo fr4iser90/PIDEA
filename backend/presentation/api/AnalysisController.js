@@ -23,7 +23,7 @@ class AnalysisController {
     // Initialize memory management and queue services with Phase 3 enhancements
     this.analysisQueueService = new AnalysisQueueService({
       logger: this.logger,
-      maxMemoryUsage: 256, // 256MB per analysis
+      maxMemoryUsage: 512, // 512MB per analysis (increased for large codebases)
       enableMemoryMonitoring: true,
       enableSelectiveAnalysis: true,
       enableEnhancedTimeouts: true,
@@ -34,7 +34,7 @@ class AnalysisController {
     
     this.memoryOptimizedService = new MemoryOptimizedAnalysisService({
       logger: this.logger,
-      maxMemoryUsage: 256,
+      maxMemoryUsage: 512, // 512MB per analysis (increased for large codebases)
       enableGarbageCollection: true,
       enableStreaming: true,
       enableEnhancedTimeouts: true,

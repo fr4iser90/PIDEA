@@ -90,87 +90,130 @@ class AnalysisStep {
 
       // 1. Project Analysis
       if (projectAnalyzer) {
-        const projectAnalysis = await projectAnalyzer.analyzeProject(projectPath, {
-          includeRepoStructure: context.includeRepoStructure !== false,
-          includeDependencies: context.includeDependencies !== false
-        });
-        results.projectAnalysis = this.cleanResult(projectAnalysis);
+        try {
+          const projectAnalysis = await projectAnalyzer.analyzeProject(projectPath, {
+            includeRepoStructure: context.includeRepoStructure !== false,
+            includeDependencies: context.includeDependencies !== false
+          });
+          results.projectAnalysis = this.cleanResult(projectAnalysis);
+          logger.info(`✅ Project analysis completed`);
+        } catch (error) {
+          logger.warn(`⚠️ Project analysis failed: ${error.message}`);
+          results.projectAnalysis = { error: error.message, status: 'failed' };
+        }
       }
 
       // 2. Code Quality Analysis
       if (codeQualityAnalyzer && context.includeCodeQuality !== false) {
-        const codeQuality = await codeQualityAnalyzer.analyzeCodeQuality(projectPath, {
-          includeMetrics: true,
-          includeIssues: true,
-          includeSuggestions: true
-        });
-        results.codeQuality = this.cleanResult(codeQuality);
+        try {
+          const codeQuality = await codeQualityAnalyzer.analyzeCodeQuality(projectPath, {
+            includeMetrics: true,
+            includeIssues: true,
+            includeSuggestions: true
+          });
+          results.codeQuality = this.cleanResult(codeQuality);
+          logger.info(`✅ Code quality analysis completed`);
+        } catch (error) {
+          logger.warn(`⚠️ Code quality analysis failed: ${error.message}`);
+          results.codeQuality = { error: error.message, status: 'failed' };
+        }
       }
 
       // 3. Security Analysis
       if (securityAnalyzer && context.includeSecurity !== false) {
-        const security = await securityAnalyzer.analyzeSecurity(projectPath, {
-          includeVulnerabilities: true,
-          includeBestPractices: true,
-          includeDependencies: true
-        });
-        results.security = this.cleanResult(security);
+        try {
+          const security = await securityAnalyzer.analyzeSecurity(projectPath, {
+            includeVulnerabilities: true,
+            includeBestPractices: true,
+            includeDependencies: true
+          });
+          results.security = this.cleanResult(security);
+          logger.info(`✅ Security analysis completed`);
+        } catch (error) {
+          logger.warn(`⚠️ Security analysis failed: ${error.message}`);
+          results.security = { error: error.message, status: 'failed' };
+        }
       }
 
       // 4. Performance Analysis
       if (performanceAnalyzer && context.includePerformance !== false) {
-        const performance = await performanceAnalyzer.analyzePerformance(projectPath, {
-          includeMetrics: true,
-          includeOptimizations: true,
-          includeBottlenecks: true
-        });
-        results.performance = this.cleanResult(performance);
+        try {
+          const performance = await performanceAnalyzer.analyzePerformance(projectPath, {
+            includeMetrics: true,
+            includeOptimizations: true,
+            includeBottlenecks: true
+          });
+          results.performance = this.cleanResult(performance);
+          logger.info(`✅ Performance analysis completed`);
+        } catch (error) {
+          logger.warn(`⚠️ Performance analysis failed: ${error.message}`);
+          results.performance = { error: error.message, status: 'failed' };
+        }
       }
 
       // 5. Architecture Analysis
       if (architectureAnalyzer && context.includeArchitecture !== false) {
-        const architecture = await architectureAnalyzer.analyzeArchitecture(projectPath, {
-          includePatterns: true,
-          includeStructure: true,
-          includeRecommendations: true
-        });
-        results.architecture = this.cleanResult(architecture);
+        try {
+          const architecture = await architectureAnalyzer.analyzeArchitecture(projectPath, {
+            includePatterns: true,
+            includeStructure: true,
+            includeRecommendations: true
+          });
+          results.architecture = this.cleanResult(architecture);
+          logger.info(`✅ Architecture analysis completed`);
+        } catch (error) {
+          logger.warn(`⚠️ Architecture analysis failed: ${error.message}`);
+          results.architecture = { error: error.message, status: 'failed' };
+        }
       }
 
       // 6. Tech Stack Analysis
       if (techStackAnalyzer && context.includeTechStack !== false) {
-        const techStack = await techStackAnalyzer.analyzeTechStack(projectPath, {
-          includeFrameworks: true,
-          includeLibraries: true,
-          includeTools: true
-        });
-        results.techStack = this.cleanResult(techStack);
+        try {
+          const techStack = await techStackAnalyzer.analyzeTechStack(projectPath, {
+            includeFrameworks: true,
+            includeLibraries: true,
+            includeTools: true
+          });
+          results.techStack = this.cleanResult(techStack);
+          logger.info(`✅ Tech stack analysis completed`);
+        } catch (error) {
+          logger.warn(`⚠️ Tech stack analysis failed: ${error.message}`);
+          results.techStack = { error: error.message, status: 'failed' };
+        }
       }
 
       // 7. Dependency Analysis
       if (dependencyAnalyzer && context.includeDependencies !== false) {
-        const dependencies = await dependencyAnalyzer.analyzeDependencies(projectPath, {
-          includeOutdated: true,
-          includeVulnerabilities: true,
-          includeRecommendations: true
-        });
-        results.dependencies = this.cleanResult(dependencies);
-        // Store all found dependencies for merging in the controller
-        if (dependencies.packages && Array.isArray(dependencies.packages)) {
-          results.dependencies.allPackages = dependencies.packages.map(pkg => ({
-            context: pkg.path,
-            dependencies: pkg.dependencies,
-            devDependencies: pkg.devDependencies
-          }));
-          // Also as packagesByContext for easier merging
-          results.dependencies.packagesByContext = {};
-          for (const pkg of dependencies.packages) {
-            const ctx = pkg.path.replace(projectPath, '').replace(/^\/+/, '') || 'root';
-            results.dependencies.packagesByContext[ctx] = {
+        try {
+          const dependencies = await dependencyAnalyzer.analyzeDependencies(projectPath, {
+            includeOutdated: true,
+            includeVulnerabilities: true,
+            includeRecommendations: true
+          });
+          results.dependencies = this.cleanResult(dependencies);
+          logger.info(`✅ Dependency analysis completed`);
+          
+          // Store all found dependencies for merging in the controller
+          if (dependencies.packages && Array.isArray(dependencies.packages)) {
+            results.dependencies.allPackages = dependencies.packages.map(pkg => ({
+              context: pkg.path,
               dependencies: pkg.dependencies,
               devDependencies: pkg.devDependencies
-            };
+            }));
+            // Also as packagesByContext for easier merging
+            results.dependencies.packagesByContext = {};
+            for (const pkg of dependencies.packages) {
+              const ctx = pkg.path.replace(projectPath, '').replace(/^\/+/, '') || 'root';
+              results.dependencies.packagesByContext[ctx] = {
+                dependencies: pkg.dependencies,
+                devDependencies: pkg.devDependencies
+              };
+            }
           }
+        } catch (error) {
+          logger.warn(`⚠️ Dependency analysis failed: ${error.message}`);
+          results.dependencies = { error: error.message, status: 'failed' };
         }
       }
 
@@ -286,20 +329,39 @@ class AnalysisStep {
     const summary = {
       totalAnalyses: 0,
       successfulAnalyses: 0,
+      failedAnalyses: 0,
       criticalIssues: 0,
       warnings: 0,
       recommendations: 0,
       overallScore: 0,
-      categories: {}
+      categories: {},
+      partialResults: false
     };
 
     // Count analyses and issues
     Object.keys(results).forEach(key => {
       if (key !== 'summary' && key !== 'output' && key !== 'analysisId' && results[key]) {
         summary.totalAnalyses++;
-        summary.successfulAnalyses++;
         
         const result = results[key];
+        
+        // Check if analysis failed
+        if (result.status === 'failed' || result.error) {
+          summary.failedAnalyses++;
+          summary.categories[key] = {
+            hasData: false,
+            status: 'failed',
+            error: result.error || 'Analysis failed',
+            score: 0,
+            issues: 0,
+            recommendations: 0
+          };
+          return; // Skip processing failed analysis
+        }
+        
+        // Successful analysis
+        summary.successfulAnalyses++;
+        
         if (result.issues) {
           summary.criticalIssues += result.issues.filter(i => i.severity === 'critical').length;
           summary.warnings += result.issues.filter(i => i.severity === 'warning').length;
@@ -315,6 +377,7 @@ class AnalysisStep {
         
         summary.categories[key] = {
           hasData: true,
+          status: 'success',
           score: result.score || 0,
           issues: result.issues?.length || 0,
           recommendations: result.recommendations?.length || 0
@@ -322,9 +385,14 @@ class AnalysisStep {
       }
     });
 
-    // Calculate overall score
+    // Calculate overall score (only from successful analyses)
     if (summary.successfulAnalyses > 0) {
       summary.overallScore = Math.round(summary.overallScore / summary.successfulAnalyses);
+    }
+
+    // Mark as partial results if some analyses failed
+    if (summary.failedAnalyses > 0) {
+      summary.partialResults = true;
     }
 
     return summary;
