@@ -65,7 +65,7 @@ const AnalysisDataViewer = ({ projectId = null, eventBus = null }) => {
   useEffect(() => {
     loadAnalysisData();
     setupEventListeners();
-  }, [projectId, filters]);
+  }, [projectId]); // Removed filters dependency to prevent infinite loop
 
   const setupEventListeners = () => {
     if (!eventBus) return;
