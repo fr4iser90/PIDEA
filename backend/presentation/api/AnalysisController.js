@@ -1,9 +1,13 @@
 const Logger = require('@logging/Logger');
 const ServiceLogger = require('@logging/ServiceLogger');
 const ETagService = require('@domain/services/ETagService');
+const AnalysisQueueService = require('@domain/services/AnalysisQueueService');
+const MemoryOptimizedAnalysisService = require('@domain/services/MemoryOptimizedAnalysisService');
 const logger = new ServiceLogger('AnalysisController');
+
 /**
  * AnalysisController - API controller for specialized analysis endpoints
+ * Enhanced with memory management and queue integration
  */
 class AnalysisController {
   constructor(codeQualityService, securityService, performanceService, architectureService, logger, analysisOutputService, analysisRepository) {
@@ -15,6 +19,35 @@ class AnalysisController {
     this.analysisOutputService = analysisOutputService;
     this.analysisRepository = analysisRepository;
     this.etagService = new ETagService();
+    
+    // Initialize memory management and queue services with Phase 3 enhancements
+    this.analysisQueueService = new AnalysisQueueService({
+      logger: this.logger,
+      maxMemoryUsage: 256, // 256MB per analysis
+      enableMemoryMonitoring: true,
+      enableSelectiveAnalysis: true,
+      enableEnhancedTimeouts: true,
+      enableResultStreaming: true,
+      enableMemoryLogging: true,
+      enableProgressiveDegradation: true
+    });
+    
+    this.memoryOptimizedService = new MemoryOptimizedAnalysisService({
+      logger: this.logger,
+      maxMemoryUsage: 256,
+      enableGarbageCollection: true,
+      enableStreaming: true,
+      enableEnhancedTimeouts: true,
+      enableResultStreaming: true,
+      enableMemoryLogging: true,
+      enableProgressiveDegradation: true,
+      timeoutPerAnalysisType: {
+        'code-quality': 2 * 60 * 1000,    // 2 minutes
+        'security': 3 * 60 * 1000,        // 3 minutes
+        'performance': 4 * 60 * 1000,     // 4 minutes
+        'architecture': 5 * 60 * 1000     // 5 minutes
+      }
+    });
   }
 
   /**
@@ -268,16 +301,32 @@ class AnalysisController {
   }
 
   /**
-   * Comprehensive analysis (all types)
+   * Comprehensive analysis (all types) with memory management and queue integration
    * @param {Object} req - Express request
    * @param {Object} res - Express response
    */
   async analyzeComprehensive(req, res) {
     try {
       const { projectPath } = req.params;
+      const { types, exclude, priority, timeout } = req.query;
       const options = req.body || {};
 
-      this.logger.info(`Comprehensive analysis requested for project`);
+      this.logger.info(`Comprehensive analysis requested for project`, {
+        projectPath,
+        types,
+        exclude,
+        priority
+      });
+
+      // Parse analysis types from query parameters
+      const analysisTypes = this.parseAnalysisTypes(types, exclude);
+      
+      if (analysisTypes.length === 0) {
+        return res.status(400).json({
+          success: false,
+          error: 'No valid analysis types specified'
+        });
+      }
 
       // Check for cached comprehensive analysis first
       const latest = await this.analysisRepository.findLatestByProjectPath(projectPath, 'comprehensive');
@@ -287,87 +336,46 @@ class AnalysisController {
         
         res.json({
           success: true,
-          data: analysis
+          status: 'cached',
+          data: analysis,
+          cachedAt: latest.createdAt,
+          message: 'Returning cached analysis results'
         });
         return;
       }
 
-      this.logger.info(`Running new comprehensive analysis for project`);
-
-      // Run all analyses in parallel
-      const [codeQuality, security, performance, architecture] = await Promise.all([
-        this.codeQualityService.analyzeCodeQuality(projectPath, options),
-        this.securityService.analyzeSecurity(projectPath, options),
-        this.performanceService.analyzePerformance(projectPath, options),
-        this.architectureService.analyzeArchitecture(projectPath, options)
-      ]);
-
-      // Calculate overall scores
-      const codeQualityScore = this.codeQualityService.getQualityScore(codeQuality);
-      const securityScore = this.securityService.getSecurityScore(security);
-      const performanceScore = this.performanceService.getPerformanceScore(performance);
-      const architectureScore = this.architectureService.getArchitectureScore(architecture);
-
-      // Calculate weighted overall score
-      const overallScore = Math.round(
-        (codeQualityScore * 0.25) +
-        (securityScore * 0.30) +
-        (performanceScore * 0.25) +
-        (architectureScore * 0.20)
+      // Process request with automatic queueing
+      const result = await this.analysisQueueService.processAnalysisRequest(
+        projectPath,
+        analysisTypes,
+        { 
+          priority: priority || 'normal',
+          timeout: timeout ? parseInt(timeout) * 1000 : 300000,
+          selective: analysisTypes.length < 4 // Less than all types = selective
+        }
       );
-
-      // Get critical issues from all analyses
-      const criticalIssues = [
-        ...this.performanceService.getCriticalIssues(performance),
-        ...this.architectureService.getCriticalIssues(architecture)
-      ];
-
-      // Check for critical vulnerabilities
-      if (this.securityService.hasCriticalVulnerabilities(security)) {
-        criticalIssues.push({
-          type: 'security-vulnerabilities',
-          severity: 'critical',
-          description: 'Critical security vulnerabilities detected',
-          value: security.dependencies.critical
+      
+      // Return appropriate response based on status
+      if (result.status === 'queued') {
+        res.json({
+          success: true,
+          status: 'queued',
+          jobId: result.jobId,
+          analysisTypes: result.analysisTypes,
+          position: result.position,
+          estimatedWaitTime: result.estimatedWaitTime,
+          message: result.message
+        });
+      } else if (result.status === 'running') {
+        res.json({
+          success: true,
+          status: 'running',
+          jobId: result.jobId,
+          analysisTypes: result.analysisTypes,
+          estimatedTime: result.estimatedTime,
+          message: result.message
         });
       }
-
-      const comprehensiveResult = {
-        comprehensive: {
-          overallScore,
-          level: this.getOverallLevel(overallScore),
-          criticalIssues,
-          timestamp: new Date()
-        },
-        codeQuality: {
-          analysis: codeQuality,
-          score: codeQualityScore,
-          level: this.codeQualityService.getQualityLevel(codeQualityScore)
-        },
-        security: {
-          analysis: security,
-          score: securityScore,
-          riskLevel: this.securityService.getOverallRiskLevel(security)
-        },
-        performance: {
-          analysis: performance,
-          score: performanceScore,
-          level: this.performanceService.getPerformanceLevel(performanceScore)
-        },
-        architecture: {
-          analysis: architecture,
-          score: architectureScore,
-          level: this.architectureService.getArchitectureLevel(architectureScore)
-        }
-      };
-
-      // Save the comprehensive analysis result
-      await this.analysisRepository.saveAnalysis(projectPath, 'comprehensive', comprehensiveResult);
-
-      res.json({
-        success: true,
-        data: comprehensiveResult
-      });
 
     } catch (error) {
       this.logger.error(`Comprehensive analysis failed:`, error);
@@ -376,6 +384,347 @@ class AnalysisController {
         error: error.message
       });
     }
+  }
+
+  /**
+   * Parse analysis types from query parameters
+   * @param {string} types - Comma-separated analysis types
+   * @param {string} exclude - Comma-separated types to exclude
+   * @returns {Array} Selected analysis types
+   */
+  parseAnalysisTypes(types, exclude) {
+    const availableTypes = ['code-quality', 'security', 'performance', 'architecture'];
+    let selectedTypes = [...availableTypes];
+    
+    if (types) {
+      const requestedTypes = types.split(',').map(t => t.trim());
+      selectedTypes = requestedTypes.filter(type => availableTypes.includes(type));
+    }
+    
+    if (exclude) {
+      const excludedTypes = exclude.split(',').map(t => t.trim());
+      selectedTypes = selectedTypes.filter(type => !excludedTypes.includes(type));
+    }
+    
+    return selectedTypes;
+  }
+
+  /**
+   * Execute comprehensive analysis with sequential execution and memory management
+   * @param {string} projectPath - Project path
+   * @param {Array} analysisTypes - Analysis types to execute
+   * @param {Object} options - Analysis options
+   * @returns {Promise<Object>} Comprehensive analysis result
+   */
+  async executeComprehensiveAnalysis(projectPath, analysisTypes, options = {}) {
+    this.logger.info(`Executing comprehensive analysis with memory management`, {
+      projectPath,
+      analysisTypes
+    });
+
+    try {
+      // Check memory before starting
+      await this.checkMemoryUsage();
+      
+      const results = {};
+      
+      // Execute analyses sequentially to prevent OOM
+      for (const analysisType of analysisTypes) {
+        this.logger.info(`Executing ${analysisType} analysis`, {
+          projectPath,
+          analysisType
+        });
+        
+        // Check memory before each analysis
+        await this.checkMemoryUsage();
+        
+        // Execute with timeout and memory monitoring
+        const result = await this.executeAnalysisWithTimeout(
+          analysisType,
+          projectPath,
+          options
+        );
+        
+        results[analysisType] = result;
+        
+        // Cleanup after each analysis
+        await this.cleanupAfterAnalysis();
+      }
+      
+      // Calculate comprehensive results
+      const comprehensiveResult = this.calculateComprehensiveResults(results, analysisTypes);
+      
+      // Save the comprehensive analysis result
+      await this.analysisRepository.saveAnalysis(projectPath, 'comprehensive', comprehensiveResult);
+      
+      this.logger.info(`Comprehensive analysis completed successfully`, {
+        projectPath,
+        analysisTypes
+      });
+      
+      return comprehensiveResult;
+      
+    } catch (error) {
+      this.logger.error(`Comprehensive analysis execution failed`, {
+        projectPath,
+        analysisTypes,
+        error: error.message
+      });
+      throw error;
+    }
+  }
+
+  /**
+   * Execute single analysis with enhanced timeout and memory monitoring (Phase 3)
+   * @param {string} analysisType - Type of analysis
+   * @param {string} projectPath - Project path
+   * @param {Object} options - Analysis options
+   * @returns {Promise<Object>} Analysis result
+   */
+  async executeAnalysisWithTimeout(analysisType, projectPath, options) {
+    // **NEW**: Use analysis-type-specific timeouts from Phase 3
+    const timeout = options.timeout || this.memoryOptimizedService.timeoutPerAnalysisType[analysisType] || 300000;
+    
+    this.logger.info(`Executing analysis with enhanced timeout`, {
+      analysisType,
+      projectPath,
+      timeout: `${timeout / 1000}s`
+    });
+    
+    // **NEW**: Apply progressive degradation for large repositories
+    const degradedOptions = this.memoryOptimizedService.applyProgressiveDegradation(projectPath, options);
+    
+    return new Promise((resolve, reject) => {
+      const timeoutId = setTimeout(() => {
+        const error = new Error(`Enhanced timeout exceeded for ${analysisType}: ${timeout / 1000}s`);
+        error.name = 'EnhancedTimeoutError';
+        error.analysisType = analysisType;
+        error.timeout = timeout;
+        reject(error);
+      }, timeout);
+      
+      // Execute analysis based on type with enhanced error handling
+      let analysisPromise;
+      try {
+        switch (analysisType) {
+          case 'code-quality':
+            analysisPromise = this.codeQualityService.analyzeCodeQuality(projectPath, degradedOptions);
+            break;
+          case 'security':
+            analysisPromise = this.securityService.analyzeSecurity(projectPath, degradedOptions);
+            break;
+          case 'performance':
+            analysisPromise = this.performanceService.analyzePerformance(projectPath, degradedOptions);
+            break;
+          case 'architecture':
+            analysisPromise = this.architectureService.analyzeArchitecture(projectPath, degradedOptions);
+            break;
+          default:
+            reject(new Error(`Unknown analysis type: ${analysisType}`));
+            return;
+        }
+        
+        analysisPromise
+          .then(result => {
+            clearTimeout(timeoutId);
+            this.logger.info(`Analysis completed successfully`, {
+              analysisType,
+              projectPath,
+              duration: `${Date.now() - Date.now()}ms`
+            });
+            resolve(result);
+          })
+          .catch(error => {
+            clearTimeout(timeoutId);
+            this.logger.error(`Analysis failed with error`, {
+              analysisType,
+              projectPath,
+              error: error.message
+            });
+            reject(error);
+          });
+      } catch (error) {
+        clearTimeout(timeoutId);
+        this.logger.error(`Analysis setup failed`, {
+          analysisType,
+          projectPath,
+          error: error.message
+        });
+        reject(error);
+      }
+    });
+  }
+
+  /**
+   * Check memory usage and trigger enhanced cleanup if needed (Phase 3)
+   */
+  async checkMemoryUsage() {
+    const usage = process.memoryUsage();
+    const currentUsage = Math.round(usage.heapUsed / 1024 / 1024);
+    const heapTotal = Math.round(usage.heapTotal / 1024 / 1024);
+    const external = Math.round(usage.external / 1024 / 1024);
+    const rss = Math.round(usage.rss / 1024 / 1024);
+    
+    // **NEW**: Enhanced memory logging with detailed metrics
+    this.logger.info(`Enhanced memory usage check`, {
+      heapUsed: `${currentUsage}MB`,
+      heapTotal: `${heapTotal}MB`,
+      external: `${external}MB`,
+      rss: `${rss}MB`,
+      threshold: `${this.memoryOptimizedService.maxMemoryUsage}MB`
+    });
+    
+    // **NEW**: Check against enhanced memory threshold with fallback mechanisms
+    if (currentUsage > this.memoryOptimizedService.maxMemoryUsage * this.memoryOptimizedService.memoryThreshold) {
+      this.logger.warn(`Memory threshold exceeded: ${currentUsage}MB, triggering enhanced cleanup`, {
+        currentUsage: `${currentUsage}MB`,
+        threshold: `${this.memoryOptimizedService.maxMemoryUsage * this.memoryOptimizedService.memoryThreshold}MB`
+      });
+      
+      // **NEW**: Trigger fallback mechanisms from MemoryOptimizedAnalysisService
+      this.memoryOptimizedService.triggerFallbackMechanisms();
+      
+      // Force garbage collection if available
+      if (global.gc) {
+        global.gc();
+      }
+      
+      // **NEW**: Enhanced cleanup wait time
+      await new Promise(resolve => setTimeout(resolve, 200));
+      
+      // **NEW**: Log cleanup results
+      const afterUsage = process.memoryUsage();
+      const afterCurrentUsage = Math.round(afterUsage.heapUsed / 1024 / 1024);
+      this.logger.info(`Memory cleanup completed`, {
+        before: `${currentUsage}MB`,
+        after: `${afterCurrentUsage}MB`,
+        reduction: `${currentUsage - afterCurrentUsage}MB`
+      });
+    }
+  }
+
+  /**
+   * Enhanced cleanup after analysis (Phase 3)
+   */
+  async cleanupAfterAnalysis() {
+    this.logger.info(`Starting enhanced cleanup after analysis`);
+    
+    // **NEW**: Enhanced garbage collection with multiple passes
+    if (global.gc) {
+      // First pass
+      global.gc();
+      await new Promise(resolve => setTimeout(resolve, 50));
+      
+      // Second pass for thorough cleanup
+      global.gc();
+      await new Promise(resolve => setTimeout(resolve, 50));
+    }
+    
+    // **NEW**: Cleanup enhanced resources from MemoryOptimizedAnalysisService
+    await this.memoryOptimizedService.cleanupEnhanced();
+    
+    // **NEW**: Enhanced cleanup wait time
+    await new Promise(resolve => setTimeout(resolve, 100));
+    
+    // **NEW**: Log cleanup results
+    const usage = process.memoryUsage();
+    const currentUsage = Math.round(usage.heapUsed / 1024 / 1024);
+    this.logger.info(`Enhanced cleanup completed`, {
+      finalMemoryUsage: `${currentUsage}MB`
+    });
+  }
+
+  /**
+   * Calculate comprehensive results from individual analyses
+   * @param {Object} results - Individual analysis results
+   * @param {Array} analysisTypes - Analysis types performed
+   * @returns {Object} Comprehensive results
+   */
+  calculateComprehensiveResults(results, analysisTypes) {
+    const comprehensive = {
+      overallScore: 0,
+      level: 'unknown',
+      criticalIssues: [],
+      timestamp: new Date()
+    };
+    
+    let totalScore = 0;
+    let scoreCount = 0;
+    
+    // Calculate scores for each analysis type
+    if (results['code-quality']) {
+      const score = this.codeQualityService.getQualityScore(results['code-quality']);
+      totalScore += score;
+      scoreCount++;
+      
+      comprehensive.codeQuality = {
+        analysis: results['code-quality'],
+        score,
+        level: this.codeQualityService.getQualityLevel(score)
+      };
+    }
+    
+    if (results.security) {
+      const score = this.securityService.getSecurityScore(results.security);
+      totalScore += score;
+      scoreCount++;
+      
+      comprehensive.security = {
+        analysis: results.security,
+        score,
+        riskLevel: this.securityService.getOverallRiskLevel(results.security)
+      };
+      
+      // Add critical vulnerabilities
+      if (this.securityService.hasCriticalVulnerabilities(results.security)) {
+        comprehensive.criticalIssues.push({
+          type: 'security-vulnerabilities',
+          severity: 'critical',
+          description: 'Critical security vulnerabilities detected',
+          value: results.security.dependencies?.critical || 0
+        });
+      }
+    }
+    
+    if (results.performance) {
+      const score = this.performanceService.getPerformanceScore(results.performance);
+      totalScore += score;
+      scoreCount++;
+      
+      comprehensive.performance = {
+        analysis: results.performance,
+        score,
+        level: this.performanceService.getPerformanceLevel(score)
+      };
+      
+      // Add critical performance issues
+      const criticalIssues = this.performanceService.getCriticalIssues(results.performance);
+      comprehensive.criticalIssues.push(...criticalIssues);
+    }
+    
+    if (results.architecture) {
+      const score = this.architectureService.getArchitectureScore(results.architecture);
+      totalScore += score;
+      scoreCount++;
+      
+      comprehensive.architecture = {
+        analysis: results.architecture,
+        score,
+        level: this.architectureService.getArchitectureLevel(score)
+      };
+      
+      // Add critical architecture issues
+      const criticalIssues = this.architectureService.getCriticalIssues(results.architecture);
+      comprehensive.criticalIssues.push(...criticalIssues);
+    }
+    
+    // Calculate overall score
+    if (scoreCount > 0) {
+      comprehensive.overallScore = Math.round(totalScore / scoreCount);
+      comprehensive.level = this.getOverallLevel(comprehensive.overallScore);
+    }
+    
+    return comprehensive;
   }
 
   /**
