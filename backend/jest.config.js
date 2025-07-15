@@ -63,13 +63,19 @@ module.exports = {
     '^@/workflows/(.*)$': '<rootDir>/domain/workflows/$1',
     '^@/logging/(.*)$': '<rootDir>/infrastructure/logging/$1',
     '^@logging$': '<rootDir>/infrastructure/logging/$1',
+    '^@logging/(.*)$': '<rootDir>/infrastructure/logging/$1',
     '^@entities/(.*)$': '<rootDir>/domain/entities/$1',
     '^@entities$': '<rootDir>/domain/entities/$1',
     '^@services/(.*)$': '<rootDir>/domain/services/$1',
     '^@services$': '<rootDir>/domain/services/$1',
     '^@value-objects/(.*)$': '<rootDir>/domain/value-objects/$1',
     '^@value-objects$': '<rootDir>/domain/value-objects',
-
+    '^@repositories/(.*)$': '<rootDir>/domain/repositories/$1',
+    '^@repositories$': '<rootDir>/domain/repositories/$1',
+    '^@categories/(.*)$': '<rootDir>/application/commands/categories/$1',
+    '^@categories$': '<rootDir>/application/commands/categories/$1',
+    '^@external/(.*)$': '<rootDir>/infrastructure/external/$1',
+    '^@external$': '<rootDir>/infrastructure/external/$1'
   },
   
   transform: {
@@ -89,7 +95,6 @@ module.exports = {
   
   // Memory Management für große Test-Suites
   maxWorkers: 1,
-  runInBand: true,
   
   // Performance-Optimierungen
   cache: true,

@@ -6,7 +6,10 @@ require('module-alias/register');
  */
 
 const TestManagementService = require('@services/TestManagementService');
+const Logger = require('@logging/Logger');
 const path = require('path');
+
+const logger = new Logger('TestManagementReporter');
 
 class TestManagementReporter {
   constructor(globalConfig, options = {}) {
