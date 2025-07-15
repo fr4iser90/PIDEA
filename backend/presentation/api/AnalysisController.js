@@ -1,5 +1,6 @@
 const Logger = require('@logging/Logger');
 const ServiceLogger = require('@logging/ServiceLogger');
+const ETagService = require('@domain/services/ETagService');
 const logger = new ServiceLogger('AnalysisController');
 /**
  * AnalysisController - API controller for specialized analysis endpoints
@@ -13,6 +14,7 @@ class AnalysisController {
     this.logger = logger || { info: () => {}, error: () => {} };
     this.analysisOutputService = analysisOutputService;
     this.analysisRepository = analysisRepository;
+    this.etagService = new ETagService();
   }
 
   /**
@@ -586,6 +588,23 @@ class AnalysisController {
       
       this.logger.info(`Calculated metrics successfully`);
       
+      // Generate ETag for metrics data
+      const etag = this.etagService.generateMetricsETag(metrics, projectId);
+      
+      // Check if client has current version
+      if (this.etagService.shouldReturn304(req, etag)) {
+        this.logger.info('Client has current version, sending 304 Not Modified');
+        this.etagService.sendNotModified(res, etag);
+        return;
+      }
+      
+      // Set ETag headers for caching
+      this.etagService.setETagHeaders(res, etag, {
+        maxAge: 300, // 5 minutes
+        mustRevalidate: true,
+        isPublic: false
+      });
+      
       res.json({ success: true, data: metrics });
     } catch (error) {
       this.logger.error(`Failed to get analysis metrics:`, error);
@@ -656,6 +675,23 @@ class AnalysisController {
       
       this.logger.info(`Analysis history prepared successfully`);
       
+      // Generate ETag for history data
+      const etag = this.etagService.generateHistoryETag(history, projectId);
+      
+      // Check if client has current version
+      if (this.etagService.shouldReturn304(req, etag)) {
+        this.logger.info('Client has current version, sending 304 Not Modified');
+        this.etagService.sendNotModified(res, etag);
+        return;
+      }
+      
+      // Set ETag headers for caching
+      this.etagService.setETagHeaders(res, etag, {
+        maxAge: 300, // 5 minutes
+        mustRevalidate: true,
+        isPublic: false
+      });
+      
       res.json({ success: true, data: history });
     } catch (error) {
       this.logger.error(`Failed to get analysis history:`, error);
@@ -672,6 +708,26 @@ class AnalysisController {
     try {
       const { projectId, filename } = req.params;
       const content = await this.analysisOutputService.getAnalysisFile(projectId, filename);
+      
+      const responseData = { content, filename, projectId };
+
+      // Generate ETag for analysis file
+      const etag = this.etagService.generateETag(responseData, `analysis-file-${filename}`, projectId);
+      
+      // Check if client has current version
+      if (this.etagService.shouldReturn304(req, etag)) {
+        this.logger.info('Client has current version, sending 304 Not Modified');
+        this.etagService.sendNotModified(res, etag);
+        return;
+      }
+      
+      // Set ETag headers for caching
+      this.etagService.setETagHeaders(res, etag, {
+        maxAge: 300, // 5 minutes
+        mustRevalidate: true,
+        isPublic: false
+      });
+      
       res.json({ success: true, data: content });
     } catch (error) {
       this.logger.error(`Failed to get analysis file:`, error);
@@ -695,6 +751,25 @@ class AnalysisController {
       } else {
         analyses = await this.analysisRepository.findByProjectId(projectId);
       }
+      
+      const responseData = { analyses, type, projectId };
+
+      // Generate ETag for database analyses
+      const etag = this.etagService.generateETag(responseData, `analysis-database-${type || 'all'}`, projectId);
+      
+      // Check if client has current version
+      if (this.etagService.shouldReturn304(req, etag)) {
+        this.logger.info('Client has current version, sending 304 Not Modified');
+        this.etagService.sendNotModified(res, etag);
+        return;
+      }
+      
+      // Set ETag headers for caching
+      this.etagService.setETagHeaders(res, etag, {
+        maxAge: 300, // 5 minutes
+        mustRevalidate: true,
+        isPublic: false
+      });
       
       res.json({ success: true, data: analyses });
     } catch (error) {
@@ -857,7 +932,26 @@ class AnalysisController {
       
       this.logger.info(`Issues data extracted, count: ${issues.length}`);
       
-      res.json({ success: true, data: { issues, summary } });
+      const issuesData = { issues, summary };
+      
+      // Generate ETag for issues data
+      const etag = this.etagService.generateETag(issuesData, 'analysis-issues', projectId);
+      
+      // Check if client has current version
+      if (this.etagService.shouldReturn304(req, etag)) {
+        this.logger.info('Client has current version, sending 304 Not Modified');
+        this.etagService.sendNotModified(res, etag);
+        return;
+      }
+      
+      // Set ETag headers for caching
+      this.etagService.setETagHeaders(res, etag, {
+        maxAge: 300, // 5 minutes
+        mustRevalidate: true,
+        isPublic: false
+      });
+      
+      res.json({ success: true, data: issuesData });
     } catch (error) {
       this.logger.error(`Failed to get analysis issues:`, error);
       res.status(500).json({ success: false, error: error.message });
@@ -946,6 +1040,24 @@ class AnalysisController {
         }
       };
       this.logger.info(`Tech stack data extracted successfully`);
+      
+      // Generate ETag for tech stack data
+      const etag = this.etagService.generateETag(techStack, 'analysis-techstack', projectId);
+      
+      // Check if client has current version
+      if (this.etagService.shouldReturn304(req, etag)) {
+        this.logger.info('Client has current version, sending 304 Not Modified');
+        this.etagService.sendNotModified(res, etag);
+        return;
+      }
+      
+      // Set ETag headers for caching
+      this.etagService.setETagHeaders(res, etag, {
+        maxAge: 300, // 5 minutes
+        mustRevalidate: true,
+        isPublic: false
+      });
+      
       res.json({ success: true, data: techStack });
     } catch (error) {
       this.logger.error(`Failed to get analysis tech stack:`, error);
@@ -1037,6 +1149,23 @@ class AnalysisController {
       
       this.logger.info(`Architecture data extracted successfully`);
       
+      // Generate ETag for architecture data
+      const etag = this.etagService.generateETag(architecture, 'analysis-architecture', projectId);
+      
+      // Check if client has current version
+      if (this.etagService.shouldReturn304(req, etag)) {
+        this.logger.info('Client has current version, sending 304 Not Modified');
+        this.etagService.sendNotModified(res, etag);
+        return;
+      }
+      
+      // Set ETag headers for caching
+      this.etagService.setETagHeaders(res, etag, {
+        maxAge: 300, // 5 minutes
+        mustRevalidate: true,
+        isPublic: false
+      });
+      
       res.json({ success: true, data: architecture });
     } catch (error) {
       this.logger.error(`Failed to get analysis architecture:`, error);
@@ -1079,6 +1208,23 @@ class AnalysisController {
         default:
           chartData = this.generateTrendsData(analyses);
       }
+      
+      // Generate ETag for charts data
+      const etag = this.etagService.generateChartsETag(chartData, projectId, type);
+      
+      // Check if client has current version
+      if (this.etagService.shouldReturn304(req, etag)) {
+        this.logger.info('Client has current version, sending 304 Not Modified');
+        this.etagService.sendNotModified(res, etag);
+        return;
+      }
+      
+      // Set ETag headers for caching
+      this.etagService.setETagHeaders(res, etag, {
+        maxAge: 300, // 5 minutes
+        mustRevalidate: true,
+        isPublic: false
+      });
       
       res.json({ success: true, data: chartData });
     } catch (error) {
@@ -1234,7 +1380,26 @@ class AnalysisController {
         insights.push(...resultData.integratedInsights);
       }
       
-      res.json({ success: true, data: { recommendations, insights } });
+      const recommendationsData = { recommendations, insights };
+      
+      // Generate ETag for recommendations data
+      const etag = this.etagService.generateETag(recommendationsData, 'analysis-recommendations', projectId);
+      
+      // Check if client has current version
+      if (this.etagService.shouldReturn304(req, etag)) {
+        this.logger.info('Client has current version, sending 304 Not Modified');
+        this.etagService.sendNotModified(res, etag);
+        return;
+      }
+      
+      // Set ETag headers for caching
+      this.etagService.setETagHeaders(res, etag, {
+        maxAge: 300, // 5 minutes
+        mustRevalidate: true,
+        isPublic: false
+      });
+      
+      res.json({ success: true, data: recommendationsData });
     } catch (error) {
       this.logger.error(`Failed to get analysis recommendations:`, error);
       res.status(500).json({ success: false, error: error.message });
@@ -1268,13 +1433,33 @@ class AnalysisController {
         latestAnalyses
       );
       
+      const responseData = {
+        reportFile: reportResult.filename,
+        reportPath: reportResult.filepath,
+        analyses: Object.keys(latestAnalyses),
+        projectId
+      };
+
+      // Generate ETag for comprehensive report
+      const etag = this.etagService.generateETag(responseData, 'comprehensive-report', projectId);
+      
+      // Check if client has current version
+      if (this.etagService.shouldReturn304(req, etag)) {
+        this.logger.info('Client has current version, sending 304 Not Modified');
+        this.etagService.sendNotModified(res, etag);
+        return;
+      }
+      
+      // Set ETag headers for caching
+      this.etagService.setETagHeaders(res, etag, {
+        maxAge: 300, // 5 minutes
+        mustRevalidate: true,
+        isPublic: false
+      });
+      
       res.json({ 
         success: true, 
-        data: {
-          reportFile: reportResult.filename,
-          reportPath: reportResult.filepath,
-          analyses: Object.keys(latestAnalyses)
-        }
+        data: responseData
       });
     } catch (error) {
       this.logger.error(`Failed to generate comprehensive report:`, error);
@@ -1306,21 +1491,40 @@ class AnalysisController {
       const score = this.codeQualityService.getQualityScore(analysis);
       const level = this.codeQualityService.getQualityLevel(score);
 
+      const analysisData = {
+        analysis,
+        score,
+        level,
+        summary: {
+          overallScore: score,
+          issues: analysis.issues.length,
+          recommendations: analysis.recommendations.length,
+          configuration: analysis.configuration
+        },
+        cached: true,
+        timestamp: latest.createdAt
+      };
+
+      // Generate ETag for analysis data
+      const etag = this.etagService.generateAnalysisETag(analysisData, projectPath, 'code-quality');
+      
+      // Check if client has current version
+      if (this.etagService.shouldReturn304(req, etag)) {
+        this.logger.info('Client has current version, sending 304 Not Modified');
+        this.etagService.sendNotModified(res, etag);
+        return;
+      }
+      
+      // Set ETag headers for caching
+      this.etagService.setETagHeaders(res, etag, {
+        maxAge: 300, // 5 minutes
+        mustRevalidate: true,
+        isPublic: false
+      });
+
       res.json({
         success: true,
-        data: {
-          analysis,
-          score,
-          level,
-          summary: {
-            overallScore: score,
-            issues: analysis.issues.length,
-            recommendations: analysis.recommendations.length,
-            configuration: analysis.configuration
-          },
-          cached: true,
-          timestamp: latest.createdAt
-        }
+        data: analysisData
       });
 
     } catch (error) {
@@ -1357,17 +1561,36 @@ class AnalysisController {
       const riskLevel = this.securityService.getOverallRiskLevel(analysis);
       const hasCriticalVulnerabilities = this.securityService.hasCriticalVulnerabilities(analysis);
 
+      const analysisData = {
+        analysis,
+        score,
+        riskLevel,
+        hasCriticalVulnerabilities,
+        summary: this.securityService.getVulnerabilitySummary(analysis),
+        cached: true,
+        timestamp: latest.createdAt
+      };
+
+      // Generate ETag for analysis data
+      const etag = this.etagService.generateAnalysisETag(analysisData, projectPath, 'security');
+      
+      // Check if client has current version
+      if (this.etagService.shouldReturn304(req, etag)) {
+        this.logger.info('Client has current version, sending 304 Not Modified');
+        this.etagService.sendNotModified(res, etag);
+        return;
+      }
+      
+      // Set ETag headers for caching
+      this.etagService.setETagHeaders(res, etag, {
+        maxAge: 300, // 5 minutes
+        mustRevalidate: true,
+        isPublic: false
+      });
+
       res.json({
         success: true,
-        data: {
-          analysis,
-          score,
-          riskLevel,
-          hasCriticalVulnerabilities,
-          summary: this.securityService.getVulnerabilitySummary(analysis),
-          cached: true,
-          timestamp: latest.createdAt
-        }
+        data: analysisData
       });
 
     } catch (error) {
@@ -1404,17 +1627,36 @@ class AnalysisController {
       const level = this.performanceService.getPerformanceLevel(score);
       const criticalIssues = this.performanceService.getCriticalIssues(analysis);
 
+      const analysisData = {
+        analysis,
+        score,
+        level,
+        criticalIssues,
+        summary: this.performanceService.getPerformanceSummary(analysis),
+        cached: true,
+        timestamp: latest.createdAt
+      };
+
+      // Generate ETag for analysis data
+      const etag = this.etagService.generateAnalysisETag(analysisData, projectPath, 'performance');
+      
+      // Check if client has current version
+      if (this.etagService.shouldReturn304(req, etag)) {
+        this.logger.info('Client has current version, sending 304 Not Modified');
+        this.etagService.sendNotModified(res, etag);
+        return;
+      }
+      
+      // Set ETag headers for caching
+      this.etagService.setETagHeaders(res, etag, {
+        maxAge: 300, // 5 minutes
+        mustRevalidate: true,
+        isPublic: false
+      });
+
       res.json({
         success: true,
-        data: {
-          analysis,
-          score,
-          level,
-          criticalIssues,
-          summary: this.performanceService.getPerformanceSummary(analysis),
-          cached: true,
-          timestamp: latest.createdAt
-        }
+        data: analysisData
       });
 
     } catch (error) {
@@ -1452,18 +1694,37 @@ class AnalysisController {
       const isWellStructured = this.architectureService.isWellStructured(analysis);
       const hasCircularDependencies = this.architectureService.hasCircularDependencies(analysis);
 
+      const analysisData = {
+        analysis,
+        score,
+        level,
+        isWellStructured,
+        hasCircularDependencies,
+        summary: this.architectureService.getArchitectureSummary(analysis),
+        cached: true,
+        timestamp: latest.createdAt
+      };
+
+      // Generate ETag for analysis data
+      const etag = this.etagService.generateAnalysisETag(analysisData, projectPath, 'architecture');
+      
+      // Check if client has current version
+      if (this.etagService.shouldReturn304(req, etag)) {
+        this.logger.info('Client has current version, sending 304 Not Modified');
+        this.etagService.sendNotModified(res, etag);
+        return;
+      }
+      
+      // Set ETag headers for caching
+      this.etagService.setETagHeaders(res, etag, {
+        maxAge: 300, // 5 minutes
+        mustRevalidate: true,
+        isPublic: false
+      });
+
       res.json({
         success: true,
-        data: {
-          analysis,
-          score,
-          level,
-          isWellStructured,
-          hasCircularDependencies,
-          summary: this.architectureService.getArchitectureSummary(analysis),
-          cached: true,
-          timestamp: latest.createdAt
-        }
+        data: analysisData
       });
 
     } catch (error) {
@@ -1497,13 +1758,32 @@ class AnalysisController {
 
       const analysis = latest.resultData;
       
+      const analysisData = {
+        ...analysis,
+        cached: true,
+        timestamp: latest.createdAt
+      };
+
+      // Generate ETag for analysis data
+      const etag = this.etagService.generateAnalysisETag(analysisData, projectPath, 'comprehensive');
+      
+      // Check if client has current version
+      if (this.etagService.shouldReturn304(req, etag)) {
+        this.logger.info('Client has current version, sending 304 Not Modified');
+        this.etagService.sendNotModified(res, etag);
+        return;
+      }
+      
+      // Set ETag headers for caching
+      this.etagService.setETagHeaders(res, etag, {
+        maxAge: 300, // 5 minutes
+        mustRevalidate: true,
+        isPublic: false
+      });
+
       res.json({
         success: true,
-        data: {
-          ...analysis,
-          cached: true,
-          timestamp: latest.createdAt
-        }
+        data: analysisData
       });
 
     } catch (error) {

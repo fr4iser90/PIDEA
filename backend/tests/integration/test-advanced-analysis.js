@@ -1,8 +1,9 @@
+#!/usr/bin/env node
+
+require('module-alias/register');
 const Logger = require('@logging/Logger');
 
 const logger = new Logger('ServiceName');
-
-#!/usr/bin/env node
 
 /**
  * Test runner for Advanced Analysis components
@@ -13,9 +14,9 @@ const path = require('path');
 const fs = require('fs').promises;
 
 // Import the components to test
-const AdvancedAnalysisCommand = require('./backend/application/commands/analyze/AdvancedAnalysisCommand');
-const AdvancedAnalysisHandler = require('./backend/application/handlers/analyze/AdvancedAnalysisHandler');
-const AdvancedAnalysisService = require('./backend/domain/services/AdvancedAnalysisService');
+const AdvancedAnalysisCommand = require('@application/commands/analyze/AdvancedAnalysisCommand');
+const AdvancedAnalysisHandler = require('@application/handlers/analyze/AdvancedAnalysisHandler');
+const AdvancedAnalysisService = require('@domain/services/AdvancedAnalysisService');
 
 class AdvancedAnalysisTester {
     constructor() {

@@ -3,6 +3,7 @@ import ChatRepository from '@/domain/repositories/ChatRepository.jsx';
 import ChatMessage from '@/domain/entities/ChatMessage.jsx';
 import ChatSession from '@/domain/entities/ChatSession.jsx';
 import useAuthStore from '@/infrastructure/stores/AuthStore.jsx';
+import etagManager from '@/infrastructure/services/ETagManager.js';
 
 // Utility function to convert workspace path to project ID
 const getProjectIdFromWorkspace = (workspacePath) => {
@@ -132,8 +133,8 @@ const API_CONFIG = {
   }
 };
 
-// Helper function to make API calls
-export const apiCall = async (endpoint, options = {}) => {
+// Helper function to make API calls with ETag support
+export const apiCall = async (endpoint, options = {}, projectId = null) => {
   const url = typeof endpoint === 'function' ? endpoint() : `${API_CONFIG.baseURL}${endpoint}`;
   
   logger.info('🔍 [APIChatRepository] Making API call to:', url);
@@ -142,13 +143,16 @@ export const apiCall = async (endpoint, options = {}) => {
   const { getAuthHeaders } = useAuthStore.getState();
   const authHeaders = getAuthHeaders();
   
+  // Add ETag headers for GET requests
+  const etagOptions = etagManager.addETagHeaders(options, endpoint, projectId);
+  
   const config = {
     headers: {
       'Content-Type': 'application/json',
       ...authHeaders,
-      ...options.headers
+      ...etagOptions.headers
     },
-    ...options
+    ...etagOptions
   };
 
   logger.info('🔍 [APIChatRepository] Request config:', {
@@ -162,6 +166,18 @@ export const apiCall = async (endpoint, options = {}) => {
     
     logger.info('🔍 [APIChatRepository] Response status:', response.status);
     
+    // Handle ETag response
+    const etagResponse = etagManager.handleResponse(response, endpoint, projectId);
+    
+    if (response.status === 304) {
+      // Handle 304 Not Modified
+      const cachedData = etagManager.handleNotModified(endpoint, projectId);
+      if (cachedData) {
+        logger.info('✅ [APIChatRepository] Using cached data (304 Not Modified)');
+        return cachedData;
+      }
+    }
+    
     if (!response.ok) {
       if (response.status === 401) {
         logger.info('❌ [APIChatRepository] 401 Unauthorized - logging out user');
@@ -174,6 +190,12 @@ export const apiCall = async (endpoint, options = {}) => {
     }
     
     const data = await response.json();
+    
+    // Cache successful GET responses
+    if (config.method === 'GET' || !config.method) {
+      etagManager.cacheData(endpoint, data, projectId);
+    }
+    
     logger.info('✅ [APIChatRepository] API call successful');
     return data;
   } catch (error) {
@@ -459,54 +481,54 @@ export default class APIChatRepository extends ChatRepository {
   // New analysis methods for enhanced data viewer
   async getAnalysisMetrics(projectId = null) {
     const currentProjectId = projectId || await this.getCurrentProjectId();
-    return apiCall(`/api/projects/${currentProjectId}/analysis/metrics`);
+    return apiCall(`/api/projects/${currentProjectId}/analysis/metrics`, {}, currentProjectId);
   }
 
   async getAnalysisStatus(projectId = null) {
     const currentProjectId = projectId || await this.getCurrentProjectId();
-    return apiCall(`/api/projects/${currentProjectId}/analysis/status`);
+    return apiCall(`/api/projects/${currentProjectId}/analysis/status`, {}, currentProjectId);
   }
 
   async getAnalysisCharts(projectId = null, type = 'trends') {
     const currentProjectId = projectId || await this.getCurrentProjectId();
-    return apiCall(`/api/projects/${currentProjectId}/analysis/charts/${type}`);
+    return apiCall(`/api/projects/${currentProjectId}/analysis/charts/${type}`, {}, currentProjectId);
   }
 
   async getAnalysisHistory(projectId = null) {
     const currentProjectId = projectId || await this.getCurrentProjectId();
-    return apiCall(`/api/projects/${currentProjectId}/analysis/history`);
+    return apiCall(`/api/projects/${currentProjectId}/analysis/history`, {}, currentProjectId);
   }
 
   // Enhanced analysis methods for new dashboard components
   async getAnalysisIssues(projectId = null) {
     const currentProjectId = projectId || await this.getCurrentProjectId();
-    return apiCall(`/api/projects/${currentProjectId}/analysis/issues`);
+    return apiCall(`/api/projects/${currentProjectId}/analysis/issues`, {}, currentProjectId);
   }
 
   async getAnalysisTechStack(projectId = null) {
     const currentProjectId = projectId || await this.getCurrentProjectId();
-    return apiCall(`/api/projects/${currentProjectId}/analysis/techstack`);
+    return apiCall(`/api/projects/${currentProjectId}/analysis/techstack`, {}, currentProjectId);
   }
 
   async getAnalysisArchitecture(projectId = null) {
     const currentProjectId = projectId || await this.getCurrentProjectId();
-    return apiCall(`/api/projects/${currentProjectId}/analysis/architecture`);
+    return apiCall(`/api/projects/${currentProjectId}/analysis/architecture`, {}, currentProjectId);
   }
 
   async getAnalysisRecommendations(projectId = null) {
     const currentProjectId = projectId || await this.getCurrentProjectId();
-    return apiCall(`/api/projects/${currentProjectId}/analysis/recommendations`);
+    return apiCall(`/api/projects/${currentProjectId}/analysis/recommendations`, {}, currentProjectId);
   }
 
   // Documentation Tasks Methods
-  async getDocsTasks() {
-    const projectId = await this.getCurrentProjectId();
-    return apiCall(`/api/projects/${projectId}/docs-tasks`);
+  async getDocsTasks(projectId = null) {
+    const currentProjectId = projectId || await this.getCurrentProjectId();
+    return apiCall(`/api/projects/${currentProjectId}/docs-tasks`, {}, currentProjectId);
   }
 
-  async getDocsTaskDetails(taskId) {
-    const projectId = await this.getCurrentProjectId();
-    return await apiCall(`/api/projects/${projectId}/docs-tasks/${taskId}`);
+  async getDocsTaskDetails(taskId, projectId = null) {
+    const currentProjectId = projectId || await this.getCurrentProjectId();
+    return await apiCall(`/api/projects/${currentProjectId}/docs-tasks/${taskId}`, {}, currentProjectId);
   }
 
   // NEW: Sync docs tasks to database

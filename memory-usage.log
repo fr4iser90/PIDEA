@@ -1,0 +1,10 @@
+{"timestamp":"2025-07-15T15:47:24.496Z","event":"MONITOR_START","data":{"maxMemoryUsage":2048,"interval":500}}
+{"timestamp":"2025-07-15T15:47:24.533Z","event":"MONITOR_STOP","data":{"duration":37,"peakMemory":0,"peakTime":null,"totalSamples":0}}
+{"timestamp":"2025-07-15T15:47:37.944Z","event":"MONITOR_START","data":{"maxMemoryUsage":2048,"interval":500}}
+{"timestamp":"2025-07-15T15:47:37.983Z","event":"MONITOR_STOP","data":{"duration":39,"peakMemory":0,"peakTime":null,"totalSamples":0}}
+{"timestamp":"2025-07-15T15:47:48.179Z","event":"MONITOR_START","data":{"maxMemoryUsage":2048,"interval":500}}
+{"timestamp":"2025-07-15T15:47:48.262Z","event":"MONITOR_STOP","data":{"duration":83,"peakMemory":0,"peakTime":null,"totalSamples":0}}
+{"timestamp":"2025-07-15T15:53:12.094Z","event":"MONITOR_START","data":{"maxMemoryUsage":1024,"interval":500}}
+{"timestamp":"2025-07-15T15:53:12.131Z","event":"MONITOR_STOP","data":{"duration":37,"peakMemory":0,"peakTime":null,"totalSamples":0}}
+{"timestamp":"2025-07-15T15:54:07.377Z","event":"MONITOR_START","data":{"maxMemoryUsage":1024,"interval":500}}
+{"timestamp":"2025-07-15T15:54:08.067Z","event":"MONITOR_STOP","data":{"duration":690,"peakMemory":5,"peakTime":1752594847878,"totalSamples":1}}

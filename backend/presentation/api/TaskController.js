@@ -9,6 +9,7 @@ const TaskPriority = require('@value-objects/TaskPriority');
 const TaskType = require('@value-objects/TaskType');
 const Logger = require('@logging/Logger');
 const ServiceLogger = require('@logging/ServiceLogger');
+const ETagService = require('@domain/services/ETagService');
 const logger = new ServiceLogger('TaskController');
 
 class TaskController {
@@ -20,6 +21,7 @@ class TaskController {
         this.projectMappingService = projectMappingService;
         this.ideManager = ideManager;
         this.docsImportService = docsImportService;
+        this.etagService = new ETagService();
     }
 
     // Create task for a specific project
@@ -71,6 +73,25 @@ class TaskController {
                 type
             });
 
+            const responseData = { tasks, projectId, filters: { status, priority, type } };
+
+            // Generate ETag for tasks
+            const etag = this.etagService.generateETag(responseData, 'project-tasks', projectId);
+            
+            // Check if client has current version
+            if (this.etagService.shouldReturn304(req, etag)) {
+                logger.info('Client has current version, sending 304 Not Modified');
+                this.etagService.sendNotModified(res, etag);
+                return;
+            }
+            
+            // Set ETag headers for caching
+            this.etagService.setETagHeaders(res, etag, {
+                maxAge: 300, // 5 minutes
+                mustRevalidate: true,
+                isPublic: false
+            });
+
             res.json({
                 success: true,
                 data: tasks
@@ -97,6 +118,25 @@ class TaskController {
                     error: 'Task not found'
                 });
             }
+
+            const responseData = { task, projectId, taskId: id };
+
+            // Generate ETag for specific task
+            const etag = this.etagService.generateETag(responseData, 'project-task', projectId);
+            
+            // Check if client has current version
+            if (this.etagService.shouldReturn304(req, etag)) {
+                logger.info('Client has current version, sending 304 Not Modified');
+                this.etagService.sendNotModified(res, etag);
+                return;
+            }
+            
+            // Set ETag headers for caching
+            this.etagService.setETagHeaders(res, etag, {
+                maxAge: 300, // 5 minutes
+                mustRevalidate: true,
+                isPublic: false
+            });
 
             res.json({
                 success: true,
@@ -248,6 +288,25 @@ class TaskController {
 
             const execution = await this.taskService.getTaskExecution(id);
 
+            const responseData = { execution, projectId, taskId: id };
+
+            // Generate ETag for task execution
+            const etag = this.etagService.generateETag(responseData, 'task-execution', projectId);
+            
+            // Check if client has current version
+            if (this.etagService.shouldReturn304(req, etag)) {
+                logger.info('Client has current version, sending 304 Not Modified');
+                this.etagService.sendNotModified(res, etag);
+                return;
+            }
+            
+            // Set ETag headers for caching
+            this.etagService.setETagHeaders(res, etag, {
+                maxAge: 300, // 5 minutes
+                mustRevalidate: true,
+                isPublic: false
+            });
+
             res.json({
                 success: true,
                 data: execution
@@ -322,6 +381,25 @@ class TaskController {
 
             const analysis = await this.taskService.getProjectAnalysis(analysisId);
 
+            const responseData = { analysis, projectId, analysisId };
+
+            // Generate ETag for project analysis
+            const etag = this.etagService.generateETag(responseData, 'project-analysis', projectId);
+            
+            // Check if client has current version
+            if (this.etagService.shouldReturn304(req, etag)) {
+                logger.info('Client has current version, sending 304 Not Modified');
+                this.etagService.sendNotModified(res, etag);
+                return;
+            }
+            
+            // Set ETag headers for caching
+            this.etagService.setETagHeaders(res, etag, {
+                maxAge: 300, // 5 minutes
+                mustRevalidate: true,
+                isPublic: false
+            });
+
             res.json({
                 success: true,
                 data: analysis
@@ -384,6 +462,25 @@ class TaskController {
 
             const status = await this.taskService.getAutoModeStatus(projectId);
 
+            const responseData = { status, projectId };
+
+            // Generate ETag for auto mode status
+            const etag = this.etagService.generateETag(responseData, 'auto-mode-status', projectId);
+            
+            // Check if client has current version
+            if (this.etagService.shouldReturn304(req, etag)) {
+                logger.info('Client has current version, sending 304 Not Modified');
+                this.etagService.sendNotModified(res, etag);
+                return;
+            }
+            
+            // Set ETag headers for caching
+            this.etagService.setETagHeaders(res, etag, {
+                maxAge: 300, // 5 minutes
+                mustRevalidate: true,
+                isPublic: false
+            });
+
             res.json({
                 success: true,
                 data: status
@@ -444,6 +541,25 @@ class TaskController {
             const userId = req.user.id;
 
             const scripts = await this.taskService.getGeneratedScripts(projectId);
+
+            const responseData = { scripts, projectId };
+
+            // Generate ETag for generated scripts
+            const etag = this.etagService.generateETag(responseData, 'generated-scripts', projectId);
+            
+            // Check if client has current version
+            if (this.etagService.shouldReturn304(req, etag)) {
+                logger.info('Client has current version, sending 304 Not Modified');
+                this.etagService.sendNotModified(res, etag);
+                return;
+            }
+            
+            // Set ETag headers for caching
+            this.etagService.setETagHeaders(res, etag, {
+                maxAge: 300, // 5 minutes
+                mustRevalidate: true,
+                isPublic: false
+            });
 
             res.json({
                 success: true,

@@ -1,11 +1,13 @@
 const ProjectAnalysis = require('@entities/ProjectAnalysis');
 const Logger = require('@logging/Logger');
+const ETagService = require('@domain/services/ETagService');
 const logger = new Logger('Logger');
 
 class ProjectAnalysisController {
     constructor(projectAnalysisRepository, logger) {
         this.projectAnalysisRepository = projectAnalysisRepository;
         this.logger = logger;
+        this.etagService = new ETagService();
     }
 
     /**
@@ -24,13 +26,32 @@ class ProjectAnalysisController {
 
             const analyses = await this.projectAnalysisRepository.findByProjectId(projectId);
             
+            const responseData = {
+                projectId,
+                analyses: analyses.map(analysis => analysis.toJSON()),
+                count: analyses.length
+            };
+
+            // Generate ETag for project analyses
+            const etag = this.etagService.generateETag(responseData, 'project-analyses', projectId);
+            
+            // Check if client has current version
+            if (this.etagService.shouldReturn304(req, etag)) {
+                this.logger.info('Client has current version, sending 304 Not Modified');
+                this.etagService.sendNotModified(res, etag);
+                return;
+            }
+            
+            // Set ETag headers for caching
+            this.etagService.setETagHeaders(res, etag, {
+                maxAge: 300, // 5 minutes
+                mustRevalidate: true,
+                isPublic: false
+            });
+            
             res.json({
                 success: true,
-                data: {
-                    projectId,
-                    analyses: analyses.map(analysis => analysis.toJSON()),
-                    count: analyses.length
-                }
+                data: responseData
             });
         } catch (error) {
             this.logger.error('Error getting project analyses:', error);
@@ -64,9 +85,28 @@ class ProjectAnalysisController {
                 });
             }
 
+            const responseData = analysis.toJSON();
+
+            // Generate ETag for latest analysis by type
+            const etag = this.etagService.generateAnalysisETag(responseData, projectId, analysisType);
+            
+            // Check if client has current version
+            if (this.etagService.shouldReturn304(req, etag)) {
+                this.logger.info('Client has current version, sending 304 Not Modified');
+                this.etagService.sendNotModified(res, etag);
+                return;
+            }
+            
+            // Set ETag headers for caching
+            this.etagService.setETagHeaders(res, etag, {
+                maxAge: 300, // 5 minutes
+                mustRevalidate: true,
+                isPublic: false
+            });
+
             res.json({
                 success: true,
-                data: analysis.toJSON()
+                data: responseData
             });
         } catch (error) {
             this.logger.error('Error getting latest analysis:', error);
@@ -93,14 +133,33 @@ class ProjectAnalysisController {
 
             const analyses = await this.projectAnalysisRepository.findByProjectIdAndType(projectId, analysisType);
             
+            const responseData = {
+                projectId,
+                analysisType,
+                analyses: analyses.map(analysis => analysis.toJSON()),
+                count: analyses.length
+            };
+
+            // Generate ETag for analyses by type
+            const etag = this.etagService.generateETag(responseData, `analyses-by-type-${analysisType}`, projectId);
+            
+            // Check if client has current version
+            if (this.etagService.shouldReturn304(req, etag)) {
+                this.logger.info('Client has current version, sending 304 Not Modified');
+                this.etagService.sendNotModified(res, etag);
+                return;
+            }
+            
+            // Set ETag headers for caching
+            this.etagService.setETagHeaders(res, etag, {
+                maxAge: 300, // 5 minutes
+                mustRevalidate: true,
+                isPublic: false
+            });
+            
             res.json({
                 success: true,
-                data: {
-                    projectId,
-                    analysisType,
-                    analyses: analyses.map(analysis => analysis.toJSON()),
-                    count: analyses.length
-                }
+                data: responseData
             });
         } catch (error) {
             this.logger.error('Error getting analyses by type:', error);
@@ -278,14 +337,33 @@ class ProjectAnalysisController {
                 stats[type].versions = Array.from(stats[type].versions);
             });
 
+            const responseData = {
+                projectId,
+                totalAnalyses: allAnalyses.length,
+                analysisTypes: Object.keys(stats),
+                stats
+            };
+
+            // Generate ETag for analysis stats
+            const etag = this.etagService.generateETag(responseData, 'analysis-stats', projectId);
+            
+            // Check if client has current version
+            if (this.etagService.shouldReturn304(req, etag)) {
+                this.logger.info('Client has current version, sending 304 Not Modified');
+                this.etagService.sendNotModified(res, etag);
+                return;
+            }
+            
+            // Set ETag headers for caching
+            this.etagService.setETagHeaders(res, etag, {
+                maxAge: 300, // 5 minutes
+                mustRevalidate: true,
+                isPublic: false
+            });
+
             res.json({
                 success: true,
-                data: {
-                    projectId,
-                    totalAnalyses: allAnalyses.length,
-                    analysisTypes: Object.keys(stats),
-                    stats
-                }
+                data: responseData
             });
         } catch (error) {
             this.logger.error('Error getting analysis stats:', error);

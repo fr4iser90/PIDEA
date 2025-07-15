@@ -1,0 +1,16 @@
+{
+  "summary": {
+    "duration": 690,
+    "totalSamples": 1,
+    "peakMemory": 5,
+    "peakTime": 1752594847878,
+    "averageMemory": 5
+  },
+  "analysis": {
+    "growthRate": 0,
+    "memoryLeaks": [],
+    "spikes": [],
+    "trends": []
+  },
+  "recommendations": []
+}
