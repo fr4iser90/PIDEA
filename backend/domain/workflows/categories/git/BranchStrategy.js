@@ -7,7 +7,7 @@ const HotfixBranchStrategy = require('./strategies/HotfixBranchStrategy');
 const ReleaseBranchStrategy = require('./strategies/ReleaseBranchStrategy');
 const GitWorkflowException = require('./exceptions/GitWorkflowException');
 const Logger = require('@logging/Logger');
-const logger = new Logger('Logger');
+const logger = new Logger('GitBranchStrategy');
 
 class BranchStrategy {
   constructor(config = {}) {
