@@ -46,7 +46,7 @@ class DeploymentConfig {
       // Database Configuration
       database: {
         type: 'sqlite',
-        path: path.join(__dirname, '../database/PIDEA-dev.db'),
+        path: path.join(__dirname, '../database/pidea-dev.db'),
         logging: true
       },
 

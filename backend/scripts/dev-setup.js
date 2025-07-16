@@ -207,7 +207,7 @@ class DevSetup {
   }
 
   async showDatabaseInfo() {
-    const dbPath = path.join(__dirname, '../database/PIDEA-dev.db');
+    const dbPath = path.join(__dirname, '../database/pidea-dev.db');
     if (fs.existsSync(dbPath)) {
       const stats = fs.statSync(dbPath);
       logger.info('📊 Database Info:');
@@ -250,7 +250,7 @@ class DevSetup {
       const bcrypt = require('bcryptjs');
       const { v4: uuidv4 } = require('uuid');
       
-      const dbPath = path.join(__dirname, '../database/PIDEA-dev.db');
+      const dbPath = path.join(__dirname, '../database/pidea-dev.db');
       const db = new sqlite3.Database(dbPath);
       
       const userId = uuidv4();
@@ -310,7 +310,7 @@ class DevSetup {
   async listUsers() {
     try {
       const sqlite3 = require('sqlite3').verbose();
-      const dbPath = path.join(__dirname, '../database/PIDEA-dev.db');
+      const dbPath = path.join(__dirname, '../database/pidea-dev.db');
       const db = new sqlite3.Database(dbPath);
       
       const sql = 'SELECT id, email, role, created_at FROM users ORDER BY created_at DESC';
@@ -438,7 +438,7 @@ class DevSetup {
     logger.info('===============');
     
     // Check database
-    const dbPath = path.join(__dirname, '../database/PIDEA-dev.db');
+    const dbPath = path.join(__dirname, '../database/pidea-dev.db');
     if (fs.existsSync(dbPath)) {
       const stats = fs.statSync(dbPath);
       logger.info(`✅ Database: ${(stats.size / 1024).toFixed(2)} KB`);

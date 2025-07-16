@@ -8,7 +8,7 @@ const Logger = require('@logging/Logger');
 const logger = new Logger('Logger');
 
 // Use the same database path as the application
-const dbPath = path.join(__dirname, '../database/PIDEA-dev.db');
+const dbPath = path.join(__dirname, '../database/pidea-dev.db');
 
 logger.debug('👤 [CreateTestUser] Creating test user...');
 logger.info(`📁 Database path: ${dbPath}`);

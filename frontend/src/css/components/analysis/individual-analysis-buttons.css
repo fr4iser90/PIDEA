@@ -147,6 +147,14 @@
   border-left: 4px solid #9C27B0;
 }
 
+.analysis-button-container.orange {
+  border-left: 4px solid #FF9800;
+}
+
+.analysis-button-container.teal {
+  border-left: 4px solid #009688;
+}
+
 /* Button Header */
 .analysis-button-header {
   display: flex;

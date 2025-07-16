@@ -124,7 +124,7 @@ class AutoSecurityManager {
       // Development: Use SQLite
       return {
         type: 'sqlite',
-        database: path.join(__dirname, '../../database/PIDEA-dev.db'),
+        database: path.join(__dirname, '../../database/pidea-dev.db'),
         fallback: {
           type: 'memory',
           database: ':memory:'
