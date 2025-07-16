@@ -69,4 +69,9 @@ async function createTestUser() {
   }
 }
 
-createTestUser(); 
+// Run if called directly
+if (require.main === module) {
+  createTestUser();
+}
+
+module.exports = createTestUser; 
