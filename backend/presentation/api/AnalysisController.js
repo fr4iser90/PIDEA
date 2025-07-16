@@ -300,179 +300,33 @@ class AnalysisController {
     }
   }
 
-  /**
-   * Comprehensive analysis (all types) with memory management and queue integration
-   * @param {Object} req - Express request
-   * @param {Object} res - Express response
-   */
-  async analyzeComprehensive(req, res) {
-    try {
-      const { projectPath } = req.params;
-      const { types, exclude, priority, timeout } = req.query;
-      const options = req.body || {};
 
-      this.logger.info(`Comprehensive analysis requested for project`, {
-        projectPath,
-        types,
-        exclude,
-        priority
-      });
-
-      // Parse analysis types from query parameters
-      const analysisTypes = this.parseAnalysisTypes(types, exclude);
-      
-      if (analysisTypes.length === 0) {
-        return res.status(400).json({
-          success: false,
-          error: 'No valid analysis types specified'
-        });
-      }
-
-      // Check for cached comprehensive analysis first
-      const latest = await this.analysisRepository.findLatestByProjectPath(projectPath, 'comprehensive');
-      if (latest && isAnalysisFresh(latest)) {
-        this.logger.info(`Returning cached comprehensive analysis for project`);
-        const analysis = latest.resultData;
-        
-        res.json({
-          success: true,
-          status: 'cached',
-          data: analysis,
-          cachedAt: latest.createdAt,
-          message: 'Returning cached analysis results'
-        });
-        return;
-      }
-
-      // Process request with automatic queueing
-      const result = await this.analysisQueueService.processAnalysisRequest(
-        projectPath,
-        analysisTypes,
-        { 
-          priority: priority || 'normal',
-          timeout: timeout ? parseInt(timeout) * 1000 : 300000,
-          selective: analysisTypes.length < 4 // Less than all types = selective
-        }
-      );
-      
-      // Return appropriate response based on status
-      if (result.status === 'queued') {
-        res.json({
-          success: true,
-          status: 'queued',
-          jobId: result.jobId,
-          analysisTypes: result.analysisTypes,
-          position: result.position,
-          estimatedWaitTime: result.estimatedWaitTime,
-          message: result.message
-        });
-      } else if (result.status === 'running') {
-        res.json({
-          success: true,
-          status: 'running',
-          jobId: result.jobId,
-          analysisTypes: result.analysisTypes,
-          estimatedTime: result.estimatedTime,
-          message: result.message
-        });
-      }
-
-    } catch (error) {
-      this.logger.error(`Comprehensive analysis failed:`, error);
-      res.status(500).json({
-        success: false,
-        error: error.message
-      });
-    }
-  }
 
   /**
    * Parse analysis types from query parameters
    * @param {string} types - Comma-separated analysis types
    * @param {string} exclude - Comma-separated types to exclude
-   * @returns {Array} Selected analysis types
+   * @returns {Array} Array of analysis types
    */
   parseAnalysisTypes(types, exclude) {
-    const availableTypes = ['code-quality', 'security', 'performance', 'architecture'];
-    let selectedTypes = [...availableTypes];
+    const allTypes = ['code-quality', 'security', 'performance', 'architecture'];
     
-    if (types) {
-      const requestedTypes = types.split(',').map(t => t.trim());
-      selectedTypes = requestedTypes.filter(type => availableTypes.includes(type));
+    if (!types || types === 'all') {
+      return allTypes;
     }
+    
+    const requestedTypes = types.split(',').map(t => t.trim());
+    const validTypes = requestedTypes.filter(t => allTypes.includes(t));
     
     if (exclude) {
       const excludedTypes = exclude.split(',').map(t => t.trim());
-      selectedTypes = selectedTypes.filter(type => !excludedTypes.includes(type));
+      return validTypes.filter(t => !excludedTypes.includes(t));
     }
     
-    return selectedTypes;
+    return validTypes;
   }
 
-  /**
-   * Execute comprehensive analysis with sequential execution and memory management
-   * @param {string} projectPath - Project path
-   * @param {Array} analysisTypes - Analysis types to execute
-   * @param {Object} options - Analysis options
-   * @returns {Promise<Object>} Comprehensive analysis result
-   */
-  async executeComprehensiveAnalysis(projectPath, analysisTypes, options = {}) {
-    this.logger.info(`Executing comprehensive analysis with memory management`, {
-      projectPath,
-      analysisTypes
-    });
 
-    try {
-      // Check memory before starting
-      await this.checkMemoryUsage();
-      
-      const results = {};
-      
-      // Execute analyses sequentially to prevent OOM
-      for (const analysisType of analysisTypes) {
-        this.logger.info(`Executing ${analysisType} analysis`, {
-          projectPath,
-          analysisType
-        });
-        
-        // Check memory before each analysis
-        await this.checkMemoryUsage();
-        
-        // Execute with timeout and memory monitoring
-        const result = await this.executeAnalysisWithTimeout(
-          analysisType,
-          projectPath,
-          options
-        );
-        
-        results[analysisType] = result;
-        
-        // Cleanup after each analysis
-        await this.cleanupAfterAnalysis();
-      }
-      
-      // Calculate comprehensive results
-      const comprehensiveResult = this.calculateComprehensiveResults(results, analysisTypes);
-      
-      // Save the comprehensive analysis result
-      await this.analysisRepository.saveAnalysis(projectPath, 'comprehensive', comprehensiveResult);
-      
-      this.logger.info(`Comprehensive analysis completed successfully`, {
-        projectPath,
-        analysisTypes
-      });
-      
-      return comprehensiveResult;
-      
-    } catch (error) {
-      this.logger.error(`Comprehensive analysis execution failed`, {
-        projectPath,
-        analysisTypes,
-        error: error.message
-      });
-      throw error;
-    }
-  }
 
   /**
    * Execute single analysis with enhanced timeout and memory monitoring (Phase 3)
@@ -632,99 +486,6 @@ class AnalysisController {
     this.logger.info(`Enhanced cleanup completed`, {
       finalMemoryUsage: `${currentUsage}MB`
     });
-  }
-
-  /**
-   * Calculate comprehensive results from individual analyses
-   * @param {Object} results - Individual analysis results
-   * @param {Array} analysisTypes - Analysis types performed
-   * @returns {Object} Comprehensive results
-   */
-  calculateComprehensiveResults(results, analysisTypes) {
-    const comprehensive = {
-      overallScore: 0,
-      level: 'unknown',
-      criticalIssues: [],
-      timestamp: new Date()
-    };
-    
-    let totalScore = 0;
-    let scoreCount = 0;
-    
-    // Calculate scores for each analysis type
-    if (results['code-quality']) {
-      const score = this.codeQualityService.getQualityScore(results['code-quality']);
-      totalScore += score;
-      scoreCount++;
-      
-      comprehensive.codeQuality = {
-        analysis: results['code-quality'],
-        score,
-        level: this.codeQualityService.getQualityLevel(score)
-      };
-    }
-    
-    if (results.security) {
-      const score = this.securityService.getSecurityScore(results.security);
-      totalScore += score;
-      scoreCount++;
-      
-      comprehensive.security = {
-        analysis: results.security,
-        score,
-        riskLevel: this.securityService.getOverallRiskLevel(results.security)
-      };
-      
-      // Add critical vulnerabilities
-      if (this.securityService.hasCriticalVulnerabilities(results.security)) {
-        comprehensive.criticalIssues.push({
-          type: 'security-vulnerabilities',
-          severity: 'critical',
-          description: 'Critical security vulnerabilities detected',
-          value: results.security.dependencies?.critical || 0
-        });
-      }
-    }
-    
-    if (results.performance) {
-      const score = this.performanceService.getPerformanceScore(results.performance);
-      totalScore += score;
-      scoreCount++;
-      
-      comprehensive.performance = {
-        analysis: results.performance,
-        score,
-        level: this.performanceService.getPerformanceLevel(score)
-      };
-      
-      // Add critical performance issues
-      const criticalIssues = this.performanceService.getCriticalIssues(results.performance);
-      comprehensive.criticalIssues.push(...criticalIssues);
-    }
-    
-    if (results.architecture) {
-      const score = this.architectureService.getArchitectureScore(results.architecture);
-      totalScore += score;
-      scoreCount++;
-      
-      comprehensive.architecture = {
-        analysis: results.architecture,
-        score,
-        level: this.architectureService.getArchitectureLevel(score)
-      };
-      
-      // Add critical architecture issues
-      const criticalIssues = this.architectureService.getCriticalIssues(results.architecture);
-      comprehensive.criticalIssues.push(...criticalIssues);
-    }
-    
-    // Calculate overall score
-    if (scoreCount > 0) {
-      comprehensive.overallScore = Math.round(totalScore / scoreCount);
-      comprehensive.level = this.getOverallLevel(comprehensive.overallScore);
-    }
-    
-    return comprehensive;
   }
 
   /**
@@ -1824,66 +1585,7 @@ class AnalysisController {
     }
   }
 
-  /**
-   * Generate comprehensive report
-   * @param {Object} req - Express request
-   * @param {Object} res - Express response
-   */
-  async generateComprehensiveReport(req, res) {
-    try {
-      const { projectId } = req.params;
-      
-      // Get all analyses for this project
-      const analyses = await this.analysisRepository.findByProjectId(projectId);
-      
-      // Group by type and get latest
-      const latestAnalyses = {};
-      analyses.forEach(analysis => {
-        if (!latestAnalyses[analysis.analysisType] || 
-            new Date(analysis.timestamp) > new Date(latestAnalyses[analysis.analysisType].timestamp)) {
-          latestAnalyses[analysis.analysisType] = analysis;
-        }
-      });
-      
-      // Generate markdown report
-      const reportResult = await this.analysisOutputService.generateMarkdownReport(
-        projectId, 
-        latestAnalyses
-      );
-      
-      const responseData = {
-        reportFile: reportResult.filename,
-        reportPath: reportResult.filepath,
-        analyses: Object.keys(latestAnalyses),
-        projectId
-      };
 
-      // Generate ETag for comprehensive report
-      const etag = this.etagService.generateETag(responseData, 'comprehensive-report', projectId);
-      
-      // Check if client has current version
-      if (this.etagService.shouldReturn304(req, etag)) {
-        this.logger.info('Client has current version, sending 304 Not Modified');
-        this.etagService.sendNotModified(res, etag);
-        return;
-      }
-      
-      // Set ETag headers for caching
-      this.etagService.setETagHeaders(res, etag, {
-        maxAge: 300, // 5 minutes
-        mustRevalidate: true,
-        isPublic: false
-      });
-      
-      res.json({ 
-        success: true, 
-        data: responseData
-      });
-    } catch (error) {
-      this.logger.error(`Failed to generate comprehensive report:`, error);
-      res.status(500).json({ success: false, error: error.message });
-    }
-  }
 
   /**
    * Get code quality analysis data (GET - no analysis)
@@ -2154,64 +1856,7 @@ class AnalysisController {
     }
   }
 
-  /**
-   * Get comprehensive analysis data (GET - no analysis)
-   * @param {Object} req - Express request
-   * @param {Object} res - Express response
-   */
-  async getComprehensiveAnalysis(req, res) {
-    try {
-      const { projectPath } = req.params;
 
-      this.logger.info(`Getting comprehensive analysis data`);
-
-      // Get latest analysis from database
-      const latest = await this.analysisRepository.findLatestByProjectPath(projectPath, 'comprehensive');
-      if (!latest) {
-        return res.status(404).json({
-          success: false,
-          error: 'No comprehensive analysis found'
-        });
-      }
-
-      const analysis = latest.resultData;
-      
-      const analysisData = {
-        ...analysis,
-        cached: true,
-        timestamp: latest.createdAt
-      };
-
-      // Generate ETag for analysis data
-      const etag = this.etagService.generateAnalysisETag(analysisData, projectPath, 'comprehensive');
-      
-      // Check if client has current version
-      if (this.etagService.shouldReturn304(req, etag)) {
-        this.logger.info('Client has current version, sending 304 Not Modified');
-        this.etagService.sendNotModified(res, etag);
-        return;
-      }
-      
-      // Set ETag headers for caching
-      this.etagService.setETagHeaders(res, etag, {
-        maxAge: 300, // 5 minutes
-        mustRevalidate: true,
-        isPublic: false
-      });
-
-      res.json({
-        success: true,
-        data: analysisData
-      });
-
-    } catch (error) {
-      this.logger.error(`Failed to get comprehensive analysis:`, error);
-      res.status(500).json({
-        success: false,
-        error: error.message
-      });
-    }
-  }
 
   /**
    * Get overall level based on score

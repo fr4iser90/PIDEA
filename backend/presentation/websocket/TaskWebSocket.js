@@ -41,6 +41,14 @@ class TaskWebSocket {
         this.eventBus.on('analysis:complete', this.handleAnalysisComplete.bind(this));
         this.eventBus.on('analysis:error', this.handleAnalysisError.bind(this));
         
+        // Analysis step events
+        this.eventBus.on('step:created', this.handleAnalysisStepCreated.bind(this));
+        this.eventBus.on('step:started', this.handleAnalysisStepStarted.bind(this));
+        this.eventBus.on('step:progress', this.handleAnalysisStepProgress.bind(this));
+        this.eventBus.on('step:completed', this.handleAnalysisStepCompleted.bind(this));
+        this.eventBus.on('step:failed', this.handleAnalysisStepFailed.bind(this));
+        this.eventBus.on('step:cancelled', this.handleAnalysisStepCancelled.bind(this));
+        
         // Suggestion events
         this.eventBus.on('suggestion:generated', this.handleSuggestionGenerated.bind(this));
         this.eventBus.on('suggestion:applied', this.handleSuggestionApplied.bind(this));
@@ -643,6 +651,31 @@ class TaskWebSocket {
 
     handleAnalysisError(data) {
         this.broadcastToRoom(`project:${data.projectId}`, 'analysis:error', data);
+    }
+
+    // Event handlers for analysis step events
+    handleAnalysisStepCreated(data) {
+        this.broadcastToRoom(`project:${data.projectId}`, 'step:created', data);
+    }
+
+    handleAnalysisStepStarted(data) {
+        this.broadcastToRoom(`project:${data.projectId}`, 'step:started', data);
+    }
+
+    handleAnalysisStepProgress(data) {
+        this.broadcastToRoom(`project:${data.projectId}`, 'step:progress', data);
+    }
+
+    handleAnalysisStepCompleted(data) {
+        this.broadcastToRoom(`project:${data.projectId}`, 'step:completed', data);
+    }
+
+    handleAnalysisStepFailed(data) {
+        this.broadcastToRoom(`project:${data.projectId}`, 'step:failed', data);
+    }
+
+    handleAnalysisStepCancelled(data) {
+        this.broadcastToRoom(`project:${data.projectId}`, 'step:cancelled', data);
     }
 
     // Event handlers for suggestion events

@@ -749,7 +749,6 @@ class Application {
     this.app.get('/api/projects/:projectId/analysis/status', (req, res) => this.analysisController.getAnalysisStatus(req, res));
     this.app.get('/api/projects/:projectId/analysis/files/:filename', (req, res) => this.analysisController.getAnalysisFile(req, res));
     this.app.get('/api/projects/:projectId/analysis/database', (req, res) => this.analysisController.getAnalysisFromDatabase(req, res));
-    this.app.post('/api/projects/:projectId/analysis/report', (req, res) => this.analysisController.generateComprehensiveReport(req, res));
     
     // New analysis component routes (protected) - PROJECT-BASED
     this.app.get('/api/projects/:projectId/analysis/issues', (req, res) => this.analysisController.getAnalysisIssues(req, res));
@@ -763,14 +762,12 @@ class Application {
     this.app.post('/api/projects/:projectId/analysis/security', (req, res) => this.analysisController.analyzeSecurity(req, res));
     this.app.post('/api/projects/:projectId/analysis/performance', (req, res) => this.analysisController.analyzePerformance(req, res));
     this.app.post('/api/projects/:projectId/analysis/architecture', (req, res) => this.analysisController.analyzeArchitecture(req, res));
-    this.app.post('/api/projects/:projectId/analysis/comprehensive', (req, res) => this.analysisController.analyzeComprehensive(req, res));
     
     // Individual Analysis GET routes (protected) - PROJECT-BASED
     this.app.get('/api/projects/:projectId/analysis/code-quality', (req, res) => this.analysisController.getCodeQualityAnalysis(req, res));
     this.app.get('/api/projects/:projectId/analysis/security', (req, res) => this.analysisController.getSecurityAnalysis(req, res));
     this.app.get('/api/projects/:projectId/analysis/performance', (req, res) => this.analysisController.getPerformanceAnalysis(req, res));
     this.app.get('/api/projects/:projectId/analysis/architecture', (req, res) => this.analysisController.getArchitectureAnalysis(req, res));
-    this.app.get('/api/projects/:projectId/analysis/comprehensive', (req, res) => this.analysisController.getComprehensiveAnalysis(req, res));
     
     // GENERIC ROUTE MUST BE LAST - PROJECT-BASED
     this.app.get('/api/projects/:projectId/analysis/:analysisId', (req, res) => this.taskController.getProjectAnalysis(req, res));

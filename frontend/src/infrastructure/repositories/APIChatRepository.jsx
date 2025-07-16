@@ -520,6 +520,51 @@ export default class APIChatRepository extends ChatRepository {
     return apiCall(`/api/projects/${currentProjectId}/analysis/recommendations`, {}, currentProjectId);
   }
 
+  // Individual Analysis Step Methods
+  async executeAnalysisStep(projectId = null, analysisType, options = {}) {
+    const currentProjectId = projectId || await this.getCurrentProjectId();
+    return apiCall(`/api/projects/${currentProjectId}/analysis/steps/${analysisType}`, {
+      method: 'POST',
+      body: JSON.stringify(options)
+    }, currentProjectId);
+  }
+
+  async getAnalysisSteps(projectId = null, options = {}) {
+    const currentProjectId = projectId || await this.getCurrentProjectId();
+    const queryParams = new URLSearchParams(options).toString();
+    return apiCall(`/api/projects/${currentProjectId}/analysis/steps?${queryParams}`, {}, currentProjectId);
+  }
+
+  async getAnalysisStep(stepId, projectId = null) {
+    const currentProjectId = projectId || await this.getCurrentProjectId();
+    return apiCall(`/api/projects/${currentProjectId}/analysis/steps/${stepId}`, {}, currentProjectId);
+  }
+
+  async getActiveAnalysisSteps(projectId = null) {
+    const currentProjectId = projectId || await this.getCurrentProjectId();
+    return apiCall(`/api/projects/${currentProjectId}/analysis/steps/active`, {}, currentProjectId);
+  }
+
+  async cancelAnalysisStep(stepId, projectId = null) {
+    const currentProjectId = projectId || await this.getCurrentProjectId();
+    return apiCall(`/api/projects/${currentProjectId}/analysis/steps/${stepId}/cancel`, {
+      method: 'POST'
+    }, currentProjectId);
+  }
+
+  async retryAnalysisStep(stepId, projectId = null, options = {}) {
+    const currentProjectId = projectId || await this.getCurrentProjectId();
+    return apiCall(`/api/projects/${currentProjectId}/analysis/steps/${stepId}/retry`, {
+      method: 'POST',
+      body: JSON.stringify(options)
+    }, currentProjectId);
+  }
+
+  async getAnalysisStepStats(projectId = null) {
+    const currentProjectId = projectId || await this.getCurrentProjectId();
+    return apiCall(`/api/projects/${currentProjectId}/analysis/steps/stats`, {}, currentProjectId);
+  }
+
   // Documentation Tasks Methods
   async getDocsTasks(projectId = null) {
     const currentProjectId = projectId || await this.getCurrentProjectId();
