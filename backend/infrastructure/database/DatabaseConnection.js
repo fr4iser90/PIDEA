@@ -424,14 +424,13 @@ class DatabaseConnection {
     for (const table of tables) {
       try {
         await this.execute(table);
-        logger.info(`✅ Table created/verified`);
       } catch (error) {
         logger.error(`❌ Table creation failed:`, error.message);
         throw error;
       }
     }
     
-    logger.info('✅ All PIDEA tables created successfully');
+    logger.info('✅ All PIDEA tables created/verified');
   }
 
   async execute(sql, params = []) {

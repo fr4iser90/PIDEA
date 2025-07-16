@@ -16,7 +16,7 @@ const ServiceLogger = require('@logging/ServiceLogger');
 const logger = new ServiceLogger('IDEManager');
 
 class IDEManager {
-  constructor(browserManager = null, eventBus = null) {
+  constructor(browserManager = null, eventBus = null, gitService = null) {
     // Initialize factories
     this.detectorFactory = new IDEDetectorFactory();
     this.starterFactory = new IDEStarterFactory();
@@ -32,6 +32,12 @@ class IDEManager {
     this.fileDetector = null;
     this.browserManager = browserManager;
     this.eventBus = eventBus;
+    this.gitService = gitService;
+    if (gitService) {
+      logger.info('IDEManager: gitService injected and available');
+    } else {
+      logger.warn('IDEManager: gitService NOT available');
+    }
     
     if (browserManager) {
       try {

@@ -94,6 +94,7 @@ class BranchStrategy {
    * @param {Object} config - Configuration object
    */
   initializeStrategies(config) {
+    if (this._alreadyLogged) return;
     // Create feature branch strategy
     this.strategies.set('feature', new FeatureBranchStrategy({
       ...config.feature,
@@ -113,6 +114,7 @@ class BranchStrategy {
     }));
 
     this.logger.info('Initialized branch strategies:', Array.from(this.strategies.keys()));
+    this._alreadyLogged = true;
   }
 
   /**

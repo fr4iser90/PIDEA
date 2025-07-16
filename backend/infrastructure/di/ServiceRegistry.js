@@ -64,13 +64,13 @@ class ServiceRegistry {
         }, { singleton: true });
 
         // IDE manager
-        this.container.register('ideManager', (browserManager, projectRepository, eventBus) => {
+        this.container.register('ideManager', (browserManager, projectRepository, eventBus, gitService) => {
             const IDEManager = require('../external/ide/IDEManager');
-            const manager = new IDEManager(browserManager, eventBus);
+            const manager = new IDEManager(browserManager, eventBus, gitService);
             // Inject project repository for automatic database operations
             manager.projectRepository = projectRepository;
             return manager;
-        }, { singleton: true, dependencies: ['browserManager', 'projectRepository', 'eventBus'] });
+        }, { singleton: true, dependencies: ['browserManager', 'projectRepository', 'eventBus', 'gitService'] });
 
         // IDE Port Manager
         this.container.register('idePortManager', (ideManager, eventBus) => {

@@ -60,7 +60,8 @@ class AutoFinishSystem {
         });
         this.logger.info('Git workflow manager initialized');
       } else {
-        this.logger.warn('⚠️ Git service not available, git workflow manager disabled');
+        this.logger.warn('⚠️ Git service not available in IDEManager. Git-based features are disabled.');
+        this.logger.warn('ℹ️  Lösung: Stelle sicher, dass gitService im DI-Container an IDEManager übergeben wird.');
       }
     } catch (error) {
       this.logger.error('Failed to initialize git workflow manager:', error.message);
