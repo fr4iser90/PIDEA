@@ -1,6 +1,6 @@
 const { chromium } = require('playwright');
 const Logger = require('@logging/Logger');
-const logger = new Logger('Logger');
+const logger = new Logger('BrowserManager');
 
 
 class BrowserManager {

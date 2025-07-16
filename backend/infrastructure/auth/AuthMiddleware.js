@@ -1,6 +1,6 @@
 const AuthService = require('@services/AuthService');
 const Logger = require('@logging/Logger');
-const logger = new Logger('Logger');
+const logger = new Logger('AuthMiddleware');
 
 
 class AuthMiddleware {
@@ -12,26 +12,26 @@ class AuthMiddleware {
   authenticate() {
     return async (req, res, next) => {
       try {
-        logger.info('🔍 [AuthMiddleware] Authenticating request to:', req.path);
-        logger.info('🔍 [AuthMiddleware] Headers:', {
-          authorization: req.headers.authorization ? req.headers.authorization.substring(0, 20) + '...' : 'null',
-          'content-type': req.headers['content-type']
-        });
+        // logger.info('🔍 Authenticating request to:', req.path);
+        // logger.info('🔍 Headers:', {
+        //   authorization: req.headers.authorization ? req.headers.authorization.substring(0, 20) + '...' : 'null',
+        //   'content-type': req.headers['content-type']
+        // });
         
         const token = this.extractToken(req);
-        // logger.info('🔍 [AuthMiddleware] Extracted token:', token ? token.substring(0, 20) + '...' : 'null');
+        // logger.info('🔍 Extracted token:', token ? token.substring(0, 20) + '...' : 'null');
         
         if (!token) {
-          logger.info('❌ [AuthMiddleware] No token found');
+          logger.info('❌ No token found');
           return res.status(401).json({
             success: false,
             error: 'Access token required'
           });
         }
 
-        logger.info('🔍 [AuthMiddleware] Validating token...');
+        // logger.info('🔍 Validating token...');
         const { user, session } = await this.authService.validateAccessToken(token);
-        logger.info('✅ [AuthMiddleware] Token validated successfully for user:', user.email);
+        // logger.info('✅ Token validated successfully for user:', user.email);
         
         // Inject user context into request
         req.user = user;
@@ -39,7 +39,7 @@ class AuthMiddleware {
         
         next();
       } catch (error) {
-        logger.error('❌ [AuthMiddleware] Authentication failed:', error.message);
+        logger.error('❌ Authentication failed:', error.message);
         return res.status(401).json({
           success: false,
           error: 'Invalid or expired access token'

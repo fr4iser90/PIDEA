@@ -35,7 +35,7 @@ class ServiceContainer {
             dependencies
         });
         
-        logger.info(`Registered service: ${name} (singleton: ${singleton})`);
+        // logger.info(`Registered service: ${name} (singleton: ${singleton})`);
     }
 
     /**

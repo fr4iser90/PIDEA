@@ -104,19 +104,19 @@ class IDEManager {
       if (existingIDEs.length > 0) {
         await this.portManager.initialize();
         this.activePort = this.portManager.getActivePort();
-        logger.info(`Port manager selected active IDE on port ${this.activePort}`);
+        // logger.info(`Port manager selected active IDE on port ${this.activePort}`);
       }
 
       // Detect workspace paths for existing IDEs
       if (existingIDEs.length > 0) {
-        logger.info(`Detecting workspace paths for ${existingIDEs.length} IDEs`);
+        // logger.info(`Detecting workspace paths for ${existingIDEs.length} IDEs`);
         for (const ide of existingIDEs) {
           if (!this.ideWorkspaces.has(ide.port)) {
             try {
               await this.detectWorkspacePath(ide.port);
               const workspacePath = this.ideWorkspaces.get(ide.port);
               if (workspacePath) {
-                logger.info(`Detected workspace path for port ${ide.port}: ${workspacePath}`);
+                // logger.info(`Detected workspace path for port ${ide.port}: ${workspacePath}`);
               }
                           } catch (error) {
                 logger.warn(`Could not detect workspace path for port ${ide.port}: ${error.message}`);
@@ -551,13 +551,19 @@ class IDEManager {
       // Generate project ID
       const projectId = projectName.toLowerCase().replace(/[^a-z0-9]/g, '_');
       
-      logger.info(`Creating project in database: ${projectId} (${projectName}) at ${workspacePath}`);
-      
+      // Prüfe, ob das Projekt existiert
+      let project = await this.projectRepository.findByWorkspacePath(workspacePath);
+      let created = false;
+      if (!project) {
+        logger.info(`Creating project in database: ${projectId} (${projectName}) at ${workspacePath}`);
+        created = true;
+      }
+    
       // Get IDE type for this port
       const ideType = this.ideTypes.get(port) || 'cursor';
       
       // Create project using findOrCreateByWorkspacePath
-      const project = await this.projectRepository.findOrCreateByWorkspacePath(workspacePath, {
+      project = await this.projectRepository.findOrCreateByWorkspacePath(workspacePath, {
         id: projectId,
         name: projectName,
         description: `Project detected at ${workspacePath}`,
@@ -572,7 +578,11 @@ class IDEManager {
         }
       });
       
-      logger.info(`Project created/found in database: ${project.id}`);
+      if (created) {
+        logger.info(`Project created in database: ${project.id}`);
+      } else {
+        logger.info(`Project already exists in database: ${project.id}`);
+      }
       
     } catch (error) {
       logger.error('Failed to create project in database:', error.message);

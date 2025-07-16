@@ -27,7 +27,7 @@ class WindsurfDetector {
    * @returns {Promise<Array>} Array of detected Windsurf IDEs
    */
   async scanForIDEs() {
-    logger.info('🔍 Scanning for Windsurf IDEs on ports', this.portRange.start, 'to', this.portRange.end);
+    // logger.info('🔍 Scanning for Windsurf IDEs on ports', this.portRange.start, 'to', this.portRange.end);
     
     const availableIDEs = [];
     const promises = [];
@@ -52,7 +52,7 @@ class WindsurfDetector {
       }
     });
 
-    logger.info('✅ Found', availableIDEs.length, 'running Windsurf IDEs');
+    // logger.info('✅ Found', availableIDEs.length, 'running Windsurf IDEs');
     return availableIDEs;
   }
 

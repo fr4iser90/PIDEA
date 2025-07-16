@@ -285,15 +285,15 @@ class MemoryOptimizedAnalysisService {
             this.analysisResults.metrics.memoryUsage.push(currentUsage);
             
             // Log detailed memory information
-            this.logger.info('Enhanced memory logging', {
-                currentUsage: `${currentUsage}MB`,
-                heapTotal: `${memoryEntry.heapTotal}MB`,
-                external: `${memoryEntry.external}MB`,
-                rss: `${memoryEntry.rss}MB`,
-                processedFiles: this.processedFiles,
-                activeStreams: this.streamingResults.size,
-                fallbackCount: this.fallbackResults.size
-            });
+            // this.logger.info('Enhanced memory logging', {
+            //     currentUsage: `${currentUsage}MB`,
+            //     heapTotal: `${memoryEntry.heapTotal}MB`,
+            //     external: `${memoryEntry.external}MB`,
+            //     rss: `${memoryEntry.rss}MB`,
+            //     processedFiles: this.processedFiles,
+            //     activeStreams: this.streamingResults.size,
+            //     fallbackCount: this.fallbackResults.size
+            // });
             
             // Check for memory threshold and trigger fallback if needed
             if (currentUsage > this.maxMemoryUsage * this.memoryThreshold) {

@@ -89,7 +89,7 @@ class IDEDetectorFactory {
       }
     });
 
-    logger.info(`Detected ${allIDEs.length} IDEs total`);
+    // logger.info(`Detected ${allIDEs.length} IDEs total`);
     return allIDEs;
   }
 

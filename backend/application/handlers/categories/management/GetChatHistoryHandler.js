@@ -4,7 +4,7 @@ const ChatMessage = require('@entities/ChatMessage');
 
 const IDETypes = require('@services/ide/IDETypes');
 const Logger = require('@logging/Logger');
-const logger = new Logger('Logger');
+const logger = new Logger('ChatHistoryHandler');
 
 class GetChatHistoryHandler {
   constructor(chatRepository, ideManager = null, serviceRegistry = null) {
@@ -81,12 +81,12 @@ class GetChatHistoryHandler {
   async getMessagesByPort(port, userId = null, options = {}) {
     const { limit = 50, offset = 0 } = options;
     
-          logger.info(`getMessagesByPort called with port: ${port}`);
+          // logger.info(`getMessagesByPort called with port: ${port}`);
 
     // Use the new direct message method from ChatRepository
     const filteredMessages = await this.chatRepository.getMessagesByPort(port, userId);
     
-    logger.info(`Found ${filteredMessages.length} messages for port ${port}`);
+    // logger.info(`Found ${filteredMessages.length} messages for port ${port}`);
 
     // Sort by timestamp (newest first)
     filteredMessages.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
@@ -148,7 +148,7 @@ class GetChatHistoryHandler {
   async getPortChatHistory(port, userId, options = {}) {
     const { limit = 50, offset = 0 } = options;
     
-          logger.info(`getPortChatHistory called with port: ${port}`);
+          // logger.info(`getPortChatHistory called with port: ${port}`);
 
     // Get messages for this port and user
     const messages = await this.getMessagesByPort(port, userId, { limit, offset });
@@ -158,9 +158,9 @@ class GetChatHistoryHandler {
     try {
       const ideService = await this.getIDEServiceForPort(port);
       if (ideService) {
-        logger.info(`Extracting live chat from IDE on port ${port}...`);
-        logger.info(`IDE Service type:`, ideService.constructor.name);
-        logger.info(`IDE Service methods:`, Object.getOwnPropertyNames(Object.getPrototypeOf(ideService)));
+        // logger.info(`Extracting live chat from IDE on port ${port}...`);
+        // logger.info(`IDE Service type:`, ideService.constructor.name);
+        // logger.info(`IDE Service methods:`, Object.getOwnPropertyNames(Object.getPrototypeOf(ideService)));
         
         liveMessages = await ideService.extractChatHistory();
         //logger.info(`Extracted ${liveMessages.length} live messages:`, liveMessages);
@@ -212,16 +212,16 @@ class GetChatHistoryHandler {
 
       // Get available IDEs to determine the type
       const availableIDEs = await this.ideManager.getAvailableIDEs();
-      logger.info(`Available IDEs:`, availableIDEs);
+      // logger.info(`Available IDEs:`, availableIDEs);
       
       // FIXED: Handle the correct data structure from IDEManager
       // availableIDEs is an object with port as key, not an array
       const targetIDE = availableIDEs[port] || Object.values(availableIDEs).find(ide => ide.port === port);
       
       if (!targetIDE) {
-        logger.info(`No IDE found for port ${port} in available IDEs:`, availableIDEs);
+        // logger.info(`No IDE found for port ${port} in available IDEs:`, availableIDEs);
         // Fallback: determine IDE type based on port range anyway
-        logger.info(`Using port range fallback for port ${port}`);
+        // logger.info(`Using port range fallback for port ${port}`);
       }
 
       // Determine IDE type based on port range
@@ -234,7 +234,7 @@ class GetChatHistoryHandler {
         ideType = IDETypes.WINDSURF;
       }
 
-      logger.info(`Detected IDE type ${ideType} for port ${port}`);
+      // logger.info(`Detected IDE type ${ideType} for port ${port}`);
 
       // Get the appropriate service from registry
       if (this.serviceRegistry) {

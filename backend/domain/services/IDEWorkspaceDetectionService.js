@@ -137,13 +137,19 @@ class IDEWorkspaceDetectionService {
       // Generate project ID
       const projectId = projectName.toLowerCase().replace(/[^a-z0-9]/g, '_');
       
-      logger.info(`Creating project in database: ${projectId} (${projectName}) at ${workspacePath}`);
+      // Prüfe, ob das Projekt existiert
+      let project = await this.projectRepository.findByWorkspacePath(workspacePath);
+      let created = false;
+      if (!project) {
+        logger.info(`Creating project in database: ${projectId} (${projectName}) at ${workspacePath}`);
+        created = true;
+      }
       
       // Detect ports from package.json files
       const detectedPorts = await this.detectPortsFromPackageJson(workspacePath);
       
       // Create project using findOrCreateByWorkspacePath
-      const project = await this.projectRepository.findOrCreateByWorkspacePath(workspacePath, {
+      project = await this.projectRepository.findOrCreateByWorkspacePath(workspacePath, {
         id: projectId,
         name: projectName,
         description: `Project detected at ${workspacePath}`,
@@ -165,7 +171,11 @@ class IDEWorkspaceDetectionService {
         }
       });
       
-      logger.info(`Project created/found in database: ${project.id}`);
+      if (created) {
+        logger.info(`Project created in database: ${project.id}`);
+      } else {
+        logger.info(`Project already exists in database: ${project.id}`);
+      }
       logger.info(`Detected ports: Frontend=${detectedPorts.frontendPort}, Backend=${detectedPorts.backendPort}, Database=${detectedPorts.databasePort}`);
       
     } catch (error) {

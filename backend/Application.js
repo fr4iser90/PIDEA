@@ -541,15 +541,7 @@ class Application {
     this.app.use(express.json({ limit: '2mb' }));
     this.app.use(express.urlencoded({ extended: true }));
 
-    // Request logging
-    this.app.use((req, res, next) => {
-      this.logger.info(`${req.method} ${req.path}`, {
-        ip: '[REDACTED_IP]',
-        userAgent: '[REDACTED_USER_AGENT]',
-        userId: req.user?.id ? '[REDACTED_USER_ID]' : null
-      });
-      next();
-    });
+    // Request logging entfernt auf Wunsch des Users
 
     // Serve static files
     this.app.use('/web', express.static(path.join(__dirname, '../web'), {

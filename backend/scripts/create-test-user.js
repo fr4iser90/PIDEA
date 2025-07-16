@@ -5,7 +5,7 @@ const path = require('path');
 const bcrypt = require('bcryptjs');
 const { v4: uuidv4 } = require('uuid');
 const Logger = require('@logging/Logger');
-const logger = new Logger('Logger');
+const logger = new Logger('CreateTestUser');
 
 // Use the same database path as the application
 const dbPath = path.join(__dirname, '../database/pidea-dev.db');

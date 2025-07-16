@@ -233,10 +233,10 @@ class IDEPortManager {
    * @returns {Promise<boolean>} True if valid, false otherwise
    */
   async validatePort(port) {
-    logger.info(`Validating port: ${port}`);
+    // logger.info(`Validating port: ${port}`);
     try {
       const health = await this.performHealthCheck(port);
-      logger.info(`Health check result for port ${port}:`, health);
+      // logger.info(`Health check result for port ${port}:`, health);
       if (health.healthy) {
         return true;
       } else {
@@ -275,7 +275,7 @@ class IDEPortManager {
       // Use direct detection to avoid circular dependency
       const availableIDEs = await this.ideManager.detectorFactory.detectAll() || [];
       const ide = availableIDEs.find(ide => ide.port === port);
-      logger.info(`performHealthCheck: Looking for IDE on port ${port}. Found:`, !!ide);
+      // logger.info(`performHealthCheck: Looking for IDE on port ${port}. Found:`, !!ide);
       if (!ide) {
         logger.warn(`performHealthCheck: IDE not found for port ${port}`);
         return { healthy: false, reason: 'IDE not found' };
@@ -284,7 +284,7 @@ class IDEPortManager {
       // If IDE is detected and running, consider it healthy
       // Workspace path will be assigned by IDEManager during initialization
       if (ide.status === 'running' || ide.status === 'active') {
-        logger.info(`performHealthCheck: IDE on port ${port} is healthy (detected and running)`);
+        // logger.info(`performHealthCheck: IDE on port ${port} is healthy (detected and running)`);
         return { healthy: true, reason: 'IDE detected and running' };
       }
       
@@ -296,12 +296,12 @@ class IDEPortManager {
       
       // If we have a workspace path, that's a bonus
       if (ide.workspacePath) {
-        logger.info(`performHealthCheck: IDE on port ${port} is healthy with workspace path`);
+        // logger.info(`performHealthCheck: IDE on port ${port} is healthy with workspace path`);
         return { healthy: true, reason: 'IDE with workspace path' };
       }
       
       // Default: if IDE is detected, consider it healthy
-      logger.info(`performHealthCheck: IDE on port ${port} is healthy (detected)`);
+      // logger.info(`performHealthCheck: IDE on port ${port} is healthy (detected)`);
       return { healthy: true, reason: 'IDE detected' };
     } catch (error) {
       logger.error(`performHealthCheck: Error for port ${port}:`, error);

@@ -1,7 +1,7 @@
 const UserSessionRepository = require('@repositories/UserSessionRepository');
 const UserSession = require('@entities/UserSession');
 const Logger = require('@logging/Logger');
-const logger = new Logger('Logger');
+const logger = new Logger('UserSessionRepository');
 
 
 class PostgreSQLUserSessionRepository extends UserSessionRepository {
@@ -15,7 +15,7 @@ class PostgreSQLUserSessionRepository extends UserSessionRepository {
       throw new Error('Invalid session entity');
     }
 
-    logger.info('🔍 [UserSessionRepository] Saving session:', {
+    logger.info('🔍 Saving session:', {
       id: session.id,
       userId: session.userId,
       accessTokenLength: session.accessToken.length,
@@ -33,7 +33,7 @@ class PostgreSQLUserSessionRepository extends UserSessionRepository {
     `;
 
     const sessionData = session.toJSON();
-    logger.info('🔍 [UserSessionRepository] Session data to save:', {
+    logger.info('🔍 Session data to save:', {
       id: sessionData.id,
       userId: sessionData.userId,
       accessTokenStart: sessionData.accessToken.substring(0, 20) + '...',
@@ -50,7 +50,7 @@ class PostgreSQLUserSessionRepository extends UserSessionRepository {
       JSON.stringify(sessionData.metadata)
     ]);
 
-    logger.info('✅ [UserSessionRepository] Session saved successfully');
+    logger.info('✅ Session saved successfully');
     return session;
   }
 
@@ -99,12 +99,12 @@ class PostgreSQLUserSessionRepository extends UserSessionRepository {
       throw new Error('Access token is required');
     }
 
-    logger.info('🔍 [UserSessionRepository] Finding session by access token:', accessToken.substring(0, 20) + '...');
+    logger.info('🔍 Finding session by access token:', accessToken.substring(0, 20) + '...');
 
     const sql = 'SELECT * FROM user_sessions WHERE access_token = $1';
     const row = await this.db.getOne(sql, [accessToken]);
     
-    logger.info('🔍 [UserSessionRepository] Database result:', row ? {
+    logger.info('🔍 Database result:', row ? {
       id: row.id,
       user_id: row.user_id,
       access_token_start: row.access_token.substring(0, 20) + '...',
@@ -123,7 +123,7 @@ class PostgreSQLUserSessionRepository extends UserSessionRepository {
       metadata: row.metadata ? JSON.parse(row.metadata) : {}
     });
 
-    logger.info('✅ [UserSessionRepository] Session found and reconstructed:', {
+    logger.info('✅ Session found and reconstructed:', {
       id: session.id,
       userId: session.userId,
       isActive: session.isActive()

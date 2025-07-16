@@ -20,16 +20,16 @@ class AuthService {
       throw new Error('Email and password are required');
     }
 
-    logger.debug('🔍 [AuthService] Attempting login for email:', email);
-    logger.info('🔍 [AuthService] Password length:', password.length);
+    logger.debug('🔍 Attempting login for email:', email);
+    logger.info('🔍 Password length:', password.length);
 
     const user = await this.userRepository.findByEmail(email);
     if (!user) {
-      logger.info('❌ [AuthService] User not found in database for email:', email);
+      logger.info('❌ User not found in database for email:', email);
       throw new Error('Invalid credentials');
     }
 
-    logger.info('✅ [AuthService] User found in DB:', {
+    logger.info('✅ User found in DB:', {
       id: user.id,
       email: user.email,
       role: user.role,
@@ -38,14 +38,14 @@ class AuthService {
     });
 
     const isValidPassword = await user.verifyPassword(password);
-    logger.info('🔍 [AuthService] Password verification result:', isValidPassword);
+    logger.info('🔍 Password verification result:', isValidPassword);
     
     if (!isValidPassword) {
-      logger.info('❌ [AuthService] Password verification failed for user:', email);
+      logger.info('❌ Password verification failed for user:', email);
       throw new Error('Invalid credentials');
     }
 
-    logger.info('✅ [AuthService] Login successful for user:', email);
+    logger.info('✅ Login successful for user:', email);
     return user;
   }
 
@@ -54,7 +54,7 @@ class AuthService {
       throw new Error('Invalid user entity');
     }
 
-    logger.info('🔍 [AuthService] Creating session for user:', {
+    logger.info('🔍 Creating session for user:', {
       id: user.id,
       email: user.email
     });
@@ -63,7 +63,7 @@ class AuthService {
     const refreshToken = this.generateRefreshToken(user);
     const expiresAt = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
 
-    logger.info('🔍 [AuthService] Generated tokens:', {
+    logger.info('🔍 Generated tokens:', {
       accessTokenLength: accessToken.length,
       refreshTokenLength: refreshToken.length,
       expiresAt: expiresAt.toISOString()
@@ -80,14 +80,14 @@ class AuthService {
       }
     );
 
-    logger.info('🔍 [AuthService] Session created:', {
+    logger.info('🔍 Session created:', {
       id: session.id,
       userId: session.userId,
       isActive: session.isActive()
     });
 
     await this.userSessionRepository.save(session);
-    logger.info('✅ [AuthService] Session saved to database');
+    logger.info('✅ Session saved to database');
     
     return session;
   }
@@ -127,19 +127,19 @@ class AuthService {
       throw new Error('Access token is required');
     }
 
-    // logger.info('🔍 [AuthService] Validating access token:', accessToken.substring(0, 20) + '...');
+    // logger.info('🔍 Validating access token:', accessToken.substring(0, 20) + '...');
 
     try {
       const decoded = jwt.verify(accessToken, this.jwtSecret);
-      logger.info('🔍 [AuthService] JWT decoded successfully:', {
-        userId: decoded.userId,
-        email: decoded.email,
-        role: decoded.role,
-        type: decoded.type
-      });
+      // logger.info('🔍 JWT decoded successfully:', {
+      //   userId: decoded.userId,
+      //   email: decoded.email,
+      //   role: decoded.role,
+      //   type: decoded.type
+      // });
       
       const session = await this.userSessionRepository.findByAccessToken(accessToken);
-      // logger.info('🔍 [AuthService] Session found:', session ? {
+      // logger.info('🔍 Session found:', session ? {
       //   id: session.id,
       //   userId: session.userId,
       //   isActive: session.isActive(),
@@ -147,26 +147,26 @@ class AuthService {
       // } : 'null');
       
       if (!session || !session.isActive()) {
-        logger.info('❌ [AuthService] Session invalid or expired');
+        logger.info('❌ Session invalid or expired');
         throw new Error('Invalid or expired access token');
       }
 
       const user = await this.userRepository.findById(decoded.userId);
-      // logger.info('🔍 [AuthService] User found:', user ? {
+      // logger.info('🔍 User found:', user ? {
       //   id: user.id,
       //   email: user.email,
       //   role: user.role
       // } : 'null');
       
       if (!user) {
-        logger.info('❌ [AuthService] User not found');
+        logger.info('❌ User not found');
         throw new Error('User not found');
       }
 
-      logger.info('✅ [AuthService] Token validation successful');
+      // logger.info('✅ Token validation successful');
       return { user, session };
     } catch (error) {
-      logger.error('❌ [AuthService] Token validation failed:', error.message);
+      logger.error('❌ Token validation failed:', error.message);
       throw new Error('Invalid access token');
     }
   }
