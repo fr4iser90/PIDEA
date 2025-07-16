@@ -8,6 +8,8 @@ const IndividualAnalysisButtons = ({ projectId = null, eventBus = null, onAnalys
   const [stepProgress, setStepProgress] = useState(new Map());
   const [loadingStates, setLoadingStates] = useState(new Map());
   const [errorStates, setErrorStates] = useState(new Map());
+  const [runAllLoading, setRunAllLoading] = useState(false);
+  const [runAllProgress, setRunAllProgress] = useState(0);
 
   const apiRepository = new APIChatRepository();
 
@@ -39,6 +41,20 @@ const IndividualAnalysisButtons = ({ projectId = null, eventBus = null, onAnalys
       icon: '🏗️',
       description: 'Review architectural patterns and dependencies',
       color: 'purple'
+    },
+    {
+      key: 'techstack',
+      label: 'Tech Stack',
+      icon: '🔧',
+      description: 'Analyze technologies, frameworks, and dependencies',
+      color: 'orange'
+    },
+    {
+      key: 'recommendations',
+      label: 'Recommendations',
+      icon: '💡',
+      description: 'Generate improvement suggestions and best practices',
+      color: 'teal'
     }
   ];
 
@@ -46,8 +62,8 @@ const IndividualAnalysisButtons = ({ projectId = null, eventBus = null, onAnalys
     loadActiveSteps();
     setupEventListeners();
     
-    // Poll for active steps every 5 seconds
-    const interval = setInterval(loadActiveSteps, 5000);
+    // Poll for active steps every 30 seconds (reduced from 5 seconds)
+    const interval = setInterval(loadActiveSteps, 30000);
     
     return () => {
       clearInterval(interval);
@@ -76,22 +92,31 @@ const IndividualAnalysisButtons = ({ projectId = null, eventBus = null, onAnalys
   const loadActiveSteps = async () => {
     try {
       const currentProjectId = projectId || await apiRepository.getCurrentProjectId();
-      const response = await apiRepository.getActiveAnalysisSteps(currentProjectId);
+      // Use the analysis status endpoint instead of non-existent active steps endpoint
+      const response = await apiRepository.getAnalysisStatus(currentProjectId);
       
       if (response.success && response.data) {
-        const newActiveSteps = new Map();
-        const newStepProgress = new Map();
-        
-        response.data.forEach(step => {
-          newActiveSteps.set(step.analysisType, step);
-          newStepProgress.set(step.id, step.progress);
-        });
-        
-        setActiveSteps(newActiveSteps);
-        setStepProgress(newStepProgress);
+        // Check if any analysis is currently running
+        if (response.data.isRunning) {
+          // Create a mock active step for the running analysis
+          const mockStep = {
+            id: 'current-analysis',
+            analysisType: response.data.currentStep || 'analysis',
+            status: 'running',
+            progress: response.data.progress || 0,
+            projectId: currentProjectId
+          };
+          setActiveSteps(new Map([[mockStep.analysisType, mockStep]]));
+          setStepProgress(new Map([[mockStep.id, mockStep.progress]]));
+        } else {
+          setActiveSteps(new Map());
+          setStepProgress(new Map());
+        }
       }
     } catch (error) {
       logger.error('Failed to load active steps:', error);
+      setActiveSteps(new Map());
+      setStepProgress(new Map());
     }
   };
 
@@ -170,9 +195,9 @@ const IndividualAnalysisButtons = ({ projectId = null, eventBus = null, onAnalys
         }
       }
       
+      // Use the executeAnalysisStep method with the correct analysis type
       const response = await apiRepository.executeAnalysisStep(currentProjectId, analysisType, {
-        projectPath,
-        timeout: 300000 // 5 minutes
+        projectPath
       });
       
       if (response.success) {
@@ -192,14 +217,19 @@ const IndividualAnalysisButtons = ({ projectId = null, eventBus = null, onAnalys
       const step = activeSteps.get(analysisType);
       if (!step) return;
       
-      const currentProjectId = projectId || await apiRepository.getCurrentProjectId();
-      const response = await apiRepository.cancelAnalysisStep(step.id, currentProjectId);
+      // For now, just remove the step from active steps since we don't have a cancel endpoint
+      setActiveSteps(prev => {
+        const newMap = new Map(prev);
+        newMap.delete(analysisType);
+        return newMap;
+      });
+      setStepProgress(prev => {
+        const newMap = new Map(prev);
+        newMap.delete(step.id);
+        return newMap;
+      });
       
-      if (response.success) {
-        logger.info(`${analysisType} analysis cancelled`);
-      } else {
-        throw new Error(response.error || 'Failed to cancel analysis');
-      }
+      logger.info(`${analysisType} analysis cancelled (local state only)`);
     } catch (error) {
       logger.error(`Failed to cancel ${analysisType} analysis:`, error);
     }
@@ -207,20 +237,69 @@ const IndividualAnalysisButtons = ({ projectId = null, eventBus = null, onAnalys
 
   const handleRetryAnalysis = async (analysisType) => {
     try {
-      const step = activeSteps.get(analysisType);
-      if (!step) return;
+      // Clear error state and restart the analysis
+      setErrorStates(prev => new Map(prev.set(analysisType, null)));
+      await handleStartAnalysis(analysisType);
       
-      const currentProjectId = projectId || await apiRepository.getCurrentProjectId();
-      const response = await apiRepository.retryAnalysisStep(step.id, currentProjectId);
-      
-      if (response.success) {
-        logger.info(`${analysisType} analysis retry started`);
-        setErrorStates(prev => new Map(prev.set(analysisType, null)));
-      } else {
-        throw new Error(response.error || 'Failed to retry analysis');
-      }
+      logger.info(`${analysisType} analysis retry started`);
     } catch (error) {
       logger.error(`Failed to retry ${analysisType} analysis:`, error);
+    }
+  };
+
+  const handleRunAllAnalysis = async () => {
+    try {
+      setRunAllLoading(true);
+      setRunAllProgress(0);
+      
+      const currentProjectId = projectId || await apiRepository.getCurrentProjectId();
+      
+      // Get workspace path from active IDE
+      const ideList = await apiRepository.getIDEs();
+      let projectPath = null;
+      
+      if (ideList.success && ideList.data) {
+        const activeIDE = ideList.data.find(ide => ide.active);
+        if (activeIDE && activeIDE.workspacePath) {
+          projectPath = activeIDE.workspacePath;
+        }
+      }
+      
+      // Start all analysis types sequentially
+      const analysisTypesToRun = analysisTypes.map(type => type.key);
+      let completedCount = 0;
+      
+      for (const analysisType of analysisTypesToRun) {
+        try {
+          setRunAllProgress((completedCount / analysisTypesToRun.length) * 100);
+          
+          // Use the executeAnalysisStep method for bulk analysis
+          const response = await apiRepository.executeAnalysisStep(currentProjectId, analysisType, { projectPath });
+          
+          if (response.success) {
+            logger.info(`${analysisType} analysis started as part of bulk run`);
+            completedCount++;
+          } else {
+            logger.warn(`Failed to start ${analysisType} analysis:`, response.error);
+          }
+        } catch (error) {
+          logger.error(`Error starting ${analysisType} analysis:`, error);
+        }
+      }
+      
+      setRunAllProgress(100);
+      logger.info(`Bulk analysis started: ${completedCount}/${analysisTypesToRun.length} analyses initiated`);
+      
+      // Call completion callback if provided
+      if (onAnalysisComplete) {
+        onAnalysisComplete();
+      }
+      
+    } catch (error) {
+      logger.error('Failed to start bulk analysis:', error);
+    } finally {
+      setRunAllLoading(false);
+      setRunAllProgress(0);
     }
   };
 
@@ -322,6 +401,39 @@ const IndividualAnalysisButtons = ({ projectId = null, eventBus = null, onAnalys
       <div className="analysis-buttons-header">
         <h3>🔬 Individual Analysis</h3>
         <p>Run specific analysis types to get detailed insights</p>
+        
+        {/* Run All Analysis Button */}
+        <div className="run-all-section">
+          <button
+            onClick={handleRunAllAnalysis}
+            disabled={runAllLoading || activeSteps.size > 0}
+            className="btn-run-all-analysis"
+            title="Run all analysis types sequentially"
+          >
+            {runAllLoading ? (
+              <>
+                <div className="loading-spinner"></div>
+                Starting All Analyses... ({Math.round(runAllProgress)}%)
+              </>
+            ) : (
+              <>
+                🚀 Run All Analysis
+              </>
+            )}
+          </button>
+          
+          {runAllLoading && (
+            <div className="run-all-progress">
+              <div className="progress-bar">
+                <div 
+                  className="progress-fill" 
+                  style={{ width: `${runAllProgress}%` }}
+                ></div>
+              </div>
+              <span className="progress-text">{Math.round(runAllProgress)}%</span>
+            </div>
+          )}
+        </div>
       </div>
       
       <div className="analysis-buttons-grid">

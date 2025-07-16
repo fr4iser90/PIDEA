@@ -268,6 +268,7 @@ class Application {
         this.subprojectDetector = this.serviceRegistry.getService('subprojectDetector');
         this.analysisOutputService = this.serviceRegistry.getService('analysisOutputService');
         this.analysisRepository = this.serviceRegistry.getService('analysisRepository');
+        this.projectRepository = this.serviceRegistry.getService('projectRepository');
         this.projectMappingService = this.serviceRegistry.getService('projectMappingService');
         this.taskRepository = this.serviceRegistry.getService('taskRepository');
         this.taskExecutionRepository = this.serviceRegistry.getService('taskExecutionRepository');
@@ -484,15 +485,8 @@ class Application {
       this.logger
     );
 
-    this.analysisController = new AnalysisController(
-      this.codeQualityService,
-      this.securityService,
-      this.performanceService,
-      this.architectureService,
-      this.logger,
-      this.analysisOutputService,
-      this.analysisRepository
-    );
+    // Get AnalysisController from DI container to ensure all dependencies are available
+    this.analysisController = this.serviceRegistry.getService('analysisController');
 
     this.gitController = new GitController({
       gitService: this.gitService,

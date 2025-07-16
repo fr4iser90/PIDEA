@@ -190,6 +190,12 @@ class ServiceRegistry {
             return new ArchitectureService(architectureAnalyzer, eventBus, logger, analysisOutputService, analysisRepository);
         }, { singleton: true, dependencies: ['architectureAnalyzer', 'eventBus', 'logger', 'analysisOutputService', 'analysisRepository'] });
 
+        // Analysis Controller
+        this.container.register('analysisController', (codeQualityService, securityService, performanceService, architectureService, logger, analysisOutputService, analysisRepository, projectRepository) => {
+            const AnalysisController = require('@presentation/api/AnalysisController');
+            return new AnalysisController(codeQualityService, securityService, performanceService, architectureService, logger, analysisOutputService, analysisRepository, projectRepository);
+        }, { singleton: true, dependencies: ['codeQualityService', 'securityService', 'performanceService', 'architectureService', 'logger', 'analysisOutputService', 'analysisRepository', 'projectRepository'] });
+
             // Auto-Finish System
         this.container.register('autoFinishSystem', (cursorIDEService, browserManager, ideManager) => {
             const AutoFinishSystem = require('@domain/services/auto-finish/AutoFinishSystem');

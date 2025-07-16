@@ -142,25 +142,7 @@ const AnalysisStatus = ({ status, onStartAnalysis, loading }) => {
           <span className="status-text">{getStatusText()}</span>
         </div>
         
-        {!status?.isRunning && (
-          <button
-            onClick={onStartAnalysis}
-            disabled={loading}
-            className="btn-start-analysis"
-            title="Start new analysis"
-          >
-            {loading ? (
-              <>
-                <div className="loading-spinner"></div>
-                Starting...
-              </>
-            ) : (
-              <>
-                🚀 Start Analysis
-              </>
-            )}
-          </button>
-        )}
+        {/* Start Analysis button removed - replaced with IndividualAnalysisButtons */}
       </div>
 
       {status?.isRunning && (

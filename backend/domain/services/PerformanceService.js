@@ -14,9 +14,10 @@ class PerformanceService {
    * Analyze performance for a project
    * @param {string} projectPath - Project directory path
    * @param {Object} options - Analysis options
+   * @param {string} projectId - Project ID
    * @returns {Promise<Object>} Performance analysis results
    */
-  async analyzePerformance(projectPath, options = {}, projectId = 'default') {
+  async analyzePerformance(projectPath, options = {}, projectId) {
     try {
       this.logger.info(`Starting performance analysis for project`);
 
@@ -156,7 +157,8 @@ const logger = new Logger('Logger');
    * @returns {number} Performance score (0-100)
    */
   getPerformanceScore(analysis) {
-    return this.performanceAnalyzer.calculateOverallScore(analysis);
+    // Use the performanceScore that's already calculated by the analyzer
+    return analysis.performanceScore || 0;
   }
 
   /**
@@ -170,6 +172,41 @@ const logger = new Logger('Logger');
     if (score >= 70) return 'fair';
     if (score >= 60) return 'poor';
     return 'critical';
+  }
+
+  /**
+   * Get critical issues from analysis
+   * @param {Object} analysis - Performance analysis results
+   * @returns {Array} Critical issues
+   */
+  getCriticalIssues(analysis) {
+    if (!analysis || !analysis.issues) return [];
+    return analysis.issues.filter(issue => issue.severity === 'critical');
+  }
+
+  /**
+   * Get performance summary
+   * @param {Object} analysis - Performance analysis results
+   * @returns {Object} Performance summary
+   */
+  getPerformanceSummary(analysis) {
+    if (!analysis) return {};
+    
+    const issues = analysis.issues || [];
+    const criticalIssues = issues.filter(issue => issue.severity === 'critical');
+    const highIssues = issues.filter(issue => issue.severity === 'high');
+    const mediumIssues = issues.filter(issue => issue.severity === 'medium');
+    const lowIssues = issues.filter(issue => issue.severity === 'low');
+    
+    return {
+      totalIssues: issues.length,
+      criticalIssues: criticalIssues.length,
+      highIssues: highIssues.length,
+      mediumIssues: mediumIssues.length,
+      lowIssues: lowIssues.length,
+      overallScore: analysis.performanceScore || 0,
+      performanceLevel: this.getPerformanceLevel(analysis.performanceScore || 0)
+    };
   }
 
   /**
@@ -190,64 +227,6 @@ const logger = new Logger('Logger');
   isBundleSizeAcceptable(analysis) {
     const totalSize = analysis.bundleAnalysis.totalSize;
     return totalSize < 5000000; // Less than 5MB
-  }
-
-  /**
-   * Get performance summary
-   * @param {Object} analysis - Performance analysis results
-   * @returns {Object} Performance summary
-   */
-  getPerformanceSummary(analysis) {
-    return {
-      overallScore: analysis.overallScore,
-      buildTime: analysis.buildPerformance.buildTime,
-      bundleSize: analysis.bundleAnalysis.totalSize,
-      bottlenecks: analysis.bottlenecks.length,
-      optimizations: analysis.optimizationOpportunities.length,
-      recommendations: analysis.recommendations.length
-    };
-  }
-
-  /**
-   * Get critical performance issues
-   * @param {Object} analysis - Performance analysis results
-   * @returns {Array} Critical performance issues
-   */
-  getCriticalIssues(analysis) {
-    const issues = [];
-
-    // Check build time
-    if (analysis.buildPerformance.buildTime > 120000) { // 2 minutes
-      issues.push({
-        type: 'build-time',
-        severity: 'critical',
-        description: 'Build time is too slow (>2 minutes)',
-        value: analysis.buildPerformance.buildTime
-      });
-    }
-
-    // Check bundle size
-    if (analysis.bundleAnalysis.totalSize > 10000000) { // 10MB
-      issues.push({
-        type: 'bundle-size',
-        severity: 'critical',
-        description: 'Bundle size is too large (>10MB)',
-        value: analysis.bundleAnalysis.totalSize
-      });
-    }
-
-    // Check bottlenecks
-    const criticalBottlenecks = analysis.bottlenecks.filter(b => b.severity === 'critical');
-    if (criticalBottlenecks.length > 0) {
-      issues.push({
-        type: 'bottlenecks',
-        severity: 'critical',
-        description: `${criticalBottlenecks.length} critical performance bottlenecks found`,
-        value: criticalBottlenecks.length
-      });
-    }
-
-    return issues;
   }
 
   /**

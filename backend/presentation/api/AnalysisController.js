@@ -1,6 +1,7 @@
 const Logger = require('@logging/Logger');
 const ServiceLogger = require('@logging/ServiceLogger');
 const ETagService = require('@domain/services/ETagService');
+const AnalysisResult = require('@domain/entities/AnalysisResult');
 const AnalysisQueueService = require('@domain/services/AnalysisQueueService');
 const MemoryOptimizedAnalysisService = require('@domain/services/MemoryOptimizedAnalysisService');
 const logger = new ServiceLogger('AnalysisController');
@@ -10,7 +11,7 @@ const logger = new ServiceLogger('AnalysisController');
  * Enhanced with memory management and queue integration
  */
 class AnalysisController {
-  constructor(codeQualityService, securityService, performanceService, architectureService, logger, analysisOutputService, analysisRepository) {
+  constructor(codeQualityService, securityService, performanceService, architectureService, logger, analysisOutputService, analysisRepository, projectRepository = null) {
     this.codeQualityService = codeQualityService;
     this.securityService = securityService;
     this.performanceService = performanceService;
@@ -18,7 +19,39 @@ class AnalysisController {
     this.logger = logger || { info: () => {}, error: () => {} };
     this.analysisOutputService = analysisOutputService;
     this.analysisRepository = analysisRepository;
+    this.projectRepository = projectRepository;
     this.etagService = new ETagService();
+    
+    // Helper method to get project path from database
+    this.getProjectPath = async (projectId) => {
+      this.logger.info(`Getting project path for projectId: ${projectId}`);
+      
+      if (this.projectRepository) {
+        try {
+          this.logger.info(`ProjectRepository available, searching for project...`);
+          const project = await this.projectRepository.findById(projectId);
+          this.logger.info(`Project found:`, { 
+            found: !!project, 
+            hasWorkspacePath: !!(project && project.workspacePath),
+            workspacePath: project?.workspacePath 
+          });
+          
+          if (project && project.workspacePath) {
+            this.logger.info(`Using workspace path: ${project.workspacePath}`);
+            return project.workspacePath;
+          }
+        } catch (error) {
+          this.logger.error(`Failed to get project path for ${projectId}:`, error);
+        }
+      } else {
+        this.logger.warn(`ProjectRepository not available!`);
+      }
+      
+      // Fallback to current working directory
+      const fallbackPath = process.cwd();
+      this.logger.warn(`Using fallback path: ${fallbackPath}`);
+      return fallbackPath;
+    };
     
     // Initialize memory management and queue services with Phase 3 enhancements
     this.analysisQueueService = new AnalysisQueueService({
@@ -57,18 +90,22 @@ class AnalysisController {
    */
   async analyzeCodeQuality(req, res) {
     try {
-      const { projectPath } = req.params;
+      const { projectId } = req.params;
       const options = req.body || {};
 
       this.logger.info(`Code quality analysis requested for project`);
 
+      // Get project path from database
+      const projectPath = await this.getProjectPath(projectId);
+
       // Suche nach aktueller Analyse
-      const latest = await this.analysisRepository.findLatestByProjectPath(projectPath, 'code-quality');
+      const latest = await this.analysisRepository.findLatestByProjectId(projectId);
       if (latest && isAnalysisFresh(latest)) {
         this.logger.info(`Returning cached code quality analysis for project`);
         const analysis = latest.resultData;
         const score = this.codeQualityService.getQualityScore(analysis);
         const level = this.codeQualityService.getQualityLevel(score);
+        const criticalIssues = this.codeQualityService.getCriticalIssues(analysis);
 
         res.json({
           success: true,
@@ -76,21 +113,29 @@ class AnalysisController {
             analysis,
             score,
             level,
-            summary: {
-              overallScore: score,
-              issues: analysis.issues.length,
-              recommendations: analysis.recommendations.length,
-              configuration: analysis.configuration
-            }
+            criticalIssues,
+            summary: this.codeQualityService.getQualitySummary(analysis)
           }
         });
         return;
       }
 
-      const analysis = await this.codeQualityService.analyzeCodeQuality(projectPath, options);
-      await this.analysisRepository.saveAnalysis(projectPath, 'code-quality', analysis);
+      this.logger.info(`Calling codeQualityService.analyzeCodeQuality with path: ${projectPath}`);
+      const analysis = await this.codeQualityService.analyzeCodeQuality(projectPath, {
+        ...options,
+        saveToFile: false, // Prevent automatic file generation
+        saveToDatabase: true // Allow database saving for caching
+      }, projectId);
       const score = this.codeQualityService.getQualityScore(analysis);
       const level = this.codeQualityService.getQualityLevel(score);
+      const criticalIssues = this.codeQualityService.getCriticalIssues(analysis);
+      
+      // Create and save analysis result
+      const analysisResult = AnalysisResult.create(projectId, 'codeQuality', analysis, {
+        overallScore: score,
+        criticalIssuesCount: criticalIssues?.length || 0
+      });
+      await this.analysisRepository.save(analysisResult);
 
       res.json({
         success: true,
@@ -98,20 +143,16 @@ class AnalysisController {
           analysis,
           score,
           level,
-          summary: {
-            overallScore: score,
-            issues: analysis.issues.length,
-            recommendations: analysis.recommendations.length,
-            configuration: analysis.configuration
-          }
+          criticalIssues,
+          summary: this.codeQualityService.getQualitySummary(analysis)
         }
       });
-
     } catch (error) {
       this.logger.error(`Code quality analysis failed:`, error);
       res.status(500).json({
         success: false,
-        error: error.message
+        error: 'Code quality analysis failed',
+        message: error.message
       });
     }
   }
@@ -123,55 +164,68 @@ class AnalysisController {
    */
   async analyzeSecurity(req, res) {
     try {
-      const { projectPath } = req.params;
+      const { projectId } = req.params;
       const options = req.body || {};
 
       this.logger.info(`Security analysis requested for project`);
 
+      // Get project path from database
+      const projectPath = await this.getProjectPath(projectId);
+
       // Suche nach aktueller Analyse
-      const latest = await this.analysisRepository.findLatestByProjectPath(projectPath, 'security');
+      const latest = await this.analysisRepository.findLatestByProjectId(projectId);
       if (latest && isAnalysisFresh(latest)) {
         this.logger.info(`Returning cached security analysis for project`);
         const analysis = latest.resultData;
         const score = this.securityService.getSecurityScore(analysis);
-        const riskLevel = this.securityService.getOverallRiskLevel(analysis);
-        const hasCriticalVulnerabilities = this.securityService.hasCriticalVulnerabilities(analysis);
+        const level = this.securityService.getSecurityLevel(score);
+        const criticalIssues = this.securityService.getCriticalIssues(analysis);
 
         res.json({
           success: true,
           data: {
             analysis,
             score,
-            riskLevel,
-            hasCriticalVulnerabilities,
-            summary: this.securityService.getVulnerabilitySummary(analysis)
+            level,
+            criticalIssues,
+            summary: this.securityService.getSecuritySummary(analysis)
           }
         });
         return;
       }
 
-      const analysis = await this.securityService.analyzeSecurity(projectPath, options);
-      await this.analysisRepository.saveAnalysis(projectPath, 'security', analysis);
+      const analysis = await this.securityService.analyzeSecurity(projectPath, {
+        ...options,
+        saveToFile: false, // Prevent automatic file generation
+        saveToDatabase: true // Allow database saving for caching
+      }, projectId);
       const score = this.securityService.getSecurityScore(analysis);
-      const riskLevel = this.securityService.getOverallRiskLevel(analysis);
-      const hasCriticalVulnerabilities = this.securityService.hasCriticalVulnerabilities(analysis);
+      const level = this.securityService.getSecurityLevel(score);
+      const criticalIssues = this.securityService.getCriticalIssues(analysis);
+      
+      // Create and save analysis result
+      const analysisResult = AnalysisResult.create(projectId, 'security', analysis, {
+        overallScore: score,
+        criticalIssuesCount: criticalIssues?.length || 0
+      });
+      await this.analysisRepository.save(analysisResult);
 
       res.json({
         success: true,
         data: {
           analysis,
           score,
-          riskLevel,
-          hasCriticalVulnerabilities,
-          summary: this.securityService.getVulnerabilitySummary(analysis)
+          level,
+          criticalIssues,
+          summary: this.securityService.getSecuritySummary(analysis)
         }
       });
-
     } catch (error) {
       this.logger.error(`Security analysis failed:`, error);
       res.status(500).json({
         success: false,
-        error: error.message
+        error: 'Security analysis failed',
+        message: error.message
       });
     }
   }
@@ -183,13 +237,16 @@ class AnalysisController {
    */
   async analyzePerformance(req, res) {
     try {
-      const { projectPath } = req.params;
+      const { projectId } = req.params;
       const options = req.body || {};
 
       this.logger.info(`Performance analysis requested for project`);
 
+      // Get project path from database
+      const projectPath = await this.getProjectPath(projectId);
+
       // Suche nach aktueller Analyse
-      const latest = await this.analysisRepository.findLatestByProjectPath(projectPath, 'performance');
+      const latest = await this.analysisRepository.findLatestByProjectId(projectId);
       if (latest && isAnalysisFresh(latest)) {
         this.logger.info(`Returning cached performance analysis for project`);
         const analysis = latest.resultData;
@@ -210,11 +267,21 @@ class AnalysisController {
         return;
       }
 
-      const analysis = await this.performanceService.analyzePerformance(projectPath, options);
-      await this.analysisRepository.saveAnalysis(projectPath, 'performance', analysis);
+      const analysis = await this.performanceService.analyzePerformance(projectPath, {
+        ...options,
+        saveToFile: false, // Prevent automatic file generation
+        saveToDatabase: true // Allow database saving for caching
+      }, projectId);
       const score = this.performanceService.getPerformanceScore(analysis);
       const level = this.performanceService.getPerformanceLevel(score);
       const criticalIssues = this.performanceService.getCriticalIssues(analysis);
+      
+      // Create and save analysis result
+      const analysisResult = AnalysisResult.create(projectId, 'performance', analysis, {
+        overallScore: score,
+        criticalIssuesCount: criticalIssues?.length || 0
+      });
+      await this.analysisRepository.save(analysisResult);
 
       res.json({
         success: true,
@@ -243,20 +310,22 @@ class AnalysisController {
    */
   async analyzeArchitecture(req, res) {
     try {
-      const { projectPath } = req.params;
+      const { projectId } = req.params;
       const options = req.body || {};
 
       this.logger.info(`Architecture analysis requested for project`);
 
+      // Get project path from database
+      const projectPath = await this.getProjectPath(projectId);
+
       // Suche nach aktueller Analyse
-      const latest = await this.analysisRepository.findLatestByProjectPath(projectPath, 'architecture');
+      const latest = await this.analysisRepository.findLatestByProjectId(projectId);
       if (latest && isAnalysisFresh(latest)) {
         this.logger.info(`Returning cached architecture analysis for project`);
         const analysis = latest.resultData;
         const score = this.architectureService.getArchitectureScore(analysis);
         const level = this.architectureService.getArchitectureLevel(score);
-        const isWellStructured = this.architectureService.isWellStructured(analysis);
-        const hasCircularDependencies = this.architectureService.hasCircularDependencies(analysis);
+        const criticalIssues = this.architectureService.getCriticalIssues(analysis);
 
         res.json({
           success: true,
@@ -264,20 +333,28 @@ class AnalysisController {
             analysis,
             score,
             level,
-            isWellStructured,
-            hasCircularDependencies,
+            criticalIssues,
             summary: this.architectureService.getArchitectureSummary(analysis)
           }
         });
         return;
       }
 
-      const analysis = await this.architectureService.analyzeArchitecture(projectPath, options);
-      await this.analysisRepository.saveAnalysis(projectPath, 'architecture', analysis);
+      const analysis = await this.architectureService.analyzeArchitecture(projectPath, {
+        ...options,
+        saveToFile: false, // Prevent automatic file generation
+        saveToDatabase: true // Allow database saving for caching
+      }, projectId);
       const score = this.architectureService.getArchitectureScore(analysis);
       const level = this.architectureService.getArchitectureLevel(score);
-      const isWellStructured = this.architectureService.isWellStructured(analysis);
-      const hasCircularDependencies = this.architectureService.hasCircularDependencies(analysis);
+      const criticalIssues = this.architectureService.getCriticalIssues(analysis);
+      
+      // Create and save analysis result
+      const analysisResult = AnalysisResult.create(projectId, 'architecture', analysis, {
+        overallScore: score,
+        criticalIssuesCount: criticalIssues?.length || 0
+      });
+      await this.analysisRepository.save(analysisResult);
 
       res.json({
         success: true,
@@ -285,17 +362,16 @@ class AnalysisController {
           analysis,
           score,
           level,
-          isWellStructured,
-          hasCircularDependencies,
+          criticalIssues,
           summary: this.architectureService.getArchitectureSummary(analysis)
         }
       });
-
     } catch (error) {
       this.logger.error(`Architecture analysis failed:`, error);
       res.status(500).json({
         success: false,
-        error: error.message
+        error: 'Architecture analysis failed',
+        message: error.message
       });
     }
   }
@@ -1594,12 +1670,12 @@ class AnalysisController {
    */
   async getCodeQualityAnalysis(req, res) {
     try {
-      const { projectPath } = req.params;
+      const { projectId } = req.params;
 
       this.logger.info(`Getting code quality analysis data`);
 
       // Get latest analysis from database
-      const latest = await this.analysisRepository.findLatestByProjectPath(projectPath, 'code-quality');
+      const latest = await this.analysisRepository.findLatestByProjectId(projectId);
       if (!latest) {
         return res.status(404).json({
           success: false,
@@ -1626,7 +1702,7 @@ class AnalysisController {
       };
 
       // Generate ETag for analysis data
-      const etag = this.etagService.generateAnalysisETag(analysisData, projectPath, 'code-quality');
+      const etag = this.etagService.generateAnalysisETag(analysisData, projectId, 'code-quality');
       
       // Check if client has current version
       if (this.etagService.shouldReturn304(req, etag)) {
@@ -1663,12 +1739,12 @@ class AnalysisController {
    */
   async getSecurityAnalysis(req, res) {
     try {
-      const { projectPath } = req.params;
+      const { projectId } = req.params;
 
       this.logger.info(`Getting security analysis data`);
 
       // Get latest analysis from database
-      const latest = await this.analysisRepository.findLatestByProjectPath(projectPath, 'security');
+      const latest = await this.analysisRepository.findLatestByProjectId(projectId);
       if (!latest) {
         return res.status(404).json({
           success: false,
@@ -1692,7 +1768,7 @@ class AnalysisController {
       };
 
       // Generate ETag for analysis data
-      const etag = this.etagService.generateAnalysisETag(analysisData, projectPath, 'security');
+      const etag = this.etagService.generateAnalysisETag(analysisData, projectId, 'security');
       
       // Check if client has current version
       if (this.etagService.shouldReturn304(req, etag)) {
@@ -1729,12 +1805,12 @@ class AnalysisController {
    */
   async getPerformanceAnalysis(req, res) {
     try {
-      const { projectPath } = req.params;
+      const { projectId } = req.params;
 
       this.logger.info(`Getting performance analysis data`);
 
       // Get latest analysis from database
-      const latest = await this.analysisRepository.findLatestByProjectPath(projectPath, 'performance');
+      const latest = await this.analysisRepository.findLatestByProjectId(projectId);
       if (!latest) {
         return res.status(404).json({
           success: false,
@@ -1758,7 +1834,7 @@ class AnalysisController {
       };
 
       // Generate ETag for analysis data
-      const etag = this.etagService.generateAnalysisETag(analysisData, projectPath, 'performance');
+      const etag = this.etagService.generateAnalysisETag(analysisData, projectId, 'performance');
       
       // Check if client has current version
       if (this.etagService.shouldReturn304(req, etag)) {
@@ -1795,12 +1871,12 @@ class AnalysisController {
    */
   async getArchitectureAnalysis(req, res) {
     try {
-      const { projectPath } = req.params;
+      const { projectId } = req.params;
 
       this.logger.info(`Getting architecture analysis data`);
 
       // Get latest analysis from database
-      const latest = await this.analysisRepository.findLatestByProjectPath(projectPath, 'architecture');
+      const latest = await this.analysisRepository.findLatestByProjectId(projectId);
       if (!latest) {
         return res.status(404).json({
           success: false,
@@ -1826,7 +1902,7 @@ class AnalysisController {
       };
 
       // Generate ETag for analysis data
-      const etag = this.etagService.generateAnalysisETag(analysisData, projectPath, 'architecture');
+      const etag = this.etagService.generateAnalysisETag(analysisData, projectId, 'architecture');
       
       // Check if client has current version
       if (this.etagService.shouldReturn304(req, etag)) {

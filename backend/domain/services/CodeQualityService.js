@@ -14,24 +14,25 @@ class CodeQualityService {
    * Analyze code quality for a project
    * @param {string} projectPath - Project directory path
    * @param {Object} options - Analysis options
+   * @param {string} projectId - Project ID
    * @returns {Promise<Object>} Code quality analysis results
    */
-  async analyzeCodeQuality(projectPath, options = {}, projectId = 'default') {
+  async analyzeCodeQuality(projectPath, options = {}, projectId) {
     try {
       this.logger.info(`Starting code quality analysis for project`);
 
       const analysis = await this.codeQualityAnalyzer.analyzeCodeQuality(projectPath, options);
 
-      // Save to file
-      if (this.analysisOutputService) {
+      // Save to file ONLY if explicitly requested
+      if (this.analysisOutputService && options.saveToFile !== false) {
         const fileResult = await this.analysisOutputService.saveAnalysisResult(
           projectId, 
           'codeQuality', 
           analysis
         );
         
-        // Save to database
-        if (this.analysisRepository) {
+        // Save to database ONLY if explicitly requested
+        if (this.analysisRepository && options.saveToDatabase !== false) {
           const AnalysisResult = require('@entities/AnalysisResult');
 const Logger = require('@logging/Logger');
 const logger = new Logger('Logger');
@@ -146,7 +147,8 @@ const logger = new Logger('Logger');
    * @returns {number} Quality score (0-100)
    */
   getQualityScore(analysis) {
-    return this.codeQualityAnalyzer.calculateOverallScore(analysis);
+    // Use the overallScore that's already calculated by the analyzer
+    return analysis.overallScore || 0;
   }
 
   /**
@@ -160,6 +162,41 @@ const logger = new Logger('Logger');
     if (score >= 70) return 'fair';
     if (score >= 60) return 'poor';
     return 'critical';
+  }
+
+  /**
+   * Get critical issues from analysis
+   * @param {Object} analysis - Code quality analysis results
+   * @returns {Array} Critical issues
+   */
+  getCriticalIssues(analysis) {
+    if (!analysis || !analysis.issues) return [];
+    return analysis.issues.filter(issue => issue.severity === 'critical');
+  }
+
+  /**
+   * Get quality summary
+   * @param {Object} analysis - Code quality analysis results
+   * @returns {Object} Quality summary
+   */
+  getQualitySummary(analysis) {
+    if (!analysis) return {};
+    
+    const issues = analysis.issues || [];
+    const criticalIssues = issues.filter(issue => issue.severity === 'critical');
+    const highIssues = issues.filter(issue => issue.severity === 'high');
+    const mediumIssues = issues.filter(issue => issue.severity === 'medium');
+    const lowIssues = issues.filter(issue => issue.severity === 'low');
+    
+    return {
+      totalIssues: issues.length,
+      criticalIssues: criticalIssues.length,
+      highIssues: highIssues.length,
+      mediumIssues: mediumIssues.length,
+      lowIssues: lowIssues.length,
+      overallScore: analysis.overallScore || 0,
+      qualityLevel: this.getQualityLevel(analysis.overallScore || 0)
+    };
   }
 }
 

@@ -146,6 +146,31 @@ CREATE TABLE IF NOT EXISTS analysis_results (
     FOREIGN KEY (project_id) REFERENCES projects (id)
 );
 
+-- ANALYSIS STEPS (Individual analysis steps)
+CREATE TABLE IF NOT EXISTS analysis_steps (
+    id TEXT PRIMARY KEY,
+    project_id TEXT NOT NULL,
+    analysis_type TEXT NOT NULL, -- 'code-quality', 'security', 'performance', 'architecture'
+    status TEXT DEFAULT 'pending', -- 'pending', 'running', 'completed', 'failed', 'cancelled'
+    progress INTEGER DEFAULT 0,
+    started_at TEXT,
+    completed_at TEXT,
+    error TEXT, -- JSON error information
+    result TEXT, -- JSON analysis result data
+    metadata TEXT, -- JSON additional metadata
+    config TEXT, -- JSON step configuration
+    timeout INTEGER DEFAULT 300000,
+    retry_count INTEGER DEFAULT 0,
+    max_retries INTEGER DEFAULT 2,
+    memory_usage INTEGER, -- Memory usage in bytes
+    execution_time INTEGER, -- Execution time in milliseconds
+    file_count INTEGER, -- Number of files processed
+    line_count INTEGER, -- Number of lines processed
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (project_id) REFERENCES projects (id)
+);
+
 -- ============================================================================
 -- CHAT SYSTEM TABLES
 -- ============================================================================
@@ -245,6 +270,16 @@ CREATE INDEX IF NOT EXISTS idx_analysis_project_id ON analysis_results(project_i
 CREATE INDEX IF NOT EXISTS idx_analysis_type ON analysis_results(analysis_type);
 CREATE INDEX IF NOT EXISTS idx_analysis_status ON analysis_results(status);
 CREATE INDEX IF NOT EXISTS idx_analysis_created_at ON analysis_results(created_at);
+
+-- Analysis steps indexes
+CREATE INDEX IF NOT EXISTS idx_analysis_steps_project_id ON analysis_steps(project_id);
+CREATE INDEX IF NOT EXISTS idx_analysis_steps_type ON analysis_steps(analysis_type);
+CREATE INDEX IF NOT EXISTS idx_analysis_steps_status ON analysis_steps(status);
+CREATE INDEX IF NOT EXISTS idx_analysis_steps_created_at ON analysis_steps(created_at);
+CREATE INDEX IF NOT EXISTS idx_analysis_steps_completed_at ON analysis_steps(completed_at);
+CREATE INDEX IF NOT EXISTS idx_analysis_steps_project_type ON analysis_steps(project_id, analysis_type);
+CREATE INDEX IF NOT EXISTS idx_analysis_steps_project_status ON analysis_steps(project_id, status);
+CREATE INDEX IF NOT EXISTS idx_analysis_steps_type_status ON analysis_steps(analysis_type, status);
 
 -- Chat indexes
 CREATE INDEX IF NOT EXISTS idx_chat_sessions_project_id ON chat_sessions(project_id);

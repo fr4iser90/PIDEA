@@ -523,7 +523,7 @@ export default class APIChatRepository extends ChatRepository {
   // Individual Analysis Step Methods
   async executeAnalysisStep(projectId = null, analysisType, options = {}) {
     const currentProjectId = projectId || await this.getCurrentProjectId();
-    return apiCall(`/api/projects/${currentProjectId}/analysis/steps/${analysisType}`, {
+    return apiCall(`/api/projects/${currentProjectId}/analysis/${analysisType}`, {
       method: 'POST',
       body: JSON.stringify(options)
     }, currentProjectId);

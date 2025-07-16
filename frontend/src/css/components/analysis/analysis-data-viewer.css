@@ -115,6 +115,13 @@
   gap: 0.75rem;
 }
 
+/* Analysis Controls Section */
+.analysis-controls {
+  padding: 1.5rem;
+  background: var(--bg-primary, #ffffff);
+  border-bottom: 1px solid var(--border-color, #e5e7eb);
+}
+
 .btn-refresh {
   display: flex;
   align-items: center;
@@ -129,12 +136,47 @@
   transition: all 0.2s ease;
 }
 
-.btn-refresh:hover {
-  background: var(--secondary-hover, #e5e7eb);
-  color: var(--text-primary, #374151);
-}
+  .btn-refresh:hover {
+    background: var(--secondary-hover, #e5e7eb);
+    color: var(--text-primary, #374151);
+  }
+
+  .btn-clear-cache {
+    background: var(--warning-bg-dark, #451a03);
+    color: var(--warning-text-dark, #fbbf24);
+    border-color: var(--warning-border-dark, #f59e0b);
+  }
+
+  .btn-clear-cache:hover {
+    background: var(--warning-hover-dark, #78350f);
+    color: var(--warning-text-hover-dark, #fde68a);
+  }
 
 .btn-refresh:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-clear-cache {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: var(--warning-bg, #fef3c7);
+  color: var(--warning-text, #92400e);
+  border: 1px solid var(--warning-border, #f59e0b);
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.875rem;
+  transition: all 0.2s ease;
+}
+
+.btn-clear-cache:hover {
+  background: var(--warning-hover, #fde68a);
+  color: var(--warning-text-hover, #78350f);
+}
+
+.btn-clear-cache:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }
@@ -270,6 +312,10 @@
     justify-content: flex-end;
   }
 
+  .analysis-controls {
+    padding: 1rem;
+  }
+
   .analysis-data-viewer > *:not(.analysis-header) {
     padding: 1rem;
   }
@@ -316,6 +362,11 @@
   }
 
   .analysis-data-viewer > *:not(.analysis-header):not(:last-child) {
+    border-bottom-color: var(--border-color-dark, #374151);
+  }
+
+  .analysis-controls {
+    background: var(--bg-primary-dark, #1f2937);
     border-bottom-color: var(--border-color-dark, #374151);
   }
 
@@ -366,6 +417,7 @@
   }
 
   .btn-refresh,
+  .btn-clear-cache,
   .btn-retry {
     display: none;
   }

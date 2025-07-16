@@ -14,24 +14,25 @@ class ArchitectureService {
    * Analyze architecture for a project
    * @param {string} projectPath - Project directory path
    * @param {Object} options - Analysis options
+   * @param {string} projectId - Project ID
    * @returns {Promise<Object>} Architecture analysis results
    */
-  async analyzeArchitecture(projectPath, options = {}, projectId = 'default') {
+  async analyzeArchitecture(projectPath, options = {}, projectId) {
     try {
       this.logger.info(`Starting architecture analysis for project`);
 
       const analysis = await this.architectureAnalyzer.analyzeArchitecture(projectPath, options);
 
-      // Save to file
-      if (this.analysisOutputService) {
+      // Save to file ONLY if explicitly requested
+      if (this.analysisOutputService && options.saveToFile !== false) {
         const fileResult = await this.analysisOutputService.saveAnalysisResult(
           projectId, 
           'architecture', 
           analysis
         );
         
-        // Save to database
-        if (this.analysisRepository) {
+        // Save to database ONLY if explicitly requested
+        if (this.analysisRepository && options.saveToDatabase !== false) {
           const AnalysisResult = require('@entities/AnalysisResult');
 const Logger = require('@logging/Logger');
 const logger = new Logger('Logger');
@@ -160,7 +161,8 @@ const logger = new Logger('Logger');
    * @returns {number} Architecture score (0-100)
    */
   getArchitectureScore(analysis) {
-    return this.architectureAnalyzer.calculateArchitectureScore(analysis);
+    // Use the architectureScore that's already calculated by the analyzer
+    return analysis.architectureScore || 0;
   }
 
   /**
@@ -174,6 +176,41 @@ const logger = new Logger('Logger');
     if (score >= 70) return 'fair';
     if (score >= 60) return 'poor';
     return 'critical';
+  }
+
+  /**
+   * Get critical issues from analysis
+   * @param {Object} analysis - Architecture analysis results
+   * @returns {Array} Critical issues
+   */
+  getCriticalIssues(analysis) {
+    if (!analysis || !analysis.issues) return [];
+    return analysis.issues.filter(issue => issue.severity === 'critical');
+  }
+
+  /**
+   * Get architecture summary
+   * @param {Object} analysis - Architecture analysis results
+   * @returns {Object} Architecture summary
+   */
+  getArchitectureSummary(analysis) {
+    if (!analysis) return {};
+    
+    const issues = analysis.issues || [];
+    const criticalIssues = issues.filter(issue => issue.severity === 'critical');
+    const highIssues = issues.filter(issue => issue.severity === 'high');
+    const mediumIssues = issues.filter(issue => issue.severity === 'medium');
+    const lowIssues = issues.filter(issue => issue.severity === 'low');
+    
+    return {
+      totalIssues: issues.length,
+      criticalIssues: criticalIssues.length,
+      highIssues: highIssues.length,
+      mediumIssues: mediumIssues.length,
+      lowIssues: lowIssues.length,
+      overallScore: analysis.architectureScore || 0,
+      architectureLevel: this.getArchitectureLevel(analysis.architectureScore || 0)
+    };
   }
 
   /**
@@ -193,67 +230,6 @@ const logger = new Logger('Logger');
    */
   hasCircularDependencies(analysis) {
     return analysis.dependencies.circularDependencies.length > 0;
-  }
-
-  /**
-   * Get architecture summary
-   * @param {Object} analysis - Architecture analysis results
-   * @returns {Object} Architecture summary
-   */
-  getArchitectureSummary(analysis) {
-    return {
-      overallScore: analysis.architectureScore,
-      patterns: analysis.detectedPatterns.length,
-      violations: analysis.violations.length,
-      circularDependencies: analysis.dependencies.circularDependencies.length,
-      modules: Object.keys(analysis.coupling.instability).length,
-      organization: analysis.structure.organization
-    };
-  }
-
-  /**
-   * Get critical architecture issues
-   * @param {Object} analysis - Architecture analysis results
-   * @returns {Array} Critical architecture issues
-   */
-  getCriticalIssues(analysis) {
-    const issues = [];
-
-    // Check for critical violations
-    const criticalViolations = analysis.violations.filter(v => v.severity === 'critical');
-    if (criticalViolations.length > 0) {
-      issues.push({
-        type: 'violations',
-        severity: 'critical',
-        description: `${criticalViolations.length} critical architecture violations found`,
-        value: criticalViolations.length
-      });
-    }
-
-    // Check for circular dependencies
-    if (analysis.dependencies.circularDependencies.length > 0) {
-      issues.push({
-        type: 'circular-dependencies',
-        severity: 'critical',
-        description: `${analysis.dependencies.circularDependencies.length} circular dependencies found`,
-        value: analysis.dependencies.circularDependencies.length
-      });
-    }
-
-    // Check for high instability
-    const highInstability = Object.entries(analysis.coupling.instability)
-      .filter(([module, instability]) => instability > 0.8);
-    
-    if (highInstability.length > 0) {
-      issues.push({
-        type: 'high-instability',
-        severity: 'high',
-        description: `${highInstability.length} modules have very high instability`,
-        value: highInstability.length
-      });
-    }
-
-    return issues;
   }
 
   /**

@@ -1,7 +1,7 @@
 import { logger } from "@/infrastructure/logging/Logger";
 import React, { useState, useEffect } from 'react';
 import APIChatRepository from '@/infrastructure/repositories/APIChatRepository';
-import useAnalysisCache from '@/hooks/useAnalysisCache';
+import useNotificationStore from '@/infrastructure/stores/NotificationStore.jsx';
 import AnalysisCharts from './AnalysisCharts';
 import AnalysisMetrics from './AnalysisMetrics';
 import AnalysisFilters from './AnalysisFilters';
@@ -12,6 +12,7 @@ import AnalysisIssues from './AnalysisIssues';
 import AnalysisTechStack from './AnalysisTechStack';
 import AnalysisArchitecture from './AnalysisArchitecture';
 import AnalysisRecommendations from './AnalysisRecommendations';
+import IndividualAnalysisButtons from './IndividualAnalysisButtons';
 import '@/css/components/analysis/analysis-data-viewer.css';
 
 const AnalysisDataViewer = ({ projectId = null, eventBus = null }) => {
@@ -60,7 +61,7 @@ const AnalysisDataViewer = ({ projectId = null, eventBus = null }) => {
   });
 
   const apiRepository = new APIChatRepository();
-  const { getCachedData, setCachedData, hasCachedData } = useAnalysisCache();
+  const { showSuccess, showInfo } = useNotificationStore();
 
   useEffect(() => {
     loadAnalysisData();
@@ -106,38 +107,12 @@ const AnalysisDataViewer = ({ projectId = null, eventBus = null }) => {
       updateLoadingState('status', true);
       updateLoadingState('metrics', true);
       
-      // Check cache first
-      const cachedStatus = getCachedData(currentProjectId, 'status');
-      const cachedMetrics = getCachedData(currentProjectId, 'metrics');
-      
-      let statusResponse, metricsResponse;
-      
-      if (cachedStatus && cachedMetrics && !forceRefresh) {
-        // Use cached data
-        statusResponse = { success: true, data: cachedStatus };
-        metricsResponse = { success: true, data: cachedMetrics };
-        logger.info('🔍 [AnalysisDataViewer] Using cached status and metrics');
-      } else {
-        // Load from API
-        [statusResponse, metricsResponse] = await Promise.all([
-          apiRepository.getAnalysisStatus?.(currentProjectId) || Promise.resolve({ success: false, data: null }),
-          apiRepository.getAnalysisMetrics?.(currentProjectId) || Promise.resolve({ success: false, data: null })
-        ]);
-        
-        // Cache the results (only if successful)
-        if (statusResponse.success) {
-          const cached = setCachedData(currentProjectId, 'status', statusResponse.data);
-          if (!cached) {
-            logger.warn('Failed to cache status data (too large)');
-          }
-        }
-        if (metricsResponse.success) {
-          const cached = setCachedData(currentProjectId, 'metrics', metricsResponse.data);
-          if (!cached) {
-            logger.warn('Failed to cache metrics data (too large)');
-          }
-        }
-      }
+      // For large analysis data, skip client-side caching and rely on ETag system
+      // Load from API directly (ETag will handle caching)
+      const [statusResponse, metricsResponse] = await Promise.all([
+        apiRepository.getAnalysisStatus?.(currentProjectId) || Promise.resolve({ success: false, data: null }),
+        apiRepository.getAnalysisMetrics?.(currentProjectId) || Promise.resolve({ success: false, data: null })
+      ]);
 
       // Update UI with immediate data
       setAnalysisData(prev => ({
@@ -152,21 +127,8 @@ const AnalysisDataViewer = ({ projectId = null, eventBus = null }) => {
       // Step 2: Load heavy data with progress indicators
       updateLoadingState('history', true);
       
-      const cachedHistory = getCachedData(currentProjectId, 'history');
-      let historyResponse;
-      
-      if (cachedHistory && !forceRefresh) {
-        historyResponse = { success: true, data: cachedHistory };
-        logger.info('🔍 [AnalysisDataViewer] Using cached history');
-      } else {
-        historyResponse = await apiRepository.getAnalysisHistory(currentProjectId);
-        if (historyResponse.success) {
-          const cached = setCachedData(currentProjectId, 'history', historyResponse.data || []);
-          if (!cached) {
-            logger.warn('Failed to cache history data (too large)');
-          }
-        }
-      }
+      // For large analysis data, skip client-side caching and rely on ETag system
+      const historyResponse = await apiRepository.getAnalysisHistory(currentProjectId);
       
       setAnalysisData(prev => ({
         ...prev,
@@ -179,21 +141,8 @@ const AnalysisDataViewer = ({ projectId = null, eventBus = null }) => {
       // Load issues data
       updateLoadingState('issues', true);
       try {
-        const cachedIssues = getCachedData(currentProjectId, 'issues');
-        let issuesResponse;
-        
-        if (cachedIssues && !forceRefresh) {
-          issuesResponse = { success: true, data: cachedIssues };
-          logger.info('🔍 [AnalysisDataViewer] Using cached issues');
-        } else {
-          issuesResponse = await apiRepository.getAnalysisIssues?.(currentProjectId) || Promise.resolve({ success: false, data: null });
-          if (issuesResponse.success) {
-            const cached = setCachedData(currentProjectId, 'issues', issuesResponse.data);
-            if (!cached) {
-              logger.warn('Failed to cache issues data (too large)');
-            }
-          }
-        }
+        // For large analysis data, skip client-side caching and rely on ETag system
+        const issuesResponse = await apiRepository.getAnalysisIssues?.(currentProjectId) || Promise.resolve({ success: false, data: null });
         
         setAnalysisData(prev => ({
           ...prev,
@@ -207,18 +156,8 @@ const AnalysisDataViewer = ({ projectId = null, eventBus = null }) => {
       // Load tech stack data
       updateLoadingState('techStack', true);
       try {
-        const cachedTechStack = getCachedData(currentProjectId, 'techStack');
-        let techStackResponse;
-        
-        if (cachedTechStack && !forceRefresh) {
-          techStackResponse = { success: true, data: cachedTechStack };
-          logger.info('🔍 [AnalysisDataViewer] Using cached tech stack');
-        } else {
-          techStackResponse = await apiRepository.getAnalysisTechStack?.(currentProjectId) || Promise.resolve({ success: false, data: null });
-          if (techStackResponse.success) {
-            setCachedData(currentProjectId, 'techStack', techStackResponse.data);
-          }
-        }
+        // For large analysis data, skip client-side caching and rely on ETag system
+        const techStackResponse = await apiRepository.getAnalysisTechStack?.(currentProjectId) || Promise.resolve({ success: false, data: null });
         
         setAnalysisData(prev => ({
           ...prev,
@@ -232,18 +171,8 @@ const AnalysisDataViewer = ({ projectId = null, eventBus = null }) => {
       // Load architecture data
       updateLoadingState('architecture', true);
       try {
-        const cachedArchitecture = getCachedData(currentProjectId, 'architecture');
-        let architectureResponse;
-        
-        if (cachedArchitecture && !forceRefresh) {
-          architectureResponse = { success: true, data: cachedArchitecture };
-          logger.info('🔍 [AnalysisDataViewer] Using cached architecture');
-        } else {
-          architectureResponse = await apiRepository.getAnalysisArchitecture?.(currentProjectId) || Promise.resolve({ success: false, data: null });
-          if (architectureResponse.success) {
-            setCachedData(currentProjectId, 'architecture', architectureResponse.data);
-          }
-        }
+        // For large analysis data, skip client-side caching and rely on ETag system
+        const architectureResponse = await apiRepository.getAnalysisArchitecture?.(currentProjectId) || Promise.resolve({ success: false, data: null });
         
         setAnalysisData(prev => ({
           ...prev,
@@ -257,18 +186,8 @@ const AnalysisDataViewer = ({ projectId = null, eventBus = null }) => {
       // Load recommendations data
       updateLoadingState('recommendations', true);
       try {
-        const cachedRecommendations = getCachedData(currentProjectId, 'recommendations');
-        let recommendationsResponse;
-        
-        if (cachedRecommendations && !forceRefresh) {
-          recommendationsResponse = { success: true, data: cachedRecommendations };
-          logger.info('🔍 [AnalysisDataViewer] Using cached recommendations');
-        } else {
-          recommendationsResponse = await apiRepository.getAnalysisRecommendations?.(currentProjectId) || Promise.resolve({ success: false, data: null });
-          if (recommendationsResponse.success) {
-            setCachedData(currentProjectId, 'recommendations', recommendationsResponse.data);
-          }
-        }
+        // For large analysis data, skip client-side caching and rely on ETag system
+        const recommendationsResponse = await apiRepository.getAnalysisRecommendations?.(currentProjectId) || Promise.resolve({ success: false, data: null });
         
         setAnalysisData(prev => ({
           ...prev,
@@ -282,6 +201,7 @@ const AnalysisDataViewer = ({ projectId = null, eventBus = null }) => {
       // Load charts data
       updateLoadingState('charts', true);
       try {
+        // For large analysis data, skip client-side caching and rely on ETag system
         const chartsResponse = await apiRepository.getAnalysisCharts?.(currentProjectId, 'trends') || Promise.resolve({ success: false, data: null });
         setAnalysisData(prev => ({
           ...prev,
@@ -295,6 +215,11 @@ const AnalysisDataViewer = ({ projectId = null, eventBus = null }) => {
       // Check if we have recent analysis data
       const hasRecentData = await checkForRecentAnalysisData(historyResponse, currentProjectId);
       setAnalysisData(prev => ({ ...prev, hasRecentData }));
+
+      // Show success notification if data was loaded successfully
+      if (forceRefresh) {
+        showSuccess('Analysis data refreshed successfully!', 'Data Loaded');
+      }
 
     } catch (err) {
       setError('Failed to load analysis data: ' + err.message);
@@ -347,7 +272,10 @@ const AnalysisDataViewer = ({ projectId = null, eventBus = null }) => {
 
   const handleAnalysisCompleted = (data) => {
     if (data.projectId === (projectId || analysisData.status?.projectId)) {
-      // Force fresh data when analysis completes
+      // Force fresh data when analysis completes (ETag will handle caching)
+      showSuccess('Analysis completed! Data refreshed.', 'Analysis Complete');
+      
+      // Force fresh data
       loadAnalysisData(true); // forceRefresh = true
     }
   };
@@ -375,10 +303,15 @@ const AnalysisDataViewer = ({ projectId = null, eventBus = null }) => {
   };
 
   const handleRefresh = () => {
-    // Force fresh data without clearing cache
+    // Force fresh data (ETag will handle caching)
+    showInfo('Refreshing analysis data...', 'Data Refresh');
     loadAnalysisData(true); // forceRefresh = true
   };
 
+  /**
+   * @deprecated This function is deprecated. Use IndividualAnalysisButtons component instead.
+   * Kept for backward compatibility but should not be used in new code.
+   */
   const handleStartAnalysis = async () => {
     try {
       setLoading(true);
@@ -456,8 +389,16 @@ const AnalysisDataViewer = ({ projectId = null, eventBus = null }) => {
           >
             🔄 Refresh
           </button>
-          <button onClick={handleStartAnalysis} className="analyze-btn">Jetzt analysieren</button>
         </div>
+      </div>
+      
+      {/* Individual Analysis Buttons Section */}
+      <div className="analysis-controls">
+        <IndividualAnalysisButtons 
+          projectId={projectId}
+          eventBus={eventBus}
+          onAnalysisComplete={handleRefresh}
+        />
       </div>
       <div className="analysis-content">
         {/* Filters */}

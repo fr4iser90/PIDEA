@@ -14,27 +14,28 @@ class SecurityService {
    * Analyze security for a project
    * @param {string} projectPath - Project directory path
    * @param {Object} options - Analysis options
+   * @param {string} projectId - Project ID
    * @returns {Promise<Object>} Security analysis results
    */
-  async analyzeSecurity(projectPath, options = {}, projectId = 'default') {
+  async analyzeSecurity(projectPath, options = {}, projectId) {
     try {
       this.logger.info(`Starting security analysis for project`);
 
       const analysis = await this.securityAnalyzer.analyzeSecurity(projectPath, options);
 
-      // Save to file
-      if (this.analysisOutputService) {
+      // Save to file ONLY if explicitly requested
+      if (this.analysisOutputService && options.saveToFile !== false) {
         const fileResult = await this.analysisOutputService.saveAnalysisResult(
           projectId, 
           'security', 
           analysis
         );
         
-        // Save to database
-        if (this.analysisRepository) {
+        // Save to database ONLY if explicitly requested
+        if (this.analysisRepository && options.saveToDatabase !== false) {
           const AnalysisResult = require('@entities/AnalysisResult');
-const Logger = require('@logging/Logger');
-const logger = new Logger('Logger');
+          const Logger = require('@logging/Logger');
+          const logger = new Logger('SecurityService');
           const analysisResult = AnalysisResult.create(
             projectId, 
             'security', 
@@ -132,7 +133,8 @@ const logger = new Logger('Logger');
    * @returns {number} Security score (0-100)
    */
   getSecurityScore(analysis) {
-    return this.securityAnalyzer.calculateSecurityScore(analysis);
+    // Use the securityScore that's already calculated by the analyzer
+    return analysis.securityScore || 0;
   }
 
   /**
@@ -181,6 +183,77 @@ const logger = new Logger('Logger');
       low: analysis.dependencies.low,
       codeIssues: analysis.codeIssues.length,
       secrets: analysis.secrets.found.length
+    };
+  }
+
+  /**
+   * Get security level based on score
+   * @param {number} score - Security score
+   * @returns {string} Security level
+   */
+  getSecurityLevel(score) {
+    if (score >= 90) return 'excellent';
+    if (score >= 80) return 'good';
+    if (score >= 70) return 'fair';
+    if (score >= 60) return 'poor';
+    return 'critical';
+  }
+
+  /**
+   * Get critical issues from analysis
+   * @param {Object} analysis - Security analysis results
+   * @returns {Array} Critical issues
+   */
+  getCriticalIssues(analysis) {
+    if (!analysis) return [];
+    
+    const criticalIssues = [];
+    
+    // Add critical dependency vulnerabilities
+    if (analysis.dependencies && analysis.dependencies.critical) {
+      criticalIssues.push(...analysis.dependencies.critical.map(vuln => ({
+        type: 'dependency',
+        severity: 'critical',
+        title: vuln.title,
+        description: vuln.description
+      })));
+    }
+    
+    // Add critical code issues
+    if (analysis.codeIssues) {
+      criticalIssues.push(...analysis.codeIssues.filter(issue => issue.severity === 'critical'));
+    }
+    
+    // Add critical secrets
+    if (analysis.secrets && analysis.secrets.found) {
+      criticalIssues.push(...analysis.secrets.found.filter(secret => secret.severity === 'critical'));
+    }
+    
+    return criticalIssues;
+  }
+
+  /**
+   * Get security summary
+   * @param {Object} analysis - Security analysis results
+   * @returns {Object} Security summary
+   */
+  getSecuritySummary(analysis) {
+    if (!analysis) return {};
+    
+    const criticalIssues = this.getCriticalIssues(analysis);
+    const score = this.getSecurityScore(analysis);
+    
+    return {
+      totalVulnerabilities: analysis.dependencies?.total || 0,
+      criticalVulnerabilities: analysis.dependencies?.critical?.length || 0,
+      highVulnerabilities: analysis.dependencies?.high?.length || 0,
+      mediumVulnerabilities: analysis.dependencies?.medium?.length || 0,
+      lowVulnerabilities: analysis.dependencies?.low?.length || 0,
+      codeIssues: analysis.codeIssues?.length || 0,
+      secretsFound: analysis.secrets?.found?.length || 0,
+      criticalIssues: criticalIssues.length,
+      overallScore: score,
+      securityLevel: this.getSecurityLevel(score)
     };
   }
 }

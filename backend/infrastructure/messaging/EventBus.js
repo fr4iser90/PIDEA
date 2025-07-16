@@ -57,6 +57,11 @@ class EventBus {
     }
   }
 
+  // Alias for publish (for compatibility with services that use emit)
+  async emit(eventName, eventData) {
+    return this.publish(eventName, eventData);
+  }
+
   // Add middleware
   use(middleware) {
     this.middleware.push(middleware);
