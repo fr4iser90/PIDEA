@@ -22,28 +22,24 @@ class RecommendationsService {
             const recommendations = [];
 
             // Process each analysis type and convert findings to recommendations
-            if (analysis.linting && analysis.linting.errors) {
-                this.processLintingFindings(analysis.linting, recommendations);
+            if (analysis.codeQuality && analysis.codeQuality.issues) {
+                this.processCodeQualityFindings(analysis.codeQuality, recommendations);
             }
 
             if (analysis.security && analysis.security.vulnerabilities) {
                 this.processSecurityFindings(analysis.security, recommendations);
             }
 
-            if (analysis.codeQuality && analysis.codeQuality.criticalIssues) {
-                this.processCodeQualityFindings(analysis.codeQuality, recommendations);
-            }
-
-            if (analysis.architecture && analysis.architecture.violations) {
+            if (analysis.architecture && analysis.architecture.detectedPatterns) {
                 this.processArchitectureFindings(analysis.architecture, recommendations);
             }
 
-            if (analysis.scripts && analysis.scripts.recommendations) {
-                this.processScriptRecommendations(analysis.scripts, recommendations);
+            if (analysis.performance && analysis.performance) {
+                this.processPerformanceFindings(analysis.performance, recommendations);
             }
 
-            if (analysis.performance && analysis.performance.issues) {
-                this.processPerformanceFindings(analysis.performance, recommendations);
+            if (analysis.techstack && analysis.techstack) {
+                this.processTechStackFindings(analysis.techstack, recommendations);
             }
 
             // logger.info('RecommendationsService: Generated', recommendations.length, 'recommendations');
@@ -65,20 +61,20 @@ class RecommendationsService {
         }
     }
 
-    processLintingFindings(linting, recommendations) {
-        if (!Array.isArray(linting.errors)) return;
+    processCodeQualityFindings(codeQuality, recommendations) {
+        if (!Array.isArray(codeQuality.issues)) return;
         
-        for (const error of linting.errors) {
+        for (const issue of codeQuality.issues) {
             recommendations.push({
-                title: error.message,
-                description: `Fix linting issue in file: ${error.file}`,
-                priority: error.severity === 'error' ? 'high' : 'medium',
+                title: issue.issue || 'Code Quality Issue',
+                description: `Fix code quality issue in file: ${issue.file} at line ${issue.line}`,
+                priority: issue.severity === 'error' ? 'high' : 'medium',
                 category: 'code-quality',
                 effort: 'low',
                 impact: 'medium',
-                type: 'linting',
-                file: error.file,
-                line: error.line
+                type: 'code-quality',
+                file: issue.file,
+                line: issue.line
             });
         }
     }
@@ -88,8 +84,8 @@ class RecommendationsService {
         
         for (const vuln of security.vulnerabilities) {
             recommendations.push({
-                title: vuln.title,
-                description: vuln.recommendation,
+                title: vuln.title || 'Security Vulnerability',
+                description: vuln.recommendation || 'Address security vulnerability',
                 priority: 'high',
                 category: 'security',
                 effort: 'medium',
@@ -101,73 +97,68 @@ class RecommendationsService {
         }
     }
 
-    processCodeQualityFindings(codeQuality, recommendations) {
-        if (!Array.isArray(codeQuality.criticalIssues)) return;
-        
-        for (const issue of codeQuality.criticalIssues) {
-            recommendations.push({
-                title: issue.message,
-                description: `Fix code quality issue in file: ${issue.file}`,
-                priority: 'critical',
-                category: 'code-quality',
-                effort: 'medium',
-                impact: 'high',
-                type: 'code-quality',
-                file: issue.file,
-                line: issue.line
-            });
-        }
-    }
-
     processArchitectureFindings(architecture, recommendations) {
-        if (!Array.isArray(architecture.violations)) return;
+        if (!Array.isArray(architecture.detectedPatterns)) return;
         
-        for (const violation of architecture.violations) {
+        for (const pattern of architecture.detectedPatterns) {
             recommendations.push({
-                title: violation.message,
-                description: violation.suggestion,
-                priority: violation.severity || 'medium',
+                title: `Architecture Pattern: ${pattern.pattern}`,
+                description: pattern.description || `Consider ${pattern.pattern} pattern implementation`,
+                priority: pattern.confidence === 1 ? 'medium' : 'low',
                 category: 'architecture',
                 effort: 'high',
                 impact: 'high',
                 type: 'architecture',
-                file: violation.file,
-                component: violation.component
-            });
-        }
-    }
-
-    processScriptRecommendations(scripts, recommendations) {
-        if (!Array.isArray(scripts.recommendations)) return;
-        
-        for (const rec of scripts.recommendations) {
-            recommendations.push({
-                title: rec.message,
-                description: rec.action,
-                priority: rec.priority || 'medium',
-                category: 'automation',
-                effort: rec.effort || 'medium',
-                impact: rec.impact || 'medium',
-                type: 'script',
-                file: rec.file
+                pattern: pattern.pattern,
+                confidence: pattern.confidence
             });
         }
     }
 
     processPerformanceFindings(performance, recommendations) {
-        if (!Array.isArray(performance.issues)) return;
-        
-        for (const perf of performance.issues) {
+        // Handle performance analysis data
+        if (performance.overallScore && performance.overallScore < 70) {
             recommendations.push({
-                title: perf.message,
-                description: perf.suggestion,
-                priority: perf.severity || 'medium',
+                title: 'Performance Optimization Needed',
+                description: `Overall performance score is ${performance.overallScore}. Consider optimizing build times, caching, and parallel processing.`,
+                priority: 'medium',
                 category: 'performance',
                 effort: 'medium',
                 impact: 'medium',
                 type: 'performance',
-                file: perf.file,
-                metric: perf.metric
+                score: performance.overallScore
+            });
+        }
+
+        if (performance.buildPerformance) {
+            const build = performance.buildPerformance;
+            if (build.buildTime && build.buildTime > 5000) {
+                recommendations.push({
+                    title: 'Build Time Optimization',
+                    description: `Build time is ${build.buildTime}ms. Consider implementing build optimizations, caching, and parallel processing.`,
+                    priority: 'medium',
+                    category: 'performance',
+                    effort: 'medium',
+                    impact: 'medium',
+                    type: 'performance',
+                    buildTime: build.buildTime
+                });
+            }
+        }
+    }
+
+    processTechStackFindings(techstack, recommendations) {
+        if (techstack.frameworks && Array.isArray(techstack.frameworks)) {
+            const frameworks = techstack.frameworks.map(f => f.name);
+            recommendations.push({
+                title: 'Tech Stack Analysis',
+                description: `Detected frameworks: ${frameworks.join(', ')}. Consider version updates and security patches.`,
+                priority: 'low',
+                category: 'techstack',
+                effort: 'low',
+                impact: 'low',
+                type: 'techstack',
+                frameworks: frameworks
             });
         }
     }
