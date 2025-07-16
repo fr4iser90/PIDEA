@@ -6,23 +6,18 @@ const AnalysisRecommendations = ({ recommendations, loading, error }) => {
   const [activeView, setActiveView] = useState('all');
   const [selectedPriority, setSelectedPriority] = useState('all');
   const [selectedCategory, setSelectedCategory] = useState('all');
+  const [selectedEffort, setSelectedEffort] = useState('all');
   const [sortBy, setSortBy] = useState('priority');
   const [sortOrder, setSortOrder] = useState('desc');
   const [expandedRecommendations, setExpandedRecommendations] = useState(new Set());
 
-  // Add debugging
-  console.log('💡 [AnalysisRecommendations] Received props:', { recommendations, loading, error });
+  // Debug logging removed for security
 
   // Process recommendations data from backend structure
   const processedRecommendations = useMemo(() => {
     if (!recommendations) {
-      console.log('💡 [AnalysisRecommendations] No recommendations data provided');
-      return null;
-    }
-
-    console.log('💡 [AnalysisRecommendations] Processing recommendations data:', recommendations);
-    console.log('💡 [AnalysisRecommendations] recommendations.recommendations:', recommendations.recommendations);
-    console.log('💡 [AnalysisRecommendations] recommendations.insights:', recommendations.insights);
+          return null;
+  }
 
     const processed = {
       recommendations: recommendations.recommendations || [],
@@ -61,6 +56,11 @@ const AnalysisRecommendations = ({ recommendations, loading, error }) => {
     // Apply category filter
     if (selectedCategory !== 'all') {
       filtered = filtered.filter(rec => rec.category === selectedCategory);
+    }
+
+    // Apply effort filter
+    if (selectedEffort !== 'all') {
+      filtered = filtered.filter(rec => rec.effort === selectedEffort);
     }
 
     // Sort recommendations
@@ -105,7 +105,7 @@ const AnalysisRecommendations = ({ recommendations, loading, error }) => {
     });
 
     return filtered;
-  }, [processedRecommendations, selectedPriority, selectedCategory, sortBy, sortOrder]);
+  }, [processedRecommendations, selectedPriority, selectedCategory, selectedEffort, sortBy, sortOrder]);
 
   // Get unique values for filters
   const uniquePriorities = useMemo(() => 
@@ -249,6 +249,7 @@ const AnalysisRecommendations = ({ recommendations, loading, error }) => {
   const clearFilters = () => {
     setSelectedPriority('all');
     setSelectedCategory('all');
+    setSelectedEffort('all');
   };
 
   const exportRecommendations = () => {
@@ -400,8 +401,8 @@ const AnalysisRecommendations = ({ recommendations, loading, error }) => {
           <label htmlFor="effort-filter">Effort:</label>
           <select
             id="effort-filter"
-            value={filterEffort}
-            onChange={(e) => setFilterEffort(e.target.value)}
+            value={selectedEffort}
+            onChange={(e) => setSelectedEffort(e.target.value)}
             className="filter-select"
           >
             <option value="all">All Efforts</option>

@@ -485,29 +485,37 @@ class AnalysisController {
 
       // First get existing analysis data to generate recommendations
       const existingAnalyses = await this.analysisRepository.findByProjectId(projectId);
-      const analysisData = existingAnalyses.length > 0 ? existingAnalyses[0].resultData : {};
+      const analysisData = {};
+      for (const a of existingAnalyses) {
+        analysisData[a.analysisType] = a.resultData;
+      }
 
       const analysis = await application.recommendationsService.generateRecommendations(analysisData);
       
+      // KORREKTES FORMAT für Speicherung und Response
+      const resultToSave = {
+        recommendations: analysis.recommendations || [],
+        insights: analysis.insights || []
+      };
       // Create and save analysis result
-      const analysisResult = AnalysisResult.create(projectId, 'recommendations', analysis, {
-        recommendationsCount: analysis.recommendations?.length || 0,
-        insightsCount: analysis.insights?.length || 0
+      const analysisResult = AnalysisResult.create(projectId, 'recommendations', resultToSave, {
+        recommendationsCount: resultToSave.recommendations.length,
+        insightsCount: resultToSave.insights.length
       });
       await this.analysisRepository.save(analysisResult);
 
       res.json({
         success: true,
         data: {
-          analysis,
+          ...resultToSave,
           summary: 'Recommendations analysis completed successfully'
         }
       });
     } catch (error) {
-      this.logger.error(`Recommendations analysis failed:`, error);
+      this.logger.error(`Failed to get recommendations analysis:`, error);
       res.status(500).json({
         success: false,
-        error: 'Recommendations analysis failed',
+        error: 'Failed to get recommendations analysis',
         message: error.message
       });
     }
@@ -1784,10 +1792,11 @@ class AnalysisController {
         recommendationsData = resultData.recommendations || resultData;
       }
       
-      // Extract and structure the data
+      // Extract and structure the data - ensure we return an object with recommendations array
       const extractedData = {
-        recommendations: recommendationsData.recommendations || recommendationsData.suggestions || [],
-        insights: recommendationsData.insights || recommendationsData.observations || []
+        recommendations: Array.isArray(recommendationsData.recommendations) ? recommendationsData.recommendations : 
+                        Array.isArray(recommendationsData) ? recommendationsData : [],
+        insights: Array.isArray(recommendationsData.insights) ? recommendationsData.insights : []
       };
       
       this.logger.info(`Recommendations data extracted successfully`);

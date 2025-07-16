@@ -39,13 +39,13 @@ const AnalysisDataViewer = ({ projectId = null, eventBus = null }) => {
   
   // Collapsible sections state
   const [expandedSections, setExpandedSections] = useState({
-    metrics: true,
-    charts: true,
-    history: true,
+    recommendations: true,
     issues: false,
     techStack: false,
     architecture: false,
-    recommendations: false
+    metrics: false,
+    charts: false,
+    history: false
   });
   
   // Individual loading states for progressive loading
@@ -163,7 +163,7 @@ const AnalysisDataViewer = ({ projectId = null, eventBus = null }) => {
         // For large analysis data, skip client-side caching and rely on ETag system
         const techStackResponse = await apiRepository.getAnalysisTechStack?.(currentProjectId) || Promise.resolve({ success: false, data: null });
         
-        logger.info('🔧 [AnalysisDataViewer] Tech stack response:', techStackResponse);
+        logger.info('🔧 [AnalysisDataViewer] Tech stack response received');
         
         setAnalysisData(prev => ({
           ...prev,
@@ -180,7 +180,7 @@ const AnalysisDataViewer = ({ projectId = null, eventBus = null }) => {
         // For large analysis data, skip client-side caching and rely on ETag system
         const architectureResponse = await apiRepository.getAnalysisArchitecture?.(currentProjectId) || Promise.resolve({ success: false, data: null });
         
-        logger.info('🏗️ [AnalysisDataViewer] Architecture response:', architectureResponse);
+        logger.info('🏗️ [AnalysisDataViewer] Architecture response received');
         
         setAnalysisData(prev => ({
           ...prev,
@@ -197,7 +197,7 @@ const AnalysisDataViewer = ({ projectId = null, eventBus = null }) => {
         // For large analysis data, skip client-side caching and rely on ETag system
         const recommendationsResponse = await apiRepository.getAnalysisRecommendations?.(currentProjectId) || Promise.resolve({ success: false, data: null });
         
-        logger.info('💡 [AnalysisDataViewer] Recommendations response:', recommendationsResponse);
+        logger.info('💡 [AnalysisDataViewer] Recommendations response received');
         
         setAnalysisData(prev => ({
           ...prev,
@@ -429,52 +429,18 @@ const AnalysisDataViewer = ({ projectId = null, eventBus = null }) => {
           projectId={projectId}
         />
 
-        {/* Metrics Section */}
-        <div className={`analysis-section ${expandedSections.metrics ? 'expanded' : 'collapsed'}`}>
-          <div className="section-header" onClick={() => toggleSection('metrics')}>
-            <h3>📊 Metrics</h3>
-            <span className="section-toggle">{expandedSections.metrics ? '▼' : '▶'}</span>
+        {/* Recommendations Section */}
+        <div className={`analysis-section ${expandedSections.recommendations ? 'expanded' : 'collapsed'}`}>
+          <div className="section-header" onClick={() => toggleSection('recommendations')}>
+            <h3>💡 Recommendations</h3>
+            <span className="section-toggle">{expandedSections.recommendations ? '▼' : '▶'}</span>
           </div>
-          {expandedSections.metrics && (
+          {expandedSections.recommendations && (
             <div className="section-content">
-              <AnalysisMetrics 
-                metrics={analysisData.metrics}
-                loading={loadingStates.metrics}
-              />
-            </div>
-          )}
-        </div>
-
-        {/* Charts Section */}
-        <div className={`analysis-section ${expandedSections.charts ? 'expanded' : 'collapsed'}`}>
-          <div className="section-header" onClick={() => toggleSection('charts')}>
-            <h3>📈 Charts</h3>
-            <span className="section-toggle">{expandedSections.charts ? '▼' : '▶'}</span>
-          </div>
-          {expandedSections.charts && (
-            <div className="section-content">
-              <AnalysisCharts 
-                data={analysisData.charts}
-                history={analysisData.history}
-                filters={filters}
-                loading={loadingStates.history}
-              />
-            </div>
-          )}
-        </div>
-
-        {/* History Section */}
-        <div className={`analysis-section ${expandedSections.history ? 'expanded' : 'collapsed'}`}>
-          <div className="section-header" onClick={() => toggleSection('history')}>
-            <h3>📋 History</h3>
-            <span className="section-toggle">{expandedSections.history ? '▼' : '▶'}</span>
-          </div>
-          {expandedSections.history && (
-            <div className="section-content">
-              <AnalysisHistory 
-                history={analysisData.history}
-                onAnalysisSelect={handleAnalysisSelect}
-                loading={loadingStates.history}
+              <AnalysisRecommendations 
+                recommendations={analysisData.recommendations}
+                loading={loadingStates.recommendations}
+                error={error}
               />
             </div>
           )}
@@ -531,18 +497,52 @@ const AnalysisDataViewer = ({ projectId = null, eventBus = null }) => {
           )}
         </div>
 
-        {/* Recommendations Section */}
-        <div className={`analysis-section ${expandedSections.recommendations ? 'expanded' : 'collapsed'}`}>
-          <div className="section-header" onClick={() => toggleSection('recommendations')}>
-            <h3>💡 Recommendations</h3>
-            <span className="section-toggle">{expandedSections.recommendations ? '▼' : '▶'}</span>
+        {/* Metrics Section */}
+        <div className={`analysis-section ${expandedSections.metrics ? 'expanded' : 'collapsed'}`}>
+          <div className="section-header" onClick={() => toggleSection('metrics')}>
+            <h3>📊 Metrics</h3>
+            <span className="section-toggle">{expandedSections.metrics ? '▼' : '▶'}</span>
           </div>
-          {expandedSections.recommendations && (
+          {expandedSections.metrics && (
             <div className="section-content">
-              <AnalysisRecommendations 
-                recommendations={analysisData.recommendations}
-                loading={loadingStates.recommendations}
-                error={error}
+              <AnalysisMetrics 
+                metrics={analysisData.metrics}
+                loading={loadingStates.metrics}
+              />
+            </div>
+          )}
+        </div>
+
+        {/* Charts Section */}
+        <div className={`analysis-section ${expandedSections.charts ? 'expanded' : 'collapsed'}`}>
+          <div className="section-header" onClick={() => toggleSection('charts')}>
+            <h3>📈 Charts</h3>
+            <span className="section-toggle">{expandedSections.charts ? '▼' : '▶'}</span>
+          </div>
+          {expandedSections.charts && (
+            <div className="section-content">
+              <AnalysisCharts 
+                data={analysisData.charts}
+                history={analysisData.history}
+                filters={filters}
+                loading={loadingStates.history}
+              />
+            </div>
+          )}
+        </div>
+
+        {/* History Section */}
+        <div className={`analysis-section ${expandedSections.history ? 'expanded' : 'collapsed'}`}>
+          <div className="section-header" onClick={() => toggleSection('history')}>
+            <h3>📋 History</h3>
+            <span className="section-toggle">{expandedSections.history ? '▼' : '▶'}</span>
+          </div>
+          {expandedSections.history && (
+            <div className="section-content">
+              <AnalysisHistory 
+                history={analysisData.history}
+                onAnalysisSelect={handleAnalysisSelect}
+                loading={loadingStates.history}
               />
             </div>
           )}
