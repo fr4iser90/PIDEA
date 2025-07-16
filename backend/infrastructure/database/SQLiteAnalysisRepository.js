@@ -1,7 +1,7 @@
 const AnalysisRepository = require('@repositories/AnalysisRepository');
 const AnalysisResult = require('@entities/AnalysisResult');
 const Logger = require('@logging/Logger');
-const logger = new Logger('Logger');
+const logger = new Logger('SQLiteAnalysisRepository');
 
 class SQLiteAnalysisRepository extends AnalysisRepository {
   constructor(databaseConnection) {
