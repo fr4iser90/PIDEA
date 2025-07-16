@@ -253,7 +253,7 @@ class IDEWorkspaceDetectionService {
         }
       }
 
-      logger.info(`Port detection completed for ${workspacePath}:`, result);
+      logger.info(`Port detection completed for ${workspacePath}`);
       return result;
 
     } catch (error) {

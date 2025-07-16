@@ -7,7 +7,7 @@ const path = require('path');
 const fs = require('fs').promises;
 const { getServiceContainer } = require('./ServiceContainer');
 const Logger = require('@logging/Logger');
-const logger = new Logger('Logger');
+const logger = new Logger('PIDEAProjectContextService');
 
 class ProjectContextService {
     constructor() {
