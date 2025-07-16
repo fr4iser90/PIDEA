@@ -28,9 +28,59 @@ const AnalysisTechStack = ({ techStack, loading, error }) => {
   const [activeView, setActiveView] = useState('overview');
   const [selectedCategory, setSelectedCategory] = useState('all');
 
+  // Add debugging
+  console.log('🔧 [AnalysisTechStack] Received props:', { techStack, loading, error });
+
   // Process tech stack data from backend structure
   const processedTechStack = useMemo(() => {
-    if (!techStack) return null;
+    if (!techStack) {
+      console.log('🔧 [AnalysisTechStack] No techStack data provided');
+      return null;
+    }
+
+    console.log('🔧 [AnalysisTechStack] Processing techStack data:', techStack);
+    console.log('🔧 [AnalysisTechStack] techStack.dependencies:', techStack.dependencies);
+    console.log('🔧 [AnalysisTechStack] techStack.structure:', techStack.structure);
+
+    // Extract dependencies and structure
+    const dependencies = techStack.dependencies || {};
+    const structure = techStack.structure || {};
+    
+    // Use structure data if dependencies are empty
+    const directDeps = dependencies.direct || {};
+    const devDeps = dependencies.dev || {};
+    const outdatedDeps = dependencies.outdated || [];
+    
+    // Extract from structure if dependencies are empty
+    const frameworks = structure.frameworks || [];
+    const libraries = structure.libraries || [];
+    
+    // Convert frameworks and libraries to dependency format for processing
+    const structureDeps = {};
+    frameworks.forEach(fw => {
+      structureDeps[fw.name] = fw.version;
+    });
+    libraries.forEach(lib => {
+      structureDeps[lib.name] = lib.version;
+    });
+    
+    // Use structure dependencies if direct dependencies are empty
+    const effectiveDeps = Object.keys(directDeps).length > 0 ? directDeps : structureDeps;
+    
+    console.log('🔧 [AnalysisTechStack] Direct deps:', directDeps);
+    console.log('🔧 [AnalysisTechStack] Structure deps:', structureDeps);
+    console.log('🔧 [AnalysisTechStack] Effective deps:', effectiveDeps);
+    console.log('🔧 [AnalysisTechStack] Dev deps:', devDeps);
+    console.log('🔧 [AnalysisTechStack] Outdated deps:', outdatedDeps);
+
+    // Extract structure
+    const projectType = structure.projectType || 'unknown';
+    const fileTypes = structure.fileTypes || {};
+
+    console.log('🔧 [AnalysisTechStack] Project type:', projectType);
+    console.log('🔧 [AnalysisTechStack] File types:', fileTypes);
+    console.log('🔧 [AnalysisTechStack] Frameworks:', frameworks);
+    console.log('🔧 [AnalysisTechStack] Libraries:', libraries);
 
     const categories = {
       frameworks: ['react', 'vue', 'angular', 'express', 'fastify', 'koa', 'next', 'nuxt', 'gatsby'],
@@ -45,13 +95,13 @@ const AnalysisTechStack = ({ techStack, loading, error }) => {
 
     const categorized = {};
     Object.entries(categories).forEach(([category, keywords]) => {
-      if (techStack.dependencies?.direct) {
-        categorized[category] = Object.entries(techStack.dependencies.direct)
+      if (effectiveDeps) {
+        categorized[category] = Object.entries(effectiveDeps)
           .filter(([pkg]) => keywords.some(keyword => pkg.toLowerCase().includes(keyword)))
           .map(([pkg, version]) => ({ 
             name: pkg, 
             version,
-            isOutdated: techStack.dependencies.outdated?.some(o => o.name === pkg) || false
+            isOutdated: outdatedDeps.some(o => o.name === pkg) || false
           }));
       }
     });
@@ -62,13 +112,13 @@ const AnalysisTechStack = ({ techStack, loading, error }) => {
       packages.forEach(pkg => categorizedPackages.add(pkg.name));
     });
 
-    if (techStack.dependencies?.direct) {
-      const uncategorized = Object.entries(techStack.dependencies.direct)
+    if (effectiveDeps) {
+      const uncategorized = Object.entries(effectiveDeps)
         .filter(([pkg]) => !categorizedPackages.has(pkg))
         .map(([pkg, version]) => ({ 
           name: pkg, 
           version,
-          isOutdated: techStack.dependencies.outdated?.some(o => o.name === pkg) || false
+          isOutdated: outdatedDeps.some(o => o.name === pkg) || false
         }));
 
       if (uncategorized.length > 0) {
@@ -78,11 +128,13 @@ const AnalysisTechStack = ({ techStack, loading, error }) => {
 
     return {
       categorized,
-      outdated: techStack.dependencies?.outdated || [],
-      fileTypes: techStack.structure?.fileTypes || {},
-      projectType: techStack.structure?.projectType || 'unknown',
-      totalDependencies: techStack.dependencies?.direct ? Object.keys(techStack.dependencies.direct).length : 0,
-      devDependencies: techStack.dependencies?.dev ? Object.keys(techStack.dependencies.dev).length : 0
+      outdated: outdatedDeps,
+      fileTypes: fileTypes,
+      projectType: projectType,
+      totalDependencies: Object.keys(effectiveDeps).length,
+      devDependencies: Object.keys(devDeps).length,
+      frameworks: frameworks,
+      libraries: libraries
     };
   }, [techStack]);
 

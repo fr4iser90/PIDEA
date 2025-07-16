@@ -17,8 +17,16 @@ class RecommendationsService {
         try {
             const recommendations = [];
 
+            // Ensure analysis object has required properties
+            const structure = analysis?.structure || {};
+            const mainDirectories = structure.mainDirectories || {};
+            const testing = analysis?.testing || {};
+            const linting = analysis?.linting || {};
+            const security = analysis?.security || {};
+            const performance = analysis?.performance || {};
+
             // Structure recommendations
-            if (!analysis.structure.mainDirectories.src && !analysis.structure.mainDirectories.app) {
+            if (!mainDirectories.src && !mainDirectories.app) {
                 recommendations.push({
                     type: 'structure',
                     priority: 'medium',
@@ -28,7 +36,7 @@ class RecommendationsService {
             }
 
             // Testing recommendations
-            if (!analysis.testing.hasTests) {
+            if (!testing.hasTests) {
                 recommendations.push({
                     type: 'testing',
                     priority: 'high',
@@ -38,7 +46,7 @@ class RecommendationsService {
             }
 
             // Linting recommendations
-            if (!analysis.linting.hasLinting) {
+            if (!linting.hasLinting) {
                 recommendations.push({
                     type: 'linting',
                     priority: 'medium',
@@ -48,7 +56,7 @@ class RecommendationsService {
             }
 
             // Security recommendations
-            if (!analysis.security.hasSecurityDependencies) {
+            if (!security.hasSecurityDependencies) {
                 recommendations.push({
                     type: 'security',
                     priority: 'high',
@@ -58,7 +66,7 @@ class RecommendationsService {
             }
 
             // Performance recommendations
-            if (!analysis.performance.hasMonitoring) {
+            if (!performance.hasMonitoring) {
                 recommendations.push({
                     type: 'performance',
                     priority: 'low',

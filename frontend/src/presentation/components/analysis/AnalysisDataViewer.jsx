@@ -76,12 +76,16 @@ const AnalysisDataViewer = ({ projectId = null, eventBus = null }) => {
     eventBus.on('analysis-completed', handleAnalysisCompleted);
     eventBus.on('analysis-progress', handleAnalysisProgress);
     eventBus.on('analysis:completed', handleAnalysisCompleted);
+    eventBus.on('step:completed', handleAnalysisCompleted);
+    eventBus.on('step:failed', handleAnalysisCompleted);
 
     return () => {
       eventBus.off('analysis-status-update', handleAnalysisStatusUpdate);
       eventBus.off('analysis-completed', handleAnalysisCompleted);
       eventBus.off('analysis-progress', handleAnalysisProgress);
       eventBus.off('analysis:completed', handleAnalysisCompleted);
+      eventBus.off('step:completed', handleAnalysisCompleted);
+      eventBus.off('step:failed', handleAnalysisCompleted);
     };
   };
 
@@ -159,6 +163,8 @@ const AnalysisDataViewer = ({ projectId = null, eventBus = null }) => {
         // For large analysis data, skip client-side caching and rely on ETag system
         const techStackResponse = await apiRepository.getAnalysisTechStack?.(currentProjectId) || Promise.resolve({ success: false, data: null });
         
+        logger.info('🔧 [AnalysisDataViewer] Tech stack response:', techStackResponse);
+        
         setAnalysisData(prev => ({
           ...prev,
           techStack: techStackResponse.success ? techStackResponse.data : null
@@ -174,6 +180,8 @@ const AnalysisDataViewer = ({ projectId = null, eventBus = null }) => {
         // For large analysis data, skip client-side caching and rely on ETag system
         const architectureResponse = await apiRepository.getAnalysisArchitecture?.(currentProjectId) || Promise.resolve({ success: false, data: null });
         
+        logger.info('🏗️ [AnalysisDataViewer] Architecture response:', architectureResponse);
+        
         setAnalysisData(prev => ({
           ...prev,
           architecture: architectureResponse.success ? architectureResponse.data : null
@@ -188,6 +196,8 @@ const AnalysisDataViewer = ({ projectId = null, eventBus = null }) => {
       try {
         // For large analysis data, skip client-side caching and rely on ETag system
         const recommendationsResponse = await apiRepository.getAnalysisRecommendations?.(currentProjectId) || Promise.resolve({ success: false, data: null });
+        
+        logger.info('💡 [AnalysisDataViewer] Recommendations response:', recommendationsResponse);
         
         setAnalysisData(prev => ({
           ...prev,
@@ -271,12 +281,23 @@ const AnalysisDataViewer = ({ projectId = null, eventBus = null }) => {
   };
 
   const handleAnalysisCompleted = (data) => {
+    logger.info('🔍 [AnalysisDataViewer] Analysis completed event received:', data);
+    logger.info('🔍 [AnalysisDataViewer] Current projectId:', projectId);
+    logger.info('🔍 [AnalysisDataViewer] Event projectId:', data.projectId);
+    logger.info('🔍 [AnalysisDataViewer] Status projectId:', analysisData.status?.projectId);
+    
     if (data.projectId === (projectId || analysisData.status?.projectId)) {
+      logger.info('🔍 [AnalysisDataViewer] Project ID matches, refreshing data...');
       // Force fresh data when analysis completes (ETag will handle caching)
       showSuccess('Analysis completed! Data refreshed.', 'Analysis Complete');
       
-      // Force fresh data
-      loadAnalysisData(true); // forceRefresh = true
+      // Force fresh data with a small delay to ensure backend has processed the data
+      setTimeout(() => {
+        logger.info('🔍 [AnalysisDataViewer] Starting data refresh...');
+        loadAnalysisData(true); // forceRefresh = true
+      }, 1000);
+    } else {
+      logger.info('🔍 [AnalysisDataViewer] Project ID does not match, ignoring event');
     }
   };
 

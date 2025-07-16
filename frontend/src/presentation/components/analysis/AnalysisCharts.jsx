@@ -36,13 +36,12 @@ const AnalysisCharts = ({ data, history, filters, loading }) => {
   const chartsRef = useRef(null);
 
   useEffect(() => {
-    if (history && history.length > 0) {
-      generateChartData();
-    }
+    // Always regenerate chart data when history changes, even if empty
+    generateChartData();
   }, [history, filters]);
 
   const generateChartData = () => {
-    const filteredHistory = filterHistory(history, filters);
+    const filteredHistory = filterHistory(history || [], filters);
     
     // Generate trends chart data
     const trendsData = generateTrendsData(filteredHistory);

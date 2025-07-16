@@ -3,16 +3,26 @@ import React, { useState, useMemo } from 'react';
 import '@/css/components/analysis/analysis-recommendations.css';
 
 const AnalysisRecommendations = ({ recommendations, loading, error }) => {
-  const [filterPriority, setFilterPriority] = useState('all');
-  const [filterCategory, setFilterCategory] = useState('all');
-  const [filterEffort, setFilterEffort] = useState('all');
+  const [activeView, setActiveView] = useState('all');
+  const [selectedPriority, setSelectedPriority] = useState('all');
+  const [selectedCategory, setSelectedCategory] = useState('all');
   const [sortBy, setSortBy] = useState('priority');
   const [sortOrder, setSortOrder] = useState('desc');
   const [expandedRecommendations, setExpandedRecommendations] = useState(new Set());
 
-  // Process recommendations from backend data structure
+  // Add debugging
+  console.log('💡 [AnalysisRecommendations] Received props:', { recommendations, loading, error });
+
+  // Process recommendations data from backend structure
   const processedRecommendations = useMemo(() => {
-    if (!recommendations) return null;
+    if (!recommendations) {
+      console.log('💡 [AnalysisRecommendations] No recommendations data provided');
+      return null;
+    }
+
+    console.log('💡 [AnalysisRecommendations] Processing recommendations data:', recommendations);
+    console.log('💡 [AnalysisRecommendations] recommendations.recommendations:', recommendations.recommendations);
+    console.log('💡 [AnalysisRecommendations] recommendations.insights:', recommendations.insights);
 
     const processed = {
       recommendations: recommendations.recommendations || [],
@@ -39,23 +49,18 @@ const AnalysisRecommendations = ({ recommendations, loading, error }) => {
 
   // Filter and sort recommendations
   const filteredAndSortedRecommendations = useMemo(() => {
-    if (!processedRecommendations) return [];
+    if (!processedRecommendations?.recommendations) return [];
 
-    let filtered = processedRecommendations.recommendations;
+    let filtered = [...processedRecommendations.recommendations];
 
     // Apply priority filter
-    if (filterPriority !== 'all') {
-      filtered = filtered.filter(rec => rec.priority === filterPriority);
+    if (selectedPriority !== 'all') {
+      filtered = filtered.filter(rec => rec.priority === selectedPriority);
     }
 
     // Apply category filter
-    if (filterCategory !== 'all') {
-      filtered = filtered.filter(rec => rec.category === filterCategory);
-    }
-
-    // Apply effort filter
-    if (filterEffort !== 'all') {
-      filtered = filtered.filter(rec => rec.effort === filterEffort);
+    if (selectedCategory !== 'all') {
+      filtered = filtered.filter(rec => rec.category === selectedCategory);
     }
 
     // Sort recommendations
@@ -64,23 +69,28 @@ const AnalysisRecommendations = ({ recommendations, loading, error }) => {
 
       switch (sortBy) {
         case 'priority':
-          const priorityOrder = { critical: 4, high: 3, medium: 2, low: 1 };
-          aValue = priorityOrder[a.priority] || 0;
-          bValue = priorityOrder[b.priority] || 0;
-          break;
-        case 'effort':
-          const effortOrder = { low: 1, medium: 2, high: 3 };
-          aValue = effortOrder[a.effort] || 0;
-          bValue = effortOrder[b.effort] || 0;
-          break;
-        case 'impact':
-          const impactOrder = { high: 3, medium: 2, low: 1 };
-          aValue = impactOrder[a.impact] || 0;
-          bValue = impactOrder[b.impact] || 0;
+          const priorityOrder = { critical: 0, high: 1, medium: 2, low: 3 };
+          aValue = priorityOrder[a.priority] || 4;
+          bValue = priorityOrder[b.priority] || 4;
           break;
         case 'category':
           aValue = a.category || '';
           bValue = b.category || '';
+          break;
+        case 'effort':
+          const effortOrder = { low: 0, medium: 1, high: 2 };
+          aValue = effortOrder[a.effort] || 3;
+          bValue = effortOrder[b.effort] || 3;
+          break;
+        case 'impact':
+          const impactOrder = { high: 0, medium: 1, low: 2 };
+          aValue = impactOrder[a.impact] || 3;
+          bValue = impactOrder[b.impact] || 3;
+          break;
+        case 'status':
+          const statusOrder = { 'in-progress': 0, planned: 1, pending: 2, completed: 3 };
+          aValue = statusOrder[a.status] || 4;
+          bValue = statusOrder[b.status] || 4;
           break;
         default:
           aValue = a[sortBy] || '';
@@ -95,7 +105,7 @@ const AnalysisRecommendations = ({ recommendations, loading, error }) => {
     });
 
     return filtered;
-  }, [processedRecommendations, filterPriority, filterCategory, filterEffort, sortBy, sortOrder]);
+  }, [processedRecommendations, selectedPriority, selectedCategory, sortBy, sortOrder]);
 
   // Get unique values for filters
   const uniquePriorities = useMemo(() => 
@@ -237,9 +247,8 @@ const AnalysisRecommendations = ({ recommendations, loading, error }) => {
   };
 
   const clearFilters = () => {
-    setFilterPriority('all');
-    setFilterCategory('all');
-    setFilterEffort('all');
+    setSelectedPriority('all');
+    setSelectedCategory('all');
   };
 
   const exportRecommendations = () => {
@@ -357,8 +366,8 @@ const AnalysisRecommendations = ({ recommendations, loading, error }) => {
           <label htmlFor="priority-filter">Priority:</label>
           <select
             id="priority-filter"
-            value={filterPriority}
-            onChange={(e) => setFilterPriority(e.target.value)}
+            value={selectedPriority}
+            onChange={(e) => setSelectedPriority(e.target.value)}
             className="filter-select"
           >
             <option value="all">All Priorities</option>
@@ -374,8 +383,8 @@ const AnalysisRecommendations = ({ recommendations, loading, error }) => {
           <label htmlFor="category-filter">Category:</label>
           <select
             id="category-filter"
-            value={filterCategory}
-            onChange={(e) => setFilterCategory(e.target.value)}
+            value={selectedCategory}
+            onChange={(e) => setSelectedCategory(e.target.value)}
             className="filter-select"
           >
             <option value="all">All Categories</option>

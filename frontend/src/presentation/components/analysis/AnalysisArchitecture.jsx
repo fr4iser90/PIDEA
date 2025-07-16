@@ -15,6 +15,9 @@ const AnalysisArchitecture = ({ architecture, loading, error }) => {
   const [network, setNetwork] = useState(null);
   const networkRef = useRef(null);
 
+  // Add debugging
+  console.log('🏗️ [AnalysisArchitecture] Received props:', { architecture, loading, error });
+
   // Initialize Mermaid
   useEffect(() => {
     mermaid.initialize({
@@ -140,7 +143,17 @@ const AnalysisArchitecture = ({ architecture, loading, error }) => {
 
   // Process architecture data from backend structure
   const processedArchitecture = useMemo(() => {
-    if (!architecture) return null;
+    if (!architecture) {
+      console.log('🏗️ [AnalysisArchitecture] No architecture data provided');
+      return null;
+    }
+
+    console.log('🏗️ [AnalysisArchitecture] Processing architecture data:', architecture);
+    console.log('🏗️ [AnalysisArchitecture] architecture.structure:', architecture.structure);
+    console.log('🏗️ [AnalysisArchitecture] architecture.dependencies:', architecture.dependencies);
+    console.log('🏗️ [AnalysisArchitecture] architecture.metrics:', architecture.metrics);
+    console.log('🏗️ [AnalysisArchitecture] architecture.patterns:', architecture.patterns);
+    console.log('🏗️ [AnalysisArchitecture] architecture.recommendations:', architecture.recommendations);
 
     return {
       structure: {

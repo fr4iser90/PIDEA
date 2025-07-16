@@ -904,22 +904,31 @@ class AnalysisController {
       analyses.forEach((analysis, index) => {
         const summary = analysis.summary || {};
         const resultData = analysis.resultData || {};
+        const analysisType = analysis.analysisType;
         
-        // Always use fallback method - count individual analysis types in resultData
-        const analysisTypes = ['projectAnalysis', 'codeQuality', 'security', 'performance', 'architecture', 'techStack', 'dependencies'];
-        let foundTypes = 0;
-        analysisTypes.forEach(type => {
-          if (resultData[type]) {
-            totalAnalyses++;
-            foundTypes++;
-            if (resultData[type].status === 'failed' || resultData[type].error) {
-              failedAnalyses++;
-            } else {
-              completedAnalyses++;
+        // Count this analysis record
+        totalAnalyses++;
+        
+        // Check if this analysis was successful
+        if (analysis.status === 'completed' && !analysis.error) {
+          completedAnalyses++;
+        } else {
+          failedAnalyses++;
+        }
+        
+        // Also count individual analysis types if this is a comprehensive analysis
+        if (analysisType === 'comprehensive-analysis' || analysisType === 'advanced-analysis') {
+          const analysisTypes = ['projectAnalysis', 'codeQuality', 'security', 'performance', 'architecture', 'techStack', 'dependencies'];
+          let foundTypes = 0;
+          analysisTypes.forEach(type => {
+            if (resultData[type]) {
+              foundTypes++;
             }
-          }
-        });
-        this.logger.info(`Analysis ${index + 1}: Found ${foundTypes} analysis types in resultData`);
+          });
+          this.logger.info(`Analysis ${index + 1}: Found ${foundTypes} analysis types in comprehensive analysis`);
+        } else {
+          this.logger.info(`Analysis ${index + 1}: Individual analysis of type ${analysisType}`);
+        }
       });
       
       this.logger.info(`Final metrics: totalAnalyses=${totalAnalyses}, completedAnalyses=${completedAnalyses}, failedAnalyses=${failedAnalyses}`);
@@ -931,24 +940,32 @@ class AnalysisController {
       let durationCount = 0;
       analyses.forEach(analysis => {
         if (analysis.durationMs) {
-          const summary = analysis.summary || {};
-          const resultData = analysis.resultData || {};
+          const analysisType = analysis.analysisType;
           
-          // Count individual analyses for this workflow
-          let individualAnalysisCount = 0;
-          if (summary.totalAnalyses) {
-            individualAnalysisCount = summary.totalAnalyses;
+          if (analysisType === 'comprehensive-analysis' || analysisType === 'advanced-analysis') {
+            // For comprehensive analyses, distribute duration across individual analysis types
+            const summary = analysis.summary || {};
+            const resultData = analysis.resultData || {};
+            
+            let individualAnalysisCount = 0;
+            if (summary.totalAnalyses) {
+              individualAnalysisCount = summary.totalAnalyses;
+            } else {
+              // Fallback: count individual analysis types
+              const analysisTypes = ['projectAnalysis', 'codeQuality', 'security', 'performance', 'architecture', 'techStack', 'dependencies'];
+              individualAnalysisCount = analysisTypes.filter(type => resultData[type]).length;
+            }
+            
+            if (individualAnalysisCount > 0) {
+              // Distribute workflow duration across individual analyses
+              const durationPerAnalysis = analysis.durationMs / individualAnalysisCount;
+              totalDuration += durationPerAnalysis * individualAnalysisCount;
+              durationCount += individualAnalysisCount;
+            }
           } else {
-            // Fallback: count individual analysis types
-            const analysisTypes = ['projectAnalysis', 'codeQuality', 'security', 'performance', 'architecture', 'techStack', 'dependencies'];
-            individualAnalysisCount = analysisTypes.filter(type => resultData[type]).length;
-          }
-          
-          if (individualAnalysisCount > 0) {
-            // Distribute workflow duration across individual analyses
-            const durationPerAnalysis = analysis.durationMs / individualAnalysisCount;
-            totalDuration += durationPerAnalysis * individualAnalysisCount;
-            durationCount += individualAnalysisCount;
+            // For individual analyses, use the duration directly
+            totalDuration += analysis.durationMs;
+            durationCount++;
           }
         }
       });
@@ -959,30 +976,44 @@ class AnalysisController {
       analyses.forEach(analysis => {
         const resultData = analysis.resultData || {};
         const summary = analysis.summary || {};
+        const analysisType = analysis.analysisType;
         
-        // Count individual analysis types from resultData
-        const individualTypes = ['projectAnalysis', 'codeQuality', 'security', 'performance', 'architecture', 'techStack', 'dependencies'];
-        individualTypes.forEach(type => {
-          if (resultData[type]) {
-            const displayName = type === 'projectAnalysis' ? 'Project Analysis' :
-                              type === 'codeQuality' ? 'Code Quality' :
-                              type === 'techStack' ? 'Tech Stack' :
-                              type.charAt(0).toUpperCase() + type.slice(1);
-            
-            analysisTypes[displayName] = (analysisTypes[displayName] || 0) + 1;
-          }
-        });
-        
-        // Also count from summary categories if available
-        if (summary.categories) {
-          Object.keys(summary.categories).forEach(category => {
-            const displayName = category === 'projectAnalysis' ? 'Project Analysis' :
-                              category === 'codeQuality' ? 'Code Quality' :
-                              category === 'techStack' ? 'Tech Stack' :
-                              category.charAt(0).toUpperCase() + category.slice(1);
-            
-            analysisTypes[displayName] = (analysisTypes[displayName] || 0) + 1;
+        if (analysisType === 'comprehensive-analysis' || analysisType === 'advanced-analysis') {
+          // Count individual analysis types from resultData for comprehensive analyses
+          const individualTypes = ['projectAnalysis', 'codeQuality', 'security', 'performance', 'architecture', 'techStack', 'dependencies'];
+          individualTypes.forEach(type => {
+            if (resultData[type]) {
+              const displayName = type === 'projectAnalysis' ? 'Project Analysis' :
+                                type === 'codeQuality' ? 'Code Quality' :
+                                type === 'techStack' ? 'Tech Stack' :
+                                type.charAt(0).toUpperCase() + type.slice(1);
+              
+              analysisTypes[displayName] = (analysisTypes[displayName] || 0) + 1;
+            }
           });
+          
+          // Also count from summary categories if available
+          if (summary.categories) {
+            Object.keys(summary.categories).forEach(category => {
+              const displayName = category === 'projectAnalysis' ? 'Project Analysis' :
+                                category === 'codeQuality' ? 'Code Quality' :
+                                category === 'techStack' ? 'Tech Stack' :
+                                category.charAt(0).toUpperCase() + category.slice(1);
+              
+              analysisTypes[displayName] = (analysisTypes[displayName] || 0) + 1;
+            });
+          }
+        } else {
+          // Count individual analysis records by their type
+          const displayName = analysisType === 'codeQuality' ? 'Code Quality' :
+                            analysisType === 'techStack' ? 'Tech Stack' :
+                            analysisType === 'security' ? 'Security' :
+                            analysisType === 'performance' ? 'Performance' :
+                            analysisType === 'architecture' ? 'Architecture' :
+                            analysisType === 'recommendations' ? 'Recommendations' :
+                            analysisType.charAt(0).toUpperCase() + analysisType.slice(1);
+          
+          analysisTypes[displayName] = (analysisTypes[displayName] || 0) + 1;
         }
       });
       
@@ -1386,6 +1417,7 @@ class AnalysisController {
     try {
       const { projectId } = req.params;
       this.logger.info(`Getting analysis tech stack for project`);
+      
       // Get latest analysis for this project
       const analyses = await this.analysisRepository.findByProjectId(projectId);
       if (analyses.length === 0) {
@@ -1394,93 +1426,81 @@ class AnalysisController {
           structure: { projectType: 'unknown', fileTypes: {}, frameworks: [], libraries: [] }
         } });
       }
-      const latestAnalysis = analyses[0];
-      const resultData = latestAnalysis.resultData || {};
-      // --- Merge all dependencies from all manifests (root, backend, frontend, etc.) ---
-      // Try to find all dependency objects in resultData
-      let allDeps = [];
-      if (resultData.dependencies?.allPackages) {
-        // If already collected as array
-        allDeps = resultData.dependencies.allPackages;
-      } else {
-        // Fallback: try to collect from known locations
-        allDeps = [];
-        if (resultData.dependencies?.packagesByContext) {
-          // e.g. { root: {...}, backend: {...}, frontend: {...} }
-          for (const ctx of Object.values(resultData.dependencies.packagesByContext)) {
-            allDeps.push(ctx);
-          }
-        } else {
-          // Try to find root/backend/frontend/dev
-          ['dependencies', 'devDependencies', 'packageJson'].forEach(key => {
-            if (resultData[key]) allDeps.push(resultData[key]);
-          });
-        }
-      }
-      // Merge all direct/dev dependencies
-      let mergedDirect = {};
-      let mergedDev = {};
-      let mergedOutdated = [];
-      for (const depObj of allDeps) {
-        if (depObj.dependencies) Object.assign(mergedDirect, depObj.dependencies);
-        if (depObj.devDependencies) Object.assign(mergedDev, depObj.devDependencies);
-        if (depObj.outdated) mergedOutdated = mergedOutdated.concat(depObj.outdated);
-      }
-      // Fallback: if nothing found, use old logic
-      if (Object.keys(mergedDirect).length === 0) {
-        mergedDirect = resultData.dependencies?.direct || resultData.dependencies?.packages || resultData.packageJson?.dependencies || {};
-      }
-      if (Object.keys(mergedDev).length === 0) {
-        mergedDev = resultData.dependencies?.dev || resultData.dependencies?.devDependencies || resultData.packageJson?.devDependencies || {};
-      }
-      if (mergedOutdated.length === 0) {
-        mergedOutdated = resultData.dependencies?.outdated || resultData.dependencies?.outdatedPackages || resultData.packageJson?.outdated || [];
-      }
-      const techStack = {
-        dependencies: {
-          direct: mergedDirect,
-          dev: mergedDev,
-          outdated: mergedOutdated
-        },
-        structure: {
-          projectType: resultData.techStack?.frameworks?.[0]?.name || 
-                      resultData.structure?.projectType || 
-                      resultData.projectType || 
-                      'nodejs',
-          fileTypes: resultData.structure?.fileTypes || 
-                    resultData.techStack?.languages || 
-                    resultData.fileTypes || {},
-          frameworks: resultData.techStack?.frameworks || 
-                     resultData.frameworks || 
-                     resultData.structure?.frameworks || [],
-          libraries: resultData.techStack?.libraries || 
-                    resultData.libraries || 
-                    resultData.structure?.libraries || []
-        }
-      };
-      this.logger.info(`Tech stack data extracted successfully`);
       
-      // Generate ETag for tech stack data
-      const etag = this.etagService.generateETag(techStack, 'analysis-techstack', projectId);
+      // Look for techstack-specific analysis first
+      let techStackAnalysis = analyses.find(a => a.analysisType === 'techstack');
       
-      // Check if client has current version
-      if (this.etagService.shouldReturn304(req, etag)) {
-        this.logger.info('Client has current version, sending 304 Not Modified');
-        this.etagService.sendNotModified(res, etag);
-        return;
+      // If no specific techstack analysis, look for comprehensive analysis
+      if (!techStackAnalysis) {
+        techStackAnalysis = analyses.find(a => 
+          a.analysisType === 'comprehensive-analysis' || 
+          a.analysisType === 'advanced-analysis'
+        );
       }
       
-      // Set ETag headers for caching
-      this.etagService.setETagHeaders(res, etag, {
-        maxAge: 300, // 5 minutes
-        mustRevalidate: true,
-        isPublic: false
+      if (!techStackAnalysis) {
+        this.logger.warn(`No tech stack analysis found for project`);
+        return res.json({ success: true, data: { 
+          dependencies: { direct: {}, dev: {}, outdated: [] },
+          structure: { projectType: 'unknown', fileTypes: {}, frameworks: [], libraries: [] }
+        } });
+      }
+      
+      const resultData = techStackAnalysis.resultData || {};
+      const summary = techStackAnalysis.summary || {};
+      
+      // For individual techstack analysis, the data is directly in resultData
+      // For comprehensive analysis, it's nested under techStack key
+      let techStackData = resultData;
+      
+      if (techStackAnalysis.analysisType === 'comprehensive-analysis' || 
+          techStackAnalysis.analysisType === 'advanced-analysis') {
+        techStackData = resultData.techStack || resultData;
+      }
+      
+      // Convert frameworks and libraries to dependencies format
+      const directDeps = {};
+      const frameworks = techStackData.frameworks || techStackData.structure?.frameworks || [];
+      const libraries = techStackData.libraries || techStackData.structure?.libraries || [];
+      
+      // Add frameworks to direct dependencies
+      frameworks.forEach(fw => {
+        directDeps[fw.name] = fw.version;
       });
       
-      res.json({ success: true, data: techStack });
+      // Add libraries to direct dependencies
+      libraries.forEach(lib => {
+        directDeps[lib.name] = lib.version;
+      });
+      
+      // Extract and structure the data
+      const extractedData = {
+        dependencies: {
+          direct: Object.keys(directDeps).length > 0 ? directDeps : (techStackData.dependencies?.direct || {}),
+          dev: techStackData.dependencies?.dev || {},
+          outdated: techStackData.dependencies?.outdated || []
+        },
+        structure: {
+          projectType: techStackData.projectType || techStackData.structure?.projectType || 'unknown',
+          fileTypes: techStackData.fileTypes || techStackData.structure?.fileTypes || {},
+          frameworks: frameworks,
+          libraries: libraries
+        }
+      };
+      
+      this.logger.info(`Tech stack data extracted successfully`);
+      
+      // Set ETag for caching
+      this.setETagHeaders(res, 'analysis-techstack', projectId, extractedData);
+      
+      res.json({ success: true, data: extractedData });
     } catch (error) {
-      this.logger.error(`Failed to get analysis tech stack:`, error);
-      res.status(500).json({ success: false, error: error.message });
+      this.logger.error(`Failed to get tech stack analysis:`, error);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to get tech stack analysis',
+        message: error.message
+      });
     }
   }
 
@@ -1509,86 +1529,78 @@ class AnalysisController {
         } });
       }
       
-      const latestAnalysis = analyses[0];
-      const resultData = latestAnalysis.resultData || {};
+      // Look for architecture-specific analysis first
+      let architectureAnalysis = analyses.find(a => a.analysisType === 'architecture');
       
-      // Extract ONLY architecture information from actual data structure
-      // Don't send the entire resultData file!
-      const architecture = {
+      // If no specific architecture analysis, look for comprehensive analysis
+      if (!architectureAnalysis) {
+        architectureAnalysis = analyses.find(a => 
+          a.analysisType === 'comprehensive-analysis' || 
+          a.analysisType === 'advanced-analysis'
+        );
+      }
+      
+      if (!architectureAnalysis) {
+        this.logger.warn(`No architecture analysis found for project`);
+        return res.json({ success: true, data: { 
+          structure: { layers: 0, modules: 0, patterns: [] },
+          dependencies: { circular: false, count: 0, graph: null },
+          metrics: { coupling: 'unknown', cohesion: 'unknown', complexity: 'unknown', maintainability: 'unknown', testability: 'unknown' },
+          patterns: [],
+          antiPatterns: [],
+          recommendations: []
+        } });
+      }
+      
+      const resultData = architectureAnalysis.resultData || {};
+      const summary = architectureAnalysis.summary || {};
+      
+      // For individual architecture analysis, the data is directly in resultData
+      // For comprehensive analysis, it's nested under architecture key
+      let architectureData = resultData;
+      
+      if (architectureAnalysis.analysisType === 'comprehensive-analysis' || 
+          architectureAnalysis.analysisType === 'advanced-analysis') {
+        architectureData = resultData.architecture || resultData;
+      }
+      
+      // Extract and structure the data
+      const extractedData = {
         structure: {
-          layers: resultData.architecture?.layers || 
-                 resultData.architecture?.structure?.layers || 
-                 resultData.structure?.layers || 0,
-          modules: resultData.architecture?.modules || 
-                  resultData.architecture?.structure?.modules || 
-                  resultData.structure?.modules || 
-                  Object.keys(resultData.architecture?.modules || {}).length || 0,
-          patterns: resultData.architecture?.patterns || 
-                   resultData.architecture?.detectedPatterns || 
-                   resultData.structure?.patterns || []
+          layers: architectureData.structure?.layers || architectureData.layers || 0,
+          modules: architectureData.structure?.modules || architectureData.modules || 0,
+          patterns: architectureData.structure?.patterns || architectureData.patterns || []
         },
         dependencies: {
-          circular: resultData.architecture?.circularDependencies || 
-                   resultData.architecture?.dependencies?.circular || 
-                   resultData.dependencies?.circular || false,
-          count: resultData.architecture?.dependencyCount || 
-                resultData.architecture?.dependencies?.count || 
-                resultData.dependencies?.count || 
-                Object.keys(resultData.dependencies?.packages || {}).length || 0,
-          graph: resultData.architecture?.dependencyGraph || 
-                resultData.architecture?.dependencies?.graph || 
-                resultData.dependencies?.graph || null
+          circular: architectureData.dependencies?.circular || architectureData.circular || false,
+          count: architectureData.dependencies?.count || architectureData.dependencyCount || 0,
+          graph: architectureData.dependencies?.graph || architectureData.graph || null
         },
         metrics: {
-          coupling: resultData.architecture?.coupling || 
-                   resultData.architecture?.metrics?.coupling || 
-                   resultData.metrics?.coupling || 'unknown',
-          cohesion: resultData.architecture?.cohesion || 
-                   resultData.architecture?.metrics?.cohesion || 
-                   resultData.metrics?.cohesion || 'unknown',
-          complexity: resultData.architecture?.complexity || 
-                     resultData.architecture?.metrics?.complexity || 
-                     resultData.metrics?.complexity || 'unknown',
-          maintainability: resultData.architecture?.maintainability || 
-                          resultData.architecture?.metrics?.maintainability || 
-                          resultData.metrics?.maintainability || 'unknown',
-          testability: resultData.architecture?.testability || 
-                      resultData.architecture?.metrics?.testability || 
-                      resultData.metrics?.testability || 'unknown'
+          coupling: architectureData.metrics?.coupling || architectureData.coupling || 'unknown',
+          cohesion: architectureData.metrics?.cohesion || architectureData.cohesion || 'unknown',
+          complexity: architectureData.metrics?.complexity || architectureData.complexity || 'unknown',
+          maintainability: architectureData.metrics?.maintainability || architectureData.maintainability || 'unknown',
+          testability: architectureData.metrics?.testability || architectureData.testability || 'unknown'
         },
-        patterns: resultData.architecture?.patterns || 
-                 resultData.architecture?.detectedPatterns || 
-                 resultData.patterns || [],
-        antiPatterns: resultData.architecture?.antiPatterns || 
-                     resultData.architecture?.violations || 
-                     resultData.antiPatterns || [],
-        recommendations: resultData.architecture?.recommendations || 
-                        resultData.recommendations || []
+        patterns: architectureData.patterns || [],
+        antiPatterns: architectureData.antiPatterns || architectureData.antiPatterns || [],
+        recommendations: architectureData.recommendations || []
       };
       
       this.logger.info(`Architecture data extracted successfully`);
       
-      // Generate ETag for architecture data
-      const etag = this.etagService.generateETag(architecture, 'analysis-architecture', projectId);
+      // Set ETag for caching
+      this.setETagHeaders(res, 'analysis-architecture', projectId, extractedData);
       
-      // Check if client has current version
-      if (this.etagService.shouldReturn304(req, etag)) {
-        this.logger.info('Client has current version, sending 304 Not Modified');
-        this.etagService.sendNotModified(res, etag);
-        return;
-      }
-      
-      // Set ETag headers for caching
-      this.etagService.setETagHeaders(res, etag, {
-        maxAge: 300, // 5 minutes
-        mustRevalidate: true,
-        isPublic: false
-      });
-      
-      res.json({ success: true, data: architecture });
+      res.json({ success: true, data: extractedData });
     } catch (error) {
-      this.logger.error(`Failed to get analysis architecture:`, error);
-      res.status(500).json({ success: false, error: error.message });
+      this.logger.error(`Failed to get architecture analysis:`, error);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to get architecture analysis',
+        message: error.message
+      });
     }
   }
 
@@ -1744,84 +1756,53 @@ class AnalysisController {
         return res.json({ success: true, data: { recommendations: [], insights: [] } });
       }
       
-      const latestAnalysis = analyses[0];
-      const resultData = latestAnalysis.resultData || {};
-      const summary = latestAnalysis.summary || {};
+      // Look for recommendations-specific analysis first
+      let recommendationsAnalysis = analyses.find(a => a.analysisType === 'recommendations');
       
-      // Extract recommendations from various sources
-      const recommendations = [];
-      
-      // Code quality recommendations
-      if (resultData.codeQuality?.recommendations && Array.isArray(resultData.codeQuality.recommendations)) {
-        recommendations.push(...resultData.codeQuality.recommendations.map(rec => ({
-          ...rec,
-          source: 'code-quality',
-          category: 'code-quality'
-        })));
+      // If no specific recommendations analysis, look for comprehensive analysis
+      if (!recommendationsAnalysis) {
+        recommendationsAnalysis = analyses.find(a => 
+          a.analysisType === 'comprehensive-analysis' || 
+          a.analysisType === 'advanced-analysis'
+        );
       }
       
-      // Security recommendations
-      if (resultData.security?.recommendations && Array.isArray(resultData.security.recommendations)) {
-        recommendations.push(...resultData.security.recommendations.map(rec => ({
-          ...rec,
-          source: 'security',
-          category: 'security'
-        })));
+      if (!recommendationsAnalysis) {
+        this.logger.warn(`No recommendations analysis found for project`);
+        return res.json({ success: true, data: { recommendations: [], insights: [] } });
       }
       
-      // Architecture recommendations
-      if (resultData.architecture?.recommendations && Array.isArray(resultData.architecture.recommendations)) {
-        recommendations.push(...resultData.architecture.recommendations.map(rec => ({
-          ...rec,
-          source: 'architecture',
-          category: 'architecture'
-        })));
+      const resultData = recommendationsAnalysis.resultData || {};
+      const summary = recommendationsAnalysis.summary || {};
+      
+      // For individual recommendations analysis, the data is directly in resultData
+      // For comprehensive analysis, it's nested under recommendations key
+      let recommendationsData = resultData;
+      
+      if (recommendationsAnalysis.analysisType === 'comprehensive-analysis' || 
+          recommendationsAnalysis.analysisType === 'advanced-analysis') {
+        recommendationsData = resultData.recommendations || resultData;
       }
       
-      // Summary recommendations
-      if (summary.recommendations && Array.isArray(summary.recommendations)) {
-        recommendations.push(...summary.recommendations.map(rec => ({
-          ...rec,
-          source: 'summary',
-          category: rec.category || 'general'
-        })));
-      }
+      // Extract and structure the data
+      const extractedData = {
+        recommendations: recommendationsData.recommendations || recommendationsData.suggestions || [],
+        insights: recommendationsData.insights || recommendationsData.observations || []
+      };
       
-      // Sort by priority
-      recommendations.sort((a, b) => {
-        const priorityOrder = { critical: 0, high: 1, medium: 2, low: 3 };
-        return (priorityOrder[a.priority] || 4) - (priorityOrder[b.priority] || 4);
-      });
+      this.logger.info(`Recommendations data extracted successfully`);
       
-      // Extract insights
-      const insights = [];
-      if (resultData.integratedInsights && Array.isArray(resultData.integratedInsights)) {
-        insights.push(...resultData.integratedInsights);
-      }
+      // Set ETag for caching
+      this.setETagHeaders(res, 'analysis-recommendations', projectId, extractedData);
       
-      const recommendationsData = { recommendations, insights };
-      
-      // Generate ETag for recommendations data
-      const etag = this.etagService.generateETag(recommendationsData, 'analysis-recommendations', projectId);
-      
-      // Check if client has current version
-      if (this.etagService.shouldReturn304(req, etag)) {
-        this.logger.info('Client has current version, sending 304 Not Modified');
-        this.etagService.sendNotModified(res, etag);
-        return;
-      }
-      
-      // Set ETag headers for caching
-      this.etagService.setETagHeaders(res, etag, {
-        maxAge: 300, // 5 minutes
-        mustRevalidate: true,
-        isPublic: false
-      });
-      
-      res.json({ success: true, data: recommendationsData });
+      res.json({ success: true, data: extractedData });
     } catch (error) {
-      this.logger.error(`Failed to get analysis recommendations:`, error);
-      res.status(500).json({ success: false, error: error.message });
+      this.logger.error(`Failed to get recommendations analysis:`, error);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to get recommendations analysis',
+        message: error.message
+      });
     }
   }
 
@@ -2109,6 +2090,30 @@ class AnalysisController {
     if (score >= 70) return 'fair';
     if (score >= 60) return 'poor';
     return 'critical';
+  }
+
+  /**
+   * Set ETag headers for caching
+   * @param {Object} res - Express response
+   * @param {string} type - Data type
+   * @param {string} projectId - Project ID
+   * @param {Object} data - Data to cache
+   */
+  setETagHeaders(res, type, projectId, data) {
+    if (!this.etagService) {
+      return;
+    }
+    
+    try {
+      const etag = this.etagService.generateETag(data, type, projectId);
+      this.etagService.setETagHeaders(res, etag, {
+        maxAge: 300, // 5 minutes
+        mustRevalidate: true,
+        isPublic: false
+      });
+    } catch (error) {
+      this.logger.warn(`Failed to set ETag headers: ${error.message}`);
+    }
   }
 }
 

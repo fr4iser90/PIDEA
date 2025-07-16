@@ -74,6 +74,8 @@ const IndividualAnalysisButtons = ({ projectId = null, eventBus = null, onAnalys
         eventBus.off('step:completed');
         eventBus.off('step:failed');
         eventBus.off('step:cancelled');
+        eventBus.off('analysis:completed');
+        eventBus.off('analysis-completed');
       }
     };
   }, [projectId]);
@@ -81,12 +83,29 @@ const IndividualAnalysisButtons = ({ projectId = null, eventBus = null, onAnalys
   const setupEventListeners = () => {
     if (!eventBus) return;
 
+    // Listen for analysis step events
     eventBus.on('step:created', handleStepCreated);
     eventBus.on('step:started', handleStepStarted);
     eventBus.on('step:progress', handleStepProgress);
     eventBus.on('step:completed', handleStepCompleted);
     eventBus.on('step:failed', handleStepFailed);
     eventBus.on('step:cancelled', handleStepCancelled);
+    
+    // Listen for general analysis completion events
+    eventBus.on('analysis:completed', handleAnalysisCompleted);
+    eventBus.on('analysis-completed', handleAnalysisCompleted);
+
+    return () => {
+      eventBus.off('step:created', handleStepCreated);
+      eventBus.off('step:started', handleStepStarted);
+      eventBus.off('step:progress', handleStepProgress);
+      eventBus.off('step:completed', handleStepCompleted);
+      eventBus.off('step:failed', handleStepFailed);
+      eventBus.off('step:cancelled', handleStepCancelled);
+      
+      eventBus.off('analysis:completed', handleAnalysisCompleted);
+      eventBus.off('analysis-completed', handleAnalysisCompleted);
+    };
   };
 
   const loadActiveSteps = async () => {
@@ -175,6 +194,28 @@ const IndividualAnalysisButtons = ({ projectId = null, eventBus = null, onAnalys
       return newMap;
     });
     setLoadingStates(prev => new Map(prev.set(data.analysisType, false)));
+  };
+
+  const handleAnalysisCompleted = (data) => {
+    logger.info('Analysis completed:', data);
+    
+    // Clear all loading states when overall analysis completes
+    setLoadingStates(prev => {
+      const newMap = new Map(prev);
+      analysisTypes.forEach(type => {
+        newMap.set(type.key, false);
+      });
+      return newMap;
+    });
+    
+    // Clear all active steps
+    setActiveSteps(new Map());
+    setStepProgress(new Map());
+    
+    // Trigger data refresh callback
+    if (onAnalysisComplete) {
+      onAnalysisComplete();
+    }
   };
 
   const handleStartAnalysis = async (analysisType) => {

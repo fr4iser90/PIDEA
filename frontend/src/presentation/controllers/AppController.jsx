@@ -497,10 +497,10 @@ class AppController {
           this.eventBus.emit('activeIDEChanged', data.data);
         }
         if (data.type === 'analysis:completed' || data.event === 'analysis:completed') {
-          logger.info('Analysis completed:', data.data);
+          logger.info('Analysis completed WebSocket event received:', data);
           logger.info('Emitting analysis:completed event to eventBus');
           // Emit the event to trigger analysis data refresh
-          this.eventBus.emit('analysis:completed', data.data);
+          this.eventBus.emit('analysis:completed', data.data || data);
         }
       };
       chatWs.onclose = () => {
