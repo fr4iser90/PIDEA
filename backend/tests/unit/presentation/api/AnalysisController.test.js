@@ -1,4 +1,4 @@
-const AnalysisController = require('@api/AnalysisController');
+const AnalysisController = require('@presentation/api/AnalysisController');
 
 describe('AnalysisController', () => {
   let controller;
@@ -674,6 +674,157 @@ describe('AnalysisController', () => {
     it('should return critical for score < 60', () => {
       expect(controller.getOverallLevel(55)).toBe('critical');
       expect(controller.getOverallLevel(0)).toBe('critical');
+    });
+  });
+
+  describe('analyzeTechStack', () => {
+    beforeEach(() => {
+      mockReq.params = { projectId: 'project-123' };
+      mockReq.body = { includeFrameworks: true };
+      
+      // Mock global application context
+      global.application = {
+        techStackAnalyzer: {
+          analyzeTechStack: jest.fn()
+        }
+      };
+    });
+
+    afterEach(() => {
+      delete global.application;
+    });
+
+    it('should analyze tech stack successfully', async () => {
+      const mockAnalysis = {
+        frameworks: [{ name: 'React', version: '18.0.0' }],
+        libraries: [{ name: 'lodash', version: '4.17.21' }],
+        tools: [{ name: 'webpack', version: '5.0.0' }]
+      };
+
+      global.application.techStackAnalyzer.analyzeTechStack.mockResolvedValue(mockAnalysis);
+      mockAnalysisRepository.findLatestByProjectId.mockResolvedValue(null);
+      mockAnalysisRepository.save.mockResolvedValue({});
+
+      await controller.analyzeTechStack(mockReq, mockRes);
+
+      expect(global.application.techStackAnalyzer.analyzeTechStack).toHaveBeenCalledWith(
+        expect.any(String),
+        { includeFrameworks: true, saveToFile: false, saveToDatabase: true },
+        'project-123'
+      );
+      expect(mockRes.json).toHaveBeenCalledWith({
+        success: true,
+        data: {
+          analysis: mockAnalysis,
+          summary: 'Tech stack analysis completed successfully'
+        }
+      });
+    });
+
+    it('should handle tech stack analyzer not available', async () => {
+      global.application = {};
+
+      await controller.analyzeTechStack(mockReq, mockRes);
+
+      expect(mockLogger.error).toHaveBeenCalledWith('Tech stack analysis failed:', expect.any(Error));
+      expect(mockRes.status).toHaveBeenCalledWith(500);
+      expect(mockRes.json).toHaveBeenCalledWith({
+        success: false,
+        error: 'Tech stack analysis failed',
+        message: 'Tech stack analyzer not available'
+      });
+    });
+
+    it('should handle analysis errors', async () => {
+      const error = new Error('Tech stack analysis failed');
+      global.application.techStackAnalyzer.analyzeTechStack.mockRejectedValue(error);
+      mockAnalysisRepository.findLatestByProjectId.mockResolvedValue(null);
+
+      await controller.analyzeTechStack(mockReq, mockRes);
+
+      expect(mockLogger.error).toHaveBeenCalledWith('Tech stack analysis failed:', error);
+      expect(mockRes.status).toHaveBeenCalledWith(500);
+      expect(mockRes.json).toHaveBeenCalledWith({
+        success: false,
+        error: 'Tech stack analysis failed',
+        message: 'Tech stack analysis failed'
+      });
+    });
+  });
+
+  describe('analyzeRecommendations', () => {
+    beforeEach(() => {
+      mockReq.params = { projectId: 'project-123' };
+      mockReq.body = { includeInsights: true };
+      
+      // Mock global application context
+      global.application = {
+        recommendationsService: {
+          generateRecommendations: jest.fn()
+        }
+      };
+    });
+
+    afterEach(() => {
+      delete global.application;
+    });
+
+    it('should generate recommendations successfully', async () => {
+      const mockAnalysis = {
+        recommendations: [
+          { title: 'Add TypeScript', priority: 'medium', category: 'development' }
+        ],
+        insights: [
+          { type: 'performance', message: 'Consider code splitting' }
+        ]
+      };
+
+      global.application.recommendationsService.generateRecommendations.mockResolvedValue(mockAnalysis);
+      mockAnalysisRepository.findLatestByProjectId.mockResolvedValue(null);
+      mockAnalysisRepository.findByProjectId.mockResolvedValue([]);
+      mockAnalysisRepository.save.mockResolvedValue({});
+
+      await controller.analyzeRecommendations(mockReq, mockRes);
+
+      expect(global.application.recommendationsService.generateRecommendations).toHaveBeenCalledWith({});
+      expect(mockRes.json).toHaveBeenCalledWith({
+        success: true,
+        data: {
+          analysis: mockAnalysis,
+          summary: 'Recommendations analysis completed successfully'
+        }
+      });
+    });
+
+    it('should handle recommendations service not available', async () => {
+      global.application = {};
+
+      await controller.analyzeRecommendations(mockReq, mockRes);
+
+      expect(mockLogger.error).toHaveBeenCalledWith('Recommendations analysis failed:', expect.any(Error));
+      expect(mockRes.status).toHaveBeenCalledWith(500);
+      expect(mockRes.json).toHaveBeenCalledWith({
+        success: false,
+        error: 'Recommendations analysis failed',
+        message: 'Recommendations service not available'
+      });
+    });
+
+    it('should handle analysis errors', async () => {
+      const error = new Error('Recommendations generation failed');
+      global.application.recommendationsService.generateRecommendations.mockRejectedValue(error);
+      mockAnalysisRepository.findLatestByProjectId.mockResolvedValue(null);
+      mockAnalysisRepository.findByProjectId.mockResolvedValue([]);
+
+      await controller.analyzeRecommendations(mockReq, mockRes);
+
+      expect(mockLogger.error).toHaveBeenCalledWith('Recommendations analysis failed:', error);
+      expect(mockRes.status).toHaveBeenCalledWith(500);
+      expect(mockRes.json).toHaveBeenCalledWith({
+        success: false,
+        error: 'Recommendations analysis failed',
+        message: 'Recommendations generation failed'
+      });
     });
   });
 }); 

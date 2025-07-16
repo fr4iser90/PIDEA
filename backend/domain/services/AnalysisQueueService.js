@@ -311,7 +311,9 @@ class AnalysisQueueService {
       codeQualityService,
       securityService,
       performanceService,
-      architectureService
+      architectureService,
+      techStackAnalyzer,
+      recommendationsService
     } = application;
 
     // Execute analysis based on type
@@ -339,6 +341,18 @@ class AnalysisQueueService {
           throw new Error('Architecture service not available');
         }
         return await architectureService.analyzeArchitecture(projectId, options);
+        
+      case 'techstack':
+        if (!techStackAnalyzer) {
+          throw new Error('Tech stack analyzer not available');
+        }
+        return await techStackAnalyzer.analyzeTechStack(projectId, options);
+        
+      case 'recommendations':
+        if (!recommendationsService) {
+          throw new Error('Recommendations service not available');
+        }
+        return await recommendationsService.generateRecommendations(projectId, options);
         
       default:
         throw new Error(`Unknown analysis type: ${analysisType}`);
@@ -453,7 +467,9 @@ class AnalysisQueueService {
       'code-quality': 1,
       'security': 2,
       'performance': 2,
-      'architecture': 3
+      'architecture': 3,
+      'techstack': 2,
+      'recommendations': 1
     };
     
     const totalMinutes = analysisTypes.reduce((total, type) => {

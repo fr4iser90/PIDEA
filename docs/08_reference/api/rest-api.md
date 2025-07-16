@@ -474,6 +474,198 @@ Get the content of a specific file.
 }
 ```
 
+## Analysis API
+
+### Create Techstack Analysis
+
+**POST** `/api/analysis/techstack`
+
+Create and queue a new techstack analysis for a project.
+
+#### Request Body
+
+```json
+{
+  "projectId": "project-uuid",
+  "projectPath": "/path/to/project",
+  "analysisType": "techstack",
+  "priority": "high|medium|low",
+  "metadata": {
+    "framework": "react",
+    "language": "javascript",
+    "additionalContext": "optional-context"
+  }
+}
+```
+
+#### Response
+
+```json
+{
+  "success": true,
+  "data": {
+    "analysisId": "analysis-uuid",
+    "projectId": "project-uuid",
+    "analysisType": "techstack",
+    "status": "queued",
+    "priority": "high",
+    "createdAt": "2024-01-01T12:00:00.000Z",
+    "estimatedDuration": 300
+  }
+}
+```
+
+### Get Techstack Analysis
+
+**GET** `/api/analysis/techstack/:projectId`
+
+Retrieve techstack analysis results for a specific project.
+
+#### Path Parameters
+
+- `projectId`: Project identifier
+
+#### Response
+
+```json
+{
+  "success": true,
+  "data": {
+    "analysisId": "analysis-uuid",
+    "projectId": "project-uuid",
+    "analysisType": "techstack",
+    "status": "completed",
+    "results": {
+      "frameworks": ["react", "express"],
+      "languages": ["javascript", "typescript"],
+      "databases": ["mongodb"],
+      "tools": ["webpack", "babel"],
+      "dependencies": {
+        "production": ["react", "express"],
+        "development": ["jest", "eslint"]
+      }
+    },
+    "createdAt": "2024-01-01T12:00:00.000Z",
+    "completedAt": "2024-01-01T12:05:00.000Z"
+  }
+}
+```
+
+### Create Recommendations Analysis
+
+**POST** `/api/analysis/recommendations`
+
+Create and queue a new recommendations analysis for a project.
+
+#### Request Body
+
+```json
+{
+  "projectId": "project-uuid",
+  "projectPath": "/path/to/project",
+  "analysisType": "recommendations",
+  "priority": "high|medium|low",
+  "metadata": {
+    "currentTechstack": ["react", "nodejs"],
+    "targetFeatures": ["authentication", "database"],
+    "projectGoals": ["scalability", "performance"],
+    "constraints": ["budget", "timeline"]
+  }
+}
+```
+
+#### Response
+
+```json
+{
+  "success": true,
+  "data": {
+    "analysisId": "analysis-uuid",
+    "projectId": "project-uuid",
+    "analysisType": "recommendations",
+    "status": "queued",
+    "priority": "medium",
+    "createdAt": "2024-01-01T12:00:00.000Z",
+    "estimatedDuration": 600
+  }
+}
+```
+
+### Get Recommendations Analysis
+
+**GET** `/api/analysis/recommendations/:projectId`
+
+Retrieve recommendations analysis results for a specific project.
+
+#### Path Parameters
+
+- `projectId`: Project identifier
+
+#### Response
+
+```json
+{
+  "success": true,
+  "data": {
+    "analysisId": "analysis-uuid",
+    "projectId": "project-uuid",
+    "analysisType": "recommendations",
+    "status": "completed",
+    "results": {
+      "recommendations": [
+        {
+          "category": "authentication",
+          "suggestions": ["passport.js", "auth0"],
+          "priority": "high",
+          "reasoning": "Security best practices"
+        },
+        {
+          "category": "database",
+          "suggestions": ["mongodb", "postgresql"],
+          "priority": "medium",
+          "reasoning": "Scalability requirements"
+        }
+      ],
+      "techstackEnhancements": [
+        {
+          "component": "state-management",
+          "recommendation": "redux-toolkit",
+          "benefits": ["simplified setup", "better performance"]
+        }
+      ]
+    },
+    "createdAt": "2024-01-01T12:00:00.000Z",
+    "completedAt": "2024-01-01T12:10:00.000Z"
+  }
+}
+```
+
+### Get Analysis Status
+
+**GET** `/api/analysis/status/:analysisId`
+
+Get the current status of an analysis.
+
+#### Path Parameters
+
+- `analysisId`: Analysis identifier
+
+#### Response
+
+```json
+{
+  "success": true,
+  "data": {
+    "analysisId": "analysis-uuid",
+    "status": "processing",
+    "progress": 65,
+    "estimatedTimeRemaining": 120,
+    "currentStep": "analyzing-dependencies",
+    "createdAt": "2024-01-01T12:00:00.000Z"
+  }
+}
+```
+
 ## Git Management API
 
 For complete Git management functionality, see the dedicated [Git API Documentation](git-api.md).
@@ -537,8 +729,10 @@ Get WebSocket connection status.
 |-------------|-------|-------------|
 | 400 | Bad Request | Invalid request parameters |
 | 404 | Not Found | Resource not found |
+| 409 | Conflict | Analysis already exists for project |
+| 422 | Unprocessable Entity | Invalid analysis type or configuration |
 | 500 | Internal Server Error | Server error |
-| 503 | Service Unavailable | IDE not available |
+| 503 | Service Unavailable | IDE not available or analysis service unavailable |
 
 ## Rate Limiting
 
@@ -572,6 +766,32 @@ curl http://localhost:3000/api/ide/available
 curl -X POST http://localhost:3000/api/ide/start \
   -H "Content-Type: application/json" \
   -d '{"workspacePath": "/path/to/project"}'
+
+# Create techstack analysis
+curl -X POST http://localhost:3000/api/analysis/techstack \
+  -H "Content-Type: application/json" \
+  -d '{
+    "projectId": "my-project-123",
+    "projectPath": "/path/to/project",
+    "analysisType": "techstack",
+    "priority": "high"
+  }'
+
+# Get techstack analysis results
+curl http://localhost:3000/api/analysis/techstack/my-project-123
+
+# Create recommendations analysis
+curl -X POST http://localhost:3000/api/analysis/recommendations \
+  -H "Content-Type: application/json" \
+  -d '{
+    "projectId": "my-project-123",
+    "projectPath": "/path/to/project",
+    "analysisType": "recommendations",
+    "metadata": {
+      "currentTechstack": ["react", "nodejs"],
+      "targetFeatures": ["authentication", "database"]
+    }
+  }'
 ```
 
 ### JavaScript Examples
@@ -594,6 +814,42 @@ const result = await response.json();
 const ides = await fetch('/api/ide/available')
   .then(res => res.json())
   .then(data => data.data);
+
+// Create techstack analysis
+const techstackAnalysis = await fetch('/api/analysis/techstack', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify({
+    projectId: 'my-project-123',
+    projectPath: '/path/to/project',
+    analysisType: 'techstack',
+    priority: 'high'
+  })
+}).then(res => res.json());
+
+// Get techstack analysis results
+const techstackResults = await fetch('/api/analysis/techstack/my-project-123')
+  .then(res => res.json())
+  .then(data => data.data);
+
+// Create recommendations analysis
+const recommendationsAnalysis = await fetch('/api/analysis/recommendations', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify({
+    projectId: 'my-project-123',
+    projectPath: '/path/to/project',
+    analysisType: 'recommendations',
+    metadata: {
+      currentTechstack: ['react', 'nodejs'],
+      targetFeatures: ['authentication', 'database']
+    }
+  })
+}).then(res => res.json());
 ```
 
 ## WebSocket Events

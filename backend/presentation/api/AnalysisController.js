@@ -78,7 +78,9 @@ class AnalysisController {
         'code-quality': 2 * 60 * 1000,    // 2 minutes
         'security': 3 * 60 * 1000,        // 3 minutes
         'performance': 4 * 60 * 1000,     // 4 minutes
-        'architecture': 5 * 60 * 1000     // 5 minutes
+        'architecture': 5 * 60 * 1000,    // 5 minutes
+        'techstack': 3 * 60 * 1000,       // 3 minutes
+        'recommendations': 2 * 60 * 1000  // 2 minutes
       }
     });
   }
@@ -376,7 +378,140 @@ class AnalysisController {
     }
   }
 
+  /**
+   * Analyze tech stack
+   * @param {Object} req - Express request
+   * @param {Object} res - Express response
+   */
+  async analyzeTechStack(req, res) {
+    try {
+      const { projectId } = req.params;
+      const options = req.body || {};
 
+      this.logger.info(`Tech stack analysis requested for project`);
+
+      // Get project path from database
+      const projectPath = await this.getProjectPath(projectId);
+
+      // Check for cached analysis
+      const latest = await this.analysisRepository.findLatestByProjectId(projectId);
+      if (latest && isAnalysisFresh(latest)) {
+        this.logger.info(`Returning cached tech stack analysis for project`);
+        const analysis = latest.resultData;
+        
+        res.json({
+          success: true,
+          data: {
+            analysis,
+            summary: 'Tech stack analysis from cache'
+          }
+        });
+        return;
+      }
+
+      // Get tech stack analyzer from application context
+      const application = global.application;
+      if (!application || !application.techStackAnalyzer) {
+        throw new Error('Tech stack analyzer not available');
+      }
+
+      const analysis = await application.techStackAnalyzer.analyzeTechStack(projectPath, {
+        ...options,
+        saveToFile: false,
+        saveToDatabase: true
+      }, projectId);
+      
+      // Create and save analysis result
+      const analysisResult = AnalysisResult.create(projectId, 'techstack', analysis, {
+        frameworksCount: analysis.frameworks?.length || 0,
+        librariesCount: analysis.libraries?.length || 0,
+        toolsCount: analysis.tools?.length || 0
+      });
+      await this.analysisRepository.save(analysisResult);
+
+      res.json({
+        success: true,
+        data: {
+          analysis,
+          summary: 'Tech stack analysis completed successfully'
+        }
+      });
+    } catch (error) {
+      this.logger.error(`Tech stack analysis failed:`, error);
+      res.status(500).json({
+        success: false,
+        error: 'Tech stack analysis failed',
+        message: error.message
+      });
+    }
+  }
+
+  /**
+   * Analyze recommendations
+   * @param {Object} req - Express request
+   * @param {Object} res - Express response
+   */
+  async analyzeRecommendations(req, res) {
+    try {
+      const { projectId } = req.params;
+      const options = req.body || {};
+
+      this.logger.info(`Recommendations analysis requested for project`);
+
+      // Get project path from database
+      const projectPath = await this.getProjectPath(projectId);
+
+      // Check for cached analysis
+      const latest = await this.analysisRepository.findLatestByProjectId(projectId);
+      if (latest && isAnalysisFresh(latest)) {
+        this.logger.info(`Returning cached recommendations analysis for project`);
+        const analysis = latest.resultData;
+        
+        res.json({
+          success: true,
+          data: {
+            analysis,
+            summary: 'Recommendations analysis from cache'
+          }
+        });
+        return;
+      }
+
+      // Get recommendations service from application context
+      const application = global.application;
+      if (!application || !application.recommendationsService) {
+        throw new Error('Recommendations service not available');
+      }
+
+      // First get existing analysis data to generate recommendations
+      const existingAnalyses = await this.analysisRepository.findByProjectId(projectId);
+      const analysisData = existingAnalyses.length > 0 ? existingAnalyses[0].resultData : {};
+
+      const analysis = await application.recommendationsService.generateRecommendations(analysisData);
+      
+      // Create and save analysis result
+      const analysisResult = AnalysisResult.create(projectId, 'recommendations', analysis, {
+        recommendationsCount: analysis.recommendations?.length || 0,
+        insightsCount: analysis.insights?.length || 0
+      });
+      await this.analysisRepository.save(analysisResult);
+
+      res.json({
+        success: true,
+        data: {
+          analysis,
+          summary: 'Recommendations analysis completed successfully'
+        }
+      });
+    } catch (error) {
+      this.logger.error(`Recommendations analysis failed:`, error);
+      res.status(500).json({
+        success: false,
+        error: 'Recommendations analysis failed',
+        message: error.message
+      });
+    }
+  }
 
   /**
    * Parse analysis types from query parameters
@@ -385,7 +520,7 @@ class AnalysisController {
    * @returns {Array} Array of analysis types
    */
   parseAnalysisTypes(types, exclude) {
-    const allTypes = ['code-quality', 'security', 'performance', 'architecture'];
+    const allTypes = ['code-quality', 'security', 'performance', 'architecture', 'techstack', 'recommendations'];
     
     if (!types || types === 'all') {
       return allTypes;
@@ -449,6 +584,35 @@ class AnalysisController {
           case 'architecture':
             analysisPromise = this.architectureService.analyzeArchitecture(projectPath, degradedOptions);
             break;
+          case 'techstack':
+            const application = global.application;
+            if (!application || !application.techStackAnalyzer) {
+              reject(new Error('Tech stack analyzer not available'));
+              return;
+            }
+            analysisPromise = application.techStackAnalyzer.analyzeTechStack(projectPath, degradedOptions);
+            break;
+          case 'recommendations':
+            const app = global.application;
+            if (!app || !app.recommendationsService) {
+              reject(new Error('Recommendations service not available'));
+              return;
+            }
+            // Get existing analysis data for recommendations
+            this.analysisRepository.findByProjectId(projectPath)
+              .then(existingAnalyses => {
+                const analysisData = existingAnalyses.length > 0 ? existingAnalyses[0].resultData : {};
+                return app.recommendationsService.generateRecommendations(analysisData);
+              })
+              .then(result => {
+                clearTimeout(timeoutId);
+                resolve(result);
+              })
+              .catch(error => {
+                clearTimeout(timeoutId);
+                reject(error);
+              });
+            return;
           default:
             reject(new Error(`Unknown analysis type: ${analysisType}`));
             return;

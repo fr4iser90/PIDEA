@@ -71,6 +71,29 @@ class IndividualAnalysisService {
           { progress: 75, description: 'Evaluating architectural patterns' },
           { progress: 100, description: 'Architecture analysis completed' }
         ]
+      },
+      'techstack': {
+        service: this.getTechStackAnalyzer(),
+        method: 'analyzeTechStack',
+        timeout: 3 * 60 * 1000, // 3 minutes
+        progressSteps: [
+          { progress: 10, description: 'Initializing tech stack analysis' },
+          { progress: 30, description: 'Scanning package files' },
+          { progress: 60, description: 'Analyzing dependencies' },
+          { progress: 80, description: 'Detecting frameworks and tools' },
+          { progress: 100, description: 'Tech stack analysis completed' }
+        ]
+      },
+      'recommendations': {
+        service: this.getRecommendationsService(),
+        method: 'generateRecommendations',
+        timeout: 2 * 60 * 1000, // 2 minutes
+        progressSteps: [
+          { progress: 10, description: 'Initializing recommendations analysis' },
+          { progress: 40, description: 'Analyzing project structure' },
+          { progress: 70, description: 'Generating recommendations' },
+          { progress: 100, description: 'Recommendations analysis completed' }
+        ]
       }
     };
   }
@@ -336,6 +359,30 @@ class IndividualAnalysisService {
    */
   getAnalysisConfig(analysisType) {
     return this.analysisConfigs[analysisType] || null;
+  }
+
+  /**
+   * Get tech stack analyzer from application context
+   * @returns {Object} Tech stack analyzer service
+   */
+  getTechStackAnalyzer() {
+    const application = global.application;
+    if (!application || !application.techStackAnalyzer) {
+      throw new Error('Tech stack analyzer not available');
+    }
+    return application.techStackAnalyzer;
+  }
+
+  /**
+   * Get recommendations service from application context
+   * @returns {Object} Recommendations service
+   */
+  getRecommendationsService() {
+    const application = global.application;
+    if (!application || !application.recommendationsService) {
+      throw new Error('Recommendations service not available');
+    }
+    return application.recommendationsService;
   }
 }
 

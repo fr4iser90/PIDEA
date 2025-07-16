@@ -265,6 +265,7 @@ class Application {
         this.performanceAnalyzer = this.serviceRegistry.getService('performanceAnalyzer');
         this.architectureAnalyzer = this.serviceRegistry.getService('architectureAnalyzer');
         this.techStackAnalyzer = this.serviceRegistry.getService('techStackAnalyzer');
+        this.recommendationsService = this.serviceRegistry.getService('recommendationsService');
         this.subprojectDetector = this.serviceRegistry.getService('subprojectDetector');
         this.analysisOutputService = this.serviceRegistry.getService('analysisOutputService');
         this.analysisRepository = this.serviceRegistry.getService('analysisRepository');
@@ -748,6 +749,8 @@ class Application {
     this.app.post('/api/projects/:projectId/analysis/security', (req, res) => this.analysisController.analyzeSecurity(req, res));
     this.app.post('/api/projects/:projectId/analysis/performance', (req, res) => this.analysisController.analyzePerformance(req, res));
     this.app.post('/api/projects/:projectId/analysis/architecture', (req, res) => this.analysisController.analyzeArchitecture(req, res));
+    this.app.post('/api/projects/:projectId/analysis/techstack', (req, res) => this.analysisController.analyzeTechStack(req, res));
+    this.app.post('/api/projects/:projectId/analysis/recommendations', (req, res) => this.analysisController.analyzeRecommendations(req, res));
     
     // Individual Analysis GET routes (protected) - PROJECT-BASED
     this.app.get('/api/projects/:projectId/analysis/code-quality', (req, res) => this.analysisController.getCodeQualityAnalysis(req, res));

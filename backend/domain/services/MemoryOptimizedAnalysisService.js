@@ -39,7 +39,9 @@ class MemoryOptimizedAnalysisService {
             'code-quality': 2 * 60 * 1000,    // 2 minutes
             'security': 3 * 60 * 1000,        // 3 minutes
             'performance': 4 * 60 * 1000,     // 4 minutes
-            'architecture': 5 * 60 * 1000     // 5 minutes
+            'architecture': 5 * 60 * 1000,    // 5 minutes
+            'techstack': 3 * 60 * 1000,       // 3 minutes
+            'recommendations': 2 * 60 * 1000  // 2 minutes
         };
         this.streamingBatchSize = options.streamingBatchSize || 100; // Files per streaming batch
         this.memoryLoggingInterval = options.memoryLoggingInterval || 30000; // 30 seconds
