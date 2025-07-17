@@ -9,7 +9,17 @@ const createTestUser = require('./scripts/create-test-user');
 
 async function ensureTestUser() {
   try {
-    // Check if users exist first
+    // First, initialize the database connection to create tables
+    const DatabaseConnection = require('./infrastructure/database/DatabaseConnection');
+    const AutoSecurityManager = require('./infrastructure/auto/AutoSecurityManager');
+    
+    const autoSecurityManager = new AutoSecurityManager();
+    const securityConfig = autoSecurityManager.getConfig();
+    
+    const dbConnection = new DatabaseConnection(securityConfig.database);
+    await dbConnection.connect();
+    
+    // Now check if users exist
     const sqlite3 = require('sqlite3').verbose();
     const path = require('path');
     const dbPath = path.join(__dirname, 'database/pidea-dev.db');

@@ -111,17 +111,19 @@ class SQLiteChatRepository extends ChatRepository {
     }
 
     const sql = `
-      INSERT INTO chat_messages (id, session_id, content, sender, type, timestamp, metadata)
+      INSERT INTO chat_messages (id, session_id, content, sender_type, message_type, timestamp, metadata)
       VALUES (?, ?, ?, ?, ?, ?, ?)
     `;
 
     const messageData = message.toJSON();
     
+    const senderType = messageData.sender;
+    
     await this.db.execute(sql, [
       messageData.id,
       sessionId,
       messageData.content,
-      messageData.sender,
+      senderType,
       messageData.type,
       messageData.timestamp,
       JSON.stringify(messageData.metadata)
@@ -147,12 +149,15 @@ class SQLiteChatRepository extends ChatRepository {
         }
       }
       
+      // Verwende direkt den Sender - keine Mapping mehr
+      const sender = row.sender_type;
+      
       const messageData = {
         id: row.id,
         sessionId: row.session_id,
         content: row.content,
-        sender: row.sender,
-        type: row.type,
+        sender: sender,
+        type: row.message_type || row.type,
         timestamp: row.timestamp,
         metadata
       };

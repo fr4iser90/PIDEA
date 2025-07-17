@@ -1,4 +1,7 @@
 const IDETypes = require('../ide/IDETypes');
+const MessageTypeDetector = require('./MessageTypeDetector');
+const DOMCodeBlockDetector = require('./DOMCodeBlockDetector');
+const AITextDetector = require('./AITextDetector');
 
 // Simple SmartCompletionDetector without external dependency
 class SimpleSmartCompletionDetector {
@@ -33,6 +36,11 @@ class ChatMessageHandler {
 
     // Initialize smart completion detector
     this.smartCompletionDetector = new SimpleSmartCompletionDetector();
+    
+    // Initialize new separated services
+    this.messageTypeDetector = new MessageTypeDetector();
+    this.domCodeBlockDetector = new DOMCodeBlockDetector(this.selectors);
+    this.aiTextDetector = new AITextDetector(this.selectors);
   }
 
   async sendMessage(message, options = {}) {
@@ -557,6 +565,185 @@ class ChatMessageHandler {
    */
   getSelectors() {
     return this.selectors;
+  }
+
+  // ===== NEUE METHODEN MIT SEPARIERTEN SERVICES =====
+
+  /**
+   * Process user message using MessageTypeDetector
+   * @param {string} content - User message content
+   * @param {Object} metadata - Message metadata
+   * @returns {Object} User message analysis
+   */
+  async processUserMessage(content, metadata = {}) {
+    logger.info('👤 [ChatMessageHandler] Processing user message with MessageTypeDetector');
+    
+    const analysis = this.messageTypeDetector.detectUserMessage(content, metadata);
+    
+    logger.info('📊 [ChatMessageHandler] User message analysis:', {
+      type: analysis.type,
+      hasCodeBlocks: analysis.hasCodeBlocks,
+      hasInlineCode: analysis.hasInlineCode,
+      hasMarkdown: analysis.hasMarkdown,
+      language: analysis.language,
+      confidence: analysis.confidence
+    });
+    
+    return analysis;
+  }
+
+  /**
+   * Process AI response using separated services
+   * @param {Object} page - Playwright page object
+   * @returns {Object} AI response analysis
+   */
+  async processAIResponse(page) {
+    logger.info('🤖 [ChatMessageHandler] Processing AI response with separated services');
+    
+    // Step 1: Extract AI text response using AITextDetector
+    const aiText = await this.aiTextDetector.extractLatestAIResponse(page);
+    
+    // Step 2: Detect code blocks from DOM using DOMCodeBlockDetector
+    const domCodeBlocks = await this.domCodeBlockDetector.detectCodeBlocks(page);
+    
+    // Step 3: Analyze message type using MessageTypeDetector
+    const messageAnalysis = this.messageTypeDetector.analyzeMessage(aiText, 'ai', domCodeBlocks);
+    
+    // Step 4: Analyze response quality using AITextDetector
+    const qualityAnalysis = this.aiTextDetector.analyzeResponseQuality(aiText);
+    
+    // Step 5: Detect completion using AITextDetector
+    const completionAnalysis = this.aiTextDetector.detectCompletion(aiText, {
+      hasCode: domCodeBlocks.length > 0
+    });
+    
+    // Step 6: Get code block statistics using DOMCodeBlockDetector
+    const codeBlockStats = this.domCodeBlockDetector.getCodeBlockStats(domCodeBlocks);
+    
+    const result = {
+      success: true,
+      response: aiText,
+      messageType: messageAnalysis,
+      quality: qualityAnalysis,
+      completion: completionAnalysis,
+      codeBlocks: domCodeBlocks,
+      codeBlockStats: codeBlockStats,
+      timestamp: new Date(),
+      ideType: this.ideType
+    };
+    
+    logger.info('📊 [ChatMessageHandler] AI response analysis:', {
+      responseLength: aiText.length,
+      messageType: messageAnalysis.type,
+      hasCodeBlocks: messageAnalysis.hasCodeBlocks,
+      codeBlockCount: domCodeBlocks.length,
+      qualityScore: qualityAnalysis.score,
+      isComplete: completionAnalysis.isComplete,
+      confidence: completionAnalysis.confidence
+    });
+    
+    return result;
+  }
+
+  /**
+   * Wait for AI response using AITextDetector
+   * @param {Object} page - Playwright page object
+   * @param {Object} options - Wait options
+   * @returns {Promise<Object>} Complete AI response analysis
+   */
+  async waitForAIResponseWithServices(page, options = {}) {
+    logger.info('⏳ [ChatMessageHandler] Waiting for AI response with separated services');
+    
+    // Use AITextDetector for waiting and completion detection
+    const waitResult = await this.aiTextDetector.waitForAIResponse(page, options);
+    
+    if (waitResult.success) {
+      // Extract code blocks from DOM using DOMCodeBlockDetector
+      const domCodeBlocks = await this.domCodeBlockDetector.detectCodeBlocks(page);
+      
+      // Analyze message type using MessageTypeDetector
+      const messageAnalysis = this.messageTypeDetector.analyzeMessage(
+        waitResult.response, 
+        'ai', 
+        domCodeBlocks
+      );
+      
+      // Get code block statistics using DOMCodeBlockDetector
+      const codeBlockStats = this.domCodeBlockDetector.getCodeBlockStats(domCodeBlocks);
+      
+      return {
+        ...waitResult,
+        messageType: messageAnalysis,
+        codeBlocks: domCodeBlocks,
+        codeBlockStats: codeBlockStats,
+        ideType: this.ideType
+      };
+    }
+    
+    return waitResult;
+  }
+
+  /**
+   * Send message and wait for AI response using separated services
+   * @param {string} message - User message
+   * @param {Object} options - Options
+   * @returns {Promise<Object>} Complete response analysis
+   */
+  async sendMessageAndWaitWithServices(message, options = {}) {
+    logger.info('📤 [ChatMessageHandler] Sending message and waiting with separated services');
+    
+    // Step 1: Process user message using MessageTypeDetector
+    const userAnalysis = await this.processUserMessage(message);
+    
+    // Step 2: Send message using existing method
+    await this.sendMessage(message, { waitForResponse: false });
+    
+    // Step 3: Wait for and process AI response using separated services
+    const page = await this.browserManager.getPage();
+    const aiAnalysis = await this.waitForAIResponseWithServices(page, options);
+    
+    return {
+      userMessage: {
+        content: message,
+        analysis: userAnalysis
+      },
+      aiResponse: aiAnalysis,
+      timestamp: new Date()
+    };
+  }
+
+  /**
+   * Get comprehensive chat analysis using separated services
+   * @param {Object} page - Playwright page object
+   * @returns {Object} Complete chat analysis
+   */
+  async getChatAnalysisWithServices(page) {
+    logger.info('🔍 [ChatMessageHandler] Getting comprehensive chat analysis with separated services');
+    
+    // Extract AI response using AITextDetector
+    const aiText = await this.aiTextDetector.extractLatestAIResponse(page);
+    
+    // Detect code blocks using DOMCodeBlockDetector
+    const domCodeBlocks = await this.domCodeBlockDetector.detectCodeBlocks(page);
+    
+    // Analyze message type using MessageTypeDetector
+    const messageAnalysis = this.messageTypeDetector.analyzeMessage(aiText, 'ai', domCodeBlocks);
+    
+    // Analyze quality using AITextDetector
+    const qualityAnalysis = this.aiTextDetector.analyzeResponseQuality(aiText);
+    
+    // Get code block statistics using DOMCodeBlockDetector
+    const codeBlockStats = this.domCodeBlockDetector.getCodeBlockStats(domCodeBlocks);
+    
+    return {
+      aiText: aiText,
+      messageType: messageAnalysis,
+      quality: qualityAnalysis,
+      codeBlocks: domCodeBlocks,
+      codeBlockStats: codeBlockStats,
+      timestamp: new Date(),
+      ideType: this.ideType
+    };
   }
 }
 

@@ -154,7 +154,7 @@ class ChatHistoryExtractor {
         const text = element.innerText || element.textContent || '';
         if (text.trim()) {
           messages.push({
-            sender: 'ai',
+            sender: 'assistant',
             type: text.includes('```') ? 'code' : 'text',
             content: text.trim(),
             element: element,
@@ -249,7 +249,7 @@ class ChatHistoryExtractor {
               const text = contentElement.innerText || contentElement.textContent || '';
               if (text.trim()) {
                 messages.push({
-                  sender: 'ai',
+                  sender: 'assistant',
                   type: text.includes('```') ? 'code' : 'text',
                   content: text.trim(),
                   index: index
@@ -299,7 +299,7 @@ class ChatHistoryExtractor {
         const text = element.innerText || element.textContent || '';
         if (text.trim()) {
           messages.push({
-            sender: 'ai',
+            sender: 'assistant',
             type: text.includes('```') ? 'code' : 'text',
             content: text.trim(),
             element: element,
@@ -356,7 +356,7 @@ class ChatHistoryExtractor {
           const text = element.innerText || element.textContent || '';
           if (text.trim()) {
             messages.push({
-              sender: 'ai',
+              sender: 'assistant',
               type: text.includes('```') ? 'code' : 'text',
               content: text.trim(),
               element: element,

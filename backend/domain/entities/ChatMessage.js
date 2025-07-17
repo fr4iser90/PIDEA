@@ -4,7 +4,7 @@ class ChatMessage {
   constructor(id, content, sender, type, timestamp, metadata = {}) {
     this._id = id || uuidv4();
     this._content = content;
-    this._sender = sender; // 'user' | 'ai' | 'system'
+    this._sender = sender; // 'user' | 'assistant' | 'system'
     this._type = type; // 'text' | 'code' | 'system' | 'error'
     this._timestamp = timestamp || new Date();
     this._metadata = metadata;
@@ -25,7 +25,7 @@ class ChatMessage {
   }
 
   isAIMessage() {
-    return this._sender === 'ai';
+    return this._sender === 'assistant';
   }
 
   isCodeBlock() {
@@ -41,8 +41,8 @@ class ChatMessage {
     if (!this._content || this._content.trim().length === 0) {
       throw new Error('ChatMessage content cannot be empty');
     }
-    if (!['user', 'ai', 'system'].includes(this._sender)) {
-      throw new Error('ChatMessage sender must be either "user", "ai" or "system"');
+    if (!['user', 'assistant', 'system'].includes(this._sender)) {
+      throw new Error('ChatMessage sender must be either "user", "assistant" or "system"');
     }
     if (!['text', 'code', 'system', 'error'].includes(this._type)) {
       throw new Error('ChatMessage type must be text, code, system, or error');
@@ -58,7 +58,7 @@ class ChatMessage {
   }
 
   static createAIMessage(content, type = 'text', metadata = {}) {
-    return new ChatMessage(null, content, 'ai', type, new Date(), metadata);
+    return new ChatMessage(null, content, 'assistant', type, new Date(), metadata);
   }
 
   static createSystemMessage(content, type = 'system', metadata = {}) {

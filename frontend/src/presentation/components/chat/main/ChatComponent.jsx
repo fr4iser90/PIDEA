@@ -15,20 +15,16 @@ function escapeHtml(text) {
 }
 
 function normalizeMessage(msg) {
-  // Fallbacks für sender/type
+  // EINFACH: Verwende nur die Sender-Information vom Backend
   let sender = msg.sender;
+  
+  // Type bestimmen - EINFACH
   let type = msg.type;
-  if (!sender) {
-    if (type === 'user' || msg.isUserMessage?.() || msg.role === 'user') sender = 'user';
-    else if (type === 'ai' || msg.isAIMessage?.() || msg.role === 'ai') sender = 'ai';
-    else if (type === 'system' || msg.role === 'system') sender = 'system';
-    else sender = 'ai'; // fallback
-  }
   if (!type) {
     if (msg.content && msg.content.includes('```')) type = 'code';
-    else if (msg.type) type = msg.type;
     else type = 'text';
   }
+  
   return { ...msg, sender, type };
 }
 
@@ -92,6 +88,7 @@ function ChatComponent({ eventBus, activePort, attachedPrompts = [] }) {
         msgs = data;
       }
       logger.info('Neue Nachrichten geladen:', msgs.length);
+      logger.info('Message structure:', msgs.map(m => ({ id: m.id, sender: m.sender, type: m.type, content: m.content?.substring(0, 50) })));
       setMessages(msgs.map(normalizeMessage));
     } catch (error) {
       setMessages([]);
@@ -193,43 +190,16 @@ function ChatComponent({ eventBus, activePort, attachedPrompts = [] }) {
         throw new Error(result.error || 'Failed to send message');
       }
       
-      // Add quality indicators if response contains code blocks
-      if (result.data && result.data.codeBlocks && result.data.codeBlocks.length > 0) {
-        // Create enhanced AI response with code blocks
-        const enhancedContent = result.data.codeBlocks.map(block => {
-          const language = block.language || 'text';
-          const content = block.content || '';
-          const filename = block.filename ? ` (${block.filename})` : '';
-          return `\`\`\`${language}${filename}\n${content}\n\`\`\``;
-        }).join('\n\n');
-        
-        // Add the enhanced AI response
+      // EINFACH: AI Response hinzufügen
+      if (result.data && result.data.response) {
         const aiResponse = normalizeMessage({
           id: Date.now() + 3,
-          content: enhancedContent,
-          sender: 'ai',
+          content: result.data.response,
+          sender: 'assistant',
           timestamp: new Date().toISOString(),
-          type: 'code',
-          metadata: {
-            codeBlocks: result.data.codeBlocks,
-            averageConfidence: result.data.codeBlocks.reduce((acc, block) => acc + block.confidence, 0) / result.data.codeBlocks.length
-          }
+          type: 'text'
         });
         setMessages(prevMessages => [...prevMessages, aiResponse]);
-        
-        // Add quality indicator
-        const qualityMessage = normalizeMessage({
-          id: Date.now() + 4,
-          content: `Code blocks detected: ${result.data.codeBlocks.length} blocks with ${Math.round(result.data.codeBlocks.reduce((acc, block) => acc + block.confidence, 0) / result.data.codeBlocks.length * 100)}% average confidence`,
-          sender: 'system',
-          timestamp: new Date().toISOString(),
-          type: 'quality',
-          metadata: {
-            codeBlocks: result.data.codeBlocks,
-            averageConfidence: result.data.codeBlocks.reduce((acc, block) => acc + block.confidence, 0) / result.data.codeBlocks.length
-          }
-        });
-        setMessages(prevMessages => [...prevMessages, qualityMessage]);
       }
     } catch (error) {
       setError('❌ ' + error.message);
@@ -254,35 +224,7 @@ function ChatComponent({ eventBus, activePort, attachedPrompts = [] }) {
     return 'text';
   };
 
-  // Quality indicator component
-  const QualityIndicator = ({ message }) => {
-    if (message.type !== 'quality' || !message.metadata?.codeBlocks) return null;
-    
-    const { codeBlocks, averageConfidence } = message.metadata;
-    const confidenceColor = averageConfidence > 0.8 ? 'green' : averageConfidence > 0.6 ? 'orange' : 'red';
-    
-    return (
-      <div className="quality-indicator" style={{ 
-        padding: '8px', 
-        margin: '4px 0', 
-        borderRadius: '4px', 
-        backgroundColor: '#f5f5f5',
-        border: `2px solid ${confidenceColor}` 
-      }}>
-        <div style={{ fontSize: '12px', color: confidenceColor, fontWeight: 'bold' }}>
-          📊 Code Quality: {Math.round(averageConfidence * 100)}% Confidence
-        </div>
-        <div style={{ fontSize: '11px', color: '#666' }}>
-          {codeBlocks.length} code block{codeBlocks.length !== 1 ? 's' : ''} detected
-        </div>
-        {codeBlocks.map((block, index) => (
-          <div key={index} style={{ fontSize: '10px', marginTop: '2px' }}>
-            • {block.language} ({Math.round(block.confidence * 100)}% confidence)
-          </div>
-        ))}
-      </div>
-    );
-  };
+
 
   const handleInputChange = (e) => setInputValue(e.target.value);
   const handleInputKeyDown = (e) => {
@@ -340,129 +282,47 @@ function ChatComponent({ eventBus, activePort, attachedPrompts = [] }) {
     navigator.clipboard.writeText(code);
   };
 
-  // Render message bubble (user/ai)
+  // Render message bubble - EINFACH
   const renderMessage = (message, index) => {
     const isUser = message.sender === 'user';
-    const isAI = message.sender === 'ai';
-    const isCode = message.type === 'code';
-    const isQuality = message.type === 'quality';
-    let content = message.content || message.text;
+    const isAI = message.sender === 'assistant';
+    let content = message.content || message.text || '';
+    
+    // Debug logging
+    console.log('Rendering message:', {
+      id: message.id,
+      sender: message.sender,
+      contentLength: content.length,
+      hasCodeBlocks: content.includes('```')
+    });
+    
+    // EINFACH: Code-Blöcke rendern
     let bubbleContent;
-    
-    if (isQuality) {
-      bubbleContent = <QualityIndicator message={message} />;
-    } else if (isAI && message.metadata?.codeBlocks?.length > 0) {
-      // Modernes Codeblock-Rendering mit Header und Toggle
-      bubbleContent = (
-        <div className="code-blocks-container">
-          {message.metadata.codeBlocks.map((block, idx) => {
-            const blockId = `${message.id}_${idx}`;
-            const expanded = expandedBlocks[blockId] !== false; // default: true
-            return (
-              <div key={blockId} className="modern-code-block-wrapper">
-                <div className="modern-code-block-header" onClick={() => toggleBlock(blockId)}>
-                  <span className="modern-code-block-title">
-                    {block.filename ? block.filename : block.language ? block.language : 'Code'}
-                  </span>
-                  <button
-                    className="modern-code-block-toggle"
-                    title={expanded ? 'Einklappen' : 'Ausklappen'}
-                    tabIndex={-1}
-                    onClick={e => { e.stopPropagation(); toggleBlock(blockId); }}
-                  >
-                    {expanded ? '▲' : '▼'}
-                  </button>
-                  <button
-                    className="modern-code-block-copy"
-                    title="Copy code"
-                    tabIndex={-1}
-                    onClick={e => { e.stopPropagation(); handleCopyClick(block.content); }}
-                  >
-                    📋
-                  </button>
-                </div>
-                {expanded && (
-                  <pre className={`modern-code-block code-block ${block.language || ''}`}>
-                    <code>{block.content}</code>
-                  </pre>
-                )}
-              </div>
-            );
-          })}
-        </div>
-      );
-      } else if (isAI && window.marked) {
-    // Check if content contains markdown code blocks
-    const codeBlockRegex = /```(\w+)?\s*([\s\S]+?)```/g;
-    const codeBlocks = content.match(codeBlockRegex);
-    
-    if (codeBlocks && codeBlocks.length > 0) {
-      // Use our custom code block rendering
-      bubbleContent = (
-        <div className="code-blocks-container">
-          {codeBlocks.map((block, idx) => {
-            const match = block.match(/```(\w+)?\s*([\s\S]+?)```/);
-            const language = match[1] || 'text';
-            const code = match[2].trim();
-            const blockId = `${message.id}_md_${idx}`;
-            const expanded = expandedBlocks[blockId] !== false;
-            return (
-              <div key={blockId} className="modern-code-block-wrapper">
-                <div className="modern-code-block-header" onClick={() => toggleBlock(blockId)}>
-                  <span className="modern-code-block-title">{language}</span>
-                  <button
-                    className="modern-code-block-toggle"
-                    title={expanded ? 'Einklappen' : 'Ausklappen'}
-                    tabIndex={-1}
-                    onClick={e => { e.stopPropagation(); toggleBlock(blockId); }}
-                  >
-                    {expanded ? '▲' : '▼'}
-                  </button>
-                  <button
-                    className="modern-code-block-copy"
-                    title="Copy code"
-                    tabIndex={-1}
-                    onClick={e => { e.stopPropagation(); handleCopyClick(code); }}
-                  >
-                    📋
-                  </button>
-                </div>
-                {expanded && (
-                  <pre className={`modern-code-block code-block ${language}`}>
-                    <code>{code}</code>
-                  </pre>
-                )}
-              </div>
-            );
-          })}
-        </div>
-      );
-    } else {
-      // Regular markdown parsing for non-code content
-      const parsedContent = window.marked.parse(content);
-      bubbleContent = (
-        <div className="message-bubble" dangerouslySetInnerHTML={{ __html: parsedContent }} />
-      );
-    }
-    } else if (isCode) {
-      // Fallback: Markdown-Codeblöcke parsen
-      const codeBlocks = content.match(/```(\w+)?\s*([^`]+)```/g);
-      if (codeBlocks) {
+    if (content.includes('```')) {
+      const codeBlockRegex = /```(\w+)?\s*([\s\S]+?)```/g;
+      const codeBlocks = [];
+      let match;
+      
+      while ((match = codeBlockRegex.exec(content)) !== null) {
+        codeBlocks.push({
+          language: match[1] || 'text',
+          code: match[2].trim()
+        });
+      }
+      
+      if (codeBlocks.length > 0) {
         bubbleContent = (
           <div className="code-blocks-container">
             {codeBlocks.map((block, idx) => {
-              const match = block.match(/```(\w+)?\s*([^`]+)```/);
-              const language = match[1] || 'text';
-              const code = match[2].trim();
-              const blockId = `${message.id}_md_${idx}`;
+              const blockId = `${message.id}_${idx}`;
               const expanded = expandedBlocks[blockId] !== false;
               return (
                 <div key={blockId} className="modern-code-block-wrapper">
                   <div className="modern-code-block-header" onClick={() => toggleBlock(blockId)}>
-                    <span className="modern-code-block-title">{language}</span>
+                    <span className="modern-code-block-title">{block.language}</span>
                     <button
                       className="modern-code-block-toggle"
-                      title={expanded ? 'Einklappen' : 'Ausklappen'}
+                      title="Toggle"
                       tabIndex={-1}
                       onClick={e => { e.stopPropagation(); toggleBlock(blockId); }}
                     >
@@ -472,14 +332,14 @@ function ChatComponent({ eventBus, activePort, attachedPrompts = [] }) {
                       className="modern-code-block-copy"
                       title="Copy code"
                       tabIndex={-1}
-                      onClick={e => { e.stopPropagation(); handleCopyClick(code); }}
+                      onClick={e => { e.stopPropagation(); handleCopyClick(block.code); }}
                     >
                       📋
                     </button>
                   </div>
                   {expanded && (
-                    <pre className={`modern-code-block code-block ${language}`}>
-                      <code>{code}</code>
+                    <pre className={`modern-code-block code-block ${block.language}`}>
+                      <code>{block.code}</code>
                     </pre>
                   )}
                 </div>
@@ -487,18 +347,19 @@ function ChatComponent({ eventBus, activePort, attachedPrompts = [] }) {
             })}
           </div>
         );
+      } else {
+        bubbleContent = <div className="message-bubble">{escapeHtml(content)}</div>;
       }
     } else {
-      bubbleContent = <div className="message-bubble">{escapeHtml(content)}</div>;
+      // Regular text content
+      bubbleContent = (
+        <div className="message-bubble" dangerouslySetInnerHTML={{ __html: window.marked ? window.marked.parse(content) : escapeHtml(content) }} />
+      );
     }
     
     return (
-      <div className={`message ${isUser ? 'user' : 'ai'}`} key={message.id || index} data-index={index}>
-        {isUser && !isCode && !isQuality && <div className="message-avatar">U</div>}
-        {isAI && !isQuality && <div className="message-avatar">AI</div>}
-        {isUser && isCode && (
-          <div className="message-avatar">U</div>
-        )}
+      <div className={`message ${isUser ? 'user' : 'ai'}`} key={`${message.id || 'msg'}_${index}_${message.timestamp || Date.now()}`} data-index={index}>
+        <div className="message-avatar">{isUser ? 'U' : 'AI'}</div>
         {bubbleContent}
       </div>
     );
@@ -507,7 +368,7 @@ function ChatComponent({ eventBus, activePort, attachedPrompts = [] }) {
   return (
     <div ref={containerRef} className="chat-container">
       <div className="messages-container" id="messages" onScroll={handleScroll}>
-        {messages.map(renderMessage)}
+        {messages.map(renderMessage).filter(Boolean)}
         {isTyping && (
           <div className="typing-indicator show">
             <div className="message-avatar">AI</div>

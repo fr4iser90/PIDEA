@@ -24,8 +24,8 @@ class IDETypes {
       chatSelectors: {
         input: '.aislash-editor-input[contenteditable="true"]',
         inputContainer: '.aislash-editor-container',
-        userMessages: 'div[data-message-index]',
-        aiMessages: 'div[data-message-index]',
+        userMessages: 'div.aislash-editor-input-readonly[contenteditable="false"][data-lexical-editor="true"]',
+        aiMessages: 'span.anysphere-markdown-container-root',
         messagesContainer: 'div[style*="display: flex; flex-direction: column"]',
         chatContainer: '.aislash-container',
         isActive: '.aislash-container',
