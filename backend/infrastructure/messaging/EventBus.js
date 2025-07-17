@@ -1,10 +1,10 @@
-const Logger = require('@logging/Logger');
-const logger = new Logger('Logger');
+const ServiceLogger = require('@logging/ServiceLogger');
 
 class EventBus {
   constructor() {
     this.handlers = new Map();
     this.middleware = [];
+    this.logger = new ServiceLogger('EventBus');
   }
 
   // Subscribe to events
@@ -33,7 +33,7 @@ class EventBus {
 
   // Publish events
   async publish(eventName, eventData) {
-          logger.info(`Publishing event: ${eventName}`);
+    this.logger.info(`Publishing event: ${eventName}`);
     
     // Apply middleware
     let processedEventData = eventData;
