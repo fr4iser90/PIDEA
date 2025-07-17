@@ -146,12 +146,22 @@ function ChatComponent({ eventBus, activePort, attachedPrompts = [] }) {
     // logger.info('==== FAILED PROMPTS ====', failedPrompts);
     // logger.info('==== FINAL MESSAGE ====', finalMessage);
     // === DEBUG LOGS END ===
+    
+    // Enhanced message type detection
+    const messageType = detectMessageType(finalMessage);
+    
     const newMessage = normalizeMessage({
       id: Date.now(),
       content: finalMessage,
       sender: 'user',
       timestamp: new Date().toISOString(),
-      type: finalMessage.includes('```') ? 'code' : 'text'
+      type: messageType,
+      metadata: {
+        hasCodeBlocks: finalMessage.includes('```'),
+        hasInlineCode: /`[^`]+`/.test(finalMessage),
+        promptCount: promptContents.length,
+        characterCount: finalMessage.length
+      }
     });
     setMessages(prevMessages => [...prevMessages, newMessage]);
     setInputValue('');
@@ -175,6 +185,22 @@ function ChatComponent({ eventBus, activePort, attachedPrompts = [] }) {
       if (!result.success) {
         throw new Error(result.error || 'Failed to send message');
       }
+      
+      // Add quality indicators if response contains code blocks
+      if (result.codeBlocks && result.codeBlocks.length > 0) {
+        const qualityMessage = normalizeMessage({
+          id: Date.now() + 3,
+          content: `Code blocks detected: ${result.codeBlocks.length} blocks with ${result.codeBlocks.reduce((acc, block) => acc + block.confidence, 0) / result.codeBlocks.length * 100}% average confidence`,
+          sender: 'system',
+          timestamp: new Date().toISOString(),
+          type: 'quality',
+          metadata: {
+            codeBlocks: result.codeBlocks,
+            averageConfidence: result.codeBlocks.reduce((acc, block) => acc + block.confidence, 0) / result.codeBlocks.length
+          }
+        });
+        setMessages(prevMessages => [...prevMessages, qualityMessage]);
+      }
     } catch (error) {
       setError('❌ ' + error.message);
       const errorMessage = normalizeMessage({
@@ -186,6 +212,46 @@ function ChatComponent({ eventBus, activePort, attachedPrompts = [] }) {
       });
       setMessages(prevMessages => [...prevMessages, errorMessage]);
     }
+  };
+
+  // Enhanced message type detection
+  const detectMessageType = (content) => {
+    if (content.includes('```')) return 'code';
+    if (/`[^`]+`/.test(content)) return 'inline_code';
+    if (/^[ \t]*(function|def|class|const|let|var|if|for|while|import|require)/m.test(content)) return 'code_snippet';
+    if (/<[^>]+>/.test(content)) return 'html';
+    if (/^[ \t]*\w+\s*\{/.test(content)) return 'css';
+    return 'text';
+  };
+
+  // Quality indicator component
+  const QualityIndicator = ({ message }) => {
+    if (message.type !== 'quality' || !message.metadata?.codeBlocks) return null;
+    
+    const { codeBlocks, averageConfidence } = message.metadata;
+    const confidenceColor = averageConfidence > 0.8 ? 'green' : averageConfidence > 0.6 ? 'orange' : 'red';
+    
+    return (
+      <div className="quality-indicator" style={{ 
+        padding: '8px', 
+        margin: '4px 0', 
+        borderRadius: '4px', 
+        backgroundColor: '#f5f5f5',
+        border: `2px solid ${confidenceColor}` 
+      }}>
+        <div style={{ fontSize: '12px', color: confidenceColor, fontWeight: 'bold' }}>
+          📊 Code Quality: {Math.round(averageConfidence * 100)}% Confidence
+        </div>
+        <div style={{ fontSize: '11px', color: '#666' }}>
+          {codeBlocks.length} code block{codeBlocks.length !== 1 ? 's' : ''} detected
+        </div>
+        {codeBlocks.map((block, index) => (
+          <div key={index} style={{ fontSize: '10px', marginTop: '2px' }}>
+            • {block.language} ({Math.round(block.confidence * 100)}% confidence)
+          </div>
+        ))}
+      </div>
+    );
   };
 
   const handleInputChange = (e) => setInputValue(e.target.value);
@@ -249,9 +315,13 @@ function ChatComponent({ eventBus, activePort, attachedPrompts = [] }) {
     const isUser = message.sender === 'user';
     const isAI = message.sender === 'ai';
     const isCode = message.type === 'code';
+    const isQuality = message.type === 'quality';
     let content = message.content || message.text;
     let bubbleContent;
-    if (isAI && window.marked) {
+    
+    if (isQuality) {
+      bubbleContent = <QualityIndicator message={message} />;
+    } else if (isAI && window.marked) {
       bubbleContent = (
         <div className="message-bubble" dangerouslySetInnerHTML={{ __html: window.marked.parse(content) }} />
       );
@@ -265,10 +335,11 @@ function ChatComponent({ eventBus, activePort, attachedPrompts = [] }) {
     } else {
       bubbleContent = <div className="message-bubble">{escapeHtml(content)}</div>;
     }
+    
     return (
       <div className={`message ${isUser ? 'user' : 'ai'}`} key={message.id || index} data-index={index}>
-        {isUser && !isCode && <div className="message-avatar">U</div>}
-        {isAI && <div className="message-avatar">AI</div>}
+        {isUser && !isCode && !isQuality && <div className="message-avatar">U</div>}
+        {isAI && !isQuality && <div className="message-avatar">AI</div>}
         {isUser && isCode && (
           <div className="message-avatar">U</div>
         )}

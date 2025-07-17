@@ -2,6 +2,9 @@ const TodoParser = require('./TodoParser');
 const ConfirmationSystem = require('./ConfirmationSystem');
 const FallbackDetection = require('./FallbackDetection');
 const TaskSequencer = require('./TaskSequencer');
+const ResponseQualityEngine = require('../chat/ResponseQualityEngine');
+const ContextAwareValidator = require('./ContextAwareValidator');
+const SmartCompletionDetector = require('./SmartCompletionDetector');
 const GitWorkflowManager = require('../../workflows/categories/git/GitWorkflowManager');
 const GitWorkflowContext = require('../../workflows/categories/git/GitWorkflowContext');
 const { v4: uuidv4 } = require('uuid');
@@ -24,6 +27,9 @@ class AutoFinishSystem {
     this.confirmationSystem = new ConfirmationSystem(cursorIDE);
     this.fallbackDetection = new FallbackDetection(browserManager, ideManager);
     this.taskSequencer = new TaskSequencer();
+    this.responseQualityEngine = new ResponseQualityEngine();
+    this.contextAwareValidator = new ContextAwareValidator();
+    this.smartCompletionDetector = new SmartCompletionDetector();
     
     // Session management
     this.activeSessions = new Map(); // sessionId -> session data
@@ -80,6 +86,7 @@ class AutoFinishSystem {
       await this.confirmationSystem.initialize();
       await this.fallbackDetection.initialize();
       await this.taskSequencer.initialize();
+      // ResponseQualityEngine, ContextAwareValidator, and SmartCompletionDetector don't need initialization
       
       // Start session cleanup timer
       this.startSessionCleanup();
@@ -414,20 +421,91 @@ Please proceed with the implementation and let me know when you're finished.`;
   }
 
   /**
-   * Validate task completion
+   * Validate task completion with enhanced quality assessment
    * @param {Object} task - Task object
    * @param {string} aiResponse - AI response
    * @returns {Promise<Object>} Validation result
    */
   async validateTaskCompletion(task, aiResponse) {
     try {
-      // Basic validation - check for completion keywords
+      // Enhanced validation using ResponseQualityEngine
+      const context = {
+        userQuestion: task.description,
+        taskType: task.type,
+        taskId: task.id,
+        previousMessages: task.metadata?.previousMessages || []
+      };
+      
+      const qualityAssessment = this.responseQualityEngine.assessResponse(aiResponse, context);
+      
+      // Context-aware validation using ContextAwareValidator
+      const conversationHistory = task.metadata?.conversationHistory || [];
+      const contextValidation = await this.contextAwareValidator.validateResponse(
+        aiResponse, 
+        task.description, 
+        conversationHistory
+      );
+      
+      // Smart completion detection
+      const completionDetection = await this.smartCompletionDetector.detectCompletion(aiResponse, {
+        userIntent: task.description,
+        qualityAssessment: qualityAssessment,
+        contextValidation: contextValidation,
+        hasCode: aiResponse.includes('```'),
+        hasErrors: qualityAssessment.errorDetection.hasErrors
+      });
+      
+      // Enhanced completion determination with smart detection
+      const isCompleted = qualityAssessment.completeness.score > 0.7 && 
+                         qualityAssessment.overallScore > 0.6 &&
+                         !qualityAssessment.errorDetection.hasErrors &&
+                         contextValidation.intentMatch.score > 0.5 &&
+                         contextValidation.overallScore > 0.6 &&
+                         completionDetection.isComplete &&
+                         completionDetection.confidence >= 0.6;
+      
+      // Enhanced confidence calculation including smart completion
+      const confidence = Math.min(1.0, 
+        qualityAssessment.overallScore * 0.3 + 
+        qualityAssessment.completeness.score * 0.25 +
+        contextValidation.overallScore * 0.25 +
+        completionDetection.confidence * 0.2
+      );
+      
+      return {
+        isValid: isCompleted,
+        hasCompletionKeyword: qualityAssessment.completeness.factors.includes('has_completion_keyword'),
+        hasErrorKeyword: qualityAssessment.errorDetection.hasErrors,
+        confidence: confidence,
+        qualityAssessment: qualityAssessment,
+        contextValidation: contextValidation,
+        completionDetection: completionDetection,
+        suggestions: [
+          ...qualityAssessment.suggestions,
+          ...contextValidation.intentMatch.factors.map(f => f.details),
+          ...contextValidation.contextRelevance.factors.map(f => f.details),
+          ...completionDetection.suggestions
+        ].filter(Boolean),
+        overallScore: (qualityAssessment.overallScore + contextValidation.overallScore + completionDetection.confidence) / 3,
+        completenessScore: qualityAssessment.completeness.score,
+        codeQualityScore: qualityAssessment.codeQuality.score,
+        relevanceScore: qualityAssessment.relevance.score,
+        intentMatchScore: contextValidation.intentMatch.score,
+        contextRelevanceScore: contextValidation.contextRelevance.score,
+        detectedIntent: contextValidation.intentMatch.detectedIntent,
+        completionType: completionDetection.completionType,
+        completionQuality: completionDetection.quality
+      };
+      
+    } catch (error) {
+      this.logger.error(`Task validation failed:`, error.message);
+      
+      // Fallback to basic validation
       const completionKeywords = ['fertig', 'done', 'complete', 'finished', 'erledigt', 'abgeschlossen'];
       const hasCompletionKeyword = completionKeywords.some(keyword => 
         aiResponse.toLowerCase().includes(keyword)
       );
       
-      // Check for error indicators
       const errorKeywords = ['error', 'failed', 'cannot', 'unable', 'problem', 'issue'];
       const hasErrorKeyword = errorKeywords.some(keyword => 
         aiResponse.toLowerCase().includes(keyword)
@@ -437,15 +515,9 @@ Please proceed with the implementation and let me know when you're finished.`;
         isValid: hasCompletionKeyword && !hasErrorKeyword,
         hasCompletionKeyword,
         hasErrorKeyword,
-        confidence: hasCompletionKeyword ? 0.9 : 0.3
-      };
-      
-    } catch (error) {
-      this.logger.error(`Task validation failed:`, error.message);
-      return {
-        isValid: false,
+        confidence: hasCompletionKeyword ? 0.9 : 0.3,
         error: error.message,
-        confidence: 0.0
+        fallback: true
       };
     }
   }

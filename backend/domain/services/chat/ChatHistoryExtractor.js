@@ -12,6 +12,15 @@ class ChatHistoryExtractor {
     if (!this.selectors) {
       logger.warn(`No chat selectors found for IDE type: ${ideType}`);
     }
+
+    // Context tracking properties
+    this.conversationContext = {
+      topics: [],
+      intentHistory: [],
+      codeReferences: [],
+      lastUserIntent: null,
+      conversationFlow: []
+    };
   }
 
   async extractChatHistory() {
@@ -39,6 +48,9 @@ class ChatHistoryExtractor {
 
       // Use IDE-specific extraction logic
       const allMessages = await this.extractMessagesByIDEType(page);
+
+      // Update conversation context
+      this.updateConversationContext(allMessages);
 
       return allMessages;
     } catch (error) {
@@ -383,6 +395,194 @@ class ChatHistoryExtractor {
    */
   getSelectors() {
     return this.selectors;
+  }
+
+  // Context tracking methods
+  updateConversationContext(messages) {
+    try {
+      // Extract topics from messages
+      this.extractTopics(messages);
+      
+      // Track intent history
+      this.trackIntentHistory(messages);
+      
+      // Extract code references
+      this.extractCodeReferences(messages);
+      
+      // Update conversation flow
+      this.updateConversationFlow(messages);
+      
+      logger.info('Conversation context updated:', {
+        topicsCount: this.conversationContext.topics.length,
+        intentHistoryCount: this.conversationContext.intentHistory.length,
+        codeReferencesCount: this.conversationContext.codeReferences.length
+      });
+    } catch (error) {
+      logger.error('Error updating conversation context:', error);
+    }
+  }
+
+  extractTopics(messages) {
+    const topics = new Set();
+    
+    messages.forEach(message => {
+      if (message.sender === 'user') {
+        // Extract potential topics from user messages
+        const words = message.content.toLowerCase().split(/\s+/);
+        const topicKeywords = ['function', 'class', 'component', 'api', 'database', 'test', 'error', 'bug', 'feature', 'refactor'];
+        
+        topicKeywords.forEach(keyword => {
+          if (words.includes(keyword)) {
+            topics.add(keyword);
+          }
+        });
+      }
+    });
+    
+    this.conversationContext.topics = Array.from(topics);
+  }
+
+  trackIntentHistory(messages) {
+    const userMessages = messages.filter(msg => msg.sender === 'user');
+    
+    userMessages.forEach(message => {
+      const intent = this.detectMessageIntent(message.content);
+      if (intent.type !== 'unknown') {
+        this.conversationContext.intentHistory.push({
+          message: message.content,
+          intent: intent,
+          timestamp: Date.now()
+        });
+        this.conversationContext.lastUserIntent = intent;
+      }
+    });
+  }
+
+  detectMessageIntent(message) {
+    const messageLower = message.toLowerCase();
+    
+    // Intent detection patterns
+    const intentPatterns = {
+      codeReview: {
+        keywords: ['review', 'check', 'examine', 'analyze', 'inspect', 'audit'],
+        patterns: [/review.*code/i, /check.*code/i, /analyze.*code/i]
+      },
+      codeGeneration: {
+        keywords: ['create', 'generate', 'write', 'build', 'develop', 'implement'],
+        patterns: [/create.*function/i, /generate.*code/i, /write.*class/i]
+      },
+      debugging: {
+        keywords: ['fix', 'debug', 'solve', 'resolve', 'troubleshoot', 'error'],
+        patterns: [/fix.*error/i, /debug.*issue/i, /solve.*problem/i]
+      },
+      explanation: {
+        keywords: ['explain', 'describe', 'clarify', 'understand', 'how', 'why'],
+        patterns: [/explain.*code/i, /describe.*function/i, /how.*works/i]
+      },
+      refactoring: {
+        keywords: ['refactor', 'improve', 'optimize', 'clean', 'restructure', 'simplify'],
+        patterns: [/refactor.*code/i, /improve.*performance/i, /optimize.*function/i]
+      }
+    };
+
+    for (const [intentType, patterns] of Object.entries(intentPatterns)) {
+      let score = 0;
+      
+      // Check keywords
+      for (const keyword of patterns.keywords) {
+        if (messageLower.includes(keyword)) {
+          score += 0.3;
+        }
+      }
+      
+      // Check patterns
+      for (const pattern of patterns.patterns) {
+        if (pattern.test(message)) {
+          score += 0.5;
+        }
+      }
+      
+      if (score > 0.3) {
+        return {
+          type: intentType,
+          confidence: Math.min(score, 1.0),
+          keywords: patterns.keywords.filter(k => messageLower.includes(k))
+        };
+      }
+    }
+    
+    return { type: 'unknown', confidence: 0, keywords: [] };
+  }
+
+  extractCodeReferences(messages) {
+    const codeReferences = [];
+    
+    messages.forEach(message => {
+      // Look for code blocks
+      const codeBlockMatches = message.content.match(/```[\s\S]*?```/g);
+      if (codeBlockMatches) {
+        codeBlockMatches.forEach(block => {
+          codeReferences.push({
+            type: 'code_block',
+            content: block,
+            sender: message.sender,
+            timestamp: Date.now()
+          });
+        });
+      }
+      
+      // Look for inline code
+      const inlineCodeMatches = message.content.match(/`[^`]+`/g);
+      if (inlineCodeMatches) {
+        inlineCodeMatches.forEach(code => {
+          codeReferences.push({
+            type: 'inline_code',
+            content: code,
+            sender: message.sender,
+            timestamp: Date.now()
+          });
+        });
+      }
+    });
+    
+    this.conversationContext.codeReferences = codeReferences;
+  }
+
+  updateConversationFlow(messages) {
+    const flow = [];
+    
+    messages.forEach((message, index) => {
+      flow.push({
+        index: index,
+        sender: message.sender,
+        type: message.type,
+        timestamp: Date.now(),
+        hasCode: message.content.includes('```') || message.content.includes('`'),
+        intent: message.sender === 'user' ? this.detectMessageIntent(message.content) : null
+      });
+    });
+    
+    this.conversationContext.conversationFlow = flow;
+  }
+
+  getConversationContext() {
+    return this.conversationContext;
+  }
+
+  getLastUserIntent() {
+    return this.conversationContext.lastUserIntent;
+  }
+
+  getRecentTopics() {
+    return this.conversationContext.topics.slice(-5); // Last 5 topics
+  }
+
+  getCodeReferences() {
+    return this.conversationContext.codeReferences;
+  }
+
+  getConversationFlow() {
+    return this.conversationContext.conversationFlow;
   }
 }
 

@@ -1,4 +1,6 @@
 const ServiceLogger = require('@logging/ServiceLogger');
+const ResponseQualityEngine = require('../chat/ResponseQualityEngine');
+const ContextAwareValidator = require('./ContextAwareValidator');
 /**
  * ConfirmationSystem - Service for handling AI confirmation loops
  * Analyzes AI responses and manages confirmation workflows
@@ -7,6 +9,8 @@ const ServiceLogger = require('@logging/ServiceLogger');
 class ConfirmationSystem {
   constructor(cursorIDE) {
     this.cursorIDE = cursorIDE;
+    this.responseQualityEngine = new ResponseQualityEngine();
+    this.contextAwareValidator = new ContextAwareValidator();
     
     // Completion keywords in multiple languages
     this.completionKeywords = {
@@ -136,61 +140,131 @@ class ConfirmationSystem {
   }
 
   /**
-   * Validate task completion from AI response
+   * Validate task completion from AI response with enhanced quality assessment
    * @param {string} response - AI response
-   * @returns {Object} Validation result
+   * @param {Object} context - Context information
+   * @returns {Promise<Object>} Validation result
    */
-  validateTaskCompletion(response) {
+  async validateTaskCompletion(response, context = {}) {
     if (!response || typeof response !== 'string') {
       return { isValid: false, confidence: 0, status: 'unknown', testResults: null };
     }
 
-    const lowerResponse = response.toLowerCase();
-    
-    // Parse structured status response
-    const statusMatch = lowerResponse.match(/(completed|partially completed|need human)/);
-    const passedMatch = lowerResponse.match(/\[passed\]\s*(\d+)%/i);
-    const failedMatch = lowerResponse.match(/\[failed\]\s*(\d+)%/i);
-    
-    let status = 'unknown';
-    let testResults = null;
-    let isValid = false;
-    let confidence = 0;
-    
-    // Extract status
-    if (statusMatch) {
-      status = statusMatch[1];
+    try {
+      // Enhanced validation using ResponseQualityEngine
+      const qualityAssessment = this.responseQualityEngine.assessResponse(response, context);
       
-      // Determine if task is completed
-      if (status === 'completed') {
-        isValid = true;
-        confidence = 0.9;
-      } else if (status === 'partially completed') {
-        isValid = false;
-        confidence = 0.7;
-      } else if (status === 'need human') {
-        isValid = false;
-        confidence = 0.8;
+      // Context-aware validation using ContextAwareValidator
+      const userIntent = context.userQuestion || context.taskDescription || '';
+      const conversationHistory = context.conversationHistory || [];
+      const contextValidation = await this.contextAwareValidator.validateResponse(
+        response, 
+        userIntent, 
+        conversationHistory
+      );
+      
+      const lowerResponse = response.toLowerCase();
+      
+      // Parse structured status response
+      const statusMatch = lowerResponse.match(/(completed|partially completed|need human)/);
+      const passedMatch = lowerResponse.match(/\[passed\]\s*(\d+)%/i);
+      const failedMatch = lowerResponse.match(/\[failed\]\s*(\d+)%/i);
+      
+      let status = 'unknown';
+      let testResults = null;
+      let isValid = false;
+      let confidence = 0;
+      
+      // Extract status with enhanced context awareness
+      if (statusMatch) {
+        status = statusMatch[1];
+        
+        // Determine if task is completed based on quality assessment and context
+        if (status === 'completed') {
+          isValid = qualityAssessment.completeness.score > 0.7 && 
+                   qualityAssessment.overallScore > 0.6 &&
+                   contextValidation.intentMatch.score > 0.5 &&
+                   contextValidation.overallScore > 0.6;
+          confidence = Math.min(0.95, 
+            qualityAssessment.overallScore * 0.4 + 
+            qualityAssessment.completeness.score * 0.3 +
+            contextValidation.overallScore * 0.3
+          );
+        } else if (status === 'partially completed') {
+          isValid = false;
+          confidence = (qualityAssessment.overallScore + contextValidation.overallScore) / 2 * 0.7;
+        } else if (status === 'need human') {
+          isValid = false;
+          confidence = (qualityAssessment.overallScore + contextValidation.overallScore) / 2 * 0.8;
+        }
       }
-    }
-    
-    // Extract test results
-    if (passedMatch) {
-      testResults = {
-        status: 'PASSED',
-        percentage: parseInt(passedMatch[1]),
-        raw: passedMatch[0]
+      
+      // Extract test results
+      if (passedMatch) {
+        testResults = {
+          status: 'PASSED',
+          percentage: parseInt(passedMatch[1]),
+          raw: passedMatch[0]
+        };
+      } else if (failedMatch) {
+        testResults = {
+          status: 'FAILED',
+          percentage: parseInt(failedMatch[1]),
+          raw: failedMatch[0]
+        };
+      }
+      
+      // Enhanced fallback validation using quality assessment and context
+      if (status === 'unknown') {
+        const hasCompletionKeyword = qualityAssessment.completeness.factors.includes('has_completion_keyword');
+        const hasErrorKeyword = qualityAssessment.errorDetection.hasErrors;
+        const intentMatch = contextValidation.intentMatch.score > 0.5;
+        
+        if (hasCompletionKeyword && !hasErrorKeyword && intentMatch) {
+          status = 'completed';
+          isValid = qualityAssessment.completeness.score > 0.6;
+          confidence = (qualityAssessment.overallScore + contextValidation.overallScore) / 2 * 0.7;
+        } else if (hasErrorKeyword) {
+          status = 'need human';
+          isValid = false;
+          confidence = (qualityAssessment.overallScore + contextValidation.overallScore) / 2 * 0.6;
+        } else {
+          status = 'partially completed';
+          isValid = false;
+          confidence = (qualityAssessment.overallScore + contextValidation.overallScore) / 2 * 0.5;
+        }
+      }
+      
+      this.logger.info(`Enhanced context-aware validation: status=${status}, isValid=${isValid}, confidence=${confidence}, overallScore=${qualityAssessment.overallScore}, contextScore=${contextValidation.overallScore}`);
+      
+      return {
+        isValid,
+        confidence,
+        status,
+        testResults,
+        rawResponse: response,
+        qualityAssessment: qualityAssessment,
+        contextValidation: contextValidation,
+        suggestions: [
+          ...qualityAssessment.suggestions,
+          ...contextValidation.intentMatch.factors.map(f => f.details),
+          ...contextValidation.contextRelevance.factors.map(f => f.details)
+        ].filter(Boolean),
+        overallScore: (qualityAssessment.overallScore + contextValidation.overallScore) / 2,
+        completenessScore: qualityAssessment.completeness.score,
+        codeQualityScore: qualityAssessment.codeQuality.score,
+        relevanceScore: qualityAssessment.relevance.score,
+        intentMatchScore: contextValidation.intentMatch.score,
+        contextRelevanceScore: contextValidation.contextRelevance.score,
+        detectedIntent: contextValidation.intentMatch.detectedIntent
       };
-    } else if (failedMatch) {
-      testResults = {
-        status: 'FAILED',
-        percentage: parseInt(failedMatch[1]),
-        raw: failedMatch[0]
-      };
-    }
-    
-    // Fallback to old keyword-based validation if no structured response
-    if (status === 'unknown') {
+      
+    } catch (error) {
+      this.logger.error('Enhanced validation failed, falling back to basic validation:', error.message);
+      
+      // Fallback to basic validation
+      const lowerResponse = response.toLowerCase();
+      
       // Check for completion keywords
       const completionKeywords = [
         'completed', 'done', 'finished', 'ready', 'complete',
@@ -199,25 +273,29 @@ class ConfirmationSystem {
         'fini', 'terminé', 'completé'
       ];
       
+      let status = 'unknown';
+      let isValid = false;
+      let confidence = 0.3;
+      
       for (const keyword of completionKeywords) {
         if (lowerResponse.includes(keyword)) {
           status = 'completed';
           isValid = true;
-          confidence = 0.6; // Lower confidence for keyword-based detection
+          confidence = 0.6;
           break;
         }
       }
+      
+      return {
+        isValid,
+        confidence,
+        status,
+        testResults: null,
+        rawResponse: response,
+        fallback: true,
+        error: error.message
+      };
     }
-    
-    this.logger.info(`Parsed response: status=${status}, isValid=${isValid}, confidence=${confidence}`);
-    
-    return {
-      isValid,
-      confidence,
-      status,
-      testResults,
-      rawResponse: response
-    };
   }
 
   /**

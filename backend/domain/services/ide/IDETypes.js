@@ -29,7 +29,30 @@ class IDETypes {
         messagesContainer: '.chat-messages-container',
         chatContainer: '.aislash-container',
         isActive: '.aislash-container',
-        isInputReady: '.aislash-editor-input[contenteditable="true"]'
+        isInputReady: '.aislash-editor-input[contenteditable="true"]',
+        
+        // Enhanced code block detection selectors
+        codeBlocks: '.composer-code-block-container',
+        codeBlockContent: '.composer-code-block-content',
+        codeBlockHeader: '.composer-code-block-header',
+        codeBlockFilename: '.composer-code-block-filename',
+        codeBlockLanguage: '.composer-code-block-file-info .javascript-lang-file-icon',
+        monacoEditor: '.monaco-editor',
+        codeLines: '.view-lines .view-line',
+        syntaxTokens: '.mtk1, .mtk4, .mtk14, .mtk18',
+        codeBlockApplyButton: '.anysphere-text-button:has-text("Apply")',
+        
+        // Inline code detection
+        inlineCode: 'code:not(pre code)',
+        codeSpans: 'span[class*="code"]',
+        
+        // Syntax highlighting classes
+        syntaxClasses: {
+          keyword: '.mtk1',
+          string: '.mtk4',
+          comment: '.mtk14',
+          function: '.mtk18'
+        }
       }
     },
     [IDETypes.VSCODE]: {
