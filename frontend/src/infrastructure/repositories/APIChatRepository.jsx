@@ -19,7 +19,7 @@ const getProjectIdFromWorkspace = (workspacePath) => {
 
 // Central API Configuration
 const API_CONFIG = {
-  baseURL: 'http://localhost:3000',
+  baseURL: import.meta.env.VITE_BACKEND_URL,
   endpoints: {
     chat: {
       send: '/api/chat',
@@ -143,6 +143,8 @@ export const apiCall = async (endpoint, options = {}, projectId = null) => {
   const { getAuthHeaders } = useAuthStore.getState();
   const authHeaders = getAuthHeaders();
   
+  logger.info('🔍 [APIChatRepository] Auth headers:', authHeaders);
+  
   // Add ETag headers for GET requests
   const etagOptions = etagManager.addETagHeaders(options, endpoint, projectId);
   
@@ -155,6 +157,7 @@ export const apiCall = async (endpoint, options = {}, projectId = null) => {
     ...etagOptions
   };
 
+  logger.info('🔍 [APIChatRepository] Final headers:', config.headers);
   logger.info('🔍 [APIChatRepository] Request config:', {
     method: config.method || 'GET',
     headers: config.headers,

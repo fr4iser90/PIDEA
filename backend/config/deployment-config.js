@@ -4,6 +4,7 @@
  */
 
 const path = require('path');
+const centralizedConfig = require('./centralized-config');
 
 class DeploymentConfig {
   constructor() {
@@ -23,68 +24,27 @@ class DeploymentConfig {
   getDevelopmentConfig() {
     return {
       // IDE API Configuration
-      ide: {
-        portRange: {
-          cursor: { start: 9222, end: 9231 },
-          vscode: { start: 9232, end: 9241 },
-          windsurf: { start: 9242, end: 9251 }
-        },
-        healthCheckInterval: 30000,
-        maxConcurrentIDEs: 5,
-        autoStart: false,
-        logLevel: 'debug'
-      },
+      ide: centralizedConfig.ideConfig,
 
       // Frontend Configuration
       frontend: {
-        port: 4040,
+        port: centralizedConfig.frontendPort,
         hotReload: true,
         sourceMaps: true,
         devTools: true
       },
 
       // Database Configuration
-      database: {
-        type: 'sqlite',
-        path: path.join(__dirname, '../database/pidea-dev.db'),
-        logging: true
-      },
+      database: centralizedConfig.databaseConfig,
 
       // WebSocket Configuration
-      websocket: {
-        port: 8090,
-        cors: {
-          origin: ['http://localhost:4040', 'http://127.0.0.1:4040'],
-          credentials: true
-        }
-      },
+      websocket: centralizedConfig.websocketConfig,
 
       // Security Configuration
-      security: {
-        jwtSecret: 'dev-secret-key-change-in-production',
-        cors: {
-          origin: ['http://localhost:4040', 'http://127.0.0.1:4040'],
-          credentials: true
-        },
-        rateLimit: {
-          windowMs: 15 * 60 * 1000, // 15 minutes
-          max: 1000 // limit each IP to 1000 requests per windowMs
-        }
-      },
+      security: centralizedConfig.securityConfig,
 
       // Monitoring Configuration
-      monitoring: {
-        enabled: true,
-        metrics: {
-          enabled: true,
-          port: 9090
-        },
-        healthChecks: {
-          enabled: true,
-          interval: 30000,
-          timeout: 5000
-        }
-      },
+      monitoring: centralizedConfig.monitoringConfig,
 
       // Git Workflow Configuration
       gitWorkflow: {
@@ -128,72 +88,27 @@ class DeploymentConfig {
   getStagingConfig() {
     return {
       // IDE API Configuration
-      ide: {
-        portRange: {
-          cursor: { start: 9222, end: 9231 },
-          vscode: { start: 9232, end: 9241 },
-          windsurf: { start: 9242, end: 9251 }
-        },
-        healthCheckInterval: 60000,
-        maxConcurrentIDEs: 10,
-        autoStart: false,
-        logLevel: 'info'
-      },
+      ide: centralizedConfig.ideConfig,
 
       // Frontend Configuration
       frontend: {
-        port: 4040,
+        port: centralizedConfig.frontendPort,
         hotReload: false,
         sourceMaps: false,
         devTools: false
       },
 
       // Database Configuration
-      database: {
-        type: 'postgresql',
-        host: process.env.DB_HOST || 'localhost',
-        port: process.env.DB_PORT || 5432,
-        database: process.env.DB_NAME || 'pidea_staging',
-        username: process.env.DB_USER || 'postgres',
-        password: process.env.DB_PASSWORD || 'postgres',
-        logging: false
-      },
+      database: centralizedConfig.databaseConfig,
 
       // WebSocket Configuration
-      websocket: {
-        port: 8090,
-        cors: {
-          origin: process.env.FRONTEND_URL || 'https://staging.pidea.com',
-          credentials: true
-        }
-      },
+      websocket: centralizedConfig.websocketConfig,
 
       // Security Configuration
-      security: {
-        jwtSecret: process.env.JWT_SECRET || 'staging-secret-key',
-        cors: {
-          origin: process.env.FRONTEND_URL || 'https://staging.pidea.com',
-          credentials: true
-        },
-        rateLimit: {
-          windowMs: 15 * 60 * 1000,
-          max: 500
-        }
-      },
+      security: centralizedConfig.securityConfig,
 
       // Monitoring Configuration
-      monitoring: {
-        enabled: true,
-        metrics: {
-          enabled: true,
-          port: 9090
-        },
-        healthChecks: {
-          enabled: true,
-          interval: 60000,
-          timeout: 10000
-        }
-      },
+      monitoring: centralizedConfig.monitoringConfig,
 
       // Git Workflow Configuration
       gitWorkflow: {
@@ -237,73 +152,27 @@ class DeploymentConfig {
   getProductionConfig() {
     return {
       // IDE API Configuration
-      ide: {
-        portRange: {
-          cursor: { start: 9222, end: 9231 },
-          vscode: { start: 9232, end: 9241 },
-          windsurf: { start: 9242, end: 9251 }
-        },
-        healthCheckInterval: 120000,
-        maxConcurrentIDEs: 20,
-        autoStart: false,
-        logLevel: 'warn'
-      },
+      ide: centralizedConfig.ideConfig,
 
       // Frontend Configuration
       frontend: {
-        port: 4040,
+        port: centralizedConfig.frontendPort,
         hotReload: false,
         sourceMaps: false,
         devTools: false
       },
 
       // Database Configuration
-      database: {
-        type: 'postgresql',
-        host: process.env.DB_HOST,
-        port: process.env.DB_PORT || 5432,
-        database: process.env.DB_NAME,
-        username: process.env.DB_USER,
-        password: process.env.DB_PASSWORD,
-        logging: false,
-        ssl: process.env.DB_SSL === 'true' ? { rejectUnauthorized: false } : false
-      },
+      database: centralizedConfig.databaseConfig,
 
       // WebSocket Configuration
-      websocket: {
-        port: 8090,
-        cors: {
-          origin: process.env.FRONTEND_URL,
-          credentials: true
-        }
-      },
+      websocket: centralizedConfig.websocketConfig,
 
       // Security Configuration
-      security: {
-        jwtSecret: process.env.JWT_SECRET,
-        cors: {
-          origin: process.env.FRONTEND_URL,
-          credentials: true
-        },
-        rateLimit: {
-          windowMs: 15 * 60 * 1000,
-          max: 200
-        }
-      },
+      security: centralizedConfig.securityConfig,
 
       // Monitoring Configuration
-      monitoring: {
-        enabled: true,
-        metrics: {
-          enabled: true,
-          port: 9090
-        },
-        healthChecks: {
-          enabled: true,
-          interval: 120000,
-          timeout: 15000
-        }
-      },
+      monitoring: centralizedConfig.monitoringConfig,
 
       // Git Workflow Configuration
       gitWorkflow: {

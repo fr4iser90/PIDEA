@@ -66,7 +66,7 @@ const WebSocketManager = require('./presentation/websocket/WebSocketManager');
 class Application {
   constructor(config = {}) {
     this.config = {
-      port: config.port || 3000,
+      port: config.port,
       ...config
     };
     
@@ -175,15 +175,18 @@ class Application {
 
   async checkDefaultUser() {
     try {
-      const userRepository = this.databaseConnection.getRepository('User');
-      const defaultUser = await userRepository.findById('me');
+      const dbType = this.databaseConnection.getType();
+      const param = dbType === 'postgresql' ? '$1' : '?';
       
-      if (!defaultUser) {
+      const checkResult = await this.databaseConnection.query(
+        `SELECT id, email, username FROM users WHERE id = ${param}`,
+        ['me']
+      );
+      
+      if (!checkResult || checkResult.length === 0) {
         this.logger.error('❌ No default user found in database!');
         this.logger.error('📝 To create the default user, run:');
-        this.logger.error('   node setup.js');
-        this.logger.error('   or');
-        this.logger.error('   npm run setup:user');
+        this.logger.error('   node scripts/create-default-user.js');
         this.logger.error('');
         this.logger.error('🛑 Server cannot start without default user due to foreign key constraints.');
         process.exit(0);

@@ -4,28 +4,47 @@
 # Exit on error
 set -e
 
-echo "Starting Cursor Chat Agent Backend..."
+echo "🚀 Starting PIDEA Backend Entrypoint..."
 
-# Wait for database to be ready (if using external database)
-if [ -n "$DATABASE_URL" ]; then
-    echo "Waiting for database to be ready..."
-    # You can add database connection check here
-    # Example: node -e "require('./src/infrastructure/database/DatabaseConnection').waitForConnection()"
+# Debug: Show current directory and files
+echo "📁 Current directory: $(pwd)"
+echo "📄 Files in current directory:"
+ls -la
+
+# Debug: Check if script exists
+if [ -f "scripts/create-default-user.js" ]; then
+    echo "✅ create-default-user.js found"
+else
+    echo "❌ create-default-user.js NOT found"
+    echo "📄 Files in scripts directory:"
+    ls -la scripts/ || echo "scripts directory not found"
 fi
 
-# Run database migrations (if auto-migration is enabled)
-if [ "$AUTO_MIGRATE" = "true" ]; then
-    echo "Running database migrations..."
-    # node scripts/migrate.js
+# Default user anlegen und auf Erfolg warten
+echo "👤 Creating default user..."
+MAX_RETRIES=5
+RETRY_COUNT=0
+
+while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
+    echo "🔄 Attempt $((RETRY_COUNT + 1)) of $MAX_RETRIES"
+    
+    # Führe das Skript aus und speichere Exit-Code
+    if node scripts/create-default-user.js; then
+        echo "✅ Default user created successfully!"
+        break
+    else
+        echo "❌ Failed to create user, retrying in 5 seconds..."
+        RETRY_COUNT=$((RETRY_COUNT + 1))
+        sleep 5
+    fi
+done
+
+if [ $RETRY_COUNT -eq $MAX_RETRIES ]; then
+    echo "💥 Failed to create default user after $MAX_RETRIES attempts"
+    echo "💥 Server cannot start without default user"
+    exit 1
 fi
 
-# Create default admin user (if auto-setup is enabled)
-if [ "$AUTO_SETUP" = "true" ]; then
-    echo "Setting up default admin user..."
-    # node scripts/setup-admin.js
-fi
-
-echo "Starting Node.js server..."
-
-# Execute the original CMD (Node.js server)
-exec "$@" 
+# Backend starten
+echo "🚀 Starting backend server..."
+exec node server.js 

@@ -8,6 +8,9 @@
  */
 
 const path = require('path');
+const Logger = require('@logging/Logger');
+const logger = new Logger('IDE-Deployment-Config');
+const centralizedConfig = require('./centralized-config');
 
 // Environment detection
 const NODE_ENV = process.env.NODE_ENV || 'development';
@@ -19,11 +22,10 @@ const isDevelopment = NODE_ENV === 'development';
 const baseConfig = {
   // API Configuration
   api: {
-    port: parseInt(process.env.PORT) || 3000,
-    host: process.env.HOST || 'localhost',
-    baseUrl: process.env.API_BASE_URL || 'http://localhost:3000',
+    port: centralizedConfig.backendPort,
+    host: centralizedConfig.backendUrl?.split('://')[1]?.split(':')[0],
     cors: {
-      origin: process.env.CORS_ORIGIN || '*',
+      origin: centralizedConfig.frontendUrl,
       credentials: true,
       methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
       allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
@@ -42,7 +44,7 @@ const baseConfig = {
 
   // WebSocket Configuration
   websocket: {
-    port: parseInt(process.env.WS_PORT) || 3001,
+    port: centralizedConfig.websocketPort,
     path: '/ws',
     pingInterval: 25000,
     pingTimeout: 5000,
@@ -66,17 +68,7 @@ const baseConfig = {
   },
 
   // Database Configuration
-  database: {
-    url: process.env.DATABASE_URL || 'mongodb://localhost:27017/pidea',
-    options: {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-      maxPoolSize: isProduction ? 10 : 5,
-      serverSelectionTimeoutMS: 5000,
-      socketTimeoutMS: 45000,
-      bufferMaxEntries: 0
-    }
-  },
+  database: centralizedConfig.databaseConfig,
 
   // Logging Configuration
   logging: {
@@ -99,17 +91,12 @@ const baseConfig = {
 
   // Security Configuration
   security: {
-    jwt: {
-      secret: process.env.JWT_SECRET || 'your-secret-key',
-      expiresIn: process.env.JWT_EXPIRES_IN || '24h',
-      refreshExpiresIn: process.env.JWT_REFRESH_EXPIRES_IN || '7d'
-    },
     bcrypt: {
-      rounds: parseInt(process.env.BCRYPT_ROUNDS) || 12
+      rounds: parseInt(process.env.BCRYPT_ROUNDS)
     },
     cors: {
       enabled: true,
-      origin: process.env.CORS_ORIGIN || '*',
+      origin: centralizedConfig.frontendUrl,
       credentials: true
     },
     helmet: {
@@ -141,8 +128,6 @@ const baseConfig = {
     clustering: {
       enabled: isProduction,
       workers: parseInt(process.env.CLUSTER_WORKERS) || require('os').cpus().length
-const Logger = require('@logging/Logger');
-const logger = new Logger('Logger');
     }
   },
 
@@ -151,7 +136,7 @@ const logger = new Logger('Logger');
     enabled: isProduction,
     metrics: {
       enabled: true,
-      port: parseInt(process.env.METRICS_PORT) || 9090
+      port: centralizedConfig.monitoringConfig.metrics.port
     },
     healthCheck: {
       enabled: true,
@@ -262,11 +247,14 @@ const config = {
 function validateConfig() {
   const errors = [];
 
-  // Required environment variables
-  const requiredEnvVars = [
-    'JWT_SECRET',
-    'DATABASE_URL'
-  ];
+  // Use centralized config validation
+  const centralizedValidation = centralizedConfig.validate();
+  if (!centralizedValidation.isValid) {
+    errors.push(...centralizedValidation.errors);
+  }
+
+  // Additional required environment variables for this config
+  const requiredEnvVars = [];
 
   if (isProduction) {
     requiredEnvVars.push('ERROR_TRACKING_DSN');

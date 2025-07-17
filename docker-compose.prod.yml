@@ -1,0 +1,87 @@
+version: '3.8'
+
+services:
+  pidea-db:
+    build:
+      context: ./database
+      dockerfile: Dockerfile
+    image: fr4iser/pidea:db
+    container_name: pidea-db
+    volumes:
+      - pidea-db-data:/var/lib/postgresql/data
+    env_file:
+      - .env.production
+    restart: unless-stopped
+    networks:
+      - pidea-network
+
+  # IDE läuft auf HOST (nicht im Container)
+  # Cursor IDE: localhost:9222
+
+  pidea-backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    image: fr4iser/pidea:backend
+    container_name: pidea-backend
+    depends_on:
+      pidea-db:
+        condition: service_healthy
+    env_file:
+      - .env.production
+    volumes:
+      - pidea-backend_logs:/app/logs
+      - /var/run/docker.sock:/var/run/docker.sock
+      # Host IDE-Zugriff (Cursor läuft auf Host)
+      - /var/run/docker.sock:/var/run/docker.sock
+    restart: unless-stopped
+    networks:
+      - pidea-network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.pidea-api.rule=Host(`pidea.fr4iser.com`) && PathPrefix(`/api`)"
+      - "traefik.http.routers.pidea-api.entrypoints=websecure"
+      - "traefik.http.routers.pidea-api.tls.certresolver=letsencrypt"
+      - "traefik.http.services.pidea-api.loadbalancer.server.port=3000"
+      - "traefik.http.routers.pidea-ws.rule=Host(`pidea.fr4iser.com`) && PathPrefix(`/ws`)"
+      - "traefik.http.routers.pidea-ws.entrypoints=websecure"
+      - "traefik.http.routers.pidea-ws.tls.certresolver=letsencrypt"
+      - "traefik.http.services.pidea-ws.loadbalancer.server.port=3000"
+
+  pidea-frontend:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+    image: fr4iser/pidea:frontend
+    container_name: pidea-frontend
+    depends_on:
+      - pidea-backend
+    env_file:
+      - .env.production
+    volumes:
+      - pidea-frontend_logs:/var/log/nginx
+    restart: unless-stopped
+    networks:
+      - pidea-network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.pidea-frontend.rule=Host(`pidea.fr4iser.com`)"
+      - "traefik.http.routers.pidea-frontend.entrypoints=websecure"
+      - "traefik.http.routers.pidea-frontend.tls.certresolver=letsencrypt"
+      - "traefik.http.services.pidea-frontend.loadbalancer.server.port=80"
+      - "traefik.http.routers.pidea-frontend.middlewares=pidea-redirect"
+      - "traefik.http.middlewares.pidea-redirect.redirectscheme.scheme=https"
+      - "traefik.http.middlewares.pidea-redirect.redirectscheme.permanent=true"
+
+volumes:
+  pidea-db-data:
+    driver: local
+  pidea-backend_logs:
+    driver: local
+  pidea-frontend_logs:
+    driver: local
+
+
+networks:
+  pidea-network:
+    driver: bridge 

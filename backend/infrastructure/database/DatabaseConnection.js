@@ -438,17 +438,20 @@ class DatabaseConnection {
       throw new Error('Database not connected');
     }
 
+    // Convert SQLite-style placeholders to PostgreSQL-style if needed
+    const { convertedSql, convertedParams } = this.convertParameters(sql, params);
+
     if (this.type === 'postgresql') {
       const client = await this.connection.connect();
       try {
-        const result = await client.query(sql, params);
+        const result = await client.query(convertedSql, convertedParams);
         return result;
       } finally {
         client.release();
       }
     } else {
       return new Promise((resolve, reject) => {
-        this.connection.run(sql, params, function(err) {
+        this.connection.run(convertedSql, convertedParams, function(err) {
           if (err) {
             reject(err);
           } else {
@@ -464,17 +467,20 @@ class DatabaseConnection {
       throw new Error('Database not connected');
     }
 
+    // Convert SQLite-style placeholders to PostgreSQL-style if needed
+    const { convertedSql, convertedParams } = this.convertParameters(sql, params);
+
     if (this.type === 'postgresql') {
       const client = await this.connection.connect();
       try {
-        const result = await client.query(sql, params);
+        const result = await client.query(convertedSql, convertedParams);
         return result.rows;
       } finally {
         client.release();
       }
     } else {
       return new Promise((resolve, reject) => {
-        this.connection.all(sql, params, (err, rows) => {
+        this.connection.all(convertedSql, convertedParams, (err, rows) => {
           if (err) {
             reject(err);
           } else {
@@ -483,6 +489,22 @@ class DatabaseConnection {
         });
       });
     }
+  }
+
+  convertParameters(sql, params) {
+    if (this.type === 'postgresql' && sql.includes('?')) {
+      // Convert SQLite-style placeholders (?) to PostgreSQL-style ($1, $2, etc.)
+      let convertedSql = sql;
+      const convertedParams = [...params];
+      
+      for (let i = 0; i < params.length; i++) {
+        convertedSql = convertedSql.replace('?', `$${i + 1}`);
+      }
+      
+      return { convertedSql, convertedParams };
+    }
+    
+    return { convertedSql: sql, convertedParams: params };
   }
 
   async getOne(sql, params = []) {
@@ -528,9 +550,7 @@ class DatabaseConnection {
       'Task': isPostgreSQL ? 
         require('./PostgreSQLTaskRepository') : 
         require('./SQLiteTaskRepository'),
-      'Project': isPostgreSQL ? 
-        require('./PostgreSQLProjectRepository') : 
-        require('./SQLiteProjectRepository'),
+      'Project': require('./SQLiteProjectRepository'),
       
       // User repositories - use proper PostgreSQL/SQLite mapping
       'User': isPostgreSQL ? 

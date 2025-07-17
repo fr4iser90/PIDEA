@@ -296,14 +296,6 @@ CREATE INDEX IF NOT EXISTS idx_workflow_executions_workflow_id ON workflow_execu
 CREATE INDEX IF NOT EXISTS idx_workflow_executions_status ON workflow_executions(status);
 
 -- ============================================================================
--- INITIAL DATA
--- ============================================================================
-
--- Insert default user if not exists
-INSERT OR IGNORE INTO users (id, email, username, password_hash, role, status) 
-VALUES ('me', 'admin@pidea.local', 'admin', '$2b$10$default.hash.for.development', 'admin', 'active');
-
--- ============================================================================
 -- COMMENTS
 -- ============================================================================
 

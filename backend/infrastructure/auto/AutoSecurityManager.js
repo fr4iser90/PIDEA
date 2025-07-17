@@ -35,7 +35,23 @@ class AutoSecurityManager {
   }
 
   detectEnvironment() {
-    const env = process.env.NODE_ENV || 'development';
+    // Automatische Erkennung: Docker vs npm run dev
+    let env = process.env.NODE_ENV || 'development';
+    
+    // Docker-Erkennung
+    const isDocker = process.env.DOCKER_ENV === 'true' || 
+                     process.env.KUBERNETES_SERVICE_HOST ||
+                     process.env.DOCKER_CONTAINER ||
+                     process.env.HOSTNAME?.includes('container') ||
+                     process.env.HOSTNAME?.includes('docker');
+    
+    if (isDocker) {
+      env = 'production';
+      logger.info('🐳 Docker environment detected, using production settings');
+    } else {
+      logger.info('💻 Local development environment detected');
+    }
+    
     logger.info(`🌍 Detected environment: ${env}`);
     return env;
   }
@@ -74,11 +90,23 @@ class AutoSecurityManager {
   }
 
   getSecurityConfig() {
+    // Get URLs from environment variables
+    const frontendUrl = process.env.FRONTEND_URL;
+    const backendUrl = process.env.BACKEND_URL;
+    
+    // Dynamische CORS-Origin: Wenn kein Port in FRONTEND_URL, dann automatisch Port hinzufügen
+    let corsOrigin = frontendUrl;
+    if (frontendUrl && !frontendUrl.includes(':')) {
+      // Kein Port angegeben - automatisch Port basierend auf Environment
+      const port = this.config.environment === 'development' ? ':4000' : ':80';
+      corsOrigin = frontendUrl + port;
+    }
+    
     const isProduction = this.config.environment === 'production';
     
     return {
       cors: {
-        origin: isProduction ? false : ['http://localhost:4000', 'http://localhost:4005'],
+        origin: corsOrigin,
         credentials: true,
         methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
         allowedHeaders: ['Content-Type', 'Authorization']

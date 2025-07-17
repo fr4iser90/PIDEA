@@ -1,75 +1,77 @@
 
 require('module-alias/register');
+require('dotenv').config({ path: require('path').join(__dirname, '../.env') });
 const Application = require('./Application');
 const ServiceLogger = require('@logging/ServiceLogger');
 const logger = new ServiceLogger('Server');
 
-// Import your existing script
-const createTestUser = require('./scripts/create-test-user');
+function getParam(n, dbType) {
+  return dbType === 'postgresql' ? `$${n}` : '?';
+}
 
-async function ensureTestUser() {
+async function ensureDefaultUser() {
   try {
-    // First, initialize the database connection to create tables
-    const DatabaseConnection = require('./infrastructure/database/DatabaseConnection');
+    logger.info('👤 Ensuring default user exists...');
+    
+    // Use the same configuration as the main application
     const AutoSecurityManager = require('./infrastructure/auto/AutoSecurityManager');
+    const DatabaseConnection = require('./infrastructure/database/DatabaseConnection');
+    const createDefaultUser = require('./scripts/create-default-user');
     
     const autoSecurityManager = new AutoSecurityManager();
-    const securityConfig = autoSecurityManager.getConfig();
+    const dbConfig = autoSecurityManager.getDatabaseConfig();
     
-    const dbConnection = new DatabaseConnection(securityConfig.database);
-    await dbConnection.connect();
+    logger.info('🔧 Database config:', JSON.stringify(dbConfig, null, 2));
     
-    // Now check if users exist
-    const sqlite3 = require('sqlite3').verbose();
-    const path = require('path');
-    const dbPath = path.join(__dirname, 'database/pidea-dev.db');
+    const databaseConnection = new DatabaseConnection(dbConfig);
+    await databaseConnection.connect();
     
-    return new Promise((resolve, reject) => {
-      const db = new sqlite3.Database(dbPath, (err) => {
-        if (err) {
-          logger.error('❌ Error opening database:', err.message);
-          reject(err);
-          return;
-        }
-        
-        db.get('SELECT COUNT(*) as count FROM users', (err, row) => {
-          if (err) {
-            logger.error('❌ Error checking users:', err.message);
-            db.close();
-            reject(err);
-            return;
-          }
-          
-          if (row.count > 0) {
-            logger.info('✅ Users already exist in database');
-            db.close();
-            resolve();
-          } else {
-            logger.info('👤 No users found, creating test user...');
-            db.close();
-            // Use your existing script
-            createTestUser().then(resolve).catch(reject);
-          }
-        });
-      });
-    });
+    const dbType = databaseConnection.getType();
+    
+    // Check if user exists
+    const checkResult = await databaseConnection.query(
+      `SELECT id, email, username FROM users WHERE id = ${getParam(1, dbType)}`,
+      ['me']
+    );
+    
+    if (checkResult && checkResult.length > 0) {
+      logger.info('✅ Default user already exists');
+      await databaseConnection.disconnect();
+      return;
+    }
+    
+    // Create default user
+    await createDefaultUser();
+    await databaseConnection.disconnect();
+    
   } catch (error) {
-    logger.error('❌ Error ensuring test user:', error.message);
-    throw error;
+    logger.error('❌ Error ensuring default user:', error.message);
+    // Don't exit, just log the error and continue
+    logger.warn('⚠️ Continuing without default user...');
   }
 }
 
 async function main() {
-  // Ensure test user exists before starting application
-  try {
-    await ensureTestUser();
-  } catch (error) {
-    logger.error('❌ Failed to ensure test user:', error.message);
+  // Ensure default user exists before starting application
+  await ensureDefaultUser();
+  
+  const centralizedConfig = require('./config/centralized-config');
+  
+  // Validate configuration before starting
+  const validation = centralizedConfig.validate();
+  if (!validation.isValid) {
+    logger.error('❌ Configuration validation failed:');
+    validation.errors.forEach(error => logger.error(`  - ${error}`));
     process.exit(1);
   }
   
+  if (validation.warnings.length > 0) {
+    logger.warn('⚠️ Configuration warnings:');
+    validation.warnings.forEach(warning => logger.warn(`  - ${warning}`));
+  }
+
   const app = new Application({
-    port: process.env.PORT || 3000
+    port: centralizedConfig.backendPort
   });
 
   // Handle graceful shutdown
