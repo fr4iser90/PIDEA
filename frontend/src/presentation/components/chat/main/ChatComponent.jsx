@@ -391,10 +391,59 @@ function ChatComponent({ eventBus, activePort, attachedPrompts = [] }) {
           })}
         </div>
       );
-    } else if (isAI && window.marked) {
+      } else if (isAI && window.marked) {
+    // Check if content contains markdown code blocks
+    const codeBlockRegex = /```(\w+)?\s*([\s\S]+?)```/g;
+    const codeBlocks = content.match(codeBlockRegex);
+    
+    if (codeBlocks && codeBlocks.length > 0) {
+      // Use our custom code block rendering
       bubbleContent = (
-        <div className="message-bubble" dangerouslySetInnerHTML={{ __html: window.marked.parse(content) }} />
+        <div className="code-blocks-container">
+          {codeBlocks.map((block, idx) => {
+            const match = block.match(/```(\w+)?\s*([\s\S]+?)```/);
+            const language = match[1] || 'text';
+            const code = match[2].trim();
+            const blockId = `${message.id}_md_${idx}`;
+            const expanded = expandedBlocks[blockId] !== false;
+            return (
+              <div key={blockId} className="modern-code-block-wrapper">
+                <div className="modern-code-block-header" onClick={() => toggleBlock(blockId)}>
+                  <span className="modern-code-block-title">{language}</span>
+                  <button
+                    className="modern-code-block-toggle"
+                    title={expanded ? 'Einklappen' : 'Ausklappen'}
+                    tabIndex={-1}
+                    onClick={e => { e.stopPropagation(); toggleBlock(blockId); }}
+                  >
+                    {expanded ? '▲' : '▼'}
+                  </button>
+                  <button
+                    className="modern-code-block-copy"
+                    title="Copy code"
+                    tabIndex={-1}
+                    onClick={e => { e.stopPropagation(); handleCopyClick(code); }}
+                  >
+                    📋
+                  </button>
+                </div>
+                {expanded && (
+                  <pre className={`modern-code-block code-block ${language}`}>
+                    <code>{code}</code>
+                  </pre>
+                )}
+              </div>
+            );
+          })}
+        </div>
       );
+    } else {
+      // Regular markdown parsing for non-code content
+      const parsedContent = window.marked.parse(content);
+      bubbleContent = (
+        <div className="message-bubble" dangerouslySetInnerHTML={{ __html: parsedContent }} />
+      );
+    }
     } else if (isCode) {
       // Fallback: Markdown-Codeblöcke parsen
       const codeBlocks = content.match(/```(\w+)?\s*([^`]+)```/g);
