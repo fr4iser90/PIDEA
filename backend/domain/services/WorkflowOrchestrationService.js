@@ -10,6 +10,7 @@ const GitWorkflowContext = require('../workflows/categories/git/GitWorkflowConte
 const { SequentialExecutionEngine } = require('../workflows/execution');
 const StepRegistry = require('../steps/StepRegistry');
 const FrameworkRegistry = require('../frameworks/FrameworkRegistry');
+const ServiceLogger = require('@logging/ServiceLogger');
 
 
 class WorkflowOrchestrationService {
@@ -18,7 +19,7 @@ class WorkflowOrchestrationService {
         this.cursorIDEService = dependencies.cursorIDEService;
         this.autoFinishSystem = dependencies.autoFinishSystem;
         this.taskRepository = dependencies.taskRepository;
-        this.logger = dependencies.logger || console;
+        this.logger = dependencies.logger || new ServiceLogger('WorkflowOrchestrationService');
         this.eventBus = dependencies.eventBus;
         
         // Initialize enhanced git workflow manager

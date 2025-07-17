@@ -8,13 +8,12 @@ const TaskType = require('../value-objects/TaskType');
 const GitWorkflowManager = require('../workflows/categories/git/GitWorkflowManager');
 const GitWorkflowContext = require('../workflows/categories/git/GitWorkflowContext');
 const GitWorkflowResult = require('../workflows/categories/git/GitWorkflowResult');
-const Logger = require('@logging/Logger');
-const logger = new Logger('Logger');
+const ServiceLogger = require('@logging/ServiceLogger');
 
 class WorkflowGitService {
     constructor(dependencies = {}) {
         this.gitService = dependencies.gitService || new GitService(dependencies);
-        this.logger = dependencies.logger || console;
+        this.logger = dependencies.logger || new ServiceLogger('WorkflowGitService');
         this.eventBus = dependencies.eventBus;
         
         // Initialize enhanced git workflow manager

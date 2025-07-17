@@ -3,12 +3,11 @@
  */
 const path = require('path');
 const fs = require('fs').promises;
-const Logger = require('@logging/Logger');
-const logger = new Logger('Logger');
+const ServiceLogger = require('@logging/ServiceLogger');
 
 class FileUtils {
-    constructor(logger) {
-        this.logger = logger;
+    constructor(dependencies = {}) {
+        this.logger = new ServiceLogger('FileUtils');
     }
 
     /**

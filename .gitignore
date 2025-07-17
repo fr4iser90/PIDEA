@@ -25,6 +25,7 @@ frontend/coverage
 frontend/.jest-cache
 backups/
 *.backup
+*.backup.*
 *.db
 output/
 refactor_*.md

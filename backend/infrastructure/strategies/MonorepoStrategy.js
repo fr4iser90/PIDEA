@@ -3,12 +3,11 @@
  */
 const path = require('path');
 const fs = require('fs').promises;
-const Logger = require('@logging/Logger');
-const logger = new Logger('MonorepoStrategy');
+const ServiceLogger = require('@logging/ServiceLogger');
 
 class MonorepoStrategy {
     constructor(dependencies = {}) {
-        this.logger = dependencies.logger || console;
+        this.logger = new ServiceLogger('MonorepoStrategy');
         this.eventBus = dependencies.eventBus;
         this.fileSystemService = dependencies.fileSystemService;
         this.projectAnalyzer = dependencies.projectAnalyzer;

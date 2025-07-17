@@ -1,11 +1,13 @@
 /**
  * ArchitectureService - Domain service for architecture analysis
  */
+const ServiceLogger = require('@logging/ServiceLogger');
+
 class ArchitectureService {
   constructor(architectureAnalyzer, eventBus, logger, analysisOutputService, analysisRepository) {
     this.architectureAnalyzer = architectureAnalyzer;
     this.eventBus = eventBus || { emit: () => {} };
-    this.logger = logger || { info: () => {}, error: () => {}, warn: () => {} };
+    this.logger = logger || new ServiceLogger('ArchitectureService');
     this.analysisOutputService = analysisOutputService;
     this.analysisRepository = analysisRepository;
   }

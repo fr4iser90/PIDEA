@@ -3,12 +3,11 @@
  */
 const path = require('path');
 const { MONOREPO_INDICATORS } = require('../constants');
-const Logger = require('@logging/Logger');
-const logger = new Logger('Logger');
+const ServiceLogger = require('@logging/ServiceLogger');
 
 class RepositoryTypeValidator {
-    constructor(logger, fileUtils) {
-        this.logger = logger;
+    constructor(dependencies = {}) {
+        this.logger = new ServiceLogger('RepositoryTypeValidator');
         this.fileUtils = fileUtils;
     }
 

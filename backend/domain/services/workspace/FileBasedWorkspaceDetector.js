@@ -59,7 +59,7 @@ class FileBasedWorkspaceDetector {
       // 4. Terminal schließen
       await this._closeTerminal(page);
 
-      if (workspaceInfo.workspace) {
+      if (workspaceInfo && workspaceInfo.workspace) {
         logger.info(`Workspace info found for port ${port}:`, workspaceInfo.workspace);
         this._detectionCache.set(cacheKey, workspaceInfo);
         return workspaceInfo;

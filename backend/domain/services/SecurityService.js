@@ -1,11 +1,13 @@
 /**
  * SecurityService - Domain service for security analysis
  */
+const ServiceLogger = require('@logging/ServiceLogger');
+
 class SecurityService {
   constructor(securityAnalyzer, eventBus, logger, analysisOutputService, analysisRepository) {
     this.securityAnalyzer = securityAnalyzer;
     this.eventBus = eventBus || { emit: () => {} };
-    this.logger = logger || { info: () => {}, error: () => {}, warn: () => {} };
+    this.logger = logger || new ServiceLogger('SecurityService');
     this.analysisOutputService = analysisOutputService;
     this.analysisRepository = analysisRepository;
   }
@@ -34,8 +36,6 @@ class SecurityService {
         // Save to database ONLY if explicitly requested
         if (this.analysisRepository && options.saveToDatabase !== false) {
           const AnalysisResult = require('@entities/AnalysisResult');
-          const Logger = require('@logging/Logger');
-          const logger = new Logger('SecurityService');
           const analysisResult = AnalysisResult.create(
             projectId, 
             'security', 

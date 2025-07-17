@@ -5,7 +5,7 @@
 - **Category**: backend
 - **Priority**: High
 - **Status**: Ready for Implementation
-- **Total Estimated Time**: 2 hours (NOT 16 hours!)
+- **Total Estimated Time**: 1 hour (NOT 16 hours!)
 - **Created**: 2024-12-16
 - **Last Updated**: 2024-12-16
 
@@ -23,7 +23,7 @@ docs/09_roadmap/features/backend/logging-system-improvement/
 ## 📊 Task Breakdown
 | Task | Status | Time | Progress |
 |------|--------|------|----------|
-| Fix Logger DI Usage | Ready | 2h | 0% |
+| Fix Logger DI Usage | Ready | 1h | 0% |
 
 ## 🔄 Subtask Management
 ### Active Subtasks
@@ -32,7 +32,6 @@ docs/09_roadmap/features/backend/logging-system-improvement/
 ### Completed Subtasks
 - [x] [Corrected Implementation Plan](./logging-system-improvement-implementation.md) - ✅ Done
 - [x] [Codebase Analysis & Validation](./logging-system-improvement-implementation.md) - ✅ Done
-- [x] [Fix Script Creation](./backend/scripts/fix-logger-usage.js) - ✅ Done
 
 ### Pending Subtasks
 - [ ] [Execute Fix Script](./logging-system-improvement-implementation.md) - ⏳ Ready for Implementation
@@ -41,7 +40,7 @@ docs/09_roadmap/features/backend/logging-system-improvement/
 - **Overall Progress**: 50% Complete
 - **Current Status**: Ready for Implementation
 - **Next Milestone**: Execute Fix Script
-- **Estimated Completion**: 2 hours
+- **Estimated Completion**: 1 hour
 
 ## 🔗 Related Tasks
 - **Dependencies**: None
@@ -53,21 +52,21 @@ docs/09_roadmap/features/backend/logging-system-improvement/
 - **REALIZATION**: Existing DI system is perfect, no need for complex migration
 - **REALIZATION**: Only issue is services not using existing DI properly
 - **REALIZATION**: 16-hour plan was completely overkill
-- **SOLUTION**: Simple 2-hour fix to use existing DI system
+- **SOLUTION**: Simple 1-hour fix to use existing DI system
 
 ### 2024-12-16 - Task Review & Validation Complete
 - ✅ Analyzed current codebase and DI implementation
 - ✅ **DISCOVERED**: DI system already exists and works perfectly
 - ✅ **DISCOVERED**: Only problem is services not using DI for logging
+- ✅ **REALIZATION**: Only services that already use DI should be changed
 - ✅ **SOLUTION**: Simple script to fix logger usage
-- ✅ **ESTIMATE**: 2 hours instead of 16 hours
-- ✅ **CREATED**: Fix script ready for execution
+- ✅ **ESTIMATE**: 1 hour instead of 16 hours
 
 ### 2024-12-16 - Validation Results
-- ✅ **FOUND**: 100+ files using `new Logger('ServiceName')`
-- ✅ **FOUND**: 50+ files using `new ServiceLogger('ServiceName')`
+- ✅ **FOUND**: Services using `new Logger('ServiceName')`
+- ✅ **FOUND**: Services using `new ServiceLogger('ServiceName')`
 - ✅ **FOUND**: Existing DI system properly configured
-- ✅ **CREATED**: Automated fix script with dry-run capability
+- ✅ **REALIZATION**: Only DI-using services need changes
 - ✅ **READY**: For immediate implementation
 
 ## 🚀 Quick Actions
@@ -78,6 +77,7 @@ docs/09_roadmap/features/backend/logging-system-improvement/
 
 ### 1. Use Existing DI System (ONLY OBJECTIVE!)
 - Services should use `this.container.resolve('logger')` instead of `new Logger()`
+- **ONLY** for services that already use DI
 - No new infrastructure needed
 - No complex migration needed
 - Just fix the usage pattern
@@ -103,16 +103,16 @@ Service → this.container.resolve('logger') → Winston Logger
 
 ## 📊 Impact Analysis
 
-### Files to Modify: 150+
-- All services currently using direct logger instantiation
+### Files to Modify: 4
+- Only services that already use DI
 
 ### Files to Create: 1
-- ✅ `backend/scripts/fix-logger-usage.js` - Created and ready
+- `backend/scripts/fix-logger-usage.js` - Simple script
 
-### Services Affected: 150+
-- All services currently using direct logger instantiation
+### Services Affected: 4
+- Only services that already use DI
 
-### Migration Complexity: LOW
+### Migration Complexity: VERY LOW
 - Simple find/replace operation
 - No breaking changes
 - Easy to test and rollback
@@ -130,7 +130,7 @@ Service → this.container.resolve('logger') → Winston Logger
 ### What We DO Need:
 - ✅ Use existing DI system
 - ✅ Simple script to fix usage
-- ✅ 2 hours of work
+- ✅ 1 hour of work
 - ✅ Test that everything works
 
 ## 📋 Success Criteria
@@ -138,14 +138,14 @@ Service → this.container.resolve('logger') → Winston Logger
 - [ ] No direct Logger instantiation
 - [ ] Application works correctly
 - [ ] No breaking changes
-- [ ] 2 hours or less
+- [ ] 1 hour or less
 
 ## 🛠️ Implementation Tools
 
 ### Fix Script Features
 - **Dry Run Mode**: `node backend/scripts/fix-logger-usage.js --dry-run`
 - **Backup Creation**: Automatic backup of modified files
-- **Pattern Detection**: Identifies service classes automatically
+- **DI Detection**: Only modifies services that already use DI
 - **Import Cleanup**: Removes unused logger imports
 - **Error Handling**: Graceful error handling and reporting
 

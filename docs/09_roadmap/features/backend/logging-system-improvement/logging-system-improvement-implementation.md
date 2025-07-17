@@ -4,7 +4,7 @@
 - **Feature/Component Name**: Logging System Improvement
 - **Priority**: High
 - **Category**: backend
-- **Estimated Time**: 2 hours (NOT 16 hours!)
+- **Estimated Time**: 1 hour (NOT 16 hours!)
 - **Dependencies**: None
 - **Related Issues**: Services not using existing DI system for logging
 
@@ -19,7 +19,7 @@
 ## 3. File Impact Analysis
 #### Files to Modify:
 - [ ] `backend/infrastructure/di/ServiceRegistry.js` - Fix logger registration (already exists!)
-- [ ] Services that use `new Logger()` - Convert to DI usage
+- [ ] Services that already use DI - Convert to use DI for logging
 
 #### Files to Create:
 - [ ] `backend/scripts/fix-logger-usage.js` - Simple script to fix logger usage
@@ -29,13 +29,13 @@
 
 ## 4. Implementation Phases
 
-#### Phase 1: Fix Service Registry Logger Registration (30 minutes)
+#### Phase 1: Fix Service Registry Logger Registration (15 minutes)
 - [ ] Ensure logger is properly registered in ServiceRegistry
 - [ ] Test that services can get logger via DI
 
-#### Phase 2: Convert Services to Use DI (1.5 hours)
-- [ ] Create simple script to find services using `new Logger()`
-- [ ] Convert services to use `this.container.resolve('logger')`
+#### Phase 2: Convert DI Services to Use DI for Logging (45 minutes)
+- [ ] Create simple script to find services using DI
+- [ ] Convert only DI-using services to use `this.container.resolve('logger')`
 - [ ] Test that everything still works
 
 ## 5. Code Standards & Patterns
@@ -160,16 +160,17 @@
 - [x] DI System: Logger registration exists in ServiceRegistry - Status: Properly configured
 
 ### ⚠️ Issues Found
-- [ ] **CRITICAL**: 100+ files using `new Logger('ServiceName')` instead of DI
-- [ ] **CRITICAL**: 50+ files using `new ServiceLogger('ServiceName')` instead of DI
+- [ ] **CRITICAL**: Services using `new Logger('ServiceName')` instead of DI
+- [ ] **CRITICAL**: Services using `new ServiceLogger('ServiceName')` instead of DI
 - [ ] **Pattern**: Services not accessing container for logger resolution
 - [ ] **Inconsistency**: Mixed logger instantiation patterns across codebase
 
 ### 🔧 Improvements Made
 - **REALIZATION**: Existing DI system is perfect, no infrastructure changes needed
 - **REALIZATION**: Only issue is services not using existing DI properly
+- **REALIZATION**: Only services that already use DI should be changed
 - **SOLUTION**: Simple script to fix logger usage patterns
-- **ESTIMATE**: 2 hours instead of 16 hours
+- **ESTIMATE**: 1 hour instead of 16 hours
 
 ### 📊 Code Quality Metrics
 - **Coverage**: Same as before (no functional changes)
@@ -178,12 +179,12 @@
 - **Maintainability**: Will improve significantly (proper DI usage)
 
 ### 🚀 Next Steps
-1. Create simple fix script (30 minutes)
-2. Run script to fix logger usage (1 hour)
-3. Test everything works (30 minutes)
+1. Create simple fix script (15 minutes)
+2. Run script to fix logger usage (30 minutes)
+3. Test everything works (15 minutes)
 
 ### 📋 Task Splitting Recommendations
-- **Main Task**: Fix Logger DI Usage (2 hours) → Simple fix
+- **Main Task**: Fix Logger DI Usage (1 hour) → Simple fix
 - **No phases needed** - just fix the usage pattern
 
 ## Current Issues Analysis
@@ -211,8 +212,8 @@
 const fs = require('fs');
 const path = require('path');
 
-// Find files with new Logger() or new ServiceLogger()
-// Replace with this.container.resolve('logger')
+// Find files that already use DI (this.container or this.serviceRegistry)
+// Replace logger instantiation with this.container.resolve('logger')
 // Test that everything works
 ```
 
@@ -227,12 +228,16 @@ const logger = new ServiceLogger('ServiceName');
 this.logger = this.container.resolve('logger');
 ```
 
-### Files to Fix (Sample from grep results):
-- `backend/domain/services/TaskService.js`
-- `backend/domain/services/CursorIDEService.js`
-- `backend/presentation/api/TaskController.js`
-- `backend/infrastructure/external/IDEManager.js`
-- And 100+ more files...
+### Files to Fix (ONLY DI-using services):
+- `backend/infrastructure/di/ServiceRegistry.js` - Already uses `this.container`
+- `backend/Application.js` - Already uses `this.serviceRegistry`
+- `backend/infrastructure/di/ApplicationIntegration.js` - Already uses `this.serviceRegistry`
+- `backend/application/handlers/categories/management/GetChatHistoryHandler.js` - Already uses `this.serviceRegistry`
+
+### Files NOT to Fix:
+- All other services that don't use DI
+- Application.js (has no container)
+- Any service without `this.container` or `this.serviceRegistry`
 
 ## CORRECTED Analysis - 2024-12-16
 
@@ -244,11 +249,11 @@ this.logger = this.container.resolve('logger');
 - [x] File: `backend/Application.js` - ✅ Uses ServiceLogger correctly
 
 ### ❌ What Needs Fixing (MINIMAL!)
-- [ ] Services using `new Logger()` instead of DI (100+ files)
-- [ ] Services using `new ServiceLogger()` instead of DI (50+ files)
+- [ ] Services using `new Logger()` instead of DI (ONLY DI-using services)
+- [ ] Services using `new ServiceLogger()` instead of DI (ONLY DI-using services)
 
 ### 🔧 Simple Solution
-1. Find services using direct logger instantiation
+1. Find services that already use DI (`this.container` or `this.serviceRegistry`)
 2. Convert them to use `this.container.resolve('logger')`
 3. Test that everything works
 

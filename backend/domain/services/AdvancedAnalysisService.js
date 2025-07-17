@@ -5,12 +5,11 @@
 const LayerValidationService = require('./LayerValidationService');
 const LogicValidationService = require('./LogicValidationService');
 const TaskAnalysisService = require('./TaskAnalysisService');
-const Logger = require('@logging/Logger');
-const logger = new Logger('Logger');
+const ServiceLogger = require('@logging/ServiceLogger');
 
 class AdvancedAnalysisService {
     constructor(dependencies = {}) {
-        this.logger = dependencies.logger || console;
+        this.logger = dependencies.logger || new ServiceLogger('AdvancedAnalysisService');
         this.layerValidationService = dependencies.layerValidationService || new LayerValidationService(this.logger);
         this.logicValidationService = dependencies.logicValidationService || new LogicValidationService(this.logger);
         this.taskAnalysisService = dependencies.taskAnalysisService || new TaskAnalysisService();
