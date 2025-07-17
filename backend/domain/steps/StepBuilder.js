@@ -5,13 +5,13 @@
  */
 
 const path = require('path');
-const Logger = require('@logging/Logger');
-const logger = new Logger('StepBuilder');
+const ServiceLogger = require('@logging/ServiceLogger');
 
 class StepBuilder {
   constructor(stepRegistry) {
     this.registry = stepRegistry;
     this.buildCache = new Map();
+    this.logger = new ServiceLogger('StepBuilder');
   }
 
   /**
@@ -27,7 +27,7 @@ class StepBuilder {
       // Check cache first
       const cacheKey = this.getCacheKey(stepName, options);
       if (this.buildCache.has(cacheKey)) {
-        logger.info(`📦 Using cached step instance for "${stepName}"`);
+        this.logger.info(`📦 Using cached step instance for "${stepName}"`);
         return this.buildCache.get(cacheKey);
       }
 
@@ -40,10 +40,10 @@ class StepBuilder {
       // Cache the instance
       this.buildCache.set(cacheKey, instance);
 
-      logger.info(`🔨 Step "${stepName}" built successfully`);
+      this.logger.info(`🔨 Step "${stepName}" built successfully`);
       return instance;
     } catch (error) {
-      logger.error(`❌ Failed to build step "${stepName}":`, error.message);
+      this.logger.error(`❌ Failed to build step "${stepName}":`, error.message);
       throw error;
     }
   }
@@ -85,10 +85,10 @@ class StepBuilder {
         throw new Error('Step config must have a description');
       }
 
-      logger.info(`🔨 Step "${instance.name}" built from config`);
+      this.logger.info(`🔨 Step "${instance.name}" built from config`);
       return instance;
     } catch (error) {
-      logger.error(`❌ Failed to build step from config:`, error.message);
+      this.logger.error(`❌ Failed to build step from config:`, error.message);
       throw error;
     }
   }
@@ -144,7 +144,7 @@ class StepBuilder {
         const instance = await this.buildStep(stepName, options);
         instances.push(instance);
       } catch (error) {
-        logger.error(`❌ Failed to build step "${stepName}":`, error.message);
+        this.logger.error(`❌ Failed to build step "${stepName}":`, error.message);
         
         // Continue with other steps if this one fails
         if (options.continueOnError !== false) {

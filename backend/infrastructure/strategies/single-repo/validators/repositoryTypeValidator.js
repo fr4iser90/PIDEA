@@ -8,7 +8,7 @@ const ServiceLogger = require('@logging/ServiceLogger');
 class RepositoryTypeValidator {
     constructor(dependencies = {}) {
         this.logger = new ServiceLogger('RepositoryTypeValidator');
-        this.fileUtils = fileUtils;
+        this.fileUtils = new (require('../utils/fileUtils'))();
     }
 
     /**

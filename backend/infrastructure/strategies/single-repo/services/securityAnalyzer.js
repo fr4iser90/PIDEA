@@ -3,13 +3,12 @@
  */
 const path = require('path');
 const { SECURITY_FILES, SECRETS_FILES, SECURITY_DEPENDENCIES } = require('../constants');
-const Logger = require('@logging/Logger');
-const logger = new Logger('Logger');
+const ServiceLogger = require('@logging/ServiceLogger');
 
 class SecurityAnalyzer {
-    constructor(logger, fileUtils) {
-        this.logger = logger;
-        this.fileUtils = fileUtils;
+    constructor(dependencies = {}) {
+        this.logger = new ServiceLogger('SecurityAnalyzer');
+        this.fileUtils = new (require('../utils/fileUtils'))();
     }
 
     /**

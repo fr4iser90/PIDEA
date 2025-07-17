@@ -1,12 +1,11 @@
-const Logger = require('@logging/Logger');
-const logger = new Logger('Logger');
+const ServiceLogger = require('@logging/ServiceLogger');
 
 /**
  * Recommendations service for SingleRepoStrategy
  */
 class RecommendationsService {
-    constructor(logger) {
-        this.logger = logger;
+    constructor(dependencies = {}) {
+        this.logger = new ServiceLogger('RecommendationsService');
     }
 
     /**

@@ -3,14 +3,13 @@
  */
 const path = require('path');
 const { TEST_CONFIGS } = require('../constants');
-const Logger = require('@logging/Logger');
-const logger = new Logger('Logger');
+const ServiceLogger = require('@logging/ServiceLogger');
 
 class TestingAnalyzer {
-    constructor(logger, fileUtils, directoryScanner) {
-        this.logger = logger;
-        this.fileUtils = fileUtils;
-        this.directoryScanner = directoryScanner;
+    constructor(dependencies = {}) {
+        this.logger = new ServiceLogger('TestingAnalyzer');
+        this.fileUtils = new (require('../utils/fileUtils'))();
+        this.directoryScanner = new (require('../utils/directoryScanner'))();
     }
 
     /**

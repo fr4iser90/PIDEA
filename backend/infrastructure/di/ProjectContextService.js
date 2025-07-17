@@ -6,8 +6,7 @@
 const path = require('path');
 const fs = require('fs').promises;
 const { getServiceContainer } = require('./ServiceContainer');
-const Logger = require('@logging/Logger');
-const logger = new Logger('PIDEAProjectContextService');
+const ServiceLogger = require('@logging/ServiceLogger');
 
 class ProjectContextService {
     constructor() {
@@ -147,6 +146,7 @@ class ProjectContextService {
                 ).length >= 2;
                 
                 if (hasMonorepoIndicators && hasMultipleSubdirs) {
+                    const logger = new ServiceLogger('PIDEAProjectContextService');
                     logger.info('🏗️ Detected monorepo, using parent directory:', parentDir);
                     return parentDir;
                 }
@@ -179,6 +179,7 @@ class ProjectContextService {
 
             return null;
         } catch (error) {
+            const logger = new ServiceLogger('PIDEAProjectContextService');
             logger.error('Auto-detect failed:', error.message);
             return null;
         }

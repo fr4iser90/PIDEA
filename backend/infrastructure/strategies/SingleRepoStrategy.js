@@ -31,19 +31,19 @@ class SingleRepoStrategy {
         this.projectAnalyzer = dependencies.projectAnalyzer;
 
         // Initialize utilities
-        this.fileUtils = new FileUtils(this.logger);
-        this.directoryScanner = new DirectoryScanner(this.logger, this.fileUtils);
+        this.fileUtils = new FileUtils();
+        this.directoryScanner = new DirectoryScanner();
 
         // Initialize services
-        this.dependencyAnalyzer = new DependencyAnalyzer(this.logger, this.fileUtils);
-        this.projectTypeAnalyzer = new ProjectTypeAnalyzer(this.logger, this.fileUtils);
-        this.structureAnalyzer = new StructureAnalyzer(this.logger, this.fileUtils, this.directoryScanner);
-        this.buildToolsAnalyzer = new BuildToolsAnalyzer(this.logger, this.fileUtils);
-        this.testingAnalyzer = new TestingAnalyzer(this.logger, this.fileUtils, this.directoryScanner);
-        this.lintingAnalyzer = new LintingAnalyzer(this.logger, this.fileUtils);
-        this.deploymentAnalyzer = new DeploymentAnalyzer(this.logger, this.fileUtils);
-        this.performanceAnalyzer = new PerformanceAnalyzer(this.logger, this.fileUtils);
-        this.securityAnalyzer = new SecurityAnalyzer(this.logger, this.fileUtils);
+        this.dependencyAnalyzer = new DependencyAnalyzer();
+        this.projectTypeAnalyzer = new ProjectTypeAnalyzer();
+        this.structureAnalyzer = new StructureAnalyzer();
+        this.buildToolsAnalyzer = new BuildToolsAnalyzer();
+        this.testingAnalyzer = new TestingAnalyzer();
+        this.lintingAnalyzer = new LintingAnalyzer();
+        this.deploymentAnalyzer = new DeploymentAnalyzer();
+        this.performanceAnalyzer = new PerformanceAnalyzer();
+        this.securityAnalyzer = new SecurityAnalyzer();
         // Use DI system for service creation
         const { getServiceRegistry } = require('../di/ServiceRegistry');
         const registry = getServiceRegistry();
@@ -56,14 +56,13 @@ class SingleRepoStrategy {
             // Fallback to direct instantiation if services not registered
             const RecommendationsService = require('./single-repo/services/recommendationsService');
             const OptimizationService = require('./single-repo/services/optimizationService');
-const Logger = require('@logging/Logger');
-const logger = new Logger('Logger');
-            this.recommendationsService = new RecommendationsService(this.logger);
-            this.optimizationService = new OptimizationService(this.logger);
+const ServiceLogger = require('@logging/ServiceLogger');
+            this.recommendationsService = new RecommendationsService();
+            this.optimizationService = new OptimizationService();
         }
 
         // Initialize validators
-        this.repositoryTypeValidator = new RepositoryTypeValidator(this.logger, this.fileUtils);
+        this.repositoryTypeValidator = new RepositoryTypeValidator();
     }
 
     /**

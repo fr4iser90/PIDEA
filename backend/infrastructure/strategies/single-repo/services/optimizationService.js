@@ -1,11 +1,11 @@
-const Logger = require('@logging/Logger');
-const logger = new Logger('Logger');
+const ServiceLogger = require('@logging/ServiceLogger');
+
 /**
  * Optimization service for SingleRepoStrategy
  */
 class OptimizationService {
-    constructor(logger) {
-        this.logger = logger;
+    constructor(dependencies = {}) {
+        this.logger = new ServiceLogger('OptimizationService');
     }
 
     /**

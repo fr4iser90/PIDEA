@@ -7,13 +7,12 @@ const {
     BACKEND_FRAMEWORKS, 
     BUILD_TOOLS_DETECTION 
 } = require('../constants');
-const Logger = require('@logging/Logger');
-const logger = new Logger('Logger');
+const ServiceLogger = require('@logging/ServiceLogger');
 
 class ProjectTypeAnalyzer {
-    constructor(logger, fileUtils) {
-        this.logger = logger;
-        this.fileUtils = fileUtils;
+    constructor(dependencies = {}) {
+        this.logger = new ServiceLogger('ProjectTypeAnalyzer');
+        this.fileUtils = new (require('../utils/fileUtils'))();
     }
 
     /**

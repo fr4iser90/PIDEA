@@ -7,8 +7,7 @@ const TerminalMonitor = require('./terminal/TerminalMonitor');
 const PackageJsonAnalyzer = require('./dev-server/PackageJsonAnalyzer');
 const WorkspacePathDetector = require('./workspace/WorkspacePathDetector');
 const IDETypes = require('./ide/IDETypes');
-const Logger = require('@logging/Logger');
-const logger = new Logger('Logger');
+const ServiceLogger = require('@logging/ServiceLogger');
 
 class IDEAutomationService {
   constructor(dependencies = {}) {
@@ -17,6 +16,7 @@ class IDEAutomationService {
     this.browserManager = dependencies.browserManager;
     this.ideManager = dependencies.ideManager;
     this.eventBus = dependencies.eventBus;
+    this.logger = new ServiceLogger('IDEAutomationService');
     
     // Initialize core services
     this.terminalMonitor = new TerminalMonitor(this.browserManager, this.eventBus);
@@ -40,7 +40,7 @@ class IDEAutomationService {
     // Event listeners
     this.setupEventListeners();
     
-    logger.info('✅ IDE automation service initialized');
+    this.logger.info('✅ IDE automation service initialized');
   }
 
   /**
@@ -103,7 +103,7 @@ class IDEAutomationService {
         throw new Error('No IDE page available');
       }
 
-      logger.info(`Opening terminal for ${context.ideType} on port ${context.port}`);
+      this.logger.info(`Opening terminal for ${context.ideType} on port ${context.port}`);
 
       // Use IDE-specific terminal shortcuts
       if (context.ideType === IDETypes.VSCODE) {
@@ -144,7 +144,7 @@ class IDEAutomationService {
         timestamp: new Date()
       });
 
-      logger.info(`Terminal opened: ${this.terminalStatus.isOpen}`);
+      this.logger.info(`Terminal opened: ${this.terminalStatus.isOpen}`);
 
       return {
         success: this.terminalStatus.isOpen,
@@ -154,7 +154,7 @@ class IDEAutomationService {
       };
 
     } catch (error) {
-      logger.error('Failed to open terminal:', error);
+      this.logger.error('Failed to open terminal:', error);
       await this.eventBus.publish('terminal.open.failed', {
         error: error.message,
         timestamp: new Date()
@@ -178,7 +178,7 @@ class IDEAutomationService {
         throw new Error('No IDE page available');
       }
 
-      logger.info(`Executing command: ${command}`);
+      this.logger.info(`Executing command: ${command}`);
 
       // Ensure terminal is open
       if (!this.terminalStatus.isOpen) {
@@ -211,7 +211,7 @@ class IDEAutomationService {
         timestamp: new Date()
       });
 
-      logger.info(`Command executed: ${command}`);
+      this.logger.info(`Command executed: ${command}`);
 
       return {
         success: true,
@@ -221,7 +221,7 @@ class IDEAutomationService {
       };
 
     } catch (error) {
-      logger.error('Failed to execute terminal command:', error);
+      this.logger.error('Failed to execute terminal command:', error);
       await this.eventBus.publish('terminal.command.failed', {
         command: command,
         error: error.message,
@@ -240,7 +240,7 @@ class IDEAutomationService {
     try {
       const context = await this.getIDEContext();
       
-      logger.info(`Monitoring terminal output for ${context.ideType}`);
+      this.logger.info(`Monitoring terminal output for ${context.ideType}`);
 
       // Use existing TerminalMonitor service
       const result = await this.terminalMonitor.monitorTerminalOutput();
@@ -256,7 +256,7 @@ class IDEAutomationService {
         timestamp: new Date()
       });
 
-      logger.info(`Terminal output monitored: ${result ? 'URL found' : 'No URL'}`);
+      this.logger.info(`Terminal output monitored: ${result ? 'URL found' : 'No URL'}`);
 
       return {
         success: true,
@@ -266,7 +266,7 @@ class IDEAutomationService {
       };
 
     } catch (error) {
-      logger.error('Failed to monitor terminal output:', error);
+      this.logger.error('Failed to monitor terminal output:', error);
       await this.eventBus.publish('terminal.output.monitoring.failed', {
         error: error.message,
         timestamp: new Date()
@@ -284,7 +284,7 @@ class IDEAutomationService {
     try {
       const context = await this.getIDEContext();
       
-      logger.info(`Restarting user app for ${context.ideType}`);
+      this.logger.info(`Restarting user app for ${context.ideType}`);
 
       // Use existing TerminalMonitor service
       const result = await this.terminalMonitor.restartUserApp();

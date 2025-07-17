@@ -4,21 +4,21 @@
  */
 const { getServiceContainer } = require('./ServiceContainer');
 const { getProjectContextService } = require('./ProjectContextService');
-const Logger = require('@logging/Logger');
-const logger = new Logger('Logger');
+const ServiceLogger = require('@logging/ServiceLogger');
 
 class ServiceRegistry {
     constructor() {
         this.container = getServiceContainer();
         this.projectContextService = getProjectContextService();
         this.registeredServices = new Set();
+        this.logger = new ServiceLogger('ServiceRegistry');
     }
 
     /**
      * Register core infrastructure services
      */
     registerInfrastructureServices() {
-        logger.info('Registering infrastructure services...');
+        this.logger.info('Registering infrastructure services...');
 
         // Database services
         this.container.register('databaseConnection', () => {
@@ -85,7 +85,7 @@ class ServiceRegistry {
      * Register domain services
      */
     registerDomainServices() {
-        logger.info('Registering domain services...');
+        this.logger.info('Registering domain services...');
 
         // IDEMirrorService - FIXED: Use DI instead of new IDEManager()
         this.container.register('ideMirrorService', (ideManager, browserManager) => {
@@ -316,7 +316,7 @@ class ServiceRegistry {
      * Register external services
      */
     registerExternalServices() {
-        logger.info('Registering external services...');
+        this.logger.info('Registering external services...');
 
         // AI service
         this.container.register('aiService', () => {
@@ -421,7 +421,7 @@ class ServiceRegistry {
      * Register strategy services
      */
     registerStrategyServices() {
-        logger.info('Registering strategy services...');
+        this.logger.info('Registering strategy services...');
 
         // Monorepo strategy
         this.container.register('monorepoStrategy', (logger, eventBus, fileSystemService) => {
@@ -454,7 +454,7 @@ class ServiceRegistry {
      * Register repository services
      */
     registerRepositoryServices() {
-        logger.info('Registering repository services...');
+        this.logger.info('Registering repository services...');
 
         // Chat repository
         this.container.register('chatRepository', () => {
@@ -505,7 +505,7 @@ class ServiceRegistry {
      * Register application handlers
      */
     registerApplicationHandlers() {
-        logger.info('Registering application handlers...');
+        this.logger.info('Registering application handlers...');
 
         // Send message handler
         this.container.register('sendMessageHandler', (cursorIDEService, vscodeIDEService, windsurfIDEService, ideManager, idePortManager, eventBus, logger) => {
@@ -564,7 +564,7 @@ class ServiceRegistry {
      * Register all services
      */
     registerAllServices() {
-        logger.info('🔧 Registering all services...');
+        this.logger.info('🔧 Registering all services...');
 
         // ✅ CORRECT ORDER: Infrastructure first, then dependencies
         this.registerInfrastructureServices();
@@ -580,12 +580,12 @@ class ServiceRegistry {
                 projectMappingService: this.container.resolve('projectMappingService'),
                 workspacePathDetector: this.container.resolve('workspacePathDetector')
             });
-        } catch (error) {
-            logger.warn('Project context initialization failed:', error.message);
+                } catch (error) {
+            this.logger.warn('Project context initialization failed:', error.message);
         }
-
-        logger.info('✅ All services registered successfully');
-        logger.info('Registered service categories:', Array.from(this.registeredServices));
+        
+        this.logger.info('✅ All services registered successfully');
+        this.logger.info('Registered service categories:', Array.from(this.registeredServices));
     }
 
     /**
@@ -627,7 +627,7 @@ class ServiceRegistry {
     clearAllServices() {
         this.container.clear();
         this.registeredServices.clear();
-        logger.info('All services cleared');
+        this.logger.info('All services cleared');
     }
 }
 

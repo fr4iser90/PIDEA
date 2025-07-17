@@ -2,11 +2,12 @@
  * Build tools analyzer service for SingleRepoStrategy
  */
 const { BUILD_TOOLS } = require('../constants');
+const ServiceLogger = require('@logging/ServiceLogger');
 
 class BuildToolsAnalyzer {
-    constructor(logger, fileUtils) {
-        this.logger = logger;
-        this.fileUtils = fileUtils;
+    constructor(dependencies = {}) {
+        this.logger = new ServiceLogger('BuildToolsAnalyzer');
+        this.fileUtils = new (require('../utils/fileUtils'))();
     }
 
     /**
