@@ -187,16 +187,39 @@ function ChatComponent({ eventBus, activePort, attachedPrompts = [] }) {
       }
       
       // Add quality indicators if response contains code blocks
-      if (result.codeBlocks && result.codeBlocks.length > 0) {
-        const qualityMessage = normalizeMessage({
+      if (result.data && result.data.codeBlocks && result.data.codeBlocks.length > 0) {
+        // Create enhanced AI response with code blocks
+        const enhancedContent = result.data.codeBlocks.map(block => {
+          const language = block.language || 'text';
+          const content = block.content || '';
+          const filename = block.filename ? ` (${block.filename})` : '';
+          return `\`\`\`${language}${filename}\n${content}\n\`\`\``;
+        }).join('\n\n');
+        
+        // Add the enhanced AI response
+        const aiResponse = normalizeMessage({
           id: Date.now() + 3,
-          content: `Code blocks detected: ${result.codeBlocks.length} blocks with ${result.codeBlocks.reduce((acc, block) => acc + block.confidence, 0) / result.codeBlocks.length * 100}% average confidence`,
+          content: enhancedContent,
+          sender: 'ai',
+          timestamp: new Date().toISOString(),
+          type: 'code',
+          metadata: {
+            codeBlocks: result.data.codeBlocks,
+            averageConfidence: result.data.codeBlocks.reduce((acc, block) => acc + block.confidence, 0) / result.data.codeBlocks.length
+          }
+        });
+        setMessages(prevMessages => [...prevMessages, aiResponse]);
+        
+        // Add quality indicator
+        const qualityMessage = normalizeMessage({
+          id: Date.now() + 4,
+          content: `Code blocks detected: ${result.data.codeBlocks.length} blocks with ${Math.round(result.data.codeBlocks.reduce((acc, block) => acc + block.confidence, 0) / result.data.codeBlocks.length * 100)}% average confidence`,
           sender: 'system',
           timestamp: new Date().toISOString(),
           type: 'quality',
           metadata: {
-            codeBlocks: result.codeBlocks,
-            averageConfidence: result.codeBlocks.reduce((acc, block) => acc + block.confidence, 0) / result.codeBlocks.length
+            codeBlocks: result.data.codeBlocks,
+            averageConfidence: result.data.codeBlocks.reduce((acc, block) => acc + block.confidence, 0) / result.data.codeBlocks.length
           }
         });
         setMessages(prevMessages => [...prevMessages, qualityMessage]);
@@ -326,12 +349,43 @@ function ChatComponent({ eventBus, activePort, attachedPrompts = [] }) {
         <div className="message-bubble" dangerouslySetInnerHTML={{ __html: window.marked.parse(content) }} />
       );
     } else if (isCode) {
-      bubbleContent = (
-        <pre className="user-codeblock">
-          <code>{content.replace(/^```[a-zA-Z0-9]*|```$/g, '').trim()}</code>
-          <button className="codeblock-copy-btn" onClick={() => handleCopyClick(content.replace(/^```[a-zA-Z0-9]*|```$/g, '').trim())}>Copy</button>
-        </pre>
-      );
+      // Enhanced code block rendering with language detection
+      const codeBlocks = content.match(/```(\w+)?\s*([^`]+)```/g);
+      if (codeBlocks) {
+        bubbleContent = (
+          <div className="code-blocks-container">
+            {codeBlocks.map((block, index) => {
+              const match = block.match(/```(\w+)?\s*([^`]+)```/);
+              const language = match[1] || 'text';
+              const code = match[2].trim();
+              return (
+                <div key={index} className="code-block-wrapper">
+                  <div className="code-block-header">
+                    <span className="code-language">{language}</span>
+                    <button 
+                      className="codeblock-copy-btn" 
+                      onClick={() => handleCopyClick(code)}
+                      title="Copy code"
+                    >
+                      📋 Copy
+                    </button>
+                  </div>
+                  <pre className={`code-block ${language}`}>
+                    <code>{code}</code>
+                  </pre>
+                </div>
+              );
+            })}
+          </div>
+        );
+      } else {
+        bubbleContent = (
+          <pre className="user-codeblock">
+            <code>{content.replace(/^```[a-zA-Z0-9]*|```$/g, '').trim()}</code>
+            <button className="codeblock-copy-btn" onClick={() => handleCopyClick(content.replace(/^```[a-zA-Z0-9]*|```$/g, '').trim())}>Copy</button>
+          </pre>
+        );
+      }
     } else {
       bubbleContent = <div className="message-bubble">{escapeHtml(content)}</div>;
     }

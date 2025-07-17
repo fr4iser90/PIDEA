@@ -1,7 +1,24 @@
 const IDETypes = require('../ide/IDETypes');
-const Logger = require('@logging/Logger');
-const SmartCompletionDetector = require('../auto-finish/SmartCompletionDetector');
-const logger = new Logger('Logger');
+
+// Simple SmartCompletionDetector without external dependency
+class SimpleSmartCompletionDetector {
+  async detectCompletion(response, context) {
+    return {
+      isComplete: response.length > 100,
+      isPartial: response.length > 50,
+      confidence: response.length > 200 ? 0.9 : 0.5,
+      completionType: 'text',
+      quality: 'good'
+    };
+  }
+}
+
+// Simple logger without external dependency
+const logger = {
+  info: (msg, ...args) => console.log(`[INFO] ${msg}`, ...args),
+  error: (msg, ...args) => console.error(`[ERROR] ${msg}`, ...args),
+  warn: (msg, ...args) => console.warn(`[WARN] ${msg}`, ...args)
+};
 
 
 class ChatMessageHandler {
@@ -15,7 +32,7 @@ class ChatMessageHandler {
     }
 
     // Initialize smart completion detector
-    this.smartCompletionDetector = new SmartCompletionDetector();
+    this.smartCompletionDetector = new SimpleSmartCompletionDetector();
   }
 
   async sendMessage(message, options = {}) {
@@ -58,29 +75,184 @@ class ChatMessageHandler {
    */
   async detectCodeBlocks(page) {
     try {
+      // Pass selectors directly to avoid 'this' reference issues
+      const selectors = this.selectors;
+      
       return await page.evaluate((selectors) => {
+        // Helper functions that work inside page.evaluate
+        const detectLanguageFromElement = (languageElement, filenameElement) => {
+          if (languageElement) {
+            const classList = languageElement.className;
+            if (classList.includes('javascript-lang-file-icon')) return 'javascript';
+            if (classList.includes('typescript-lang-file-icon')) return 'typescript';
+            if (classList.includes('python-lang-file-icon')) return 'python';
+            if (classList.includes('java-lang-file-icon')) return 'java';
+            if (classList.includes('cpp-lang-file-icon')) return 'cpp';
+            if (classList.includes('csharp-lang-file-icon')) return 'csharp';
+            if (classList.includes('php-lang-file-icon')) return 'php';
+            if (classList.includes('ruby-lang-file-icon')) return 'ruby';
+            if (classList.includes('go-lang-file-icon')) return 'go';
+            if (classList.includes('rust-lang-file-icon')) return 'rust';
+          }
+          
+          if (filenameElement) {
+            const filename = filenameElement.textContent.toLowerCase();
+            const extensionMap = {
+              '.js': 'javascript',
+              '.jsx': 'javascript',
+              '.ts': 'typescript',
+              '.tsx': 'typescript',
+              '.py': 'python',
+              '.java': 'java',
+              '.cpp': 'cpp',
+              '.c': 'c',
+              '.cs': 'csharp',
+              '.php': 'php',
+              '.rb': 'ruby',
+              '.go': 'go',
+              '.rs': 'rust',
+              '.html': 'html',
+              '.css': 'css',
+              '.scss': 'scss',
+              '.json': 'json',
+              '.xml': 'xml',
+              '.sql': 'sql',
+              '.md': 'markdown'
+            };
+            
+            for (const [ext, lang] of Object.entries(extensionMap)) {
+              if (filename.includes(ext)) return lang;
+            }
+          }
+          
+          return 'text';
+        };
+
+        const calculateConfidence = (container, selectors) => {
+          let confidence = 0.5; // Base confidence
+          
+          // Check for Monaco editor (high confidence)
+          if (container.querySelector(selectors.monacoEditor)) confidence += 0.3;
+          
+          // Check for syntax highlighting (medium confidence)
+          if (container.querySelector(selectors.syntaxTokens)) confidence += 0.2;
+          
+          // Check for filename (low confidence)
+          if (container.querySelector(selectors.codeBlockFilename)) confidence += 0.1;
+          
+          // Check for language indicator (medium confidence)
+          if (container.querySelector(selectors.codeBlockLanguage)) confidence += 0.15;
+          
+          return Math.min(confidence, 1.0);
+        };
+
+        const validateSyntax = (codeText, language) => {
+          // Basic syntax validation patterns
+          const patterns = {
+            javascript: {
+              valid: /^[\s\S]*$/,
+              hasErrors: /(SyntaxError|ReferenceError|TypeError|console\.error)/i,
+              hasConsole: /console\.(log|warn|error|info)/i
+            },
+            typescript: {
+              valid: /^[\s\S]*$/,
+              hasErrors: /(TS\d+|Type.*error|interface|type\s+\w+)/i,
+              hasTypes: /(:\s*\w+|interface|type\s+\w+)/i
+            },
+            python: {
+              valid: /^[\s\S]*$/,
+              hasErrors: /(SyntaxError|IndentationError|NameError|print\()/i,
+              hasPrint: /print\s*\(/i
+            },
+            java: {
+              valid: /^[\s\S]*$/,
+              hasErrors: /(public\s+class|import\s+java|System\.out)/i,
+              hasMain: /public\s+static\s+void\s+main/i
+            }
+          };
+          
+          const pattern = patterns[language] || patterns.javascript;
+          return {
+            isValid: pattern.valid.test(codeText),
+            hasErrors: pattern.hasErrors.test(codeText),
+            hasLanguageFeatures: pattern.hasConsole || pattern.hasTypes || pattern.hasPrint || pattern.hasMain,
+            confidence: 0.8,
+            language: language
+          };
+        };
+
         const codeBlocks = [];
         const containers = document.querySelectorAll(selectors.codeBlocks);
         
-        containers.forEach(container => {
+        // Log found containers
+        const containerCount = containers.length;
+        
+                containers.forEach((container, index) => {
           const content = container.querySelector(selectors.codeBlockContent);
           const header = container.querySelector(selectors.codeBlockHeader);
           const filename = container.querySelector(selectors.codeBlockFilename);
           const language = container.querySelector(selectors.codeBlockLanguage);
           const editor = container.querySelector(selectors.monacoEditor);
           
+          // Initialize variables
+          let codeLines = null;
+          let codeText = '';
+          
+          // Debug info (will be logged by the outer function)
+          const debugInfo = {
+            index: index + 1,
+            hasContent: !!content,
+            hasHeader: !!header,
+            hasFilename: !!filename,
+            hasLanguage: !!language,
+            hasEditor: !!editor,
+            codeLinesFound: 0,
+            codeTextLength: 0
+          };
+          
           if (content && editor) {
-            const codeLines = editor.querySelectorAll(selectors.codeLines);
-            const codeText = Array.from(codeLines).map(line => line.textContent).join('\n');
+            // Try multiple selectors for code lines
+            let codeLines = editor.querySelectorAll(selectors.codeLines);
+            
+            // If no lines found, try alternative selectors
+            if (codeLines.length === 0) {
+              codeLines = editor.querySelectorAll('.view-line');
+            }
+            if (codeLines.length === 0) {
+              codeLines = editor.querySelectorAll('.monaco-editor .view-line');
+            }
+            if (codeLines.length === 0) {
+              codeLines = editor.querySelectorAll('span[class*="mtk"]');
+            }
+            
+            // If still no lines, use the editor content directly
+            let codeText;
+            if (codeLines.length > 0) {
+              // Join tokens and clean up whitespace
+              codeText = Array.from(codeLines)
+                .map(line => line.textContent || '')
+                .join('')
+                .replace(/\s+/g, ' ')
+                .trim();
+              
+              // Remove duplicates (common issue with Monaco editor)
+              codeText = codeText.replace(/(.+?)\1+/g, '$1');
+            } else {
+              codeText = (editor.textContent || editor.innerText || '').trim();
+            }
             
             // Detect language from DOM elements
-            const detectedLanguage = this.detectLanguageFromElement(language, filename);
+            const detectedLanguage = detectLanguageFromElement(language, filename);
             
             // Calculate confidence score
-            const confidence = this.calculateConfidence(container, selectors);
+            const confidence = calculateConfidence(container, selectors);
             
             // Validate syntax
-            const syntax = this.validateSyntax(codeText, detectedLanguage);
+            const syntax = validateSyntax(codeText, detectedLanguage);
+            
+            // Update debug info
+            debugInfo.codeLinesFound = codeLines ? codeLines.length : 0;
+            debugInfo.codeTextLength = codeText.length;
             
             codeBlocks.push({
               type: 'code_block',
@@ -89,139 +261,28 @@ class ChatMessageHandler {
               filename: filename?.textContent || null,
               confidence: confidence,
               syntax: syntax,
-              hasApplyButton: !!container.querySelector(selectors.codeBlockApplyButton),
-              lineCount: codeLines.length,
+              hasApplyButton: !!container.querySelector(selectors.codeBlockApplyButton) && 
+                container.querySelector(selectors.codeBlockApplyButton).textContent.includes('Apply'),
+              lineCount: codeLines ? codeLines.length : 0,
               characterCount: codeText.length
             });
           }
         });
         
         return codeBlocks;
-      }, this.selectors);
+      }, selectors);
+      
+      // Log the results
+      logger.info(`🔍 [ChatMessageHandler] detectCodeBlocks found ${codeBlocks.length} code blocks`);
+      
+      return codeBlocks;
     } catch (error) {
-      logger.error('Error detecting code blocks:', error.message);
+      logger.error('❌ [ChatMessageHandler] Error detecting code blocks:', error.message);
       return [];
     }
   }
 
-  /**
-   * Language detection from DOM elements
-   * @param {Element} languageElement - Language indicator element
-   * @param {Element} filenameElement - Filename element
-   * @returns {string} Detected language
-   */
-  detectLanguageFromElement(languageElement, filenameElement) {
-    if (languageElement) {
-      const classList = languageElement.className;
-      if (classList.includes('javascript-lang-file-icon')) return 'javascript';
-      if (classList.includes('typescript-lang-file-icon')) return 'typescript';
-      if (classList.includes('python-lang-file-icon')) return 'python';
-      if (classList.includes('java-lang-file-icon')) return 'java';
-      if (classList.includes('cpp-lang-file-icon')) return 'cpp';
-      if (classList.includes('csharp-lang-file-icon')) return 'csharp';
-      if (classList.includes('php-lang-file-icon')) return 'php';
-      if (classList.includes('ruby-lang-file-icon')) return 'ruby';
-      if (classList.includes('go-lang-file-icon')) return 'go';
-      if (classList.includes('rust-lang-file-icon')) return 'rust';
-    }
-    
-    if (filenameElement) {
-      const filename = filenameElement.textContent.toLowerCase();
-      const extensionMap = {
-        '.js': 'javascript',
-        '.jsx': 'javascript',
-        '.ts': 'typescript',
-        '.tsx': 'typescript',
-        '.py': 'python',
-        '.java': 'java',
-        '.cpp': 'cpp',
-        '.c': 'c',
-        '.cs': 'csharp',
-        '.php': 'php',
-        '.rb': 'ruby',
-        '.go': 'go',
-        '.rs': 'rust',
-        '.html': 'html',
-        '.css': 'css',
-        '.scss': 'scss',
-        '.json': 'json',
-        '.xml': 'xml',
-        '.sql': 'sql',
-        '.md': 'markdown'
-      };
-      
-      for (const [ext, lang] of Object.entries(extensionMap)) {
-        if (filename.includes(ext)) return lang;
-      }
-    }
-    
-    return 'text';
-  }
 
-  /**
-   * Calculate confidence score for code block
-   * @param {Element} container - Code block container
-   * @param {Object} selectors - DOM selectors
-   * @returns {number} Confidence score (0-1)
-   */
-  calculateConfidence(container, selectors) {
-    let confidence = 0.5; // Base confidence
-    
-    // Check for Monaco editor (high confidence)
-    if (container.querySelector(selectors.monacoEditor)) confidence += 0.3;
-    
-    // Check for syntax highlighting (medium confidence)
-    if (container.querySelector(selectors.syntaxTokens)) confidence += 0.2;
-    
-    // Check for filename (low confidence)
-    if (container.querySelector(selectors.codeBlockFilename)) confidence += 0.1;
-    
-    // Check for language indicator (medium confidence)
-    if (container.querySelector(selectors.codeBlockLanguage)) confidence += 0.15;
-    
-    return Math.min(confidence, 1.0);
-  }
-
-  /**
-   * Validate syntax based on language
-   * @param {string} codeText - Code content
-   * @param {string} language - Programming language
-   * @returns {Object} Syntax validation result
-   */
-  validateSyntax(codeText, language) {
-    // Basic syntax validation patterns
-    const patterns = {
-      javascript: {
-        valid: /^[\s\S]*$/,
-        hasErrors: /(SyntaxError|ReferenceError|TypeError|console\.error)/i,
-        hasConsole: /console\.(log|warn|error|info)/i
-      },
-      typescript: {
-        valid: /^[\s\S]*$/,
-        hasErrors: /(TS\d+|Type.*error|interface|type\s+\w+)/i,
-        hasTypes: /(:\s*\w+|interface|type\s+\w+)/i
-      },
-      python: {
-        valid: /^[\s\S]*$/,
-        hasErrors: /(SyntaxError|IndentationError|NameError|print\()/i,
-        hasPrint: /print\s*\(/i
-      },
-      java: {
-        valid: /^[\s\S]*$/,
-        hasErrors: /(public\s+class|import\s+java|System\.out)/i,
-        hasMain: /public\s+static\s+void\s+main/i
-      }
-    };
-    
-    const pattern = patterns[language] || patterns.javascript;
-    return {
-      isValid: pattern.valid.test(codeText),
-      hasErrors: pattern.hasErrors.test(codeText),
-      hasLanguageFeatures: pattern.hasConsole || pattern.hasTypes || pattern.hasPrint || pattern.hasMain,
-      confidence: 0.8,
-      language: language
-    };
-  }
 
   /**
    * Extract inline code from text content
@@ -301,6 +362,10 @@ class ChatMessageHandler {
           // Get the latest AI response for smart completion detection
           const latestResponse = await this.extractLatestAIResponse(page);
           completionContext.response = latestResponse;
+          
+          // Debug logging
+          logger.info(`📝 [ChatMessageHandler] Latest AI response length: ${latestResponse?.length || 0}`);
+          logger.info(`📝 [ChatMessageHandler] Latest AI response preview: ${latestResponse?.substring(0, 100)}...`);
           
           // Update context with code detection
           const codeBlocks = await this.detectCodeBlocks(page);
@@ -426,20 +491,33 @@ class ChatMessageHandler {
         return '';
       }
       
-      const response = await currentPage.evaluate((selector) => {
-        const aiMessages = document.querySelectorAll(selector);
-        if (aiMessages.length === 0) {
-          return '';
+      const response = await currentPage.evaluate(() => {
+        // Try multiple selectors for AI messages
+        const selectors = [
+          'span.anysphere-markdown-container-root',
+          '.markdown-section',
+          '.message-content-animated',
+          '.ai-message',
+          '.assistant-message'
+        ];
+        
+        for (const selector of selectors) {
+          const messages = document.querySelectorAll(selector);
+          
+          if (messages.length > 0) {
+            const lastMessage = messages[messages.length - 1];
+            const content = lastMessage.innerText || lastMessage.textContent || '';
+            return content;
+          }
         }
         
-        // Get the last AI message
-        const lastMessage = aiMessages[aiMessages.length - 1];
-        return lastMessage.innerText || lastMessage.textContent || '';
-      }, this.selectors.aiMessages);
+        return '';
+      });
       
+      logger.info(`📝 [ChatMessageHandler] extractLatestAIResponse returned ${response.length} characters`);
       return response.trim();
     } catch (error) {
-      logger.error(`Error extracting AI response from ${this.ideType}:`, error.message);
+      logger.error(`❌ [ChatMessageHandler] Error extracting AI response from ${this.ideType}:`, error.message);
       return '';
     }
   }

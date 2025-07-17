@@ -324,6 +324,82 @@
   color: #4e8cff;
 }
 
+/* Enhanced Code Block Styles */
+.code-blocks-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.code-block-wrapper {
+  border: 1px solid #23272e;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #181c20;
+}
+
+.code-block-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 1rem;
+  background: #23272e;
+  border-bottom: 1px solid #23272e;
+}
+
+.code-language {
+  font-size: 0.8rem;
+  color: #4e8cff;
+  font-weight: bold;
+  text-transform: uppercase;
+}
+
+.codeblock-copy-btn {
+  background: #4e8cff;
+  color: white;
+  border: none;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.7rem;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.codeblock-copy-btn:hover {
+  background: #3a7bd5;
+}
+
+.code-block {
+  margin: 0;
+  padding: 1rem;
+  background: #181c20;
+  color: #e6e6e6;
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  font-size: 0.9rem;
+  line-height: 1.4;
+  overflow-x: auto;
+}
+
+.code-block.javascript {
+  border-left: 4px solid #f7df1e;
+}
+
+.code-block.typescript {
+  border-left: 4px solid #3178c6;
+}
+
+.code-block.python {
+  border-left: 4px solid #3776ab;
+}
+
+.code-block.bash {
+  border-left: 4px solid #4e9900;
+}
+
+.code-block.text {
+  border-left: 4px solid #666;
+}
+
 /* Light Theme Support */
 body.light-theme #chat {
   background: #f8f9fa;

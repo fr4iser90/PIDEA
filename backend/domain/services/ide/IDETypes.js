@@ -38,9 +38,9 @@ class IDETypes {
         codeBlockFilename: '.composer-code-block-filename',
         codeBlockLanguage: '.composer-code-block-file-info .javascript-lang-file-icon',
         monacoEditor: '.monaco-editor',
-        codeLines: '.view-lines .view-line',
+        codeLines: '.view-line, .view-lines .view-line, span[class*="mtk"]',
         syntaxTokens: '.mtk1, .mtk4, .mtk14, .mtk18',
-        codeBlockApplyButton: '.anysphere-text-button:has-text("Apply")',
+        codeBlockApplyButton: '.anysphere-text-button',
         
         // Inline code detection
         inlineCode: 'code:not(pre code)',

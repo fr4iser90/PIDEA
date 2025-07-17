@@ -1,8 +1,13 @@
-const ServiceLogger = require('@logging/ServiceLogger');
+// Simple logger without external dependency
+const logger = {
+  info: (msg, ...args) => console.log(`[INFO] ${msg}`, ...args),
+  error: (msg, ...args) => console.error(`[ERROR] ${msg}`, ...args),
+  warn: (msg, ...args) => console.warn(`[WARN] ${msg}`, ...args)
+};
 
 class SmartCompletionDetector {
   constructor() {
-    this.logger = new ServiceLogger('SmartCompletionDetector');
+    this.logger = logger;
     
     // Completion detection patterns
     this.completionPatterns = {

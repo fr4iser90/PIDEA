@@ -113,7 +113,8 @@ class SendMessageHandler {
       });
       return {
         success: true,
-        result
+        result,
+        codeBlocks: result.codeBlocks || []
       };
     } catch (error) {
       this.logger.error('SendMessageHandler: Message sending failed', {
@@ -215,8 +216,8 @@ class SendMessageHandler {
         await activeIDEService.switchToSession(session);
       }
 
-      // Send to the appropriate IDE
-      await activeIDEService.sendMessage(content);
+      // Send to the appropriate IDE and get response with code blocks
+      const ideResponse = await activeIDEService.sendMessage(content, { waitForResponse: true });
 
       // Publish events
       if (this.eventBus) {
@@ -227,7 +228,8 @@ class SendMessageHandler {
           content: message.content,
           sender: message.sender,
           type: message.type,
-          timestamp: message.timestamp
+          timestamp: message.timestamp,
+          ideResponse: ideResponse
         });
       }
 
@@ -235,7 +237,8 @@ class SendMessageHandler {
         success: true,
         sessionId: session.id,
         messageId: message.id,
-        response: 'Message sent successfully',
+        response: ideResponse.response || 'Message sent successfully',
+        codeBlocks: ideResponse.codeBlocks || [],
         timestamp: new Date()
       };
 
@@ -281,8 +284,8 @@ class SendMessageHandler {
         await activeIDEService.switchToSession(session);
       }
 
-      // Send to the appropriate IDE
-      await activeIDEService.sendMessage(command.content);
+      // Send to the appropriate IDE and get response with code blocks
+      const ideResponse = await activeIDEService.sendMessage(command.content, { waitForResponse: true });
 
       // Publish events
       if (this.eventBus) {
@@ -292,7 +295,8 @@ class SendMessageHandler {
           content: message.content,
           sender: message.sender,
           type: message.type,
-          timestamp: message.timestamp
+          timestamp: message.timestamp,
+          ideResponse: ideResponse
         });
       }
 
@@ -300,7 +304,9 @@ class SendMessageHandler {
         success: true,
         sessionId: session.id,
         messageId: message.id,
-        message: message
+        message: message,
+        response: ideResponse.response || 'Message sent successfully',
+        codeBlocks: ideResponse.codeBlocks || []
       };
 
     } catch (error) {

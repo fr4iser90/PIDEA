@@ -50,7 +50,8 @@ class ChatController {
           messageId: result.messageId,
           response: result.response,
           sessionId: result.sessionId,
-          timestamp: result.timestamp
+          timestamp: result.timestamp,
+          codeBlocks: result.codeBlocks || []
         }
       });
     } catch (error) {
