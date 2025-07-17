@@ -519,6 +519,80 @@ body.light-theme .message-bubble pre code {
   color: #23272e;
 }
 
+/* Modern Code Block Styles */
+.modern-code-block-wrapper {
+  margin: 16px 0;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  background: #23272e;
+  overflow: hidden;
+  border: 1px solid #23272e;
+  transition: box-shadow 0.2s;
+}
+.modern-code-block-wrapper:hover {
+  box-shadow: 0 4px 16px rgba(0,0,0,0.10);
+  border-color: #3a3f4b;
+}
+.modern-code-block-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #181b20;
+  color: #b6c2e0;
+  font-size: 14px;
+  font-weight: 500;
+  padding: 8px 14px;
+  cursor: pointer;
+  border-bottom: 1px solid #23272e;
+  user-select: none;
+}
+.modern-code-block-title {
+  flex: 1;
+  font-family: 'Fira Mono', 'Consolas', monospace;
+  font-size: 13px;
+  color: #8ec07c;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.modern-code-block-toggle {
+  background: none;
+  border: none;
+  color: #b6c2e0;
+  font-size: 16px;
+  margin-left: 8px;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+.modern-code-block-toggle:hover {
+  color: #8ec07c;
+}
+.modern-code-block-copy {
+  background: none;
+  border: none;
+  color: #b6c2e0;
+  font-size: 16px;
+  margin-left: 8px;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+.modern-code-block-copy:hover {
+  color: #fabd2f;
+}
+.modern-code-block {
+  background: #23272e;
+  color: #eaeaea;
+  font-family: 'Fira Mono', 'Consolas', monospace;
+  font-size: 14px;
+  padding: 16px;
+  margin: 0;
+  border: none;
+  border-radius: 0 0 8px 8px;
+  overflow-x: auto;
+  line-height: 1.6;
+}
+
 /* Mobile Responsive */
 @media (max-width: 768px) {
   #chat {

@@ -70,6 +70,13 @@ function ChatComponent({ eventBus, activePort, attachedPrompts = [] }) {
   const { user } = useAuthStore.getState();
   const requestedBy = user?.email || user?.id || 'unknown';
 
+  // State für ausgeklappte Codeblöcke
+  const [expandedBlocks, setExpandedBlocks] = useState({});
+
+  const toggleBlock = (id) => {
+    setExpandedBlocks(prev => ({ ...prev, [id]: !prev[id] }));
+  };
+
   // Lade Chat immer, wenn activePort sich ändert (React-Way)
   const loadChatHistory = useCallback(async () => {
     if (!activePort) return;
@@ -344,46 +351,92 @@ function ChatComponent({ eventBus, activePort, attachedPrompts = [] }) {
     
     if (isQuality) {
       bubbleContent = <QualityIndicator message={message} />;
+    } else if (isAI && message.metadata?.codeBlocks?.length > 0) {
+      // Modernes Codeblock-Rendering mit Header und Toggle
+      bubbleContent = (
+        <div className="code-blocks-container">
+          {message.metadata.codeBlocks.map((block, idx) => {
+            const blockId = `${message.id}_${idx}`;
+            const expanded = expandedBlocks[blockId] !== false; // default: true
+            return (
+              <div key={blockId} className="modern-code-block-wrapper">
+                <div className="modern-code-block-header" onClick={() => toggleBlock(blockId)}>
+                  <span className="modern-code-block-title">
+                    {block.filename ? block.filename : block.language ? block.language : 'Code'}
+                  </span>
+                  <button
+                    className="modern-code-block-toggle"
+                    title={expanded ? 'Einklappen' : 'Ausklappen'}
+                    tabIndex={-1}
+                    onClick={e => { e.stopPropagation(); toggleBlock(blockId); }}
+                  >
+                    {expanded ? '▲' : '▼'}
+                  </button>
+                  <button
+                    className="modern-code-block-copy"
+                    title="Copy code"
+                    tabIndex={-1}
+                    onClick={e => { e.stopPropagation(); handleCopyClick(block.content); }}
+                  >
+                    📋
+                  </button>
+                </div>
+                {expanded && (
+                  <pre className={`modern-code-block code-block ${block.language || ''}`}>
+                    <code>{block.content}</code>
+                  </pre>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      );
     } else if (isAI && window.marked) {
       bubbleContent = (
         <div className="message-bubble" dangerouslySetInnerHTML={{ __html: window.marked.parse(content) }} />
       );
     } else if (isCode) {
-      // Enhanced code block rendering with language detection
+      // Fallback: Markdown-Codeblöcke parsen
       const codeBlocks = content.match(/```(\w+)?\s*([^`]+)```/g);
       if (codeBlocks) {
         bubbleContent = (
           <div className="code-blocks-container">
-            {codeBlocks.map((block, index) => {
+            {codeBlocks.map((block, idx) => {
               const match = block.match(/```(\w+)?\s*([^`]+)```/);
               const language = match[1] || 'text';
               const code = match[2].trim();
+              const blockId = `${message.id}_md_${idx}`;
+              const expanded = expandedBlocks[blockId] !== false;
               return (
-                <div key={index} className="code-block-wrapper">
-                  <div className="code-block-header">
-                    <span className="code-language">{language}</span>
-                    <button 
-                      className="codeblock-copy-btn" 
-                      onClick={() => handleCopyClick(code)}
-                      title="Copy code"
+                <div key={blockId} className="modern-code-block-wrapper">
+                  <div className="modern-code-block-header" onClick={() => toggleBlock(blockId)}>
+                    <span className="modern-code-block-title">{language}</span>
+                    <button
+                      className="modern-code-block-toggle"
+                      title={expanded ? 'Einklappen' : 'Ausklappen'}
+                      tabIndex={-1}
+                      onClick={e => { e.stopPropagation(); toggleBlock(blockId); }}
                     >
-                      📋 Copy
+                      {expanded ? '▲' : '▼'}
+                    </button>
+                    <button
+                      className="modern-code-block-copy"
+                      title="Copy code"
+                      tabIndex={-1}
+                      onClick={e => { e.stopPropagation(); handleCopyClick(code); }}
+                    >
+                      📋
                     </button>
                   </div>
-                  <pre className={`code-block ${language}`}>
-                    <code>{code}</code>
-                  </pre>
+                  {expanded && (
+                    <pre className={`modern-code-block code-block ${language}`}>
+                      <code>{code}</code>
+                    </pre>
+                  )}
                 </div>
               );
             })}
           </div>
-        );
-      } else {
-        bubbleContent = (
-          <pre className="user-codeblock">
-            <code>{content.replace(/^```[a-zA-Z0-9]*|```$/g, '').trim()}</code>
-            <button className="codeblock-copy-btn" onClick={() => handleCopyClick(content.replace(/^```[a-zA-Z0-9]*|```$/g, '').trim())}>Copy</button>
-          </pre>
         );
       }
     } else {
