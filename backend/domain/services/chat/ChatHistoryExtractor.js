@@ -141,22 +141,36 @@ class ChatHistoryExtractor {
           messages.push({
             sender: 'user',
             type: text.includes('```') ? 'code' : 'text',
-            content: text.trim(),
+            content: text,
             element: element,
             index: index
           });
         }
       });
       
-      // Find all AI messages
+      // Find all AI messages and their code blocks
       const aiElements = document.querySelectorAll(selectors.aiMessages);
       aiElements.forEach((element, index) => {
-        const text = element.innerText || element.textContent || '';
-        if (text.trim()) {
+        let content = element.innerText || element.textContent || '';
+        
+        // Find code blocks in the entire document that belong to this message
+        // Code blocks are usually siblings or children of the message container
+        const messageContainer = element.closest(selectors.messagesContainer) || element.parentElement;
+        const codeBlocks = messageContainer ? messageContainer.querySelectorAll(selectors.codeBlocks) : [];
+        
+        codeBlocks.forEach((codeBlock, codeIndex) => {
+          const codeContent = codeBlock.innerText || codeBlock.textContent || '';
+          if (codeContent.trim()) {
+            // Add code block as markdown to the content
+            content += '\n\n```\n' + codeContent + '\n```\n';
+          }
+        });
+        
+        if (content.trim()) {
           messages.push({
             sender: 'assistant',
-            type: text.includes('```') ? 'code' : 'text',
-            content: text.trim(),
+            type: content.includes('```') ? 'code' : 'text',
+            content: content,
             element: element,
             index: index
           });
@@ -233,7 +247,7 @@ class ChatHistoryExtractor {
                 messages.push({
                   sender: 'user',
                   type: text.includes('```') ? 'code' : 'text',
-                  content: text.trim(),
+                  content: content,
                   index: index
                 });
               }
@@ -251,7 +265,7 @@ class ChatHistoryExtractor {
                 messages.push({
                   sender: 'assistant',
                   type: text.includes('```') ? 'code' : 'text',
-                  content: text.trim(),
+                  content: content,
                   index: index
                 });
               }
@@ -286,7 +300,7 @@ class ChatHistoryExtractor {
           messages.push({
             sender: 'user',
             type: text.includes('```') ? 'code' : 'text',
-            content: text.trim(),
+            content: content,
             element: element,
             index: index
           });
@@ -301,7 +315,7 @@ class ChatHistoryExtractor {
           messages.push({
             sender: 'assistant',
             type: text.includes('```') ? 'code' : 'text',
-            content: text.trim(),
+            content: content,
             element: element,
             index: index
           });
@@ -341,7 +355,7 @@ class ChatHistoryExtractor {
             messages.push({
               sender: 'user',
               type: text.includes('```') ? 'code' : 'text',
-              content: text.trim(),
+              content: content,
               element: element,
               index: index
             });
@@ -358,7 +372,7 @@ class ChatHistoryExtractor {
             messages.push({
               sender: 'assistant',
               type: text.includes('```') ? 'code' : 'text',
-              content: text.trim(),
+              content: content,
               element: element,
               index: index
             });
