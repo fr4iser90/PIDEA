@@ -206,7 +206,7 @@ const useAuthStore = create(
         );
 
         // Instant redirect - no countdown
-        window.location.href = '/login';
+        window.location.href = '/';
       },
 
       // Reset redirect flag
