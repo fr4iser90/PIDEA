@@ -148,29 +148,30 @@ class ChatHistoryExtractor {
         }
       });
       
-      // Find all AI messages and their code blocks
+      // Find all AI normal messages (text only)
       const aiElements = document.querySelectorAll(selectors.aiMessages);
       aiElements.forEach((element, index) => {
-        let content = element.innerText || element.textContent || '';
-        
-        // Find code blocks in the entire document that belong to this message
-        // Code blocks are usually siblings or children of the message container
-        const messageContainer = element.closest(selectors.messagesContainer) || element.parentElement;
-        const codeBlocks = messageContainer ? messageContainer.querySelectorAll(selectors.codeBlocks) : [];
-        
-        codeBlocks.forEach((codeBlock, codeIndex) => {
-          const codeContent = codeBlock.innerText || codeBlock.textContent || '';
-          if (codeContent.trim()) {
-            // Add code block as markdown to the content
-            content += '\n\n```\n' + codeContent + '\n```\n';
-          }
-        });
-        
+        const content = element.innerText || element.textContent || '';
         if (content.trim()) {
           messages.push({
             sender: 'assistant',
-            type: content.includes('```') ? 'code' : 'text',
+            type: 'text',
             content: content,
+            element: element,
+            index: index
+          });
+        }
+      });
+      
+      // Find all AI code blocks as SEPARATE messages
+      const codeBlockElements = document.querySelectorAll(selectors.codeBlocks);
+      codeBlockElements.forEach((element, index) => {
+        const content = element.innerText || element.textContent || '';
+        if (content.trim()) {
+          messages.push({
+            sender: 'assistant',
+            type: 'code',
+            content: '```\n' + content + '\n```',
             element: element,
             index: index
           });
