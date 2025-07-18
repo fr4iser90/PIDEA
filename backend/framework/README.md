@@ -205,3 +205,38 @@ Framework: Testing Framework
 ## 🎯 **Ziel**
 
 Jedes Framework ist eine Sammlung von Steps, die automatisch geladen und auf Projekte angewendet werden können. Keine hardcodierten Workflows mehr!
+
+
+backend/domain/steps/categories/
+├── analysis/
+│   ├── analysis_step.js ✅ (bleibt)
+│   └── check_container_status.js ✅ (bleibt)
+├── refactoring/
+│   ├── refactor_analyze.js ✅ (bleibt)
+│   ├── refactor_generate_task.js ✅ (bleibt)
+│   └── refactor_step.js ✅ (bleibt)
+├── testing/
+│   ├── run_unit_tests.js ✅ (bleibt)
+│   └── testing_step.js ✅ (bleibt)
+├── git/ ✅ (NEU - Git Steps hier)
+│   ├── git_create_branch.js
+│   ├── git_commit.js
+│   ├── git_push.js
+│   └── git_create_pr.js
+├── ide/ ✅ (NEU - IDE Steps hier)
+│   ├── ide_open_file.js
+│   ├── ide_edit_file.js
+│   └── ide_save_file.js
+└── cursor/ ✅ (NEU - Cursor AI Steps hier)
+    ├── cursor_send_message.js
+    ├── cursor_get_response.js
+    └── cursor_apply_changes.js
+
+backend/framework/[framework_name]/
+├── workflow/
+│   ├── framework_specific_step.js (Framework-spezifisch)
+│   ├── custom_analysis.js (Framework-spezifisch)
+│   └── custom_generation.js (Framework-spezifisch)
+├── script/
+├── prompt/
+└── template/
