@@ -145,14 +145,15 @@ export const apiCall = async (endpoint, options = {}, projectId = null) => {
   
   logger.info('🔍 [APIChatRepository] Auth headers:', authHeaders);
   
-  // Add ETag headers for GET requests
-  const etagOptions = etagManager.addETagHeaders(options, endpoint, projectId);
+  // Add ETag headers only for analysis endpoints, not for IDE endpoints
+  const isAnalysisEndpoint = endpoint.includes('/analysis') || endpoint.includes('/auto-finish') || endpoint.includes('/auto-test');
+  const etagOptions = isAnalysisEndpoint ? etagManager.addETagHeaders(options, endpoint, projectId) : options;
   
   const config = {
     headers: {
       'Content-Type': 'application/json',
       ...authHeaders,
-      ...etagOptions.headers
+      ...(etagOptions.headers || {})
     },
     ...etagOptions
   };
@@ -169,7 +170,8 @@ export const apiCall = async (endpoint, options = {}, projectId = null) => {
     
     logger.info('🔍 [APIChatRepository] Response status:', response.status);
     
-    // Handle ETag response
+    // Handle ETag response only for analysis endpoints
+    if (isAnalysisEndpoint) {
     const etagResponse = etagManager.handleResponse(response, endpoint, projectId);
     
     if (response.status === 304) {
@@ -178,6 +180,7 @@ export const apiCall = async (endpoint, options = {}, projectId = null) => {
       if (cachedData) {
         logger.info('✅ [APIChatRepository] Using cached data (304 Not Modified)');
         return cachedData;
+        }
       }
     }
     
@@ -194,8 +197,8 @@ export const apiCall = async (endpoint, options = {}, projectId = null) => {
     
     const data = await response.json();
     
-    // Cache successful GET responses
-    if (config.method === 'GET' || !config.method) {
+    // Cache successful GET responses only for analysis endpoints
+    if (isAnalysisEndpoint && (config.method === 'GET' || !config.method)) {
       etagManager.cacheData(endpoint, data, projectId);
     }
     

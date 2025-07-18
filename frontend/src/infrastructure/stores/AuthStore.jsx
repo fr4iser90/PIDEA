@@ -42,6 +42,13 @@ const useAuthStore = create(
           const userData = data.data || data;
           const token = userData.accessToken || userData.token;
 
+          logger.info('🔍 [AuthStore] Parsed response data:', {
+            hasData: !!data.data,
+            userDataKeys: Object.keys(userData || {}),
+            tokenExists: !!token,
+            tokenLength: token ? token.length : 0
+          });
+
           logger.info('🔍 [AuthStore] Extracted data:', {
             user: userData.user,
             token: token ? token.substring(0, 20) + '...' : 'null',
@@ -171,7 +178,7 @@ const useAuthStore = create(
           const data = await response.json();
           logger.info('✅ [AuthStore] Token validation successful');
           set({ 
-            user: data.user, 
+            user: data.data?.user || data.user, 
             isAuthenticated: true, 
             lastAuthCheck: now,
             redirectToLogin: false
@@ -238,7 +245,8 @@ const useAuthStore = create(
           }
 
           const data = await response.json();
-          const newToken = data.accessToken || data.token;
+          const userData = data.data || data;
+          const newToken = userData.accessToken || userData.token;
           
           logger.info('✅ [AuthStore] Token refreshed successfully');
           set({ token: newToken, isAuthenticated: true });

@@ -471,7 +471,7 @@ class AppController {
     // WebSocket for chat updates only (existing functionality)
     let chatWs;
     const connectChatWebSocket = () => {
-      chatWs = new WebSocket(`ws://${process.env.BACKEND_URL?.replace('http://', '')}/ws`);
+      chatWs = new WebSocket(`ws://${process.env.VITE_BACKEND_URL?.replace('http://', '')}/ws`);
       chatWs.onopen = () => {
         logger.info('Connected for chat updates');
         logger.info('Connection URL:', chatWs.url);
@@ -634,7 +634,7 @@ class AppController {
         } else {
           logger.info('No URL found in terminal output, using default frontend dev server...');
           // Use the main server URL as fallback (not the WebSocket server)
-          this.handleUserAppUrl({ url: process.env.BACKEND_URL });
+          this.handleUserAppUrl({ url: process.env.VITE_BACKEND_URL });
         }
       }
     } catch (error) {

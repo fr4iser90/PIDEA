@@ -19,6 +19,9 @@ RUN cd frontend && npm install
 # Copy frontend source code
 COPY frontend/ ./frontend/
 
+# Copy environment file for build
+COPY .env ./
+
 # Build the application
 WORKDIR /app/frontend
 RUN npm run build

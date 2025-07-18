@@ -14,23 +14,43 @@ class CentralizedConfig {
   // ============================================================================
 
   get backendPort() {
-    return process.env.BACKEND_PORT || this.extractPortFromUrl(process.env.BACKEND_URL);
+    // Always use port 3000 in Docker, extract from URL in development
+    if (process.env.DOCKER_ENV === 'true') {
+      return 3000;
+    }
+    // In development, extract from VITE_BACKEND_URL
+    return this.extractPortFromUrl(process.env.VITE_BACKEND_URL) || 3000;
   }
 
   get frontendPort() {
-    return process.env.FRONTEND_PORT || this.extractPortFromUrl(process.env.FRONTEND_URL);
+    return process.env.FRONTEND_PORT || this.extractPortFromUrl(process.env.VITE_FRONTEND_URL);
   }
 
   get websocketPort() {
     return process.env.WEBSOCKET_PORT || this.extractPortFromUrl(process.env.WEBSOCKET_URL);
   }
 
+  get domain() {
+    // Development: localhost, Production: aus DOMAIN env
+    if (this.currentEnv === 'development') {
+      return 'localhost';
+    }
+    return process.env.DOMAIN || 'localhost';
+  }
+
   get frontendUrl() {
-    return process.env.FRONTEND_URL;
+    const protocol = this.currentEnv === 'development' ? 'http' : 'https';
+    return `${protocol}://${this.domain}`;
   }
 
   get backendUrl() {
-    return process.env.BACKEND_URL;
+    // Im Docker: Frontend proxy't /api an Backend
+    // Im Development: direkter Backend-Zugriff
+    if (process.env.DOCKER_ENV === 'true') {
+      return `${this.frontendUrl}`;  // Nur die Domain, /api kommt vom Frontend
+    }
+    // Development: direkter Backend-Zugriff
+    return `${this.frontendUrl}:3000`;
   }
 
   get websocketUrl() {
@@ -114,27 +134,15 @@ class CentralizedConfig {
     const errors = [];
     const warnings = [];
 
-    // Required for all environments
-    const required = [
-      'FRONTEND_URL',
-      'BACKEND_URL'
-    ];
-
     // Required for production
     const productionRequired = [
       'DB_HOST',
       'DB_PORT', 
       'DB_NAME',
       'DB_USER',
-      'DB_PASSWORD'
+      'DB_PASSWORD',
+      'DOMAIN'
     ];
-
-    // Check required vars
-    for (const envVar of required) {
-      if (!process.env[envVar]) {
-        errors.push(`Missing required environment variable: ${envVar}`);
-      }
-    }
 
     // Check production vars
     if (this.currentEnv === 'production') {

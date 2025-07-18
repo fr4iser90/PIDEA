@@ -38,7 +38,9 @@ class BrowserManager {
         await this.disconnect();
       }
       
-      this.browser = await chromium.connectOverCDP(`http://127.0.0.1:${this.currentPort}`);
+          // Always use localhost since we're using network_mode: "host"
+    const host = '127.0.0.1';
+      this.browser = await chromium.connectOverCDP(`http://${host}:${this.currentPort}`);
       const contexts = this.browser.contexts();
       this.page = contexts[0].pages()[0];
       

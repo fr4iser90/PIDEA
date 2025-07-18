@@ -41,10 +41,12 @@ class WindsurfDetector {
     results.forEach((result, index) => {
       const port = this.portRange.start + index;
       if (result.status === 'fulfilled' && result.value) {
+d        // Always use localhost since we're using network_mode: "host"
+        const host = '127.0.0.1';
         availableIDEs.push({
           port: port,
           status: 'running',
-          url: `http://127.0.0.1:${port}`,
+          url: `http://${host}:${port}`,
           ideType: 'windsurf',
           version: result.value.version || 'unknown',
           webSocketUrl: result.value.webSocketUrl || null
@@ -63,8 +65,10 @@ class WindsurfDetector {
    */
   async checkPort(port) {
     return new Promise((resolve) => {
+      // Always use localhost since we're using network_mode: "host"
+      const host = '127.0.0.1';
       const req = http.get({
-        hostname: '127.0.0.1',
+        hostname: host,
         port: port,
         path: this.config.versionEndpoint,
         timeout: this.scanTimeout

@@ -46,8 +46,14 @@ class AutoSecurityManager {
                      process.env.HOSTNAME?.includes('docker');
     
     if (isDocker) {
-      env = 'production';
-      logger.info('🐳 Docker environment detected, using production settings');
+      // Docker kann auch Development sein - respektiere NODE_ENV
+      if (process.env.NODE_ENV === 'development') {
+        env = 'development';
+        logger.info('🐳 Docker environment detected, using development settings');
+      } else {
+        env = 'production';
+        logger.info('🐳 Docker environment detected, using production settings');
+      }
     } else {
       logger.info('💻 Local development environment detected');
     }
@@ -91,10 +97,10 @@ class AutoSecurityManager {
 
   getSecurityConfig() {
     // Get URLs from environment variables
-    const frontendUrl = process.env.FRONTEND_URL;
-    const backendUrl = process.env.BACKEND_URL;
+    const frontendUrl = process.env.VITE_FRONTEND_URL;
+    const backendUrl = process.env.VITE_BACKEND_URL;
     
-    // Dynamische CORS-Origin: Wenn kein Port in FRONTEND_URL, dann automatisch Port hinzufügen
+    // Dynamische CORS-Origin: Wenn kein Port in VITE_FRONTEND_URL, dann automatisch Port hinzufügen
     let corsOrigin = frontendUrl;
     if (frontendUrl && !frontendUrl.includes(':')) {
       // Kein Port angegeben - automatisch Port basierend auf Environment

@@ -13,7 +13,7 @@ async function createDefaultUser() {
   // Use the same configuration as the main application
   const autoSecurityManager = new AutoSecurityManager();
   const dbConfig = autoSecurityManager.getDatabaseConfig();
-  
+
   logger.info('🔧 Database config:', JSON.stringify(dbConfig, null, 2));
 
   const databaseConnection = new DatabaseConnection(dbConfig);

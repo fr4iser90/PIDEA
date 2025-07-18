@@ -27,7 +27,7 @@ const TerminalLogDisplay = ({ port, onClose }) => {
   const searchTimeoutRef = useRef(null);
 
   // API base URL
-  const API_BASE = process.env.BACKEND_URL + '/api';
+  const API_BASE = process.env.VITE_BACKEND_URL + '/api';
 
   /**
    * Fetch terminal logs from API

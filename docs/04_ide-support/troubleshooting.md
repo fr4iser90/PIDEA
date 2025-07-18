@@ -351,7 +351,7 @@ This guide helps diagnose and resolve common issues with the IDE port management
 3. **Use Local Development**:
    ```bash
    # Use localhost for development
-   export BACKEND_URL=http://localhost:3000
+   export VITE_BACKEND_URL=http://localhost:3000
    export IDE_HOST=localhost
    ```
 

@@ -22,62 +22,62 @@ export default defineConfig(({ mode }) => {
                    process.env.HOSTNAME?.includes('docker');
   
   let frontendPort = isDocker ? 80 : 4000;
-  if (process.env.FRONTEND_URL) {
-    const match = process.env.FRONTEND_URL.match(/:(\d+)(?:$|\/)/);
+  if (process.env.VITE_FRONTEND_URL) {
+    const match = process.env.VITE_FRONTEND_URL.match(/:(\d+)(?:$|\/)/);
     if (match) {
       frontendPort = Number(match[1]);
     }
   }
 
   return {
-    plugins: [react()],
-    server: {
+  plugins: [react()],
+  server: {
       port: frontendPort,
-      proxy: {
-        '/api': {
-          target: process.env.BACKEND_URL,
-          changeOrigin: true,
-          secure: false,
-        },
-        '/ws': {
-          target: process.env.BACKEND_URL?.replace('http://', 'ws://'),
-          ws: true,
-        }
-      }
-    },
-    build: {
-      outDir: 'dist',
-      sourcemap: true,
-      rollupOptions: {
-        output: {
-          manualChunks: {
-            vendor: ['react', 'react-dom'],
-            ui: ['@headlessui/react', '@heroicons/react'],
-            state: ['zustand']
-          }
-        }
-      }
-    },
-    preview: {
-      port: frontendPort
-    },
-    resolve: {
-      alias: {
-        '@/application': path.resolve(__dirname, 'src/application'),
-        '@/assets': path.resolve(__dirname, 'src/assets'),
-        '@/components': path.resolve(__dirname, 'src/components'),
-        '@/config': path.resolve(__dirname, 'src/config'),
-        '@/css': path.resolve(__dirname, 'src/css'),
-        '@/domain': path.resolve(__dirname, 'src/domain'),
-        '@/hooks': path.resolve(__dirname, 'src/hooks'),
-        '@/infrastructure': path.resolve(__dirname, 'src/infrastructure'),
-        '@/presentation': path.resolve(__dirname, 'src/presentation'),
-        '@/stores': path.resolve(__dirname, 'src/stores'),
+    proxy: {
+      '/api': {
+          target: process.env.NODE_ENV === 'development' ? 'http://localhost:3000' : `https://${process.env.DOMAIN}`,
+        changeOrigin: true,
+        secure: false,
       },
+      '/ws': {
+          target: process.env.NODE_ENV === 'development' ? 'ws://localhost:3000' : `wss://${process.env.DOMAIN}`,
+        ws: true,
+      }
+    }
+  },
+  build: {
+    outDir: 'dist',
+    sourcemap: true,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          vendor: ['react', 'react-dom'],
+          ui: ['@headlessui/react', '@heroicons/react'],
+          state: ['zustand']
+        }
+      }
+    }
+  },
+  preview: {
+      port: frontendPort
+  },
+  resolve: {
+    alias: {
+      '@/application': path.resolve(__dirname, 'src/application'),
+      '@/assets': path.resolve(__dirname, 'src/assets'),
+      '@/components': path.resolve(__dirname, 'src/components'),
+      '@/config': path.resolve(__dirname, 'src/config'),
+      '@/css': path.resolve(__dirname, 'src/css'),
+      '@/domain': path.resolve(__dirname, 'src/domain'),
+      '@/hooks': path.resolve(__dirname, 'src/hooks'),
+      '@/infrastructure': path.resolve(__dirname, 'src/infrastructure'),
+      '@/presentation': path.resolve(__dirname, 'src/presentation'),
+      '@/stores': path.resolve(__dirname, 'src/stores'),
     },
+  },
     define: {
-      'import.meta.env.VITE_BACKEND_URL': JSON.stringify(process.env.BACKEND_URL),
-      'import.meta.env.VITE_FRONTEND_URL': JSON.stringify(process.env.FRONTEND_URL),
+      'import.meta.env.VITE_BACKEND_URL': JSON.stringify(process.env.NODE_ENV === 'development' ? 'http://localhost:3000' : `https://${process.env.DOMAIN}`),
+      'import.meta.env.VITE_FRONTEND_URL': JSON.stringify(process.env.NODE_ENV === 'development' ? 'http://localhost:4000' : `https://${process.env.DOMAIN}`),
     }
   };
 });

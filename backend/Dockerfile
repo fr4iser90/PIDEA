@@ -18,10 +18,13 @@ RUN cd backend && npm install
 # Copy backend source code
 COPY backend/ ./backend/
 
+# Copy environment file
+COPY .env ./
+
 # Set working directory to backend
 WORKDIR /app/backend
 
-# Expose port
+# Expose port (will be set from environment)
 EXPOSE 3000
 
 # Start directly with node

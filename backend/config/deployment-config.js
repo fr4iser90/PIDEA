@@ -238,7 +238,7 @@ class DeploymentConfig {
         'DB_USER',
         'DB_PASSWORD',
         'JWT_SECRET',
-        'FRONTEND_URL'
+        'VITE_FRONTEND_URL'
       ];
 
       for (const envVar of requiredEnvVars) {

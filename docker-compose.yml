@@ -29,23 +29,20 @@ services:
       dockerfile: backend/Dockerfile
     image: fr4iser/pidea:backend
     container_name: pidea-backend
-    ports:
-      - "8090:3000"
+    # NO PORTS - Backend läuft nur intern!
     depends_on:
       pidea-db:
         condition: service_healthy
     environment:
-      NODE_ENV: production
-      DB_HOST: pidea-db
-      DB_PORT: 5432
-      DB_NAME: pidea
-      DB_USER: postgres
-      DB_PASSWORD: postgres
+      DOCKER_ENV: "true"
     env_file:
       - .env
     volumes:
       - pidea-backend_logs:/app/logs
       - /var/run/docker.sock:/var/run/docker.sock
+      - /tmp:/tmp  # <- Host /tmp in Container
+    # Use host network mode for IDE connections
+    network_mode: "host"
     restart: unless-stopped
 
   pidea-frontend:
@@ -54,8 +51,8 @@ services:
       dockerfile: frontend/Dockerfile
     image: fr4iser/pidea:frontend
     container_name: pidea-frontend
-    ports:
-      - "80:80"
+    # Use host network mode to access backend on localhost
+    network_mode: "host"
     depends_on:
       - pidea-backend
     env_file:
