@@ -1,77 +1,133 @@
 version: '3.8'
 
 services:
+  # SSL Certificate Manager
+  certbot:
+    image: certbot/certbot:latest
+    container_name: pidea-certbot
+    volumes:
+      - ./nginx/ssl:/etc/letsencrypt
+      - ./nginx/webroot:/var/www/html
+    command: >
+      certonly --webroot
+      --webroot-path=/var/www/html
+      --email ${SSL_EMAIL}
+      --agree-tos --no-eff-email
+      --domains ${SSL_DOMAIN}
+      --keep-until-expiring
+    depends_on:
+      - nginx-proxy
+    restart: unless-stopped
+    networks:
+      - pidea-network
+
+  # SSL Reverse Proxy with automatic certificate renewal
+  nginx-proxy:
+    build:
+      context: .
+      dockerfile: nginx/Dockerfile
+    image: fr4iser/pidea:nginx-proxy
+    container_name: pidea-nginx-proxy
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/ssl:/etc/nginx/ssl
+      - ./nginx/webroot:/var/www/html
+    environment:
+      - SSL_DOMAIN=${SSL_DOMAIN}
+      - SSL_EMAIL=${SSL_EMAIL}
+    depends_on:
+      - pidea-frontend
+      - pidea-backend
+    restart: unless-stopped
+    networks:
+      - pidea-network
+
+  # SSL Certificate Renewal Service
+  certbot-renew:
+    image: certbot/certbot:latest
+    container_name: pidea-certbot-renew
+    volumes:
+      - ./nginx/ssl:/etc/letsencrypt
+      - ./nginx/webroot:/var/www/html
+    command: >
+      renew --webroot
+      --webroot-path=/var/www/html
+      --quiet
+    depends_on:
+      - nginx-proxy
+    restart: "no"
+    networks:
+      - pidea-network
+
+  # Database
   pidea-db:
     build:
       context: ./database
       dockerfile: Dockerfile
     image: fr4iser/pidea:db
     container_name: pidea-db
+    # No external ports - internal only
     volumes:
       - pidea-db-data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: pidea
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
     env_file:
-      - .env.production
+      - .env
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d pidea"]
+      interval: 5s
+      timeout: 5s
+      retries: 15
+      start_period: 20s
     networks:
       - pidea-network
 
-  # IDE läuft auf HOST (nicht im Container)
-  # Cursor IDE: localhost:9222
-
+  # Backend (no external ports)
   pidea-backend:
     build:
       context: .
       dockerfile: backend/Dockerfile
     image: fr4iser/pidea:backend
     container_name: pidea-backend
+    # No external ports - only accessible via proxy
     depends_on:
       pidea-db:
         condition: service_healthy
+    environment:
+      DOCKER_ENV: "true"
+      NODE_ENV: "production"
     env_file:
-      - .env.production
+      - .env
     volumes:
       - pidea-backend_logs:/app/logs
       - /var/run/docker.sock:/var/run/docker.sock
-      # Host IDE-Zugriff (Cursor läuft auf Host)
-      - /var/run/docker.sock:/var/run/docker.sock
+      - /tmp:/tmp
+    # Use host network for IDE connections
+    network_mode: "host"
     restart: unless-stopped
-    networks:
-      - pidea-network
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.pidea-api.rule=Host(`pidea.fr4iser.com`) && PathPrefix(`/api`)"
-      - "traefik.http.routers.pidea-api.entrypoints=websecure"
-      - "traefik.http.routers.pidea-api.tls.certresolver=letsencrypt"
-      - "traefik.http.services.pidea-api.loadbalancer.server.port=3000"
-      - "traefik.http.routers.pidea-ws.rule=Host(`pidea.fr4iser.com`) && PathPrefix(`/ws`)"
-      - "traefik.http.routers.pidea-ws.entrypoints=websecure"
-      - "traefik.http.routers.pidea-ws.tls.certresolver=letsencrypt"
-      - "traefik.http.services.pidea-ws.loadbalancer.server.port=3000"
 
+  # Frontend (no external ports)
   pidea-frontend:
     build:
       context: .
       dockerfile: frontend/Dockerfile
     image: fr4iser/pidea:frontend
     container_name: pidea-frontend
+    # No external ports - only accessible via proxy
+    # Use host network to access backend on localhost
+    network_mode: "host"
     depends_on:
       - pidea-backend
     env_file:
-      - .env.production
+      - .env
     volumes:
       - pidea-frontend_logs:/var/log/nginx
     restart: unless-stopped
-    networks:
-      - pidea-network
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.pidea-frontend.rule=Host(`pidea.fr4iser.com`)"
-      - "traefik.http.routers.pidea-frontend.entrypoints=websecure"
-      - "traefik.http.routers.pidea-frontend.tls.certresolver=letsencrypt"
-      - "traefik.http.services.pidea-frontend.loadbalancer.server.port=80"
-      - "traefik.http.routers.pidea-frontend.middlewares=pidea-redirect"
-      - "traefik.http.middlewares.pidea-redirect.redirectscheme.scheme=https"
-      - "traefik.http.middlewares.pidea-redirect.redirectscheme.permanent=true"
 
 volumes:
   pidea-db-data:
@@ -80,7 +136,6 @@ volumes:
     driver: local
   pidea-frontend_logs:
     driver: local
-
 
 networks:
   pidea-network:
