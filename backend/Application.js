@@ -7,6 +7,8 @@ const fs = require('fs');
 const rateLimit = require('express-rate-limit');
 const helmet = require('helmet');
 const cors = require('cors');
+const hpp = require('hpp');
+const slowDown = require('express-slow-down');
 
 const ServiceLogger = require('@logging/ServiceLogger');
 const logger = new ServiceLogger('Application');
@@ -533,21 +535,41 @@ class Application {
   setupMiddleware() {
     this.logger.info('Setting up middleware...');
 
-    // Security middleware
-    this.app.use(helmet(this.securityConfig.helmet));
-    this.app.use(cors(this.securityConfig.cors));
+    // Import centralized security configuration
+    const securityConfig = require('./config/security-config');
 
-    // Rate limiting
-    const limiter = rateLimit(this.securityConfig.rateLimiting);
+    // Security middleware
+    this.app.use(helmet(securityConfig.config.helmet));
+    this.app.use(cors(securityConfig.config.cors));
+
+    // HTTP Parameter Pollution protection
+    this.app.use(hpp());
+
+    // Progressive rate limiting (slow down)
+    const speedLimiter = slowDown({
+      windowMs: 15 * 60 * 1000, // 15 minutes
+      delayAfter: 50, // allow 50 requests per 15 minutes, then...
+      delayMs: 500 // begin adding 500ms of delay per request above 50
+    });
+    this.app.use('/api/', speedLimiter);
+
+    // Standard rate limiting
+    const limiter = rateLimit(securityConfig.config.rateLimiting);
     this.app.use('/api/', limiter);
 
-    // Body parsing
-    this.app.use(express.json({ limit: '2mb' }));
-    this.app.use(express.urlencoded({ extended: true }));
+    // Body parsing with security limits
+    this.app.use(express.json({ 
+      limit: securityConfig.config.inputValidation.limits.maxBodySize,
+      strict: true
+    }));
+    this.app.use(express.urlencoded({ 
+      extended: true,
+      limit: securityConfig.config.inputValidation.limits.maxBodySize
+    }));
 
     // Request logging entfernt auf Wunsch des Users
 
-    // Serve static files
+    // Serve static files with security headers
     this.app.use('/web', express.static(path.join(__dirname, '../web'), {
       etag: false,
       lastModified: false,
@@ -555,6 +577,10 @@ class Application {
         res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
         res.setHeader('Pragma', 'no-cache');
         res.setHeader('Expires', '0');
+        // Add security headers to static files
+        Object.entries(securityConfig.config.headers).forEach(([key, value]) => {
+          res.setHeader(key, value);
+        });
       }
     }));
 
@@ -582,10 +608,10 @@ class Application {
       });
     });
 
-    // Auth routes (public)
-    this.app.post('/api/auth/register', (req, res) => this.authController.register(req, res));
-    this.app.post('/api/auth/login', (req, res) => this.authController.login(req, res));
-    this.app.post('/api/auth/refresh', (req, res) => this.authController.refresh(req, res));
+    // Auth routes (public) with brute force protection
+    //this.app.post('/api/auth/register', this.authMiddleware.bruteForceProtection(), (req, res) => this.authController.register(req, res));
+    this.app.post('/api/auth/login', this.authMiddleware.bruteForceProtection(), (req, res) => this.authController.login(req, res));
+    this.app.post('/api/auth/refresh', this.authMiddleware.bruteForceProtection(), (req, res) => this.authController.refresh(req, res));
 
     // Protected routes
     this.app.use('/api/auth/profile', this.authMiddleware.authenticate());
@@ -598,8 +624,8 @@ class Application {
     this.app.use('/api/auth/validate', this.authMiddleware.authenticate());
     this.app.get('/api/auth/validate', (req, res) => this.authController.validateToken(req, res));
 
-    // Chat routes (protected)
-    this.app.use('/api/chat', this.authMiddleware.authenticate());
+    // Chat routes (protected) with enhanced rate limiting
+    this.app.use('/api/chat', this.authMiddleware.authenticate(), this.authMiddleware.rateLimitByUser());
     this.app.post('/api/chat', (req, res) => this.chatController.sendMessage(req, res));
     this.app.get('/api/chat/history', (req, res) => this.chatController.getChatHistory(req, res));
     this.app.get('/api/chat/port/:port/history', (req, res) => this.chatController.getPortChatHistory(req, res));
