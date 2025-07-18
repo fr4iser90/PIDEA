@@ -37,7 +37,37 @@ Framework: AI Code Review
 └── Step 9: GENERATE_FINAL_RESULT (Script Step)
 ```
 
-### **4. Custom Steps (Erweiterbar)**
+### **4. Git Workflow (Mit Git Management)**
+```
+Framework: Task Branch Workflow
+├── Step 1: ANALYZE_TASK (Script Step)
+├── Step 2: GIT_CREATE_BRANCH (Git Step)
+├── Step 3: AI_SEND_TASK_PROMPT (AI Step)
+├── Step 4: AI_GET_TASK_RESPONSE (AI Step)
+├── Step 5: APPLY_CHANGES (Script Step)
+├── Step 6: GIT_COMMIT (Git Step)
+├── Step 7: GIT_PUSH (Git Step)
+└── Step 8: CREATE_PULL_REQUEST (Git Step)
+```
+
+### **5. Autonomous AI Workflow (Vollautomatisch)**
+```
+Framework: AI Autonomous Development
+├── Step 1: ANALYZE_PROJECT (Script Step)
+├── Step 2: AI_SEND_ANALYSIS_PROMPT (AI Step)
+├── Step 3: AI_GET_ANALYSIS_RESPONSE (AI Step)
+├── Step 4: GIT_CREATE_FEATURE_BRANCH (Git Step)
+├── Step 5: AI_GENERATE_IMPLEMENTATION (AI Step)
+├── Step 6: AI_APPLY_CHANGES (AI Step)
+├── Step 7: AI_RUN_TESTS (AI Step)
+├── Step 8: AI_FIX_ISSUES (AI Step)
+├── Step 9: GIT_COMMIT_CHANGES (Git Step)
+├── Step 10: GIT_PUSH_BRANCH (Git Step)
+├── Step 11: AI_CREATE_PULL_REQUEST (AI Step)
+└── Step 12: AI_MERGE_IF_APPROVED (AI Step)
+```
+
+### **6. Custom Steps (Erweiterbar)**
 ```
 Framework: Testing Framework
 ├── Step 1: GENERATE_TESTS (Script Step)
@@ -45,7 +75,6 @@ Framework: Testing Framework
 ├── Step 3: RUN_TESTS (Script Step)
 └── Step 4: [CUSTOM: user_defined_step] (Custom Step)
 ```
-
 
 ## 🔧 **Step-Typen**
 
@@ -60,6 +89,16 @@ Framework: Testing Framework
 - **GENERATE_*:** Generiert Output
 - **APPLY_*:** Wendet Changes an
 - **VALIDATE_*:** Validiert Results
+
+### **Git Steps:**
+- **GIT_CREATE_BRANCH:** Erstellt neuen Branch
+- **GIT_COMMIT:** Committet Changes
+- **GIT_PUSH:** Pusht Changes
+- **GIT_PULL:** Pullt Changes
+- **GIT_MERGE:** Merged Branches
+- **GIT_CHECKOUT:** Wechselt Branch
+- **GIT_CREATE_PULL_REQUEST:** Erstellt Pull Request
+- **GIT_MERGE_PULL_REQUEST:** Merged Pull Request
 
 ### **Template Steps:**
 - **TEMPLATE_APPLY:** Wendet Template an
