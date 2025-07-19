@@ -48,7 +48,7 @@
 | **CursorIDE** | `backend/domain/services/ide/implementations/CursorIDE.js` | Cursor-spezifische Implementation | BaseIDE | ✅ Core |
 | **VSCodeIDE** | `backend/domain/services/ide/implementations/VSCodeIDE.js` | VSCode-spezifische Implementation | BaseIDE | ✅ Core |
 | **WindsurfIDE** | `backend/domain/services/ide/implementations/WindsurfIDE.js` | Windsurf-spezifische Implementation | BaseIDE | ✅ Core |
-| **KiroIDE** | `backend/domain/services/ide/implementations/KiroIDE.js` | Kiro-spezifische Implementation | BaseIDE | 📋 Planned |
+
 
 #### **Legacy IDE Services (Deprecated):**
 | Service | Location | Purpose | Dependencies | Status |
@@ -94,8 +94,8 @@
 #### **Planned Frameworks:**
 | Framework | Purpose | Dependencies | Status |
 |-----------|---------|--------------|--------|
-| **task_management** | Task-Management Business Logic | Core Services | 📋 Planned |
-| **workflow_management** | Workflow-Execution Business Logic | Core Services | 📋 Planned |
+| **task_management** | Advanced Task-Management Features | Core Services | 📋 Planned |
+| **workflow_management** | Specialized Workflow Features | Core Services | 📋 Planned |
 | **refactoring_management** | Erweiterte Refactoring-Features | Core Services | 📋 Planned |
 | **testing_management** | Erweiterte Testing-Features | Core Services | 📋 Planned |
 | **documentation_management** | Erweiterte Documentation-Features | Core Services | 📋 Planned |
@@ -214,7 +214,7 @@ backend/framework/documentation_pidea_numeric/
 | BrowserManager | Core | IDE-Integration, von allen IDE-Services genutzt | `backend/infrastructure/external/` |
 | CursorIDEService | Core | AI-Integration, von vielen Services genutzt | `backend/domain/services/` |
 | WorkflowExecutionService | Core | Step-Execution Engine, zentral | `backend/domain/services/` |
-| TaskService | Framework | Business Logic für Task-Management | `backend/domain/services/` → Framework |
+| TaskService | Core | Basis Task-Management | `backend/domain/services/` |
 | FileSystemService | Core | Datei-Operationen, von vielen genutzt | `backend/domain/services/` |
 | TerminalService | Core | Terminal-Operationen, von vielen genutzt | `backend/domain/services/` |
 | Analysis Steps | Core | Basis-Analyse, immer benötigt | `backend/domain/steps/categories/analysis/` |
@@ -235,8 +235,8 @@ backend/framework/documentation_pidea_numeric/
 - [x] Clean up duplicate Git steps (bereits erledigt)
 
 ### **📊 Analysis Results:**
-- **Core Services:** 10 identifiziert (GitService, BrowserManager, IDEManager, BaseIDE, IDEFactory, FileSystemService, TerminalService, CursorIDE, VSCodeIDE, WindsurfIDE)
-- **Framework Services:** 3 identifiziert (TaskService, WorkflowExecutionService, WorkflowOrchestrationService)
+- **Core Services:** 13 identifiziert (GitService, BrowserManager, IDEManager, BaseIDE, IDEFactory, FileSystemService, TerminalService, CursorIDE, VSCodeIDE, WindsurfIDE, TaskService, WorkflowExecutionService, WorkflowOrchestrationService)
+- **Framework Services:** 0 identifiziert (alle Services sind Core)
 - **Services to Remove:** 4 identifiziert (TaskExecutionService, Legacy IDE Services) → Migration geplant
 - **Core Steps:** 6 Kategorien (git, ide, analysis, cursor, vscode, windsurf)
 - **Framework Steps:** 2 Kategorien (refactoring, testing) → Migration geplant

@@ -22,16 +22,16 @@
 - [ ] `backend/domain/constants/Categories.js` - Update with proper step/workflow separation
 - [ ] `backend/domain/steps/StepRegistry.js` - Add framework loading capability
 - [ ] `backend/Application.js` - Integrate framework loader
-- [ ] `backend/domain/services/TaskService.js` - Replace with framework steps
-- [ ] `backend/domain/services/WorkflowGitService.js` - Replace with framework steps
+- [ ] `backend/domain/services/TaskService.js` - Keep as CORE, add framework integration
+- [ ] `backend/domain/services/WorkflowExecutionService.js` - Keep as CORE, add framework integration
 - [ ] `backend/framework/README.md` - Update with new structure
 
 ### Files to Create:
 - [ ] `backend/infrastructure/framework/FrameworkLoader.js` - Framework loading system
 - [ ] `backend/infrastructure/framework/FrameworkRegistry.js` - Framework registration
 - [ ] `backend/infrastructure/framework/FrameworkManager.js` - Framework management
-- [ ] `backend/framework/task_management/` - Task-Management Business Logic Framework
-- [ ] `backend/framework/workflow_management/` - Workflow-Execution Business Logic Framework
+- [ ] `backend/framework/task_management/` - Advanced Task-Management Features Framework
+- [ ] `backend/framework/workflow_management/` - Specialized Workflow Features Framework
 - [ ] `backend/framework/refactoring_management/` - Refactoring framework (erweiterte Features)
 - [ ] `backend/framework/testing_management/` - Testing framework (erweiterte Features)
 - [ ] `backend/framework/documentation_management/` - Documentation framework (erweiterte Features)
@@ -68,8 +68,8 @@
 - [ ] Create framework validation and dependency checking
 
 ### Phase 4: Framework Migration (8 hours)
-- [ ] Migrate TaskService to task_management framework
-- [ ] Migrate WorkflowExecutionService to workflow_management framework
+- [ ] Create task_management framework with advanced features (TaskService stays CORE)
+- [ ] Create workflow_management framework with specialized workflows (WorkflowExecutionService stays CORE)
 - [ ] Migrate refactoring steps to refactoring_management framework
 - [ ] Migrate testing steps to testing_management framework
 - [ ] Migrate documentation steps to documentation_management framework
