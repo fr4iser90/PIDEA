@@ -65,6 +65,7 @@ const AnalysisController = require('./presentation/api/AnalysisController');
 const GitController = require('./presentation/api/GitController');
 const DocumentationController = require('./presentation/api/DocumentationController');
 const WebSocketManager = require('./presentation/websocket/WebSocketManager');
+const ProjectController = require('./presentation/api/controllers/ProjectController');
 
 class Application {
   constructor(config = {}) {
@@ -530,6 +531,8 @@ class Application {
       this.chatRepository
     );
 
+    this.projectController = new ProjectController();
+
     this.logger.info('Presentation layer initialized');
   }
 
@@ -593,7 +596,7 @@ class Application {
 
     // Serve the main page
     this.app.get('/', (req, res) => {
-      res.sendFile(path.join(__dirname, '../frontend/index2.html'));
+      res.sendFile(path.join(__dirname, '../frontend/index.html'));
     });
 
     // Health check (public)
@@ -874,6 +877,14 @@ class Application {
     this.app.get('/api/projects/:projectId/workflow/status', (req, res) => this.workflowController.getWorkflowStatus(req, res));
     this.app.post('/api/projects/:projectId/workflow/stop', (req, res) => this.workflowController.stopWorkflow(req, res));
     this.app.get('/api/projects/:projectId/workflow/health', (req, res) => this.workflowController.healthCheck(req, res));
+
+    // Project routes (protected)
+    this.app.use('/api/projects', this.authMiddleware.authenticate());
+    this.app.get('/api/projects', (req, res) => this.projectController.list(req, res));
+    this.app.get('/api/projects/:id', (req, res) => this.projectController.getById(req, res));
+    this.app.get('/api/projects/ide-port/:idePort', (req, res) => this.projectController.getByIDEPort(req, res));
+    this.app.post('/api/projects/:id/save-port', (req, res) => this.projectController.savePort(req, res));
+    this.app.put('/api/projects/:id/port', (req, res) => this.projectController.updatePort(req, res));
 
     // Error handling middleware
     this.app.use((error, req, res, next) => {

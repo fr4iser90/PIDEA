@@ -240,6 +240,27 @@ function PreviewComponent({ eventBus, activePort, projectId = null }) {
         logger.info('Setting custom port:', validationResult.port);
         setCustomPort(validationResult.port);
         
+        // Save port to database for current project
+        if (activePort) {
+          try {
+            // Get current project from IDE port
+            const projectResult = await apiRepository.getProjectByIDEPort(activePort);
+            if (projectResult.success && projectResult.data) {
+              const project = projectResult.data;
+              
+              // Save frontend port to database
+              const saveResult = await apiRepository.saveProjectPort(project.id, validationResult.port, 'frontend');
+              if (saveResult.success) {
+                logger.info('Port saved to database for project:', project.id);
+              } else {
+                logger.warn('Failed to save port to database:', saveResult.error);
+              }
+            }
+          } catch (error) {
+            logger.error('Failed to save port to database:', error);
+          }
+        }
+        
         // Immediately create preview data with the validated port
         // Don't wait for state update - use the port directly
         const newPreviewData = {
@@ -270,6 +291,18 @@ function PreviewComponent({ eventBus, activePort, projectId = null }) {
           if (project.frontendPort) {
             setCustomPort(project.frontendPort);
             logger.info('Loaded frontend port from database:', project.frontendPort);
+            
+            // Create preview data with loaded port
+            const newPreviewData = {
+              url: `http://localhost:${project.frontendPort}`,
+              title: `Preview - User App (Port: ${project.frontendPort})`,
+              timestamp: new Date().toISOString(),
+              port: project.frontendPort,
+              workspacePath: project.workspacePath
+            };
+            setPreviewData(newPreviewData);
+            setError(null);
+            logger.info('Preview data updated with loaded port:', project.frontendPort);
           }
         }
       }

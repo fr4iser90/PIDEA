@@ -51,7 +51,10 @@ const API_CONFIG = {
     },
     projects: {
       list: '/api/projects',
-      byId: (id) => `/api/projects/${id}`
+      byId: (id) => `/api/projects/${id}`,
+      byIDEPort: (idePort) => `/api/projects/ide-port/${idePort}`,
+      updatePort: (projectId) => `/api/projects/${projectId}/port`,
+      savePort: (projectId) => `/api/projects/${projectId}/save-port`
     },
     preview: {
       status: '/api/preview/status',
@@ -834,6 +837,58 @@ export default class APIChatRepository extends ChatRepository {
     } catch (error) {
       logger.error('Port validation failed:', error);
       return { valid: false, error: 'Port validation failed' };
+    }
+  }
+
+  /**
+   * Get project by IDE port
+   * @param {number} idePort - IDE port number
+   * @returns {Promise<Object>} Project data
+   */
+  async getProjectByIDEPort(idePort) {
+    try {
+      return apiCall(API_CONFIG.endpoints.projects.byIDEPort(idePort));
+    } catch (error) {
+      logger.error('Failed to get project by IDE port:', error);
+      return { success: false, error: 'Failed to get project' };
+    }
+  }
+
+  /**
+   * Save project port to database
+   * @param {string} projectId - Project ID
+   * @param {number} port - Port number to save
+   * @param {string} portType - Type of port (frontend, backend, database)
+   * @returns {Promise<Object>} Save result
+   */
+  async saveProjectPort(projectId, port, portType = 'frontend') {
+    try {
+      return apiCall(API_CONFIG.endpoints.projects.savePort(projectId), {
+        method: 'POST',
+        body: JSON.stringify({ port, portType })
+      });
+    } catch (error) {
+      logger.error('Failed to save project port:', error);
+      return { success: false, error: 'Failed to save port' };
+    }
+  }
+
+  /**
+   * Update project port
+   * @param {string} projectId - Project ID
+   * @param {number} port - Port number
+   * @param {string} portType - Type of port (frontend, backend, database)
+   * @returns {Promise<Object>} Update result
+   */
+  async updateProjectPort(projectId, port, portType = 'frontend') {
+    try {
+      return apiCall(API_CONFIG.endpoints.projects.updatePort(projectId), {
+        method: 'PUT',
+        body: JSON.stringify({ port, portType })
+      });
+    } catch (error) {
+      logger.error('Failed to update project port:', error);
+      return { success: false, error: 'Failed to update port' };
     }
   }
 }
