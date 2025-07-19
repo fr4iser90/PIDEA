@@ -1,22 +1,21 @@
 
 /**
- * Analysis Step - Analysis Workflow
- * Integrates all existing analysis services and components
+ * Analysis Step - Analysis Workflow Orchestrator
+ * Orchestrates individual analysis steps for comprehensive project analysis
  */
 
 const StepBuilder = require('@steps/StepBuilder');
 const Logger = require('@logging/Logger');
 const logger = new Logger('analysis_step');
-const path = require('path'); // Added missing import for path
 
 // Step configuration
 const config = {
   name: 'AnalysisStep',
   type: 'analysis',
-  description: 'Comprehensive project analysis using all available services',
+  description: 'Comprehensive project analysis orchestrator using modular steps',
   category: 'analysis',
-  version: '1.0.0',
-  dependencies: ['projectAnalyzer', 'codeQualityAnalyzer', 'securityAnalyzer', 'performanceAnalyzer', 'architectureAnalyzer', 'techStackAnalyzer'],
+  version: '2.0.0',
+  dependencies: ['stepRegistry'],
   settings: {
     timeout: 120000,
     parallel: true,
@@ -26,7 +25,8 @@ const config = {
     includeDependencies: true,
     includeRepoStructure: true,
     includeSecurity: true,
-    includePerformance: true
+    includePerformance: true,
+    includeManifest: true
   },
   validation: {
     requiredFiles: ['package.json'],
@@ -37,9 +37,9 @@ const config = {
 class AnalysisStep {
   constructor() {
     this.name = 'AnalysisStep';
-    this.description = 'Comprehensive project analysis using all available services';
+    this.description = 'Comprehensive project analysis orchestrator using modular steps';
     this.category = 'analysis';
-    this.dependencies = ['projectAnalyzer', 'codeQualityAnalyzer', 'securityAnalyzer', 'performanceAnalyzer', 'architectureAnalyzer', 'techStackAnalyzer'];
+    this.dependencies = ['stepRegistry'];
   }
 
   static getConfig() {
@@ -51,383 +51,267 @@ class AnalysisStep {
     const step = StepBuilder.build(config, context);
     
     try {
-      logger.info(`🔍 Executing ${this.name}...`);
+      logger.info(`🔍 Executing ${this.name} (Orchestrator)...`);
       
       // Validate context
       this.validateContext(context);
       
-      // Get all analysis services from the application
+      // Get step registry from application
       const application = global.application;
       if (!application) {
         throw new Error('Application not available');
       }
 
-      const {
-        projectAnalyzer,
-        codeQualityAnalyzer,
-        securityAnalyzer,
-        performanceAnalyzer,
-        architectureAnalyzer,
-        techStackAnalyzer,
-        dependencyAnalyzer,
-        analysisOutputService,
-        analysisRepository
-      } = application;
+      const { stepRegistry } = application;
+      if (!stepRegistry) {
+        throw new Error('Step registry not available');
+      }
 
       const projectPath = context.projectPath;
       const results = {
         projectAnalysis: null,
-        codeQuality: null,
-        security: null,
-        performance: null,
-        architecture: null,
-        techStack: null,
-        dependencies: null,
+        architectureAnalysis: null,
+        codeQualityAnalysis: null,
+        techStackAnalysis: null,
+        manifestAnalysis: null,
+        securityAnalysis: null,
+        performanceAnalysis: null,
+        dependencyAnalysis: null,
         summary: null
       };
 
-      logger.info(`📊 Starting analysis`);
+      logger.info(`📊 Starting comprehensive analysis orchestration for: ${projectPath}`);
 
-      // 1. Project Analysis
-      if (projectAnalyzer) {
-        try {
-          const projectAnalysis = await projectAnalyzer.analyzeProject(projectPath, {
-            includeRepoStructure: context.includeRepoStructure !== false,
-            includeDependencies: context.includeDependencies !== false
-          });
-          results.projectAnalysis = this.cleanResult(projectAnalysis);
-          logger.info(`✅ Project analysis completed`);
-        } catch (error) {
-          logger.warn(`⚠️ Project analysis failed: ${error.message}`);
-          results.projectAnalysis = { error: error.message, status: 'failed' };
-        }
-      }
+      // Define analysis steps to execute
+      const analysisSteps = this.getAnalysisStepsToExecute(context);
+      
+      logger.info(`🎯 Will execute ${analysisSteps.length} analysis steps:`, 
+        analysisSteps.map(step => step.name));
 
-      // 2. Code Quality Analysis
-      if (codeQualityAnalyzer && context.includeCodeQuality !== false) {
+      // Execute analysis steps
+      for (const stepConfig of analysisSteps) {
         try {
-          const codeQuality = await codeQualityAnalyzer.analyzeCodeQuality(projectPath, {
-            includeMetrics: true,
-            includeIssues: true,
-            includeSuggestions: true
-          });
-          results.codeQuality = this.cleanResult(codeQuality);
-          logger.info(`✅ Code quality analysis completed`);
-        } catch (error) {
-          logger.warn(`⚠️ Code quality analysis failed: ${error.message}`);
-          results.codeQuality = { error: error.message, status: 'failed' };
-        }
-      }
-
-      // 3. Security Analysis
-      if (securityAnalyzer && context.includeSecurity !== false) {
-        try {
-          const security = await securityAnalyzer.analyzeSecurity(projectPath, {
-            includeVulnerabilities: true,
-            includeBestPractices: true,
-            includeDependencies: true
-          });
-          results.security = this.cleanResult(security);
-          logger.info(`✅ Security analysis completed`);
-        } catch (error) {
-          logger.warn(`⚠️ Security analysis failed: ${error.message}`);
-          results.security = { error: error.message, status: 'failed' };
-        }
-      }
-
-      // 4. Performance Analysis
-      if (performanceAnalyzer && context.includePerformance !== false) {
-        try {
-          const performance = await performanceAnalyzer.analyzePerformance(projectPath, {
-            includeMetrics: true,
-            includeOptimizations: true,
-            includeBottlenecks: true
-          });
-          results.performance = this.cleanResult(performance);
-          logger.info(`✅ Performance analysis completed`);
-        } catch (error) {
-          logger.warn(`⚠️ Performance analysis failed: ${error.message}`);
-          results.performance = { error: error.message, status: 'failed' };
-        }
-      }
-
-      // 5. Architecture Analysis
-      if (architectureAnalyzer && context.includeArchitecture !== false) {
-        try {
-          const architecture = await architectureAnalyzer.analyzeArchitecture(projectPath, {
-            includePatterns: true,
-            includeStructure: true,
-            includeRecommendations: true
-          });
-          results.architecture = this.cleanResult(architecture);
-          logger.info(`✅ Architecture analysis completed`);
-        } catch (error) {
-          logger.warn(`⚠️ Architecture analysis failed: ${error.message}`);
-          results.architecture = { error: error.message, status: 'failed' };
-        }
-      }
-
-      // 6. Tech Stack Analysis
-      if (techStackAnalyzer && context.includeTechStack !== false) {
-        try {
-          const techStack = await techStackAnalyzer.analyzeTechStack(projectPath, {
-            includeFrameworks: true,
-            includeLibraries: true,
-            includeTools: true
-          });
-          results.techStack = this.cleanResult(techStack);
-          logger.info(`✅ Tech stack analysis completed`);
-        } catch (error) {
-          logger.warn(`⚠️ Tech stack analysis failed: ${error.message}`);
-          results.techStack = { error: error.message, status: 'failed' };
-        }
-      }
-
-      // 7. Dependency Analysis
-      if (dependencyAnalyzer && context.includeDependencies !== false) {
-        try {
-          const dependencies = await dependencyAnalyzer.analyzeDependencies(projectPath, {
-            includeOutdated: true,
-            includeVulnerabilities: true,
-            includeRecommendations: true
-          });
-          results.dependencies = this.cleanResult(dependencies);
-          logger.info(`✅ Dependency analysis completed`);
+          logger.info(`🔄 Executing ${stepConfig.name}...`);
           
-          // Store all found dependencies for merging in the controller
-          if (dependencies.packages && Array.isArray(dependencies.packages)) {
-            results.dependencies.allPackages = dependencies.packages.map(pkg => ({
-              context: pkg.path,
-              dependencies: pkg.dependencies,
-              devDependencies: pkg.devDependencies
-            }));
-            // Also as packagesByContext for easier merging
-            results.dependencies.packagesByContext = {};
-            for (const pkg of dependencies.packages) {
-              const ctx = pkg.path.replace(projectPath, '').replace(/^\/+/, '') || 'root';
-              results.dependencies.packagesByContext[ctx] = {
-                dependencies: pkg.dependencies,
-                devDependencies: pkg.devDependencies
-              };
-            }
+          const stepResult = await stepRegistry.executeStep(stepConfig.name, {
+            ...context,
+            ...stepConfig.options
+          });
+          
+          if (stepResult.success) {
+            results[stepConfig.resultKey] = stepResult.result;
+            logger.info(`✅ ${stepConfig.name} completed successfully`);
+          } else {
+            logger.warn(`⚠️ ${stepConfig.name} failed: ${stepResult.error}`);
+            results[stepConfig.resultKey] = { error: stepResult.error, status: 'failed' };
           }
         } catch (error) {
-          logger.warn(`⚠️ Dependency analysis failed: ${error.message}`);
-          results.dependencies = { error: error.message, status: 'failed' };
+          logger.error(`❌ ${stepConfig.name} failed: ${error.message}`);
+          results[stepConfig.resultKey] = { error: error.message, status: 'failed' };
         }
       }
 
       // Generate comprehensive summary
       results.summary = this.generateSummary(results);
 
-      // Save results to repository if available
-      if (analysisRepository) {
-        const AnalysisResult = require('@entities/AnalysisResult');
-        
-        const startTime = Date.now();
-        const endTime = Date.now();
-        const durationMs = endTime - startTime;
-        
-        const analysisResult = AnalysisResult.create(
-          context.projectId,
-          'comprehensive-analysis',
-          results,
-          results.summary,
-          {
-            status: 'completed',
-            startedAt: new Date(startTime).toISOString(),
-            completedAt: new Date(endTime).toISOString(),
-            durationMs: durationMs,
-            overallScore: results.summary?.overallScore || 0,
-            criticalIssuesCount: results.summary?.criticalIssues || 0,
-            warningsCount: results.summary?.warnings || 0,
-            recommendationsCount: results.summary?.recommendations || 0
-          }
-        );
+      logger.info(`✅ Comprehensive analysis orchestration completed successfully`);
 
-        await analysisRepository.save(analysisResult);
-        logger.info(`✅ Analysis results saved to repository with ID: ${analysisResult.id}`);
-        
-        // Emit event to notify frontend about new analysis
-        const application = global.application;
-        if (application && application.eventBus) {
-          application.eventBus.publish('analysis:completed', {
-            projectId: context.projectId,
-            analysisId: analysisResult.id,
-            analysisType: 'comprehensive-analysis',
-            timestamp: new Date().toISOString(),
-            summary: results.summary
-          });
-          logger.info(`📡 Analysis completion event published for project: ${context.projectId}`);
-        }
-      }
-
-      // Generate output using analysis output service
-      if (analysisOutputService && typeof analysisOutputService.generateOutput === 'function') {
-        try {
-          const output = await analysisOutputService.generateOutput(results, {
-            format: 'comprehensive',
-            includeRecommendations: true,
-            includeActionItems: true
-          });
-          results.output = output;
-        } catch (outputError) {
-          logger.warn(`⚠️ Analysis output generation failed: ${outputError.message}`);
-          // Continue without output generation
-        }
-      }
-
-      logger.info(`✅ ${this.name} completed successfully`);
       return {
         success: true,
-        step: this.name,
-        results: {
-          summary: results.summary,
-          totalAnalyses: results.summary?.totalAnalyses || 0,
-          overallScore: results.summary?.overallScore || 0
-        },
-        timestamp: new Date().toISOString()
+        result: results,
+        metadata: {
+          stepName: this.name,
+          projectPath,
+          analysisType: 'comprehensive',
+          stepsExecuted: analysisSteps.length,
+          timestamp: new Date()
+        }
       };
+
     } catch (error) {
-      logger.error(`❌ ${this.name} failed:`, error.message);
+      logger.error(`❌ Analysis orchestration failed: ${error.message}`);
+      
       return {
         success: false,
-        step: this.name,
         error: error.message,
-        timestamp: new Date().toISOString()
+        metadata: {
+          stepName: this.name,
+          projectPath: context.projectPath,
+          analysisType: 'comprehensive',
+          timestamp: new Date()
+        }
       };
     }
   }
 
-  /**
-   * Clean result object to remove circular references and ensure serializability
-   * @param {Object} result - The result object to clean
-   * @returns {Object} Cleaned result object
-   */
-  cleanResult(result) {
-    if (!result || typeof result !== 'object') {
-      return result;
+  getAnalysisStepsToExecute(context) {
+    const steps = [];
+
+    // Always include project analysis
+    steps.push({
+      name: 'ProjectAnalysisStep',
+      resultKey: 'projectAnalysis',
+      options: {
+        includeRepoStructure: context.includeRepoStructure !== false,
+        includeDependencies: context.includeDependencies !== false
+      }
+    });
+
+    // Conditional steps based on context
+    if (context.includeArchitecture !== false) {
+      steps.push({
+        name: 'ArchitectureAnalysisStep',
+        resultKey: 'architectureAnalysis',
+        options: {
+          includePatterns: true,
+          includeStructure: true,
+          includeRecommendations: true
+        }
+      });
     }
 
-    // Handle arrays
-    if (Array.isArray(result)) {
-      return result.map(item => this.cleanResult(item));
+    if (context.includeCodeQuality !== false) {
+      steps.push({
+        name: 'CodeQualityAnalysisStep',
+        resultKey: 'codeQualityAnalysis',
+        options: {
+          includeMetrics: true,
+          includeIssues: true,
+          includeSuggestions: true
+        }
+      });
     }
 
-    // Handle objects
-    const cleaned = {};
-    for (const [key, value] of Object.entries(result)) {
-      // Skip known circular reference properties
-      if (['parent', 'root', '__proto__', 'constructor', 'prototype'].includes(key)) {
-        continue;
-      }
-
-      // Skip functions
-      if (typeof value === 'function') {
-        continue;
-      }
-
-      // Recursively clean nested objects
-      if (value && typeof value === 'object') {
-        cleaned[key] = this.cleanResult(value);
-      } else {
-        cleaned[key] = value;
-      }
+    if (context.includeTechStack !== false) {
+      steps.push({
+        name: 'TechStackAnalysisStep',
+        resultKey: 'techStackAnalysis',
+        options: {
+          includeFrameworks: true,
+          includeLibraries: true,
+          includeTools: true
+        }
+      });
     }
 
-    return cleaned;
+    if (context.includeManifest !== false) {
+      steps.push({
+        name: 'ManifestAnalysisStep',
+        resultKey: 'manifestAnalysis',
+        options: {
+          includePackageJson: true,
+          includeConfigFiles: true,
+          includeDockerFiles: true,
+          includeCIFiles: true
+        }
+      });
+    }
+
+    if (context.includeSecurity !== false) {
+      steps.push({
+        name: 'SecurityAnalysisStep',
+        resultKey: 'securityAnalysis',
+        options: {
+          includeVulnerabilities: true,
+          includeBestPractices: true,
+          includeDependencies: true
+        }
+      });
+    }
+
+    if (context.includePerformance !== false) {
+      steps.push({
+        name: 'PerformanceAnalysisStep',
+        resultKey: 'performanceAnalysis',
+        options: {
+          includeMetrics: true,
+          includeOptimizations: true,
+          includeBottlenecks: true
+        }
+      });
+    }
+
+    if (context.includeDependencies !== false) {
+      steps.push({
+        name: 'DependencyAnalysisStep',
+        resultKey: 'dependencyAnalysis',
+        options: {
+          includeOutdated: true,
+          includeVulnerabilities: true,
+          includeRecommendations: true
+        }
+      });
+    }
+
+    return steps;
   }
 
   generateSummary(results) {
     const summary = {
-      totalAnalyses: 0,
-      successfulAnalyses: 0,
-      failedAnalyses: 0,
-      criticalIssues: 0,
-      warnings: 0,
-      recommendations: 0,
-      overallScore: 0,
-      categories: {},
-      partialResults: false
+      totalSteps: 8,
+      completedSteps: 0,
+      failedSteps: 0,
+      analysisTypes: [],
+      projectType: 'unknown',
+      frameworks: [],
+      buildTools: [],
+      packageManager: 'unknown',
+      securityIssues: 0,
+      performanceIssues: 0,
+      codeQualityIssues: 0,
+      outdatedDependencies: 0,
+      vulnerabilities: 0
     };
 
-    // Count analyses and issues
-    Object.keys(results).forEach(key => {
-      if (key !== 'summary' && key !== 'output' && key !== 'analysisId' && results[key]) {
-        summary.totalAnalyses++;
-        
-        const result = results[key];
-        
-        // Check if analysis failed
-        if (result.status === 'failed' || result.error) {
-          summary.failedAnalyses++;
-          summary.categories[key] = {
-            hasData: false,
-            status: 'failed',
-            error: result.error || 'Analysis failed',
-            score: 0,
-            issues: 0,
-            recommendations: 0
-          };
-          return; // Skip processing failed analysis
-        }
-        
-        // Successful analysis
-        summary.successfulAnalyses++;
-        
-        if (result.issues) {
-          summary.criticalIssues += result.issues.filter(i => i.severity === 'critical').length;
-          summary.warnings += result.issues.filter(i => i.severity === 'warning').length;
-        }
-        
-        if (result.recommendations) {
-          summary.recommendations += result.recommendations.length;
-        }
-        
-        if (result.score) {
-          summary.overallScore += result.score;
-        }
-        
-        summary.categories[key] = {
-          hasData: true,
-          status: 'success',
-          score: result.score || 0,
-          issues: result.issues?.length || 0,
-          recommendations: result.recommendations?.length || 0
-        };
+    // Count completed and failed steps
+    Object.entries(results).forEach(([key, result]) => {
+      if (key === 'summary') return;
+      
+      if (result && !result.error) {
+        summary.completedSteps++;
+        summary.analysisTypes.push(key.replace('Analysis', ''));
+      } else if (result && result.error) {
+        summary.failedSteps++;
       }
     });
 
-    // Calculate overall score (only from successful analyses)
-    if (summary.successfulAnalyses > 0) {
-      summary.overallScore = Math.round(summary.overallScore / summary.successfulAnalyses);
+    // Extract information from results
+    if (results.manifestAnalysis && results.manifestAnalysis.summary) {
+      const manifest = results.manifestAnalysis.summary;
+      summary.projectType = manifest.projectType || 'unknown';
+      summary.frameworks = manifest.frameworks || [];
+      summary.buildTools = manifest.buildTools || [];
+      summary.packageManager = manifest.packageManager || 'unknown';
     }
 
-    // Mark as partial results if some analyses failed
-    if (summary.failedAnalyses > 0) {
-      summary.partialResults = true;
+    if (results.securityAnalysis && results.securityAnalysis.vulnerabilities) {
+      summary.securityIssues = results.securityAnalysis.vulnerabilities.length || 0;
+    }
+
+    if (results.performanceAnalysis && results.performanceAnalysis.issues) {
+      summary.performanceIssues = results.performanceAnalysis.issues.length || 0;
+    }
+
+    if (results.codeQualityAnalysis && results.codeQualityAnalysis.issues) {
+      summary.codeQualityIssues = results.codeQualityAnalysis.issues.length || 0;
+    }
+
+    if (results.dependencyAnalysis && results.dependencyAnalysis.outdated) {
+      summary.outdatedDependencies = results.dependencyAnalysis.outdated.length || 0;
+    }
+
+    if (results.dependencyAnalysis && results.dependencyAnalysis.vulnerabilities) {
+      summary.vulnerabilities = results.dependencyAnalysis.vulnerabilities.length || 0;
     }
 
     return summary;
   }
 
   validateContext(context) {
-    const required = ['projectPath'];
-    const missing = required.filter(key => !context[key]);
-    
-    if (missing.length > 0) {
-      throw new Error(`Missing required context: ${missing.join(', ')}`);
+    if (!context.projectPath) {
+      throw new Error('Project path is required for analysis');
     }
-    
-    return true;
   }
 }
 
-// Export for StepRegistry
-module.exports = {
-  config: AnalysisStep.getConfig(),
-  execute: async (context = {}) => {
-    const step = new AnalysisStep();
-    return await step.execute(context);
-  }
-}; 
+module.exports = AnalysisStep; 
