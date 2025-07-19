@@ -62,6 +62,13 @@
 |---------|----------|--------|-------------|
 | **TaskExecutionService** | `backend/domain/services/TaskExecutionService.js` | Redundant - TaskService macht das schon | TaskService + WorkflowExecutionService |
 
+#### **Legacy IDE Services (Deprecated - zu entfernen):**
+| Service | Location | Reason | Replacement |
+|---------|----------|--------|-------------|
+| **CursorIDEService** | `backend/domain/services/CursorIDEService.js` | Legacy - keine BaseIDE Vererbung | CursorIDE (extends BaseIDE) |
+| **VSCodeIDEService** | `backend/domain/services/VSCodeService.js` | Legacy - keine BaseIDE Vererbung | VSCodeIDE (extends BaseIDE) |
+| **WindsurfIDEService** | `backend/domain/services/WindsurfIDEService.js` | Legacy - keine BaseIDE Vererbung | WindsurfIDE (extends BaseIDE) |
+
 #### **Core Steps:**
 | Category | Steps | Purpose | Dependencies | Status |
 |----------|-------|---------|--------------|--------|
