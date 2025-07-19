@@ -549,16 +549,43 @@ class Application {
     // HTTP Parameter Pollution protection
     this.app.use(hpp());
 
-    // Progressive rate limiting (slow down)
+    // Progressive rate limiting (slow down) - only for unauthenticated users
     const speedLimiter = slowDown({
       windowMs: 15 * 60 * 1000, // 15 minutes
-      delayAfter: 50, // allow 50 requests per 15 minutes, then...
-      delayMs: 500 // begin adding 500ms of delay per request above 50
+      delayAfter: 20, // allow 20 requests per 15 minutes for visitors, then...
+      delayMs: 1000, // begin adding 1000ms of delay per request above 20
+      skip: (req) => {
+        // Skip rate limiting for authenticated users
+        return req.user || req.path === '/api/health';
+      },
+      onLimitReached: (req, res) => {
+        // Redirect content library requests to GitHub
+        if (req.path.includes('/api/frameworks') || req.path.includes('/api/prompts') || req.path.includes('/api/templates')) {
+          return res.status(429).json({
+            success: false,
+            error: 'Rate limit exceeded for content library',
+            message: 'Please visit our GitHub repository for direct access to frameworks, prompts, and templates',
+            githubUrl: 'https://github.com/fr4iser90/PIDEA'
+          });
+        }
+      }
     });
     this.app.use('/api/', speedLimiter);
 
     // Standard rate limiting
-    const limiter = rateLimit(securityConfig.config.rateLimiting);
+    const limiter = rateLimit({
+      ...securityConfig.config.rateLimiting,
+      skip: (req) => {
+        // Skip rate limiting for authenticated users and public content
+        return req.user || 
+               req.path === '/api/health' || 
+               req.path.startsWith('/web/') || 
+               req.path.startsWith('/framework/') ||
+               req.path.startsWith('/api/frameworks') ||
+               req.path.startsWith('/api/prompts') ||
+               req.path.startsWith('/api/templates');
+      }
+    });
     this.app.use('/api/', limiter);
 
     // Body parsing with security limits
@@ -628,8 +655,8 @@ class Application {
     this.app.use('/api/auth/validate', this.authMiddleware.authenticate());
     this.app.get('/api/auth/validate', (req, res) => this.authController.validateToken(req, res));
 
-    // Chat routes (protected) with enhanced rate limiting
-    this.app.use('/api/chat', this.authMiddleware.authenticate(), this.authMiddleware.rateLimitByUser());
+    // Chat routes (protected) - no rate limiting for authenticated users
+    this.app.use('/api/chat', this.authMiddleware.authenticate());
     this.app.post('/api/chat', (req, res) => this.chatController.sendMessage(req, res));
     this.app.get('/api/chat/history', (req, res) => this.chatController.getChatHistory(req, res));
     this.app.get('/api/chat/port/:port/history', (req, res) => this.chatController.getPortChatHistory(req, res));

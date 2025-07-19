@@ -134,7 +134,7 @@ class SecurityConfig {
   getRateLimitingConfig() {
     const baseConfig = {
       windowMs: 15 * 60 * 1000, // 15 minutes
-      max: isProduction ? 100 : 5000, // requests per windowMs
+      max: isProduction ? 100 : 1000, // Stricter limits for unauthenticated users
       message: {
         error: 'Too many requests from this IP, please try again later.',
         retryAfter: '15 minutes'
@@ -152,7 +152,20 @@ class SecurityConfig {
         return req.user ? req.user.id : req.ip;
       },
       handler: (req, res) => {
-        logger.warn(`Rate limit exceeded for ${req.ip}`);
+        logger.warn(`Rate limit exceeded for ${req.ip} - redirecting to GitHub`);
+        
+        // Redirect to GitHub instead of blocking
+        if (req.path.includes('/api/frameworks') || req.path.includes('/api/prompts') || req.path.includes('/api/templates')) {
+          return res.status(429).json({
+            success: false,
+            error: 'Rate limit exceeded for content library',
+            message: 'Please visit our GitHub repository for direct access to frameworks, prompts, and templates',
+            githubUrl: 'https://github.com/fr4iser90/PIDEA',
+            retryAfter: Math.ceil(15 * 60 / 1000) // 15 minutes in seconds
+          });
+        }
+        
+        // For other endpoints, show standard message
         res.status(429).json({
           success: false,
           error: 'Rate limit exceeded',
