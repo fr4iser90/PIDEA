@@ -5,16 +5,41 @@
 
 ![Big Icon](docs/assets/icons/big.png)
 
-## Quickstart (Monorepo & Dev Setup)
+## Quickstart
+
+Choose your preferred setup method:
+
+### Option 1: Docker Setup (Recommended for Testing)
+
+**⚠️ WARNING: This setup is for testing only and should NOT be used in production!**
 
 1. **Clone the repository:**
    ```bash
    git clone https://github.com/fr4iser90/PIDEA.git && cd PIDEA
    ```
+
+2. **Start with Docker Compose:**
+   ```bash
+   docker-compose up --build
+   ```
+
+3. **Access PIDEA:**
+   - Frontend: http://localhost
+   - Backend API: http://localhost:3000
+   - **Test Credentials:** `test@test.com` / `test123`
+
+### Option 2: Development Setup (Monorepo)
+
+1. **Clone the repository:**
+   ```bash
+   git clone https://github.com/fr4iser90/PIDEA.git && cd PIDEA
+   ```
+
 2. **Install all dependencies (backend & frontend):**
    ```bash
    npm install
    ```
+
 3. **Start the interactive dev setup menu:**
    ```bash
    npm run setup
@@ -33,6 +58,76 @@
 
 ---
 
+## Cursor IDE Setup
+
+PIDEA integrates with Cursor IDE for enhanced development experience. Follow these steps to set up the integration:
+
+### Step 1: Download Cursor IDE
+
+**Download Cursor IDE from the official website:**
+- Visit: https://cursor.sh/
+- Download the appropriate version for your operating system
+
+### Step 2: Start Cursor with Remote Debugging
+
+**Linux (AppImage):**
+```bash
+# Navigate to your download directory
+cd ~/Downloads  # or wherever you downloaded the AppImage
+
+# Start Cursor with remote debugging
+appimage-run ./Cursor-1.x.x-x86_64.AppImage \
+  --user-data-dir="$HOME/.cursor-profile-dev" \
+  --remote-debugging-port=9222
+```
+
+**Linux (Installed):**
+```bash
+cursor \
+  --user-data-dir="$HOME/.cursor-profile-dev" \
+  --remote-debugging-port=9222
+```
+
+**Windows:**
+```cmd
+# Navigate to Cursor installation directory (usually)
+cd "C:\Users\%USERNAME%\AppData\Local\Programs\cursor"
+
+# Start Cursor with remote debugging
+cursor.exe --user-data-dir="%USERPROFILE%\.cursor-profile-dev" --remote-debugging-port=9222
+```
+
+**macOS:**
+```bash
+/Applications/Cursor.app/Contents/MacOS/Cursor \
+  --user-data-dir="$HOME/.cursor-profile-dev" \
+  --remote-debugging-port=9222
+```
+
+### VS Code Support (Experimental)
+
+**⚠️ Note: VS Code support is experimental and not fully functional yet.**
+
+**Linux/macOS:**
+```bash
+code --no-sandbox --remote-debugging-port=9232
+```
+
+**Windows:**
+```cmd
+code.exe --no-sandbox --remote-debugging-port=9232
+```
+
+### Step 3: Verify Connection
+
+Once Cursor is running with remote debugging enabled, PIDEA can connect to it and provide IDE mirroring functionality.
+
+**Parameters explained:**
+- `--user-data-dir`: Creates a separate profile directory for development, keeping your main Cursor profile clean
+- `--remote-debugging-port=9222`: Enables remote debugging on port 9222, which PIDEA uses to connect to your IDE
+
+---
+
 ## Overview
 
 **Personal IDE Agent** - An innovative web-based platform designed to enhance developer productivity through integrated tools and AI-driven assistance. It provides a seamless environment for coding, collaboration, and project management, with features like real-time chat, IDE mirroring, and content preview. The platform is built to support developers in creating, analyzing, and refactoring projects efficiently.
@@ -43,51 +138,6 @@
 - **IDE Integration**: Mirror and interact with your Cursor IDE for a unified coding experience.
 - **Preview Functionality**: View code output or project content in real-time alongside your workspace.
 - **Multi-View Interface**: Switch between chat, code, IDE mirror, and preview modes to suit your workflow.
-
-## Cursor IDE Setup
-
-To use PIDEA with Cursor IDE, you need to start Cursor with remote debugging enabled. This allows PIDEA to communicate with and mirror your IDE.
-
-### Starting Cursor with Remote Debugging
-
-Run the following command to start Cursor with the necessary configuration:
-
-```bash
-appimage-run ./Cursor-1.1.6-x86_64.AppImage \
-  --user-data-dir="$HOME/.cursor-profile-dev" \
-  --remote-debugging-port=9223
-```
-
-**Parameters explained:**
-- `--user-data-dir="$HOME/.cursor-profile-dev"`: Creates a separate profile directory for development, keeping your main Cursor profile clean
-- `--remote-debugging-port=9223`: Enables remote debugging on port 9223, which PIDEA uses to connect to your IDE
-
-### Alternative Startup Methods
-
-If you're not using an AppImage, adjust the command based on your installation:
-
-**For installed Cursor:**
-```bash
-cursor \
-  --user-data-dir="$HOME/.cursor-profile-dev" \
-  --remote-debugging-port=9223
-vscode   
-  code --no-sandbox --remote-debugging-port=9232
-```
-
-**For Windows:**
-```cmd
-cursor.exe --user-data-dir="%USERPROFILE%\.cursor-profile-dev" --remote-debugging-port=9223
-```
-
-**For macOS:**
-```bash
-/Applications/Cursor.app/Contents/MacOS/Cursor \
-  --user-data-dir="$HOME/.cursor-profile-dev" \
-  --remote-debugging-port=9223
-```
-
-Once Cursor is running with remote debugging enabled, PIDEA can connect to it and provide IDE mirroring functionality.
 
 ## Upcoming Enhancements
 
