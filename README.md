@@ -70,6 +70,8 @@ PIDEA integrates with Cursor IDE for enhanced development experience. Follow the
 
 ### Step 2: Start Cursor with Remote Debugging
 
+**Option A: Manual Commands**
+
 **Linux (AppImage):**
 ```bash
 # Navigate to your download directory
@@ -103,6 +105,49 @@ cursor.exe --user-data-dir="%USERPROFILE%\.cursor-profile-dev" --remote-debuggin
   --user-data-dir="$HOME/.cursor-profile-dev" \
   --remote-debugging-port=9222
 ```
+
+**Option B: IDE Starter Scripts (Recommended)**
+
+We provide convenient starter scripts that manage multiple IDE instances with automatic port allocation:
+
+**Linux/macOS:**
+```bash
+# Interactive menu
+./start_ide_example.sh menu
+
+# Direct commands
+./start_ide_example.sh cursor        # Start Cursor with free port
+./start_ide_example.sh cursor 3      # Start Cursor on slot 3 (port 9224)
+./start_ide_example.sh cursor auto   # Auto-find free slot
+```
+
+**Windows PowerShell:**
+```powershell
+# Interactive menu
+.\start_ide_example.ps1 menu
+
+# Direct commands
+.\start_ide_example.ps1 cursor       # Start Cursor with free port
+.\start_ide_example.ps1 vscode 3     # Start VSCode on slot 3 (port 9235)
+.\start_ide_example.ps1 cursor auto  # Auto-find free slot
+```
+
+**Windows Batch:**
+```cmd
+# Interactive menu
+start_ide_example.bat menu
+
+# Direct commands
+start_ide_example.bat cursor         # Start Cursor with free port
+start_ide_example.bat vscode 3       # Start VSCode on slot 3
+start_ide_example.bat cursor auto    # Auto-find free slot
+```
+
+**Port Ranges:**
+- **Cursor**: Ports 9222-9232 (11 slots)
+- **VSCode**: Ports 9233-9242 (10 slots)
+
+Each slot gets its own directory and port, allowing you to run multiple IDE instances simultaneously without conflicts.
 
 ### VS Code Support (Experimental)
 
