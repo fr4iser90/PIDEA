@@ -49,6 +49,10 @@ const API_CONFIG = {
       },
       newChat: (port) => `/api/ide/new-chat/${port}`
     },
+    projects: {
+      list: '/api/projects',
+      byId: (id) => `/api/projects/${id}`
+    },
     preview: {
       status: '/api/preview/status',
       data: '/api/preview/data'
@@ -288,8 +292,13 @@ export default class APIChatRepository extends ChatRepository {
     return apiCall(API_CONFIG.endpoints.ide.userAppUrl);
   }
 
+  /**
+   * Get user app URL for specific port
+   * @param {number} port - IDE port
+   * @returns {Promise<Object>} User app URL result
+   */
   async getUserAppUrlForPort(port) {
-    return apiCall(API_CONFIG.endpoints.ide.userAppUrlForPort(port));
+    return this.apiCall(API_CONFIG.endpoints.ide.userAppUrlForPort(port));
   }
 
   async monitorTerminal() {
@@ -767,6 +776,64 @@ export default class APIChatRepository extends ChatRepository {
     } catch (error) {
       logger.error('Failed to get current branch for pidea-agent operations:', error);
       return null;
+    }
+  }
+
+  /**
+   * Get project commands from database
+   * @param {string} projectId - Project ID
+   * @returns {Promise<Object>} Project commands
+   */
+  async getProjectCommands(projectId = null) {
+    try {
+      const currentProjectId = projectId || await this.getCurrentProjectId();
+      
+      // Use existing terminal services to get project commands
+      return apiCall(`/api/projects/${currentProjectId}/commands`);
+    } catch (error) {
+      logger.error('Failed to get project commands:', error);
+      return { success: false, error: 'Failed to get project commands' };
+    }
+  }
+
+  /**
+   * Execute project command
+   * @param {string} projectId - Project ID
+   * @param {string} commandType - Command type (start, dev, build, test, stop)
+   * @param {Object} options - Additional options
+   * @returns {Promise<Object>} Command execution result
+   */
+  async executeProjectCommand(projectId = null, commandType, options = {}) {
+    try {
+      const currentProjectId = projectId || await this.getCurrentProjectId();
+      
+      // Use existing terminal execution services
+      return apiCall(`/api/projects/${currentProjectId}/execute-command`, {
+        method: 'POST',
+        body: JSON.stringify({ commandType, ...options })
+      });
+    } catch (error) {
+      logger.error('Failed to execute project command:', error);
+      return { success: false, error: 'Failed to execute command' };
+    }
+  }
+
+  /**
+   * Validate port (optional - uses IDEStore validation instead)
+   * @param {number} port - Port to validate
+   * @returns {Promise<Object>} Validation result
+   */
+  async validatePort(port) {
+    try {
+      // Use existing IDEStore validation instead of backend call
+      // This method is kept for API consistency but delegates to IDEStore
+      logger.info('Port validation requested via API:', port);
+      
+      // Return success - actual validation happens in IDEStore
+      return { valid: true };
+    } catch (error) {
+      logger.error('Port validation failed:', error);
+      return { valid: false, error: 'Port validation failed' };
     }
   }
 }

@@ -17,6 +17,313 @@
   min-height: 0;
 }
 
+/* Port Configuration Styles */
+.port-config-input {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 200px;
+}
+
+.port-input-container {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.port-input-label {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  margin-bottom: 2px;
+}
+
+.port-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.port-input {
+  width: 100%;
+  padding: 8px 32px 8px 12px;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  font-size: 14px;
+  transition: all 0.2s ease;
+}
+
+.port-input:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 2px var(--primary-color-alpha);
+}
+
+.port-input:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.port-input-error {
+  border-color: var(--error-color);
+  box-shadow: 0 0 0 2px var(--error-color-alpha);
+}
+
+.port-input-loading {
+  opacity: 0.7;
+}
+
+.port-input-loading-spinner {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 16px;
+  height: 16px;
+}
+
+.port-input-clear {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 16px;
+  height: 16px;
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  border-radius: 50%;
+  transition: all 0.2s ease;
+}
+
+.port-input-clear:hover {
+  background: var(--hover-bg);
+  color: var(--text-primary);
+}
+
+.port-input-error-message {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--error-color);
+  padding: 4px 8px;
+  background: var(--error-bg);
+  border-radius: 4px;
+  border: 1px solid var(--error-color-alpha);
+}
+
+.error-icon {
+  font-size: 12px;
+}
+
+.error-text {
+  flex: 1;
+}
+
+.port-input-help {
+  font-size: 11px;
+  color: var(--text-tertiary);
+  font-style: italic;
+}
+
+/* Project Command Buttons Styles */
+.project-command-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.command-buttons-container {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.command-buttons-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.command-buttons-title {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+.command-error-message {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  color: var(--error-color);
+  padding: 2px 6px;
+  background: var(--error-bg);
+  border-radius: 3px;
+  border: 1px solid var(--error-color-alpha);
+}
+
+.command-buttons-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(60px, 1fr));
+  gap: 4px;
+}
+
+.command-button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  padding: 6px 4px;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  background: var(--bg-secondary);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+  min-height: 48px;
+  font-size: 11px;
+}
+
+.command-button:hover:not(:disabled) {
+  background: var(--hover-bg);
+  color: var(--text-primary);
+  border-color: var(--primary-color);
+}
+
+.command-button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.command-button.command-available {
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+}
+
+.command-button.command-unavailable {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.command-button.command-executing {
+  background: var(--primary-color-alpha);
+  border-color: var(--primary-color);
+  color: var(--primary-color);
+}
+
+.command-button.command-success {
+  background: var(--success-bg);
+  border-color: var(--success-color);
+  color: var(--success-color);
+}
+
+.command-button.command-error {
+  background: var(--error-bg);
+  border-color: var(--error-color);
+  color: var(--error-color);
+}
+
+.command-icon {
+  font-size: 14px;
+  line-height: 1;
+}
+
+.command-label {
+  font-size: 10px;
+  font-weight: 500;
+  text-align: center;
+  line-height: 1;
+}
+
+.command-loading {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 16px;
+  height: 16px;
+}
+
+.command-status {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  font-size: 10px;
+  line-height: 1;
+}
+
+.command-status-detail {
+  padding: 8px;
+  border-radius: 4px;
+  border: 1px solid;
+  font-size: 12px;
+  margin-top: 4px;
+}
+
+.command-status-detail.command-status-success {
+  background: var(--success-bg);
+  border-color: var(--success-color);
+  color: var(--success-color);
+}
+
+.command-status-detail.command-status-error {
+  background: var(--error-bg);
+  border-color: var(--error-color);
+  color: var(--error-color);
+}
+
+.status-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 4px;
+}
+
+.status-command {
+  font-weight: 600;
+}
+
+.status-clear {
+  width: 16px;
+  height: 16px;
+  border: none;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  border-radius: 50%;
+  opacity: 0.7;
+  transition: opacity 0.2s ease;
+}
+
+.status-clear:hover {
+  opacity: 1;
+}
+
+.status-message {
+  margin-bottom: 2px;
+}
+
+.status-timestamp {
+  font-size: 10px;
+  opacity: 0.7;
+}
+
 .preview-container.preview-visible {
   display: flex;
 }
@@ -45,6 +352,18 @@
   background: var(--bg-tertiary);
   border-bottom: 1px solid var(--border-color);
   min-height: 48px;
+  gap: 12px;
+}
+
+.port-config-section {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  max-width: 300px;
+}
+
+.header-command-buttons {
+  flex-shrink: 0;
 }
 
 .preview-title {

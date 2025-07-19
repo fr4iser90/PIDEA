@@ -61,9 +61,12 @@ function SidebarLeft({ eventBus, activePort, onActivePortChange, mode = 'chat' }
     };
   }, [eventBus, onActivePortChange]);
 
-  // Load IDE list on component mount
+  // Load IDE list on component mount ONLY if authenticated
   useEffect(() => {
-    refreshIDEList();
+    const { isAuthenticated } = useAuthStore.getState();
+    if (isAuthenticated) {
+      refreshIDEList();
+    }
   }, []);
 
   const handleNewIDE = () => eventBus.emit('sidebar-left:new-ide');

@@ -1,9 +1,12 @@
 import { logger } from "@/infrastructure/logging/Logger";
 import React, { useState, useEffect, useRef } from 'react';
 import APIChatRepository from '@/infrastructure/repositories/APIChatRepository.jsx';
+import PortConfigInput from './PortConfigInput.jsx';
+import ProjectCommandButtons from './ProjectCommandButtons.jsx';
+import { usePortConfiguration } from '@/hooks/usePortConfiguration.js';
 import '@/css/main/preview.css';
 
-function PreviewComponent({ eventBus, activePort }) {
+function PreviewComponent({ eventBus, activePort, projectId = null }) {
   const [previewData, setPreviewData] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -13,6 +16,9 @@ function PreviewComponent({ eventBus, activePort }) {
   const containerRef = useRef(null);
   const iframeRef = useRef(null);
   const apiRepository = new APIChatRepository();
+  
+  // Port configuration hook
+  const { customPort, setCustomPort, validatePort } = usePortConfiguration();
 
   useEffect(() => {
     logger.info('🔄 PreviewComponent initializing...');
@@ -131,10 +137,13 @@ function PreviewComponent({ eventBus, activePort }) {
       let port = null;
       let workspacePath = null;
       
-      // If we have activePort, try to get user app URL for that specific port
-      if (activePort) {
-        logger.info('Getting user app URL for port:', activePort);
-        const result = await apiRepository.getUserAppUrlForPort(activePort);
+      // Priority: custom port > active port > fallback
+      const effectivePort = customPort || activePort;
+      
+      // If we have an effective port, try to get user app URL for that specific port
+      if (effectivePort) {
+        logger.info('Getting user app URL for port:', effectivePort);
+        const result = await apiRepository.getUserAppUrlForPort(effectivePort);
         
         if (result.success && result.data && result.data.url) {
           logger.info('Found user app URL for port:', result.data.url);
@@ -142,13 +151,13 @@ function PreviewComponent({ eventBus, activePort }) {
           port = result.data.port;
           workspacePath = result.data.workspacePath;
         } else {
-          logger.info('No user app URL found for port, trying  endpoint...');
+          logger.info('No user app URL found for port, trying fallback...');
         }
       }
       
-      // Fallback to  user app URL if port-specific failed
+      // Fallback to general user app URL if port-specific failed
       if (!previewUrl) {
-        logger.info('Trying  user app URL...');
+        logger.info('Trying general user app URL...');
         const result = await apiRepository.getUserAppUrl();
         
         if (result.success && result.data && result.data.url) {
@@ -210,6 +219,79 @@ function PreviewComponent({ eventBus, activePort }) {
     if (refreshInterval) {
       clearInterval(refreshInterval);
       setRefreshInterval(null);
+    }
+  };
+
+  // Port configuration handlers
+  const handlePortChange = async (newPort) => {
+    try {
+      logger.info('Port configuration changed:', newPort);
+      setCustomPort(newPort);
+      
+      // Update preview data with new port
+      const newPreviewData = {
+        ...previewData,
+        url: `http://localhost:${newPort}`
+      };
+      setPreviewData(newPreviewData);
+      
+    } catch (error) {
+      logger.error('Failed to handle port change:', error);
+    }
+  };
+
+  const handlePortValidate = async (validationResult) => {
+    try {
+      logger.info('Port validation result:', validationResult);
+      if (validationResult.isValid) {
+        setCustomPort(validationResult.port);
+      }
+    } catch (error) {
+      logger.error('Failed to handle port validation:', error);
+    }
+  };
+
+  // Load project ports from database
+  const loadProjectPorts = async () => {
+    try {
+      if (activePort) {
+        const projectResult = await apiRepository.getProjectByIDEPort(activePort);
+        if (projectResult.success && projectResult.data) {
+          const project = projectResult.data;
+          
+          // Set custom port from database
+          if (project.frontendPort) {
+            setCustomPort(project.frontendPort);
+            logger.info('Loaded frontend port from database:', project.frontendPort);
+          }
+        }
+      }
+    } catch (error) {
+      logger.error('Failed to load project ports from database:', error);
+    }
+  };
+
+  // Load project ports when activePort changes
+  useEffect(() => {
+    if (activePort) {
+      loadProjectPorts();
+    }
+  }, [activePort]);
+
+  // Command execution handlers
+  const handleCommandExecute = async (commandType, result) => {
+    try {
+      logger.info('Command executed:', commandType, result);
+      
+      // Refresh preview after command execution
+      if (commandType === 'start' || commandType === 'dev') {
+        // Wait a bit for the server to start
+        setTimeout(async () => {
+          await handleRefresh();
+        }, 2000);
+      }
+    } catch (error) {
+      logger.error('Failed to handle command execution:', error);
     }
   };
 
@@ -304,6 +386,28 @@ function PreviewComponent({ eventBus, activePort }) {
           <span className="preview-icon">👁️</span>
           <span className="preview-text">Preview</span>
         </div>
+        
+        {/* Port configuration when no project URL is available */}
+        {!previewData?.url && !isLoading && (
+          <div className="port-config-section">
+            <PortConfigInput
+              onPortChange={handlePortChange}
+              onPortValidate={handlePortValidate}
+              initialPort={customPort}
+              disabled={isLoading}
+            />
+          </div>
+        )}
+        
+        {/* Command execution buttons */}
+        {projectId && (
+          <ProjectCommandButtons
+            projectId={projectId}
+            activePort={activePort || customPort}
+            onCommandExecute={handleCommandExecute}
+            className="header-command-buttons"
+          />
+        )}
         
         <div className="preview-actions">
           <button

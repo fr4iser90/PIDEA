@@ -90,12 +90,7 @@ function App() {
     logger.info('✅ App ready');
   };
 
-  // Load active port on mount
-  useEffect(() => {
-    loadActivePort();
-  }, []);
-
-  // Retry loading active port when authentication changes
+  // Load active port ONLY after authentication
   useEffect(() => {
     if (isAuthenticated) {
       loadActivePort();

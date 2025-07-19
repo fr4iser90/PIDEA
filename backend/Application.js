@@ -53,6 +53,7 @@ const AuthMiddleware = require('./infrastructure/auth/AuthMiddleware');
 
 // Presentation - Only keep what's not in DI
 const ChatController = require('./presentation/api/ChatController');
+const IDEController = require('./presentation/api/IDEController');
 const IDEFeatureController = require('./presentation/api/ide/IDEFeatureController');
 const IDEMirrorController = require('./presentation/api/IDEMirrorController');
 const ContentLibraryController = require('./presentation/api/ContentLibraryController');

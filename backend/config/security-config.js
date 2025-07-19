@@ -134,7 +134,7 @@ class SecurityConfig {
   getRateLimitingConfig() {
     const baseConfig = {
       windowMs: 15 * 60 * 1000, // 15 minutes
-      max: isProduction ? 100 : 1000, // requests per windowMs
+      max: isProduction ? 100 : 5000, // requests per windowMs
       message: {
         error: 'Too many requests from this IP, please try again later.',
         retryAfter: '15 minutes'

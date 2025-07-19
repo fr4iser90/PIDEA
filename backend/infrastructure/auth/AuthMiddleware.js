@@ -306,15 +306,15 @@ class AuthMiddleware {
       const now = Date.now();
       const windowMs = 15 * 60 * 1000; // 15 minutes
       
-      // Different limits based on user role and operation
-      let maxRequests = 100; // Default limit
+      // Much higher limits for authenticated users
+      let maxRequests = 5000; // Increased from 100 to 5000
       
       if (req.user.isAdmin()) {
-        maxRequests = 2000; // Higher limit for admins
+        maxRequests = 10000; // Increased from 2000 to 10000
       } else if (req.path.includes('/api/auth/')) {
-        maxRequests = 50; // Lower limit for auth operations
+        maxRequests = 200; // Increased from 50 to 200
       } else if (req.path.includes('/api/projects/')) {
-        maxRequests = 200; // Higher limit for project operations
+        maxRequests = 1000; // Increased from 200 to 1000
       }
 
       if (!userRequests.has(userId)) {

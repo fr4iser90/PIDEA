@@ -7,6 +7,7 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { logger } from '@/infrastructure/logging/Logger';
 import { apiCall } from '@/infrastructure/repositories/APIChatRepository.jsx';
+import useAuthStore from './AuthStore.jsx';
 
 const useIDEStore = create(
   persist(
@@ -120,6 +121,13 @@ const useIDEStore = create(
         try {
           set({ isLoading: true, error: null });
           logger.info('Loading available IDEs...');
+
+          // Check if user is authenticated before making API call
+          const { isAuthenticated } = useAuthStore.getState();
+          if (!isAuthenticated) {
+            logger.info('User not authenticated, skipping IDE load');
+            return [];
+          }
 
           const result = await apiCall('/api/ide/available');
           if (result.success) {
@@ -293,6 +301,65 @@ const useIDEStore = create(
           error: null,
           lastUpdate: null,
           retryCount: 0
+        });
+      },
+
+      // Custom port management methods
+      setCustomPort: async (port) => {
+        try {
+          // Use existing validatePort method for validation
+          const isValid = await get().validatePort(port);
+          if (isValid) {
+            set({ customPort: port });
+            // Use existing persistence system
+            const { portPreferences } = get();
+            const existingPreference = portPreferences.find(p => p.port === port);
+            if (!existingPreference) {
+              portPreferences.push({
+                port,
+                weight: 100,
+                usageCount: 1,
+                lastUsed: new Date().toISOString(),
+                createdAt: new Date().toISOString(),
+                isCustom: true
+              });
+              set({ portPreferences: [...portPreferences] });
+            }
+            return { success: true };
+          } else {
+            return { success: false, error: 'Invalid port' };
+          }
+        } catch (error) {
+          logger.error('Failed to set custom port:', error);
+          return { success: false, error: 'Failed to set port' };
+        }
+      },
+
+      getCustomPort: () => {
+        return get().customPort;
+      },
+
+      validateCustomPort: async (port) => {
+        // Use existing validatePort method
+        return await get().validatePort(port);
+      },
+
+      clearCustomPort: () => {
+        set({ customPort: null });
+        return { success: true };
+      },
+
+      // Project command methods (optional - can use existing terminal services)
+      getProjectCommands: async (projectId) => {
+        // Use existing APIChatRepository patterns
+        return apiCall(`/api/projects/${projectId}/commands`);
+      },
+
+      executeProjectCommand: async (projectId, commandType) => {
+        // Use existing terminal execution services
+        return apiCall(`/api/projects/${projectId}/execute-command`, {
+          method: 'POST',
+          body: JSON.stringify({ commandType })
         });
       }
     }),

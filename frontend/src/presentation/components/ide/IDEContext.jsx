@@ -2,6 +2,7 @@ import { logger } from "@/infrastructure/logging/Logger";
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import useIDEStore from '@/infrastructure/stores/IDEStore.jsx';
 import { apiCall } from '@/infrastructure/repositories/APIChatRepository.jsx';
+import useAuthStore from '@/infrastructure/stores/AuthStore.jsx';
 
 // Create IDE Context
 const IDEContext = createContext();
@@ -23,9 +24,12 @@ export const IDEProvider = ({ children, eventBus }) => {
   const [ideFeatures, setIdeFeatures] = useState({});
   const [ideStatus, setIdeStatus] = useState({});
 
-  // Load available IDEs on mount
+  // Load available IDEs on mount ONLY if authenticated
   useEffect(() => {
-    loadAvailableIDEs();
+    const { isAuthenticated } = useAuthStore.getState();
+    if (isAuthenticated) {
+      loadAvailableIDEs();
+    }
   }, []);
 
   // Listen for IDE events
