@@ -49,13 +49,16 @@ class SecurityAnalysisStep {
       // Validate context
       this.validateContext(context);
       
-      // Get security analyzer from application
-      const application = global.application;
-      if (!application) {
-        throw new Error('Application not available');
+      // Get security analyzer from context or application
+      let securityAnalyzer = context.securityAnalyzer;
+      if (!securityAnalyzer) {
+        const application = global.application;
+        if (!application) {
+          throw new Error('Application not available and securityAnalyzer not provided in context');
+        }
+        securityAnalyzer = application.securityAnalyzer;
       }
-
-      const { securityAnalyzer } = application;
+      
       if (!securityAnalyzer) {
         throw new Error('Security analyzer not available');
       }
@@ -123,4 +126,11 @@ class SecurityAnalysisStep {
   }
 }
 
-module.exports = SecurityAnalysisStep; 
+// Create instance for execution
+const stepInstance = new SecurityAnalysisStep();
+
+// Export in StepRegistry format
+module.exports = {
+  config,
+  execute: async (context) => await stepInstance.execute(context)
+}; 

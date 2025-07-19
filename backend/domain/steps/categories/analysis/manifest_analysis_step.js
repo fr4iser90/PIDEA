@@ -56,6 +56,20 @@ class ManifestAnalysisStep {
       
       logger.info(`📊 Starting manifest analysis for: ${projectPath}`);
 
+      // Get manifest analyzer from context or application
+      let manifestAnalyzer = context.manifestAnalyzer;
+      if (!manifestAnalyzer) {
+        const application = global.application;
+        if (!application) {
+          throw new Error('Application not available and manifestAnalyzer not provided in context');
+        }
+        manifestAnalyzer = application.manifestAnalyzer;
+      }
+      
+      if (!manifestAnalyzer) {
+        throw new Error('Manifest analyzer not available');
+      }
+
       // Analyze manifests
       const manifestAnalysis = await this.analyzeManifests(projectPath, context);
 
@@ -373,4 +387,11 @@ class ManifestAnalysisStep {
   }
 }
 
-module.exports = ManifestAnalysisStep; 
+// Create instance for execution
+const stepInstance = new ManifestAnalysisStep();
+
+// Export in StepRegistry format
+module.exports = {
+  config,
+  execute: async (context) => await stepInstance.execute(context)
+}; 

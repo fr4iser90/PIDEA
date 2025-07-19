@@ -121,7 +121,9 @@ class FrameworkStepRegistry {
    */
   async loadFrameworkStep(frameworkName, stepName, stepConfig, stepsPath) {
     try {
-      const stepFilePath = path.join(stepsPath, stepConfig.file);
+      // Fix: Remove 'steps/' prefix if it exists in the file path
+      const fileName = stepConfig.file.replace(/^steps\//, '');
+      const stepFilePath = path.join(stepsPath, fileName);
       
       // Check if step file exists
       const fileExists = await fs.access(stepFilePath).then(() => true).catch(() => false);

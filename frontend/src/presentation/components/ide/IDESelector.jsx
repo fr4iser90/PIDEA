@@ -24,7 +24,8 @@ const IDESelector = ({
 
   // Load available IDEs on component mount
   useEffect(() => {
-    loadAvailableIDEs();
+    // Don't call loadAvailableIDEs here - IDEProvider will handle it
+    logger.info('IDESelector mounted, IDEProvider will handle IDE loading');
   }, []);
 
   // Update current selection when activePort changes

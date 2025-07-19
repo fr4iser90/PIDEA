@@ -61,7 +61,8 @@ class AuthService {
 
     const accessToken = this.generateAccessToken(user);
     const refreshToken = this.generateRefreshToken(user);
-    const expiresAt = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
+    const expiresIn = process.env.NODE_ENV === 'development' ? 2 * 60 * 60 * 1000 : 15 * 60 * 1000; // 2h dev, 15m prod
+    const expiresAt = new Date(Date.now() + expiresIn);
 
     logger.info('🔍 Generated tokens:', {
       accessTokenLength: accessToken.length,
@@ -199,7 +200,8 @@ class AuthService {
       type: 'access'
     };
 
-    return jwt.sign(payload, this.jwtSecret, { expiresIn: '15m' });
+    const expiresIn = process.env.NODE_ENV === 'development' ? '2h' : '15m';
+    return jwt.sign(payload, this.jwtSecret, { expiresIn });
   }
 
   generateRefreshToken(user) {

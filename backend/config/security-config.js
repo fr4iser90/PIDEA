@@ -185,7 +185,7 @@ class SecurityConfig {
       jwt: {
         accessToken: {
           secret: process.env.JWT_ACCESS_SECRET || 'your-access-secret-key-change-in-production',
-          expiresIn: '15m',
+          expiresIn: process.env.NODE_ENV === 'development' ? '2h' : '15m',
           algorithm: 'HS256',
           issuer: 'pidea-backend',
           audience: 'pidea-frontend'

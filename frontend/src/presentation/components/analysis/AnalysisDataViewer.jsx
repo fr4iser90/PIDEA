@@ -1,5 +1,5 @@
 import { logger } from "@/infrastructure/logging/Logger";
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import APIChatRepository from '@/infrastructure/repositories/APIChatRepository';
 import useNotificationStore from '@/infrastructure/stores/NotificationStore.jsx';
 import AnalysisCharts from './AnalysisCharts';
@@ -22,7 +22,7 @@ const AnalysisDataViewer = ({ projectId = null, eventBus = null }) => {
     metrics: null,
     status: null,
     history: [],
-    charts: {},
+    charts: null,
     issues: null,
     techStack: null,
     architecture: null,
@@ -39,7 +39,7 @@ const AnalysisDataViewer = ({ projectId = null, eventBus = null }) => {
   
   // Collapsible sections state
   const [expandedSections, setExpandedSections] = useState({
-    recommendations: true,
+    recommendations: false,  // FIXED: Was true, now false
     issues: false,
     techStack: false,
     architecture: false,
@@ -47,6 +47,9 @@ const AnalysisDataViewer = ({ projectId = null, eventBus = null }) => {
     charts: false,
     history: false
   });
+
+  // Debug: Log initial expanded sections
+  console.log('🎯 [DEBUG] Initial expandedSections:', expandedSections);
   
   // Individual loading states for progressive loading
   const [loadingStates, setLoadingStates] = useState({
@@ -93,138 +96,64 @@ const AnalysisDataViewer = ({ projectId = null, eventBus = null }) => {
     setLoadingStates(prev => ({ ...prev, [key]: loading }));
   };
 
-  const toggleSection = (sectionName) => {
-    setExpandedSections(prev => ({
-      ...prev,
-      [sectionName]: !prev[sectionName]
-    }));
-  };
 
-  const loadAnalysisData = async (forceRefresh = false) => {
+
+  const loadAnalysisData = useCallback(async (forceRefresh = false) => {
+    console.log('🚀 [DEBUG] loadAnalysisData called', { forceRefresh, projectId });
+    logger.info('🚀 [AnalysisDataViewer] loadAnalysisData called', { forceRefresh, projectId });
+    
     try {
       setLoading(true);
       setError(null);
 
       const currentProjectId = projectId || await apiRepository.getCurrentProjectId();
+      console.log('🔍 [DEBUG] Current project ID:', currentProjectId);
       
-      // Step 1: Load lightweight data first (status, metrics) with caching
+      // Step 1: Load only essential data first (status, metrics, history)
       updateLoadingState('status', true);
       updateLoadingState('metrics', true);
+      updateLoadingState('history', true);
       
-      // For large analysis data, skip client-side caching and rely on ETag system
-      // Load from API directly (ETag will handle caching)
-      const [statusResponse, metricsResponse] = await Promise.all([
+      console.log('📡 [DEBUG] Starting API calls...');
+      logger.info('📡 [AnalysisDataViewer] Starting API calls...');
+      
+      // Load essential data in parallel (including tech stack for immediate display)
+      const [statusResponse, metricsResponse, historyResponse, techStackResponse] = await Promise.all([
         apiRepository.getAnalysisStatus?.(currentProjectId) || Promise.resolve({ success: false, data: null }),
-        apiRepository.getAnalysisMetrics?.(currentProjectId) || Promise.resolve({ success: false, data: null })
+        apiRepository.getAnalysisMetrics?.(currentProjectId) || Promise.resolve({ success: false, data: null }),
+        apiRepository.getAnalysisHistory(currentProjectId),
+        apiRepository.getAnalysisTechStack?.(currentProjectId) || Promise.resolve({ success: false, data: null })
       ]);
 
-      // Update UI with immediate data
+      console.log('📊 [DEBUG] API responses received:', {
+        statusSuccess: statusResponse.success,
+        metricsSuccess: metricsResponse.success,
+        historySuccess: historyResponse.success,
+        techStackSuccess: techStackResponse.success,
+        statusData: statusResponse.data ? 'present' : 'null',
+        metricsData: metricsResponse.data ? 'present' : 'null',
+        historyData: historyResponse.data ? `${historyResponse.data.length} items` : 'null',
+        techStackData: techStackResponse.data ? 'present' : 'null'
+      });
+
+      // Update UI with essential data immediately
       setAnalysisData(prev => ({
         ...prev,
         status: statusResponse.success ? statusResponse.data : null,
-        metrics: metricsResponse.success ? metricsResponse.data : null
+        metrics: metricsResponse.success ? metricsResponse.data : null,
+        history: historyResponse.success ? (historyResponse.data || []) : [],
+        techStack: techStackResponse.success ? techStackResponse.data : null
       }));
 
       updateLoadingState('status', false);
       updateLoadingState('metrics', false);
-
-      // Step 2: Load heavy data with progress indicators
-      updateLoadingState('history', true);
-      
-      // For large analysis data, skip client-side caching and rely on ETag system
-      const historyResponse = await apiRepository.getAnalysisHistory(currentProjectId);
-      
-      setAnalysisData(prev => ({
-        ...prev,
-        history: historyResponse.success ? (historyResponse.data || []) : []
-      }));
-
       updateLoadingState('history', false);
-
-      // Step 3: Load new component data (Phase 2 components)
-      // Load issues data
-      updateLoadingState('issues', true);
-      try {
-        // For large analysis data, skip client-side caching and rely on ETag system
-        const issuesResponse = await apiRepository.getAnalysisIssues?.(currentProjectId) || Promise.resolve({ success: false, data: null });
-        
-        setAnalysisData(prev => ({
-          ...prev,
-          issues: issuesResponse.success ? issuesResponse.data : null
-        }));
-      } catch (err) {
-        logger.error('Failed to load issues data:', err);
-      }
-      updateLoadingState('issues', false);
-
-      // Load tech stack data
-      updateLoadingState('techStack', true);
-      try {
-        // For large analysis data, skip client-side caching and rely on ETag system
-        const techStackResponse = await apiRepository.getAnalysisTechStack?.(currentProjectId) || Promise.resolve({ success: false, data: null });
-        
-        logger.info('🔧 [AnalysisDataViewer] Tech stack response received');
-        
-        setAnalysisData(prev => ({
-          ...prev,
-          techStack: techStackResponse.success ? techStackResponse.data : null
-        }));
-      } catch (err) {
-        logger.error('Failed to load tech stack data:', err);
-      }
-      updateLoadingState('techStack', false);
-
-      // Load architecture data
-      updateLoadingState('architecture', true);
-      try {
-        // For large analysis data, skip client-side caching and rely on ETag system
-        const architectureResponse = await apiRepository.getAnalysisArchitecture?.(currentProjectId) || Promise.resolve({ success: false, data: null });
-        
-        logger.info('🏗️ [AnalysisDataViewer] Architecture response received');
-        
-        setAnalysisData(prev => ({
-          ...prev,
-          architecture: architectureResponse.success ? architectureResponse.data : null
-        }));
-      } catch (err) {
-        logger.error('Failed to load architecture data:', err);
-      }
-      updateLoadingState('architecture', false);
-
-      // Load recommendations data
-      updateLoadingState('recommendations', true);
-      try {
-        // For large analysis data, skip client-side caching and rely on ETag system
-        const recommendationsResponse = await apiRepository.getAnalysisRecommendations?.(currentProjectId) || Promise.resolve({ success: false, data: null });
-        
-        logger.info('💡 [AnalysisDataViewer] Recommendations response received');
-        
-        setAnalysisData(prev => ({
-          ...prev,
-          recommendations: recommendationsResponse.success ? recommendationsResponse.data : null
-        }));
-      } catch (err) {
-        logger.error('Failed to load recommendations data:', err);
-      }
-      updateLoadingState('recommendations', false);
-
-      // Load charts data
-      updateLoadingState('charts', true);
-      try {
-        // For large analysis data, skip client-side caching and rely on ETag system
-        const chartsResponse = await apiRepository.getAnalysisCharts?.(currentProjectId, 'trends') || Promise.resolve({ success: false, data: null });
-        setAnalysisData(prev => ({
-          ...prev,
-          charts: chartsResponse.success ? chartsResponse.data : null
-        }));
-      } catch (err) {
-        logger.error('Failed to load charts data:', err);
-      }
-      updateLoadingState('charts', false);
 
       // Check if we have recent analysis data
       const hasRecentData = await checkForRecentAnalysisData(historyResponse, currentProjectId);
       setAnalysisData(prev => ({ ...prev, hasRecentData }));
+
+      console.log('✅ [DEBUG] Analysis data loaded successfully');
 
       // Show success notification if data was loaded successfully
       if (forceRefresh) {
@@ -232,11 +161,215 @@ const AnalysisDataViewer = ({ projectId = null, eventBus = null }) => {
       }
 
     } catch (err) {
+      console.error('❌ [DEBUG] Analysis data loading error:', err);
       setError('Failed to load analysis data: ' + err.message);
       logger.error('Analysis data loading error:', err);
     } finally {
       setLoading(false);
     }
+  }, [projectId, apiRepository, showSuccess]);
+
+  // Lazy loading functions for non-essential data
+  const loadIssuesData = useCallback(async () => {
+    console.log('🔍 [DEBUG] loadIssuesData called', { 
+      issuesData: analysisData.issues, 
+      expandedSections: expandedSections,
+      isExpanded: expandedSections.issues 
+    });
+    
+    if (analysisData.issues !== null) {
+      console.log('🔍 [DEBUG] loadIssuesData: Already loaded, returning');
+      return; // Already loaded
+    }
+    
+    console.log('🔍 [DEBUG] loadIssuesData: Starting API call');
+    
+    try {
+      updateLoadingState('issues', true);
+      const currentProjectId = projectId || await apiRepository.getCurrentProjectId();
+      const issuesResponse = await apiRepository.getAnalysisIssues?.(currentProjectId) || Promise.resolve({ success: false, data: null });
+      
+      setAnalysisData(prev => ({
+        ...prev,
+        issues: issuesResponse.success ? issuesResponse.data : null
+      }));
+    } catch (err) {
+      logger.error('Failed to load issues data:', err);
+    } finally {
+      updateLoadingState('issues', false);
+    }
+  }, [projectId, apiRepository, analysisData.issues, expandedSections]);
+
+  const loadTechStackData = useCallback(async () => {
+    console.log('🔧 [DEBUG] loadTechStackData called', { 
+      techStackData: analysisData.techStack, 
+      expandedSections: expandedSections,
+      isExpanded: expandedSections.techStack 
+    });
+    
+    if (analysisData.techStack !== null) {
+      console.log('🔧 [DEBUG] loadTechStackData: Already loaded, returning');
+      return; // Already loaded
+    }
+    
+    console.log('🔧 [DEBUG] loadTechStackData: Starting API call');
+    
+    try {
+      updateLoadingState('techStack', true);
+      const currentProjectId = projectId || await apiRepository.getCurrentProjectId();
+      const techStackResponse = await apiRepository.getAnalysisTechStack?.(currentProjectId) || Promise.resolve({ success: false, data: null });
+      
+      logger.info('🔧 [AnalysisDataViewer] Tech stack response received');
+      
+      setAnalysisData(prev => ({
+        ...prev,
+        techStack: techStackResponse.success ? techStackResponse.data : null
+      }));
+    } catch (err) {
+      logger.error('Failed to load tech stack data:', err);
+    } finally {
+      updateLoadingState('techStack', false);
+    }
+  }, [projectId, apiRepository, analysisData.techStack, expandedSections]);
+
+  const loadArchitectureData = useCallback(async () => {
+    console.log('🏗️ [DEBUG] loadArchitectureData called', { 
+      architectureData: analysisData.architecture, 
+      expandedSections: expandedSections,
+      isExpanded: expandedSections.architecture 
+    });
+    
+    if (analysisData.architecture !== null) {
+      console.log('🏗️ [DEBUG] loadArchitectureData: Already loaded, returning');
+      return; // Already loaded
+    }
+    
+    console.log('🏗️ [DEBUG] loadArchitectureData: Starting API call');
+    
+    try {
+      updateLoadingState('architecture', true);
+      const currentProjectId = projectId || await apiRepository.getCurrentProjectId();
+      const architectureResponse = await apiRepository.getAnalysisArchitecture?.(currentProjectId) || Promise.resolve({ success: false, data: null });
+      
+      logger.info('🏗️ [AnalysisDataViewer] Architecture response received');
+      
+      setAnalysisData(prev => ({
+        ...prev,
+        architecture: architectureResponse.success ? architectureResponse.data : null
+      }));
+    } catch (err) {
+      logger.error('Failed to load architecture data:', err);
+    } finally {
+      updateLoadingState('architecture', false);
+    }
+  }, [projectId, apiRepository, analysisData.architecture, expandedSections]);
+
+  const loadRecommendationsData = useCallback(async () => {
+    console.log('💡 [DEBUG] loadRecommendationsData called', { 
+      recommendationsData: analysisData.recommendations, 
+      expandedSections: expandedSections,
+      isExpanded: expandedSections.recommendations 
+    });
+    
+    if (analysisData.recommendations !== null) {
+      console.log('💡 [DEBUG] loadRecommendationsData: Already loaded, returning');
+      return; // Already loaded
+    }
+    
+    console.log('💡 [DEBUG] loadRecommendationsData: Starting API call');
+    
+    try {
+      updateLoadingState('recommendations', true);
+      const currentProjectId = projectId || await apiRepository.getCurrentProjectId();
+      const recommendationsResponse = await apiRepository.getAnalysisRecommendations?.(currentProjectId) || Promise.resolve({ success: false, data: null });
+      
+      logger.info('💡 [AnalysisDataViewer] Recommendations response received');
+      
+      setAnalysisData(prev => ({
+        ...prev,
+        recommendations: recommendationsResponse.success ? recommendationsResponse.data : null
+      }));
+    } catch (err) {
+      logger.error('Failed to load recommendations data:', err);
+    } finally {
+      updateLoadingState('recommendations', false);
+    }
+  }, [projectId, apiRepository, analysisData.recommendations, expandedSections]);
+
+  const loadChartsData = useCallback(async () => {
+    console.log('📈 [DEBUG] loadChartsData called', { 
+      chartsData: analysisData.charts, 
+      expandedSections: expandedSections,
+      isExpanded: expandedSections.charts 
+    });
+    
+    if (analysisData.charts !== null) {
+      console.log('📈 [DEBUG] loadChartsData: Already loaded, returning');
+      return; // Already loaded
+    }
+    
+    console.log('📈 [DEBUG] loadChartsData: Starting API call');
+    
+    try {
+      updateLoadingState('charts', true);
+      const currentProjectId = projectId || await apiRepository.getCurrentProjectId();
+      const chartsResponse = await apiRepository.getAnalysisCharts?.(currentProjectId, 'trends') || Promise.resolve({ success: false, data: null });
+      
+      setAnalysisData(prev => ({
+        ...prev,
+        charts: chartsResponse.success ? chartsResponse.data : null
+      }));
+    } catch (err) {
+      logger.error('Failed to load charts data:', err);
+    } finally {
+      updateLoadingState('charts', false);
+    }
+  }, [projectId, apiRepository, analysisData.charts, expandedSections]);
+
+  // Handle section expansion to trigger lazy loading
+  const handleSectionToggle = (sectionName) => {
+    console.log('🔄 [DEBUG] handleSectionToggle called', { 
+      sectionName, 
+      currentExpanded: expandedSections[sectionName],
+      allExpandedSections: expandedSections 
+    });
+    
+    setExpandedSections(prev => {
+      const newExpanded = { ...prev, [sectionName]: !prev[sectionName] };
+      
+      console.log('🔄 [DEBUG] handleSectionToggle new state', { 
+        sectionName, 
+        willBeExpanded: newExpanded[sectionName],
+        allNewExpandedSections: newExpanded 
+      });
+      
+      // Trigger lazy loading when section is expanded
+      if (newExpanded[sectionName]) {
+        console.log('🔄 [DEBUG] handleSectionToggle: Section will be expanded, triggering lazy load', { sectionName });
+        
+        switch (sectionName) {
+          case 'issues':
+            loadIssuesData();
+            break;
+          case 'techStack':
+            loadTechStackData();
+            break;
+          case 'architecture':
+            loadArchitectureData();
+            break;
+          case 'recommendations':
+            loadRecommendationsData();
+            break;
+          case 'charts':
+            loadChartsData();
+            break;
+        }
+      } else {
+        console.log('🔄 [DEBUG] handleSectionToggle: Section will be collapsed', { sectionName });
+      }
+      
+      return newExpanded;
+    });
   };
 
   /**
@@ -272,11 +405,29 @@ const AnalysisDataViewer = ({ projectId = null, eventBus = null }) => {
   };
 
   const handleAnalysisStatusUpdate = (data) => {
+    // Only update status if it's actually different to avoid unnecessary re-renders
     if (data.projectId === (projectId || analysisData.status?.projectId)) {
-      setAnalysisData(prev => ({
-        ...prev,
-        status: data.status
-      }));
+      const currentStatus = analysisData.status;
+      const newStatus = data.status;
+      
+      // Only update if status actually changed
+      if (!currentStatus || 
+          currentStatus.status !== newStatus.status ||
+          currentStatus.progress !== newStatus.progress ||
+          currentStatus.currentStep !== newStatus.currentStep) {
+        
+        logger.info('🔄 [AnalysisDataViewer] Status update received:', {
+          oldStatus: currentStatus?.status,
+          newStatus: newStatus.status,
+          oldProgress: currentStatus?.progress,
+          newProgress: newStatus.progress
+        });
+        
+        setAnalysisData(prev => ({
+          ...prev,
+          status: data.status
+        }));
+      }
     }
   };
 
@@ -290,6 +441,16 @@ const AnalysisDataViewer = ({ projectId = null, eventBus = null }) => {
       logger.info('🔍 [AnalysisDataViewer] Project ID matches, refreshing data...');
       // Force fresh data when analysis completes (ETag will handle caching)
       showSuccess('Analysis completed! Data refreshed.', 'Analysis Complete');
+      
+      // Reset lazy loaded data to force reload when sections are expanded
+      setAnalysisData(prev => ({
+        ...prev,
+        issues: null,
+        techStack: null,
+        architecture: null,
+        recommendations: null,
+        charts: null
+      }));
       
       // Force fresh data with a small delay to ensure backend has processed the data
       setTimeout(() => {
@@ -326,6 +487,17 @@ const AnalysisDataViewer = ({ projectId = null, eventBus = null }) => {
   const handleRefresh = () => {
     // Force fresh data (ETag will handle caching)
     showInfo('Refreshing analysis data...', 'Data Refresh');
+    
+    // Reset lazy loaded data to force reload when sections are expanded
+    setAnalysisData(prev => ({
+      ...prev,
+      issues: null,
+      techStack: null,
+      architecture: null,
+      recommendations: null,
+      charts: null
+    }));
+    
     loadAnalysisData(true); // forceRefresh = true
   };
 
@@ -431,7 +603,7 @@ const AnalysisDataViewer = ({ projectId = null, eventBus = null }) => {
 
         {/* Recommendations Section */}
         <div className={`analysis-section ${expandedSections.recommendations ? 'expanded' : 'collapsed'}`}>
-          <div className="section-header" onClick={() => toggleSection('recommendations')}>
+          <div className="section-header" onClick={() => handleSectionToggle('recommendations')}>
             <h3>💡 Recommendations</h3>
             <span className="section-toggle">{expandedSections.recommendations ? '▼' : '▶'}</span>
           </div>
@@ -448,7 +620,7 @@ const AnalysisDataViewer = ({ projectId = null, eventBus = null }) => {
 
         {/* Issues Section */}
         <div className={`analysis-section ${expandedSections.issues ? 'expanded' : 'collapsed'}`}>
-          <div className="section-header" onClick={() => toggleSection('issues')}>
+          <div className="section-header" onClick={() => handleSectionToggle('issues')}>
             <h3>⚠️ Issues</h3>
             <span className="section-toggle">{expandedSections.issues ? '▼' : '▶'}</span>
           </div>
@@ -465,7 +637,7 @@ const AnalysisDataViewer = ({ projectId = null, eventBus = null }) => {
 
         {/* Tech Stack Section */}
         <div className={`analysis-section ${expandedSections.techStack ? 'expanded' : 'collapsed'}`}>
-          <div className="section-header" onClick={() => toggleSection('techStack')}>
+          <div className="section-header" onClick={() => handleSectionToggle('techStack')}>
             <h3>🔧 Tech Stack</h3>
             <span className="section-toggle">{expandedSections.techStack ? '▼' : '▶'}</span>
           </div>
@@ -482,7 +654,7 @@ const AnalysisDataViewer = ({ projectId = null, eventBus = null }) => {
 
         {/* Architecture Section */}
         <div className={`analysis-section ${expandedSections.architecture ? 'expanded' : 'collapsed'}`}>
-          <div className="section-header" onClick={() => toggleSection('architecture')}>
+          <div className="section-header" onClick={() => handleSectionToggle('architecture')}>
             <h3>🏗️ Architecture</h3>
             <span className="section-toggle">{expandedSections.architecture ? '▼' : '▶'}</span>
           </div>
@@ -499,7 +671,7 @@ const AnalysisDataViewer = ({ projectId = null, eventBus = null }) => {
 
         {/* Metrics Section */}
         <div className={`analysis-section ${expandedSections.metrics ? 'expanded' : 'collapsed'}`}>
-          <div className="section-header" onClick={() => toggleSection('metrics')}>
+          <div className="section-header" onClick={() => handleSectionToggle('metrics')}>
             <h3>📊 Metrics</h3>
             <span className="section-toggle">{expandedSections.metrics ? '▼' : '▶'}</span>
           </div>
@@ -515,7 +687,7 @@ const AnalysisDataViewer = ({ projectId = null, eventBus = null }) => {
 
         {/* Charts Section */}
         <div className={`analysis-section ${expandedSections.charts ? 'expanded' : 'collapsed'}`}>
-          <div className="section-header" onClick={() => toggleSection('charts')}>
+          <div className="section-header" onClick={() => handleSectionToggle('charts')}>
             <h3>📈 Charts</h3>
             <span className="section-toggle">{expandedSections.charts ? '▼' : '▶'}</span>
           </div>
@@ -533,7 +705,7 @@ const AnalysisDataViewer = ({ projectId = null, eventBus = null }) => {
 
         {/* History Section */}
         <div className={`analysis-section ${expandedSections.history ? 'expanded' : 'collapsed'}`}>
-          <div className="section-header" onClick={() => toggleSection('history')}>
+          <div className="section-header" onClick={() => handleSectionToggle('history')}>
             <h3>📋 History</h3>
             <span className="section-toggle">{expandedSections.history ? '▼' : '▶'}</span>
           </div>

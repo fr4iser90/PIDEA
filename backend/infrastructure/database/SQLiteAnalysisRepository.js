@@ -89,8 +89,31 @@ class SQLiteAnalysisRepository extends AnalysisRepository {
   }
 
   async findLatestByProjectId(projectId) {
-    const projectAnalyses = await this.findByProjectId(projectId);
-    return projectAnalyses.length > 0 ? projectAnalyses[0] : null;
+    const sql = 'SELECT * FROM analysis_results WHERE project_id = ? ORDER BY created_at DESC LIMIT 1';
+    const rows = await this.db.query(sql, [projectId]);
+    
+    if (rows.length === 0) {
+      return null;
+    }
+    
+    const entity = this.mapRowToEntity(rows[0]);
+    logger.info(`Found latest analysis for projectId: ${projectId}`);
+    
+    return entity;
+  }
+
+  async findLatestByProjectIdAndType(projectId, analysisType) {
+    const sql = 'SELECT * FROM analysis_results WHERE project_id = ? AND analysis_type = ? ORDER BY created_at DESC LIMIT 1';
+    const rows = await this.db.query(sql, [projectId, analysisType]);
+    
+    if (rows.length === 0) {
+      return null;
+    }
+    
+    const entity = this.mapRowToEntity(rows[0]);
+    logger.info(`Found latest ${analysisType} analysis for projectId: ${projectId}`);
+    
+    return entity;
   }
 
   async findByStatus(status) {

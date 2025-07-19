@@ -2,6 +2,7 @@ import { logger } from "@/infrastructure/logging/Logger";
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { apiCall, API_CONFIG } from '@/infrastructure/repositories/APIChatRepository.jsx';
 import ChatMessage from '@/domain/entities/ChatMessage.jsx';
+import VoiceInput from '../../common/VoiceInput';
 import '@/css/main/chat.css';
 import useAuthStore from '@/infrastructure/stores/AuthStore.jsx';
 
@@ -247,6 +248,15 @@ function ChatComponent({ eventBus, activePort, attachedPrompts = [] }) {
     };
     reader.readAsText(file);
   };
+  
+  // Voice input handler
+  const handleVoiceInput = (text) => {
+    setInputValue(text);
+    // Focus the textarea after voice input
+    if (msgInputRef.current) {
+      msgInputRef.current.focus();
+    }
+  };
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
@@ -388,16 +398,22 @@ function ChatComponent({ eventBus, activePort, attachedPrompts = [] }) {
         <div className="input-container">
           <button id="fileUploadBtn" title="Datei hochladen" onClick={handleFileUploadClick}>📎</button>
           <input type="file" ref={fileInputRef} style={{ display: 'none' }} onChange={handleFileChange} />
-          <textarea
-            id="msgInput"
-            ref={msgInputRef}
-            value={inputValue}
-            onChange={handleInputChange}
-            onKeyDown={handleInputKeyDown}
-            placeholder="Nachricht eingeben..."
-            autoComplete="off"
-            rows={1}
-          />
+          <div className="input-with-voice">
+            <textarea
+              id="msgInput"
+              ref={msgInputRef}
+              value={inputValue}
+              onChange={handleInputChange}
+              onKeyDown={handleInputKeyDown}
+              placeholder="Nachricht eingeben..."
+              autoComplete="off"
+              rows={1}
+            />
+            <VoiceInput 
+              onTextReceived={handleVoiceInput}
+              size="md"
+            />
+          </div>
           <div className="button-group">
             <button id="sendBtn" onClick={handleSendClick} disabled={!inputValue.trim()} className="btn btn-primary">
               <span>Senden</span>

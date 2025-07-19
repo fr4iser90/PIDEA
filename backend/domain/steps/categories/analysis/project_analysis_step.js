@@ -43,18 +43,21 @@ class ProjectAnalysisStep {
     const step = StepBuilder.build(config, context);
     
     try {
-      logger.info(`🔍 Executing ${this.name}...`);
+      logger.info(`📁 Executing ${this.name}...`);
       
       // Validate context
       this.validateContext(context);
       
-      // Get project analyzer from application
-      const application = global.application;
-      if (!application) {
-        throw new Error('Application not available');
+      // Get project analyzer from context or application
+      let projectAnalyzer = context.projectAnalyzer;
+      if (!projectAnalyzer) {
+        const application = global.application;
+        if (!application) {
+          throw new Error('Application not available and projectAnalyzer not provided in context');
+        }
+        projectAnalyzer = application.projectAnalyzer;
       }
-
-      const { projectAnalyzer } = application;
+      
       if (!projectAnalyzer) {
         throw new Error('Project analyzer not available');
       }
@@ -64,13 +67,13 @@ class ProjectAnalysisStep {
       logger.info(`📊 Starting project analysis for: ${projectPath}`);
 
       // Execute project analysis
-      const projectAnalysis = await projectAnalyzer.analyzeProject(projectPath, {
+      const project = await projectAnalyzer.analyzeProject(projectPath, {
         includeRepoStructure: context.includeRepoStructure !== false,
         includeDependencies: context.includeDependencies !== false
       });
 
       // Clean and format result
-      const cleanResult = this.cleanResult(projectAnalysis);
+      const cleanResult = this.cleanResult(project);
 
       logger.info(`✅ Project analysis completed successfully`);
 
@@ -127,4 +130,11 @@ class ProjectAnalysisStep {
   }
 }
 
-module.exports = ProjectAnalysisStep; 
+// Create instance for execution
+const stepInstance = new ProjectAnalysisStep();
+
+// Export in StepRegistry format
+module.exports = {
+  config,
+  execute: async (context) => await stepInstance.execute(context)
+}; 

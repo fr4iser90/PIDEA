@@ -49,13 +49,16 @@ class CodeQualityAnalysisStep {
       // Validate context
       this.validateContext(context);
       
-      // Get code quality analyzer from application
-      const application = global.application;
-      if (!application) {
-        throw new Error('Application not available');
+      // Get code quality analyzer from context or application
+      let codeQualityAnalyzer = context.codeQualityAnalyzer;
+      if (!codeQualityAnalyzer) {
+        const application = global.application;
+        if (!application) {
+          throw new Error('Application not available and codeQualityAnalyzer not provided in context');
+        }
+        codeQualityAnalyzer = application.codeQualityAnalyzer;
       }
-
-      const { codeQualityAnalyzer } = application;
+      
       if (!codeQualityAnalyzer) {
         throw new Error('Code quality analyzer not available');
       }
@@ -123,4 +126,11 @@ class CodeQualityAnalysisStep {
   }
 }
 
-module.exports = CodeQualityAnalysisStep; 
+// Create instance for execution
+const stepInstance = new CodeQualityAnalysisStep();
+
+// Export in StepRegistry format
+module.exports = {
+  config,
+  execute: async (context) => await stepInstance.execute(context)
+}; 

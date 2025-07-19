@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import VoiceInput from '../../common/VoiceInput';
 
 const TaskCreationForm = ({ onSubmit, onCancel, isGeneratingPlan, errors }) => {
   const [formData, setFormData] = useState({
@@ -203,6 +204,15 @@ const TaskCreationForm = ({ onSubmit, onCancel, isGeneratingPlan, errors }) => {
     clearSavedData();
   };
 
+  // Voice input handlers
+  const handleVoiceTitle = (text) => {
+    handleInputChange('title', text);
+  };
+
+  const handleVoiceDescription = (text) => {
+    handleInputChange('description', text);
+  };
+
   return (
     <div className="modal-description">
       <p>Describe your task and let AI create a comprehensive implementation plan with automatic execution.</p>
@@ -213,18 +223,25 @@ const TaskCreationForm = ({ onSubmit, onCancel, isGeneratingPlan, errors }) => {
           <label htmlFor="title" className="form-label">
             Task Title *
           </label>
-          <input
-            type="text"
-            id="title"
-            className={`form-input ${validation.title && !validation.title.isValid && touched.title ? 'form-input-error' : ''} ${validation.title && validation.title.isValid && touched.title && formData.title ? 'form-input-success' : ''}`}
-            value={formData.title}
-            onChange={(e) => handleInputChange('title', e.target.value)}
-            onBlur={() => handleFieldBlur('title')}
-            placeholder="Enter a descriptive title for your task..."
-            disabled={isGeneratingPlan}
-            required
-            maxLength={100}
-          />
+          <div className="input-with-voice">
+            <input
+              type="text"
+              id="title"
+              className={`form-input ${validation.title && !validation.title.isValid && touched.title ? 'form-input-error' : ''} ${validation.title && validation.title.isValid && touched.title && formData.title ? 'form-input-success' : ''}`}
+              value={formData.title}
+              onChange={(e) => handleInputChange('title', e.target.value)}
+              onBlur={() => handleFieldBlur('title')}
+              placeholder="Enter a descriptive title for your task..."
+              disabled={isGeneratingPlan}
+              required
+              maxLength={100}
+            />
+            <VoiceInput 
+              onTextReceived={handleVoiceTitle}
+              disabled={isGeneratingPlan}
+              size="md"
+            />
+          </div>
           {validation.title && !validation.title.isValid && touched.title && (
             <div className="error-message">{validation.title.message}</div>
           )}
@@ -241,18 +258,25 @@ const TaskCreationForm = ({ onSubmit, onCancel, isGeneratingPlan, errors }) => {
           <label htmlFor="description" className="form-label">
             Task Description *
           </label>
-          <textarea
-            id="description"
-            className={`form-textarea ${validation.description && !validation.description.isValid && touched.description ? 'form-textarea-error' : ''} ${validation.description && validation.description.isValid && touched.description && formData.description ? 'form-textarea-success' : ''}`}
-            value={formData.description}
-            onChange={(e) => handleInputChange('description', e.target.value)}
-            onBlur={() => handleFieldBlur('description')}
-            placeholder="Describe what you want to build or implement in detail..."
-            rows={4}
-            disabled={isGeneratingPlan}
-            required
-            maxLength={1000}
-          />
+          <div className="input-with-voice">
+            <textarea
+              id="description"
+              className={`form-textarea ${validation.description && !validation.description.isValid && touched.description ? 'form-textarea-error' : ''} ${validation.description && validation.description.isValid && touched.description && formData.description ? 'form-textarea-success' : ''}`}
+              value={formData.description}
+              onChange={(e) => handleInputChange('description', e.target.value)}
+              onBlur={() => handleFieldBlur('description')}
+              placeholder="Describe what you want to build or implement in detail..."
+              rows={4}
+              disabled={isGeneratingPlan}
+              required
+              maxLength={1000}
+            />
+            <VoiceInput 
+              onTextReceived={handleVoiceDescription}
+              disabled={isGeneratingPlan}
+              size="md"
+            />
+          </div>
           {validation.description && !validation.description.isValid && touched.description && (
             <div className="error-message">{validation.description.message}</div>
           )}

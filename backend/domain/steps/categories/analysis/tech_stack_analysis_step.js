@@ -49,13 +49,16 @@ class TechStackAnalysisStep {
       // Validate context
       this.validateContext(context);
       
-      // Get tech stack analyzer from application
-      const application = global.application;
-      if (!application) {
-        throw new Error('Application not available');
+      // Get tech stack analyzer from context or application
+      let techStackAnalyzer = context.techStackAnalyzer;
+      if (!techStackAnalyzer) {
+        const application = global.application;
+        if (!application) {
+          throw new Error('Application not available and techStackAnalyzer not provided in context');
+        }
+        techStackAnalyzer = application.techStackAnalyzer;
       }
-
-      const { techStackAnalyzer } = application;
+      
       if (!techStackAnalyzer) {
         throw new Error('Tech stack analyzer not available');
       }
@@ -123,4 +126,11 @@ class TechStackAnalysisStep {
   }
 }
 
-module.exports = TechStackAnalysisStep; 
+// Create instance for execution
+const stepInstance = new TechStackAnalysisStep();
+
+// Export in StepRegistry format
+module.exports = {
+  config,
+  execute: async (context) => await stepInstance.execute(context)
+}; 

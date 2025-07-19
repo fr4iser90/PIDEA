@@ -49,13 +49,16 @@ class PerformanceAnalysisStep {
       // Validate context
       this.validateContext(context);
       
-      // Get performance analyzer from application
-      const application = global.application;
-      if (!application) {
-        throw new Error('Application not available');
+      // Get performance analyzer from context or application
+      let performanceAnalyzer = context.performanceAnalyzer;
+      if (!performanceAnalyzer) {
+        const application = global.application;
+        if (!application) {
+          throw new Error('Application not available and performanceAnalyzer not provided in context');
+        }
+        performanceAnalyzer = application.performanceAnalyzer;
       }
-
-      const { performanceAnalyzer } = application;
+      
       if (!performanceAnalyzer) {
         throw new Error('Performance analyzer not available');
       }
@@ -123,4 +126,11 @@ class PerformanceAnalysisStep {
   }
 }
 
-module.exports = PerformanceAnalysisStep; 
+// Create instance for execution
+const stepInstance = new PerformanceAnalysisStep();
+
+// Export in StepRegistry format
+module.exports = {
+  config,
+  execute: async (context) => await stepInstance.execute(context)
+}; 

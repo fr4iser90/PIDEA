@@ -1,0 +1,17 @@
+{
+  "name": "refactor_mvc_pattern",
+  "version": "1.0.0",
+  "description": "Framework for refactor_mvc_pattern",
+  "category": "general",
+  "author": "PIDEA Team",
+  "dependencies": [
+    "core"
+  ],
+  "steps": {},
+  "workflows": {},
+  "activation": {
+    "auto_load": false,
+    "requires_confirmation": true,
+    "fallback_to_core": true
+  }
+}

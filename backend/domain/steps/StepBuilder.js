@@ -54,6 +54,8 @@ class StepBuilder {
    * @param {Object} context - Execution context
    */
   static build(config, context = {}) {
+    const logger = new ServiceLogger('StepBuilder');
+    
     try {
       // Create a simple step instance from config
       const instance = {
@@ -85,10 +87,10 @@ class StepBuilder {
         throw new Error('Step config must have a description');
       }
 
-      this.logger.info(`🔨 Step "${instance.name}" built from config`);
+      logger.info(`🔨 Step "${instance.name}" built from config`);
       return instance;
     } catch (error) {
-      this.logger.error(`❌ Failed to build step from config:`, error.message);
+      logger.error(`❌ Failed to build step from config:`, error.message);
       throw error;
     }
   }
@@ -237,11 +239,11 @@ class StepBuilder {
         .filter(key => key.startsWith(stepName + ':'));
       
       keysToDelete.forEach(key => this.buildCache.delete(key));
-      logger.info(`🗑️ Cleared cache for step "${stepName}"`);
+      this.logger.info(`🗑️ Cleared cache for step "${stepName}"`);
     } else {
       // Clear all cache
       this.buildCache.clear();
-      logger.info('🗑️ Cleared all step build cache');
+      this.logger.info('🗑️ Cleared all step build cache');
     }
   }
 

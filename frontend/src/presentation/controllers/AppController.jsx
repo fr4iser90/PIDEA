@@ -502,6 +502,25 @@ class AppController {
           // Emit the event to trigger analysis data refresh
           this.eventBus.emit('analysis:completed', data.data || data);
         }
+        
+        // IDE Events
+        if (data.type === 'ide:list:updated' || data.event === 'ide:list:updated') {
+          logger.info('IDE list updated WebSocket event received:', data);
+          logger.info('Emitting ide:list:updated event to eventBus');
+          this.eventBus.emit('ide:list:updated', data.data || data);
+        }
+        
+        if (data.type === 'ide:status:changed' || data.event === 'ide:status:changed') {
+          logger.info('IDE status changed WebSocket event received:', data);
+          logger.info('Emitting ide:status:changed event to eventBus');
+          this.eventBus.emit('ide:status:changed', data.data || data);
+        }
+        
+        if (data.type === 'ide:switched' || data.event === 'ide:switched') {
+          logger.info('IDE switched WebSocket event received:', data);
+          logger.info('Emitting ide:switched event to eventBus');
+          this.eventBus.emit('ide:switched', data.data || data);
+        }
       };
       chatWs.onclose = () => {
         logger.info('Chat WebSocket closed, reconnecting...');

@@ -49,13 +49,16 @@ class DependencyAnalysisStep {
       // Validate context
       this.validateContext(context);
       
-      // Get dependency analyzer from application
-      const application = global.application;
-      if (!application) {
-        throw new Error('Application not available');
+      // Get dependency analyzer from context or application
+      let dependencyAnalyzer = context.dependencyAnalyzer;
+      if (!dependencyAnalyzer) {
+        const application = global.application;
+        if (!application) {
+          throw new Error('Application not available and dependencyAnalyzer not provided in context');
+        }
+        dependencyAnalyzer = application.dependencyAnalyzer;
       }
-
-      const { dependencyAnalyzer } = application;
+      
       if (!dependencyAnalyzer) {
         throw new Error('Dependency analyzer not available');
       }
@@ -142,4 +145,11 @@ class DependencyAnalysisStep {
   }
 }
 
-module.exports = DependencyAnalysisStep; 
+// Create instance for execution
+const stepInstance = new DependencyAnalysisStep();
+
+// Export in StepRegistry format
+module.exports = {
+  config,
+  execute: async (context) => await stepInstance.execute(context)
+}; 

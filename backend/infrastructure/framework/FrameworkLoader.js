@@ -43,7 +43,9 @@ class FrameworkLoader {
    */
   async discoverFrameworks() {
     try {
-      const frameworkRoot = path.join(process.cwd(), 'backend', 'framework');
+      // Use __dirname to get the correct path relative to this file
+      const basePath = path.dirname(path.dirname(__dirname)); // Go up from infrastructure/framework to backend root
+      const frameworkRoot = path.join(basePath, 'framework');
       
       // Check if framework directory exists
       try {

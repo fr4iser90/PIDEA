@@ -83,6 +83,21 @@ class AuthController {
         refreshTokenLength: responseData.data.refreshToken.length
       });
 
+      // Set httpOnly cookies for security
+      res.cookie('accessToken', session.accessToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'strict',
+        maxAge: 2 * 60 * 60 * 1000 // 2 hours
+      });
+      
+      res.cookie('refreshToken', session.refreshToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'strict',
+        maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+      });
+
       res.json(responseData);
     } catch (error) {
       logger.error('Login error:', error);
@@ -145,6 +160,10 @@ class AuthController {
         });
       }
 
+      // Clear cookies
+      res.clearCookie('accessToken');
+      res.clearCookie('refreshToken');
+      
       res.json({
         success: true,
         message: 'Logged out successfully'

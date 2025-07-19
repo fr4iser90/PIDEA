@@ -1,49 +1,34 @@
-import { logger } from '@/infrastructure/logging/Logger';
-
 /**
- * ETagManager - Frontend ETag handling service
- * 
- * This service manages ETags for API requests, stores them in localStorage,
- * and handles conditional requests to reduce bandwidth usage.
+ * ETagManager - HTTP ETag-based caching without localStorage
+ * Provides efficient caching using ETags and HTTP headers only
+ * No sensitive data stored in browser storage
  */
 class ETagManager {
   constructor() {
-    this.storageKey = 'pidea_etags';
-    this.logger = logger;
+    this.etags = new Map();
+    this.logger = console;
   }
 
   /**
-   * Get stored ETag for a specific endpoint
+   * Get stored ETag for an endpoint
    * @param {string} endpoint - API endpoint
    * @param {string} projectId - Project identifier
    * @returns {string|null} Stored ETag or null
    */
   getStoredETag(endpoint, projectId = null) {
-    try {
-      const etags = this.getAllETags();
-      const key = this.getETagKey(endpoint, projectId);
-      const stored = etags[key];
-      
-      if (stored && stored.etag && stored.timestamp) {
-        // Check if ETag is still valid (not expired)
-        const now = Date.now();
-        const maxAge = stored.maxAge || 300000; // 5 minutes default
-        const isValid = (now - stored.timestamp) < maxAge;
-        
-        if (isValid) {
-          this.logger.info(`Retrieved valid ETag for ${key}:`, stored.etag.substring(0, 20) + '...');
-          return stored.etag;
-        } else {
-          this.logger.info(`ETag expired for ${key}, removing`);
-          this.removeETag(endpoint, projectId);
-        }
-      }
-      
-      return null;
-    } catch (error) {
-      this.logger.error('Error getting stored ETag:', error);
-      return null;
+    const key = this.getETagKey(endpoint, projectId);
+    const stored = this.etags.get(key);
+    
+    if (stored && Date.now() < stored.expiresAt) {
+      return stored.etag;
     }
+    
+    // Remove expired ETag
+    if (stored) {
+      this.etags.delete(key);
+    }
+    
+    return null;
   }
 
   /**
@@ -54,56 +39,32 @@ class ETagManager {
    * @param {number} maxAge - Max age in milliseconds
    */
   storeETag(endpoint, etag, projectId = null, maxAge = 300000) {
-    try {
-      const etags = this.getAllETags();
-      const key = this.getETagKey(endpoint, projectId);
-      
-      etags[key] = {
-        etag,
-        timestamp: Date.now(),
-        maxAge,
-        endpoint,
-        projectId
-      };
-      
-      localStorage.setItem(this.storageKey, JSON.stringify(etags));
-      
-      this.logger.info(`Stored ETag for ${key}:`, etag.substring(0, 20) + '...');
-    } catch (error) {
-      this.logger.error('Error storing ETag:', error);
-    }
+    const key = this.getETagKey(endpoint, projectId);
+    this.etags.set(key, {
+      etag,
+      expiresAt: Date.now() + maxAge
+    });
+    
+    this.logger.info(`Stored ETag for ${endpoint}:`, etag.substring(0, 20) + '...');
   }
 
   /**
-   * Remove ETag for an endpoint
+   * Remove stored ETag
    * @param {string} endpoint - API endpoint
    * @param {string} projectId - Project identifier
    */
   removeETag(endpoint, projectId = null) {
-    try {
-      const etags = this.getAllETags();
-      const key = this.getETagKey(endpoint, projectId);
-      
-      if (etags[key]) {
-        delete etags[key];
-        localStorage.setItem(this.storageKey, JSON.stringify(etags));
-        this.logger.info(`Removed ETag for ${key}`);
-      }
-    } catch (error) {
-      this.logger.error('Error removing ETag:', error);
-    }
+    const key = this.getETagKey(endpoint, projectId);
+    this.etags.delete(key);
+    this.logger.info(`Removed ETag for ${endpoint}`);
   }
 
   /**
-   * Clear all ETags
+   * Clear all stored ETags
    */
   clearAllETags() {
-    try {
-      localStorage.removeItem(this.storageKey);
-      this.logger.info('Cleared all ETags');
-    } catch (error) {
-      this.logger.error('Error clearing ETags:', error);
-    }
+    this.etags.clear();
+    this.logger.info('Cleared all ETags');
   }
 
   /**
@@ -111,48 +72,42 @@ class ETagManager {
    * @returns {Object} All stored ETags
    */
   getAllETags() {
-    try {
-      const stored = localStorage.getItem(this.storageKey);
-      return stored ? JSON.parse(stored) : {};
-    } catch (error) {
-      this.logger.error('Error getting all ETags:', error);
-      return {};
+    const result = {};
+    for (const [key, value] of this.etags.entries()) {
+      if (Date.now() < value.expiresAt) {
+        result[key] = value.etag;
+      }
     }
+    return result;
   }
 
   /**
-   * Generate ETag key for storage
+   * Generate ETag key for endpoint and project
    * @param {string} endpoint - API endpoint
    * @param {string} projectId - Project identifier
    * @returns {string} ETag key
    */
   getETagKey(endpoint, projectId = null) {
-    const components = [endpoint];
-    if (projectId) {
-      components.push(projectId);
-    }
-    return components.join(':');
+    return projectId ? `${endpoint}_${projectId}` : endpoint;
   }
 
   /**
-   * Add ETag headers to fetch request
-   * @param {Object} options - Fetch options
+   * Add ETag headers to request options
+   * @param {Object} options - Request options
    * @param {string} endpoint - API endpoint
    * @param {string} projectId - Project identifier
-   * @returns {Object} Updated fetch options
+   * @returns {Object} Updated options with ETag headers
    */
   addETagHeaders(options = {}, endpoint, projectId = null) {
-    const etag = this.getStoredETag(endpoint, projectId);
+    const storedETag = this.getStoredETag(endpoint, projectId);
     
-    if (etag) {
-      const headers = options.headers || {};
-      headers['If-None-Match'] = `"${etag}"`;
-      
-      this.logger.info(`Added If-None-Match header for ${endpoint}:`, etag.substring(0, 20) + '...');
-      
+    if (storedETag) {
       return {
         ...options,
-        headers
+        headers: {
+          ...options.headers,
+          'If-None-Match': storedETag
+        }
       };
     }
     
@@ -198,121 +153,22 @@ class ETagManager {
    * @returns {Object} Cached data or null
    */
   handleNotModified(endpoint, projectId = null) {
-    try {
-      const cachedData = this.getCachedData(endpoint, projectId);
-      if (cachedData) {
-        this.logger.info(`Using cached data for ${endpoint} (304 Not Modified)`);
-        return {
-          success: true,
-          data: cachedData,
-          cached: true,
-          etag: this.getStoredETag(endpoint, projectId)
-        };
-      }
-      
-      this.logger.warn(`No cached data found for ${endpoint} despite 304 response`);
-      return null;
-    } catch (error) {
-      this.logger.error('Error handling 304 response:', error);
-      return null;
-    }
+    this.logger.info(`Using cached data for ${endpoint} (304 Not Modified)`);
+    return {
+      success: true,
+      data: null, // No data in 304 response
+      cached: true,
+      etag: this.getStoredETag(endpoint, projectId)
+    };
   }
 
   /**
-   * Store cached data for an endpoint
-   * @param {string} endpoint - API endpoint
-   * @param {any} data - Data to cache
-   * @param {string} projectId - Project identifier
-   */
-  cacheData(endpoint, data, projectId = null) {
-    try {
-      const key = `pidea_cache_${this.getETagKey(endpoint, projectId)}`;
-      const cacheEntry = {
-        data,
-        timestamp: Date.now(),
-        endpoint,
-        projectId
-      };
-      
-      localStorage.setItem(key, JSON.stringify(cacheEntry));
-      this.logger.info(`Cached data for ${endpoint}`);
-    } catch (error) {
-      this.logger.error('Error caching data:', error);
-    }
-  }
-
-  /**
-   * Get cached data for an endpoint
-   * @param {string} endpoint - API endpoint
-   * @param {string} projectId - Project identifier
-   * @returns {any} Cached data or null
-   */
-  getCachedData(endpoint, projectId = null) {
-    try {
-      const key = `pidea_cache_${this.getETagKey(endpoint, projectId)}`;
-      const stored = localStorage.getItem(key);
-      
-      if (stored) {
-        const cacheEntry = JSON.parse(stored);
-        const now = Date.now();
-        const maxAge = 300000; // 5 minutes default
-        const isValid = (now - cacheEntry.timestamp) < maxAge;
-        
-        if (isValid) {
-          return cacheEntry.data;
-        } else {
-          this.removeCachedData(endpoint, projectId);
-        }
-      }
-      
-      return null;
-    } catch (error) {
-      this.logger.error('Error getting cached data:', error);
-      return null;
-    }
-  }
-
-  /**
-   * Remove cached data for an endpoint
-   * @param {string} endpoint - API endpoint
-   * @param {string} projectId - Project identifier
-   */
-  removeCachedData(endpoint, projectId = null) {
-    try {
-      const key = `pidea_cache_${this.getETagKey(endpoint, projectId)}`;
-      localStorage.removeItem(key);
-      this.logger.info(`Removed cached data for ${endpoint}`);
-    } catch (error) {
-      this.logger.error('Error removing cached data:', error);
-    }
-  }
-
-  /**
-   * Clear all cached data
-   */
-  clearAllCachedData() {
-    try {
-      const keys = Object.keys(localStorage);
-      const cacheKeys = keys.filter(key => key.startsWith('pidea_cache_'));
-      
-      cacheKeys.forEach(key => {
-        localStorage.removeItem(key);
-      });
-      
-      this.logger.info(`Cleared ${cacheKeys.length} cached data entries`);
-    } catch (error) {
-      this.logger.error('Error clearing cached data:', error);
-    }
-  }
-
-  /**
-   * Force refresh by removing ETag and cached data
+   * Force refresh by removing ETag
    * @param {string} endpoint - API endpoint
    * @param {string} projectId - Project identifier
    */
   forceRefresh(endpoint, projectId = null) {
     this.removeETag(endpoint, projectId);
-    this.removeCachedData(endpoint, projectId);
     this.logger.info(`Forced refresh for ${endpoint}`);
   }
 
@@ -321,42 +177,11 @@ class ETagManager {
    * @returns {Object} ETag statistics
    */
   getStatistics() {
-    try {
-      const etags = this.getAllETags();
-      const keys = Object.keys(localStorage);
-      const cacheKeys = keys.filter(key => key.startsWith('pidea_cache_'));
-      
-      return {
-        etagCount: Object.keys(etags).length,
-        cacheCount: cacheKeys.length,
-        totalStorage: this.getStorageSize(),
-        etags: Object.keys(etags)
-      };
-    } catch (error) {
-      this.logger.error('Error getting statistics:', error);
-      return { etagCount: 0, cacheCount: 0, totalStorage: 0, etags: [] };
-    }
-  }
-
-  /**
-   * Get storage size in bytes
-   * @returns {number} Storage size in bytes
-   */
-  getStorageSize() {
-    try {
-      let total = 0;
-      const keys = Object.keys(localStorage);
-      
-      keys.forEach(key => {
-        const value = localStorage.getItem(key);
-        total += key.length + (value ? value.length : 0);
-      });
-      
-      return total;
-    } catch (error) {
-      this.logger.error('Error calculating storage size:', error);
-      return 0;
-    }
+    const etags = this.getAllETags();
+    return {
+      etagCount: Object.keys(etags).length,
+      etags: Object.keys(etags)
+    };
   }
 }
 

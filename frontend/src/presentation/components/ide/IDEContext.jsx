@@ -1,5 +1,5 @@
 import { logger } from "@/infrastructure/logging/Logger";
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import useIDEStore from '@/infrastructure/stores/IDEStore.jsx';
 import { apiCall } from '@/infrastructure/repositories/APIChatRepository.jsx';
 import useAuthStore from '@/infrastructure/stores/AuthStore.jsx';
@@ -21,23 +21,33 @@ export const IDEProvider = ({ children, eventBus }) => {
     clearError
   } = useIDEStore();
   
+  const { isAuthenticated } = useAuthStore();
   const [ideFeatures, setIdeFeatures] = useState({});
   const [ideStatus, setIdeStatus] = useState({});
 
+  // Stabilize functions with useCallback to prevent infinite loops
+  const stableLoadAvailableIDEs = useCallback(() => {
+    loadAvailableIDEs();
+  }, [loadAvailableIDEs]);
+
+  const stableLoadActivePort = useCallback(() => {
+    loadActivePort();
+  }, [loadActivePort]);
+
   // Load available IDEs on mount ONLY if authenticated
   useEffect(() => {
-    const { isAuthenticated } = useAuthStore.getState();
     if (isAuthenticated) {
-      loadAvailableIDEs();
+      stableLoadAvailableIDEs();
+      stableLoadActivePort();
     }
-  }, []);
+  }, [isAuthenticated]); // Remove function dependencies!
 
   // Listen for IDE events
   useEffect(() => {
     if (!eventBus) return;
 
     const handleIDEListUpdated = () => {
-      loadAvailableIDEs();
+      stableLoadAvailableIDEs();
     };
 
     const handleActiveIDEChanged = (data) => {
@@ -81,7 +91,7 @@ export const IDEProvider = ({ children, eventBus }) => {
       eventBus.off('featuresUpdated', handleFeaturesUpdated);
       eventBus.off('statusUpdated', handleStatusUpdated);
     };
-  }, [eventBus, activePort]);
+  }, [eventBus, activePort, stableLoadAvailableIDEs]);
 
   /**
    * Load IDE features

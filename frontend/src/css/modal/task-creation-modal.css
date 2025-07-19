@@ -130,6 +130,18 @@
   font-weight: 500;
 }
 
+/* Voice input integration */
+.input-with-voice {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.input-with-voice .form-input,
+.input-with-voice .form-textarea {
+  flex: 1;
+}
+
 .form-input,
 .form-textarea,
 .form-select {
@@ -234,18 +246,24 @@
   color: #ff6b6b;
 }
 
-/* Optional label */
-.optional-label {
-  color: #888;
-  font-weight: normal;
-  font-size: 0.8rem;
-}
-
-/* Form row layout */
+/* Form rows */
 .form-row {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 16px;
+}
+
+@media (max-width: 768px) {
+  .form-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Optional label */
+.optional-label {
+  color: #888;
+  font-size: 0.8rem;
+  font-weight: normal;
 }
 
 /* Form actions */
@@ -253,11 +271,11 @@
   display: flex;
   justify-content: flex-end;
   gap: 12px;
-  margin-top: 8px;
   padding-top: 20px;
   border-top: 1px solid #333;
 }
 
+/* Buttons */
 .btn-primary,
 .btn-secondary {
   padding: 12px 24px;
@@ -270,43 +288,47 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  font-family: inherit;
+  min-width: 120px;
+  justify-content: center;
 }
 
 .btn-primary {
   background: linear-gradient(135deg, #007acc 0%, #005a9e 100%);
-  color: #fff;
+  color: white;
 }
 
 .btn-primary:hover:not(:disabled) {
   background: linear-gradient(135deg, #005a9e 0%, #004080 100%);
   transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 122, 204, 0.3);
 }
 
 .btn-primary:disabled {
   background: #444;
-  color: #888;
+  color: #666;
   cursor: not-allowed;
   transform: none;
+  box-shadow: none;
 }
 
 .btn-secondary {
-  background: #444;
+  background: rgba(255, 255, 255, 0.1);
   color: #ccc;
+  border: 1px solid #444;
 }
 
 .btn-secondary:hover:not(:disabled) {
-  background: #555;
+  background: rgba(255, 255, 255, 0.15);
   color: #fff;
+  border-color: #666;
 }
 
 .btn-secondary:disabled {
-  background: #333;
-  color: #666;
+  opacity: 0.5;
   cursor: not-allowed;
 }
 
-/* Loading spinner */
+/* Spinner */
 .spinner {
   width: 16px;
   height: 16px;
@@ -321,29 +343,38 @@
   100% { transform: rotate(360deg); }
 }
 
+/* Modal complete state */
+.modal-complete {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 200px;
+}
+
+.complete-content {
+  text-align: center;
+  color: #fff;
+}
+
+.complete-content h2 {
+  margin: 0 0 16px 0;
+  color: #44aa44;
+}
+
+.complete-content p {
+  margin: 0 0 24px 0;
+  color: #ccc;
+}
+
 /* Responsive design */
 @media (max-width: 768px) {
   .task-creation-modal {
     width: 95%;
-    max-width: none;
     margin: 20px;
   }
   
-  .modal-header {
-    padding: 16px 20px;
-  }
-  
-  .modal-title {
-    font-size: 1.3rem;
-  }
-  
   .modal-content {
-    padding: 20px;
-  }
-  
-  .form-row {
-    grid-template-columns: 1fr;
-    gap: 12px;
+    padding: 16px;
   }
   
   .form-actions {
@@ -353,144 +384,36 @@
   .btn-primary,
   .btn-secondary {
     width: 100%;
-    justify-content: center;
   }
 }
 
-@media (max-width: 480px) {
-  .task-creation-modal {
-    width: 98%;
-    margin: 10px;
+/* Voice input specific styles */
+.input-with-voice .voice-input-container {
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+/* Ensure voice button aligns properly with textarea */
+.input-with-voice .form-textarea {
+  min-height: 100px;
+  resize: vertical;
+}
+
+/* Voice button hover effects */
+.input-with-voice button:hover {
+  transform: scale(1.05);
+}
+
+/* Voice recording animation */
+.input-with-voice button.recording {
+  animation: pulse 1.5s ease-in-out infinite alternate;
+}
+
+@keyframes pulse {
+  from {
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7);
   }
-  
-  .modal-header {
-    padding: 12px 16px;
-  }
-  
-  .modal-content {
-    padding: 16px;
-  }
-  
-  .form-input,
-  .form-textarea,
-  .form-select {
-    padding: 10px;
-    font-size: 16px; /* Prevent zoom on iOS */
-  }
-}
-
-/* Accessibility improvements */
-.task-creation-modal:focus {
-  outline: none;
-}
-
-.form-input:focus-visible,
-.form-textarea:focus-visible,
-.form-select:focus-visible {
-  outline: 2px solid #007acc;
-  outline-offset: 2px;
-}
-
-.btn-primary:focus-visible,
-.btn-secondary:focus-visible {
-  outline: 2px solid #007acc;
-  outline-offset: 2px;
-}
-
-/* High contrast mode support */
-@media (prefers-contrast: high) {
-  .task-creation-modal {
-    border: 2px solid #fff;
-  }
-  
-  .form-input,
-  .form-textarea,
-  .form-select {
-    border: 2px solid #fff;
-  }
-  
-  .error-message {
-    border: 2px solid #ff6b6b;
-  }
-}
-
-/* Reduced motion support */
-/* Completion message styles */
-.completion-message {
-  text-align: center;
-  padding: 40px 20px;
-}
-
-.completion-icon {
-  font-size: 4rem;
-  margin-bottom: 20px;
-  animation: bounce 0.6s ease-in-out;
-}
-
-@keyframes bounce {
-  0%, 20%, 50%, 80%, 100% {
-    transform: translateY(0);
-  }
-  40% {
-    transform: translateY(-10px);
-  }
-  60% {
-    transform: translateY(-5px);
-  }
-}
-
-.completion-message h3 {
-  color: #fff;
-  font-size: 1.8rem;
-  margin: 0 0 16px 0;
-  font-weight: 600;
-}
-
-.completion-message p {
-  color: #ccc;
-  font-size: 1rem;
-  margin: 0 0 24px 0;
-  line-height: 1.5;
-}
-
-.completion-details {
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid #333;
-  border-radius: 8px;
-  padding: 20px;
-  text-align: left;
-}
-
-.completion-details p {
-  margin: 0 0 8px 0;
-  color: #ccc;
-  font-size: 0.9rem;
-}
-
-.completion-details p:last-child {
-  margin-bottom: 0;
-}
-
-.completion-details strong {
-  color: #fff;
-  font-weight: 600;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .task-creation-modal {
-    animation: none;
-  }
-  
-  .spinner {
-    animation: none;
-  }
-  
-  .completion-icon {
-    animation: none;
-  }
-  
-  .btn-primary:hover,
-  .btn-secondary:hover {
-    transform: none;
+  to {
+    box-shadow: 0 0 0 10px rgba(239, 68, 68, 0);
   }
 } 

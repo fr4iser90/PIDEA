@@ -37,24 +37,24 @@ class ETagService {
         etagComponents.push(projectId);
       }
       
-      // Add timestamp for versioning
-      const timestamp = Math.floor(Date.now() / 1000);
-      etagComponents.push(timestamp.toString(36));
-      
+      // NEVER add timestamps to ETags - they should be stable for same data
+      // ETags should only change when the actual data content changes
       const etag = etagComponents.join('-');
       
       this.logger.info(`Generated ETag for ${type}:`, {
         type,
         projectId,
         dataSize: dataString.length,
-        etag: etag.substring(0, 20) + '...'
+        etag: etag.substring(0, 20) + '...',
+        hasTimestamp: false
       });
       
       return etag;
     } catch (error) {
       this.logger.error('Failed to generate ETag:', error);
-      // Fallback to timestamp-based ETag
-      return `fallback-${Date.now()}`;
+      // Fallback to content-based ETag without timestamp
+      const fallbackHash = crypto.createHash('sha256').update(JSON.stringify(data)).digest('hex');
+      return `fallback-${fallbackHash.substring(0, 16)}`;
     }
   }
 
@@ -100,7 +100,11 @@ class ETagService {
         types: [...new Set(historyData.map(item => item.type || item.analysisType))],
         latestTimestamp: historyData.length > 0 ? 
           Math.max(...historyData.map(item => new Date(item.timestamp || item.createdAt).getTime())) : 0,
-        projectId
+        projectId,
+        // Include the actual data hash for stability
+        dataHash: crypto.createHash('sha256')
+          .update(JSON.stringify(historyData))
+          .digest('hex').substring(0, 8)
       };
       
       return this.generateETag(etagData, 'analysis-history', projectId);
@@ -139,6 +143,8 @@ class ETagService {
    */
   validateETag(etag, currentETag) {
     if (!etag || !currentETag) {
+      // No ETag provided by client, so validation fails (but this is normal for first request)
+      this.logger.info('ETag validation: No ETag provided by client (normal for first request)');
       return false;
     }
     
@@ -148,11 +154,21 @@ class ETagService {
     
     const isValid = cleanETag === cleanCurrentETag;
     
-    this.logger.info('ETag validation:', {
-      requestETag: cleanETag.substring(0, 20) + '...',
-      currentETag: cleanCurrentETag.substring(0, 20) + '...',
-      isValid
+    // DEBUG: Log the actual ETags for comparison
+    this.logger.info('🔍 ETag comparison:', {
+      originalRequestETag: etag,
+      originalCurrentETag: currentETag,
+      cleanRequestETag: cleanETag,
+      cleanCurrentETag: cleanCurrentETag,
+      isValid,
+      hasRequestETag: !!etag
     });
+    
+    if (isValid) {
+      this.logger.info('✅ ETag validation: ETags match, data unchanged');
+    } else {
+      this.logger.info('❌ ETag validation: ETags differ, data changed');
+    }
     
     return isValid;
   }

@@ -12,6 +12,7 @@ import { logger } from "@/infrastructure/logging/Logger";
  */
 import React, { useState, useEffect } from 'react';
 import useAuthStore from '@/infrastructure/stores/AuthStore.jsx';
+import useIDEStore from '@/infrastructure/stores/IDEStore.jsx';
 import ChatPanelComponent from './chat/sidebar-left/ChatPanelComponent.jsx';
 import '@/css/global/sidebar-left.css';
 
@@ -19,8 +20,10 @@ function SidebarLeft({ eventBus, activePort, onActivePortChange, mode = 'chat' }
   logger.info('🔍 SidebarLeft RENDERING!');
   
   const [currentSessionId, setCurrentSessionId] = useState(null);
-  const [availableIDEs, setAvailableIDEs] = useState([]);
   const { isAuthenticated } = useAuthStore();
+  
+  // Use IDEStore instead of local state
+  const { availableIDEs, loadAvailableIDEs } = useIDEStore();
 
   // EventBus-Listener for sidebar-level events
   useEffect(() => {
@@ -28,9 +31,9 @@ function SidebarLeft({ eventBus, activePort, onActivePortChange, mode = 'chat' }
     
     const handleIDEListUpdated = (data) => {
       if (data.ides) {
-        setAvailableIDEs(data.ides);
+        // setAvailableIDEs(data.ides); // IDEStore handles this
       } else {
-        refreshIDEList();
+        loadAvailableIDEs(); // IDEStore handles this
       }
     };
     
@@ -59,15 +62,16 @@ function SidebarLeft({ eventBus, activePort, onActivePortChange, mode = 'chat' }
       eventBus.off('activeIDEChanged', handleActiveIDEChanged);
       eventBus.off('sidebar-left-toggle', handleLeftSidebarToggle);
     };
-  }, [eventBus, onActivePortChange]);
+  }, [eventBus, onActivePortChange, loadAvailableIDEs]);
 
   // Load IDE list on component mount ONLY if authenticated
   useEffect(() => {
     const { isAuthenticated } = useAuthStore.getState();
     if (isAuthenticated) {
-      refreshIDEList();
+      // Don't call loadAvailableIDEs here - IDEProvider will handle it
+      logger.info('User authenticated, IDEProvider will handle IDE loading');
     }
-  }, []);
+  }, [isAuthenticated]);
 
   const handleNewIDE = () => eventBus.emit('sidebar-left:new-ide');
   
@@ -76,7 +80,7 @@ function SidebarLeft({ eventBus, activePort, onActivePortChange, mode = 'chat' }
       const { apiCall } = await import('@/infrastructure/repositories/APIChatRepository.jsx');
       await apiCall(`/api/ide/switch/${port}`, { method: 'POST' });
       if (onActivePortChange) onActivePortChange(port);
-      refreshIDEList();
+      loadAvailableIDEs(); // IDEStore handles this
       eventBus.emit('sidebar-left:ide-switched', { port });
     } catch (error) {
       logger.error('Fehler beim Umschalten der IDE:', error);
@@ -121,19 +125,6 @@ function SidebarLeft({ eventBus, activePort, onActivePortChange, mode = 'chat' }
         return 'Sublime';
       default:
         return 'IDE';
-    }
-  };
-
-  const refreshIDEList = async () => {
-    if (!isAuthenticated) return;
-    try {
-      const { apiCall } = await import('@/infrastructure/repositories/APIChatRepository.jsx');
-      const result = await apiCall('/api/ide/available');
-      if (result.success) {
-        setAvailableIDEs(result.data);
-      }
-    } catch (error) {
-      logger.error('Error refreshing IDE list:', error);
     }
   };
 
@@ -219,7 +210,7 @@ function SidebarLeft({ eventBus, activePort, onActivePortChange, mode = 'chat' }
                       try {
                         const { apiCall } = await import('@/infrastructure/repositories/APIChatRepository.jsx');
                         await apiCall(`/api/ide/workspace-detection/${ide.port}`, { method: 'POST' });
-                        refreshIDEList();
+                        loadAvailableIDEs(); // IDEStore handles this
                       } catch (err) {
                         alert('Fehler beim Workspace-Update: ' + (err?.message || err));
                       }

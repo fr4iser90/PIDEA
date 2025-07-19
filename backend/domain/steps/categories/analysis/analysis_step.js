@@ -114,6 +114,9 @@ class AnalysisStep {
       // Generate comprehensive summary
       results.summary = this.generateSummary(results);
 
+      // Save results to database
+      await this.saveAnalysisResults(context.projectId, results);
+
       logger.info(`✅ Comprehensive analysis orchestration completed successfully`);
 
       return {
@@ -284,27 +287,86 @@ class AnalysisStep {
       summary.packageManager = manifest.packageManager || 'unknown';
     }
 
-    if (results.securityAnalysis && results.securityAnalysis.vulnerabilities) {
-      summary.securityIssues = results.securityAnalysis.vulnerabilities.length || 0;
+    if (results.securityAnalysis && results.securityAnalysis.summary) {
+      const security = results.securityAnalysis.summary;
+      summary.securityIssues = security.issues?.length || 0;
+      summary.vulnerabilities = security.vulnerabilities?.length || 0;
     }
 
-    if (results.performanceAnalysis && results.performanceAnalysis.issues) {
-      summary.performanceIssues = results.performanceAnalysis.issues.length || 0;
+    if (results.performanceAnalysis && results.performanceAnalysis.summary) {
+      const performance = results.performanceAnalysis.summary;
+      summary.performanceIssues = performance.issues?.length || 0;
     }
 
-    if (results.codeQualityAnalysis && results.codeQualityAnalysis.issues) {
-      summary.codeQualityIssues = results.codeQualityAnalysis.issues.length || 0;
+    if (results.codeQualityAnalysis && results.codeQualityAnalysis.summary) {
+      const codeQuality = results.codeQualityAnalysis.summary;
+      summary.codeQualityIssues = codeQuality.issues?.length || 0;
     }
 
-    if (results.dependencyAnalysis && results.dependencyAnalysis.outdated) {
-      summary.outdatedDependencies = results.dependencyAnalysis.outdated.length || 0;
-    }
-
-    if (results.dependencyAnalysis && results.dependencyAnalysis.vulnerabilities) {
-      summary.vulnerabilities = results.dependencyAnalysis.vulnerabilities.length || 0;
+    if (results.dependencyAnalysis && results.dependencyAnalysis.summary) {
+      const dependencies = results.dependencyAnalysis.summary;
+      summary.outdatedDependencies = dependencies.outdated?.length || 0;
     }
 
     return summary;
+  }
+
+  async saveAnalysisResults(projectId, results) {
+    try {
+      const AnalysisResult = require('@entities/AnalysisResult');
+      
+      // Save comprehensive analysis result
+      const analysisResult = AnalysisResult.create(
+        projectId,
+        'comprehensive',
+        results,
+        null // No file path for comprehensive analysis
+      );
+
+      // Get analysis repository from context or dependency injection
+      const analysisRepository = this.getAnalysisRepository();
+      if (analysisRepository) {
+        await analysisRepository.save(analysisResult);
+        logger.info(`✅ Analysis results saved to database for project: ${projectId}`);
+      } else {
+        logger.warn(`⚠️ No analysis repository available, skipping database save`);
+      }
+
+      // Save individual step results
+      for (const [stepName, stepResult] of Object.entries(results)) {
+        if (stepName === 'summary' || !stepResult || stepResult.error) continue;
+        
+        const stepAnalysisResult = AnalysisResult.create(
+          projectId,
+          stepName,
+          stepResult,
+          null
+        );
+
+        if (analysisRepository) {
+          await analysisRepository.save(stepAnalysisResult);
+          logger.info(`✅ ${stepName} results saved to database`);
+        }
+      }
+
+    } catch (error) {
+      logger.error(`❌ Failed to save analysis results to database: ${error.message}`);
+      // Don't throw error to avoid breaking the analysis flow
+    }
+  }
+
+  getAnalysisRepository() {
+    // Try to get repository from global context or dependency injection
+    if (global.analysisRepository) {
+      return global.analysisRepository;
+    }
+    
+    // Try to get from application context
+    if (global.application && global.application.analysisRepository) {
+      return global.application.analysisRepository;
+    }
+    
+    return null;
   }
 
   validateContext(context) {
@@ -314,4 +376,11 @@ class AnalysisStep {
   }
 }
 
-module.exports = AnalysisStep; 
+// Create instance for execution
+const stepInstance = new AnalysisStep();
+
+// Export in StepRegistry format
+module.exports = {
+  config,
+  execute: async (context) => await stepInstance.execute(context)
+}; 

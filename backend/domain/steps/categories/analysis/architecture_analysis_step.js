@@ -49,13 +49,16 @@ class ArchitectureAnalysisStep {
       // Validate context
       this.validateContext(context);
       
-      // Get architecture analyzer from application
-      const application = global.application;
-      if (!application) {
-        throw new Error('Application not available');
+      // Get architecture analyzer from context or application
+      let architectureAnalyzer = context.architectureAnalyzer;
+      if (!architectureAnalyzer) {
+        const application = global.application;
+        if (!application) {
+          throw new Error('Application not available and architectureAnalyzer not provided in context');
+        }
+        architectureAnalyzer = application.architectureAnalyzer;
       }
-
-      const { architectureAnalyzer } = application;
+      
       if (!architectureAnalyzer) {
         throw new Error('Architecture analyzer not available');
       }
@@ -123,4 +126,11 @@ class ArchitectureAnalysisStep {
   }
 }
 
-module.exports = ArchitectureAnalysisStep; 
+// Create instance for execution
+const stepInstance = new ArchitectureAnalysisStep();
+
+// Export in StepRegistry format
+module.exports = {
+  config,
+  execute: async (context) => await stepInstance.execute(context)
+}; 

@@ -3,6 +3,7 @@
  */
 const { validationResult } = require('express-validator');
 const { getStepRegistry } = require('@steps');
+const Logger = require('@logging/Logger');
 
 class WorkflowController {
     constructor(dependencies = {}) {
@@ -235,23 +236,115 @@ class WorkflowController {
                 
                 this.logger.info('WorkflowController: New Chat process completed, proceeding to task execution');
 
-                // Execute task using TaskService
+                // Execute task using TaskService with AutoFinish and additional steps
                 try {
                     const taskService = this.application?.taskService;
+                    const stepRegistry = getStepRegistry();
+                    
                     this.logger.info('WorkflowController: TaskService available', {
                         hasTaskService: !!taskService,
                         taskId: taskOptions.taskId
                     });
                     
                     if (taskService) {
-                        this.logger.info('WorkflowController: Starting task execution', {
+                        this.logger.info('WorkflowController: Starting task execution with additional steps', {
                             taskId: taskOptions.taskId,
                             userId,
                             projectPath: workspacePath,
                             projectId
                         });
                         
-                        // Execute task using TaskService with existing task ID
+                        // 1. AutoFinish workflow if enabled
+                        if (taskOptions.enableAutoFinish) {
+                            this.logger.info('WorkflowController: Starting AutoFinish workflow');
+                            try {
+                                const autoFinishResult = await stepRegistry.executeStep('AutoFinishStep', {
+                                    projectId,
+                                    workspacePath,
+                                    userId,
+                                    includeConfirmation: true,      // Only ConfirmationStep enabled
+                                    includeQualityAssessment: false, // Others disabled
+                                    includeCompletionDetection: false,
+                                    includeFallback: false,
+                                    includeTodoParsing: false,
+                                    includeTaskSequencing: false
+                                });
+                                
+                                this.logger.info('WorkflowController: AutoFinish completed', {
+                                    success: autoFinishResult.success,
+                                    message: autoFinishResult.message
+                                });
+                            } catch (error) {
+                                this.logger.warn('WorkflowController: AutoFinish failed, continuing with task', {
+                                    error: error.message
+                                });
+                            }
+                        }
+                        
+                        // 2. Dev server management if enabled
+                        if (taskOptions.manageDevServer) {
+                            this.logger.info('WorkflowController: Managing dev server');
+                            try {
+                                const devServerResult = await stepRegistry.executeStep('DevServerRestartStep', {
+                                    projectId,
+                                    workspacePath,
+                                    userId
+                                });
+                                
+                                this.logger.info('WorkflowController: Dev server management completed', {
+                                    success: devServerResult.success,
+                                    status: devServerResult.data?.status
+                                });
+                            } catch (error) {
+                                this.logger.warn('WorkflowController: Dev server management failed', {
+                                    error: error.message
+                                });
+                            }
+                        }
+                        
+                        // 3. Run tests if enabled
+                        if (taskOptions.runTests) {
+                            this.logger.info('WorkflowController: Running project tests');
+                            try {
+                                const testResult = await stepRegistry.executeStep('ProjectTestStep', {
+                                    projectId,
+                                    workspacePath,
+                                    userId
+                                });
+                                
+                                this.logger.info('WorkflowController: Tests completed', {
+                                    success: testResult.success,
+                                    status: testResult.data?.status
+                                });
+                            } catch (error) {
+                                this.logger.warn('WorkflowController: Tests failed', {
+                                    error: error.message
+                                });
+                            }
+                        }
+                        
+                        // 4. Health check if enabled
+                        if (taskOptions.healthCheck) {
+                            this.logger.info('WorkflowController: Performing health check');
+                            try {
+                                const healthResult = await stepRegistry.executeStep('ProjectHealthCheckStep', {
+                                    projectId,
+                                    workspacePath,
+                                    userId
+                                });
+                                
+                                this.logger.info('WorkflowController: Health check completed', {
+                                    success: healthResult.success,
+                                    status: healthResult.data?.overallStatus
+                                });
+                            } catch (error) {
+                                this.logger.warn('WorkflowController: Health check failed', {
+                                    error: error.message
+                                });
+                            }
+                        }
+                        
+                        // 5. Execute the actual task
                         const taskResult = await taskService.executeTask(taskOptions.taskId, userId, {
                             projectPath: workspacePath,
                             projectId
@@ -264,12 +357,16 @@ class WorkflowController {
 
                         res.json({
                             success: true,
-                            message: 'Task executed successfully',
+                            message: 'Task executed successfully with additional steps',
                             data: {
                                 taskId: taskOptions.taskId,
                                 result: taskResult,
                                 gitBranch: taskOptions.createGitBranch ? taskOptions.branchName : null,
-                                newChat: taskOptions.clickNewChat
+                                newChat: taskOptions.clickNewChat,
+                                autoFinish: taskOptions.enableAutoFinish,
+                                devServerManaged: taskOptions.manageDevServer,
+                                testsRun: taskOptions.runTests,
+                                healthChecked: taskOptions.healthCheck
                             }
                         });
                         return;
@@ -293,7 +390,7 @@ class WorkflowController {
             }
 
             // Execute using Categories-based step registry
-            const stepRegistry = getStepRegistry();
+            const stepRegistry = this.application?.stepRegistry || getStepRegistry();
             
             let stepName;
             let stepOptions = {
@@ -325,13 +422,94 @@ class WorkflowController {
             };
 
             // Map modes to Categories-based steps
-            if (mode === 'analysis') {
-                stepName = 'AnalysisStep';
-                stepOptions.includeCodeQuality = true;
-                stepOptions.includeArchitecture = true;
-                stepOptions.includeTechStack = true;
-                stepOptions.includeDependencies = true;
+            if (mode === 'project-analysis') {
+                stepName = 'ProjectAnalysisStep';
                 stepOptions.includeRepoStructure = true;
+                stepOptions.includeDependencies = true;
+            } else if (mode === 'architecture-analysis') {
+                stepName = 'ArchitectureAnalysisStep';
+                stepOptions.includePatterns = true;
+                stepOptions.includeStructure = true;
+                stepOptions.includeRecommendations = true;
+            } else if (mode === 'code-quality-analysis') {
+                stepName = 'CodeQualityAnalysisStep';
+                stepOptions.includeMetrics = true;
+                stepOptions.includeIssues = true;
+                stepOptions.includeSuggestions = true;
+            } else if (mode === 'tech-stack-analysis') {
+                stepName = 'TechStackAnalysisStep';
+                stepOptions.includeFrameworks = true;
+                stepOptions.includeLibraries = true;
+                stepOptions.includeTools = true;
+            } else if (mode === 'manifest-analysis') {
+                stepName = 'ManifestAnalysisStep';
+                stepOptions.includePackageJson = true;
+                stepOptions.includeConfigFiles = true;
+                stepOptions.includeDockerFiles = true;
+                stepOptions.includeCIFiles = true;
+            } else if (mode === 'security-analysis') {
+                stepName = 'SecurityAnalysisStep';
+                stepOptions.includeVulnerabilities = true;
+                stepOptions.includeBestPractices = true;
+                stepOptions.includeDependencies = true;
+            } else if (mode === 'performance-analysis') {
+                stepName = 'PerformanceAnalysisStep';
+                stepOptions.includeMetrics = true;
+                stepOptions.includeOptimizations = true;
+                stepOptions.includeBottlenecks = true;
+            } else if (mode === 'dependency-analysis') {
+                stepName = 'DependencyAnalysisStep';
+                stepOptions.includeOutdated = true;
+                stepOptions.includeVulnerabilities = true;
+                stepOptions.includeRecommendations = true;
+            } else if (mode === 'recommendations') {
+                stepName = 'RecommendationsStep';
+                stepOptions.includePriority = true;
+                stepOptions.includeEffort = true;
+                stepOptions.includeImpact = true;
+                stepOptions.maxRecommendations = 20;
+            } else if (mode === 'security-recommendations') {
+                stepName = 'SecurityRecommendationsStep';
+                stepOptions.includePriority = true;
+                stepOptions.includeEffort = true;
+                stepOptions.includeImpact = true;
+                stepOptions.maxRecommendations = 10;
+            } else if (mode === 'code-quality-recommendations') {
+                stepName = 'CodeQualityRecommendationsStep';
+                stepOptions.includePriority = true;
+                stepOptions.includeEffort = true;
+                stepOptions.includeImpact = true;
+                stepOptions.maxRecommendations = 10;
+            } else if (mode === 'architecture-recommendations') {
+                stepName = 'ArchitectureRecommendationsStep';
+                stepOptions.includePriority = true;
+                stepOptions.includeEffort = true;
+                stepOptions.includeImpact = true;
+                stepOptions.maxRecommendations = 10;
+            } else if (mode === 'auto-finish') {
+                stepName = 'AutoFinishStep';
+                stepOptions.maxConfirmationAttempts = 3;
+                stepOptions.confirmationTimeout = 10000;
+                stepOptions.fallbackDetectionEnabled = true;
+                stepOptions.autoContinueThreshold = 0.8;
+            } else if (mode === 'todo-parsing') {
+                stepName = 'TodoParsingStep';
+                stepOptions.enableDependencyDetection = true;
+                stepOptions.enablePriorityDetection = true;
+                stepOptions.enableTypeDetection = true;
+                stepOptions.maxTasks = 50;
+            } else if (mode === 'confirmation') {
+                stepName = 'ConfirmationStep';
+                stepOptions.maxConfirmationAttempts = 3;
+                stepOptions.confirmationTimeout = 10000;
+                stepOptions.autoContinueThreshold = 0.8;
+                stepOptions.enableMultiLanguage = true;
+            } else if (mode === 'completion-detection') {
+                stepName = 'CompletionDetectionStep';
+                stepOptions.confidenceThreshold = 0.6;
+                stepOptions.enableMultiStrategy = true;
+                stepOptions.enableContextAnalysis = true;
+                stepOptions.enableQualityIntegration = true;
             } else if (mode === 'refactor') {
                 stepName = 'RefactoringStep';
                 stepOptions.includeCodeQuality = true;
@@ -342,13 +520,7 @@ class WorkflowController {
                 stepOptions.includeTestGeneration = true;
                 stepOptions.includeTestFixing = true;
             } else {
-                // Default to analysis
-                stepName = 'AnalysisStep';
-                stepOptions.includeCodeQuality = true;
-                stepOptions.includeArchitecture = true;
-                stepOptions.includeTechStack = true;
-                stepOptions.includeDependencies = true;
-                stepOptions.includeRepoStructure = true;
+
             }
 
             this.logger.info('WorkflowController: Executing Categories-based step', {

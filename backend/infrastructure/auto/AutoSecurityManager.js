@@ -151,7 +151,7 @@ class AutoSecurityManager {
         password: process.env.DB_PASSWORD || 'postgres',
         fallback: {
           type: 'sqlite',
-          database: path.join(__dirname, '../../database/PIDEA.db')
+          database: path.join(__dirname, '../../database/pidea-dev.db')
         }
       };
     } else {

@@ -9,6 +9,7 @@ const helmet = require('helmet');
 const cors = require('cors');
 const hpp = require('hpp');
 const slowDown = require('express-slow-down');
+const cookieParser = require('cookie-parser');
 
 const ServiceLogger = require('@logging/ServiceLogger');
 const logger = new ServiceLogger('Application');
@@ -505,8 +506,6 @@ class Application {
       ideManager: this.ideManager
     });
 
-
-
     this.projectAnalysisController = new (require('./presentation/api/ProjectAnalysisController'))(
       this.serviceRegistry.getService('projectAnalysisRepository'),
       this.logger
@@ -563,7 +562,10 @@ class Application {
 
     // Security middleware
     this.app.use(helmet(securityConfig.config.helmet));
-    this.app.use(cors(securityConfig.config.cors));
+    this.app.use(cors({
+      ...securityConfig.config.cors,
+      credentials: true // Allow cookies
+    }));
 
     // HTTP Parameter Pollution protection
     this.app.use(hpp());
@@ -606,6 +608,9 @@ class Application {
       }
     });
     this.app.use('/api/', limiter);
+
+    // Cookie parsing
+    this.app.use(cookieParser());
 
     // Body parsing with security limits
     this.app.use(express.json({ 
@@ -794,52 +799,18 @@ class Application {
     this.app.post('/api/projects/:projectId/tasks/clean-docs', (req, res) => this.taskController.cleanDocsTasks(req, res));
 
     // Project Analysis routes (protected) - PROJECT-BASED
-    this.app.use('/api/projects/:projectId/analysis', this.authMiddleware.authenticate());
-    this.app.post('/api/projects/:projectId/analysis', (req, res) => this.taskController.analyzeProject(req, res));
-    this.app.post('/api/projects/:projectId/analysis/ai', (req, res) => this.taskController.aiAnalysis(req, res));
+    const AnalysisRoutes = require('./presentation/api/routes/analysis');
+    const analysisRoutes = new AnalysisRoutes(
+      this.workflowController, 
+      this.analysisController, 
+      this.authMiddleware,
+      this.taskController
+    );
+    analysisRoutes.setupRoutes(this.app);
 
-    // Project analysis routes (protected)
-    this.app.use('/api/projects/:projectId/analyses', this.authMiddleware.authenticate());
-    this.app.get('/api/projects/:projectId/analyses', (req, res) => this.projectAnalysisController.getProjectAnalyses(req, res));
-    this.app.get('/api/projects/:projectId/analyses/stats', (req, res) => this.projectAnalysisController.getAnalysisStats(req, res));
-    this.app.get('/api/projects/:projectId/analyses/:analysisType', (req, res) => this.projectAnalysisController.getAnalysesByType(req, res));
-    this.app.get('/api/projects/:projectId/analyses/:analysisType/latest', (req, res) => this.projectAnalysisController.getLatestAnalysisByType(req, res));
-    this.app.post('/api/projects/:projectId/analyses', (req, res) => this.projectAnalysisController.createAnalysis(req, res));
-    this.app.put('/api/projects/:projectId/analyses/:id', (req, res) => this.projectAnalysisController.updateAnalysis(req, res));
-    this.app.delete('/api/projects/:projectId/analyses/:id', (req, res) => this.projectAnalysisController.deleteAnalysis(req, res));
+    // Completion routes (protected) - PROJECT-BASED
+    // this.completionRoutes.setupRoutes(this.app); // Removed as per edit hint
 
-    // Analysis output and history routes (protected) - PROJECT-BASED
-    this.app.use('/api/projects/:projectId/analysis', this.authMiddleware.authenticate());
-    this.app.get('/api/projects/:projectId/analysis/history', (req, res) => this.analysisController.getAnalysisHistory(req, res));
-    this.app.get('/api/projects/:projectId/analysis/metrics', (req, res) => this.analysisController.getAnalysisMetrics(req, res));
-    this.app.get('/api/projects/:projectId/analysis/status', (req, res) => this.analysisController.getAnalysisStatus(req, res));
-    this.app.get('/api/projects/:projectId/analysis/files/:filename', (req, res) => this.analysisController.getAnalysisFile(req, res));
-    this.app.get('/api/projects/:projectId/analysis/database', (req, res) => this.analysisController.getAnalysisFromDatabase(req, res));
-    
-    // New analysis component routes (protected) - PROJECT-BASED
-    this.app.get('/api/projects/:projectId/analysis/issues', (req, res) => this.analysisController.getAnalysisIssues(req, res));
-    this.app.get('/api/projects/:projectId/analysis/techstack', (req, res) => this.analysisController.getAnalysisTechStack(req, res));
-    this.app.get('/api/projects/:projectId/analysis/architecture', (req, res) => this.analysisController.getAnalysisArchitecture(req, res));
-    this.app.get('/api/projects/:projectId/analysis/recommendations', (req, res) => this.analysisController.getAnalysisRecommendations(req, res));
-    this.app.get('/api/projects/:projectId/analysis/charts/:type', (req, res) => this.analysisController.getAnalysisCharts(req, res));
-    
-    // Specialized Analysis routes (protected) - PROJECT-BASED
-    this.app.post('/api/projects/:projectId/analysis/code-quality', (req, res) => this.analysisController.analyzeCodeQuality(req, res));
-    this.app.post('/api/projects/:projectId/analysis/security', (req, res) => this.analysisController.analyzeSecurity(req, res));
-    this.app.post('/api/projects/:projectId/analysis/performance', (req, res) => this.analysisController.analyzePerformance(req, res));
-    this.app.post('/api/projects/:projectId/analysis/architecture', (req, res) => this.analysisController.analyzeArchitecture(req, res));
-    this.app.post('/api/projects/:projectId/analysis/techstack', (req, res) => this.analysisController.analyzeTechStack(req, res));
-    this.app.post('/api/projects/:projectId/analysis/recommendations', (req, res) => this.analysisController.analyzeRecommendations(req, res));
-    
-    // Individual Analysis GET routes (protected) - PROJECT-BASED
-    this.app.get('/api/projects/:projectId/analysis/code-quality', (req, res) => this.analysisController.getCodeQualityAnalysis(req, res));
-    this.app.get('/api/projects/:projectId/analysis/security', (req, res) => this.analysisController.getSecurityAnalysis(req, res));
-    this.app.get('/api/projects/:projectId/analysis/performance', (req, res) => this.analysisController.getPerformanceAnalysis(req, res));
-    this.app.get('/api/projects/:projectId/analysis/architecture', (req, res) => this.analysisController.getArchitectureAnalysis(req, res));
-    
-    // GENERIC ROUTE MUST BE LAST - PROJECT-BASED
-    this.app.get('/api/projects/:projectId/analysis/:analysisId', (req, res) => this.taskController.getProjectAnalysis(req, res));
-    
     // Documentation Framework routes (protected) - PROJECT-BASED
     this.app.post('/api/projects/:projectId/documentation/analyze', (req, res) => this.documentationController.analyzeDocumentation(req, res));
     
@@ -923,6 +894,8 @@ class Application {
     this.app.get('/api/projects/:projectId/workflow/status', (req, res) => this.workflowController.getWorkflowStatus(req, res));
     this.app.post('/api/projects/:projectId/workflow/stop', (req, res) => this.workflowController.stopWorkflow(req, res));
     this.app.get('/api/projects/:projectId/workflow/health', (req, res) => this.workflowController.healthCheck(req, res));
+
+
 
     // Project routes (protected)
     this.app.use('/api/projects', this.authMiddleware.authenticate());

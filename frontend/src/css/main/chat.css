@@ -593,6 +593,58 @@ body.light-theme .message-bubble pre code {
   line-height: 1.6;
 }
 
+/* Voice input integration */
+.input-with-voice {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  flex: 1;
+}
+
+.input-with-voice textarea {
+  flex: 1;
+  resize: none;
+  border: none;
+  background: transparent;
+  color: #fff;
+  font-family: inherit;
+  font-size: 0.9rem;
+  line-height: 1.4;
+  padding: 8px;
+  outline: none;
+  min-height: 20px;
+  max-height: 120px;
+}
+
+.input-with-voice textarea::placeholder {
+  color: #666;
+}
+
+/* Voice input specific styles */
+.input-with-voice .voice-input-container {
+  flex-shrink: 0;
+  margin-bottom: 2px;
+}
+
+/* Voice button hover effects */
+.input-with-voice button:hover {
+  transform: scale(1.05);
+}
+
+/* Voice recording animation */
+.input-with-voice button.recording {
+  animation: pulse 1.5s ease-in-out infinite alternate;
+}
+
+@keyframes pulse {
+  from {
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7);
+  }
+  to {
+    box-shadow: 0 0 0 10px rgba(239, 68, 68, 0);
+  }
+}
+
 /* Mobile Responsive */
 @media (max-width: 768px) {
   #chat {

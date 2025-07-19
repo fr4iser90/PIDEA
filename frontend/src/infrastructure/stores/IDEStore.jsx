@@ -131,13 +131,31 @@ const useIDEStore = create(
 
           const result = await apiCall('/api/ide/available');
           if (result.success) {
+            // Handle both response formats: result.data.ides (new) and result.data (old)
             const ides = result.data.ides || result.data || [];
+            logger.info('API Response:', { 
+              hasData: !!result.data, 
+              dataType: typeof result.data, 
+              isArray: Array.isArray(result.data),
+              idesLength: ides.length,
+              firstIDE: ides[0]
+            });
+            
             set({ 
               availableIDEs: ides,
               lastUpdate: new Date().toISOString(),
               retryCount: 0
             });
             logger.info('Loaded', ides.length, 'IDEs');
+            
+            // Auto-set active port if none is set and we have IDEs
+            const { activePort } = get();
+            if (!activePort && ides.length > 0) {
+              const firstIDE = ides[0];
+              logger.info('Auto-setting active port to:', firstIDE.port);
+              set({ activePort: firstIDE.port });
+            }
+            
             return ides;
           } else {
             throw new Error(result.error || 'Failed to load IDEs');
@@ -146,14 +164,8 @@ const useIDEStore = create(
           logger.error('Error loading available IDEs:', error);
           set({ error: error.message });
           
-          // Retry logic
-          const { retryCount, maxRetries } = get();
-          if (retryCount < maxRetries) {
-            set({ retryCount: retryCount + 1 });
-            logger.info('Retrying...', retryCount + 1, 'of', maxRetries);
-            setTimeout(() => get().loadAvailableIDEs(), 1000 * (retryCount + 1));
-          }
-          
+          // Don't retry automatically - only on manual refresh
+          // This prevents infinite loops
           return [];
         } finally {
           set({ isLoading: false });

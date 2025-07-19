@@ -2,6 +2,7 @@ import { logger } from "@/infrastructure/logging/Logger";
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import useNotificationStore from './NotificationStore.jsx';
+import { apiCall } from '@/infrastructure/repositories/APIChatRepository.jsx';
 
 const useAuthStore = create(
   persist(
@@ -23,18 +24,17 @@ const useAuthStore = create(
         try {
           logger.debug('🔍 [AuthStore] Attempting login for:', email);
           
-          const response = await fetch('/api/auth/login', {
+          const data = await apiCall('/api/auth/login', {
             method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
             body: JSON.stringify({ email, password }),
+            credentials: 'include', // Include cookies
           });
 
-          const data = await response.json();
+          // Check if cookies were set
+          logger.info('🔍 [AuthStore] Login response received, checking cookies...');
           logger.info('🔍 [AuthStore] Login response:', data);
 
-          if (!response.ok) {
+          if (!data.success) {
             throw new Error(data.error || data.message || 'Login failed');
           }
 
@@ -81,17 +81,12 @@ const useAuthStore = create(
         set({ isLoading: true, error: null });
         
         try {
-          const response = await fetch('/api/auth/register', {
+          const data = await apiCall('/api/auth/register', {
             method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
             body: JSON.stringify({ email, password, username }),
           });
 
-          const data = await response.json();
-
-          if (!response.ok) {
+          if (!data.success) {
             throw new Error(data.error || data.message || 'Registration failed');
           }
 
@@ -119,10 +114,19 @@ const useAuthStore = create(
         }
       },
 
-      logout: () => {
+      logout: async () => {
+        try {
+          // Call logout endpoint to clear cookies
+          await apiCall('/api/auth/logout', {
+            method: 'POST',
+            credentials: 'include',
+          });
+        } catch (error) {
+          logger.error('Error during logout:', error);
+        }
+        
         set({
           user: null,
-          token: null,
           isAuthenticated: false,
           isLoading: false,
           error: null,
@@ -135,23 +139,21 @@ const useAuthStore = create(
         set({ error: null });
       },
 
-      // Getter for authenticated API calls
+      // Get authentication headers for API calls
       getAuthHeaders: () => {
-        const { token } = get();
-        logger.info('🔍 [AuthStore] getAuthHeaders called, token:', token ? token.substring(0, 20) + '...' : 'null');
-        return token ? { Authorization: `Bearer ${token}` } : {};
+        const headers = {};
+        
+        // Cookies are sent automatically with credentials: 'include'
+        // No need to manually add Authorization header when using cookies
+        logger.info('🔍 [AuthStore] Using cookie-based authentication');
+        
+        return headers;
       },
 
       // Enhanced token validation with instant auto-redirect
       validateToken: async () => {
-        const { token, lastAuthCheck, authCheckInterval } = get();
+        const { lastAuthCheck, authCheckInterval } = get();
         
-        if (!token) {
-          logger.info('🔍 [AuthStore] No token found for validation');
-          set({ isAuthenticated: false });
-          return false;
-        }
-
         // Check if we need to validate (avoid too frequent checks)
         const now = new Date();
         if (lastAuthCheck && (now - lastAuthCheck) < authCheckInterval) {
@@ -161,21 +163,8 @@ const useAuthStore = create(
 
         try {
           logger.info('🔍 [AuthStore] Validating token...');
-          const response = await fetch('/api/auth/validate', {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          });
-
-          logger.info('🔍 [AuthStore] Validation response status:', response.status);
-
-          if (!response.ok) {
-            logger.info('❌ [AuthStore] Token validation failed:', response.status);
-            await get().handleAuthFailure('Token validation failed');
-            return false;
-          }
-
-          const data = await response.json();
+          
+          const data = await apiCall('/api/auth/validate');
           logger.info('✅ [AuthStore] Token validation successful');
           set({ 
             user: data.data?.user || data.user, 
@@ -223,28 +212,18 @@ const useAuthStore = create(
 
       // Refresh token if needed
       refreshToken: async () => {
-        const { token } = get();
-        if (!token) {
-          logger.info('🔍 [AuthStore] No token to refresh');
-          return false;
-        }
-
         try {
           logger.info('🔍 [AuthStore] Refreshing token...');
-          const response = await fetch('/api/auth/refresh', {
+          const data = await apiCall('/api/auth/refresh', {
             method: 'POST',
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
           });
-
-          if (!response.ok) {
+          
+          if (!data.success) {
             logger.info('❌ [AuthStore] Token refresh failed');
             set({ isAuthenticated: false, token: null, user: null });
             return false;
           }
-
-          const data = await response.json();
+          
           const userData = data.data || data;
           const newToken = userData.accessToken || userData.token;
           
@@ -262,7 +241,6 @@ const useAuthStore = create(
       name: 'auth-storage',
       partialize: (state) => ({
         user: state.user,
-        token: state.token,
         isAuthenticated: state.isAuthenticated,
       }),
     }

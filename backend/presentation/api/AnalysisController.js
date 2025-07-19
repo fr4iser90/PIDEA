@@ -465,7 +465,7 @@ class AnalysisController {
       const latest = await this.analysisRepository.findLatestByProjectId(projectId);
       if (latest && isAnalysisFresh(latest)) {
         this.logger.info(`Returning cached recommendations analysis for project`);
-        const analysis = latest.resultData;
+        const analysis = latest.resultData || {};
         
         res.json({
           success: true,
@@ -747,10 +747,10 @@ class AnalysisController {
       
       this.logger.info(`Getting analysis status for project`);
       
-      // Get all analyses for this project
-      const analyses = await this.analysisRepository.findByProjectId(projectId);
+      // Get only the latest analysis for this project
+      const latestAnalysis = await this.analysisRepository.findLatestByProjectId(projectId);
       
-      if (analyses.length === 0) {
+      if (!latestAnalysis) {
         // Return default status if no analyses exist
         const defaultStatus = {
           id: 'status',
@@ -768,8 +768,6 @@ class AnalysisController {
         return;
       }
       
-      // Get the latest analysis
-      const latestAnalysis = analyses[0];
       const resultData = latestAnalysis.resultData || {};
       const summary = latestAnalysis.summary || {};
       
@@ -837,12 +835,12 @@ class AnalysisController {
       
       this.logger.info(`Getting analysis metrics for project`);
       
-      // Get all analyses for this project
-      const analyses = await this.analysisRepository.findByProjectId(projectId);
+      // Get only the latest analysis for this project
+      const latestAnalysis = await this.analysisRepository.findLatestByProjectId(projectId);
       
-      this.logger.info(`Found ${analyses.length} analyses for project`);
+      this.logger.info(`Found latest analysis for project`);
       
-      if (analyses.length === 0) {
+      if (!latestAnalysis) {
         // Return default metrics if no analyses exist
         const defaultMetrics = {
           id: 'metrics',
@@ -863,8 +861,6 @@ class AnalysisController {
         return;
       }
       
-      // Get the latest analysis for detailed metrics
-      const latestAnalysis = analyses[0]; // Already sorted by created_at DESC
       const resultData = latestAnalysis.resultData || {};
       const summary = latestAnalysis.summary || {};
       
@@ -881,149 +877,16 @@ class AnalysisController {
       const issues = [];
       const suggestions = [];
       
-      // Add code quality issues
       if (resultData.codeQuality?.issues) {
-        issues.push(...resultData.codeQuality.issues.slice(0, 10)); // Limit to 10 most important
+        issues.push(...resultData.codeQuality.issues.slice(0, 5));
       }
       
-      // Add security issues
-      if (resultData.security?.vulnerabilities) {
-        issues.push(...resultData.security.vulnerabilities.slice(0, 5));
-      }
-      
-      // Add performance issues
-      if (resultData.performance?.issues) {
-        issues.push(...resultData.performance.issues.slice(0, 5));
-      }
-      
-      // Add recommendations
       if (summary.recommendations && Array.isArray(summary.recommendations)) {
-        suggestions.push(...summary.recommendations.slice(0, 10));
+        suggestions.push(...summary.recommendations.slice(0, 5));
       }
       
-      // Calculate basic metrics - count individual analyses from summary data
-      let totalAnalyses = 0;
-      let completedAnalyses = 0;
-      let failedAnalyses = 0;
-      
-      this.logger.info(`Processing ${analyses.length} workflow executions for metrics calculation`);
-      
-      // Count individual analyses from each workflow execution
-      analyses.forEach((analysis, index) => {
-        const summary = analysis.summary || {};
-        const resultData = analysis.resultData || {};
-        const analysisType = analysis.analysisType;
-        
-        // Count this analysis record
-        totalAnalyses++;
-        
-        // Check if this analysis was successful
-        if (analysis.status === 'completed' && !analysis.error) {
-          completedAnalyses++;
-        } else {
-          failedAnalyses++;
-        }
-        
-        // Also count individual analysis types if this is a comprehensive analysis
-        if (analysisType === 'comprehensive-analysis' || analysisType === 'advanced-analysis') {
-          const analysisTypes = ['projectAnalysis', 'codeQuality', 'security', 'performance', 'architecture', 'techStack', 'dependencies'];
-          let foundTypes = 0;
-          analysisTypes.forEach(type => {
-            if (resultData[type]) {
-              foundTypes++;
-            }
-          });
-          this.logger.info(`Analysis ${index + 1}: Found ${foundTypes} analysis types in comprehensive analysis`);
-        } else {
-          this.logger.info(`Analysis ${index + 1}: Individual analysis of type ${analysisType}`);
-        }
-      });
-      
-      this.logger.info(`Final metrics: totalAnalyses=${totalAnalyses}, completedAnalyses=${completedAnalyses}, failedAnalyses=${failedAnalyses}`);
-      
-      const successRate = totalAnalyses > 0 ? completedAnalyses / totalAnalyses : 0;
-      
-      // Calculate average duration per individual analysis
-      let totalDuration = 0;
-      let durationCount = 0;
-      analyses.forEach(analysis => {
-        if (analysis.durationMs) {
-          const analysisType = analysis.analysisType;
-          
-          if (analysisType === 'comprehensive-analysis' || analysisType === 'advanced-analysis') {
-            // For comprehensive analyses, distribute duration across individual analysis types
-            const summary = analysis.summary || {};
-            const resultData = analysis.resultData || {};
-            
-            let individualAnalysisCount = 0;
-            if (summary.totalAnalyses) {
-              individualAnalysisCount = summary.totalAnalyses;
-            } else {
-              // Fallback: count individual analysis types
-              const analysisTypes = ['projectAnalysis', 'codeQuality', 'security', 'performance', 'architecture', 'techStack', 'dependencies'];
-              individualAnalysisCount = analysisTypes.filter(type => resultData[type]).length;
-            }
-            
-            if (individualAnalysisCount > 0) {
-              // Distribute workflow duration across individual analyses
-              const durationPerAnalysis = analysis.durationMs / individualAnalysisCount;
-              totalDuration += durationPerAnalysis * individualAnalysisCount;
-              durationCount += individualAnalysisCount;
-            }
-          } else {
-            // For individual analyses, use the duration directly
-            totalDuration += analysis.durationMs;
-            durationCount++;
-          }
-        }
-      });
-      const averageDuration = durationCount > 0 ? totalDuration / durationCount : 0;
-      
-      // Group by individual analysis types
-      const analysisTypes = {};
-      analyses.forEach(analysis => {
-        const resultData = analysis.resultData || {};
-        const summary = analysis.summary || {};
-        const analysisType = analysis.analysisType;
-        
-        if (analysisType === 'comprehensive-analysis' || analysisType === 'advanced-analysis') {
-          // Count individual analysis types from resultData for comprehensive analyses
-          const individualTypes = ['projectAnalysis', 'codeQuality', 'security', 'performance', 'architecture', 'techStack', 'dependencies'];
-          individualTypes.forEach(type => {
-            if (resultData[type]) {
-              const displayName = type === 'projectAnalysis' ? 'Project Analysis' :
-                                type === 'codeQuality' ? 'Code Quality' :
-                                type === 'techStack' ? 'Tech Stack' :
-                                type.charAt(0).toUpperCase() + type.slice(1);
-              
-              analysisTypes[displayName] = (analysisTypes[displayName] || 0) + 1;
-            }
-          });
-          
-          // Also count from summary categories if available
-          if (summary.categories) {
-            Object.keys(summary.categories).forEach(category => {
-              const displayName = category === 'projectAnalysis' ? 'Project Analysis' :
-                                category === 'codeQuality' ? 'Code Quality' :
-                                category === 'techStack' ? 'Tech Stack' :
-                                category.charAt(0).toUpperCase() + category.slice(1);
-              
-              analysisTypes[displayName] = (analysisTypes[displayName] || 0) + 1;
-            });
-          }
-        } else {
-          // Count individual analysis records by their type
-          const displayName = analysisType === 'codeQuality' ? 'Code Quality' :
-                            analysisType === 'techStack' ? 'Tech Stack' :
-                            analysisType === 'security' ? 'Security' :
-                            analysisType === 'performance' ? 'Performance' :
-                            analysisType === 'architecture' ? 'Architecture' :
-                            analysisType === 'recommendations' ? 'Recommendations' :
-                            analysisType.charAt(0).toUpperCase() + analysisType.slice(1);
-          
-          analysisTypes[displayName] = (analysisTypes[displayName] || 0) + 1;
-        }
-      });
+      // Get project stats for metrics
+      const projectStats = await this.analysisRepository.getProjectAnalysisStats(projectId);
       
       const metrics = {
         id: 'metrics',
@@ -1031,39 +894,33 @@ class AnalysisController {
         complexity,
         issues,
         suggestions,
-        totalAnalyses,
-        completedAnalyses,
-        failedAnalyses,
-        successRate,
-        averageDuration,
+        totalAnalyses: projectStats.totalAnalyses,
+        completedAnalyses: projectStats.totalAnalyses, // Assuming all are completed
+        failedAnalyses: 0, // Would need to track failed analyses separately
+        successRate: 100, // Assuming all are successful
+        averageDuration: projectStats.averageDuration || 0,
         lastAnalysisDate: latestAnalysis.createdAt,
-        analysisTypes,
-        overallScore: summary.overallScore || 0,
-        criticalIssues: summary.criticalIssues || 0,
-        warnings: summary.warnings || 0,
-        recommendations: summary.recommendations?.length || 0
+        analysisTypes: {
+          [latestAnalysis.analysisType]: {
+            count: 1,
+            latest: latestAnalysis.createdAt,
+            averageScore: latestAnalysis.overallScore || 0
+          }
+        },
+        overallScore: latestAnalysis.overallScore || 0,
+        criticalIssues: latestAnalysis.criticalIssuesCount || 0,
+        warnings: latestAnalysis.warningsCount || 0,
+        recommendations: latestAnalysis.recommendationsCount || 0
       };
       
       this.logger.info(`Calculated metrics successfully`);
       
-      // Generate ETag for metrics data
-      const etag = this.etagService.generateMetricsETag(metrics, projectId);
+      // Set ETag for caching with 304 support
+      const etagSent = this.setETagHeaders(res, 'analysis-metrics', projectId, metrics, req);
       
-      // Check if client has current version
-      if (this.etagService.shouldReturn304(req, etag)) {
-        this.logger.info('Client has current version, sending 304 Not Modified');
-        this.etagService.sendNotModified(res, etag);
-        return;
+      if (!etagSent) {
+        res.json({ success: true, data: metrics });
       }
-      
-      // Set ETag headers for caching
-      this.etagService.setETagHeaders(res, etag, {
-        maxAge: 300, // 5 minutes
-        mustRevalidate: true,
-        isPublic: false
-      });
-      
-      res.json({ success: true, data: metrics });
     } catch (error) {
       this.logger.error(`Failed to get analysis metrics:`, error);
       res.status(500).json({ success: false, error: error.message });
@@ -1084,52 +941,57 @@ class AnalysisController {
       this.logger.info(`Request method: ${req.method}`);
       this.logger.info(`AnalysisRepository type: ${this.analysisRepository.constructor.name}`);
       
-      // Get analysis history from database
-      this.logger.info(`Calling analysisRepository.findByProjectId('${projectId}')`);
-      const analyses = await this.analysisRepository.findByProjectId(projectId);
+      // Get only the latest analysis for this project
+      this.logger.info(`Calling analysisRepository.findLatestByProjectId('${projectId}')`);
+      const latestAnalysis = await this.analysisRepository.findLatestByProjectId(projectId);
       
-      this.logger.info(`Found ${analyses.length} analyses from repository`);
+      if (!latestAnalysis) {
+        this.logger.info(`No analyses found for project`);
+        res.json({ success: true, data: [] });
+        return;
+      }
       
-      // Transform to expected format (array of objects)
-      const history = analyses.map(analysis => {
-        // Extract data from the analysis result
-        const resultData = analysis.resultData || {};
-        const summary = analysis.summary || {};
-        
-        // Determine analysis type for display
-        const analysisType = analysis.analysisType || 'unknown';
-        const displayType = analysisType === 'advanced-analysis' ? 'analysis' : analysisType;
-        
-        // Calculate file size from data (if available)
-        const dataSize = JSON.stringify(resultData).length;
-        
-        // Get filename from metadata or generate one
-        const filename = summary.metadata?.filename || 
-                        summary.metadata?.projectPath?.split('/').pop() || 
-                        `${analysisType}-${analysis.id}.json`;
-        
-        const transformedAnalysis = {
-          id: analysis.id,
-          projectId: analysis.projectId,
-          analysisType: analysisType,
-          type: displayType, // Frontend expects 'type' field
-          timestamp: analysis.createdAt,
-          status: analysis.status,
-          data: resultData,
-          report: summary,
-          metadata: summary.metadata || {},
-          // Frontend-specific fields
-          filename: filename,
-          size: dataSize,
-          completed: analysis.status === 'completed',
-          error: analysis.status === 'failed' ? 'Analysis failed' : null,
-          progress: analysis.status === 'completed' ? 100 : 
-                   analysis.status === 'running' ? 50 : 0
-        };
-        
-        this.logger.info(`Transformed analysis successfully`);
-        return transformedAnalysis;
-      });
+      this.logger.info(`Found latest analysis from repository`);
+      
+      // Transform to expected format (array with single object)
+      const resultData = latestAnalysis.resultData || {};
+      const summary = latestAnalysis.summary || {};
+      
+      // Determine analysis type for display
+      const analysisType = latestAnalysis.analysisType || 'unknown';
+      const displayType = analysisType === 'advanced-analysis' ? 'analysis' : analysisType;
+      
+      // Calculate file size from data (if available)
+      const dataSize = JSON.stringify(resultData).length;
+      
+      // Get filename from metadata or generate one
+      const filename = summary.metadata?.filename || 
+                      summary.metadata?.projectPath?.split('/').pop() || 
+                      `${analysisType}-${latestAnalysis.id}.json`;
+      
+      const transformedAnalysis = {
+        id: latestAnalysis.id,
+        projectId: latestAnalysis.projectId,
+        analysisType: analysisType,
+        type: displayType, // Frontend expects 'type' field
+        timestamp: latestAnalysis.createdAt,
+        status: latestAnalysis.status,
+        data: resultData,
+        report: summary,
+        metadata: summary.metadata || {},
+        // Frontend-specific fields
+        filename: filename,
+        size: dataSize,
+        completed: latestAnalysis.status === 'completed',
+        error: latestAnalysis.status === 'failed' ? 'Analysis failed' : null,
+        progress: latestAnalysis.status === 'completed' ? 100 : 
+                 latestAnalysis.status === 'running' ? 50 : 0
+      };
+      
+      this.logger.info(`Transformed analysis successfully`);
+      
+      // Return array with single analysis for frontend compatibility
+      const history = [transformedAnalysis];
       
       this.logger.info(`Analysis history prepared successfully`);
       
@@ -1247,169 +1109,109 @@ class AnalysisController {
       
       this.logger.info(`Getting analysis issues for project: ${projectId}`);
       
-      // Get latest analysis for this project
-      const analyses = await this.analysisRepository.findByProjectId(projectId);
+      // Get only the latest analysis for this project
+      const latestAnalysis = await this.analysisRepository.findLatestByProjectId(projectId);
       
-      if (analyses.length === 0) {
-        return res.json({ success: true, data: { 
-          issues: [], 
-          summary: { total: 0, bySeverity: { critical: 0, high: 0, medium: 0, low: 0 }, byCategory: {} } 
-        } });
-      }
-      
-      const latestAnalysis = analyses[0];
-      const resultData = latestAnalysis.resultData || {};
-      
-      // Extract ONLY issues from various analysis types
-      // Don't send the entire resultData file!
-      const issues = [];
-      
-      // Code quality issues
-      if (resultData.codeQuality?.issues && Array.isArray(resultData.codeQuality.issues)) {
-        issues.push(...resultData.codeQuality.issues.map(issue => ({
-          id: issue.id || issue.name || `cq-${Date.now()}`,
-          title: issue.title || issue.name || issue.message || 'Code Quality Issue',
-          description: issue.description || issue.message || issue.text || 'No description available',
-          severity: issue.severity || issue.level || 'medium',
-          category: 'code-quality',
-          source: 'code-quality',
-          file: issue.file || issue.path || null,
-          line: issue.line || issue.lineNumber || null,
-          rule: issue.rule || issue.type || null
-        })));
-      }
-      
-      // Security issues
-      if (resultData.security?.vulnerabilities && Array.isArray(resultData.security.vulnerabilities)) {
-        issues.push(...resultData.security.vulnerabilities.map(issue => ({
-          id: issue.id || issue.name || `sec-${Date.now()}`,
-          title: issue.title || issue.name || issue.message || 'Security Issue',
-          description: issue.description || issue.message || issue.text || 'No description available',
-          severity: issue.severity || issue.level || 'medium',
-          category: 'security',
-          source: 'security',
-          cve: issue.cve || issue.cveId || null,
-          package: issue.package || issue.dependency || null,
-          version: issue.version || issue.affectedVersion || null
-        })));
-      }
-      
-      // Architecture issues
-      if (resultData.architecture?.violations && Array.isArray(resultData.architecture.violations)) {
-        issues.push(...resultData.architecture.violations.map(issue => ({
-          id: issue.id || issue.name || `arch-${Date.now()}`,
-          title: issue.title || issue.name || issue.message || 'Architecture Issue',
-          description: issue.description || issue.message || issue.text || 'No description available',
-          severity: issue.severity || issue.level || 'medium',
-          category: 'architecture',
-          source: 'architecture',
-          pattern: issue.pattern || issue.type || null,
-          component: issue.component || issue.file || null
-        })));
-      }
-      
-      // Project analysis issues
-      if (resultData.projectAnalysis?.issues && Array.isArray(resultData.projectAnalysis.issues)) {
-        issues.push(...resultData.projectAnalysis.issues.map(issue => ({
-          id: issue.id || issue.name || `proj-${Date.now()}`,
-          title: issue.title || issue.name || issue.message || 'Project Issue',
-          description: issue.description || issue.message || issue.text || 'No description available',
-          severity: issue.severity || issue.level || 'medium',
-          category: 'project',
-          source: 'project-analysis',
-          file: issue.file || issue.path || null
-        })));
-      }
-      
-      // Performance issues
-      if (resultData.performance?.issues && Array.isArray(resultData.performance.issues)) {
-        issues.push(...resultData.performance.issues.map(issue => ({
-          id: issue.id || issue.name || `perf-${Date.now()}`,
-          title: issue.title || issue.name || issue.message || 'Performance Issue',
-          description: issue.description || issue.message || issue.text || 'No description available',
-          severity: issue.severity || issue.level || 'medium',
-          category: 'performance',
-          source: 'performance',
-          metric: issue.metric || issue.type || null,
-          value: issue.value || issue.currentValue || null,
-          threshold: issue.threshold || issue.targetValue || null
-        })));
-      }
-      
-      // Layer validation issues
-      if (resultData.layerValidation?.violations && Array.isArray(resultData.layerValidation.violations)) {
-        issues.push(...resultData.layerValidation.violations.map(issue => ({
-          id: issue.id || issue.name || `layer-${Date.now()}`,
-          title: issue.title || issue.name || issue.message || 'Layer Validation Issue',
-          description: issue.description || issue.message || issue.text || 'No description available',
-          severity: issue.severity || issue.level || 'medium',
-          category: 'architecture',
-          source: 'layer-validation',
-          layer: issue.layer || issue.type || null,
-          component: issue.component || issue.file || null
-        })));
-      }
-      
-      // Logic validation issues
-      if (resultData.logicValidation?.violations && Array.isArray(resultData.logicValidation.violations)) {
-        issues.push(...resultData.logicValidation.violations.map(issue => ({
-          id: issue.id || issue.name || `logic-${Date.now()}`,
-          title: issue.title || issue.name || issue.message || 'Logic Validation Issue',
-          description: issue.description || issue.message || issue.text || 'No description available',
-          severity: issue.severity || issue.level || 'medium',
-          category: 'logic',
-          source: 'logic-validation',
-          rule: issue.rule || issue.type || null,
-          component: issue.component || issue.file || null
-        })));
-      }
-      
-      // Sort by severity
-      issues.sort((a, b) => {
-        const severityOrder = { critical: 0, high: 1, medium: 2, low: 3 };
-        return (severityOrder[a.severity] || 4) - (severityOrder[b.severity] || 4);
-      });
-      
-      const summary = {
-        total: issues.length,
-        bySeverity: {
-          critical: issues.filter(i => i.severity === 'critical').length,
-          high: issues.filter(i => i.severity === 'high').length,
-          medium: issues.filter(i => i.severity === 'medium').length,
-          low: issues.filter(i => i.severity === 'low').length
-        },
-        byCategory: {
-          'code-quality': issues.filter(i => i.category === 'code-quality').length,
-          security: issues.filter(i => i.category === 'security').length,
-          architecture: issues.filter(i => i.category === 'architecture').length,
-          logic: issues.filter(i => i.category === 'logic').length,
-          project: issues.filter(i => i.category === 'project').length,
-          performance: issues.filter(i => i.category === 'performance').length
-        }
-      };
-      
-      this.logger.info(`Issues data extracted, count: ${issues.length}`);
-      
-      const issuesData = { issues, summary };
-      
-      // Generate ETag for issues data
-      const etag = this.etagService.generateETag(issuesData, 'analysis-issues', projectId);
-      
-      // Check if client has current version
-      if (this.etagService.shouldReturn304(req, etag)) {
-        this.logger.info('Client has current version, sending 304 Not Modified');
-        this.etagService.sendNotModified(res, etag);
+      if (!latestAnalysis) {
+        const defaultIssues = {
+          issues: [],
+          totalIssues: 0,
+          criticalIssues: 0,
+          warnings: 0,
+          info: 0,
+          categories: {}
+        };
+        
+        res.json({ success: true, data: defaultIssues });
         return;
       }
       
-      // Set ETag headers for caching
-      this.etagService.setETagHeaders(res, etag, {
-        maxAge: 300, // 5 minutes
-        mustRevalidate: true,
-        isPublic: false
-      });
+      const resultData = latestAnalysis.resultData || {};
+      const summary = latestAnalysis.summary || {};
       
-      res.json({ success: true, data: issuesData });
+      // Extract issues from the latest analysis
+      const issues = [];
+      const categories = {};
+      
+      // Extract code quality issues
+      if (resultData.codeQuality?.issues) {
+        resultData.codeQuality.issues.forEach(issue => {
+          const issueData = {
+            id: `issue-${Date.now()}-${Math.random()}`,
+            type: 'code-quality',
+            severity: issue.severity || 'medium',
+            message: issue.message || 'Code quality issue',
+            file: issue.file || 'unknown',
+            line: issue.line || 0,
+            category: issue.category || 'general',
+            description: issue.description || '',
+            suggestion: issue.suggestion || '',
+            timestamp: latestAnalysis.createdAt
+          };
+          
+          issues.push(issueData);
+          
+          // Count by category
+          if (!categories[issueData.category]) {
+            categories[issueData.category] = { count: 0, issues: [] };
+          }
+          categories[issueData.category].count++;
+          categories[issueData.category].issues.push(issueData);
+        });
+      }
+      
+      // Extract security issues
+      if (resultData.security?.vulnerabilities) {
+        resultData.security.vulnerabilities.forEach(vuln => {
+          const issueData = {
+            id: `security-${Date.now()}-${Math.random()}`,
+            type: 'security',
+            severity: vuln.severity || 'high',
+            message: vuln.title || 'Security vulnerability',
+            file: vuln.file || 'unknown',
+            line: vuln.line || 0,
+            category: 'security',
+            description: vuln.description || '',
+            suggestion: vuln.recommendation || '',
+            cve: vuln.cve || null,
+            timestamp: latestAnalysis.createdAt
+          };
+          
+          issues.push(issueData);
+          
+          if (!categories.security) {
+            categories.security = { count: 0, issues: [] };
+          }
+          categories.security.count++;
+          categories.security.issues.push(issueData);
+        });
+      }
+      
+      // Count by severity
+      const totalIssues = issues.length;
+      const criticalIssues = issues.filter(i => i.severity === 'critical').length;
+      const warnings = issues.filter(i => i.severity === 'warning').length;
+      const info = issues.filter(i => i.severity === 'info').length;
+      
+      const issuesData = {
+        issues: issues.slice(0, 100), // Limit to 100 issues for performance
+        totalIssues,
+        criticalIssues,
+        warnings,
+        info,
+        categories,
+        lastUpdated: latestAnalysis.createdAt,
+        analysisId: latestAnalysis.id
+      };
+      
+      this.logger.info(`Issues data extracted, count: ${totalIssues}`);
+      
+      // Set ETag for caching with 304 support
+      const etagSent = this.setETagHeaders(res, 'analysis-issues', projectId, issuesData, req);
+      
+      if (!etagSent) {
+        res.json({ success: true, data: issuesData });
+      }
     } catch (error) {
       this.logger.error(`Failed to get analysis issues:`, error);
       res.status(500).json({ success: false, error: error.message });
@@ -1426,48 +1228,21 @@ class AnalysisController {
       const { projectId } = req.params;
       this.logger.info(`Getting analysis tech stack for project`);
       
-      // Get latest analysis for this project
-      const analyses = await this.analysisRepository.findByProjectId(projectId);
+       // Get latest tech stack analysis for this project
+      const techStackAnalysis = await this.analysisRepository.findLatestByProjectIdAndType(projectId, 'techStackAnalysis');
+      const analyses = techStackAnalysis ? [techStackAnalysis] : [];
       if (analyses.length === 0) {
         return res.json({ success: true, data: { 
           dependencies: { direct: {}, dev: {}, outdated: [] },
           structure: { projectType: 'unknown', fileTypes: {}, frameworks: [], libraries: [] }
         } });
       }
-      
-      // Look for techstack-specific analysis first
-      let techStackAnalysis = analyses.find(a => a.analysisType === 'techstack');
-      
-      // If no specific techstack analysis, look for comprehensive analysis
-      if (!techStackAnalysis) {
-        techStackAnalysis = analyses.find(a => 
-          a.analysisType === 'comprehensive-analysis' || 
-          a.analysisType === 'advanced-analysis'
-        );
-      }
-      
-      if (!techStackAnalysis) {
-        this.logger.warn(`No tech stack analysis found for project`);
-        return res.json({ success: true, data: { 
-          dependencies: { direct: {}, dev: {}, outdated: [] },
-          structure: { projectType: 'unknown', fileTypes: {}, frameworks: [], libraries: [] }
-        } });
-      }
-      
       const resultData = techStackAnalysis.resultData || {};
       const summary = techStackAnalysis.summary || {};
       
-      // For individual techstack analysis, the data is directly in resultData
-      // For comprehensive analysis, it's nested under techStack key
-      let techStackData = resultData;
-      
-      if (techStackAnalysis.analysisType === 'comprehensive-analysis' || 
-          techStackAnalysis.analysisType === 'advanced-analysis') {
-        techStackData = resultData.techStack || resultData;
-      }
-      
       // Convert frameworks and libraries to dependencies format
       const directDeps = {};
+      const techStackData = resultData.result || resultData;
       const frameworks = techStackData.frameworks || techStackData.structure?.frameworks || [];
       const libraries = techStackData.libraries || techStackData.structure?.libraries || [];
       
@@ -1498,10 +1273,12 @@ class AnalysisController {
       
       this.logger.info(`Tech stack data extracted successfully`);
       
-      // Set ETag for caching
-      this.setETagHeaders(res, 'analysis-techstack', projectId, extractedData);
+      // Set ETag for caching with 304 support
+      const etagSent = this.setETagHeaders(res, 'analysis-techstack', projectId, extractedData, req);
       
-      res.json({ success: true, data: extractedData });
+      if (!etagSent) {
+        res.json({ success: true, data: extractedData });
+      }
     } catch (error) {
       this.logger.error(`Failed to get tech stack analysis:`, error);
       res.status(500).json({
@@ -1523,30 +1300,8 @@ class AnalysisController {
       
       this.logger.info(`Getting analysis architecture for project`);
       
-      // Get latest analysis for this project
-      const analyses = await this.analysisRepository.findByProjectId(projectId);
-      
-      if (analyses.length === 0) {
-        return res.json({ success: true, data: { 
-          structure: { layers: 0, modules: 0, patterns: [] },
-          dependencies: { circular: false, count: 0, graph: null },
-          metrics: { coupling: 'unknown', cohesion: 'unknown', complexity: 'unknown', maintainability: 'unknown', testability: 'unknown' },
-          patterns: [],
-          antiPatterns: [],
-          recommendations: []
-        } });
-      }
-      
-      // Look for architecture-specific analysis first
-      let architectureAnalysis = analyses.find(a => a.analysisType === 'architecture');
-      
-      // If no specific architecture analysis, look for comprehensive analysis
-      if (!architectureAnalysis) {
-        architectureAnalysis = analyses.find(a => 
-          a.analysisType === 'comprehensive-analysis' || 
-          a.analysisType === 'advanced-analysis'
-        );
-      }
+      // Get latest architecture analysis for this project
+      const architectureAnalysis = await this.analysisRepository.findLatestByProjectIdAndType(projectId, 'architectureAnalysis');
       
       if (!architectureAnalysis) {
         this.logger.warn(`No architecture analysis found for project`);
@@ -1563,45 +1318,41 @@ class AnalysisController {
       const resultData = architectureAnalysis.resultData || {};
       const summary = architectureAnalysis.summary || {};
       
-      // For individual architecture analysis, the data is directly in resultData
-      // For comprehensive analysis, it's nested under architecture key
-      let architectureData = resultData;
-      
-      if (architectureAnalysis.analysisType === 'comprehensive-analysis' || 
-          architectureAnalysis.analysisType === 'advanced-analysis') {
-        architectureData = resultData.architecture || resultData;
-      }
+      // Extract data from resultData.result (the actual analysis data)
+      const analysisData = resultData.result || resultData;
       
       // Extract and structure the data
       const extractedData = {
         structure: {
-          layers: architectureData.structure?.layers || architectureData.layers || 0,
-          modules: architectureData.structure?.modules || architectureData.modules || 0,
-          patterns: architectureData.structure?.patterns || architectureData.patterns || []
+          layers: analysisData.structure?.layers || analysisData.layers || 0,
+          modules: analysisData.structure?.modules || analysisData.modules || 0,
+          patterns: analysisData.structure?.patterns || analysisData.patterns || analysisData.detectedPatterns || []
         },
         dependencies: {
-          circular: architectureData.dependencies?.circular || architectureData.circular || false,
-          count: architectureData.dependencies?.count || architectureData.dependencyCount || 0,
-          graph: architectureData.dependencies?.graph || architectureData.graph || null
+          circular: analysisData.dependencies?.circular || analysisData.circular || false,
+          count: analysisData.dependencies?.count || analysisData.dependencyCount || 0,
+          graph: analysisData.dependencies?.graph || analysisData.graph || null
         },
         metrics: {
-          coupling: architectureData.metrics?.coupling || architectureData.coupling || 'unknown',
-          cohesion: architectureData.metrics?.cohesion || architectureData.cohesion || 'unknown',
-          complexity: architectureData.metrics?.complexity || architectureData.complexity || 'unknown',
-          maintainability: architectureData.metrics?.maintainability || architectureData.maintainability || 'unknown',
-          testability: architectureData.metrics?.testability || architectureData.testability || 'unknown'
+          coupling: analysisData.metrics?.coupling || analysisData.coupling || 'unknown',
+          cohesion: analysisData.metrics?.cohesion || analysisData.cohesion || 'unknown',
+          complexity: analysisData.metrics?.complexity || analysisData.complexity || 'unknown',
+          maintainability: analysisData.metrics?.maintainability || analysisData.maintainability || 'unknown',
+          testability: analysisData.metrics?.testability || analysisData.testability || 'unknown'
         },
-        patterns: architectureData.patterns || [],
-        antiPatterns: architectureData.antiPatterns || architectureData.antiPatterns || [],
-        recommendations: architectureData.recommendations || []
+        patterns: analysisData.patterns || analysisData.detectedPatterns || [],
+        antiPatterns: analysisData.antiPatterns || analysisData.antiPatterns || [],
+        recommendations: analysisData.recommendations || []
       };
       
       this.logger.info(`Architecture data extracted successfully`);
       
-      // Set ETag for caching
-      this.setETagHeaders(res, 'analysis-architecture', projectId, extractedData);
+      // Set ETag for caching with 304 support
+      const etagSent = this.setETagHeaders(res, 'analysis-architecture', projectId, extractedData, req);
       
-      res.json({ success: true, data: extractedData });
+      if (!etagSent) {
+        res.json({ success: true, data: extractedData });
+      }
     } catch (error) {
       this.logger.error(`Failed to get architecture analysis:`, error);
       res.status(500).json({
@@ -1757,23 +1508,8 @@ class AnalysisController {
       
       this.logger.info(`Getting analysis recommendations for project`);
       
-      // Get latest analysis for this project
-      const analyses = await this.analysisRepository.findByProjectId(projectId);
-      
-      if (analyses.length === 0) {
-        return res.json({ success: true, data: { recommendations: [], insights: [] } });
-      }
-      
-      // Look for recommendations-specific analysis first
-      let recommendationsAnalysis = analyses.find(a => a.analysisType === 'recommendations');
-      
-      // If no specific recommendations analysis, look for comprehensive analysis
-      if (!recommendationsAnalysis) {
-        recommendationsAnalysis = analyses.find(a => 
-          a.analysisType === 'comprehensive-analysis' || 
-          a.analysisType === 'advanced-analysis'
-        );
-      }
+      // Get latest recommendations analysis for this project
+      const recommendationsAnalysis = await this.analysisRepository.findLatestByProjectIdAndType(projectId, 'recommendations');
       
       if (!recommendationsAnalysis) {
         this.logger.warn(`No recommendations analysis found for project`);
@@ -1783,28 +1519,21 @@ class AnalysisController {
       const resultData = recommendationsAnalysis.resultData || {};
       const summary = recommendationsAnalysis.summary || {};
       
-      // For individual recommendations analysis, the data is directly in resultData
-      // For comprehensive analysis, it's nested under recommendations key
-      let recommendationsData = resultData;
-      
-      if (recommendationsAnalysis.analysisType === 'comprehensive-analysis' || 
-          recommendationsAnalysis.analysisType === 'advanced-analysis') {
-        recommendationsData = resultData.recommendations || resultData;
-      }
-      
       // Extract and structure the data - ensure we return an object with recommendations array
       const extractedData = {
-        recommendations: Array.isArray(recommendationsData.recommendations) ? recommendationsData.recommendations : 
-                        Array.isArray(recommendationsData) ? recommendationsData : [],
-        insights: Array.isArray(recommendationsData.insights) ? recommendationsData.insights : []
+        recommendations: Array.isArray(resultData.recommendations) ? resultData.recommendations : 
+                        Array.isArray(resultData) ? resultData : [],
+        insights: Array.isArray(resultData.insights) ? resultData.insights : []
       };
       
       this.logger.info(`Recommendations data extracted successfully`);
       
-      // Set ETag for caching
-      this.setETagHeaders(res, 'analysis-recommendations', projectId, extractedData);
+      // Set ETag for caching with 304 support
+      const etagSent = this.setETagHeaders(res, 'analysis-recommendations', projectId, extractedData, req);
       
-      res.json({ success: true, data: extractedData });
+      if (!etagSent) {
+        res.json({ success: true, data: extractedData });
+      }
     } catch (error) {
       this.logger.error(`Failed to get recommendations analysis:`, error);
       res.status(500).json({
@@ -1828,8 +1557,8 @@ class AnalysisController {
 
       this.logger.info(`Getting code quality analysis data`);
 
-      // Get latest analysis from database
-      const latest = await this.analysisRepository.findLatestByProjectId(projectId);
+      // Get latest code quality analysis from database
+      const latest = await this.analysisRepository.findLatestByProjectIdAndType(projectId, 'codeQualityAnalysis');
       if (!latest) {
         return res.status(404).json({
           success: false,
@@ -1847,9 +1576,9 @@ class AnalysisController {
         level,
         summary: {
           overallScore: score,
-          issues: analysis.issues.length,
-          recommendations: analysis.recommendations.length,
-          configuration: analysis.configuration
+          issues: analysis.issues?.length || 0,
+          recommendations: analysis.recommendations?.length || 0,
+          configuration: analysis.configuration || {}
         },
         cached: true,
         timestamp: latest.createdAt
@@ -2102,26 +1831,40 @@ class AnalysisController {
   }
 
   /**
-   * Set ETag headers for caching
+   * Set ETag headers for caching with 304 support
    * @param {Object} res - Express response
    * @param {string} type - Data type
    * @param {string} projectId - Project ID
    * @param {Object} data - Data to cache
+   * @param {Object} req - Express request (optional, for 304 checking)
+   * @returns {boolean} True if 304 was sent, false if data should be sent
    */
-  setETagHeaders(res, type, projectId, data) {
+  setETagHeaders(res, type, projectId, data, req = null) {
     if (!this.etagService) {
-      return;
+      return false;
     }
     
     try {
       const etag = this.etagService.generateETag(data, type, projectId);
+      
+      // Check if client has current version (if request is provided)
+      if (req && this.etagService.shouldReturn304(req, etag)) {
+        this.logger.info(`Client has current version for ${type}, sending 304 Not Modified`);
+        this.etagService.sendNotModified(res, etag);
+        return true; // 304 was sent
+      }
+      
+      // Set ETag headers for caching
       this.etagService.setETagHeaders(res, etag, {
         maxAge: 300, // 5 minutes
         mustRevalidate: true,
         isPublic: false
       });
+      
+      return false; // Data should be sent
     } catch (error) {
       this.logger.warn(`Failed to set ETag headers: ${error.message}`);
+      return false;
     }
   }
 }

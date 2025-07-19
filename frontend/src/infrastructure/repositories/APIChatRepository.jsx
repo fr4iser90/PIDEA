@@ -105,10 +105,10 @@ const API_CONFIG = {
     },
     vibecoder: {
         analyze: (projectId) => `/api/projects/${projectId}/workflow/execute`,
-  refactor: (projectId) => `/api/projects/${projectId}/workflow/execute`,
-  mode: (projectId) => `/api/projects/${projectId}/workflow/execute`,
+        refactor: (projectId) => `/api/projects/${projectId}/workflow/execute`,
+        mode: (projectId) => `/api/projects/${projectId}/workflow/execute`,
         status: (projectId) => `/api/projects/${projectId}/workflow/status`,
-  progress: (projectId) => `/api/projects/${projectId}/workflow/status`
+        progress: (projectId) => `/api/projects/${projectId}/workflow/status`
     },
     git: {
       status: (projectId) => `/api/projects/${projectId}/git/status`,
@@ -142,7 +142,8 @@ const API_CONFIG = {
 
 // Helper function to make API calls with ETag support
 export const apiCall = async (endpoint, options = {}, projectId = null) => {
-  const url = typeof endpoint === 'function' ? endpoint() : `${API_CONFIG.baseURL}${endpoint}`;
+  // Use relative URLs to work with Vite proxy
+  const url = typeof endpoint === 'function' ? endpoint() : endpoint;
   
   logger.info('🔍 [APIChatRepository] Making API call to:', url);
   
@@ -162,6 +163,7 @@ export const apiCall = async (endpoint, options = {}, projectId = null) => {
       ...authHeaders,
       ...(etagOptions.headers || {})
     },
+    credentials: 'include', // Include cookies with all requests
     ...etagOptions
   };
 
@@ -179,15 +181,13 @@ export const apiCall = async (endpoint, options = {}, projectId = null) => {
     
     // Handle ETag response only for analysis endpoints
     if (isAnalysisEndpoint) {
-    const etagResponse = etagManager.handleResponse(response, endpoint, projectId);
-    
-    if (response.status === 304) {
-      // Handle 304 Not Modified
-      const cachedData = etagManager.handleNotModified(endpoint, projectId);
-      if (cachedData) {
+      const etagResponse = etagManager.handleResponse(response, endpoint, projectId);
+      
+      if (response.status === 304) {
+        // Handle 304 Not Modified - no data to return, client should use existing data
+        const notModifiedData = etagManager.handleNotModified(endpoint, projectId);
         logger.info('✅ [APIChatRepository] Using cached data (304 Not Modified)');
-        return cachedData;
-        }
+        return notModifiedData;
       }
     }
     
@@ -204,11 +204,7 @@ export const apiCall = async (endpoint, options = {}, projectId = null) => {
     
     const data = await response.json();
     
-    // Cache successful GET responses only for analysis endpoints
-    if (isAnalysisEndpoint && (config.method === 'GET' || !config.method)) {
-      etagManager.cacheData(endpoint, data, projectId);
-    }
-    
+    // No data caching - only ETags for HTTP efficiency
     logger.info('✅ [APIChatRepository] API call successful');
     return data;
   } catch (error) {
@@ -228,21 +224,40 @@ export default class APIChatRepository extends ChatRepository {
   // Get current project ID from active IDE
   async getCurrentProjectId() {
     try {
+      // KORREKTE LÖSUNG: Hole ProjectId aus der aktiven IDE (dynamisch)
       const ideList = await this.getIDEs();
       if (ideList.success && ideList.data) {
         const activeIDE = ideList.data.find(ide => ide.active);
         if (activeIDE && activeIDE.workspacePath) {
           this.currentProjectId = getProjectIdFromWorkspace(activeIDE.workspacePath);
-          logger.info('🔍 [APIChatRepository] Current project ID:', this.currentProjectId, 'from workspace:', activeIDE.workspacePath);
+          logger.info('✅ [APIChatRepository] Current project ID from active IDE:', this.currentProjectId, 'from workspace:', activeIDE.workspacePath);
+          return this.currentProjectId;
+        }
+        
+        // Fallback: Nimm die erste verfügbare IDE
+        const firstIDE = ideList.data[0];
+        if (firstIDE && firstIDE.workspacePath) {
+          this.currentProjectId = getProjectIdFromWorkspace(firstIDE.workspacePath);
+          logger.info('🔍 [APIChatRepository] Current project ID from first IDE:', this.currentProjectId, 'from workspace:', firstIDE.workspacePath);
           return this.currentProjectId;
         }
       }
+      
+      // Fallback: Workspace Info
+      const workspaceInfo = await this.getWorkspaceInfo();
+      if (workspaceInfo.success && workspaceInfo.data && workspaceInfo.data.workspacePath) {
+        this.currentProjectId = getProjectIdFromWorkspace(workspaceInfo.data.workspacePath);
+        logger.info('🔍 [APIChatRepository] Current project ID from workspace info:', this.currentProjectId);
+        return this.currentProjectId;
+      }
+      
     } catch (error) {
       logger.error('❌ [APIChatRepository] Error getting current project ID:', error);
     }
     
-    // Fallback to default
-    this.currentProjectId = 'default';
+    // Final fallback: Hardcoded für PIDEA (nur als letzte Option)
+    this.currentProjectId = 'pidea';
+    logger.info('🔍 [APIChatRepository] Using hardcoded project ID:', this.currentProjectId);
     return this.currentProjectId;
   }
 
@@ -541,9 +556,84 @@ export default class APIChatRepository extends ChatRepository {
   // Individual Analysis Step Methods
   async executeAnalysisStep(projectId = null, analysisType, options = {}) {
     const currentProjectId = projectId || await this.getCurrentProjectId();
-    return apiCall(`/api/projects/${currentProjectId}/analysis/${analysisType}`, {
+    
+    // Map frontend analysis types to backend route names
+    const routeMapping = {
+      'code-quality': 'code-quality',
+      'security': 'security',
+      'performance': 'performance',
+      'architecture': 'architecture',
+      'tech-stack': 'tech-stack',
+      'manifest': 'manifest',
+      'dependencies': 'dependencies',
+      'project': 'project',
+      'comprehensive': 'comprehensive',
+      'recommendations': 'recommendations',
+      'security-recommendations': 'security-recommendations',
+      'code-quality-recommendations': 'code-quality-recommendations',
+      'architecture-recommendations': 'architecture-recommendations'
+    };
+    
+    const routeName = routeMapping[analysisType] || analysisType;
+    
+    return apiCall(`/api/projects/${currentProjectId}/analysis/${routeName}`, {
       method: 'POST',
       body: JSON.stringify(options)
+    }, currentProjectId);
+  }
+
+  // Start Analysis function for IndividualAnalysisButtons
+  async startAnalysis(projectId = null, analysisType, options = {}) {
+    const currentProjectId = projectId || await this.getCurrentProjectId();
+    
+    // Map frontend analysis types to backend step names
+    const stepMapping = {
+      'code-quality': 'CodeQualityAnalysisStep',
+      'security': 'SecurityAnalysisStep',
+      'performance': 'PerformanceAnalysisStep',
+      'architecture': 'ArchitectureAnalysisStep',
+      'tech-stack': 'TechStackAnalysisStep',
+      'manifest': 'ManifestAnalysisStep',
+      'dependencies': 'DependencyAnalysisStep',
+      'project': 'ProjectAnalysisStep',
+      'recommendations': 'RecommendationsStep'
+    };
+    
+    const stepName = stepMapping[analysisType] || analysisType;
+    
+    // Use workflow execution endpoint to run the specific step
+    return apiCall(`/api/projects/${currentProjectId}/workflow/execute`, {
+      method: 'POST',
+      body: JSON.stringify({
+        mode: analysisType + '-analysis',
+        steps: [stepName],
+        projectPath: options.projectPath || '/home/fr4iser/Documents/Git/PIDEA',
+        options: {
+          ...options,
+          analysisType: analysisType
+        }
+      })
+    }, currentProjectId);
+  }
+
+  // Get completion status
+  async getCompletionStatus(projectId = null) {
+    const currentProjectId = projectId || await this.getCurrentProjectId();
+    return apiCall(`/api/projects/${currentProjectId}/completion/status`, {}, currentProjectId);
+  }
+
+  // Get completion history
+  async getCompletionHistory(projectId = null) {
+    const currentProjectId = projectId || await this.getCurrentProjectId();
+    return apiCall(`/api/projects/${currentProjectId}/completion/history`, {}, currentProjectId);
+  }
+
+  // Cancel completion workflow
+  async cancelCompletionWorkflow(projectId = null, sessionId) {
+    const currentProjectId = projectId || await this.getCurrentProjectId();
+    return apiCall(`/api/projects/${currentProjectId}/completion/cancel`, {
+      method: 'POST',
+      body: JSON.stringify({ sessionId })
     }, currentProjectId);
   }
 

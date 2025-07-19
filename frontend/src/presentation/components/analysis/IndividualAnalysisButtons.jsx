@@ -13,6 +13,7 @@ const IndividualAnalysisButtons = ({ projectId = null, eventBus = null, onAnalys
 
   const apiRepository = new APIChatRepository();
 
+  // Core Analysis Types - Only the main analysis steps
   const analysisTypes = [
     {
       key: 'code-quality',
@@ -43,20 +44,69 @@ const IndividualAnalysisButtons = ({ projectId = null, eventBus = null, onAnalys
       color: 'purple'
     },
     {
-      key: 'techstack',
+      key: 'tech-stack',
       label: 'Tech Stack',
-      icon: '🔧',
-      description: 'Analyze technologies, frameworks, and dependencies',
+      icon: '🛠️',
+      description: 'Analyze technologies, frameworks, and tools',
       color: 'orange'
     },
+    {
+      key: 'manifest',
+      label: 'Manifest',
+      icon: '📋',
+      description: 'Analyze project configuration and manifest files',
+      color: 'teal'
+    },
+    {
+      key: 'dependencies',
+      label: 'Dependencies',
+      icon: '📦',
+      description: 'Analyze package dependencies and versions',
+      color: 'indigo'
+    },
+    {
+      key: 'project',
+      label: 'Project',
+      icon: '📁',
+      description: 'Comprehensive project structure analysis',
+      color: 'gray'
+    }
+  ];
+
+  // Recommendation Types - Based on analysis results
+  const recommendationTypes = [
     {
       key: 'recommendations',
       label: 'Recommendations',
       icon: '💡',
-      description: 'Generate improvement suggestions and best practices',
-      color: 'teal'
+      description: 'Generate actionable recommendations from analysis',
+      color: 'yellow'
+    },
+    {
+      key: 'security-recommendations',
+      label: 'Security Recommendations',
+      icon: '🔒',
+      description: 'Generate security-focused recommendations',
+      color: 'red'
+    },
+    {
+      key: 'code-quality-recommendations',
+      label: 'Code Quality Recommendations',
+      icon: '🔍',
+      description: 'Generate code quality-focused recommendations',
+      color: 'blue'
+    },
+    {
+      key: 'architecture-recommendations',
+      label: 'Architecture Recommendations',
+      icon: '🏗️',
+      description: 'Generate architecture-focused recommendations',
+      color: 'purple'
     }
   ];
+
+  // All analysis types (core + recommendations)
+  const allAnalysisTypes = [...analysisTypes, ...recommendationTypes];
 
   useEffect(() => {
     loadActiveSteps();
@@ -141,18 +191,17 @@ const IndividualAnalysisButtons = ({ projectId = null, eventBus = null, onAnalys
 
   const handleStepCreated = (data) => {
     logger.info('Step created:', data);
-    setActiveSteps(prev => new Map(prev.set(data.analysisType, data)));
   };
 
   const handleStepStarted = (data) => {
     logger.info('Step started:', data);
     setActiveSteps(prev => new Map(prev.set(data.analysisType, data)));
-    setLoadingStates(prev => new Map(prev.set(data.analysisType, true)));
+    setLoadingStates(prev => new Map(prev.set(data.analysisType, false)));
   };
 
   const handleStepProgress = (data) => {
     logger.info('Step progress:', data);
-    setStepProgress(prev => new Map(prev.set(data.stepId, data.progress)));
+    setStepProgress(prev => new Map(prev.set(data.id, data.progress)));
   };
 
   const handleStepCompleted = (data) => {
@@ -162,16 +211,17 @@ const IndividualAnalysisButtons = ({ projectId = null, eventBus = null, onAnalys
       newMap.delete(data.analysisType);
       return newMap;
     });
-    setLoadingStates(prev => new Map(prev.set(data.analysisType, false)));
     setStepProgress(prev => {
       const newMap = new Map(prev);
-      newMap.delete(data.stepId);
+      newMap.delete(data.id);
       return newMap;
     });
+    setLoadingStates(prev => new Map(prev.set(data.analysisType, false)));
+    setErrorStates(prev => new Map(prev.set(data.analysisType, null)));
     
-    // Trigger data refresh
+    // Show success notification
     if (onAnalysisComplete) {
-      onAnalysisComplete(data.analysisType);
+      onAnalysisComplete(data);
     }
   };
 
@@ -183,7 +233,7 @@ const IndividualAnalysisButtons = ({ projectId = null, eventBus = null, onAnalys
       return newMap;
     });
     setLoadingStates(prev => new Map(prev.set(data.analysisType, false)));
-    setErrorStates(prev => new Map(prev.set(data.analysisType, data.error)));
+    setErrorStates(prev => new Map(prev.set(data.analysisType, data.error || 'Analysis failed')));
   };
 
   const handleStepCancelled = (data) => {
@@ -194,27 +244,19 @@ const IndividualAnalysisButtons = ({ projectId = null, eventBus = null, onAnalys
       return newMap;
     });
     setLoadingStates(prev => new Map(prev.set(data.analysisType, false)));
+    setErrorStates(prev => new Map(prev.set(data.analysisType, null)));
   };
 
   const handleAnalysisCompleted = (data) => {
     logger.info('Analysis completed:', data);
-    
-    // Clear all loading states when overall analysis completes
-    setLoadingStates(prev => {
-      const newMap = new Map(prev);
-      analysisTypes.forEach(type => {
-        newMap.set(type.key, false);
-      });
-      return newMap;
-    });
-    
-    // Clear all active steps
+    // Clear any remaining active steps
     setActiveSteps(new Map());
     setStepProgress(new Map());
+    setLoadingStates(new Map());
+    setErrorStates(new Map());
     
-    // Trigger data refresh callback
     if (onAnalysisComplete) {
-      onAnalysisComplete();
+      onAnalysisComplete(data);
     }
   };
 
@@ -225,67 +267,71 @@ const IndividualAnalysisButtons = ({ projectId = null, eventBus = null, onAnalys
       
       const currentProjectId = projectId || await apiRepository.getCurrentProjectId();
       
-      // Get workspace path from active IDE
-      const ideList = await apiRepository.getIDEs();
-      let projectPath = null;
-      
-      if (ideList.success && ideList.data) {
-        const activeIDE = ideList.data.find(ide => ide.active);
-        if (activeIDE && activeIDE.workspacePath) {
-          projectPath = activeIDE.workspacePath;
-        }
-      }
-      
-      // Use the executeAnalysisStep method with the correct analysis type
-      const response = await apiRepository.executeAnalysisStep(currentProjectId, analysisType, {
-        projectPath
-      });
+      // Call the analysis endpoint
+      const response = await apiRepository.startAnalysis(currentProjectId, analysisType);
       
       if (response.success) {
-        logger.info(`${analysisType} analysis started:`, response);
+        logger.info(`Started ${analysisType} analysis:`, response);
+        
+        // Create a mock step for immediate UI feedback
+        const mockStep = {
+          id: `analysis-${Date.now()}`,
+          analysisType: analysisType,
+          status: 'running',
+          progress: 0,
+          projectId: currentProjectId
+        };
+        
+        setActiveSteps(prev => new Map(prev.set(analysisType, mockStep)));
+        setStepProgress(prev => new Map(prev.set(mockStep.id, 0)));
       } else {
         throw new Error(response.error || 'Failed to start analysis');
       }
     } catch (error) {
       logger.error(`Failed to start ${analysisType} analysis:`, error);
       setErrorStates(prev => new Map(prev.set(analysisType, error.message)));
+    } finally {
       setLoadingStates(prev => new Map(prev.set(analysisType, false)));
     }
   };
 
   const handleCancelAnalysis = async (analysisType) => {
     try {
-      const step = activeSteps.get(analysisType);
-      if (!step) return;
+      const currentProjectId = projectId || await apiRepository.getCurrentProjectId();
       
-      // For now, just remove the step from active steps since we don't have a cancel endpoint
-      setActiveSteps(prev => {
-        const newMap = new Map(prev);
-        newMap.delete(analysisType);
-        return newMap;
-      });
-      setStepProgress(prev => {
-        const newMap = new Map(prev);
-        newMap.delete(step.id);
-        return newMap;
-      });
+      // Call the cancel endpoint
+      const response = await apiRepository.cancelAnalysis(currentProjectId, analysisType);
       
-      logger.info(`${analysisType} analysis cancelled (local state only)`);
+      if (response.success) {
+        logger.info(`Cancelled ${analysisType} analysis:`, response);
+        
+        setActiveSteps(prev => {
+          const newMap = new Map(prev);
+          newMap.delete(analysisType);
+          return newMap;
+        });
+        setStepProgress(prev => {
+          const newMap = new Map(prev);
+          // Remove all progress entries for this analysis type
+          for (const [key] of newMap) {
+            if (key.includes(analysisType)) {
+              newMap.delete(key);
+            }
+          }
+          return newMap;
+        });
+      } else {
+        throw new Error(response.error || 'Failed to cancel analysis');
+      }
     } catch (error) {
       logger.error(`Failed to cancel ${analysisType} analysis:`, error);
+      setErrorStates(prev => new Map(prev.set(analysisType, error.message)));
     }
   };
 
   const handleRetryAnalysis = async (analysisType) => {
-    try {
-      // Clear error state and restart the analysis
-      setErrorStates(prev => new Map(prev.set(analysisType, null)));
-      await handleStartAnalysis(analysisType);
-      
-      logger.info(`${analysisType} analysis retry started`);
-    } catch (error) {
-      logger.error(`Failed to retry ${analysisType} analysis:`, error);
-    }
+    setErrorStates(prev => new Map(prev.set(analysisType, null)));
+    await handleStartAnalysis(analysisType);
   };
 
   const handleRunAllAnalysis = async () => {
@@ -295,49 +341,25 @@ const IndividualAnalysisButtons = ({ projectId = null, eventBus = null, onAnalys
       
       const currentProjectId = projectId || await apiRepository.getCurrentProjectId();
       
-      // Get workspace path from active IDE
-      const ideList = await apiRepository.getIDEs();
-      let projectPath = null;
-      
-      if (ideList.success && ideList.data) {
-        const activeIDE = ideList.data.find(ide => ide.active);
-        if (activeIDE && activeIDE.workspacePath) {
-          projectPath = activeIDE.workspacePath;
-        }
-      }
-      
-      // Start all analysis types sequentially
-      const analysisTypesToRun = analysisTypes.map(type => type.key);
-      let completedCount = 0;
-      
-      for (const analysisType of analysisTypesToRun) {
+      // Start all core analysis types sequentially
+      for (let i = 0; i < analysisTypes.length; i++) {
+        const analysisType = analysisTypes[i];
+        const progress = (i / analysisTypes.length) * 100;
+        setRunAllProgress(progress);
+        
         try {
-          setRunAllProgress((completedCount / analysisTypesToRun.length) * 100);
-          
-          // Use the executeAnalysisStep method for bulk analysis
-          const response = await apiRepository.executeAnalysisStep(currentProjectId, analysisType, { projectPath });
-          
-          if (response.success) {
-            logger.info(`${analysisType} analysis started as part of bulk run`);
-            completedCount++;
-          } else {
-            logger.warn(`Failed to start ${analysisType} analysis:`, response.error);
-          }
+          await handleStartAnalysis(analysisType.key);
+          // Wait a bit between analyses to avoid overwhelming the system
+          await new Promise(resolve => setTimeout(resolve, 2000));
         } catch (error) {
-          logger.error(`Error starting ${analysisType} analysis:`, error);
+          logger.error(`Failed to start ${analysisType.key} in run-all:`, error);
+          // Continue with next analysis even if one fails
         }
       }
       
       setRunAllProgress(100);
-      logger.info(`Bulk analysis started: ${completedCount}/${analysisTypesToRun.length} analyses initiated`);
-      
-      // Call completion callback if provided
-      if (onAnalysisComplete) {
-        onAnalysisComplete();
-      }
-      
     } catch (error) {
-      logger.error('Failed to start bulk analysis:', error);
+      logger.error('Failed to run all analyses:', error);
     } finally {
       setRunAllLoading(false);
       setRunAllProgress(0);
@@ -345,34 +367,35 @@ const IndividualAnalysisButtons = ({ projectId = null, eventBus = null, onAnalys
   };
 
   const getStepStatus = (analysisType) => {
-    const step = activeSteps.get(analysisType);
+    const activeStep = activeSteps.get(analysisType);
     const isLoading = loadingStates.get(analysisType);
     const error = errorStates.get(analysisType);
     
-    if (step) {
+    if (activeStep) {
+      const progress = stepProgress.get(activeStep.id) || 0;
       return {
-        status: step.status,
-        progress: stepProgress.get(step.id) || 0,
-        stepId: step.id
+        isActive: true,
+        isLoading: false,
+        progress: progress,
+        status: activeStep.status,
+        error: null
       };
     }
     
-    if (isLoading) {
-      return { status: 'loading', progress: 0 };
-    }
-    
-    if (error) {
-      return { status: 'error', error };
-    }
-    
-    return { status: 'idle', progress: 0 };
+    return {
+      isActive: false,
+      isLoading: isLoading || false,
+      progress: 0,
+      status: 'idle',
+      error: error
+    };
   };
 
   const renderAnalysisButton = (analysisType) => {
     const status = getStepStatus(analysisType.key);
-    const isActive = status.status === 'running' || status.status === 'pending';
-    const isLoading = loadingStates.get(analysisType.key);
-    const error = errorStates.get(analysisType.key);
+    const isActive = status.isActive;
+    const isLoading = status.isLoading;
+    const error = status.error;
     
     return (
       <div key={analysisType.key} className={`analysis-button-container ${analysisType.color}`}>
@@ -478,7 +501,7 @@ const IndividualAnalysisButtons = ({ projectId = null, eventBus = null, onAnalys
       </div>
       
       <div className="analysis-buttons-grid">
-        {analysisTypes.map(renderAnalysisButton)}
+        {allAnalysisTypes.map(renderAnalysisButton)}
       </div>
       
       {activeSteps.size > 0 && (

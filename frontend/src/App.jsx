@@ -93,7 +93,8 @@ function App() {
   // Load active port ONLY after authentication
   useEffect(() => {
     if (isAuthenticated) {
-      loadActivePort();
+      // Don't call loadActivePort here - IDEProvider will handle it
+      logger.info('User authenticated, IDEProvider will handle IDE loading');
     }
   }, [isAuthenticated]);
 
@@ -131,9 +132,10 @@ function App() {
         return;
       }
       try {
-        const ideRes = await apiCall('/api/ide/available');
-        if (ideRes.success && ideRes.data) {
-                  const activeIDE = ideRes.data.find(ide => ide.port === port);
+        // Use availableIDEs from store instead of making new API call
+        const { availableIDEs } = useIDEStore.getState();
+        const activeIDE = availableIDEs.find(ide => ide.port === port);
+        
         if (activeIDE && activeIDE.workspacePath) {
           // Get project ID from workspace path
           const projectId = getProjectIdFromWorkspace(activeIDE.workspacePath);
@@ -147,7 +149,6 @@ function App() {
         } else {
           setGitStatus(null);
           setGitBranch('');
-        }
         }
       } catch (e) {
         setGitStatus(null);

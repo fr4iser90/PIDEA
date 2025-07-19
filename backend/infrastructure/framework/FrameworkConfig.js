@@ -10,7 +10,9 @@ const logger = new Logger('FrameworkConfig');
 
 class FrameworkConfig {
   constructor() {
-    this.configPath = path.join(process.cwd(), 'backend', 'config', 'framework-config.json');
+    // Use __dirname to get the correct path relative to this file
+    const basePath = path.dirname(path.dirname(__dirname)); // Go up from infrastructure/framework to backend root
+    this.configPath = path.join(basePath, 'config', 'framework-config.json');
     this.config = this.getDefaultConfig();
     this.isInitialized = false;
   }
@@ -57,16 +59,16 @@ class FrameworkConfig {
         securityEnabled: true
       },
       directories: {
-        frameworkRoot: 'backend/framework',
-        configRoot: 'backend/config/frameworks',
-        tempRoot: 'backend/temp/frameworks',
-        logRoot: 'backend/logs/frameworks'
+        frameworkRoot: 'framework',
+        configRoot: 'config/frameworks',
+        tempRoot: 'temp/frameworks',
+        logRoot: 'logs/frameworks'
       },
       security: {
         allowedPaths: [
-          'backend/framework/',
-          'backend/domain/',
-          'backend/infrastructure/'
+          'framework/',
+          'domain/',
+          'infrastructure/'
         ],
         forbiddenPaths: [
           'node_modules/',

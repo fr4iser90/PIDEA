@@ -38,7 +38,10 @@ class AuthMiddleware {
     // Clear failed attempts on successful login
     this.failedAttempts.delete(ip);
     this.blockedIPs.delete(ip);
-    logger.info(`Cleared failed attempts for IP: ${ip}`);
+    // Only log when there were actually failed attempts to clear
+    if (this.failedAttempts.has(ip) || this.blockedIPs.has(ip)) {
+      logger.info(`Cleared failed attempts for IP: ${ip}`);
+    }
   }
 
   isBlocked(ip) {
@@ -120,7 +123,8 @@ class AuthMiddleware {
         // Record successful authentication
         this.recordSuccessfulAttempt(clientIp);
         
-        logger.info(`✅ Token validated successfully for user: ${user.email}`);
+        // Only log on debug level to reduce spam
+        logger.debug(`✅ Token validated successfully for user: ${user.email}`);
         next();
       } catch (error) {
         logger.error('❌ Authentication failed:', error.message);
