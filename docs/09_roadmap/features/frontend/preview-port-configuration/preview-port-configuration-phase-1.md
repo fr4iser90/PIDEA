@@ -41,12 +41,13 @@ Set up the foundational components and structure for the port configuration feat
 - [ ] **Time**: 15 minutes
 - [ ] **Description**: Extend IDEStore with custom port management functionality
 - [ ] **Requirements**:
-  - `setCustomPort(port)` method
-  - `getCustomPort()` method
-  - `validateCustomPort(port)` method
-  - `clearCustomPort()` method
-  - Persistence with existing store structure
-  - Integration with existing `isValidPortRange` method
+  - `setCustomPort(port)` method - **Leverage existing `validatePort` method**
+  - `getCustomPort()` method - **Use existing persistence system**
+  - `validateCustomPort(port)` method - **Use existing `validatePort` method**
+  - `clearCustomPort()` method - **Use existing persistence system**
+  - **Integration with existing `validatePort` and `isValidPortRange` methods**
+  - **Use existing port preferences and persistence structure**
+  - **Follow existing store patterns and error handling**
 
 ### 4. Create ProjectCommandButtons Component
 - [ ] **File**: `frontend/src/presentation/components/chat/main/ProjectCommandButtons.jsx`
@@ -58,7 +59,9 @@ Set up the foundational components and structure for the port configuration feat
   - Start/Stop button functionality
   - Loading states and error handling
   - Real-time execution status
-  - Integration with existing terminal execution services
+  - **Integration with existing terminal execution services**
+  - **Use existing APIChatRepository patterns for API calls**
+  - **Follow existing component patterns from PreviewComponent.jsx**
 
 ### 5. Set Up Basic Styling Structure
 - [ ] **File**: `frontend/src/css/main/preview.css`
@@ -139,20 +142,60 @@ const ProjectCommandButtons = ({
 ```javascript
 // New methods to add to IDEStore following existing patterns
 setCustomPort: async (port) => {
-  // Implementation using existing validatePort method
+  try {
+    // Use existing validatePort method for validation
+    const isValid = await get().validatePort(port);
+    if (isValid) {
+      set({ customPort: port });
+      // Use existing persistence system
+      const { portPreferences } = get();
+      const existingPreference = portPreferences.find(p => p.port === port);
+      if (!existingPreference) {
+        portPreferences.push({
+          port,
+          weight: 100,
+          usageCount: 1,
+          lastUsed: new Date().toISOString(),
+          createdAt: new Date().toISOString()
+        });
+        set({ portPreferences: [...portPreferences] });
+      }
+      return { success: true };
+    } else {
+      return { success: false, error: 'Invalid port' };
+    }
+  } catch (error) {
+    logger.error('Failed to set custom port:', error);
+    return { success: false, error: 'Failed to set port' };
+  }
 },
+
 getCustomPort: () => {
-  // Implementation using existing persistence
+  return get().customPort;
 },
+
 validateCustomPort: async (port) => {
-  // Implementation using existing isValidPortRange
+  // Use existing validatePort method
+  return await get().validatePort(port);
 },
-// New project command methods
+
+clearCustomPort: () => {
+  set({ customPort: null });
+  return { success: true };
+},
+
+// New project command methods (optional - can use existing terminal services)
 getProjectCommands: async (projectId) => {
-  // Implementation using APIChatRepository
+  // Use existing APIChatRepository patterns
+  return apiCall(`/api/projects/${projectId}/commands`);
 },
+
 executeProjectCommand: async (projectId, commandType) => {
-  // Implementation using existing terminal services
+  // Use existing terminal execution services
+  return apiCall(`/api/projects/${projectId}/execute-command`, {
+    method: 'POST',
+    body: JSON.stringify({ commandType })
+  });
 }
 ```
 
@@ -243,10 +286,10 @@ executeProjectCommand: async (projectId, commandType) => {
 
 ### Codebase Analysis
 - **PreviewComponent.jsx**: ✅ Exists at correct path with proper structure
-- **IDEStore.jsx**: ✅ Exists with Zustand store pattern and port management
-- **APIChatRepository.jsx**: ✅ Exists with proper API configuration
-- **preview.css**: ✅ Exists with comprehensive styling system
-- **hooks/ directory**: ✅ Exists with proper patterns
+- **IDEStore.jsx**: ✅ Exists with Zustand store pattern and comprehensive port management
+- **APIChatRepository.jsx**: ✅ Exists with proper API configuration and extensive endpoint structure
+- **preview.css**: ✅ Exists with comprehensive styling system and CSS variables
+- **hooks/ directory**: ✅ Exists with proper patterns (useAnalysisCache.js provides good reference)
 - **Import aliases**: ✅ `@/` alias correctly configured in vite.config.js
 
 ### Implementation Patterns
@@ -260,4 +303,17 @@ executeProjectCommand: async (projectId, commandType) => {
 - ✅ All planned file paths match actual project structure
 - ✅ Import statements use correct `@/` alias pattern
 - ✅ Directory structure follows existing conventions
-- ✅ Component placement aligns with existing organization 
+- ✅ Component placement aligns with existing organization
+
+### Critical Implementation Notes
+1. **IDEStore Integration**: Leverage existing `validatePort()` and `isValidPortRange()` methods
+2. **Persistence**: Use existing port preferences system for custom port storage
+3. **API Patterns**: Follow existing APIChatRepository patterns for new endpoints
+4. **Terminal Services**: Backend has extensive terminal execution infrastructure available
+5. **Component Patterns**: Follow PreviewComponent.jsx patterns for consistency
+
+### Backend Dependencies
+- **Optional**: Project commands endpoint (`/api/projects/{projectId}/commands`)
+- **Optional**: Command execution endpoint (`/api/projects/{projectId}/execute-command`)
+- **Available**: Existing terminal execution services for command execution
+- **Available**: Existing IDEStore validation for port management 

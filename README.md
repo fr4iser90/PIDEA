@@ -11,7 +11,7 @@ Choose your preferred setup method:
 
 ### Option 1: Docker Setup (Recommended for Testing)
 
-**⚠️ WARNING: This setup is for testing only and should NOT be used in production!**
+**⚠️ WARNING: This setup is for testing only and should NOT be used in production! DO NOT EXPOSE TO WWW! Use it via VPN please!**
 
 1. **Clone the repository:**
    ```bash

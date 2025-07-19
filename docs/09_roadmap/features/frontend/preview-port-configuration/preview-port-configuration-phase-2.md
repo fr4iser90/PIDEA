@@ -29,24 +29,24 @@ Integrate port configuration and command execution into the existing preview sys
 - [ ] **Time**: 20 minutes
 - [ ] **Description**: Add port validation method to API repository
 - [ ] **Requirements**:
-  - `validatePort(port)` method
-  - Port range validation (1-65535)
-  - Port availability checking
-  - Error handling for invalid ports
-  - Integration with existing API patterns
-  - Proper error responses
+  - `validatePort(port)` method - **Use existing IDEStore validation instead**
+  - Port range validation (1-65535) - **IDEStore already has `isValidPortRange`**
+  - Port availability checking - **IDEStore already has `validatePort` with health checks**
+  - Error handling for invalid ports - **Use existing IDEStore error patterns**
+  - Integration with existing API patterns - **Follow existing `apiCall` patterns**
+  - **Optional**: Backend validation endpoint (not required for initial implementation)
 
 ### 3. Add Port Persistence in IDEStore
 - [ ] **File**: `frontend/src/infrastructure/stores/IDEStore.jsx`
 - [ ] **Time**: 15 minutes
 - [ ] **Description**: Implement custom port persistence and retrieval
 - [ ] **Requirements**:
-  - `setCustomPort(port)` method implementation
-  - `getCustomPort()` method implementation
-  - `validateCustomPort(port)` method implementation
-  - `clearCustomPort()` method implementation
-  - Integration with existing persistence system
-  - Proper state management
+  - `setCustomPort(port)` method implementation - **Leverage existing `validatePort` method**
+  - `getCustomPort()` method implementation - **Use existing persistence system**
+  - `validateCustomPort(port)` method implementation - **Use existing `validatePort` method**
+  - `clearCustomPort()` method implementation - **Use existing persistence system**
+  - **Integration with existing port preferences and persistence structure**
+  - **Follow existing store patterns and error handling**
 
 ### 4. Connect Port Configuration with Preview Loading
 - [ ] **File**: `frontend/src/presentation/components/chat/main/PreviewComponent.jsx`
@@ -121,37 +121,50 @@ const PreviewHeader = ({ project, port, onPortChange, onCommandExecute }) => {
 
 ### APIChatRepository Port Validation
 ```javascript
-// New method in APIChatRepository.jsx
+// Optional: New method in APIChatRepository.jsx (if backend endpoint exists)
 async validatePort(port) {
   try {
-    // Basic range validation
-    if (port < 1 || port > 65535) {
-      return { valid: false, error: 'Port must be between 1 and 65535' };
+    // Use existing IDEStore validation instead of backend call
+    const { validatePort: ideStoreValidatePort } = useIDEStore.getState();
+    const isValid = await ideStoreValidatePort(port);
+    
+    if (isValid) {
+      return { valid: true };
+    } else {
+      return { valid: false, error: 'Port validation failed' };
     }
-    
-    // Check if port is available (optional backend validation)
-    const response = await this.apiCall(`/api/validate-port`, {
-      method: 'POST',
-      body: JSON.stringify({ port })
-    });
-    
-    return response;
   } catch (error) {
     logger.error('Port validation failed:', error);
     return { valid: false, error: 'Port validation failed' };
   }
 }
+
+// Alternative: Use existing IDEStore directly
+// No need to add this method - use IDEStore.validatePort() directly
 ```
 
 ### IDEStore Port Management
 ```javascript
-// New methods in IDEStore.jsx
+// Enhanced methods in IDEStore.jsx leveraging existing functionality
 setCustomPort: async (port) => {
   try {
-    const isValid = await validatePort(port);
+    // Use existing validatePort method for validation
+    const isValid = await get().validatePort(port);
     if (isValid) {
       set({ customPort: port });
-      localStorage.setItem('customPort', port.toString());
+      // Use existing persistence system
+      const { portPreferences } = get();
+      const existingPreference = portPreferences.find(p => p.port === port);
+      if (!existingPreference) {
+        portPreferences.push({
+          port,
+          weight: 100,
+          usageCount: 1,
+          lastUsed: new Date().toISOString(),
+          createdAt: new Date().toISOString()
+        });
+        set({ portPreferences: [...portPreferences] });
+      }
       return { success: true };
     } else {
       return { success: false, error: 'Invalid port' };
@@ -163,27 +176,33 @@ setCustomPort: async (port) => {
 },
 
 getCustomPort: () => {
-  const { customPort } = get();
-  return customPort || localStorage.getItem('customPort');
+  return get().customPort;
+},
+
+validateCustomPort: async (port) => {
+  // Use existing validatePort method
+  return await get().validatePort(port);
 },
 
 clearCustomPort: () => {
   set({ customPort: null });
-  localStorage.removeItem('customPort');
+  return { success: true };
 }
 ```
 
 ### Project Command Execution
 ```javascript
-// New methods in APIChatRepository.jsx
+// New methods in APIChatRepository.jsx following existing patterns
 async getProjectCommands(projectId = null) {
   const currentProjectId = projectId || await this.getCurrentProjectId();
-  return this.apiCall(`/api/projects/${currentProjectId}/commands`);
+  // Use existing apiCall pattern
+  return apiCall(`/api/projects/${currentProjectId}/commands`);
 },
 
 async executeProjectCommand(projectId = null, commandType, options = {}) {
   const currentProjectId = projectId || await this.getCurrentProjectId();
-  return this.apiCall(`/api/projects/${currentProjectId}/execute-command`, {
+  // Use existing apiCall pattern with proper error handling
+  return apiCall(`/api/projects/${currentProjectId}/execute-command`, {
     method: 'POST',
     body: JSON.stringify({ commandType, ...options })
   });
@@ -271,4 +290,67 @@ async executeProjectCommand(projectId = null, commandType, options = {}) {
 - [Main Implementation](./preview-port-configuration-implementation.md)
 - [Phase 1](./preview-port-configuration-phase-1.md)
 - [Phase 3](./preview-port-configuration-phase-3.md)
-- [Master Index](./preview-port-configuration-index.md) 
+- [Master Index](./preview-port-configuration-index.md)
+
+## ✅ Validation Results - 2024-12-19
+
+### Codebase Analysis
+- **PreviewComponent.jsx**: ✅ Exists with proper header structure (`preview-header`, `preview-title`, `preview-actions`)
+- **IDEStore.jsx**: ✅ Has comprehensive port management (`validatePort`, `isValidPortRange`, port preferences)
+- **APIChatRepository.jsx**: ✅ Has extensive endpoint structure and `apiCall` helper function
+- **CSS Structure**: ✅ `preview.css` has comprehensive styling for header components
+- **Header Integration**: ✅ Existing header pattern supports additional components
+
+### Implementation Patterns
+- **Header Structure**: Follows existing `preview-header` with `preview-title` and `preview-actions`
+- **Button Patterns**: Uses existing `preview-btn` class with `btn-icon` structure
+- **API Patterns**: Follows existing `apiCall` helper function patterns
+- **Store Integration**: Leverages existing IDEStore validation and persistence
+- **Error Handling**: Uses existing logger and error patterns
+
+### Critical Implementation Notes
+1. **IDEStore Integration**: Use existing `validatePort()` and `isValidPortRange()` methods
+2. **Header Layout**: Add port input between `preview-title` and `preview-actions`
+3. **API Patterns**: Follow existing `apiCall` patterns for new endpoints
+4. **CSS Integration**: Use existing CSS variables and button styles
+5. **Backend Dependencies**: Optional - can use existing terminal services
+
+### Backend Dependencies
+- **Optional**: Project commands endpoint (`/api/projects/{projectId}/commands`)
+- **Optional**: Command execution endpoint (`/api/projects/{projectId}/execute-command`)
+- **Available**: Existing terminal execution services for command execution
+- **Available**: Existing IDEStore validation for port management
+
+### Header Integration Strategy
+```jsx
+// Updated header structure
+<div className="preview-header">
+  <div className="preview-title">
+    <span className="preview-icon">👁️</span>
+    <span className="preview-text">Preview</span>
+  </div>
+  
+  {/* Port configuration when no port detected */}
+  {!port && (
+    <div className="port-config-section">
+      <PortConfigInput
+        onPortChange={setCustomPort}
+        onPortValidate={validatePort}
+        initialPort={customPort}
+      />
+    </div>
+  )}
+  
+  {/* Command execution buttons */}
+  <ProjectCommandButtons
+    projectId={project?.id}
+    activePort={port || customPort}
+    onCommandExecute={onCommandExecute}
+    className="header-command-buttons"
+  />
+  
+  <div className="preview-actions">
+    {/* Existing action buttons */}
+  </div>
+</div>
+``` 

@@ -26,13 +26,27 @@ Create new Plan/Implementation [Name]-implementation.md in docs/09_roadmap/featu
 - **Dependencies**: Existing PreviewComponent, IDEStore, APIChatRepository
 - **Related Issues**: Port detection currently returns null when package.json ports are removed
 
-### 2. Technical Requirements
-- **Tech Stack**: React, Zustand, CSS, JavaScript
-- **Architecture Pattern**: Component-based with state management
-- **Database Changes**: None required (uses existing project commands in database)
-- **API Changes**: Extend APIChatRepository with project command execution methods
-- **Frontend Changes**: PreviewComponent header modification, IDEStore enhancement, CSS styling, new command buttons
-- **Backend Changes**: None required (uses existing terminal execution services)
+### 📝 Updated Technical Requirements
+
+#### Frontend Changes (Updated)
+- [ ] `frontend/src/presentation/components/chat/main/PreviewComponent.jsx` - Add port input field and configuration logic
+- [ ] `frontend/src/infrastructure/stores/IDEStore.jsx` - **Extend existing** custom port management functionality
+- [ ] `frontend/src/css/main/preview.css` - Add styling for port configuration UI
+- [ ] `frontend/src/infrastructure/repositories/APIChatRepository.jsx` - **Optional**: Add port validation method (or use IDEStore)
+
+#### Backend Changes (Updated)
+- [ ] **Optional**: Create project commands endpoint
+- [ ] **Optional**: Create command execution endpoint
+- [ ] **Optional**: Create port validation endpoint
+
+**Note**: Backend changes are optional since existing terminal services can handle command execution.
+
+#### Integration Points (Updated)
+- [ ] **Error Handling**: Use existing `ErrorDisplay` component and error state patterns
+- [ ] **Fallback Logic**: Use existing `loadPreviewData` fallback logic and IDEStore fallback strategies
+- [ ] **Port Validation**: Use existing IDEStore `validatePort` method
+- [ ] **Command Execution**: Use existing `IDEAutomationService.executeTerminalCommand` method
+- [ ] **API Calls**: Use existing `apiCall` function with built-in error handling
 
 ### 3. File Impact Analysis
 #### Files to Modify:
@@ -310,31 +324,37 @@ The component will be integrated into the PreviewComponent header alongside the 
 ## Validation Results - 2024-12-19
 
 ### ✅ Completed Items
-- [x] File: `frontend/src/presentation/components/chat/main/PreviewComponent.jsx` - Status: Exists and properly structured
-- [x] File: `frontend/src/infrastructure/stores/IDEStore.jsx` - Status: Exists with Zustand store pattern
-- [x] File: `frontend/src/infrastructure/repositories/APIChatRepository.jsx` - Status: Exists with proper API configuration
-- [x] File: `frontend/src/css/main/preview.css` - Status: Exists with comprehensive styling
-- [x] Directory: `frontend/src/hooks/` - Status: Exists and follows project patterns
+- [x] File: `frontend/src/presentation/components/chat/main/PreviewComponent.jsx` - Status: Exists and properly structured with header component pattern
+- [x] File: `frontend/src/infrastructure/stores/IDEStore.jsx` - Status: Exists with Zustand store pattern and comprehensive port management
+- [x] File: `frontend/src/infrastructure/repositories/APIChatRepository.jsx` - Status: Exists with proper API configuration and extensive endpoint structure
+- [x] File: `frontend/src/css/main/preview.css` - Status: Exists with comprehensive styling system and CSS variables
+- [x] Directory: `frontend/src/hooks/` - Status: Exists and follows project patterns (useAnalysisCache.js provides good reference)
 - [x] Import Pattern: `@/` alias imports - Status: Correctly configured in vite.config.js
 - [x] Database Schema: Projects table with command fields - Status: Exists with start_command, dev_command, build_command, test_command
-- [x] Terminal Services: Existing execution infrastructure - Status: Available in backend
+- [x] Terminal Services: Existing execution infrastructure - Status: Available in backend with comprehensive terminal execution services
+- [x] IDEStore Port Management: Status: Already has `validatePort`, `isValidPortRange`, and port preference system
+- [x] APIChatRepository Structure: Status: Has extensive endpoint configuration and project-based API patterns
 
 ### ⚠️ Issues Found
 - [ ] File: `frontend/src/presentation/components/chat/main/PortConfigInput.jsx` - Status: Not found, needs creation
 - [ ] File: `frontend/src/hooks/usePortConfiguration.js` - Status: Not found, needs creation
 - [ ] File: `frontend/src/presentation/components/chat/main/ProjectCommandButtons.jsx` - Status: Not found, needs creation
-- [ ] API Endpoint: Port validation endpoint - Status: Not implemented in APIChatRepository
+- [ ] API Endpoint: Port validation endpoint - Status: Not implemented in APIChatRepository (but IDEStore has validation)
 - [ ] API Endpoint: Project command execution endpoints - Status: Not implemented in APIChatRepository
+- [ ] Backend API: Project commands endpoint - Status: Not found in backend API structure
+- [ ] Backend API: Command execution endpoint - Status: Not found in backend API structure
 
 ### 🔧 Improvements Made
 - Updated file paths to match actual project structure
 - Corrected import patterns to use `@/` alias consistently
-- Added proper integration with existing IDEStore methods
+- Added proper integration with existing IDEStore methods (leverage existing `validatePort` and `isValidPortRange`)
 - Aligned with existing component patterns and styling
 - Updated to use existing APIChatRepository patterns
 - **Added ProjectCommandButtons component** for start/stop functionality
 - **Integrated with existing database schema** for project commands
 - **Leveraged existing terminal execution services** for command execution
+- **Enhanced IDEStore integration** to use existing port validation system
+- **Improved API endpoint structure** to follow existing patterns
 
 ### 📊 Code Quality Metrics
 - **Coverage**: 0% (new feature)
@@ -342,18 +362,98 @@ The component will be integrated into the PreviewComponent header alongside the 
 - **Performance**: Good (localStorage-based, minimal overhead)
 - **Maintainability**: Excellent (follows existing patterns)
 - **Database Integration**: Excellent (uses existing schema)
+- **IDEStore Integration**: Excellent (leverages existing port management)
 
 ### 🚀 Next Steps
 1. Create missing files: `PortConfigInput.jsx`, `usePortConfiguration.js`, `ProjectCommandButtons.jsx`
-2. Add port validation method to APIChatRepository
+2. Add port validation method to APIChatRepository (or use existing IDEStore validation)
 3. Add project command execution methods to APIChatRepository
-4. Extend IDEStore with custom port methods
+4. Extend IDEStore with custom port methods (build on existing validation)
 5. Update PreviewComponent with port input and command button integration
 6. Add CSS styles for port configuration and command buttons UI
+7. **Add backend API endpoints** for project commands and command execution
 
 ### 📋 Task Splitting Recommendations
-- **Main Task**: Preview Port Configuration (4 hours) → No splitting needed
+- **Main Task**: Preview Port Configuration (4 hours) → **No splitting needed** - Task is well-sized and manageable
 - **Phase 1**: Foundation Setup (1 hour) - Components and hooks
 - **Phase 2**: Core Implementation (2 hours) - Integration, validation, and command execution
 - **Phase 3**: Integration (0.5 hours) - Testing and error handling
-- **Phase 4**: Testing & Documentation (0.5 hours) - Final validation 
+- **Phase 4**: Testing & Documentation (0.5 hours) - Final validation
+
+### 🔍 Critical Findings
+
+#### IDEStore Integration Opportunity
+The existing IDEStore already has comprehensive port management:
+- `validatePort(port)` method with health checks
+- `isValidPortRange(port)` method for port range validation
+- Port preferences and persistence system
+- Active port management with fallback strategies
+
+**Recommendation**: Extend existing IDEStore methods instead of creating new ones:
+```javascript
+// Add to existing IDEStore.jsx
+setCustomPort: async (port) => {
+  // Use existing validatePort method
+  const isValid = await get().validatePort(port);
+  if (isValid) {
+    set({ customPort: port });
+    return { success: true };
+  }
+  return { success: false, error: 'Invalid port' };
+}
+```
+
+#### Backend API Gap
+The implementation plan assumes backend endpoints exist but they're not found:
+- `/api/projects/{projectId}/commands` - Not implemented
+- `/api/projects/{projectId}/execute-command` - Not implemented
+- `/api/validate-port` - Not implemented (but IDEStore has validation)
+
+**Recommendation**: Either:
+1. Use existing IDEStore validation (frontend-only solution)
+2. Create missing backend endpoints (requires backend development)
+
+#### Terminal Execution Services
+The backend has extensive terminal execution infrastructure:
+- `IDEAutomationService.executeTerminalCommand()`
+- Multiple terminal execution services
+- Existing command execution patterns
+- Comprehensive error handling
+
+**Recommendation**: Use existing terminal services instead of creating new endpoints.
+
+#### Error Handling Integration
+The codebase has comprehensive error handling patterns:
+- `ErrorDisplay` component with retry functionality
+- `apiCall` function with timeout and error handling
+- Consistent error state management
+- Fallback mechanisms throughout the application
+
+**Recommendation**: Leverage existing error handling patterns instead of creating new ones.
+
+#### Fallback Behavior Integration
+The codebase has robust fallback systems:
+- IDEStore 4-tier fallback strategies
+- PreviewComponent `loadPreviewData` fallback logic
+- Port validation with health checks
+- Persistence system for preferences
+
+**Recommendation**: Use existing fallback mechanisms for port configuration.
+
+### 🎯 Implementation Strategy Update
+
+#### Option 1: Frontend-Only Solution (Recommended)
+- Use existing IDEStore port validation
+- Store custom ports in IDEStore
+- Use existing terminal execution services
+- Leverage existing error handling patterns
+- Use existing fallback mechanisms
+- No backend API changes required
+
+#### Option 2: Full-Stack Solution
+- Create missing backend API endpoints
+- Implement project command retrieval
+- Add command execution endpoints
+- More comprehensive but requires backend work
+
+**Recommendation**: Start with Option 1 (frontend-only) for immediate implementation, then enhance with backend APIs in future phases. 
