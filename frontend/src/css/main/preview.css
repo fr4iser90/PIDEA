@@ -31,6 +31,33 @@
   gap: 4px;
 }
 
+.port-input-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.port-input-close {
+  width: 20px;
+  height: 20px;
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  border-radius: 50%;
+  transition: all 0.2s ease;
+}
+
+.port-input-close:hover {
+  background: var(--hover-bg);
+  color: var(--text-primary);
+}
+
 .port-input-label {
   font-size: 12px;
   font-weight: 500;

@@ -13,6 +13,7 @@ function PreviewComponent({ eventBus, activePort, projectId = null }) {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isCompact, setIsCompact] = useState(false);
   const [refreshInterval, setRefreshInterval] = useState(null);
+  const [showPortInput, setShowPortInput] = useState(false);
   const containerRef = useRef(null);
   const iframeRef = useRef(null);
   const apiRepository = new APIChatRepository();
@@ -42,8 +43,10 @@ function PreviewComponent({ eventBus, activePort, projectId = null }) {
   useEffect(() => {
     if (!eventBus) return;
     eventBus.on('activeIDEChanged', handleIDEChanged);
+    eventBus.on('open-port-config', handleOpenPortConfig);
     return () => {
       eventBus.off('activeIDEChanged', handleIDEChanged);
+      eventBus.off('open-port-config', handleOpenPortConfig);
     };
   }, [eventBus]);
 
@@ -65,6 +68,11 @@ function PreviewComponent({ eventBus, activePort, projectId = null }) {
     logger.info('🔄 [PreviewComponent] Active IDE changed:', data);
     // Refresh preview data when IDE changes
     await handleRefresh();
+  };
+
+  const handleOpenPortConfig = () => {
+    logger.info('PreviewComponent: Opening port config...');
+    setShowPortInput(true);
   };
 
   const handleUserAppUrl = (data) => {
@@ -427,17 +435,18 @@ function PreviewComponent({ eventBus, activePort, projectId = null }) {
           <span className="preview-text">Preview</span>
         </div>
         
-        {/* Port configuration when no project URL is available */}
-        {!previewData?.url && !isLoading && (
+        {/* Port configuration when no project URL is available or when manually opened */}
+        {(!previewData?.url && !isLoading) || showPortInput ? (
           <div className="port-config-section">
             <PortConfigInput
               onPortChange={handlePortChange}
               onPortValidate={handlePortValidate}
               initialPort={customPort}
               disabled={isLoading}
+              onClose={() => setShowPortInput(false)}
             />
           </div>
-        )}
+        ) : null}
         
         {/* Command execution buttons */}
         {projectId && (
@@ -457,6 +466,14 @@ function PreviewComponent({ eventBus, activePort, projectId = null }) {
             disabled={isLoading}
           >
             <span className="btn-icon">🔄</span>
+          </button>
+          
+          <button
+            onClick={handleOpenPortConfig}
+            className="preview-btn"
+            title="Port Configuration"
+          >
+            <span className="btn-icon">🔌</span>
           </button>
           
           <button

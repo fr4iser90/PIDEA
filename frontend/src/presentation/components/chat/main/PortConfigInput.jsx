@@ -20,7 +20,8 @@ const PortConfigInput = ({
   initialPort, 
   disabled = false,
   className = '',
-  placeholder = 'Enter port (1-65535)'
+  placeholder = 'Enter port (1-65535)',
+  onClose
 }) => {
   const [port, setPort] = useState(initialPort || '');
   const [isValidating, setIsValidating] = useState(false);
@@ -143,9 +144,21 @@ const PortConfigInput = ({
   return (
     <div className={`port-config-input ${className}`}>
       <div className="port-input-container">
-        <label className="port-input-label" htmlFor="port-input">
-          Port Configuration
-        </label>
+        <div className="port-input-header">
+          <label className="port-input-label" htmlFor="port-input">
+            Port Configuration
+          </label>
+          {onClose && (
+            <button
+              type="button"
+              className="port-input-close"
+              onClick={onClose}
+              aria-label="Close port configuration"
+            >
+              ✕
+            </button>
+          )}
+        </div>
         
         <div className="port-input-wrapper">
           <input
