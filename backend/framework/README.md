@@ -1,374 +1,198 @@
-# Framework System - Step-Based Architecture
+# PIDEA Framework System
 
-## 🎯 **Framework-Typen (Alle Step-basiert)**
+## Overview
+The PIDEA Framework System provides modular, extensible functionality that builds upon the core system. Frameworks are optional components that can be activated or deactivated as needed, providing additional capabilities beyond the essential core operations.
 
-### **1. Normal Workflow (Sequentiell)**
+## Architecture
 ```
-Framework: DDD Refactoring
-├── Step 1: ANALYZE_PROJECT_STRUCTURE (Script Step)
-├── Step 2: AI_SEND_ANALYSIS_PROMPT (AI Step)
-├── Step 3: AI_GET_ANALYSIS_RESPONSE (AI Step)
-├── Step 4: GENERATE_REFACTORING_PLAN (Script Step)
-├── Step 5: AI_SEND_PLAN_PROMPT (AI Step)
-├── Step 6: AI_GET_PLAN_RESPONSE (AI Step)
-├── Step 7: APPLY_REFACTORING_CHANGES (Script Step)
-└── Step 8: VALIDATE_CHANGES (Script Step)
-```
-
-### **2. Single Shot (Einmalig)**
-```
-Framework: Code Documentation
-├── Step 1: ANALYZE_CODE_FILES (Script Step)
-├── Step 2: AI_SEND_DOCUMENTATION_PROMPT (AI Step)
-└── Step 3: AI_GET_DOCUMENTATION_RESPONSE (AI Step)
+backend/framework/
+├── refactoring_management/     # Advanced refactoring operations
+├── testing_management/         # Advanced testing operations
+├── documentation_management/   # Documentation generation
+├── deployment_management/      # Deployment and infrastructure
+├── security_management/        # Security and vulnerability management
+└── performance_management/     # Performance optimization
 ```
 
-### **3. Iterative (Aufeinander aufbauend)**
-```
-Framework: AI Code Review
-├── Step 1: ANALYZE_CODE (Script Step)
-├── Step 2: AI_SEND_PROMPT (AI Step) 
-├── Step 3: AI_GET_RESPONSE (AI Step)
-├── Step 4: PROCESS_AI_RESPONSE (Script Step)
-├── Step 5: BUILD_NEW_PROMPT (Script Step)
-├── Step 6: AI_SEND_REFINED_PROMPT (AI Step)
-├── Step 7: AI_GET_REFINED_RESPONSE (AI Step)
-├── Step 8: PROCESS_FINAL_RESPONSE (Script Step)
-└── Step 9: GENERATE_FINAL_RESULT (Script Step)
-```
+## Core vs Framework Separation
 
-### **4. Git Workflow (Mit Git Management)**
-```
-Framework: Task Branch Workflow
-├── Step 1: ANALYZE_TASK (Script Step)
-├── Step 2: GIT_CREATE_BRANCH (Git Step)
-├── Step 3: AI_SEND_TASK_PROMPT (AI Step)
-├── Step 4: AI_GET_TASK_RESPONSE (AI Step)
-├── Step 5: APPLY_CHANGES (Script Step)
-├── Step 6: GIT_COMMIT (Git Step)
-├── Step 7: GIT_PUSH (Git Step)
-└── Step 8: CREATE_PULL_REQUEST (Git Step)
-```
+### Core System (Always Available)
+- **Location**: `backend/domain/`
+- **Purpose**: Essential operations required for basic system functionality
+- **Examples**: Git operations, IDE integration, basic analysis, file operations
 
-### **5. Autonomous AI Workflow (Vollautomatisch)**
-```
-Framework: AI Autonomous Development
-├── Step 1: ANALYZE_PROJECT (Script Step)
-├── Step 2: AI_SEND_ANALYSIS_PROMPT (AI Step)
-├── Step 3: AI_GET_ANALYSIS_RESPONSE (AI Step)
-├── Step 4: GIT_CREATE_FEATURE_BRANCH (Git Step)
-├── Step 5: AI_GENERATE_IMPLEMENTATION (AI Step)
-├── Step 6: AI_APPLY_CHANGES (AI Step)
-├── Step 7: AI_RUN_TESTS (AI Step)
-├── Step 8: AI_FIX_ISSUES (AI Step)
-├── Step 9: GIT_COMMIT_CHANGES (Git Step)
-├── Step 10: GIT_PUSH_BRANCH (Git Step)
-├── Step 11: AI_CREATE_PULL_REQUEST (AI Step)
-└── Step 12: AI_MERGE_IF_APPROVED (AI Step)
-```
+### Framework System (Optional)
+- **Location**: `backend/framework/`
+- **Purpose**: Advanced operations and specialized functionality
+- **Examples**: Advanced refactoring, comprehensive testing, security audits
 
-### **6. Custom Steps (Erweiterbar)**
-```
-Framework: Testing Framework
-├── Step 1: GENERATE_TESTS (Script Step)
-├── Step 2: [CUSTOM: user_defined_step] (Custom Step)
-├── Step 3: RUN_TESTS (Script Step)
-└── Step 4: [CUSTOM: user_defined_step] (Custom Step)
-```
+## Available Frameworks
 
-## 🔧 **Step-Typen**
+### 1. Refactoring Management
+- **Purpose**: Advanced code restructuring and refactoring operations
+- **Steps**: 10 specialized refactoring steps
+- **Workflows**: 3 comprehensive refactoring workflows
+- **Use Case**: Large-scale code restructuring and maintenance
 
-### **AI Steps:**
-- **AI_SEND_PROMPT:** Sendet Prompt an AI
-- **AI_GET_RESPONSE:** Holt Response von AI
+### 2. Testing Management
+- **Purpose**: Comprehensive testing operations and automation
+- **Steps**: 10 testing-related steps
+- **Workflows**: 3 testing workflows
+- **Use Case**: Complete test suite management and automation
 
-### **Script Steps:**
-- **ANALYZE_*:** Analysiert Code/Projekt
-- **PROCESS_*:** Verarbeitet Daten
-- **BUILD_*:** Erstellt neue Prompts/Data
-- **GENERATE_*:** Generiert Output
-- **APPLY_*:** Wendet Changes an
-- **VALIDATE_*:** Validiert Results
+### 3. Documentation Management
+- **Purpose**: Automated documentation generation and management
+- **Steps**: 10 documentation steps
+- **Workflows**: 3 documentation workflows
+- **Use Case**: Maintaining comprehensive project documentation
 
-### **Git Steps:**
-- **GIT_CREATE_BRANCH:** Erstellt neuen Branch
-- **GIT_COMMIT:** Committet Changes
-- **GIT_PUSH:** Pusht Changes
-- **GIT_PULL:** Pullt Changes
-- **GIT_MERGE:** Merged Branches
-- **GIT_CHECKOUT:** Wechselt Branch
-- **GIT_CREATE_PULL_REQUEST:** Erstellt Pull Request
-- **GIT_MERGE_PULL_REQUEST:** Merged Pull Request
+### 4. Deployment Management
+- **Purpose**: Deployment operations and infrastructure management
+- **Steps**: 10 deployment steps
+- **Workflows**: 4 deployment workflows
+- **Use Case**: Automated deployment and infrastructure management
 
-### **Template Steps:**
-- **TEMPLATE_APPLY:** Wendet Template an
-- **TEMPLATE_GENERATE:** Generiert aus Template
+### 5. Security Management
+- **Purpose**: Security auditing and vulnerability management
+- **Steps**: 10 security steps
+- **Workflows**: 3 security workflows
+- **Use Case**: Security compliance and vulnerability management
 
-### **Custom Steps:**
-- **CUSTOM_*:** User-definierte Steps
+### 6. Performance Management
+- **Purpose**: Performance optimization and monitoring
+- **Steps**: 10 performance steps
+- **Workflows**: 3 performance workflows
+- **Use Case**: Application performance optimization
 
-## 📋 **Alle Steps (Aktuell + Fehlend)**
+## Framework Configuration
 
-### **Aktuelle Steps (bereits implementiert):**
-- **analysis_step.js** - Hauptanalyse-Step
-- **check_container_status.js** - Container-Status prüfen
-- **refactor_analyze.js** - Refactoring-Analyse
-- **refactor_generate_task.js** - Refactoring-Tasks generieren
-- **refactor_step.js** - Hauptrefactoring-Step
-- **run_unit_tests.js** - Unit Tests ausführen
-- **testing_step.js** - Haupttesting-Step
-- **chat** - Chat-basierte Steps
-- **terminal** - Terminal-Commands
-- **analysis** - Analyse-Steps
-- **ide** - IDE-Integration
-- **GIT_COMMIT, GIT_PUSH, GIT_PULL, GIT_CREATE_BRANCH, GIT_MERGE, GIT_CHECKOUT**
-- **openTerminal, executeCommand, monitorOutput**
+Each framework includes:
+- **framework.json**: Configuration file defining steps, workflows, and settings
+- **README.md**: Documentation for the specific framework
+- **Steps**: Individual operations that can be executed
+- **Workflows**: Predefined sequences of steps
+- **Settings**: Framework-specific configuration options
 
-### **Fehlende Steps (noch zu implementieren):**
+## Activation and Usage
 
-#### **IDE Steps:**
-- **IDE_OPEN_FILE** - Datei in IDE öffnen
-- **IDE_EDIT_FILE** - Datei bearbeiten
-- **IDE_CREATE_FILE** - Neue Datei erstellen
-- **IDE_DELETE_FILE** - Datei löschen
-- **IDE_RENAME_FILE** - Datei umbenennen
-- **IDE_MOVE_FILE** - Datei verschieben
-- **IDE_SEARCH_CODE** - Code durchsuchen
-- **IDE_GET_FILE_CONTENT** - Datei-Inhalt holen
-- **IDE_SAVE_FILE** - Datei speichern
-- **IDE_GET_PROJECT_STRUCTURE** - Projekt-Struktur holen
-- **IDE_GET_ACTIVE_FILE** - Aktive Datei holen
-- **IDE_GET_CURSOR_POSITION** - Cursor-Position holen
-
-#### **Cursor AI Steps:**
-- **CURSOR_SEND_MESSAGE** - Nachricht an Cursor AI senden
-- **CURSOR_GET_RESPONSE** - Response von Cursor AI holen
-- **CURSOR_EXECUTE_COMMAND** - Cursor Command ausführen
-- **CURSOR_APPLY_CHANGES** - AI-Änderungen anwenden
-- **CURSOR_ANALYZE_CODE** - Code mit Cursor analysieren
-- **CURSOR_GENERATE_CODE** - Code mit Cursor generieren
-- **CURSOR_REFACTOR_CODE** - Code mit Cursor refactoren
-- **CURSOR_FIX_CODE** - Code mit Cursor reparieren
-- **CURSOR_EXPLAIN_CODE** - Code mit Cursor erklären
-- **CURSOR_OPTIMIZE_CODE** - Code mit Cursor optimieren
-
-#### **Template Steps:**
-- **TEMPLATE_APPLY** - Template anwenden
-- **TEMPLATE_GENERATE** - Aus Template generieren
-- **TEMPLATE_VALIDATE** - Template validieren
-- **TEMPLATE_CUSTOMIZE** - Template anpassen
-
-#### **Script Steps:**
-- **SCRIPT_EXECUTE** - Script ausführen
-- **SCRIPT_VALIDATE** - Script validieren
-- **SCRIPT_BUILD** - Script bauen
-- **SCRIPT_TEST** - Script testen
-
-#### **Data Processing Steps:**
-- **PROCESS_AI_RESPONSE** - AI Response verarbeiten
-- **BUILD_NEW_PROMPT** - Neuen Prompt erstellen
-- **EXTRACT_CODE_BLOCKS** - Code-Blöcke extrahieren
-- **PARSE_JSON_RESPONSE** - JSON Response parsen
-- **VALIDATE_DATA** - Daten validieren
-- **TRANSFORM_DATA** - Daten transformieren
-
-#### **File System Steps:**
-- **FILE_READ** - Datei lesen
-- **FILE_WRITE** - Datei schreiben
-- **FILE_COPY** - Datei kopieren
-- **FILE_MOVE** - Datei verschieben
-- **FILE_DELETE** - Datei löschen
-- **FILE_SEARCH** - Dateien suchen
-- **FILE_VALIDATE** - Datei validieren
-
-#### **Project Steps:**
-- **PROJECT_ANALYZE_STRUCTURE** - Projekt-Struktur analysieren
-- **PROJECT_GET_DEPENDENCIES** - Dependencies holen
-- **PROJECT_VALIDATE_SETUP** - Projekt-Setup validieren
-- **PROJECT_BUILD** - Projekt bauen
-- **PROJECT_TEST** - Projekt testen
-- **PROJECT_DEPLOY** - Projekt deployen
-
-#### **Custom Steps:**
-- **CUSTOM_USER_DEFINED** - User-definierter Step
-- **CUSTOM_VALIDATION** - Custom Validierung
-- **CUSTOM_TRANSFORMATION** - Custom Transformation
-
-## 📋 **Framework Loading Process**
-
-1. **Load Framework Config:** JSON-Konfiguration laden
-2. **Load Steps:** Alle Steps aus Framework-Ordner laden
-3. **Load Resources:** Prompts, Scripts, Templates laden
-4. **Apply to Project:** Framework auf spezifisches Projekt anwenden
-5. **Execute Workflow:** Steps sequentiell ausführen
-
-## 🎯 **Ziel**
-
-Jedes Framework ist eine Sammlung von Steps, die automatisch geladen und auf Projekte angewendet werden können. Keine hardcodierten Workflows mehr!
-
-
-backend/domain/steps/categories/
-├── analysis/
-│   ├── analysis_step.js ✅ (bleibt)
-│   └── check_container_status.js ✅ (bleibt)
-├── refactoring/
-│   ├── refactor_analyze.js ✅ (bleibt)
-│   ├── refactor_generate_task.js ✅ (bleibt)
-│   └── refactor_step.js ✅ (bleibt)
-├── testing/
-│   ├── run_unit_tests.js ✅ (bleibt)
-│   └── testing_step.js ✅ (bleibt)
-├── git/ ✅ (NEU - Git Steps hier)
-│   ├── git_create_branch.js
-│   ├── git_commit.js
-│   ├── git_push.js
-│   └── git_create_pr.js
-├── ide/ ✅ (NEU - IDE Steps hier)
-│   ├── ide_open_file.js
-│   ├── ide_edit_file.js
-│   └── ide_save_file.js
-└── cursor/ ✅ (NEU - Cursor AI Steps hier)
-    ├── cursor_send_message.js
-    ├── cursor_get_response.js
-    └── cursor_apply_changes.js
-
-Perfekt! Lass uns **systematisch** die Core-Komponenten identifizieren:
-
-## 🧠 **Core-Analyse: Was MUSS im Core bleiben?**
-
-### **1. 🔍 Analysis Steps (Core)**
-```
-✅ Immer benötigt:
-├── analysis_step.js           # Basis-Analyse
-├── analysis_validate.js       # Validierung
-├── analysis_report.js         # Report-Generierung
-└── analysis_export.js         # Export-Funktionen
+### Framework Activation
+Frameworks can be activated through the Framework Manager:
+```javascript
+const frameworkManager = require('@infrastructure/framework').getFrameworkManager();
+await frameworkManager.activateFramework('refactoring_management');
 ```
 
-### **2. 🔧 Git Management (Core)**
-```
-✅ Immer benötigt:
-├── GitService.js              # Basis Git-Operationen
-├── git_commit.js              # Basis Commit
-├── git_push.js                # Basis Push
-├── git_create_branch.js       # Basis Branch
-└── git_create_pull_request.js # Basis PR
+### Framework Deactivation
+Frameworks can be deactivated when not needed:
+```javascript
+await frameworkManager.deactivateFramework('refactoring_management');
 ```
 
-### **3. ��️ IDE Integration (Core)**
-```
-✅ Immer benötigt:
-├── BrowserManager.js          # Browser-Management
-├── ide_open_file.js           # Datei öffnen
-├── ide_get_file_content.js    # Datei-Inhalt lesen
-└── ide_save_file.js           # Datei speichern
+### Step Execution
+Execute framework steps through the Step Registry:
+```javascript
+const stepRegistry = require('@domain/steps').getStepRegistry();
+await stepRegistry.executeStep('refactoring_management.extract_method', context);
 ```
 
-### **4. 🤖 AI/Cursor Integration (Core)**
-```
-✅ Immer benötigt:
-├── CursorIDEService.js        # Cursor AI Service
-├── cursor_send_message.js     # Nachricht senden
-└── cursor_get_response.js     # Response holen
-```
+## Framework Dependencies
 
-### **5. 💻 Terminal/System (Core)**
-```
-✅ Immer benötigt:
-├── TerminalService.js         # Terminal-Operationen
-├── terminal_execute.js        # Kommando ausführen
-└── terminal_install.js        # Pakete installieren
-```
+### Core Dependencies
+All frameworks depend on the core system for basic operations:
+- IDE integration
+- File system operations
+- Terminal operations
+- Analysis capabilities
 
-### **6. �� File System (Core)**
-```
-✅ Immer benötigt:
-├── FileSystemService.js       # Datei-Operationen
-├── file_read.js               # Datei lesen
-├── file_write.js              # Datei schreiben
-└── file_copy.js               # Datei kopieren
-```
+### Framework Dependencies
+Some frameworks may depend on other frameworks:
+- Testing framework may use refactoring framework
+- Deployment framework may use testing framework
+- Security framework may use analysis capabilities
 
-### **7. 🔄 Workflow Engine (Core)**
-```
-✅ Immer benötigt:
-├── WorkflowExecutionService.js # Step-Execution
-├── StepRegistry.js            # Step-Registry
-├── StepBuilder.js             # Step-Builder
-└── WorkflowManager.js         # Workflow-Management
-```
+## Configuration Options
 
-### **8. 📊 Data Processing (Core)**
-```
-✅ Immer benötigt:
-├── DataProcessingService.js   # Daten-Verarbeitung
-├── data_parse.js              # Daten parsen
-├── data_transform.js          # Daten transformieren
-└── data_validate.js           # Daten validieren
-```
+### Global Framework Settings
+- **Auto Load**: Whether frameworks load automatically
+- **Confirmation Required**: Whether user confirmation is needed
+- **Fallback to Core**: Whether to fall back to core operations if framework fails
 
-## 🎯 **Was in Frameworks auslagern?**
+### Framework-Specific Settings
+Each framework has its own configuration options:
+- Timeouts and limits
+- Feature toggles
+- Performance settings
+- Security settings
 
-### **1. 🏗️ Refactoring Framework**
-```
-backend/framework/refactoring_management/
-├── step/
-│   ├── refactor_extract_method.js
-│   ├── refactor_rename_variable.js
-│   └── refactor_move_class.js
-├── workflow/
-│   └── refactoring_workflow.json
-└── config.json
-```
+## Integration with Core System
 
-### **2. 🧪 Testing Framework**
-```
-backend/framework/testing_management/
-├── step/
-│   ├── test_generate_unit.js
-│   ├── test_run_tests.js
-│   └── test_coverage.js
-├── workflow/
-│   └── testing_workflow.json
-└── config.json
-```
+### Step Registry Integration
+Framework steps are registered with the existing Step Registry:
+- Steps are prefixed with framework name (e.g., `refactoring_management.extract_method`)
+- Framework steps can be executed alongside core steps
+- Fallback mechanisms ensure system stability
 
-### **3. 📚 Documentation Framework**
-```
-backend/framework/documentation_management/
-├── step/
-│   ├── doc_generate_readme.js
-│   ├── doc_update_api.js
-│   └── doc_create_diagrams.js
-├── workflow/
-│   └── documentation_workflow.json
-└── config.json
-```
+### Workflow Integration
+Framework workflows integrate with the existing workflow system:
+- Workflows can combine core and framework steps
+- Framework workflows can be composed with core workflows
+- Workflow execution is managed by the core system
 
-### **4. 🚀 Deployment Framework**
-```
-backend/framework/deployment_management/
-├── step/
-│   ├── deploy_build.js
-│   ├── deploy_test.js
-│   └── deploy_release.js
-├── workflow/
-│   └── deployment_workflow.json
-└── config.json
-```
+## Development Guidelines
 
-## ✅ **Core vs Framework Entscheidung:**
+### Creating New Frameworks
+1. Create framework directory in `backend/framework/`
+2. Create `framework.json` configuration file
+3. Define steps and workflows
+4. Add documentation (README.md)
+5. Test framework integration
 
-### **Core = Immer benötigt:**
-- ✅ **Basis-Operationen:** Git, IDE, Terminal, File System
-- ✅ **AI-Integration:** Cursor, Basis AI-Operationen
-- ✅ **Workflow-Engine:** Step-Execution, Registry
-- ✅ **Data Processing:** Basis Daten-Verarbeitung
-- ✅ **Analysis:** Basis-Analyse-Funktionen
+### Framework Best Practices
+- Keep frameworks focused on specific domains
+- Ensure proper dependency management
+- Provide comprehensive documentation
+- Include validation and error handling
+- Follow established naming conventions
 
-### **Framework = Optional/Spezialisiert:**
-- ✅ **Business-Logic:** Refactoring, Testing, Documentation
-- ✅ **Erweiterte Features:** Komplexe Workflows
-- ✅ **Spezialisierte Tools:** Deployment, Security, Performance
+## Monitoring and Maintenance
 
-**Ist diese Aufteilung logisch für dich?** 🎯
+### Framework Health
+- Monitor framework loading and activation
+- Track step execution success rates
+- Monitor performance impact
+- Validate framework dependencies
+
+### Framework Updates
+- Regular security updates
+- Performance optimizations
+- Feature enhancements
+- Compatibility updates
+
+## Troubleshooting
+
+### Common Issues
+1. **Framework Loading Failures**: Check configuration and dependencies
+2. **Step Execution Errors**: Verify step dependencies and permissions
+3. **Performance Issues**: Monitor resource usage and optimize settings
+4. **Integration Problems**: Validate core system compatibility
+
+### Debugging
+- Enable framework logging
+- Check framework status and health
+- Validate configuration files
+- Review error logs and reports
+
+## Future Enhancements
+
+### Planned Features
+- Framework marketplace
+- Dynamic framework loading
+- Framework versioning
+- Advanced dependency resolution
+- Framework performance analytics
+
+### Extension Points
+- Custom framework development
+- Framework plugin system
+- Framework composition
+- Advanced workflow orchestration

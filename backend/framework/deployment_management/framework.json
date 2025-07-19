@@ -1,0 +1,134 @@
+{
+  "name": "deployment_management",
+  "version": "1.0.0",
+  "description": "Advanced deployment operations and infrastructure management framework",
+  "category": "deployment",
+  "author": "PIDEA Team",
+  "dependencies": ["core"],
+  "steps": {
+    "build_application": {
+      "name": "build_application",
+      "type": "deployment",
+      "category": "build",
+      "description": "Build application for deployment",
+      "dependencies": ["terminal", "file-system"]
+    },
+    "run_tests_before_deploy": {
+      "name": "run_tests_before_deploy",
+      "type": "deployment",
+      "category": "testing",
+      "description": "Run tests before deployment",
+      "dependencies": ["terminal", "testing"]
+    },
+    "create_deployment_package": {
+      "name": "create_deployment_package",
+      "type": "deployment",
+      "category": "package",
+      "description": "Create deployment package with all dependencies",
+      "dependencies": ["file-system", "terminal"]
+    },
+    "deploy_to_staging": {
+      "name": "deploy_to_staging",
+      "type": "deployment",
+      "category": "staging",
+      "description": "Deploy to staging environment",
+      "dependencies": ["terminal", "file-system"]
+    },
+    "deploy_to_production": {
+      "name": "deploy_to_production",
+      "type": "deployment",
+      "category": "production",
+      "description": "Deploy to production environment",
+      "dependencies": ["terminal", "file-system"]
+    },
+    "rollback_deployment": {
+      "name": "rollback_deployment",
+      "type": "deployment",
+      "category": "rollback",
+      "description": "Rollback to previous deployment",
+      "dependencies": ["terminal", "file-system"]
+    },
+    "monitor_deployment": {
+      "name": "monitor_deployment",
+      "type": "deployment",
+      "category": "monitoring",
+      "description": "Monitor deployment health and performance",
+      "dependencies": ["terminal", "analysis"]
+    },
+    "update_environment_config": {
+      "name": "update_environment_config",
+      "type": "deployment",
+      "category": "config",
+      "description": "Update environment configuration",
+      "dependencies": ["file-system", "terminal"]
+    },
+    "setup_ci_cd": {
+      "name": "setup_ci_cd",
+      "type": "deployment",
+      "category": "ci_cd",
+      "description": "Setup continuous integration and deployment",
+      "dependencies": ["file-system", "terminal"]
+    },
+    "validate_deployment": {
+      "name": "validate_deployment",
+      "type": "deployment",
+      "category": "validation",
+      "description": "Validate deployment success and functionality",
+      "dependencies": ["terminal", "analysis"]
+    }
+  },
+  "workflows": {
+    "complete_deployment": {
+      "name": "complete_deployment",
+      "steps": [
+        "build_application",
+        "run_tests_before_deploy",
+        "create_deployment_package",
+        "deploy_to_staging",
+        "validate_deployment",
+        "deploy_to_production",
+        "monitor_deployment"
+      ],
+      "description": "Complete deployment workflow"
+    },
+    "staging_deployment": {
+      "name": "staging_deployment",
+      "steps": [
+        "build_application",
+        "run_tests_before_deploy",
+        "deploy_to_staging",
+        "validate_deployment"
+      ],
+      "description": "Staging deployment workflow"
+    },
+    "production_deployment": {
+      "name": "production_deployment",
+      "steps": [
+        "deploy_to_production",
+        "monitor_deployment",
+        "validate_deployment"
+      ],
+      "description": "Production deployment workflow"
+    },
+    "emergency_rollback": {
+      "name": "emergency_rollback",
+      "steps": [
+        "rollback_deployment",
+        "monitor_deployment",
+        "validate_deployment"
+      ],
+      "description": "Emergency rollback workflow"
+    }
+  },
+  "activation": {
+    "auto_load": false,
+    "requires_confirmation": true,
+    "fallback_to_core": true
+  },
+  "settings": {
+    "deployment_timeout": 300000,
+    "auto_rollback_on_failure": true,
+    "health_check_interval": 30000,
+    "backup_before_deploy": true
+  }
+} 

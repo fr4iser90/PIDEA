@@ -126,7 +126,7 @@ class ServiceHandlerAdapter extends IHandlerAdapter {
       'auto_test_fix': 'AutoTestFixService',
       'test_correction': 'TestCorrectionService',
       'workflow_orchestration': 'WorkflowOrchestrationService',
-      'task_execution': 'TaskExecutionService',
+  
       'workflow': 'WorkflowService'  // Add support for 'workflow' type
     };
     

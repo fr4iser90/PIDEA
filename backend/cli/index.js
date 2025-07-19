@@ -75,7 +75,7 @@ class TaskCLIMain {
                 commandBus: this.application.commandBus,
                 queryBus: this.application.queryBus,
                 aiService: this.application.aiService,
-                taskExecutionEngine: this.application.taskExecutionEngine,
+                // TaskExecutionEngine removed - functionality moved to WorkflowController
                 logger: this.application.logger
             };
 
@@ -103,22 +103,8 @@ class TaskCLIMain {
      * Setup event forwarding between components
      */
     setupEventForwarding() {
-        // Forward task execution events to progress UI
-        this.application.taskExecutionEngine.on('execution:start', (data) => {
-            this.progressUI.emit('execution:start', data);
-        });
-
-        this.application.taskExecutionEngine.on('execution:progress', (data) => {
-            this.progressUI.emit('execution:progress', data);
-        });
-
-        this.application.taskExecutionEngine.on('execution:complete', (data) => {
-            this.progressUI.emit('execution:complete', data);
-        });
-
-        this.application.taskExecutionEngine.on('execution:error', (data) => {
-            this.progressUI.emit('execution:error', data);
-        });
+        // TaskExecutionEngine removed - events now handled by WorkflowController
+        // Progress UI will be updated via WorkflowController events
 
         // Forward AI events to progress UI
         this.application.aiService.on('ai:request', (data) => {

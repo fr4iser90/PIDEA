@@ -1,0 +1,147 @@
+{
+  "name": "testing_management",
+  "version": "1.0.0",
+  "description": "Advanced testing operations and test automation framework",
+  "category": "testing",
+  "author": "PIDEA Team",
+  "dependencies": ["core"],
+  "steps": {
+    "testing_step": {
+      "name": "testing_step",
+      "type": "testing",
+      "category": "comprehensive",
+      "description": "Comprehensive testing workflow with analysis, generation, and fixing",
+      "dependencies": ["testAnalyzer", "testFixer", "coverageAnalyzer"],
+      "file": "steps/testing_step.js"
+    },
+    "run_unit_tests": {
+      "name": "run_unit_tests",
+      "type": "testing",
+      "category": "unit",
+      "description": "Execute unit tests and collect results",
+      "dependencies": ["jest", "testRunner"],
+      "file": "steps/run_unit_tests.js"
+    },
+    "run_unit_tests_legacy": {
+      "name": "run_unit_tests_legacy",
+      "type": "testing",
+      "category": "unit",
+      "description": "Run unit tests for specified modules",
+      "dependencies": ["terminal", "file-system"]
+    },
+    "run_integration_tests": {
+      "name": "run_integration_tests",
+      "type": "testing",
+      "category": "integration",
+      "description": "Run integration tests",
+      "dependencies": ["terminal", "file-system"]
+    },
+    "run_e2e_tests": {
+      "name": "run_e2e_tests",
+      "type": "testing",
+      "category": "e2e",
+      "description": "Run end-to-end tests",
+      "dependencies": ["terminal", "browser"]
+    },
+    "generate_test_coverage": {
+      "name": "generate_test_coverage",
+      "type": "testing",
+      "category": "coverage",
+      "description": "Generate test coverage report",
+      "dependencies": ["terminal", "file-system"]
+    },
+    "create_unit_test": {
+      "name": "create_unit_test",
+      "type": "testing",
+      "category": "generation",
+      "description": "Create unit test for specified function",
+      "dependencies": ["ide", "cursor"]
+    },
+    "create_integration_test": {
+      "name": "create_integration_test",
+      "type": "testing",
+      "category": "generation",
+      "description": "Create integration test for specified module",
+      "dependencies": ["ide", "cursor"]
+    },
+    "create_mock": {
+      "name": "create_mock",
+      "type": "testing",
+      "category": "generation",
+      "description": "Create mock objects for testing",
+      "dependencies": ["ide", "cursor"]
+    },
+    "validate_test_structure": {
+      "name": "validate_test_structure",
+      "type": "testing",
+      "category": "validation",
+      "description": "Validate test file structure and conventions",
+      "dependencies": ["file-system", "analysis"]
+    },
+    "optimize_test_performance": {
+      "name": "optimize_test_performance",
+      "type": "testing",
+      "category": "optimization",
+      "description": "Optimize test execution performance",
+      "dependencies": ["analysis", "file-system"]
+    },
+    "setup_test_environment": {
+      "name": "setup_test_environment",
+      "type": "testing",
+      "category": "setup",
+      "description": "Setup test environment and dependencies",
+      "dependencies": ["terminal", "file-system"]
+    }
+  },
+  "workflows": {
+    "comprehensive_testing": {
+      "name": "comprehensive_testing",
+      "steps": [
+        "testing_step",
+        "run_unit_tests"
+      ],
+      "description": "Comprehensive testing workflow with analysis and execution"
+    },
+    "complete_test_suite": {
+      "name": "complete_test_suite",
+      "steps": [
+        "setup_test_environment",
+        "run_unit_tests_legacy",
+        "run_integration_tests",
+        "run_e2e_tests",
+        "generate_test_coverage"
+      ],
+      "description": "Complete test suite execution workflow"
+    },
+    "test_generation": {
+      "name": "test_generation",
+      "steps": [
+        "create_unit_test",
+        "create_integration_test",
+        "create_mock",
+        "validate_test_structure"
+      ],
+      "description": "Test generation workflow"
+    },
+    "test_optimization": {
+      "name": "test_optimization",
+      "steps": [
+        "validate_test_structure",
+        "optimize_test_performance",
+        "run_unit_tests"
+      ],
+      "description": "Test optimization workflow"
+    }
+  },
+  "activation": {
+    "auto_load": false,
+    "requires_confirmation": true,
+    "fallback_to_core": true
+  },
+  "settings": {
+    "test_timeout": 30000,
+    "parallel_execution": true,
+    "coverage_threshold": 80,
+    "auto_retry_failed": true
+  }
+} 

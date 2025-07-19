@@ -20,7 +20,7 @@ class TaskCLI {
         this.commandBus = dependencies.commandBus;
         this.queryBus = dependencies.queryBus;
         this.aiService = dependencies.aiService;
-        this.taskExecutionEngine = dependencies.taskExecutionEngine;
+        // TaskExecutionEngine removed - functionality moved to WorkflowController
         this.logger = dependencies.logger || console;
         
         this.program = new Command();

@@ -1,8 +1,7 @@
-const Logger = require('@logging/Logger');
-
-const logger = new Logger('ServiceName');
-
 #!/usr/bin/env node
+
+const Logger = require('@logging/Logger');
+const logger = new Logger('ServiceName');
 
 const fs = require('fs');
 const path = require('path');
@@ -218,7 +217,7 @@ class WorkflowAnalyzer {
           'CreateTaskHandler',
           'TaskService',
           'TaskValidationService',
-          'TaskExecutionService'
+      
         ]
       },
       {

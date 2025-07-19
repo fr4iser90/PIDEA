@@ -328,7 +328,7 @@
 | `presentation/api/StreamingController.js` | 18% | 16% | 24% | 19% | ❌ |
 | `presentation/api/TaskAnalysisController.js` | 0% | 0% | 0% | 0% | ❌ |
 | `presentation/api/TaskController.js` | 4% | 5% | 0% | 3% | ❌ |
-| `presentation/api/TaskExecutionController.js` | 0% | 0% | 0% | 0% | ❌ |
+
 | `presentation/api/TaskSuggestionController.js` | 0% | 0% | 0% | 0% | ❌ |
 | `presentation/api/VibeCoderAutoRefactorController.js` | 50% | 29% | 25% | 35% | ❌ |
 | `presentation/api/controllers/AutoTestFixController.js` | 8% | 14% | 3% | 8% | ❌ |

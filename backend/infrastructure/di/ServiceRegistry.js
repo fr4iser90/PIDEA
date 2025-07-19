@@ -148,11 +148,7 @@ class ServiceRegistry {
             return new AnalysisOutputService();
         }, { singleton: true });
 
-            // Task execution service
-        this.container.register('taskExecutionService', (taskRepository, taskExecutionRepository, cursorIDEService, eventBus, logger) => {
-            const TaskExecutionService = require('@domain/services/TaskExecutionService');
-            return new TaskExecutionService(taskRepository, taskExecutionRepository, cursorIDEService, eventBus, logger);
-        }, { singleton: true, dependencies: ['taskRepository', 'taskExecutionRepository', 'cursorIDEService', 'eventBus', 'logger'] });
+    
 
         // Task analysis service
         this.container.register('taskAnalysisService', (cursorIDEService, eventBus, logger, aiService, projectAnalyzer) => {
@@ -161,10 +157,10 @@ class ServiceRegistry {
         }, { singleton: true, dependencies: ['cursorIDEService', 'eventBus', 'logger', 'aiService', 'projectAnalyzer'] });
 
         // Task validation service
-        this.container.register('taskValidationService', (taskRepository, taskExecutionRepository, cursorIDEService, eventBus, fileSystemService) => {
+        this.container.register('taskValidationService', (taskRepository, cursorIDEService, eventBus, fileSystemService) => {
             const TaskValidationService = require('@domain/services/TaskValidationService');
-            return new TaskValidationService(taskRepository, taskExecutionRepository, cursorIDEService, eventBus, fileSystemService);
-        }, { singleton: true, dependencies: ['taskRepository', 'taskExecutionRepository', 'cursorIDEService', 'eventBus', 'fileSystemService'] });
+            return new TaskValidationService(taskRepository, cursorIDEService, eventBus, fileSystemService);
+        }, { singleton: true, dependencies: ['taskRepository', 'cursorIDEService', 'eventBus', 'fileSystemService'] });
 
         // Code quality service
         this.container.register('codeQualityService', (codeQualityAnalyzer, eventBus, logger, analysisOutputService, analysisRepository) => {

@@ -12,7 +12,7 @@ module.exports = {
   ScriptGenerationService: require('./ScriptGenerationService'),
   SecurityService: require('./SecurityService'),
   TaskAnalysisService: require('./TaskAnalysisService'),
-  TaskExecutionService: require('./TaskExecutionService'),
+  
   TaskGenerationService: require('./TaskGenerationService'),
   TaskMonitoringService: require('./TaskMonitoringService'),
   TaskOptimizationService: require('./TaskOptimizationService'),

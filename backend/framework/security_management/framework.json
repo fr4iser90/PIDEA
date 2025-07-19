@@ -1,0 +1,123 @@
+{
+  "name": "security_management",
+  "version": "1.0.0",
+  "description": "Advanced security operations and vulnerability management framework",
+  "category": "security",
+  "author": "PIDEA Team",
+  "dependencies": ["core"],
+  "steps": {
+    "security_audit": {
+      "name": "security_audit",
+      "type": "security",
+      "category": "audit",
+      "description": "Perform comprehensive security audit",
+      "dependencies": ["analysis", "file-system"]
+    },
+    "vulnerability_scan": {
+      "name": "vulnerability_scan",
+      "type": "security",
+      "category": "scan",
+      "description": "Scan for security vulnerabilities",
+      "dependencies": ["analysis", "file-system"]
+    },
+    "dependency_check": {
+      "name": "dependency_check",
+      "type": "security",
+      "category": "dependencies",
+      "description": "Check dependencies for security issues",
+      "dependencies": ["analysis", "file-system"]
+    },
+    "code_security_analysis": {
+      "name": "code_security_analysis",
+      "type": "security",
+      "category": "code_analysis",
+      "description": "Analyze code for security issues",
+      "dependencies": ["analysis", "file-system"]
+    },
+    "generate_security_report": {
+      "name": "generate_security_report",
+      "type": "security",
+      "category": "reporting",
+      "description": "Generate security analysis report",
+      "dependencies": ["analysis", "file-system"]
+    },
+    "fix_security_issues": {
+      "name": "fix_security_issues",
+      "type": "security",
+      "category": "fixes",
+      "description": "Automatically fix security issues where possible",
+      "dependencies": ["ide", "cursor"]
+    },
+    "update_security_dependencies": {
+      "name": "update_security_dependencies",
+      "type": "security",
+      "category": "updates",
+      "description": "Update dependencies with security patches",
+      "dependencies": ["terminal", "file-system"]
+    },
+    "configure_security_settings": {
+      "name": "configure_security_settings",
+      "type": "security",
+      "category": "configuration",
+      "description": "Configure security settings and policies",
+      "dependencies": ["file-system", "terminal"]
+    },
+    "encrypt_sensitive_data": {
+      "name": "encrypt_sensitive_data",
+      "type": "security",
+      "category": "encryption",
+      "description": "Encrypt sensitive data and configurations",
+      "dependencies": ["file-system", "cursor"]
+    },
+    "validate_security_compliance": {
+      "name": "validate_security_compliance",
+      "type": "security",
+      "category": "compliance",
+      "description": "Validate security compliance requirements",
+      "dependencies": ["analysis", "file-system"]
+    }
+  },
+  "workflows": {
+    "complete_security_audit": {
+      "name": "complete_security_audit",
+      "steps": [
+        "security_audit",
+        "vulnerability_scan",
+        "dependency_check",
+        "code_security_analysis",
+        "generate_security_report"
+      ],
+      "description": "Complete security audit workflow"
+    },
+    "security_fixes": {
+      "name": "security_fixes",
+      "steps": [
+        "vulnerability_scan",
+        "fix_security_issues",
+        "update_security_dependencies",
+        "validate_security_compliance"
+      ],
+      "description": "Security fixes workflow"
+    },
+    "security_setup": {
+      "name": "security_setup",
+      "steps": [
+        "configure_security_settings",
+        "encrypt_sensitive_data",
+        "validate_security_compliance"
+      ],
+      "description": "Security setup workflow"
+    }
+  },
+  "activation": {
+    "auto_load": false,
+    "requires_confirmation": true,
+    "fallback_to_core": true
+  },
+  "settings": {
+    "scan_depth": "deep",
+    "auto_fix": false,
+    "compliance_standards": ["OWASP", "CWE"],
+    "report_format": "detailed"
+  }
+} 

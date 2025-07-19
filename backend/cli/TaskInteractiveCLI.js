@@ -21,7 +21,7 @@ class TaskInteractiveCLI extends EventEmitter {
         this.commandBus = dependencies.commandBus;
         this.queryBus = dependencies.queryBus;
         this.aiService = dependencies.aiService;
-        this.taskExecutionEngine = dependencies.taskExecutionEngine;
+        // TaskExecutionEngine removed - functionality moved to WorkflowController
         this.logger = dependencies.logger || console;
         
         this.currentProject = null;
@@ -36,21 +36,7 @@ class TaskInteractiveCLI extends EventEmitter {
      * Setup event listeners for real-time updates
      */
     setupEventListeners() {
-        this.taskExecutionEngine.on('execution:start', (data) => {
-            this.handleExecutionStart(data);
-        });
-
-        this.taskExecutionEngine.on('execution:progress', (data) => {
-            this.handleExecutionProgress(data);
-        });
-
-        this.taskExecutionEngine.on('execution:complete', (data) => {
-            this.handleExecutionComplete(data);
-        });
-
-        this.taskExecutionEngine.on('execution:error', (data) => {
-            this.handleExecutionError(data);
-        });
+        // TaskExecutionEngine removed - events now handled by WorkflowController
 
         this.aiService.on('ai:request', (data) => {
             this.handleAIRequest(data);

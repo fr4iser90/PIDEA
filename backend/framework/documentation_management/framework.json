@@ -1,0 +1,122 @@
+{
+  "name": "documentation_management",
+  "version": "1.0.0",
+  "description": "Advanced documentation generation and management framework",
+  "category": "documentation",
+  "author": "PIDEA Team",
+  "dependencies": ["core"],
+  "steps": {
+    "generate_api_docs": {
+      "name": "generate_api_docs",
+      "type": "documentation",
+      "category": "api",
+      "description": "Generate API documentation from code",
+      "dependencies": ["analysis", "file-system"]
+    },
+    "generate_readme": {
+      "name": "generate_readme",
+      "type": "documentation",
+      "category": "readme",
+      "description": "Generate or update README file",
+      "dependencies": ["analysis", "file-system"]
+    },
+    "generate_architecture_docs": {
+      "name": "generate_architecture_docs",
+      "type": "documentation",
+      "category": "architecture",
+      "description": "Generate architecture documentation",
+      "dependencies": ["analysis", "file-system"]
+    },
+    "generate_changelog": {
+      "name": "generate_changelog",
+      "type": "documentation",
+      "category": "changelog",
+      "description": "Generate changelog from git history",
+      "dependencies": ["git", "file-system"]
+    },
+    "validate_documentation": {
+      "name": "validate_documentation",
+      "type": "documentation",
+      "category": "validation",
+      "description": "Validate documentation completeness and accuracy",
+      "dependencies": ["analysis", "file-system"]
+    },
+    "update_documentation": {
+      "name": "update_documentation",
+      "type": "documentation",
+      "category": "update",
+      "description": "Update existing documentation based on code changes",
+      "dependencies": ["analysis", "file-system"]
+    },
+    "generate_diagrams": {
+      "name": "generate_diagrams",
+      "type": "documentation",
+      "category": "diagrams",
+      "description": "Generate architecture and flow diagrams",
+      "dependencies": ["analysis", "file-system"]
+    },
+    "create_user_guide": {
+      "name": "create_user_guide",
+      "type": "documentation",
+      "category": "user_guide",
+      "description": "Create user guide and tutorials",
+      "dependencies": ["analysis", "cursor"]
+    },
+    "create_developer_guide": {
+      "name": "create_developer_guide",
+      "type": "documentation",
+      "category": "developer_guide",
+      "description": "Create developer guide and setup instructions",
+      "dependencies": ["analysis", "cursor"]
+    },
+    "generate_code_comments": {
+      "name": "generate_code_comments",
+      "type": "documentation",
+      "category": "comments",
+      "description": "Generate JSDoc comments for functions and classes",
+      "dependencies": ["ide", "cursor"]
+    }
+  },
+  "workflows": {
+    "complete_documentation": {
+      "name": "complete_documentation",
+      "steps": [
+        "generate_api_docs",
+        "generate_readme",
+        "generate_architecture_docs",
+        "generate_changelog",
+        "validate_documentation"
+      ],
+      "description": "Complete documentation generation workflow"
+    },
+    "documentation_update": {
+      "name": "documentation_update",
+      "steps": [
+        "update_documentation",
+        "generate_diagrams",
+        "validate_documentation"
+      ],
+      "description": "Documentation update workflow"
+    },
+    "user_documentation": {
+      "name": "user_documentation",
+      "steps": [
+        "create_user_guide",
+        "create_developer_guide",
+        "generate_diagrams"
+      ],
+      "description": "User documentation creation workflow"
+    }
+  },
+  "activation": {
+    "auto_load": false,
+    "requires_confirmation": true,
+    "fallback_to_core": true
+  },
+  "settings": {
+    "output_format": "markdown",
+    "include_diagrams": true,
+    "auto_update": false,
+    "validation_strict": true
+  }
+} 

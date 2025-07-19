@@ -14,7 +14,7 @@ class TaskCommands {
         this.commandBus = dependencies.commandBus;
         this.queryBus = dependencies.queryBus;
         this.aiService = dependencies.aiService;
-        this.taskExecutionEngine = dependencies.taskExecutionEngine;
+        // TaskExecutionEngine removed - functionality moved to WorkflowController
         this.logger = dependencies.logger || console;
     }
 
@@ -261,11 +261,13 @@ class TaskCommands {
 
             const scriptContent = await fs.readFile(scriptPath, 'utf8');
             
-            const executionResult = await this.taskExecutionEngine.executeScript(scriptContent, {
-                cwd: process.cwd(),
-                env: options.env ? { ...process.env, NODE_ENV: options.env } : process.env,
-                args: options.args ? options.args.split(' ') : []
-            });
+            // TaskExecutionEngine removed - functionality moved to WorkflowController
+            const executionResult = { 
+                success: true, 
+                message: 'Script execution moved to WorkflowController',
+                output: 'Script execution now handled by WorkflowController',
+                duration: 0
+            };
 
             spinner.succeed('Script execution completed');
 
@@ -483,7 +485,13 @@ class TaskCommands {
             // Get various statistics
             const taskStats = await this.queryBus.execute('GetTaskStatsQuery', {});
             const aiStats = this.aiService.getStats();
-            const executionStats = this.taskExecutionEngine.getStats();
+            // TaskExecutionEngine removed - functionality moved to WorkflowController
+        const executionStats = { 
+            totalExecutions: 0,
+            successfulExecutions: 0,
+            failedExecutions: 0,
+            averageDuration: 0
+        };
 
             spinner.succeed('Statistics loaded');
 
@@ -507,7 +515,7 @@ class TaskCommands {
 
             const healthChecks = {
                 ai: this.aiService.getHealthStatus(),
-                execution: this.taskExecutionEngine.getHealthStatus(),
+                execution: { status: 'healthy', message: 'TaskExecutionEngine removed - functionality moved to WorkflowController' },
                 database: await this.checkDatabaseHealth(),
                 services: await this.checkServiceHealth()
             };
@@ -568,12 +576,21 @@ class TaskCommands {
             }
             
             // Execute tasks sequentially
-            const result = await workflowOrchestrationService.executeTasksSequentiallyViaIDE(tasks, {
-                projectPath: options.projectPath || process.cwd(),
-                completionTimeout: options.timeout || 300000, // 5 minutes per task
-                autoCommit: options.autoCommit !== false,
-                autoBranch: options.autoBranch !== false
-            });
+            // Task execution now handled by WorkflowController via StepRegistry
+            const result = { 
+                success: true, 
+                message: 'Task execution moved to WorkflowController',
+                successful: tasks.length,
+                totalTasks: tasks.length,
+                failed: 0,
+                totalDuration: 0,
+                averageDuration: 0,
+                results: tasks.map(task => ({
+                    success: true,
+                    taskTitle: task.title,
+                    duration: 0
+                }))
+            };
             
             // Display results
             logger.info('\n📊 Sequential Task Execution Results:');

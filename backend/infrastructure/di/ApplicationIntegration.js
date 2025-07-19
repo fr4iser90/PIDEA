@@ -64,7 +64,7 @@ class ApplicationIntegration {
         this.taskRepository = this.serviceRegistry.getService('taskRepository');
         this.taskExecutionRepository = this.serviceRegistry.getService('taskExecutionRepository');
         this.taskService = this.serviceRegistry.getService('taskService');
-        this.taskExecutionService = this.serviceRegistry.getService('taskExecutionService');
+    
         this.taskValidationService = this.serviceRegistry.getService('taskValidationService');
         this.taskAnalysisService = this.serviceRegistry.getService('taskAnalysisService');
         this.codeQualityService = this.serviceRegistry.getService('codeQualityService');

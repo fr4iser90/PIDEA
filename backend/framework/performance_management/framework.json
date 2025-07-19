@@ -1,0 +1,125 @@
+{
+  "name": "performance_management",
+  "version": "1.0.0",
+  "description": "Advanced performance optimization and monitoring framework",
+  "category": "performance",
+  "author": "PIDEA Team",
+  "dependencies": ["core"],
+  "steps": {
+    "performance_analysis": {
+      "name": "performance_analysis",
+      "type": "performance",
+      "category": "analysis",
+      "description": "Analyze application performance",
+      "dependencies": ["analysis", "file-system"]
+    },
+    "memory_optimization": {
+      "name": "memory_optimization",
+      "type": "performance",
+      "category": "memory",
+      "description": "Optimize memory usage and reduce leaks",
+      "dependencies": ["analysis", "ide"]
+    },
+    "cpu_optimization": {
+      "name": "cpu_optimization",
+      "type": "performance",
+      "category": "cpu",
+      "description": "Optimize CPU usage and processing",
+      "dependencies": ["analysis", "ide"]
+    },
+    "database_optimization": {
+      "name": "database_optimization",
+      "type": "performance",
+      "category": "database",
+      "description": "Optimize database queries and performance",
+      "dependencies": ["analysis", "database"]
+    },
+    "network_optimization": {
+      "name": "network_optimization",
+      "type": "performance",
+      "category": "network",
+      "description": "Optimize network requests and API calls",
+      "dependencies": ["analysis", "network"]
+    },
+    "generate_performance_report": {
+      "name": "generate_performance_report",
+      "type": "performance",
+      "category": "reporting",
+      "description": "Generate performance analysis report",
+      "dependencies": ["analysis", "file-system"]
+    },
+    "setup_monitoring": {
+      "name": "setup_monitoring",
+      "type": "performance",
+      "category": "monitoring",
+      "description": "Setup performance monitoring tools",
+      "dependencies": ["file-system", "terminal"]
+    },
+    "optimize_build_process": {
+      "name": "optimize_build_process",
+      "type": "performance",
+      "category": "build",
+      "description": "Optimize build and compilation process",
+      "dependencies": ["terminal", "file-system"]
+    },
+    "cache_optimization": {
+      "name": "cache_optimization",
+      "type": "performance",
+      "category": "caching",
+      "description": "Optimize caching strategies",
+      "dependencies": ["analysis", "ide"]
+    },
+    "load_testing": {
+      "name": "load_testing",
+      "type": "performance",
+      "category": "testing",
+      "description": "Perform load testing and stress testing",
+      "dependencies": ["terminal", "analysis"]
+    }
+  },
+  "workflows": {
+    "complete_performance_audit": {
+      "name": "complete_performance_audit",
+      "steps": [
+        "performance_analysis",
+        "memory_optimization",
+        "cpu_optimization",
+        "database_optimization",
+        "network_optimization",
+        "generate_performance_report"
+      ],
+      "description": "Complete performance audit workflow"
+    },
+    "performance_optimization": {
+      "name": "performance_optimization",
+      "steps": [
+        "performance_analysis",
+        "memory_optimization",
+        "cpu_optimization",
+        "cache_optimization",
+        "generate_performance_report"
+      ],
+      "description": "Performance optimization workflow"
+    },
+    "performance_monitoring": {
+      "name": "performance_monitoring",
+      "steps": [
+        "setup_monitoring",
+        "load_testing",
+        "generate_performance_report"
+      ],
+      "description": "Performance monitoring workflow"
+    }
+  },
+  "activation": {
+    "auto_load": false,
+    "requires_confirmation": true,
+    "fallback_to_core": true
+  },
+  "settings": {
+    "monitoring_interval": 60000,
+    "performance_threshold": 80,
+    "auto_optimization": false,
+    "detailed_reporting": true
+  }
+} 

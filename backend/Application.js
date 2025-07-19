@@ -281,7 +281,7 @@ class Application {
         this.taskRepository = this.serviceRegistry.getService('taskRepository');
         this.taskExecutionRepository = this.serviceRegistry.getService('taskExecutionRepository');
         this.taskService = this.serviceRegistry.getService('taskService');
-        this.taskExecutionService = this.serviceRegistry.getService('taskExecutionService');
+    
         this.taskValidationService = this.serviceRegistry.getService('taskValidationService');
         this.taskAnalysisService = this.serviceRegistry.getService('taskAnalysisService');
         this.codeQualityService = this.serviceRegistry.getService('codeQualityService');
@@ -370,6 +370,35 @@ class Application {
     this.stepRegistry = require('./domain/steps').getStepRegistry();
     this.logger.info('Step Registry initialized');
 
+    // Initialize Framework Infrastructure
+    try {
+      const { initializeFrameworkInfrastructure } = require('./infrastructure/framework');
+      const frameworkInfrastructure = await initializeFrameworkInfrastructure(this.stepRegistry);
+      this.frameworkManager = frameworkInfrastructure.manager;
+      this.frameworkLoader = frameworkInfrastructure.loader;
+      this.frameworkValidator = frameworkInfrastructure.validator;
+      this.frameworkConfig = frameworkInfrastructure.config;
+      this.frameworkStepRegistry = frameworkInfrastructure.stepRegistry;
+      this.logger.info('Framework Infrastructure initialized');
+    } catch (error) {
+      this.logger.warn('Framework Infrastructure initialization failed, continuing without framework support:', error.message);
+      // Create fallback framework services
+      this.frameworkManager = { 
+        activateFramework: () => Promise.resolve({}),
+        deactivateFramework: () => Promise.resolve(true),
+        getActiveFramework: () => null,
+        getAllActiveFrameworks: () => []
+      };
+      this.frameworkLoader = { getStats: () => ({}) };
+      this.frameworkValidator = { validateFramework: () => Promise.resolve({ isValid: true }) };
+      this.frameworkConfig = { getConfigStats: () => ({}) };
+      this.frameworkStepRegistry = { 
+        getFrameworkSteps: () => [], 
+        isFrameworkStep: () => false,
+        getLoadedFrameworks: () => []
+      };
+    }
+
     this.logger.info('Domain services initialized with DI');
   }
 
@@ -417,17 +446,7 @@ class Application {
       logger: this.logger
     });
 
-    this.taskExecutionEngine = new (require('./infrastructure/external/TaskExecutionEngine'))({
-      aiService: this.aiService,
-      scriptExecutor: new (require('./infrastructure/external/ScriptExecutor'))(this.logger),
-      fileSystemService: this.fileSystemService,
-      gitService: this.gitService,
-      dockerService: this.dockerService,
-      taskRepository: this.taskRepository,
-      analysisRepository: this.analysisRepository,
-      logger: this.logger,
-      eventBus: this.eventBus
-    });
+    // TaskExecutionEngine removed - functionality moved to WorkflowController + StepRegistry
 
     // Register only non-legacy command handlers
     this.commandBus.register('ProcessTodoListCommand', this.processTodoListHandler);
@@ -1170,6 +1189,27 @@ class Application {
    */
   getIDEWorkspaceDetectionService() {
     return this.ideWorkspaceDetectionService;
+  }
+
+  // Framework Infrastructure Getters
+  getFrameworkManager() {
+    return this.frameworkManager;
+  }
+
+  getFrameworkLoader() {
+    return this.frameworkLoader;
+  }
+
+  getFrameworkValidator() {
+    return this.frameworkValidator;
+  }
+
+  getFrameworkConfig() {
+    return this.frameworkConfig;
+  }
+
+  getFrameworkStepRegistry() {
+    return this.frameworkStepRegistry;
   }
 }
 

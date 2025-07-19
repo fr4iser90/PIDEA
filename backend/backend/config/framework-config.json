@@ -1,0 +1,60 @@
+{
+  "framework": {
+    "autoLoad": false,
+    "defaultCategory": "general",
+    "maxFrameworks": 50,
+    "timeout": 30000,
+    "retryAttempts": 3,
+    "cacheEnabled": true,
+    "cacheTimeout": 300000,
+    "validationEnabled": true,
+    "securityEnabled": true
+  },
+  "directories": {
+    "frameworkRoot": "backend/framework",
+    "configRoot": "backend/config/frameworks",
+    "tempRoot": "backend/temp/frameworks",
+    "logRoot": "backend/logs/frameworks"
+  },
+  "security": {
+    "allowedPaths": [
+      "backend/framework/",
+      "backend/domain/",
+      "backend/infrastructure/"
+    ],
+    "forbiddenPaths": [
+      "node_modules/",
+      ".git/",
+      "package.json",
+      "package-lock.json"
+    ],
+    "maxFileSize": 1048576,
+    "allowedModules": [
+      "fs",
+      "path",
+      "util",
+      "crypto",
+      "http",
+      "https"
+    ],
+    "forbiddenModules": [
+      "child_process",
+      "eval",
+      "Function"
+    ]
+  },
+  "performance": {
+    "lazyLoading": true,
+    "parallelLoading": true,
+    "maxParallelLoads": 5,
+    "memoryLimit": 104857600,
+    "cpuLimit": 50
+  },
+  "logging": {
+    "enabled": true,
+    "level": "info",
+    "format": "json",
+    "maxFiles": 10,
+    "maxSize": 10485760
+  }
+}
