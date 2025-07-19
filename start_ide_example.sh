@@ -2,7 +2,18 @@
 
 cd "$HOME/Documents" || exit 1
 
-APPIMAGE="./Cursor-1.2.2-x86_64.AppImage"
+# IDE Konfigurationen
+declare -A IDES=(
+  ["cursor"]="./Cursor-1.2.2-x86_64.AppImage"
+  ["vscode"]="code"
+)
+
+# Port Ranges für verschiedene IDEs
+declare -A PORT_RANGES=(
+  ["cursor"]="9222:9232"
+  ["vscode"]="9233:9242"
+)
+
 RUNNER="appimage-run"
 
 # Hilfsfunktion: prüft ob Port frei ist
@@ -10,53 +21,184 @@ port_in_use() {
   lsof -i ":$1" &>/dev/null
 }
 
-# Standard: Slot 2 (Port 9222)
-if [[ -z "$1" ]]; then
-  PORT=9222
-  DIR="$HOME/.fr4iser2"
-  if port_in_use "$PORT"; then
-    echo "❌ Port $PORT ist bereits belegt. Bitte schließe die andere Instanz oder nutze einen anderen Slot."
-    exit 1
-  fi
-  $RUNNER "$APPIMAGE" \
-    --user-data-dir="$DIR" \
-    --remote-debugging-port=$PORT &
-  exit 0
-fi
-
-# Manueller Slot (Zahl)
-if [[ "$1" =~ ^[0-9]+$ ]]; then
-  DIR="$HOME/.fr4iser$1"
-  PORT=$((9220 + $1))
-  if port_in_use "$PORT"; then
-    echo "❌ Port $PORT (Slot $1) ist bereits belegt."
-    exit 1
-  fi
-  $RUNNER "$APPIMAGE" \
-    --user-data-dir="$DIR" \
-    --remote-debugging-port=$PORT &
-  exit 0
-fi
-
-# Automatisch freien Slot finden
-if [[ "$1" == "auto" ]]; then
-  for i in {3..30}; do
-    DIR="$HOME/.fr4iser$i"
-    PORT=$((9220 + i))
-    if [[ ! -d "$DIR" ]] && ! port_in_use "$PORT"; then
-      $RUNNER "$APPIMAGE" \
-        --user-data-dir="$DIR" \
-        --remote-debugging-port=$PORT &
-      exit 0
+# Hilfsfunktion: findet freien Port in Range
+find_free_port() {
+  local range=$1
+  local start_port=$(echo $range | cut -d: -f1)
+  local end_port=$(echo $range | cut -d: -f2)
+  
+  for port in $(seq $start_port $end_port); do
+    if ! port_in_use "$port"; then
+      echo $port
+      return 0
     fi
   done
-  echo "❌ Keine freien Slots (Ports 9223–9250) gefunden."
-  exit 1
-fi
+  return 1
+}
 
-# Ungültiger Parameter
-echo "❗ Ungültiges Argument:"
-echo "   -> Kein Argument: startet Slot 2 (Port 9222)"
-echo "   -> <Zahl>: startet entsprechenden Slot"
-echo "   -> auto: sucht nächsten freien Slot"
-exit 1
+# Hilfsfunktion: zeigt verfügbare IDEs
+show_ides() {
+  echo "📋 Verfügbare IDEs:"
+  for ide in "${!IDES[@]}"; do
+    local range="${PORT_RANGES[$ide]}"
+    echo "   $ide (Ports $range)"
+  done
+}
+
+# Hilfsfunktion: zeigt Hilfe
+show_help() {
+  echo "🚀 IDE Starter Script"
+  echo ""
+  echo "Verwendung:"
+  echo "  $0 [ide] [slot]"
+  echo "  $0 [ide] auto"
+  echo "  $0 menu"
+  echo ""
+  echo "Argumente:"
+  echo "  ide    - cursor, vscode"
+  echo "  slot   - spezifischer Slot (Zahl)"
+  echo "  auto   - automatisch freien Slot finden"
+  echo "  menu   - interaktives Menü"
+  echo ""
+  show_ides
+  echo ""
+  echo "Beispiele:"
+  echo "  $0 cursor        # Cursor mit freiem Port starten"
+  echo "  $0 vscode 3      # VSCode auf Slot 3 starten"
+  echo "  $0 cursor auto   # Cursor mit automatischem Slot"
+}
+
+# Interaktives Menü
+show_menu() {
+  echo "🎯 IDE Starter - Wähle deine IDE:"
+  echo ""
+  local i=1
+  for ide in "${!IDES[@]}"; do
+    local range="${PORT_RANGES[$ide]}"
+    echo "  $i) $ide (Ports $range)"
+    ((i++))
+  done
+  echo "  $i) Hilfe"
+  echo "  0) Beenden"
+  echo ""
+  read -p "Wähle eine Option (0-$i): " choice
+  
+  case $choice in
+    0) exit 0 ;;
+    $i) show_help; exit 0 ;;
+    *) 
+      local ides_array=($(echo "${!IDES[@]}" | tr ' ' '\n'))
+      if [[ $choice -ge 1 && $choice -le ${#ides_array[@]} ]]; then
+        local selected_ide="${ides_array[$((choice-1))]}"
+        echo ""
+        read -p "Slot für $selected_ide (Zahl oder 'auto'): " slot
+        start_ide "$selected_ide" "$slot"
+      else
+        echo "❌ Ungültige Auswahl"
+        exit 1
+      fi
+      ;;
+  esac
+}
+
+# IDE starten
+start_ide() {
+  local ide=$1
+  local slot=$2
+  
+  # Prüfe ob IDE existiert
+  if [[ ! -v IDES[$ide] ]]; then
+    echo "❌ Unbekannte IDE: $ide"
+    show_ides
+    exit 1
+  fi
+  
+  local ide_path="${IDES[$ide]}"
+  local port_range="${PORT_RANGES[$ide]}"
+  
+  # Prüfe ob IDE verfügbar ist
+  if [[ $ide == "cursor" ]]; then
+    if [[ ! -f "$ide_path" ]]; then
+      echo "❌ Cursor AppImage nicht gefunden: $ide_path"
+      exit 1
+    fi
+  else
+    if ! command -v "$ide_path" &> /dev/null; then
+      echo "❌ $ide ist nicht installiert oder nicht im PATH"
+      exit 1
+    fi
+  fi
+  
+  local port
+  local dir
+  
+  # Port und Verzeichnis bestimmen
+  if [[ -z "$slot" ]]; then
+    # Automatisch freien Port finden
+    port=$(find_free_port "$port_range")
+    if [[ -z "$port" ]]; then
+      echo "❌ Kein freier Port in Range $port_range verfügbar"
+      exit 1
+    fi
+    dir="$HOME/.${ide}_${port}"
+  elif [[ "$slot" == "auto" ]]; then
+    # Automatisch freien Port finden
+    port=$(find_free_port "$port_range")
+    if [[ -z "$port" ]]; then
+      echo "❌ Kein freier Port in Range $port_range verfügbar"
+      exit 1
+    fi
+    dir="$HOME/.${ide}_${port}"
+  elif [[ "$slot" =~ ^[0-9]+$ ]]; then
+    # Spezifischer Slot
+    local start_port=$(echo $port_range | cut -d: -f1)
+    port=$((start_port + slot - 1))
+    local end_port=$(echo $port_range | cut -d: -f2)
+    
+    if [[ $port -gt $end_port ]]; then
+      echo "❌ Slot $slot ist außerhalb der verfügbaren Range ($port_range)"
+      exit 1
+    fi
+    
+    if port_in_use "$port"; then
+      echo "❌ Port $port (Slot $slot) ist bereits belegt"
+      exit 1
+    fi
+    
+    dir="$HOME/.${ide}_${port}"
+  else
+    echo "❌ Ungültiger Slot: $slot"
+    exit 1
+  fi
+  
+  # IDE starten
+  echo "🚀 Starte $ide auf Port $port..."
+  
+  if [[ $ide == "cursor" ]]; then
+    $RUNNER "$ide_path" \
+      --user-data-dir="$dir" \
+      --remote-debugging-port=$port &
+  else
+    # VSCode mit Remote Debugging starten
+    "$ide_path" \
+      --user-data-dir="$dir" \
+      --remote-debugging-port=$port &
+  fi
+  
+  echo "✅ $ide gestartet auf Port $port"
+  echo "   Verzeichnis: $dir"
+  echo "   Debug URL: http://localhost:$port"
+}
+
+# Hauptlogik
+if [[ "$1" == "menu" ]]; then
+  show_menu
+elif [[ "$1" == "help" || "$1" == "-h" || "$1" == "--help" ]]; then
+  show_help
+elif [[ -z "$1" ]]; then
+  echo "❌ Keine IDE angegeben"
+  echo ""
+  show_help
+else
+  start_ide "$1" "$2"
+fi
