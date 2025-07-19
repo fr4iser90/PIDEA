@@ -22,7 +22,7 @@
 const fs = require('fs').promises;
 const path = require('path');
 const FrameworkValidator = require('./FrameworkValidator');
-const FrameworkRegistry = require('@domain/frameworks/FrameworkRegistry');
+const { FrameworkRegistry } = require('@domain/frameworks');
 
 class FrameworkLoader {
     constructor() {
@@ -234,6 +234,12 @@ class FrameworkManager {
     
     async deactivateFramework(frameworkName) {
         try {
+            // Check if framework is active
+            if (!this.loader.hasFramework(frameworkName)) {
+                logger.info(`ℹ️ Framework '${frameworkName}' not active`);
+                return;
+            }
+            
             // Unload framework
             await this.loader.unloadFramework(frameworkName);
             
@@ -250,19 +256,29 @@ class FrameworkManager {
     }
     
     async getAvailableFrameworks() {
-        return this.config.getAvailableFrameworks();
+        return await this.loader.getAvailableFrameworks();
     }
     
     async getActiveFrameworks() {
-        return this.loader.getActiveFrameworks();
+        return await this.loader.getActiveFrameworks();
     }
     
-    async getFrameworkStatus(frameworkName) {
+    async getFrameworkInfo(frameworkName) {
+        const metadata = this.registry.getFrameworkMetadata(frameworkName);
+        const steps = this.registry.getFrameworkSteps(frameworkName);
+        const services = this.registry.getFrameworkServices(frameworkName);
+        const dependencies = this.registry.getFrameworkDependencies(frameworkName);
+        
         return {
-            name: frameworkName,
-            active: this.loader.hasFramework(frameworkName),
-            config: this.config.getFrameworkConfig(frameworkName)
+            metadata,
+            steps: steps.length,
+            services: services.length,
+            dependencies
         };
+    }
+    
+    async getRegistryStatus() {
+        return this.registry.getRegistryStatus();
     }
     
     async reloadFramework(frameworkName) {
@@ -273,6 +289,45 @@ class FrameworkManager {
         } catch (error) {
             logger.error(`❌ Failed to reload framework '${frameworkName}':`, error.message);
             throw error;
+        }
+    }
+    
+    async reloadAllFrameworks() {
+        const activeFrameworks = await this.getActiveFrameworks();
+        
+        for (const frameworkName of activeFrameworks) {
+            try {
+                await this.reloadFramework(frameworkName);
+            } catch (error) {
+                logger.error(`❌ Failed to reload framework '${frameworkName}':`, error.message);
+            }
+        }
+    }
+    
+    async validateFramework(frameworkName) {
+        try {
+            const availableFrameworks = await this.getAvailableFrameworks();
+            if (!availableFrameworks.includes(frameworkName)) {
+                throw new Error(`Framework '${frameworkName}' not found`);
+            }
+            
+            // Try to load framework temporarily for validation
+            const framework = await this.loader.loadFramework(frameworkName);
+            await this.loader.unloadFramework(frameworkName);
+            
+            return {
+                valid: true,
+                framework: framework.name,
+                version: framework.version,
+                steps: framework.steps.size,
+                services: framework.services.size
+            };
+            
+        } catch (error) {
+            return {
+                valid: false,
+                error: error.message
+            };
         }
     }
 }
@@ -288,133 +343,220 @@ module.exports = FrameworkManager;
 // backend/infrastructure/framework/FrameworkValidator.js
 const fs = require('fs').promises;
 const path = require('path');
-const Logger = require('@logging/Logger');
-const logger = new Logger('FrameworkValidator');
 
 class FrameworkValidator {
     constructor() {
-        this.validationRules = {
-            requiredFiles: [
-                'config.json',
-                'README.md'
-            ],
-            requiredConfigFields: [
-                'name',
-                'version',
-                'description',
-                'category'
-            ],
-            optionalConfigFields: [
-                'dependencies',
-                'steps',
-                'services',
-                'workflows',
-                'activation'
-            ]
+        this.requiredFiles = [
+            'config.json',
+            'README.md',
+            'steps/',
+            'services/'
+        ];
+        
+        this.requiredConfigFields = [
+            'name',
+            'version',
+            'description',
+            'dependencies',
+            'steps',
+            'services'
+        ];
+        
+        this.stepValidation = {
+            requiredMethods: ['execute', 'validate'],
+            requiredProperties: ['category', 'dependencies']
+        };
+        
+        this.serviceValidation = {
+            requiredMethods: ['initialize', 'cleanup'],
+            requiredProperties: ['dependencies']
         };
     }
     
     async validateFrameworkExists(frameworkPath) {
         try {
-            await fs.access(frameworkPath);
-            logger.info(`✅ Framework path exists: ${frameworkPath}`);
-        } catch (error) {
-            throw new Error(`Framework path does not exist: ${frameworkPath}`);
-        }
-    }
-    
-    async validateFrameworkConfig(config) {
-        // Validate required fields
-        for (const field of this.validationRules.requiredConfigFields) {
-            if (!config[field]) {
-                throw new Error(`Missing required config field: ${field}`);
+            const stats = await fs.stat(frameworkPath);
+            if (!stats.isDirectory()) {
+                throw new Error(`Framework path '${frameworkPath}' is not a directory`);
             }
+        } catch (error) {
+            throw new Error(`Framework not found at '${frameworkPath}'`);
         }
-        
-        // Validate field types
-        if (typeof config.name !== 'string') {
-            throw new Error('Config field "name" must be a string');
-        }
-        
-        if (typeof config.version !== 'string') {
-            throw new Error('Config field "version" must be a string');
-        }
-        
-        if (typeof config.description !== 'string') {
-            throw new Error('Config field "description" must be a string');
-        }
-        
-        if (typeof config.category !== 'string') {
-            throw new Error('Config field "category" must be a string');
-        }
-        
-        // Validate dependencies
-        if (config.dependencies && !Array.isArray(config.dependencies)) {
-            throw new Error('Config field "dependencies" must be an array');
-        }
-        
-        // Validate steps
-        if (config.steps && typeof config.steps !== 'object') {
-            throw new Error('Config field "steps" must be an object');
-        }
-        
-        // Validate services
-        if (config.services && typeof config.services !== 'object') {
-            throw new Error('Config field "services" must be an object');
-        }
-        
-        logger.info(`✅ Framework config validation passed for: ${config.name}`);
     }
     
     async validateFrameworkStructure(frameworkPath) {
-        const requiredFiles = this.validationRules.requiredFiles;
+        const missingFiles = [];
         
-        for (const file of requiredFiles) {
-            const filePath = path.join(frameworkPath, file);
+        for (const requiredFile of this.requiredFiles) {
+            const filePath = path.join(frameworkPath, requiredFile);
             try {
                 await fs.access(filePath);
             } catch (error) {
-                throw new Error(`Missing required file: ${file}`);
+                missingFiles.push(requiredFile);
             }
         }
         
-        logger.info(`✅ Framework structure validation passed: ${frameworkPath}`);
+        if (missingFiles.length > 0) {
+            throw new Error(`Missing required files: ${missingFiles.join(', ')}`);
+        }
+    }
+    
+    validateFrameworkConfig(config) {
+        const missingFields = [];
+        
+        for (const field of this.requiredConfigFields) {
+            if (!(field in config)) {
+                missingFields.push(field);
+            }
+        }
+        
+        if (missingFields.length > 0) {
+            throw new Error(`Missing required config fields: ${missingFields.join(', ')}`);
+        }
+        
+        // Validate name format
+        if (!/^[a-z_]+$/.test(config.name)) {
+            throw new Error('Framework name must contain only lowercase letters and underscores');
+        }
+        
+        // Validate version format
+        if (!/^\d+\.\d+\.\d+$/.test(config.version)) {
+            throw new Error('Framework version must be in semantic versioning format (x.y.z)');
+        }
+    }
+    
+    async validateFrameworkSteps(frameworkPath, config) {
+        if (!config.steps) return;
+        
+        for (const [stepName, stepConfig] of Object.entries(config.steps)) {
+            // Validate step config
+            if (!stepConfig.file) {
+                throw new Error(`Step '${stepName}' missing file path`);
+            }
+            
+            if (!stepConfig.category) {
+                throw new Error(`Step '${stepName}' missing category`);
+            }
+            
+            // Validate step file exists
+            const stepPath = path.join(frameworkPath, stepConfig.file);
+            try {
+                await fs.access(stepPath);
+            } catch (error) {
+                throw new Error(`Step file not found: ${stepConfig.file}`);
+            }
+            
+            // Validate step class
+            try {
+                const StepClass = require(stepPath);
+                this.validateStepClass(StepClass, stepName);
+            } catch (error) {
+                throw new Error(`Invalid step class '${stepName}': ${error.message}`);
+            }
+        }
+    }
+    
+    async validateFrameworkServices(frameworkPath, config) {
+        if (!config.services) return;
+        
+        for (const [serviceName, serviceConfig] of Object.entries(config.services)) {
+            // Validate service config
+            if (!serviceConfig.file) {
+                throw new Error(`Service '${serviceName}' missing file path`);
+            }
+            
+            // Validate service file exists
+            const servicePath = path.join(frameworkPath, serviceConfig.file);
+            try {
+                await fs.access(servicePath);
+            } catch (error) {
+                throw new Error(`Service file not found: ${serviceConfig.file}`);
+            }
+            
+            // Validate service class
+            try {
+                const ServiceClass = require(servicePath);
+                this.validateServiceClass(ServiceClass, serviceName);
+            } catch (error) {
+                throw new Error(`Invalid service class '${serviceName}': ${error.message}`);
+            }
+        }
     }
     
     validateStepClass(StepClass, stepName) {
+        // Check if it's a class
         if (typeof StepClass !== 'function') {
-            throw new Error(`Step "${stepName}" must be a class`);
+            throw new Error('Step must be a class');
         }
         
-        const step = new StepClass();
-        
-        if (typeof step.execute !== 'function') {
-            throw new Error(`Step "${stepName}" must have an "execute" method`);
+        // Check required methods
+        for (const method of this.stepValidation.requiredMethods) {
+            if (typeof StepClass.prototype[method] !== 'function') {
+                throw new Error(`Step must have '${method}' method`);
+            }
         }
         
-        if (typeof step.validate !== 'function') {
-            throw new Error(`Step "${stepName}" must have a "validate" method`);
+        // Check required properties
+        const instance = new StepClass();
+        for (const property of this.stepValidation.requiredProperties) {
+            if (!(property in instance)) {
+                throw new Error(`Step must have '${property}' property`);
+            }
         }
-        
-        logger.info(`✅ Step class validation passed: ${stepName}`);
     }
     
     validateServiceClass(ServiceClass, serviceName) {
+        // Check if it's a class
         if (typeof ServiceClass !== 'function') {
-            throw new Error(`Service "${serviceName}" must be a class`);
+            throw new Error('Service must be a class');
         }
         
-        const service = new ServiceClass();
-        
-        if (typeof service.initialize !== 'function') {
-            throw new Error(`Service "${serviceName}" must have an "initialize" method`);
+        // Check required methods
+        for (const method of this.serviceValidation.requiredMethods) {
+            if (typeof ServiceClass.prototype[method] !== 'function') {
+                throw new Error(`Service must have '${method}' method`);
+            }
         }
         
-        if (typeof service.cleanup !== 'function') {
-            throw new Error(`Service "${serviceName}" must have a "cleanup" method`);
+        // Check required properties
+        const instance = new ServiceClass();
+        for (const property of this.serviceValidation.requiredProperties) {
+            if (!(property in instance)) {
+                throw new Error(`Service must have '${property}' property`);
+            }
         }
-        
-        logger.info(`✅ Service class validation passed: ${serviceName}`);
+    }
+    
+    async validateFramework(frameworkPath) {
+        try {
+            // Validate framework exists
+            await this.validateFrameworkExists(frameworkPath);
+            
+            // Validate framework structure
+            await this.validateFrameworkStructure(frameworkPath);
+            
+            // Load and validate config
+            const configPath = path.join(frameworkPath, 'config.json');
+            const configData = await fs.readFile(configPath, 'utf8');
+            const config = JSON.parse(configData);
+            
+            this.validateFrameworkConfig(config);
+            
+            // Validate steps and services
+            await this.validateFrameworkSteps(frameworkPath, config);
+            await this.validateFrameworkServices(frameworkPath, config);
+            
+            return {
+                valid: true,
+                config: config
+            };
+            
+        } catch (error) {
+            return {
+                valid: false,
+                error: error.message
+            };
+        }
     }
 }
 
@@ -429,8 +571,6 @@ module.exports = FrameworkValidator;
 // backend/infrastructure/framework/FrameworkConfig.js
 const fs = require('fs').promises;
 const path = require('path');
-const Logger = require('@logging/Logger');
-const logger = new Logger('FrameworkConfig');
 
 class FrameworkConfig {
     constructor() {
@@ -438,9 +578,9 @@ class FrameworkConfig {
         this.config = {
             activeFrameworks: [],
             requiredFrameworks: [],
+            frameworkSettings: {},
             autoLoad: true,
-            fallbackEnabled: true,
-            frameworkSettings: {}
+            fallbackEnabled: true
         };
     }
     
@@ -448,29 +588,19 @@ class FrameworkConfig {
         try {
             const configData = await fs.readFile(this.configPath, 'utf8');
             this.config = { ...this.config, ...JSON.parse(configData) };
-            logger.info('✅ Framework configuration loaded');
         } catch (error) {
-            logger.warn('⚠️ No framework configuration found, using defaults');
-            await this.save();
+            // Use default config if file doesn't exist
+            console.log('📝 Using default framework configuration');
         }
     }
     
     async save() {
         try {
             await fs.writeFile(this.configPath, JSON.stringify(this.config, null, 2));
-            logger.info('✅ Framework configuration saved');
         } catch (error) {
-            logger.error('❌ Failed to save framework configuration:', error.message);
+            console.error('❌ Failed to save framework configuration:', error.message);
             throw error;
         }
-    }
-    
-    getRequiredFrameworks() {
-        return this.config.requiredFrameworks || [];
-    }
-    
-    getActiveFrameworks() {
-        return this.config.activeFrameworks || [];
     }
     
     addActiveFramework(frameworkName) {
@@ -481,20 +611,28 @@ class FrameworkConfig {
     
     removeActiveFramework(frameworkName) {
         this.config.activeFrameworks = this.config.activeFrameworks.filter(
-            name => name !== frameworkName
+            f => f !== frameworkName
         );
     }
     
-    getAvailableFrameworks() {
-        return this.config.frameworkSettings || {};
+    getActiveFrameworks() {
+        return this.config.activeFrameworks;
     }
     
-    getFrameworkConfig(frameworkName) {
-        return this.config.frameworkSettings[frameworkName] || null;
+    getRequiredFrameworks() {
+        return this.config.requiredFrameworks;
     }
     
-    setFrameworkConfig(frameworkName, config) {
-        this.config.frameworkSettings[frameworkName] = config;
+    setRequiredFrameworks(frameworks) {
+        this.config.requiredFrameworks = frameworks;
+    }
+    
+    getFrameworkSettings(frameworkName) {
+        return this.config.frameworkSettings[frameworkName] || {};
+    }
+    
+    setFrameworkSettings(frameworkName, settings) {
+        this.config.frameworkSettings[frameworkName] = settings;
     }
     
     isAutoLoadEnabled() {
@@ -558,25 +696,26 @@ module.exports = FrameworkConfig;
    - Create framework configurations
 
 2. **Phase 4**: Step Migration
-   - Migrate refactoring steps to framework
-   - Migrate testing steps to framework
+   - Migrate refactoring and testing steps to frameworks
    - Test step migration and functionality
 
-3. **Phase 5**: Core Integration
-   - Integrate with StepRegistry and Application.js
+3. **Phase 5**: Core Integration & Testing
+   - Integrate framework system with Application.js
    - Test framework activation/deactivation
    - Performance testing
 
 ## 📝 Notes & Updates
 
 ### **2024-12-19 - Phase 2 Planning:**
-- Designed comprehensive infrastructure framework system
-- Created robust validation and error handling
-- Planned configuration management system
-- Designed framework loading and management interfaces
+- ✅ **FrameworkRegistry already exists in domain layer** - No need to create duplicate
+- ✅ **FrameworkBuilder already exists in domain layer** - No need to create duplicate
+- ✅ **StepRegistry already has framework support** - Already implements IStandardRegistry interface
+- ⚠️ **Infrastructure framework components missing** - FrameworkLoader, FrameworkManager, FrameworkValidator, FrameworkConfig
+- ⚠️ **Framework directories missing** - All planned framework directories need creation
 
 ### **Key Technical Decisions:**
-- FrameworkLoader handles dynamic loading and validation
-- FrameworkManager provides high-level control interface
-- FrameworkValidator ensures framework integrity
-- Configuration system supports auto-load and settings 
+- Use existing FrameworkRegistry from domain layer (`@domain/frameworks`)
+- Use existing StepRegistry from domain layer (already has framework support)
+- Create only missing infrastructure components
+- Maintain backward compatibility with existing system
+- Follow established DDD patterns and registry interfaces 
