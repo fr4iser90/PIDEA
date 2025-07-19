@@ -225,16 +225,9 @@ function PreviewComponent({ eventBus, activePort, projectId = null }) {
   // Port configuration handlers
   const handlePortChange = async (newPort) => {
     try {
-      logger.info('Port configuration changed:', newPort);
-      setCustomPort(newPort);
-      
-      // Update preview data with new port
-      const newPreviewData = {
-        ...previewData,
-        url: `http://localhost:${newPort}`
-      };
-      setPreviewData(newPreviewData);
-      
+      logger.info('Port input changed:', newPort);
+      // DON'T set custom port here - only store the input value
+      // The port will be set only after validation in handlePortValidate
     } catch (error) {
       logger.error('Failed to handle port change:', error);
     }
@@ -243,8 +236,22 @@ function PreviewComponent({ eventBus, activePort, projectId = null }) {
   const handlePortValidate = async (validationResult) => {
     try {
       logger.info('Port validation result:', validationResult);
-      if (validationResult.isValid) {
+      if (validationResult.isValid && validationResult.port) {
+        logger.info('Setting custom port:', validationResult.port);
         setCustomPort(validationResult.port);
+        
+        // Immediately create preview data with the validated port
+        // Don't wait for state update - use the port directly
+        const newPreviewData = {
+          url: `http://localhost:${validationResult.port}`,
+          title: `Preview - User App (Port: ${validationResult.port})`,
+          timestamp: new Date().toISOString(),
+          port: validationResult.port,
+          workspacePath: null
+        };
+        setPreviewData(newPreviewData);
+        setError(null);
+        logger.info('Preview data updated with port:', validationResult.port);
       }
     } catch (error) {
       logger.error('Failed to handle port validation:', error);
