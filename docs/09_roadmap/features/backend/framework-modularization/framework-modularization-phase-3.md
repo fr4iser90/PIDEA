@@ -7,11 +7,12 @@
 - **Progress**: 0%
 
 ## 🎯 Phase Objectives
-1. Implement FrameworkLoader with dynamic loading
-2. Create FrameworkRegistry for framework management
-3. Implement FrameworkManager for activation/deactivation
-4. Add framework configuration system
-5. Create framework validation and dependency checking
+1. Create framework directory structure for optional features
+2. Implement FrameworkLoader with dynamic loading
+3. Create FrameworkRegistry for framework management
+4. Implement FrameworkManager for activation/deactivation
+5. Add framework configuration system
+6. Create framework validation and dependency checking
 
 ## 🔧 Task 1: FrameworkLoader Implementation
 
@@ -1207,6 +1208,14 @@ describe('FrameworkValidator', () => {
 
 ## 📊 Phase 3 Deliverables
 
+### **✅ Framework Directory Structure:**
+- [ ] refactoring_management framework with complete structure
+- [ ] testing_management framework with complete structure
+- [ ] documentation_management framework with complete structure
+- [ ] deployment_management framework with complete structure
+- [ ] security_management framework with complete structure
+- [ ] performance_management framework with complete structure
+
 ### **✅ FrameworkLoader Implementation:**
 - [ ] Dynamic framework loading system
 - [ ] Framework validation and dependency checking
@@ -1240,6 +1249,7 @@ describe('FrameworkValidator', () => {
 ## 🚀 Success Criteria
 
 ### **Phase 3 Success Indicators:**
+- [ ] All framework directories created with proper structure
 - [ ] FrameworkLoader loads frameworks dynamically
 - [ ] FrameworkRegistry manages framework metadata
 - [ ] FrameworkManager provides high-level control
@@ -1265,12 +1275,15 @@ describe('FrameworkValidator', () => {
 ## 📝 Notes & Updates
 
 ### **2024-12-19 - Phase 3 Planning:**
+- Designed comprehensive framework directory structure for optional features
 - Designed comprehensive framework loading system
 - Created robust validation and error handling
 - Planned configuration management system
 - Designed registry for framework metadata
 
 ### **Key Technical Decisions:**
+- Only optional features (refactoring, testing, etc.) go to frameworks
+- Core services (TaskService, WorkflowExecutionService) remain in domain
 - FrameworkLoader handles dynamic loading and validation
 - FrameworkRegistry manages all framework metadata
 - FrameworkManager provides high-level control interface
