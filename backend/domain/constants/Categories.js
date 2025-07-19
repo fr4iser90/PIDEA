@@ -24,7 +24,10 @@ const STANDARD_CATEGORIES = {
   ANALYZE: 'analyze', // Legacy support
   
   // IDE Categories
-  IDE: 'ide'
+  IDE: 'ide',
+  
+  // Version Control Categories
+  GIT: 'git'
 };
 
 /**
@@ -44,7 +47,8 @@ const CATEGORY_DESCRIPTIONS = {
   [STANDARD_CATEGORIES.TASK]: 'Task execution, task management, task automation',
   [STANDARD_CATEGORIES.APPLICATION]: 'Application-specific operations, business logic',
   [STANDARD_CATEGORIES.ANALYZE]: 'Legacy analysis operations (deprecated, use ANALYSIS)',
-  [STANDARD_CATEGORIES.IDE]: 'IDE integration, chat commands, session management'
+  [STANDARD_CATEGORIES.IDE]: 'IDE integration, chat commands, session management',
+  [STANDARD_CATEGORIES.GIT]: 'Git operations, version control, branch management'
 };
 
 /**

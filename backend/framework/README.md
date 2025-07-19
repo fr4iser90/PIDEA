@@ -232,11 +232,143 @@ backend/domain/steps/categories/
     ├── cursor_get_response.js
     └── cursor_apply_changes.js
 
-backend/framework/[framework_name]/
+Perfekt! Lass uns **systematisch** die Core-Komponenten identifizieren:
+
+## 🧠 **Core-Analyse: Was MUSS im Core bleiben?**
+
+### **1. 🔍 Analysis Steps (Core)**
+```
+✅ Immer benötigt:
+├── analysis_step.js           # Basis-Analyse
+├── analysis_validate.js       # Validierung
+├── analysis_report.js         # Report-Generierung
+└── analysis_export.js         # Export-Funktionen
+```
+
+### **2. 🔧 Git Management (Core)**
+```
+✅ Immer benötigt:
+├── GitService.js              # Basis Git-Operationen
+├── git_commit.js              # Basis Commit
+├── git_push.js                # Basis Push
+├── git_create_branch.js       # Basis Branch
+└── git_create_pull_request.js # Basis PR
+```
+
+### **3. ��️ IDE Integration (Core)**
+```
+✅ Immer benötigt:
+├── BrowserManager.js          # Browser-Management
+├── ide_open_file.js           # Datei öffnen
+├── ide_get_file_content.js    # Datei-Inhalt lesen
+└── ide_save_file.js           # Datei speichern
+```
+
+### **4. 🤖 AI/Cursor Integration (Core)**
+```
+✅ Immer benötigt:
+├── CursorIDEService.js        # Cursor AI Service
+├── cursor_send_message.js     # Nachricht senden
+└── cursor_get_response.js     # Response holen
+```
+
+### **5. 💻 Terminal/System (Core)**
+```
+✅ Immer benötigt:
+├── TerminalService.js         # Terminal-Operationen
+├── terminal_execute.js        # Kommando ausführen
+└── terminal_install.js        # Pakete installieren
+```
+
+### **6. �� File System (Core)**
+```
+✅ Immer benötigt:
+├── FileSystemService.js       # Datei-Operationen
+├── file_read.js               # Datei lesen
+├── file_write.js              # Datei schreiben
+└── file_copy.js               # Datei kopieren
+```
+
+### **7. 🔄 Workflow Engine (Core)**
+```
+✅ Immer benötigt:
+├── WorkflowExecutionService.js # Step-Execution
+├── StepRegistry.js            # Step-Registry
+├── StepBuilder.js             # Step-Builder
+└── WorkflowManager.js         # Workflow-Management
+```
+
+### **8. 📊 Data Processing (Core)**
+```
+✅ Immer benötigt:
+├── DataProcessingService.js   # Daten-Verarbeitung
+├── data_parse.js              # Daten parsen
+├── data_transform.js          # Daten transformieren
+└── data_validate.js           # Daten validieren
+```
+
+## 🎯 **Was in Frameworks auslagern?**
+
+### **1. 🏗️ Refactoring Framework**
+```
+backend/framework/refactoring_management/
+├── step/
+│   ├── refactor_extract_method.js
+│   ├── refactor_rename_variable.js
+│   └── refactor_move_class.js
 ├── workflow/
-│   ├── framework_specific_step.js (Framework-spezifisch)
-│   ├── custom_analysis.js (Framework-spezifisch)
-│   └── custom_generation.js (Framework-spezifisch)
-├── script/
-├── prompt/
-└── template/
+│   └── refactoring_workflow.json
+└── config.json
+```
+
+### **2. 🧪 Testing Framework**
+```
+backend/framework/testing_management/
+├── step/
+│   ├── test_generate_unit.js
+│   ├── test_run_tests.js
+│   └── test_coverage.js
+├── workflow/
+│   └── testing_workflow.json
+└── config.json
+```
+
+### **3. 📚 Documentation Framework**
+```
+backend/framework/documentation_management/
+├── step/
+│   ├── doc_generate_readme.js
+│   ├── doc_update_api.js
+│   └── doc_create_diagrams.js
+├── workflow/
+│   └── documentation_workflow.json
+└── config.json
+```
+
+### **4. 🚀 Deployment Framework**
+```
+backend/framework/deployment_management/
+├── step/
+│   ├── deploy_build.js
+│   ├── deploy_test.js
+│   └── deploy_release.js
+├── workflow/
+│   └── deployment_workflow.json
+└── config.json
+```
+
+## ✅ **Core vs Framework Entscheidung:**
+
+### **Core = Immer benötigt:**
+- ✅ **Basis-Operationen:** Git, IDE, Terminal, File System
+- ✅ **AI-Integration:** Cursor, Basis AI-Operationen
+- ✅ **Workflow-Engine:** Step-Execution, Registry
+- ✅ **Data Processing:** Basis Daten-Verarbeitung
+- ✅ **Analysis:** Basis-Analyse-Funktionen
+
+### **Framework = Optional/Spezialisiert:**
+- ✅ **Business-Logic:** Refactoring, Testing, Documentation
+- ✅ **Erweiterte Features:** Komplexe Workflows
+- ✅ **Spezialisierte Tools:** Deployment, Security, Performance
+
+**Ist diese Aufteilung logisch für dich?** 🎯
