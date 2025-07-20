@@ -14,7 +14,7 @@ const config = {
   category: 'completion',
   description: 'Parse TODO items into structured tasks',
   version: '1.0.0',
-  dependencies: ['taskRepository'],
+  dependencies: ['TaskRepository'],
   settings: {
     includePriorityDetection: true,
     includeTypeDetection: true,
@@ -32,28 +32,14 @@ class TodoParsingStep {
     this.name = 'TodoParsingStep';
     this.description = 'Parse TODO items into structured tasks';
     this.category = 'completion';
-    this.dependencies = ['taskRepository'];
+    this.version = '1.0.0';
   }
 
-  static getConfig() {
-    return config;
-  }
-
-  async execute(context = {}) {
-    const config = TodoParsingStep.getConfig();
-    const step = StepBuilder.build(config, context);
-    
+  async execute(context) {
     try {
-      logger.info(`🔧 Executing ${this.name}...`);
+      logger.info('Starting TodoParsingStep execution');
       
-      // Validate context
-      this.validateContext(context);
-      
-      const { projectId, workspacePath, todoInput } = context;
-      
-      logger.info(`📝 Parsing TODO items for project ${projectId}`);
-      
-      // Get task repository from application
+      // Get TaskRepository from global application (like analysis steps)
       const application = global.application;
       if (!application) {
         throw new Error('Application not available');
@@ -61,38 +47,55 @@ class TodoParsingStep {
 
       const taskRepository = application.taskRepository;
       if (!taskRepository) {
-        throw new Error('Task repository not available');
+        throw new Error('TaskRepository not available');
       }
+
+      const { projectId, workspacePath, todoInput } = context;
+
+      logger.info(`Parsing TODO items for project: ${projectId}`);
       
       // Parse TODO items
       const tasks = await this.parseTodos(todoInput, projectId);
       
+      if (tasks.length === 0) {
+        logger.info('No TODO items found to parse');
+        return {
+          success: true,
+          message: 'No TODO items found to parse',
+          data: { createdTasks: 0 }
+        };
+      }
+
       // Save tasks to repository
       const savedTasks = [];
       for (const task of tasks) {
-        const savedTask = await taskRepository.create(task);
-        savedTasks.push(savedTask);
+        try {
+          const savedTask = await taskRepository.create(task);
+          savedTasks.push(savedTask);
+          logger.info(`Created task: ${savedTask.id} - ${savedTask.description}`);
+        } catch (error) {
+          logger.error(`Failed to create task: ${task.description}`, error);
+        }
       }
       
-      logger.info(`✅ TODO parsing completed: ${savedTasks.length} tasks created`);
+      logger.info(`TodoParsingStep completed: ${savedTasks.length}/${tasks.length} tasks created`);
       
       return {
         success: true,
         message: 'TODO parsing completed',
         data: {
+          createdTasks: savedTasks.length,
+          totalTasks: tasks.length,
           tasks: savedTasks,
-          totalTasks: savedTasks.length,
           projectId
         }
       };
       
     } catch (error) {
-      logger.error('❌ TODO parsing failed:', error);
-      
+      logger.error('Error in TodoParsingStep:', error);
       return {
         success: false,
-        error: error.message,
-        timestamp: new Date()
+        error: error.message
       };
     }
   }
@@ -177,19 +180,13 @@ class TodoParsingStep {
       }
     };
   }
-
-  validateContext(context) {
-    if (!context.projectId) {
-      throw new Error('Project ID is required');
-    }
-  }
 }
+
+// Create instance for execution
+const stepInstance = new TodoParsingStep();
 
 // Export in StepRegistry format
 module.exports = {
   config,
-  execute: async (context) => {
-    const stepInstance = new TodoParsingStep();
-    return await stepInstance.execute(context);
-  }
-}; 
+  execute: async (context) => await stepInstance.execute(context)
+};

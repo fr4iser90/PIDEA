@@ -9,12 +9,12 @@ const logger = new Logger('run_dev_step');
 
 // Step configuration
 const config = {
-  name: 'RUN_DEV_STEP',
+  name: 'RunDevStep',
   type: 'completion',
   category: 'completion',
   description: 'Starts the development server',
   version: '1.0.0',
-  dependencies: ['terminalService'],
+  dependencies: ['TerminalService'],
   settings: {
     timeout: 30000,
     port: 3000,
@@ -22,57 +22,43 @@ const config = {
     env: 'development'
   },
   validation: {
-    required: ['projectPath'],
-    optional: ['port', 'host', 'env']
+    required: ['projectId'],
+    optional: ['workspacePath', 'port', 'host', 'env']
   }
 };
 
 class RunDevStep {
   constructor() {
-    this.name = 'RUN_DEV_STEP';
+    this.name = 'RunDevStep';
     this.description = 'Starts the development server';
     this.category = 'completion';
-    this.dependencies = ['terminalService'];
+    this.version = '1.0.0';
   }
 
-  static getConfig() {
-    return config;
-  }
-
-  async execute(context = {}) {
-    const config = RunDevStep.getConfig();
-    const step = StepBuilder.build(config, context);
-    
+  async execute(context) {
     try {
-      logger.info(`🔧 Executing ${this.name}...`);
+      logger.info('Starting RunDevStep execution');
       
-      // Validate context
-      this.validateContext(context);
-      
-      const { projectPath, port = 3000, host = 'localhost', env = 'development' } = context;
-      
-      logger.info('Executing RUN_DEV_STEP', {
-        projectPath,
-        port,
-        host,
-        env
-      });
-
-      // Get TerminalService from global application (like old steps)
+      // Get TerminalService from global application (like analysis steps)
       const application = global.application;
       if (!application) {
         throw new Error('Application not available');
       }
 
-      const { terminalService } = application;
+      const terminalService = application.terminalService;
       if (!terminalService) {
         throw new Error('TerminalService not available');
       }
 
-      // Start dev server
+      const { projectId, workspacePath = process.cwd(), port = 3000, host = 'localhost', env = 'development' } = context;
+
+      logger.info(`Starting dev server for project: ${projectId} in ${workspacePath}`);
+
+      // Start dev server using TerminalService
       const command = `npm run dev`;
       const result = await terminalService.executeCommand(command, {
-        cwd: projectPath,
+        cwd: workspacePath,
+        timeout: 30000,
         env: {
           ...process.env,
           NODE_ENV: env,
@@ -81,45 +67,80 @@ class RunDevStep {
         }
       });
 
-      logger.info('RUN_DEV_STEP completed successfully', {
-        success: result.success,
-        output: result.output?.substring(0, 200) + '...'
-      });
-
-      return {
-        success: result.success,
-        command,
-        output: result.output,
-        error: result.error,
-        timestamp: new Date()
-      };
+      if (result.success) {
+        logger.info('Dev server started successfully');
+        
+        // Try to extract URL from output
+        const url = this.extractDevServerUrl(result.output, port, host);
+        
+        return {
+          success: true,
+          message: 'Development server started successfully',
+          data: {
+            command,
+            output: result.output,
+            url,
+            port,
+            host,
+            env
+          }
+        };
+      } else {
+        logger.error('Failed to start dev server:', result.error);
+        return {
+          success: false,
+          error: result.error || 'Failed to start development server',
+          data: {
+            command,
+            output: result.output,
+            errorOutput: result.errorOutput
+          }
+        };
+      }
 
     } catch (error) {
-      logger.error('RUN_DEV_STEP failed', {
-        error: error.message,
-        context
-      });
-
+      logger.error('Error in RunDevStep:', error);
       return {
         success: false,
-        error: error.message,
-        timestamp: new Date()
+        error: error.message
       };
     }
   }
 
-  validateContext(context) {
-    if (!context.projectPath) {
-      throw new Error('Project path is required');
+  extractDevServerUrl(output, port, host) {
+    if (!output) return null;
+    
+    // Common dev server URL patterns
+    const patterns = [
+      /Local:\s*(http:\/\/localhost:\d+)/i,
+      /Server running on\s*(http:\/\/localhost:\d+)/i,
+      /(http:\/\/localhost:\d+)/i,
+      /(http:\/\/127\.0\.0\.1:\d+)/i,
+      /localhost:\d+/i,
+      /127\.0\.0\.1:\d+/i
+    ];
+    
+    for (const pattern of patterns) {
+      const match = output.match(pattern);
+      if (match) {
+        let url = match[1] || match[0];
+        if (!url.startsWith('http')) {
+          url = 'http://' + url;
+        }
+        return url;
+      }
     }
+    
+    // Fallback to default URL
+    return `http://${host}:${port}`;
   }
 }
+
+// Create instance for execution
+const stepInstance = new RunDevStep();
 
 // Export in StepRegistry format
 module.exports = {
   config,
-  execute: async (context) => {
-    const stepInstance = new RunDevStep();
-    return await stepInstance.execute(context);
-  }
+  execute: async (context) => await stepInstance.execute(context)
 };

@@ -14,7 +14,7 @@ const config = {
   category: 'completion',
   description: 'Automatically finish tasks based on completion detection',
   version: '1.0.0',
-  dependencies: ['taskRepository'],
+  dependencies: ['TaskRepository', 'TerminalService'],
   settings: {
     includeCompletionDetection: true,
     includeAutoCommit: true,
@@ -22,7 +22,7 @@ const config = {
   },
   validation: {
     required: ['projectId'],
-    optional: ['workspacePath']
+    optional: ['workspacePath', 'taskId']
   }
 };
 
@@ -31,73 +31,77 @@ class AutoFinishStep {
     this.name = 'AutoFinishStep';
     this.description = 'Automatically finish tasks based on completion detection';
     this.category = 'completion';
-    this.dependencies = ['taskRepository'];
+    this.version = '1.0.0';
   }
 
-  static getConfig() {
-    return config;
-  }
-
-  async execute(context = {}) {
-    const config = AutoFinishStep.getConfig();
-    const step = StepBuilder.build(config, context);
-    
+  async execute(context) {
     try {
-      logger.info(`🔧 Executing ${this.name}...`);
+      logger.info('Starting AutoFinishStep execution');
       
-      // Validate context
-      this.validateContext(context);
-      
-      const { projectId, workspacePath } = context;
-      
-      logger.info(`🚀 Auto-finishing tasks for project ${projectId}`);
-      
-      // Get task repository from application
+      // Get services from global application (like analysis steps)
       const application = global.application;
       if (!application) {
         throw new Error('Application not available');
       }
 
       const taskRepository = application.taskRepository;
+      const terminalService = application.terminalService;
+      
       if (!taskRepository) {
-        throw new Error('Task repository not available');
+        throw new Error('TaskRepository not available');
       }
+      if (!terminalService) {
+        throw new Error('TerminalService not available');
+      }
+
+      const { projectId, workspacePath = process.cwd(), taskId } = context;
+
+      logger.info(`Auto-finishing project: ${projectId}${taskId ? `, task: ${taskId}` : ''}`);
+
+      // Get tasks to finish
+      let tasksToFinish = [];
       
-      // Get completed tasks
-      const completedTasks = await taskRepository.findByStatus('completed');
-      
-      if (completedTasks.length === 0) {
-        logger.info('ℹ️ No completed tasks detected');
+      if (taskId) {
+        // Finish specific task
+        const task = await taskRepository.findById(taskId);
+        if (task && task.status === 'completed') {
+          tasksToFinish = [task];
+        }
+      } else {
+        // Finish all completed tasks for project
+        tasksToFinish = await taskRepository.findByProjectIdAndStatus(projectId, 'completed');
+      }
+
+      if (tasksToFinish.length === 0) {
+        logger.info('No completed tasks found to finish');
         return {
           success: true,
-          message: 'No completed tasks detected',
-          data: {
-            completedTasks: 0,
-            status: 'no_tasks'
-          }
+          message: 'No completed tasks found to finish',
+          data: { finishedTasks: 0 }
         };
       }
-      
-      logger.info(`✅ Found ${completedTasks.length} completed tasks`);
-      
-      // Auto-finish each task
+
+      logger.info(`Found ${tasksToFinish.length} completed tasks to finish`);
+
+      // Finish each task
       const results = [];
-      for (const task of completedTasks) {
+      for (const task of tasksToFinish) {
         try {
-          // Mark task as finished
+          // Update task status to finished
           await taskRepository.update(task.id, {
             status: 'finished',
             finishedAt: new Date()
           });
-          
+
           results.push({
             taskId: task.id,
             success: true,
             message: 'Task marked as finished'
           });
-          
+
+          logger.info(`Task ${task.id} marked as finished`);
         } catch (error) {
-          logger.error(`❌ Failed to auto-finish task ${task.id}:`, error);
+          logger.error(`Failed to finish task ${task.id}:`, error);
           results.push({
             taskId: task.id,
             success: false,
@@ -105,45 +109,60 @@ class AutoFinishStep {
           });
         }
       }
-      
+
+      // Auto-commit if there are changes (using TerminalService)
+      const gitStatus = await terminalService.executeCommand('git status --porcelain', {
+        cwd: workspacePath,
+        timeout: 10000
+      });
+
+      if (gitStatus.success && gitStatus.output.trim()) {
+        logger.info('Found uncommitted changes, auto-committing');
+        
+        await terminalService.executeCommand('git add .', {
+          cwd: workspacePath,
+          timeout: 10000
+        });
+
+        const commitMessage = `Auto-finish: ${results.length} tasks finished`;
+        await terminalService.executeCommand(`git commit -m "${commitMessage}"`, {
+          cwd: workspacePath,
+          timeout: 10000
+        });
+
+        logger.info('Auto-commit completed successfully');
+      }
+
       const successfulFinishes = results.filter(r => r.success).length;
-      
-      logger.info(`✅ Auto-finish completed: ${successfulFinishes}/${completedTasks.length} tasks`);
+
+      logger.info(`AutoFinishStep completed: ${successfulFinishes}/${tasksToFinish.length} tasks finished`);
       
       return {
         success: true,
-        message: 'Auto-finish completed',
+        message: 'Tasks auto-finished successfully',
         data: {
-          totalTasks: completedTasks.length,
-          successfulFinishes,
-          failedFinishes: completedTasks.length - successfulFinishes,
-          results
+          finishedTasks: successfulFinishes,
+          totalTasks: tasksToFinish.length,
+          results,
+          committed: gitStatus.success && gitStatus.output.trim() ? true : false
         }
       };
-      
+
     } catch (error) {
-      logger.error('❌ Auto-finish failed:', error);
-      
+      logger.error('Error in AutoFinishStep:', error);
       return {
         success: false,
-        error: error.message,
-        timestamp: new Date()
+        error: error.message
       };
-    }
-  }
-
-  validateContext(context) {
-    if (!context.projectId) {
-      throw new Error('Project ID is required');
     }
   }
 }
 
+// Create instance for execution
+const stepInstance = new AutoFinishStep();
+
 // Export in StepRegistry format
 module.exports = {
   config,
-  execute: async (context) => {
-    const stepInstance = new AutoFinishStep();
-    return await stepInstance.execute(context);
-  }
-}; 
+  execute: async (context) => await stepInstance.execute(context)
+};

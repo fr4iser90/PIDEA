@@ -63,6 +63,12 @@ class ServiceRegistry {
             return new BrowserManager();
         }, { singleton: true });
 
+        // Terminal service
+        this.container.register('terminalService', () => {
+            const { TerminalService } = require('@domain/services/TerminalService');
+            return new TerminalService();
+        }, { singleton: true });
+
         // IDE manager
         this.container.register('ideManager', (browserManager, projectRepository, eventBus, gitService) => {
             const IDEManager = require('../external/ide/IDEManager');
