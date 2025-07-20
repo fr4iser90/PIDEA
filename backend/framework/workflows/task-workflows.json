@@ -2,175 +2,154 @@
   "workflows": {
     "standard-task-workflow": {
       "name": "Standard Task Workflow",
-      "description": "Einheitlicher Flow für alle Tasks",
+      "description": "Einheitlicher Flow für alle Tasks: Task + Prompt → IDE → Validieren → 3x Complete-Check → Test → npm run dev",
       "steps": [
         {
           "name": "send-to-ide",
-          "type": "ide-chat",
+          "type": "ide_send_message",
           "description": "Send task to IDE with prompt",
-          "prompt": "prompts/task-prompt.md",
-          "waitForResponse": true,
-          "timeout": 60000
+          "step": "IDESendMessageStep",
+          "options": {
+            "message": "prompts/task-prompt.md",
+            "waitForResponse": true,
+            "timeout": 60000
+          }
         },
         {
           "name": "validate-response",
           "type": "validation",
           "description": "Validate IDE response",
-          "checks": ["code-quality", "syntax", "completeness"],
-          "strict": false
+          "step": "CodeQualityAnalysisStep",
+          "options": {
+            "checks": ["code-quality", "syntax", "completeness"],
+            "strict": false
+          }
         },
         {
           "name": "completion-check",
-          "type": "confirmation",
-          "description": "Ask if task is complete",
-          "maxAttempts": 3,
-          "prompt": "Is the task complete? Answer with YES or NO",
-          "expectedResponse": "YES"
+          "type": "confirmation_step",
+          "description": "3x Complete-Check with AI confirmation",
+          "step": "ConfirmationStep",
+          "options": {
+            "maxAttempts": 3,
+            "timeout": 10000,
+            "autoContinueThreshold": 0.8
+          }
         },
         {
           "name": "test-run",
-          "type": "execution",
-          "description": "Run tests to validate changes",
-          "command": "npm test",
-          "timeout": 30000,
-          "continueOnError": false
+          "type": "project_test_step",
+          "description": "Run project tests",
+          "step": "ProjectTestStep",
+          "options": {
+            "commands": ["npm test", "npm run test"],
+            "continueOnFailure": true
+          }
         },
         {
           "name": "dev-server",
-          "type": "execution",
+          "type": "run_dev_step",
           "description": "Start development server",
-          "command": "npm run dev",
-          "timeout": 30000,
-          "background": true
+          "step": "RunDevStep",
+          "options": {
+            "commands": ["npm run dev", "npm start"],
+            "waitForReady": true,
+            "timeout": 30000
+          }
         }
-      ]
+      ],
+      "options": {
+        "autoConfirm": true,
+        "createBranch": true,
+        "timeout": 300000
+      }
     },
     "refactor-workflow": {
-      "name": "Refactor Workflow",
-      "description": "Workflow für Refactoring-Tasks",
+      "name": "Refactoring Workflow",
+      "description": "Specialized workflow for refactoring tasks",
       "extends": "standard-task-workflow",
       "steps": [
         {
-          "name": "pre-refactor-validation",
-          "type": "validation",
-          "description": "Pre-refactor validation",
-          "checks": ["build", "tests", "lint"],
-          "strict": true
-        },
-        {
-          "name": "send-to-ide",
-          "type": "ide-chat",
-          "description": "Send refactor task to IDE",
-          "prompt": "prompts/refactor-prompt.md",
-          "waitForResponse": true,
-          "timeout": 120000
-        },
-        {
-          "name": "validate-response",
-          "type": "validation",
-          "description": "Validate refactored code",
-          "checks": ["code-quality", "syntax", "refactoring-quality"],
-          "strict": true
-        },
-        {
-          "name": "completion-check",
-          "type": "confirmation",
-          "description": "Ask if refactoring is complete",
-          "maxAttempts": 3,
-          "prompt": "Is the refactoring complete and working? Answer with YES or NO",
-          "expectedResponse": "YES"
-        },
-        {
-          "name": "test-run",
-          "type": "execution",
-          "description": "Run tests after refactoring",
-          "command": "npm test",
-          "timeout": 30000,
-          "continueOnError": false
-        },
-        {
-          "name": "build-check",
-          "type": "execution",
-          "description": "Check if build still works",
-          "command": "npm run build",
-          "timeout": 60000,
-          "continueOnError": false
-        },
-        {
-          "name": "dev-server",
-          "type": "execution",
-          "description": "Start development server",
-          "command": "npm run dev",
-          "timeout": 30000,
-          "background": true
+          "name": "analysis",
+          "type": "analysis",
+          "description": "Analyze code before refactoring",
+          "step": "ProjectAnalysisStep",
+          "options": {
+            "analysisTypes": ["code-quality", "architecture", "dependencies"]
+          }
         }
-      ]
+      ],
+      "options": {
+        "autoConfirm": true,
+        "createBranch": true,
+        "timeout": 450000
+      }
     },
     "testing-workflow": {
       "name": "Testing Workflow",
-      "description": "Workflow für Testing-Tasks",
+      "description": "Specialized workflow for testing tasks",
       "extends": "standard-task-workflow",
       "steps": [
+        {
+          "name": "test-analysis",
+          "type": "analysis",
+          "description": "Analyze existing tests",
+          "analysisTypes": ["test-coverage", "test-quality", "test-structure"]
+        },
         {
           "name": "send-to-ide",
           "type": "ide-chat",
           "description": "Send testing task to IDE",
           "prompt": "prompts/testing-prompt.md",
           "waitForResponse": true,
-          "timeout": 90000
+          "timeout": 60000
         },
         {
           "name": "validate-response",
           "type": "validation",
-          "description": "Validate test code",
-          "checks": ["test-quality", "syntax", "coverage"],
+          "description": "Validate test implementation",
+          "checks": ["test-syntax", "test-coverage", "test-quality"],
           "strict": true
         },
         {
           "name": "completion-check",
           "type": "confirmation",
-          "description": "Ask if tests are complete",
+          "description": "3x Complete-Check for testing",
           "maxAttempts": 3,
-          "prompt": "Are the tests complete and comprehensive? Answer with YES or NO",
-          "expectedResponse": "YES"
+          "timeout": 10000,
+          "autoContinueThreshold": 0.8
         },
         {
           "name": "test-run",
-          "type": "execution",
+          "type": "testing",
           "description": "Run the new tests",
-          "command": "npm test",
-          "timeout": 45000,
-          "continueOnError": false
+          "commands": ["npm test", "npm run test"],
+          "continueOnFailure": false
         },
         {
           "name": "coverage-check",
-          "type": "execution",
+          "type": "coverage",
           "description": "Check test coverage",
-          "command": "npm run test:coverage",
-          "timeout": 60000,
-          "continueOnError": true
-        },
-        {
-          "name": "dev-server",
-          "type": "execution",
-          "description": "Start development server",
-          "command": "npm run dev",
-          "timeout": 30000,
-          "background": true
+          "commands": ["npm run test:coverage", "npm run coverage"],
+          "minCoverage": 80
         }
-      ]
+      ],
+      "options": {
+        "autoConfirm": true,
+        "createBranch": true,
+        "timeout": 300000
+      }
     },
     "feature-workflow": {
       "name": "Feature Workflow",
-      "description": "Workflow für Feature-Development",
+      "description": "Specialized workflow for feature development",
       "extends": "standard-task-workflow",
       "steps": [
         {
-          "name": "pre-feature-validation",
-          "type": "validation",
-          "description": "Pre-feature validation",
-          "checks": ["build", "tests"],
-          "strict": true
+          "name": "planning",
+          "type": "planning",
+          "description": "Plan feature implementation",
+          "analysisTypes": ["architecture", "dependencies", "requirements"]
         },
         {
           "name": "send-to-ide",
@@ -178,55 +157,167 @@
           "description": "Send feature task to IDE",
           "prompt": "prompts/feature-prompt.md",
           "waitForResponse": true,
-          "timeout": 180000
+          "timeout": 120000
         },
         {
           "name": "validate-response",
           "type": "validation",
           "description": "Validate feature implementation",
-          "checks": ["code-quality", "syntax", "feature-completeness"],
+          "checks": ["code-quality", "syntax", "architecture", "requirements"],
           "strict": true
         },
         {
           "name": "completion-check",
           "type": "confirmation",
-          "description": "Ask if feature is complete",
+          "description": "3x Complete-Check for feature",
           "maxAttempts": 3,
-          "prompt": "Is the feature complete and working? Answer with YES or NO",
-          "expectedResponse": "YES"
+          "timeout": 15000,
+          "autoContinueThreshold": 0.9
         },
         {
           "name": "test-run",
-          "type": "execution",
+          "type": "testing",
           "description": "Run tests for new feature",
-          "command": "npm test",
-          "timeout": 45000,
-          "continueOnError": false
-        },
-        {
-          "name": "build-check",
-          "type": "execution",
-          "description": "Check if build works with new feature",
-          "command": "npm run build",
-          "timeout": 60000,
-          "continueOnError": false
+          "commands": ["npm test", "npm run test"],
+          "continueOnFailure": false
         },
         {
           "name": "dev-server",
-          "type": "execution",
+          "type": "development",
           "description": "Start development server",
-          "command": "npm run dev",
-          "timeout": 30000,
-          "background": true
+          "commands": ["npm run dev", "npm start"],
+          "waitForReady": true,
+          "timeout": 30000
         }
-      ]
+      ],
+      "options": {
+        "autoConfirm": true,
+        "createBranch": true,
+        "timeout": 600000
+      }
+    },
+    "bugfix-workflow": {
+      "name": "Bug Fix Workflow",
+      "description": "Specialized workflow for bug fixes",
+      "extends": "standard-task-workflow",
+      "steps": [
+        {
+          "name": "investigation",
+          "type": "analysis",
+          "description": "Investigate the bug",
+          "analysisTypes": ["error-analysis", "code-tracing", "log-analysis"]
+        },
+        {
+          "name": "send-to-ide",
+          "type": "ide-chat",
+          "description": "Send bug fix task to IDE",
+          "prompt": "prompts/bugfix-prompt.md",
+          "waitForResponse": true,
+          "timeout": 90000
+        },
+        {
+          "name": "validate-response",
+          "type": "validation",
+          "description": "Validate bug fix",
+          "checks": ["code-quality", "syntax", "bug-fix", "regression"],
+          "strict": true
+        },
+        {
+          "name": "completion-check",
+          "type": "confirmation",
+          "description": "3x Complete-Check for bug fix",
+          "maxAttempts": 3,
+          "timeout": 12000,
+          "autoContinueThreshold": 0.9
+        },
+        {
+          "name": "test-run",
+          "type": "testing",
+          "description": "Run tests to verify fix",
+          "commands": ["npm test", "npm run test"],
+          "continueOnFailure": false
+        },
+        {
+          "name": "regression-test",
+          "type": "testing",
+          "description": "Run regression tests",
+          "commands": ["npm run test:regression", "npm run test:integration"],
+          "continueOnFailure": false
+        }
+      ],
+      "options": {
+        "autoConfirm": true,
+        "createBranch": true,
+        "timeout": 300000
+      }
+    },
+    "analysis-workflow": {
+      "name": "Analysis Workflow",
+      "description": "Specialized workflow for analysis tasks",
+      "extends": "standard-task-workflow",
+      "steps": [
+        {
+          "name": "data-collection",
+          "type": "analysis",
+          "description": "Collect analysis data",
+          "analysisTypes": ["code-quality", "architecture", "dependencies", "security", "performance"]
+        },
+        {
+          "name": "send-to-ide",
+          "type": "ide-chat",
+          "description": "Send analysis task to IDE",
+          "prompt": "prompts/analysis-prompt.md",
+          "waitForResponse": true,
+          "timeout": 60000
+        },
+        {
+          "name": "validate-response",
+          "type": "validation",
+          "description": "Validate analysis results",
+          "checks": ["analysis-completeness", "data-quality", "insights"],
+          "strict": false
+        },
+        {
+          "name": "completion-check",
+          "type": "confirmation",
+          "description": "3x Complete-Check for analysis",
+          "maxAttempts": 3,
+          "timeout": 10000,
+          "autoContinueThreshold": 0.8
+        },
+        {
+          "name": "report-generation",
+          "type": "reporting",
+          "description": "Generate analysis report",
+          "formats": ["markdown", "json", "html"]
+        }
+      ],
+      "options": {
+        "autoConfirm": true,
+        "createBranch": false,
+        "timeout": 180000
+      }
     }
   },
-  "defaults": {
-    "timeout": 300000,
-    "maxAttempts": 3,
-    "strict": false,
-    "background": false,
-    "continueOnError": false
+  "taskTypeMapping": {
+    "feature": "feature-workflow",
+    "bug": "bugfix-workflow",
+    "refactor": "refactor-workflow",
+    "testing": "testing-workflow",
+    "test": "testing-workflow",
+    "analysis": "analysis-workflow",
+    "documentation": "standard-task-workflow",
+    "optimization": "standard-task-workflow",
+    "security": "standard-task-workflow",
+    "deployment": "standard-task-workflow",
+    "default": "standard-task-workflow"
+  },
+  "prompts": {
+    "task-prompt.md": "Please implement the following task: {taskTitle}\n\nDescription: {taskDescription}\n\nRequirements:\n- Follow best practices\n- Write clean, maintainable code\n- Include appropriate comments\n- Ensure proper error handling\n\nPlease provide a complete implementation.",
+    "refactor-prompt.md": "Please refactor the following code according to these requirements: {taskDescription}\n\nFocus on:\n- Code quality improvements\n- Architecture optimization\n- Performance enhancements\n- Maintainability\n- Test coverage\n\nPlease provide the refactored implementation.",
+    "testing-prompt.md": "Please create comprehensive tests for: {taskDescription}\n\nRequirements:\n- Unit tests for all functions\n- Integration tests where appropriate\n- Edge case coverage\n- Mock external dependencies\n- Follow testing best practices\n\nPlease provide complete test implementation.",
+    "feature-prompt.md": "Please implement the following feature: {taskDescription}\n\nRequirements:\n- Follow project architecture\n- Implement proper error handling\n- Include input validation\n- Write comprehensive tests\n- Update documentation if needed\n\nPlease provide a complete feature implementation.",
+    "bugfix-prompt.md": "Please fix the following bug: {taskDescription}\n\nRequirements:\n- Identify the root cause\n- Implement a proper fix\n- Ensure no regressions\n- Add tests to prevent recurrence\n- Document the fix\n\nPlease provide the bug fix implementation.",
+    "analysis-prompt.md": "Please analyze the following: {taskDescription}\n\nRequirements:\n- Comprehensive analysis\n- Identify issues and opportunities\n- Provide actionable recommendations\n- Include metrics and insights\n- Suggest improvements\n\nPlease provide a detailed analysis report."
   }
 }

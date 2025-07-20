@@ -131,6 +131,66 @@ class WorkflowController {
                 hasTaskId: !!taskOptions?.taskId
             });
             
+            // Handle JSON workflow-based task execution (NEW)
+            if (req.body.type === 'task' && req.body.taskType) {
+                this.logger.info('WorkflowController: Processing JSON workflow task execution', {
+                    taskType: req.body.taskType,
+                    projectId,
+                    taskData: req.body.taskData
+                });
+
+                try {
+                    // Load WorkflowLoaderService
+                    const WorkflowLoaderService = require('@domain/services/WorkflowLoaderService');
+                    const workflowLoader = new WorkflowLoaderService();
+                    await workflowLoader.loadWorkflows();
+
+                    // Get workflow for task type
+                    const workflow = workflowLoader.getWorkflowByTaskType(req.body.taskType);
+                    this.logger.info('WorkflowController: Loaded workflow', {
+                        taskType: req.body.taskType,
+                        workflowName: workflow.name,
+                        stepsCount: workflow.steps.length
+                    });
+
+                    // Execute workflow steps
+                    const executionResult = await this.executeWorkflowSteps(
+                        workflow,
+                        req.body.taskData,
+                        projectId,
+                        userId,
+                        workspacePath,
+                        options
+                    );
+
+                    this.logger.info('WorkflowController: JSON workflow execution completed', {
+                        taskType: req.body.taskType,
+                        success: executionResult.success
+                    });
+
+                    return res.json({
+                        success: true,
+                        data: executionResult,
+                        projectId,
+                        workflowType: 'task',
+                        taskType: req.body.taskType,
+                        workflowName: workflow.name
+                    });
+
+                } catch (error) {
+                    this.logger.error('WorkflowController: JSON workflow execution failed', {
+                        taskType: req.body.taskType,
+                        error: error.message
+                    });
+
+                    return res.status(500).json({
+                        success: false,
+                        error: 'JSON workflow execution failed',
+                        message: error.message
+                    });
+                }
+            }
+            
             if (taskOptions && taskOptions.taskId) {
                 this.logger.info('WorkflowController: Processing task execution request', {
                     taskId: taskOptions.taskId,
@@ -894,6 +954,167 @@ class WorkflowController {
             });
         }
     }
+
+    /**
+     * Execute workflow steps from JSON configuration
+     */
+    async executeWorkflowSteps(workflow, taskData, projectId, userId, workspacePath, options) {
+        const results = {
+            success: true,
+            steps: [],
+            errors: [],
+            duration: 0
+        };
+
+        const startTime = Date.now();
+
+        try {
+            this.logger.info('WorkflowController: Starting workflow execution', {
+                workflowName: workflow.name,
+                stepsCount: workflow.steps.length
+            });
+
+            for (const step of workflow.steps) {
+                const stepStartTime = Date.now();
+                
+                try {
+                    this.logger.info('WorkflowController: Executing step', {
+                        stepName: step.name,
+                        stepType: step.type
+                    });
+
+                    const stepResult = await this.executeStep(step, taskData, projectId, userId, workspacePath, options);
+                    
+                    results.steps.push({
+                        name: step.name,
+                        type: step.type,
+                        success: stepResult.success,
+                        duration: Date.now() - stepStartTime,
+                        data: stepResult.data,
+                        error: stepResult.error
+                    });
+
+                    if (!stepResult.success) {
+                        results.errors.push(`Step ${step.name} failed: ${stepResult.error}`);
+                        if (step.strict !== false) {
+                            results.success = false;
+                            break;
+                        }
+                    }
+
+                } catch (error) {
+                    this.logger.error('WorkflowController: Step execution failed', {
+                        stepName: step.name,
+                        error: error.message
+                    });
+
+                    results.steps.push({
+                        name: step.name,
+                        type: step.type,
+                        success: false,
+                        duration: Date.now() - stepStartTime,
+                        error: error.message
+                    });
+
+                    results.errors.push(`Step ${step.name} failed: ${error.message}`);
+                    
+                    if (step.strict !== false) {
+                        results.success = false;
+                        break;
+                    }
+                }
+            }
+
+        } catch (error) {
+            this.logger.error('WorkflowController: Workflow execution failed', {
+                workflowName: workflow.name,
+                error: error.message
+            });
+            
+            results.success = false;
+            results.errors.push(`Workflow execution failed: ${error.message}`);
+        }
+
+        results.duration = Date.now() - startTime;
+
+        this.logger.info('WorkflowController: Workflow execution completed', {
+            workflowName: workflow.name,
+            success: results.success,
+            duration: results.duration,
+            stepsCompleted: results.steps.length,
+            errorsCount: results.errors.length
+        });
+
+        return results;
+    }
+
+    /**
+     * Execute individual workflow step using existing StepRegistry
+     */
+    async executeStep(step, taskData, projectId, userId, workspacePath, options) {
+        try {
+            // Get StepRegistry
+            const { getStepRegistry } = require('@steps');
+            const stepRegistry = getStepRegistry();
+            
+            // Get step name from step configuration
+            const stepName = step.step || step.type;
+            
+            this.logger.info('WorkflowController: Executing step via StepRegistry', {
+                stepName,
+                stepType: step.type
+            });
+            
+            // Format prompt if needed
+            let stepOptions = {
+                projectPath: workspacePath,
+                projectId,
+                userId,
+                taskData,
+                ...step.options,
+                ...options
+            };
+
+            // Format prompt for IDE steps
+            if (step.type === 'ide_send_message' && step.options?.message) {
+                const WorkflowLoaderService = require('@domain/services/WorkflowLoaderService');
+                const workflowLoader = new WorkflowLoaderService();
+                await workflowLoader.loadWorkflows();
+                
+                const formattedPrompt = workflowLoader.formatPromptForStep(step, taskData);
+                if (formattedPrompt) {
+                    stepOptions.message = formattedPrompt;
+                }
+            }
+            
+            // Execute step using existing StepRegistry
+            const result = await stepRegistry.executeStep(stepName, stepOptions);
+            
+            this.logger.info('WorkflowController: Step executed successfully', {
+                stepName,
+                success: result.success
+            });
+            
+            return {
+                success: result.success,
+                data: result.data || result,
+                error: result.error
+            };
+            
+        } catch (error) {
+            this.logger.error('WorkflowController: Step execution failed', {
+                stepName: step.step || step.type,
+                error: error.message
+            });
+            
+            return {
+                success: false,
+                error: error.message
+            };
+        }
+    }
+
+
 
     /**
      * Health check endpoint

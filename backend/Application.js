@@ -753,14 +753,13 @@ class Application {
     this.app.get('/api/templates', (req, res) => this.ContentLibraryController.getTemplates(req, res));
     this.app.get('/api/templates/:category/:filename', (req, res) => this.ContentLibraryController.getTemplateFile(req, res));
 
-    // Task Management routes (protected) - PROJECT-BASED
+    // Task Management routes (protected) - PROJECT-BASED (CRUD only, no execution)
     this.app.use('/api/projects/:projectId/tasks', this.authMiddleware.authenticate());
     this.app.post('/api/projects/:projectId/tasks', (req, res) => this.taskController.createTask(req, res));
     this.app.get('/api/projects/:projectId/tasks', (req, res) => this.taskController.getTasks(req, res));
     this.app.get('/api/projects/:projectId/tasks/:id', (req, res) => this.taskController.getTaskById(req, res));
     this.app.put('/api/projects/:projectId/tasks/:id', (req, res) => this.taskController.updateTask(req, res));
     this.app.delete('/api/projects/:projectId/tasks/:id', (req, res) => this.taskController.deleteTask(req, res));
-    this.app.post('/api/projects/:projectId/tasks/:id/execute', (req, res) => this.taskController.executeTask(req, res));
     this.app.get('/api/projects/:projectId/tasks/:id/execution', (req, res) => this.taskController.getTaskExecution(req, res));
     this.app.post('/api/projects/:projectId/tasks/:id/cancel', (req, res) => this.taskController.cancelTask(req, res));
     
