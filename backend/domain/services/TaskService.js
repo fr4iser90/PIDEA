@@ -4,7 +4,7 @@ const TaskPriority = require('@value-objects/TaskPriority');
 const TaskType = require('@value-objects/TaskType');
 const GitWorkflowManager = require('../workflows/categories/git/GitWorkflowManager');
 const GitWorkflowContext = require('../workflows/categories/git/GitWorkflowContext');
-const { SequentialExecutionEngine } = require('../workflows/execution');
+// SequentialExecutionEngine removed - no longer needed
 const StepRegistry = require('../steps/StepRegistry');
 const FrameworkRegistry = require('../frameworks/FrameworkRegistry');
 const Logger = require('@logging/Logger');
@@ -37,15 +37,7 @@ class TaskService {
       });
     }
     
-    // Initialize core execution engine
-    this.executionEngine = new SequentialExecutionEngine({
-            logger: new ServiceLogger('TaskService'),
-            enablePriority: true,
-            enableRetry: true,
-            enableResourceManagement: true,
-            enableDependencyResolution: true,
-            enablePriorityScheduling: true
-        });
+    // Execution engine removed - using WorkflowOrchestrationService instead
 
         // Initialize Categories-based registries
         this.stepRegistry = new StepRegistry();

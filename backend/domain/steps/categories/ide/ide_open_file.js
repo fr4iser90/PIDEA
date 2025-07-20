@@ -104,4 +104,11 @@ class IDEOpenFileStep {
   }
 }
 
-module.exports = { config, execute: IDEOpenFileStep.prototype.execute.bind(new IDEOpenFileStep()) }; 
+// Create instance for execution
+const stepInstance = new IDEOpenFileStep();
+
+// Export in StepRegistry format
+module.exports = {
+  config,
+  execute: async (context) => await stepInstance.execute(context)
+}; 

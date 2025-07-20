@@ -1,5 +1,5 @@
 /**
- * GitService - Git operations with proper error handling
+ * GitService - Git operations orchestrator using Steps
  */
 const { execSync, spawn } = require('child_process');
 const path = require('path');
@@ -11,6 +11,7 @@ class GitService {
     constructor(dependencies = {}) {
         this.logger = dependencies.logger || console;
         this.eventBus = dependencies.eventBus;
+        this.stepRegistry = dependencies.stepRegistry;
     }
 
     /**
@@ -29,7 +30,7 @@ class GitService {
     }
 
     /**
-     * Initialize Git repository
+     * Initialize Git repository using GIT_INIT_REPOSITORY step
      * @param {string} repoPath - Repository path
      * @param {Object} options - Init options
      * @returns {Promise<Object>} Init result
@@ -38,25 +39,33 @@ class GitService {
         const { bare = false, initialBranch = 'main' } = options;
 
         try {
-            this.logger.info('GitService: Initializing repository', { repoPath });
+            this.logger.info('GitService: Initializing repository using step', { repoPath, bare, initialBranch });
             
-            const args = ['init'];
-            if (bare) args.push('--bare');
-            if (initialBranch) args.push('-b', initialBranch);
-
-            const result = execSync(`git ${args.join(' ')}`, {
-                cwd: repoPath,
-                encoding: 'utf8'
-            });
-
-            if (this.eventBus) {
-                this.eventBus.publish('git.repository.init', {
-                    repoPath,
-                    timestamp: new Date()
-                });
+            if (!this.stepRegistry) {
+                throw new Error('StepRegistry not available for Git operations');
             }
 
-            return { success: true, output: result };
+            const stepContext = {
+                projectPath: repoPath,
+                bare,
+                initialBranch
+            };
+
+            const result = await this.stepRegistry.executeStep('GIT_INIT_REPOSITORY', stepContext);
+            
+            if (result.success) {
+                if (this.eventBus) {
+                    this.eventBus.publish('git.repository.init', {
+                        repoPath,
+                        bare,
+                        initialBranch,
+                        timestamp: new Date()
+                    });
+                }
+                return { success: true, output: result.result };
+            } else {
+                throw new Error(result.error || 'Failed to initialize repository');
+            }
         } catch (error) {
             this.logger.error('GitService: Failed to initialize repository', {
                 repoPath,
@@ -67,7 +76,7 @@ class GitService {
     }
 
     /**
-     * Clone repository
+     * Clone repository using GIT_CLONE_REPOSITORY step
      * @param {string} url - Repository URL
      * @param {string} targetPath - Target path
      * @param {Object} options - Clone options
@@ -82,27 +91,39 @@ class GitService {
         } = options;
 
         try {
-            this.logger.info('GitService: Cloning repository', { url, targetPath });
+            this.logger.info('GitService: Cloning repository using step', { url, targetPath, branch, depth, singleBranch, recursive });
             
-            const args = ['clone', url, targetPath];
-            if (branch) args.push('-b', branch);
-            if (depth) args.push('--depth', depth.toString());
-            if (singleBranch) args.push('--single-branch');
-            if (recursive) args.push('--recursive');
-
-            const result = execSync(`git ${args.join(' ')}`, {
-                encoding: 'utf8'
-            });
-
-            if (this.eventBus) {
-                this.eventBus.publish('git.repository.clone', {
-                    url,
-                    targetPath,
-                    timestamp: new Date()
-                });
+            if (!this.stepRegistry) {
+                throw new Error('StepRegistry not available for Git operations');
             }
 
-            return { success: true, output: result };
+            const stepContext = {
+                url,
+                targetPath,
+                branch,
+                depth,
+                singleBranch,
+                recursive
+            };
+
+            const result = await this.stepRegistry.executeStep('GIT_CLONE_REPOSITORY', stepContext);
+            
+            if (result.success) {
+                if (this.eventBus) {
+                    this.eventBus.publish('git.repository.clone', {
+                        url,
+                        targetPath,
+                        branch,
+                        depth,
+                        singleBranch,
+                        recursive,
+                        timestamp: new Date()
+                    });
+                }
+                return { success: true, output: result.result };
+            } else {
+                throw new Error(result.error || 'Failed to clone repository');
+            }
         } catch (error) {
             this.logger.error('GitService: Failed to clone repository', {
                 url,
@@ -114,19 +135,30 @@ class GitService {
     }
 
     /**
-     * Get current branch
+     * Get current branch using GIT_GET_CURRENT_BRANCH step
      * @param {string} repoPath - Repository path
      * @returns {Promise<string>} Current branch name
      */
     async getCurrentBranch(repoPath) {
         try {
-            const result = execSync('git branch --show-current', {
-                cwd: repoPath,
-                encoding: 'utf8'
-            });
-            const branch = result.trim();
-            this.logger.info(`Aktueller Branch für ${repoPath}: "${branch}"`);
-            return branch;
+            this.logger.info('GitService: Getting current branch using step', { repoPath });
+            
+            if (!this.stepRegistry) {
+                throw new Error('StepRegistry not available for Git operations');
+            }
+
+            const stepContext = {
+                projectPath: repoPath
+            };
+
+            const result = await this.stepRegistry.executeStep('GIT_GET_CURRENT_BRANCH', stepContext);
+            
+            if (result.success) {
+                this.logger.info(`Aktueller Branch für ${repoPath}: "${result.currentBranch}"`);
+                return result.currentBranch;
+            } else {
+                throw new Error(result.error || 'Failed to get current branch');
+            }
         } catch (error) {
             this.logger.error('GitService: Failed to get current branch', {
                 repoPath,
@@ -137,25 +169,35 @@ class GitService {
     }
 
     /**
-     * Get all real origin branches (as on GitHub, no HEAD, no duplicates, no remotes/)
+     * Get all branches using GIT_GET_BRANCHES step
      * @param {string} repoPath - Repository path
+     * @param {Object} options - Branch options
      * @returns {Promise<Array>} Branch list
      */
     async getBranches(repoPath, options = {}) {
+        const { includeRemote = true, includeLocal = true } = options;
+        
         try {
-            const command = 'git branch -r';
-            const result = execSync(command, {
-                cwd: repoPath,
-                encoding: 'utf8'
-            });
-            return result
-                .split('\n')
-                .map(line => line.trim())
-                .filter(line => line.startsWith('origin/')) // nur origin-Branches
-                .filter(line => !line.includes('HEAD ->')) // kein HEAD
-                .map(line => line.replace(/^origin\//, ''))
-                .filter(branch => branch && branch.length > 0)
-                .filter((branch, idx, arr) => arr.indexOf(branch) === idx); // unique
+            this.logger.info('GitService: Getting branches using step', { repoPath, includeRemote, includeLocal });
+            
+            if (!this.stepRegistry) {
+                throw new Error('StepRegistry not available for Git operations');
+            }
+
+            const stepContext = {
+                projectPath: repoPath,
+                includeRemote,
+                includeLocal
+            };
+
+            const result = await this.stepRegistry.executeStep('GIT_GET_BRANCHES', stepContext);
+            
+            if (result.success) {
+                // Return all branches (local + remote combined)
+                return result.branches.all;
+            } else {
+                throw new Error(result.error || 'Failed to get branches');
+            }
         } catch (error) {
             this.logger.error('GitService: Failed to get branches', {
                 repoPath,
@@ -166,7 +208,7 @@ class GitService {
     }
 
     /**
-     * Create new branch
+     * Create new branch using GIT_CREATE_BRANCH step
      * @param {string} repoPath - Repository path
      * @param {string} branchName - Branch name
      * @param {Object} options - Branch options
@@ -176,15 +218,20 @@ class GitService {
         const { checkout = true, startPoint = null } = options;
 
         try {
-            this.logger.info('GitService: Creating branch', { repoPath, branchName });
+            this.logger.info('GitService: Creating branch using step', { repoPath, branchName });
             
-            const args = ['checkout', '-b', branchName];
-            if (startPoint) args.push(startPoint);
+            if (!this.stepRegistry) {
+                throw new Error('StepRegistry not available for Git operations');
+            }
 
-            const result = execSync(`git ${args.join(' ')}`, {
-                cwd: repoPath,
-                encoding: 'utf8'
-            });
+            const stepContext = {
+                projectPath: repoPath,
+                branchName,
+                checkout,
+                fromBranch: startPoint
+            };
+
+            const result = await this.stepRegistry.executeStep('GIT_CREATE_BRANCH', stepContext);
 
             if (this.eventBus) {
                 this.eventBus.publish('git.branch.create', {
@@ -194,7 +241,7 @@ class GitService {
                 });
             }
 
-            return { success: true, output: result };
+            return { success: result.success, output: result.result };
         } catch (error) {
             this.logger.error('GitService: Failed to create branch', {
                 repoPath,
@@ -206,29 +253,43 @@ class GitService {
     }
 
     /**
-     * Checkout branch
+     * Checkout branch using GIT_CHECKOUT_BRANCH step
      * @param {string} repoPath - Repository path
      * @param {string} branchName - Branch name
+     * @param {Object} options - Checkout options
      * @returns {Promise<Object>} Checkout result
      */
-    async checkoutBranch(repoPath, branchName) {
+    async checkoutBranch(repoPath, branchName, options = {}) {
+        const { createIfNotExists = false } = options;
+        
         try {
-            this.logger.info('GitService: Checking out branch', { repoPath, branchName });
+            this.logger.info('GitService: Checking out branch using step', { repoPath, branchName, createIfNotExists });
             
-            const result = execSync(`git checkout ${branchName}`, {
-                cwd: repoPath,
-                encoding: 'utf8'
-            });
-
-            if (this.eventBus) {
-                this.eventBus.publish('git.branch.checkout', {
-                    repoPath,
-                    branchName,
-                    timestamp: new Date()
-                });
+            if (!this.stepRegistry) {
+                throw new Error('StepRegistry not available for Git operations');
             }
 
-            return { success: true, output: result };
+            const stepContext = {
+                projectPath: repoPath,
+                branchName,
+                createIfNotExists
+            };
+
+            const result = await this.stepRegistry.executeStep('GIT_CHECKOUT_BRANCH', stepContext);
+            
+            if (result.success) {
+                if (this.eventBus) {
+                    this.eventBus.publish('git.branch.checkout', {
+                        repoPath,
+                        branchName,
+                        created: result.created,
+                        timestamp: new Date()
+                    });
+                }
+                return { success: true, output: result.result, created: result.created };
+            } else {
+                throw new Error(result.error || 'Failed to checkout branch');
+            }
         } catch (error) {
             this.logger.error('GitService: Failed to checkout branch', {
                 repoPath,
@@ -240,7 +301,7 @@ class GitService {
     }
 
     /**
-     * Get commit history
+     * Get commit history using GIT_GET_COMMIT_HISTORY step
      * @param {string} repoPath - Repository path
      * @param {Object} options - History options
      * @returns {Promise<Array>} Commit history
@@ -255,24 +316,28 @@ class GitService {
         } = options;
 
         try {
-            let command = `git log --${format}`;
-            if (limit) command += ` -${limit}`;
-            if (since) command += ` --since="${since}"`;
-            if (until) command += ` --until="${until}"`;
-            if (author) command += ` --author="${author}"`;
+            this.logger.info('GitService: Getting commit history using step', { repoPath, limit, since, until, author });
+            
+            if (!this.stepRegistry) {
+                throw new Error('StepRegistry not available for Git operations');
+            }
 
-            const result = execSync(command, {
-                cwd: repoPath,
-                encoding: 'utf8'
-            });
+            const stepContext = {
+                projectPath: repoPath,
+                limit,
+                since,
+                until,
+                author,
+                format
+            };
 
-            return result
-                .split('\n')
-                .filter(line => line.trim())
-                .map(line => {
-                    const [hash, author, email, date, message] = line.split('|');
-                    return { hash, author, email, date, message };
-                });
+            const result = await this.stepRegistry.executeStep('GIT_GET_COMMIT_HISTORY', stepContext);
+            
+            if (result.success) {
+                return result.commits;
+            } else {
+                throw new Error(result.error || 'Failed to get commit history');
+            }
         } catch (error) {
             this.logger.error('GitService: Failed to get commit history', {
                 repoPath,
@@ -283,33 +348,29 @@ class GitService {
     }
 
     /**
-     * Get last commit
+     * Get last commit using GIT_GET_LAST_COMMIT step
      * @param {string} repoPath - Repository path
      * @returns {Promise<Object>} Last commit info
      */
     async getLastCommit(repoPath) {
         try {
-            const hash = execSync('git rev-parse HEAD', {
-                cwd: repoPath,
-                encoding: 'utf8'
-            }).trim();
+            this.logger.info('GitService: Getting last commit using step', { repoPath });
             
-            const message = execSync('git log -1 --pretty=format:%s', {
-                cwd: repoPath,
-                encoding: 'utf8'
-            }).trim();
-            
-            const author = execSync('git log -1 --pretty=format:%an', {
-                cwd: repoPath,
-                encoding: 'utf8'
-            }).trim();
-            
-            const date = execSync('git log -1 --pretty=format:%cd', {
-                cwd: repoPath,
-                encoding: 'utf8'
-            }).trim();
+            if (!this.stepRegistry) {
+                throw new Error('StepRegistry not available for Git operations');
+            }
 
-            return { hash, message, author, date };
+            const stepContext = {
+                projectPath: repoPath
+            };
+
+            const result = await this.stepRegistry.executeStep('GIT_GET_LAST_COMMIT', stepContext);
+            
+            if (result.success) {
+                return result.lastCommit;
+            } else {
+                throw new Error(result.error || 'Failed to get last commit');
+            }
         } catch (error) {
             this.logger.error('GitService: Failed to get last commit', {
                 repoPath,
@@ -320,36 +381,38 @@ class GitService {
     }
 
     /**
-     * Add files to staging
+     * Add files to staging using GIT_ADD_FILES step
      * @param {string} repoPath - Repository path
      * @param {Array<string>} files - Files to add
      * @returns {Promise<Object>} Add result
      */
     async addFiles(repoPath, files = []) {
         try {
-            this.logger.info('GitService: Adding files', { repoPath, files });
+            this.logger.info('GitService: Adding files using step', { repoPath, files });
             
-            const args = ['add'];
-            if (files.length === 0) {
-                args.push('.');
+            if (!this.stepRegistry) {
+                throw new Error('StepRegistry not available for Git operations');
+            }
+
+            const stepContext = {
+                projectPath: repoPath,
+                files: files.length === 0 ? '.' : files.join(' ')
+            };
+
+            const result = await this.stepRegistry.executeStep('GIT_ADD_FILES', stepContext);
+            
+            if (result.success) {
+                if (this.eventBus) {
+                    this.eventBus.publish('git.files.add', {
+                        repoPath,
+                        files,
+                        timestamp: new Date()
+                    });
+                }
+                return { success: true, output: result.result };
             } else {
-                args.push(...files);
+                throw new Error(result.error || 'Failed to add files');
             }
-
-            const result = execSync(`git ${args.join(' ')}`, {
-                cwd: repoPath,
-                encoding: 'utf8'
-            });
-
-            if (this.eventBus) {
-                this.eventBus.publish('git.files.add', {
-                    repoPath,
-                    files,
-                    timestamp: new Date()
-                });
-            }
-
-            return { success: true, output: result };
         } catch (error) {
             this.logger.error('GitService: Failed to add files', {
                 repoPath,
@@ -361,7 +424,7 @@ class GitService {
     }
 
     /**
-     * Commit changes
+     * Commit changes using GIT_COMMIT step
      * @param {string} repoPath - Repository path
      * @param {string} message - Commit message
      * @param {Object} options - Commit options
@@ -371,16 +434,20 @@ class GitService {
         const { author = null, allowEmpty = false } = options;
 
         try {
-            this.logger.info('GitService: Committing changes', { repoPath, message });
+            this.logger.info('GitService: Committing changes using step', { repoPath, message });
             
-            const args = ['commit', '-m', message];
-            if (author) args.push('--author', author);
-            if (allowEmpty) args.push('--allow-empty');
+            if (!this.stepRegistry) {
+                throw new Error('StepRegistry not available for Git operations');
+            }
 
-            const result = execSync(`git ${args.join(' ')}`, {
-                cwd: repoPath,
-                encoding: 'utf8'
-            });
+            const stepContext = {
+                projectPath: repoPath,
+                message,
+                author,
+                files: '.'
+            };
+
+            const result = await this.stepRegistry.executeStep('GIT_COMMIT', stepContext);
 
             if (this.eventBus) {
                 this.eventBus.publish('git.commit', {
@@ -390,7 +457,7 @@ class GitService {
                 });
             }
 
-            return { success: true, output: result };
+            return { success: result.success, output: result.result };
         } catch (error) {
             this.logger.error('GitService: Failed to commit changes', {
                 repoPath,
@@ -402,7 +469,7 @@ class GitService {
     }
 
     /**
-     * Push changes
+     * Push changes using GIT_PUSH step
      * @param {string} repoPath - Repository path
      * @param {Object} options - Push options
      * @returns {Promise<Object>} Push result
@@ -416,18 +483,20 @@ class GitService {
         } = options;
 
         try {
-            this.logger.info('GitService: Pushing changes', { repoPath, remote });
+            this.logger.info('GitService: Pushing changes using step', { repoPath, remote });
             
-            const args = ['push'];
-            if (force) args.push('--force');
-            if (setUpstream) args.push('--set-upstream');
-            args.push(remote);
-            if (branch) args.push(branch);
+            if (!this.stepRegistry) {
+                throw new Error('StepRegistry not available for Git operations');
+            }
 
-            const result = execSync(`git ${args.join(' ')}`, {
-                cwd: repoPath,
-                encoding: 'utf8'
-            });
+            const stepContext = {
+                projectPath: repoPath,
+                branch,
+                remote,
+                setUpstream
+            };
+
+            const result = await this.stepRegistry.executeStep('GIT_PUSH', stepContext);
 
             if (this.eventBus) {
                 this.eventBus.publish('git.push', {
@@ -437,7 +506,7 @@ class GitService {
                 });
             }
 
-            return { success: true, output: result };
+            return { success: result.success, output: result.result };
         } catch (error) {
             this.logger.error('GitService: Failed to push changes', {
                 repoPath,
@@ -449,7 +518,7 @@ class GitService {
     }
 
     /**
-     * Pull changes
+     * Pull changes using GIT_PULL_CHANGES step
      * @param {string} repoPath - Repository path
      * @param {Object} options - Pull options
      * @returns {Promise<Object>} Pull result
@@ -458,27 +527,35 @@ class GitService {
         const { remote = 'origin', branch = null, rebase = false } = options;
 
         try {
-            this.logger.info('GitService: Pulling changes', { repoPath, remote });
+            this.logger.info('GitService: Pulling changes using step', { repoPath, remote, branch, rebase });
             
-            const args = ['pull'];
-            if (rebase) args.push('--rebase');
-            args.push(remote);
-            if (branch) args.push(branch);
-
-            const result = execSync(`git ${args.join(' ')}`, {
-                cwd: repoPath,
-                encoding: 'utf8'
-            });
-
-            if (this.eventBus) {
-                this.eventBus.publish('git.pull', {
-                    repoPath,
-                    remote,
-                    timestamp: new Date()
-                });
+            if (!this.stepRegistry) {
+                throw new Error('StepRegistry not available for Git operations');
             }
 
-            return { success: true, output: result };
+            const stepContext = {
+                projectPath: repoPath,
+                remote,
+                branch,
+                rebase
+            };
+
+            const result = await this.stepRegistry.executeStep('GIT_PULL_CHANGES', stepContext);
+            
+            if (result.success) {
+                if (this.eventBus) {
+                    this.eventBus.publish('git.pull', {
+                        repoPath,
+                        remote,
+                        branch,
+                        rebase,
+                        timestamp: new Date()
+                    });
+                }
+                return { success: true, output: result.result };
+            } else {
+                throw new Error(result.error || 'Failed to pull changes');
+            }
         } catch (error) {
             this.logger.error('GitService: Failed to pull changes', {
                 repoPath,
@@ -490,40 +567,33 @@ class GitService {
     }
 
     /**
-     * Get status
+     * Get status using GIT_GET_STATUS step
      * @param {string} repoPath - Repository path
+     * @param {Object} options - Status options
      * @returns {Promise<Object>} Repository status
      */
-    async getStatus(repoPath) {
+    async getStatus(repoPath, options = {}) {
+        const { porcelain = true } = options;
+        
         try {
-            const result = execSync('git status --porcelain', {
-                cwd: repoPath,
-                encoding: 'utf8'
-            });
-
-            const lines = result.split('\n').filter(line => line.trim());
-            const status = {
-                modified: [],
-                added: [],
-                deleted: [],
-                untracked: [],
-                staged: [],
-                unstaged: []
-            };
-
-            for (const line of lines) {
-                const code = line.substring(0, 2);
-                const file = line.substring(3);
-
-                if (code === 'M ') status.modified.push(file);
-                else if (code === 'A ') status.added.push(file);
-                else if (code === 'D ') status.deleted.push(file);
-                else if (code === '??') status.untracked.push(file);
-                else if (code === 'M ') status.staged.push(file);
-                else if (code === ' M') status.unstaged.push(file);
+            this.logger.info('GitService: Getting status using step', { repoPath, porcelain });
+            
+            if (!this.stepRegistry) {
+                throw new Error('StepRegistry not available for Git operations');
             }
 
-            return status;
+            const stepContext = {
+                projectPath: repoPath,
+                porcelain
+            };
+
+            const result = await this.stepRegistry.executeStep('GIT_GET_STATUS', stepContext);
+            
+            if (result.success) {
+                return result.status;
+            } else {
+                throw new Error(result.error || 'Failed to get status');
+            }
         } catch (error) {
             this.logger.error('GitService: Failed to get status', {
                 repoPath,
@@ -534,18 +604,31 @@ class GitService {
     }
 
     /**
-     * Get remote URL
+     * Get remote URL using GIT_GET_REMOTE_URL step
      * @param {string} repoPath - Repository path
      * @param {string} remote - Remote name
      * @returns {Promise<string>} Remote URL
      */
     async getRemoteUrl(repoPath, remote = 'origin') {
         try {
-            const result = execSync(`git remote get-url ${remote}`, {
-                cwd: repoPath,
-                encoding: 'utf8'
-            });
-            return result.trim();
+            this.logger.info('GitService: Getting remote URL using step', { repoPath, remote });
+            
+            if (!this.stepRegistry) {
+                throw new Error('StepRegistry not available for Git operations');
+            }
+
+            const stepContext = {
+                projectPath: repoPath,
+                remote
+            };
+
+            const result = await this.stepRegistry.executeStep('GIT_GET_REMOTE_URL', stepContext);
+            
+            if (result.success) {
+                return result.remoteUrl;
+            } else {
+                throw new Error(result.error || 'Failed to get remote URL');
+            }
         } catch (error) {
             this.logger.error('GitService: Failed to get remote URL', {
                 repoPath,
@@ -557,7 +640,7 @@ class GitService {
     }
 
     /**
-     * Add remote
+     * Add remote using GIT_ADD_REMOTE step
      * @param {string} repoPath - Repository path
      * @param {string} name - Remote name
      * @param {string} url - Remote URL
@@ -565,23 +648,33 @@ class GitService {
      */
     async addRemote(repoPath, name, url) {
         try {
-            this.logger.info('GitService: Adding remote', { repoPath, name, url });
+            this.logger.info('GitService: Adding remote using step', { repoPath, name, url });
             
-            const result = execSync(`git remote add ${name} ${url}`, {
-                cwd: repoPath,
-                encoding: 'utf8'
-            });
-
-            if (this.eventBus) {
-                this.eventBus.publish('git.remote.add', {
-                    repoPath,
-                    name,
-                    url,
-                    timestamp: new Date()
-                });
+            if (!this.stepRegistry) {
+                throw new Error('StepRegistry not available for Git operations');
             }
 
-            return { success: true, output: result };
+            const stepContext = {
+                projectPath: repoPath,
+                name,
+                url
+            };
+
+            const result = await this.stepRegistry.executeStep('GIT_ADD_REMOTE', stepContext);
+            
+            if (result.success) {
+                if (this.eventBus) {
+                    this.eventBus.publish('git.remote.add', {
+                        repoPath,
+                        name,
+                        url,
+                        timestamp: new Date()
+                    });
+                }
+                return { success: true, output: result.result };
+            } else {
+                throw new Error(result.error || 'Failed to add remote');
+            }
         } catch (error) {
             this.logger.error('GitService: Failed to add remote', {
                 repoPath,
@@ -594,7 +687,7 @@ class GitService {
     }
 
     /**
-     * Get diff
+     * Get diff using GIT_GET_DIFF step
      * @param {string} repoPath - Repository path
      * @param {Object} options - Diff options
      * @returns {Promise<string>} Diff output
@@ -608,18 +701,27 @@ class GitService {
         } = options;
 
         try {
-            let command = 'git diff';
-            if (staged) command += ' --staged';
-            if (commit1 && commit2) command += ` ${commit1}..${commit2}`;
-            else if (commit1) command += ` ${commit1}`;
-            if (file) command += ` -- ${file}`;
+            this.logger.info('GitService: Getting diff using step', { repoPath, staged, file, commit1, commit2 });
+            
+            if (!this.stepRegistry) {
+                throw new Error('StepRegistry not available for Git operations');
+            }
 
-            const result = execSync(command, {
-                cwd: repoPath,
-                encoding: 'utf8'
-            });
+            const stepContext = {
+                projectPath: repoPath,
+                staged,
+                file,
+                commit1,
+                commit2
+            };
 
-            return result;
+            const result = await this.stepRegistry.executeStep('GIT_GET_DIFF', stepContext);
+            
+            if (result.success) {
+                return result.diff;
+            } else {
+                throw new Error(result.error || 'Failed to get diff');
+            }
         } catch (error) {
             this.logger.error('GitService: Failed to get diff', {
                 repoPath,
@@ -630,7 +732,7 @@ class GitService {
     }
 
     /**
-     * Reset repository
+     * Reset repository using GIT_RESET step
      * @param {string} repoPath - Repository path
      * @param {string} mode - Reset mode (soft, mixed, hard)
      * @param {string} commit - Commit to reset to
@@ -638,23 +740,33 @@ class GitService {
      */
     async resetRepository(repoPath, mode = 'mixed', commit = 'HEAD') {
         try {
-            this.logger.info('GitService: Resetting repository', { repoPath, mode, commit });
+            this.logger.info('GitService: Resetting repository using step', { repoPath, mode, commit });
             
-            const result = execSync(`git reset --${mode} ${commit}`, {
-                cwd: repoPath,
-                encoding: 'utf8'
-            });
-
-            if (this.eventBus) {
-                this.eventBus.publish('git.reset', {
-                    repoPath,
-                    mode,
-                    commit,
-                    timestamp: new Date()
-                });
+            if (!this.stepRegistry) {
+                throw new Error('StepRegistry not available for Git operations');
             }
 
-            return { success: true, output: result };
+            const stepContext = {
+                projectPath: repoPath,
+                mode,
+                commit
+            };
+
+            const result = await this.stepRegistry.executeStep('GIT_RESET', stepContext);
+            
+            if (result.success) {
+                if (this.eventBus) {
+                    this.eventBus.publish('git.reset', {
+                        repoPath,
+                        mode,
+                        commit,
+                        timestamp: new Date()
+                    });
+                }
+                return { success: true, output: result.result };
+            } else {
+                throw new Error(result.error || 'Failed to reset repository');
+            }
         } catch (error) {
             this.logger.error('GitService: Failed to reset repository', {
                 repoPath,
@@ -667,7 +779,7 @@ class GitService {
     }
 
     /**
-     * Merge branch
+     * Merge branch using GIT_MERGE_BRANCH step
      * @param {string} repoPath - Repository path
      * @param {string} branchName - Branch to merge
      * @param {Object} options - Merge options
@@ -677,26 +789,35 @@ class GitService {
         const { strategy = 'recursive', noFF = false } = options;
 
         try {
-            this.logger.info('GitService: Merging branch', { repoPath, branchName });
+            this.logger.info('GitService: Merging branch using step', { repoPath, branchName, strategy, noFF });
             
-            const args = ['merge'];
-            if (noFF) args.push('--no-ff');
-            args.push(branchName);
-
-            const result = execSync(`git ${args.join(' ')}`, {
-                cwd: repoPath,
-                encoding: 'utf8'
-            });
-
-            if (this.eventBus) {
-                this.eventBus.publish('git.branch.merge', {
-                    repoPath,
-                    branchName,
-                    timestamp: new Date()
-                });
+            if (!this.stepRegistry) {
+                throw new Error('StepRegistry not available for Git operations');
             }
 
-            return { success: true, output: result };
+            const stepContext = {
+                projectPath: repoPath,
+                branchName,
+                strategy,
+                noFF
+            };
+
+            const result = await this.stepRegistry.executeStep('GIT_MERGE_BRANCH', stepContext);
+            
+            if (result.success) {
+                if (this.eventBus) {
+                    this.eventBus.publish('git.branch.merge', {
+                        repoPath,
+                        branchName,
+                        strategy,
+                        noFF,
+                        timestamp: new Date()
+                    });
+                }
+                return { success: true, output: result.result };
+            } else {
+                throw new Error(result.error || 'Failed to merge branch');
+            }
         } catch (error) {
             this.logger.error('GitService: Failed to merge branch', {
                 repoPath,

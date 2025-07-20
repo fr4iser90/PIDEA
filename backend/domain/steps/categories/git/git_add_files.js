@@ -1,36 +1,34 @@
 /**
- * Git Commit Step
- * Commits changes using real Git commands
+ * Git Add Files Step
+ * Adds files to Git staging area using real Git commands
  */
 
 const StepBuilder = require('@steps/StepBuilder');
 const Logger = require('@logging/Logger');
-const logger = new Logger('GitCommitStep');
+const logger = new Logger('GitAddFilesStep');
 
 // Step configuration
 const config = {
-  name: 'GIT_COMMIT',
+  name: 'GIT_ADD_FILES',
   type: 'git',
-  description: 'Commits changes to Git repository',
+  description: 'Adds files to Git staging area',
   category: 'git',
   version: '1.0.0',
   dependencies: ['terminalService'],
   settings: {
     timeout: 30000,
-    files: '.',
-    author: null,
-    email: null
+    files: '.'
   },
   validation: {
-    required: ['projectPath', 'message'],
-    optional: ['files', 'author', 'email']
+    required: ['projectPath'],
+    optional: ['files']
   }
 };
 
-class GitCommitStep {
+class GitAddFilesStep {
   constructor() {
-    this.name = 'GIT_COMMIT';
-    this.description = 'Commits changes to Git repository';
+    this.name = 'GIT_ADD_FILES';
+    this.description = 'Adds files to Git staging area';
     this.category = 'git';
     this.dependencies = ['terminalService'];
   }
@@ -40,7 +38,7 @@ class GitCommitStep {
   }
 
   async execute(context = {}) {
-    const config = GitCommitStep.getConfig();
+    const config = GitAddFilesStep.getConfig();
     const step = StepBuilder.build(config, context);
     
     try {
@@ -49,11 +47,10 @@ class GitCommitStep {
       // Validate context
       this.validateContext(context);
       
-      const { projectPath, message, files = '.', author, email } = context;
+      const { projectPath, files = '.' } = context;
       
-      logger.info('Executing GIT_COMMIT step', {
+      logger.info('Executing GIT_ADD_FILES step', {
         projectPath,
-        message,
         files
       });
 
@@ -64,34 +61,26 @@ class GitCommitStep {
         throw new Error('TerminalService not available in context');
       }
 
-      // Add files to staging using real Git command
-      const addResult = await terminalService.executeCommand(`git add ${files}`, { cwd: projectPath });
+      // Build add command
+      const addCommand = `git add ${files}`;
 
-      // Build commit command
-      let commitCommand = `git commit -m "${message}"`;
-      if (author && email) {
-        commitCommand = `git commit -m "${message}" --author="${author} <${email}>"`;
-      }
+      // Execute git add using real Git command
+      const result = await terminalService.executeCommand(addCommand, { cwd: projectPath });
 
-      // Commit changes using real Git command
-      const result = await terminalService.executeCommand(commitCommand, { cwd: projectPath });
-
-      logger.info('GIT_COMMIT step completed successfully', {
-        message,
+      logger.info('GIT_ADD_FILES step completed successfully', {
         files,
         result: result.stdout
       });
 
       return {
         success: true,
-        message,
         files,
         result: result.stdout,
         timestamp: new Date()
       };
 
     } catch (error) {
-      logger.error('GIT_COMMIT step failed', {
+      logger.error('GIT_ADD_FILES step failed', {
         error: error.message,
         context
       });
@@ -108,10 +97,7 @@ class GitCommitStep {
     if (!context.projectPath) {
       throw new Error('Project path is required');
     }
-    if (!context.message) {
-      throw new Error('Commit message is required');
-    }
   }
 }
 
-module.exports = { config, execute: GitCommitStep.prototype.execute.bind(new GitCommitStep()) }; 
+module.exports = { config, execute: GitAddFilesStep.prototype.execute.bind(new GitAddFilesStep()) }; 

@@ -3,7 +3,7 @@
  * Provides project-specific analysis queues with OOM prevention and resource limits
  */
 const { v4: uuidv4 } = require('uuid');
-const { ExecutionQueue, ExecutionScheduler } = require('@domain/workflows/execution');
+// ExecutionQueue and ExecutionScheduler removed - no longer needed
 const MemoryOptimizedAnalysisService = require('./MemoryOptimizedAnalysisService');
 const Logger = require('@logging/Logger');
 
@@ -431,13 +431,17 @@ class AnalysisQueueService {
    */
   getProjectQueue(projectId) {
     if (!this.projectQueues.has(projectId)) {
-      this.projectQueues.set(projectId, new ExecutionQueue({
+      this.projectQueues.set(projectId, {
         maxSize: 10,
         enablePriority: true,
         enableRetry: true,
         maxRetries: 2,
-        defaultTimeout: this.config.analysisTimeout
-      }));
+        defaultTimeout: this.config.analysisTimeout,
+        queue: [],
+        processing: [],
+        completed: [],
+        failed: []
+      });
     }
     return this.projectQueues.get(projectId);
   }

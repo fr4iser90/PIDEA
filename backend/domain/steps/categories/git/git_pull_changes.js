@@ -1,35 +1,35 @@
 /**
- * Git Push Step
- * Pushes changes to remote repository using real Git commands
+ * Git Pull Changes Step
+ * Pulls changes from remote repository using real Git commands
  */
 
 const StepBuilder = require('@steps/StepBuilder');
 const Logger = require('@logging/Logger');
-const logger = new Logger('GitPushStep');
+const logger = new Logger('GitPullChangesStep');
 
 // Step configuration
 const config = {
-  name: 'GIT_PUSH',
+  name: 'GIT_PULL_CHANGES',
   type: 'git',
-  description: 'Pushes changes to remote Git repository',
+  description: 'Pulls changes from remote repository',
   category: 'git',
   version: '1.0.0',
   dependencies: ['terminalService'],
   settings: {
     timeout: 30000,
     remote: 'origin',
-    setUpstream: false
+    rebase: false
   },
   validation: {
     required: ['projectPath'],
-    optional: ['branch', 'remote', 'setUpstream']
+    optional: ['remote', 'branch', 'rebase']
   }
 };
 
-class GitPushStep {
+class GitPullChangesStep {
   constructor() {
-    this.name = 'GIT_PUSH';
-    this.description = 'Pushes changes to remote Git repository';
+    this.name = 'GIT_PULL_CHANGES';
+    this.description = 'Pulls changes from remote repository';
     this.category = 'git';
     this.dependencies = ['terminalService'];
   }
@@ -39,7 +39,7 @@ class GitPushStep {
   }
 
   async execute(context = {}) {
-    const config = GitPushStep.getConfig();
+    const config = GitPullChangesStep.getConfig();
     const step = StepBuilder.build(config, context);
     
     try {
@@ -48,13 +48,13 @@ class GitPushStep {
       // Validate context
       this.validateContext(context);
       
-      const { projectPath, branch, remote = 'origin', setUpstream = false } = context;
+      const { projectPath, remote = 'origin', branch, rebase = false } = context;
       
-      logger.info('Executing GIT_PUSH step', {
+      logger.info('Executing GIT_PULL_CHANGES step', {
         projectPath,
-        branch,
         remote,
-        setUpstream
+        branch,
+        rebase
       });
 
       // Get terminal service via dependency injection
@@ -64,40 +64,37 @@ class GitPushStep {
         throw new Error('TerminalService not available in context');
       }
 
-      // Get current branch if not specified
-      let currentBranch = branch;
-      if (!currentBranch) {
-        const branchResult = await terminalService.executeCommand('git branch --show-current', { cwd: projectPath });
-        currentBranch = branchResult.stdout.trim();
+      // Build pull command
+      let pullCommand = 'git pull';
+      if (rebase) {
+        pullCommand += ' --rebase';
+      }
+      pullCommand += ` ${remote}`;
+      if (branch) {
+        pullCommand += ` ${branch}`;
       }
 
-      // Build git push command
-      let pushCommand = `git push ${remote} ${currentBranch}`;
-      if (setUpstream) {
-        pushCommand = `git push -u ${remote} ${currentBranch}`;
-      }
+      // Execute git pull using real Git command
+      const result = await terminalService.executeCommand(pullCommand, { cwd: projectPath });
 
-      // Execute git push using real Git command
-      const result = await terminalService.executeCommand(pushCommand, { cwd: projectPath });
-
-      logger.info('GIT_PUSH step completed successfully', {
-        branch: currentBranch,
+      logger.info('GIT_PULL_CHANGES step completed successfully', {
         remote,
-        setUpstream,
+        branch,
+        rebase,
         result: result.stdout
       });
 
       return {
         success: true,
-        branch: currentBranch,
         remote,
-        setUpstream,
+        branch,
+        rebase,
         result: result.stdout,
         timestamp: new Date()
       };
 
     } catch (error) {
-      logger.error('GIT_PUSH step failed', {
+      logger.error('GIT_PULL_CHANGES step failed', {
         error: error.message,
         context
       });
@@ -117,4 +114,4 @@ class GitPushStep {
   }
 }
 
-module.exports = { config, execute: GitPushStep.prototype.execute.bind(new GitPushStep()) }; 
+module.exports = { config, execute: GitPullChangesStep.prototype.execute.bind(new GitPullChangesStep()) }; 

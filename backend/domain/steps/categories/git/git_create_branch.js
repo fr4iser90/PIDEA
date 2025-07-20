@@ -1,6 +1,6 @@
 /**
  * Git Create Branch Step
- * Creates a new Git branch using the existing GitService
+ * Creates a new Git branch using real Git commands
  */
 
 const StepBuilder = require('@steps/StepBuilder');
@@ -14,15 +14,15 @@ const config = {
   description: 'Creates a new Git branch',
   category: 'git',
   version: '1.0.0',
-  dependencies: ['gitService'],
+  dependencies: ['terminalService'],
   settings: {
     timeout: 30000,
     checkout: true,
-    startPoint: 'main'
+    fromBranch: null
   },
   validation: {
     required: ['projectPath', 'branchName'],
-    optional: ['startPoint', 'checkout']
+    optional: ['checkout', 'fromBranch']
   }
 };
 
@@ -31,7 +31,7 @@ class GitCreateBranchStep {
     this.name = 'GIT_CREATE_BRANCH';
     this.description = 'Creates a new Git branch';
     this.category = 'git';
-    this.dependencies = ['gitService'];
+    this.dependencies = ['terminalService'];
   }
 
   static getConfig() {
@@ -48,43 +48,63 @@ class GitCreateBranchStep {
       // Validate context
       this.validateContext(context);
       
-      const { projectPath, branchName, startPoint = 'main', checkout = true } = context;
+      const { projectPath, branchName, checkout = true, fromBranch } = context;
       
       logger.info('Executing GIT_CREATE_BRANCH step', {
         projectPath,
         branchName,
-        startPoint,
-        checkout
+        checkout,
+        fromBranch
       });
 
-      // Get services via dependency injection
-      const gitService = context.getService('GitService');
-      const terminalService = context.getService('TerminalService');
+      // Get terminal service via dependency injection
+      const terminalService = context.getService('terminalService');
       
-      if (!gitService) {
-        throw new Error('GitService not available in context');
-      }
       if (!terminalService) {
         throw new Error('TerminalService not available in context');
       }
 
-      // Create branch using existing GitService
-      const result = await gitService.createBranch(projectPath, branchName, {
-        startPoint,
-        checkout
-      });
+      // Check if branch already exists
+      const branchExistsResult = await terminalService.executeCommand(`git branch --list ${branchName}`, { cwd: projectPath });
+      if (branchExistsResult.stdout.trim()) {
+        logger.warn(`Branch ${branchName} already exists`);
+        if (checkout) {
+          await terminalService.executeCommand(`git checkout ${branchName}`, { cwd: projectPath });
+        }
+        return {
+          success: true,
+          branchName,
+          checkout,
+          result: 'Branch already exists',
+          timestamp: new Date()
+        };
+      }
+
+      // Switch to base branch if specified
+      if (fromBranch) {
+        await terminalService.executeCommand(`git checkout ${fromBranch}`, { cwd: projectPath });
+      }
+
+      // Create new branch using real Git command
+      let createCommand = `git branch ${branchName}`;
+      if (checkout) {
+        createCommand = `git checkout -b ${branchName}`;
+      }
+
+      const result = await terminalService.executeCommand(createCommand, { cwd: projectPath });
 
       logger.info('GIT_CREATE_BRANCH step completed successfully', {
         branchName,
-        result
+        checkout,
+        result: result.stdout
       });
 
       return {
         success: true,
         branchName,
-        startPoint,
         checkout,
-        result,
+        fromBranch,
+        result: result.stdout,
         timestamp: new Date()
       };
 

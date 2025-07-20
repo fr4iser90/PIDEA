@@ -13,6 +13,7 @@ class MonorepoStrategy {
         this.fileSystemService = dependencies.fileSystemService;
         this.projectAnalyzer = dependencies.projectAnalyzer;
         this.container = dependencies.container;
+        this.stepRegistry = dependencies.stepRegistry;
     }
 
     /**
@@ -214,28 +215,87 @@ class MonorepoStrategy {
     }
 
     /**
-     * Analyze monorepo - ONLY the 4 things needed!
+     * Analyze monorepo using orchestrated steps
      * @param {string} projectPath - Project path
      * @returns {Promise<Object>} Monorepo analysis
      */
     async analyzeMonorepo(projectPath) {
         try {
-            this.logger.info('MonorepoStrategy: Starting analysis - ONLY 4 things needed!');
+            this.logger.info('MonorepoStrategy: Starting orchestrated analysis');
 
-            // 1. Detect monorepo type
+            // 1. Base monorepo detection
             const monorepoType = await this.getMonorepoType(projectPath);
             
-            // 2. Get the 4 things needed
+            // 2. Base results
             const results = {
                 isMonorepo: true,
                 type: monorepoType,
-                workpath: projectPath,                    // ✅ 1. Workpath
-                manifest: await this.getManifest(projectPath), // ✅ 2. Manifest
-                commands: await this.getCommands(projectPath), // ✅ 3. Commands
-                ports: await this.getPorts(projectPath)        // ✅ 4. Ports
+                workpath: projectPath,
+                manifest: await this.getManifest(projectPath),
+                commands: await this.getCommands(projectPath),
+                ports: await this.getPorts(projectPath)
             };
 
-            // 3. Publish event
+            // 3. Orchestrate analysis steps
+            if (this.stepRegistry) {
+                try {
+                    this.logger.info('MonorepoStrategy: Orchestrating analysis steps...');
+                    
+                    // Tech Stack Analysis (Framework detection)
+                    const techStackResult = await this.stepRegistry.executeStep('TechStackAnalysisStep', {
+                        projectPath: projectPath,
+                        includeFrameworks: true,
+                        includeLibraries: true,
+                        includeTools: true
+                    });
+                    
+                    if (techStackResult.success) {
+                        results.techStack = techStackResult.result;
+                        this.logger.info('MonorepoStrategy: Tech stack analysis completed');
+                    }
+                    
+                    // Manifest Analysis (Subdirectory detection)
+                    const manifestResult = await this.stepRegistry.executeStep('ManifestAnalysisStep', {
+                        projectPath: projectPath,
+                        analyzeSubdirectories: true,
+                        includeDependencies: true
+                    });
+                    
+                    if (manifestResult.success) {
+                        results.subdirectories = manifestResult.result;
+                        this.logger.info('MonorepoStrategy: Manifest analysis completed');
+                    }
+                    
+                    // Project Analysis (Overall structure)
+                    const projectResult = await this.stepRegistry.executeStep('ProjectAnalysisStep', {
+                        projectPath: projectPath,
+                        includeArchitecture: true
+                    });
+                    
+                    if (projectResult.success) {
+                        results.projectStructure = projectResult.result;
+                        this.logger.info('MonorepoStrategy: Project analysis completed');
+                    }
+                    
+                    // Dependency Analysis (Cross-dependencies)
+                    const dependencyResult = await this.stepRegistry.executeStep('DependencyAnalysisStep', {
+                        projectPath: projectPath,
+                        includeCrossDependencies: true
+                    });
+                    
+                    if (dependencyResult.success) {
+                        results.dependencies = dependencyResult.result;
+                        this.logger.info('MonorepoStrategy: Dependency analysis completed');
+                    }
+                    
+                } catch (stepError) {
+                    this.logger.warn('MonorepoStrategy: Step execution failed:', stepError.message);
+                }
+            } else {
+                this.logger.warn('MonorepoStrategy: StepRegistry not available, using basic analysis only');
+            }
+
+            // 4. Publish event
             if (this.eventBus) {
                 this.eventBus.publish('monorepo.analysis.completed', {
                     projectPath,
@@ -244,7 +304,7 @@ class MonorepoStrategy {
                 });
             }
 
-            this.logger.info('MonorepoStrategy: Analysis completed - ONLY 4 things!');
+            this.logger.info('MonorepoStrategy: Orchestrated analysis completed');
             return results;
 
         } catch (error) {

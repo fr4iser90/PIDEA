@@ -204,17 +204,18 @@ class ServiceRegistry {
             return new AutoFinishSystem(cursorIDEService, browserManager, ideManager);
         }, { singleton: true, dependencies: ['cursorIDEService', 'browserManager', 'ideManager'] });
 
-        // Workflow Orchestration Service
-        this.container.register('workflowOrchestrationService', (cursorIDEService, autoFinishSystem, taskRepository, eventBus, logger) => {
+        // Workflow Orchestration Service - ORCHESTRATES STEPS!
+        this.container.register('workflowOrchestrationService', (cursorIDEService, autoFinishSystem, taskRepository, eventBus, logger, stepRegistry) => {
             const WorkflowOrchestrationService = require('@domain/services/WorkflowOrchestrationService');
             return new WorkflowOrchestrationService({
                 cursorIDEService,
                 autoFinishSystem,
                 taskRepository,
                 eventBus,
-                logger
+                logger,
+                stepRegistry
             });
-        }, { singleton: true, dependencies: ['cursorIDEService', 'autoFinishSystem', 'taskRepository', 'eventBus', 'logger'] });
+        }, { singleton: true, dependencies: ['cursorIDEService', 'autoFinishSystem', 'taskRepository', 'eventBus', 'logger', 'stepRegistry'] });
 
         // Advanced Analysis Service
         this.container.register('advancedAnalysisService', (layerValidationService, logicValidationService, taskAnalysisService, eventBus, logger) => {
@@ -326,53 +327,59 @@ class ServiceRegistry {
             return new AIService();
         }, { singleton: true });
 
-        // Project analyzer
-        this.container.register('projectAnalyzer', () => {
-            const ProjectAnalyzer = require('../external/ProjectAnalyzer');
-            return new ProjectAnalyzer();
-        }, { singleton: true });
+        // Project analyzer - REMOVED (using ProjectAnalysisStep instead)
+        // this.container.register('projectAnalyzer', () => {
+        //     const ProjectAnalyzer = require('../external/ProjectAnalyzer');
+        //     return new ProjectAnalyzer();
+        // }, { singleton: true });
 
-        // Code quality analyzer
-        this.container.register('codeQualityAnalyzer', () => {
-            const CodeQualityAnalyzer = require('../external/CodeQualityAnalyzer');
-            return new CodeQualityAnalyzer();
-        }, { singleton: true });
+        // Code quality analyzer - REMOVED (using CodeQualityAnalysisStep instead)
+        // this.container.register('codeQualityAnalyzer', () => {
+        //     const CodeQualityAnalyzer = require('../external/CodeQualityAnalyzer');
+        //     return new CodeQualityAnalyzer();
+        // }, { singleton: true });
 
-        // Security analyzer
-        this.container.register('securityAnalyzer', () => {
-            const SecurityAnalyzer = require('../external/SecurityAnalyzer');
-            return new SecurityAnalyzer();
-        }, { singleton: true });
+        // Security analyzer - REMOVED (using SecurityAnalysisStep instead)
+        // this.container.register('securityAnalyzer', () => {
+        //     const SecurityAnalyzer = require('../external/SecurityAnalyzer');
+        //     return new SecurityAnalyzer();
+        // }, { singleton: true });
 
-        // Performance analyzer
-        this.container.register('performanceAnalyzer', () => {
-            const PerformanceAnalyzer = require('../external/PerformanceAnalyzer');
-            return new PerformanceAnalyzer();
-        }, { singleton: true });
+        // Performance analyzer - REMOVED (using PerformanceAnalysisStep instead)
+        // this.container.register('performanceAnalyzer', () => {
+        //     const PerformanceAnalyzer = require('../external/PerformanceAnalyzer');
+        //     return new PerformanceAnalyzer();
+        // }, { singleton: true });
 
-        // Architecture analyzer
-        this.container.register('architectureAnalyzer', () => {
-            const ArchitectureAnalyzer = require('../external/ArchitectureAnalyzer');
-            return new ArchitectureAnalyzer();
-        }, { singleton: true });
+        // Architecture analyzer - REMOVED (using ArchitectureAnalysisStep instead)
+        // this.container.register('architectureAnalyzer', () => {
+        //     const ArchitectureAnalyzer = require('../external/ArchitectureAnalyzer');
+        //     return new ArchitectureAnalyzer();
+        // }, { singleton: true });
 
-        // Tech stack analyzer
-        this.container.register('techStackAnalyzer', () => {
-            const TechStackAnalyzer = require('../external/TechStackAnalyzer');
-            return new TechStackAnalyzer();
-        }, { singleton: true });
+        // Tech stack analyzer - REMOVED (using TechStackAnalysisStep instead)
+        // this.container.register('techStackAnalyzer', () => {
+        //     const TechStackAnalyzer = require('../external/TechStackAnalyzer');
+        //     return new TechStackAnalyzer();
+        // }, { singleton: true });
 
         // Dependency analyzer
         this.container.register('dependencyAnalyzer', (monorepoStrategy, singleRepoStrategy) => {
-            const DependencyAnalyzer = require('../external/DependencyAnalyzer');
+            const DependencyAnalyzer = require('../external/OLD6');
             return new DependencyAnalyzer({ monorepoStrategy, singleRepoStrategy });
         }, { singleton: true, dependencies: ['monorepoStrategy', 'singleRepoStrategy'] });
 
-        // Git service
-        this.container.register('gitService', (logger, eventBus) => {
+        // Step Registry Service
+        this.container.register('stepRegistry', () => {
+            const { getStepRegistry } = require('@domain/steps');
+            return getStepRegistry();
+        }, { singleton: true });
+
+        // Git service (orchestrator using steps)
+        this.container.register('gitService', (logger, eventBus, stepRegistry) => {
             const GitService = require('../external/GitService');
-            return new GitService({ logger, eventBus });
-        }, { singleton: true, dependencies: ['logger', 'eventBus'] });
+            return new GitService({ logger, eventBus, stepRegistry });
+        }, { singleton: true, dependencies: ['logger', 'eventBus', 'stepRegistry'] });
 
         // Docker service
         this.container.register('dockerService', (logger, eventBus) => {
@@ -380,9 +387,18 @@ class ServiceRegistry {
             return new DockerService({ logger, eventBus });
         }, { singleton: true, dependencies: ['logger', 'eventBus'] });
 
+        // Workflow Git Service (verwendet Steps statt gitService)
+        this.container.register('workflowGitService', (logger, eventBus) => {
+            const WorkflowGitService = require('@domain/services/WorkflowGitService');
+            return new WorkflowGitService({
+                logger,
+                eventBus
+            });
+        }, { singleton: true, dependencies: ['logger', 'eventBus'] });
+
         // Test Analyzer Tools
         this.container.register('testAnalyzer', () => {
-            const TestAnalyzer = require('../external/TestAnalyzer');
+            const TestAnalyzer = require('../external/OLD9');
             return new TestAnalyzer();
         }, { singleton: true });
 
@@ -392,7 +408,7 @@ class ServiceRegistry {
         }, { singleton: true });
 
         this.container.register('coverageAnalyzer', () => {
-            const CoverageAnalyzer = require('../external/CoverageAnalyzer');
+            const CoverageAnalyzer = require('../external/OLD3');
             return new CoverageAnalyzer();
         }, { singleton: true });
 

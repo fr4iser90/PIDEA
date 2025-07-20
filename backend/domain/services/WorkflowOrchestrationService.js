@@ -47,38 +47,63 @@ class WorkflowOrchestrationService {
     }
 
     /**
-     * Execute workflow using enhanced git workflow manager
+     * Execute workflow using the modular workflow system
      * @param {Object} task - Task object
      * @param {Object} options - Workflow options
      * @returns {Promise<Object>} Workflow execution result
      */
     async executeWorkflow(task, options = {}) {
         try {
-            // Use enhanced git workflow manager for workflow execution
-            const context = new GitWorkflowContext({
-                projectPath: task.metadata?.projectPath,
-                task,
-                options,
-                workflowType: 'workflow-execution'
+            this.logger.info('WorkflowOrchestrationService: Starting modular workflow execution', {
+                taskId: task.id,
+                taskType: task.type?.value
             });
 
-            const result = await this.gitWorkflowManager.executeWorkflow(context);
+            // Use the modular workflow system
+            const { WorkflowComposer } = require('../workflows');
+            const composer = new WorkflowComposer();
             
-            this.logger.info('WorkflowOrchestrationService: Enhanced workflow execution completed', {
+            // Determine workflow type based on task type
+            let workflow;
+            switch (task.type?.value) {
+                case 'refactor':
+                    workflow = composer.composeRefactoringWorkflow(options);
+                    break;
+                case 'feature':
+                    workflow = composer.composeFeatureWorkflow(options);
+                    break;
+                case 'testing':
+                    workflow = composer.composeTestingWorkflow(options);
+                    break;
+                case 'analysis':
+                    workflow = composer.composeAnalysisWorkflow(options);
+                    break;
+                default:
+                    workflow = composer.composeAnalysisWorkflow(options);
+            }
+
+            // Execute the workflow
+            const result = await workflow.execute({
+                task,
+                projectPath: task.metadata?.projectPath,
+                ...options
+            });
+
+            this.logger.info('WorkflowOrchestrationService: Modular workflow execution completed', {
                 taskId: task.id,
                 taskType: task.type?.value,
-                result: result.status
+                success: result.success
             });
 
             return result;
 
         } catch (error) {
-            this.logger.error('WorkflowOrchestrationService: Enhanced workflow execution failed', {
+            this.logger.error('WorkflowOrchestrationService: Modular workflow execution failed', {
                 taskId: task.id,
                 error: error.message
             });
             
-            // Fallback to legacy method if enhanced method fails
+            // Fallback to legacy method if modular method fails
             return await this.executeWorkflowLegacy(task, options);
         }
     }

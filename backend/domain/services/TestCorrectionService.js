@@ -1,5 +1,5 @@
 const TestCorrection = require('@entities/TestCorrection');
-const TestAnalyzer = require('@external/TestAnalyzer');
+const TestAnalyzer = require('@/infrastructure/external/OLD9');
 const TestFixer = require('@external/TestFixer');
 const Logger = require('@logging/Logger');
 const logger = new Logger('Logger');

@@ -1,6 +1,6 @@
 /**
  * Git Create Pull Request Step
- * Creates a pull request using the existing PullRequestManager
+ * Creates a pull request using GitHub CLI or Git commands
  */
 
 const StepBuilder = require('@steps/StepBuilder');
@@ -14,7 +14,7 @@ const config = {
   description: 'Creates a pull request',
   category: 'git',
   version: '1.0.0',
-  dependencies: ['pullRequestManager'],
+  dependencies: ['terminalService'],
   settings: {
     timeout: 60000,
     targetBranch: 'main',
@@ -32,7 +32,7 @@ class GitCreatePullRequestStep {
     this.name = 'GIT_CREATE_PULL_REQUEST';
     this.description = 'Creates a pull request';
     this.category = 'git';
-    this.dependencies = ['pullRequestManager'];
+    this.dependencies = ['terminalService'];
   }
 
   static getConfig() {
@@ -66,47 +66,94 @@ class GitCreatePullRequestStep {
         title
       });
 
-      // Get services via dependency injection
-      const gitService = context.getService('GitService');
-      const terminalService = context.getService('TerminalService');
+      // Get terminal service via dependency injection
+      const terminalService = context.getService('terminalService');
       
-      if (!gitService) {
-        throw new Error('GitService not available in context');
-      }
       if (!terminalService) {
         throw new Error('TerminalService not available in context');
       }
 
       // Generate PR data
-      const prData = {
-        title: title || `Merge ${sourceBranch} into ${targetBranch}`,
-        description: description || `Automated pull request from ${sourceBranch}`,
+      const prTitle = title || `Merge ${sourceBranch} into ${targetBranch}`;
+      const prDescription = description || `Automated pull request from ${sourceBranch}`;
+
+      // Try GitHub CLI first, fallback to manual process
+      try {
+        // Check if GitHub CLI is available
+        const ghCheck = await terminalService.executeCommand('gh --version', { cwd: projectPath });
+        
+        if (ghCheck.exitCode === 0) {
+          // Use GitHub CLI to create PR
+          let ghCommand = `gh pr create --base ${targetBranch} --head ${sourceBranch} --title "${prTitle}" --body "${prDescription}"`;
+          
+          if (labels.length > 0) {
+            ghCommand += ` --label "${labels.join(',')}"`;
+          }
+          
+          if (reviewers.length > 0) {
+            ghCommand += ` --reviewer "${reviewers.join(',')}"`;
+          }
+
+          const result = await terminalService.executeCommand(ghCommand, { cwd: projectPath });
+          
+          // Extract PR URL from output
+          const prUrlMatch = result.stdout.match(/https:\/\/github\.com\/[^\s]+/);
+          const prUrl = prUrlMatch ? prUrlMatch[0] : result.stdout;
+
+          logger.info('GIT_CREATE_PULL_REQUEST step completed successfully with GitHub CLI', {
+            sourceBranch,
+            targetBranch,
+            prUrl
+          });
+
+          return {
+            success: true,
+            pullRequestUrl: prUrl,
+            title: prTitle,
+            sourceBranch,
+            targetBranch,
+            labels,
+            reviewers,
+            method: 'github-cli',
+            result: result.stdout,
+            timestamp: new Date()
+          };
+        }
+      } catch (ghError) {
+        logger.warn('GitHub CLI not available, using manual process');
+      }
+
+      // Fallback: Manual process (push and create PR via web)
+      await terminalService.executeCommand(`git push origin ${sourceBranch}`, { cwd: projectPath });
+      
+      // Get remote URL to construct PR URL
+      const remoteResult = await terminalService.executeCommand('git remote get-url origin', { cwd: projectPath });
+      const remoteUrl = remoteResult.stdout.trim();
+      
+      // Convert SSH to HTTPS if needed
+      let repoUrl = remoteUrl;
+      if (remoteUrl.startsWith('git@github.com:')) {
+        repoUrl = remoteUrl.replace('git@github.com:', 'https://github.com/').replace('.git', '');
+      }
+
+      const prUrl = `${repoUrl}/compare/${targetBranch}...${sourceBranch}`;
+
+      logger.info('GIT_CREATE_PULL_REQUEST step completed successfully with manual process', {
         sourceBranch,
         targetBranch,
-        labels,
-        reviewers
-      };
-
-      // Create pull request using existing PullRequestManager
-      const result = await gitService.createPullRequest(projectPath, prData);
-
-      logger.info('GIT_CREATE_PULL_REQUEST step completed successfully', {
-        sourceBranch,
-        targetBranch,
-        prId: result.id,
-        prUrl: result.url
+        prUrl
       });
 
       return {
         success: true,
-        pullRequestId: result.id,
-        pullRequestUrl: result.url,
-        title: prData.title,
+        pullRequestUrl: prUrl,
+        title: prTitle,
         sourceBranch,
         targetBranch,
         labels,
         reviewers,
-        result,
+        method: 'manual',
+        result: 'Push completed, create PR manually',
         timestamp: new Date()
       };
 

@@ -14,6 +14,7 @@ class SingleRepoStrategy {
         this.fileSystemService = dependencies.fileSystemService;
         this.projectAnalyzer = dependencies.projectAnalyzer;
         this.container = dependencies.container;
+        this.stepRegistry = dependencies.stepRegistry;
     }
 
     /**
@@ -226,28 +227,87 @@ class SingleRepoStrategy {
     }
 
     /**
-     * Analyze single repository - ONLY the 4 things needed!
+     * Analyze single repository using orchestrated steps
      * @param {string} projectPath - Project path
      * @returns {Promise<Object>} Single repo analysis
      */
     async analyzeSingleRepo(projectPath) {
         try {
-            this.logger.info('SingleRepoStrategy: Starting analysis - ONLY 4 things needed!');
+            this.logger.info('SingleRepoStrategy: Starting orchestrated analysis');
 
             // 1. Detect project type
             const projectType = await this.getProjectType(projectPath);
             
-            // 2. Get the 4 things needed
+            // 2. Base results
             const results = {
                 isSingleRepo: true,
                 type: projectType,
-                workpath: projectPath,                    // ✅ 1. Workpath
-                manifest: await this.getManifest(projectPath), // ✅ 2. Manifest
-                commands: await this.getCommands(projectPath), // ✅ 3. Commands
-                ports: await this.getPorts(projectPath)        // ✅ 4. Ports
+                workpath: projectPath,
+                manifest: await this.getManifest(projectPath),
+                commands: await this.getCommands(projectPath),
+                ports: await this.getPorts(projectPath)
             };
 
-            // 3. Publish event
+            // 3. Orchestrate analysis steps
+            if (this.stepRegistry) {
+                try {
+                    this.logger.info('SingleRepoStrategy: Orchestrating analysis steps...');
+                    
+                    // Tech Stack Analysis (Framework detection)
+                    const techStackResult = await this.stepRegistry.executeStep('TechStackAnalysisStep', {
+                        projectPath: projectPath,
+                        includeFrameworks: true,
+                        includeLibraries: true,
+                        includeTools: true
+                    });
+                    
+                    if (techStackResult.success) {
+                        results.techStack = techStackResult.result;
+                        this.logger.info('SingleRepoStrategy: Tech stack analysis completed');
+                    }
+                    
+                    // Manifest Analysis (Dependencies)
+                    const manifestResult = await this.stepRegistry.executeStep('ManifestAnalysisStep', {
+                        projectPath: projectPath,
+                        includeDependencies: true,
+                        includeScripts: true
+                    });
+                    
+                    if (manifestResult.success) {
+                        results.manifestDetails = manifestResult.result;
+                        this.logger.info('SingleRepoStrategy: Manifest analysis completed');
+                    }
+                    
+                    // Project Analysis (Structure)
+                    const projectResult = await this.stepRegistry.executeStep('ProjectAnalysisStep', {
+                        projectPath: projectPath,
+                        includeArchitecture: true
+                    });
+                    
+                    if (projectResult.success) {
+                        results.projectStructure = projectResult.result;
+                        this.logger.info('SingleRepoStrategy: Project analysis completed');
+                    }
+                    
+                    // Code Quality Analysis
+                    const codeQualityResult = await this.stepRegistry.executeStep('CodeQualityAnalysisStep', {
+                        projectPath: projectPath,
+                        includeMetrics: true
+                    });
+                    
+                    if (codeQualityResult.success) {
+                        results.codeQuality = codeQualityResult.result;
+                        this.logger.info('SingleRepoStrategy: Code quality analysis completed');
+                    }
+                    
+                } catch (stepError) {
+                    this.logger.warn('SingleRepoStrategy: Step execution failed:', stepError.message);
+                }
+            } else {
+                this.logger.warn('SingleRepoStrategy: StepRegistry not available, using basic analysis only');
+            }
+
+            // 4. Publish event
             if (this.eventBus) {
                 this.eventBus.publish('singlerepo.analysis.completed', {
                     projectPath,
@@ -256,7 +316,7 @@ class SingleRepoStrategy {
                 });
             }
 
-            this.logger.info('SingleRepoStrategy: Analysis completed - ONLY 4 things!');
+            this.logger.info('SingleRepoStrategy: Orchestrated analysis completed');
             return results;
 
         } catch (error) {

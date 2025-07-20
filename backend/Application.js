@@ -226,7 +226,13 @@ class Application {
   async initializeInfrastructure() {
     this.logger.info('🏗️ Initializing infrastructure...');
 
-    // Initialize DI system first
+    // Initialize Step Registry FIRST (before DI)
+    const { initializeSteps } = require('./domain/steps');
+    await initializeSteps();
+    this.stepRegistry = require('./domain/steps').getStepRegistry();
+    this.logger.info('Step Registry initialized');
+
+    // Initialize DI system
     const { getServiceRegistry } = require('./infrastructure/dependency-injection/ServiceRegistry');
     const { getProjectContextService } = require('./infrastructure/dependency-injection/ProjectContextService');
     
@@ -383,11 +389,12 @@ class Application {
     });
     await this.autoTestFixSystem.initialize();
 
-    // Initialize Step Registry with DI container
-    const { initializeSteps } = require('./domain/steps');
-    await initializeSteps(this.serviceRegistry);
-    this.stepRegistry = require('./domain/steps').getStepRegistry();
-    this.logger.info('Step Registry initialized');
+    // Step Registry already initialized in initializeInfrastructure()
+    // Update it with service registry for dependency injection
+    if (this.stepRegistry && this.serviceRegistry) {
+      this.stepRegistry.serviceRegistry = this.serviceRegistry;
+      this.logger.info('Step Registry updated with DI container');
+    }
 
     // Initialize Framework Infrastructure
     try {

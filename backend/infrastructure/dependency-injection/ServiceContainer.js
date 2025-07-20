@@ -78,6 +78,7 @@ class ServiceContainer {
                 return instance;
             } catch (error) {
                 logger.error(`Failed to resolve service '${name}':`, error.message);
+                logger.error(`Dependencies for '${name}': ${dependencies.join(', ')}`);
                 throw new Error(`Service resolution failed for '${name}': ${error.message}`);
             }
         }
@@ -85,6 +86,7 @@ class ServiceContainer {
         // Log available services for debugging
         const availableServices = Array.from(this.factories.keys()).join(', ');
         logger.error(`Service '${name}' not found. Available services: ${availableServices}`);
+        logger.error(`Available singletons: ${Array.from(this.singletons.keys()).join(', ')}`);
         throw new Error(`Service not found: ${name}`);
     }
 

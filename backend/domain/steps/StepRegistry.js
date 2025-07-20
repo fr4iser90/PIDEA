@@ -69,10 +69,6 @@ class StepRegistry {
               this.executors.set(name, executor);
     }
 
-    // Only log in debug mode or for important steps
-    if (process.env.DEBUG_STEPS === 'true' || name.includes('Analysis') || name.includes('Test')) {
-      this.logger.info(`✅ Step "${name}" registered successfully in category "${finalCategory}"`);
-    }
     return true;
     } catch (error) {
       this.logger.error(`❌ Failed to register step "${name}":`, error.message);
