@@ -69,6 +69,7 @@ function ChatComponent({ eventBus, activePort, attachedPrompts = [] }) {
 
   // State für ausgeklappte Codeblöcke
   const [expandedBlocks, setExpandedBlocks] = useState({});
+  const lastLoadedPort = useRef(null);
 
   const toggleBlock = (id) => {
     setExpandedBlocks(prev => ({ ...prev, [id]: !prev[id] }));
@@ -91,6 +92,7 @@ function ChatComponent({ eventBus, activePort, attachedPrompts = [] }) {
       logger.info('Neue Nachrichten geladen:', msgs.length);
       logger.info('Message structure:', msgs.map(m => ({ id: m.id, sender: m.sender, type: m.type, content: m.content?.substring(0, 50) })));
       setMessages(msgs.map(normalizeMessage));
+      lastLoadedPort.current = activePort;
     } catch (error) {
       setMessages([]);
       setError('❌ Failed to load chat history: ' + error.message);
@@ -99,11 +101,13 @@ function ChatComponent({ eventBus, activePort, attachedPrompts = [] }) {
 
   useEffect(() => {
     logger.info('activePort changed:', activePort);
-    // Wenn sich der Port ändert, sofort leeren!
-    setMessages([]);
-    setError(null);
-    logger.info('setMessages([]) aufgerufen!');
-    loadChatHistory();
+    // Nur laden wenn sich der Port wirklich geändert hat
+    if (activePort && lastLoadedPort.current !== activePort) {
+      setMessages([]);
+      setError(null);
+      logger.info('setMessages([]) aufgerufen!');
+      loadChatHistory();
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activePort]);
 

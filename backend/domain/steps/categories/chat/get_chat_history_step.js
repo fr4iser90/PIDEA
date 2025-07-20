@@ -172,13 +172,22 @@ class GetChatHistoryStep {
       // Ensure messages is an array
       const messageList = Array.isArray(messages) ? messages : [];
 
+      // Add IDs to messages that don't have them
+      const messagesWithIds = messageList.map((message, index) => ({
+        ...message,
+        id: message.id || `extracted_${Date.now()}_${index}`,
+        timestamp: message.timestamp || new Date().toISOString(),
+        type: message.type || 'text',
+        sender: message.sender || 'assistant'
+      }));
+
       // Publish success event
       await eventBus.publish('chat.history.retrieved', {
         stepId,
         userId: context.userId,
         sessionId: context.sessionId,
         port: context.port,
-        messageCount: messageList.length,
+        messageCount: messagesWithIds.length,
         timestamp: new Date()
       });
 
@@ -187,7 +196,7 @@ class GetChatHistoryStep {
         userId: context.userId,
         sessionId: context.sessionId,
         port: context.port,
-        messageCount: messageList.length
+        messageCount: messagesWithIds.length
       });
 
       return {
@@ -198,7 +207,7 @@ class GetChatHistoryStep {
         userId: context.userId,
         timestamp: new Date(),
         data: {
-          messages: messageList.map(message => ({
+          messages: messagesWithIds.map(message => ({
             id: message.id,
             content: message.content,
             type: message.type,
@@ -209,7 +218,7 @@ class GetChatHistoryStep {
           pagination: {
             limit,
             offset,
-            total: messageList.length
+            total: messagesWithIds.length
           }
         }
       };

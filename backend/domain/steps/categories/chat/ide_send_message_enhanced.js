@@ -201,7 +201,7 @@ class IDESendMessageStepEnhanced {
       const originalError = error.message;
 
       // Publish failure event (don't let this affect the original error)
-      const eventBus = context.getService('EventBus');
+      const eventBus = context.getService('eventBus');
       if (eventBus) {
         eventBus.publish('ide.message.failed', {
           stepId,
@@ -242,18 +242,18 @@ class IDESendMessageStepEnhanced {
     const services = {};
 
     // Required services
-    services.ideService = context.getService('ideService');
+    services.ideService = context.getService('cursorIDEService');
     if (!services.ideService) {
-      throw new Error('IDEService not available in context');
+      throw new Error('cursorIDEService not available in context');
     }
 
-    services.chatService = context.getService('chatService');
+    services.chatService = context.getService('chatSessionService');
     if (!services.chatService) {
-      throw new Error('ChatService not available in context');
+      throw new Error('chatSessionService not available in context');
     }
 
     // Optional services (for enhanced features)
-    services.eventBus = context.getService('EventBus');
+    services.eventBus = context.getService('eventBus');
     services.chatSessionService = context.getService('chatSessionService');
     services.analysisService = context.getService('analysisService');
     services.validationService = context.getService('validationService');
