@@ -13,18 +13,32 @@ async function ensureDefaultUser() {
   try {
     logger.info('👤 Ensuring default user exists...');
     
-    // Use the same configuration as the main application
+    // Get DI Container
+    const { getServiceContainer } = require('./infrastructure/dependency-injection/ServiceContainer');
+    const container = getServiceContainer();
+    
+    // Register core services as singletons
     const AutoSecurityManager = require('./infrastructure/auto/AutoSecurityManager');
     const DatabaseConnection = require('./infrastructure/database/DatabaseConnection');
     const createDefaultUser = require('./scripts/create-default-user');
     
-    const autoSecurityManager = new AutoSecurityManager();
+    // Register AutoSecurityManager as singleton
+    if (!container.singletons.has('autoSecurityManager')) {
+      const autoSecurityManager = new AutoSecurityManager();
+      container.registerSingleton('autoSecurityManager', autoSecurityManager);
+    }
+    
+    const autoSecurityManager = container.resolve('autoSecurityManager');
     const dbConfig = autoSecurityManager.getDatabaseConfig();
     
-    logger.info('🔧 Database config:', JSON.stringify(dbConfig, null, 2));
+    // Register DatabaseConnection as singleton
+    if (!container.singletons.has('databaseConnection')) {
+      const databaseConnection = new DatabaseConnection(dbConfig);
+      await databaseConnection.connect();
+      container.registerSingleton('databaseConnection', databaseConnection);
+    }
     
-    const databaseConnection = new DatabaseConnection(dbConfig);
-    await databaseConnection.connect();
+    const databaseConnection = container.resolve('databaseConnection');
     
     const dbType = databaseConnection.getType();
     
@@ -36,13 +50,13 @@ async function ensureDefaultUser() {
     
     if (checkResult && checkResult.length > 0) {
       logger.info('✅ Default user already exists');
-      await databaseConnection.disconnect();
+      // Don't disconnect - let Application.js use the same connection
       return;
     }
     
     // Create default user
     await createDefaultUser();
-    await databaseConnection.disconnect();
+    // Don't disconnect - let Application.js use the same connection
     
   } catch (error) {
     logger.error('❌ Error ensuring default user:', error.message);

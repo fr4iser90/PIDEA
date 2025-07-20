@@ -8,10 +8,22 @@ const logger = new Logger('DatabaseConnection');
 
 class DatabaseConnection {
   constructor(config) {
+    // Singleton pattern - prevent multiple connections to same database
+    const connectionKey = `${config.type}-${config.database}`;
+    if (DatabaseConnection.instances && DatabaseConnection.instances[connectionKey]) {
+      return DatabaseConnection.instances[connectionKey];
+    }
+    
     this.config = config;
     this.connection = null;
     this.type = null;
     this.isConnected = false;
+    
+    // Store instance
+    if (!DatabaseConnection.instances) {
+      DatabaseConnection.instances = {};
+    }
+    DatabaseConnection.instances[connectionKey] = this;
   }
 
   async connect() {

@@ -79,8 +79,16 @@ class Application {
     this.server = null;
     this.isRunning = false;
     
-    // Initialize auto-security manager
-    this.autoSecurityManager = new AutoSecurityManager();
+    // Get services from DI Container
+    const { getServiceContainer } = require('./infrastructure/dependency-injection/ServiceContainer');
+    const container = getServiceContainer();
+    
+    // Get or create AutoSecurityManager
+    if (!container.singletons.has('autoSecurityManager')) {
+      const autoSecurityManager = new AutoSecurityManager();
+      container.registerSingleton('autoSecurityManager', autoSecurityManager);
+    }
+    this.autoSecurityManager = container.resolve('autoSecurityManager');
     this.securityConfig = this.autoSecurityManager.getConfig();
     
     // Setup logger
@@ -146,6 +154,7 @@ class Application {
       // Initialize IDE Manager
       try {
         await this.ideManager.initialize();
+        this.logger.info('IDE Manager initialized successfully');
       } catch (error) {
         this.logger.warn('IDE Manager initialization failed, continuing without IDE support:', error.message);
       }
@@ -169,8 +178,17 @@ class Application {
   async initializeDatabase() {
     this.logger.info('💾 Initializing database...');
     
-    this.databaseConnection = new DatabaseConnection(this.securityConfig.database);
-    await this.databaseConnection.connect();
+    // Get database from DI Container
+    const { getServiceContainer } = require('./infrastructure/dependency-injection/ServiceContainer');
+    const container = getServiceContainer();
+    
+    if (!container.singletons.has('databaseConnection')) {
+      this.databaseConnection = new DatabaseConnection(this.securityConfig.database);
+      await this.databaseConnection.connect();
+      container.registerSingleton('databaseConnection', this.databaseConnection);
+    } else {
+      this.databaseConnection = container.resolve('databaseConnection');
+    }
     
     this.logger.info(`✅ Database connected: ${this.databaseConnection.getType()}`);
     

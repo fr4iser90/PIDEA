@@ -115,20 +115,17 @@ class IDEManager {
 
       // Detect workspace paths for existing IDEs
       if (existingIDEs.length > 0) {
-        // logger.info(`Detecting workspace paths for ${existingIDEs.length} IDEs`);
+        logger.info(`Detecting workspace paths for ${existingIDEs.length} IDEs...`);
         for (const ide of existingIDEs) {
           if (!this.ideWorkspaces.has(ide.port)) {
             try {
               await this.detectWorkspacePath(ide.port);
-              const workspacePath = this.ideWorkspaces.get(ide.port);
-              if (workspacePath) {
-                // logger.info(`Detected workspace path for port ${ide.port}: ${workspacePath}`);
-              }
-                          } catch (error) {
-                logger.warn(`Could not detect workspace path for port ${ide.port}: ${error.message}`);
-              }
+            } catch (error) {
+              logger.warn(`Could not detect workspace path for port ${ide.port}: ${error.message}`);
+            }
           }
         }
+        logger.info(`Workspace detection completed for ${existingIDEs.length} IDEs`);
       }
 
       // Start health monitoring

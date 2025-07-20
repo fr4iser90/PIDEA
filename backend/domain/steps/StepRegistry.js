@@ -66,11 +66,14 @@ class StepRegistry {
 
       // Store executor if provided
       if (executor && typeof executor === 'function') {
-        this.executors.set(name, executor);
-      }
+              this.executors.set(name, executor);
+    }
 
+    // Only log in debug mode or for important steps
+    if (process.env.DEBUG_STEPS === 'true' || name.includes('Analysis') || name.includes('Test')) {
       this.logger.info(`✅ Step "${name}" registered successfully in category "${finalCategory}"`);
-      return true;
+    }
+    return true;
     } catch (error) {
       this.logger.error(`❌ Failed to register step "${name}":`, error.message);
       throw error;
@@ -126,6 +129,15 @@ class StepRegistry {
       }
 
       this.logger.info(`📦 Loaded ${this.steps.size} steps from categories`);
+      
+      // Log step summary in debug mode
+      if (process.env.DEBUG_STEPS === 'true') {
+        const categories = this.getCategories();
+        for (const category of categories) {
+          const steps = this.getStepsByCategory(category);
+          this.logger.info(`  📁 ${category}: ${steps.length} steps`);
+        }
+      }
     } catch (error) {
       this.logger.error('❌ Failed to load steps from categories:', error.message);
       throw error;
@@ -151,14 +163,17 @@ class StepRegistry {
           const executor = stepModule.execute || null;
           const stepName = config.name || path.basename(file, '.js');
           
-          await this.registerStep(stepName, config, category, executor);
-        } catch (error) {
-          this.logger.error(`❌ Failed to load step "${file}" from category "${category}":`, error.message);
-        }
-      }
+                await this.registerStep(stepName, config, category, executor);
     } catch (error) {
-      this.logger.error(`❌ Failed to load category "${category}":`, error.message);
+      this.logger.error(`❌ Failed to load step "${file}" from category "${category}":`, error.message);
     }
+  }
+  
+  // Log summary instead of individual steps
+  this.logger.info(`📦 Loaded ${jsFiles.length} steps from category "${category}"`);
+} catch (error) {
+  this.logger.error(`❌ Failed to load category "${category}":`, error.message);
+}
   }
 
   /**

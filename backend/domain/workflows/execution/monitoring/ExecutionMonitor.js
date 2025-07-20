@@ -227,7 +227,10 @@ class ExecutionMonitor extends EventEmitter {
       this.performMonitoring();
     }, this.monitoringInterval);
 
-    this.logger.info('Started monitoring');
+    // Only log in debug mode
+    if (process.env.DEBUG_MONITORING === 'true') {
+      this.logger.info('Started monitoring');
+    }
     this.emit('monitoring:started');
   }
 

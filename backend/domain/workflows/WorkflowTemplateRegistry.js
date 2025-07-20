@@ -109,11 +109,13 @@ class WorkflowTemplateRegistry {
       return builder
         .setMetadata({
           name: 'Simple Analysis',
-          description: 'Basic analysis workflow',
+          description: 'Basic analysis workflow using modular steps',
           type: 'analysis',
           version: '1.0.0'
         })
-        .addStep(require('../steps/AnalysisStep')(options))
+        .addStep(require('../steps/categories/analysis/ProjectAnalysisStep'))
+        .addStep(require('../steps/categories/analysis/ManifestAnalysisStep'))
+        .addStep(require('../steps/categories/analysis/TechStackAnalysisStep'))
         .build();
     });
 

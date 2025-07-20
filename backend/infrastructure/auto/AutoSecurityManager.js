@@ -13,6 +13,11 @@ class AutoSecurityManager {
   }
 
   initialize() {
+    // Prevent double initialization
+    if (this.config.environment) {
+      return;
+    }
+    
     logger.info('🔐 Initializing auto-security...');
     
     // Auto-detect environment

@@ -130,7 +130,7 @@ class WorkflowStepBuilder {
    */
   static analysis(options = {}) {
     return new WorkflowStepBuilder()
-      .setType('analysis')
+      .setType('ProjectAnalysisStep')
       .setOptions(options);
   }
 

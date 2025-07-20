@@ -29,9 +29,20 @@ class WorkflowComposer {
         version: '1.0.0'
       });
 
-    // Add analysis step
-    const analysisStep = WorkflowStepBuilder.analysis(options).build();
-    builder.addStep(analysisStep);
+    // Add analysis steps
+    const projectAnalysisStep = WorkflowStepBuilder.analysis(options).build();
+    builder.addStep(projectAnalysisStep);
+    
+    // Add additional analysis steps based on options
+    if (options.includeTechStack !== false) {
+      const techStackStep = new (require('../steps/categories/analysis/TechStackAnalysisStep'))();
+      builder.addStep(techStackStep);
+    }
+    
+    if (options.includeArchitecture !== false) {
+      const architectureStep = new (require('../steps/categories/analysis/ArchitectureAnalysisStep'))();
+      builder.addStep(architectureStep);
+    }
 
     // Add validation step if required
     if (options.includeValidation !== false) {
@@ -68,12 +79,15 @@ class WorkflowComposer {
         version: '1.0.0'
       });
 
-    // Add analysis step for understanding current code
-    const analysisStep = WorkflowStepBuilder.analysis({
+    // Add analysis steps for understanding current code
+    const projectAnalysisStep = WorkflowStepBuilder.analysis({
       type: 'code-analysis',
       includeMetrics: true
     }).build();
-    builder.addStep(analysisStep);
+    builder.addStep(projectAnalysisStep);
+    
+    const codeQualityStep = new (require('../steps/categories/analysis/CodeQualityAnalysisStep'))();
+    builder.addStep(codeQualityStep);
 
     // Add refactoring step
     const refactoringStep = WorkflowStepBuilder.refactoring(options).build();
@@ -110,12 +124,15 @@ class WorkflowComposer {
         version: '1.0.0'
       });
 
-    // Add analysis step for requirements understanding
-    const analysisStep = WorkflowStepBuilder.analysis({
+    // Add analysis steps for requirements understanding
+    const projectAnalysisStep = WorkflowStepBuilder.analysis({
       type: 'requirements-analysis',
       includeArchitecture: true
     }).build();
-    builder.addStep(analysisStep);
+    builder.addStep(projectAnalysisStep);
+    
+    const architectureStep = new (require('../steps/categories/analysis/ArchitectureAnalysisStep'))();
+    builder.addStep(architectureStep);
 
     // Add implementation step (using refactoring step for code generation)
     const implementationStep = WorkflowStepBuilder.refactoring({
@@ -163,12 +180,15 @@ class WorkflowComposer {
         version: '1.0.0'
       });
 
-    // Add analysis step to understand test requirements
-    const analysisStep = WorkflowStepBuilder.analysis({
+    // Add analysis steps to understand test requirements
+    const projectAnalysisStep = WorkflowStepBuilder.analysis({
       type: 'test-analysis',
       identifyGaps: true
     }).build();
-    builder.addStep(analysisStep);
+    builder.addStep(projectAnalysisStep);
+    
+    const dependencyStep = new (require('../steps/categories/analysis/DependencyAnalysisStep'))();
+    builder.addStep(dependencyStep);
 
     // Add testing step
     const testingStep = WorkflowStepBuilder.testing(options).build();
@@ -240,11 +260,14 @@ class WorkflowComposer {
         version: '1.0.0'
       });
 
-    // Add security analysis step
-    const securityAnalysisStep = WorkflowStepBuilder.analysis({
+    // Add security analysis steps
+    const projectAnalysisStep = WorkflowStepBuilder.analysis({
       type: 'security-analysis',
       includeVulnerabilities: true
     }).build();
+    builder.addStep(projectAnalysisStep);
+    
+    const securityAnalysisStep = new (require('../steps/categories/analysis/SecurityAnalysisStep'))();
     builder.addStep(securityAnalysisStep);
 
     // Add security step
@@ -275,12 +298,15 @@ class WorkflowComposer {
         version: '1.0.0'
       });
 
-    // Add performance analysis step
-    const performanceAnalysisStep = WorkflowStepBuilder.analysis({
+    // Add performance analysis steps
+    const projectAnalysisStep = WorkflowStepBuilder.analysis({
       type: 'performance-analysis',
       includeMetrics: true
     }).build();
-    builder.addStep(performanceAnalysisStep);
+    builder.addStep(projectAnalysisStep);
+    
+    const performanceStep = new (require('../steps/categories/analysis/PerformanceAnalysisStep'))();
+    builder.addStep(performanceStep);
 
     // Add optimization step
     const optimizationStep = WorkflowStepBuilder.optimization(options).build();

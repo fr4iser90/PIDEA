@@ -113,8 +113,11 @@ class BranchStrategy {
       logger: this.logger
     }));
 
-    this.logger.info('Initialized branch strategies:', Array.from(this.strategies.keys()));
-    this._alreadyLogged = true;
+    // Only log once per instance
+    if (!this._alreadyLogged) {
+      this.logger.info('Initialized branch strategies:', Array.from(this.strategies.keys()));
+      this._alreadyLogged = true;
+    }
   }
 
   /**
