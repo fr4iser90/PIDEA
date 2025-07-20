@@ -63,10 +63,13 @@ class IDESendMessageStep {
         throw new Error('ChatSessionService not available in context');
       }
       
-      // Send message
-      const result = await cursorIDEService.sendMessage(message, {
-        timeout: config.settings.timeout
-      });
+      // Send message directly to Browser Manager (avoid infinite loop with CursorIDEService)
+      const browserManager = context.getService('browserManager');
+      if (!browserManager) {
+        throw new Error('BrowserManager not available in context');
+      }
+      
+      const result = await browserManager.typeMessage(message, true);
       
       logger.info(`✅ Message sent to IDE`);
       

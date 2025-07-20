@@ -71,8 +71,28 @@ class WebChatApplicationService {
         }
       }
 
-      // Get current project ID from IDE Manager
-      const projectId = this.cursorIDEService?.ideManager?.getCurrentProjectId?.();
+      // Get current project ID from database based on active port
+      const activePort = this.cursorIDEService?.ideManager?.getActivePort?.();
+      let projectId = null;
+      
+      if (activePort) {
+        // Get workspace path from IDE Manager
+        const workspacePath = this.cursorIDEService?.ideManager?.getWorkspacePath?.(activePort);
+        
+        if (workspacePath) {
+          // Get project repository from DI container
+          const { getServiceContainer } = require('@infrastructure/dependency-injection/ServiceContainer');
+          const container = getServiceContainer();
+          const projectRepository = container?.resolve('projectRepository');
+          
+          if (projectRepository) {
+            const project = await projectRepository.findByWorkspacePath(workspacePath);
+            if (project) {
+              projectId = project.id;
+            }
+          }
+        }
+      }
       
       // Execute send message step
       const step = this.stepRegistry.getStep('IDESendMessageStepEnhanced');

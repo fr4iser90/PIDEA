@@ -73,7 +73,7 @@ class CursorIDEService {
       const stepData = {
         message: message,
         port: activePort,
-        projectId: this.ideManager?.getCurrentProjectId?.(), // Get from current context
+        projectId: options.projectId || this.ideManager?.getCurrentProjectId?.(), // ← Priorität auf options.projectId
         ...options
       };
 
