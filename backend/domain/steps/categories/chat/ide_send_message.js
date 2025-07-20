@@ -53,8 +53,8 @@ class IDESendMessageStep {
       logger.info(`📤 Sending message to IDE for project ${projectId}${ideType ? ` (${ideType})` : ''}`);
       
       // Get services via dependency injection
-      const ideService = context.getService('IDEService');
-      const chatService = context.getService('ChatService');
+      const ideService = context.getService('ideService');
+      const chatService = context.getService('chatService');
       
       if (!ideService) {
         throw new Error('IDEService not available in context');

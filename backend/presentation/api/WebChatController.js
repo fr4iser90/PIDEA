@@ -113,11 +113,15 @@ class WebChatController {
 
       logger.info(`Getting chat history for port ${port}`);
 
-      // Get chat history for specific port
-      const result = await this.getChatHistoryHandler.getPortChatHistory(port, userId, {
+      // Get chat history for specific port via application service
+      const queryData = {
+        sessionId: null, // Will be determined by port
         limit: parseInt(limit),
-        offset: parseInt(offset)
-      });
+        offset: parseInt(offset),
+        port: port
+      };
+
+      const result = await this.webChatApplicationService.getPortChatHistory(queryData, { userId });
 
       res.json({
         success: true,
@@ -144,16 +148,18 @@ class WebChatController {
       const userId = req.user.id;
       const { limit = 20, offset = 0 } = req.query;
 
-      // Get user's chat sessions
-      const sessions = await this.getChatHistoryHandler.getUserSessions(userId, {
+      // Get user's chat sessions via application service
+      const queryData = {
         limit: parseInt(limit),
         offset: parseInt(offset)
-      });
+      };
+
+      const result = await this.webChatApplicationService.getUserSessions(queryData, { userId });
 
       res.json({
         success: true,
         data: {
-          sessions: sessions.map(session => ({
+          sessions: result.sessions.map(session => ({
             id: session.id,
             title: session.title,
             createdAt: session.createdAt,
@@ -178,24 +184,26 @@ class WebChatController {
       const userId = req.user.id;
       const { title } = req.body;
 
-      // Create new chat session for user
-      const session = await this.getChatHistoryHandler.createSession(userId, {
+      // Create new chat session for user via application service
+      const sessionData = {
         title: title || 'New Chat',
         metadata: {
           createdBy: userId,
           userAgent: req.get('User-Agent'),
           ipAddress: req.ip
         }
-      });
+      };
+
+      const result = await this.webChatApplicationService.createChatSession(sessionData, { userId });
 
       res.status(201).json({
         success: true,
         data: {
           session: {
-            id: session.id,
-            title: session.title,
-            createdAt: session.createdAt,
-            updatedAt: session.updatedAt
+            id: result.session.id,
+            title: result.session.title,
+            createdAt: result.session.createdAt,
+            updatedAt: result.session.updatedAt
           }
         }
       });
@@ -222,8 +230,8 @@ class WebChatController {
         });
       }
 
-      // Delete session
-      await this.getChatHistoryHandler.deleteSession(sessionId, userId);
+      // Delete session via application service
+      await this.webChatApplicationService.deleteChatSession(sessionId, { userId });
 
       res.json({
         success: true,

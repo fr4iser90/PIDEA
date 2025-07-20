@@ -45,7 +45,7 @@ class WebChatApplicationService {
    */
   async sendMessage(messageData, userContext) {
     try {
-      const { message, requestedBy, sessionId, metadata } = messageData;
+      const { message, requestedBy, sessionId, metadata, port } = messageData;
       
       this.logger.info('Processing chat message:', { 
         messageLength: message?.length,
@@ -71,44 +71,36 @@ class WebChatApplicationService {
         }
       }
       
-      // Execute chat message step
-      const step = this.stepRegistry.getStep('chat', 'ide_send_message_enhanced');
+      // Execute send message step
+      const step = this.stepRegistry.getStep('IDESendMessageStepEnhanced');
       if (!step) {
-        throw new Error('Chat message step not found');
+        throw new Error('Send message step not found');
       }
       
       const stepData = {
-        message: message.trim(),
-        requestedBy: requestedBy,
+        message: message,
         sessionId: sessionId,
-        timestamp: new Date(),
+        userId: userContext.userId,
+        port: port,
         metadata: {
           ...metadata,
-          userAgent: userContext.userAgent,
-          ipAddress: userContext.ipAddress,
-          userRole: userContext.role,
+          timestamp: new Date(),
           userId: userContext.userId
         }
       };
       
-      const result = await step.execute(stepData);
+      const result = await this.stepRegistry.executeStep('IDESendMessageStepEnhanced', stepData);
       
-      // Publish event if event bus is available
-      if (this.eventBus) {
-        await this.eventBus.publish('chat:messageSent', {
-          messageId: result.messageId,
-          sessionId: result.sessionId,
-          userId: userContext.userId,
-          timestamp: result.timestamp
-        });
+      // Check if step execution was successful
+      if (!result.success) {
+        throw new Error(`Step execution failed: ${result.error}`);
       }
       
       return {
-        messageId: result.messageId,
-        response: result.response,
-        sessionId: result.sessionId,
-        timestamp: result.timestamp,
-        codeBlocks: result.codeBlocks || []
+        messageId: result.result.messageId,
+        sessionId: result.result.sessionId,
+        timestamp: result.result.timestamp,
+        status: result.result.status
       };
     } catch (error) {
       this.logger.error('Send message error:', error);
@@ -134,7 +126,7 @@ class WebChatApplicationService {
       });
       
       // Execute chat history step
-      const step = this.stepRegistry.getStep('chat', 'get_chat_history_step');
+      const step = this.stepRegistry.getStep('GetChatHistoryStep');
       if (!step) {
         throw new Error('Chat history step not found');
       }
@@ -162,66 +154,53 @@ class WebChatApplicationService {
   }
 
   /**
-   * Create new chat session
-   * @param {Object} sessionData - Session creation data
+   * Get chat history for specific port
+   * @param {Object} queryData - Query parameters
    * @param {Object} userContext - User context from request
-   * @returns {Promise<Object>} New session
+   * @returns {Promise<Object>} Port chat history
    */
-  async createChatSession(sessionData, userContext) {
+  async getPortChatHistory(queryData, userContext) {
     try {
-      this.logger.info('Creating new chat session:', { userId: userContext.userId });
+      const { port, limit = 50, offset = 0 } = queryData;
       
-      if (!this.chatSessionService) {
-        throw new Error('Chat session service not available');
+      this.logger.info('Getting port chat history:', { 
+        port,
+        limit,
+        offset,
+        userId: userContext.userId
+      });
+      
+      // Execute port chat history step
+      const step = this.stepRegistry.getStep('GetChatHistoryStep');
+      if (!step) {
+        throw new Error('Chat history step not found');
       }
       
-      // Authenticate user if auth service is available
-      if (this.authService && userContext.userId) {
-        const isAuthorized = await this.authService.authorizeUser(userContext.userId, 'chat:create');
-        if (!isAuthorized) {
-          throw new Error('User not authorized to create chat sessions');
-        }
-      }
-      
-      const { title, metadata } = sessionData;
-      
-      // Create session through domain service
-      const session = await this.chatSessionService.createSession({
-        title: title || 'New Chat',
+      const stepData = {
+        port: port,
+        limit: parseInt(limit),
+        offset: parseInt(offset),
         userId: userContext.userId,
-        metadata: {
-          ...metadata,
-          createdBy: userContext.userId,
-          userAgent: userContext.userAgent,
-          ipAddress: userContext.ipAddress
-        }
-      });
-      
-      // Publish event
-      if (this.eventBus) {
-        await this.eventBus.publish('chat:sessionCreated', {
-          sessionId: session.sessionId,
-          userId: userContext.userId,
-          timestamp: session.createdAt
-        });
-      }
-      
-      this.logger.info('✅ Chat session created successfully:', { 
-        sessionId: session.sessionId?.substring(0, 8) + '...'
-      });
-      
-      return {
-        success: true,
-        data: {
-          sessionId: session.sessionId,
-          title: session.title,
-          createdAt: session.createdAt
-        }
+        includeUserData: userContext.isAdmin || false
       };
       
+      const result = await this.stepRegistry.executeStep('GetChatHistoryStep', stepData);
+      
+      // Check if step execution was successful
+      if (!result.success) {
+        throw new Error(`Step execution failed: ${result.error}`);
+      }
+      
+      return {
+        messages: result.result.data?.messages || result.result.messages || [],
+        sessionId: result.result.sessionId,
+        port: port,
+        totalCount: result.result.data?.pagination?.total || result.result.totalCount || 0,
+        hasMore: result.result.hasMore || false
+      };
     } catch (error) {
-      this.logger.error('❌ Failed to create chat session:', error);
-      throw new Error(`Failed to create chat session: ${error.message}`);
+      this.logger.error('Get port chat history error:', error);
+      throw error;
     }
   }
 
@@ -235,52 +214,123 @@ class WebChatApplicationService {
     try {
       const { limit = 20, offset = 0 } = queryData;
       
-      this.logger.info('Getting user chat sessions:', { 
-        userId: userContext.userId,
+      this.logger.info('Getting user sessions:', { 
         limit,
-        offset
+        offset,
+        userId: userContext.userId
       });
       
-      if (!this.chatSessionService) {
-        throw new Error('Chat session service not available');
+      // Execute list chats step
+      const step = this.stepRegistry.getStep('ListChatsStep');
+      if (!step) {
+        throw new Error('List chats step not found');
       }
       
-      // Authenticate user
-      if (this.authService && userContext.userId) {
-        const isAuthorized = await this.authService.authorizeUser(userContext.userId, 'chat:read');
-        if (!isAuthorized) {
-          throw new Error('User not authorized to read chat sessions');
-        }
+      const stepData = {
+        limit: parseInt(limit),
+        offset: parseInt(offset),
+        userId: userContext.userId
+      };
+      
+      const result = await this.stepRegistry.executeStep('ListChatsStep', stepData);
+      
+      // Check if step execution was successful
+      if (!result.success) {
+        throw new Error(`Step execution failed: ${result.error}`);
       }
-      
-      // Get sessions through domain service
-      const sessions = await this.chatSessionService.getUserSessions(userContext.userId, {
-        limit,
-        offset
-      });
-      
-      this.logger.info('✅ User sessions retrieved successfully:', { 
-        sessionCount: sessions.length
-      });
       
       return {
-        success: true,
-        data: {
-          sessions: sessions.map(session => ({
-            sessionId: session.sessionId,
-            title: session.title,
-            createdAt: session.createdAt,
-            updatedAt: session.updatedAt,
-            messageCount: session.messageCount
-          })),
-          totalCount: sessions.length,
-          hasMore: sessions.length === limit
+        sessions: result.result.sessions
+      };
+    } catch (error) {
+      this.logger.error('Get user sessions error:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Create new chat session
+   * @param {Object} sessionData - Session data
+   * @param {Object} userContext - User context from request
+   * @returns {Promise<Object>} Created session
+   */
+  async createChatSession(sessionData, userContext) {
+    try {
+      const { title, metadata } = sessionData;
+      
+      this.logger.info('Creating chat session:', { 
+        title,
+        userId: userContext.userId
+      });
+      
+      // Execute create chat step
+      const step = this.stepRegistry.getStep('CreateChatStep');
+      if (!step) {
+        throw new Error('Create chat step not found');
+      }
+      
+      const stepData = {
+        title: title,
+        metadata: {
+          ...metadata,
+          userId: userContext.userId
         }
       };
       
+      const result = await this.stepRegistry.executeStep('CreateChatStep', stepData);
+      
+      // Check if step execution was successful
+      if (!result.success) {
+        throw new Error(`Step execution failed: ${result.error}`);
+      }
+      
+      return {
+        session: result.result.session
+      };
     } catch (error) {
-      this.logger.error('❌ Failed to get user sessions:', error);
-      throw new Error(`Failed to get user sessions: ${error.message}`);
+      this.logger.error('Create chat session error:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Delete chat session
+   * @param {string} sessionId - Session ID
+   * @param {Object} userContext - User context from request
+   * @returns {Promise<Object>} Deletion result
+   */
+  async deleteChatSession(sessionId, userContext) {
+    try {
+      this.logger.info('Deleting chat session:', { 
+        sessionId,
+        userId: userContext.userId
+      });
+      
+      // Execute close chat step
+      const step = this.stepRegistry.getStep('CloseChatStep');
+      if (!step) {
+        throw new Error('Close chat step not found');
+      }
+      
+      const stepData = {
+        sessionId: sessionId,
+        userId: userContext.userId
+      };
+      
+      const result = await this.stepRegistry.executeStep('CloseChatStep', stepData);
+      
+      // Check if step execution was successful
+      if (!result.success) {
+        throw new Error(`Step execution failed: ${result.error}`);
+      }
+      
+      return {
+        success: true,
+        message: 'Chat session deleted successfully'
+      };
+    } catch (error) {
+      this.logger.error('Delete chat session error:', error);
+      throw error;
     }
   }
 

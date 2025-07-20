@@ -54,7 +54,7 @@ class SwitchChatStep {
       });
 
       // Validate required services
-      const chatSessionService = context.getService('ChatSessionService');
+      const chatSessionService = context.getService('chatSessionService');
       if (!chatSessionService) {
         return {
           success: false,
@@ -63,7 +63,7 @@ class SwitchChatStep {
         };
       }
 
-      const eventBus = context.getService('EventBus');
+      const eventBus = context.getService('eventBus');
       if (!eventBus) {
         return {
           success: false,
@@ -72,7 +72,7 @@ class SwitchChatStep {
         };
       }
 
-      const ideManager = context.getService('IDEManager');
+      const ideManager = context.getService('ideManager');
       if (!ideManager) {
         return {
           success: false,

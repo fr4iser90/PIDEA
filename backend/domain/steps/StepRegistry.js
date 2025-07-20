@@ -176,12 +176,15 @@ class StepRegistry {
 
   /**
    * Get step by name
-   * @param {string} name - Step name
+   * @param {string} name - Step name (filename without .js)
    */
   getStep(name) {
-    const step = this.steps.get(name);
+    // Remove category prefix if present (e.g., "chat/get_chat_history_step" -> "get_chat_history_step")
+    const stepName = name.includes('/') ? name.split('/').pop() : name;
+    
+    const step = this.steps.get(stepName);
     if (!step) {
-      throw new Error(`Step "${name}" not found`);
+      throw new Error(`Step "${stepName}" not found`);
     }
     return step;
   }
@@ -211,7 +214,7 @@ class StepRegistry {
 
   /**
    * Execute a step
-   * @param {string} name - Step name
+   * @param {string} name - Step name (filename without .js)
    * @param {Object} context - Execution context
    * @param {Object} options - Execution options
    */
@@ -220,20 +223,20 @@ class StepRegistry {
       const step = this.getStep(name);
       
       if (step.status !== 'active') {
-        throw new Error(`Step "${name}" is not active (status: ${step.status})`);
+        throw new Error(`Step "${step.name}" is not active (status: ${step.status})`);
       }
 
       // Get executor
-      const executor = this.executors.get(name);
+      const executor = this.executors.get(step.name);
       if (!executor) {
-        throw new Error(`No executor found for step "${name}"`);
+        throw new Error(`No executor found for step "${step.name}"`);
       }
 
       // Enhance context with services from DI container
       const enhancedContext = this.enhanceContextWithServices(context);
 
       // Execute step
-      this.logger.info(`🚀 Executing step "${name}"...`);
+      this.logger.info(`🚀 Executing step "${step.name}"...`);
       const startTime = Date.now();
       
       const result = await executor(enhancedContext, options);
@@ -246,7 +249,7 @@ class StepRegistry {
       step.lastExecuted = new Date();
       step.lastDuration = duration;
 
-      this.logger.info(`✅ Step "${name}" executed successfully in ${duration}ms`);
+      this.logger.info(`✅ Step "${step.name}" executed successfully in ${duration}ms`);
       return {
         success: true,
         result,

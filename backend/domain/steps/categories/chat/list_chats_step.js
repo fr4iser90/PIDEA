@@ -55,7 +55,7 @@ class ListChatsStep {
       });
 
       // Validate required services
-      const chatSessionService = context.getService('ChatSessionService');
+      const chatSessionService = context.getService('chatSessionService');
       if (!chatSessionService) {
         return {
           success: false,

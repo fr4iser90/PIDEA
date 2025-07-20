@@ -179,11 +179,17 @@ class IDEApplicationService {
         }
     }
 
-    async getWorkspaceInfo(port, userId) {
+    async getWorkspaceInfo(userId) {
         try {
-            this.logger.info('IDEApplicationService: Getting workspace info', { port, userId });
+            this.logger.info('IDEApplicationService: Getting workspace info for all IDEs', { userId });
             
-            const workspaceInfo = await this.ideManager.getWorkspaceInfo(port);
+            const availableIDEs = await this.ideManager.getAvailableIDEs();
+            const workspaceInfo = availableIDEs.map(ide => ({
+                port: ide.port,
+                status: ide.status,
+                workspacePath: this.ideManager.getWorkspacePath(ide.port),
+                hasWorkspace: !!this.ideManager.getWorkspacePath(ide.port)
+            }));
             
             return {
                 success: true,

@@ -53,9 +53,9 @@ class CreateChatStep {
       logger.info(`📝 Creating chat session for user ${userId} with title: ${title}`);
       
       // Get services via dependency injection
-      const chatSessionService = context.getService('ChatSessionService');
-      const eventBus = context.getService('EventBus');
-      const browserManager = context.getService('BrowserManager');
+      const chatSessionService = context.getService('chatSessionService');
+      const eventBus = context.getService('eventBus');
+      const browserManager = context.getService('browserManager');
       
       if (!chatSessionService) {
         throw new Error('ChatSessionService not available in context');

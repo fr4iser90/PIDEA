@@ -310,17 +310,12 @@ class IDEController {
 
   async getWorkspaceInfo(req, res) {
     try {
-      const availableIDEs = await this.ideManager.getAvailableIDEs();
-      const workspaceInfo = availableIDEs.map(ide => ({
-        port: ide.port,
-        status: ide.status,
-        workspacePath: this.ideManager.getWorkspacePath(ide.port),
-        hasWorkspace: !!this.ideManager.getWorkspacePath(ide.port)
-      }));
+      const userId = req.user?.id;
+      const result = await this.ideApplicationService.getWorkspaceInfo(userId);
       
       res.json({
-        success: true,
-        data: workspaceInfo
+        success: result.success,
+        data: result.data
       });
     } catch (error) {
       logger.error('Error getting workspace info:', error);

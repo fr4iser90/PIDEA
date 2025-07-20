@@ -242,21 +242,21 @@ class IDESendMessageStepEnhanced {
     const services = {};
 
     // Required services
-    services.ideService = context.getService('IDEService');
+    services.ideService = context.getService('ideService');
     if (!services.ideService) {
       throw new Error('IDEService not available in context');
     }
 
-    services.chatService = context.getService('ChatService');
+    services.chatService = context.getService('chatService');
     if (!services.chatService) {
       throw new Error('ChatService not available in context');
     }
 
     // Optional services (for enhanced features)
     services.eventBus = context.getService('EventBus');
-    services.chatSessionService = context.getService('ChatSessionService');
-    services.analysisService = context.getService('AnalysisService');
-    services.validationService = context.getService('ValidationService');
+    services.chatSessionService = context.getService('chatSessionService');
+    services.analysisService = context.getService('analysisService');
+    services.validationService = context.getService('validationService');
 
     return services;
   }

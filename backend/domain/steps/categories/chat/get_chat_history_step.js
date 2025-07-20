@@ -56,29 +56,29 @@ class GetChatHistoryStep {
       });
 
       // Validate required services
-      const chatSessionService = context.getService('ChatSessionService');
+      const chatSessionService = context.getService('chatSessionService');
       if (!chatSessionService) {
         return {
           success: false,
-          error: 'ChatSessionService not available in context',
+          error: 'chatSessionService not available in context',
           stepId
         };
       }
 
-      const eventBus = context.getService('EventBus');
+      const eventBus = context.getService('eventBus');
       if (!eventBus) {
         return {
           success: false,
-          error: 'EventBus not available in context',
+          error: 'eventBus not available in context',
           stepId
         };
       }
 
-      const ideManager = context.getService('IDEManager');
+      const ideManager = context.getService('ideManager');
       if (!ideManager) {
         return {
           success: false,
-          error: 'IDEManager not available in context',
+          error: 'ideManager not available in context',
           stepId
         };
       }
@@ -92,15 +92,17 @@ class GetChatHistoryStep {
         };
       }
 
-      if (!context.sessionId || (typeof context.sessionId === 'string' && context.sessionId.trim().length === 0)) {
+      // Check if we have either sessionId or port
+      if (!context.sessionId && !context.port) {
         return {
           success: false,
-          error: 'Session ID must be a non-empty string',
+          error: 'Either Session ID or Port is required',
           stepId
         };
       }
 
-      if (typeof context.sessionId !== 'string') {
+      // If sessionId is provided, validate it
+      if (context.sessionId && (typeof context.sessionId !== 'string' || context.sessionId.trim().length === 0)) {
         return {
           success: false,
           error: 'Session ID must be a non-empty string',
@@ -133,18 +135,39 @@ class GetChatHistoryStep {
         stepId,
         userId: context.userId,
         sessionId: context.sessionId,
+        port: context.port,
         timestamp: new Date()
       });
 
-      // Get chat history using ChatSessionService
-      const messages = await chatSessionService.getChatHistory(
-        context.userId,
-        context.sessionId,
-        {
-          limit,
-          offset
+      let messages = [];
+      
+      if (context.sessionId) {
+        // Get chat history for specific session
+        messages = await chatSessionService.getChatHistory(
+          context.userId,
+          context.sessionId,
+          {
+            limit,
+            offset
+          }
+        );
+      } else if (context.port) {
+        // Get chat history for specific port using IDE service
+        const cursorIDEService = context.getService('cursorIDEService');
+        if (cursorIDEService) {
+          try {
+            // Extract live chat from IDE
+            messages = await cursorIDEService.extractChatHistory();
+            logger.info(`Extracted ${messages.length} messages from IDE on port ${context.port}`);
+          } catch (error) {
+            logger.error(`Failed to extract chat from IDE on port ${context.port}:`, error);
+            messages = [];
+          }
+        } else {
+          logger.warn(`No cursorIDEService available for port ${context.port}`);
+          messages = [];
         }
-      );
+      }
 
       // Ensure messages is an array
       const messageList = Array.isArray(messages) ? messages : [];
@@ -154,6 +177,7 @@ class GetChatHistoryStep {
         stepId,
         userId: context.userId,
         sessionId: context.sessionId,
+        port: context.port,
         messageCount: messageList.length,
         timestamp: new Date()
       });
@@ -162,6 +186,7 @@ class GetChatHistoryStep {
         stepId,
         userId: context.userId,
         sessionId: context.sessionId,
+        port: context.port,
         messageCount: messageList.length
       });
 
@@ -169,6 +194,7 @@ class GetChatHistoryStep {
         success: true,
         stepId,
         sessionId: context.sessionId,
+        port: context.port,
         userId: context.userId,
         timestamp: new Date(),
         data: {
