@@ -252,11 +252,24 @@ class IDESendMessageStepEnhanced {
       throw new Error('chatSessionService not available in context');
     }
 
-    // Optional services (for enhanced features)
-    services.eventBus = context.getService('eventBus');
-    services.chatSessionService = context.getService('chatSessionService');
-    services.analysisService = context.getService('analysisService');
-    services.validationService = context.getService('validationService');
+    // Optional services (for enhanced features) - don't fail if not available
+    try {
+      services.eventBus = context.getService('eventBus');
+    } catch (error) {
+      logger.warn('eventBus not available, continuing without event publishing');
+    }
+
+    try {
+      services.analysisService = context.getService('analysisService');
+    } catch (error) {
+      logger.warn('analysisService not available, continuing without analysis features');
+    }
+
+    try {
+      services.validationService = context.getService('validationService');
+    } catch (error) {
+      logger.warn('validationService not available, continuing without validation features');
+    }
 
     return services;
   }

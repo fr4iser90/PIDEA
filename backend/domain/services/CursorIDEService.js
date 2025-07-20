@@ -6,10 +6,11 @@ const Logger = require('@logging/Logger');
 const logger = new Logger('CursorIDEService');
 
 class CursorIDEService {
-  constructor(browserManager, ideManager, eventBus = null) {
+  constructor(browserManager, ideManager, eventBus = null, stepRegistry = null) {
     this.browserManager = browserManager;
     this.ideManager = ideManager;
     this.eventBus = eventBus;
+    this.stepRegistry = stepRegistry;
     
     // Initialize separated services
     this.terminalMonitor = new TerminalMonitor(browserManager, eventBus);
@@ -57,10 +58,33 @@ class CursorIDEService {
         logger.error('sendMessage() - Failed to switch browser port:', error.message);
       }
     }
-    
-    // Use IDE Steps instead of ChatMessageHandler
+
+    // Use IDE Steps for message sending
     logger.info('sendMessage() - Using IDE Steps for message sending');
-    throw new Error('sendMessage() - ChatMessageHandler removed, use IDE Steps instead');
+    
+    try {
+      // Get the step registry from the DI container
+      const stepRegistry = this.stepRegistry;
+      if (!stepRegistry) {
+        throw new Error('Step registry not available');
+      }
+
+      // Execute the IDE send message step
+      const stepData = {
+        message: message,
+        port: activePort,
+        projectId: this.ideManager?.getCurrentProjectId?.(), // Get from current context
+        ...options
+      };
+
+      const result = await stepRegistry.executeStep('IDESendMessageStep', stepData);
+      logger.info('sendMessage() - Step executed successfully:', result.success);
+      
+      return result;
+    } catch (error) {
+      logger.error('sendMessage() - Failed to execute IDE step:', error);
+      throw error;
+    }
   }
 
   async extractChatHistory() {
@@ -104,9 +128,11 @@ class CursorIDEService {
     try {
       logger.info('Sending prompt to Cursor IDE:', prompt.substring(0, 100) + '...');
       
-      // Use IDE Steps instead of ChatMessageHandler
+      // Use IDE Steps for message sending
       logger.info('postToCursor() - Using IDE Steps for message sending');
-      throw new Error('postToCursor() - ChatMessageHandler removed, use IDE Steps instead');
+      
+      // Use the sendMessage method which now uses IDE Steps
+      return await this.sendMessage(prompt, { type: 'prompt' });
     } catch (error) {
       logger.error('Error sending prompt to Cursor:', error);
       throw error;

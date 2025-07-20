@@ -53,18 +53,18 @@ class IDESendMessageStep {
       logger.info(`📤 Sending message to IDE for project ${projectId}${ideType ? ` (${ideType})` : ''}`);
       
       // Get services via dependency injection
-      const ideService = context.getService('ideService');
-      const chatService = context.getService('chatService');
+      const cursorIDEService = context.getService('cursorIDEService');
+      const chatSessionService = context.getService('chatSessionService');
       
-      if (!ideService) {
-        throw new Error('IDEService not available in context');
+      if (!cursorIDEService) {
+        throw new Error('CursorIDEService not available in context');
       }
-      if (!chatService) {
-        throw new Error('ChatService not available in context');
+      if (!chatSessionService) {
+        throw new Error('ChatSessionService not available in context');
       }
       
       // Send message
-      const result = await ideService.sendMessage(message, {
+      const result = await cursorIDEService.sendMessage(message, {
         timeout: config.settings.timeout
       });
       

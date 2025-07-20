@@ -276,10 +276,10 @@ class ServiceRegistry {
         }, { singleton: true, dependencies: ['browserManager', 'ideManager', 'eventBus', 'ideFactory'] });
 
         // Legacy Cursor IDE service (for backward compatibility)
-        this.container.register('cursorIDEService', (browserManager, ideManager, eventBus) => {
+        this.container.register('cursorIDEService', (browserManager, ideManager, eventBus, stepRegistry) => {
             const CursorIDEService = require('@domain/services/CursorIDEService');
-            return new CursorIDEService(browserManager, ideManager, eventBus);
-        }, { singleton: true, dependencies: ['browserManager', 'ideManager', 'eventBus'] });
+            return new CursorIDEService(browserManager, ideManager, eventBus, stepRegistry);
+        }, { singleton: true, dependencies: ['browserManager', 'ideManager', 'eventBus', 'stepRegistry'] });
 
         // VSCode IDE service
         this.container.register('vscodeIDEService', (browserManager, ideManager, eventBus) => {
@@ -1386,10 +1386,10 @@ class ServiceRegistry {
                 }, { singleton: true, dependencies: ['browserManager', 'ideManager', 'eventBus', 'ideFactory'] });
                 break;
             case 'cursorIDEService':
-                this.container.register('cursorIDEService', (browserManager, ideManager, eventBus) => {
+                this.container.register('cursorIDEService', (browserManager, ideManager, eventBus, stepRegistry) => {
                     const CursorIDEService = require('@domain/services/CursorIDEService');
-                    return new CursorIDEService(browserManager, ideManager, eventBus);
-                }, { singleton: true, dependencies: ['browserManager', 'ideManager', 'eventBus'] });
+                    return new CursorIDEService(browserManager, ideManager, eventBus, stepRegistry);
+                }, { singleton: true, dependencies: ['browserManager', 'ideManager', 'eventBus', 'stepRegistry'] });
                 break;
             case 'vscodeIDEService':
                 this.container.register('vscodeIDEService', (browserManager, ideManager, eventBus) => {
@@ -1551,7 +1551,7 @@ class ServiceRegistry {
         this.addServiceDefinition('workflowExecutionService', ['chatSessionService', 'ideAutomationService', 'browserManager', 'ideManager', 'eventBus', 'logger'], 'domain');
         this.addServiceDefinition('ideFactory', [], 'domain');
         this.addServiceDefinition('ideService', ['browserManager', 'ideManager', 'eventBus', 'ideFactory'], 'domain');
-        this.addServiceDefinition('cursorIDEService', ['browserManager', 'ideManager', 'eventBus'], 'domain');
+        this.addServiceDefinition('cursorIDEService', ['browserManager', 'ideManager', 'eventBus', 'stepRegistry'], 'domain');
         this.addServiceDefinition('vscodeIDEService', ['browserManager', 'ideManager', 'eventBus'], 'domain');
         this.addServiceDefinition('windsurfIDEService', ['browserManager', 'ideManager', 'eventBus'], 'domain');
         this.addServiceDefinition('authService', ['userRepository', 'userSessionRepository'], 'domain');

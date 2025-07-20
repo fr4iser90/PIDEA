@@ -70,6 +70,9 @@ class WebChatApplicationService {
           throw new Error('User not authorized to send chat messages');
         }
       }
+
+      // Get current project ID from IDE Manager
+      const projectId = this.cursorIDEService?.ideManager?.getCurrentProjectId?.();
       
       // Execute send message step
       const step = this.stepRegistry.getStep('IDESendMessageStepEnhanced');
@@ -82,6 +85,7 @@ class WebChatApplicationService {
         sessionId: sessionId,
         userId: userContext.userId,
         port: port,
+        projectId: projectId,
         metadata: {
           ...metadata,
           timestamp: new Date(),
@@ -89,7 +93,7 @@ class WebChatApplicationService {
         }
       };
       
-      const result = await this.stepRegistry.executeStep('IDESendMessageStepEnhanced', stepData);
+      const result = await this.stepRegistry.executeStep('IDESendMessageStep', stepData);
       
       // Check if step execution was successful
       if (!result.success) {
