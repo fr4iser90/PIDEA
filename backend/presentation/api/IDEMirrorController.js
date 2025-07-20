@@ -1,33 +1,22 @@
-const IDEMirrorService = require('@services/IDEMirrorService');
-const ScreenshotStreamingService = require('@services/ide-mirror/ScreenshotStreamingService');
-const StreamingController = require('./StreamingController');
 const Logger = require('@logging/Logger');
 const ServiceLogger = require('@logging/ServiceLogger');
 const logger = new ServiceLogger('IDEMirrorController');
 
 
 class IDEMirrorController {
-    constructor() {
-        // Use DI system for service creation
-        const { getServiceRegistry } = require('../../infrastructure/dependency-injection/ServiceRegistry');
-        const registry = getServiceRegistry();
+    constructor(dependencies = {}) {
+        this.ideMirrorApplicationService = dependencies.ideMirrorApplicationService;
+        this.logger = dependencies.logger || logger;
         
-        // Register IDE mirror service if not already registered
-        if (!registry.getContainer().factories.has('ideMirrorService')) {
-            registry.getContainer().register('ideMirrorService', () => {
-                const IDEMirrorService = require('@services/IDEMirrorService');
-                return new IDEMirrorService();
-            }, { singleton: true });
+        if (!this.ideMirrorApplicationService) {
+            throw new Error('IDEMirrorController requires ideMirrorApplicationService dependency');
         }
         
-        this.ideMirrorService = registry.getService('ideMirrorService');
         this.connectedClients = new Set();
         
         // Message queue for sequential processing
         this.messageQueue = [];
         this.isProcessingQueue = false;
-
-        // Streaming services will be initialized later after WebSocket manager is available
         this.streamingController = null;
         this.screenshotStreamingService = null;
     }
@@ -96,11 +85,9 @@ class IDEMirrorController {
     // HTTP Endpoints
     async getIDEState(req, res) {
         try {
-            if (!this.ideMirrorService.isIDEConnected()) {
-                await this.ideMirrorService.connectToIDE();
-            }
-
-            const state = await this.ideMirrorService.captureCompleteIDEState();
+            const userId = req.user?.id;
+            const result = await this.ideMirrorApplicationService.getIDEState(userId);
+            const state = result.data;
             
             res.json({
                 success: true,
@@ -118,8 +105,9 @@ class IDEMirrorController {
 
     async getAvailableIDEs(req, res) {
         try {
-            const ides = await this.ideMirrorService.getAvailableIDEs();
-            const activeIDE = await this.ideMirrorService.getActiveIDE();
+            const userId = req.user?.id;
+            const result = await this.ideMirrorApplicationService.getAvailableIDEs(userId);
+            const { ides, activeIDE } = result.data;
             
             // Mark active IDE
             const idesWithStatus = ides.map(ide => ({
@@ -151,17 +139,14 @@ class IDEMirrorController {
                 });
             }
 
-            if (!this.ideMirrorService.isIDEConnected()) {
-                await this.ideMirrorService.connectToIDE();
-            }
-
-            await this.ideMirrorService.clickElementInIDE(selector, coordinates);
+            const userId = req.user?.id;
+            const result = await this.ideMirrorApplicationService.clickElement(selector, coordinates, userId);
             
             // Wait a bit for the IDE to update
             await new Promise(resolve => setTimeout(resolve, 500));
             
             // Get new state
-            const newState = await this.ideMirrorService.captureCompleteIDEState();
+            const newState = result.data.newState;
             
             // Notify all connected WebSocket clients
             this.broadcastToClients('ide-state-updated', newState);
@@ -192,10 +177,11 @@ class IDEMirrorController {
                 });
             }
 
-            await this.ideMirrorService.switchToIDE(port);
+            const userId = req.user?.id;
+            const result = await this.ideMirrorApplicationService.switchIDE(port, userId);
             
             // Get new state
-            const newState = await this.ideMirrorService.captureCompleteIDEState();
+            const newState = result.data.newState;
             this.broadcastToClients('ide-state-updated', newState);
 
             res.json({
@@ -214,8 +200,9 @@ class IDEMirrorController {
 
     async connectToIDE(req, res) {
         try {
-            await this.ideMirrorService.connectToIDE();
-            const state = await this.ideMirrorService.captureCompleteIDEState();
+            const userId = req.user?.id;
+            const result = await this.ideMirrorApplicationService.connectToIDE(userId);
+            const state = result.data.state;
             
             res.json({
                 success: true,
@@ -242,17 +229,14 @@ class IDEMirrorController {
                 });
             }
 
-            if (!this.ideMirrorService.isIDEConnected()) {
-                await this.ideMirrorService.connectToIDE();
-            }
-
-            await this.ideMirrorService.typeInIDE(text, selector);
+            const userId = req.user?.id;
+            const result = await this.ideMirrorApplicationService.typeText(text, selector, userId);
             
             // Wait for IDE to update
             await new Promise(resolve => setTimeout(resolve, 300));
             
             // Get new state
-            const newState = await this.ideMirrorService.captureCompleteIDEState();
+            const newState = result.data.newState;
             this.broadcastToClients('ide-state-updated', newState);
 
             res.json({
@@ -281,17 +265,14 @@ class IDEMirrorController {
                 });
             }
 
-            if (!this.ideMirrorService.isIDEConnected()) {
-                await this.ideMirrorService.connectToIDE();
-            }
-
-            await this.ideMirrorService.focusAndTypeInIDE(selector, text, clearFirst);
+            const userId = req.user?.id;
+            const result = await this.ideMirrorApplicationService.focusAndType(selector, text, clearFirst, userId);
             
             // Wait for IDE to update
             await new Promise(resolve => setTimeout(resolve, 300));
             
             // Get new state
-            const newState = await this.ideMirrorService.captureCompleteIDEState();
+            const newState = result.data.newState;
             this.broadcastToClients('ide-state-updated', newState);
 
             res.json({
@@ -321,17 +302,14 @@ class IDEMirrorController {
                 });
             }
 
-            if (!this.ideMirrorService.isIDEConnected()) {
-                await this.ideMirrorService.connectToIDE();
-            }
-
-            await this.ideMirrorService.sendChatMessage(message);
+            const userId = req.user?.id;
+            const result = await this.ideMirrorApplicationService.sendChatMessage(message, userId);
             
             // Wait for response
             await new Promise(resolve => setTimeout(resolve, 1000));
             
             // Get new state
-            const newState = await this.ideMirrorService.captureCompleteIDEState();
+            const newState = result.data.newState;
             this.broadcastToClients('ide-state-updated', newState);
 
             res.json({
@@ -373,21 +351,26 @@ class IDEMirrorController {
         });
 
         // Send initial IDE state if connected
-        if (this.ideMirrorService.isIDEConnected()) {
-            this.ideMirrorService.captureCompleteIDEState()
-                .then(state => {
+        this.ideMirrorApplicationService.isIDEConnected()
+            .then(result => {
+                if (result.data.connected) {
+                    return this.ideMirrorApplicationService.refreshIDEState(ws.userId);
+                }
+            })
+            .then(result => {
+                if (result) {
                     ws.send(JSON.stringify({
                         type: 'ide-state-updated',
-                        data: state
+                        data: result.data.state
                     }));
-                })
-                .catch(error => {
-                    ws.send(JSON.stringify({
-                        type: 'error',
-                        message: 'Failed to get initial IDE state'
-                    }));
-                });
-        }
+                }
+            })
+            .catch(error => {
+                ws.send(JSON.stringify({
+                    type: 'error',
+                    message: 'Failed to get initial IDE state'
+                }));
+            });
     }
 
     async handleWebSocketMessage(ws, data) {
@@ -489,17 +472,13 @@ class IDEMirrorController {
     async handleWebSocketClick(ws, payload) {
         const { selector, coordinates } = payload;
         
-        if (!this.ideMirrorService.isIDEConnected()) {
-            await this.ideMirrorService.connectToIDE();
-        }
-
         logger.info(`🖱️ Processing click: ${selector}`);
-        await this.ideMirrorService.clickElementInIDE(selector, coordinates);
+        const result = await this.ideMirrorApplicationService.clickElement(selector, coordinates, ws.userId);
         
         // Wait for UI changes
         await new Promise(resolve => setTimeout(resolve, 300));
         
-        const newState = await this.ideMirrorService.captureCompleteIDEState();
+        const newState = result.data.newState;
         this.broadcastToClients('ide-state-updated', newState);
         logger.info(`📸 Screenshot updated after click: ${selector}`);
     }
@@ -507,12 +486,8 @@ class IDEMirrorController {
     async handleWebSocketType(ws, payload) {
         const { text, selector, key, modifiers } = payload;
         
-        if (!this.ideMirrorService.isIDEConnected()) {
-            await this.ideMirrorService.connectToIDE();
-        }
-
         logger.info(`⌨️ Processing keystroke: ${key || text} for ${selector}`);
-        await this.ideMirrorService.typeInIDE(text, selector, key, modifiers);
+        const result = await this.ideMirrorApplicationService.typeTextAdvanced(text, selector, key, modifiers, ws.userId);
         
         // Smart screenshot timing - only when truly needed
         const shouldUpdateScreenshot = (
@@ -529,7 +504,7 @@ class IDEMirrorController {
             // Minimal delay for critical updates
             await new Promise(resolve => setTimeout(resolve, 150));
             
-            const newState = await this.ideMirrorService.captureCompleteIDEState();
+            const newState = result.data.newState;
             this.broadcastToClients('ide-state-updated', newState);
             logger.info(`📸 Screenshot updated for key: ${key}`);
         } else {
@@ -547,19 +522,15 @@ class IDEMirrorController {
     async handleWebSocketTypeBatch(ws, payload) {
         const { text, selector } = payload;
         
-        if (!this.ideMirrorService.isIDEConnected()) {
-            await this.ideMirrorService.connectToIDE();
-        }
-
         logger.info(`⚡ Processing batch: "${text}" (${text.length} chars) for ${selector}`);
         
         // Send entire batch at once - much faster than individual keystrokes
-        await this.ideMirrorService.typeInIDE(text, selector);
+        const result = await this.ideMirrorApplicationService.typeText(text, selector, ws.userId);
         
         // Always update screenshot after batch (user expects to see result)
         await new Promise(resolve => setTimeout(resolve, 100));
         
-        const newState = await this.ideMirrorService.captureCompleteIDEState();
+        const newState = result.data.newState;
         this.broadcastToClients('ide-state-updated', newState);
         logger.info(`📸 Screenshot updated after batch: "${text.substring(0, 20)}..."`);
     }
@@ -571,43 +542,32 @@ class IDEMirrorController {
     async handleWebSocketFocusAndType(ws, payload) {
         const { selector, text, clearFirst = false } = payload;
         
-        if (!this.ideMirrorService.isIDEConnected()) {
-            await this.ideMirrorService.connectToIDE();
-        }
-
-        await this.ideMirrorService.focusAndTypeInIDE(selector, text, clearFirst);
+        const result = await this.ideMirrorApplicationService.focusAndType(selector, text, clearFirst, ws.userId);
         await new Promise(resolve => setTimeout(resolve, 300));
         
-        const newState = await this.ideMirrorService.captureCompleteIDEState();
+        const newState = result.data.newState;
         this.broadcastToClients('ide-state-updated', newState);
     }
 
     async handleWebSocketChatMessage(ws, payload) {
         const { message } = payload;
         
-        if (!this.ideMirrorService.isIDEConnected()) {
-            await this.ideMirrorService.connectToIDE();
-        }
-
-        await this.ideMirrorService.sendChatMessage(message);
+        const result = await this.ideMirrorApplicationService.sendChatMessage(message, ws.userId);
         await new Promise(resolve => setTimeout(resolve, 1000));
         
-        const newState = await this.ideMirrorService.captureCompleteIDEState();
+        const newState = result.data.newState;
         this.broadcastToClients('ide-state-updated', newState);
     }
 
     async handleWebSocketRefresh(ws) {
-        if (!this.ideMirrorService.isIDEConnected()) {
-            await this.ideMirrorService.connectToIDE();
-        }
-
-        const state = await this.ideMirrorService.captureCompleteIDEState();
+        const result = await this.ideMirrorApplicationService.handleWebSocketInteraction('refresh', {}, ws.userId);
+        const state = result.data.state;
         this.broadcastToClients('ide-state-updated', state);
     }
 
     async handleWebSocketConnect(ws) {
-        await this.ideMirrorService.connectToIDE();
-        const state = await this.ideMirrorService.captureCompleteIDEState();
+        const result = await this.ideMirrorApplicationService.handleWebSocketInteraction('connect', {}, ws.userId);
+        const state = result.data.state;
         
         ws.send(JSON.stringify({
             type: 'ide-connected',
@@ -618,8 +578,8 @@ class IDEMirrorController {
     async handleWebSocketSwitch(ws, payload) {
         const { port } = payload;
         
-        await this.ideMirrorService.switchToIDE(port);
-        const state = await this.ideMirrorService.captureCompleteIDEState();
+        const result = await this.ideMirrorApplicationService.switchIDE(port, ws.userId);
+        const state = result.data.newState;
         
         this.broadcastToClients('ide-state-updated', state);
     }

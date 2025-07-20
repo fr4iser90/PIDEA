@@ -1,39 +1,25 @@
-const DocsTasksHandler = require('@handlers/categories/management/DocsTasksHandler');
-const TerminalLogCaptureService = require('@services/TerminalLogCaptureService');
-const TerminalLogReader = require('@services/TerminalLogReader');
 const Logger = require('@logging/Logger');
 const logger = new Logger('IDEController');
 
 
 class IDEController {
-  constructor(ideManager, eventBus, cursorIDEService = null, taskRepository = null, terminalLogCaptureService = null, terminalLogReader = null) {
-    this.ideManager = ideManager;
-    this.eventBus = eventBus;
-    this.cursorIDEService = cursorIDEService;
-    this.taskRepository = taskRepository;
-    this.docsTasksHandler = new DocsTasksHandler(() => {
-      const activePath = this.ideManager.getActiveWorkspacePath();
-      logger.info('Active workspace path:', activePath);
-      logger.info('Active port:', this.ideManager.getActivePort());
-      logger.info('Available workspaces:', Array.from(this.ideManager.ideWorkspaces.entries()));
-      
-      if (!activePath) {
-        throw new Error('No active workspace path available - IDE workspace detection failed');
-      }
-      return activePath;
-    }, this.taskRepository);
+  constructor(dependencies = {}) {
+    this.ideApplicationService = dependencies.ideApplicationService;
+    this.logger = dependencies.logger || logger;
     
-    // Use injected services instead of creating new instances
-    this.terminalLogCaptureService = terminalLogCaptureService;
-    this.terminalLogReader = terminalLogReader;
+    if (!this.ideApplicationService) {
+      throw new Error('IDEController requires ideApplicationService dependency');
+    }
   }
 
   async getAvailableIDEs(req, res) {
     try {
-      const availableIDEs = await this.ideManager.getAvailableIDEs();
+      const userId = req.user?.id;
+      const result = await this.ideApplicationService.getAvailableIDEs(userId);
+      
       res.json({
-        success: true,
-        data: availableIDEs
+        success: result.success,
+        data: result.data
       });
     } catch (error) {
       logger.error('Error getting available IDEs:', error);
@@ -47,20 +33,12 @@ class IDEController {
   async startIDE(req, res) {
     try {
       const { workspacePath, ideType = 'cursor' } = req.body;
-      const ideInfo = await this.ideManager.startNewIDE(workspacePath, ideType);
-      
-      // Publish event
-      if (this.eventBus) {
-        await this.eventBus.publish('ideAdded', {
-          port: ideInfo.port,
-          status: ideInfo.status,
-          ideType: ideInfo.ideType
-        });
-      }
+      const userId = req.user?.id;
+      const result = await this.ideApplicationService.startIDE(workspacePath, ideType, userId);
       
       res.json({
-        success: true,
-        data: ideInfo
+        success: result.success,
+        data: result.data
       });
     } catch (error) {
       logger.error('Error starting IDE:', error);
@@ -137,18 +115,12 @@ class IDEController {
   async stopIDE(req, res) {
     try {
       const port = parseInt(req.params.port);
-      const result = await this.ideManager.stopIDE(port);
-      
-      // Publish event
-      if (this.eventBus) {
-        await this.eventBus.publish('ideRemoved', {
-          port: port
-        });
-      }
+      const userId = req.user?.id;
+      const result = await this.ideApplicationService.stopIDE(port, userId);
       
       res.json({
-        success: true,
-        data: result
+        success: result.success,
+        data: result.data
       });
     } catch (error) {
       logger.error('Error stopping IDE:', error);
@@ -177,12 +149,14 @@ class IDEController {
 
   async restartUserApp(req, res) {
     try {
-      if (!this.cursorIDEService) {
-        throw new Error('CursorIDEService not available');
-      }
+      const port = parseInt(req.params.port);
+      const userId = req.user?.id;
+      const result = await this.ideApplicationService.restartUserApp(port, userId);
       
-      await this.cursorIDEService.restartUserApp();
-      res.json({ success: true });
+      res.json({
+        success: result.success,
+        data: result.data
+      });
     } catch (error) {
       logger.error('Error restarting user app:', error);
       res.status(500).json({ 
@@ -222,13 +196,12 @@ class IDEController {
         }
       }
       
-      res.json({ 
-        success: true, 
-        data: { 
-          url: foundUrl,
-          port: foundPort,
-          workspacePath: foundWorkspacePath
-        } 
+      const userId = req.user?.id;
+      const result = await this.ideApplicationService.getUserAppUrl(foundPort, userId);
+      
+      res.json({
+        success: result.success,
+        data: result.data
       });
     } catch (error) {
       logger.error('Error getting user app URL:', error);

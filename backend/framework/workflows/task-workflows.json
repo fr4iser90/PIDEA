@@ -1,0 +1,232 @@
+{
+  "workflows": {
+    "standard-task-workflow": {
+      "name": "Standard Task Workflow",
+      "description": "Einheitlicher Flow für alle Tasks",
+      "steps": [
+        {
+          "name": "send-to-ide",
+          "type": "ide-chat",
+          "description": "Send task to IDE with prompt",
+          "prompt": "prompts/task-prompt.md",
+          "waitForResponse": true,
+          "timeout": 60000
+        },
+        {
+          "name": "validate-response",
+          "type": "validation",
+          "description": "Validate IDE response",
+          "checks": ["code-quality", "syntax", "completeness"],
+          "strict": false
+        },
+        {
+          "name": "completion-check",
+          "type": "confirmation",
+          "description": "Ask if task is complete",
+          "maxAttempts": 3,
+          "prompt": "Is the task complete? Answer with YES or NO",
+          "expectedResponse": "YES"
+        },
+        {
+          "name": "test-run",
+          "type": "execution",
+          "description": "Run tests to validate changes",
+          "command": "npm test",
+          "timeout": 30000,
+          "continueOnError": false
+        },
+        {
+          "name": "dev-server",
+          "type": "execution",
+          "description": "Start development server",
+          "command": "npm run dev",
+          "timeout": 30000,
+          "background": true
+        }
+      ]
+    },
+    "refactor-workflow": {
+      "name": "Refactor Workflow",
+      "description": "Workflow für Refactoring-Tasks",
+      "extends": "standard-task-workflow",
+      "steps": [
+        {
+          "name": "pre-refactor-validation",
+          "type": "validation",
+          "description": "Pre-refactor validation",
+          "checks": ["build", "tests", "lint"],
+          "strict": true
+        },
+        {
+          "name": "send-to-ide",
+          "type": "ide-chat",
+          "description": "Send refactor task to IDE",
+          "prompt": "prompts/refactor-prompt.md",
+          "waitForResponse": true,
+          "timeout": 120000
+        },
+        {
+          "name": "validate-response",
+          "type": "validation",
+          "description": "Validate refactored code",
+          "checks": ["code-quality", "syntax", "refactoring-quality"],
+          "strict": true
+        },
+        {
+          "name": "completion-check",
+          "type": "confirmation",
+          "description": "Ask if refactoring is complete",
+          "maxAttempts": 3,
+          "prompt": "Is the refactoring complete and working? Answer with YES or NO",
+          "expectedResponse": "YES"
+        },
+        {
+          "name": "test-run",
+          "type": "execution",
+          "description": "Run tests after refactoring",
+          "command": "npm test",
+          "timeout": 30000,
+          "continueOnError": false
+        },
+        {
+          "name": "build-check",
+          "type": "execution",
+          "description": "Check if build still works",
+          "command": "npm run build",
+          "timeout": 60000,
+          "continueOnError": false
+        },
+        {
+          "name": "dev-server",
+          "type": "execution",
+          "description": "Start development server",
+          "command": "npm run dev",
+          "timeout": 30000,
+          "background": true
+        }
+      ]
+    },
+    "testing-workflow": {
+      "name": "Testing Workflow",
+      "description": "Workflow für Testing-Tasks",
+      "extends": "standard-task-workflow",
+      "steps": [
+        {
+          "name": "send-to-ide",
+          "type": "ide-chat",
+          "description": "Send testing task to IDE",
+          "prompt": "prompts/testing-prompt.md",
+          "waitForResponse": true,
+          "timeout": 90000
+        },
+        {
+          "name": "validate-response",
+          "type": "validation",
+          "description": "Validate test code",
+          "checks": ["test-quality", "syntax", "coverage"],
+          "strict": true
+        },
+        {
+          "name": "completion-check",
+          "type": "confirmation",
+          "description": "Ask if tests are complete",
+          "maxAttempts": 3,
+          "prompt": "Are the tests complete and comprehensive? Answer with YES or NO",
+          "expectedResponse": "YES"
+        },
+        {
+          "name": "test-run",
+          "type": "execution",
+          "description": "Run the new tests",
+          "command": "npm test",
+          "timeout": 45000,
+          "continueOnError": false
+        },
+        {
+          "name": "coverage-check",
+          "type": "execution",
+          "description": "Check test coverage",
+          "command": "npm run test:coverage",
+          "timeout": 60000,
+          "continueOnError": true
+        },
+        {
+          "name": "dev-server",
+          "type": "execution",
+          "description": "Start development server",
+          "command": "npm run dev",
+          "timeout": 30000,
+          "background": true
+        }
+      ]
+    },
+    "feature-workflow": {
+      "name": "Feature Workflow",
+      "description": "Workflow für Feature-Development",
+      "extends": "standard-task-workflow",
+      "steps": [
+        {
+          "name": "pre-feature-validation",
+          "type": "validation",
+          "description": "Pre-feature validation",
+          "checks": ["build", "tests"],
+          "strict": true
+        },
+        {
+          "name": "send-to-ide",
+          "type": "ide-chat",
+          "description": "Send feature task to IDE",
+          "prompt": "prompts/feature-prompt.md",
+          "waitForResponse": true,
+          "timeout": 180000
+        },
+        {
+          "name": "validate-response",
+          "type": "validation",
+          "description": "Validate feature implementation",
+          "checks": ["code-quality", "syntax", "feature-completeness"],
+          "strict": true
+        },
+        {
+          "name": "completion-check",
+          "type": "confirmation",
+          "description": "Ask if feature is complete",
+          "maxAttempts": 3,
+          "prompt": "Is the feature complete and working? Answer with YES or NO",
+          "expectedResponse": "YES"
+        },
+        {
+          "name": "test-run",
+          "type": "execution",
+          "description": "Run tests for new feature",
+          "command": "npm test",
+          "timeout": 45000,
+          "continueOnError": false
+        },
+        {
+          "name": "build-check",
+          "type": "execution",
+          "description": "Check if build works with new feature",
+          "command": "npm run build",
+          "timeout": 60000,
+          "continueOnError": false
+        },
+        {
+          "name": "dev-server",
+          "type": "execution",
+          "description": "Start development server",
+          "command": "npm run dev",
+          "timeout": 30000,
+          "background": true
+        }
+      ]
+    }
+  },
+  "defaults": {
+    "timeout": 300000,
+    "maxAttempts": 3,
+    "strict": false,
+    "background": false,
+    "continueOnError": false
+  }
+}

@@ -1,13 +1,13 @@
-const ProjectAnalysis = require('@entities/ProjectAnalysis');
 const Logger = require('@logging/Logger');
-const ETagService = require('@domain/services/ETagService');
-const logger = new Logger('Logger');
+const logger = new Logger('ProjectAnalysisController');
 
 class ProjectAnalysisController {
-    constructor(projectAnalysisRepository, logger) {
-        this.projectAnalysisRepository = projectAnalysisRepository;
-        this.logger = logger;
-        this.etagService = new ETagService();
+    constructor(dependencies = {}) {
+        this.projectAnalysisApplicationService = dependencies.projectAnalysisApplicationService;
+        this.logger = dependencies.logger || logger;
+        if (!this.projectAnalysisApplicationService) {
+            throw new Error('ProjectAnalysisController requires projectAnalysisApplicationService dependency');
+        }
     }
 
     /**
@@ -16,6 +16,7 @@ class ProjectAnalysisController {
     async getProjectAnalyses(req, res) {
         try {
             const { projectId } = req.params;
+            const userId = req.user?.id;
             
             if (!projectId) {
                 return res.status(400).json({
@@ -24,30 +25,24 @@ class ProjectAnalysisController {
                 });
             }
 
-            const analyses = await this.projectAnalysisRepository.findByProjectId(projectId);
+            const result = await this.projectAnalysisApplicationService.getProjectAnalyses(projectId, userId);
             
-            const responseData = {
-                projectId,
-                analyses: analyses.map(analysis => analysis.toJSON()),
-                count: analyses.length
-            };
+            const responseData = result.data;
 
             // Generate ETag for project analyses
-            const etag = this.etagService.generateETag(responseData, 'project-analyses', projectId);
+            const etag = await this.projectAnalysisApplicationService.generateETag(responseData);
             
             // Check if client has current version
-            if (this.etagService.shouldReturn304(req, etag)) {
+            const clientEtag = req.headers['if-none-match'];
+            if (clientEtag === etag) {
                 this.logger.info('Client has current version, sending 304 Not Modified');
-                this.etagService.sendNotModified(res, etag);
+                res.status(304).set('ETag', etag).end();
                 return;
             }
             
             // Set ETag headers for caching
-            this.etagService.setETagHeaders(res, etag, {
-                maxAge: 300, // 5 minutes
-                mustRevalidate: true,
-                isPublic: false
-            });
+            res.set('ETag', etag);
+            res.set('Cache-Control', 'private, max-age=300, must-revalidate');
             
             res.json({
                 success: true,
@@ -76,7 +71,8 @@ class ProjectAnalysisController {
                 });
             }
 
-            const analysis = await this.projectAnalysisRepository.findLatestByProjectIdAndType(projectId, analysisType);
+            const result = await this.projectAnalysisApplicationService.getLatestAnalysisByType(projectId, analysisType, req.user?.id);
+            const analysis = result.data;
             
             if (!analysis) {
                 return res.status(404).json({
@@ -88,21 +84,19 @@ class ProjectAnalysisController {
             const responseData = analysis.toJSON();
 
             // Generate ETag for latest analysis by type
-            const etag = this.etagService.generateAnalysisETag(responseData, projectId, analysisType);
+            const etag = await this.projectAnalysisApplicationService.generateETag(responseData);
             
             // Check if client has current version
-            if (this.etagService.shouldReturn304(req, etag)) {
+            const clientEtag = req.headers['if-none-match'];
+            if (clientEtag === etag) {
                 this.logger.info('Client has current version, sending 304 Not Modified');
-                this.etagService.sendNotModified(res, etag);
+                res.status(304).set('ETag', etag).end();
                 return;
             }
             
             // Set ETag headers for caching
-            this.etagService.setETagHeaders(res, etag, {
-                maxAge: 300, // 5 minutes
-                mustRevalidate: true,
-                isPublic: false
-            });
+            res.set('ETag', etag);
+            res.set('Cache-Control', 'private, max-age=300, must-revalidate');
 
             res.json({
                 success: true,
@@ -131,7 +125,8 @@ class ProjectAnalysisController {
                 });
             }
 
-            const analyses = await this.projectAnalysisRepository.findByProjectIdAndType(projectId, analysisType);
+            const result = await this.projectAnalysisApplicationService.getAnalysesByType(projectId, analysisType, req.user?.id);
+            const analyses = result.data.analyses;
             
             const responseData = {
                 projectId,
@@ -141,21 +136,19 @@ class ProjectAnalysisController {
             };
 
             // Generate ETag for analyses by type
-            const etag = this.etagService.generateETag(responseData, `analyses-by-type-${analysisType}`, projectId);
+            const etag = await this.projectAnalysisApplicationService.generateETag(responseData);
             
             // Check if client has current version
-            if (this.etagService.shouldReturn304(req, etag)) {
+            const clientEtag = req.headers['if-none-match'];
+            if (clientEtag === etag) {
                 this.logger.info('Client has current version, sending 304 Not Modified');
-                this.etagService.sendNotModified(res, etag);
+                res.status(304).set('ETag', etag).end();
                 return;
             }
             
             // Set ETag headers for caching
-            this.etagService.setETagHeaders(res, etag, {
-                maxAge: 300, // 5 minutes
-                mustRevalidate: true,
-                isPublic: false
-            });
+            res.set('ETag', etag);
+            res.set('Cache-Control', 'private, max-age=300, must-revalidate');
             
             res.json({
                 success: true,
@@ -192,7 +185,8 @@ class ProjectAnalysisController {
                 metadata
             });
 
-            const savedAnalysis = await this.projectAnalysisRepository.save(analysis);
+            const result = await this.projectAnalysisApplicationService.createProjectAnalysis(projectId, { type: analysisType, data: analysisData }, req.user?.id);
+            const savedAnalysis = result.data;
             
             res.status(201).json({
                 success: true,
@@ -222,7 +216,8 @@ class ProjectAnalysisController {
                 });
             }
 
-            const existingAnalysis = await this.projectAnalysisRepository.findById(id);
+            const existingResult = await this.projectAnalysisApplicationService.getProjectAnalysis(id, req.user?.id);
+            const existingAnalysis = existingResult.data;
             
             if (!existingAnalysis) {
                 return res.status(404).json({
@@ -246,7 +241,8 @@ class ProjectAnalysisController {
                 existingAnalysis.updateVersion(updateData.version);
             }
 
-            const updatedAnalysis = await this.projectAnalysisRepository.update(existingAnalysis);
+            const result = await this.projectAnalysisApplicationService.updateProjectAnalysis(id, req.body, req.user?.id);
+            const updatedAnalysis = result.data;
             
             res.json({
                 success: true,
@@ -275,7 +271,8 @@ class ProjectAnalysisController {
                 });
             }
 
-            const deleted = await this.projectAnalysisRepository.delete(id);
+            const result = await this.projectAnalysisApplicationService.deleteProjectAnalysis(id, req.user?.id);
+            const deleted = result.success;
             
             if (!deleted) {
                 return res.status(404).json({
@@ -311,55 +308,23 @@ class ProjectAnalysisController {
                 });
             }
 
-            const allAnalyses = await this.projectAnalysisRepository.findByProjectId(projectId);
-            
-            // Group by analysis type
-            const stats = {};
-            allAnalyses.forEach(analysis => {
-                const type = analysis.getAnalysisType();
-                if (!stats[type]) {
-                    stats[type] = {
-                        count: 0,
-                        latest: null,
-                        versions: new Set()
-                    };
-                }
-                stats[type].count++;
-                stats[type].versions.add(analysis.getVersion());
-                
-                if (!stats[type].latest || analysis.createdAt > stats[type].latest.createdAt) {
-                    stats[type].latest = analysis.toJSON();
-                }
-            });
-
-            // Convert sets to arrays
-            Object.keys(stats).forEach(type => {
-                stats[type].versions = Array.from(stats[type].versions);
-            });
-
-            const responseData = {
-                projectId,
-                totalAnalyses: allAnalyses.length,
-                analysisTypes: Object.keys(stats),
-                stats
-            };
+            const result = await this.projectAnalysisApplicationService.getAnalysisStats(projectId, req.user?.id);
+            const responseData = result.data;
 
             // Generate ETag for analysis stats
-            const etag = this.etagService.generateETag(responseData, 'analysis-stats', projectId);
+            const etag = await this.projectAnalysisApplicationService.generateETag(responseData);
             
             // Check if client has current version
-            if (this.etagService.shouldReturn304(req, etag)) {
+            const clientEtag = req.headers['if-none-match'];
+            if (clientEtag === etag) {
                 this.logger.info('Client has current version, sending 304 Not Modified');
-                this.etagService.sendNotModified(res, etag);
+                res.status(304).set('ETag', etag).end();
                 return;
             }
             
             // Set ETag headers for caching
-            this.etagService.setETagHeaders(res, etag, {
-                maxAge: 300, // 5 minutes
-                mustRevalidate: true,
-                isPublic: false
-            });
+            res.set('ETag', etag);
+            res.set('Cache-Control', 'private, max-age=300, must-revalidate');
 
             res.json({
                 success: true,

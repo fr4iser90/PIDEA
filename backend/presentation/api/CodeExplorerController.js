@@ -1,23 +1,26 @@
-const BrowserManager = require('@external/BrowserManager');
 const Logger = require('@logging/Logger');
 const ServiceLogger = require('@logging/ServiceLogger');
 const logger = new ServiceLogger('CodeExplorerController');
 
 
 class CodeExplorerController {
-  constructor() {
-    this.browserManager = new BrowserManager();
+  constructor(dependencies = {}) {
+    this.codeExplorerApplicationService = dependencies.codeExplorerApplicationService;
+    if (!this.codeExplorerApplicationService) {
+      throw new Error('CodeExplorerController requires codeExplorerApplicationService dependency');
+    }
   }
 
   async getFileTree(req, res) {
     try {
       logger.info('Getting file tree...');
+      const userId = req.user?.id;
       
-      const files = await this.browserManager.getFileExplorerTree();
+      const result = await this.codeExplorerApplicationService.getFileTree(userId);
       
       res.json({
-        success: true,
-        data: files
+        success: result.success,
+        data: result.data
       });
     } catch (error) {
       logger.error('Error getting file tree:', error);
@@ -31,27 +34,14 @@ class CodeExplorerController {
   async getFileContent(req, res) {
     try {
       const { path } = req.params;
+      const userId = req.user?.id;
       logger.info(`Getting file content for: ${path}`);
       
-      // First open the file in Cursor IDE
-      const opened = await this.browserManager.openFile(path);
-      if (!opened) {
-        return res.status(404).json({
-          success: false,
-          error: 'File not found or could not be opened'
-        });
-      }
-
-      // Then get the content
-      const content = await this.browserManager.getCurrentFileContent();
+      const result = await this.codeExplorerApplicationService.getFileContent(path, userId);
       
       res.json({
-        success: true,
-        data: {
-          path,
-          content,
-          opened
-        }
+        success: result.success,
+        data: result.data
       });
     } catch (error) {
       logger.error('Error getting file content:', error);
@@ -64,13 +54,14 @@ class CodeExplorerController {
 
   async getCurrentFileInfo(req, res) {
     try {
+      const userId = req.user?.id;
       logger.info('Getting current file info...');
       
-      const fileInfo = await this.browserManager.getCurrentFileInfo();
+      const result = await this.codeExplorerApplicationService.getCurrentFileInfo(userId);
       
       res.json({
-        success: true,
-        data: fileInfo
+        success: result.success,
+        data: result.data
       });
     } catch (error) {
       logger.error('Error getting current file info:', error);
@@ -83,13 +74,14 @@ class CodeExplorerController {
 
   async refreshExplorer(req, res) {
     try {
+      const userId = req.user?.id;
       logger.info('Refreshing explorer...');
       
-      const refreshed = await this.browserManager.refreshExplorer();
+      const result = await this.codeExplorerApplicationService.refreshExplorer(userId);
       
       res.json({
-        success: true,
-        data: { refreshed }
+        success: result.success,
+        data: result.data
       });
     } catch (error) {
       logger.error('Error refreshing explorer:', error);

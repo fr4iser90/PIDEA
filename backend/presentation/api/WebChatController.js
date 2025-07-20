@@ -1,17 +1,14 @@
-const SendMessageHandler = require('@handler-categories/management/SendMessageHandler');
-const GetChatHistoryHandler = require('@handler-categories/management/GetChatHistoryHandler');
-const AuthService = require('@services/AuthService');
 const Logger = require('@logging/Logger');
 const ServiceLogger = require('@logging/ServiceLogger');
 const logger = new ServiceLogger('WebChatController');
 
 
 class WebChatController {
-  constructor(sendMessageHandler, getChatHistoryHandler, cursorIDEService, authService) {
-    this.sendMessageHandler = sendMessageHandler;
-    this.getChatHistoryHandler = getChatHistoryHandler;
-    this.cursorIDEService = cursorIDEService;
-    this.authService = authService;
+  constructor(dependencies = {}) {
+    this.webChatApplicationService = dependencies.webChatApplicationService;
+    if (!this.webChatApplicationService) {
+      throw new Error('WebChatController requires webChatApplicationService dependency');
+    }
   }
 
   // POST /api/chat
@@ -30,8 +27,8 @@ class WebChatController {
           error: 'Requested by is required'
         });
       }
-      // Command mit exakt den Feldern, die der Handler erwartet
-      const command = {
+      // Send message via application service
+      const messageData = {
         message: message.trim(),
         requestedBy: requestedBy,
         sessionId: sessionId,
@@ -39,11 +36,11 @@ class WebChatController {
         metadata: {
           userAgent: req.get('User-Agent'),
           ipAddress: req.ip,
-          userRole: req.user.role
+          userRole: req.user?.role
         }
       };
-      // Execute command
-      const result = await this.sendMessageHandler.handle(command);
+      
+      const result = await this.webChatApplicationService.sendMessage(messageData, req.user?.id);
       res.json({
         success: true,
         data: {
@@ -86,8 +83,8 @@ class WebChatController {
         includeUserData: req.user.isAdmin() // Only admins can see user data
       };
 
-      // Execute query
-      const result = await this.getChatHistoryHandler.handle(query);
+      // Get chat history via application service
+      const result = await this.webChatApplicationService.getChatHistory(query, userId);
 
       res.json({
         success: true,

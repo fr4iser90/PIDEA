@@ -1,0 +1,157 @@
+{
+    "name": "refactoring_management",
+    "version": "1.0.0",
+    "description": "Advanced refactoring operations and code restructuring framework",
+    "category": "refactoring",
+    "author": "PIDEA Team",
+    "dependencies": ["core"],
+    "steps": {
+      "refactor_step": {
+        "name": "refactor_step",
+        "type": "refactoring",
+        "category": "orchestration",
+        "description": "Main refactoring orchestration step",
+        "dependencies": ["stepRegistry", "projectPath"],
+        "file": "steps/refactor_step.js"
+      },
+      "refactor_analyze": {
+        "name": "refactor_analyze",
+        "type": "refactoring",
+        "category": "analysis",
+        "description": "Analyzes project structure to identify refactoring opportunities",
+        "dependencies": ["projectAnalyzer", "projectPath"],
+        "file": "steps/refactor_analyze.js"
+      },
+      "refactor_generate_task": {
+        "name": "refactor_generate_task",
+        "type": "refactoring",
+        "category": "task-generation",
+        "description": "Creates refactoring tasks for identified large files",
+        "dependencies": ["taskRepository", "projectPath"],
+        "file": "steps/refactor_generate_task.js"
+      },
+      "extract_method": {
+        "name": "extract_method",
+        "type": "refactoring",
+        "category": "func",
+        "description": "Extract method from code block",
+        "dependencies": ["ide", "cursor"],
+        "file": "steps/extract_method.js"
+      },
+      "inline_method": {
+        "name": "inline_method",
+        "type": "refactoring",
+        "category": "func",
+        "description": "Inline method call",
+        "dependencies": ["ide", "cursor"],
+        "file": "steps/inline_method.js"
+      },
+      "move_method": {
+        "name": "move_method",
+        "type": "refactoring",
+        "category": "func",
+        "description": "Move method to different class",
+        "dependencies": ["ide", "cursor"],
+        "file": "steps/move_method.js"
+      },
+      "extract_class": {
+        "name": "extract_class",
+        "type": "refactoring",
+        "category": "class",
+        "description": "Extract class from existing class",
+        "dependencies": ["ide", "cursor"]
+      },
+      "split_large_file": {
+        "name": "split_large_file",
+        "type": "refactoring",
+        "category": "file",
+        "description": "Split large file into smaller modules",
+        "dependencies": ["ide", "file-system"]
+      },
+      "organize_imports": {
+        "name": "organize_imports",
+        "type": "refactoring",
+        "category": "import",
+        "description": "Organize and clean up imports",
+        "dependencies": ["ide", "cursor"]
+      },
+      "rename_variable": {
+        "name": "rename_variable",
+        "type": "refactoring",
+        "category": "naming",
+        "description": "Rename variable with scope awareness",
+        "dependencies": ["ide", "cursor"]
+      },
+      "extract_interface": {
+        "name": "extract_interface",
+        "type": "refactoring",
+        "category": "interface",
+        "description": "Extract interface from class",
+        "dependencies": ["ide", "cursor"]
+      },
+      "pull_up_method": {
+        "name": "pull_up_method",
+        "type": "refactoring",
+        "category": "inheritance",
+        "description": "Pull up method to superclass",
+        "dependencies": ["ide", "cursor"]
+      },
+      "push_down_method": {
+        "name": "push_down_method",
+        "type": "refactoring",
+        "category": "inheritance",
+        "description": "Push down method to subclass",
+        "dependencies": ["ide", "cursor"]
+      }
+    },
+    "workflows": {
+      "complete_refactoring": {
+        "name": "complete_refactoring",
+        "steps": [
+          "refactor_analyze",
+          "refactor_generate_task",
+          "refactor_step"
+        ],
+        "description": "Complete refactoring workflow with analysis and task generation"
+      },
+      "functional_refactoring": {
+        "name": "functional_refactoring",
+        "steps": [
+          "extract_method",
+          "inline_method",
+          "move_method"
+        ],
+        "description": "Complete functional refactoring workflow"
+      },
+      "class_refactoring": {
+        "name": "class_refactoring",
+        "steps": [
+          "extract_class",
+          "extract_interface",
+          "pull_up_method",
+          "push_down_method"
+        ],
+        "description": "Complete class refactoring workflow"
+      },
+      "file_organization": {
+        "name": "file_organization",
+        "steps": [
+          "split_large_file",
+          "organize_imports",
+          "rename_variable"
+        ],
+        "description": "Complete file organization workflow"
+      }
+    },
+    "activation": {
+      "auto_load": false,
+      "requires_confirmation": true,
+      "fallback_to_core": true
+    },
+    "settings": {
+      "max_file_size": 1000000,
+      "backup_enabled": true,
+      "validation_enabled": true,
+      "undo_enabled": true
+    }
+  } 

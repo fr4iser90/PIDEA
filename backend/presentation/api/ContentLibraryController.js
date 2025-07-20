@@ -1,13 +1,14 @@
-const fs = require('fs').promises;
-const path = require('path');
 const Logger = require('@logging/Logger');
 const ServiceLogger = require('@logging/ServiceLogger');
 const logger = new ServiceLogger('ContentLibraryController');
 
 
 class ContentLibraryController {
-  constructor() {
-    this.contentLibraryPath = path.join(__dirname, '../../../content-library');
+  constructor(dependencies = {}) {
+    this.contentLibraryApplicationService = dependencies.contentLibraryApplicationService;
+    if (!this.contentLibraryApplicationService) {
+      throw new Error('ContentLibraryController requires contentLibraryApplicationService dependency');
+    }
   }
 
   // ===== FRAMEWORK-ENDPUNKTE =====
@@ -16,17 +17,14 @@ class ContentLibraryController {
   async getFrameworks(req, res) {
     try {
       const { techstack } = req.query;
-      const frameworksPath = path.join(this.contentLibraryPath, 'frameworks');
-      const frameworks = await fs.readdir(frameworksPath, { withFileTypes: true });
+      const userId = req.user?.id;
       
-      let frameworkList = frameworks
-        .filter(dirent => dirent.isDirectory())
-        .map(dirent => ({
-          id: dirent.name,
-          name: dirent.name.replace('-framework', '').replace(/([A-Z])/g, ' $1').trim(),
-          path: dirent.name,
-          type: 'framework'
-        }));
+      const result = await this.contentLibraryApplicationService.getFrameworks(techstack, userId);
+      
+      res.json({
+        success: result.success,
+        data: result.data
+      });
 
       // Filter nach Techstack falls angegeben
       if (techstack) {

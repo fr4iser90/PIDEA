@@ -3,20 +3,17 @@
  * StreamingController
  * 
  * REST API controller for IDE screenshot streaming operations.
- * Updated to use port-based architecture instead of session-based.
+ * Updated to use Application Service layer for proper architecture.
  */
-const PortStreamingCommand = require('@commands/categories/management/PortStreamingCommand');
-const PortStreamingHandler = require('@handlers/categories/management/PortStreamingHandler');
 const Logger = require('@logging/Logger');
-const logger = new Logger('Logger');
+const logger = new Logger('StreamingController');
 
 class StreamingController {
-  constructor(screenshotStreamingService, eventBus = null) {
-    this.screenshotStreamingService = screenshotStreamingService;
-    this.eventBus = eventBus;
-    
-    // Initialize port-based handler
-    this.portStreamingHandler = new PortStreamingHandler(screenshotStreamingService, eventBus);
+  constructor(dependencies = {}) {
+    this.streamingApplicationService = dependencies.streamingApplicationService;
+    if (!this.streamingApplicationService) {
+      throw new Error('StreamingController requires streamingApplicationService dependency');
+    }
   }
 
   /**
@@ -26,7 +23,8 @@ class StreamingController {
   async startStreaming(req, res) {
     try {
       const port = parseInt(req.params.port);
-      const { fps, quality, format, maxFrameSize, enableRegionDetection } = req.body;
+      const userId = req.user?.id;
+      const { projectId, fps, quality, format, maxFrameSize, enableRegionDetection } = req.body;
       
       // Validate port parameter
       if (!port || isNaN(port) || port < 1 || port > 65535) {
@@ -36,32 +34,18 @@ class StreamingController {
         });
       }
       
-      // Create port-based command
-      const command = PortStreamingCommand.createStartCommand(port, {
-        fps: fps || 10,
-        quality: quality || 0.8,
-        format: format || 'jpeg',
-        maxFrameSize: maxFrameSize || 50 * 1024,
-        enableRegionDetection: enableRegionDetection || false
+      const result = await this.streamingApplicationService.startPortStreaming(
+        projectId || 'default', 
+        port, 
+        userId
+      );
+      
+      res.status(200).json({
+        success: result.success,
+        port: port,
+        data: result.data,
+        message: 'Streaming started successfully'
       });
-      
-      // Execute command
-      const result = await this.portStreamingHandler.handle(command);
-      
-      if (result.success) {
-        res.status(200).json({
-          success: true,
-          port: port,
-          result: result.result,
-          message: 'Streaming started successfully'
-        });
-      } else {
-        res.status(400).json({
-          success: false,
-          error: result.error,
-          port: port
-        });
-      }
       
     } catch (error) {
       logger.error('Error starting streaming:', error.message);
@@ -89,26 +73,21 @@ class StreamingController {
         });
       }
       
-      // Create port-based command
-      const command = PortStreamingCommand.createStopCommand(port);
+      const userId = req.user?.id;
+      const { projectId } = req.body;
       
-      // Execute command
-      const result = await this.portStreamingHandler.handle(command);
+      const result = await this.streamingApplicationService.stopPortStreaming(
+        projectId || 'default', 
+        port, 
+        userId
+      );
       
-      if (result.success) {
-        res.status(200).json({
-          success: true,
-          port: port,
-          result: result.result,
-          message: 'Streaming stopped successfully'
-        });
-      } else {
-        res.status(400).json({
-          success: false,
-          error: result.error,
-          port: port
-        });
-      }
+      res.status(200).json({
+        success: result.success,
+        port: port,
+        data: result.data,
+        message: 'Streaming stopped successfully'
+      });
       
     } catch (error) {
       logger.error('Error stopping streaming:', error.message);
@@ -136,10 +115,11 @@ class StreamingController {
         });
       }
       
-      // Get port information
-      const portInfo = this.screenshotStreamingService.getPort(port);
+      // Get port information via application service
+      const result = await this.streamingApplicationService.getPortStatus(port, req.user?.id);
+      const portInfo = result.data;
       
-      if (!portInfo) {
+      if (!result.success) {
         return res.status(404).json({
           success: false,
           error: 'Port not found',
@@ -169,7 +149,8 @@ class StreamingController {
    */
   async getAllPorts(req, res) {
     try {
-      const ports = this.screenshotStreamingService.getAllPorts();
+      const result = await this.streamingApplicationService.getAllPorts(req.user?.id);
+      const ports = result.data;
       
       res.status(200).json({
         success: true,
@@ -341,7 +322,8 @@ class StreamingController {
    */
   async getStats(req, res) {
     try {
-      const stats = this.screenshotStreamingService.getStats();
+      const result = await this.streamingApplicationService.getStreamingStats(req.user?.id);
+      const stats = result.data;
       
       res.status(200).json({
         success: true,
@@ -364,7 +346,8 @@ class StreamingController {
    */
   async stopAllStreaming(req, res) {
     try {
-      const stoppedCount = await this.screenshotStreamingService.stopAllStreaming();
+      const result = await this.streamingApplicationService.stopAllStreaming(req.user?.id);
+      const stoppedCount = result.data.stoppedCount;
       
       res.status(200).json({
         success: true,
@@ -388,8 +371,9 @@ class StreamingController {
    */
   async healthCheck(req, res) {
     try {
-      const stats = this.screenshotStreamingService.getStats();
-      const isHealthy = stats.activeSessions >= 0; // Basic health check
+      const result = await this.streamingApplicationService.getStreamingStats(req.user?.id);
+      const stats = result.data;
+      const isHealthy = stats.activeStreams >= 0; // Basic health check
       
       res.status(200).json({
         success: true,

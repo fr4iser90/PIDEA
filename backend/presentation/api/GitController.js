@@ -1,16 +1,17 @@
 /**
  * GitController - Handles Git management operations
  */
-const GitService = require('@external/GitService');
 const Logger = require('@logging/Logger');
 const ServiceLogger = require('@logging/ServiceLogger');
 const logger = new ServiceLogger('GitController');
 
 class GitController {
     constructor(dependencies = {}) {
-        this.gitService = dependencies.gitService || new GitService(dependencies);
+        this.gitApplicationService = dependencies.gitApplicationService;
         this.logger = dependencies.logger || console;
-        this.eventBus = dependencies.eventBus;
+        if (!this.gitApplicationService) {
+            throw new Error('GitController requires gitApplicationService dependency');
+        }
     }
 
     /**
@@ -39,43 +40,11 @@ class GitController {
 
             this.logger.info('GitController: Getting Git status', { projectId, userId });
 
-            // Check if it's a Git repository
-            const isGitRepo = await this.gitService.isGitRepository(projectPath);
-            if (!isGitRepo) {
-                return res.status(400).json({
-                    success: false,
-                    error: 'Not a Git repository'
-                });
-            }
-
-            // Get current branch
-            const currentBranch = await this.gitService.getCurrentBranch(projectPath);
+            const result = await this.gitApplicationService.getStatus(projectId, projectPath, userId);
             
-            // Get status
-            const status = await this.gitService.getStatus(projectPath);
-
-            // Get last commit info
-            const lastCommit = await this.gitService.getLastCommit(projectPath);
-
-            if (this.eventBus) {
-                this.eventBus.publish('git.status.retrieved', {
-                    projectId,
-                    projectPath,
-                    currentBranch,
-                    status,
-                    userId,
-                    timestamp: new Date()
-                });
-            }
-
             res.json({
-                success: true,
-                data: {
-                    status,
-                    currentBranch,
-                    lastCommit,
-                    isGitRepository: true
-                },
+                success: result.success,
+                data: result.data,
                 message: 'Git status retrieved successfully'
             });
 
@@ -120,8 +89,9 @@ class GitController {
 
             this.logger.info('GitController: Getting branches', { projectId, userId });
 
-            const branches = await this.gitService.getBranches(projectPath, { all: true });
-            const currentBranch = await this.gitService.getCurrentBranch(projectPath);
+            const result = await this.gitApplicationService.getBranches(projectPath, userId);
+            const branches = result.data.branches;
+            const currentBranch = result.data.currentBranch;
 
             res.json({
                 success: true,

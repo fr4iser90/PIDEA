@@ -452,18 +452,25 @@ class Application {
     // Initialize auth middleware
     this.authMiddleware = new AuthMiddleware(this.authService);
 
-    // Initialize controllers
-    this.authController = new AuthController(this.authService, this.userRepository);
+    // Initialize controllers with Application Services
+    const AuthController = require('./presentation/api/AuthController');
+    this.authController = new AuthController({ 
+        authApplicationService: this.serviceRegistry.getService('authApplicationService'),
+        logger: this.serviceRegistry.getService('logger')
+    });
     
-    this.webChatController = new WebChatController(
-      this.sendMessageHandler,
-      this.getChatHistoryHandler,
-      this.cursorIDEService,
-      this.authService
-    );
+    const WebChatController = require('./presentation/api/WebChatController');
+    this.webChatController = new WebChatController({
+        webChatApplicationService: this.serviceRegistry.getService('webChatApplicationService'),
+        logger: this.serviceRegistry.getService('logger')
+    });
 
-    // Use DI container for IDEController
-    this.ideController = this.serviceRegistry.getService('ideController');
+    // Use Application Service for IDEController
+    const IDEController = require('./presentation/api/IDEController');
+    this.ideController = new IDEController({
+        ideApplicationService: this.serviceRegistry.getService('ideApplicationService'),
+        logger: this.serviceRegistry.getService('logger')
+    });
 
     // Initialize IDE Feature Controller
     const IDEFeatureController = require('./presentation/api/ide/IDEFeatureController');
@@ -474,41 +481,43 @@ class Application {
       serviceRegistry: this.serviceRegistry
     });
 
-    this.ideMirrorController = new IDEMirrorController();
-
-    this.ContentLibraryController = new ContentLibraryController();
-
-    this.taskController = new TaskController(
-      this.taskService,
-      this.taskRepository,
-      this.aiService,
-      this.projectAnalyzer,
-      this.projectMappingService,
-      this.ideManager,
-      this.serviceRegistry.getService('docsImportService')
-    );
-
-            this.workflowController = new WorkflowController({
-      commandBus: this.commandBus,
-      queryBus: this.queryBus,
-      logger: this.logger,
-      eventBus: this.eventBus,
-      application: this,
-      ideManager: this.ideManager
+    const IDEMirrorController = require('./presentation/api/IDEMirrorController');
+    this.ideMirrorController = new IDEMirrorController({
+        ideMirrorApplicationService: this.serviceRegistry.getService('ideMirrorApplicationService'),
+        logger: this.serviceRegistry.getService('logger')
     });
 
-    this.projectAnalysisController = new (require('./presentation/api/ProjectAnalysisController'))(
-      this.serviceRegistry.getService('projectAnalysisRepository'),
-      this.logger
-    );
+    const ContentLibraryController = require('./presentation/api/ContentLibraryController');
+    this.ContentLibraryController = new ContentLibraryController({
+        contentLibraryApplicationService: this.serviceRegistry.getService('contentLibraryApplicationService'),
+        logger: this.serviceRegistry.getService('logger')
+    });
+
+    const TaskController = require('./presentation/api/TaskController');
+    this.taskController = new TaskController({
+        taskApplicationService: this.serviceRegistry.getService('taskApplicationService'),
+        logger: this.serviceRegistry.getService('logger')
+    });
+
+                const WorkflowController = require('./presentation/api/WorkflowController');
+    this.workflowController = new WorkflowController({
+        workflowApplicationService: this.serviceRegistry.getService('workflowApplicationService'),
+        logger: this.serviceRegistry.getService('logger')
+    });
+
+    const ProjectAnalysisController = require('./presentation/api/ProjectAnalysisController');
+    this.projectAnalysisController = new ProjectAnalysisController({
+        projectAnalysisApplicationService: this.serviceRegistry.getService('projectAnalysisApplicationService'),
+        logger: this.serviceRegistry.getService('logger')
+    });
 
     // TODO: Phase 2 - Re-enable AnalysisController after implementing with AnalysisOrchestrator
     // this.analysisController = this.serviceRegistry.getService('analysisController');
 
+    const GitController = require('./presentation/api/GitController');
     this.gitController = new GitController({
-      gitService: this.gitService,
-      logger: this.logger,
-      eventBus: this.eventBus
+        gitApplicationService: this.serviceRegistry.getService('gitApplicationService'),
+        logger: this.serviceRegistry.getService('logger')
     });
 
     this.projectController = new ProjectController();

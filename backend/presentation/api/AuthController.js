@@ -1,15 +1,14 @@
-const AuthService = require('@services/AuthService');
-const User = require('@entities/User');
-const bcrypt = require('bcryptjs');
 const Logger = require('@logging/Logger');
 const ServiceLogger = require('@logging/ServiceLogger');
 const logger = new ServiceLogger('AuthController');
 
 
 class AuthController {
-  constructor(authService, userRepository) {
-    this.authService = authService;
-    this.userRepository = userRepository;
+  constructor(dependencies = {}) {
+    this.authApplicationService = dependencies.authApplicationService;
+    if (!this.authApplicationService) {
+      throw new Error('AuthController requires authApplicationService dependency');
+    }
   }
 
   // POST /api/auth/register
@@ -19,19 +18,14 @@ class AuthController {
       if (!email || !password) {
         return res.status(400).json({ success: false, message: 'Email and password are required' });
       }
-      // Hash password IMMER vor dem Speichern
-      const saltRounds = 12;
-      const passwordHash = await bcrypt.hash(password, saltRounds);
-      const user = await this.userRepository.save({
-        email,
-        passwordHash,
-        username,
-        role: 'user',
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        metadata: {}
+
+      const userData = { email, password, username };
+      const result = await this.authApplicationService.register(userData);
+      
+      res.status(201).json({ 
+        success: result.success, 
+        user: result.data 
       });
-      res.status(201).json({ success: true, user: user.toJSON() });
     } catch (error) {
       logger.error('Registration error:', error);
       res.status(500).json({ success: false, message: error.message });
@@ -59,11 +53,9 @@ class AuthController {
         });
       }
 
-      // Authenticate user
-      const user = await this.authService.authenticateUser(email, password);
-
-      // Create session
-      const session = await this.authService.createUserSession(user);
+      // Authenticate user and create session
+      const credentials = { email, password };
+      const result = await this.authApplicationService.login(credentials);
 
       const responseData = {
         success: true,
