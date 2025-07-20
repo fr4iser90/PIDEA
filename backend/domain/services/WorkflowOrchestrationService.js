@@ -17,7 +17,6 @@ class WorkflowOrchestrationService {
     constructor(dependencies = {}) {
         this.workflowGitService = dependencies.workflowGitService || new WorkflowGitService(dependencies);
         this.cursorIDEService = dependencies.cursorIDEService;
-        this.autoFinishSystem = dependencies.autoFinishSystem;
         this.taskRepository = dependencies.taskRepository;
         this.logger = dependencies.logger || new ServiceLogger('WorkflowOrchestrationService');
         this.eventBus = dependencies.eventBus;
@@ -258,19 +257,26 @@ class WorkflowOrchestrationService {
                 await new Promise(resolve => setTimeout(resolve, 2000));
             }
 
-            // Step 2: Execute AI refactoring with Auto-Finish
-            let refactoringResult;
-            if (this.autoFinishSystem && this.cursorIDEService) {
-                refactoringResult = await this.autoFinishSystem.processTask(task, `refactor-${task.id}`, {
-                    stopOnError: false,
-                    maxConfirmationAttempts: 3,
-                    confirmationTimeout: 10000,
-                    fallbackDetectionEnabled: true
-                });
-            } else {
-                // Fallback to direct AI refactoring
-                const aiPrompt = await this.buildRefactoringPrompt(task);
-                refactoringResult = await this.cursorIDEService.sendMessage(aiPrompt);
+            // Step 2: Execute AI refactoring with Steps
+            const aiPrompt = await this.buildRefactoringPrompt(task);
+            const refactoringResult = await this.cursorIDEService.sendMessage(aiPrompt);
+            
+            // Step 2.1: Execute ConfirmationStep if stepRegistry is available
+            if (this.stepRegistry) {
+                try {
+                    const confirmationResult = await this.stepRegistry.executeStep('completion', 'ConfirmationStep', {
+                        task,
+                        aiResponse: refactoringResult,
+                        maxConfirmationAttempts: 3,
+                        confirmationTimeout: 10000
+                    });
+                    
+                    if (!confirmationResult.success) {
+                        throw new Error('Task confirmation failed');
+                    }
+                } catch (error) {
+                    this.logger.warn('ConfirmationStep failed, continuing without confirmation:', error.message);
+                }
             }
 
             // Step 3: Validate refactoring

@@ -84,6 +84,12 @@ class ServiceRegistry {
             return new IDEPortManager(ideManager, eventBus);
         }, { singleton: true, dependencies: ['ideManager', 'eventBus'] });
 
+        // Step Registry Service (moved from external services)
+        this.container.register('stepRegistry', () => {
+            const { getStepRegistry } = require('@domain/steps');
+            return getStepRegistry();
+        }, { singleton: true });
+
         this.registeredServices.add('infrastructure');
     }
 
@@ -198,24 +204,10 @@ class ServiceRegistry {
         //     return new AnalysisController(codeQualityService, securityService, performanceService, architectureService, logger, analysisOutputService, analysisRepository, projectRepository);
         // }, { singleton: true, dependencies: ['codeQualityService', 'securityService', 'performanceService', 'architectureService', 'logger', 'analysisOutputService', 'analysisRepository', 'projectRepository'] });
 
-            // Auto-Finish System
-        this.container.register('autoFinishSystem', (cursorIDEService, browserManager, ideManager) => {
-            const AutoFinishSystem = require('@domain/services/auto-finish/AutoFinishSystem');
-            return new AutoFinishSystem(cursorIDEService, browserManager, ideManager);
-        }, { singleton: true, dependencies: ['cursorIDEService', 'browserManager', 'ideManager'] });
+            // AutoFinishSystem removed - using Steps instead
+        // this.container.register('autoFinishSystem', ...);
 
-        // Workflow Orchestration Service - ORCHESTRATES STEPS!
-        this.container.register('workflowOrchestrationService', (cursorIDEService, autoFinishSystem, taskRepository, eventBus, logger, stepRegistry) => {
-            const WorkflowOrchestrationService = require('@domain/services/WorkflowOrchestrationService');
-            return new WorkflowOrchestrationService({
-                cursorIDEService,
-                autoFinishSystem,
-                taskRepository,
-                eventBus,
-                logger,
-                stepRegistry
-            });
-        }, { singleton: true, dependencies: ['cursorIDEService', 'autoFinishSystem', 'taskRepository', 'eventBus', 'logger', 'stepRegistry'] });
+
 
         // Advanced Analysis Service
         this.container.register('advancedAnalysisService', (layerValidationService, logicValidationService, taskAnalysisService, eventBus, logger) => {
@@ -282,6 +274,8 @@ class ServiceRegistry {
             return new CursorIDEService(browserManager, ideManager, eventBus);
         }, { singleton: true, dependencies: ['browserManager', 'ideManager', 'eventBus'] });
 
+
+
         // VSCode IDE service
         this.container.register('vscodeIDEService', (browserManager, ideManager, eventBus) => {
             const VSCodeIDEService = require('@domain/services/VSCodeService');
@@ -301,10 +295,10 @@ class ServiceRegistry {
         }, { singleton: true, dependencies: ['userRepository', 'userSessionRepository'] });
 
         // Task service
-        this.container.register('taskService', (taskRepository, aiService, projectAnalyzer, cursorIDEService, autoFinishSystem) => {
+        this.container.register('taskService', (taskRepository, aiService, projectAnalyzer, cursorIDEService) => {
             const TaskService = require('@domain/services/TaskService');
-            return new TaskService(taskRepository, aiService, projectAnalyzer, cursorIDEService, autoFinishSystem);
-        }, { singleton: true, dependencies: ['taskRepository', 'aiService', 'projectAnalyzer', 'cursorIDEService', 'autoFinishSystem'] });
+            return new TaskService(taskRepository, aiService, projectAnalyzer, cursorIDEService, null); // autoFinishSystem removed
+        }, { singleton: true, dependencies: ['taskRepository', 'aiService', 'projectAnalyzer', 'cursorIDEService'] });
 
         // Docs Import Service
         this.container.register('docsImportService', (browserManager, taskService, taskRepository) => {
@@ -348,6 +342,18 @@ class ServiceRegistry {
                 testRepository: null // Not needed for step delegation
             });
         }, { singleton: true, dependencies: ['stepRegistry', 'eventBus', 'logger'] });
+
+        // Workflow Orchestration Service - ORCHESTRATES STEPS! (moved to external services)
+        this.container.register('workflowOrchestrationService', (taskRepository, eventBus, logger, stepRegistry) => {
+            const WorkflowOrchestrationService = require('@domain/services/WorkflowOrchestrationService');
+            return new WorkflowOrchestrationService({
+                cursorIDEService: null, // Will be injected later
+                taskRepository,
+                eventBus,
+                logger,
+                stepRegistry
+            });
+        }, { singleton: true, dependencies: ['taskRepository', 'eventBus', 'logger', 'stepRegistry'] });
 
         // Project analyzer - Stub for Phase 1 compatibility
         this.container.register('projectAnalyzer', () => {
@@ -396,11 +402,7 @@ class ServiceRegistry {
         //     return new DependencyAnalyzer({ monorepoStrategy, singleRepoStrategy });
         // }, { singleton: true, dependencies: ['monorepoStrategy', 'singleRepoStrategy'] });
 
-        // Step Registry Service
-        this.container.register('stepRegistry', () => {
-            const { getStepRegistry } = require('@domain/steps');
-            return getStepRegistry();
-        }, { singleton: true });
+
 
         // Git service (orchestrator using steps)
         this.container.register('gitService', (logger, eventBus, stepRegistry) => {

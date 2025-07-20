@@ -30,7 +30,7 @@ const TaskRepository = require('./domain/repositories/TaskRepository');
 const TaskValidationService = require('./domain/services/TaskValidationService');
 
 // Auto-Finish System
-const AutoFinishSystem = require('./domain/services/auto-finish/AutoFinishSystem');
+// AutoFinishSystem import removed - using Steps instead
 const TaskSession = require('./domain/entities/TaskSession');
 const TodoTask = require('./domain/entities/TodoTask');
 
@@ -290,11 +290,6 @@ class Application {
         this.aiService = this.serviceRegistry.getService('aiService');
         // TODO: Replace with AnalysisOrchestrator after Phase 2
         // this.projectAnalyzer = this.serviceRegistry.getService('projectAnalyzer');
-        // this.codeQualityAnalyzer = this.serviceRegistry.getService('codeQualityAnalyzer');
-        // this.securityAnalyzer = this.serviceRegistry.getService('securityAnalyzer');
-        // this.performanceAnalyzer = this.serviceRegistry.getService('performanceAnalyzer');
-        // this.architectureAnalyzer = this.serviceRegistry.getService('architectureAnalyzer');
-        // this.techStackAnalyzer = this.serviceRegistry.getService('techStackAnalyzer');
         this.recommendationsService = this.serviceRegistry.getService('recommendationsService');
         this.subprojectDetector = this.serviceRegistry.getService('subprojectDetector');
         this.analysisOutputService = this.serviceRegistry.getService('analysisOutputService');
@@ -326,6 +321,10 @@ class Application {
     // Get Workflow Orchestration Service
     try {
         this.workflowOrchestrationService = this.serviceRegistry.getService('workflowOrchestrationService');
+        // Inject stepRegistry into WorkflowOrchestrationService
+        if (this.workflowOrchestrationService && this.stepRegistry) {
+            this.workflowOrchestrationService.stepRegistry = this.stepRegistry;
+        }
     } catch (error) {
         this.logger.warn('WorkflowOrchestrationService not available:', error.message);
         this.workflowOrchestrationService = { orchestrate: () => ({}) };
@@ -361,14 +360,6 @@ class Application {
     // Initialize Auto-Finish System
     this.taskSessionRepository = this.databaseConnection.getRepository('TaskSession');
     await this.taskSessionRepository.initialize();
-    
-    this.autoFinishSystem = new AutoFinishSystem(
-      this.cursorIDEService,
-      this.browserManager,
-      this.ideManager,
-      this.webSocketManager
-    );
-    await this.autoFinishSystem.initialize();
 
     // Initialize Auto Test Fix System
     this.autoTestFixSystem = new AutoTestFixSystem({
@@ -459,22 +450,12 @@ class Application {
 
     // Legacy handlers removed - using new workflow system instead
     
-    // Initialize Auto-Finish Handler (still needed)
-    this.processTodoListHandler = new ProcessTodoListHandler({
-      autoFinishSystem: this.autoFinishSystem,
-      cursorIDE: this.cursorIDEService,
-      browserManager: this.browserManager,
-      ideManager: this.ideManager,
-      webSocketManager: this.webSocketManager,
-      taskSessionRepository: this.taskSessionRepository,
-      eventBus: this.eventBus,
-      logger: this.logger
-    });
+    // ProcessTodoListHandler removed - using WorkflowController + Steps instead
+    this.processTodoListHandler = null;
 
     // TaskExecutionEngine removed - functionality moved to WorkflowController + StepRegistry
 
-    // Register only non-legacy command handlers
-    this.commandBus.register('ProcessTodoListCommand', this.processTodoListHandler);
+    // No legacy command handlers - using WorkflowController + Steps instead
 
     this.logger.info('Application handlers initialized (legacy removed)');
   }
@@ -544,12 +525,8 @@ class Application {
       eventBus: this.eventBus
     });
 
-    this.autoFinishController = new AutoFinishController({
-      commandBus: this.commandBus,
-      taskSessionRepository: this.taskSessionRepository,
-      autoFinishSystem: this.autoFinishSystem,
-      logger: this.logger
-    });
+    // AutoFinishController removed - using WorkflowController + Steps instead
+    this.autoFinishController = null;
 
     this.autoTestFixController = new (require('./presentation/api/controllers/AutoTestFixController'))({
       autoTestFixSystem: this.autoTestFixSystem,
@@ -1134,9 +1111,7 @@ class Application {
     }
 
     // Cleanup Auto-Finish System
-    if (this.autoFinishSystem) {
-      await this.autoFinishSystem.cleanup();
-    }
+    // AutoFinishSystem cleanup removed - using Steps instead
 
     this.logger.info('Cleanup completed');
   }
