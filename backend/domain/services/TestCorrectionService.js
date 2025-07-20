@@ -1,17 +1,19 @@
 const TestCorrection = require('@entities/TestCorrection');
-const TestAnalyzer = require('@infrastructure/external/OLD9');
 const TestFixer = require('@external/TestFixer');
 const Logger = require('@logging/Logger');
 const logger = new Logger('Logger');
 
 class TestCorrectionService {
   constructor({
-    testAnalyzer = new TestAnalyzer(),
+    testOrchestrator = null,
     testFixer = new TestFixer(),
     eventBus = null,
     config = {}
   }) {
-    this.testAnalyzer = testAnalyzer;
+    this.testOrchestrator = testOrchestrator || {
+      executeTest: async () => ({ success: false, error: 'TestOrchestrator not available' }),
+      executeMultipleTests: async () => ({ success: false, error: 'TestOrchestrator not available' })
+    };
     this.testFixer = testFixer;
     this.eventBus = eventBus;
     this.config = {
@@ -36,8 +38,8 @@ class TestCorrectionService {
     
     for (const testResult of testResults.failing || []) {
       try {
-        const analysis = await this.testAnalyzer.analyzeTest(testResult);
-        const fixStrategy = this.determineFixStrategy(analysis);
+        const analysis = await this.testOrchestrator.executeTest('test-analysis', testResult.file, { testResult });
+        const fixStrategy = this.determineFixStrategy(analysis.result || analysis);
         
         const correction = TestCorrection.createForFailingTest(
           testResult.file,
@@ -81,7 +83,7 @@ class TestCorrectionService {
     
     for (const testResult of testResults.legacy || []) {
       try {
-        const analysis = await this.testAnalyzer.analyzeLegacyTest(testResult);
+        const analysis = await this.testOrchestrator.executeTest('test-analysis', testResult.file, { testResult, type: 'legacy' });
         
         const correction = TestCorrection.createForLegacyTest(
           testResult.file,
@@ -119,7 +121,7 @@ class TestCorrectionService {
     
     for (const testResult of testResults.complex || []) {
       try {
-        const analysis = await this.testAnalyzer.analyzeComplexTest(testResult);
+        const analysis = await this.testOrchestrator.executeTest('test-analysis', testResult.file, { testResult, type: 'complex' });
         
         const correction = TestCorrection.createForComplexTest(
           testResult.file,

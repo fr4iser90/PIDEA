@@ -288,12 +288,13 @@ class Application {
         this.cursorIDEService = this.serviceRegistry.getService('cursorIDEService');
         this.authService = this.serviceRegistry.getService('authService');
         this.aiService = this.serviceRegistry.getService('aiService');
-        this.projectAnalyzer = this.serviceRegistry.getService('projectAnalyzer');
-        this.codeQualityAnalyzer = this.serviceRegistry.getService('codeQualityAnalyzer');
-        this.securityAnalyzer = this.serviceRegistry.getService('securityAnalyzer');
-        this.performanceAnalyzer = this.serviceRegistry.getService('performanceAnalyzer');
-        this.architectureAnalyzer = this.serviceRegistry.getService('architectureAnalyzer');
-        this.techStackAnalyzer = this.serviceRegistry.getService('techStackAnalyzer');
+        // TODO: Replace with AnalysisOrchestrator after Phase 2
+        // this.projectAnalyzer = this.serviceRegistry.getService('projectAnalyzer');
+        // this.codeQualityAnalyzer = this.serviceRegistry.getService('codeQualityAnalyzer');
+        // this.securityAnalyzer = this.serviceRegistry.getService('securityAnalyzer');
+        // this.performanceAnalyzer = this.serviceRegistry.getService('performanceAnalyzer');
+        // this.architectureAnalyzer = this.serviceRegistry.getService('architectureAnalyzer');
+        // this.techStackAnalyzer = this.serviceRegistry.getService('techStackAnalyzer');
         this.recommendationsService = this.serviceRegistry.getService('recommendationsService');
         this.subprojectDetector = this.serviceRegistry.getService('subprojectDetector');
         this.analysisOutputService = this.serviceRegistry.getService('analysisOutputService');
@@ -306,11 +307,12 @@ class Application {
     
         this.taskValidationService = this.serviceRegistry.getService('taskValidationService');
         this.taskAnalysisService = this.serviceRegistry.getService('taskAnalysisService');
-        this.codeQualityService = this.serviceRegistry.getService('codeQualityService');
-        this.securityService = this.serviceRegistry.getService('securityService');
-        this.performanceService = this.serviceRegistry.getService('performanceService');
-        this.architectureService = this.serviceRegistry.getService('architectureService');
-        this.dependencyAnalyzer = this.serviceRegistry.getService('dependencyAnalyzer');
+        // TODO: Replace with AnalysisOrchestrator after Phase 2
+        // this.codeQualityService = this.serviceRegistry.getService('codeQualityService');
+        // this.securityService = this.serviceRegistry.getService('securityService');
+        // this.performanceService = this.serviceRegistry.getService('performanceService');
+        // this.architectureService = this.serviceRegistry.getService('architectureService');
+        // this.dependencyAnalyzer = this.serviceRegistry.getService('dependencyAnalyzer'); // REMOVED - using DependencyAnalysisStep
         this.monorepoStrategy = this.serviceRegistry.getService('monorepoStrategy');
         this.singleRepoStrategy = this.serviceRegistry.getService('singleRepoStrategy');
     } catch (error) {
@@ -337,11 +339,10 @@ class Application {
         this.gitService = { status: () => ({}) };
     }
 
-    // Get Test Analyzer Tools
+    // Get Test Orchestrator Tools
     try {
-        this.testAnalyzer = this.serviceRegistry.getService('testAnalyzer');
+        this.testOrchestrator = this.serviceRegistry.getService('testOrchestrator');
         this.testFixer = this.serviceRegistry.getService('testFixer');
-        this.coverageAnalyzer = this.serviceRegistry.getService('coverageAnalyzer');
         this.testReportParser = this.serviceRegistry.getService('testReportParser');
         this.testFixTaskGenerator = this.serviceRegistry.getService('testFixTaskGenerator');
         this.testCorrectionService = this.serviceRegistry.getService('testCorrectionService');
@@ -349,9 +350,8 @@ class Application {
     } catch (error) {
         this.logger.warn('Some test services not available:', error.message);
         // Create fallback services
-        this.testAnalyzer = { analyze: () => ({}) };
+        this.testOrchestrator = { executeTest: () => ({ success: false, error: 'TestOrchestrator not available' }) };
         this.testFixer = { fix: () => ({}) };
-        this.coverageAnalyzer = { analyze: () => ({}) };
         this.testReportParser = { parse: () => ({}) };
         this.testFixTaskGenerator = { generate: () => ({}) };
         this.testCorrectionService = { correct: () => ({}) };
@@ -381,9 +381,8 @@ class Application {
       gitService: this.gitService,
       eventBus: this.eventBus,
       logger: this.logger,
-      testAnalyzer: this.testAnalyzer,
+      testOrchestrator: this.testOrchestrator,
       testFixer: this.testFixer,
-      coverageAnalyzer: this.coverageAnalyzer,
       testReportParser: this.testReportParser,
       testFixTaskGenerator: this.testFixTaskGenerator
     });
@@ -536,8 +535,8 @@ class Application {
       this.logger
     );
 
-    // Get AnalysisController from DI container to ensure all dependencies are available
-    this.analysisController = this.serviceRegistry.getService('analysisController');
+    // TODO: Phase 2 - Re-enable AnalysisController after implementing with AnalysisOrchestrator
+    // this.analysisController = this.serviceRegistry.getService('analysisController');
 
     this.gitController = new GitController({
       gitService: this.gitService,

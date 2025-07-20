@@ -2,9 +2,7 @@
  * AutoTestFixSystem - Core service for automated test correction and coverage improvement
  * Handles test analysis, AI-powered fixes, coverage improvement, and autonomous workflow execution
  */
-const TestAnalyzer = require('@infrastructure/external/OLD9');
 const TestFixer = require('@external/TestFixer');
-const CoverageAnalyzer = require('@infrastructure/external/OLD3');
 const TestReportParser = require('@services/TestReportParser');
 const TestFixTaskGenerator = require('@services/TestFixTaskGenerator');
 const WorkflowGitService = require('@services/WorkflowGitService');
@@ -22,9 +20,11 @@ class AutoTestFixSystem {
     this.workflowOrchestrationService = dependencies.workflowOrchestrationService;
     
     // Initialize subsystems
-    this.testAnalyzer = new TestAnalyzer();
+    this.testOrchestrator = dependencies.testOrchestrator || {
+      executeTest: async () => ({ success: false, error: 'TestOrchestrator not available' }),
+      executeMultipleTests: async () => ({ success: false, error: 'TestOrchestrator not available' })
+    };
     this.testFixer = new TestFixer();
-    this.coverageAnalyzer = new CoverageAnalyzer();
     this.testReportParser = new TestReportParser();
     this.testFixTaskGenerator = new TestFixTaskGenerator(this.taskRepository);
     
@@ -69,9 +69,7 @@ class AutoTestFixSystem {
       this.logger.info('🧪 Initializing...');
       
       // Initialize subsystems
-      await this.testAnalyzer.initialize();
       await this.testFixer.initialize();
-      await this.coverageAnalyzer.initialize();
       
       this.logger.info('✅ Initialized successfully');
     } catch (error) {

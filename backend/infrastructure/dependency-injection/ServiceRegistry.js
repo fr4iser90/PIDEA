@@ -157,10 +157,10 @@ class ServiceRegistry {
     
 
         // Task analysis service
-        this.container.register('taskAnalysisService', (cursorIDEService, eventBus, logger, aiService, projectAnalyzer) => {
+        this.container.register('taskAnalysisService', (cursorIDEService, eventBus, logger, aiService, projectAnalyzer, analysisOrchestrator) => {
             const TaskAnalysisService = require('@domain/services/TaskAnalysisService');
-            return new TaskAnalysisService(cursorIDEService, eventBus, logger, aiService, projectAnalyzer);
-        }, { singleton: true, dependencies: ['cursorIDEService', 'eventBus', 'logger', 'aiService', 'projectAnalyzer'] });
+            return new TaskAnalysisService(cursorIDEService, eventBus, logger, aiService, projectAnalyzer, analysisOrchestrator);
+        }, { singleton: true, dependencies: ['cursorIDEService', 'eventBus', 'logger', 'aiService', 'projectAnalyzer', 'analysisOrchestrator'] });
 
         // Task validation service
         this.container.register('taskValidationService', (taskRepository, cursorIDEService, eventBus, fileSystemService) => {
@@ -168,35 +168,35 @@ class ServiceRegistry {
             return new TaskValidationService(taskRepository, cursorIDEService, eventBus, fileSystemService);
         }, { singleton: true, dependencies: ['taskRepository', 'cursorIDEService', 'eventBus', 'fileSystemService'] });
 
-        // Code quality service
-        this.container.register('codeQualityService', (codeQualityAnalyzer, eventBus, logger, analysisOutputService, analysisRepository) => {
-            const CodeQualityService = require('@domain/services/CodeQualityService');
-            return new CodeQualityService(codeQualityAnalyzer, eventBus, logger, analysisOutputService, analysisRepository);
-        }, { singleton: true, dependencies: ['codeQualityAnalyzer', 'eventBus', 'logger', 'analysisOutputService', 'analysisRepository'] });
+        // Code quality service - TODO: Phase 2 - Update to use AnalysisOrchestrator
+        // this.container.register('codeQualityService', (codeQualityAnalyzer, eventBus, logger, analysisOutputService, analysisRepository) => {
+        //     const CodeQualityService = require('@domain/services/CodeQualityService');
+        //     return new CodeQualityService(codeQualityAnalyzer, eventBus, logger, analysisOutputService, analysisRepository);
+        // }, { singleton: true, dependencies: ['codeQualityAnalyzer', 'eventBus', 'logger', 'analysisOutputService', 'analysisRepository'] });
 
-        // Security service
-        this.container.register('securityService', (securityAnalyzer, eventBus, logger, analysisOutputService, analysisRepository) => {
-            const SecurityService = require('@domain/services/SecurityService');
-            return new SecurityService(securityAnalyzer, eventBus, logger, analysisOutputService, analysisRepository);
-        }, { singleton: true, dependencies: ['securityAnalyzer', 'eventBus', 'logger', 'analysisOutputService', 'analysisRepository'] });
+        // Security service - TODO: Phase 2 - Update to use AnalysisOrchestrator
+        // this.container.register('securityService', (securityAnalyzer, eventBus, logger, analysisOutputService, analysisRepository) => {
+        //     const SecurityService = require('@domain/services/SecurityService');
+        //     return new SecurityService(securityAnalyzer, eventBus, logger, analysisOutputService, analysisRepository);
+        // }, { singleton: true, dependencies: ['securityAnalyzer', 'eventBus', 'logger', 'analysisOutputService', 'analysisRepository'] });
 
-        // Performance service
-        this.container.register('performanceService', (performanceAnalyzer, eventBus, logger, analysisOutputService, analysisRepository) => {
-            const PerformanceService = require('@domain/services/PerformanceService');
-            return new PerformanceService(performanceAnalyzer, eventBus, logger, analysisOutputService, analysisRepository);
-        }, { singleton: true, dependencies: ['performanceAnalyzer', 'eventBus', 'logger', 'analysisOutputService', 'analysisRepository'] });
+        // Performance service - TODO: Phase 2 - Update to use AnalysisOrchestrator
+        // this.container.register('performanceService', (performanceAnalyzer, eventBus, logger, analysisOutputService, analysisRepository) => {
+        //     const PerformanceService = require('@domain/services/PerformanceService');
+        //     return new PerformanceService(performanceAnalyzer, eventBus, logger, analysisOutputService, analysisRepository);
+        // }, { singleton: true, dependencies: ['performanceAnalyzer', 'eventBus', 'logger', 'analysisOutputService', 'analysisRepository'] });
 
-        // Architecture service
-        this.container.register('architectureService', (architectureAnalyzer, eventBus, logger, analysisOutputService, analysisRepository) => {
-            const ArchitectureService = require('@domain/services/ArchitectureService');
-            return new ArchitectureService(architectureAnalyzer, eventBus, logger, analysisOutputService, analysisRepository);
-        }, { singleton: true, dependencies: ['architectureAnalyzer', 'eventBus', 'logger', 'analysisOutputService', 'analysisRepository'] });
+        // Architecture service - TODO: Phase 2 - Update to use AnalysisOrchestrator
+        // this.container.register('architectureService', (architectureAnalyzer, eventBus, logger, analysisOutputService, analysisRepository) => {
+        //     const ArchitectureService = require('@domain/services/ArchitectureService');
+        //     return new ArchitectureService(architectureAnalyzer, eventBus, logger, analysisOutputService, analysisRepository);
+        // }, { singleton: true, dependencies: ['architectureAnalyzer', 'eventBus', 'logger', 'analysisOutputService', 'analysisRepository'] });
 
-        // Analysis Controller
-        this.container.register('analysisController', (codeQualityService, securityService, performanceService, architectureService, logger, analysisOutputService, analysisRepository, projectRepository) => {
-            const AnalysisController = require('@presentation/api/AnalysisController');
-            return new AnalysisController(codeQualityService, securityService, performanceService, architectureService, logger, analysisOutputService, analysisRepository, projectRepository);
-        }, { singleton: true, dependencies: ['codeQualityService', 'securityService', 'performanceService', 'architectureService', 'logger', 'analysisOutputService', 'analysisRepository', 'projectRepository'] });
+        // Analysis Controller - TODO: Phase 2 - Update to use AnalysisOrchestrator
+        // this.container.register('analysisController', (codeQualityService, securityService, performanceService, architectureService, logger, analysisOutputService, analysisRepository, projectRepository) => {
+        //     const AnalysisController = require('@presentation/api/AnalysisController');
+        //     return new AnalysisController(codeQualityService, securityService, performanceService, architectureService, logger, analysisOutputService, analysisRepository, projectRepository);
+        // }, { singleton: true, dependencies: ['codeQualityService', 'securityService', 'performanceService', 'architectureService', 'logger', 'analysisOutputService', 'analysisRepository', 'projectRepository'] });
 
             // Auto-Finish System
         this.container.register('autoFinishSystem', (cursorIDEService, browserManager, ideManager) => {
@@ -327,11 +327,38 @@ class ServiceRegistry {
             return new AIService();
         }, { singleton: true });
 
-        // Project analyzer - REMOVED (using ProjectAnalysisStep instead)
-        // this.container.register('projectAnalyzer', () => {
-        //     const ProjectAnalyzer = require('../external/ProjectAnalyzer');
-        //     return new ProjectAnalyzer();
-        // }, { singleton: true });
+        // Analysis Orchestrator (Phase 2: Step delegation)
+        this.container.register('analysisOrchestrator', (stepRegistry, eventBus, logger, analysisRepository) => {
+            const AnalysisOrchestrator = require('../external/AnalysisOrchestrator');
+            return new AnalysisOrchestrator({
+                stepRegistry,
+                eventBus,
+                logger,
+                analysisRepository
+            });
+        }, { singleton: true, dependencies: ['stepRegistry', 'eventBus', 'logger', 'analysisRepository'] });
+
+        // Test Orchestrator (Step delegation)
+        this.container.register('testOrchestrator', (stepRegistry, eventBus, logger) => {
+            const TestOrchestrator = require('../external/TestOrchestrator');
+            return new TestOrchestrator({
+                stepRegistry,
+                eventBus,
+                logger,
+                testRepository: null // Not needed for step delegation
+            });
+        }, { singleton: true, dependencies: ['stepRegistry', 'eventBus', 'logger'] });
+
+        // Project analyzer - Stub for Phase 1 compatibility
+        this.container.register('projectAnalyzer', () => {
+            // TODO: Phase 2 - Remove this stub and use AnalysisOrchestrator
+            return {
+                analyzeProject: async () => ({ id: 'stub', type: 'project', result: { stub: true } }),
+                analyzeCodeQuality: async () => ({ id: 'stub', type: 'code-quality', result: { stub: true } }),
+                detectPatterns: async () => ({ patterns: [] }),
+                identifyDependencies: async () => ({ dependencies: [] })
+            };
+        }, { singleton: true });
 
         // Code quality analyzer - REMOVED (using CodeQualityAnalysisStep instead)
         // this.container.register('codeQualityAnalyzer', () => {
@@ -363,11 +390,11 @@ class ServiceRegistry {
         //     return new TechStackAnalyzer();
         // }, { singleton: true });
 
-        // Dependency analyzer
-        this.container.register('dependencyAnalyzer', (monorepoStrategy, singleRepoStrategy) => {
-            const DependencyAnalyzer = require('../external/OLD6');
-            return new DependencyAnalyzer({ monorepoStrategy, singleRepoStrategy });
-        }, { singleton: true, dependencies: ['monorepoStrategy', 'singleRepoStrategy'] });
+        // Dependency analyzer - REMOVED (using DependencyAnalysisStep instead)
+        // this.container.register('dependencyAnalyzer', (monorepoStrategy, singleRepoStrategy) => {
+        //     const DependencyAnalyzer = require('../external/OLD6');
+        //     return new DependencyAnalyzer({ monorepoStrategy, singleRepoStrategy });
+        // }, { singleton: true, dependencies: ['monorepoStrategy', 'singleRepoStrategy'] });
 
         // Step Registry Service
         this.container.register('stepRegistry', () => {
@@ -396,21 +423,23 @@ class ServiceRegistry {
             });
         }, { singleton: true, dependencies: ['logger', 'eventBus'] });
 
-        // Test Analyzer Tools
-        this.container.register('testAnalyzer', () => {
-            const TestAnalyzer = require('../external/OLD9');
-            return new TestAnalyzer();
-        }, { singleton: true });
-
+        // Test Orchestrator Tools
         this.container.register('testFixer', () => {
             const TestFixer = require('../external/TestFixer');
             return new TestFixer();
         }, { singleton: true });
 
-        this.container.register('coverageAnalyzer', () => {
-            const CoverageAnalyzer = require('../external/OLD3');
-            return new CoverageAnalyzer();
-        }, { singleton: true });
+        // Test Analyzer - REMOVED (using TestOrchestrator instead)
+        // this.container.register('testAnalyzer', () => {
+        //     const TestAnalyzer = require('../external/OLD9');
+        //     return new TestAnalyzer();
+        // }, { singleton: true });
+
+        // Coverage Analyzer - REMOVED (using TestOrchestrator instead)
+        // this.container.register('coverageAnalyzer', () => {
+        //     const CoverageAnalyzer = require('../external/OLD3');
+        //     return new CoverageAnalyzer();
+        // }, { singleton: true });
 
         this.container.register('testReportParser', () => {
             const TestReportParser = require('@domain/services/TestReportParser');
@@ -422,10 +451,15 @@ class ServiceRegistry {
             return new TestFixTaskGenerator(taskRepository);
         }, { singleton: true, dependencies: ['taskRepository'] });
 
-        this.container.register('testCorrectionService', (testAnalyzer, testFixer, coverageAnalyzer, eventBus, logger) => {
+        this.container.register('testCorrectionService', (testOrchestrator, testFixer, eventBus, logger) => {
             const TestCorrectionService = require('@domain/services/TestCorrectionService');
-            return new TestCorrectionService(testAnalyzer, testFixer, coverageAnalyzer, eventBus, logger);
-        }, { singleton: true, dependencies: ['testAnalyzer', 'testFixer', 'coverageAnalyzer', 'eventBus', 'logger'] });
+            return new TestCorrectionService({
+                testOrchestrator,
+                testFixer,
+                eventBus,
+                logger
+            });
+        }, { singleton: true, dependencies: ['testOrchestrator', 'testFixer', 'eventBus', 'logger'] });
 
         this.container.register('generateTestsHandler', (aiService, projectAnalyzer, eventBus, logger) => {
             const GenerateTestsHandler = require('@application/handlers/categories/generate/GenerateTestsHandler');

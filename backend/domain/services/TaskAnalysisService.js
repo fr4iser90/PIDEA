@@ -7,13 +7,13 @@ const TaskType = require('../value-objects/TaskType');
 const TaskPriority = require('../value-objects/TaskPriority');
 const AISuggestion = require('../value-objects/AISuggestion');
 const AIService = require('@external/AIService');
-const ProjectAnalyzer = require('@infrastructure/external/OLD7');
+// Phase 2: Using AnalysisOrchestrator instead of OLD7
 const Task = require('../entities/Task');
 const Logger = require('@logging/Logger');
 const logger = new Logger('Logger');
 
 class TaskAnalysisService {
-  constructor(cursorIDEService, eventBus, logger, aiService, projectAnalyzer) {
+  constructor(cursorIDEService, eventBus, logger, aiService, projectAnalyzer, analysisOrchestrator) {
     this.cursorIDEService = cursorIDEService || {};
     this.eventBus = eventBus || { emit: () => {} };
     this.logger = logger || { info: () => {}, error: () => {}, warn: () => {} };
@@ -24,6 +24,12 @@ class TaskAnalysisService {
       generateRecommendations: async () => ({}),
       analyzePerformance: async () => ({})
     };
+    // Phase 2: Using AnalysisOrchestrator as primary analysis engine
+    this.analysisOrchestrator = analysisOrchestrator || {
+      executeAnalysis: async () => ({}),
+      executeMultipleAnalyses: async () => ({})
+    };
+    // Keep projectAnalyzer for backward compatibility during transition
     this.projectAnalyzer = projectAnalyzer || {
       analyzeProject: async () => ({}),
       analyzeCodeQuality: async () => ({}),
@@ -103,11 +109,11 @@ class TaskAnalysisService {
    */
   async analyzeProjectAndGenerateTasks(projectId, projectPath, options = {}) {
     try {
-      // Analyze project structure
-      const projectAnalysis = await this.projectAnalyzer.analyzeProject(projectPath);
+      // Phase 2: Use AnalysisOrchestrator for project analysis
+      const projectAnalysis = await this.analysisOrchestrator.executeAnalysis('project', projectPath, options);
       
       // Generate AI-powered suggestions
-      const aiSuggestions = await this.aiService.generateTaskSuggestions(projectAnalysis, options);
+      const aiSuggestions = await this.aiService.generateTaskSuggestions(projectAnalysis.result, options);
       
       // Convert suggestions to project-based tasks
       const tasks = aiSuggestions.suggestions.map(suggestion => 
@@ -128,7 +134,7 @@ class TaskAnalysisService {
       return {
         projectId,
         projectPath,
-        analysis: projectAnalysis,
+        analysis: projectAnalysis.result,
         tasks,
         aiSuggestions,
         timestamp: new Date()

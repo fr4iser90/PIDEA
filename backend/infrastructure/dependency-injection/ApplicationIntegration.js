@@ -71,7 +71,7 @@ class ApplicationIntegration {
         this.securityService = this.serviceRegistry.getService('securityService');
         this.performanceService = this.serviceRegistry.getService('performanceService');
         this.architectureService = this.serviceRegistry.getService('architectureService');
-        this.dependencyAnalyzer = this.serviceRegistry.getService('dependencyAnalyzer');
+        // this.dependencyAnalyzer = this.serviceRegistry.getService('dependencyAnalyzer'); // REMOVED - using DependencyAnalysisStep
 
         this.logger.info('Domain services initialized with DI');
     }
