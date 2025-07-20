@@ -149,6 +149,7 @@ class StepRegistry {
     try {
       const files = await fs.readdir(categoryPath);
       const jsFiles = files.filter(file => file.endsWith('.js'));
+      let loadedCount = 0;
 
       for (const file of jsFiles) {
         try {
@@ -159,17 +160,18 @@ class StepRegistry {
           const executor = stepModule.execute || null;
           const stepName = config.name || path.basename(file, '.js');
           
-                await this.registerStep(stepName, config, category, executor);
+          await this.registerStep(stepName, config, category, executor);
+          loadedCount++;
+        } catch (error) {
+          this.logger.error(`❌ Failed to load step "${file}" from category "${category}":`, error.message);
+        }
+      }
+      
+      // Log summary instead of individual steps
+      this.logger.info(`📦 Loaded ${loadedCount} steps from category "${category}"`);
     } catch (error) {
-      this.logger.error(`❌ Failed to load step "${file}" from category "${category}":`, error.message);
+      this.logger.error(`❌ Failed to load category "${category}":`, error.message);
     }
-  }
-  
-  // Log summary instead of individual steps
-  this.logger.info(`📦 Loaded ${jsFiles.length} steps from category "${category}"`);
-} catch (error) {
-  this.logger.error(`❌ Failed to load category "${category}":`, error.message);
-}
   }
 
   /**

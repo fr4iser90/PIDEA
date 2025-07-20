@@ -5,6 +5,19 @@
       "description": "Einheitlicher Flow für alle Tasks: Task + Prompt → IDE → Validieren → 3x Complete-Check → Test → npm run dev",
       "steps": [
         {
+          "name": "create-chat",
+          "type": "ide",
+          "description": "Create new chat session",
+          "step": "CreateChatStep",
+          "options": {
+            "title": "Task Execution Session",
+            "metadata": {
+              "workflow": "standard-task-workflow",
+              "autoCreated": true
+            }
+          }
+        },
+        {
           "name": "send-to-ide",
           "type": "ide_send_message",
           "description": "Send task to IDE with prompt",
@@ -296,6 +309,54 @@
         "autoConfirm": true,
         "createBranch": false,
         "timeout": 180000
+      }
+    },
+    "chat-management-workflow": {
+      "name": "Chat Management Workflow",
+      "description": "Workflow for managing chat sessions",
+      "steps": [
+        {
+          "name": "create-chat",
+          "type": "ide",
+          "description": "Create new chat session",
+          "step": "CreateChatStep",
+          "options": {
+            "title": "New Analysis Session"
+          }
+        },
+        {
+          "name": "list-chats",
+          "type": "ide",
+          "description": "List available chat sessions",
+          "step": "ListChatsStep",
+          "options": {
+            "limit": 10,
+            "includeArchived": false
+          }
+        },
+        {
+          "name": "switch-chat",
+          "type": "ide",
+          "description": "Switch to specific chat session",
+          "step": "SwitchChatStep",
+          "options": {
+            "sessionId": "{{list_chats.sessions[0].id}}"
+          }
+        },
+        {
+          "name": "get-history",
+          "type": "ide",
+          "description": "Get chat history",
+          "step": "GetChatHistoryStep",
+          "options": {
+            "limit": 50
+          }
+        }
+      ],
+      "options": {
+        "autoConfirm": true,
+        "createBranch": false,
+        "timeout": 120000
       }
     }
   },

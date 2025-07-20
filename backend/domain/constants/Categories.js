@@ -28,7 +28,13 @@ const STANDARD_CATEGORIES = {
   IDE: 'ide',
   
   // Version Control Categories
-  GIT: 'git'
+  GIT: 'git',
+  
+  // Terminal Categories
+  TERMINAL: 'terminal',
+  
+  // Chat Categories
+  CHAT: 'chat'
 };
 
 /**
@@ -50,6 +56,8 @@ const CATEGORY_DESCRIPTIONS = {
   [STANDARD_CATEGORIES.ANALYZE]: 'Legacy analysis operations (deprecated, use ANALYSIS)',
   [STANDARD_CATEGORIES.IDE]: 'IDE integration, chat commands, session management',
   [STANDARD_CATEGORIES.GIT]: 'Git operations, version control, branch management',
+  [STANDARD_CATEGORIES.TERMINAL]: 'Terminal operations, command execution, process management',
+  [STANDARD_CATEGORIES.CHAT]: 'Chat operations, message handling, conversation management',
   [STANDARD_CATEGORIES.COMPLETION]: 'Task completion, process completion, workflow completion'
 };
 
