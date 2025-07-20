@@ -453,11 +453,7 @@ class Application {
     this.authMiddleware = new AuthMiddleware(this.authService);
 
     // Initialize controllers with Application Services
-    const AuthController = require('./presentation/api/AuthController');
-    this.authController = new AuthController({ 
-        authApplicationService: this.serviceRegistry.getService('authApplicationService'),
-        logger: this.serviceRegistry.getService('logger')
-    });
+    this.authController = this.serviceRegistry.getService('authController');
     
     const WebChatController = require('./presentation/api/WebChatController');
     this.webChatController = new WebChatController({

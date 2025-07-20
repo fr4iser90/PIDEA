@@ -60,10 +60,10 @@ class AuthController {
       const responseData = {
         success: true,
         data: {
-          user: user.toJSON(),
-          accessToken: session.accessToken,
-          refreshToken: session.refreshToken,
-          expiresAt: session.expiresAt
+          user: result.data.user,
+          accessToken: result.data.session.accessToken,
+          refreshToken: result.data.session.refreshToken,
+          expiresAt: result.data.session.expiresAt
         }
       };
 
@@ -76,14 +76,14 @@ class AuthController {
       });
 
       // Set httpOnly cookies for security
-      res.cookie('accessToken', session.accessToken, {
+      res.cookie('accessToken', result.data.session.accessToken, {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'strict',
         maxAge: 2 * 60 * 60 * 1000 // 2 hours
       });
       
-      res.cookie('refreshToken', session.refreshToken, {
+      res.cookie('refreshToken', result.data.session.refreshToken, {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'strict',
@@ -112,17 +112,15 @@ class AuthController {
         });
       }
 
-      // Refresh session
-      const session = await this.authService.refreshUserSession(refreshToken);
-      const user = await this.userRepository.findById(session.userId);
+      // Refresh session using application service
+      const result = await this.authApplicationService.refreshToken(refreshToken);
 
       res.json({
         success: true,
         data: {
-          user: user.toJSON(),
-          accessToken: session.accessToken,
-          refreshToken: session.refreshToken,
-          expiresAt: session.expiresAt
+          accessToken: result.data.accessToken,
+          refreshToken: result.data.refreshToken,
+          expiresAt: result.data.expiresAt
         }
       });
     } catch (error) {
@@ -141,10 +139,10 @@ class AuthController {
 
       if (sessionId) {
         // Logout specific session
-        await this.authService.logoutSession(sessionId);
+        await this.authApplicationService.logout(sessionId);
       } else if (req.user) {
         // Logout all user sessions
-        await this.authService.logoutUser(req.user.id);
+        await this.authApplicationService.logout(req.user.id);
       } else {
         return res.status(400).json({
           success: false,

@@ -17,17 +17,15 @@ const ServiceLogger = require('@logging/ServiceLogger');
 
 class WebChatApplicationService {
   constructor({
-    sendMessageHandler,
-    getChatHistoryHandler,
+    stepRegistry,
     cursorIDEService,
     authService,
     chatSessionService,
     eventBus,
     logger
   }) {
-    // Application handlers (proper layer access)
-    this.sendMessageHandler = sendMessageHandler;
-    this.getChatHistoryHandler = getChatHistoryHandler;
+    // Step Registry for chat operations
+    this.stepRegistry = stepRegistry;
     
     // Domain services
     this.cursorIDEService = cursorIDEService;
@@ -73,8 +71,13 @@ class WebChatApplicationService {
         }
       }
       
-      // Create command with required fields for handler
-      const command = {
+      // Execute chat message step
+      const step = this.stepRegistry.getStep('chat', 'ide_send_message_enhanced');
+      if (!step) {
+        throw new Error('Chat message step not found');
+      }
+      
+      const stepData = {
         message: message.trim(),
         requestedBy: requestedBy,
         sessionId: sessionId,
@@ -88,8 +91,7 @@ class WebChatApplicationService {
         }
       };
       
-      // Execute command through application handler
-      const result = await this.sendMessageHandler.handle(command);
+      const result = await step.execute(stepData);
       
       // Publish event if event bus is available
       if (this.eventBus) {
@@ -101,25 +103,16 @@ class WebChatApplicationService {
         });
       }
       
-      this.logger.info('✅ Chat message sent successfully:', { 
-        messageId: result.messageId,
-        sessionId: result.sessionId?.substring(0, 8) + '...'
-      });
-      
       return {
-        success: true,
-        data: {
-          messageId: result.messageId,
-          response: result.response,
-          sessionId: result.sessionId,
-          timestamp: result.timestamp,
-          codeBlocks: result.codeBlocks || []
-        }
+        messageId: result.messageId,
+        response: result.response,
+        sessionId: result.sessionId,
+        timestamp: result.timestamp,
+        codeBlocks: result.codeBlocks || []
       };
-      
     } catch (error) {
-      this.logger.error('❌ Failed to send chat message:', error);
-      throw new Error(`Failed to send chat message: ${error.message}`);
+      this.logger.error('Send message error:', error);
+      throw error;
     }
   }
 
@@ -140,48 +133,31 @@ class WebChatApplicationService {
         userId: userContext.userId
       });
       
-      // Authenticate user if auth service is available
-      if (this.authService && userContext.userId) {
-        const isAuthorized = await this.authService.authorizeUser(userContext.userId, 'chat:read');
-        if (!isAuthorized) {
-          throw new Error('User not authorized to read chat history');
-        }
+      // Execute chat history step
+      const step = this.stepRegistry.getStep('chat', 'get_chat_history_step');
+      if (!step) {
+        throw new Error('Chat history step not found');
       }
       
-      // Create query for handler
-      const query = {
-        sessionId,
-        limit,
-        offset,
+      const stepData = {
+        sessionId: sessionId,
+        limit: parseInt(limit),
+        offset: parseInt(offset),
         userId: userContext.userId,
-        metadata: {
-          requestedBy: userContext.userId,
-          timestamp: new Date()
-        }
+        includeUserData: userContext.isAdmin || false
       };
       
-      // Execute query through application handler
-      const result = await this.getChatHistoryHandler.handle(query);
-      
-      this.logger.info('✅ Chat history retrieved successfully:', { 
-        messageCount: result.messages?.length,
-        sessionId: sessionId?.substring(0, 8) + '...'
-      });
+      const result = await step.execute(stepData);
       
       return {
-        success: true,
-        data: {
-          messages: result.messages,
-          sessionId: result.sessionId,
-          totalCount: result.totalCount,
-          hasMore: result.hasMore,
-          timestamp: new Date().toISOString()
-        }
+        messages: result.messages,
+        sessionId: result.sessionId,
+        totalCount: result.totalCount,
+        hasMore: result.hasMore
       };
-      
     } catch (error) {
-      this.logger.error('❌ Failed to get chat history:', error);
-      throw new Error(`Failed to get chat history: ${error.message}`);
+      this.logger.error('Get chat history error:', error);
+      throw error;
     }
   }
 

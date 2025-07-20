@@ -1,6 +1,5 @@
 const TerminalMonitor = require('./terminal/TerminalMonitor');
 const WorkspacePathDetector = require('./workspace/WorkspacePathDetector');
-const ChatMessageHandler = require('./chat/ChatMessageHandler');
 const ChatHistoryExtractor = require('./chat/ChatHistoryExtractor');
 const PackageJsonAnalyzer = require('./dev-server/PackageJsonAnalyzer');
 const ServiceLogger = require('@logging/ServiceLogger');
@@ -17,7 +16,6 @@ class WindsurfIDEService {
     this.terminalMonitor = new TerminalMonitor(browserManager, eventBus);
     this.packageJsonAnalyzer = new PackageJsonAnalyzer(eventBus);
     this.workspacePathDetector = new WorkspacePathDetector(browserManager, ideManager);
-    this.chatMessageHandler = new ChatMessageHandler(browserManager);
     this.chatHistoryExtractor = new ChatHistoryExtractor(browserManager, 'windsurf');
     
     // Listen for IDE changes
@@ -60,7 +58,9 @@ class WindsurfIDEService {
       }
     }
     
-    return await this.chatMessageHandler.sendMessage(message, options);
+    // Use IDE Steps instead of ChatMessageHandler
+    this.logger.info('sendMessage() - Using IDE Steps for message sending');
+    throw new Error('sendMessage() - ChatMessageHandler removed, use IDE Steps instead');
   }
 
   async extractChatHistory() {
@@ -104,11 +104,9 @@ class WindsurfIDEService {
     try {
       this.logger.info('Sending prompt to Windsurf IDE:', prompt.substring(0, 100) + '...');
       
-      // Use the chat message handler to send the prompt
-      const result = await this.chatMessageHandler.sendMessage(prompt);
-      
-      this.logger.info('Prompt sent successfully');
-      return result;
+      // Use IDE Steps instead of ChatMessageHandler
+      this.logger.info('postToWindsurf() - Using IDE Steps for message sending');
+      throw new Error('postToWindsurf() - ChatMessageHandler removed, use IDE Steps instead');
     } catch (error) {
       this.logger.error('Error sending prompt to Windsurf:', error);
       throw error;

@@ -5,7 +5,6 @@
  */
 const BaseIDE = require('../BaseIDE');
 const IDETypes = require('../IDETypes');
-const ChatMessageHandler = require('../../chat/ChatMessageHandler');
 const VSCodeExtensionManager = require('@external/VSCodeExtensionManager');
 
 class VSCodeIDE extends BaseIDE {
@@ -13,7 +12,6 @@ class VSCodeIDE extends BaseIDE {
     super(browserManager, ideManager, eventBus, IDETypes.VSCODE);
     
     // Initialize VSCode-specific services with IDE type
-    this.chatMessageHandler = new ChatMessageHandler(browserManager, IDETypes.VSCODE);
     this.extensionManager = new VSCodeExtensionManager();
     
     // Ensure ChatHistoryExtractor is properly configured for VS Code
@@ -303,7 +301,9 @@ class VSCodeIDE extends BaseIDE {
         }
       }
       
-      const result = await this.chatMessageHandler.sendMessage(message, options);
+      // Use IDE Steps instead of ChatMessageHandler
+      logger.info('sendMessage() - Using IDE Steps for message sending');
+      throw new Error('sendMessage() - ChatMessageHandler removed, use IDE Steps instead');
       
       this.updateStatus('message_sent', { messageLength: message.length });
       

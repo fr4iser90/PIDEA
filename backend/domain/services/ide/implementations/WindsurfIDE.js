@@ -5,16 +5,12 @@
  */
 const BaseIDE = require('../BaseIDE');
 const IDETypes = require('../IDETypes');
-const ChatMessageHandler = require('../../chat/ChatMessageHandler');
 const Logger = require('@logging/Logger');
 const logger = new Logger('Logger');
 
 class WindsurfIDE extends BaseIDE {
   constructor(browserManager, ideManager, eventBus = null) {
     super(browserManager, ideManager, eventBus, IDETypes.WINDSURF);
-    
-    // Initialize Windsurf-specific services with IDE type
-    this.chatMessageHandler = new ChatMessageHandler(browserManager, IDETypes.WINDSURF);
     
     // Windsurf-specific configuration
     this.config = {
@@ -277,19 +273,9 @@ class WindsurfIDE extends BaseIDE {
 
   async sendMessage(message, options = {}) {
     try {
-      const page = await this.browserManager.getPage();
-      if (!page) {
-        throw new Error('No page available');
-      }
-
-      // Find chat input and send message
-      const chatInput = '.windsurf-chat-input, .chat-input, [data-chat-input]';
-      const chatSend = '.windsurf-chat-send, .chat-send, [data-chat-send]';
-
-      await page.fill(chatInput, message);
-      await page.click(chatSend);
-
-      return { success: true, message, ideType: IDETypes.WINDSURF };
+      // Use IDE Steps instead of ChatMessageHandler
+      logger.info('sendMessage() - Using IDE Steps for message sending');
+      throw new Error('sendMessage() - ChatMessageHandler removed, use IDE Steps instead');
     } catch (error) {
       return { success: false, error: error.message, message, ideType: IDETypes.WINDSURF };
     }

@@ -28,10 +28,7 @@ describe('DocumentationController', () => {
     mockCursorIDEService = {
       sendMessage: jest.fn(),
       switchToPort: jest.fn(),
-      getActivePort: jest.fn().mockReturnValue(3000),
-      chatMessageHandler: {
-        waitForAIResponse: jest.fn()
-      }
+      getActivePort: jest.fn().mockReturnValue(3000)
     };
 
     mockLogger = {
@@ -1243,76 +1240,6 @@ describe('DocumentationController', () => {
           success: false,
           error: 'Send failed',
           tasksSent: 0
-        })
-      );
-    });
-  });
-
-  describe('collectResponseWithPolling', () => {
-    beforeEach(() => {
-      mockCursorIDEService.chatMessageHandler.waitForAIResponse.mockResolvedValue({
-        success: true,
-        response: 'Polled AI response',
-        duration: 5000
-      });
-    });
-
-    it('should collect response with polling successfully', async () => {
-      const result = await controller.collectResponseWithPolling('test-project', '/path/to/project', 3000);
-
-      expect(result).toEqual(
-        expect.objectContaining({
-          success: true,
-          response: 'Polled AI response',
-          analysis: expect.any(Object)
-        })
-      );
-    });
-
-    it('should handle case when chat message handler is not available', async () => {
-      const controllerWithoutChatHandler = new DocumentationController(
-        mockTaskService,
-        { ...mockCursorIDEService, chatMessageHandler: null },
-        mockLogger,
-        mockIDEManager,
-        mockChatRepository
-      );
-
-      const result = await controllerWithoutChatHandler.collectResponseWithPolling('test-project', '/path/to/project', 3000);
-
-      expect(result).toEqual({
-        success: false,
-        response: null,
-        error: 'ChatMessageHandler not available'
-      });
-    });
-
-    it('should handle polling timeout', async () => {
-      mockCursorIDEService.chatMessageHandler.waitForAIResponse.mockResolvedValue({
-        success: false,
-        response: null,
-        error: 'Timeout'
-      });
-
-      const result = await controller.collectResponseWithPolling('test-project', '/path/to/project', 3000);
-
-      expect(result).toEqual({
-        success: false,
-        response: null,
-        error: 'Timeout'
-      });
-    });
-
-    it('should handle chat repository save errors', async () => {
-      mockChatRepository.saveMessage.mockRejectedValue(new Error('Save failed'));
-
-      const result = await controller.collectResponseWithPolling('test-project', '/path/to/project', 3000);
-
-      // Should still succeed even if save fails
-      expect(result).toEqual(
-        expect.objectContaining({
-          success: true,
-          response: 'Polled AI response'
         })
       );
     });

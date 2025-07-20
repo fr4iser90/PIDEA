@@ -189,33 +189,9 @@ class TaskService {
       // Simple task execution - just send the prompt to Cursor IDE
       const taskPrompt = await this.buildTaskExecutionPrompt(task);
       
-      if (this.cursorIDEService && this.cursorIDEService.chatMessageHandler) {
-        logger.info('🔍 [TaskService] Sending task prompt to Cursor IDE:', { taskId: task.id });
-        
-        const result = await this.cursorIDEService.chatMessageHandler.sendMessage(taskPrompt, {
-          waitForResponse: true,
-          timeout: 300000
-        });
-        
-        logger.info('✅ [TaskService] Task executed successfully via Cursor IDE', {
-          taskId: task.id,
-          result: result
-        });
-        
-        return {
-          success: true,
-          taskId: task.id,
-          taskType: task.type?.value,
-          result: result,
-          message: `Task completed successfully: ${task.title}`,
-          metadata: {
-            executionTime: Date.now(),
-            timestamp: new Date()
-          }
-        };
-      } else {
-        throw new Error('Cursor IDE service not available for task execution');
-      }
+      // Use IDE Steps instead of ChatMessageHandler
+      logger.info('🔍 [TaskService] Using IDE Steps for task execution');
+      throw new Error('TaskService - ChatMessageHandler removed, use IDE Steps instead');
 
     } catch (error) {
       logger.error('❌ [TaskService] Task execution failed:', error.message);
@@ -342,20 +318,9 @@ class TaskService {
         // Execute task using modern methods
         const taskPrompt = await this.buildTaskExecutionPrompt(task);
         
-        if (this.cursorIDEService && this.cursorIDEService.chatMessageHandler) {
-          const result = await this.cursorIDEService.chatMessageHandler.sendMessage(taskPrompt, {
-            waitForResponse: true,
-            timeout: 300000
-          });
-          
-          return {
-            success: true,
-            result: result,
-            message: 'Task executed via Cursor IDE'
-          };
-        } else {
-          throw new Error('Cursor IDE service not available for task execution');
-        }
+        // Use IDE Steps instead of ChatMessageHandler
+        logger.info('🔍 [TaskService] Using IDE Steps for task execution');
+        throw new Error('TaskService - ChatMessageHandler removed, use IDE Steps instead');
       },
       validate: async (context) => ({ isValid: true }),
       canExecute: async (context) => true,
@@ -522,102 +487,9 @@ class TaskService {
       // Build AI prompt for task execution (uses markdown content for doc tasks)
       const aiPrompt = await this.buildTaskExecutionPrompt(task);
       
-      // Use the same working chat mechanism as the frontend
-      if (this.cursorIDEService) {
-        // Try to send via ChatMessageHandler first
-        if (this.cursorIDEService.chatMessageHandler) {
-          logger.info('🤖 [TaskService] Sending refactoring prompt and waiting for AI to finish editing...');
-          
-          try {
-            const result = await this.cursorIDEService.chatMessageHandler.sendMessage(aiPrompt, {
-              waitForResponse: true,
-              timeout: 120000, // 2 minutes timeout
-              checkInterval: 2000 // Check every 2 seconds
-            });
-            
-            logger.info('✅ [TaskService] AI finished editing:', {
-              success: result.success,
-              responseLength: result.response?.length || 0,
-              duration: result.duration
-            });
-            
-            return {
-              success: result.success,
-              prompt: aiPrompt,
-              aiResponse: result.response,
-              message: result.success ? 'AI finished editing codebase' : 'AI editing timed out',
-              duration: result.duration,
-              timestamp: new Date()
-            };
-          } catch (chatError) {
-            logger.warn('⚠️ [TaskService] ChatMessageHandler failed, trying fallback methods:', chatError.message);
-            
-            // Fallback 1: Try direct sendMessage
-            try {
-              await this.cursorIDEService.sendMessage(aiPrompt);
-              logger.info('✅ [TaskService] Refactoring prompt sent via sendMessage (no response waiting)');
-              
-              return {
-                success: true,
-                prompt: aiPrompt,
-                message: 'Refactoring prompt sent to IDE chat (no response waiting)',
-                timestamp: new Date()
-              };
-            } catch (sendError) {
-              logger.warn('⚠️ [TaskService] Direct sendMessage failed, trying browser manager:', sendError.message);
-              
-              // Fallback 2: Try browser manager directly
-              if (this.cursorIDEService.browserManager) {
-                try {
-                  // Use ExecuteIDEActionCommand for sending message via browser
-                  const ExecuteIDEActionCommand = require('@categories/ide/ExecuteIDEActionCommand');
-                  const executeActionCommand = new ExecuteIDEActionCommand({
-                    userId: userId,
-                    port: this.cursorIDEService.ideManager?.getActivePort() || 9222,
-                    action: 'sendMessage',
-                    parameters: { message: aiPrompt },
-                    ideType: 'cursor'
-                  });
-                  
-                  const result = await executeActionCommand.execute({
-                    eventBus: this.cursorIDEService.eventBus,
-                    browserManager: this.cursorIDEService.browserManager
-                  });
-                  
-                  if (result && result.success) {
-                    logger.info('✅ [TaskService] Message sent via modular command fallback');
-                    return {
-                      success: true,
-                      prompt: aiPrompt,
-                      message: 'Refactoring prompt sent via modular command fallback',
-                      timestamp: new Date()
-                    };
-                  }
-                } catch (browserError) {
-                  logger.error('❌ [TaskService] Modular command fallback failed:', browserError.message);
-                }
-              }
-              
-              // If all methods fail, throw the original error
-              throw new Error(`All chat methods failed: ${chatError.message}`);
-            }
-          }
-        } else {
-          // Fallback: use the sendMessage method directly
-          await this.cursorIDEService.sendMessage(aiPrompt);
-          logger.info('✅ [TaskService] Refactoring prompt sent via sendMessage (no response waiting)');
-          
-          return {
-            success: true,
-            prompt: aiPrompt,
-            message: 'Refactoring prompt sent to IDE chat (no response waiting)',
-            timestamp: new Date()
-          };
-        }
-      } else {
-        logger.info('⚠️ [TaskService] CursorIDEService nicht verfügbar!');
-        throw new Error('CursorIDEService not available');
-      }
+      // Use IDE Steps instead of ChatMessageHandler
+      logger.info('🤖 [TaskService] Using IDE Steps for AI refactoring');
+      throw new Error('TaskService - ChatMessageHandler removed, use IDE Steps instead');
     } catch (error) {
       throw new Error(`AI refactoring failed: ${error.message}`);
     }

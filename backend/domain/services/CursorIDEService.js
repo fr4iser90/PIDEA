@@ -1,6 +1,5 @@
 const TerminalMonitor = require('./terminal/TerminalMonitor');
 const WorkspacePathDetector = require('./workspace/WorkspacePathDetector');
-const ChatMessageHandler = require('./chat/ChatMessageHandler');
 const ChatHistoryExtractor = require('./chat/ChatHistoryExtractor');
 const PackageJsonAnalyzer = require('./dev-server/PackageJsonAnalyzer');
 const Logger = require('@logging/Logger');
@@ -16,7 +15,6 @@ class CursorIDEService {
     this.terminalMonitor = new TerminalMonitor(browserManager, eventBus);
     this.packageJsonAnalyzer = new PackageJsonAnalyzer(eventBus);
     this.workspacePathDetector = new WorkspacePathDetector(browserManager, ideManager);
-    this.chatMessageHandler = new ChatMessageHandler(browserManager);
     this.chatHistoryExtractor = new ChatHistoryExtractor(browserManager);
     
     // Listen for IDE changes to reset package.json cache (optional, if you cache results)
@@ -60,7 +58,9 @@ class CursorIDEService {
       }
     }
     
-    return await this.chatMessageHandler.sendMessage(message, options);
+    // Use IDE Steps instead of ChatMessageHandler
+    logger.info('sendMessage() - Using IDE Steps for message sending');
+    throw new Error('sendMessage() - ChatMessageHandler removed, use IDE Steps instead');
   }
 
   async extractChatHistory() {
@@ -104,11 +104,9 @@ class CursorIDEService {
     try {
       logger.info('Sending prompt to Cursor IDE:', prompt.substring(0, 100) + '...');
       
-      // Use the chat message handler to send the prompt
-      const result = await this.chatMessageHandler.sendMessage(prompt);
-      
-      logger.info('Prompt sent successfully');
-      return result;
+      // Use IDE Steps instead of ChatMessageHandler
+      logger.info('postToCursor() - Using IDE Steps for message sending');
+      throw new Error('postToCursor() - ChatMessageHandler removed, use IDE Steps instead');
     } catch (error) {
       logger.error('Error sending prompt to Cursor:', error);
       throw error;

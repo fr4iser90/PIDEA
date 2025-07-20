@@ -189,7 +189,7 @@
 | `domain/services/auto-finish/TodoParser.js` | 43% | 51% | 28% | 41% | ❌ |
 | `domain/services/auto-test/AutoTestFixSystem.js` | 6% | 8% | 0% | 5% | ❌ |
 | `domain/services/chat/ChatHistoryExtractor.js` | 14% | 7% | 0% | 7% | ❌ |
-| `domain/services/chat/ChatMessageHandler.js` | 17% | 4% | 0% | 7% | ❌ |
+
 | `domain/services/dev-server/CDPWorkspaceDetector.js` | 0% | 0% | 0% | 0% | ❌ |
 | `domain/services/dev-server/PackageJsonAnalyzer.js` | 11% | 4% | 0% | 5% | ❌ |
 | `domain/services/ide-mirror/CompressionEngine.js` | 33% | 20% | 4% | 19% | ❌ |
@@ -949,9 +949,7 @@
   - Current: Funcs 14%, Lines 7%, Branches 0%
   - Task: Improve test coverage for ChatHistoryExtractor.js
 
-- **domain/services/chat/ChatMessageHandler.js** (7% → 80%)
-  - Current: Funcs 17%, Lines 4%, Branches 0%
-  - Task: Improve test coverage for ChatMessageHandler.js
+
 
 - **domain/services/dev-server/CDPWorkspaceDetector.js** (0% → 80%)
   - Current: Funcs 0%, Lines 0%, Branches 0%

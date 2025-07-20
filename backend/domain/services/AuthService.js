@@ -14,6 +14,37 @@ class AuthService {
     this.jwtRefreshSecret = jwtRefreshSecret;
   }
 
+  async login(credentials) {
+    if (!credentials || !credentials.email || !credentials.password) {
+      throw new Error('Email and password are required');
+    }
+
+    logger.info('🔍 Login attempt for email:', credentials.email);
+
+    // Authenticate user
+    const user = await this.authenticateUser(credentials.email, credentials.password);
+    
+    // Create user session
+    const session = await this.createUserSession(user);
+
+    logger.info('✅ Login successful for user:', credentials.email);
+
+    return {
+      user: {
+        id: user.id,
+        email: user.email,
+        role: user.role,
+        name: user.name
+      },
+      session: {
+        id: session.id,
+        accessToken: session.accessToken,
+        refreshToken: session.refreshToken,
+        expiresAt: session.expiresAt
+      }
+    };
+  }
+
   // Domain methods
   async authenticateUser(email, password) {
     if (!email || !password) {
@@ -189,6 +220,108 @@ class AuthService {
     }
 
     await this.userSessionRepository.delete(sessionId);
+  }
+
+  async logout(userId) {
+    logger.info('🔍 Logout request for user:', userId);
+    await this.logoutUser(userId);
+    return { success: true, message: 'Logged out successfully' };
+  }
+
+  async validateToken(token) {
+    logger.info('🔍 Validating token');
+    const result = await this.validateAccessToken(token);
+    return result;
+  }
+
+  async refreshToken(refreshToken) {
+    logger.info('🔍 Refreshing token');
+    const session = await this.refreshUserSession(refreshToken);
+    return {
+      accessToken: session.accessToken,
+      refreshToken: session.refreshToken,
+      expiresAt: session.expiresAt
+    };
+  }
+
+  async getUserProfile(userId) {
+    logger.info('🔍 Getting user profile for:', userId);
+    const user = await this.userRepository.findById(userId);
+    if (!user) {
+      throw new Error('User not found');
+    }
+    return {
+      id: user.id,
+      email: user.email,
+      role: user.role,
+      name: user.name,
+      createdAt: user.createdAt
+    };
+  }
+
+  async updateUserProfile(userId, profileData) {
+    logger.info('🔍 Updating user profile for:', userId);
+    const user = await this.userRepository.findById(userId);
+    if (!user) {
+      throw new Error('User not found');
+    }
+    
+    // Update allowed fields
+    if (profileData.name) user.name = profileData.name;
+    if (profileData.email) user.email = profileData.email;
+    
+    await this.userRepository.save(user);
+    return {
+      id: user.id,
+      email: user.email,
+      role: user.role,
+      name: user.name,
+      updatedAt: new Date()
+    };
+  }
+
+  async changePassword(userId, oldPassword, newPassword) {
+    logger.info('🔍 Changing password for user:', userId);
+    const user = await this.userRepository.findById(userId);
+    if (!user) {
+      throw new Error('User not found');
+    }
+
+    // Verify old password
+    const isValidOldPassword = await user.verifyPassword(oldPassword);
+    if (!isValidOldPassword) {
+      throw new Error('Invalid old password');
+    }
+
+    // Set new password
+    await user.setPassword(newPassword);
+    await this.userRepository.save(user);
+    
+    return { success: true, message: 'Password changed successfully' };
+  }
+
+  async register(userData) {
+    logger.info('🔍 Registering new user:', userData.email);
+    
+    // Check if user already exists
+    const existingUser = await this.userRepository.findByEmail(userData.email);
+    if (existingUser) {
+      throw new Error('User with this email already exists');
+    }
+
+    // Create new user
+    const user = new User(userData);
+    await this.userRepository.save(user);
+
+    logger.info('✅ User registered successfully:', userData.email);
+    
+    return {
+      id: user.id,
+      email: user.email,
+      role: user.role,
+      name: user.name,
+      createdAt: user.createdAt
+    };
   }
 
   // Token generation

@@ -136,6 +136,12 @@ class ServiceRegistry {
             return new IDEController(ideManager, eventBus, cursorIDEService, taskRepository, terminalLogCaptureService, terminalLogReader);
         }, { singleton: true, dependencies: ['ideManager', 'eventBus', 'cursorIDEService', 'taskRepository', 'terminalLogCaptureService', 'terminalLogReader'] });
 
+        // AuthController - coordinates authentication endpoints
+        this.container.register('authController', (authApplicationService) => {
+            const AuthController = require('@presentation/api/AuthController');
+            return new AuthController({ authApplicationService });
+        }, { singleton: true, dependencies: ['authApplicationService'] });
+
         // Project Mapping Service
         this.container.register('projectMappingService', (monorepoStrategy) => {
             const ProjectMappingService = require('@domain/services/ProjectMappingService');
@@ -372,18 +378,17 @@ class ServiceRegistry {
         }, { singleton: true, dependencies: ['ideManager', 'eventBus', 'cursorIDEService', 'taskRepository', 'terminalLogCaptureService', 'terminalLogReader', 'browserManager', 'logger'] });
 
         // WebChat Application Service - coordinates chat use cases
-        this.container.register('webChatApplicationService', (sendMessageHandler, getChatHistoryHandler, cursorIDEService, authService, chatSessionService, eventBus, logger) => {
+        this.container.register('webChatApplicationService', (stepRegistry, cursorIDEService, authService, chatSessionService, eventBus, logger) => {
             const WebChatApplicationService = require('@application/services/WebChatApplicationService');
             return new WebChatApplicationService({
-                sendMessageHandler,
-                getChatHistoryHandler,
+                stepRegistry,
                 cursorIDEService,
                 authService,
                 chatSessionService,
                 eventBus,
                 logger
             });
-        }, { singleton: true, dependencies: ['sendMessageHandler', 'getChatHistoryHandler', 'cursorIDEService', 'authService', 'chatSessionService', 'eventBus', 'logger'] });
+        }, { singleton: true, dependencies: ['stepRegistry', 'cursorIDEService', 'authService', 'chatSessionService', 'eventBus', 'logger'] });
 
         // Workflow Application Service - coordinates workflow execution use cases
         this.container.register('workflowApplicationService', (commandBus, queryBus, eventBus, application, ideManager, taskService, workflowExecutionService, projectMappingService, logger) => {
@@ -411,13 +416,14 @@ class ServiceRegistry {
         }, { singleton: true, dependencies: ['logger', 'eventBus'] });
 
         // Auth Application Service - coordinates authentication use cases
-        this.container.register('authApplicationService', (logger, eventBus) => {
+        this.container.register('authApplicationService', (authService, logger, eventBus) => {
             const AuthApplicationService = require('@application/services/AuthApplicationService');
             return new AuthApplicationService({
+                authService,
                 logger,
                 eventBus
             });
-        }, { singleton: true, dependencies: ['logger', 'eventBus'] });
+        }, { singleton: true, dependencies: ['authService', 'logger', 'eventBus'] });
 
         // Streaming Application Service - coordinates streaming operations
         this.container.register('streamingApplicationService', (logger, eventBus, commandBus) => {
@@ -564,18 +570,17 @@ class ServiceRegistry {
     }
 
     registerWebChatApplicationService() {
-        this.container.register('webChatApplicationService', (sendMessageHandler, getChatHistoryHandler, cursorIDEService, authService, chatSessionService, eventBus, logger) => {
+        this.container.register('webChatApplicationService', (stepRegistry, cursorIDEService, authService, chatSessionService, eventBus, logger) => {
             const WebChatApplicationService = require('@application/services/WebChatApplicationService');
             return new WebChatApplicationService({
-                sendMessageHandler,
-                getChatHistoryHandler,
+                stepRegistry,
                 cursorIDEService,
                 authService,
                 chatSessionService,
                 eventBus,
                 logger
             });
-        }, { singleton: true, dependencies: ['sendMessageHandler', 'getChatHistoryHandler', 'cursorIDEService', 'authService', 'chatSessionService', 'eventBus', 'logger'] });
+        }, { singleton: true, dependencies: ['stepRegistry', 'cursorIDEService', 'authService', 'chatSessionService', 'eventBus', 'logger'] });
     }
 
     registerWorkflowApplicationService() {
@@ -604,13 +609,14 @@ class ServiceRegistry {
     }
 
     registerAuthApplicationService() {
-        this.container.register('authApplicationService', (logger, eventBus) => {
+        this.container.register('authApplicationService', (authService, logger, eventBus) => {
             const AuthApplicationService = require('@application/services/AuthApplicationService');
             return new AuthApplicationService({
+                authService,
                 logger,
                 eventBus
             });
-        }, { singleton: true, dependencies: ['logger', 'eventBus'] });
+        }, { singleton: true, dependencies: ['authService', 'logger', 'eventBus'] });
     }
 
     registerStreamingApplicationService() {
@@ -1252,6 +1258,12 @@ class ServiceRegistry {
                     return new IDEController(ideManager, eventBus, cursorIDEService, taskRepository, terminalLogCaptureService, terminalLogReader);
                 }, { singleton: true, dependencies: ['ideManager', 'eventBus', 'cursorIDEService', 'taskRepository', 'terminalLogCaptureService', 'terminalLogReader'] });
                 break;
+            case 'authController':
+                this.container.register('authController', (authApplicationService) => {
+                    const AuthController = require('@presentation/api/AuthController');
+                    return new AuthController({ authApplicationService });
+                }, { singleton: true, dependencies: ['authApplicationService'] });
+                break;
             case 'projectMappingService':
                 this.container.register('projectMappingService', (monorepoStrategy) => {
                     const ProjectMappingService = require('@domain/services/ProjectMappingService');
@@ -1523,6 +1535,7 @@ class ServiceRegistry {
         this.addServiceDefinition('terminalLogCaptureService', ['ideManager', 'browserManager', 'ideMirrorService'], 'domain');
         this.addServiceDefinition('terminalLogReader', [], 'domain');
         this.addServiceDefinition('ideController', ['ideManager', 'eventBus', 'cursorIDEService', 'taskRepository', 'terminalLogCaptureService', 'terminalLogReader'], 'domain');
+        this.addServiceDefinition('authController', ['authApplicationService'], 'domain');
         this.addServiceDefinition('projectMappingService', ['monorepoStrategy'], 'domain');
         this.addServiceDefinition('workspacePathDetector', [], 'domain');
         this.addServiceDefinition('ideWorkspaceDetectionService', ['ideManager', 'projectRepository'], 'domain');
@@ -1550,10 +1563,10 @@ class ServiceRegistry {
         this.addServiceDefinition('projectApplicationService', ['projectRepository', 'ideManager', 'workspacePathDetector', 'projectMappingService', 'logger'], 'application');
         this.addServiceDefinition('taskApplicationService', ['taskService', 'taskRepository', 'aiService', 'projectAnalyzer', 'projectMappingService', 'ideManager', 'docsImportService', 'logger'], 'application');
         this.addServiceDefinition('ideApplicationService', ['ideManager', 'eventBus', 'cursorIDEService', 'taskRepository', 'terminalLogCaptureService', 'terminalLogReader', 'browserManager', 'logger'], 'application');
-        this.addServiceDefinition('webChatApplicationService', ['sendMessageHandler', 'getChatHistoryHandler', 'cursorIDEService', 'authService', 'chatSessionService', 'eventBus', 'logger'], 'application');
+        this.addServiceDefinition('webChatApplicationService', ['stepRegistry', 'cursorIDEService', 'authService', 'chatSessionService', 'eventBus', 'logger'], 'application');
         this.addServiceDefinition('workflowApplicationService', ['commandBus', 'queryBus', 'eventBus', 'ideManager', 'taskService', 'projectMappingService', 'logger'], 'application');
         this.addServiceDefinition('gitApplicationService', ['logger', 'eventBus'], 'application');
-        this.addServiceDefinition('authApplicationService', ['logger', 'eventBus'], 'application');
+        this.addServiceDefinition('authApplicationService', ['authService', 'logger', 'eventBus'], 'application');
         this.addServiceDefinition('streamingApplicationService', ['logger', 'eventBus', 'commandBus'], 'application');
         this.addServiceDefinition('contentLibraryApplicationService', ['logger', 'eventBus'], 'application');
         this.addServiceDefinition('codeExplorerApplicationService', ['logger', 'eventBus', 'browserManager'], 'application');

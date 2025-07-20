@@ -19,7 +19,6 @@ class BaseIDE extends IDEInterface {
     this.terminalMonitor = null;
     this.packageJsonAnalyzer = null;
     this.workspacePathDetector = null;
-    this.chatMessageHandler = null;
     this.chatHistoryExtractor = null;
     
     // Status tracking

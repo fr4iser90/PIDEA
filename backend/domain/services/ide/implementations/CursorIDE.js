@@ -5,14 +5,10 @@
  */
 const BaseIDE = require('../BaseIDE');
 const IDETypes = require('../IDETypes');
-const ChatMessageHandler = require('../../chat/ChatMessageHandler');
 
 class CursorIDE extends BaseIDE {
   constructor(browserManager, ideManager, eventBus = null) {
     super(browserManager, ideManager, eventBus, IDETypes.CURSOR);
-    
-    // Initialize Cursor-specific services with IDE type
-    this.chatMessageHandler = new ChatMessageHandler(browserManager, IDETypes.CURSOR);
     
     // Cursor-specific properties
     this.cursorFeatures = [
@@ -274,7 +270,9 @@ class CursorIDE extends BaseIDE {
         }
       }
       
-      const result = await this.chatMessageHandler.sendMessage(message, options);
+      // Use IDE Steps instead of ChatMessageHandler
+      logger.info('sendMessage() - Using IDE Steps for message sending');
+      throw new Error('sendMessage() - ChatMessageHandler removed, use IDE Steps instead');
       
       this.updateStatus('message_sent', { messageLength: message.length });
       

@@ -1,6 +1,5 @@
 const TerminalMonitor = require('./terminal/TerminalMonitor');
 const WorkspacePathDetector = require('./workspace/WorkspacePathDetector');
-const VSCodeChatHandler = require('./vscode/VSCodeChatHandler');
 const ChatHistoryExtractor = require('./chat/ChatHistoryExtractor');
 const PackageJsonAnalyzer = require('./dev-server/PackageJsonAnalyzer');
 const VSCodeExtensionManager = require('@external/VSCodeExtensionManager');
@@ -16,7 +15,6 @@ class VSCodeIDEService {
     this.terminalMonitor = new TerminalMonitor(browserManager, eventBus);
     this.packageJsonAnalyzer = new PackageJsonAnalyzer(eventBus);
     this.workspacePathDetector = new WorkspacePathDetector(browserManager, ideManager);
-    this.chatMessageHandler = new VSCodeChatHandler(browserManager);
     this.chatHistoryExtractor = new ChatHistoryExtractor(browserManager, 'vscode');
     this.extensionManager = new VSCodeExtensionManager();
     
@@ -60,7 +58,9 @@ class VSCodeIDEService {
       }
     }
     
-    return await this.chatMessageHandler.sendMessage(message, options);
+    // Use IDE Steps instead of ChatMessageHandler
+    logger.info('sendMessage() - Using IDE Steps for message sending');
+    throw new Error('sendMessage() - ChatMessageHandler removed, use IDE Steps instead');
   }
 
   async extractChatHistory() {
@@ -104,11 +104,9 @@ class VSCodeIDEService {
     try {
       logger.info('Sending prompt to VSCode IDE:', prompt.substring(0, 100) + '...');
       
-      // Use the chat message handler to send the prompt
-      const result = await this.chatMessageHandler.sendMessage(prompt);
-      
-      logger.info('Prompt sent successfully');
-      return result;
+      // Use IDE Steps instead of ChatMessageHandler
+      logger.info('postToVSCode() - Using IDE Steps for message sending');
+      throw new Error('postToVSCode() - ChatMessageHandler removed, use IDE Steps instead');
     } catch (error) {
       logger.error('Error sending prompt to VSCode:', error);
       throw error;
