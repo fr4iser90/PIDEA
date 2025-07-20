@@ -3,10 +3,10 @@ const GetChatHistoryHandler = require('@handler-categories/management/GetChatHis
 const AuthService = require('@services/AuthService');
 const Logger = require('@logging/Logger');
 const ServiceLogger = require('@logging/ServiceLogger');
-const logger = new ServiceLogger('ChatController');
+const logger = new ServiceLogger('WebChatController');
 
 
-class ChatController {
+class WebChatController {
   constructor(sendMessageHandler, getChatHistoryHandler, cursorIDEService, authService) {
     this.sendMessageHandler = sendMessageHandler;
     this.getChatHistoryHandler = getChatHistoryHandler;
@@ -392,4 +392,4 @@ class ChatController {
   }
 }
 
-module.exports = ChatController; 
+module.exports = WebChatController; 

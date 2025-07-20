@@ -1,6 +1,6 @@
-const ChatController = require('@api/ChatController');
+const WebChatController = require('@api/WebChatController');
 
-describe('ChatController', () => {
+describe('WebChatController', () => {
   let controller;
   let mockSendMessageHandler;
   let mockGetChatHistoryHandler;
@@ -32,7 +32,7 @@ describe('ChatController', () => {
     };
 
     // Create controller instance
-    controller = new ChatController(
+    controller = new WebChatController(
       mockSendMessageHandler,
       mockGetChatHistoryHandler,
       mockCursorIDEService,
@@ -800,7 +800,7 @@ describe('ChatController', () => {
       await controller.updateUserSettings('user-123', settings);
 
       expect(consoleSpy).toHaveBeenCalledWith(
-        '[ChatController] Updating settings for user user-123:',
+        '[WebChatController] Updating settings for user user-123:',
         settings
       );
 

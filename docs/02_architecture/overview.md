@@ -76,7 +76,7 @@ cursor-chat-agent/
 │   │       └── EventBus.js       # Domain event bus
 │   ├── presentation/             # Presentation Layer
 │   │   ├── api/                  # REST API controllers
-│   │   │   ├── ChatController.js # Chat API endpoints
+│   │   │   ├── WebChatController.js # Chat API endpoints
 │   │   │   ├── IDEController.js  # IDE management API
 │   │   │   └── IDEMirrorController.js # IDE mirror API
 │   │   └── websocket/            # WebSocket handling
@@ -144,7 +144,7 @@ Domain Event → EventBus → WebSocket → Client Update
 - **InMemoryChatRepository**: In-memory data storage
 
 ### Presentation Layer
-- **ChatController**: RESTful chat API endpoints
+- **WebChatController**: RESTful chat API endpoints
 - **IDEController**: IDE management API endpoints
 - **WebSocketManager**: Real-time communication
 - **Frontend**: Modern web interface with multiple views

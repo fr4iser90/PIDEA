@@ -121,7 +121,7 @@ backend/
 │       └── ...
 └── presentation/                    # 🎯 Presentation Layer (API)
     ├── api/                         # REST API
-    │   ├── ChatController.js
+    │   ├── WebChatController.js
     │   ├── TaskController.js
     │   ├── AuthController.js
     │   └── ...

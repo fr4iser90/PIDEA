@@ -160,7 +160,7 @@ backend/infrastructure/
 ```
 backend/presentation/
 ├── api/                         # REST API
-│   ├── ChatController.js
+│   ├── WebChatController.js
 │   ├── TaskController.js
 │   ├── AuthController.js
 │   └── ...

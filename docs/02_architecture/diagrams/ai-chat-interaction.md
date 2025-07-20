@@ -24,7 +24,7 @@ graph TB
 
     %% API Gateway
     subgraph API["🌐 API Gateway"]
-        ChatController[("ChatController<br/>✅ IMPLEMENTED")]
+        WebChatController[("WebChatController<br/>✅ IMPLEMENTED")]
         TaskController[("TaskController<br/>🟡 PARTIAL")]
         DebugController[("DebugController<br/>❌ PLANNED")]
         WebSocket[("WebSocket Server<br/>✅ IMPLEMENTED")]
@@ -108,7 +108,7 @@ graph TB
     classDef realtime fill:#fce4ec,stroke:#ad1457,stroke-width:2px
 
     %% Apply styling with status
-    class ChatUI,FrameworkUI,ChatService,EventBus,APIRepo,ChatController,WebSocket,SendMessageHandler,ChatMessageHandler,AutoFinishSystem,CursorIDEService,BrowserManager,IDEManager,AIService,OpenAI,CompletionDetector,DocumentationWorkflow,RefactorWorkflow,ChatRepo,TaskRepo,WebSocketClient,PollingService,EventEmitter implemented
+    class ChatUI,FrameworkUI,ChatService,EventBus,APIRepo,WebChatController,WebSocket,SendMessageHandler,ChatMessageHandler,AutoFinishSystem,CursorIDEService,BrowserManager,IDEManager,AIService,OpenAI,CompletionDetector,DocumentationWorkflow,RefactorWorkflow,ChatRepo,TaskRepo,WebSocketClient,PollingService,EventEmitter implemented
     class TaskUI,TaskController,WorkflowOrchestrator,PromptManager,ResponseAnalyzer partial
     class DebugUI,DebugController,ContextBuilder,Anthropic,LocalLLM,CustomLLM,QualityChecker,IntentDetector,DebugWorkflow,TestWorkflow,DebugRepo,AnalysisRepo planned
 
@@ -122,12 +122,12 @@ graph TB
     ChatService --> APIRepo
     
     %% API Communication
-    APIRepo --> ChatController
+    APIRepo --> WebChatController
     APIRepo --> TaskController
     APIRepo -.-> DebugController
     
     %% Backend Processing
-    ChatController --> SendMessageHandler
+    WebChatController --> SendMessageHandler
     TaskController --> WorkflowOrchestrator
     DebugController -.-> WorkflowOrchestrator
     
@@ -217,7 +217,7 @@ graph TB
 - **ChatService**: Frontend chat logic
 - **EventBus**: Event-driven communication
 - **APIChatRepository**: API communication
-- **ChatController**: Message handling
+- **WebChatController**: Message handling
 - **WebSocket Server**: Real-time communication
 - **SendMessageHandler**: Message processing
 - **ChatMessageHandler**: IDE chat integration

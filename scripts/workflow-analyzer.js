@@ -228,7 +228,7 @@ class WorkflowAnalyzer {
           'SendMessageHandler',
           'ChatRepository',
           'AIService',
-          'ChatController'
+          'WebChatController'
         ]
       },
       {

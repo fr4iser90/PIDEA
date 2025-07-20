@@ -53,7 +53,7 @@ const DatabaseConnection = require('./infrastructure/database/DatabaseConnection
 const AuthMiddleware = require('./infrastructure/auth/AuthMiddleware');
 
 // Presentation - Only keep what's not in DI
-const ChatController = require('./presentation/api/ChatController');
+const WebChatController = require('./presentation/api/WebChatController');
 const IDEController = require('./presentation/api/IDEController');
 const IDEFeatureController = require('./presentation/api/ide/IDEFeatureController');
 const IDEMirrorController = require('./presentation/api/IDEMirrorController');
@@ -61,10 +61,8 @@ const ContentLibraryController = require('./presentation/api/ContentLibraryContr
 const AuthController = require('./presentation/api/AuthController');
 const TaskController = require('./presentation/api/TaskController');
 const WorkflowController = require('./presentation/api/WorkflowController');
-const AutoFinishController = require('./presentation/api/AutoFinishController');
 const AnalysisController = require('./presentation/api/AnalysisController');
 const GitController = require('./presentation/api/GitController');
-const DocumentationController = require('./presentation/api/DocumentationController');
 const WebSocketManager = require('./presentation/websocket/WebSocketManager');
 const ProjectController = require('./presentation/api/controllers/ProjectController');
 
@@ -281,15 +279,21 @@ class Application {
   }
 
   async initializeDomainServices() {
-    this.logger.info('🔧 Initializing domain services with DI...');
+    this.logger.info('🔧 Initializing domain services with automatic dependency resolution...');
 
-    // Get services through DI container with consistent error handling
+    // Validate dependency resolution before getting services
+    const validation = this.serviceRegistry.getContainer().validateDependencies();
+    if (!validation.isValid) {
+        this.logger.error('Dependency validation failed:', validation);
+        throw new Error(`Dependency validation failed: ${JSON.stringify(validation)}`);
+    }
+
+    // Get services through DI container with automatic dependency resolution
     try {
+        // Core services
         this.cursorIDEService = this.serviceRegistry.getService('cursorIDEService');
         this.authService = this.serviceRegistry.getService('authService');
         this.aiService = this.serviceRegistry.getService('aiService');
-        // TODO: Replace with AnalysisOrchestrator after Phase 2
-        // this.projectAnalyzer = this.serviceRegistry.getService('projectAnalyzer');
         this.recommendationsService = this.serviceRegistry.getService('recommendationsService');
         this.subprojectDetector = this.serviceRegistry.getService('subprojectDetector');
         this.analysisOutputService = this.serviceRegistry.getService('analysisOutputService');
@@ -299,69 +303,54 @@ class Application {
         this.taskRepository = this.serviceRegistry.getService('taskRepository');
         this.taskExecutionRepository = this.serviceRegistry.getService('taskExecutionRepository');
         this.taskService = this.serviceRegistry.getService('taskService');
-    
         this.taskValidationService = this.serviceRegistry.getService('taskValidationService');
         this.taskAnalysisService = this.serviceRegistry.getService('taskAnalysisService');
-        // TODO: Replace with AnalysisOrchestrator after Phase 2
-        // this.codeQualityService = this.serviceRegistry.getService('codeQualityService');
-        // this.securityService = this.serviceRegistry.getService('securityService');
-        // this.performanceService = this.serviceRegistry.getService('performanceService');
-        // this.architectureService = this.serviceRegistry.getService('architectureService');
-        // this.dependencyAnalyzer = this.serviceRegistry.getService('dependencyAnalyzer'); // REMOVED - using DependencyAnalysisStep
         this.monorepoStrategy = this.serviceRegistry.getService('monorepoStrategy');
         this.singleRepoStrategy = this.serviceRegistry.getService('singleRepoStrategy');
+
+        // Workflow and orchestration services
+        this.workflowOrchestrationService = this.serviceRegistry.getService('workflowOrchestrationService');
+        this.gitService = this.serviceRegistry.getService('gitService');
+        this.testOrchestrator = this.serviceRegistry.getService('testOrchestrator');
+
+            // Log dependency statistics
+    const stats = this.serviceRegistry.getContainer().getDependencyStats();
+    this.logger.info('Dependency resolution statistics:', stats);
+
+    // Start all services with lifecycle hooks
+    this.logger.info('Starting services with lifecycle hooks...');
+    const startupResults = await this.serviceRegistry.getContainer().startAllServices();
+    
+    if (startupResults.failed.length > 0) {
+        this.logger.warn('Some services failed to start:', startupResults.failed);
+    }
+    
+    this.logger.info(`Service startup completed: ${startupResults.started.length} started, ${startupResults.failed.length} failed`);
+
     } catch (error) {
         this.logger.error('Failed to get domain services:', error.message);
+        
+        // Get detailed dependency information for debugging
+        const dependencyInfo = this.serviceRegistry.getContainer().getAllDependencyInfo();
+        this.logger.error('Dependency information:', dependencyInfo);
+        
         throw error; // Re-throw because these are critical services
     }
 
     // Set up project context AFTER repositories are available
     await this.setupProjectContext();
 
-    // Get Workflow Orchestration Service
-    try {
-        this.workflowOrchestrationService = this.serviceRegistry.getService('workflowOrchestrationService');
-        // Inject stepRegistry into WorkflowOrchestrationService
-        if (this.workflowOrchestrationService && this.stepRegistry) {
-            this.workflowOrchestrationService.stepRegistry = this.stepRegistry;
-        }
-    } catch (error) {
-        this.logger.warn('WorkflowOrchestrationService not available:', error.message);
-        this.workflowOrchestrationService = { orchestrate: () => ({}) };
-    }
-
-    // Get Git Service
-    try {
-        this.gitService = this.serviceRegistry.getService('gitService');
-    } catch (error) {
-        this.logger.warn('GitService not available:', error.message);
-        this.gitService = { status: () => ({}) };
-    }
-
-    // Get Test Orchestrator Tools
-    try {
-        this.testOrchestrator = this.serviceRegistry.getService('testOrchestrator');
-        this.testFixer = this.serviceRegistry.getService('testFixer');
-        this.testReportParser = this.serviceRegistry.getService('testReportParser');
-        this.testFixTaskGenerator = this.serviceRegistry.getService('testFixTaskGenerator');
-        this.testCorrectionService = this.serviceRegistry.getService('testCorrectionService');
-        this.generateTestsHandler = this.serviceRegistry.getService('generateTestsHandler');
-    } catch (error) {
-        this.logger.warn('Some test services not available:', error.message);
-        // Create fallback services
-        this.testOrchestrator = { executeTest: () => ({ success: false, error: 'TestOrchestrator not available' }) };
-        this.testFixer = { fix: () => ({}) };
-        this.testReportParser = { parse: () => ({}) };
-        this.testFixTaskGenerator = { generate: () => ({}) };
-        this.testCorrectionService = { correct: () => ({}) };
-        this.generateTestsHandler = { handle: () => ({}) };
+    // Update step registry with service registry for dependency injection
+    if (this.stepRegistry && this.serviceRegistry) {
+        this.stepRegistry.serviceRegistry = this.serviceRegistry;
+        this.logger.info('Step Registry updated with DI container');
     }
 
     // Initialize Auto-Finish System
     this.taskSessionRepository = this.databaseConnection.getRepository('TaskSession');
     await this.taskSessionRepository.initialize();
 
-    // Initialize Auto Test Fix System
+    // Initialize Auto Test Fix System with automatic dependency resolution
     this.autoTestFixSystem = new AutoTestFixSystem({
       cursorIDE: this.cursorIDEService,
       browserManager: this.browserManager,
@@ -372,10 +361,7 @@ class Application {
       gitService: this.gitService,
       eventBus: this.eventBus,
       logger: this.logger,
-      testOrchestrator: this.testOrchestrator,
-      testFixer: this.testFixer,
-      testReportParser: this.testReportParser,
-      testFixTaskGenerator: this.testFixTaskGenerator
+      testOrchestrator: this.testOrchestrator
     });
     await this.autoTestFixSystem.initialize();
 
@@ -469,7 +455,7 @@ class Application {
     // Initialize controllers
     this.authController = new AuthController(this.authService, this.userRepository);
     
-    this.chatController = new ChatController(
+    this.webChatController = new WebChatController(
       this.sendMessageHandler,
       this.getChatHistoryHandler,
       this.cursorIDEService,
@@ -524,31 +510,6 @@ class Application {
       logger: this.logger,
       eventBus: this.eventBus
     });
-
-    // AutoFinishController removed - using WorkflowController + Steps instead
-    this.autoFinishController = null;
-
-    this.autoTestFixController = new (require('./presentation/api/controllers/AutoTestFixController'))({
-      autoTestFixSystem: this.autoTestFixSystem,
-      commandBus: this.commandBus,
-      taskService: this.taskService,
-      taskRepository: this.taskRepository,
-      aiService: this.aiService,
-      projectAnalyzer: this.projectAnalyzer,
-      cursorIDEService: this.cursorIDEService,
-      ideManager: this.ideManager,
-      webSocketManager: this.webSocketManager,
-      eventBus: this.eventBus,
-      logger: this.logger
-    });
-
-    this.documentationController = new DocumentationController(
-      this.taskService,
-      this.cursorIDEService,
-      this.logger,
-      this.ideManager,
-      this.chatRepository
-    );
 
     this.projectController = new ProjectController();
 
@@ -682,18 +643,18 @@ class Application {
 
     // Chat routes (protected) - no rate limiting for authenticated users
     this.app.use('/api/chat', this.authMiddleware.authenticate());
-    this.app.post('/api/chat', (req, res) => this.chatController.sendMessage(req, res));
-    this.app.get('/api/chat/history', (req, res) => this.chatController.getChatHistory(req, res));
-    this.app.get('/api/chat/port/:port/history', (req, res) => this.chatController.getPortChatHistory(req, res));
-    this.app.get('/api/chat/status', (req, res) => this.chatController.getConnectionStatus(req, res));
+    this.app.post('/api/chat', (req, res) => this.webChatController.sendMessage(req, res));
+    this.app.get('/api/chat/history', (req, res) => this.webChatController.getChatHistory(req, res));
+    this.app.get('/api/chat/port/:port/history', (req, res) => this.webChatController.getPortChatHistory(req, res));
+    this.app.get('/api/chat/status', (req, res) => this.webChatController.getConnectionStatus(req, res));
 
     // Settings routes (protected)
     this.app.use('/api/settings', this.authMiddleware.authenticate());
-    this.app.get('/api/settings', (req, res) => this.chatController.getSettings(req, res));
+    this.app.get('/api/settings', (req, res) => this.webChatController.getSettings(req, res));
 
     // Prompts routes (protected)
     this.app.use('/api/prompts', this.authMiddleware.authenticate());
-    this.app.get('/api/prompts/quick', (req, res) => this.chatController.getQuickPrompts(req, res));
+    this.app.get('/api/prompts/quick', (req, res) => this.webChatController.getQuickPrompts(req, res));
 
     // IDE routes (protected)
     this.app.use('/api/ide', this.authMiddleware.authenticate());
@@ -813,11 +774,10 @@ class Application {
     // this.completionRoutes.setupRoutes(this.app); // Removed as per edit hint
 
     // Documentation Framework routes (protected) - PROJECT-BASED
-    this.app.post('/api/projects/:projectId/documentation/analyze', (req, res) => this.documentationController.analyzeDocumentation(req, res));
+    // REMOVED: DocumentationController routes - using WorkflowController + Steps instead
     
     // Bulk Documentation Analysis route (protected)
-    this.app.use('/api/projects/analyze-all', this.authMiddleware.authenticate());
-    this.app.post('/api/projects/analyze-all/documentation', (req, res) => this.documentationController.analyzeAllProjects(req, res));
+    // REMOVED: DocumentationController routes - using WorkflowController + Steps instead
 
     // Script Generation routes (protected) - PROJECT-BASED
     this.app.use('/api/projects/:projectId/scripts', this.authMiddleware.authenticate());
@@ -861,33 +821,8 @@ class Application {
     this.app.get('/api/projects/:projectId/docs-tasks', (req, res) => this.ideController.getDocsTasks(req, res));
     this.app.get('/api/projects/:projectId/docs-tasks/:id', (req, res) => this.ideController.getDocsTaskDetails(req, res));
 
-    // Auto Finish routes (protected)
-    this.app.use('/api/projects/:projectId/auto-finish', this.authMiddleware.authenticate());
-    this.app.post('/api/projects/:projectId/auto-finish/process', (req, res) => this.autoFinishController.processTodoList(req, res));
-    this.app.get('/api/projects/:projectId/auto-finish/status', (req, res) => this.autoFinishController.getSessionStatus(req, res));
-    this.app.post('/api/projects/:projectId/auto-finish/cancel', (req, res) => this.autoFinishController.cancelSession(req, res));
-    this.app.get('/api/projects/:projectId/auto-finish/stats', (req, res) => this.autoFinishController.getProjectStats(req, res));
-    this.app.get('/api/projects/:projectId/auto-finish/patterns', (req, res) => this.autoFinishController.getSupportedPatterns(req, res));
-    this.app.get('/api/projects/:projectId/auto-finish/health', (req, res) => this.autoFinishController.healthCheck(req, res));
-
-    // Auto Test Fix routes (protected) - PROJECT-BASED
-    this.app.use('/api/projects/:projectId/auto/tests', this.authMiddleware.authenticate());
-    this.app.post('/api/projects/:projectId/auto/tests/analyze', (req, res) => this.autoTestFixController.analyzeProjectTests(req, res));
-    this.app.post('/api/projects/:projectId/auto/tests/fix', (req, res) => {
-          this.logger.info('Auto test fix route hit', {
-      projectId: '[REDACTED_PROJECT_ID]', 
-      method: req.method,
-      url: '[REDACTED_URL]' 
-    });
-      this.autoTestFixController.executeAutoTestFix(req, res);
-    });
-    this.app.get('/api/projects/:projectId/auto/tests/load-tasks', (req, res) => this.autoTestFixController.loadExistingTasks(req, res));
-    this.app.get('/api/projects/:projectId/auto/tests/status/:sessionId', (req, res) => this.autoTestFixController.getSessionStatus(req, res));
-    this.app.post('/api/projects/:projectId/auto/tests/cancel/:sessionId', (req, res) => this.autoTestFixController.cancelSession(req, res));
-    this.app.get('/api/projects/:projectId/auto/tests/stats', (req, res) => this.autoTestFixController.getStats(req, res));
-    this.app.get('/api/projects/:projectId/auto/tests/tasks', (req, res) => this.autoTestFixController.getAutoTestTasks(req, res));
-    this.app.get('/api/projects/:projectId/auto/tests/tasks/:taskId', (req, res) => this.autoTestFixController.getAutoTestTaskDetails(req, res));
-    this.app.post('/api/projects/:projectId/auto/tests/tasks/:taskId/retry', (req, res) => this.autoTestFixController.retryAutoTestTask(req, res));
+    // Auto Finish routes (protected) - REMOVED: using WorkflowController + Steps instead
+    // Auto Test Fix routes (protected) - REMOVED: using WorkflowController + Steps instead
 
     // Workflow routes (protected) - PROJECT-BASED
     this.app.use('/api/projects/:projectId/workflow', this.authMiddleware.authenticate());
@@ -1076,6 +1011,18 @@ class Application {
     this.logger.info('Stopping...');
     
     this.isRunning = false;
+
+    // Stop all services with lifecycle hooks
+    if (this.serviceRegistry && this.serviceRegistry.getContainer()) {
+      this.logger.info('Stopping services with lifecycle hooks...');
+      const shutdownResults = await this.serviceRegistry.getContainer().stopAllServices();
+      
+      if (shutdownResults.failed.length > 0) {
+        this.logger.warn('Some services failed to stop:', shutdownResults.failed);
+      }
+      
+      this.logger.info(`Service shutdown completed: ${shutdownResults.stopped.length} stopped, ${shutdownResults.failed.length} failed`);
+    }
 
     if (this.server) {
       this.server.close();
