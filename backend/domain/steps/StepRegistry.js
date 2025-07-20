@@ -13,11 +13,12 @@ const IStandardRegistry = require('../interfaces/IStandardRegistry');
 const ServiceLogger = require('@logging/ServiceLogger');
 
 class StepRegistry {
-  constructor() {
+  constructor(serviceRegistry = null) {
     this.steps = new Map();
     this.categories = new Map();
     this.executors = new Map();
     this.logger = new ServiceLogger('StepRegistry');
+    this.serviceRegistry = serviceRegistry;
   }
 
   /**
@@ -215,11 +216,14 @@ class StepRegistry {
         throw new Error(`No executor found for step "${name}"`);
       }
 
+      // Enhance context with services from DI container
+      const enhancedContext = this.enhanceContextWithServices(context);
+
       // Execute step
       this.logger.info(`🚀 Executing step "${name}"...`);
       const startTime = Date.now();
       
-      const result = await executor(context, options);
+      const result = await executor(enhancedContext, options);
       
       const endTime = Date.now();
       const duration = endTime - startTime;
@@ -255,6 +259,30 @@ class StepRegistry {
         timestamp: new Date()
       };
     }
+  }
+
+  /**
+   * Enhance context with services from DI container
+   * @param {Object} context - Original context
+   * @returns {Object} Enhanced context with services
+   */
+  enhanceContextWithServices(context) {
+    const enhancedContext = { ...context };
+    
+    // Add getService method to context
+    enhancedContext.getService = (serviceName) => {
+      if (!this.serviceRegistry) {
+        throw new Error(`Service "${serviceName}" not available - serviceRegistry not found`);
+      }
+      
+      try {
+        return this.serviceRegistry.getService(serviceName);
+      } catch (error) {
+        throw new Error(`Service "${serviceName}" not found in DI container: ${error.message}`);
+      }
+    };
+    
+    return enhancedContext;
   }
 
   /**

@@ -49,18 +49,14 @@ class CodeQualityAnalysisStep {
       // Validate context
       this.validateContext(context);
       
-      // Get code quality analyzer from context or application
+      // Get code quality analyzer from context via dependency injection
       let codeQualityAnalyzer = context.codeQualityAnalyzer;
       if (!codeQualityAnalyzer) {
-        const application = global.application;
-        if (!application) {
-          throw new Error('Application not available and codeQualityAnalyzer not provided in context');
-        }
-        codeQualityAnalyzer = application.codeQualityAnalyzer;
+        codeQualityAnalyzer = context.getService('codeQualityAnalyzer');
       }
       
       if (!codeQualityAnalyzer) {
-        throw new Error('Code quality analyzer not available');
+        throw new Error('Code quality analyzer not available in context');
       }
 
       const projectPath = context.projectPath;

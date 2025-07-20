@@ -209,8 +209,8 @@ class Application {
     this.logger.info('🏗️ Initializing infrastructure...');
 
     // Initialize DI system first
-    const { getServiceRegistry } = require('./infrastructure/di/ServiceRegistry');
-    const { getProjectContextService } = require('./infrastructure/di/ProjectContextService');
+    const { getServiceRegistry } = require('./infrastructure/dependency-injection/ServiceRegistry');
+    const { getProjectContextService } = require('./infrastructure/dependency-injection/ProjectContextService');
     
     this.serviceRegistry = getServiceRegistry();
     this.projectContext = getProjectContextService();
@@ -259,9 +259,6 @@ class Application {
   async initializeDomainServices() {
     this.logger.info('🔧 Initializing domain services with DI...');
 
-    // Set up project context
-    await this.setupProjectContext();
-
     // Get services through DI container with consistent error handling
     try {
         this.cursorIDEService = this.serviceRegistry.getService('cursorIDEService');
@@ -296,6 +293,9 @@ class Application {
         this.logger.error('Failed to get domain services:', error.message);
         throw error; // Re-throw because these are critical services
     }
+
+    // Set up project context AFTER repositories are available
+    await this.setupProjectContext();
 
     // Get Workflow Orchestration Service
     try {
@@ -365,9 +365,9 @@ class Application {
     });
     await this.autoTestFixSystem.initialize();
 
-    // Initialize Step Registry
+    // Initialize Step Registry with DI container
     const { initializeSteps } = require('./domain/steps');
-    await initializeSteps();
+    await initializeSteps(this.serviceRegistry);
     this.stepRegistry = require('./domain/steps').getStepRegistry();
     this.logger.info('Step Registry initialized');
 

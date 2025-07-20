@@ -16,9 +16,15 @@ const stepBuilder = new StepBuilder(stepRegistry);
 /**
  * Initialize the step system
  */
-async function initializeSteps() {
+async function initializeSteps(serviceRegistry = null) {
   try {
     logger.info('🚀 Initializing step system...');
+    
+    // Update the global stepRegistry instance with serviceRegistry
+    if (serviceRegistry) {
+      stepRegistry.serviceRegistry = serviceRegistry;
+      logger.info('✅ StepRegistry updated with DI container');
+    }
     
     // Load steps from categories
     await stepRegistry.loadStepsFromCategories();

@@ -8,8 +8,8 @@ Systematic migration of all backend services from direct logger instantiation to
 ### ✅ Existing Infrastructure (DON'T TOUCH)
 - [x] `backend/infrastructure/logging/Logger.js` - Core logger implementation
 - [x] `backend/infrastructure/logging/ServiceLogger.js` - Service-specific logger wrapper
-- [x] `backend/infrastructure/di/ServiceRegistry.js` - DI container with logger registration
-- [x] `backend/infrastructure/di/ServiceContainer.js` - DI container implementation
+- [x] `backend/infrastructure/dependency-injection/ServiceRegistry.js` - DI container with logger registration
+- [x] `backend/infrastructure/dependency-injection/ServiceContainer.js` - DI container implementation
 - [x] `backend/Application.js` - Uses ServiceLogger correctly
 
 ### ❌ Current Issues
@@ -61,8 +61,8 @@ Systematic migration of all backend services from direct logger instantiation to
 ### High Priority (DI-Enabled Services)
 These services already use DI and need immediate logger migration:
 
-- [ ] `backend/infrastructure/di/ServiceRegistry.js` - Already uses `this.container`
-- [ ] `backend/infrastructure/di/ApplicationIntegration.js` - Already uses `this.serviceRegistry`
+- [ ] `backend/infrastructure/dependency-injection/ServiceRegistry.js` - Already uses `this.container`
+- [ ] `backend/infrastructure/dependency-injection/ApplicationIntegration.js` - Already uses `this.serviceRegistry`
 - [ ] `backend/application/handlers/categories/management/GetChatHistoryHandler.js` - Already uses `this.serviceRegistry`
 
 ### Domain Services (Core Business Logic)
@@ -176,7 +176,7 @@ this.container.register('serviceName', (logger) => {
 
 ### Configuration
 - Logger configuration in `backend/infrastructure/logging/Logger.js`
-- DI container configuration in `backend/infrastructure/di/ServiceRegistry.js`
+- DI container configuration in `backend/infrastructure/dependency-injection/ServiceRegistry.js`
 - Service registration patterns
 
 ## Success Criteria
@@ -273,8 +273,8 @@ this.container.register('serviceName', (logger) => {
 ### ✅ Completed Items
 - [x] File: `backend/infrastructure/logging/Logger.js` - Status: Working perfectly
 - [x] File: `backend/infrastructure/logging/ServiceLogger.js` - Status: Working perfectly
-- [x] File: `backend/infrastructure/di/ServiceRegistry.js` - Status: Has logger registration
-- [x] File: `backend/infrastructure/di/ServiceContainer.js` - Status: DI container works
+- [x] File: `backend/infrastructure/dependency-injection/ServiceRegistry.js` - Status: Has logger registration
+- [x] File: `backend/infrastructure/dependency-injection/ServiceContainer.js` - Status: DI container works
 - [x] File: `backend/Application.js` - Status: Uses ServiceLogger correctly
 - [x] Analysis: Identified 100+ files needing migration - Status: Complete
 

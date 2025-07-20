@@ -38,20 +38,15 @@ class ConfirmationStep {
     try {
       logger.info('Starting ConfirmationStep execution');
       
-      // Get services from global application (like analysis steps)
-      const application = global.application;
-      if (!application) {
-        throw new Error('Application not available');
-      }
-
-      const taskRepository = application.taskRepository;
-      const terminalService = application.terminalService;
+      // Get services via dependency injection (NOT global.application!)
+      const taskRepository = context.getService('TaskRepository');
+      const terminalService = context.getService('TerminalService');
       
       if (!taskRepository) {
-        throw new Error('TaskRepository not available');
+        throw new Error('TaskRepository not available in context');
       }
       if (!terminalService) {
-        throw new Error('TerminalService not available');
+        throw new Error('TerminalService not available in context');
       }
 
       const { projectId, workspacePath = process.cwd(), taskId } = context;

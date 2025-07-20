@@ -133,26 +133,40 @@ class TestingStep {
    */
   async runTestAnalysis(projectPath, context) {
     try {
-      // Get test analyzer from application
-      const application = global.application;
-      const testAnalyzer = application?.testAnalyzer || application?.TestAnalyzer;
+      // Get services via dependency injection
+      const testService = context.getService('TestService');
+      const terminalService = context.getService('TerminalService');
+      const projectService = context.getService('ProjectService');
+      const coverageService = context.getService('CoverageService');
+      const reportService = context.getService('ReportService');
       
-      if (!testAnalyzer) {
-        logger.warn('⚠️ TestAnalyzer not available, skipping test analysis');
-        return { success: false, error: 'TestAnalyzer not available' };
+      if (!testService) {
+        throw new Error('TestService not available in context');
+      }
+      if (!terminalService) {
+        throw new Error('TerminalService not available in context');
+      }
+      if (!projectService) {
+        throw new Error('ProjectService not available in context');
+      }
+      if (!coverageService) {
+        throw new Error('CoverageService not available in context');
+      }
+      if (!reportService) {
+        throw new Error('ReportService not available in context');
       }
 
       // Analyze failing tests
-      const failingTests = await testAnalyzer.analyzeFailingTests(projectPath);
+      const failingTests = await testService.analyzeFailingTests(projectPath);
       
       // Analyze legacy tests
-      const legacyTests = await testAnalyzer.analyzeLegacyTests(projectPath);
+      const legacyTests = await testService.analyzeLegacyTests(projectPath);
       
       // Analyze complex tests
-      const complexTests = await testAnalyzer.analyzeComplexTests(projectPath);
+      const complexTests = await testService.analyzeComplexTests(projectPath);
       
       // Run tests to get current status
-      const testResults = await testAnalyzer.runTests(projectPath);
+      const testResults = await testService.runTests(projectPath);
 
       return {
         success: true,
@@ -182,29 +196,22 @@ class TestingStep {
    */
   async runTestGeneration(projectPath, context) {
     try {
-      // Get test generation services from application
-      const application = global.application;
-      const generateTestsHandler = application?.generateTestsHandler;
+      // Get test generation services via dependency injection
+      const testGenerationService = context.getService('TestGenerationService');
       
-      if (!generateTestsHandler) {
-        logger.warn('⚠️ GenerateTestsHandler not available, skipping test generation');
-        return { success: false, error: 'GenerateTestsHandler not available' };
+      if (!testGenerationService) {
+        logger.warn('⚠️ TestGenerationService not available, skipping test generation');
+        return { success: false, error: 'TestGenerationService not available' };
       }
 
-      // Create test generation command
-      const { GenerateTestsCommand } = require('@application/commands/GenerateTestsCommand');
-const Logger = require('@logging/Logger');
-const logger = new Logger('Logger');
-      const command = new GenerateTestsCommand({
+      // Execute test generation
+      const result = await testGenerationService.generateTests({
         projectPath: projectPath,
         generateUnitTests: true,
         generateIntegrationTests: true,
         generateE2ETests: false,
         testFramework: 'jest'
       });
-
-      // Execute test generation
-      const result = await generateTestsHandler.handle(command);
 
       return {
         success: true,
@@ -222,9 +229,8 @@ const logger = new Logger('Logger');
    */
   async runTestFixing(projectPath, context) {
     try {
-      // Get test fixing services from application
-      const application = global.application;
-      const testCorrectionService = application?.testCorrectionService;
+      // Get test fixing services via dependency injection
+      const testCorrectionService = context.getService('TestCorrectionService');
       
       if (!testCorrectionService) {
         logger.warn('⚠️ TestCorrectionService not available, skipping test fixing');
@@ -252,20 +258,19 @@ const logger = new Logger('Logger');
    */
   async runCoverageAnalysis(projectPath, context) {
     try {
-      // Get coverage analyzer from application
-      const application = global.application;
-      const coverageAnalyzer = application?.coverageAnalyzer || application?.CoverageAnalyzer;
+      // Get coverage analyzer via dependency injection
+      const coverageService = context.getService('CoverageService');
       
-      if (!coverageAnalyzer) {
-        logger.warn('⚠️ CoverageAnalyzer not available, skipping coverage analysis');
-        return { success: false, error: 'CoverageAnalyzer not available' };
+      if (!coverageService) {
+        logger.warn('⚠️ CoverageService not available, skipping coverage analysis');
+        return { success: false, error: 'CoverageService not available' };
       }
 
       // Get current coverage
-      const coverage = await coverageAnalyzer.getCurrentCoverage(projectPath);
+      const coverage = await coverageService.getCurrentCoverage(projectPath);
       
       // Analyze coverage gaps
-      const coverageGaps = await coverageAnalyzer.analyzeCoverageGaps(projectPath);
+      const coverageGaps = await coverageService.analyzeCoverageGaps(projectPath);
 
       return {
         success: true,
@@ -284,17 +289,16 @@ const logger = new Logger('Logger');
    */
   async runAutoTestFix(projectPath, context) {
     try {
-      // Get auto test fix system from application
-      const application = global.application;
-      const autoTestFixSystem = application?.autoTestFixSystem || application?.AutoTestFixSystem;
+      // Get auto test fix system via dependency injection
+      const autoTestFixService = context.getService('AutoTestFixService');
       
-      if (!autoTestFixSystem) {
-        logger.warn('⚠️ AutoTestFixSystem not available, skipping auto test fix');
-        return { success: false, error: 'AutoTestFixSystem not available' };
+      if (!autoTestFixService) {
+        logger.warn('⚠️ AutoTestFixService not available, skipping auto test fix');
+        return { success: false, error: 'AutoTestFixService not available' };
       }
 
       // Execute auto test fix workflow
-      const result = await autoTestFixSystem.executeAutoTestFixWorkflow({
+      const result = await autoTestFixService.executeAutoTestFixWorkflow({
         projectPath: projectPath,
         projectId: context.projectId || 'system',
         userId: context.userId || 'system',

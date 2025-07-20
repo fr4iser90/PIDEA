@@ -56,15 +56,10 @@ class AnalysisStep {
       // Validate context
       this.validateContext(context);
       
-      // Get step registry from application
-      const application = global.application;
-      if (!application) {
-        throw new Error('Application not available');
-      }
-
-      const { stepRegistry } = application;
+      // Get step registry via dependency injection
+      const stepRegistry = context.getService('stepRegistry');
       if (!stepRegistry) {
-        throw new Error('Step registry not available');
+        throw new Error('Step registry not available in context');
       }
 
       const projectPath = context.projectPath;
@@ -324,7 +319,7 @@ class AnalysisStep {
       );
 
       // Get analysis repository from context or dependency injection
-      const analysisRepository = this.getAnalysisRepository();
+      const analysisRepository = this.getAnalysisRepository(context);
       if (analysisRepository) {
         await analysisRepository.save(analysisResult);
         logger.info(`✅ Analysis results saved to database for project: ${projectId}`);
@@ -355,15 +350,11 @@ class AnalysisStep {
     }
   }
 
-  getAnalysisRepository() {
-    // Try to get repository from global context or dependency injection
-    if (global.analysisRepository) {
-      return global.analysisRepository;
-    }
-    
-    // Try to get from application context
-    if (global.application && global.application.analysisRepository) {
-      return global.application.analysisRepository;
+  getAnalysisRepository(context) {
+    // Try to get repository from context via dependency injection
+    const analysisRepository = context.getService('analysisRepository');
+    if (analysisRepository) {
+      return analysisRepository;
     }
     
     return null;

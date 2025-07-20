@@ -49,18 +49,14 @@ class DependencyAnalysisStep {
       // Validate context
       this.validateContext(context);
       
-      // Get dependency analyzer from context or application
+      // Get dependency analyzer from context via dependency injection
       let dependencyAnalyzer = context.dependencyAnalyzer;
       if (!dependencyAnalyzer) {
-        const application = global.application;
-        if (!application) {
-          throw new Error('Application not available and dependencyAnalyzer not provided in context');
-        }
-        dependencyAnalyzer = application.dependencyAnalyzer;
+        dependencyAnalyzer = context.getService('dependencyAnalyzer');
       }
       
       if (!dependencyAnalyzer) {
-        throw new Error('Dependency analyzer not available');
+        throw new Error('Dependency analyzer not available in context');
       }
 
       const projectPath = context.projectPath;

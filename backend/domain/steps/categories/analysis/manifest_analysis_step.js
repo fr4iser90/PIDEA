@@ -56,18 +56,14 @@ class ManifestAnalysisStep {
       
       logger.info(`📊 Starting manifest analysis for: ${projectPath}`);
 
-      // Get manifest analyzer from context or application
+      // Get manifest analyzer from context via dependency injection
       let manifestAnalyzer = context.manifestAnalyzer;
       if (!manifestAnalyzer) {
-        const application = global.application;
-        if (!application) {
-          throw new Error('Application not available and manifestAnalyzer not provided in context');
-        }
-        manifestAnalyzer = application.manifestAnalyzer;
+        manifestAnalyzer = context.getService('manifestAnalyzer');
       }
       
       if (!manifestAnalyzer) {
-        throw new Error('Manifest analyzer not available');
+        throw new Error('Manifest analyzer not available in context');
       }
 
       // Analyze manifests

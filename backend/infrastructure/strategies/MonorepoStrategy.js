@@ -1,5 +1,6 @@
 /**
- * MonorepoStrategy - Handles monorepo project structures and optimization
+ * MonorepoStrategy - Router to Step System for Monorepo Analysis
+ * Detects monorepo type and calls existing steps for analysis
  */
 const path = require('path');
 const fs = require('fs').promises;
@@ -11,6 +12,7 @@ class MonorepoStrategy {
         this.eventBus = dependencies.eventBus;
         this.fileSystemService = dependencies.fileSystemService;
         this.projectAnalyzer = dependencies.projectAnalyzer;
+        this.container = dependencies.container;
     }
 
     /**
@@ -88,44 +90,6 @@ class MonorepoStrategy {
     }
 
     /**
-     * Analyze monorepo structure
-     * @param {string} projectPath - Project path
-     * @returns {Promise<Object>} Monorepo analysis
-     */
-    async analyzeMonorepo(projectPath) {
-        try {
-            this.logger.info('MonorepoStrategy: Analyzing monorepo');
-
-            const analysis = {
-                isMonorepo: true, // Skip the check to avoid infinite loop
-                type: await this.getMonorepoType(projectPath),
-                workspaces: await this.getWorkspaces(projectPath),
-                packages: await this.getPackages(projectPath),
-                dependencies: await this.analyzeDependencies(projectPath),
-                buildTools: await this.detectBuildTools(projectPath),
-                sharedConfigs: await this.getSharedConfigs(projectPath),
-                recommendations: await this.generateRecommendations(projectPath)
-            };
-
-            if (this.eventBus) {
-                this.eventBus.publish('monorepo.analysis.completed', {
-                    projectPath,
-                    analysis,
-                    timestamp: new Date()
-                });
-            }
-
-            return analysis;
-        } catch (error) {
-            this.logger.error('MonorepoStrategy: Failed to analyze monorepo', {
-                projectPath,
-                error: error.message
-            });
-            throw new Error(`Failed to analyze monorepo: ${error.message}`);
-        }
-    }
-
-    /**
      * Get monorepo type
      * @param {string} projectPath - Project path
      * @returns {Promise<string>} Monorepo type
@@ -143,7 +107,7 @@ class MonorepoStrategy {
             } else if (await this.hasYarnWorkspaces(projectPath)) {
                 return 'yarn';
             } else {
-                return 'custom';
+                return 'npm'; // Default to npm workspaces
             }
         } catch {
             return 'unknown';
@@ -180,579 +144,116 @@ class MonorepoStrategy {
     }
 
     /**
-     * Get workspaces configuration
+     * Get manifest (package.json)
      * @param {string} projectPath - Project path
-     * @returns {Promise<Object>} Workspaces config
+     * @returns {Promise<Object>} Package.json content
      */
-    async getWorkspaces(projectPath) {
+    async getManifest(projectPath) {
         try {
             const packageJsonPath = path.join(projectPath, 'package.json');
             const packageJson = JSON.parse(await fs.readFile(packageJsonPath, 'utf8'));
             
             return {
-                workspaces: packageJson.workspaces || [],
-                private: packageJson.private || false,
                 name: packageJson.name,
-                version: packageJson.version
+                version: packageJson.version,
+                workspaces: packageJson.workspaces || [],
+                private: packageJson.private || false
             };
-        } catch {
-            return { workspaces: [], private: false };
-        }
-    }
-
-    /**
-     * Get all packages in monorepo
-     * @param {string} projectPath - Project path
-     * @returns {Promise<Array>} Package list
-     */
-    async getPackages(projectPath) {
-        try {
-            const workspaces = await this.getWorkspaces(projectPath);
-            const packages = [];
-
-            for (const workspace of workspaces.workspaces) {
-                const workspacePath = path.join(projectPath, workspace);
-                const workspacePackages = await this.findPackagesInWorkspace(workspacePath);
-                packages.push(...workspacePackages);
-            }
-
-            return packages;
         } catch (error) {
-            this.logger.error('MonorepoStrategy: Failed to get packages', {
-                projectPath,
-                error: error.message
-            });
-            return [];
+            this.logger.warn('Failed to read package.json:', error.message);
+            return { name: 'unknown', version: 'unknown', workspaces: [], private: false };
         }
     }
 
     /**
-     * Find packages in workspace
-     * @param {string} workspacePath - Workspace path
-     * @returns {Promise<Array>} Package list
-     */
-    async findPackagesInWorkspace(workspacePath) {
-        try {
-            const packages = [];
-            const entries = await fs.readdir(workspacePath, { withFileTypes: true });
-
-            for (const entry of entries) {
-                if (entry.isDirectory === true) {
-                    const packagePath = path.join(workspacePath, entry.name);
-                    const packageJsonPath = path.join(packagePath, 'package.json');
-
-                    if (await this.fileExists(packageJsonPath)) {
-                        try {
-                            const packageJson = JSON.parse(await fs.readFile(packageJsonPath, 'utf8'));
-                            packages.push({
-                                name: packageJson.name,
-                                version: packageJson.version,
-                                path: packagePath,
-                                relativePath: path.relative(workspacePath, packagePath),
-                                type: this.determinePackageType(packageJson),
-                                dependencies: packageJson.dependencies || {},
-                                devDependencies: packageJson.devDependencies || {},
-                                scripts: packageJson.scripts || {}
-                            });
-                        } catch {
-                            // Skip invalid package.json files
-                        }
-                    }
-
-                    // Also check common subdirectories like backend/frontend
-                    const commonSubdirs = ['backend', 'frontend', 'api', 'client', 'server', 'app', 'src'];
-                    if (commonSubdirs.includes(entry.name)) {
-                        const subdirPackages = await this.findPackagesInSubdirectory(packagePath);
-                        packages.push(...subdirPackages);
-                    }
-                }
-            }
-
-            return packages;
-        } catch {
-            return [];
-        }
-    }
-
-    /**
-     * Find packages in subdirectory
-     * @param {string} subdirPath - Subdirectory path
-     * @returns {Promise<Array>} Package list
-     */
-    async findPackagesInSubdirectory(subdirPath) {
-        try {
-            const packages = [];
-            const packageJsonPath = path.join(subdirPath, 'package.json');
-
-            if (await this.fileExists(packageJsonPath)) {
-                try {
-                    const packageJson = JSON.parse(await fs.readFile(packageJsonPath, 'utf8'));
-                    packages.push({
-                        name: packageJson.name,
-                        version: packageJson.version,
-                        path: subdirPath,
-                        relativePath: path.relative(path.dirname(path.dirname(subdirPath)), subdirPath),
-                        type: this.determinePackageType(packageJson),
-                        dependencies: packageJson.dependencies || {},
-                        devDependencies: packageJson.devDependencies || {},
-                        scripts: packageJson.scripts || {}
-                    });
-                } catch {
-                    // Skip invalid package.json files
-                }
-            }
-
-            return packages;
-        } catch {
-            return [];
-        }
-    }
-
-    /**
-     * Determine package type
-     * @param {Object} packageJson - Package.json content
-     * @returns {string} Package type
-     */
-    determinePackageType(packageJson) {
-        const dependencies = { ...packageJson.dependencies, ...packageJson.devDependencies };
-
-        if (dependencies.react || dependencies.vue || dependencies.angular) {
-            return 'frontend';
-        } else if (dependencies.express || dependencies.koa || dependencies.fastify) {
-            return 'backend';
-        } else if (dependencies.typescript) {
-            return 'library';
-        } else {
-            return 'utility';
-        }
-    }
-
-    /**
-     * Analyze dependencies across monorepo
+     * Get commands (npm scripts)
      * @param {string} projectPath - Project path
-     * @returns {Promise<Object>} Dependencies analysis
+     * @returns {Promise<Object>} Available commands
      */
-    async analyzeDependencies(projectPath) {
+    async getCommands(projectPath) {
         try {
-            const packages = await this.getPackages(projectPath);
-            const analysis = {
-                sharedDependencies: {},
-                uniqueDependencies: {},
-                dependencyConflicts: [],
-                circularDependencies: [],
-                recommendations: []
-            };
-
-            // Analyze shared dependencies
-            const allDeps = new Map();
-            for (const pkg of packages) {
-                for (const [dep, version] of Object.entries(pkg.dependencies)) {
-                    if (!allDeps.has(dep)) {
-                        allDeps.set(dep, new Set());
-                    }
-                    allDeps.get(dep).add(version);
-                }
-            }
-
-            // Find shared dependencies
-            for (const [dep, versions] of allDeps) {
-                if (versions.size > 1) {
-                    analysis.dependencyConflicts.push({
-                        dependency: dep,
-                        versions: Array.from(versions),
-                        packages: packages.filter(pkg => pkg.dependencies[dep])
-                    });
-                } else {
-                    analysis.sharedDependencies[dep] = Array.from(versions)[0];
-                }
-            }
-
-            // Generate recommendations
-            if (analysis.dependencyConflicts.length > 0) {
-                analysis.recommendations.push({
-                    type: 'dependency_conflicts',
-                    message: 'Consider standardizing dependency versions across packages',
-                    conflicts: analysis.dependencyConflicts
-                });
-            }
-
-            return analysis;
+            const packageJsonPath = path.join(projectPath, 'package.json');
+            const packageJson = JSON.parse(await fs.readFile(packageJsonPath, 'utf8'));
+            
+            return packageJson.scripts || {};
         } catch (error) {
-            this.logger.error('MonorepoStrategy: Failed to analyze dependencies', {
-                projectPath,
-                error: error.message
-            });
+            this.logger.warn('Failed to read npm scripts:', error.message);
             return {};
         }
     }
 
     /**
-     * Detect build tools in monorepo
+     * Get ports from docker-compose.yml
      * @param {string} projectPath - Project path
-     * @returns {Promise<Object>} Build tools detection
+     * @returns {Promise<Object>} Port configuration
      */
-    async detectBuildTools(projectPath) {
+    async getPorts(projectPath) {
         try {
-            const tools = {
-                lerna: await this.fileExists(path.join(projectPath, 'lerna.json')),
-                nx: await this.fileExists(path.join(projectPath, 'nx.json')),
-                rush: await this.fileExists(path.join(projectPath, 'rush.json')),
-                pnpm: await this.fileExists(path.join(projectPath, 'pnpm-workspace.yaml')),
-                yarn: await this.hasYarnWorkspaces(projectPath),
-                npm: false
-            };
-
-            // Check for npm workspaces
-            try {
-                const packageJsonPath = path.join(projectPath, 'package.json');
-                const packageJson = JSON.parse(await fs.readFile(packageJsonPath, 'utf8'));
-                tools.npm = !!(packageJson.workspaces && !Array.isArray(packageJson.workspaces));
-            } catch {
-                tools.npm = false;
+            const dockerComposePath = path.join(projectPath, 'docker-compose.yml');
+            if (!await this.fileExists(dockerComposePath)) {
+                return {};
             }
 
-            return tools;
+            const dockerCompose = await fs.readFile(dockerComposePath, 'utf8');
+            const ports = {};
+
+            // Simple regex to extract ports
+            const portMatches = dockerCompose.match(/"(\d+):(\d+)"/g);
+            if (portMatches) {
+                portMatches.forEach(match => {
+                    const [hostPort, containerPort] = match.replace(/"/g, '').split(':');
+                    ports[`port_${hostPort}`] = parseInt(hostPort);
+                });
+            }
+
+            return ports;
         } catch (error) {
-            this.logger.error('MonorepoStrategy: Failed to detect build tools', {
-                projectPath,
-                error: error.message
-            });
+            this.logger.warn('Failed to read docker-compose.yml:', error.message);
             return {};
         }
     }
 
     /**
-     * Get shared configurations
+     * Analyze monorepo - ONLY the 4 things needed!
      * @param {string} projectPath - Project path
-     * @returns {Promise<Object>} Shared configs
+     * @returns {Promise<Object>} Monorepo analysis
      */
-    async getSharedConfigs(projectPath) {
+    async analyzeMonorepo(projectPath) {
         try {
-            const configs = {
-                eslint: await this.findSharedConfig(projectPath, '.eslintrc'),
-                prettier: await this.findSharedConfig(projectPath, '.prettierrc'),
-                typescript: await this.findSharedConfig(projectPath, 'tsconfig.json'),
-                jest: await this.findSharedConfig(projectPath, 'jest.config'),
-                webpack: await this.findSharedConfig(projectPath, 'webpack.config'),
-                babel: await this.findSharedConfig(projectPath, 'babel.config')
+            this.logger.info('MonorepoStrategy: Starting analysis - ONLY 4 things needed!');
+
+            // 1. Detect monorepo type
+            const monorepoType = await this.getMonorepoType(projectPath);
+            
+            // 2. Get the 4 things needed
+            const results = {
+                isMonorepo: true,
+                type: monorepoType,
+                workpath: projectPath,                    // ✅ 1. Workpath
+                manifest: await this.getManifest(projectPath), // ✅ 2. Manifest
+                commands: await this.getCommands(projectPath), // ✅ 3. Commands
+                ports: await this.getPorts(projectPath)        // ✅ 4. Ports
             };
 
-            return configs;
-        } catch (error) {
-            this.logger.error('MonorepoStrategy: Failed to get shared configs', {
-                projectPath,
-                error: error.message
-            });
-            return {};
-        }
-    }
-
-    /**
-     * Find shared configuration file
-     * @param {string} projectPath - Project path
-     * @param {string} configName - Config file name
-     * @returns {Promise<boolean>} True if shared config exists
-     */
-    async findSharedConfig(projectPath, configName) {
-        const extensions = ['', '.js', '.json', '.yml', '.yaml'];
-        
-        for (const ext of extensions) {
-            if (await this.fileExists(path.join(projectPath, `${configName}${ext}`))) {
-                return true;
-            }
-        }
-        
-        return false;
-    }
-
-    /**
-     * Generate recommendations for monorepo
-     * @param {string} projectPath - Project path
-     * @returns {Promise<Array>} Recommendations
-     */
-    async generateRecommendations(projectPath) {
-        try {
-            const recommendations = [];
-            const analysis = await this.analyzeMonorepo(projectPath);
-
-            // Check for missing shared configurations
-            const sharedConfigs = analysis.sharedConfigs;
-            if (!sharedConfigs.eslint) {
-                recommendations.push({
-                    type: 'shared_config',
-                    priority: 'high',
-                    message: 'Consider adding a shared ESLint configuration',
-                    action: 'Create .eslintrc.js in root with extends for all packages'
-                });
-            }
-
-            if (!sharedConfigs.prettier) {
-                recommendations.push({
-                    type: 'shared_config',
-                    priority: 'medium',
-                    message: 'Consider adding a shared Prettier configuration',
-                    action: 'Create .prettierrc in root for consistent formatting'
-                });
-            }
-
-            if (!sharedConfigs.typescript) {
-                recommendations.push({
-                    type: 'shared_config',
-                    priority: 'high',
-                    message: 'Consider adding a shared TypeScript configuration',
-                    action: 'Create tsconfig.json in root with base configuration'
-                });
-            }
-
-            // Check for dependency management
-            if (analysis.dependencies.dependencyConflicts.length > 0) {
-                recommendations.push({
-                    type: 'dependency_management',
-                    priority: 'high',
-                    message: 'Standardize dependency versions across packages',
-                    action: 'Use workspace hoisting or lockfile management'
-                });
-            }
-
-            // Check for build tool optimization
-            const buildTools = analysis.buildTools;
-            if (!buildTools.lerna && !buildTools.nx && !buildTools.rush) {
-                recommendations.push({
-                    type: 'build_tool',
-                    priority: 'medium',
-                    message: 'Consider using a monorepo build tool',
-                    action: 'Implement Lerna, Nx, or Rush for better package management'
-                });
-            }
-
-            // Check for package structure
-            const packages = analysis.packages;
-            if (packages.length > 10) {
-                recommendations.push({
-                    type: 'structure',
-                    priority: 'low',
-                    message: 'Consider organizing packages into categories',
-                    action: 'Group packages by domain or functionality'
-                });
-            }
-
-            return recommendations;
-        } catch (error) {
-            this.logger.error('MonorepoStrategy: Failed to generate recommendations', {
-                projectPath,
-                error: error.message
-            });
-            return [];
-        }
-    }
-
-    /**
-     * Optimize monorepo structure
-     * @param {string} projectPath - Project path
-     * @param {Object} options - Optimization options
-     * @returns {Promise<Object>} Optimization result
-     */
-    async optimizeMonorepo(projectPath, options = {}) {
-        try {
-            this.logger.info('MonorepoStrategy: Optimizing monorepo');
-
-            const optimizations = {
-                sharedConfigs: await this.createSharedConfigs(projectPath, options),
-                dependencyManagement: await this.optimizeDependencies(projectPath, options),
-                buildOptimization: await this.optimizeBuild(projectPath, options),
-                structureOptimization: await this.optimizeStructure(projectPath, options)
-            };
-
+            // 3. Publish event
             if (this.eventBus) {
-                this.eventBus.publish('monorepo.optimization.completed', {
+                this.eventBus.publish('monorepo.analysis.completed', {
                     projectPath,
-                    optimizations,
+                    results,
                     timestamp: new Date()
                 });
             }
 
-            return optimizations;
+            this.logger.info('MonorepoStrategy: Analysis completed - ONLY 4 things!');
+            return results;
+
         } catch (error) {
-            this.logger.error('MonorepoStrategy: Failed to optimize monorepo', {
+            this.logger.error('MonorepoStrategy: Failed to analyze monorepo', {
                 projectPath,
                 error: error.message
             });
-            throw new Error(`Failed to optimize monorepo: ${error.message}`);
+            throw new Error(`Failed to analyze monorepo: ${error.message}`);
         }
-    }
-
-    /**
-     * Create shared configurations
-     * @param {string} projectPath - Project path
-     * @param {Object} options - Options
-     * @returns {Promise<Object>} Shared configs result
-     */
-    async createSharedConfigs(projectPath, options) {
-        const results = {};
-
-        try {
-            // Create shared ESLint config
-            if (options.createEslintConfig) {
-                results.eslint = await this.createSharedEslintConfig(projectPath);
-            }
-
-            // Create shared Prettier config
-            if (options.createPrettierConfig) {
-                results.prettier = await this.createSharedPrettierConfig(projectPath);
-            }
-
-            // Create shared TypeScript config
-            if (options.createTypescriptConfig) {
-                results.typescript = await this.createSharedTypescriptConfig(projectPath);
-            }
-
-            return results;
-        } catch (error) {
-            this.logger.error('MonorepoStrategy: Failed to create shared configs', {
-                projectPath,
-                error: error.message
-            });
-            return results;
-        }
-    }
-
-    /**
-     * Create shared ESLint configuration
-     * @param {string} projectPath - Project path
-     * @returns {Promise<boolean>} Success status
-     */
-    async createSharedEslintConfig(projectPath) {
-        try {
-            const eslintConfig = {
-                root: true,
-                extends: [
-                    'eslint:recommended',
-                    '@typescript-eslint/recommended'
-                ],
-                parser: '@typescript-eslint/parser',
-                plugins: ['@typescript-eslint'],
-                env: {
-                    node: true,
-                    es2021: true
-                },
-                parserOptions: {
-                    ecmaVersion: 2021,
-                    sourceType: 'module'
-                },
-                rules: {
-                    '@typescript-eslint/no-unused-vars': 'error',
-                    '@typescript-eslint/explicit-function-return-type': 'off',
-                    '@typescript-eslint/explicit-module-boundary-types': 'off'
-                }
-            };
-
-            await fs.writeFile(
-                path.join(projectPath, '.eslintrc.json'),
-                JSON.stringify(eslintConfig, null, 2)
-            );
-
-            return true;
-        } catch {
-            return false;
-        }
-    }
-
-    /**
-     * Create shared Prettier configuration
-     * @param {string} projectPath - Project path
-     * @returns {Promise<boolean>} Success status
-     */
-    async createSharedPrettierConfig(projectPath) {
-        try {
-            const prettierConfig = {
-                semi: true,
-                trailingComma: 'es5',
-                singleQuote: true,
-                printWidth: 80,
-                tabWidth: 2,
-                useTabs: false
-            };
-
-            await fs.writeFile(
-                path.join(projectPath, '.prettierrc'),
-                JSON.stringify(prettierConfig, null, 2)
-            );
-
-            return true;
-        } catch {
-            return false;
-        }
-    }
-
-    /**
-     * Create shared TypeScript configuration
-     * @param {string} projectPath - Project path
-     * @returns {Promise<boolean>} Success status
-     */
-    async createSharedTypescriptConfig(projectPath) {
-        try {
-            const tsConfig = {
-                compilerOptions: {
-                    target: 'ES2020',
-                    module: 'commonjs',
-                    lib: ['ES2020'],
-                    outDir: './dist',
-                    rootDir: './src',
-                    strict: true,
-                    esModuleInterop: true,
-                    skipLibCheck: true,
-                    forceConsistentCasingInFileNames: true,
-                    declaration: true,
-                    declarationMap: true,
-                    sourceMap: true,
-                    composite: true
-                },
-                include: ['src/**/*'],
-                exclude: ['node_modules', 'dist']
-            };
-
-            await fs.writeFile(
-                path.join(projectPath, 'tsconfig.json'),
-                JSON.stringify(tsConfig, null, 2)
-            );
-
-            return true;
-        } catch {
-            return false;
-        }
-    }
-
-    /**
-     * Optimize dependencies
-     * @param {string} projectPath - Project path
-     * @param {Object} options - Options
-     * @returns {Promise<Object>} Optimization result
-     */
-    async optimizeDependencies(projectPath, options) {
-        // Implementation for dependency optimization
-        return { success: true, message: 'Dependency optimization completed' };
-    }
-
-    /**
-     * Optimize build process
-     * @param {string} projectPath - Project path
-     * @param {Object} options - Options
-     * @returns {Promise<Object>} Optimization result
-     */
-    async optimizeBuild(projectPath, options) {
-        // Implementation for build optimization
-        return { success: true, message: 'Build optimization completed' };
-    }
-
-    /**
-     * Optimize structure
-     * @param {string} projectPath - Project path
-     * @param {Object} options - Options
-     * @returns {Promise<Object>} Optimization result
-     */
-    async optimizeStructure(projectPath, options) {
-        // Implementation for structure optimization
-        return { success: true, message: 'Structure optimization completed' };
     }
 }
 

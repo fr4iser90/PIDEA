@@ -6,7 +6,7 @@ class ProjectController {
   constructor() {
     // Get ProjectRepository from DI container or create new instance
     try {
-      const { getServiceRegistry } = require('../../../infrastructure/di/ServiceRegistry');
+      const { getServiceRegistry } = require('../../../infrastructure/dependency-injection/ServiceRegistry');
       const serviceRegistry = getServiceRegistry();
       this.projectRepository = serviceRegistry.getService('projectRepository');
     } catch (error) {

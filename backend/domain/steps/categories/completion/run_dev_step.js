@@ -39,15 +39,10 @@ class RunDevStep {
     try {
       logger.info('Starting RunDevStep execution');
       
-      // Get TerminalService from global application (like analysis steps)
-      const application = global.application;
-      if (!application) {
-        throw new Error('Application not available');
-      }
-
-      const terminalService = application.terminalService;
+      // Get TerminalService via dependency injection (NOT global.application!)
+      const terminalService = context.getService('TerminalService');
       if (!terminalService) {
-        throw new Error('TerminalService not available');
+        throw new Error('TerminalService not available in context');
       }
 
       const { projectId, workspacePath = process.cwd(), port = 3000, host = 'localhost', env = 'development' } = context;

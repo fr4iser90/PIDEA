@@ -57,15 +57,15 @@ class GitPushStep {
         setUpstream
       });
 
-      // Get GitService from global application (like old steps)
-      const application = global.application;
-      if (!application) {
-        throw new Error('Application not available');
-      }
-
-      const { gitService } = application;
+      // Get services via dependency injection
+      const gitService = context.getService('GitService');
+      const terminalService = context.getService('TerminalService');
+      
       if (!gitService) {
-        throw new Error('GitService not available');
+        throw new Error('GitService not available in context');
+      }
+      if (!terminalService) {
+        throw new Error('TerminalService not available in context');
       }
 
       // Push changes using existing GitService

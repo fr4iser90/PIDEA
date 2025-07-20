@@ -59,7 +59,7 @@ class RunDevStep extends BaseStep {
       });
 
       // Get TerminalService from DI container
-      const { getServiceRegistry } = require('@/infrastructure/di/ServiceRegistry');
+      const { getServiceRegistry } = require('@/infrastructure/dependency-injection/ServiceRegistry');
       const serviceRegistry = getServiceRegistry();
       const terminalService = serviceRegistry.getContainer().resolve('terminalService');
 

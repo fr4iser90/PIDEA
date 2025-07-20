@@ -48,18 +48,14 @@ class ProjectAnalysisStep {
       // Validate context
       this.validateContext(context);
       
-      // Get project analyzer from context or application
+      // Get project analyzer from context via dependency injection
       let projectAnalyzer = context.projectAnalyzer;
       if (!projectAnalyzer) {
-        const application = global.application;
-        if (!application) {
-          throw new Error('Application not available and projectAnalyzer not provided in context');
-        }
-        projectAnalyzer = application.projectAnalyzer;
+        projectAnalyzer = context.getService('projectAnalyzer');
       }
       
       if (!projectAnalyzer) {
-        throw new Error('Project analyzer not available');
+        throw new Error('Project analyzer not available in context');
       }
 
       const projectPath = context.projectPath;

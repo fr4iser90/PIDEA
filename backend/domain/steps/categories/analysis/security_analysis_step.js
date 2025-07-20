@@ -49,18 +49,14 @@ class SecurityAnalysisStep {
       // Validate context
       this.validateContext(context);
       
-      // Get security analyzer from context or application
+      // Get security analyzer from context via dependency injection
       let securityAnalyzer = context.securityAnalyzer;
       if (!securityAnalyzer) {
-        const application = global.application;
-        if (!application) {
-          throw new Error('Application not available and securityAnalyzer not provided in context');
-        }
-        securityAnalyzer = application.securityAnalyzer;
+        securityAnalyzer = context.getService('securityAnalyzer');
       }
       
       if (!securityAnalyzer) {
-        throw new Error('Security analyzer not available');
+        throw new Error('Security analyzer not available in context');
       }
 
       const projectPath = context.projectPath;

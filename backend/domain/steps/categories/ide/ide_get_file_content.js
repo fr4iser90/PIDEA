@@ -56,19 +56,19 @@ class IDEGetFileContentStep {
         workspacePath
       });
 
-      // Get BrowserManager from global application (like old steps)
-      const application = global.application;
-      if (!application) {
-        throw new Error('Application not available');
+      // Get services via dependency injection
+      const fileService = context.getService('FileService');
+      const ideService = context.getService('IDEService');
+      
+      if (!fileService) {
+        throw new Error('FileService not available in context');
       }
-
-      const { browserManager } = application;
-      if (!browserManager) {
-        throw new Error('BrowserManager not available');
+      if (!ideService) {
+        throw new Error('IDEService not available in context');
       }
 
       // Get file content using existing BrowserManager
-      const content = await browserManager.getFileContent(filePath);
+      const content = await fileService.getFileContent(filePath);
 
       logger.info('IDE_GET_FILE_CONTENT step completed successfully', {
         filePath,

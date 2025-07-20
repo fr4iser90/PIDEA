@@ -121,6 +121,22 @@ class ProjectContextService {
         try {
             const cwd = process.cwd();
             
+            // FIRST: Check database cache for existing project
+            const cachedProject = await this.getCachedProjectInfo(cwd);
+            if (cachedProject) {
+                const logger = new ServiceLogger('PIDEAProjectContextService');
+                logger.info('📊 Using cached project info from database:', {
+                    projectPath: cachedProject.workspacePath,
+                    type: cachedProject.type,
+                    framework: cachedProject.framework
+                });
+                return cachedProject.workspacePath;
+            }
+            
+            // SECOND: Live detection only if no cache
+            const logger = new ServiceLogger('PIDEAProjectContextService');
+            logger.info('🔍 No cached project info found, performing live detection...');
+            
             // Check if we're in a monorepo subdirectory (backend, frontend, etc.)
             const currentDirName = path.basename(cwd);
             const monorepoSubdirs = ['backend', 'frontend', 'client', 'server', 'api', 'app', 'web', 'mobile'];
@@ -146,8 +162,11 @@ class ProjectContextService {
                 ).length >= 2;
                 
                 if (hasMonorepoIndicators && hasMultipleSubdirs) {
-                    const logger = new ServiceLogger('PIDEAProjectContextService');
                     logger.info('🏗️ Detected monorepo, using parent directory:', parentDir);
+                    
+                    // Cache the detection result
+                    await this.cacheProjectInfo(parentDir, 'monorepo');
+                    
                     return parentDir;
                 }
             }
@@ -162,6 +181,8 @@ class ProjectContextService {
 
             for (const indicator of projectIndicators) {
                 if (files.includes(indicator)) {
+                    // Cache the detection result
+                    await this.cacheProjectInfo(cwd, 'single_repo');
                     return cwd;
                 }
             }
@@ -172,6 +193,8 @@ class ProjectContextService {
                 const parentFiles = await fs.readdir(parentDir);
                 for (const indicator of projectIndicators) {
                     if (parentFiles.includes(indicator)) {
+                        // Cache the detection result
+                        await this.cacheProjectInfo(parentDir, 'single_repo');
                         return parentDir;
                     }
                 }
@@ -182,6 +205,126 @@ class ProjectContextService {
             const logger = new ServiceLogger('PIDEAProjectContextService');
             logger.error('Auto-detect failed:', error.message);
             return null;
+        }
+    }
+
+    /**
+     * Get cached project info from database
+     * @param {string} projectPath - Project path
+     * @returns {Promise<Object|null>} Cached project info or null
+     */
+    async getCachedProjectInfo(projectPath) {
+        try {
+            const logger = new ServiceLogger('PIDEAProjectContextService');
+            
+            // Get project repository from DI container
+            const projectRepository = this.container.resolve('projectRepository');
+            if (!projectRepository) {
+                logger.warn('ProjectRepository not available in DI container yet');
+                return null;
+            }
+
+            logger.info('🔍 Looking up cached project info for path:', projectPath);
+
+            // Try to find project by workspace path
+            const project = await projectRepository.findByWorkspacePath(projectPath);
+            
+            if (project) {
+                logger.info('✅ Found cached project info:', {
+                    projectId: project.id,
+                    type: project.type,
+                    workspacePath: project.workspace_path
+                });
+                return {
+                    projectId: project.id,
+                    type: project.type,
+                    workspacePath: project.workspace_path,
+                    framework: project.framework,
+                    language: project.language
+                };
+            }
+
+            // Also check parent directory for monorepo
+            const parentDir = path.dirname(projectPath);
+            const parentProject = await projectRepository.findByWorkspacePath(parentDir);
+            
+            if (parentProject) {
+                logger.info('✅ Found cached parent project info:', {
+                    projectId: parentProject.id,
+                    type: parentProject.type,
+                    workspacePath: parentProject.workspace_path
+                });
+                return {
+                    projectId: parentProject.id,
+                    type: parentProject.type,
+                    workspacePath: parentProject.workspace_path,
+                    framework: parentProject.framework,
+                    language: parentProject.language
+                };
+            }
+
+            logger.info('❌ No cached project info found for path or parent');
+            return null;
+
+        } catch (error) {
+            const logger = new ServiceLogger('PIDEAProjectContextService');
+            logger.error('❌ Failed to get cached project info:', {
+                projectPath,
+                error: error.message,
+                stack: error.stack
+            });
+            return null;
+        }
+    }
+
+    /**
+     * Cache project info in database
+     * @param {string} projectPath - Project path
+     * @param {string} projectType - Project type
+     */
+    async cacheProjectInfo(projectPath, projectType) {
+        try {
+            const logger = new ServiceLogger('PIDEAProjectContextService');
+            
+            // Get project repository from DI container
+            const projectRepository = this.container.resolve('projectRepository');
+            if (!projectRepository) {
+                logger.warn('ProjectRepository not available in DI container yet, skipping cache');
+                return;
+            }
+
+            logger.info('Attempting to cache project info:', { projectPath, projectType });
+
+            const projectName = path.basename(projectPath);
+            const projectId = projectName.toLowerCase().replace(/[^a-z0-9]/g, '_');
+
+            // Create or update project in database
+            const result = await projectRepository.findOrCreateByWorkspacePath(projectPath, {
+                id: projectId,
+                name: projectName,
+                description: `Project detected at ${projectPath}`,
+                type: projectType,
+                metadata: {
+                    detectedBy: 'ProjectContextService',
+                    detectedAt: new Date().toISOString(),
+                    detectionMethod: 'auto_detect'
+                }
+            });
+
+            logger.info('💾 Successfully cached project info in database:', {
+                projectPath,
+                type: projectType,
+                projectId: result.id,
+                result: 'success'
+            });
+        } catch (error) {
+            const logger = new ServiceLogger('PIDEAProjectContextService');
+            logger.error('Failed to cache project info:', {
+                error: error.message,
+                stack: error.stack,
+                projectPath,
+                projectType
+            });
         }
     }
 

@@ -9,7 +9,7 @@ const logger = new ServiceLogger('IDEMirrorController');
 class IDEMirrorController {
     constructor() {
         // Use DI system for service creation
-        const { getServiceRegistry } = require('../../infrastructure/di/ServiceRegistry');
+        const { getServiceRegistry } = require('../../infrastructure/dependency-injection/ServiceRegistry');
         const registry = getServiceRegistry();
         
         // Register IDE mirror service if not already registered

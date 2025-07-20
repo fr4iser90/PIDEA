@@ -49,18 +49,14 @@ class ArchitectureAnalysisStep {
       // Validate context
       this.validateContext(context);
       
-      // Get architecture analyzer from context or application
+      // Get architecture analyzer from context via dependency injection
       let architectureAnalyzer = context.architectureAnalyzer;
       if (!architectureAnalyzer) {
-        const application = global.application;
-        if (!application) {
-          throw new Error('Application not available and architectureAnalyzer not provided in context');
-        }
-        architectureAnalyzer = application.architectureAnalyzer;
+        architectureAnalyzer = context.getService('architectureAnalyzer');
       }
       
       if (!architectureAnalyzer) {
-        throw new Error('Architecture analyzer not available');
+        throw new Error('Architecture analyzer not available in context');
       }
 
       const projectPath = context.projectPath;

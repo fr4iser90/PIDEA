@@ -39,15 +39,10 @@ class TodoParsingStep {
     try {
       logger.info('Starting TodoParsingStep execution');
       
-      // Get TaskRepository from global application (like analysis steps)
-      const application = global.application;
-      if (!application) {
-        throw new Error('Application not available');
-      }
-
-      const taskRepository = application.taskRepository;
+      // Get TaskRepository via dependency injection (NOT global.application!)
+      const taskRepository = context.getService('TaskRepository');
       if (!taskRepository) {
-        throw new Error('TaskRepository not available');
+        throw new Error('TaskRepository not available in context');
       }
 
       const { projectId, workspacePath, todoInput } = context;

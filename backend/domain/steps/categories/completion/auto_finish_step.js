@@ -1,11 +1,12 @@
 /**
  * Auto Finish Step
  * Automatically finishes tasks based on completion detection
+ * Uses proper dependency injection via context.getService()
  */
 
 const StepBuilder = require('@steps/StepBuilder');
 const Logger = require('@logging/Logger');
-const logger = new Logger('auto_finish_step');
+const logger = new Logger('AutoFinishStep');
 
 // Step configuration
 const config = {
@@ -34,24 +35,26 @@ class AutoFinishStep {
     this.version = '1.0.0';
   }
 
-  async execute(context) {
+  static getConfig() {
+    return config;
+  }
+
+  async execute(context = {}) {
+    const config = AutoFinishStep.getConfig();
+    const step = StepBuilder.build(config, context);
+    
     try {
       logger.info('Starting AutoFinishStep execution');
       
-      // Get services from global application (like analysis steps)
-      const application = global.application;
-      if (!application) {
-        throw new Error('Application not available');
-      }
-
-      const taskRepository = application.taskRepository;
-      const terminalService = application.terminalService;
+      // Get services via dependency injection (NOT global.application!)
+      const taskRepository = context.getService('TaskRepository');
+      const terminalService = context.getService('TerminalService');
       
       if (!taskRepository) {
-        throw new Error('TaskRepository not available');
+        throw new Error('TaskRepository not available in context');
       }
       if (!terminalService) {
-        throw new Error('TerminalService not available');
+        throw new Error('TerminalService not available in context');
       }
 
       const { projectId, workspacePath = process.cwd(), taskId } = context;

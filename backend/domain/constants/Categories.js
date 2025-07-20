@@ -22,6 +22,7 @@ const STANDARD_CATEGORIES = {
   TASK: 'task',
   APPLICATION: 'application',
   ANALYZE: 'analyze', // Legacy support
+  COMPLETION: 'completion', // Task completion, process completion, workflow completion
   
   // IDE Categories
   IDE: 'ide',
@@ -48,7 +49,8 @@ const CATEGORY_DESCRIPTIONS = {
   [STANDARD_CATEGORIES.APPLICATION]: 'Application-specific operations, business logic',
   [STANDARD_CATEGORIES.ANALYZE]: 'Legacy analysis operations (deprecated, use ANALYSIS)',
   [STANDARD_CATEGORIES.IDE]: 'IDE integration, chat commands, session management',
-  [STANDARD_CATEGORIES.GIT]: 'Git operations, version control, branch management'
+  [STANDARD_CATEGORIES.GIT]: 'Git operations, version control, branch management',
+  [STANDARD_CATEGORIES.COMPLETION]: 'Task completion, process completion, workflow completion'
 };
 
 /**
@@ -100,7 +102,8 @@ function getCategoriesByType() {
     specialized: [
       STANDARD_CATEGORIES.TASK,
       STANDARD_CATEGORIES.APPLICATION,
-      STANDARD_CATEGORIES.ANALYZE
+      STANDARD_CATEGORIES.ANALYZE,
+      STANDARD_CATEGORIES.COMPLETION
     ],
     ide: [
       STANDARD_CATEGORIES.IDE

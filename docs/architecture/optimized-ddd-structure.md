@@ -485,7 +485,7 @@ class WorkflowConfigService {
 - [ ] Erstelle API-Endpoint für JSON-Workflows
 
 ### Phase 4: Kategorien-basierte DI (2 Stunden)
-- [ ] Erstelle `backend/infrastructure/di/CategoryServiceRegistry.js`
+- [ ] Erstelle `backend/infrastructure/dependency-injection/CategoryServiceRegistry.js`
 - [ ] Integriere in bestehende DI-Infrastruktur
 - [ ] Teste Kategorien-basierte Service-Registrierung
 - [ ] Update Application.js für neue DI

@@ -49,18 +49,14 @@ class PerformanceAnalysisStep {
       // Validate context
       this.validateContext(context);
       
-      // Get performance analyzer from context or application
+      // Get performance analyzer from context via dependency injection
       let performanceAnalyzer = context.performanceAnalyzer;
       if (!performanceAnalyzer) {
-        const application = global.application;
-        if (!application) {
-          throw new Error('Application not available and performanceAnalyzer not provided in context');
-        }
-        performanceAnalyzer = application.performanceAnalyzer;
+        performanceAnalyzer = context.getService('performanceAnalyzer');
       }
       
       if (!performanceAnalyzer) {
-        throw new Error('Performance analyzer not available');
+        throw new Error('Performance analyzer not available in context');
       }
 
       const projectPath = context.projectPath;

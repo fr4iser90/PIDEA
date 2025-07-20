@@ -66,15 +66,15 @@ class GitCreatePullRequestStep {
         title
       });
 
-      // Get PullRequestManager from global application (like old steps)
-      const application = global.application;
-      if (!application) {
-        throw new Error('Application not available');
+      // Get services via dependency injection
+      const gitService = context.getService('GitService');
+      const terminalService = context.getService('TerminalService');
+      
+      if (!gitService) {
+        throw new Error('GitService not available in context');
       }
-
-      const { pullRequestManager } = application;
-      if (!pullRequestManager) {
-        throw new Error('PullRequestManager not available');
+      if (!terminalService) {
+        throw new Error('TerminalService not available in context');
       }
 
       // Generate PR data
@@ -88,7 +88,7 @@ class GitCreatePullRequestStep {
       };
 
       // Create pull request using existing PullRequestManager
-      const result = await pullRequestManager.createPullRequest(projectPath, prData);
+      const result = await gitService.createPullRequest(projectPath, prData);
 
       logger.info('GIT_CREATE_PULL_REQUEST step completed successfully', {
         sourceBranch,

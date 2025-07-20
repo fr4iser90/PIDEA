@@ -49,18 +49,14 @@ class TechStackAnalysisStep {
       // Validate context
       this.validateContext(context);
       
-      // Get tech stack analyzer from context or application
+      // Get tech stack analyzer from context via dependency injection
       let techStackAnalyzer = context.techStackAnalyzer;
       if (!techStackAnalyzer) {
-        const application = global.application;
-        if (!application) {
-          throw new Error('Application not available and techStackAnalyzer not provided in context');
-        }
-        techStackAnalyzer = application.techStackAnalyzer;
+        techStackAnalyzer = context.getService('techStackAnalyzer');
       }
       
       if (!techStackAnalyzer) {
-        throw new Error('Tech stack analyzer not available');
+        throw new Error('Tech stack analyzer not available in context');
       }
 
       const projectPath = context.projectPath;

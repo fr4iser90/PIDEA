@@ -52,16 +52,15 @@ class IDESendMessageStep {
       
       logger.info(`📤 Sending message to IDE for project ${projectId}${ideType ? ` (${ideType})` : ''}`);
       
-      // Get IDE service from application
-      const application = global.application;
-      if (!application) {
-        throw new Error('Application not available');
-      }
-
-      // Get the appropriate IDE service
-      const ideService = this.getIDEService(application, ideType);
+      // Get services via dependency injection
+      const ideService = context.getService('IDEService');
+      const chatService = context.getService('ChatService');
+      
       if (!ideService) {
-        throw new Error('No IDE service available');
+        throw new Error('IDEService not available in context');
+      }
+      if (!chatService) {
+        throw new Error('ChatService not available in context');
       }
       
       // Send message

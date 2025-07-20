@@ -56,19 +56,19 @@ class IDEOpenFileStep {
         workspacePath
       });
 
-      // Get BrowserManager from global application (like old steps)
-      const application = global.application;
-      if (!application) {
-        throw new Error('Application not available');
+      // Get services via dependency injection
+      const fileService = context.getService('FileService');
+      const ideService = context.getService('IDEService');
+      
+      if (!fileService) {
+        throw new Error('FileService not available in context');
       }
-
-      const { browserManager } = application;
-      if (!browserManager) {
-        throw new Error('BrowserManager not available');
+      if (!ideService) {
+        throw new Error('IDEService not available in context');
       }
 
       // Open file using existing BrowserManager
-      const result = await browserManager.openFile(filePath);
+      const result = await fileService.openFile(filePath);
 
       logger.info('IDE_OPEN_FILE step completed successfully', {
         filePath,

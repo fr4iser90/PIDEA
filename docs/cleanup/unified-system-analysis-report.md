@@ -12,7 +12,7 @@
 ### Service Registry Dependencies
 
 #### ServiceRegistry
-- **File**: /home/fr4iser/Documents/Git/PIDEA/backend/infrastructure/di/ServiceRegistry.js
+- **File**: /home/fr4iser/Documents/Git/PIDEA/backend/infrastructure/dependency-injection/ServiceRegistry.js
 - **Matches**: unifiedWorkflowService, UnifiedWorkflowService, UnifiedWorkflowService, UnifiedWorkflowService
 - **Lines**: 7
 
@@ -36,7 +36,7 @@
 ### HIGH: Remove unified workflow service registration from ServiceRegistry.js
 - **Category**: service_registry
 - **Impact**: Required for cleanup
-- **Files**: backend/infrastructure/di/ServiceRegistry.js
+- **Files**: backend/infrastructure/dependency-injection/ServiceRegistry.js
 
 
 
