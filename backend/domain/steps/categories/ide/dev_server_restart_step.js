@@ -1,199 +1,86 @@
-const { BaseStep } = require('@/domain/steps/BaseStep');
-const { ProjectRepository } = require('@/domain/repositories/ProjectRepository');
-const { TerminalService } = require('@/domain/services/TerminalService');
-const logger = require('@/infrastructure/logging/logger');
+/**
+ * Dev Server Restart Step
+ * Restarts the development server for the project
+ */
 
-class DevServerRestartStep extends BaseStep {
-  constructor() {
-    super({
+const StepBuilder = require('@steps/StepBuilder');
+const Logger = require('@logging/Logger');
+const logger = new Logger('DevServerRestartStep');
+
+// Step configuration
+const config = {
       name: 'DevServerRestartStep',
+  type: 'ide',
+  category: 'ide',
       description: 'Restart development server for the project',
-      category: 'ide',
+  version: '1.0.0',
+  dependencies: ['projectRepository', 'terminalService'],
       settings: {
         includeStatusCheck: true,
-        includeWaitTime: 3000,
-        includeHealthCheck: true,
-        includeErrorRecovery: true,
+    includeErrorHandling: true,
         timeout: 60000
-      }
-    });
+  },
+  validation: {
+    required: ['projectId'],
+    optional: ['workspacePath']
+  }
+};
+
+class DevServerRestartStep {
+  constructor() {
+    this.name = 'DevServerRestartStep';
+    this.description = 'Restart development server for the project';
+    this.category = 'ide';
+    this.dependencies = ['projectRepository', 'terminalService'];
   }
 
-  async execute(context) {
+  static getConfig() {
+    return config;
+  }
+
+  async execute(context = {}) {
+    const config = DevServerRestartStep.getConfig();
+    const step = StepBuilder.build(config, context);
+    
     try {
+      logger.info(`🔧 Executing ${this.name}...`);
+      
+      // Validate context
+      this.validateContext(context);
+      
       const { projectId, workspacePath } = context;
       
       logger.info(`🔄 Restarting dev server for project ${projectId}`);
       
-      // 1. Get project configuration from database
-      const projectRepo = new ProjectRepository();
+      // Get project configuration from database
+      const projectRepo = new (require('@/domain/repositories/ProjectRepository'))();
       const project = await projectRepo.findById(projectId);
       
       if (!project) {
         throw new Error(`Project ${projectId} not found`);
       }
       
-      const port = project.frontend_port || project.backend_port;
-      const devCommand = project.dev_command || 'npm run dev';
-      
-      logger.info(`🔧 Dev command: ${devCommand}`);
-      logger.info(`🌐 Port: ${port}`);
-      
-      // 2. Check current status
-      let wasRunning = false;
-      if (this.settings.includeStatusCheck) {
-        wasRunning = await this.checkDevServerStatus(project);
-        logger.info(`📊 Current status: ${wasRunning ? 'running' : 'stopped'}`);
-      }
-      
-      // 3. Stop dev server if running
-      if (wasRunning) {
-        logger.info('🛑 Stopping existing dev server...');
-        const stopResult = await this.stopDevServer(project, workspacePath);
-        
-        if (!stopResult.success) {
-          logger.warn('⚠️ Failed to stop dev server, continuing anyway...');
-        }
-        
-        // Wait before restarting
-        if (this.settings.includeWaitTime > 0) {
-          logger.info(`⏳ Waiting ${this.settings.includeWaitTime}ms before restart...`);
-          await new Promise(resolve => setTimeout(resolve, this.settings.includeWaitTime));
-        }
-      }
-      
-      // 4. Start dev server
-      logger.info('🚀 Starting dev server...');
-      const startResult = await this.startDevServer(project, workspacePath);
-      
-      if (!startResult.success) {
-        throw new Error(`Failed to start dev server: ${startResult.error}`);
-      }
-      
-      // 5. Health check if enabled
-      let healthStatus = null;
-      if (this.settings.includeHealthCheck && port) {
-        logger.info('🏥 Performing health check...');
-        healthStatus = await this.performHealthCheck(port);
-      }
-      
-      logger.info('✅ Dev server restarted successfully');
-      
-      return {
-        success: true,
-        message: 'Dev server restarted successfully',
-        data: {
-          status: 'restarted',
-          wasRunning: wasRunning,
-          port: port,
-          command: devCommand,
-          healthStatus: healthStatus,
-          startResult: startResult.data
-        }
-      };
-      
-    } catch (error) {
-      logger.error('❌ Failed to restart dev server:', error);
-      
-      if (this.settings.includeErrorRecovery) {
-        logger.info('🔄 Attempting error recovery...');
-        const recoveryResult = await this.attemptErrorRecovery(context);
-        
-        return {
-          success: false,
-          message: 'Failed to restart dev server, recovery attempted',
-          error: error.message,
-          recoveryAttempted: true,
-          recoveryResult: recoveryResult,
-          data: {
-            status: 'error'
-          }
-        };
-      }
-      
-      return {
-        success: false,
-        message: 'Failed to restart dev server',
-        error: error.message,
-        data: {
-          status: 'error'
-        }
-      };
-    }
-  }
-
-  async checkDevServerStatus(project) {
-    try {
-      const port = project.frontend_port || project.backend_port;
-      if (!port) return false;
-      
-      const { exec } = require('child_process');
-      const util = require('util');
-      const execAsync = util.promisify(exec);
-      
-      // Check if port is in use
-      const { stdout } = await execAsync(`lsof -i :${port}`);
-      return stdout.trim().length > 0;
-      
-    } catch (error) {
-      return false;
-    }
-  }
-
-  async stopDevServer(project, workspacePath) {
-    try {
-      const port = project.frontend_port || project.backend_port;
-      if (!port) {
-        return { success: true, message: 'No port configured' };
-      }
-      
-      const { exec } = require('child_process');
-      const util = require('util');
-      const execAsync = util.promisify(exec);
-      
-      // Find and kill processes on port
-      const { stdout } = await execAsync(`lsof -ti :${port}`);
-      const pids = stdout.trim().split('\n').filter(pid => pid.length > 0);
-      
-      if (pids.length === 0) {
-        return { success: true, message: 'No processes to stop' };
-      }
-      
-      let killedCount = 0;
-      for (const pid of pids) {
-        try {
-          await execAsync(`kill -TERM ${pid}`);
-          killedCount++;
-        } catch (error) {
-          logger.warn(`Failed to kill process ${pid}: ${error.message}`);
-        }
-      }
-      
-      // Wait for processes to terminate
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      return {
-        success: true,
-        processesKilled: killedCount
-      };
-      
-    } catch (error) {
-      return {
-        success: false,
-        error: error.message
-      };
-    }
-  }
-
-  async startDevServer(project, workspacePath) {
-    try {
+      // Get dev command from project config
       const devCommand = project.dev_command || 'npm run dev';
       const packageManager = project.package_manager || 'npm';
       
-      const terminalService = new TerminalService();
+      logger.info(`📦 Using package manager: ${packageManager}`);
+      logger.info(`🔧 Dev command: ${devCommand}`);
+      
+      // Stop existing dev server first
+      const stopResult = await this.stopDevServer(project);
+      if (stopResult.success) {
+        logger.info('✅ Existing dev server stopped');
+        }
+        
+      // Wait a moment for processes to fully terminate
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      // Start dev server
+      const terminalService = new (require('@/domain/services/TerminalService'))();
       const result = await terminalService.executeCommand(devCommand, {
         cwd: workspacePath,
-        timeout: this.settings.timeout,
+        timeout: config.settings.timeout,
         env: {
           ...process.env,
           NODE_ENV: 'development'
@@ -201,124 +88,86 @@ class DevServerRestartStep extends BaseStep {
       });
       
       if (result.success) {
-        return {
-          success: true,
-          data: {
-            command: devCommand,
-            output: result.output
-          }
-        };
+        logger.info('✅ Dev server restarted successfully');
+      
+        // Detect port if enabled
+        let detectedPort = null;
+        if (config.settings.includeStatusCheck) {
+          detectedPort = await this.detectDevServerPort(project, workspacePath);
+        }
+      
+      return {
+        success: true,
+        message: 'Dev server restarted successfully',
+        data: {
+          status: 'restarted',
+            port: detectedPort || project.frontend_port || project.backend_port,
+          command: devCommand,
+            output: result.output,
+            stoppedProcesses: stopResult.killedProcesses || 0
+        }
+      };
       } else {
-        return {
-          success: false,
-          error: result.error
-        };
+        throw new Error(`Failed to restart dev server: ${result.error}`);
       }
       
     } catch (error) {
+      logger.error('❌ Failed to restart dev server:', error);
+      
+      if (config.settings.includeErrorHandling) {
+        return {
+          success: false,
+          message: 'Failed to restart dev server',
+          error: error.message,
+          data: {
+            status: 'error',
+            command: context.devCommand || 'npm run dev'
+          }
+        };
+      }
+      
       return {
         success: false,
-        error: error.message
+        error: error.message,
+        timestamp: new Date()
       };
     }
   }
 
-  async performHealthCheck(port) {
+  async stopDevServer(project) {
     try {
-      const http = require('http');
+      const port = project.frontend_port || project.backend_port;
+      if (!port) {
+        return { success: true, killedProcesses: 0 };
+      }
       
-      return new Promise((resolve) => {
-        const req = http.get(`http://localhost:${port}/health`, (res) => {
-          resolve({
-            status: res.statusCode,
-            healthy: res.statusCode >= 200 && res.statusCode < 300
-          });
-        });
-        
-        req.on('error', () => {
-          resolve({
-            status: 'error',
-            healthy: false
-          });
-        });
-        
-        req.setTimeout(5000, () => {
-          req.destroy();
-          resolve({
-            status: 'timeout',
-            healthy: false
-          });
-        });
-      });
-      
-    } catch (error) {
-      return {
-        status: 'error',
-        healthy: false,
-        error: error.message
-      };
-    }
-  }
-
-  async attemptErrorRecovery(context) {
-    try {
-      const { projectId, workspacePath } = context;
-      
-      logger.info('🔄 Attempting error recovery...');
-      
-      // 1. Force kill all dev processes
       const { exec } = require('child_process');
       const util = require('util');
       const execAsync = util.promisify(exec);
       
-      const commonProcesses = [
-        'node.*dev',
-        'npm.*dev',
-        'yarn.*dev',
-        'pnpm.*dev',
-        'nodemon',
-        'webpack.*serve',
-        'vite'
-      ];
+      // Get PIDs using the port
+      const { stdout } = await execAsync(`lsof -ti :${port}`);
+      const pids = stdout.trim().split('\n').filter(pid => pid.length > 0);
       
-      for (const pattern of commonProcesses) {
+      if (pids.length === 0) {
+        return { success: true, killedProcesses: 0 };
+      }
+      
+      // Kill processes
+      const killedProcesses = [];
+      for (const pid of pids) {
         try {
-          await execAsync(`pkill -f "${pattern}"`);
+          await execAsync(`kill -9 ${pid}`);
+          killedProcesses.push(pid);
         } catch (error) {
-          // Process not found is expected
+          logger.warn(`Failed to kill process ${pid}: ${error.message}`);
         }
       }
       
-      // 2. Wait for cleanup
-      await new Promise(resolve => setTimeout(resolve, 3000));
-      
-      // 3. Try to start again
-      const projectRepo = new ProjectRepository();
-      const project = await projectRepo.findById(projectId);
-      
-      if (project) {
-        const terminalService = new TerminalService();
-        const devCommand = project.dev_command || 'npm run dev';
-        
-        const result = await terminalService.executeCommand(devCommand, {
-          cwd: workspacePath,
-          timeout: 30000,
-          env: {
-            ...process.env,
-            NODE_ENV: 'development'
-          }
-        });
-        
-        return {
-          success: result.success,
-          error: result.error,
-          command: devCommand
-        };
-      }
-      
       return {
-        success: false,
-        error: 'Project not found during recovery'
+        success: true,
+        killedProcesses: killedProcesses.length,
+        pids: killedProcesses
       };
       
     } catch (error) {
@@ -328,6 +177,51 @@ class DevServerRestartStep extends BaseStep {
       };
     }
   }
+
+  async detectDevServerPort(project, workspacePath) {
+    try {
+      // Try to detect port from common dev server outputs
+      const commonPorts = [3000, 3001, 4000, 4001, 5000, 5001, 8080, 8081];
+      
+      for (const port of commonPorts) {
+        const isInUse = await this.checkPortInUse(port);
+        if (isInUse) {
+          return port;
+          }
+      }
+      
+      return null;
+    } catch (error) {
+      logger.warn('Could not detect dev server port:', error.message);
+      return null;
+    }
+  }
+
+  async checkPortInUse(port) {
+    try {
+      const { exec } = require('child_process');
+      const util = require('util');
+      const execAsync = util.promisify(exec);
+      
+      const { stdout } = await execAsync(`lsof -i :${port}`);
+      return stdout.trim().length > 0;
+        } catch (error) {
+      return false;
+        }
+      }
+      
+  validateContext(context) {
+    if (!context.projectId) {
+      throw new Error('Project ID is required');
+    }
+  }
 }
 
-module.exports = DevServerRestartStep; 
+// Create instance for execution
+const stepInstance = new DevServerRestartStep();
+
+// Export in StepRegistry format
+module.exports = {
+  config,
+  execute: async (context) => await stepInstance.execute(context)
+}; 

@@ -1,351 +1,239 @@
-const { BaseStep } = require('@/domain/steps/BaseStep');
-const { ProjectRepository } = require('@/domain/repositories/ProjectRepository');
-const logger = require('@/infrastructure/logging/logger');
+/**
+ * Project Health Check Step
+ * Performs health checks on the project
+ */
 
-class ProjectHealthCheckStep extends BaseStep {
+const StepBuilder = require('@steps/StepBuilder');
+const Logger = require('@logging/Logger');
+const logger = new Logger('ProjectHealthCheckStep');
+
+// Step configuration
+const config = {
+  name: 'ProjectHealthCheckStep',
+  type: 'testing',
+  category: 'testing',
+  description: 'Perform health checks on the project',
+  version: '1.0.0',
+  dependencies: ['projectRepository', 'terminalService'],
+  settings: {
+    includeBuildCheck: true,
+    includeTestCheck: true,
+    includeLintCheck: true,
+    timeout: 60000
+  },
+  validation: {
+    required: ['projectId'],
+    optional: ['workspacePath']
+  }
+};
+
+class ProjectHealthCheckStep {
   constructor() {
-    super({
-      name: 'ProjectHealthCheckStep',
-      description: 'Check if project is running and healthy',
-      category: 'testing',
-      settings: {
-        includePortCheck: true,
-        includeHttpCheck: true,
-        includeProcessCheck: true,
-        includeResponseTime: true,
-        timeout: 10000,
-        retries: 3
-      }
-    });
+    this.name = 'ProjectHealthCheckStep';
+    this.description = 'Perform health checks on the project';
+    this.category = 'testing';
+    this.dependencies = ['projectRepository', 'terminalService'];
   }
 
-  async execute(context) {
+  static getConfig() {
+    return config;
+  }
+
+  async execute(context = {}) {
+    const config = ProjectHealthCheckStep.getConfig();
+    const step = StepBuilder.build(config, context);
+    
     try {
+      logger.info(`🔧 Executing ${this.name}...`);
+      
+      // Validate context
+      this.validateContext(context);
+      
       const { projectId, workspacePath } = context;
       
-      logger.info(`🏥 Performing health check for project ${projectId}`);
+      logger.info(`🏥 Performing health checks for project ${projectId}`);
       
-      // 1. Get project configuration from database
-      const projectRepo = new ProjectRepository();
+      // Get project configuration from database
+      const projectRepo = new (require('@/domain/repositories/ProjectRepository'))();
       const project = await projectRepo.findById(projectId);
       
       if (!project) {
         throw new Error(`Project ${projectId} not found`);
       }
       
-      const healthResults = {
-        projectId: projectId,
-        projectName: project.name,
-        overallStatus: 'unknown',
-        checks: {},
-        timestamp: new Date().toISOString()
+      const packageManager = project.package_manager || 'npm';
+      const healthChecks = {
+        build: null,
+        test: null,
+        lint: null,
+        summary: {
+          total: 0,
+          passed: 0,
+          failed: 0,
+          status: 'unknown'
+        }
       };
       
-      // 2. Port availability check
-      if (this.settings.includePortCheck) {
-        healthResults.checks.portCheck = await this.checkPortAvailability(project);
-      }
-      
-      // 3. Process check
-      if (this.settings.includeProcessCheck) {
-        healthResults.checks.processCheck = await this.checkProcessStatus(project);
-      }
-      
-      // 4. HTTP health check
-      if (this.settings.includeHttpCheck) {
-        healthResults.checks.httpCheck = await this.performHttpHealthCheck(project);
-      }
-      
-      // 5. Determine overall status
-      healthResults.overallStatus = this.determineOverallStatus(healthResults.checks);
-      
-      // 6. Retry logic if unhealthy
-      if (healthResults.overallStatus === 'unhealthy' && this.settings.retries > 0) {
-        logger.info(`🔄 Retrying health check (${this.settings.retries} attempts remaining)...`);
-        const retryResults = await this.retryHealthCheck(project, this.settings.retries);
-        healthResults.retryResults = retryResults;
-        
-        // Update overall status after retries
-        if (retryResults.finalStatus === 'healthy') {
-          healthResults.overallStatus = 'healthy';
+      // Perform build check
+      if (config.settings.includeBuildCheck) {
+        healthChecks.build = await this.performBuildCheck(workspacePath, packageManager);
+        healthChecks.summary.total++;
+        if (healthChecks.build.success) {
+          healthChecks.summary.passed++;
+        } else {
+          healthChecks.summary.failed++;
         }
       }
       
-      const isHealthy = healthResults.overallStatus === 'healthy';
-      
-      if (isHealthy) {
-        logger.info('✅ Project is healthy');
-        return {
-          success: true,
-          message: 'Project health check passed',
-          data: healthResults
-        };
-      } else {
-        logger.warn('⚠️ Project health check failed');
-        return {
-          success: false,
-          message: 'Project health check failed',
-          data: healthResults
-        };
+      // Perform test check
+      if (config.settings.includeTestCheck) {
+        healthChecks.test = await this.performTestCheck(workspacePath, packageManager);
+        healthChecks.summary.total++;
+        if (healthChecks.test.success) {
+          healthChecks.summary.passed++;
+        } else {
+          healthChecks.summary.failed++;
+        }
       }
       
+      // Perform lint check
+      if (config.settings.includeLintCheck) {
+        healthChecks.lint = await this.performLintCheck(workspacePath, packageManager);
+        healthChecks.summary.total++;
+        if (healthChecks.lint.success) {
+          healthChecks.summary.passed++;
+        } else {
+          healthChecks.summary.failed++;
+        }
+      }
+      
+      // Determine overall status
+      if (healthChecks.summary.failed === 0) {
+        healthChecks.summary.status = 'healthy';
+      } else if (healthChecks.summary.passed > 0) {
+        healthChecks.summary.status = 'warning';
+      } else {
+        healthChecks.summary.status = 'unhealthy';
+      }
+      
+      logger.info(`✅ Health checks completed. Status: ${healthChecks.summary.status}`);
+      
+        return {
+        success: true,
+        message: 'Health checks completed',
+        data: healthChecks
+        };
+      
     } catch (error) {
-      logger.error('❌ Health check failed:', error);
+      logger.error('❌ Health checks failed:', error);
       
       return {
         success: false,
-        message: 'Health check failed',
         error: error.message,
-        data: {
-          status: 'error',
-          timestamp: new Date().toISOString()
-        }
+        timestamp: new Date()
       };
     }
   }
 
-  async checkPortAvailability(project) {
+  async performBuildCheck(workspacePath, packageManager) {
     try {
-      const port = project.frontend_port || project.backend_port;
-      if (!port) {
-        return {
-          status: 'unknown',
-          message: 'No port configured',
-          available: false
-        };
-      }
+      const terminalService = new (require('@/domain/services/TerminalService'))();
+      const buildCommand = `${packageManager} run build`;
       
-      const { exec } = require('child_process');
-      const util = require('util');
-      const execAsync = util.promisify(exec);
-      
-      const { stdout } = await execAsync(`lsof -i :${port}`);
-      const isInUse = stdout.trim().length > 0;
+      const result = await terminalService.executeCommand(buildCommand, {
+        cwd: workspacePath,
+        timeout: 30000,
+        env: {
+          ...process.env,
+          NODE_ENV: 'production'
+        }
+      });
       
       return {
-        status: isInUse ? 'in_use' : 'available',
-        port: port,
-        available: isInUse,
-        message: isInUse ? `Port ${port} is in use` : `Port ${port} is available`
+        success: result.success,
+        command: buildCommand,
+        output: result.output,
+        error: result.error
       };
       
     } catch (error) {
       return {
-        status: 'error',
-        message: error.message,
-        available: false
+        success: false,
+        error: error.message
       };
     }
   }
 
-  async checkProcessStatus(project) {
+  async performTestCheck(workspacePath, packageManager) {
     try {
-      const port = project.frontend_port || project.backend_port;
-      if (!port) {
-        return {
-          status: 'unknown',
-          message: 'No port configured',
-          running: false
-        };
-      }
+      const terminalService = new (require('@/domain/services/TerminalService'))();
+      const testCommand = `${packageManager} test`;
       
-      const { exec } = require('child_process');
-      const util = require('util');
-      const execAsync = util.promisify(exec);
-      
-      // Find processes using the port
-      const { stdout } = await execAsync(`lsof -ti :${port}`);
-      const pids = stdout.trim().split('\n').filter(pid => pid.length > 0);
-      
-      if (pids.length === 0) {
-        return {
-          status: 'not_running',
-          message: 'No processes found on port',
-          running: false,
-          pids: []
-        };
-      }
-      
-      // Get process details
-      const processDetails = [];
-      for (const pid of pids) {
-        try {
-          const { stdout: psOutput } = await execAsync(`ps -p ${pid} -o pid,ppid,cmd --no-headers`);
-          processDetails.push({
-            pid: pid,
-            details: psOutput.trim()
-          });
-        } catch (error) {
-          processDetails.push({
-            pid: pid,
-            details: 'Unknown'
-          });
+      const result = await terminalService.executeCommand(testCommand, {
+        cwd: workspacePath,
+        timeout: 30000,
+        env: {
+          ...process.env,
+          NODE_ENV: 'test'
         }
-      }
+      });
       
       return {
-        status: 'running',
-        message: `${pids.length} process(es) running on port`,
-        running: true,
-        pids: pids,
-        processDetails: processDetails
+        success: result.success,
+        command: testCommand,
+        output: result.output,
+        error: result.error
       };
       
     } catch (error) {
       return {
-        status: 'error',
-        message: error.message,
-        running: false
+        success: false,
+        error: error.message
       };
     }
   }
 
-  async performHttpHealthCheck(project) {
+  async performLintCheck(workspacePath, packageManager) {
     try {
-      const port = project.frontend_port || project.backend_port;
-      if (!port) {
-        return {
-          status: 'unknown',
-          message: 'No port configured',
-          healthy: false
-        };
-      }
+      const terminalService = new (require('@/domain/services/TerminalService'))();
+      const lintCommand = `${packageManager} run lint`;
       
-      const startTime = Date.now();
-      
-      // Try different health endpoints
-      const healthEndpoints = [
-        `http://localhost:${port}/health`,
-        `http://localhost:${port}/api/health`,
-        `http://localhost:${port}/status`,
-        `http://localhost:${port}/`
-      ];
-      
-      for (const endpoint of healthEndpoints) {
-        try {
-          const result = await this.checkHttpEndpoint(endpoint, this.settings.timeout);
-          
-          if (result.success) {
-            const responseTime = Date.now() - startTime;
-            
-            return {
-              status: 'healthy',
-              message: `Health check passed for ${endpoint}`,
-              healthy: true,
-              endpoint: endpoint,
-              statusCode: result.statusCode,
-              responseTime: responseTime,
-              responseSize: result.responseSize
-            };
-          }
-        } catch (error) {
-          // Try next endpoint
-          continue;
+      const result = await terminalService.executeCommand(lintCommand, {
+        cwd: workspacePath,
+        timeout: 30000,
+        env: {
+          ...process.env,
+          NODE_ENV: 'development'
         }
-      }
+      });
       
       return {
-        status: 'unhealthy',
-        message: 'All health endpoints failed',
-        healthy: false,
-        endpoints: healthEndpoints
+        success: result.success,
+        command: lintCommand,
+        output: result.output,
+        error: result.error
       };
       
     } catch (error) {
       return {
-        status: 'error',
-        message: error.message,
-        healthy: false
+        success: false,
+        error: error.message
       };
     }
   }
 
-  async checkHttpEndpoint(url, timeout) {
-    return new Promise((resolve, reject) => {
-      const http = require('http');
-      const https = require('https');
-      
-      const client = url.startsWith('https') ? https : http;
-      
-      const req = client.get(url, (res) => {
-        let data = '';
-        
-        res.on('data', (chunk) => {
-          data += chunk;
-        });
-        
-        res.on('end', () => {
-          const isHealthy = res.statusCode >= 200 && res.statusCode < 300;
-          
-          resolve({
-            success: isHealthy,
-            statusCode: res.statusCode,
-            responseSize: data.length,
-            headers: res.headers
-          });
-        });
-      });
-      
-      req.on('error', (error) => {
-        reject(error);
-      });
-      
-      req.setTimeout(timeout, () => {
-        req.destroy();
-        reject(new Error('Request timeout'));
-      });
-    });
-  }
-
-  determineOverallStatus(checks) {
-    const statuses = Object.values(checks).map(check => check.status);
-    
-    if (statuses.every(status => status === 'healthy' || status === 'running' || status === 'in_use')) {
-      return 'healthy';
-    } else if (statuses.some(status => status === 'error')) {
-      return 'error';
-    } else {
-      return 'unhealthy';
+  validateContext(context) {
+    if (!context.projectId) {
+      throw new Error('Project ID is required');
     }
-  }
-
-  async retryHealthCheck(project, retries) {
-    const results = [];
-    
-    for (let i = 0; i < retries; i++) {
-      logger.info(`🔄 Health check retry ${i + 1}/${retries}`);
-      
-      // Wait before retry
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      const retryChecks = {};
-      
-      if (this.settings.includeHttpCheck) {
-        retryChecks.httpCheck = await this.performHttpHealthCheck(project);
-      }
-      
-      if (this.settings.includeProcessCheck) {
-        retryChecks.processCheck = await this.checkProcessStatus(project);
-      }
-      
-      const retryStatus = this.determineOverallStatus(retryChecks);
-      results.push({
-        attempt: i + 1,
-        status: retryStatus,
-        checks: retryChecks
-      });
-      
-      if (retryStatus === 'healthy') {
-        logger.info(`✅ Health check passed on retry ${i + 1}`);
-        break;
-      }
-    }
-    
-    return {
-      attempts: results,
-      finalStatus: results.length > 0 ? results[results.length - 1].status : 'unknown'
-    };
   }
 }
 
-module.exports = ProjectHealthCheckStep; 
+// Create instance for execution
+const stepInstance = new ProjectHealthCheckStep();
+      
+// Export in StepRegistry format
+module.exports = {
+  config,
+  execute: async (context) => await stepInstance.execute(context)
+}; 

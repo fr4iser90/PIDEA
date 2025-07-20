@@ -11,14 +11,16 @@
       "type": "security",
       "category": "audit",
       "description": "Perform comprehensive security audit",
-      "dependencies": ["analysis", "file-system"]
+      "dependencies": ["analysis", "file-system"],
+      "file": "steps/security_audit.js"
     },
     "vulnerability_scan": {
       "name": "vulnerability_scan",
       "type": "security",
       "category": "scan",
       "description": "Scan for security vulnerabilities",
-      "dependencies": ["analysis", "file-system"]
+      "dependencies": ["analysis", "file-system"],
+      "file": "steps/vulnerability_scan.js"
     },
     "dependency_check": {
       "name": "dependency_check",

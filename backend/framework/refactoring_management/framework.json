@@ -35,21 +35,24 @@
       "type": "refactoring",
       "category": "func",
       "description": "Extract method from code block",
-      "dependencies": ["ide", "cursor"]
+      "dependencies": ["ide", "cursor"],
+      "file": "steps/extract_method.js"
     },
     "inline_method": {
       "name": "inline_method",
       "type": "refactoring",
       "category": "func",
       "description": "Inline method call",
-      "dependencies": ["ide", "cursor"]
+      "dependencies": ["ide", "cursor"],
+      "file": "steps/inline_method.js"
     },
     "move_method": {
       "name": "move_method",
       "type": "refactoring",
       "category": "func",
       "description": "Move method to different class",
-      "dependencies": ["ide", "cursor"]
+      "dependencies": ["ide", "cursor"],
+      "file": "steps/move_method.js"
     },
     "extract_class": {
       "name": "extract_class",

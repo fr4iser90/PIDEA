@@ -11,14 +11,16 @@
       "type": "performance",
       "category": "analysis",
       "description": "Analyze application performance",
-      "dependencies": ["analysis", "file-system"]
+      "dependencies": ["analysis", "file-system"],
+      "file": "steps/performance_analysis.js"
     },
     "memory_optimization": {
       "name": "memory_optimization",
       "type": "performance",
       "category": "memory",
       "description": "Optimize memory usage and reduce leaks",
-      "dependencies": ["analysis", "ide"]
+      "dependencies": ["analysis", "ide"],
+      "file": "steps/memory_optimization.js"
     },
     "cpu_optimization": {
       "name": "cpu_optimization",

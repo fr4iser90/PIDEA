@@ -1,78 +1,84 @@
 /**
  * Cursor Get Response Step
- * Gets the latest response from Cursor AI using the existing CursorIDEService
+ * Gets response from Cursor IDE
  */
 
-const { BaseStep } = require('../../BaseStep');
+const StepBuilder = require('@steps/StepBuilder');
 const Logger = require('@logging/Logger');
-const logger = new Logger('CursorGetResponseStep');
+const logger = new Logger('cursor_get_response');
 
-class CursorGetResponseStep extends BaseStep {
+// Step configuration
+const config = {
+  name: 'CursorGetResponseStep',
+  type: 'cursor',
+  category: 'cursor',
+  description: 'Get response from Cursor IDE',
+  version: '1.0.0',
+  dependencies: [],
+  settings: {
+    includeTimeout: true,
+    includeRetry: true,
+    timeout: 30000
+  },
+  validation: {
+    required: ['projectId'],
+    optional: ['workspacePath', 'messageId']
+  }
+};
+
+class CursorGetResponseStep {
   constructor() {
-    super({
-      name: 'CURSOR_GET_RESPONSE',
-      type: 'cursor',
-      category: 'cursor',
-      description: 'Gets the latest response from Cursor AI',
-      version: '1.0.0',
-      config: {
-        required: [],
-        optional: ['timeout', 'checkInterval', 'maxRetries']
-      }
-    });
+    this.name = 'CursorGetResponseStep';
+    this.description = 'Get response from Cursor IDE';
+    this.category = 'cursor';
+    this.dependencies = [];
   }
 
-  async execute(context) {
+  static getConfig() {
+    return config;
+  }
+
+  async execute(context = {}) {
+    const config = CursorGetResponseStep.getConfig();
+    const step = StepBuilder.build(config, context);
+    
     try {
-      const { 
-        timeout = 300000, 
-        checkInterval = 5000, 
-        maxRetries = 60 
-      } = context;
+      logger.info(`🔧 Executing ${this.name}...`);
       
-      logger.info('Executing CURSOR_GET_RESPONSE step', {
-        timeout,
-        checkInterval,
-        maxRetries
-      });
-
-      // Get CursorIDEService from DI container
-      const { getServiceRegistry } = require('@/infrastructure/di/ServiceRegistry');
-      const serviceRegistry = getServiceRegistry();
-      const cursorIDEService = serviceRegistry.getContainer().resolve('cursorIDEService');
-
-      if (!cursorIDEService) {
-        throw new Error('CursorIDEService not available');
+      // Validate context
+      this.validateContext(context);
+      
+      const { projectId, workspacePath, messageId } = context;
+      
+      logger.info(`📨 Getting response from Cursor IDE for project ${projectId}${messageId ? `, message ${messageId}` : ''}`);
+      
+      // Get Cursor IDE service from application
+      const application = global.application;
+      if (!application) {
+        throw new Error('Application not available');
       }
 
-      // Get response using existing CursorIDEService
-      const result = await cursorIDEService.getLatestResponse({
-        timeout,
-        checkInterval,
-        maxRetries
+      const cursorIDEService = application.cursorIDEService;
+      if (!cursorIDEService) {
+        throw new Error('Cursor IDE service not available');
+      }
+      
+      // Get response
+      const response = await cursorIDEService.getLatestResponse({
+        timeout: config.settings.timeout
       });
-
-      logger.info('CURSOR_GET_RESPONSE step completed successfully', {
-        success: result.success,
-        responseLength: result.response?.length || 0,
-        hasCodeBlocks: result.hasCodeBlocks
-      });
-
+      
+      logger.info(`✅ Response received from Cursor IDE`);
+      
       return {
-        success: result.success,
-        response: result.response,
-        hasCodeBlocks: result.hasCodeBlocks,
-        codeBlocks: result.codeBlocks,
-        duration: result.duration,
-        timestamp: new Date()
+        success: true,
+        message: 'Response received from Cursor IDE',
+        data: response
       };
-
+      
     } catch (error) {
-      logger.error('CURSOR_GET_RESPONSE step failed', {
-        error: error.message,
-        context
-      });
-
+      logger.error('❌ Failed to get response from Cursor IDE:', error);
+      
       return {
         success: false,
         error: error.message,
@@ -80,6 +86,19 @@ class CursorGetResponseStep extends BaseStep {
       };
     }
   }
+
+  validateContext(context) {
+    if (!context.projectId) {
+      throw new Error('Project ID is required');
+    }
+  }
 }
 
-module.exports = CursorGetResponseStep; 
+// Export in StepRegistry format
+module.exports = {
+  config,
+  execute: async (context) => {
+    const stepInstance = new CursorGetResponseStep();
+    return await stepInstance.execute(context);
+  }
+}; 

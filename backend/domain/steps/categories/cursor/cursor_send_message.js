@@ -1,37 +1,37 @@
 /**
  * Cursor Send Message Step
- * Sends a message to Cursor AI using the existing CursorIDEService
+ * Sends message to Cursor IDE
  */
 
 const StepBuilder = require('@steps/StepBuilder');
 const Logger = require('@logging/Logger');
-const logger = new Logger('CursorSendMessageStep');
+const logger = new Logger('cursor_send_message');
 
 // Step configuration
 const config = {
-  name: 'CURSOR_SEND_MESSAGE',
+  name: 'CursorSendMessageStep',
   type: 'cursor',
-  description: 'Sends a message to Cursor AI',
   category: 'cursor',
+  description: 'Send message to Cursor IDE',
   version: '1.0.0',
-  dependencies: ['cursorIDEService'],
+  dependencies: [],
   settings: {
-    timeout: 300000,
-    waitForResponse: false,
-    checkInterval: 5000
+    includeTimeout: true,
+    includeRetry: true,
+    timeout: 30000
   },
   validation: {
-    required: ['message'],
-    optional: ['waitForResponse', 'timeout', 'checkInterval']
+    required: ['projectId', 'message'],
+    optional: ['workspacePath']
   }
 };
 
 class CursorSendMessageStep {
   constructor() {
-    this.name = 'CURSOR_SEND_MESSAGE';
-    this.description = 'Sends a message to Cursor AI';
+    this.name = 'CursorSendMessageStep';
+    this.description = 'Send message to Cursor IDE';
     this.category = 'cursor';
-    this.dependencies = ['cursorIDEService'];
+    this.dependencies = [];
   }
 
   static getConfig() {
@@ -48,56 +48,37 @@ class CursorSendMessageStep {
       // Validate context
       this.validateContext(context);
       
-      const { 
-        message, 
-        waitForResponse = false, 
-        timeout = 300000, 
-        checkInterval = 5000 
-      } = context;
+      const { projectId, workspacePath, message } = context;
       
-      logger.info('Executing CURSOR_SEND_MESSAGE step', {
-        messageLength: message?.length || 0,
-        waitForResponse,
-        timeout
-      });
-
-      // Get CursorIDEService from global application (like old steps)
+      logger.info(`📤 Sending message to Cursor IDE for project ${projectId}`);
+      
+      // Get Cursor IDE service from application
       const application = global.application;
       if (!application) {
         throw new Error('Application not available');
       }
 
-      const { cursorIDEService } = application;
+      const cursorIDEService = application.cursorIDEService;
       if (!cursorIDEService) {
-        throw new Error('CursorIDEService not available');
+        throw new Error('Cursor IDE service not available');
       }
-
-      // Send message using existing CursorIDEService
+      
+      // Send message
       const result = await cursorIDEService.sendMessage(message, {
-        waitForResponse,
-        timeout,
-        checkInterval
+        timeout: config.settings.timeout
       });
-
-      logger.info('CURSOR_SEND_MESSAGE step completed successfully', {
-        success: result.success,
-        responseLength: result.response?.length || 0
-      });
-
+      
+      logger.info(`✅ Message sent to Cursor IDE`);
+      
       return {
-        success: result.success,
-        message,
-        response: result.response,
-        duration: result.duration,
-        timestamp: new Date()
+        success: true,
+        message: 'Message sent to Cursor IDE',
+        data: result
       };
-
+      
     } catch (error) {
-      logger.error('CURSOR_SEND_MESSAGE step failed', {
-        error: error.message,
-        context
-      });
-
+      logger.error('❌ Failed to send message to Cursor IDE:', error);
+      
       return {
         success: false,
         error: error.message,
@@ -107,10 +88,20 @@ class CursorSendMessageStep {
   }
 
   validateContext(context) {
+    if (!context.projectId) {
+      throw new Error('Project ID is required');
+    }
     if (!context.message) {
       throw new Error('Message is required');
     }
   }
 }
 
-module.exports = { config, execute: CursorSendMessageStep.prototype.execute.bind(new CursorSendMessageStep()) }; 
+// Export in StepRegistry format
+module.exports = {
+  config,
+  execute: async (context) => {
+    const stepInstance = new CursorSendMessageStep();
+    return await stepInstance.execute(context);
+  }
+}; 

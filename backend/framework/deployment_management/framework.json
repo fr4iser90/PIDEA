@@ -11,70 +11,80 @@
       "type": "deployment",
       "category": "build",
       "description": "Build application for deployment",
-      "dependencies": ["terminal", "file-system"]
+      "dependencies": ["terminal", "file-system"],
+      "file": "steps/build_application.js"
     },
     "run_tests_before_deploy": {
       "name": "run_tests_before_deploy",
       "type": "deployment",
       "category": "testing",
       "description": "Run tests before deployment",
-      "dependencies": ["terminal", "testing"]
+      "dependencies": ["terminal", "testing"],
+      "file": "steps/run_tests_before_deploy.js"
     },
     "create_deployment_package": {
       "name": "create_deployment_package",
       "type": "deployment",
       "category": "package",
       "description": "Create deployment package with all dependencies",
-      "dependencies": ["file-system", "terminal"]
+      "dependencies": ["file-system", "terminal"],
+      "file": "steps/create_deployment_package.js"
     },
     "deploy_to_staging": {
       "name": "deploy_to_staging",
       "type": "deployment",
       "category": "staging",
       "description": "Deploy to staging environment",
-      "dependencies": ["terminal", "file-system"]
+      "dependencies": ["terminal", "file-system"],
+      "file": "steps/deploy_to_staging.js"
     },
     "deploy_to_production": {
       "name": "deploy_to_production",
       "type": "deployment",
       "category": "production",
       "description": "Deploy to production environment",
-      "dependencies": ["terminal", "file-system"]
+      "dependencies": ["terminal", "file-system"],
+      "file": "steps/deploy_to_production.js"
     },
     "rollback_deployment": {
       "name": "rollback_deployment",
       "type": "deployment",
       "category": "rollback",
       "description": "Rollback to previous deployment",
-      "dependencies": ["terminal", "file-system"]
+      "dependencies": ["terminal", "file-system"],
+      "file": "steps/rollback_deployment.js"
     },
     "monitor_deployment": {
       "name": "monitor_deployment",
       "type": "deployment",
       "category": "monitoring",
       "description": "Monitor deployment health and performance",
-      "dependencies": ["terminal", "analysis"]
+      "dependencies": ["terminal", "analysis"],
+      "file": "steps/monitor_deployment.js"
     },
     "update_environment_config": {
       "name": "update_environment_config",
       "type": "deployment",
       "category": "config",
       "description": "Update environment configuration",
-      "dependencies": ["file-system", "terminal"]
+      "dependencies": ["file-system", "terminal"],
+      "file": "steps/update_environment_config.js"
     },
     "setup_ci_cd": {
       "name": "setup_ci_cd",
       "type": "deployment",
       "category": "ci_cd",
       "description": "Setup continuous integration and deployment",
-      "dependencies": ["file-system", "terminal"]
+      "dependencies": ["file-system", "terminal"],
+      "file": "steps/run_tests_before_deploy.js"
     },
     "validate_deployment": {
       "name": "validate_deployment",
       "type": "deployment",
       "category": "validation",
       "description": "Validate deployment success and functionality",
-      "dependencies": ["terminal", "analysis"]
+      "dependencies": ["terminal", "analysis"],
+      "file": "steps/validate_deployment.js"
     }
   },
   "workflows": {

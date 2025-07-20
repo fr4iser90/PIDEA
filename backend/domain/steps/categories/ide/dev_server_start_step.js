@@ -1,46 +1,75 @@
-const { BaseStep } = require('@/domain/steps/BaseStep');
-const { ProjectRepository } = require('@/domain/repositories/ProjectRepository');
-const { TerminalService } = require('@/domain/services/TerminalService');
-const logger = require('@/infrastructure/logging/logger');
+/**
+ * Dev Server Start Step
+ * Starts the development server for the project
+ */
 
-class DevServerStartStep extends BaseStep {
-  constructor() {
-    super({
+const StepBuilder = require('@steps/StepBuilder');
+const Logger = require('@logging/Logger');
+const logger = new Logger('DevServerStartStep');
+
+// Step configuration
+const config = {
       name: 'DevServerStartStep',
+  type: 'ide',
+  category: 'ide',
       description: 'Start development server for the project',
-      category: 'ide',
+  version: '1.0.0',
+  dependencies: ['projectRepository', 'terminalService'],
       settings: {
         includeStatusCheck: true,
         includeErrorHandling: true,
         includePortDetection: true,
         timeout: 30000
-      }
-    });
+  },
+  validation: {
+    required: ['projectId'],
+    optional: ['workspacePath']
+  }
+};
+
+class DevServerStartStep {
+  constructor() {
+    this.name = 'DevServerStartStep';
+    this.description = 'Start development server for the project';
+    this.category = 'ide';
+    this.dependencies = ['projectRepository', 'terminalService'];
   }
 
-  async execute(context) {
+  static getConfig() {
+    return config;
+  }
+
+  async execute(context = {}) {
+    const config = DevServerStartStep.getConfig();
+    const step = StepBuilder.build(config, context);
+    
     try {
+      logger.info(`🔧 Executing ${this.name}...`);
+      
+      // Validate context
+      this.validateContext(context);
+      
       const { projectId, workspacePath } = context;
       
       logger.info(`🚀 Starting dev server for project ${projectId}`);
       
-      // 1. Get project configuration from database
-      const projectRepo = new ProjectRepository();
+      // Get project configuration from database
+      const projectRepo = new (require('@/domain/repositories/ProjectRepository'))();
       const project = await projectRepo.findById(projectId);
       
       if (!project) {
         throw new Error(`Project ${projectId} not found`);
       }
       
-      // 2. Get dev command from project config
+      // Get dev command from project config
       const devCommand = project.dev_command || 'npm run dev';
       const packageManager = project.package_manager || 'npm';
       
       logger.info(`📦 Using package manager: ${packageManager}`);
       logger.info(`🔧 Dev command: ${devCommand}`);
       
-      // 3. Check if dev server is already running
-      if (this.settings.includeStatusCheck) {
+      // Check if dev server is already running
+      if (config.settings.includeStatusCheck) {
         const isRunning = await this.checkDevServerStatus(project);
         if (isRunning) {
           logger.info('✅ Dev server is already running');
@@ -56,11 +85,11 @@ class DevServerStartStep extends BaseStep {
         }
       }
       
-      // 4. Start dev server
-      const terminalService = new TerminalService();
+      // Start dev server
+      const terminalService = new (require('@/domain/services/TerminalService'))();
       const result = await terminalService.executeCommand(devCommand, {
         cwd: workspacePath,
-        timeout: this.settings.timeout,
+        timeout: config.settings.timeout,
         env: {
           ...process.env,
           NODE_ENV: 'development'
@@ -70,9 +99,9 @@ class DevServerStartStep extends BaseStep {
       if (result.success) {
         logger.info('✅ Dev server started successfully');
         
-        // 5. Detect port if enabled
+        // Detect port if enabled
         let detectedPort = null;
-        if (this.settings.includePortDetection) {
+        if (config.settings.includePortDetection) {
           detectedPort = await this.detectDevServerPort(project, workspacePath);
         }
         
@@ -93,7 +122,7 @@ class DevServerStartStep extends BaseStep {
     } catch (error) {
       logger.error('❌ Failed to start dev server:', error);
       
-      if (this.settings.includeErrorHandling) {
+      if (config.settings.includeErrorHandling) {
         return {
           success: false,
           message: 'Failed to start dev server',
@@ -105,7 +134,11 @@ class DevServerStartStep extends BaseStep {
         };
       }
       
-      throw error;
+      return {
+        success: false,
+        error: error.message,
+        timestamp: new Date()
+      };
     }
   }
 
@@ -158,6 +191,19 @@ class DevServerStartStep extends BaseStep {
       return false;
     }
   }
+
+  validateContext(context) {
+    if (!context.projectId) {
+      throw new Error('Project ID is required');
+    }
+  }
 }
 
-module.exports = DevServerStartStep; 
+// Create instance for execution
+const stepInstance = new DevServerStartStep();
+
+// Export in StepRegistry format
+module.exports = {
+  config,
+  execute: async (context) => await stepInstance.execute(context)
+}; 

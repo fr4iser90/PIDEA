@@ -11,14 +11,16 @@
       "type": "documentation",
       "category": "api",
       "description": "Generate API documentation from code",
-      "dependencies": ["analysis", "file-system"]
+      "dependencies": ["analysis", "file-system"],
+      "file": "steps/generate_api_docs.js"
     },
     "generate_readme": {
       "name": "generate_readme",
       "type": "documentation",
       "category": "readme",
       "description": "Generate or update README file",
-      "dependencies": ["analysis", "file-system"]
+      "dependencies": ["analysis", "file-system"],
+      "file": "steps/generate_readme.js"
     },
     "generate_architecture_docs": {
       "name": "generate_architecture_docs",

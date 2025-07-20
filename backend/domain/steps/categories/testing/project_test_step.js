@@ -1,201 +1,239 @@
-const { BaseStep } = require('@/domain/steps/BaseStep');
-const { ProjectRepository } = require('@/domain/repositories/ProjectRepository');
-const { TerminalService } = require('@/domain/services/TerminalService');
-const logger = require('@/infrastructure/logging/logger');
+/**
+ * Project Test Step
+ * Runs tests for the project
+ */
 
-class ProjectTestStep extends BaseStep {
-  constructor() {
-    super({
+const StepBuilder = require('@steps/StepBuilder');
+const Logger = require('@logging/Logger');
+const logger = new Logger('ProjectTestStep');
+
+// Step configuration
+const config = {
       name: 'ProjectTestStep',
-      description: 'Run project tests using configured test command',
+  type: 'testing',
       category: 'testing',
+  description: 'Run tests for the project',
+  version: '1.0.0',
+  dependencies: ['projectRepository', 'terminalService'],
       settings: {
+    includeUnitTests: true,
+    includeIntegrationTests: true,
         includeCoverage: true,
-        includeWatchMode: false,
-        includeVerboseOutput: false,
-        includeTestResults: true,
         timeout: 120000
-      }
-    });
+  },
+  validation: {
+    required: ['projectId'],
+    optional: ['workspacePath']
+  }
+};
+
+class ProjectTestStep {
+  constructor() {
+    this.name = 'ProjectTestStep';
+    this.description = 'Run tests for the project';
+    this.category = 'testing';
+    this.dependencies = ['projectRepository', 'terminalService'];
   }
 
-  async execute(context) {
+  static getConfig() {
+    return config;
+  }
+
+  async execute(context = {}) {
+    const config = ProjectTestStep.getConfig();
+    const step = StepBuilder.build(config, context);
+    
     try {
+      logger.info(`🔧 Executing ${this.name}...`);
+      
+      // Validate context
+      this.validateContext(context);
+      
       const { projectId, workspacePath } = context;
       
       logger.info(`🧪 Running tests for project ${projectId}`);
       
-      // 1. Get project configuration from database
-      const projectRepo = new ProjectRepository();
+      // Get project configuration from database
+      const projectRepo = new (require('@/domain/repositories/ProjectRepository'))();
       const project = await projectRepo.findById(projectId);
       
       if (!project) {
         throw new Error(`Project ${projectId} not found`);
       }
       
-      // 2. Get test command from project config
-      const testCommand = project.test_command || 'npm test';
       const packageManager = project.package_manager || 'npm';
-      
-      logger.info(`📦 Using package manager: ${packageManager}`);
-      logger.info(`🧪 Test command: ${testCommand}`);
-      
-      // 3. Build enhanced test command based on settings
-      const enhancedCommand = this.buildTestCommand(testCommand);
-      logger.info(`🔧 Enhanced command: ${enhancedCommand}`);
-      
-      // 4. Run tests
-      const terminalService = new TerminalService();
-      const result = await terminalService.executeCommand(enhancedCommand, {
-        cwd: workspacePath,
-        timeout: this.settings.timeout,
-        env: {
-          ...process.env,
-          NODE_ENV: 'test',
-          CI: 'true' // Ensure consistent test environment
+      const testResults = {
+        unit: null,
+        integration: null,
+        coverage: null,
+        summary: {
+          total: 0,
+          passed: 0,
+          failed: 0,
+          status: 'unknown'
         }
-      });
+      };
       
-      // 5. Parse test results
-      const testResults = this.parseTestResults(result.output, result.success);
-      
-      if (result.success) {
-        logger.info('✅ Tests passed successfully');
-        
-        return {
-          success: true,
-          message: 'Tests passed successfully',
-          data: {
-            status: 'passed',
-            command: enhancedCommand,
-            output: result.output,
-            testResults: testResults,
-            coverage: testResults.coverage
-          }
-        };
-      } else {
-        logger.warn('⚠️ Tests failed or had issues');
-        
-        return {
-          success: false,
-          message: 'Tests failed or had issues',
-          error: result.error,
-          data: {
-            status: 'failed',
-            command: enhancedCommand,
-            output: result.output,
-            testResults: testResults,
-            coverage: testResults.coverage
-          }
-        };
+      // Run unit tests
+      if (config.settings.includeUnitTests) {
+        testResults.unit = await this.runUnitTests(workspacePath, packageManager);
+        testResults.summary.total++;
+        if (testResults.unit.success) {
+          testResults.summary.passed++;
+        } else {
+          testResults.summary.failed++;
+        }
       }
       
+      // Run integration tests
+      if (config.settings.includeIntegrationTests) {
+        testResults.integration = await this.runIntegrationTests(workspacePath, packageManager);
+        testResults.summary.total++;
+        if (testResults.integration.success) {
+          testResults.summary.passed++;
+        } else {
+          testResults.summary.failed++;
+        }
+      }
+      
+      // Run coverage tests
+      if (config.settings.includeCoverage) {
+        testResults.coverage = await this.runCoverageTests(workspacePath, packageManager);
+        testResults.summary.total++;
+        if (testResults.coverage.success) {
+          testResults.summary.passed++;
+        } else {
+          testResults.summary.failed++;
+        }
+      }
+      
+      // Determine overall status
+      if (testResults.summary.failed === 0) {
+        testResults.summary.status = 'passed';
+      } else if (testResults.summary.passed > 0) {
+        testResults.summary.status = 'partial';
+      } else {
+        testResults.summary.status = 'failed';
+      }
+      
+      logger.info(`✅ Tests completed. Status: ${testResults.summary.status}`);
+        
+        return {
+        success: testResults.summary.status === 'passed',
+        message: 'Tests completed',
+        data: testResults
+        };
+      
     } catch (error) {
-      logger.error('❌ Failed to run tests:', error);
+      logger.error('❌ Tests failed:', error);
       
       return {
         success: false,
-        message: 'Failed to run tests',
         error: error.message,
-        data: {
-          status: 'error',
-          command: context.testCommand || 'npm test'
-        }
+        timestamp: new Date()
       };
     }
   }
 
-  buildTestCommand(baseCommand) {
-    let command = baseCommand;
-    
-    // Add coverage if enabled
-    if (this.settings.includeCoverage) {
-      if (command.includes('npm test')) {
-        command = command.replace('npm test', 'npm run test:coverage');
-      } else if (command.includes('yarn test')) {
-        command = command.replace('yarn test', 'yarn test --coverage');
-      } else if (command.includes('pnpm test')) {
-        command = command.replace('pnpm test', 'pnpm test --coverage');
-      } else if (!command.includes('--coverage')) {
-        command += ' --coverage';
+  async runUnitTests(workspacePath, packageManager) {
+    try {
+      const terminalService = new (require('@/domain/services/TerminalService'))();
+      const testCommand = `${packageManager} test`;
+      
+      const result = await terminalService.executeCommand(testCommand, {
+        cwd: workspacePath,
+        timeout: 60000,
+        env: {
+          ...process.env,
+          NODE_ENV: 'test'
+        }
+      });
+      
+      return {
+        success: result.success,
+        command: testCommand,
+        output: result.output,
+        error: result.error
+      };
+      
+    } catch (error) {
+      return {
+        success: false,
+        error: error.message
+      };
       }
     }
     
-    // Add watch mode if enabled
-    if (this.settings.includeWatchMode) {
-      if (!command.includes('--watch') && !command.includes('watch')) {
-        command += ' --watch';
+  async runIntegrationTests(workspacePath, packageManager) {
+    try {
+      const terminalService = new (require('@/domain/services/TerminalService'))();
+      const testCommand = `${packageManager} run test:integration`;
+      
+      const result = await terminalService.executeCommand(testCommand, {
+        cwd: workspacePath,
+        timeout: 60000,
+        env: {
+          ...process.env,
+          NODE_ENV: 'test'
       }
+      });
+      
+      return {
+        success: result.success,
+        command: testCommand,
+        output: result.output,
+        error: result.error
+      };
+      
+    } catch (error) {
+      return {
+        success: false,
+        error: error.message
+      };
     }
-    
-    // Add verbose output if enabled
-    if (this.settings.includeVerboseOutput) {
-      if (!command.includes('--verbose')) {
-        command += ' --verbose';
-      }
-    }
-    
-    return command;
   }
 
-  parseTestResults(output, success) {
-    const results = {
-      passed: 0,
-      failed: 0,
-      skipped: 0,
-      total: 0,
-      coverage: null,
-      duration: null,
-      errors: []
-    };
-    
-    if (!output) {
-      return results;
-    }
-    
-    const lines = output.split('\n');
-    
-    // Parse Jest-style output
-    for (const line of lines) {
-      // Test counts
-      const testMatch = line.match(/(\d+) tests? passed, (\d+) tests? failed/);
-      if (testMatch) {
-        results.passed = parseInt(testMatch[1]);
-        results.failed = parseInt(testMatch[2]);
-        results.total = results.passed + results.failed;
-      }
+  async runCoverageTests(workspacePath, packageManager) {
+    try {
+      const terminalService = new (require('@/domain/services/TerminalService'))();
+      const testCommand = `${packageManager} run test:coverage`;
       
-      // Coverage
-      const coverageMatch = line.match(/All files\s+\|\s+(\d+(?:\.\d+)?)%/);
-      if (coverageMatch) {
-        results.coverage = parseFloat(coverageMatch[1]);
-      }
+      const result = await terminalService.executeCommand(testCommand, {
+        cwd: workspacePath,
+        timeout: 60000,
+        env: {
+          ...process.env,
+          NODE_ENV: 'test'
+        }
+      });
       
-      // Duration
-      const durationMatch = line.match(/Time:\s+(\d+(?:\.\d+)?)s/);
-      if (durationMatch) {
-        results.duration = parseFloat(durationMatch[1]);
-      }
+      return {
+        success: result.success,
+        command: testCommand,
+        output: result.output,
+        error: result.error
+      };
       
-      // Errors
-      if (line.includes('FAIL') || line.includes('Error:')) {
-        results.errors.push(line.trim());
-      }
+    } catch (error) {
+      return {
+        success: false,
+        error: error.message
+      };
     }
-    
-    // Fallback parsing for different test runners
-    if (results.total === 0) {
-      // Try to parse other formats
-      const totalMatch = output.match(/(\d+) tests?/);
-      if (totalMatch) {
-        results.total = parseInt(totalMatch[1]);
-        results.passed = success ? results.total : 0;
-        results.failed = success ? 0 : results.total;
-      }
+  }
+
+  validateContext(context) {
+    if (!context.projectId) {
+      throw new Error('Project ID is required');
     }
-    
-    return results;
   }
 }
 
-module.exports = ProjectTestStep; 
+// Create instance for execution
+const stepInstance = new ProjectTestStep();
+
+// Export in StepRegistry format
+module.exports = {
+  config,
+  execute: async (context) => await stepInstance.execute(context)
+}; 

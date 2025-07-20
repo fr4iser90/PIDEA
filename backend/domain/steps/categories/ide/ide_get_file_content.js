@@ -3,27 +3,51 @@
  * Gets file content from the IDE using the existing BrowserManager
  */
 
-const { BaseStep } = require('../../BaseStep');
+const StepBuilder = require('@steps/StepBuilder');
 const Logger = require('@logging/Logger');
 const logger = new Logger('IDEGetFileContentStep');
 
-class IDEGetFileContentStep extends BaseStep {
-  constructor() {
-    super({
+// Step configuration
+const config = {
       name: 'IDE_GET_FILE_CONTENT',
       type: 'ide',
       category: 'ide',
       description: 'Gets file content from the IDE',
       version: '1.0.0',
-      config: {
+  dependencies: ['browserManager'],
+  settings: {
+    timeout: 30000,
+    ideType: 'cursor',
+    workspacePath: null
+  },
+  validation: {
         required: ['filePath'],
         optional: ['ideType', 'workspacePath']
       }
-    });
+};
+
+class IDEGetFileContentStep {
+  constructor() {
+    this.name = 'IDE_GET_FILE_CONTENT';
+    this.description = 'Gets file content from the IDE';
+    this.category = 'ide';
+    this.dependencies = ['browserManager'];
   }
 
-  async execute(context) {
+  static getConfig() {
+    return config;
+  }
+
+  async execute(context = {}) {
+    const config = IDEGetFileContentStep.getConfig();
+    const step = StepBuilder.build(config, context);
+    
     try {
+      logger.info(`🔧 Executing ${this.name}...`);
+      
+      // Validate context
+      this.validateContext(context);
+      
       const { filePath, ideType, workspacePath } = context;
       
       logger.info('Executing IDE_GET_FILE_CONTENT step', {
@@ -32,11 +56,13 @@ class IDEGetFileContentStep extends BaseStep {
         workspacePath
       });
 
-      // Get BrowserManager from DI container
-      const { getServiceRegistry } = require('@/infrastructure/di/ServiceRegistry');
-      const serviceRegistry = getServiceRegistry();
-      const browserManager = serviceRegistry.getContainer().resolve('browserManager');
+      // Get BrowserManager from global application (like old steps)
+      const application = global.application;
+      if (!application) {
+        throw new Error('Application not available');
+      }
 
+      const { browserManager } = application;
       if (!browserManager) {
         throw new Error('BrowserManager not available');
       }
@@ -71,6 +97,19 @@ class IDEGetFileContentStep extends BaseStep {
       };
     }
   }
+
+  validateContext(context) {
+    if (!context.filePath) {
+      throw new Error('File path is required');
+    }
+  }
 }
 
-module.exports = IDEGetFileContentStep; 
+// Create instance for execution
+const stepInstance = new IDEGetFileContentStep();
+
+// Export in StepRegistry format
+module.exports = {
+  config,
+  execute: async (context) => await stepInstance.execute(context)
+}; 
