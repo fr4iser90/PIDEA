@@ -193,10 +193,8 @@ export const apiCall = async (endpoint, options = {}, projectId = null) => {
     
     if (!response.ok) {
       if (response.status === 401) {
-        logger.info('❌ [APIChatRepository] 401 Unauthorized - logging out user');
-        // Token expired or invalid, logout user
-        const { logout } = useAuthStore.getState();
-        logout();
+        logger.info('❌ [APIChatRepository] 401 Unauthorized - user not authenticated');
+        // Don't call logout if user is not authenticated
         throw new Error('Authentication required. Please log in again.');
       }
       throw new Error(`HTTP ${response.status}: ${response.statusText}`);

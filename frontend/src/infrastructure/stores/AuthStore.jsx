@@ -167,7 +167,7 @@ const useAuthStore = create(
         }
       },
 
-      // Handle authentication failures with instant redirect
+      // Handle authentication failures without redirect
       handleAuthFailure: async (reason = 'Session expired') => {
         const { showWarning } = useNotificationStore.getState();
         
@@ -182,13 +182,12 @@ const useAuthStore = create(
 
         // Show notification
         showWarning(
-          'Your session has expired. Redirecting to login...',
+          'Your session has expired. Please log in again.',
           'Session Expired',
           false
         );
 
-        // Instant redirect - no countdown
-        window.location.href = '/';
+        // No automatic redirect - let AuthWrapper handle it
       },
 
       // Reset redirect flag

@@ -46,9 +46,9 @@ const AuthWrapper = ({ children }) => {
       }
     };
 
-    // Always validate - cookies are handled automatically
+    // Only validate once on mount - cookies are handled automatically
     checkAuth();
-      }, [validateToken, showWarning, showInfo]);
+  }, []); // Empty dependency array - only run once
 
   // Handle redirect to login
   useEffect(() => {

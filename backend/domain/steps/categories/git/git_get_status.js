@@ -5,7 +5,7 @@
 
 const StepBuilder = require('@steps/StepBuilder');
 const Logger = require('@logging/Logger');
-const logger = new Logger('GitGetStatusStep');
+const logger = new Logger('git_get_status_step');
 
 // Step configuration
 const config = {
@@ -38,9 +38,6 @@ class GitGetStatusStep {
   }
 
   async execute(context = {}) {
-    const config = GitGetStatusStep.getConfig();
-    const step = StepBuilder.build(config, context);
-    
     try {
       logger.info(`🔧 Executing ${this.name}...`);
       

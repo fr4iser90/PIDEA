@@ -79,14 +79,14 @@ class AuthController {
       res.cookie('accessToken', result.data.session.accessToken, {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
-        sameSite: 'strict',
+        sameSite: 'lax', // Allow cross-origin requests in development
         maxAge: 2 * 60 * 60 * 1000 // 2 hours
       });
       
       res.cookie('refreshToken', result.data.session.refreshToken, {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
-        sameSite: 'strict',
+        sameSite: 'lax', // Allow cross-origin requests in development
         maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
       });
 

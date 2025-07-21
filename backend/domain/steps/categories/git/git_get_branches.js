@@ -5,7 +5,7 @@
 
 const StepBuilder = require('@steps/StepBuilder');
 const Logger = require('@logging/Logger');
-const logger = new Logger('GitGetBranchesStep');
+const logger = new Logger('git_get_branches_step');
 
 // Step configuration
 const config = {
@@ -39,9 +39,6 @@ class GitGetBranchesStep {
   }
 
   async execute(context = {}) {
-    const config = GitGetBranchesStep.getConfig();
-    const step = StepBuilder.build(config, context);
-    
     try {
       logger.info(`🔧 Executing ${this.name}...`);
       
