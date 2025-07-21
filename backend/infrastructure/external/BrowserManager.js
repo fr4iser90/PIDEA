@@ -690,23 +690,42 @@ class BrowserManager {
     try {
       const page = await this.getPage();
       if (!page) {
-        throw new Error('No connection to Cursor IDE');
+        throw new Error('No connection to IDE');
       }
 
       logger.info(`Typing message: ${message}`);
 
+      // Determine IDE type based on current port
+      const currentPort = this.getCurrentPort();
+      let ideType = 'cursor'; // default
+      
+      if (currentPort >= 9222 && currentPort <= 9231) {
+        ideType = 'cursor';
+      } else if (currentPort >= 9232 && currentPort <= 9241) {
+        ideType = 'vscode';
+      } else if (currentPort >= 9242 && currentPort <= 9251) {
+        ideType = 'windsurf';
+      }
+      
+      logger.info(`Detected IDE type: ${ideType} on port ${currentPort}`);
+
+      // Get IDE-specific selectors
+      const IDETypes = require('@services/ide/IDETypes');
+      const ideMetadata = IDETypes.getMetadata(ideType);
+      const chatSelectors = ideMetadata?.chatSelectors;
+      
+      if (!chatSelectors) {
+        throw new Error(`No chat selectors found for IDE type: ${ideType}`);
+      }
+
       // Wait for chat input to be ready
       await page.waitForTimeout(1000);
 
-      // Try multiple selectors for the chat input
+      // Use IDE-specific input selectors
       const inputSelectors = [
-        '.chat-input',
-        '.monaco-editor[data-testid="chat-input"]',
-        'textarea[placeholder*="chat"]',
-        'textarea[placeholder*="message"]',
-        '.monaco-editor textarea',
-        '[contenteditable="true"][role="textbox"]',
-        '.chat-input textarea'
+        chatSelectors.input,
+        chatSelectors.inputContainer + ' textarea',
+        chatSelectors.inputContainer + ' [contenteditable="true"]'
       ];
 
       let chatInput = null;
@@ -714,7 +733,7 @@ class BrowserManager {
         try {
           chatInput = await page.$(selector);
           if (chatInput) {
-            logger.info(`Found chat input with selector: ${selector}`);
+            logger.info(`Found chat input with selector: ${selector} (${ideType})`);
             break;
           }
         } catch (e) {
@@ -723,7 +742,7 @@ class BrowserManager {
       }
 
       if (!chatInput) {
-        throw new Error('Chat input not found');
+        throw new Error(`Chat input not found for ${ideType} IDE`);
       }
 
       logger.info(`About to click chat input...`);
@@ -739,35 +758,50 @@ class BrowserManager {
 
       if (send) {
         logger.info(`Looking for send button...`);
-        // Find and click send button
-        const sendSelectors = [
-          'button[aria-label*="Send"]',
-          '.send-button',
-          '.codicon-send',
-          'button[title*="Send"]',
-          '[data-testid="send-button"]'
-        ];
-
-        let sendButton = null;
-        for (const selector of sendSelectors) {
-          try {
-            sendButton = await page.$(selector);
-            if (sendButton) {
-              logger.info(`Found send button with selector: ${selector}`);
-              break;
-            }
-          } catch (e) {
-            // Continue to next selector
-          }
-        }
-
-        if (sendButton) {
-          await sendButton.click();
-          logger.info(`Message sent: ${message}`);
-        } else {
-          // Fallback: Press Enter to send
+        
+        // Use IDE-specific send method
+        if (ideType === 'cursor') {
+          // Cursor uses Enter key to send
           await chatInput.press('Enter');
-          logger.info(`Message sent via Enter key: ${message}`);
+          logger.info(`Message sent via Enter key (Cursor): ${message}`);
+        } else if (ideType === 'vscode') {
+          // VSCode might have a send button
+          const sendSelectors = [
+            '.codicon-send',
+            '.action-label[aria-label*="Send"]',
+            '.chat-execute-toolbar .codicon-send',
+            '.monaco-action-bar .codicon-send',
+            'button[aria-label*="Send"]',
+            '.send-button',
+            'button[title*="Send"]',
+            '[data-testid="send-button"]'
+          ];
+
+          let sendButton = null;
+          for (const selector of sendSelectors) {
+            try {
+              sendButton = await page.$(selector);
+              if (sendButton) {
+                logger.info(`Found VSCode send button with selector: ${selector}`);
+                break;
+              }
+            } catch (e) {
+              // Continue to next selector
+            }
+          }
+
+          if (sendButton) {
+            await sendButton.click();
+            logger.info(`Message sent via VSCode send button: ${message}`);
+          } else {
+            // Fallback: Press Enter to send
+            await chatInput.press('Enter');
+            logger.info(`Message sent via Enter key (VSCode fallback): ${message}`);
+          }
+        } else {
+          // Generic fallback for other IDEs
+          await chatInput.press('Enter');
+          logger.info(`Message sent via Enter key (${ideType}): ${message}`);
         }
       }
 
@@ -775,6 +809,7 @@ class BrowserManager {
 
     } catch (error) {
       logger.error('Error typing message:', error.message);
+      logger.error('Error stack:', error.stack);
       return false;
     }
   }

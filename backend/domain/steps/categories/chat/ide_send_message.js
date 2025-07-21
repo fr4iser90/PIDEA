@@ -53,26 +53,27 @@ class IDESendMessageStep {
       logger.info(`📤 Sending message to IDE for project ${projectId}${ideType ? ` (${ideType})` : ''}`);
       
       // Get services via dependency injection
-      const cursorIDEService = context.getService('cursorIDEService');
+      const browserManager = context.getService('browserManager');
       const chatSessionService = context.getService('chatSessionService');
       
-      if (!cursorIDEService) {
-        throw new Error('CursorIDEService not available in context');
+      if (!browserManager) {
+        throw new Error('BrowserManager not available in context');
       }
       if (!chatSessionService) {
         throw new Error('ChatSessionService not available in context');
       }
       
-      // Send message via CursorIDE Service (ideService not registered)
-      const cursorIDEService = context.getService('cursorIDEService');
-      if (!cursorIDEService) {
-        throw new Error('CursorIDEService not available in context');
+      // Switch to active port first
+      const idePortManager = context.getService('idePortManager');
+      if (idePortManager) {
+        const activePort = idePortManager.getActivePort();
+        if (activePort) {
+          await browserManager.switchToPort(activePort);
+        }
       }
       
-      const result = await cursorIDEService.sendMessage(message, {
-        projectId: projectId,
-        timeout: config.settings.timeout
-      });
+      // Send message directly via BrowserManager (no infinite loop)
+      const result = await browserManager.typeMessage(message, true);
       
       if (!result) {
         throw new Error('Failed to send message to IDE - BrowserManager returned false');
