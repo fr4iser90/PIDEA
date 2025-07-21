@@ -287,7 +287,8 @@ class AnalysisOrchestrator {
         'performance': 'PerformanceAnalysisStep',
         'architecture': 'ArchitectureAnalysisStep',
         'techstack': 'TechStackAnalysisStep',
-        'dependency': 'DependencyAnalysisStep'
+        'dependency': 'DependencyAnalysisStep',
+        'repository-type': 'RepositoryTypeAnalysisStep' // NEW: Fast repository type detection
       };
 
       const stepName = stepMapping[analysisType];

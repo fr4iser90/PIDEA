@@ -855,28 +855,40 @@ class ServiceRegistry {
     registerStrategyServices() {
         this.logger.info('Registering strategy services...');
 
-        // Monorepo strategy
+        // REPLACED: Monorepo strategy with RepositoryTypeAnalysisStep
         this.container.register('monorepoStrategy', (logger, eventBus, fileSystemService) => {
-            const MonorepoStrategy = require('../strategies/MonorepoStrategy');
-            return new MonorepoStrategy({ logger, eventBus, fileSystemService });
+            // TODO: Replace with RepositoryTypeAnalysisStep after integration
+            return {
+                isMonorepo: async () => false,
+                analyzeMonorepo: async () => ({ stub: true, message: 'Replaced with RepositoryTypeAnalysisStep' })
+            };
         }, { singleton: true, dependencies: ['logger', 'eventBus', 'fileSystemService'] });
 
-        // Single repo strategy
+        // REPLACED: Single repo strategy with RepositoryTypeAnalysisStep
         this.container.register('singleRepoStrategy', (logger, eventBus, fileSystemService) => {
-            const SingleRepoStrategy = require('../strategies/SingleRepoStrategy');
-            return new SingleRepoStrategy({ logger, eventBus, fileSystemService });
+            // TODO: Replace with RepositoryTypeAnalysisStep after integration
+            return {
+                isSingleRepo: async () => true,
+                analyzeSingleRepo: async () => ({ stub: true, message: 'Replaced with RepositoryTypeAnalysisStep' })
+            };
         }, { singleton: true, dependencies: ['logger', 'eventBus', 'fileSystemService'] });
 
-        // Recommendations service
+        // REPLACED: Recommendations service with stub
         this.container.register('recommendationsService', (logger) => {
-            const RecommendationsService = require('../strategies/single-repo/services/recommendationsService');
-            return new RecommendationsService(logger);
+            // TODO: Replace with proper recommendations service
+            return {
+                generateRecommendations: async () => ({ recommendations: [], stub: true }),
+                analyzeRecommendations: async () => ({ analysis: [], stub: true })
+            };
         }, { singleton: true, dependencies: ['logger'] });
 
-        // Optimization service
+        // REPLACED: Optimization service with stub
         this.container.register('optimizationService', (logger) => {
-            const OptimizationService = require('../strategies/single-repo/services/optimizationService');
-            return new OptimizationService(logger);
+            // TODO: Replace with proper optimization service
+            return {
+                optimize: async () => ({ optimizations: [], stub: true }),
+                analyzeOptimizations: async () => ({ analysis: [], stub: true })
+            };
         }, { singleton: true, dependencies: ['logger'] });
 
         this.registeredServices.add('strategies');
@@ -1201,26 +1213,38 @@ class ServiceRegistry {
         switch (serviceName) {
             case 'monorepoStrategy':
                 this.container.register('monorepoStrategy', (logger, eventBus, fileSystemService) => {
-                    const MonorepoStrategy = require('../strategies/MonorepoStrategy');
-                    return new MonorepoStrategy({ logger, eventBus, fileSystemService });
+                    // TODO: Replace with RepositoryTypeAnalysisStep after integration
+                    return {
+                        isMonorepo: async () => false,
+                        analyzeMonorepo: async () => ({ stub: true, message: 'Replaced with RepositoryTypeAnalysisStep' })
+                    };
                 }, { singleton: true, dependencies: ['logger', 'eventBus', 'fileSystemService'] });
                 break;
             case 'singleRepoStrategy':
                 this.container.register('singleRepoStrategy', (logger, eventBus, fileSystemService) => {
-                    const SingleRepoStrategy = require('../strategies/SingleRepoStrategy');
-                    return new SingleRepoStrategy({ logger, eventBus, fileSystemService });
+                    // TODO: Replace with RepositoryTypeAnalysisStep after integration
+                    return {
+                        isSingleRepo: async () => true,
+                        analyzeSingleRepo: async () => ({ stub: true, message: 'Replaced with RepositoryTypeAnalysisStep' })
+                    };
                 }, { singleton: true, dependencies: ['logger', 'eventBus', 'fileSystemService'] });
                 break;
             case 'recommendationsService':
                 this.container.register('recommendationsService', (logger) => {
-                    const RecommendationsService = require('../strategies/single-repo/services/recommendationsService');
-                    return new RecommendationsService(logger);
+                    // TODO: Replace with proper recommendations service
+                    return {
+                        generateRecommendations: async () => ({ recommendations: [], stub: true }),
+                        analyzeRecommendations: async () => ({ analysis: [], stub: true })
+                    };
                 }, { singleton: true, dependencies: ['logger'] });
                 break;
             case 'optimizationService':
                 this.container.register('optimizationService', (logger) => {
-                    const OptimizationService = require('../strategies/single-repo/services/optimizationService');
-                    return new OptimizationService(logger);
+                    // TODO: Replace with proper optimization service
+                    return {
+                        optimize: async () => ({ optimizations: [], stub: true }),
+                        analyzeOptimizations: async () => ({ analysis: [], stub: true })
+                    };
                 }, { singleton: true, dependencies: ['logger'] });
                 break;
             default:
