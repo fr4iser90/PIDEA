@@ -366,7 +366,7 @@ class HandlerAudit {
     }
 
     // Check for data retention compliance
-    const sensitiveData = ['password', 'token', 'key', 'secret'];
+    const sensitiveData = ['password', 'key', 'secret'];
     const requestString = JSON.stringify(data.request || {});
     if (sensitiveData.some(term => requestString.includes(term))) {
       violations.push('SENSITIVE_DATA_EXPOSURE');

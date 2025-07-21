@@ -14,10 +14,10 @@ const ErrorDisplayTest = () => {
   const createTestError = (type) => {
     const errorMap = {
       auth: {
-        message: 'Authentication token has expired',
+        message: 'Authentication session has expired',
         code: ERROR_CODES.AUTH_EXPIRED,
         title: 'Authentication Error',
-        stack: 'Error: Token expired\n    at AuthService.validateToken (auth.js:25)\n    at App.jsx:42'
+        stack: 'Error: Session expired\n    at AuthService.validateAuth (auth.js:25)\n    at App.jsx:42'
       },
       network: {
         message: 'Failed to fetch data from server',

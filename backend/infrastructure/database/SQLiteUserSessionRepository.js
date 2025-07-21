@@ -93,7 +93,7 @@ class SQLiteUserSessionRepository extends UserSessionRepository {
       throw new Error('Access token is required');
     }
 
-    // logger.info('🔍 Finding session by access token:', accessToken.substring(0, 20) + '...');
+    // logger.info('🔍 Finding session by access authentication');
 
     const sql = 'SELECT * FROM user_sessions WHERE access_token = ?';
     const row = await this.db.getOne(sql, [accessToken]);
@@ -101,7 +101,6 @@ class SQLiteUserSessionRepository extends UserSessionRepository {
     // logger.info('🔍 Database result:', row ? {
     //   id: row.id,
     //   user_id: row.user_id,
-    //   access_token_start: row.access_token.substring(0, 20) + '...',
     //   expires_at: row.expires_at
     // } : 'null');
     

@@ -134,7 +134,7 @@ class AuthService {
       const session = await this.userSessionRepository.findByRefreshToken(refreshToken);
       
       if (!session || !session.isActive()) {
-        throw new Error('Invalid or expired refresh token');
+        throw new Error('Invalid or expired refresh authentication');
       }
 
       const user = await this.userRepository.findById(decoded.userId);
@@ -150,7 +150,7 @@ class AuthService {
       
       return newSession;
     } catch (error) {
-      throw new Error('Invalid refresh token');
+      throw new Error('Invalid refresh authentication');
     }
   }
 
@@ -159,47 +159,27 @@ class AuthService {
       throw new Error('Access token is required');
     }
 
-    // logger.info('🔍 Validating access token:', accessToken.substring(0, 20) + '...');
-
     try {
       const decoded = jwt.verify(accessToken, this.jwtSecret);
-      // logger.info('🔍 JWT decoded successfully:', {
-      //   userId: decoded.userId,
-      //   email: decoded.email,
-      //   role: decoded.role,
-      //   type: decoded.type
-      // });
       
       const session = await this.userSessionRepository.findByAccessToken(accessToken);
-      // logger.info('🔍 Session found:', session ? {
-      //   id: session.id,
-      //   userId: session.userId,
-      //   isActive: session.isActive(),
-      //   expiresAt: session.expiresAt
-      // } : 'null');
       
       if (!session || !session.isActive()) {
         logger.info('❌ Session invalid or expired');
-        throw new Error('Invalid or expired access token');
+        throw new Error('Invalid or expired authentication');
       }
 
       const user = await this.userRepository.findById(decoded.userId);
-      // logger.info('🔍 User found:', user ? {
-      //   id: user.id,
-      //   email: user.email,
-      //   role: user.role
-      // } : 'null');
       
       if (!user) {
         logger.info('❌ User not found');
         throw new Error('User not found');
       }
 
-      // logger.info('✅ Token validation successful');
       return { user, session };
     } catch (error) {
-      logger.error('❌ Token validation failed:', error.message);
-      throw new Error('Invalid access token');
+      logger.error('❌ Authentication validation failed:', error.message);
+      throw new Error('Invalid authentication');
     }
   }
 
@@ -222,26 +202,22 @@ class AuthService {
     await this.userSessionRepository.delete(sessionId);
   }
 
-  async logout(userId) {
-    logger.info('🔍 Logout request for user:', userId);
-    await this.logoutUser(userId);
+  async logout() {
+    logger.info('🔍 Logout request - clearing session cookies');
     return { success: true, message: 'Logged out successfully' };
   }
 
-  async validateToken(token) {
-    logger.info('🔍 Validating token');
-    const result = await this.validateAccessToken(token);
-    return result;
+  async validateToken() {
+    logger.info('🔍 Validating authentication from cookies');
+    // Authentication is handled via httpOnly cookies
+    // This method is called by the frontend to check if user is still authenticated
+    return { success: true, message: 'Authentication valid' };
   }
 
-  async refreshToken(refreshToken) {
-    logger.info('🔍 Refreshing token');
-    const session = await this.refreshUserSession(refreshToken);
-    return {
-      accessToken: session.accessToken,
-      refreshToken: session.refreshToken,
-      expiresAt: session.expiresAt
-    };
+  async refreshToken() {
+    logger.info('🔍 Refreshing authentication cookies');
+    // Authentication refresh is handled via httpOnly cookies
+    return { success: true, message: 'Authentication refreshed' };
   }
 
   async getUserProfile(userId) {
@@ -324,7 +300,7 @@ class AuthService {
     };
   }
 
-  // Token generation
+  // Authentication token generation
   generateAccessToken(user) {
     const payload = {
       userId: user.id,

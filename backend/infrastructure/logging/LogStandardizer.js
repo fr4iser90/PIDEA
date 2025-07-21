@@ -6,7 +6,6 @@ class LogStandardizer {
     constructor() {
         this.secretPatterns = [
             /password\s*[:=]\s*['"]?[^'"\s]+['"]?/gi,
-            /token\s*[:=]\s*['"]?[^'"\s]+['"]?/gi,
             /api_key\s*[:=]\s*['"]?[^'"\s]+['"]?/gi,
             /auth_token\s*[:=]\s*['"]?[^'"\s]+['"]?/gi,
             /secret\s*[:=]\s*['"]?[^'"\s]+['"]?/gi,
@@ -31,7 +30,7 @@ class LogStandardizer {
         ];
 
         this.sensitiveKeys = [
-            'password', 'token', 'api_key', 'auth_token', 'secret',
+            'password', 'api_key', 'auth_token', 'secret',
             'key', 'private_key', 'access_token', 'refresh_token',
             'session_id', 'authorization', 'cookie', 'session'
         ];

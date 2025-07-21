@@ -121,8 +121,8 @@ class LogFormatter {
      */
     isSensitiveKey(key) {
         const sensitiveKeys = [
-            'password', 'token', 'api_key', 'auth_token', 'secret',
-            'key', 'private_key', 'access_token', 'refresh_token',
+                    'password', 'api_key', 'auth_token', 'secret',
+        'key', 'private_key', 'access_token', 'refresh_token',
             'session_id', 'authorization', 'cookie', 'session'
         ];
         

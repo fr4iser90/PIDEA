@@ -103,31 +103,20 @@ class AuthController {
   // POST /api/auth/refresh
   async refresh(req, res) {
     try {
-      const { refreshToken } = req.body;
-
-      if (!refreshToken) {
-        return res.status(400).json({
-          success: false,
-          error: 'Refresh token is required'
-        });
-      }
-
-      // Refresh session using application service
-      const result = await this.authApplicationService.refreshToken(refreshToken);
+      // Refresh authentication using application service
+      const result = await this.authApplicationService.refreshToken();
 
       res.json({
         success: true,
         data: {
-          accessToken: result.data.accessToken,
-          refreshToken: result.data.refreshToken,
-          expiresAt: result.data.expiresAt
+          message: 'Authentication refreshed successfully'
         }
       });
     } catch (error) {
       logger.error('Refresh error:', error);
       res.status(401).json({
         success: false,
-        error: 'Invalid refresh token'
+        error: 'Authentication refresh failed'
       });
     }
   }
@@ -135,20 +124,8 @@ class AuthController {
   // POST /api/auth/logout
   async logout(req, res) {
     try {
-      const { sessionId } = req.body;
-
-      if (sessionId) {
-        // Logout specific session
-        await this.authApplicationService.logout(sessionId);
-      } else if (req.user) {
-        // Logout all user sessions
-        await this.authApplicationService.logout(req.user.id);
-      } else {
-        return res.status(400).json({
-          success: false,
-          error: 'Session ID or authentication required'
-        });
-      }
+      // Logout using application service
+      await this.authApplicationService.logout();
 
       // Clear cookies
       res.clearCookie('accessToken');
@@ -198,11 +175,11 @@ class AuthController {
       if (!req.user) {
         return res.status(401).json({
           success: false,
-          error: 'Invalid or expired token'
+          error: 'Invalid or expired authentication'
         });
       }
 
-      // Token is valid, return user data
+      // Authentication is valid, return user data
       res.json({
         success: true,
         data: {
@@ -210,10 +187,10 @@ class AuthController {
         }
       });
     } catch (error) {
-      logger.error('Token validation error:', error);
+      logger.error('Authentication validation error:', error);
       res.status(401).json({
         success: false,
-        error: 'Token validation failed'
+        error: 'Authentication validation failed'
       });
     }
   }

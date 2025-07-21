@@ -471,34 +471,33 @@ class SecurityAnalysisStep {
     return { vulnerabilities, bestPractices };
   }
 
-  /**
-   * Detect hardcoded secrets in code
-   */
-  detectHardcodedSecrets(content, filePath) {
-    const vulnerabilities = [];
+      /**
+     * Detect hardcoded secrets in code
+     */
+    detectHardcodedSecrets(content, filePath) {
+        const vulnerabilities = [];
 
-    // Check for hardcoded secrets
-    const secretPatterns = [
-      { pattern: /password\s*[:=]\s*['"][^'"]{8,}['"]/gi, message: 'Hardcoded password detected' },
-      { pattern: /secret\s*[:=]\s*['"][^'"]{8,}['"]/gi, message: 'Hardcoded secret detected' },
-      { pattern: /api_key\s*[:=]\s*['"][^'"]{8,}['"]/gi, message: 'Hardcoded API key detected' },
-      { pattern: /token\s*[:=]\s*['"][^'"]{8,}['"]/gi, message: 'Hardcoded token detected' }
-    ];
+        // Check for hardcoded secrets
+        const secretPatterns = [
+            { pattern: /password\s*[:=]\s*['"][^'"]{8,}['"]/gi, message: 'Hardcoded password detected' },
+            { pattern: /secret\s*[:=]\s*['"][^'"]{8,}['"]/gi, message: 'Hardcoded secret detected' },
+            { pattern: /api_key\s*[:=]\s*['"][^'"]{8,}['"]/gi, message: 'Hardcoded API key detected' }
+        ];
 
-    secretPatterns.forEach(({ pattern, message }) => {
-      if (pattern.test(content)) {
-        vulnerabilities.push({
-          type: 'code',
-          severity: 'critical',
-          file: path.relative(process.cwd(), filePath),
-          message,
-          suggestion: 'Move secrets to environment variables or secure configuration'
+        secretPatterns.forEach(({ pattern, message }) => {
+            if (pattern.test(content)) {
+                vulnerabilities.push({
+                    type: 'code',
+                    severity: 'critical',
+                    file: path.relative(process.cwd(), filePath),
+                    message,
+                    suggestion: 'Move secrets to environment variables or secure configuration'
+                });
+            }
         });
-      }
-    });
 
-    return vulnerabilities;
-  }
+        return vulnerabilities;
+    }
 
   /**
    * Calculate risk level based on vulnerabilities

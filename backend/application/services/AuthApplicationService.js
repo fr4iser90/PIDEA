@@ -24,11 +24,11 @@ class AuthApplicationService {
         }
     }
 
-    async logout(token) {
+    async logout() {
         try {
             this.logger.info('AuthApplicationService: Processing logout');
             
-            const result = await this.authService.logout(token);
+            const result = await this.authService.logout();
             return {
                 success: true,
                 data: result
@@ -55,32 +55,32 @@ class AuthApplicationService {
         }
     }
 
-    async validateToken(token) {
+    async validateToken() {
         try {
-            this.logger.info('AuthApplicationService: Validating token');
+            this.logger.info('AuthApplicationService: Validating authentication');
             
-            const result = await this.authService.validateToken(token);
+            const result = await this.authService.validateToken();
             return {
                 success: true,
                 data: result
             };
         } catch (error) {
-            this.logger.error('Error validating token:', error);
+            this.logger.error('Error validating authentication:', error);
             throw error;
         }
     }
 
-    async refreshToken(token) {
+    async refreshToken() {
         try {
-            this.logger.info('AuthApplicationService: Refreshing token');
+            this.logger.info('AuthApplicationService: Refreshing authentication');
             
-            const result = await this.authService.refreshToken(token);
+            const result = await this.authService.refreshToken();
             return {
                 success: true,
                 data: result
             };
         } catch (error) {
-            this.logger.error('Error refreshing token:', error);
+            this.logger.error('Error refreshing authentication:', error);
             throw error;
         }
     }

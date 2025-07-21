@@ -149,13 +149,13 @@ class WebSocketManager {
   }
 
   extractTokenFromRequest(req) {
-    // From query parameters
+    // From query parameters (primary method for WebSocket authentication)
     const url = new URL(req.url, `http://${req.headers.host}`);
     if (url.searchParams.get('token')) {
       return url.searchParams.get('token');
     }
 
-    // From headers
+    // From headers (fallback)
     const authHeader = req.headers.authorization;
     if (authHeader && authHeader.startsWith('Bearer ')) {
       return authHeader.substring(7);

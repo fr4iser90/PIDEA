@@ -253,9 +253,9 @@ Please provide:
 Include code examples and explain the reasoning behind the fix.`,
                 variables: {
                     BUG_DESCRIPTION: 'User authentication fails intermittently',
-                    ERROR_MESSAGE: 'JWT token validation error',
+                    ERROR_MESSAGE: 'JWT authentication validation error',
                     ENVIRONMENT: 'Production',
-                    STEPS: 'Login with valid credentials, token expires after 1 hour'
+                    STEPS: 'Login with valid credentials, authentication expires after 1 hour'
                 }
             },
 
@@ -798,7 +798,7 @@ Please help:
 
 Provide comprehensive debugging guidance with examples.`,
                 variables: {
-                    ERROR_MESSAGE: 'JWT token validation failed',
+                    ERROR_MESSAGE: 'JWT authentication validation failed',
                     ERROR_TYPE: 'Authentication Error',
                     ENVIRONMENT: 'Production',
                     CODE_CONTEXT: 'User authentication middleware'

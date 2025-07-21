@@ -8,7 +8,7 @@ jest.mock('@/infrastructure/stores/AuthStore.jsx', () => ({
   __esModule: true,
   default: {
     getState: jest.fn(() => ({
-      getAuthHeaders: jest.fn(() => ({ 'Authorization': 'Bearer mock-token' }))
+      getAuthHeaders: jest.fn(() => ({})) // No auth headers needed with cookies
     }))
   }
 }));
@@ -76,8 +76,7 @@ describe('APIChatRepository - Phase Operations', () => {
         expect.stringMatching(/.*\/api\/projects\/project1\/tasks\/phases/),
         expect.objectContaining({
           headers: expect.objectContaining({
-            'Content-Type': 'application/json',
-            'Authorization': 'Bearer mock-token'
+            'Content-Type': 'application/json'
           })
         })
       );
@@ -174,8 +173,7 @@ describe('APIChatRepository - Phase Operations', () => {
         expect.objectContaining({
           method: 'POST',
           headers: expect.objectContaining({
-            'Content-Type': 'application/json',
-            'Authorization': 'Bearer mock-token'
+            'Content-Type': 'application/json'
           })
         })
       );
@@ -279,8 +277,7 @@ describe('APIChatRepository - Phase Operations', () => {
         expect.objectContaining({
           method: 'POST',
           headers: expect.objectContaining({
-            'Content-Type': 'application/json',
-            'Authorization': 'Bearer mock-token'
+            'Content-Type': 'application/json'
           }),
           body: JSON.stringify({ phaseNames: ['setup', 'implementation'] })
         })

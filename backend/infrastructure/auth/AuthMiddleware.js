@@ -227,22 +227,22 @@ class AuthMiddleware {
     };
   }
 
-  // Extract token from various sources
+  // Extract authentication from various sources
   extractToken(req) {
-    // From Authorization header
+    // From cookies (primary method)
+    if (req.cookies && req.cookies.accessToken) {
+      return req.cookies.accessToken;
+    }
+
+    // From Authorization header (fallback)
     const authHeader = req.headers.authorization;
     if (authHeader && authHeader.startsWith('Bearer ')) {
       return authHeader.substring(7);
     }
 
-    // From query parameter
+    // From query parameter (for WebSocket)
     if (req.query.token) {
       return req.query.token;
-    }
-
-    // From cookies
-    if (req.cookies && req.cookies.accessToken) {
-      return req.cookies.accessToken;
     }
 
     return null;
@@ -255,7 +255,7 @@ class AuthMiddleware {
         const token = this.extractWebSocketToken(socket);
         
         if (!token) {
-          return next(new Error('Access token required'));
+          return next(new Error('Authentication required'));
         }
 
         const { user, session } = await this.authService.validateAccessToken(token);
@@ -266,19 +266,19 @@ class AuthMiddleware {
         
         next();
       } catch (error) {
-        next(new Error('Invalid or expired access token'));
+        next(new Error('Invalid or expired authentication'));
       }
     };
   }
 
-  // Extract token from WebSocket connection
+  // Extract authentication from WebSocket connection
   extractWebSocketToken(socket) {
-    // From query parameters
+    // From query parameters (primary method for WebSocket)
     if (socket.handshake.query.token) {
       return socket.handshake.query.token;
     }
 
-    // From headers
+    // From headers (fallback)
     if (socket.handshake.headers.authorization) {
       const authHeader = socket.handshake.headers.authorization;
       if (authHeader.startsWith('Bearer ')) {

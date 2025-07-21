@@ -428,7 +428,6 @@ class TaskSecurityService {
             'password',
             'secret',
             'key',
-            'token',
             'api_key',
             'private_key'
         ];

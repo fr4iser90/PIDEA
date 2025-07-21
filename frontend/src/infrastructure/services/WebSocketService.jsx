@@ -35,14 +35,8 @@ class WebSocketService {
           this.isConnected = true;
           this.reconnectAttempts = 0;
           
-          // Send authentication token
-          const { token } = useAuthStore.getState();
-          if (token) {
-            this.send({
-              type: 'authenticate',
-              token: token
-            });
-          }
+          // Authentication handled via cookies automatically
+          // No need to send tokens manually
           
           resolve();
         };

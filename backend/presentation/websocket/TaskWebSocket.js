@@ -139,13 +139,13 @@ class TaskWebSocket {
         try {
             const token = socket.handshake.auth.token || socket.handshake.headers.authorization;
             if (!token) {
-                socket.emit('error', { message: 'Authentication token required' });
+                socket.emit('error', { message: 'Authentication required' });
                 return null;
             }
 
-            const user = await this.authService.verifyToken(token);
+            const user = await this.authService.verifyAuthentication(token);
             if (!user) {
-                socket.emit('error', { message: 'Invalid authentication token' });
+                socket.emit('error', { message: 'Invalid authentication' });
                 return null;
             }
 

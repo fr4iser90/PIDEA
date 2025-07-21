@@ -9,7 +9,6 @@ const useAuthStore = create(
     (set, get) => ({
       // State
       user: null,
-      token: null,
       isAuthenticated: false,
       isLoading: false,
       error: null,
@@ -38,26 +37,15 @@ const useAuthStore = create(
             throw new Error(data.error || data.message || 'Login failed');
           }
 
-          // Backend returns: { success: true, data: { user, accessToken, refreshToken, expiresAt } }
+          // Backend returns: { success: true, data: { user } }
+          // Authentication handled via httpOnly cookies
           const userData = data.data || data;
-          const token = userData.accessToken || userData.token;
 
-          logger.info('🔍 [AuthStore] Parsed response data:', {
-            hasData: !!data.data,
-            userDataKeys: Object.keys(userData || {}),
-            tokenExists: !!token,
-            tokenLength: token ? token.length : 0
-          });
-
-          logger.info('🔍 [AuthStore] Extracted data:', {
-            user: userData.user,
-            token: token ? token.substring(0, 20) + '...' : 'null',
-            tokenLength: token ? token.length : 0
-          });
+          logger.info('🔍 [AuthStore] Login successful, cookies set by backend');
+          logger.info('🔍 [AuthStore] User data:', userData.user);
 
           set({
             user: userData.user,
-            token: token,
             isAuthenticated: true,
             isLoading: false,
             error: null,
@@ -91,12 +79,11 @@ const useAuthStore = create(
           }
 
           // Backend returns: { success: true, user: ... } for register
+          // Authentication handled via httpOnly cookies
           const userData = data.data || data;
-          const token = userData.accessToken || userData.token;
 
           set({
             user: userData.user,
-            token: token,
             isAuthenticated: true,
             isLoading: false,
             error: null,
@@ -116,7 +103,7 @@ const useAuthStore = create(
 
       logout: async () => {
         try {
-          // Call logout endpoint to clear cookies
+          // Call logout endpoint to clear httpOnly cookies
           await apiCall('/api/auth/logout', {
             method: 'POST',
             credentials: 'include',
@@ -150,7 +137,7 @@ const useAuthStore = create(
         return headers;
       },
 
-      // Enhanced token validation with instant auto-redirect
+      // Enhanced authentication validation with instant auto-redirect
       validateToken: async () => {
         const { lastAuthCheck, authCheckInterval } = get();
         
@@ -162,10 +149,10 @@ const useAuthStore = create(
         }
 
         try {
-          logger.info('🔍 [AuthStore] Validating token...');
+          logger.info('🔍 [AuthStore] Validating authentication...');
           
           const data = await apiCall('/api/auth/validate');
-          logger.info('✅ [AuthStore] Token validation successful');
+          logger.info('✅ [AuthStore] Authentication validation successful');
           set({ 
             user: data.data?.user || data.user, 
             isAuthenticated: true, 
@@ -174,7 +161,7 @@ const useAuthStore = create(
           });
           return true;
         } catch (error) {
-          logger.error('❌ [AuthStore] Token validation error:', error);
+          logger.error('❌ [AuthStore] Authentication validation error:', error);
           await get().handleAuthFailure('Authentication check failed');
           return false;
         }
@@ -188,7 +175,6 @@ const useAuthStore = create(
         
         set({ 
           isAuthenticated: false, 
-          token: null, 
           user: null,
           redirectToLogin: true,
           lastAuthCheck: new Date()
@@ -210,29 +196,27 @@ const useAuthStore = create(
         set({ redirectToLogin: false });
       },
 
-      // Refresh token if needed
+      // Refresh authentication if needed (cookies are handled automatically)
       refreshToken: async () => {
         try {
-          logger.info('🔍 [AuthStore] Refreshing token...');
+          logger.info('🔍 [AuthStore] Refreshing authentication...');
           const data = await apiCall('/api/auth/refresh', {
             method: 'POST',
+            credentials: 'include', // Include cookies
           });
           
           if (!data.success) {
-            logger.info('❌ [AuthStore] Token refresh failed');
-            set({ isAuthenticated: false, token: null, user: null });
+            logger.info('❌ [AuthStore] Authentication refresh failed');
+            set({ isAuthenticated: false, user: null });
             return false;
           }
           
-          const userData = data.data || data;
-          const newToken = userData.accessToken || userData.token;
-          
-          logger.info('✅ [AuthStore] Token refreshed successfully');
-          set({ token: newToken, isAuthenticated: true });
+          logger.info('✅ [AuthStore] Authentication refreshed successfully (cookies updated)');
+          set({ isAuthenticated: true });
           return true;
         } catch (error) {
-          logger.error('❌ [AuthStore] Token refresh error:', error);
-          set({ isAuthenticated: false, token: null, user: null });
+          logger.error('❌ [AuthStore] Authentication refresh error:', error);
+          set({ isAuthenticated: false, user: null });
           return false;
         }
       },

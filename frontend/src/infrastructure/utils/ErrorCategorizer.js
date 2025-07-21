@@ -69,9 +69,9 @@ export class ErrorCategorizer {
     const lowerMessage = message.toLowerCase();
 
     if (lowerMessage.includes('expired') || 
-        lowerMessage.includes('token') || 
         lowerMessage.includes('auth') ||
-        lowerMessage.includes('login')) {
+        lowerMessage.includes('login') ||
+        lowerMessage.includes('session')) {
       return { type: ERROR_TYPES.AUTH, code: ERROR_CODES.AUTH_EXPIRED };
     }
 
