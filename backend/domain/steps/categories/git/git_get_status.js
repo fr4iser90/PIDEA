@@ -9,7 +9,7 @@ const logger = new Logger('git_get_status_step');
 
 // Step configuration
 const config = {
-  name: 'GIT_GET_STATUS',
+  name: 'GitGetStatusStep',
   type: 'git',
   description: 'Gets Git repository status',
   category: 'git',
@@ -27,7 +27,7 @@ const config = {
 
 class GitGetStatusStep {
   constructor() {
-    this.name = 'GIT_GET_STATUS';
+    this.name = 'GitGetStatusStep';
     this.description = 'Gets Git repository status';
     this.category = 'git';
     this.dependencies = ['terminalService'];
@@ -136,4 +136,11 @@ class GitGetStatusStep {
   }
 }
 
-module.exports = { config, execute: GitGetStatusStep.prototype.execute.bind(new GitGetStatusStep()) }; 
+// Create instance for execution
+const stepInstance = new GitGetStatusStep();
+
+// Export in StepRegistry format
+module.exports = {
+  config,
+  execute: async (context) => await stepInstance.execute(context)
+}; 

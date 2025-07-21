@@ -9,7 +9,7 @@ const logger = new Logger('GitCheckoutBranchStep');
 
 // Step configuration
 const config = {
-  name: 'GIT_CHECKOUT_BRANCH',
+  name: 'GitCheckoutBranchStep',
   type: 'git',
   description: 'Checks out a Git branch',
   category: 'git',
@@ -27,7 +27,7 @@ const config = {
 
 class GitCheckoutBranchStep {
   constructor() {
-    this.name = 'GIT_CHECKOUT_BRANCH';
+    this.name = 'GitCheckoutBranchStep';
     this.description = 'Checks out a Git branch';
     this.category = 'git';
     this.dependencies = ['terminalService'];
@@ -117,4 +117,11 @@ class GitCheckoutBranchStep {
   }
 }
 
-module.exports = { config, execute: GitCheckoutBranchStep.prototype.execute.bind(new GitCheckoutBranchStep()) }; 
+// Create instance for execution
+const stepInstance = new GitCheckoutBranchStep();
+
+// Export in StepRegistry format
+module.exports = {
+  config,
+  execute: async (context) => await stepInstance.execute(context)
+}; 

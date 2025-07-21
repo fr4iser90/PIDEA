@@ -9,7 +9,7 @@ const logger = new Logger('GitGetDiffStep');
 
 // Step configuration
 const config = {
-  name: 'GIT_GET_DIFF',
+  name: 'GitGetDiffStep',
   type: 'git',
   description: 'Gets Git diff',
   category: 'git',
@@ -27,7 +27,7 @@ const config = {
 
 class GitGetDiffStep {
   constructor() {
-    this.name = 'GIT_GET_DIFF';
+    this.name = 'GitGetDiffStep';
     this.description = 'Gets Git diff';
     this.category = 'git';
     this.dependencies = ['terminalService'];
@@ -121,4 +121,11 @@ class GitGetDiffStep {
   }
 }
 
-module.exports = { config, execute: GitGetDiffStep.prototype.execute.bind(new GitGetDiffStep()) }; 
+// Create instance for execution
+const stepInstance = new GitGetDiffStep();
+
+// Export in StepRegistry format
+module.exports = {
+  config,
+  execute: async (context) => await stepInstance.execute(context)
+}; 

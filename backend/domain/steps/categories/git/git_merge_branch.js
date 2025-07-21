@@ -9,7 +9,7 @@ const logger = new Logger('GitMergeBranchStep');
 
 // Step configuration
 const config = {
-  name: 'GIT_MERGE_BRANCH',
+  name: 'GitMergeBranchStep',
   type: 'git',
   description: 'Merges a Git branch',
   category: 'git',
@@ -28,7 +28,7 @@ const config = {
 
 class GitMergeBranchStep {
   constructor() {
-    this.name = 'GIT_MERGE_BRANCH';
+    this.name = 'GitMergeBranchStep';
     this.description = 'Merges a Git branch';
     this.category = 'git';
     this.dependencies = ['terminalService'];
@@ -114,4 +114,11 @@ class GitMergeBranchStep {
   }
 }
 
-module.exports = { config, execute: GitMergeBranchStep.prototype.execute.bind(new GitMergeBranchStep()) }; 
+// Create instance for execution
+const stepInstance = new GitMergeBranchStep();
+
+// Export in StepRegistry format
+module.exports = {
+  config,
+  execute: async (context) => await stepInstance.execute(context)
+}; 

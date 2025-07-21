@@ -9,7 +9,7 @@ const logger = new Logger('GitGetLastCommitStep');
 
 // Step configuration
 const config = {
-  name: 'GIT_GET_LAST_COMMIT',
+  name: 'GitGetLastCommitStep',
   type: 'git',
   description: 'Gets the last Git commit',
   category: 'git',
@@ -26,7 +26,7 @@ const config = {
 
 class GitGetLastCommitStep {
   constructor() {
-    this.name = 'GIT_GET_LAST_COMMIT';
+    this.name = 'GitGetLastCommitStep';
     this.description = 'Gets the last Git commit';
     this.category = 'git';
     this.dependencies = ['terminalService'];
@@ -113,4 +113,11 @@ class GitGetLastCommitStep {
   }
 }
 
-module.exports = { config, execute: GitGetLastCommitStep.prototype.execute.bind(new GitGetLastCommitStep()) }; 
+// Create instance for execution
+const stepInstance = new GitGetLastCommitStep();
+
+// Export in StepRegistry format
+module.exports = {
+  config,
+  execute: async (context) => await stepInstance.execute(context)
+}; 

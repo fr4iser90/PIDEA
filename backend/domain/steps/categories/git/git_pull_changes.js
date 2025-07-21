@@ -9,16 +9,14 @@ const logger = new Logger('GitPullChangesStep');
 
 // Step configuration
 const config = {
-  name: 'GIT_PULL_CHANGES',
+  name: 'GitPullChangesStep',
   type: 'git',
   description: 'Pulls changes from remote repository',
   category: 'git',
   version: '1.0.0',
   dependencies: ['terminalService'],
   settings: {
-    timeout: 30000,
-    remote: 'origin',
-    rebase: false
+    timeout: 10000
   },
   validation: {
     required: ['projectPath'],
@@ -28,7 +26,7 @@ const config = {
 
 class GitPullChangesStep {
   constructor() {
-    this.name = 'GIT_PULL_CHANGES';
+    this.name = 'GitPullChangesStep';
     this.description = 'Pulls changes from remote repository';
     this.category = 'git';
     this.dependencies = ['terminalService'];
@@ -114,4 +112,11 @@ class GitPullChangesStep {
   }
 }
 
-module.exports = { config, execute: GitPullChangesStep.prototype.execute.bind(new GitPullChangesStep()) }; 
+// Create instance for execution
+const stepInstance = new GitPullChangesStep();
+
+// Export in StepRegistry format
+module.exports = {
+  config,
+  execute: async (context) => await stepInstance.execute(context)
+}; 

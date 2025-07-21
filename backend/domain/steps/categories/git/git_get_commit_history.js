@@ -9,7 +9,7 @@ const logger = new Logger('GitGetCommitHistoryStep');
 
 // Step configuration
 const config = {
-  name: 'GIT_GET_COMMIT_HISTORY',
+  name: 'GitGetCommitHistoryStep',
   type: 'git',
   description: 'Gets Git commit history',
   category: 'git',
@@ -31,7 +31,7 @@ const config = {
 
 class GitGetCommitHistoryStep {
   constructor() {
-    this.name = 'GIT_GET_COMMIT_HISTORY';
+    this.name = 'GitGetCommitHistoryStep';
     this.description = 'Gets Git commit history';
     this.category = 'git';
     this.dependencies = ['terminalService'];
@@ -137,4 +137,11 @@ class GitGetCommitHistoryStep {
   }
 }
 
-module.exports = { config, execute: GitGetCommitHistoryStep.prototype.execute.bind(new GitGetCommitHistoryStep()) }; 
+// Create instance for execution
+const stepInstance = new GitGetCommitHistoryStep();
+
+// Export in StepRegistry format
+module.exports = {
+  config,
+  execute: async (context) => await stepInstance.execute(context)
+}; 

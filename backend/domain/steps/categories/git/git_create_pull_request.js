@@ -9,7 +9,7 @@ const logger = new Logger('GitCreatePullRequestStep');
 
 // Step configuration
 const config = {
-  name: 'GIT_CREATE_PULL_REQUEST',
+  name: 'GitCreatePullRequestStep',
   type: 'git',
   description: 'Creates a pull request',
   category: 'git',
@@ -29,7 +29,7 @@ const config = {
 
 class GitCreatePullRequestStep {
   constructor() {
-    this.name = 'GIT_CREATE_PULL_REQUEST';
+    this.name = 'GitCreatePullRequestStep';
     this.description = 'Creates a pull request';
     this.category = 'git';
     this.dependencies = ['terminalService'];
@@ -184,4 +184,11 @@ class GitCreatePullRequestStep {
   }
 }
 
-module.exports = { config, execute: GitCreatePullRequestStep.prototype.execute.bind(new GitCreatePullRequestStep()) }; 
+// Create instance for execution
+const stepInstance = new GitCreatePullRequestStep();
+
+// Export in StepRegistry format
+module.exports = {
+  config,
+  execute: async (context) => await stepInstance.execute(context)
+}; 

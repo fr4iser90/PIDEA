@@ -9,7 +9,7 @@ const logger = new Logger('git_get_branches_step');
 
 // Step configuration
 const config = {
-  name: 'GIT_GET_BRANCHES',
+  name: 'GitGetBranchesStep',
   type: 'git',
   description: 'Gets all Git branches',
   category: 'git',
@@ -28,7 +28,7 @@ const config = {
 
 class GitGetBranchesStep {
   constructor() {
-    this.name = 'GIT_GET_BRANCHES';
+    this.name = 'GitGetBranchesStep';
     this.description = 'Gets all Git branches';
     this.category = 'git';
     this.dependencies = ['terminalService'];
@@ -124,4 +124,11 @@ class GitGetBranchesStep {
   }
 }
 
-module.exports = { config, execute: GitGetBranchesStep.prototype.execute.bind(new GitGetBranchesStep()) }; 
+// Create instance for execution
+const stepInstance = new GitGetBranchesStep();
+
+// Export in StepRegistry format
+module.exports = {
+  config,
+  execute: async (context) => await stepInstance.execute(context)
+}; 

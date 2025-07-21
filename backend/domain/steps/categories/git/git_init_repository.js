@@ -9,7 +9,7 @@ const logger = new Logger('GitInitRepositoryStep');
 
 // Step configuration
 const config = {
-  name: 'GIT_INIT_REPOSITORY',
+  name: 'GitInitRepositoryStep',
   type: 'git',
   description: 'Initializes a Git repository',
   category: 'git',
@@ -28,7 +28,7 @@ const config = {
 
 class GitInitRepositoryStep {
   constructor() {
-    this.name = 'GIT_INIT_REPOSITORY';
+    this.name = 'GitInitRepositoryStep';
     this.description = 'Initializes a Git repository';
     this.category = 'git';
     this.dependencies = ['terminalService'];
@@ -112,4 +112,11 @@ class GitInitRepositoryStep {
   }
 }
 
-module.exports = { config, execute: GitInitRepositoryStep.prototype.execute.bind(new GitInitRepositoryStep()) }; 
+// Create instance for execution
+const stepInstance = new GitInitRepositoryStep();
+
+// Export in StepRegistry format
+module.exports = {
+  config,
+  execute: async (context) => await stepInstance.execute(context)
+}; 

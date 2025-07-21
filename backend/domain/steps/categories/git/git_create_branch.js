@@ -9,7 +9,7 @@ const logger = new Logger('GitCreateBranchStep');
 
 // Step configuration
 const config = {
-  name: 'GIT_CREATE_BRANCH',
+  name: 'GitCreateBranchStep',
   type: 'git',
   description: 'Creates a new Git branch',
   category: 'git',
@@ -28,7 +28,7 @@ const config = {
 
 class GitCreateBranchStep {
   constructor() {
-    this.name = 'GIT_CREATE_BRANCH';
+    this.name = 'GitCreateBranchStep';
     this.description = 'Creates a new Git branch';
     this.category = 'git';
     this.dependencies = ['terminalService'];
@@ -132,4 +132,11 @@ class GitCreateBranchStep {
   }
 }
 
-module.exports = { config, execute: GitCreateBranchStep.prototype.execute.bind(new GitCreateBranchStep()) }; 
+// Create instance for execution
+const stepInstance = new GitCreateBranchStep();
+
+// Export in StepRegistry format
+module.exports = {
+  config,
+  execute: async (context) => await stepInstance.execute(context)
+}; 

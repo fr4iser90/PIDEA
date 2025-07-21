@@ -9,7 +9,7 @@ const logger = new Logger('GitGetCurrentBranchStep');
 
 // Step configuration
 const config = {
-  name: 'GIT_GET_CURRENT_BRANCH',
+  name: 'GitGetCurrentBranchStep',
   type: 'git',
   description: 'Gets the current Git branch',
   category: 'git',
@@ -26,7 +26,7 @@ const config = {
 
 class GitGetCurrentBranchStep {
   constructor() {
-    this.name = 'GIT_GET_CURRENT_BRANCH';
+    this.name = 'GitGetCurrentBranchStep';
     this.description = 'Gets the current Git branch';
     this.category = 'git';
     this.dependencies = ['terminalService'];
@@ -96,4 +96,11 @@ class GitGetCurrentBranchStep {
   }
 }
 
-module.exports = { config, execute: GitGetCurrentBranchStep.prototype.execute.bind(new GitGetCurrentBranchStep()) }; 
+// Create instance for execution
+const stepInstance = new GitGetCurrentBranchStep();
+
+// Export in StepRegistry format
+module.exports = {
+  config,
+  execute: async (context) => await stepInstance.execute(context)
+}; 

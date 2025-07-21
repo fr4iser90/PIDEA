@@ -9,7 +9,7 @@ const logger = new Logger('GitAddFilesStep');
 
 // Step configuration
 const config = {
-  name: 'GIT_ADD_FILES',
+  name: 'GitAddFilesStep',
   type: 'git',
   description: 'Adds files to Git staging area',
   category: 'git',
@@ -27,7 +27,7 @@ const config = {
 
 class GitAddFilesStep {
   constructor() {
-    this.name = 'GIT_ADD_FILES';
+    this.name = 'GitAddFilesStep';
     this.description = 'Adds files to Git staging area';
     this.category = 'git';
     this.dependencies = ['terminalService'];
@@ -100,4 +100,11 @@ class GitAddFilesStep {
   }
 }
 
-module.exports = { config, execute: GitAddFilesStep.prototype.execute.bind(new GitAddFilesStep()) }; 
+// Create instance for execution
+const stepInstance = new GitAddFilesStep();
+
+// Export in StepRegistry format
+module.exports = {
+  config,
+  execute: async (context) => await stepInstance.execute(context)
+}; 

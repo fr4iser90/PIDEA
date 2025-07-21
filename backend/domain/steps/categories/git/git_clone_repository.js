@@ -9,7 +9,7 @@ const logger = new Logger('GitCloneRepositoryStep');
 
 // Step configuration
 const config = {
-  name: 'GIT_CLONE_REPOSITORY',
+  name: 'GitCloneRepositoryStep',
   type: 'git',
   description: 'Clones a Git repository',
   category: 'git',
@@ -30,7 +30,7 @@ const config = {
 
 class GitCloneRepositoryStep {
   constructor() {
-    this.name = 'GIT_CLONE_REPOSITORY';
+    this.name = 'GitCloneRepositoryStep';
     this.description = 'Clones a Git repository';
     this.category = 'git';
     this.dependencies = ['terminalService'];
@@ -128,4 +128,11 @@ class GitCloneRepositoryStep {
   }
 }
 
-module.exports = { config, execute: GitCloneRepositoryStep.prototype.execute.bind(new GitCloneRepositoryStep()) }; 
+// Create instance for execution
+const stepInstance = new GitCloneRepositoryStep();
+
+// Export in StepRegistry format
+module.exports = {
+  config,
+  execute: async (context) => await stepInstance.execute(context)
+}; 

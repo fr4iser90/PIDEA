@@ -9,16 +9,14 @@ const logger = new Logger('GitResetStep');
 
 // Step configuration
 const config = {
-  name: 'GIT_RESET',
+  name: 'GitResetStep',
   type: 'git',
-  description: 'Resets Git repository',
+  description: 'Resets the current HEAD to the specified state',
   category: 'git',
   version: '1.0.0',
   dependencies: ['terminalService'],
   settings: {
-    timeout: 30000,
-    mode: 'mixed',
-    commit: 'HEAD'
+    timeout: 10000
   },
   validation: {
     required: ['projectPath'],
@@ -28,8 +26,8 @@ const config = {
 
 class GitResetStep {
   constructor() {
-    this.name = 'GIT_RESET';
-    this.description = 'Resets Git repository';
+    this.name = 'GitResetStep';
+    this.description = 'Resets the current HEAD to the specified state';
     this.category = 'git';
     this.dependencies = ['terminalService'];
   }
@@ -110,4 +108,11 @@ class GitResetStep {
   }
 }
 
-module.exports = { config, execute: GitResetStep.prototype.execute.bind(new GitResetStep()) }; 
+// Create instance for execution
+const stepInstance = new GitResetStep();
+
+// Export in StepRegistry format
+module.exports = {
+  config,
+  execute: async (context) => await stepInstance.execute(context)
+}; 

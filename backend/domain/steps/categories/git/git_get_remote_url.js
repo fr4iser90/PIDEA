@@ -9,7 +9,7 @@ const logger = new Logger('GitGetRemoteUrlStep');
 
 // Step configuration
 const config = {
-  name: 'GIT_GET_REMOTE_URL',
+  name: 'GitGetRemoteUrlStep',
   type: 'git',
   description: 'Gets Git remote URL',
   category: 'git',
@@ -27,7 +27,7 @@ const config = {
 
 class GitGetRemoteUrlStep {
   constructor() {
-    this.name = 'GIT_GET_REMOTE_URL';
+    this.name = 'GitGetRemoteUrlStep';
     this.description = 'Gets Git remote URL';
     this.category = 'git';
     this.dependencies = ['terminalService'];
@@ -101,4 +101,11 @@ class GitGetRemoteUrlStep {
   }
 }
 
-module.exports = { config, execute: GitGetRemoteUrlStep.prototype.execute.bind(new GitGetRemoteUrlStep()) }; 
+// Create instance for execution
+const stepInstance = new GitGetRemoteUrlStep();
+
+// Export in StepRegistry format
+module.exports = {
+  config,
+  execute: async (context) => await stepInstance.execute(context)
+}; 

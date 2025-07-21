@@ -9,7 +9,7 @@ const logger = new Logger('GitAddRemoteStep');
 
 // Step configuration
 const config = {
-  name: 'GIT_ADD_REMOTE',
+  name: 'GitAddRemoteStep',
   type: 'git',
   description: 'Adds a Git remote',
   category: 'git',
@@ -26,7 +26,7 @@ const config = {
 
 class GitAddRemoteStep {
   constructor() {
-    this.name = 'GIT_ADD_REMOTE';
+    this.name = 'GitAddRemoteStep';
     this.description = 'Adds a Git remote';
     this.category = 'git';
     this.dependencies = ['terminalService'];
@@ -107,4 +107,11 @@ class GitAddRemoteStep {
   }
 }
 
-module.exports = { config, execute: GitAddRemoteStep.prototype.execute.bind(new GitAddRemoteStep()) }; 
+// Create instance for execution
+const stepInstance = new GitAddRemoteStep();
+
+// Export in StepRegistry format
+module.exports = {
+  config,
+  execute: async (context) => await stepInstance.execute(context)
+}; 

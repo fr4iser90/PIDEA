@@ -9,7 +9,7 @@ const logger = new Logger('GitCommitStep');
 
 // Step configuration
 const config = {
-  name: 'GIT_COMMIT',
+  name: 'GitCommitStep',
   type: 'git',
   description: 'Commits changes to Git repository',
   category: 'git',
@@ -29,7 +29,7 @@ const config = {
 
 class GitCommitStep {
   constructor() {
-    this.name = 'GIT_COMMIT';
+    this.name = 'GitCommitStep';
     this.description = 'Commits changes to Git repository';
     this.category = 'git';
     this.dependencies = ['terminalService'];
@@ -114,4 +114,11 @@ class GitCommitStep {
   }
 }
 
-module.exports = { config, execute: GitCommitStep.prototype.execute.bind(new GitCommitStep()) }; 
+// Create instance for execution
+const stepInstance = new GitCommitStep();
+
+// Export in StepRegistry format
+module.exports = {
+  config,
+  execute: async (context) => await stepInstance.execute(context)
+}; 

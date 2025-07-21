@@ -9,7 +9,7 @@ const logger = new Logger('GitPushStep');
 
 // Step configuration
 const config = {
-  name: 'GIT_PUSH',
+  name: 'GitPushStep',
   type: 'git',
   description: 'Pushes changes to remote Git repository',
   category: 'git',
@@ -28,7 +28,7 @@ const config = {
 
 class GitPushStep {
   constructor() {
-    this.name = 'GIT_PUSH';
+    this.name = 'GitPushStep';
     this.description = 'Pushes changes to remote Git repository';
     this.category = 'git';
     this.dependencies = ['terminalService'];
@@ -117,4 +117,11 @@ class GitPushStep {
   }
 }
 
-module.exports = { config, execute: GitPushStep.prototype.execute.bind(new GitPushStep()) }; 
+// Create instance for execution
+const stepInstance = new GitPushStep();
+
+// Export in StepRegistry format
+module.exports = {
+  config,
+  execute: async (context) => await stepInstance.execute(context)
+}; 
