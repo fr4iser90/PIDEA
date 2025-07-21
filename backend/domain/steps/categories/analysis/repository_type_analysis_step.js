@@ -433,6 +433,7 @@ class RepositoryTypeAnalysisStep {
 
 // Export both the class and the execute function for StepRegistry
 module.exports = RepositoryTypeAnalysisStep;
+module.exports.config = config;
 module.exports.execute = async function(context) {
   const step = new RepositoryTypeAnalysisStep();
   return await step.execute(context);
