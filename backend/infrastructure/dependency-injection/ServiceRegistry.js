@@ -407,13 +407,14 @@ class ServiceRegistry {
         }, { singleton: true, dependencies: ['commandBus', 'queryBus', 'eventBus', 'application', 'ideManager', 'taskService', 'workflowExecutionService', 'projectMappingService', 'logger'] });
 
         // Git Application Service - coordinates Git operations
-        this.container.register('gitApplicationService', (logger, eventBus) => {
+        this.container.register('gitApplicationService', (logger, eventBus, gitService) => {
             const GitApplicationService = require('@application/services/GitApplicationService');
             return new GitApplicationService({
                 logger,
-                eventBus
+                eventBus,
+                gitService
             });
-        }, { singleton: true, dependencies: ['logger', 'eventBus'] });
+        }, { singleton: true, dependencies: ['logger', 'eventBus', 'gitService'] });
 
         // Auth Application Service - coordinates authentication use cases
         this.container.register('authApplicationService', (authService, logger, eventBus) => {
@@ -599,13 +600,14 @@ class ServiceRegistry {
     }
 
     registerGitApplicationService() {
-        this.container.register('gitApplicationService', (logger, eventBus) => {
+        this.container.register('gitApplicationService', (logger, eventBus, gitService) => {
             const GitApplicationService = require('@application/services/GitApplicationService');
             return new GitApplicationService({
                 logger,
-                eventBus
+                eventBus,
+                gitService
             });
-        }, { singleton: true, dependencies: ['logger', 'eventBus'] });
+        }, { singleton: true, dependencies: ['logger', 'eventBus', 'gitService'] });
     }
 
     registerAuthApplicationService() {
@@ -1589,7 +1591,7 @@ class ServiceRegistry {
         this.addServiceDefinition('ideApplicationService', ['ideManager', 'eventBus', 'cursorIDEService', 'taskRepository', 'terminalLogCaptureService', 'terminalLogReader', 'browserManager', 'logger'], 'application');
         this.addServiceDefinition('webChatApplicationService', ['stepRegistry', 'cursorIDEService', 'authService', 'chatSessionService', 'eventBus', 'logger'], 'application');
         this.addServiceDefinition('workflowApplicationService', ['commandBus', 'queryBus', 'eventBus', 'ideManager', 'taskService', 'projectMappingService', 'logger'], 'application');
-        this.addServiceDefinition('gitApplicationService', ['logger', 'eventBus'], 'application');
+        this.addServiceDefinition('gitApplicationService', ['logger', 'eventBus', 'gitService'], 'application');
         this.addServiceDefinition('authApplicationService', ['authService', 'logger', 'eventBus'], 'application');
         this.addServiceDefinition('streamingApplicationService', ['logger', 'eventBus', 'commandBus'], 'application');
         this.addServiceDefinition('contentLibraryApplicationService', ['logger', 'eventBus'], 'application');
