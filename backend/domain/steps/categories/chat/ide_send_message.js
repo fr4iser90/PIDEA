@@ -14,7 +14,7 @@ const config = {
   category: 'ide',
   description: 'Send message to any IDE',
   version: '1.0.0',
-  dependencies: ['cursorIDEService', 'vscodeIDEService', 'windsurfIDEService'],
+  dependencies: ['browserManager'],
   settings: {
     includeTimeout: true,
     includeRetry: true,
@@ -31,7 +31,7 @@ class IDESendMessageStep {
     this.name = 'IDESendMessageStep';
     this.description = 'Send message to any IDE';
     this.category = 'ide';
-    this.dependencies = ['cursorIDEService', 'vscodeIDEService', 'windsurfIDEService'];
+    this.dependencies = ['browserManager'];
   }
 
   static getConfig() {
@@ -99,26 +99,7 @@ class IDESendMessageStep {
     }
   }
 
-  getIDEService(application, ideType = null) {
-    // If specific IDE type requested, use that
-    if (ideType) {
-      switch (ideType.toLowerCase()) {
-        case 'cursor':
-          return application.cursorIDEService;
-        case 'vscode':
-          return application.vscodeIDEService;
-        case 'windsurf':
-          return application.windsurfIDEService;
-        default:
-          throw new Error(`Unknown IDE type: ${ideType}`);
-      }
-    }
-    
-    // Auto-detect IDE service (priority order)
-    return application.cursorIDEService || 
-           application.vscodeIDEService || 
-           application.windsurfIDEService;
-  }
+
 
   validateContext(context) {
     if (!context.projectId) {

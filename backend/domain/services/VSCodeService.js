@@ -38,28 +38,12 @@ class VSCodeIDEService {
     }
   }
 
+  /**
+   * @deprecated Use BrowserManager.typeMessage() or IDESendMessageStep instead
+   * This method has been removed to prevent infinite loops
+   */
   async sendMessage(message, options = {}) {
-    // Ensure browser is connected to the active IDE port
-    const activePort = this.getActivePort();
-    logger.info('sendMessage() - Active port:', activePort);
-    
-    if (activePort) {
-      try {
-        // Switch browser to active port if needed
-        const currentBrowserPort = this.browserManager.getCurrentPort();
-        logger.info('sendMessage() - Current browser port:', currentBrowserPort);
-        
-        if (currentBrowserPort !== activePort) {
-          logger.info('sendMessage() - Switching browser to active port:', activePort);
-          await this.browserManager.switchToPort(activePort);
-        }
-      } catch (error) {
-        logger.error('sendMessage() - Failed to switch browser port:', error.message);
-      }
-    }
-    
-    // Use IDE Steps instead of ChatMessageHandler
-    logger.info('sendMessage() - Using IDE Steps for message sending');
+    console.warn('DEPRECATED: VSCodeIDEService.sendMessage() is deprecated. Use BrowserManager.typeMessage() or IDESendMessageStep instead.');
     throw new Error('sendMessage() - ChatMessageHandler removed, use IDE Steps instead');
   }
 
@@ -104,9 +88,35 @@ class VSCodeIDEService {
     try {
       logger.info('Sending prompt to VSCode IDE:', prompt.substring(0, 100) + '...');
       
-      // Use IDE Steps instead of ChatMessageHandler
-      logger.info('postToVSCode() - Using IDE Steps for message sending');
-      throw new Error('postToVSCode() - ChatMessageHandler removed, use IDE Steps instead');
+      // Use BrowserManager directly to avoid infinite loops
+      logger.info('postToVSCode() - Using BrowserManager directly');
+      
+      // Ensure browser is connected to the active IDE port
+      const activePort = this.getActivePort();
+      if (activePort) {
+        try {
+          const currentBrowserPort = this.browserManager.getCurrentPort();
+          if (currentBrowserPort !== activePort) {
+            logger.info('postToVSCode() - Switching browser to active port:', activePort);
+            await this.browserManager.switchToPort(activePort);
+          }
+        } catch (error) {
+          logger.error('postToVSCode() - Failed to switch browser port:', error.message);
+        }
+      }
+      
+      // Send message directly via BrowserManager
+      const result = await this.browserManager.typeMessage(prompt, true);
+      
+      if (!result) {
+        throw new Error('Failed to send prompt to VSCode IDE - BrowserManager returned false');
+      }
+      
+      return {
+        success: true,
+        message: 'Prompt sent to VSCode IDE',
+        data: result
+      };
     } catch (error) {
       logger.error('Error sending prompt to VSCode:', error);
       throw error;

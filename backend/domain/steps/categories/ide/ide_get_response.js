@@ -14,7 +14,7 @@ const config = {
   category: 'ide',
   description: 'Get response from any IDE',
   version: '1.0.0',
-  dependencies: ['cursorIDEService', 'vscodeIDEService', 'windsurfIDEService'],
+  dependencies: ['browserManager'],
   settings: {
     includeTimeout: true,
     includeRetry: true,
@@ -31,7 +31,7 @@ class IDEGetResponseStep {
     this.name = 'IDEGetResponseStep';
     this.description = 'Get response from any IDE';
     this.category = 'ide';
-    this.dependencies = ['cursorIDEService', 'vscodeIDEService', 'windsurfIDEService'];
+    this.dependencies = ['browserManager'];
   }
 
   static getConfig() {
@@ -53,18 +53,23 @@ class IDEGetResponseStep {
       logger.info(`📨 Getting response from IDE for project ${projectId}${ideType ? ` (${ideType})` : ''}${messageId ? `, message ${messageId}` : ''}`);
       
       // Get services via dependency injection
-      const ideService = context.getService('IDEService');
-      const chatService = context.getService('ChatService');
+      const browserManager = context.getService('browserManager');
       
-      if (!ideService) {
-        throw new Error('IDEService not available in context');
-      }
-      if (!chatService) {
-        throw new Error('ChatService not available in context');
+      if (!browserManager) {
+        throw new Error('BrowserManager not available in context');
       }
       
-      // Get response
-      const response = await ideService.getLatestResponse({
+      // Switch to active port first
+      const idePortManager = context.getService('idePortManager');
+      if (idePortManager) {
+        const activePort = idePortManager.getActivePort();
+        if (activePort) {
+          await browserManager.switchToPort(activePort);
+        }
+      }
+      
+      // Get response using BrowserManager
+      const response = await browserManager.getLatestResponse({
         timeout: config.settings.timeout
       });
       
@@ -88,26 +93,7 @@ class IDEGetResponseStep {
     }
   }
 
-  getIDEService(application, ideType = null) {
-    // If specific IDE type requested, use that
-    if (ideType) {
-      switch (ideType.toLowerCase()) {
-        case 'cursor':
-          return application.cursorIDEService;
-        case 'vscode':
-          return application.vscodeIDEService;
-        case 'windsurf':
-          return application.windsurfIDEService;
-        default:
-          throw new Error(`Unknown IDE type: ${ideType}`);
-      }
-    }
-    
-    // Auto-detect IDE service (priority order)
-    return application.cursorIDEService || 
-           application.vscodeIDEService || 
-           application.windsurfIDEService;
-  }
+
 
   validateContext(context) {
     if (!context.projectId) {

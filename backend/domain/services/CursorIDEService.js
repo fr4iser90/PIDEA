@@ -6,11 +6,10 @@ const Logger = require('@logging/Logger');
 const logger = new Logger('CursorIDEService');
 
 class CursorIDEService {
-  constructor(browserManager, ideManager, eventBus = null, stepRegistry = null) {
+  constructor(browserManager, ideManager, eventBus = null) {
     this.browserManager = browserManager;
     this.ideManager = ideManager;
     this.eventBus = eventBus;
-    this.stepRegistry = stepRegistry;
     
     // Initialize separated services
     this.terminalMonitor = new TerminalMonitor(browserManager, eventBus);
@@ -39,52 +38,13 @@ class CursorIDEService {
     }
   }
 
+  /**
+   * @deprecated Use BrowserManager.typeMessage() or IDESendMessageStep instead
+   * This method has been removed to prevent infinite loops
+   */
   async sendMessage(message, options = {}) {
-    // Ensure browser is connected to the active IDE port
-    const activePort = this.getActivePort();
-    logger.info(`sendMessage() - Active port: ${activePort}`);
-    
-    if (activePort) {
-      try {
-        // Switch browser to active port if needed
-        const currentBrowserPort = this.browserManager.getCurrentPort();
-        logger.info(`sendMessage() - Current browser port: ${currentBrowserPort}`);
-        
-        if (currentBrowserPort !== activePort) {
-          logger.info('sendMessage() - Switching browser to active port:', activePort);
-          await this.browserManager.switchToPort(activePort);
-        }
-      } catch (error) {
-        logger.error('sendMessage() - Failed to switch browser port:', error.message);
-      }
-    }
-
-    // Use IDE Steps for message sending
-    logger.info('sendMessage() - Using IDE Steps for message sending');
-    
-    try {
-      // Get the step registry from the DI container
-      const stepRegistry = this.stepRegistry;
-      if (!stepRegistry) {
-        throw new Error('Step registry not available');
-      }
-
-      // Execute the IDE send message step
-      const stepData = {
-        message: message,
-        port: activePort,
-        projectId: options.projectId || this.ideManager?.getCurrentProjectId?.(), // ← Priorität auf options.projectId
-        ...options
-      };
-
-      const result = await stepRegistry.executeStep('IDESendMessageStep', stepData);
-      logger.info('sendMessage() - Step executed successfully:', result.success);
-      
-      return result;
-    } catch (error) {
-      logger.error('sendMessage() - Failed to execute IDE step:', error);
-      throw error;
-    }
+    console.warn('DEPRECATED: CursorIDEService.sendMessage() is deprecated. Use BrowserManager.typeMessage() or IDESendMessageStep instead.');
+    throw new Error('sendMessage() - ChatMessageHandler removed, use IDE Steps instead');
   }
 
   async extractChatHistory() {
@@ -128,11 +88,35 @@ class CursorIDEService {
     try {
       logger.info('Sending prompt to Cursor IDE:', prompt.substring(0, 100) + '...');
       
-      // Use IDE Steps for message sending
-      logger.info('postToCursor() - Using IDE Steps for message sending');
+      // Use BrowserManager directly to avoid infinite loops
+      logger.info('postToCursor() - Using BrowserManager directly');
       
-      // Use the sendMessage method which now uses IDE Steps
-      return await this.sendMessage(prompt, { type: 'prompt' });
+      // Ensure browser is connected to the active IDE port
+      const activePort = this.getActivePort();
+      if (activePort) {
+        try {
+          const currentBrowserPort = this.browserManager.getCurrentPort();
+          if (currentBrowserPort !== activePort) {
+            logger.info('postToCursor() - Switching browser to active port:', activePort);
+            await this.browserManager.switchToPort(activePort);
+          }
+        } catch (error) {
+          logger.error('postToCursor() - Failed to switch browser port:', error.message);
+        }
+      }
+      
+      // Send message directly via BrowserManager
+      const result = await this.browserManager.typeMessage(prompt, true);
+      
+      if (!result) {
+        throw new Error('Failed to send prompt to Cursor IDE - BrowserManager returned false');
+      }
+      
+      return {
+        success: true,
+        message: 'Prompt sent to Cursor IDE',
+        data: result
+      };
     } catch (error) {
       logger.error('Error sending prompt to Cursor:', error);
       throw error;

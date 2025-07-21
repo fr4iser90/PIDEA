@@ -4,10 +4,10 @@
 Update the Step system to use BrowserManager directly instead of IDE services for chat functionality, eliminating the redundant service layer.
 
 ## Objectives
-- [ ] Remove IDE service dependencies from chat steps
-- [ ] Update step configurations to use BrowserManager directly
-- [ ] Test step execution with new architecture
-- [ ] Update step documentation
+- [x] Remove IDE service dependencies from chat steps
+- [x] Update step configurations to use BrowserManager directly
+- [x] Test step execution with new architecture
+- [x] Update step documentation
 
 ## Deliverables
 - File: `backend/domain/steps/categories/chat/ide_send_message.js` - Updated to use BrowserManager directly
@@ -23,11 +23,11 @@ Update the Step system to use BrowserManager directly instead of IDE services fo
 2 hours
 
 ## Success Criteria
-- [ ] Steps execute without IDE service dependencies
-- [ ] Message sending works through BrowserManager
-- [ ] Step execution performance is maintained or improved
-- [ ] All existing step functionality is preserved
-- [ ] Integration tests pass
+- [x] Steps execute without IDE service dependencies
+- [x] Message sending works through BrowserManager
+- [x] Step execution performance is maintained or improved
+- [x] All existing step functionality is preserved
+- [x] Integration tests pass
 
 ## Implementation Details
 

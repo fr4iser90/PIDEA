@@ -38,28 +38,12 @@ class WindsurfIDEService {
     }
   }
 
+  /**
+   * @deprecated Use BrowserManager.typeMessage() or IDESendMessageStep instead
+   * This method has been removed to prevent infinite loops
+   */
   async sendMessage(message, options = {}) {
-    // Ensure browser is connected to the active IDE port
-    const activePort = this.getActivePort();
-    this.logger.info('sendMessage() - Active port:', activePort);
-    
-    if (activePort) {
-      try {
-        // Switch browser to active port if needed
-        const currentBrowserPort = this.browserManager.getCurrentPort();
-        this.logger.info('sendMessage() - Current browser port:', currentBrowserPort);
-        
-        if (currentBrowserPort !== activePort) {
-          this.logger.info('sendMessage() - Switching browser to active port:', activePort);
-          await this.browserManager.switchToPort(activePort);
-        }
-      } catch (error) {
-        this.logger.error('sendMessage() - Failed to switch browser port:', error.message);
-      }
-    }
-    
-    // Use IDE Steps instead of ChatMessageHandler
-    this.logger.info('sendMessage() - Using IDE Steps for message sending');
+    console.warn('DEPRECATED: WindsurfIDEService.sendMessage() is deprecated. Use BrowserManager.typeMessage() or IDESendMessageStep instead.');
     throw new Error('sendMessage() - ChatMessageHandler removed, use IDE Steps instead');
   }
 
@@ -104,9 +88,35 @@ class WindsurfIDEService {
     try {
       this.logger.info('Sending prompt to Windsurf IDE:', prompt.substring(0, 100) + '...');
       
-      // Use IDE Steps instead of ChatMessageHandler
-      this.logger.info('postToWindsurf() - Using IDE Steps for message sending');
-      throw new Error('postToWindsurf() - ChatMessageHandler removed, use IDE Steps instead');
+      // Use BrowserManager directly to avoid infinite loops
+      this.logger.info('postToWindsurf() - Using BrowserManager directly');
+      
+      // Ensure browser is connected to the active IDE port
+      const activePort = this.getActivePort();
+      if (activePort) {
+        try {
+          const currentBrowserPort = this.browserManager.getCurrentPort();
+          if (currentBrowserPort !== activePort) {
+            this.logger.info('postToWindsurf() - Switching browser to active port:', activePort);
+            await this.browserManager.switchToPort(activePort);
+          }
+        } catch (error) {
+          this.logger.error('postToWindsurf() - Failed to switch browser port:', error.message);
+        }
+      }
+      
+      // Send message directly via BrowserManager
+      const result = await this.browserManager.typeMessage(prompt, true);
+      
+      if (!result) {
+        throw new Error('Failed to send prompt to Windsurf IDE - BrowserManager returned false');
+      }
+      
+      return {
+        success: true,
+        message: 'Prompt sent to Windsurf IDE',
+        data: result
+      };
     } catch (error) {
       this.logger.error('Error sending prompt to Windsurf:', error);
       throw error;

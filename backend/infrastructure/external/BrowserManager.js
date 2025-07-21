@@ -681,6 +681,28 @@ class BrowserManager {
   }
 
   /**
+   * Detect IDE type based on port number
+   * @param {number} port - The port number
+   * @returns {string} The detected IDE type
+   */
+  async detectIDEType(port) {
+    if (port >= 9222 && port <= 9231) return 'cursor';
+    if (port >= 9232 && port <= 9241) return 'vscode';
+    if (port >= 9242 && port <= 9251) return 'windsurf';
+    return 'cursor'; // default fallback
+  }
+
+  /**
+   * Get IDE-specific selectors using IDESelectorManager
+   * @param {string} ideType - The IDE type
+   * @returns {Object} IDE-specific selectors
+   */
+  async getIDESelectors(ideType) {
+    const IDESelectorManager = require('@services/ide/IDESelectorManager');
+    return IDESelectorManager.getSelectors(ideType);
+  }
+
+  /**
    * Type a message into the chat input and optionally send it
    * @param {string} message - Message to type
    * @param {boolean} send - Whether to send the message after typing
@@ -697,22 +719,12 @@ class BrowserManager {
 
       // Determine IDE type based on current port
       const currentPort = this.getCurrentPort();
-      let ideType = 'cursor'; // default
-      
-      if (currentPort >= 9222 && currentPort <= 9231) {
-        ideType = 'cursor';
-      } else if (currentPort >= 9232 && currentPort <= 9241) {
-        ideType = 'vscode';
-      } else if (currentPort >= 9242 && currentPort <= 9251) {
-        ideType = 'windsurf';
-      }
+      const ideType = await this.detectIDEType(currentPort);
       
       logger.info(`Detected IDE type: ${ideType} on port ${currentPort}`);
 
-      // Get IDE-specific selectors
-      const IDETypes = require('@services/ide/IDETypes');
-      const ideMetadata = IDETypes.getMetadata(ideType);
-      const chatSelectors = ideMetadata?.chatSelectors;
+      // Get IDE-specific selectors using IDESelectorManager
+      const chatSelectors = await this.getIDESelectors(ideType);
       
       if (!chatSelectors) {
         throw new Error(`No chat selectors found for IDE type: ${ideType}`);
