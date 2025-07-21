@@ -726,16 +726,19 @@ class BrowserManager {
         throw new Error('Chat input not found');
       }
 
+      logger.info(`About to click chat input...`);
       // Click the input to focus it
       await chatInput.click();
-      await page.waitForTimeout(500);
+      logger.info(`Clicked chat input to focus`);
 
       // Clear existing content and type the message
       await chatInput.fill('');
+      logger.info(`Cleared chat input`);
       await chatInput.type(message);
       logger.info(`Message typed: ${message}`);
 
       if (send) {
+        logger.info(`Looking for send button...`);
         // Find and click send button
         const sendSelectors = [
           'button[aria-label*="Send"]',
