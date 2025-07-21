@@ -51,7 +51,7 @@ class GitService {
                 initialBranch
             };
 
-            const result = await this.stepRegistry.executeStep('GIT_INIT_REPOSITORY', stepContext);
+            const result = await this.stepRegistry.executeStep('GitInitRepositoryStep', stepContext);
             
             if (result.success) {
                 if (this.eventBus) {
@@ -106,7 +106,7 @@ class GitService {
                 recursive
             };
 
-            const result = await this.stepRegistry.executeStep('GIT_CLONE_REPOSITORY', stepContext);
+            const result = await this.stepRegistry.executeStep('GitCloneRepositoryStep', stepContext);
             
             if (result.success) {
                 if (this.eventBus) {
@@ -151,7 +151,7 @@ class GitService {
                 projectPath: repoPath
             };
 
-            const result = await this.stepRegistry.executeStep('GIT_GET_CURRENT_BRANCH', stepContext);
+            const result = await this.stepRegistry.executeStep('GitGetCurrentBranchStep', stepContext);
             
             if (result.success) {
                 this.logger.info(`Aktueller Branch für ${repoPath}: "${result.currentBranch}"`);
@@ -190,7 +190,7 @@ class GitService {
                 includeLocal
             };
 
-            const result = await this.stepRegistry.executeStep('GIT_GET_BRANCHES', stepContext);
+            const result = await this.stepRegistry.executeStep('GitGetBranchesStep', stepContext);
             
             if (result.success) {
                 // Return all branches (local + remote combined)
@@ -231,7 +231,7 @@ class GitService {
                 fromBranch: startPoint
             };
 
-            const result = await this.stepRegistry.executeStep('GIT_CREATE_BRANCH', stepContext);
+            const result = await this.stepRegistry.executeStep('GitCreateBranchStep', stepContext);
 
             if (this.eventBus) {
                 this.eventBus.publish('git.branch.create', {
@@ -275,7 +275,7 @@ class GitService {
                 createIfNotExists
             };
 
-            const result = await this.stepRegistry.executeStep('GIT_CHECKOUT_BRANCH', stepContext);
+            const result = await this.stepRegistry.executeStep('GitCheckoutBranchStep', stepContext);
             
             if (result.success) {
                 if (this.eventBus) {
@@ -331,7 +331,7 @@ class GitService {
                 format
             };
 
-            const result = await this.stepRegistry.executeStep('GIT_GET_COMMIT_HISTORY', stepContext);
+            const result = await this.stepRegistry.executeStep('GitGetCommitHistoryStep', stepContext);
             
             if (result.success) {
                 return result.commits;
@@ -364,7 +364,7 @@ class GitService {
                 projectPath: repoPath
             };
 
-            const result = await this.stepRegistry.executeStep('GIT_GET_LAST_COMMIT', stepContext);
+            const result = await this.stepRegistry.executeStep('GitGetLastCommitStep', stepContext);
             
             if (result.success) {
                 return result.lastCommit;
@@ -399,7 +399,7 @@ class GitService {
                 files: files.length === 0 ? '.' : files.join(' ')
             };
 
-            const result = await this.stepRegistry.executeStep('GIT_ADD_FILES', stepContext);
+            const result = await this.stepRegistry.executeStep('GitAddFilesStep', stepContext);
             
             if (result.success) {
                 if (this.eventBus) {
@@ -447,7 +447,7 @@ class GitService {
                 files: '.'
             };
 
-            const result = await this.stepRegistry.executeStep('GIT_COMMIT', stepContext);
+            const result = await this.stepRegistry.executeStep('GitCommitStep', stepContext);
 
             if (this.eventBus) {
                 this.eventBus.publish('git.commit', {
@@ -496,7 +496,7 @@ class GitService {
                 setUpstream
             };
 
-            const result = await this.stepRegistry.executeStep('GIT_PUSH', stepContext);
+            const result = await this.stepRegistry.executeStep('GitPushStep', stepContext);
 
             if (this.eventBus) {
                 this.eventBus.publish('git.push', {
@@ -540,7 +540,7 @@ class GitService {
                 rebase
             };
 
-            const result = await this.stepRegistry.executeStep('GIT_PULL_CHANGES', stepContext);
+            const result = await this.stepRegistry.executeStep('GitPullChangesStep', stepContext);
             
             if (result.success) {
                 if (this.eventBus) {
@@ -587,7 +587,7 @@ class GitService {
                 porcelain
             };
 
-            const result = await this.stepRegistry.executeStep('GIT_GET_STATUS', stepContext);
+            const result = await this.stepRegistry.executeStep('GitGetStatusStep', stepContext);
             
             if (result.success) {
                 return result.status;
@@ -622,7 +622,7 @@ class GitService {
                 remote
             };
 
-            const result = await this.stepRegistry.executeStep('GIT_GET_REMOTE_URL', stepContext);
+            const result = await this.stepRegistry.executeStep('GitGetRemoteUrlStep', stepContext);
             
             if (result.success) {
                 return result.remoteUrl;
@@ -660,7 +660,7 @@ class GitService {
                 url
             };
 
-            const result = await this.stepRegistry.executeStep('GIT_ADD_REMOTE', stepContext);
+            const result = await this.stepRegistry.executeStep('GitAddRemoteStep', stepContext);
             
             if (result.success) {
                 if (this.eventBus) {
@@ -715,7 +715,7 @@ class GitService {
                 commit2
             };
 
-            const result = await this.stepRegistry.executeStep('GIT_GET_DIFF', stepContext);
+            const result = await this.stepRegistry.executeStep('GitGetDiffStep', stepContext);
             
             if (result.success) {
                 return result.diff;
@@ -752,7 +752,7 @@ class GitService {
                 commit
             };
 
-            const result = await this.stepRegistry.executeStep('GIT_RESET', stepContext);
+            const result = await this.stepRegistry.executeStep('GitResetStep', stepContext);
             
             if (result.success) {
                 if (this.eventBus) {
@@ -802,7 +802,7 @@ class GitService {
                 noFF
             };
 
-            const result = await this.stepRegistry.executeStep('GIT_MERGE_BRANCH', stepContext);
+            const result = await this.stepRegistry.executeStep('GitMergeBranchStep', stepContext);
             
             if (result.success) {
                 if (this.eventBus) {
