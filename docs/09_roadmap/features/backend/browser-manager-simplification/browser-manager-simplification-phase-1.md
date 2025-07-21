@@ -34,9 +34,9 @@ Enhance BrowserManager with IDE detection and IDE-specific selectors to eliminat
 ## Implementation Details
 
 ### Current State Analysis
-The current BrowserManager already has some IDE detection logic in the `typeMessage` method:
+The current BrowserManager already has comprehensive IDE detection and selector logic in the `typeMessage` method:
 ```javascript
-// Current implementation in BrowserManager.js lines 700-710
+// Current implementation in BrowserManager.js lines 700-720
 const currentPort = this.getCurrentPort();
 let ideType = 'cursor'; // default
 
@@ -47,6 +47,11 @@ if (currentPort >= 9222 && currentPort <= 9231) {
 } else if (currentPort >= 9242 && currentPort <= 9251) {
   ideType = 'windsurf';
 }
+
+// Get IDE-specific selectors
+const IDETypes = require('@services/ide/IDETypes');
+const ideMetadata = IDETypes.getMetadata(ideType);
+const chatSelectors = ideMetadata?.chatSelectors;
 ```
 
 ### Required Changes
@@ -81,7 +86,7 @@ class IDESelectorManager {
 }
 ```
 
-#### 3. Update typeMessage Method
+#### 3. Refactor typeMessage Method
 ```javascript
 async typeMessage(message, send = true) {
   try {

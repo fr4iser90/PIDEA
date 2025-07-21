@@ -164,16 +164,16 @@
 ## 14. Validation Results - 2024-12-19
 
 ### ✅ Completed Items
-- [x] File: `backend/infrastructure/external/BrowserManager.js` - Status: Already has IDE detection logic
+- [x] File: `backend/infrastructure/external/BrowserManager.js` - Status: Already has IDE detection logic and selectors
 - [x] File: `backend/domain/steps/categories/chat/ide_send_message.js` - Status: Already uses BrowserManager directly
-- [x] File: `backend/domain/services/ide/IDETypes.js` - Status: Contains IDE-specific selectors
-- [x] File: `backend/infrastructure/dependency-injection/ServiceRegistry.js` - Status: IDE services registered
+- [x] File: `backend/domain/services/ide/IDETypes.js` - Status: Contains comprehensive IDE-specific selectors
+- [x] File: `backend/infrastructure/dependency-injection/ServiceRegistry.js` - Status: IDE services registered with stepRegistry dependency
 
 ### ⚠️ Issues Found
 - [ ] File: `backend/domain/services/ide/IDESelectorManager.js` - Status: Not found, needs creation
-- [ ] Dependencies: IDE services still have chat functionality - Status: Creates infinite loops
-- [ ] Architecture: Redundant service layer - Status: Step → IDE-Service → BrowserManager → IDE
-- [ ] Performance: Multiple abstraction layers - Status: Unnecessary overhead
+- [ ] Infinite Loop: CursorIDEService.sendMessage() calls stepRegistry.executeStep('IDESendMessageStep') - Status: CRITICAL
+- [ ] Redundant Dependencies: Step still declares IDE service dependencies - Status: Unnecessary
+- [ ] Architecture: Step → IDE-Service → Step → BrowserManager → IDE - Status: Complex and error-prone
 
 ### 🔧 Improvements Made
 - Updated file paths to match actual project structure
@@ -181,17 +181,18 @@
 - Corrected architecture analysis based on actual codebase
 - Enhanced implementation details with real code examples
 - Created comprehensive phase breakdown for task splitting
+- Identified critical infinite loop issue
 
 ### 📊 Code Quality Metrics
 - **Coverage**: 85% (needs improvement)
-- **Architecture Issues**: 1 high (infinite loops), 2 medium (redundancy, performance)
-- **Performance**: Good (current implementation works)
-- **Maintainability**: Poor (redundant layers)
+- **Architecture Issues**: 1 critical (infinite loops), 2 high (redundancy, complexity)
+- **Performance**: Good (current implementation works when not looping)
+- **Maintainability**: Poor (redundant layers and infinite loops)
 
 ### 🚀 Next Steps
 1. Create missing files: `backend/domain/services/ide/IDESelectorManager.js`
-2. Fix infinite loops in IDE services
-3. Remove redundant service layer
+2. Fix infinite loops in IDE services (CRITICAL)
+3. Remove redundant IDE service dependencies from steps
 4. Add comprehensive tests for new architecture
 5. Update documentation
 

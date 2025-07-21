@@ -24,11 +24,12 @@ Remove chat functionality from IDE services while preserving IDE-specific featur
 2 hours
 
 ## Success Criteria
-- [ ] Chat functionality removed from IDE services
+- [ ] Chat functionality removed from IDE services (CRITICAL - fixes infinite loops)
 - [ ] IDE-specific features still work (extensions, refactoring, terminal)
 - [ ] Service dependencies updated in DI container
 - [ ] Deprecation warnings added for removed methods
 - [ ] No breaking changes to existing IDE-specific functionality
+- [ ] Infinite loops eliminated (CRITICAL)
 
 ## Implementation Details
 
@@ -45,6 +46,8 @@ async sendMessage(message, options = {}) {
   return result;
 }
 ```
+
+**CRITICAL ISSUE**: This creates the pattern: IDE Service → Step → BrowserManager, but the step also declares IDE service dependencies, creating circular dependencies and infinite loops.
 
 ### Required Changes
 

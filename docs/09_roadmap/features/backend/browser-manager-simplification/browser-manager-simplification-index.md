@@ -76,9 +76,10 @@ docs/09_roadmap/features/backend/browser-manager-simplification/
 - Set up file structure for task tracking
 
 ### 2024-12-19 - Architecture Analysis
-- Identified current problem: Step → IDE-Service → BrowserManager → IDE
+- Identified current problem: Step → IDE-Service → Step → BrowserManager → IDE (infinite loops)
+- Identified critical issue: CursorIDEService.sendMessage() calls stepRegistry.executeStep('IDESendMessageStep')
 - Proposed solution: Step → BrowserManager → IDE (with IDE-specific selectors)
-- Benefits: 50% fewer service calls, 30% faster execution, 40% fewer files to maintain
+- Benefits: 50% fewer service calls, 30% faster execution, 40% fewer files to maintain, eliminates infinite loops
 - Risk assessment completed with mitigation strategies
 
 ## 🚀 Quick Actions
@@ -106,16 +107,18 @@ docs/09_roadmap/features/backend/browser-manager-simplification/
 ## 🔧 Technical Details
 
 ### Current Architecture Issues:
-1. **Redundant Layers**: Step → IDE-Service → BrowserManager → IDE
-2. **Outdated Selectors**: Hardcoded selectors instead of IDE-specific ones
-3. **Complex Dependencies**: Multiple services for same functionality
-4. **Performance Overhead**: Unnecessary abstraction layers
+1. **Infinite Loops**: Step → IDE-Service → Step → BrowserManager → IDE (CRITICAL)
+2. **Redundant Layers**: Step → IDE-Service → BrowserManager → IDE
+3. **Outdated Selectors**: Hardcoded selectors instead of IDE-specific ones
+4. **Complex Dependencies**: Multiple services for same functionality
+5. **Performance Overhead**: Unnecessary abstraction layers
 
 ### New Architecture Benefits:
-1. **Simplified Flow**: Step → BrowserManager → IDE
-2. **IDE-Specific Selectors**: Using IDETypes.js for accurate selectors
-3. **Reduced Complexity**: Single point of IDE interaction
-4. **Better Performance**: Fewer abstraction layers
+1. **Eliminates Infinite Loops**: Step → BrowserManager → IDE (CRITICAL)
+2. **Simplified Flow**: Step → BrowserManager → IDE
+3. **IDE-Specific Selectors**: Using IDETypes.js for accurate selectors
+4. **Reduced Complexity**: Single point of IDE interaction
+5. **Better Performance**: Fewer abstraction layers
 
 ### Files to Modify:
 - `backend/infrastructure/external/BrowserManager.js` - Add IDE detection and specific selectors
@@ -132,6 +135,7 @@ docs/09_roadmap/features/backend/browser-manager-simplification/
 ## 📊 Metrics & KPIs
 
 ### Technical Metrics:
+- **Infinite Loops**: 0 (eliminated completely)
 - **Reduced Complexity**: 50% fewer service calls for message sending
 - **Performance**: 30% faster step execution
 - **Maintainability**: 40% fewer files to maintain for chat functionality
@@ -151,6 +155,9 @@ docs/09_roadmap/features/backend/browser-manager-simplification/
 
 ## 🚨 Risk Management
 
+### Critical Risk:
+- Infinite loops in message sending (currently happening)
+
 ### High Risk:
 - Breaking changes to existing functionality
 - IDE detection failures
@@ -163,6 +170,7 @@ docs/09_roadmap/features/backend/browser-manager-simplification/
 - Documentation gaps
 
 ### Mitigation Strategies:
+- **IMMEDIATE**: Remove chat functionality from IDE services to fix infinite loops
 - Comprehensive testing and gradual rollout
 - Fallback to default selectors with extensive logging
 - Performance testing and monitoring

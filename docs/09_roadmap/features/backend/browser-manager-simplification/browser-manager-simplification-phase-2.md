@@ -45,6 +45,12 @@ However, it still has IDE service dependencies in the configuration:
 dependencies: ['cursorIDEService', 'vscodeIDEService', 'windsurfIDEService'],
 ```
 
+**CRITICAL ISSUE**: The step uses BrowserManager directly, but IDE services still call this step, creating infinite loops:
+```javascript
+// CursorIDEService.sendMessage() - creates infinite loop
+const result = await stepRegistry.executeStep('IDESendMessageStep', stepData);
+```
+
 ### Required Changes
 
 #### 1. Update Step Dependencies
