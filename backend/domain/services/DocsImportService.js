@@ -41,7 +41,7 @@ class DocsImportService {
             if (!workspacePath) {
                 throw new Error('No workspace path provided');
             }
-            const featuresDir = path.join(workspacePath, 'docs/09_roadmap/features');
+            const featuresDir = path.join(workspacePath, 'docs/09_roadmap/tasks');
             // Hilfsfunktion: rekursiv alle .md-Dateien finden
             async function getAllMarkdownFiles(dir) {
                 let results = [];
@@ -58,23 +58,35 @@ class DocsImportService {
                 return results;
             }
             const allFiles = await getAllMarkdownFiles(featuresDir);
+            logger.info(`📁 Found ${allFiles.length} markdown files in ${featuresDir}`);
             const importedTasks = [];
             for (const filePath of allFiles) {
                 // category = Ordner unter features, name = Ordner unter category
                 const rel = path.relative(featuresDir, filePath);
                 const parts = rel.split(path.sep);
-                if (parts.length < 3) continue; // category/name/file
+                if (parts.length < 3) {
+                    logger.debug(`⏭️ Skipping file with insufficient path parts: ${rel} (${parts.length} parts)`);
+                    continue; // category/name/file
+                }
                 const category = parts[0];
                 const name = parts[1];
                 const filename = parts[2];
-                let type = 'feature_summary', phase = null;
-                if (filename.endsWith('-index.md')) {
-                    type = 'feature_index';
-                } else if (filename.endsWith('-implementation.md')) {
-                    type = 'feature_implementation';
-                } else if (filename.match(/-phase-(\d+)\.md$/)) {
-                    type = 'feature_phase';
+                // All docs tasks should be 'documentation' type
+                let type = 'documentation', phase = null;
+                if (filename.match(/-phase-(\d+)\.md$/)) {
                     phase = filename.match(/-phase-(\d+)\.md$/)[1];
+                }
+                
+                // Determine structure type for metadata
+                let structure = 'implementation'; // default
+                if (filename.endsWith('-index.md')) {
+                    structure = 'index';
+                } else if (filename.endsWith('-implementation.md')) {
+                    structure = 'implementation';
+                } else if (filename.match(/-phase-(\d+)\.md$/)) {
+                    structure = 'phase';
+                } else if (filename.endsWith('-summary.md')) {
+                    structure = 'summary';
                 }
                 const content = await fs.readFile(filePath, 'utf8');
                 
@@ -98,9 +110,13 @@ class DocsImportService {
                 }
                 title = title.replace(/-/g, ' ');
                 
-                // Prüfe ob Task schon existiert (nach title+category+type+phase)
-                const existing = await this.taskRepository.findByTitle(title);
-                if (!existing) {
+                // Prüfe ob Task schon existiert (nach title+projectId+category+type+phase)
+                const existing = await this.taskRepository.findAll({
+                    title: title,
+                    projectId: projectId
+                });
+                logger.info(`🔍 Checking for existing task: "${title}" in project "${projectId}" - Found: ${existing.length}`);
+                if (existing.length === 0) {
                     // Erstelle Task mit Gruppierungs-Metadaten
                     const taskMetadata = {
                         category,
@@ -112,19 +128,20 @@ class DocsImportService {
                         featureId, // Eindeutige ID für das Feature
                         featureGroup: `${category}/${name}`, // Gruppierungs-Key
                         projectPath: workspacePath, // ✅ Setze projectPath beim Import
+                        structure, // ✅ Structure type (index, phase, implementation, summary)
                         ...progressInfo, // Füge Progress-Informationen hinzu
                     };
                     
-                    // Füge Type-spezifische Metadaten hinzu
-                    if (type === 'feature_index') {
+                    // Füge Structure-spezifische Metadaten hinzu
+                    if (structure === 'index') {
                         taskMetadata.isIndexTask = true;
                         taskMetadata.indexForFeature = featureId;
-                    } else if (type === 'feature_phase') {
+                    } else if (structure === 'phase') {
                         taskMetadata.phaseNumber = parseInt(phase);
                         taskMetadata.isPhaseTask = true;
-                    } else if (type === 'feature_implementation') {
+                    } else if (structure === 'implementation') {
                         taskMetadata.isImplementationTask = true;
-                    } else if (type === 'feature_summary') {
+                    } else if (structure === 'summary') {
                         taskMetadata.isSummaryTask = true;
                     }
                     
@@ -136,7 +153,10 @@ class DocsImportService {
                         type,
                         taskMetadata
                     );
+                    logger.info(`✅ Created task: "${title}" (${type}) for project "${projectId}"`);
                     importedTasks.push(task);
+                } else {
+                    logger.debug(`⏭️ Skipping existing task: "${title}" in project "${projectId}"`);
                 }
             }
             return {
@@ -171,18 +191,19 @@ class DocsImportService {
                 priority = 'low';
             }
 
-            // Extract type
-            let type = 'feature';
+            // All docs tasks from roadmap/features should be 'documentation' type
+            let type = 'documentation';
+            
+            // Determine structure type for metadata
+            let structure = 'implementation'; // default
             if (content.includes('Master Index') || content.includes('📋 Task Overview')) {
-                type = 'feature_index';
-            } else if (content.includes('refactor') || content.includes('Refactor')) {
-                type = 'refactor';
-            } else if (content.includes('bug') || content.includes('Bug')) {
-                type = 'bug';
-            } else if (content.includes('test') || content.includes('Test')) {
-                type = 'test';
-            } else if (content.includes('documentation') || content.includes('docs')) {
-                type = 'documentation';
+                structure = 'index';
+            } else if (filename.includes('Phase')) {
+                structure = 'phase';
+            } else if (filename.includes('summary') || content.includes('Summary')) {
+                structure = 'summary';
+            } else if (filename.includes('implementation') || content.includes('Implementation')) {
+                structure = 'implementation';
             }
 
             // Extract category from filename or content
@@ -202,6 +223,7 @@ class DocsImportService {
                 priority,
                 type,
                 category,
+                structure, // ✅ Return structure for metadata
                 metadata: {}
             };
             

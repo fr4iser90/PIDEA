@@ -41,6 +41,53 @@ const TASK_TYPES = [
 
 function TasksPanelComponent({ eventBus, activePort }) {
   const api = new APIChatRepository();
+  
+  // Helper functions
+  const getTaskFilename = (task) => {
+    return task.filename || task.title || 'Unknown';
+  };
+
+  const getTaskDescription = (task) => {
+    return task.description || task.content || 'No description available';
+  };
+
+  const getPriorityColor = (priority) => {
+    const priorityStr = String(priority || '').toLowerCase();
+    switch (priorityStr) {
+      case 'high': return '#ef4444';
+      case 'medium': return '#f59e0b';
+      case 'low': return '#10b981';
+      default: return '#6b7280';
+    }
+  };
+
+  const getStatusColor = (status) => {
+    const statusStr = String(status || '').toLowerCase();
+    switch (statusStr) {
+      case 'completed': return '#10b981';
+      case 'running': return '#3b82f6';
+      case 'pending': return '#f59e0b';
+      case 'failed': return '#ef4444';
+      default: return '#6b7280';
+    }
+  };
+
+  const formatDate = (dateString) => {
+    if (!dateString) return 'Unknown';
+    try {
+      const date = new Date(dateString);
+      return date.toLocaleDateString('de-DE', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    } catch (error) {
+      return 'Invalid date';
+    }
+  };
+
   // Regular Tasks
   const [showTaskModal, setShowTaskModal] = useState(false);
   const [modalType, setModalType] = useState('feature');
@@ -65,6 +112,8 @@ function TasksPanelComponent({ eventBus, activePort }) {
 
   // TaskCreationModal state
   const [showTaskCreationModal, setShowTaskCreationModal] = useState(false);
+
+
 
   // Load docs tasks on mount AND when activePort changes
   useEffect(() => {
@@ -142,30 +191,63 @@ function TasksPanelComponent({ eventBus, activePort }) {
     setIsLoadingDocsTaskDetails(true);
     setIsDocsTaskModalOpen(true);
     setSelectedDocsTask(null);
+    
     try {
+      // Find the group this task belongs to
+      const featureId = task.metadata?.featureId || task.metadata?.featureGroup || task.id;
+      const group = groupedList.find(g => g.featureId === featureId);
+      
       logger.info('Loading task details for:', task.id);
       const response = await api.getDocsTaskDetails(task.id);
       if (response.success && response.data) {
         logger.info('Task details loaded successfully:', response.data);
-        setSelectedDocsTask(response.data);
+        const taskWithGroup = {
+          ...response.data,
+          featureGroup: group,
+          allTasks: group ? {
+            index: group.index,
+            phases: group.phases,
+            implementation: group.implementation,
+            summary: group.summary
+          } : null
+        };
+        setSelectedDocsTask(taskWithGroup);
       } else {
         logger.warn('API returned no data, using task as fallback');
         // Fallback: use the task data we already have
-        setSelectedDocsTask({
+        const taskWithGroup = {
           ...task,
           description: getTaskDescription(task),
-          filename: getTaskFilename(task)
-        });
+          filename: getTaskFilename(task),
+          featureGroup: group,
+          allTasks: group ? {
+            index: group.index,
+            phases: group.phases,
+            implementation: group.implementation,
+            summary: group.summary
+          } : null
+        };
+        setSelectedDocsTask(taskWithGroup);
       }
     } catch (error) {
       logger.error('Error loading task details:', error);
       setFeedback('Error loading task details: ' + error.message);
       // Fallback: use the task data we already have
-      setSelectedDocsTask({
+      const featureId = task.metadata?.featureId || task.metadata?.featureGroup || task.id;
+      const group = groupedList.find(g => g.featureId === featureId);
+      const taskWithGroup = {
         ...task,
         description: getTaskDescription(task),
-        filename: getTaskFilename(task)
-      });
+        filename: getTaskFilename(task),
+        featureGroup: group,
+        allTasks: group ? {
+          index: group.index,
+            phases: group.phases,
+            implementation: group.implementation,
+            summary: group.summary
+        } : null
+      };
+      setSelectedDocsTask(taskWithGroup);
     } finally {
       setIsLoadingDocsTaskDetails(false);
     }
@@ -240,31 +322,73 @@ ${taskDetails.description}
 
   // Docs tasks filter/search
   const filteredDocsTasks = docsTasks.filter(task => {
-    const matchesSearch = task.title.toLowerCase().includes(docsTaskSearch.toLowerCase()) ||
-                         task.filename.toLowerCase().includes(docsTaskSearch.toLowerCase());
+    const taskTitle = String(task.title || '');
+    const taskFilename = getTaskFilename(task);
+    const matchesSearch = taskTitle.toLowerCase().includes(docsTaskSearch.toLowerCase()) ||
+                         String(taskFilename).toLowerCase().includes(docsTaskSearch.toLowerCase());
     const matchesFilter = docsTaskFilter === 'all' || task.priority === docsTaskFilter;
     return matchesSearch && matchesFilter;
   });
 
-  // Group tasks by summary and implementation
+  // Group tasks by feature (category/name)
   const groupedList = filteredDocsTasks.reduce((acc, task) => {
-    const summary = acc.find(g => g.summary?.id === task.id);
-    if (summary) {
-      // If summary exists, add implementation to its group
-      summary.implementation = task;
+    const featureId = task.metadata?.featureId || task.metadata?.featureGroup || task.id;
+    const existingGroup = acc.find(g => g.featureId === featureId);
+    
+    if (existingGroup) {
+      // Add task to existing group based on structure
+      const structure = task.metadata?.structure || 'implementation';
+      if (structure === 'index') {
+        existingGroup.index = task;
+      } else if (structure === 'phase') {
+        if (!existingGroup.phases) existingGroup.phases = [];
+        existingGroup.phases.push(task);
+      } else if (structure === 'implementation') {
+        existingGroup.implementation = task;
+      } else if (structure === 'summary') {
+        existingGroup.summary = task;
+      }
     } else {
-      // Otherwise, create a new group for the summary
-      acc.push({
-        summary: task,
-        implementation: null
-      });
+      // Create new group
+      const newGroup = {
+        featureId,
+        featureName: task.metadata?.name || task.title,
+        category: task.metadata?.category || 'Unknown',
+        index: null,
+        phases: [],
+        implementation: null,
+        summary: null
+      };
+      
+      // Add first task to appropriate slot
+      const structure = task.metadata?.structure || 'implementation';
+      if (structure === 'index') {
+        newGroup.index = task;
+      } else if (structure === 'phase') {
+        newGroup.phases.push(task);
+      } else if (structure === 'implementation') {
+        newGroup.implementation = task;
+      } else if (structure === 'summary') {
+        newGroup.summary = task;
+      }
+      
+      acc.push(newGroup);
     }
     return acc;
   }, []);
 
-  // Only show groups with a summary task
-  // Fix: Removed reference to undefined 'phases' variable
-  const groupedSummaryList = groupedList.filter(group => group.summary);
+  // Sort phases within each group
+  groupedList.forEach(group => {
+    if (group.phases) {
+      group.phases.sort((a, b) => {
+        const phaseA = a.metadata?.phaseNumber || 0;
+        const phaseB = b.metadata?.phaseNumber || 0;
+        return phaseA - phaseB;
+      });
+    }
+  });
+
+
 
   // Task creation logic
   const handleCreateTask = () => {
@@ -295,57 +419,6 @@ ${taskDetails.description}
       logger.error('Error handling task submission:', err);
       setFeedback('❌ Failed to create task: ' + (err.message || err));
       throw err;
-    }
-  };
-
-  // Helper function to get filename from task
-  const getTaskFilename = (task) => {
-    return (
-      task.metadata?.filename ||
-      task.filename ||
-      (task.metadata?.category && task.metadata.category.filename) ||
-      'Unknown file'
-    );
-  };
-
-  // Helper function to get task description
-  const getTaskDescription = (task) => {
-    return task.description || 
-           task.content || 
-           task.details || 
-           task.metadata?.description || 
-           'No description available';
-  };
-
-  // Helper
-  const getPriorityColor = (priority) => {
-    switch (priority?.toLowerCase()) {
-      case 'high': return '#ff4444';
-      case 'medium': return '#ffaa00';
-      case 'low': return '#44aa44';
-      default: return '#888888';
-    }
-  };
-  const getStatusColor = (status) => {
-    switch (status?.toLowerCase()) {
-      case 'completed': return '#44aa44';
-      case 'in-progress': return '#ffaa00';
-      case 'blocked': return '#ff4444';
-      case 'pending': return '#888888';
-      default: return '#888888';
-    }
-  };
-  const formatDate = (dateString) => {
-    if (!dateString) return 'Unknown';
-    try {
-      return new Date(dateString).toLocaleDateString('en-US', {
-        month: 'short',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
-      });
-    } catch (error) {
-      return dateString;
     }
   };
 
@@ -412,41 +485,49 @@ ${taskDetails.description}
               <div className="loading-spinner mr-3"></div>
               <span className="text-gray-400">Loading documentation tasks...</span>
             </div>
-          ) : groupedSummaryList.length > 0 ? (
-            <div className="space-y-2">
-              {groupedSummaryList.map((group) => (
-                <div
-                  key={group.summary.id}
-                  className="docs-task-item p-3 bg-gray-800 rounded border border-gray-700 hover:border-gray-600 cursor-pointer transition-colors"
-                  onClick={() => handleDocsTaskClick(group.summary)}
-                >
-                  <div className="flex justify-between items-start mb-2">
-                    <h4 className="font-medium text-white text-sm line-clamp-2">
-                      {group.summary.title}
-                    </h4>
-                    <div className="flex gap-1 flex-shrink-0 ml-2">
-                      <span
-                        className="priority-badge text-xs px-2 py-1 rounded"
-                        style={{ backgroundColor: getPriorityColor(group.summary.priority) }}
-                      >
-                        {group.summary.priority}
-                      </span>
-                      {group.summary.status && (
+          ) : groupedList.length > 0 ? (
+            <div className="space-y-3">
+              {groupedList.map((group) => {
+                // Get main task for display (prefer index, then first phase, then implementation)
+                const mainTask = group.index || (group.phases && group.phases[0]) || group.implementation || group.summary;
+                if (!mainTask || typeof mainTask !== 'object') return null;
+                
+                // Build structure string
+                const structureParts = [];
+                if (group.index) structureParts.push('📄 Master Index');
+                if (group.phases && group.phases.length > 0) structureParts.push(`${group.phases.length} Phase${group.phases.length > 1 ? 's' : ''}`);
+                if (group.implementation) structureParts.push('Implementation');
+                if (group.summary) structureParts.push('Summary');
+                
+                return (
+                  <div
+                    key={group.featureId || mainTask.id || Math.random()}
+                    className="docs-task-item p-3 bg-gray-800 rounded border border-gray-700 hover:border-gray-600 cursor-pointer transition-colors"
+                    onClick={() => handleDocsTaskClick(mainTask)}
+                  >
+                    <div className="flex justify-between items-start mb-2">
+                      <h4 className="font-medium text-white text-sm line-clamp-2">
+                        {String(group.featureName || 'Unknown Feature')}
+                      </h4>
+                      <div className="flex gap-1 flex-shrink-0 ml-2">
                         <span
-                          className="status-badge text-xs px-2 py-1 rounded"
-                          style={{ backgroundColor: getStatusColor(group.summary.status) }}
+                          className="priority-badge text-xs px-2 py-1 rounded"
+                          style={{ backgroundColor: getPriorityColor(mainTask.priority) }}
                         >
-                          {group.summary.status}
+                          {String(mainTask.priority || 'Unknown')}
                         </span>
-                      )}
+                        <span className="text-xs px-2 py-1 rounded bg-blue-600">
+                          📋
+                        </span>
+                      </div>
+                    </div>
+                    <div className="flex justify-between items-center text-xs text-gray-400">
+                      <span className="font-mono">{structureParts.join(' • ')}</span>
+                      <span>{formatDate(mainTask.updatedAt || mainTask.createdAt || null)}</span>
                     </div>
                   </div>
-                  <div className="flex justify-between items-center text-xs text-gray-400">
-                    <span className="font-mono">{getTaskFilename(group.summary)}</span>
-                    <span>{formatDate(group.summary.updatedAt)}</span>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           ) : (
             <div className="text-center py-8 text-gray-400">

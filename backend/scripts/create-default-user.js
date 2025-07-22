@@ -101,7 +101,10 @@ async function createDefaultUser() {
     logger.error('❌ Error stack:', error.stack);
     throw error;
   } finally {
-    await databaseConnection.disconnect();
+    // Only disconnect if this script is run directly (not from main app)
+    if (require.main === module) {
+      await databaseConnection.disconnect();
+    }
   }
 }
 

@@ -347,20 +347,7 @@ class ServiceRegistry {
             });
         }, { singleton: true, dependencies: ['projectRepository', 'ideManager', 'workspacePathDetector', 'projectMappingService', 'logger'] });
 
-        // Task Application Service - coordinates task management use cases
-        this.container.register('taskApplicationService', (taskService, taskRepository, aiService, projectAnalyzer, projectMappingService, ideManager, docsImportService, logger) => {
-            const TaskApplicationService = require('@application/services/TaskApplicationService');
-            return new TaskApplicationService({
-                taskService,
-                taskRepository,
-                aiService,
-                projectAnalyzer,
-                projectMappingService,
-                ideManager,
-                docsImportService,
-                logger
-            });
-        }, { singleton: true, dependencies: ['taskService', 'taskRepository', 'aiService', 'projectAnalyzer', 'projectMappingService', 'ideManager', 'docsImportService', 'logger'] });
+
 
         // IDE Application Service - coordinates IDE management use cases
         this.container.register('ideApplicationService', (ideManager, eventBus, cursorIDEService, taskRepository, terminalLogCaptureService, terminalLogReader, browserManager, logger) => {

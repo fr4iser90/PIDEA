@@ -18,7 +18,7 @@ const logger = new Logger('Logger');
 
 /**
  * Handler for managing documentation tasks from markdown files
- * Provides secure access to task documentation in docs/09_roadmap/features/
+ * Provides secure access to task documentation in docs/09_roadmap/tasks/
  */
 class DocsTasksHandler {
   constructor(getWorkspacePath, taskRepository = null) {
@@ -40,7 +40,7 @@ class DocsTasksHandler {
     }
     
     logger.info(`Workspace root: ${workspaceRoot}`);
-    const featuresDir = path.resolve(workspaceRoot, 'docs/09_roadmap/features');
+            const featuresDir = path.resolve(workspaceRoot, 'docs/09_roadmap/tasks');
     logger.info(`Features directory resolved: ${featuresDir}`);
     
     return featuresDir;

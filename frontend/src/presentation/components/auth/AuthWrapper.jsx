@@ -35,7 +35,6 @@ const AuthWrapper = ({ children }) => {
           showWarning('Your session has expired. Please log in again.', 'Session Expired');
         } else {
           logger.info('✅ [AuthWrapper] Authentication validation successful');
-          showInfo('Welcome back!', 'Authentication Successful');
         }
       } catch (error) {
         logger.error('❌ [AuthWrapper] Authentication validation error:', error);
@@ -46,9 +45,9 @@ const AuthWrapper = ({ children }) => {
       }
     };
 
-    // Only validate once on mount - cookies are handled automatically
+    // Always validate on mount - this is how pros do it
     checkAuth();
-  }, []); // Empty dependency array - only run once
+  }, []); // Empty dependency array - only run once on mount
 
   // Handle redirect to login
   useEffect(() => {

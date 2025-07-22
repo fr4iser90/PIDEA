@@ -412,51 +412,7 @@ class IDEApplicationService {
         }
     }
 
-    // ========== DOCUMENTATION TASKS ==========
-
-    async getDocsTasks(projectId, userId) {
-        try {
-            this.logger.info('IDEApplicationService: Getting docs tasks', { projectId, userId });
-            
-            if (!this.taskRepository) {
-                throw new Error('Task repository not available');
-            }
-            
-            const tasks = await this.taskRepository.findByProject(projectId);
-            
-            return {
-                success: true,
-                data: tasks
-            };
-        } catch (error) {
-            this.logger.error('Error getting docs tasks:', error);
-            throw error;
-        }
-    }
-
-    async getDocsTaskDetails(projectId, taskId, userId) {
-        try {
-            this.logger.info('IDEApplicationService: Getting docs task details', { projectId, taskId, userId });
-            
-            if (!this.taskRepository) {
-                throw new Error('Task repository not available');
-            }
-            
-            const task = await this.taskRepository.findById(taskId);
-            
-            if (!task || task.projectId !== projectId) {
-                throw new Error('Task not found or does not belong to project');
-            }
-            
-            return {
-                success: true,
-                data: task
-            };
-        } catch (error) {
-            this.logger.error('Error getting docs task details:', error);
-            throw error;
-        }
-    }
+    // REMOVED: Documentation tasks methods - MIGRATED TO TASKAPPLICATIONSERVICE
 
     // ========== USER APP OPERATIONS ==========
 

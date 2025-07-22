@@ -5,7 +5,7 @@ Analyze files to determine if task splitting is needed and create phase files fo
 
 > **File Pattern Requirement:**  
 > All phase files must follow this pattern:  
-> - Phase: docs/09_roadmap/features/[category]/[name]/[name]-phase-[number].md  
+> - Phase: docs/09_roadmap/tasks/[category]/[name]/[name]-phase-[number].md  
 > If splitting is needed, phase files must be created automatically. This pattern is required for orchestration and grouping in the system.
 
 ## Core Review Process
@@ -322,14 +322,14 @@ When a task needs to be split into subtasks, create individual phase files follo
 
 **File Path Pattern:**
 ```
-docs/09_roadmap/features/[category]/[name]/[name]-phase-[number].md
+docs/09_roadmap/tasks/[category]/[name]/[name]-phase-[number].md
 ```
 
 **Example:**
 ```
-docs/09_roadmap/features/backend/unified-workflow-legacy-migration/unified-workflow-legacy-migration-phase-1.md
-docs/09_roadmap/features/backend/unified-workflow-legacy-migration/unified-workflow-legacy-migration-phase-2.md
-docs/09_roadmap/features/backend/unified-workflow-legacy-migration/unified-workflow-legacy-migration-phase-3.md
+docs/09_roadmap/tasks/backend/unified-workflow-legacy-migration/unified-workflow-legacy-migration-phase-1.md
+docs/09_roadmap/tasks/backend/unified-workflow-legacy-migration/unified-workflow-legacy-migration-phase-2.md
+docs/09_roadmap/tasks/backend/unified-workflow-legacy-migration/unified-workflow-legacy-migration-phase-3.md
 ```
 
 ### Phase File Content Template

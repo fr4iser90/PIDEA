@@ -30,7 +30,10 @@ module.exports = {
     '!**/*.spec.js',
     '!**/jest.config.js',
     '!**/setup.js',
-    '!**/scripts/**'
+    '!**/scripts/**',
+    '!**/cli/**',
+    '!**/*.sh',
+    '!**/entrypoint.sh'
   ],
   
   coverageDirectory: 'coverage',

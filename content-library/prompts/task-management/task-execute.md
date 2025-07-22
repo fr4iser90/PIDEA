@@ -3,7 +3,7 @@
 ## Goal
 Execute complete development tasks automatically with phase-by-phase implementation, automatic file creation/modification, and full task completion without requiring user input or confirmation.
 
-**Note**: Tasks are automatically organized in hierarchical folder structure: `docs/09_roadmap/features/[category]/[name]/`
+**Note**: Tasks are automatically organized in hierarchical folder structure: `docs/09_roadmap/tasks/[category]/[name]/`
 
 ## Core Principles
 - **Zero User Input Required**: Execute all phases automatically
@@ -74,7 +74,7 @@ Execute complete development tasks automatically with phase-by-phase implementat
 - Include all necessary imports and dependencies
 - Add proper error handling and validation
 - Implement complete functionality, not stubs
-- **Organize files in hierarchical structure**: `docs/09_roadmap/features/[category]/[name]/`
+- **Organize files in hierarchical structure**: `docs/09_roadmap/tasks/[category]/[name]/`
 - **Create main implementation file**: `[name]-implementation.md`
 - **Create phase files**: `[name]-phase-[number].md` for subtasks
 
@@ -86,8 +86,8 @@ Execute complete development tasks automatically with phase-by-phase implementat
 - Ensure backward compatibility
 
 ### Implementation File Updates
-- Create/update `docs/09_roadmap/features/[category]/[name]/[name]-implementation.md`
-- Create/update phase files: `docs/09_roadmap/features/[category]/[name]/[name]-phase-[number].md`
+- Create/update `docs/09_roadmap/tasks/[category]/[name]/[name]-implementation.md`
+- Create/update phase files: `docs/09_roadmap/tasks/[category]/[name]/[name]-phase-[number].md`
 - Track progress through all phases
 - Document all changes and decisions
 - Update completion status automatically
@@ -146,7 +146,7 @@ Execute complete development tasks automatically with phase-by-phase implementat
 ## Goal
 Execute complete development tasks automatically with phase-by-phase implementation, automatic file creation/modification, and full task completion without requiring user input or confirmation.
 
-**Note**: Tasks are automatically organized in hierarchical folder structure: `docs/09_roadmap/features/[category]/[name]/`
+**Note**: Tasks are automatically organized in hierarchical folder structure: `docs/09_roadmap/tasks/[category]/[name]/`
 
 ## Core Principles
 - **Zero User Input Required**: Execute all phases automatically
@@ -217,7 +217,7 @@ Execute complete development tasks automatically with phase-by-phase implementat
 - Include all necessary imports and dependencies
 - Add proper error handling and validation
 - Implement complete functionality, not stubs
-- **Organize files in hierarchical structure**: `docs/09_roadmap/features/[category]/[name]/`
+- **Organize files in hierarchical structure**: `docs/09_roadmap/tasks/[category]/[name]/`
 - **Create main implementation file**: `[name]-implementation.md`
 - **Create phase files**: `[name]-phase-[number].md` for subtasks
 
@@ -229,8 +229,8 @@ Execute complete development tasks automatically with phase-by-phase implementat
 - Ensure backward compatibility
 
 ### Implementation File Updates
-- Create/update `docs/09_roadmap/features/[category]/[name]/[name]-implementation.md`
-- Create/update phase files: `docs/09_roadmap/features/[category]/[name]/[name]-phase-[number].md`
+- Create/update `docs/09_roadmap/tasks/[category]/[name]/[name]-implementation.md`
+- Create/update phase files: `docs/09_roadmap/tasks/[category]/[name]/[name]-phase-[number].md`
 - Track progress through all phases
 - Document all changes and decisions
 - Update completion status automatically
@@ -289,7 +289,7 @@ Execute complete development tasks automatically with phase-by-phase implementat
 ## Goal
 Execute complete development tasks automatically with phase-by-phase implementation, automatic file creation/modification, and full task completion without requiring user input or confirmation.
 
-**Note**: Tasks are automatically organized in hierarchical folder structure: `docs/09_roadmap/features/[category]/[name]/`
+**Note**: Tasks are automatically organized in hierarchical folder structure: `docs/09_roadmap/tasks/[category]/[name]/`
 
 ## Core Principles
 - **Zero User Input Required**: Execute all phases automatically
@@ -360,7 +360,7 @@ Execute complete development tasks automatically with phase-by-phase implementat
 - Include all necessary imports and dependencies
 - Add proper error handling and validation
 - Implement complete functionality, not stubs
-- **Organize files in hierarchical structure**: `docs/09_roadmap/features/[category]/[name]/`
+- **Organize files in hierarchical structure**: `docs/09_roadmap/tasks/[category]/[name]/`
 - **Create main implementation file**: `[name]-implementation.md`
 - **Create phase files**: `[name]-phase-[number].md` for subtasks
 
@@ -372,8 +372,8 @@ Execute complete development tasks automatically with phase-by-phase implementat
 - Ensure backward compatibility
 
 ### Implementation File Updates
-- Create/update `docs/09_roadmap/features/[category]/[name]/[name]-implementation.md`
-- Create/update phase files: `docs/09_roadmap/features/[category]/[name]/[name]-phase-[number].md`
+- Create/update `docs/09_roadmap/tasks/[category]/[name]/[name]-implementation.md`
+- Create/update phase files: `docs/09_roadmap/tasks/[category]/[name]/[name]-phase-[number].md`
 - Track progress through all phases
 - Document all changes and decisions
 - Update completion status automatically
@@ -432,7 +432,7 @@ Execute complete development tasks automatically with phase-by-phase implementat
 ## Goal
 Execute complete development tasks automatically with phase-by-phase implementation, automatic file creation/modification, and full task completion without requiring user input or confirmation.
 
-**Note**: Tasks are automatically organized in hierarchical folder structure: `docs/09_roadmap/features/[category]/[name]/`
+**Note**: Tasks are automatically organized in hierarchical folder structure: `docs/09_roadmap/tasks/[category]/[name]/`
 
 ## Core Principles
 - **Zero User Input Required**: Execute all phases automatically
@@ -503,7 +503,7 @@ Execute complete development tasks automatically with phase-by-phase implementat
 - Include all necessary imports and dependencies
 - Add proper error handling and validation
 - Implement complete functionality, not stubs
-- **Organize files in hierarchical structure**: `docs/09_roadmap/features/[category]/[name]/`
+- **Organize files in hierarchical structure**: `docs/09_roadmap/tasks/[category]/[name]/`
 - **Create main implementation file**: `[name]-implementation.md`
 - **Create phase files**: `[name]-phase-[number].md` for subtasks
 
@@ -515,8 +515,8 @@ Execute complete development tasks automatically with phase-by-phase implementat
 - Ensure backward compatibility
 
 ### Implementation File Updates
-- Create/update `docs/09_roadmap/features/[category]/[name]/[name]-implementation.md`
-- Create/update phase files: `docs/09_roadmap/features/[category]/[name]/[name]-phase-[number].md`
+- Create/update `docs/09_roadmap/tasks/[category]/[name]/[name]-implementation.md`
+- Create/update phase files: `docs/09_roadmap/tasks/[category]/[name]/[name]-phase-[number].md`
 - Track progress through all phases
 - Document all changes and decisions
 - Update completion status automatically
@@ -575,7 +575,7 @@ Execute complete development tasks automatically with phase-by-phase implementat
 ## Goal
 Execute complete development tasks automatically with phase-by-phase implementation, automatic file creation/modification, and full task completion without requiring user input or confirmation.
 
-**Note**: Tasks are automatically organized in hierarchical folder structure: `docs/09_roadmap/features/[category]/[name]/`
+**Note**: Tasks are automatically organized in hierarchical folder structure: `docs/09_roadmap/tasks/[category]/[name]/`
 
 ## Core Principles
 - **Zero User Input Required**: Execute all phases automatically
@@ -646,7 +646,7 @@ Execute complete development tasks automatically with phase-by-phase implementat
 - Include all necessary imports and dependencies
 - Add proper error handling and validation
 - Implement complete functionality, not stubs
-- **Organize files in hierarchical structure**: `docs/09_roadmap/features/[category]/[name]/`
+- **Organize files in hierarchical structure**: `docs/09_roadmap/tasks/[category]/[name]/`
 - **Create main implementation file**: `[name]-implementation.md`
 - **Create phase files**: `[name]-phase-[number].md` for subtasks
 
@@ -658,8 +658,8 @@ Execute complete development tasks automatically with phase-by-phase implementat
 - Ensure backward compatibility
 
 ### Implementation File Updates
-- Create/update `docs/09_roadmap/features/[category]/[name]/[name]-implementation.md`
-- Create/update phase files: `docs/09_roadmap/features/[category]/[name]/[name]-phase-[number].md`
+- Create/update `docs/09_roadmap/tasks/[category]/[name]/[name]-implementation.md`
+- Create/update phase files: `docs/09_roadmap/tasks/[category]/[name]/[name]-phase-[number].md`
 - Track progress through all phases
 - Document all changes and decisions
 - Update completion status automatically
@@ -718,7 +718,7 @@ Execute complete development tasks automatically with phase-by-phase implementat
 ## Goal
 Execute complete development tasks automatically with phase-by-phase implementation, automatic file creation/modification, and full task completion without requiring user input or confirmation.
 
-**Note**: Tasks are automatically organized in hierarchical folder structure: `docs/09_roadmap/features/[category]/[name]/`
+**Note**: Tasks are automatically organized in hierarchical folder structure: `docs/09_roadmap/tasks/[category]/[name]/`
 
 ## Core Principles
 - **Zero User Input Required**: Execute all phases automatically
@@ -789,7 +789,7 @@ Execute complete development tasks automatically with phase-by-phase implementat
 - Include all necessary imports and dependencies
 - Add proper error handling and validation
 - Implement complete functionality, not stubs
-- **Organize files in hierarchical structure**: `docs/09_roadmap/features/[category]/[name]/`
+- **Organize files in hierarchical structure**: `docs/09_roadmap/tasks/[category]/[name]/`
 - **Create main implementation file**: `[name]-implementation.md`
 - **Create phase files**: `[name]-phase-[number].md` for subtasks
 
@@ -801,8 +801,8 @@ Execute complete development tasks automatically with phase-by-phase implementat
 - Ensure backward compatibility
 
 ### Implementation File Updates
-- Create/update `docs/09_roadmap/features/[category]/[name]/[name]-implementation.md`
-- Create/update phase files: `docs/09_roadmap/features/[category]/[name]/[name]-phase-[number].md`
+- Create/update `docs/09_roadmap/tasks/[category]/[name]/[name]-implementation.md`
+- Create/update phase files: `docs/09_roadmap/tasks/[category]/[name]/[name]-phase-[number].md`
 - Track progress through all phases
 - Document all changes and decisions
 - Update completion status automatically
@@ -861,7 +861,7 @@ Execute complete development tasks automatically with phase-by-phase implementat
 ## Goal
 Execute complete development tasks automatically with phase-by-phase implementation, automatic file creation/modification, and full task completion without requiring user input or confirmation.
 
-**Note**: Tasks are automatically organized in hierarchical folder structure: `docs/09_roadmap/features/[category]/[name]/`
+**Note**: Tasks are automatically organized in hierarchical folder structure: `docs/09_roadmap/tasks/[category]/[name]/`
 
 ## Core Principles
 - **Zero User Input Required**: Execute all phases automatically
@@ -932,7 +932,7 @@ Execute complete development tasks automatically with phase-by-phase implementat
 - Include all necessary imports and dependencies
 - Add proper error handling and validation
 - Implement complete functionality, not stubs
-- **Organize files in hierarchical structure**: `docs/09_roadmap/features/[category]/[name]/`
+- **Organize files in hierarchical structure**: `docs/09_roadmap/tasks/[category]/[name]/`
 - **Create main implementation file**: `[name]-implementation.md`
 - **Create phase files**: `[name]-phase-[number].md` for subtasks
 
@@ -944,8 +944,8 @@ Execute complete development tasks automatically with phase-by-phase implementat
 - Ensure backward compatibility
 
 ### Implementation File Updates
-- Create/update `docs/09_roadmap/features/[category]/[name]/[name]-implementation.md`
-- Create/update phase files: `docs/09_roadmap/features/[category]/[name]/[name]-phase-[number].md`
+- Create/update `docs/09_roadmap/tasks/[category]/[name]/[name]-implementation.md`
+- Create/update phase files: `docs/09_roadmap/tasks/[category]/[name]/[name]-phase-[number].md`
 - Track progress through all phases
 - Document all changes and decisions
 - Update completion status automatically
@@ -1004,7 +1004,7 @@ Execute complete development tasks automatically with phase-by-phase implementat
 ## Goal
 Execute complete development tasks automatically with phase-by-phase implementation, automatic file creation/modification, and full task completion without requiring user input or confirmation.
 
-**Note**: Tasks are automatically organized in hierarchical folder structure: `docs/09_roadmap/features/[category]/[name]/`
+**Note**: Tasks are automatically organized in hierarchical folder structure: `docs/09_roadmap/tasks/[category]/[name]/`
 
 ## Core Principles
 - **Zero User Input Required**: Execute all phases automatically
@@ -1075,7 +1075,7 @@ Execute complete development tasks automatically with phase-by-phase implementat
 - Include all necessary imports and dependencies
 - Add proper error handling and validation
 - Implement complete functionality, not stubs
-- **Organize files in hierarchical structure**: `docs/09_roadmap/features/[category]/[name]/`
+- **Organize files in hierarchical structure**: `docs/09_roadmap/tasks/[category]/[name]/`
 - **Create main implementation file**: `[name]-implementation.md`
 - **Create phase files**: `[name]-phase-[number].md` for subtasks
 
@@ -1087,8 +1087,8 @@ Execute complete development tasks automatically with phase-by-phase implementat
 - Ensure backward compatibility
 
 ### Implementation File Updates
-- Create/update `docs/09_roadmap/features/[category]/[name]/[name]-implementation.md`
-- Create/update phase files: `docs/09_roadmap/features/[category]/[name]/[name]-phase-[number].md`
+- Create/update `docs/09_roadmap/tasks/[category]/[name]/[name]-implementation.md`
+- Create/update phase files: `docs/09_roadmap/tasks/[category]/[name]/[name]-phase-[number].md`
 - Track progress through all phases
 - Document all changes and decisions
 - Update completion status automatically
@@ -1147,7 +1147,7 @@ Execute complete development tasks automatically with phase-by-phase implementat
 ## Goal
 Execute complete development tasks automatically with phase-by-phase implementation, automatic file creation/modification, and full task completion without requiring user input or confirmation.
 
-**Note**: Tasks are automatically organized in hierarchical folder structure: `docs/09_roadmap/features/[category]/[name]/`
+**Note**: Tasks are automatically organized in hierarchical folder structure: `docs/09_roadmap/tasks/[category]/[name]/`
 
 ## Core Principles
 - **Zero User Input Required**: Execute all phases automatically
@@ -1218,7 +1218,7 @@ Execute complete development tasks automatically with phase-by-phase implementat
 - Include all necessary imports and dependencies
 - Add proper error handling and validation
 - Implement complete functionality, not stubs
-- **Organize files in hierarchical structure**: `docs/09_roadmap/features/[category]/[name]/`
+- **Organize files in hierarchical structure**: `docs/09_roadmap/tasks/[category]/[name]/`
 - **Create main implementation file**: `[name]-implementation.md`
 - **Create phase files**: `[name]-phase-[number].md` for subtasks
 
@@ -1230,8 +1230,8 @@ Execute complete development tasks automatically with phase-by-phase implementat
 - Ensure backward compatibility
 
 ### Implementation File Updates
-- Create/update `docs/09_roadmap/features/[category]/[name]/[name]-implementation.md`
-- Create/update phase files: `docs/09_roadmap/features/[category]/[name]/[name]-phase-[number].md`
+- Create/update `docs/09_roadmap/tasks/[category]/[name]/[name]-implementation.md`
+- Create/update phase files: `docs/09_roadmap/tasks/[category]/[name]/[name]-phase-[number].md`
 - Track progress through all phases
 - Document all changes and decisions
 - Update completion status automatically

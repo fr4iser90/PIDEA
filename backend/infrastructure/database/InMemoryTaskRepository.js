@@ -28,10 +28,13 @@ class InMemoryTaskRepository extends TaskRepository {
     return task;
   }
 
-  async findByProject(projectId, filters = {}) {
-    let tasks = Array.from(this.tasks.values()).filter(task => task.belongsToProject(projectId));
+  async findAll(filters = {}) {
+    let tasks = Array.from(this.tasks.values());
 
     // Apply filters
+    if (filters.projectId) {
+      tasks = tasks.filter(task => task.belongsToProject(filters.projectId));
+    }
     if (filters.status) {
       tasks = tasks.filter(task => task.status === filters.status);
     }
@@ -41,8 +44,21 @@ class InMemoryTaskRepository extends TaskRepository {
     if (filters.type) {
       tasks = tasks.filter(task => task.type === filters.type);
     }
+    if (filters.title) {
+      tasks = tasks.filter(task => task.title === filters.title);
+    }
+    if (filters.userId) {
+      tasks = tasks.filter(task => task.userId === filters.userId);
+    }
+    if (filters.assignee) {
+      tasks = tasks.filter(task => task.assignee === filters.assignee);
+    }
 
     return tasks;
+  }
+
+  async findByProject(projectId, filters = {}) {
+    return this.findAll({ ...filters, projectId });
   }
 
   async update(id, updatedTask) {

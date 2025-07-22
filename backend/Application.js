@@ -196,6 +196,15 @@ class Application {
 
   async checkDefaultUser() {
     try {
+      // Wait a moment for database to be fully ready
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      // Check if database is connected
+      if (!this.databaseConnection || !this.databaseConnection.isConnected()) {
+        this.logger.warn('⚠️ Database not ready, skipping user check for now...');
+        return;
+      }
+      
       const dbType = this.databaseConnection.getType();
       const param = dbType === 'postgresql' ? '$1' : '?';
       
@@ -205,19 +214,24 @@ class Application {
       );
       
       if (!checkResult || checkResult.length === 0) {
-        this.logger.error('❌ No default user found in database!');
-        this.logger.error('📝 To create the default user, run:');
-        this.logger.error('   node scripts/create-default-user.js');
-        this.logger.error('');
-        this.logger.error('🛑 Server cannot start without default user due to foreign key constraints.');
-        process.exit(0);
+        this.logger.warn('⚠️ No default user found, creating one automatically...');
+        
+        // Try to create default user automatically
+        try {
+          const createDefaultUser = require('./scripts/create-default-user');
+          await createDefaultUser();
+          this.logger.info('✅ Default user created automatically');
+        } catch (createError) {
+          this.logger.error('❌ Could not create default user automatically:', createError.message);
+          this.logger.error('📝 Please run manually: node scripts/create-default-user.js');
+          process.exit(0);
+        }
       } else {
         this.logger.info('✅ Default user found in database');
       }
     } catch (error) {
-      this.logger.error('❌ Could not check for default user:', error.message);
-      this.logger.error('🛑 Server cannot start. Please run: node scripts/create-default-user.js');
-      process.exit(0);
+      this.logger.warn('⚠️ Could not check for default user, continuing anyway:', error.message);
+      // Don't exit, just continue - the user might be created later
     }
   }
 
@@ -465,6 +479,7 @@ class Application {
     const IDEController = require('./presentation/api/IDEController');
     this.ideController = new IDEController({
         ideApplicationService: this.serviceRegistry.getService('ideApplicationService'),
+        taskRepository: this.taskRepository,
         logger: this.serviceRegistry.getService('logger')
     });
 
@@ -490,10 +505,7 @@ class Application {
     });
 
     const TaskController = require('./presentation/api/TaskController');
-    this.taskController = new TaskController({
-        taskApplicationService: this.serviceRegistry.getService('taskApplicationService'),
-        logger: this.serviceRegistry.getService('logger')
-    });
+    this.taskController = new TaskController(this.serviceRegistry.getService('taskApplicationService'));
 
                 const WorkflowController = require('./presentation/api/WorkflowController');
     this.workflowController = new WorkflowController({
@@ -753,7 +765,7 @@ class Application {
     // Task Management routes (protected) - PROJECT-BASED (CRUD only, no execution)
     this.app.use('/api/projects/:projectId/tasks', this.authMiddleware.authenticate());
     this.app.post('/api/projects/:projectId/tasks', (req, res) => this.taskController.createTask(req, res));
-    this.app.get('/api/projects/:projectId/tasks', (req, res) => this.taskController.getTasks(req, res));
+    this.app.get('/api/projects/:projectId/tasks', (req, res) => this.taskController.getProjectTasks(req, res));
     this.app.get('/api/projects/:projectId/tasks/:id', (req, res) => this.taskController.getTaskById(req, res));
     this.app.put('/api/projects/:projectId/tasks/:id', (req, res) => this.taskController.updateTask(req, res));
     this.app.delete('/api/projects/:projectId/tasks/:id', (req, res) => this.taskController.deleteTask(req, res));
@@ -820,14 +832,6 @@ class Application {
 
     // IDE Mirror API-Routen einbinden
     this.ideMirrorController.setupRoutes(this.app);
-
-    // Documentation Tasks routes (protected)
-    this.app.use('/api/projects/:projectId/docs-tasks', this.authMiddleware.authenticate());
-    this.app.get('/api/projects/:projectId/docs-tasks', (req, res) => this.ideController.getDocsTasks(req, res));
-    this.app.get('/api/projects/:projectId/docs-tasks/:id', (req, res) => this.ideController.getDocsTaskDetails(req, res));
-
-    // Auto Finish routes (protected) - REMOVED: using WorkflowController + Steps instead
-    // Auto Test Fix routes (protected) - REMOVED: using WorkflowController + Steps instead
 
     // Workflow routes (protected) - PROJECT-BASED
     this.app.use('/api/projects/:projectId/workflow', this.authMiddleware.authenticate());

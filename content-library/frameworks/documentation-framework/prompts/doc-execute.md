@@ -60,7 +60,7 @@ docs/
 └── README.md
 ```
 
-**Note**: The 09_roadmap/features/ section now uses hierarchical organization: Category → Task Name → Implementation files
+**Note**: The docs/09_roadmap/tasks/ section now uses hierarchical organization: Category → Task Name → Implementation files
 
 **FIRST STEP: Always create this folder structure before writing any documentation!**
 
@@ -196,7 +196,7 @@ Welcome to the complete documentation for [Project Name]. This documentation fol
 
 ### 🗺️ [09. Roadmap](./09_roadmap/)
 - [Roadmap Overview](./09_roadmap/overview.md)
-- [Future Features](./09_roadmap/features/)
+- [Future Features](./09_roadmap/tasks/)
 
 ### 🔧 [10. Maintenance](./10_maintenance/)
 - [Updates](./10_maintenance/updates.md)

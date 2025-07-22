@@ -201,6 +201,11 @@ class PostgreSQLTaskRepository extends TaskRepository {
         params.push(filters.assignee);
       }
 
+      if (filters.title) {
+        conditions.push('title = ?');
+        params.push(filters.title);
+      }
+
       if (conditions.length > 0) {
         sql += ' WHERE ' + conditions.join(' AND ');
       }

@@ -1,12 +1,12 @@
 # Prompt: Task Review & Validation System
 
 ## Goal
-Review, validate, and analyze development tasks against the actual codebase. Analyze implementation files, verify code existence, identify gaps, and create phase files for task splitting when needed. **DO NOT modify the docs/09_roadmap/features/[category]/[name]/[name]-implementation.md** - only analyze and create phase files.
+Review, validate, and analyze development tasks against the actual codebase. Analyze implementation files, verify code existence, identify gaps, and create phase files for task splitting when needed. **DO NOT modify the docs/09_roadmap/tasks/[category]/[name]/[name]-implementation.md** - only analyze and create phase files.
 
 > **File Pattern Requirement:**  
 > All implementation and phase files must always be created using this pattern:  
-> - Implementation: docs/09_roadmap/features/[category]/[name]/[name]-implementation.md  
-> - Phase: docs/09_roadmap/features/[category]/[name]/[name]-phase-[number].md  
+> - Implementation: docs/09_roadmap/tasks/[category]/[name]/[name]-implementation.md  
+> - Phase: docs/09_roadmap/tasks/[category]/[name]/[name]-phase-[number].md  
 > If a file is missing, it must be created automatically. This pattern is required for orchestration and grouping in the system.
 
 ## Core Review Process
@@ -322,14 +322,14 @@ When a task needs to be split into subtasks, create individual phase files follo
 
 **File Path Pattern:**
 ```
-docs/09_roadmap/features/[category]/[name]/[name]-phase-[number].md
+docs/09_roadmap/tasks/[category]/[name]/[name]-phase-[number].md
 ```
 
 **Example:**
 ```
-docs/09_roadmap/features/backend/unified-workflow-legacy-migration/unified-workflow-legacy-migration-phase-1.md
-docs/09_roadmap/features/backend/unified-workflow-legacy-migration/unified-workflow-legacy-migration-phase-2.md
-docs/09_roadmap/features/backend/unified-workflow-legacy-migration/unified-workflow-legacy-migration-phase-3.md
+docs/09_roadmap/tasks/backend/unified-workflow-legacy-migration/unified-workflow-legacy-migration-phase-1.md
+docs/09_roadmap/tasks/backend/unified-workflow-legacy-migration/unified-workflow-legacy-migration-phase-2.md
+docs/09_roadmap/tasks/backend/unified-workflow-legacy-migration/unified-workflow-legacy-migration-phase-3.md
 ```
 
 ### Phase File Content Template

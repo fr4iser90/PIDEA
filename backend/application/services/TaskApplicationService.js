@@ -381,6 +381,49 @@ class TaskApplicationService {
   }
 
   /**
+   * Clean documentation tasks from database
+   * @param {string} projectId - Project identifier
+   * @param {string} userId - User identifier
+   * @returns {Promise<Object>} Cleanup result
+   */
+  async cleanDocsTasks(projectId, userId) {
+    try {
+      this.logger.info(`🧹 Cleaning docs tasks for project: ${projectId}`);
+      
+      if (!this.taskRepository) {
+        throw new Error('TaskRepository not available');
+      }
+      
+      // Get all docs tasks for the project
+      const docsTasks = await this.taskRepository.findByProject(projectId, {
+        type: 'documentation'
+      });
+      
+      this.logger.info(`Found ${docsTasks.length} docs tasks to clean`);
+      
+      // Delete all docs tasks
+      let deletedCount = 0;
+      for (const task of docsTasks) {
+        await this.taskRepository.delete(task.id);
+        deletedCount++;
+      }
+      
+      this.logger.info(`✅ Cleaned ${deletedCount} docs tasks from project: ${projectId}`);
+      
+      return {
+        success: true,
+        deletedCount,
+        projectId,
+        message: `Successfully cleaned ${deletedCount} documentation tasks`
+      };
+      
+    } catch (error) {
+      this.logger.error('❌ Failed to clean docs tasks:', error);
+      throw new Error(`Failed to clean docs tasks: ${error.message}`);
+    }
+  }
+
+  /**
    * Analyze project for task suggestions
    * @param {string} projectId - Project identifier
    * @param {Object} options - Analysis options

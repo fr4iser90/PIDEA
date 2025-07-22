@@ -137,7 +137,7 @@ const useAuthStore = create(
         return headers;
       },
 
-      // Enhanced authentication validation with instant auto-redirect
+      // Professional authentication validation with proper caching
       validateToken: async () => {
         const { lastAuthCheck, authCheckInterval } = get();
         
@@ -151,7 +151,14 @@ const useAuthStore = create(
         try {
           logger.info('🔍 [AuthStore] Validating authentication...');
           
-          const data = await apiCall('/api/auth/validate');
+          // Add timeout to prevent hanging
+          const timeoutPromise = new Promise((_, reject) => {
+            setTimeout(() => reject(new Error('Authentication timeout')), 3000); // 3 second timeout
+          });
+          
+          const validationPromise = apiCall('/api/auth/validate');
+          const data = await Promise.race([validationPromise, timeoutPromise]);
+          
           logger.info('✅ [AuthStore] Authentication validation successful');
           set({ 
             user: data.data?.user || data.user, 

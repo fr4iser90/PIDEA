@@ -127,7 +127,8 @@ ${taskDetails.content || taskDetails.description}`;
   };
 
   const getPriorityColor = (priority) => {
-    switch (priority?.toLowerCase()) {
+    const priorityStr = String(priority || '').toLowerCase();
+    switch (priorityStr) {
       case 'high': return '#ff4444';
       case 'medium': return '#ffaa00';
       case 'low': return '#44aa44';
@@ -136,7 +137,8 @@ ${taskDetails.content || taskDetails.description}`;
   };
 
   const getStatusColor = (status) => {
-    switch (status?.toLowerCase()) {
+    const statusStr = String(status || '').toLowerCase();
+    switch (statusStr) {
       case 'completed': return '#44aa44';
       case 'in-progress': return '#ffaa00';
       case 'blocked': return '#ff4444';
@@ -177,7 +179,7 @@ ${taskDetails.content || taskDetails.description}`;
                   className="priority-badge"
                   style={{ backgroundColor: getPriorityColor(taskDetails.priority) }}
                 >
-                  {taskDetails.priority}
+                  {String(taskDetails.priority)}
                 </span>
               )}
               {taskDetails?.status && (
@@ -185,7 +187,7 @@ ${taskDetails.content || taskDetails.description}`;
                   className="status-badge"
                   style={{ backgroundColor: getStatusColor(taskDetails.status) }}
                 >
-                  {taskDetails.status}
+                  {String(taskDetails.status)}
                 </span>
               )}
               {taskDetails?.estimatedTime && (

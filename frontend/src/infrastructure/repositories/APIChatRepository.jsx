@@ -674,12 +674,12 @@ export default class APIChatRepository extends ChatRepository {
   // Documentation Tasks Methods
   async getDocsTasks(projectId = null) {
     const currentProjectId = projectId || await this.getCurrentProjectId();
-    return apiCall(`/api/projects/${currentProjectId}/docs-tasks`, {}, currentProjectId);
+    return apiCall(`/api/projects/${currentProjectId}/tasks?type=documentation`, {}, currentProjectId);
   }
 
   async getDocsTaskDetails(taskId, projectId = null) {
     const currentProjectId = projectId || await this.getCurrentProjectId();
-    return await apiCall(`/api/projects/${currentProjectId}/docs-tasks/${taskId}`, {}, currentProjectId);
+    return await apiCall(`/api/projects/${currentProjectId}/tasks/${taskId}`, {}, currentProjectId);
   }
 
   // NEW: Sync docs tasks to database

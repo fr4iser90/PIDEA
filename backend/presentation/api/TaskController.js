@@ -20,6 +20,13 @@ class TaskController {
     constructor(taskApplicationService) {
         this.taskApplicationService = taskApplicationService;
         this.logger = logger;
+        
+        // DEBUG: Check what methods taskApplicationService has
+        this.logger.info('🔍 [TaskController] taskApplicationService methods:', Object.getOwnPropertyNames(Object.getPrototypeOf(this.taskApplicationService)));
+        this.logger.info('🔍 [TaskController] syncDocsTasks exists:', typeof this.taskApplicationService.syncDocsTasks);
+        this.logger.info('🔍 [TaskController] taskApplicationService type:', typeof this.taskApplicationService);
+        this.logger.info('🔍 [TaskController] taskApplicationService constructor:', this.taskApplicationService.constructor.name);
+        this.logger.info('🔍 [TaskController] taskApplicationService keys:', Object.keys(this.taskApplicationService));
     }
 
     /**
@@ -95,6 +102,14 @@ class TaskController {
             }
         }
     }
+
+    /**
+     * GET /api/projects/:projectId/tasks?type=documentation - Get docs tasks
+     * Reuses existing getProjectTasks with type=documentation filter
+     */
+    // REMOVED: getDocsTasks method - using generic /tasks routes instead
+
+    // REMOVED: getDocsTaskDetails method - using generic /tasks routes instead
 
     /**
      * POST /api/projects/:projectId/tasks - Create new task
@@ -285,6 +300,38 @@ class TaskController {
             res.status(500).json({
                 success: false,
                 error: 'Failed to sync docs tasks',
+                message: error.message
+            });
+        }
+    }
+
+    /**
+     * POST /api/projects/:projectId/tasks/clean-docs - Clean documentation tasks from database
+     */
+    async cleanDocsTasks(req, res) {
+        try {
+            const { projectId } = req.params;
+            const userId = req.user.id;
+
+            this.logger.info(`🧹 [TaskController] cleanDocsTasks called for project: ${projectId}`);
+
+            // Use Application Service for docs cleanup
+            const result = await this.taskApplicationService.cleanDocsTasks(projectId, userId);
+
+            this.logger.info('✅ [TaskController] Docs cleanup completed successfully');
+
+            res.json({
+                success: true,
+                data: result,
+                projectId,
+                timestamp: new Date().toISOString()
+            });
+
+        } catch (error) {
+            this.logger.error('❌ [TaskController] Failed to clean docs tasks:', error);
+            res.status(500).json({
+                success: false,
+                error: 'Failed to clean docs tasks',
                 message: error.message
             });
         }

@@ -14,7 +14,7 @@ Create, update, and maintain master index files that serve as central navigation
 
 ### File Path Pattern
 ```
-docs/09_roadmap/features/[category]/[name]/[name]-index.md
+docs/09_roadmap/tasks/[category]/[name]/[name]-index.md
 ```
 
 ### Template Structure
@@ -34,7 +34,7 @@ docs/09_roadmap/features/[category]/[name]/[name]-index.md
 
 ## 📁 File Structure
 ```
-docs/09_roadmap/features/[category]/[name]/
+docs/09_roadmap/tasks/[category]/[name]/
 ├── [name]-index.md (this file)
 ├── [name]-implementation.md
 ├── [name]-phase-1.md
@@ -150,7 +150,7 @@ docs/09_roadmap/features/[category]/[name]/
 ### Create New Index File
 ```bash
 # When creating a new task
-touch docs/09_roadmap/features/[category]/[name]/[name]-index.md
+touch docs/09_roadmap/tasks/[category]/[name]/[name]-index.md
 # Generate index content using template
 ```
 
