@@ -519,8 +519,12 @@ class Application {
         logger: this.serviceRegistry.getService('logger')
     });
 
-    // TODO: Phase 2 - Re-enable AnalysisController after implementing with AnalysisOrchestrator
-    // this.analysisController = this.serviceRegistry.getService('analysisController');
+    // Initialize AnalysisController
+    const AnalysisController = require('./presentation/api/AnalysisController');
+    this.analysisController = new AnalysisController({
+        analysisApplicationService: this.serviceRegistry.getService('analysisApplicationService'),
+        logger: this.serviceRegistry.getService('logger')
+    });
 
     const GitController = require('./presentation/api/GitController');
     this.gitController = new GitController({

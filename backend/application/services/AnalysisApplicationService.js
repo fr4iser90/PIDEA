@@ -262,6 +262,194 @@ class AnalysisApplicationService {
   validateETag(etag, data) {
     return this.etagService.validate(etag, data);
   }
+
+  /**
+   * Get analysis metrics for a project
+   * @param {string} projectId - Project identifier
+   * @returns {Promise<Object>} Analysis metrics
+   */
+  async getAnalysisMetrics(projectId) {
+    this.logger.info(`Getting analysis metrics for project: ${projectId}`);
+    
+    try {
+      const projectPath = await this.getProjectPath(projectId);
+      if (!projectPath) {
+        throw new Error(`Project path not found for project: ${projectId}`);
+      }
+
+      const metrics = await this.analysisOutputService.getAnalysisMetrics(projectPath);
+      
+      return {
+        projectId,
+        metrics,
+        timestamp: new Date().toISOString()
+      };
+    } catch (error) {
+      this.logger.error(`Failed to get analysis metrics for ${projectId}:`, error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get analysis from database
+   * @param {string} projectId - Project identifier
+   * @returns {Promise<Object>} Analysis data from database
+   */
+  async getAnalysisFromDatabase(projectId) {
+    this.logger.info(`Getting analysis from database for project: ${projectId}`);
+    
+    try {
+      const analysis = await this.analysisRepository.findByProjectId(projectId);
+      
+      return {
+        projectId,
+        analysis,
+        timestamp: new Date().toISOString()
+      };
+    } catch (error) {
+      this.logger.error(`Failed to get analysis from database for ${projectId}:`, error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get analysis file
+   * @param {string} projectId - Project identifier
+   * @param {string} filename - File name
+   * @returns {Promise<Object>} Analysis file content
+   */
+  async getAnalysisFile(projectId, filename) {
+    this.logger.info(`Getting analysis file for project: ${projectId}, file: ${filename}`);
+    
+    try {
+      const projectPath = await this.getProjectPath(projectId);
+      if (!projectPath) {
+        throw new Error(`Project path not found for project: ${projectId}`);
+      }
+
+      const file = await this.analysisOutputService.getAnalysisFile(projectPath, filename);
+      
+      return {
+        projectId,
+        filename,
+        content: file,
+        timestamp: new Date().toISOString()
+      };
+    } catch (error) {
+      this.logger.error(`Failed to get analysis file for ${projectId}/${filename}:`, error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get analysis tech stack
+   * @param {string} projectId - Project identifier
+   * @returns {Promise<Object>} Tech stack analysis
+   */
+  async getAnalysisTechStack(projectId) {
+    this.logger.info(`Getting analysis tech stack for project: ${projectId}`);
+    
+    try {
+      const projectPath = await this.getProjectPath(projectId);
+      if (!projectPath) {
+        throw new Error(`Project path not found for project: ${projectId}`);
+      }
+
+      const techStack = await this.analysisOutputService.getAnalysisTechStack(projectPath);
+      
+      return {
+        projectId,
+        techStack,
+        timestamp: new Date().toISOString()
+      };
+    } catch (error) {
+      this.logger.error(`Failed to get analysis tech stack for ${projectId}:`, error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get analysis architecture
+   * @param {string} projectId - Project identifier
+   * @returns {Promise<Object>} Architecture analysis
+   */
+  async getAnalysisArchitecture(projectId) {
+    this.logger.info(`Getting analysis architecture for project: ${projectId}`);
+    
+    try {
+      const projectPath = await this.getProjectPath(projectId);
+      if (!projectPath) {
+        throw new Error(`Project path not found for project: ${projectId}`);
+      }
+
+      const architecture = await this.analysisOutputService.getAnalysisArchitecture(projectPath);
+      
+      return {
+        projectId,
+        architecture,
+        timestamp: new Date().toISOString()
+      };
+    } catch (error) {
+      this.logger.error(`Failed to get analysis architecture for ${projectId}:`, error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get analysis recommendations
+   * @param {string} projectId - Project identifier
+   * @returns {Promise<Object>} Analysis recommendations
+   */
+  async getAnalysisRecommendations(projectId) {
+    this.logger.info(`Getting analysis recommendations for project: ${projectId}`);
+    
+    try {
+      const projectPath = await this.getProjectPath(projectId);
+      if (!projectPath) {
+        throw new Error(`Project path not found for project: ${projectId}`);
+      }
+
+      const recommendations = await this.analysisOutputService.getAnalysisRecommendations(projectPath);
+      
+      return {
+        projectId,
+        recommendations,
+        timestamp: new Date().toISOString()
+      };
+    } catch (error) {
+      this.logger.error(`Failed to get analysis recommendations for ${projectId}:`, error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get analysis charts
+   * @param {string} projectId - Project identifier
+   * @param {string} type - Chart type
+   * @returns {Promise<Object>} Analysis charts
+   */
+  async getAnalysisCharts(projectId, type) {
+    this.logger.info(`Getting analysis charts for project: ${projectId}, type: ${type}`);
+    
+    try {
+      const projectPath = await this.getProjectPath(projectId);
+      if (!projectPath) {
+        throw new Error(`Project path not found for project: ${projectId}`);
+      }
+
+      const charts = await this.analysisOutputService.getAnalysisCharts(projectPath, type);
+      
+      return {
+        projectId,
+        chartType: type,
+        charts,
+        timestamp: new Date().toISOString()
+      };
+    } catch (error) {
+      this.logger.error(`Failed to get analysis charts for ${projectId}/${type}:`, error);
+      throw error;
+    }
+  }
 }
 
 module.exports = AnalysisApplicationService; 
