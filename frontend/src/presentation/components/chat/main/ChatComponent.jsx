@@ -76,11 +76,11 @@ function ChatComponent({ eventBus, activePort, attachedPrompts = [] }) {
   };
 
   // Lade Chat immer, wenn activePort sich ändert (React-Way)
-  const loadChatHistory = useCallback(async () => {
-    if (!activePort) return;
-    logger.info('Lade Chat für Port:', activePort);
+  const loadChatHistory = useCallback(async (port) => {
+    if (!port) return;
+    logger.info('Lade Chat für Port:', port);
     try {
-      const data = await apiCall(API_CONFIG.endpoints.chat.portHistory(activePort));
+      const data = await apiCall(API_CONFIG.endpoints.chat.portHistory(port));
       let msgs = [];
       if (data.success && data.data && data.data.messages) {
         msgs = data.data.messages;
@@ -92,12 +92,12 @@ function ChatComponent({ eventBus, activePort, attachedPrompts = [] }) {
       logger.info('Neue Nachrichten geladen:', msgs.length);
       logger.info('Message structure:', msgs.map(m => ({ id: m.id, sender: m.sender, type: m.type, content: m.content?.substring(0, 50) })));
       setMessages(msgs.map(normalizeMessage));
-      lastLoadedPort.current = activePort;
+      lastLoadedPort.current = port;
     } catch (error) {
       setMessages([]);
       setError('❌ Failed to load chat history: ' + error.message);
     }
-  }, [activePort]);
+  }, []);
 
   useEffect(() => {
     logger.info('activePort changed:', activePort);
@@ -106,10 +106,9 @@ function ChatComponent({ eventBus, activePort, attachedPrompts = [] }) {
       setMessages([]);
       setError(null);
       logger.info('setMessages([]) aufgerufen!');
-      loadChatHistory();
+      loadChatHistory(activePort);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activePort]);
+  }, [activePort, loadChatHistory]);
 
   useEffect(() => {
     if (shouldAutoScroll) scrollToBottom();

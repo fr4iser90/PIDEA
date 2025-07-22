@@ -173,7 +173,7 @@ const TaskSelectionModal = ({
                             
                             {expandedPlans.has(task.id) ? (
                               <div className="expanded-plan">
-                                <div className="markdown-content" dangerouslySetInnerHTML={{ __html: marked.parse(task.metadata.refactoringPlan) }} />
+                                <div className="markdown-content" dangerouslySetInnerHTML={{ __html: marked.parse(task.metadata?.refactoringPlan || '') }} />
                                 <button 
                                   className="collapse-plan-btn"
                                   onClick={() => togglePlanExpansion(task.id)}

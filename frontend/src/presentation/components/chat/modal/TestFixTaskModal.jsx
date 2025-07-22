@@ -197,7 +197,7 @@ const TestFixTaskModal = ({
                         <div className="task-steps">
                           <h4>Refactoring Steps:</h4>
                           <ol>
-                            {task.metadata.refactoringSteps.map((step, index) => (
+                            {task.metadata?.refactoringSteps.map((step, index) => (
                               <li key={index}>{step}</li>
                             ))}
                           </ol>

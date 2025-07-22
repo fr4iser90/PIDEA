@@ -485,36 +485,25 @@ ${taskDetails.description}
               <div className="loading-spinner mr-3"></div>
               <span className="text-gray-400">Loading documentation tasks...</span>
             </div>
-          ) : groupedList.length > 0 ? (
+          ) : filteredDocsTasks.length > 0 ? (
             <div className="space-y-3">
-              {groupedList.map((group) => {
-                // Get main task for display (prefer index, then first phase, then implementation)
-                const mainTask = group.index || (group.phases && group.phases[0]) || group.implementation || group.summary;
-                if (!mainTask || typeof mainTask !== 'object') return null;
-                
-                // Build structure string
-                const structureParts = [];
-                if (group.index) structureParts.push('📄 Master Index');
-                if (group.phases && group.phases.length > 0) structureParts.push(`${group.phases.length} Phase${group.phases.length > 1 ? 's' : ''}`);
-                if (group.implementation) structureParts.push('Implementation');
-                if (group.summary) structureParts.push('Summary');
-                
+              {filteredDocsTasks.map((task) => {
                 return (
                   <div
-                    key={group.featureId || mainTask.id || Math.random()}
+                    key={task.id}
                     className="docs-task-item p-3 bg-gray-800 rounded border border-gray-700 hover:border-gray-600 cursor-pointer transition-colors"
-                    onClick={() => handleDocsTaskClick(mainTask)}
+                    onClick={() => handleDocsTaskClick(task)}
                   >
                     <div className="flex justify-between items-start mb-2">
                       <h4 className="font-medium text-white text-sm line-clamp-2">
-                        {String(group.featureName || 'Unknown Feature')}
+                        {String(task.title || 'Unknown Task')}
                       </h4>
                       <div className="flex gap-1 flex-shrink-0 ml-2">
                         <span
                           className="priority-badge text-xs px-2 py-1 rounded"
-                          style={{ backgroundColor: getPriorityColor(mainTask.priority) }}
+                          style={{ backgroundColor: getPriorityColor(task.priority) }}
                         >
-                          {String(mainTask.priority || 'Unknown')}
+                          {String(task.priority || 'Unknown')}
                         </span>
                         <span className="text-xs px-2 py-1 rounded bg-blue-600">
                           📋
@@ -522,8 +511,10 @@ ${taskDetails.description}
                       </div>
                     </div>
                     <div className="flex justify-between items-center text-xs text-gray-400">
-                      <span className="font-mono">{structureParts.join(' • ')}</span>
-                      <span>{formatDate(mainTask.updatedAt || mainTask.createdAt || null)}</span>
+                      <span className="font-mono">
+                        {String(task.metadata?.structure || 'Documentation')} • {String(task.metadata?.category || 'Unknown')}
+                      </span>
+                      <span>{formatDate(task.updatedAt || task.createdAt || null)}</span>
                     </div>
                   </div>
                 );

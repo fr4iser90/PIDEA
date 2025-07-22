@@ -645,9 +645,9 @@ class Application {
     });
 
     // Auth routes (public) with brute force protection
-    //this.app.post('/api/auth/register', this.authMiddleware.bruteForceProtection(), (req, res) => this.authController.register(req, res));
     this.app.post('/api/auth/login', this.authMiddleware.bruteForceProtection(), (req, res) => this.authController.login(req, res));
     this.app.post('/api/auth/refresh', this.authMiddleware.bruteForceProtection(), (req, res) => this.authController.refresh(req, res));
+    this.app.get('/api/auth/validate', (req, res) => this.authController.validateToken(req, res));
 
     // Protected routes
     this.app.use('/api/auth/profile', this.authMiddleware.authenticate());
@@ -655,9 +655,6 @@ class Application {
     this.app.put('/api/auth/profile', (req, res) => this.authController.updateProfile(req, res));
     this.app.get('/api/auth/sessions', (req, res) => this.authController.getSessions(req, res));
     this.app.post('/api/auth/logout', this.authMiddleware.authenticate(), (req, res) => this.authController.logout(req, res));
-    
-    // Token validation route (protected) - require authentication
-    this.app.get('/api/auth/validate', this.authMiddleware.authenticate(), (req, res) => this.authController.validateToken(req, res));
 
     // Chat routes (protected) - no rate limiting for authenticated users
     this.app.use('/api/chat', this.authMiddleware.authenticate());

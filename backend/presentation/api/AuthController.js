@@ -172,8 +172,12 @@ class AuthController {
   // GET /api/auth/validate
   async validateToken(req, res) {
     try {
-      if (!req.user) {
-        // No user found - this is normal for cookie-based auth when cookies are cleared
+      // Check for cookies directly since this is a public route
+      const accessToken = req.cookies?.accessToken;
+      const refreshToken = req.cookies?.refreshToken;
+      
+      if (!accessToken && !refreshToken) {
+        logger.info('❌ [AuthController] No authentication tokens found in cookies');
         return res.status(401).json({
           success: false,
           error: 'No valid session found',
@@ -181,15 +185,66 @@ class AuthController {
         });
       }
 
-      // Authentication is valid, return user data
-      res.json({
-        success: true,
-        data: {
-          user: req.user.toJSON()
+      // Try to validate access token first
+      if (accessToken) {
+        try {
+          const result = await this.authApplicationService.validateToken(accessToken);
+          if (result.success) {
+            logger.info('✅ [AuthController] Access token validation successful');
+            return res.json({
+              success: true,
+              data: {
+                user: result.data.user
+              }
+            });
+          }
+        } catch (error) {
+          logger.debug('❌ [AuthController] Access token validation failed, trying refresh token');
         }
+      }
+
+      // Try refresh token if access token failed
+      if (refreshToken) {
+        try {
+          const result = await this.authApplicationService.refresh(refreshToken);
+          if (result.success) {
+            // Set new cookies
+            res.cookie('accessToken', result.data.session.accessToken, {
+              httpOnly: true,
+              secure: process.env.NODE_ENV === 'production',
+              sameSite: 'lax',
+              maxAge: 2 * 60 * 60 * 1000 // 2 hours
+            });
+            
+            res.cookie('refreshToken', result.data.session.refreshToken, {
+              httpOnly: true,
+              secure: process.env.NODE_ENV === 'production',
+              sameSite: 'lax',
+              maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+            });
+
+            logger.info('✅ [AuthController] Token refreshed and validated successfully');
+            return res.json({
+              success: true,
+              data: {
+                user: result.data.user
+              }
+            });
+          }
+        } catch (error) {
+          logger.debug('❌ [AuthController] Refresh token validation failed');
+        }
+      }
+
+      // All validation attempts failed
+      logger.info('❌ [AuthController] All authentication attempts failed');
+      return res.status(401).json({
+        success: false,
+        error: 'No valid session found',
+        code: 'SESSION_EXPIRED'
       });
     } catch (error) {
-      logger.error('Authentication validation error:', error);
+      logger.error('❌ [AuthController] Authentication validation error:', error);
       res.status(401).json({
         success: false,
         error: 'Authentication validation failed',
