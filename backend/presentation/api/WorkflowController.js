@@ -522,25 +522,51 @@ class WorkflowController {
                 stepOptions.includeOutdated = true;
                 stepOptions.includeVulnerabilities = true;
                 stepOptions.includeRecommendations = true;
-            } else if (mode === 'recommendations') {
+            } else if (mode === 'recommendations' || mode === 'recommendations-analysis') {
+                // Automatisch alle Einzelanalysen ausführen und Ergebnisse sammeln
+                const analysisSteps = [
+                    { key: 'codeQuality', name: 'CodeQualityAnalysisStep' },
+                    { key: 'security', name: 'SecurityAnalysisStep' },
+                    { key: 'architecture', name: 'ArchitectureAnalysisStep' },
+                    { key: 'performance', name: 'PerformanceAnalysisStep' },
+                    { key: 'techStack', name: 'TechStackAnalysisStep' },
+                    { key: 'manifest', name: 'ManifestAnalysisStep' },
+                    { key: 'dependencies', name: 'DependencyAnalysisStep' }
+                ];
+                const analysis_results = {};
+                for (const step of analysisSteps) {
+                    const result = await stepRegistry.executeStep(step.name, {
+                        projectPath: workspacePath,
+                        projectId,
+                        userId
+                    });
+                    if (!result.success) {
+                        return res.status(500).json({
+                            success: false,
+                            error: `Failed to execute ${step.name}: ${result.error}`
+                        });
+                    }
+                    analysis_results[step.key] = result.result;
+                }
                 stepName = 'RecommendationsStep';
                 stepOptions.includePriority = true;
                 stepOptions.includeEffort = true;
                 stepOptions.includeImpact = true;
                 stepOptions.maxRecommendations = 20;
-            } else if (mode === 'security-recommendations') {
+                stepOptions.analysis_results = analysis_results;
+            } else if (mode === 'security-recommendations' || mode === 'security-recommendations-analysis') {
                 stepName = 'SecurityRecommendationsStep';
                 stepOptions.includePriority = true;
                 stepOptions.includeEffort = true;
                 stepOptions.includeImpact = true;
                 stepOptions.maxRecommendations = 10;
-            } else if (mode === 'code-quality-recommendations') {
+            } else if (mode === 'code-quality-recommendations' || mode === 'code-quality-recommendations-analysis') {
                 stepName = 'CodeQualityRecommendationsStep';
                 stepOptions.includePriority = true;
                 stepOptions.includeEffort = true;
                 stepOptions.includeImpact = true;
                 stepOptions.maxRecommendations = 10;
-            } else if (mode === 'architecture-recommendations') {
+            } else if (mode === 'architecture-recommendations' || mode === 'architecture-recommendations-analysis') {
                 stepName = 'ArchitectureRecommendationsStep';
                 stepOptions.includePriority = true;
                 stepOptions.includeEffort = true;
@@ -588,6 +614,11 @@ class WorkflowController {
                 projectPath: workspacePath,
                 mode
             });
+
+            // Validate that stepName is defined
+            if (!stepName) {
+                throw new Error(`No step mapping found for mode: ${mode}`);
+            }
 
             // Execute the Categories-based step
             const result = await stepRegistry.executeStep(stepName, stepOptions);
