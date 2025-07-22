@@ -154,8 +154,10 @@ class GitService {
             const result = await this.stepRegistry.executeStep('GitGetCurrentBranchStep', stepContext);
             
             if (result.success) {
-                this.logger.info(`Aktueller Branch für ${repoPath}: "${result.currentBranch}"`);
-                return result.currentBranch;
+                // Handle nested result structure from StepRegistry
+                const currentBranch = result.result?.currentBranch || result.currentBranch;
+                this.logger.info(`Aktueller Branch für ${repoPath}: "${currentBranch}"`);
+                return currentBranch;
             } else {
                 throw new Error(result.error || 'Failed to get current branch');
             }
@@ -193,8 +195,17 @@ class GitService {
             const result = await this.stepRegistry.executeStep('GitGetBranchesStep', stepContext);
             
             if (result.success) {
-                // Return all branches (local + remote combined)
-                return result.result;
+                // Log the result structure for debugging
+                this.logger.info('GitService: Step result structure', { 
+                    hasBranches: !!result.result?.branches, 
+                    hasResult: !!result.result,
+                    resultKeys: Object.keys(result),
+                    stepResultKeys: result.result ? Object.keys(result.result) : []
+                });
+                
+                // The StepRegistry wraps the step result in a 'result' property
+                // So we need to access result.result.branches
+                return result.result?.branches || { local: [], remote: [], all: [] };
             } else {
                 throw new Error(result.error || 'Failed to get branches');
             }

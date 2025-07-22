@@ -66,8 +66,10 @@ const GitManagementComponent = ({ activePort, onGitOperation, onGitStatusChange 
         method: 'POST',
         body: JSON.stringify({ projectPath: workspacePath })
       });
+      
       setGitStatus(data.data?.status);
       setCurrentBranch(data.data?.currentBranch);
+      
       if (onGitStatusChange) {
         onGitStatusChange(data.data?.status);
       }
@@ -89,10 +91,20 @@ const GitManagementComponent = ({ activePort, onGitOperation, onGitStatusChange 
         method: 'POST',
         body: JSON.stringify({ projectPath: workspacePath })
       });
-      // Backend now returns branches directly in result.result
-      setBranches((data && data.result) ? data.result : []);
+      
+      // Ensure we always set an array
+      if (data && data.data && Array.isArray(data.data.branches)) {
+        setBranches(data.data.branches);
+      } else if (data && data.data && data.data.result && Array.isArray(data.data.result)) {
+        // Fallback for old format
+        setBranches(data.data.result);
+      } else {
+        logger.warn('No valid branches data received, setting empty array');
+        setBranches([]);
+      }
     } catch (error) {
       logger.error('Failed to load branches:', error);
+      setBranches([]); // Set empty array on error
     }
   };
 
@@ -195,7 +207,7 @@ const GitManagementComponent = ({ activePort, onGitOperation, onGitStatusChange 
   };
 
   // Filtere nur lokale Branches (ohne 'remotes/')
-  const localBranches = branches.filter(branch => !branch.startsWith('remotes/'));
+  const localBranches = Array.isArray(branches) ? branches.filter(branch => !branch.startsWith('remotes/')) : [];
 
   return (
     <div className="git-management">

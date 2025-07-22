@@ -68,8 +68,8 @@ class GitGetBranchesStep {
         branches.local = localResult.stdout
           .split('\n')
           .map(line => line.trim())
-          .filter(line => line && !line.startsWith('*'))
-          .map(line => line.replace(/^\*?\s*/, ''));
+          .filter(line => line) // Keep all non-empty lines including current branch
+          .map(line => line.replace(/^\*?\s*/, '')); // Remove asterisk and spaces
       }
 
       // Get remote branches using execAsync

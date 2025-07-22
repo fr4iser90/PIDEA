@@ -513,6 +513,8 @@ class Application {
     const GitController = require('./presentation/api/GitController');
     this.gitController = new GitController({
         gitApplicationService: this.serviceRegistry.getService('gitApplicationService'),
+        gitService: this.serviceRegistry.getService('gitService'),
+        eventBus: this.eventBus,
         logger: this.serviceRegistry.getService('logger')
     });
 

@@ -8,9 +8,14 @@ const logger = new ServiceLogger('GitController');
 class GitController {
     constructor(dependencies = {}) {
         this.gitApplicationService = dependencies.gitApplicationService;
+        this.gitService = dependencies.gitService;
+        this.eventBus = dependencies.eventBus;
         this.logger = dependencies.logger || console;
         if (!this.gitApplicationService) {
             throw new Error('GitController requires gitApplicationService dependency');
+        }
+        if (!this.gitService) {
+            throw new Error('GitController requires gitService dependency');
         }
     }
 
@@ -93,10 +98,18 @@ class GitController {
             const branches = result.data.branches;
             const currentBranch = result.data.currentBranch;
 
+            // Log the branches structure for debugging
+            this.logger.info('GitController: Branches structure', { 
+                hasBranches: !!branches,
+                branchesType: typeof branches,
+                hasAll: branches && !!branches.all,
+                allLength: branches && branches.all ? branches.all.length : 0
+            });
+
             res.json({
                 success: true,
                 data: {
-                    branches,
+                    branches: branches && branches.all ? branches.all : (Array.isArray(branches) ? branches : []),
                     currentBranch
                 },
                 message: 'Branches retrieved successfully'
@@ -840,7 +853,8 @@ class GitController {
             this.logger.info('GitController: Getting pidea-agent branch status', { projectId, userId });
 
             // Check if pidea-agent branch exists
-            const branches = await this.gitService.getBranches(projectPath, { all: true });
+            const branchesResult = await this.gitService.getBranches(projectPath, { all: true });
+            const branches = branchesResult && branchesResult.all ? branchesResult.all : [];
             const pideaAgentExists = branches.includes('pidea-agent') || branches.includes('remotes/origin/pidea-agent');
 
             if (!pideaAgentExists) {
@@ -929,7 +943,8 @@ class GitController {
             });
 
             // Check if pidea-agent branch exists
-            const branches = await this.gitService.getBranches(projectPath, { all: true });
+            const branchesResult = await this.gitService.getBranches(projectPath, { all: true });
+            const branches = branchesResult && branchesResult.all ? branchesResult.all : [];
             const pideaAgentExists = branches.includes('pidea-agent') || branches.includes('remotes/origin/pidea-agent');
 
             if (!pideaAgentExists) {

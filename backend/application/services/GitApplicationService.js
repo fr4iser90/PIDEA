@@ -18,10 +18,24 @@ class GitApplicationService {
                 throw new Error('Not a Git repository');
             }
 
+            // Get status first
             const status = await this.gitService.getStatus(projectPath);
+            
+            // Try to get current branch, but don't fail if it doesn't work
+            let currentBranch = '';
+            try {
+                currentBranch = await this.gitService.getCurrentBranch(projectPath);
+            } catch (branchError) {
+                this.logger.warn('Failed to get current branch, using empty string:', branchError.message);
+                currentBranch = '';
+            }
+
             return {
                 success: true,
-                data: status
+                data: {
+                    status,
+                    currentBranch
+                }
             };
         } catch (error) {
             this.logger.error('Error getting Git status:', error);
@@ -108,10 +122,24 @@ class GitApplicationService {
         try {
             this.logger.info('GitApplicationService: Getting branches', { userId });
             
+            // Get branches first
             const branches = await this.gitService.getBranches(projectPath);
+            
+            // Try to get current branch, but don't fail if it doesn't work
+            let currentBranch = '';
+            try {
+                currentBranch = await this.gitService.getCurrentBranch(projectPath);
+            } catch (branchError) {
+                this.logger.warn('Failed to get current branch, using empty string:', branchError.message);
+                currentBranch = '';
+            }
+            
             return {
                 success: true,
-                data: branches
+                data: {
+                    branches,
+                    currentBranch
+                }
             };
         } catch (error) {
             this.logger.error('Error getting branches:', error);
