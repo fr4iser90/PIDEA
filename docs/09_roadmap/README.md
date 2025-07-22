@@ -39,6 +39,42 @@ features/
 - Architecture documents
 - Technical standards
 
+## 🔄 Alternative: Phase-Based Organization
+
+For complex projects requiring research and analysis phases, you can also organize tasks by development phases:
+
+```
+phase-01-ideation/
+├── index.md              # Phase overview and goals
+├── task-x.md             # Specific ideation tasks
+└── research.md           # Research findings and insights
+
+phase-02-planning/
+├── index.md              # Planning phase overview
+├── requirements.md       # Detailed requirements
+└── architecture.md       # System architecture decisions
+
+phase-03-implementation/
+├── index.md              # Implementation phase overview
+├── task-a.md             # Implementation tasks
+└── task-b.md             # More implementation tasks
+
+shared/
+├── glossary.md           # Shared terminology
+└── changelog.md          # Phase changes and decisions
+```
+
+### When to Use Phase-Based Organization:
+- **Complex features** requiring research and analysis
+- **New domains** where you need to explore before implementing
+- **Architecture decisions** that need thorough planning
+- **AI-assisted development** where you want to separate ideation from implementation
+
+### Integration with Category System:
+- Phase-based tasks can reference category-based tasks
+- Use category system for implementation details
+- Phase system for high-level project flow
+
 ## 📊 Task Management System
 
 ### Task Types
