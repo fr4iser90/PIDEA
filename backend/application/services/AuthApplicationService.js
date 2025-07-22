@@ -70,6 +70,21 @@ class AuthApplicationService {
         }
     }
 
+    async validateAccessToken(accessToken) {
+        try {
+            this.logger.info('AuthApplicationService: Validating access token');
+            
+            const result = await this.authService.validateAccessToken(accessToken);
+            return {
+                success: true,
+                data: result
+            };
+        } catch (error) {
+            this.logger.error('Error validating access token:', error);
+            throw error;
+        }
+    }
+
     async refreshToken() {
         try {
             this.logger.info('AuthApplicationService: Refreshing authentication');
@@ -78,6 +93,37 @@ class AuthApplicationService {
             return {
                 success: true,
                 data: result
+            };
+        } catch (error) {
+            this.logger.error('Error refreshing authentication:', error);
+            throw error;
+        }
+    }
+
+    async refresh(refreshToken) {
+        try {
+            this.logger.info('AuthApplicationService: Refreshing authentication with refresh token');
+            
+            const newSession = await this.authService.refreshUserSession(refreshToken);
+            
+            // Get user from the session
+            const user = await this.authService.userRepository.findById(newSession.userId);
+            
+            return {
+                success: true,
+                data: {
+                    user: {
+                        id: user.id,
+                        email: user.email,
+                        role: user.role,
+                        name: user.name
+                    },
+                    session: {
+                        accessToken: newSession.accessToken,
+                        refreshToken: newSession.refreshToken,
+                        expiresAt: newSession.expiresAt
+                    }
+                }
             };
         } catch (error) {
             this.logger.error('Error refreshing authentication:', error);

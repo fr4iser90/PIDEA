@@ -14,7 +14,7 @@ const useAuthStore = create(
       error: null,
       redirectToLogin: false,
       lastAuthCheck: null,
-      authCheckInterval: 5 * 60 * 1000, // 5 minutes
+      authCheckInterval: 1 * 60 * 1000, // 1 minute (reduced from 5 minutes)
       isValidating: false, // New state for race condition protection
 
       // Actions
@@ -140,7 +140,13 @@ const useAuthStore = create(
 
       // Professional authentication validation with proper caching
       validateToken: async () => {
-        const { lastAuthCheck, authCheckInterval } = get();
+        const { lastAuthCheck, authCheckInterval, isValidating } = get();
+        
+        // Prevent race conditions
+        if (isValidating) {
+          logger.info('🔍 [AuthStore] Validation already in progress, skipping');
+          return true;
+        }
         
         // Check if we need to validate (avoid too frequent checks)
         const now = new Date();
@@ -150,6 +156,7 @@ const useAuthStore = create(
         }
 
         try {
+          set({ isValidating: true });
           logger.info('🔍 [AuthStore] Validating authentication...');
           
           const data = await apiCall('/api/auth/validate');
@@ -160,12 +167,13 @@ const useAuthStore = create(
             user: data.data?.user || data.user || null, 
             isAuthenticated: true, 
             lastAuthCheck: now,
-            redirectToLogin: false
+            redirectToLogin: false,
+            isValidating: false
           });
           return true;
         } catch (error) {
           logger.error('❌ [AuthStore] Authentication validation error:', error);
-          set({ lastAuthCheck: now });
+          set({ lastAuthCheck: now, isValidating: false });
           await get().handleAuthFailure('Authentication check failed');
           return false;
         }

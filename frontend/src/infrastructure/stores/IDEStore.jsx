@@ -68,6 +68,12 @@ const useIDEStore = create(
 
       loadActivePort: async () => {
         try {
+          const { isLoading } = get();
+          if (isLoading) {
+            logger.info('Port load already in progress, skipping');
+            return get().activePort;
+          }
+          
           set({ isLoading: true, error: null });
           logger.info('Loading active port...');
 
@@ -77,6 +83,7 @@ const useIDEStore = create(
             const isValid = await get().validatePort(activePort);
             if (isValid) {
               logger.info('Using previously active port:', activePort);
+              set({ isLoading: false });
               return activePort;
             }
           }
@@ -90,7 +97,7 @@ const useIDEStore = create(
             const isValid = await get().validatePort(preference.port);
             if (isValid) {
               logger.info('Using preferred port:', preference.port);
-              set({ activePort: preference.port });
+              set({ activePort: preference.port, isLoading: false });
               return preference.port;
             }
           }
@@ -102,23 +109,28 @@ const useIDEStore = create(
           if (availableIDEs.length > 0) {
             const firstIDE = availableIDEs[0];
             logger.info('Using first available port:', firstIDE.port);
-            set({ activePort: firstIDE.port });
+            set({ activePort: firstIDE.port, isLoading: false });
             return firstIDE.port;
           }
 
           logger.warn('No active port could be loaded');
+          set({ isLoading: false });
           return null;
         } catch (error) {
           logger.error('Error loading active port:', error);
-          set({ error: error.message });
+          set({ error: error.message, isLoading: false });
           return null;
-        } finally {
-          set({ isLoading: false });
         }
       },
 
       loadAvailableIDEs: async () => {
         try {
+          const { isLoading } = get();
+          if (isLoading) {
+            logger.info('IDE load already in progress, skipping');
+            return get().availableIDEs;
+          }
+          
           set({ isLoading: true, error: null });
           logger.info('Loading available IDEs...');
 
@@ -126,6 +138,7 @@ const useIDEStore = create(
           const { isAuthenticated } = useAuthStore.getState();
           if (!isAuthenticated) {
             logger.info('User not authenticated, skipping IDE load');
+            set({ isLoading: false });
             return [];
           }
 
@@ -144,7 +157,8 @@ const useIDEStore = create(
             set({ 
               availableIDEs: ides,
               lastUpdate: new Date().toISOString(),
-              retryCount: 0
+              retryCount: 0,
+              isLoading: false
             });
             logger.info('Loaded', ides.length, 'IDEs');
             
@@ -162,13 +176,11 @@ const useIDEStore = create(
           }
         } catch (error) {
           logger.error('Error loading available IDEs:', error);
-          set({ error: error.message });
+          set({ error: error.message, isLoading: false });
           
           // Don't retry automatically - only on manual refresh
           // This prevents infinite loops
           return [];
-        } finally {
-          set({ isLoading: false });
         }
       },
 

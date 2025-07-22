@@ -37,8 +37,13 @@ export const IDEProvider = ({ children, eventBus }) => {
   // Load available IDEs on mount ONLY if authenticated
   useEffect(() => {
     if (isAuthenticated) {
-      stableLoadAvailableIDEs();
-      stableLoadActivePort();
+      // Add a small delay to prevent race conditions with authentication
+      const timer = setTimeout(() => {
+        stableLoadAvailableIDEs();
+        stableLoadActivePort();
+      }, 100);
+      
+      return () => clearTimeout(timer);
     }
   }, [isAuthenticated]); // Remove function dependencies!
 

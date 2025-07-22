@@ -188,7 +188,7 @@ class AuthController {
       // Try to validate access token first
       if (accessToken) {
         try {
-          const result = await this.authApplicationService.validateToken(accessToken);
+          const result = await this.authApplicationService.validateAccessToken(accessToken);
           if (result.success) {
             logger.info('✅ [AuthController] Access token validation successful');
             return res.json({
