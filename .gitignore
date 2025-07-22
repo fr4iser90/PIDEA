@@ -30,3 +30,5 @@ backups/
 *.db
 output/
 refactor_*.md
+cookies.txt
+*.cookies

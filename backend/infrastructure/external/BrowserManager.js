@@ -762,11 +762,11 @@ class BrowserManager {
       await chatInput.click();
       logger.info(`Clicked chat input to focus`);
 
-      // Clear existing content and type the message
+      // Clear existing content and set the complete message
       await chatInput.fill('');
       logger.info(`Cleared chat input`);
-      await chatInput.type(message);
-      logger.info(`Message typed: ${message}`);
+      await chatInput.fill(message);
+      logger.info(`Message set: ${message}`);
 
       if (send) {
         logger.info(`Looking for send button...`);

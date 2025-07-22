@@ -1,3 +1,5 @@
+const path = require('path');
+const fs = require('fs').promises;
 const Logger = require('@logging/Logger');
 const ServiceLogger = require('@logging/ServiceLogger');
 const logger = new ServiceLogger('ContentLibraryController');
@@ -6,6 +8,8 @@ const logger = new ServiceLogger('ContentLibraryController');
 class ContentLibraryController {
   constructor(dependencies = {}) {
     this.contentLibraryApplicationService = dependencies.contentLibraryApplicationService;
+    this.contentLibraryPath = path.join(process.cwd(), '../content-library');
+    
     if (!this.contentLibraryApplicationService) {
       throw new Error('ContentLibraryController requires contentLibraryApplicationService dependency');
     }
@@ -16,26 +20,21 @@ class ContentLibraryController {
   // GET /api/frameworks - Liste aller Frameworks
   async getFrameworks(req, res) {
     try {
-      const { techstack } = req.query;
-      const userId = req.user?.id;
+      const frameworksPath = path.join(this.contentLibraryPath, 'frameworks');
+      const frameworks = await this.scanDirectoryForFrameworks(frameworksPath);
       
-      const result = await this.contentLibraryApplicationService.getFrameworks(techstack, userId);
-      
-      res.json({
-        success: result.success,
-        data: result.data
-      });
-
       // Filter nach Techstack falls angegeben
+      let filteredFrameworks = frameworks;
+      const { techstack } = req.query;
       if (techstack) {
-        frameworkList = frameworkList.filter(fw => 
+        filteredFrameworks = frameworks.filter(fw => 
           fw.id.toLowerCase().includes(techstack.toLowerCase())
         );
       }
       
       res.json({
         success: true,
-        data: frameworkList
+        data: filteredFrameworks
       });
     } catch (error) {
       logger.error('Error loading frameworks:', error);
@@ -304,6 +303,34 @@ class ContentLibraryController {
   }
 
   // ===== HILFSMETHODEN =====
+
+  // Scanne Verzeichnis für Frameworks
+  async scanDirectoryForFrameworks(dirPath) {
+    try {
+      const items = await fs.readdir(dirPath, { withFileTypes: true });
+      const frameworks = [];
+
+      for (const item of items) {
+        if (item.isDirectory()) {
+          const frameworkPath = path.join(dirPath, item.name);
+          const frameworkFiles = await fs.readdir(frameworkPath);
+          
+          frameworks.push({
+            id: item.name,
+            name: item.name.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase()),
+            description: `${item.name} framework`,
+            hasPrompts: frameworkFiles.includes('prompts'),
+            hasTemplates: frameworkFiles.includes('templates')
+          });
+        }
+      }
+
+      return frameworks;
+    } catch (error) {
+      logger.error('Error scanning frameworks directory:', error);
+      return [];
+    }
+  }
 
   // Scanne Verzeichnis für Prompts
   async scanDirectoryForPrompts(dirPath) {

@@ -752,16 +752,16 @@ class Application {
       }
     });
 
-    // Content Library routes (public)
-    this.app.get('/api/frameworks', (req, res) => this.ContentLibraryController.getFrameworks(req, res));
-    this.app.get('/api/frameworks/:frameworkId/prompts', (req, res) => this.ContentLibraryController.getFrameworkPrompts(req, res));
-    this.app.get('/api/frameworks/:frameworkId/templates', (req, res) => this.ContentLibraryController.getFrameworkTemplates(req, res));
-    this.app.get('/api/frameworks/:frameworkId/prompts/:filename', (req, res) => this.ContentLibraryController.getFrameworkPromptFile(req, res));
-    this.app.get('/api/frameworks/:frameworkId/templates/:filename', (req, res) => this.ContentLibraryController.getFrameworkTemplateFile(req, res));
-    this.app.get('/api/prompts', (req, res) => this.ContentLibraryController.getPrompts(req, res));
-    this.app.get('/api/prompts/:category/:filename', (req, res) => this.ContentLibraryController.getPromptFile(req, res));
-    this.app.get('/api/templates', (req, res) => this.ContentLibraryController.getTemplates(req, res));
-    this.app.get('/api/templates/:category/:filename', (req, res) => this.ContentLibraryController.getTemplateFile(req, res));
+    // Content Library routes (protected) - MUST BE BEFORE GENERIC AUTH MIDDLEWARE
+    this.app.get('/api/frameworks', this.authMiddleware.authenticate(), (req, res) => this.ContentLibraryController.getFrameworks(req, res));
+    this.app.get('/api/frameworks/:frameworkId/prompts', this.authMiddleware.authenticate(), (req, res) => this.ContentLibraryController.getFrameworkPrompts(req, res));
+    this.app.get('/api/frameworks/:frameworkId/templates', this.authMiddleware.authenticate(), (req, res) => this.ContentLibraryController.getFrameworkTemplates(req, res));
+    this.app.get('/api/frameworks/:frameworkId/prompts/:filename', this.authMiddleware.authenticate(), (req, res) => this.ContentLibraryController.getFrameworkPromptFile(req, res));
+    this.app.get('/api/frameworks/:frameworkId/templates/:filename', this.authMiddleware.authenticate(), (req, res) => this.ContentLibraryController.getFrameworkTemplateFile(req, res));
+    this.app.get('/api/prompts', this.authMiddleware.authenticate(), (req, res) => this.ContentLibraryController.getPrompts(req, res));
+    this.app.get('/api/prompts/:category/:filename', this.authMiddleware.authenticate(), (req, res) => this.ContentLibraryController.getPromptFile(req, res));
+    this.app.get('/api/templates', this.authMiddleware.authenticate(), (req, res) => this.ContentLibraryController.getTemplates(req, res));
+    this.app.get('/api/templates/:category/:filename', this.authMiddleware.authenticate(), (req, res) => this.ContentLibraryController.getTemplateFile(req, res));
 
     // Task Management routes (protected) - PROJECT-BASED (CRUD only, no execution)
     this.app.use('/api/projects/:projectId/tasks', this.authMiddleware.authenticate());
