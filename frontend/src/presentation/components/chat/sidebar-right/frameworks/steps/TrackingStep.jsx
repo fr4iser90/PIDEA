@@ -165,8 +165,8 @@ function TrackingStep({ tasks, analysisResults, workflowData }) {
               <div key={task.id} className="activity-item">
                 <div className="activity-header">
                   <span className="task-title">{task.title}</span>
-                  <span className={`task-status status-${task.status}`}>
-                    {task.status}
+                  <span className={`task-status status-${(task.status?.value || task.status || '').toLowerCase()}`}>
+                    {task.status?.value || task.status}
                   </span>
                 </div>
                 <div className="activity-meta">

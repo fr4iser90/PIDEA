@@ -763,7 +763,7 @@ class Application {
     this.app.use('/api/projects/:projectId/tasks', this.authMiddleware.authenticate());
     this.app.post('/api/projects/:projectId/tasks', (req, res) => this.taskController.createTask(req, res));
     this.app.get('/api/projects/:projectId/tasks', (req, res) => this.taskController.getProjectTasks(req, res));
-    this.app.get('/api/projects/:projectId/tasks/:id', (req, res) => this.taskController.getTaskById(req, res));
+    this.app.get('/api/projects/:projectId/tasks/:id', (req, res) => this.taskController.getTask(req, res));
     this.app.put('/api/projects/:projectId/tasks/:id', (req, res) => this.taskController.updateTask(req, res));
     this.app.delete('/api/projects/:projectId/tasks/:id', (req, res) => this.taskController.deleteTask(req, res));
     this.app.get('/api/projects/:projectId/tasks/:id/execution', (req, res) => this.taskController.getTaskExecution(req, res));

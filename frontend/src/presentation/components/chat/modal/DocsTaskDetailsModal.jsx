@@ -127,7 +127,9 @@ ${taskDetails.content || taskDetails.description}`;
   };
 
   const getPriorityColor = (priority) => {
-    const priorityStr = String(priority || '').toLowerCase();
+    // Handle value objects
+    const priorityValue = priority?.value || priority;
+    const priorityStr = String(priorityValue || '').toLowerCase();
     switch (priorityStr) {
       case 'high': return '#ff4444';
       case 'medium': return '#ffaa00';
@@ -137,14 +139,28 @@ ${taskDetails.content || taskDetails.description}`;
   };
 
   const getStatusColor = (status) => {
-    const statusStr = String(status || '').toLowerCase();
+    // Handle value objects
+    const statusValue = status?.value || status;
+    const statusStr = String(statusValue || '').toLowerCase();
     switch (statusStr) {
       case 'completed': return '#44aa44';
-      case 'in-progress': return '#ffaa00';
-      case 'blocked': return '#ff4444';
-      case 'pending': return '#888888';
+      case 'running': return '#4488ff';
+      case 'pending': return '#ffaa00';
+      case 'failed': return '#ff4444';
       default: return '#888888';
     }
+  };
+
+  const getPriorityText = (priority) => {
+    // Handle value objects
+    const priorityValue = priority?.value || priority;
+    return String(priorityValue || 'Unknown');
+  };
+
+  const getStatusText = (status) => {
+    // Handle value objects
+    const statusValue = status?.value || status;
+    return String(statusValue || 'Unknown');
   };
 
   const formatDate = (dateString) => {
@@ -179,7 +195,7 @@ ${taskDetails.content || taskDetails.description}`;
                   className="priority-badge"
                   style={{ backgroundColor: getPriorityColor(taskDetails.priority) }}
                 >
-                  {String(taskDetails.priority)}
+                  {getPriorityText(taskDetails.priority)}
                 </span>
               )}
               {taskDetails?.status && (
@@ -187,7 +203,7 @@ ${taskDetails.content || taskDetails.description}`;
                   className="status-badge"
                   style={{ backgroundColor: getStatusColor(taskDetails.status) }}
                 >
-                  {String(taskDetails.status)}
+                  {getStatusText(taskDetails.status)}
                 </span>
               )}
               {taskDetails?.estimatedTime && (

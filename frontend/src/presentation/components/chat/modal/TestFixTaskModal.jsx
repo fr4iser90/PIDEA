@@ -45,12 +45,21 @@ const TestFixTaskModal = ({
   };
 
   const getPriorityColor = (priority) => {
-    switch (priority) {
+    // Handle value objects
+    const priorityValue = priority?.value || priority;
+    const priorityStr = String(priorityValue || '').toLowerCase();
+    switch (priorityStr) {
       case 'high': return '#ff4444';
       case 'medium': return '#ffaa00';
       case 'low': return '#44aa44';
       default: return '#888888';
     }
+  };
+
+  const getPriorityText = (priority) => {
+    // Handle value objects
+    const priorityValue = priority?.value || priority;
+    return String(priorityValue || 'Unknown');
   };
 
   const getTestStatusColor = (status) => {
@@ -144,7 +153,7 @@ const TestFixTaskModal = ({
                             className="priority-badge"
                             style={{ backgroundColor: getPriorityColor(task.priority) }}
                           >
-                            {task.priority}
+                            {getPriorityText(task.priority)}
                           </span>
                           {task.testStatus && (
                             <span 

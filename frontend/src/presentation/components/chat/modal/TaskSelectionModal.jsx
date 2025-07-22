@@ -58,12 +58,21 @@ const TaskSelectionModal = ({
   };
 
   const getPriorityColor = (priority) => {
-    switch (priority) {
+    // Handle value objects
+    const priorityValue = priority?.value || priority;
+    const priorityStr = String(priorityValue || '').toLowerCase();
+    switch (priorityStr) {
       case 'high': return '#ff4444';
       case 'medium': return '#ffaa00';
       case 'low': return '#44aa44';
       default: return '#888888';
     }
+  };
+
+  const getPriorityText = (priority) => {
+    // Handle value objects
+    const priorityValue = priority?.value || priority;
+    return String(priorityValue || 'Unknown');
   };
 
   const formatFileSize = (lines) => {
@@ -140,7 +149,7 @@ const TaskSelectionModal = ({
                             className="priority-badge"
                             style={{ backgroundColor: getPriorityColor(task.priority) }}
                           >
-                            {task.priority}
+                            {getPriorityText(task.priority)}
                           </span>
                           <span className="file-size">{formatFileSize(task.metadata?.lines)}</span>
                         </div>
@@ -162,7 +171,7 @@ const TaskSelectionModal = ({
                               <br />
                               <strong>Target Size:</strong> &lt;500 lines per file
                               <br />
-                              <strong>Priority:</strong> {task.priority}
+                              <strong>Priority:</strong> {getPriorityText(task.priority)}
                               <br />
                               <strong>Estimated Time:</strong> {task.metadata?.estimatedTime || 'unknown'}
                             </div>

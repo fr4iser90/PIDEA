@@ -15,6 +15,7 @@ const useAuthStore = create(
       redirectToLogin: false,
       lastAuthCheck: null,
       authCheckInterval: 5 * 60 * 1000, // 5 minutes
+      isValidating: false, // New state for race condition protection
 
       // Actions
       login: async (email, password) => {
@@ -151,17 +152,12 @@ const useAuthStore = create(
         try {
           logger.info('🔍 [AuthStore] Validating authentication...');
           
-          // Add timeout to prevent hanging
-          const timeoutPromise = new Promise((_, reject) => {
-            setTimeout(() => reject(new Error('Authentication timeout')), 3000); // 3 second timeout
-          });
+          const data = await apiCall('/api/auth/validate');
           
-          const validationPromise = apiCall('/api/auth/validate');
-          const data = await Promise.race([validationPromise, timeoutPromise]);
-          
+          // Simple validation - if we get here, we're authenticated
           logger.info('✅ [AuthStore] Authentication validation successful');
           set({ 
-            user: data.data?.user || data.user, 
+            user: data.data?.user || data.user || null, 
             isAuthenticated: true, 
             lastAuthCheck: now,
             redirectToLogin: false
@@ -169,7 +165,6 @@ const useAuthStore = create(
           return true;
         } catch (error) {
           logger.error('❌ [AuthStore] Authentication validation error:', error);
-          // Set lastAuthCheck even on failure to prevent infinite loops
           set({ lastAuthCheck: now });
           await get().handleAuthFailure('Authentication check failed');
           return false;

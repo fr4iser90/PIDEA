@@ -51,8 +51,14 @@ function TasksPanelComponent({ eventBus, activePort }) {
     return task.description || task.content || 'No description available';
   };
 
+  const getTaskTitle = (task) => {
+    return task.title || 'Unknown Task';
+  };
+
   const getPriorityColor = (priority) => {
-    const priorityStr = String(priority || '').toLowerCase();
+    // Handle value objects
+    const priorityValue = priority?.value || priority;
+    const priorityStr = String(priorityValue || '').toLowerCase();
     switch (priorityStr) {
       case 'high': return '#ef4444';
       case 'medium': return '#f59e0b';
@@ -62,7 +68,9 @@ function TasksPanelComponent({ eventBus, activePort }) {
   };
 
   const getStatusColor = (status) => {
-    const statusStr = String(status || '').toLowerCase();
+    // Handle value objects
+    const statusValue = status?.value || status;
+    const statusStr = String(statusValue || '').toLowerCase();
     switch (statusStr) {
       case 'completed': return '#10b981';
       case 'running': return '#3b82f6';
@@ -70,6 +78,18 @@ function TasksPanelComponent({ eventBus, activePort }) {
       case 'failed': return '#ef4444';
       default: return '#6b7280';
     }
+  };
+
+  const getPriorityText = (priority) => {
+    // Handle value objects
+    const priorityValue = priority?.value || priority;
+    return String(priorityValue || 'Unknown');
+  };
+
+  const getStatusText = (status) => {
+    // Handle value objects
+    const statusValue = status?.value || status;
+    return String(statusValue || 'Unknown');
   };
 
   const formatDate = (dateString) => {
@@ -496,14 +516,14 @@ ${taskDetails.description}
                   >
                     <div className="flex justify-between items-start mb-2">
                       <h4 className="font-medium text-white text-sm line-clamp-2">
-                        {String(task.title || 'Unknown Task')}
+                        {getTaskTitle(task)}
                       </h4>
                       <div className="flex gap-1 flex-shrink-0 ml-2">
                         <span
                           className="priority-badge text-xs px-2 py-1 rounded"
                           style={{ backgroundColor: getPriorityColor(task.priority) }}
                         >
-                          {String(task.priority || 'Unknown')}
+                          {getPriorityText(task.priority)}
                         </span>
                         <span className="text-xs px-2 py-1 rounded bg-blue-600">
                           📋

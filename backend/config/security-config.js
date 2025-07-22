@@ -54,7 +54,7 @@ class SecurityConfig {
           styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
           scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'"],
           imgSrc: ["'self'", "data:", "https:", "blob:"],
-          connectSrc: ["'self'", "ws:", "wss:", "https:"],
+          connectSrc: ["'self'", "ws:", "wss:", "https:", "http://localhost:*"],
           fontSrc: ["'self'", "https://fonts.gstatic.com"],
           objectSrc: ["'none'"],
           mediaSrc: ["'self'"],

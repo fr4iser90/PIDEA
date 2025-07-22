@@ -352,12 +352,12 @@ const TaskProgressComponent = ({ sessionId, onComplete, onError, onCancel }) => 
           <h4>Tasks ({tasks.filter(t => t.status === 'completed').length}/{tasks.length})</h4>
           <div className="tasks">
             {tasks.map((task, index) => (
-              <div key={task.id} className={`task-item ${task.status}`}>
+              <div key={task.id} className={`task-item ${task.status?.value || task.status}`}>
                 <div className="task-status">
-                  {task.status === 'completed' && '✅'}
-                  {task.status === 'failed' && '❌'}
-                  {task.status === 'running' && '⚡'}
-                  {task.status === 'pending' && '⏳'}
+                  {(task.status?.value || task.status) === 'completed' && '✅'}
+                  {(task.status?.value || task.status) === 'failed' && '❌'}
+                  {(task.status?.value || task.status) === 'running' && '⚡'}
+                  {(task.status?.value || task.status) === 'pending' && '⏳'}
                 </div>
                 <div className="task-content">
                   <div className="task-description">{task.description}</div>

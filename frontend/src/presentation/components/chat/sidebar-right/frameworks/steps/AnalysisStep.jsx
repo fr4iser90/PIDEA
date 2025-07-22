@@ -264,8 +264,8 @@ function AnalysisStep({ framework, onAnalysisComplete, workflowData, setWorkflow
             <div key={index} className="task-preview-item">
               <div className="task-header">
                 <span className="task-title">{task.title}</span>
-                <span className={`priority-badge ${task.priority.toLowerCase()}`}>
-                  {task.priority}
+                <span className={`priority-badge ${(task.priority?.value || task.priority || '').toLowerCase()}`}>
+                  {task.priority?.value || task.priority}
                 </span>
               </div>
               <div className="task-meta">

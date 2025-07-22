@@ -105,8 +105,8 @@ function PlanningStep({ analysisResults, onTasksCreated, workflowData }) {
               <div className="task-creation-header">
                 <span className="task-number">#{index + 1}</span>
                 <span className="task-title">{task.title}</span>
-                <span className={`priority-badge ${task.priority.toLowerCase()}`}>
-                  {task.priority}
+                <span className={`priority-badge ${(task.priority?.value || task.priority || '').toLowerCase()}`}>
+                  {task.priority?.value || task.priority}
                 </span>
               </div>
               <div className="task-creation-details">
@@ -132,7 +132,7 @@ function PlanningStep({ analysisResults, onTasksCreated, workflowData }) {
           </div>
           <div className="summary-row">
             <span>High Priority Tasks:</span>
-            <span>{analysisResults.prioritizedTasks.filter(t => t.priority === 'High').length}</span>
+            <span>{analysisResults.prioritizedTasks.filter(t => (t.priority?.value || t.priority) === 'High').length}</span>
           </div>
         </div>
       </div>
