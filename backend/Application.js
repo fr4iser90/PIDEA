@@ -510,6 +510,10 @@ class Application {
                 const WorkflowController = require('./presentation/api/WorkflowController');
     this.workflowController = new WorkflowController({
         workflowApplicationService: this.serviceRegistry.getService('workflowApplicationService'),
+        ideManager: this.serviceRegistry.getService('ideManager'),
+        taskService: this.serviceRegistry.getService('taskService'),
+        eventBus: this.eventBus,
+        application: this,
         logger: this.serviceRegistry.getService('logger')
     });
 

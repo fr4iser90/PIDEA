@@ -189,9 +189,73 @@ class TaskService {
       // Simple task execution - just send the prompt to Cursor IDE
       const taskPrompt = await this.buildTaskExecutionPrompt(task);
       
-      // Use IDE Steps instead of ChatMessageHandler
-      logger.info('🔍 [TaskService] Using IDE Steps for task execution');
-      throw new Error('TaskService - ChatMessageHandler removed, use IDE Steps instead');
+      // Use modern workflow execution with IDE Steps
+      logger.info('🔍 [TaskService] Using modern workflow execution with IDE Steps');
+      
+      // Load workflow from JSON configuration
+      const WorkflowLoaderService = require('./WorkflowLoaderService');
+      const workflowLoader = new WorkflowLoaderService();
+      await workflowLoader.loadWorkflows();
+      
+      // Get standard task workflow
+      const workflow = workflowLoader.getWorkflow('standard-task-workflow');
+      if (!workflow) {
+        throw new Error('Standard task workflow not found');
+      }
+      
+      // Create execution context
+      const context = {
+        task,
+        taskPrompt,
+        projectPath: options.projectPath,
+        userId,
+        projectId: options.projectId,
+        ...options
+      };
+      
+      // Execute workflow using StepRegistry
+      const { getStepRegistry } = require('@steps');
+      const stepRegistry = getStepRegistry();
+      
+      const results = [];
+      for (const step of workflow.steps) {
+        try {
+          logger.info(`🔧 [TaskService] Executing step: ${step.name} (${step.step})`);
+          
+          const stepResult = await stepRegistry.executeStep(step.step, {
+            ...step.options,
+            ...context
+          });
+          
+          results.push({
+            step: step.name,
+            success: stepResult.success,
+            data: stepResult.data,
+            error: stepResult.error
+          });
+          
+          if (!stepResult.success && step.strict !== false) {
+            throw new Error(`Step ${step.name} failed: ${stepResult.error}`);
+          }
+          
+        } catch (error) {
+          logger.error(`❌ [TaskService] Step ${step.name} failed:`, error.message);
+          throw error;
+        }
+      }
+      
+      return {
+        success: true,
+        taskId: task.id,
+        taskType: task.type?.value,
+        results,
+        message: `Task executed successfully: ${task.title}`,
+        metadata: {
+          executionTime: Date.now(),
+          stepCount: workflow.steps.length,
+          timestamp: new Date()
+        }
+      };
 
     } catch (error) {
       logger.error('❌ [TaskService] Task execution failed:', error.message);

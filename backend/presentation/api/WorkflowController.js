@@ -13,6 +13,7 @@ class WorkflowController {
         this.eventBus = dependencies.eventBus;
         this.application = dependencies.application;
         this.ideManager = dependencies.ideManager;
+        this.taskService = dependencies.taskService;
     }
 
     /**
@@ -298,15 +299,14 @@ class WorkflowController {
 
                 // Execute task using TaskService with AutoFinish and additional steps
                 try {
-                    const taskService = this.application?.taskService;
                     const stepRegistry = getStepRegistry();
                     
                     this.logger.info('WorkflowController: TaskService available', {
-                        hasTaskService: !!taskService,
+                        hasTaskService: !!this.taskService,
                         taskId: taskOptions.taskId
                     });
                     
-                    if (taskService) {
+                    if (this.taskService) {
                         this.logger.info('WorkflowController: Starting task execution with additional steps', {
                             taskId: taskOptions.taskId,
                             userId,
@@ -405,7 +405,7 @@ class WorkflowController {
                         }
                         
                         // 5. Execute the actual task
-                        const taskResult = await taskService.executeTask(taskOptions.taskId, userId, {
+                        const taskResult = await this.taskService.executeTask(taskOptions.taskId, userId, {
                             projectPath: workspacePath,
                             projectId
                         });

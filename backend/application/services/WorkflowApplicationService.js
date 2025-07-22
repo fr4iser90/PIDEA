@@ -250,23 +250,7 @@ class WorkflowApplicationService {
         branchName: taskOptions.branchName,
         autoExecute: taskOptions.autoExecute,
         activeIDEPort: activeIDE?.port,
-        // Add required services for steps
-        refactoringService: this.application?.refactoringService,
-        aiService: this.application?.aiService,
-        optimizationService: this.application?.optimizationService,
-        cleanupService: this.application?.cleanupService,
-        restructureService: this.application?.restructureService,
-        modernizeService: this.application?.modernizeService,
-        testingService: this.application?.testingService,
-        deploymentService: this.application?.deploymentService,
-        customTaskService: this.application?.customTaskService,
-        taskRepository: this.application?.taskRepository,
-        projectAnalysisRepository: this.application?.projectAnalysisRepository,
-        analysisOutputService: this.application?.analysisOutputService,
-        projectAnalyzer: this.application?.projectAnalyzer,
-        codeQualityAnalyzer: this.application?.codeQualityAnalyzer,
-        architectureAnalyzer: this.application?.architectureAnalyzer,
-        stepRegistry: getStepRegistry()
+        projectId: taskOptions.projectId
       });
       
       this.logger.info('✅ Task workflow executed successfully:', { 
