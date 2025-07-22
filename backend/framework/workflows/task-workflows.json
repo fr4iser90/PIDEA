@@ -26,7 +26,8 @@
             "useTaskPrompt": true,
             "waitForResponse": true,
             "timeout": 60000
-          }
+          },
+          "strict": true
         },
         {
           "name": "validate-response",
@@ -36,7 +37,8 @@
           "options": {
             "checks": ["code-quality", "syntax", "completeness"],
             "strict": false
-          }
+          },
+          "strict": false
         },
         {
           "name": "completion-check",
@@ -47,7 +49,8 @@
             "maxAttempts": 3,
             "timeout": 10000,
             "autoContinueThreshold": 0.8
-          }
+          },
+          "strict": true
         },
         {
           "name": "test-run",
@@ -57,7 +60,8 @@
           "options": {
             "commands": ["npm test", "npm run test"],
             "continueOnFailure": true
-          }
+          },
+          "strict": false
         },
         {
           "name": "dev-server",

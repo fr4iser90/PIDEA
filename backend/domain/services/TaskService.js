@@ -250,8 +250,19 @@ class TaskService {
             error: stepResult.error
           });
           
-          if (!stepResult.success && step.strict !== false) {
-            throw new Error(`Step ${step.name} failed: ${stepResult.error}`);
+          if (!stepResult.success) {
+            logger.error(`❌ [TaskService] Step ${step.name} failed: ${stepResult.error}`);
+            
+            // Critical steps that should stop execution
+            const criticalSteps = ['create-chat', 'send-to-ide', 'completion-check'];
+            
+            // If step is critical or strict, stop execution
+            if (criticalSteps.includes(step.name) || step.strict !== false) {
+              throw new Error(`Critical step ${step.name} failed: ${stepResult.error}`);
+            }
+            
+            // If step is not critical and not strict, continue but log the failure
+            logger.warn(`⚠️ [TaskService] Non-critical step ${step.name} failed but continuing`);
           }
           
         } catch (error) {

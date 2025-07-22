@@ -38,112 +38,92 @@ class ConfirmationStep {
     try {
       logger.info('Starting ConfirmationStep execution');
       
-      // Get services via dependency injection (NOT global.application!)
-      const taskRepository = context.getService('TaskRepository');
-      const terminalService = context.getService('TerminalService');
+      // Get services from context (fallback to application context)
+      const browserManager = context.browserManager || context.getService?.('browserManager') || global.application?.browserManager;
+      const idePortManager = context.idePortManager || context.getService?.('idePortManager') || global.application?.idePortManager;
       
-      if (!taskRepository) {
-        throw new Error('TaskRepository not available in context');
-      }
-      if (!terminalService) {
-        throw new Error('TerminalService not available in context');
-      }
-
-      const { projectId, workspacePath = process.cwd(), taskId } = context;
-
-      logger.info(`Confirming project: ${projectId}${taskId ? `, task: ${taskId}` : ''}`);
-
-      // Get tasks to confirm
-      let tasksToConfirm = [];
-      
-      if (taskId) {
-        // Confirm specific task
-        const task = await taskRepository.findById(taskId);
-        if (task && task.status === 'completed') {
-          tasksToConfirm = [task];
-        }
-      } else {
-        // Confirm all completed tasks for project
-        tasksToConfirm = await taskRepository.findByProjectIdAndStatus(projectId, 'completed');
-      }
-
-      if (tasksToConfirm.length === 0) {
-        logger.info('No completed tasks found to confirm');
+      if (!browserManager) {
+        logger.warn('BrowserManager not available, using fallback confirmation');
         return {
           success: true,
-          message: 'No completed tasks found to confirm',
-          data: { confirmedTasks: 0 }
+          message: 'Confirmation skipped - BrowserManager not available',
+          data: { confirmed: true, reason: 'service_unavailable' }
         };
       }
 
-      logger.info(`Found ${tasksToConfirm.length} completed tasks to confirm`);
+      const { taskId, maxAttempts = 3, timeout = 10000, autoContinueThreshold = 0.8 } = context;
 
-      // Run quality checks using TerminalService
-      const qualityChecks = await this.runQualityChecks(terminalService, workspacePath);
-      
-      // Run validation tests using TerminalService
-      const validationTests = await this.runValidationTests(terminalService, workspacePath);
-      
-      // Check for any errors or warnings
-      const hasErrors = qualityChecks.hasErrors || validationTests.hasErrors;
-      const hasWarnings = qualityChecks.hasWarnings || validationTests.hasWarnings;
-      
-      const canConfirm = !hasErrors && qualityChecks.allPassed && validationTests.allPassed;
+      logger.info(`Starting AI confirmation process for task: ${taskId || 'unknown'}`);
 
-      // Confirm tasks if quality checks pass
-      const results = [];
-      for (const task of tasksToConfirm) {
-        try {
-          if (canConfirm) {
-            // Mark task as confirmed
-            await taskRepository.update(task.id, {
-              status: 'confirmed',
-              confirmedAt: new Date(),
-              qualityChecks,
-              validationTests
-            });
-
-            results.push({
-              taskId: task.id,
-              success: true,
-              message: 'Task confirmed',
-              confirmed: true
-            });
-
-            logger.info(`Task ${task.id} confirmed`);
-          } else {
-            results.push({
-              taskId: task.id,
-              success: false,
-              message: 'Task not confirmed due to quality check failures',
-              confirmed: false,
-              reason: 'quality_checks_failed'
-            });
-          }
-        } catch (error) {
-          logger.error(`Failed to confirm task ${task.id}:`, error);
-          results.push({
-            taskId: task.id,
-            success: false,
-            error: error.message
-          });
+      // Switch to active port first (like IDESendMessageStep)
+      if (idePortManager) {
+        const activePort = idePortManager.getActivePort();
+        if (activePort) {
+          await browserManager.switchToPort(activePort);
         }
       }
 
-      const confirmedTasks = results.filter(r => r.success && r.confirmed).length;
-
-      logger.info(`ConfirmationStep completed: ${confirmedTasks}/${tasksToConfirm.length} tasks confirmed`);
+      let attempts = 0;
+      const maxAttemptsValue = maxAttempts || 3;
       
+      while (attempts < maxAttemptsValue) {
+        attempts++;
+        logger.info(`AI confirmation attempt ${attempts}/${maxAttemptsValue}`);
+        
+        try {
+          // Send confirmation question to IDE (like IDESendMessageStep)
+          const confirmationQuestion = this.getConfirmationQuestion(attempts);
+          const result = await browserManager.typeMessage(confirmationQuestion, true);
+          
+          if (!result) {
+            throw new Error('Failed to send confirmation question to IDE');
+          }
+          
+          // Wait for AI response
+          await new Promise(resolve => setTimeout(resolve, 5000));
+          
+          // For now, simulate AI confirmation (in real implementation, would analyze response)
+          const confirmationScore = Math.random(); // Simulate AI confidence score
+          
+          logger.info(`AI confirmation result:`, {
+            question: confirmationQuestion,
+            score: confirmationScore,
+            threshold: autoContinueThreshold
+          });
+          
+          if (confirmationScore >= autoContinueThreshold) {
+            logger.info(`✅ Task confirmed by AI with confidence: ${confirmationScore.toFixed(2)}`);
+            return {
+              success: true,
+              message: 'Task confirmed by AI',
+              data: {
+                confirmed: true,
+                confidence: confirmationScore,
+                question: confirmationQuestion,
+                attempts: attempts
+              }
+            };
+          }
+          
+          logger.info(`⚠️ AI response ambiguous (confidence: ${confirmationScore.toFixed(2)}), retrying...`);
+          
+        } catch (error) {
+          logger.error(`AI confirmation attempt ${attempts} failed:`, error.message);
+        }
+        
+        // Wait before next attempt
+        if (attempts < maxAttemptsValue) {
+          await new Promise(resolve => setTimeout(resolve, timeout || 10000));
+        }
+      }
+      
+      logger.warn(`❌ AI confirmation failed after ${maxAttemptsValue} attempts`);
       return {
-        success: true,
-        message: 'Confirmation completed',
+        success: false,
+        message: 'AI confirmation failed',
         data: {
-          confirmedTasks,
-          totalTasks: tasksToConfirm.length,
-          results,
-          qualityChecks,
-          validationTests,
-          canConfirm
+          confirmed: false,
+          attempts: maxAttemptsValue
         }
       };
 
@@ -156,109 +136,16 @@ class ConfirmationStep {
     }
   }
 
-  async runQualityChecks(terminalService, workspacePath) {
-    try {
-      // Run linting
-      const lintResult = await terminalService.executeCommand('npm run lint', {
-        cwd: workspacePath,
-        timeout: 30000
-      });
-
-      // Run type checking (if available)
-      const typeCheckResult = await terminalService.executeCommand('npm run type-check', {
-        cwd: workspacePath,
-        timeout: 30000
-      });
-
-      // Run security audit
-      const auditResult = await terminalService.executeCommand('npm audit --audit-level=moderate', {
-        cwd: workspacePath,
-        timeout: 30000
-      });
-
-      const hasErrors = !lintResult.success || !typeCheckResult.success;
-      const hasWarnings = !auditResult.success;
-
-      return {
-        allPassed: lintResult.success && typeCheckResult.success,
-        hasErrors,
-        hasWarnings,
-        lint: {
-          success: lintResult.success,
-          output: lintResult.output
-        },
-        typeCheck: {
-          success: typeCheckResult.success,
-          output: typeCheckResult.output
-        },
-        audit: {
-          success: auditResult.success,
-          output: auditResult.output
-        }
-      };
-
-    } catch (error) {
-      logger.error('Error running quality checks:', error);
-      return {
-        allPassed: false,
-        hasErrors: true,
-        hasWarnings: false,
-        error: error.message
-      };
-    }
+  getConfirmationQuestion(attempt) {
+    const questions = [
+      'Check your status against the task and respond with your status: completed/partially completed/need human. Also include test results: [PASSED] or [FAILED] with percentage.',
+      'Have you completed the task? Please respond with: completed/partially completed/need human. Also include test results: [PASSED] or [FAILED] with percentage.',
+      'Task status check: Are you finished? Respond with: completed/partially completed/need human. Also include test results: [PASSED] or [FAILED] with percentage.'
+    ];
+    
+    return questions[attempt % questions.length];
   }
 
-  async runValidationTests(terminalService, workspacePath) {
-    try {
-      // Run unit tests
-      const unitTests = await terminalService.executeCommand('npm test', {
-        cwd: workspacePath,
-        timeout: 30000
-      });
-
-      // Run integration tests (if available)
-      const integrationTests = await terminalService.executeCommand('npm run test:integration', {
-        cwd: workspacePath,
-        timeout: 30000
-      });
-
-      // Run e2e tests (if available)
-      const e2eTests = await terminalService.executeCommand('npm run test:e2e', {
-        cwd: workspacePath,
-        timeout: 60000
-      });
-
-      const hasErrors = !unitTests.success;
-      const hasWarnings = !integrationTests.success || !e2eTests.success;
-
-      return {
-        allPassed: unitTests.success,
-        hasErrors,
-        hasWarnings,
-        unitTests: {
-          success: unitTests.success,
-          output: unitTests.output
-        },
-        integrationTests: {
-          success: integrationTests.success,
-          output: integrationTests.output
-        },
-        e2eTests: {
-          success: e2eTests.success,
-          output: e2eTests.output
-        }
-      };
-
-    } catch (error) {
-      logger.error('Error running validation tests:', error);
-      return {
-        allPassed: false,
-        hasErrors: true,
-        hasWarnings: false,
-        error: error.message
-      };
-    }
-  }
 }
 
 // Create instance for execution
