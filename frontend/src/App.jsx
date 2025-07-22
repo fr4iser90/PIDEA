@@ -25,8 +25,9 @@ function App() {
   const [isSplitView, setIsSplitView] = useState(false);
   const [isLeftSidebarVisible, setIsLeftSidebarVisible] = useState(true);
   const [isRightSidebarVisible, setIsRightSidebarVisible] = useState(true);
-  const [gitStatus, setGitStatus] = useState(null);
-  const [gitBranch, setGitBranch] = useState('');
+
+  
+
   const [attachedPrompts, setAttachedPrompts] = useState([]);
   const containerRef = useRef(null);
   const { isAuthenticated } = useAuthStore();
@@ -124,44 +125,7 @@ function App() {
     };
   }, [eventBus]);
 
-  useEffect(() => {
-    const fetchGitStatusForPort = async (port) => {
-      if (!port) {
-        setGitStatus(null);
-        setGitBranch('');
-        return;
-      }
-      try {
-        // Use availableIDEs from store instead of making new API call
-        const { availableIDEs } = useIDEStore.getState();
-        const activeIDE = availableIDEs.find(ide => ide.port === port);
-        
-        if (activeIDE && activeIDE.workspacePath) {
-          // Get project ID from workspace path
-          const projectId = getProjectIdFromWorkspace(activeIDE.workspacePath);
-          
-          const gitRes = await apiCall(`/api/projects/${projectId}/git/status`, {
-            method: 'POST',
-            body: JSON.stringify({ projectPath: activeIDE.workspacePath })
-          });
-          setGitStatus(gitRes.data?.status || null);
-          setGitBranch(gitRes.data?.currentBranch || '');
-        } else {
-          setGitStatus(null);
-          setGitBranch('');
-        }
-      } catch (e) {
-        setGitStatus(null);
-        setGitBranch('');
-      }
-    };
-    if (activePort) {
-      fetchGitStatusForPort(activePort);
-    } else {
-      setGitStatus(null);
-      setGitBranch('');
-    }
-  }, [activePort]);
+
 
   const renderView = () => {
     switch (currentView) {
@@ -184,12 +148,16 @@ function App() {
       case 'analyze':
         return <AnalysisDataViewer eventBus={eventBus} />;
       case 'git':
-        return <GitManagementComponent activePort={activePort} onGitOperation={(operation, result) => {
-          logger.info('Git operation completed:', operation, result);
-          if (eventBus) {
-            eventBus.emit('git-operation-completed', { operation, result });
-          }
-        }} />;
+        return <GitManagementComponent 
+          activePort={activePort} 
+          eventBus={eventBus}
+          onGitOperation={(operation, result) => {
+            logger.info('Git operation completed:', operation, result);
+            if (eventBus) {
+              eventBus.emit('git-operation-completed', { operation, result });
+            }
+          }} 
+        />;
       case 'code':
         return <div className="code-explorer-container">Code Editor View</div>;
       default:
@@ -274,8 +242,6 @@ function App() {
           <Footer 
             eventBus={eventBus}
             activePort={activePort}
-            gitStatus={gitStatus}
-            gitBranch={gitBranch}
             version="1.0.0"
             message="Welcome to PIDEA! Your AI development assistant is ready to help."
           />

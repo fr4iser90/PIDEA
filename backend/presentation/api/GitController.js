@@ -98,13 +98,7 @@ class GitController {
             const branches = result.data.branches;
             const currentBranch = result.data.currentBranch;
 
-            // Log the branches structure for debugging
-            this.logger.info('GitController: Branches structure', { 
-                hasBranches: !!branches,
-                branchesType: typeof branches,
-                hasAll: branches && !!branches.all,
-                allLength: branches && branches.all ? branches.all.length : 0
-            });
+
 
             res.json({
                 success: true,

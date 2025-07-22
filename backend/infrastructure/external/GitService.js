@@ -195,13 +195,7 @@ class GitService {
             const result = await this.stepRegistry.executeStep('GitGetBranchesStep', stepContext);
             
             if (result.success) {
-                // Log the result structure for debugging
-                this.logger.info('GitService: Step result structure', { 
-                    hasBranches: !!result.result?.branches, 
-                    hasResult: !!result.result,
-                    resultKeys: Object.keys(result),
-                    stepResultKeys: result.result ? Object.keys(result.result) : []
-                });
+
                 
                 // The StepRegistry wraps the step result in a 'result' property
                 // So we need to access result.result.branches
@@ -601,7 +595,9 @@ class GitService {
             const result = await this.stepRegistry.executeStep('GitGetStatusStep', stepContext);
             
             if (result.success) {
-                return result.status;
+                // The StepRegistry wraps the step result in a 'result' property
+                // So we need to access result.result.status
+                return result.result?.status || result.status;
             } else {
                 throw new Error(result.error || 'Failed to get status');
             }

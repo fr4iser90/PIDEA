@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 
-function Footer({ eventBus, activePort, gitStatus, gitBranch, version = 'dev', message = 'Welcome to PIDEA!' }) {
+function Footer({ eventBus, activePort, version = 'dev', message = 'Welcome to PIDEA!' }) {
   const [currentTime, setCurrentTime] = useState(new Date());
   const [isOnline, setIsOnline] = useState(true);
+  const [gitBranch, setGitBranch] = useState('');
+  const [gitStatus, setGitStatus] = useState(null);
 
   useEffect(() => {
     // Update time every second
@@ -24,6 +26,47 @@ function Footer({ eventBus, activePort, gitStatus, gitBranch, version = 'dev', m
       window.removeEventListener('offline', checkOnlineStatus);
     };
   }, []);
+
+  // Fetch git status when activePort changes
+  useEffect(() => {
+    const fetchGitStatus = async () => {
+      if (!activePort) {
+        setGitBranch('');
+        setGitStatus(null);
+        return;
+      }
+
+      try {
+        // Get IDE info
+        const ideRes = await fetch('/api/ide/available');
+        const ides = await ideRes.json();
+        const activeIDE = ides.data?.find(ide => ide.port === activePort);
+        
+        if (activeIDE && activeIDE.workspacePath) {
+          // Get project ID from workspace path
+          const pathParts = activeIDE.workspacePath.split('/');
+          const projectName = pathParts[pathParts.length - 1];
+          const projectId = projectName.toLowerCase().replace(/[^a-z0-9]/g, '');
+          
+          // Get git status
+          const gitRes = await fetch(`/api/projects/${projectId}/git/status`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ projectPath: activeIDE.workspacePath })
+          });
+          const gitData = await gitRes.json();
+          
+          setGitStatus(gitData.data?.status || null);
+          setGitBranch(gitData.data?.currentBranch || '');
+        }
+      } catch (error) {
+        setGitBranch('');
+        setGitStatus(null);
+      }
+    };
+
+    fetchGitStatus();
+  }, [activePort]);
 
   const formatTime = (date) => {
     return date.toLocaleTimeString('de-DE', { 

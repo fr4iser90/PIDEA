@@ -16,7 +16,7 @@ const getProjectIdFromWorkspace = (workspacePath) => {
   return projectName.toLowerCase().replace(/[^a-z0-9]/g, '');
 };
 
-const GitManagementComponent = ({ activePort, onGitOperation, onGitStatusChange }) => {
+const GitManagementComponent = ({ activePort, onGitOperation, onGitStatusChange, eventBus }) => {
   const [gitStatus, setGitStatus] = useState(null);
   const [currentBranch, setCurrentBranch] = useState('');
   const [branches, setBranches] = useState([]);
@@ -67,8 +67,18 @@ const GitManagementComponent = ({ activePort, onGitOperation, onGitStatusChange 
         body: JSON.stringify({ projectPath: workspacePath })
       });
       
+
+      
       setGitStatus(data.data?.status);
       setCurrentBranch(data.data?.currentBranch);
+      
+      // Emit event for App component
+      if (eventBus) {
+        eventBus.emit('git-status-changed', {
+          status: data.data?.status,
+          currentBranch: data.data?.currentBranch
+        });
+      }
       
       if (onGitStatusChange) {
         onGitStatusChange(data.data?.status);
@@ -91,6 +101,8 @@ const GitManagementComponent = ({ activePort, onGitOperation, onGitStatusChange 
         method: 'POST',
         body: JSON.stringify({ projectPath: workspacePath })
       });
+      
+
       
       // Ensure we always set an array
       if (data && data.data && Array.isArray(data.data.branches)) {
@@ -216,7 +228,7 @@ const GitManagementComponent = ({ activePort, onGitOperation, onGitStatusChange 
         <div className="git-status-info">
           <span className="git-status-icon">{getStatusIcon()}</span>
           <span className="git-status-text">{getStatusText()}</span>
-          <span className="git-branch-name">branch: {currentBranch}</span>
+          <span className="git-branch-name">branch: {currentBranch || 'Loading...'}</span>
         </div>
         
         <div className="git-actions">
