@@ -1107,14 +1107,38 @@ class WorkflowController {
             };
 
             // Format prompt for IDE steps
-            if (step.type === 'ide_send_message' && step.options?.message) {
-                const WorkflowLoaderService = require('@domain/services/WorkflowLoaderService');
-                const workflowLoader = new WorkflowLoaderService();
-                await workflowLoader.loadWorkflows();
-                
-                const formattedPrompt = workflowLoader.formatPromptForStep(step, taskData);
-                if (formattedPrompt) {
-                    stepOptions.message = formattedPrompt;
+            if (step.type === 'ide_send_message') {
+                // If useTaskPrompt is true, use the actual task prompt from TaskService
+                if (step.options?.useTaskPrompt && taskData) {
+                    const TaskService = require('@domain/services/TaskService');
+                    const taskRepository = require('@domain/repositories/TaskRepository');
+                    const aiService = require('@domain/services/AIService');
+                    const projectAnalyzer = require('@domain/services/ProjectAnalyzerService');
+                    
+                    // Create a minimal TaskService instance to build the prompt
+                    const taskService = new TaskService(taskRepository, aiService, projectAnalyzer);
+                    
+                    // Create a task object with the data
+                    const task = {
+                        id: taskData.id,
+                        title: taskData.title,
+                        description: taskData.description,
+                        type: { value: taskData.type },
+                        metadata: taskData.metadata || {}
+                    };
+                    
+                    const taskPrompt = await taskService.buildTaskExecutionPrompt(task);
+                    stepOptions.message = taskPrompt;
+                } else if (step.options?.message) {
+                    // Fallback to template-based prompt
+                    const WorkflowLoaderService = require('@domain/services/WorkflowLoaderService');
+                    const workflowLoader = new WorkflowLoaderService();
+                    await workflowLoader.loadWorkflows();
+                    
+                    const formattedPrompt = workflowLoader.formatPromptForStep(step, taskData);
+                    if (formattedPrompt) {
+                        stepOptions.message = formattedPrompt;
+                    }
                 }
             }
             

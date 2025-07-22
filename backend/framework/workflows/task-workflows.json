@@ -23,7 +23,7 @@
           "description": "Send task to IDE with prompt",
           "step": "IDESendMessageStep",
           "options": {
-            "message": "prompts/task-prompt.md",
+            "useTaskPrompt": true,
             "waitForResponse": true,
             "timeout": 60000
           }
@@ -107,44 +107,62 @@
           "name": "test-analysis",
           "type": "analysis",
           "description": "Analyze existing tests",
-          "analysisTypes": ["test-coverage", "test-quality", "test-structure"]
+          "step": "ProjectAnalysisStep",
+          "options": {
+            "analysisTypes": ["test-coverage", "test-quality", "test-structure"]
+          }
         },
         {
           "name": "send-to-ide",
-          "type": "ide-chat",
+          "type": "ide_send_message",
           "description": "Send testing task to IDE",
-          "prompt": "prompts/testing-prompt.md",
-          "waitForResponse": true,
-          "timeout": 60000
+          "step": "IDESendMessageStep",
+          "options": {
+            "useTaskPrompt": true,
+            "waitForResponse": true,
+            "timeout": 60000
+          }
         },
         {
           "name": "validate-response",
           "type": "validation",
           "description": "Validate test implementation",
-          "checks": ["test-syntax", "test-coverage", "test-quality"],
-          "strict": true
+          "step": "CodeQualityAnalysisStep",
+          "options": {
+            "checks": ["test-syntax", "test-coverage", "test-quality"],
+            "strict": true
+          }
         },
         {
           "name": "completion-check",
-          "type": "confirmation",
+          "type": "confirmation_step",
           "description": "3x Complete-Check for testing",
-          "maxAttempts": 3,
-          "timeout": 10000,
-          "autoContinueThreshold": 0.8
+          "step": "ConfirmationStep",
+          "options": {
+            "maxAttempts": 3,
+            "timeout": 10000,
+            "autoContinueThreshold": 0.8
+          }
         },
         {
           "name": "test-run",
-          "type": "testing",
+          "type": "project_test_step",
           "description": "Run the new tests",
-          "commands": ["npm test", "npm run test"],
-          "continueOnFailure": false
+          "step": "ProjectTestStep",
+          "options": {
+            "commands": ["npm test", "npm run test"],
+            "continueOnFailure": false
+          }
         },
         {
           "name": "coverage-check",
-          "type": "coverage",
+          "type": "project_test_step",
           "description": "Check test coverage",
-          "commands": ["npm run test:coverage", "npm run coverage"],
-          "minCoverage": 80
+          "step": "ProjectTestStep",
+          "options": {
+            "commands": ["npm run test:coverage", "npm run coverage"],
+            "minCoverage": 80
+          }
         }
       ],
       "options": {
@@ -160,47 +178,65 @@
       "steps": [
         {
           "name": "planning",
-          "type": "planning",
+          "type": "analysis",
           "description": "Plan feature implementation",
-          "analysisTypes": ["architecture", "dependencies", "requirements"]
+          "step": "ProjectAnalysisStep",
+          "options": {
+            "analysisTypes": ["architecture", "dependencies", "requirements"]
+          }
         },
         {
           "name": "send-to-ide",
-          "type": "ide-chat",
+          "type": "ide_send_message",
           "description": "Send feature task to IDE",
-          "prompt": "prompts/feature-prompt.md",
-          "waitForResponse": true,
-          "timeout": 120000
+          "step": "IDESendMessageStep",
+          "options": {
+            "useTaskPrompt": true,
+            "waitForResponse": true,
+            "timeout": 120000
+          }
         },
         {
           "name": "validate-response",
           "type": "validation",
           "description": "Validate feature implementation",
-          "checks": ["code-quality", "syntax", "architecture", "requirements"],
-          "strict": true
+          "step": "CodeQualityAnalysisStep",
+          "options": {
+            "checks": ["code-quality", "syntax", "architecture", "requirements"],
+            "strict": true
+          }
         },
         {
           "name": "completion-check",
-          "type": "confirmation",
+          "type": "confirmation_step",
           "description": "3x Complete-Check for feature",
-          "maxAttempts": 3,
-          "timeout": 15000,
-          "autoContinueThreshold": 0.9
+          "step": "ConfirmationStep",
+          "options": {
+            "maxAttempts": 3,
+            "timeout": 15000,
+            "autoContinueThreshold": 0.9
+          }
         },
         {
           "name": "test-run",
-          "type": "testing",
+          "type": "project_test_step",
           "description": "Run tests for new feature",
-          "commands": ["npm test", "npm run test"],
-          "continueOnFailure": false
+          "step": "ProjectTestStep",
+          "options": {
+            "commands": ["npm test", "npm run test"],
+            "continueOnFailure": false
+          }
         },
         {
           "name": "dev-server",
-          "type": "development",
+          "type": "run_dev_step",
           "description": "Start development server",
-          "commands": ["npm run dev", "npm start"],
-          "waitForReady": true,
-          "timeout": 30000
+          "step": "RunDevStep",
+          "options": {
+            "commands": ["npm run dev", "npm start"],
+            "waitForReady": true,
+            "timeout": 30000
+          }
         }
       ],
       "options": {
@@ -218,44 +254,62 @@
           "name": "investigation",
           "type": "analysis",
           "description": "Investigate the bug",
-          "analysisTypes": ["error-analysis", "code-tracing", "log-analysis"]
+          "step": "ProjectAnalysisStep",
+          "options": {
+            "analysisTypes": ["error-analysis", "code-tracing", "log-analysis"]
+          }
         },
         {
           "name": "send-to-ide",
-          "type": "ide-chat",
+          "type": "ide_send_message",
           "description": "Send bug fix task to IDE",
-          "prompt": "prompts/bugfix-prompt.md",
-          "waitForResponse": true,
-          "timeout": 90000
+          "step": "IDESendMessageStep",
+          "options": {
+            "useTaskPrompt": true,
+            "waitForResponse": true,
+            "timeout": 90000
+          }
         },
         {
           "name": "validate-response",
           "type": "validation",
           "description": "Validate bug fix",
-          "checks": ["code-quality", "syntax", "bug-fix", "regression"],
-          "strict": true
+          "step": "CodeQualityAnalysisStep",
+          "options": {
+            "checks": ["test-syntax", "test-coverage", "test-quality"],
+            "strict": true
+          }
         },
         {
           "name": "completion-check",
-          "type": "confirmation",
+          "type": "confirmation_step",
           "description": "3x Complete-Check for bug fix",
-          "maxAttempts": 3,
-          "timeout": 12000,
-          "autoContinueThreshold": 0.9
+          "step": "ConfirmationStep",
+          "options": {
+            "maxAttempts": 3,
+            "timeout": 12000,
+            "autoContinueThreshold": 0.9
+          }
         },
         {
           "name": "test-run",
-          "type": "testing",
+          "type": "project_test_step",
           "description": "Run tests to verify fix",
-          "commands": ["npm test", "npm run test"],
-          "continueOnFailure": false
+          "step": "ProjectTestStep",
+          "options": {
+            "commands": ["npm test", "npm run test"],
+            "continueOnFailure": false
+          }
         },
         {
           "name": "regression-test",
-          "type": "testing",
+          "type": "project_test_step",
           "description": "Run regression tests",
-          "commands": ["npm run test:regression", "npm run test:integration"],
-          "continueOnFailure": false
+          "step": "ProjectTestStep",
+          "options": {
+            "commands": ["npm run test:regression", "npm run test:integration"],
+            "continueOnFailure": false
+          }
         }
       ],
       "options": {
@@ -273,36 +327,51 @@
           "name": "data-collection",
           "type": "analysis",
           "description": "Collect analysis data",
-          "analysisTypes": ["code-quality", "architecture", "dependencies", "security", "performance"]
+          "step": "ProjectAnalysisStep",
+          "options": {
+            "analysisTypes": ["code-quality", "architecture", "dependencies", "security", "performance"]
+          }
         },
         {
           "name": "send-to-ide",
-          "type": "ide-chat",
+          "type": "ide_send_message",
           "description": "Send analysis task to IDE",
-          "prompt": "prompts/analysis-prompt.md",
-          "waitForResponse": true,
-          "timeout": 60000
+          "step": "IDESendMessageStep",
+          "options": {
+            "useTaskPrompt": true,
+            "waitForResponse": true,
+            "timeout": 60000
+          }
         },
         {
           "name": "validate-response",
           "type": "validation",
           "description": "Validate analysis results",
-          "checks": ["analysis-completeness", "data-quality", "insights"],
-          "strict": false
+          "step": "CodeQualityAnalysisStep",
+          "options": {
+            "checks": ["analysis-completeness", "data-quality", "insights"],
+            "strict": false
+          }
         },
         {
           "name": "completion-check",
-          "type": "confirmation",
+          "type": "confirmation_step",
           "description": "3x Complete-Check for analysis",
-          "maxAttempts": 3,
-          "timeout": 10000,
-          "autoContinueThreshold": 0.8
+          "step": "ConfirmationStep",
+          "options": {
+            "maxAttempts": 3,
+            "timeout": 10000,
+            "autoContinueThreshold": 0.8
+          }
         },
         {
           "name": "report-generation",
           "type": "reporting",
           "description": "Generate analysis report",
-          "formats": ["markdown", "json", "html"]
+          "step": "ReportGenerationStep",
+          "options": {
+            "formats": ["markdown", "json", "html"]
+          }
         }
       ],
       "options": {
