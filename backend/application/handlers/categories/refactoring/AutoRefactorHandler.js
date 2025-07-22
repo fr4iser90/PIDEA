@@ -594,7 +594,8 @@ class AutoRefactorHandler {
         const path = require('path');
 
         const files = [];
-        const excludeDirs = ['node_modules', '.git', 'dist', 'build', 'coverage'];
+        const { getExcludePatterns } = require('@config/analysis-excludes');
+        const excludeDirs = getExcludePatterns('standard');
 
         async function scanDirectory(dir) {
             try {

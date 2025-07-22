@@ -219,7 +219,8 @@ class ProjectAnalysisStep {
 
     const maxDepth = options.maxDepth || 10;
     const includeHidden = options.includeHidden || false;
-    const excludePatterns = options.excludePatterns || ['node_modules', '.git', 'dist', 'build', 'coverage'];
+    const { getExcludePatterns } = require('@config/analysis-excludes');
+    const excludePatterns = options.excludePatterns || getExcludePatterns('extended');
     const fileTypes = options.fileTypes || [];
 
     try {

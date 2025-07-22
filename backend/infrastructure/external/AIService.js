@@ -664,10 +664,8 @@ Please analyze the project and execute improvements automatically. Provide detai
      */
     async scanProjectFiles(projectPath) {
         const files = [];
-        const ignoredPatterns = [
-            'node_modules', '.git', '.vscode', '.idea', 'dist', 'build',
-            '*.log', '*.tmp', '*.cache', '.DS_Store', 'Thumbs.db'
-        ];
+        const { getExcludePatterns } = require('@config/analysis-excludes');
+        const ignoredPatterns = getExcludePatterns('extended');
 
         try {
             await this.scanDirectory(projectPath, files, ignoredPatterns);

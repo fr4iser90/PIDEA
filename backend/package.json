@@ -38,6 +38,7 @@
     "test:refactor:slow": "node scripts/test-correction/index.js refactor --slow",
     "test:correction-status": "node scripts/test-correction/index.js status",
     "test:correction-report": "node scripts/test-correction/index.js report",
+    "test:analysis-excludes": "node scripts/test-analysis-excludes.js",
     "fix:task-priorities": "node scripts/fix-task-priorities.js",
     "lint": "eslint ",
     "lint:fix": "eslint  --fix",

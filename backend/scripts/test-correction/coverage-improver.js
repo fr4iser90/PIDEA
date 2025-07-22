@@ -16,7 +16,10 @@ class CoverageImprover {
       targetCoverage: 90,
       minCoverage: 80,
       focusAreas: ['unit', 'integration'],
-      excludePatterns: ['**/node_modules/**', '**/coverage/**', '**/*.test.js'],
+      excludePatterns: (() => {
+        const { getExcludePatterns } = require('@config/analysis-excludes');
+        return getExcludePatterns('testing', { additionalExcludes: ['**/*.test.js'] });
+      })(),
       includePatterns: ['**/*.js', '**/*.jsx', '**/*.ts', '**/*.tsx'],
       ...options
     };

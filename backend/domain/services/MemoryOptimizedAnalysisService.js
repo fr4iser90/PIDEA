@@ -650,7 +650,8 @@ class MemoryOptimizedAnalysisService {
     async analyzeStructureStreaming(projectPath, options) {
         this.logger.info('Phase 1: Analyzing structure with streaming...');
         
-        const excludePatterns = options.excludePatterns || ['node_modules', '.git', 'dist', 'build', 'coverage'];
+        const { getExcludePatterns } = require('@config/analysis-excludes');
+        const excludePatterns = options.excludePatterns || getExcludePatterns('extended');
         const maxDepth = Math.min(options.maxDepth || 5, this.maxDirectoryDepth);
         
         await this.scanDirectoryStreaming(projectPath, '', 0, maxDepth, excludePatterns);

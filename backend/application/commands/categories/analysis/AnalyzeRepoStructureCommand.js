@@ -124,7 +124,10 @@ class AnalyzeRepoStructureCommand {
             includeHidden: this.options.includeHidden || false,
             maxDepth: this.options.maxDepth || 10,
             fileTypes: this.options.fileTypes || ['js', 'ts', 'jsx', 'tsx', 'json', 'md', 'yml', 'yaml'],
-            excludePatterns: this.options.excludePatterns || ['node_modules', '.git', 'dist', 'build'],
+            excludePatterns: this.options.excludePatterns || (() => {
+                const { getExcludePatterns } = require('@config/analysis-excludes');
+                return getExcludePatterns('extended');
+            })(),
             includeStats: this.options.includeStats || true,
             includeDependencies: this.options.includeDependencies || false
         };
