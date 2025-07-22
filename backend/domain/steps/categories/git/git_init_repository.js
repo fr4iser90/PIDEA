@@ -6,6 +6,9 @@
 const StepBuilder = require('@steps/StepBuilder');
 const Logger = require('@logging/Logger');
 const logger = new Logger('GitInitRepositoryStep');
+const { exec } = require('child_process');
+const util = require('util');
+const execAsync = util.promisify(exec);
 
 // Step configuration
 const config = {
@@ -56,13 +59,6 @@ class GitInitRepositoryStep {
         initialBranch
       });
 
-      // Get terminal service via dependency injection
-      const terminalService = context.getService('terminalService');
-      
-      if (!terminalService) {
-        throw new Error('TerminalService not available in context');
-      }
-
       // Build init command
       let initCommand = 'git init';
       if (bare) {
@@ -72,8 +68,8 @@ class GitInitRepositoryStep {
         initCommand += ` -b ${initialBranch}`;
       }
 
-      // Execute git init using real Git command
-      const result = await terminalService.executeCommand(initCommand, { cwd: projectPath });
+      // Execute git init using execAsync (like legacy implementation)
+      const result = await execAsync(initCommand, { cwd: projectPath });
 
       logger.info('GIT_INIT_REPOSITORY step completed successfully', {
         projectPath,

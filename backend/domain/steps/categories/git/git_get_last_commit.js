@@ -6,6 +6,9 @@
 const StepBuilder = require('@steps/StepBuilder');
 const Logger = require('@logging/Logger');
 const logger = new Logger('GitGetLastCommitStep');
+const { exec } = require('child_process');
+const util = require('util');
+const execAsync = util.promisify(exec);
 
 // Step configuration
 const config = {
@@ -52,27 +55,20 @@ class GitGetLastCommitStep {
         projectPath
       });
 
-      // Get terminal service via dependency injection
-      const terminalService = context.getService('terminalService');
-      
-      if (!terminalService) {
-        throw new Error('TerminalService not available in context');
-      }
-
-      // Get commit hash
-      const hashResult = await terminalService.executeCommand('git rev-parse HEAD', { cwd: projectPath });
+      // Get commit hash using execAsync
+      const hashResult = await execAsync('git rev-parse HEAD', { cwd: projectPath });
       const hash = hashResult.stdout.trim();
       
-      // Get commit message
-      const messageResult = await terminalService.executeCommand('git log -1 --pretty=format:%s', { cwd: projectPath });
+      // Get commit message using execAsync
+      const messageResult = await execAsync('git log -1 --pretty=format:%s', { cwd: projectPath });
       const message = messageResult.stdout.trim();
       
-      // Get commit author
-      const authorResult = await terminalService.executeCommand('git log -1 --pretty=format:%an', { cwd: projectPath });
+      // Get commit author using execAsync
+      const authorResult = await execAsync('git log -1 --pretty=format:%an', { cwd: projectPath });
       const author = authorResult.stdout.trim();
       
-      // Get commit date
-      const dateResult = await terminalService.executeCommand('git log -1 --pretty=format:%cd', { cwd: projectPath });
+      // Get commit date using execAsync
+      const dateResult = await execAsync('git log -1 --pretty=format:%cd', { cwd: projectPath });
       const date = dateResult.stdout.trim();
 
       const lastCommit = { hash, message, author, date };

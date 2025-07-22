@@ -6,6 +6,9 @@
 const StepBuilder = require('@steps/StepBuilder');
 const Logger = require('@logging/Logger');
 const logger = new Logger('GitCloneRepositoryStep');
+const { exec } = require('child_process');
+const util = require('util');
+const execAsync = util.promisify(exec);
 
 // Step configuration
 const config = {
@@ -61,13 +64,6 @@ class GitCloneRepositoryStep {
         recursive
       });
 
-      // Get terminal service via dependency injection
-      const terminalService = context.getService('terminalService');
-      
-      if (!terminalService) {
-        throw new Error('TerminalService not available in context');
-      }
-
       // Build clone command
       let cloneCommand = `git clone ${url} ${targetPath}`;
       if (branch) {
@@ -83,8 +79,8 @@ class GitCloneRepositoryStep {
         cloneCommand += ' --recursive';
       }
 
-      // Execute git clone using real Git command
-      const result = await terminalService.executeCommand(cloneCommand);
+      // Execute git clone using execAsync (like legacy implementation)
+      const result = await execAsync(cloneCommand);
 
       logger.info('GIT_CLONE_REPOSITORY step completed successfully', {
         url,

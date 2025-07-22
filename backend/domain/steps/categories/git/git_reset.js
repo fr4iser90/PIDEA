@@ -6,6 +6,9 @@
 const StepBuilder = require('@steps/StepBuilder');
 const Logger = require('@logging/Logger');
 const logger = new Logger('GitResetStep');
+const { exec } = require('child_process');
+const util = require('util');
+const execAsync = util.promisify(exec);
 
 // Step configuration
 const config = {
@@ -54,13 +57,6 @@ class GitResetStep {
         commit
       });
 
-      // Get terminal service via dependency injection
-      const terminalService = context.getService('terminalService');
-      
-      if (!terminalService) {
-        throw new Error('TerminalService not available in context');
-      }
-
       // Validate mode
       const validModes = ['soft', 'mixed', 'hard'];
       if (!validModes.includes(mode)) {
@@ -70,8 +66,8 @@ class GitResetStep {
       // Build reset command
       const resetCommand = `git reset --${mode} ${commit}`;
 
-      // Execute git reset using real Git command
-      const result = await terminalService.executeCommand(resetCommand, { cwd: projectPath });
+      // Execute git reset using execAsync (like legacy implementation)
+      const result = await execAsync(resetCommand, { cwd: projectPath });
 
       logger.info('GIT_RESET step completed successfully', {
         mode,

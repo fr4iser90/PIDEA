@@ -6,6 +6,9 @@
 const StepBuilder = require('@steps/StepBuilder');
 const Logger = require('@logging/Logger');
 const logger = new Logger('GitMergeBranchStep');
+const { exec } = require('child_process');
+const util = require('util');
+const execAsync = util.promisify(exec);
 
 // Step configuration
 const config = {
@@ -57,13 +60,6 @@ class GitMergeBranchStep {
         noFF
       });
 
-      // Get terminal service via dependency injection
-      const terminalService = context.getService('terminalService');
-      
-      if (!terminalService) {
-        throw new Error('TerminalService not available in context');
-      }
-
       // Build merge command
       let mergeCommand = 'git merge';
       if (noFF) {
@@ -71,8 +67,8 @@ class GitMergeBranchStep {
       }
       mergeCommand += ` ${branchName}`;
 
-      // Execute git merge using real Git command
-      const result = await terminalService.executeCommand(mergeCommand, { cwd: projectPath });
+      // Execute git merge using execAsync (like legacy implementation)
+      const result = await execAsync(mergeCommand, { cwd: projectPath });
 
       logger.info('GIT_MERGE_BRANCH step completed successfully', {
         branchName,

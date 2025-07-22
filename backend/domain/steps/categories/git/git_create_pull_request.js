@@ -6,6 +6,9 @@
 const StepBuilder = require('@steps/StepBuilder');
 const Logger = require('@logging/Logger');
 const logger = new Logger('GitCreatePullRequestStep');
+const { exec } = require('child_process');
+const util = require('util');
+const execAsync = util.promisify(exec);
 
 // Step configuration
 const config = {
@@ -66,12 +69,7 @@ class GitCreatePullRequestStep {
         title
       });
 
-      // Get terminal service via dependency injection
-      const terminalService = context.getService('terminalService');
-      
-      if (!terminalService) {
-        throw new Error('TerminalService not available in context');
-      }
+
 
       // Generate PR data
       const prTitle = title || `Merge ${sourceBranch} into ${targetBranch}`;
@@ -80,7 +78,7 @@ class GitCreatePullRequestStep {
       // Try GitHub CLI first, fallback to manual process
       try {
         // Check if GitHub CLI is available
-        const ghCheck = await terminalService.executeCommand('gh --version', { cwd: projectPath });
+        const ghCheck = await execAsync('gh --version', { cwd: projectPath });
         
         if (ghCheck.exitCode === 0) {
           // Use GitHub CLI to create PR
@@ -94,7 +92,7 @@ class GitCreatePullRequestStep {
             ghCommand += ` --reviewer "${reviewers.join(',')}"`;
           }
 
-          const result = await terminalService.executeCommand(ghCommand, { cwd: projectPath });
+          const result = await execAsync(ghCommand, { cwd: projectPath });
           
           // Extract PR URL from output
           const prUrlMatch = result.stdout.match(/https:\/\/github\.com\/[^\s]+/);
@@ -124,10 +122,10 @@ class GitCreatePullRequestStep {
       }
 
       // Fallback: Manual process (push and create PR via web)
-      await terminalService.executeCommand(`git push origin ${sourceBranch}`, { cwd: projectPath });
+      await execAsync(`git push origin ${sourceBranch}`, { cwd: projectPath });
       
       // Get remote URL to construct PR URL
-      const remoteResult = await terminalService.executeCommand('git remote get-url origin', { cwd: projectPath });
+      const remoteResult = await execAsync('git remote get-url origin', { cwd: projectPath });
       const remoteUrl = remoteResult.stdout.trim();
       
       // Convert SSH to HTTPS if needed

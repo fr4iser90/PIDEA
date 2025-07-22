@@ -6,6 +6,9 @@
 const StepBuilder = require('@steps/StepBuilder');
 const Logger = require('@logging/Logger');
 const logger = new Logger('GitPushStep');
+const { exec } = require('child_process');
+const util = require('util');
+const execAsync = util.promisify(exec);
 
 // Step configuration
 const config = {
@@ -57,17 +60,10 @@ class GitPushStep {
         setUpstream
       });
 
-      // Get terminal service via dependency injection
-      const terminalService = context.getService('terminalService');
-      
-      if (!terminalService) {
-        throw new Error('TerminalService not available in context');
-      }
-
-      // Get current branch if not specified
+      // Get current branch if not specified using execAsync
       let currentBranch = branch;
       if (!currentBranch) {
-        const branchResult = await terminalService.executeCommand('git branch --show-current', { cwd: projectPath });
+        const branchResult = await execAsync('git branch --show-current', { cwd: projectPath });
         currentBranch = branchResult.stdout.trim();
       }
 
@@ -77,8 +73,8 @@ class GitPushStep {
         pushCommand = `git push -u ${remote} ${currentBranch}`;
       }
 
-      // Execute git push using real Git command
-      const result = await terminalService.executeCommand(pushCommand, { cwd: projectPath });
+      // Execute git push using execAsync (like legacy implementation)
+      const result = await execAsync(pushCommand, { cwd: projectPath });
 
       logger.info('GIT_PUSH step completed successfully', {
         branch: currentBranch,

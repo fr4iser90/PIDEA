@@ -89,7 +89,8 @@ const GitManagementComponent = ({ activePort, onGitOperation, onGitStatusChange 
         method: 'POST',
         body: JSON.stringify({ projectPath: workspacePath })
       });
-      setBranches((data && data.data && data.data.branches) ? data.data.branches : []);
+      // Backend now returns branches directly in result.result
+      setBranches((data && data.result) ? data.result : []);
     } catch (error) {
       logger.error('Failed to load branches:', error);
     }

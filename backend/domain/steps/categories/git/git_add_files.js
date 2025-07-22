@@ -6,6 +6,9 @@
 const StepBuilder = require('@steps/StepBuilder');
 const Logger = require('@logging/Logger');
 const logger = new Logger('GitAddFilesStep');
+const { exec } = require('child_process');
+const util = require('util');
+const execAsync = util.promisify(exec);
 
 // Step configuration
 const config = {
@@ -54,18 +57,9 @@ class GitAddFilesStep {
         files
       });
 
-      // Get terminal service via dependency injection
-      const terminalService = context.getService('terminalService');
-      
-      if (!terminalService) {
-        throw new Error('TerminalService not available in context');
-      }
-
-      // Build add command
+      // Execute git add using execAsync (like legacy implementation)
       const addCommand = `git add ${files}`;
-
-      // Execute git add using real Git command
-      const result = await terminalService.executeCommand(addCommand, { cwd: projectPath });
+      const result = await execAsync(addCommand, { cwd: projectPath });
 
       logger.info('GIT_ADD_FILES step completed successfully', {
         files,

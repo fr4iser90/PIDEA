@@ -642,9 +642,8 @@ class Application {
     this.app.get('/api/auth/sessions', (req, res) => this.authController.getSessions(req, res));
     this.app.post('/api/auth/logout', this.authMiddleware.authenticate(), (req, res) => this.authController.logout(req, res));
     
-    // Token validation route (protected)
-    this.app.use('/api/auth/validate', this.authMiddleware.authenticate());
-    this.app.get('/api/auth/validate', (req, res) => this.authController.validateToken(req, res));
+    // Token validation route (protected) - require authentication
+    this.app.get('/api/auth/validate', this.authMiddleware.authenticate(), (req, res) => this.authController.validateToken(req, res));
 
     // Chat routes (protected) - no rate limiting for authenticated users
     this.app.use('/api/chat', this.authMiddleware.authenticate());

@@ -6,6 +6,9 @@
 const StepBuilder = require('@steps/StepBuilder');
 const Logger = require('@logging/Logger');
 const logger = new Logger('GitAddRemoteStep');
+const { exec } = require('child_process');
+const util = require('util');
+const execAsync = util.promisify(exec);
 
 // Step configuration
 const config = {
@@ -54,15 +57,8 @@ class GitAddRemoteStep {
         url
       });
 
-      // Get terminal service via dependency injection
-      const terminalService = context.getService('terminalService');
-      
-      if (!terminalService) {
-        throw new Error('TerminalService not available in context');
-      }
-
-      // Execute git remote add using real Git command
-      const result = await terminalService.executeCommand(`git remote add ${name} ${url}`, { cwd: projectPath });
+      // Execute git remote add using execAsync (like legacy implementation)
+      const result = await execAsync(`git remote add ${name} ${url}`, { cwd: projectPath });
 
       logger.info('GIT_ADD_REMOTE step completed successfully', {
         projectPath,

@@ -6,6 +6,9 @@
 const StepBuilder = require('@steps/StepBuilder');
 const Logger = require('@logging/Logger');
 const logger = new Logger('GitCheckoutBranchStep');
+const { exec } = require('child_process');
+const util = require('util');
+const execAsync = util.promisify(exec);
 
 // Step configuration
 const config = {
@@ -55,15 +58,8 @@ class GitCheckoutBranchStep {
         createIfNotExists
       });
 
-      // Get terminal service via dependency injection
-      const terminalService = context.getService('terminalService');
-      
-      if (!terminalService) {
-        throw new Error('TerminalService not available in context');
-      }
-
-      // Check if branch exists
-      const branchExistsResult = await terminalService.executeCommand(`git branch --list ${branchName}`, { cwd: projectPath });
+      // Check if branch exists using execAsync
+      const branchExistsResult = await execAsync(`git branch --list ${branchName}`, { cwd: projectPath });
       const branchExists = branchExistsResult.stdout.trim().includes(branchName);
 
       if (!branchExists && !createIfNotExists) {
@@ -76,8 +72,8 @@ class GitCheckoutBranchStep {
         checkoutCommand = `git checkout -b ${branchName}`;
       }
 
-      // Execute git checkout using real Git command
-      const result = await terminalService.executeCommand(checkoutCommand, { cwd: projectPath });
+      // Execute git checkout using execAsync (like legacy implementation)
+      const result = await execAsync(checkoutCommand, { cwd: projectPath });
 
       logger.info('GIT_CHECKOUT_BRANCH step completed successfully', {
         branchName,

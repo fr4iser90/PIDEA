@@ -5,7 +5,10 @@
 
 const StepBuilder = require('@steps/StepBuilder');
 const Logger = require('@logging/Logger');
-const logger = new Logger('git_get_status_step');
+const logger = new Logger('GitGetStatusStep');
+const { exec } = require('child_process');
+const util = require('util');
+const execAsync = util.promisify(exec);
 
 // Step configuration
 const config = {
@@ -51,18 +54,11 @@ class GitGetStatusStep {
         porcelain
       });
 
-      // Get terminal service via dependency injection
-      const terminalService = context.getService('terminalService');
-      
-      if (!terminalService) {
-        throw new Error('TerminalService not available in context');
-      }
-
       // Build status command
       const statusCommand = porcelain ? 'git status --porcelain' : 'git status';
       
-      // Execute git status using real Git command
-      const result = await terminalService.executeCommand(statusCommand, { cwd: projectPath });
+      // Execute git status using execAsync (like legacy implementation)
+      const result = await execAsync(statusCommand, { cwd: projectPath });
 
       // Parse status if porcelain format
       let status = { raw: result.stdout };

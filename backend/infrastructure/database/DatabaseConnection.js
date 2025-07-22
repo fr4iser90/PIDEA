@@ -202,6 +202,8 @@ class DatabaseConnection {
         FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
       )`,
       
+      `CREATE INDEX IF NOT EXISTS idx_user_sessions_access_token ON user_sessions(access_token)`,
+      
       `CREATE TABLE IF NOT EXISTS projects (
         id TEXT PRIMARY KEY DEFAULT ${uuidFunction},
         name TEXT NOT NULL,

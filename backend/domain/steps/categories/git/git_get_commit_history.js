@@ -6,6 +6,9 @@
 const StepBuilder = require('@steps/StepBuilder');
 const Logger = require('@logging/Logger');
 const logger = new Logger('GitGetCommitHistoryStep');
+const { exec } = require('child_process');
+const util = require('util');
+const execAsync = util.promisify(exec);
 
 // Step configuration
 const config = {
@@ -68,13 +71,6 @@ class GitGetCommitHistoryStep {
         author
       });
 
-      // Get terminal service via dependency injection
-      const terminalService = context.getService('terminalService');
-      
-      if (!terminalService) {
-        throw new Error('TerminalService not available in context');
-      }
-
       // Build log command
       let logCommand = `git log --${format}`;
       if (limit) {
@@ -90,8 +86,8 @@ class GitGetCommitHistoryStep {
         logCommand += ` --author="${author}"`;
       }
 
-      // Execute git log using real Git command
-      const result = await terminalService.executeCommand(logCommand, { cwd: projectPath });
+      // Execute git log using execAsync (like legacy implementation)
+      const result = await execAsync(logCommand, { cwd: projectPath });
 
       // Parse commit history
       const commits = result.stdout

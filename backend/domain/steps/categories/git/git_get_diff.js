@@ -6,6 +6,9 @@
 const StepBuilder = require('@steps/StepBuilder');
 const Logger = require('@logging/Logger');
 const logger = new Logger('GitGetDiffStep');
+const { exec } = require('child_process');
+const util = require('util');
+const execAsync = util.promisify(exec);
 
 // Step configuration
 const config = {
@@ -57,13 +60,6 @@ class GitGetDiffStep {
         commit2
       });
 
-      // Get terminal service via dependency injection
-      const terminalService = context.getService('terminalService');
-      
-      if (!terminalService) {
-        throw new Error('TerminalService not available in context');
-      }
-
       // Build diff command
       let diffCommand = 'git diff';
       if (staged) {
@@ -78,8 +74,8 @@ class GitGetDiffStep {
         diffCommand += ` -- ${file}`;
       }
 
-      // Execute git diff using real Git command
-      const result = await terminalService.executeCommand(diffCommand, { cwd: projectPath });
+      // Execute git diff using execAsync (like legacy implementation)
+      const result = await execAsync(diffCommand, { cwd: projectPath });
 
       logger.info('GIT_GET_DIFF step completed successfully', {
         staged,

@@ -142,26 +142,6 @@ class AuthMiddleware {
     };
   }
 
-  // Middleware for optional authentication (for public routes)
-  optionalAuth() {
-    return async (req, res, next) => {
-      try {
-        const token = this.extractToken(req);
-        
-        if (token) {
-          const { user, session } = await this.authService.validateAccessToken(token);
-          req.user = user;
-          req.session = session;
-        }
-        
-        next();
-      } catch (error) {
-        // Continue without authentication
-        next();
-      }
-    };
-  }
-
   // Middleware to check user permissions
   requirePermission(permission) {
     return (req, res, next) => {

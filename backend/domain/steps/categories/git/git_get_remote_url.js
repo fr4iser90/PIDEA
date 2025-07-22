@@ -6,6 +6,9 @@
 const StepBuilder = require('@steps/StepBuilder');
 const Logger = require('@logging/Logger');
 const logger = new Logger('GitGetRemoteUrlStep');
+const { exec } = require('child_process');
+const util = require('util');
+const execAsync = util.promisify(exec);
 
 // Step configuration
 const config = {
@@ -54,15 +57,8 @@ class GitGetRemoteUrlStep {
         remote
       });
 
-      // Get terminal service via dependency injection
-      const terminalService = context.getService('terminalService');
-      
-      if (!terminalService) {
-        throw new Error('TerminalService not available in context');
-      }
-
-      // Execute git remote get-url using real Git command
-      const result = await terminalService.executeCommand(`git remote get-url ${remote}`, { cwd: projectPath });
+      // Execute git remote get-url using execAsync (like legacy implementation)
+      const result = await execAsync(`git remote get-url ${remote}`, { cwd: projectPath });
       const remoteUrl = result.stdout.trim();
 
       logger.info('GIT_GET_REMOTE_URL step completed successfully', {

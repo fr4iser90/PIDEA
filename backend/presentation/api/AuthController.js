@@ -173,9 +173,11 @@ class AuthController {
   async validateToken(req, res) {
     try {
       if (!req.user) {
+        // No user found - this is normal for cookie-based auth when cookies are cleared
         return res.status(401).json({
           success: false,
-          error: 'Invalid or expired authentication'
+          error: 'No valid session found',
+          code: 'SESSION_EXPIRED'
         });
       }
 
@@ -190,7 +192,8 @@ class AuthController {
       logger.error('Authentication validation error:', error);
       res.status(401).json({
         success: false,
-        error: 'Authentication validation failed'
+        error: 'Authentication validation failed',
+        code: 'VALIDATION_ERROR'
       });
     }
   }

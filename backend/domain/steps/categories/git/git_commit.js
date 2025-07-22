@@ -6,6 +6,9 @@
 const StepBuilder = require('@steps/StepBuilder');
 const Logger = require('@logging/Logger');
 const logger = new Logger('GitCommitStep');
+const { exec } = require('child_process');
+const util = require('util');
+const execAsync = util.promisify(exec);
 
 // Step configuration
 const config = {
@@ -57,15 +60,8 @@ class GitCommitStep {
         files
       });
 
-      // Get terminal service via dependency injection
-      const terminalService = context.getService('terminalService');
-      
-      if (!terminalService) {
-        throw new Error('TerminalService not available in context');
-      }
-
-      // Add files to staging using real Git command
-      const addResult = await terminalService.executeCommand(`git add ${files}`, { cwd: projectPath });
+      // Add files to staging using execAsync
+      const addResult = await execAsync(`git add ${files}`, { cwd: projectPath });
 
       // Build commit command
       let commitCommand = `git commit -m "${message}"`;
@@ -73,8 +69,8 @@ class GitCommitStep {
         commitCommand = `git commit -m "${message}" --author="${author} <${email}>"`;
       }
 
-      // Commit changes using real Git command
-      const result = await terminalService.executeCommand(commitCommand, { cwd: projectPath });
+      // Commit changes using execAsync (like legacy implementation)
+      const result = await execAsync(commitCommand, { cwd: projectPath });
 
       logger.info('GIT_COMMIT step completed successfully', {
         message,

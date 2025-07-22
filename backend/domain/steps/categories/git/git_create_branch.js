@@ -6,6 +6,9 @@
 const StepBuilder = require('@steps/StepBuilder');
 const Logger = require('@logging/Logger');
 const logger = new Logger('GitCreateBranchStep');
+const { exec } = require('child_process');
+const util = require('util');
+const execAsync = util.promisify(exec);
 
 // Step configuration
 const config = {
@@ -57,19 +60,12 @@ class GitCreateBranchStep {
         fromBranch
       });
 
-      // Get terminal service via dependency injection
-      const terminalService = context.getService('terminalService');
-      
-      if (!terminalService) {
-        throw new Error('TerminalService not available in context');
-      }
-
-      // Check if branch already exists
-      const branchExistsResult = await terminalService.executeCommand(`git branch --list ${branchName}`, { cwd: projectPath });
+      // Check if branch already exists using execAsync
+      const branchExistsResult = await execAsync(`git branch --list ${branchName}`, { cwd: projectPath });
       if (branchExistsResult.stdout.trim()) {
         logger.warn(`Branch ${branchName} already exists`);
         if (checkout) {
-          await terminalService.executeCommand(`git checkout ${branchName}`, { cwd: projectPath });
+          await execAsync(`git checkout ${branchName}`, { cwd: projectPath });
         }
         return {
           success: true,
@@ -82,16 +78,16 @@ class GitCreateBranchStep {
 
       // Switch to base branch if specified
       if (fromBranch) {
-        await terminalService.executeCommand(`git checkout ${fromBranch}`, { cwd: projectPath });
+        await execAsync(`git checkout ${fromBranch}`, { cwd: projectPath });
       }
 
-      // Create new branch using real Git command
+      // Create new branch using execAsync (like legacy implementation)
       let createCommand = `git branch ${branchName}`;
       if (checkout) {
         createCommand = `git checkout -b ${branchName}`;
       }
 
-      const result = await terminalService.executeCommand(createCommand, { cwd: projectPath });
+      const result = await execAsync(createCommand, { cwd: projectPath });
 
       logger.info('GIT_CREATE_BRANCH step completed successfully', {
         branchName,

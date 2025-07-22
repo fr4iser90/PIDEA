@@ -194,7 +194,7 @@ class GitService {
             
             if (result.success) {
                 // Return all branches (local + remote combined)
-                return result.branches.all;
+                return result.result;
             } else {
                 throw new Error(result.error || 'Failed to get branches');
             }

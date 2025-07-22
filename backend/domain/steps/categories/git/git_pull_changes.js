@@ -6,6 +6,9 @@
 const StepBuilder = require('@steps/StepBuilder');
 const Logger = require('@logging/Logger');
 const logger = new Logger('GitPullChangesStep');
+const { exec } = require('child_process');
+const util = require('util');
+const execAsync = util.promisify(exec);
 
 // Step configuration
 const config = {
@@ -55,13 +58,6 @@ class GitPullChangesStep {
         rebase
       });
 
-      // Get terminal service via dependency injection
-      const terminalService = context.getService('terminalService');
-      
-      if (!terminalService) {
-        throw new Error('TerminalService not available in context');
-      }
-
       // Build pull command
       let pullCommand = 'git pull';
       if (rebase) {
@@ -72,8 +68,8 @@ class GitPullChangesStep {
         pullCommand += ` ${branch}`;
       }
 
-      // Execute git pull using real Git command
-      const result = await terminalService.executeCommand(pullCommand, { cwd: projectPath });
+      // Execute git pull using execAsync (like legacy implementation)
+      const result = await execAsync(pullCommand, { cwd: projectPath });
 
       logger.info('GIT_PULL_CHANGES step completed successfully', {
         remote,

@@ -5,7 +5,10 @@
 
 const StepBuilder = require('@steps/StepBuilder');
 const Logger = require('@logging/Logger');
-const logger = new Logger('git_get_branches_step');
+const logger = new Logger('GitGetBranchesStep');
+const { exec } = require('child_process');
+const util = require('util');
+const execAsync = util.promisify(exec);
 
 // Step configuration
 const config = {
@@ -53,22 +56,15 @@ class GitGetBranchesStep {
         includeLocal
       });
 
-      // Get terminal service via dependency injection
-      const terminalService = context.getService('terminalService');
-      
-      if (!terminalService) {
-        throw new Error('TerminalService not available in context');
-      }
-
       const branches = {
         local: [],
         remote: [],
         all: []
       };
 
-      // Get local branches
+      // Get local branches using execAsync
       if (includeLocal) {
-        const localResult = await terminalService.executeCommand('git branch', { cwd: projectPath });
+        const localResult = await execAsync('git branch', { cwd: projectPath });
         branches.local = localResult.stdout
           .split('\n')
           .map(line => line.trim())
@@ -76,9 +72,9 @@ class GitGetBranchesStep {
           .map(line => line.replace(/^\*?\s*/, ''));
       }
 
-      // Get remote branches
+      // Get remote branches using execAsync
       if (includeRemote) {
-        const remoteResult = await terminalService.executeCommand('git branch -r', { cwd: projectPath });
+        const remoteResult = await execAsync('git branch -r', { cwd: projectPath });
         branches.remote = remoteResult.stdout
           .split('\n')
           .map(line => line.trim())

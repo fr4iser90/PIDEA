@@ -162,6 +162,8 @@ const useAuthStore = create(
           return true;
         } catch (error) {
           logger.error('❌ [AuthStore] Authentication validation error:', error);
+          // Set lastAuthCheck even on failure to prevent infinite loops
+          set({ lastAuthCheck: now });
           await get().handleAuthFailure('Authentication check failed');
           return false;
         }
@@ -176,16 +178,18 @@ const useAuthStore = create(
         set({ 
           isAuthenticated: false, 
           user: null,
-          redirectToLogin: true,
+          redirectToLogin: false, // Don't auto-redirect when user clears cookies
           lastAuthCheck: new Date()
         });
 
-        // Show notification
-        showWarning(
-          'Your session has expired. Please log in again.',
-          'Session Expired',
-          false
-        );
+        // Only show notification for actual session expiry, not manual logout
+        if (reason !== 'Manual logout') {
+          showWarning(
+            'Your session has expired. Please log in again.',
+            'Session Expired',
+            false
+          );
+        }
 
         // No automatic redirect - let AuthWrapper handle it
       },
