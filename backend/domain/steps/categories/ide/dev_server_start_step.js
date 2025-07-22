@@ -54,8 +54,16 @@ class DevServerStartStep {
       logger.info(`🚀 Starting dev server for project ${projectId}`);
       
       // Get project configuration from database
-      const projectRepo = new (require('@domain/repositories/ProjectRepository'))();
-      const project = await projectRepo.findById(projectId);
+      const projectRepo = context.projectRepository || context.getService?.('projectRepository') || global.application?.projectRepository;
+      if (!projectRepo) {
+        logger.warn('ProjectRepository not available in context, using basic dev server start');
+        // Continue without project repository for basic dev server start
+      }
+      
+      let project = null;
+      if (projectRepo) {
+        project = await projectRepo.findById(projectId);
+      }
       
       if (!project) {
         throw new Error(`Project ${projectId} not found`);

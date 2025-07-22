@@ -222,7 +222,8 @@ class TaskService {
         try {
           logger.info(`🔧 [TaskService] Executing step: ${step.name} (${step.step})`);
           
-          const stepResult = await stepRegistry.executeStep(step.step, {
+          // Build step context with task data
+          const stepContext = {
             ...step.options,
             ...context,
             taskData: {
@@ -232,7 +233,15 @@ class TaskService {
               type: task.type?.value,
               metadata: task.metadata || {}
             }
-          });
+          };
+
+          // If this is the send-to-ide step and useTaskPrompt is true, add the message
+          if (step.step === 'IDESendMessageStep' && step.options?.useTaskPrompt) {
+            const taskPrompt = await this.buildTaskExecutionPrompt(task);
+            stepContext.message = taskPrompt;
+          }
+
+          const stepResult = await stepRegistry.executeStep(step.step, stepContext);
           
           results.push({
             step: step.name,
