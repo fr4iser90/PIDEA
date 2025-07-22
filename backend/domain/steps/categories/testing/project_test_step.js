@@ -54,7 +54,7 @@ class ProjectTestStep {
       logger.info(`🧪 Running tests for project ${projectId}`);
       
       // Get project configuration from database
-      const projectRepo = new (require('@/domain/repositories/ProjectRepository'))();
+      const projectRepo = new (require('@domain/repositories/ProjectRepository'))();
       const project = await projectRepo.findById(projectId);
       
       if (!project) {
@@ -137,7 +137,7 @@ class ProjectTestStep {
 
   async runUnitTests(workspacePath, packageManager) {
     try {
-      const terminalService = new (require('@/domain/services/TerminalService'))();
+      const terminalService = new (require('@domain/services/TerminalService'))();
       const testCommand = `${packageManager} test`;
       
       const result = await terminalService.executeCommand(testCommand, {
@@ -166,7 +166,7 @@ class ProjectTestStep {
     
   async runIntegrationTests(workspacePath, packageManager) {
     try {
-      const terminalService = new (require('@/domain/services/TerminalService'))();
+      const terminalService = new (require('@domain/services/TerminalService'))();
       const testCommand = `${packageManager} run test:integration`;
       
       const result = await terminalService.executeCommand(testCommand, {
@@ -195,7 +195,7 @@ class ProjectTestStep {
 
   async runCoverageTests(workspacePath, packageManager) {
     try {
-      const terminalService = new (require('@/domain/services/TerminalService'))();
+      const terminalService = new (require('@domain/services/TerminalService'))();
       const testCommand = `${packageManager} run test:coverage`;
       
       const result = await terminalService.executeCommand(testCommand, {

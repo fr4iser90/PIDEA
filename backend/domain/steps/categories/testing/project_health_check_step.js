@@ -54,7 +54,7 @@ class ProjectHealthCheckStep {
       logger.info(`🏥 Performing health checks for project ${projectId}`);
       
       // Get project configuration from database
-      const projectRepo = new (require('@/domain/repositories/ProjectRepository'))();
+      const projectRepo = new (require('@domain/repositories/ProjectRepository'))();
       const project = await projectRepo.findById(projectId);
       
       if (!project) {
@@ -137,7 +137,7 @@ class ProjectHealthCheckStep {
 
   async performBuildCheck(workspacePath, packageManager) {
     try {
-      const terminalService = new (require('@/domain/services/TerminalService'))();
+      const terminalService = new (require('@domain/services/TerminalService'))();
       const buildCommand = `${packageManager} run build`;
       
       const result = await terminalService.executeCommand(buildCommand, {
@@ -166,7 +166,7 @@ class ProjectHealthCheckStep {
 
   async performTestCheck(workspacePath, packageManager) {
     try {
-      const terminalService = new (require('@/domain/services/TerminalService'))();
+      const terminalService = new (require('@domain/services/TerminalService'))();
       const testCommand = `${packageManager} test`;
       
       const result = await terminalService.executeCommand(testCommand, {
@@ -195,7 +195,7 @@ class ProjectHealthCheckStep {
 
   async performLintCheck(workspacePath, packageManager) {
     try {
-      const terminalService = new (require('@/domain/services/TerminalService'))();
+      const terminalService = new (require('@domain/services/TerminalService'))();
       const lintCommand = `${packageManager} run lint`;
       
       const result = await terminalService.executeCommand(lintCommand, {

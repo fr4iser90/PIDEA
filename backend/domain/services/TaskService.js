@@ -224,7 +224,14 @@ class TaskService {
           
           const stepResult = await stepRegistry.executeStep(step.step, {
             ...step.options,
-            ...context
+            ...context,
+            taskData: {
+              id: task.id,
+              title: task.title,
+              description: task.description,
+              type: task.type?.value,
+              metadata: task.metadata || {}
+            }
           });
           
           results.push({

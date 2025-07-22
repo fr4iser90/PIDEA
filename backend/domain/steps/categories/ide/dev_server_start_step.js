@@ -54,7 +54,7 @@ class DevServerStartStep {
       logger.info(`🚀 Starting dev server for project ${projectId}`);
       
       // Get project configuration from database
-      const projectRepo = new (require('@/domain/repositories/ProjectRepository'))();
+      const projectRepo = new (require('@domain/repositories/ProjectRepository'))();
       const project = await projectRepo.findById(projectId);
       
       if (!project) {
@@ -86,7 +86,7 @@ class DevServerStartStep {
       }
       
       // Start dev server
-      const terminalService = new (require('@/domain/services/TerminalService'))();
+      const terminalService = new (require('@domain/services/TerminalService'))();
       const result = await terminalService.executeCommand(devCommand, {
         cwd: workspacePath,
         timeout: config.settings.timeout,

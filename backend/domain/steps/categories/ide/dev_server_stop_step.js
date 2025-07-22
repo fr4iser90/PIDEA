@@ -53,7 +53,7 @@ class DevServerStopStep {
       logger.info(`🛑 Stopping dev server for project ${projectId}`);
       
       // Get project configuration from database
-      const projectRepo = new (require('@/domain/repositories/ProjectRepository'))();
+      const projectRepo = new (require('@domain/repositories/ProjectRepository'))();
       const project = await projectRepo.findById(projectId);
       
       if (!project) {

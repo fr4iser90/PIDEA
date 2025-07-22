@@ -53,7 +53,7 @@ class DevServerRestartStep {
       logger.info(`🔄 Restarting dev server for project ${projectId}`);
       
       // Get project configuration from database
-      const projectRepo = new (require('@/domain/repositories/ProjectRepository'))();
+      const projectRepo = new (require('@domain/repositories/ProjectRepository'))();
       const project = await projectRepo.findById(projectId);
       
       if (!project) {
@@ -77,7 +77,7 @@ class DevServerRestartStep {
       await new Promise(resolve => setTimeout(resolve, 2000));
       
       // Start dev server
-      const terminalService = new (require('@/domain/services/TerminalService'))();
+      const terminalService = new (require('@domain/services/TerminalService'))();
       const result = await terminalService.executeCommand(devCommand, {
         cwd: workspacePath,
         timeout: config.settings.timeout,

@@ -1110,25 +1110,23 @@ class WorkflowController {
             if (step.type === 'ide_send_message') {
                 // If useTaskPrompt is true, use the actual task prompt from TaskService
                 if (step.options?.useTaskPrompt && taskData) {
-                    const TaskService = require('@domain/services/TaskService');
-                    const taskRepository = require('@domain/repositories/TaskRepository');
-                    const aiService = require('@domain/services/AIService');
-                    const projectAnalyzer = require('@domain/services/ProjectAnalyzerService');
-                    
-                    // Create a minimal TaskService instance to build the prompt
-                    const taskService = new TaskService(taskRepository, aiService, projectAnalyzer);
-                    
-                    // Create a task object with the data
-                    const task = {
-                        id: taskData.id,
-                        title: taskData.title,
-                        description: taskData.description,
-                        type: { value: taskData.type },
-                        metadata: taskData.metadata || {}
-                    };
-                    
-                    const taskPrompt = await taskService.buildTaskExecutionPrompt(task);
-                    stepOptions.message = taskPrompt;
+                    // Use the existing TaskService from the application context
+                    if (this.taskService) {
+                        // Create a task object with the data
+                        const task = {
+                            id: taskData.id,
+                            title: taskData.title,
+                            description: taskData.description,
+                            type: { value: taskData.type },
+                            metadata: taskData.metadata || {}
+                        };
+                        
+                        const taskPrompt = await this.taskService.buildTaskExecutionPrompt(task);
+                        stepOptions.message = taskPrompt;
+                    } else {
+                        this.logger.error('TaskService not available for prompt building');
+                        stepOptions.message = `Execute the following task:\n\n${taskData.title}\n\n${taskData.description || ''}`;
+                    }
                 } else if (step.options?.message) {
                     // Fallback to template-based prompt
                     const WorkflowLoaderService = require('@domain/services/WorkflowLoaderService');
