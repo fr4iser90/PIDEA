@@ -30,11 +30,8 @@ function SidebarLeft({ eventBus, activePort, onActivePortChange, mode = 'chat' }
     if (!eventBus) return;
     
     const handleIDEListUpdated = (data) => {
-      if (data.ides) {
-        // setAvailableIDEs(data.ides); // IDEStore handles this
-      } else {
-        loadAvailableIDEs(); // IDEStore handles this
-      }
+      // IDEContext will handle IDE loading, don't duplicate here
+      logger.info('IDE list updated event received, IDEContext will handle loading');
     };
     
     const handleActiveIDEChanged = (data) => {
@@ -62,14 +59,14 @@ function SidebarLeft({ eventBus, activePort, onActivePortChange, mode = 'chat' }
       eventBus.off('activeIDEChanged', handleActiveIDEChanged);
       eventBus.off('sidebar-left-toggle', handleLeftSidebarToggle);
     };
-  }, [eventBus, onActivePortChange, loadAvailableIDEs]);
+  }, [eventBus, onActivePortChange]);
 
   // Load IDE list on component mount ONLY if authenticated
   useEffect(() => {
     const { isAuthenticated } = useAuthStore.getState();
     if (isAuthenticated) {
-      // Don't call loadAvailableIDEs here - IDEProvider will handle it
-      logger.info('User authenticated, IDEProvider will handle IDE loading');
+      // IDEContext will handle IDE loading, don't duplicate here
+      logger.info('User authenticated, IDEContext will handle IDE loading');
     }
   }, [isAuthenticated]);
 

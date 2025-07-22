@@ -53,7 +53,20 @@ class IDEApplicationService {
         try {
             this.logger.info('IDEApplicationService: Getting available IDEs', { userId });
             
+            // Simple cache check - return cached data if less than 5 seconds old
+            if (this._cachedIDEs && this._cacheTime && (Date.now() - this._cacheTime) < 5000) {
+                this.logger.info('Returning cached IDE data');
+                return {
+                    success: true,
+                    data: this._cachedIDEs
+                };
+            }
+            
             const availableIDEs = await this.ideManager.getAvailableIDEs();
+            
+            // Cache the result
+            this._cachedIDEs = availableIDEs;
+            this._cacheTime = Date.now();
             
             return {
                 success: true,
@@ -63,6 +76,13 @@ class IDEApplicationService {
             this.logger.error('Error getting available IDEs:', error);
             throw error;
         }
+    }
+
+    // Method to invalidate cache when IDE state changes
+    invalidateIDECache() {
+        this._cachedIDEs = null;
+        this._cacheTime = null;
+        this.logger.info('IDE cache invalidated');
     }
 
     async startIDE(workspacePath, ideType = 'cursor', userId) {

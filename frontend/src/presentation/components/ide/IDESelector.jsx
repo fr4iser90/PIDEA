@@ -41,7 +41,8 @@ const IDESelector = ({
     if (!eventBus) return;
 
     const handleIDEListUpdated = () => {
-      loadAvailableIDEs();
+      // IDEContext will handle IDE loading, don't duplicate here
+      logger.info('IDE list updated event received, IDEContext will handle loading');
     };
 
     const handleActiveIDEChanged = (data) => {

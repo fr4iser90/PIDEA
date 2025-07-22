@@ -37,6 +37,7 @@ export const IDEProvider = ({ children, eventBus }) => {
   // Load available IDEs on mount ONLY if authenticated
   useEffect(() => {
     if (isAuthenticated) {
+      logger.info('🔍 [IDEContext] User authenticated, loading IDE data...');
       // Add a small delay to prevent race conditions with authentication
       const timer = setTimeout(() => {
         stableLoadAvailableIDEs();
@@ -44,8 +45,10 @@ export const IDEProvider = ({ children, eventBus }) => {
       }, 100);
       
       return () => clearTimeout(timer);
+    } else {
+      logger.info('🔍 [IDEContext] User not authenticated, skipping IDE loading');
     }
-  }, [isAuthenticated]); // Remove function dependencies!
+  }, [isAuthenticated, stableLoadAvailableIDEs, stableLoadActivePort]);
 
   // Listen for IDE events
   useEffect(() => {

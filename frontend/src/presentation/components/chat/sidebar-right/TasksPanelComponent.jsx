@@ -135,7 +135,7 @@ function TasksPanelComponent({ eventBus, activePort }) {
 
 
 
-  // Load docs tasks on mount AND when activePort changes
+  // Load docs tasks on mount only
   useEffect(() => {
     if (activePort) {
       logger.info('Loading docs tasks for port:', activePort);
@@ -144,7 +144,7 @@ function TasksPanelComponent({ eventBus, activePort }) {
       logger.info('No active port, clearing docs tasks');
       setDocsTasks([]);
     }
-  }, [activePort]); // ← Jetzt lädt bei activePort Änderungen neu
+  }, []); // ← Only load once on mount, not on every activePort change
 
   // Docs tasks functions
   const loadDocsTasks = async () => {

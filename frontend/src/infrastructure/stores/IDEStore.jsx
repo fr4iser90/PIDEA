@@ -131,9 +131,6 @@ const useIDEStore = create(
             return get().availableIDEs;
           }
           
-          set({ isLoading: true, error: null });
-          logger.info('Loading available IDEs...');
-
           // Check if user is authenticated before making API call
           const { isAuthenticated } = useAuthStore.getState();
           if (!isAuthenticated) {
@@ -141,6 +138,9 @@ const useIDEStore = create(
             set({ isLoading: false });
             return [];
           }
+          
+          set({ isLoading: true, error: null });
+          logger.info('Loading available IDEs...');
 
           const result = await apiCall('/api/ide/available');
           if (result.success) {

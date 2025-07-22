@@ -39,7 +39,6 @@ function App() {
     isLoading: ideLoading,
     error: ideError,
     loadActivePort,
-    loadAvailableIDEs,
     setActivePort,
     refresh: refreshIDE,
     clearError: clearIDEError
