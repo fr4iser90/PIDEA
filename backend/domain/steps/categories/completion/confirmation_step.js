@@ -68,8 +68,10 @@ class ConfirmationStep {
         }
       }
 
-      // Initialize AITextDetector for proper response waiting
-      const aiTextDetector = new AITextDetector();
+      // Initialize AITextDetector for proper response waiting with IDE-specific selectors
+      const ideType = await browserManager.detectIDEType(browserManager.getCurrentPort());
+      const ideSelectors = await browserManager.getIDESelectors(ideType);
+      const aiTextDetector = new AITextDetector(ideSelectors);
       const page = await browserManager.getPage();
       
       if (!page) {
