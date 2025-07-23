@@ -175,6 +175,29 @@ class AuthApplicationService {
             throw error;
         }
     }
+
+    async getUserSessions(userId) {
+        try {
+            this.logger.info('AuthApplicationService: Getting user sessions', { userId });
+            
+            const sessions = await this.authService.getUserSessions(userId);
+            return {
+                success: true,
+                data: {
+                    sessions: sessions.map(session => ({
+                        id: session.id,
+                        createdAt: session.createdAt,
+                        expiresAt: session.expiresAt,
+                        isActive: session.isActive(),
+                        metadata: session.metadata
+                    }))
+                }
+            };
+        } catch (error) {
+            this.logger.error('Error getting user sessions:', error);
+            throw error;
+        }
+    }
 }
 
 module.exports = AuthApplicationService; 
