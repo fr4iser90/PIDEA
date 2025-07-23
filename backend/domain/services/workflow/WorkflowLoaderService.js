@@ -9,11 +9,14 @@ class WorkflowLoaderService {
     constructor() {
         this.logger = new Logger('WorkflowLoaderService');
         this.workflows = new Map();
+        this.taskTypeMapping = {};
+        this.prompts = {};
+        this.contentLibrary = {};
         this.workflowsPaths = [
-            path.join(__dirname, '../../framework/workflows/task-workflows.json'),
-            path.join(__dirname, '../../framework/workflows/task-creation-workflows.json')
+            path.join(__dirname, '../../../framework/workflows/task-workflows.json'),
+            path.join(__dirname, '../../../framework/workflows/task-creation-workflows.json')
         ];
-        this.promptsPath = path.join(__dirname, '../../framework/prompts');
+        this.promptsPath = path.join(__dirname, '../../../framework/prompts');
     }
 
     /**
