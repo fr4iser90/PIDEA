@@ -5,7 +5,6 @@ const logger = new Logger('IDEController');
 class IDEController {
   constructor(dependencies = {}) {
     this.ideApplicationService = dependencies.ideApplicationService;
-    this.taskRepository = dependencies.taskRepository;
     this.logger = dependencies.logger || logger;
     
     if (!this.ideApplicationService) {
@@ -52,60 +51,17 @@ class IDEController {
 
   async switchIDE(req, res) {
     try {
-      logger.info('switchIDE called with req.params:', req.params);
-      logger.info('switchIDE called with req.url:', req.url);
-      logger.info('switchIDE called with req.path:', req.path);
-      
-      // Fix: Handle string port properly
       const portParam = req.params.port;
-      logger.info('switchIDE called with portParam:', portParam);
-      logger.info('Current active port before switch:', this.ideManager.getActivePort());
+      const userId = req.user?.id;
       
-      // FIX: Use the port directly from params, not parsed
-      const port = parseInt(portParam);
-      logger.info('Parsed port:', port);
-      
-      if (!port || isNaN(port)) {
-        logger.error('Invalid port:', portParam);
-        return res.status(400).json({
-          success: false,
-          error: 'Invalid port parameter'
-        });
-      }
-      
-      // Validate port before switching
-      if (this.ideManager.portManager) {
-        const isValid = await this.ideManager.portManager.validatePort(port);
-        if (!isValid) {
-          logger.error('Port validation failed:', port);
-          return res.status(400).json({
-            success: false,
-            error: 'Port validation failed'
-          });
-        }
-      }
-      
-      const result = await this.ideManager.switchToIDE(port);
-      logger.info('ideManager.switchToIDE completed, result:', result);
-      logger.info('New active port after switch:', this.ideManager.getActivePort());
-      
-      // Publish event
-      if (this.eventBus) {
-        logger.info('Publishing activeIDEChanged event:', { port, previousPort: this.ideManager.getActivePort() });
-        await this.eventBus.publish('activeIDEChanged', {
-          port: port,
-          previousPort: this.ideManager.getActivePort()
-        });
-      } else {
-        logger.info('No eventBus available for publishing activeIDEChanged');
-      }
+      const result = await this.ideApplicationService.switchIDE(portParam, userId);
       
       res.json({
-        success: true,
-        data: result
+        success: result.success,
+        data: result.data
       });
     } catch (error) {
-      logger.error('Error switching IDE:', error);
+      this.logger.error('Error switching IDE:', error);
       res.status(500).json({
         success: false,
         error: 'Failed to switch IDE'
@@ -134,13 +90,15 @@ class IDEController {
 
   async getStatus(req, res) {
     try {
-      const status = this.ideManager.getStatus();
+      const userId = req.user?.id;
+      const result = await this.ideApplicationService.getIDEStatus(userId);
+      
       res.json({
-        success: true,
-        data: status
+        success: result.success,
+        data: result.data
       });
     } catch (error) {
-      logger.error('Error getting status:', error);
+      this.logger.error('Error getting status:', error);
       res.status(500).json({
         success: false,
         error: 'Failed to get IDE status'
@@ -169,43 +127,15 @@ class IDEController {
 
   async getUserAppUrl(req, res) {
     try {
-      if (!this.cursorIDEService) {
-        throw new Error('CursorIDEService not available');
-      }
-      
-      // Get ALL available IDEs and find frontend URLs in any of them
-      const availableIDEs = await this.ideManager.getAvailableIDEs();
-      logger.info('Searching for frontend URLs in', availableIDEs.length, 'IDEs');
-      
-      let foundUrl = null;
-      let foundPort = null;
-      let foundWorkspacePath = null;
-      
-      // Try each IDE workspace until we find a frontend
-      for (const ide of availableIDEs) {
-        if (ide.workspacePath && !ide.workspacePath.includes(':')) {
-          logger.info('Checking IDE port', ide.port, 'workspace:', ide.workspacePath);
-          
-          const url = await this.cursorIDEService.getUserAppUrlForPort(ide.port);
-          if (url) {
-            logger.info('Found frontend URL in IDE port', ide.port, ':', url);
-            foundUrl = url;
-            foundPort = ide.port;
-            foundWorkspacePath = ide.workspacePath;
-            break;
-          }
-        }
-      }
-      
       const userId = req.user?.id;
-      const result = await this.ideApplicationService.getUserAppUrl(foundPort, userId);
+      const result = await this.ideApplicationService.getUserAppUrl(null, userId);
       
       res.json({
         success: result.success,
         data: result.data
       });
     } catch (error) {
-      logger.error('Error getting user app URL:', error);
+      this.logger.error('Error getting user app URL:', error);
       res.status(500).json({ 
         success: false, 
         error: error.message 
@@ -215,11 +145,9 @@ class IDEController {
 
   async getUserAppUrlForPort(req, res) {
     try {
-      if (!this.cursorIDEService) {
-        throw new Error('CursorIDEService not available');
-      }
-      
       const port = parseInt(req.params.port);
+      const userId = req.user?.id;
+      
       if (!port) {
         return res.status(400).json({
           success: false,
@@ -227,19 +155,14 @@ class IDEController {
         });
       }
       
-      const url = await this.cursorIDEService.getUserAppUrlForPort(port);
-      const workspacePath = this.ideManager.getWorkspacePath(port);
+      const result = await this.ideApplicationService.getUserAppUrlForPort(port, userId);
       
-      res.json({ 
-        success: true, 
-        data: { 
-          url: url,
-          port: port,
-          workspacePath: workspacePath
-        } 
+      res.json({
+        success: result.success,
+        data: result.data
       });
     } catch (error) {
-      logger.error('Error getting user app URL for port:', error);
+      this.logger.error('Error getting user app URL for port:', error);
       res.status(500).json({ 
         success: false, 
         error: error.message 
@@ -249,17 +172,15 @@ class IDEController {
 
   async monitorTerminal(req, res) {
     try {
-      if (!this.cursorIDEService) {
-        throw new Error('CursorIDEService not available');
-      }
+      const userId = req.user?.id;
+      const result = await this.ideApplicationService.monitorTerminal(userId);
       
-      const url = await this.cursorIDEService.monitorTerminalOutput();
-      res.json({ 
-        success: true, 
-        data: { url: url } 
+      res.json({
+        success: result.success,
+        data: result.data
       });
     } catch (error) {
-      logger.error('Error monitoring terminal:', error);
+      this.logger.error('Error monitoring terminal:', error);
       res.status(500).json({ 
         success: false, 
         error: error.message 
@@ -271,6 +192,7 @@ class IDEController {
     try {
       const port = parseInt(req.params.port);
       const { workspacePath } = req.body;
+      const userId = req.user?.id;
       
       if (!workspacePath) {
         return res.status(400).json({
@@ -279,29 +201,14 @@ class IDEController {
         });
       }
       
-      this.ideManager.setWorkspacePath(port, workspacePath);
-      
-      // Trigger dev server detection with the new workspace path
-      if (this.cursorIDEService) {
-        const devServerUrl = await this.cursorIDEService.detectDevServerFromPackageJson(workspacePath);
-        if (devServerUrl) {
-          logger.info('Detected dev server for workspace:', devServerUrl);
-          // Broadcast the new dev server URL
-          if (this.eventBus) {
-            await this.eventBus.publish('userAppDetected', { url: devServerUrl });
-          }
-        }
-      }
+      const result = await this.ideApplicationService.setWorkspacePath(port, workspacePath, userId);
       
       res.json({
-        success: true,
-        data: {
-          port: port,
-          workspacePath: workspacePath
-        }
+        success: result.success,
+        data: result.data
       });
     } catch (error) {
-      logger.error('Error setting workspace path:', error);
+      this.logger.error('Error setting workspace path:', error);
       res.status(500).json({
         success: false,
         error: 'Failed to set workspace path'
@@ -329,26 +236,15 @@ class IDEController {
 
   async detectWorkspacePaths(req, res) {
     try {
-      logger.info('Triggering workspace path detection for all IDEs');
-      await this.ideManager.detectWorkspacePathsForAllIDEs();
-      
-      // Get updated IDE list with workspace paths
-      const availableIDEs = await this.ideManager.getAvailableIDEs();
+      const userId = req.user?.id;
+      const result = await this.ideApplicationService.detectWorkspacePaths(userId);
       
       res.json({
-        success: true,
-        data: {
-          message: 'Workspace path detection completed',
-          ides: availableIDEs.map(ide => ({
-            port: ide.port,
-            status: ide.status,
-            workspacePath: ide.workspacePath,
-            hasWorkspace: !!ide.workspacePath
-          }))
-        }
+        success: result.success,
+        data: result.data
       });
     } catch (error) {
-      logger.error('Error detecting workspace paths:', error);
+      this.logger.error('Error detecting workspace paths:', error);
       res.status(500).json({
         success: false,
         error: 'Failed to detect workspace paths'
@@ -358,83 +254,15 @@ class IDEController {
 
   async debugDOM(req, res) {
     try {
-      if (!this.cursorIDEService) {
-        throw new Error('CursorIDEService not available');
-      }
-      
-      const page = await this.cursorIDEService.browserManager.getPage();
-      if (!page) {
-        throw new Error('No page available');
-      }
-      
-      const domInfo = await page.evaluate(() => {
-        const info = {
-          title: document.title,
-          url: window.location.href,
-          vscode: !!window.vscode,
-          monaco: !!window.monaco,
-          workspace: !!window.workspace,
-          fileExplorer: {
-            hasExplorer: !!document.querySelector('.explorer-folders-view'),
-            rootFolders: [],
-            allElements: []
-          },
-          statusBar: {
-            items: []
-          },
-          breadcrumbs: {
-            items: []
-          }
-        };
-        
-        // Get file explorer info
-        const explorerElements = document.querySelectorAll('.explorer-folders-view *');
-        explorerElements.forEach(el => {
-          const text = el.textContent || el.innerText;
-          if (text && text.trim()) {
-            info.fileExplorer.allElements.push({
-              tagName: el.tagName,
-              className: el.className,
-              text: text.trim(),
-              ariaLevel: el.getAttribute('aria-level'),
-              role: el.getAttribute('role')
-            });
-          }
-        });
-        
-        // Get status bar info
-        const statusItems = document.querySelectorAll('.status-bar-item');
-        statusItems.forEach(item => {
-          const text = item.textContent || item.innerText;
-          const title = item.getAttribute('title');
-          const ariaLabel = item.getAttribute('aria-label');
-          if (text || title || ariaLabel) {
-            info.statusBar.items.push({
-              text: text,
-              title: title,
-              ariaLabel: ariaLabel
-            });
-          }
-        });
-        
-        // Get breadcrumb info
-        const breadcrumbItems = document.querySelectorAll('.breadcrumb-item, .monaco-breadcrumb-item');
-        breadcrumbItems.forEach(item => {
-          const text = item.textContent || item.innerText;
-          if (text && text.trim()) {
-            info.breadcrumbs.items.push(text.trim());
-          }
-        });
-        
-        return info;
-      });
+      const userId = req.user?.id;
+      const result = await this.ideApplicationService.debugDOM(userId);
       
       res.json({
-        success: true,
-        data: domInfo
+        success: result.success,
+        data: result.data
       });
     } catch (error) {
-      logger.error('Error debugging DOM:', error);
+      this.logger.error('Error debugging DOM:', error);
       res.status(500).json({
         success: false,
         error: error.message
@@ -448,17 +276,15 @@ class IDEController {
    */
   async detectAllWorkspaces(req, res) {
     try {
-      const detectionService = this.application.getIDEWorkspaceDetectionService();
-      const results = await detectionService.detectAllWorkspaces();
+      const userId = req.user?.id;
+      const result = await this.ideApplicationService.detectAllWorkspaces(userId);
       
       res.json({
-        success: true,
-        message: 'Workspace detection completed',
-        results: detectionService.getDetectionResults(),
-        stats: detectionService.getDetectionStats()
+        success: result.success,
+        data: result.data
       });
     } catch (error) {
-      logger.error('Error detecting workspaces:', error);
+      this.logger.error('Error detecting workspaces:', error);
       res.status(500).json({
         success: false,
         error: 'Failed to detect workspaces',
@@ -475,25 +301,16 @@ class IDEController {
     try {
       const { port } = req.params;
       const portNum = parseInt(port);
+      const userId = req.user?.id;
       
-      logger.info(`Detecting workspace for port ${portNum}`);
-      
-      // Trigger workspace detection for this specific port
-      await this.ideManager.detectWorkspacePath(portNum);
-      
-      // Get the updated workspace path
-      const workspacePath = this.ideManager.getWorkspacePath(portNum);
-      
-      logger.info(`Workspace detection completed for port ${portNum}:`, workspacePath);
+      const result = await this.ideApplicationService.detectWorkspaceForIDE(portNum, userId);
       
       res.json({
-        success: true,
-        port: portNum,
-        workspacePath: workspacePath,
-        message: 'Workspace detection completed'
+        success: result.success,
+        data: result.data
       });
     } catch (error) {
-      logger.error(`Error detecting workspace for port ${req.params.port}:`, error);
+      this.logger.error(`Error detecting workspace for port ${req.params.port}:`, error);
       res.status(500).json({
         success: false,
         error: 'Failed to detect workspace',
@@ -510,64 +327,16 @@ class IDEController {
     try {
       const { port } = req.params;
       const portNum = parseInt(port);
+      const userId = req.user?.id;
       
-      logger.info(`Force detecting workspace for port ${portNum} (clearing cache)`);
-      
-      // Clear cached workspace path to force re-detection
-      this.ideManager.ideWorkspaces.delete(portNum);
-      logger.info(`Cleared cached workspace for port ${portNum}`);
-      
-      // Clear FileBasedWorkspaceDetector cache
-      if (this.ideManager.fileDetector) {
-        this.ideManager.fileDetector.clearCache();
-        logger.info(`Cleared FileBasedWorkspaceDetector cache for port ${portNum}`);
-        
-        // Also clear the actual files on disk
-        const fs = require('fs');
-        const path = require('path');
-        const cacheDir = `/tmp/IDEWEB/${portNum}`;
-        
-        if (fs.existsSync(cacheDir)) {
-          try {
-            // Delete all files and directories in the cache directory
-            const files = fs.readdirSync(cacheDir);
-            for (const file of files) {
-              const filePath = path.join(cacheDir, file);
-              const stats = fs.statSync(filePath);
-              
-              if (stats.isDirectory()) {
-                // Recursively delete directory
-                fs.rmSync(filePath, { recursive: true, force: true });
-                logger.info(`Deleted cached directory: ${filePath}`);
-              } else {
-                // Delete file
-                fs.unlinkSync(filePath);
-                logger.info(`Deleted cached file: ${filePath}`);
-              }
-            }
-            logger.info(`Cleared disk cache for port ${portNum}`);
-          } catch (error) {
-            logger.error(`Error clearing disk cache for port ${portNum}:`, error);
-          }
-        }
-      }
-      
-      // Trigger workspace detection for this specific port
-      await this.ideManager.detectWorkspacePath(portNum);
-      
-      // Get the updated workspace path
-      const workspacePath = this.ideManager.getWorkspacePath(portNum);
-      
-      logger.info(`Force workspace detection completed for port ${portNum}:`, workspacePath);
+      const result = await this.ideApplicationService.forceDetectWorkspaceForIDE(portNum, userId);
       
       res.json({
-        success: true,
-        port: portNum,
-        workspacePath: workspacePath,
-        message: 'Workspace detection completed (cache cleared)'
+        success: result.success,
+        data: result.data
       });
     } catch (error) {
-      logger.error(`Error force detecting workspace for port ${req.params.port}:`, error);
+      this.logger.error(`Error force detecting workspace for port ${req.params.port}:`, error);
       res.status(500).json({
         success: false,
         error: 'Failed to detect workspace',
@@ -582,15 +351,15 @@ class IDEController {
    */
   async getDetectionStats(req, res) {
     try {
-      const detectionService = this.application.getIDEWorkspaceDetectionService();
+      const userId = req.user?.id;
+      const result = await this.ideApplicationService.getDetectionStats(userId);
       
       res.json({
-        success: true,
-        stats: detectionService.getDetectionStats(),
-        serviceStatus: detectionService.getServiceStatus()
+        success: result.success,
+        data: result.data
       });
     } catch (error) {
-      logger.error('Error getting detection stats:', error);
+      this.logger.error('Error getting detection stats:', error);
       res.status(500).json({
         success: false,
         error: 'Failed to get detection stats',
@@ -605,15 +374,15 @@ class IDEController {
    */
   async clearDetectionResults(req, res) {
     try {
-      const detectionService = this.application.getIDEWorkspaceDetectionService();
-      detectionService.clearDetectionResults();
+      const userId = req.user?.id;
+      const result = await this.ideApplicationService.clearDetectionResults(userId);
       
       res.json({
-        success: true,
-        message: 'Detection results cleared'
+        success: result.success,
+        data: result.data
       });
     } catch (error) {
-      logger.error('Error clearing detection results:', error);
+      this.logger.error('Error clearing detection results:', error);
       res.status(500).json({
         success: false,
         error: 'Failed to clear detection results',
@@ -630,6 +399,7 @@ class IDEController {
     try {
       const { port } = req.params;
       const { command, outputFile } = req.body;
+      const userId = req.user?.id;
       
       if (!command) {
         return res.status(400).json({
@@ -638,17 +408,14 @@ class IDEController {
         });
       }
       
-      const detectionService = this.application.getIDEWorkspaceDetectionService();
-      const result = await detectionService.executeTerminalCommand(parseInt(port), command, outputFile);
+      const result = await this.ideApplicationService.executeTerminalCommand(parseInt(port), command, userId);
       
       res.json({
-        success: true,
-        port: parseInt(port),
-        command: command,
-        result: result
+        success: result.success,
+        data: result.data
       });
     } catch (error) {
-      logger.error(`Error executing terminal command for port ${req.params.port}:`, error);
+      this.logger.error(`Error executing terminal command for port ${req.params.port}:`, error);
       res.status(500).json({
         success: false,
         error: 'Failed to execute terminal command',
@@ -663,39 +430,16 @@ class IDEController {
     try {
       const { port } = req.params;
       const { message } = req.body;
+      const userId = req.user?.id;
 
-      logger.info(`Clicking New Chat for port ${port}${message ? ` with message: ${message}` : ''}`);
-
-      // Get the browser manager for the specified port
-      const browserManager = this.ideManager.browserManager;
-      if (!browserManager) {
-        throw new Error('Browser manager not available');
-      }
-
-      // Switch to the specified port first
-      await browserManager.switchToPort(parseInt(port));
-
-      // Click the New Chat button
-      const success = await browserManager.clickNewChat();
+      const result = await this.ideApplicationService.clickNewChat(userId);
       
-      if (success) {
-        logger.info(`Successfully clicked New Chat button on port ${port}`);
-        
-        // If a message was provided, type it into the chat
-        if (message) {
-          logger.info(`Typing message: ${message}`);
-          await browserManager.typeMessage(message);
-        }
-        
-        res.json({
-          success: true,
-          message: `New chat created on port ${port}${message ? ` with message: ${message}` : ''}`
-        });
-      } else {
-        throw new Error('Failed to click New Chat button');
-      }
+      res.json({
+        success: result.success,
+        data: result.data
+      });
     } catch (error) {
-      logger.error('Error clicking New Chat:', error);
+      this.logger.error('Error clicking New Chat:', error);
       res.status(500).json({
         success: false,
         error: error.message
@@ -965,23 +709,16 @@ class IDEController {
   async startVSCode(req, res) {
     try {
       const { workspacePath } = req.body;
-      const ideInfo = await this.ideManager.startNewIDE(workspacePath, 'vscode');
+      const userId = req.user?.id;
       
-      // Publish event
-      if (this.eventBus) {
-        await this.eventBus.publish('vscodeAdded', {
-          port: ideInfo.port,
-          status: ideInfo.status,
-          ideType: 'vscode'
-        });
-      }
+      const result = await this.ideApplicationService.startVSCode(workspacePath, userId);
       
       res.json({
-        success: true,
-        data: ideInfo
+        success: result.success,
+        data: result.data
       });
     } catch (error) {
-      logger.error('Error starting VSCode:', error);
+      this.logger.error('Error starting VSCode:', error);
       res.status(500).json({
         success: false,
         error: 'Failed to start VSCode'
@@ -992,19 +729,16 @@ class IDEController {
   async getVSCodeExtensions(req, res) {
     try {
       const port = parseInt(req.params.port);
+      const userId = req.user?.id;
       
-      if (!this.cursorIDEService) {
-        throw new Error('vscodeIDEService not available');
-      }
-      
-      const extensions = await this.cursorIDEService.getExtensions(port);
+      const result = await this.ideApplicationService.getVSCodeExtensions(port, userId);
       
       res.json({
-        success: true,
-        data: extensions
+        success: result.success,
+        data: result.data
       });
     } catch (error) {
-      logger.error('Error getting VSCode extensions:', error);
+      this.logger.error('Error getting VSCode extensions:', error);
       res.status(500).json({
         success: false,
         error: error.message
@@ -1015,19 +749,16 @@ class IDEController {
   async getVSCodeWorkspaceInfo(req, res) {
     try {
       const port = parseInt(req.params.port);
+      const userId = req.user?.id;
       
-      if (!this.cursorIDEService) {
-        throw new Error('vscodeIDEService not available');
-      }
-      
-      const workspaceInfo = await this.ideManager.getWorkspaceInfo(port);
+      const result = await this.ideApplicationService.getVSCodeWorkspaceInfo(port, userId);
       
       res.json({
-        success: true,
-        data: workspaceInfo
+        success: result.success,
+        data: result.data
       });
     } catch (error) {
-      logger.error('Error getting VSCode workspace info:', error);
+      this.logger.error('Error getting VSCode workspace info:', error);
       res.status(500).json({
         success: false,
         error: error.message
@@ -1038,24 +769,16 @@ class IDEController {
   async sendMessageToVSCode(req, res) {
     try {
       const { message, extensionType = 'githubCopilot', port } = req.body;
+      const userId = req.user?.id;
       
-      if (!this.cursorIDEService) {
-        throw new Error('vscodeIDEService not available');
-      }
-      
-      // Switch to specified port if provided
-      if (port) {
-        await this.cursorIDEService.switchToPort(port);
-      }
-      
-      const result = await this.cursorIDEService.sendMessage(message, { extensionType });
+      const result = await this.ideApplicationService.sendMessageToVSCode(message, extensionType, port, userId);
       
       res.json({
-        success: true,
-        data: result
+        success: result.success,
+        data: result.data
       });
     } catch (error) {
-      logger.error('Error sending message to VSCode:', error);
+      this.logger.error('Error sending message to VSCode:', error);
       res.status(500).json({
         success: false,
         error: error.message
@@ -1066,19 +789,16 @@ class IDEController {
   async getVSCodeStatus(req, res) {
     try {
       const port = parseInt(req.params.port);
+      const userId = req.user?.id;
       
-      if (!this.cursorIDEService) {
-        throw new Error('vscodeIDEService not available');
-      }
-      
-      const status = await this.cursorIDEService.getConnectionStatus('vscode-user');
+      const result = await this.ideApplicationService.getVSCodeStatus(port, userId);
       
       res.json({
-        success: true,
-        data: status
+        success: result.success,
+        data: result.data
       });
     } catch (error) {
-      logger.error('Error getting VSCode status:', error);
+      this.logger.error('Error getting VSCode status:', error);
       res.status(500).json({
         success: false,
         error: error.message

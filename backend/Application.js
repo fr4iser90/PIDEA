@@ -506,7 +506,6 @@ class Application {
     const IDEController = require('./presentation/api/IDEController');
     this.ideController = new IDEController({
         ideApplicationService: this.serviceRegistry.getService('ideApplicationService'),
-        taskRepository: this.taskRepository,
         logger: this.serviceRegistry.getService('logger')
     });
 
@@ -565,7 +564,7 @@ class Application {
         logger: this.serviceRegistry.getService('logger')
     });
 
-    this.projectController = new ProjectController();
+    this.projectController = new ProjectController(this.serviceRegistry.getService('projectApplicationService'));
 
     this.logger.info('Presentation layer initialized');
   }
