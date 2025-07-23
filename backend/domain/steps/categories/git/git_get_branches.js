@@ -74,12 +74,12 @@ class GitGetBranchesStep {
       const result = await handler.handle(command);
 
       logger.info(`${this.name} completed successfully using DDD pattern`, {
-        result: result.result
+        result: result.branches
       });
 
       return {
         success: result.success,
-        result: result.result,
+        result: result.branches,
         timestamp: new Date()
       };
 

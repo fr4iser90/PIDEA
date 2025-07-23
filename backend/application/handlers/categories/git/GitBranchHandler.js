@@ -53,20 +53,14 @@ class GitBranchHandler {
       // Combine all branches
       branches.all = [...new Set([...branches.local, ...branches.remote])];
 
-      return {
-        success: true,
-        branches,
-        result: branches.all,
-        timestamp: new Date()
-      };
-
       this.logger.info('GitBranchHandler: GitBranchCommand completed successfully', {
-        result: result.stdout
+        branches: branches.all
       });
 
       return {
         success: true,
-        result: result.stdout,
+        branches,
+        result: branches.all,
         timestamp: new Date()
       };
 
