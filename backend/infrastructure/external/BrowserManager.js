@@ -607,6 +607,11 @@ class BrowserManager {
   async handleNewChatModal(page, modal) {
     try {
       logger.info('Handling New Chat modal...');
+      
+      // Maximum attempts to prevent infinite loops
+      let attempts = 0;
+      const maxAttempts = 3;
+      
       // Look for buttons in the New Chat modal only
       const modalSelectors = [
         // Common modal buttons
@@ -635,45 +640,77 @@ class BrowserManager {
         '[aria-label*="Cancel"]'
       ];
 
+      // First try: Look for action buttons (prefer OK, Continue, Start)
       for (const selector of modalSelectors) {
         try {
           const element = await modal.$(selector);
           if (element) {
             const text = await element.textContent();
             const ariaLabel = await element.getAttribute('aria-label');
+            
             // Skip close/cancel buttons, prefer action buttons
             if (text?.includes('Cancel') || ariaLabel?.includes('Cancel') ||
                 text?.includes('Close') || ariaLabel?.includes('Close')) {
               continue;
             }
-            logger.info(`Clicking New Chat modal button: ${text || ariaLabel}`);
-            await element.click();
-            await page.waitForTimeout(200);
-            return;
+            
+            // Prefer positive action buttons
+            if (text?.includes('OK') || text?.includes('Continue') || text?.includes('Start') ||
+                ariaLabel?.includes('OK') || ariaLabel?.includes('Continue') || ariaLabel?.includes('Start')) {
+              logger.info(`Clicking preferred modal button: ${text || ariaLabel}`);
+              await element.click();
+              await page.waitForTimeout(500);
+              attempts++;
+              
+              // Check if modal is gone
+              const modalStillExists = await page.$('.monaco-dialog, [role="dialog"], .modal-dialog');
+              if (!modalStillExists) {
+                logger.info('Modal closed successfully');
+                return;
+              }
+            }
           }
         } catch (e) {
           continue;
         }
       }
-      // If no action button found, try any button
-      for (const selector of modalSelectors) {
-        try {
-          const element = await modal.$(selector);
-          if (element) {
-            const text = await element.textContent();
-            const ariaLabel = await element.getAttribute('aria-label');
-            logger.info(`Clicking any modal button: ${text || ariaLabel}`);
-            await element.click();
-            await page.waitForTimeout(200);
-            return;
+      
+      // Second try: Any button if modal still exists
+      if (attempts < maxAttempts) {
+        for (const selector of modalSelectors) {
+          try {
+            const element = await modal.$(selector);
+            if (element) {
+              const text = await element.textContent();
+              const ariaLabel = await element.getAttribute('aria-label');
+              logger.info(`Clicking any modal button: ${text || ariaLabel}`);
+              await element.click();
+              await page.waitForTimeout(500);
+              attempts++;
+              
+              // Check if modal is gone
+              const modalStillExists = await page.$('.monaco-dialog, [role="dialog"], .modal-dialog');
+              if (!modalStillExists) {
+                logger.info('Modal closed successfully');
+                return;
+              }
+              
+              if (attempts >= maxAttempts) {
+                logger.warn('Maximum modal handling attempts reached');
+                break;
+              }
+            }
+          } catch (e) {
+            continue;
           }
-        } catch (e) {
-          continue;
         }
       }
+      
       // Last resort: try Escape key
+      logger.info('Using Escape key as last resort');
       await page.keyboard.press('Escape');
-      await page.waitForTimeout(200);
+      await page.waitForTimeout(500);
+      
       logger.info('New Chat modal handled (or no modal found)');
     } catch (error) {
       logger.info(`New Chat modal handling failed: ${error.message}`);
