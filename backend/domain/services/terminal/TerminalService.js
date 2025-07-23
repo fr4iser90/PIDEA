@@ -1,5 +1,6 @@
 const { spawn } = require('child_process');
-const logger = require('@logging/Logger');
+const Logger = require('@logging/Logger');
+const logger = new Logger('TerminalService');
 
 class TerminalService {
   constructor() {

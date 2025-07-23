@@ -35,7 +35,8 @@
       "@strategies/*": ["./infrastructure/strategies/*"],
       "@controllers/*": ["./presentation/api/controllers/*"],
       "@websocket/*": ["./presentation/websocket/*"],
-      "@api/*": ["./presentation/api/*"]
+      "@api/*": ["./presentation/api/*"],
+      "@config/*": ["./config/*"]
     }
   },
   "exclude": ["node_modules", "tests", "coverage"]

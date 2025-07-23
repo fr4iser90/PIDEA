@@ -76,7 +76,9 @@ module.exports = {
     '^@categories/(.*)$': '<rootDir>/application/commands/categories/$1',
     '^@categories$': '<rootDir>/application/commands/categories',
     '^@external/(.*)$': '<rootDir>/infrastructure/external/$1',
-    '^@external$': '<rootDir>/infrastructure/external'
+    '^@external$': '<rootDir>/infrastructure/external',
+    '^@config/(.*)$': '<rootDir>/config/$1',
+    '^@config$': '<rootDir>/config'
   },
   
   transform: {

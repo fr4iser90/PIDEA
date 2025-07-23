@@ -89,6 +89,7 @@
     "@tests": "backend/tests",
     "@cli": "backend/cli",
     "@scripts": "backend/scripts",
+    "@config": "backend/config",
     "@commands": "backend/application/commands",
     "@handlers": "backend/application/handlers",
     "@steps": "backend/domain/steps",
