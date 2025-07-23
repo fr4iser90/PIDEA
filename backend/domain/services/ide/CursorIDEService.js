@@ -1,11 +1,11 @@
-const TerminalMonitor = require('./terminal/TerminalMonitor');
-const WorkspacePathDetector = require('./workspace/WorkspacePathDetector');
-const ChatHistoryExtractor = require('./chat/ChatHistoryExtractor');
-const PackageJsonAnalyzer = require('./dev-server/PackageJsonAnalyzer');
-const VSCodeExtensionManager = require('@external/VSCodeExtensionManager');
+const TerminalMonitor = require('../terminal/TerminalMonitor');
+const WorkspacePathDetector = require('../workspace/WorkspacePathDetector');
+const ChatHistoryExtractor = require('../chat/ChatHistoryExtractor');
+const PackageJsonAnalyzer = require('../dev-server/PackageJsonAnalyzer');
+const Logger = require('@logging/Logger');
+const logger = new Logger('CursorIDEService');
 
-
-class VSCodeIDEService {
+class CursorIDEService {
   constructor(browserManager, ideManager, eventBus = null) {
     this.browserManager = browserManager;
     this.ideManager = ideManager;
@@ -15,21 +15,21 @@ class VSCodeIDEService {
     this.terminalMonitor = new TerminalMonitor(browserManager, eventBus);
     this.packageJsonAnalyzer = new PackageJsonAnalyzer(eventBus);
     this.workspacePathDetector = new WorkspacePathDetector(browserManager, ideManager);
-    this.chatHistoryExtractor = new ChatHistoryExtractor(browserManager, 'vscode');
-    this.extensionManager = new VSCodeExtensionManager();
+    this.chatHistoryExtractor = new ChatHistoryExtractor(browserManager);
     
-    // Listen for IDE changes
+    // Listen for IDE changes to reset package.json cache (optional, if you cache results)
     if (this.eventBus) {
       this.eventBus.subscribe('activeIDEChanged', async (eventData) => {
         logger.info('IDE changed, resetting package.json cache');
         logger.info('Event data:', eventData);
-        
+        // No cache in new analyzer, but if you add one, reset here
+        // this.packageJsonAnalyzer.resetCache?.();
         // Switch browser connection to new IDE
         if (eventData.port) {
           try {
-            logger.info('Switching browser connection to port:', eventData.port);
+            logger.info(`Switching browser connection to port: ${eventData.port}`);
             await this.browserManager.switchToPort(eventData.port);
-            logger.info('Successfully switched browser connection to port:', eventData.port);
+            logger.info(`Successfully switched browser connection to port: ${eventData.port}`);
           } catch (error) {
             logger.error('Failed to switch browser connection:', error.message);
           }
@@ -43,20 +43,20 @@ class VSCodeIDEService {
    * This method has been removed to prevent infinite loops
    */
   async sendMessage(message, options = {}) {
-    console.warn('DEPRECATED: VSCodeIDEService.sendMessage() is deprecated. Use BrowserManager.typeMessage() or IDESendMessageStep instead.');
+    console.warn('DEPRECATED: CursorIDEService.sendMessage() is deprecated. Use BrowserManager.typeMessage() or IDESendMessageStep instead.');
     throw new Error('sendMessage() - ChatMessageHandler removed, use IDE Steps instead');
   }
 
   async extractChatHistory() {
     // Ensure browser is connected to the active IDE port
     const activePort = this.getActivePort();
-    logger.info('extractChatHistory() - Active port:', activePort);
+    // logger.info(`extractChatHistory() - Active port: ${activePort}`);
     
     if (activePort) {
       try {
         // Switch browser to active port if needed
         const currentBrowserPort = this.browserManager.getCurrentPort();
-        logger.info('extractChatHistory() - Current browser port:', currentBrowserPort);
+        // logger.info(`extractChatHistory() - Current browser port: ${currentBrowserPort}`);
         
         if (currentBrowserPort !== activePort) {
           logger.info('extractChatHistory() - Switching browser to active port:', activePort);
@@ -80,16 +80,16 @@ class VSCodeIDEService {
   }
 
   /**
-   * Send a prompt to VSCode IDE via chat
+   * Send a prompt to Cursor IDE via chat
    * @param {string} prompt - The prompt to send
    * @returns {Promise<Object>} Result of sending prompt
    */
-  async postToVSCode(prompt) {
+  async postToCursor(prompt) {
     try {
-      logger.info('Sending prompt to VSCode IDE:', prompt.substring(0, 100) + '...');
+      logger.info('Sending prompt to Cursor IDE:', prompt.substring(0, 100) + '...');
       
       // Use BrowserManager directly to avoid infinite loops
-      logger.info('postToVSCode() - Using BrowserManager directly');
+      logger.info('postToCursor() - Using BrowserManager directly');
       
       // Ensure browser is connected to the active IDE port
       const activePort = this.getActivePort();
@@ -97,11 +97,11 @@ class VSCodeIDEService {
         try {
           const currentBrowserPort = this.browserManager.getCurrentPort();
           if (currentBrowserPort !== activePort) {
-            logger.info('postToVSCode() - Switching browser to active port:', activePort);
+            logger.info('postToCursor() - Switching browser to active port:', activePort);
             await this.browserManager.switchToPort(activePort);
           }
         } catch (error) {
-          logger.error('postToVSCode() - Failed to switch browser port:', error.message);
+          logger.error('postToCursor() - Failed to switch browser port:', error.message);
         }
       }
       
@@ -109,22 +109,22 @@ class VSCodeIDEService {
       const result = await this.browserManager.typeMessage(prompt, true);
       
       if (!result) {
-        throw new Error('Failed to send prompt to VSCode IDE - BrowserManager returned false');
+        throw new Error('Failed to send prompt to Cursor IDE - BrowserManager returned false');
       }
       
       return {
         success: true,
-        message: 'Prompt sent to VSCode IDE',
+        message: 'Prompt sent to Cursor IDE',
         data: result
       };
     } catch (error) {
-      logger.error('Error sending prompt to VSCode:', error);
+      logger.error('Error sending prompt to Cursor:', error);
       throw error;
     }
   }
 
   /**
-   * Apply refactoring changes to a file in VSCode IDE
+   * Apply refactoring changes to a file in Cursor IDE
    * @param {string} filePath - Path to the file to refactor
    * @param {string} refactoredCode - The refactored code content
    * @returns {Promise<Object>} Result of the refactoring application
@@ -148,8 +148,8 @@ Please replace the entire content of the file with this refactored version. Make
 
 After applying the changes, please confirm that the refactoring has been completed successfully.`;
 
-      // Send the refactoring prompt to VSCode IDE
-      const result = await this.postToVSCode(applyPrompt);
+      // Send the refactoring prompt to Cursor IDE
+      const result = await this.postToCursor(applyPrompt);
       
       logger.info('Refactoring applied successfully');
       
@@ -158,7 +158,7 @@ After applying the changes, please confirm that the refactoring has been complet
         filePath,
         appliedAt: new Date(),
         result: result,
-        message: 'Refactoring applied to VSCode IDE'
+        message: 'Refactoring applied to Cursor IDE'
       };
     } catch (error) {
       logger.error('Error applying refactoring:', error);
@@ -184,17 +184,17 @@ After applying the changes, please confirm that the refactoring has been complet
     return await this.ideManager.getAvailableIDEs();
   }
 
-  async startNewVSCode(workspacePath = null) {
-    return await this.ideManager.startNewIDE(workspacePath, 'vscode');
+  async startNewIDE(workspacePath = null) {
+    return await this.ideManager.startNewIDE(workspacePath);
   }
 
-  async stopVSCode(port) {
+  async stopIDE(port) {
     return await this.ideManager.stopIDE(port);
   }
 
   getActivePort() {
     const activePort = this.ideManager.getActivePort();
-    logger.info(`getActivePort() called, returning: ${activePort}`);
+    // logger.info(`getActivePort() called, returning: ${activePort}`);
     return activePort;
   }
 
@@ -208,9 +208,14 @@ After applying the changes, please confirm that the refactoring has been complet
     }
     
     logger.info(`Switching to port ${port}`);
-    await this.ideManager.switchToIDE(port);
     await this.browserManager.switchToPort(port);
-    logger.info(`Successfully switched to port ${port}`);
+    
+    // Update active port in IDE manager
+    if (this.ideManager.switchToIDE) {
+      logger.info(`Calling ideManager.switchToIDE(${port})`);
+      await this.ideManager.switchToIDE(port);
+      logger.info(`ideManager.switchToIDE(${port}) completed`);
+    }
   }
 
   // Enhanced terminal monitoring with package.json priority
@@ -293,79 +298,13 @@ After applying the changes, please confirm that the refactoring has been complet
     }
   }
 
-  // VSCode-specific methods
-  async getExtensions(port = null) {
-    if (!port) {
-      const activeIDE = await this.ideManager.getActiveIDE();
-      port = activeIDE?.port;
-    }
-    
-    if (!port) {
-      throw new Error('No IDE port available');
-    }
-    
-    return await this.extensionManager.getExtensions(port);
-  }
-
-  async getChatExtensions(port = null) {
-    if (!port) {
-      const activeIDE = await this.ideManager.getActiveIDE();
-      port = activeIDE?.port;
-    }
-    
-    if (!port) {
-      throw new Error('No IDE port available');
-    }
-    
-    return await this.extensionManager.getChatExtensions(port);
-  }
-
-  async getAIExtensions(port = null) {
-    if (!port) {
-      const activeIDE = await this.ideManager.getActiveIDE();
-      port = activeIDE?.port;
-    }
-    
-    if (!port) {
-      throw new Error('No IDE port available');
-    }
-    
-    return await this.extensionManager.getAIExtensions(port);
-  }
-
-  async hasExtension(extensionId, port = null) {
-    if (!port) {
-      const activeIDE = await this.ideManager.getActiveIDE();
-      port = activeIDE?.port;
-    }
-    
-    if (!port) {
-      throw new Error('No IDE port available');
-    }
-    
-    return await this.extensionManager.hasExtension(port, extensionId);
-  }
-
-  async detectExtensions(port = null) {
-    if (!port) {
-      const activeIDE = await this.ideManager.getActiveIDE();
-      port = activeIDE?.port;
-    }
-    
-    if (!port) {
-      throw new Error('No IDE port available');
-    }
-    
-    return await this.extensionManager.detectExtensions(port);
-  }
-
   // Terminal monitoring methods
   async startTerminalMonitoring() {
-    return await this.terminalMonitor.startMonitoring();
+    return await this.terminalMonitor.startTerminalMonitoring();
   }
 
   async stopTerminalMonitoring() {
-    return await this.terminalMonitor.stopMonitoring();
+    return await this.terminalMonitor.stopTerminalMonitoring();
   }
 
   async restartUserApp() {
@@ -376,78 +315,194 @@ After applying the changes, please confirm that the refactoring has been complet
     return await this.terminalMonitor.ensureTerminalOpen();
   }
 
+  // Dev server detection methods
   async detectDevServerFromPackageJson(workspacePath = null) {
+    // If no workspace path provided, use the active IDE's workspace path
     if (!workspacePath) {
       const activeIDE = await this.ideManager.getActiveIDE();
       workspacePath = activeIDE?.workspacePath;
+      logger.info('No workspace path provided, using active IDE workspace path:', workspacePath);
     }
     
-    if (!workspacePath) {
-      throw new Error('No workspace path available');
+    // If workspace path is virtual (like composer-code-block-anysphere:/), use project root as fallback
+    if (workspacePath && workspacePath.includes(':')) {
+      const path = require('path');
+      const currentDir = process.cwd();
+      workspacePath = path.resolve(currentDir, '..');
+      logger.info('Virtual workspace detected, using project root as fallback:', workspacePath);
     }
     
     return await this.packageJsonAnalyzer.analyzePackageJsonInPath(workspacePath);
   }
 
+  // Workspace path detection methods
+  async addWorkspacePathDetectionViaPlaywright() {
+    return await this.workspacePathDetector.addWorkspacePathDetectionViaPlaywright();
+  }
+
+  // User-specific connection status
   async getConnectionStatus(userId) {
     try {
-      // Check connection status by attempting to get page
-      let isConnected = false;
-      let connectionError = null;
-      
-      try {
-        const page = await this.browserManager.getPage();
-        isConnected = page !== null;
-      } catch (error) {
-        isConnected = false;
-        connectionError = error.message;
-      }
-      
-      const activeIDE = await this.ideManager.getActiveIDE();
-      
-      const result = {
+      const isConnected = await this.isConnected();
+      const activePort = this.getActivePort();
+      const availableIDEs = await this.getAvailableIDEs();
+
+      return {
         connected: isConnected,
-        activeIDE: activeIDE,
-        userId: userId,
-        timestamp: new Date().toISOString()
+        activePort: activePort,
+        availablePorts: availableIDEs.map(ide => ({
+          port: ide.port,
+          active: ide.active,
+          workspacePath: ide.workspacePath
+        })),
+        lastActivity: new Date().toISOString(),
+        userId: userId
       };
-      
-      // Add error property if there was a connection error
-      if (connectionError) {
-        result.error = connectionError;
-      }
-      
-      return result;
     } catch (error) {
       logger.error('Error getting connection status:', error);
       return {
         connected: false,
-        error: error.message,
+        activePort: null,
+        availablePorts: [],
+        lastActivity: new Date().toISOString(),
         userId: userId,
-        timestamp: new Date().toISOString()
+        error: error.message
       };
     }
   }
 
   /**
-   * Send task to VSCode IDE via Playwright
+   * Generate AI-powered task suggestions based on project analysis
+   * @param {Object} projectAnalysis - Project analysis results
+   * @returns {Promise<Array>} Array of task suggestions
+   */
+  async generateTaskSuggestions(projectAnalysis) {
+    logger.info('🔍 [CursorIDEService] Generating AI task suggestions for:', projectAnalysis.projectType);
+    
+    // Generate suggestions based on project type and analysis
+    const suggestions = [];
+    
+    // Common suggestions for all project types
+    suggestions.push({
+      title: 'Add comprehensive tests',
+      description: 'Create unit tests, integration tests, and e2e tests to improve code quality and reliability',
+      type: 'test',
+      priority: 'high'
+    });
+    
+    suggestions.push({
+      title: 'Improve documentation',
+      description: 'Add README.md, API documentation, and inline code comments',
+      type: 'documentation',
+      priority: 'medium'
+    });
+    
+    suggestions.push({
+      title: 'Code quality improvements',
+      description: 'Run linters, fix code style issues, and improve code organization',
+      type: 'refactor',
+      priority: 'medium'
+    });
+    
+    // Project-specific suggestions
+    if (projectAnalysis.projectType === 'nodejs' || projectAnalysis.projectType === 'react') {
+      suggestions.push({
+        title: 'Update dependencies',
+        description: 'Check for outdated packages and update them to latest versions',
+        type: 'maintenance',
+        priority: 'medium'
+      });
+      
+      suggestions.push({
+        title: 'Add error handling',
+        description: 'Implement proper error handling and logging throughout the application',
+        type: 'bugfix',
+        priority: 'high'
+      });
+    }
+    
+    if (projectAnalysis.projectType === 'react') {
+      suggestions.push({
+        title: 'Optimize bundle size',
+        description: 'Analyze and reduce JavaScript bundle size for better performance',
+        type: 'optimization',
+        priority: 'medium'
+      });
+      
+      suggestions.push({
+        title: 'Add accessibility features',
+        description: 'Implement ARIA labels, keyboard navigation, and screen reader support',
+        type: 'feature',
+        priority: 'medium'
+      });
+    }
+    
+    if (projectAnalysis.complexity === 'high') {
+      suggestions.push({
+        title: 'Architecture review',
+        description: 'Review and refactor complex code structures for better maintainability',
+        type: 'refactor',
+        priority: 'high'
+      });
+    }
+    
+    // Add suggestions based on detected issues
+    if (projectAnalysis.issues && projectAnalysis.issues.length > 0) {
+      projectAnalysis.issues.forEach(issue => {
+        // Handle both old string format and new object format
+        const issueTitle = typeof issue === 'string' ? issue : issue.title;
+        const issueDescription = typeof issue === 'string' ? issue : issue.description;
+        const issueSeverity = typeof issue === 'string' ? 'medium' : issue.severity;
+        
+        suggestions.push({
+          title: `Fix: ${issueTitle}`,
+          description: issueDescription,
+          type: 'bugfix',
+          priority: issueSeverity === 'high' ? 'high' : 'medium'
+        });
+      });
+    }
+    
+    // Add suggestions from project analysis
+    if (projectAnalysis.suggestions && projectAnalysis.suggestions.length > 0) {
+      projectAnalysis.suggestions.forEach(suggestion => {
+        // Handle both old string format and new object format
+        const suggestionTitle = typeof suggestion === 'string' ? suggestion : suggestion.title;
+        const suggestionDescription = typeof suggestion === 'string' ? suggestion : suggestion.description;
+        const suggestionPriority = typeof suggestion === 'string' ? 'medium' : suggestion.priority;
+        
+        suggestions.push({
+          title: suggestionTitle,
+          description: suggestionDescription,
+          type: 'improvement',
+          priority: suggestionPriority === 'high' ? 'high' : 'medium'
+        });
+      });
+    }
+    
+    logger.info('✅ [CursorIDEService] Generated', suggestions.length, 'task suggestions');
+    return suggestions;
+  }
+
+  /**
+   * Send task to Cursor IDE via Playwright
    * @param {Object} task - Task object
    * @param {string} workspacePath - Workspace path
    * @returns {Promise<Object>} Result of sending task
    */
-  async sendTaskToVSCode(task, workspacePath = null) {
-    logger.info('🔍 [vscodeIDEService] Sending task to VSCode IDE:', task.title);
+  async sendTaskToCursorIDE(task, workspacePath = null) {
+    logger.info('🔍 [CursorIDEService] Sending task to Cursor IDE:', task.title);
     
     try {
       // Get active IDE workspace path if not provided
       if (!workspacePath) {
         const activeIDE = await this.ideManager.getActiveIDE();
         workspacePath = activeIDE?.workspacePath;
-        logger.info('🔍 [vscodeIDEService] Using active IDE workspace path:', workspacePath);
+        logger.info('🔍 [CursorIDEService] Using active IDE workspace path:', workspacePath);
       }
       
       if (!workspacePath) {
-        throw new Error('No workspace path available for VSCode IDE');
+        throw new Error('No workspace path available for Cursor IDE');
       }
       
       // Create task content
@@ -461,7 +516,7 @@ ${task.description}
 ## Status: ${task.status}
 
 ## Instructions
-Please execute this task in VSCode IDE and provide a summary of what was accomplished.
+Please execute this task in Cursor IDE and provide a summary of what was accomplished.
 
 ## Task ID: ${task.id}
 ## Created: ${task.createdAt}
@@ -485,50 +540,62 @@ Please execute this task in VSCode IDE and provide a summary of what was accompl
       const taskFilePath = path.join(workspacePath, `task_${task.id}.md`);
       fs.writeFileSync(taskFilePath, taskContent);
       
-      logger.info('✅ [vscodeIDEService] Created task file at:', taskFilePath);
+      logger.info('✅ [CursorIDEService] Created task file at:', taskFilePath);
       
-      // Open file in VSCode IDE via Playwright
+      // Open file in Cursor IDE via Playwright
       await page.evaluate((filePath) => {
-        // This would open the file in VSCode IDE
+        // This would open the file in Cursor IDE
         // For now, we'll just log it
-        logger.info('Opening file in VSCode IDE:', filePath);
+        logger.info('Opening file in Cursor IDE:', filePath);
       }, taskFilePath);
       
-      logger.info('✅ [vscodeIDEService] Task sent to VSCode IDE successfully');
+      // Send message to Cursor chat
+      const chatMessage = `New task created: ${task.title}
+
+Please open the file \`task_${task.id}.md\` in your workspace and execute the task.
+
+Task details:
+- Title: ${task.title}
+- Description: ${task.description}
+- Type: ${task.type}
+- Priority: ${task.priority}
+
+Please provide a summary when you complete the task.`;
+      
+      await this.sendMessage(chatMessage);
       
       return {
         success: true,
-        taskId: task.id,
-        filePath: taskFilePath,
-        message: 'Task sent to VSCode IDE successfully'
+        taskFilePath,
+        message: 'Task sent to Cursor IDE successfully'
       };
       
     } catch (error) {
-      logger.error('❌ [vscodeIDEService] Error sending task to VSCode IDE:', error);
-      throw new Error(`Failed to send task to VSCode IDE: ${error.message}`);
+      logger.error('❌ [CursorIDEService] Error sending task to Cursor IDE:', error);
+      throw error;
     }
   }
 
   /**
-   * Send auto mode tasks to VSCode IDE via Playwright
+   * Send auto mode tasks to Cursor IDE via Playwright
    * @param {Array} tasks - Array of tasks
    * @param {Object} projectAnalysis - Project analysis
    * @param {string} workspacePath - Workspace path
    * @returns {Promise<Object>} Result of sending tasks
    */
-  async sendAutoModeTasksToVSCode(tasks, projectAnalysis, workspacePath = null) {
-    logger.info('🔍 [vscodeIDEService] Sending auto mode tasks to VSCode IDE:', tasks.length, 'tasks');
+  async sendAutoModeTasksToCursorIDE(tasks, projectAnalysis, workspacePath = null) {
+    logger.info('🔍 [CursorIDEService] Sending auto mode tasks to Cursor IDE:', tasks.length, 'tasks');
     
     try {
       // Get active IDE workspace path if not provided
       if (!workspacePath) {
         const activeIDE = await this.ideManager.getActiveIDE();
         workspacePath = activeIDE?.workspacePath;
-        logger.info('🔍 [vscodeIDEService] Using active IDE workspace path:', workspacePath);
+        logger.info('🔍 [CursorIDEService] Using active IDE workspace path:', workspacePath);
       }
       
       if (!workspacePath) {
-        throw new Error('No workspace path available for VSCode IDE');
+        throw new Error('No workspace path available for Cursor IDE');
       }
       
       // Create comprehensive auto mode content
@@ -569,38 +636,54 @@ Complete all generated tasks and provide a comprehensive summary.
       // Create file in workspace via Playwright
       const fs = require('fs');
       const path = require('path');
-const Logger = require('@logging/Logger');
-const logger = new Logger('Logger');
       
       // Use real workspace path, not backend path
-      const autoModeFilePath = path.join(workspacePath, `auto_mode_tasks_${Date.now()}.md`);
+      const autoModeFilePath = path.join(workspacePath, 'auto_mode_tasks.md');
       fs.writeFileSync(autoModeFilePath, autoModeContent);
       
-      logger.info('✅ [vscodeIDEService] Created auto mode file at:', autoModeFilePath);
+      logger.info('✅ [CursorIDEService] Created auto mode file at:', autoModeFilePath);
       
-      // Open file in VSCode IDE via Playwright
+      // Get browser page
       const page = await this.browserManager.getPage();
-      if (page) {
-        await page.evaluate((filePath) => {
-          // This would open the file in VSCode IDE
-          logger.info('Opening auto mode file in VSCode IDE:', filePath);
-        }, autoModeFilePath);
+      if (!page) {
+        throw new Error('No browser page available');
       }
       
-      logger.info('✅ [vscodeIDEService] Auto mode tasks sent to VSCode IDE successfully');
+      // Open file in Cursor IDE via Playwright
+      await page.evaluate((filePath) => {
+        // This would open the file in Cursor IDE
+        // For now, we'll just log it
+        logger.info('Opening auto mode file in Cursor IDE:', filePath);
+      }, autoModeFilePath);
+      
+      // Send message to Cursor chat
+      const chatMessage = `Auto Mode activated! 🚀
+
+I've analyzed your project and generated ${tasks.length} tasks to improve your codebase.
+
+Please open the file \`auto_mode_tasks.md\` in your workspace and execute all tasks in priority order.
+
+Project Analysis:
+- Type: ${projectAnalysis.projectType}
+- Complexity: ${projectAnalysis.complexity}
+- Issues Found: ${projectAnalysis.issues?.length || 0}
+
+Please provide a comprehensive summary when you complete all tasks.`;
+      
+      await this.sendMessage(chatMessage);
       
       return {
         success: true,
-        taskCount: tasks.length,
-        filePath: autoModeFilePath,
-        message: 'Auto mode tasks sent to VSCode IDE successfully'
+        autoModeFilePath,
+        tasksCount: tasks.length,
+        message: 'Auto mode tasks sent to Cursor IDE successfully'
       };
       
     } catch (error) {
-      logger.error('❌ [vscodeIDEService] Error sending auto mode tasks to VSCode IDE:', error);
-      throw new Error(`Failed to send auto mode tasks to VSCode IDE: ${error.message}`);
+      logger.error('❌ [CursorIDEService] Error sending auto mode tasks to Cursor IDE:', error);
+      throw error;
     }
   }
 }
 
-module.exports = VSCodeIDEService; 
+module.exports = CursorIDEService; 

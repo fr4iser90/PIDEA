@@ -1,4 +1,3 @@
-
 #!/usr/bin/env node
 require('module-alias/register');
 
@@ -7,7 +6,7 @@ require('module-alias/register');
  * Tests that the system uses correct branches for different task types
  */
 
-const WorkflowGitService = require('@services/WorkflowGitService');
+const WorkflowGitService = require('@domain/services/workflow/WorkflowGitService');
 const TaskType = require('@value-objects/TaskType');
 const Logger = require('@logging/Logger');
 const logger = new Logger('Logger');

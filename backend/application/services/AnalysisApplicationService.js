@@ -14,10 +14,10 @@
  */
 const Logger = require('@logging/Logger');
 const ServiceLogger = require('@logging/ServiceLogger');
-const ETagService = require('@domain/services/ETagService');
+const ETagService = require('@domain/services/shared/ETagService');
 const AnalysisResult = require('@domain/entities/AnalysisResult');
-const AnalysisQueueService = require('@domain/services/AnalysisQueueService');
-const MemoryOptimizedAnalysisService = require('@domain/services/MemoryOptimizedAnalysisService');
+const AnalysisQueueService = require('@domain/services/analysis/AnalysisQueueService');
+const MemoryOptimizedAnalysisService = require('@domain/services/analysis/MemoryOptimizedAnalysisService');
 
 class AnalysisApplicationService {
   constructor({

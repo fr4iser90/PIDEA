@@ -15,8 +15,8 @@
  * ✅ Encapsulates complex IDE workflow orchestration
  */
 const DocsTasksHandler = require('@handlers/categories/management/DocsTasksHandler');
-const TerminalLogCaptureService = require('@services/TerminalLogCaptureService');
-const TerminalLogReader = require('@services/TerminalLogReader');
+const TerminalLogCaptureService = require('@domain/services/terminal/TerminalLogCaptureService');
+const TerminalLogReader = require('@domain/services/terminal/TerminalLogReader');
 const Logger = require('@logging/Logger');
 
 class IDEApplicationService {

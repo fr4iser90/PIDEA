@@ -75,7 +75,7 @@ class ProjectBuildStep {
       logger.info(`🔨 Build command: ${buildCommand}`);
       
       // Execute build command
-      const terminalService = new (require('@domain/services/TerminalService'))();
+      const terminalService = new (require('@domain/services/terminal/TerminalService'))();
       const result = await terminalService.executeCommand(buildCommand, {
         cwd: workspacePath,
         timeout: config.settings.timeout,

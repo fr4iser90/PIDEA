@@ -1,4 +1,3 @@
-
 #!/usr/bin/env node
 require('module-alias/register');
 
@@ -25,11 +24,11 @@ const backendPath = path.resolve(__dirname, '..', '..');
 require('module').globalPaths.push(backendPath);
 
 // Import services
-const TestReportParser = require('@services/TestReportParser');
-const TestFixTaskGenerator = require('@services/TestFixTaskGenerator');
+const TestReportParser = require('@domain/services/testing/TestReportParser');
+const TestFixTaskGenerator = require('@domain/services/testing/TestFixTaskGenerator');
 const AutoTestFixSystem = require('@services/auto-test/AutoTestFixSystem');
 const SQLiteTaskRepository = require('@database/SQLiteTaskRepository');
-const CursorIDEService = require('@services/CursorIDEService');
+const CursorIDEService = require('@domain/services/ide/CursorIDEService');
 const BrowserManager = require('@external/BrowserManager');
 const IDEManager = require('@external/ide/IDEManager');
 const ServiceLogger = require('@logging/ServiceLogger');

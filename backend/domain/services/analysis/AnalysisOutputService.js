@@ -20,7 +20,7 @@ const {
     SecurityAggregator,
     UTILS,
     CONSTANTS
-} = require('./analysis-output');
+} = require('../analysis-output');
 
 class AnalysisOutputService {
     constructor() {

@@ -13,7 +13,7 @@
  * ✅ Handles DTOs and use case orchestration
  */
 const ProjectAnalysis = require('@entities/ProjectAnalysis');
-const ETagService = require('@domain/services/ETagService');
+const ETagService = require('@domain/services/shared/ETagService');
 const Logger = require('@logging/Logger');
 
 class ProjectAnalysisApplicationService {

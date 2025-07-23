@@ -145,7 +145,7 @@ class ProjectHealthCheckStep {
 
   async performBuildCheck(workspacePath, packageManager) {
     try {
-      const terminalService = new (require('@domain/services/TerminalService'))();
+      const terminalService = new (require('@domain/services/terminal/TerminalService'))();
       const buildCommand = `${packageManager} run build`;
       
       const result = await terminalService.executeCommand(buildCommand, {
@@ -174,7 +174,7 @@ class ProjectHealthCheckStep {
 
   async performTestCheck(workspacePath, packageManager) {
     try {
-      const terminalService = new (require('@domain/services/TerminalService'))();
+      const terminalService = new (require('@domain/services/terminal/TerminalService'))();
       const testCommand = `${packageManager} test`;
       
       const result = await terminalService.executeCommand(testCommand, {
@@ -203,7 +203,7 @@ class ProjectHealthCheckStep {
 
   async performLintCheck(workspacePath, packageManager) {
     try {
-      const terminalService = new (require('@domain/services/TerminalService'))();
+      const terminalService = new (require('@domain/services/terminal/TerminalService'))();
       const lintCommand = `${packageManager} run lint`;
       
       const result = await terminalService.executeCommand(lintCommand, {

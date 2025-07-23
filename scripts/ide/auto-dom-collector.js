@@ -1,7 +1,6 @@
 const Logger = require('@logging/Logger');
 
 const logger = new Logger('ServiceName');
-
 #!/usr/bin/env node
 
 /**

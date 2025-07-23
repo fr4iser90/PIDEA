@@ -23,11 +23,11 @@ const ChatSession = require('./domain/entities/ChatSession');
 const ChatRepository = require('./domain/repositories/ChatRepository');
 const User = require('./domain/entities/User');
 const UserSession = require('./domain/entities/UserSession');
-const CursorIDEService = require('./domain/services/CursorIDEService');
-const AuthService = require('./domain/services/AuthService');
-const TaskService = require('./domain/services/TaskService');
+const CursorIDEService = require('./domain/services/ide/CursorIDEService');
+const AuthService = require('./domain/services/security/AuthService');
+const TaskService = require('./domain/services/task/TaskService');
 const TaskRepository = require('./domain/repositories/TaskRepository');
-const TaskValidationService = require('./domain/services/TaskValidationService');
+const TaskValidationService = require('./domain/services/task/TaskValidationService');
 
 // Auto-Finish System
 // AutoFinishSystem import removed - using Steps instead
@@ -328,7 +328,7 @@ class Application {
         this.testOrchestrator = this.serviceRegistry.getService('testOrchestrator');
         
         // Initialize WorkflowLoaderService
-        const WorkflowLoaderService = require('@domain/services/WorkflowLoaderService');
+        const WorkflowLoaderService = require('@domain/services/workflow/WorkflowLoaderService');
         this.workflowLoaderService = new WorkflowLoaderService();
         await this.workflowLoaderService.loadWorkflows();
         this.logger.info('✅ WorkflowLoaderService initialized and workflows loaded');

@@ -141,7 +141,7 @@ async function createRefactoringTask(fileInfo, projectPath, taskRepository, cont
   if (!projectId && projectPath) {
     try {
       // Try to get projectId from ProjectMappingService
-      const { ProjectMappingService } = require('@services/ProjectMappingService');
+      const { ProjectMappingService } = require('@domain/services/shared/ProjectMappingService');
       const projectMappingService = new ProjectMappingService();
       projectId = await projectMappingService.getProjectIdFromWorkspace(projectPath);
     } catch (error) {

@@ -142,7 +142,7 @@ class WorkflowController {
 
                 try {
                     // Load WorkflowLoaderService
-                    const WorkflowLoaderService = require('@domain/services/WorkflowLoaderService');
+                    const WorkflowLoaderService = require('@domain/services/workflow/WorkflowLoaderService');
                     const workflowLoader = new WorkflowLoaderService();
                     await workflowLoader.loadWorkflows();
 
@@ -1161,7 +1161,7 @@ class WorkflowController {
                     }
                 } else if (step.options?.message) {
                     // Fallback to template-based prompt
-                    const WorkflowLoaderService = require('@domain/services/WorkflowLoaderService');
+                    const WorkflowLoaderService = require('@domain/services/workflow/WorkflowLoaderService');
                     const workflowLoader = new WorkflowLoaderService();
                     await workflowLoader.loadWorkflows();
                     

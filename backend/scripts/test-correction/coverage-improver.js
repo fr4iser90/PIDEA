@@ -7,8 +7,8 @@ const fs = require('fs-extra');
 const { execSync } = require('child_process');
 const Logger = require('@logging/Logger');
 const logger = new Logger('Logger');
-const CoverageAnalyzerService = require('@services/CoverageAnalyzerService');
-const TestCorrectionService = require('@services/TestCorrectionService');
+const CoverageAnalyzerService = require('@domain/services/analysis/CoverageAnalyzerService');
+const TestCorrectionService = require('@domain/services/testing/TestCorrectionService');
 
 class CoverageImprover {
   constructor(options = {}) {

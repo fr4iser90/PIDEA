@@ -2,7 +2,7 @@
  * AdvancedAnalysisHandler - Handler for comprehensive analysis with layer and logic validation
  */
 const AdvancedAnalysisCommand = require('@categories/analysis/AdvancedAnalysisCommand');
-const AdvancedAnalysisService = require('@services/AdvancedAnalysisService');
+const AdvancedAnalysisService = require('@domain/services/analysis/AdvancedAnalysisService');
 const TaskRepository = require('@repositories/TaskRepository');
 const TaskExecutionRepository = require('@repositories/TaskExecutionRepository');
 const AnalysisRepository = require('@repositories/AnalysisRepository');

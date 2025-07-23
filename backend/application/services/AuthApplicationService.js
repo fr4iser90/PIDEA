@@ -1,4 +1,4 @@
-const AuthService = require('@services/AuthService');
+const AuthService = require('@domain/services/security/AuthService');
 const User = require('@entities/User');
 const Logger = require('@logging/Logger');
 

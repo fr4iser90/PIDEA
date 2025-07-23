@@ -1,7 +1,7 @@
 /**
  * UpdateTestStatusHandler - Handler for updating test status
  */
-const TestManagementService = require('@services/TestManagementService');
+const TestManagementService = require('@domain/services/testing/TestManagementService');
 
 class UpdateTestStatusHandler {
     constructor(testManagementService = new TestManagementService()) {

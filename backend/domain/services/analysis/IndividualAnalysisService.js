@@ -1,5 +1,5 @@
 const ServiceLogger = require('@logging/ServiceLogger');
-const AnalysisStepRepository = require('../repositories/AnalysisStepRepository');
+const AnalysisStepRepository = require('../../repositories/AnalysisStepRepository');
 
 /**
  * IndividualAnalysisService - Manages individual analysis steps with progress tracking

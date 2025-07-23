@@ -4,12 +4,12 @@
  * Enhanced with GitWorkflowManager integration and Core Execution Engine
  */
 const WorkflowGitService = require('./WorkflowGitService');
-const TaskType = require('../value-objects/TaskType');
-const GitWorkflowManager = require('../workflows/categories/git/GitWorkflowManager');
-const GitWorkflowContext = require('../workflows/categories/git/GitWorkflowContext');
-const { SequentialExecutionEngine } = require('../workflows/execution');
-const StepRegistry = require('../steps/StepRegistry');
-const FrameworkRegistry = require('../frameworks/FrameworkRegistry');
+const TaskType = require('../../value-objects/TaskType');
+const GitWorkflowManager = require('../../workflows/categories/git/GitWorkflowManager');
+const GitWorkflowContext = require('../../workflows/categories/git/GitWorkflowContext');
+const { SequentialExecutionEngine } = require('../../workflows/execution');
+const StepRegistry = require('../../steps/StepRegistry');
+const FrameworkRegistry = require('../../frameworks/FrameworkRegistry');
 const ServiceLogger = require('@logging/ServiceLogger');
 
 
@@ -59,7 +59,7 @@ class WorkflowOrchestrationService {
             });
 
             // Use the modular workflow system
-            const { WorkflowComposer } = require('../workflows');
+            const { WorkflowComposer } = require('../../workflows');
             const composer = new WorkflowComposer();
             
             // Determine workflow type based on task type
@@ -740,103 +740,103 @@ class WorkflowOrchestrationService {
     // Use existing TaskService prompt building methods
     async buildRefactoringPrompt(task) {
         // Use existing TaskService buildRefactoringPrompt
-        const taskService = new (require('./TaskService'))();
+        const taskService = new (require('../task/TaskService'))();
         return taskService.buildRefactoringPrompt(task);
     }
 
     async buildFeaturePrompt(task) {
         // Use existing TaskService buildTaskExecutionPrompt
-        const taskService = new (require('./TaskService'))();
+        const taskService = new (require('../task/TaskService'))();
         return await taskService.buildTaskExecutionPrompt(task);
     }
 
     async buildBugAnalysisPrompt(task) {
         // Use existing TaskService buildTaskExecutionPrompt
-        const taskService = new (require('./TaskService'))();
+        const taskService = new (require('../task/TaskService'))();
         return await taskService.buildTaskExecutionPrompt(task);
     }
 
     async buildBugFixPrompt(task, analysisResult) {
         // Use existing TaskService buildTaskExecutionPrompt
-        const taskService = new (require('./TaskService'))();
+        const taskService = new (require('../task/TaskService'))();
         return await taskService.buildTaskExecutionPrompt(task);
     }
 
     async buildAnalysisPrompt(task) {
         // Use existing TaskService buildTaskExecutionPrompt
-        const taskService = new (require('./TaskService'))();
+        const taskService = new (require('../task/TaskService'))();
         return await taskService.buildTaskExecutionPrompt(task);
     }
 
     async buildTestGenerationPrompt(task) {
         // Use existing TaskService buildTaskExecutionPrompt
-        const taskService = new (require('./TaskService'))();
+        const taskService = new (require('../task/TaskService'))();
         return await taskService.buildTaskExecutionPrompt(task);
     }
 
     async buildTestExecutionPrompt(task, testResult) {
         // Use existing TaskService buildTaskExecutionPrompt
-        const taskService = new (require('./TaskService'))();
+        const taskService = new (require('../task/TaskService'))();
         return await taskService.buildTaskExecutionPrompt(task);
     }
 
     async buildDocumentationPrompt(task) {
         // Use existing TaskService buildTaskExecutionPrompt
-        const taskService = new (require('./TaskService'))();
+        const taskService = new (require('../task/TaskService'))();
         return await taskService.buildTaskExecutionPrompt(task);
     }
 
     async buildDebugPrompt(task) {
         // Use existing TaskService buildTaskExecutionPrompt
-        const taskService = new (require('./TaskService'))();
+        const taskService = new (require('../task/TaskService'))();
         return await taskService.buildTaskExecutionPrompt(task);
     }
 
     async buildDebugReportPrompt(task, debugResult) {
         // Use existing TaskService buildTaskExecutionPrompt
-        const taskService = new (require('./TaskService'))();
+        const taskService = new (require('../task/TaskService'))();
         return await taskService.buildTaskExecutionPrompt(task);
     }
 
     async buildOptimizationAnalysisPrompt(task) {
         // Use existing TaskService buildTaskExecutionPrompt
-        const taskService = new (require('./TaskService'))();
+        const taskService = new (require('../task/TaskService'))();
         return await taskService.buildTaskExecutionPrompt(task);
     }
 
     async buildOptimizationPrompt(task, analysisResult) {
         // Use existing TaskService buildTaskExecutionPrompt
-        const taskService = new (require('./TaskService'))();
+        const taskService = new (require('../task/TaskService'))();
         return await taskService.buildTaskExecutionPrompt(task);
     }
 
     async buildCodeReviewPrompt(task) {
         // Use existing TaskService buildTaskExecutionPrompt
-        const taskService = new (require('./TaskService'))();
+        const taskService = new (require('../task/TaskService'))();
         return await taskService.buildTaskExecutionPrompt(task);
     }
 
     async buildReviewReportPrompt(task, reviewResult) {
         // Use existing TaskService buildTaskExecutionPrompt
-        const taskService = new (require('./TaskService'))();
+        const taskService = new (require('../task/TaskService'))();
         return await taskService.buildTaskExecutionPrompt(task);
     }
 
     async buildHotfixAnalysisPrompt(task) {
         // Use existing TaskService buildTaskExecutionPrompt
-        const taskService = new (require('./TaskService'))();
+        const taskService = new (require('../task/TaskService'))();
         return await taskService.buildTaskExecutionPrompt(task);
     }
 
     async buildHotfixPrompt(task, analysisResult) {
         // Use existing TaskService buildTaskExecutionPrompt
-        const taskService = new (require('./TaskService'))();
+        const taskService = new (require('../task/TaskService'))();
         return await taskService.buildTaskExecutionPrompt(task);
     }
 
     async buildGenericPrompt(task) {
         // Use existing TaskService buildTaskExecutionPrompt
-        const taskService = new (require('./TaskService'))();
+        const taskService = new (require('../task/TaskService'))();
         return await taskService.buildTaskExecutionPrompt(task);
     }
 
@@ -1346,7 +1346,7 @@ Please proceed with the task execution.
      */
     async buildTaskExecutionPrompt(task) {
         // Use existing TaskService buildTaskExecutionPrompt
-        const taskService = new (require('./TaskService'))();
+        const taskService = new (require('../task/TaskService'))();
 const Logger = require('@logging/Logger');
 const logger = new Logger('Logger');
         return await taskService.buildTaskExecutionPrompt(task);

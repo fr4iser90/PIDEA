@@ -1,4 +1,3 @@
-
 #!/usr/bin/env node
 require('module-alias/register');
 
@@ -7,7 +6,7 @@ require('module-alias/register');
  * Scans test files for legacy indicators and provides recommendations
  */
 
-const TestManagementService = require('@services/TestManagementService');
+const TestManagementService = require('@domain/services/testing/TestManagementService');
 const path = require('path');
 const fs = require('fs').promises;
 const { exec } = require('child_process');

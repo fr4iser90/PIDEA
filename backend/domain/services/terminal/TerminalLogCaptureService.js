@@ -3,7 +3,7 @@ const path = require('path');
 const crypto = require('crypto');
 const IDEManager = require('@external/ide/IDEManager');
 const BrowserManager = require('@external/BrowserManager');
-const IDEMirrorService = require('./IDEMirrorService');
+const IDEMirrorService = require('../ide/IDEMirrorService');
 const Logger = require('@logging/Logger');
 const logger = new Logger('Logger');
 

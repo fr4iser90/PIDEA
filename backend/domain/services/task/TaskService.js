@@ -2,11 +2,11 @@ const Task = require('@entities/Task');
 const TaskStatus = require('@value-objects/TaskStatus');
 const TaskPriority = require('@value-objects/TaskPriority');
 const TaskType = require('@value-objects/TaskType');
-const GitWorkflowManager = require('../workflows/categories/git/GitWorkflowManager');
-const GitWorkflowContext = require('../workflows/categories/git/GitWorkflowContext');
+const GitWorkflowManager = require('../../workflows/categories/git/GitWorkflowManager');
+const GitWorkflowContext = require('../../workflows/categories/git/GitWorkflowContext');
 // SequentialExecutionEngine removed - no longer needed
-const StepRegistry = require('../steps/StepRegistry');
-const FrameworkRegistry = require('../frameworks/FrameworkRegistry');
+const StepRegistry = require('../../steps/StepRegistry');
+const FrameworkRegistry = require('../../frameworks/FrameworkRegistry');
 const Logger = require('@logging/Logger');
 const ServiceLogger = require('@logging/ServiceLogger');
 const logger = new Logger('TaskService');
@@ -193,7 +193,7 @@ class TaskService {
       logger.info('🔍 [TaskService] Using modern workflow execution with IDE Steps');
       
       // Load workflow from JSON configuration
-      const WorkflowLoaderService = require('./WorkflowLoaderService');
+      const WorkflowLoaderService = require('../workflow/WorkflowLoaderService');
       const workflowLoader = new WorkflowLoaderService();
       await workflowLoader.loadWorkflows();
       
@@ -428,7 +428,7 @@ class TaskService {
    * @returns {WorkflowContext} Workflow context
    */
   createWorkflowContext(task, options = {}) {
-    const { WorkflowContext, WorkflowState, WorkflowMetadata } = require('../workflows');
+    const { WorkflowContext, WorkflowState, WorkflowMetadata } = require('../../workflows');
     
     return new WorkflowContext(
       task.id,

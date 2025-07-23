@@ -1,4 +1,3 @@
-
 #!/usr/bin/env node
 require('module-alias/register');
 
@@ -9,7 +8,7 @@ require('module-alias/register');
 
 const fs = require('fs');
 const path = require('path');
-const TestManagementService = require('@services/TestManagementService');
+const TestManagementService = require('@domain/services/testing/TestManagementService');
 
 /**
  * Strip ANSI color codes from text

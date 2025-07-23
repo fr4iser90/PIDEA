@@ -94,7 +94,7 @@ class DevServerStartStep {
       }
       
       // Start dev server
-      const terminalService = new (require('@domain/services/TerminalService'))();
+      const terminalService = new (require('@domain/services/terminal/TerminalService'))();
       const result = await terminalService.executeCommand(devCommand, {
         cwd: workspacePath,
         timeout: config.settings.timeout,

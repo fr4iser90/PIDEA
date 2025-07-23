@@ -3,9 +3,9 @@
  * Handles test analysis, AI-powered fixes, coverage improvement, and autonomous workflow execution
  */
 const TestFixer = require('@external/TestFixer');
-const TestReportParser = require('@services/TestReportParser');
-const TestFixTaskGenerator = require('@services/TestFixTaskGenerator');
-const WorkflowGitService = require('@services/WorkflowGitService');
+const TestReportParser = require('@domain/services/testing/TestReportParser');
+const TestFixTaskGenerator = require('@domain/services/testing/TestFixTaskGenerator');
+const WorkflowGitService = require('@domain/services/workflow/WorkflowGitService');
 const ConfirmationSystem = require('@services/auto-finish/ConfirmationSystem');
 const TaskType = require('@value-objects/TaskType');
 const { v4: uuidv4 } = require('uuid');

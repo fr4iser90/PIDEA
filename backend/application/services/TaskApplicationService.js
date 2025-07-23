@@ -16,7 +16,7 @@ const Logger = require('@logging/Logger');
 const ServiceLogger = require('@logging/ServiceLogger');
 const TaskPriority = require('@value-objects/TaskPriority');
 const TaskType = require('@value-objects/TaskType');
-const ETagService = require('@domain/services/ETagService');
+const ETagService = require('@domain/services/shared/ETagService');
 
 class TaskApplicationService {
   constructor({

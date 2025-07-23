@@ -13,7 +13,7 @@
  * ✅ Uses Domain services and Infrastructure through interfaces
  * ✅ Handles WebSocket coordination and IDE automation workflows
  */
-const IDEMirrorService = require('@services/IDEMirrorService');
+const IDEMirrorService = require('@domain/services/ide/IDEMirrorService');
 const Logger = require('@logging/Logger');
 
 class IDEMirrorApplicationService {

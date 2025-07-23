@@ -7,11 +7,11 @@ const fs = require('fs-extra');
 const { execSync } = require('child_process');
 const Logger = require('@logging/Logger');
 const logger = new Logger('Logger');
-const TestCorrectionService = require('@services/TestCorrectionService');
+const TestCorrectionService = require('@domain/services/testing/TestCorrectionService');
 // TestAnalyzer - REMOVED (using TestOrchestrator instead)
 // const TestAnalyzer = require('@infrastructure/external/OLD9');
 const TestFixer = require('@external/TestFixer');
-const CoverageAnalyzerService = require('@services/CoverageAnalyzerService');
+const CoverageAnalyzerService = require('@domain/services/analysis/CoverageAnalyzerService');
 
 class AutoFixTests {
   constructor(options = {}) {

@@ -1,7 +1,7 @@
-const TerminalMonitor = require('./terminal/TerminalMonitor');
-const WorkspacePathDetector = require('./workspace/WorkspacePathDetector');
-const ChatHistoryExtractor = require('./chat/ChatHistoryExtractor');
-const PackageJsonAnalyzer = require('./dev-server/PackageJsonAnalyzer');
+const TerminalMonitor = require('../terminal/TerminalMonitor');
+const WorkspacePathDetector = require('../workspace/WorkspacePathDetector');
+const ChatHistoryExtractor = require('../chat/ChatHistoryExtractor');
+const PackageJsonAnalyzer = require('../dev-server/PackageJsonAnalyzer');
 const ServiceLogger = require('@logging/ServiceLogger');
 
 

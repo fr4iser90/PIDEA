@@ -3,10 +3,10 @@
  * Provides unified automation capabilities for terminal and analysis operations
  */
 
-const TerminalMonitor = require('./terminal/TerminalMonitor');
-const PackageJsonAnalyzer = require('./dev-server/PackageJsonAnalyzer');
-const WorkspacePathDetector = require('./workspace/WorkspacePathDetector');
-const IDETypes = require('./ide/IDETypes');
+const TerminalMonitor = require('../terminal/TerminalMonitor');
+const PackageJsonAnalyzer = require('../dev-server/PackageJsonAnalyzer');
+const WorkspacePathDetector = require('../workspace/WorkspacePathDetector');
+const IDETypes = require('./IDETypes');
 const ServiceLogger = require('@logging/ServiceLogger');
 
 class IDEAutomationService {

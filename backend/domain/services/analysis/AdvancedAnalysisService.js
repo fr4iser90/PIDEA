@@ -4,7 +4,7 @@
  */
 const LayerValidationService = require('./LayerValidationService');
 const LogicValidationService = require('./LogicValidationService');
-const TaskAnalysisService = require('./TaskAnalysisService');
+const TaskAnalysisService = require('../task/TaskAnalysisService');
 const ServiceLogger = require('@logging/ServiceLogger');
 
 class AdvancedAnalysisService {
