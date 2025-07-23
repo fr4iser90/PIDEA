@@ -47,7 +47,7 @@
           "step": "ConfirmationStep",
           "options": {
             "maxAttempts": 3,
-            "timeout": 10000,
+            "timeout": 30000,
             "autoContinueThreshold": 0.8
           },
           "strict": true
@@ -291,7 +291,7 @@
           "step": "ConfirmationStep",
           "options": {
             "maxAttempts": 3,
-            "timeout": 12000,
+            "timeout": 30000,
             "autoContinueThreshold": 0.9
           }
         },
@@ -364,7 +364,7 @@
           "step": "ConfirmationStep",
           "options": {
             "maxAttempts": 3,
-            "timeout": 10000,
+            "timeout": 30000,
             "autoContinueThreshold": 0.8
           }
         },

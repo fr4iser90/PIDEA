@@ -5,6 +5,7 @@
 
 const StepBuilder = require('@steps/StepBuilder');
 const Logger = require('@logging/Logger');
+const AITextDetector = require('@services/chat/AITextDetector');
 const logger = new Logger('confirmation_step');
 
 // Step configuration
@@ -51,7 +52,7 @@ class ConfirmationStep {
         };
       }
 
-      const { taskId, maxAttempts = 3, timeout = 10000, autoContinueThreshold = 0.8 } = context;
+      const { taskId, maxAttempts = 3, timeout = 30000, autoContinueThreshold = 0.8 } = context;
 
       logger.info(`Starting AI confirmation process for task: ${taskId || 'unknown'}`);
 
@@ -61,6 +62,14 @@ class ConfirmationStep {
         if (activePort) {
           await browserManager.switchToPort(activePort);
         }
+      }
+
+      // Initialize AITextDetector for proper response waiting
+      const aiTextDetector = new AITextDetector();
+      const page = await browserManager.getPage();
+      
+      if (!page) {
+        throw new Error('No browser page available for AI response detection');
       }
 
       let attempts = 0;
@@ -79,16 +88,28 @@ class ConfirmationStep {
             throw new Error('Failed to send confirmation question to IDE');
           }
           
-          // Wait for AI response
-          await new Promise(resolve => setTimeout(resolve, 5000));
+          // Wait for AI response using AITextDetector (proper waiting instead of fixed timeout)
+          logger.info('⏳ Waiting for AI response...');
+          const aiResponseResult = await aiTextDetector.waitForAIResponse(page, {
+            timeout: timeout || 30000,
+            checkInterval: 2000,
+            requiredStableChecks: 3
+          });
           
-          // For now, simulate AI confirmation (in real implementation, would analyze response)
-          const confirmationScore = Math.random(); // Simulate AI confidence score
+          if (!aiResponseResult.success) {
+            logger.warn('AI response timeout or error, continuing with next attempt');
+            continue;
+          }
+          
+          // Analyze the AI response for completion confirmation
+          const confirmationScore = this.analyzeConfirmationResponse(aiResponseResult.response);
           
           logger.info(`AI confirmation result:`, {
             question: confirmationQuestion,
+            response: aiResponseResult.response.substring(0, 100) + '...',
             score: confirmationScore,
-            threshold: autoContinueThreshold
+            threshold: autoContinueThreshold,
+            completion: aiResponseResult.completion
           });
           
           if (confirmationScore >= autoContinueThreshold) {
@@ -100,7 +121,9 @@ class ConfirmationStep {
                 confirmed: true,
                 confidence: confirmationScore,
                 question: confirmationQuestion,
-                attempts: attempts
+                response: aiResponseResult.response,
+                attempts: attempts,
+                completion: aiResponseResult.completion
               }
             };
           }
@@ -113,7 +136,7 @@ class ConfirmationStep {
         
         // Wait before next attempt
         if (attempts < maxAttemptsValue) {
-          await new Promise(resolve => setTimeout(resolve, timeout || 10000));
+          await new Promise(resolve => setTimeout(resolve, 5000));
         }
       }
       
@@ -136,6 +159,80 @@ class ConfirmationStep {
     }
   }
 
+  analyzeConfirmationResponse(response) {
+    if (!response || typeof response !== 'string') {
+      return 0;
+    }
+    
+    const lowerResponse = response.toLowerCase();
+    
+    // Check for completion status patterns
+    const completionPatterns = [
+      /completed/i,
+      /finished/i,
+      /done/i,
+      /ready/i,
+      /successful/i,
+      /\[passed\]/i
+    ];
+    
+    // Check for partial completion patterns
+    const partialPatterns = [
+      /partially completed/i,
+      /almost done/i,
+      /mostly complete/i,
+      /in progress/i
+    ];
+    
+    // Check for need human patterns
+    const needHumanPatterns = [
+      /need human/i,
+      /requires human/i,
+      /user input/i,
+      /manual intervention/i,
+      /\[failed\]/i
+    ];
+    
+    // Calculate confidence score
+    let score = 0;
+    
+    // Check for explicit completion
+    if (completionPatterns.some(pattern => pattern.test(lowerResponse))) {
+      score += 0.8;
+    }
+    
+    // Check for partial completion
+    if (partialPatterns.some(pattern => pattern.test(lowerResponse))) {
+      score += 0.4;
+    }
+    
+    // Check for need human
+    if (needHumanPatterns.some(pattern => pattern.test(lowerResponse))) {
+      score += 0.2;
+    }
+    
+    // Check for test results
+    const testMatch = lowerResponse.match(/\[(passed|failed)\]\s*(\d+)%/i);
+    if (testMatch) {
+      const testStatus = testMatch[1];
+      const testPercentage = parseInt(testMatch[2]);
+      
+      if (testStatus === 'passed' && testPercentage >= 80) {
+        score += 0.3;
+      } else if (testStatus === 'failed') {
+        score -= 0.2;
+      }
+    }
+    
+    // Check for response length and quality
+    if (response.length > 50) {
+      score += 0.1;
+    }
+    
+    // Normalize score to 0-1 range
+    return Math.min(Math.max(score, 0), 1);
+  }
+
   getConfirmationQuestion(attempt) {
     const questions = [
       'Check your status against the task and respond with your status: completed/partially completed/need human. Also include test results: [PASSED] or [FAILED] with percentage.',
@@ -148,11 +245,4 @@ class ConfirmationStep {
 
 }
 
-// Create instance for execution
-const stepInstance = new ConfirmationStep();
-
-// Export in StepRegistry format
-module.exports = {
-  config,
-  execute: async (context) => await stepInstance.execute(context)
-};
+module.exports = ConfirmationStep;

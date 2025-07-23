@@ -65,7 +65,7 @@
           "step": "AutoFinishStep",
           "options": {
             "maxConfirmationAttempts": 3,
-            "confirmationTimeout": 10000,
+            "confirmationTimeout": 30000,
             "fallbackDetectionEnabled": true,
             "autoContinueThreshold": 0.8,
             "includeCompletionDetection": true,
