@@ -354,7 +354,7 @@ class ProjectApplicationService {
    */
   async getProjectByIDEPort(idePort) {
     try {
-      this.logger.info(`Getting project by IDE port: ${idePort}`);
+      // // // this.logger.info(`Getting project by IDE port: ${idePort}`);
       
       const project = await this.projectRepository.findByIDEPort(parseInt(idePort));
       

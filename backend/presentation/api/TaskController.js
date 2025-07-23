@@ -37,7 +37,7 @@ class TaskController {
             const { projectId } = req.params;
             const { limit, offset, status, priority, type } = req.query;
             
-            this.logger.info(`Getting tasks for project: ${projectId}`);
+            // // // this.logger.info(`Getting tasks for project: ${projectId}`);
             
             // Use Application Service for tasks
             const tasks = await this.taskApplicationService.getProjectTasks(projectId, {

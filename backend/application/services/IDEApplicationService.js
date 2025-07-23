@@ -51,11 +51,11 @@ class IDEApplicationService {
 
     async getAvailableIDEs(userId) {
         try {
-            this.logger.info('IDEApplicationService: Getting available IDEs', { userId });
+            // // // this.logger.info('IDEApplicationService: Getting available IDEs', { userId });
             
             // Simple cache check - return cached data if less than 5 seconds old
             if (this._cachedIDEs && this._cacheTime && (Date.now() - this._cacheTime) < 5000) {
-                this.logger.info('Returning cached IDE data');
+                // // // this.logger.info('Returning cached IDE data');
                 return {
                     success: true,
                     data: this._cachedIDEs
@@ -167,7 +167,7 @@ class IDEApplicationService {
 
     async getIDEStatus(userId) {
         try {
-            this.logger.info('IDEApplicationService: Getting IDE status', { userId });
+            // // // this.logger.info('IDEApplicationService: Getting IDE status', { userId });
             
             const status = await this.ideManager.getStatus();
             
@@ -201,7 +201,7 @@ class IDEApplicationService {
 
     async getWorkspaceInfo(userId) {
         try {
-            this.logger.info('IDEApplicationService: Getting workspace info for all IDEs', { userId });
+            // // // this.logger.info('IDEApplicationService: Getting workspace info for all IDEs', { userId });
             
             const availableIDEs = await this.ideManager.getAvailableIDEs();
             const workspaceInfo = availableIDEs.map(ide => ({

@@ -43,7 +43,7 @@ class GitController {
                 });
             }
 
-            this.logger.info('GitController: Getting Git status', { projectId, userId });
+            // // // this.logger.info('GitController: Getting Git status', { projectId, userId });
 
             const result = await this.gitApplicationService.getStatus(projectId, projectPath, userId);
             

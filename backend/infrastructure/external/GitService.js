@@ -141,7 +141,7 @@ class GitService {
      */
     async getCurrentBranch(repoPath) {
         try {
-            this.logger.info('GitService: Getting current branch using step', { repoPath });
+            // // this.logger.info('GitService: Getting current branch using step', { repoPath });
             
             if (!this.stepRegistry) {
                 throw new Error('StepRegistry not available for Git operations');
@@ -156,7 +156,7 @@ class GitService {
             if (result.success) {
                 // Handle nested result structure from StepRegistry
                 const currentBranch = result.result?.currentBranch || result.currentBranch;
-                this.logger.info(`Aktueller Branch für ${repoPath}: "${currentBranch}"`);
+                // this.logger.info(`Aktueller Branch für ${repoPath}: "${currentBranch}"`);
                 return currentBranch;
             } else {
                 throw new Error(result.error || 'Failed to get current branch');
@@ -180,7 +180,7 @@ class GitService {
         const { includeRemote = true, includeLocal = true } = options;
         
         try {
-            this.logger.info('GitService: Getting branches using step', { repoPath, includeRemote, includeLocal });
+            // // this.logger.info('GitService: Getting branches using step', { repoPath, includeRemote, includeLocal });
             
             if (!this.stepRegistry) {
                 throw new Error('StepRegistry not available for Git operations');
@@ -581,7 +581,7 @@ class GitService {
         const { porcelain = true } = options;
         
         try {
-            this.logger.info('GitService: Getting status using step', { repoPath, porcelain });
+            // // this.logger.info('GitService: Getting status using step', { repoPath, porcelain });
             
             if (!this.stepRegistry) {
                 throw new Error('StepRegistry not available for Git operations');

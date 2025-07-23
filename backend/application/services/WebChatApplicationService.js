@@ -193,12 +193,12 @@ class WebChatApplicationService {
     try {
       const { port, limit = 50, offset = 0 } = queryData;
       
-      this.logger.info('Getting port chat history:', { 
-        port,
-        limit,
-        offset,
-        userId: userContext.userId
-      });
+      // this.logger.info('Getting port chat history:', { 
+      //   port,
+      //   limit,
+      //   offset,
+      //   userId: userContext.userId
+      // });
       
       // Execute port chat history step
       const step = this.stepRegistry.getStep('GetChatHistoryStep');

@@ -122,7 +122,7 @@ class AnalysisApplicationService {
       if (useCache) {
         const cachedResult = await this.analysisRepository.getCachedAnalysis(projectId, types);
         if (cachedResult) {
-          this.logger.info('✅ Returning cached analysis result');
+          // // // this.logger.info('✅ Returning cached analysis result');
           return cachedResult;
         }
       }

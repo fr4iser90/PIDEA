@@ -100,7 +100,7 @@ class TaskApplicationService {
    */
   async getProjectTasks(projectId, options = {}) {
     try {
-      this.logger.info(`Getting tasks for project: ${projectId}`);
+      // // // this.logger.info(`Getting tasks for project: ${projectId}`);
       
       const { limit = 50, offset = 0, status, priority, type } = options;
       
