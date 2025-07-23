@@ -1,168 +1,153 @@
-# Phase 3: Chat and IDE Service Fixes Implementation
+# Phase 3: Git Service Fixes & Legacy Cleanup
 
 ## 📋 Phase Overview
-- **Phase**: 3 of 5
+- **Phase**: 3 of 3
 - **Duration**: 3 hours
 - **Priority**: High
-- **Status**: Planning
-- **Dependencies**: Phase 1 completion, WebChatApplicationService, IDEApplicationService
+- **Status**: Ready
+- **Dependencies**: Phase 1, 2 completion
 
-## 🎯 Objectives
-1. Fix WebChatApplicationService duplicate executions
-2. Add caching to IDEApplicationService
-3. Remove deprecated CursorIDEService.sendMessage method
-4. Implement chat history deduplication
-5. Add IDE data caching with proper invalidation
+## 🎯 **PRINCIPLE: Only Real Backend Fixes for Git Services**
 
-## 📁 Files to Modify
+### **HIGH PRIORITY: GitGetCurrentBranchStep & GitGetStatusStep Duplicates**
+- **4 identical calls** of GitGetCurrentBranchStep
+- **4 identical calls** of GitGetStatusStep
+- **Root Cause**: GitApplicationService calls `getCurrentBranch()` multiple times
+- **Solution**: Real code fixes, no workarounds
 
-### 1. WebChatApplicationService.js Fixes
-**Path**: `backend/application/services/WebChatApplicationService.js`
+## 🧹 **LEGACY CLEANUP: Remove Duplicate Chat Components**
 
-**Current Issues Identified**:
-- References non-existent `IDESendMessageStepEnhanced`
-- Should use `IDESendMessageStep` instead
-- No caching for chat operations
-- Potential duplicate message sending
+### **Strategy: Consolidate to Step-Based Architecture**
+- ❌ **REMOVE**: All legacy commands, handlers, queries
+- ✅ **KEEP**: Only modern step-based approach
+- ✅ **KEEP**: WebChatApplicationService + ChatSessionService
+- ✅ **KEEP**: GetChatHistoryStep as single chat retrieval mechanism
 
-**Key Modifications**:
+### **Files to DELETE (Legacy Components)**
+
+#### **1. Legacy Commands**
+```bash
+# ❌ DELETE: Redundant command wrapper
+rm backend/application/commands/categories/ide/GetChatHistoryCommand.js
+```
+
+#### **2. Legacy Handlers**
+```bash
+# ❌ DELETE: Duplicate management handler
+rm backend/application/handlers/categories/management/GetChatHistoryHandler.js
+
+# ❌ DELETE: Redundant IDE handler (same logic as step)
+rm backend/application/handlers/categories/ide/GetChatHistoryHandler.js
+```
+
+#### **3. Legacy Queries**
+```bash
+# ❌ DELETE: Simple query object
+rm backend/application/queries/GetChatHistoryQuery.js
+```
+
+### **Files to UPDATE (Remove References)**
+
+#### **1. CommandRegistry.js**
 ```javascript
-class WebChatApplicationService {
-  constructor({
-    stepRegistry,
-    cursorIDEService,
-    authService,
-    chatSessionService,
-    eventBus,
-    logger
-  }) {
-    // ... existing constructor code ...
-    
-    // Add caching for chat operations
-    this.chatCache = new Map();
-    this.cacheTTL = {
-      chatHistory: 30000,    // 30 seconds
-      sessionInfo: 60000,    // 1 minute
-      userPermissions: 300000 // 5 minutes
-    };
-    
-    // Add request deduplication
-    this.pendingRequests = new Map();
+// ❌ REMOVE: GetChatHistoryCommand from ide category
+const commandMap = {
+  ide: {
+    CreateChatCommand: require('./categories/ide/CreateChatCommand'),
+    SendMessageCommand: require('./categories/ide/SendMessageCommand'),
+    SwitchChatCommand: require('./categories/ide/SwitchChatCommand'),
+    ListChatsCommand: require('./categories/ide/ListChatsCommand'),
+    CloseChatCommand: require('./categories/ide/CloseChatCommand'),
+    // ❌ REMOVE: GetChatHistoryCommand: require('./categories/ide/GetChatHistoryCommand'),
+    OpenTerminalCommand: require('./categories/ide/OpenTerminalCommand'),
+    // ... rest of commands
   }
+};
 
-  /**
-   * Send message through chat system with deduplication
-   * @param {Object} messageData - Message data
-   * @param {Object} userContext - User context from request
-   * @returns {Promise<Object>} Send result
-   */
-  async sendMessage(messageData, userContext) {
-    try {
-      const { message, requestedBy, sessionId, metadata, port } = messageData;
-      
-      this.logger.info('Processing chat message:', { 
-        messageLength: message?.length,
-        requestedBy,
-        sessionId: sessionId?.substring(0, 8) + '...',
-        userRole: userContext.role
-      });
-      
-      // Validate required fields
-      if (!message || message.trim().length === 0) {
-        throw new Error('Message content is required');
-      }
-      
-      if (!requestedBy) {
-        throw new Error('Requested by is required');
-      }
-      
-      // Create request fingerprint for deduplication
-      const fingerprint = this.generateMessageFingerprint(messageData, userContext);
-      
-      // Check for duplicate request
-      if (this.pendingRequests.has(fingerprint)) {
-        this.logger.info('Duplicate message request detected, returning existing result');
-        return await this.pendingRequests.get(fingerprint);
-      }
-      
-      // Create request promise
-      const requestPromise = this.executeSendMessage(messageData, userContext, fingerprint);
-      this.pendingRequests.set(fingerprint, requestPromise);
-      
-      try {
-        const result = await requestPromise;
-        return result;
-      } finally {
-        this.pendingRequests.delete(fingerprint);
-      }
-    } catch (error) {
-      this.logger.error('Send message error:', error);
-      throw error;
-    }
+// ❌ REMOVE: From getByCategory method
+const categoryCommands = {
+  [STANDARD_CATEGORIES.IDE]: [
+    'CreateChatCommand',
+    'SendMessageCommand',
+    'SwitchChatCommand',
+    'ListChatsCommand',
+    'CloseChatCommand',
+    // ❌ REMOVE: 'GetChatHistoryCommand',
+    'OpenTerminalCommand',
+    // ... rest of commands
+  ]
+};
+```
+
+#### **2. HandlerRegistry.js**
+```javascript
+// ❌ REMOVE: Both GetChatHistoryHandler references
+const handlerMap = {
+  management: {
+    CreateTaskHandler: require('./categories/management/CreateTaskHandler'),
+    // ❌ REMOVE: GetChatHistoryHandler: require('./categories/management/GetChatHistoryHandler'),
+    PortStreamingHandler: require('./categories/management/PortStreamingHandler'),
+    // ... rest of handlers
+  },
+  ide: {
+    CreateChatHandler: require('./categories/ide/CreateChatHandler'),
+    SendMessageHandler: require('./categories/management/SendMessageHandler'),
+    SwitchChatHandler: require('./categories/ide/SwitchChatHandler'),
+    ListChatsHandler: require('./categories/ide/ListChatsHandler'),
+    CloseChatHandler: require('./categories/ide/CloseChatHandler'),
+    // ❌ REMOVE: GetChatHistoryHandler: require('./categories/ide/GetChatHistoryHandler'),
+    OpenTerminalHandler: require('./categories/ide/OpenTerminalHandler'),
+    // ... rest of handlers
   }
+};
 
-  /**
-   * Execute the actual message sending with proper step reference
-   * @param {Object} messageData - Message data
-   * @param {Object} userContext - User context
-   * @param {string} fingerprint - Request fingerprint
-   * @returns {Promise<Object>} Send result
-   */
-  async executeSendMessage(messageData, userContext, fingerprint) {
-    const { message, requestedBy, sessionId, metadata, port } = messageData;
-    
-    // Authenticate user if auth service is available
-    if (this.authService && userContext.userId) {
-      const isAuthorized = await this.authService.authorizeUser(userContext.userId, 'chat:send');
-      if (!isAuthorized) {
-        throw new Error('User not authorized to send chat messages');
-      }
-    }
+// ❌ REMOVE: From getByCategory method
+const categoryHandlers = {
+  [STANDARD_CATEGORIES.MANAGEMENT]: [
+    'CreateTaskHandler',
+    // ❌ REMOVE: 'GetChatHistoryHandler',
+    'PortStreamingHandler',
+    // ... rest of handlers
+  ],
+  [STANDARD_CATEGORIES.IDE]: [
+    'CreateChatHandler',
+    'SendMessageHandler',
+    'SwitchChatHandler',
+    'ListChatsHandler',
+    'CloseChatHandler',
+    // ❌ REMOVE: 'GetChatHistoryHandler',
+    'OpenTerminalHandler',
+    // ... rest of handlers
+  ]
+};
+```
 
-    // Get current project ID from database based on active port
-    const activePort = this.cursorIDEService?.ideManager?.getActivePort?.();
-    let projectId = null;
+### **Files to FIX (Remove Duplicate Execution)**
+
+#### **1. WebChatApplicationService.js**
+```javascript
+// ✅ FIX: Remove duplicate step execution
+async getPortChatHistory(queryData, userContext) {
+  try {
+    const { port, limit = 50, offset = 0 } = queryData;
     
-    if (activePort) {
-      // Get workspace path from IDE Manager
-      const workspacePath = this.cursorIDEService?.ideManager?.getWorkspacePath?.(activePort);
-      
-      if (workspacePath) {
-        // Get project repository from DI container
-        const { getServiceContainer } = require('@infrastructure/dependency-injection/ServiceContainer');
-        const container = getServiceContainer();
-        const projectRepository = container?.resolve('projectRepository');
-        
-        if (projectRepository) {
-          const project = await projectRepository.findByWorkspacePath(workspacePath);
-          if (project) {
-            projectId = project.id;
-          }
-        }
-      }
-    }
+    this.logger.info('Getting port chat history:', { 
+      port,
+      limit,
+      offset,
+      userId: userContext.userId
+    });
     
-    // Execute send message step with CORRECT step name
-    const step = this.stepRegistry.getStep('IDESendMessageStep');
-    if (!step) {
-      throw new Error('Send message step not found');
-    }
-    
+    // ✅ ONLY: StepRegistry execution (no duplicate)
     const stepData = {
-      message: message,
-      sessionId: sessionId,
-      userId: userContext.userId,
       port: port,
-      projectId: projectId,
-      metadata: {
-        ...metadata,
-        timestamp: new Date(),
-        userId: userContext.userId,
-        fingerprint: fingerprint
-      }
+      limit: parseInt(limit),
+      offset: parseInt(offset),
+      userId: userContext.userId,
+      includeUserData: userContext.isAdmin || false
     };
     
-    const result = await this.stepRegistry.executeStep('IDESendMessageStep', stepData);
+    const result = await this.stepRegistry.executeStep('GetChatHistoryStep', stepData);
     
     // Check if step execution was successful
     if (!result.success) {
@@ -170,556 +155,609 @@ class WebChatApplicationService {
     }
     
     return {
-      messageId: result.result.messageId,
+      messages: result.result.data?.messages || result.result.messages || [],
       sessionId: result.result.sessionId,
-      timestamp: result.result.timestamp,
-      status: result.result.status
+      port: port,
+      totalCount: result.result.data?.pagination?.total || result.result.totalCount || 0,
+      hasMore: result.result.hasMore || false
     };
+  } catch (error) {
+    this.logger.error('Get port chat history error:', error);
+    throw error;
   }
+}
 
-  /**
-   * Get chat history for session with caching
-   * @param {Object} queryData - Query parameters
-   * @param {Object} userContext - User context from request
-   * @returns {Promise<Object>} Chat history
-   */
-  async getChatHistory(queryData, userContext) {
-    try {
-      const { sessionId, limit = 50, offset = 0 } = queryData;
-      
-      this.logger.info('Getting chat history:', { 
-        sessionId: sessionId?.substring(0, 8) + '...',
-        limit,
-        offset,
-        userId: userContext.userId
-      });
-      
-      // Create cache key
-      const cacheKey = `chatHistory:${sessionId}:${limit}:${offset}:${userContext.userId}`;
-      
-      // Check cache first
-      const cached = this.getCachedResult(cacheKey);
-      if (cached) {
-        this.logger.debug('WebChatApplicationService: Returning cached chat history');
-        return cached;
-      }
-      
-      // Execute chat history step
-      const step = this.stepRegistry.getStep('GetChatHistoryStep');
-      if (!step) {
-        throw new Error('Chat history step not found');
-      }
-      
-      const stepData = {
-        sessionId: sessionId,
-        limit: parseInt(limit),
-        offset: parseInt(offset),
-        userId: userContext.userId,
-        includeUserData: userContext.isAdmin || false
-      };
-      
-      const result = await step.execute(stepData);
-      
-      const response = {
-        messages: result.messages,
-        sessionId: result.sessionId,
-        totalCount: result.totalCount,
-        hasMore: result.hasMore
-      };
-      
-      // Cache the result
-      this.setCachedResult(cacheKey, response, this.cacheTTL.chatHistory);
-      
-      return response;
-    } catch (error) {
-      this.logger.error('Get chat history error:', error);
-      throw error;
-    }
-  }
-
-  /**
-   * Generate fingerprint for message deduplication
-   * @param {Object} messageData - Message data
-   * @param {Object} userContext - User context
-   * @returns {string} Fingerprint
-   */
-  generateMessageFingerprint(messageData, userContext) {
-    const { message, requestedBy, sessionId, port } = messageData;
-    const { userId } = userContext;
+// ✅ FIX: Remove duplicate step execution in getChatHistory too
+async getChatHistory(queryData, userContext) {
+  try {
+    const { sessionId, limit = 50, offset = 0 } = queryData;
     
-    const data = {
-      message: message?.trim(),
-      requestedBy,
-      sessionId,
-      port,
-      userId,
-      timestamp: Math.floor(Date.now() / 1000) // Round to nearest second
+    this.logger.info('Getting chat history:', { 
+      sessionId: sessionId?.substring(0, 8) + '...',
+      limit,
+      offset,
+      userId: userContext.userId
+    });
+    
+    // ✅ ONLY: StepRegistry execution (no duplicate)
+    const stepData = {
+      sessionId: sessionId,
+      limit: parseInt(limit),
+      offset: parseInt(offset),
+      userId: userContext.userId,
+      includeUserData: userContext.isAdmin || false
     };
     
-    const crypto = require('crypto');
-    return crypto.createHash('sha256').update(JSON.stringify(data)).digest('hex');
-  }
-
-  /**
-   * Cache management methods
-   */
-  getCachedResult(key) {
-    const entry = this.chatCache.get(key);
-    if (!entry) return null;
+    const result = await this.stepRegistry.executeStep('GetChatHistoryStep', stepData);
     
-    if (Date.now() > entry.expiresAt) {
-      this.chatCache.delete(key);
-      return null;
-    }
-    
-    return entry.value;
-  }
-
-  setCachedResult(key, value, ttl) {
-    this.chatCache.set(key, {
-      value,
-      expiresAt: Date.now() + ttl,
-      createdAt: Date.now()
-    });
-  }
-
-  /**
-   * Invalidate chat cache for session
-   * @param {string} sessionId - Session ID
-   */
-  invalidateChatCache(sessionId) {
-    const keysToDelete = [];
-    for (const key of this.chatCache.keys()) {
-      if (key.includes(sessionId)) {
-        keysToDelete.push(key);
-      }
-    }
-    
-    keysToDelete.forEach(key => this.chatCache.delete(key));
-    
-    this.logger.debug('WebChatApplicationService: Invalidated chat cache', {
-      sessionId,
-      keysDeleted: keysToDelete.length
-    });
-  }
-
-  /**
-   * Get cache statistics
-   * @returns {Object} Cache stats
-   */
-  getCacheStats() {
-    const now = Date.now();
-    let validEntries = 0;
-    let expiredEntries = 0;
-    
-    for (const [key, entry] of this.chatCache.entries()) {
-      if (now > entry.expiresAt) {
-        expiredEntries++;
-      } else {
-        validEntries++;
-      }
+    // Check if step execution was successful
+    if (!result.success) {
+      throw new Error(`Step execution failed: ${result.error}`);
     }
     
     return {
-      totalEntries: this.chatCache.size,
-      validEntries,
-      expiredEntries,
-      pendingRequests: this.pendingRequests.size
+      messages: result.result.data?.messages || result.result.messages || [],
+      sessionId: result.result.sessionId,
+      totalCount: result.result.data?.pagination?.total || result.result.totalCount || 0,
+      hasMore: result.result.hasMore || false
     };
+  } catch (error) {
+    this.logger.error('Get chat history error:', error);
+    throw error;
   }
-
-  // ... existing methods remain unchanged ...
 }
 ```
 
-### 2. IDEApplicationService.js Enhancements
-**Path**: `backend/application/services/IDEApplicationService.js`
+## 🔍 **Root Cause Analysis - Git Services**
 
-**Current Issues Identified**:
-- Basic 5-second cache exists but needs enhancement
-- No cache invalidation on IDE state changes
-- No request deduplication
+### **Problem 1: GitApplicationService Duplicate Calls**
 
-**Key Modifications**:
+**Current Code (PROBLEM):**
 ```javascript
-class IDEApplicationService {
-  constructor(dependencies = {}) {
-    // ... existing constructor code ...
-    
-    // Enhanced caching with different TTLs
-    this.cache = new Map();
-    this.cacheTTL = {
-      availableIDEs: 10000,     // 10 seconds
-      workspaceInfo: 30000,     // 30 seconds
-      projectInfo: 60000,       // 1 minute
-      userPermissions: 300000   // 5 minutes
-    };
-    
-    // Add request deduplication
-    this.pendingRequests = new Map();
-    
-    // Setup cache invalidation on IDE changes
-    this.setupCacheInvalidation();
-  }
-
-  // Enhanced getAvailableIDEs with better caching
-  async getAvailableIDEs(userId) {
+// ❌ BAD - backend/application/services/GitApplicationService.js
+class GitApplicationService {
+  async getStatus(projectId, projectPath, userId) {
     try {
-      this.logger.info('IDEApplicationService: Getting available IDEs', { userId });
-      
-      const cacheKey = `availableIDEs:${userId}`;
-      
-      // Check cache first
-      const cached = this.getCachedResult(cacheKey);
-      if (cached) {
-        this.logger.info('Returning cached IDE data');
-        return {
-          success: true,
-          data: cached
-        };
-      }
-      
-      // Check for pending request
-      if (this.pendingRequests.has(cacheKey)) {
-        this.logger.info('Waiting for pending IDE data request');
-        return await this.pendingRequests.get(cacheKey);
-      }
-      
-      // Create new request promise
-      const requestPromise = this.executeGetAvailableIDEs(userId);
-      this.pendingRequests.set(cacheKey, requestPromise);
-      
-      try {
-        const availableIDEs = await requestPromise;
-        
-        // Cache the result
-        this.setCachedResult(cacheKey, availableIDEs, this.cacheTTL.availableIDEs);
-        
-        return {
-          success: true,
-          data: availableIDEs
-        };
-      } finally {
-        this.pendingRequests.delete(cacheKey);
-      }
-    } catch (error) {
-      this.logger.error('Error getting available IDEs:', error);
-      throw error;
-    }
-  }
+      this.logger.info('GitApplicationService: Getting Git status', { projectId, userId });
 
-  // Execute method for getting available IDEs
-  async executeGetAvailableIDEs(userId) {
-    return await this.ideManager.getAvailableIDEs();
-  }
+      const isGitRepo = await this.gitService.isGitRepository(projectPath);
+      if (!isGitRepo) {
+        throw new Error('Not a Git repository');
+      }
 
-  // Enhanced cache invalidation
-  invalidateIDECache(pattern = null) {
-    if (pattern) {
-      // Invalidate specific pattern
-      const keysToDelete = [];
-      for (const key of this.cache.keys()) {
-        if (key.includes(pattern)) {
-          keysToDelete.push(key);
+      const status = await this.gitService.getStatus(projectPath);
+      const currentBranch = await this.gitService.getCurrentBranch(projectPath); // 1st call
+      
+      return {
+        success: true,
+        data: {
+          status,
+          currentBranch
         }
+      };
+    } catch (error) {
+      this.logger.error('Error getting Git status:', error);
+      throw error;
+    }
+  }
+
+  async getBranches(projectPath, userId) {
+    try {
+      this.logger.info('GitApplicationService: Getting branches', { userId });
+      
+      const branches = await this.gitService.getBranches(projectPath);
+      const currentBranch = await this.gitService.getCurrentBranch(projectPath); // 2nd call - DUPLICATE!
+      
+      return {
+        success: true,
+        data: {
+          branches,
+          currentBranch
+        }
+      };
+    } catch (error) {
+      this.logger.error('Error getting branches:', error);
+      throw error;
+    }
+  }
+}
+```
+
+**Fix (GOOD):**
+```javascript
+// ✅ GOOD - backend/application/services/GitApplicationService.js
+class GitApplicationService {
+  async getStatus(projectId, projectPath, userId) {
+    try {
+      this.logger.info('GitApplicationService: Getting Git status', { projectId, userId });
+
+      const isGitRepo = await this.gitService.isGitRepository(projectPath);
+      if (!isGitRepo) {
+        throw new Error('Not a Git repository');
       }
+
+      const status = await this.gitService.getStatus(projectPath);
+      const currentBranch = await this.gitService.getCurrentBranch(projectPath);
       
-      keysToDelete.forEach(key => this.cache.delete(key));
-      
-      this.logger.info('IDE cache invalidated for pattern', {
-        pattern,
-        keysDeleted: keysToDelete.length
-      });
-    } else {
-      // Invalidate all cache
-      this.cache.clear();
-      this.logger.info('IDE cache completely invalidated');
+      return {
+        success: true,
+        data: {
+          status,
+          currentBranch
+        }
+      };
+    } catch (error) {
+      this.logger.error('Error getting Git status:', error);
+      throw error;
     }
   }
 
-  // Setup cache invalidation on IDE state changes
-  setupCacheInvalidation() {
-    if (this.eventBus) {
-      this.eventBus.subscribe('activeIDEChanged', (eventData) => {
-        this.logger.info('IDE changed, invalidating cache');
-        this.invalidateIDECache('availableIDEs');
-      });
+  async getBranches(projectPath, userId) {
+    try {
+      this.logger.info('GitApplicationService: Getting branches', { userId });
       
-      this.eventBus.subscribe('workspaceChanged', (eventData) => {
-        this.logger.info('Workspace changed, invalidating cache');
-        this.invalidateIDECache('workspaceInfo');
-      });
+      const branches = await this.gitService.getBranches(projectPath);
+      // currentBranch only loaded when needed, not automatically
       
-      this.eventBus.subscribe('projectChanged', (eventData) => {
-        this.logger.info('Project changed, invalidating cache');
-        this.invalidateIDECache('projectInfo');
-      });
+      return {
+        success: true,
+        data: {
+          branches
+        }
+      };
+    } catch (error) {
+      this.logger.error('Error getting branches:', error);
+      throw error;
     }
   }
 
-  // Cache management methods
-  getCachedResult(key) {
-    const entry = this.cache.get(key);
-    if (!entry) return null;
-    
-    if (Date.now() > entry.expiresAt) {
-      this.cache.delete(key);
-      return null;
+  // New method for combined Git info
+  async getGitInfo(projectPath, userId) {
+    try {
+      this.logger.info('GitApplicationService: Getting comprehensive Git info', { userId });
+      
+      const isGitRepo = await this.gitService.isGitRepository(projectPath);
+      if (!isGitRepo) {
+        throw new Error('Not a Git repository');
+      }
+
+      // Batch all Git operations
+      const [status, branches, currentBranch] = await Promise.all([
+        this.gitService.getStatus(projectPath),
+        this.gitService.getBranches(projectPath),
+        this.gitService.getCurrentBranch(projectPath)
+      ]);
+
+      return {
+        success: true,
+        data: {
+          status,
+          branches,
+          currentBranch,
+          isGitRepository: true
+        }
+      };
+    } catch (error) {
+      this.logger.error('Error getting Git info:', error);
+      throw error;
     }
-    
-    return entry.value;
+  }
+}
+```
+
+### **Problem 2: GitController Redundant Calls**
+
+**Current Code (PROBLEM):**
+```javascript
+// ❌ BAD - backend/presentation/api/GitController.js
+class GitController {
+  async getStatus(req, res) {
+    try {
+      const { projectId } = req.params;
+      const { projectPath } = req.query;
+      const userId = req.user.userId;
+
+      // Why are Git operations executed multiple times?
+      const status1 = await this.gitApplicationService.getStatus(projectId, projectPath, userId);
+      const status2 = await this.gitApplicationService.getStatus(projectId, projectPath, userId); // DUPLICATE!
+      
+      res.json(status1);
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  }
+}
+```
+
+**Fix (GOOD):**
+```javascript
+// ✅ GOOD - backend/presentation/api/GitController.js
+class GitController {
+  async getStatus(req, res) {
+    try {
+      const { projectId } = req.params;
+      const { projectPath } = req.query;
+      const userId = req.user.userId;
+
+      // Call only once!
+      const status = await this.gitApplicationService.getStatus(projectId, projectPath, userId);
+      
+      res.json(status);
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
   }
 
-  setCachedResult(key, value, ttl) {
-    this.cache.set(key, {
-      value,
-      expiresAt: Date.now() + ttl,
-      createdAt: Date.now()
-    });
-  }
+  // New method for combined Git info
+  async getGitInfo(req, res) {
+    try {
+      const { projectPath } = req.query;
+      const userId = req.user.userId;
 
-  // Get cache statistics
-  getCacheStats() {
-    const now = Date.now();
-    let validEntries = 0;
-    let expiredEntries = 0;
-    
-    for (const [key, entry] of this.cache.entries()) {
-      if (now > entry.expiresAt) {
-        expiredEntries++;
+      const gitInfo = await this.gitApplicationService.getGitInfo(projectPath, userId);
+      
+      res.json(gitInfo);
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  }
+}
+```
+
+### **Problem 3: GitService Redundant Step Executions**
+
+**Current Code (PROBLEM):**
+```javascript
+// ❌ BAD - backend/infrastructure/external/GitService.js
+class GitService {
+  async getCurrentBranch(repoPath) {
+    try {
+      this.logger.info('GitService: Getting current branch using step', { repoPath });
+      
+      if (!this.stepRegistry) {
+        throw new Error('StepRegistry not available for Git operations');
+      }
+
+      const stepContext = {
+        projectPath: repoPath
+      };
+
+      const result = await this.stepRegistry.executeStep('GitGetCurrentBranchStep', stepContext);
+      
+      if (result.success) {
+        const currentBranch = result.result?.currentBranch || result.currentBranch;
+        this.logger.info(`Current branch for ${repoPath}: "${currentBranch}"`);
+        return currentBranch;
       } else {
-        validEntries++;
+        throw new Error(result.error || 'Failed to get current branch');
       }
-    }
-    
-    return {
-      totalEntries: this.cache.size,
-      validEntries,
-      expiredEntries,
-      pendingRequests: this.pendingRequests.size
-    };
-  }
-
-  // ... existing methods remain unchanged ...
-}
-```
-
-### 3. CursorIDEService.js Cleanup
-**Path**: `backend/domain/services/CursorIDEService.js`
-
-**Current Issues Identified**:
-- Deprecated `sendMessage` method still exists
-- Should be removed to prevent confusion
-
-**Key Modifications**:
-```javascript
-class CursorIDEService {
-  constructor(browserManager, ideManager, eventBus = null) {
-    // ... existing constructor code ...
-    
-    // Remove deprecated sendMessage method reference
-    this.logger.info('CursorIDEService: Initialized without deprecated sendMessage method');
-  }
-
-  // REMOVE the deprecated sendMessage method entirely
-  // It should not exist in this class anymore
-  
-  // Keep all other methods unchanged
-  // ... existing methods remain unchanged ...
-}
-```
-
-## 📁 Files to Create
-
-### 1. ChatDeduplicationService.js
-**Path**: `backend/domain/services/ChatDeduplicationService.js`
-
-**Purpose**: Dedicated service for chat message deduplication
-
-**Implementation**:
-```javascript
-const { Logger } = require('@infrastructure/logging/Logger');
-const crypto = require('crypto');
-
-class ChatDeduplicationService {
-  constructor(logger = null) {
-    this.logger = logger || new Logger('ChatDeduplicationService');
-    this.pendingMessages = new Map();
-    this.messageHistory = new Map();
-    this.deduplicationWindow = 5000; // 5 seconds
-  }
-
-  /**
-   * Check if message is duplicate and handle accordingly
-   * @param {Object} messageData - Message data
-   * @param {Object} userContext - User context
-   * @returns {Object} Deduplication result
-   */
-  async checkDuplicate(messageData, userContext) {
-    const fingerprint = this.generateFingerprint(messageData, userContext);
-    const now = Date.now();
-    
-    // Check if message is already being processed
-    if (this.pendingMessages.has(fingerprint)) {
-      this.logger.info('ChatDeduplicationService: Duplicate message detected (pending)', { fingerprint: fingerprint.substring(0, 8) });
-      return {
-        isDuplicate: true,
-        type: 'pending',
-        existingPromise: this.pendingMessages.get(fingerprint)
-      };
-    }
-    
-    // Check if message was recently sent
-    const recentMessage = this.messageHistory.get(fingerprint);
-    if (recentMessage && (now - recentMessage.timestamp) < this.deduplicationWindow) {
-      this.logger.info('ChatDeduplicationService: Duplicate message detected (recent)', { fingerprint: fingerprint.substring(0, 8) });
-      return {
-        isDuplicate: true,
-        type: 'recent',
-        existingResult: recentMessage.result
-      };
-    }
-    
-    return {
-      isDuplicate: false,
-      fingerprint
-    };
-  }
-
-  /**
-   * Register message as being processed
-   * @param {string} fingerprint - Message fingerprint
-   * @param {Promise} promise - Processing promise
-   */
-  registerPendingMessage(fingerprint, promise) {
-    this.pendingMessages.set(fingerprint, promise);
-    
-    // Clean up after promise resolves
-    promise.finally(() => {
-      this.pendingMessages.delete(fingerprint);
-    });
-  }
-
-  /**
-   * Register completed message
-   * @param {string} fingerprint - Message fingerprint
-   * @param {Object} result - Message result
-   */
-  registerCompletedMessage(fingerprint, result) {
-    this.messageHistory.set(fingerprint, {
-      result,
-      timestamp: Date.now()
-    });
-    
-    // Clean up old messages
-    this.cleanupOldMessages();
-  }
-
-  /**
-   * Generate fingerprint for message
-   * @param {Object} messageData - Message data
-   * @param {Object} userContext - User context
-   * @returns {string} Fingerprint
-   */
-  generateFingerprint(messageData, userContext) {
-    const { message, requestedBy, sessionId, port } = messageData;
-    const { userId } = userContext;
-    
-    const data = {
-      message: message?.trim(),
-      requestedBy,
-      sessionId,
-      port,
-      userId,
-      timestamp: Math.floor(Date.now() / 1000) // Round to nearest second
-    };
-    
-    return crypto.createHash('sha256').update(JSON.stringify(data)).digest('hex');
-  }
-
-  /**
-   * Clean up old messages from history
-   */
-  cleanupOldMessages() {
-    const now = Date.now();
-    const keysToDelete = [];
-    
-    for (const [key, entry] of this.messageHistory.entries()) {
-      if (now - entry.timestamp > this.deduplicationWindow) {
-        keysToDelete.push(key);
-      }
-    }
-    
-    keysToDelete.forEach(key => this.messageHistory.delete(key));
-    
-    if (keysToDelete.length > 0) {
-      this.logger.debug('ChatDeduplicationService: Cleaned up old messages', {
-        cleaned: keysToDelete.length,
-        remaining: this.messageHistory.size
+    } catch (error) {
+      this.logger.error('GitService: Failed to get current branch', {
+        repoPath,
+        error: error.message
       });
+      throw new Error(`Failed to get current branch: ${error.message}`);
     }
   }
 
-  /**
-   * Get service statistics
-   * @returns {Object} Service stats
-   */
-  getStats() {
-    return {
-      pendingMessages: this.pendingMessages.size,
-      messageHistory: this.messageHistory.size,
-      deduplicationWindow: this.deduplicationWindow
-    };
-  }
+  async getStatus(repoPath, options = {}) {
+    try {
+      this.logger.info('GitService: Getting status using step', { repoPath, porcelain: options.porcelain });
+      
+      if (!this.stepRegistry) {
+        throw new Error('StepRegistry not available for Git operations');
+      }
 
-  /**
-   * Clear all data
-   */
-  clear() {
-    this.pendingMessages.clear();
-    this.messageHistory.clear();
-    this.logger.info('ChatDeduplicationService: All data cleared');
+      const stepContext = {
+        projectPath: repoPath,
+        porcelain: options.porcelain
+      };
+
+      const result = await this.stepRegistry.executeStep('GitGetStatusStep', stepContext);
+      
+      if (result.success) {
+        return result.result?.status || result.status;
+      } else {
+        throw new Error(result.error || 'Failed to get status');
+      }
+    } catch (error) {
+      this.logger.error('GitService: Failed to get status', {
+        repoPath,
+        error: error.message
+      });
+      throw new Error(`Failed to get status: ${error.message}`);
+    }
   }
 }
-
-module.exports = ChatDeduplicationService;
 ```
 
-## 🧪 Testing Strategy
+**Fix (GOOD):**
+```javascript
+// ✅ GOOD - backend/infrastructure/external/GitService.js
+class GitService {
+  async getCurrentBranch(repoPath) {
+    try {
+      this.logger.info('GitService: Getting current branch using step', { repoPath });
+      
+      if (!this.stepRegistry) {
+        throw new Error('StepRegistry not available for Git operations');
+      }
 
-### Unit Tests
-**File**: `tests/unit/ChatAndIDEServiceFixes.test.js`
+      const stepContext = {
+        projectPath: repoPath
+      };
 
-**Test Cases**:
-- WebChatApplicationService deduplication
-- IDEApplicationService caching
-- Chat message fingerprinting
-- Cache invalidation scenarios
-- Error handling with deduplication
+      const result = await this.stepRegistry.executeStep('GitGetCurrentBranchStep', stepContext);
+      
+      if (result.success) {
+        const currentBranch = result.result?.currentBranch || result.currentBranch;
+        this.logger.info(`Current branch for ${repoPath}: "${currentBranch}"`);
+        return currentBranch;
+      } else {
+        throw new Error(result.error || 'Failed to get current branch');
+      }
+    } catch (error) {
+      this.logger.error('GitService: Failed to get current branch', {
+        repoPath,
+        error: error.message
+      });
+      throw new Error(`Failed to get current branch: ${error.message}`);
+    }
+  }
 
-### Integration Tests
-**File**: `tests/integration/ChatAndIDEServiceFixes.test.js`
+  async getStatus(repoPath, options = {}) {
+    try {
+      this.logger.info('GitService: Getting status using step', { repoPath, porcelain: options.porcelain });
+      
+      if (!this.stepRegistry) {
+        throw new Error('StepRegistry not available for Git operations');
+      }
 
-**Test Cases**:
-- End-to-end chat message flow
-- IDE data caching and invalidation
-- Concurrent message handling
-- Performance improvements measurement
+      const stepContext = {
+        projectPath: repoPath,
+        porcelain: options.porcelain
+      };
 
-## 📊 Success Metrics
-- [ ] 95% reduction in duplicate chat messages
-- [ ] 80% improvement in IDE data response times
-- [ ] Cache hit rate > 90% for IDE operations
-- [ ] All unit tests passing
-- [ ] Integration tests passing
-- [ ] No deprecated method usage
+      const result = await this.stepRegistry.executeStep('GitGetStatusStep', stepContext);
+      
+      if (result.success) {
+        return result.result?.status || result.status;
+      } else {
+        throw new Error(result.error || 'Failed to get status');
+      }
+    } catch (error) {
+      this.logger.error('GitService: Failed to get status', {
+        repoPath,
+        error: error.message
+      });
+      throw new Error(`Failed to get status: ${error.message}`);
+    }
+  }
 
-## 🔄 Next Phase
-After completing Phase 3, proceed to [Phase 4: Analytics and Monitoring](./backend-duplicate-execution-fix-phase-4.md) to implement analytics and monitoring systems.
+  // New method for combined Git operations
+  async getGitInfo(repoPath, options = {}) {
+    try {
+      this.logger.info('GitService: Getting comprehensive Git info', { repoPath });
+      
+      if (!this.stepRegistry) {
+        throw new Error('StepRegistry not available for Git operations');
+      }
 
-## 📝 Notes
-- This phase addresses the most critical duplicate execution issues
-- Chat message deduplication prevents spam and improves performance
-- IDE caching reduces redundant API calls
-- Deprecated methods are properly removed
-- The implementation maintains backward compatibility 
+      // Batch all Git operations
+      const [statusResult, branchesResult, currentBranchResult] = await Promise.all([
+        this.stepRegistry.executeStep('GitGetStatusStep', { projectPath: repoPath }),
+        this.stepRegistry.executeStep('GitGetBranchesStep', { projectPath: repoPath }),
+        this.stepRegistry.executeStep('GitGetCurrentBranchStep', { projectPath: repoPath })
+      ]);
+
+      return {
+        status: statusResult.success ? statusResult.result?.status : null,
+        branches: branchesResult.success ? branchesResult.result?.branches : null,
+        currentBranch: currentBranchResult.success ? currentBranchResult.result?.currentBranch : null
+      };
+    } catch (error) {
+      this.logger.error('GitService: Failed to get Git info', {
+        repoPath,
+        error: error.message
+      });
+      throw new Error(`Failed to get Git info: ${error.message}`);
+    }
+  }
+}
+```
+
+## 📁 **Files to Fix**
+
+### **1. GitApplicationService.js**
+**Path**: `backend/application/services/GitApplicationService.js`
+
+**Fixes:**
+- [ ] Remove duplicate `getCurrentBranch()` calls
+- [ ] Separate `getStatus()` and `getBranches()` cleanly
+- [ ] Add `getGitInfo()` method
+
+**Code Changes:**
+```javascript
+// ❌ REMOVE: Duplicate getCurrentBranch calls
+async getBranches(projectPath, userId) {
+  const branches = await this.gitService.getBranches(projectPath);
+  const currentBranch = await this.gitService.getCurrentBranch(projectPath); // REMOVE!
+  return { branches, currentBranch };
+}
+
+// ✅ KEEP: Clean separation
+async getBranches(projectPath, userId) {
+  const branches = await this.gitService.getBranches(projectPath);
+  return { branches };
+}
+
+// ✅ ADD: Combined method
+async getGitInfo(projectPath, userId) {
+  const [status, branches, currentBranch] = await Promise.all([
+    this.gitService.getStatus(projectPath),
+    this.gitService.getBranches(projectPath),
+    this.gitService.getCurrentBranch(projectPath)
+  ]);
+  return { status, branches, currentBranch };
+}
+```
+
+### **2. GitController.js**
+**Path**: `backend/presentation/api/GitController.js`
+
+**Fixes:**
+- [ ] Remove duplicate service calls
+- [ ] Add `getGitInfo()` endpoint
+- [ ] Simplify request handling
+
+**Code Changes:**
+```javascript
+// ❌ REMOVE: Duplicate service calls
+async getStatus(req, res) {
+  const status1 = await this.gitApplicationService.getStatus(projectId, projectPath, userId);
+  const status2 = await this.gitApplicationService.getStatus(projectId, projectPath, userId); // REMOVE!
+  res.json(status1);
+}
+
+// ✅ KEEP: Call only once
+async getStatus(req, res) {
+  const status = await this.gitApplicationService.getStatus(projectId, projectPath, userId);
+  res.json(status);
+}
+
+// ✅ ADD: New endpoint
+async getGitInfo(req, res) {
+  const gitInfo = await this.gitApplicationService.getGitInfo(projectPath, userId);
+  res.json(gitInfo);
+}
+```
+
+### **3. GitService.js**
+**Path**: `backend/infrastructure/external/GitService.js`
+
+**Fixes:**
+- [ ] Optimize step execution
+- [ ] Add `getGitInfo()` method
+- [ ] Improve error handling
+
+**Code Changes:**
+```javascript
+// ✅ ADD: Combined Git operations
+async getGitInfo(repoPath, options = {}) {
+  const [statusResult, branchesResult, currentBranchResult] = await Promise.all([
+    this.stepRegistry.executeStep('GitGetStatusStep', { projectPath: repoPath }),
+    this.stepRegistry.executeStep('GitGetBranchesStep', { projectPath: repoPath }),
+    this.stepRegistry.executeStep('GitGetCurrentBranchStep', { projectPath: repoPath })
+  ]);
+  
+  return {
+    status: statusResult.success ? statusResult.result?.status : null,
+    branches: branchesResult.success ? branchesResult.result?.branches : null,
+    currentBranch: currentBranchResult.success ? currentBranchResult.result?.currentBranch : null
+  };
+}
+```
+
+## 🧪 **Testing Strategy**
+
+### **Unit Tests:**
+```javascript
+// tests/unit/GitApplicationService.test.js
+describe('GitApplicationService', () => {
+  it('should not make duplicate getCurrentBranch calls', async () => {
+    const service = new GitApplicationService();
+    const mockGitService = { 
+      getStatus: jest.fn(),
+      getCurrentBranch: jest.fn(),
+      getBranches: jest.fn()
+    };
+    service.gitService = mockGitService;
+
+    await service.getStatus('project1', '/test/repo', 'user1');
+    await service.getBranches('/test/repo', 'user1');
+
+    // getCurrentBranch should only be called once (in getStatus)
+    expect(mockGitService.getCurrentBranch).toHaveBeenCalledTimes(1);
+  });
+
+  it('should provide getGitInfo method for combined operations', async () => {
+    const service = new GitApplicationService();
+    const mockGitService = { 
+      getStatus: jest.fn().mockResolvedValue('clean'),
+      getCurrentBranch: jest.fn().mockResolvedValue('main'),
+      getBranches: jest.fn().mockResolvedValue(['main', 'develop'])
+    };
+    service.gitService = mockGitService;
+
+    const result = await service.getGitInfo('/test/repo', 'user1');
+
+    expect(result.success).toBe(true);
+    expect(result.data.status).toBe('clean');
+    expect(result.data.currentBranch).toBe('main');
+    expect(result.data.branches).toEqual(['main', 'develop']);
+  });
+});
+```
+
+### **Integration Tests:**
+```javascript
+// tests/integration/GitService.test.js
+describe('Git Service Integration', () => {
+  it('should not execute GitGetCurrentBranchStep multiple times', async () => {
+    const service = new GitApplicationService();
+    const mockStepRegistry = {
+      executeStep: jest.fn().mockResolvedValue({
+        success: true,
+        result: { currentBranch: 'main' }
+      })
+    };
+    service.stepRegistry = mockStepRegistry;
+
+    await service.getStatus('project1', '/test/repo', 'user1');
+    await service.getBranches('/test/repo', 'user1');
+
+    // GitGetCurrentBranchStep should only be executed once
+    const gitCurrentBranchCalls = mockStepRegistry.executeStep.mock.calls.filter(
+      call => call[0] === 'GitGetCurrentBranchStep'
+    );
+    expect(gitCurrentBranchCalls).toHaveLength(1);
+  });
+});
+```
+
+## 📊 **Success Criteria**
+- [ ] GitApplicationService makes no duplicate `getCurrentBranch()` calls
+- [ ] GitController makes no duplicate service calls
+- [ ] GitService has optimized step execution
+- [ ] New `getGitInfo()` method for combined operations
+- [ ] All legacy chat components removed
+- [ ] Only step-based chat architecture remains
+- [ ] All tests pass
+- [ ] No GitGetCurrentBranchStep or GitGetStatusStep duplicates in logs
+- [ ] No GetChatHistoryStep duplicates in logs
+
+## 🔄 **Dependencies**
+- **Requires**: Phase 1 (Root Cause Analysis), Phase 2 (Chat Service Fixes)
+- **Blocks**: None (final phase)
+- **Related**: Git system optimization, Legacy cleanup
+
+## 📈 **Expected Impact**
+- **Performance**: 50% reduction in Git API response times
+- **Logs**: No more GitGetCurrentBranchStep or GitGetStatusStep duplicates
+- **Code Quality**: Cleaner, maintainable Git service code
+- **User Experience**: Faster Git operations
+- **Architecture**: Clean, modern step-based approach
+- **Maintenance**: Easier debugging and optimization
+
+## 🚀 **Completion**
+This phase completes the backend duplicate execution fix implementation and legacy cleanup.
+
+## 📝 **Notes**
+- **Focus**: Real code fixes, no workarounds
+- **Principle**: Clean, maintainable backend architecture
+- **Goal**: Eliminate all Git service duplicates and legacy components
+- **Quality**: Proper backend design without masking
+- **Result**: Fully functional backend without duplicates
+- **Legacy Cleanup**: Remove all redundant chat components
+- **Architecture**: Consolidate to step-based approach
+- Request deduplication is more effective than caching for this use case 

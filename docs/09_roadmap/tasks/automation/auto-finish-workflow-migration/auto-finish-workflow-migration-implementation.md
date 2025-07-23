@@ -44,7 +44,16 @@
 
 ## 4. Implementation Phases
 
+### 📋 Task Splitting Recommendations
+The original 16-hour task has been split into 4 manageable phases to meet size and complexity guidelines:
+
+- **Phase 1**: [Service Analysis & Step Mapping](./auto-finish-workflow-migration-phase-1.md) (4 hours) - Foundation
+- **Phase 2**: [Core Workflow Steps Creation](./auto-finish-workflow-migration-phase-2.md) (6 hours) - Core Implementation  
+- **Phase 3**: [Existing Steps Enhancement](./auto-finish-workflow-migration-phase-3.md) (4 hours) - Integration
+- **Phase 4**: [Integration & Testing](./auto-finish-workflow-migration-phase-4.md) (2 hours) - Validation
+
 ### Phase 1: Service Analysis & Step Mapping (4 hours)
+**File**: [auto-finish-workflow-migration-phase-1.md](./auto-finish-workflow-migration-phase-1.md)
 - [ ] Analyze existing auto-finish services
 - [ ] Map service functionality to workflow steps
 - [ ] Identify missing workflow step categories
@@ -52,6 +61,7 @@
 - [ ] Create dependency injection mappings
 
 ### Phase 2: Core Workflow Steps Creation (6 hours)
+**File**: [auto-finish-workflow-migration-phase-2.md](./auto-finish-workflow-migration-phase-2.md)
 - [ ] Create fallback_detection_step.js
   - [ ] Implement user input need detection logic
   - [ ] Add IDE state analysis (dialogs, input focus, errors)
@@ -96,6 +106,7 @@
   - [ ] Follow exact step patterns (config, constructor, execute, validation, export)
 
 ### Phase 3: Existing Steps Enhancement (4 hours)
+**File**: [auto-finish-workflow-migration-phase-3.md](./auto-finish-workflow-migration-phase-3.md)
 - [ ] Enhance ide_send_message_enhanced.js with response waiting
 - [ ] Enhance confirmation_step.js with quality assessment
 - [ ] Enhance completion_detection_step.js with smart detection
@@ -103,6 +114,7 @@
 - [ ] Enhance auto_finish_step.js with session management
 
 ### Phase 4: Integration & Testing (2 hours)
+**File**: [auto-finish-workflow-migration-phase-4.md](./auto-finish-workflow-migration-phase-4.md)
 - [ ] Update StepRegistry with new steps
 - [ ] Create integration tests
 - [ ] Update workflow configurations

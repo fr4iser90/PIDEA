@@ -1,738 +1,344 @@
-# Phase 2: Git Service Optimization Implementation
+# Phase 2: Chat Service Fixes
 
 ## 📋 Phase Overview
-- **Phase**: 2 of 5
+- **Phase**: 2 of 3
 - **Duration**: 3 hours
-- **Priority**: Medium
-- **Status**: Planning
-- **Dependencies**: Phase 1 completion, GitService, StepRegistry
+- **Priority**: Critical
+- **Status**: Ready
+- **Dependencies**: Phase 1 completion
 
-## 🎯 Objectives
-1. Add caching layer to GitService
-2. Implement request batching for Git operations
-3. Create Git operation deduplication
-4. Add cache invalidation for Git state changes
-5. Optimize GitGetCurrentBranchStep execution
+## 🎯 **PRINCIPLE: Only Real Backend Fixes for Chat Services**
 
-## 📁 Files to Modify
+### **CRITICAL PROBLEM: GetChatHistoryStep Duplicates**
+- **2 identical calls** within 3ms
+- **Root Cause**: WebChatController calls `getPortChatHistory()` twice
+- **Solution**: Real code fixes, no workarounds
 
-### 1. GitService.js Optimizations
-**Path**: `backend/infrastructure/external/GitService.js`
+## 🔍 **Root Cause Analysis - Chat Services**
 
-**Current Issues Identified**:
-- Multiple calls to `getCurrentBranch` in same request
-- No caching for Git operations
-- Each Git step executed independently
-- No request batching
+### **Problem 1: WebChatController Duplicate Calls**
 
-**Key Modifications**:
+**Current Code (PROBLEM):**
 ```javascript
-class GitService {
-  constructor(dependencies = {}) {
-    // ... existing constructor code ...
+// ❌ BAD - backend/presentation/api/WebChatController.js
+class WebChatController {
+  async getChatHistory(req, res) {
+    try {
+      // Why is this called twice?
+      const result1 = await this.webChatService.getPortChatHistory(req.query, req.user);
+      const result2 = await this.webChatService.getPortChatHistory(req.query, req.user); // DUPLICATE!
+      
+      res.json(result1);
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  }
+}
+```
+
+**Fix (GOOD):**
+```javascript
+// ✅ GOOD - backend/presentation/api/WebChatController.js
+class WebChatController {
+  async getChatHistory(req, res) {
+    try {
+      // Call only once!
+      const result = await this.webChatService.getPortChatHistory(req.query, req.user);
+      
+      res.json(result);
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  }
+}
+```
+
+### **Problem 2: WebChatApplicationService Inconsistencies**
+
+**Current Code (PROBLEM):**
+```javascript
+// ❌ BAD - backend/application/services/WebChatApplicationService.js
+class WebChatApplicationService {
+  async getPortChatHistory(queryData, userContext) {
+    // Method 1: Direct step execution
+    const step = this.stepRegistry.getStep('GetChatHistoryStep');
+    const result = await step.execute(stepData);
     
-    // Add caching layer
-    this.cache = new Map();
-    this.cacheTTL = {
-      status: 30000,      // 30 seconds
-      currentBranch: 60000, // 1 minute
-      branches: 120000,   // 2 minutes
-      remoteUrl: 300000   // 5 minutes
+    // Method 2: StepRegistry execution (DUPLICATE!)
+    const result2 = await this.stepRegistry.executeStep('GetChatHistoryStep', stepData);
+    
+    return result;
+  }
+}
+```
+
+**Fix (GOOD):**
+```javascript
+// ✅ GOOD - backend/application/services/WebChatApplicationService.js
+class WebChatApplicationService {
+  async getPortChatHistory(queryData, userContext) {
+    const { port, limit = 50, offset = 0 } = queryData;
+    
+    this.logger.info('Getting port chat history:', { 
+      port,
+      limit,
+      offset,
+      userId: userContext.userId
+    });
+    
+    // Use only ONE method - StepRegistry execution
+    const stepData = {
+      port: port,
+      limit: parseInt(limit),
+      offset: parseInt(offset),
+      userId: userContext.userId,
+      includeUserData: userContext.isAdmin || false
     };
     
-    // Add request batching
-    this.pendingRequests = new Map();
-    this.batchTimeout = 100; // 100ms batch window
-  }
-
-  // Enhanced getCurrentBranch with caching
-  async getCurrentBranch(repoPath) {
-    const cacheKey = `currentBranch:${repoPath}`;
+    const result = await this.stepRegistry.executeStep('GetChatHistoryStep', stepData);
     
-    // Check cache first
-    const cached = this.getCachedResult(cacheKey);
-    if (cached) {
-      this.logger.debug('GitService: Returning cached current branch', { repoPath });
-      return cached;
-    }
-
-    // Check for pending request
-    if (this.pendingRequests.has(cacheKey)) {
-      this.logger.debug('GitService: Waiting for pending current branch request', { repoPath });
-      return await this.pendingRequests.get(cacheKey);
-    }
-
-    // Create new request promise
-    const requestPromise = this.executeGetCurrentBranch(repoPath);
-    this.pendingRequests.set(cacheKey, requestPromise);
-
-    try {
-      const result = await requestPromise;
-      this.setCachedResult(cacheKey, result, this.cacheTTL.currentBranch);
-      return result;
-    } finally {
-      this.pendingRequests.delete(cacheKey);
-    }
-  }
-
-  // Enhanced getStatus with caching
-  async getStatus(repoPath, options = {}) {
-    const { porcelain = true } = options;
-    const cacheKey = `status:${repoPath}:${porcelain}`;
-    
-    // Check cache first
-    const cached = this.getCachedResult(cacheKey);
-    if (cached) {
-      this.logger.debug('GitService: Returning cached status', { repoPath });
-      return cached;
-    }
-
-    // Check for pending request
-    if (this.pendingRequests.has(cacheKey)) {
-      this.logger.debug('GitService: Waiting for pending status request', { repoPath });
-      return await this.pendingRequests.get(cacheKey);
-    }
-
-    // Create new request promise
-    const requestPromise = this.executeGetStatus(repoPath, options);
-    this.pendingRequests.set(cacheKey, requestPromise);
-
-    try {
-      const result = await requestPromise;
-      this.setCachedResult(cacheKey, result, this.cacheTTL.status);
-      return result;
-    } finally {
-      this.pendingRequests.delete(cacheKey);
-    }
-  }
-
-  // Enhanced getBranches with caching and batching
-  async getBranches(repoPath, options = {}) {
-    const { includeRemote = true, includeLocal = true } = options;
-    const cacheKey = `branches:${repoPath}:${includeRemote}:${includeLocal}`;
-    
-    // Check cache first
-    const cached = this.getCachedResult(cacheKey);
-    if (cached) {
-      this.logger.debug('GitService: Returning cached branches', { repoPath });
-      return cached;
-    }
-
-    // Check for pending request
-    if (this.pendingRequests.has(cacheKey)) {
-      this.logger.debug('GitService: Waiting for pending branches request', { repoPath });
-      return await this.pendingRequests.get(cacheKey);
-    }
-
-    // Create new request promise
-    const requestPromise = this.executeGetBranches(repoPath, options);
-    this.pendingRequests.set(cacheKey, requestPromise);
-
-    try {
-      const result = await requestPromise;
-      this.setCachedResult(cacheKey, result, this.cacheTTL.branches);
-      return result;
-    } finally {
-      this.pendingRequests.delete(cacheKey);
-    }
-  }
-
-  // Cache management methods
-  getCachedResult(key) {
-    const entry = this.cache.get(key);
-    if (!entry) return null;
-    
-    if (Date.now() > entry.expiresAt) {
-      this.cache.delete(key);
-      return null;
-    }
-    
-    return entry.value;
-  }
-
-  setCachedResult(key, value, ttl) {
-    this.cache.set(key, {
-      value,
-      expiresAt: Date.now() + ttl,
-      createdAt: Date.now()
-    });
-  }
-
-  // Cache invalidation methods
-  invalidateCache(repoPath) {
-    const keysToDelete = [];
-    for (const key of this.cache.keys()) {
-      if (key.includes(repoPath)) {
-        keysToDelete.push(key);
-      }
-    }
-    
-    keysToDelete.forEach(key => this.cache.delete(key));
-    this.logger.debug('GitService: Invalidated cache for repository', { repoPath, keysDeleted: keysToDelete.length });
-  }
-
-  // Execute methods (extracted from original methods)
-  async executeGetCurrentBranch(repoPath) {
-    try {
-      this.logger.info('GitService: Getting current branch using step', { repoPath });
-      
-      if (!this.stepRegistry) {
-        throw new Error('StepRegistry not available for Git operations');
-      }
-
-      const stepContext = {
-        projectPath: repoPath
-      };
-
-      const result = await this.stepRegistry.executeStep('GitGetCurrentBranchStep', stepContext);
-      
-      if (result.success) {
-        const currentBranch = result.result?.currentBranch || result.currentBranch;
-        this.logger.info(`Aktueller Branch für ${repoPath}: "${currentBranch}"`);
-        return currentBranch;
-      } else {
-        throw new Error(result.error || 'Failed to get current branch');
-      }
-    } catch (error) {
-      this.logger.error('GitService: Failed to get current branch', {
-        repoPath,
-        error: error.message
-      });
-      throw new Error(`Failed to get current branch: ${error.message}`);
-    }
-  }
-
-  async executeGetStatus(repoPath, options = {}) {
-    const { porcelain = true } = options;
-    
-    try {
-      this.logger.info('GitService: Getting status using step', { repoPath, porcelain });
-      
-      if (!this.stepRegistry) {
-        throw new Error('StepRegistry not available for Git operations');
-      }
-
-      const stepContext = {
-        projectPath: repoPath,
-        porcelain
-      };
-
-      const result = await this.stepRegistry.executeStep('GitGetStatusStep', stepContext);
-      
-      if (result.success) {
-        return result.result?.status || result.status;
-      } else {
-        throw new Error(result.error || 'Failed to get status');
-      }
-    } catch (error) {
-      this.logger.error('GitService: Failed to get status', {
-        repoPath,
-        error: error.message
-      });
-      throw new Error(`Failed to get status: ${error.message}`);
-    }
-  }
-
-  async executeGetBranches(repoPath, options = {}) {
-    const { includeRemote = true, includeLocal = true } = options;
-    
-    try {
-      this.logger.info('GitService: Getting branches using step', { repoPath, includeRemote, includeLocal });
-      
-      if (!this.stepRegistry) {
-        throw new Error('StepRegistry not available for Git operations');
-      }
-
-      const stepContext = {
-        projectPath: repoPath,
-        includeRemote,
-        includeLocal
-      };
-
-      const result = await this.stepRegistry.executeStep('GitGetBranchesStep', stepContext);
-      
-      if (result.success) {
-        return result.result?.branches || { local: [], remote: [], all: [] };
-      } else {
-        throw new Error(result.error || 'Failed to get branches');
-      }
-    } catch (error) {
-      this.logger.error('GitService: Failed to get branches', {
-        repoPath,
-        error: error.message
-      });
-      throw new Error(`Failed to get branches: ${error.message}`);
-    }
-  }
-
-  // Cache statistics
-  getCacheStats() {
-    const now = Date.now();
-    let validEntries = 0;
-    let expiredEntries = 0;
-    
-    for (const [key, entry] of this.cache.entries()) {
-      if (now > entry.expiresAt) {
-        expiredEntries++;
-      } else {
-        validEntries++;
-      }
+    // Check if step execution was successful
+    if (!result.success) {
+      throw new Error(`Step execution failed: ${result.error}`);
     }
     
     return {
-      totalEntries: this.cache.size,
-      validEntries,
-      expiredEntries,
-      pendingRequests: this.pendingRequests.size
+      messages: result.result.data?.messages || result.result.messages || [],
+      sessionId: result.result.sessionId,
+      port: port,
+      totalCount: result.result.data?.pagination?.total || result.result.totalCount || 0,
+      hasMore: result.result.hasMore || false
     };
   }
+}
+```
 
-  // Cleanup expired cache entries
-  cleanupCache() {
-    const now = Date.now();
-    const keysToDelete = [];
+### **Problem 3: GetChatHistoryHandler Redundancy**
+
+**Current Code (PROBLEM):**
+```javascript
+// ❌ BAD - backend/application/handlers/categories/ide/GetChatHistoryHandler.js
+class GetChatHistoryHandler {
+  async getPortChatHistory(port, userId, options = {}) {
+    // Duplicate logic with WebChatApplicationService
+    const messages = await this.getMessagesByPort(port, userId, { limit, offset });
     
-    for (const [key, entry] of this.cache.entries()) {
-      if (now > entry.expiresAt) {
-        keysToDelete.push(key);
+    // Live chat extraction (DUPLICATE!)
+    let liveMessages = [];
+    try {
+      const ideService = await this.getIDEServiceForPort(port);
+      if (ideService) {
+        liveMessages = await ideService.extractChatHistory(); // DUPLICATE!
       }
+    } catch (error) {
+      logger.info(`Failed to extract live chat: ${error.message}`);
     }
     
-    keysToDelete.forEach(key => this.cache.delete(key));
-    
-    if (keysToDelete.length > 0) {
-      this.logger.debug('GitService: Cleaned up expired cache entries', { 
-        cleaned: keysToDelete.length,
-        remaining: this.cache.size
-      });
-    }
+    return { messages: liveMessages, port, totalCount: liveMessages.length };
   }
 }
 ```
 
-### 2. GitApplicationService.js Optimizations
-**Path**: `backend/application/services/GitApplicationService.js`
-
-**Current Issues Identified**:
-- Multiple calls to `getCurrentBranch` in same request
-- No request batching
-- Redundant Git operations
-
-**Key Modifications**:
+**Fix (GOOD):**
 ```javascript
-class GitApplicationService {
-  constructor(dependencies = {}) {
-    // ... existing constructor code ...
-    
-    // Add request batching
-    this.pendingRequests = new Map();
-    this.batchTimeout = 50; // 50ms batch window
+// ✅ GOOD - Remove redundant handler logic
+// GetChatHistoryHandler.js should only be used for session-based chats
+// Port-based chats go through WebChatApplicationService
+
+class GetChatHistoryHandler {
+  async getPortChatHistory(port, userId, options = {}) {
+    // Remove this method - taken over by WebChatApplicationService
+    throw new Error('getPortChatHistory() moved to WebChatApplicationService');
   }
-
-  // Optimized getStatus with single getCurrentBranch call
-  async getStatus(projectId, projectPath, userId) {
-    try {
-      this.logger.info('GitApplicationService: Getting Git status', { projectId, userId });
-
-      // Check if it's a Git repository
-      const isGitRepo = await this.gitService.isGitRepository(projectPath);
-      if (!isGitRepo) {
-        throw new Error('Not a Git repository');
-      }
-
-      // Batch status and current branch requests
-      const [status, currentBranch] = await Promise.all([
-        this.gitService.getStatus(projectPath),
-        this.gitService.getCurrentBranch(projectPath)
-      ]);
-
-      return {
-        success: true,
-        data: {
-          status,
-          currentBranch
-        }
-      };
-    } catch (error) {
-      this.logger.error('Error getting Git status:', error);
-      throw error;
-    }
-  }
-
-  // Optimized getBranches with single getCurrentBranch call
-  async getBranches(projectPath, userId) {
-    try {
-      this.logger.info('GitApplicationService: Getting branches', { userId });
-      
-      // Batch branches and current branch requests
-      const [branches, currentBranch] = await Promise.all([
-        this.gitService.getBranches(projectPath),
-        this.gitService.getCurrentBranch(projectPath)
-      ]);
-      
-      return {
-        success: true,
-        data: {
-          branches,
-          currentBranch
-        }
-      };
-    } catch (error) {
-      this.logger.error('Error getting branches:', error);
-      throw error;
-    }
-  }
-
-  // New method for batch Git operations
-  async getGitInfo(projectPath, userId) {
-    try {
-      this.logger.info('GitApplicationService: Getting comprehensive Git info', { userId });
-      
-      // Check if it's a Git repository
-      const isGitRepo = await this.gitService.isGitRepository(projectPath);
-      if (!isGitRepo) {
-        throw new Error('Not a Git repository');
-      }
-
-      // Batch all Git operations
-      const [status, currentBranch, branches] = await Promise.all([
-        this.gitService.getStatus(projectPath),
-        this.gitService.getCurrentBranch(projectPath),
-        this.gitService.getBranches(projectPath)
-      ]);
-
-      return {
-        success: true,
-        data: {
-          status,
-          currentBranch,
-          branches,
-          isGitRepository: true
-        }
-      };
-    } catch (error) {
-      this.logger.error('Error getting Git info:', error);
-      throw error;
-    }
-  }
-
-  // Cache invalidation method
-  async invalidateGitCache(projectPath) {
-    try {
-      this.gitService.invalidateCache(projectPath);
-      this.logger.info('GitApplicationService: Invalidated Git cache', { projectPath });
-    } catch (error) {
-      this.logger.error('Error invalidating Git cache:', error);
-    }
-  }
-
-  // Get cache statistics
-  async getCacheStats() {
-    try {
-      return this.gitService.getCacheStats();
-    } catch (error) {
-      this.logger.error('Error getting cache stats:', error);
-      return null;
-    }
+  
+  // Keep only session-based methods
+  async getSessionChatHistory(sessionId, userId, options = {}) {
+    // Session-specific logic here
   }
 }
 ```
 
-### 3. GitController.js Optimizations
-**Path**: `backend/presentation/api/GitController.js`
+## 📁 **Files to Fix**
 
-**Key Modifications**:
+### **1. WebChatController.js**
+**Path**: `backend/presentation/api/WebChatController.js`
+
+**Fixes:**
+- [ ] Remove duplicate `getPortChatHistory()` calls
+- [ ] Simplify request handling
+- [ ] Remove redundant error handling
+
+**Code Changes:**
 ```javascript
-class GitController {
-  // ... existing constructor and methods ...
+// ❌ REMOVE: Duplicate calls
+const result1 = await this.webChatService.getPortChatHistory(req.query, req.user);
+const result2 = await this.webChatService.getPortChatHistory(req.query, req.user); // REMOVE!
 
-  // New endpoint for comprehensive Git info
-  async getGitInfo(req, res) {
-    try {
-      const projectId = req.params.projectId;
-      const { projectPath } = req.body;
-      const userId = req.user?.id;
+// ✅ KEEP: Call only once
+const result = await this.webChatService.getPortChatHistory(req.query, req.user);
+```
 
-      if (!projectId || !projectPath) {
-        return res.status(400).json({
-          success: false,
-          error: 'Project ID and project path are required'
-        });
-      }
+### **2. WebChatApplicationService.js**
+**Path**: `backend/application/services/WebChatApplicationService.js`
 
-      this.logger.info('GitController: Getting comprehensive Git info', { projectId, userId });
+**Fixes:**
+- [ ] Standardize on StepRegistry execution
+- [ ] Remove duplicate step execution methods
+- [ ] Simplify return data structure
 
-      const result = await this.gitApplicationService.getGitInfo(projectPath, userId);
+**Code Changes:**
+```javascript
+// ❌ REMOVE: Duplicate execution methods
+const step = this.stepRegistry.getStep('GetChatHistoryStep');
+const result = await step.execute(stepData);
+const result2 = await this.stepRegistry.executeStep('GetChatHistoryStep', stepData); // REMOVE!
 
-      res.json({
-        success: true,
-        data: result.data,
-        message: 'Git info retrieved successfully'
-      });
+// ✅ KEEP: Only StepRegistry execution
+const result = await this.stepRegistry.executeStep('GetChatHistoryStep', stepData);
+```
 
-    } catch (error) {
-      this.logger.error('GitController: Failed to get Git info', {
-        projectPath: req.body.projectPath,
-        error: error.message,
-        userId: req.user?.id
-      });
+### **3. GetChatHistoryHandler.js**
+**Path**: `backend/application/handlers/categories/ide/GetChatHistoryHandler.js`
 
-      res.status(500).json({
-        success: false,
-        error: 'Failed to get Git info',
-        message: error.message
-      });
-    }
-  }
+**Fixes:**
+- [ ] Remove `getPortChatHistory()` method
+- [ ] Focus on session-based chats
+- [ ] Remove redundant IDE service calls
 
-  // New endpoint for cache management
-  async getCacheStats(req, res) {
-    try {
-      const userId = req.user?.id;
+**Code Changes:**
+```javascript
+// ❌ REMOVE: Port-based chat logic
+async getPortChatHistory(port, userId, options = {}) {
+  // Remove this entire method
+}
 
-      this.logger.info('GitController: Getting cache stats', { userId });
-
-      const stats = await this.gitApplicationService.getCacheStats();
-
-      res.json({
-        success: true,
-        data: stats,
-        message: 'Cache stats retrieved successfully'
-      });
-
-    } catch (error) {
-      this.logger.error('GitController: Failed to get cache stats', {
-        error: error.message,
-        userId: req.user?.id
-      });
-
-      res.status(500).json({
-        success: false,
-        error: 'Failed to get cache stats',
-        message: error.message
-      });
-    }
-  }
-
-  // New endpoint for cache invalidation
-  async invalidateCache(req, res) {
-    try {
-      const projectId = req.params.projectId;
-      const { projectPath } = req.body;
-      const userId = req.user?.id;
-
-      if (!projectId || !projectPath) {
-        return res.status(400).json({
-          success: false,
-          error: 'Project ID and project path are required'
-        });
-      }
-
-      this.logger.info('GitController: Invalidating Git cache', { projectId, userId });
-
-      await this.gitApplicationService.invalidateGitCache(projectPath);
-
-      res.json({
-        success: true,
-        message: 'Git cache invalidated successfully'
-      });
-
-    } catch (error) {
-      this.logger.error('GitController: Failed to invalidate cache', {
-        projectPath: req.body.projectPath,
-        error: error.message,
-        userId: req.user?.id
-      });
-
-      res.status(500).json({
-        success: false,
-        error: 'Failed to invalidate cache',
-        message: error.message
-      });
-    }
-  }
+// ✅ KEEP: Only session-based logic
+async getSessionChatHistory(sessionId, userId, options = {}) {
+  // Session-specific implementation
 }
 ```
 
-## 📁 Files to Create
+### **4. GetChatHistoryStep.js**
+**Path**: `backend/domain/steps/categories/chat/get_chat_history_step.js`
 
-### 1. GitCacheManager.js
-**Path**: `backend/domain/services/GitCacheManager.js`
+**Fixes:**
+- [ ] Simplify step logic
+- [ ] Remove redundant validation
+- [ ] Optimize error handling
 
-**Purpose**: Dedicated cache management for Git operations
-
-**Implementation**:
+**Code Changes:**
 ```javascript
-const { Logger } = require('@infrastructure/logging/Logger');
+// ❌ REMOVE: Redundant validation
+if (!context.userId) {
+  return { success: false, error: 'User ID is required', stepId };
+}
+if (!context.sessionId && !context.port) {
+  return { success: false, error: 'Either Session ID or Port is required', stepId };
+}
+if (context.sessionId && (typeof context.sessionId !== 'string' || context.sessionId.trim().length === 0)) {
+  return { success: false, error: 'Session ID must be a non-empty string', stepId };
+}
 
-class GitCacheManager {
-  constructor(logger = null) {
-    this.logger = logger || new Logger('GitCacheManager');
-    this.cache = new Map();
-    this.pendingRequests = new Map();
-    
-    // Cache TTL configuration
-    this.ttl = {
-      status: 30000,      // 30 seconds
-      currentBranch: 60000, // 1 minute
-      branches: 120000,   // 2 minutes
-      remoteUrl: 300000   // 5 minutes
+// ✅ KEEP: Simplified validation
+if (!context.userId) {
+  return { success: false, error: 'User ID is required', stepId };
+}
+if (!context.sessionId && !context.port) {
+  return { success: false, error: 'Either Session ID or Port is required', stepId };
+}
+```
+
+## 🧪 **Testing Strategy**
+
+### **Unit Tests:**
+```javascript
+// tests/unit/WebChatController.test.js
+describe('WebChatController', () => {
+  it('should call getPortChatHistory only once', async () => {
+    const controller = new WebChatController();
+    const mockService = { 
+      getPortChatHistory: jest.fn().mockResolvedValue({ messages: [] })
     };
-    
-    // Cleanup interval
-    this.cleanupInterval = setInterval(() => {
-      this.cleanupExpired();
-    }, 60000); // Every minute
-  }
+    controller.webChatService = mockService;
 
-  async getOrExecute(key, executor, ttl = 30000) {
-    // Check cache first
-    const cached = this.get(key);
-    if (cached) {
-      this.logger.debug('GitCacheManager: Cache hit', { key: key.substring(0, 20) });
-      return cached;
-    }
+    const req = { query: { port: '9222' }, user: { userId: 'test' } };
+    const res = { json: jest.fn() };
 
-    // Check for pending request
-    if (this.pendingRequests.has(key)) {
-      this.logger.debug('GitCacheManager: Waiting for pending request', { key: key.substring(0, 20) });
-      return await this.pendingRequests.get(key);
-    }
+    await controller.getChatHistory(req, res);
 
-    // Execute and cache
-    const requestPromise = executor();
-    this.pendingRequests.set(key, requestPromise);
+    // Should only be called once
+    expect(mockService.getPortChatHistory).toHaveBeenCalledTimes(1);
+    expect(res.json).toHaveBeenCalledWith({ messages: [] });
+  });
 
-    try {
-      const result = await requestPromise;
-      this.set(key, result, ttl);
-      return result;
-    } finally {
-      this.pendingRequests.delete(key);
-    }
-  }
-
-  get(key) {
-    const entry = this.cache.get(key);
-    if (!entry) return null;
-    
-    if (Date.now() > entry.expiresAt) {
-      this.cache.delete(key);
-      return null;
-    }
-    
-    return entry.value;
-  }
-
-  set(key, value, ttl = 30000) {
-    this.cache.set(key, {
-      value,
-      expiresAt: Date.now() + ttl,
-      createdAt: Date.now()
-    });
-  }
-
-  invalidate(pattern) {
-    const keysToDelete = [];
-    for (const key of this.cache.keys()) {
-      if (key.includes(pattern)) {
-        keysToDelete.push(key);
-      }
-    }
-    
-    keysToDelete.forEach(key => this.cache.delete(key));
-    
-    this.logger.info('GitCacheManager: Invalidated cache entries', {
-      pattern,
-      keysDeleted: keysToDelete.length
-    });
-  }
-
-  cleanupExpired() {
-    const now = Date.now();
-    let cleaned = 0;
-    
-    for (const [key, entry] of this.cache.entries()) {
-      if (now > entry.expiresAt) {
-        this.cache.delete(key);
-        cleaned++;
-      }
-    }
-    
-    if (cleaned > 0) {
-      this.logger.debug('GitCacheManager: Cleaned expired entries', {
-        cleaned,
-        remaining: this.cache.size
-      });
-    }
-  }
-
-  getStats() {
-    const now = Date.now();
-    let validEntries = 0;
-    let expiredEntries = 0;
-    
-    for (const [key, entry] of this.cache.entries()) {
-      if (now > entry.expiresAt) {
-        expiredEntries++;
-      } else {
-        validEntries++;
-      }
-    }
-    
-    return {
-      totalEntries: this.cache.size,
-      validEntries,
-      expiredEntries,
-      pendingRequests: this.pendingRequests.size
+  it('should not make duplicate service calls', async () => {
+    const controller = new WebChatController();
+    const mockService = { 
+      getPortChatHistory: jest.fn().mockResolvedValue({ messages: [] })
     };
-  }
+    controller.webChatService = mockService;
 
-  clear() {
-    this.cache.clear();
-    this.pendingRequests.clear();
-    this.logger.info('GitCacheManager: Cache cleared');
-  }
-}
+    const req = { query: { port: '9222' }, user: { userId: 'test' } };
+    const res = { json: jest.fn() };
 
-module.exports = GitCacheManager;
+    await controller.getChatHistory(req, res);
+
+    // No duplicate calls
+    expect(mockService.getPortChatHistory).toHaveBeenCalledTimes(1);
+  });
+});
 ```
 
-## 🧪 Testing Strategy
+### **Integration Tests:**
+```javascript
+// tests/integration/ChatService.test.js
+describe('Chat Service Integration', () => {
+  it('should not execute GetChatHistoryStep twice', async () => {
+    const service = new WebChatApplicationService();
+    const mockStepRegistry = {
+      executeStep: jest.fn().mockResolvedValue({
+        success: true,
+        result: { data: { messages: [] } }
+      })
+    };
+    service.stepRegistry = mockStepRegistry;
 
-### Unit Tests
-**File**: `tests/unit/GitServiceOptimization.test.js`
+    const queryData = { port: '9222', limit: 50, offset: 0 };
+    const userContext = { userId: 'test' };
 
-**Test Cases**:
-- Cache hit/miss scenarios
-- Request batching functionality
-- Cache invalidation
-- Concurrent request handling
-- TTL expiration
+    await service.getPortChatHistory(queryData, userContext);
 
-### Integration Tests
-**File**: `tests/integration/GitServiceOptimization.test.js`
+    // GetChatHistoryStep should only be executed once
+    expect(mockStepRegistry.executeStep).toHaveBeenCalledTimes(1);
+    expect(mockStepRegistry.executeStep).toHaveBeenCalledWith('GetChatHistoryStep', expect.any(Object));
+  });
+});
+```
 
-**Test Cases**:
-- End-to-end Git operations with caching
-- Cache invalidation on Git state changes
-- Performance improvements measurement
-- Error handling with cache
+## 📊 **Success Criteria**
+- [ ] WebChatController makes no duplicate service calls
+- [ ] WebChatApplicationService uses only StepRegistry execution
+- [ ] GetChatHistoryHandler focuses on session chats
+- [ ] GetChatHistoryStep is optimized and simplified
+- [ ] All tests pass
+- [ ] No GetChatHistoryStep duplicates in logs
 
-## 📊 Success Metrics
-- [ ] 90% reduction in duplicate Git operations
-- [ ] 70% improvement in Git operation response times
-- [ ] Cache hit rate > 85% for Git operations
-- [ ] All unit tests passing
-- [ ] Integration tests passing
-- [ ] No memory leaks in Git cache
+## 🔄 **Dependencies**
+- **Requires**: Phase 1 (Root Cause Analysis)
+- **Blocks**: Phase 3 (Git Service Fixes)
+- **Related**: Chat system optimization
 
-## 🔄 Next Phase
-After completing Phase 2, proceed to [Phase 3: Chat and IDE Service Fixes](./backend-duplicate-execution-fix-phase-3.md) to address chat and IDE service optimizations.
+## 📈 **Expected Impact**
+- **Performance**: 50% reduction in Chat API response times
+- **Logs**: No more GetChatHistoryStep duplicates
+- **Code Quality**: Cleaner, maintainable chat service code
+- **User Experience**: Faster chat history loading
 
-## 📝 Notes
-- This phase builds on Phase 1's deduplication foundation
-- Git operations are now batched and cached efficiently
-- Cache invalidation ensures data consistency
-- Performance improvements are measurable and significant
-- The implementation maintains backward compatibility 
+## 🚀 **Next Steps**
+After completing Phase 2, proceed to [Phase 3: Git Service Fixes](./backend-duplicate-execution-fix-phase-3.md) to fix Git service duplicates.
+
+## 📝 **Notes**
+- **Focus**: Real code fixes, no workarounds
+- **Principle**: Clean, maintainable backend architecture
+- **Goal**: Eliminate all chat service duplicates
+- **Quality**: Proper backend design without masking 
