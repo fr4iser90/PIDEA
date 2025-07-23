@@ -196,6 +196,18 @@ class ServiceRegistry {
             });
         }, { singleton: true, dependencies: ['taskRepository', 'cursorIDEService', 'eventBus', 'fileSystemService'] });
 
+        // Task Generation Service
+        this.container.register('taskGenerationService', (taskRepository, taskTemplateRepository, taskSuggestionRepository, eventBus, logger) => {
+            const TaskGenerationService = require('@domain/services/task/TaskGenerationService');
+            return new TaskGenerationService({
+                taskRepository,
+                taskTemplateRepository,
+                taskSuggestionRepository,
+                eventBus,
+                logger
+            });
+        }, { singleton: true, dependencies: ['taskRepository', 'taskTemplateRepository', 'taskSuggestionRepository', 'eventBus', 'logger'] });
+
         // Advanced Analysis Service - combines layer and logic validation
         this.container.register('advancedAnalysisService', (layerValidationService, logicValidationService, taskAnalysisService, eventBus, logger) => {
             const AdvancedAnalysisService = require('@domain/services/analysis/AdvancedAnalysisService');
@@ -931,65 +943,27 @@ class ServiceRegistry {
             return databaseConnection.getRepository('Project');
         }, { singleton: true, dependencies: ['databaseConnection'] });
 
+        // Task template repository
+        this.container.register('taskTemplateRepository', (databaseConnection) => {
+            return databaseConnection.getRepository('TaskTemplate');
+        }, { singleton: true, dependencies: ['databaseConnection'] });
+
+        // Task suggestion repository
+        this.container.register('taskSuggestionRepository', (databaseConnection) => {
+            return databaseConnection.getRepository('TaskSuggestion');
+        }, { singleton: true, dependencies: ['databaseConnection'] });
+
         this.registeredServices.add('repositories');
     }
 
     /**
      * Register application handlers
+     * NOTE: Handlers are now managed by HandlerRegistry with ServiceRegistry injection
      */
     registerApplicationHandlers() {
         this.logger.info('Registering application handlers...');
-
-        // Send message handler
-        this.container.register('sendMessageHandler', (cursorIDEService, vscodeIDEService, windsurfIDEService, ideManager, idePortManager, eventBus, logger) => {
-            const SendMessageHandler = require('@application/handlers/categories/management/SendMessageHandler');
-            return new SendMessageHandler({ 
-                cursorIDEService, 
-                vscodeIDEService, 
-                windsurfIDEService, 
-                ideManager, 
-                idePortManager,
-                eventBus, 
-                logger 
-            });
-        }, { singleton: true, dependencies: ['cursorIDEService', 'vscodeIDEService', 'windsurfIDEService', 'ideManager', 'idePortManager', 'eventBus', 'logger'] });
-
-        // Get chat history handler
-        this.container.register('getChatHistoryHandler', (chatRepository, ideManager) => {
-            const GetChatHistoryHandler = require('@application/handlers/categories/management/GetChatHistoryHandler');
-            return new GetChatHistoryHandler(chatRepository, ideManager, this);
-        }, { singleton: true, dependencies: ['chatRepository', 'ideManager'] });
-
-        // Create task handler
-        this.container.register('createTaskHandler', (taskRepository, taskValidationService, eventBus, logger) => {
-            const CreateTaskHandler = require('@application/handlers/categories/management/CreateTaskHandler');
-            return new CreateTaskHandler({
-                taskRepository,
-                taskValidationService,
-                eventBus,
-                logger
-            });
-        }, { singleton: true, dependencies: ['taskRepository', 'taskValidationService', 'eventBus', 'logger'] });
-
-        // VibeCoder auto refactor handler
-        this.container.register('vibeCoderAutoRefactorHandler', (taskRepository, projectAnalysisRepository, eventBus, logger) => {
-            const VibeCoderAutoRefactorHandler = require('@application/handlers/vibecoder/VibeCoderAutoRefactorHandler');
-            return new VibeCoderAutoRefactorHandler({ taskRepository, projectAnalysisRepository, eventBus, logger });
-        }, { singleton: true, dependencies: ['taskRepository', 'projectAnalysisRepository', 'eventBus', 'logger'] });
-
-        // Advanced Analysis Handler
-        this.container.register('advancedAnalysisHandler', (advancedAnalysisService, taskRepository, taskExecutionRepository, analysisRepository, eventBus, logger) => {
-            const AdvancedAnalysisHandler = require('@application/handlers/categories/analysis/AdvancedAnalysisHandler');
-            return new AdvancedAnalysisHandler({ 
-                advancedAnalysisService, 
-                taskRepository, 
-                taskExecutionRepository, 
-                analysisRepository,
-                eventBus, 
-                logger 
-            });
-        }, { singleton: true, dependencies: ['advancedAnalysisService', 'taskRepository', 'taskExecutionRepository', 'analysisRepository', 'eventBus', 'logger'] });
-
+        // Handlers are now managed by HandlerRegistry with ServiceRegistry injection
+        // No direct registration here to avoid redundancy
         this.registeredServices.add('handlers');
     }
 
@@ -1028,7 +1002,7 @@ class ServiceRegistry {
             case 'logger':
                 this.container.register('logger', () => {
                     const ServiceLogger = require('@logging/ServiceLogger');
-                    return new ServiceLogger('ServiceRegistry');
+                    return new ServiceLogger('PIDEA');
                 }, { singleton: true });
                 break;
             case 'fileSystemService':
@@ -1120,6 +1094,16 @@ class ServiceRegistry {
             case 'projectRepository':
                 this.container.register('projectRepository', (databaseConnection) => {
                     return databaseConnection.getRepository('Project');
+                }, { singleton: true, dependencies: ['databaseConnection'] });
+                break;
+            case 'taskTemplateRepository':
+                this.container.register('taskTemplateRepository', (databaseConnection) => {
+                    return databaseConnection.getRepository('TaskTemplate');
+                }, { singleton: true, dependencies: ['databaseConnection'] });
+                break;
+            case 'taskSuggestionRepository':
+                this.container.register('taskSuggestionRepository', (databaseConnection) => {
+                    return databaseConnection.getRepository('TaskSuggestion');
                 }, { singleton: true, dependencies: ['databaseConnection'] });
                 break;
             default:
@@ -1319,6 +1303,18 @@ class ServiceRegistry {
                     return new TaskValidationService(taskRepository, cursorIDEService, eventBus, fileSystemService);
                 }, { singleton: true, dependencies: ['taskRepository', 'cursorIDEService', 'eventBus', 'fileSystemService'] });
                 break;
+            case 'taskGenerationService':
+                this.container.register('taskGenerationService', (taskRepository, taskTemplateRepository, taskSuggestionRepository, eventBus, logger) => {
+                    const TaskGenerationService = require('@domain/services/task/TaskGenerationService');
+                    return new TaskGenerationService({
+                        taskRepository,
+                        taskTemplateRepository,
+                        taskSuggestionRepository,
+                        eventBus,
+                        logger
+                    });
+                }, { singleton: true, dependencies: ['taskRepository', 'taskTemplateRepository', 'taskSuggestionRepository', 'eventBus', 'logger'] });
+                break;
             case 'advancedAnalysisService':
                 this.container.register('advancedAnalysisService', (layerValidationService, logicValidationService, taskAnalysisService, eventBus, logger) => {
                     const AdvancedAnalysisService = require('@domain/services/analysis/AdvancedAnalysisService');
@@ -1441,63 +1437,11 @@ class ServiceRegistry {
 
     /**
      * Register a single handler service by name
+     * NOTE: Handlers are now managed by HandlerRegistry with ServiceRegistry injection
      * @param {string} serviceName - Name of the service to register
      */
     registerHandlerService(serviceName) {
-        switch (serviceName) {
-            case 'sendMessageHandler':
-                this.container.register('sendMessageHandler', (cursorIDEService, vscodeIDEService, windsurfIDEService, ideManager, idePortManager, eventBus, logger) => {
-                    const SendMessageHandler = require('@application/handlers/categories/management/SendMessageHandler');
-                    return new SendMessageHandler({ 
-                        cursorIDEService, 
-                        vscodeIDEService, 
-                        windsurfIDEService, 
-                        ideManager, 
-                        idePortManager,
-                        eventBus, 
-                        logger 
-                    });
-                }, { singleton: true, dependencies: ['cursorIDEService', 'vscodeIDEService', 'windsurfIDEService', 'ideManager', 'idePortManager', 'eventBus', 'logger'] });
-                break;
-            case 'getChatHistoryHandler':
-                this.container.register('getChatHistoryHandler', (chatRepository, ideManager) => {
-                    const GetChatHistoryHandler = require('@application/handlers/categories/management/GetChatHistoryHandler');
-                    return new GetChatHistoryHandler(chatRepository, ideManager, this);
-                }, { singleton: true, dependencies: ['chatRepository', 'ideManager'] });
-                break;
-            case 'createTaskHandler':
-                this.container.register('createTaskHandler', (taskRepository, taskValidationService, eventBus, logger) => {
-                    const CreateTaskHandler = require('@application/handlers/categories/management/CreateTaskHandler');
-                    return new CreateTaskHandler({
-                        taskRepository,
-                        taskValidationService,
-                        eventBus,
-                        logger
-                    });
-                }, { singleton: true, dependencies: ['taskRepository', 'taskValidationService', 'eventBus', 'logger'] });
-                break;
-            case 'vibeCoderAutoRefactorHandler':
-                this.container.register('vibeCoderAutoRefactorHandler', (taskRepository, projectAnalysisRepository, eventBus, logger) => {
-                    const VibeCoderAutoRefactorHandler = require('@application/handlers/vibecoder/VibeCoderAutoRefactorHandler');
-                    return new VibeCoderAutoRefactorHandler({ taskRepository, projectAnalysisRepository, eventBus, logger });
-                }, { singleton: true, dependencies: ['taskRepository', 'projectAnalysisRepository', 'eventBus', 'logger'] });
-                break;
-            case 'advancedAnalysisHandler':
-                this.container.register('advancedAnalysisHandler', (advancedAnalysisService, taskRepository, taskExecutionRepository, analysisRepository, eventBus, logger) => {
-                    const AdvancedAnalysisHandler = require('@application/handlers/categories/analysis/AdvancedAnalysisHandler');
-                    return new AdvancedAnalysisHandler({ 
-                        advancedAnalysisService, 
-                        taskRepository, 
-                        taskExecutionRepository, 
-                        analysisRepository,
-                        eventBus, 
-                        logger 
-                    });
-                }, { singleton: true, dependencies: ['advancedAnalysisService', 'taskRepository', 'taskExecutionRepository', 'analysisRepository', 'eventBus', 'logger'] });
-                break;
-            default:
-                throw new Error(`Unknown handler service: ${serviceName}`);
-        }
+        throw new Error(`Handler service '${serviceName}' should be managed by HandlerRegistry, not ServiceRegistry`);
     }
 
     /**
@@ -1528,6 +1472,8 @@ class ServiceRegistry {
         this.addServiceDefinition('userSessionRepository', ['databaseConnection'], 'repositories');
         this.addServiceDefinition('projectAnalysisRepository', ['databaseConnection'], 'repositories');
         this.addServiceDefinition('projectRepository', ['databaseConnection'], 'repositories');
+        this.addServiceDefinition('taskTemplateRepository', ['databaseConnection'], 'repositories');
+        this.addServiceDefinition('taskSuggestionRepository', ['databaseConnection'], 'repositories');
 
         // External services
         this.addServiceDefinition('aiService', [], 'external');
@@ -1556,6 +1502,7 @@ class ServiceRegistry {
         this.addServiceDefinition('analysisOutputService', [], 'domain');
         this.addServiceDefinition('taskAnalysisService', ['cursorIDEService', 'eventBus', 'logger', 'aiService', 'projectAnalyzer', 'analysisOrchestrator'], 'domain');
         this.addServiceDefinition('taskValidationService', ['taskRepository', 'cursorIDEService', 'eventBus', 'fileSystemService'], 'domain');
+        this.addServiceDefinition('taskGenerationService', ['taskRepository', 'taskTemplateRepository', 'taskSuggestionRepository', 'eventBus', 'logger'], 'domain');
         this.addServiceDefinition('advancedAnalysisService', ['layerValidationService', 'logicValidationService', 'taskAnalysisService', 'eventBus', 'logger'], 'domain');
         this.addServiceDefinition('layerValidationService', ['logger'], 'domain');
         this.addServiceDefinition('logicValidationService', ['logger'], 'domain');
@@ -1587,12 +1534,8 @@ class ServiceRegistry {
         this.addServiceDefinition('ideMirrorApplicationService', ['logger', 'eventBus'], 'application');
         this.addServiceDefinition('ideApplicationService', ['ideManager', 'eventBus', 'cursorIDEService', 'taskRepository', 'terminalLogCaptureService', 'terminalLogReader', 'logger'], 'application');
 
-        // Handler services
-        this.addServiceDefinition('sendMessageHandler', ['chatRepository', 'eventBus', 'logger'], 'handlers');
-        this.addServiceDefinition('getChatHistoryHandler', ['chatRepository', 'logger'], 'handlers');
-        this.addServiceDefinition('createTaskHandler', ['taskRepository', 'logger'], 'handlers');
-        this.addServiceDefinition('vibeCoderAutoRefactorHandler', ['logger'], 'handlers');
-        this.addServiceDefinition('advancedAnalysisHandler', ['advancedAnalysisService', 'logger'], 'handlers');
+        // Handler services are now managed by HandlerRegistry with ServiceRegistry injection
+        // No direct service definitions here to avoid redundancy
 
         this.logger.info('✅ Service definitions collected for automatic dependency resolution');
     }

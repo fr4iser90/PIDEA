@@ -156,19 +156,19 @@ class GetChatHistoryHandler {
     // Try to extract live chat from IDE first
     let liveMessages = [];
     try {
+      logger.info(`🔍 Getting IDE service for port ${port}...`);
       const ideService = await this.getIDEServiceForPort(port);
       if (ideService) {
-        // logger.info(`Extracting live chat from IDE on port ${port}...`);
-        // logger.info(`IDE Service type:`, ideService.constructor.name);
-        // logger.info(`IDE Service methods:`, Object.getOwnPropertyNames(Object.getPrototypeOf(ideService)));
+        logger.info(`✅ Found IDE service: ${ideService.constructor.name}`);
+        logger.info(`📝 Extracting live chat from IDE on port ${port}...`);
         
         liveMessages = await ideService.extractChatHistory();
-        //logger.info(`Extracted ${liveMessages.length} live messages:`, liveMessages);
+        logger.info(`✅ Extracted ${liveMessages.length} live messages from IDE`);
       } else {
-        logger.info(`No IDE service found for port ${port}`);
+        logger.warn(`❌ No IDE service found for port ${port}`);
       }
     } catch (error) {
-      logger.info(`Failed to extract live chat: ${error.message}`);
+      logger.error(`❌ Failed to extract live chat: ${error.message}`);
       logger.error(`Full error:`, error);
     }
 
@@ -212,16 +212,17 @@ class GetChatHistoryHandler {
 
       // Get available IDEs to determine the type
       const availableIDEs = await this.ideManager.getAvailableIDEs();
-      // logger.info(`Available IDEs:`, availableIDEs);
+      logger.info(`🔍 Available IDEs:`, availableIDEs);
       
       // FIXED: Handle the correct data structure from IDEManager
       // availableIDEs is an object with port as key, not an array
       const targetIDE = availableIDEs[port] || Object.values(availableIDEs).find(ide => ide.port === port);
       
       if (!targetIDE) {
-        // logger.info(`No IDE found for port ${port} in available IDEs:`, availableIDEs);
-        // Fallback: determine IDE type based on port range anyway
-        // logger.info(`Using port range fallback for port ${port}`);
+        logger.warn(`❌ No IDE found for port ${port} in available IDEs:`, availableIDEs);
+        logger.info(`🔄 Using port range fallback for port ${port}`);
+      } else {
+        logger.info(`✅ Found IDE for port ${port}:`, targetIDE);
       }
 
       // Determine IDE type based on port range
@@ -234,22 +235,37 @@ class GetChatHistoryHandler {
         ideType = IDETypes.WINDSURF;
       }
 
-      // logger.info(`Detected IDE type ${ideType} for port ${port}`);
+      logger.info(`🔍 Detected IDE type ${ideType} for port ${port}`);
 
       // Get the appropriate service from registry
       if (this.serviceRegistry) {
+        logger.info(`🔍 Getting IDE service from registry for type ${ideType}...`);
+        let service = null;
+        
         switch (ideType) {
           case IDETypes.CURSOR:
-            return this.serviceRegistry.getService('cursorIDEService');
+            service = this.serviceRegistry.getService('cursorIDEService');
+            break;
           case IDETypes.VSCODE:
-            return this.serviceRegistry.getService('vscodeIDEService');
+            service = this.serviceRegistry.getService('vscodeIDEService');
+            break;
           case IDETypes.WINDSURF:
-            return this.serviceRegistry.getService('windsurfIDEService');
+            service = this.serviceRegistry.getService('windsurfIDEService');
+            break;
           default:
-            return this.serviceRegistry.getService('cursorIDEService'); // fallback
+            service = this.serviceRegistry.getService('cursorIDEService'); // fallback
         }
+        
+        if (service) {
+          logger.info(`✅ Found IDE service: ${service.constructor.name}`);
+        } else {
+          logger.warn(`❌ No IDE service found in registry for type ${ideType}`);
+        }
+        
+        return service;
       }
 
+      logger.warn(`❌ No service registry available`);
       return null;
     } catch (error) {
       logger.error(`Error getting IDE service for port ${port}:`, error);

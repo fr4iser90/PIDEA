@@ -3,7 +3,7 @@
  * Handler for executing specific IDE actions
  */
 
-const ExecuteIDEActionCommand = require('@categories/ide/ExecuteIDEActionCommand');
+const ExecuteIDEActionCommand = require('@categories/workflow/ExecuteIDEActionCommand');
 const Logger = require('@logging/Logger');
 const logger = new Logger('Logger');
 

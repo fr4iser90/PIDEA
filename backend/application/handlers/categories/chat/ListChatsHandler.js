@@ -1,13 +1,13 @@
 /**
- * GetChatHistoryHandler - Application Layer: IDE Chat Handlers
- * Handler for retrieving chat history
+ * ListChatsHandler - Application Layer: IDE Chat Handlers
+ * Handler for listing available chat sessions
  */
 
-const GetChatHistoryCommand = require('@categories/ide/GetChatHistoryCommand');
+const ListChatsCommand = require('@categories/chat/ListChatsCommand');
 const Logger = require('@logging/Logger');
 const logger = new Logger('Logger');
 
-class GetChatHistoryHandler {
+class ListChatsHandler {
   constructor(dependencies = {}) {
     this.validateDependencies(dependencies);
     
@@ -38,14 +38,14 @@ class GetChatHistoryHandler {
    * @returns {string} Unique handler ID
    */
   generateHandlerId() {
-    return `get_chat_history_handler_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    return `list_chats_handler_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
   }
 
   /**
-   * Handle GetChatHistoryCommand
-   * @param {GetChatHistoryCommand} command - Chat history command
+   * Handle ListChatsCommand
+   * @param {ListChatsCommand} command - Chat listing command
    * @param {Object} options - Execution options
-   * @returns {Promise<Object>} History retrieval result
+   * @returns {Promise<Object>} Listing result
    */
   async handle(command, options = {}) {
     try {
@@ -55,80 +55,76 @@ class GetChatHistoryHandler {
         throw new Error(`Command validation failed: ${validationResult.errors.join(', ')}`);
       }
 
-      this.logger.info('Retrieving chat history', {
+      this.logger.info('Listing chat sessions', {
         handlerId: this.handlerId,
         commandId: command.commandId,
         userId: command.userId,
-        sessionId: command.sessionId,
         limit: command.limit,
         offset: command.offset
       });
 
       // Publish event
-      await this.eventBus.publish('chat.history.retrieving', {
+      await this.eventBus.publish('chat.listing', {
         commandId: command.commandId,
         userId: command.userId,
-        sessionId: command.sessionId,
         timestamp: new Date()
       });
 
-      // Get chat history using ChatSessionService
-      const messages = await this.chatSessionService.getChatHistory(
-        command.userId,
-        command.sessionId,
-        {
-          limit: command.limit,
-          offset: command.offset
-        }
-      );
+      // List sessions using ChatSessionService
+      const sessions = await this.chatSessionService.listSessions(command.userId, {
+        limit: command.limit,
+        offset: command.offset,
+        includeArchived: command.includeArchived
+      });
+
+      // Get session statistics
+      const stats = await this.chatSessionService.getSessionStats(command.userId);
 
       // Publish success event
-      await this.eventBus.publish('chat.history.retrieved', {
+      await this.eventBus.publish('chat.listed', {
         commandId: command.commandId,
         userId: command.userId,
-        sessionId: command.sessionId,
-        messageCount: messages.length,
+        sessionCount: sessions.length,
         timestamp: new Date()
       });
 
-      this.logger.info('Chat history retrieved successfully', {
+      this.logger.info('Chat sessions listed successfully', {
         handlerId: this.handlerId,
         commandId: command.commandId,
-        sessionId: command.sessionId,
-        messageCount: messages.length
+        sessionCount: sessions.length
       });
 
       return {
         success: true,
-        sessionId: command.sessionId,
-        messages: messages.map(message => ({
-          id: message.id,
-          content: message.content,
-          type: message.type,
-          sender: message.sender,
-          timestamp: message.timestamp,
-          metadata: message.metadata
+        sessions: sessions.map(session => ({
+          id: session.id,
+          title: session.title,
+          userId: session.userId,
+          status: session.status,
+          createdAt: session.createdAt,
+          isActive: session.isActive || false,
+          metadata: session.metadata
         })),
+        stats: stats,
         pagination: {
           limit: command.limit,
           offset: command.offset,
-          total: messages.length
+          total: sessions.length
         },
         commandId: command.commandId
       };
 
     } catch (error) {
-      this.logger.error('Failed to retrieve chat history', {
+      this.logger.error('Failed to list chat sessions', {
         handlerId: this.handlerId,
         commandId: command.commandId,
         error: error.message
       });
 
       // Publish failure event
-      await this.eventBus.publish('chat.history.retrieval.failed', {
+      await this.eventBus.publish('chat.listing.failed', {
         commandId: command.commandId,
         userId: command.userId,
-        sessionId: command.sessionId,
         error: error.message,
         timestamp: new Date()
       });
@@ -139,7 +135,7 @@ class GetChatHistoryHandler {
 
   /**
    * Validate command
-   * @param {GetChatHistoryCommand} command - Chat history command
+   * @param {ListChatsCommand} command - Chat listing command
    * @returns {Promise<Object>} Validation result
    */
   async validateCommand(command) {
@@ -150,20 +146,16 @@ class GetChatHistoryHandler {
       errors.push('User ID is required');
     }
 
-    if (!command.sessionId) {
-      errors.push('Session ID is required');
-    }
-
-    if (command.sessionId && (typeof command.sessionId !== 'string' || command.sessionId.trim().length === 0)) {
-      errors.push('Session ID must be a non-empty string');
-    }
-
     if (command.limit && (typeof command.limit !== 'number' || command.limit < 1 || command.limit > 1000)) {
       errors.push('Limit must be a number between 1 and 1000');
     }
 
     if (command.offset && (typeof command.offset !== 'number' || command.offset < 0)) {
       errors.push('Offset must be a non-negative number');
+    }
+
+    if (typeof command.includeArchived !== 'boolean') {
+      errors.push('includeArchived must be a boolean');
     }
 
     return {
@@ -174,4 +166,4 @@ class GetChatHistoryHandler {
   }
 }
 
-module.exports = GetChatHistoryHandler; 
+module.exports = ListChatsHandler; 

@@ -8,9 +8,10 @@ const { STANDARD_CATEGORIES, isValidCategory, getDefaultCategory } = require('..
 const IStandardRegistry = require('../../domain/interfaces/IStandardRegistry');
 
 class HandlerRegistry {
-  constructor() {
+  constructor(serviceRegistry = null) {
     this.handlers = new Map();
     this.categories = new Map();
+    this.serviceRegistry = serviceRegistry;
   }
 
   /**
@@ -20,7 +21,7 @@ class HandlerRegistry {
    * @param {Object} dependencies - Handler dependencies
    * @returns {Object|null} Handler instance
    */
-  static buildFromCategory(category, name, dependencies) {
+  static buildFromCategory(category, name, dependencies, serviceRegistry = null) {
     const handlerMap = {
       analysis: {
         AdvancedAnalysisHandler: require('./categories/analysis/AdvancedAnalysisHandler')
@@ -41,7 +42,7 @@ class HandlerRegistry {
         CreateTaskHandler: require('./categories/management/CreateTaskHandler'),
         GetChatHistoryHandler: require('./categories/management/GetChatHistoryHandler'),
         PortStreamingHandler: require('./categories/management/PortStreamingHandler'),
-        ProcessTodoListHandler: require('./categories/management/ProcessTodoListHandler'),
+        // ProcessTodoListHandler: require('./categories/management/ProcessTodoListHandler'), // Removed - converted to workflow
         SendMessageHandler: require('./categories/management/SendMessageHandler'),
         StartStreamingHandler: require('./categories/management/StartStreamingHandler'),
         StopStreamingHandler: require('./categories/management/StopStreamingHandler'),
@@ -72,7 +73,22 @@ class HandlerRegistry {
     };
     
     const HandlerClass = handlerMap[category]?.[name];
-    return HandlerClass ? new HandlerClass(dependencies) : null;
+    if (!HandlerClass) return null;
+    
+    // If serviceRegistry is provided, enhance dependencies with services
+    if (serviceRegistry) {
+      const enhancedDependencies = { ...dependencies };
+      // Add services that the handler might need
+      if (serviceRegistry.hasService('logger')) {
+        enhancedDependencies.logger = serviceRegistry.getService('logger');
+      }
+      if (serviceRegistry.hasService('eventBus')) {
+        enhancedDependencies.eventBus = serviceRegistry.getService('eventBus');
+      }
+      return new HandlerClass(enhancedDependencies);
+    }
+    
+    return new HandlerClass(dependencies);
   }
 
   /**
@@ -106,7 +122,7 @@ class HandlerRegistry {
         'CreateTaskHandler',
         'GetChatHistoryHandler',
         'PortStreamingHandler',
-        'ProcessTodoListHandler',
+        // 'ProcessTodoListHandler', // Removed - converted to workflow
         'SendMessageHandler',
         'StartStreamingHandler',
         'StopStreamingHandler',

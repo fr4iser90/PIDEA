@@ -3,7 +3,7 @@
  * Handler for switching between chat sessions
  */
 
-const SwitchChatCommand = require('@categories/ide/SwitchChatCommand');
+const SwitchChatCommand = require('@categories/chat/SwitchChatCommand');
 const Logger = require('@logging/Logger');
 const logger = new Logger('Logger');
 

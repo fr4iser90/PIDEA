@@ -2,13 +2,12 @@
  * AutoRefactorHandler - Handles auto refactor command execution
  * Generates refactoring tasks based on project analysis
  */
-const RefactoringOutputGenerator = require('@infrastructure/external/output/RefactoringOutputGenerator');
 
 class AutoRefactorHandler {
     constructor(dependencies = {}) {
-        this.refactoringOutputGenerator = dependencies.refactoringOutputGenerator || new RefactoringOutputGenerator();
         this.logger = dependencies.logger || console;
         this.eventBus = dependencies.eventBus;
+        this.projectAnalysisRepository = dependencies.projectAnalysisRepository;
     }
 
     /**

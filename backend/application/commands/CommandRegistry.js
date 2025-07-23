@@ -8,9 +8,10 @@ const { STANDARD_CATEGORIES, isValidCategory, getDefaultCategory } = require('..
 const IStandardRegistry = require('../../domain/interfaces/IStandardRegistry');
 
 class CommandRegistry {
-  constructor() {
+  constructor(serviceRegistry = null) {
     this.commands = new Map();
     this.categories = new Map();
+    this.serviceRegistry = serviceRegistry;
   }
 
   /**
@@ -20,7 +21,7 @@ class CommandRegistry {
    * @param {Object} params - Command parameters
    * @returns {Object|null} Command instance
    */
-  static buildFromCategory(category, name, params) {
+  static buildFromCategory(category, name, params, serviceRegistry = null) {
     const commandMap = {
       analysis: {
         AdvancedAnalysisCommand: require('./categories/analysis/AdvancedAnalysisCommand'),
@@ -78,7 +79,22 @@ class CommandRegistry {
     };
     
     const CommandClass = commandMap[category]?.[name];
-    return CommandClass ? new CommandClass(params) : null;
+    if (!CommandClass) return null;
+    
+    // If serviceRegistry is provided, enhance params with services
+    if (serviceRegistry) {
+      const enhancedParams = { ...params };
+      // Add services that the command might need
+      if (serviceRegistry.hasService('logger')) {
+        enhancedParams.logger = serviceRegistry.getService('logger');
+      }
+      if (serviceRegistry.hasService('eventBus')) {
+        enhancedParams.eventBus = serviceRegistry.getService('eventBus');
+      }
+      return new CommandClass(enhancedParams);
+    }
+    
+    return new CommandClass(params);
   }
 
   /**

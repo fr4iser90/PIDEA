@@ -1,4 +1,4 @@
-const SendMessageCommand = require('@categories/management/SendMessageCommand');
+const SendMessageCommand = require('@categories/chat/SendMessageCommand');
 const ChatMessage = require('@entities/ChatMessage');
 const ChatSession = require('@entities/ChatSession');
 const Logger = require('@logging/Logger');
@@ -12,9 +12,7 @@ const logger = new Logger('Logger');
 class SendMessageHandler {
   constructor(dependencies = {}) {
     this.validateDependencies(dependencies);
-    this.cursorIDEService = dependencies.cursorIDEService;
-    this.vscodeIDEService = dependencies.vscodeIDEService;
-    this.windsurfIDEService = dependencies.windsurfIDEService;
+    this.browserManager = dependencies.browserManager;
     this.ideManager = dependencies.ideManager;
     this.eventBus = dependencies.eventBus;
     this.logger = dependencies.logger;
@@ -28,9 +26,7 @@ class SendMessageHandler {
    */
   validateDependencies(dependencies) {
     const required = [
-      'cursorIDEService',
-      'vscodeIDEService',
-      'windsurfIDEService',
+      'browserManager',
       'ideManager',
       'eventBus',
       'logger'
@@ -43,27 +39,20 @@ class SendMessageHandler {
   }
 
   /**
-   * Get the appropriate IDE service based on active port
-   * @returns {Object} The appropriate IDE service
+   * Get the BrowserManager instance
+   * @returns {Object} The BrowserManager instance
    */
-  getActiveIDEService() {
+  getBrowserManager() {
     const activePort = this.ideManager.getActivePort();
     logger.info(`Active port: ${activePort}`);
     
-    // Determine IDE type based on port range
-    if (activePort >= 9222 && activePort <= 9231) {
-      logger.info('Using Cursor IDE service');
-      return this.cursorIDEService;
-    } else if (activePort >= 9232 && activePort <= 9241) {
-      logger.info('Using VSCode IDE service');
-      return this.vscodeIDEService;
-    } else if (activePort >= 9242 && activePort <= 9251) {
-      logger.info('Using Windsurf IDE service');
-      return this.windsurfIDEService;
-    } else {
-      logger.info('Defaulting to Cursor IDE service');
-      return this.cursorIDEService; // fallback
+    // Ensure BrowserManager is connected to the correct port
+    if (this.browserManager.getCurrentPort() !== activePort) {
+      logger.info(`Switching BrowserManager to port ${activePort}`);
+      this.browserManager.switchToPort(activePort);
     }
+    
+    return this.browserManager;
   }
 
   /**
@@ -89,17 +78,18 @@ class SendMessageHandler {
       this.logger.info('SendMessageHandler: Sending message', {
         handlerId: this.handlerId,
         commandId: command.commandId,
-        requestedBy: command.requestedBy
+        userId: command.userId
       });
       await this.eventBus.publish('message.sending', {
         commandId: command.commandId,
-        requestedBy: command.requestedBy,
+        userId: command.userId,
         message: command.message,
         timestamp: new Date()
       });
-      // Get the appropriate IDE service and send message
-      const activeIDEService = this.getActiveIDEService();
-      const result = await activeIDEService.sendMessage(command.message, command.options || {});
+      // Use BrowserManager for message sending (replaces deprecated IDE service sendMessage)
+      const browserManager = this.getBrowserManager();
+      this.logger.info('Sending message via BrowserManager:', command.message);
+      const result = await browserManager.typeMessage(command.message, true);
       await this.eventBus.publish('message.sent', {
         commandId: command.commandId,
         requestedBy: command.requestedBy,

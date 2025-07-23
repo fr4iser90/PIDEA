@@ -1,20 +1,18 @@
 /**
- * CreateChatHandler - Application Layer: IDE Chat Handlers
- * Handler for creating new chat sessions with IDE integration
+ * CloseChatHandler - Application Layer: IDE Chat Handlers
+ * Handler for closing chat sessions
  */
 
-const CreateChatCommand = require('@categories/ide/CreateChatCommand');
-const ChatSession = require('@entities/ChatSession');
+const CloseChatCommand = require('@categories/chat/CloseChatCommand');
 const Logger = require('@logging/Logger');
 const logger = new Logger('Logger');
 
-class CreateChatHandler {
+class CloseChatHandler {
   constructor(dependencies = {}) {
     this.validateDependencies(dependencies);
     
     this.chatSessionService = dependencies.chatSessionService;
     this.ideManager = dependencies.ideManager;
-    this.browserManager = dependencies.browserManager;
     this.eventBus = dependencies.eventBus;
     this.logger = dependencies.logger || logger;
     
@@ -27,7 +25,7 @@ class CreateChatHandler {
    * @throws {Error} If dependencies are invalid
    */
   validateDependencies(dependencies) {
-    const required = ['chatSessionService', 'ideManager', 'eventBus', 'browserManager'];
+    const required = ['chatSessionService', 'ideManager', 'eventBus'];
     for (const dep of required) {
       if (!dependencies[dep]) {
         throw new Error(`Missing required dependency: ${dep}`);
@@ -40,14 +38,14 @@ class CreateChatHandler {
    * @returns {string} Unique handler ID
    */
   generateHandlerId() {
-    return `create_chat_handler_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    return `close_chat_handler_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
   }
 
   /**
-   * Handle CreateChatCommand
-   * @param {CreateChatCommand} command - Chat creation command
+   * Handle CloseChatCommand
+   * @param {CloseChatCommand} command - Chat closing command
    * @param {Object} options - Execution options
-   * @returns {Promise<Object>} Creation result
+   * @returns {Promise<Object>} Closing result
    */
   async handle(command, options = {}) {
     try {
@@ -57,80 +55,59 @@ class CreateChatHandler {
         throw new Error(`Command validation failed: ${validationResult.errors.join(', ')}`);
       }
 
-      this.logger.info('Creating chat session', {
+      this.logger.info('Closing chat session', {
         handlerId: this.handlerId,
         commandId: command.commandId,
         userId: command.userId,
-        title: command.title
+        sessionId: command.sessionId
       });
 
       // Publish event
-      await this.eventBus.publish('chat.creating', {
+      await this.eventBus.publish('chat.closing', {
         commandId: command.commandId,
         userId: command.userId,
-        title: command.title,
+        sessionId: command.sessionId,
         timestamp: new Date()
       });
 
-      // First, click New Chat button in the IDE using BrowserManager
-      this.logger.info('Clicking New Chat button in IDE...');
-      const browserResult = await this.browserManager.clickNewChat();
-      
-      if (!browserResult) {
-        throw new Error('Failed to click New Chat button in IDE');
-      }
-      
-      this.logger.info('New Chat button clicked successfully');
-      
-      // Wait a bit for the new chat to be ready
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Then create session using ChatSessionService
-      const session = await this.chatSessionService.createSession(
+      // Close session using ChatSessionService
+      const success = await this.chatSessionService.closeSession(
         command.userId,
-        command.title,
-        command.metadata
+        command.sessionId
       );
 
       // Publish success event
-      await this.eventBus.publish('chat.created', {
+      await this.eventBus.publish('chat.closed', {
         commandId: command.commandId,
         userId: command.userId,
-        sessionId: session.id,
-        title: session.title,
+        sessionId: command.sessionId,
         timestamp: new Date()
       });
 
-      this.logger.info('Chat session created successfully', {
+      this.logger.info('Chat session closed successfully', {
         handlerId: this.handlerId,
         commandId: command.commandId,
-        sessionId: session.id
+        sessionId: command.sessionId
       });
 
       return {
         success: true,
-        session: {
-          id: session.id,
-          title: session.title,
-          userId: session.userId,
-          status: session.status,
-          createdAt: session.createdAt,
-          metadata: session.metadata
-        },
+        sessionId: command.sessionId,
         commandId: command.commandId
       };
 
     } catch (error) {
-      this.logger.error('Failed to create chat session', {
+      this.logger.error('Failed to close chat session', {
         handlerId: this.handlerId,
         commandId: command.commandId,
         error: error.message
       });
 
       // Publish failure event
-      await this.eventBus.publish('chat.creation.failed', {
+      await this.eventBus.publish('chat.closing.failed', {
         commandId: command.commandId,
         userId: command.userId,
+        sessionId: command.sessionId,
         error: error.message,
         timestamp: new Date()
       });
@@ -141,7 +118,7 @@ class CreateChatHandler {
 
   /**
    * Validate command
-   * @param {CreateChatCommand} command - Chat creation command
+   * @param {CloseChatCommand} command - Chat closing command
    * @returns {Promise<Object>} Validation result
    */
   async validateCommand(command) {
@@ -152,16 +129,12 @@ class CreateChatHandler {
       errors.push('User ID is required');
     }
 
-    if (!command.title || command.title.trim().length === 0) {
-      errors.push('Chat title is required');
+    if (!command.sessionId) {
+      errors.push('Session ID is required');
     }
 
-    if (command.title && command.title.length > 200) {
-      errors.push('Chat title too long (max 200 characters)');
-    }
-
-    if (command.metadata && typeof command.metadata !== 'object') {
-      errors.push('Metadata must be an object');
+    if (command.sessionId && (typeof command.sessionId !== 'string' || command.sessionId.trim().length === 0)) {
+      errors.push('Session ID must be a non-empty string');
     }
 
     return {
@@ -172,4 +145,4 @@ class CreateChatHandler {
   }
 }
 
-module.exports = CreateChatHandler; 
+module.exports = CloseChatHandler; 

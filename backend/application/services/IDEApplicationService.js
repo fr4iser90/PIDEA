@@ -14,7 +14,7 @@
  * ✅ Uses Domain services through interfaces
  * ✅ Encapsulates complex IDE workflow orchestration
  */
-const DocsTasksHandler = require('@handlers/categories/management/DocsTasksHandler');
+const DocsTasksHandler = require('@handlers/categories/workflow/DocsTasksHandler');
 const TerminalLogCaptureService = require('@domain/services/terminal/TerminalLogCaptureService');
 const TerminalLogReader = require('@domain/services/terminal/TerminalLogReader');
 const Logger = require('@logging/Logger');

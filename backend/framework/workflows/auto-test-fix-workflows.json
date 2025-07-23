@@ -1,0 +1,167 @@
+{
+  "workflows": {
+    "auto-test-fix-workflow": {
+      "name": "Auto Test Fix Workflow",
+      "description": "Automatische Test-Korrektur und Coverage-Verbesserung - Konvertiert von AutoTestFixSystem",
+      "steps": [
+        {
+          "name": "parse-test-outputs",
+          "type": "analysis",
+          "description": "Parse existing test output files for failing tests and coverage issues",
+          "step": "TestOutputParsingStep",
+          "options": {
+            "parseFailingTests": true,
+            "parseCoverageIssues": true,
+            "parseLegacyTests": true,
+            "parseComplexTests": true,
+            "projectPath": "{{context.projectPath}}"
+          },
+          "strict": true
+        },
+        {
+          "name": "generate-fix-tasks",
+          "type": "task_generation",
+          "description": "Generate and save test fix tasks to database",
+          "step": "TestFixTaskGenerationStep",
+          "options": {
+            "projectId": "{{context.projectId}}",
+            "userId": "{{context.userId}}",
+            "clearExisting": false,
+            "taskTypes": ["failing_test_fix", "coverage_improvement", "legacy_test_refactor"]
+          },
+          "strict": true
+        },
+        {
+          "name": "process-tasks-sequentially",
+          "type": "task_processing",
+          "description": "Process test fix tasks sequentially with AI assistance",
+          "step": "TestFixTaskProcessingStep",
+          "options": {
+            "maxFixAttempts": 3,
+            "fixTimeout": 300000,
+            "stopOnError": false,
+            "parallelExecution": false,
+            "maxConfirmationAttempts": 3,
+            "confirmationTimeout": 10000
+          },
+          "strict": false
+        },
+        {
+          "name": "validate-tests",
+          "type": "validation",
+          "description": "Execute tests and validate success rate",
+          "step": "TestValidationStep",
+          "options": {
+            "successThreshold": 80,
+            "testCommand": "npm test",
+            "captureOutput": true,
+            "parseResults": true
+          },
+          "strict": true
+        },
+        {
+          "name": "commit-successful-changes",
+          "type": "git_operations",
+          "description": "Commit and push changes for successful test fixes",
+          "step": "GitCommitStep",
+          "options": {
+            "autoCommit": true,
+            "autoPush": true,
+            "commitMessageTemplate": "{{task.title}} (Task ID: {{task.id}}) - ✅ Tests PASSED ({{successRate}}%) - Auto-fixed by PIDEA",
+            "onlyOnSuccess": true
+          },
+          "strict": false,
+          "condition": "previousStep.success && previousStep.successRate >= 80"
+        },
+        {
+          "name": "discard-failed-changes",
+          "type": "git_operations",
+          "description": "Discard changes for failed test fixes",
+          "step": "GitDiscardStep",
+          "options": {
+            "resetHard": true,
+            "cleanUntracked": true,
+            "markForReview": true
+          },
+          "strict": false,
+          "condition": "previousStep.success && previousStep.successRate < 80"
+        },
+        {
+          "name": "generate-final-report",
+          "type": "reporting",
+          "description": "Generate comprehensive final report",
+          "step": "TestFixReportGenerationStep",
+          "options": {
+            "includeSummary": true,
+            "includeDetails": true,
+            "includeRecommendations": true,
+            "formats": ["json", "markdown"]
+          },
+          "strict": false
+        }
+      ],
+      "options": {
+        "autoConfirm": true,
+        "createBranch": true,
+        "timeout": 1800000,
+        "enableProgressTracking": true,
+        "enableErrorRecovery": true,
+        "maxConcurrentSessions": 3,
+        "sessionTimeout": 1800000
+      }
+    },
+    "quick-test-fix-workflow": {
+      "name": "Quick Test Fix Workflow",
+      "description": "Schneller Test-Fix Workflow für einfache Probleme",
+      "extends": "auto-test-fix-workflow",
+      "options": {
+        "timeout": 600000,
+        "maxFixAttempts": 1,
+        "stopOnError": true,
+        "parallelExecution": false
+      }
+    },
+    "comprehensive-test-fix-workflow": {
+      "name": "Comprehensive Test Fix Workflow",
+      "description": "Umfassender Test-Fix Workflow mit detaillierter Analyse",
+      "extends": "auto-test-fix-workflow",
+      "steps": [
+        {
+          "name": "project-analysis",
+          "type": "analysis",
+          "description": "Comprehensive project analysis before test fixes",
+          "step": "ProjectAnalysisStep",
+          "options": {
+            "analysisTypes": ["test-structure", "coverage-analysis", "dependency-analysis"],
+            "includeMetrics": true,
+            "generateReport": true
+          }
+        }
+      ],
+      "options": {
+        "timeout": 3600000,
+        "maxFixAttempts": 5,
+        "enableQualityGates": true,
+        "enableDetailedLogging": true
+      }
+    }
+  },
+  "taskTypeMapping": {
+    "test_fix": "auto-test-fix-workflow",
+    "coverage_improvement": "auto-test-fix-workflow",
+    "legacy_test_refactor": "comprehensive-test-fix-workflow",
+    "failing_test_fix": "quick-test-fix-workflow",
+    "default": "auto-test-fix-workflow"
+  },
+  "contentLibrary": {
+    "prompts": {
+      "test-fix": "content-library/prompts/testing/test-fix.md",
+      "coverage-improvement": "content-library/prompts/testing/coverage-improvement.md",
+      "legacy-refactor": "content-library/prompts/testing/legacy-refactor.md"
+    },
+    "templates": {
+      "test-fix": "content-library/templates/testing/",
+      "coverage": "content-library/prompts/testing/"
+    }
+  }
+} 
