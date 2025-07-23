@@ -769,6 +769,27 @@ class BrowserManager {
 
       // Wait for chat input to be ready
       await page.waitForTimeout(1000);
+      
+      // Check if there's a modal and close it if needed
+      const modal = await page.$('.monaco-dialog, [role="dialog"], .modal-dialog');
+      if (modal) {
+        logger.info('Modal detected, attempting to close it...');
+        try {
+          // Try to find and click a close button
+          const closeButton = await page.$('.monaco-dialog .codicon-close, [role="dialog"] .codicon-close, .modal-dialog .close');
+          if (closeButton) {
+            await closeButton.click();
+            logger.info('Modal closed via close button');
+          } else {
+            // Fallback: Press Escape
+            await page.keyboard.press('Escape');
+            logger.info('Modal closed via Escape key');
+          }
+          await page.waitForTimeout(500);
+        } catch (e) {
+          logger.warn('Failed to close modal:', e.message);
+        }
+      }
 
       // Use IDE-specific input selectors
       const inputSelectors = [

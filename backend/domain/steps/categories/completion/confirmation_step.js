@@ -94,29 +94,29 @@ class ConfirmationStep {
             throw new Error('Failed to send confirmation question to IDE');
           }
           
-          // Wait for AI response using AITextDetector (proper waiting instead of fixed timeout)
-          logger.info('⏳ Waiting for AI response...');
-          const aiResponseResult = await aiTextDetector.waitForAIResponse(page, {
-            timeout: timeout || 30000,
-            checkInterval: 2000,
-            requiredStableChecks: 3
-          });
+          // Wait a bit for the AI to process the confirmation question
+          logger.info('⏳ Waiting for AI to process confirmation question...');
+          await new Promise(resolve => setTimeout(resolve, 5000));
           
-          if (!aiResponseResult.success) {
-            logger.warn('AI response timeout or error, continuing with next attempt');
+          // Try to get the latest AI response
+          let aiResponse = '';
+          try {
+            aiResponse = await aiTextDetector.extractLatestAIResponse(page);
+            logger.info(`📝 Extracted AI response (${aiResponse.length} chars)`);
+          } catch (error) {
+            logger.warn('Could not extract AI response, continuing with next attempt');
             continue;
           }
           
           // Analyze the AI response for completion confirmation
-          const confirmationScore = this.analyzeConfirmationResponse(aiResponseResult.response);
+          const confirmationScore = this.analyzeConfirmationResponse(aiResponse);
           
-          logger.info(`AI confirmation result:`, {
-            question: confirmationQuestion,
-            response: aiResponseResult.response.substring(0, 100) + '...',
-            score: confirmationScore,
-            threshold: autoContinueThreshold,
-            completion: aiResponseResult.completion
-          });
+              logger.info(`AI confirmation result:`, {
+              question: confirmationQuestion,
+              response: aiResponse.substring(0, 100) + '...',
+              score: confirmationScore,
+              threshold: autoContinueThreshold
+            });
           
           if (confirmationScore >= autoContinueThreshold) {
             logger.info(`✅ Task confirmed by AI with confidence: ${confirmationScore.toFixed(2)}`);
@@ -127,9 +127,8 @@ class ConfirmationStep {
                 confirmed: true,
                 confidence: confirmationScore,
                 question: confirmationQuestion,
-                response: aiResponseResult.response,
-                attempts: attempts,
-                completion: aiResponseResult.completion
+                response: aiResponse,
+                attempts: attempts
               }
             };
           }

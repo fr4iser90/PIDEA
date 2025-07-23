@@ -48,7 +48,7 @@ class IDESendMessageStep {
       // Validate context
       this.validateContext(context);
       
-      const { projectId, workspacePath, message, ideType } = context;
+      const { projectId, workspacePath, message, ideType, waitForResponse = false, timeout = 60000 } = context;
       
       logger.info(`📤 Sending message to IDE for project ${projectId}${ideType ? ` (${ideType})` : ''}`);
       
@@ -81,10 +81,43 @@ class IDESendMessageStep {
       
       logger.info(`✅ Message sent to IDE`);
       
+      // Wait for AI response if requested
+      let aiResponse = null;
+      if (waitForResponse) {
+        logger.info(`⏳ Waiting for AI response (timeout: ${timeout}ms)...`);
+        
+        try {
+          // Initialize AITextDetector for proper response waiting
+          const AITextDetector = require('@services/chat/AITextDetector');
+          const ideType = await browserManager.detectIDEType(browserManager.getCurrentPort());
+          const ideSelectors = await browserManager.getIDESelectors(ideType);
+          const aiTextDetector = new AITextDetector(ideSelectors);
+          const page = await browserManager.getPage();
+          
+          if (page) {
+            const aiResponseResult = await aiTextDetector.waitForAIResponse(page, {
+              timeout: timeout,
+              checkInterval: 2000,
+              requiredStableChecks: 3
+            });
+            
+            if (aiResponseResult.success) {
+              aiResponse = aiResponseResult.response;
+              logger.info(`✅ AI response received (${aiResponse.length} chars)`);
+            } else {
+              logger.warn(`⚠️ AI response timeout or error`);
+            }
+          }
+        } catch (error) {
+          logger.error(`❌ Error waiting for AI response: ${error.message}`);
+        }
+      }
+      
       return {
         success: true,
         message: 'Message sent to IDE',
         data: result,
+        aiResponse: aiResponse,
         ideType: ideType || 'auto-detected'
       };
       
