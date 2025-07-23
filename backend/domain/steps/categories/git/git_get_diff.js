@@ -1,37 +1,35 @@
 /**
- * Git Get Diff Step
- * Gets Git diff using real Git commands
+ * GitGetDiff
+ * Gets Git diff using DDD pattern with Commands and Handlers
  */
 
 const StepBuilder = require('@steps/StepBuilder');
 const Logger = require('@logging/Logger');
 const logger = new Logger('GitGetDiffStep');
-const { exec } = require('child_process');
-const util = require('util');
-const execAsync = util.promisify(exec);
+const CommandRegistry = require('@application/commands/CommandRegistry');
+const HandlerRegistry = require('@application/handlers/HandlerRegistry');
 
 // Step configuration
 const config = {
   name: 'GitGetDiffStep',
   type: 'git',
-  description: 'Gets Git diff',
+  description: 'Gets Git diff using DDD pattern with Commands and Handlers',
   category: 'git',
   version: '1.0.0',
   dependencies: ['terminalService'],
   settings: {
-    timeout: 30000,
-    staged: false
+    timeout: 30000
   },
   validation: {
     required: ['projectPath'],
-    optional: ['staged', 'file', 'commit1', 'commit2']
+    optional: []
   }
 };
 
-class GitGetDiffStep {
+class GitGetDiffStepStep {
   constructor() {
     this.name = 'GitGetDiffStep';
-    this.description = 'Gets Git diff';
+    this.description = 'Gets Git diff using DDD pattern with Commands and Handlers';
     this.category = 'git';
     this.dependencies = ['terminalService'];
   }
@@ -50,54 +48,43 @@ class GitGetDiffStep {
       // Validate context
       this.validateContext(context);
       
-      const { projectPath, staged = false, file, commit1, commit2 } = context;
+      const { projectPath, ...otherParams } = context;
       
-      logger.info('Executing GIT_GET_DIFF step', {
+      logger.info(`Executing ${this.name} using DDD pattern`, {
         projectPath,
-        staged,
-        file,
-        commit1,
-        commit2
+        ...otherParams
       });
 
-      // Build diff command
-      let diffCommand = 'git diff';
-      if (staged) {
-        diffCommand += ' --staged';
-      }
-      if (commit1 && commit2) {
-        diffCommand += ` ${commit1}..${commit2}`;
-      } else if (commit1) {
-        diffCommand += ` ${commit1}`;
-      }
-      if (file) {
-        diffCommand += ` -- ${file}`;
+      // ✅ DDD PATTERN: Create Command and Handler
+      const command = CommandRegistry.buildFromCategory('git', 'GitDiffCommand', {
+        projectPath,
+        ...otherParams
+      });
+
+      const handler = HandlerRegistry.buildFromCategory('git', 'GitDiffHandler', {
+        terminalService: context.terminalService,
+        logger: logger
+      });
+
+      if (!command || !handler) {
+        throw new Error('Failed to create Git command or handler');
       }
 
-      // Execute git diff using execAsync (like legacy implementation)
-      const result = await execAsync(diffCommand, { cwd: projectPath });
+      // Execute command through handler
+      const result = await handler.handle(command);
 
-      logger.info('GIT_GET_DIFF step completed successfully', {
-        staged,
-        file,
-        commit1,
-        commit2,
-        diffLength: result.stdout.length
+      logger.info(`${this.name} completed successfully using DDD pattern`, {
+        result: result.result
       });
 
       return {
-        success: true,
-        staged,
-        file,
-        commit1,
-        commit2,
-        diff: result.stdout,
-        result: result.stdout,
+        success: result.success,
+        result: result.result,
         timestamp: new Date()
       };
 
     } catch (error) {
-      logger.error('GIT_GET_DIFF step failed', {
+      logger.error(`${this.name} failed`, {
         error: error.message,
         context
       });
@@ -124,4 +111,4 @@ const stepInstance = new GitGetDiffStep();
 module.exports = {
   config,
   execute: async (context) => await stepInstance.execute(context)
-}; 
+};

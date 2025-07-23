@@ -24,7 +24,8 @@ class HandlerRegistry {
   static buildFromCategory(category, name, dependencies, serviceRegistry = null) {
     const handlerMap = {
       analysis: {
-        AdvancedAnalysisHandler: require('./categories/analysis/AdvancedAnalysisHandler')
+        AdvancedAnalysisHandler: require('./categories/analysis/AdvancedAnalysisHandler'),
+        AnalyzeLayerViolationsHandler: require('./categories/analysis/AnalyzeLayerViolationsHandler')
       },
       generate: {
         GenerateConfigsHandler: require('./categories/generate/GenerateConfigsHandler'),
@@ -69,6 +70,24 @@ class HandlerRegistry {
         OpenCommandPaletteHandler: require('./categories/ide/OpenCommandPaletteHandler'),
         ExecuteIDEActionHandler: require('./categories/ide/ExecuteIDEActionHandler'),
         GetIDESelectorsHandler: require('./categories/ide/GetIDESelectorsHandler')
+      },
+      git: {
+        GitAddFilesHandler: require('./categories/git/GitAddFilesHandler'),
+        GitCommitHandler: require('./categories/git/GitCommitHandler'),
+        GitPushHandler: require('./categories/git/GitPushHandler'),
+        GitPullHandler: require('./categories/git/GitPullHandler'),
+        GitCheckoutHandler: require('./categories/git/GitCheckoutHandler'),
+        GitCreateBranchHandler: require('./categories/git/GitCreateBranchHandler'),
+        GitMergeHandler: require('./categories/git/GitMergeHandler'),
+        GitStatusHandler: require('./categories/git/GitStatusHandler'),
+        GitCloneHandler: require('./categories/git/GitCloneHandler'),
+        GitInitHandler: require('./categories/git/GitInitHandler'),
+        GitResetHandler: require('./categories/git/GitResetHandler'),
+        GitDiffHandler: require('./categories/git/GitDiffHandler'),
+        GitLogHandler: require('./categories/git/GitLogHandler'),
+        GitRemoteHandler: require('./categories/git/GitRemoteHandler'),
+        GitBranchHandler: require('./categories/git/GitBranchHandler'),
+        GitCreatePullRequestHandler: require('./categories/git/GitCreatePullRequestHandler')
       }
     };
     

@@ -1,38 +1,35 @@
 /**
- * Git Create Branch Step
- * Creates a new Git branch using real Git commands
+ * GitCreateBranch
+ * Creates a new Git branch using DDD pattern with Commands and Handlers
  */
 
 const StepBuilder = require('@steps/StepBuilder');
 const Logger = require('@logging/Logger');
 const logger = new Logger('GitCreateBranchStep');
-const { exec } = require('child_process');
-const util = require('util');
-const execAsync = util.promisify(exec);
+const CommandRegistry = require('@application/commands/CommandRegistry');
+const HandlerRegistry = require('@application/handlers/HandlerRegistry');
 
 // Step configuration
 const config = {
   name: 'GitCreateBranchStep',
   type: 'git',
-  description: 'Creates a new Git branch',
+  description: 'Creates a new Git branch using DDD pattern with Commands and Handlers',
   category: 'git',
   version: '1.0.0',
   dependencies: ['terminalService'],
   settings: {
-    timeout: 30000,
-    checkout: true,
-    fromBranch: null
+    timeout: 30000
   },
   validation: {
-    required: ['projectPath', 'branchName'],
-    optional: ['checkout', 'fromBranch']
+    required: ['projectPath'],
+    optional: []
   }
 };
 
-class GitCreateBranchStep {
+class GitCreateBranchStepStep {
   constructor() {
     this.name = 'GitCreateBranchStep';
-    this.description = 'Creates a new Git branch';
+    this.description = 'Creates a new Git branch using DDD pattern with Commands and Handlers';
     this.category = 'git';
     this.dependencies = ['terminalService'];
   }
@@ -51,61 +48,43 @@ class GitCreateBranchStep {
       // Validate context
       this.validateContext(context);
       
-      const { projectPath, branchName, checkout = true, fromBranch } = context;
+      const { projectPath, ...otherParams } = context;
       
-      logger.info('Executing GIT_CREATE_BRANCH step', {
+      logger.info(`Executing ${this.name} using DDD pattern`, {
         projectPath,
-        branchName,
-        checkout,
-        fromBranch
+        ...otherParams
       });
 
-      // Check if branch already exists using execAsync
-      const branchExistsResult = await execAsync(`git branch --list ${branchName}`, { cwd: projectPath });
-      if (branchExistsResult.stdout.trim()) {
-        logger.warn(`Branch ${branchName} already exists`);
-        if (checkout) {
-          await execAsync(`git checkout ${branchName}`, { cwd: projectPath });
-        }
-        return {
-          success: true,
-          branchName,
-          checkout,
-          result: 'Branch already exists',
-          timestamp: new Date()
-        };
+      // ✅ DDD PATTERN: Create Command and Handler
+      const command = CommandRegistry.buildFromCategory('git', 'GitCreateBranchCommand', {
+        projectPath,
+        ...otherParams
+      });
+
+      const handler = HandlerRegistry.buildFromCategory('git', 'GitCreateBranchHandler', {
+        terminalService: context.terminalService,
+        logger: logger
+      });
+
+      if (!command || !handler) {
+        throw new Error('Failed to create Git command or handler');
       }
 
-      // Switch to base branch if specified
-      if (fromBranch) {
-        await execAsync(`git checkout ${fromBranch}`, { cwd: projectPath });
-      }
+      // Execute command through handler
+      const result = await handler.handle(command);
 
-      // Create new branch using execAsync (like legacy implementation)
-      let createCommand = `git branch ${branchName}`;
-      if (checkout) {
-        createCommand = `git checkout -b ${branchName}`;
-      }
-
-      const result = await execAsync(createCommand, { cwd: projectPath });
-
-      logger.info('GIT_CREATE_BRANCH step completed successfully', {
-        branchName,
-        checkout,
-        result: result.stdout
+      logger.info(`${this.name} completed successfully using DDD pattern`, {
+        result: result.result
       });
 
       return {
-        success: true,
-        branchName,
-        checkout,
-        fromBranch,
-        result: result.stdout,
+        success: result.success,
+        result: result.result,
         timestamp: new Date()
       };
 
     } catch (error) {
-      logger.error('GIT_CREATE_BRANCH step failed', {
+      logger.error(`${this.name} failed`, {
         error: error.message,
         context
       });
@@ -122,9 +101,6 @@ class GitCreateBranchStep {
     if (!context.projectPath) {
       throw new Error('Project path is required');
     }
-    if (!context.branchName) {
-      throw new Error('Branch name is required');
-    }
   }
 }
 
@@ -135,4 +111,4 @@ const stepInstance = new GitCreateBranchStep();
 module.exports = {
   config,
   execute: async (context) => await stepInstance.execute(context)
-}; 
+};

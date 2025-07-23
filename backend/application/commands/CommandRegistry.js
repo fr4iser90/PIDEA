@@ -29,7 +29,8 @@ class CommandRegistry {
         AnalyzeCodeQualityCommand: require('./categories/analysis/AnalyzeCodeQualityCommand'),
         AnalyzeDependenciesCommand: require('./categories/analysis/AnalyzeDependenciesCommand'),
         AnalyzeRepoStructureCommand: require('./categories/analysis/AnalyzeRepoStructureCommand'),
-        AnalyzeTechStackCommand: require('./categories/analysis/AnalyzeTechStackCommand')
+        AnalyzeTechStackCommand: require('./categories/analysis/AnalyzeTechStackCommand'),
+        AnalyzeLayerViolationsCommand: require('./categories/analysis/AnalyzeLayerViolationsCommand')
       },
       generate: {
         GenerateConfigsCommand: require('./categories/generate/GenerateConfigsCommand'),
@@ -44,7 +45,6 @@ class CommandRegistry {
         CleanDependenciesCommand: require('./categories/refactoring/CleanDependenciesCommand')
       },
       management: {
-        AutoRefactorCommand: require('./categories/management/AutoRefactorCommand'),
         CreateTaskCommand: require('./categories/management/CreateTaskCommand'),
         PortStreamingCommand: require('./categories/management/PortStreamingCommand'),
         ProcessTodoListCommand: require('./categories/management/ProcessTodoListCommand'),
@@ -75,6 +75,24 @@ class CommandRegistry {
         OpenCommandPaletteCommand: require('./categories/ide/OpenCommandPaletteCommand'),
         ExecuteIDEActionCommand: require('./categories/ide/ExecuteIDEActionCommand'),
         GetIDESelectorsCommand: require('./categories/ide/GetIDESelectorsCommand')
+      },
+      git: {
+        GitAddFilesCommand: require('./categories/git/GitAddFilesCommand'),
+        GitCommitCommand: require('./categories/git/GitCommitCommand'),
+        GitPushCommand: require('./categories/git/GitPushCommand'),
+        GitPullCommand: require('./categories/git/GitPullCommand'),
+        GitCheckoutCommand: require('./categories/git/GitCheckoutCommand'),
+        GitCreateBranchCommand: require('./categories/git/GitCreateBranchCommand'),
+        GitMergeCommand: require('./categories/git/GitMergeCommand'),
+        GitStatusCommand: require('./categories/git/GitStatusCommand'),
+        GitCloneCommand: require('./categories/git/GitCloneCommand'),
+        GitInitCommand: require('./categories/git/GitInitCommand'),
+        GitResetCommand: require('./categories/git/GitResetCommand'),
+        GitDiffCommand: require('./categories/git/GitDiffCommand'),
+        GitLogCommand: require('./categories/git/GitLogCommand'),
+        GitRemoteCommand: require('./categories/git/GitRemoteCommand'),
+        GitBranchCommand: require('./categories/git/GitBranchCommand'),
+        GitCreatePullRequestCommand: require('./categories/git/GitCreatePullRequestCommand')
       }
     };
     

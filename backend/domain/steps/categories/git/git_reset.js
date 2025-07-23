@@ -1,36 +1,35 @@
 /**
- * Git Reset Step
- * Resets Git repository using real Git commands
+ * GitReset
+ * Resets Git repository using DDD pattern with Commands and Handlers
  */
 
 const StepBuilder = require('@steps/StepBuilder');
 const Logger = require('@logging/Logger');
 const logger = new Logger('GitResetStep');
-const { exec } = require('child_process');
-const util = require('util');
-const execAsync = util.promisify(exec);
+const CommandRegistry = require('@application/commands/CommandRegistry');
+const HandlerRegistry = require('@application/handlers/HandlerRegistry');
 
 // Step configuration
 const config = {
   name: 'GitResetStep',
   type: 'git',
-  description: 'Resets the current HEAD to the specified state',
+  description: 'Resets Git repository using DDD pattern with Commands and Handlers',
   category: 'git',
   version: '1.0.0',
   dependencies: ['terminalService'],
   settings: {
-    timeout: 10000
+    timeout: 30000
   },
   validation: {
     required: ['projectPath'],
-    optional: ['mode', 'commit']
+    optional: []
   }
 };
 
-class GitResetStep {
+class GitResetStepStep {
   constructor() {
     this.name = 'GitResetStep';
-    this.description = 'Resets the current HEAD to the specified state';
+    this.description = 'Resets Git repository using DDD pattern with Commands and Handlers';
     this.category = 'git';
     this.dependencies = ['terminalService'];
   }
@@ -49,42 +48,43 @@ class GitResetStep {
       // Validate context
       this.validateContext(context);
       
-      const { projectPath, mode = 'mixed', commit = 'HEAD' } = context;
+      const { projectPath, ...otherParams } = context;
       
-      logger.info('Executing GIT_RESET step', {
+      logger.info(`Executing ${this.name} using DDD pattern`, {
         projectPath,
-        mode,
-        commit
+        ...otherParams
       });
 
-      // Validate mode
-      const validModes = ['soft', 'mixed', 'hard'];
-      if (!validModes.includes(mode)) {
-        throw new Error(`Invalid reset mode: ${mode}. Valid modes: ${validModes.join(', ')}`);
+      // ✅ DDD PATTERN: Create Command and Handler
+      const command = CommandRegistry.buildFromCategory('git', 'GitResetCommand', {
+        projectPath,
+        ...otherParams
+      });
+
+      const handler = HandlerRegistry.buildFromCategory('git', 'GitResetHandler', {
+        terminalService: context.terminalService,
+        logger: logger
+      });
+
+      if (!command || !handler) {
+        throw new Error('Failed to create Git command or handler');
       }
 
-      // Build reset command
-      const resetCommand = `git reset --${mode} ${commit}`;
+      // Execute command through handler
+      const result = await handler.handle(command);
 
-      // Execute git reset using execAsync (like legacy implementation)
-      const result = await execAsync(resetCommand, { cwd: projectPath });
-
-      logger.info('GIT_RESET step completed successfully', {
-        mode,
-        commit,
-        result: result.stdout
+      logger.info(`${this.name} completed successfully using DDD pattern`, {
+        result: result.result
       });
 
       return {
-        success: true,
-        mode,
-        commit,
-        result: result.stdout,
+        success: result.success,
+        result: result.result,
         timestamp: new Date()
       };
 
     } catch (error) {
-      logger.error('GIT_RESET step failed', {
+      logger.error(`${this.name} failed`, {
         error: error.message,
         context
       });
@@ -111,4 +111,4 @@ const stepInstance = new GitResetStep();
 module.exports = {
   config,
   execute: async (context) => await stepInstance.execute(context)
-}; 
+};

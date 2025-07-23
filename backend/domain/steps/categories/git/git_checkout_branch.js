@@ -1,37 +1,35 @@
 /**
- * Git Checkout Branch Step
- * Checks out a Git branch using real Git commands
+ * GitCheckoutBranch
+ * Checks out a Git branch using DDD pattern with Commands and Handlers
  */
 
 const StepBuilder = require('@steps/StepBuilder');
 const Logger = require('@logging/Logger');
 const logger = new Logger('GitCheckoutBranchStep');
-const { exec } = require('child_process');
-const util = require('util');
-const execAsync = util.promisify(exec);
+const CommandRegistry = require('@application/commands/CommandRegistry');
+const HandlerRegistry = require('@application/handlers/HandlerRegistry');
 
 // Step configuration
 const config = {
   name: 'GitCheckoutBranchStep',
   type: 'git',
-  description: 'Checks out a Git branch',
+  description: 'Checks out a Git branch using DDD pattern with Commands and Handlers',
   category: 'git',
   version: '1.0.0',
   dependencies: ['terminalService'],
   settings: {
-    timeout: 30000,
-    createIfNotExists: false
+    timeout: 30000
   },
   validation: {
-    required: ['projectPath', 'branchName'],
-    optional: ['createIfNotExists']
+    required: ['projectPath'],
+    optional: []
   }
 };
 
-class GitCheckoutBranchStep {
+class GitCheckoutBranchStepStep {
   constructor() {
     this.name = 'GitCheckoutBranchStep';
-    this.description = 'Checks out a Git branch';
+    this.description = 'Checks out a Git branch using DDD pattern with Commands and Handlers';
     this.category = 'git';
     this.dependencies = ['terminalService'];
   }
@@ -50,47 +48,43 @@ class GitCheckoutBranchStep {
       // Validate context
       this.validateContext(context);
       
-      const { projectPath, branchName, createIfNotExists = false } = context;
+      const { projectPath, ...otherParams } = context;
       
-      logger.info('Executing GIT_CHECKOUT_BRANCH step', {
+      logger.info(`Executing ${this.name} using DDD pattern`, {
         projectPath,
-        branchName,
-        createIfNotExists
+        ...otherParams
       });
 
-      // Check if branch exists using execAsync
-      const branchExistsResult = await execAsync(`git branch --list ${branchName}`, { cwd: projectPath });
-      const branchExists = branchExistsResult.stdout.trim().includes(branchName);
+      // ✅ DDD PATTERN: Create Command and Handler
+      const command = CommandRegistry.buildFromCategory('git', 'GitCheckoutCommand', {
+        projectPath,
+        ...otherParams
+      });
 
-      if (!branchExists && !createIfNotExists) {
-        throw new Error(`Branch ${branchName} does not exist and createIfNotExists is false`);
+      const handler = HandlerRegistry.buildFromCategory('git', 'GitCheckoutHandler', {
+        terminalService: context.terminalService,
+        logger: logger
+      });
+
+      if (!command || !handler) {
+        throw new Error('Failed to create Git command or handler');
       }
 
-      // Build checkout command
-      let checkoutCommand = `git checkout ${branchName}`;
-      if (!branchExists && createIfNotExists) {
-        checkoutCommand = `git checkout -b ${branchName}`;
-      }
+      // Execute command through handler
+      const result = await handler.handle(command);
 
-      // Execute git checkout using execAsync (like legacy implementation)
-      const result = await execAsync(checkoutCommand, { cwd: projectPath });
-
-      logger.info('GIT_CHECKOUT_BRANCH step completed successfully', {
-        branchName,
-        created: !branchExists && createIfNotExists,
-        result: result.stdout
+      logger.info(`${this.name} completed successfully using DDD pattern`, {
+        result: result.result
       });
 
       return {
-        success: true,
-        branchName,
-        created: !branchExists && createIfNotExists,
-        result: result.stdout,
+        success: result.success,
+        result: result.result,
         timestamp: new Date()
       };
 
     } catch (error) {
-      logger.error('GIT_CHECKOUT_BRANCH step failed', {
+      logger.error(`${this.name} failed`, {
         error: error.message,
         context
       });
@@ -107,9 +101,6 @@ class GitCheckoutBranchStep {
     if (!context.projectPath) {
       throw new Error('Project path is required');
     }
-    if (!context.branchName) {
-      throw new Error('Branch name is required');
-    }
   }
 }
 
@@ -120,4 +111,4 @@ const stepInstance = new GitCheckoutBranchStep();
 module.exports = {
   config,
   execute: async (context) => await stepInstance.execute(context)
-}; 
+};
