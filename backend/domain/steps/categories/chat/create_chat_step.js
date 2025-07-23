@@ -14,7 +14,7 @@ const config = {
   category: 'ide',
   description: 'Create new chat session with IDE integration',
   version: '1.0.0',
-  dependencies: ['chatSessionService', 'eventBus', 'browserManager'],
+  dependencies: ['chatSessionService', 'eventBus'],
   settings: {
     includeTimeout: true,
     includeRetry: true,
@@ -31,7 +31,7 @@ class CreateChatStep {
     this.name = 'CreateChatStep';
     this.description = 'Create new chat session with IDE integration';
     this.category = 'ide';
-    this.dependencies = ['chatSessionService', 'eventBus', 'browserManager'];
+    this.dependencies = ['chatSessionService', 'eventBus'];
   }
 
   static getConfig() {
@@ -55,16 +55,12 @@ class CreateChatStep {
       // Get services via dependency injection
       const chatSessionService = context.getService('chatSessionService');
       const eventBus = context.getService('eventBus');
-      const browserManager = context.getService('browserManager');
       
       if (!chatSessionService) {
         throw new Error('ChatSessionService not available in context');
       }
       if (!eventBus) {
         throw new Error('EventBus not available in context');
-      }
-      if (!browserManager) {
-        throw new Error('BrowserManager not available in context');
       }
       
       // Generate unique step ID
@@ -78,20 +74,8 @@ class CreateChatStep {
         timestamp: new Date()
       });
       
-      // Click New Chat button in IDE using BrowserManager
-      logger.info('🖱️ Clicking New Chat button in IDE...');
-      const browserResult = await browserManager.clickNewChat();
-      
-      if (!browserResult) {
-        throw new Error('Failed to click New Chat button in IDE');
-      }
-      
-      logger.info('✅ New Chat button clicked successfully');
-      
-      // Wait a bit for the new chat to be ready
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Create session using ChatSessionService
+      // Create session using ChatSessionService (NO BROWSER ACTIONS!)
+      logger.info('📝 Creating chat session in database...');
       const session = await chatSessionService.createSession(
         userId,
         title,
