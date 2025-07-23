@@ -48,7 +48,11 @@ class IDESendMessageStep {
       // Validate context
       this.validateContext(context);
       
-      const { projectId, workspacePath, message, ideType, waitForResponse = false, timeout = 60000 } = context;
+      const TimeoutResolver = require('@infrastructure/utils/TimeoutResolver');
+      const { projectId, workspacePath, message, ideType, waitForResponse = false, timeout = null } = context;
+      
+      // Use centralized timeout configuration
+      const actualTimeout = TimeoutResolver.resolve(timeout || 'IDE.SEND_MESSAGE');
       
       logger.info(`📤 Sending message to IDE for project ${projectId}${ideType ? ` (${ideType})` : ''}`);
       
@@ -84,7 +88,7 @@ class IDESendMessageStep {
       // Wait for AI response if requested
       let aiResponse = null;
       if (waitForResponse) {
-        logger.info(`⏳ Waiting for AI response (timeout: ${timeout}ms)...`);
+        logger.info(`⏳ Waiting for AI response (timeout: ${actualTimeout}ms)...`);
         
         try {
           // Initialize AITextDetector for proper response waiting
@@ -96,8 +100,8 @@ class IDESendMessageStep {
           
           if (page) {
             const aiResponseResult = await aiTextDetector.waitForAIResponse(page, {
-              timeout: timeout,
-              checkInterval: 2000,
+              timeout: actualTimeout,
+              checkInterval: 'AI_RESPONSE_CHECK',
               requiredStableChecks: 3
             });
             

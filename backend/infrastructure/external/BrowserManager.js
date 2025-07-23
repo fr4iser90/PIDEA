@@ -770,24 +770,30 @@ class BrowserManager {
       // Wait for chat input to be ready
       await page.waitForTimeout(1000);
       
-      // Check if there's a modal and close it if needed
+      // Check if there's a modal and close it if needed (but be more careful)
       const modal = await page.$('.monaco-dialog, [role="dialog"], .modal-dialog');
       if (modal) {
-        logger.info('Modal detected, attempting to close it...');
-        try {
-          // Try to find and click a close button
-          const closeButton = await page.$('.monaco-dialog .codicon-close, [role="dialog"] .codicon-close, .modal-dialog .close');
-          if (closeButton) {
-            await closeButton.click();
-            logger.info('Modal closed via close button');
-          } else {
-            // Fallback: Press Escape
-            await page.keyboard.press('Escape');
-            logger.info('Modal closed via Escape key');
+        // Check if modal is actually visible and blocking
+        const isVisible = await modal.isVisible();
+        if (isVisible) {
+          logger.info('Visible modal detected, attempting to close it...');
+          try {
+            // Try to find and click a close button
+            const closeButton = await page.$('.monaco-dialog .codicon-close, [role="dialog"] .codicon-close, .modal-dialog .close');
+            if (closeButton) {
+              await closeButton.click();
+              logger.info('Modal closed via close button');
+            } else {
+              // Fallback: Press Escape
+              await page.keyboard.press('Escape');
+              logger.info('Modal closed via Escape key');
+            }
+            await page.waitForTimeout(500);
+          } catch (e) {
+            logger.warn('Failed to close modal:', e.message);
           }
-          await page.waitForTimeout(500);
-        } catch (e) {
-          logger.warn('Failed to close modal:', e.message);
+        } else {
+          logger.info('Modal detected but not visible, ignoring');
         }
       }
 

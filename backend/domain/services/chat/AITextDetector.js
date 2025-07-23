@@ -239,11 +239,16 @@ class AITextDetector {
    * @returns {Promise<Object>} AI response with analysis
    */
   async waitForAIResponse(page, options = {}) {
+    const TimeoutResolver = require('@infrastructure/utils/TimeoutResolver');
     const {
-      timeout = 30000,
-      checkInterval = 1000,
+      timeout = null,
+      checkInterval = null,
       requiredStableChecks = 3
     } = options;
+    
+    // Use centralized timeout configuration
+    const actualTimeout = TimeoutResolver.resolve(timeout || 'AI_RESPONSE.DEFAULT');
+    const actualCheckInterval = TimeoutResolver.resolve(checkInterval || 'AI_RESPONSE_CHECK');
     
     const startTime = Date.now();
     let lastMessageCount = 0;
@@ -251,7 +256,7 @@ class AITextDetector {
     
     this.logger.info('⏳ [AITextDetector] Waiting for AI response...');
     
-    while (Date.now() - startTime < timeout) {
+    while (Date.now() - startTime < actualTimeout) {
       try {
         // Count current AI messages
         const currentMessageCount = await page.evaluate((selector) => {
@@ -304,6 +309,12 @@ class AITextDetector {
             };
           }
           
+          // Check if AI is still actively working (new messages appearing)
+          if (currentMessageCount > lastMessageCount) {
+            stableCount = 0; // Reset stable count if AI is still working
+            this.logger.info(`📝 [AITextDetector] AI still actively working: ${currentMessageCount} messages`);
+          }
+          
         } else {
           // Reset stable count if new message detected
           stableCount = 0;
@@ -313,7 +324,7 @@ class AITextDetector {
         lastMessageCount = currentMessageCount;
         
         // Wait before next check
-        await page.waitForTimeout(checkInterval);
+        await page.waitForTimeout(actualCheckInterval);
         
       } catch (error) {
         this.logger.error('❌ [AITextDetector] Error checking AI response:', error.message);

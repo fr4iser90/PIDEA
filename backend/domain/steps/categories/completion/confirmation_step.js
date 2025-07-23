@@ -56,9 +56,26 @@ class ConfirmationStep {
         };
       }
 
-      const { taskId, maxAttempts = 3, timeout = 30000, autoContinueThreshold = 0.8 } = context;
+      const TimeoutResolver = require('@infrastructure/utils/TimeoutResolver');
+      const { taskId, maxAttempts = 3, timeout = null, autoContinueThreshold = 0.8, onlyIfResponseReceived = false } = context;
+      
+      // Use centralized timeout configuration
+      const actualTimeout = TimeoutResolver.resolve(timeout || 'WORKFLOW.CONFIRMATION');
 
       logger.info(`Starting AI confirmation process for task: ${taskId || 'unknown'}`);
+
+      // Check if we should only proceed if AI response was received
+      if (onlyIfResponseReceived) {
+        const previousStepResult = context.previousStepResult || context.getService?.('stepRegistry')?.getLastStepResult?.();
+        if (!previousStepResult?.data?.aiResponse) {
+          logger.info('Skipping confirmation - no AI response received from previous step');
+          return {
+            success: true,
+            message: 'Confirmation skipped - no AI response',
+            data: { confirmed: true, reason: 'no_ai_response' }
+          };
+        }
+      }
 
       // Switch to active port first (like IDESendMessageStep)
       if (idePortManager) {
@@ -96,7 +113,7 @@ class ConfirmationStep {
           
           // Wait a bit for the AI to process the confirmation question
           logger.info('⏳ Waiting for AI to process confirmation question...');
-          await new Promise(resolve => setTimeout(resolve, 5000));
+          await new Promise(resolve => setTimeout(resolve, 2000)); // Simple wait for AI processing
           
           // Try to get the latest AI response
           let aiResponse = '';
