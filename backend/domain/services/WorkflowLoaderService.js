@@ -9,33 +9,53 @@ class WorkflowLoaderService {
     constructor() {
         this.logger = new Logger('WorkflowLoaderService');
         this.workflows = new Map();
-        this.workflowsPath = path.join(__dirname, '../../framework/workflows/task-workflows.json');
+        this.workflowsPaths = [
+            path.join(__dirname, '../../framework/workflows/task-workflows.json'),
+            path.join(__dirname, '../../framework/workflows/task-creation-workflows.json')
+        ];
         this.promptsPath = path.join(__dirname, '../../framework/prompts');
     }
 
     /**
-     * Load all workflows from JSON file
+     * Load all workflows from JSON files
      */
     async loadWorkflows() {
         try {
-            this.logger.info('Loading workflows from JSON file...');
+            this.logger.info('Loading workflows from JSON files...');
             
-            const workflowsData = await fs.readFile(this.workflowsPath, 'utf8');
-            const workflowsConfig = JSON.parse(workflowsData);
-            
-            // Load workflows
-            for (const [workflowId, workflow] of Object.entries(workflowsConfig.workflows)) {
-                this.workflows.set(workflowId, workflow);
-                this.logger.info(`Loaded workflow: ${workflowId} - ${workflow.name}`);
+            // Load from all workflow files
+            for (const workflowPath of this.workflowsPaths) {
+                try {
+                    const workflowsData = await fs.readFile(workflowPath, 'utf8');
+                    const workflowsConfig = JSON.parse(workflowsData);
+                    
+                    // Load workflows
+                    for (const [workflowId, workflow] of Object.entries(workflowsConfig.workflows)) {
+                        this.workflows.set(workflowId, workflow);
+                        this.logger.info(`Loaded workflow: ${workflowId} - ${workflow.name} from ${path.basename(workflowPath)}`);
+                    }
+                    
+                    // Merge task type mappings
+                    if (workflowsConfig.taskTypeMapping) {
+                        this.taskTypeMapping = { ...this.taskTypeMapping, ...workflowsConfig.taskTypeMapping };
+                    }
+                    
+                    // Merge prompts
+                    if (workflowsConfig.prompts) {
+                        this.prompts = { ...this.prompts, ...workflowsConfig.prompts };
+                    }
+                    
+                    // Store content library config if available
+                    if (workflowsConfig.contentLibrary) {
+                        this.contentLibrary = { ...this.contentLibrary, ...workflowsConfig.contentLibrary };
+                    }
+                    
+                } catch (error) {
+                    this.logger.warn(`Failed to load workflows from ${workflowPath}:`, error.message);
+                }
             }
             
-            // Store task type mapping
-            this.taskTypeMapping = workflowsConfig.taskTypeMapping || {};
-            
-            // Store prompts
-            this.prompts = workflowsConfig.prompts || {};
-            
-            this.logger.info(`Successfully loaded ${this.workflows.size} workflows`);
+            this.logger.info(`Successfully loaded ${this.workflows.size} workflows from ${this.workflowsPaths.length} files`);
             return true;
             
         } catch (error) {

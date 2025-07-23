@@ -326,6 +326,12 @@ class Application {
         this.workflowOrchestrationService = this.serviceRegistry.getService('workflowOrchestrationService');
         this.gitService = this.serviceRegistry.getService('gitService');
         this.testOrchestrator = this.serviceRegistry.getService('testOrchestrator');
+        
+        // Initialize WorkflowLoaderService
+        const WorkflowLoaderService = require('@domain/services/WorkflowLoaderService');
+        this.workflowLoaderService = new WorkflowLoaderService();
+        await this.workflowLoaderService.loadWorkflows();
+        this.logger.info('✅ WorkflowLoaderService initialized and workflows loaded');
 
             // Log dependency statistics
     const stats = this.serviceRegistry.getContainer().getDependencyStats();

@@ -161,8 +161,8 @@ Format the response in Markdown with clear sections and actionable steps.`;
       // Get current project ID
       const projectId = await this.api.getCurrentProjectId();
       
-      // Start auto-finish workflow using existing API pattern
-      const result = await this.workflowApi.startAutoFinishWorkflow({
+      // Start task creation workflow
+      const result = await this.workflowApi.startTaskCreationWorkflow({
         workflowId,
         projectId,
         taskData,
@@ -179,7 +179,7 @@ Format the response in Markdown with clear sections and actionable steps.`;
         projectId
       });
 
-      logger.info('Auto-finish monitoring started successfully');
+      logger.info('Task creation workflow started successfully');
       
       return {
         success: true,
@@ -189,8 +189,8 @@ Format the response in Markdown with clear sections and actionable steps.`;
       };
 
     } catch (error) {
-      logger.error('Failed to start auto-finish monitoring:', error);
-      throw new Error(`Failed to start auto-finish monitoring: ${error.message}`);
+      logger.error('Failed to start task creation workflow:', error);
+      throw new Error(`Failed to start task creation workflow: ${error.message}`);
     }
   }
 

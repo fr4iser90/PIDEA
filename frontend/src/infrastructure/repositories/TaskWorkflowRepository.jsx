@@ -7,39 +7,47 @@ export default class TaskWorkflowRepository {
   }
 
   /**
-   * Start auto-finish workflow
+   * Start task creation workflow
    * @param {Object} workflowData - Workflow configuration
    * @returns {Promise<Object>} Workflow result
    */
-  async startAutoFinishWorkflow(workflowData) {
+  async startTaskCreationWorkflow(workflowData) {
     try {
-      logger.info('Starting auto-finish workflow:', workflowData);
+      logger.info('Starting task creation workflow:', workflowData);
 
       const { workflowId, projectId, taskData, type, priority, estimatedTime } = workflowData;
 
-      // Use existing auto-finish API pattern
-      const response = await apiCall(`/api/projects/${projectId}/auto-finish/process`, {
+      // Use WorkflowController with task-creation mode
+      const response = await apiCall(`/api/projects/${projectId}/workflow/execute`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          workflowId,
-          type: type || 'task_creation',
-          priority: priority || 'medium',
-          estimatedTime: estimatedTime || 1,
-          taskData,
-          autoExecute: true,
-          createBranch: true,
-          branchName: `task/${workflowId}-${Date.now()}`
+          mode: 'task-creation',
+          task: {
+            id: workflowId,
+            title: taskData?.title || 'New task',
+            description: taskData?.description || 'Task created via workflow',
+            type: type || 'feature',
+            priority: priority || 'medium',
+            estimatedHours: estimatedTime || 1,
+            category: taskData?.category || 'general'
+          },
+          options: {
+            autoExecute: true,
+            createGitBranch: true,
+            branchName: `task/${workflowId}-${Date.now()}`,
+            clickNewChat: true
+          }
         })
       });
 
       if (!response.success) {
-        throw new Error(response.error || 'Failed to start auto-finish workflow');
+        throw new Error(response.error || 'Failed to start task creation workflow');
       }
 
-      logger.info('Auto-finish workflow started successfully');
+      logger.info('Task creation workflow started successfully');
       
       return {
         success: true,
@@ -50,8 +58,8 @@ export default class TaskWorkflowRepository {
       };
 
     } catch (error) {
-      logger.error('Failed to start auto-finish workflow:', error);
-      throw new Error(`Failed to start auto-finish workflow: ${error.message}`);
+      logger.error('Failed to start task creation workflow:', error);
+      throw new Error(`Failed to start task creation workflow: ${error.message}`);
     }
   }
 
@@ -70,22 +78,30 @@ export default class TaskWorkflowRepository {
       // Get current project ID if not provided
       const currentProjectId = projectId || await this.api.getCurrentProjectId();
 
-      // Use existing auto-finish API pattern with todoInput
-      const response = await apiCall(`/api/projects/${currentProjectId}/auto-finish/process`, {
+      // Use WorkflowController with task-creation mode instead of non-existent auto-finish endpoint
+      const response = await apiCall(`/api/projects/${currentProjectId}/workflow/execute`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          workflowId,
-          type: 'task_execution',
-          priority: taskData?.priority || 'medium',
-          estimatedTime: options?.estimatedHours || 1,
-          taskData,
-          todoInput, // The actual execution prompt
-          autoExecute: true,
-          createBranch: true,
-          branchName: `task/${workflowId}-${Date.now()}`
+          mode: 'task-creation',
+          task: {
+            id: workflowId,
+            title: taskData?.title || 'Task execution',
+            description: todoInput || taskData?.description || 'Task execution via workflow',
+            type: 'task_execution',
+            priority: taskData?.priority || 'medium',
+            estimatedHours: options?.estimatedHours || 1,
+            category: taskData?.category || 'general'
+          },
+          options: {
+            autoExecute: true,
+            createGitBranch: true,
+            branchName: `task/${workflowId}-${Date.now()}`,
+            clickNewChat: true,
+            todoInput: todoInput // Pass the actual execution prompt
+          }
         })
       });
 

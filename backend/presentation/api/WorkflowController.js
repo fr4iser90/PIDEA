@@ -605,6 +605,38 @@ class WorkflowController {
                 stepOptions.includeTestAnalysis = true;
                 stepOptions.includeTestGeneration = true;
                 stepOptions.includeTestFixing = true;
+            } else if (mode === 'task-creation' || mode === 'task-creation-workflow') {
+                // Execute Task Creation Workflow using WorkflowLoaderService
+                try {
+                    const workflowLoaderService = this.application?.workflowLoaderService;
+                    if (!workflowLoaderService) {
+                        throw new Error('WorkflowLoaderService not available');
+                    }
+
+                    // Get workflow based on task type or use default
+                    const taskType = req.body.task?.type || 'default';
+                    const workflow = workflowLoaderService.getWorkflowByTaskType(taskType);
+                    
+                    // Execute the workflow
+                    const result = await this.executeWorkflowSteps(workflow, req.body.task, projectId, userId, workspacePath, req.body.options);
+                    
+                    return res.status(200).json({
+                        success: true,
+                        message: 'Task creation workflow executed successfully',
+                        data: {
+                            workflowId: workflow.name,
+                            taskType,
+                            result
+                        }
+                    });
+                    
+                } catch (error) {
+                    this.logger.error('Task creation workflow failed:', error);
+                    return res.status(500).json({
+                        success: false,
+                        error: `Task creation workflow failed: ${error.message}`
+                    });
+                }
             } else {
 
             }

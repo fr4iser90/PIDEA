@@ -1,0 +1,278 @@
+{
+  "workflows": {
+    "task-creation-workflow": {
+      "name": "Task Creation Workflow",
+      "description": "Complete workflow for task creation: Prompt generation → IDE communication → Auto-finish execution",
+      "steps": [
+        {
+          "name": "generate-prompt",
+          "type": "generate",
+          "description": "Generate comprehensive task creation prompt",
+          "step": "TaskPromptGenerationStep",
+          "options": {
+            "useTaskCreateTemplate": true,
+            "includeProjectAnalysis": true,
+            "includeArchitectureContext": true,
+            "includeDependencies": true
+          },
+          "strict": true
+        },
+        {
+          "name": "create-chat",
+          "type": "ide",
+          "description": "Create new chat session for task creation",
+          "step": "CreateChatStep",
+          "options": {
+            "title": "Task Creation Session",
+            "metadata": {
+              "workflow": "task-creation-workflow",
+              "autoCreated": true,
+              "taskType": "creation"
+            }
+          },
+          "strict": true
+        },
+        {
+          "name": "send-to-ide",
+          "type": "ide_send_message",
+          "description": "Send generated prompt to IDE",
+          "step": "IDESendMessageStep",
+          "options": {
+            "useTaskPrompt": true,
+            "waitForResponse": true,
+            "timeout": 60000,
+            "retryOnFailure": true,
+            "maxRetries": 3
+          },
+          "strict": true
+        },
+        {
+          "name": "validate-response",
+          "type": "validation",
+          "description": "Validate IDE response quality",
+          "step": "CodeQualityAnalysisStep",
+          "options": {
+            "checks": ["completeness", "relevance", "structure"],
+            "strict": false,
+            "continueOnFailure": true
+          },
+          "strict": false
+        },
+        {
+          "name": "auto-finish",
+          "type": "completion",
+          "description": "Start auto-finish workflow for task execution",
+          "step": "AutoFinishStep",
+          "options": {
+            "maxConfirmationAttempts": 3,
+            "confirmationTimeout": 10000,
+            "fallbackDetectionEnabled": true,
+            "autoContinueThreshold": 0.8,
+            "includeCompletionDetection": true,
+            "includeAutoCommit": true
+          },
+          "strict": true
+        },
+        {
+          "name": "completion-check",
+          "type": "confirmation_step",
+          "description": "Final completion check with AI confirmation",
+          "step": "ConfirmationStep",
+          "options": {
+            "maxAttempts": 2,
+            "timeout": 15000,
+            "autoContinueThreshold": 0.9,
+            "enableMultiLanguage": true
+          },
+          "strict": false
+        }
+      ],
+      "options": {
+        "autoConfirm": true,
+        "createBranch": true,
+        "timeout": 300000,
+        "enableProgressTracking": true,
+        "enableErrorRecovery": true
+      }
+    },
+    "quick-task-creation-workflow": {
+      "name": "Quick Task Creation Workflow",
+      "description": "Simplified workflow for quick task creation without extensive validation",
+      "steps": [
+        {
+          "name": "generate-prompt",
+          "type": "generate",
+          "description": "Generate basic task creation prompt",
+          "step": "TaskPromptGenerationStep",
+          "options": {
+            "useTaskCreateTemplate": true,
+            "includeProjectAnalysis": false,
+            "simplified": true
+          }
+        },
+        {
+          "name": "send-to-ide",
+          "type": "ide_send_message",
+          "description": "Send prompt to IDE",
+          "step": "IDESendMessageStep",
+          "options": {
+            "waitForResponse": true,
+            "timeout": 30000
+          }
+        },
+        {
+          "name": "auto-finish",
+          "type": "completion",
+          "description": "Start auto-finish workflow",
+          "step": "AutoFinishStep",
+          "options": {
+            "maxConfirmationAttempts": 2,
+            "confirmationTimeout": 5000,
+            "fallbackDetectionEnabled": false
+          }
+        }
+      ],
+      "options": {
+        "autoConfirm": true,
+        "createBranch": false,
+        "timeout": 120000
+      }
+    },
+    "advanced-task-creation-workflow": {
+      "name": "Advanced Task Creation Workflow",
+      "description": "Advanced workflow with comprehensive analysis and validation",
+      "steps": [
+        {
+          "name": "project-analysis",
+          "type": "analysis",
+          "description": "Comprehensive project analysis before task creation",
+          "step": "ProjectAnalysisStep",
+          "options": {
+            "analysisTypes": ["architecture", "dependencies", "code-quality", "security"],
+            "includeMetrics": true,
+            "generateReport": true
+          }
+        },
+        {
+          "name": "generate-prompt",
+          "type": "generate",
+          "description": "Generate advanced task creation prompt with analysis context",
+          "step": "TaskPromptGenerationStep",
+          "options": {
+            "useTaskCreateTemplate": true,
+            "includeProjectAnalysis": true,
+            "includeArchitectureContext": true,
+            "includeDependencies": true,
+            "includeSecurityContext": true,
+            "includePerformanceContext": true
+          }
+        },
+        {
+          "name": "create-chat",
+          "type": "ide",
+          "description": "Create new chat session",
+          "step": "CreateChatStep",
+          "options": {
+            "title": "Advanced Task Creation Session",
+            "metadata": {
+              "workflow": "advanced-task-creation-workflow",
+              "autoCreated": true,
+              "taskType": "advanced-creation"
+            }
+          }
+        },
+        {
+          "name": "send-to-ide",
+          "type": "ide_send_message",
+          "description": "Send advanced prompt to IDE",
+          "step": "IDESendMessageStep",
+          "options": {
+            "useTaskPrompt": true,
+            "waitForResponse": true,
+            "timeout": 90000,
+            "retryOnFailure": true,
+            "maxRetries": 5
+          }
+        },
+        {
+          "name": "validate-response",
+          "type": "validation",
+          "description": "Comprehensive response validation",
+          "step": "CodeQualityAnalysisStep",
+          "options": {
+            "checks": ["completeness", "relevance", "structure", "security", "performance"],
+            "strict": true,
+            "continueOnFailure": false
+          }
+        },
+        {
+          "name": "auto-finish",
+          "type": "completion",
+          "description": "Start advanced auto-finish workflow",
+          "step": "AutoFinishStep",
+          "options": {
+            "maxConfirmationAttempts": 5,
+            "confirmationTimeout": 20000,
+            "fallbackDetectionEnabled": true,
+            "autoContinueThreshold": 0.7,
+            "includeCompletionDetection": true,
+            "includeAutoCommit": true,
+            "includeQualityAssessment": true
+          }
+        },
+        {
+          "name": "quality-assessment",
+          "type": "validation",
+          "description": "Final quality assessment",
+          "step": "ResponseQualityEngine",
+          "options": {
+            "assessmentTypes": ["code-quality", "architecture", "security", "performance"],
+            "generateReport": true
+          }
+        },
+        {
+          "name": "completion-check",
+          "type": "confirmation_step",
+          "description": "Final completion check",
+          "step": "ConfirmationStep",
+          "options": {
+            "maxAttempts": 3,
+            "timeout": 20000,
+            "autoContinueThreshold": 0.8,
+            "enableMultiLanguage": true
+          }
+        }
+      ],
+      "options": {
+        "autoConfirm": false,
+        "createBranch": true,
+        "timeout": 600000,
+        "enableProgressTracking": true,
+        "enableErrorRecovery": true,
+        "enableQualityGates": true
+      }
+    }
+  },
+  "taskTypeMapping": {
+    "feature": "task-creation-workflow",
+    "bug": "task-creation-workflow", 
+    "refactor": "advanced-task-creation-workflow",
+    "testing": "task-creation-workflow",
+    "documentation": "quick-task-creation-workflow",
+    "optimization": "advanced-task-creation-workflow",
+    "security": "advanced-task-creation-workflow",
+    "deployment": "task-creation-workflow",
+    "default": "task-creation-workflow"
+  },
+  "contentLibrary": {
+    "prompts": {
+      "task-creation": "content-library/prompts/task-management/task-create.md",
+      "quick-task": "content-library/prompts/task-management/task-create.md",
+      "advanced-task": "content-library/prompts/task-management/task-create.md"
+    },
+    "templates": {
+      "task-creation": "content-library/templates/",
+      "implementation": "content-library/prompts/development/"
+    }
+  }
+} 
