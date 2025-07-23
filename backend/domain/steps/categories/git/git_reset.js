@@ -26,7 +26,7 @@ const config = {
   }
 };
 
-class GitResetStepStep {
+class GitResetStep {
   constructor() {
     this.name = 'GitResetStep';
     this.description = 'Resets Git repository using DDD pattern with Commands and Handlers';

@@ -26,7 +26,7 @@ const config = {
   }
 };
 
-class GitGetCommitHistoryStepStep {
+class GitGetCommitHistoryStep {
   constructor() {
     this.name = 'GitGetCommitHistoryStep';
     this.description = 'Gets Git commit history using DDD pattern with Commands and Handlers';

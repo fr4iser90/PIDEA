@@ -26,7 +26,7 @@ const config = {
   }
 };
 
-class GitPullChangesStepStep {
+class GitPullChangesStep {
   constructor() {
     this.name = 'GitPullChangesStep';
     this.description = 'Pulls changes from remote repository using DDD pattern with Commands and Handlers';

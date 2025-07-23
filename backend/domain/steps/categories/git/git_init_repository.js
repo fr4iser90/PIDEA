@@ -26,7 +26,7 @@ const config = {
   }
 };
 
-class GitInitRepositoryStepStep {
+class GitInitRepositoryStep {
   constructor() {
     this.name = 'GitInitRepositoryStep';
     this.description = 'Initializes a Git repository using DDD pattern with Commands and Handlers';

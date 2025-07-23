@@ -26,7 +26,7 @@ const config = {
   }
 };
 
-class GitAddRemoteStepStep {
+class GitAddRemoteStep {
   constructor() {
     this.name = 'GitAddRemoteStep';
     this.description = 'Adds a Git remote using DDD pattern with Commands and Handlers';

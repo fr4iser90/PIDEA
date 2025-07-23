@@ -26,7 +26,7 @@ const config = {
   }
 };
 
-class GitGetDiffStepStep {
+class GitGetDiffStep {
   constructor() {
     this.name = 'GitGetDiffStep';
     this.description = 'Gets Git diff using DDD pattern with Commands and Handlers';

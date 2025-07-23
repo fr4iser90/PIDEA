@@ -26,7 +26,7 @@ const config = {
   }
 };
 
-class GitCreatePullRequestStepStep {
+class GitCreatePullRequestStep {
   constructor() {
     this.name = 'GitCreatePullRequestStep';
     this.description = 'Creates a pull request using DDD pattern with Commands and Handlers';

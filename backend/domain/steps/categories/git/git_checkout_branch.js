@@ -26,7 +26,7 @@ const config = {
   }
 };
 
-class GitCheckoutBranchStepStep {
+class GitCheckoutBranchStep {
   constructor() {
     this.name = 'GitCheckoutBranchStep';
     this.description = 'Checks out a Git branch using DDD pattern with Commands and Handlers';

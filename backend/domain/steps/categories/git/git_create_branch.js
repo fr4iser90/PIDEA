@@ -26,7 +26,7 @@ const config = {
   }
 };
 
-class GitCreateBranchStepStep {
+class GitCreateBranchStep {
   constructor() {
     this.name = 'GitCreateBranchStep';
     this.description = 'Creates a new Git branch using DDD pattern with Commands and Handlers';

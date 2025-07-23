@@ -26,7 +26,7 @@ const config = {
   }
 };
 
-class GitCloneRepositoryStepStep {
+class GitCloneRepositoryStep {
   constructor() {
     this.name = 'GitCloneRepositoryStep';
     this.description = 'Clones a Git repository using DDD pattern with Commands and Handlers';

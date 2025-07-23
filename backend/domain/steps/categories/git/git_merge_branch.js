@@ -26,7 +26,7 @@ const config = {
   }
 };
 
-class GitMergeBranchStepStep {
+class GitMergeBranchStep {
   constructor() {
     this.name = 'GitMergeBranchStep';
     this.description = 'Merges a Git branch using DDD pattern with Commands and Handlers';
