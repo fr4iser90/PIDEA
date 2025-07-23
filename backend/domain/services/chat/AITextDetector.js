@@ -239,7 +239,6 @@ class AITextDetector {
    * @returns {Promise<Object>} AI response with analysis
    */
   async waitForAIResponse(page, options = {}) {
-    const TimeoutResolver = require('@infrastructure/utils/TimeoutResolver');
     const {
       timeout = null,
       checkInterval = null,
@@ -247,8 +246,9 @@ class AITextDetector {
     } = options;
     
     // Use centralized timeout configuration
-    const actualTimeout = TimeoutResolver.resolve(timeout || 'AI_RESPONSE.DEFAULT');
-    const actualCheckInterval = TimeoutResolver.resolve(checkInterval || 'AI_RESPONSE_CHECK');
+    const TimeoutConfig = require('@config/timeout-config');
+    const actualTimeout = timeout ? TimeoutConfig.getTimeout('AI_RESPONSE', timeout) : TimeoutConfig.getTimeout('AI_RESPONSE', 'DEFAULT');
+    const actualCheckInterval = checkInterval ? TimeoutConfig.getInterval(checkInterval) : TimeoutConfig.getInterval('AI_RESPONSE_CHECK');
     
     const startTime = Date.now();
     let lastMessageCount = 0;

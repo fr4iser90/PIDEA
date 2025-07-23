@@ -56,11 +56,11 @@ class ConfirmationStep {
         };
       }
 
-      const TimeoutResolver = require('@infrastructure/utils/TimeoutResolver');
       const { taskId, maxAttempts = 3, timeout = null, autoContinueThreshold = 0.8, onlyIfResponseReceived = false } = context;
       
       // Use centralized timeout configuration
-      const actualTimeout = TimeoutResolver.resolve(timeout || 'WORKFLOW.CONFIRMATION');
+      const TimeoutConfig = require('@config/timeout-config');
+      const actualTimeout = timeout ? TimeoutConfig.getTimeout('WORKFLOW', timeout) : TimeoutConfig.getTimeout('WORKFLOW', 'CONFIRMATION');
 
       logger.info(`Starting AI confirmation process for task: ${taskId || 'unknown'}`);
 

@@ -48,11 +48,11 @@ class IDESendMessageStep {
       // Validate context
       this.validateContext(context);
       
-      const TimeoutResolver = require('@infrastructure/utils/TimeoutResolver');
       const { projectId, workspacePath, message, ideType, waitForResponse = false, timeout = null } = context;
       
       // Use centralized timeout configuration
-      const actualTimeout = TimeoutResolver.resolve(timeout || 'IDE.SEND_MESSAGE');
+      const TimeoutConfig = require('@config/timeout-config');
+      const actualTimeout = timeout ? TimeoutConfig.getTimeout('IDE', timeout) : TimeoutConfig.getTimeout('IDE', 'SEND_MESSAGE');
       
       logger.info(`📤 Sending message to IDE for project ${projectId}${ideType ? ` (${ideType})` : ''}`);
       
