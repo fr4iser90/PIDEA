@@ -35,6 +35,10 @@ class ConfirmationStep {
     this.version = '1.0.0';
   }
 
+  static getConfig() {
+    return config;
+  }
+
   async execute(context) {
     try {
       logger.info('Starting ConfirmationStep execution');
@@ -243,6 +247,18 @@ class ConfirmationStep {
     return questions[attempt % questions.length];
   }
 
+  validateContext(context) {
+    if (!context.projectId) {
+      throw new Error('Project ID is required');
+    }
+  }
 }
 
-module.exports = ConfirmationStep;
+// Create instance for execution
+const stepInstance = new ConfirmationStep();
+
+// Export in StepRegistry format
+module.exports = {
+  config,
+  execute: async (context) => await stepInstance.execute(context)
+};
