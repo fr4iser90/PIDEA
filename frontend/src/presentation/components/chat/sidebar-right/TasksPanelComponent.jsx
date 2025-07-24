@@ -4,6 +4,9 @@ import APIChatRepository, { apiCall } from '@/infrastructure/repositories/APICha
 import TaskSelectionModal from '../modal/TaskSelectionModal.jsx';
 import ManualTaskDetailsModal from '../modal/ManualTaskDetailsModal.jsx';
 import TaskCreationModal from '../modal/TaskCreationModal.jsx';
+import { getCategoryDisplay, getAllCategories, getCategoryIcon, getCategoryColor, MAIN_CATEGORIES } from '@/utils/taskTypeUtils';
+import TaskTypeBadge from '@/components/TaskTypeBadge.jsx';
+import '@/css/panel/task-panel.css';
 
 // Import the SAME fetchPromptContent function that works everywhere
 async function fetchPromptContent(promptFile) {
@@ -30,14 +33,76 @@ async function fetchPromptContent(promptFile) {
   throw new Error(`Prompt content not found for ${promptFile}`);
 }
 
-const TASK_TYPES = [
-  { value: 'test', label: 'Test' },
-  { value: 'refactor', label: 'Refactor' },
-  { value: 'bugfix', label: 'Bugfix' },
-  { value: 'doku', label: 'Doku' },
-  { value: 'feature', label: 'Feature' },
-  { value: 'custom', label: 'Custom' }
-];
+// Category Tabs Component for Left Sidebar
+const CategoryTabs = ({ categories, selectedCategory, onCategorySelect, taskCounts }) => {
+  return (
+    <div className="category-tabs-sidebar w-48 bg-gray-800 rounded p-3">
+      <h4 className="text-sm font-semibold text-gray-300 mb-3">Categories</h4>
+      <div className="space-y-2">
+        {Object.entries(categories).map(([key, category]) => {
+          const count = taskCounts[key] || 0;
+          const isActive = selectedCategory === key;
+          return (
+            <button
+              key={key}
+              className={`category-tab w-full text-left p-2 rounded text-sm transition-colors ${
+                isActive 
+                  ? 'bg-blue-600 text-white' 
+                  : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+              }`}
+              onClick={() => onCategorySelect(key)}
+            >
+              <div className="flex items-center justify-between">
+                <span>{getCategoryIcon(key)} {category}</span>
+                <span className="text-xs bg-gray-600 px-2 py-1 rounded">
+                  {count}
+                </span>
+              </div>
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+};
+
+// Vertical Action Buttons Component for Bottom Section
+const VerticalActionButtons = ({ 
+  onGenerate, 
+  onRefactor, 
+  onTest, 
+  onDeploy, 
+  onSecurity, 
+  onOptimize 
+}) => {
+  const categoryActions = [
+    { id: 'generate', label: 'Generate', icon: '⚡', handler: onGenerate },
+    { id: 'refactor', label: 'Refactor', icon: '🔧', handler: onRefactor },
+    { id: 'test', label: 'Test', icon: '🧪', handler: onTest },
+    { id: 'deploy', label: 'Deploy', icon: '🚀', handler: onDeploy },
+    { id: 'security', label: 'Security', icon: '🔒', handler: onSecurity },
+    { id: 'optimize', label: 'Optimize', icon: '⚡', handler: onOptimize }
+  ];
+
+  return (
+    <div className="vertical-action-buttons bg-gray-800 rounded p-3">
+      <h4 className="text-sm font-semibold text-gray-300 mb-3">Actions</h4>
+      <div className="space-y-2">
+        {categoryActions.map((action) => (
+          <button
+            key={action.id}
+            className="action-button w-full btn-secondary text-sm text-left"
+            onClick={action.handler}
+            title={action.label}
+          >
+            <span className="mr-2">{action.icon}</span>
+            {action.label}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+};
 
 function TasksPanelComponent({ eventBus, activePort }) {
   const api = new APIChatRepository();
@@ -108,166 +173,154 @@ function TasksPanelComponent({ eventBus, activePort }) {
     }
   };
 
-  // Regular Tasks
-  const [showTaskModal, setShowTaskModal] = useState(false);
-  const [modalType, setModalType] = useState('feature');
-  const [feedback, setFeedback] = useState(null);
-  const [tasks, setTasks] = useState([]);
-  const [taskFilter, setTaskFilter] = useState('all');
-  const [taskSearch, setTaskSearch] = useState('');
-
-  // Docs Tasks
+  // State management
   const [manualTasks, setManualTasks] = useState([]);
-  const [manualTaskFilter, setManualTaskFilter] = useState('all');
-  const [manualTaskSearch, setManualTaskSearch] = useState('');
+  const [isLoadingManualTasks, setIsLoadingManualTasks] = useState(false);
   const [selectedManualTask, setSelectedManualTask] = useState(null);
   const [isManualTaskModalOpen, setIsManualTaskModalOpen] = useState(false);
-  const [isLoadingManualTasks, setIsLoadingManualTasks] = useState(false);
   const [isLoadingManualTaskDetails, setIsLoadingManualTaskDetails] = useState(false);
-
-  // TaskSelectionModal (for refactoring etc.)
+  const [taskSearch, setTaskSearch] = useState('');
+  const [taskFilter, setTaskFilter] = useState('all');
+  const [selectedCategory, setSelectedCategory] = useState('all');
+  const [showTaskCreationModal, setShowTaskCreationModal] = useState(false);
+  const [feedback, setFeedback] = useState('');
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
   const [refactoringTasks, setRefactoringTasks] = useState([]);
   const [isAutoRefactoring, setIsAutoRefactoring] = useState(false);
 
-  // TaskCreationModal state
-  const [showTaskCreationModal, setShowTaskCreationModal] = useState(false);
-
-
-
-  // Load docs tasks on mount only
+  // Load tasks on component mount
   useEffect(() => {
-    if (activePort) {
-      logger.info('Loading docs tasks for port:', activePort);
-      loadManualTasks();
-    } else {
-      logger.info('No active port, clearing docs tasks');
-      setManualTasks([]);
-    }
-  }, []); // ← Only load once on mount, not on every activePort change
+    loadTasks();
+  }, []);
 
-  // Docs tasks functions
-  const loadManualTasks = async () => {
+  const loadTasks = async () => {
     setIsLoadingManualTasks(true);
     try {
       const response = await api.getManualTasks();
-      if (response.success) {
-        setManualTasks(response.data || []);
+      if (response && response.data) {
+        setManualTasks(response.data);
       } else {
-        setFeedback('Failed to load manual tasks');
+        setManualTasks([]);
       }
     } catch (error) {
-              setFeedback('Error loading manual tasks: ' + error.message);
-          } finally {
-        setIsLoadingManualTasks(false);
-      }
+      logger.error('Error loading manual tasks:', error);
+      setManualTasks([]);
+    } finally {
+      setIsLoadingManualTasks(false);
+    }
   };
 
-  const handleSyncManualTasks = async () => {
+  const handleSyncTasks = async () => {
     setIsLoadingManualTasks(true);
     try {
-      logger.info('🔄 [TasksPanelComponent] Starting manual tasks sync...');
       const response = await api.syncManualTasks();
-      if (response.success) {
-        setFeedback(`✅ Successfully synced ${response.data.importedCount} manual tasks to database`);
-        // Reload tasks after sync
-        await loadManualTasks();
-      } else {
-        setFeedback('❌ Failed to sync manual tasks: ' + response.error);
+      if (response && response.data) {
+        setManualTasks(response.data);
+        setFeedback('Tasks synced successfully');
       }
     } catch (error) {
-      logger.error('Error syncing manual tasks:', error);
-      setFeedback('❌ Error syncing manual tasks: ' + error.message);
+      logger.error('Error syncing tasks:', error);
+      setFeedback('Error syncing tasks');
     } finally {
       setIsLoadingManualTasks(false);
     }
   };
 
-  const handleCleanManualTasks = async () => {
-    if (!window.confirm('🗑️ Are you sure you want to delete ALL manual tasks from the database? This cannot be undone!')) {
-      return;
-    }
-    
+  const handleCleanTasks = async () => {
     setIsLoadingManualTasks(true);
     try {
-      logger.info('🗑️ [TasksPanelComponent] Starting manual tasks cleanup...');
       const response = await api.cleanManualTasks();
-      if (response.success) {
-        setFeedback(`✅ Successfully deleted ${response.data.deletedCount} manual tasks from database`);
-        // Reload tasks after cleanup
-        await loadManualTasks();
-      } else {
-        setFeedback('❌ Failed to clean manual tasks: ' + response.error);
+      if (response && response.data) {
+        setManualTasks(response.data);
+        setFeedback('Tasks cleaned successfully');
       }
     } catch (error) {
-      logger.error('Error cleaning manual tasks:', error);
-      setFeedback('❌ Error cleaning manual tasks: ' + error.message);
+      logger.error('Error cleaning tasks:', error);
+      setFeedback('Error cleaning tasks');
     } finally {
       setIsLoadingManualTasks(false);
     }
   };
 
-  const handleManualTaskClick = async (task) => {
-    setIsLoadingManualTaskDetails(true);
+  const handleGenerateTasks = async () => {
+    try {
+      const promptContent = await fetchPromptContent('prompts/development/generate-tasks.md');
+      const message = `Generate tasks based on the current project analysis:\n\n${promptContent}`;
+      eventBus.emit('sendMessage', { content: message, port: activePort });
+    } catch (error) {
+      logger.error('Error generating tasks:', error);
+      setFeedback('Error generating tasks');
+    }
+  };
+
+  const handleRefactorTasks = async () => {
+    try {
+      const promptContent = await fetchPromptContent('prompts/development/refactor-tasks.md');
+      const message = `Start refactoring workflow:\n\n${promptContent}`;
+      eventBus.emit('sendMessage', { content: message, port: activePort });
+    } catch (error) {
+      logger.error('Error starting refactoring:', error);
+      setFeedback('Error starting refactoring');
+    }
+  };
+
+  const handleTestTasks = async () => {
+    try {
+      const promptContent = await fetchPromptContent('prompts/development/test-tasks.md');
+      const message = `Start testing workflow:\n\n${promptContent}`;
+      eventBus.emit('sendMessage', { content: message, port: activePort });
+    } catch (error) {
+      logger.error('Error starting testing:', error);
+      setFeedback('Error starting testing');
+    }
+  };
+
+  const handleDeployTasks = async () => {
+    try {
+      const promptContent = await fetchPromptContent('prompts/development/deploy-tasks.md');
+      const message = `Start deployment workflow:\n\n${promptContent}`;
+      eventBus.emit('sendMessage', { content: message, port: activePort });
+    } catch (error) {
+      logger.error('Error starting deployment:', error);
+      setFeedback('Error starting deployment');
+    }
+  };
+
+  const handleSecurityTasks = async () => {
+    try {
+      const promptContent = await fetchPromptContent('prompts/development/security-tasks.md');
+      const message = `Start security analysis:\n\n${promptContent}`;
+      eventBus.emit('sendMessage', { content: message, port: activePort });
+    } catch (error) {
+      logger.error('Error starting security analysis:', error);
+      setFeedback('Error starting security analysis');
+    }
+  };
+
+  const handleOptimizeTasks = async () => {
+    try {
+      const promptContent = await fetchPromptContent('prompts/development/optimize-tasks.md');
+      const message = `Start optimization workflow:\n\n${promptContent}`;
+      eventBus.emit('sendMessage', { content: message, port: activePort });
+    } catch (error) {
+      logger.error('Error starting optimization:', error);
+      setFeedback('Error starting optimization');
+    }
+  };
+
+  const handleTaskClick = async (task) => {
+    setSelectedManualTask(task);
     setIsManualTaskModalOpen(true);
-    setSelectedManualTask(null);
+    setIsLoadingManualTaskDetails(true);
     
     try {
-      // Find the group this task belongs to
-      const featureId = task.metadata?.featureId || task.metadata?.featureGroup || task.id;
-      const group = groupedList.find(g => g.featureId === featureId);
-      
-      logger.info('Loading task details for:', task.id);
       const response = await api.getManualTaskDetails(task.id);
-      if (response.success && response.data) {
-        logger.info('Task details loaded successfully:', response.data);
-        const taskWithGroup = {
-          ...response.data,
-          featureGroup: group,
-          allTasks: group ? {
-            index: group.index,
-            phases: group.phases,
-            implementation: group.implementation,
-            summary: group.summary
-          } : null
-        };
-        setSelectedManualTask(taskWithGroup);
-      } else {
-        logger.warn('API returned no data, using task as fallback');
-        // Fallback: use the task data we already have
-        const taskWithGroup = {
-          ...task,
-          description: getTaskDescription(task),
-          filename: getTaskFilename(task),
-          featureGroup: group,
-          allTasks: group ? {
-            index: group.index,
-            phases: group.phases,
-            implementation: group.implementation,
-            summary: group.summary
-          } : null
-        };
-        setSelectedManualTask(taskWithGroup);
+      if (response && response.data) {
+        setSelectedManualTask(response.data);
       }
     } catch (error) {
       logger.error('Error loading task details:', error);
-      setFeedback('Error loading task details: ' + error.message);
-            // Fallback: use the task data we already have
-      const featureId = task.metadata?.featureId || task.metadata?.featureGroup || task.id;
-      const group = groupedList.find(g => g.featureId === featureId);
-      const taskWithGroup = {
-        ...task,
-        description: getTaskDescription(task),
-        filename: getTaskFilename(task),
-        featureGroup: group,
-        allTasks: group ? {
-          index: group.index,
-          phases: group.phases,
-          implementation: group.implementation,
-          summary: group.summary
-        } : null
-      };
-      setSelectedManualTask(taskWithGroup);
+      setFeedback('Error loading task details');
     } finally {
       setIsLoadingManualTaskDetails(false);
     }
@@ -278,139 +331,23 @@ function TasksPanelComponent({ eventBus, activePort }) {
     setSelectedManualTask(null);
   };
 
-  // Handle sending task to chat
   const handleSendToChat = (messageContent) => {
-    if (eventBus) {
-      eventBus.emit('chat:send:message', { message: messageContent });
-    }
-    handleCloseManualTaskModal();
+    eventBus.emit('sendMessage', { content: messageContent, port: activePort });
   };
 
-  // Handle executing task (start auto-mode with git branch and new chat)
   const handleExecuteTask = async (taskDetails) => {
     try {
-      // Load the execute prompt using the SAME function as everywhere else
-      const executePromptContent = await fetchPromptContent('prompts/task-management/task-execute.md');
-
-      // Create the complete task message
-      const taskMessage = `${executePromptContent}
-
----
-
-# TASK TO EXECUTE: ${taskDetails.title}
-
-## Task Details
-- **Priority**: ${taskDetails.priority || 'Not specified'}
-- **Status**: ${taskDetails.status || 'Not specified'}
-- **Estimated Time**: ${taskDetails.estimatedDuration ? Math.round(taskDetails.estimatedDuration / 60) + 'min' : 'Not specified'}
-- **File**: ${taskDetails.metadata?.filename || 'Unknown file'}
-
-## Task Content
-${taskDetails.description}
-
-## Execute Instructions
-**Execute this task automatically using the above prompt framework. Create a Git branch named \`task/${taskDetails.id}-${Date.now()}\` and implement everything with zero user input required.**`;
-
-      // Get current project ID
-      const projectId = await api.getCurrentProjectId();
-      
-      // Start auto-mode with the task
-      const autoModeResponse = await apiCall(`/api/projects/${projectId}/workflow/execute`, {
-        method: 'POST',
-        body: JSON.stringify({
-          taskId: taskDetails.id,
-          options: {
-            createGitBranch: true,
-            branchName: `task/${taskDetails.id}-${Date.now()}`,
-            clickNewChat: true,
-            autoExecute: true
-          }
-        })
-      });
-
-      if (autoModeResponse.success) {
-        setFeedback('✅ Auto-mode started! Git branch created and task execution initiated.');
-        handleCloseManualTaskModal();
-      } else {
-        throw new Error(autoModeResponse.error || 'Failed to start auto-mode');
+      const response = await api.executeManualTask(taskDetails.id);
+      if (response && response.data) {
+        setFeedback('Task executed successfully');
+        loadTasks(); // Reload tasks to update status
       }
     } catch (error) {
       logger.error('Error executing task:', error);
-      setFeedback('Failed to execute task: ' + error.message);
+      setFeedback('Error executing task');
     }
   };
 
-  // Docs tasks filter/search
-  const filteredManualTasks = manualTasks.filter(task => {
-    const taskTitle = String(task.title || '');
-    const taskFilename = getTaskFilename(task);
-    const matchesSearch = taskTitle.toLowerCase().includes(manualTaskSearch.toLowerCase()) ||
-                         String(taskFilename).toLowerCase().includes(manualTaskSearch.toLowerCase());
-    const matchesFilter = manualTaskFilter === 'all' || task.priority === manualTaskFilter;
-    return matchesSearch && matchesFilter;
-  });
-
-  // Group tasks by feature (category/name)
-  const groupedList = filteredManualTasks.reduce((acc, task) => {
-    const featureId = task.metadata?.featureId || task.metadata?.featureGroup || task.id;
-    const existingGroup = acc.find(g => g.featureId === featureId);
-    
-    if (existingGroup) {
-      // Add task to existing group based on structure
-      const structure = task.metadata?.structure || 'implementation';
-      if (structure === 'index') {
-        existingGroup.index = task;
-      } else if (structure === 'phase') {
-        if (!existingGroup.phases) existingGroup.phases = [];
-        existingGroup.phases.push(task);
-      } else if (structure === 'implementation') {
-        existingGroup.implementation = task;
-      } else if (structure === 'summary') {
-        existingGroup.summary = task;
-      }
-    } else {
-      // Create new group
-      const newGroup = {
-        featureId,
-        featureName: task.metadata?.name || task.title,
-        category: task.metadata?.category || 'Unknown',
-        index: null,
-        phases: [],
-        implementation: null,
-        summary: null
-      };
-      
-      // Add first task to appropriate slot
-      const structure = task.metadata?.structure || 'implementation';
-      if (structure === 'index') {
-        newGroup.index = task;
-      } else if (structure === 'phase') {
-        newGroup.phases.push(task);
-      } else if (structure === 'implementation') {
-        newGroup.implementation = task;
-      } else if (structure === 'summary') {
-        newGroup.summary = task;
-      }
-      
-      acc.push(newGroup);
-    }
-    return acc;
-  }, []);
-
-  // Sort phases within each group
-  groupedList.forEach(group => {
-    if (group.phases) {
-      group.phases.sort((a, b) => {
-        const phaseA = a.metadata?.phaseNumber || 0;
-        const phaseB = b.metadata?.phaseNumber || 0;
-        return phaseA - phaseB;
-      });
-    }
-  });
-
-
-
-  // Task creation logic
   const handleCreateTask = () => {
     setShowTaskCreationModal(true);
   };
@@ -420,77 +357,92 @@ ${taskDetails.description}
   };
 
   const handleTaskSubmit = async (taskData) => {
-    setFeedback(null);
     try {
-      logger.info('Task submitted:', taskData);
-      
-      // If this is a workflow result, handle it differently
-      if (taskData.workflowId && taskData.workflowResult) {
-        setFeedback(`✅ AI Task "${taskData.title}" created and executed successfully! Workflow ID: ${taskData.workflowId}`);
-      } else {
-        // Handle regular task creation
-        await api.createTask(taskData);
-        setFeedback(`✅ Task "${taskData.title}" created successfully!`);
+      const response = await api.createManualTask(taskData);
+      if (response && response.data) {
+        setManualTasks(prev => [...prev, response.data]);
+        setFeedback('Task created successfully');
+        setShowTaskCreationModal(false);
       }
-      
-      setShowTaskCreationModal(false);
-      
-    } catch (err) {
-      logger.error('Error handling task submission:', err);
-      setFeedback('❌ Failed to create task: ' + (err.message || err));
-      throw err;
+    } catch (error) {
+      logger.error('Error creating task:', error);
+      setFeedback('Error creating task');
     }
   };
 
+  // Filter and group tasks
+  const filteredTasks = manualTasks.filter(task => {
+    const matchesSearch = !taskSearch || 
+      getTaskTitle(task).toLowerCase().includes(taskSearch.toLowerCase()) ||
+      getTaskDescription(task).toLowerCase().includes(taskSearch.toLowerCase());
+    
+    const matchesCategory = selectedCategory === 'all' || task.category === selectedCategory;
+    
+    const matchesFilter = taskFilter === 'all' || 
+      getPriorityText(task.priority).toLowerCase() === taskFilter;
+    
+    return matchesSearch && matchesCategory && matchesFilter;
+  });
+
+  // Group tasks by category for display
+  const groupedTasks = filteredTasks.reduce((acc, task) => {
+    const category = task.category || 'manual';
+    if (!acc[category]) {
+      acc[category] = [];
+    }
+    acc[category].push(task);
+    return acc;
+  }, {});
+
+  // Get task counts for each category
+  const getCategoryTaskCounts = () => {
+    const counts = {};
+    Object.keys(MAIN_CATEGORIES).forEach(category => {
+      counts[category] = manualTasks.filter(task => task.category === category).length;
+    });
+    return counts;
+  };
+
   return (
-    <div className="tasks-tab space-y-4 p-3">
-      {/* Task Creation */}
-      <div className="panel-block">
-        <div className="flex gap-2 mb-4">
-          <button className="btn-primary" onClick={handleCreateTask}>Create Task</button>
-        </div>
-      </div>
-      {/* Manual Tasks Section */}
-      <div className="panel-block">
-        <div className="flex justify-between items-center mb-3">
-          <h3 className="font-semibold text-lg">📚 Manual Tasks</h3>
-          <div className="flex gap-2">
+    <div className="tasks-tab">
+      {/* Simplified Header */}
+      <div className="tasks-header">
+        <div className="tasks-header-content">
+          <h3 className="tasks-title">📋 Task Management</h3>
+          <div className="tasks-header-buttons">
+            <button 
+              className="btn-primary text-sm"
+              onClick={handleCreateTask}
+              title="Create new task"
+            >
+              ➕ Create
+            </button>
             <button 
               className="btn-secondary text-sm"
-              onClick={handleSyncManualTasks}
+              onClick={handleSyncTasks}
               disabled={isLoadingManualTasks}
+              title="Sync tasks with backend"
             >
               {isLoadingManualTasks ? 'Syncing...' : '🔄 Sync'}
             </button>
-            <button 
-              className="btn-secondary text-sm"
-              onClick={handleCleanManualTasks}
-              disabled={isLoadingManualTasks}
-            >
-              {isLoadingManualTasks ? 'Cleaning...' : '🗑️ Clean'}
-            </button>
-            <button 
-              className="btn-secondary text-sm"
-              onClick={loadManualTasks}
-              disabled={isLoadingManualTasks}
-            >
-              {isLoadingManualTasks ? 'Loading...' : '🔄 Refresh'}
-            </button>
           </div>
         </div>
-        {/* Manual Tasks Filter */}
-        <div className="flex gap-2 mb-3">
+      </div>
+
+      {/* Search and Filter */}
+      <div className="tasks-search-filter">
+        <div className="search-filter-content">
           <input 
             type="text" 
-            placeholder="Search manual tasks..." 
-            className="flex-1 rounded p-2 bg-gray-800 text-gray-100 text-sm"
-            value={manualTaskSearch}
-            onChange={(e) => setManualTaskSearch(e.target.value)}
+            placeholder="Search tasks..." 
+            className="search-input"
+            value={taskSearch}
+            onChange={(e) => setTaskSearch(e.target.value)}
           />
           <select 
-            className="rounded p-2 bg-gray-800 text-gray-100 text-sm"
-            value={manualTaskFilter}
-            onChange={(e) => setManualTaskFilter(e.target.value)}
+            className="filter-select"
+            value={taskFilter}
+            onChange={(e) => setTaskFilter(e.target.value)}
           >
             <option value="all">All Priorities</option>
             <option value="high">High Priority</option>
@@ -498,83 +450,153 @@ ${taskDetails.description}
             <option value="low">Low Priority</option>
           </select>
         </div>
-        {/* Manual Tasks List */}
-        <div className="bg-gray-900 rounded p-3 min-h-[200px] max-h-[300px] overflow-y-auto">
-          {isLoadingManualTasks ? (
-            <div className="flex items-center justify-center py-8">
-              <div className="loading-spinner mr-3"></div>
-              <span className="text-gray-400">Loading manual tasks...</span>
-            </div>
-          ) : filteredManualTasks.length > 0 ? (
-            <div className="space-y-3">
-              {filteredManualTasks.map((task) => {
-                return (
-                  <div
-                    key={task.id}
-                    className="manual-task-item p-3 bg-gray-800 rounded border border-gray-700 hover:border-gray-600 cursor-pointer transition-colors"
-                    onClick={() => handleManualTaskClick(task)}
-                  >
-                    <div className="flex justify-between items-start mb-2">
-                      <h4 className="font-medium text-white text-sm line-clamp-2">
-                        {getTaskTitle(task)}
-                      </h4>
-                      <div className="flex gap-1 flex-shrink-0 ml-2">
-                        <span
-                          className="priority-badge text-xs px-2 py-1 rounded"
-                          style={{ backgroundColor: getPriorityColor(task.priority) }}
-                        >
-                          {getPriorityText(task.priority)}
-                        </span>
-                        <span className="text-xs px-2 py-1 rounded bg-blue-600">
-                          📋
-                        </span>
-                      </div>
-                    </div>
-                    <div className="flex justify-between items-center text-xs text-gray-400">
-                      <span className="font-mono">
-                        {String(task.metadata?.structure || 'Documentation')} • {String(task.metadata?.category || 'Unknown')}
-                      </span>
-                      <span>{formatDate(task.updatedAt || task.createdAt || null)}</span>
-                    </div>
+      </div>
+
+      {/* Main Content Area - Category Tabs + Tasks List */}
+      <div className="tasks-main-content">
+        {/* Category Tabs - Left Sidebar */}
+        <div className="category-tabs-sidebar">
+          <h4>Categories</h4>
+          <div className="category-tabs-list">
+            {Object.entries(MAIN_CATEGORIES).map(([key, category]) => {
+              const count = getCategoryTaskCounts()[key] || 0;
+              const isActive = selectedCategory === key;
+              return (
+                <button
+                  key={key}
+                  className={`category-tab ${isActive ? 'active' : ''}`}
+                  onClick={() => setSelectedCategory(key)}
+                >
+                  <div className="category-tab-content">
+                    <span className="category-tab-text">{getCategoryIcon(key)} {category}</span>
+                    <span className="category-tab-count">{count}</span>
                   </div>
-                );
-              })}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+        
+        {/* Tasks List - Right Side */}
+        <div className="tasks-list-container">
+          {isLoadingManualTasks ? (
+            <div className="loading-container">
+              <div className="loading-spinner"></div>
+              <span className="loading-text">Loading tasks...</span>
+            </div>
+          ) : filteredTasks.length > 0 ? (
+            <div className="tasks-list">
+              {Object.entries(groupedTasks).map(([category, categoryTasks]) => (
+                <div key={category} className="category-group">
+                  <div className="category-header">
+                    <TaskTypeBadge 
+                      category={category}
+                      size="small"
+                      showSubcategory={false}
+                    />
+                    <span className="category-count">
+                      {categoryTasks.length} tasks
+                    </span>
+                  </div>
+                  <div className="category-tasks">
+                    {categoryTasks.map((task) => (
+                      <div
+                        key={task.id}
+                        className="task-item"
+                        onClick={() => handleTaskClick(task)}
+                      >
+                        <div className="task-header">
+                          <h4 className="task-title">{getTaskTitle(task)}</h4>
+                          <div className="task-badges">
+                            <span 
+                              className="priority-badge"
+                              style={{ backgroundColor: getPriorityColor(task.priority) }}
+                            >
+                              {getPriorityText(task.priority)}
+                            </span>
+                            <span 
+                              className="status-badge"
+                              style={{ backgroundColor: getStatusColor(task.status) }}
+                            >
+                              {getStatusText(task.status)}
+                            </span>
+                          </div>
+                        </div>
+                        <div className="task-footer">
+                          <span className="task-category">{task.category}</span>
+                          <span className="task-date">{formatDate(task.created_at)}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
             </div>
           ) : (
-            <div className="text-center py-8 text-gray-400">
-              {manualTaskSearch || manualTaskFilter !== 'all' ? 'No tasks match your filters' : 'No manual tasks found'}
+            <div className="no-tasks">
+              {taskSearch || selectedCategory !== 'all' || taskFilter !== 'all' 
+                ? 'No tasks match your filters' 
+                : 'No tasks found'}
             </div>
           )}
         </div>
       </div>
-      {/* Regular Task List & Filter */}
-      <div className="panel-block">
-        <h3 className="font-semibold mb-2">🔄 Active Tasks</h3>
-        <div className="flex gap-2 mb-3">
-          <input 
-            type="text" 
-            placeholder="Search tasks..." 
-            className="flex-1 rounded p-2 bg-gray-800 text-gray-100"
-            value={taskSearch}
-            onChange={(e) => setTaskSearch(e.target.value)}
-          />
-          <select 
-            className="rounded p-2 bg-gray-800 text-gray-100"
-            value={taskFilter}
-            onChange={(e) => setTaskFilter(e.target.value)}
+
+      {/* Vertical Action Buttons - Bottom */}
+      <div className="vertical-action-buttons">
+        <h4>Actions</h4>
+        <div className="action-buttons-list">
+          <button
+            className="action-button"
+            onClick={handleGenerateTasks}
+            title="Generate"
           >
-            <option value="all">All</option>
-            <option value="pending">Pending</option>
-            <option value="running">Running</option>
-            <option value="completed">Completed</option>
-            <option value="failed">Failed</option>
-          </select>
-        </div>
-        {/* Task List */}
-        <div className="bg-gray-900 rounded p-3 min-h-[200px]">
-          <div className="text-gray-400 text-sm">Active task list will be populated here</div>
+            <span className="action-icon">⚡</span>
+            <span className="action-text">Generate</span>
+          </button>
+          <button
+            className="action-button"
+            onClick={handleRefactorTasks}
+            title="Refactor"
+          >
+            <span className="action-icon">🔧</span>
+            <span className="action-text">Refactor</span>
+          </button>
+          <button
+            className="action-button"
+            onClick={handleTestTasks}
+            title="Test"
+          >
+            <span className="action-icon">🧪</span>
+            <span className="action-text">Test</span>
+          </button>
+          <button
+            className="action-button"
+            onClick={handleDeployTasks}
+            title="Deploy"
+          >
+            <span className="action-icon">🚀</span>
+            <span className="action-text">Deploy</span>
+          </button>
+          <button
+            className="action-button"
+            onClick={handleSecurityTasks}
+            title="Security"
+          >
+            <span className="action-icon">🔒</span>
+            <span className="action-text">Security</span>
+          </button>
+          <button
+            className="action-button"
+            onClick={handleOptimizeTasks}
+            title="Optimize"
+          >
+            <span className="action-icon">⚡</span>
+            <span className="action-text">Optimize</span>
+          </button>
         </div>
       </div>
+
       {/* Modals */}
       <ManualTaskDetailsModal
         isOpen={isManualTaskModalOpen}
@@ -597,7 +619,7 @@ ${taskDetails.description}
         onSubmit={handleTaskSubmit}
         eventBus={eventBus}
       />
-      {feedback && <div className="text-sm text-blue-400">{feedback}</div>}
+      {feedback && <div className="feedback-message">{feedback}</div>}
     </div>
   );
 }

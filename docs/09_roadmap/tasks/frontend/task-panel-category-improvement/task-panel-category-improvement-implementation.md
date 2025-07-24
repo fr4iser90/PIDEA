@@ -265,6 +265,147 @@ const ACTION_BUTTONS = [
 ];
 ```
 
+### 5.4 New Layout Structure Implementation
+
+#### 5.4.1 Category Tabs Sidebar
+```javascript
+// Category tabs component for left sidebar
+const CategoryTabs = ({ categories, selectedCategory, onCategorySelect, taskCounts }) => {
+  return (
+    <div className="category-tabs-sidebar w-48 bg-gray-800 rounded p-3">
+      <h4 className="text-sm font-semibold text-gray-300 mb-3">Categories</h4>
+      <div className="space-y-2">
+        {Object.entries(categories).map(([key, category]) => {
+          const count = taskCounts[key] || 0;
+          const isActive = selectedCategory === key;
+          return (
+            <button
+              key={key}
+              className={`category-tab w-full text-left p-2 rounded text-sm transition-colors ${
+                isActive 
+                  ? 'bg-blue-600 text-white' 
+                  : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+              }`}
+              onClick={() => onCategorySelect(key)}
+            >
+              <div className="flex items-center justify-between">
+                <span>{getCategoryIcon(key)} {category}</span>
+                <span className="text-xs bg-gray-600 px-2 py-1 rounded">
+                  {count}
+                </span>
+              </div>
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+};
+```
+
+#### 5.4.2 Vertical Action Buttons
+```javascript
+// Vertical action buttons component for bottom section
+const VerticalActionButtons = ({ onAction }) => {
+  const categoryActions = [
+    { id: 'generate', label: 'Generate', icon: '⚡', handler: handleGenerateTasks },
+    { id: 'refactor', label: 'Refactor', icon: '🔧', handler: handleRefactorTasks },
+    { id: 'test', label: 'Test', icon: '🧪', handler: handleTestTasks },
+    { id: 'deploy', label: 'Deploy', icon: '🚀', handler: handleDeployTasks },
+    { id: 'security', label: 'Security', icon: '🔒', handler: handleSecurityTasks },
+    { id: 'optimize', label: 'Optimize', icon: '⚡', handler: handleOptimizeTasks }
+  ];
+
+  return (
+    <div className="vertical-action-buttons bg-gray-800 rounded p-3">
+      <h4 className="text-sm font-semibold text-gray-300 mb-3">Actions</h4>
+      <div className="space-y-2">
+        {categoryActions.map((action) => (
+          <button
+            key={action.id}
+            className="action-button w-full btn-secondary text-sm text-left"
+            onClick={action.handler}
+            title={action.label}
+          >
+            <span className="mr-2">{action.icon}</span>
+            {action.label}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+};
+```
+
+#### 5.4.3 Updated TasksPanelComponent Layout
+```javascript
+// Updated layout structure in TasksPanelComponent
+return (
+  <div className="tasks-tab space-y-4 p-3">
+    {/* Simplified Header */}
+    <div className="panel-block">
+      <div className="flex justify-between items-center mb-4">
+        <h3 className="font-semibold text-lg">📋 Task Management</h3>
+        <div className="flex gap-2">
+          <button className="btn-primary text-sm" onClick={handleCreateTask}>
+            ➕ Create
+          </button>
+          <button className="btn-secondary text-sm" onClick={handleSyncTasks}>
+            🔄 Sync
+          </button>
+        </div>
+      </div>
+    </div>
+
+    {/* Search and Filter */}
+    <div className="panel-block">
+      <div className="flex gap-2 mb-3">
+        <input 
+          type="text" 
+          placeholder="Search tasks..." 
+          className="flex-1 rounded p-2 bg-gray-800 text-gray-100 text-sm"
+          value={taskSearch}
+          onChange={(e) => setTaskSearch(e.target.value)}
+        />
+        <select 
+          className="rounded p-2 bg-gray-800 text-gray-100 text-sm"
+          value={taskFilter}
+          onChange={(e) => setTaskFilter(e.target.value)}
+        >
+          <option value="all">All Priorities</option>
+          <option value="high">High Priority</option>
+          <option value="medium">Medium Priority</option>
+          <option value="low">Low Priority</option>
+        </select>
+      </div>
+    </div>
+
+    {/* Main Content Area - Category Tabs + Tasks List */}
+    <div className="panel-block">
+      <div className="flex gap-4">
+        {/* Category Tabs - Left Sidebar */}
+        <CategoryTabs 
+          categories={MAIN_CATEGORIES}
+          selectedCategory={selectedCategory}
+          onCategorySelect={setSelectedCategory}
+          taskCounts={getCategoryTaskCounts()}
+        />
+        
+        {/* Tasks List - Right Side */}
+        <div className="flex-1 bg-gray-900 rounded p-3 min-h-[300px] max-h-[500px] overflow-y-auto">
+          {/* Tasks list content */}
+        </div>
+      </div>
+    </div>
+
+    {/* Vertical Action Buttons - Bottom */}
+    <div className="panel-block">
+      <VerticalActionButtons onAction={handleAction} />
+    </div>
+  </div>
+);
+```
+
 ## 6. Implementation Phases
 
 ### Phase 1: Database & Backend (1 hour)
@@ -276,7 +417,11 @@ const ACTION_BUTTONS = [
 ### Phase 2: Frontend Core (2 hours)
 - [ ] Create task type utilities
 - [ ] Implement TaskTypeBadge component
-- [ ] Update TasksPanelComponent to use new structure
+- [ ] Update TasksPanelComponent with new layout structure:
+  - [ ] Move category tabs to left sidebar
+  - [ ] Position tasks list on the right
+  - [ ] Arrange action buttons vertically at bottom
+  - [ ] Simplify header with only Create and Sync buttons
 - [ ] Add enhanced action buttons
 - [ ] Implement category filtering
 - [ ] Fix category display issue (replace "Documentation" with actual category)
@@ -297,13 +442,40 @@ production security audit
 Documentation • [object Object] 23.07.2025, 10:26
 ```
 
-### After:
+### After (New Layout):
 ```
-🔒 Security Tasks
-production security audit
-Security Tasks • Security Audit 23.07.2025, 10:26
-[➕ Create] [🔄 Sync] [🗑️ Clean] [🔄 Refresh] [📤 Export] [📥 Import] [✏️ Bulk Edit] [📦 Archive] [📋 Duplicate] [📁 Move]
+┌─────────────────────────────────────────────────────────────┐
+│ 📋 Task Management                    [➕ Create] [🔄 Sync] │
+├─────────────────────────────────────────────────────────────┤
+│ ┌─────────────────┐ ┌─────────────────────────────────────┐ │
+│ │ Category Tabs   │ │ Tasks List                          │ │
+│ │                 │ │                                     │ │
+│ │ 🔒 Security (3) │ │ 🔒 Security Tasks                   │ │
+│ │ 📚 Manual (2)   │ │ production security audit           │ │
+│ │ 🔧 Refactor (1) │ │ Security Tasks • Security Audit     │ │
+│ │ 🧪 Test (0)     │ │ 23.07.2025, 10:26                  │ │
+│ │ 🚀 Build (0)    │ │                                     │ │
+│ │ ⚡ Analysis (0)  │ │ 📚 Manual Tasks                     │ │
+│ │ ⚡ Optimize (0)  │ │ manual task example                 │ │
+│ │ 📖 Docs (0)     │ │ Manual Tasks • General              │ │
+│ │                 │ │ 23.07.2025, 10:26                  │ │
+│ └─────────────────┘ └─────────────────────────────────────┘ │
+├─────────────────────────────────────────────────────────────┤
+│ Action Buttons (Vertical Layout):                          │
+│ [⚡ Generate]                                              │
+│ [🔧 Refactor]                                              │
+│ [🧪 Test]                                                  │
+│ [🚀 Deploy]                                                │
+│ [🔒 Security]                                              │
+│ [⚡ Optimize]                                              │
+└─────────────────────────────────────────────────────────────┘
 ```
+
+### Layout Changes:
+1. **Category Tabs**: Moved to left sidebar, showing category counts
+2. **Tasks List**: Main content area on the right
+3. **Action Buttons**: Moved to bottom, arranged vertically
+4. **Header**: Simplified with only Create and Sync buttons
 
 ## 8. Testing Strategy
 - Unit tests for category utilities
@@ -357,7 +529,7 @@ const getCategoryDisplay = (category, subcategory, structure) => {
 };
 ```
 
-### Issue 1.1: ManualTaskDetailsModal Value Object Handling
+? ### Issue 1.1: ManualTaskDetailsModal Value Object Handling
 **Current Problem**: ManualTaskDetailsModal fails to handle priority, status, and category values that are objects with `value` properties.
 
 **Location**: `frontend/src/presentation/components/chat/modal/ManualTaskDetailsModal.jsx` lines 125, 141, 159, 165, 199, 275

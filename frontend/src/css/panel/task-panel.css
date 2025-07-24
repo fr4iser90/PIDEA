@@ -1,144 +1,354 @@
-@import './panel-block.css';
+/* Task Panel Styles - New Layout Structure */
 
-/* VibeCoder Mode Button Group */
-.vibecoder-btn-group {
-    display: flex;
-    gap: 8px;
-    margin-bottom: 8px;
-  }
-  .vibecoder-btn {
-    background: #23272e;
-    color: #e6e6e6;
-    border: 1px solid var(--border-color);
-    border-radius: 5px;
-    padding: 6px 12px;
-    font-size: 13px;
-    cursor: pointer;
-    transition: background 0.2s, color 0.2s;
-    display: flex;
-    align-items: center;
-    gap: 4px;
-  }
-  .vibecoder-btn.active, .vibecoder-btn:active {
-    background: var(--primary-color);
-    color: #fff;
-  }
-  .vibecoder-btn:hover {
-    background: var(--hover-bg);
-    color: var(--primary-color);
+/* Tasks Tab Container */
+.tasks-tab {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 1rem;
+  height: 100%;
+  overflow: hidden;
+}
+
+/* Header Section */
+.tasks-header {
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 1rem;
+}
+
+.tasks-header-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.tasks-title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  margin: 0;
+  color: var(--text-primary);
+}
+
+.tasks-header-buttons {
+  display: flex;
+  gap: 0.5rem;
+}
+
+/* Search and Filter Section */
+.tasks-search-filter {
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 1rem;
+}
+
+.search-filter-content {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.search-input {
+  flex: 1;
+  padding: 0.5rem;
+  border-radius: 4px;
+  background: var(--input-bg);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+  font-size: 0.875rem;
+}
+
+.filter-select {
+  padding: 0.5rem;
+  border-radius: 4px;
+  background: var(--input-bg);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+  font-size: 0.875rem;
+}
+
+/* Main Content Layout */
+.tasks-main-content {
+  display: flex;
+  gap: 1rem;
+  flex: 1;
+  min-height: 0;
+}
+
+/* Category Tabs Sidebar */
+.category-tabs-sidebar {
+  width: 12rem;
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 1rem;
+  flex-shrink: 0;
+}
+
+.category-tabs-sidebar h4 {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  margin-bottom: 0.75rem;
+}
+
+.category-tabs-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.category-tab {
+  width: 100%;
+  text-align: left;
+  padding: 0.5rem;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  transition: all 0.2s ease;
+  border: none;
+  cursor: pointer;
+  background: var(--card-bg);
+  color: var(--text-muted);
+}
+
+.category-tab:hover {
+  background: var(--hover-bg);
+  color: var(--text-primary);
+}
+
+.category-tab.active {
+  background: var(--primary-color);
+  color: white;
+}
+
+.category-tab-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.category-tab-text {
+  font-size: 0.875rem;
+}
+
+.category-tab-count {
+  font-size: 0.75rem;
+  background: var(--border-color);
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  color: var(--text-muted);
+}
+
+/* Tasks List Container */
+.tasks-list-container {
+  flex: 1;
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 1rem;
+  min-height: 300px;
+  max-height: 500px;
+  overflow-y: auto;
+}
+
+.loading-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+}
+
+.loading-spinner {
+  width: 1.5rem;
+  height: 1.5rem;
+  border: 2px solid var(--border-color);
+  border-top: 2px solid var(--primary-color);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-right: 0.75rem;
+}
+
+.loading-text {
+  color: var(--text-muted);
+  font-size: 0.875rem;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.tasks-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.category-group {
+  margin-bottom: 1rem;
+}
+
+.category-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.category-count {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-left: 0.5rem;
+}
+
+.category-tasks {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-left: 1rem;
+}
+
+.task-item {
+  padding: 0.75rem;
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.task-item:hover {
+  border-color: var(--hover-border);
+  background: var(--hover-bg);
+}
+
+.task-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 0.5rem;
+}
+
+.task-title {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--text-primary);
+  margin: 0;
+  line-height: 1.4;
+}
+
+.task-badges {
+  display: flex;
+  gap: 0.25rem;
+  flex-shrink: 0;
+  margin-left: 0.5rem;
+}
+
+.priority-badge,
+.status-badge {
+  font-size: 0.75rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  color: white;
+  font-weight: 500;
+}
+
+.task-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.task-category {
+  font-family: monospace;
+}
+
+.task-date {
+  color: var(--text-muted);
+}
+
+.no-tasks {
+  text-align: center;
+  padding: 2rem;
+  color: var(--text-muted);
+  font-size: 0.875rem;
+}
+
+/* Vertical Action Buttons */
+.vertical-action-buttons {
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 1rem;
+}
+
+.vertical-action-buttons h4 {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  margin-bottom: 0.75rem;
+}
+
+.action-buttons-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.action-button {
+  width: 100%;
+  text-align: left;
+  padding: 0.5rem;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  transition: all 0.2s ease;
+  border: none;
+  cursor: pointer;
+  background: var(--card-bg);
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+}
+
+.action-button:hover {
+  background: var(--hover-bg);
+  color: var(--text-primary);
+}
+
+.action-icon {
+  margin-right: 0.5rem;
+  font-size: 1rem;
+}
+
+.action-text {
+  font-size: 0.875rem;
+}
+
+.feedback-message {
+  font-size: 0.875rem;
+  color: var(--primary-color);
+  text-align: center;
+  padding: 0.5rem;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .tasks-main-content {
+    flex-direction: column;
   }
   
-  /* Preset Buttons */
-  .preset-btn-group {
-    display: flex;
-    gap: 6px;
-    margin-bottom: 10px;
-  }
-  .preset-btn {
-    background: #222;
-    color: #e6e6e6;
-    border: 1px solid var(--border-color);
-    border-radius: 4px;
-    padding: 5px 10px;
-    font-size: 12px;
-    cursor: pointer;
-    transition: background 0.2s, color 0.2s;
-  }
-  .preset-btn.active, .preset-btn:active {
-    background: var(--primary-color);
-    color: #fff;
-  }
-  .preset-btn:hover {
-    background: var(--hover-bg);
-    color: var(--primary-color);
+  .category-tabs-sidebar {
+    width: 100%;
+    order: 2;
   }
   
-  /* Auto Mode Section */
-  .auto-mode-section {
-    background: var(--card-bg);
-    border: 1px solid var(--border-color);
-    border-radius: 8px;
-    padding: 12px;
-    margin-bottom: 12px;
-  }
-  .auto-mode-status {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 13px;
-  }
-  .auto-mode-btn {
-    background: #1db954;
-    color: #fff;
-    border: none;
-    border-radius: 5px;
-    padding: 6px 16px;
-    font-size: 13px;
-    cursor: pointer;
-    margin-left: auto;
-    transition: background 0.2s;
-  }
-  .auto-mode-btn:hover {
-    background: #1976d2;
+  .tasks-list-container {
+    order: 1;
   }
   
-  /* Preset Buttons */
-  .btn-preset {
-    background: #222;
-    color: #e6e6e6;
-    border: 1px solid var(--border-color);
-    border-radius: 4px;
-    padding: 5px 10px;
-    font-size: 12px;
-    cursor: pointer;
-    transition: background 0.2s, color 0.2s;
-    margin-bottom: 2px;
+  .vertical-action-buttons {
+    order: 3;
   }
-  .btn-preset.active, .btn-preset:active {
-    background: var(--primary-color);
-    color: #fff;
-  }
-  .btn-preset:hover {
-    background: var(--hover-bg);
-    color: var(--primary-color);
-  }
-  
-  /* VibeCoder Mode Buttons */
-  .btn-vibecoder {
-    background: #23272e;
-    color: #e6e6e6;
-    border: 1px solid var(--border-color);
-    border-radius: 5px;
-    padding: 6px 12px;
-    font-size: 13px;
-    cursor: pointer;
-    transition: background 0.2s, color 0.2s;
-    display: flex;
-    align-items: center;
-    gap: 4px;
-  }
-  .btn-vibecoder.active, .btn-vibecoder:active {
-    background: var(--primary-color);
-    color: #fff;
-  }
-  .btn-vibecoder:hover {
-    background: var(--hover-bg);
-    color: var(--primary-color);
-  }
-  
-  /* Danger Button (Stop) */
-  .btn-danger {
-    background: #b91c1c;
-    color: #fff;
-    border: none;
-    border-radius: 5px;
-    padding: 6px 12px;
-    font-size: 13px;
-    cursor: pointer;
-    transition: background 0.2s;
-  }
-  .btn-danger:hover {
-    background: #ef4444;
-  }
-  
-  /* Nur Task-Panel-spezifische Styles: Button-Gruppen, Task-Status, Analysis Results, etc. Keine generellen Panel- oder Framework-Styles! */ 
+} 
