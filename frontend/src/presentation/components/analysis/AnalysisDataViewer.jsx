@@ -67,7 +67,8 @@ const AnalysisDataViewer = ({ projectId = null, eventBus = null }) => {
   const { showSuccess, showInfo } = useNotificationStore();
 
   useEffect(() => {
-    loadAnalysisData();
+    // Only setup event listeners, don't auto-load data
+    // Data will be loaded manually via IndividualAnalysisButtons
     setupEventListeners();
   }, [projectId]); // Removed filters dependency to prevent infinite loop
 
