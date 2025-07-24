@@ -247,6 +247,104 @@ CREATE TABLE IF NOT EXISTS workflow_executions (
 );
 
 -- ============================================================================
+-- TASK MANAGEMENT TABLES
+-- ============================================================================
+
+-- TASK TEMPLATES (Reusable task templates)
+CREATE TABLE IF NOT EXISTS task_templates (
+    id TEXT PRIMARY KEY DEFAULT uuid_generate_v4()::text,
+    name TEXT NOT NULL,
+    description TEXT,
+    type TEXT NOT NULL, -- 'feature', 'bug', 'refactor', 'test', 'documentation'
+    default_priority TEXT NOT NULL DEFAULT 'medium', -- 'low', 'medium', 'high', 'critical'
+    estimated_time INTEGER, -- Estimated time in minutes
+    tags TEXT, -- JSON array of tags
+    content TEXT, -- Template content/description
+    variables TEXT, -- JSON array of template variables
+    metadata TEXT, -- JSON for template metadata
+    is_active BOOLEAN NOT NULL DEFAULT true,
+    version TEXT DEFAULT '1.0.0',
+    created_by TEXT NOT NULL DEFAULT 'me',
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (created_by) REFERENCES users (id)
+);
+
+-- TASK SUGGESTIONS (AI-generated task suggestions)
+CREATE TABLE IF NOT EXISTS task_suggestions (
+    id TEXT PRIMARY KEY DEFAULT uuid_generate_v4()::text,
+    title TEXT NOT NULL,
+    description TEXT,
+    task_type TEXT NOT NULL, -- 'feature', 'bug', 'refactor', 'test', 'documentation'
+    priority TEXT NOT NULL DEFAULT 'medium', -- 'low', 'medium', 'high', 'critical'
+    estimated_time INTEGER, -- Estimated time in minutes
+    tags TEXT, -- JSON array of tags
+    confidence REAL DEFAULT 0.0, -- AI confidence score (0-1)
+    reasoning TEXT, -- AI reasoning for suggestion
+    context TEXT, -- Context information
+    project_path TEXT, -- Project path where suggestion applies
+    metadata TEXT, -- JSON for suggestion metadata
+    status TEXT NOT NULL DEFAULT 'pending', -- 'pending', 'approved', 'rejected', 'applied'
+    is_approved BOOLEAN DEFAULT false,
+    is_rejected BOOLEAN DEFAULT false,
+    applied_at TEXT, -- When suggestion was applied
+    applied_by TEXT, -- Who applied the suggestion
+    ai_model TEXT, -- AI model used for generation
+    ai_response TEXT, -- Full AI response
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (applied_by) REFERENCES users (id)
+);
+
+-- TASK SESSIONS (Task execution sessions)
+CREATE TABLE IF NOT EXISTS task_sessions (
+    id TEXT PRIMARY KEY DEFAULT uuid_generate_v4()::text,
+    user_id TEXT NOT NULL DEFAULT 'me',
+    project_id TEXT,
+    todo_input TEXT NOT NULL, -- Original todo input
+    options TEXT, -- JSON options for task generation
+    status TEXT NOT NULL DEFAULT 'pending', -- 'pending', 'running', 'completed', 'failed', 'cancelled'
+    tasks TEXT, -- JSON array of generated tasks
+    total_tasks INTEGER DEFAULT 0,
+    completed_tasks INTEGER DEFAULT 0,
+    failed_tasks INTEGER DEFAULT 0,
+    current_task_index INTEGER DEFAULT 0,
+    progress INTEGER DEFAULT 0, -- Progress percentage (0-100)
+    start_time TEXT,
+    end_time TEXT,
+    duration INTEGER DEFAULT 0, -- Duration in milliseconds
+    result TEXT, -- JSON execution results
+    error TEXT, -- Error message if failed
+    metadata TEXT, -- JSON for session metadata
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users (id),
+    FOREIGN KEY (project_id) REFERENCES projects (id)
+);
+
+-- PROJECT ANALYSIS (Extended project analysis data)
+CREATE TABLE IF NOT EXISTS project_analysis (
+    id TEXT PRIMARY KEY DEFAULT uuid_generate_v4()::text,
+    project_id TEXT NOT NULL,
+    analysis_type TEXT NOT NULL, -- 'comprehensive', 'architecture', 'performance', 'security'
+    analysis_data TEXT NOT NULL, -- JSON analysis results
+    summary TEXT, -- JSON summary data
+    status TEXT NOT NULL DEFAULT 'completed', -- 'pending', 'running', 'completed', 'failed'
+    started_at TEXT NOT NULL,
+    completed_at TEXT,
+    duration_ms INTEGER,
+    overall_score REAL, -- 0-100 score
+    critical_issues_count INTEGER DEFAULT 0,
+    warnings_count INTEGER DEFAULT 0,
+    recommendations_count INTEGER DEFAULT 0,
+    file_hash TEXT, -- Hash of project files for cache validation
+    cache_expires_at TEXT, -- When cache expires (TTL)
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (project_id) REFERENCES projects (id)
+);
+
+-- ============================================================================
 -- INDEXES FOR PERFORMANCE
 -- ============================================================================
 
@@ -300,6 +398,33 @@ CREATE INDEX IF NOT EXISTS idx_workflows_type ON workflows(workflow_type);
 CREATE INDEX IF NOT EXISTS idx_workflows_status ON workflows(status);
 CREATE INDEX IF NOT EXISTS idx_workflow_executions_workflow_id ON workflow_executions(workflow_id);
 CREATE INDEX IF NOT EXISTS idx_workflow_executions_status ON workflow_executions(status);
+
+-- Task template indexes
+CREATE INDEX IF NOT EXISTS idx_task_templates_name ON task_templates(name);
+CREATE INDEX IF NOT EXISTS idx_task_templates_type ON task_templates(type);
+CREATE INDEX IF NOT EXISTS idx_task_templates_active ON task_templates(is_active);
+CREATE INDEX IF NOT EXISTS idx_task_templates_version ON task_templates(version);
+CREATE INDEX IF NOT EXISTS idx_task_templates_created_by ON task_templates(created_by);
+
+-- Task suggestion indexes
+CREATE INDEX IF NOT EXISTS idx_task_suggestions_status ON task_suggestions(status);
+CREATE INDEX IF NOT EXISTS idx_task_suggestions_project ON task_suggestions(project_path);
+CREATE INDEX IF NOT EXISTS idx_task_suggestions_confidence ON task_suggestions(confidence);
+CREATE INDEX IF NOT EXISTS idx_task_suggestions_approved ON task_suggestions(is_approved);
+CREATE INDEX IF NOT EXISTS idx_task_suggestions_created_at ON task_suggestions(created_at);
+
+-- Task session indexes
+CREATE INDEX IF NOT EXISTS idx_task_sessions_user_id ON task_sessions(user_id);
+CREATE INDEX IF NOT EXISTS idx_task_sessions_project_id ON task_sessions(project_id);
+CREATE INDEX IF NOT EXISTS idx_task_sessions_status ON task_sessions(status);
+CREATE INDEX IF NOT EXISTS idx_task_sessions_created_at ON task_sessions(created_at);
+
+-- Project analysis indexes
+CREATE INDEX IF NOT EXISTS idx_project_analysis_project_id ON project_analysis(project_id);
+CREATE INDEX IF NOT EXISTS idx_project_analysis_type ON project_analysis(analysis_type);
+CREATE INDEX IF NOT EXISTS idx_project_analysis_status ON project_analysis(status);
+CREATE INDEX IF NOT EXISTS idx_project_analysis_created_at ON project_analysis(created_at);
+CREATE INDEX IF NOT EXISTS idx_project_analysis_cache_expires ON project_analysis(cache_expires_at);
 
 -- ============================================================================
 -- COMMENTS
