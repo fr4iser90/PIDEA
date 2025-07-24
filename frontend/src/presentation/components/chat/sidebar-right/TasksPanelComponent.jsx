@@ -376,7 +376,7 @@ function TasksPanelComponent({ eventBus, activePort }) {
       getTaskTitle(task).toLowerCase().includes(taskSearch.toLowerCase()) ||
       getTaskDescription(task).toLowerCase().includes(taskSearch.toLowerCase());
     
-    const matchesCategory = selectedCategory === 'all' || task.category === selectedCategory;
+    const matchesCategory = selectedCategory === 'all' || (task.category || 'manual') === selectedCategory;
     
     const matchesFilter = taskFilter === 'all' || 
       getPriorityText(task.priority).toLowerCase() === taskFilter;
@@ -398,7 +398,9 @@ function TasksPanelComponent({ eventBus, activePort }) {
   const getCategoryTaskCounts = () => {
     const counts = {};
     Object.keys(MAIN_CATEGORIES).forEach(category => {
-      counts[category] = manualTasks.filter(task => task.category === category).length;
+      // Use the same logic as groupedTasks
+      const taskCategory = category === 'manual' ? 'manual' : category;
+      counts[category] = manualTasks.filter(task => (task.category || 'manual') === taskCategory).length;
     });
     return counts;
   };
