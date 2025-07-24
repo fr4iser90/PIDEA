@@ -1,7 +1,7 @@
 FROM postgres:16-alpine
 
-# Copy initialization scripts
-COPY init.sql /docker-entrypoint-initdb.d/
+# Copy PostgreSQL-specific initialization script
+COPY init-postgres.sql /docker-entrypoint-initdb.d/init.sql
 
 # Set locale
 ENV LANG en_US.utf8

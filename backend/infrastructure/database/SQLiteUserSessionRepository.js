@@ -1,5 +1,6 @@
 const UserSessionRepository = require('@repositories/UserSessionRepository');
 const UserSession = require('@entities/UserSession');
+const TokenHasher = require('@infrastructure/auth/TokenHasher');
 const Logger = require('@logging/Logger');
 const logger = new Logger('UserSessionRepositorySQLite');
 
@@ -7,6 +8,7 @@ class SQLiteUserSessionRepository extends UserSessionRepository {
   constructor(databaseConnection) {
     super();
     this.db = databaseConnection;
+    this.tokenHasher = new TokenHasher();
   }
 
   async save(session) {
@@ -22,8 +24,8 @@ class SQLiteUserSessionRepository extends UserSessionRepository {
     });
 
     const sql = `
-      INSERT OR REPLACE INTO user_sessions (id, user_id, access_token, refresh_token, expires_at, created_at, metadata)
-      VALUES (?, ?, ?, ?, ?, ?, ?)
+      INSERT OR REPLACE INTO user_sessions (id, user_id, access_token_start, access_token_hash, refresh_token, expires_at, created_at, metadata)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
     `;
 
     const sessionData = session.toJSON();
@@ -34,10 +36,16 @@ class SQLiteUserSessionRepository extends UserSessionRepository {
       expiresAt: sessionData.expiresAt
     });
 
+    // Store only the first 20 characters of the access token and generate hash
+    const accessTokenStart = sessionData.accessToken.substring(0, 20);
+    const tokenHashResult = this.tokenHasher.hashToken(sessionData.accessToken);
+    const accessTokenHash = tokenHashResult.hash;
+    
     await this.db.execute(sql, [
       sessionData.id,
       sessionData.userId,
-      sessionData.accessToken,
+      accessTokenStart,
+      accessTokenHash,
       sessionData.refreshToken,
       sessionData.expiresAt,
       sessionData.createdAt,
@@ -61,11 +69,12 @@ class SQLiteUserSessionRepository extends UserSessionRepository {
     return UserSession.fromJSON({
       id: row.id,
       userId: row.user_id,
-      accessToken: row.access_token,
+      accessToken: row.access_token_start,
       refreshToken: row.refresh_token,
       expiresAt: row.expires_at,
       createdAt: row.created_at,
-      metadata: row.metadata ? JSON.parse(row.metadata) : {}
+      metadata: row.metadata ? JSON.parse(row.metadata) : {},
+      accessTokenHash: row.access_token_hash
     });
   }
 
@@ -80,11 +89,12 @@ class SQLiteUserSessionRepository extends UserSessionRepository {
     return rows.map(row => UserSession.fromJSON({
       id: row.id,
       userId: row.user_id,
-      accessToken: row.access_token,
+      accessToken: row.access_token_start,
       refreshToken: row.refresh_token,
       expiresAt: row.expires_at,
       createdAt: row.created_at,
-      metadata: row.metadata ? JSON.parse(row.metadata) : {}
+      metadata: row.metadata ? JSON.parse(row.metadata) : {},
+      accessTokenHash: row.access_token_hash
     }));
   }
 
@@ -95,8 +105,10 @@ class SQLiteUserSessionRepository extends UserSessionRepository {
 
     // logger.info('🔍 Finding session by access authentication');
 
-    const sql = 'SELECT * FROM user_sessions WHERE access_token = ?';
-    const row = await this.db.getOne(sql, [accessToken]);
+    // Extract first 20 characters for comparison
+    const accessTokenStart = accessToken.substring(0, 20);
+    const sql = 'SELECT * FROM user_sessions WHERE access_token_start = ?';
+    const row = await this.db.getOne(sql, [accessTokenStart]);
     
     // logger.info('🔍 Database result:', row ? {
     //   id: row.id,
@@ -109,11 +121,12 @@ class SQLiteUserSessionRepository extends UserSessionRepository {
     const session = UserSession.fromJSON({
       id: row.id,
       userId: row.user_id,
-      accessToken: row.access_token,
+      accessToken: row.access_token_start,
       refreshToken: row.refresh_token,
       expiresAt: row.expires_at,
       createdAt: row.created_at,
-      metadata: row.metadata ? JSON.parse(row.metadata) : {}
+      metadata: row.metadata ? JSON.parse(row.metadata) : {},
+      accessTokenHash: row.access_token_hash
     });
 
     // logger.info('✅ Session found and reconstructed:', {

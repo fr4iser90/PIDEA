@@ -1,8 +1,8 @@
--- PIDEA Database Schema
+-- PIDEA Database Schema - PostgreSQL Version
 -- Single-User IDE Management System
 -- This application is designed for a single user managing their local IDEs (Cursor, VSCode, etc.)
 
--- Enable UUID extension
+-- Enable UUID extension (PostgreSQL only)
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 -- ============================================================================
@@ -25,9 +25,10 @@ CREATE TABLE IF NOT EXISTS users (
 
 -- USER SESSIONS (Your login sessions)
 CREATE TABLE IF NOT EXISTS user_sessions (
-    id TEXT PRIMARY KEY,
+    id TEXT PRIMARY KEY DEFAULT uuid_generate_v4()::text,
     user_id TEXT NOT NULL DEFAULT 'me',
     access_token_start TEXT NOT NULL, -- First 20 chars of token
+    access_token_hash TEXT, -- SHA-256 hash of full access token for secure validation
     refresh_token TEXT,
     expires_at TEXT NOT NULL,
     is_active BOOLEAN NOT NULL DEFAULT true,
@@ -39,7 +40,7 @@ CREATE TABLE IF NOT EXISTS user_sessions (
 
 -- PROJECTS (Your local projects) - EXTENDED VERSION
 CREATE TABLE IF NOT EXISTS projects (
-    id TEXT PRIMARY KEY,
+    id TEXT PRIMARY KEY DEFAULT uuid_generate_v4()::text,
     name TEXT NOT NULL,
     description TEXT,
     workspace_path TEXT NOT NULL, -- Path on YOUR computer
@@ -85,7 +86,7 @@ CREATE TABLE IF NOT EXISTS projects (
 
 -- TASKS (Your tasks for each project)
 CREATE TABLE IF NOT EXISTS tasks (
-    id TEXT PRIMARY KEY,
+    id TEXT PRIMARY KEY DEFAULT uuid_generate_v4()::text,
     project_id TEXT NOT NULL,
     title TEXT NOT NULL,
     description TEXT,
@@ -129,7 +130,7 @@ CREATE TABLE IF NOT EXISTS tasks (
 
 -- ANALYSIS RESULTS (Your project analysis data)
 CREATE TABLE IF NOT EXISTS analysis_results (
-    id TEXT PRIMARY KEY,
+    id TEXT PRIMARY KEY DEFAULT uuid_generate_v4()::text,
     project_id TEXT NOT NULL,
     analysis_type TEXT NOT NULL, -- 'code_quality', 'security', 'performance', 'architecture'
     result_data TEXT NOT NULL, -- JSON analysis results
@@ -148,7 +149,7 @@ CREATE TABLE IF NOT EXISTS analysis_results (
 
 -- ANALYSIS STEPS (Individual analysis steps)
 CREATE TABLE IF NOT EXISTS analysis_steps (
-    id TEXT PRIMARY KEY,
+    id TEXT PRIMARY KEY DEFAULT uuid_generate_v4()::text,
     project_id TEXT NOT NULL,
     analysis_type TEXT NOT NULL, -- 'code-quality', 'security', 'performance', 'architecture'
     status TEXT DEFAULT 'pending', -- 'pending', 'running', 'completed', 'failed', 'cancelled'
@@ -177,7 +178,7 @@ CREATE TABLE IF NOT EXISTS analysis_steps (
 
 -- CHAT SESSIONS (Your chat conversations)
 CREATE TABLE IF NOT EXISTS chat_sessions (
-    id TEXT PRIMARY KEY,
+    id TEXT PRIMARY KEY DEFAULT uuid_generate_v4()::text,
     project_id TEXT,
     title TEXT NOT NULL,
     session_type TEXT NOT NULL DEFAULT 'general', -- 'general', 'analysis', 'refactoring', 'debugging'
@@ -194,7 +195,7 @@ CREATE TABLE IF NOT EXISTS chat_sessions (
 
 -- CHAT MESSAGES (Your chat messages)
 CREATE TABLE IF NOT EXISTS chat_messages (
-    id TEXT PRIMARY KEY,
+    id TEXT PRIMARY KEY DEFAULT uuid_generate_v4()::text,
     session_id TEXT NOT NULL,
     sender_type TEXT NOT NULL, -- 'user', 'assistant', 'system'
     content TEXT NOT NULL,
@@ -211,7 +212,7 @@ CREATE TABLE IF NOT EXISTS chat_messages (
 
 -- WORKFLOWS (Your automated workflows)
 CREATE TABLE IF NOT EXISTS workflows (
-    id TEXT PRIMARY KEY,
+    id TEXT PRIMARY KEY DEFAULT uuid_generate_v4()::text,
     name TEXT NOT NULL,
     description TEXT,
     project_id TEXT,
@@ -230,7 +231,7 @@ CREATE TABLE IF NOT EXISTS workflows (
 
 -- WORKFLOW EXECUTIONS (Your workflow run history)
 CREATE TABLE IF NOT EXISTS workflow_executions (
-    id TEXT PRIMARY KEY,
+    id TEXT PRIMARY KEY DEFAULT uuid_generate_v4()::text,
     workflow_id TEXT NOT NULL,
     project_id TEXT,
     status TEXT NOT NULL, -- 'pending', 'running', 'completed', 'failed', 'cancelled'
@@ -248,6 +249,11 @@ CREATE TABLE IF NOT EXISTS workflow_executions (
 -- ============================================================================
 -- INDEXES FOR PERFORMANCE
 -- ============================================================================
+
+-- User sessions indexes
+CREATE INDEX IF NOT EXISTS idx_user_sessions_access_token ON user_sessions(access_token_start);
+CREATE INDEX IF NOT EXISTS idx_user_sessions_access_token_hash ON user_sessions(access_token_hash);
+CREATE INDEX IF NOT EXISTS idx_user_sessions_token_lookup ON user_sessions(access_token_start, access_token_hash);
 
 -- Projects indexes
 CREATE INDEX IF NOT EXISTS idx_projects_workspace_path ON projects(workspace_path);
@@ -305,4 +311,4 @@ CREATE INDEX IF NOT EXISTS idx_workflow_executions_status ON workflow_executions
 -- Tasks are organized by project and can have complex hierarchies
 -- Analysis results are stored per project and analysis type
 -- Chat sessions provide context-aware conversations
--- Workflows enable automation of common development tasks
+-- Workflows enable automation of common development tasks 

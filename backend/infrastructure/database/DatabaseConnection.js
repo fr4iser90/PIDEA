@@ -134,319 +134,48 @@ class DatabaseConnection {
   async runMigrations() {
     logger.info('🔄 Running migrations...');
     
-    const migrationsDir = path.join(__dirname, '../../migrations');
-    if (!fs.existsSync(migrationsDir)) {
-      await this.createTables();
-      return;
+    // Determine which SQL file to use based on ACTUAL database type (not config)
+    let initSqlPath;
+    if (this.type === 'postgresql') {
+      initSqlPath = path.join(__dirname, '../../../database/init-postgres.sql');
+      logger.info('📄 Using PostgreSQL-specific schema...');
+    } else {
+      initSqlPath = path.join(__dirname, '../../../database/init-sqlite.sql');
+      logger.info('📄 Using SQLite-specific schema...');
     }
-
-    const migrationFiles = fs.readdirSync(migrationsDir)
-      .filter(file => file.endsWith('.sql'))
-      .sort();
-
-    // If no migration files exist, create tables
-    if (migrationFiles.length === 0) {
-      logger.info('🔄 No migration files found, creating tables...');
-      await this.createTables();
-      return;
-    }
-
-    for (const file of migrationFiles) {
-      const migrationPath = path.join(migrationsDir, file);
-      const sql = fs.readFileSync(migrationPath, 'utf8');
+    
+    if (fs.existsSync(initSqlPath)) {
+      logger.info(`📄 Using ${path.basename(initSqlPath)} for database initialization...`);
+      const sql = fs.readFileSync(initSqlPath, 'utf8');
       
       try {
         await this.execute(sql);
-        logger.info(`✅ Migration applied: ${file}`);
+        logger.info(`✅ Database initialized from ${path.basename(initSqlPath)}`);
       } catch (error) {
-        logger.error(`❌ Migration failed: ${file}`, error.message);
+        logger.error('❌ Database initialization failed:', error.message);
         throw error;
+      }
+    } else {
+      logger.warn(`⚠️ ${path.basename(initSqlPath)} not found, falling back to legacy init.sql...`);
+      const legacyPath = path.join(__dirname, '../../../database/init.sql');
+      if (fs.existsSync(legacyPath)) {
+        const sql = fs.readFileSync(legacyPath, 'utf8');
+        await this.execute(sql);
+        logger.info('✅ Database initialized from legacy init.sql');
+      } else {
+        logger.info('🔄 No SQL files found, creating tables from code...');
+        await this.createTables();
       }
     }
   }
 
   async createTables() {
     logger.info('🏗️ Creating PIDEA tables...');
+    logger.warn('⚠️ createTables() is deprecated - using init.sql instead');
     
-    const isPostgreSQL = this.type === 'postgresql';
-    const metadataType = isPostgreSQL ? 'JSONB' : 'TEXT DEFAULT \'{}\'';
-    const timestampType = isPostgreSQL ? 'TIMESTAMP DEFAULT CURRENT_TIMESTAMP' : 'TEXT DEFAULT (datetime(\'now\'))';
-    const uuidFunction = isPostgreSQL ? 'uuid_generate_v4()' : '(lower(hex(randomblob(4))) || \'-\' || lower(hex(randomblob(2))) || \'-\' || lower(hex(randomblob(2))) || \'-\' || lower(hex(randomblob(2))) || \'-\' || lower(hex(randomblob(6))))';
-    
-    const tables = [
-      // Enable UUID extension for PostgreSQL
-      isPostgreSQL ? 'CREATE EXTENSION IF NOT EXISTS "uuid-ossp";' : null,
-      
-      // CORE TABLES (Single User System)
-      `CREATE TABLE IF NOT EXISTS users (
-        id TEXT PRIMARY KEY DEFAULT 'me' CHECK (id = 'me'),
-        email TEXT UNIQUE NOT NULL,
-        username TEXT UNIQUE NOT NULL,
-        password_hash TEXT NOT NULL,
-        role TEXT NOT NULL DEFAULT 'admin',
-        status TEXT NOT NULL DEFAULT 'active',
-        metadata ${metadataType},
-        created_at ${timestampType},
-        updated_at ${timestampType},
-        last_login ${timestampType}
-      )`,
-      
-      `CREATE TABLE IF NOT EXISTS user_sessions (
-        id TEXT PRIMARY KEY DEFAULT ${uuidFunction},
-        user_id TEXT NOT NULL DEFAULT 'me',
-        access_token_start TEXT NOT NULL,
-        refresh_token TEXT,
-        expires_at ${timestampType},
-        is_active BOOLEAN NOT NULL DEFAULT true,
-        metadata ${metadataType},
-        created_at ${timestampType},
-        updated_at ${timestampType},
-        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-      )`,
-      
-      `CREATE INDEX IF NOT EXISTS idx_user_sessions_access_token ON user_sessions(access_token_start)`,
-      
-      `CREATE TABLE IF NOT EXISTS projects (
-        id TEXT PRIMARY KEY DEFAULT ${uuidFunction},
-        name TEXT NOT NULL,
-        description TEXT,
-        workspace_path TEXT NOT NULL,
-        type TEXT NOT NULL DEFAULT 'development',
-        ide_type TEXT NOT NULL DEFAULT 'cursor',
-        ide_port INTEGER,
-        ide_status TEXT DEFAULT 'inactive',
-        backend_port INTEGER,
-        frontend_port INTEGER,
-        database_port INTEGER,
-        start_command TEXT,
-        build_command TEXT,
-        dev_command TEXT,
-        test_command TEXT,
-        framework TEXT,
-        language TEXT,
-        package_manager TEXT,
-        status TEXT NOT NULL DEFAULT 'active',
-        priority INTEGER DEFAULT 0,
-        last_accessed ${timestampType},
-        access_count INTEGER DEFAULT 0,
-        metadata ${metadataType},
-        config ${metadataType},
-        created_at ${timestampType},
-        updated_at ${timestampType},
-        created_by TEXT NOT NULL DEFAULT 'me',
-        FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE CASCADE
-      )`,
-      
-      `CREATE TABLE IF NOT EXISTS tasks (
-        id TEXT PRIMARY KEY DEFAULT ${uuidFunction},
-        title TEXT NOT NULL,
-        description TEXT NOT NULL,
-        type TEXT NOT NULL,
-        category TEXT,
-        priority TEXT NOT NULL,
-        status TEXT NOT NULL DEFAULT 'pending',
-        project_id TEXT,
-        created_by TEXT NOT NULL DEFAULT 'me',
-        metadata ${metadataType},
-        created_at ${timestampType},
-        updated_at ${timestampType},
-        completed_at ${timestampType},
-        due_date ${timestampType},
-        estimated_time INTEGER,
-        actual_time INTEGER,
-        tags TEXT,
-        assignee TEXT,
-        started_at ${timestampType},
-        execution_history ${metadataType},
-        parent_task_id TEXT,
-        child_task_ids ${metadataType},
-        phase TEXT,
-        stage TEXT,
-        phase_order INTEGER,
-        task_level INTEGER DEFAULT 0,
-        root_task_id TEXT,
-        is_phase_task INTEGER DEFAULT 0,
-        progress INTEGER DEFAULT 0,
-        phase_progress ${metadataType},
-        blocked_by ${metadataType},
-        FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE,
-        FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE CASCADE,
-        FOREIGN KEY (parent_task_id) REFERENCES tasks(id) ON DELETE CASCADE,
-        FOREIGN KEY (root_task_id) REFERENCES tasks(id) ON DELETE CASCADE
-      )`,
-      
-      // META-EBENEN TABLES (PIDEA Architecture)
-      `CREATE TABLE IF NOT EXISTS frameworks (
-        id TEXT PRIMARY KEY DEFAULT ${uuidFunction},
-        name TEXT NOT NULL UNIQUE,
-        description TEXT,
-        type TEXT NOT NULL,
-        version TEXT NOT NULL,
-        category TEXT NOT NULL,
-        capabilities TEXT,
-        configuration ${metadataType},
-        status TEXT NOT NULL DEFAULT 'active',
-        created_at ${timestampType},
-        updated_at ${timestampType}
-      )`,
-      
-      `CREATE TABLE IF NOT EXISTS workflows (
-        id TEXT PRIMARY KEY DEFAULT ${uuidFunction},
-        name TEXT NOT NULL,
-        description TEXT,
-        framework_id TEXT NOT NULL,
-        type TEXT NOT NULL,
-        category TEXT NOT NULL,
-        steps TEXT NOT NULL,
-        configuration ${metadataType},
-        status TEXT NOT NULL DEFAULT 'active',
-        created_at ${timestampType},
-        updated_at ${timestampType},
-        FOREIGN KEY (framework_id) REFERENCES frameworks(id) ON DELETE CASCADE
-      )`,
-      
-      `CREATE TABLE IF NOT EXISTS steps (
-        id TEXT PRIMARY KEY DEFAULT ${uuidFunction},
-        name TEXT NOT NULL,
-        description TEXT,
-        type TEXT NOT NULL,
-        category TEXT NOT NULL,
-        handler TEXT NOT NULL,
-        configuration ${metadataType},
-        status TEXT NOT NULL DEFAULT 'active',
-        created_at ${timestampType},
-        updated_at ${timestampType}
-      )`,
-      
-      `CREATE TABLE IF NOT EXISTS commands (
-        id TEXT PRIMARY KEY DEFAULT ${uuidFunction},
-        name TEXT NOT NULL UNIQUE,
-        description TEXT,
-        handler TEXT NOT NULL,
-        category TEXT NOT NULL,
-        parameters ${metadataType},
-        status TEXT NOT NULL DEFAULT 'active',
-        created_at ${timestampType},
-        updated_at ${timestampType}
-      )`,
-      
-      `CREATE TABLE IF NOT EXISTS handlers (
-        id TEXT PRIMARY KEY DEFAULT ${uuidFunction},
-        name TEXT NOT NULL UNIQUE,
-        description TEXT,
-        type TEXT NOT NULL,
-        category TEXT NOT NULL,
-        implementation TEXT NOT NULL,
-        configuration ${metadataType},
-        status TEXT NOT NULL DEFAULT 'active',
-        created_at ${timestampType},
-        updated_at ${timestampType}
-      )`,
-      
-      // IDE AGENTS (Ebene 3)
-      `CREATE TABLE IF NOT EXISTS ide_agents (
-        id TEXT PRIMARY KEY DEFAULT ${uuidFunction},
-        name TEXT NOT NULL,
-        type TEXT NOT NULL,
-        port INTEGER NOT NULL,
-        status TEXT NOT NULL DEFAULT 'running',
-        configuration ${metadataType},
-        created_at ${timestampType},
-        updated_at ${timestampType},
-        last_activity ${timestampType}
-      )`,
-      
-      // WORKFLOW EXECUTION
-      `CREATE TABLE IF NOT EXISTS workflow_executions (
-        id TEXT PRIMARY KEY DEFAULT ${uuidFunction},
-        workflow_id TEXT NOT NULL,
-        project_id TEXT,
-        user_id TEXT NOT NULL DEFAULT 'me',
-        status TEXT NOT NULL DEFAULT 'running',
-        current_step TEXT,
-        progress INTEGER DEFAULT 0,
-        result ${metadataType},
-        error_message TEXT,
-        started_at ${timestampType},
-        completed_at ${timestampType},
-        metadata ${metadataType},
-        FOREIGN KEY (workflow_id) REFERENCES workflows(id) ON DELETE CASCADE,
-        FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE,
-        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-      )`,
-      
-      // CHAT SYSTEM
-      `CREATE TABLE IF NOT EXISTS chat_sessions (
-        id TEXT PRIMARY KEY DEFAULT ${uuidFunction},
-        user_id TEXT NOT NULL DEFAULT 'me',
-        title TEXT,
-        created_at ${timestampType},
-        updated_at ${timestampType},
-        metadata ${metadataType},
-        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-      )`,
-      
-      `CREATE TABLE IF NOT EXISTS chat_messages (
-        id TEXT PRIMARY KEY DEFAULT ${uuidFunction},
-        session_id TEXT NOT NULL,
-        content TEXT NOT NULL,
-        sender TEXT NOT NULL,
-        type TEXT NOT NULL DEFAULT 'text',
-        timestamp ${timestampType},
-        metadata ${metadataType},
-        FOREIGN KEY (session_id) REFERENCES chat_sessions(id) ON DELETE CASCADE
-      )`,
-      
-      // ANALYSIS & METRICS
-      `CREATE TABLE IF NOT EXISTS analysis_results (
-        id TEXT PRIMARY KEY DEFAULT ${uuidFunction},
-        project_id TEXT NOT NULL,
-        
-        -- ANALYSIS DATA
-        analysis_type TEXT NOT NULL,
-        result_data ${metadataType},
-        summary ${metadataType},
-        
-        -- BASIC STATUS
-        status TEXT NOT NULL DEFAULT 'completed',
-        started_at ${timestampType},
-        completed_at ${timestampType},
-        duration_ms INTEGER,
-        
-        -- BASIC METRICS
-        overall_score INTEGER DEFAULT 0,
-        critical_issues_count INTEGER DEFAULT 0,
-        warnings_count INTEGER DEFAULT 0,
-        recommendations_count INTEGER DEFAULT 0,
-        
-        created_at ${timestampType},
-        
-        FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE
-      )`,
-      
-      `CREATE TABLE IF NOT EXISTS workflow_metrics (
-        id TEXT PRIMARY KEY DEFAULT ${uuidFunction},
-        workflow_id TEXT NOT NULL,
-        execution_id TEXT NOT NULL,
-        metric_name TEXT NOT NULL,
-        metric_value REAL NOT NULL,
-        timestamp ${timestampType},
-        metadata ${metadataType},
-        FOREIGN KEY (workflow_id) REFERENCES workflows(id) ON DELETE CASCADE,
-        FOREIGN KEY (execution_id) REFERENCES workflow_executions(id) ON DELETE CASCADE
-      )`
-    ].filter(Boolean); // Remove null entries
-    
-    for (const table of tables) {
-      try {
-        await this.execute(table);
-      } catch (error) {
-        logger.error(`❌ Table creation failed:`, error.message);
-        throw error;
-      }
-    }
-    
-    logger.info('✅ All PIDEA tables created/verified');
+    // This method is kept for backward compatibility but should not be used
+    // All table creation is now handled by init.sql
+    throw new Error('Table creation is now handled by init.sql - this method is deprecated');
   }
 
   async execute(sql, params = []) {

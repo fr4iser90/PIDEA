@@ -1,4 +1,5 @@
 const AuthService = require('@domain/services/security/AuthService');
+const TokenValidator = require('./TokenValidator');
 const Logger = require('@logging/Logger');
 const logger = new Logger('AuthMiddleware');
 
@@ -6,6 +7,7 @@ const logger = new Logger('AuthMiddleware');
 class AuthMiddleware {
   constructor(authService) {
     this.authService = authService;
+    this.tokenValidator = new TokenValidator();
     this.failedAttempts = new Map();
     this.blockedIPs = new Map();
     this.maxFailedAttempts = 5;

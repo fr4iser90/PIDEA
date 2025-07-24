@@ -1,5 +1,6 @@
 const User = require('@entities/User');
 const UserSession = require('@entities/UserSession');
+const TokenValidator = require('@infrastructure/auth/TokenValidator');
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const Logger = require('@logging/Logger');
@@ -12,6 +13,7 @@ class AuthService {
     this.userSessionRepository = userSessionRepository;
     this.jwtSecret = jwtSecret;
     this.jwtRefreshSecret = jwtRefreshSecret;
+    this.tokenValidator = new TokenValidator();
   }
 
   async login(credentials) {
@@ -159,26 +161,40 @@ class AuthService {
       throw new Error('Access token is required');
     }
 
+    logger.info('🔍 Validating access token');
+
     try {
-      const decoded = jwt.verify(accessToken, this.jwtSecret);
-      
+      // Find session by token prefix
       const session = await this.userSessionRepository.findByAccessToken(accessToken);
-      
-      if (!session || !session.isActive()) {
-        logger.info('❌ Session invalid or expired');
+      if (!session) {
+        logger.warn('❌ Session not found for token');
         throw new Error('Invalid or expired authentication');
       }
 
-      const user = await this.userRepository.findById(decoded.userId);
-      
+      // Use secure token validation
+      const validationResult = this.tokenValidator.validateSessionToken(accessToken, session);
+      if (!validationResult.isValid) {
+        logger.warn('❌ Token validation failed:', validationResult.reason);
+        throw new Error('Invalid authentication');
+      }
+
+      // Check if session is active
+      if (!session.isActive()) {
+        logger.warn('❌ Session is not active');
+        throw new Error('Invalid or expired authentication');
+      }
+
+      // Get user from session
+      const user = await this.userRepository.findById(session.userId);
       if (!user) {
-        logger.info('❌ User not found');
+        logger.warn('❌ User not found');
         throw new Error('User not found');
       }
 
+      logger.info('✅ Access token validated successfully');
       return { user, session };
     } catch (error) {
-      logger.error('❌ Authentication validation failed:', error.message);
+      logger.error('❌ Access token validation failed:', error.message);
       throw new Error('Invalid authentication');
     }
   }

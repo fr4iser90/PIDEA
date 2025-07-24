@@ -1,5 +1,6 @@
 const UserSessionRepository = require('@repositories/UserSessionRepository');
 const UserSession = require('@entities/UserSession');
+const TokenHasher = require('@infrastructure/auth/TokenHasher');
 const Logger = require('@logging/Logger');
 const logger = new Logger('UserSessionRepository');
 
@@ -8,6 +9,7 @@ class PostgreSQLUserSessionRepository extends UserSessionRepository {
   constructor(databaseConnection) {
     super();
     this.db = databaseConnection;
+    this.tokenHasher = new TokenHasher();
   }
 
   async save(session) {
@@ -23,10 +25,11 @@ class PostgreSQLUserSessionRepository extends UserSessionRepository {
     });
 
     const sql = `
-          INSERT INTO user_sessions (id, user_id, access_token_start, refresh_token, expires_at, created_at, metadata)
-    VALUES ($1, $2, $3, $4, $5, $6, $7)
+          INSERT INTO user_sessions (id, user_id, access_token_start, access_token_hash, refresh_token, expires_at, created_at, metadata)
+    VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
     ON CONFLICT (id) DO UPDATE SET
       access_token_start = EXCLUDED.access_token_start,
+      access_token_hash = EXCLUDED.access_token_hash,
         refresh_token = EXCLUDED.refresh_token,
         expires_at = EXCLUDED.expires_at,
         metadata = EXCLUDED.metadata
@@ -40,13 +43,16 @@ class PostgreSQLUserSessionRepository extends UserSessionRepository {
       expiresAt: sessionData.expiresAt
     });
 
-    // Store only the first 20 characters of the access token
+    // Store only the first 20 characters of the access token and generate hash
     const accessTokenStart = sessionData.accessToken.substring(0, 20);
+    const tokenHashResult = this.tokenHasher.hashToken(sessionData.accessToken);
+    const accessTokenHash = tokenHashResult.hash;
     
     await this.db.execute(sql, [
       sessionData.id,
       sessionData.userId,
       accessTokenStart,
+      accessTokenHash,
       sessionData.refreshToken,
       sessionData.expiresAt,
       sessionData.createdAt,
@@ -74,7 +80,8 @@ class PostgreSQLUserSessionRepository extends UserSessionRepository {
       refreshToken: row.refresh_token,
       expiresAt: row.expires_at,
       createdAt: row.created_at,
-      metadata: row.metadata ? JSON.parse(row.metadata) : {}
+      metadata: row.metadata ? JSON.parse(row.metadata) : {},
+      accessTokenHash: row.access_token_hash
     });
   }
 
@@ -93,7 +100,8 @@ class PostgreSQLUserSessionRepository extends UserSessionRepository {
       refreshToken: row.refresh_token,
       expiresAt: row.expires_at,
       createdAt: row.created_at,
-      metadata: row.metadata ? JSON.parse(row.metadata) : {}
+      metadata: row.metadata ? JSON.parse(row.metadata) : {},
+      accessTokenHash: row.access_token_hash
     }));
   }
 
@@ -120,11 +128,12 @@ class PostgreSQLUserSessionRepository extends UserSessionRepository {
     const session = UserSession.fromJSON({
       id: row.id,
       userId: row.user_id, // Map user_id to userId
-      accessToken: row.access_token,
+      accessToken: row.access_token_start,
       refreshToken: row.refresh_token,
       expiresAt: row.expires_at,
       createdAt: row.created_at,
-      metadata: row.metadata ? JSON.parse(row.metadata) : {}
+      metadata: row.metadata ? JSON.parse(row.metadata) : {},
+      accessTokenHash: row.access_token_hash
     });
 
     logger.info('✅ Session found and reconstructed:', {

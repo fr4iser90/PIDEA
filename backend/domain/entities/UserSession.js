@@ -1,7 +1,9 @@
 const { v4: uuidv4 } = require('uuid');
+const Token = require('@domain/value-objects/Token');
+const TokenHash = require('@domain/value-objects/TokenHash');
 
 class UserSession {
-  constructor(id, userId, accessToken, refreshToken, expiresAt, createdAt, metadata = {}) {
+  constructor(id, userId, accessToken, refreshToken, expiresAt, createdAt, metadata = {}, accessTokenHash = null) {
     this._id = id || uuidv4();
     this._userId = userId;
     this._accessToken = accessToken;
@@ -9,6 +11,7 @@ class UserSession {
     this._expiresAt = expiresAt;
     this._createdAt = createdAt || new Date();
     this._metadata = metadata;
+    this._accessTokenHash = accessTokenHash;
     this._validate();
   }
 
@@ -20,6 +23,12 @@ class UserSession {
   get expiresAt() { return this._expiresAt; }
   get createdAt() { return this._createdAt; }
   get metadata() { return { ...this._metadata }; }
+  get accessTokenHash() { return this._accessTokenHash; }
+  
+  // Secure token getters
+  get accessTokenStart() { 
+    return this._accessToken ? this._accessToken.substring(0, 20) : null; 
+  }
 
   // Domain methods
   isExpired() {
@@ -62,6 +71,25 @@ class UserSession {
     }
   }
 
+  // Secure token validation
+  validateToken(fullToken) {
+    if (!fullToken || !this._accessTokenHash) {
+      return false;
+    }
+
+    try {
+      const tokenHash = new TokenHash(fullToken);
+      return tokenHash.compare(this._accessTokenHash);
+    } catch (error) {
+      return false;
+    }
+  }
+
+  // Set token hash (for secure token migration)
+  setAccessTokenHash(hash) {
+    this._accessTokenHash = hash;
+  }
+
   // Factory methods
   static createSession(userId, accessToken, refreshToken, expiresAt, metadata = {}) {
     return new UserSession(
@@ -84,7 +112,8 @@ class UserSession {
       refreshToken: this._refreshToken,
       expiresAt: this._expiresAt.toISOString(),
       createdAt: this._createdAt.toISOString(),
-      metadata: this._metadata
+      metadata: this._metadata,
+      accessTokenHash: this._accessTokenHash
     };
   }
 
@@ -96,7 +125,8 @@ class UserSession {
       data.refreshToken,
       new Date(data.expiresAt),
       new Date(data.createdAt),
-      data.metadata
+      data.metadata,
+      data.accessTokenHash
     );
   }
 }
