@@ -56,9 +56,18 @@ class GitCreateBranchStep {
       });
 
       // ✅ DDD PATTERN: Create Command and Handler
+      // Resolve template variables in branchName
+      const resolvedParams = { ...otherParams };
+      if (resolvedParams.branchName && typeof resolvedParams.branchName === 'string') {
+        // Replace ${task.id} with actual task ID from taskData
+        if (resolvedParams.branchName.includes('${task.id}') && context.taskData?.id) {
+          resolvedParams.branchName = resolvedParams.branchName.replace(/\$\{task\.id\}/g, context.taskData.id);
+        }
+      }
+      
       const command = CommandRegistry.buildFromCategory('git', 'GitCreateBranchCommand', {
         projectPath,
-        ...otherParams
+        ...resolvedParams
       });
 
       const handler = HandlerRegistry.buildFromCategory('git', 'GitCreateBranchHandler', {

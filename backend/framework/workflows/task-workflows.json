@@ -10,7 +10,7 @@
           "description": "Create Git branch for task",
           "step": "GitCreateBranchStep",
           "options": {
-            "branchName": "task/{{task.id}}",
+            "branchName": "task/${task.id}",
             "checkout": true,
             "fromBranch": "main"
           },
