@@ -5,6 +5,18 @@
       "description": "Einheitlicher Flow für alle Tasks: Task + Prompt → IDE → Validieren → 3x Complete-Check → Test → npm run dev",
       "steps": [
         {
+          "name": "create-branch",
+          "type": "git",
+          "description": "Create Git branch for task",
+          "step": "GitCreateBranchStep",
+          "options": {
+            "branchName": "task/{{task.id}}",
+            "checkout": true,
+            "fromBranch": "main"
+          },
+          "strict": false
+        },
+        {
           "name": "create-chat",
           "type": "ide",
           "description": "Create new chat session",

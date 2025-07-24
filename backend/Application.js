@@ -480,6 +480,17 @@ class Application {
     this.serviceRegistry.container.register('sendMessageHandler', () => this.sendMessageHandler, { singleton: true });
     this.serviceRegistry.container.register('getChatHistoryHandler', () => this.getChatHistoryHandler, { singleton: true });
     this.serviceRegistry.container.register('createTaskHandler', () => this.createTaskHandler, { singleton: true });
+    
+    // Register CreateChatHandler for steps
+    const CreateChatHandler = require('./application/handlers/categories/chat/CreateChatHandler');
+    this.createChatHandler = new CreateChatHandler({
+      chatSessionService: this.serviceRegistry.getService('chatSessionService'),
+      ideManager: this.serviceRegistry.getService('ideManager'),
+      browserManager: this.serviceRegistry.getService('browserManager'),
+      eventBus: this.serviceRegistry.getService('eventBus'),
+      logger: this.serviceRegistry.getService('logger')
+    });
+    this.serviceRegistry.container.register('createChatHandler', () => this.createChatHandler, { singleton: true });
 
     // Legacy handlers removed - using new workflow system instead
     this.processTodoListHandler = null;
