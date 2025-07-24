@@ -21,76 +21,89 @@
 ### Files to Modify:
 
 #### Backend Files:
-- [ ] `backend/Application.js` - Update route comments and method calls
-- [ ] `backend/application/services/TaskApplicationService.js` - Rename syncDocsTasks/cleanDocsTasks methods
-- [ ] `backend/presentation/api/TaskController.js` - Rename syncDocsTasks/cleanDocsTasks methods
-- [ ] `backend/domain/services/task/DocsImportService.js` - Rename to ManualTasksImportService
-- [ ] `backend/application/handlers/categories/workflow/DocsTasksHandler.js` - Rename to ManualTasksHandler
-- [ ] `backend/application/services/IDEApplicationService.js` - Update handler reference
+- [x] ✅ `backend/Application.js` - Updated route comments and method calls
+- [x] ✅ `backend/application/services/TaskApplicationService.js` - Renamed syncDocsTasks/cleanDocsTasks methods
+- [x] ✅ `backend/presentation/api/TaskController.js` - Renamed syncDocsTasks/cleanDocsTasks methods
+- [x] ✅ `backend/domain/services/task/DocsImportService.js` - Renamed to ManualTasksImportService
+- [x] ✅ `backend/application/handlers/categories/workflow/DocsTasksHandler.js` - Renamed to ManualTasksHandler
+- [x] ✅ `backend/application/services/IDEApplicationService.js` - Updated handler reference
 
 #### Frontend Files:
-- [ ] `frontend/src/infrastructure/repositories/APIChatRepository.jsx` - Rename API methods
-- [ ] `frontend/src/presentation/components/chat/modal/DocsTaskDetailsModal.jsx` - Rename component
-- [ ] `frontend/src/presentation/components/chat/sidebar-right/TasksPanelComponent.jsx` - Update component references
-- [ ] `frontend/src/css/global/sidebar-right.css` - Update CSS classes
-- [ ] `frontend/src/css/modal/task-docs-details-modal.css` - Rename file and update classes
+- [x] ✅ `frontend/src/infrastructure/repositories/APIChatRepository.jsx` - Added new manual task methods
+- [x] ✅ `frontend/src/presentation/components/chat/modal/DocsTaskDetailsModal.jsx` - Renamed to ManualTaskDetailsModal
+- [x] ✅ `frontend/src/presentation/components/chat/sidebar-right/TasksPanelComponent.jsx` - Updated component references
+- [x] ✅ `frontend/src/css/global/sidebar-right.css` - Updated CSS classes
+- [x] ✅ `frontend/src/css/modal/task-docs-details-modal.css` - Renamed to manual-task-details-modal.css
 
 #### Test Files:
-- [ ] `backend/tests/unit/presentation/api/handlers/DocsTasksHandler.test.js` - Rename and update
-- [ ] `backend/tests/unit/presentation/api/TaskController.test.js` - Update method names
-- [ ] `frontend/tests/integration/DocsTasksIntegration.test.jsx` - Rename and update
+- [x] ✅ `backend/tests/unit/presentation/api/handlers/DocsTasksHandler.test.js` - Renamed to ManualTasksHandler.test.js
+- [x] ✅ `backend/tests/unit/presentation/api/TaskController.test.js` - Updated method names
+- [x] ✅ `frontend/tests/integration/DocsTasksIntegration.test.jsx` - Renamed to ManualTasksIntegration.test.jsx
 
 #### Documentation Files:
-- [ ] `content-library/prompts/task-management/task-create.md` - Update references
-- [ ] `content-library/prompts/task-management/task-execute.md` - Update references
-- [ ] `content-library/prompts/task-management/task-review.md` - Update references
-- [ ] `content-library/prompts/task-management/task-analyze.md` - Update references
-- [ ] `content-library/prompts/task-management/task-index-manager.md` - Update references
-- [ ] `content-library/prompts/task-management/task-review-phases.md` - Update references
+- [x] ✅ `content-library/prompts/task-management/task-create.md` - No changes needed (generic templates)
+- [x] ✅ `content-library/prompts/task-management/task-execute.md` - No changes needed (generic templates)
+- [x] ✅ `content-library/prompts/task-management/task-review.md` - No changes needed (generic templates)
+- [x] ✅ `content-library/prompts/task-management/task-analyze.md` - No changes needed (generic templates)
+- [x] ✅ `content-library/prompts/task-management/task-index-manager.md` - No changes needed (generic templates)
+- [x] ✅ `content-library/prompts/task-management/task-review-phases.md` - No changes needed (generic templates)
 
 ### Files to Create:
-- [ ] `backend/domain/services/task/ManualTasksImportService.js` - Renamed from DocsImportService
-- [ ] `backend/application/handlers/categories/workflow/ManualTasksHandler.js` - Renamed from DocsTasksHandler
-- [ ] `frontend/src/presentation/components/chat/modal/ManualTaskDetailsModal.jsx` - Renamed from DocsTaskDetailsModal
-- [ ] `frontend/src/css/modal/manual-task-details-modal.css` - Renamed from task-docs-details-modal.css
+- [x] ✅ `backend/domain/services/task/ManualTasksImportService.js` - Renamed from DocsImportService
+- [x] ✅ `backend/application/handlers/categories/workflow/ManualTasksHandler.js` - Renamed from DocsTasksHandler
+- [x] ✅ `frontend/src/presentation/components/chat/modal/ManualTaskDetailsModal.jsx` - Renamed from DocsTaskDetailsModal
+- [x] ✅ `frontend/src/css/modal/manual-task-details-modal.css` - Renamed from task-docs-details-modal.css
+- [x] ✅ `backend/tests/unit/presentation/api/handlers/ManualTasksHandler.test.js` - Renamed from DocsTasksHandler.test.js
+- [x] ✅ `frontend/tests/integration/ManualTasksIntegration.test.jsx` - Renamed from DocsTasksIntegration.test.jsx
 
 ### Files to Delete:
-- [ ] `backend/domain/services/task/DocsImportService.js` - After migration
-- [ ] `backend/application/handlers/categories/workflow/DocsTasksHandler.js` - After migration
-- [ ] `frontend/src/presentation/components/chat/modal/DocsTaskDetailsModal.jsx` - After migration
-- [ ] `frontend/src/css/modal/task-docs-details-modal.css` - After migration
-- [ ] `backend/tests/unit/presentation/api/handlers/DocsTasksHandler.test.js` - After migration
-- [ ] `frontend/tests/integration/DocsTasksIntegration.test.jsx` - After migration
+- [x] ✅ `backend/domain/services/task/DocsImportService.js` - After migration
+- [x] ✅ `backend/application/handlers/categories/workflow/DocsTasksHandler.js` - After migration
+- [x] ✅ `frontend/src/presentation/components/chat/modal/DocsTaskDetailsModal.jsx` - After migration
+- [x] ✅ `frontend/src/css/modal/task-docs-details-modal.css` - After migration
+- [x] ✅ `backend/tests/unit/presentation/api/handlers/DocsTasksHandler.test.js` - After migration
+- [x] ✅ `frontend/tests/integration/DocsTasksIntegration.test.jsx` - After migration
 
 ## 4. Implementation Phases
 
-### Phase 1: Backend Service Refactoring (3 hours)
-- [ ] Rename DocsImportService to ManualTasksImportService
-- [ ] Rename DocsTasksHandler to ManualTasksHandler
-- [ ] Update all method names (syncDocsTasks → syncManualTasks, cleanDocsTasks → cleanManualTasks)
-- [ ] Update route handlers and comments
-- [ ] Update service registrations and dependencies
+### Phase 1: Backend Service Refactoring (3 hours) ✅ COMPLETED
+- [x] ✅ Rename DocsImportService to ManualTasksImportService
+- [x] ✅ Rename DocsTasksHandler to ManualTasksHandler
+- [x] ✅ Update all method names (syncDocsTasks → syncManualTasks, cleanDocsTasks → cleanManualTasks)
+- [x] ✅ Update route handlers and comments
+- [x] ✅ Update service registrations and dependencies
+- [x] ✅ Remove all backward compatibility - only new manual task methods remain
 
-### Phase 2: Frontend Component Refactoring (2 hours)
-- [ ] Rename DocsTaskDetailsModal to ManualTaskDetailsModal
-- [ ] Update all component imports and references
-- [ ] Rename CSS classes from docs-task-* to manual-task-*
-- [ ] Update API method names in repositories
-- [ ] Update UI text and labels
+### Phase 2: Frontend Component Refactoring (2 hours) ✅ COMPLETED
+- [x] ✅ Rename DocsTaskDetailsModal to ManualTaskDetailsModal
+- [x] ✅ Update all component imports and references
+- [x] ✅ Rename CSS classes from docs-task-* to manual-task-*
+- [x] ✅ Update API method names in repositories
+- [x] ✅ Update UI text and labels
+- [x] ✅ Remove all backward compatibility - only new manual task methods remain
+- [x] ✅ Update all variable names and state management
+- [x] ✅ Update all UI text and user-facing messages
 
-### Phase 3: Test Files Refactoring (1 hour)
-- [ ] Rename test files
-- [ ] Update test method names and descriptions
-- [ ] Update mock data and assertions
-- [ ] Ensure all tests pass after refactoring
+### Phase 3: Test Files Refactoring (1 hour) ✅ COMPLETED
+- [x] ✅ Rename `backend/tests/unit/presentation/api/handlers/DocsTasksHandler.test.js` to `ManualTasksHandler.test.js`
+- [x] ✅ Update `backend/tests/unit/presentation/api/TaskController.test.js` with new method names
+- [x] ✅ Rename `frontend/tests/integration/DocsTasksIntegration.test.jsx` to `ManualTasksIntegration.test.jsx`
+- [x] ✅ Update test method names and descriptions
+- [x] ✅ Update mock data and assertions
+- [x] ✅ Ensure all tests pass after refactoring
 
-### Phase 4: Documentation Updates (1 hour)
-- [ ] Update all prompt files with new naming
-- [ ] Update documentation references
-- [ ] Update comments and inline documentation
-- [ ] Update README files if needed
+### Phase 4: Documentation Updates (1 hour) ✅ COMPLETED
+- [x] ✅ Update `content-library/prompts/task-management/task-create.md` - No changes needed (generic templates)
+- [x] ✅ Update `content-library/prompts/task-management/task-execute.md` - No changes needed (generic templates)
+- [x] ✅ Update `content-library/prompts/task-management/task-review.md` - No changes needed (generic templates)
+- [x] ✅ Update `content-library/prompts/task-management/task-analyze.md` - No changes needed (generic templates)
+- [x] ✅ Update `content-library/prompts/task-management/task-index-manager.md` - No changes needed (generic templates)
+- [x] ✅ Update `content-library/prompts/task-management/task-review-phases.md` - No changes needed (generic templates)
+- [x] ✅ Update historical documentation in `docs-sync-fix` files
+- [x] ✅ Update comments and inline documentation
+- [x] ✅ Update README files if needed
 
-### Phase 5: Integration Testing (1 hour)
+### Phase 5: Integration Testing (1 hour) ⏳ PENDING
 - [ ] Test manual tasks sync functionality
 - [ ] Test manual tasks cleanup functionality
 - [ ] Test manual task details modal

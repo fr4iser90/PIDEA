@@ -14,7 +14,7 @@
  * ✅ Uses Domain services through interfaces
  * ✅ Encapsulates complex IDE workflow orchestration
  */
-const DocsTasksHandler = require('@handlers/categories/workflow/DocsTasksHandler');
+const ManualTasksHandler = require('@handlers/categories/workflow/ManualTasksHandler');
 const TerminalLogCaptureService = require('@domain/services/terminal/TerminalLogCaptureService');
 const TerminalLogReader = require('@domain/services/terminal/TerminalLogReader');
 const Logger = require('@logging/Logger');
@@ -31,9 +31,9 @@ class IDEApplicationService {
         this.terminalLogCaptureService = dependencies.terminalLogCaptureService || new TerminalLogCaptureService();
         this.terminalLogReader = dependencies.terminalLogReader || new TerminalLogReader();
         
-        // Initialize docs handler if we have required dependencies
+        // Initialize manual tasks handler if we have required dependencies
         if (this.ideManager && this.taskRepository) {
-            this.docsTasksHandler = new DocsTasksHandler(() => {
+            this.manualTasksHandler = new ManualTasksHandler(() => {
                 const activePath = this.ideManager.getActiveWorkspacePath();
                 this.logger.info('Active workspace path:', activePath);
                 this.logger.info('Active port:', this.ideManager.getActivePort());

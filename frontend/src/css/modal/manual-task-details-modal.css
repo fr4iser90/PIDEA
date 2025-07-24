@@ -1,6 +1,6 @@
-/* Docs Task Details Modal Styles */
+/* Manual Task Details Modal Styles */
 
-.docs-task-modal-overlay {
+.manual-task-details-modal-overlay {
   position: fixed;
   top: 0;
   left: 0;
@@ -15,7 +15,7 @@
   backdrop-filter: blur(4px);
 }
 
-.docs-task-modal {
+.manual-task-details-modal {
   background: #1a1a1a;
   border: 1px solid #333;
   border-radius: 12px;
@@ -41,7 +41,7 @@
 }
 
 /* Modal Header */
-.modal-header {
+.manual-task-details-modal-header {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
@@ -50,12 +50,12 @@
   background: linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%);
 }
 
-.modal-title-section {
+.manual-task-details-modal-title {
   flex: 1;
   min-width: 0;
 }
 
-.modal-title {
+.manual-task-details-modal-title h2 {
   margin: 0 0 12px 0;
   font-size: 1.5rem;
   font-weight: 600;
@@ -64,16 +64,16 @@
   word-wrap: break-word;
 }
 
-.task-meta {
+.manual-task-details-modal-meta {
   display: flex;
   gap: 8px;
   flex-wrap: wrap;
   align-items: center;
 }
 
-.priority-badge,
-.status-badge,
-.time-badge {
+.manual-task-details-modal-priority,
+.manual-task-details-modal-status,
+.manual-task-details-modal-category {
   padding: 4px 8px;
   border-radius: 6px;
   font-size: 0.75rem;
@@ -84,12 +84,12 @@
   white-space: nowrap;
 }
 
-.time-badge {
+.manual-task-details-modal-category {
   background-color: #4a5568;
   color: #e2e8f0;
 }
 
-.modal-close-btn {
+.manual-task-details-modal-close {
   background: none;
   border: none;
   color: #888;
@@ -102,13 +102,13 @@
   flex-shrink: 0;
 }
 
-.modal-close-btn:hover {
+.manual-task-details-modal-close:hover {
   color: #ffffff;
   background-color: #333;
 }
 
 /* Loading State */
-.modal-loading {
+.manual-task-details-modal-loading {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -117,7 +117,7 @@
   color: #888;
 }
 
-.loading-spinner {
+.spinner {
   width: 40px;
   height: 40px;
   border: 3px solid #333;
@@ -133,46 +133,21 @@
 }
 
 /* Modal Content */
-.modal-content {
+.manual-task-details-modal-content {
   flex: 1;
   display: flex;
   flex-direction: column;
   overflow: hidden;
 }
 
-.file-info {
-  padding: 16px 24px;
-  background-color: #0f0f0f;
-  border-bottom: 1px solid #333;
-}
-
-.file-details {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 16px;
-}
-
-.file-name {
-  color: #007acc;
-  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
-  font-size: 0.875rem;
-}
-
-.file-modified {
-  color: #888;
-  font-size: 0.75rem;
-  white-space: nowrap;
-}
-
 /* Tab Navigation */
-.tab-navigation {
+.manual-task-details-modal-tabs {
   display: flex;
   background-color: #1a1a1a;
   border-bottom: 1px solid #333;
 }
 
-.tab-btn {
+.manual-task-details-modal-tab {
   background: none;
   border: none;
   color: #888;
@@ -185,45 +160,45 @@
   white-space: nowrap;
 }
 
-.tab-btn:hover {
+.manual-task-details-modal-tab:hover {
   color: #ffffff;
   background-color: #2a2a2a;
 }
 
-.tab-btn.active {
+.manual-task-details-modal-tab.active {
   color: #007acc;
   border-bottom-color: #007acc;
   background-color: #0f0f0f;
 }
 
 /* Tab Content */
-.tab-content {
+.manual-task-details-modal-body {
   flex: 1;
   overflow: hidden;
   display: flex;
   flex-direction: column;
 }
 
-.rendered-content,
-.raw-content {
+.manual-task-details-modal-rendered,
+.manual-task-details-modal-raw {
   flex: 1;
   overflow-y: auto;
   padding: 24px;
 }
 
 /* Markdown Content Styles */
-.markdown-content {
+.manual-task-details-modal-rendered {
   color: #e2e8f0;
   line-height: 1.6;
   font-size: 0.875rem;
 }
 
-.markdown-content h1,
-.markdown-content h2,
-.markdown-content h3,
-.markdown-content h4,
-.markdown-content h5,
-.markdown-content h6 {
+.manual-task-details-modal-rendered h1,
+.manual-task-details-modal-rendered h2,
+.manual-task-details-modal-rendered h3,
+.manual-task-details-modal-rendered h4,
+.manual-task-details-modal-rendered h5,
+.manual-task-details-modal-rendered h6 {
   color: #ffffff;
   margin-top: 24px;
   margin-bottom: 16px;
@@ -231,41 +206,41 @@
   line-height: 1.3;
 }
 
-.markdown-content h1 {
+.manual-task-details-modal-rendered h1 {
   font-size: 1.75rem;
   border-bottom: 2px solid #333;
   padding-bottom: 8px;
 }
 
-.markdown-content h2 {
+.manual-task-details-modal-rendered h2 {
   font-size: 1.5rem;
   border-bottom: 1px solid #333;
   padding-bottom: 6px;
 }
 
-.markdown-content h3 {
+.manual-task-details-modal-rendered h3 {
   font-size: 1.25rem;
 }
 
-.markdown-content h4 {
+.manual-task-details-modal-rendered h4 {
   font-size: 1.125rem;
 }
 
-.markdown-content p {
+.manual-task-details-modal-rendered p {
   margin-bottom: 16px;
 }
 
-.markdown-content ul,
-.markdown-content ol {
+.manual-task-details-modal-rendered ul,
+.manual-task-details-modal-rendered ol {
   margin-bottom: 16px;
   padding-left: 24px;
 }
 
-.markdown-content li {
+.manual-task-details-modal-rendered li {
   margin-bottom: 4px;
 }
 
-.markdown-content blockquote {
+.manual-task-details-modal-rendered blockquote {
   border-left: 4px solid #007acc;
   padding-left: 16px;
   margin: 16px 0;
@@ -273,7 +248,7 @@
   font-style: italic;
 }
 
-.markdown-content code {
+.manual-task-details-modal-rendered code {
   background-color: #2d3748;
   color: #e2e8f0;
   padding: 2px 6px;
@@ -282,7 +257,7 @@
   font-size: 0.875em;
 }
 
-.markdown-content pre {
+.manual-task-details-modal-rendered pre {
   background-color: #1a202c;
   border: 1px solid #333;
   border-radius: 6px;
@@ -291,7 +266,7 @@
   overflow-x: auto;
 }
 
-.markdown-content pre code {
+.manual-task-details-modal-rendered pre code {
   background: none;
   padding: 0;
   color: #e2e8f0;
@@ -315,7 +290,7 @@
   border-radius: 0 6px 0 4px;
 }
 
-.markdown-content table {
+.manual-task-details-modal-rendered table {
   width: 100%;
   border-collapse: collapse;
   margin: 16px 0;
@@ -324,33 +299,33 @@
   overflow: hidden;
 }
 
-.markdown-content th,
-.markdown-content td {
+.manual-task-details-modal-rendered th,
+.manual-task-details-modal-rendered td {
   padding: 12px;
   text-align: left;
   border-bottom: 1px solid #333;
 }
 
-.markdown-content th {
+.manual-task-details-modal-rendered th {
   background-color: #2d3748;
   font-weight: 600;
   color: #ffffff;
 }
 
-.markdown-content tr:hover {
+.manual-task-details-modal-rendered tr:hover {
   background-color: #2a2a2a;
 }
 
-.markdown-content a {
+.manual-task-details-modal-rendered a {
   color: #007acc;
   text-decoration: none;
 }
 
-.markdown-content a:hover {
+.manual-task-details-modal-rendered a:hover {
   text-decoration: underline;
 }
 
-.markdown-content img {
+.manual-task-details-modal-rendered img {
   max-width: 100%;
   height: auto;
   border-radius: 6px;
@@ -358,7 +333,7 @@
 }
 
 /* Raw Markdown Styles */
-.markdown-raw {
+.manual-task-details-modal-raw {
   background-color: #1a202c;
   border: 1px solid #333;
   border-radius: 6px;
@@ -373,14 +348,14 @@
   word-wrap: break-word;
 }
 
-.markdown-raw code {
+.manual-task-details-modal-raw code {
   background: none;
   padding: 0;
   color: inherit;
 }
 
 /* Error State */
-.modal-error {
+.manual-task-details-modal-error {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -390,46 +365,45 @@
 }
 
 /* Modal Footer */
-.modal-footer {
+.manual-task-details-modal-footer {
   padding: 16px 20px;
-  border-top: 1px solid var(--border-color);
-  background: var(--modal-bg);
+  border-top: 1px solid #333;
+  background: #1a1a1a;
   border-radius: 0 0 12px 12px;
 }
 
-.footer-actions {
+.manual-task-details-modal-actions {
   display: flex;
   gap: 12px;
   justify-content: flex-end;
   margin-bottom: 12px;
 }
 
-.execute-options {
+.manual-task-details-modal-send-options {
   padding-top: 12px;
-  border-top: 1px solid var(--border-color);
+  border-top: 1px solid #333;
 }
 
-.execute-checkbox {
+.manual-task-details-modal-checkbox {
   display: flex;
   align-items: center;
   gap: 8px;
   font-size: 0.9rem;
-  color: var(--text-secondary);
+  color: #888;
   cursor: pointer;
 }
 
-.execute-checkbox input[type="checkbox"] {
+.manual-task-details-modal-checkbox input[type="checkbox"] {
   width: 16px;
   height: 16px;
-  accent-color: var(--primary-color);
+  accent-color: #007acc;
 }
 
-.execute-checkbox span {
+.manual-task-details-modal-checkbox span {
   line-height: 1.4;
 }
 
-.btn-primary,
-.btn-secondary {
+.manual-task-details-modal-button {
   padding: 8px 16px;
   border: none;
   border-radius: 6px;
@@ -440,151 +414,152 @@
   white-space: nowrap;
 }
 
-.btn-primary {
+.manual-task-details-modal-button-primary {
   background-color: #007acc;
   color: #ffffff;
 }
 
-.btn-primary:hover {
+.manual-task-details-modal-button-primary:hover {
   background-color: #005a9e;
 }
 
-.btn-secondary {
+.manual-task-details-modal-button-secondary {
   background-color: #4a5568;
   color: #e2e8f0;
 }
 
-.btn-secondary:hover {
+.manual-task-details-modal-button-secondary:hover {
   background-color: #2d3748;
+}
+
+.manual-task-details-modal-info {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid #333;
+}
+
+.manual-task-details-modal-info-item {
+  font-size: 0.875rem;
+  color: #888;
+  margin-bottom: 4px;
 }
 
 /* Responsive Design */
 @media (max-width: 768px) {
-  .docs-task-modal {
+  .manual-task-details-modal {
     max-width: 95vw;
     max-height: 95vh;
     margin: 10px;
   }
 
-  .modal-header {
+  .manual-task-details-modal-header {
     padding: 16px 20px;
   }
 
-  .modal-title {
+  .manual-task-details-modal-title h2 {
     font-size: 1.25rem;
   }
 
-  .task-meta {
+  .manual-task-details-modal-meta {
     gap: 6px;
   }
 
-  .priority-badge,
-  .status-badge,
-  .time-badge {
+  .manual-task-details-modal-priority,
+  .manual-task-details-modal-status,
+  .manual-task-details-modal-category {
     font-size: 0.7rem;
     padding: 3px 6px;
   }
 
-  .file-details {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 8px;
-  }
-
-  .file-modified {
-    font-size: 0.7rem;
-  }
-
-  .tab-btn {
+  .manual-task-details-modal-tab {
     padding: 10px 16px;
     font-size: 0.8rem;
   }
 
-  .rendered-content,
-  .raw-content {
+  .manual-task-details-modal-rendered,
+  .manual-task-details-modal-raw {
     padding: 16px 20px;
   }
 
-  .markdown-content {
+  .manual-task-details-modal-rendered {
     font-size: 0.8rem;
   }
 
-  .markdown-content h1 {
+  .manual-task-details-modal-rendered h1 {
     font-size: 1.5rem;
   }
 
-  .markdown-content h2 {
+  .manual-task-details-modal-rendered h2 {
     font-size: 1.25rem;
   }
 
-  .markdown-content h3 {
+  .manual-task-details-modal-rendered h3 {
     font-size: 1.125rem;
   }
 
-  .footer-actions {
+  .manual-task-details-modal-actions {
     flex-direction: column;
   }
 
-  .btn-primary,
-  .btn-secondary {
+  .manual-task-details-modal-button {
     width: 100%;
     padding: 10px 16px;
   }
 }
 
 @media (max-width: 480px) {
-  .docs-task-modal-overlay {
+  .manual-task-details-modal-overlay {
     padding: 10px;
   }
 
-  .docs-task-modal {
+  .manual-task-details-modal {
     max-width: 100vw;
     max-height: 100vh;
     border-radius: 0;
   }
 
-  .modal-header {
+  .manual-task-details-modal-header {
     padding: 12px 16px;
   }
 
-  .modal-title {
+  .manual-task-details-modal-title h2 {
     font-size: 1.125rem;
   }
 
-  .rendered-content,
-  .raw-content {
+  .manual-task-details-modal-rendered,
+  .manual-task-details-modal-raw {
     padding: 12px 16px;
   }
 
-  .markdown-content {
+  .manual-task-details-modal-rendered {
     font-size: 0.75rem;
   }
 }
 
 /* Scrollbar Styling */
-.rendered-content::-webkit-scrollbar,
-.raw-content::-webkit-scrollbar {
+.manual-task-details-modal-rendered::-webkit-scrollbar,
+.manual-task-details-modal-raw::-webkit-scrollbar {
   width: 8px;
 }
 
-.rendered-content::-webkit-scrollbar-track,
-.raw-content::-webkit-scrollbar-track {
+.manual-task-details-modal-rendered::-webkit-scrollbar-track,
+.manual-task-details-modal-raw::-webkit-scrollbar-track {
   background: #1a1a1a;
 }
 
-.rendered-content::-webkit-scrollbar-thumb,
-.raw-content::-webkit-scrollbar-thumb {
+.manual-task-details-modal-rendered::-webkit-scrollbar-thumb,
+.manual-task-details-modal-raw::-webkit-scrollbar-thumb {
   background: #4a5568;
   border-radius: 4px;
 }
 
-.rendered-content::-webkit-scrollbar-thumb:hover,
-.raw-content::-webkit-scrollbar-thumb:hover {
+.manual-task-details-modal-rendered::-webkit-scrollbar-thumb:hover,
+.manual-task-details-modal-raw::-webkit-scrollbar-thumb:hover {
   background: #2d3748;
 }
 
-/* Docs Task Items in Panel */
-.docs-task-item {
+/* Manual Task Items in Panel */
+.manual-task-item {
   transition: all 0.2s ease;
   max-width: 100%;
   min-width: 0;
@@ -600,13 +575,13 @@
   overflow: hidden;
 }
 
-.docs-task-item:hover {
+.manual-task-item:hover {
   background: #2a2e36;
   border-color: #444;
   box-shadow: 0 2px 8px rgba(0,0,0,0.10);
 }
 
-.docs-task-item .line-clamp-2 {
+.manual-task-item .line-clamp-2 {
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
@@ -615,7 +590,7 @@
   word-break: break-word;
 }
 
-.docs-task-item h4 {
+.manual-task-item h4 {
   font-size: 1rem;
   font-weight: 600;
   color: #fff;
@@ -624,7 +599,7 @@
   min-width: 0;
 }
 
-.docs-task-item .task-meta-row {
+.manual-task-item .task-meta-row {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
@@ -632,8 +607,8 @@
   margin-bottom: 2px;
 }
 
-.docs-task-item .priority-badge,
-.docs-task-item .status-badge {
+.manual-task-item .priority-badge,
+.manual-task-item .status-badge {
   font-size: 0.75rem;
   padding: 2px 8px;
   border-radius: 5px;
@@ -644,7 +619,7 @@
   white-space: nowrap;
 }
 
-.docs-task-item .file-meta-row {
+.manual-task-item .file-meta-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -654,7 +629,7 @@
   margin-top: 2px;
 }
 
-.docs-task-item .file-meta-row .file-name {
+.manual-task-item .file-meta-row .file-name {
   font-family: 'Fira Mono', 'Menlo', 'Consolas', monospace;
   font-size: 0.78rem;
   color: #7ecfff;
@@ -663,13 +638,13 @@
   max-width: 60%;
 }
 
-.docs-task-item .file-meta-row .file-date {
+.manual-task-item .file-meta-row .file-date {
   font-size: 0.75rem;
   color: #888;
   white-space: nowrap;
 }
 
-.docs-task-item .estimated-time {
+.manual-task-item .estimated-time {
   font-size: 0.75rem;
   color: #ffb347;
   margin-top: 2px;
@@ -684,14 +659,14 @@
 }
 
 @media (max-width: 600px) {
-  .docs-task-item {
+  .manual-task-item {
     padding: 10px 8px;
     font-size: 0.95rem;
   }
-  .docs-task-item h4 {
+  .manual-task-item h4 {
     font-size: 0.95rem;
   }
-  .docs-task-item .file-meta-row {
+  .manual-task-item .file-meta-row {
     font-size: 0.7rem;
   }
 } 

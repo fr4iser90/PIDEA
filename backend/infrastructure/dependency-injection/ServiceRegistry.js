@@ -317,10 +317,10 @@ class ServiceRegistry {
             return new TaskService(taskRepository, aiService, projectAnalyzer, cursorIDEService, null); // autoFinishSystem removed
         }, { singleton: true, dependencies: ['taskRepository', 'aiService', 'projectAnalyzer', 'cursorIDEService'] });
 
-        // Docs Import Service
-        this.container.register('docsImportService', (browserManager, taskService, taskRepository) => {
-            const DocsImportService = require('@domain/services/task/DocsImportService');
-            return new DocsImportService(browserManager, taskService, taskRepository);
+        // Manual Tasks Import Service
+        this.container.register('manualTasksImportService', (browserManager, taskService, taskRepository) => {
+            const ManualTasksImportService = require('@domain/services/task/ManualTasksImportService');
+            return new ManualTasksImportService(browserManager, taskService, taskRepository);
         }, { singleton: true, dependencies: ['browserManager', 'taskService', 'taskRepository'] });
 
         this.registeredServices.add('domain');
@@ -538,7 +538,7 @@ class ServiceRegistry {
     }
 
     registerTaskApplicationService() {
-        this.container.register('taskApplicationService', (taskService, taskRepository, aiService, projectAnalyzer, projectMappingService, ideManager, docsImportService, logger) => {
+        this.container.register('taskApplicationService', (taskService, taskRepository, aiService, projectAnalyzer, projectMappingService, ideManager, manualTasksImportService, logger) => {
             const TaskApplicationService = require('@application/services/TaskApplicationService');
             return new TaskApplicationService({
                 taskService,
@@ -547,10 +547,10 @@ class ServiceRegistry {
                 projectAnalyzer,
                 projectMappingService,
                 ideManager,
-                docsImportService,
+                manualTasksImportService,
                 logger
             });
-        }, { singleton: true, dependencies: ['taskService', 'taskRepository', 'aiService', 'projectAnalyzer', 'projectMappingService', 'ideManager', 'docsImportService', 'logger'] });
+        }, { singleton: true, dependencies: ['taskService', 'taskRepository', 'aiService', 'projectAnalyzer', 'projectMappingService', 'ideManager', 'manualTasksImportService', 'logger'] });
     }
 
     registerIDEApplicationService() {
@@ -1424,10 +1424,10 @@ class ServiceRegistry {
                     return new TaskService(taskRepository, aiService, projectAnalyzer, cursorIDEService, null);
                 }, { singleton: true, dependencies: ['taskRepository', 'aiService', 'projectAnalyzer', 'cursorIDEService'] });
                 break;
-            case 'docsImportService':
-                this.container.register('docsImportService', (browserManager, taskService, taskRepository) => {
-                    const DocsImportService = require('@domain/services/task/DocsImportService');
-                    return new DocsImportService(browserManager, taskService, taskRepository);
+            case 'manualTasksImportService':
+                this.container.register('manualTasksImportService', (browserManager, taskService, taskRepository) => {
+                    const ManualTasksImportService = require('@domain/services/task/ManualTasksImportService');
+                    return new ManualTasksImportService(browserManager, taskService, taskRepository);
                 }, { singleton: true, dependencies: ['browserManager', 'taskService', 'taskRepository'] });
                 break;
             default:
@@ -1516,12 +1516,12 @@ class ServiceRegistry {
         this.addServiceDefinition('windsurfIDEService', ['browserManager', 'ideManager', 'eventBus'], 'domain');
         this.addServiceDefinition('authService', ['userRepository', 'userSessionRepository'], 'domain');
         this.addServiceDefinition('taskService', ['taskRepository', 'aiService', 'projectAnalyzer', 'cursorIDEService'], 'domain');
-        this.addServiceDefinition('docsImportService', ['browserManager', 'taskService', 'taskRepository'], 'domain');
+        this.addServiceDefinition('manualTasksImportService', ['browserManager', 'taskService', 'taskRepository'], 'domain');
 
         // 🚨 NEW APPLICATION SERVICES - Layer Boundary Violation Fixes
         this.addServiceDefinition('analysisApplicationService', ['analysisOutputService', 'analysisRepository', 'projectRepository', 'logger'], 'application');
         this.addServiceDefinition('projectApplicationService', ['projectRepository', 'ideManager', 'workspacePathDetector', 'projectMappingService', 'logger'], 'application');
-        this.addServiceDefinition('taskApplicationService', ['taskService', 'taskRepository', 'aiService', 'projectAnalyzer', 'projectMappingService', 'ideManager', 'docsImportService', 'logger'], 'application');
+        this.addServiceDefinition('taskApplicationService', ['taskService', 'taskRepository', 'aiService', 'projectAnalyzer', 'projectMappingService', 'ideManager', 'manualTasksImportService', 'logger'], 'application');
         this.addServiceDefinition('ideApplicationService', ['ideManager', 'eventBus', 'cursorIDEService', 'taskRepository', 'terminalLogCaptureService', 'terminalLogReader', 'browserManager', 'logger'], 'application');
         this.addServiceDefinition('webChatApplicationService', ['stepRegistry', 'cursorIDEService', 'authService', 'chatSessionService', 'eventBus', 'logger'], 'application');
         this.addServiceDefinition('workflowApplicationService', ['commandBus', 'queryBus', 'eventBus', 'ideManager', 'taskService', 'projectMappingService', 'logger'], 'application');

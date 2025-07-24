@@ -1,6 +1,5 @@
-
 /**
- * DocsImportService - Importiert Docs direkt aus dem Workspace in die Datenbank
+ * ManualTasksImportService - Importiert Manual Tasks direkt aus dem Workspace in die Datenbank
  * DATABASE ONLY - Keine TEMP-Logik!
  */
 const fs = require('fs').promises;
@@ -8,7 +7,7 @@ const path = require('path');
 const Logger = require('@logging/Logger');
 const logger = new Logger('ImportService');
 
-class DocsImportService {
+class ManualTasksImportService {
     constructor(browserManager, taskService, taskRepository) {
         this.browserManager = browserManager;
         this.taskService = taskService;
@@ -16,18 +15,18 @@ class DocsImportService {
     }
 
     /**
-     * HAUPTMETHODE: Importiere Docs direkt aus Workspace in die Datenbank
+     * HAUPTMETHODE: Importiere Manual Tasks direkt aus Workspace in die Datenbank
      * @param {string} projectId - Projekt ID
      * @param {string} workspacePath - Workspace Pfad
      * @returns {Promise<Object>} Import Ergebnis
      */
-    async importDocsFromWorkspace(projectId, workspacePath) {
-        logger.info(`🔄 [DocsImportService] Starting docs import for project ${projectId} from workspace: ${workspacePath}`);
+    async importManualTasksFromWorkspace(projectId, workspacePath) {
+        logger.info(`🔄 [ManualTasksImportService] Starting manual tasks import for project ${projectId} from workspace: ${workspacePath}`);
         
         try {
             return await this._importFromWorkspace(workspacePath, projectId);
         } catch (error) {
-            logger.error(`❌ [DocsImportService] Import failed:`, error);
+            logger.error(`❌ [ManualTasksImportService] Import failed:`, error);
             throw error;
         }
     }
@@ -37,7 +36,7 @@ class DocsImportService {
      */
     async _importFromWorkspace(workspacePath, projectId) {
         try {
-            logger.info(`🔄 [DocsImportService] Importing from workspace to database: ${workspacePath}`);
+            logger.info(`🔄 [ManualTasksImportService] Importing from workspace to database: ${workspacePath}`);
             if (!workspacePath) {
                 throw new Error('No workspace path provided');
             }
@@ -71,7 +70,7 @@ class DocsImportService {
                 const category = parts[0];
                 const name = parts[1];
                 const filename = parts[2];
-                // All docs tasks should be 'documentation' type
+                // All manual tasks should be 'documentation' type
                 let type = 'documentation', phase = null;
                 if (filename.match(/-phase-(\d+)\.md$/)) {
                     phase = filename.match(/-phase-(\d+)\.md$/)[1];
@@ -167,7 +166,7 @@ class DocsImportService {
                 workspacePath
             };
         } catch (error) {
-            logger.error(`❌ [DocsImportService] Import from workspace failed:`, error);
+            logger.error(`❌ [ManualTasksImportService] Import from workspace failed:`, error);
             throw error;
         }
     }
@@ -175,7 +174,7 @@ class DocsImportService {
     /**
      * Parse markdown content für Task-Info
      */
-    _parseDocsTaskFromMarkdown(content, filename) {
+    _parseManualTaskFromMarkdown(content, filename) {
         try {
             // Extract title from first line
             const titleMatch = content.match(/^#\s+(.+)$/m);
@@ -191,7 +190,7 @@ class DocsImportService {
                 priority = 'low';
             }
 
-            // All docs tasks from roadmap/features should be 'documentation' type
+            // All manual tasks from roadmap/features should be 'documentation' type
             let type = 'documentation';
             
             // Determine structure type for metadata
@@ -228,7 +227,7 @@ class DocsImportService {
             };
             
         } catch (error) {
-            logger.error(`❌ [DocsImportService] Error parsing markdown:`, error);
+            logger.error(`❌ [ManualTasksImportService] Error parsing markdown:`, error);
             return null;
         }
     }
@@ -286,7 +285,7 @@ class DocsImportService {
             return progressInfo;
             
         } catch (error) {
-            logger.error(`❌ [DocsImportService] Error parsing index file:`, error);
+            logger.error(`❌ [ManualTasksImportService] Error parsing index file:`, error);
             return {};
         }
     }
@@ -296,7 +295,7 @@ class DocsImportService {
      */
     async updateIndexFileProgress(projectId, featureId, progressData) {
         try {
-            logger.info(`🔄 [DocsImportService] Updating index file progress for feature ${featureId}`);
+            logger.info(`🔄 [ManualTasksImportService] Updating index file progress for feature ${featureId}`);
             
             // Finde das Index File für dieses Feature
             const indexTask = await this.taskRepository.findByMetadata({
@@ -305,7 +304,7 @@ class DocsImportService {
             });
             
             if (!indexTask) {
-                logger.warn(`⚠️ [DocsImportService] No index file found for feature ${featureId}`);
+                logger.warn(`⚠️ [ManualTasksImportService] No index file found for feature ${featureId}`);
                 return false;
             }
             
@@ -321,11 +320,11 @@ class DocsImportService {
                 metadata: updatedMetadata
             });
             
-            logger.info(`✅ [DocsImportService] Index file progress updated for feature ${featureId}`);
+            logger.info(`✅ [ManualTasksImportService] Index file progress updated for feature ${featureId}`);
             return true;
             
         } catch (error) {
-            logger.error(`❌ [DocsImportService] Error updating index file progress:`, error);
+            logger.error(`❌ [ManualTasksImportService] Error updating index file progress:`, error);
             return false;
         }
     }
@@ -354,10 +353,10 @@ class DocsImportService {
             };
             
         } catch (error) {
-            logger.error(`❌ [DocsImportService] Error getting feature progress:`, error);
+            logger.error(`❌ [ManualTasksImportService] Error getting feature progress:`, error);
             return null;
         }
     }
 }
 
-module.exports = DocsImportService; 
+module.exports = ManualTasksImportService; 

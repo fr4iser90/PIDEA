@@ -26,7 +26,7 @@ class TaskApplicationService {
     projectAnalyzer,
     projectMappingService,
     ideManager,
-    docsImportService,
+    manualTasksImportService,
     logger
   }) {
     // Domain services
@@ -35,7 +35,7 @@ class TaskApplicationService {
     this.projectAnalyzer = projectAnalyzer;
     this.projectMappingService = projectMappingService;
     this.ideManager = ideManager;
-    this.docsImportService = docsImportService;
+    this.manualTasksImportService = manualTasksImportService;
     
     // Infrastructure repositories (accessed through domain interfaces)
     this.taskRepository = taskRepository;
@@ -341,26 +341,26 @@ class TaskApplicationService {
   }
 
   /**
-   * Sync documentation tasks using workspace
+   * Sync manual tasks using workspace
    * @param {string} projectId - Project identifier
    * @param {string} userId - User identifier
    * @returns {Promise<Object>} Sync result
    */
-  async syncDocsTasks(projectId, userId) {
+  async syncManualTasks(projectId, userId) {
     try {
-      this.logger.info(`🔄 Syncing docs tasks for project: ${projectId}`);
+      this.logger.info(`🔄 Syncing manual tasks for project: ${projectId}`);
       
-      if (!this.docsImportService) {
-        throw new Error('DocsImportService not available');
+      if (!this.manualTasksImportService) {
+        throw new Error('ManualTasksImportService not available');
       }
       
       // Get workspace path
       const workspacePath = await this.getProjectWorkspacePath(projectId);
       
-      // Use DocsImportService for workspace import
-      const result = await this.docsImportService.importDocsFromWorkspace(projectId, workspacePath);
+      // Use ManualTasksImportService for workspace import
+      const result = await this.manualTasksImportService.importManualTasksFromWorkspace(projectId, workspacePath);
       
-      this.logger.info(`✅ Docs import completed:`, {
+      this.logger.info(`✅ Manual tasks import completed:`, {
         importedCount: result.importedCount,
         totalFiles: result.totalFiles,
         workspacePath: result.workspacePath
@@ -375,51 +375,51 @@ class TaskApplicationService {
       };
       
     } catch (error) {
-      this.logger.error('❌ Failed to sync docs tasks:', error);
-      throw new Error(`Failed to sync docs tasks: ${error.message}`);
+      this.logger.error('❌ Failed to sync manual tasks:', error);
+      throw new Error(`Failed to sync manual tasks: ${error.message}`);
     }
   }
 
   /**
-   * Clean documentation tasks from database
+   * Clean manual tasks from database
    * @param {string} projectId - Project identifier
    * @param {string} userId - User identifier
    * @returns {Promise<Object>} Cleanup result
    */
-  async cleanDocsTasks(projectId, userId) {
+  async cleanManualTasks(projectId, userId) {
     try {
-      this.logger.info(`🧹 Cleaning docs tasks for project: ${projectId}`);
+      this.logger.info(`🧹 Cleaning manual tasks for project: ${projectId}`);
       
       if (!this.taskRepository) {
         throw new Error('TaskRepository not available');
       }
       
-      // Get all docs tasks for the project
-      const docsTasks = await this.taskRepository.findByProject(projectId, {
+      // Get all manual tasks for the project
+      const manualTasks = await this.taskRepository.findByProject(projectId, {
         type: 'documentation'
       });
       
-      this.logger.info(`Found ${docsTasks.length} docs tasks to clean`);
+      this.logger.info(`Found ${manualTasks.length} manual tasks to clean`);
       
-      // Delete all docs tasks
+      // Delete all manual tasks
       let deletedCount = 0;
-      for (const task of docsTasks) {
+      for (const task of manualTasks) {
         await this.taskRepository.delete(task.id);
         deletedCount++;
       }
       
-      this.logger.info(`✅ Cleaned ${deletedCount} docs tasks from project: ${projectId}`);
+      this.logger.info(`✅ Cleaned ${deletedCount} manual tasks from project: ${projectId}`);
       
       return {
         success: true,
         deletedCount,
         projectId,
-        message: `Successfully cleaned ${deletedCount} documentation tasks`
+        message: `Successfully cleaned ${deletedCount} manual tasks`
       };
       
     } catch (error) {
-      this.logger.error('❌ Failed to clean docs tasks:', error);
-      throw new Error(`Failed to clean docs tasks: ${error.message}`);
+      this.logger.error('❌ Failed to clean manual tasks:', error);
+      throw new Error(`Failed to clean manual tasks: ${error.message}`);
     }
   }
 

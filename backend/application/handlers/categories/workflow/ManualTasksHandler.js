@@ -17,10 +17,10 @@ const Logger = require('@logging/Logger');
 const logger = new Logger('Logger');
 
 /**
- * Handler for managing documentation tasks from markdown files
+ * Handler for managing manual tasks from markdown files
  * Provides secure access to task documentation in docs/09_roadmap/tasks/
  */
-class DocsTasksHandler {
+class ManualTasksHandler {
   constructor(getWorkspacePath, taskRepository = null) {
     // getWorkspacePath: function that returns the current workspace root path
     this.getWorkspacePath = getWorkspacePath || (() => process.cwd());
@@ -47,11 +47,11 @@ class DocsTasksHandler {
   }
 
   /**
-   * Get list of all available documentation tasks from database
+   * Get list of all available manual tasks from database
    * @param {Object} req - Express request object
    * @param {Object} res - Express response object
    */
-  async getDocsTasks(req, res) {
+  async getManualTasks(req, res) {
     try {
       const projectId = req.params.projectId || req.query.projectId;
       
@@ -66,7 +66,7 @@ class DocsTasksHandler {
       const tasks = await this.taskRepository.findByProject(projectId);
       
       // Return ALL tasks - no filtering
-      const docsTasks = tasks;
+      const manualTasks = tasks;
 
       // Sort by category, priority, and title
       tasks.sort((a, b) => {
@@ -91,7 +91,7 @@ class DocsTasksHandler {
         return a.title.localeCompare(b.title);
       });
 
-      logger.info(`Found ${tasks.length} documentation tasks from database`);
+      logger.info(`Found ${tasks.length} manual tasks from database`);
       
       res.json({
         success: true,
@@ -99,20 +99,20 @@ class DocsTasksHandler {
         count: tasks.length
       });
     } catch (error) {
-      logger.error('Error getting docs tasks:', error);
+      logger.error('Error getting manual tasks:', error);
       res.status(500).json({
         success: false,
-        error: 'Failed to retrieve documentation tasks'
+        error: 'Failed to retrieve manual tasks'
       });
     }
   }
 
   /**
-   * Get specific documentation task content from database
+   * Get specific manual task content from database
    * @param {Object} req - Express request object
    * @param {Object} res - Express response object
    */
-  async getDocsTaskDetails(req, res) {
+  async getManualTaskDetails(req, res) {
     try {
       const { taskId } = req.params;
       const projectId = req.params.projectId || req.query.projectId;
@@ -303,9 +303,9 @@ class DocsTasksHandler {
   }
 
   /**
-   * Sync documentation tasks to repository (now handled by TaskController)
+   * Sync manual tasks to repository (now handled by TaskController)
    */
-  async syncDocsTasksToRepository() {
+  async syncManualTasksToRepository() {
     logger.info('Sync is now handled by TaskController - skipping');
     return;
   }
@@ -343,4 +343,4 @@ class DocsTasksHandler {
   }
 }
 
-module.exports = DocsTasksHandler; 
+module.exports = ManualTasksHandler; 

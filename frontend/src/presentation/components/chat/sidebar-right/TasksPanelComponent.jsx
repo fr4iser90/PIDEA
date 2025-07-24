@@ -2,7 +2,7 @@ import { logger } from "@/infrastructure/logging/Logger";
 import React, { useState, useEffect } from 'react';
 import APIChatRepository, { apiCall } from '@/infrastructure/repositories/APIChatRepository.jsx';
 import TaskSelectionModal from '../modal/TaskSelectionModal.jsx';
-import DocsTaskDetailsModal from '../modal/DocsTaskDetailsModal.jsx';
+import ManualTaskDetailsModal from '../modal/ManualTaskDetailsModal.jsx';
 import TaskCreationModal from '../modal/TaskCreationModal.jsx';
 
 // Import the SAME fetchPromptContent function that works everywhere
@@ -117,13 +117,13 @@ function TasksPanelComponent({ eventBus, activePort }) {
   const [taskSearch, setTaskSearch] = useState('');
 
   // Docs Tasks
-  const [docsTasks, setDocsTasks] = useState([]);
-  const [docsTaskFilter, setDocsTaskFilter] = useState('all');
-  const [docsTaskSearch, setDocsTaskSearch] = useState('');
-  const [selectedDocsTask, setSelectedDocsTask] = useState(null);
-  const [isDocsTaskModalOpen, setIsDocsTaskModalOpen] = useState(false);
-  const [isLoadingDocsTasks, setIsLoadingDocsTasks] = useState(false);
-  const [isLoadingDocsTaskDetails, setIsLoadingDocsTaskDetails] = useState(false);
+  const [manualTasks, setManualTasks] = useState([]);
+  const [manualTaskFilter, setManualTaskFilter] = useState('all');
+  const [manualTaskSearch, setManualTaskSearch] = useState('');
+  const [selectedManualTask, setSelectedManualTask] = useState(null);
+  const [isManualTaskModalOpen, setIsManualTaskModalOpen] = useState(false);
+  const [isLoadingManualTasks, setIsLoadingManualTasks] = useState(false);
+  const [isLoadingManualTaskDetails, setIsLoadingManualTaskDetails] = useState(false);
 
   // TaskSelectionModal (for refactoring etc.)
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
@@ -139,78 +139,78 @@ function TasksPanelComponent({ eventBus, activePort }) {
   useEffect(() => {
     if (activePort) {
       logger.info('Loading docs tasks for port:', activePort);
-      loadDocsTasks();
+      loadManualTasks();
     } else {
       logger.info('No active port, clearing docs tasks');
-      setDocsTasks([]);
+      setManualTasks([]);
     }
   }, []); // ← Only load once on mount, not on every activePort change
 
   // Docs tasks functions
-  const loadDocsTasks = async () => {
-    setIsLoadingDocsTasks(true);
+  const loadManualTasks = async () => {
+    setIsLoadingManualTasks(true);
     try {
-      const response = await api.getDocsTasks();
+      const response = await api.getManualTasks();
       if (response.success) {
-        setDocsTasks(response.data || []);
+        setManualTasks(response.data || []);
       } else {
-        setFeedback('Failed to load documentation tasks');
+        setFeedback('Failed to load manual tasks');
       }
     } catch (error) {
-      setFeedback('Error loading documentation tasks: ' + error.message);
-    } finally {
-      setIsLoadingDocsTasks(false);
-    }
+              setFeedback('Error loading manual tasks: ' + error.message);
+          } finally {
+        setIsLoadingManualTasks(false);
+      }
   };
 
-  const handleSyncDocsTasks = async () => {
-    setIsLoadingDocsTasks(true);
+  const handleSyncManualTasks = async () => {
+    setIsLoadingManualTasks(true);
     try {
-      logger.info('🔄 [TasksPanelComponent] Starting docs tasks sync...');
-      const response = await api.syncDocsTasks();
+      logger.info('🔄 [TasksPanelComponent] Starting manual tasks sync...');
+      const response = await api.syncManualTasks();
       if (response.success) {
-        setFeedback(`✅ Successfully synced ${response.data.importedCount} docs tasks to database`);
+        setFeedback(`✅ Successfully synced ${response.data.importedCount} manual tasks to database`);
         // Reload tasks after sync
-        await loadDocsTasks();
+        await loadManualTasks();
       } else {
-        setFeedback('❌ Failed to sync documentation tasks: ' + response.error);
+        setFeedback('❌ Failed to sync manual tasks: ' + response.error);
       }
     } catch (error) {
-      logger.error('Error syncing docs tasks:', error);
-      setFeedback('❌ Error syncing docs tasks: ' + error.message);
+      logger.error('Error syncing manual tasks:', error);
+      setFeedback('❌ Error syncing manual tasks: ' + error.message);
     } finally {
-      setIsLoadingDocsTasks(false);
+      setIsLoadingManualTasks(false);
     }
   };
 
-  const handleCleanDocsTasks = async () => {
-    if (!window.confirm('🗑️ Are you sure you want to delete ALL docs tasks from the database? This cannot be undone!')) {
+  const handleCleanManualTasks = async () => {
+    if (!window.confirm('🗑️ Are you sure you want to delete ALL manual tasks from the database? This cannot be undone!')) {
       return;
     }
     
-    setIsLoadingDocsTasks(true);
+    setIsLoadingManualTasks(true);
     try {
-      logger.info('🗑️ [TasksPanelComponent] Starting docs tasks cleanup...');
-      const response = await api.cleanDocsTasks();
+      logger.info('🗑️ [TasksPanelComponent] Starting manual tasks cleanup...');
+      const response = await api.cleanManualTasks();
       if (response.success) {
-        setFeedback(`✅ Successfully deleted ${response.data.deletedCount} docs tasks from database`);
+        setFeedback(`✅ Successfully deleted ${response.data.deletedCount} manual tasks from database`);
         // Reload tasks after cleanup
-        await loadDocsTasks();
+        await loadManualTasks();
       } else {
-        setFeedback('❌ Failed to clean documentation tasks: ' + response.error);
+        setFeedback('❌ Failed to clean manual tasks: ' + response.error);
       }
     } catch (error) {
-      logger.error('Error cleaning docs tasks:', error);
-      setFeedback('❌ Error cleaning docs tasks: ' + error.message);
+      logger.error('Error cleaning manual tasks:', error);
+      setFeedback('❌ Error cleaning manual tasks: ' + error.message);
     } finally {
-      setIsLoadingDocsTasks(false);
+      setIsLoadingManualTasks(false);
     }
   };
 
-  const handleDocsTaskClick = async (task) => {
-    setIsLoadingDocsTaskDetails(true);
-    setIsDocsTaskModalOpen(true);
-    setSelectedDocsTask(null);
+  const handleManualTaskClick = async (task) => {
+    setIsLoadingManualTaskDetails(true);
+    setIsManualTaskModalOpen(true);
+    setSelectedManualTask(null);
     
     try {
       // Find the group this task belongs to
@@ -218,7 +218,7 @@ function TasksPanelComponent({ eventBus, activePort }) {
       const group = groupedList.find(g => g.featureId === featureId);
       
       logger.info('Loading task details for:', task.id);
-      const response = await api.getDocsTaskDetails(task.id);
+      const response = await api.getManualTaskDetails(task.id);
       if (response.success && response.data) {
         logger.info('Task details loaded successfully:', response.data);
         const taskWithGroup = {
@@ -231,7 +231,7 @@ function TasksPanelComponent({ eventBus, activePort }) {
             summary: group.summary
           } : null
         };
-        setSelectedDocsTask(taskWithGroup);
+        setSelectedManualTask(taskWithGroup);
       } else {
         logger.warn('API returned no data, using task as fallback');
         // Fallback: use the task data we already have
@@ -247,12 +247,12 @@ function TasksPanelComponent({ eventBus, activePort }) {
             summary: group.summary
           } : null
         };
-        setSelectedDocsTask(taskWithGroup);
+        setSelectedManualTask(taskWithGroup);
       }
     } catch (error) {
       logger.error('Error loading task details:', error);
       setFeedback('Error loading task details: ' + error.message);
-      // Fallback: use the task data we already have
+            // Fallback: use the task data we already have
       const featureId = task.metadata?.featureId || task.metadata?.featureGroup || task.id;
       const group = groupedList.find(g => g.featureId === featureId);
       const taskWithGroup = {
@@ -262,20 +262,20 @@ function TasksPanelComponent({ eventBus, activePort }) {
         featureGroup: group,
         allTasks: group ? {
           index: group.index,
-            phases: group.phases,
-            implementation: group.implementation,
-            summary: group.summary
+          phases: group.phases,
+          implementation: group.implementation,
+          summary: group.summary
         } : null
       };
-      setSelectedDocsTask(taskWithGroup);
+      setSelectedManualTask(taskWithGroup);
     } finally {
-      setIsLoadingDocsTaskDetails(false);
+      setIsLoadingManualTaskDetails(false);
     }
   };
 
-  const handleCloseDocsTaskModal = () => {
-    setIsDocsTaskModalOpen(false);
-    setSelectedDocsTask(null);
+  const handleCloseManualTaskModal = () => {
+    setIsManualTaskModalOpen(false);
+    setSelectedManualTask(null);
   };
 
   // Handle sending task to chat
@@ -283,7 +283,7 @@ function TasksPanelComponent({ eventBus, activePort }) {
     if (eventBus) {
       eventBus.emit('chat:send:message', { message: messageContent });
     }
-    handleCloseDocsTaskModal();
+    handleCloseManualTaskModal();
   };
 
   // Handle executing task (start auto-mode with git branch and new chat)
@@ -330,7 +330,7 @@ ${taskDetails.description}
 
       if (autoModeResponse.success) {
         setFeedback('✅ Auto-mode started! Git branch created and task execution initiated.');
-        handleCloseDocsTaskModal();
+        handleCloseManualTaskModal();
       } else {
         throw new Error(autoModeResponse.error || 'Failed to start auto-mode');
       }
@@ -341,17 +341,17 @@ ${taskDetails.description}
   };
 
   // Docs tasks filter/search
-  const filteredDocsTasks = docsTasks.filter(task => {
+  const filteredManualTasks = manualTasks.filter(task => {
     const taskTitle = String(task.title || '');
     const taskFilename = getTaskFilename(task);
-    const matchesSearch = taskTitle.toLowerCase().includes(docsTaskSearch.toLowerCase()) ||
-                         String(taskFilename).toLowerCase().includes(docsTaskSearch.toLowerCase());
-    const matchesFilter = docsTaskFilter === 'all' || task.priority === docsTaskFilter;
+    const matchesSearch = taskTitle.toLowerCase().includes(manualTaskSearch.toLowerCase()) ||
+                         String(taskFilename).toLowerCase().includes(manualTaskSearch.toLowerCase());
+    const matchesFilter = manualTaskFilter === 'all' || task.priority === manualTaskFilter;
     return matchesSearch && matchesFilter;
   });
 
   // Group tasks by feature (category/name)
-  const groupedList = filteredDocsTasks.reduce((acc, task) => {
+  const groupedList = filteredManualTasks.reduce((acc, task) => {
     const featureId = task.metadata?.featureId || task.metadata?.featureGroup || task.id;
     const existingGroup = acc.find(g => g.featureId === featureId);
     
@@ -450,47 +450,47 @@ ${taskDetails.description}
           <button className="btn-primary" onClick={handleCreateTask}>Create Task</button>
         </div>
       </div>
-      {/* Documentation Tasks Section */}
+      {/* Manual Tasks Section */}
       <div className="panel-block">
         <div className="flex justify-between items-center mb-3">
-          <h3 className="font-semibold text-lg">📚 Documentation Tasks</h3>
+          <h3 className="font-semibold text-lg">📚 Manual Tasks</h3>
           <div className="flex gap-2">
             <button 
               className="btn-secondary text-sm"
-              onClick={handleSyncDocsTasks}
-              disabled={isLoadingDocsTasks}
+              onClick={handleSyncManualTasks}
+              disabled={isLoadingManualTasks}
             >
-              {isLoadingDocsTasks ? 'Syncing...' : '🔄 Sync'}
+              {isLoadingManualTasks ? 'Syncing...' : '🔄 Sync'}
             </button>
             <button 
               className="btn-secondary text-sm"
-              onClick={handleCleanDocsTasks}
-              disabled={isLoadingDocsTasks}
+              onClick={handleCleanManualTasks}
+              disabled={isLoadingManualTasks}
             >
-              {isLoadingDocsTasks ? 'Cleaning...' : '🗑️ Clean'}
+              {isLoadingManualTasks ? 'Cleaning...' : '🗑️ Clean'}
             </button>
             <button 
               className="btn-secondary text-sm"
-              onClick={loadDocsTasks}
-              disabled={isLoadingDocsTasks}
+              onClick={loadManualTasks}
+              disabled={isLoadingManualTasks}
             >
-              {isLoadingDocsTasks ? 'Loading...' : '🔄 Refresh'}
+              {isLoadingManualTasks ? 'Loading...' : '🔄 Refresh'}
             </button>
           </div>
         </div>
-        {/* Docs Tasks Filter */}
+        {/* Manual Tasks Filter */}
         <div className="flex gap-2 mb-3">
           <input 
             type="text" 
-            placeholder="Search docs tasks..." 
+            placeholder="Search manual tasks..." 
             className="flex-1 rounded p-2 bg-gray-800 text-gray-100 text-sm"
-            value={docsTaskSearch}
-            onChange={(e) => setDocsTaskSearch(e.target.value)}
+            value={manualTaskSearch}
+            onChange={(e) => setManualTaskSearch(e.target.value)}
           />
           <select 
             className="rounded p-2 bg-gray-800 text-gray-100 text-sm"
-            value={docsTaskFilter}
-            onChange={(e) => setDocsTaskFilter(e.target.value)}
+            value={manualTaskFilter}
+            onChange={(e) => setManualTaskFilter(e.target.value)}
           >
             <option value="all">All Priorities</option>
             <option value="high">High Priority</option>
@@ -498,21 +498,21 @@ ${taskDetails.description}
             <option value="low">Low Priority</option>
           </select>
         </div>
-        {/* Docs Tasks List */}
+        {/* Manual Tasks List */}
         <div className="bg-gray-900 rounded p-3 min-h-[200px] max-h-[300px] overflow-y-auto">
-          {isLoadingDocsTasks ? (
+          {isLoadingManualTasks ? (
             <div className="flex items-center justify-center py-8">
               <div className="loading-spinner mr-3"></div>
-              <span className="text-gray-400">Loading documentation tasks...</span>
+              <span className="text-gray-400">Loading manual tasks...</span>
             </div>
-          ) : filteredDocsTasks.length > 0 ? (
+          ) : filteredManualTasks.length > 0 ? (
             <div className="space-y-3">
-              {filteredDocsTasks.map((task) => {
+              {filteredManualTasks.map((task) => {
                 return (
                   <div
                     key={task.id}
-                    className="docs-task-item p-3 bg-gray-800 rounded border border-gray-700 hover:border-gray-600 cursor-pointer transition-colors"
-                    onClick={() => handleDocsTaskClick(task)}
+                    className="manual-task-item p-3 bg-gray-800 rounded border border-gray-700 hover:border-gray-600 cursor-pointer transition-colors"
+                    onClick={() => handleManualTaskClick(task)}
                   >
                     <div className="flex justify-between items-start mb-2">
                       <h4 className="font-medium text-white text-sm line-clamp-2">
@@ -542,7 +542,7 @@ ${taskDetails.description}
             </div>
           ) : (
             <div className="text-center py-8 text-gray-400">
-              {docsTaskSearch || docsTaskFilter !== 'all' ? 'No tasks match your filters' : 'No documentation tasks found'}
+              {manualTaskSearch || manualTaskFilter !== 'all' ? 'No tasks match your filters' : 'No manual tasks found'}
             </div>
           )}
         </div>
@@ -576,11 +576,11 @@ ${taskDetails.description}
         </div>
       </div>
       {/* Modals */}
-      <DocsTaskDetailsModal
-        isOpen={isDocsTaskModalOpen}
-        onClose={handleCloseDocsTaskModal}
-        taskDetails={selectedDocsTask}
-        isLoading={isLoadingDocsTaskDetails}
+      <ManualTaskDetailsModal
+        isOpen={isManualTaskModalOpen}
+        onClose={handleCloseManualTaskModal}
+        taskDetails={selectedManualTask}
+        isLoading={isLoadingManualTaskDetails}
         onSendToChat={handleSendToChat}
         onExecuteTask={handleExecuteTask}
       />

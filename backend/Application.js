@@ -803,10 +803,10 @@ class Application {
     this.app.get('/api/projects/:projectId/tasks/:id/execution', (req, res) => this.taskController.getTaskExecution(req, res));
     this.app.post('/api/projects/:projectId/tasks/:id/cancel', (req, res) => this.taskController.cancelTask(req, res));
     
-    // NEW: Sync docs tasks route
-    this.app.post('/api/projects/:projectId/tasks/sync-docs', (req, res) => this.taskController.syncDocsTasks(req, res));
-    // NEW: Clean docs tasks route
-    this.app.post('/api/projects/:projectId/tasks/clean-docs', (req, res) => this.taskController.cleanDocsTasks(req, res));
+    // NEW: Sync manual tasks route
+    this.app.post('/api/projects/:projectId/tasks/sync-manual', (req, res) => this.taskController.syncManualTasks(req, res));
+    // NEW: Clean manual tasks route
+    this.app.post('/api/projects/:projectId/tasks/clean-manual', (req, res) => this.taskController.cleanManualTasks(req, res));
 
     // Project Analysis routes (protected) - PROJECT-BASED
     const AnalysisRoutes = require('./presentation/api/routes/analysis');

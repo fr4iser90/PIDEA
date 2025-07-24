@@ -1,53 +1,53 @@
-# Docs Sync Fix – Phase 1: Complete Missing Method ✅ COMPLETED
+# Manual Tasks Sync Fix – Phase 1: Complete Missing Method ✅ COMPLETED
 
 ## Overview
-Implement the missing `cleanDocsTasks` method in both TaskController and TaskApplicationService to complete the docs sync functionality.
+Implement the missing `cleanManualTasks` method in both TaskController and TaskApplicationService to complete the manual tasks sync functionality.
 
 ## Objectives
-- [x] ✅ Implement cleanDocsTasks method in TaskController
-- [x] ✅ Implement cleanDocsTasks method in TaskApplicationService
+- [x] ✅ Implement cleanManualTasks method in TaskController
+- [x] ✅ Implement cleanManualTasks method in TaskApplicationService
 - [x] ✅ Add proper error handling and logging
 - [x] ✅ Ensure method follows existing patterns and conventions
 
 ## Deliverables
-- [x] ✅ File: `backend/presentation/api/TaskController.js` - Added cleanDocsTasks method
-- [x] ✅ File: `backend/application/services/TaskApplicationService.js` - Added cleanDocsTasks method
-- [x] ✅ API: `POST /api/projects/:projectId/tasks/clean-docs` - Functional endpoint
-- [x] ✅ Test: Verify cleanDocsTasks functionality works correctly
+- [x] ✅ File: `backend/presentation/api/TaskController.js` - Added cleanManualTasks method
+- [x] ✅ File: `backend/application/services/TaskApplicationService.js` - Added cleanManualTasks method
+- [x] ✅ API: `POST /api/projects/:projectId/tasks/clean-manual` - Functional endpoint
+- [x] ✅ Test: Verify cleanManualTasks functionality works correctly
 
 ## Dependencies
-- ✅ Requires: Existing syncDocsTasks implementation (already complete)
+- ✅ Requires: Existing syncManualTasks implementation (already complete)
 - ✅ Blocks: Phase 2 testing and validation
 
 ## Estimated Time
 0.5 hours ✅ COMPLETED
 
 ## Success Criteria
-- [x] ✅ cleanDocsTasks method implemented in TaskController
-- [x] ✅ cleanDocsTasks method implemented in TaskApplicationService
+- [x] ✅ cleanManualTasks method implemented in TaskController
+- [x] ✅ cleanManualTasks method implemented in TaskApplicationService
 - [x] ✅ Method follows existing error handling patterns
 - [x] ✅ Method includes proper logging
 - [x] ✅ Method returns consistent response format
-- [x] ✅ Route `/api/projects/:projectId/tasks/clean-docs` works correctly
+- [x] ✅ Route `/api/projects/:projectId/tasks/clean-manual` works correctly
 
 ## Implementation Details
 
-### TaskController.cleanDocsTasks Method ✅ IMPLEMENTED
+### TaskController.cleanManualTasks Method ✅ IMPLEMENTED
 ```javascript
 /**
- * POST /api/projects/:projectId/tasks/clean-docs - Clean docs tasks from database
+ * POST /api/projects/:projectId/tasks/clean-manual - Clean manual tasks from database
  */
-async cleanDocsTasks(req, res) {
+async cleanManualTasks(req, res) {
     try {
         const { projectId } = req.params;
         const userId = req.user.id;
 
-        this.logger.info('🗑️ [TaskController] cleanDocsTasks called');
+        this.logger.info('🗑️ [TaskController] cleanManualTasks called');
 
-        // Use Application Service for docs cleanup
-        const result = await this.taskApplicationService.cleanDocsTasks(projectId, userId);
+        // Use Application Service for manual tasks cleanup
+        const result = await this.taskApplicationService.cleanManualTasks(projectId, userId);
 
-        this.logger.info('✅ [TaskController] Docs cleanup completed successfully');
+        this.logger.info('✅ [TaskController] Manual tasks cleanup completed successfully');
 
         res.json({
             success: true,
@@ -57,36 +57,36 @@ async cleanDocsTasks(req, res) {
         });
 
     } catch (error) {
-        this.logger.error('❌ [TaskController] Failed to clean docs tasks:', error);
+        this.logger.error('❌ [TaskController] Failed to clean manual tasks:', error);
         res.status(500).json({
             success: false,
-            error: 'Failed to clean docs tasks',
+            error: 'Failed to clean manual tasks',
             message: error.message
         });
     }
 }
 ```
 
-### TaskApplicationService.cleanDocsTasks Method ✅ IMPLEMENTED
+### TaskApplicationService.cleanManualTasks Method ✅ IMPLEMENTED
 ```javascript
 /**
- * Clean documentation tasks from database
+ * Clean manual tasks from database
  * @param {string} projectId - Project identifier
  * @param {string} userId - User identifier
  * @returns {Promise<Object>} Cleanup result
  */
-async cleanDocsTasks(projectId, userId) {
+async cleanManualTasks(projectId, userId) {
     try {
-        this.logger.info(`🗑️ Cleaning docs tasks for project: ${projectId}`);
+        this.logger.info(`🗑️ Cleaning manual tasks for project: ${projectId}`);
         
         if (!this.taskRepository) {
             throw new Error('Task repository not available');
         }
         
-        // Delete all tasks for this project that were imported from docs
+        // Delete all tasks for this project that were imported from manual tasks
         const deletedCount = await this.taskRepository.deleteByProject(projectId);
         
-        this.logger.info(`✅ Docs cleanup completed:`, {
+        this.logger.info(`✅ Manual tasks cleanup completed:`, {
             deletedCount,
             projectId
         });

@@ -23,7 +23,7 @@ class TaskController {
         
         // DEBUG: Check what methods taskApplicationService has
         this.logger.info('🔍 [TaskController] taskApplicationService methods:', Object.getOwnPropertyNames(Object.getPrototypeOf(this.taskApplicationService)));
-        this.logger.info('🔍 [TaskController] syncDocsTasks exists:', typeof this.taskApplicationService.syncDocsTasks);
+        this.logger.info('🔍 [TaskController] syncManualTasks exists:', typeof this.taskApplicationService.syncManualTasks);
         this.logger.info('🔍 [TaskController] taskApplicationService type:', typeof this.taskApplicationService);
         this.logger.info('🔍 [TaskController] taskApplicationService constructor:', this.taskApplicationService.constructor.name);
         this.logger.info('🔍 [TaskController] taskApplicationService keys:', Object.keys(this.taskApplicationService));
@@ -274,19 +274,19 @@ class TaskController {
     }
 
     /**
-     * POST /api/projects/:projectId/tasks/sync-docs - Sync docs tasks using workspace
+     * POST /api/projects/:projectId/tasks/sync-manual - Sync manual tasks using workspace
      */
-    async syncDocsTasks(req, res) {
+    async syncManualTasks(req, res) {
         try {
             const { projectId } = req.params;
             const userId = req.user.id;
 
-            this.logger.info('🔄 [TaskController] syncDocsTasks called');
+            this.logger.info('🔄 [TaskController] syncManualTasks called');
 
-            // Use Application Service for docs sync
-            const result = await this.taskApplicationService.syncDocsTasks(projectId, userId);
+            // Use Application Service for manual tasks sync
+            const result = await this.taskApplicationService.syncManualTasks(projectId, userId);
 
-            this.logger.info('✅ [TaskController] Docs sync completed successfully');
+            this.logger.info('✅ [TaskController] Manual tasks sync completed successfully');
 
             res.json({
                 success: true,
@@ -296,29 +296,29 @@ class TaskController {
             });
 
         } catch (error) {
-            this.logger.error('❌ [TaskController] Failed to sync docs tasks:', error);
+            this.logger.error('❌ [TaskController] Failed to sync manual tasks:', error);
             res.status(500).json({
                 success: false,
-                error: 'Failed to sync docs tasks',
+                error: 'Failed to sync manual tasks',
                 message: error.message
             });
         }
     }
 
     /**
-     * POST /api/projects/:projectId/tasks/clean-docs - Clean documentation tasks from database
+     * POST /api/projects/:projectId/tasks/clean-manual - Clean manual tasks from database
      */
-    async cleanDocsTasks(req, res) {
+    async cleanManualTasks(req, res) {
         try {
             const { projectId } = req.params;
             const userId = req.user.id;
 
-            this.logger.info(`🧹 [TaskController] cleanDocsTasks called for project: ${projectId}`);
+            this.logger.info(`🧹 [TaskController] cleanManualTasks called for project: ${projectId}`);
 
-            // Use Application Service for docs cleanup
-            const result = await this.taskApplicationService.cleanDocsTasks(projectId, userId);
+            // Use Application Service for manual tasks cleanup
+            const result = await this.taskApplicationService.cleanManualTasks(projectId, userId);
 
-            this.logger.info('✅ [TaskController] Docs cleanup completed successfully');
+            this.logger.info('✅ [TaskController] Manual tasks cleanup completed successfully');
 
             res.json({
                 success: true,
@@ -328,10 +328,10 @@ class TaskController {
             });
 
         } catch (error) {
-            this.logger.error('❌ [TaskController] Failed to clean docs tasks:', error);
+            this.logger.error('❌ [TaskController] Failed to clean manual tasks:', error);
             res.status(500).json({
                 success: false,
-                error: 'Failed to clean docs tasks',
+                error: 'Failed to clean manual tasks',
                 message: error.message
             });
         }
