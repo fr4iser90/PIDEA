@@ -227,7 +227,7 @@ class DependencyDebugger {
                 { name: 'docsImportService', dependencies: ['browserManager', 'taskService', 'taskRepository'] }
             ],
             handlers: [
-                { name: 'sendMessageHandler', dependencies: ['cursorIDEService', 'vscodeIDEService', 'windsurfIDEService', 'ideManager', 'idePortManager', 'eventBus', 'logger'] }
+                { name: 'sendMessageHandler', dependencies: ['browserManager', 'ideManager', 'eventBus', 'logger'] }
             ]
         };
     }

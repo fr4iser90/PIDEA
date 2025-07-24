@@ -128,9 +128,9 @@ const API_CONFIG = {
     },
     settings: '/api/settings',
     health: '/api/health',
-    docsTasks: {
-      list: '/api/docs-tasks',
-      details: (filename) => `/api/docs-tasks/${filename}`
+    manualTasks: {
+      list: '/api/manual-tasks',
+      details: (filename) => `/api/manual-tasks/${filename}`
     },
     framework: {
       structure: '/api/framework/structure',
@@ -671,29 +671,27 @@ export default class APIChatRepository extends ChatRepository {
     return apiCall(`/api/projects/${currentProjectId}/analysis/steps/stats`, {}, currentProjectId);
   }
 
-  // Documentation Tasks Methods
-  async getDocsTasks(projectId = null) {
+  // Manual Tasks methods
+  async getManualTasks(projectId = null) {
     const currentProjectId = projectId || await this.getCurrentProjectId();
     return apiCall(`/api/projects/${currentProjectId}/tasks?type=documentation`, {}, currentProjectId);
   }
 
-  async getDocsTaskDetails(taskId, projectId = null) {
+  async getManualTaskDetails(taskId, projectId = null) {
     const currentProjectId = projectId || await this.getCurrentProjectId();
     return await apiCall(`/api/projects/${currentProjectId}/tasks/${taskId}`, {}, currentProjectId);
   }
 
-  // NEW: Sync docs tasks to database
-  async syncDocsTasks() {
+  async syncManualTasks() {
     const projectId = await this.getCurrentProjectId();
-    return await apiCall(`/api/projects/${projectId}/tasks/sync-docs`, {
+    return await apiCall(`/api/projects/${projectId}/tasks/sync-manual`, {
       method: 'POST'
     });
   }
 
-  // NEW: Clean docs tasks from database
-  async cleanDocsTasks() {
+  async cleanManualTasks() {
     const projectId = await this.getCurrentProjectId();
-    return await apiCall(`/api/projects/${projectId}/tasks/clean-docs`, {
+    return await apiCall(`/api/projects/${projectId}/tasks/clean-manual`, {
       method: 'POST'
     });
   }

@@ -14,7 +14,7 @@
  * ✅ Uses Domain services through interfaces
  * ✅ Encapsulates complex IDE workflow orchestration
  */
-const DocsTasksHandler = require('@handlers/categories/management/DocsTasksHandler');
+const ManualTasksHandler = require('@handlers/categories/workflow/ManualTasksHandler');
 const TerminalLogCaptureService = require('@domain/services/terminal/TerminalLogCaptureService');
 const TerminalLogReader = require('@domain/services/terminal/TerminalLogReader');
 const Logger = require('@logging/Logger');
@@ -31,9 +31,9 @@ class IDEApplicationService {
         this.terminalLogCaptureService = dependencies.terminalLogCaptureService || new TerminalLogCaptureService();
         this.terminalLogReader = dependencies.terminalLogReader || new TerminalLogReader();
         
-        // Initialize docs handler if we have required dependencies
+        // Initialize manual tasks handler if we have required dependencies
         if (this.ideManager && this.taskRepository) {
-            this.docsTasksHandler = new DocsTasksHandler(() => {
+            this.manualTasksHandler = new ManualTasksHandler(() => {
                 const activePath = this.ideManager.getActiveWorkspacePath();
                 this.logger.info('Active workspace path:', activePath);
                 this.logger.info('Active port:', this.ideManager.getActivePort());
@@ -51,11 +51,11 @@ class IDEApplicationService {
 
     async getAvailableIDEs(userId) {
         try {
-            this.logger.info('IDEApplicationService: Getting available IDEs', { userId });
+            // // // this.logger.info('IDEApplicationService: Getting available IDEs', { userId });
             
             // Simple cache check - return cached data if less than 5 seconds old
             if (this._cachedIDEs && this._cacheTime && (Date.now() - this._cacheTime) < 5000) {
-                this.logger.info('Returning cached IDE data');
+                // // // this.logger.info('Returning cached IDE data');
                 return {
                     success: true,
                     data: this._cachedIDEs
@@ -167,7 +167,7 @@ class IDEApplicationService {
 
     async getIDEStatus(userId) {
         try {
-            this.logger.info('IDEApplicationService: Getting IDE status', { userId });
+            // // // this.logger.info('IDEApplicationService: Getting IDE status', { userId });
             
             const status = await this.ideManager.getStatus();
             
@@ -201,7 +201,7 @@ class IDEApplicationService {
 
     async getWorkspaceInfo(userId) {
         try {
-            this.logger.info('IDEApplicationService: Getting workspace info for all IDEs', { userId });
+            // // // this.logger.info('IDEApplicationService: Getting workspace info for all IDEs', { userId });
             
             const availableIDEs = await this.ideManager.getAvailableIDEs();
             const workspaceInfo = availableIDEs.map(ide => ({
@@ -468,6 +468,51 @@ class IDEApplicationService {
         }
     }
 
+    async getUserAppUrlForPort(port, userId) {
+        try {
+            this.logger.info('IDEApplicationService: Getting user app URL for port', { port, userId });
+            
+            if (!this.cursorIDEService) {
+                throw new Error('CursorIDEService not available');
+            }
+            
+            const url = await this.cursorIDEService.getUserAppUrlForPort(port);
+            const workspacePath = this.ideManager.getWorkspacePath(port);
+            
+            return {
+                success: true,
+                data: { 
+                    url: url,
+                    port: port,
+                    workspacePath: workspacePath
+                }
+            };
+        } catch (error) {
+            this.logger.error('Error getting user app URL for port:', error);
+            throw error;
+        }
+    }
+
+    async monitorTerminal(userId) {
+        try {
+            this.logger.info('IDEApplicationService: Monitoring terminal', { userId });
+            
+            if (!this.cursorIDEService) {
+                throw new Error('CursorIDEService not available');
+            }
+            
+            const url = await this.cursorIDEService.monitorTerminalOutput();
+            
+            return {
+                success: true,
+                data: { url: url }
+            };
+        } catch (error) {
+            this.logger.error('Error monitoring terminal:', error);
+            throw error;
+        }
+    }
+
     // ========== VSCODE OPERATIONS ==========
 
     async startVSCode(workspacePath, userId) {
@@ -490,15 +535,15 @@ class IDEApplicationService {
         }
     }
 
-    async getVSCodeExtensions(userId) {
+    async getVSCodeExtensions(port, userId) {
         try {
-            this.logger.info('IDEApplicationService: Getting VSCode extensions', { userId });
+            this.logger.info('IDEApplicationService: Getting VSCode extensions', { port, userId });
             
             if (!this.cursorIDEService) {
                 throw new Error('VSCode service not available');
             }
             
-            const extensions = await this.cursorIDEService.getExtensions();
+            const extensions = await this.cursorIDEService.getExtensions(port);
             
             return {
                 success: true,
@@ -510,15 +555,15 @@ class IDEApplicationService {
         }
     }
 
-    async getVSCodeWorkspaceInfo(userId) {
+    async getVSCodeWorkspaceInfo(port, userId) {
         try {
-            this.logger.info('IDEApplicationService: Getting VSCode workspace info', { userId });
+            this.logger.info('IDEApplicationService: Getting VSCode workspace info', { port, userId });
             
             if (!this.cursorIDEService) {
                 throw new Error('VSCode service not available');
             }
             
-            const workspaceInfo = await this.cursorIDEService.getWorkspaceInfo();
+            const workspaceInfo = await this.ideManager.getWorkspaceInfo(port);
             
             return {
                 success: true,
@@ -530,15 +575,20 @@ class IDEApplicationService {
         }
     }
 
-    async sendMessageToVSCode(message, userId) {
+    async sendMessageToVSCode(message, extensionType = 'githubCopilot', port, userId) {
         try {
-            this.logger.info('IDEApplicationService: Sending message to VSCode', { message: message?.substring(0, 50), userId });
+            this.logger.info('IDEApplicationService: Sending message to VSCode', { message: message?.substring(0, 50), extensionType, port, userId });
             
             if (!this.cursorIDEService) {
                 throw new Error('VSCode service not available');
             }
             
-            const result = await this.cursorIDEService.sendMessage(message);
+            // Switch to specified port if provided
+            if (port) {
+                await this.cursorIDEService.switchToPort(port);
+            }
+            
+            const result = await this.cursorIDEService.sendMessage(message, { extensionType });
             
             return {
                 success: true,
@@ -550,15 +600,15 @@ class IDEApplicationService {
         }
     }
 
-    async getVSCodeStatus(userId) {
+    async getVSCodeStatus(port, userId) {
         try {
-            this.logger.info('IDEApplicationService: Getting VSCode status', { userId });
+            this.logger.info('IDEApplicationService: Getting VSCode status', { port, userId });
             
             if (!this.cursorIDEService) {
                 throw new Error('VSCode service not available');
             }
             
-            const status = await this.cursorIDEService.getStatus();
+            const status = await this.cursorIDEService.getConnectionStatus('vscode-user');
             
             return {
                 success: true,

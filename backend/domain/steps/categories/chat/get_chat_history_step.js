@@ -141,30 +141,38 @@ class GetChatHistoryStep {
 
       let messages = [];
       
-      if (context.sessionId) {
-        // Get chat history for specific session
-        messages = await chatSessionService.getChatHistory(
-          context.userId,
-          context.sessionId,
-          {
-            limit,
-            offset
-          }
-        );
-      } else if (context.port) {
+      if (context.sessionId && context.sessionId !== context.port) {
+        // Get chat history for specific session (not port-based)
+        try {
+          messages = await chatSessionService.getChatHistory(
+            context.userId,
+            context.sessionId,
+            {
+              limit,
+              offset
+            }
+          );
+        } catch (error) {
+          logger.warn(`Session ${context.sessionId} not found, falling back to IDE extraction`);
+          messages = [];
+        }
+      }
+      
+      // If no messages from session or if sessionId is actually a port, try IDE extraction
+      if (messages.length === 0 || context.sessionId === context.port) {
         // Get chat history for specific port using IDE service
         const cursorIDEService = context.getService('cursorIDEService');
         if (cursorIDEService) {
           try {
             // Extract live chat from IDE
             messages = await cursorIDEService.extractChatHistory();
-            logger.info(`Extracted ${messages.length} messages from IDE on port ${context.port}`);
+            logger.info(`Extracted ${messages.length} messages from IDE on port ${context.port || context.sessionId}`);
           } catch (error) {
-            logger.error(`Failed to extract chat from IDE on port ${context.port}:`, error);
+            logger.error(`Failed to extract chat from IDE on port ${context.port || context.sessionId}:`, error);
             messages = [];
           }
         } else {
-          logger.warn(`No cursorIDEService available for port ${context.port}`);
+          logger.warn(`No cursorIDEService available for port ${context.port || context.sessionId}`);
           messages = [];
         }
       }
@@ -235,7 +243,7 @@ class GetChatHistoryStep {
       const originalError = error.message;
 
       // Publish failure event (don't let this affect the original error)
-      const eventBus = context.getService('EventBus');
+      const eventBus = context.getService('eventBus');
       if (eventBus) {
         eventBus.publish('chat.history.retrieval.failed', {
           stepId,

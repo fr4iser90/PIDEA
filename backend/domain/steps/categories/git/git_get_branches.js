@@ -1,38 +1,35 @@
 /**
- * Git Get Branches Step
- * Gets all Git branches using real Git commands
+ * GitGetBranches
+ * Gets all Git branches using DDD pattern with Commands and Handlers
  */
 
 const StepBuilder = require('@steps/StepBuilder');
 const Logger = require('@logging/Logger');
 const logger = new Logger('GitGetBranchesStep');
-const { exec } = require('child_process');
-const util = require('util');
-const execAsync = util.promisify(exec);
+const CommandRegistry = require('@application/commands/CommandRegistry');
+const HandlerRegistry = require('@application/handlers/HandlerRegistry');
 
 // Step configuration
 const config = {
   name: 'GitGetBranchesStep',
   type: 'git',
-  description: 'Gets all Git branches',
+  description: 'Gets all Git branches using DDD pattern with Commands and Handlers',
   category: 'git',
   version: '1.0.0',
   dependencies: ['terminalService'],
   settings: {
-    timeout: 10000,
-    includeRemote: true,
-    includeLocal: true
+    timeout: 30000
   },
   validation: {
     required: ['projectPath'],
-    optional: ['includeRemote', 'includeLocal']
+    optional: []
   }
 };
 
 class GitGetBranchesStep {
   constructor() {
     this.name = 'GitGetBranchesStep';
-    this.description = 'Gets all Git branches';
+    this.description = 'Gets all Git branches using DDD pattern with Commands and Handlers';
     this.category = 'git';
     this.dependencies = ['terminalService'];
   }
@@ -42,65 +39,52 @@ class GitGetBranchesStep {
   }
 
   async execute(context = {}) {
+    const config = GitGetBranchesStep.getConfig();
+    const step = StepBuilder.build(config, context);
+    
     try {
       logger.info(`🔧 Executing ${this.name}...`);
       
       // Validate context
       this.validateContext(context);
       
-      const { projectPath, includeRemote = true, includeLocal = true } = context;
+      const { projectPath, ...otherParams } = context;
       
-      logger.info('Executing GIT_GET_BRANCHES step', {
+      logger.info(`Executing ${this.name} using DDD pattern`, {
         projectPath,
-        includeRemote,
-        includeLocal
+        ...otherParams
       });
 
-      const branches = {
-        local: [],
-        remote: [],
-        all: []
-      };
+      // ✅ DDD PATTERN: Create Command and Handler
+      const command = CommandRegistry.buildFromCategory('git', 'GitBranchCommand', {
+        projectPath,
+        ...otherParams
+      });
 
-      // Get local branches using execAsync
-      if (includeLocal) {
-        const localResult = await execAsync('git branch', { cwd: projectPath });
-        branches.local = localResult.stdout
-          .split('\n')
-          .map(line => line.trim())
-          .filter(line => line) // Keep all non-empty lines including current branch
-          .map(line => line.replace(/^\*?\s*/, '')); // Remove asterisk and spaces
+      const handler = HandlerRegistry.buildFromCategory('git', 'GitBranchHandler', {
+        terminalService: context.terminalService,
+        logger: logger
+      });
+
+      if (!command || !handler) {
+        throw new Error('Failed to create Git command or handler');
       }
 
-      // Get remote branches using execAsync
-      if (includeRemote) {
-        const remoteResult = await execAsync('git branch -r', { cwd: projectPath });
-        branches.remote = remoteResult.stdout
-          .split('\n')
-          .map(line => line.trim())
-          .filter(line => line.startsWith('origin/'))
-          .filter(line => !line.includes('HEAD ->'))
-          .map(line => line.replace(/^origin\//, ''));
-      }
+      // Execute command through handler
+      const result = await handler.handle(command);
 
-      // Combine all branches
-      branches.all = [...new Set([...branches.local, ...branches.remote])];
-
-      logger.info('GIT_GET_BRANCHES step completed successfully', {
-        localCount: branches.local.length,
-        remoteCount: branches.remote.length,
-        totalCount: branches.all.length
+      logger.info(`${this.name} completed successfully using DDD pattern`, {
+        result: result.branches
       });
 
       return {
-        success: true,
-        branches,
-        result: branches.all,
+        success: result.success,
+        result: result.branches,
         timestamp: new Date()
       };
 
     } catch (error) {
-      logger.error('GIT_GET_BRANCHES step failed', {
+      logger.error(`${this.name} failed`, {
         error: error.message,
         context
       });
@@ -127,4 +111,4 @@ const stepInstance = new GitGetBranchesStep();
 module.exports = {
   config,
   execute: async (context) => await stepInstance.execute(context)
-}; 
+};

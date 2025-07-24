@@ -1,14 +1,13 @@
 /**
  * Git Get Status Step
- * Gets Git repository status using real Git commands
+ * Gets Git repository status using DDD pattern with Commands and Handlers
  */
 
 const StepBuilder = require('@steps/StepBuilder');
 const Logger = require('@logging/Logger');
 const logger = new Logger('GitGetStatusStep');
-const { exec } = require('child_process');
-const util = require('util');
-const execAsync = util.promisify(exec);
+const CommandRegistry = require('@application/commands/CommandRegistry');
+const HandlerRegistry = require('@application/handlers/HandlerRegistry');
 
 // Step configuration
 const config = {
@@ -49,35 +48,40 @@ class GitGetStatusStep {
       
       const { projectPath, porcelain = true } = context;
       
-      logger.info('Executing GIT_GET_STATUS step', {
+      logger.info('Executing GIT_GET_STATUS step using DDD pattern', {
         projectPath,
         porcelain
       });
 
-      // Build status command
-      const statusCommand = porcelain ? 'git status --porcelain' : 'git status';
-      
-      // Execute git status using execAsync (like legacy implementation)
-      const result = await execAsync(statusCommand, { cwd: projectPath });
+      // ✅ DDD PATTERN: Create Command and Handler
+      const command = CommandRegistry.buildFromCategory('git', 'GitStatusCommand', {
+        projectPath,
+        porcelain
+      });
 
-      // Parse status if porcelain format
-      let status = { raw: result.stdout };
-      
-      if (porcelain) {
-        status = this.parsePorcelainStatus(result.stdout);
+      const handler = HandlerRegistry.buildFromCategory('git', 'GitStatusHandler', {
+        terminalService: context.terminalService,
+        logger: logger
+      });
+
+      if (!command || !handler) {
+        throw new Error('Failed to create Git command or handler');
       }
 
-      logger.info('GIT_GET_STATUS step completed successfully', {
-        modifiedCount: status.modified?.length || 0,
-        addedCount: status.added?.length || 0,
-        deletedCount: status.deleted?.length || 0,
-        untrackedCount: status.untracked?.length || 0
+      // Execute command through handler
+      const result = await handler.handle(command);
+
+      logger.info('GIT_GET_STATUS step completed successfully using DDD pattern', {
+        modifiedCount: result.status?.modified?.length || 0,
+        addedCount: result.status?.added?.length || 0,
+        deletedCount: result.status?.deleted?.length || 0,
+        untrackedCount: result.status?.untracked?.length || 0
       });
 
       return {
-        success: true,
-        status,
-        result: result.stdout,
+        success: result.success,
+        status: result.status,
+        result: result.result,
         timestamp: new Date()
       };
 
@@ -95,35 +99,7 @@ class GitGetStatusStep {
     }
   }
 
-  parsePorcelainStatus(stdout) {
-    const lines = stdout.split('\n').filter(line => line.trim());
-    const status = {
-      modified: [],
-      added: [],
-      deleted: [],
-      untracked: [],
-      staged: [],
-      unstaged: [],
-      renamed: [],
-      copied: []
-    };
 
-    for (const line of lines) {
-      const code = line.substring(0, 2);
-      const file = line.substring(3);
-
-      if (code === 'M ') status.modified.push(file);
-      else if (code === 'A ') status.added.push(file);
-      else if (code === 'D ') status.deleted.push(file);
-      else if (code === '??') status.untracked.push(file);
-      else if (code === 'M ') status.staged.push(file);
-      else if (code === ' M') status.unstaged.push(file);
-      else if (code === 'R ') status.renamed.push(file);
-      else if (code === 'C ') status.copied.push(file);
-    }
-
-    return status;
-  }
 
   validateContext(context) {
     if (!context.projectPath) {

@@ -103,6 +103,7 @@ class WebChatApplicationService {
       const stepData = {
         message: message,
         sessionId: sessionId,
+        requestedBy: userContext.userId,
         userId: userContext.userId,
         port: port,
         projectId: projectId,
@@ -163,13 +164,18 @@ class WebChatApplicationService {
         includeUserData: userContext.isAdmin || false
       };
       
-      const result = await step.execute(stepData);
+      const result = await this.stepRegistry.executeStep('GetChatHistoryStep', stepData);
+      
+      // Check if step execution was successful
+      if (!result.success) {
+        throw new Error(`Step execution failed: ${result.error}`);
+      }
       
       return {
-        messages: result.messages,
-        sessionId: result.sessionId,
-        totalCount: result.totalCount,
-        hasMore: result.hasMore
+        messages: result.result.messages || [],
+        sessionId: result.result.sessionId,
+        totalCount: result.result.totalCount || 0,
+        hasMore: result.result.hasMore || false
       };
     } catch (error) {
       this.logger.error('Get chat history error:', error);
@@ -187,12 +193,12 @@ class WebChatApplicationService {
     try {
       const { port, limit = 50, offset = 0 } = queryData;
       
-      this.logger.info('Getting port chat history:', { 
-        port,
-        limit,
-        offset,
-        userId: userContext.userId
-      });
+      // this.logger.info('Getting port chat history:', { 
+      //   port,
+      //   limit,
+      //   offset,
+      //   userId: userContext.userId
+      // });
       
       // Execute port chat history step
       const step = this.stepRegistry.getStep('GetChatHistoryStep');
@@ -201,7 +207,7 @@ class WebChatApplicationService {
       }
       
       const stepData = {
-        port: port,
+        sessionId: port, // Use port as sessionId for port-based chat history
         limit: parseInt(limit),
         offset: parseInt(offset),
         userId: userContext.userId,

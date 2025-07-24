@@ -154,10 +154,12 @@ class AuthController {
         });
       }
 
+      const result = await this.authApplicationService.getUserProfile(req.user.id);
+      
       res.json({
         success: true,
         data: {
-          user: req.user.toJSON()
+          user: result.data.user
         }
       });
     } catch (error) {
@@ -265,53 +267,41 @@ class AuthController {
 
       const { email, currentPassword, newPassword } = req.body;
 
-      // Update email if provided
-      if (email && email !== req.user.email) {
-        const existingUser = await this.userRepository.findByEmail(email);
-        if (existingUser) {
-          return res.status(409).json({
-            success: false,
-            error: 'Email already in use'
-          });
-        }
-        req.user._email = email;
+      // Validate required fields for password change
+      if (newPassword && !currentPassword) {
+        return res.status(400).json({
+          success: false,
+          error: 'Current password is required to change password'
+        });
       }
 
-      // Update password if provided
-      if (newPassword) {
-        if (!currentPassword) {
-          return res.status(400).json({
-            success: false,
-            error: 'Current password is required to change password'
-          });
-        }
-
-        const isValidPassword = await req.user.verifyPassword(currentPassword);
-        if (!isValidPassword) {
-          return res.status(400).json({
-            success: false,
-            error: 'Current password is incorrect'
-          });
-        }
-
-        const newPasswordHash = await User.createUser('temp', newPassword);
-        req.user._passwordHash = newPasswordHash.passwordHash;
-      }
-
-      // Update timestamp
-      req.user.updateLastActivity();
-
-      // Save updated user
-      await this.userRepository.update(req.user);
+      const profileData = { email, currentPassword, newPassword };
+      const result = await this.authApplicationService.updateUserProfile(req.user.id, profileData);
 
       res.json({
         success: true,
         data: {
-          user: req.user.toJSON()
+          user: result.data.user
         }
       });
     } catch (error) {
       logger.error('Update profile error:', error);
+      
+      // Handle specific error types
+      if (error.message === 'Email already in use') {
+        return res.status(409).json({
+          success: false,
+          error: 'Email already in use'
+        });
+      }
+      
+      if (error.message === 'Current password is incorrect') {
+        return res.status(400).json({
+          success: false,
+          error: 'Current password is incorrect'
+        });
+      }
+      
       res.status(500).json({
         success: false,
         error: 'Failed to update profile'
@@ -329,18 +319,12 @@ class AuthController {
         });
       }
 
-      const sessions = await this.authService.getUserSessions(req.user.id);
+      const result = await this.authApplicationService.getUserSessions(req.user.id);
 
       res.json({
         success: true,
         data: {
-          sessions: sessions.map(session => ({
-            id: session.id,
-            createdAt: session.createdAt,
-            expiresAt: session.expiresAt,
-            isActive: session.isActive(),
-            metadata: session.metadata
-          }))
+          sessions: result.data.sessions
         }
       });
     } catch (error) {

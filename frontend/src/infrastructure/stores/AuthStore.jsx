@@ -39,11 +39,12 @@ const useAuthStore = create(
           }
 
           // Backend returns: { success: true, data: { user } }
-          // Authentication handled via httpOnly cookies
           const userData = data.data || data;
 
           logger.info('🔍 [AuthStore] Login successful, cookies set by backend');
           logger.info('🔍 [AuthStore] User data:', userData.user);
+
+          // No token storage - use cookies only (enterprise standard)
 
           set({
             user: userData.user,
@@ -131,8 +132,7 @@ const useAuthStore = create(
       getAuthHeaders: () => {
         const headers = {};
         
-        // Cookies are sent automatically with credentials: 'include'
-        // No need to manually add Authorization header when using cookies
+        // Use cookie-based authentication only (enterprise standard)
         logger.info('🔍 [AuthStore] Using cookie-based authentication');
         
         return headers;

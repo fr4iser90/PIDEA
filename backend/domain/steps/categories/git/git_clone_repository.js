@@ -1,40 +1,35 @@
 /**
- * Git Clone Repository Step
- * Clones a Git repository using real Git commands
+ * GitCloneRepository
+ * Clones a Git repository using DDD pattern with Commands and Handlers
  */
 
 const StepBuilder = require('@steps/StepBuilder');
 const Logger = require('@logging/Logger');
 const logger = new Logger('GitCloneRepositoryStep');
-const { exec } = require('child_process');
-const util = require('util');
-const execAsync = util.promisify(exec);
+const CommandRegistry = require('@application/commands/CommandRegistry');
+const HandlerRegistry = require('@application/handlers/HandlerRegistry');
 
 // Step configuration
 const config = {
   name: 'GitCloneRepositoryStep',
   type: 'git',
-  description: 'Clones a Git repository',
+  description: 'Clones a Git repository using DDD pattern with Commands and Handlers',
   category: 'git',
   version: '1.0.0',
   dependencies: ['terminalService'],
   settings: {
-    timeout: 60000,
-    branch: null,
-    depth: null,
-    singleBranch: false,
-    recursive: false
+    timeout: 30000
   },
   validation: {
-    required: ['url', 'targetPath'],
-    optional: ['branch', 'depth', 'singleBranch', 'recursive']
+    required: ['projectPath'],
+    optional: []
   }
 };
 
 class GitCloneRepositoryStep {
   constructor() {
     this.name = 'GitCloneRepositoryStep';
-    this.description = 'Clones a Git repository';
+    this.description = 'Clones a Git repository using DDD pattern with Commands and Handlers';
     this.category = 'git';
     this.dependencies = ['terminalService'];
   }
@@ -53,55 +48,43 @@ class GitCloneRepositoryStep {
       // Validate context
       this.validateContext(context);
       
-      const { url, targetPath, branch = null, depth = null, singleBranch = false, recursive = false } = context;
+      const { projectPath, ...otherParams } = context;
       
-      logger.info('Executing GIT_CLONE_REPOSITORY step', {
-        url,
-        targetPath,
-        branch,
-        depth,
-        singleBranch,
-        recursive
+      logger.info(`Executing ${this.name} using DDD pattern`, {
+        projectPath,
+        ...otherParams
       });
 
-      // Build clone command
-      let cloneCommand = `git clone ${url} ${targetPath}`;
-      if (branch) {
-        cloneCommand += ` -b ${branch}`;
-      }
-      if (depth) {
-        cloneCommand += ` --depth ${depth}`;
-      }
-      if (singleBranch) {
-        cloneCommand += ' --single-branch';
-      }
-      if (recursive) {
-        cloneCommand += ' --recursive';
+      // ✅ DDD PATTERN: Create Command and Handler
+      const command = CommandRegistry.buildFromCategory('git', 'GitCloneCommand', {
+        projectPath,
+        ...otherParams
+      });
+
+      const handler = HandlerRegistry.buildFromCategory('git', 'GitCloneHandler', {
+        terminalService: context.terminalService,
+        logger: logger
+      });
+
+      if (!command || !handler) {
+        throw new Error('Failed to create Git command or handler');
       }
 
-      // Execute git clone using execAsync (like legacy implementation)
-      const result = await execAsync(cloneCommand);
+      // Execute command through handler
+      const result = await handler.handle(command);
 
-      logger.info('GIT_CLONE_REPOSITORY step completed successfully', {
-        url,
-        targetPath,
-        result: result.stdout
+      logger.info(`${this.name} completed successfully using DDD pattern`, {
+        result: result.result
       });
 
       return {
-        success: true,
-        url,
-        targetPath,
-        branch,
-        depth,
-        singleBranch,
-        recursive,
-        result: result.stdout,
+        success: result.success,
+        result: result.result,
         timestamp: new Date()
       };
 
     } catch (error) {
-      logger.error('GIT_CLONE_REPOSITORY step failed', {
+      logger.error(`${this.name} failed`, {
         error: error.message,
         context
       });
@@ -115,11 +98,8 @@ class GitCloneRepositoryStep {
   }
 
   validateContext(context) {
-    if (!context.url) {
-      throw new Error('Repository URL is required');
-    }
-    if (!context.targetPath) {
-      throw new Error('Target path is required');
+    if (!context.projectPath) {
+      throw new Error('Project path is required');
     }
   }
 }
@@ -131,4 +111,4 @@ const stepInstance = new GitCloneRepositoryStep();
 module.exports = {
   config,
   execute: async (context) => await stepInstance.execute(context)
-}; 
+};

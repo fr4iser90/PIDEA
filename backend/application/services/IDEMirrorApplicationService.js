@@ -25,7 +25,7 @@ class IDEMirrorApplicationService {
 
     async getIDEState(userId) {
         try {
-            this.logger.info('IDEMirrorApplicationService: Getting IDE state', { userId });
+            // // // this.logger.info('IDEMirrorApplicationService: Getting IDE state', { userId });
             
             if (!this.ideMirrorService.isIDEConnected()) {
                 await this.ideMirrorService.connectToIDE();
@@ -45,7 +45,7 @@ class IDEMirrorApplicationService {
 
     async getAvailableIDEs(userId) {
         try {
-            this.logger.info('IDEMirrorApplicationService: Getting available IDEs', { userId });
+            // // // this.logger.info('IDEMirrorApplicationService: Getting available IDEs', { userId });
             
             const ides = await this.ideMirrorService.getAvailableIDEs();
             const activeIDE = await this.ideMirrorService.getActiveIDE();

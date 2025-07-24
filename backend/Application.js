@@ -28,23 +28,21 @@ const AuthService = require('./domain/services/security/AuthService');
 const TaskService = require('./domain/services/task/TaskService');
 const TaskRepository = require('./domain/repositories/TaskRepository');
 const TaskValidationService = require('./domain/services/task/TaskValidationService');
-
-// Auto-Finish System
-// AutoFinishSystem import removed - using Steps instead
 const TaskSession = require('./domain/entities/TaskSession');
 const TodoTask = require('./domain/entities/TodoTask');
-
-// Auto Test Fix System
-const AutoTestFixSystem = require('./domain/services/auto-test/AutoTestFixSystem');
-
 // Application
-const SendMessageCommand = require('@categories/management/SendMessageCommand');
 const GetChatHistoryQuery = require('@application/queries/GetChatHistoryQuery');
-const SendMessageHandler = require('@handler-categories/management/SendMessageHandler');
-const GetChatHistoryHandler = require('@handler-categories/management/GetChatHistoryHandler');
-const CreateTaskHandler = require('@handler-categories/management/CreateTaskHandler');
-const ProcessTodoListCommand = require('@categories/management/ProcessTodoListCommand');
-const ProcessTodoListHandler = require('@handler-categories/management/ProcessTodoListHandler');
+// Handler imports - Updated paths
+const SendMessageHandler = require('@handler-categories/chat/SendMessageHandler');
+const CreateTaskHandler = require('@handler-categories/workflow/CreateTaskHandler');
+const UpdateTestStatusHandler = require('@handler-categories/workflow/UpdateTestStatusHandler');
+const AutoRefactorHandler = require('@handler-categories/refactoring/AutoRefactorHandler');
+
+// Command imports - Updated paths
+const SendMessageCommand = require('@categories/chat/SendMessageCommand');
+const CreateTaskCommand = require('@categories/workflow/CreateTaskCommand');
+const UpdateTestStatusCommand = require('@categories/workflow/UpdateTestStatusCommand');
+const AutoRefactorCommand = require('@categories/refactoring/AutoRefactorCommand');
 
 // Application handlers - Categories-based only
 
@@ -370,20 +368,20 @@ class Application {
     this.taskSessionRepository = this.databaseConnection.getRepository('TaskSession');
     await this.taskSessionRepository.initialize();
 
-    // Initialize Auto Test Fix System with automatic dependency resolution
-    this.autoTestFixSystem = new AutoTestFixSystem({
-      cursorIDE: this.cursorIDEService,
-      browserManager: this.browserManager,
-      ideManager: this.ideManager,
-      webSocketManager: this.webSocketManager,
-      taskRepository: this.taskRepository,
-      workflowOrchestrationService: this.workflowOrchestrationService,
-      gitService: this.gitService,
-      eventBus: this.eventBus,
-      logger: this.logger,
-      testOrchestrator: this.testOrchestrator
-    });
-    await this.autoTestFixSystem.initialize();
+    // Auto Test Fix System - Now converted to workflow
+    // this.autoTestFixSystem = new AutoTestFixSystem({
+    //   cursorIDE: this.cursorIDEService,
+    //   browserManager: this.browserManager,
+    //   ideManager: this.ideManager,
+    //   webSocketManager: this.webSocketManager,
+    //   taskRepository: this.taskRepository,
+    //   workflowOrchestrationService: this.workflowOrchestrationService,
+    //   gitService: this.gitService,
+    //   eventBus: this.eventBus,
+    //   logger: this.logger,
+    //   testOrchestrator: this.testOrchestrator
+    // });
+    // await this.autoTestFixSystem.initialize();
 
     // Step Registry already initialized in initializeInfrastructure()
     // Update it with service registry for dependency injection
@@ -449,21 +447,44 @@ class Application {
   async initializeApplicationHandlers() {
     this.logger.info('Initializing application handlers with DI...');
 
-    // Get handlers through DI container
-    this.sendMessageHandler = this.serviceRegistry.getService('sendMessageHandler');
-    this.getChatHistoryHandler = this.serviceRegistry.getService('getChatHistoryHandler');
-    this.createTaskHandler = this.serviceRegistry.getService('createTaskHandler');
+    // Instantiate handlers with dependencies from ServiceRegistry
+    const SendMessageHandler = require('./application/handlers/categories/chat/SendMessageHandler');
+    const GetChatHistoryHandler = require('./application/handlers/categories/chat/GetChatHistoryHandler');
+    const CreateTaskHandler = require('./application/handlers/categories/workflow/CreateTaskHandler');
+
+    // Create handler instances with dependencies
+    this.sendMessageHandler = new SendMessageHandler({
+      browserManager: this.serviceRegistry.getService('browserManager'),
+      ideManager: this.serviceRegistry.getService('ideManager'),
+      eventBus: this.serviceRegistry.getService('eventBus'),
+      logger: this.serviceRegistry.getService('logger')
+    });
+
+    this.getChatHistoryHandler = new GetChatHistoryHandler(
+      this.serviceRegistry.getService('chatRepository'),
+      this.serviceRegistry.getService('ideManager'),
+      this.serviceRegistry
+    );
+
+    this.createTaskHandler = new CreateTaskHandler({
+      taskRepository: this.serviceRegistry.getService('taskRepository'),
+      taskTemplateRepository: this.serviceRegistry.getService('taskTemplateRepository'),
+      taskSuggestionRepository: this.serviceRegistry.getService('taskSuggestionRepository'),
+      taskValidationService: this.serviceRegistry.getService('taskValidationService'),
+      taskGenerationService: this.serviceRegistry.getService('taskGenerationService'),
+      eventBus: this.serviceRegistry.getService('eventBus'),
+      logger: this.serviceRegistry.getService('logger')
+    });
+
+    // Register handlers in ServiceRegistry for steps to access
+    this.serviceRegistry.container.register('sendMessageHandler', () => this.sendMessageHandler, { singleton: true });
+    this.serviceRegistry.container.register('getChatHistoryHandler', () => this.getChatHistoryHandler, { singleton: true });
+    this.serviceRegistry.container.register('createTaskHandler', () => this.createTaskHandler, { singleton: true });
 
     // Legacy handlers removed - using new workflow system instead
-    
-    // ProcessTodoListHandler removed - using WorkflowController + Steps instead
     this.processTodoListHandler = null;
 
-    // TaskExecutionEngine removed - functionality moved to WorkflowController + StepRegistry
-
-    // No legacy command handlers - using WorkflowController + Steps instead
-
-    this.logger.info('Application handlers initialized (legacy removed)');
+    this.logger.info('Application handlers initialized with DI');
   }
 
   async initializePresentationLayer() {
@@ -485,7 +506,6 @@ class Application {
     const IDEController = require('./presentation/api/IDEController');
     this.ideController = new IDEController({
         ideApplicationService: this.serviceRegistry.getService('ideApplicationService'),
-        taskRepository: this.taskRepository,
         logger: this.serviceRegistry.getService('logger')
     });
 
@@ -544,7 +564,7 @@ class Application {
         logger: this.serviceRegistry.getService('logger')
     });
 
-    this.projectController = new ProjectController();
+    this.projectController = new ProjectController(this.serviceRegistry.getService('projectApplicationService'));
 
     this.logger.info('Presentation layer initialized');
   }
@@ -783,10 +803,10 @@ class Application {
     this.app.get('/api/projects/:projectId/tasks/:id/execution', (req, res) => this.taskController.getTaskExecution(req, res));
     this.app.post('/api/projects/:projectId/tasks/:id/cancel', (req, res) => this.taskController.cancelTask(req, res));
     
-    // NEW: Sync docs tasks route
-    this.app.post('/api/projects/:projectId/tasks/sync-docs', (req, res) => this.taskController.syncDocsTasks(req, res));
-    // NEW: Clean docs tasks route
-    this.app.post('/api/projects/:projectId/tasks/clean-docs', (req, res) => this.taskController.cleanDocsTasks(req, res));
+    // NEW: Sync manual tasks route
+    this.app.post('/api/projects/:projectId/tasks/sync-manual', (req, res) => this.taskController.syncManualTasks(req, res));
+    // NEW: Clean manual tasks route
+    this.app.post('/api/projects/:projectId/tasks/clean-manual', (req, res) => this.taskController.cleanManualTasks(req, res));
 
     // Project Analysis routes (protected) - PROJECT-BASED
     const AnalysisRoutes = require('./presentation/api/routes/analysis');

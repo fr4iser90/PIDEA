@@ -1,14 +1,13 @@
 /**
  * Git Commit Step
- * Commits changes using real Git commands
+ * Commits changes using DDD pattern with Commands and Handlers
  */
 
 const StepBuilder = require('@steps/StepBuilder');
 const Logger = require('@logging/Logger');
 const logger = new Logger('GitCommitStep');
-const { exec } = require('child_process');
-const util = require('util');
-const execAsync = util.promisify(exec);
+const CommandRegistry = require('@application/commands/CommandRegistry');
+const HandlerRegistry = require('@application/handlers/HandlerRegistry');
 
 // Step configuration
 const config = {
@@ -54,35 +53,44 @@ class GitCommitStep {
       
       const { projectPath, message, files = '.', author, email } = context;
       
-      logger.info('Executing GIT_COMMIT step', {
+      logger.info('Executing GIT_COMMIT step using DDD pattern', {
         projectPath,
         message,
         files
       });
 
-      // Add files to staging using execAsync
-      const addResult = await execAsync(`git add ${files}`, { cwd: projectPath });
-
-      // Build commit command
-      let commitCommand = `git commit -m "${message}"`;
-      if (author && email) {
-        commitCommand = `git commit -m "${message}" --author="${author} <${email}>"`;
-      }
-
-      // Commit changes using execAsync (like legacy implementation)
-      const result = await execAsync(commitCommand, { cwd: projectPath });
-
-      logger.info('GIT_COMMIT step completed successfully', {
+      // ✅ DDD PATTERN: Create Command and Handler
+      const command = CommandRegistry.buildFromCategory('git', 'GitCommitCommand', {
+        projectPath,
         message,
         files,
-        result: result.stdout
+        author,
+        email
+      });
+
+      const handler = HandlerRegistry.buildFromCategory('git', 'GitCommitHandler', {
+        terminalService: context.terminalService,
+        logger: logger
+      });
+
+      if (!command || !handler) {
+        throw new Error('Failed to create Git command or handler');
+      }
+
+      // Execute command through handler
+      const result = await handler.handle(command);
+
+      logger.info('GIT_COMMIT step completed successfully using DDD pattern', {
+        message,
+        files,
+        result: result.result
       });
 
       return {
-        success: true,
+        success: result.success,
         message,
         files,
-        result: result.stdout,
+        result: result.result,
         timestamp: new Date()
       };
 

@@ -43,7 +43,7 @@ class GitController {
                 });
             }
 
-            this.logger.info('GitController: Getting Git status', { projectId, userId });
+            // // // this.logger.info('GitController: Getting Git status', { projectId, userId });
 
             const result = await this.gitApplicationService.getStatus(projectId, projectPath, userId);
             
@@ -844,14 +844,26 @@ class GitController {
                 });
             }
 
-            this.logger.info('GitController: Getting pidea-agent branch status', { projectId, userId });
+            this.logger.info('GitController: Getting pidea-agent branch status', { projectId, userId, projectPath });
 
             // Check if pidea-agent branch exists
-            const branchesResult = await this.gitService.getBranches(projectPath, { all: true });
-            const branches = branchesResult && branchesResult.all ? branchesResult.all : [];
+            this.logger.info('GitController: Calling GitService.getBranches()', { projectPath });
+            const branchesResult = await this.gitService.getBranches(projectPath, { includeRemote: true, includeLocal: true });
+            this.logger.info('GitController: GitService.getBranches() returned', { branchesResult });
+            
+            // Fix: Extract branches from the nested structure
+            const branches = branchesResult && branchesResult.result && branchesResult.result.all ? branchesResult.result.all : [];
+            this.logger.info('GitController: Extracted branches.all', { branches });
+            
             const pideaAgentExists = branches.includes('pidea-agent') || branches.includes('remotes/origin/pidea-agent');
+            this.logger.info('GitController: Branch search result', { 
+                pideaAgentExists, 
+                'pidea-agent found in local': branches.includes('pidea-agent'),
+                'pidea-agent found in remote': branches.includes('remotes/origin/pidea-agent')
+            });
 
             if (!pideaAgentExists) {
+                this.logger.warn('GitController: Pidea-agent branch not found', { branches });
                 return res.status(404).json({
                     success: false,
                     error: 'Pidea-agent branch does not exist',
@@ -861,6 +873,7 @@ class GitController {
 
             // Get current branch
             const currentBranch = await this.gitService.getCurrentBranch(projectPath);
+            this.logger.info('GitController: Current branch', { currentBranch });
             
             // Get pidea-agent branch status
             const pideaAgentStatus = await this.gitService.getStatus(projectPath, { branch: 'pidea-agent' });
@@ -878,15 +891,19 @@ class GitController {
                 });
             }
 
+            const responseData = {
+                pideaAgentExists,
+                currentBranch,
+                pideaAgentStatus,
+                lastCommit,
+                isOnPideaAgentBranch: currentBranch === 'pidea-agent'
+            };
+
+            this.logger.info('GitController: Sending response', { responseData });
+
             res.json({
                 success: true,
-                data: {
-                    pideaAgentExists,
-                    currentBranch,
-                    pideaAgentStatus,
-                    lastCommit,
-                    isOnPideaAgentBranch: currentBranch === 'pidea-agent'
-                },
+                data: responseData,
                 message: 'Pidea-agent branch status retrieved successfully'
             });
 
@@ -937,8 +954,8 @@ class GitController {
             });
 
             // Check if pidea-agent branch exists
-            const branchesResult = await this.gitService.getBranches(projectPath, { all: true });
-            const branches = branchesResult && branchesResult.all ? branchesResult.all : [];
+            const branchesResult = await this.gitService.getBranches(projectPath, { includeRemote: true, includeLocal: true });
+            const branches = branchesResult && branchesResult.result && branchesResult.result.all ? branchesResult.result.all : [];
             const pideaAgentExists = branches.includes('pidea-agent') || branches.includes('remotes/origin/pidea-agent');
 
             if (!pideaAgentExists) {

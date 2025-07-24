@@ -427,11 +427,11 @@ class ChatHistoryExtractor {
       // Update conversation flow
       this.updateConversationFlow(messages);
       
-      logger.info('Conversation context updated:', {
-        topicsCount: this.conversationContext.topics.length,
-        intentHistoryCount: this.conversationContext.intentHistory.length,
-        codeReferencesCount: this.conversationContext.codeReferences.length
-      });
+      // logger.info('Conversation context updated:', {
+      //   topicsCount: this.conversationContext.topics.length,
+      //   intentHistoryCount: this.conversationContext.intentHistory.length,
+      //   codeReferencesCount: this.conversationContext.codeReferences.length
+      // });
     } catch (error) {
       logger.error('Error updating conversation context:', error);
     }

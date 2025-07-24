@@ -316,6 +316,187 @@ class ProjectApplicationService {
       throw new Error(`Failed to search projects: ${error.message}`);
     }
   }
+
+  /**
+   * Get all projects (for controller list endpoint)
+   * @returns {Promise<Array>} List of all projects
+   */
+  async getAllProjects() {
+    try {
+      this.logger.info('Getting all projects');
+      
+      const projects = await this.projectRepository.findAll();
+      
+      return projects.map(project => ({
+        id: project.id,
+        name: project.name,
+        description: project.description,
+        workspacePath: project.workspacePath,
+        type: project.type,
+        framework: project.framework,
+        frontendPort: project.frontendPort,
+        backendPort: project.backendPort,
+        databasePort: project.databasePort,
+        createdAt: project.createdAt,
+        updatedAt: project.updatedAt
+      }));
+      
+    } catch (error) {
+      this.logger.error('❌ Failed to get all projects:', error);
+      throw new Error(`Failed to get all projects: ${error.message}`);
+    }
+  }
+
+  /**
+   * Get project by IDE port
+   * @param {number} idePort - IDE port number
+   * @returns {Promise<Object>} Project data
+   */
+  async getProjectByIDEPort(idePort) {
+    try {
+      // // // this.logger.info(`Getting project by IDE port: ${idePort}`);
+      
+      const project = await this.projectRepository.findByIDEPort(parseInt(idePort));
+      
+      if (!project) {
+        throw new Error(`Project not found for IDE port: ${idePort}`);
+      }
+      
+      return {
+        id: project.id,
+        name: project.name,
+        description: project.description,
+        workspacePath: project.workspacePath,
+        type: project.type,
+        framework: project.framework,
+        frontendPort: project.frontendPort,
+        backendPort: project.backendPort,
+        databasePort: project.databasePort,
+        createdAt: project.createdAt,
+        updatedAt: project.updatedAt
+      };
+      
+    } catch (error) {
+      this.logger.error('❌ Failed to get project by IDE port:', error);
+      throw new Error(`Failed to get project by IDE port: ${error.message}`);
+    }
+  }
+
+  /**
+   * Save project port
+   * @param {string} projectId - Project identifier
+   * @param {number} port - Port number
+   * @param {string} portType - Port type (frontend, backend, database)
+   * @returns {Promise<Object>} Updated project
+   */
+  async saveProjectPort(projectId, port, portType = 'frontend') {
+    try {
+      this.logger.info(`Saving port ${port} for project ${projectId} (${portType})`);
+      
+      // Validate port number
+      if (!port || !Number.isInteger(parseInt(port))) {
+        throw new Error('Valid port number required');
+      }
+      
+      // Get existing project
+      const project = await this.projectRepository.findById(projectId);
+      if (!project) {
+        throw new Error(`Project not found: ${projectId}`);
+      }
+      
+      // Update the appropriate port field
+      const updateData = { ...project };
+      if (portType === 'frontend') {
+        updateData.frontendPort = parseInt(port);
+      } else if (portType === 'backend') {
+        updateData.backendPort = parseInt(port);
+      } else if (portType === 'database') {
+        updateData.databasePort = parseInt(port);
+      } else {
+        throw new Error(`Invalid port type: ${portType}`);
+      }
+      
+      // Update project
+      const updatedProject = await this.projectRepository.update(updateData);
+      
+      this.logger.info(`✅ Port ${port} saved for project ${projectId} (${portType})`);
+      
+      return {
+        id: updatedProject.id,
+        name: updatedProject.name,
+        description: updatedProject.description,
+        workspacePath: updatedProject.workspacePath,
+        type: updatedProject.type,
+        framework: updatedProject.framework,
+        frontendPort: updatedProject.frontendPort,
+        backendPort: updatedProject.backendPort,
+        databasePort: updatedProject.databasePort,
+        updatedAt: updatedProject.updatedAt
+      };
+      
+    } catch (error) {
+      this.logger.error('❌ Failed to save project port:', error);
+      throw new Error(`Failed to save project port: ${error.message}`);
+    }
+  }
+
+  /**
+   * Update project port
+   * @param {string} projectId - Project identifier
+   * @param {number} port - Port number
+   * @param {string} portType - Port type (frontend, backend, database)
+   * @returns {Promise<Object>} Updated project
+   */
+  async updateProjectPort(projectId, port, portType = 'frontend') {
+    try {
+      this.logger.info(`Updating port ${port} for project ${projectId} (${portType})`);
+      
+      // Validate port number
+      if (!port || !Number.isInteger(parseInt(port))) {
+        throw new Error('Valid port number required');
+      }
+      
+      // Get existing project
+      const project = await this.projectRepository.findById(projectId);
+      if (!project) {
+        throw new Error(`Project not found: ${projectId}`);
+      }
+      
+      // Update the appropriate port field
+      const updateData = { ...project };
+      if (portType === 'frontend') {
+        updateData.frontendPort = parseInt(port);
+      } else if (portType === 'backend') {
+        updateData.backendPort = parseInt(port);
+      } else if (portType === 'database') {
+        updateData.databasePort = parseInt(port);
+      } else {
+        throw new Error(`Invalid port type: ${portType}`);
+      }
+      
+      // Update project
+      const updatedProject = await this.projectRepository.update(updateData);
+      
+      this.logger.info(`✅ Port ${port} updated for project ${projectId} (${portType})`);
+      
+      return {
+        id: updatedProject.id,
+        name: updatedProject.name,
+        description: updatedProject.description,
+        workspacePath: updatedProject.workspacePath,
+        type: updatedProject.type,
+        framework: updatedProject.framework,
+        frontendPort: updatedProject.frontendPort,
+        backendPort: updatedProject.backendPort,
+        databasePort: updatedProject.databasePort,
+        updatedAt: updatedProject.updatedAt
+      };
+      
+    } catch (error) {
+      this.logger.error('❌ Failed to update project port:', error);
+      throw new Error(`Failed to update project port: ${error.message}`);
+    }
+  }
 }
 
 module.exports = ProjectApplicationService; 

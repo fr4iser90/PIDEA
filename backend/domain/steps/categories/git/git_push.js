@@ -1,38 +1,35 @@
 /**
- * Git Push Step
- * Pushes changes to remote repository using real Git commands
+ * GitPush
+ * Pushes changes to remote Git repository using DDD pattern with Commands and Handlers
  */
 
 const StepBuilder = require('@steps/StepBuilder');
 const Logger = require('@logging/Logger');
-const logger = new Logger('GitPushStep');
-const { exec } = require('child_process');
-const util = require('util');
-const execAsync = util.promisify(exec);
+const logger = new Logger('GitPush');
+const CommandRegistry = require('@application/commands/CommandRegistry');
+const HandlerRegistry = require('@application/handlers/HandlerRegistry');
 
 // Step configuration
 const config = {
   name: 'GitPushStep',
   type: 'git',
-  description: 'Pushes changes to remote Git repository',
+  description: 'Pushes changes to remote Git repository using DDD pattern with Commands and Handlers',
   category: 'git',
   version: '1.0.0',
   dependencies: ['terminalService'],
   settings: {
-    timeout: 30000,
-    remote: 'origin',
-    setUpstream: false
+    timeout: 30000
   },
   validation: {
     required: ['projectPath'],
-    optional: ['branch', 'remote', 'setUpstream']
+    optional: []
   }
 };
 
 class GitPushStep {
   constructor() {
     this.name = 'GitPushStep';
-    this.description = 'Pushes changes to remote Git repository';
+    this.description = 'Pushes changes to remote Git repository using DDD pattern with Commands and Handlers';
     this.category = 'git';
     this.dependencies = ['terminalService'];
   }
@@ -51,49 +48,43 @@ class GitPushStep {
       // Validate context
       this.validateContext(context);
       
-      const { projectPath, branch, remote = 'origin', setUpstream = false } = context;
+      const { projectPath, ...otherParams } = context;
       
-      logger.info('Executing GIT_PUSH step', {
+      logger.info(`Executing ${this.name} using DDD pattern`, {
         projectPath,
-        branch,
-        remote,
-        setUpstream
+        ...otherParams
       });
 
-      // Get current branch if not specified using execAsync
-      let currentBranch = branch;
-      if (!currentBranch) {
-        const branchResult = await execAsync('git branch --show-current', { cwd: projectPath });
-        currentBranch = branchResult.stdout.trim();
+      // ✅ DDD PATTERN: Create Command and Handler
+      const command = CommandRegistry.buildFromCategory('git', 'GitPushCommand', {
+        projectPath,
+        ...otherParams
+      });
+
+      const handler = HandlerRegistry.buildFromCategory('git', 'GitPushHandler', {
+        terminalService: context.terminalService,
+        logger: logger
+      });
+
+      if (!command || !handler) {
+        throw new Error('Failed to create Git command or handler');
       }
 
-      // Build git push command
-      let pushCommand = `git push ${remote} ${currentBranch}`;
-      if (setUpstream) {
-        pushCommand = `git push -u ${remote} ${currentBranch}`;
-      }
+      // Execute command through handler
+      const result = await handler.handle(command);
 
-      // Execute git push using execAsync (like legacy implementation)
-      const result = await execAsync(pushCommand, { cwd: projectPath });
-
-      logger.info('GIT_PUSH step completed successfully', {
-        branch: currentBranch,
-        remote,
-        setUpstream,
-        result: result.stdout
+      logger.info(`${this.name} completed successfully using DDD pattern`, {
+        result: result.result
       });
 
       return {
-        success: true,
-        branch: currentBranch,
-        remote,
-        setUpstream,
-        result: result.stdout,
+        success: result.success,
+        result: result.result,
         timestamp: new Date()
       };
 
     } catch (error) {
-      logger.error('GIT_PUSH step failed', {
+      logger.error(`${this.name} failed`, {
         error: error.message,
         context
       });
@@ -120,4 +111,4 @@ const stepInstance = new GitPushStep();
 module.exports = {
   config,
   execute: async (context) => await stepInstance.execute(context)
-}; 
+};

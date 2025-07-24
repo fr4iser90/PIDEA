@@ -141,7 +141,7 @@ class GitService {
      */
     async getCurrentBranch(repoPath) {
         try {
-            this.logger.info('GitService: Getting current branch using step', { repoPath });
+            // // this.logger.info('GitService: Getting current branch using step', { repoPath });
             
             if (!this.stepRegistry) {
                 throw new Error('StepRegistry not available for Git operations');
@@ -156,7 +156,7 @@ class GitService {
             if (result.success) {
                 // Handle nested result structure from StepRegistry
                 const currentBranch = result.result?.currentBranch || result.currentBranch;
-                this.logger.info(`Aktueller Branch für ${repoPath}: "${currentBranch}"`);
+                // this.logger.info(`Aktueller Branch für ${repoPath}: "${currentBranch}"`);
                 return currentBranch;
             } else {
                 throw new Error(result.error || 'Failed to get current branch');
@@ -195,11 +195,14 @@ class GitService {
             const result = await this.stepRegistry.executeStep('GitGetBranchesStep', stepContext);
             
             if (result.success) {
-
+                this.logger.info('GitService: Step execution result', { result: result.result });
                 
-                // The StepRegistry wraps the step result in a 'result' property
-                // So we need to access result.result.branches
-                return result.result?.branches || { local: [], remote: [], all: [] };
+                // The step now returns the branches object directly in result.result
+                const branches = result.result || { local: [], remote: [], all: [] };
+                
+                this.logger.info('GitService: Extracted branches', { branches });
+                
+                return branches;
             } else {
                 throw new Error(result.error || 'Failed to get branches');
             }
@@ -581,7 +584,7 @@ class GitService {
         const { porcelain = true } = options;
         
         try {
-            this.logger.info('GitService: Getting status using step', { repoPath, porcelain });
+            // // this.logger.info('GitService: Getting status using step', { repoPath, porcelain });
             
             if (!this.stepRegistry) {
                 throw new Error('StepRegistry not available for Git operations');

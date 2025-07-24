@@ -1,14 +1,13 @@
 /**
  * Git Add Files Step
- * Adds files to Git staging area using real Git commands
+ * Adds files to Git staging area using DDD pattern with Commands and Handlers
  */
 
 const StepBuilder = require('@steps/StepBuilder');
 const Logger = require('@logging/Logger');
 const logger = new Logger('GitAddFilesStep');
-const { exec } = require('child_process');
-const util = require('util');
-const execAsync = util.promisify(exec);
+const CommandRegistry = require('@application/commands/CommandRegistry');
+const HandlerRegistry = require('@application/handlers/HandlerRegistry');
 
 // Step configuration
 const config = {
@@ -52,24 +51,38 @@ class GitAddFilesStep {
       
       const { projectPath, files = '.' } = context;
       
-      logger.info('Executing GIT_ADD_FILES step', {
+      logger.info('Executing GIT_ADD_FILES step using DDD pattern', {
         projectPath,
         files
       });
 
-      // Execute git add using execAsync (like legacy implementation)
-      const addCommand = `git add ${files}`;
-      const result = await execAsync(addCommand, { cwd: projectPath });
+      // ✅ DDD PATTERN: Create Command and Handler
+      const command = CommandRegistry.buildFromCategory('git', 'GitAddFilesCommand', {
+        projectPath,
+        files
+      });
 
-      logger.info('GIT_ADD_FILES step completed successfully', {
+      const handler = HandlerRegistry.buildFromCategory('git', 'GitAddFilesHandler', {
+        terminalService: context.terminalService,
+        logger: logger
+      });
+
+      if (!command || !handler) {
+        throw new Error('Failed to create Git command or handler');
+      }
+
+      // Execute command through handler
+      const result = await handler.handle(command);
+
+      logger.info('GIT_ADD_FILES step completed successfully using DDD pattern', {
         files,
-        result: result.stdout
+        result: result.result
       });
 
       return {
-        success: true,
+        success: result.success,
         files,
-        result: result.stdout,
+        result: result.result,
         timestamp: new Date()
       };
 

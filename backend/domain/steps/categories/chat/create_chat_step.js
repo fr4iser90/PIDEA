@@ -1,6 +1,7 @@
 /**
  * Create Chat Step
  * Creates new chat session with IDE integration
+ * Wrapper for CreateChatHandler (which handles both business logic AND browser automation)
  */
 
 const StepBuilder = require('@steps/StepBuilder');
@@ -14,7 +15,7 @@ const config = {
   category: 'ide',
   description: 'Create new chat session with IDE integration',
   version: '1.0.0',
-  dependencies: ['chatSessionService', 'eventBus'],
+  dependencies: ['createChatHandler'],
   settings: {
     includeTimeout: true,
     includeRetry: true,
@@ -31,7 +32,7 @@ class CreateChatStep {
     this.name = 'CreateChatStep';
     this.description = 'Create new chat session with IDE integration';
     this.category = 'ide';
-    this.dependencies = ['chatSessionService', 'eventBus'];
+    this.dependencies = ['createChatHandler'];
   }
 
   static getConfig() {
@@ -52,80 +53,36 @@ class CreateChatStep {
       
       logger.info(`📝 Creating chat session for user ${userId} with title: ${title}`);
       
-      // Get services via dependency injection
-      const chatSessionService = context.getService('chatSessionService');
-      const eventBus = context.getService('eventBus');
-      
-      if (!chatSessionService) {
-        throw new Error('ChatSessionService not available in context');
-      }
-      if (!eventBus) {
-        throw new Error('EventBus not available in context');
+      // ✅ 1. BUSINESS LOGIC + BROWSER AUTOMATION über Handler
+      const createChatHandler = context.getService('createChatHandler');
+      if (!createChatHandler) {
+        throw new Error('CreateChatHandler not available in context');
       }
       
-      // Generate unique step ID
-      const stepId = this.generateStepId();
-      
-      // Publish creating event
-      await eventBus.publish('chat.creating', {
-        stepId: stepId,
+      // Create command for business logic
+      const CreateChatCommand = require('@categories/chat/CreateChatCommand');
+      const command = new CreateChatCommand({
         userId: userId,
         title: title,
-        timestamp: new Date()
+        metadata: metadata
       });
       
-      // Create session using ChatSessionService (NO BROWSER ACTIONS!)
-      logger.info('📝 Creating chat session in database...');
-      const session = await chatSessionService.createSession(
-        userId,
-        title,
-        metadata
-      );
+      // ✅ Handler macht BEIDES: Business Logic + Browser Automation
+      logger.info('📝 Executing CreateChatHandler (Business Logic + Browser Automation)...');
+      const result = await createChatHandler.handle(command);
       
-      // Publish success event
-      await eventBus.publish('chat.created', {
-        stepId: stepId,
-        userId: userId,
-        sessionId: session.id,
-        title: session.title,
-        timestamp: new Date()
-      });
-      
-      logger.info(`✅ Chat session created successfully`, {
-        stepId: stepId,
-        sessionId: session.id
+      logger.info(`✅ Chat session created successfully via Handler`, {
+        sessionId: result.session.id
       });
       
       return {
         success: true,
-        session: {
-          id: session.id,
-          title: session.title,
-          userId: session.userId,
-          status: session.status,
-          createdAt: session.createdAt,
-          metadata: session.metadata
-        },
-        stepId: stepId,
-        message: 'Chat session created successfully'
+        session: result.session,
+        message: 'Chat session created successfully via Handler'
       };
       
     } catch (error) {
       logger.error('❌ Failed to create chat session:', error);
-      
-      // Publish failure event
-      try {
-        const eventBus = context.getService('EventBus');
-        if (eventBus) {
-          await eventBus.publish('chat.creation.failed', {
-            userId: context.userId,
-            error: error.message,
-            timestamp: new Date()
-          });
-        }
-      } catch (eventError) {
-        logger.error('Failed to publish failure event:', eventError);
-      }
       
       return {
         success: false,
@@ -133,14 +90,6 @@ class CreateChatStep {
         timestamp: new Date()
       };
     }
-  }
-
-  /**
-   * Generate unique step ID
-   * @returns {string} Unique step ID
-   */
-  generateStepId() {
-    return `create_chat_step_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
   }
 
   /**

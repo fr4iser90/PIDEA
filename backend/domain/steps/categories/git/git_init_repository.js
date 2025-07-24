@@ -1,38 +1,35 @@
 /**
- * Git Init Repository Step
- * Initializes a Git repository using real Git commands
+ * GitInitRepository
+ * Initializes a Git repository using DDD pattern with Commands and Handlers
  */
 
 const StepBuilder = require('@steps/StepBuilder');
 const Logger = require('@logging/Logger');
 const logger = new Logger('GitInitRepositoryStep');
-const { exec } = require('child_process');
-const util = require('util');
-const execAsync = util.promisify(exec);
+const CommandRegistry = require('@application/commands/CommandRegistry');
+const HandlerRegistry = require('@application/handlers/HandlerRegistry');
 
 // Step configuration
 const config = {
   name: 'GitInitRepositoryStep',
   type: 'git',
-  description: 'Initializes a Git repository',
+  description: 'Initializes a Git repository using DDD pattern with Commands and Handlers',
   category: 'git',
   version: '1.0.0',
   dependencies: ['terminalService'],
   settings: {
-    timeout: 30000,
-    bare: false,
-    initialBranch: 'main'
+    timeout: 30000
   },
   validation: {
     required: ['projectPath'],
-    optional: ['bare', 'initialBranch']
+    optional: []
   }
 };
 
 class GitInitRepositoryStep {
   constructor() {
     this.name = 'GitInitRepositoryStep';
-    this.description = 'Initializes a Git repository';
+    this.description = 'Initializes a Git repository using DDD pattern with Commands and Handlers';
     this.category = 'git';
     this.dependencies = ['terminalService'];
   }
@@ -51,44 +48,43 @@ class GitInitRepositoryStep {
       // Validate context
       this.validateContext(context);
       
-      const { projectPath, bare = false, initialBranch = 'main' } = context;
+      const { projectPath, ...otherParams } = context;
       
-      logger.info('Executing GIT_INIT_REPOSITORY step', {
+      logger.info(`Executing ${this.name} using DDD pattern`, {
         projectPath,
-        bare,
-        initialBranch
+        ...otherParams
       });
 
-      // Build init command
-      let initCommand = 'git init';
-      if (bare) {
-        initCommand += ' --bare';
-      }
-      if (initialBranch) {
-        initCommand += ` -b ${initialBranch}`;
-      }
-
-      // Execute git init using execAsync (like legacy implementation)
-      const result = await execAsync(initCommand, { cwd: projectPath });
-
-      logger.info('GIT_INIT_REPOSITORY step completed successfully', {
+      // ✅ DDD PATTERN: Create Command and Handler
+      const command = CommandRegistry.buildFromCategory('git', 'GitInitCommand', {
         projectPath,
-        bare,
-        initialBranch,
-        result: result.stdout
+        ...otherParams
+      });
+
+      const handler = HandlerRegistry.buildFromCategory('git', 'GitInitHandler', {
+        terminalService: context.terminalService,
+        logger: logger
+      });
+
+      if (!command || !handler) {
+        throw new Error('Failed to create Git command or handler');
+      }
+
+      // Execute command through handler
+      const result = await handler.handle(command);
+
+      logger.info(`${this.name} completed successfully using DDD pattern`, {
+        result: result.result
       });
 
       return {
-        success: true,
-        projectPath,
-        bare,
-        initialBranch,
-        result: result.stdout,
+        success: result.success,
+        result: result.result,
         timestamp: new Date()
       };
 
     } catch (error) {
-      logger.error('GIT_INIT_REPOSITORY step failed', {
+      logger.error(`${this.name} failed`, {
         error: error.message,
         context
       });
@@ -115,4 +111,4 @@ const stepInstance = new GitInitRepositoryStep();
 module.exports = {
   config,
   execute: async (context) => await stepInstance.execute(context)
-}; 
+};

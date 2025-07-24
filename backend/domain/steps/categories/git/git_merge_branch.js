@@ -1,38 +1,35 @@
 /**
- * Git Merge Branch Step
- * Merges a Git branch using real Git commands
+ * GitMergeBranch
+ * Merges a Git branch using DDD pattern with Commands and Handlers
  */
 
 const StepBuilder = require('@steps/StepBuilder');
 const Logger = require('@logging/Logger');
 const logger = new Logger('GitMergeBranchStep');
-const { exec } = require('child_process');
-const util = require('util');
-const execAsync = util.promisify(exec);
+const CommandRegistry = require('@application/commands/CommandRegistry');
+const HandlerRegistry = require('@application/handlers/HandlerRegistry');
 
 // Step configuration
 const config = {
   name: 'GitMergeBranchStep',
   type: 'git',
-  description: 'Merges a Git branch',
+  description: 'Merges a Git branch using DDD pattern with Commands and Handlers',
   category: 'git',
   version: '1.0.0',
   dependencies: ['terminalService'],
   settings: {
-    timeout: 30000,
-    strategy: 'recursive',
-    noFF: false
+    timeout: 30000
   },
   validation: {
-    required: ['projectPath', 'branchName'],
-    optional: ['strategy', 'noFF']
+    required: ['projectPath'],
+    optional: []
   }
 };
 
 class GitMergeBranchStep {
   constructor() {
     this.name = 'GitMergeBranchStep';
-    this.description = 'Merges a Git branch';
+    this.description = 'Merges a Git branch using DDD pattern with Commands and Handlers';
     this.category = 'git';
     this.dependencies = ['terminalService'];
   }
@@ -51,43 +48,43 @@ class GitMergeBranchStep {
       // Validate context
       this.validateContext(context);
       
-      const { projectPath, branchName, strategy = 'recursive', noFF = false } = context;
+      const { projectPath, ...otherParams } = context;
       
-      logger.info('Executing GIT_MERGE_BRANCH step', {
+      logger.info(`Executing ${this.name} using DDD pattern`, {
         projectPath,
-        branchName,
-        strategy,
-        noFF
+        ...otherParams
       });
 
-      // Build merge command
-      let mergeCommand = 'git merge';
-      if (noFF) {
-        mergeCommand += ' --no-ff';
+      // ✅ DDD PATTERN: Create Command and Handler
+      const command = CommandRegistry.buildFromCategory('git', 'GitMergeCommand', {
+        projectPath,
+        ...otherParams
+      });
+
+      const handler = HandlerRegistry.buildFromCategory('git', 'GitMergeHandler', {
+        terminalService: context.terminalService,
+        logger: logger
+      });
+
+      if (!command || !handler) {
+        throw new Error('Failed to create Git command or handler');
       }
-      mergeCommand += ` ${branchName}`;
 
-      // Execute git merge using execAsync (like legacy implementation)
-      const result = await execAsync(mergeCommand, { cwd: projectPath });
+      // Execute command through handler
+      const result = await handler.handle(command);
 
-      logger.info('GIT_MERGE_BRANCH step completed successfully', {
-        branchName,
-        strategy,
-        noFF,
-        result: result.stdout
+      logger.info(`${this.name} completed successfully using DDD pattern`, {
+        result: result.result
       });
 
       return {
-        success: true,
-        branchName,
-        strategy,
-        noFF,
-        result: result.stdout,
+        success: result.success,
+        result: result.result,
         timestamp: new Date()
       };
 
     } catch (error) {
-      logger.error('GIT_MERGE_BRANCH step failed', {
+      logger.error(`${this.name} failed`, {
         error: error.message,
         context
       });
@@ -104,9 +101,6 @@ class GitMergeBranchStep {
     if (!context.projectPath) {
       throw new Error('Project path is required');
     }
-    if (!context.branchName) {
-      throw new Error('Branch name is required');
-    }
   }
 }
 
@@ -117,4 +111,4 @@ const stepInstance = new GitMergeBranchStep();
 module.exports = {
   config,
   execute: async (context) => await stepInstance.execute(context)
-}; 
+};

@@ -14,19 +14,16 @@ class WebChatController {
   // POST /api/chat
   async sendMessage(req, res) {
     try {
-      const { message, requestedBy, sessionId } = req.body;
+      const { message, sessionId } = req.body;
       if (!message || message.trim().length === 0) {
         return res.status(400).json({
           success: false,
           error: 'Message content is required'
         });
       }
-      if (!requestedBy) {
-        return res.status(400).json({
-          success: false,
-          error: 'Requested by is required'
-        });
-      }
+      
+      // Use authenticated user as requestedBy
+      const requestedBy = req.user?.id || req.user?.email || 'unknown';
       // Send message via application service
       const messageData = {
         message: message.trim(),

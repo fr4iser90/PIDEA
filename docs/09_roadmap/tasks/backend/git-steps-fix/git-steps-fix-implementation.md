@@ -1,135 +1,179 @@
-# Git Steps Fix - Implementation Plan
+# Git Steps Fix Implementation
 
 ## 1. Project Overview
-- **Feature/Component Name**: Git Steps Fix - Add Missing StepBuilder.build() Calls
+- **Feature/Component Name**: Git Steps Data Flow Fix
 - **Priority**: High
 - **Category**: backend
-- **Estimated Time**: 2 hours
-- **Dependencies**: StepBuilder, Logger system, TerminalService
-- **Related Issues**: Git operations failing with logger errors
+- **Estimated Time**: 4 hours
+- **Dependencies**: None
+- **Related Issues**: Backend returns 404 for pidea-agent status despite branch existing
 
 ## 2. Technical Requirements
-- **Tech Stack**: Node.js, Winston Logger, StepBuilder
+- **Tech Stack**: Node.js, Express, SQLite
 - **Architecture Pattern**: DDD (Domain-Driven Design)
 - **Database Changes**: None
-- **API Changes**: None
+- **API Changes**: Fix `/api/projects/:projectId/git/pidea-agent-status` endpoint
 - **Frontend Changes**: None
-- **Backend Changes**: Update 19 Git step files to include StepBuilder.build() calls
+- **Backend Changes**: Fix critical bugs in GitService, GitGetBranchesStep, and GitBranchHandler
 
 ## 3. File Impact Analysis
+#### Files to Modify:
+- [ ] `backend/application/handlers/categories/git/GitBranchHandler.js` - Fix duplicate return statements
+- [ ] `backend/domain/steps/categories/git/git_get_branches.js` - Fix return structure
+- [ ] `backend/infrastructure/external/GitService.js` - Fix data extraction logic
+- [ ] `backend/presentation/api/GitController.js` - Add detailed logging for debugging
 
-### Files to Modify:
-- [ ] `backend/domain/steps/categories/git/git_get_status.js` - Add StepBuilder.build() call
-- [ ] `backend/domain/steps/categories/git/git_get_branches.js` - Add StepBuilder.build() call
-- [ ] `backend/domain/steps/categories/git/git_get_last_commit.js` - Add StepBuilder.build() call
-- [ ] `backend/domain/steps/categories/git/git_get_remote_url.js` - Add StepBuilder.build() call
-- [ ] `backend/domain/steps/categories/git/git_init_repository.js` - Add StepBuilder.build() call
-- [ ] `backend/domain/steps/categories/git/git_merge_branch.js` - Add StepBuilder.build() call
-- [ ] `backend/domain/steps/categories/git/git_pull_changes.js` - Add StepBuilder.build() call
-- [ ] `backend/domain/steps/categories/git/git_push.js` - Add StepBuilder.build() call
-- [ ] `backend/domain/steps/categories/git/git_reset.js` - Add StepBuilder.build() call
-- [ ] `backend/domain/steps/categories/git/git_add_files.js` - Add StepBuilder.build() call
-- [ ] `backend/domain/steps/categories/git/git_add_remote.js` - Add StepBuilder.build() call
-- [ ] `backend/domain/steps/categories/git/git_checkout_branch.js` - Add StepBuilder.build() call
-- [ ] `backend/domain/steps/categories/git/git_clone_repository.js` - Add StepBuilder.build() call
-- [ ] `backend/domain/steps/categories/git/git_commit.js` - Add StepBuilder.build() call
-- [ ] `backend/domain/steps/categories/git/git_create_branch.js` - Add StepBuilder.build() call
-- [ ] `backend/domain/steps/categories/git/git_create_pull_request.js` - Add StepBuilder.build() call
-- [ ] `backend/domain/steps/categories/git/git_get_commit_history.js` - Add StepBuilder.build() call
-- [ ] `backend/domain/steps/categories/git/git_get_current_branch.js` - Add StepBuilder.build() call
-- [ ] `backend/domain/steps/categories/git/git_get_diff.js` - Add StepBuilder.build() call
+#### Files to Create:
+- [ ] None
 
-### Files to Create:
-- [ ] `docs/09_roadmap/tasks/backend/git-steps-fix/git-steps-fix-index.md` - Master index file
-- [ ] `docs/09_roadmap/tasks/backend/git-steps-fix/git-steps-fix-phase-1.md` - Phase 1: Fix Git Steps
-- [ ] `docs/09_roadmap/tasks/backend/git-steps-fix/git-steps-fix-phase-2.md` - Phase 2: Testing & Validation
+#### Files to Delete:
+- [ ] None
 
 ## 4. Implementation Phases
 
-### Phase 1: Fix Git Steps (1.5 hours)
-- [ ] Add StepBuilder.build() calls to all 19 Git step files
-- [ ] Follow the exact pattern from working Chat steps
-- [ ] Ensure consistent error handling
-- [ ] Test each step individually
+#### Phase 1: Critical Bug Fixes (2 hours) - ✅ COMPLETED
+- [x] Fix GitBranchHandler duplicate return statements (CRITICAL) - ✅ DONE
+- [x] Fix GitGetBranchesStep return structure (CRITICAL) - ✅ DONE
+- [x] Fix GitService.getBranches() data extraction (CRITICAL) - ✅ DONE
+- [x] Add comprehensive logging to trace data flow - ✅ DONE
+- [x] Test basic git branch functionality - ✅ DONE
 
-### Phase 2: Testing & Validation (0.5 hours)
-- [ ] Test all Git operations
-- [ ] Verify logger functionality
-- [ ] Ensure no regression in existing functionality
-- [ ] Update documentation
+**Implementation Details:**
+- **GitBranchHandler.js**: Removed unreachable code after return statement, added proper logging before return
+- **GitGetBranchesStep.js**: Fixed return structure to return `result.branches` instead of `result.result`
+- **GitService.js**: Fixed data extraction to handle the new step return structure, added detailed logging
+- **GitController.js**: Added comprehensive logging to trace data flow from git command to API response
+
+#### Phase 2: Data Flow Validation (1 hour) - ✅ COMPLETED
+- [x] Test pidea-agent branch status endpoint - ✅ DONE
+- [x] Verify data extraction from nested structure - ✅ DONE
+- [x] Validate authentication flow - ✅ DONE
+- [x] Confirm proper JSON response structure - ✅ DONE
+- [x] Test with real git repository data - ✅ DONE
+
+**Implementation Details:**
+- **GitController.js**: Fixed data extraction to access `branchesResult.result.all` instead of `branchesResult.all`
+- **Authentication**: Successfully tested with login endpoint and cookie-based auth
+- **Endpoint Response**: Now returns proper JSON with `pideaAgentExists: true` and full status data
+- **Data Flow**: Complete chain working: GitBranchHandler → GitGetBranchesStep → GitService → GitController → API Response
+
+**Test Results:**
+```json
+{
+  "success": true,
+  "data": {
+    "pideaAgentExists": true,
+    "currentBranch": "task/task_pidea_1753259168364_i5cwld7r0-1753270599630",
+    "pideaAgentStatus": { /* full git status */ },
+    "isOnPideaAgentBranch": false
+  },
+  "message": "Pidea-agent branch status retrieved successfully"
+}
+```
+
+**Key Fix Applied:**
+```javascript
+// BEFORE (broken):
+const branches = branchesResult && branchesResult.all ? branchesResult.all : [];
+
+// AFTER (fixed):
+const branches = branchesResult && branchesResult.result && branchesResult.result.all ? branchesResult.result.all : [];
+```
+
+#### Phase 3: Testing and Validation (1 hour)
+- [ ] Run integration tests for git operations
+- [ ] Test pidea-agent branch status endpoint
+- [ ] Verify all git endpoints work correctly
+- [ ] Validate error handling for edge cases
 
 ## 5. Code Standards & Patterns
-- **Coding Style**: Follow existing project patterns
-- **Naming Conventions**: Maintain existing naming
-- **Error Handling**: Keep existing try-catch patterns
-- **Logging**: Use existing Winston logger setup
-- **Testing**: Ensure all Git operations work correctly
+- **Coding Style**: ESLint with existing project rules
+- **Naming Conventions**: camelCase for variables/functions, PascalCase for classes
+- **Error Handling**: Try-catch with specific error types, proper error logging
+- **Logging**: Winston logger with structured logging, different levels for operations
+- **Testing**: Jest framework
+- **Documentation**: JSDoc for all public methods
 
 ## 6. Security Considerations
-- [ ] No security changes required
-- [ ] Maintain existing Git command validation
-- [ ] Keep existing error handling patterns
+- [ ] Input validation for project paths
+- [ ] Sanitize git command outputs
+- [ ] Validate branch names for security
+- [ ] Rate limiting for git operations
 
 ## 7. Performance Requirements
-- **Response Time**: < 2 seconds for Git operations
-- **Memory Usage**: No significant change
-- **Database Queries**: None
-- **Caching Strategy**: None
+- **Response Time**: < 500ms for branch status check
+- **Memory Usage**: Minimal impact
+- **Database Queries**: No additional queries needed
+- **Caching Strategy**: Consider caching branch lists for 30 seconds
 
 ## 8. Testing Strategy
 
-### Unit Tests:
-- [ ] Test each Git step individually
-- [ ] Verify StepBuilder.build() integration
-- [ ] Test error handling scenarios
+#### Unit Tests:
+- [ ] Test file: `tests/unit/GitService.test.js`
+- [ ] Test cases: 
+  - getBranches() returns correct branch structure
+  - Handles empty branch lists correctly
+  - Properly extracts data from step results
+- [ ] Mock requirements: Mock GitGetBranchesStep
 
-### Integration Tests:
-- [ ] Test Git operations end-to-end
-- [ ] Verify logger functionality
-- [ ] Test service resolution
+#### Integration Tests:
+- [ ] Test file: `tests/integration/GitController.test.js`
+- [ ] Test scenarios: 
+  - pidea-agent status endpoint returns correct data
+  - Branch status endpoint handles various scenarios
+- [ ] Test data: Mock git repository with known branches
 
 ## 9. Documentation Requirements
 
-### Code Documentation:
-- [ ] Update comments to reflect StepBuilder usage
-- [ ] Document the fix pattern for future reference
+#### Code Documentation:
+- [ ] JSDoc comments for all modified functions
+- [ ] Update API documentation for git endpoints
+- [ ] Document data flow between components
 
-### User Documentation:
-- [ ] No user-facing changes
-- [ ] Update developer documentation if needed
+#### User Documentation:
+- [ ] Update troubleshooting guide for git issues
+- [ ] Document expected branch status responses
 
 ## 10. Deployment Checklist
 
-### Pre-deployment:
-- [ ] All Git steps tested individually
-- [ ] No build errors
-- [ ] Logger functionality verified
+#### Pre-deployment:
+- [ ] All tests passing
+- [ ] Code review completed
+- [ ] Documentation updated
+- [ ] Performance benchmarks met
 
-### Deployment:
-- [ ] Deploy updated Git step files
-- [ ] Restart services if needed
-- [ ] Verify Git operations work
+#### Deployment:
+- [ ] Restart backend service
+- [ ] Verify git endpoints work correctly
+- [ ] Monitor logs for errors
 
-### Post-deployment:
-- [ ] Monitor Git operation logs
-- [ ] Verify no regression in functionality
+#### Post-deployment:
+- [ ] Monitor logs for git-related errors
+- [ ] Verify pidea-agent status endpoint works
+- [ ] Test branch switching functionality
 
 ## 11. Rollback Plan
-- [ ] Keep backup of original Git step files
+- [ ] Keep previous version ready for rollback
 - [ ] Document rollback procedure
 - [ ] Test rollback process
 
 ## 12. Success Criteria
-- [ ] All 19 Git steps include StepBuilder.build() calls
-- [ ] Git operations work without logger errors
-- [ ] No regression in existing functionality
+- [ ] `/api/projects/pidea/git/pidea-agent-status` returns 200 with correct branch status
+- [ ] All git branch endpoints work correctly
+- [ ] No 404 errors for existing branches
+- [ ] Proper error handling for non-existent branches
 - [ ] All tests pass
 
 ## 13. Risk Assessment
 
+#### High Risk:
+- [ ] Breaking existing git functionality - Mitigation: Comprehensive testing before deployment
+
+#### Medium Risk:
+- [ ] Performance impact from additional logging - Mitigation: Use appropriate log levels
+
 #### Low Risk:
-- [ ] StepBuilder.build() call might cause issues - Mitigation: Follow exact pattern from working Chat steps
-- [ ] Logger initialization might fail - Mitigation: Keep existing logger creation pattern
+- [ ] Minor API response format changes - Mitigation: Maintain backward compatibility
 
 ## 14. AI Auto-Implementation Instructions
 
@@ -137,17 +181,17 @@
 - **source_type**: 'markdown_doc'
 - **source_path**: 'docs/09_roadmap/tasks/backend/git-steps-fix/git-steps-fix-implementation.md'
 - **category**: 'backend'
-- **automation_level**: 'full_auto'
-- **confirmation_required**: false
+- **automation_level**: 'semi_auto'
+- **confirmation_required**: true
 - **max_attempts**: 3
 - **git_branch_required**: true
-- **new_chat_required**: false
+- **new_chat_required**: true
 
 #### AI Execution Context:
 ```json
 {
-  "requires_new_chat": false,
-  "git_branch_name": "fix/git-steps-stepbuilder",
+  "requires_new_chat": true,
+  "git_branch_name": "fix/git-steps-data-flow",
   "confirmation_keywords": ["fertig", "done", "complete"],
   "fallback_detection": true,
   "max_confirmation_attempts": 3,
@@ -156,204 +200,91 @@
 ```
 
 #### Success Indicators:
-- [ ] All 19 Git step files updated with StepBuilder.build() calls
-- [ ] Git operations work without errors
+- [ ] All checkboxes in phases completed
+- [ ] Tests pass
 - [ ] No build errors
-- [ ] Logger functionality works correctly
+- [ ] pidea-agent status endpoint returns 200
+- [ ] Proper error handling implemented
 
 ## 15. References & Resources
-- **Working Example**: `backend/domain/steps/categories/chat/ide_send_message.js`
-- **StepBuilder Documentation**: `backend/domain/steps/StepBuilder.js`
-- **Logger Implementation**: `backend/infrastructure/logging/Logger.js`
+- **Technical Documentation**: Git command documentation
+- **API References**: Express.js routing documentation
+- **Design Patterns**: DDD patterns used in the project
+- **Best Practices**: Node.js error handling best practices
+- **Similar Implementations**: Existing git step implementations in the codebase
 
-## Root Cause Analysis
+## Root Cause Analysis - UPDATED
 
-### Problem Identified:
-The Git steps have TWO issues compared to working steps (Chat steps, IDE steps, etc.):
+Based on the validation analysis, the issue is **NOT** in the data flow as originally suspected, but in **THREE CRITICAL BUGS**:
 
-1. **Missing `StepBuilder.build()` call**
-2. **Different export pattern**
+### Critical Bug 1: GitBranchHandler Duplicate Return Statements
+**File**: `backend/application/handlers/categories/git/GitBranchHandler.js`  
+**Issue**: Lines 58-66 contain unreachable code after the first return statement
 
-### Working Pattern (Chat Steps):
 ```javascript
-async execute(context = {}) {
-  const config = IDESendMessageStep.getConfig();
-  const step = StepBuilder.build(config, context);  // ← THIS IS MISSING!
-  
-  try {
-    logger.info(`🔧 Executing ${this.name}...`);
-    // ... rest of implementation
-}
+// ❌ PROBLEM: Unreachable code after return
+return {
+  success: true,
+  branches,
+  result: branches.all,
+  timestamp: new Date()
+};
 
-// Create instance for execution
-const stepInstance = new IDESendMessageStep();
+// ❌ UNREACHABLE CODE - This will never execute
+this.logger.info('GitBranchHandler: GitBranchCommand completed successfully', {
+  result: result.stdout
+});
 
-// Export in StepRegistry format
-module.exports = {
-  config,
-  execute: async (context) => await stepInstance.execute(context)
+return {
+  success: true,
+  result: result.stdout,
+  timestamp: new Date()
 };
 ```
 
-### Broken Pattern (Git Steps):
+**Fix**: Remove the duplicate return statements and unreachable code.
+
+### Critical Bug 2: GitGetBranchesStep Return Structure Mismatch
+**File**: `backend/domain/steps/categories/git/git_get_branches.js`  
+**Issue**: Returns `result.result` (branches array) instead of the full branches object
+
 ```javascript
-async execute(context = {}) {
-  try {
-    logger.info(`🔧 Executing ${this.name}...`);
-    // ... rest of implementation
-    // ← MISSING: StepBuilder.build() call!
-}
+// ❌ CURRENT: Returns only the array
+return {
+  success: result.success,
+  result: result.result,  // This is branches.all array
+  timestamp: new Date()
+};
 
-module.exports = { config, execute: GitGetStatusStep.prototype.execute.bind(new GitGetStatusStep()) };
-```
-
-### Solution:
-Fix BOTH issues in all 19 Git step files:
-1. Add the missing `StepBuilder.build()` call
-2. Use the correct export pattern from working steps
-
-## Implementation Pattern
-
-### Before (Broken):
-```javascript
-async execute(context = {}) {
-  try {
-    logger.info(`🔧 Executing ${this.name}...`);
-    // ... implementation
-}
-
-module.exports = { config, execute: GitGetStatusStep.prototype.execute.bind(new GitGetStatusStep()) };
-```
-
-### After (Fixed):
-```javascript
-async execute(context = {}) {
-  const config = GitGetStatusStep.getConfig();
-  const step = StepBuilder.build(config, context);
-  
-  try {
-    logger.info(`🔧 Executing ${this.name}...`);
-    // ... implementation
-}
-
-// Create instance for execution
-const stepInstance = new GitGetStatusStep();
-
-// Export in StepRegistry format
-module.exports = {
-  config,
-  execute: async (context) => await stepInstance.execute(context)
+// ✅ SHOULD BE: Return the full branches object
+return {
+  success: result.success,
+  result: result.branches,  // This is the full {local, remote, all} object
+  timestamp: new Date()
 };
 ```
 
-This fix will resolve BOTH the logger initialization issues AND the export pattern issues, making all Git steps work correctly, just like the Chat steps do.
+### Critical Bug 3: GitService Data Extraction Issue
+**File**: `backend/infrastructure/external/GitService.js`  
+**Issue**: The method expects `result.result?.branches` but GitGetBranchesStep returns `result.result` (the branches object directly)
 
-## Validation Results - 2024-12-21
-
-### ✅ Completed Items
-- [x] File: `docs/09_roadmap/tasks/backend/git-steps-fix/git-steps-fix-index.md` - Status: Created correctly
-- [x] File: `docs/09_roadmap/tasks/backend/git-steps-fix/git-steps-fix-phase-1.md` - Status: Created correctly
-- [x] File: `docs/09_roadmap/tasks/backend/git-steps-fix/git-steps-fix-phase-2.md` - Status: Created correctly
-- [x] Root Cause Analysis: Status: Accurate and complete
-
-### ⚠️ Issues Found
-- [ ] **CRITICAL DISCOVERY**: All 19 Git step files ALREADY have StepBuilder.build() calls
-- [ ] **CRITICAL DISCOVERY**: The export pattern is the ONLY issue remaining
-- [ ] **MISALIGNMENT**: Implementation plan assumes missing StepBuilder.build() calls, but they exist
-
-### 🔧 Improvements Made
-- Updated analysis to reflect actual codebase state
-- Identified that only export pattern needs fixing
-- Corrected root cause analysis
-
-### 📊 Code Quality Metrics
-- **StepBuilder Usage**: 100% (all 19 files have StepBuilder.build() calls)
-- **Export Pattern Issues**: 100% (all 19 files use wrong export pattern)
-- **Logger Integration**: Good (all files use proper logger setup)
-- **Service Resolution**: Good (all files use context.getService() correctly)
-
-### 🚀 Next Steps
-1. **Update Phase 1**: Focus only on fixing export patterns, not StepBuilder.build() calls
-2. **Update Phase 2**: Update testing strategy to reflect actual changes needed
-3. **Reduce Time Estimate**: From 2 hours to 0.5 hours (only export pattern fixes)
-4. **Update Success Criteria**: Focus on export pattern consistency
-
-### 📋 Task Splitting Recommendations
-- **Current Task Size**: 0.5 hours (reduced from 2 hours)
-- **File Count**: 19 files to modify (export pattern only)
-- **Phase Count**: 2 phases (appropriate for task size)
-- **Recommended**: Keep current 2-phase structure but update content
-
-### 🔍 Actual Codebase State Analysis
-
-#### StepBuilder.build() Calls Status:
-- ✅ `git_add_files.js` - Has StepBuilder.build() call
-- ✅ `git_add_remote.js` - Has StepBuilder.build() call
-- ✅ `git_checkout_branch.js` - Has StepBuilder.build() call
-- ✅ `git_clone_repository.js` - Has StepBuilder.build() call
-- ✅ `git_commit.js` - Has StepBuilder.build() call
-- ✅ `git_create_branch.js` - Has StepBuilder.build() call
-- ✅ `git_create_pull_request.js` - Has StepBuilder.build() call
-- ✅ `git_get_branches.js` - Has StepBuilder.build() call
-- ✅ `git_get_commit_history.js` - Has StepBuilder.build() call
-- ✅ `git_get_current_branch.js` - Has StepBuilder.build() call
-- ✅ `git_get_diff.js` - Has StepBuilder.build() call
-- ✅ `git_get_last_commit.js` - Has StepBuilder.build() call
-- ✅ `git_get_remote_url.js` - Has StepBuilder.build() call
-- ✅ `git_get_status.js` - Has StepBuilder.build() call
-- ✅ `git_init_repository.js` - Has StepBuilder.build() call
-- ✅ `git_merge_branch.js` - Has StepBuilder.build() call
-- ✅ `git_pull_changes.js` - Has StepBuilder.build() call
-- ✅ `git_push.js` - Has StepBuilder.build() call
-- ✅ `git_reset.js` - Has StepBuilder.build() call
-
-#### Export Pattern Status:
-- ❌ All 19 files use: `module.exports = { config, execute: GitStep.prototype.execute.bind(new GitStep()) }`
-- ✅ Working pattern: `module.exports = { config, execute: async (context) => await stepInstance.execute(context) }`
-
-### 🎯 Corrected Root Cause Analysis
-
-#### Actual Problem:
-The Git steps have ONLY ONE issue compared to working steps:
-1. **Wrong export pattern** (StepBuilder.build() calls are already present)
-
-#### Working Pattern (Chat Steps):
 ```javascript
-// Create instance for execution
-const stepInstance = new IDESendMessageStep();
+// ❌ CURRENT: Expects nested structure
+return result.result?.branches || { local: [], remote: [], all: [] };
 
-// Export in StepRegistry format
-module.exports = {
-  config,
-  execute: async (context) => await stepInstance.execute(context)
-};
+// ✅ SHOULD BE: Direct access since step returns branches object
+return result.result || { local: [], remote: [], all: [] };
 ```
 
-#### Broken Pattern (Git Steps):
-```javascript
-module.exports = { config, execute: GitGetStatusStep.prototype.execute.bind(new GitGetStatusStep()) };
-```
+### The Fix Strategy:
+1. **Remove duplicate return statements** in GitBranchHandler
+2. **Fix GitGetBranchesStep** to return the full branches object
+3. **Fix GitService** to properly extract the branches object
+4. **Add logging** to verify the fix works
+5. **Test the complete data flow** from git command to API response
 
-### 📈 Updated Implementation Plan
-
-#### Phase 1: Fix Export Patterns (0.3 hours)
-- [ ] Update export pattern in all 19 Git step files
-- [ ] Follow exact pattern from working Chat steps
-- [ ] Test each step individually
-
-#### Phase 2: Testing & Validation (0.2 hours)
-- [ ] Test all Git operations
-- [ ] Verify logger functionality
-- [ ] Ensure no regression in existing functionality
-
-### 🎉 Updated Success Criteria
-- [ ] All 19 Git step files use correct export pattern
-- [ ] Git operations work without errors
-- [ ] No regression in existing functionality
-- [ ] All tests pass
-
-### 📝 Lessons Learned
-- **Always verify assumptions**: The original analysis assumed missing StepBuilder.build() calls
-- **Codebase analysis is critical**: Actual inspection revealed different root cause
-- **Export patterns matter**: The bind() pattern vs async wrapper pattern has significant impact
-- **Task estimation should be dynamic**: Reduced from 2 hours to 0.5 hours based on actual findings 
+### Expected Data Flow After Fix:
+1. **GitBranchHandler** correctly finds `pidea-agent` branch in the branch list
+2. **GitGetBranchesStep** returns the full branches object `{local: [...], remote: [...], all: [...]}`
+3. **GitService.getBranches()** properly extracts the branches object from step result
+4. **GitController** receives the correct data structure and returns 200 with branch status 

@@ -1,20 +1,19 @@
 /**
- * Git Add Remote Step
- * Adds a Git remote using real Git commands
+ * GitAddRemote
+ * Adds a Git remote using DDD pattern with Commands and Handlers
  */
 
 const StepBuilder = require('@steps/StepBuilder');
 const Logger = require('@logging/Logger');
 const logger = new Logger('GitAddRemoteStep');
-const { exec } = require('child_process');
-const util = require('util');
-const execAsync = util.promisify(exec);
+const CommandRegistry = require('@application/commands/CommandRegistry');
+const HandlerRegistry = require('@application/handlers/HandlerRegistry');
 
 // Step configuration
 const config = {
   name: 'GitAddRemoteStep',
   type: 'git',
-  description: 'Adds a Git remote',
+  description: 'Adds a Git remote using DDD pattern with Commands and Handlers',
   category: 'git',
   version: '1.0.0',
   dependencies: ['terminalService'],
@@ -22,7 +21,7 @@ const config = {
     timeout: 30000
   },
   validation: {
-    required: ['projectPath', 'name', 'url'],
+    required: ['projectPath'],
     optional: []
   }
 };
@@ -30,7 +29,7 @@ const config = {
 class GitAddRemoteStep {
   constructor() {
     this.name = 'GitAddRemoteStep';
-    this.description = 'Adds a Git remote';
+    this.description = 'Adds a Git remote using DDD pattern with Commands and Handlers';
     this.category = 'git';
     this.dependencies = ['terminalService'];
   }
@@ -49,35 +48,43 @@ class GitAddRemoteStep {
       // Validate context
       this.validateContext(context);
       
-      const { projectPath, name, url } = context;
+      const { projectPath, ...otherParams } = context;
       
-      logger.info('Executing GIT_ADD_REMOTE step', {
+      logger.info(`Executing ${this.name} using DDD pattern`, {
         projectPath,
-        name,
-        url
+        ...otherParams
       });
 
-      // Execute git remote add using execAsync (like legacy implementation)
-      const result = await execAsync(`git remote add ${name} ${url}`, { cwd: projectPath });
-
-      logger.info('GIT_ADD_REMOTE step completed successfully', {
+      // ✅ DDD PATTERN: Create Command and Handler
+      const command = CommandRegistry.buildFromCategory('git', 'GitRemoteCommand', {
         projectPath,
-        name,
-        url,
-        result: result.stdout
+        ...otherParams
+      });
+
+      const handler = HandlerRegistry.buildFromCategory('git', 'GitRemoteHandler', {
+        terminalService: context.terminalService,
+        logger: logger
+      });
+
+      if (!command || !handler) {
+        throw new Error('Failed to create Git command or handler');
+      }
+
+      // Execute command through handler
+      const result = await handler.handle(command);
+
+      logger.info(`${this.name} completed successfully using DDD pattern`, {
+        result: result.result
       });
 
       return {
-        success: true,
-        projectPath,
-        name,
-        url,
-        result: result.stdout,
+        success: result.success,
+        result: result.result,
         timestamp: new Date()
       };
 
     } catch (error) {
-      logger.error('GIT_ADD_REMOTE step failed', {
+      logger.error(`${this.name} failed`, {
         error: error.message,
         context
       });
@@ -94,12 +101,6 @@ class GitAddRemoteStep {
     if (!context.projectPath) {
       throw new Error('Project path is required');
     }
-    if (!context.name) {
-      throw new Error('Remote name is required');
-    }
-    if (!context.url) {
-      throw new Error('Remote URL is required');
-    }
   }
 }
 
@@ -110,4 +111,4 @@ const stepInstance = new GitAddRemoteStep();
 module.exports = {
   config,
   execute: async (context) => await stepInstance.execute(context)
-}; 
+};

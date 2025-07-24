@@ -8,9 +8,10 @@ const { STANDARD_CATEGORIES, isValidCategory, getDefaultCategory } = require('..
 const IStandardRegistry = require('../../domain/interfaces/IStandardRegistry');
 
 class CommandRegistry {
-  constructor() {
+  constructor(serviceRegistry = null) {
     this.commands = new Map();
     this.categories = new Map();
+    this.serviceRegistry = serviceRegistry;
   }
 
   /**
@@ -20,65 +21,114 @@ class CommandRegistry {
    * @param {Object} params - Command parameters
    * @returns {Object|null} Command instance
    */
-  static buildFromCategory(category, name, params) {
-    const commandMap = {
-      analysis: {
-        AdvancedAnalysisCommand: require('./categories/analysis/AdvancedAnalysisCommand'),
-        AnalyzeArchitectureCommand: require('./categories/analysis/AnalyzeArchitectureCommand'),
-        AnalyzeCodeQualityCommand: require('./categories/analysis/AnalyzeCodeQualityCommand'),
-        AnalyzeDependenciesCommand: require('./categories/analysis/AnalyzeDependenciesCommand'),
-        AnalyzeRepoStructureCommand: require('./categories/analysis/AnalyzeRepoStructureCommand'),
-        AnalyzeTechStackCommand: require('./categories/analysis/AnalyzeTechStackCommand')
-      },
-      generate: {
-        GenerateConfigsCommand: require('./categories/generate/GenerateConfigsCommand'),
-        GenerateDocumentationCommand: require('./categories/generate/GenerateDocumentationCommand'),
-        GenerateScriptsCommand: require('./categories/generate/GenerateScriptsCommand'),
-        GenerateTestsCommand: require('./categories/generate/GenerateTestsCommand')
-      },
-      refactoring: {
-        OrganizeModulesCommand: require('./categories/refactoring/OrganizeModulesCommand'),
-        RestructureArchitectureCommand: require('./categories/refactoring/RestructureArchitectureCommand'),
-        SplitLargeFilesCommand: require('./categories/refactoring/SplitLargeFilesCommand'),
-        CleanDependenciesCommand: require('./categories/refactoring/CleanDependenciesCommand')
-      },
-      management: {
-        AutoRefactorCommand: require('./categories/management/AutoRefactorCommand'),
-        CreateTaskCommand: require('./categories/management/CreateTaskCommand'),
-        PortStreamingCommand: require('./categories/management/PortStreamingCommand'),
-        ProcessTodoListCommand: require('./categories/management/ProcessTodoListCommand'),
-        SendMessageCommand: require('./categories/management/SendMessageCommand'),
-        StartStreamingCommand: require('./categories/management/StartStreamingCommand'),
-        StopStreamingCommand: require('./categories/management/StopStreamingCommand'),
-        TestCorrectionCommand: require('./categories/management/TestCorrectionCommand'),
-        UpdateTestStatusCommand: require('./categories/management/UpdateTestStatusCommand')
-      },
-      ide: {
-        CreateChatCommand: require('./categories/ide/CreateChatCommand'),
-        SendMessageCommand: require('./categories/ide/SendMessageCommand'),
-        SwitchChatCommand: require('./categories/ide/SwitchChatCommand'),
-        ListChatsCommand: require('./categories/ide/ListChatsCommand'),
-        CloseChatCommand: require('./categories/ide/CloseChatCommand'),
-        GetChatHistoryCommand: require('./categories/ide/GetChatHistoryCommand'),
-        OpenTerminalCommand: require('./categories/ide/OpenTerminalCommand'),
-        ExecuteTerminalCommand: require('./categories/ide/ExecuteTerminalCommand'),
-        MonitorTerminalOutputCommand: require('./categories/ide/MonitorTerminalOutputCommand'),
-        RestartUserAppCommand: require('./categories/ide/RestartUserAppCommand'),
-        TerminalLogCaptureCommand: require('./categories/ide/TerminalLogCaptureCommand'),
-        AnalyzeProjectCommand: require('./categories/ide/AnalyzeProjectCommand'),
-        AnalyzeAgainCommand: require('./categories/ide/AnalyzeAgainCommand'),
-        GetWorkspaceInfoCommand: require('./categories/ide/GetWorkspaceInfoCommand'),
-        DetectPackageJsonCommand: require('./categories/ide/DetectPackageJsonCommand'),
-        SwitchIDEPortCommand: require('./categories/ide/SwitchIDEPortCommand'),
-        OpenFileExplorerCommand: require('./categories/ide/OpenFileExplorerCommand'),
-        OpenCommandPaletteCommand: require('./categories/ide/OpenCommandPaletteCommand'),
-        ExecuteIDEActionCommand: require('./categories/ide/ExecuteIDEActionCommand'),
-        GetIDESelectorsCommand: require('./categories/ide/GetIDESelectorsCommand')
+  static buildFromCategory(category, name, params, serviceRegistry = null) {
+    // Lazy loading function to get command class
+    const getCommandClass = (category, name) => {
+      try {
+        const commandMap = {
+          analysis: {
+            AdvancedAnalysisCommand: () => require('./categories/analysis/AdvancedAnalysisCommand'),
+            AnalyzeArchitectureCommand: () => require('./categories/analysis/AnalyzeArchitectureCommand'),
+            AnalyzeCodeQualityCommand: () => require('./categories/analysis/AnalyzeCodeQualityCommand'),
+            AnalyzeDependenciesCommand: () => require('./categories/analysis/AnalyzeDependenciesCommand'),
+            AnalyzeRepoStructureCommand: () => require('./categories/analysis/AnalyzeRepoStructureCommand'),
+            AnalyzeTechStackCommand: () => require('./categories/analysis/AnalyzeTechStackCommand'),
+            AnalyzeLayerViolationsCommand: () => require('./categories/analysis/AnalyzeLayerViolationsCommand')
+          },
+          generate: {
+            GenerateConfigsCommand: () => require('./categories/generate/GenerateConfigsCommand'),
+            GenerateDocumentationCommand: () => require('./categories/generate/GenerateDocumentationCommand'),
+            GenerateScriptsCommand: () => require('./categories/generate/GenerateScriptsCommand'),
+            GenerateTestsCommand: () => require('./categories/generate/GenerateTestsCommand')
+          },
+          refactoring: {
+            OrganizeModulesCommand: () => require('./categories/refactoring/OrganizeModulesCommand'),
+            RestructureArchitectureCommand: () => require('./categories/refactoring/RestructureArchitectureCommand'),
+            SplitLargeFilesCommand: () => require('./categories/refactoring/SplitLargeFilesCommand'),
+            CleanDependenciesCommand: () => require('./categories/refactoring/CleanDependenciesCommand')
+          },
+          management: {
+            PortStreamingCommand: () => require('./categories/management/PortStreamingCommand'),
+            ProcessTodoListCommand: () => require('./categories/management/ProcessTodoListCommand'),
+            SendMessageCommand: () => require('./categories/management/SendMessageCommand'),
+            StartStreamingCommand: () => require('./categories/management/StartStreamingCommand'),
+            StopStreamingCommand: () => require('./categories/management/StopStreamingCommand'),
+            TestCorrectionCommand: () => require('./categories/management/TestCorrectionCommand'),
+            UpdateTestStatusCommand: () => require('./categories/management/UpdateTestStatusCommand')
+          },
+          workflow: {
+            CreateTaskCommand: () => require('./categories/workflow/CreateTaskCommand'),
+            UpdateTestStatusCommand: () => require('./categories/workflow/UpdateTestStatusCommand')
+          },
+          ide: {
+            CreateChatCommand: () => require('./categories/ide/CreateChatCommand'),
+            SendMessageCommand: () => require('./categories/ide/SendMessageCommand'),
+            SwitchChatCommand: () => require('./categories/ide/SwitchChatCommand'),
+            ListChatsCommand: () => require('./categories/ide/ListChatsCommand'),
+            CloseChatCommand: () => require('./categories/ide/CloseChatCommand'),
+            GetChatHistoryCommand: () => require('./categories/ide/GetChatHistoryCommand'),
+            OpenTerminalCommand: () => require('./categories/ide/OpenTerminalCommand'),
+            ExecuteTerminalCommand: () => require('./categories/ide/ExecuteTerminalCommand'),
+            MonitorTerminalOutputCommand: () => require('./categories/ide/MonitorTerminalOutputCommand'),
+            RestartUserAppCommand: () => require('./categories/ide/RestartUserAppCommand'),
+            TerminalLogCaptureCommand: () => require('./categories/ide/TerminalLogCaptureCommand'),
+            AnalyzeProjectCommand: () => require('./categories/ide/AnalyzeProjectCommand'),
+            AnalyzeAgainCommand: () => require('./categories/ide/AnalyzeAgainCommand'),
+            GetWorkspaceInfoCommand: () => require('./categories/ide/GetWorkspaceInfoCommand'),
+            DetectPackageJsonCommand: () => require('./categories/ide/DetectPackageJsonCommand'),
+            SwitchIDEPortCommand: () => require('./categories/ide/SwitchIDEPortCommand'),
+            OpenFileExplorerCommand: () => require('./categories/ide/OpenFileExplorerCommand'),
+            OpenCommandPaletteCommand: () => require('./categories/ide/OpenCommandPaletteCommand'),
+            ExecuteIDEActionCommand: () => require('./categories/ide/ExecuteIDEActionCommand'),
+            GetIDESelectorsCommand: () => require('./categories/ide/GetIDESelectorsCommand')
+          },
+          git: {
+            GitAddFilesCommand: () => require('./categories/git/GitAddFilesCommand'),
+            GitCommitCommand: () => require('./categories/git/GitCommitCommand'),
+            GitPushCommand: () => require('./categories/git/GitPushCommand'),
+            GitPullCommand: () => require('./categories/git/GitPullCommand'),
+            GitCheckoutCommand: () => require('./categories/git/GitCheckoutCommand'),
+            GitCreateBranchCommand: () => require('./categories/git/GitCreateBranchCommand'),
+            GitMergeCommand: () => require('./categories/git/GitMergeCommand'),
+            GitStatusCommand: () => require('./categories/git/GitStatusCommand'),
+            GitCloneCommand: () => require('./categories/git/GitCloneCommand'),
+            GitInitCommand: () => require('./categories/git/GitInitCommand'),
+            GitResetCommand: () => require('./categories/git/GitResetCommand'),
+            GitDiffCommand: () => require('./categories/git/GitDiffCommand'),
+            GitLogCommand: () => require('./categories/git/GitLogCommand'),
+            GitRemoteCommand: () => require('./categories/git/GitRemoteCommand'),
+            GitBranchCommand: () => require('./categories/git/GitBranchCommand'),
+            GitCreatePullRequestCommand: () => require('./categories/git/GitCreatePullRequestCommand')
+          }
+        };
+        
+        const commandLoader = commandMap[category]?.[name];
+        if (!commandLoader) return null;
+        
+        return commandLoader();
+      } catch (error) {
+        console.error(`Failed to load command ${category}/${name}:`, error.message);
+        return null;
       }
     };
     
-    const CommandClass = commandMap[category]?.[name];
-    return CommandClass ? new CommandClass(params) : null;
+    const CommandClass = getCommandClass(category, name);
+    if (!CommandClass) return null;
+    
+    // If serviceRegistry is provided, enhance params with services
+    if (serviceRegistry) {
+      const enhancedParams = { ...params };
+      // Add services that the command might need
+      if (serviceRegistry.hasService('logger')) {
+        enhancedParams.logger = serviceRegistry.getService('logger');
+      }
+      if (serviceRegistry.hasService('eventBus')) {
+        enhancedParams.eventBus = serviceRegistry.getService('eventBus');
+      }
+      return new CommandClass(enhancedParams);
+    }
+    
+    return new CommandClass(params);
   }
 
   /**

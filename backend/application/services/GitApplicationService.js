@@ -10,7 +10,7 @@ class GitApplicationService {
 
     async getStatus(projectId, projectPath, userId) {
         try {
-            this.logger.info('GitApplicationService: Getting Git status', { projectId, userId });
+            // // // this.logger.info('GitApplicationService: Getting Git status', { projectId, userId });
 
             // Check if it's a Git repository
             const isGitRepo = await this.gitService.isGitRepository(projectPath);

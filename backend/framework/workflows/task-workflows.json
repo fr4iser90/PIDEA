@@ -433,6 +433,68 @@
         "createBranch": false,
         "timeout": 120000
       }
+    },
+    "layer-violation-workflow": {
+      "name": "Layer Violation Analysis Workflow",
+      "description": "Analyze and fix layer boundary violations",
+      "steps": [
+        {
+          "name": "analyze-violations",
+          "type": "analysis",
+          "description": "Analyze layer boundary violations",
+          "step": "LayerViolationAnalysisStep",
+          "options": {
+            "includeViolations": true,
+            "includeFixes": true,
+            "includeFixPlans": true,
+            "generateTasks": true,
+            "createDocs": true
+          },
+          "strict": true
+        }
+      ],
+      "options": {
+        "autoConfirm": true,
+        "createBranch": false,
+        "timeout": 120000
+      }
+    },
+    "layer-violation-fix-workflow": {
+      "name": "Layer Violation Fix Workflow",
+      "description": "Fix layer boundary violations with task generation",
+      "steps": [
+        {
+          "name": "analyze-violations",
+          "type": "analysis",
+          "description": "Analyze layer boundary violations",
+          "step": "LayerViolationAnalysisStep",
+          "options": {
+            "includeViolations": true,
+            "includeFixes": true,
+            "includeFixPlans": true,
+            "generateTasks": true,
+            "createDocs": true
+          },
+          "strict": true
+        },
+        {
+          "name": "create-tasks",
+          "type": "task",
+          "description": "Create tasks from violations",
+          "step": "CreateTaskStep",
+          "options": {
+            "useViolationTasks": true,
+            "priority": "high"
+          },
+          "strict": false,
+          "condition": "previousStep.success && previousStep.data.tasks.length > 0"
+        }
+      ],
+      "options": {
+        "autoConfirm": true,
+        "createBranch": true,
+        "timeout": 180000
+      }
     }
   },
   "taskTypeMapping": {
@@ -442,6 +504,8 @@
     "testing": "testing-workflow",
     "test": "testing-workflow",
     "analysis": "analysis-workflow",
+    "layer-violation": "layer-violation-workflow",
+    "layer-violation-fix": "layer-violation-fix-workflow",
     "documentation": "standard-task-workflow",
     "optimization": "standard-task-workflow",
     "security": "standard-task-workflow",

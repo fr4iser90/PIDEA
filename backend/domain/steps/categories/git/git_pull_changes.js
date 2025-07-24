@@ -1,36 +1,35 @@
 /**
- * Git Pull Changes Step
- * Pulls changes from remote repository using real Git commands
+ * GitPullChanges
+ * Pulls changes from remote repository using DDD pattern with Commands and Handlers
  */
 
 const StepBuilder = require('@steps/StepBuilder');
 const Logger = require('@logging/Logger');
 const logger = new Logger('GitPullChangesStep');
-const { exec } = require('child_process');
-const util = require('util');
-const execAsync = util.promisify(exec);
+const CommandRegistry = require('@application/commands/CommandRegistry');
+const HandlerRegistry = require('@application/handlers/HandlerRegistry');
 
 // Step configuration
 const config = {
   name: 'GitPullChangesStep',
   type: 'git',
-  description: 'Pulls changes from remote repository',
+  description: 'Pulls changes from remote repository using DDD pattern with Commands and Handlers',
   category: 'git',
   version: '1.0.0',
   dependencies: ['terminalService'],
   settings: {
-    timeout: 10000
+    timeout: 30000
   },
   validation: {
     required: ['projectPath'],
-    optional: ['remote', 'branch', 'rebase']
+    optional: []
   }
 };
 
 class GitPullChangesStep {
   constructor() {
     this.name = 'GitPullChangesStep';
-    this.description = 'Pulls changes from remote repository';
+    this.description = 'Pulls changes from remote repository using DDD pattern with Commands and Handlers';
     this.category = 'git';
     this.dependencies = ['terminalService'];
   }
@@ -49,46 +48,43 @@ class GitPullChangesStep {
       // Validate context
       this.validateContext(context);
       
-      const { projectPath, remote = 'origin', branch, rebase = false } = context;
+      const { projectPath, ...otherParams } = context;
       
-      logger.info('Executing GIT_PULL_CHANGES step', {
+      logger.info(`Executing ${this.name} using DDD pattern`, {
         projectPath,
-        remote,
-        branch,
-        rebase
+        ...otherParams
       });
 
-      // Build pull command
-      let pullCommand = 'git pull';
-      if (rebase) {
-        pullCommand += ' --rebase';
-      }
-      pullCommand += ` ${remote}`;
-      if (branch) {
-        pullCommand += ` ${branch}`;
+      // ✅ DDD PATTERN: Create Command and Handler
+      const command = CommandRegistry.buildFromCategory('git', 'GitPullCommand', {
+        projectPath,
+        ...otherParams
+      });
+
+      const handler = HandlerRegistry.buildFromCategory('git', 'GitPullHandler', {
+        terminalService: context.terminalService,
+        logger: logger
+      });
+
+      if (!command || !handler) {
+        throw new Error('Failed to create Git command or handler');
       }
 
-      // Execute git pull using execAsync (like legacy implementation)
-      const result = await execAsync(pullCommand, { cwd: projectPath });
+      // Execute command through handler
+      const result = await handler.handle(command);
 
-      logger.info('GIT_PULL_CHANGES step completed successfully', {
-        remote,
-        branch,
-        rebase,
-        result: result.stdout
+      logger.info(`${this.name} completed successfully using DDD pattern`, {
+        result: result.result
       });
 
       return {
-        success: true,
-        remote,
-        branch,
-        rebase,
-        result: result.stdout,
+        success: result.success,
+        result: result.result,
         timestamp: new Date()
       };
 
     } catch (error) {
-      logger.error('GIT_PULL_CHANGES step failed', {
+      logger.error(`${this.name} failed`, {
         error: error.message,
         context
       });
@@ -115,4 +111,4 @@ const stepInstance = new GitPullChangesStep();
 module.exports = {
   config,
   execute: async (context) => await stepInstance.execute(context)
-}; 
+};

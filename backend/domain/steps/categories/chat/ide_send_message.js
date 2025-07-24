@@ -1,6 +1,7 @@
 /**
  * IDE Send Message Step
  * Sends message to any IDE (Cursor, VSCode, Windsurf)
+ * Wrapper for SendMessageHandler (which handles both business logic AND browser automation)
  */
 
 const StepBuilder = require('@steps/StepBuilder');
@@ -14,7 +15,7 @@ const config = {
   category: 'ide',
   description: 'Send message to any IDE',
   version: '1.0.0',
-  dependencies: ['browserManager'],
+  dependencies: ['sendMessageHandler'],
   settings: {
     includeTimeout: true,
     includeRetry: true,
@@ -22,7 +23,7 @@ const config = {
   },
   validation: {
     required: ['projectId', 'message'],
-    optional: ['workspacePath', 'ideType']
+    optional: ['workspacePath', 'ideType', 'waitForResponse']
   }
 };
 
@@ -31,7 +32,7 @@ class IDESendMessageStep {
     this.name = 'IDESendMessageStep';
     this.description = 'Send message to any IDE';
     this.category = 'ide';
-    this.dependencies = ['browserManager'];
+    this.dependencies = ['sendMessageHandler'];
   }
 
   static getConfig() {
@@ -50,78 +51,55 @@ class IDESendMessageStep {
       
       const { projectId, workspacePath, message, ideType, waitForResponse = false, timeout = null } = context;
       
-      // Use centralized timeout configuration
-      const TimeoutConfig = require('@config/timeout-config');
-      const actualTimeout = timeout ? TimeoutConfig.getTimeout('IDE', timeout) : TimeoutConfig.getTimeout('IDE', 'SEND_MESSAGE');
-      
       logger.info(`📤 Sending message to IDE for project ${projectId}${ideType ? ` (${ideType})` : ''}`);
       
-      // Get services via dependency injection
-      const browserManager = context.getService('browserManager');
-      const chatSessionService = context.getService('chatSessionService');
-      
-      if (!browserManager) {
-        throw new Error('BrowserManager not available in context');
-      }
-      if (!chatSessionService) {
-        throw new Error('ChatSessionService not available in context');
+      // ✅ BUSINESS LOGIC + BROWSER AUTOMATION über Handler
+      const sendMessageHandler = context.getService('sendMessageHandler');
+      if (!sendMessageHandler) {
+        throw new Error('SendMessageHandler not available in context');
       }
       
-      // Switch to active port first
-      const idePortManager = context.getService('idePortManager');
-      if (idePortManager) {
-        const activePort = idePortManager.getActivePort();
-        if (activePort) {
-          await browserManager.switchToPort(activePort);
-        }
+      // Create command for business logic
+      const SendMessageCommand = require('@categories/chat/SendMessageCommand');
+      const command = new SendMessageCommand(message, context.sessionId);
+      
+      // Add required fields for handler
+      command.message = message;
+      command.requestedBy = context.requestedBy || context.userId || 'unknown';
+      
+      // Debug logging
+      logger.info('🔍 [IDESendMessageStep] Context data:', {
+        requestedBy: context.requestedBy,
+        userId: context.userId,
+        finalRequestedBy: command.requestedBy
+      });
+      
+      // Ensure command has all required fields
+      if (!command.requestedBy) {
+        throw new Error('RequestedBy is required but not provided in context');
       }
       
-      // Send message directly via BrowserManager (no infinite loop)
-      const result = await browserManager.typeMessage(message, true);
+      // Add additional options for IDE integration
+      command.options = {
+        ...command.options,
+        projectId: projectId,
+        workspacePath: workspacePath,
+        ideType: ideType,
+        waitForResponse: waitForResponse,
+        timeout: timeout
+      };
       
-      if (!result) {
-        throw new Error('Failed to send message to IDE - BrowserManager returned false');
-      }
+      // ✅ Handler macht BEIDES: Business Logic + Browser Automation
+      logger.info('📝 Executing SendMessageHandler (Business Logic + Browser Automation)...');
+      const result = await sendMessageHandler.handle(command);
       
-      logger.info(`✅ Message sent to IDE`);
-      
-      // Wait for AI response if requested
-      let aiResponse = null;
-      if (waitForResponse) {
-        logger.info(`⏳ Waiting for AI response (timeout: ${actualTimeout}ms)...`);
-        
-        try {
-          // Initialize AITextDetector for proper response waiting
-          const AITextDetector = require('@services/chat/AITextDetector');
-          const ideType = await browserManager.detectIDEType(browserManager.getCurrentPort());
-          const ideSelectors = await browserManager.getIDESelectors(ideType);
-          const aiTextDetector = new AITextDetector(ideSelectors);
-          const page = await browserManager.getPage();
-          
-          if (page) {
-            const aiResponseResult = await aiTextDetector.waitForAIResponse(page, {
-              timeout: actualTimeout,
-              checkInterval: 'AI_RESPONSE_CHECK',
-              requiredStableChecks: 3
-            });
-            
-            if (aiResponseResult.success) {
-              aiResponse = aiResponseResult.response;
-              logger.info(`✅ AI response received (${aiResponse.length} chars)`);
-            } else {
-              logger.warn(`⚠️ AI response timeout or error`);
-            }
-          }
-        } catch (error) {
-          logger.error(`❌ Error waiting for AI response: ${error.message}`);
-        }
-      }
+      logger.info(`✅ Message sent to IDE successfully via Handler`);
       
       return {
         success: true,
-        message: 'Message sent to IDE',
+        message: 'Message sent to IDE via Handler',
         data: result,
-        aiResponse: aiResponse,
+        aiResponse: result.aiResponse || null,
         ideType: ideType || 'auto-detected'
       };
       
@@ -135,8 +113,6 @@ class IDESendMessageStep {
       };
     }
   }
-
-
 
   validateContext(context) {
     if (!context.projectId) {

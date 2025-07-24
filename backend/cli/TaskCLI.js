@@ -58,6 +58,7 @@ class TaskCLI {
         this.setupTemplateCommands();
         this.setupStrategyCommands();
         this.setupAICommands();
+        this.setupLayerViolationCommands();
     }
 
     /**
@@ -356,6 +357,20 @@ class TaskCLI {
             .action(async () => {
                 await this.listAIModels();
             });
+    }
+
+    /**
+     * Setup layer violation commands
+     */
+    setupLayerViolationCommands() {
+        const LayerViolationCommands = require('./LayerViolationCommands');
+        const layerViolationCommands = new LayerViolationCommands({
+            commandBus: this.commandBus,
+            queryBus: this.queryBus,
+            logger: this.logger
+        });
+        
+        layerViolationCommands.setupCommands(this.program);
     }
 
     /**

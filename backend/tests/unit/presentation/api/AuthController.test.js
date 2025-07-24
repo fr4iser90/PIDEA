@@ -1,41 +1,29 @@
-const AuthController = require('@api/AuthController');
-const User = require('@entities/User');
-const UserSession = require('@entities/UserSession');
-const bcrypt = require('bcryptjs');
-
-// Mock bcrypt
-jest.mock('bcryptjs');
+const AuthController = require('../../../presentation/api/AuthController');
 
 describe('AuthController', () => {
   let controller;
-  let mockAuthService;
-  let mockUserRepository;
+  let mockAuthApplicationService;
   let mockReq;
   let mockRes;
   let mockUser;
   let mockSession;
 
   beforeEach(() => {
-    // Create mock services
-    mockAuthService = {
-      authenticateUser: jest.fn(),
-      createUserSession: jest.fn(),
-      refreshUserSession: jest.fn(),
-      logoutSession: jest.fn(),
-      logoutUser: jest.fn(),
-      getUserSessions: jest.fn(),
-      validateAccessToken: jest.fn()
-    };
-
-    mockUserRepository = {
-      save: jest.fn(),
-      findByEmail: jest.fn(),
-      findById: jest.fn(),
-      update: jest.fn()
+    // Create mock application service
+    mockAuthApplicationService = {
+      register: jest.fn(),
+      login: jest.fn(),
+      logout: jest.fn(),
+      refreshToken: jest.fn(),
+      refresh: jest.fn(),
+      validateAccessToken: jest.fn(),
+      getUserProfile: jest.fn(),
+      updateUserProfile: jest.fn(),
+      getUserSessions: jest.fn()
     };
 
     // Create controller instance
-    controller = new AuthController(mockAuthService, mockUserRepository);
+    controller = new AuthController({ authApplicationService: mockAuthApplicationService });
 
     // Create mock user
     mockUser = {
@@ -88,9 +76,12 @@ describe('AuthController', () => {
   });
 
   describe('constructor', () => {
-    it('should initialize with dependencies', () => {
-      expect(controller.authService).toBe(mockAuthService);
-      expect(controller.userRepository).toBe(mockUserRepository);
+    it('should initialize with authApplicationService', () => {
+      expect(controller.authApplicationService).toBe(mockAuthApplicationService);
+    });
+
+    it('should throw error if authApplicationService is missing', () => {
+      expect(() => new AuthController({})).toThrow('AuthController requires authApplicationService dependency');
     });
   });
 
@@ -104,32 +95,25 @@ describe('AuthController', () => {
     });
 
     it('should register a new user successfully', async () => {
-      const hashedPassword = 'hashed-password-123';
-      bcrypt.hash.mockResolvedValue(hashedPassword);
-
+      const userData = { email: 'newuser@example.com', password: 'password123', username: 'newuser' };
       const savedUser = {
         ...mockUser,
         email: 'newuser@example.com',
         username: 'newuser'
       };
-      mockUserRepository.save.mockResolvedValue(savedUser);
+      
+      mockAuthApplicationService.register.mockResolvedValue({
+        success: true,
+        data: savedUser
+      });
 
       await controller.register(mockReq, mockRes);
 
-      expect(bcrypt.hash).toHaveBeenCalledWith('password123', 12);
-      expect(mockUserRepository.save).toHaveBeenCalledWith({
-        email: 'newuser@example.com',
-        passwordHash: hashedPassword,
-        username: 'newuser',
-        role: 'user',
-        createdAt: expect.any(Date),
-        updatedAt: expect.any(Date),
-        metadata: {}
-      });
+      expect(mockAuthApplicationService.register).toHaveBeenCalledWith(userData);
       expect(mockRes.status).toHaveBeenCalledWith(201);
       expect(mockRes.json).toHaveBeenCalledWith({
         success: true,
-        user: savedUser.toJSON()
+        user: savedUser
       });
     });
 
@@ -171,7 +155,7 @@ describe('AuthController', () => {
 
     it('should handle registration errors', async () => {
       const error = new Error('Database error');
-      mockUserRepository.save.mockRejectedValue(error);
+      mockAuthApplicationService.register.mockRejectedValue(error);
 
       await controller.register(mockReq, mockRes);
 
@@ -179,19 +163,6 @@ describe('AuthController', () => {
       expect(mockRes.json).toHaveBeenCalledWith({
         success: false,
         message: 'Database error'
-      });
-    });
-
-    it('should handle bcrypt hash errors', async () => {
-      const error = new Error('Hash error');
-      bcrypt.hash.mockRejectedValue(error);
-
-      await controller.register(mockReq, mockRes);
-
-      expect(mockRes.status).toHaveBeenCalledWith(500);
-      expect(mockRes.json).toHaveBeenCalledWith({
-        success: false,
-        message: 'Hash error'
       });
     });
   });
@@ -205,17 +176,28 @@ describe('AuthController', () => {
     });
 
     it('should login user successfully', async () => {
-      mockAuthService.authenticateUser.mockResolvedValue(mockUser);
-      mockAuthService.createUserSession.mockResolvedValue(mockSession);
+      const credentials = { email: 'test@example.com', password: 'password123' };
+      const loginResult = {
+        success: true,
+        data: {
+          user: mockUser,
+          session: {
+            accessToken: mockSession.accessToken,
+            refreshToken: mockSession.refreshToken,
+            expiresAt: mockSession.expiresAt
+          }
+        }
+      };
+      
+      mockAuthApplicationService.login.mockResolvedValue(loginResult);
 
       await controller.login(mockReq, mockRes);
 
-      expect(mockAuthService.authenticateUser).toHaveBeenCalledWith('test@example.com', 'password123');
-      expect(mockAuthService.createUserSession).toHaveBeenCalledWith(mockUser);
+      expect(mockAuthApplicationService.login).toHaveBeenCalledWith(credentials);
       expect(mockRes.json).toHaveBeenCalledWith({
         success: true,
         data: {
-          user: mockUser.toJSON(),
+          user: mockUser,
           accessToken: mockSession.accessToken,
           refreshToken: mockSession.refreshToken,
           expiresAt: mockSession.expiresAt
@@ -261,21 +243,7 @@ describe('AuthController', () => {
 
     it('should handle authentication errors', async () => {
       const error = new Error('Invalid credentials');
-      mockAuthService.authenticateUser.mockRejectedValue(error);
-
-      await controller.login(mockReq, mockRes);
-
-      expect(mockRes.status).toHaveBeenCalledWith(401);
-      expect(mockRes.json).toHaveBeenCalledWith({
-        success: false,
-        error: 'Invalid credentials'
-      });
-    });
-
-    it('should handle session creation errors', async () => {
-      mockAuthService.authenticateUser.mockResolvedValue(mockUser);
-      const error = new Error('Session creation failed');
-      mockAuthService.createUserSession.mockRejectedValue(error);
+      mockAuthApplicationService.login.mockRejectedValue(error);
 
       await controller.login(mockReq, mockRes);
 
@@ -408,13 +376,20 @@ describe('AuthController', () => {
   describe('getProfile', () => {
     it('should return user profile when authenticated', async () => {
       mockReq.user = mockUser;
+      const profileResult = {
+        success: true,
+        data: { user: mockUser }
+      };
+      
+      mockAuthApplicationService.getUserProfile.mockResolvedValue(profileResult);
 
       await controller.getProfile(mockReq, mockRes);
 
+      expect(mockAuthApplicationService.getUserProfile).toHaveBeenCalledWith('user-123');
       expect(mockRes.json).toHaveBeenCalledWith({
         success: true,
         data: {
-          user: mockUser.toJSON()
+          user: mockUser
         }
       });
     });
@@ -433,9 +408,8 @@ describe('AuthController', () => {
 
     it('should handle profile retrieval errors', async () => {
       mockReq.user = mockUser;
-      mockUser.toJSON.mockImplementation(() => {
-        throw new Error('Serialization error');
-      });
+      const error = new Error('Profile retrieval failed');
+      mockAuthApplicationService.getUserProfile.mockRejectedValue(error);
 
       await controller.getProfile(mockReq, mockRes);
 
@@ -496,18 +470,21 @@ describe('AuthController', () => {
 
     it('should update email successfully', async () => {
       mockReq.body = { email: 'newemail@example.com' };
-      mockUserRepository.findByEmail.mockResolvedValue(null);
+      const profileData = { email: 'newemail@example.com' };
+      const updatedUser = { ...mockUser, email: 'newemail@example.com' };
+      
+      mockAuthApplicationService.updateUserProfile.mockResolvedValue({
+        success: true,
+        data: { user: updatedUser }
+      });
 
       await controller.updateProfile(mockReq, mockRes);
 
-      expect(mockUserRepository.findByEmail).toHaveBeenCalledWith('newemail@example.com');
-      expect(mockUser._email).toBe('newemail@example.com');
-      expect(mockUser.updateLastActivity).toHaveBeenCalled();
-      expect(mockUserRepository.update).toHaveBeenCalledWith(mockUser);
+      expect(mockAuthApplicationService.updateUserProfile).toHaveBeenCalledWith('user-123', profileData);
       expect(mockRes.json).toHaveBeenCalledWith({
         success: true,
         data: {
-          user: mockUser.toJSON()
+          user: updatedUser
         }
       });
     });
@@ -517,21 +494,23 @@ describe('AuthController', () => {
         currentPassword: 'oldpassword',
         newPassword: 'newpassword'
       };
-      mockUser.verifyPassword.mockResolvedValue(true);
+      const profileData = { currentPassword: 'oldpassword', newPassword: 'newpassword' };
+      const updatedUser = { ...mockUser };
       
-      // Mock User.createUser static method
-      const mockNewUser = {
-        passwordHash: 'new-hashed-password'
-      };
-      User.createUser = jest.fn().mockResolvedValue(mockNewUser);
+      mockAuthApplicationService.updateUserProfile.mockResolvedValue({
+        success: true,
+        data: { user: updatedUser }
+      });
 
       await controller.updateProfile(mockReq, mockRes);
 
-      expect(mockUser.verifyPassword).toHaveBeenCalledWith('oldpassword');
-      expect(User.createUser).toHaveBeenCalledWith('temp', 'newpassword');
-      expect(mockUser._passwordHash).toBe('new-hashed-password');
-      expect(mockUser.updateLastActivity).toHaveBeenCalled();
-      expect(mockUserRepository.update).toHaveBeenCalledWith(mockUser);
+      expect(mockAuthApplicationService.updateUserProfile).toHaveBeenCalledWith('user-123', profileData);
+      expect(mockRes.json).toHaveBeenCalledWith({
+        success: true,
+        data: {
+          user: updatedUser
+        }
+      });
     });
 
     it('should return 401 when user is not authenticated', async () => {
@@ -548,7 +527,8 @@ describe('AuthController', () => {
 
     it('should return 409 when email is already in use', async () => {
       mockReq.body = { email: 'existing@example.com' };
-      mockUserRepository.findByEmail.mockResolvedValue({ id: 'other-user' });
+      const error = new Error('Email already in use');
+      mockAuthApplicationService.updateUserProfile.mockRejectedValue(error);
 
       await controller.updateProfile(mockReq, mockRes);
 
@@ -576,7 +556,8 @@ describe('AuthController', () => {
         currentPassword: 'wrongpassword',
         newPassword: 'newpassword'
       };
-      mockUser.verifyPassword.mockResolvedValue(false);
+      const error = new Error('Current password is incorrect');
+      mockAuthApplicationService.updateUserProfile.mockRejectedValue(error);
 
       await controller.updateProfile(mockReq, mockRes);
 
@@ -589,27 +570,8 @@ describe('AuthController', () => {
 
     it('should handle update profile errors', async () => {
       mockReq.body = { email: 'newemail@example.com' };
-      mockUserRepository.findByEmail.mockResolvedValue(null);
       const error = new Error('Database error');
-      mockUserRepository.update.mockRejectedValue(error);
-
-      await controller.updateProfile(mockReq, mockRes);
-
-      expect(mockRes.status).toHaveBeenCalledWith(500);
-      expect(mockRes.json).toHaveBeenCalledWith({
-        success: false,
-        error: 'Failed to update profile'
-      });
-    });
-
-    it('should handle User.createUser errors', async () => {
-      mockReq.body = { 
-        currentPassword: 'oldpassword',
-        newPassword: 'newpassword'
-      };
-      mockUser.verifyPassword.mockResolvedValue(true);
-      const error = new Error('Hash error');
-      User.createUser = jest.fn().mockRejectedValue(error);
+      mockAuthApplicationService.updateUserProfile.mockRejectedValue(error);
 
       await controller.updateProfile(mockReq, mockRes);
 
@@ -640,11 +602,24 @@ describe('AuthController', () => {
           metadata: { userAgent: 'mobile' }
         }
       ];
-      mockAuthService.getUserSessions.mockResolvedValue(mockSessions);
+      const sessionsResult = {
+        success: true,
+        data: {
+          sessions: mockSessions.map(session => ({
+            id: session.id,
+            createdAt: session.createdAt,
+            expiresAt: session.expiresAt,
+            isActive: session.isActive(),
+            metadata: session.metadata
+          }))
+        }
+      };
+      
+      mockAuthApplicationService.getUserSessions.mockResolvedValue(sessionsResult);
 
       await controller.getSessions(mockReq, mockRes);
 
-      expect(mockAuthService.getUserSessions).toHaveBeenCalledWith(mockUser.id);
+      expect(mockAuthApplicationService.getUserSessions).toHaveBeenCalledWith('user-123');
       expect(mockRes.json).toHaveBeenCalledWith({
         success: true,
         data: {
@@ -674,7 +649,7 @@ describe('AuthController', () => {
     it('should handle get sessions errors', async () => {
       mockReq.user = mockUser;
       const error = new Error('Database error');
-      mockAuthService.getUserSessions.mockRejectedValue(error);
+      mockAuthApplicationService.getUserSessions.mockRejectedValue(error);
 
       await controller.getSessions(mockReq, mockRes);
 

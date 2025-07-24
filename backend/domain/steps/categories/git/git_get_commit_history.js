@@ -1,41 +1,35 @@
 /**
- * Git Get Commit History Step
- * Gets Git commit history using real Git commands
+ * GitGetCommitHistory
+ * Gets Git commit history using DDD pattern with Commands and Handlers
  */
 
 const StepBuilder = require('@steps/StepBuilder');
 const Logger = require('@logging/Logger');
 const logger = new Logger('GitGetCommitHistoryStep');
-const { exec } = require('child_process');
-const util = require('util');
-const execAsync = util.promisify(exec);
+const CommandRegistry = require('@application/commands/CommandRegistry');
+const HandlerRegistry = require('@application/handlers/HandlerRegistry');
 
 // Step configuration
 const config = {
   name: 'GitGetCommitHistoryStep',
   type: 'git',
-  description: 'Gets Git commit history',
+  description: 'Gets Git commit history using DDD pattern with Commands and Handlers',
   category: 'git',
   version: '1.0.0',
   dependencies: ['terminalService'],
   settings: {
-    timeout: 30000,
-    limit: 10,
-    since: null,
-    until: null,
-    author: null,
-    format: 'pretty=format:"%H|%an|%ae|%ad|%s"'
+    timeout: 30000
   },
   validation: {
     required: ['projectPath'],
-    optional: ['limit', 'since', 'until', 'author', 'format']
+    optional: []
   }
 };
 
 class GitGetCommitHistoryStep {
   constructor() {
     this.name = 'GitGetCommitHistoryStep';
-    this.description = 'Gets Git commit history';
+    this.description = 'Gets Git commit history using DDD pattern with Commands and Handlers';
     this.category = 'git';
     this.dependencies = ['terminalService'];
   }
@@ -54,66 +48,43 @@ class GitGetCommitHistoryStep {
       // Validate context
       this.validateContext(context);
       
-      const { 
-        projectPath, 
-        limit = 10, 
-        since = null, 
-        until = null, 
-        author = null,
-        format = 'pretty=format:"%H|%an|%ae|%ad|%s"'
-      } = context;
+      const { projectPath, ...otherParams } = context;
       
-      logger.info('Executing GIT_GET_COMMIT_HISTORY step', {
+      logger.info(`Executing ${this.name} using DDD pattern`, {
         projectPath,
-        limit,
-        since,
-        until,
-        author
+        ...otherParams
       });
 
-      // Build log command
-      let logCommand = `git log --${format}`;
-      if (limit) {
-        logCommand += ` -${limit}`;
-      }
-      if (since) {
-        logCommand += ` --since="${since}"`;
-      }
-      if (until) {
-        logCommand += ` --until="${until}"`;
-      }
-      if (author) {
-        logCommand += ` --author="${author}"`;
-      }
-
-      // Execute git log using execAsync (like legacy implementation)
-      const result = await execAsync(logCommand, { cwd: projectPath });
-
-      // Parse commit history
-      const commits = result.stdout
-        .split('\n')
-        .filter(line => line.trim())
-        .map(line => {
-          const [hash, author, email, date, message] = line.split('|');
-          return { hash, author, email, date, message };
-        });
-
-      logger.info('GIT_GET_COMMIT_HISTORY step completed successfully', {
+      // ✅ DDD PATTERN: Create Command and Handler
+      const command = CommandRegistry.buildFromCategory('git', 'GitLogCommand', {
         projectPath,
-        commitCount: commits.length
+        ...otherParams
+      });
+
+      const handler = HandlerRegistry.buildFromCategory('git', 'GitLogHandler', {
+        terminalService: context.terminalService,
+        logger: logger
+      });
+
+      if (!command || !handler) {
+        throw new Error('Failed to create Git command or handler');
+      }
+
+      // Execute command through handler
+      const result = await handler.handle(command);
+
+      logger.info(`${this.name} completed successfully using DDD pattern`, {
+        result: result.result
       });
 
       return {
-        success: true,
-        projectPath,
-        commits,
-        commitCount: commits.length,
-        result: result.stdout,
+        success: result.success,
+        result: result.result,
         timestamp: new Date()
       };
 
     } catch (error) {
-      logger.error('GIT_GET_COMMIT_HISTORY step failed', {
+      logger.error(`${this.name} failed`, {
         error: error.message,
         context
       });
@@ -140,4 +111,4 @@ const stepInstance = new GitGetCommitHistoryStep();
 module.exports = {
   config,
   execute: async (context) => await stepInstance.execute(context)
-}; 
+};
