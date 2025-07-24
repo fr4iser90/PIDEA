@@ -209,10 +209,17 @@ function TasksPanelComponent({ eventBus, activePort }) {
     setIsLoadingManualTasks(true);
     try {
       const response = await api.getManualTasks();
-      if (response && response.data) {
-        setManualTasks(response.data);
+      if (response && response.success) {
+        // Ensure we have an array of tasks
+        const tasks = Array.isArray(response.data) ? response.data : 
+                     Array.isArray(response.tasks) ? response.tasks : 
+                     Array.isArray(response.data?.tasks) ? response.data.tasks : [];
+        
+        setManualTasks(tasks);
         setLastLoadTime(now);
+        logger.debug('Tasks loaded successfully:', { taskCount: tasks.length });
       } else {
+        logger.warn('Load response not successful:', response);
         setManualTasks([]);
       }
     } catch (error) {
@@ -227,14 +234,24 @@ function TasksPanelComponent({ eventBus, activePort }) {
     setIsLoadingManualTasks(true);
     try {
       const response = await api.syncManualTasks();
-      if (response && response.data) {
-        setManualTasks(response.data);
+      if (response && response.success) {
+        // Ensure we have an array of tasks
+        const tasks = Array.isArray(response.data) ? response.data : 
+                     Array.isArray(response.tasks) ? response.tasks : 
+                     Array.isArray(response.data?.tasks) ? response.data.tasks : [];
+        
+        setManualTasks(tasks);
         setFeedback('Tasks synced successfully');
         setLastLoadTime(Date.now());
+        logger.info('Tasks synced successfully:', { taskCount: tasks.length });
+      } else {
+        logger.warn('Sync response not successful:', response);
+        setFeedback('Sync completed but no tasks returned');
       }
     } catch (error) {
       logger.error('Error syncing tasks:', error);
       setFeedback('Error syncing tasks');
+      // Keep existing tasks on error
     } finally {
       setIsLoadingManualTasks(false);
     }
@@ -385,7 +402,7 @@ function TasksPanelComponent({ eventBus, activePort }) {
   };
 
   // Filter and group tasks
-  const filteredTasks = manualTasks.filter(task => {
+  const filteredTasks = (Array.isArray(manualTasks) ? manualTasks : []).filter(task => {
     const matchesSearch = !taskSearch || 
       getTaskTitle(task).toLowerCase().includes(taskSearch.toLowerCase()) ||
       getTaskDescription(task).toLowerCase().includes(taskSearch.toLowerCase());
@@ -411,10 +428,11 @@ function TasksPanelComponent({ eventBus, activePort }) {
   // Get task counts for each category
   const getCategoryTaskCounts = () => {
     const counts = {};
+    const tasks = Array.isArray(manualTasks) ? manualTasks : [];
     Object.keys(MAIN_CATEGORIES).forEach(category => {
       // Use the same logic as groupedTasks
       const taskCategory = category === 'manual' ? 'manual' : category;
-      counts[category] = manualTasks.filter(task => (task.category || 'manual') === taskCategory).length;
+      counts[category] = tasks.filter(task => (task.category || 'manual') === taskCategory).length;
     });
     return counts;
   };
