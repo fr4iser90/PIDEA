@@ -11,7 +11,8 @@ export default {
     '^.+\\.[jt]sx?$': 'babel-jest'
   },
   moduleNameMapper: {
-    '^@/(.*)$': '<rootDir>/src/$1'
+    '^@/(.*)$': '<rootDir>/src/$1',
+    '^@/utils/(.*)$': '<rootDir>/src/utils/$1'
   },
   collectCoverage: true,
   collectCoverageFrom: [

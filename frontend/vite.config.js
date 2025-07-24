@@ -73,6 +73,7 @@ export default defineConfig(({ mode }) => {
       '@/infrastructure': path.resolve(__dirname, 'src/infrastructure'),
       '@/presentation': path.resolve(__dirname, 'src/presentation'),
       '@/stores': path.resolve(__dirname, 'src/stores'),
+      '@/utils': path.resolve(__dirname, 'src/utils'),
     },
   },
     define: {
