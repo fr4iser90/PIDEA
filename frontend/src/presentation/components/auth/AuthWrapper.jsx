@@ -26,7 +26,7 @@ const AuthWrapper = ({ children }) => {
       setValidationError(null);
       
       try {
-        logger.info('🔍 [AuthWrapper] Checking authentication...');
+        logger.debug('🔍 [AuthWrapper] Checking authentication...');
         const isValid = await validateToken();
         
         if (!isValid) {
@@ -34,7 +34,7 @@ const AuthWrapper = ({ children }) => {
           setValidationError('Session expired. Please log in again.');
           showWarning('Your session has expired. Please log in again.', 'Session Expired');
         } else {
-          logger.info('✅ [AuthWrapper] Authentication validation successful');
+          logger.debug('✅ [AuthWrapper] Authentication validation successful');
         }
       } catch (error) {
         logger.error('❌ [AuthWrapper] Authentication validation error:', error);
@@ -45,9 +45,13 @@ const AuthWrapper = ({ children }) => {
       }
     };
 
-    // Always validate on mount - this is how pros do it
-    checkAuth();
-  }, []); // Empty dependency array - only run once on mount
+    // Only validate if not already authenticated to reduce requests
+    if (!isAuthenticated) {
+      checkAuth();
+    } else {
+      setIsValidating(false);
+    }
+  }, [isAuthenticated]); // Only run when authentication state changes
 
   // Handle redirect to login
   useEffect(() => {

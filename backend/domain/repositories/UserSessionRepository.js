@@ -61,6 +61,10 @@ class UserSessionRepository {
     throw new Error('deleteExpiredSessions method must be implemented');
   }
 
+  async findAll() {
+    throw new Error('findAll method must be implemented');
+  }
+
   async update(session) {
     if (!(session instanceof UserSession)) {
       throw new Error('Invalid session entity');

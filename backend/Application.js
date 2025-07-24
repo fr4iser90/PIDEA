@@ -969,15 +969,15 @@ class Application {
   setupCleanupTasks() {
     this.logger.info('Setting up cleanup tasks...');
 
-    // Cleanup expired sessions every hour
+    // Cleanup expired sessions every 15 minutes
     setInterval(async () => {
       try {
-        await this.authService.cleanupExpiredSessions();
-        this.logger.info('Cleaned up expired sessions');
+        const result = await this.authService.cleanupExpiredSessions();
+        this.logger.info(`Cleaned up ${result.expired} expired and ${result.orphaned} orphaned sessions`);
       } catch (error) {
         this.logger.error('Failed to cleanup expired sessions:', error);
       }
-    }, 60 * 60 * 1000); // 1 hour
+    }, 15 * 60 * 1000); // 15 minutes
 
     // Cleanup old secrets every day
     setInterval(async () => {

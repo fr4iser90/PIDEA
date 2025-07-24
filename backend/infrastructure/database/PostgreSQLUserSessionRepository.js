@@ -215,6 +215,22 @@ class PostgreSQLUserSessionRepository extends UserSessionRepository {
     return result.rowsAffected;
   }
 
+  async findAll() {
+    const sql = 'SELECT * FROM user_sessions ORDER BY created_at DESC';
+    const rows = await this.db.query(sql);
+    
+    return rows.map(row => UserSession.fromJSON({
+      id: row.id,
+      userId: row.user_id,
+      accessToken: row.access_token_start,
+      refreshToken: row.refresh_token,
+      expiresAt: row.expires_at,
+      createdAt: row.created_at,
+      metadata: row.metadata ? JSON.parse(row.metadata) : {},
+      accessTokenHash: row.access_token_hash
+    }));
+  }
+
   async update(session) {
     if (!(session instanceof UserSession)) {
       throw new Error('Invalid session entity');

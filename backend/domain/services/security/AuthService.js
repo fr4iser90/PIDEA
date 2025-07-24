@@ -175,12 +175,30 @@ class AuthService {
       const validationResult = this.tokenValidator.validateSessionToken(accessToken, session);
       if (!validationResult.isValid) {
         logger.warn('❌ Token validation failed:', validationResult.reason);
+        
+        // Automatically clean up invalid sessions
+        try {
+          await this.userSessionRepository.delete(session.id);
+          logger.info('🧹 [AuthService] Automatically cleaned up invalid session:', session.id);
+        } catch (cleanupError) {
+          logger.error('❌ [AuthService] Failed to cleanup invalid session:', cleanupError.message);
+        }
+        
         throw new Error('Invalid authentication');
       }
 
       // Check if session is active
       if (!session.isActive()) {
         logger.warn('❌ Session is not active');
+        
+        // Automatically clean up expired sessions
+        try {
+          await this.userSessionRepository.delete(session.id);
+          logger.info('🧹 [AuthService] Automatically cleaned up expired session:', session.id);
+        } catch (cleanupError) {
+          logger.error('❌ [AuthService] Failed to cleanup expired session:', cleanupError.message);
+        }
+        
         throw new Error('Invalid or expired authentication');
       }
 
@@ -188,6 +206,15 @@ class AuthService {
       const user = await this.userRepository.findById(session.userId);
       if (!user) {
         logger.warn('❌ User not found');
+        
+        // Automatically clean up orphaned sessions
+        try {
+          await this.userSessionRepository.delete(session.id);
+          logger.info('🧹 [AuthService] Automatically cleaned up orphaned session:', session.id);
+        } catch (cleanupError) {
+          logger.error('❌ [AuthService] Failed to cleanup orphaned session:', cleanupError.message);
+        }
+        
         throw new Error('User not found');
       }
 
@@ -340,7 +367,53 @@ class AuthService {
 
   // Utility methods
   async cleanupExpiredSessions() {
-    await this.userSessionRepository.deleteExpiredSessions();
+    logger.info('🧹 [AuthService] Starting automatic session cleanup');
+    
+    try {
+      // Clean up expired sessions
+      const deletedCount = await this.userSessionRepository.deleteExpiredSessions();
+      logger.info(`🧹 [AuthService] Cleaned up ${deletedCount} expired sessions`);
+      
+      // Clean up orphaned sessions (sessions without valid users)
+      const orphanedCount = await this.cleanupOrphanedSessions();
+      logger.info(`🧹 [AuthService] Cleaned up ${orphanedCount} orphaned sessions`);
+      
+      return { expired: deletedCount, orphaned: orphanedCount };
+    } catch (error) {
+      logger.error('❌ [AuthService] Session cleanup failed:', error.message);
+      throw error;
+    }
+  }
+
+  async cleanupOrphanedSessions() {
+    try {
+      // Get all active sessions
+      const allSessions = await this.userSessionRepository.findAll();
+      let orphanedCount = 0;
+      
+      for (const session of allSessions) {
+        try {
+          // Check if user still exists
+          const user = await this.userRepository.findById(session.userId);
+          if (!user) {
+            // User doesn't exist, clean up session
+            await this.userSessionRepository.delete(session.id);
+            orphanedCount++;
+            logger.debug(`🧹 [AuthService] Cleaned up orphaned session for non-existent user: ${session.userId}`);
+          }
+        } catch (error) {
+          // If user lookup fails, clean up session
+          await this.userSessionRepository.delete(session.id);
+          orphanedCount++;
+          logger.debug(`🧹 [AuthService] Cleaned up session with lookup error: ${session.id}`);
+        }
+      }
+      
+      return orphanedCount;
+    } catch (error) {
+      logger.error('❌ [AuthService] Orphaned session cleanup failed:', error.message);
+      return 0;
+    }
   }
 
   async getUserSessions(userId) {

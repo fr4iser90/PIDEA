@@ -14,7 +14,7 @@ const useAuthStore = create(
       error: null,
       redirectToLogin: false,
       lastAuthCheck: null,
-      authCheckInterval: 1 * 60 * 1000, // 1 minute (reduced from 5 minutes)
+      authCheckInterval: 5 * 60 * 1000, // 5 minutes (increased to reduce requests)
       isValidating: false, // New state for race condition protection
 
       // Actions
@@ -140,41 +140,61 @@ const useAuthStore = create(
 
       // Professional authentication validation with proper caching
       validateToken: async () => {
-        const { lastAuthCheck, authCheckInterval, isValidating } = get();
+        const { lastAuthCheck, authCheckInterval, isValidating, isAuthenticated } = get();
+        
+        // If already authenticated and recently checked, skip validation
+        if (isAuthenticated && lastAuthCheck && (Date.now() - lastAuthCheck) < authCheckInterval) {
+          logger.debug('🔍 [AuthStore] Skipping validation, already authenticated and recent');
+          return true;
+        }
         
         // Prevent race conditions
         if (isValidating) {
-          logger.info('🔍 [AuthStore] Validation already in progress, skipping');
+          logger.debug('🔍 [AuthStore] Validation already in progress, skipping');
           return true;
         }
         
         // Check if we need to validate (avoid too frequent checks)
         const now = new Date();
         if (lastAuthCheck && (now - lastAuthCheck) < authCheckInterval) {
-          logger.info('🔍 [AuthStore] Skipping validation, too recent');
+          logger.debug('🔍 [AuthStore] Skipping validation, too recent');
           return true;
         }
 
         try {
           set({ isValidating: true });
-          logger.info('🔍 [AuthStore] Validating authentication...');
+          logger.debug('🔍 [AuthStore] Validating authentication...');
           
           const data = await apiCall('/api/auth/validate');
           
+          // Check if validation was successful
+          if (!data.success) {
+            throw new Error(data.error || 'Authentication validation failed');
+          }
+          
           // Simple validation - if we get here, we're authenticated
-          logger.info('✅ [AuthStore] Authentication validation successful');
+          logger.debug('✅ [AuthStore] Authentication validation successful');
           set({ 
             user: data.data?.user || data.user || null, 
             isAuthenticated: true, 
             lastAuthCheck: now,
             redirectToLogin: false,
-            isValidating: false
+            isValidating: false,
+            error: null
           });
           return true;
         } catch (error) {
           logger.error('❌ [AuthStore] Authentication validation error:', error);
           set({ lastAuthCheck: now, isValidating: false });
-          await get().handleAuthFailure('Authentication check failed');
+          
+          // Handle different types of auth failures
+          if (error.message.includes('401') || error.message.includes('SESSION_EXPIRED')) {
+            await get().handleAuthFailure('Session expired');
+          } else if (error.message.includes('429') || error.message.includes('BRUTE_FORCE')) {
+            await get().handleAuthFailure('Too many failed attempts. Please try again later.');
+          } else {
+            await get().handleAuthFailure('Authentication check failed');
+          }
           return false;
         }
       },
@@ -185,12 +205,25 @@ const useAuthStore = create(
         
         logger.info('🔐 [AuthStore] Handling auth failure:', reason);
         
+        // Clear all authentication state immediately
         set({ 
           isAuthenticated: false, 
           user: null,
-          redirectToLogin: false, // Don't auto-redirect when user clears cookies
-          lastAuthCheck: new Date()
+          redirectToLogin: true, // Force redirect to login
+          lastAuthCheck: new Date(),
+          error: reason
         });
+
+        // Clear any stored tokens/cookies by calling logout endpoint
+        try {
+          await apiCall('/api/auth/logout', {
+            method: 'POST',
+            credentials: 'include',
+          });
+          logger.info('🔐 [AuthStore] Logout endpoint called to clear session');
+        } catch (error) {
+          logger.warn('🔐 [AuthStore] Failed to call logout endpoint:', error);
+        }
 
         // Only show notification for actual session expiry, not manual logout
         if (reason !== 'Manual logout') {
@@ -201,7 +234,8 @@ const useAuthStore = create(
           );
         }
 
-        // No automatic redirect - let AuthWrapper handle it
+        // Force redirect to login
+        window.location.href = '/';
       },
 
       // Reset redirect flag
