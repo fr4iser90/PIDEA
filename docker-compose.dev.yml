@@ -1,0 +1,30 @@
+# docker-compose.dev.yml
+services:
+  pidea-db:
+    build:
+      context: ./database
+      dockerfile: Dockerfile
+    image: fr4iser/pidea:db-dev
+    container_name: pidea-db-dev
+    ports:
+      - "5432:5432"
+    volumes:
+      - pidea-db-dev-data:/var/lib/postgresql/data
+    environment:
+      # Docker PostgreSQL Image Variablen
+      POSTGRES_DB: ${DATABASE_NAME:-pidea_dev}
+      POSTGRES_USER: ${DATABASE_USER:-postgres}
+      POSTGRES_PASSWORD: ${DATABASE_PASSWORD:-postgres}
+    env_file:
+      - .env
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DATABASE_USER:-postgres} -d ${DATABASE_NAME:-pidea_dev}"]
+      interval: 5s
+      timeout: 5s
+      retries: 15
+      start_period: 20s
+
+volumes:
+  pidea-db-dev-data:
+    driver: local

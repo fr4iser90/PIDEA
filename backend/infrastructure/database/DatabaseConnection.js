@@ -194,15 +194,17 @@ class DatabaseConnection {
       `CREATE TABLE IF NOT EXISTS user_sessions (
         id TEXT PRIMARY KEY DEFAULT ${uuidFunction},
         user_id TEXT NOT NULL DEFAULT 'me',
-        access_token TEXT NOT NULL,
-        refresh_token TEXT NOT NULL,
+        access_token_start TEXT NOT NULL,
+        refresh_token TEXT,
         expires_at ${timestampType},
-        created_at ${timestampType},
+        is_active BOOLEAN NOT NULL DEFAULT true,
         metadata ${metadataType},
+        created_at ${timestampType},
+        updated_at ${timestampType},
         FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
       )`,
       
-      `CREATE INDEX IF NOT EXISTS idx_user_sessions_access_token ON user_sessions(access_token)`,
+      `CREATE INDEX IF NOT EXISTS idx_user_sessions_access_token ON user_sessions(access_token_start)`,
       
       `CREATE TABLE IF NOT EXISTS projects (
         id TEXT PRIMARY KEY DEFAULT ${uuidFunction},

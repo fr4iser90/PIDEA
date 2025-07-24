@@ -197,26 +197,29 @@ class CentralizedConfig {
   }
 
   get databaseConfig() {
-    if (this.currentEnv === 'development' && !this.databaseHost) {
-      // SQLite for development
+    // Check DATABASE_TYPE first
+    const databaseType = process.env.DATABASE_TYPE || 'sqlite';
+    
+    if (databaseType === 'postgres' || databaseType === 'postgresql') {
+      // PostgreSQL configuration
+      return {
+        type: 'postgresql',
+        host: this.databaseHost,
+        port: this.databasePort,
+        database: this.databaseName,
+        username: this.databaseUser,
+        password: this.databasePassword,
+        logging: this.currentEnv === 'development',
+        ssl: this.databaseSsl ? { rejectUnauthorized: false } : false
+      };
+    } else {
+      // SQLite configuration (default)
       return {
         type: 'sqlite',
         database: './pidea-dev.db',
         logging: true
       };
     }
-
-    // PostgreSQL for production/staging
-    return {
-      type: 'postgresql',
-      host: this.databaseHost,
-      port: this.databasePort,
-      database: this.databaseName,
-      username: this.databaseUser,
-      password: this.databasePassword,
-      logging: this.currentEnv === 'development',
-      ssl: this.databaseSsl ? { rejectUnauthorized: false } : false
-    };
   }
 
   get securityConfig() {

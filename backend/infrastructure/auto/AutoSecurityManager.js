@@ -143,15 +143,16 @@ class AutoSecurityManager {
   }
 
   getDatabaseConfig() {
-    const isProduction = this.config.environment === 'production';
+    // Check DATABASE_TYPE first
+    const databaseType = process.env.DATABASE_TYPE || 'sqlite';
     
-    if (isProduction) {
-      // Production: Try PostgreSQL, fallback to SQLite
+    if (databaseType === 'postgres' || databaseType === 'postgresql') {
+      // PostgreSQL configuration
       return {
         type: 'postgresql',
         host: process.env.DB_HOST || 'localhost',
         port: process.env.DB_PORT || 5432,
-        database: process.env.DB_NAME || 'PIDEA',
+        database: process.env.DB_NAME || 'pidea_dev',
         username: process.env.DB_USER || 'postgres',
         password: process.env.DB_PASSWORD || 'postgres',
         fallback: {
@@ -160,7 +161,7 @@ class AutoSecurityManager {
         }
       };
     } else {
-      // Development: Use SQLite
+      // SQLite configuration (default)
       return {
         type: 'sqlite',
         database: path.join(__dirname, '../../database/pidea-dev.db'),

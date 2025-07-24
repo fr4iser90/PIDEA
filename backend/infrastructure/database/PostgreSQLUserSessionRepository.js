@@ -23,10 +23,10 @@ class PostgreSQLUserSessionRepository extends UserSessionRepository {
     });
 
     const sql = `
-      INSERT INTO user_sessions (id, user_id, access_token, refresh_token, expires_at, created_at, metadata)
-      VALUES ($1, $2, $3, $4, $5, $6, $7)
-      ON CONFLICT (id) DO UPDATE SET
-        access_token = EXCLUDED.access_token,
+          INSERT INTO user_sessions (id, user_id, access_token_start, refresh_token, expires_at, created_at, metadata)
+    VALUES ($1, $2, $3, $4, $5, $6, $7)
+    ON CONFLICT (id) DO UPDATE SET
+      access_token_start = EXCLUDED.access_token_start,
         refresh_token = EXCLUDED.refresh_token,
         expires_at = EXCLUDED.expires_at,
         metadata = EXCLUDED.metadata
@@ -40,10 +40,13 @@ class PostgreSQLUserSessionRepository extends UserSessionRepository {
       expiresAt: sessionData.expiresAt
     });
 
+    // Store only the first 20 characters of the access token
+    const accessTokenStart = sessionData.accessToken.substring(0, 20);
+    
     await this.db.execute(sql, [
       sessionData.id,
       sessionData.userId,
-      sessionData.accessToken,
+      accessTokenStart,
       sessionData.refreshToken,
       sessionData.expiresAt,
       sessionData.createdAt,
@@ -67,7 +70,7 @@ class PostgreSQLUserSessionRepository extends UserSessionRepository {
     return UserSession.fromJSON({
       id: row.id,
       userId: row.user_id,
-      accessToken: row.access_token,
+      accessToken: row.access_token_start,
       refreshToken: row.refresh_token,
       expiresAt: row.expires_at,
       createdAt: row.created_at,
@@ -86,7 +89,7 @@ class PostgreSQLUserSessionRepository extends UserSessionRepository {
     return rows.map(row => UserSession.fromJSON({
       id: row.id,
       userId: row.user_id,
-      accessToken: row.access_token,
+      accessToken: row.access_token_start,
       refreshToken: row.refresh_token,
       expiresAt: row.expires_at,
       createdAt: row.created_at,
@@ -101,8 +104,10 @@ class PostgreSQLUserSessionRepository extends UserSessionRepository {
 
     logger.info('🔍 Finding session by access authentication');
 
-    const sql = 'SELECT * FROM user_sessions WHERE access_token = $1';
-    const row = await this.db.getOne(sql, [accessToken]);
+    // Extract first 20 characters for comparison
+    const accessTokenStart = accessToken.substring(0, 20);
+    const sql = 'SELECT * FROM user_sessions WHERE access_token_start = $1';
+    const row = await this.db.getOne(sql, [accessTokenStart]);
     
     logger.info('🔍 Database result:', row ? {
       id: row.id,
@@ -144,7 +149,7 @@ class PostgreSQLUserSessionRepository extends UserSessionRepository {
     return UserSession.fromJSON({
       id: row.id,
       userId: row.user_id,
-      accessToken: row.access_token,
+      accessToken: row.access_token_start,
       refreshToken: row.refresh_token,
       expiresAt: row.expires_at,
       createdAt: row.created_at,
@@ -165,7 +170,7 @@ class PostgreSQLUserSessionRepository extends UserSessionRepository {
     return rows.map(row => UserSession.fromJSON({
       id: row.id,
       userId: row.user_id,
-      accessToken: row.access_token,
+      accessToken: row.access_token_start,
       refreshToken: row.refresh_token,
       expiresAt: row.expires_at,
       createdAt: row.created_at,
@@ -208,14 +213,17 @@ class PostgreSQLUserSessionRepository extends UserSessionRepository {
 
     const sql = `
       UPDATE user_sessions 
-      SET access_token = $2, refresh_token = $3, expires_at = $4, metadata = $5
+      SET access_token_start = $2, refresh_token = $3, expires_at = $4, metadata = $5
       WHERE id = $1
     `;
 
     const sessionData = session.toJSON();
+    // Store only the first 20 characters of the access token
+    const accessTokenStart = sessionData.accessToken.substring(0, 20);
+    
     const result = await this.db.execute(sql, [
       sessionData.id,
-      sessionData.accessToken,
+      accessTokenStart,
       sessionData.refreshToken,
       sessionData.expiresAt,
       JSON.stringify(sessionData.metadata)
