@@ -62,10 +62,17 @@ const ManualTaskDetailsModal = ({
 
   const loadExecutePrompt = async () => {
     try {
-      const response = await fetch('/api/prompts/task-management/task-execute');
+      // Use the correct API endpoint from the configuration
+      const response = await fetch('/api/prompts/task-management/task-execute.md');
       if (response.ok) {
         const data = await response.json();
-        setExecutePromptContent(data.content);
+        if (data.success && data.content) {
+          setExecutePromptContent(data.content);
+        } else {
+          logger.error('Failed to load execute prompt: Invalid response format');
+        }
+      } else {
+        logger.error('Failed to load execute prompt: HTTP error', response.status);
       }
     } catch (error) {
       logger.error('Failed to load execute prompt:', error);

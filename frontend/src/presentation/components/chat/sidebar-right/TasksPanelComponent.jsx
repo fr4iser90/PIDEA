@@ -368,10 +368,16 @@ function TasksPanelComponent({ eventBus, activePort }) {
 
   const handleExecuteTask = async (taskDetails) => {
     try {
-      const response = await api.executeManualTask(taskDetails.id);
-      if (response && response.data) {
+      // Get current project ID
+      const projectId = await api.getCurrentProjectId();
+      
+      // Use the correct task execution endpoint
+      const response = await api.executeTask(taskDetails.id, projectId);
+      if (response && response.success) {
         setFeedback('Task executed successfully');
         loadTasks(); // Reload tasks to update status
+      } else {
+        throw new Error(response?.error || 'Task execution failed');
       }
     } catch (error) {
       logger.error('Error executing task:', error);
@@ -389,11 +395,17 @@ function TasksPanelComponent({ eventBus, activePort }) {
 
   const handleTaskSubmit = async (taskData) => {
     try {
-      const response = await api.createManualTask(taskData);
-      if (response && response.data) {
-        setManualTasks(prev => [...prev, response.data]);
+      // Get current project ID
+      const projectId = await api.getCurrentProjectId();
+      
+      // Use the correct task creation endpoint
+      const response = await api.createTask(taskData, projectId);
+      if (response && response.success) {
+        setManualTasks(prev => [...(Array.isArray(prev) ? prev : []), response.data]);
         setFeedback('Task created successfully');
         setShowTaskCreationModal(false);
+      } else {
+        throw new Error(response?.error || 'Task creation failed');
       }
     } catch (error) {
       logger.error('Error creating task:', error);
