@@ -371,8 +371,28 @@ function TasksPanelComponent({ eventBus, activePort }) {
       // Get current project ID
       const projectId = await api.getCurrentProjectId();
       
-      // Use the correct task execution endpoint
-      const response = await api.executeTask(taskDetails.id, projectId);
+      // Use the workflow execution endpoint for task execution
+      const response = await apiCall(`/api/projects/${projectId}/workflow/execute`, {
+        method: 'POST',
+        body: JSON.stringify({
+          type: 'task',
+          taskType: 'manual',
+          taskData: {
+            id: taskDetails.id,
+            title: taskDetails.title,
+            description: taskDetails.content || taskDetails.description,
+            type: 'manual',
+            priority: taskDetails.priority || 'medium',
+            category: taskDetails.category || 'manual'
+          },
+          options: {
+            autoExecute: true,
+            createGitBranch: true,
+            clickNewChat: true
+          }
+        })
+      });
+      
       if (response && response.success) {
         setFeedback('Task executed successfully');
         loadTasks(); // Reload tasks to update status
