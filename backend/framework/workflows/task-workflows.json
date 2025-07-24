@@ -510,6 +510,7 @@
     "optimization": "standard-task-workflow",
     "security": "standard-task-workflow",
     "deployment": "standard-task-workflow",
+    "manual": "standard-task-workflow",
     "default": "standard-task-workflow"
   },
   "prompts": {

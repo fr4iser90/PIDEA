@@ -309,4 +309,6 @@ Please provide a complete, actionable implementation plan in Markdown format.`;
   }
 }
 
-module.exports = TaskPromptGenerationStep; 
+// Export both the class and a factory function for StepRegistry
+module.exports = TaskPromptGenerationStep;
+module.exports.default = TaskPromptGenerationStep; 

@@ -254,14 +254,15 @@
     }
   },
   "taskTypeMapping": {
-    "feature": "task-creation-workflow",
-    "bug": "task-creation-workflow", 
-    "refactor": "advanced-task-creation-workflow",
-    "testing": "task-creation-workflow",
-    "documentation": "quick-task-creation-workflow",
-    "optimization": "advanced-task-creation-workflow",
-    "security": "advanced-task-creation-workflow",
-    "deployment": "task-creation-workflow",
+    "feature": "standard-task-workflow",
+    "bug": "standard-task-workflow", 
+    "refactor": "standard-task-workflow",
+    "testing": "standard-task-workflow",
+    "documentation": "standard-task-workflow",
+    "optimization": "standard-task-workflow",
+    "security": "standard-task-workflow",
+    "deployment": "standard-task-workflow",
+    "manual": "standard-task-workflow",
     "default": "task-creation-workflow"
   },
   "contentLibrary": {
