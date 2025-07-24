@@ -152,11 +152,22 @@ class PostgreSQLTaskRepository extends TaskRepository {
 
   /**
    * Find tasks by project ID
+   * @param {string} projectId - The project ID
+   * @param {Object} filters - Optional filters
+   * @returns {Promise<Task[]>} Array of tasks
+   */
+  async findByProjectId(projectId, filters = {}) {
+    return this.findAll({ ...filters, projectId });
+  }
+
+  /**
+   * Find tasks by project (alias for findByProjectId)
    * @param {string} projectId - Project ID
+   * @param {Object} filters - Optional filters
    * @returns {Promise<Task[]>} Array of tasks for the project
    */
-  async findByProject(projectId) {
-    return this.findAll({ projectId });
+  async findByProject(projectId, filters = {}) {
+    return this.findByProjectId(projectId, filters);
   }
 
   /**
@@ -328,6 +339,11 @@ class PostgreSQLTaskRepository extends TaskRepository {
 
       if (row.completed_at) {
         task._completedAt = new Date(row.completed_at);
+      }
+
+      // Set estimated time if available
+      if (row.estimated_time) {
+        task._estimatedTime = row.estimated_time;
       }
 
       // Note: executionHistory is not in the current schema, so we skip it

@@ -99,9 +99,8 @@ CREATE TABLE IF NOT EXISTS tasks (
     completed_at TEXT,
     due_date TEXT,
     started_at TEXT,
-    estimated_hours REAL,
     actual_hours REAL,
-    estimated_duration REAL,
+    estimated_time INTEGER, -- Estimated time in minutes
     tags TEXT, -- JSON array
     dependencies TEXT, -- JSON array
     assignee TEXT,
@@ -229,18 +228,27 @@ CREATE TABLE IF NOT EXISTS workflows (
 -- WORKFLOW EXECUTIONS (Your workflow run history)
 CREATE TABLE IF NOT EXISTS workflow_executions (
     id TEXT PRIMARY KEY,
+    execution_id TEXT UNIQUE NOT NULL,
     workflow_id TEXT NOT NULL,
-    project_id TEXT,
+    workflow_name TEXT,
+    workflow_version TEXT DEFAULT '1.0.0',
+    task_id TEXT,
+    user_id TEXT NOT NULL DEFAULT 'me',
     status TEXT NOT NULL, -- 'pending', 'running', 'completed', 'failed', 'cancelled'
-    started_at TEXT NOT NULL,
-    completed_at TEXT,
-    duration_ms INTEGER,
+    strategy TEXT,
+    priority INTEGER DEFAULT 1,
+    estimated_time INTEGER, -- Estimated time in minutes
+    actual_duration INTEGER, -- Actual duration in milliseconds
+    start_time TEXT NOT NULL,
+    end_time TEXT,
     result_data TEXT, -- JSON execution results
     error_message TEXT,
     metadata TEXT, -- JSON for execution metadata
     created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (workflow_id) REFERENCES workflows (id),
-    FOREIGN KEY (project_id) REFERENCES projects (id)
+    FOREIGN KEY (project_id) REFERENCES projects (id),
+    FOREIGN KEY (user_id) REFERENCES users (id)
 );
 
 -- ============================================================================

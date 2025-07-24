@@ -323,11 +323,15 @@ class DatabaseConnection {
         require('./PostgreSQLTaskExecutionRepository') : 
         require('./SQLiteTaskExecutionRepository'),
       
-      // Task suggestion repositories - use SQLite for both (only SQLite version exists)
-      'TaskSuggestion': require('./SQLiteTaskSuggestionRepository'),
+      // Task suggestion repositories - use proper PostgreSQL/SQLite mapping
+      'TaskSuggestion': isPostgreSQL ? 
+        require('./PostgreSQLTaskSuggestionRepository') : 
+        require('./SQLiteTaskSuggestionRepository'),
       
-      // Task template repositories - use SQLite for both (only SQLite version exists)
-      'TaskTemplate': require('./SQLiteTaskTemplateRepository'),
+      // Task template repositories - use proper PostgreSQL/SQLite mapping
+      'TaskTemplate': isPostgreSQL ? 
+        require('./PostgreSQLTaskTemplateRepository') : 
+        require('./SQLiteTaskTemplateRepository'),
       
       // Session repositories - use proper mapping
       'StreamingSession': isPostgreSQL ? 

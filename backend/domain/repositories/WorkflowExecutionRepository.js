@@ -122,7 +122,7 @@ class PostgreSQLWorkflowExecutionRepository extends WorkflowExecutionRepository 
     const query = `
       INSERT INTO ${this.tableName} (
         execution_id, workflow_id, workflow_name, workflow_version,
-        task_id, user_id, status, strategy, priority, estimated_duration,
+        task_id, user_id, status, strategy, priority, estimated_time,
         start_time, metadata
       ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
       RETURNING *
@@ -138,7 +138,7 @@ class PostgreSQLWorkflowExecutionRepository extends WorkflowExecutionRepository 
       execution.status || 'pending',
       execution.strategy,
       execution.priority || 1,
-      execution.estimatedDuration,
+      execution.estimatedTime,
       execution.startTime || new Date(),
       JSON.stringify(execution.metadata || {})
     ];
@@ -366,7 +366,7 @@ class PostgreSQLWorkflowExecutionRepository extends WorkflowExecutionRepository 
         AVG(actual_duration) as average_duration,
         MIN(actual_duration) as min_duration,
         MAX(actual_duration) as max_duration,
-        AVG(estimated_duration) as average_estimated_duration
+        AVG(estimated_time) as average_estimated_time
       FROM ${this.tableName}
       ${whereClause}
     `;
@@ -450,7 +450,7 @@ class InMemoryWorkflowExecutionRepository extends WorkflowExecutionRepository {
       status: execution.status || 'pending',
       strategy: execution.strategy,
       priority: execution.priority || 1,
-      estimatedDuration: execution.estimatedDuration,
+      estimatedTime: execution.estimatedTime,
       actualDuration: execution.actualDuration,
       startTime: execution.startTime || new Date(),
       endTime: execution.endTime,
@@ -554,9 +554,9 @@ class InMemoryWorkflowExecutionRepository extends WorkflowExecutionRepository {
       .filter(exec => exec.actualDuration)
       .map(exec => exec.actualDuration);
 
-    const estimatedDurations = executions
-      .filter(exec => exec.estimatedDuration)
-      .map(exec => exec.estimatedDuration);
+    const estimatedTimes = executions
+      .filter(exec => exec.estimatedTime)
+      .map(exec => exec.estimatedTime);
 
     return {
       total_executions: totalExecutions,
@@ -566,7 +566,7 @@ class InMemoryWorkflowExecutionRepository extends WorkflowExecutionRepository {
       average_duration: durations.length > 0 ? durations.reduce((a, b) => a + b, 0) / durations.length : null,
       min_duration: durations.length > 0 ? Math.min(...durations) : null,
       max_duration: durations.length > 0 ? Math.max(...durations) : null,
-      average_estimated_duration: estimatedDurations.length > 0 ? estimatedDurations.reduce((a, b) => a + b, 0) / estimatedDurations.length : null
+      average_estimated_time: estimatedTimes.length > 0 ? estimatedTimes.reduce((a, b) => a + b, 0) / estimatedTimes.length : null
     };
   }
 
