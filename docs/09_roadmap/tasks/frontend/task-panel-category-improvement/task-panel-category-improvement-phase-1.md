@@ -38,26 +38,29 @@ ALTER TABLE tasks ADD COLUMN subcategory TEXT;
 CREATE INDEX idx_tasks_category_subcategory ON tasks(category, subcategory);
 ```
 
+**Note**: Current database schema in `database/init-postgres.sql` and `database/init-sqlite.sql` does NOT include the subcategory column. This needs to be added to both files.
+
 ### Step 2: Category Mapping Configuration
 ```javascript
 // backend/config/task-categories.js
 const MAIN_CATEGORIES = {
-  'docs': 'Documentation Tasks',
+  'manual': 'Manual Tasks',
   'refactor': 'Refactoring Tasks', 
   'test': 'Testing Tasks',
   'build': 'Build & Deploy',
   'security': 'Security Tasks',
   'analysis': 'Analysis Tasks',
-  'optimization': 'Optimization Tasks'
+  'optimization': 'Optimization Tasks',
+  'documentation': 'Documentation Tasks'
 };
 
 const SUB_CATEGORIES = {
-  'docs': {
-    'manual': 'Manual Tasks',
-    'api': 'API Documentation',
-    'user_guide': 'User Guides',
-    'technical': 'Technical Docs',
-    'tutorial': 'Tutorials'
+  'manual': {
+    'implementation': 'Implementation Tasks',
+    'index': 'Index Tasks',
+    'phase': 'Phase Tasks',
+    'summary': 'Summary Tasks',
+    'general': 'General Manual Tasks'
   },
   'refactor': {
     'code_quality': 'Code Quality',
@@ -68,6 +71,16 @@ const SUB_CATEGORIES = {
     'complexity': 'Complexity Reduction'
   },
   // ... weitere Kategorien
+  'documentation': {
+    'api': 'API Documentation',
+    'user': 'User Documentation',
+    'technical': 'Technical Documentation',
+    'code': 'Code Documentation',
+    'guides': 'User Guides',
+    'tutorials': 'Tutorials',
+    'structure': 'Documentation Structure',
+    'maintenance': 'Documentation Maintenance'
+  }
 };
 
 module.exports = { MAIN_CATEGORIES, SUB_CATEGORIES };
@@ -101,9 +114,12 @@ function mapTaskTypeToCategories(taskType) {
   if (taskType.startsWith('test_')) {
     return { category: 'test', subcategory: getTestSubcategory(taskType) };
   }
+  if (taskType.startsWith('documentation_')) {
+    return { category: 'documentation', subcategory: getDocumentationSubcategory(taskType) };
+  }
   // ... weitere Mappings
   
-  return { category: 'docs', subcategory: 'manual' };
+  return { category: 'manual', subcategory: 'general' };
 }
 ```
 
@@ -116,8 +132,8 @@ class Task {
     this.title = data.title;
     this.description = data.description;
     this.type = data.type;
-    this.category = data.category || 'docs';
-    this.subcategory = data.subcategory || 'manual';
+    this.category = data.category || 'manual';
+    this.subcategory = data.subcategory || 'general';
     this.priority = data.priority;
     this.status = data.status;
     this.projectId = data.projectId;
