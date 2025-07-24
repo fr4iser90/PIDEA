@@ -191,14 +191,27 @@ function TasksPanelComponent({ eventBus, activePort }) {
   // Load tasks on component mount
   useEffect(() => {
     loadTasks();
-  }, []);
+  }, []); // Only run once on mount
 
-  const loadTasks = async () => {
+  // Add task loading optimization
+  const [lastLoadTime, setLastLoadTime] = useState(0);
+  const loadTasksThrottle = 5000; // 5 seconds
+
+  const loadTasks = async (force = false) => {
+    const now = Date.now();
+    
+    // Prevent excessive loading
+    if (!force && (now - lastLoadTime) < loadTasksThrottle) {
+      logger.debug('Skipping task load - too recent');
+      return;
+    }
+
     setIsLoadingManualTasks(true);
     try {
       const response = await api.getManualTasks();
       if (response && response.data) {
         setManualTasks(response.data);
+        setLastLoadTime(now);
       } else {
         setManualTasks([]);
       }
@@ -217,6 +230,7 @@ function TasksPanelComponent({ eventBus, activePort }) {
       if (response && response.data) {
         setManualTasks(response.data);
         setFeedback('Tasks synced successfully');
+        setLastLoadTime(Date.now());
       }
     } catch (error) {
       logger.error('Error syncing tasks:', error);

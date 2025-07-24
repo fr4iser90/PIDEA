@@ -12,6 +12,39 @@ class AuthMiddleware {
     this.blockedIPs = new Map();
     this.maxFailedAttempts = 5;
     this.blockDuration = 15 * 60 * 1000; // 15 minutes
+    
+    // Add authentication caching
+    this.authCache = new Map();
+    this.cacheTTL = 5 * 60 * 1000; // 5 minutes
+    this.cacheCleanupInterval = 10 * 60 * 1000; // 10 minutes
+    
+    // Start cache cleanup
+    setInterval(() => this.cleanupCache(), this.cacheCleanupInterval);
+  }
+
+  // Add cache management methods
+  cleanupCache() {
+    const now = Date.now();
+    for (const [key, value] of this.authCache.entries()) {
+      if (now > value.expiresAt) {
+        this.authCache.delete(key);
+      }
+    }
+  }
+
+  getCachedAuth(token) {
+    const cached = this.authCache.get(token);
+    if (cached && Date.now() < cached.expiresAt) {
+      return cached.result;
+    }
+    return null;
+  }
+
+  setCachedAuth(token, result) {
+    this.authCache.set(token, {
+      result,
+      expiresAt: Date.now() + this.cacheTTL
+    });
   }
 
   // Brute force protection methods
@@ -103,6 +136,17 @@ class AuthMiddleware {
           });
         }
 
+        // Check cache first
+        const cachedAuth = this.getCachedAuth(token);
+        if (cachedAuth) {
+          req.user = cachedAuth.user;
+          req.session = cachedAuth.session;
+          this.addSecurityHeaders(res, cachedAuth.user, cachedAuth.session);
+          this.recordSuccessfulAttempt(clientIp);
+          logger.debug(`✅ Cached authentication used for user: ${cachedAuth.user.email}`);
+          return next();
+        }
+
         const { user, session } = await this.authService.validateAccessToken(token);
         
         // Check if user account is locked
@@ -114,6 +158,9 @@ class AuthMiddleware {
             code: 'ACCOUNT_LOCKED'
           });
         }
+        
+        // Cache successful authentication
+        this.setCachedAuth(token, { user, session });
         
         // Inject user context into request
         req.user = user;
