@@ -357,6 +357,43 @@ const getCategoryDisplay = (category, subcategory, structure) => {
 };
 ```
 
+### Issue 1.1: ManualTaskDetailsModal Value Object Handling
+**Current Problem**: ManualTaskDetailsModal fails to handle priority, status, and category values that are objects with `value` properties.
+
+**Location**: `frontend/src/presentation/components/chat/modal/ManualTaskDetailsModal.jsx` lines 125, 141, 159, 165, 199, 275
+
+**Solution**: 
+1. Update all helper functions to handle value objects
+2. Extract values properly before rendering
+3. Ensure consistent handling across all task-related components
+
+**Code Fix**:
+```javascript
+// Fixed helper functions:
+const getPriorityColor = (priority) => {
+  // Handle value objects
+  const priorityValue = priority?.value || priority;
+  const priorityStr = String(priorityValue || '').toLowerCase();
+  switch (priorityStr) {
+    case 'high': return '#ff6b6b';
+    case 'medium': return '#ffd93d';
+    case 'low': return '#6bcf7f';
+    default: return '#6c757d';
+  }
+};
+
+const getCategoryText = (category) => {
+  // Handle value objects
+  const categoryValue = category?.value || category;
+  return String(categoryValue || 'Unknown');
+};
+
+// Updated rendering:
+<span className="manual-task-details-modal-category">
+  {getCategoryText(taskDetails.category)}
+</span>
+```
+
 ### Issue 2: Missing Database Schema
 **Current Problem**: Database lacks `subcategory` column in tasks table
 
@@ -417,6 +454,7 @@ CREATE INDEX idx_tasks_category_subcategory ON tasks(category, subcategory);
 
 ### ⚠️ Issues Found
 - [ ] **Critical Bug**: Line 530 in `TasksPanelComponent.jsx` shows `{String(task.metadata?.structure || 'Documentation')}` instead of actual category
+- [x] **Runtime Error Fixed**: ManualTaskDetailsModal value object handling - priority.toLowerCase is not a function
 - [ ] **Missing Column**: Database schema lacks `subcategory` column in tasks table
 - [ ] **Missing Utilities**: No `taskTypeUtils.js` file exists in frontend
 - [ ] **Missing Component**: No `TaskTypeBadge.jsx` component exists
@@ -430,6 +468,8 @@ CREATE INDEX idx_tasks_category_subcategory ON tasks(category, subcategory);
 - Added validation results section to track review progress
 - Corrected terminology consistency across all files
 - Added specific line numbers and code snippets for critical issues
+- **Fixed Runtime Error**: Updated ManualTaskDetailsModal to handle value objects properly (priority, status, category)
+- **Added Value Object Support**: Created helper functions to extract values from objects with `value` properties
 
 ### 📊 Code Quality Metrics
 - **Coverage**: Implementation plan covers all critical issues

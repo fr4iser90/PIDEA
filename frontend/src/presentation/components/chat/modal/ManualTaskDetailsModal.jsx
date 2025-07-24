@@ -122,7 +122,10 @@ Please execute this manual task with zero user input required.`;
   };
 
   const getPriorityColor = (priority) => {
-    switch (priority?.toLowerCase()) {
+    // Handle value objects
+    const priorityValue = priority?.value || priority;
+    const priorityStr = String(priorityValue || '').toLowerCase();
+    switch (priorityStr) {
       case 'high':
         return '#ff6b6b';
       case 'medium':
@@ -135,7 +138,10 @@ Please execute this manual task with zero user input required.`;
   };
 
   const getStatusColor = (status) => {
-    switch (status?.toLowerCase()) {
+    // Handle value objects
+    const statusValue = status?.value || status;
+    const statusStr = String(statusValue || '').toLowerCase();
+    switch (statusStr) {
       case 'completed':
         return '#6bcf7f';
       case 'in_progress':
@@ -150,11 +156,21 @@ Please execute this manual task with zero user input required.`;
   };
 
   const getPriorityText = (priority) => {
-    return priority?.charAt(0).toUpperCase() + priority?.slice(1) || 'Unknown';
+    // Handle value objects
+    const priorityValue = priority?.value || priority;
+    return String(priorityValue || 'Unknown');
   };
 
   const getStatusText = (status) => {
-    return status?.replace('_', ' ').charAt(0).toUpperCase() + status?.replace('_', ' ').slice(1) || 'Unknown';
+    // Handle value objects
+    const statusValue = status?.value || status;
+    return String(statusValue || 'Unknown').replace('_', ' ');
+  };
+
+  const getCategoryText = (category) => {
+    // Handle value objects
+    const categoryValue = category?.value || category;
+    return String(categoryValue || 'Unknown');
   };
 
   const formatDate = (dateString) => {
@@ -186,7 +202,7 @@ Please execute this manual task with zero user input required.`;
                 </span>
                 {taskDetails.category && (
                   <span className="manual-task-details-modal-category">
-                    {taskDetails.category}
+                    {getCategoryText(taskDetails.category)}
                   </span>
                 )}
               </div>
@@ -274,7 +290,7 @@ Please execute this manual task with zero user input required.`;
                   </div>
                   {taskDetails.metadata && (
                     <div className="manual-task-details-modal-info-item">
-                      <strong>Type:</strong> {taskDetails.type || 'Documentation'}
+                      <strong>Type:</strong> {getCategoryText(taskDetails.type) || 'Documentation'}
                     </div>
                   )}
                 </div>
