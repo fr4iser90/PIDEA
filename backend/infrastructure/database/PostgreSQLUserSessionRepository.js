@@ -125,10 +125,12 @@ class PostgreSQLUserSessionRepository extends UserSessionRepository {
     
     if (!row) return null;
     
+    // Create session with the original access token from the request
+    // The session will use this for hash validation
     const session = UserSession.fromJSON({
       id: row.id,
       userId: row.user_id, // Map user_id to userId
-      accessToken: row.access_token_start,
+      accessToken: accessToken, // Use the FULL token from the request
       refreshToken: row.refresh_token,
       expiresAt: row.expires_at, // PostgreSQL returns Date object for TIMESTAMP
       createdAt: row.created_at, // PostgreSQL returns Date object for TIMESTAMP

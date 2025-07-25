@@ -155,10 +155,16 @@ class AuthController {
   // POST /api/auth/logout
   async logout(req, res) {
     try {
-      // Logout using application service
-      await this.authApplicationService.logout();
+      // Try to logout using application service (if user is authenticated)
+      try {
+        await this.authApplicationService.logout();
+        logger.info('✅ [AuthController] User logout successful');
+      } catch (authError) {
+        // If authentication fails, that's OK - we still want to clear cookies
+        logger.info('🔍 [AuthController] User not authenticated, clearing cookies only');
+      }
 
-      // Clear cookies with same settings
+      // ALWAYS clear cookies, regardless of authentication status
       res.clearCookie('accessToken', {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
@@ -170,12 +176,32 @@ class AuthController {
         sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax'
       });
       
+      logger.info('✅ [AuthController] Cookies cleared successfully');
+      
       res.json({
         success: true,
         message: 'Logged out successfully'
       });
     } catch (error) {
-      logger.error('Logout error:', error);
+      logger.error('❌ [AuthController] Logout error:', error);
+      
+      // Even if there's an error, try to clear cookies
+      try {
+        res.clearCookie('accessToken', {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === 'production',
+          sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax'
+        });
+        res.clearCookie('refreshToken', {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === 'production',
+          sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax'
+        });
+        logger.info('✅ [AuthController] Cookies cleared despite error');
+      } catch (cookieError) {
+        logger.error('❌ [AuthController] Failed to clear cookies:', cookieError);
+      }
+      
       res.status(500).json({
         success: false,
         error: 'Logout failed'

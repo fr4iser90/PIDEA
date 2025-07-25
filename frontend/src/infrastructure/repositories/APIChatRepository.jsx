@@ -194,7 +194,8 @@ export const apiCall = async (endpoint, options = {}, projectId = null) => {
     if (!response.ok) {
       if (response.status === 401) {
         logger.info('❌ [APIChatRepository] 401 Unauthorized - user not authenticated');
-        // Trigger authentication failure to redirect to login
+        
+        // CRITICAL FIX: Clear local state and redirect to login
         const { handleAuthFailure } = useAuthStore.getState();
         handleAuthFailure('Session expired. Please log in again.');
         throw new Error('Authentication required. Please log in again.');

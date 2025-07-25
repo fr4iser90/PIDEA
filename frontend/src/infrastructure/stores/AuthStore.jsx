@@ -204,6 +204,13 @@ const useAuthStore = create(
         
         logger.info('🔐 [AuthStore] Handling auth failure:', reason);
         
+        // CRITICAL FIX: Don't clear state if we just logged in successfully
+        const currentState = get();
+        if (currentState.isAuthenticated && currentState.user) {
+          logger.info('🔐 [AuthStore] User is authenticated, not clearing state');
+          return;
+        }
+        
         // Clear all authentication state immediately
         set({ 
           isAuthenticated: false, 

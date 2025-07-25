@@ -38,17 +38,25 @@ class TokenValidator {
         return { isValid: false, reason: 'Token expired' };
       }
 
-      // Validate hash (secure tokens always enabled)
-      if (storedHash) {
-        const isValidHash = this._tokenHasher.validateToken(fullToken, storedHash);
-        if (!isValidHash) {
-          logger.warn('❌ Token validation failed: invalid hash', {
-            tokenLength: fullToken.length,
-            hashLength: storedHash.length
-          });
-          return { isValid: false, reason: 'Invalid token hash' };
-        }
+      // SECURE TOKEN VALIDATION - Hash is REQUIRED
+      if (!storedHash) {
+        logger.warn('❌ Token validation failed: no hash stored', {
+          tokenLength: fullToken.length
+        });
+        return { isValid: false, reason: 'No token hash stored - session invalid' };
       }
+
+      // Validate token against stored hash
+      const isValidHash = this._tokenHasher.validateToken(fullToken, storedHash);
+      if (!isValidHash) {
+        logger.warn('❌ Token validation failed: invalid hash', {
+          tokenLength: fullToken.length,
+          hashLength: storedHash.length
+        });
+        return { isValid: false, reason: 'Invalid token hash' };
+      }
+
+      logger.debug('✅ Hash validation successful');
 
       // Validate prefix match (for quick lookup)
       if (storedPrefix && !fullToken.startsWith(storedPrefix)) {
