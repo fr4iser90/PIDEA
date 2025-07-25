@@ -4,6 +4,8 @@
  * NO HARDCODED VALUES ANYWHERE ELSE IN THE CODEBASE
  */
 
+const path = require('path');
+
 class CentralizedConfig {
   constructor() {
     this.currentEnv = process.env.NODE_ENV || 'development';
@@ -216,7 +218,7 @@ class CentralizedConfig {
       // SQLite configuration (default)
       return {
         type: 'sqlite',
-        database: './pidea-dev.db',
+        database: path.join(process.cwd(), 'backend', 'database', 'pidea-dev.db'),
         logging: true
       };
     }
