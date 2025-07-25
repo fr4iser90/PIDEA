@@ -472,10 +472,25 @@ class AppController {
     let chatWs;
     const connectChatWebSocket = () => {
       chatWs = new WebSocket(`ws://${process.env.VITE_BACKEND_URL?.replace('http://', '')}/ws`);
-      chatWs.onopen = () => {
+      chatWs.onopen = async () => {
         logger.info('Connected for chat updates');
         logger.info('Connection URL:', chatWs.url);
         logger.info('Ready state:', chatWs.readyState);
+        
+        // Subscribe to project updates for task sync notifications
+        try {
+          const { apiCall } = await import('@/infrastructure/repositories/APIChatRepository.jsx');
+          const projectId = await this.getCurrentProjectId();
+          if (projectId) {
+            chatWs.send(JSON.stringify({
+              type: 'subscribe:project',
+              data: { projectId }
+            }));
+            logger.info('Subscribed to project updates for project:', projectId);
+          }
+        } catch (error) {
+          logger.error('Failed to subscribe to project updates:', error);
+        }
       };
       chatWs.onmessage = (event) => {
         const data = JSON.parse(event.data);
@@ -520,6 +535,13 @@ class AppController {
           logger.info('IDE switched WebSocket event received:', data);
           logger.info('Emitting ide:switched event to eventBus');
           this.eventBus.emit('ide:switched', data.data || data);
+        }
+        
+        // Task sync events
+        if (data.type === 'task:sync:completed' || data.event === 'task:sync:completed') {
+          logger.info('Task sync completed WebSocket event received:', data);
+          logger.info('Emitting task:sync:completed event to eventBus');
+          this.eventBus.emit('task:sync:completed', data.data || data);
         }
       };
       chatWs.onclose = () => {
@@ -697,6 +719,15 @@ class AppController {
 
   openFrameworkModal(framework) {
     this.frameworkModalComponent.open(framework);
+  }
+
+  async getCurrentProjectId() {
+    try {
+      return await this.apiRepository.getCurrentProjectId();
+    } catch (error) {
+      logger.error('Failed to get current project ID:', error);
+      return null;
+    }
   }
 }
 

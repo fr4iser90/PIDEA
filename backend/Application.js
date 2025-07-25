@@ -542,7 +542,10 @@ class Application {
     });
 
     const TaskController = require('./presentation/api/TaskController');
-    this.taskController = new TaskController(this.serviceRegistry.getService('taskApplicationService'));
+    this.taskController = new TaskController(
+        this.serviceRegistry.getService('taskApplicationService'),
+        this.eventBus
+    );
 
                 const WorkflowController = require('./presentation/api/WorkflowController');
     this.workflowController = new WorkflowController({

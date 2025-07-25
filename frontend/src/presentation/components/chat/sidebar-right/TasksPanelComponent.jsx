@@ -187,11 +187,45 @@ function TasksPanelComponent({ eventBus, activePort }) {
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
   const [refactoringTasks, setRefactoringTasks] = useState([]);
   const [isAutoRefactoring, setIsAutoRefactoring] = useState(false);
+  
+  // Add state to track if initial sync is complete
+  const [isInitialSyncComplete, setIsInitialSyncComplete] = useState(false);
+  const [isWaitingForSync, setIsWaitingForSync] = useState(true);
 
   // Load tasks on component mount
   useEffect(() => {
     loadTasks();
+    
+    // Wait a bit for backend sync to complete before showing "no tasks"
+    const initialDelay = setTimeout(() => {
+      if (manualTasks.length === 0 && !isLoadingManualTasks) {
+        setIsWaitingForSync(false);
+      }
+    }, 3000); // Wait 3 seconds for initial sync
+    
+    return () => clearTimeout(initialDelay);
   }, []); // Only run once on mount
+
+  // Listen for task sync events from WebSocket
+  useEffect(() => {
+    if (!eventBus) return;
+
+    const handleTaskSyncCompleted = (data) => {
+      logger.info('Task sync completed event received:', data);
+      // Mark initial sync as complete
+      setIsInitialSyncComplete(true);
+      setIsWaitingForSync(false);
+      // Refresh tasks when sync is completed
+      loadTasks(true); // Force refresh
+      setFeedback(`Tasks synced successfully (${data.result?.importedCount || 0} imported)`);
+    };
+
+    eventBus.on('task:sync:completed', handleTaskSyncCompleted);
+
+    return () => {
+      eventBus.off('task:sync:completed', handleTaskSyncCompleted);
+    };
+  }, [eventBus]);
 
   // Add task loading optimization
   const [lastLoadTime, setLastLoadTime] = useState(0);
@@ -217,14 +251,29 @@ function TasksPanelComponent({ eventBus, activePort }) {
         
         setManualTasks(tasks);
         setLastLoadTime(now);
+        
+        // If we found tasks, mark sync as complete
+        if (tasks.length > 0) {
+          setIsInitialSyncComplete(true);
+          setIsWaitingForSync(false);
+        }
+        
         logger.debug('Tasks loaded successfully:', { taskCount: tasks.length });
       } else {
         logger.warn('Load response not successful:', response);
         setManualTasks([]);
+        // Don't immediately show "no tasks" on first load
+        if (lastLoadTime > 0) {
+          setIsWaitingForSync(false);
+        }
       }
     } catch (error) {
       logger.error('Error loading manual tasks:', error);
       setManualTasks([]);
+      // Don't immediately show "no tasks" on first load
+      if (lastLoadTime > 0) {
+        setIsWaitingForSync(false);
+      }
     } finally {
       setIsLoadingManualTasks(false);
     }
@@ -232,6 +281,7 @@ function TasksPanelComponent({ eventBus, activePort }) {
 
   const handleSyncTasks = async () => {
     setIsLoadingManualTasks(true);
+    setIsWaitingForSync(true);
     try {
       const response = await api.syncManualTasks();
       if (response && response.success) {
@@ -243,14 +293,18 @@ function TasksPanelComponent({ eventBus, activePort }) {
         setManualTasks(tasks);
         setFeedback('Tasks synced successfully');
         setLastLoadTime(Date.now());
+        setIsInitialSyncComplete(true);
+        setIsWaitingForSync(false);
         logger.info('Tasks synced successfully:', { taskCount: tasks.length });
       } else {
         logger.warn('Sync response not successful:', response);
         setFeedback('Sync completed but no tasks returned');
+        setIsWaitingForSync(false);
       }
     } catch (error) {
       logger.error('Error syncing tasks:', error);
       setFeedback('Error syncing tasks');
+      setIsWaitingForSync(false);
       // Keep existing tasks on error
     } finally {
       setIsLoadingManualTasks(false);
@@ -549,6 +603,11 @@ function TasksPanelComponent({ eventBus, activePort }) {
             <div className="loading-container">
               <div className="loading-spinner"></div>
               <span className="loading-text">Loading tasks...</span>
+            </div>
+          ) : isWaitingForSync && !isInitialSyncComplete ? (
+            <div className="loading-container">
+              <div className="loading-spinner"></div>
+              <span className="loading-text">Waiting for task sync to complete...</span>
             </div>
           ) : filteredTasks.length > 0 ? (
             <div className="tasks-list">

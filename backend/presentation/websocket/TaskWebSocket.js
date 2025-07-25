@@ -28,6 +28,7 @@ class TaskWebSocket {
         this.eventBus.on('task:created', this.handleTaskCreated.bind(this));
         this.eventBus.on('task:updated', this.handleTaskUpdated.bind(this));
         this.eventBus.on('task:deleted', this.handleTaskDeleted.bind(this));
+        this.eventBus.on('task:sync:completed', this.handleTaskSyncCompleted.bind(this));
         
         // Task execution events
         this.eventBus.on('task:execution:start', this.handleTaskExecutionStart.bind(this));
@@ -617,6 +618,16 @@ class TaskWebSocket {
 
     handleTaskDeleted(data) {
         this.broadcastToRoom(`task:${data.task.id}`, 'task:deleted', data);
+    }
+
+    handleTaskSyncCompleted(data) {
+        // Broadcast to all clients subscribed to the project
+        this.broadcastToRoom(`project:${data.projectId}`, 'task:sync:completed', data);
+        
+        this.logger.info('TaskWebSocket: Task sync completed event broadcasted', {
+            projectId: data.projectId,
+            importedCount: data.result?.importedCount || 0
+        });
     }
 
     // Event handlers for task execution events

@@ -17,8 +17,9 @@ const ServiceLogger = require('@logging/ServiceLogger');
 const logger = new ServiceLogger('TaskController');
 
 class TaskController {
-    constructor(taskApplicationService) {
+    constructor(taskApplicationService, eventBus = null) {
         this.taskApplicationService = taskApplicationService;
+        this.eventBus = eventBus;
         this.logger = logger;
         
         // DEBUG: Check what methods taskApplicationService has
@@ -287,6 +288,17 @@ class TaskController {
             const result = await this.taskApplicationService.syncManualTasks(projectId, userId);
 
             this.logger.info('✅ [TaskController] Manual tasks sync completed successfully');
+
+            // Emit WebSocket event to notify frontend about task sync
+            if (this.eventBus) {
+                this.eventBus.emit('task:sync:completed', {
+                    projectId,
+                    userId,
+                    result,
+                    timestamp: new Date().toISOString()
+                });
+                this.logger.info('📡 [TaskController] Emitted task:sync:completed event');
+            }
 
             res.json({
                 success: true,

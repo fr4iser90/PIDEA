@@ -161,6 +161,20 @@ const useAuthStore = create(
           return true;
         }
 
+        // CRITICAL FIX: Check if we have cookies before attempting validation
+        const hasCookies = document.cookie.includes('accessToken') || document.cookie.includes('refreshToken');
+        if (!hasCookies) {
+          logger.debug('🔍 [AuthStore] No authentication cookies found, skipping validation');
+          set({ 
+            isAuthenticated: false, 
+            user: null,
+            lastAuthCheck: now,
+            isValidating: false,
+            error: null
+          });
+          return false;
+        }
+
         try {
           set({ isValidating: true });
           logger.debug('🔍 [AuthStore] Validating authentication...');
