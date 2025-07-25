@@ -1,4 +1,5 @@
 require('module-alias/register');
+require('dotenv').config({ path: require('path').join(__dirname, '../../.env') });
 const bcrypt = require('bcryptjs');
 const Logger = require('@logging/Logger');
 const AutoSecurityManager = require('@infrastructure/auto/AutoSecurityManager');
@@ -38,7 +39,9 @@ async function createDefaultUser() {
     }
 
     // Create default user
-    const password = 'test123';
+    const email = process.env.ADMIN_EMAIL || 'test@test.com';
+    const password = process.env.ADMIN_PASSWORD || 'test123';
+    const username = process.env.ADMIN_USERNAME || 'test';
     const saltRounds = 12;
     const passwordHash = await bcrypt.hash(password, saltRounds);
     const now = new Date().toISOString();
@@ -46,8 +49,8 @@ async function createDefaultUser() {
     logger.info('👤 Creating new default user...');
     logger.info('📝 User data:', {
       id: 'me',
-      email: 'test@test.com',
-      username: 'test',
+      email: email,
+      username: username,
       role: 'admin',
       status: 'active'
     });
@@ -70,8 +73,8 @@ async function createDefaultUser() {
 
     const insertResult = await databaseConnection.execute(insertSql, [
       'me',
-      'test@test.com',
-      'test',
+      email,
+      username,
       passwordHash,
       'admin',
       'active',
@@ -92,8 +95,8 @@ async function createDefaultUser() {
     logger.info('✅ Verification result (full user row):', JSON.stringify(verifyResult, null, 2));
 
     logger.info('✅ Default user created successfully!');
-    logger.info('📧 Email: test@test.com');
-    logger.info('🔑 Password: test123');
+    logger.info('📧 Email: ' + email);
+    logger.info('🔑 Password: ' + password);
     logger.info('🆔 User ID: me');
 
   } catch (error) {

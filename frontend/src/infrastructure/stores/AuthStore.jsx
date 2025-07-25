@@ -209,21 +209,13 @@ const useAuthStore = create(
         set({ 
           isAuthenticated: false, 
           user: null,
-          redirectToLogin: true, // Force redirect to login
+          redirectToLogin: false, // Don't force redirect, let React handle it
           lastAuthCheck: new Date(),
           error: reason
         });
 
-        // Clear any stored tokens/cookies by calling logout endpoint
-        try {
-          await apiCall('/api/auth/logout', {
-            method: 'POST',
-            credentials: 'include',
-          });
-          logger.info('🔐 [AuthStore] Logout endpoint called to clear session');
-        } catch (error) {
-          logger.warn('🔐 [AuthStore] Failed to call logout endpoint:', error);
-        }
+        // Don't call logout endpoint to avoid infinite loop
+        // Just clear the local state and let the user log in again
 
         // Only show notification for actual session expiry, not manual logout
         if (reason !== 'Manual logout') {
@@ -234,8 +226,7 @@ const useAuthStore = create(
           );
         }
 
-        // Force redirect to login
-        window.location.href = '/';
+        // Don't force redirect - let React Router handle it naturally
       },
 
       // Reset redirect flag

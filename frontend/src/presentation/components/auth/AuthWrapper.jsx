@@ -8,59 +8,25 @@ import RegisterComponent from './RegisterComponent.jsx';
 const AuthWrapper = ({ children }) => {
   const { 
     isAuthenticated, 
-    validateToken, 
-    isLoading, 
-    redirectToLogin,
-    resetRedirectFlag 
+    isLoading
   } = useAuthStore();
   
   const { showInfo, showWarning } = useNotificationStore();
   
   const [authMode, setAuthMode] = useState('login');
-  const [isValidating, setIsValidating] = useState(true);
+  const [isValidating, setIsValidating] = useState(false);
   const [validationError, setValidationError] = useState(null);
 
-  useEffect(() => {
-    const checkAuth = async () => {
-      setIsValidating(true);
-      setValidationError(null);
-      
-      try {
-        logger.debug('🔍 [AuthWrapper] Checking authentication...');
-        const isValid = await validateToken();
-        
-        if (!isValid) {
-          logger.info('❌ [AuthWrapper] Authentication validation failed');
-          setValidationError('Session expired. Please log in again.');
-          showWarning('Your session has expired. Please log in again.', 'Session Expired');
-        } else {
-          logger.debug('✅ [AuthWrapper] Authentication validation successful');
-        }
-      } catch (error) {
-        logger.error('❌ [AuthWrapper] Authentication validation error:', error);
-        setValidationError('Authentication check failed. Please log in again.');
-        showWarning('Authentication check failed. Please log in again.', 'Authentication Error');
-      } finally {
-        setIsValidating(false);
-      }
-    };
+  // No validation on mount - just use the AuthStore state directly
 
-    // Only validate if not already authenticated to reduce requests
-    if (!isAuthenticated) {
-      checkAuth();
-    } else {
-      setIsValidating(false);
-    }
-  }, [isAuthenticated]); // Only run when authentication state changes
-
-  // Handle redirect to login
-  useEffect(() => {
-    if (redirectToLogin && !isValidating) {
-      logger.info('🔄 [AuthWrapper] Redirecting to login...');
-      resetRedirectFlag();
-      // The redirect is handled by AuthStore.handleAuthFailure
-    }
-  }, [redirectToLogin, isValidating, resetRedirectFlag]);
+  // Handle redirect to login - removed since we don't force redirects anymore
+  // useEffect(() => {
+  //   if (redirectToLogin && !isValidating) {
+  //     logger.info('🔄 [AuthWrapper] Redirecting to login...');
+  //     resetRedirectFlag();
+  //     // The redirect is handled by AuthStore.handleAuthFailure
+  //   }
+  // }, [redirectToLogin, isValidating, resetRedirectFlag]);
 
   const handleSwitchToRegister = () => {
     setAuthMode('register');
@@ -72,15 +38,13 @@ const AuthWrapper = ({ children }) => {
     setValidationError(null);
   };
 
-  // Show loading while validating authentication
-  if (isValidating || isLoading) {
+  // Show loading only if AuthStore is loading
+  if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">
-            {isValidating ? 'Validating authentication...' : 'Loading...'}
-          </p>
+          <p className="mt-4 text-gray-600">Loading...</p>
         </div>
       </div>
     );

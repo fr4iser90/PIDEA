@@ -79,14 +79,14 @@ class AuthController {
       res.cookie('accessToken', result.data.session.accessToken, {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
-        sameSite: 'lax', // Allow cross-origin requests in development
+        sameSite: 'none', // Allow cross-origin requests in development
         maxAge: 2 * 60 * 60 * 1000 // 2 hours
       });
       
       res.cookie('refreshToken', result.data.session.refreshToken, {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
-        sameSite: 'lax', // Allow cross-origin requests in development
+        sameSite: 'none', // Allow cross-origin requests in development
         maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
       });
 
@@ -127,9 +127,17 @@ class AuthController {
       // Logout using application service
       await this.authApplicationService.logout();
 
-      // Clear cookies
-      res.clearCookie('accessToken');
-      res.clearCookie('refreshToken');
+      // Clear cookies with same settings
+      res.clearCookie('accessToken', {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'none'
+      });
+      res.clearCookie('refreshToken', {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'none'
+      });
       
       res.json({
         success: true,
@@ -214,14 +222,14 @@ class AuthController {
             res.cookie('accessToken', result.data.session.accessToken, {
               httpOnly: true,
               secure: process.env.NODE_ENV === 'production',
-              sameSite: 'lax',
+              sameSite: 'none',
               maxAge: 2 * 60 * 60 * 1000 // 2 hours
             });
             
             res.cookie('refreshToken', result.data.session.refreshToken, {
               httpOnly: true,
               secure: process.env.NODE_ENV === 'production',
-              sameSite: 'lax',
+              sameSite: 'none',
               maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
             });
 

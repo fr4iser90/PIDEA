@@ -1,5 +1,6 @@
 
 require('module-alias/register');
+require('dotenv').config({ path: require('path').join(__dirname, '../../.env') });
 const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
 const bcrypt = require('bcryptjs');
@@ -24,8 +25,8 @@ const db = new sqlite3.Database(dbPath, (err) => {
 async function createTestUser() {
   try {
     const userId = uuidv4();
-    const email = 'test@test.com';
-    const password = 'test123';
+    const email = process.env.ADMIN_EMAIL || 'test@test.com';
+    const password = process.env.ADMIN_PASSWORD || 'test123';
     const saltRounds = 12;
     const passwordHash = await bcrypt.hash(password, saltRounds);
     const now = new Date().toISOString();
