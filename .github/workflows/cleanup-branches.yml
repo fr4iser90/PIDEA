@@ -1,0 +1,27 @@
+name: Auto-cleanup merged branches
+on:
+  pull_request:
+    types: [closed]
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.merged == true
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Delete merged branch
+        run: |
+          # Branch löschen (nur wenn gemerged)
+          git push origin --delete ${{ github.head_ref }}
+          echo "Deleted branch: ${{ github.head_ref }}"
+      
+      - name: Cleanup local branches
+        run: |
+          # Lokale Branches bereinigen
+          git remote prune origin
+          git branch -r | grep -v "origin/main" | grep -v "origin/pidea-agent" | sed 's/origin\///' | xargs -I {} git branch -D {} 2>/dev/null || true 

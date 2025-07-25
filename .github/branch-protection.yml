@@ -1,0 +1,31 @@
+# Branch Protection Rules für PIDEA
+# Schütze main und pidea-agent vor versehentlichen Änderungen
+
+branches:
+  - name: main
+    protection:
+      required_pull_request_reviews:
+        required_approving_review_count: 1
+        dismiss_stale_reviews: true
+        require_code_owner_reviews: false
+      required_status_checks:
+        strict: true
+        contexts: []
+      enforce_admins: false
+      allow_force_pushes: false
+      allow_deletions: false
+      required_conversation_resolution: true
+      
+  - name: pidea-agent
+    protection:
+      required_pull_request_reviews:
+        required_approving_review_count: 1
+        dismiss_stale_reviews: true
+        require_code_owner_reviews: false
+      required_status_checks:
+        strict: true
+        contexts: []
+      enforce_admins: false
+      allow_force_pushes: false
+      allow_deletions: false
+      required_conversation_resolution: true 
