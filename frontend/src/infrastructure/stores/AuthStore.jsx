@@ -142,38 +142,23 @@ const useAuthStore = create(
       validateToken: async () => {
         const { lastAuthCheck, authCheckInterval, isValidating, isAuthenticated } = get();
         
-        // If already authenticated and recently checked, skip validation
-        if (isAuthenticated && lastAuthCheck && (Date.now() - lastAuthCheck) < authCheckInterval) {
-          logger.debug('🔍 [AuthStore] Skipping validation, already authenticated and recent');
-          return true;
-        }
-        
         // Prevent race conditions
         if (isValidating) {
           logger.debug('🔍 [AuthStore] Validation already in progress, skipping');
           return true;
         }
         
-        // Check if we need to validate (avoid too frequent checks)
+        // CRITICAL FIX: Always validate on app start, even if we think we're authenticated
+        // This prevents the frontend from trusting localStorage when cookies are expired
         const now = new Date();
-        if (lastAuthCheck && (now - lastAuthCheck) < authCheckInterval) {
-          logger.debug('🔍 [AuthStore] Skipping validation, too recent');
+        const shouldValidate = !lastAuthCheck || (now - lastAuthCheck) >= authCheckInterval;
+        
+        if (!shouldValidate && isAuthenticated) {
+          logger.debug('🔍 [AuthStore] Skipping validation, already authenticated and recent');
           return true;
         }
-
-        // CRITICAL FIX: Check if we have cookies before attempting validation
-        const hasCookies = document.cookie.includes('accessToken') || document.cookie.includes('refreshToken');
-        if (!hasCookies) {
-          logger.debug('🔍 [AuthStore] No authentication cookies found, skipping validation');
-          set({ 
-            isAuthenticated: false, 
-            user: null,
-            lastAuthCheck: now,
-            isValidating: false,
-            error: null
-          });
-          return false;
-        }
+        
+        logger.debug('🔍 [AuthStore] Validating authentication with backend...');
 
         try {
           set({ isValidating: true });
