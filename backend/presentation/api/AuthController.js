@@ -79,14 +79,14 @@ class AuthController {
       res.cookie('accessToken', result.data.session.accessToken, {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
-        sameSite: 'none', // Allow cross-origin requests in development
-        maxAge: 2 * 60 * 60 * 1000 // 2 hours
+        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+        maxAge: 15 * 60 * 1000 // 15 minutes (enterprise standard)
       });
       
       res.cookie('refreshToken', result.data.session.refreshToken, {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
-        sameSite: 'none', // Allow cross-origin requests in development
+        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
         maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
       });
 
@@ -103,17 +103,48 @@ class AuthController {
   // POST /api/auth/refresh
   async refresh(req, res) {
     try {
-      // Refresh authentication using application service
-      const result = await this.authApplicationService.refreshToken();
+      // Get refresh token from cookies
+      const refreshToken = req.cookies?.refreshToken;
+      
+      if (!refreshToken) {
+        logger.info('❌ [AuthController] No refresh token found in cookies');
+        return res.status(400).json({
+          success: false,
+          error: 'Refresh token is required'
+        });
+      }
+
+      // Refresh authentication using application service with refresh token
+      const result = await this.authApplicationService.refresh(refreshToken);
+      
+      // Set new cookies with proper security settings
+      res.cookie('accessToken', result.data.session.accessToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+        maxAge: 15 * 60 * 1000 // 15 minutes (enterprise standard)
+      });
+      
+      res.cookie('refreshToken', result.data.session.refreshToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+        maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+      });
+
+      logger.info('✅ [AuthController] Authentication refreshed successfully', {
+        userId: result.data.user.id,
+        userEmail: result.data.user.email
+      });
 
       res.json({
         success: true,
         data: {
-          message: 'Authentication refreshed successfully'
+          user: result.data.user
         }
       });
     } catch (error) {
-      logger.error('Refresh error:', error);
+      logger.error('❌ [AuthController] Refresh error:', error);
       res.status(401).json({
         success: false,
         error: 'Authentication refresh failed'
@@ -131,12 +162,12 @@ class AuthController {
       res.clearCookie('accessToken', {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
-        sameSite: 'none'
+        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax'
       });
       res.clearCookie('refreshToken', {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
-        sameSite: 'none'
+        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax'
       });
       
       res.json({
@@ -222,14 +253,14 @@ class AuthController {
             res.cookie('accessToken', result.data.session.accessToken, {
               httpOnly: true,
               secure: process.env.NODE_ENV === 'production',
-              sameSite: 'none',
-              maxAge: 2 * 60 * 60 * 1000 // 2 hours
+              sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+              maxAge: 15 * 60 * 1000 // 15 minutes (enterprise standard)
             });
             
             res.cookie('refreshToken', result.data.session.refreshToken, {
               httpOnly: true,
               secure: process.env.NODE_ENV === 'production',
-              sameSite: 'none',
+              sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
               maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
             });
 

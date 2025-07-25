@@ -27,11 +27,11 @@ CREATE TABLE IF NOT EXISTS user_sessions (
     access_token_start TEXT NOT NULL, -- First 20 chars of token
     access_token_hash TEXT, -- SHA-256 hash of full access token for secure validation
     refresh_token TEXT,
-    expires_at TEXT NOT NULL,
+    expires_at DATETIME NOT NULL, -- Enterprise: Proper datetime for SQLite
     is_active BOOLEAN NOT NULL DEFAULT true,
     metadata TEXT, -- JSON for session metadata
-    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users (id)
 );
 

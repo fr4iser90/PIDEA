@@ -54,8 +54,8 @@ class PostgreSQLUserSessionRepository extends UserSessionRepository {
       accessTokenStart,
       accessTokenHash,
       sessionData.refreshToken,
-      sessionData.expiresAt,
-      sessionData.createdAt,
+      sessionData.expiresAt, // PostgreSQL will convert ISO string to TIMESTAMP
+      sessionData.createdAt, // PostgreSQL will convert ISO string to TIMESTAMP
       JSON.stringify(sessionData.metadata)
     ]);
 
@@ -78,8 +78,8 @@ class PostgreSQLUserSessionRepository extends UserSessionRepository {
       userId: row.user_id,
       accessToken: row.access_token_start,
       refreshToken: row.refresh_token,
-      expiresAt: row.expires_at,
-      createdAt: row.created_at,
+      expiresAt: row.expires_at, // PostgreSQL returns Date object for TIMESTAMP
+      createdAt: row.created_at, // PostgreSQL returns Date object for TIMESTAMP
       metadata: row.metadata ? JSON.parse(row.metadata) : {},
       accessTokenHash: row.access_token_hash
     });
@@ -98,8 +98,8 @@ class PostgreSQLUserSessionRepository extends UserSessionRepository {
       userId: row.user_id,
       accessToken: row.access_token_start,
       refreshToken: row.refresh_token,
-      expiresAt: row.expires_at,
-      createdAt: row.created_at,
+      expiresAt: row.expires_at, // PostgreSQL returns Date object for TIMESTAMP
+      createdAt: row.created_at, // PostgreSQL returns Date object for TIMESTAMP
       metadata: row.metadata ? JSON.parse(row.metadata) : {},
       accessTokenHash: row.access_token_hash
     }));
@@ -130,8 +130,8 @@ class PostgreSQLUserSessionRepository extends UserSessionRepository {
       userId: row.user_id, // Map user_id to userId
       accessToken: row.access_token_start,
       refreshToken: row.refresh_token,
-      expiresAt: row.expires_at,
-      createdAt: row.created_at,
+      expiresAt: row.expires_at, // PostgreSQL returns Date object for TIMESTAMP
+      createdAt: row.created_at, // PostgreSQL returns Date object for TIMESTAMP
       metadata: row.metadata ? JSON.parse(row.metadata) : {},
       accessTokenHash: row.access_token_hash
     });
@@ -160,8 +160,8 @@ class PostgreSQLUserSessionRepository extends UserSessionRepository {
       userId: row.user_id,
       accessToken: row.access_token_start,
       refreshToken: row.refresh_token,
-      expiresAt: row.expires_at,
-      createdAt: row.created_at,
+      expiresAt: row.expires_at, // PostgreSQL returns Date object for TIMESTAMP
+      createdAt: row.created_at, // PostgreSQL returns Date object for TIMESTAMP
       metadata: row.metadata ? JSON.parse(row.metadata) : {}
     });
   }
@@ -172,19 +172,35 @@ class PostgreSQLUserSessionRepository extends UserSessionRepository {
     }
 
     const isPostgreSQL = this.db.getType() === 'postgresql';
-    const nowExpr = isPostgreSQL ? 'NOW()' : 'CURRENT_TIMESTAMP';
-    const sql = `SELECT * FROM user_sessions WHERE user_id = $1 AND expires_at > ${nowExpr} ORDER BY created_at DESC`;
-    const rows = await this.db.query(sql, [userId]);
-    
-    return rows.map(row => UserSession.fromJSON({
-      id: row.id,
-      userId: row.user_id,
-      accessToken: row.access_token_start,
-      refreshToken: row.refresh_token,
-      expiresAt: row.expires_at,
-      createdAt: row.created_at,
-      metadata: row.metadata ? JSON.parse(row.metadata) : {}
-    }));
+    if (isPostgreSQL) {
+      // Enterprise: Direct timestamp comparison for optimal performance
+      const sql = `SELECT * FROM user_sessions WHERE user_id = $1 AND expires_at > NOW() ORDER BY created_at DESC`;
+      const rows = await this.db.query(sql, [userId]);
+      
+      return rows.map(row => UserSession.fromJSON({
+        id: row.id,
+        userId: row.user_id,
+        accessToken: row.access_token_start,
+        refreshToken: row.refresh_token,
+        expiresAt: row.expires_at, // PostgreSQL returns Date object for TIMESTAMP
+        createdAt: row.created_at, // PostgreSQL returns Date object for TIMESTAMP
+        metadata: row.metadata ? JSON.parse(row.metadata) : {}
+      }));
+    } else {
+      // For SQLite, use datetime comparison
+      const sql = `SELECT * FROM user_sessions WHERE user_id = ? AND expires_at > datetime('now') ORDER BY created_at DESC`;
+      const rows = await this.db.query(sql, [userId]);
+      
+      return rows.map(row => UserSession.fromJSON({
+        id: row.id,
+        userId: row.user_id,
+        accessToken: row.access_token_start,
+        refreshToken: row.refresh_token,
+        expiresAt: row.expires_at, // SQLite returns string, UserSession.fromJSON handles conversion
+        createdAt: row.created_at, // SQLite returns string, UserSession.fromJSON handles conversion
+        metadata: row.metadata ? JSON.parse(row.metadata) : {}
+      }));
+    }
   }
 
   async delete(id) {
@@ -209,10 +225,17 @@ class PostgreSQLUserSessionRepository extends UserSessionRepository {
 
   async deleteExpiredSessions() {
     const isPostgreSQL = this.db.getType() === 'postgresql';
-    const nowExpr = isPostgreSQL ? 'NOW()' : 'CURRENT_TIMESTAMP';
-    const sql = `DELETE FROM user_sessions WHERE expires_at <= ${nowExpr}`;
-    const result = await this.db.execute(sql);
-    return result.rowsAffected;
+    if (isPostgreSQL) {
+      // Enterprise: Direct timestamp comparison for optimal performance
+      const sql = `DELETE FROM user_sessions WHERE expires_at <= NOW()`;
+      const result = await this.db.execute(sql);
+      return result.rowsAffected;
+    } else {
+      // For SQLite, use datetime comparison
+      const sql = `DELETE FROM user_sessions WHERE expires_at <= datetime('now')`;
+      const result = await this.db.execute(sql);
+      return result.rowsAffected;
+    }
   }
 
   async findAll() {
@@ -224,8 +247,8 @@ class PostgreSQLUserSessionRepository extends UserSessionRepository {
       userId: row.user_id,
       accessToken: row.access_token_start,
       refreshToken: row.refresh_token,
-      expiresAt: row.expires_at,
-      createdAt: row.created_at,
+      expiresAt: row.expires_at, // PostgreSQL returns Date object for TIMESTAMP
+      createdAt: row.created_at, // PostgreSQL returns Date object for TIMESTAMP
       metadata: row.metadata ? JSON.parse(row.metadata) : {},
       accessTokenHash: row.access_token_hash
     }));
@@ -250,7 +273,7 @@ class PostgreSQLUserSessionRepository extends UserSessionRepository {
       sessionData.id,
       accessTokenStart,
       sessionData.refreshToken,
-      sessionData.expiresAt,
+      sessionData.expiresAt, // PostgreSQL will convert ISO string to TIMESTAMP
       JSON.stringify(sessionData.metadata)
     ]);
 

@@ -30,11 +30,11 @@ CREATE TABLE IF NOT EXISTS user_sessions (
     access_token_start TEXT NOT NULL, -- First 20 chars of token
     access_token_hash TEXT, -- SHA-256 hash of full access token for secure validation
     refresh_token TEXT,
-    expires_at TEXT NOT NULL,
+    expires_at TIMESTAMP WITH TIME ZONE NOT NULL, -- Enterprise: Proper timestamp with timezone
     is_active BOOLEAN NOT NULL DEFAULT true,
     metadata TEXT, -- JSON for session metadata
-    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users (id)
 );
 
