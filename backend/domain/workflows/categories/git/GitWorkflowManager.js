@@ -188,13 +188,13 @@ class GitWorkflowManager {
         context.get('projectPath'),
         branchName,
         {
-          startPoint: context.get('baseBranch') || 'main',
+          startPoint: context.get('baseBranch') || 'pidea-agent',
           checkout: true
         }
       );
 
       // Update context with branch information
-      context.setBranchInfo(branchName, context.get('baseBranch') || 'main', {
+      context.setBranchInfo(branchName, context.get('baseBranch') || 'pidea-agent', {
         strategy: strategy.constructor.name,
         configuration: strategy.getConfiguration()
       });
@@ -202,7 +202,7 @@ class GitWorkflowManager {
       const branchResult = {
         success: true,
         branchName,
-        baseBranch: context.get('baseBranch') || 'main',
+        baseBranch: context.get('baseBranch') || 'pidea-agent',
         strategy: strategy.constructor.name,
         duration: Date.now() - context.timestamps.get('created').getTime(),
         timestamp: new Date(),

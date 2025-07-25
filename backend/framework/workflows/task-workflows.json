@@ -12,7 +12,7 @@
           "options": {
             "branchName": "task/${task.id}",
             "checkout": true,
-            "fromBranch": "main"
+            "fromBranch": "pidea-agent"
           },
           "strict": false
         },

@@ -213,87 +213,81 @@ class WorkflowGitService {
             return v;
         };
         const strategies = {
-            // Refactoring Workflows
-            [safe(TaskType.REFACTOR)]: {
-                type: 'refactor',
-                prefix: 'refactor',
-                startPoint: 'main',
-                protection: 'medium',
-                autoMerge: false,
-                requiresReview: true,
-                mergeTarget: 'develop'
-            },
-            [safe(TaskType.ANALYSIS)]: {
-                type: 'review',
-                prefix: 'review',
-                startPoint: 'main',
-                protection: 'high',
-                autoMerge: false,
-                requiresReview: true,
-                mergeTarget: 'main'
-            },
-
-            // Feature Implementation Workflows - PIDEA Features Branch
+            // ===== AI-GENERATED TASKS (merge to pidea-ai-main) =====
             [safe(TaskType.FEATURE)]: {
                 type: 'feature',
                 prefix: 'feature',
-                startPoint: 'pidea-features',
+                startPoint: 'pidea-agent',
                 protection: 'medium',
                 autoMerge: false,
                 requiresReview: true,
-                mergeTarget: 'pidea-features'
+                mergeTarget: 'pidea-ai-main',
+                description: 'New feature implementation by AI'
             },
             [safe(TaskType.OPTIMIZATION)]: {
                 type: 'enhancement',
                 prefix: 'enhance',
-                startPoint: 'pidea-features',
+                startPoint: 'pidea-agent',
                 protection: 'medium',
                 autoMerge: false,
                 requiresReview: true,
-                mergeTarget: 'pidea-features'
+                mergeTarget: 'pidea-ai-main',
+                description: 'Performance and code optimization by AI'
+            },
+            [safe(TaskType.REFACTOR)]: {
+                type: 'refactor',
+                prefix: 'refactor',
+                startPoint: 'pidea-agent',
+                protection: 'medium',
+                autoMerge: false,
+                requiresReview: true,
+                mergeTarget: 'pidea-ai-main',
+                description: 'Code refactoring by AI'
+            },
+            [safe(TaskType.ANALYSIS)]: {
+                type: 'analysis',
+                prefix: 'analyze',
+                startPoint: 'pidea-agent',
+                protection: 'low',
+                autoMerge: true,
+                requiresReview: false,
+                mergeTarget: 'pidea-ai-main',
+                description: 'Code analysis by AI'
+            },
+            [safe(TaskType.DOCUMENTATION)]: {
+                type: 'documentation',
+                prefix: 'docs',
+                startPoint: 'pidea-agent',
+                protection: 'low',
+                autoMerge: false,
+                requiresReview: false,
+                mergeTarget: 'pidea-ai-main',
+                description: 'Documentation generation by AI'
             },
 
-            // Bug Fix Workflows
+            // ===== CRITICAL BUG FIXES (merge to main) =====
             [safe(TaskType.BUG)]: {
                 type: 'bugfix',
                 prefix: 'fix',
-                startPoint: 'main',
+                startPoint: 'pidea-agent',
                 protection: 'high',
                 autoMerge: false,
                 requiresReview: true,
-                mergeTarget: 'main'
+                mergeTarget: 'main',
+                description: 'Critical bug fixes'
             },
             [safe(TaskType.SECURITY)]: {
                 type: 'hotfix',
                 prefix: 'hotfix',
-                startPoint: 'main',
+                startPoint: 'pidea-agent',
                 protection: 'critical',
                 autoMerge: false,
                 requiresReview: true,
-                mergeTarget: 'main'
+                mergeTarget: 'main',
+                description: 'Security hotfixes'
             },
 
-            // Analysis Workflows
-            [safe(TaskType.ANALYSIS)]: {
-                type: 'analysis',
-                prefix: 'analyze',
-                startPoint: 'main',
-                protection: 'low',
-                autoMerge: true,
-                requiresReview: false,
-                mergeTarget: 'main'
-            },
-            [safe(TaskType.OPTIMIZATION)]: {
-                type: 'optimization',
-                prefix: 'optimize',
-                startPoint: 'develop',
-                protection: 'medium',
-                autoMerge: false,
-                requiresReview: true,
-                mergeTarget: 'develop'
-            },
-
-            // Testing Workflows 
+            // ===== TESTING TASKS (merge to pidea-agent) =====
             [safe(TaskType.TESTING)]: {
                 type: 'testing',
                 prefix: 'test',
@@ -301,40 +295,236 @@ class WorkflowGitService {
                 protection: 'low',
                 autoMerge: true,
                 requiresReview: false,
-                mergeTarget: 'pidea-agent'
+                mergeTarget: 'pidea-agent',
+                description: 'Testing tasks'
             },
-
-            // Documentation Workflows
-            [safe(TaskType.DOCUMENTATION)]: {
-                type: 'documentation',
-                prefix: 'docs',
-                startPoint: 'main',
+            [safe(TaskType.TEST)]: {
+                type: 'testing',
+                prefix: 'test',
+                startPoint: 'pidea-agent',
                 protection: 'low',
-                autoMerge: false,
+                autoMerge: true,
                 requiresReview: false,
-                mergeTarget: 'main'
+                mergeTarget: 'pidea-agent',
+                description: 'Test execution'
             },
-
-            // Debug Workflows
-            [safe(TaskType.TEST_STATUS)]: {
-                type: 'debug',
-                prefix: 'debug',
-                startPoint: 'main',
-                protection: 'low',
-                autoMerge: false,
-                requiresReview: false,
-                mergeTarget: 'main'
-            },
-
-            // Default strategy
-            default: {
-                type: 'task',
-                prefix: 'task',
-                startPoint: 'main',
+            [safe(TaskType.TEST_FIX)]: {
+                type: 'testing',
+                prefix: 'test-fix',
+                startPoint: 'pidea-agent',
                 protection: 'medium',
                 autoMerge: false,
                 requiresReview: true,
-                mergeTarget: 'main'
+                mergeTarget: 'pidea-agent',
+                description: 'Test fixes'
+            },
+            [safe(TaskType.TEST_COVERAGE)]: {
+                type: 'testing',
+                prefix: 'test-coverage',
+                startPoint: 'pidea-agent',
+                protection: 'low',
+                autoMerge: true,
+                requiresReview: false,
+                mergeTarget: 'pidea-agent',
+                description: 'Test coverage improvements'
+            },
+            [safe(TaskType.TEST_REFACTOR)]: {
+                type: 'testing',
+                prefix: 'test-refactor',
+                startPoint: 'pidea-agent',
+                protection: 'medium',
+                autoMerge: false,
+                requiresReview: true,
+                mergeTarget: 'pidea-agent',
+                description: 'Test refactoring'
+            },
+            [safe(TaskType.TEST_STATUS)]: {
+                type: 'testing',
+                prefix: 'test-status',
+                startPoint: 'pidea-agent',
+                protection: 'low',
+                autoMerge: true,
+                requiresReview: false,
+                mergeTarget: 'pidea-agent',
+                description: 'Test status updates'
+            },
+            [safe(TaskType.TEST_REPORT)]: {
+                type: 'testing',
+                prefix: 'test-report',
+                startPoint: 'pidea-agent',
+                protection: 'low',
+                autoMerge: true,
+                requiresReview: false,
+                mergeTarget: 'pidea-agent',
+                description: 'Test report generation'
+            },
+
+            // ===== TECHNOLOGY-SPECIFIC REFACTORING (merge to pidea-ai-main) =====
+            [safe(TaskType.REFACTOR_NODE)]: {
+                type: 'refactor',
+                prefix: 'refactor-node',
+                startPoint: 'pidea-agent',
+                protection: 'medium',
+                autoMerge: false,
+                requiresReview: true,
+                mergeTarget: 'pidea-ai-main',
+                description: 'Node.js specific refactoring'
+            },
+            [safe(TaskType.REFACTOR_REACT)]: {
+                type: 'refactor',
+                prefix: 'refactor-react',
+                startPoint: 'pidea-agent',
+                protection: 'medium',
+                autoMerge: false,
+                requiresReview: true,
+                mergeTarget: 'pidea-ai-main',
+                description: 'React specific refactoring'
+            },
+            [safe(TaskType.REFACTOR_FRONTEND)]: {
+                type: 'refactor',
+                prefix: 'refactor-frontend',
+                startPoint: 'pidea-agent',
+                protection: 'medium',
+                autoMerge: false,
+                requiresReview: true,
+                mergeTarget: 'pidea-ai-main',
+                description: 'Frontend refactoring'
+            },
+            [safe(TaskType.REFACTOR_BACKEND)]: {
+                type: 'refactor',
+                prefix: 'refactor-backend',
+                startPoint: 'pidea-agent',
+                protection: 'medium',
+                autoMerge: false,
+                requiresReview: true,
+                mergeTarget: 'pidea-ai-main',
+                description: 'Backend refactoring'
+            },
+            [safe(TaskType.REFACTOR_DATABASE)]: {
+                type: 'refactor',
+                prefix: 'refactor-db',
+                startPoint: 'pidea-agent',
+                protection: 'high',
+                autoMerge: false,
+                requiresReview: true,
+                mergeTarget: 'pidea-ai-main',
+                description: 'Database refactoring'
+            },
+            [safe(TaskType.REFACTOR_API)]: {
+                type: 'refactor',
+                prefix: 'refactor-api',
+                startPoint: 'pidea-agent',
+                protection: 'medium',
+                autoMerge: false,
+                requiresReview: true,
+                mergeTarget: 'pidea-ai-main',
+                description: 'API refactoring'
+            },
+
+            // ===== TECHNOLOGY-SPECIFIC TESTING (merge to pidea-agent) =====
+            [safe(TaskType.TEST_UNIT)]: {
+                type: 'testing',
+                prefix: 'test-unit',
+                startPoint: 'pidea-agent',
+                protection: 'low',
+                autoMerge: true,
+                requiresReview: false,
+                mergeTarget: 'pidea-agent',
+                description: 'Unit testing'
+            },
+            [safe(TaskType.TEST_INTEGRATION)]: {
+                type: 'testing',
+                prefix: 'test-integration',
+                startPoint: 'pidea-agent',
+                protection: 'medium',
+                autoMerge: false,
+                requiresReview: true,
+                mergeTarget: 'pidea-agent',
+                description: 'Integration testing'
+            },
+            [safe(TaskType.TEST_E2E)]: {
+                type: 'testing',
+                prefix: 'test-e2e',
+                startPoint: 'pidea-agent',
+                protection: 'medium',
+                autoMerge: false,
+                requiresReview: true,
+                mergeTarget: 'pidea-agent',
+                description: 'End-to-end testing'
+            },
+            [safe(TaskType.TEST_PERFORMANCE)]: {
+                type: 'testing',
+                prefix: 'test-performance',
+                startPoint: 'pidea-agent',
+                protection: 'medium',
+                autoMerge: false,
+                requiresReview: true,
+                mergeTarget: 'pidea-agent',
+                description: 'Performance testing'
+            },
+            [safe(TaskType.TEST_SECURITY)]: {
+                type: 'testing',
+                prefix: 'test-security',
+                startPoint: 'pidea-agent',
+                protection: 'high',
+                autoMerge: false,
+                requiresReview: true,
+                mergeTarget: 'pidea-agent',
+                description: 'Security testing'
+            },
+
+            // ===== ROADMAP FEATURE TYPES (merge to pidea-ai-main) =====
+            [safe(TaskType.FEATURE_SUMMARY)]: {
+                type: 'feature',
+                prefix: 'feature-summary',
+                startPoint: 'pidea-agent',
+                protection: 'low',
+                autoMerge: true,
+                requiresReview: false,
+                mergeTarget: 'pidea-ai-main',
+                description: 'Feature summary generation'
+            },
+            [safe(TaskType.FEATURE_IMPLEMENTATION)]: {
+                type: 'feature',
+                prefix: 'feature-impl',
+                startPoint: 'pidea-agent',
+                protection: 'medium',
+                autoMerge: false,
+                requiresReview: true,
+                mergeTarget: 'pidea-ai-main',
+                description: 'Feature implementation'
+            },
+            [safe(TaskType.FEATURE_PHASE)]: {
+                type: 'feature',
+                prefix: 'feature-phase',
+                startPoint: 'pidea-agent',
+                protection: 'medium',
+                autoMerge: false,
+                requiresReview: true,
+                mergeTarget: 'pidea-ai-main',
+                description: 'Feature phase management'
+            },
+            [safe(TaskType.FEATURE_INDEX)]: {
+                type: 'feature',
+                prefix: 'feature-index',
+                startPoint: 'pidea-agent',
+                protection: 'low',
+                autoMerge: true,
+                requiresReview: false,
+                mergeTarget: 'pidea-ai-main',
+                description: 'Feature indexing'
+            },
+
+            // ===== DEFAULT STRATEGY =====
+            default: {
+                type: 'task',
+                prefix: 'task',
+                startPoint: 'pidea-agent',
+                protection: 'medium',
+                autoMerge: false,
+                requiresReview: true,
+                mergeTarget: 'pidea-ai-main',
+                description: 'Generic task'
             }
         };
 
