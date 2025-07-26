@@ -32,6 +32,19 @@ class AnalysisApplicationService {
     // Application services
     this.logger = logger || new ServiceLogger('AnalysisApplicationService');
     this.etagService = new ETagService();
+    
+    // ✅ Memory-Management settings
+    this.maxMemoryUsage = 512; // MB - Increased for large codebases
+    this.memoryThreshold = 0.8; // 80% of max memory
+    this.enableGarbageCollection = true;
+    this.enableCancellation = false;
+    this.enableFallback = true;
+    this.maxRetries = 2;
+    
+    // Memory tracking
+    this.currentMemoryUsage = 0;
+    this.memoryHistory = [];
+    this.analysisStartTime = null;
   }
 
   /**
@@ -637,27 +650,53 @@ class AnalysisApplicationService {
   }
 
   /**
-   * Execute analysis step via StepRegistry
+   * Execute analysis step via StepRegistry with Memory-Management
    * @param {string} stepName - Step name
    * @param {Object} context - Execution context
    * @returns {Promise<Object>} Step result
    */
   async executeAnalysisStep(stepName, context) {
     try {
+      // ✅ Memory-Check vor Step
+      await this.checkMemoryUsage();
+      
       // Get StepRegistry from global dependency injection
       const stepRegistry = this.getStepRegistry();
       if (!stepRegistry) {
         throw new Error('StepRegistry not available');
       }
       
+      // ✅ Start analysis timer
+      const startTime = Date.now();
+      
       // Execute step
       const result = await stepRegistry.executeStep(stepName, context);
       
-      this.logger.info(`✅ Step ${stepName} executed successfully`);
+      // ✅ Calculate duration
+      const duration = Date.now() - startTime;
+      
+      // ✅ Memory-Cleanup nach Step
+      await this.cleanup();
+      
+      // ✅ Log memory stats
+      const memoryStats = this.getMemoryStats();
+      this.logger.info(`✅ Step ${stepName} executed successfully`, {
+        memoryUsage: `${memoryStats.currentUsage}MB`,
+        peakUsage: `${memoryStats.peakUsage}MB`,
+        duration: `${duration}ms`
+      });
+      
       return result;
       
     } catch (error) {
       this.logger.error(`❌ Step ${stepName} execution failed: ${error.message}`);
+      
+      // ✅ Memory-Fallback bei Problemen
+      if (error.name === 'MemoryError' || error.message.includes('memory')) {
+        this.logger.warn('Memory error detected, returning partial results');
+        return this.createPartialResults('memory-error');
+      }
+      
       throw error;
     }
   }
@@ -729,6 +768,126 @@ class AnalysisApplicationService {
       this.logger.warn('Could not get StepRegistry:', error.message);
       return null;
     }
+  }
+
+  // ✅ Memory-Management methods
+  /**
+   * Check current memory usage and trigger cleanup if needed
+   */
+  async checkMemoryUsage() {
+    const usage = process.memoryUsage();
+    const currentUsage = Math.round(usage.heapUsed / 1024 / 1024);
+    const maxMemory = this.maxMemoryUsage;
+    
+    this.currentMemoryUsage = currentUsage;
+    this.memoryHistory.push({
+      timestamp: new Date(),
+      usage: currentUsage,
+      maxMemory
+    });
+    
+    // Keep only last 100 memory readings
+    if (this.memoryHistory.length > 100) {
+      this.memoryHistory = this.memoryHistory.slice(-100);
+    }
+    
+    // Check if memory usage is approaching the threshold
+    if (currentUsage > maxMemory * this.memoryThreshold) {
+      this.logger.warn(`Memory usage approaching limit: ${currentUsage}MB/${maxMemory}MB, triggering cleanup`);
+      await this.forceGarbageCollection();
+    }
+    
+    // Check if memory usage exceeds the limit
+    if (currentUsage > maxMemory) {
+      this.logger.error(`Memory usage exceeded limit: ${currentUsage}MB/${maxMemory}MB`);
+      
+      // If cancellation is enabled, cancel the analysis
+      if (this.enableCancellation) {
+        throw new Error('Memory limit exceeded');
+      }
+      
+      // If fallback is enabled, return partial results
+      if (this.enableFallback) {
+        this.logger.warn('Memory limit exceeded, returning partial results');
+        return this.createPartialResults('memory');
+      }
+      
+      // Otherwise, throw memory error
+      const error = new Error(`Memory usage exceeded limit: ${currentUsage}MB/${maxMemory}MB`);
+      error.name = 'MemoryError';
+      throw error;
+    }
+    
+    // Log memory usage periodically
+    this.logger.info(`Memory usage check: ${currentUsage}MB/${maxMemory}MB`);
+  }
+
+  /**
+   * Force garbage collection
+   */
+  async forceGarbageCollection() {
+    if (this.enableGarbageCollection && global.gc) {
+      this.logger.info('Forcing garbage collection...');
+      global.gc();
+      
+      // Wait a bit for GC to complete
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
+      const usage = process.memoryUsage();
+      const newUsage = Math.round(usage.heapUsed / 1024 / 1024);
+      this.logger.info(`Garbage collection completed. Memory: ${newUsage}MB`);
+    }
+  }
+
+  /**
+   * Cleanup resources
+   */
+  async cleanup() {
+    this.logger.info('Cleaning up analysis resources...');
+    
+    // Force garbage collection
+    if (this.enableGarbageCollection && global.gc) {
+      global.gc();
+    }
+    
+    this.currentMemoryUsage = 0;
+    this.analysisStartTime = null;
+  }
+
+  /**
+   * Create partial results when memory limit is exceeded
+   */
+  createPartialResults(reason = 'unknown') {
+    const usage = process.memoryUsage();
+    const currentUsage = Math.round(usage.heapUsed / 1024 / 1024);
+    
+    return {
+      success: false,
+      error: `Analysis stopped due to ${reason}`,
+      partial: true,
+      memoryUsage: currentUsage,
+      maxMemoryUsage: this.maxMemoryUsage,
+      message: `Analysis was stopped due to ${reason}. Memory usage: ${currentUsage}MB/${this.maxMemoryUsage}MB`,
+      timestamp: new Date().toISOString()
+    };
+  }
+
+  /**
+   * Get memory statistics
+   */
+  getMemoryStats() {
+    const usage = process.memoryUsage();
+    const currentUsage = Math.round(usage.heapUsed / 1024 / 1024);
+    
+    return {
+      currentUsage,
+      maxMemoryUsage: this.maxMemoryUsage,
+      memoryThreshold: this.memoryThreshold,
+      memoryHistory: this.memoryHistory,
+      peakUsage: this.memoryHistory.length > 0 ? Math.max(...this.memoryHistory.map(h => h.usage)) : currentUsage,
+      averageUsage: this.memoryHistory.length > 0 ? 
+        this.memoryHistory.reduce((sum, h) => sum + h.usage, 0) / this.memoryHistory.length : currentUsage
+    };
   }
 }
 

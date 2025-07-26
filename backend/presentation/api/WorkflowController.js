@@ -498,6 +498,7 @@ class WorkflowController {
                     });
                 } else {
                     stepName = 'ArchitectureAnalysisStep';
+                    stepOptions.analysisType = 'architecture';
                     stepOptions.includePatterns = true;
                     stepOptions.includeStructure = true;
                     stepOptions.includeRecommendations = true;
@@ -513,12 +514,14 @@ class WorkflowController {
                     });
                 } else {
                     stepName = 'CodeQualityAnalysisStep';
+                    stepOptions.analysisType = 'code-quality';
                     stepOptions.includeMetrics = true;
                     stepOptions.includeIssues = true;
                     stepOptions.includeSuggestions = true;
                 }
             } else if (mode === 'tech-stack-analysis') {
                 stepName = 'TechStackAnalysisStep';
+                stepOptions.analysisType = 'tech-stack';
                 stepOptions.includeFrameworks = true;
                 stepOptions.includeLibraries = true;
                 stepOptions.includeTools = true;
@@ -533,6 +536,7 @@ class WorkflowController {
                     });
                 } else {
                     stepName = 'ManifestAnalysisStep';
+                    stepOptions.analysisType = 'manifest';
                     stepOptions.includePackageJson = true;
                     stepOptions.includeConfigFiles = true;
                     stepOptions.includeDockerFiles = true;
@@ -549,6 +553,7 @@ class WorkflowController {
                     });
                 } else {
                     stepName = 'SecurityAnalysisStep';
+                    stepOptions.analysisType = 'security';
                     stepOptions.includeVulnerabilities = true;
                     stepOptions.includeBestPractices = true;
                     stepOptions.includeDependencies = true;
@@ -564,6 +569,7 @@ class WorkflowController {
                     });
                 } else {
                     stepName = 'PerformanceAnalysisStep';
+                    stepOptions.analysisType = 'performance';
                     stepOptions.includeMetrics = true;
                     stepOptions.includeOptimizations = true;
                     stepOptions.includeBottlenecks = true;
@@ -579,6 +585,7 @@ class WorkflowController {
                     });
                 } else {
                     stepName = 'DependencyAnalysisStep';
+                    stepOptions.analysisType = 'dependencies';
                     stepOptions.includeOutdated = true;
                     stepOptions.includeVulnerabilities = true;
                     stepOptions.includeRecommendations = true;

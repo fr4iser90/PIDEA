@@ -85,7 +85,7 @@ class AuthController {
 
       res.cookie('accessToken', result.data.session.accessToken, {
         ...cookieOptions,
-        maxAge: 15 * 60 * 1000 // 15 minutes (enterprise standard)
+        maxAge: process.env.NODE_ENV === 'development' ? 2 * 60 * 60 * 1000 : 15 * 60 * 1000 // 2h dev, 15m prod
       });
       
       res.cookie('refreshToken', result.data.session.refreshToken, {
@@ -130,7 +130,7 @@ class AuthController {
 
       res.cookie('accessToken', result.data.session.accessToken, {
         ...cookieOptions,
-        maxAge: 15 * 60 * 1000 // 15 minutes (enterprise standard)
+        maxAge: process.env.NODE_ENV === 'development' ? 2 * 60 * 60 * 1000 : 15 * 60 * 1000 // 2h dev, 15m prod
       });
       
       res.cookie('refreshToken', result.data.session.refreshToken, {
@@ -289,7 +289,7 @@ class AuthController {
 
             res.cookie('accessToken', result.data.session.accessToken, {
               ...cookieOptions,
-              maxAge: 15 * 60 * 1000 // 15 minutes (enterprise standard)
+              maxAge: process.env.NODE_ENV === 'development' ? 2 * 60 * 60 * 1000 : 15 * 60 * 1000 // 2h dev, 15m prod
             });
             
             res.cookie('refreshToken', result.data.session.refreshToken, {

@@ -76,7 +76,6 @@ class DependencyAnalysisStep {
         metadata: {
           stepName: this.name,
           projectPath,
-          analysisType: 'dependency',
           timestamp: new Date()
         }
       };
@@ -90,7 +89,6 @@ class DependencyAnalysisStep {
         metadata: {
           stepName: this.name,
           projectPath: context.projectPath,
-          analysisType: 'dependency',
           timestamp: new Date()
         }
       };
@@ -111,7 +109,6 @@ class DependencyAnalysisStep {
         recommendations: [],
         summary: {},
         metadata: {
-          analysisType: 'dependencies',
           timestamp: new Date().toISOString(),
           version: '1.0.0'
         }

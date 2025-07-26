@@ -143,19 +143,6 @@ class WebChatApplicationService {
     try {
       const { sessionId, limit = 50, offset = 0 } = queryData;
       
-      this.logger.info('Getting chat history:', { 
-        sessionId: sessionId?.substring(0, 8) + '...',
-        limit,
-        offset,
-        userId: userContext.userId
-      });
-      
-      // Execute chat history step
-      const step = this.stepRegistry.getStep('GetChatHistoryStep');
-      if (!step) {
-        throw new Error('Chat history step not found');
-      }
-      
       const stepData = {
         sessionId: sessionId,
         limit: parseInt(limit),
@@ -164,6 +151,7 @@ class WebChatApplicationService {
         includeUserData: userContext.isAdmin || false
       };
       
+      // ✅ FIX: Only ONE step execution (no duplicate)
       const result = await this.stepRegistry.executeStep('GetChatHistoryStep', stepData);
       
       // Check if step execution was successful
@@ -172,9 +160,9 @@ class WebChatApplicationService {
       }
       
       return {
-        messages: result.result.messages || [],
+        messages: result.result.data?.messages || result.result.messages || [],
         sessionId: result.result.sessionId,
-        totalCount: result.result.totalCount || 0,
+        totalCount: result.result.data?.pagination?.total || result.result.totalCount || 0,
         hasMore: result.result.hasMore || false
       };
     } catch (error) {
@@ -193,19 +181,6 @@ class WebChatApplicationService {
     try {
       const { port, limit = 50, offset = 0 } = queryData;
       
-      // this.logger.info('Getting port chat history:', { 
-      //   port,
-      //   limit,
-      //   offset,
-      //   userId: userContext.userId
-      // });
-      
-      // Execute port chat history step
-      const step = this.stepRegistry.getStep('GetChatHistoryStep');
-      if (!step) {
-        throw new Error('Chat history step not found');
-      }
-      
       const stepData = {
         sessionId: port, // Use port as sessionId for port-based chat history
         limit: parseInt(limit),
@@ -214,6 +189,7 @@ class WebChatApplicationService {
         includeUserData: userContext.isAdmin || false
       };
       
+      // ✅ FIX: Only ONE step execution (no duplicate)
       const result = await this.stepRegistry.executeStep('GetChatHistoryStep', stepData);
       
       // Check if step execution was successful

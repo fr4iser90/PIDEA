@@ -108,7 +108,7 @@ function ChatComponent({ eventBus, activePort, attachedPrompts = [] }) {
       logger.info('setMessages([]) aufgerufen!');
       loadChatHistory(activePort);
     }
-  }, [activePort, loadChatHistory]);
+  }, [activePort]); // ✅ FIX: loadChatHistory aus Dependencies entfernt
 
   useEffect(() => {
     if (shouldAutoScroll) scrollToBottom();

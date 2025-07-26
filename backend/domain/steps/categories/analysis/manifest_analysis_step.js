@@ -67,7 +67,6 @@ class ManifestAnalysisStep {
         metadata: {
           stepName: this.name,
           projectPath,
-          analysisType: 'manifest',
           timestamp: new Date()
         }
       };
@@ -81,7 +80,6 @@ class ManifestAnalysisStep {
         metadata: {
           stepName: this.name,
           projectPath: context.projectPath,
-          analysisType: 'manifest',
           timestamp: new Date()
         }
       };
@@ -97,11 +95,10 @@ class ManifestAnalysisStep {
       issues: [],
       recommendations: [],
       summary: {},
-      metadata: {
-        analysisType: 'manifest',
-        timestamp: new Date().toISOString(),
-        version: '1.0.0'
-      }
+              metadata: {
+          timestamp: new Date().toISOString(),
+          version: '1.0.0'
+        }
     };
 
     const manifests = {

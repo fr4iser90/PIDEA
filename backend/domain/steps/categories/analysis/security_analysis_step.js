@@ -53,7 +53,7 @@ class SecurityAnalysisStep {
       this.validateContext(context);
 
       const projectPath = context.projectPath;
-      const projectId = context.projectId || this.extractProjectId(projectPath);
+      const projectId = context.projectId;
       
       logger.info(`📊 Starting security analysis for: ${projectPath}`);
 
@@ -79,7 +79,6 @@ class SecurityAnalysisStep {
           stepName: this.name,
           projectPath,
           projectId,
-          analysisType: 'security',
           timestamp: new Date()
         }
       };
@@ -93,7 +92,6 @@ class SecurityAnalysisStep {
         metadata: {
           stepName: this.name,
           projectPath: context.projectPath,
-          analysisType: 'security',
           timestamp: new Date()
         }
       };
@@ -117,7 +115,6 @@ class SecurityAnalysisStep {
         recommendations: [],
         summary: {},
         metadata: {
-          analysisType: 'security',
           timestamp: new Date().toISOString(),
           version: '1.0.0'
         }
@@ -669,89 +666,7 @@ class SecurityAnalysisStep {
     return files;
   }
 
-  /**
-   * Save analysis result to database
-   * @param {string} projectId - Project ID
-   * @param {Object} result - Analysis result
-   * @param {Object} context - Execution context
-   */
-  async saveAnalysisResult(projectId, result, context) {
-    try {
-      // Get analysis repository from dependency injection
-      const analysisRepository = this.getAnalysisRepository();
-      if (!analysisRepository) {
-        logger.warn('Analysis repository not available, skipping database save');
-        return;
-      }
 
-      // Create analysis entity
-      const Analysis = require('@domain/entities/Analysis');
-      const analysis = Analysis.create(projectId, 'security', {
-        result: result,
-        metadata: {
-          stepName: this.name,
-          projectPath: context.projectPath,
-          analysisType: 'security',
-          executionContext: context,
-          timestamp: new Date().toISOString()
-        }
-      });
-
-      // Save to database
-      await analysisRepository.save(analysis);
-      
-      logger.info(`💾 Analysis result saved to database: ${analysis.id}`);
-      
-    } catch (error) {
-      logger.error(`❌ Failed to save analysis result: ${error.message}`);
-      // Don't throw error - analysis execution was successful, just saving failed
-    }
-  }
-
-  /**
-   * Get analysis repository from dependency injection
-   * @returns {Object|null} Analysis repository or null
-   */
-  getAnalysisRepository() {
-    try {
-      // Try to get from global dependency injection
-      if (global.dependencyContainer) {
-        return global.dependencyContainer.get('analysisRepository');
-      }
-      
-      // Try to get from step context
-      if (this.context && this.context.analysisRepository) {
-        return this.context.analysisRepository;
-      }
-      
-      return null;
-    } catch (error) {
-      logger.warn('Could not get analysis repository:', error.message);
-      return null;
-    }
-  }
-
-  /**
-   * Extract project ID from project path
-   * @param {string} projectPath - Project path
-   * @returns {string} Project ID
-   */
-  extractProjectId(projectPath) {
-    try {
-      // Try to get from package.json
-      const packageJsonPath = path.join(projectPath, 'package.json');
-      if (fs.existsSync(packageJsonPath)) {
-        const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
-        return packageJson.name || path.basename(projectPath);
-      }
-      
-      // Fallback to directory name
-      return path.basename(projectPath);
-    } catch (error) {
-      logger.warn('Could not extract project ID:', error.message);
-      return path.basename(projectPath);
-    }
-  }
 }
 
 // Create instance for execution

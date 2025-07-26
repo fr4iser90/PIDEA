@@ -74,7 +74,6 @@ class TechStackAnalysisStep {
         metadata: {
           stepName: this.name,
           projectPath,
-          analysisType: 'techstack',
           timestamp: new Date()
         }
       };
@@ -88,7 +87,6 @@ class TechStackAnalysisStep {
         metadata: {
           stepName: this.name,
           projectPath: context.projectPath,
-          analysisType: 'techstack',
           timestamp: new Date()
         }
       };
@@ -112,7 +110,6 @@ class TechStackAnalysisStep {
         recommendations: [],
         summary: {},
         metadata: {
-          analysisType: 'tech-stack',
           timestamp: new Date().toISOString(),
           version: '1.0.0'
         }

@@ -74,7 +74,6 @@ class PerformanceAnalysisStep {
         metadata: {
           stepName: this.name,
           projectPath,
-          analysisType: 'performance',
           timestamp: new Date()
         }
       };
@@ -88,7 +87,6 @@ class PerformanceAnalysisStep {
         metadata: {
           stepName: this.name,
           projectPath: context.projectPath,
-          analysisType: 'performance',
           timestamp: new Date()
         }
       };
@@ -112,7 +110,6 @@ class PerformanceAnalysisStep {
         recommendations: [],
         summary: {},
         metadata: {
-          analysisType: 'performance',
           timestamp: new Date().toISOString(),
           version: '1.0.0'
         }

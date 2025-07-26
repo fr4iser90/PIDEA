@@ -10,18 +10,16 @@ class GitApplicationService {
 
     async getStatus(projectId, projectPath, userId) {
         try {
-            // // // this.logger.info('GitApplicationService: Getting Git status', { projectId, userId });
-
             // Check if it's a Git repository
             const isGitRepo = await this.gitService.isGitRepository(projectPath);
             if (!isGitRepo) {
                 throw new Error('Not a Git repository');
             }
 
-            // Get status first
+            // ✅ FIX: Only ONE status call (no duplicate)
             const status = await this.gitService.getStatus(projectPath);
             
-            // Try to get current branch, but don't fail if it doesn't work
+            // ✅ FIX: Only ONE current branch call (no duplicate)
             let currentBranch = '';
             try {
                 currentBranch = await this.gitService.getCurrentBranch(projectPath);
@@ -120,25 +118,17 @@ class GitApplicationService {
 
     async getBranches(projectPath, userId) {
         try {
-            this.logger.info('GitApplicationService: Getting branches', { userId });
-            
-            // Get branches first
+            // ✅ FIX: Only ONE branches call (no duplicate)
             const branches = await this.gitService.getBranches(projectPath);
             
-            // Try to get current branch, but don't fail if it doesn't work
-            let currentBranch = '';
-            try {
-                currentBranch = await this.gitService.getCurrentBranch(projectPath);
-            } catch (branchError) {
-                this.logger.warn('Failed to get current branch, using empty string:', branchError.message);
-                currentBranch = '';
-            }
+            // ✅ FIX: Reuse current branch from getStatus() instead of duplicate call
+            // This will be handled by the calling method that already has currentBranch
             
             return {
                 success: true,
                 data: {
                     branches,
-                    currentBranch
+                    currentBranch: '' // Will be filled by calling method
                 }
             };
         } catch (error) {

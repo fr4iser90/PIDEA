@@ -98,7 +98,6 @@ class RepositoryTypeAnalysisStep {
         result: result,
         metadata: {
           stepName: this.name,
-          analysisType: this.settings.analysisType,
           duration: result.detectionTime,
           cacheTTL: this.settings.cacheTTL
         }
@@ -110,8 +109,7 @@ class RepositoryTypeAnalysisStep {
         success: false,
         error: error.message,
         metadata: {
-          stepName: this.name,
-          analysisType: this.settings.analysisType
+          stepName: this.name
         }
       };
     }

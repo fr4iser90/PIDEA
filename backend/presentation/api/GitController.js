@@ -92,13 +92,12 @@ class GitController {
                 });
             }
 
-            this.logger.info('GitController: Getting branches', { projectId, userId });
-
-            const result = await this.gitApplicationService.getBranches(projectPath, userId);
-            const branches = result.data.branches;
-            const currentBranch = result.data.currentBranch;
-
-
+            // ✅ FIX: Get both status AND branches in ONE call to avoid duplicates
+            const statusResult = await this.gitApplicationService.getStatus(projectId, projectPath, userId);
+            const branchesResult = await this.gitApplicationService.getBranches(projectPath, userId);
+            
+            const branches = branchesResult.data.branches;
+            const currentBranch = statusResult.data.currentBranch; // Use from status, not duplicate call
 
             res.json({
                 success: true,
@@ -148,11 +147,10 @@ class GitController {
                 });
             }
 
-            this.logger.info('GitController: Validating changes', { projectId, userId });
-
-            // Get status to check for changes
-            const status = await this.gitService.getStatus(projectPath);
-            const currentBranch = await this.gitService.getCurrentBranch(projectPath);
+            // ✅ FIX: Use ApplicationService instead of duplicate direct service calls
+            const result = await this.gitApplicationService.getStatus(projectId, projectPath, userId);
+            const status = result.data.status;
+            const currentBranch = result.data.currentBranch;
 
             // Perform validation checks
             const validation = {

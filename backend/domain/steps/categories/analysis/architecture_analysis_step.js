@@ -74,7 +74,6 @@ class ArchitectureAnalysisStep {
         metadata: {
           stepName: this.name,
           projectPath,
-          analysisType: 'architecture',
           timestamp: new Date()
         }
       };
@@ -88,7 +87,6 @@ class ArchitectureAnalysisStep {
         metadata: {
           stepName: this.name,
           projectPath: context.projectPath,
-          analysisType: 'architecture',
           timestamp: new Date()
         }
       };
@@ -112,7 +110,6 @@ class ArchitectureAnalysisStep {
         recommendations: [],
         summary: {},
         metadata: {
-          analysisType: 'architecture',
           timestamp: new Date().toISOString(),
           version: '1.0.0'
         }
