@@ -1,342 +1,471 @@
-# Backend Performance Bottleneck – Phase 1: Duplicate Call Fixes
+# Backend Performance Bottleneck – Phase 1: In-Memory Chat Cache
 
 ## 📋 Phase Overview
-- **Phase**: 1 of 4
+- **Phase**: 1 of 2
 - **Duration**: 2 hours
 - **Priority**: Critical
 - **Status**: Planning
 - **Dependencies**: None
 
-## 🎯 **PRINCIPLE: Fix Real Duplicate Calls Found in Logs**
+## 🎯 **PRINCIPLE: Simple In-Memory Cache for Live IDE Chat**
 
-### **CRITICAL PROBLEM: Duplicate API Calls**
-- **WebChatController**: `getPortChatHistory()` called 2x (2ms gap)
-- **GitController**: Status/Branch calls executed 2x each
-- **AuthService**: Token validation called 2x
-- **Root Cause**: Real code issues, not monitoring problems
+### **CRITICAL PROBLEM: Chat Extraction Performance**
+- **GetChatHistoryStep**: 1000ms+ execution time (TOO SLOW!)
+- **Live Extraction**: Every request hits browser directly
+- **No Caching**: No performance optimization
+- **Browser Overhead**: Heavy browser operations every time
 
-## 🔍 **Root Cause Analysis - Duplicate Calls**
+## 🔍 **Root Cause Analysis - Chat Performance**
 
-### **Problem 1: WebChatController Duplicate Calls**
+### **Problem 1: Slow Chat Extraction**
 
-**Current Code (PROBLEM):**
+**Current Performance (PROBLEM):**
 ```javascript
-// ❌ BAD - backend/presentation/api/WebChatController.js
-class WebChatController {
-  async getPortChatHistory(req, res) {
-    try {
-      // Why is this called twice?
-      const result1 = await this.webChatService.getPortChatHistory(req.query, req.user);
-      const result2 = await this.webChatService.getPortChatHistory(req.query, req.user); // DUPLICATE!
-      
-      res.json(result1);
-    } catch (error) {
-      res.status(500).json({ error: error.message });
-    }
+// ❌ SLOW - backend/domain/steps/categories/chat/get_chat_history_step.js:162
+if (messages.length === 0 || isPortNumber || context.sessionId === context.port) {
+  const cursorIDEService = context.getService('cursorIDEService');
+  if (cursorIDEService) {
+    // Extract live chat from IDE - 1000ms+ every time!
+    messages = await cursorIDEService.extractChatHistory(); // SLOW!
   }
 }
 ```
 
-**Fix (GOOD):**
+**Optimized Performance (GOOD):**
 ```javascript
-// ✅ GOOD - backend/presentation/api/WebChatController.js
-class WebChatController {
-  async getPortChatHistory(req, res) {
+// ✅ FAST - backend/domain/steps/categories/chat/get_chat_history_step.js
+async execute(context) {
+  // Check cache first
+  const cachedMessages = this.chatCacheService.getChatHistory(context.port);
+  if (cachedMessages) {
+    return {
+      success: true,
+      messages: cachedMessages,
+      fromCache: true
+    };
+  }
+
+  // Extract from browser if cache miss
+  const messages = await cursorIDEService.extractChatHistory();
+  
+  // Cache the result
+  this.chatCacheService.setChatHistory(context.port, messages);
+  
+  return {
+    success: true,
+    messages: messages,
+    fromCache: false
+  };
+}
+```
+
+### **Problem 2: Heavy Browser Operations**
+
+**Current Approach (PROBLEM):**
+```javascript
+// ❌ SLOW - backend/domain/services/chat/ChatHistoryExtractor.js:24
+async extractChatHistory() {
+  const page = await this.browserManager.getPage();
+  await page.waitForTimeout(1000); // ← 1 SECOND DELAY!
+  const allMessages = await this.extractMessagesByIDEType(page); // ← DOM OVERHEAD!
+  return allMessages;
+}
+```
+
+**Optimized Approach (GOOD):**
+```javascript
+// ✅ FAST - backend/domain/services/chat/ChatHistoryExtractor.js
+async extractChatHistory() {
+  const page = await this.browserManager.getPage();
+  
+  // Reduce timeout from 1000ms to 100ms
+  await page.waitForTimeout(100); // ← OPTIMIZED!
+  
+  // Optimize DOM extraction
+  const allMessages = await this.extractMessagesByIDEType(page);
+  
+  return allMessages;
+}
+```
+
+## 📁 **Files to Create/Modify**
+
+### **1. ChatCacheService.js (NEW)**
+**Path**: `backend/infrastructure/cache/ChatCacheService.js`
+
+**Purpose**: Simple in-memory cache for chat messages
+
+**Implementation:**
+```javascript
+const Logger = require('@logging/Logger');
+const logger = new Logger('ChatCacheService');
+
+class ChatCacheService {
+  constructor() {
+    this.memoryCache = new Map(); // port -> { messages, timestamp }
+    this.cacheTTL = 300000; // 5 minutes
+    this.maxCacheSize = 100; // Maximum number of cached ports
+  }
+
+  /**
+   * Get chat history from cache
+   * @param {number} port - IDE port
+   * @returns {Array|null} Cached messages or null if cache miss
+   */
+  getChatHistory(port) {
     try {
-      // Call only once!
-      const result = await this.webChatService.getPortChatHistory(req.query, req.user);
+      const cached = this.memoryCache.get(port);
+      if (cached && Date.now() - cached.timestamp < this.cacheTTL) {
+        logger.info(`Cache HIT for port ${port}: ${cached.messages.length} messages`);
+        return cached.messages;
+      }
       
-      res.json({
-        success: true,
-        data: result
+      if (cached) {
+        logger.info(`Cache EXPIRED for port ${port}`);
+        this.memoryCache.delete(port);
+      }
+      
+      logger.info(`Cache MISS for port ${port}`);
+      return null; // Cache miss
+    } catch (error) {
+      logger.error(`Error getting cache for port ${port}:`, error);
+      return null;
+    }
+  }
+
+  /**
+   * Set chat history in cache
+   * @param {number} port - IDE port
+   * @param {Array} messages - Chat messages
+   */
+  setChatHistory(port, messages) {
+    try {
+      // Clean up old entries if cache is full
+      if (this.memoryCache.size >= this.maxCacheSize) {
+        this.cleanupOldEntries();
+      }
+
+      this.memoryCache.set(port, {
+        messages,
+        timestamp: Date.now()
       });
-    } catch (error) {
-      res.status(500).json({ error: error.message });
-    }
-  }
-}
-```
-
-### **Problem 2: GitController Duplicate Operations**
-
-**Current Code (PROBLEM):**
-```javascript
-// ❌ BAD - backend/presentation/api/GitController.js
-class GitController {
-  async getBranches(req, res) {
-    try {
-      // Both calls executed 2x!
-      const status = await this.gitService.getStatus(); // DUPLICATE!
-      const branches = await this.gitService.getBranches(); // DUPLICATE!
       
-      res.json({ status, branches });
+      logger.info(`Cache SET for port ${port}: ${messages.length} messages`);
     } catch (error) {
-      res.status(500).json({ error: error.message });
+      logger.error(`Error setting cache for port ${port}:`, error);
     }
   }
-}
-```
 
-**Fix (GOOD):**
-```javascript
-// ✅ GOOD - backend/presentation/api/GitController.js
-class GitController {
-  async getBranches(req, res) {
+  /**
+   * Invalidate cache for specific port
+   * @param {number} port - IDE port
+   */
+  invalidateCache(port) {
     try {
-      // Call each method only once
-      const status = await this.gitService.getStatus();
-      const branches = await this.gitService.getBranches();
-      
-      res.json({ status, branches });
+      this.memoryCache.delete(port);
+      logger.info(`Cache INVALIDATED for port ${port}`);
     } catch (error) {
-      res.status(500).json({ error: error.message });
+      logger.error(`Error invalidating cache for port ${port}:`, error);
     }
   }
+
+  /**
+   * Clean up old cache entries
+   */
+  cleanupOldEntries() {
+    try {
+      const now = Date.now();
+      const expiredPorts = [];
+      
+      for (const [port, cached] of this.memoryCache.entries()) {
+        if (now - cached.timestamp > this.cacheTTL) {
+          expiredPorts.push(port);
+        }
+      }
+      
+      expiredPorts.forEach(port => this.memoryCache.delete(port));
+      
+      if (expiredPorts.length > 0) {
+        logger.info(`Cleaned up ${expiredPorts.length} expired cache entries`);
+      }
+    } catch (error) {
+      logger.error('Error cleaning up cache:', error);
+    }
+  }
+
+  /**
+   * Get cache statistics
+   * @returns {Object} Cache statistics
+   */
+  getStats() {
+    const now = Date.now();
+    let validEntries = 0;
+    let expiredEntries = 0;
+    
+    for (const cached of this.memoryCache.values()) {
+      if (now - cached.timestamp < this.cacheTTL) {
+        validEntries++;
+      } else {
+        expiredEntries++;
+      }
+    }
+    
+    return {
+      totalEntries: this.memoryCache.size,
+      validEntries,
+      expiredEntries,
+      maxSize: this.maxCacheSize,
+      ttl: this.cacheTTL
+    };
+  }
 }
+
+module.exports = ChatCacheService;
 ```
 
-### **Problem 3: AuthService Duplicate Validations**
+### **2. GetChatHistoryStep.js (MODIFY)**
+**Path**: `backend/domain/steps/categories/chat/get_chat_history_step.js`
 
-**Current Code (PROBLEM):**
+**Enhancements:**
+- [ ] Add cache service dependency
+- [ ] Add cache check before browser extraction
+- [ ] Add cache storage after extraction
+- [ ] Add cache performance logging
+
+**Code Changes:**
 ```javascript
-// ❌ BAD - backend/application/services/AuthApplicationService.js
-class AuthApplicationService {
-  async validateToken(token) {
-    // Called 2x for same token
-    const validation1 = await this.authService.validateAccessToken(token); // DUPLICATE!
-    const validation2 = await this.authService.validateAccessToken(token); // DUPLICATE!
-    
-    return validation1;
+// Add to constructor
+constructor() {
+  // ... existing code ...
+  this.chatCacheService = null; // Will be injected
+}
+
+// Add to execute method
+async execute(context) {
+  const stepId = `get_chat_history_step_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  
+  try {
+    // ... existing validation code ...
+
+    // Check cache first if we have a port
+    if (context.port && this.chatCacheService) {
+      const cachedMessages = this.chatCacheService.getChatHistory(context.port);
+      if (cachedMessages && cachedMessages.length > 0) {
+        logger.info(`Returning cached messages for port ${context.port}: ${cachedMessages.length} messages`);
+        
+        return {
+          success: true,
+          stepId,
+          sessionId: context.sessionId,
+          port: context.port,
+          userId: context.userId,
+          timestamp: new Date(),
+          fromCache: true,
+          data: {
+            messages: cachedMessages,
+            pagination: {
+              limit,
+              offset,
+              total: cachedMessages.length
+            }
+          }
+        };
+      }
+    }
+
+    // ... existing session logic ...
+
+    // If no messages from session or if sessionId is a port number, try IDE extraction
+    if (messages.length === 0 || isPortNumber || context.sessionId === context.port) {
+      const cursorIDEService = context.getService('cursorIDEService');
+      if (cursorIDEService) {
+        try {
+          // Extract live chat from IDE
+          messages = await cursorIDEService.extractChatHistory();
+          logger.info(`Extracted ${messages.length} messages from IDE on port ${context.port || context.sessionId}`);
+          
+          // Cache the extracted messages
+          if (context.port && this.chatCacheService && messages.length > 0) {
+            this.chatCacheService.setChatHistory(context.port, messages);
+            logger.info(`Cached ${messages.length} messages for port ${context.port}`);
+          }
+        } catch (error) {
+          logger.error(`Failed to extract chat from IDE on port ${context.port || context.sessionId}:`, error);
+          messages = [];
+        }
+      } else {
+        logger.warn(`No cursorIDEService available for port ${context.port || context.sessionId}`);
+        messages = [];
+      }
+    }
+
+    // ... rest of existing code ...
+  } catch (error) {
+    // ... existing error handling ...
   }
 }
 ```
 
-**Fix (GOOD):**
+### **3. WebChatApplicationService.js (MODIFY)**
+**Path**: `backend/application/services/WebChatApplicationService.js`
+
+**Enhancements:**
+- [ ] Add chat cache service dependency
+- [ ] Pass cache service to step context
+- [ ] Add cache performance monitoring
+
+**Code Changes:**
 ```javascript
-// ✅ GOOD - backend/application/services/AuthApplicationService.js
-class AuthApplicationService {
-  async validateToken(token) {
-    // Call only once
-    const validation = await this.authService.validateAccessToken(token);
+// Add to constructor
+constructor(dependencies = {}) {
+  // ... existing dependencies ...
+  this.chatCacheService = dependencies.chatCacheService;
+}
+
+// Modify getPortChatHistory method
+async getPortChatHistory(queryData, userContext) {
+  try {
+    const { port, limit = 50, offset = 0 } = queryData;
     
-    return validation;
+    const stepData = {
+      sessionId: port, // Use port as sessionId for port-based chat history
+      limit: parseInt(limit),
+      offset: parseInt(offset),
+      userId: userContext.userId,
+      includeUserData: userContext.isAdmin || false,
+      port: port // Add port to step data
+    };
+    
+    // Add cache service to step context
+    const stepContext = {
+      ...stepData,
+      getService: (serviceName) => {
+        if (serviceName === 'chatCacheService') {
+          return this.chatCacheService;
+        }
+        return this.serviceRegistry.getService(serviceName);
+      }
+    };
+    
+    const result = await this.stepRegistry.executeStep('GetChatHistoryStep', stepContext);
+    
+    // Check if step execution was successful
+    if (!result.success) {
+      throw new Error(`Step execution failed: ${result.error}`);
+    }
+    
+    return {
+      messages: result.result.data?.messages || result.result.messages || [],
+      sessionId: result.result.sessionId,
+      port: port,
+      totalCount: result.result.data?.pagination?.total || result.result.totalCount || 0,
+      hasMore: result.result.hasMore || false,
+      fromCache: result.result.fromCache || false
+    };
+  } catch (error) {
+    this.logger.error('Get port chat history error:', error);
+    throw error;
   }
 }
 ```
-
-## 📁 **Files to Fix**
-
-### **1. WebChatController.js**
-**Path**: `backend/presentation/api/WebChatController.js`
-
-**Fixes:**
-- [ ] Remove duplicate `getPortChatHistory()` calls
-- [ ] Simplify request handling
-- [ ] Remove redundant error handling
-
-**Code Changes:**
-```javascript
-// ❌ REMOVE: Duplicate calls
-const result1 = await this.webChatService.getPortChatHistory(req.query, req.user);
-const result2 = await this.webChatService.getPortChatHistory(req.query, req.user); // REMOVE!
-
-// ✅ KEEP: Call only once
-const result = await this.webChatService.getPortChatHistory(req.query, req.user);
-```
-
-### **2. GitController.js**
-**Path**: `backend/presentation/api/GitController.js`
-
-**Fixes:**
-- [ ] Remove duplicate `getStatus()` calls
-- [ ] Remove duplicate `getBranches()` calls
-- [ ] Add request deduplication within 100ms window
-
-**Code Changes:**
-```javascript
-// ❌ REMOVE: Duplicate Git operations
-const status1 = await this.gitService.getStatus(); // REMOVE!
-const status2 = await this.gitService.getStatus(); // KEEP!
-
-// ✅ KEEP: Single Git operations
-const status = await this.gitService.getStatus();
-const branches = await this.gitService.getBranches();
-```
-
-### **3. AuthApplicationService.js**
-**Path**: `backend/application/services/AuthApplicationService.js`
-
-**Fixes:**
-- [ ] Remove duplicate `validateAccessToken()` calls
-- [ ] Add auth validation caching for 5 seconds
-- [ ] Fix UserSessionRepository duplicate database queries
-
-**Code Changes:**
-```javascript
-// ❌ REMOVE: Duplicate auth validation
-const validation1 = await this.authService.validateAccessToken(token); // REMOVE!
-const validation2 = await this.authService.validateAccessToken(token); // KEEP!
-
-// ✅ KEEP: Single auth validation with caching
-const validation = await this.authService.validateAccessToken(token);
-```
-
-### **4. UserSessionRepository.js**
-**Path**: `backend/infrastructure/database/repositories/UserSessionRepository.js`
-
-**Fixes:**
-- [ ] Remove duplicate `findByAccessToken()` queries
-- [ ] Add query result caching
-- [ ] Optimize database queries
 
 ## 🎯 **Implementation Steps**
 
-### **Step 1: WebChatController Fix (30min)**
-1. **Locate duplicate calls** in `getPortChatHistory()` method
-2. **Remove redundant calls** - keep only one execution
-3. **Test single call behavior** - verify functionality works
-4. **Update error handling** - ensure proper error responses
+### **Step 1: Create ChatCacheService (45min)**
+1. **Create cache service file** - Simple in-memory cache
+2. **Implement cache methods** - get/set/invalidate with TTL
+3. **Add cache cleanup** - Remove expired entries
+4. **Add logging** - Track cache hits/misses
 
-### **Step 2: GitController Fix (30min)**
-1. **Identify duplicate Git operations** in `getBranches()` method
-2. **Remove duplicate status calls** - keep only one
-3. **Remove duplicate branch calls** - keep only one
-4. **Add request deduplication** - prevent future duplicates
+### **Step 2: Integrate Cache into GetChatHistoryStep (45min)**
+1. **Add cache service dependency** - Inject into step
+2. **Add cache check** - Check cache before browser extraction
+3. **Add cache storage** - Store extracted messages
+4. **Add cache logging** - Track performance improvements
 
-### **Step 3: AuthService Fix (30min)**
-1. **Fix duplicate token validation** in `validateToken()` method
-2. **Add auth validation caching** - 5 second TTL
-3. **Fix UserSessionRepository duplicates** - optimize database queries
-4. **Test auth flow** - verify authentication still works
-
-### **Step 4: Testing & Validation (30min)**
-1. **Test all fixes** with real API calls
-2. **Verify no duplicate calls** in logs
-3. **Performance benchmarks** - measure improvement
-4. **Integration testing** - ensure no regressions
+### **Step 3: Update WebChatApplicationService (30min)**
+1. **Add cache service dependency** - Inject into service
+2. **Pass cache to step context** - Make cache available to steps
+3. **Add cache monitoring** - Track cache usage
+4. **Test integration** - Verify cache works
 
 ## ✅ **Success Criteria**
 
 ### **Performance Targets:**
-- **No Duplicate Calls** in logs for WebChat, Git, and Auth
-- **API Response Time** -50% (eliminate duplicates)
-- **Database Queries** -50% (eliminate duplicates)
-- **Memory Usage** -20% (less redundancy)
+- **Cache Hit Response Time**: <10ms (from 1000ms)
+- **Cache Miss Response Time**: <200ms (from 1000ms)
+- **Cache Hit Rate**: >80% for repeated requests
+- **Memory Usage**: <100MB for cache
+
+### **Functionality:**
+- **Port-Based Caching** - No session IDs required
+- **TTL Management** - 5-minute cache expiration
+- **Cache Cleanup** - Automatic expired entry removal
+- **Error Resilience** - Graceful cache failures
 
 ### **Code Quality:**
-- **Single execution** of each method
-- **Proper error handling** maintained
-- **No regressions** in functionality
-- **Clean code** - remove redundant logic
-
-### **Testing Requirements:**
-- **Unit tests** for each fixed method
-- **Integration tests** for API endpoints
-- **Performance tests** to verify improvements
-- **Log analysis** to confirm no duplicates
+- **Simple Implementation** - No complex session management
+- **Memory Efficient** - TTL-based cache cleanup
+- **Proper Logging** - Track cache performance
+- **Error Handling** - Graceful failures
 
 ## 🔧 **Technical Details**
 
-### **Request Deduplication Strategy:**
+### **Cache Strategy:**
 ```javascript
-// Add to WebChatController.js
-class WebChatController {
-  constructor() {
-    this.requestCache = new Map(); // Cache recent requests
-    this.cacheTTL = 100; // 100ms TTL for deduplication
-  }
-
-  async getPortChatHistory(req, res) {
-    const cacheKey = `${req.params.port}_${req.user.id}`;
-    
-    // Check if same request was made recently
-    if (this.requestCache.has(cacheKey)) {
-      const cached = this.requestCache.get(cacheKey);
-      if (Date.now() - cached.timestamp < this.cacheTTL) {
-        return res.json(cached.result); // Return cached result
-      }
-    }
-
-    // Execute request
-    const result = await this.webChatService.getPortChatHistory(req.query, req.user);
-    
-    // Cache result
-    this.requestCache.set(cacheKey, {
-      result,
-      timestamp: Date.now()
-    });
-
-    res.json(result);
-  }
-}
+const cacheStrategy = {
+  ttl: 300000, // 5 minutes
+  maxSize: 100, // Maximum cached ports
+  cleanup: 'automatic', // Remove expired entries
+  key: 'port', // Port-based caching
+  fallback: 'browser_extraction' // Fallback to live extraction
+};
 ```
 
-### **Auth Caching Strategy:**
+### **Performance Impact:**
 ```javascript
-// Add to AuthApplicationService.js
-class AuthApplicationService {
-  constructor() {
-    this.tokenCache = new Map(); // Cache validated tokens
-    this.cacheTTL = 5000; // 5 second TTL
+const performanceMetrics = {
+  current: {
+    extractionTime: 1000ms,  // Live browser extraction
+    totalTime: 1000ms        // Every request
+  },
+  cached: {
+    cacheHitTime: 10ms,      // Memory access
+    cacheMissTime: 200ms,    // Optimized extraction
+    averageTime: 50ms        // 80% hit rate
   }
-
-  async validateToken(token) {
-    // Check cache first
-    if (this.tokenCache.has(token)) {
-      const cached = this.tokenCache.get(token);
-      if (Date.now() - cached.timestamp < this.cacheTTL) {
-        return cached.result; // Return cached validation
-      }
-    }
-
-    // Validate token
-    const validation = await this.authService.validateAccessToken(token);
-    
-    // Cache result
-    this.tokenCache.set(token, {
-      result: validation,
-      timestamp: Date.now()
-    });
-
-    return validation;
-  }
-}
+};
 ```
 
 ## 📊 **Expected Results**
 
-### **Before Fix:**
+### **Before Cache:**
 ```
-[WebChatController] Getting chat history for port 9222
-[WebChatController] Getting chat history for port 9222  ← DUPLICATE!
-[GitController] Getting status...
-[GitController] Getting status...  ← DUPLICATE!
-[AuthService] Validating token...
-[AuthService] Validating token...  ← DUPLICATE!
+[GetChatHistoryStep] Extracted 15 messages from IDE on port 9222
+[GetChatHistoryStep] executed successfully in 1016ms  ← TOO SLOW!
 ```
 
-### **After Fix:**
+### **After Cache:**
 ```
-[WebChatController] Getting chat history for port 9222  ← SINGLE CALL!
-[GitController] Getting status...  ← SINGLE CALL!
-[AuthService] Validating token...  ← SINGLE CALL!
+[ChatCacheService] Cache HIT for port 9222: 15 messages
+[GetChatHistoryStep] executed successfully in 8ms  ← 125x FASTER!
 ```
 
 ## 🚨 **Risk Mitigation**
 
 ### **High Risk:**
-- **Breaking existing functionality** - Mitigation: Comprehensive testing
-- **Auth validation failures** - Mitigation: Thorough auth flow testing
+- **Cache invalidation issues** - Mitigation: Proper TTL management
+- **Memory usage increase** - Mitigation: Cache size limits
 
 ### **Medium Risk:**
-- **Performance regression** - Mitigation: Benchmarks before/after
-- **Cache invalidation issues** - Mitigation: Proper TTL management
+- **Cache miss performance** - Mitigation: Graceful fallback
+- **Stale data** - Mitigation: 5-minute TTL
 
 ### **Low Risk:**
 - **Minor bugs** - Mitigation: Code review and testing
 
 ## 📝 **Notes**
 
-**This phase focuses ONLY on fixing the real duplicate calls found in logs. No new features, no monitoring systems, just pure code fixes to eliminate the performance bottlenecks.**
+**This phase focuses on adding simple in-memory caching to eliminate the 1000ms+ chat extraction time. No session IDs, no database changes, just fast port-based caching.**
 
-**All fixes are based on actual log analysis showing 2x execution of the same methods within milliseconds.** 
+**The goal is to reduce chat response time from 1000ms to under 100ms through intelligent caching.** 
