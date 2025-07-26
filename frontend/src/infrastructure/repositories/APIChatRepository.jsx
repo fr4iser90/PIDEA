@@ -677,7 +677,7 @@ export default class APIChatRepository extends ChatRepository {
   // Manual Tasks methods
   async getManualTasks(projectId = null) {
     const currentProjectId = projectId || await this.getCurrentProjectId();
-    return apiCall(`/api/projects/${currentProjectId}/tasks?type=documentation`, {}, currentProjectId);
+    return apiCall(`/api/projects/${currentProjectId}/tasks`, {}, currentProjectId);
   }
 
   async getManualTaskDetails(taskId, projectId = null) {
