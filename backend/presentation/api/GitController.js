@@ -92,12 +92,11 @@ class GitController {
                 });
             }
 
-            // ✅ FIX: Get both status AND branches in ONE call to avoid duplicates
-            const statusResult = await this.gitApplicationService.getStatus(projectId, projectPath, userId);
-            const branchesResult = await this.gitApplicationService.getBranches(projectPath, userId);
+            // ✅ OPTIMIZATION: Use combined Git info method to reduce duplicate calls
+            const gitInfo = await this.gitApplicationService.getGitInfo(projectPath, userId);
             
-            const branches = branchesResult.data.branches;
-            const currentBranch = statusResult.data.currentBranch; // Use from status, not duplicate call
+            const branches = gitInfo.data.branches;
+            const currentBranch = gitInfo.data.currentBranch;
 
             res.json({
                 success: true,

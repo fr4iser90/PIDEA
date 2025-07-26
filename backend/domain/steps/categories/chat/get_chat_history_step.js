@@ -174,28 +174,28 @@ class GetChatHistoryStep {
         const chatCacheService = context.getService('chatCacheService');
         
         // Check cache first for performance optimization
-        const cachedMessages = chatCacheService ? chatCacheService.getChatHistory(port) : null;
+        const cachedMessages = chatCacheService ? await chatCacheService.getChatHistory(port) : null;
         if (cachedMessages) {
           logger.info(`Cache hit: Retrieved ${cachedMessages.length} messages from cache for port ${port}`);
           messages = cachedMessages;
           fromCache = true;
         } else {
-          // Cache miss - extract from IDE
+          // Cache miss - extract from IDE with deduplication
           logger.info(`Cache miss: Extracting live chat from IDE for port ${port}`);
           const cursorIDEService = context.getService('cursorIDEService');
           if (cursorIDEService) {
             try {
-              // Extract live chat from IDE
-              messages = await cursorIDEService.extractChatHistory();
-              logger.info(`Extracted ${messages.length} messages from IDE on port ${port}`);
-              
-              // Cache the extracted messages for future requests
-              if (messages && messages.length > 0 && chatCacheService) {
-                chatCacheService.setChatHistory(port, messages, {
-                  extractedAt: new Date().toISOString(),
-                  source: 'ide_extraction'
+              // Use deduplication to prevent multiple simultaneous extractions
+              if (chatCacheService) {
+                messages = await chatCacheService.executeWithDeduplication(port, async () => {
+                  const extractedMessages = await cursorIDEService.extractChatHistory();
+                  logger.info(`Extracted ${extractedMessages.length} messages from IDE on port ${port}`);
+                  return extractedMessages;
                 });
-                logger.info(`Cached ${messages.length} messages for port ${port}`);
+              } else {
+                // Fallback to direct extraction if no cache service
+                messages = await cursorIDEService.extractChatHistory();
+                logger.info(`Extracted ${messages.length} messages from IDE on port ${port}`);
               }
             } catch (error) {
               logger.error(`Failed to extract chat from IDE on port ${port}:`, error);

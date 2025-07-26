@@ -1,70 +1,35 @@
 #!/usr/bin/env node
 
+/**
+ * Performance Monitor for PIDEA Backend
+ * Tracks API response times, duplicate requests, and performance bottlenecks
+ */
+
 const fs = require('fs');
 const path = require('path');
-const { spawn } = require('child_process');
 
 class PerformanceMonitor {
   constructor() {
     this.metrics = {
       requests: 0,
-      errors: 0,
-      slowRequests: [],
       authCalls: 0,
       gitCalls: 0,
       taskCalls: 0,
-      startTime: Date.now()
+      chatCalls: 0,
+      slowRequests: [],
+      errors: 0,
+      duplicateRequests: 0,
+      cacheHits: 0,
+      cacheMisses: 0
     };
     
     this.thresholds = {
-      slowRequest: 1000, // 1 second
-      errorRate: 0.05, // 5%
-      authCallRate: 10, // 10 per minute
-      gitCallRate: 5, // 5 per minute
+      slowRequest: 500, // 500ms
+      verySlowRequest: 1000, // 1 second
+      criticalRequest: 2000 // 2 seconds
     };
-  }
-
-  start() {
-    console.log('🔍 Starting PIDEA Performance Monitor...');
-    console.log('📊 Monitoring backend performance metrics...\n');
-
-    // Monitor backend logs
-    this.monitorBackendLogs();
     
-    // Monitor system resources
-    this.monitorSystemResources();
-    
-    // Generate reports
-    setInterval(() => this.generateReport(), 60000); // Every minute
-  }
-
-  monitorBackendLogs() {
-    const logFile = path.join(__dirname, '../backend/logs/app.log');
-    
-    if (!fs.existsSync(logFile)) {
-      console.log('⚠️  Log file not found, creating...');
-      fs.writeFileSync(logFile, '');
-    }
-
-    // Watch log file for changes
-    fs.watch(logFile, (eventType, filename) => {
-      if (eventType === 'change') {
-        this.analyzeLogFile(logFile);
-      }
-    });
-  }
-
-  analyzeLogFile(logFile) {
-    try {
-      const content = fs.readFileSync(logFile, 'utf8');
-      const lines = content.split('\n').slice(-100); // Last 100 lines
-      
-      lines.forEach(line => {
-        this.analyzeLogLine(line);
-      });
-    } catch (error) {
-      console.error('Error reading log file:', error.message);
-    }
+    this.startTime = Date.now();
   }
 
   analyzeLogLine(line) {
@@ -83,6 +48,24 @@ class PerformanceMonitor {
     // Count task operations
     if (line.includes('[TaskController]') || line.includes('getManualTasks')) {
       this.metrics.taskCalls++;
+    }
+
+    // Count chat operations
+    if (line.includes('[GetChatHistoryStep]') || line.includes('get_chat_history_step')) {
+      this.metrics.chatCalls++;
+    }
+
+    // Detect cache hits/misses
+    if (line.includes('Cache hit:')) {
+      this.metrics.cacheHits++;
+    }
+    if (line.includes('Cache miss:')) {
+      this.metrics.cacheMisses++;
+    }
+
+    // Detect duplicate requests
+    if (line.includes('Duplicate request detected') || line.includes('Duplicate Git info request detected')) {
+      this.metrics.duplicateRequests++;
     }
 
     // Detect slow requests
@@ -108,95 +91,126 @@ class PerformanceMonitor {
     this.metrics.requests++;
   }
 
-  monitorSystemResources() {
-    // Monitor CPU and memory usage
-    setInterval(() => {
-      const usage = process.memoryUsage();
-      const cpuUsage = process.cpuUsage();
-      
-      console.log(`📈 Memory: ${Math.round(usage.heapUsed / 1024 / 1024)}MB | CPU: ${Math.round(cpuUsage.user / 1000)}ms`);
-    }, 30000); // Every 30 seconds
+  generateReport() {
+    const runtime = Date.now() - this.startTime;
+    const runtimeMinutes = (runtime / 1000 / 60).toFixed(2);
+    
+    const cacheHitRate = this.metrics.cacheHits + this.metrics.cacheMisses > 0 
+      ? ((this.metrics.cacheHits / (this.metrics.cacheHits + this.metrics.cacheMisses)) * 100).toFixed(2)
+      : 0;
+
+    const duplicateRate = this.metrics.requests > 0 
+      ? ((this.metrics.duplicateRequests / this.metrics.requests) * 100).toFixed(2)
+      : 0;
+
+    const report = `
+🚀 PIDEA Performance Report
+==========================
+Runtime: ${runtimeMinutes} minutes
+Total Requests: ${this.metrics.requests}
+
+📊 API Call Distribution:
+- Authentication: ${this.metrics.authCalls}
+- Git Operations: ${this.metrics.gitCalls}
+- Task Operations: ${this.metrics.taskCalls}
+- Chat Operations: ${this.metrics.chatCalls}
+
+🎯 Performance Metrics:
+- Cache Hit Rate: ${cacheHitRate}% (${this.metrics.cacheHits} hits, ${this.metrics.cacheMisses} misses)
+- Duplicate Request Rate: ${duplicateRate}% (${this.metrics.duplicateRequests} duplicates)
+- Errors: ${this.metrics.errors}
+
+🐌 Slow Requests (${this.metrics.slowRequests.length}):
+${this.metrics.slowRequests.slice(0, 10).map(req => 
+  `- ${req.duration}ms: ${req.line.substring(0, 100)}...`
+).join('\n')}
+
+💡 Performance Insights:
+${this.generateInsights()}
+`;
+
+    return report;
   }
 
-  generateReport() {
-    const uptime = Date.now() - this.metrics.startTime;
-    const minutes = Math.floor(uptime / 60000);
+  generateInsights() {
+    const insights = [];
     
-    console.log('\n📊 Performance Report:');
-    console.log(`⏱️  Uptime: ${minutes} minutes`);
-    console.log(`📡 Total Requests: ${this.metrics.requests}`);
-    console.log(`❌ Errors: ${this.metrics.errors}`);
-    console.log(`🔐 Auth Calls: ${this.metrics.authCalls}`);
-    console.log(`📝 Git Calls: ${this.metrics.gitCalls}`);
-    console.log(`📋 Task Calls: ${this.metrics.taskCalls}`);
+    if (this.metrics.duplicateRequests > 0) {
+      insights.push(`⚠️  ${this.metrics.duplicateRequests} duplicate requests detected - consider implementing request deduplication`);
+    }
+    
+    if (this.metrics.cacheMisses > this.metrics.cacheHits) {
+      insights.push(`⚠️  Low cache hit rate (${this.metrics.cacheHits} hits vs ${this.metrics.cacheMisses} misses) - consider increasing cache TTL`);
+    }
     
     if (this.metrics.slowRequests.length > 0) {
-      console.log('\n🐌 Slow Requests:');
-      this.metrics.slowRequests.slice(-5).forEach(req => {
-        console.log(`  ${req.duration}ms - ${req.line.substring(0, 100)}...`);
-      });
-    }
-
-    // Calculate rates
-    const authRate = this.metrics.authCalls / minutes;
-    const gitRate = this.metrics.gitCalls / minutes;
-    const errorRate = this.metrics.requests > 0 ? this.metrics.errors / this.metrics.requests : 0;
-
-    console.log('\n📈 Rates (per minute):');
-    console.log(`🔐 Auth Calls: ${authRate.toFixed(2)}`);
-    console.log(`📝 Git Calls: ${gitRate.toFixed(2)}`);
-    console.log(`❌ Error Rate: ${(errorRate * 100).toFixed(2)}%`);
-
-    // Performance warnings
-    if (authRate > this.thresholds.authCallRate) {
-      console.log('⚠️  WARNING: High authentication call rate detected!');
+      const avgSlowRequest = this.metrics.slowRequests.reduce((sum, req) => sum + req.duration, 0) / this.metrics.slowRequests.length;
+      insights.push(`🐌 Average slow request time: ${avgSlowRequest.toFixed(0)}ms - consider optimizing database queries or adding caching`);
     }
     
-    if (gitRate > this.thresholds.gitCallRate) {
-      console.log('⚠️  WARNING: High Git operation rate detected!');
+    if (this.metrics.gitCalls > this.metrics.requests * 0.3) {
+      insights.push(`🔄 High Git operation frequency (${this.metrics.gitCalls} calls) - consider batching Git operations`);
     }
     
-    if (errorRate > this.thresholds.errorRate) {
-      console.log('⚠️  WARNING: High error rate detected!');
+    if (this.metrics.chatCalls > this.metrics.requests * 0.2) {
+      insights.push(`💬 High chat operation frequency (${this.metrics.chatCalls} calls) - consider implementing chat caching`);
     }
-
-    console.log('\n' + '='.repeat(50));
+    
+    return insights.length > 0 ? insights.join('\n') : '✅ No significant performance issues detected';
   }
 
-  getRecommendations() {
-    const recommendations = [];
-    
-    if (this.metrics.authCalls > 100) {
-      recommendations.push('🔐 Implement authentication caching');
+  saveReport(filename = null) {
+    if (!filename) {
+      const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+      filename = `performance-report-${timestamp}.txt`;
     }
     
-    if (this.metrics.gitCalls > 50) {
-      recommendations.push('📝 Implement Git operation caching');
+    const report = this.generateReport();
+    const reportPath = path.join(__dirname, '..', 'output', filename);
+    
+    // Ensure output directory exists
+    const outputDir = path.dirname(reportPath);
+    if (!fs.existsSync(outputDir)) {
+      fs.mkdirSync(outputDir, { recursive: true });
     }
     
-    if (this.metrics.slowRequests.length > 10) {
-      recommendations.push('🐌 Optimize slow database queries');
-    }
+    fs.writeFileSync(reportPath, report);
+    console.log(`📊 Performance report saved to: ${reportPath}`);
     
-    if (this.metrics.errors > 20) {
-      recommendations.push('❌ Review error handling and logging');
-    }
-
-    return recommendations;
+    return reportPath;
   }
 }
 
-// Start monitoring
-const monitor = new PerformanceMonitor();
-monitor.start();
+// CLI usage
+if (require.main === module) {
+  const monitor = new PerformanceMonitor();
+  
+  if (process.argv.length < 3) {
+    console.log('Usage: node performance-monitor.js <log-file> [output-file]');
+    console.log('Example: node performance-monitor.js backend.log performance-report.txt');
+    process.exit(1);
+  }
+  
+  const logFile = process.argv[2];
+  const outputFile = process.argv[3];
+  
+  if (!fs.existsSync(logFile)) {
+    console.error(`❌ Log file not found: ${logFile}`);
+    process.exit(1);
+  }
+  
+  console.log(`📖 Analyzing log file: ${logFile}`);
+  
+  const logContent = fs.readFileSync(logFile, 'utf8');
+  const lines = logContent.split('\n');
+  
+  lines.forEach(line => monitor.analyzeLogLine(line));
+  
+  console.log(monitor.generateReport());
+  
+  if (outputFile) {
+    monitor.saveReport(outputFile);
+  }
+}
 
-// Handle graceful shutdown
-process.on('SIGINT', () => {
-  console.log('\n📊 Final Performance Report:');
-  monitor.generateReport();
-  
-  console.log('\n💡 Recommendations:');
-  monitor.getRecommendations().forEach(rec => console.log(rec));
-  
-  process.exit(0);
-}); 
+module.exports = PerformanceMonitor; 

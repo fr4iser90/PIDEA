@@ -3,18 +3,18 @@ const Logger = require('@logging/Logger');
 
 class GitApplicationService {
     constructor(dependencies = {}) {
-        // ✅ FIX: Verwende NUR die injizierte gitService-Instanz, keine doppelte Erstellung
         this.gitService = dependencies.gitService;
-        if (!this.gitService) {
-            throw new Error('GitApplicationService requires gitService dependency');
-        }
-        this.logger = dependencies.logger || new Logger('GitApplicationService');
-        this.eventBus = dependencies.eventBus;
+        this.logger = dependencies.logger;
+        
+        // Request deduplication to prevent duplicate Git operations
+        this.pendingRequests = new Map(); // key -> Promise
+        this.requestTimeout = 5000; // 5 seconds timeout
     }
 
     async getStatus(projectId, projectPath, userId) {
         try {
-            // Check if it's a Git repository
+            this.logger.info('GitApplicationService: Getting Git status', { projectId, userId });
+
             const isGitRepo = await this.gitService.isGitRepository(projectPath);
             if (!isGitRepo) {
                 throw new Error('Not a Git repository');
@@ -122,21 +122,136 @@ class GitApplicationService {
 
     async getBranches(projectPath, userId) {
         try {
-            // ✅ FIX: Only ONE branches call (no duplicate)
-            const branches = await this.gitService.getBranches(projectPath);
+            this.logger.info('GitApplicationService: Getting branches', { userId });
             
-            // ✅ FIX: Reuse current branch from getStatus() instead of duplicate call
-            // This will be handled by the calling method that already has currentBranch
+            // ✅ FIX: Only get branches, don't duplicate currentBranch call
+            const branches = await this.gitService.getBranches(projectPath);
             
             return {
                 success: true,
                 data: {
-                    branches,
-                    currentBranch: '' // Will be filled by calling method
+                    branches
                 }
             };
         } catch (error) {
             this.logger.error('Error getting branches:', error);
+            throw error;
+        }
+    }
+
+    // ✅ NEW: Combined method to get all Git info in one call
+    async getGitInfo(projectPath, userId) {
+        const requestKey = `git_info_${projectPath}`;
+        
+        // Check for pending request to prevent duplicates
+        if (this.pendingRequests.has(requestKey)) {
+            this.logger.info(`Duplicate Git info request detected for ${projectPath}, waiting for existing request`);
+            try {
+                return await Promise.race([
+                    this.pendingRequests.get(requestKey),
+                    new Promise((_, reject) => 
+                        setTimeout(() => reject(new Error('Request timeout')), this.requestTimeout)
+                    )
+                ]);
+            } catch (error) {
+                this.logger.warn(`Pending Git info request failed for ${projectPath}:`, error.message);
+                this.pendingRequests.delete(requestKey);
+                throw error;
+            }
+        }
+
+        // Create new request
+        const requestPromise = this._executeGitInfoRequest(projectPath, userId);
+        this.pendingRequests.set(requestKey, requestPromise);
+        
+        try {
+            const result = await requestPromise;
+            return result;
+        } finally {
+            this.pendingRequests.delete(requestKey);
+        }
+    }
+
+    async _executeGitInfoRequest(projectPath, userId) {
+        try {
+            this.logger.info('GitApplicationService: Getting comprehensive Git info', { userId });
+            
+            const isGitRepo = await this.gitService.isGitRepository(projectPath);
+            if (!isGitRepo) {
+                throw new Error('Not a Git repository');
+            }
+
+            // Execute all Git operations in parallel to minimize time
+            const [status, branches, currentBranch] = await Promise.all([
+                this.gitService.getStatus(projectPath),
+                this.gitService.getBranches(projectPath),
+                this.gitService.getCurrentBranch(projectPath)
+            ]);
+
+            return {
+                success: true,
+                data: {
+                    status,
+                    branches,
+                    currentBranch
+                }
+            };
+        } catch (error) {
+            this.logger.error('Error getting Git info:', error);
+            throw error;
+        }
+    }
+
+    // ✅ NEW: Deduplicated method for getting current branch
+    async getCurrentBranch(projectPath, userId) {
+        const requestKey = `current_branch_${projectPath}`;
+        
+        if (this.pendingRequests.has(requestKey)) {
+            this.logger.info(`Duplicate current branch request detected for ${projectPath}, waiting for existing request`);
+            try {
+                return await Promise.race([
+                    this.pendingRequests.get(requestKey),
+                    new Promise((_, reject) => 
+                        setTimeout(() => reject(new Error('Request timeout')), this.requestTimeout)
+                    )
+                ]);
+            } catch (error) {
+                this.logger.warn(`Pending current branch request failed for ${projectPath}:`, error.message);
+                this.pendingRequests.delete(requestKey);
+                throw error;
+            }
+        }
+
+        const requestPromise = this._executeCurrentBranchRequest(projectPath, userId);
+        this.pendingRequests.set(requestKey, requestPromise);
+        
+        try {
+            const result = await requestPromise;
+            return result;
+        } finally {
+            this.pendingRequests.delete(requestKey);
+        }
+    }
+
+    async _executeCurrentBranchRequest(projectPath, userId) {
+        try {
+            this.logger.info('GitApplicationService: Getting current branch', { userId });
+            
+            const isGitRepo = await this.gitService.isGitRepository(projectPath);
+            if (!isGitRepo) {
+                throw new Error('Not a Git repository');
+            }
+
+            const currentBranch = await this.gitService.getCurrentBranch(projectPath);
+
+            return {
+                success: true,
+                data: {
+                    currentBranch
+                }
+            };
+        } catch (error) {
+            this.logger.error('Error getting current branch:', error);
             throw error;
         }
     }

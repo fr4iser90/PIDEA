@@ -255,7 +255,8 @@ class StepRegistry {
         result,
         duration,
         step: step.name,
-        timestamp: new Date()
+        timestamp: new Date(),
+        executionMode: shouldExecuteSequentially ? 'sequential' : 'parallel'
       };
     } catch (error) {
       this.logger.error(`❌ Failed to execute step "${name}":`, error.message);
@@ -275,6 +276,39 @@ class StepRegistry {
         timestamp: new Date()
       };
     }
+  }
+
+  /**
+   * Check if a step is a critical workflow step that requires sequential execution
+   * @param {string} stepName - Step name
+   * @param {Object} context - Execution context
+   * @returns {boolean} True if critical workflow step
+   */
+  isCriticalWorkflowStep(stepName, context) {
+    // Critical workflow steps that must be sequential
+    const criticalSteps = [
+      'IDESendMessageStep',
+      'CreateChatStep', 
+      'TaskExecutionStep',
+      'WorkflowExecutionStep',
+      'AnalysisExecutionStep',
+      'RefactoringStep',
+      'TestingStep',
+      'DeploymentStep'
+    ];
+    
+    // Check if step name contains critical keywords
+    const isCriticalByName = criticalSteps.some(critical => 
+      stepName.includes(critical) || stepName.toLowerCase().includes('workflow')
+    );
+    
+    // Check if context indicates this is a workflow execution
+    const isWorkflowContext = context.workflowId || 
+                             context.taskId || 
+                             context.analysisId ||
+                             context.executionMode === 'workflow';
+    
+    return isCriticalByName || isWorkflowContext;
   }
 
   /**

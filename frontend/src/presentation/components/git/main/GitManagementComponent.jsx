@@ -1,5 +1,5 @@
 import { logger } from "@/infrastructure/logging/Logger";
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import '@/css/main/git.css';
 import { apiCall } from '@/infrastructure/repositories/APIChatRepository.jsx';
 import PideaAgentBranchComponent from '../pidea-agent/PideaAgentBranchComponent.jsx';
@@ -27,19 +27,7 @@ const GitManagementComponent = ({ activePort, onGitOperation, onGitStatusChange,
   const [workspacePath, setWorkspacePath] = useState('');
   const [showPideaAgent, setShowPideaAgent] = useState(false);
 
-  useEffect(() => {
-    if (activePort) {
-      loadWorkspacePath();
-    }
-  }, [activePort]);
-
-  useEffect(() => {
-    if (workspacePath) {
-      loadGitStatus();
-      loadBranches();
-    }
-  }, [workspacePath]);
-
+  // ✅ FIX: Move useEffect after function declarations to avoid "can't access lexical declaration" error
   const loadWorkspacePath = async () => {
     try {
       const result = await apiCall('/api/ide/available');
@@ -54,9 +42,16 @@ const GitManagementComponent = ({ activePort, onGitOperation, onGitStatusChange,
     }
   };
 
-  const loadGitStatus = async () => {
+  const loadGitStatus = useCallback(async () => {
     try {
       if (!workspacePath) return;
+      
+      // ✅ OPTIMIZATION: Prevent duplicate requests
+      if (isLoading) {
+        logger.info('Skipping duplicate Git status load - already loading');
+        return;
+      }
+      
       setIsLoading(true);
       
       // Get project ID from workspace path
@@ -66,8 +61,6 @@ const GitManagementComponent = ({ activePort, onGitOperation, onGitStatusChange,
         method: 'POST',
         body: JSON.stringify({ projectPath: workspacePath })
       });
-      
-
       
       setGitStatus(data.data?.status);
       setCurrentBranch(data.data?.currentBranch);
@@ -88,11 +81,17 @@ const GitManagementComponent = ({ activePort, onGitOperation, onGitStatusChange,
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [workspacePath, isLoading, eventBus, onGitStatusChange]);
 
-  const loadBranches = async () => {
+  const loadBranches = useCallback(async () => {
     try {
       if (!workspacePath) return;
+      
+      // ✅ OPTIMIZATION: Prevent duplicate requests
+      if (isLoading) {
+        logger.info('Skipping duplicate branches load - already loading');
+        return;
+      }
       
       // Get project ID from workspace path
       const projectId = getProjectIdFromWorkspace(workspacePath);
@@ -101,8 +100,6 @@ const GitManagementComponent = ({ activePort, onGitOperation, onGitStatusChange,
         method: 'POST',
         body: JSON.stringify({ projectPath: workspacePath })
       });
-      
-
       
       // Ensure we always set an array
       if (data && data.data && Array.isArray(data.data.branches)) {
@@ -118,7 +115,22 @@ const GitManagementComponent = ({ activePort, onGitOperation, onGitStatusChange,
       logger.error('Failed to load branches:', error);
       setBranches([]); // Set empty array on error
     }
-  };
+  }, [workspacePath, isLoading]);
+
+  // ✅ FIX: Move useEffect after function declarations
+  useEffect(() => {
+    if (workspacePath) {
+      loadGitStatus();
+      loadBranches();
+    }
+  }, [workspacePath]); // ✅ FIX: Remove function dependencies to avoid circular reference
+
+  // ✅ FIX: Add back workspace path loading effect
+  useEffect(() => {
+    if (activePort) {
+      loadWorkspacePath();
+    }
+  }, [activePort]);
 
   const handleGitOperation = async (operation, options = {}) => {
     try {

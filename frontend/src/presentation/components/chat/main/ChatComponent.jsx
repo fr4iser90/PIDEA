@@ -78,6 +78,13 @@ function ChatComponent({ eventBus, activePort, attachedPrompts = [] }) {
   // Lade Chat immer, wenn activePort sich ändert (React-Way)
   const loadChatHistory = useCallback(async (port) => {
     if (!port) return;
+    
+    // ✅ OPTIMIZATION: Prevent duplicate requests for the same port
+    if (lastLoadedPort.current === port) {
+      logger.info('Skipping duplicate chat load for port:', port);
+      return;
+    }
+    
     logger.info('Lade Chat für Port:', port);
     try {
       const data = await apiCall(API_CONFIG.endpoints.chat.portHistory(port));

@@ -23,49 +23,32 @@ class ChatHistoryExtractor {
     };
   }
 
+  /**
+   * Extract chat history from the current IDE
+   * @returns {Promise<Array>} Array of chat messages
+   */
   async extractChatHistory() {
-    const startTime = Date.now();
     try {
-      const page = await this.browserManager.getPage();
-      if (!page) {
-        throw new Error('No IDE page available');
-      }
-
-      if (!this.selectors) {
-        throw new Error(`No chat selectors available for IDE type: ${this.ideType}`);
-      }
-
-      // For VS Code, we need to navigate to the actual application window
-      // Only if we're on DevTools page
-      if (this.ideType === IDETypes.VSCODE) {
-        const pageTitle = await page.title();
-        if (pageTitle === 'DevTools') {
-          await this.navigateToVSCodeApp(page);
-        }
-      }
-
-      // Wait for messages to load (optimized from 1000ms to 100ms)
-      await page.waitForTimeout(100);
-
-      // Use IDE-specific extraction logic
-      const allMessages = await this.extractMessagesByIDEType(page);
-
-      // Update conversation context
-      this.updateConversationContext(allMessages);
-
-      const endTime = Date.now();
-      const duration = endTime - startTime;
+      const startTime = Date.now();
+      logger.info('ChatHistoryExtractor: Starting chat extraction');
       
-      logger.info(`ChatHistoryExtractor completed in ${duration}ms`, {
-        ideType: this.ideType,
+      const page = await this.browserManager.getPage();
+      
+      // ✅ OPTIMIZATION: Reduce timeout from 1000ms to 100ms for faster response
+      await page.waitForTimeout(100); // Reduced from 1000ms
+      
+      const allMessages = await this.extractMessagesByIDEType(page);
+      
+      const duration = Date.now() - startTime;
+      logger.info(`ChatHistoryExtractor: Extraction completed in ${duration}ms`, {
         messageCount: allMessages.length,
-        duration: duration
+        duration
       });
-
+      
       return allMessages;
     } catch (error) {
-      logger.error(`Error extracting chat history from ${this.ideType}:`, error);
-      return [];
+      logger.error('ChatHistoryExtractor: Failed to extract chat history:', error);
+      throw error;
     }
   }
 
