@@ -444,14 +444,14 @@ class TaskApplicationService {
       const analysis = await this.projectAnalyzer.analyzeProject(workspacePath, {
         ...options,
         projectId,
-        includeTaskSuggestions: true
+        includeRecommendations: true
       });
       
       return {
         projectId,
         workspacePath,
         analysis: analysis.summary,
-        taskSuggestions: analysis.taskSuggestions || [],
+        recommendations: analysis.recommendations || [],
         issues: analysis.issues || [],
         recommendations: analysis.recommendations || []
       };

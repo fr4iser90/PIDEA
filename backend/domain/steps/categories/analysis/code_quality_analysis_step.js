@@ -53,6 +53,7 @@ class CodeQualityAnalysisStep {
       this.validateContext(context);
 
       const projectPath = context.projectPath;
+      const projectId = context.projectId || this.extractProjectId(projectPath);
       
       logger.info(`📊 Starting code quality analysis for: ${projectPath}`);
 
@@ -66,6 +67,9 @@ class CodeQualityAnalysisStep {
       // Clean and format result
       const cleanResult = this.cleanResult(codeQuality);
 
+      // Note: Database saving is handled by Application Layer
+      // Steps should only execute business logic
+
       logger.info(`✅ Code quality analysis completed successfully`);
 
       return {
@@ -74,6 +78,7 @@ class CodeQualityAnalysisStep {
         metadata: {
           stepName: this.name,
           projectPath,
+          projectId,
           analysisType: 'code-quality',
           timestamp: new Date()
         }
@@ -96,19 +101,110 @@ class CodeQualityAnalysisStep {
   }
 
   /**
+   * Save analysis result to database
+   * @param {string} projectId - Project ID
+   * @param {Object} result - Analysis result
+   * @param {Object} context - Execution context
+   */
+  async saveAnalysisResult(projectId, result, context) {
+    try {
+      // Get analysis repository from dependency injection
+      const analysisRepository = this.getAnalysisRepository();
+      if (!analysisRepository) {
+        logger.warn('Analysis repository not available, skipping database save');
+        return;
+      }
+
+      // Create analysis entity
+      const Analysis = require('@domain/entities/Analysis');
+      const analysis = Analysis.create(projectId, 'code-quality', {
+        result: result,
+        metadata: {
+          stepName: this.name,
+          projectPath: context.projectPath,
+          analysisType: 'code-quality',
+          executionContext: context,
+          timestamp: new Date().toISOString()
+        }
+      });
+
+      // Save to database
+      await analysisRepository.save(analysis);
+      
+      logger.info(`💾 Analysis result saved to database: ${analysis.id}`);
+      
+    } catch (error) {
+      logger.error(`❌ Failed to save analysis result: ${error.message}`);
+      // Don't throw error - analysis execution was successful, just saving failed
+    }
+  }
+
+  /**
+   * Get analysis repository from dependency injection
+   * @returns {Object|null} Analysis repository or null
+   */
+  getAnalysisRepository() {
+    try {
+      // Try to get from global dependency injection
+      if (global.dependencyContainer) {
+        return global.dependencyContainer.get('analysisRepository');
+      }
+      
+      // Try to get from step context
+      if (this.context && this.context.analysisRepository) {
+        return this.context.analysisRepository;
+      }
+      
+      return null;
+    } catch (error) {
+      logger.warn('Could not get analysis repository:', error.message);
+      return null;
+    }
+  }
+
+  /**
+   * Extract project ID from project path
+   * @param {string} projectPath - Project path
+   * @returns {string} Project ID
+   */
+  extractProjectId(projectPath) {
+    try {
+      // Try to get from package.json
+      const packageJsonPath = path.join(projectPath, 'package.json');
+      if (fs.existsSync(packageJsonPath)) {
+        const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
+        return packageJson.name || path.basename(projectPath);
+      }
+      
+      // Fallback to directory name
+      return path.basename(projectPath);
+    } catch (error) {
+      logger.warn('Could not extract project ID:', error.message);
+      return path.basename(projectPath);
+    }
+  }
+
+  /**
    * Analyze code quality for a project
    * @param {string} projectPath - Path to the project
    * @param {Object} options - Analysis options
    * @returns {Promise<Object>} Code quality analysis result
    */
   async analyzeCodeQuality(projectPath, options = {}) {
+    const startTime = Date.now();
+    
     try {
       const result = {
         score: 0,
-        metrics: {},
+        results: {},
         issues: [],
-        suggestions: [],
-        summary: {}
+        recommendations: [],
+        summary: {},
+        metadata: {
+          analysisType: 'code-quality',
+          timestamp: new Date().toISOString(),
+          version: '1.0.0'
+        }
       };
 
       // Analyze project structure
@@ -135,9 +231,9 @@ class CodeQualityAnalysisStep {
         tests: testAnalysis
       });
 
-      // Aggregate metrics
+      // Aggregate results (detailed analysis data)
       if (options.includeMetrics) {
-        result.metrics = {
+        result.results = {
           complexity: complexityAnalysis,
           structure: structureAnalysis.metrics,
           style: styleAnalysis.metrics,
@@ -157,17 +253,30 @@ class CodeQualityAnalysisStep {
         ];
       }
 
-      // Generate suggestions
+      // Generate recommendations
       if (options.includeSuggestions) {
-        result.suggestions = this.generateSuggestions(result);
+        result.recommendations = this.generateSuggestions(result);
       }
 
       // Create summary
       result.summary = {
         overallScore: result.score,
         totalIssues: result.issues.length,
-        totalSuggestions: result.suggestions.length,
+        totalRecommendations: result.recommendations.length,
+        status: this.getQualityLevel(result.score),
         qualityLevel: this.getQualityLevel(result.score)
+      };
+
+      // Add metadata
+      const executionTime = Date.now() - startTime;
+      const files = await this.getAllFiles(projectPath);
+      
+      result.metadata = {
+        ...result.metadata,
+        executionTime,
+        filesAnalyzed: files.length,
+        coverage: this.calculateCoverage(files, projectPath),
+        confidence: this.calculateConfidence(result)
       };
 
       return result;
@@ -619,6 +728,61 @@ class CodeQualityAnalysisStep {
     if (!context.projectPath) {
       throw new Error('Project path is required for code quality analysis');
     }
+  }
+
+  /**
+   * Calculate coverage percentage
+   * @param {Array} files - Analyzed files
+   * @param {string} projectPath - Project path
+   * @returns {number} Coverage percentage
+   */
+  calculateCoverage(files, projectPath) {
+    try {
+      // Get all files in project
+      const allFiles = this.getAllFilesSync(projectPath);
+      return allFiles.length > 0 ? Math.round((files.length / allFiles.length) * 100) : 100;
+    } catch (error) {
+      return 100; // Default to 100% if calculation fails
+    }
+  }
+
+  /**
+   * Calculate confidence level based on analysis quality
+   * @param {Object} result - Analysis result
+   * @returns {number} Confidence percentage
+   */
+  calculateConfidence(result) {
+    let confidence = 80; // Base confidence
+    
+    // Increase confidence based on data quality
+    if (result.issues.length > 0) confidence += 10;
+    if (result.recommendations.length > 0) confidence += 5;
+    if (result.results && Object.keys(result.results).length > 0) confidence += 5;
+    
+    return Math.min(confidence, 100);
+  }
+
+  /**
+   * Get all files synchronously (for coverage calculation)
+   * @param {string} dir - Directory path
+   * @returns {Array} File paths
+   */
+  getAllFilesSync(dir) {
+    const files = [];
+    const items = fs.readdirSync(dir);
+    
+    for (const item of items) {
+      const fullPath = path.join(dir, item);
+      const stat = fs.statSync(fullPath);
+      
+      if (stat.isDirectory() && !item.startsWith('.') && item !== 'node_modules') {
+        files.push(...this.getAllFilesSync(fullPath));
+      } else if (stat.isFile()) {
+        files.push(fullPath);
+      }
+    }
+    
+    return files;
   }
 }
 

@@ -44,7 +44,15 @@ const useAuthStore = create(
           logger.info('🔍 [AuthStore] Login successful, cookies set by backend');
           logger.info('🔍 [AuthStore] User data:', userData.user);
 
-          // No token storage - use cookies only (enterprise standard)
+          // CRITICAL FIX: Validate authentication with backend before setting state
+          logger.info('🔍 [AuthStore] Validating authentication with backend...');
+          const validationResult = await get().validateToken();
+          
+          if (!validationResult) {
+            throw new Error('Authentication validation failed after login');
+          }
+
+          logger.info('✅ [AuthStore] Authentication validated successfully with backend');
 
           set({
             user: userData.user,
@@ -83,6 +91,20 @@ const useAuthStore = create(
           // Backend returns: { success: true, user: ... } for register
           // Authentication handled via httpOnly cookies
           const userData = data.data || data;
+
+          // CRITICAL FIX: Add delay to ensure cookies are properly set
+          logger.info('🔍 [AuthStore] Waiting for cookies to be properly set after registration...');
+          await new Promise(resolve => setTimeout(resolve, 1000)); // 1 second delay
+
+          // Validate authentication immediately after registration
+          logger.info('🔍 [AuthStore] Validating authentication after registration...');
+          const validationResult = await get().validateToken();
+          
+          if (!validationResult) {
+            throw new Error('Authentication validation failed after registration');
+          }
+
+          logger.info('✅ [AuthStore] Authentication validated successfully after registration');
 
           set({
             user: userData.user,

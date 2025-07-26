@@ -159,7 +159,13 @@ const analysisExcludes = {
   // Development-specific excludes - includes development tools and hot-reload
   development: [
     // Standard excludes
-    ...analysisExcludes.standard,
+    'node_modules',
+    '.git',
+    'dist',
+    'build',
+    'coverage',
+    '.jest-cache',
+    '.nyc_output',
     
     // Development tools
     '.webpack',
@@ -188,7 +194,13 @@ const analysisExcludes = {
   // Production-specific excludes - focuses on build artifacts and logs
   production: [
     // Standard excludes
-    ...analysisExcludes.standard,
+    'node_modules',
+    '.git',
+    'dist',
+    'build',
+    'coverage',
+    '.jest-cache',
+    '.nyc_output',
     
     // Production logs
     'logs',

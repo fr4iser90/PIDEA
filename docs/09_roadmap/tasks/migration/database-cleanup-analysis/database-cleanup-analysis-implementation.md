@@ -14,8 +14,9 @@
 - **Database Changes**: 
   - Entferne alle Migrationen und Datenübernahmen
   - Passe nur die Init-Dateien an:
-    - Nur noch eine Tabelle: `analysis` (basiert auf `analysis_steps`)
-    - Entferne alle redundanten Analysis-Tabellen komplett
+    - **Nur noch eine Tabelle:** `analysis` (basiert auf `analysis_steps`)
+    - **Entferne alle anderen Analysis-Tabellen komplett**
+    - **KEINE** `task_suggestions` Tabelle mehr! Recommendations sind im `analysis.result` JSON enthalten.
     - Passe alle Foreign Keys und Referenzen in Init-SQL an
 - **API Changes**: Update alle Endpunkte, die bisher auf andere Tabellen zugreifen
 - **Backend Changes**: Repositories, Services, Entities auf neue Struktur anpassen
@@ -24,8 +25,8 @@
 ### 3. File Impact Analysis
 
 #### Files to Modify:
-- [ ] `database/init-postgres.sql` - Nur noch Tabelle `analysis` (basiert auf `analysis_steps`), alle anderen Analysis-Tabellen entfernen
-- [ ] `database/init-sqlite.sql` - Nur noch Tabelle `analysis` (basiert auf `analysis_steps`), alle anderen Analysis-Tabellen entfernen
+- [ ] `database/init-postgres.sql` - Nur noch Tabelle `analysis` (basiert auf `analysis_steps`), **alle anderen Analysis-Tabellen entfernen**
+- [ ] `database/init-sqlite.sql` - Nur noch Tabelle `analysis` (basiert auf `analysis_steps`), **alle anderen Analysis-Tabellen entfernen**
 - [ ] `backend/domain/entities/Analysis.js` - Neue Entity für die einheitliche Tabelle
 - [ ] `backend/infrastructure/database/AnalysisRepository.js` - Repository für neue Tabelle
 - [ ] `backend/application/services/AnalysisApplicationService.js` - Service auf neue Struktur anpassen
@@ -37,31 +38,31 @@
 - [ ] `backend/domain/entities/ProjectAnalysis.js` - Entfernen
 - [ ] `backend/infrastructure/database/SQLiteProjectAnalysisRepository.js` - Entfernen
 - [ ] `backend/infrastructure/database/PostgreSQLProjectAnalysisRepository.js` - Entfernen
-- [ ] `backend/infrastructure/database/SQLiteAnalysisRepository.js` - Entfernen (arbeitet mit analysis_results)
-- [ ] `backend/infrastructure/database/InMemoryAnalysisRepository.js` - Entfernen (arbeitet mit analysis_results)
+- [ ] `backend/infrastructure/database/SQLiteAnalysisRepository.js` - Entfernen (alte Version, falls noch vorhanden)
+- [ ] `backend/infrastructure/database/InMemoryAnalysisRepository.js` - Entfernen (alte Version, falls noch vorhanden)
 - [ ] `backend/domain/repositories/AnalysisResultRepository.js` - Entfernen (falls existiert)
 - [ ] `backend/domain/repositories/ProjectAnalysisRepository.js` - Entfernen
-- [ ] `backend/domain/repositories/TaskSuggestionRepository.js` - Entfernen
-- [ ] `backend/infrastructure/database/SQLiteTaskSuggestionRepository.js` - Entfernen
-- [ ] `backend/infrastructure/database/PostgreSQLTaskSuggestionRepository.js` - Entfernen
+- [ ] `backend/domain/repositories/TaskSuggestionRepository.js` - **Entfernen!**
+- [ ] `backend/infrastructure/database/SQLiteTaskSuggestionRepository.js` - **Entfernen!**
+- [ ] `backend/infrastructure/database/PostgreSQLTaskSuggestionRepository.js` - **Entfernen!**
 
 ### 4. Repository Impact Analysis
 
 #### ❌ **Repository-Dateien die ENTFERNT werden:**
 
 **AnalysisResult-bezogene Repositories:**
-- `backend/infrastructure/database/SQLiteAnalysisRepository.js` → Arbeitet mit `analysis_results` Tabelle
-- `backend/infrastructure/database/InMemoryAnalysisRepository.js` → Arbeitet mit `analysis_results` Tabelle
+- `backend/infrastructure/database/SQLiteAnalysisRepository.js` → Entfernen, falls noch alte Version vorhanden
+- `backend/infrastructure/database/InMemoryAnalysisRepository.js` → Entfernen
 
 **ProjectAnalysis-bezogene Repositories:**
-- `backend/domain/repositories/ProjectAnalysisRepository.js` → Interface für ProjectAnalysis
-- `backend/infrastructure/database/SQLiteProjectAnalysisRepository.js` → Arbeitet mit `project_analysis` Tabelle
-- `backend/infrastructure/database/PostgreSQLProjectAnalysisRepository.js` → Arbeitet mit `project_analysis` Tabelle
+- `backend/domain/repositories/ProjectAnalysisRepository.js` → Entfernen
+- `backend/infrastructure/database/SQLiteProjectAnalysisRepository.js` → Entfernen
+- `backend/infrastructure/database/PostgreSQLProjectAnalysisRepository.js` → Entfernen
 
 **TaskSuggestion-bezogene Repositories:**
-- `backend/domain/repositories/TaskSuggestionRepository.js` → Interface für TaskSuggestions
-- `backend/infrastructure/database/SQLiteTaskSuggestionRepository.js` → Arbeitet mit `task_suggestions` Tabelle
-- `backend/infrastructure/database/PostgreSQLTaskSuggestionRepository.js` → Arbeitet mit `task_suggestions` Tabelle
+- `backend/domain/repositories/TaskSuggestionRepository.js` → **Entfernen!**
+- `backend/infrastructure/database/SQLiteTaskSuggestionRepository.js` → **Entfernen!**
+- `backend/infrastructure/database/PostgreSQLTaskSuggestionRepository.js` → **Entfernen!**
 
 #### ✅ **Repository-Dateien die BLEIBEN:**
 
@@ -92,12 +93,12 @@
 #### ❌ **Frontend-Komponenten die ENTFERNT werden:**
 
 **Recommendation-spezifische Komponenten:**
-- [ ] `frontend/src/components/RecommendationStep.jsx` - Separate Recommendation-Step-Komponente
-- [ ] `frontend/src/components/RecommendationList.jsx` - Separate Recommendation-Liste
-- [ ] `frontend/src/components/RecommendationCard.jsx` - Separate Recommendation-Karte
-- [ ] `frontend/src/components/RecommendationWorkflow.jsx` - Separate Recommendation-Workflow
-- [ ] `frontend/src/hooks/useRecommendations.js` - Separate Recommendation-Hooks
-- [ ] `frontend/src/services/RecommendationService.js` - Separate Recommendation-Service
+- [ ] `frontend/src/components/RecommendationStep.jsx` - Entfernen
+- [ ] `frontend/src/components/RecommendationList.jsx` - Entfernen
+- [ ] `frontend/src/components/RecommendationCard.jsx` - Entfernen
+- [ ] `frontend/src/components/RecommendationWorkflow.jsx` - Entfernen
+- [ ] `frontend/src/hooks/useRecommendations.js` - Entfernen
+- [ ] `frontend/src/services/RecommendationService.js` - Entfernen
 
 **Recommendation-spezifische Buttons/Actions:**
 - [ ] "Generate Recommendations" Button → Recommendations sind automatisch in Analysen
@@ -130,7 +131,7 @@
 ### 6. Implementation Phases
 
 #### Phase 1: Init-Dateien anpassen (1 Stunde)
-- [ ] Passe `init-postgres.sql` und `init-sqlite.sql` an: Nur noch Tabelle `analysis` (basiert auf `analysis_steps`), alle anderen Analysis-Tabellen entfernen
+- [ ] Passe `init-postgres.sql` und `init-sqlite.sql` an: **Nur noch Tabelle `analysis` (basiert auf `analysis_steps`), alle anderen Analysis-Tabellen entfernen**
 
 #### Phase 2: Backend/Frontend Code anpassen (1 Stunde)
 - [ ] Entities, Repositories, Services, Controller, API-Calls auf neue Struktur anpassen
@@ -167,146 +168,15 @@
 
 ---
 
-## Validation Results - 2024-12-19
-
-### ✅ Completed Items
-- [x] File: `database/init-postgres.sql` - Status: Contains all redundant tables (analysis_results, project_analysis, task_suggestions)
-- [x] File: `database/init-sqlite.sql` - Status: Contains all redundant tables (analysis_results, project_analysis, task_suggestions)
-- [x] File: `backend/domain/entities/AnalysisResult.js` - Status: Exists and needs removal
-- [x] File: `backend/domain/entities/ProjectAnalysis.js` - Status: Exists and needs removal
-- [x] File: `backend/domain/entities/TaskSuggestion.js` - Status: Exists and needs removal
-- [x] File: `backend/domain/entities/AnalysisStep.js` - Status: Exists and will be basis for unified Analysis entity
-- [x] File: `backend/domain/repositories/AnalysisStepRepository.js` - Status: Exists and will be renamed to AnalysisRepository
-- [x] File: `backend/infrastructure/database/SQLiteAnalysisRepository.js` - Status: Works with analysis_results table
-- [x] File: `backend/infrastructure/database/InMemoryAnalysisRepository.js` - Status: Works with analysis_results table
-- [x] File: `backend/infrastructure/database/SQLiteProjectAnalysisRepository.js` - Status: Exists and needs removal
-- [x] File: `backend/infrastructure/database/PostgreSQLProjectAnalysisRepository.js` - Status: Exists and needs removal
-- [x] File: `backend/infrastructure/database/SQLiteTaskSuggestionRepository.js` - Status: Exists and needs removal
-- [x] File: `backend/infrastructure/database/PostgreSQLTaskSuggestionRepository.js` - Status: Exists and needs removal
-- [x] File: `backend/infrastructure/dependency-injection/ServiceRegistry.js` - Status: Contains registrations for all repositories to be removed
-- [x] File: `frontend/src/presentation/components/analysis/AnalysisRecommendations.jsx` - Status: Exists and will be adapted
-- [x] File: `frontend/src/presentation/components/analysis/AnalysisDataViewer.jsx` - Status: Contains recommendations section
-- [x] File: `frontend/src/infrastructure/repositories/APIChatRepository.jsx` - Status: Contains analysis and recommendation API calls
-
-### ⚠️ Issues Found
-- [ ] File: `backend/domain/entities/Analysis.js` - Status: **NOT FOUND** - Needs creation for unified analysis table
-- [ ] File: `backend/infrastructure/database/AnalysisRepository.js` - Status: **NOT FOUND** - Needs creation for unified analysis table
-- [ ] File: `backend/application/services/AnalysisApplicationService.js` - Status: **NOT FOUND** - Needs creation or adaptation
-- [ ] File: `backend/presentation/api/AnalysisController.js` - Status: **NOT FOUND** - Needs creation or adaptation
-- [ ] Import: `backend/domain/entities/index.js` - Status: **NEEDS UPDATE** - Exports AnalysisResult, ProjectAnalysis, TaskSuggestion
-- [ ] Import: `backend/domain/repositories/index.js` - Status: **NEEDS UPDATE** - Exports TaskSuggestionRepository
-- [ ] Service: `backend/application/services/ProjectAnalysisApplicationService.js` - Status: **NEEDS REMOVAL** - Uses ProjectAnalysis entity
-- [ ] Service: `backend/domain/services/task/TaskAnalysisService.js` - Status: **NEEDS UPDATE** - References AnalysisResult entity
-- [ ] Service: `backend/domain/services/analysis/ArchitectureService.js` - Status: **NEEDS UPDATE** - References AnalysisResult entity
-- [ ] Service: `backend/domain/services/task/TaskService.js` - Status: **NEEDS UPDATE** - Uses projectAnalyzer with old structure
-
-### 🔧 Improvements Made
-- Updated file paths to match actual project structure
-- Added missing entity and repository files that need creation
-- Corrected import statements and dependencies
-- Enhanced implementation details with actual codebase references
-- Added comprehensive validation of existing files and dependencies
-
-### 📊 Code Quality Metrics
-- **Coverage**: 85% (needs improvement for new unified structure)
-- **Security Issues**: 0 (no security concerns identified)
-- **Performance**: Good (reduced table complexity will improve performance)
-- **Maintainability**: Excellent (unified structure reduces complexity)
-
-### 🚀 Next Steps
-1. Create missing files: `backend/domain/entities/Analysis.js`, `backend/infrastructure/database/AnalysisRepository.js`
-2. Update entity and repository index files
-3. Remove redundant services and update existing ones
-4. Update ServiceRegistry to remove old registrations
-5. Adapt frontend components to use unified analysis structure
-
-### 📋 Task Splitting Recommendations
-- **Main Task**: Database Analysis Tables Cleanup (2 hours) → **NO SPLITTING NEEDED**
-- **Reason**: Task is well-scoped and within 8-hour limit
-- **File Count**: 15 files to modify (within 10-file limit)
-- **Phase Count**: 2 phases (within 5-phase limit)
-- **Complexity**: Low to medium complexity
-- **Dependencies**: No external dependencies
-
----
-
-## Gap Analysis - Database Analysis Tables Cleanup
-
-### Missing Components
-1. **Backend Entities**
-   - `Analysis.js` (planned but not implemented) - Unified analysis entity
-
-2. **Backend Repositories**
-   - `AnalysisRepository.js` (planned but not implemented) - Unified analysis repository
-
-3. **Backend Services**
-   - `AnalysisApplicationService.js` (planned but not implemented) - Application service for unified analysis
-
-4. **Backend Controllers**
-   - `AnalysisController.js` (planned but not implemented) - API controller for unified analysis
-
-### Incomplete Implementations
-1. **Database Schema**
-   - Current: 3 separate analysis tables (analysis_results, analysis_steps, project_analysis)
-   - Target: 1 unified analysis table (analysis)
-   - Gap: Schema consolidation needed
-
-2. **Entity Structure**
-   - Current: AnalysisResult, ProjectAnalysis, TaskSuggestion entities
-   - Target: Single Analysis entity
-   - Gap: Entity consolidation needed
-
-3. **Repository Pattern**
-   - Current: Multiple repositories for different analysis types
-   - Target: Single AnalysisRepository
-   - Gap: Repository consolidation needed
-
-### Broken Dependencies
-1. **Import Errors**
-   - `backend/domain/entities/index.js` exports entities to be removed
-   - `backend/domain/repositories/index.js` exports repositories to be removed
-   - ServiceRegistry registers repositories to be removed
-
-2. **Service Dependencies**
-   - ProjectAnalysisApplicationService depends on ProjectAnalysis entity
-   - TaskAnalysisService depends on AnalysisResult entity
-   - ArchitectureService depends on AnalysisResult entity
-
-### Task Splitting Analysis
-1. **Current Task Size**: 2 hours (well within 8-hour limit)
-2. **File Count**: 15 files to modify (within 10-file limit)
-3. **Phase Count**: 2 phases (within 5-phase limit)
-4. **Recommended Split**: **NO SPLITTING REQUIRED**
-5. **Independent Components**: All components are tightly coupled to the same goal
-
----
-
-## Tabellen die ENTFERNT werden:
-
-### ❌ **Zu entfernende Analysis-Tabellen:**
-1. **`analysis_results`** → Redundant mit `analysis_steps`
-2. **`project_analysis`** → Redundant mit `analysis_steps`
-3. **`task_suggestions`** → Recommendations sind bereits in `analysis.result` JSON
-
-### ✅ **Behaltene Tabellen:**
-1. **`users`** → Single-User System
-2. **`user_sessions`** → Session-Management
-3. **`projects`** → DevOps-Projekte
-4. **`tasks`** → Task-Management
-5. **`task_templates`** → Task-Vorlagen
-6. **`task_sessions`** → Task-Ausführung
-7. **`chat_sessions`** → AI-Chat
-8. **`chat_messages`** → Chat-Nachrichten
-9. **`workflows`** → Automatisierung
-10. **`workflow_executions`** → Workflow-Historie
-11. **`streaming_sessions`** → Screen-Streaming
-12. **`frame_metrics`** → Performance-Metriken
+## WICHTIG: Recommendations/Task Suggestions
+- **KEINE** separate Tabelle `task_suggestions` mehr!
+- **KEINE** TaskSuggestion-Entity oder -Repository mehr!
+- **Recommendations** sind **nur noch** ein Feld im `analysis.result` JSON der `analysis`-Tabelle.
+- **Alle alten Suggestion-Komponenten/Repos/Entities entfernen!**
 
 ---
 
 ## Neue Init-SQL Struktur (Finale Version)
-
-### PostgreSQL/SQLite Init (nur noch eine Tabelle)
 ```sql
 CREATE TABLE IF NOT EXISTS analysis (
     id TEXT PRIMARY KEY DEFAULT uuid_generate_v4()::text,

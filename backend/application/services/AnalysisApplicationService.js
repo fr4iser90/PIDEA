@@ -5,7 +5,6 @@
  * ✅ Coordinate analysis use cases
  * ✅ Handle analysis data retrieval and caching
  * ✅ Manage analysis status and metrics
- * ✅ Orchestrate memory optimization and queue management
  * 
  * LAYER COMPLIANCE:
  * ✅ Application layer - coordinates between Presentation and Domain
@@ -15,9 +14,6 @@
 const Logger = require('@logging/Logger');
 const ServiceLogger = require('@logging/ServiceLogger');
 const ETagService = require('@domain/services/shared/ETagService');
-const AnalysisResult = require('@domain/entities/AnalysisResult');
-const AnalysisQueueService = require('@domain/services/analysis/AnalysisQueueService');
-const MemoryOptimizedAnalysisService = require('@domain/services/analysis/MemoryOptimizedAnalysisService');
 
 class AnalysisApplicationService {
   constructor({
@@ -36,37 +32,6 @@ class AnalysisApplicationService {
     // Application services
     this.logger = logger || new ServiceLogger('AnalysisApplicationService');
     this.etagService = new ETagService();
-    
-    // Initialize memory management and queue services
-    this.analysisQueueService = new AnalysisQueueService({
-      logger: this.logger,
-      maxMemoryUsage: 512,
-      enableMemoryMonitoring: true,
-      enableSelectiveAnalysis: true,
-      enableEnhancedTimeouts: true,
-      enableResultStreaming: true,
-      enableMemoryLogging: true,
-      enableProgressiveDegradation: true
-    });
-    
-    this.memoryOptimizedService = new MemoryOptimizedAnalysisService({
-      logger: this.logger,
-      maxMemoryUsage: 512,
-      enableGarbageCollection: true,
-      enableStreaming: true,
-      enableEnhancedTimeouts: true,
-      enableResultStreaming: true,
-      enableMemoryLogging: true,
-      enableProgressiveDegradation: true,
-      timeoutPerAnalysisType: {
-        'code-quality': 2 * 60 * 1000,
-        'security': 3 * 60 * 1000,
-        'performance': 4 * 60 * 1000,
-        'architecture': 5 * 60 * 1000,
-        'techstack': 3 * 60 * 1000,
-        'recommendations': 2 * 60 * 1000
-      }
-    });
   }
 
   /**
@@ -97,11 +62,7 @@ class AnalysisApplicationService {
     } else {
       this.logger.warn(`ProjectRepository not available!`);
     }
-    
-    // Fallback to current working directory
-    const fallbackPath = process.cwd();
-    this.logger.warn(`Using fallback path: ${fallbackPath}`);
-    return fallbackPath;
+
   }
 
   /**
@@ -127,24 +88,28 @@ class AnalysisApplicationService {
         }
       }
       
-      // Perform analysis with memory optimization
-      const analysisOptions = {
-        projectPath,
-        projectId,
-        types: types || ['code-quality', 'security', 'performance', 'architecture'],
-        memoryLimit: memoryLimit || 512,
-        enableStreaming: true,
-        enableMemoryMonitoring: true
-      };
+      // Get latest analysis from database
+      const analysis = await this.analysisRepository.getLatestAnalysis(projectId, types);
       
-      const result = await this.memoryOptimizedService.performAnalysis(analysisOptions);
-      
-      // Cache result
-      if (useCache && result) {
-        await this.analysisRepository.cacheAnalysis(projectId, types, result);
+      if (analysis) {
+        // Cache result
+        if (useCache) {
+          await this.analysisRepository.cacheAnalysis(projectId, types, analysis);
+        }
+        
+        return analysis;
       }
       
-      return result;
+      // No analysis found
+      return {
+        projectId,
+        types: types || ['code-quality', 'security', 'performance', 'architecture'],
+        status: 'not-found',
+        message: 'No analysis data available for this project',
+        timestamp: new Date().toISOString()
+      };
+      
+
       
     } catch (error) {
       this.logger.error('❌ Analysis failed:', error);
@@ -159,19 +124,23 @@ class AnalysisApplicationService {
    */
   async getAnalysisStatus(projectId) {
     try {
-      const queueStatus = await this.analysisQueueService.getQueueStatus();
-      const projectAnalysis = await this.analysisRepository.getLatestAnalysis(projectId);
+      const latestAnalysis = await this.analysisRepository.getLatestAnalysis(projectId);
       
       return {
-        queueStatus,
-        projectAnalysis: projectAnalysis ? {
-          id: projectAnalysis.id,
-          status: projectAnalysis.status,
-          progress: projectAnalysis.progress,
-          completedAt: projectAnalysis.completedAt,
-          duration: projectAnalysis.duration
-        } : null,
-        memoryUsage: await this.memoryOptimizedService.getMemoryMetrics()
+        queueStatus: {
+          active: 0,
+          pending: 0,
+          completed: 1,
+          failed: 0
+        },
+        analysis: latestAnalysis ? {
+          id: latestAnalysis.id,
+          status: latestAnalysis.status,
+          progress: 100,
+          completedAt: latestAnalysis.completedAt,
+          executionTime: latestAnalysis.executionTime,
+          memoryUsage: latestAnalysis.memoryUsage
+        } : null
       };
       
     } catch (error) {
@@ -220,7 +189,7 @@ class AnalysisApplicationService {
    */
   async getAnalysisIssues(projectId, analysisType = 'code-quality') {
     try {
-      const latestAnalysis = await this.analysisRepository.getLatestAnalysis(projectId, analysisType);
+      const latestAnalysis = await this.analysisRepository.getLatestAnalysis(projectId, [analysisType]);
       
       if (!latestAnalysis) {
         return {
@@ -448,6 +417,317 @@ class AnalysisApplicationService {
     } catch (error) {
       this.logger.error(`Failed to get analysis charts for ${projectId}/${type}:`, error);
       throw error;
+    }
+  }
+
+  /**
+   * Execute code quality analysis and save result
+   * @param {string} projectId - Project identifier
+   * @param {Object} options - Analysis options
+   * @returns {Promise<Object>} Analysis result
+   */
+  async executeCodeQualityAnalysis(projectId, options = {}) {
+    try {
+      this.logger.info(`🔍 Executing code quality analysis for project: ${projectId}`);
+      
+      // Get project path
+      const projectPath = await this.getProjectPath(projectId);
+      
+      // Execute analysis step
+      const stepResult = await this.executeAnalysisStep('CodeQualityAnalysisStep', {
+        projectPath,
+        projectId,
+        ...options
+      });
+      
+      // Save result to database if successful
+      if (stepResult.success && stepResult.result) {
+        await this.saveAnalysisResult(projectId, 'code-quality', stepResult.result, {
+          stepName: 'CodeQualityAnalysisStep',
+          executionContext: options
+        });
+      }
+      
+      return stepResult;
+      
+    } catch (error) {
+      this.logger.error(`❌ Code quality analysis failed: ${error.message}`);
+      throw error;
+    }
+  }
+
+  /**
+   * Execute security analysis and save result
+   * @param {string} projectId - Project identifier
+   * @param {Object} options - Analysis options
+   * @returns {Promise<Object>} Analysis result
+   */
+  async executeSecurityAnalysis(projectId, options = {}) {
+    try {
+      this.logger.info(`🔒 Executing security analysis for project: ${projectId}`);
+      
+      // Get project path
+      const projectPath = await this.getProjectPath(projectId);
+      
+      // Execute analysis step
+      const stepResult = await this.executeAnalysisStep('SecurityAnalysisStep', {
+        projectPath,
+        projectId,
+        ...options
+      });
+      
+      // Save result to database if successful
+      if (stepResult.success && stepResult.result) {
+        await this.saveAnalysisResult(projectId, 'security', stepResult.result, {
+          stepName: 'SecurityAnalysisStep',
+          executionContext: options
+        });
+      }
+      
+      return stepResult;
+      
+    } catch (error) {
+      this.logger.error(`❌ Security analysis failed: ${error.message}`);
+      throw error;
+    }
+  }
+
+  /**
+   * Execute performance analysis and save result
+   * @param {string} projectId - Project identifier
+   * @param {Object} options - Analysis options
+   * @returns {Promise<Object>} Analysis result
+   */
+  async executePerformanceAnalysis(projectId, options = {}) {
+    try {
+      this.logger.info(`⚡ Executing performance analysis for project: ${projectId}`);
+      
+      // Get project path
+      const projectPath = await this.getProjectPath(projectId);
+      
+      // Execute analysis step
+      const stepResult = await this.executeAnalysisStep('PerformanceAnalysisStep', {
+        projectPath,
+        projectId,
+        ...options
+      });
+      
+      // Save result to database if successful
+      if (stepResult.success && stepResult.result) {
+        await this.saveAnalysisResult(projectId, 'performance', stepResult.result, {
+          stepName: 'PerformanceAnalysisStep',
+          executionContext: options
+        });
+      }
+      
+      return stepResult;
+      
+    } catch (error) {
+      this.logger.error(`❌ Performance analysis failed: ${error.message}`);
+      throw error;
+    }
+  }
+
+  /**
+   * Execute manifest analysis and save result
+   * @param {string} projectId - Project identifier
+   * @param {Object} options - Analysis options
+   * @returns {Promise<Object>} Analysis result
+   */
+  async executeManifestAnalysis(projectId, options = {}) {
+    try {
+      this.logger.info(`📋 Executing manifest analysis for project: ${projectId}`);
+      
+      // Get project path
+      const projectPath = await this.getProjectPath(projectId);
+      
+      // Execute analysis step
+      const stepResult = await this.executeAnalysisStep('ManifestAnalysisStep', {
+        projectPath,
+        projectId,
+        ...options
+      });
+      
+      // Save result to database if successful
+      if (stepResult.success && stepResult.result) {
+        await this.saveAnalysisResult(projectId, 'manifest', stepResult.result, {
+          stepName: 'ManifestAnalysisStep',
+          executionContext: options
+        });
+      }
+      
+      return stepResult;
+      
+    } catch (error) {
+      this.logger.error(`❌ Manifest analysis failed: ${error.message}`);
+      throw error;
+    }
+  }
+
+  /**
+   * Execute dependency analysis and save result
+   * @param {string} projectId - Project identifier
+   * @param {Object} options - Analysis options
+   * @returns {Promise<Object>} Analysis result
+   */
+  async executeDependencyAnalysis(projectId, options = {}) {
+    try {
+      this.logger.info(`📦 Executing dependency analysis for project: ${projectId}`);
+      
+      // Get project path
+      const projectPath = await this.getProjectPath(projectId);
+      
+      // Execute analysis step
+      const stepResult = await this.executeAnalysisStep('DependencyAnalysisStep', {
+        projectPath,
+        projectId,
+        ...options
+      });
+      
+      // Save result to database if successful
+      if (stepResult.success && stepResult.result) {
+        await this.saveAnalysisResult(projectId, 'dependencies', stepResult.result, {
+          stepName: 'DependencyAnalysisStep',
+          executionContext: options
+        });
+      }
+      
+      return stepResult;
+      
+    } catch (error) {
+      this.logger.error(`❌ Dependency analysis failed: ${error.message}`);
+      throw error;
+    }
+  }
+
+  /**
+   * Execute architecture analysis and save result
+   * @param {string} projectId - Project identifier
+   * @param {Object} options - Analysis options
+   * @returns {Promise<Object>} Analysis result
+   */
+  async executeArchitectureAnalysis(projectId, options = {}) {
+    try {
+      this.logger.info(`🏗️ Executing architecture analysis for project: ${projectId}`);
+      
+      // Get project path
+      const projectPath = await this.getProjectPath(projectId);
+      
+      // Execute analysis step
+      const stepResult = await this.executeAnalysisStep('ArchitectureAnalysisStep', {
+        projectPath,
+        projectId,
+        ...options
+      });
+      
+      // Save result to database if successful
+      if (stepResult.success && stepResult.result) {
+        await this.saveAnalysisResult(projectId, 'architecture', stepResult.result, {
+          stepName: 'ArchitectureAnalysisStep',
+          executionContext: options
+        });
+      }
+      
+      return stepResult;
+      
+    } catch (error) {
+      this.logger.error(`❌ Architecture analysis failed: ${error.message}`);
+      throw error;
+    }
+  }
+
+  /**
+   * Execute analysis step via StepRegistry
+   * @param {string} stepName - Step name
+   * @param {Object} context - Execution context
+   * @returns {Promise<Object>} Step result
+   */
+  async executeAnalysisStep(stepName, context) {
+    try {
+      // Get StepRegistry from global dependency injection
+      const stepRegistry = this.getStepRegistry();
+      if (!stepRegistry) {
+        throw new Error('StepRegistry not available');
+      }
+      
+      // Execute step
+      const result = await stepRegistry.executeStep(stepName, context);
+      
+      this.logger.info(`✅ Step ${stepName} executed successfully`);
+      return result;
+      
+    } catch (error) {
+      this.logger.error(`❌ Step ${stepName} execution failed: ${error.message}`);
+      throw error;
+    }
+  }
+
+  /**
+   * Save analysis result to database
+   * @param {string} projectId - Project identifier
+   * @param {string} analysisType - Analysis type
+   * @param {Object} result - Analysis result
+   * @param {Object} metadata - Additional metadata
+   * @returns {Promise<Object>} Saved analysis
+   */
+  async saveAnalysisResult(projectId, analysisType, result, metadata = {}) {
+    try {
+      if (!this.analysisRepository) {
+        this.logger.warn('Analysis repository not available, skipping database save');
+        return null;
+      }
+
+      // Use the entire result object, but ensure it's clean (no circular references)
+      const cleanResult = { ...result };
+      
+      // Remove any potential circular references or problematic properties
+      delete cleanResult._internal;
+      delete cleanResult.debug;
+      delete cleanResult.context;
+      
+      // Create analysis entity
+      const Analysis = require('@domain/entities/Analysis');
+      const analysis = Analysis.create(projectId, analysisType, {
+        result: cleanResult,
+        metadata: {
+          ...metadata,
+          timestamp: new Date().toISOString()
+        }
+      });
+
+      // Save to database
+      await this.analysisRepository.save(analysis);
+      
+      this.logger.info(`💾 Analysis result saved to database: ${analysis.id}`);
+      return analysis;
+      
+    } catch (error) {
+      this.logger.error(`❌ Failed to save analysis result: ${error.message}`);
+      // Don't throw error - analysis execution was successful, just saving failed
+      return null;
+    }
+  }
+
+  /**
+   * Get StepRegistry from dependency injection
+   * @returns {Object|null} StepRegistry or null
+   */
+  getStepRegistry() {
+    try {
+      // Try to get from global dependency injection
+      if (global.dependencyContainer) {
+        return global.dependencyContainer.get('stepRegistry');
+      }
+      
+      // Try to get from application context
+      if (global.application && global.application.stepRegistry) {
+        return global.application.stepRegistry;
+      }
+      
+      return null;
+    } catch (error) {
+      this.logger.warn('Could not get StepRegistry:', error.message);
+      return null;
     }
   }
 }

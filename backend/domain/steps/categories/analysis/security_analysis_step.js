@@ -53,6 +53,7 @@ class SecurityAnalysisStep {
       this.validateContext(context);
 
       const projectPath = context.projectPath;
+      const projectId = context.projectId || this.extractProjectId(projectPath);
       
       logger.info(`📊 Starting security analysis for: ${projectPath}`);
 
@@ -66,6 +67,9 @@ class SecurityAnalysisStep {
       // Clean and format result
       const cleanResult = this.cleanResult(security);
 
+      // Note: Database saving is handled by Application Layer
+      // Steps should only execute business logic
+
       logger.info(`✅ Security analysis completed successfully`);
 
       return {
@@ -74,6 +78,7 @@ class SecurityAnalysisStep {
         metadata: {
           stepName: this.name,
           projectPath,
+          projectId,
           analysisType: 'security',
           timestamp: new Date()
         }
@@ -102,19 +107,27 @@ class SecurityAnalysisStep {
    * @returns {Promise<Object>} Security analysis result
    */
   async analyzeSecurity(projectPath, options = {}) {
+    const startTime = Date.now();
+    
     try {
       const result = {
-        riskLevel: 'unknown',
-        vulnerabilities: [],
-        bestPractices: [],
-        dependencies: [],
-        summary: {}
+        score: 0,
+        results: {},
+        issues: [],
+        recommendations: [],
+        summary: {},
+        metadata: {
+          analysisType: 'security',
+          timestamp: new Date().toISOString(),
+          version: '1.0.0'
+        }
       };
 
       // Analyze dependencies for vulnerabilities
+      let dependencyAnalysis = { vulnerabilities: [], bestPractices: [] };
       if (options.includeDependencies) {
-        const dependencyAnalysis = await this.analyzeDependencies(projectPath);
-        result.dependencies = dependencyAnalysis;
+        dependencyAnalysis = await this.analyzeDependencies(projectPath);
+        result.results.dependencies = dependencyAnalysis;
       }
 
       // Analyze code for security issues
@@ -126,38 +139,53 @@ class SecurityAnalysisStep {
       // Analyze environment and secrets
       const environmentAnalysis = await this.analyzeEnvironment(projectPath);
 
-      // Aggregate vulnerabilities
+      // Aggregate vulnerabilities as issues
       if (options.includeVulnerabilities) {
-        result.vulnerabilities = [
-          ...dependencyAnalysis.vulnerabilities,
-          ...codeAnalysis.vulnerabilities,
-          ...configAnalysis.vulnerabilities,
-          ...environmentAnalysis.vulnerabilities
+        result.issues = [
+          ...dependencyAnalysis.vulnerabilities.map(v => ({ ...v, type: 'vulnerability' })),
+          ...codeAnalysis.vulnerabilities.map(v => ({ ...v, type: 'code-security' })),
+          ...configAnalysis.vulnerabilities.map(v => ({ ...v, type: 'configuration' })),
+          ...environmentAnalysis.vulnerabilities.map(v => ({ ...v, type: 'environment' }))
         ];
       }
 
-      // Aggregate best practices
+      // Aggregate best practices as recommendations
       if (options.includeBestPractices) {
-        result.bestPractices = [
-          ...dependencyAnalysis.bestPractices,
-          ...codeAnalysis.bestPractices,
-          ...configAnalysis.bestPractices,
-          ...environmentAnalysis.bestPractices
+        result.recommendations = [
+          ...dependencyAnalysis.bestPractices.map(bp => ({ ...bp, priority: 'medium' })),
+          ...codeAnalysis.bestPractices.map(bp => ({ ...bp, priority: 'high' })),
+          ...configAnalysis.bestPractices.map(bp => ({ ...bp, priority: 'medium' })),
+          ...environmentAnalysis.bestPractices.map(bp => ({ ...bp, priority: 'high' }))
         ];
       }
 
-      // Calculate risk level
-      result.riskLevel = this.calculateRiskLevel(result.vulnerabilities);
+      // Calculate security score based on issues
+      result.score = this.calculateSecurityScore(result.issues);
 
       // Create summary
+      const riskLevel = this.calculateRiskLevel(result.issues);
       result.summary = {
-        riskLevel: result.riskLevel,
-        totalVulnerabilities: result.vulnerabilities.length,
-        totalBestPractices: result.bestPractices.length,
-        criticalIssues: result.vulnerabilities.filter(v => v.severity === 'critical').length,
-        highIssues: result.vulnerabilities.filter(v => v.severity === 'high').length,
-        mediumIssues: result.vulnerabilities.filter(v => v.severity === 'medium').length,
-        lowIssues: result.vulnerabilities.filter(v => v.severity === 'low').length
+        overallScore: result.score,
+        totalIssues: result.issues.length,
+        totalRecommendations: result.recommendations.length,
+        status: riskLevel,
+        riskLevel: riskLevel,
+        criticalIssues: result.issues.filter(v => v.severity === 'critical').length,
+        highIssues: result.issues.filter(v => v.severity === 'high').length,
+        mediumIssues: result.issues.filter(v => v.severity === 'medium').length,
+        lowIssues: result.issues.filter(v => v.severity === 'low').length
+      };
+
+      // Add metadata
+      const executionTime = Date.now() - startTime;
+      const files = await this.getAllFiles(projectPath);
+      
+      result.metadata = {
+        ...result.metadata,
+        executionTime,
+        filesAnalyzed: files.length,
+        coverage: this.calculateCoverage(files, projectPath),
+        confidence: this.calculateConfidence(result)
       };
 
       return result;
@@ -564,6 +592,164 @@ class SecurityAnalysisStep {
   validateContext(context) {
     if (!context.projectPath) {
       throw new Error('Project path is required for security analysis');
+    }
+  }
+
+  /**
+   * Calculate security score based on issues
+   * @param {Array} issues - Security issues
+   * @returns {number} Security score (0-100)
+   */
+  calculateSecurityScore(issues) {
+    let score = 100; // Start with perfect score
+    
+    // Deduct points based on issue severity
+    issues.forEach(issue => {
+      switch (issue.severity) {
+        case 'critical': score -= 20; break;
+        case 'high': score -= 10; break;
+        case 'medium': score -= 5; break;
+        case 'low': score -= 2; break;
+      }
+    });
+    
+    return Math.max(score, 0);
+  }
+
+  /**
+   * Calculate coverage percentage
+   * @param {Array} files - Analyzed files
+   * @param {string} projectPath - Project path
+   * @returns {number} Coverage percentage
+   */
+  calculateCoverage(files, projectPath) {
+    try {
+      const allFiles = this.getAllFilesSync(projectPath);
+      return allFiles.length > 0 ? Math.round((files.length / allFiles.length) * 100) : 100;
+    } catch (error) {
+      return 100;
+    }
+  }
+
+  /**
+   * Calculate confidence level
+   * @param {Object} result - Analysis result
+   * @returns {number} Confidence percentage
+   */
+  calculateConfidence(result) {
+    let confidence = 80;
+    
+    if (result.issues.length > 0) confidence += 10;
+    if (result.recommendations.length > 0) confidence += 5;
+    if (result.results && Object.keys(result.results).length > 0) confidence += 5;
+    
+    return Math.min(confidence, 100);
+  }
+
+  /**
+   * Get all files synchronously
+   * @param {string} dir - Directory path
+   * @returns {Array} File paths
+   */
+  getAllFilesSync(dir) {
+    const files = [];
+    const items = fs.readdirSync(dir);
+    
+    for (const item of items) {
+      const fullPath = path.join(dir, item);
+      const stat = fs.statSync(fullPath);
+      
+      if (stat.isDirectory() && !item.startsWith('.') && item !== 'node_modules') {
+        files.push(...this.getAllFilesSync(fullPath));
+      } else if (stat.isFile()) {
+        files.push(fullPath);
+      }
+    }
+    
+    return files;
+  }
+
+  /**
+   * Save analysis result to database
+   * @param {string} projectId - Project ID
+   * @param {Object} result - Analysis result
+   * @param {Object} context - Execution context
+   */
+  async saveAnalysisResult(projectId, result, context) {
+    try {
+      // Get analysis repository from dependency injection
+      const analysisRepository = this.getAnalysisRepository();
+      if (!analysisRepository) {
+        logger.warn('Analysis repository not available, skipping database save');
+        return;
+      }
+
+      // Create analysis entity
+      const Analysis = require('@domain/entities/Analysis');
+      const analysis = Analysis.create(projectId, 'security', {
+        result: result,
+        metadata: {
+          stepName: this.name,
+          projectPath: context.projectPath,
+          analysisType: 'security',
+          executionContext: context,
+          timestamp: new Date().toISOString()
+        }
+      });
+
+      // Save to database
+      await analysisRepository.save(analysis);
+      
+      logger.info(`💾 Analysis result saved to database: ${analysis.id}`);
+      
+    } catch (error) {
+      logger.error(`❌ Failed to save analysis result: ${error.message}`);
+      // Don't throw error - analysis execution was successful, just saving failed
+    }
+  }
+
+  /**
+   * Get analysis repository from dependency injection
+   * @returns {Object|null} Analysis repository or null
+   */
+  getAnalysisRepository() {
+    try {
+      // Try to get from global dependency injection
+      if (global.dependencyContainer) {
+        return global.dependencyContainer.get('analysisRepository');
+      }
+      
+      // Try to get from step context
+      if (this.context && this.context.analysisRepository) {
+        return this.context.analysisRepository;
+      }
+      
+      return null;
+    } catch (error) {
+      logger.warn('Could not get analysis repository:', error.message);
+      return null;
+    }
+  }
+
+  /**
+   * Extract project ID from project path
+   * @param {string} projectPath - Project path
+   * @returns {string} Project ID
+   */
+  extractProjectId(projectPath) {
+    try {
+      // Try to get from package.json
+      const packageJsonPath = path.join(projectPath, 'package.json');
+      if (fs.existsSync(packageJsonPath)) {
+        const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
+        return packageJson.name || path.basename(projectPath);
+      }
+      
+      // Fallback to directory name
+      return path.basename(projectPath);
+    } catch (error) {
+      logger.warn('Could not extract project ID:', error.message);
+      return path.basename(projectPath);
     }
   }
 }

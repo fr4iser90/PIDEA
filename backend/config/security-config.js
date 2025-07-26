@@ -119,9 +119,10 @@ class SecurityConfig {
         'Accept',
         'Origin',
         'X-API-Key',
-        'X-Client-Version'
+        'X-Client-Version',
+        'Cookie'
       ],
-      exposedHeaders: ['X-Total-Count', 'X-Page-Count'],
+      exposedHeaders: ['X-Total-Count', 'X-Page-Count', 'Set-Cookie'],
       maxAge: 86400, // 24 hours
       preflightContinue: false,
       optionsSuccessStatus: 204

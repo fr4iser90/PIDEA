@@ -127,36 +127,17 @@ CREATE TABLE IF NOT EXISTS tasks (
 -- ANALYSIS TABLES
 -- ============================================================================
 
--- ANALYSIS RESULTS (Your project analysis data)
-CREATE TABLE IF NOT EXISTS analysis_results (
+-- ANALYSIS (Unified analysis table - replaces analysis_results, analysis_steps, project_analysis, task_suggestions)
+CREATE TABLE IF NOT EXISTS analysis (
     id TEXT PRIMARY KEY DEFAULT uuid_generate_v4()::text,
     project_id TEXT NOT NULL,
-    analysis_type TEXT NOT NULL, -- 'code_quality', 'security', 'performance', 'architecture'
-    result_data TEXT NOT NULL, -- JSON analysis results
-    summary TEXT, -- JSON summary data
-    status TEXT NOT NULL DEFAULT 'completed', -- 'pending', 'running', 'completed', 'failed'
-    started_at TEXT NOT NULL,
-    completed_at TEXT,
-    duration_ms INTEGER,
-    overall_score REAL, -- 0-100 score
-    critical_issues_count INTEGER DEFAULT 0,
-    warnings_count INTEGER DEFAULT 0,
-    recommendations_count INTEGER DEFAULT 0,
-    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (project_id) REFERENCES projects (id)
-);
-
--- ANALYSIS STEPS (Individual analysis steps)
-CREATE TABLE IF NOT EXISTS analysis_steps (
-    id TEXT PRIMARY KEY DEFAULT uuid_generate_v4()::text,
-    project_id TEXT NOT NULL,
-    analysis_type TEXT NOT NULL, -- 'code-quality', 'security', 'performance', 'architecture'
+    analysis_type TEXT NOT NULL, -- 'security', 'code-quality', 'performance', 'architecture', 'layer-violations'
     status TEXT DEFAULT 'pending', -- 'pending', 'running', 'completed', 'failed', 'cancelled'
     progress INTEGER DEFAULT 0,
     started_at TEXT,
     completed_at TEXT,
     error TEXT, -- JSON error information
-    result TEXT, -- JSON analysis result data
+    result TEXT, -- JSON analysis result data (INCLUDES recommendations!)
     metadata TEXT, -- JSON additional metadata
     config TEXT, -- JSON step configuration
     timeout INTEGER DEFAULT 300000,
@@ -166,6 +147,10 @@ CREATE TABLE IF NOT EXISTS analysis_steps (
     execution_time INTEGER, -- Execution time in milliseconds
     file_count INTEGER, -- Number of files processed
     line_count INTEGER, -- Number of lines processed
+    overall_score REAL, -- 0-100 score
+    critical_issues_count INTEGER DEFAULT 0,
+    warnings_count INTEGER DEFAULT 0,
+    recommendations_count INTEGER DEFAULT 0, -- Quick count
     created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (project_id) REFERENCES projects (id)
@@ -331,27 +316,7 @@ CREATE TABLE IF NOT EXISTS task_sessions (
     FOREIGN KEY (project_id) REFERENCES projects (id)
 );
 
--- PROJECT ANALYSIS (Extended project analysis data)
-CREATE TABLE IF NOT EXISTS project_analysis (
-    id TEXT PRIMARY KEY DEFAULT uuid_generate_v4()::text,
-    project_id TEXT NOT NULL,
-    analysis_type TEXT NOT NULL, -- 'comprehensive', 'architecture', 'performance', 'security'
-    analysis_data TEXT NOT NULL, -- JSON analysis results
-    summary TEXT, -- JSON summary data
-    status TEXT NOT NULL DEFAULT 'completed', -- 'pending', 'running', 'completed', 'failed'
-    started_at TEXT NOT NULL,
-    completed_at TEXT,
-    duration_ms INTEGER,
-    overall_score REAL, -- 0-100 score
-    critical_issues_count INTEGER DEFAULT 0,
-    warnings_count INTEGER DEFAULT 0,
-    recommendations_count INTEGER DEFAULT 0,
-    file_hash TEXT, -- Hash of project files for cache validation
-    cache_expires_at TEXT, -- When cache expires (TTL)
-    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (project_id) REFERENCES projects (id)
-);
+
 
 -- ============================================================================
 -- INDEXES FOR PERFORMANCE
@@ -379,20 +344,14 @@ CREATE INDEX IF NOT EXISTS idx_tasks_created_by ON tasks(created_by);
 CREATE INDEX IF NOT EXISTS idx_tasks_due_date ON tasks(due_date);
 
 -- Analysis indexes
-CREATE INDEX IF NOT EXISTS idx_analysis_project_id ON analysis_results(project_id);
-CREATE INDEX IF NOT EXISTS idx_analysis_type ON analysis_results(analysis_type);
-CREATE INDEX IF NOT EXISTS idx_analysis_status ON analysis_results(status);
-CREATE INDEX IF NOT EXISTS idx_analysis_created_at ON analysis_results(created_at);
-
--- Analysis steps indexes
-CREATE INDEX IF NOT EXISTS idx_analysis_steps_project_id ON analysis_steps(project_id);
-CREATE INDEX IF NOT EXISTS idx_analysis_steps_type ON analysis_steps(analysis_type);
-CREATE INDEX IF NOT EXISTS idx_analysis_steps_status ON analysis_steps(status);
-CREATE INDEX IF NOT EXISTS idx_analysis_steps_created_at ON analysis_steps(created_at);
-CREATE INDEX IF NOT EXISTS idx_analysis_steps_completed_at ON analysis_steps(completed_at);
-CREATE INDEX IF NOT EXISTS idx_analysis_steps_project_type ON analysis_steps(project_id, analysis_type);
-CREATE INDEX IF NOT EXISTS idx_analysis_steps_project_status ON analysis_steps(project_id, status);
-CREATE INDEX IF NOT EXISTS idx_analysis_steps_type_status ON analysis_steps(analysis_type, status);
+CREATE INDEX IF NOT EXISTS idx_analysis_project_id ON analysis(project_id);
+CREATE INDEX IF NOT EXISTS idx_analysis_type ON analysis(analysis_type);
+CREATE INDEX IF NOT EXISTS idx_analysis_status ON analysis(status);
+CREATE INDEX IF NOT EXISTS idx_analysis_created_at ON analysis(created_at);
+CREATE INDEX IF NOT EXISTS idx_analysis_completed_at ON analysis(completed_at);
+CREATE INDEX IF NOT EXISTS idx_analysis_project_type ON analysis(project_id, analysis_type);
+CREATE INDEX IF NOT EXISTS idx_analysis_project_status ON analysis(project_id, status);
+CREATE INDEX IF NOT EXISTS idx_analysis_type_status ON analysis(analysis_type, status);
 
 -- Chat indexes
 CREATE INDEX IF NOT EXISTS idx_chat_sessions_project_id ON chat_sessions(project_id);
@@ -428,12 +387,7 @@ CREATE INDEX IF NOT EXISTS idx_task_sessions_project_id ON task_sessions(project
 CREATE INDEX IF NOT EXISTS idx_task_sessions_status ON task_sessions(status);
 CREATE INDEX IF NOT EXISTS idx_task_sessions_created_at ON task_sessions(created_at);
 
--- Project analysis indexes
-CREATE INDEX IF NOT EXISTS idx_project_analysis_project_id ON project_analysis(project_id);
-CREATE INDEX IF NOT EXISTS idx_project_analysis_type ON project_analysis(analysis_type);
-CREATE INDEX IF NOT EXISTS idx_project_analysis_status ON project_analysis(status);
-CREATE INDEX IF NOT EXISTS idx_project_analysis_created_at ON project_analysis(created_at);
-CREATE INDEX IF NOT EXISTS idx_project_analysis_cache_expires ON project_analysis(cache_expires_at);
+
 
 -- ============================================================================
 -- COMMENTS

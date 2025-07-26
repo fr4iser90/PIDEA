@@ -14,6 +14,7 @@ class WorkflowController {
         this.application = dependencies.application;
         this.ideManager = dependencies.ideManager;
         this.taskService = dependencies.taskService;
+        this.analysisApplicationService = dependencies.analysisApplicationService;
     }
 
     /**
@@ -487,41 +488,101 @@ class WorkflowController {
                 stepOptions.includeRepoStructure = true;
                 stepOptions.includeDependencies = true;
             } else if (mode === 'architecture-analysis') {
-                stepName = 'ArchitectureAnalysisStep';
-                stepOptions.includePatterns = true;
-                stepOptions.includeStructure = true;
-                stepOptions.includeRecommendations = true;
+                // Use AnalysisApplicationService instead of direct step execution
+                if (this.analysisApplicationService) {
+                    const result = await this.analysisApplicationService.executeArchitectureAnalysis(projectId, stepOptions);
+                    return res.json({
+                        success: true,
+                        data: result,
+                        message: 'Architecture analysis completed successfully'
+                    });
+                } else {
+                    stepName = 'ArchitectureAnalysisStep';
+                    stepOptions.includePatterns = true;
+                    stepOptions.includeStructure = true;
+                    stepOptions.includeRecommendations = true;
+                }
             } else if (mode === 'code-quality-analysis') {
-                stepName = 'CodeQualityAnalysisStep';
-                stepOptions.includeMetrics = true;
-                stepOptions.includeIssues = true;
-                stepOptions.includeSuggestions = true;
+                // Use AnalysisApplicationService instead of direct step execution
+                if (this.analysisApplicationService) {
+                    const result = await this.analysisApplicationService.executeCodeQualityAnalysis(projectId, stepOptions);
+                    return res.json({
+                        success: true,
+                        data: result,
+                        message: 'Code quality analysis completed successfully'
+                    });
+                } else {
+                    stepName = 'CodeQualityAnalysisStep';
+                    stepOptions.includeMetrics = true;
+                    stepOptions.includeIssues = true;
+                    stepOptions.includeSuggestions = true;
+                }
             } else if (mode === 'tech-stack-analysis') {
                 stepName = 'TechStackAnalysisStep';
                 stepOptions.includeFrameworks = true;
                 stepOptions.includeLibraries = true;
                 stepOptions.includeTools = true;
             } else if (mode === 'manifest-analysis') {
-                stepName = 'ManifestAnalysisStep';
-                stepOptions.includePackageJson = true;
-                stepOptions.includeConfigFiles = true;
-                stepOptions.includeDockerFiles = true;
-                stepOptions.includeCIFiles = true;
+                // Use AnalysisApplicationService instead of direct step execution
+                if (this.analysisApplicationService) {
+                    const result = await this.analysisApplicationService.executeManifestAnalysis(projectId, stepOptions);
+                    return res.json({
+                        success: true,
+                        data: result,
+                        message: 'Manifest analysis completed successfully'
+                    });
+                } else {
+                    stepName = 'ManifestAnalysisStep';
+                    stepOptions.includePackageJson = true;
+                    stepOptions.includeConfigFiles = true;
+                    stepOptions.includeDockerFiles = true;
+                    stepOptions.includeCIFiles = true;
+                }
             } else if (mode === 'security-analysis') {
-                stepName = 'SecurityAnalysisStep';
-                stepOptions.includeVulnerabilities = true;
-                stepOptions.includeBestPractices = true;
-                stepOptions.includeDependencies = true;
+                // Use AnalysisApplicationService instead of direct step execution
+                if (this.analysisApplicationService) {
+                    const result = await this.analysisApplicationService.executeSecurityAnalysis(projectId, stepOptions);
+                    return res.json({
+                        success: true,
+                        data: result,
+                        message: 'Security analysis completed successfully'
+                    });
+                } else {
+                    stepName = 'SecurityAnalysisStep';
+                    stepOptions.includeVulnerabilities = true;
+                    stepOptions.includeBestPractices = true;
+                    stepOptions.includeDependencies = true;
+                }
             } else if (mode === 'performance-analysis') {
-                stepName = 'PerformanceAnalysisStep';
-                stepOptions.includeMetrics = true;
-                stepOptions.includeOptimizations = true;
-                stepOptions.includeBottlenecks = true;
-            } else if (mode === 'dependency-analysis') {
-                stepName = 'DependencyAnalysisStep';
-                stepOptions.includeOutdated = true;
-                stepOptions.includeVulnerabilities = true;
-                stepOptions.includeRecommendations = true;
+                // Use AnalysisApplicationService instead of direct step execution
+                if (this.analysisApplicationService) {
+                    const result = await this.analysisApplicationService.executePerformanceAnalysis(projectId, stepOptions);
+                    return res.json({
+                        success: true,
+                        data: result,
+                        message: 'Performance analysis completed successfully'
+                    });
+                } else {
+                    stepName = 'PerformanceAnalysisStep';
+                    stepOptions.includeMetrics = true;
+                    stepOptions.includeOptimizations = true;
+                    stepOptions.includeBottlenecks = true;
+                }
+            } else if (mode === 'dependency-analysis' || mode === 'dependencies-analysis') {
+                // Use AnalysisApplicationService instead of direct step execution
+                if (this.analysisApplicationService) {
+                    const result = await this.analysisApplicationService.executeDependencyAnalysis(projectId, stepOptions);
+                    return res.json({
+                        success: true,
+                        data: result,
+                        message: 'Dependency analysis completed successfully'
+                    });
+                } else {
+                    stepName = 'DependencyAnalysisStep';
+                    stepOptions.includeOutdated = true;
+                    stepOptions.includeVulnerabilities = true;
+                    stepOptions.includeRecommendations = true;
+                }
             } else if (mode === 'recommendations' || mode === 'recommendations-analysis') {
                 // Automatisch alle Einzelanalysen ausführen und Ergebnisse sammeln
                 const analysisSteps = [
@@ -654,6 +715,59 @@ class WorkflowController {
 
             // Execute the Categories-based step
             const result = await stepRegistry.executeStep(stepName, stepOptions);
+
+            // Save analysis result to database if this is an analysis step
+            if (result.success && this.application?.analysisRepository && stepOptions.analysisType) {
+                try {
+                    const Analysis = require('@domain/entities/Analysis');
+                    const repo = this.application.analysisRepository;
+                    // Suche nach bestehendem 'pending' oder 'running' Eintrag
+                    const query = `SELECT * FROM analysis WHERE project_id = $1 AND analysis_type = $2 AND status IN ('pending', 'running') ORDER BY created_at ASC LIMIT 1`;
+                    const rows = await repo.databaseConnection.query(query, [projectId, stepOptions.analysisType]);
+                    let analysis;
+                    if (rows.length > 0) {
+                        // Update bestehenden Eintrag
+                        analysis = repo.mapRowToAnalysis(rows[0]);
+                        analysis.status = 'completed';
+                        analysis.progress = 100;
+                        analysis.completedAt = new Date();
+                        analysis.result = result.result;
+                        analysis.metadata = { ...analysis.metadata, ...{
+                            stepName,
+                            projectPath: workspacePath,
+                            mode,
+                            executionMethod: 'categories',
+                            timestamp: new Date().toISOString()
+                        }};
+                        analysis.updatedAt = new Date();
+                        await repo.update(analysis);
+                    } else {
+                        // Neuer Eintrag wie bisher
+                        analysis = Analysis.create(projectId, stepOptions.analysisType, {
+                            result: result.result,
+                            metadata: {
+                                stepName,
+                                projectPath: workspacePath,
+                                mode,
+                                executionMethod: 'categories',
+                                timestamp: new Date().toISOString()
+                            }
+                        });
+                        await repo.save(analysis);
+                    }
+                    this.logger.info('WorkflowController: Analysis result saved to database', {
+                        analysisId: analysis.id,
+                        analysisType: stepOptions.analysisType,
+                        stepName
+                    });
+                } catch (dbError) {
+                    this.logger.warn('WorkflowController: Failed to save analysis result to database', {
+                        error: dbError.message,
+                        stepName,
+                        analysisType: stepOptions.analysisType
+                    });
+                }
+            }
 
             // Save workflow execution to database for tracking
             if (this.application?.workflowExecutionRepository) {

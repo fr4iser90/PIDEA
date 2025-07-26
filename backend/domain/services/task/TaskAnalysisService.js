@@ -13,7 +13,7 @@ const Logger = require('@logging/Logger');
 const logger = new Logger('Logger');
 
 class TaskAnalysisService {
-  constructor(cursorIDEService, eventBus, logger, aiService, projectAnalyzer, analysisOrchestrator) {
+  constructor(cursorIDEService, eventBus, logger, aiService, projectAnalyzer) {
     this.cursorIDEService = cursorIDEService || {};
     this.eventBus = eventBus || { emit: () => {} };
     this.logger = logger || { info: () => {}, error: () => {}, warn: () => {} };
@@ -23,11 +23,6 @@ class TaskAnalysisService {
       performSecurityAnalysis: async () => ({}),
       generateRecommendations: async () => ({}),
       analyzePerformance: async () => ({})
-    };
-    // Phase 2: Using AnalysisOrchestrator as primary analysis engine
-    this.analysisOrchestrator = analysisOrchestrator || {
-      executeAnalysis: async () => ({}),
-      executeMultipleAnalyses: async () => ({})
     };
     // Keep projectAnalyzer for backward compatibility during transition
     this.projectAnalyzer = projectAnalyzer || {
@@ -109,8 +104,8 @@ class TaskAnalysisService {
    */
   async analyzeProjectAndGenerateTasks(projectId, projectPath, options = {}) {
     try {
-      // Phase 2: Use AnalysisOrchestrator for project analysis
-      const projectAnalysis = await this.analysisOrchestrator.executeAnalysis('project', projectPath, options);
+      // Use projectAnalyzer for project analysis
+      const projectAnalysis = await this.projectAnalyzer.analyzeProject(projectPath, options);
       
       // Generate AI-powered suggestions
       const aiSuggestions = await this.aiService.generateTaskSuggestions(projectAnalysis.result, options);

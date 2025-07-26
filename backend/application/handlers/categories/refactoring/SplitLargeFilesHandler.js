@@ -153,18 +153,18 @@ class SplitLargeFilesHandler {
     }
 
     async saveAnalysisResult(command, result) {
-        const analysisResult = {
-            id: `split_large_files_${command.commandId}`,
-            type: 'SplitLargeFilesCommand',
-            projectPath: command.projectPath,
-            commandId: command.commandId,
+        const Analysis = require('@domain/entities/Analysis');
+        
+        const analysis = Analysis.create(command.projectId, 'file-split', {
             result: result,
-            metadata: command.getMetadata(),
-            timestamp: new Date(),
-            status: 'completed'
-        };
+            metadata: {
+                ...command.getMetadata(),
+                commandId: command.commandId,
+                type: 'SplitLargeFilesCommand'
+            }
+        });
 
-        await this.analysisRepository.save(analysisResult);
+        await this.analysisRepository.save(analysis);
 
         this.logger.info('Analysis result saved', {
             handlerId: this.handlerId,

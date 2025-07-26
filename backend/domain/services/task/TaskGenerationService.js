@@ -1,6 +1,6 @@
-const { Task, TaskTemplate, TaskSuggestion } = require('@domain/entities');
+const { Task, TaskTemplate } = require('@domain/entities');
 const { TaskStatus, TaskPriority, TaskType, ProjectType } = require('@domain/value-objects');
-const { TaskRepository, TaskTemplateRepository, TaskSuggestionRepository } = require('@domain/repositories');
+const { TaskRepository, TaskTemplateRepository, AnalysisRepository } = require('@domain/repositories');
 
 /**
  * TaskGenerationService - Handles human/AI task creation and generation
@@ -10,13 +10,13 @@ class TaskGenerationService {
     constructor(
         taskRepository,
         taskTemplateRepository,
-        taskSuggestionRepository,
+        analysisRepository,
         cursorIDEService,
         eventBus
     ) {
         this.taskRepository = taskRepository;
         this.taskTemplateRepository = taskTemplateRepository;
-        this.taskSuggestionRepository = taskSuggestionRepository;
+        this.analysisRepository = analysisRepository;
         this.cursorIDEService = cursorIDEService;
         this.eventBus = eventBus;
     }
@@ -366,7 +366,7 @@ class TaskGenerationService {
 
     /**
      * Generate tasks from AI suggestions
-     * @param {Array<TaskSuggestion>} suggestions - AI suggestions
+     * @param {Array<Object>} suggestions - AI suggestions
      * @param {Object} options - Generation options
      * @returns {Promise<Array<Task>>} Generated tasks
      */

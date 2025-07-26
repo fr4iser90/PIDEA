@@ -469,7 +469,7 @@ class Application {
     this.createTaskHandler = new CreateTaskHandler({
       taskRepository: this.serviceRegistry.getService('taskRepository'),
       taskTemplateRepository: this.serviceRegistry.getService('taskTemplateRepository'),
-      taskSuggestionRepository: this.serviceRegistry.getService('taskSuggestionRepository'),
+                  analysisRepository: this.serviceRegistry.getService('analysisRepository'),
       taskValidationService: this.serviceRegistry.getService('taskValidationService'),
       taskGenerationService: this.serviceRegistry.getService('taskGenerationService'),
       eventBus: this.serviceRegistry.getService('eventBus'),
@@ -550,6 +550,7 @@ class Application {
                 const WorkflowController = require('./presentation/api/WorkflowController');
     this.workflowController = new WorkflowController({
         workflowApplicationService: this.serviceRegistry.getService('workflowApplicationService'),
+        analysisApplicationService: this.serviceRegistry.getService('analysisApplicationService'),
         ideManager: this.serviceRegistry.getService('ideManager'),
         taskService: this.serviceRegistry.getService('taskService'),
         eventBus: this.eventBus,
@@ -557,18 +558,13 @@ class Application {
         logger: this.serviceRegistry.getService('logger')
     });
 
-    const ProjectAnalysisController = require('./presentation/api/ProjectAnalysisController');
-    this.projectAnalysisController = new ProjectAnalysisController({
-        projectAnalysisApplicationService: this.serviceRegistry.getService('projectAnalysisApplicationService'),
-        logger: this.serviceRegistry.getService('logger')
-    });
+
 
     // Initialize AnalysisController
     const AnalysisController = require('./presentation/api/AnalysisController');
-    this.analysisController = new AnalysisController({
-        analysisApplicationService: this.serviceRegistry.getService('analysisApplicationService'),
-        logger: this.serviceRegistry.getService('logger')
-    });
+    this.analysisController = new AnalysisController(
+        this.serviceRegistry.getService('analysisApplicationService')
+    );
 
     const GitController = require('./presentation/api/GitController');
     this.gitController = new GitController({

@@ -102,12 +102,20 @@ class ArchitectureAnalysisStep {
    * @returns {Promise<Object>} Architecture analysis result
    */
   async analyzeArchitecture(projectPath, options = {}) {
+    const startTime = Date.now();
+    
     try {
       const result = {
-        patterns: [],
-        layers: [],
+        score: 0,
+        results: {},
+        issues: [],
         recommendations: [],
-        summary: {}
+        summary: {},
+        metadata: {
+          analysisType: 'architecture',
+          timestamp: new Date().toISOString(),
+          version: '1.0.0'
+        }
       };
 
       // Analyze project structure and patterns
@@ -122,17 +130,17 @@ class ArchitectureAnalysisStep {
       // Analyze dependencies and coupling
       const couplingAnalysis = await this.analyzeCoupling(projectPath);
 
-      // Aggregate patterns
+      // Aggregate patterns as results
       if (options.includePatterns) {
-        result.patterns = [
+        result.results.patterns = [
           ...structureAnalysis.patterns,
           ...patternAnalysis.patterns
         ];
       }
 
-      // Aggregate layers
+      // Aggregate layers as results
       if (options.includeLayers) {
-        result.layers = [
+        result.results.layers = [
           ...structureAnalysis.layers,
           ...layerAnalysis.layers
         ];
@@ -148,13 +156,30 @@ class ArchitectureAnalysisStep {
         });
       }
 
+      // Calculate architecture score
+      result.score = this.calculateArchitectureScore(result);
+
       // Create summary
+      const architectureType = this.determineArchitectureType(result.results.patterns || []);
       result.summary = {
-        totalPatterns: result.patterns.length,
-        totalLayers: result.layers.length,
+        overallScore: result.score,
+        totalIssues: result.issues.length,
         totalRecommendations: result.recommendations.length,
-        architectureType: this.determineArchitectureType(result.patterns),
+        status: this.getArchitectureStatus(result.score),
+        architectureType: architectureType,
         complexityLevel: this.calculateComplexityLevel(result)
+      };
+
+      // Add metadata
+      const executionTime = Date.now() - startTime;
+      const files = await this.getAllFiles(projectPath);
+      
+      result.metadata = {
+        ...result.metadata,
+        executionTime,
+        filesAnalyzed: files.length,
+        coverage: this.calculateCoverage(files, projectPath),
+        confidence: this.calculateConfidence(result)
       };
 
       return result;
@@ -608,9 +633,11 @@ class ArchitectureAnalysisStep {
    * Calculate complexity level
    */
   calculateComplexityLevel(result) {
-    const totalPatterns = result.patterns.length;
-    const totalLayers = result.layers.length;
-    const totalRecommendations = result.recommendations.length;
+    const patterns = (result.results && Array.isArray(result.results.patterns)) ? result.results.patterns : [];
+    const layers = (result.results && Array.isArray(result.results.layers)) ? result.results.layers : [];
+    const totalPatterns = patterns.length;
+    const totalLayers = layers.length;
+    const totalRecommendations = Array.isArray(result.recommendations) ? result.recommendations.length : 0;
 
     if (totalPatterns > 5 || totalLayers > 4) {
       return 'high';
@@ -683,6 +710,98 @@ class ArchitectureAnalysisStep {
     if (!context.projectPath) {
       throw new Error('Project path is required for architecture analysis');
     }
+  }
+
+  /**
+   * Calculate architecture score
+   * @param {Object} result - Analysis result
+   * @returns {number} Architecture score (0-100)
+   */
+  calculateArchitectureScore(result) {
+    let score = 80; // Base score for having an architecture
+    
+    // Add points for good patterns
+    if (result.results.patterns && result.results.patterns.length > 0) {
+      score += 10;
+    }
+    
+    // Add points for clear layers
+    if (result.results.layers && result.results.layers.length > 0) {
+      score += 10;
+    }
+    
+    // Deduct points for issues
+    if (result.issues && result.issues.length > 0) {
+      score -= Math.min(result.issues.length * 2, 20);
+    }
+    
+    return Math.max(Math.min(score, 100), 0);
+  }
+
+  /**
+   * Get architecture status
+   * @param {number} score - Architecture score
+   * @returns {string} Status
+   */
+  getArchitectureStatus(score) {
+    if (score >= 90) return 'excellent';
+    if (score >= 80) return 'good';
+    if (score >= 70) return 'fair';
+    if (score >= 60) return 'poor';
+    return 'critical';
+  }
+
+  /**
+   * Calculate coverage percentage
+   * @param {Array} files - Analyzed files
+   * @param {string} projectPath - Project path
+   * @returns {number} Coverage percentage
+   */
+  calculateCoverage(files, projectPath) {
+    try {
+      const allFiles = this.getAllFilesSync(projectPath);
+      return allFiles.length > 0 ? Math.round((files.length / allFiles.length) * 100) : 100;
+    } catch (error) {
+      return 100;
+    }
+  }
+
+  /**
+   * Calculate confidence level
+   * @param {Object} result - Analysis result
+   * @returns {number} Confidence percentage
+   */
+  calculateConfidence(result) {
+    let confidence = 80;
+    
+    if (result.issues.length > 0) confidence += 10;
+    if (result.recommendations.length > 0) confidence += 5;
+    if (result.results && Object.keys(result.results).length > 0) confidence += 5;
+    
+    return Math.min(confidence, 100);
+  }
+
+  /**
+   * Get all files synchronously
+   * @param {string} dir - Directory path
+   * @returns {Array} File paths
+   */
+  getAllFilesSync(dir) {
+    const files = [];
+    const items = fs.readdirSync(dir);
+    
+    for (const item of items) {
+      const fullPath = path.join(dir, item);
+      const stat = fs.statSync(fullPath);
+      
+      if (stat.isDirectory() && !item.startsWith('.') && item !== 'node_modules') {
+        files.push(...this.getAllFilesSync(fullPath));
+      } else if (stat.isFile()) {
+        files.push(fullPath);
+      }
+    }
+    
+    return files;
   }
 }
 

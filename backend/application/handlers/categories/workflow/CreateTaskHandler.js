@@ -8,7 +8,7 @@ class CreateTaskHandler {
         
         this.taskRepository = dependencies.taskRepository;
         this.taskTemplateRepository = dependencies.taskTemplateRepository;
-        this.taskSuggestionRepository = dependencies.taskSuggestionRepository;
+        this.analysisRepository = dependencies.analysisRepository;
         this.taskValidationService = dependencies.taskValidationService;
         this.taskGenerationService = dependencies.taskGenerationService;
         this.eventBus = dependencies.eventBus;
@@ -208,7 +208,7 @@ class CreateTaskHandler {
     async handleWithSuggestion(command, suggestionId) {
         try {
             // Load suggestion
-            const suggestion = await this.taskSuggestionRepository.findById(suggestionId);
+            const analysis = await this.analysisRepository.findById(suggestionId);
             if (!suggestion) {
                 throw new Error(`Suggestion not found: ${suggestionId}`);
             }

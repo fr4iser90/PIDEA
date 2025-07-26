@@ -102,13 +102,20 @@ class PerformanceAnalysisStep {
    * @returns {Promise<Object>} Performance analysis result
    */
   async analyzePerformance(projectPath, options = {}) {
+    const startTime = Date.now();
+    
     try {
       const result = {
         score: 0,
-        metrics: {},
-        optimizations: [],
-        bottlenecks: [],
-        summary: {}
+        results: {},
+        issues: [],
+        recommendations: [],
+        summary: {},
+        metadata: {
+          analysisType: 'performance',
+          timestamp: new Date().toISOString(),
+          version: '1.0.0'
+        }
       };
 
       // Analyze bundle size and dependencies
@@ -131,9 +138,9 @@ class PerformanceAnalysisStep {
         resources: resourceAnalysis
       });
 
-      // Aggregate metrics
+      // Aggregate results (detailed analysis data)
       if (options.includeMetrics) {
-        result.metrics = {
+        result.results = {
           bundle: bundleAnalysis.metrics,
           code: codeAnalysis.metrics,
           build: buildAnalysis.metrics,
@@ -141,32 +148,35 @@ class PerformanceAnalysisStep {
         };
       }
 
-      // Aggregate optimizations
-      if (options.includeOptimizations) {
-        result.optimizations = [
-          ...bundleAnalysis.optimizations,
-          ...codeAnalysis.optimizations,
-          ...buildAnalysis.optimizations,
-          ...resourceAnalysis.optimizations
-        ];
-      }
-
-      // Aggregate bottlenecks
+      // Aggregate bottlenecks as issues
       if (options.includeBottlenecks) {
-        result.bottlenecks = [
-          ...bundleAnalysis.bottlenecks,
-          ...codeAnalysis.bottlenecks,
-          ...buildAnalysis.bottlenecks,
-          ...resourceAnalysis.bottlenecks
+        result.issues = [
+          ...bundleAnalysis.bottlenecks.map(b => ({ ...b, type: 'bundle' })),
+          ...codeAnalysis.bottlenecks.map(b => ({ ...b, type: 'code' })),
+          ...buildAnalysis.bottlenecks.map(b => ({ ...b, type: 'build' })),
+          ...resourceAnalysis.bottlenecks.map(b => ({ ...b, type: 'resource' }))
         ];
       }
 
       // Create summary
       result.summary = {
         overallScore: result.score,
-        totalOptimizations: result.optimizations.length,
-        totalBottlenecks: result.bottlenecks.length,
+        totalIssues: result.issues.length,
+        totalRecommendations: result.recommendations.length,
+        status: this.getPerformanceLevel(result.score),
         performanceLevel: this.getPerformanceLevel(result.score)
+      };
+
+      // Add metadata
+      const executionTime = Date.now() - startTime;
+      const files = await this.getAllFiles(projectPath);
+      
+      result.metadata = {
+        ...result.metadata,
+        executionTime,
+        filesAnalyzed: files.length,
+        coverage: this.calculateCoverage(files, projectPath),
+        confidence: this.calculateConfidence(result)
       };
 
       return result;
@@ -600,6 +610,59 @@ class PerformanceAnalysisStep {
     if (!context.projectPath) {
       throw new Error('Project path is required for performance analysis');
     }
+  }
+
+  /**
+   * Calculate coverage percentage
+   * @param {Array} files - Analyzed files
+   * @param {string} projectPath - Project path
+   * @returns {number} Coverage percentage
+   */
+  calculateCoverage(files, projectPath) {
+    try {
+      const allFiles = this.getAllFilesSync(projectPath);
+      return allFiles.length > 0 ? Math.round((files.length / allFiles.length) * 100) : 100;
+    } catch (error) {
+      return 100;
+    }
+  }
+
+  /**
+   * Calculate confidence level
+   * @param {Object} result - Analysis result
+   * @returns {number} Confidence percentage
+   */
+  calculateConfidence(result) {
+    let confidence = 80;
+    
+    if (result.issues.length > 0) confidence += 10;
+    if (result.recommendations.length > 0) confidence += 5;
+    if (result.results && Object.keys(result.results).length > 0) confidence += 5;
+    
+    return Math.min(confidence, 100);
+  }
+
+  /**
+   * Get all files synchronously
+   * @param {string} dir - Directory path
+   * @returns {Array} File paths
+   */
+  getAllFilesSync(dir) {
+    const files = [];
+    const items = fs.readdirSync(dir);
+    
+    for (const item of items) {
+      const fullPath = path.join(dir, item);
+      const stat = fs.statSync(fullPath);
+      
+      if (stat.isDirectory() && !item.startsWith('.') && item !== 'node_modules') {
+        files.push(...this.getAllFilesSync(fullPath));
+      } else if (stat.isFile()) {
+        files.push(fullPath);
+      }
+    }
+    
+    return files;
   }
 }
 

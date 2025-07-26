@@ -90,14 +90,6 @@ class AnalysisRoutes {
       this.analysisController.getAnalysisRecommendations(req, res));
     app.get('/api/projects/:projectId/analysis/charts/:type', (req, res) => 
       this.analysisController.getAnalysisCharts(req, res));
-
-    // ========================================
-    // LEGACY COMPATIBILITY
-    // ========================================
-    
-    // Generic analysis route for legacy compatibility
-    app.get('/api/projects/:projectId/analysis/:analysisId', (req, res) => 
-      this.taskController.getProjectAnalysis(req, res));
   }
 
   /**

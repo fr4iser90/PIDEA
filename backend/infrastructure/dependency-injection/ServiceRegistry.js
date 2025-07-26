@@ -167,23 +167,22 @@ class ServiceRegistry {
         }, { singleton: true });
 
         // Analysis Output Service
-        this.container.register('analysisOutputService', () => {
+        this.container.register('analysisOutputService', (analysisRepository, logger) => {
             const AnalysisOutputService = require('@domain/services/analysis/AnalysisOutputService');
-            return new AnalysisOutputService();
-        }, { singleton: true });
+            return new AnalysisOutputService({ analysisRepository, logger });
+        }, { singleton: true, dependencies: ['analysisRepository', 'logger'] });
 
-        // Task Analysis Service - FIXED: Add missing dependencies
-        this.container.register('taskAnalysisService', (cursorIDEService, eventBus, logger, aiService, projectAnalyzer, analysisOrchestrator) => {
+        // Task Analysis Service - FIXED: Remove redundant analysisOrchestrator dependency
+        this.container.register('taskAnalysisService', (cursorIDEService, eventBus, logger, aiService, projectAnalyzer) => {
             const TaskAnalysisService = require('@domain/services/task/TaskAnalysisService');
             return new TaskAnalysisService({
                 cursorIDEService,
                 eventBus,
                 logger,
                 aiService,
-                projectAnalyzer,
-                analysisOrchestrator
+                projectAnalyzer
             });
-        }, { singleton: true, dependencies: ['cursorIDEService', 'eventBus', 'logger', 'aiService', 'projectAnalyzer', 'analysisOrchestrator'] });
+        }, { singleton: true, dependencies: ['cursorIDEService', 'eventBus', 'logger', 'aiService', 'projectAnalyzer'] });
 
         // Task Validation Service
         this.container.register('taskValidationService', (taskRepository, cursorIDEService, eventBus, fileSystemService) => {
@@ -197,16 +196,16 @@ class ServiceRegistry {
         }, { singleton: true, dependencies: ['taskRepository', 'cursorIDEService', 'eventBus', 'fileSystemService'] });
 
         // Task Generation Service
-        this.container.register('taskGenerationService', (taskRepository, taskTemplateRepository, taskSuggestionRepository, eventBus, logger) => {
+        this.container.register('taskGenerationService', (taskRepository, taskTemplateRepository, analysisRepository, cursorIDEService, eventBus) => {
             const TaskGenerationService = require('@domain/services/task/TaskGenerationService');
-            return new TaskGenerationService({
+            return new TaskGenerationService(
                 taskRepository,
                 taskTemplateRepository,
-                taskSuggestionRepository,
-                eventBus,
-                logger
-            });
-        }, { singleton: true, dependencies: ['taskRepository', 'taskTemplateRepository', 'taskSuggestionRepository', 'eventBus', 'logger'] });
+                analysisRepository,
+                cursorIDEService,
+                eventBus
+            );
+        }, { singleton: true, dependencies: ['taskRepository', 'taskTemplateRepository', 'analysisRepository', 'cursorIDEService', 'eventBus'] });
 
         // Advanced Analysis Service - combines layer and logic validation
         this.container.register('advancedAnalysisService', (layerValidationService, logicValidationService, taskAnalysisService, eventBus, logger) => {
@@ -333,19 +332,15 @@ class ServiceRegistry {
         this.logger.info('Registering application services...');
 
         // Analysis Application Service - coordinates analysis use cases
-        this.container.register('analysisApplicationService', (codeQualityService, securityService, performanceService, architectureService, analysisOutputService, analysisRepository, projectRepository, logger) => {
+        this.container.register('analysisApplicationService', (analysisOutputService, analysisRepository, projectRepository, logger) => {
             const AnalysisApplicationService = require('@application/services/AnalysisApplicationService');
             return new AnalysisApplicationService({
-                codeQualityService,
-                securityService,
-                performanceService,
-                architectureService,
                 analysisOutputService,
                 analysisRepository,
                 projectRepository,
                 logger
             });
-        }, { singleton: true, dependencies: ['codeQualityService', 'securityService', 'performanceService', 'architectureService', 'analysisOutputService', 'analysisRepository', 'projectRepository', 'logger'] });
+        }, { singleton: true, dependencies: ['analysisOutputService', 'analysisRepository', 'projectRepository', 'logger'] });
 
         // Project Application Service - coordinates project management use cases
         this.container.register('projectApplicationService', (projectRepository, ideManager, workspacePathDetector, projectMappingService, logger) => {
@@ -497,9 +492,7 @@ class ServiceRegistry {
             case 'codeExplorerApplicationService':
                 this.registerCodeExplorerApplicationService();
                 break;
-            case 'projectAnalysisApplicationService':
-                this.registerProjectAnalysisApplicationService();
-                break;
+
             case 'ideMirrorApplicationService':
                 this.registerIDEMirrorApplicationService();
                 break;
@@ -652,16 +645,7 @@ class ServiceRegistry {
         }, { singleton: true, dependencies: ['logger', 'eventBus', 'browserManager'] });
     }
 
-    registerProjectAnalysisApplicationService() {
-        this.container.register('projectAnalysisApplicationService', (projectAnalysisRepository, logger, eventBus) => {
-            const ProjectAnalysisApplicationService = require('@application/services/ProjectAnalysisApplicationService');
-            return new ProjectAnalysisApplicationService({
-                projectAnalysisRepository,
-                logger,
-                eventBus
-            });
-        }, { singleton: true, dependencies: ['projectAnalysisRepository', 'logger', 'eventBus'] });
-    }
+
 
     registerIDEMirrorApplicationService() {
         this.container.register('ideMirrorApplicationService', (logger, eventBus) => {
@@ -701,15 +685,7 @@ class ServiceRegistry {
         }, { singleton: true });
 
         // Analysis Orchestrator (Phase 2: Step delegation)
-        this.container.register('analysisOrchestrator', (stepRegistry, eventBus, logger, analysisRepository) => {
-            const AnalysisOrchestrator = require('../external/AnalysisOrchestrator');
-            return new AnalysisOrchestrator({
-                stepRegistry,
-                eventBus,
-                logger,
-                analysisRepository
-            });
-        }, { singleton: true, dependencies: ['stepRegistry', 'eventBus', 'logger', 'analysisRepository'] });
+        // AnalysisOrchestrator REMOVED - redundant with AnalysisApplicationService
 
         // Test Orchestrator (Step delegation)
         this.container.register('testOrchestrator', (stepRegistry, eventBus, logger) => {
@@ -782,6 +758,12 @@ class ServiceRegistry {
         // }, { singleton: true, dependencies: ['monorepoStrategy', 'singleRepoStrategy'] });
 
 
+
+        // Manifest analyzer service
+        this.container.register('manifestAnalyzer', () => {
+            const ManifestAnalyzer = require('@domain/services/analysis/ManifestAnalyzer');
+            return new ManifestAnalyzer();
+        }, { singleton: true });
 
         // Git service (orchestrator using steps)
         this.container.register('gitService', (logger, eventBus, stepRegistry) => {
@@ -933,11 +915,6 @@ class ServiceRegistry {
             return databaseConnection.getRepository('UserSession');
         }, { singleton: true, dependencies: ['databaseConnection'] });
 
-        // Project analysis repository
-        this.container.register('projectAnalysisRepository', (databaseConnection) => {
-            return databaseConnection.getRepository('ProjectAnalysis');
-        }, { singleton: true, dependencies: ['databaseConnection'] });
-
         // Project repository
         this.container.register('projectRepository', (databaseConnection) => {
             return databaseConnection.getRepository('Project');
@@ -946,11 +923,6 @@ class ServiceRegistry {
         // Task template repository
         this.container.register('taskTemplateRepository', (databaseConnection) => {
             return databaseConnection.getRepository('TaskTemplate');
-        }, { singleton: true, dependencies: ['databaseConnection'] });
-
-        // Task suggestion repository
-        this.container.register('taskSuggestionRepository', (databaseConnection) => {
-            return databaseConnection.getRepository('TaskSuggestion');
         }, { singleton: true, dependencies: ['databaseConnection'] });
 
         this.registeredServices.add('repositories');
@@ -1086,11 +1058,6 @@ class ServiceRegistry {
                     return databaseConnection.getRepository('UserSession');
                 }, { singleton: true, dependencies: ['databaseConnection'] });
                 break;
-            case 'projectAnalysisRepository':
-                this.container.register('projectAnalysisRepository', (databaseConnection) => {
-                    return databaseConnection.getRepository('ProjectAnalysis');
-                }, { singleton: true, dependencies: ['databaseConnection'] });
-                break;
             case 'projectRepository':
                 this.container.register('projectRepository', (databaseConnection) => {
                     return databaseConnection.getRepository('Project');
@@ -1099,11 +1066,6 @@ class ServiceRegistry {
             case 'taskTemplateRepository':
                 this.container.register('taskTemplateRepository', (databaseConnection) => {
                     return databaseConnection.getRepository('TaskTemplate');
-                }, { singleton: true, dependencies: ['databaseConnection'] });
-                break;
-            case 'taskSuggestionRepository':
-                this.container.register('taskSuggestionRepository', (databaseConnection) => {
-                    return databaseConnection.getRepository('TaskSuggestion');
                 }, { singleton: true, dependencies: ['databaseConnection'] });
                 break;
             default:
@@ -1123,17 +1085,10 @@ class ServiceRegistry {
                     return new AIService();
                 }, { singleton: true });
                 break;
-            case 'analysisOrchestrator':
-                this.container.register('analysisOrchestrator', (stepRegistry, eventBus, logger, analysisRepository) => {
-                    const AnalysisOrchestrator = require('../external/AnalysisOrchestrator');
-                    return new AnalysisOrchestrator({
-                        stepRegistry,
-                        eventBus,
-                        logger,
-                        analysisRepository
-                    });
-                }, { singleton: true, dependencies: ['stepRegistry', 'eventBus', 'logger', 'analysisRepository'] });
-                break;
+                    case 'analysisOrchestrator':
+            // AnalysisOrchestrator REMOVED - redundant with AnalysisApplicationService
+            throw new Error('AnalysisOrchestrator has been removed - use AnalysisApplicationService instead');
+            break;
             case 'testOrchestrator':
                 this.container.register('testOrchestrator', (stepRegistry, eventBus, logger) => {
                     const TestOrchestrator = require('../external/TestOrchestrator');
@@ -1286,16 +1241,16 @@ class ServiceRegistry {
                 }, { singleton: true });
                 break;
             case 'analysisOutputService':
-                this.container.register('analysisOutputService', () => {
+                this.container.register('analysisOutputService', (analysisRepository, logger) => {
                     const AnalysisOutputService = require('@domain/services/analysis/AnalysisOutputService');
-                    return new AnalysisOutputService();
-                }, { singleton: true });
+                    return new AnalysisOutputService({ analysisRepository, logger });
+                }, { singleton: true, dependencies: ['analysisRepository', 'logger'] });
                 break;
             case 'taskAnalysisService':
-                this.container.register('taskAnalysisService', (cursorIDEService, eventBus, logger, aiService, projectAnalyzer, analysisOrchestrator) => {
-                    const TaskAnalysisService = require('@domain/services/task/TaskAnalysisService');
-                    return new TaskAnalysisService(cursorIDEService, eventBus, logger, aiService, projectAnalyzer, analysisOrchestrator);
-                }, { singleton: true, dependencies: ['cursorIDEService', 'eventBus', 'logger', 'aiService', 'projectAnalyzer', 'analysisOrchestrator'] });
+                        this.container.register('taskAnalysisService', (cursorIDEService, eventBus, logger, aiService, projectAnalyzer) => {
+            const TaskAnalysisService = require('@domain/services/task/TaskAnalysisService');
+            return new TaskAnalysisService(cursorIDEService, eventBus, logger, aiService, projectAnalyzer);
+        }, { singleton: true, dependencies: ['cursorIDEService', 'eventBus', 'logger', 'aiService', 'projectAnalyzer'] });
                 break;
             case 'taskValidationService':
                 this.container.register('taskValidationService', (taskRepository, cursorIDEService, eventBus, fileSystemService) => {
@@ -1304,16 +1259,16 @@ class ServiceRegistry {
                 }, { singleton: true, dependencies: ['taskRepository', 'cursorIDEService', 'eventBus', 'fileSystemService'] });
                 break;
             case 'taskGenerationService':
-                this.container.register('taskGenerationService', (taskRepository, taskTemplateRepository, taskSuggestionRepository, eventBus, logger) => {
+                this.container.register('taskGenerationService', (taskRepository, taskTemplateRepository, analysisRepository, cursorIDEService, eventBus) => {
                     const TaskGenerationService = require('@domain/services/task/TaskGenerationService');
-                    return new TaskGenerationService({
+                    return new TaskGenerationService(
                         taskRepository,
                         taskTemplateRepository,
-                        taskSuggestionRepository,
-                        eventBus,
-                        logger
-                    });
-                }, { singleton: true, dependencies: ['taskRepository', 'taskTemplateRepository', 'taskSuggestionRepository', 'eventBus', 'logger'] });
+                        analysisRepository,
+                        cursorIDEService,
+                        eventBus
+                    );
+                }, { singleton: true, dependencies: ['taskRepository', 'taskTemplateRepository', 'analysisRepository', 'cursorIDEService', 'eventBus'] });
                 break;
             case 'advancedAnalysisService':
                 this.container.register('advancedAnalysisService', (layerValidationService, logicValidationService, taskAnalysisService, eventBus, logger) => {
@@ -1470,14 +1425,12 @@ class ServiceRegistry {
         this.addServiceDefinition('analysisRepository', ['databaseConnection'], 'repositories');
         this.addServiceDefinition('userRepository', ['databaseConnection'], 'repositories');
         this.addServiceDefinition('userSessionRepository', ['databaseConnection'], 'repositories');
-        this.addServiceDefinition('projectAnalysisRepository', ['databaseConnection'], 'repositories');
         this.addServiceDefinition('projectRepository', ['databaseConnection'], 'repositories');
         this.addServiceDefinition('taskTemplateRepository', ['databaseConnection'], 'repositories');
-        this.addServiceDefinition('taskSuggestionRepository', ['databaseConnection'], 'repositories');
 
         // External services
         this.addServiceDefinition('aiService', [], 'external');
-        this.addServiceDefinition('analysisOrchestrator', ['stepRegistry', 'eventBus', 'logger', 'analysisRepository'], 'external');
+        // AnalysisOrchestrator service definition removed - redundant
         this.addServiceDefinition('testOrchestrator', ['stepRegistry', 'eventBus', 'logger'], 'external');
         this.addServiceDefinition('workflowOrchestrationService', ['taskRepository', 'eventBus', 'logger', 'stepRegistry', 'cursorIDEService'], 'external');
         this.addServiceDefinition('projectAnalyzer', [], 'external');
@@ -1499,10 +1452,10 @@ class ServiceRegistry {
         this.addServiceDefinition('workspacePathDetector', [], 'domain');
         this.addServiceDefinition('ideWorkspaceDetectionService', ['ideManager', 'projectRepository'], 'domain');
         this.addServiceDefinition('subprojectDetector', [], 'domain');
-        this.addServiceDefinition('analysisOutputService', [], 'domain');
-        this.addServiceDefinition('taskAnalysisService', ['cursorIDEService', 'eventBus', 'logger', 'aiService', 'projectAnalyzer', 'analysisOrchestrator'], 'domain');
+        this.addServiceDefinition('analysisOutputService', ['analysisRepository', 'logger'], 'domain');
+        this.addServiceDefinition('taskAnalysisService', ['cursorIDEService', 'eventBus', 'logger', 'aiService', 'projectAnalyzer'], 'domain');
         this.addServiceDefinition('taskValidationService', ['taskRepository', 'cursorIDEService', 'eventBus', 'fileSystemService'], 'domain');
-        this.addServiceDefinition('taskGenerationService', ['taskRepository', 'taskTemplateRepository', 'taskSuggestionRepository', 'eventBus', 'logger'], 'domain');
+        this.addServiceDefinition('taskGenerationService', ['taskRepository', 'taskTemplateRepository', 'analysisRepository', 'eventBus', 'logger'], 'domain');
         this.addServiceDefinition('advancedAnalysisService', ['layerValidationService', 'logicValidationService', 'taskAnalysisService', 'eventBus', 'logger'], 'domain');
         this.addServiceDefinition('layerValidationService', ['logger'], 'domain');
         this.addServiceDefinition('logicValidationService', ['logger'], 'domain');
@@ -1530,7 +1483,7 @@ class ServiceRegistry {
         this.addServiceDefinition('streamingApplicationService', ['logger', 'eventBus', 'commandBus'], 'application');
         this.addServiceDefinition('contentLibraryApplicationService', ['logger', 'eventBus'], 'application');
         this.addServiceDefinition('codeExplorerApplicationService', ['logger', 'eventBus', 'browserManager'], 'application');
-        this.addServiceDefinition('projectAnalysisApplicationService', ['projectAnalysisRepository', 'logger', 'eventBus'], 'application');
+
         this.addServiceDefinition('ideMirrorApplicationService', ['logger', 'eventBus'], 'application');
         this.addServiceDefinition('ideApplicationService', ['ideManager', 'eventBus', 'cursorIDEService', 'taskRepository', 'terminalLogCaptureService', 'terminalLogReader', 'logger'], 'application');
 

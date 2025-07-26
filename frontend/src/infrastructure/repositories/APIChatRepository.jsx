@@ -567,8 +567,6 @@ export default class APIChatRepository extends ChatRepository {
       'tech-stack': 'tech-stack',
       'manifest': 'manifest',
       'dependencies': 'dependencies',
-      'project': 'project',
-      'comprehensive': 'comprehensive',
       'recommendations': 'recommendations',
       'security-recommendations': 'security-recommendations',
       'code-quality-recommendations': 'code-quality-recommendations',
@@ -596,7 +594,6 @@ export default class APIChatRepository extends ChatRepository {
       'tech-stack': 'TechStackAnalysisStep',
       'manifest': 'ManifestAnalysisStep',
       'dependencies': 'DependencyAnalysisStep',
-      'project': 'ProjectAnalysisStep',
       'recommendations': 'RecommendationsStep'
     };
     

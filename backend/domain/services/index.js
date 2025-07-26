@@ -19,7 +19,7 @@ module.exports = {
   TaskSchedulingService: require('./task/TaskSchedulingService'),
   TaskSecurityService: require('./task/TaskSecurityService'),
   TaskService: require('./task/TaskService'),
-  TaskSuggestionService: require('./task/TaskSuggestionService'),
+  
   TaskValidationService: require('./task/TaskValidationService'),
   SubprojectDetector: require('./analysis/SubprojectDetector'),
 }; 

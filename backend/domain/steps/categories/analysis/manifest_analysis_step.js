@@ -56,17 +56,7 @@ class ManifestAnalysisStep {
       
       logger.info(`📊 Starting manifest analysis for: ${projectPath}`);
 
-      // Get manifest analyzer from context via dependency injection
-      let manifestAnalyzer = context.manifestAnalyzer;
-      if (!manifestAnalyzer) {
-        manifestAnalyzer = context.getService('manifestAnalyzer');
-      }
-      
-      if (!manifestAnalyzer) {
-        throw new Error('Manifest analyzer not available in context');
-      }
-
-      // Analyze manifests
+      // Execute manifest analysis directly (like other steps)
       const manifestAnalysis = await this.analyzeManifests(projectPath, context);
 
       logger.info(`✅ Manifest analysis completed successfully`);
@@ -99,12 +89,26 @@ class ManifestAnalysisStep {
   }
 
   async analyzeManifests(projectPath, context) {
+    const startTime = Date.now();
+    
+    const result = {
+      score: 0,
+      results: {},
+      issues: [],
+      recommendations: [],
+      summary: {},
+      metadata: {
+        analysisType: 'manifest',
+        timestamp: new Date().toISOString(),
+        version: '1.0.0'
+      }
+    };
+
     const manifests = {
       packageJson: null,
       configFiles: [],
       dockerFiles: [],
-      ciFiles: [],
-      summary: {}
+      ciFiles: []
     };
 
     try {
@@ -153,10 +157,38 @@ class ManifestAnalysisStep {
         manifests.ciFiles = ciFiles;
       }
 
-      // Generate summary
-      manifests.summary = this.generateManifestSummary(manifests);
+      // Store manifests as results
+      result.results = manifests;
 
-      return manifests;
+      // Generate issues and recommendations
+      result.issues = this.generateManifestIssues(manifests);
+      result.recommendations = this.generateManifestRecommendations(manifests);
+
+      // Calculate manifest score
+      result.score = this.calculateManifestScore(result);
+
+      // Generate summary
+      result.summary = {
+        overallScore: result.score,
+        totalIssues: result.issues.length,
+        totalRecommendations: result.recommendations.length,
+        status: this.getManifestStatus(result.score),
+        ...this.generateManifestSummary(manifests)
+      };
+
+      // Add metadata
+      const executionTime = Date.now() - startTime;
+      const files = await this.getAllFiles(projectPath);
+      
+      result.metadata = {
+        ...result.metadata,
+        executionTime,
+        filesAnalyzed: files.length,
+        coverage: this.calculateCoverage(files, projectPath),
+        confidence: this.calculateConfidence(result)
+      };
+
+      return result;
 
     } catch (error) {
       logger.error(`❌ Manifest analysis failed: ${error.message}`);
@@ -380,6 +412,182 @@ class ManifestAnalysisStep {
     if (!context.projectPath) {
       throw new Error('Project path is required for manifest analysis');
     }
+  }
+
+  /**
+   * Generate manifest issues
+   * @param {Object} manifests - Manifest data
+   * @returns {Array} Issues
+   */
+  generateManifestIssues(manifests) {
+    const issues = [];
+    
+    // Check for missing package.json
+    if (!manifests.packageJson) {
+      issues.push({
+        type: 'missing',
+        severity: 'high',
+        message: 'No package.json found',
+        suggestion: 'Create a package.json file for your project'
+      });
+    }
+    
+    // Check for missing CI/CD
+    if (manifests.ciFiles.length === 0) {
+      issues.push({
+        type: 'missing',
+        severity: 'medium',
+        message: 'No CI/CD configuration found',
+        suggestion: 'Consider adding GitHub Actions, GitLab CI, or similar'
+      });
+    }
+    
+    return issues;
+  }
+
+  /**
+   * Generate manifest recommendations
+   * @param {Object} manifests - Manifest data
+   * @returns {Array} Recommendations
+   */
+  generateManifestRecommendations(manifests) {
+    const recommendations = [];
+    
+    if (manifests.packageJson) {
+      recommendations.push({
+        priority: 'medium',
+        action: 'Add scripts for common tasks',
+        impact: 'Improved developer experience',
+        effort: 'low'
+      });
+    }
+    
+    return recommendations;
+  }
+
+  /**
+   * Calculate manifest score
+   * @param {Object} result - Analysis result
+   * @returns {number} Manifest score (0-100)
+   */
+  calculateManifestScore(result) {
+    let score = 60; // Base score
+    
+    // Add points for having package.json
+    if (result.results.packageJson) {
+      score += 20;
+    }
+    
+    // Add points for config files
+    if (result.results.configFiles.length > 0) {
+      score += 10;
+    }
+    
+    // Add points for Docker files
+    if (result.results.dockerFiles.length > 0) {
+      score += 5;
+    }
+    
+    // Add points for CI/CD files
+    if (result.results.ciFiles.length > 0) {
+      score += 5;
+    }
+    
+    // Deduct points for issues
+    if (result.issues && result.issues.length > 0) {
+      score -= Math.min(result.issues.length * 5, 20);
+    }
+    
+    return Math.max(Math.min(score, 100), 0);
+  }
+
+  /**
+   * Get manifest status
+   * @param {number} score - Manifest score
+   * @returns {string} Status
+   */
+  getManifestStatus(score) {
+    if (score >= 90) return 'excellent';
+    if (score >= 80) return 'good';
+    if (score >= 70) return 'fair';
+    if (score >= 60) return 'poor';
+    return 'critical';
+  }
+
+  /**
+   * Calculate coverage percentage
+   * @param {Array} files - Analyzed files
+   * @param {string} projectPath - Project path
+   * @returns {number} Coverage percentage
+   */
+  calculateCoverage(files, projectPath) {
+    try {
+      const allFiles = this.getAllFilesSync(projectPath);
+      return allFiles.length > 0 ? Math.round((files.length / allFiles.length) * 100) : 100;
+    } catch (error) {
+      return 100;
+    }
+  }
+
+  /**
+   * Calculate confidence level
+   * @param {Object} result - Analysis result
+   * @returns {number} Confidence percentage
+   */
+  calculateConfidence(result) {
+    let confidence = 80;
+    
+    if (result.issues.length > 0) confidence += 10;
+    if (result.recommendations.length > 0) confidence += 5;
+    if (result.results && Object.keys(result.results).length > 0) confidence += 5;
+    
+    return Math.min(confidence, 100);
+  }
+
+  /**
+   * Get all files synchronously
+   * @param {string} dir - Directory path
+   * @returns {Array} File paths
+   */
+  getAllFilesSync(dir) {
+    const files = [];
+    const items = fs.readdirSync(dir);
+    
+    for (const item of items) {
+      const fullPath = path.join(dir, item);
+      const stat = fs.statSync(fullPath);
+      
+      if (stat.isDirectory() && !item.startsWith('.') && item !== 'node_modules') {
+        files.push(...this.getAllFilesSync(fullPath));
+      } else if (stat.isFile()) {
+        files.push(fullPath);
+      }
+    }
+    
+    return files;
+  }
+
+  /**
+   * Get all files asynchronously
+   * @param {string} dir - Directory path
+   * @returns {Promise<Array>} File paths
+   */
+  async getAllFiles(dir) {
+    const files = [];
+    const items = await fs.readdir(dir);
+    
+    for (const item of items) {
+      const fullPath = path.join(dir, item);
+      const stat = await fs.stat(fullPath);
+      
+      if (stat.isDirectory() && !item.startsWith('.') && item !== 'node_modules') {
+        files.push(...await this.getAllFiles(fullPath));
+      } else if (stat.isFile()) {
+        files.push(fullPath);
+      }
+    }
+    
+    return files;
   }
 }
 

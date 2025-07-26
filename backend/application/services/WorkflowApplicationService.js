@@ -317,7 +317,7 @@ class WorkflowApplicationService {
         deploymentService: this.application?.deploymentService,
         customTaskService: this.application?.customTaskService,
         taskRepository: this.application?.taskRepository,
-        projectAnalysisRepository: this.application?.projectAnalysisRepository,
+                    analysisRepository: this.application?.analysisRepository,
         analysisOutputService: this.application?.analysisOutputService,
         projectAnalyzer: this.application?.projectAnalyzer,
         codeQualityAnalyzer: this.application?.codeQualityAnalyzer,

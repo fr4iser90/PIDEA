@@ -64,49 +64,12 @@ const IndividualAnalysisButtons = ({ projectId = null, eventBus = null, onAnalys
       description: 'Analyze package dependencies and versions',
       color: 'indigo'
     },
-    {
-      key: 'project',
-      label: 'Project',
-      icon: '📁',
-      description: 'Comprehensive project structure analysis',
-      color: 'gray'
-    }
   ];
 
-  // Recommendation Types - Based on analysis results
-  const recommendationTypes = [
-    {
-      key: 'recommendations',
-      label: 'Recommendations',
-      icon: '💡',
-      description: 'Generate actionable recommendations from analysis',
-      color: 'yellow'
-    },
-    {
-      key: 'security-recommendations',
-      label: 'Security Recommendations',
-      icon: '🔒',
-      description: 'Generate security-focused recommendations',
-      color: 'red'
-    },
-    {
-      key: 'code-quality-recommendations',
-      label: 'Code Quality Recommendations',
-      icon: '🔍',
-      description: 'Generate code quality-focused recommendations',
-      color: 'blue'
-    },
-    {
-      key: 'architecture-recommendations',
-      label: 'Architecture Recommendations',
-      icon: '🏗️',
-      description: 'Generate architecture-focused recommendations',
-      color: 'purple'
-    }
-  ];
-
-  // All analysis types (core + recommendations)
-  const allAnalysisTypes = [...analysisTypes, ...recommendationTypes];
+  // Entferne recommendationTypes und deren Verwendung
+  // const recommendationTypes = [...];
+  // const allAnalysisTypes = [...analysisTypes, ...recommendationTypes];
+  const allAnalysisTypes = analysisTypes;
 
   useEffect(() => {
     loadActiveSteps();

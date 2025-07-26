@@ -23,6 +23,58 @@ class AnalysisController {
   constructor(analysisApplicationService) {
     this.analysisApplicationService = analysisApplicationService;
     this.logger = logger;
+    
+    // Request deduplication to prevent double execution
+    this.activeRequests = new Map();
+    this.requestTimeout = 5000; // 5 seconds
+  }
+
+  /**
+   * Generate request key for deduplication
+   * @param {string} method - HTTP method
+   * @param {string} url - Request URL
+   * @param {Object} params - Request parameters
+   * @returns {string} Request key
+   */
+  generateRequestKey(method, url, params = {}) {
+    const paramString = JSON.stringify(params);
+    return `${method}:${url}:${paramString}`;
+  }
+
+  /**
+   * Check if request is already in progress
+   * @param {string} requestKey - Request key
+   * @returns {boolean} Whether request is active
+   */
+  isRequestActive(requestKey) {
+    const activeRequest = this.activeRequests.get(requestKey);
+    if (!activeRequest) return false;
+    
+    // Check if request has timed out
+    if (Date.now() - activeRequest.timestamp > this.requestTimeout) {
+      this.activeRequests.delete(requestKey);
+      return false;
+    }
+    
+    return true;
+  }
+
+  /**
+   * Mark request as active
+   * @param {string} requestKey - Request key
+   */
+  markRequestActive(requestKey) {
+    this.activeRequests.set(requestKey, {
+      timestamp: Date.now()
+    });
+  }
+
+  /**
+   * Mark request as completed
+   * @param {string} requestKey - Request key
+   */
+  markRequestCompleted(requestKey) {
+    this.activeRequests.delete(requestKey);
   }
 
   /**
@@ -81,33 +133,37 @@ class AnalysisController {
    * GET /api/analysis/:projectId/status - Get analysis status and metrics
    */
   async getAnalysisStatus(req, res) {
+    const requestKey = this.generateRequestKey('GET', req.originalUrl, req.params);
+    
+    // Check for duplicate requests
+    if (this.isRequestActive(requestKey)) {
+      this.logger.warn(`📊 Duplicate request detected for status: ${requestKey}`);
+      return res.status(409).json({
+        success: false,
+        error: 'Request already in progress',
+        message: 'Another request for the same data is currently being processed'
+      });
+    }
+    
     try {
+      this.markRequestActive(requestKey);
       const { projectId } = req.params;
       
       this.logger.info(`📊 Getting analysis status for project: ${projectId}`);
       
-      // Temporary fallback implementation
-      const status = {
-        queueStatus: {
-          active: 0,
-          pending: 0,
-          completed: 0,
-          failed: 0
-        },
-        projectAnalysis: {
-          id: `analysis_${projectId}_${Date.now()}`,
-          status: 'completed',
-          progress: 100,
-          completedAt: new Date().toISOString(),
-          duration: 5000
-        },
-        memoryUsage: {
-          used: 128,
-          total: 512,
-          percentage: 25
-        }
-      };
+      // Validate Application Service
+      if (!this.analysisApplicationService) {
+        throw new Error('AnalysisApplicationService not available');
+      }
       
+      if (typeof this.analysisApplicationService.getAnalysisStatus !== 'function') {
+        throw new Error('AnalysisApplicationService.getAnalysisStatus method not available');
+      }
+      
+      // Use Application Service for status
+      const status = await this.analysisApplicationService.getAnalysisStatus(projectId);
+      
+      this.markRequestCompleted(requestKey);
       res.json({
         success: true,
         data: status,
@@ -116,6 +172,7 @@ class AnalysisController {
       });
       
     } catch (error) {
+      this.markRequestCompleted(requestKey);
       this.logger.error('❌ Failed to get analysis status:', error);
       res.status(500).json({
         success: false,
@@ -129,7 +186,20 @@ class AnalysisController {
    * GET /api/analysis/:projectId/history - Get analysis history
    */
   async getAnalysisHistory(req, res) {
+    const requestKey = this.generateRequestKey('GET', req.originalUrl, { ...req.params, ...req.query });
+    
+    // Check for duplicate requests
+    if (this.isRequestActive(requestKey)) {
+      this.logger.warn(`📚 Duplicate request detected for history: ${requestKey}`);
+      return res.status(409).json({
+        success: false,
+        error: 'Request already in progress',
+        message: 'Another request for the same data is currently being processed'
+      });
+    }
+    
     try {
+      this.markRequestActive(requestKey);
       const { projectId } = req.params;
       const { limit = '10', offset = '0', types } = req.query;
       
@@ -140,28 +210,23 @@ class AnalysisController {
       const parsedOffset = parseInt(offset);
       const analysisTypes = types ? types.split(',') : undefined;
       
-      // Temporary fallback implementation
-      const history = [
-        {
-          id: `analysis_${projectId}_1`,
-          type: 'code-quality',
-          status: 'completed',
-          createdAt: new Date(Date.now() - 86400000).toISOString(), // 1 day ago
-          completedAt: new Date(Date.now() - 86400000 + 5000).toISOString(),
-          duration: 5000,
-          summary: 'Code quality analysis completed successfully'
-        },
-        {
-          id: `analysis_${projectId}_2`,
-          type: 'security',
-          status: 'completed',
-          createdAt: new Date(Date.now() - 172800000).toISOString(), // 2 days ago
-          completedAt: new Date(Date.now() - 172800000 + 8000).toISOString(),
-          duration: 8000,
-          summary: 'Security analysis completed successfully'
-        }
-      ];
+      // Validate Application Service
+      if (!this.analysisApplicationService) {
+        throw new Error('AnalysisApplicationService not available');
+      }
       
+      if (typeof this.analysisApplicationService.getAnalysisHistory !== 'function') {
+        throw new Error('AnalysisApplicationService.getAnalysisHistory method not available');
+      }
+      
+      // Use Application Service for history
+      const history = await this.analysisApplicationService.getAnalysisHistory(projectId, {
+        limit: parsedLimit,
+        offset: parsedOffset,
+        types: analysisTypes
+      });
+      
+      this.markRequestCompleted(requestKey);
       res.json({
         success: true,
         data: {
@@ -177,6 +242,7 @@ class AnalysisController {
       });
       
     } catch (error) {
+      this.markRequestCompleted(requestKey);
       this.logger.error('❌ Failed to get analysis history:', error);
       res.status(500).json({
         success: false,
@@ -190,15 +256,38 @@ class AnalysisController {
    * GET /api/analysis/:projectId/issues - Get analysis issues and recommendations
    */
   async getAnalysisIssues(req, res) {
+    const requestKey = this.generateRequestKey('GET', req.originalUrl, { ...req.params, ...req.query });
+    
+    // Check for duplicate requests
+    if (this.isRequestActive(requestKey)) {
+      this.logger.warn(`🔍 Duplicate request detected for issues: ${requestKey}`);
+      return res.status(409).json({
+        success: false,
+        error: 'Request already in progress',
+        message: 'Another request for the same data is currently being processed'
+      });
+    }
+    
     try {
+      this.markRequestActive(requestKey);
       const { projectId } = req.params;
       const { type = 'code-quality' } = req.query;
       
       this.logger.info(`🔍 Getting analysis issues for project: ${projectId}, type: ${type}`);
       
+      // Validate Application Service
+      if (!this.analysisApplicationService) {
+        throw new Error('AnalysisApplicationService not available');
+      }
+      
+      if (typeof this.analysisApplicationService.getAnalysisIssues !== 'function') {
+        throw new Error('AnalysisApplicationService.getAnalysisIssues method not available');
+      }
+      
       // Use Application Service for issues
       const issues = await this.analysisApplicationService.getAnalysisIssues(projectId, type);
       
+      this.markRequestCompleted(requestKey);
       res.json({
         success: true,
         data: issues,
@@ -208,6 +297,7 @@ class AnalysisController {
       });
       
     } catch (error) {
+      this.markRequestCompleted(requestKey);
       this.logger.error('❌ Failed to get analysis issues:', error);
       res.status(500).json({
         success: false,
@@ -260,20 +350,8 @@ class AnalysisController {
       
       this.logger.info(`📊 Getting analysis metrics for project: ${projectId}`);
       
-      // Temporary fallback implementation
-      const metrics = {
-        totalAnalyses: 5,
-        completedAnalyses: 4,
-        failedAnalyses: 1,
-        averageDuration: 4500,
-        lastAnalysis: new Date(Date.now() - 86400000).toISOString(),
-        analysisTypes: {
-          'code-quality': 2,
-          'security': 1,
-          'performance': 1,
-          'architecture': 1
-        }
-      };
+      // Use Application Service to get real metrics from database
+      const metrics = await this.analysisApplicationService.getAnalysisMetrics(projectId);
       
       res.json({
         success: true,
@@ -360,15 +438,8 @@ class AnalysisController {
       
       this.logger.info(`🔧 Getting analysis tech stack for project: ${projectId}`);
       
-      // Temporary fallback implementation
-      const techStack = {
-        languages: ['JavaScript', 'TypeScript', 'HTML', 'CSS'],
-        frameworks: ['React', 'Express.js', 'Node.js'],
-        databases: ['SQLite', 'PostgreSQL'],
-        tools: ['Vite', 'ESLint', 'Jest'],
-        platforms: ['Linux', 'Docker'],
-        versionControl: ['Git']
-      };
+      // Use Application Service to get real tech stack data from database
+      const techStack = await this.analysisApplicationService.getAnalysisTechStack(projectId);
       
       res.json({
         success: true,
@@ -396,15 +467,17 @@ class AnalysisController {
       
       this.logger.info(`🏗️ Getting analysis architecture for project: ${projectId}`);
       
-      // Temporary fallback implementation
-      const architecture = {
-        pattern: 'Domain-Driven Design (DDD)',
-        layers: ['Presentation', 'Application', 'Domain', 'Infrastructure'],
-        modules: ['Auth', 'IDE', 'Analysis', 'Chat', 'Tasks'],
-        communication: 'REST API + WebSocket',
-        database: 'SQLite (Development) / PostgreSQL (Production)',
-        deployment: 'Docker Compose'
-      };
+      // Validate Application Service
+      if (!this.analysisApplicationService) {
+        throw new Error('AnalysisApplicationService not available');
+      }
+      
+      if (typeof this.analysisApplicationService.getAnalysisArchitecture !== 'function') {
+        throw new Error('AnalysisApplicationService.getAnalysisArchitecture method not available');
+      }
+      
+      // Use Application Service for architecture
+      const architecture = await this.analysisApplicationService.getAnalysisArchitecture(projectId);
       
       res.json({
         success: true,
@@ -427,42 +500,37 @@ class AnalysisController {
    * GET /api/projects/:projectId/analysis/recommendations - Get analysis recommendations
    */
   async getAnalysisRecommendations(req, res) {
+    const requestKey = this.generateRequestKey('GET', req.originalUrl, req.params);
+    
+    // Check for duplicate requests
+    if (this.isRequestActive(requestKey)) {
+      this.logger.warn(`💡 Duplicate request detected for recommendations: ${requestKey}`);
+      return res.status(409).json({
+        success: false,
+        error: 'Request already in progress',
+        message: 'Another request for the same data is currently being processed'
+      });
+    }
+    
     try {
+      this.markRequestActive(requestKey);
       const { projectId } = req.params;
       
       this.logger.info(`💡 Getting analysis recommendations for project: ${projectId}`);
       
-      // Temporary fallback implementation
-      const recommendations = [
-        {
-          id: 'rec_1',
-          type: 'performance',
-          priority: 'high',
-          title: 'Optimize Database Queries',
-          description: 'Consider adding database indexes for frequently accessed columns',
-          impact: 'medium',
-          effort: 'low'
-        },
-        {
-          id: 'rec_2',
-          type: 'security',
-          priority: 'medium',
-          title: 'Implement Rate Limiting',
-          description: 'Add rate limiting for authentication endpoints',
-          impact: 'high',
-          effort: 'medium'
-        },
-        {
-          id: 'rec_3',
-          type: 'code-quality',
-          priority: 'low',
-          title: 'Add Unit Tests',
-          description: 'Increase test coverage for critical business logic',
-          impact: 'medium',
-          effort: 'high'
-        }
-      ];
+      // Validate Application Service
+      if (!this.analysisApplicationService) {
+        throw new Error('AnalysisApplicationService not available');
+      }
       
+      if (typeof this.analysisApplicationService.getAnalysisRecommendations !== 'function') {
+        throw new Error('AnalysisApplicationService.getAnalysisRecommendations method not available');
+      }
+      
+      // Use Application Service to get real recommendations from database
+      const recommendations = await this.analysisApplicationService.getAnalysisRecommendations(projectId);
+      
+      this.markRequestCompleted(requestKey);
       res.json({
         success: true,
         data: recommendations,
@@ -471,6 +539,7 @@ class AnalysisController {
       });
       
     } catch (error) {
+      this.markRequestCompleted(requestKey);
       this.logger.error('❌ Failed to get analysis recommendations:', error);
       res.status(500).json({
         success: false,
@@ -489,30 +558,17 @@ class AnalysisController {
       
       this.logger.info(`📈 Getting analysis charts for project: ${projectId}, type: ${type}`);
       
-      // Temporary fallback implementation
-      const charts = {
-        type: type,
-        data: {
-          labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May'],
-          datasets: [
-            {
-              label: 'Analysis Count',
-              data: [12, 19, 15, 25, 22],
-              backgroundColor: 'rgba(54, 162, 235, 0.2)',
-              borderColor: 'rgba(54, 162, 235, 1)',
-              borderWidth: 1
-            }
-          ]
-        },
-        options: {
-          responsive: true,
-          scales: {
-            y: {
-              beginAtZero: true
-            }
-          }
-        }
-      };
+      // Validate Application Service
+      if (!this.analysisApplicationService) {
+        throw new Error('AnalysisApplicationService not available');
+      }
+      
+      if (typeof this.analysisApplicationService.getAnalysisCharts !== 'function') {
+        throw new Error('AnalysisApplicationService.getAnalysisCharts method not available');
+      }
+      
+      // Use Application Service for charts
+      const charts = await this.analysisApplicationService.getAnalysisCharts(projectId, type);
       
       res.json({
         success: true,

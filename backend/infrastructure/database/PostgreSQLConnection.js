@@ -75,16 +75,14 @@ class PostgreSQLConnection {
       'user_sessions', 
       'projects',
       'tasks',
-      'analysis_results',
-      'analysis_steps',
+      'analysis',
       'chat_sessions',
       'chat_messages',
       'workflows',
       'workflow_executions',
       'task_templates',
       'task_suggestions',
-      'task_sessions',
-      'project_analysis'
+      'task_sessions'
     ];
     
     try {

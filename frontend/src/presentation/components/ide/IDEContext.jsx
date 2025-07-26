@@ -37,14 +37,27 @@ export const IDEProvider = ({ children, eventBus }) => {
   // Load available IDEs on mount ONLY if authenticated
   useEffect(() => {
     if (isAuthenticated) {
-      logger.debug('🔍 [IDEContext] User authenticated, loading IDE data...');
-      // Add a small delay to prevent race conditions with authentication
-      const timer = setTimeout(() => {
-        stableLoadAvailableIDEs();
-        stableLoadActivePort();
-      }, 500); // Increased delay to prevent race conditions
+      logger.debug('🔍 [IDEContext] User authenticated, validating before loading IDE data...');
       
-      return () => clearTimeout(timer);
+      // Validate authentication before making API calls
+      const validateAndLoad = async () => {
+        try {
+          const { validateToken } = useAuthStore.getState();
+          const isValid = await validateToken();
+          
+          if (isValid) {
+            logger.debug('🔍 [IDEContext] Authentication validated, loading IDE data...');
+            stableLoadAvailableIDEs();
+            stableLoadActivePort();
+          } else {
+            logger.warn('🔍 [IDEContext] Authentication validation failed, skipping IDE loading');
+          }
+        } catch (error) {
+          logger.error('🔍 [IDEContext] Authentication validation error:', error);
+        }
+      };
+      
+      validateAndLoad();
     } else {
       logger.debug('🔍 [IDEContext] User not authenticated, skipping IDE loading');
     }

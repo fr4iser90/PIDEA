@@ -3,7 +3,6 @@ module.exports = {
   ChatRepository: require('./ChatRepository'),
   TaskExecutionRepository: require('./TaskExecutionRepository'),
   TaskRepository: require('./TaskRepository'),
-  TaskSuggestionRepository: require('./TaskSuggestionRepository'),
   TaskTemplateRepository: require('./TaskTemplateRepository'),
   TestMetadataRepository: require('./TestMetadataRepository'),
   UserRepository: require('./UserRepository'),

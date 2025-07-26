@@ -102,12 +102,20 @@ class TechStackAnalysisStep {
    * @returns {Promise<Object>} Tech stack analysis result
    */
   async analyzeTechStack(projectPath, options = {}) {
+    const startTime = Date.now();
+    
     try {
       const result = {
-        technologies: [],
-        frameworks: [],
-        tools: [],
-        summary: {}
+        score: 0,
+        results: {},
+        issues: [],
+        recommendations: [],
+        summary: {},
+        metadata: {
+          analysisType: 'tech-stack',
+          timestamp: new Date().toISOString(),
+          version: '1.0.0'
+        }
       };
 
       // Analyze package.json dependencies
@@ -122,9 +130,9 @@ class TechStackAnalysisStep {
       // Analyze build tools
       const buildAnalysis = await this.analyzeBuildTools(projectPath);
 
-      // Aggregate technologies
+      // Aggregate technologies as results
       if (options.includeTechnologies) {
-        result.technologies = [
+        result.results.technologies = [
           ...dependencyAnalysis.technologies,
           ...configAnalysis.technologies,
           ...codeAnalysis.technologies,
@@ -132,9 +140,9 @@ class TechStackAnalysisStep {
         ];
       }
 
-      // Aggregate frameworks
+      // Aggregate frameworks as results
       if (options.includeFrameworks) {
-        result.frameworks = [
+        result.results.frameworks = [
           ...dependencyAnalysis.frameworks,
           ...configAnalysis.frameworks,
           ...codeAnalysis.frameworks,
@@ -142,9 +150,9 @@ class TechStackAnalysisStep {
         ];
       }
 
-      // Aggregate tools
+      // Aggregate tools as results
       if (options.includeTools) {
-        result.tools = [
+        result.results.tools = [
           ...dependencyAnalysis.tools,
           ...configAnalysis.tools,
           ...codeAnalysis.tools,
@@ -152,14 +160,34 @@ class TechStackAnalysisStep {
         ];
       }
 
+      // Generate issues and recommendations
+      result.issues = this.generateTechStackIssues(result.results);
+      result.recommendations = this.generateTechStackRecommendations(result.results);
+
+      // Calculate tech stack score
+      result.score = this.calculateTechStackScore(result);
+
       // Create summary
       result.summary = {
-        totalTechnologies: result.technologies.length,
-        totalFrameworks: result.frameworks.length,
-        totalTools: result.tools.length,
-        primaryLanguage: this.determinePrimaryLanguage(result),
-        stackType: this.determineStackType(result),
-        complexity: this.calculateComplexity(result)
+        overallScore: result.score,
+        totalIssues: result.issues.length,
+        totalRecommendations: result.recommendations.length,
+        status: this.getTechStackStatus(result.score),
+        primaryLanguage: this.determinePrimaryLanguage(result.results),
+        stackType: this.determineStackType(result.results),
+        complexity: this.calculateComplexity(result.results)
+      };
+
+      // Add metadata
+      const executionTime = Date.now() - startTime;
+      const files = await this.getAllFiles(projectPath);
+      
+      result.metadata = {
+        ...result.metadata,
+        executionTime,
+        filesAnalyzed: files.length,
+        coverage: this.calculateCoverage(files, projectPath),
+        confidence: this.calculateConfidence(result)
       };
 
       return result;
@@ -647,6 +675,150 @@ class TechStackAnalysisStep {
     if (!context.projectPath) {
       throw new Error('Project path is required for tech stack analysis');
     }
+  }
+
+  /**
+   * Generate tech stack issues
+   * @param {Object} results - Analysis results
+   * @returns {Array} Issues
+   */
+  generateTechStackIssues(results) {
+    const issues = [];
+    
+    // Check for outdated technologies
+    if (results.technologies && results.technologies.length > 0) {
+      const outdatedTechs = ['jquery', 'angularjs', 'backbone'];
+      const found = results.technologies.filter(tech => 
+        outdatedTechs.includes(tech.name.toLowerCase())
+      );
+      
+      found.forEach(tech => {
+        issues.push({
+          type: 'outdated',
+          severity: 'medium',
+          message: `Outdated technology detected: ${tech.name}`,
+          suggestion: `Consider upgrading to modern alternatives`
+        });
+      });
+    }
+    
+    return issues;
+  }
+
+  /**
+   * Generate tech stack recommendations
+   * @param {Object} results - Analysis results
+   * @returns {Array} Recommendations
+   */
+  generateTechStackRecommendations(results) {
+    const recommendations = [];
+    
+    // Recommend modern alternatives
+    if (results.frameworks && results.frameworks.length > 0) {
+      recommendations.push({
+        priority: 'medium',
+        action: 'Consider adding TypeScript for better type safety',
+        impact: 'Improved code quality and developer experience',
+        effort: 'medium'
+      });
+    }
+    
+    return recommendations;
+  }
+
+  /**
+   * Calculate tech stack score
+   * @param {Object} result - Analysis result
+   * @returns {number} Tech stack score (0-100)
+   */
+  calculateTechStackScore(result) {
+    let score = 70; // Base score
+    
+    // Add points for modern technologies
+    if (result.results.technologies && result.results.technologies.length > 0) {
+      score += 10;
+    }
+    
+    if (result.results.frameworks && result.results.frameworks.length > 0) {
+      score += 10;
+    }
+    
+    if (result.results.tools && result.results.tools.length > 0) {
+      score += 10;
+    }
+    
+    // Deduct points for issues
+    if (result.issues && result.issues.length > 0) {
+      score -= Math.min(result.issues.length * 5, 20);
+    }
+    
+    return Math.max(Math.min(score, 100), 0);
+  }
+
+  /**
+   * Get tech stack status
+   * @param {number} score - Tech stack score
+   * @returns {string} Status
+   */
+  getTechStackStatus(score) {
+    if (score >= 90) return 'excellent';
+    if (score >= 80) return 'good';
+    if (score >= 70) return 'fair';
+    if (score >= 60) return 'poor';
+    return 'critical';
+  }
+
+  /**
+   * Calculate coverage percentage
+   * @param {Array} files - Analyzed files
+   * @param {string} projectPath - Project path
+   * @returns {number} Coverage percentage
+   */
+  calculateCoverage(files, projectPath) {
+    try {
+      const allFiles = this.getAllFilesSync(projectPath);
+      return allFiles.length > 0 ? Math.round((files.length / allFiles.length) * 100) : 100;
+    } catch (error) {
+      return 100;
+    }
+  }
+
+  /**
+   * Calculate confidence level
+   * @param {Object} result - Analysis result
+   * @returns {number} Confidence percentage
+   */
+  calculateConfidence(result) {
+    let confidence = 80;
+    
+    if (result.issues.length > 0) confidence += 10;
+    if (result.recommendations.length > 0) confidence += 5;
+    if (result.results && Object.keys(result.results).length > 0) confidence += 5;
+    
+    return Math.min(confidence, 100);
+  }
+
+  /**
+   * Get all files synchronously
+   * @param {string} dir - Directory path
+   * @returns {Array} File paths
+   */
+  getAllFilesSync(dir) {
+    const files = [];
+    const items = fs.readdirSync(dir);
+    
+    for (const item of items) {
+      const fullPath = path.join(dir, item);
+      const stat = fs.statSync(fullPath);
+      
+      if (stat.isDirectory() && !item.startsWith('.') && item !== 'node_modules') {
+        files.push(...this.getAllFilesSync(fullPath));
+      } else if (stat.isFile()) {
+        files.push(fullPath);
+      }
+    }
+    
+    return files;
   }
 }
 

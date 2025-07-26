@@ -101,13 +101,35 @@ class DependencyAnalysisStep {
    * Analyze dependencies with internal logic
    */
   async analyzeDependencies(projectPath, options = {}) {
+    const startTime = Date.now();
+    
     try {
+      const result = {
+        score: 0,
+        results: {},
+        issues: [],
+        recommendations: [],
+        summary: {},
+        metadata: {
+          analysisType: 'dependencies',
+          timestamp: new Date().toISOString(),
+          version: '1.0.0'
+        }
+      };
+
       // Find all packages in the project
       const packages = await this.findPackages(projectPath);
       
       if (packages.length === 0) {
         logger.warn('No package.json found in any expected location');
-        return this.getEmptyResult();
+        result.issues.push({
+          type: 'missing',
+          severity: 'high',
+          message: 'No package.json found in project',
+          suggestion: 'Create a package.json file for your project'
+        });
+        result.score = 0;
+        return result;
       }
 
       // Process all found packages
@@ -142,21 +164,8 @@ class DependencyAnalysisStep {
         allOutdatedPackages.push(...outdatedPkgs);
       }
 
-      // Calculate metrics
-      const metrics = {
-        directDependencyCount: allDirectDependencies.length,
-        transitiveDependencyCount: allTransitiveDependencies.length,
-        totalDependencies: allDirectDependencies.length + allTransitiveDependencies.length,
-        vulnerabilityCount: allVulnerabilities.length,
-        outdatedPackageCount: allOutdatedPackages.length,
-        licenseIssueCount: 0,
-        bundleSize: Object.keys(allBundleSizes).length > 0 ? Object.values(allBundleSizes).reduce((a, b) => a + b, 0) : 0,
-        averageDependencyAge: this.calculateAverageAge(allDirectDependencies),
-        securityScore: allVulnerabilities.length === 0 ? 100 : Math.max(0, 100 - allVulnerabilities.length * 10),
-        updateScore: allOutdatedPackages.length === 0 ? 100 : Math.max(0, 100 - allOutdatedPackages.length * 5)
-      };
-
-      return {
+      // Store dependency data as results
+      result.results = {
         packages: packages,
         directDependencies: allDirectDependencies,
         directDevDependencies: allDirectDevDependencies,
@@ -166,8 +175,53 @@ class DependencyAnalysisStep {
         license: null,
         bundleSize: allBundleSizes,
         dependencyGraph: allDependencyGraphs,
-        metrics
+        metrics: {
+          directDependencyCount: allDirectDependencies.length,
+          transitiveDependencyCount: allTransitiveDependencies.length,
+          totalDependencies: allDirectDependencies.length + allTransitiveDependencies.length,
+          vulnerabilityCount: allVulnerabilities.length,
+          outdatedPackageCount: allOutdatedPackages.length,
+          licenseIssueCount: 0,
+          bundleSize: Object.keys(allBundleSizes).length > 0 ? Object.values(allBundleSizes).reduce((a, b) => a + b, 0) : 0,
+          averageDependencyAge: this.calculateAverageAge(allDirectDependencies),
+          securityScore: allVulnerabilities.length === 0 ? 100 : Math.max(0, 100 - allVulnerabilities.length * 10),
+          updateScore: allOutdatedPackages.length === 0 ? 100 : Math.max(0, 100 - allOutdatedPackages.length * 5)
+        }
       };
+
+      // Generate issues from outdated packages and vulnerabilities
+      result.issues = this.generateDependencyIssues(allOutdatedPackages, allVulnerabilities);
+      
+      // Generate recommendations
+      result.recommendations = this.generateDependencyRecommendations(allOutdatedPackages, allVulnerabilities);
+
+      // Calculate dependency score
+      result.score = this.calculateDependencyScore(result);
+
+      // Create summary
+      result.summary = {
+        overallScore: result.score,
+        totalIssues: result.issues.length,
+        totalRecommendations: result.recommendations.length,
+        status: this.getDependencyStatus(result.score),
+        totalDependencies: result.results.metrics.totalDependencies,
+        outdatedPackages: allOutdatedPackages.length,
+        vulnerabilities: allVulnerabilities.length
+      };
+
+      // Add metadata
+      const executionTime = Date.now() - startTime;
+      const files = await this.getAllFiles(projectPath);
+      
+      result.metadata = {
+        ...result.metadata,
+        executionTime,
+        filesAnalyzed: files.length,
+        coverage: this.calculateCoverage(files, projectPath),
+        confidence: this.calculateConfidence(result)
+      };
+
+      return result;
     } catch (error) {
       logger.error('Dependency analysis failed:', error.message);
       return this.getEmptyResult();
@@ -379,6 +433,178 @@ class DependencyAnalysisStep {
     if (!context.projectPath) {
       throw new Error('Project path is required for dependency analysis');
     }
+  }
+
+  /**
+   * Generate dependency issues
+   * @param {Array} outdatedPackages - Outdated packages
+   * @param {Array} vulnerabilities - Vulnerabilities
+   * @returns {Array} Issues
+   */
+  generateDependencyIssues(outdatedPackages, vulnerabilities) {
+    const issues = [];
+    
+    // Add outdated package issues
+    outdatedPackages.forEach(pkg => {
+      issues.push({
+        type: 'outdated',
+        severity: 'medium',
+        message: `Outdated package: ${pkg.name} (${pkg.installed} → ${pkg.latest})`,
+        suggestion: `Update ${pkg.name} to version ${pkg.latest}`
+      });
+    });
+    
+    // Add vulnerability issues
+    vulnerabilities.forEach(vuln => {
+      issues.push({
+        type: 'vulnerability',
+        severity: 'high',
+        message: `Security vulnerability in ${vuln.package}`,
+        suggestion: `Update ${vuln.package} to fix vulnerability`
+      });
+    });
+    
+    return issues;
+  }
+
+  /**
+   * Generate dependency recommendations
+   * @param {Array} outdatedPackages - Outdated packages
+   * @param {Array} vulnerabilities - Vulnerabilities
+   * @returns {Array} Recommendations
+   */
+  generateDependencyRecommendations(outdatedPackages, vulnerabilities) {
+    const recommendations = [];
+    
+    if (outdatedPackages.length > 0) {
+      recommendations.push({
+        priority: 'medium',
+        action: `Update ${outdatedPackages.length} outdated packages`,
+        impact: 'Improved security and features',
+        effort: 'medium'
+      });
+    }
+    
+    if (vulnerabilities.length > 0) {
+      recommendations.push({
+        priority: 'high',
+        action: `Fix ${vulnerabilities.length} security vulnerabilities`,
+        impact: 'Improved security',
+        effort: 'high'
+      });
+    }
+    
+    return recommendations;
+  }
+
+  /**
+   * Calculate dependency score
+   * @param {Object} result - Analysis result
+   * @returns {number} Dependency score (0-100)
+   */
+  calculateDependencyScore(result) {
+    let score = 80; // Base score
+    
+    // Deduct points for outdated packages
+    if (result.results.outdatedPackages && result.results.outdatedPackages.length > 0) {
+      score -= Math.min(result.results.outdatedPackages.length * 2, 20);
+    }
+    
+    // Deduct points for vulnerabilities
+    if (result.results.vulnerabilities && result.results.vulnerabilities.length > 0) {
+      score -= Math.min(result.results.vulnerabilities.length * 10, 40);
+    }
+    
+    return Math.max(Math.min(score, 100), 0);
+  }
+
+  /**
+   * Get dependency status
+   * @param {number} score - Dependency score
+   * @returns {string} Status
+   */
+  getDependencyStatus(score) {
+    if (score >= 90) return 'excellent';
+    if (score >= 80) return 'good';
+    if (score >= 70) return 'fair';
+    if (score >= 60) return 'poor';
+    return 'critical';
+  }
+
+  /**
+   * Calculate coverage percentage
+   * @param {Array} files - Analyzed files
+   * @param {string} projectPath - Project path
+   * @returns {number} Coverage percentage
+   */
+  calculateCoverage(files, projectPath) {
+    try {
+      const allFiles = this.getAllFilesSync(projectPath);
+      return allFiles.length > 0 ? Math.round((files.length / allFiles.length) * 100) : 100;
+    } catch (error) {
+      return 100;
+    }
+  }
+
+  /**
+   * Calculate confidence level
+   * @param {Object} result - Analysis result
+   * @returns {number} Confidence percentage
+   */
+  calculateConfidence(result) {
+    let confidence = 80;
+    
+    if (result.issues.length > 0) confidence += 10;
+    if (result.recommendations.length > 0) confidence += 5;
+    if (result.results && Object.keys(result.results).length > 0) confidence += 5;
+    
+    return Math.min(confidence, 100);
+  }
+
+  /**
+   * Get all files synchronously
+   * @param {string} dir - Directory path
+   * @returns {Array} File paths
+   */
+  getAllFilesSync(dir) {
+    const files = [];
+    const items = fs.readdirSync(dir);
+    
+    for (const item of items) {
+      const fullPath = path.join(dir, item);
+      const stat = fs.statSync(fullPath);
+      
+      if (stat.isDirectory() && !item.startsWith('.') && item !== 'node_modules') {
+        files.push(...this.getAllFilesSync(fullPath));
+      } else if (stat.isFile()) {
+        files.push(fullPath);
+      }
+    }
+    
+    return files;
+  }
+
+  /**
+   * Get all files asynchronously
+   * @param {string} dir - Directory path
+   * @returns {Promise<Array>} File paths
+   */
+  async getAllFiles(dir) {
+    const files = [];
+    const items = await fs.readdir(dir);
+    
+    for (const item of items) {
+      const fullPath = path.join(dir, item);
+      const stat = await fs.stat(fullPath);
+      
+      if (stat.isDirectory() && !item.startsWith('.') && item !== 'node_modules') {
+        files.push(...await this.getAllFiles(fullPath));
+      } else if (stat.isFile()) {
+        files.push(fullPath);
+      }
+    }
+    
+    return files;
   }
 }
 

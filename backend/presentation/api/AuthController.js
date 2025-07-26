@@ -76,17 +76,20 @@ class AuthController {
       });
 
       // Set httpOnly cookies for security
-      res.cookie('accessToken', result.data.session.accessToken, {
+      const cookieOptions = {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
-        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax'
+        // Note: No domain specified for development to allow cross-port cookies
+      };
+
+      res.cookie('accessToken', result.data.session.accessToken, {
+        ...cookieOptions,
         maxAge: 15 * 60 * 1000 // 15 minutes (enterprise standard)
       });
       
       res.cookie('refreshToken', result.data.session.refreshToken, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+        ...cookieOptions,
         maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
       });
 
@@ -118,17 +121,20 @@ class AuthController {
       const result = await this.authApplicationService.refresh(refreshToken);
       
       // Set new cookies with proper security settings
-      res.cookie('accessToken', result.data.session.accessToken, {
+      const cookieOptions = {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
-        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax'
+        // Note: No domain specified for development to allow cross-port cookies
+      };
+
+      res.cookie('accessToken', result.data.session.accessToken, {
+        ...cookieOptions,
         maxAge: 15 * 60 * 1000 // 15 minutes (enterprise standard)
       });
       
       res.cookie('refreshToken', result.data.session.refreshToken, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+        ...cookieOptions,
         maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
       });
 
@@ -165,16 +171,15 @@ class AuthController {
       }
 
       // ALWAYS clear cookies, regardless of authentication status
-      res.clearCookie('accessToken', {
+      const cookieOptions = {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
         sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax'
-      });
-      res.clearCookie('refreshToken', {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax'
-      });
+        // Note: No domain specified for development to allow cross-port cookies
+      };
+
+      res.clearCookie('accessToken', cookieOptions);
+      res.clearCookie('refreshToken', cookieOptions);
       
       logger.info('✅ [AuthController] Cookies cleared successfully');
       
@@ -187,16 +192,15 @@ class AuthController {
       
       // Even if there's an error, try to clear cookies
       try {
-        res.clearCookie('accessToken', {
+        const cookieOptions = {
           httpOnly: true,
           secure: process.env.NODE_ENV === 'production',
           sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax'
-        });
-        res.clearCookie('refreshToken', {
-          httpOnly: true,
-          secure: process.env.NODE_ENV === 'production',
-          sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax'
-        });
+          // Note: No domain specified for development to allow cross-port cookies
+        };
+
+        res.clearCookie('accessToken', cookieOptions);
+        res.clearCookie('refreshToken', cookieOptions);
         logger.info('✅ [AuthController] Cookies cleared despite error');
       } catch (cookieError) {
         logger.error('❌ [AuthController] Failed to clear cookies:', cookieError);
@@ -276,17 +280,20 @@ class AuthController {
           const result = await this.authApplicationService.refresh(refreshToken);
           if (result.success) {
             // Set new cookies
-            res.cookie('accessToken', result.data.session.accessToken, {
+            const cookieOptions = {
               httpOnly: true,
               secure: process.env.NODE_ENV === 'production',
-              sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+              sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax'
+              // Note: No domain specified for development to allow cross-port cookies
+            };
+
+            res.cookie('accessToken', result.data.session.accessToken, {
+              ...cookieOptions,
               maxAge: 15 * 60 * 1000 // 15 minutes (enterprise standard)
             });
             
             res.cookie('refreshToken', result.data.session.refreshToken, {
-              httpOnly: true,
-              secure: process.env.NODE_ENV === 'production',
-              sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+              ...cookieOptions,
               maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
             });
 
