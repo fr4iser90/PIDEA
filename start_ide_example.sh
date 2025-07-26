@@ -18,7 +18,34 @@ RUNNER="appimage-run"
 
 # Hilfsfunktion: prüft ob Port frei ist
 port_in_use() {
-  lsof -i ":$1" &>/dev/null
+  local port=$1
+  
+  # Prüfe verfügbare Tools in Reihenfolge der Präferenz
+  if command -v ss &> /dev/null; then
+    ss -tuln | grep -q ":$port "
+    return $?
+  elif command -v netstat &> /dev/null; then
+    netstat -tuln | grep -q ":$port "
+    return $?
+  elif command -v lsof &> /dev/null; then
+    lsof -i ":$port" &>/dev/null
+    return $?
+  else
+    echo "❌ No port check tool available!"
+    echo "   Please install one of these tools:"
+    echo "   - ss (iproute2): sudo apt install iproute2"
+    echo "   - netstat (net-tools): sudo apt install net-tools" 
+    echo "   - lsof: sudo apt install lsof"
+    echo ""
+    echo "   Without port checking, conflicts may occur."
+    echo "   Do you want to continue anyway? (y/N)"
+    read -r response
+    if [[ "$response" =~ ^[Yy]$ ]]; then
+      return 1  # Treat port as "free"
+    else
+      exit 1
+    fi
+  fi
 }
 
 # Hilfsfunktion: findet freien Port in Range

@@ -400,37 +400,7 @@ class AnalysisController {
   }
 
   /**
-   * GET /api/projects/:projectId/analysis/files/:filename - Get analysis file
-   */
-  async getAnalysisFile(req, res) {
-    try {
-      const { projectId, filename } = req.params;
-      
-      this.logger.info(`📁 Getting analysis file for project: ${projectId}, file: ${filename}`);
-      
-      // Use Application Service for file retrieval
-      const file = await this.analysisApplicationService.getAnalysisFile(projectId, filename);
-      
-      res.json({
-        success: true,
-        data: file,
-        projectId,
-        filename,
-        timestamp: new Date().toISOString()
-      });
-      
-    } catch (error) {
-      this.logger.error('❌ Failed to get analysis file:', error);
-      res.status(500).json({
-        success: false,
-        error: 'Failed to get analysis file',
-        message: error.message
-      });
-    }
-  }
-
-  /**
-   * GET /api/projects/:projectId/analysis/techstack - Get analysis tech stack
+   * GET /api/projects/:projectId/analysis/techstack - Get analysis tech stack data
    */
   async getAnalysisTechStack(req, res) {
     try {
@@ -438,7 +408,7 @@ class AnalysisController {
       
       this.logger.info(`🔧 Getting analysis tech stack for project: ${projectId}`);
       
-      // Use Application Service to get real tech stack data from database
+      // Use Application Service for tech stack data
       const techStack = await this.analysisApplicationService.getAnalysisTechStack(projectId);
       
       res.json({
@@ -459,7 +429,7 @@ class AnalysisController {
   }
 
   /**
-   * GET /api/projects/:projectId/analysis/architecture - Get analysis architecture
+   * GET /api/projects/:projectId/analysis/architecture - Get analysis architecture data
    */
   async getAnalysisArchitecture(req, res) {
     try {
@@ -467,16 +437,7 @@ class AnalysisController {
       
       this.logger.info(`🏗️ Getting analysis architecture for project: ${projectId}`);
       
-      // Validate Application Service
-      if (!this.analysisApplicationService) {
-        throw new Error('AnalysisApplicationService not available');
-      }
-      
-      if (typeof this.analysisApplicationService.getAnalysisArchitecture !== 'function') {
-        throw new Error('AnalysisApplicationService.getAnalysisArchitecture method not available');
-      }
-      
-      // Use Application Service for architecture
+      // Use Application Service for architecture data
       const architecture = await this.analysisApplicationService.getAnalysisArchitecture(projectId);
       
       res.json({
@@ -491,6 +452,36 @@ class AnalysisController {
       res.status(500).json({
         success: false,
         error: 'Failed to get analysis architecture',
+        message: error.message
+      });
+    }
+  }
+
+  /**
+   * GET /api/projects/:projectId/analysis/charts/:type - Get analysis charts data
+   */
+  async getAnalysisCharts(req, res) {
+    try {
+      const { projectId, type } = req.params;
+      
+      this.logger.info(`📊 Getting analysis charts for project: ${projectId}, type: ${type}`);
+      
+      // Use Application Service for charts data
+      const charts = await this.analysisApplicationService.getAnalysisCharts(projectId, type);
+      
+      res.json({
+        success: true,
+        data: charts,
+        projectId,
+        chartType: type,
+        timestamp: new Date().toISOString()
+      });
+      
+    } catch (error) {
+      this.logger.error('❌ Failed to get analysis charts:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to get analysis charts',
         message: error.message
       });
     }
@@ -518,15 +509,6 @@ class AnalysisController {
       
       this.logger.info(`💡 Getting analysis recommendations for project: ${projectId}`);
       
-      // Validate Application Service
-      if (!this.analysisApplicationService) {
-        throw new Error('AnalysisApplicationService not available');
-      }
-      
-      if (typeof this.analysisApplicationService.getAnalysisRecommendations !== 'function') {
-        throw new Error('AnalysisApplicationService.getAnalysisRecommendations method not available');
-      }
-      
       // Use Application Service to get real recommendations from database
       const recommendations = await this.analysisApplicationService.getAnalysisRecommendations(projectId);
       
@@ -550,39 +532,63 @@ class AnalysisController {
   }
 
   /**
-   * GET /api/projects/:projectId/analysis/charts/:type - Get analysis charts
+   * GET /api/projects/:projectId/analysis/files/:filename - Get analysis file
    */
-  async getAnalysisCharts(req, res) {
+  async getAnalysisFile(req, res) {
     try {
-      const { projectId, type } = req.params;
+      const { projectId, filename } = req.params;
       
-      this.logger.info(`📈 Getting analysis charts for project: ${projectId}, type: ${type}`);
+      this.logger.info(`📄 Getting analysis file for project: ${projectId}, file: ${filename}`);
       
-      // Validate Application Service
-      if (!this.analysisApplicationService) {
-        throw new Error('AnalysisApplicationService not available');
-      }
-      
-      if (typeof this.analysisApplicationService.getAnalysisCharts !== 'function') {
-        throw new Error('AnalysisApplicationService.getAnalysisCharts method not available');
-      }
-      
-      // Use Application Service for charts
-      const charts = await this.analysisApplicationService.getAnalysisCharts(projectId, type);
+      // Use Application Service for file data
+      const fileData = await this.analysisApplicationService.getAnalysisFile(projectId, filename);
       
       res.json({
         success: true,
-        data: charts,
+        data: fileData,
         projectId,
-        chartType: type,
+        filename,
         timestamp: new Date().toISOString()
       });
       
     } catch (error) {
-      this.logger.error('❌ Failed to get analysis charts:', error);
+      this.logger.error('❌ Failed to get analysis file:', error);
       res.status(500).json({
         success: false,
-        error: 'Failed to get analysis charts',
+        error: 'Failed to get analysis file',
+        message: error.message
+      });
+    }
+  }
+
+  /**
+   * POST /api/projects/:projectId/analysis/execute - Execute analysis workflow (for complex runs)
+   * This is for "Run All Analysis" and complex workflows that need StepRegistry
+   */
+  async executeAnalysisWorkflow(req, res) {
+    try {
+      const { projectId } = req.params;
+      const { analysisType, options = {} } = req.body;
+      
+      this.logger.info(`🚀 Executing analysis workflow for project: ${projectId}, type: ${analysisType}`);
+      
+      // Redirect to WorkflowController for complex analysis execution
+      // This maintains the existing workflow-based approach for complex operations
+      const WorkflowController = require('./WorkflowController');
+      const workflowController = new WorkflowController();
+      
+      // Set the mode for workflow execution
+      req.body.mode = `${analysisType}-analysis`;
+      req.body.projectId = projectId;
+      
+      // Delegate to WorkflowController
+      return await workflowController.executeWorkflow(req, res);
+      
+    } catch (error) {
+      this.logger.error('❌ Failed to execute analysis workflow:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to execute analysis workflow',
         message: error.message
       });
     }

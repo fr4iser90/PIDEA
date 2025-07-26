@@ -230,11 +230,12 @@ const IndividualAnalysisButtons = ({ projectId = null, eventBus = null, onAnalys
       
       const currentProjectId = projectId || await apiRepository.getCurrentProjectId();
       
-      // Call the analysis endpoint
-      const response = await apiRepository.startAnalysis(currentProjectId, analysisType);
+      // ✅ OPTIMIZATION: Use workflow execution for complex analysis runs
+      // This maintains the StepRegistry approach for actual analysis execution
+      const response = await apiRepository.executeAnalysisWorkflow(currentProjectId, analysisType);
       
       if (response.success) {
-        logger.info(`Started ${analysisType} analysis:`, response);
+        logger.info(`Started ${analysisType} analysis workflow:`, response);
         
         // Create a mock step for immediate UI feedback
         const mockStep = {
@@ -248,10 +249,10 @@ const IndividualAnalysisButtons = ({ projectId = null, eventBus = null, onAnalys
         setActiveSteps(prev => new Map(prev.set(analysisType, mockStep)));
         setStepProgress(prev => new Map(prev.set(mockStep.id, 0)));
       } else {
-        throw new Error(response.error || 'Failed to start analysis');
+        throw new Error(response.error || 'Failed to start analysis workflow');
       }
     } catch (error) {
-      logger.error(`Failed to start ${analysisType} analysis:`, error);
+      logger.error(`Failed to start ${analysisType} analysis workflow:`, error);
       setErrorStates(prev => new Map(prev.set(analysisType, error.message)));
     } finally {
       setLoadingStates(prev => new Map(prev.set(analysisType, false)));

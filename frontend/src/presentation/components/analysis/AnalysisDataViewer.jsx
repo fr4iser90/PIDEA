@@ -118,12 +118,12 @@ const AnalysisDataViewer = ({ projectId = null, eventBus = null }) => {
       console.log('📡 [DEBUG] Starting API calls...');
       logger.info('📡 [AnalysisDataViewer] Starting API calls...');
       
-      // Load essential data in parallel (including tech stack for immediate display)
+      // ✅ OPTIMIZATION: Use direct API calls (bypass StepRegistry) for faster loading
       const [statusResponse, metricsResponse, historyResponse, techStackResponse] = await Promise.all([
-        apiRepository.getAnalysisStatus?.(currentProjectId) || Promise.resolve({ success: false, data: null }),
-        apiRepository.getAnalysisMetrics?.(currentProjectId) || Promise.resolve({ success: false, data: null }),
-        apiRepository.getAnalysisHistory(currentProjectId),
-        apiRepository.getAnalysisTechStack?.(currentProjectId) || Promise.resolve({ success: false, data: null })
+        apiRepository.getAnalysisStatusDirect?.(currentProjectId) || Promise.resolve({ success: false, data: null }),
+        apiRepository.getAnalysisMetricsDirect?.(currentProjectId) || Promise.resolve({ success: false, data: null }),
+        apiRepository.getAnalysisHistoryDirect?.(currentProjectId) || Promise.resolve({ success: false, data: [] }),
+        apiRepository.getAnalysisTechStackDirect?.(currentProjectId) || Promise.resolve({ success: false, data: null })
       ]);
 
       console.log('📊 [DEBUG] API responses received:', {
@@ -188,7 +188,8 @@ const AnalysisDataViewer = ({ projectId = null, eventBus = null }) => {
     try {
       updateLoadingState('issues', true);
       const currentProjectId = projectId || await apiRepository.getCurrentProjectId();
-      const issuesResponse = await apiRepository.getAnalysisIssues?.(currentProjectId) || Promise.resolve({ success: false, data: null });
+      // ✅ OPTIMIZATION: Use direct API call (bypass StepRegistry) for faster loading
+      const issuesResponse = await apiRepository.getAnalysisIssuesDirect?.(currentProjectId) || Promise.resolve({ success: false, data: null });
       
       setAnalysisData(prev => ({
         ...prev,
@@ -199,7 +200,7 @@ const AnalysisDataViewer = ({ projectId = null, eventBus = null }) => {
     } finally {
       updateLoadingState('issues', false);
     }
-  }, [projectId, apiRepository, analysisData.issues, expandedSections]);
+  }, [analysisData.issues, expandedSections.issues, projectId, apiRepository]);
 
   const loadTechStackData = useCallback(async () => {
     console.log('🔧 [DEBUG] loadTechStackData called', { 

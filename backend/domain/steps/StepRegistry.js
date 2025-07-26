@@ -3,6 +3,7 @@
  * Step Registry - Domain Layer
  * Manages atomic steps and provides step validation
  * Implements IStandardRegistry interface for consistent patterns
+ * Enhanced with parallel execution support for performance optimization
  */
 
 require('module-alias/register');
@@ -11,6 +12,8 @@ const fs = require('fs').promises;
 const { STANDARD_CATEGORIES, isValidCategory, getDefaultCategory } = require('../constants/Categories');
 const IStandardRegistry = require('../interfaces/IStandardRegistry');
 const ServiceLogger = require('@logging/ServiceLogger');
+const StepClassifier = require('./execution/StepClassifier');
+const ParallelExecutionEngine = require('./execution/ParallelExecutionEngine');
 
 class StepRegistry {
   constructor(serviceRegistry = null) {
@@ -19,6 +22,22 @@ class StepRegistry {
     this.executors = new Map();
     this.logger = new ServiceLogger('StepRegistry');
     this.serviceRegistry = serviceRegistry;
+    
+    // Initialize parallel execution components
+    this.stepClassifier = new StepClassifier({ logger: this.logger });
+    this.parallelEngine = new ParallelExecutionEngine({ 
+      logger: this.logger,
+      stepRegistry: this
+    });
+    
+    // Execution statistics
+    this.executionStats = {
+      totalExecutions: 0,
+      sequentialExecutions: 0,
+      parallelExecutions: 0,
+      totalExecutionTime: 0,
+      averageExecutionTime: 0
+    };
   }
 
   /**
@@ -256,7 +275,7 @@ class StepRegistry {
         duration,
         step: step.name,
         timestamp: new Date(),
-        executionMode: shouldExecuteSequentially ? 'sequential' : 'parallel'
+        executionMode: 'individual'
       };
     } catch (error) {
       this.logger.error(`❌ Failed to execute step "${name}":`, error.message);
@@ -342,10 +361,100 @@ class StepRegistry {
    * @param {Object} options - Execution options
    */
   async executeSteps(stepNames, context = {}, options = {}) {
+    try {
+      this.logger.info('Starting step execution with parallel support', {
+        totalSteps: stepNames.length,
+        context: this.getContextSummary(context)
+      });
+
+      const startTime = Date.now();
+
+      // 1. Classify steps
+      const { critical, nonCritical } = this.stepClassifier.classifySteps(stepNames, context);
+
+      const results = {
+        successful: [],
+        failed: [],
+        total: stepNames.length,
+        critical: { successful: [], failed: [] },
+        parallel: { successful: [], failed: [] },
+        executionMode: 'hybrid',
+        classification: {
+          criticalCount: critical.length,
+          nonCriticalCount: nonCritical.length,
+          parallelizationRatio: nonCritical.length / stepNames.length
+        }
+      };
+
+      // 2. Execute critical steps sequentially
+      if (critical.length > 0) {
+        this.logger.info(`Executing ${critical.length} critical steps sequentially`);
+        const criticalResults = await this.executeStepsSequential(critical, context, options);
+        results.critical = criticalResults;
+        results.successful.push(...criticalResults.successful);
+        results.failed.push(...criticalResults.failed);
+        this.executionStats.sequentialExecutions += critical.length;
+      }
+
+      // 3. Execute non-critical steps in parallel
+      if (nonCritical.length > 0) {
+        this.logger.info(`Executing ${nonCritical.length} non-critical steps in parallel`);
+        const parallelResults = await this.parallelEngine.executeStepsParallel(nonCritical, context, options);
+        
+        // Process parallel results
+        parallelResults.forEach(result => {
+          if (result.success) {
+            results.parallel.successful.push(result);
+            results.successful.push(result);
+          } else {
+            results.parallel.failed.push(result);
+            results.failed.push(result);
+          }
+        });
+        
+        this.executionStats.parallelExecutions += nonCritical.length;
+      }
+
+      const endTime = Date.now();
+      const totalDuration = endTime - startTime;
+
+      // Update execution statistics
+      this.updateExecutionStatistics(totalDuration);
+
+      this.logger.info('Step execution completed', {
+        total: results.total,
+        successful: results.successful.length,
+        failed: results.failed.length,
+        criticalSuccessful: results.critical.successful.length,
+        parallelSuccessful: results.parallel.successful.length,
+        totalDuration: `${totalDuration}ms`,
+        parallelizationRatio: `${(results.classification.parallelizationRatio * 100).toFixed(1)}%`
+      });
+
+      return results;
+
+    } catch (error) {
+      this.logger.error('Step execution failed:', error.message);
+      
+      // Fallback to sequential execution
+      this.logger.warn('Falling back to sequential execution due to error');
+      return await this.executeStepsSequential(stepNames, context, options);
+    }
+  }
+
+  /**
+   * Execute steps sequentially (fallback method)
+   * @param {Array<string>} stepNames - Array of step names
+   * @param {Object} context - Execution context
+   * @param {Object} options - Execution options
+   * @returns {Object} Execution results
+   */
+  async executeStepsSequential(stepNames, context = {}, options = {}) {
     const results = {
       successful: [],
       failed: [],
-      total: stepNames.length
+      total: stepNames.length,
+      executionMode: 'sequential'
     };
 
     for (const stepName of stepNames) {
@@ -367,7 +476,8 @@ class StepRegistry {
           success: false,
           error: error.message,
           step: stepName,
-          timestamp: new Date()
+          timestamp: new Date(),
+          executionMode: 'sequential'
         });
 
         if (options.stopOnError) {
@@ -377,6 +487,68 @@ class StepRegistry {
     }
 
     return results;
+  }
+
+  /**
+   * Update execution statistics
+   * @param {number} duration - Execution duration
+   */
+  updateExecutionStatistics(duration) {
+    this.executionStats.totalExecutions++;
+    this.executionStats.totalExecutionTime += duration;
+    
+    if (this.executionStats.totalExecutions > 0) {
+      this.executionStats.averageExecutionTime = Math.round(
+        this.executionStats.totalExecutionTime / this.executionStats.totalExecutions
+      );
+    }
+  }
+
+  /**
+   * Get context summary for logging
+   * @param {Object} context - Execution context
+   * @returns {Object} Context summary
+   */
+  getContextSummary(context) {
+    return {
+      hasUserId: !!context.userId,
+      hasProjectId: !!context.projectId,
+      hasWorkflowId: !!context.workflowId,
+      hasTaskId: !!context.taskId,
+      executionMode: context.executionMode,
+      priority: context.priority
+    };
+  }
+
+  /**
+   * Get execution statistics
+   * @returns {Object} Execution statistics
+   */
+  getExecutionStatistics() {
+    return {
+      ...this.executionStats,
+      parallelizationRatio: this.executionStats.totalExecutions > 0 
+        ? (this.executionStats.parallelExecutions / this.executionStats.totalExecutions * 100).toFixed(2) + '%'
+        : '0%',
+      sequentialRatio: this.executionStats.totalExecutions > 0 
+        ? (this.executionStats.sequentialExecutions / this.executionStats.totalExecutions * 100).toFixed(2) + '%'
+        : '0%'
+    };
+  }
+
+  /**
+   * Reset execution statistics
+   */
+  resetExecutionStatistics() {
+    this.executionStats = {
+      totalExecutions: 0,
+      sequentialExecutions: 0,
+      parallelExecutions: 0,
+      totalExecutionTime: 0,
+      averageExecutionTime: 0
+    };
+    
+    this.logger.info('StepRegistry execution statistics reset');
   }
 
   /**

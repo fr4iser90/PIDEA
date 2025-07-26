@@ -614,6 +614,109 @@ export default class APIChatRepository extends ChatRepository {
     }, currentProjectId);
   }
 
+  // ✅ NEW: Direct analysis data fetching methods (bypass StepRegistry)
+  
+  /**
+   * Get analysis data directly (fast, no workflow)
+   * Use this for simple data fetching, not for running analysis
+   */
+  async getAnalysisData(projectId = null, analysisType = null, options = {}) {
+    const currentProjectId = projectId || await this.getCurrentProjectId();
+    
+    const queryParams = new URLSearchParams();
+    if (analysisType) queryParams.append('type', analysisType);
+    if (options.cache !== undefined) queryParams.append('cache', options.cache);
+    if (options.memoryLimit) queryParams.append('memoryLimit', options.memoryLimit);
+    
+    return apiCall(`/api/projects/${currentProjectId}/analysis/data?${queryParams}`, {}, currentProjectId);
+  }
+
+  /**
+   * Get analysis status directly (fast, no workflow)
+   */
+  async getAnalysisStatusDirect(projectId = null) {
+    const currentProjectId = projectId || await this.getCurrentProjectId();
+    return apiCall(`/api/projects/${currentProjectId}/analysis/status`, {}, currentProjectId);
+  }
+
+  /**
+   * Get analysis metrics directly (fast, no workflow)
+   */
+  async getAnalysisMetricsDirect(projectId = null) {
+    const currentProjectId = projectId || await this.getCurrentProjectId();
+    return apiCall(`/api/projects/${currentProjectId}/analysis/metrics`, {}, currentProjectId);
+  }
+
+  /**
+   * Get analysis history directly (fast, no workflow)
+   */
+  async getAnalysisHistoryDirect(projectId = null, options = {}) {
+    const currentProjectId = projectId || await this.getCurrentProjectId();
+    
+    const queryParams = new URLSearchParams();
+    if (options.limit) queryParams.append('limit', options.limit);
+    if (options.offset) queryParams.append('offset', options.offset);
+    if (options.types) queryParams.append('types', options.types);
+    
+    return apiCall(`/api/projects/${currentProjectId}/analysis/history?${queryParams}`, {}, currentProjectId);
+  }
+
+  /**
+   * Get analysis issues directly (fast, no workflow)
+   */
+  async getAnalysisIssuesDirect(projectId = null, type = 'code-quality') {
+    const currentProjectId = projectId || await this.getCurrentProjectId();
+    return apiCall(`/api/projects/${currentProjectId}/analysis/issues?type=${type}`, {}, currentProjectId);
+  }
+
+  /**
+   * Get analysis tech stack directly (fast, no workflow)
+   */
+  async getAnalysisTechStackDirect(projectId = null) {
+    const currentProjectId = projectId || await this.getCurrentProjectId();
+    return apiCall(`/api/projects/${currentProjectId}/analysis/techstack`, {}, currentProjectId);
+  }
+
+  /**
+   * Get analysis architecture directly (fast, no workflow)
+   */
+  async getAnalysisArchitectureDirect(projectId = null) {
+    const currentProjectId = projectId || await this.getCurrentProjectId();
+    return apiCall(`/api/projects/${currentProjectId}/analysis/architecture`, {}, currentProjectId);
+  }
+
+  /**
+   * Get analysis recommendations directly (fast, no workflow)
+   */
+  async getAnalysisRecommendationsDirect(projectId = null) {
+    const currentProjectId = projectId || await this.getCurrentProjectId();
+    return apiCall(`/api/projects/${currentProjectId}/analysis/recommendations`, {}, currentProjectId);
+  }
+
+  /**
+   * Get analysis charts directly (fast, no workflow)
+   */
+  async getAnalysisChartsDirect(projectId = null, type = 'trends') {
+    const currentProjectId = projectId || await this.getCurrentProjectId();
+    return apiCall(`/api/projects/${currentProjectId}/analysis/charts/${type}`, {}, currentProjectId);
+  }
+
+  /**
+   * Execute analysis workflow (for complex runs like "Run All Analysis")
+   * This uses StepRegistry and is slower but handles complex workflows
+   */
+  async executeAnalysisWorkflow(projectId = null, analysisType, options = {}) {
+    const currentProjectId = projectId || await this.getCurrentProjectId();
+    
+    return apiCall(`/api/projects/${currentProjectId}/analysis/execute`, {
+      method: 'POST',
+      body: JSON.stringify({
+        analysisType,
+        options
+      })
+    }, currentProjectId);
+  }
+
   // Get completion status
   async getCompletionStatus(projectId = null) {
     const currentProjectId = projectId || await this.getCurrentProjectId();

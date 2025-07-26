@@ -90,6 +90,15 @@ class AnalysisRoutes {
       this.analysisController.getAnalysisRecommendations(req, res));
     app.get('/api/projects/:projectId/analysis/charts/:type', (req, res) => 
       this.analysisController.getAnalysisCharts(req, res));
+
+    // ========================================
+    // WORKFLOW EXECUTION ROUTES - Complex Analysis Runs
+    // ========================================
+    
+    // Execute analysis workflow (for complex runs like "Run All Analysis")
+    // This uses StepRegistry and is slower but handles complex workflows
+    app.post('/api/projects/:projectId/analysis/execute', (req, res) => 
+      this.analysisController.executeAnalysisWorkflow(req, res));
   }
 
   /**
