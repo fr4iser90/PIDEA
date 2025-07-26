@@ -103,6 +103,16 @@ class ServiceRegistry {
             return getStepRegistry();
         }, { singleton: true });
 
+        // Chat Cache Service - Infrastructure layer
+        this.container.register('chatCacheService', () => {
+            const ChatCacheService = require('../cache/ChatCacheService');
+            return new ChatCacheService({
+                cacheTTL: 300000, // 5 minutes
+                maxCacheSize: 50, // Maximum 50 port entries
+                cleanupInterval: 60000 // 1 minute cleanup
+            });
+        }, { singleton: true });
+
         this.registeredServices.add('infrastructure');
     }
 
@@ -1015,6 +1025,16 @@ class ServiceRegistry {
                     return getStepRegistry();
                 }, { singleton: true });
                 break;
+            case 'chatCacheService':
+                this.container.register('chatCacheService', () => {
+                    const ChatCacheService = require('../cache/ChatCacheService');
+                    return new ChatCacheService({
+                        cacheTTL: 300000, // 5 minutes
+                        maxCacheSize: 50, // Maximum 50 port entries
+                        cleanupInterval: 60000 // 1 minute cleanup
+                    });
+                }, { singleton: true });
+                break;
             default:
                 throw new Error(`Unknown infrastructure service: ${serviceName}`);
         }
@@ -1417,6 +1437,7 @@ class ServiceRegistry {
         this.addServiceDefinition('ideManager', ['browserManager', 'projectRepository', 'eventBus', 'gitService'], 'infrastructure');
         this.addServiceDefinition('idePortManager', ['ideManager', 'eventBus'], 'infrastructure');
         this.addServiceDefinition('stepRegistry', [], 'infrastructure');
+        this.addServiceDefinition('chatCacheService', [], 'infrastructure');
 
         // Repository services
         this.addServiceDefinition('chatRepository', [], 'repositories');

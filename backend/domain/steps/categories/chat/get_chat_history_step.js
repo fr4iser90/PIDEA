@@ -36,6 +36,9 @@ class GetChatHistoryStep {
     this.dependencies = config.dependencies;
     this.settings = config.settings;
     this.validation = config.validation;
+    
+    // Chat cache service will be injected via DI
+    this.chatCacheService = null;
   }
 
   /**
@@ -140,6 +143,7 @@ class GetChatHistoryStep {
       });
 
       let messages = [];
+      let fromCache = false; // Initialize fromCache variable
       
       // Check if sessionId is actually a port number (not a real session ID)
       const isPortNumber = /^\d+$/.test(context.sessionId);
@@ -163,20 +167,44 @@ class GetChatHistoryStep {
       
       // If no messages from session or if sessionId is a port number, try IDE extraction
       if (messages.length === 0 || isPortNumber || context.sessionId === context.port) {
-        // Get chat history for specific port using IDE service
-        const cursorIDEService = context.getService('cursorIDEService');
-        if (cursorIDEService) {
-          try {
-            // Extract live chat from IDE
-            messages = await cursorIDEService.extractChatHistory();
-            logger.info(`Extracted ${messages.length} messages from IDE on port ${context.port || context.sessionId}`);
-          } catch (error) {
-            logger.error(`Failed to extract chat from IDE on port ${context.port || context.sessionId}:`, error);
+        const port = context.port || context.sessionId;
+        let fromCache = false;
+        
+        // Get cache service from DI container
+        const chatCacheService = context.getService('chatCacheService');
+        
+        // Check cache first for performance optimization
+        const cachedMessages = chatCacheService ? chatCacheService.getChatHistory(port) : null;
+        if (cachedMessages) {
+          logger.info(`Cache hit: Retrieved ${cachedMessages.length} messages from cache for port ${port}`);
+          messages = cachedMessages;
+          fromCache = true;
+        } else {
+          // Cache miss - extract from IDE
+          logger.info(`Cache miss: Extracting live chat from IDE for port ${port}`);
+          const cursorIDEService = context.getService('cursorIDEService');
+          if (cursorIDEService) {
+            try {
+              // Extract live chat from IDE
+              messages = await cursorIDEService.extractChatHistory();
+              logger.info(`Extracted ${messages.length} messages from IDE on port ${port}`);
+              
+              // Cache the extracted messages for future requests
+              if (messages && messages.length > 0 && chatCacheService) {
+                chatCacheService.setChatHistory(port, messages, {
+                  extractedAt: new Date().toISOString(),
+                  source: 'ide_extraction'
+                });
+                logger.info(`Cached ${messages.length} messages for port ${port}`);
+              }
+            } catch (error) {
+              logger.error(`Failed to extract chat from IDE on port ${port}:`, error);
+              messages = [];
+            }
+          } else {
+            logger.warn(`No cursorIDEService available for port ${port}`);
             messages = [];
           }
-        } else {
-          logger.warn(`No cursorIDEService available for port ${context.port || context.sessionId}`);
-          messages = [];
         }
       }
 
@@ -210,6 +238,10 @@ class GetChatHistoryStep {
         messageCount: messagesWithIds.length
       });
 
+      // Add cache metadata to response
+      const chatCacheService = context.getService('chatCacheService');
+      const cacheStats = chatCacheService ? chatCacheService.getStats() : {};
+      
       return {
         success: true,
         stepId,
@@ -230,6 +262,10 @@ class GetChatHistoryStep {
             limit,
             offset,
             total: messagesWithIds.length
+          },
+          cache: {
+            hit: fromCache,
+            stats: cacheStats
           }
         }
       };
@@ -277,6 +313,25 @@ class GetChatHistoryStep {
    */
   getConfig() {
     return config;
+  }
+
+  /**
+   * Invalidate cache for a specific port
+   * @param {string|number} port - The port to invalidate cache for
+   */
+  invalidateCache(port) {
+    // This method is deprecated - use DI container to get cache service
+    logger.warn('invalidateCache method is deprecated - use DI container instead');
+  }
+
+  /**
+   * Get cache statistics
+   * @returns {Object} Cache statistics
+   */
+  getCacheStats() {
+    // This method is deprecated - use DI container to get cache service
+    logger.warn('getCacheStats method is deprecated - use DI container instead');
+    return {};
   }
 
   /**

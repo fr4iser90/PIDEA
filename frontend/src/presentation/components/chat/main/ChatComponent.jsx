@@ -90,14 +90,13 @@ function ChatComponent({ eventBus, activePort, attachedPrompts = [] }) {
         msgs = data;
       }
       logger.info('Neue Nachrichten geladen:', msgs.length);
-      logger.info('Message structure:', msgs.map(m => ({ id: m.id, sender: m.sender, type: m.type, content: m.content?.substring(0, 50) })));
       setMessages(msgs.map(normalizeMessage));
       lastLoadedPort.current = port;
     } catch (error) {
       setMessages([]);
       setError('❌ Failed to load chat history: ' + error.message);
     }
-  }, []);
+  }, []); // ✅ FIX: Keine Dependencies = stabiler useCallback
 
   useEffect(() => {
     logger.info('activePort changed:', activePort);
@@ -108,7 +107,7 @@ function ChatComponent({ eventBus, activePort, attachedPrompts = [] }) {
       logger.info('setMessages([]) aufgerufen!');
       loadChatHistory(activePort);
     }
-  }, [activePort]); // ✅ FIX: loadChatHistory aus Dependencies entfernt
+  }, [activePort]); // ✅ FIX: loadChatHistory entfernt, da useCallback stabil ist
 
   useEffect(() => {
     if (shouldAutoScroll) scrollToBottom();
@@ -301,13 +300,7 @@ function ChatComponent({ eventBus, activePort, attachedPrompts = [] }) {
     const isAI = message.sender === 'assistant';
     let content = message.content || message.text || '';
     
-    // Debug logging
-    console.log('Rendering message:', {
-      id: message.id,
-      sender: message.sender,
-      contentLength: content.length,
-      hasCodeBlocks: content.includes('```')
-    });
+    // ✅ FIX: Debug logging entfernt - verursachte doppeltes Rendering
     
     // EINFACH: Code-Blöcke rendern
     let bubbleContent;
@@ -371,7 +364,7 @@ function ChatComponent({ eventBus, activePort, attachedPrompts = [] }) {
     }
     
     return (
-      <div className={`message ${isUser ? 'user' : 'ai'}`} key={`${message.id || 'msg'}_${index}_${message.timestamp || Date.now()}`} data-index={index}>
+      <div className={`message ${isUser ? 'user' : 'ai'}`} key={message.id || `msg_${index}`} data-index={index}>
         <div className="message-avatar">{isUser ? 'U' : 'AI'}</div>
         {bubbleContent}
       </div>

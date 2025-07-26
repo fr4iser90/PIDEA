@@ -45,9 +45,7 @@ globalStyles.textContent = `
 document.head.appendChild(globalStyles);
 
 ReactDOM.createRoot(document.getElementById('root')).render(
-  <React.StrictMode>
-    <App />
-  </React.StrictMode>
+  <App />
 );
 
 // Handle unhandled promise rejections

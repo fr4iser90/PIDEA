@@ -24,6 +24,7 @@ class ChatHistoryExtractor {
   }
 
   async extractChatHistory() {
+    const startTime = Date.now();
     try {
       const page = await this.browserManager.getPage();
       if (!page) {
@@ -43,14 +44,23 @@ class ChatHistoryExtractor {
         }
       }
 
-      // Wait for messages to load
-      await page.waitForTimeout(1000);
+      // Wait for messages to load (optimized from 1000ms to 100ms)
+      await page.waitForTimeout(100);
 
       // Use IDE-specific extraction logic
       const allMessages = await this.extractMessagesByIDEType(page);
 
       // Update conversation context
       this.updateConversationContext(allMessages);
+
+      const endTime = Date.now();
+      const duration = endTime - startTime;
+      
+      logger.info(`ChatHistoryExtractor completed in ${duration}ms`, {
+        ideType: this.ideType,
+        messageCount: allMessages.length,
+        duration: duration
+      });
 
       return allMessages;
     } catch (error) {
