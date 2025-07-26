@@ -86,8 +86,8 @@ class PostgreSQLTaskRepository extends TaskRepository {
       const sql = `
         INSERT INTO ${this.tableName} (
           id, title, description, type, category, priority, status, project_id,
-          estimated_time, metadata, created_at, updated_at, completed_at, due_date, tags
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          created_by, estimated_time, metadata, created_at, updated_at, completed_at, due_date, tags
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
       `;
 
       // Extract string values from value objects
@@ -104,6 +104,7 @@ class PostgreSQLTaskRepository extends TaskRepository {
         taskPriority,
         taskStatus,
         task.projectId, // camelCase property
+        task.userId || 'me', // Use userId or default to 'me'
         task.estimatedTime || null,
         JSON.stringify(task.metadata || {}),
         task.createdAt ? task.createdAt.toISOString() : new Date().toISOString(),
@@ -127,7 +128,7 @@ class PostgreSQLTaskRepository extends TaskRepository {
    */
   async findById(id) {
     try {
-      const sql = `SELECT * FROM ${this.tableName} WHERE id = ?`;
+      const sql = `SELECT * FROM ${this.tableName} WHERE id = $1`;
       const row = await this.databaseConnection.getOne(sql, [id]);
       return row ? this._rowToTask(row) : null;
     } catch (error) {
@@ -142,7 +143,7 @@ class PostgreSQLTaskRepository extends TaskRepository {
    */
   async findByTitle(title) {
     try {
-      const sql = `SELECT * FROM ${this.tableName} WHERE title = ?`;
+      const sql = `SELECT * FROM ${this.tableName} WHERE title = $1`;
       const row = await this.databaseConnection.getOne(sql, [title]);
       return row ? this._rowToTask(row) : null;
     } catch (error) {
@@ -183,37 +184,37 @@ class PostgreSQLTaskRepository extends TaskRepository {
 
       // Apply filters
       if (filters.status) {
-        conditions.push('status = ?');
+        conditions.push(`status = $${params.length + 1}`);
         params.push(filters.status);
       }
 
       if (filters.type) {
-        conditions.push('type = ?');
+        conditions.push(`type = $${params.length + 1}`);
         params.push(filters.type);
       }
 
       if (filters.priority) {
-        conditions.push('priority = ?');
+        conditions.push(`priority = $${params.length + 1}`);
         params.push(filters.priority);
       }
 
       if (filters.projectId) {
-        conditions.push('project_id = ?');
+        conditions.push(`project_id = $${params.length + 1}`);
         params.push(filters.projectId);
       }
 
       if (filters.userId) {
-        conditions.push('user_id = ?');
+        conditions.push(`created_by = $${params.length + 1}`);
         params.push(filters.userId);
       }
 
       if (filters.assignee) {
-        conditions.push('assignee = ?');
+        conditions.push(`assignee = $${params.length + 1}`);
         params.push(filters.assignee);
       }
 
       if (filters.title) {
-        conditions.push('title = ?');
+        conditions.push(`title = $${params.length + 1}`);
         params.push(filters.title);
       }
 
@@ -240,10 +241,10 @@ class PostgreSQLTaskRepository extends TaskRepository {
     try {
       const sql = `
         UPDATE ${this.tableName} SET
-          title = ?, description = ?, type = ?, category = ?, priority = ?, status = ?,
-          project_id = ?, user_id = ?, estimated_time = ?, metadata = ?,
-          updated_at = ?, tags = ?, due_date = ?, completed_at = ?
-        WHERE id = ?
+          title = $1, description = $2, type = $3, category = $4, priority = $5, status = $6,
+          project_id = $7, created_by = $8, estimated_time = $9, metadata = $10,
+          updated_at = $11, tags = $12, due_date = $13, completed_at = $14
+        WHERE id = $15
       `;
 
       // Extract string values from value objects
@@ -283,7 +284,7 @@ class PostgreSQLTaskRepository extends TaskRepository {
    */
   async delete(id) {
     try {
-      const sql = `DELETE FROM ${this.tableName} WHERE id = ?`;
+      const sql = `DELETE FROM ${this.tableName} WHERE id = $1`;
       const result = await this.databaseConnection.execute(sql, [id]);
       return result.rowsAffected > 0;
     } catch (error) {
