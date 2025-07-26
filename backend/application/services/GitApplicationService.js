@@ -3,7 +3,11 @@ const Logger = require('@logging/Logger');
 
 class GitApplicationService {
     constructor(dependencies = {}) {
-        this.gitService = dependencies.gitService || new GitService(dependencies);
+        // ✅ FIX: Verwende NUR die injizierte gitService-Instanz, keine doppelte Erstellung
+        this.gitService = dependencies.gitService;
+        if (!this.gitService) {
+            throw new Error('GitApplicationService requires gitService dependency');
+        }
         this.logger = dependencies.logger || new Logger('GitApplicationService');
         this.eventBus = dependencies.eventBus;
     }
