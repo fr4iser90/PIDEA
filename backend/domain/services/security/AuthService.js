@@ -92,6 +92,9 @@ class AuthService {
       email: user.email
     });
 
+    // CRITICAL FIX: Clean up old sessions before creating new one
+    await this.cleanupUserSessions(user.id);
+
     const accessToken = this.generateAccessToken(user);
     const refreshToken = this.generateRefreshToken(user);
     const expiresIn = process.env.NODE_ENV === 'development' ? 2 * 60 * 60 * 1000 : 15 * 60 * 1000; // 2h dev, 15m prod
@@ -422,6 +425,23 @@ class AuthService {
     }
 
     return await this.userSessionRepository.findActiveSessionsByUserId(userId);
+  }
+
+  // CRITICAL FIX: Clean up all sessions for a user
+  async cleanupUserSessions(userId) {
+    if (!userId) {
+      throw new Error('User ID is required');
+    }
+
+    logger.info('🧹 [AuthService] Cleaning up old sessions for user:', userId);
+    
+    try {
+      const deletedCount = await this.userSessionRepository.deleteByUserId(userId);
+      logger.info('✅ [AuthService] Cleaned up', deletedCount, 'old sessions for user:', userId);
+    } catch (error) {
+      logger.error('❌ [AuthService] Failed to cleanup sessions for user:', userId, error);
+      // Don't throw - session cleanup failure shouldn't prevent login
+    }
   }
 }
 
