@@ -3,7 +3,8 @@ const Token = require('@domain/value-objects/Token');
 const TokenHash = require('@domain/value-objects/TokenHash');
 
 describe('TokenHasher', () => {
-  const testToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJ0ZXN0LXVzZXIiLCJpYXQiOjE2MzQ1Njc4OTAsImV4cCI6MTYzNDU3MTQ5MH0.test-signature';
+  // TEST-ONLY dummy JWT token - NOT a real secret
+  const testToken = 'test.jwt.token.dummy.header.test.jwt.token.dummy.payload.test.jwt.token.dummy.signature';
   const testSalt = 'test-salt-123';
 
   let tokenHasher;
@@ -54,7 +55,7 @@ describe('TokenHasher', () => {
     it('should hash token and return prefix and hash', () => {
       const result = tokenHasher.hashToken(testToken);
       
-      expect(result.prefix).toBe('eyJhbGciOiJIUzI1NiIs');
+      expect(result.prefix).toBe('test.jwt.token.dummy');
       expect(result.hash).toMatch(/^[a-f0-9]{64}$/i);
       expect(result.token).toBeInstanceOf(Token);
     });
@@ -143,7 +144,7 @@ describe('TokenHasher', () => {
   describe('extractPrefix', () => {
     it('should extract token prefix', () => {
       const prefix = tokenHasher.extractPrefix(testToken);
-      expect(prefix).toBe('eyJhbGciOiJIUzI1NiIs');
+      expect(prefix).toBe('test.jwt.token.dummy');
     });
 
     it('should throw error for empty token', () => {
@@ -159,7 +160,7 @@ describe('TokenHasher', () => {
     it('should return complete token information', () => {
       const info = tokenHasher.getTokenInfo(testToken);
       
-      expect(info.prefix).toBe('eyJhbGciOiJIUzI1NiIs');
+      expect(info.prefix).toBe('test.jwt.token.dummy');
       expect(info.hash).toMatch(/^[a-f0-9]{64}$/i);
       expect(info.length).toBe(testToken.length);
       expect(info.isExpired).toBeDefined();
@@ -184,7 +185,7 @@ describe('TokenHasher', () => {
       expect(result.results).toHaveLength(3);
       expect(result.errors).toHaveLength(0);
       expect(result.results[0].success).toBe(true);
-      expect(result.results[0].data.prefix).toBe('eyJhbGciOiJIUzI1NiIs');
+      expect(result.results[0].data.prefix).toBe('test.jwt.token.dummy');
     });
 
     it('should handle errors in batch operations', () => {

@@ -73,8 +73,8 @@ describe('Secure Token System Integration', () => {
     });
 
     it('should validate access token using secure validation', async () => {
-      // Create a session with secure token
-      const accessToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJ0ZXN0LXVzZXIiLCJpYXQiOjE2MzQ1Njc4OTAsImV4cCI6MTYzNDU3MTQ5MH0.test-signature';
+      // TEST-ONLY dummy JWT token - NOT a real secret
+      const accessToken = 'test.jwt.token.dummy.header.test.jwt.token.dummy.payload.test.jwt.token.dummy.signature';
       const hashResult = tokenHasher.hashToken(accessToken);
       
       const session = new UserSession(
@@ -100,8 +100,8 @@ describe('Secure Token System Integration', () => {
     });
 
     it('should reject invalid access token', async () => {
-      // Create a session with secure token
-      const accessToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJ0ZXN0LXVzZXIiLCJpYXQiOjE2MzQ1Njc4OTAsImV4cCI6MTYzNDU3MTQ5MH0.test-signature';
+      // TEST-ONLY dummy JWT token - NOT a real secret
+      const accessToken = 'test.jwt.token.dummy.header.test.jwt.token.dummy.payload.test.jwt.token.dummy.signature';
       const hashResult = tokenHasher.hashToken(accessToken);
       
       const session = new UserSession(
@@ -120,7 +120,8 @@ describe('Secure Token System Integration', () => {
       mockUserSessionRepository.findByAccessToken.mockResolvedValue(session);
 
       // Try to validate with different token
-      const invalidToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJkaWZmZXJlbnQtdXNlciIsImlhdCI6MTYzNDU2Nzg5MCwiZXhwIjoxNjM0NTcxNDkwfS5kaWZmZXJlbnQtc2lnbmF0dXJl';
+      // TEST-ONLY dummy different JWT token - NOT a real secret
+      const invalidToken = 'test.jwt.token.dummy.header.test.jwt.token.dummy.different.payload.test.jwt.token.dummy.different.signature';
 
       await expect(authService.validateAccessToken(invalidToken))
         .rejects.toThrow('Invalid authentication');
@@ -129,7 +130,8 @@ describe('Secure Token System Integration', () => {
 
   describe('Session Token Validation', () => {
     it('should validate session token with secure hash', () => {
-      const accessToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJ0ZXN0LXVzZXIiLCJpYXQiOjE2MzQ1Njc4OTAsImV4cCI6MTYzNDU3MTQ5MH0.test-signature';
+      // TEST-ONLY dummy JWT token - NOT a real secret
+      const accessToken = 'test.jwt.token.dummy.header.test.jwt.token.dummy.payload.test.jwt.token.dummy.signature';
       const hashResult = tokenHasher.hashToken(accessToken);
       
       const session = new UserSession(
@@ -151,7 +153,8 @@ describe('Secure Token System Integration', () => {
     });
 
     it('should reject session token with invalid hash', () => {
-      const accessToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJ0ZXN0LXVzZXIiLCJpYXQiOjE2MzQ1Njc4OTAsImV4cCI6MTYzNDU3MTQ5MH0.test-signature';
+      // TEST-ONLY dummy JWT token - NOT a real secret
+      const accessToken = 'test.jwt.token.dummy.header.test.jwt.token.dummy.payload.test.jwt.token.dummy.signature';
       const hashResult = tokenHasher.hashToken(accessToken);
       
       // Create session with wrong hash
@@ -173,7 +176,8 @@ describe('Secure Token System Integration', () => {
     });
 
     it('should reject expired session', () => {
-      const accessToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJ0ZXN0LXVzZXIiLCJpYXQiOjE2MzQ1Njc4OTAsImV4cCI6MTYzNDU2Nzg5MX0.expired-signature';
+      // TEST-ONLY dummy expired JWT token - NOT a real secret
+      const accessToken = 'test.jwt.token.dummy.header.test.jwt.token.dummy.expired.payload.test.jwt.token.dummy.expired.signature';
       const hashResult = tokenHasher.hashToken(accessToken);
       
       const session = new UserSession(
@@ -196,7 +200,8 @@ describe('Secure Token System Integration', () => {
 
   describe('Refresh Token Validation', () => {
     it('should validate refresh token successfully', () => {
-      const accessToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJ0ZXN0LXVzZXIiLCJpYXQiOjE2MzQ1Njc4OTAsImV4cCI6MTYzNDU3MTQ5MH0.test-signature';
+      // TEST-ONLY dummy JWT token - NOT a real secret
+      const accessToken = 'test.jwt.token.dummy.header.test.jwt.token.dummy.payload.test.jwt.token.dummy.signature';
       const hashResult = tokenHasher.hashToken(accessToken);
       
       const session = new UserSession(
@@ -218,7 +223,8 @@ describe('Secure Token System Integration', () => {
     });
 
     it('should reject invalid refresh token', () => {
-      const accessToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJ0ZXN0LXVzZXIiLCJpYXQiOjE2MzQ1Njc4OTAsImV4cCI6MTYzNDU3MTQ5MH0.test-signature';
+      // TEST-ONLY dummy JWT token - NOT a real secret
+      const accessToken = 'test.jwt.token.dummy.header.test.jwt.token.dummy.payload.test.jwt.token.dummy.signature';
       const hashResult = tokenHasher.hashToken(accessToken);
       
       const session = new UserSession(
@@ -241,7 +247,8 @@ describe('Secure Token System Integration', () => {
 
   describe('Secure Token Requirements', () => {
     it('should require token hash for validation', () => {
-      const accessToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJ0ZXN0LXVzZXIiLCJpYXQiOjE2MzQ1Njc4OTAsImV4cCI6MTYzNDU3MTQ5MH0.test-signature';
+      // TEST-ONLY dummy JWT token - NOT a real secret
+      const accessToken = 'test.jwt.token.dummy.header.test.jwt.token.dummy.payload.test.jwt.token.dummy.signature';
       
       // Create session without hash (should fail)
       const session = new UserSession(
@@ -323,7 +330,8 @@ describe('Secure Token System Integration', () => {
       
       // Create multiple test tokens and sessions
       for (let i = 0; i < 10; i++) {
-        const token = `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJ0ZXN0LXVzZXIt${i}LCJpYXQiOjE2MzQ1Njc4OTAsImV4cCI6MTYzNDU3MTQ5MH0.test-signature-${i}`;
+        // TEST-ONLY dummy JWT tokens - NOT real secrets
+        const token = `test.jwt.token.dummy.header.test.jwt.token.dummy.payload.${i}.test.jwt.token.dummy.signature.${i}`;
         const hashResult = tokenHasher.hashToken(token);
         
         const session = new UserSession(

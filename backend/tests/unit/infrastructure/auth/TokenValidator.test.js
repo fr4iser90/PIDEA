@@ -3,7 +3,8 @@ const TokenHasher = require('@infrastructure/auth/TokenHasher');
 const UserSession = require('@domain/entities/UserSession');
 
 describe('TokenValidator', () => {
-  const testToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJ0ZXN0LXVzZXIiLCJpYXQiOjE2MzQ1Njc4OTAsImV4cCI6MTYzNDU3MTQ5MH0.test-signature';
+  // TEST-ONLY dummy JWT token - NOT a real secret
+  const testToken = 'test.jwt.token.dummy.header.test.jwt.token.dummy.payload.test.jwt.token.dummy.signature';
   const testSalt = 'test-salt-123';
 
   let tokenValidator;
@@ -56,7 +57,8 @@ describe('TokenValidator', () => {
     });
 
     it('should reject expired token', () => {
-      const expiredToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJ0ZXN0LXVzZXIiLCJpYXQiOjE2MzQ1Njc4OTAsImV4cCI6MTYzNDU2Nzg5MX0.expired-signature';
+      // TEST-ONLY dummy expired JWT token - NOT a real secret
+      const expiredToken = 'test.jwt.token.dummy.header.test.jwt.token.dummy.expired.payload.test.jwt.token.dummy.expired.signature';
       const hashResult = tokenHasher.hashToken(expiredToken);
       const result = tokenValidator.validateToken(expiredToken, hashResult.prefix, hashResult.hash);
       

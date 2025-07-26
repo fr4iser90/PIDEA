@@ -2,7 +2,8 @@ const TokenHash = require('@domain/value-objects/TokenHash');
 const crypto = require('crypto');
 
 describe('TokenHash Value Object', () => {
-  const testToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJ0ZXN0LXVzZXIiLCJpYXQiOjE2MzQ1Njc4OTAsImV4cCI6MTYzNDU3MTQ5MH0.test-signature';
+  // TEST-ONLY dummy JWT token - NOT a real secret
+  const testToken = 'test.jwt.token.dummy.header.test.jwt.token.dummy.payload.test.jwt.token.dummy.signature';
   const testSalt = 'test-salt-123';
 
   describe('Constructor', () => {
