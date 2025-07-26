@@ -261,12 +261,16 @@ class ChatSessionService {
       }
 
       const { limit = 100, offset = 0 } = options;
-      const messages = await this.chatRepository.findMessagesBySessionId(sessionId, {
-        limit,
-        offset,
-        orderBy: 'timestamp',
-        orderDirection: 'ASC'
-      });
+      const allMessages = await this.chatRepository.getSessionMessages(sessionId);
+      
+      // Apply pagination manually since repositories don't support it
+      let messages = allMessages;
+      if (offset > 0) {
+        messages = messages.slice(offset);
+      }
+      if (limit > 0) {
+        messages = messages.slice(0, limit);
+      }
 
       return messages;
     } catch (error) {

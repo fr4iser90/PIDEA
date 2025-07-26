@@ -141,7 +141,10 @@ class GetChatHistoryStep {
 
       let messages = [];
       
-      if (context.sessionId && context.sessionId !== context.port) {
+      // Check if sessionId is actually a port number (not a real session ID)
+      const isPortNumber = /^\d+$/.test(context.sessionId);
+      
+      if (context.sessionId && !isPortNumber && context.sessionId !== context.port) {
         // Get chat history for specific session (not port-based)
         try {
           messages = await chatSessionService.getChatHistory(
@@ -158,8 +161,8 @@ class GetChatHistoryStep {
         }
       }
       
-      // If no messages from session or if sessionId is actually a port, try IDE extraction
-      if (messages.length === 0 || context.sessionId === context.port) {
+      // If no messages from session or if sessionId is a port number, try IDE extraction
+      if (messages.length === 0 || isPortNumber || context.sessionId === context.port) {
         // Get chat history for specific port using IDE service
         const cursorIDEService = context.getService('cursorIDEService');
         if (cursorIDEService) {
