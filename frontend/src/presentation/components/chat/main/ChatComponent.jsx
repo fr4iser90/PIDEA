@@ -5,6 +5,7 @@ import ChatMessage from '@/domain/entities/ChatMessage.jsx';
 import VoiceInput from '../../common/VoiceInput';
 import '@/css/main/chat.css';
 import useAuthStore from '@/infrastructure/stores/AuthStore.jsx';
+import { useChatMessages, useProjectDataActions } from '@/infrastructure/stores/selectors/ProjectSelectors.jsx';
 
 // Use global marked from CDN script tag
 
@@ -54,7 +55,10 @@ async function fetchPromptContent(promptFile) {
 }
 
 function ChatComponent({ eventBus, activePort, attachedPrompts = [] }) {
-  const [messages, setMessages] = useState([]);
+  // ✅ REFACTORED: Use global state for messages
+  const { messages, hasMessages, messageCount } = useChatMessages();
+  const { loadProjectData } = useProjectDataActions();
+  
   const [isTyping, setIsTyping] = useState(false);
   const [inputValue, setInputValue] = useState('');
   const [isConnected, setIsConnected] = useState(false);
@@ -75,46 +79,17 @@ function ChatComponent({ eventBus, activePort, attachedPrompts = [] }) {
     setExpandedBlocks(prev => ({ ...prev, [id]: !prev[id] }));
   };
 
-  // Lade Chat immer, wenn activePort sich ändert (React-Way)
-  const loadChatHistory = useCallback(async (port) => {
-    if (!port) return;
-    
-    // ✅ OPTIMIZATION: Prevent duplicate requests for the same port
-    if (lastLoadedPort.current === port) {
-      logger.info('Skipping duplicate chat load for port:', port);
-      return;
-    }
-    
-    logger.info('Lade Chat für Port:', port);
-    try {
-      const data = await apiCall(API_CONFIG.endpoints.chat.portHistory(port));
-      let msgs = [];
-      if (data.success && data.data && data.data.messages) {
-        msgs = data.data.messages;
-      } else if (data.messages) {
-        msgs = data.messages;
-      } else if (Array.isArray(data)) {
-        msgs = data;
-      }
-      logger.info('Neue Nachrichten geladen:', msgs.length);
-      setMessages(msgs.map(normalizeMessage));
-      lastLoadedPort.current = port;
-    } catch (error) {
-      setMessages([]);
-      setError('❌ Failed to load chat history: ' + error.message);
-    }
-  }, []); // ✅ FIX: Keine Dependencies = stabiler useCallback
-
+  // ✅ REFACTORED: Load project data when active port changes
   useEffect(() => {
     logger.info('activePort changed:', activePort);
-    // Nur laden wenn sich der Port wirklich geändert hat
     if (activePort && lastLoadedPort.current !== activePort) {
-      setMessages([]);
       setError(null);
-      logger.info('setMessages([]) aufgerufen!');
-      loadChatHistory(activePort);
+      logger.info('Loading project data for active port:', activePort);
+      // Load project data (including chat) from global state
+      // This will be handled by the global state system
+      lastLoadedPort.current = activePort;
     }
-  }, [activePort]); // ✅ FIX: loadChatHistory entfernt, da useCallback stabil ist
+  }, [activePort]);
 
   useEffect(() => {
     if (shouldAutoScroll) scrollToBottom();

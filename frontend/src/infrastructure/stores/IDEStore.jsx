@@ -36,6 +36,7 @@ const useIDEStore = create(
       projectData: {
         git: {}, // { '/path1': { status, branches, lastUpdate }, '/path2': { status, branches, lastUpdate } }
         analysis: {}, // { '/path1': { status, metrics, history, lastUpdate }, '/path2': { status, metrics, history, lastUpdate } }
+        chat: {}, // { '/path1': { messages, lastUpdate }, '/path2': { messages, lastUpdate } }
         lastUpdate: null
       },
 
@@ -74,6 +75,21 @@ const useIDEStore = create(
 
           set({ portPreferences: [...portPreferences] });
           logger.info('Active port set successfully:', port);
+          
+          // ✅ FIX: Update active status for all IDEs
+          const { availableIDEs } = get();
+          const updatedIDEs = availableIDEs.map(ide => ({
+            ...ide,
+            active: ide.port === port
+          }));
+          set({ availableIDEs: updatedIDEs });
+          
+          // ✅ NEW: Load project data when active port changes
+          const activeIDE = updatedIDEs.find(ide => ide.port === port);
+          if (activeIDE && activeIDE.workspacePath) {
+            logger.info('Loading project data for new active port:', port, 'workspace:', activeIDE.workspacePath);
+            await get().loadProjectData(activeIDE.workspacePath);
+          }
         } catch (error) {
           logger.error('Error setting active port:', error);
           set({ error: error.message });
@@ -171,18 +187,24 @@ const useIDEStore = create(
               firstIDE: ides[0]
             });
             
+            // ✅ FIX: Set active status for IDEs
+            const idesWithActiveStatus = ides.map(ide => ({
+              ...ide,
+              active: ide.port === get().activePort
+            }));
+            
             set({ 
-              availableIDEs: ides,
+              availableIDEs: idesWithActiveStatus,
               lastUpdate: new Date().toISOString(),
               retryCount: 0,
               isLoading: false
             });
-            logger.info('Loaded', ides.length, 'IDEs');
+            logger.info('Loaded', idesWithActiveStatus.length, 'IDEs');
             
             // Auto-set active port if none is set and we have IDEs
             const { activePort } = get();
-            if (!activePort && ides.length > 0) {
-              const firstIDE = ides[0];
+            if (!activePort && idesWithActiveStatus.length > 0) {
+              const firstIDE = idesWithActiveStatus[0];
               logger.info('Auto-setting active port to:', firstIDE.port);
               set({ activePort: firstIDE.port });
             }
@@ -209,10 +231,17 @@ const useIDEStore = create(
           const projectId = getProjectIdFromWorkspace(workspacePath);
           if (!projectId) return;
           
-          logger.info('Loading project data for workspace:', workspacePath, 'projectId:', projectId);
+          // Get active port from state
+          const { activePort } = get();
+          if (!activePort) {
+            logger.warn('No active port available for loading project data');
+            return;
+          }
           
-          // Load git and analysis data in parallel
-          const [gitResult, analysisResult] = await Promise.allSettled([
+          logger.info('Loading project data for workspace:', workspacePath, 'projectId:', projectId, 'activePort:', activePort);
+          
+          // Load git, analysis, and chat data in parallel
+          const [gitResult, analysisResult, chatResult] = await Promise.allSettled([
             apiCall(`/api/projects/${projectId}/git/status`, { 
               method: 'POST',
               body: JSON.stringify({ projectPath: workspacePath })
@@ -220,7 +249,8 @@ const useIDEStore = create(
             apiCall(`/api/projects/${projectId}/analysis/status`, {
               method: 'POST', 
               body: JSON.stringify({ projectPath: workspacePath })
-            })
+            }),
+            apiCall(`/api/chat/port/${activePort}/history`)
           ]);
           
           const gitData = {
@@ -230,6 +260,11 @@ const useIDEStore = create(
           
           const analysisData = {
             status: analysisResult.status === 'fulfilled' && analysisResult.value.success ? analysisResult.value.data : null,
+            lastUpdate: new Date().toISOString()
+          };
+          
+          const chatData = {
+            messages: chatResult.status === 'fulfilled' && chatResult.value.success ? chatResult.value.data?.messages || [] : [],
             lastUpdate: new Date().toISOString()
           };
           
@@ -243,6 +278,10 @@ const useIDEStore = create(
               analysis: {
                 ...state.projectData.analysis,
                 [workspacePath]: analysisData
+              },
+              chat: {
+                ...state.projectData.chat,
+                [workspacePath]: chatData
               },
               lastUpdate: new Date().toISOString()
             }

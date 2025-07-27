@@ -11,8 +11,8 @@ const getProjectIdFromWorkspace = (workspacePath) => {
   if (!workspacePath) return null;
   const parts = workspacePath.split('/');
   const projectName = parts[parts.length - 1];
-  // Convert to lowercase to match backend expectations
-  return projectName.toLowerCase();
+  // Keep original case - Backend now supports it
+  return projectName.replace(/[^a-zA-Z0-9]/g, '_');
 };
 
 // Git selectors
@@ -22,7 +22,8 @@ export const useGitStatus = (workspacePath = null) => {
   
   return useMemo(() => {
     const targetWorkspacePath = workspacePath || activeIDE?.workspacePath;
-    const gitData = projectData.git[targetWorkspacePath];
+    // ✅ FIX: Defensive programming - handle missing git data
+    const gitData = projectData?.git?.[targetWorkspacePath];
     
     return {
       status: gitData?.status,
@@ -36,7 +37,7 @@ export const useGitStatus = (workspacePath = null) => {
                   (gitData?.status?.deleted?.length || 0) > 0,
       lastUpdate: gitData?.lastUpdate
     };
-  }, [projectData.git, activeIDE, workspacePath]);
+  }, [projectData?.git, activeIDE, workspacePath]);
 };
 
 export const useGitBranches = (workspacePath = null) => {
@@ -45,7 +46,8 @@ export const useGitBranches = (workspacePath = null) => {
   
   return useMemo(() => {
     const targetWorkspacePath = workspacePath || activeIDE?.workspacePath;
-    const gitData = projectData.git[targetWorkspacePath];
+    // ✅ FIX: Defensive programming - handle missing git data
+    const gitData = projectData?.git?.[targetWorkspacePath];
     const branches = gitData?.status?.branches || [];
     
     return {
@@ -55,7 +57,7 @@ export const useGitBranches = (workspacePath = null) => {
       remoteBranches: Array.isArray(branches) ? branches.filter(b => b.startsWith('remotes/')) : [],
       lastUpdate: gitData?.lastUpdate
     };
-  }, [projectData.git, activeIDE, workspacePath]);
+  }, [projectData?.git, activeIDE, workspacePath]);
 };
 
 // Analysis selectors
@@ -65,7 +67,8 @@ export const useAnalysisStatus = (workspacePath = null) => {
   
   return useMemo(() => {
     const targetWorkspacePath = workspacePath || activeIDE?.workspacePath;
-    const analysisData = projectData.analysis[targetWorkspacePath];
+    // ✅ FIX: Defensive programming - handle missing analysis data
+    const analysisData = projectData?.analysis?.[targetWorkspacePath];
     const status = analysisData?.status;
     
     return {
@@ -76,7 +79,7 @@ export const useAnalysisStatus = (workspacePath = null) => {
       hasRecentData: !!analysisData?.lastUpdate,
       lastUpdate: analysisData?.lastUpdate
     };
-  }, [projectData.analysis, activeIDE, workspacePath]);
+  }, [projectData?.analysis, activeIDE, workspacePath]);
 };
 
 export const useAnalysisMetrics = (workspacePath = null) => {
@@ -85,14 +88,15 @@ export const useAnalysisMetrics = (workspacePath = null) => {
   
   return useMemo(() => {
     const targetWorkspacePath = workspacePath || activeIDE?.workspacePath;
-    const analysisData = projectData.analysis[targetWorkspacePath];
+    // ✅ FIX: Defensive programming - handle missing analysis data
+    const analysisData = projectData?.analysis?.[targetWorkspacePath];
     
     return {
       metrics: analysisData?.metrics,
       hasMetrics: !!analysisData?.metrics,
       lastUpdate: analysisData?.lastUpdate
     };
-  }, [projectData.analysis, activeIDE, workspacePath]);
+  }, [projectData?.analysis, activeIDE, workspacePath]);
 };
 
 export const useAnalysisHistory = (workspacePath = null) => {
@@ -101,14 +105,34 @@ export const useAnalysisHistory = (workspacePath = null) => {
   
   return useMemo(() => {
     const targetWorkspacePath = workspacePath || activeIDE?.workspacePath;
-    const analysisData = projectData.analysis[targetWorkspacePath];
+    // ✅ FIX: Defensive programming - handle missing analysis data
+    const analysisData = projectData?.analysis?.[targetWorkspacePath];
     
     return {
       history: analysisData?.history || [],
       hasHistory: (analysisData?.history || []).length > 0,
       lastUpdate: analysisData?.lastUpdate
     };
-  }, [projectData.analysis, activeIDE, workspacePath]);
+  }, [projectData?.analysis, activeIDE, workspacePath]);
+};
+
+// Chat selectors
+export const useChatMessages = (workspacePath = null) => {
+  const { projectData, availableIDEs } = useIDEStore();
+  const activeIDE = availableIDEs.find(ide => ide.active);
+  
+  return useMemo(() => {
+    const targetWorkspacePath = workspacePath || activeIDE?.workspacePath;
+    // ✅ FIX: Defensive programming - handle missing chat data
+    const chatData = projectData?.chat?.[targetWorkspacePath];
+    
+    return {
+      messages: chatData?.messages || [],
+      hasMessages: (chatData?.messages || []).length > 0,
+      messageCount: (chatData?.messages || []).length,
+      lastUpdate: chatData?.lastUpdate
+    };
+  }, [projectData?.chat, activeIDE, workspacePath]);
 };
 
 // IDE selectors (enhanced with project data)
