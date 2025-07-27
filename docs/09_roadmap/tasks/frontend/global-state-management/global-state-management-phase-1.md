@@ -1,4 +1,4 @@
-# Frontend Global State Management - Phase 1: Global State Store Foundation
+# Frontend Global State Management - Phase 1: IDEStore Extension
 
 **Phase:** 1 of 3
 **Status:** Planning
@@ -6,238 +6,204 @@
 **Priority:** High
 
 ## Phase 1 Goals
-- Create ProjectGlobalStore with Zustand
-- Implement data loading from existing API endpoints
-- Add state selectors for components
+- Extend existing IDEStore with project data (git, analysis)
+- Add project data loading actions
 - Add WebSocket event handling for real-time updates
+- Create state selectors for components
 
 ## Implementation Steps
 
-### Step 1: Create ProjectGlobalStore ✅
-**Create global state store:**
-- [ ] File: `frontend/src/infrastructure/stores/ProjectGlobalStore.jsx` - Create global state store
-- [ ] Implement Zustand store with proper state structure
-- [ ] Add data loading actions from existing API endpoints
-- [ ] Add state update actions for WebSocket events
-- [ ] Add error handling and loading states
+### Step 1: Extend IDEStore ✅
+**Add project data to existing IDEStore:**
+- [ ] File: `frontend/src/infrastructure/stores/IDEStore.jsx` - Extend store
+- [ ] Add `projectData` state with git and analysis data
+- [ ] Add `loadProjectData` action for loading project data
+- [ ] Add WebSocket event handlers for real-time updates
+- [ ] Add cleanup functions for WebSocket listeners
+- [ ] Update persistence configuration
 
-**Store Structure:**
+**Extended IDEStore Structure:**
 ```javascript
-// ProjectGlobalStore.jsx - RICHTIGE STRUKTUR für MEHRERE IDEs!
-const useProjectGlobalStore = create((set, get) => ({
-  // State
-  initialized: false,
-  loading: false,
-  error: null,
-  
-  // IDE data - ALLE IDEs + AKTIVE IDE!
-  ideData: {
-    available: [], // [{ port: 9222, workspacePath: '/path1', active: true }, { port: 9223, workspacePath: '/path2', active: false }]
-    activeIDE: null, // { port: 9222, workspacePath: '/path1', active: true }
-    lastUpdate: null
-  },
-  
-  // Git data - KEYED BY WORKSPACE PATH!
-  gitData: {}, // { '/path1': { status, branches, lastUpdate }, '/path2': { status, branches, lastUpdate } }
-  
-  // Analysis data - KEYED BY WORKSPACE PATH!
-  analysisData: {}, // { '/path1': { status, metrics, history, lastUpdate }, '/path2': { status, metrics, history, lastUpdate } }
-  
-  // Actions
-  initialize: async () => {
-    set({ loading: true, error: null });
-    
-    try {
-      // Lade ALLE IDEs
-      const ideResult = await apiCall('/api/ide/available');
-      
-      if (ideResult.success) {
-        const ideData = ideResult.data;
-        const activeIDE = ideData.find(ide => ide.active === true); // Finde AKTIVE IDE
+// IDEStore.jsx - ERWEITERT mit Projekt-Daten (KEIN neues ProjectGlobalStore!)
+const useIDEStore = create(
+  persist(
+    (set, get) => ({
+      // Bestehende IDE-Verwaltung (UNVERÄNDERT)
+      activePort: null,
+      portPreferences: [],
+      availableIDEs: [],
+      isLoading: false,
+      error: null,
+      lastUpdate: null,
+      retryCount: 0,
+      maxRetries: 3,
+
+      // NEUE: Projekt-Daten
+      projectData: {
+        git: {}, // { '/path1': { status, branches, lastUpdate }, '/path2': { status, branches, lastUpdate } }
+        analysis: {}, // { '/path1': { status, metrics, history, lastUpdate }, '/path2': { status, metrics, history, lastUpdate } }
+        lastUpdate: null
+      },
+
+      // Bestehende Actions (UNVERÄNDERT)
+      setActivePort: async (port) => { /* ... existing logic ... */ },
+      loadActivePort: async () => { /* ... existing logic ... */ },
+      loadAvailableIDEs: async () => { /* ... existing logic ... */ },
+
+      // NEUE: Projekt-Daten Actions
+      loadProjectData: async (workspacePath) => {
+        if (!workspacePath) return;
         
-        set({ 
-          ideData: {
-            available: ideData, // ALLE IDEs
-            activeIDE: activeIDE || null, // NUR die AKTIVE IDE
+        try {
+          const projectId = getProjectIdFromWorkspace(workspacePath);
+          if (!projectId) return;
+          
+          // Load git and analysis data in parallel
+          const [gitResult, analysisResult] = await Promise.allSettled([
+            apiCall(`/api/projects/${projectId}/git/status`, { method: 'POST' }),
+            apiCall(`/api/projects/${projectId}/analysis/status`)
+          ]);
+          
+          const gitData = {
+            status: gitResult.status === 'fulfilled' && gitResult.value.success ? gitResult.value.data : null,
             lastUpdate: new Date().toISOString()
-          }
+          };
+          
+          const analysisData = {
+            status: analysisResult.status === 'fulfilled' && analysisResult.value.success ? analysisResult.value.data : null,
+            lastUpdate: new Date().toISOString()
+          };
+          
+          set(state => ({
+            projectData: {
+              ...state.projectData,
+              git: {
+                ...state.projectData.git,
+                [workspacePath]: gitData
+              },
+              analysis: {
+                ...state.projectData.analysis,
+                [workspacePath]: analysisData
+              },
+              lastUpdate: new Date().toISOString()
+            }
+          }));
+          
+          logger.info('Project data loaded for workspace:', workspacePath);
+        } catch (error) {
+          logger.error('Failed to load project data:', error);
+        }
+      },
+
+      // NEUE: WebSocket Event Handler
+      setupWebSocketListeners: (eventBus) => {
+        if (!eventBus) return;
+        
+        // Git Events
+        eventBus.on('git-status-updated', (data) => {
+          const { workspacePath, gitStatus } = data;
+          set(state => ({
+            projectData: {
+              ...state.projectData,
+              git: {
+                ...state.projectData.git,
+                [workspacePath]: {
+                  ...state.projectData.git[workspacePath],
+                  status: gitStatus,
+                  lastUpdate: new Date().toISOString()
+                }
+              }
+            }
+          }));
         });
         
-        // Wenn AKTIVE IDE gefunden, lade deren Daten
-        if (activeIDE?.workspacePath) {
-          await get().loadProjectData(activeIDE.workspacePath);
-        }
-      }
-      
-      set({ initialized: true, loading: false });
-    } catch (error) {
-      set({ error: error.message, loading: false });
-    }
-  },
-  
-  // Load project data for specific workspace
-  loadProjectData: async (workspacePath) => {
-    if (!workspacePath) return;
-    
-    try {
-      // Get project ID from workspace path (KEINE hardcodierten Pfade!)
-      const projectId = getProjectIdFromWorkspace(workspacePath);
-      if (!projectId) return;
-      
-      // Load git and analysis data in parallel
-      const [gitResult, analysisResult] = await Promise.allSettled([
-        get().loadGitData(workspacePath, projectId),
-        get().loadAnalysisData(workspacePath, projectId)
-      ]);
-      
-      logger.info('Project data loaded for workspace:', workspacePath);
-    } catch (error) {
-      logger.error('Failed to load project data:', error);
-    }
-  },
-  
-  // Load git data for specific workspace
-  loadGitData: async (workspacePath, projectId) => {
-    if (!workspacePath || !projectId) return;
-    
-    try {
-      const [statusResult, branchesResult] = await Promise.allSettled([
-        apiCall(`/api/projects/${projectId}/git/status`, { method: 'POST' }),
-        apiCall(`/api/projects/${projectId}/git/branches`, { method: 'POST' })
-      ]);
-      
-      const gitData = {
-        status: statusResult.status === 'fulfilled' && statusResult.value.success ? statusResult.value.data : null,
-        branches: branchesResult.status === 'fulfilled' && branchesResult.value.success ? branchesResult.value.data : null,
-        lastUpdate: new Date().toISOString()
-      };
-      
-      set(state => ({
-        gitData: {
-          ...state.gitData,
-          [workspacePath]: gitData
-        }
-      }));
-    } catch (error) {
-      logger.error('Failed to load git data:', error);
-    }
-  },
-  
-  // Load analysis data for specific workspace
-  loadAnalysisData: async (workspacePath, projectId) => {
-    if (!workspacePath || !projectId) return;
-    
-    try {
-      const [statusResult, metricsResult, historyResult] = await Promise.allSettled([
-        apiCall(`/api/projects/${projectId}/analysis/status`),
-        apiCall(`/api/projects/${projectId}/analysis/metrics`),
-        apiCall(`/api/projects/${projectId}/analysis/history`)
-      ]);
-      
-      const analysisData = {
-        status: statusResult.status === 'fulfilled' && statusResult.value.success ? statusResult.value.data : null,
-        metrics: metricsResult.status === 'fulfilled' && metricsResult.value.success ? metricsResult.value.data : null,
-        history: historyResult.status === 'fulfilled' && historyResult.value.success ? historyResult.value.data : null,
-        lastUpdate: new Date().toISOString()
-      };
-      
-      set(state => ({
-        analysisData: {
-          ...state.analysisData,
-          [workspacePath]: analysisData
-        }
-      }));
-    } catch (error) {
-      logger.error('Failed to load analysis data:', error);
-    }
-  },
-  
-  // Switch active IDE
-  switchActiveIDE: async (port) => {
-    try {
-      const { ideData } = get();
-      const newActiveIDE = ideData.available.find(ide => ide.port === port);
-      
-      if (newActiveIDE) {
-        set(state => ({
-          ideData: {
-            ...state.ideData,
-            activeIDE: newActiveIDE,
-            lastUpdate: new Date().toISOString()
-          }
-        }));
+        eventBus.on('git-branch-changed', (data) => {
+          const { workspacePath, newBranch } = data;
+          set(state => ({
+            projectData: {
+              ...state.projectData,
+              git: {
+                ...state.projectData.git,
+                [workspacePath]: {
+                  ...state.projectData.git[workspacePath],
+                  status: {
+                    ...state.projectData.git[workspacePath]?.status,
+                    currentBranch: newBranch
+                  },
+                  lastUpdate: new Date().toISOString()
+                }
+              }
+            }
+          }));
+        });
         
-        // Load data for new active IDE
-        if (newActiveIDE.workspacePath) {
-          await get().loadProjectData(newActiveIDE.workspacePath);
-        }
-      }
-    } catch (error) {
-      logger.error('Failed to switch active IDE:', error);
-    }
-  },
-  
-  // WebSocket event handlers
-  setupWebSocketListeners: (eventBus) => {
-    if (!eventBus) return;
-    
-    eventBus.on('git-status-updated', (data) => {
-      const { workspacePath, gitStatus } = data;
-      set(state => ({
-        gitData: {
-          ...state.gitData,
-          [workspacePath]: {
-            ...state.gitData[workspacePath],
-            status: gitStatus,
-            lastUpdate: new Date().toISOString()
-          }
-        }
-      }));
-    });
-    
-    eventBus.on('analysis-completed', (data) => {
-      const { workspacePath, analysisData } = data;
-      set(state => ({
-        analysisData: {
-          ...state.analysisData,
-          [workspacePath]: {
-            ...state.analysisData[workspacePath],
-            ...analysisData,
-            lastUpdate: new Date().toISOString()
-          }
-        }
-      }));
-    });
-    
-    eventBus.on('activeIDEChanged', (data) => {
-      const { port } = data;
-      get().switchActiveIDE(port);
-    });
-  },
-  
-  cleanupWebSocketListeners: (eventBus) => {
-    if (!eventBus) return;
-    eventBus.off('git-status-updated');
-    eventBus.off('analysis-completed');
-    eventBus.off('activeIDEChanged');
-  },
-  
-  reset: () => {
-    set({
-      initialized: false,
-      loading: false,
-      error: null,
-      ideData: { available: [], activeIDE: null, lastUpdate: null },
-      gitData: {},
-      analysisData: {}
-    });
-  }
-}));
+        // Analysis Events
+        eventBus.on('analysis-completed', (data) => {
+          const { workspacePath, analysisData } = data;
+          set(state => ({
+            projectData: {
+              ...state.projectData,
+              analysis: {
+                ...state.projectData.analysis,
+                [workspacePath]: {
+                  ...state.projectData.analysis[workspacePath],
+                  ...analysisData,
+                  lastUpdate: new Date().toISOString()
+                }
+              }
+            }
+          }));
+        });
+        
+        eventBus.on('analysis-progress', (data) => {
+          const { workspacePath, progress, currentStep } = data;
+          set(state => ({
+            projectData: {
+              ...state.projectData,
+              analysis: {
+                ...state.projectData.analysis,
+                [workspacePath]: {
+                  ...state.projectData.analysis[workspacePath],
+                  status: {
+                    ...state.projectData.analysis[workspacePath]?.status,
+                    progress,
+                    currentStep
+                  },
+                  lastUpdate: new Date().toISOString()
+                }
+              }
+            }
+          }));
+        });
+      },
 
-// Helper function to get project ID from workspace path (KEINE hardcodierten Pfade!)
+      cleanupWebSocketListeners: (eventBus) => {
+        if (!eventBus) return;
+        eventBus.off('git-status-updated');
+        eventBus.off('git-branch-changed');
+        eventBus.off('analysis-completed');
+        eventBus.off('analysis-progress');
+      },
+
+      // Bestehende Helper Functions (UNVERÄNDERT)
+      validatePort: async (port) => { /* ... existing logic ... */ },
+      getPortInfo: (port) => { /* ... existing logic ... */ }
+    }),
+    {
+      name: 'ide-store',
+      partialize: (state) => ({
+        activePort: state.activePort,
+        portPreferences: state.portPreferences,
+        // NEUE: Persistiere auch Projekt-Daten
+        projectData: state.projectData
+      })
+    }
+  )
+);
+
+// Helper function to get project ID from workspace path
 const getProjectIdFromWorkspace = (workspacePath) => {
   if (!workspacePath) return null;
-  // Extract project name from path (e.g., /home/user/projects/myproject -> myproject)
   const parts = workspacePath.split('/');
   return parts[parts.length - 1];
 };
@@ -245,165 +211,122 @@ const getProjectIdFromWorkspace = (workspacePath) => {
 
 ### Step 2: Create State Selectors ✅
 **Create selectors for components:**
-- [ ] File: `frontend/src/infrastructure/stores/selectors/ProjectSelectors.jsx` - Create state selectors
-- [ ] Project information selectors
-- [ ] Git status selectors
-- [ ] Analysis status selectors
-- [ ] Specific data selectors
+- [ ] File: `frontend/src/infrastructure/stores/selectors/ProjectSelectors.jsx` - Create selectors
+- [ ] Create git status selectors with memoization
+- [ ] Create analysis status selectors with memoization
+- [ ] Create IDE selectors with active IDE detection
+- [ ] Create action selectors for store actions
+- [ ] Add proper error handling and fallbacks
 
-**Selector Implementation:**
+**State Selectors:**
 ```javascript
-// ProjectSelectors.jsx - RICHTIGE SELECTORS für MEHRERE IDEs!
+// ProjectSelectors.jsx - CLEAR SELECTORS für ERWEITERTEN IDEStore!
 import { useMemo } from 'react';
-import useProjectGlobalStore from '../ProjectGlobalStore.jsx';
+import useIDEStore from '../IDEStore.jsx';
 
-// Git selectors - RICHTIGE PROPERTIES für AKTIVE IDE!
+// Git selectors
 export const useGitStatus = (workspacePath = null) => {
-  const gitData = useProjectGlobalStore(state => state.gitData);
-  const ideData = useProjectGlobalStore(state => state.ideData);
-  const activeIDE = ideData.activeIDE;
+  const { projectData, availableIDEs } = useIDEStore();
+  const activeIDE = availableIDEs.find(ide => ide.active);
   
   return useMemo(() => {
     const targetWorkspacePath = workspacePath || activeIDE?.workspacePath;
-    const gitStatus = gitData[targetWorkspacePath];
+    const gitData = projectData.git[targetWorkspacePath];
     
     return {
-      status: gitStatus?.status,
-      currentBranch: gitStatus?.status?.currentBranch || '',
-      modifiedFiles: gitStatus?.status?.modified || [],
-      addedFiles: gitStatus?.status?.added || [],
-      deletedFiles: gitStatus?.status?.deleted || [],
-      untrackedFiles: gitStatus?.status?.untracked || [],
-      hasChanges: (gitStatus?.status?.modified?.length || 0) + 
-                  (gitStatus?.status?.added?.length || 0) + 
-                  (gitStatus?.status?.deleted?.length || 0) > 0,
-      lastUpdate: gitStatus?.lastUpdate
+      status: gitData?.status,
+      currentBranch: gitData?.status?.currentBranch || '',
+      modifiedFiles: gitData?.status?.modified || [],
+      addedFiles: gitData?.status?.added || [],
+      deletedFiles: gitData?.status?.deleted || [],
+      untrackedFiles: gitData?.status?.untracked || [],
+      hasChanges: (gitData?.status?.modified?.length || 0) + 
+                  (gitData?.status?.added?.length || 0) + 
+                  (gitData?.status?.deleted?.length || 0) > 0,
+      lastUpdate: gitData?.lastUpdate
     };
-  }, [gitData, activeIDE, workspacePath]);
+  }, [projectData.git, activeIDE, workspacePath]);
 };
 
 export const useGitBranches = (workspacePath = null) => {
-  const gitData = useProjectGlobalStore(state => state.gitData);
-  const ideData = useProjectGlobalStore(state => state.ideData);
-  const activeIDE = ideData.activeIDE;
+  const { projectData, availableIDEs } = useIDEStore();
+  const activeIDE = availableIDEs.find(ide => ide.active);
   
   return useMemo(() => {
     const targetWorkspacePath = workspacePath || activeIDE?.workspacePath;
-    const gitStatus = gitData[targetWorkspacePath];
-    const branches = gitStatus?.branches || [];
+    const gitData = projectData.git[targetWorkspacePath];
+    const branches = gitData?.status?.branches || [];
     
     return {
       branches: Array.isArray(branches) ? branches : [],
-      currentBranch: gitStatus?.status?.currentBranch || '',
+      currentBranch: gitData?.status?.currentBranch || '',
       localBranches: Array.isArray(branches) ? branches.filter(b => !b.startsWith('remotes/')) : [],
       remoteBranches: Array.isArray(branches) ? branches.filter(b => b.startsWith('remotes/')) : [],
-      lastUpdate: gitStatus?.lastUpdate
+      lastUpdate: gitData?.lastUpdate
     };
-  }, [gitData, activeIDE, workspacePath]);
+  }, [projectData.git, activeIDE, workspacePath]);
 };
 
 // Analysis selectors
 export const useAnalysisStatus = (workspacePath = null) => {
-  const analysisData = useProjectGlobalStore(state => state.analysisData);
-  const ideData = useProjectGlobalStore(state => state.ideData);
-  const activeIDE = ideData.activeIDE;
+  const { projectData, availableIDEs } = useIDEStore();
+  const activeIDE = availableIDEs.find(ide => ide.active);
   
   return useMemo(() => {
     const targetWorkspacePath = workspacePath || activeIDE?.workspacePath;
-    const projectAnalysis = analysisData[targetWorkspacePath];
-    const status = projectAnalysis?.status;
+    const analysisData = projectData.analysis[targetWorkspacePath];
+    const status = analysisData?.status;
     
     return {
       status,
       isRunning: status?.isRunning || false,
       progress: status?.progress || 0,
-      hasRecentData: !!projectAnalysis?.lastUpdate,
-      lastUpdate: projectAnalysis?.lastUpdate
+      hasRecentData: !!analysisData?.lastUpdate,
+      lastUpdate: analysisData?.lastUpdate
     };
-  }, [analysisData, activeIDE, workspacePath]);
+  }, [projectData.analysis, activeIDE, workspacePath]);
 };
 
 export const useAnalysisMetrics = (workspacePath = null) => {
-  const analysisData = useProjectGlobalStore(state => state.analysisData);
-  const ideData = useProjectGlobalStore(state => state.ideData);
-  const activeIDE = ideData.activeIDE;
+  const { projectData, availableIDEs } = useIDEStore();
+  const activeIDE = availableIDEs.find(ide => ide.active);
   
   return useMemo(() => {
     const targetWorkspacePath = workspacePath || activeIDE?.workspacePath;
-    const projectAnalysis = analysisData[targetWorkspacePath];
+    const analysisData = projectData.analysis[targetWorkspacePath];
     
     return {
-      metrics: projectAnalysis?.metrics,
-      hasMetrics: !!projectAnalysis?.metrics,
-      lastUpdate: projectAnalysis?.lastUpdate
+      metrics: analysisData?.metrics,
+      hasMetrics: !!analysisData?.metrics,
+      lastUpdate: analysisData?.lastUpdate
     };
-  }, [analysisData, activeIDE, workspacePath]);
+  }, [projectData.analysis, activeIDE, workspacePath]);
 };
 
-export const useAnalysisHistory = (workspacePath = null) => {
-  const analysisData = useProjectGlobalStore(state => state.analysisData);
-  const ideData = useProjectGlobalStore(state => state.ideData);
-  const activeIDE = ideData.activeIDE;
-  
-  return useMemo(() => {
-    const targetWorkspacePath = workspacePath || activeIDE?.workspacePath;
-    const projectAnalysis = analysisData[targetWorkspacePath];
-    const history = projectAnalysis?.history;
-    
-    return {
-      history: Array.isArray(history) ? history : [],
-      hasHistory: Array.isArray(history) && history.length > 0,
-      recentAnalyses: Array.isArray(history) ? history.slice(0, 5) : [],
-      lastUpdate: projectAnalysis?.lastUpdate
-    };
-  }, [analysisData, activeIDE, workspacePath]);
-};
-
-// IDE selectors - RICHTIGE für MEHRERE IDEs!
+// IDE selectors (bereits vorhanden, aber erweitert)
 export const useActiveIDE = () => {
-  const ideData = useProjectGlobalStore(state => state.ideData);
+  const { availableIDEs } = useIDEStore();
   
-  return useMemo(() => ({
-    activeIDE: ideData.activeIDE,
-    workspacePath: ideData.activeIDE?.workspacePath,
-    port: ideData.activeIDE?.port,
-    projectId: ideData.activeIDE?.workspacePath ? getProjectIdFromWorkspace(ideData.activeIDE.workspacePath) : null,
-    projectName: ideData.activeIDE?.workspacePath ? ideData.activeIDE.workspacePath.split('/').pop() : null
-  }), [ideData.activeIDE]);
-};
-
-export const useAvailableIDEs = () => {
-  const ideData = useProjectGlobalStore(state => state.ideData);
-  
-  return useMemo(() => ideData.available.map(ide => ({
-    port: ide.port,
-    workspacePath: ide.workspacePath,
-    projectName: ide.workspacePath ? ide.workspacePath.split('/').pop() : null,
-    active: ide.active,
-    status: ide.status
-  })), [ideData.available]);
-};
-
-// Global state selectors
-export const useGlobalStateStatus = () => {
-  return useProjectGlobalStore(state => ({
-    initialized: state.initialized,
-    loading: state.loading,
-    error: state.error
-  }));
+  return useMemo(() => {
+    const activeIDE = availableIDEs.find(ide => ide.active);
+    return {
+      activeIDE,
+      workspacePath: activeIDE?.workspacePath,
+      port: activeIDE?.port,
+      projectId: activeIDE?.workspacePath ? getProjectIdFromWorkspace(activeIDE.workspacePath) : null,
+      projectName: activeIDE?.workspacePath ? activeIDE.workspacePath.split('/').pop() : null
+    };
+  }, [availableIDEs]);
 };
 
 // Action selectors
 export const useProjectDataActions = () => {
-  const store = useProjectGlobalStore();
+  const store = useIDEStore();
   
   return {
-    initialize: store.initialize,
     loadProjectData: store.loadProjectData,
-    switchActiveIDE: store.switchActiveIDE,
     setupWebSocketListeners: store.setupWebSocketListeners,
-    cleanupWebSocketListeners: store.cleanupWebSocketListeners,
-    reset: store.reset
+    cleanupWebSocketListeners: store.cleanupWebSocketListeners
   };
 };
 
@@ -415,159 +338,67 @@ const getProjectIdFromWorkspace = (workspacePath) => {
 };
 ```
 
-### Step 3: WebSocket Event Integration ✅
-**Add WebSocket event handling:**
-- [ ] Integrate with existing WebSocketService
-- [ ] Handle git status updates
-- [ ] Handle analysis status updates
-- [ ] Handle project data updates
-- [ ] Add event listeners for real-time updates
+### Step 3: Test IDEStore Extension ✅
+**Test extended store functionality:**
+- [ ] Test project data loading
+- [ ] Test WebSocket event handling
+- [ ] Test state persistence
+- [ ] Test error handling
+- [ ] Test multiple workspace support
 
-**WebSocket Integration:**
+**Test Scenarios:**
 ```javascript
-// Add to ProjectGlobalStore.jsx
-const useProjectGlobalStore = create((set, get) => ({
-  // ... existing state and actions
+// Test IDEStore extension
+const testIDEStoreExtension = () => {
+  // Test project data loading
+  const store = useIDEStore.getState();
+  await store.loadProjectData('/home/user/projects/PIDEA');
   
-  // WebSocket event handlers
-  setupWebSocketListeners: (eventBus) => {
-    if (!eventBus) return;
-    
-    // Listen for git updates
-    eventBus.on('git-status-updated', (data) => {
-      const { workspacePath, gitStatus } = data;
-      set(state => ({
-        gitData: {
-          ...state.gitData,
-          [workspacePath]: {
-            ...state.gitData[workspacePath],
-            status: gitStatus,
-            lastUpdate: new Date().toISOString()
-          }
-        }
-      }));
-    });
-    
-    // Listen for analysis updates
-    eventBus.on('analysis-completed', (data) => {
-      const { workspacePath, analysisData } = data;
-      set(state => ({
-        analysisData: {
-          ...state.analysisData,
-          [workspacePath]: {
-            ...state.analysisData[workspacePath],
-            ...analysisData,
-            lastUpdate: new Date().toISOString()
-          }
-        }
-      }));
-    });
-    
-    // Listen for project updates
-    eventBus.on('project-updated', (data) => {
-      // This event is not directly related to workspacePath, so we'll ignore it for now
-      // or if it needs to be handled, it would require a different state structure.
-      // For now, we'll just log it.
-      logger.info('Project updated event received:', data);
-    });
-  },
+  // Verify data is loaded
+  const projectData = store.projectData;
+  console.log('Project data loaded:', projectData);
   
-  cleanupWebSocketListeners: (eventBus) => {
-    if (!eventBus) return;
-    
-    eventBus.off('git-status-updated');
-    eventBus.off('analysis-completed');
-    eventBus.off('project-updated');
-  }
-}));
-```
-
-### Step 4: Error Handling & Validation ✅
-**Add comprehensive error handling:**
-- [ ] API call error handling
-- [ ] WebSocket connection error handling
-- [ ] State validation
-- [ ] Loading state management
-- [ ] Error state management
-
-**Error Handling Implementation:**
-```javascript
-// Add to ProjectGlobalStore.jsx
-const useProjectGlobalStore = create((set, get) => ({
-  // ... existing state and actions
+  // Test WebSocket events
+  window.eventBus.emit('git-status-updated', {
+    workspacePath: '/home/user/projects/PIDEA',
+    gitStatus: { currentBranch: 'main', status: 'clean' }
+  });
   
-  // Enhanced error handling
-  initialize: async () => {
-    set({ loading: true, error: null });
-    
-    try {
-      // RICHTIGE API ENDPUNKTE mit proper error handling
-      const ideResult = await apiCall('/api/ide/available');
-      
-      if (ideResult.success) {
-        const ideData = ideResult.data;
-        const activeIDE = ideData.find(ide => ide.active);
-        
-        set({ 
-          ideData: {
-            available: ideData,
-            activeIDE: activeIDE || null,
-            lastUpdate: new Date().toISOString()
-          }
-        });
-        
-        // Wenn aktive IDE gefunden, lade deren Daten
-        if (activeIDE?.workspacePath) {
-          try {
-            await get().loadProjectData(activeIDE.workspacePath);
-          } catch (error) {
-            logger.warn('Failed to load project data for active IDE:', error);
-          }
-        }
-      } else {
-        logger.warn('Failed to load IDE data:', ideResult.reason);
-      }
-      
-      set({ initialized: true, loading: false });
-    } catch (error) {
-      set({ 
-        error: error.message || 'Failed to initialize global state', 
-        loading: false 
-      });
-      logger.error('Global state initialization failed:', error);
-    }
-  }
-}));
+  // Verify state is updated
+  const updatedData = useIDEStore.getState().projectData;
+  console.log('Updated project data:', updatedData);
+};
 ```
 
 ## Success Criteria
-- [ ] ProjectGlobalStore created and functional
-- [ ] State selectors working correctly
-- [ ] WebSocket event handling integrated
-- [ ] Error handling comprehensive
-- [ ] Loading states managed properly
-- [ ] Store follows Zustand best practices
+- [ ] IDEStore extended with project data
+- [ ] Project data loading works correctly
+- [ ] WebSocket event handling works
+- [ ] State selectors created and working
+- [ ] Multiple workspace support works
+- [ ] Error handling works correctly
+- [ ] State persistence works
 
 ## Dependencies
-- Zustand library (already installed)
-- Existing API endpoints (already available)
-- WebSocketService (already available)
-- EventBus system (already available)
+- Existing IDEStore
+- WebSocket system
+- API endpoints for git and analysis
 
 ## Testing Checklist
-- [ ] Store initialization works
-- [ ] Data loading from API works
-- [ ] State selectors return correct data
+- [ ] Project data loads correctly
 - [ ] WebSocket events update state
-- [ ] Error handling works correctly
-- [ ] Loading states work correctly
+- [ ] Selectors return correct data
+- [ ] Multiple workspaces work
+- [ ] Error scenarios handled
+- [ ] State persists correctly
+- [ ] No memory leaks
 
 ## Next Phase
-After completing Phase 1, proceed to [Phase 2: Component Refactoring](./global-state-management-phase-2.md) to refactor components to use the global state.
+After completing Phase 1, proceed to [Phase 2: Component Refactoring](./global-state-management-phase-2.md) to refactor components to use the extended IDEStore.
 
 ## Notes
-- This phase creates the foundation for global state management
-- No backend changes required - uses existing API endpoints
-- WebSocket integration enables real-time updates
-- Error handling ensures robust operation
-- Selectors provide clean component interface 
+- This phase extends the existing IDEStore instead of creating a new store
+- Project data is keyed by workspace path for multiple IDE support
+- WebSocket events automatically update the state
+- State selectors provide clean interfaces for components
+- All existing IDE functionality remains unchanged 

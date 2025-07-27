@@ -1,4 +1,4 @@
-# Frontend Global State Management - Phase 3: App Integration & Testing
+# Frontend Global State Management - Phase 3: IDEContext Integration & Testing
 
 **Phase:** 3 of 3
 **Status:** Planning
@@ -6,66 +6,107 @@
 **Priority:** High
 
 ## Phase 3 Goals
-- Initialize global state in App.jsx on startup
+- Integrate project data loading in IDEContext
 - Test state loading and updates
 - Test WebSocket integration
 - Performance testing and optimization
 
 ## Implementation Steps
 
-### Step 1: App.jsx Integration ✅
-**Initialize global state on app startup:**
-- [ ] File: `frontend/src/App.jsx` - Add global state initialization
-- [ ] Import ProjectGlobalStore
-- [ ] Add useEffect for initial data loading
+### Step 1: IDEContext Integration ✅
+**Integrate project data loading in IDEContext:**
+- [ ] File: `frontend/src/presentation/components/ide/IDEContext.jsx` - Add project data loading
+- [ ] Import project data actions from IDEStore
+- [ ] Add useEffect for project data loading when active IDE changes
 - [ ] Setup WebSocket event listeners
 - [ ] Handle project ID detection
 - [ ] Add error handling for initialization
 
-**App.jsx Integration:**
+**IDEContext Integration:**
 ```javascript
-// App.jsx - RICHTIGE Global State Initialization für MEHRERE IDEs
-import { useProjectGlobalStore } from '@/infrastructure/stores/ProjectGlobalStore';
-import { useEffect } from 'react';
+// IDEContext.jsx - ERWEITERT für Projekt-Daten
+import { useIDEStore } from '@/infrastructure/stores/IDEStore';
+import { useAuthStore } from '@/infrastructure/stores/AuthStore';
+import { useEffect, useCallback } from 'react';
 
-const App = () => {
-  const { 
-    initialized, 
-    loading, 
-    error, 
-    initialize, 
-    setupWebSocketListeners, 
-    cleanupWebSocketListeners 
-  } = useProjectGlobalStore();
+export const IDEProvider = ({ children, eventBus }) => {
+  const {
+    activePort,
+    availableIDEs,
+    loadActivePort,
+    loadAvailableIDEs,
+    loadProjectData, // NEUE
+    setupWebSocketListeners, // NEUE
+    cleanupWebSocketListeners // NEUE
+  } = useIDEStore();
   
-  useEffect(() => {
-    // Initialize global state when authenticated
-    if (isAuthenticated && !initialized && !loading) {
-      logger.info('🔄 Initializing global state...');
-      initialize();
+  const { isAuthenticated } = useAuthStore();
+
+  // Bestehende Logic (UNVERÄNDERT)
+  const stableLoadAvailableIDEs = useCallback(async () => {
+    try {
+      await loadAvailableIDEs();
+    } catch (error) {
+      logger.error('Failed to load available IDEs:', error);
     }
-  }, [isAuthenticated, initialized, loading, initialize]);
-  
-  // Setup WebSocket listeners after initialization
+  }, [loadAvailableIDEs]);
+
+  const stableLoadActivePort = useCallback(async () => {
+    try {
+      await loadActivePort();
+    } catch (error) {
+      logger.error('Failed to load active port:', error);
+    }
+  }, [loadActivePort]);
+
   useEffect(() => {
-    if (initialized && eventBus) {
+    if (isAuthenticated) {
+      stableLoadAvailableIDEs();
+      stableLoadActivePort();
+    }
+  }, [isAuthenticated, stableLoadAvailableIDEs, stableLoadActivePort]);
+
+  // NEUE: Projekt-Daten laden wenn aktive IDE wechselt
+  useEffect(() => {
+    if (activePort && availableIDEs.length > 0) {
+      const activeIDE = availableIDEs.find(ide => ide.port === activePort);
+      if (activeIDE?.workspacePath) {
+        logger.info('🔄 Loading project data for active IDE:', activeIDE.workspacePath);
+        loadProjectData(activeIDE.workspacePath);
+      }
+    }
+  }, [activePort, availableIDEs, loadProjectData]);
+
+  // NEUE: WebSocket Listeners
+  useEffect(() => {
+    if (eventBus) {
       logger.info('🔄 Setting up WebSocket listeners...');
       setupWebSocketListeners(eventBus);
       
       // Cleanup on unmount
       return () => {
+        logger.info('🔄 Cleaning up WebSocket listeners...');
         cleanupWebSocketListeners(eventBus);
       };
     }
-  }, [initialized, eventBus, setupWebSocketListeners, cleanupWebSocketListeners]);
-  
-  // Rest of app...
+  }, [eventBus, setupWebSocketListeners, cleanupWebSocketListeners]);
+
+  // Rest of context remains the same...
+  const contextValue = {
+    activePort,
+    availableIDEs,
+    isLoading: false, // This will be handled by individual stores
+    error: null,
+    // Add project data actions to context
+    loadProjectData,
+    setupWebSocketListeners,
+    cleanupWebSocketListeners
+  };
+
   return (
-    <div className="App">
-      {loading && <div>Loading global state...</div>}
-      {error && <div>Error: {error}</div>}
-      {/* Existing app content */}
-    </div>
+    <IDEContext.Provider value={contextValue}>
+      {children}
+    </IDEContext.Provider>
   );
 };
 ```
@@ -76,24 +117,34 @@ const App = () => {
 - [ ] Test analysis status updates via WebSocket
 - [ ] Test project data updates via WebSocket
 - [ ] Verify event listeners work correctly
-- [ ] Test cleanup on app unmount
+- [ ] Test cleanup on context unmount
 
 **WebSocket Test Scenarios:**
 ```javascript
 // Test WebSocket integration
 const testWebSocketIntegration = () => {
   // Simulate git status update
-  window.eventBus.emit('git-status-update', {
-    currentBranch: 'main',
-    status: 'clean',
-    branches: ['main', 'feature/test']
+  window.eventBus.emit('git-status-updated', {
+    workspacePath: '/home/user/projects/PIDEA',
+    gitStatus: {
+      currentBranch: 'main',
+      status: 'clean',
+      modified: [],
+      added: [],
+      deleted: [],
+      untracked: []
+    }
   });
   
   // Simulate analysis status update
-  window.eventBus.emit('analysis-status-update', {
-    status: 'completed',
-    metrics: { coverage: 85, complexity: 12 },
-    results: { issues: [], recommendations: [] }
+  window.eventBus.emit('analysis-completed', {
+    workspacePath: '/home/user/projects/PIDEA',
+    analysisData: {
+      status: 'completed',
+      metrics: { coverage: 85, complexity: 12 },
+      results: { issues: [], recommendations: [] },
+      executionTime: 12000
+    }
   });
   
   // Verify state updates in components
@@ -114,10 +165,10 @@ const testWebSocketIntegration = () => {
 // Performance testing
 const performanceTest = () => {
   // Before: Multiple API calls per component
-  // After: Single API call on app startup
+  // After: Single API call on IDE change
   
   console.log('Performance Metrics:');
-  console.log('- Initial API calls: 1 (was 10+)');
+  console.log('- Initial API calls: 1 (was 6+)');
   console.log('- Page navigation: Instant (was 2-3 seconds)');
   console.log('- Memory usage: < 20MB (was variable)');
   console.log('- State updates: < 50ms (was 200-500ms)');
@@ -138,7 +189,7 @@ const performanceTest = () => {
 const testErrorHandling = async () => {
   // Test API failure
   try {
-    await loadAllData('invalid-project-id');
+    await loadProjectData('invalid-workspace-path');
   } catch (error) {
     console.log('✅ API error handled correctly:', error.message);
   }
@@ -154,7 +205,7 @@ const testErrorHandling = async () => {
 
 ### Step 5: Integration Testing ✅
 **Test complete integration:**
-- [ ] Test app startup flow
+- [ ] Test IDEContext startup flow
 - [ ] Test component rendering with global state
 - [ ] Test user interactions (git operations, analysis)
 - [ ] Test real-time updates
@@ -164,8 +215,8 @@ const testErrorHandling = async () => {
 ```javascript
 // Integration test flow
 const integrationTest = async () => {
-  // 1. App startup
-  console.log('1. App startup - Global state initialization');
+  // 1. IDEContext startup
+  console.log('1. IDEContext startup - Project data initialization');
   
   // 2. Component rendering
   console.log('2. Components render with global state data');
@@ -185,7 +236,7 @@ const integrationTest = async () => {
 ```
 
 ## Success Criteria
-- [ ] Global state initializes on app startup
+- [ ] Project data loads when active IDE changes
 - [ ] WebSocket events update state correctly
 - [ ] Components render with global state data
 - [ ] Performance improvements achieved
@@ -194,14 +245,14 @@ const integrationTest = async () => {
 - [ ] All tests pass
 
 ## Dependencies
-- Phase 1 completion (ProjectGlobalStore)
+- Phase 1 completion (IDEStore extension)
 - Phase 2 completion (Component refactoring)
 - WebSocket system
 - EventBus system
 
 ## Testing Checklist
-- [ ] App startup works correctly
-- [ ] Global state loads data on startup
+- [ ] IDEContext startup works correctly
+- [ ] Project data loads on IDE change
 - [ ] WebSocket events update state
 - [ ] Components render without errors
 - [ ] Performance metrics met
