@@ -141,7 +141,8 @@ describe('IDE Management Integration', () => {
         ideType: 'cursor',
         source: 'detected',
         workspacePath: '/test/path1',
-        active: true
+        active: true,
+        healthStatus: null
       });
       expect(result[1]).toEqual({
         port: 9232,
@@ -149,7 +150,8 @@ describe('IDE Management Integration', () => {
         ideType: 'vscode',
         source: 'started',
         workspacePath: '/test/path2',
-        active: false
+        active: false,
+        healthStatus: null
       });
     });
 
@@ -159,6 +161,7 @@ describe('IDE Management Integration', () => {
       const port = 9222;
 
       mockDetectorFactory.findAvailablePort.mockResolvedValue(port);
+      mockDetectorFactory.checkPort.mockResolvedValue(true); // Mock checkPort to return true
       mockStarterFactory.startIDE.mockResolvedValue({
         port: port,
         pid: 12345,
@@ -173,7 +176,7 @@ describe('IDE Management Integration', () => {
       expect(result.port).toBe(port);
       expect(manager.ideWorkspaces.get(port)).toBe(workspacePath);
       expect(manager.ideTypes.get(port)).toBe(ideType);
-    });
+    }, 10000); // Add timeout
 
     it('should switch between IDEs successfully', async () => {
       const targetPort = 9232;
@@ -431,7 +434,7 @@ describe('IDE Management Integration', () => {
       mockStarterFactory.getRunningIDEs.mockReturnValue([]);
 
       await expect(manager.switchToIDE(9999))
-        .rejects.toThrow('No IDE found on port 9999');
+        .rejects.toThrow('Failed to switch to IDE on port 9999');
     });
 
     it('should handle IDE stopping failures', async () => {

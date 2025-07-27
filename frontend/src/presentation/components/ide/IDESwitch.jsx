@@ -1,6 +1,7 @@
 import { logger } from "@/infrastructure/logging/Logger";
 import React, { useState, useEffect, useCallback } from 'react';
 import { apiCall } from '@/infrastructure/repositories/APIChatRepository.jsx';
+import useIDESwitchOptimizationStore from '@/infrastructure/stores/IDESwitchOptimizationStore';
 import '@/css/components/ide/ide-switch.css';
 
 /**
@@ -107,11 +108,17 @@ const IDESwitch = ({
     const switchStartTime = performance.now();
     logger.info(`[IDESwitch] Starting complete IDE switch from ${currentPort} to ${targetPort}`);
 
+    // Get optimization store
+    const optimizationStore = useIDESwitchOptimizationStore.getState();
+
     try {
       setIsSwitching(true);
       setProgress(0);
       setStatus('Initiating switch...');
       setError(null);
+
+      // Start optimization tracking
+      optimizationStore.startSwitch(targetPort);
 
       // Emit switch start event
       if (eventBus) {

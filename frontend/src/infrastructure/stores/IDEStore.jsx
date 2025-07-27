@@ -10,6 +10,10 @@ import { logger } from '@/infrastructure/logging/Logger';
 import { apiCall } from '@/infrastructure/repositories/APIChatRepository.jsx';
 import useAuthStore from './AuthStore.jsx';
 
+// Add caching to frontend store
+const switchCache = new Map();
+const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+
 // Helper function to get project ID from workspace path
 const getProjectIdFromWorkspace = (workspacePath) => {
   if (!workspacePath) return null;
@@ -534,27 +538,67 @@ const useIDEStore = create(
       },
 
       switchIDE: async (port, reason = 'manual') => {
+        const optimizationStore = useIDESwitchOptimizationStore.getState();
+        const startTime = Date.now();
+        
         try {
           set({ isLoading: true, error: null });
           logger.info('Switching to IDE:', port, reason);
 
+          // Start optimization tracking
+          optimizationStore.startSwitch(port);
+
+          // Check cache first
+          if (optimizationStore.cacheEnabled) {
+            const cacheKey = `switch_${port}`;
+            const cached = switchCache.get(cacheKey);
+            if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
+              logger.info('Using cached switch result for port:', port);
+              optimizationStore.updateProgress(50, 'Using cached result...');
+              await get().setActivePort(port);
+              optimizationStore.completeSwitch(true, Date.now() - startTime);
+              return true;
+            }
+          }
+
+          // Optimistic update
+          if (optimizationStore.optimisticUpdates) {
+            const previousPort = get().activePort;
+            set({ activePort: port });
+            optimizationStore.updateProgress(25, 'Updating UI optimistically...');
+          }
+
+          optimizationStore.updateProgress(50, 'Connecting to IDE...');
           const result = await apiCall(`/api/ide/switch/${port}`, {
             method: 'POST'
           });
 
+          optimizationStore.updateProgress(75, 'Finalizing switch...');
+
           if (result.success) {
-            await get().setActivePort(port);
-            // Remove the slow loadAvailableIDEs() call - it triggers Git/Chat operations
-            // await get().loadAvailableIDEs(); // This was causing the 4-6 second delay
+            // Cache successful result
+            if (optimizationStore.cacheEnabled) {
+              const cacheKey = `switch_${port}`;
+              switchCache.set(cacheKey, {
+                result,
+                timestamp: Date.now()
+              });
+            }
             
             logger.info('Successfully switched to IDE:', port);
+            optimizationStore.completeSwitch(true, Date.now() - startTime);
             return true;
           } else {
+            // Revert on failure
+            if (optimizationStore.optimisticUpdates) {
+              set({ activePort: previousPort });
+            }
             throw new Error(result.error || 'Failed to switch IDE');
           }
         } catch (error) {
           logger.error('Error switching IDE:', error);
           set({ error: error.message });
+          optimizationStore.completeSwitch(false, Date.now() - startTime);
           return false;
         } finally {
           set({ isLoading: false });

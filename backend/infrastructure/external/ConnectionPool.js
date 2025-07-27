@@ -9,11 +9,20 @@ const logger = new Logger('ConnectionPool');
 class ConnectionPool {
   constructor(options = {}) {
     this.connections = new Map(); // port -> {browser, page, lastUsed, health, createdAt, isConnecting}
-    this.maxConnections = options.maxConnections || 5;
-    this.connectionTimeout = options.connectionTimeout || 30000;
-    this.cleanupInterval = options.cleanupInterval || 60000;
-    this.healthCheckInterval = options.healthCheckInterval || 30000;
+    this.maxConnections = options.maxConnections || 10; // Increased for better performance
+    this.connectionTimeout = options.connectionTimeout || 20000; // Increased timeout for stability
+    this.cleanupInterval = options.cleanupInterval || 120000; // 2 minutes - less frequent cleanup
+    this.healthCheckInterval = options.healthCheckInterval || 60000; // 1 minute - less frequent health checks
     this.host = options.host || '127.0.0.1';
+    
+    // Performance monitoring
+    this.performanceMetrics = {
+      totalConnections: 0,
+      failedConnections: 0,
+      slowConnections: 0,
+      memoryUsage: [],
+      lastCleanup: Date.now()
+    };
     
     // Start cleanup timer
     this.cleanupTimer = null;
@@ -21,7 +30,7 @@ class ConnectionPool {
     this.startCleanupTimer();
     this.startHealthCheckTimer();
     
-    logger.info(`ConnectionPool initialized with maxConnections: ${this.maxConnections}`);
+    logger.info(`ConnectionPool initialized with maxConnections: ${this.maxConnections}, cleanupInterval: ${this.cleanupInterval}ms, healthCheckInterval: ${this.healthCheckInterval}ms`);
   }
 
   /**
@@ -30,6 +39,8 @@ class ConnectionPool {
    * @returns {Promise<Object>} Connection object with browser and page
    */
   async getConnection(port) {
+    const startTime = Date.now();
+    
     try {
       // Check if connection already exists and is healthy
       if (this.connections.has(port)) {
@@ -38,23 +49,60 @@ class ConnectionPool {
         // Update last used timestamp
         connection.lastUsed = Date.now();
         
-        // Check if connection is healthy
+        // Check if connection is healthy - but be more lenient
         if (connection.health === 'healthy' && connection.browser && connection.page) {
-          logger.debug(`Using existing connection for port ${port}`);
+          const duration = Date.now() - startTime;
+          this.trackPerformance('cache_hit', duration);
+          logger.debug(`Using existing connection for port ${port} in ${duration}ms`);
           return connection;
         }
         
-        // Connection exists but unhealthy, remove it
-        logger.warn(`Removing unhealthy connection for port ${port}`);
-        await this.closeConnection(port);
+        // Try to recover connection before removing it
+        if (connection.browser && connection.health !== 'failed') {
+          try {
+            logger.debug(`Attempting to recover connection for port ${port}`);
+            
+            // Check if browser is still connected
+            const contexts = connection.browser.contexts();
+            if (contexts.length > 0) {
+              const pages = contexts[0].pages();
+              if (pages.length > 0) {
+                // Connection is actually healthy, just update status
+                connection.page = pages[0];
+                connection.health = 'healthy';
+                const duration = Date.now() - startTime;
+                this.trackPerformance('recovered', duration);
+                logger.debug(`Successfully recovered connection for port ${port} in ${duration}ms`);
+                return connection;
+              }
+            }
+          } catch (recoveryError) {
+            logger.debug(`Recovery failed for port ${port}: ${recoveryError.message}`);
+          }
+        }
+        
+        // Only remove if truly unhealthy
+        if (connection.health === 'failed') {
+          logger.warn(`Removing failed connection for port ${port}`);
+          await this.closeConnection(port);
+        } else {
+          // Mark as connecting and try to recreate
+          connection.health = 'connecting';
+          logger.debug(`Marking connection as connecting for port ${port}`);
+        }
       }
       
       // Create new connection
       logger.info(`Creating new connection for port ${port}`);
-      return await this.createConnection(port);
+      const result = await this.createConnection(port);
+      const duration = Date.now() - startTime;
+      this.trackPerformance('new_connection', duration);
+      return result;
       
     } catch (error) {
-      logger.error(`Error getting connection for port ${port}:`, error.message);
+      const duration = Date.now() - startTime;
+      this.trackPerformance('failed', duration);
+      logger.error(`Error getting connection for port ${port} after ${duration}ms:`, error.message);
       throw error;
     }
   }
@@ -95,18 +143,51 @@ class ConnectionPool {
     try {
       logger.info(`Connecting to Chrome DevTools on port ${port}...`);
       
-      // Connect to Chrome DevTools Protocol
-      const browser = await chromium.connectOverCDP(`http://${this.host}:${port}`, {
-        timeout: this.connectionTimeout
-      });
+      // Use shorter timeout for initial connection to fail fast
+      const initialTimeout = Math.min(this.connectionTimeout, 10000); // Max 10 seconds for initial connection
       
-      // Get the first page
-      const contexts = browser.contexts();
-      const page = contexts[0].pages()[0];
+      // Connect to Chrome DevTools Protocol with retry logic
+      let browser = null;
+      let retryCount = 0;
+      const maxRetries = 3;
       
-      if (!page) {
-        throw new Error(`No page found on port ${port}`);
+      while (retryCount < maxRetries && !browser) {
+        try {
+          browser = await chromium.connectOverCDP(`http://${this.host}:${port}`, {
+            timeout: initialTimeout
+          });
+          logger.info(`Successfully connected to port ${port} on attempt ${retryCount + 1}`);
+        } catch (connectError) {
+          retryCount++;
+          logger.warn(`Connection attempt ${retryCount} failed for port ${port}: ${connectError.message}`);
+          
+          if (retryCount < maxRetries) {
+            // Wait before retry (exponential backoff)
+            const waitTime = Math.min(1000 * Math.pow(2, retryCount - 1), 5000);
+            logger.debug(`Waiting ${waitTime}ms before retry ${retryCount + 1}`);
+            await new Promise(resolve => setTimeout(resolve, waitTime));
+          } else {
+            throw connectError;
+          }
+        }
       }
+      
+      if (!browser) {
+        throw new Error(`Failed to connect to port ${port} after ${maxRetries} attempts`);
+      }
+      
+      // Get the first page with timeout
+      const contexts = browser.contexts();
+      if (!contexts || contexts.length === 0) {
+        throw new Error(`No contexts found on port ${port}`);
+      }
+      
+      const pages = contexts[0].pages();
+      if (!pages || pages.length === 0) {
+        throw new Error(`No pages found on port ${port}`);
+      }
+      
+      const page = pages[0];
 
       // Update connection
       connection.browser = browser;
@@ -206,13 +287,19 @@ class ConnectionPool {
    */
   async cleanup() {
     const now = Date.now();
-    const staleThreshold = now - (this.cleanupInterval * 2); // 2x cleanup interval
+    const staleThreshold = now - (this.cleanupInterval * 2); // 4 minutes - more aggressive
     
     logger.debug(`Cleaning up stale connections, threshold: ${staleThreshold}`);
     
     const stalePorts = [];
     for (const [port, connection] of this.connections) {
-      if (connection.lastUsed < staleThreshold && connection.health !== 'healthy') {
+      // More aggressive cleanup conditions
+      const isStale = connection.lastUsed < staleThreshold;
+      const isUnhealthy = connection.health !== 'healthy';
+      const isOld = (now - connection.createdAt) > (this.cleanupInterval * 6); // 12 minutes old
+      
+      // Clean up if any condition is met
+      if (isStale || isUnhealthy || isOld) {
         stalePorts.push(port);
       }
     }
@@ -224,6 +311,27 @@ class ConnectionPool {
     
     if (stalePorts.length > 0) {
       logger.info(`Cleaned up ${stalePorts.length} stale connections`);
+      this.performanceMetrics.lastCleanup = now;
+    }
+    
+    // Force garbage collection if memory usage is high
+    const memUsage = process.memoryUsage();
+    const heapUsageMB = memUsage.heapUsed / 1024 / 1024;
+    
+    if (heapUsageMB > 100) { // If heap usage > 100MB
+      logger.warn(`High memory usage detected: ${heapUsageMB.toFixed(2)}MB, forcing cleanup`);
+      
+      // Close all connections except the most recently used one
+      const sortedConnections = Array.from(this.connections.entries())
+        .sort((a, b) => b[1].lastUsed - a[1].lastUsed);
+      
+      if (sortedConnections.length > 1) {
+        const toClose = sortedConnections.slice(1); // Keep only the most recent
+        for (const [port] of toClose) {
+          logger.debug(`Force closing connection for port ${port} due to high memory usage`);
+          await this.closeConnection(port);
+        }
+      }
     }
   }
 
@@ -237,10 +345,36 @@ class ConnectionPool {
     const healthPromises = Array.from(this.connections.entries()).map(async ([port, connection]) => {
       try {
         if (connection.browser && connection.page) {
-          // Simple health check - try to get page title
-          await connection.page.title();
-          connection.health = 'healthy';
-          logger.debug(`Health check passed for port ${port}`);
+          // More robust health check - try multiple operations
+          try {
+            // Try to get page title (lightweight operation)
+            await connection.page.title();
+            connection.health = 'healthy';
+            logger.debug(`Health check passed for port ${port}`);
+          } catch (titleError) {
+            // If title fails, try to get contexts (more robust)
+            try {
+              const contexts = connection.browser.contexts();
+              if (contexts.length > 0) {
+                const pages = contexts[0].pages();
+                if (pages.length > 0) {
+                  // Update page reference and mark as healthy
+                  connection.page = pages[0];
+                  connection.health = 'healthy';
+                  logger.debug(`Health check recovered for port ${port}`);
+                } else {
+                  connection.health = 'failed';
+                  logger.warn(`Health check failed for port ${port} - no pages`);
+                }
+              } else {
+                connection.health = 'failed';
+                logger.warn(`Health check failed for port ${port} - no contexts`);
+              }
+            } catch (contextError) {
+              connection.health = 'failed';
+              logger.warn(`Health check failed for port ${port}: ${contextError.message}`);
+            }
+          }
         } else {
           connection.health = 'failed';
           logger.warn(`Health check failed for port ${port} - no browser/page`);
@@ -253,16 +387,31 @@ class ConnectionPool {
     
     await Promise.allSettled(healthPromises);
     
-    // Remove failed connections
+    // Only remove connections that are truly failed (not just temporarily unhealthy)
     const failedPorts = [];
     for (const [port, connection] of this.connections) {
       if (connection.health === 'failed') {
+        // Double-check before removing
+        try {
+          if (connection.browser) {
+            const contexts = connection.browser.contexts();
+            if (contexts.length > 0) {
+              // Connection might be recoverable, don't remove yet
+              logger.debug(`Connection for port ${port} might be recoverable, keeping it`);
+              continue;
+            }
+          }
+        } catch (finalCheckError) {
+          // Connection is truly broken
+          logger.debug(`Final check confirms connection for port ${port} is broken`);
+        }
+        
         failedPorts.push(port);
       }
     }
     
     for (const port of failedPorts) {
-      logger.info(`Removing failed connection for port ${port}`);
+      logger.info(`Removing truly failed connection for port ${port}`);
       await this.closeConnection(port);
     }
   }
@@ -309,6 +458,46 @@ class ConnectionPool {
     }
     
     return stats;
+  }
+
+  /**
+   * Track performance metrics for monitoring degradation
+   * @param {string} type - Type of operation
+   * @param {number} duration - Duration in milliseconds
+   */
+  trackPerformance(type, duration) {
+    this.performanceMetrics.totalConnections++;
+    
+    if (type === 'failed') {
+      this.performanceMetrics.failedConnections++;
+    }
+    
+    if (duration > 1000) {
+      this.performanceMetrics.slowConnections++;
+    }
+    
+    // Track memory usage every 10 operations
+    if (this.performanceMetrics.totalConnections % 10 === 0) {
+      const memUsage = process.memoryUsage();
+      this.performanceMetrics.memoryUsage.push({
+        timestamp: Date.now(),
+        heapUsed: memUsage.heapUsed,
+        heapTotal: memUsage.heapTotal,
+        external: memUsage.external,
+        connections: this.connections.size
+      });
+      
+      // Keep only last 50 memory readings
+      if (this.performanceMetrics.memoryUsage.length > 50) {
+        this.performanceMetrics.memoryUsage.shift();
+      }
+      
+      // Log performance warning if degradation detected
+      if (this.performanceMetrics.slowConnections > 5) {
+        logger.warn(`Performance degradation detected: ${this.performanceMetrics.slowConnections} slow connections out of ${this.performanceMetrics.totalConnections} total`);
+        this.performanceMetrics.slowConnections = 0; // Reset counter
+      }
+    }
   }
 
   /**

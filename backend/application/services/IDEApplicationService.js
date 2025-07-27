@@ -8,6 +8,7 @@
  * ✅ Coordinate documentation task management
  * ✅ Handle VSCode-specific operations
  * ✅ Publish IDE-related events through event bus
+ * ✅ Cache IDE switching results and deduplicate requests
  * 
  * LAYER COMPLIANCE:
  * ✅ Application layer - coordinates between Presentation and Domain
@@ -17,6 +18,7 @@
 const ManualTasksHandler = require('@handlers/categories/workflow/ManualTasksHandler');
 const TerminalLogCaptureService = require('@domain/services/terminal/TerminalLogCaptureService');
 const TerminalLogReader = require('@domain/services/terminal/TerminalLogReader');
+const IDESwitchCache = require('@infrastructure/cache/IDESwitchCache');
 const Logger = require('@logging/Logger');
 
 class IDEApplicationService {
@@ -30,6 +32,14 @@ class IDEApplicationService {
         // Initialize terminal services
         this.terminalLogCaptureService = dependencies.terminalLogCaptureService || new TerminalLogCaptureService();
         this.terminalLogReader = dependencies.terminalLogReader || new TerminalLogReader();
+        
+        // Initialize caching and request deduplication
+        this.cache = new IDESwitchCache({
+            ttl: 10 * 60 * 1000, // 10 minutes - increased for better performance
+            maxSize: 50, // Reduced to prevent memory issues
+            cleanupInterval: 300000 // 5 minutes - less frequent cleanup
+        });
+        this.pendingRequests = new Map(); // Request deduplication
         
         // Initialize manual tasks handler if we have required dependencies
         if (this.ideManager && this.taskRepository) {
@@ -85,6 +95,16 @@ class IDEApplicationService {
         this.logger.info('IDE cache invalidated');
     }
 
+    // Cache management methods
+    async invalidateSwitchCache(port = null) {
+        this.cache.invalidateCache(port);
+        this.logger.info(`Switch cache invalidated for ${port || 'all ports'}`);
+    }
+
+    getSwitchCacheStats() {
+        return this.cache.getStats();
+    }
+
     async startIDE(workspacePath, ideType = 'cursor', userId) {
         try {
             this.logger.info('IDEApplicationService: Starting IDE', { workspacePath, ideType, userId });
@@ -121,7 +141,63 @@ class IDEApplicationService {
                 throw new Error(`Invalid port: ${portParam}`);
             }
             
+            // Check cache first
+            const cached = await this.cache.getCachedSwitch(port);
+            if (cached) {
+                this.logger.info(`Cache hit for IDE switch to port ${port}`);
+                
+                // Return immediately for cache hits
+                return cached;
+            }
+            
+            // Check for pending request (request deduplication)
+            const requestKey = `switch_${port}_${userId}`;
+            if (this.pendingRequests.has(requestKey)) {
+                this.logger.info(`Deduplicating request for port ${port}`);
+                return await this.pendingRequests.get(requestKey);
+            }
+            
+            // Create new request
+            const requestPromise = this.performSwitch(port, userId);
+            this.pendingRequests.set(requestKey, requestPromise);
+            
+            try {
+                const result = await requestPromise;
+                
+                // Cache successful result
+                this.cache.setCachedSwitch(port, result);
+                
+                return result;
+            } finally {
+                // Clean up pending request
+                this.pendingRequests.delete(requestKey);
+            }
+        } catch (error) {
+            this.logger.error('Error switching IDE:', error);
+            throw error;
+        }
+    }
+
+    async performSwitch(port, userId) {
+        const start = process.hrtime.bigint();
+        
+        try {
+            // Check connection pool health before switching
+            if (this.ideManager && this.ideManager.browserManager && this.ideManager.browserManager.connectionPool) {
+                const poolHealth = this.ideManager.browserManager.connectionPool.getHealth();
+                this.logger.debug(`Connection pool health before switch: ${JSON.stringify(poolHealth)}`);
+            }
+            
             const result = await this.ideManager.switchToIDE(port);
+            
+            const duration = Number(process.hrtime.bigint() - start) / 1000;
+            this.logger.info(`IDE switch to port ${port} completed in ${duration.toFixed(2)}ms`);
+            
+            // Check connection pool health after switching
+            if (this.ideManager && this.ideManager.browserManager && this.ideManager.browserManager.connectionPool) {
+                const poolHealth = this.ideManager.browserManager.connectionPool.getHealth();
+                this.logger.debug(`Connection pool health after switch: ${JSON.stringify(poolHealth)}`);
+            }
             
             // Publish event
             if (this.eventBus) {
@@ -133,10 +209,13 @@ class IDEApplicationService {
             
             return {
                 success: true,
-                data: { port, result }
+                data: { port, result },
+                switchTime: duration,
+                timestamp: Date.now()
             };
         } catch (error) {
-            this.logger.error('Error switching IDE:', error);
+            const duration = Number(process.hrtime.bigint() - start) / 1000;
+            this.logger.error(`IDE switch to port ${port} failed after ${duration.toFixed(2)}ms:`, error.message);
             throw error;
         }
     }

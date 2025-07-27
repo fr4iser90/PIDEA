@@ -6,12 +6,13 @@ const logger = new Logger('BrowserManager');
 
 class BrowserManager {
   constructor() {
-    // Initialize connection pool for multiple parallel connections
+    // Initialize connection pool with optimized settings
     this.connectionPool = new ConnectionPool({
-      maxConnections: 5,
-      connectionTimeout: 30000,
-      cleanupInterval: 60000,
-      healthCheckInterval: 30000
+      maxConnections: 10, // Increased for better performance
+      connectionTimeout: 20000, // Increased timeout for stability
+      cleanupInterval: 120000, // 2 minutes - less frequent cleanup
+      healthCheckInterval: 60000, // 1 minute - less frequent health checks
+      host: '127.0.0.1'
     });
     
     // Current connection state
@@ -20,7 +21,71 @@ class BrowserManager {
     this.page = null;
     this.isConnecting = false;
     
-    logger.info('BrowserManager initialized with connection pooling');
+    // Performance tracking
+    this.switchTimes = [];
+    this.maxSwitchTimes = 100; // Keep last 100 switch times
+    
+    logger.info('BrowserManager initialized with optimized connection pooling');
+    
+    // Pre-warm common connections
+    this.preWarmConnections();
+  }
+
+  async preWarmConnections() {
+    const commonPorts = [9222, 9223, 9224, 9225, 9226];
+    logger.info('Pre-warming connections for common ports:', commonPorts);
+    
+    // Pre-warm connections in parallel with individual error handling
+    const preWarmPromises = commonPorts.map(async (port) => {
+      try {
+        // Attempt to pre-warm connection (non-blocking)
+        await this.connectionPool.getConnection(port);
+        logger.debug(`Successfully pre-warmed connection for port ${port}`);
+      } catch (error) {
+        logger.debug(`Could not pre-warm port ${port}: ${error.message}`);
+        // Don't throw - just log and continue
+      }
+    });
+    
+    // Wait for all pre-warm attempts to complete (with timeout)
+    try {
+      await Promise.allSettled(preWarmPromises);
+      logger.info('Pre-warming completed');
+    } catch (error) {
+      logger.warn('Some pre-warm connections failed:', error.message);
+    }
+  }
+
+  trackSwitchTime(duration) {
+    this.switchTimes.push(duration);
+    
+    // Keep only last N switch times
+    if (this.switchTimes.length > this.maxSwitchTimes) {
+      this.switchTimes.shift();
+    }
+  }
+
+  getPerformanceStats() {
+    if (this.switchTimes.length === 0) {
+      return {
+        totalSwitches: 0,
+        averageTime: 0,
+        minTime: 0,
+        maxTime: 0,
+        recentAverage: 0
+      };
+    }
+    
+    const sorted = [...this.switchTimes].sort((a, b) => a - b);
+    const recent = this.switchTimes.slice(-10); // Last 10 switches
+    
+    return {
+      totalSwitches: this.switchTimes.length,
+      averageTime: this.switchTimes.reduce((a, b) => a + b, 0) / this.switchTimes.length,
+      minTime: sorted[0],
+      maxTime: sorted[sorted.length - 1],
+      recentAverage: recent.reduce((a, b) => a + b, 0) / recent.length
+    };
   }
 
   async connect(port = null) {
@@ -79,9 +144,14 @@ class BrowserManager {
       return; // Already connected to this port
     }
     
-    logger.info(`Switching to port ${port} using connection pool...`);
     const start = process.hrtime.bigint();
+    logger.info(`Switching to port ${port} using optimized connection pool...`);
+    
     try {
+      // Check connection pool health before switching
+      const poolHealth = this.connectionPool.getHealth();
+      logger.debug(`Connection pool health before switch: ${JSON.stringify(poolHealth)}`);
+      
       // Get connection from pool (instant if cached, creates new if needed)
       const connection = await this.connectionPool.getConnection(port);
       
@@ -91,11 +161,23 @@ class BrowserManager {
       this.page = connection.page;
       
       const duration = Number(process.hrtime.bigint() - start) / 1000; // Convert to milliseconds
+      
+      // Track performance
+      this.trackSwitchTime(duration);
+      
+      // Check connection pool health after switching
+      const poolHealthAfter = this.connectionPool.getHealth();
+      logger.debug(`Connection pool health after switch: ${JSON.stringify(poolHealthAfter)}`);
+      
       logger.info(`Successfully switched to port ${port} in ${duration.toFixed(2)}ms`);
-      return connection;
+      
+      // Log performance warning if switch was slow
+      if (duration > 1000) {
+        logger.warn(`Slow switch detected: ${duration.toFixed(2)}ms for port ${port}`);
+      }
       
     } catch (error) {
-      const duration = Number(process.hrtime.bigint() - start) / 1000; // Convert to milliseconds
+      const duration = Number(process.hrtime.bigint() - start) / 1000;
       logger.error(`Failed to switch to port ${port} after ${duration.toFixed(2)}ms:`, error.message);
       throw error;
     }

@@ -213,9 +213,8 @@ class CursorIDE extends BaseIDE {
       }
       
       logger.info(`Switching to port ${port}`);
-      await this.browserManager.switchToPort(port);
       
-      // Update active port in IDE manager
+      // Only call ideManager - it handles browser switching internally
       if (this.ideManager.switchToIDE) {
         logger.info(`Calling ideManager.switchToIDE(${port})`);
         await this.ideManager.switchToIDE(port);
@@ -602,7 +601,6 @@ Please provide a comprehensive summary when you complete all tasks.`;
       }
 
       await this.ideManager.switchToIDE(session.idePort);
-      await this.browserManager.switchToPort(session.idePort);
       
       this.updateStatus('session_switched', { sessionPort: session.idePort });
       

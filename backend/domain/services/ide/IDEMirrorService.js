@@ -627,7 +627,6 @@ class IDEMirrorService {
     async switchToIDE(port) {
         logger.info(`🔄 Switching to IDE on port ${port}...`);
         await this.ideManager.switchToIDE(port);
-        await this.browserManager.switchToPort(port);
         logger.info(`✅ Switched to IDE on port ${port}`);
     }
 

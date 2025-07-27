@@ -94,47 +94,43 @@ class IDEManager {
       // Load configuration
       await this.configManager.loadConfig();
       
-      // Scan for existing IDEs
+      // Scan for existing IDEs with timeout
+      logger.info('Scanning for existing IDEs...');
       const existingIDEs = await this.detectorFactory.detectAll() || [];
+      
+      logger.info(`Found ${existingIDEs.length} existing IDEs`);
       existingIDEs.forEach(ide => {
         this.ideStatus.set(ide.port, ide.status);
-        this.ideTypes.set(ide.port, ide.ideType);
-        
-        // Register for health monitoring
-        if (this.healthMonitor && typeof this.healthMonitor.registerIDE === 'function') {
-          this.healthMonitor.registerIDE(ide.port, ide.ideType);
-        }
+        this.ideTypes.set(ide.port, ide.type || 'cursor');
+        logger.info(`Registered IDE: ${ide.type} on port ${ide.port} (${ide.status})`);
       });
-
-      // Use port manager to select active port
+      
+      // Initialize port manager
+      await this.portManager.initialize();
+      
+      // Set initial active port
       if (existingIDEs.length > 0) {
-        await this.portManager.initialize();
-        this.activePort = this.portManager.getActivePort();
-        // logger.info(`Port manager selected active IDE on port ${this.activePort}`);
+        this.activePort = existingIDEs[0].port;
+        logger.info(`Set initial active port: ${this.activePort}`);
       }
-
-      // Detect workspace paths for existing IDEs
-      if (existingIDEs.length > 0) {
-        logger.info(`Detecting workspace paths for ${existingIDEs.length} IDEs...`);
-        for (const ide of existingIDEs) {
-          if (!this.ideWorkspaces.has(ide.port)) {
-            try {
-              await this.detectWorkspacePath(ide.port);
-            } catch (error) {
-              logger.warn(`Could not detect workspace path for port ${ide.port}: ${error.message}`);
-            }
-          }
+      
+      // Register IDEs with health monitoring
+      for (const ide of existingIDEs) {
+        if (this.healthMonitor && typeof this.healthMonitor.registerIDE === 'function') {
+          this.healthMonitor.registerIDE(ide.port, ide.type || 'cursor');
         }
-        logger.info(`Workspace detection completed for ${existingIDEs.length} IDEs`);
       }
-
-      // Start health monitoring
-      await this.healthMonitor.startMonitoring();
-
+      
       this.initialized = true;
-      logger.info(`Initialization complete. Found ${existingIDEs.length} IDEs`);
+      logger.info('Initialization complete');
+      
+      // Start workspace detection in background (non-blocking)
+      this.detectWorkspacePathsForAllIDEs().catch(error => {
+        logger.warn('Background workspace detection failed:', error.message);
+      });
+      
     } catch (error) {
-      logger.error('Initialization failed:', error);
+      logger.error('Initialization failed:', error.message);
       throw error;
     }
   }
@@ -263,7 +259,21 @@ class IDEManager {
       await this.initialize();
     }
 
-          logger.info(`Switching to IDE on port ${port}`);
+    logger.info(`Switching to IDE on port ${port}`);
+    
+    // Check if already on correct port
+    if (this.activePort === port) {
+      logger.info(`Already on port ${port}, no switching needed`);
+      return {
+        port: port,
+        status: 'active',
+        alreadyActive: true,
+        workspacePath: this.ideWorkspaces.get(port) || null
+      };
+    }
+    
+    // Store the previous port before switching
+    const previousPort = this.activePort;
     
     // Use port manager to validate and set active port
     const success = await this.portManager.setActivePort(port);
@@ -284,23 +294,25 @@ class IDEManager {
       this.ideStatus.set(port, 'active');
     }
     
-    // Switch browser manager to the new port
-    if (this.browserManager) {
+    // Only switch browser manager if necessary
+    if (this.browserManager && this.browserManager.getCurrentPort() !== port) {
       try {
         await this.browserManager.switchToPort(port);
         logger.info(`Browser manager switched to port ${port}`);
       } catch (error) {
         logger.warn('Failed to switch browser manager to port', port, ':', error.message);
       }
+    } else {
+      logger.info(`Browser manager already on port ${port}, no switching needed`);
     }
     
-          logger.info(`Successfully switched to IDE on port ${port}`);
+    logger.info(`Successfully switched to IDE on port ${port}`);
     
     return {
       port: port,
       status: 'active',
       workspacePath: this.ideWorkspaces.get(port) || null,
-      previousPort: this.activePort
+      previousPort: previousPort
     };
   }
 
@@ -424,6 +436,42 @@ class IDEManager {
               logger.info('Error in workspace detection for port', port, ':', error.message);
     }
     return null;
+  }
+
+  /**
+   * Detect workspace paths for all available IDEs
+   * @returns {Promise<Array>} Array of detection results
+   */
+  async detectWorkspacePathsForAllIDEs() {
+    if (!this.initialized) {
+      await this.initialize();
+    }
+
+    const availableIDEs = await this.getAvailableIDEs();
+    const results = [];
+
+    for (const ide of availableIDEs) {
+      if (!this.ideWorkspaces.has(ide.port)) {
+        try {
+          const workspacePath = await this.detectWorkspacePath(ide.port);
+          results.push({
+            port: ide.port,
+            workspacePath: workspacePath,
+            success: workspacePath !== null
+          });
+        } catch (error) {
+          logger.warn(`Failed to detect workspace path for port ${ide.port}: ${error.message}`);
+          results.push({
+            port: ide.port,
+            workspacePath: null,
+            success: false,
+            error: error.message
+          });
+        }
+      }
+    }
+
+    return results;
   }
 
   /**

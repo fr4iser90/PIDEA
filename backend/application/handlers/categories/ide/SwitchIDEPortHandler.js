@@ -99,13 +99,7 @@ class SwitchIDEPortHandler {
         timestamp: new Date()
       });
 
-      // Use BrowserManager to switch IDE port
-      const browserResult = await this.browserManager.switchToPort(command.port, {
-        ideType: command.ideType,
-        ...command.options
-      });
-
-      // Update IDE manager with new active port
+      // Update IDE manager with new active port (handles browser switching internally)
       await this.ideManager.switchToIDE(command.port);
 
       // Use IDEAutomationService for additional IDE-specific operations
@@ -119,7 +113,6 @@ class SwitchIDEPortHandler {
         commandId: command.commandId,
         port: command.port,
         ideType: command.ideType,
-        browserResult: browserResult,
         automationResult: automationResult,
         message: `Successfully switched to IDE port ${command.port}`,
         metadata: {

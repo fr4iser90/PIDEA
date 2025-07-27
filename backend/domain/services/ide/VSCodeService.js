@@ -24,18 +24,8 @@ class VSCodeIDEService {
         logger.info('IDE changed, resetting package.json cache');
         logger.info('Event data:', eventData);
         
-        // Switch browser connection to new IDE using pooled connections
-        if (eventData.port) {
-          try {
-            logger.info('Switching browser connection to port:', eventData.port, 'using pooled connections');
-            const start = process.hrtime.bigint();
-            await this.browserManager.switchToPort(eventData.port);
-            const duration = Number(process.hrtime.bigint() - start) / 1000; // Convert to milliseconds
-            logger.info('Successfully switched browser connection to port:', eventData.port, `in ${duration.toFixed(2)}ms`);
-          } catch (error) {
-            logger.error('Failed to switch browser connection:', error.message);
-          }
-        }
+        // REMOVED: Double switching - IDEManager already handles browser switching
+        // The browser connection is already switched by IDEManager.switchToIDE()
       });
     }
   }
@@ -179,7 +169,6 @@ After applying the changes, please confirm that the refactoring has been complet
     }
 
     await this.ideManager.switchToIDE(session.idePort);
-    await this.browserManager.switchToPort(session.idePort);
   }
 
   async getAvailableIDEs() {
@@ -209,20 +198,15 @@ After applying the changes, please confirm that the refactoring has been complet
       return;
     }
     
-    logger.info(`Switching to port ${port} using pooled connections...`);
+    logger.info(`Switching to port ${port}...`);
     
     try {
       const start = process.hrtime.bigint();
-      // Use BrowserManager's pooled connection
-      await this.browserManager.switchToPort(port);
+      
+      // Only call ideManager - it handles browser switching internally
+      await this.ideManager.switchToIDE(port);
+      
       const duration = Number(process.hrtime.bigint() - start) / 1000; // Convert to milliseconds
-      
-      // Update IDE manager state (no redundant browser switching)
-      if (this.ideManager.switchToIDE) {
-        logger.info(`Updating IDE manager state for port ${port}`);
-        await this.ideManager.switchToIDE(port);
-      }
-      
       logger.info(`Successfully switched to port ${port} in ${duration.toFixed(2)}ms`);
     } catch (error) {
       logger.error(`Failed to switch to port ${port}:`, error.message);

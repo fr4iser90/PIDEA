@@ -226,9 +226,8 @@ class VSCodeIDE extends BaseIDE {
       }
       
       logger.info(`Switching to port ${port}`);
-      await this.browserManager.switchToPort(port);
       
-      // Update active port in IDE manager
+      // Only call ideManager - it handles browser switching internally
       if (this.ideManager.switchToIDE) {
         logger.info(`Calling ideManager.switchToIDE(${port})`);
         await this.ideManager.switchToIDE(port);
