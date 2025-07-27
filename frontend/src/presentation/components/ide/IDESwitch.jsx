@@ -104,6 +104,9 @@ const IDESwitch = ({
   const handleSwitch = async (targetPort, reason = 'manual') => {
     if (isSwitching || targetPort === currentPort) return;
 
+    const switchStartTime = performance.now();
+    logger.info(`[IDESwitch] Starting complete IDE switch from ${currentPort} to ${targetPort}`);
+
     try {
       setIsSwitching(true);
       setProgress(0);
@@ -123,7 +126,11 @@ const IDESwitch = ({
       setProgress(10);
       setStatus('Validating target IDE...');
       
+      const validationStart = performance.now();
       const validationResult = await apiCall(`/api/ide/status?port=${targetPort}`);
+      const validationTime = performance.now() - validationStart;
+      logger.info(`[IDESwitch] Validation completed in ${validationTime.toFixed(2)}ms`);
+      
       if (!validationResult.success) {
         throw new Error('Target IDE not available');
       }
@@ -133,16 +140,20 @@ const IDESwitch = ({
       setStatus('Preparing current IDE...');
       
       if (currentPort) {
+        const prepareStart = performance.now();
         await apiCall(`/api/ide/prepare-switch`, {
           method: 'POST',
           body: JSON.stringify({ port: currentPort, action: 'prepare' })
         });
+        const prepareTime = performance.now() - prepareStart;
+        logger.info(`[IDESwitch] Prepare completed in ${prepareTime.toFixed(2)}ms`);
       }
 
       // Step 3: Switch to target IDE (60%)
       setProgress(60);
       setStatus('Switching to target IDE...');
       
+      const switchStart = performance.now();
       const switchResult = await apiCall('/api/ide/selection', {
         method: 'POST',
         body: JSON.stringify({ 
@@ -151,6 +162,8 @@ const IDESwitch = ({
           fromPort: currentPort 
         })
       });
+      const switchTime = performance.now() - switchStart;
+      logger.info(`[IDESwitch] Backend switch completed in ${switchTime.toFixed(2)}ms`);
 
       if (!switchResult.success) {
         throw new Error(switchResult.error || 'Switch failed');
@@ -160,11 +173,17 @@ const IDESwitch = ({
       setProgress(90);
       setStatus('Verifying switch...');
       
+      const verifyStart = performance.now();
       await new Promise(resolve => setTimeout(resolve, 500)); // Brief delay for verification
+      const verifyTime = performance.now() - verifyStart;
+      logger.info(`[IDESwitch] Verification completed in ${verifyTime.toFixed(2)}ms`);
 
       // Step 5: Complete switch (100%)
       setProgress(100);
       setStatus('Switch completed successfully');
+
+      const totalSwitchTime = performance.now() - switchStartTime;
+      logger.info(`[IDESwitch] Complete IDE switch from ${currentPort} to ${targetPort} finished in ${totalSwitchTime.toFixed(2)}ms`);
 
       // Emit success event
       if (eventBus) {
@@ -172,7 +191,12 @@ const IDESwitch = ({
           fromPort: currentPort, 
           toPort: targetPort,
           targetPort,
-          success: true 
+          success: true,
+          timing: {
+            totalTime: totalSwitchTime.toFixed(2),
+            validationTime: validationTime.toFixed(2),
+            switchTime: switchTime.toFixed(2)
+          }
         });
       }
 
@@ -181,15 +205,25 @@ const IDESwitch = ({
         from: currentPort,
         to: targetPort,
         timestamp: new Date(),
-        success: true
+        success: true,
+        duration: totalSwitchTime.toFixed(2)
       }]);
 
       if (onSwitchComplete) {
-        onSwitchComplete({ fromPort: currentPort, toPort: targetPort, targetPort });
+        onSwitchComplete({ 
+          fromPort: currentPort, 
+          toPort: targetPort, 
+          targetPort,
+          timing: {
+            totalTime: totalSwitchTime.toFixed(2)
+          }
+        });
       }
 
     } catch (error) {
-      logger.error('Error switching IDE:', error);
+      const totalSwitchTime = performance.now() - switchStartTime;
+      logger.error(`[IDESwitch] Error switching IDE after ${totalSwitchTime.toFixed(2)}ms:`, error);
+      
       setError(error.message);
       setStatus('Switch failed');
 
@@ -275,6 +309,11 @@ const IDESwitch = ({
             <span className="history-time">
               {switchItem.timestamp.toLocaleTimeString()}
             </span>
+            {switchItem.duration && (
+              <span className="history-duration">
+                {switchItem.duration}ms
+              </span>
+            )}
             {switchItem.error && (
               <span className="history-error">{switchItem.error}</span>
             )}

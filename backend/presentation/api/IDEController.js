@@ -50,21 +50,34 @@ class IDEController {
   }
 
   async switchIDE(req, res) {
+    const requestStart = process.hrtime.bigint();
     try {
       const portParam = req.params.port;
       const userId = req.user?.id;
       
+      this.logger.info(`[IDEController] Starting IDE switch request for port ${portParam}, user ${userId}`);
+      
       const result = await this.ideApplicationService.switchIDE(portParam, userId);
+      
+      const totalDuration = Number(process.hrtime.bigint() - requestStart) / 1000; // Convert to milliseconds
+      this.logger.info(`[IDEController] Complete IDE switch request completed in ${totalDuration.toFixed(2)}ms for port ${portParam}`);
       
       res.json({
         success: result.success,
-        data: result.data
+        data: result.data,
+        timing: {
+          totalRequestTime: totalDuration.toFixed(2)
+        }
       });
     } catch (error) {
-      this.logger.error('Error switching IDE:', error);
+      const totalDuration = Number(process.hrtime.bigint() - requestStart) / 1000; // Convert to milliseconds
+      this.logger.error(`[IDEController] Error switching IDE after ${totalDuration.toFixed(2)}ms:`, error);
       res.status(500).json({
         success: false,
-        error: 'Failed to switch IDE'
+        error: 'Failed to switch IDE',
+        timing: {
+          totalRequestTime: totalDuration.toFixed(2)
+        }
       });
     }
   }

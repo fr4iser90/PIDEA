@@ -77,7 +77,12 @@ function SidebarLeft({ eventBus, activePort, onActivePortChange, mode = 'chat' }
       const { apiCall } = await import('@/infrastructure/repositories/APIChatRepository.jsx');
       await apiCall(`/api/ide/switch/${port}`, { method: 'POST' });
       if (onActivePortChange) onActivePortChange(port);
-      loadAvailableIDEs(); // IDEStore handles this
+      
+      // Make IDE list refresh asynchronous to avoid blocking the switch
+      setTimeout(() => {
+        loadAvailableIDEs(); // IDEStore handles this - now async
+      }, 100);
+      
       eventBus.emit('sidebar-left:ide-switched', { port });
     } catch (error) {
       logger.error('Fehler beim Umschalten der IDE:', error);

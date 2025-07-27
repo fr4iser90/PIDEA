@@ -91,11 +91,14 @@ const useIDEStore = create(
           }));
           set({ availableIDEs: updatedIDEs });
           
-          // ✅ FIX: Load project data when active port changes
+          // ✅ FIX: Load project data when active port changes - NOW ASYNC!
           const activeIDE = updatedIDEs.find(ide => ide.port === port);
           if (activeIDE && activeIDE.workspacePath) {
             logger.info('Loading project data for new active port:', port, 'workspace:', activeIDE.workspacePath);
-            await get().loadProjectData(activeIDE.workspacePath);
+            // Make project data loading asynchronous to avoid blocking the switch
+            setTimeout(() => {
+              get().loadProjectData(activeIDE.workspacePath);
+            }, 100);
           } else {
             logger.warn('No active IDE found or no workspace path for port:', port);
           }
@@ -513,7 +516,8 @@ const useIDEStore = create(
 
           if (result.success) {
             await get().setActivePort(port);
-            await get().loadAvailableIDEs(); // Refresh IDE list
+            // Remove the slow loadAvailableIDEs() call - it triggers Git/Chat operations
+            // await get().loadAvailableIDEs(); // This was causing the 4-6 second delay
             
             logger.info('Successfully switched to IDE:', port);
             return true;
