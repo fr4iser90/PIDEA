@@ -3,7 +3,7 @@
  * Test Management Workflow Integration Tests
  */
 
-const TestManagementService = require('@services/TestManagementService');
+const TestManagementService = require('@services/testing/TestManagementService');
 const TestMetadataRepository = require('@repositories/TestMetadataRepository');
 const UpdateTestStatusCommand = require('@categories/management/UpdateTestStatusCommand');
 const UpdateTestStatusHandler = require('@handler-categories/management/UpdateTestStatusHandler');

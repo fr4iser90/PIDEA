@@ -24,12 +24,14 @@ class CursorIDEService {
         logger.info('Event data:', eventData);
         // No cache in new analyzer, but if you add one, reset here
         // this.packageJsonAnalyzer.resetCache?.();
-        // Switch browser connection to new IDE
+        // Switch browser connection to new IDE using pooled connections
         if (eventData.port) {
           try {
-            logger.info(`Switching browser connection to port: ${eventData.port}`);
+            logger.info(`Switching browser connection to port: ${eventData.port} using pooled connections`);
+            const start = process.hrtime.bigint();
             await this.browserManager.switchToPort(eventData.port);
-            logger.info(`Successfully switched browser connection to port: ${eventData.port}`);
+            const duration = Number(process.hrtime.bigint() - start) / 1000; // Convert to milliseconds
+            logger.info(`Successfully switched browser connection to port: ${eventData.port} in ${duration.toFixed(2)}ms`);
           } catch (error) {
             logger.error('Failed to switch browser connection:', error.message);
           }
@@ -207,14 +209,22 @@ After applying the changes, please confirm that the refactoring has been complet
       return;
     }
     
-    logger.info(`Switching to port ${port}`);
-    await this.browserManager.switchToPort(port);
+    logger.info(`Switching to port ${port} using pooled connections...`);
     
-    // Update active port in IDE manager
-    if (this.ideManager.switchToIDE) {
-      logger.info(`Calling ideManager.switchToIDE(${port})`);
-      await this.ideManager.switchToIDE(port);
-      logger.info(`ideManager.switchToIDE(${port}) completed`);
+    try {
+      // Use BrowserManager's pooled connection
+      const start = process.hrtime.bigint();
+      await this.browserManager.switchToPort(port);
+      const duration = Number(process.hrtime.bigint() - start) / 1000; // Convert to milliseconds
+      // Update IDE manager state (no redundant browser switching)
+      if (this.ideManager.switchToIDE) {
+        logger.info(`Updating IDE manager state for port ${port}`);
+        await this.ideManager.switchToIDE(port);
+      }
+      logger.info(`Successfully switched to port ${port} in ${duration.toFixed(2)}ms`);
+    } catch (error) {
+      logger.error(`Failed to switch to port ${port}:`, error.message);
+      throw error;
     }
   }
 

@@ -24,12 +24,14 @@ class WindsurfIDEService {
         this.logger.info('IDE changed, resetting package.json cache');
         this.logger.info('Event data:', eventData);
         
-        // Switch browser connection to new IDE
+        // Switch browser connection to new IDE using pooled connections
         if (eventData.port) {
           try {
-            this.logger.info(`Switching browser connection to port: ${eventData.port}`);
+            this.logger.info(`Switching browser connection to port: ${eventData.port} using pooled connections`);
+            const start = process.hrtime.bigint();
             await this.browserManager.switchToPort(eventData.port);
-            this.logger.info(`Successfully switched browser connection to port: ${eventData.port}`);
+            const duration = Number(process.hrtime.bigint() - start) / 1000; // Convert to milliseconds
+            this.logger.info(`Successfully switched browser connection to port: ${eventData.port} in ${duration.toFixed(2)}ms`);
           } catch (error) {
             this.logger.error('Failed to switch browser connection:', error.message);
           }
@@ -207,10 +209,25 @@ After applying the changes, please confirm that the refactoring has been complet
       return;
     }
     
-    this.logger.info(`Switching to port ${port}`);
-    await this.ideManager.switchToIDE(port);
-    await this.browserManager.switchToPort(port);
-    this.logger.info(`Successfully switched to port ${port}`);
+    this.logger.info(`Switching to port ${port} using pooled connections...`);
+    
+    try {
+      const start = process.hrtime.bigint();
+      // Use BrowserManager's pooled connection
+      await this.browserManager.switchToPort(port);
+      const duration = Number(process.hrtime.bigint() - start) / 1000; // Convert to milliseconds
+      
+      // Update IDE manager state (no redundant browser switching)
+      if (this.ideManager.switchToIDE) {
+        this.logger.info(`Updating IDE manager state for port ${port}`);
+        await this.ideManager.switchToIDE(port);
+      }
+      
+      this.logger.info(`Successfully switched to port ${port} in ${duration.toFixed(2)}ms`);
+    } catch (error) {
+      this.logger.error(`Failed to switch to port ${port}:`, error.message);
+      throw error;
+    }
   }
 
   // Terminal monitoring methods

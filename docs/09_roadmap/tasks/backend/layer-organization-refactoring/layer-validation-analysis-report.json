@@ -859,7 +859,7 @@
         "domain/services/TerminalService.js",
         "domain/services/TestCorrectionService.js",
         "domain/services/TestFixTaskGenerator.js",
-        "domain/services/TestManagementService.js",
+        "domain/services/testing/TestManagementService.js",
         "domain/services/TestReportParser.js",
         "domain/services/VSCodeService.js",
         "domain/services/WindsurfIDEService.js",

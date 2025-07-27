@@ -1,14 +1,26 @@
 const { chromium } = require('playwright');
 const Logger = require('@logging/Logger');
+const ConnectionPool = require('./ConnectionPool');
 const logger = new Logger('BrowserManager');
 
 
 class BrowserManager {
   constructor() {
+    // Initialize connection pool for multiple parallel connections
+    this.connectionPool = new ConnectionPool({
+      maxConnections: 5,
+      connectionTimeout: 30000,
+      cleanupInterval: 60000,
+      healthCheckInterval: 30000
+    });
+    
+    // Current connection state
+    this.currentPort = null;
     this.browser = null;
     this.page = null;
     this.isConnecting = false;
-    this.currentPort = null; // Will be set dynamically
+    
+    logger.info('BrowserManager initialized with connection pooling');
   }
 
   async connect(port = null) {
@@ -16,39 +28,21 @@ class BrowserManager {
       this.currentPort = port;
     }
 
-    if (this.browser && this.page && !port) {
-      return this.page;
+    if (!this.currentPort) {
+      throw new Error('No port specified for connection');
     }
-
-    if (this.isConnecting) {
-      // Wait for existing connection attempt
-      while (this.isConnecting) {
-        await new Promise(resolve => setTimeout(resolve, 100));
-      }
-      return this.page;
-    }
-
-    this.isConnecting = true;
 
     try {
-      logger.info(`Connecting to Cursor IDE on port ${this.currentPort}...`);
+      logger.info(`Getting connection for port ${this.currentPort} from pool...`);
       
-      // Disconnect existing connection if switching ports
-      if (this.browser && port) {
-        await this.disconnect();
-      }
+      // Get connection from pool (creates new one if needed)
+      const connection = await this.connectionPool.getConnection(this.currentPort);
       
-          // Always use localhost since we're using network_mode: "host"
-    const host = '127.0.0.1';
-      this.browser = await chromium.connectOverCDP(`http://${host}:${this.currentPort}`);
-      const contexts = this.browser.contexts();
-      this.page = contexts[0].pages()[0];
+      // Update current connection state
+      this.browser = connection.browser;
+      this.page = connection.page;
       
-      if (!this.page) {
-        throw new Error('No page found in Cursor IDE');
-      }
-
-      logger.info(`Successfully connected to Cursor IDE on port ${this.currentPort}`);
+      logger.info(`Successfully connected to IDE on port ${this.currentPort} using connection pool`);
       return this.page;
 
     } catch (error) {
@@ -56,23 +50,21 @@ class BrowserManager {
       this.browser = null;
       this.page = null;
       throw error;
-    } finally {
-      this.isConnecting = false;
     }
   }
 
   async getPage() {
     try {
-      if (!this.page || !this.browser) {
-        await this.connect();
+      if (!this.currentPort) {
+        throw new Error('No active port selected');
       }
       
-      // Check if page is still valid
-      if (this.page && this.page.isClosed && this.page.isClosed()) {
-        logger.info('Page was closed, reconnecting...');
-        this.page = null;
-        await this.connect();
-      }
+      // Get connection from pool (handles reconnection automatically)
+      const connection = await this.connectionPool.getConnection(this.currentPort);
+      
+      // Update current state
+      this.browser = connection.browser;
+      this.page = connection.page;
       
       return this.page;
     } catch (error) {
@@ -82,9 +74,31 @@ class BrowserManager {
   }
 
   async switchToPort(port) {
-    logger.info(`Switching to port ${port}...`);
-    this.currentPort = port;
-    await this.connect(port);
+    if (this.currentPort === port) {
+      logger.debug(`Already connected to port ${port}`);
+      return; // Already connected to this port
+    }
+    
+    logger.info(`Switching to port ${port} using connection pool...`);
+    const start = process.hrtime.bigint();
+    try {
+      // Get connection from pool (instant if cached, creates new if needed)
+      const connection = await this.connectionPool.getConnection(port);
+      
+      // Update current port and connection state
+      this.currentPort = port;
+      this.browser = connection.browser;
+      this.page = connection.page;
+      
+      const duration = Number(process.hrtime.bigint() - start) / 1000; // Convert to milliseconds
+      logger.info(`Successfully switched to port ${port} in ${duration.toFixed(2)}ms`);
+      return connection;
+      
+    } catch (error) {
+      const duration = Number(process.hrtime.bigint() - start) / 1000; // Convert to milliseconds
+      logger.error(`Failed to switch to port ${port} after ${duration.toFixed(2)}ms:`, error.message);
+      throw error;
+    }
   }
 
   async connectToPort(port) {
@@ -480,18 +494,22 @@ class BrowserManager {
   }
 
   async disconnect() {
-    if (this.browser) {
-      await this.browser.close();
+    if (this.currentPort) {
+      await this.connectionPool.closeConnection(this.currentPort);
       this.browser = null;
       this.page = null;
-      logger.info('Disconnected from Cursor IDE');
+      logger.info(`Disconnected from IDE on port ${this.currentPort}`);
     }
   }
 
   async reconnect() {
-    logger.info('Reconnecting to Cursor IDE...');
-    await this.disconnect();
-    return await this.connect(this.currentPort);
+    logger.info('Reconnecting to IDE...');
+    if (this.currentPort) {
+      // Close current connection and get fresh one from pool
+      await this.connectionPool.closeConnection(this.currentPort);
+      return await this.connect(this.currentPort);
+    }
+    throw new Error('No current port to reconnect to');
   }
 
   /**
@@ -924,22 +942,53 @@ class BrowserManager {
   }
 
   isConnected() {
-    return this.browser !== null && this.page !== null;
+    return this.currentPort !== null && this.browser !== null && this.page !== null;
   }
 
   async healthCheck() {
     try {
-      const page = await this.getPage();
-      // Simple health check - try to get page title
-      await page.title();
-      return true;
+      if (!this.currentPort) {
+        return false;
+      }
+      
+      // Use connection pool's health check
+      await this.connectionPool.healthCheck();
+      
+      // Check if our current connection is still healthy
+      const connection = this.connectionPool.connections.get(this.currentPort);
+      return connection && connection.health === 'healthy';
     } catch (error) {
       logger.error('Health check failed:', error.message);
-      // Reset connection on health check failure
-      this.browser = null;
-      this.page = null;
       return false;
     }
+  }
+
+  /**
+   * Get connection pool health status
+   * @returns {Object} Health status object
+   */
+  getConnectionPoolHealth() {
+    return this.connectionPool.getHealth();
+  }
+
+  /**
+   * Get connection pool statistics
+   * @returns {Object} Statistics object
+   */
+  getConnectionPoolStats() {
+    return this.connectionPool.getStats();
+  }
+
+  /**
+   * Destroy the browser manager and cleanup all connections
+   */
+  async destroy() {
+    logger.info('Destroying BrowserManager...');
+    await this.connectionPool.destroy();
+    this.browser = null;
+    this.page = null;
+    this.currentPort = null;
+    logger.info('BrowserManager destroyed');
   }
 }
 

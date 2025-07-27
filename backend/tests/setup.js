@@ -18,7 +18,7 @@ jest.setTimeout(30000);
 // Test Management Integration - Disabled for now to fix module resolution
 if (process.env.TEST_MANAGEMENT_ENABLED !== 'false') {
   try {
-    const TestManagementService = require('@services/TestManagementService');
+    const TestManagementService = require('@services/testing/TestManagementService');
     const Logger = require('@logging/Logger');
     const logger = new Logger('Logger');
     

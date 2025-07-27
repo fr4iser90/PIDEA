@@ -3,7 +3,7 @@
  * Tests for the CreateChatStep functionality
  */
 
-const createChatStepModule = require('@domain/steps/categories/ide/create_chat_step');
+const CreateChatStep = require('@domain/steps/categories/ide/create_chat_step');
 
 // Mock dependencies
 const mockChatSessionService = {
@@ -51,8 +51,7 @@ describe('CreateChatStep', () => {
     // Reset all mocks
     jest.clearAllMocks();
     
-    // Create step instance using the exported class
-    const CreateChatStep = createChatStepModule.CreateChatStep;
+    // Create step instance
     stepInstance = new CreateChatStep();
     
     // Mock successful responses
@@ -71,7 +70,7 @@ describe('CreateChatStep', () => {
 
   describe('Configuration', () => {
     test('should have correct configuration', () => {
-      const config = createChatStepModule.config;
+      const config = CreateChatStep.getConfig();
       
       expect(config.name).toBe('CreateChatStep');
       expect(config.type).toBe('ide');
@@ -117,12 +116,7 @@ describe('CreateChatStep', () => {
       const context = createMockContext();
       context.getService.mockReturnValue(null);
       
-      return expect(stepInstance.execute(context)).resolves.toEqual(
-        expect.objectContaining({
-          success: false,
-          error: 'ChatSessionService not available in context'
-        })
-      );
+      return expect(stepInstance.execute(context)).rejects.toThrow('ChatSessionService not available');
     });
 
     test('should throw error for missing EventBus', () => {
@@ -132,12 +126,7 @@ describe('CreateChatStep', () => {
         return mockChatSessionService;
       });
       
-      return expect(stepInstance.execute(context)).resolves.toEqual(
-        expect.objectContaining({
-          success: false,
-          error: 'EventBus not available in context'
-        })
-      );
+      return expect(stepInstance.execute(context)).rejects.toThrow('EventBus not available');
     });
 
     test('should throw error for missing BrowserManager', () => {
@@ -147,12 +136,7 @@ describe('CreateChatStep', () => {
         return serviceName === 'ChatSessionService' ? mockChatSessionService : mockEventBus;
       });
       
-      return expect(stepInstance.execute(context)).resolves.toEqual(
-        expect.objectContaining({
-          success: false,
-          error: 'BrowserManager not available in context'
-        })
-      );
+      return expect(stepInstance.execute(context)).rejects.toThrow('BrowserManager not available');
     });
   });
 

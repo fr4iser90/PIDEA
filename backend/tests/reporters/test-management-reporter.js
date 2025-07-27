@@ -5,7 +5,7 @@ require('module-alias/register');
  * Integrates with the test management system to track test execution
  */
 
-const TestManagementService = require('@services/TestManagementService');
+const TestManagementService = require('@services/testing/TestManagementService');
 const Logger = require('@logging/Logger');
 const path = require('path');
 
