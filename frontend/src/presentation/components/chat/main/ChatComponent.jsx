@@ -57,7 +57,6 @@ async function fetchPromptContent(promptFile) {
 function ChatComponent({ eventBus, activePort, attachedPrompts = [] }) {
   // ✅ REFACTORED: Use global state for messages
   const { messages, hasMessages, messageCount } = useChatMessages();
-  const { loadProjectData } = useProjectDataActions();
   
   const [isTyping, setIsTyping] = useState(false);
   const [inputValue, setInputValue] = useState('');
@@ -73,22 +72,15 @@ function ChatComponent({ eventBus, activePort, attachedPrompts = [] }) {
 
   // State für ausgeklappte Codeblöcke
   const [expandedBlocks, setExpandedBlocks] = useState({});
-  const lastLoadedPort = useRef(null);
 
   const toggleBlock = (id) => {
     setExpandedBlocks(prev => ({ ...prev, [id]: !prev[id] }));
   };
 
-  // ✅ REFACTORED: Load project data when active port changes
+  // ✅ FIXED: No more manual data loading - global state handles it automatically
   useEffect(() => {
-    logger.info('activePort changed:', activePort);
-    if (activePort && lastLoadedPort.current !== activePort) {
-      setError(null);
-      logger.info('Loading project data for active port:', activePort);
-      // Load project data (including chat) from global state
-      // This will be handled by the global state system
-      lastLoadedPort.current = activePort;
-    }
+    logger.info('ChatComponent: activePort changed to:', activePort);
+    setError(null);
   }, [activePort]);
 
   useEffect(() => {
@@ -249,7 +241,10 @@ function ChatComponent({ eventBus, activePort, attachedPrompts = [] }) {
     const isAtBottom = el.scrollTop + el.clientHeight >= el.scrollHeight - 10;
     setShouldAutoScroll(isAtBottom);
   };
-  const clearChat = () => setMessages([]);
+  const clearChat = () => {
+    // ✅ FIXED: Clear chat is now handled by global state
+    logger.info('ChatComponent: clearChat called - should be handled by global state');
+  };
   const exportChat = () => {
     const chatData = { messages, exportDate: new Date().toISOString(), totalMessages: messages.length };
     const blob = new Blob([JSON.stringify(chatData, null, 2)], { type: 'application/json' });

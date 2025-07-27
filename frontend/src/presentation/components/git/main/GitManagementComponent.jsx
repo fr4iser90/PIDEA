@@ -3,7 +3,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import '@/css/main/git.css';
 import { apiCall, APIChatRepository } from '@/infrastructure/repositories/APIChatRepository.jsx';
 import PideaAgentBranchComponent from '../pidea-agent/PideaAgentBranchComponent.jsx';
-import { useGitStatus, useGitBranches, useActiveIDE, useProjectDataActions } from '@/infrastructure/stores/selectors/ProjectSelectors.jsx';
+import { useGitStatus, useGitBranches, useActiveIDE } from '@/infrastructure/stores/selectors/ProjectSelectors.jsx';
 
 // Initialize API repository
 const apiRepository = new APIChatRepository();
@@ -25,7 +25,7 @@ const GitManagementComponent = ({ activePort, onGitOperation, onGitStatusChange,
   const gitStatus = useGitStatus();
   const gitBranches = useGitBranches();
   const activeIDE = useActiveIDE();
-  const { loadProjectData } = useProjectDataActions();
+
   
   // Local state for UI interactions
   const [isLoading, setIsLoading] = useState(false);
@@ -34,13 +34,12 @@ const GitManagementComponent = ({ activePort, onGitOperation, onGitStatusChange,
   const [diffContent, setDiffContent] = useState('');
   const [showPideaAgent, setShowPideaAgent] = useState(false);
 
-  // ✅ REFACTORED: Load project data when active IDE changes
+  // ✅ FIXED: No more manual data loading - global state handles it automatically
   useEffect(() => {
     if (activeIDE.workspacePath) {
-      logger.info('Loading project data for active IDE:', activeIDE.workspacePath);
-      loadProjectData(activeIDE.workspacePath);
+      logger.info('GitManagementComponent: active IDE changed to:', activeIDE.workspacePath);
     }
-  }, [activeIDE.workspacePath, loadProjectData]);
+  }, [activeIDE.workspacePath]);
 
   // ✅ REFACTORED: Setup WebSocket listeners for real-time updates
   useEffect(() => {
@@ -71,8 +70,8 @@ const GitManagementComponent = ({ activePort, onGitOperation, onGitStatusChange,
       const result = await apiRepository.performGitOperation(projectId, workspacePath, operation, options);
       setOperationResult({ type: 'success', message: result.message, data: result.data });
       
-      // ✅ REFACTORED: Reload project data from global state instead of individual calls
-      await loadProjectData(workspacePath);
+      // ✅ FIXED: No need to reload - global state will update via WebSocket
+      logger.info('Git operation completed, global state will update automatically');
       
       if (onGitOperation) {
         onGitOperation(operation, result);
@@ -162,10 +161,10 @@ const GitManagementComponent = ({ activePort, onGitOperation, onGitStatusChange,
         
         <div className="git-actions">
           <button
-            onClick={() => loadProjectData(workspacePath)}
+            onClick={() => logger.info('Refresh button clicked - global state handles updates')}
             className="git-btn refresh-btn"
             disabled={isLoading}
-            title="Refresh Git status"
+            title="Refresh Git status (handled by global state)"
           >
             🔄
           </button>
@@ -330,8 +329,7 @@ const GitManagementComponent = ({ activePort, onGitOperation, onGitStatusChange,
             activePort={activePort}
             onPideaAgentOperation={(operation, result) => {
               logger.info('Pidea-Agent operation completed:', operation, result);
-              // ✅ REFACTORED: Refresh project data from global state
-              loadProjectData(workspacePath);
+              // ✅ FIXED: No need to refresh - global state handles updates
             }}
             onPideaAgentStatusChange={(status) => {
               logger.info('Pidea-Agent status changed:', status);

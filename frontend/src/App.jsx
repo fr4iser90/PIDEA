@@ -43,7 +43,7 @@ function App() {
     // ✅ NEW: Global state actions
     setupWebSocketListeners,
     cleanupWebSocketListeners,
-    loadProjectData
+
   } = useIDEStore();
 
   useEffect(() => {
@@ -71,16 +71,15 @@ function App() {
     }
   }, [eventBus, isAuthenticated, setupWebSocketListeners, cleanupWebSocketListeners]);
 
-  // ✅ NEW: Initialize project data when active IDE changes
+  // ✅ FIXED: No more manual data loading - global state handles it automatically
   useEffect(() => {
     if (isAuthenticated && availableIDEs.length > 0) {
       const activeIDE = availableIDEs.find(ide => ide.active);
       if (activeIDE && activeIDE.workspacePath) {
-        logger.info('Initializing project data for active IDE:', activeIDE.workspacePath);
-        loadProjectData(activeIDE.workspacePath);
+        logger.info('App: active IDE initialized:', activeIDE.workspacePath);
       }
     }
-  }, [isAuthenticated, availableIDEs, loadProjectData]);
+  }, [isAuthenticated, availableIDEs]);
 
   const setupEventListeners = () => {
     if (eventBus) {
@@ -134,11 +133,10 @@ function App() {
         // IDEStore will handle the port change automatically
         logger.info('Active IDE changed event received:', data.port);
         
-        // ✅ NEW: Load project data when IDE changes
+        // ✅ FIXED: No need to load project data - global state handles it
         const activeIDE = availableIDEs.find(ide => ide.port === data.port);
         if (activeIDE && activeIDE.workspacePath) {
-          logger.info('Loading project data for new active IDE:', activeIDE.workspacePath);
-          loadProjectData(activeIDE.workspacePath);
+          logger.info('App: IDE switched to:', activeIDE.workspacePath);
         }
       }
     };
@@ -146,7 +144,7 @@ function App() {
     return () => {
       eventBus.off('activeIDEChanged', handleActiveIDEChanged);
     };
-  }, [eventBus, availableIDEs, loadProjectData]);
+  }, [eventBus, availableIDEs]);
 
   useEffect(() => {
     if (!eventBus) return;

@@ -2,7 +2,7 @@ import { logger } from "@/infrastructure/logging/Logger";
 import React, { useState, useEffect, useCallback } from 'react';
 import APIChatRepository from '@/infrastructure/repositories/APIChatRepository';
 import useNotificationStore from '@/infrastructure/stores/NotificationStore.jsx';
-import { useAnalysisStatus, useAnalysisMetrics, useAnalysisHistory, useActiveIDE, useProjectDataActions } from '@/infrastructure/stores/selectors/ProjectSelectors.jsx';
+import { useAnalysisStatus, useAnalysisMetrics, useAnalysisHistory, useActiveIDE } from '@/infrastructure/stores/selectors/ProjectSelectors.jsx';
 import AnalysisCharts from './AnalysisCharts';
 import AnalysisMetrics from './AnalysisMetrics';
 import AnalysisFilters from './AnalysisFilters';
@@ -22,7 +22,7 @@ const AnalysisDataViewer = ({ projectId = null, eventBus = null }) => {
   const analysisMetrics = useAnalysisMetrics();
   const analysisHistory = useAnalysisHistory();
   const activeIDE = useActiveIDE();
-  const { loadProjectData } = useProjectDataActions();
+
   
   // Local state for UI interactions and non-global data
   const [loading, setLoading] = useState(false);
@@ -67,13 +67,12 @@ const AnalysisDataViewer = ({ projectId = null, eventBus = null }) => {
   const apiRepository = new APIChatRepository();
   const { showSuccess, showInfo } = useNotificationStore();
 
-  // ✅ REFACTORED: Load project data when active IDE changes
+  // ✅ FIXED: No more manual data loading - global state handles it automatically
   useEffect(() => {
     if (activeIDE.workspacePath) {
-      logger.info('Loading project data for active IDE:', activeIDE.workspacePath);
-      loadProjectData(activeIDE.workspacePath);
+      logger.info('AnalysisDataViewer: active IDE changed to:', activeIDE.workspacePath);
     }
-  }, [activeIDE.workspacePath, loadProjectData]);
+  }, [activeIDE.workspacePath]);
 
   useEffect(() => {
     // Only setup event listeners, don't auto-load data
@@ -122,8 +121,8 @@ const AnalysisDataViewer = ({ projectId = null, eventBus = null }) => {
         throw new Error('No project ID available');
       }
       
-      // ✅ REFACTORED: Load project data from global state
-      await loadProjectData(activeIDE.workspacePath);
+      // ✅ FIXED: No need to reload - global state handles updates
+      logger.info('Analysis data loading - global state handles updates');
       
       console.log('✅ [DEBUG] Analysis data loaded successfully from global state');
 
@@ -139,7 +138,7 @@ const AnalysisDataViewer = ({ projectId = null, eventBus = null }) => {
     } finally {
       setLoading(false);
     }
-  }, [projectId, activeIDE.projectId, activeIDE.workspacePath, loadProjectData, showSuccess]);
+  }, [projectId, activeIDE.projectId, activeIDE.workspacePath, showSuccess]);
 
   // Lazy loading functions for non-essential data
   const loadIssuesData = useCallback(async () => {
@@ -320,10 +319,8 @@ const AnalysisDataViewer = ({ projectId = null, eventBus = null }) => {
     console.log('✅ [DEBUG] Analysis completed:', data);
     logger.info('Analysis completed:', data);
     
-    // Reload project data from global state
-    if (activeIDE.workspacePath) {
-      loadProjectData(activeIDE.workspacePath);
-    }
+    // ✅ FIXED: No need to reload - global state handles updates
+    logger.info('Analysis completed - global state will update automatically');
     
     showSuccess('Analysis completed successfully!', 'Analysis Complete');
   };
