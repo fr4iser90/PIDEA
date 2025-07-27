@@ -1,5 +1,7 @@
 const GitService = require('@external/GitService');
 const Logger = require('@logging/Logger');
+const CommandRegistry = require('@application/commands/CommandRegistry');
+const HandlerRegistry = require('@application/handlers/HandlerRegistry');
 
 class GitApplicationService {
     constructor(dependencies = {}) {
@@ -11,26 +13,153 @@ class GitApplicationService {
         this.requestTimeout = 5000; // 5 seconds timeout
     }
 
+    // ✅ NEW: Direct Git operations using Commands and Handlers (bypass Steps)
+
+    /**
+     * Get Git status directly using Commands and Handlers (fast, no Steps)
+     */
+    async getStatusDirect(projectPath) {
+        try {
+            // Create Command and Handler directly
+            const command = CommandRegistry.buildFromCategory('git', 'GitStatusCommand', {
+                projectPath,
+                porcelain: true
+            });
+
+            const handler = HandlerRegistry.buildFromCategory('git', 'GitStatusHandler', {
+                terminalService: null, // Not needed for direct operations
+                logger: this.logger
+            });
+
+            if (!command || !handler) {
+                throw new Error('Failed to create Git command or handler');
+            }
+
+            const result = await handler.handle(command);
+            
+            if (result.success) {
+                return result.status;
+            } else {
+                throw new Error(result.error || 'Failed to get Git status');
+            }
+        } catch (error) {
+            this.logger.error('Direct Git status failed:', error);
+            throw new Error(`Failed to get Git status: ${error.message}`);
+        }
+    }
+
+    /**
+     * Get current branch directly using Commands and Handlers (fast, no Steps)
+     */
+    async getCurrentBranchDirect(projectPath) {
+        try {
+            // Use git branch --show-current command
+            const { exec } = require('child_process');
+            const { promisify } = require('util');
+            const execAsync = promisify(exec);
+            
+            const { stdout } = await execAsync('git branch --show-current', { cwd: projectPath });
+            return stdout.trim();
+        } catch (error) {
+            this.logger.error('Direct Git current branch failed:', error);
+            throw new Error(`Failed to get current branch: ${error.message}`);
+        }
+    }
+
+    /**
+     * Get branches directly using Commands and Handlers (fast, no Steps)
+     */
+    async getBranchesDirect(projectPath) {
+        try {
+            // Create Command and Handler directly
+            const command = CommandRegistry.buildFromCategory('git', 'GitBranchCommand', {
+                projectPath,
+                includeLocal: true,
+                includeRemote: true
+            });
+
+            const handler = HandlerRegistry.buildFromCategory('git', 'GitBranchHandler', {
+                terminalService: null, // Not needed for direct operations
+                logger: this.logger
+            });
+
+            if (!command || !handler) {
+                throw new Error('Failed to create Git command or handler');
+            }
+
+            const result = await handler.handle(command);
+            
+            if (result.success) {
+                return result.branches;
+            } else {
+                throw new Error(result.error || 'Failed to get Git branches');
+            }
+        } catch (error) {
+            this.logger.error('Direct Git branches failed:', error);
+            throw new Error(`Failed to get branches: ${error.message}`);
+        }
+    }
+
+    /**
+     * Get comprehensive Git info directly using Commands and Handlers (fast, no Steps)
+     */
+    async getGitInfoDirect(projectPath) {
+        try {
+            const [status, currentBranch, branches] = await Promise.all([
+                this.getStatusDirect(projectPath),
+                this.getCurrentBranchDirect(projectPath),
+                this.getBranchesDirect(projectPath)
+            ]);
+            
+            return {
+                status,
+                currentBranch,
+                branches
+            };
+        } catch (error) {
+            this.logger.error('Direct Git info failed:', error);
+            throw new Error(`Failed to get Git info: ${error.message}`);
+        }
+    }
+
+    /**
+     * Get last commit directly using Commands and Handlers (fast, no Steps)
+     */
+    async getLastCommitDirect(projectPath) {
+        try {
+            // Use git log -1 command
+            const { exec } = require('child_process');
+            const { promisify } = require('util');
+            const execAsync = promisify(exec);
+            
+            const { stdout } = await execAsync('git log -1 --oneline', { cwd: projectPath });
+            return stdout.trim();
+        } catch (error) {
+            this.logger.error('Direct Git last commit failed:', error);
+            throw new Error(`Failed to get last commit: ${error.message}`);
+        }
+    }
+
+    // ✅ EXISTING: StepRegistry-based operations (for complex workflows)
+    
     async getStatus(projectId, projectPath, userId) {
         try {
             this.logger.info('GitApplicationService: Getting Git status', { projectId, userId });
 
-            const isGitRepo = await this.gitService.isGitRepository(projectPath);
-            if (!isGitRepo) {
+            // ✅ OPTIMIZATION: Direct check without gitService (no Steps)
+            const { exec } = require('child_process');
+            const { promisify } = require('util');
+            const execAsync = promisify(exec);
+            
+            try {
+                await execAsync('git status', { cwd: projectPath });
+            } catch (error) {
                 throw new Error('Not a Git repository');
             }
 
-            // ✅ FIX: Only ONE status call (no duplicate)
-            const status = await this.gitService.getStatus(projectPath);
-            
-            // ✅ FIX: Only ONE current branch call (no duplicate)
-            let currentBranch = '';
-            try {
-                currentBranch = await this.gitService.getCurrentBranch(projectPath);
-            } catch (branchError) {
-                this.logger.warn('Failed to get current branch, using empty string:', branchError.message);
-                currentBranch = '';
-            }
+            // ✅ OPTIMIZATION: Use direct Commands and Handlers for fast data fetching
+            const status = await this.getStatusDirect(projectPath);
+            const currentBranch = await this.getCurrentBranchDirect(projectPath);
 
             return {
                 success: true,
@@ -124,8 +253,19 @@ class GitApplicationService {
         try {
             this.logger.info('GitApplicationService: Getting branches', { userId });
             
-            // ✅ FIX: Only get branches, don't duplicate currentBranch call
-            const branches = await this.gitService.getBranches(projectPath);
+            // ✅ OPTIMIZATION: Direct check without gitService (no Steps)
+            const { exec } = require('child_process');
+            const { promisify } = require('util');
+            const execAsync = promisify(exec);
+            
+            try {
+                await execAsync('git status', { cwd: projectPath });
+            } catch (error) {
+                throw new Error('Not a Git repository');
+            }
+
+            // ✅ OPTIMIZATION: Use direct Commands and Handlers for fast data fetching
+            const branches = await this.getBranchesDirect(projectPath);
             
             return {
                 success: true,
@@ -139,62 +279,27 @@ class GitApplicationService {
         }
     }
 
-    // ✅ NEW: Combined method to get all Git info in one call
     async getGitInfo(projectPath, userId) {
-        const requestKey = `git_info_${projectPath}`;
-        
-        // Check for pending request to prevent duplicates
-        if (this.pendingRequests.has(requestKey)) {
-            this.logger.info(`Duplicate Git info request detected for ${projectPath}, waiting for existing request`);
-            try {
-                return await Promise.race([
-                    this.pendingRequests.get(requestKey),
-                    new Promise((_, reject) => 
-                        setTimeout(() => reject(new Error('Request timeout')), this.requestTimeout)
-                    )
-                ]);
-            } catch (error) {
-                this.logger.warn(`Pending Git info request failed for ${projectPath}:`, error.message);
-                this.pendingRequests.delete(requestKey);
-                throw error;
-            }
-        }
-
-        // Create new request
-        const requestPromise = this._executeGitInfoRequest(projectPath, userId);
-        this.pendingRequests.set(requestKey, requestPromise);
-        
         try {
-            const result = await requestPromise;
-            return result;
-        } finally {
-            this.pendingRequests.delete(requestKey);
-        }
-    }
-
-    async _executeGitInfoRequest(projectPath, userId) {
-        try {
-            this.logger.info('GitApplicationService: Getting comprehensive Git info', { userId });
+            this.logger.info('GitApplicationService: Getting Git info', { userId });
             
-            const isGitRepo = await this.gitService.isGitRepository(projectPath);
-            if (!isGitRepo) {
+            // ✅ OPTIMIZATION: Direct check without gitService (no Steps)
+            const { exec } = require('child_process');
+            const { promisify } = require('util');
+            const execAsync = promisify(exec);
+            
+            try {
+                await execAsync('git status', { cwd: projectPath });
+            } catch (error) {
                 throw new Error('Not a Git repository');
             }
 
-            // Execute all Git operations in parallel to minimize time
-            const [status, branches, currentBranch] = await Promise.all([
-                this.gitService.getStatus(projectPath),
-                this.gitService.getBranches(projectPath),
-                this.gitService.getCurrentBranch(projectPath)
-            ]);
-
+            // ✅ OPTIMIZATION: Use direct Commands and Handlers for fast data fetching
+            const gitInfo = await this.getGitInfoDirect(projectPath);
+            
             return {
                 success: true,
-                data: {
-                    status,
-                    branches,
-                    currentBranch
-                }
+                data: gitInfo
             };
         } catch (error) {
             this.logger.error('Error getting Git info:', error);
@@ -204,46 +309,23 @@ class GitApplicationService {
 
     // ✅ NEW: Deduplicated method for getting current branch
     async getCurrentBranch(projectPath, userId) {
-        const requestKey = `current_branch_${projectPath}`;
-        
-        if (this.pendingRequests.has(requestKey)) {
-            this.logger.info(`Duplicate current branch request detected for ${projectPath}, waiting for existing request`);
-            try {
-                return await Promise.race([
-                    this.pendingRequests.get(requestKey),
-                    new Promise((_, reject) => 
-                        setTimeout(() => reject(new Error('Request timeout')), this.requestTimeout)
-                    )
-                ]);
-            } catch (error) {
-                this.logger.warn(`Pending current branch request failed for ${projectPath}:`, error.message);
-                this.pendingRequests.delete(requestKey);
-                throw error;
-            }
-        }
-
-        const requestPromise = this._executeCurrentBranchRequest(projectPath, userId);
-        this.pendingRequests.set(requestKey, requestPromise);
-        
-        try {
-            const result = await requestPromise;
-            return result;
-        } finally {
-            this.pendingRequests.delete(requestKey);
-        }
-    }
-
-    async _executeCurrentBranchRequest(projectPath, userId) {
         try {
             this.logger.info('GitApplicationService: Getting current branch', { userId });
             
-            const isGitRepo = await this.gitService.isGitRepository(projectPath);
-            if (!isGitRepo) {
+            // ✅ OPTIMIZATION: Direct check without gitService (no Steps)
+            const { exec } = require('child_process');
+            const { promisify } = require('util');
+            const execAsync = promisify(exec);
+            
+            try {
+                await execAsync('git status', { cwd: projectPath });
+            } catch (error) {
                 throw new Error('Not a Git repository');
             }
 
-            const currentBranch = await this.gitService.getCurrentBranch(projectPath);
-
+            // ✅ OPTIMIZATION: Use direct Commands and Handlers for fast data fetching
+            const currentBranch = await this.getCurrentBranchDirect(projectPath);
+            
             return {
                 success: true,
                 data: {

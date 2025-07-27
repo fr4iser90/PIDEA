@@ -1,8 +1,11 @@
 import { logger } from "@/infrastructure/logging/Logger";
 import React, { useState, useEffect, useCallback } from 'react';
 import '@/css/main/git.css';
-import { apiCall } from '@/infrastructure/repositories/APIChatRepository.jsx';
+import { apiCall, APIChatRepository } from '@/infrastructure/repositories/APIChatRepository.jsx';
 import PideaAgentBranchComponent from '../pidea-agent/PideaAgentBranchComponent.jsx';
+
+// Initialize API repository
+const apiRepository = new APIChatRepository();
 
 // Utility function to convert workspace path to project ID
 const getProjectIdFromWorkspace = (workspacePath) => {
@@ -57,10 +60,8 @@ const GitManagementComponent = ({ activePort, onGitOperation, onGitStatusChange,
       // Get project ID from workspace path
       const projectId = getProjectIdFromWorkspace(workspacePath);
       
-      const data = await apiCall(`/api/projects/${projectId}/git/status`, {
-        method: 'POST',
-        body: JSON.stringify({ projectPath: workspacePath })
-      });
+      // ✅ OPTIMIZATION: Use direct API methods (no Steps)
+      const data = await apiRepository.getGitStatus(projectId, workspacePath);
       
       setGitStatus(data.data?.status);
       setCurrentBranch(data.data?.currentBranch);
@@ -96,10 +97,8 @@ const GitManagementComponent = ({ activePort, onGitOperation, onGitStatusChange,
       // Get project ID from workspace path
       const projectId = getProjectIdFromWorkspace(workspacePath);
       
-      const data = await apiCall(`/api/projects/${projectId}/git/branches`, {
-        method: 'POST',
-        body: JSON.stringify({ projectPath: workspacePath })
-      });
+      // ✅ OPTIMIZATION: Use direct API methods (no Steps)
+      const data = await apiRepository.getGitBranches(projectId, workspacePath);
       
       // Ensure we always set an array
       if (data && data.data && Array.isArray(data.data.branches)) {
@@ -120,8 +119,13 @@ const GitManagementComponent = ({ activePort, onGitOperation, onGitStatusChange,
   // ✅ FIX: Move useEffect after function declarations
   useEffect(() => {
     if (workspacePath) {
-      loadGitStatus();
-      loadBranches();
+      // ✅ OPTIMIZATION: Parallel API calls instead of sequential
+      Promise.all([
+        loadGitStatus(),
+        loadBranches()
+      ]).catch(error => {
+        logger.error('Failed to load Git data in parallel:', error);
+      });
     }
   }, [workspacePath]); // ✅ FIX: Remove function dependencies to avoid circular reference
 
@@ -144,10 +148,7 @@ const GitManagementComponent = ({ activePort, onGitOperation, onGitStatusChange,
       // Get project ID from workspace path
       const projectId = getProjectIdFromWorkspace(workspacePath);
       
-      const result = await apiCall(`/api/projects/${projectId}/git/${operation}`, {
-        method: 'POST',
-        body: JSON.stringify({ projectPath: workspacePath, ...options })
-      });
+      const result = await apiRepository.performGitOperation(projectId, workspacePath, operation, options);
       setOperationResult({ type: 'success', message: result.message, data: result.data });
       await loadGitStatus();
       await loadBranches();
@@ -176,14 +177,7 @@ const GitManagementComponent = ({ activePort, onGitOperation, onGitStatusChange,
       // Get project ID from workspace path
       const projectId = getProjectIdFromWorkspace(workspacePath);
       
-      const result = await apiCall(`/api/projects/${projectId}/git/compare`, {
-        method: 'POST',
-        body: JSON.stringify({ 
-          projectPath: workspacePath, 
-          sourceBranch: currentBranch, 
-          targetBranch: 'main' 
-        })
-      });
+      const result = await apiRepository.compareBranches(projectId, workspacePath, currentBranch, 'main');
       setDiffContent(result.diff);
       setShowDiff(true);
     } catch (error) {

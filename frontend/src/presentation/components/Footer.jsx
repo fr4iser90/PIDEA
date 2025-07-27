@@ -1,13 +1,16 @@
 import React, { useState, useEffect } from 'react';
+import { APIChatRepository } from '@/infrastructure/repositories/APIChatRepository.jsx';
+
+// Initialize API repository
+const apiRepository = new APIChatRepository();
 
 function Footer({ eventBus, activePort, version = 'dev', message = 'Welcome to PIDEA!' }) {
   const [currentTime, setCurrentTime] = useState(new Date());
-  const [isOnline, setIsOnline] = useState(true);
+  const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [gitBranch, setGitBranch] = useState('');
   const [gitStatus, setGitStatus] = useState(null);
 
   useEffect(() => {
-    // Update time every second
     const timeInterval = setInterval(() => {
       setCurrentTime(new Date());
     }, 1000);
@@ -48,16 +51,26 @@ function Footer({ eventBus, activePort, version = 'dev', message = 'Welcome to P
           const projectName = pathParts[pathParts.length - 1];
           const projectId = projectName.toLowerCase().replace(/[^a-z0-9]/g, '');
           
-          // Get git status
-          const gitRes = await fetch(`/api/projects/${projectId}/git/status`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ projectPath: activeIDE.workspacePath })
-          });
-          const gitData = await gitRes.json();
+          // ✅ OPTIMIZATION: Use direct API methods (no Steps) with timeout
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
           
-          setGitStatus(gitData.data?.status || null);
-          setGitBranch(gitData.data?.currentBranch || '');
+          try {
+            const gitData = await apiRepository.getGitStatus(projectId, activeIDE.workspacePath);
+            clearTimeout(timeoutId);
+            
+            setGitStatus(gitData.data?.status || null);
+            setGitBranch(gitData.data?.currentBranch || '');
+          } catch (error) {
+            clearTimeout(timeoutId);
+            if (error.name === 'AbortError') {
+              console.warn('Git status request timed out');
+            } else {
+              console.error('Failed to fetch Git status:', error);
+            }
+            setGitBranch('');
+            setGitStatus(null);
+          }
         }
       } catch (error) {
         setGitBranch('');
@@ -65,7 +78,9 @@ function Footer({ eventBus, activePort, version = 'dev', message = 'Welcome to P
       }
     };
 
-    fetchGitStatus();
+    // ✅ OPTIMIZATION: Debounce rapid port changes
+    const timeoutId = setTimeout(fetchGitStatus, 100);
+    return () => clearTimeout(timeoutId);
   }, [activePort]);
 
   const formatTime = (date) => {

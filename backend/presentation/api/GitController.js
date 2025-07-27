@@ -43,13 +43,20 @@ class GitController {
                 });
             }
 
-            // // // this.logger.info('GitController: Getting Git status', { projectId, userId });
+            this.logger.info('GitController: Getting Git status', { projectId, userId });
 
-            const result = await this.gitApplicationService.getStatus(projectId, projectPath, userId);
+            // ✅ OPTIMIZATION: Parallel Git operations (no Steps)
+            const [status, currentBranch] = await Promise.all([
+                this.gitApplicationService.getStatusDirect(projectPath),
+                this.gitApplicationService.getCurrentBranchDirect(projectPath)
+            ]);
             
             res.json({
-                success: result.success,
-                data: result.data,
+                success: true,
+                data: {
+                    status,
+                    currentBranch
+                },
                 message: 'Git status retrieved successfully'
             });
 
@@ -92,11 +99,13 @@ class GitController {
                 });
             }
 
-            // ✅ OPTIMIZATION: Use combined Git info method to reduce duplicate calls
-            const gitInfo = await this.gitApplicationService.getGitInfo(projectPath, userId);
-            
-            const branches = gitInfo.data.branches;
-            const currentBranch = gitInfo.data.currentBranch;
+            this.logger.info('GitController: Getting branches', { projectId, userId });
+
+            // ✅ OPTIMIZATION: Parallel Git operations (no Steps)
+            const [branches, currentBranch] = await Promise.all([
+                this.gitApplicationService.getBranchesDirect(projectPath),
+                this.gitApplicationService.getCurrentBranchDirect(projectPath)
+            ]);
 
             res.json({
                 success: true,
@@ -628,11 +637,12 @@ class GitController {
 
             this.logger.info('GitController: Getting repository info', { projectId, userId });
 
-            const info = await this.gitService.getRepositoryInfo(projectPath);
+            // ✅ OPTIMIZATION: Use GitApplicationService with direct Commands/Handlers
+            const result = await this.gitApplicationService.getGitInfo(projectPath, userId);
 
             res.json({
                 success: true,
-                data: info,
+                data: result.data,
                 message: 'Repository info retrieved successfully'
             });
 
@@ -844,12 +854,12 @@ class GitController {
             this.logger.info('GitController: Getting pidea-agent branch status', { projectId, userId, projectPath });
 
             // Check if pidea-agent branch exists
-            this.logger.info('GitController: Calling GitService.getBranches()', { projectPath });
-            const branchesResult = await this.gitService.getBranches(projectPath, { includeRemote: true, includeLocal: true });
-            this.logger.info('GitController: GitService.getBranches() returned', { branchesResult });
+            this.logger.info('GitController: Getting branches via GitApplicationService', { projectPath });
+            const branchesResult = await this.gitApplicationService.getBranches(projectPath, userId);
+            this.logger.info('GitController: GitApplicationService.getBranches() returned', { branchesResult });
             
             // Fix: Extract branches from the nested structure
-            const branches = branchesResult && branchesResult.result && branchesResult.result.all ? branchesResult.result.all : [];
+            const branches = branchesResult && branchesResult.data && branchesResult.data.branches && branchesResult.data.branches.all ? branchesResult.data.branches.all : [];
             this.logger.info('GitController: Extracted branches.all', { branches });
             
             const pideaAgentExists = branches.includes('pidea-agent') || branches.includes('remotes/origin/pidea-agent');
@@ -869,14 +879,16 @@ class GitController {
             }
 
             // Get current branch
-            const currentBranch = await this.gitService.getCurrentBranch(projectPath);
+            const currentBranchResult = await this.gitApplicationService.getCurrentBranch(projectPath, userId);
+            const currentBranch = currentBranchResult.data.currentBranch;
             this.logger.info('GitController: Current branch', { currentBranch });
             
             // Get pidea-agent branch status
-            const pideaAgentStatus = await this.gitService.getStatus(projectPath, { branch: 'pidea-agent' });
+            const statusResult = await this.gitApplicationService.getStatus(projectId, projectPath, userId);
+            const pideaAgentStatus = statusResult.data.status;
 
             // Get last commit info for pidea-agent branch
-            const lastCommit = await this.gitService.getLastCommit(projectPath, { branch: 'pidea-agent' });
+            const lastCommit = await this.gitApplicationService.getLastCommitDirect(projectPath);
 
             if (this.eventBus) {
                 this.eventBus.publish('git.pidea-agent.status.retrieved', {

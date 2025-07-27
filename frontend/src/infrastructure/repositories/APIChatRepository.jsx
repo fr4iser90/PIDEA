@@ -829,20 +829,74 @@ export default class APIChatRepository extends ChatRepository {
   }
 
   // Git Management Methods
+  // Git operations - Direct API calls (fast, no Steps)
   async getGitStatus(projectId = null, projectPath = null) {
-    const actualProjectId = projectId || await this.getCurrentProjectId();
-    return apiCall(API_CONFIG.endpoints.git.status(actualProjectId), {
+    const currentProjectId = projectId || await this.getCurrentProjectId();
+    const currentProjectPath = projectPath || await this.getProjectPath(currentProjectId);
+    
+    // ✅ OPTIMIZATION: Use existing Git API (now uses direct Commands/Handlers)
+    return apiCall(`/api/projects/${currentProjectId}/git/status`, {
       method: 'POST',
-      body: JSON.stringify({ projectPath })
-    });
+      body: JSON.stringify({ projectPath: currentProjectPath })
+    }, currentProjectId);
   }
 
   async getGitBranches(projectId = null, projectPath = null) {
-    const actualProjectId = projectId || await this.getCurrentProjectId();
-    return apiCall(API_CONFIG.endpoints.git.branches(actualProjectId), {
+    const currentProjectId = projectId || await this.getCurrentProjectId();
+    const currentProjectPath = projectPath || await this.getProjectPath(currentProjectId);
+    
+    // ✅ OPTIMIZATION: Use existing Git API (now uses direct Commands/Handlers)
+    return apiCall(`/api/projects/${currentProjectId}/git/branches`, {
       method: 'POST',
-      body: JSON.stringify({ projectPath })
-    });
+      body: JSON.stringify({ projectPath: currentProjectPath })
+    }, currentProjectId);
+  }
+
+  async getGitInfo(projectId = null, projectPath = null) {
+    const currentProjectId = projectId || await this.getCurrentProjectId();
+    const currentProjectPath = projectPath || await this.getProjectPath(currentProjectId);
+    
+    // ✅ OPTIMIZATION: Use existing Git API (now uses direct Commands/Handlers)
+    return apiCall(`/api/projects/${currentProjectId}/git/info`, {
+      method: 'POST',
+      body: JSON.stringify({ projectPath: currentProjectPath })
+    }, currentProjectId);
+  }
+
+  // Helper method to get project path
+  async getProjectPath(projectId) {
+    try {
+      const response = await apiCall(`/api/projects/${projectId}/path`, {}, projectId);
+      return response.data?.path || '/home/fr4iser/Documents/Git/PIDEA';
+    } catch (error) {
+      console.warn('Failed to get project path, using default:', error);
+      return '/home/fr4iser/Documents/Git/PIDEA';
+    }
+  }
+
+  // Git operations - Complex operations (still use existing API)
+  async performGitOperation(projectId, projectPath, operation, options = {}) {
+    const currentProjectId = projectId || await this.getCurrentProjectId();
+    const currentProjectPath = projectPath || await this.getProjectPath(currentProjectId);
+    
+    return apiCall(`/api/projects/${currentProjectId}/git/${operation}`, {
+      method: 'POST',
+      body: JSON.stringify({ projectPath: currentProjectPath, ...options })
+    }, currentProjectId);
+  }
+
+  async compareBranches(projectId, projectPath, sourceBranch, targetBranch) {
+    const currentProjectId = projectId || await this.getCurrentProjectId();
+    const currentProjectPath = projectPath || await this.getProjectPath(currentProjectId);
+    
+    return apiCall(`/api/projects/${currentProjectId}/git/compare`, {
+      method: 'POST',
+      body: JSON.stringify({ 
+        projectPath: currentProjectPath, 
+        sourceBranch, 
+        targetBranch 
+      })
+    }, currentProjectId);
   }
 
   async validateGitChanges(projectId = null, projectPath = null) {
@@ -1083,3 +1137,4 @@ export default class APIChatRepository extends ChatRepository {
 }
 
 export { API_CONFIG }; 
+export { APIChatRepository }; 
