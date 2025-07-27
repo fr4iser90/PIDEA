@@ -26,8 +26,6 @@ function App() {
   const [isLeftSidebarVisible, setIsLeftSidebarVisible] = useState(true);
   const [isRightSidebarVisible, setIsRightSidebarVisible] = useState(true);
 
-  
-
   const [attachedPrompts, setAttachedPrompts] = useState([]);
   const containerRef = useRef(null);
   const { isAuthenticated } = useAuthStore();
@@ -41,7 +39,11 @@ function App() {
     loadActivePort,
     setActivePort,
     refresh: refreshIDE,
-    clearError: clearIDEError
+    clearError: clearIDEError,
+    // ✅ NEW: Global state actions
+    setupWebSocketListeners,
+    cleanupWebSocketListeners,
+    loadProjectData
   } = useIDEStore();
 
   useEffect(() => {
@@ -49,9 +51,36 @@ function App() {
     setupEventListeners();
     initializeApp();
     return () => {
-      // Cleanup if needed
+      // ✅ NEW: Cleanup WebSocket listeners on app unmount
+      if (eventBus) {
+        cleanupWebSocketListeners(eventBus);
+      }
     };
   }, []);
+
+  // ✅ NEW: Setup global state WebSocket listeners
+  useEffect(() => {
+    if (eventBus && isAuthenticated) {
+      logger.info('Setting up global state WebSocket listeners');
+      setupWebSocketListeners(eventBus);
+      
+      return () => {
+        logger.info('Cleaning up global state WebSocket listeners');
+        cleanupWebSocketListeners(eventBus);
+      };
+    }
+  }, [eventBus, isAuthenticated, setupWebSocketListeners, cleanupWebSocketListeners]);
+
+  // ✅ NEW: Initialize project data when active IDE changes
+  useEffect(() => {
+    if (isAuthenticated && availableIDEs.length > 0) {
+      const activeIDE = availableIDEs.find(ide => ide.active);
+      if (activeIDE && activeIDE.workspacePath) {
+        logger.info('Initializing project data for active IDE:', activeIDE.workspacePath);
+        loadProjectData(activeIDE.workspacePath);
+      }
+    }
+  }, [isAuthenticated, availableIDEs, loadProjectData]);
 
   const setupEventListeners = () => {
     if (eventBus) {
@@ -104,13 +133,20 @@ function App() {
       if (data && data.port) {
         // IDEStore will handle the port change automatically
         logger.info('Active IDE changed event received:', data.port);
+        
+        // ✅ NEW: Load project data when IDE changes
+        const activeIDE = availableIDEs.find(ide => ide.port === data.port);
+        if (activeIDE && activeIDE.workspacePath) {
+          logger.info('Loading project data for new active IDE:', activeIDE.workspacePath);
+          loadProjectData(activeIDE.workspacePath);
+        }
       }
     };
     eventBus.on('activeIDEChanged', handleActiveIDEChanged);
     return () => {
       eventBus.off('activeIDEChanged', handleActiveIDEChanged);
     };
-  }, [eventBus]);
+  }, [eventBus, availableIDEs, loadProjectData]);
 
   useEffect(() => {
     if (!eventBus) return;
@@ -123,8 +159,6 @@ function App() {
       eventBus.off('sidebar-right-toggle', handleRightSidebarToggle);
     };
   }, [eventBus]);
-
-
 
   const renderView = () => {
     switch (currentView) {
@@ -164,7 +198,7 @@ function App() {
     }
   };
 
-    const handleNavigationClick = (view) => {
+  const handleNavigationClick = (view) => {
     if (view === 'preview') {
       // Toggle split view for preview
       setIsSplitView(!isSplitView);

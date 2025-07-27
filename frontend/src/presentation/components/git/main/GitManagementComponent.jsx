@@ -3,6 +3,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import '@/css/main/git.css';
 import { apiCall, APIChatRepository } from '@/infrastructure/repositories/APIChatRepository.jsx';
 import PideaAgentBranchComponent from '../pidea-agent/PideaAgentBranchComponent.jsx';
+import { useGitStatus, useGitBranches, useActiveIDE, useProjectDataActions } from '@/infrastructure/stores/selectors/ProjectSelectors.jsx';
 
 // Initialize API repository
 const apiRepository = new APIChatRepository();
@@ -20,121 +21,40 @@ const getProjectIdFromWorkspace = (workspacePath) => {
 };
 
 const GitManagementComponent = ({ activePort, onGitOperation, onGitStatusChange, eventBus }) => {
-  const [gitStatus, setGitStatus] = useState(null);
-  const [currentBranch, setCurrentBranch] = useState('');
-  const [branches, setBranches] = useState([]);
+  // ✅ REFACTORED: Use global state selectors instead of local state
+  const gitStatus = useGitStatus();
+  const gitBranches = useGitBranches();
+  const activeIDE = useActiveIDE();
+  const { loadProjectData } = useProjectDataActions();
+  
+  // Local state for UI interactions
   const [isLoading, setIsLoading] = useState(false);
   const [operationResult, setOperationResult] = useState(null);
   const [showDiff, setShowDiff] = useState(false);
   const [diffContent, setDiffContent] = useState('');
-  const [workspacePath, setWorkspacePath] = useState('');
   const [showPideaAgent, setShowPideaAgent] = useState(false);
 
-  // ✅ FIX: Move useEffect after function declarations to avoid "can't access lexical declaration" error
-  const loadWorkspacePath = async () => {
-    try {
-      const result = await apiCall('/api/ide/available');
-      if (result.success && result.data) {
-        const activeIDE = result.data.find(ide => ide.port === activePort);
-        if (activeIDE && activeIDE.workspacePath) {
-          setWorkspacePath(activeIDE.workspacePath);
-        }
-      }
-    } catch (error) {
-      logger.error('Failed to load workspace path:', error);
-    }
-  };
-
-  const loadGitStatus = useCallback(async () => {
-    try {
-      if (!workspacePath) return;
-      
-      // ✅ OPTIMIZATION: Prevent duplicate requests
-      if (isLoading) {
-        logger.info('Skipping duplicate Git status load - already loading');
-        return;
-      }
-      
-      setIsLoading(true);
-      
-      // Get project ID from workspace path
-      const projectId = getProjectIdFromWorkspace(workspacePath);
-      
-      // ✅ OPTIMIZATION: Use direct API methods (no Steps)
-      const data = await apiRepository.getGitStatus(projectId, workspacePath);
-      
-      setGitStatus(data.data?.status);
-      setCurrentBranch(data.data?.currentBranch);
-      
-      // Emit event for App component
-      if (eventBus) {
-        eventBus.emit('git-status-changed', {
-          status: data.data?.status,
-          currentBranch: data.data?.currentBranch
-        });
-      }
-      
-      if (onGitStatusChange) {
-        onGitStatusChange(data.data?.status);
-      }
-    } catch (error) {
-      logger.error('Failed to load Git status:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [workspacePath, isLoading, eventBus, onGitStatusChange]);
-
-  const loadBranches = useCallback(async () => {
-    try {
-      if (!workspacePath) return;
-      
-      // ✅ OPTIMIZATION: Prevent duplicate requests
-      if (isLoading) {
-        logger.info('Skipping duplicate branches load - already loading');
-        return;
-      }
-      
-      // Get project ID from workspace path
-      const projectId = getProjectIdFromWorkspace(workspacePath);
-      
-      // ✅ OPTIMIZATION: Use direct API methods (no Steps)
-      const data = await apiRepository.getGitBranches(projectId, workspacePath);
-      
-      // Ensure we always set an array
-      if (data && data.data && Array.isArray(data.data.branches)) {
-        setBranches(data.data.branches);
-      } else if (data && data.data && data.data.result && Array.isArray(data.data.result)) {
-        // Fallback for old format
-        setBranches(data.data.result);
-      } else {
-        logger.warn('No valid branches data received, setting empty array');
-        setBranches([]);
-      }
-    } catch (error) {
-      logger.error('Failed to load branches:', error);
-      setBranches([]); // Set empty array on error
-    }
-  }, [workspacePath, isLoading]);
-
-  // ✅ FIX: Move useEffect after function declarations
+  // ✅ REFACTORED: Load project data when active IDE changes
   useEffect(() => {
-    if (workspacePath) {
-      // ✅ OPTIMIZATION: Parallel API calls instead of sequential
-      Promise.all([
-        loadGitStatus(),
-        loadBranches()
-      ]).catch(error => {
-        logger.error('Failed to load Git data in parallel:', error);
-      });
+    if (activeIDE.workspacePath) {
+      logger.info('Loading project data for active IDE:', activeIDE.workspacePath);
+      loadProjectData(activeIDE.workspacePath);
     }
-  }, [workspacePath]); // ✅ FIX: Remove function dependencies to avoid circular reference
+  }, [activeIDE.workspacePath, loadProjectData]);
 
-  // ✅ FIX: Add back workspace path loading effect
+  // ✅ REFACTORED: Setup WebSocket listeners for real-time updates
   useEffect(() => {
-    if (activePort) {
-      loadWorkspacePath();
+    if (eventBus) {
+      logger.info('Setting up WebSocket listeners for GitManagementComponent');
+      // WebSocket listeners are now handled by the store
+      // No need to set up individual listeners here
     }
-  }, [activePort]);
+  }, [eventBus]);
+
+  // ✅ REFACTORED: Use global state instead of local state
+  const currentBranch = gitStatus.currentBranch;
+  const branches = gitBranches.branches;
+  const workspacePath = activeIDE.workspacePath;
 
   const handleGitOperation = async (operation, options = {}) => {
     try {
@@ -150,8 +70,10 @@ const GitManagementComponent = ({ activePort, onGitOperation, onGitStatusChange,
       
       const result = await apiRepository.performGitOperation(projectId, workspacePath, operation, options);
       setOperationResult({ type: 'success', message: result.message, data: result.data });
-      await loadGitStatus();
-      await loadBranches();
+      
+      // ✅ REFACTORED: Reload project data from global state instead of individual calls
+      await loadProjectData(workspacePath);
+      
       if (onGitOperation) {
         onGitOperation(operation, result);
       }
@@ -211,21 +133,22 @@ const GitManagementComponent = ({ activePort, onGitOperation, onGitStatusChange,
     }
   };
 
+  // ✅ REFACTORED: Use global state for status information
   const getStatusIcon = () => {
-    if (!gitStatus) return '❓';
-    if (gitStatus.modified.length > 0 || gitStatus.added.length > 0) return '⚠️';
+    if (!gitStatus.status) return '❓';
+    if (gitStatus.hasChanges) return '⚠️';
     return '✅';
   };
 
   const getStatusText = () => {
-    if (!gitStatus) return 'Unknown';
-    const totalChanges = gitStatus.modified.length + gitStatus.added.length + gitStatus.deleted.length;
-    if (totalChanges === 0) return 'Clean';
+    if (!gitStatus.status) return 'Unknown';
+    if (!gitStatus.hasChanges) return 'Clean';
+    const totalChanges = gitStatus.modifiedFiles.length + gitStatus.addedFiles.length + gitStatus.deletedFiles.length;
     return `${totalChanges} changes`;
   };
 
-  // Filtere nur lokale Branches (ohne 'remotes/')
-  const localBranches = Array.isArray(branches) ? branches.filter(branch => !branch.startsWith('remotes/')) : [];
+  // ✅ REFACTORED: Use global state for branches
+  const localBranches = gitBranches.localBranches;
 
   return (
     <div className="git-management">
@@ -239,7 +162,7 @@ const GitManagementComponent = ({ activePort, onGitOperation, onGitStatusChange,
         
         <div className="git-actions">
           <button
-            onClick={loadGitStatus}
+            onClick={() => loadProjectData(workspacePath)}
             className="git-btn refresh-btn"
             disabled={isLoading}
             title="Refresh Git status"
@@ -330,30 +253,30 @@ const GitManagementComponent = ({ activePort, onGitOperation, onGitStatusChange,
       </div>
 
       {/* Git Status Details */}
-      {gitStatus && (
+      {gitStatus.status && (
         <div className="git-status-details">
           <div className="status-section">
-            <h4>📝 Modified Files ({gitStatus.modified.length})</h4>
+            <h4>📝 Modified Files ({gitStatus.modifiedFiles.length})</h4>
             <ul className="file-list">
-              {gitStatus.modified.map(file => (
+              {gitStatus.modifiedFiles.map(file => (
                 <li key={file} className="file-item modified">{file}</li>
               ))}
             </ul>
           </div>
 
           <div className="status-section">
-            <h4>➕ Added Files ({gitStatus.added.length})</h4>
+            <h4>➕ Added Files ({gitStatus.addedFiles.length})</h4>
             <ul className="file-list">
-              {gitStatus.added.map(file => (
+              {gitStatus.addedFiles.map(file => (
                 <li key={file} className="file-item added">{file}</li>
               ))}
             </ul>
           </div>
 
           <div className="status-section">
-            <h4>🗑️ Deleted Files ({gitStatus.deleted.length})</h4>
+            <h4>🗑️ Deleted Files ({gitStatus.deletedFiles.length})</h4>
             <ul className="file-list">
-              {gitStatus.deleted.map(file => (
+              {gitStatus.deletedFiles.map(file => (
                 <li key={file} className="file-item deleted">{file}</li>
               ))}
             </ul>
@@ -407,9 +330,8 @@ const GitManagementComponent = ({ activePort, onGitOperation, onGitStatusChange,
             activePort={activePort}
             onPideaAgentOperation={(operation, result) => {
               logger.info('Pidea-Agent operation completed:', operation, result);
-              // Refresh git status after pidea-agent operation
-              loadGitStatus();
-              loadBranches();
+              // ✅ REFACTORED: Refresh project data from global state
+              loadProjectData(workspacePath);
             }}
             onPideaAgentStatusChange={(status) => {
               logger.info('Pidea-Agent status changed:', status);

@@ -2,6 +2,7 @@ import { logger } from "@/infrastructure/logging/Logger";
 import React, { useState, useEffect, useCallback } from 'react';
 import APIChatRepository from '@/infrastructure/repositories/APIChatRepository';
 import useNotificationStore from '@/infrastructure/stores/NotificationStore.jsx';
+import { useAnalysisStatus, useAnalysisMetrics, useAnalysisHistory, useActiveIDE, useProjectDataActions } from '@/infrastructure/stores/selectors/ProjectSelectors.jsx';
 import AnalysisCharts from './AnalysisCharts';
 import AnalysisMetrics from './AnalysisMetrics';
 import AnalysisFilters from './AnalysisFilters';
@@ -16,15 +17,19 @@ import IndividualAnalysisButtons from './IndividualAnalysisButtons';
 import '@/css/components/analysis/analysis-data-viewer.css';
 
 const AnalysisDataViewer = ({ projectId = null, eventBus = null }) => {
+  // ✅ REFACTORED: Use global state selectors instead of local state
+  const analysisStatus = useAnalysisStatus();
+  const analysisMetrics = useAnalysisMetrics();
+  const analysisHistory = useAnalysisHistory();
+  const activeIDE = useActiveIDE();
+  const { loadProjectData } = useProjectDataActions();
+  
+  // Local state for UI interactions and non-global data
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [analysisData, setAnalysisData] = useState({
-    metrics: null,
-    status: null,
-    history: [],
-    charts: null,
     issues: null,
-    techStack: null,
+    charts: null,
     architecture: null,
     recommendations: null,
     hasRecentData: false
@@ -53,10 +58,6 @@ const AnalysisDataViewer = ({ projectId = null, eventBus = null }) => {
   
   // Individual loading states for progressive loading
   const [loadingStates, setLoadingStates] = useState({
-    metrics: false,
-    status: false,
-    history: false,
-    charts: false,
     issues: false,
     techStack: false,
     architecture: false,
@@ -65,6 +66,14 @@ const AnalysisDataViewer = ({ projectId = null, eventBus = null }) => {
 
   const apiRepository = new APIChatRepository();
   const { showSuccess, showInfo } = useNotificationStore();
+
+  // ✅ REFACTORED: Load project data when active IDE changes
+  useEffect(() => {
+    if (activeIDE.workspacePath) {
+      logger.info('Loading project data for active IDE:', activeIDE.workspacePath);
+      loadProjectData(activeIDE.workspacePath);
+    }
+  }, [activeIDE.workspacePath, loadProjectData]);
 
   useEffect(() => {
     // Only setup event listeners, don't auto-load data
@@ -97,8 +106,7 @@ const AnalysisDataViewer = ({ projectId = null, eventBus = null }) => {
     setLoadingStates(prev => ({ ...prev, [key]: loading }));
   };
 
-
-
+  // ✅ REFACTORED: Simplified data loading using global state
   const loadAnalysisData = useCallback(async (forceRefresh = false) => {
     console.log('🚀 [DEBUG] loadAnalysisData called', { forceRefresh, projectId });
     logger.info('🚀 [AnalysisDataViewer] loadAnalysisData called', { forceRefresh, projectId });
@@ -107,54 +115,17 @@ const AnalysisDataViewer = ({ projectId = null, eventBus = null }) => {
       setLoading(true);
       setError(null);
 
-      const currentProjectId = projectId || await apiRepository.getCurrentProjectId();
+      const currentProjectId = projectId || activeIDE.projectId;
       console.log('🔍 [DEBUG] Current project ID:', currentProjectId);
       
-      // Step 1: Load only essential data first (status, metrics, history)
-      updateLoadingState('status', true);
-      updateLoadingState('metrics', true);
-      updateLoadingState('history', true);
+      if (!currentProjectId) {
+        throw new Error('No project ID available');
+      }
       
-      console.log('📡 [DEBUG] Starting API calls...');
-      logger.info('📡 [AnalysisDataViewer] Starting API calls...');
+      // ✅ REFACTORED: Load project data from global state
+      await loadProjectData(activeIDE.workspacePath);
       
-      // ✅ OPTIMIZATION: Use direct API calls (bypass StepRegistry) for faster loading
-      const [statusResponse, metricsResponse, historyResponse, techStackResponse] = await Promise.all([
-        apiRepository.getAnalysisStatusDirect?.(currentProjectId) || Promise.resolve({ success: false, data: null }),
-        apiRepository.getAnalysisMetricsDirect?.(currentProjectId) || Promise.resolve({ success: false, data: null }),
-        apiRepository.getAnalysisHistoryDirect?.(currentProjectId) || Promise.resolve({ success: false, data: [] }),
-        apiRepository.getAnalysisTechStackDirect?.(currentProjectId) || Promise.resolve({ success: false, data: null })
-      ]);
-
-      console.log('📊 [DEBUG] API responses received:', {
-        statusSuccess: statusResponse.success,
-        metricsSuccess: metricsResponse.success,
-        historySuccess: historyResponse.success,
-        techStackSuccess: techStackResponse.success,
-        statusData: statusResponse.data ? 'present' : 'null',
-        metricsData: metricsResponse.data ? 'present' : 'null',
-        historyData: historyResponse.data ? `${historyResponse.data.length} items` : 'null',
-        techStackData: techStackResponse.data ? 'present' : 'null'
-      });
-
-      // Update UI with essential data immediately
-      setAnalysisData(prev => ({
-        ...prev,
-        status: statusResponse.success ? statusResponse.data : null,
-        metrics: metricsResponse.success ? metricsResponse.data : null,
-        history: historyResponse.success ? (historyResponse.data || []) : [],
-        techStack: techStackResponse.success ? techStackResponse.data : null
-      }));
-
-      updateLoadingState('status', false);
-      updateLoadingState('metrics', false);
-      updateLoadingState('history', false);
-
-      // Check if we have recent analysis data
-      const hasRecentData = await checkForRecentAnalysisData(historyResponse, currentProjectId);
-      setAnalysisData(prev => ({ ...prev, hasRecentData }));
-
-      console.log('✅ [DEBUG] Analysis data loaded successfully');
+      console.log('✅ [DEBUG] Analysis data loaded successfully from global state');
 
       // Show success notification if data was loaded successfully
       if (forceRefresh) {
@@ -168,7 +139,7 @@ const AnalysisDataViewer = ({ projectId = null, eventBus = null }) => {
     } finally {
       setLoading(false);
     }
-  }, [projectId, apiRepository, showSuccess]);
+  }, [projectId, activeIDE.projectId, activeIDE.workspacePath, loadProjectData, showSuccess]);
 
   // Lazy loading functions for non-essential data
   const loadIssuesData = useCallback(async () => {
@@ -187,7 +158,7 @@ const AnalysisDataViewer = ({ projectId = null, eventBus = null }) => {
     
     try {
       updateLoadingState('issues', true);
-      const currentProjectId = projectId || await apiRepository.getCurrentProjectId();
+      const currentProjectId = projectId || activeIDE.projectId;
       // ✅ OPTIMIZATION: Use direct API call (bypass StepRegistry) for faster loading
       const issuesResponse = await apiRepository.getAnalysisIssuesDirect?.(currentProjectId) || Promise.resolve({ success: false, data: null });
       
@@ -200,28 +171,15 @@ const AnalysisDataViewer = ({ projectId = null, eventBus = null }) => {
     } finally {
       updateLoadingState('issues', false);
     }
-  }, [analysisData.issues, expandedSections.issues, projectId, apiRepository]);
+  }, [analysisData.issues, expandedSections.issues, projectId, activeIDE.projectId, apiRepository]);
 
   const loadTechStackData = useCallback(async () => {
-    console.log('🔧 [DEBUG] loadTechStackData called', { 
-      techStackData: analysisData.techStack, 
-      expandedSections: expandedSections,
-      isExpanded: expandedSections.techStack 
-    });
-    
-    if (analysisData.techStack !== null) {
-      console.log('🔧 [DEBUG] loadTechStackData: Already loaded, returning');
-      return; // Already loaded
-    }
-    
-    console.log('🔧 [DEBUG] loadTechStackData: Starting API call');
+    if (analysisData.techStack !== null) return; // Already loaded
     
     try {
       updateLoadingState('techStack', true);
-      const currentProjectId = projectId || await apiRepository.getCurrentProjectId();
-      const techStackResponse = await apiRepository.getAnalysisTechStack?.(currentProjectId) || Promise.resolve({ success: false, data: null });
-      
-      logger.info('🔧 [AnalysisDataViewer] Tech stack response received');
+      const currentProjectId = projectId || activeIDE.projectId;
+      const techStackResponse = await apiRepository.getAnalysisTechStackDirect?.(currentProjectId) || Promise.resolve({ success: false, data: null });
       
       setAnalysisData(prev => ({
         ...prev,
@@ -232,28 +190,15 @@ const AnalysisDataViewer = ({ projectId = null, eventBus = null }) => {
     } finally {
       updateLoadingState('techStack', false);
     }
-  }, [projectId, apiRepository, analysisData.techStack, expandedSections]);
+  }, [analysisData.techStack, projectId, activeIDE.projectId, apiRepository]);
 
   const loadArchitectureData = useCallback(async () => {
-    console.log('🏗️ [DEBUG] loadArchitectureData called', { 
-      architectureData: analysisData.architecture, 
-      expandedSections: expandedSections,
-      isExpanded: expandedSections.architecture 
-    });
-    
-    if (analysisData.architecture !== null) {
-      console.log('🏗️ [DEBUG] loadArchitectureData: Already loaded, returning');
-      return; // Already loaded
-    }
-    
-    console.log('🏗️ [DEBUG] loadArchitectureData: Starting API call');
+    if (analysisData.architecture !== null) return; // Already loaded
     
     try {
       updateLoadingState('architecture', true);
-      const currentProjectId = projectId || await apiRepository.getCurrentProjectId();
-      const architectureResponse = await apiRepository.getAnalysisArchitecture?.(currentProjectId) || Promise.resolve({ success: false, data: null });
-      
-      logger.info('🏗️ [AnalysisDataViewer] Architecture response received');
+      const currentProjectId = projectId || activeIDE.projectId;
+      const architectureResponse = await apiRepository.getAnalysisArchitectureDirect?.(currentProjectId) || Promise.resolve({ success: false, data: null });
       
       setAnalysisData(prev => ({
         ...prev,
@@ -264,28 +209,15 @@ const AnalysisDataViewer = ({ projectId = null, eventBus = null }) => {
     } finally {
       updateLoadingState('architecture', false);
     }
-  }, [projectId, apiRepository, analysisData.architecture, expandedSections]);
+  }, [analysisData.architecture, projectId, activeIDE.projectId, apiRepository]);
 
   const loadRecommendationsData = useCallback(async () => {
-    console.log('💡 [DEBUG] loadRecommendationsData called', { 
-      recommendationsData: analysisData.recommendations, 
-      expandedSections: expandedSections,
-      isExpanded: expandedSections.recommendations 
-    });
-    
-    if (analysisData.recommendations !== null) {
-      console.log('💡 [DEBUG] loadRecommendationsData: Already loaded, returning');
-      return; // Already loaded
-    }
-    
-    console.log('💡 [DEBUG] loadRecommendationsData: Starting API call');
+    if (analysisData.recommendations !== null) return; // Already loaded
     
     try {
       updateLoadingState('recommendations', true);
-      const currentProjectId = projectId || await apiRepository.getCurrentProjectId();
-      const recommendationsResponse = await apiRepository.getAnalysisRecommendations?.(currentProjectId) || Promise.resolve({ success: false, data: null });
-      
-      logger.info('💡 [AnalysisDataViewer] Recommendations response received');
+      const currentProjectId = projectId || activeIDE.projectId;
+      const recommendationsResponse = await apiRepository.getAnalysisRecommendationsDirect?.(currentProjectId) || Promise.resolve({ success: false, data: null });
       
       setAnalysisData(prev => ({
         ...prev,
@@ -296,26 +228,15 @@ const AnalysisDataViewer = ({ projectId = null, eventBus = null }) => {
     } finally {
       updateLoadingState('recommendations', false);
     }
-  }, [projectId, apiRepository, analysisData.recommendations, expandedSections]);
+  }, [analysisData.recommendations, projectId, activeIDE.projectId, apiRepository]);
 
   const loadChartsData = useCallback(async () => {
-    console.log('📈 [DEBUG] loadChartsData called', { 
-      chartsData: analysisData.charts, 
-      expandedSections: expandedSections,
-      isExpanded: expandedSections.charts 
-    });
-    
-    if (analysisData.charts !== null) {
-      console.log('📈 [DEBUG] loadChartsData: Already loaded, returning');
-      return; // Already loaded
-    }
-    
-    console.log('📈 [DEBUG] loadChartsData: Starting API call');
+    if (analysisData.charts !== null) return; // Already loaded
     
     try {
       updateLoadingState('charts', true);
-      const currentProjectId = projectId || await apiRepository.getCurrentProjectId();
-      const chartsResponse = await apiRepository.getAnalysisCharts?.(currentProjectId, 'trends') || Promise.resolve({ success: false, data: null });
+      const currentProjectId = projectId || activeIDE.projectId;
+      const chartsResponse = await apiRepository.getAnalysisChartsDirect?.(currentProjectId) || Promise.resolve({ success: false, data: null });
       
       setAnalysisData(prev => ({
         ...prev,
@@ -326,155 +247,93 @@ const AnalysisDataViewer = ({ projectId = null, eventBus = null }) => {
     } finally {
       updateLoadingState('charts', false);
     }
-  }, [projectId, apiRepository, analysisData.charts, expandedSections]);
+  }, [analysisData.charts, projectId, activeIDE.projectId, apiRepository]);
 
-  // Handle section expansion to trigger lazy loading
+  // ✅ REFACTORED: Use global state for section toggle logic
   const handleSectionToggle = (sectionName) => {
-    console.log('🔄 [DEBUG] handleSectionToggle called', { 
-      sectionName, 
-      currentExpanded: expandedSections[sectionName],
-      allExpandedSections: expandedSections 
-    });
+    console.log('🎯 [DEBUG] handleSectionToggle called:', sectionName);
     
     setExpandedSections(prev => {
-      const newExpanded = { ...prev, [sectionName]: !prev[sectionName] };
-      
-      console.log('🔄 [DEBUG] handleSectionToggle new state', { 
-        sectionName, 
-        willBeExpanded: newExpanded[sectionName],
-        allNewExpandedSections: newExpanded 
-      });
-      
-      // Trigger lazy loading when section is expanded
-      if (newExpanded[sectionName]) {
-        console.log('🔄 [DEBUG] handleSectionToggle: Section will be expanded, triggering lazy load', { sectionName });
-        
-        switch (sectionName) {
-          case 'issues':
-            loadIssuesData();
-            break;
-          case 'techStack':
-            loadTechStackData();
-            break;
-          case 'architecture':
-            loadArchitectureData();
-            break;
-          case 'recommendations':
-            loadRecommendationsData();
-            break;
-          case 'charts':
-            loadChartsData();
-            break;
-        }
-      } else {
-        console.log('🔄 [DEBUG] handleSectionToggle: Section will be collapsed', { sectionName });
-      }
-      
-      return newExpanded;
+      const newExpandedSections = { ...prev, [sectionName]: !prev[sectionName] };
+      console.log('🎯 [DEBUG] New expandedSections:', newExpandedSections);
+      return newExpandedSections;
     });
+
+    // Load data when section is expanded
+    if (!expandedSections[sectionName]) {
+      switch (sectionName) {
+        case 'issues':
+          loadIssuesData();
+          break;
+        case 'techStack':
+          loadTechStackData();
+          break;
+        case 'architecture':
+          loadArchitectureData();
+          break;
+        case 'recommendations':
+          loadRecommendationsData();
+          break;
+        case 'charts':
+          loadChartsData();
+          break;
+        default:
+          break;
+      }
+    }
   };
 
-  /**
-   * Check if we have recent analysis data to avoid unnecessary re-analysis
-   * @param {Object} historyResponse - Analysis history response
-   * @param {string} projectId - Current project ID
-   * @returns {Promise<boolean>} Whether recent data exists
-   */
+  // ✅ REFACTORED: Simplified recent data check using global state
   const checkForRecentAnalysisData = async (historyResponse, projectId) => {
     try {
-      if (!historyResponse.success || !historyResponse.data || historyResponse.data.length === 0) {
+      // Use global state history data
+      const history = analysisHistory.history;
+      if (!history || history.length === 0) {
         return false;
       }
 
-      const latestAnalysis = historyResponse.data[0];
-      const analysisDate = new Date(latestAnalysis.timestamp || latestAnalysis.created_at);
-      const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
-
-      const isRecent = analysisDate > oneHourAgo;
-      
-      logger.info('🔍 [AnalysisDataViewer] Analysis data freshness check:', {
-        latestAnalysisDate: analysisDate.toISOString(),
-        oneHourAgo: oneHourAgo.toISOString(),
-        isRecent,
-        projectId
+      // Check if we have recent analysis (within last 24 hours)
+      const recentAnalysis = history.find(analysis => {
+        const analysisDate = new Date(analysis.timestamp || analysis.createdAt);
+        const now = new Date();
+        const diffHours = (now - analysisDate) / (1000 * 60 * 60);
+        return diffHours < 24;
       });
 
-      return isRecent;
+      return !!recentAnalysis;
     } catch (error) {
-      logger.warn('Analysis data freshness check failed:', error);
+      logger.error('Error checking for recent analysis data:', error);
       return false;
     }
   };
 
+  // ✅ REFACTORED: Simplified event handlers using global state
   const handleAnalysisStatusUpdate = (data) => {
-    // Only update status if it's actually different to avoid unnecessary re-renders
-    if (data.projectId === (projectId || analysisData.status?.projectId)) {
-      const currentStatus = analysisData.status;
-      const newStatus = data.status;
-      
-      // Only update if status actually changed
-      if (!currentStatus || 
-          currentStatus.status !== newStatus.status ||
-          currentStatus.progress !== newStatus.progress ||
-          currentStatus.currentStep !== newStatus.currentStep) {
-        
-        logger.info('🔄 [AnalysisDataViewer] Status update received:', {
-          oldStatus: currentStatus?.status,
-          newStatus: newStatus.status,
-          oldProgress: currentStatus?.progress,
-          newProgress: newStatus.progress
-        });
-        
-        setAnalysisData(prev => ({
-          ...prev,
-          status: data.status
-        }));
-      }
-    }
+    console.log('📊 [DEBUG] Analysis status update received:', data);
+    logger.info('Analysis status update received:', data);
+    
+    // Global state will be updated automatically via WebSocket
+    // No need to manually update local state
   };
 
   const handleAnalysisCompleted = (data) => {
-    logger.info('🔍 [AnalysisDataViewer] Analysis completed event received:', data);
-    logger.info('🔍 [AnalysisDataViewer] Current projectId:', projectId);
-    logger.info('🔍 [AnalysisDataViewer] Event projectId:', data.projectId);
-    logger.info('🔍 [AnalysisDataViewer] Status projectId:', analysisData.status?.projectId);
+    console.log('✅ [DEBUG] Analysis completed:', data);
+    logger.info('Analysis completed:', data);
     
-    if (data.projectId === (projectId || analysisData.status?.projectId)) {
-      logger.info('🔍 [AnalysisDataViewer] Project ID matches, refreshing data...');
-      // Force fresh data when analysis completes (ETag will handle caching)
-      showSuccess('Analysis completed! Data refreshed.', 'Analysis Complete');
-      
-      // Reset lazy loaded data to force reload when sections are expanded
-      setAnalysisData(prev => ({
-        ...prev,
-        issues: null,
-        techStack: null,
-        architecture: null,
-        recommendations: null,
-        charts: null
-      }));
-      
-      // Force fresh data with a small delay to ensure backend has processed the data
-      setTimeout(() => {
-        logger.info('🔍 [AnalysisDataViewer] Starting data refresh...');
-        loadAnalysisData(true); // forceRefresh = true
-      }, 1000);
-    } else {
-      logger.info('🔍 [AnalysisDataViewer] Project ID does not match, ignoring event');
+    // Reload project data from global state
+    if (activeIDE.workspacePath) {
+      loadProjectData(activeIDE.workspacePath);
     }
+    
+    showSuccess('Analysis completed successfully!', 'Analysis Complete');
   };
 
   const handleAnalysisProgress = (data) => {
-    if (data.projectId === (projectId || analysisData.status?.projectId)) {
-      setAnalysisData(prev => ({
-        ...prev,
-        status: {
-          ...prev.status,
-          progress: data.progress,
-          currentStep: data.step
-        }
-      }));
-    }
+    console.log('📈 [DEBUG] Analysis progress:', data);
+    logger.info('Analysis progress:', data);
+    
+    // Global state will be updated automatically via WebSocket
+    // No need to manually update local state
   };
 
   const handleFilterChange = (newFilters) => {
@@ -487,10 +346,7 @@ const AnalysisDataViewer = ({ projectId = null, eventBus = null }) => {
   };
 
   const handleRefresh = () => {
-    // Force fresh data (ETag will handle caching)
-    showInfo('Refreshing analysis data...', 'Data Refresh');
-    
-    // Reset lazy loaded data to force reload when sections are expanded
+    setError(null);
     setAnalysisData(prev => ({
       ...prev,
       issues: null,
@@ -511,7 +367,7 @@ const AnalysisDataViewer = ({ projectId = null, eventBus = null }) => {
     try {
       setLoading(true);
       setError(null);
-      const currentProjectId = projectId || await apiRepository.getCurrentProjectId();
+      const currentProjectId = projectId || activeIDE.projectId;
       
       // Check if we already have recent data
       if (analysisData.hasRecentData) {
@@ -540,7 +396,8 @@ const AnalysisDataViewer = ({ projectId = null, eventBus = null }) => {
     }
   };
 
-  if (loading && !analysisData.metrics) {
+  // ✅ REFACTORED: Use global state for loading and error states
+  if (loading && !analysisMetrics.hasMetrics) {
     return (
       <div className="analysis-data-viewer loading">
         <div className="loading-spinner"></div>
@@ -570,7 +427,7 @@ const AnalysisDataViewer = ({ projectId = null, eventBus = null }) => {
         <div className="analysis-title">
           <h2>📊 Analysis Dashboard</h2>
           <AnalysisStatus 
-            status={analysisData.status} 
+            status={analysisStatus.status} 
             onStartAnalysis={handleStartAnalysis}
             loading={loading}
           />
@@ -600,140 +457,126 @@ const AnalysisDataViewer = ({ projectId = null, eventBus = null }) => {
         <AnalysisFilters 
           filters={filters}
           onFilterChange={handleFilterChange}
-          projectId={projectId}
         />
-
-        {/* Recommendations Section */}
-        <div className={`analysis-section ${expandedSections.recommendations ? 'expanded' : 'collapsed'}`}>
-          <div className="section-header" onClick={() => handleSectionToggle('recommendations')}>
-            <h3>💡 Recommendations</h3>
-            <span className="section-toggle">{expandedSections.recommendations ? '▼' : '▶'}</span>
-          </div>
-          {expandedSections.recommendations && (
-            <div className="section-content">
-              <AnalysisRecommendations 
-                recommendations={analysisData.recommendations}
-                loading={loadingStates.recommendations}
-                error={error}
-              />
+        
+        {/* Analysis Sections */}
+        <div className="analysis-sections">
+          {/* Metrics Section */}
+          <div className={`analysis-section ${expandedSections.metrics ? 'expanded' : 'collapsed'}`}>
+            <div className="section-header" onClick={() => handleSectionToggle('metrics')}>
+              <h3>📊 Metrics</h3>
+              <span className="toggle-icon">{expandedSections.metrics ? '▼' : '▶'}</span>
             </div>
-          )}
-        </div>
-
-        {/* Issues Section */}
-        <div className={`analysis-section ${expandedSections.issues ? 'expanded' : 'collapsed'}`}>
-          <div className="section-header" onClick={() => handleSectionToggle('issues')}>
-            <h3>⚠️ Issues</h3>
-            <span className="section-toggle">{expandedSections.issues ? '▼' : '▶'}</span>
+            {expandedSections.metrics && (
+              <AnalysisMetrics 
+                metrics={analysisMetrics.metrics}
+                loading={loadingStates.metrics}
+              />
+            )}
           </div>
-          {expandedSections.issues && (
-            <div className="section-content">
+
+          {/* Charts Section */}
+          <div className={`analysis-section ${expandedSections.charts ? 'expanded' : 'collapsed'}`}>
+            <div className="section-header" onClick={() => handleSectionToggle('charts')}>
+              <h3>📈 Charts</h3>
+              <span className="toggle-icon">{expandedSections.charts ? '▼' : '▶'}</span>
+            </div>
+            {expandedSections.charts && (
+              <AnalysisCharts 
+                charts={analysisData.charts}
+                loading={loadingStates.charts}
+                onLoad={loadChartsData}
+              />
+            )}
+          </div>
+
+          {/* History Section */}
+          <div className={`analysis-section ${expandedSections.history ? 'expanded' : 'collapsed'}`}>
+            <div className="section-header" onClick={() => handleSectionToggle('history')}>
+              <h3>📜 History</h3>
+              <span className="toggle-icon">{expandedSections.history ? '▼' : '▶'}</span>
+            </div>
+            {expandedSections.history && (
+              <AnalysisHistory 
+                history={analysisHistory.history}
+                onAnalysisSelect={handleAnalysisSelect}
+                filters={filters}
+              />
+            )}
+          </div>
+
+          {/* Issues Section */}
+          <div className={`analysis-section ${expandedSections.issues ? 'expanded' : 'collapsed'}`}>
+            <div className="section-header" onClick={() => handleSectionToggle('issues')}>
+              <h3>⚠️ Issues</h3>
+              <span className="toggle-icon">{expandedSections.issues ? '▼' : '▶'}</span>
+            </div>
+            {expandedSections.issues && (
               <AnalysisIssues 
                 issues={analysisData.issues}
                 loading={loadingStates.issues}
-                error={error}
+                onLoad={loadIssuesData}
               />
-            </div>
-          )}
-        </div>
-
-        {/* Tech Stack Section */}
-        <div className={`analysis-section ${expandedSections.techStack ? 'expanded' : 'collapsed'}`}>
-          <div className="section-header" onClick={() => handleSectionToggle('techStack')}>
-            <h3>🔧 Tech Stack</h3>
-            <span className="section-toggle">{expandedSections.techStack ? '▼' : '▶'}</span>
+            )}
           </div>
-          {expandedSections.techStack && (
-            <div className="section-content">
+
+          {/* Tech Stack Section */}
+          <div className={`analysis-section ${expandedSections.techStack ? 'expanded' : 'collapsed'}`}>
+            <div className="section-header" onClick={() => handleSectionToggle('techStack')}>
+              <h3>🛠️ Tech Stack</h3>
+              <span className="toggle-icon">{expandedSections.techStack ? '▼' : '▶'}</span>
+            </div>
+            {expandedSections.techStack && (
               <AnalysisTechStack 
                 techStack={analysisData.techStack}
                 loading={loadingStates.techStack}
-                error={error}
+                onLoad={loadTechStackData}
               />
-            </div>
-          )}
-        </div>
-
-        {/* Architecture Section */}
-        <div className={`analysis-section ${expandedSections.architecture ? 'expanded' : 'collapsed'}`}>
-          <div className="section-header" onClick={() => handleSectionToggle('architecture')}>
-            <h3>🏗️ Architecture</h3>
-            <span className="section-toggle">{expandedSections.architecture ? '▼' : '▶'}</span>
+            )}
           </div>
-          {expandedSections.architecture && (
-            <div className="section-content">
+
+          {/* Architecture Section */}
+          <div className={`analysis-section ${expandedSections.architecture ? 'expanded' : 'collapsed'}`}>
+            <div className="section-header" onClick={() => handleSectionToggle('architecture')}>
+              <h3>🏗️ Architecture</h3>
+              <span className="toggle-icon">{expandedSections.architecture ? '▼' : '▶'}</span>
+            </div>
+            {expandedSections.architecture && (
               <AnalysisArchitecture 
                 architecture={analysisData.architecture}
                 loading={loadingStates.architecture}
-                error={error}
+                onLoad={loadArchitectureData}
               />
-            </div>
-          )}
-        </div>
-
-        {/* Metrics Section */}
-        <div className={`analysis-section ${expandedSections.metrics ? 'expanded' : 'collapsed'}`}>
-          <div className="section-header" onClick={() => handleSectionToggle('metrics')}>
-            <h3>📊 Metrics</h3>
-            <span className="section-toggle">{expandedSections.metrics ? '▼' : '▶'}</span>
+            )}
           </div>
-          {expandedSections.metrics && (
-            <div className="section-content">
-              <AnalysisMetrics 
-                metrics={analysisData.metrics}
-                loading={loadingStates.metrics}
-              />
-            </div>
-          )}
-        </div>
 
-        {/* Charts Section */}
-        <div className={`analysis-section ${expandedSections.charts ? 'expanded' : 'collapsed'}`}>
-          <div className="section-header" onClick={() => handleSectionToggle('charts')}>
-            <h3>📈 Charts</h3>
-            <span className="section-toggle">{expandedSections.charts ? '▼' : '▶'}</span>
+          {/* Recommendations Section */}
+          <div className={`analysis-section ${expandedSections.recommendations ? 'expanded' : 'collapsed'}`}>
+            <div className="section-header" onClick={() => handleSectionToggle('recommendations')}>
+              <h3>💡 Recommendations</h3>
+              <span className="toggle-icon">{expandedSections.recommendations ? '▼' : '▶'}</span>
+            </div>
+            {expandedSections.recommendations && (
+              <AnalysisRecommendations 
+                recommendations={analysisData.recommendations}
+                loading={loadingStates.recommendations}
+                onLoad={loadRecommendationsData}
+              />
+            )}
           </div>
-          {expandedSections.charts && (
-            <div className="section-content">
-              <AnalysisCharts 
-                data={analysisData.charts}
-                history={analysisData.history}
-                filters={filters}
-                loading={loadingStates.history}
-              />
-            </div>
-          )}
         </div>
-
-        {/* History Section */}
-        <div className={`analysis-section ${expandedSections.history ? 'expanded' : 'collapsed'}`}>
-          <div className="section-header" onClick={() => handleSectionToggle('history')}>
-            <h3>📋 History</h3>
-            <span className="section-toggle">{expandedSections.history ? '▼' : '▶'}</span>
-          </div>
-          {expandedSections.history && (
-            <div className="section-content">
-              <AnalysisHistory 
-                history={analysisData.history}
-                onAnalysisSelect={handleAnalysisSelect}
-                loading={loadingStates.history}
-              />
-            </div>
-          )}
-        </div>
-
-        {/* Modal */}
-        {showModal && selectedAnalysis && (
-          <AnalysisModal
-            analysis={selectedAnalysis}
-            onClose={() => {
-              setShowModal(false);
-              setSelectedAnalysis(null);
-            }}
-            projectId={projectId}
-          />
-        )}
       </div>
+
+      {/* Analysis Modal */}
+      {showModal && selectedAnalysis && (
+        <AnalysisModal
+          analysis={selectedAnalysis}
+          onClose={() => {
+            setShowModal(false);
+            setSelectedAnalysis(null);
+          }}
+        />
+      )}
     </div>
   );
 };

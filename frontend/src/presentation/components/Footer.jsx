@@ -1,14 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { APIChatRepository } from '@/infrastructure/repositories/APIChatRepository.jsx';
-
-// Initialize API repository
-const apiRepository = new APIChatRepository();
+import { useGitStatus, useActiveIDE } from '@/infrastructure/stores/selectors/ProjectSelectors.jsx';
 
 function Footer({ eventBus, activePort, version = 'dev', message = 'Welcome to PIDEA!' }) {
   const [currentTime, setCurrentTime] = useState(new Date());
   const [isOnline, setIsOnline] = useState(navigator.onLine);
-  const [gitBranch, setGitBranch] = useState('');
-  const [gitStatus, setGitStatus] = useState(null);
+  
+  // ✅ REFACTORED: Use global state selectors instead of local state
+  const gitStatus = useGitStatus();
+  const activeIDE = useActiveIDE();
 
   useEffect(() => {
     const timeInterval = setInterval(() => {
@@ -30,58 +29,8 @@ function Footer({ eventBus, activePort, version = 'dev', message = 'Welcome to P
     };
   }, []);
 
-  // Fetch git status when activePort changes
-  useEffect(() => {
-    const fetchGitStatus = async () => {
-      if (!activePort) {
-        setGitBranch('');
-        setGitStatus(null);
-        return;
-      }
-
-      try {
-        // Get IDE info
-        const ideRes = await fetch('/api/ide/available');
-        const ides = await ideRes.json();
-        const activeIDE = ides.data?.find(ide => ide.port === activePort);
-        
-        if (activeIDE && activeIDE.workspacePath) {
-          // Get project ID from workspace path
-          const pathParts = activeIDE.workspacePath.split('/');
-          const projectName = pathParts[pathParts.length - 1];
-          const projectId = projectName.toLowerCase().replace(/[^a-z0-9]/g, '');
-          
-          // ✅ OPTIMIZATION: Use direct API methods (no Steps) with timeout
-          const controller = new AbortController();
-          const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
-          
-          try {
-            const gitData = await apiRepository.getGitStatus(projectId, activeIDE.workspacePath);
-            clearTimeout(timeoutId);
-            
-            setGitStatus(gitData.data?.status || null);
-            setGitBranch(gitData.data?.currentBranch || '');
-          } catch (error) {
-            clearTimeout(timeoutId);
-            if (error.name === 'AbortError') {
-              console.warn('Git status request timed out');
-            } else {
-              console.error('Failed to fetch Git status:', error);
-            }
-            setGitBranch('');
-            setGitStatus(null);
-          }
-        }
-      } catch (error) {
-        setGitBranch('');
-        setGitStatus(null);
-      }
-    };
-
-    // ✅ OPTIMIZATION: Debounce rapid port changes
-    const timeoutId = setTimeout(fetchGitStatus, 100);
-    return () => clearTimeout(timeoutId);
-  }, [activePort]);
+  // ✅ REFACTORED: No need for individual API calls - data comes from global state
+  // Git status and branch information are now automatically available from the store
 
   const formatTime = (date) => {
     return date.toLocaleTimeString('de-DE', { 
@@ -91,17 +40,21 @@ function Footer({ eventBus, activePort, version = 'dev', message = 'Welcome to P
     });
   };
 
+  // ✅ REFACTORED: Use global state for git information
+  const currentBranch = gitStatus.currentBranch;
+  const hasChanges = gitStatus.hasChanges;
+
   return (
     <footer className="app-footer">
       <div className="footer-status">
-        <span className="footer-git" title={gitBranch ? `Branch: ${gitBranch}` : 'No Git repository detected'}>
+        <span className="footer-git" title={currentBranch ? `Branch: ${currentBranch}` : 'No Git repository detected'}>
           <span className="git-icon">Git-Branch:</span>
-          {gitBranch ? (
-            <span className="git-branch">{gitBranch}</span>
+          {currentBranch ? (
+            <span className="git-branch">{currentBranch}</span>
           ) : (
             <span className="git-branch git-unknown">No Repo</span>
           )}
-          {gitStatus?.dirty && <span className="git-dirty" title="Uncommitted changes">*</span>}
+          {hasChanges && <span className="git-dirty" title="Uncommitted changes">*</span>}
         </span>
         <span className="status-item">Port: <span className="status-value">{activePort ? `:${activePort}` : 'N/A'}</span></span>
         <span className="status-item">Status: <span className={`status-indicator ${isOnline ? 'online' : 'offline'}`}>{isOnline ? '🟢 Online' : '🔴 Offline'}</span></span>

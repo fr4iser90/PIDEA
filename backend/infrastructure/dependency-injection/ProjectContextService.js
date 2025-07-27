@@ -296,7 +296,7 @@ class ProjectContextService {
             logger.info('Attempting to cache project info:', { projectPath, projectType });
 
             const projectName = path.basename(projectPath);
-            const projectId = projectName.toLowerCase().replace(/[^a-z0-9]/g, '_');
+            const projectId = projectName.replace(/[^a-zA-Z0-9]/g, '_');
 
             // Create or update project in database
             const result = await projectRepository.findOrCreateByWorkspacePath(projectPath, {

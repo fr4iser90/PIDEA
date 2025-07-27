@@ -353,7 +353,7 @@ class PostgreSQLProjectRepository extends ProjectRepository {
    */
   generateProjectId(workspacePath) {
     const basename = path.basename(workspacePath);
-    return basename.toLowerCase().replace(/[^a-z0-9]/g, '-');
+    return basename.replace(/[^a-zA-Z0-9]/g, '-');
   }
 
   /**

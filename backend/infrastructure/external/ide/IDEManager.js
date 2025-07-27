@@ -551,8 +551,8 @@ class IDEManager {
       const path = require('path');
       const projectName = path.basename(workspacePath);
       
-      // Generate project ID
-      const projectId = projectName.toLowerCase().replace(/[^a-z0-9]/g, '_');
+      // Generate project ID - Keep original case
+      const projectId = projectName.replace(/[^a-zA-Z0-9]/g, '_');
       
       // Prüfe, ob das Projekt existiert
       let project = await this.projectRepository.findByWorkspacePath(workspacePath);

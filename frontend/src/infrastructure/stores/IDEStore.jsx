@@ -1,6 +1,7 @@
 /**
  * IDE Store
  * Dedicated state management for IDE port management with persistence
+ * EXTENDED with project data (git and analysis)
  */
 
 import { create } from 'zustand';
@@ -8,6 +9,15 @@ import { persist } from 'zustand/middleware';
 import { logger } from '@/infrastructure/logging/Logger';
 import { apiCall } from '@/infrastructure/repositories/APIChatRepository.jsx';
 import useAuthStore from './AuthStore.jsx';
+
+// Helper function to get project ID from workspace path
+const getProjectIdFromWorkspace = (workspacePath) => {
+  if (!workspacePath) return null;
+  const parts = workspacePath.split('/');
+  const projectName = parts[parts.length - 1];
+  // Keep original case - Backend now supports it
+  return projectName.replace(/[^a-zA-Z0-9]/g, '_');
+};
 
 const useIDEStore = create(
   persist(
@@ -21,6 +31,13 @@ const useIDEStore = create(
       lastUpdate: null,
       retryCount: 0,
       maxRetries: 3,
+
+      // NEW: Project Data
+      projectData: {
+        git: {}, // { '/path1': { status, branches, lastUpdate }, '/path2': { status, branches, lastUpdate } }
+        analysis: {}, // { '/path1': { status, metrics, history, lastUpdate }, '/path2': { status, metrics, history, lastUpdate } }
+        lastUpdate: null
+      },
 
       // Actions
       setActivePort: async (port) => {
@@ -184,6 +201,158 @@ const useIDEStore = create(
         }
       },
 
+      // NEW: Project Data Actions
+      loadProjectData: async (workspacePath) => {
+        if (!workspacePath) return;
+        
+        try {
+          const projectId = getProjectIdFromWorkspace(workspacePath);
+          if (!projectId) return;
+          
+          logger.info('Loading project data for workspace:', workspacePath, 'projectId:', projectId);
+          
+          // Load git and analysis data in parallel
+          const [gitResult, analysisResult] = await Promise.allSettled([
+            apiCall(`/api/projects/${projectId}/git/status`, { 
+              method: 'POST',
+              body: JSON.stringify({ projectPath: workspacePath })
+            }),
+            apiCall(`/api/projects/${projectId}/analysis/status`, {
+              method: 'POST', 
+              body: JSON.stringify({ projectPath: workspacePath })
+            })
+          ]);
+          
+          const gitData = {
+            status: gitResult.status === 'fulfilled' && gitResult.value.success ? gitResult.value.data : null,
+            lastUpdate: new Date().toISOString()
+          };
+          
+          const analysisData = {
+            status: analysisResult.status === 'fulfilled' && analysisResult.value.success ? analysisResult.value.data : null,
+            lastUpdate: new Date().toISOString()
+          };
+          
+          set(state => ({
+            projectData: {
+              ...state.projectData,
+              git: {
+                ...state.projectData.git,
+                [workspacePath]: gitData
+              },
+              analysis: {
+                ...state.projectData.analysis,
+                [workspacePath]: analysisData
+              },
+              lastUpdate: new Date().toISOString()
+            }
+          }));
+          
+          logger.info('Project data loaded for workspace:', workspacePath);
+        } catch (error) {
+          logger.error('Failed to load project data:', error);
+        }
+      },
+
+      // NEW: WebSocket Event Handler
+      setupWebSocketListeners: (eventBus) => {
+        if (!eventBus) return;
+        
+        logger.info('Setting up WebSocket listeners for project data');
+        
+        // Git Events
+        eventBus.on('git-status-updated', (data) => {
+          const { workspacePath, gitStatus } = data;
+          set(state => ({
+            projectData: {
+              ...state.projectData,
+              git: {
+                ...state.projectData.git,
+                [workspacePath]: {
+                  ...state.projectData.git[workspacePath],
+                  status: gitStatus,
+                  lastUpdate: new Date().toISOString()
+                }
+              }
+            }
+          }));
+          logger.info('Git status updated via WebSocket for workspace:', workspacePath);
+        });
+        
+        eventBus.on('git-branch-changed', (data) => {
+          const { workspacePath, newBranch } = data;
+          set(state => ({
+            projectData: {
+              ...state.projectData,
+              git: {
+                ...state.projectData.git,
+                [workspacePath]: {
+                  ...state.projectData.git[workspacePath],
+                  status: {
+                    ...state.projectData.git[workspacePath]?.status,
+                    currentBranch: newBranch
+                  },
+                  lastUpdate: new Date().toISOString()
+                }
+              }
+            }
+          }));
+          logger.info('Git branch changed via WebSocket for workspace:', workspacePath, 'new branch:', newBranch);
+        });
+        
+        // Analysis Events
+        eventBus.on('analysis-completed', (data) => {
+          const { workspacePath, analysisData } = data;
+          set(state => ({
+            projectData: {
+              ...state.projectData,
+              analysis: {
+                ...state.projectData.analysis,
+                [workspacePath]: {
+                  ...state.projectData.analysis[workspacePath],
+                  ...analysisData,
+                  lastUpdate: new Date().toISOString()
+                }
+              }
+            }
+          }));
+          logger.info('Analysis completed via WebSocket for workspace:', workspacePath);
+        });
+        
+        eventBus.on('analysis-progress', (data) => {
+          const { workspacePath, progress, currentStep } = data;
+          set(state => ({
+            projectData: {
+              ...state.projectData,
+              analysis: {
+                ...state.projectData.analysis,
+                [workspacePath]: {
+                  ...state.projectData.analysis[workspacePath],
+                  status: {
+                    ...state.projectData.analysis[workspacePath]?.status,
+                    progress,
+                    currentStep
+                  },
+                  lastUpdate: new Date().toISOString()
+                }
+              }
+            }
+          }));
+          logger.info('Analysis progress via WebSocket for workspace:', workspacePath, 'progress:', progress);
+        });
+      },
+
+      cleanupWebSocketListeners: (eventBus) => {
+        if (!eventBus) return;
+        
+        logger.info('Cleaning up WebSocket listeners for project data');
+        
+        eventBus.off('git-status-updated');
+        eventBus.off('git-branch-changed');
+        eventBus.off('analysis-completed');
+        eventBus.off('analysis-progress');
+      },
+
       validatePort: async (port) => {
         try {
           logger.info('Validating port:', port);
@@ -324,7 +493,12 @@ const useIDEStore = create(
           isLoading: false,
           error: null,
           lastUpdate: null,
-          retryCount: 0
+          retryCount: 0,
+          projectData: {
+            git: {},
+            analysis: {},
+            lastUpdate: null
+          }
         });
       },
 
@@ -391,13 +565,16 @@ const useIDEStore = create(
       name: 'ide-storage',
       partialize: (state) => ({
         activePort: state.activePort,
-        portPreferences: state.portPreferences
+        portPreferences: state.portPreferences,
+        // NEW: Persist project data
+        projectData: state.projectData
       }),
       onRehydrateStorage: () => (state) => {
         if (state) {
           logger.info('State rehydrated:', {
             activePort: state.activePort,
-            preferencesCount: state.portPreferences.length
+            preferencesCount: state.portPreferences.length,
+            projectDataKeys: Object.keys(state.projectData?.git || {}).length
           });
         }
       }
