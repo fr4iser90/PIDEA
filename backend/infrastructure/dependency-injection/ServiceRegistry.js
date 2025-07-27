@@ -113,6 +113,12 @@ class ServiceRegistry {
             });
         }, { singleton: true });
 
+        // Handler Registry Service - Infrastructure layer
+        this.container.register('handlerRegistry', () => {
+            const HandlerRegistry = require('@application/handlers/HandlerRegistry');
+            return new HandlerRegistry(this);
+        }, { singleton: true });
+
         this.registeredServices.add('infrastructure');
     }
 
@@ -1035,6 +1041,12 @@ class ServiceRegistry {
                     });
                 }, { singleton: true });
                 break;
+            case 'handlerRegistry':
+                this.container.register('handlerRegistry', () => {
+                    const HandlerRegistry = require('@application/handlers/HandlerRegistry');
+                    return new HandlerRegistry(this);
+                }, { singleton: true });
+                break;
             default:
                 throw new Error(`Unknown infrastructure service: ${serviceName}`);
         }
@@ -1438,6 +1450,7 @@ class ServiceRegistry {
         this.addServiceDefinition('idePortManager', ['ideManager', 'eventBus'], 'infrastructure');
         this.addServiceDefinition('stepRegistry', [], 'infrastructure');
         this.addServiceDefinition('chatCacheService', [], 'infrastructure');
+        this.addServiceDefinition('handlerRegistry', [], 'infrastructure');
 
         // Repository services
         this.addServiceDefinition('chatRepository', [], 'repositories');

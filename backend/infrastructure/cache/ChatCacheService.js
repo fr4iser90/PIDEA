@@ -81,7 +81,8 @@ class ChatCacheService {
         } catch (error) {
           logger.warn(`Pending request failed for port ${portKey}:`, error.message);
           this.pendingRequests.delete(portKey);
-          return null;
+          // Return empty array instead of null to prevent cascading failures
+          return [];
         }
       }
 
@@ -90,12 +91,28 @@ class ChatCacheService {
       this.stats.pendingRequests++;
       logger.debug(`Cache miss for port ${portKey}, creating new request`);
       
-      // Return null immediately for cache miss
-      // The actual extraction should be handled by the calling service
-      return null;
+      // Create a promise for this request to prevent duplicates
+      const requestPromise = new Promise(async (resolve) => {
+        try {
+          // Return empty array immediately to prevent blocking
+          // The actual extraction will be handled by the calling service
+          resolve([]);
+        } catch (error) {
+          logger.error(`Error in pending request for port ${portKey}:`, error);
+          resolve([]);
+        } finally {
+          // Clean up pending request after a delay
+          setTimeout(() => {
+            this.pendingRequests.delete(portKey);
+          }, 1000);
+        }
+      });
+      
+      this.pendingRequests.set(portKey, requestPromise);
+      return [];
     } catch (error) {
       logger.error(`Error getting chat history from cache for port ${port}:`, error);
-      return null;
+      return [];
     }
   }
 

@@ -181,28 +181,37 @@ class WebChatApplicationService {
     try {
       const { port, limit = 50, offset = 0 } = queryData;
       
-      const stepData = {
-        sessionId: port, // Use port as sessionId for port-based chat history
+      this.logger.info('Getting chat history via handler for port:', port);
+      
+      // ✅ USE PROPER HANDLER/COMMAND PATTERN!
+      const { getServiceContainer } = require('@infrastructure/dependency-injection/ServiceContainer');
+      const container = getServiceContainer();
+      const getChatHistoryHandler = container?.resolve('getChatHistoryHandler');
+      
+      if (!getChatHistoryHandler) {
+        throw new Error('GetChatHistoryHandler not available');
+      }
+      
+      // Create query for handler
+      const query = {
+        userId: userContext.userId,
+        port: parseInt(port),
         limit: parseInt(limit),
         offset: parseInt(offset),
-        userId: userContext.userId,
         includeUserData: userContext.isAdmin || false
       };
       
-      // ✅ FIX: Only ONE step execution (no duplicate)
-      const result = await this.stepRegistry.executeStep('GetChatHistoryStep', stepData);
+      // Execute handler
+      const result = await getChatHistoryHandler.handle(query);
       
-      // Check if step execution was successful
-      if (!result.success) {
-        throw new Error(`Step execution failed: ${result.error}`);
-      }
+      this.logger.info(`Handler returned ${result.messages.length} messages for port ${port}`);
       
       return {
-        messages: result.result.data?.messages || result.result.messages || [],
-        sessionId: result.result.sessionId,
+        messages: result.messages,
+        sessionId: port,
         port: port,
-        totalCount: result.result.data?.pagination?.total || result.result.totalCount || 0,
-        hasMore: result.result.hasMore || false
+        totalCount: result.totalCount,
+        hasMore: result.hasMore
       };
     } catch (error) {
       this.logger.error('Get port chat history error:', error);

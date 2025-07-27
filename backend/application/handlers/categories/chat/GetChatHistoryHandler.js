@@ -1,7 +1,6 @@
 const GetChatHistoryQuery = require('@application/queries/GetChatHistoryQuery');
 const ChatMessage = require('@entities/ChatMessage');
 
-
 const IDETypes = require('@services/ide/IDETypes');
 const Logger = require('@logging/Logger');
 const logger = new Logger('ChatHistoryHandler');
@@ -13,127 +12,36 @@ class GetChatHistoryHandler {
     this.serviceRegistry = serviceRegistry;
   }
 
+  /**
+   * EINZIGE METHODE - Holt Chat-Historie (Datenbank + IDE)
+   */
   async handle(query) {
-    // Handle new user-specific query format
-    if (query.userId) {
-      return await this.handleUserSpecificQuery(query);
-    }
-
-    // Legacy query handling for backward compatibility
-    return await this.handleLegacyQuery(query);
-  }
-
-  async handleUserSpecificQuery(query) {
     const { userId, port, limit = 50, offset = 0, includeUserData = false } = query;
 
-    if (port) {
-      // Get messages for specific port and user
-      const messages = await this.getMessagesByPort(port, userId, { limit, offset });
-      
-      return {
-        port: port,
-        messages: messages.map(m => this.sanitizeMessage(m, includeUserData)),
-        totalCount: messages.length,
-        hasMore: messages.length >= limit
-      };
-    } else {
-      // Get all messages for user across all ports
-      const allMessages = await this.getAllMessagesForUser(userId, { limit, offset });
-      
-      return {
-        port: 'all',
-        messages: allMessages.map(m => this.sanitizeMessage(m, includeUserData)),
-        totalCount: allMessages.length,
-        hasMore: allMessages.length >= limit
-      };
-    }
-  }
+    logger.info(`🔍 Getting chat history for port ${port}, user ${userId}`);
 
-  async handleLegacyQuery(query) {
-    // Validate query
-    query.validate();
-    
-    // If port is provided, get messages for that port
-    if (query.port) {
-      const messages = await this.getMessagesByPort(query.port, null, { 
-        limit: query.limit, 
-        offset: query.offset 
-      });
-      
-      return {
-        port: query.port,
-        messages: messages.map(m => m.toJSON())
-      };
-    }
-    
-    // If no port, get all messages (global chat)
-    const allMessages = await this.getAllMessages({ 
-      limit: query.limit, 
-      offset: query.offset 
-    });
-    
-    return {
-      port: 'global',
-      messages: allMessages.map(m => m.toJSON())
-    };
-  }
+    // 1. Get messages from database
+    const dbMessages = await this.chatRepository.getMessagesByPort(port, userId);
+    logger.info(`📊 Found ${dbMessages.length} messages in database for port ${port}`);
 
-  async getMessagesByPort(port, userId = null, options = {}) {
-    const { limit = 50, offset = 0 } = options;
-    
-          // logger.info(`getMessagesByPort called with port: ${port}`);
-
-    // Use the new direct message method from ChatRepository
-    const filteredMessages = await this.chatRepository.getMessagesByPort(port, userId);
-    
-    // logger.info(`Found ${filteredMessages.length} messages for port ${port}`);
-
-    // Sort by timestamp (newest first)
-    filteredMessages.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
-    
-    // Apply pagination
-    let paginatedMessages = filteredMessages;
-    if (offset) {
-      paginatedMessages = paginatedMessages.slice(offset);
-    }
-    if (limit) {
-      paginatedMessages = paginatedMessages.slice(0, limit);
+    // 2. Get live messages from IDE
+    let liveMessages = [];
+    try {
+      const ideService = await this.getIDEServiceForPort(port);
+      if (ideService && typeof ideService.extractChatHistory === 'function') {
+        logger.info(`📝 Extracting live chat from IDE on port ${port}...`);
+        liveMessages = await ideService.extractChatHistory();
+        logger.info(`✅ Extracted ${liveMessages.length} live messages from IDE`);
+      }
+    } catch (error) {
+      logger.error(`❌ Failed to extract live chat: ${error.message}`);
     }
 
-    return paginatedMessages;
-  }
-
-  async getAllMessagesForUser(userId, options = {}) {
-    const { limit = 50, offset = 0 } = options;
-
-    // Use the new direct message method from ChatRepository
-    const userMessages = await this.chatRepository.getMessagesByUser(userId);
-
-    // Sort by timestamp (newest first)
-    userMessages.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
-    
-    // Apply pagination
-    let paginatedMessages = userMessages;
-    if (offset) {
-      paginatedMessages = paginatedMessages.slice(offset);
-    }
-    if (limit) {
-      paginatedMessages = paginatedMessages.slice(0, limit);
-    }
-
-    return paginatedMessages;
-  }
-
-  async getAllMessages(options = {}) {
-    const { limit = 50, offset = 0 } = options;
-
-    // Use the new direct message method from ChatRepository
-    const allMessages = await this.chatRepository.getAllMessages();
-
-    // Sort by timestamp (newest first)
+    // 3. Combine and sort all messages
+    const allMessages = [...dbMessages, ...liveMessages];
     allMessages.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
     
-    // Apply pagination
+    // 4. Apply pagination
     let paginatedMessages = allMessages;
     if (offset) {
       paginatedMessages = paginatedMessages.slice(offset);
@@ -142,66 +50,18 @@ class GetChatHistoryHandler {
       paginatedMessages = paginatedMessages.slice(0, limit);
     }
 
-    return paginatedMessages;
-  }
+    logger.info(`📤 Returning ${paginatedMessages.length} total messages for port ${port}`);
 
-  async getPortChatHistory(port, userId, options = {}) {
-    const { limit = 50, offset = 0 } = options;
-    
-          // logger.info(`getPortChatHistory called with port: ${port}`);
-
-    // Get messages for this port and user
-    const messages = await this.getMessagesByPort(port, userId, { limit, offset });
-
-    // Try to extract live chat from IDE first
-    let liveMessages = [];
-    try {
-      logger.info(`🔍 Getting IDE service for port ${port}...`);
-      const ideService = await this.getIDEServiceForPort(port);
-      if (ideService) {
-        logger.info(`✅ Found IDE service: ${ideService.constructor.name}`);
-        logger.info(`📝 Extracting live chat from IDE on port ${port}...`);
-        
-        liveMessages = await ideService.extractChatHistory();
-        logger.info(`✅ Extracted ${liveMessages.length} live messages from IDE`);
-      } else {
-        logger.warn(`❌ No IDE service found for port ${port}`);
-      }
-    } catch (error) {
-      logger.error(`❌ Failed to extract live chat: ${error.message}`);
-      logger.error(`Full error:`, error);
-    }
-
-    // If we have live messages, return them
-    if (liveMessages && liveMessages.length > 0) {
-      return {
-        messages: liveMessages.map(m => ({
-          id: m.id || Date.now() + Math.random(),
-          content: m.content,
-          sender: m.sender,
-          type: m.type || 'text',
-          timestamp: m.timestamp || new Date().toISOString(),
-          metadata: m.metadata || {}
-        })),
-        port: port,
-        totalCount: liveMessages.length,
-        hasMore: false
-      };
-    }
-
-    // Return stored messages
     return {
-      messages: messages.map(m => this.sanitizeMessage(m, false)),
       port: port,
-      totalCount: messages.length,
-      hasMore: messages.length >= limit
+      messages: paginatedMessages.map(m => this.sanitizeMessage(m, includeUserData)),
+      totalCount: paginatedMessages.length,
+      hasMore: paginatedMessages.length >= limit
     };
   }
 
   /**
    * Get the appropriate IDE service for a given port
-   * @param {number} port - The IDE port
-   * @returns {Object|null} The IDE service or null if not found
    */
   async getIDEServiceForPort(port) {
     try {
@@ -210,20 +70,16 @@ class GetChatHistoryHandler {
         return null;
       }
 
-      // Get available IDEs to determine the type
+      // Get available IDEs
       const availableIDEs = await this.ideManager.getAvailableIDEs();
-      logger.info(`🔍 Available IDEs:`, availableIDEs);
-      
-      // FIXED: Handle the correct data structure from IDEManager
-      // availableIDEs is an object with port as key, not an array
       const targetIDE = availableIDEs[port] || Object.values(availableIDEs).find(ide => ide.port === port);
       
       if (!targetIDE) {
-        logger.warn(`❌ No IDE found for port ${port} in available IDEs:`, availableIDEs);
-        logger.info(`🔄 Using port range fallback for port ${port}`);
-      } else {
-        logger.info(`✅ Found IDE for port ${port}:`, targetIDE);
+        logger.warn(`❌ No IDE found for port ${port}`);
+        return null;
       }
+
+      logger.info(`✅ Found IDE for port ${port}:`, targetIDE);
 
       // Determine IDE type based on port range
       let ideType = IDETypes.CURSOR; // default
@@ -235,11 +91,8 @@ class GetChatHistoryHandler {
         ideType = IDETypes.WINDSURF;
       }
 
-      logger.info(`🔍 Detected IDE type ${ideType} for port ${port}`);
-
       // Get the appropriate service from registry
       if (this.serviceRegistry) {
-        logger.info(`🔍 Getting IDE service from registry for type ${ideType}...`);
         let service = null;
         
         switch (ideType) {
@@ -252,37 +105,40 @@ class GetChatHistoryHandler {
           case IDETypes.WINDSURF:
             service = this.serviceRegistry.getService('windsurfIDEService');
             break;
-          default:
-            service = this.serviceRegistry.getService('cursorIDEService'); // fallback
         }
         
         if (service) {
           logger.info(`✅ Found IDE service: ${service.constructor.name}`);
-        } else {
-          logger.warn(`❌ No IDE service found in registry for type ${ideType}`);
+          return service;
         }
-        
-        return service;
       }
 
-      logger.warn(`❌ No service registry available`);
+      logger.warn(`❌ No IDE service found for type ${ideType}`);
       return null;
+
     } catch (error) {
-      logger.error(`Error getting IDE service for port ${port}:`, error);
+      logger.error(`❌ Error getting IDE service for port ${port}:`, error);
       return null;
     }
   }
 
   sanitizeMessage(message, includeUserData) {
-    const messageData = message.toJSON ? message.toJSON() : message;
+    if (!message) return null;
     
-    if (!includeUserData) {
-      // Remove sensitive user data
-      delete messageData.userId;
-      delete messageData.userEmail;
+    const sanitized = {
+      id: message.id || message._id || Date.now() + Math.random(),
+      content: message.content || message.message || '',
+      sender: message.sender || message.user || 'unknown',
+      type: message.type || 'text',
+      timestamp: message.timestamp || message.created_at || new Date().toISOString(),
+      port: message.port || null
+    };
+
+    if (includeUserData && message.metadata) {
+      sanitized.metadata = message.metadata;
     }
 
-    return messageData;
+    return sanitized;
   }
 }
 
