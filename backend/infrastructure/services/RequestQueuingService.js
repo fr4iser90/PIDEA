@@ -12,8 +12,8 @@ class RequestQueuingService {
   constructor(options = {}) {
     this.queue = [];
     this.processing = new Map();
-    this.maxConcurrent = options.maxConcurrent || 5;
-    this.requestTimeout = options.requestTimeout || 30 * 1000; // 30 seconds
+    this.maxConcurrent = options.maxConcurrent || 3; // Reduced for IDE switches
+    this.requestTimeout = options.requestTimeout || 15 * 1000; // Reduced timeout
     this.stats = {
       totalRequests: 0,
       queuedRequests: 0,
@@ -68,6 +68,13 @@ class RequestQueuingService {
       // Add to queue
       this.queue.push(request);
       logger.debug(`Request ${key} added to queue, position: ${this.queue.length}`);
+
+      // Clear old requests if queue is too long (prevent memory buildup)
+      if (this.queue.length > 20) {
+        const removed = this.queue.splice(0, 10);
+        logger.warn(`Cleared ${removed.length} old requests from queue to prevent buildup`);
+        removed.forEach(req => req.reject(new Error('Request cancelled - queue overflow')));
+      }
 
       // Process queue
       this.processQueue();

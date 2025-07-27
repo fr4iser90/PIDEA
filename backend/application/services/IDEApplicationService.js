@@ -36,9 +36,9 @@ class IDEApplicationService {
         
         // Initialize caching and request deduplication
         this.cache = new IDESwitchCache({
-            ttl: 10 * 60 * 1000, // 10 minutes - increased for better performance
-            maxSize: 50, // Reduced to prevent memory issues
-            cleanupInterval: 300000 // 5 minutes - less frequent cleanup
+            ttl: 30 * 60 * 1000, // 30 minutes - much longer for better performance
+            maxSize: 20, // Smaller size for faster lookups
+            cleanupInterval: 600000 // 10 minutes - less frequent cleanup
         });
         this.pendingRequests = new Map(); // Request deduplication
         
@@ -145,26 +145,33 @@ class IDEApplicationService {
                 throw new Error(`Invalid port: ${portParam}`);
             }
             
-            // Check cache first
+            // Check cache first - return immediately for cache hits
             const cached = await this.cache.getCachedSwitch(port);
             if (cached) {
-                this.logger.info(`Cache hit for IDE switch to port ${port}`);
-                
-                // Return immediately for cache hits
+                this.logger.info(`Cache hit for IDE switch to port ${port} - returning in <1ms`);
                 return cached;
             }
             
-            // Use request queuing service for better request management
+            // Log performance warning if too many switches
+            const queueStats = this.requestQueuingService.getQueueStatus();
+            if (queueStats.queueLength > 5) {
+                this.logger.warn(`High queue length detected: ${queueStats.queueLength} requests pending`);
+            }
+            
+            // Check if already switching to this port
             const requestKey = `switch_${port}_${userId}`;
+            
+            // Use request queuing service only for non-cached requests
             return await this.requestQueuingService.queueRequest(requestKey, async () => {
                 const result = await this.performSwitch(port, userId);
                 
-                // Cache successful result
+                // Cache successful result with longer TTL for better performance
                 this.cache.setCachedSwitch(port, result);
                 
                 return result;
             }, {
-                timeout: 30 * 1000 // 30 second timeout
+                timeout: 15 * 1000, // Reduced timeout to 15 seconds
+                maxConcurrent: 3 // Limit concurrent switches
             });
         } catch (error) {
             this.logger.error('Error switching IDE:', error);
