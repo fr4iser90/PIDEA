@@ -13,7 +13,7 @@ This phase focuses on refactoring all frontend naming from 'active' to 'selected
 
 ## Deliverables
 - **Files**: 15 frontend files updated with new naming
-- **State Management**: IDEStore updated with `selectedPort` instead of `activePort`
+- **State Management**: IDEStore updated with `selectedIDE` instead of `activePort`
 - **Components**: All React components use `selected` terminology
 - **UI Text**: All user-facing text updated to use 'selected' instead of 'active'
 - **Events**: Frontend event handlers updated for new event names
@@ -28,58 +28,58 @@ This phase focuses on refactoring all frontend naming from 'active' to 'selected
 ## Files to Modify
 
 ### Core Components (5 files):
-- [ ] `frontend/src/App.jsx` - `activePort` → `selectedPort`, `setActivePort` → `setSelectedPort`, `loadActivePort` → `loadSelectedPort`
-- [ ] `frontend/src/presentation/components/ide/IDEContext.jsx` - `activePort` → `selectedPort`, `setActivePort` → `setSelectedPort`, `loadActivePort` → `loadSelectedPort`
-- [ ] `frontend/src/presentation/components/SidebarLeft.jsx` - `activePort` → `selectedPort`, `activeIDEChanged` → `ideSelectedChanged`
-- [ ] `frontend/src/presentation/components/SidebarRight.jsx` - `activePort` → `selectedPort`
+- [ ] `frontend/src/App.jsx` - `activePort` → `selectedIDE`, `setActivePort` → `setSelectedIDE`, `loadActivePort` → `loadSelectedIDE`
+- [ ] `frontend/src/presentation/components/ide/IDEContext.jsx` - `activePort` → `selectedIDE`, `setActivePort` → `setSelectedIDE`, `loadActivePort` → `loadSelectedIDE`
+- [ ] `frontend/src/presentation/components/SidebarLeft.jsx` - `activePort` → `selectedIDE`, `activeIDEChanged` → `ideSelectedChanged`
+- [ ] `frontend/src/presentation/components/SidebarRight.jsx` - `activePort` → `selectedIDE`
 - [ ] `frontend/src/presentation/components/ide/IDESelector.jsx` - `activeIDEChanged` → `ideSelectedChanged`, `isActive` → `isSelected`
 
 ### Chat Components (3 files):
-- [ ] `frontend/src/presentation/components/chat/main/ChatComponent.jsx` - `activePort` → `selectedPort`
-- [ ] `frontend/src/presentation/components/chat/main/PreviewComponent.jsx` - `activePort` → `selectedPort`, `activeIDEChanged` → `ideSelectedChanged`
-- [ ] `frontend/src/presentation/components/chat/main/ProjectCommandButtons.jsx` - `activePort` → `selectedPort`
+- [ ] `frontend/src/presentation/components/chat/main/ChatComponent.jsx` - `activePort` → `selectedIDE`
+- [ ] `frontend/src/presentation/components/chat/main/PreviewComponent.jsx` - `activePort` → `selectedIDE`, `activeIDEChanged` → `ideSelectedChanged`
+- [ ] `frontend/src/presentation/components/chat/main/ProjectCommandButtons.jsx` - `activePort` → `selectedIDE`
 
 ### Infrastructure (3 files):
-- [ ] `frontend/src/infrastructure/stores/IDEStore.jsx` - `activePort` → `selectedPort`, `setActivePort` → `setSelectedPort`, `loadActivePort` → `loadSelectedPort`
+- [ ] `frontend/src/infrastructure/stores/IDEStore.jsx` - `activePort` → `selectedIDE`, `setActivePort` → `setSelectedIDE`, `loadActivePort` → `loadSelectedIDE`
 - [ ] `frontend/src/infrastructure/services/WebSocketService.jsx` - `activeIDEChanged` → `ideSelectedChanged`
 - [ ] `frontend/src/infrastructure/repositories/APIChatRepository.jsx` - `activeIDE` → `selectedIDE`
 
 ### Hooks and Utilities (2 files):
-- [ ] `frontend/src/hooks/usePortConfiguration.js` - `setActivePort` → `setSelectedPort`
-- [ ] `frontend/src/presentation/components/Footer.jsx` - `activePort` → `selectedPort`, `activeIDE` → `selectedIDE`
+- [ ] `frontend/src/hooks/usePortConfiguration.js` - `setActivePort` → `setSelectedIDE`
+- [ ] `frontend/src/presentation/components/Footer.jsx` - `activePort` → `selectedIDE`, `activeIDE` → `selectedIDE`
 
 ### Git Components (2 files):
-- [ ] `frontend/src/presentation/components/git/pidea-agent/PideaAgentBranchComponent.jsx` - `activePort` → `selectedPort`, `activeIDE` → `selectedIDE`
-- [ ] `frontend/src/presentation/components/git/main/GitManagementComponent.jsx` - `activePort` → `selectedPort`, `activeIDE` → `selectedIDE`
+- [ ] `frontend/src/presentation/components/git/pidea-agent/PideaAgentBranchComponent.jsx` - `activePort` → `selectedIDE`, `activeIDE` → `selectedIDE`
+- [ ] `frontend/src/presentation/components/git/main/GitManagementComponent.jsx` - `activePort` → `selectedIDE`, `activeIDE` → `selectedIDE`
 
 ## Implementation Steps
 
 ### Step 1: State Management Refactoring (1 hour)
 1. Update `IDEStore.jsx`:
-   - `activePort` → `selectedPort`
-   - `setActivePort` → `setSelectedPort`
-   - `loadActivePort` → `loadSelectedPort`
+   - `activePort` → `selectedIDE`
+   - `setActivePort` → `setSelectedIDE`
+   - `loadActivePort` → `loadSelectedIDE`
    - Update all method implementations
 
 2. Update `IDEContext.jsx`:
-   - `activePort` → `selectedPort`
-   - `setActivePort` → `setSelectedPort`
-   - `loadActivePort` → `loadSelectedPort`
+   - `activePort` → `selectedIDE`
+   - `setActivePort` → `setSelectedIDE`
+   - `loadActivePort` → `loadSelectedIDE`
    - Update context provider and consumer
 
 ### Step 2: Core Components Refactoring (1 hour)
 1. Update `App.jsx`:
-   - `activePort` → `selectedPort`
+   - `activePort` → `selectedIDE`
    - `activeIDEChanged` → `ideSelectedChanged`
    - Update event handlers and component props
 
 2. Update `SidebarLeft.jsx`:
-   - `activePort` → `selectedPort`
+   - `activePort` → `selectedIDE`
    - `activeIDEChanged` → `ideSelectedChanged`
    - Update UI logic and event handling
 
 3. Update `SidebarRight.jsx`:
-   - `activePort` → `selectedPort`
+   - `activePort` → `selectedIDE`
 
 ### Step 3: IDE Components Refactoring (1 hour)
 1. Update `IDESelector.jsx`:
@@ -88,9 +88,9 @@ This phase focuses on refactoring all frontend naming from 'active' to 'selected
    - Update UI logic for selected state
 
 2. Update chat components:
-   - `ChatComponent.jsx`: `activePort` → `selectedPort`
-   - `PreviewComponent.jsx`: `activePort` → `selectedPort`, `activeIDEChanged` → `ideSelectedChanged`
-   - `ProjectCommandButtons.jsx`: `activePort` → `selectedPort`
+   - `ChatComponent.jsx`: `activePort` → `selectedIDE`
+   - `PreviewComponent.jsx`: `activePort` → `selectedIDE`, `activeIDEChanged` → `ideSelectedChanged`
+   - `ProjectCommandButtons.jsx`: `activePort` → `selectedIDE`
 
 ### Step 4: Infrastructure Refactoring (30 minutes)
 1. Update `WebSocketService.jsx`:
@@ -101,23 +101,23 @@ This phase focuses on refactoring all frontend naming from 'active' to 'selected
    - `activeIDE` → `selectedIDE`
 
 3. Update `usePortConfiguration.js`:
-   - `setActivePort` → `setSelectedPort`
+   - `setActivePort` → `setSelectedIDE`
 
 ### Step 5: Additional Components Refactoring (30 minutes)
 1. Update `Footer.jsx`:
-   - `activePort` → `selectedPort`
+   - `activePort` → `selectedIDE`
    - `activeIDE` → `selectedIDE`
 
 2. Update Git components:
-   - `PideaAgentBranchComponent.jsx`: `activePort` → `selectedPort`, `activeIDE` → `selectedIDE`
-   - `GitManagementComponent.jsx`: `activePort` → `selectedPort`, `activeIDE` → `selectedIDE`
+   - `PideaAgentBranchComponent.jsx`: `activePort` → `selectedIDE`, `activeIDE` → `selectedIDE`
+   - `GitManagementComponent.jsx`: `activePort` → `selectedIDE`, `activeIDE` → `selectedIDE`
 
 ## Naming Convention Changes
 
 ### State Variables:
 ```javascript
 // OLD → NEW
-activePort → selectedPort
+activePort → selectedIDE
 activeIDE → selectedIDE
 isActive → isSelected
 ```
@@ -125,24 +125,26 @@ isActive → isSelected
 ### Method Names:
 ```javascript
 // OLD → NEW
-setActivePort → setSelectedPort
-loadActivePort → loadSelectedPort
-getActivePort → getSelectedPort
+setActivePort → setSelectedIDE
+loadActivePort → loadSelectedIDE
+getActivePort → getSelectedIDE   // Returns selectedIDE object
+getActiveIDE → getSelectedIDE    // Returns selectedIDE object
 ```
 
 ### Events:
 ```javascript
 // OLD → NEW
 'activeIDEChanged' → 'ideSelectedChanged'
-'activePortChanged' → 'selectedPortChanged'
+'activePortChanged' → 'selectedIDEChanged'
 ```
 
 ### Props and Component State:
 ```javascript
 // OLD → NEW
-activePort={port} → selectedPort={port}
+activePort={port} → selectedIDE={ide}
 isActive={true} → isSelected={true}
-onActivePortChange → onSelectedPortChange
+onActivePortChange → onSelectedIDEChange
+activeIDE={ide} → selectedIDE={ide}
 ```
 
 ### UI Text:
@@ -152,6 +154,25 @@ onActivePortChange → onSelectedPortChange
 "Set Active" → "Select"
 "Active Port" → "Selected Port"
 "IDE is active" → "IDE is selected"
+```
+
+### ✅ **CLEAN FRONTEND IMPLEMENTATION:**
+```javascript
+// Zustand Store - Single source of truth
+const useIDEStore = create((set, get) => ({
+  selectedIDE: null,  // Only track IDE object
+  
+  setSelectedIDE: (ide) => set({ selectedIDE: ide }),
+  
+  getSelectedPort: () => {
+    const { selectedIDE } = get();
+    return selectedIDE?.port || null;
+  }
+}));
+
+// Component usage
+const { selectedIDE, setSelectedIDE, getSelectedPort } = useIDEStore();
+const selectedPort = getSelectedPort();  // Derived from selectedIDE.port
 ```
 
 ## Testing Strategy

@@ -13,7 +13,7 @@ This phase focuses on refactoring all backend naming from 'active' to 'selected'
 
 ## Deliverables
 - **Files**: 12 backend files updated with new naming
-- **API**: Updated endpoint responses with `selectedPort` instead of `activePort`
+- **API**: Updated endpoint responses with `selectedIDE` instead of `activePort`
 - **Events**: `activeIDEChanged` → `ideSelectedChanged` event system
 - **Services**: All IDE services updated with `selected` terminology
 - **Tests**: Backend tests updated to use new naming
@@ -28,38 +28,38 @@ This phase focuses on refactoring all backend naming from 'active' to 'selected'
 ## Files to Modify
 
 ### Core Services (4 files):
-- [ ] `backend/infrastructure/external/ide/IDEManager.js` - `activePort` → `selectedPort`, `getActivePort()` → `getSelectedPort()`
-- [ ] `backend/domain/services/ide/IDEPortManager.js` - `setActivePort()` → `setSelectedPort()`, `getActivePort()` → `getSelectedPort()`
-- [ ] `backend/domain/services/ide/CursorIDEService.js` - `getActivePort()` → `getSelectedPort()`
-- [ ] `backend/domain/services/ide/VSCodeService.js` - `getActivePort()` → `getSelectedPort()`
+- [ ] `backend/infrastructure/external/ide/IDEManager.js` - `activePort` → `selectedIDE`, `getActivePort()` → `getSelectedIDE()`
+- [ ] `backend/domain/services/ide/IDEPortManager.js` - `setActivePort()` → `setSelectedIDE()`, `getActivePort()` → `getSelectedIDE()`
+- [ ] `backend/domain/services/ide/CursorIDEService.js` - `getActivePort()` → `getSelectedIDE()`
+- [ ] `backend/domain/services/ide/VSCodeService.js` - `getActivePort()` → `getSelectedIDE()`
 
 ### Additional Services (4 files):
-- [ ] `backend/domain/services/ide/WindsurfIDEService.js` - `getActivePort()` → `getSelectedPort()`
-- [ ] `backend/domain/services/ide/IDEAutomationService.js` - `getActivePort()` → `getSelectedPort()`
-- [ ] `backend/application/services/IDEApplicationService.js` - `getActivePort()` → `getSelectedPort()`
-- [ ] `backend/application/services/WebChatApplicationService.js` - `getActivePort()` → `getSelectedPort()`
+- [ ] `backend/domain/services/ide/WindsurfIDEService.js` - `getActivePort()` → `getSelectedIDE()`
+- [ ] `backend/domain/services/ide/IDEAutomationService.js` - `getActivePort()` → `getSelectedIDE()`
+- [ ] `backend/application/services/IDEApplicationService.js` - `getActivePort()` → `getSelectedIDE()`
+- [ ] `backend/application/services/WebChatApplicationService.js` - `getActivePort()` → `getSelectedIDE()`
 
 ### API Controllers (2 files):
 - [ ] `backend/presentation/api/ide/IDEController.js` - `activeIDEChanged` events → `ideSelectedChanged`
-- [ ] `backend/presentation/api/ide/IDEMirrorController.js` - `getActivePort()` → `getSelectedPort()`
+- [ ] `backend/presentation/api/ide/IDEMirrorController.js` - `getActivePort()` → `getSelectedIDE()`
 
 ### Application Layer (2 files):
 - [ ] `backend/Application.js` - `activeIDEChanged` event handlers → `ideSelectedChanged`
-- [ ] `backend/application/handlers/categories/chat/SendMessageHandler.js` - `getActivePort()` → `getSelectedPort()`
+- [ ] `backend/application/handlers/categories/chat/SendMessageHandler.js` - `getActivePort()` → `getSelectedIDE()`
 
 ## Implementation Steps
 
 ### Step 1: Core Service Refactoring (1 hour)
 1. Update `IDEManager.js`:
-   - `activePort` → `selectedPort`
-   - `getActivePort()` → `getSelectedPort()`
+   - `activePort` → `selectedIDE`
+   - `getActivePort()` → `getSelectedIDE()`
    - `switchToActiveIDE()` → `selectIDE()`
 
 2. Update `IDEPortManager.js`:
-   - `activePort` → `selectedPort`
-   - `setActivePort()` → `setSelectedPort()`
-   - `getActivePort()` → `getSelectedPort()`
-   - `selectActivePort()` → `selectPort()`
+   - `activePort` → `selectedIDE`
+   - `setActivePort()` → `setSelectedIDE()`
+   - `getActivePort()` → `getSelectedIDE()`
+   - `selectActivePort()` → `selectIDE()`
 
 ### Step 2: IDE Services Refactoring (1 hour)
 1. Update all IDE service files:
@@ -69,24 +69,24 @@ This phase focuses on refactoring all backend naming from 'active' to 'selected'
    - `IDEAutomationService.js`
 
 2. Update method calls:
-   - `getActivePort()` → `getSelectedPort()`
+   - `getActivePort()` → `getSelectedIDE()`
    - Update event subscriptions to use new event names
 
 ### Step 3: Application Services Refactoring (30 minutes)
 1. Update `IDEApplicationService.js`:
-   - `getActivePort()` → `getSelectedPort()`
+   - `getActivePort()` → `getSelectedIDE()`
 
 2. Update `WebChatApplicationService.js`:
-   - `getActivePort()` → `getSelectedPort()`
+   - `getActivePort()` → `getSelectedIDE()`
 
 ### Step 4: API Controllers Refactoring (1 hour)
 1. Update `IDEController.js`:
    - `activeIDEChanged` events → `ideSelectedChanged`
-   - Update response fields: `activePort` → `selectedPort`
+   - Update response fields: `activePort` → `selectedIDE`
    - Update method names and variables
 
 2. Update `IDEMirrorController.js`:
-   - `getActivePort()` → `getSelectedPort()`
+   - `getActivePort()` → `getSelectedIDE()`
 
 ### Step 5: Application Layer Refactoring (30 minutes)
 1. Update `Application.js`:
@@ -94,23 +94,24 @@ This phase focuses on refactoring all backend naming from 'active' to 'selected'
    - Update event subscriptions and publishing
 
 2. Update `SendMessageHandler.js`:
-   - `getActivePort()` → `getSelectedPort()`
+   - `getActivePort()` → `getSelectedIDE()`
 
 ## Naming Convention Changes
 
 ### Method Names:
 ```javascript
 // OLD → NEW
-getActivePort() → getSelectedPort()
-setActivePort() → setSelectedPort()
+getActivePort() → getSelectedIDE()   // Returns selectedIDE object
+setActivePort() → setSelectedIDE()   // Sets selectedIDE object
 switchToActiveIDE() → selectIDE()
-selectActivePort() → selectPort()
+selectActivePort() → selectIDE()
+getActiveIDE() → getSelectedIDE()    // Returns selectedIDE object
 ```
 
 ### Variables:
 ```javascript
 // OLD → NEW
-activePort → selectedPort
+activePort → selectedIDE
 activeIDE → selectedIDE
 ```
 
@@ -118,14 +119,62 @@ activeIDE → selectedIDE
 ```javascript
 // OLD → NEW
 'activeIDEChanged' → 'ideSelectedChanged'
-'activePortChanged' → 'selectedPortChanged'
+'activePortChanged' → 'selectedIDEChanged'
 ```
 
 ### API Responses:
 ```javascript
-// OLD → NEW
-{ activePort: 9222 } → { selectedPort: 9222 }
+// OLD -> NEW
+{ activePort: 9222 } → { selectedIDE: { port: 9222, name: 'Cursor', ... } }
 { activeIDE: {...} } → { selectedIDE: {...} }
+```
+
+### State Example:
+```javascript
+// ❌ FALSCH:
+selectedPort: null
+// ✅ RICHTIG:
+selectedIDE: null
+```
+
+### Store Example:
+```javascript
+// ❌ FALSCH:
+const useIDEStore = create(() => ({
+  selectedPort: null,
+  setSelectedPort: (port) => ...
+}))
+// ✅ RICHTIG:
+const useIDEStore = create(() => ({
+  selectedIDE: null,
+  setSelectedIDE: (ide) => ...
+}))
+```
+
+### Method Example:
+```javascript
+// ✅ ERLAUBT:
+getSelectedPort() { return this.selectedIDE?.port || null; }
+```
+
+### ✅ **CLEAN IMPLEMENTATION:**
+```javascript
+// Single source of truth
+this.selectedIDE = null;
+
+// Get IDE object
+getSelectedIDE() { return this.selectedIDE; }
+
+// Get port number (derived from selectedIDE)
+getSelectedPort() { 
+  return this.selectedIDE?.port || null;
+}
+
+// Set selection
+setSelectedIDE(ide) { 
+  this.selectedIDE = ide;
+  // No need to track activePort separately!
+}
 ```
 
 ## Testing Strategy
@@ -144,7 +193,7 @@ activeIDE → selectedIDE
 - [ ] All 12 backend files updated with new naming
 - [ ] All method names changed from 'active' to 'selected'
 - [ ] All event names updated to use 'selected' terminology
-- [ ] API responses use 'selectedPort' instead of 'activePort'
+- [ ] API responses use 'selectedIDE' instead of 'activePort'
 - [ ] All backend tests pass with new naming
 - [ ] No breaking changes to existing functionality
 - [ ] Event system works with new event names

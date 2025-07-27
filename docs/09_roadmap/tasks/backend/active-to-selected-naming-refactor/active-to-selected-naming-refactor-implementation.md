@@ -120,7 +120,7 @@ activeIDEChanged: event, // IDE selection changed
 ### New Clear Terminology:
 ```javascript
 // ✅ CLEAR: Single meaning for 'selected'
-selectedPort: null,        // Selected IDE port
+selectedIDE: null,        // Selected IDE object
 ide.isSelected: true,      // IDE is selected
 isSelected: () => {},      // Check if selected
 ideSelectedChanged: event, // IDE selection changed
@@ -131,11 +131,11 @@ ideSelectedChanged: event, // IDE selection changed
 ### Backend Naming Changes:
 ```javascript
 // OLD -> NEW
-activePort -> selectedPort
+activePort -> selectedIDE
 activeIDE -> selectedIDE
 isActive() -> isSelected()
 activeIDEChanged -> ideSelectedChanged
-setActivePort() -> setSelectedPort()
+setActivePort() -> setSelectedIDE()
 getActiveIDE() -> getSelectedIDE()
 switchToActiveIDE() -> selectIDE()
 ```
@@ -143,11 +143,11 @@ switchToActiveIDE() -> selectIDE()
 ### Frontend Naming Changes:
 ```javascript
 // OLD -> NEW
-activePort -> selectedPort
+activePort -> selectedIDE
 isActive -> isSelected
 activeIDEChanged -> ideSelectedChanged
-setActivePort -> setSelectedPort
-loadActivePort -> loadSelectedPort
+setActivePort -> setSelectedIDE
+loadActivePort -> loadSelectedIDE
 ```
 
 ### Event Naming Changes:
@@ -328,19 +328,20 @@ loadActivePort -> loadSelectedPort
 ### Migration Map:
 ```javascript
 // Backend
-activePort -> selectedPort
+activePort -> selectedIDE
 activeIDE -> selectedIDE
 isActive() -> isSelected()
 activeIDEChanged -> ideSelectedChanged
 
 // Frontend  
-activePort -> selectedPort
+activePort -> selectedIDE
+activeIDE -> selectedIDE
 isActive -> isSelected
 activeIDEChanged -> ideSelectedChanged
 
 // Events
 'activeIDEChanged' -> 'ideSelectedChanged'
-'ide-switched' -> 'ide-selected'
+'activePortChanged' -> 'selectedIDEChanged'
 ```
 
 ### Benefits:
@@ -348,6 +349,49 @@ activeIDEChanged -> ideSelectedChanged
 - ✅ **No confusion**: No multiple meanings for same term
 - ✅ **Consistent**: Same terminology across backend and frontend
 - ✅ **Maintainable**: Easy to understand and extend
+
+### API Responses:
+```javascript
+// OLD -> NEW
+{ activePort: 9222 } → { selectedIDE: { port: 9222, name: 'Cursor', ... } }
+{ activeIDE: {...} } → { selectedIDE: {...} }
+```
+
+### State Example:
+```javascript
+// ❌ FALSCH:
+selectedPort: null
+// ✅ RICHTIG:
+selectedIDE: null
+```
+
+### Props Example:
+```javascript
+// ❌ FALSCH:
+<SomeComponent selectedPort={port} />
+// ✅ RICHTIG:
+<SomeComponent selectedIDE={ide} />
+```
+
+### Store Example:
+```javascript
+// ❌ FALSCH:
+const useIDEStore = create(() => ({
+  selectedPort: null,
+  setSelectedPort: (port) => ...
+}))
+// ✅ RICHTIG:
+const useIDEStore = create(() => ({
+  selectedIDE: null,
+  setSelectedIDE: (ide) => ...
+}))
+```
+
+### Method Example:
+```javascript
+// ✅ ERLAUBT:
+getSelectedPort() { return this.selectedIDE?.port || null; }
+```
 
 ## 20. File Summary
 

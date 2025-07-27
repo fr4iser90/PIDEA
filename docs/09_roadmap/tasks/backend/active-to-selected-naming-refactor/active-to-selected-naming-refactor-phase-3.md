@@ -28,18 +28,18 @@ This phase focuses on updating all tests and documentation to use the new 'selec
 ## Files to Modify
 
 ### Test Files (8 files):
-- [ ] `tests/unit/usePortConfiguration.test.js` - `setActivePort` → `setSelectedPort`
-- [ ] `tests/integration/usePortConfiguration.test.js` - `setActivePort` → `setSelectedPort`
-- [ ] `tests/integration/IDESendMessageStep.test.js` - `getActivePort` → `getSelectedPort`
-- [ ] `tests/integration/PreviewComponent.test.jsx` - `activePort` → `selectedPort`, `activeIDEChanged` → `ideSelectedChanged`
-- [ ] `tests/unit/ProjectCommandButtons.test.jsx` - `activePort` → `selectedPort`
+- [ ] `tests/unit/usePortConfiguration.test.js` - `setActivePort` → `setSelectedIDE`
+- [ ] `tests/integration/usePortConfiguration.test.js` - `setActivePort` → `setSelectedIDE`
+- [ ] `tests/integration/IDESendMessageStep.test.js` - `getActivePort` → `getSelectedIDE`
+- [ ] `tests/integration/PreviewComponent.test.jsx` - `activePort` → `selectedIDE`, `activeIDEChanged` → `ideSelectedChanged`
+- [ ] `tests/unit/ProjectCommandButtons.test.jsx` - `activePort` → `selectedIDE`
 - [ ] `frontend/tests/integration/PreviewComponent.test.jsx` - `activeIDEChanged` → `ideSelectedChanged`
 
 ### Documentation Files (6 files):
-- [ ] `docs/04_ide-support/ide-port-management.md` - `activePort` → `selectedPort`, `setActivePort` → `setSelectedPort`, `loadActivePort` → `loadSelectedPort`
-- [ ] `docs/04_ide-support/ide-components.md` - `activePort` → `selectedPort`, `setActivePort` → `setSelectedPort`
-- [ ] `docs/04_ide-support/ide-integration-guide.md` - `activePort` → `selectedPort`, `setActivePort` → `setSelectedPort`
-- [ ] `docs/04_ide-support/troubleshooting.md` - `activeIDEChanged` → `ideSelectedChanged`, `setActivePort` → `setSelectedPort`, `loadActivePort` → `loadSelectedPort`
+- [ ] `docs/04_ide-support/ide-port-management.md` - `activePort` → `selectedIDE`, `setActivePort` → `setSelectedIDE`, `loadActivePort` → `loadSelectedIDE`
+- [ ] `docs/04_ide-support/ide-components.md` - `activePort` → `selectedIDE`, `setActivePort` → `setSelectedIDE`
+- [ ] `docs/04_ide-support/ide-integration-guide.md` - `activePort` → `selectedIDE`, `setActivePort` → `setSelectedIDE`
+- [ ] `docs/04_ide-support/troubleshooting.md` - `activeIDEChanged` → `ideSelectedChanged`, `setActivePort` → `setSelectedIDE`, `loadActivePort` → `loadSelectedIDE`
 - [ ] `docs/03_features/ide-integration.md` - `getActiveIDE` → `getSelectedIDE`, `activeIDEChanged` → `ideSelectedChanged`
 - [ ] `docs/03_features/websocket.md` - `activeIDEChanged` → `ideSelectedChanged`
 
@@ -51,12 +51,12 @@ This phase focuses on updating all tests and documentation to use the new 'selec
 
 ### Step 1: Unit Tests Refactoring (1 hour)
 1. Update `usePortConfiguration.test.js`:
-   - `setActivePort` → `setSelectedPort`
+   - `setActivePort` → `setSelectedIDE`
    - Update all test descriptions and assertions
    - Update mock function names
 
 2. Update `ProjectCommandButtons.test.jsx`:
-   - `activePort` → `selectedPort`
+   - `activePort` → `selectedIDE`
    - Update component props and test data
    - Update test descriptions
 
@@ -67,36 +67,36 @@ This phase focuses on updating all tests and documentation to use the new 'selec
 
 ### Step 2: Integration Tests Refactoring (1 hour)
 1. Update `usePortConfiguration.test.js` (integration):
-   - `setActivePort` → `setSelectedPort`
+   - `setActivePort` → `setSelectedIDE`
    - Update integration test scenarios
    - Update mock implementations
 
 2. Update `IDESendMessageStep.test.js`:
-   - `getActivePort` → `getSelectedPort`
+   - `getActivePort` → `getSelectedIDE`
    - Update test scenarios and mocks
    - Update test descriptions
 
 3. Update `PreviewComponent.test.jsx` (both locations):
-   - `activePort` → `selectedPort`
+   - `activePort` → `selectedIDE`
    - `activeIDEChanged` → `ideSelectedChanged`
    - Update event handling tests
    - Update component prop tests
 
 ### Step 3: API Documentation Refactoring (1 hour)
 1. Update `ide-port-management.md`:
-   - `activePort` → `selectedPort`
-   - `setActivePort` → `setSelectedPort`
-   - `loadActivePort` → `loadSelectedPort`
+   - `activePort` → `selectedIDE`
+   - `setActivePort` → `setSelectedIDE`
+   - `loadActivePort` → `loadSelectedIDE`
    - Update all code examples and descriptions
 
 2. Update `ide-components.md`:
-   - `activePort` → `selectedPort`
-   - `setActivePort` → `setSelectedPort`
+   - `activePort` → `selectedIDE`
+   - `setActivePort` → `setSelectedIDE`
    - Update component documentation and examples
 
 3. Update `ide-integration-guide.md`:
-   - `activePort` → `selectedPort`
-   - `setActivePort` → `setSelectedPort`
+   - `activePort` → `selectedIDE`
+   - `setActivePort` → `setSelectedIDE`
    - Update integration examples and tutorials
 
 ### Step 4: Feature Documentation Refactoring (30 minutes)
@@ -112,8 +112,8 @@ This phase focuses on updating all tests and documentation to use the new 'selec
 
 3. Update `troubleshooting.md`:
    - `activeIDEChanged` → `ideSelectedChanged`
-   - `setActivePort` → `setSelectedPort`
-   - `loadActivePort` → `loadSelectedPort`
+   - `setActivePort` → `setSelectedIDE`
+   - `loadActivePort` → `loadSelectedIDE`
    - Update troubleshooting scenarios and solutions
 
 ### Step 5: Naming Conventions Guide Creation (30 minutes)
@@ -128,15 +128,15 @@ This phase focuses on updating all tests and documentation to use the new 'selec
 ### Test Method Names:
 ```javascript
 // OLD → NEW
-setActivePort → setSelectedPort
-getActivePort → getSelectedPort
-loadActivePort → loadSelectedPort
+setActivePort → setSelectedIDE
+getActivePort → getSelectedIDE
+loadActivePort → loadSelectedIDE
 ```
 
 ### Test Variables:
 ```javascript
 // OLD → NEW
-activePort → selectedPort
+activePort → selectedIDE
 activeIDE → selectedIDE
 isActive → isSelected
 ```
@@ -144,20 +144,36 @@ isActive → isSelected
 ### Test Descriptions:
 ```javascript
 // OLD → NEW
-"should set active port" → "should set selected port"
+"should set active port" → "should set selected IDE"
 "when IDE is active" → "when IDE is selected"
-"active port validation" → "selected port validation"
+"active port validation" → "selected IDE validation"
 ```
 
 ### Documentation Examples:
 ```javascript
 // OLD → NEW
 const { activePort, setActivePort } = useIDEStore();
-const { selectedPort, setSelectedPort } = useIDEStore();
+const { selectedIDE, setSelectedIDE } = useIDEStore();
+```
 
-// OLD → NEW
-eventBus.on('activeIDEChanged', handler);
-eventBus.on('ideSelectedChanged', handler);
+### Store Example:
+```javascript
+// ❌ FALSCH:
+const useIDEStore = create(() => ({
+  selectedPort: null,
+  setSelectedPort: (port) => ...
+}))
+// ✅ RICHTIG:
+const useIDEStore = create(() => ({
+  selectedIDE: null,
+  setSelectedIDE: (ide) => ...
+}))
+```
+
+### Method Example:
+```javascript
+// ✅ ERLAUBT:
+getSelectedPort() { return this.selectedIDE?.port || null; }
 ```
 
 ## Testing Strategy
