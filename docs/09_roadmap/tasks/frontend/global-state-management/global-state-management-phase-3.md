@@ -24,7 +24,7 @@
 
 **App.jsx Integration:**
 ```javascript
-// App.jsx - RICHTIGE Global State Initialization
+// App.jsx - RICHTIGE Global State Initialization für MEHRERE IDEs
 import { useProjectGlobalStore } from '@/infrastructure/stores/ProjectGlobalStore';
 import { useEffect } from 'react';
 

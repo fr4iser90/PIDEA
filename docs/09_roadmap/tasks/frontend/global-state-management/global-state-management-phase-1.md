@@ -23,47 +23,47 @@
 
 **Store Structure:**
 ```javascript
-// ProjectGlobalStore.jsx - RICHTIGE STRUKTUR!
+// ProjectGlobalStore.jsx - RICHTIGE STRUKTUR für MEHRERE IDEs!
 const useProjectGlobalStore = create((set, get) => ({
   // State
   initialized: false,
   loading: false,
   error: null,
   
-  // IDE data - DAS IST ALLES WAS WIR BRAUCHEN!
+  // IDE data - ALLE IDEs + AKTIVE IDE!
   ideData: {
-    available: [],
-    activeIDE: null, // { port, workspacePath, active: true }
+    available: [], // [{ port: 9222, workspacePath: '/path1', active: true }, { port: 9223, workspacePath: '/path2', active: false }]
+    activeIDE: null, // { port: 9222, workspacePath: '/path1', active: true }
     lastUpdate: null
   },
   
   // Git data - KEYED BY WORKSPACE PATH!
-  gitData: {}, // { workspacePath: { status, branches, lastUpdate } }
+  gitData: {}, // { '/path1': { status, branches, lastUpdate }, '/path2': { status, branches, lastUpdate } }
   
   // Analysis data - KEYED BY WORKSPACE PATH!
-  analysisData: {}, // { workspacePath: { status, metrics, history, lastUpdate } }
+  analysisData: {}, // { '/path1': { status, metrics, history, lastUpdate }, '/path2': { status, metrics, history, lastUpdate } }
   
   // Actions
   initialize: async () => {
     set({ loading: true, error: null });
     
     try {
-      // NUR IDE API laden - das ist alles!
+      // Lade ALLE IDEs
       const ideResult = await apiCall('/api/ide/available');
       
       if (ideResult.success) {
         const ideData = ideResult.data;
-        const activeIDE = ideData.find(ide => ide.active);
+        const activeIDE = ideData.find(ide => ide.active === true); // Finde AKTIVE IDE
         
         set({ 
           ideData: {
-            available: ideData,
-            activeIDE: activeIDE || null,
+            available: ideData, // ALLE IDEs
+            activeIDE: activeIDE || null, // NUR die AKTIVE IDE
             lastUpdate: new Date().toISOString()
           }
         });
         
-        // Wenn aktive IDE gefunden, lade deren Daten
+        // Wenn AKTIVE IDE gefunden, lade deren Daten
         if (activeIDE?.workspacePath) {
           await get().loadProjectData(activeIDE.workspacePath);
         }
@@ -80,7 +80,7 @@ const useProjectGlobalStore = create((set, get) => ({
     if (!workspacePath) return;
     
     try {
-      // Get project ID from workspace path
+      // Get project ID from workspace path (KEINE hardcodierten Pfade!)
       const projectId = getProjectIdFromWorkspace(workspacePath);
       if (!projectId) return;
       
@@ -152,6 +152,31 @@ const useProjectGlobalStore = create((set, get) => ({
     }
   },
   
+  // Switch active IDE
+  switchActiveIDE: async (port) => {
+    try {
+      const { ideData } = get();
+      const newActiveIDE = ideData.available.find(ide => ide.port === port);
+      
+      if (newActiveIDE) {
+        set(state => ({
+          ideData: {
+            ...state.ideData,
+            activeIDE: newActiveIDE,
+            lastUpdate: new Date().toISOString()
+          }
+        }));
+        
+        // Load data for new active IDE
+        if (newActiveIDE.workspacePath) {
+          await get().loadProjectData(newActiveIDE.workspacePath);
+        }
+      }
+    } catch (error) {
+      logger.error('Failed to switch active IDE:', error);
+    }
+  },
+  
   // WebSocket event handlers
   setupWebSocketListeners: (eventBus) => {
     if (!eventBus) return;
@@ -183,12 +208,18 @@ const useProjectGlobalStore = create((set, get) => ({
         }
       }));
     });
+    
+    eventBus.on('activeIDEChanged', (data) => {
+      const { port } = data;
+      get().switchActiveIDE(port);
+    });
   },
   
   cleanupWebSocketListeners: (eventBus) => {
     if (!eventBus) return;
     eventBus.off('git-status-updated');
     eventBus.off('analysis-completed');
+    eventBus.off('activeIDEChanged');
   },
   
   reset: () => {
@@ -203,7 +234,7 @@ const useProjectGlobalStore = create((set, get) => ({
   }
 }));
 
-// Helper function to get project ID from workspace path
+// Helper function to get project ID from workspace path (KEINE hardcodierten Pfade!)
 const getProjectIdFromWorkspace = (workspacePath) => {
   if (!workspacePath) return null;
   // Extract project name from path (e.g., /home/user/projects/myproject -> myproject)
@@ -214,7 +245,7 @@ const getProjectIdFromWorkspace = (workspacePath) => {
 
 ### Step 2: Create State Selectors ✅
 **Create selectors for components:**
-- [ ] File: `frontend/src/infrastructure/stores/ProjectSelectors.jsx` - Create state selectors
+- [ ] File: `frontend/src/infrastructure/stores/selectors/ProjectSelectors.jsx` - Create state selectors
 - [ ] Project information selectors
 - [ ] Git status selectors
 - [ ] Analysis status selectors
@@ -222,11 +253,11 @@ const getProjectIdFromWorkspace = (workspacePath) => {
 
 **Selector Implementation:**
 ```javascript
-// ProjectSelectors.jsx - RICHTIGE SELECTORS!
+// ProjectSelectors.jsx - RICHTIGE SELECTORS für MEHRERE IDEs!
 import { useMemo } from 'react';
-import useProjectGlobalStore from './ProjectGlobalStore.jsx';
+import useProjectGlobalStore from '../ProjectGlobalStore.jsx';
 
-// Git selectors - RICHTIGE PROPERTIES!
+// Git selectors - RICHTIGE PROPERTIES für AKTIVE IDE!
 export const useGitStatus = (workspacePath = null) => {
   const gitData = useProjectGlobalStore(state => state.gitData);
   const ideData = useProjectGlobalStore(state => state.ideData);
@@ -328,7 +359,7 @@ export const useAnalysisHistory = (workspacePath = null) => {
   }, [analysisData, activeIDE, workspacePath]);
 };
 
-// IDE selectors
+// IDE selectors - RICHTIGE für MEHRERE IDEs!
 export const useActiveIDE = () => {
   const ideData = useProjectGlobalStore(state => state.ideData);
   
@@ -336,8 +367,8 @@ export const useActiveIDE = () => {
     activeIDE: ideData.activeIDE,
     workspacePath: ideData.activeIDE?.workspacePath,
     port: ideData.activeIDE?.port,
-    projectId: ideData.activeIDE?.projectId,
-    projectName: ideData.activeIDE?.projectName
+    projectId: ideData.activeIDE?.workspacePath ? getProjectIdFromWorkspace(ideData.activeIDE.workspacePath) : null,
+    projectName: ideData.activeIDE?.workspacePath ? ideData.activeIDE.workspacePath.split('/').pop() : null
   }), [ideData.activeIDE]);
 };
 
@@ -347,8 +378,9 @@ export const useAvailableIDEs = () => {
   return useMemo(() => ideData.available.map(ide => ({
     port: ide.port,
     workspacePath: ide.workspacePath,
-    projectName: ide.projectName,
-    active: ide.active
+    projectName: ide.workspacePath ? ide.workspacePath.split('/').pop() : null,
+    active: ide.active,
+    status: ide.status
   })), [ideData.available]);
 };
 
@@ -368,10 +400,18 @@ export const useProjectDataActions = () => {
   return {
     initialize: store.initialize,
     loadProjectData: store.loadProjectData,
+    switchActiveIDE: store.switchActiveIDE,
     setupWebSocketListeners: store.setupWebSocketListeners,
     cleanupWebSocketListeners: store.cleanupWebSocketListeners,
     reset: store.reset
   };
+};
+
+// Helper function (same as in store)
+const getProjectIdFromWorkspace = (workspacePath) => {
+  if (!workspacePath) return null;
+  const parts = workspacePath.split('/');
+  return parts[parts.length - 1];
 };
 ```
 
