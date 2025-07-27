@@ -1,0 +1,51 @@
+{
+  "presets": [
+    ["@babel/preset-env", {
+      "targets": {
+        "node": "current"
+      }
+    }]
+  ],
+  "plugins": [
+    ["module-resolver", {
+      "root": ["./"],
+      "alias": {
+        "@": "./",
+        "@domain": "./domain",
+        "@application": "./application",
+        "@infrastructure": "./infrastructure",
+        "@presentation": "./presentation",
+        "@tests": "./tests",
+        "@cli": "./cli",
+        "@scripts": "./scripts",
+        "@commands": "./application/commands",
+        "@handlers": "./application/handlers",
+        "@steps": "./domain/steps",
+        "@workflows": "./domain/workflows",
+        "@frameworks": "./domain/frameworks",
+        "@git": "./domain/workflows/categories/git",
+        "@categories": "./application/commands/categories",
+        "@handler-categories": "./application/handlers/categories",
+        "@step-categories": "./domain/workflows/steps/categories",
+        "@workflow-categories": "./domain/workflows/categories",
+        "@entities": "./domain/entities",
+        "@repositories": "./domain/repositories",
+        "@services": "./domain/services",
+        "@value-objects": "./domain/value-objects",
+        "@messaging": "./infrastructure/messaging",
+        "@database": "./infrastructure/database",
+        "@external": "./infrastructure/external",
+        "@auth": "./infrastructure/auth",
+        "@auto": "./infrastructure/auto",
+        "@security": "./infrastructure/security",
+        "@logging": "./infrastructure/logging",
+        "@templates": "./infrastructure/templates",
+        "@strategies": "./infrastructure/strategies",
+        "@controllers": "./presentation/api/controllers",
+        "@websocket": "./presentation/websocket",
+        "@api": "./presentation/api",
+        "@config": "./config"
+      }
+    }]
+  ]
+} 
