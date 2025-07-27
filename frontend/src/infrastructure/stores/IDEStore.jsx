@@ -46,6 +46,13 @@ const useIDEStore = create(
           set({ isLoading: true, error: null });
           logger.info('Setting active port:', port);
 
+          // ✅ FIX: Ensure IDE data is loaded first
+          const { availableIDEs } = get();
+          if (availableIDEs.length === 0) {
+            logger.info('No IDEs loaded, loading available IDEs first');
+            await get().loadAvailableIDEs();
+          }
+
           // Validate port
           const isValid = await get().validatePort(port);
           if (!isValid) {
@@ -77,18 +84,20 @@ const useIDEStore = create(
           logger.info('Active port set successfully:', port);
           
           // ✅ FIX: Update active status for all IDEs
-          const { availableIDEs } = get();
-          const updatedIDEs = availableIDEs.map(ide => ({
+          const currentAvailableIDEs = get().availableIDEs;
+          const updatedIDEs = currentAvailableIDEs.map(ide => ({
             ...ide,
             active: ide.port === port
           }));
           set({ availableIDEs: updatedIDEs });
           
-          // ✅ NEW: Load project data when active port changes
+          // ✅ FIX: Load project data when active port changes
           const activeIDE = updatedIDEs.find(ide => ide.port === port);
           if (activeIDE && activeIDE.workspacePath) {
             logger.info('Loading project data for new active port:', port, 'workspace:', activeIDE.workspacePath);
             await get().loadProjectData(activeIDE.workspacePath);
+          } else {
+            logger.warn('No active IDE found or no workspace path for port:', port);
           }
         } catch (error) {
           logger.error('Error setting active port:', error);
@@ -188,9 +197,10 @@ const useIDEStore = create(
             });
             
             // ✅ FIX: Set active status for IDEs
+            const currentActivePort = get().activePort;
             const idesWithActiveStatus = ides.map(ide => ({
               ...ide,
-              active: ide.port === get().activePort
+              active: ide.port === currentActivePort
             }));
             
             set({ 
@@ -201,15 +211,20 @@ const useIDEStore = create(
             });
             logger.info('Loaded', idesWithActiveStatus.length, 'IDEs');
             
-            // Auto-set active port if none is set and we have IDEs
-            const { activePort } = get();
-            if (!activePort && idesWithActiveStatus.length > 0) {
+            // ✅ FIX: Auto-set active port if none is set and we have IDEs
+            if (!currentActivePort && idesWithActiveStatus.length > 0) {
               const firstIDE = idesWithActiveStatus[0];
               logger.info('Auto-setting active port to:', firstIDE.port);
               set({ activePort: firstIDE.port });
+              
+              // ✅ FIX: Load project data for the auto-selected IDE
+              if (firstIDE.workspacePath) {
+                logger.info('Loading project data for auto-selected IDE:', firstIDE.workspacePath);
+                await get().loadProjectData(firstIDE.workspacePath);
+              }
             }
             
-            return ides;
+            return idesWithActiveStatus;
           } else {
             throw new Error(result.error || 'Failed to load IDEs');
           }
