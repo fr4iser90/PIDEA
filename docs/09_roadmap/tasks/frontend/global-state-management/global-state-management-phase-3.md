@@ -24,47 +24,46 @@
 
 **App.jsx Integration:**
 ```javascript
-// App.jsx - Global State Initialization
+// App.jsx - RICHTIGE Global State Initialization
 import { useProjectGlobalStore } from '@/infrastructure/stores/ProjectGlobalStore';
 import { useEffect } from 'react';
 
 const App = () => {
-  const { loadAllData, setupWebSocketListeners, cleanupWebSocketListeners } = useProjectGlobalStore();
+  const { 
+    initialized, 
+    loading, 
+    error, 
+    initialize, 
+    setupWebSocketListeners, 
+    cleanupWebSocketListeners 
+  } = useProjectGlobalStore();
   
   useEffect(() => {
-    // Load all data once on app startup
-    const initializeGlobalState = async () => {
-      try {
-        // Get project ID from workspace or current context
-        const projectId = getProjectIdFromWorkspace() || 'pidea';
-        
-        // Load all project data
-        await loadAllData(projectId);
-        
-        // Setup WebSocket listeners for real-time updates
-        if (window.eventBus) {
-          setupWebSocketListeners(window.eventBus);
-        }
-        
-        console.log('✅ Global state initialized successfully');
-      } catch (error) {
-        console.error('❌ Failed to initialize global state:', error);
-      }
-    };
-    
-    initializeGlobalState();
-    
-    // Cleanup on unmount
-    return () => {
-      if (window.eventBus) {
-        cleanupWebSocketListeners(window.eventBus);
-      }
-    };
-  }, []);
+    // Initialize global state when authenticated
+    if (isAuthenticated && !initialized && !loading) {
+      logger.info('🔄 Initializing global state...');
+      initialize();
+    }
+  }, [isAuthenticated, initialized, loading, initialize]);
+  
+  // Setup WebSocket listeners after initialization
+  useEffect(() => {
+    if (initialized && eventBus) {
+      logger.info('🔄 Setting up WebSocket listeners...');
+      setupWebSocketListeners(eventBus);
+      
+      // Cleanup on unmount
+      return () => {
+        cleanupWebSocketListeners(eventBus);
+      };
+    }
+  }, [initialized, eventBus, setupWebSocketListeners, cleanupWebSocketListeners]);
   
   // Rest of app...
   return (
     <div className="App">
+      {loading && <div>Loading global state...</div>}
+      {error && <div>Error: {error}</div>}
       {/* Existing app content */}
     </div>
   );
