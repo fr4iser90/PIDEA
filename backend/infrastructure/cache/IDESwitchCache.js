@@ -9,7 +9,7 @@ class IDESwitchCache {
   constructor(options = {}) {
     this.cache = new Map();
     this.ttl = options.ttl || 10 * 60 * 1000; // 10 minutes - increased for better performance
-    this.maxSize = options.maxSize || 30; // Reduced to prevent memory issues
+    this.maxSize = options.maxSize || 100; // Increased for IDE switches (only 2 ports)
     this.cleanupInterval = options.cleanupInterval || 180000; // 3 minutes - more frequent cleanup
     
     // Performance monitoring
@@ -50,6 +50,11 @@ class IDESwitchCache {
         this.cache.delete(port);
       }
       
+      // Debug: Log cache status every 50 requests (less frequent)
+      if (this.performanceMetrics.totalMisses % 50 === 0 && this.performanceMetrics.totalMisses > 0) {
+        logger.debug(`IDESwitchCache Debug - Cache miss #${this.performanceMetrics.totalMisses}, Cache size: ${this.cache.size}/${this.maxSize}`);
+      }
+      
       return null;
     } catch (error) {
       this.performanceMetrics.totalMisses++;
@@ -69,6 +74,7 @@ class IDESwitchCache {
       
       // Check cache size limit
       if (this.cache.size >= this.maxSize) {
+        logger.warn(`IDESwitchCache full (${this.cache.size}/${this.maxSize}), evicting oldest entries`);
         this.evictOldest();
       }
       
@@ -77,7 +83,7 @@ class IDESwitchCache {
         timestamp: Date.now()
       });
       
-      logger.debug(`Cached switch result for port ${port}`);
+      logger.debug(`Cached switch result for port ${port}, cache size: ${this.cache.size}, total sets: ${this.performanceMetrics.totalSets}`);
     } catch (error) {
       logger.error(`Error caching switch for port ${port}:`, error.message);
     }
@@ -109,14 +115,14 @@ class IDESwitchCache {
       const now = Date.now();
       let cleaned = 0;
       
-      // More aggressive cleanup - clean if we have more than 5 entries
-      if (this.cache.size > 5) {
+      // For IDE switches, we only have 2 ports, so minimal cleanup
+      // Only clean if we somehow have more than 10 entries (should never happen with 2 IDEs)
+      if (this.cache.size > 10) {
         for (const [port, entry] of this.cache.entries()) {
-          // Remove if entry is expired (1.2x TTL) or very old
-          const isExpired = now - entry.timestamp > (this.ttl * 1.2);
+          // Remove if entry is very old (3x TTL)
           const isVeryOld = now - entry.timestamp > (this.ttl * 3);
           
-          if (isExpired || isVeryOld) {
+          if (isVeryOld) {
             this.cache.delete(port);
             cleaned++;
           }
@@ -141,12 +147,10 @@ class IDESwitchCache {
         this.performanceMetrics.memoryUsage.shift();
       }
       
-      // Force cleanup if memory usage is high
+      // Track memory usage for monitoring only - never clear cache for IDE switches
       const heapUsageMB = memUsage.heapUsed / 1024 / 1024;
       if (heapUsageMB > 50) { // If heap usage > 50MB
-        logger.warn(`High memory usage in cache: ${heapUsageMB.toFixed(2)}MB, forcing cleanup`);
-        this.cache.clear();
-        logger.info('Cache cleared due to high memory usage');
+        logger.warn(`High memory usage in cache: ${heapUsageMB.toFixed(2)}MB, but keeping cache for IDE switches`);
       }
       
       this.performanceMetrics.lastCleanup = now;
@@ -160,6 +164,13 @@ class IDESwitchCache {
    */
   evictOldest() {
     try {
+      // For IDE switches, we only have 2 ports, so never clear the cache
+      // Just log if we somehow reach the size limit
+      if (this.cache.size >= this.maxSize * 0.8) {
+        logger.warn(`IDESwitchCache very full (${this.cache.size}/${this.maxSize}), but keeping cache for IDE switches`);
+        return;
+      }
+      
       let oldestPort = null;
       let oldestTime = Date.now();
       

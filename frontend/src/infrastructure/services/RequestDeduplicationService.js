@@ -23,9 +23,9 @@ class RequestDeduplicationService {
 
     // Configuration
     this.defaultTTL = options.defaultTTL || 5 * 60 * 1000; // 5 minutes
-    this.cleanupInterval = options.cleanupInterval || 60 * 1000; // 1 minute
-    this.maxCacheSize = options.maxCacheSize || 1000;
-    this.requestTimeout = options.requestTimeout || 30 * 1000; // 30 seconds
+    this.cleanupInterval = options.cleanupInterval || 30 * 1000; // 30 seconds (faster cleanup)
+    this.maxCacheSize = options.maxCacheSize || 50; // Reduced from 1000 to 50
+    this.requestTimeout = options.requestTimeout || 15 * 1000; // 15 seconds (faster timeout)
 
     // Start cleanup interval
     this.startCleanupInterval();
@@ -45,6 +45,15 @@ class RequestDeduplicationService {
     const timeout = options.timeout || this.requestTimeout;
 
     this.stats.totalRequests++;
+    
+    // Debug: Log cache status every 50 requests (less frequent)
+    if (this.stats.totalRequests % 50 === 0) {
+      logger.debug(`RequestDeduplicationService Debug - Request #${this.stats.totalRequests}:`, {
+        cacheSize: this.cache.size,
+        pendingRequests: this.pendingRequests.size,
+        cacheHitRate: this.stats.cacheHits / this.stats.totalRequests * 100
+      });
+    }
 
     // Check cache first
     if (useCache) {
@@ -55,6 +64,11 @@ class RequestDeduplicationService {
         return cached.data;
       }
       this.stats.cacheMisses++;
+      
+      // Debug: Log cache misses for IDE switches
+      if (key.includes('switch_ide') || key.includes('store_switch_ide')) {
+        logger.warn(`Cache miss for IDE switch: ${key}, cache size: ${this.cache.size}, cache keys: ${Array.from(this.cache.keys()).join(', ')}`);
+      }
     }
 
     // Check for pending request
@@ -159,15 +173,18 @@ class RequestDeduplicationService {
     const cached = this.cache.get(key);
     
     if (!cached) {
+      logger.debug(`Cache miss for key: ${key}, cache size: ${this.cache.size}`);
       return null;
     }
     
     // Check if expired
     if (Date.now() > cached.expiresAt) {
+      logger.debug(`Cache expired for key: ${key}, age: ${Date.now() - cached.cachedAt}ms`);
       this.cache.delete(key);
       return null;
     }
     
+    logger.debug(`Cache hit for key: ${key}, age: ${Date.now() - cached.cachedAt}ms`);
     return cached;
   }
 
@@ -180,6 +197,7 @@ class RequestDeduplicationService {
   setCached(key, data, ttl = this.defaultTTL) {
     // Check cache size limit
     if (this.cache.size >= this.maxCacheSize) {
+      logger.warn(`Cache full (${this.cache.size}/${this.maxCacheSize}), evicting oldest entries`);
       this.evictOldest();
     }
     
@@ -189,7 +207,7 @@ class RequestDeduplicationService {
       expiresAt: Date.now() + ttl
     });
     
-    logger.debug(`Cached data for key: ${key}, TTL: ${ttl}ms`);
+    logger.debug(`Cached data for key: ${key}, TTL: ${ttl}ms, cache size: ${this.cache.size}`);
   }
 
   /**
@@ -216,13 +234,20 @@ class RequestDeduplicationService {
     const entries = Array.from(this.cache.entries());
     const sortedEntries = entries.sort((a, b) => a[1].cachedAt - b[1].cachedAt);
     
-    // Remove oldest 10% of entries
-    const toRemove = Math.ceil(sortedEntries.length * 0.1);
-    for (let i = 0; i < toRemove; i++) {
-      this.cache.delete(sortedEntries[i][0]);
+    // For IDE switches, we only have 2 ports, so never clear the cache completely
+    if (this.cache.size >= this.maxCacheSize * 0.9) {
+      logger.warn(`Cache very full (${this.cache.size}/${this.maxCacheSize}), but keeping cache for IDE switches`);
+      return;
     }
     
-    logger.debug(`Evicted ${toRemove} oldest cache entries`);
+    // Only evict if we somehow have more than 10 entries (should never happen with 2 IDEs)
+    if (this.cache.size > 10) {
+      const toRemove = Math.ceil(sortedEntries.length * 0.5);
+      for (let i = 0; i < toRemove; i++) {
+        this.cache.delete(sortedEntries[i][0]);
+      }
+      logger.debug(`Evicted ${toRemove} oldest cache entries (50% of cache)`);
+    }
   }
 
   /**
@@ -273,12 +298,19 @@ class RequestDeduplicationService {
       ? (this.stats.cacheHits / this.stats.totalRequests * 100).toFixed(2)
       : 0;
     
+    // Memory usage info
+    const memoryInfo = {
+      cacheSize: this.cache.size,
+      pendingRequestsCount: this.pendingRequests.size,
+      cacheMemoryUsage: this.cache.size * 1024, // Rough estimate
+      pendingMemoryUsage: this.pendingRequests.size * 512 // Rough estimate
+    };
+    
     return {
       ...this.stats,
       uptime,
       cacheHitRate: `${cacheHitRate}%`,
-      cacheSize: this.cache.size,
-      pendingRequestsCount: this.pendingRequests.size,
+      ...memoryInfo,
       duplicateRequestRate: this.stats.totalRequests > 0
         ? (this.stats.duplicateRequests / this.stats.totalRequests * 100).toFixed(2)
         : 0

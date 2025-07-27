@@ -10,10 +10,9 @@ import { logger } from '@/infrastructure/logging/Logger';
 import { apiCall } from '@/infrastructure/repositories/APIChatRepository.jsx';
 import useAuthStore from './AuthStore.jsx';
 import requestDeduplicationService from '@/infrastructure/services/RequestDeduplicationService';
+import useIDESwitchOptimizationStore from './IDESwitchOptimizationStore.jsx';
 
-// Add caching to frontend store
-const switchCache = new Map();
-const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+// Using RequestDeduplicationService for caching instead of local cache
 
 // Helper function to get project ID from workspace path
 const getProjectIdFromWorkspace = (workspacePath) => {
@@ -51,16 +50,17 @@ const useIDEStore = create(
           set({ isLoading: true, error: null });
           logger.info('Setting active port:', port);
 
-          // ✅ FIX: Ensure IDE data is loaded first
-          const { availableIDEs } = get();
-          if (availableIDEs.length === 0) {
-            logger.info('No IDEs loaded, loading available IDEs first');
+          // ✅ FIX: Ensure IDE data is loaded first (only if needed)
+          const { availableIDEs, lastUpdate } = get();
+          if (availableIDEs.length === 0 || !lastUpdate || (Date.now() - new Date(lastUpdate).getTime()) > 30000) {
+            logger.info('No IDEs loaded or data stale, loading available IDEs first');
             await get().loadAvailableIDEs();
           }
 
-          // Validate port
-          const isValid = await get().validatePort(port);
-          if (!isValid) {
+          // Validate port (use cached data if possible)
+          const ide = availableIDEs.find(ide => ide.port === port);
+          if (!ide) {
+            logger.warn(`Port ${port} not found in available IDEs`);
             throw new Error(`Port ${port} is not valid`);
           }
 
@@ -127,25 +127,25 @@ const useIDEStore = create(
           set({ isLoading: true, error: null });
           logger.info('Loading active port...');
 
-          // Strategy 1: Try previously active port
-          const { activePort, portPreferences } = get();
+          // Strategy 1: Try previously active port (use cached data)
+          const { activePort, portPreferences, availableIDEs: cachedIDEs } = get();
           if (activePort) {
-            const isValid = await get().validatePort(activePort);
-            if (isValid) {
+            const ide = cachedIDEs.find(ide => ide.port === activePort);
+            if (ide && ide.status === 'running') {
               logger.info('Using previously active port:', activePort);
               set({ isLoading: false });
               return activePort;
             }
           }
 
-          // Strategy 2: Try preferred ports
+          // Strategy 2: Try preferred ports (use cached data)
           const sortedPreferences = [...portPreferences]
             .sort((a, b) => b.weight - a.weight)
             .sort((a, b) => new Date(b.lastUsed) - new Date(a.lastUsed));
 
           for (const preference of sortedPreferences) {
-            const isValid = await get().validatePort(preference.port);
-            if (isValid) {
+            const ide = cachedIDEs.find(ide => ide.port === preference.port);
+            if (ide && ide.status === 'running') {
               logger.info('Using preferred port:', preference.port);
               set({ activePort: preference.port, isLoading: false });
               return preference.port;
@@ -175,17 +175,24 @@ const useIDEStore = create(
 
       loadAvailableIDEs: async () => {
         try {
-          const { isLoading } = get();
+          const { isLoading, availableIDEs, lastUpdate } = get();
+          
+          // Skip if already loading
           if (isLoading) {
             logger.info('IDE load already in progress, skipping');
-            return get().availableIDEs;
+            return availableIDEs;
+          }
+          
+          // Skip if data is recent (less than 30 seconds old)
+          if (lastUpdate && (Date.now() - lastUpdate) < 30000) {
+            logger.info('Using recent IDE data, skipping API call');
+            return availableIDEs;
           }
           
           // Check if user is authenticated before making API call
           const { isAuthenticated } = useAuthStore.getState();
           if (!isAuthenticated) {
             logger.info('User not authenticated, skipping IDE load');
-            set({ isLoading: false });
             return [];
           }
           
@@ -556,17 +563,22 @@ const useIDEStore = create(
           // Start optimization tracking
           optimizationStore.startSwitch(port);
 
-          // Check cache first
-          if (optimizationStore.cacheEnabled) {
-            const cacheKey = `switch_${port}`;
-            const cached = switchCache.get(cacheKey);
-            if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
+          // Check cache first using RequestDeduplicationService
+          logger.info(`IDEStore: Starting switchIDE for port ${port}, cache enabled: ${optimizationStore.cacheEnabled}, service available: ${!!requestDeduplicationService}`);
+          if (optimizationStore.cacheEnabled && requestDeduplicationService) {
+            const key = `switch_ide_${port}`; // SAME KEY as APIChatRepository!
+            const cacheKey = requestDeduplicationService.generateCacheKey(key, {});
+            const cached = requestDeduplicationService.getCached(cacheKey);
+            logger.info(`IDEStore: Cache check for key: ${key}, generated key: ${cacheKey}, cached: ${!!cached}`);
+            if (cached) {
               logger.info('Using cached switch result for port:', port);
               optimizationStore.updateProgress(50, 'Using cached result...');
               await get().setActivePort(port);
               optimizationStore.completeSwitch(true, Date.now() - startTime);
               return true;
             }
+          } else {
+            logger.warn(`IDEStore: Cache disabled or service unavailable - cacheEnabled: ${optimizationStore.cacheEnabled}, service: ${!!requestDeduplicationService}`);
           }
 
           // Optimistic update
@@ -579,27 +591,52 @@ const useIDEStore = create(
           optimizationStore.updateProgress(50, 'Connecting to IDE...');
           
           // Use deduplication service for IDE switching
-          const key = `store_switch_ide_${port}`;
-          const result = await requestDeduplicationService.execute(key, async () => {
-            return apiCall(`/api/ide/switch/${port}`, {
+          const key = `switch_ide_${port}`; // SAME KEY as APIChatRepository!
+          logger.info(`IDEStore: Attempting IDE switch to port ${port} with key: ${key}`);
+          logger.info(`IDEStore: RequestDeduplicationService available:`, !!requestDeduplicationService);
+          if (requestDeduplicationService) {
+            logger.info(`IDEStore: RequestDeduplicationService methods:`, Object.keys(requestDeduplicationService));
+            logger.info(`IDEStore: RequestDeduplicationService execute method:`, typeof requestDeduplicationService.execute);
+          } else {
+            logger.error(`IDEStore: RequestDeduplicationService is null or undefined!`);
+          }
+          
+          if (!requestDeduplicationService) {
+            logger.error(`IDEStore: RequestDeduplicationService not available!`);
+            logger.error(`IDEStore: Falling back to direct API call`);
+            const result = await apiCall(`/api/ide/switch/${port}`, {
               method: 'POST'
             });
-          }, {
-            useCache: true,
-            cacheTTL: 5 * 60 * 1000 // 5 minutes
-          });
+            return result;
+          }
+          
+          let result;
+          try {
+            result = await requestDeduplicationService.execute(key, async () => {
+              logger.info(`IDEStore: Making API call for IDE switch to port ${port}`);
+              return apiCall(`/api/ide/switch/${port}`, {
+                method: 'POST'
+              });
+            }, {
+              useCache: true,
+              cacheTTL: 5 * 60 * 1000 // 5 minutes
+            });
+          } catch (executeError) {
+            logger.error(`IDEStore: RequestDeduplicationService.execute() failed:`, executeError.message, executeError.stack);
+            // Fallback to direct API call
+            logger.info(`IDEStore: Falling back to direct API call`);
+            result = await apiCall(`/api/ide/switch/${port}`, {
+              method: 'POST'
+            });
+          }
+          
+          logger.info(`IDEStore: Switch result:`, result);
 
           optimizationStore.updateProgress(75, 'Finalizing switch...');
 
           if (result.success) {
-            // Cache successful result
-            if (optimizationStore.cacheEnabled) {
-              const cacheKey = `switch_${port}`;
-              switchCache.set(cacheKey, {
-                result,
-                timestamp: Date.now()
-              });
-            }
+            // Cache is handled by RequestDeduplicationService
+            // No need to manually cache here
             
             logger.info('Successfully switched to IDE:', port);
             optimizationStore.completeSwitch(true, Date.now() - startTime);
@@ -612,7 +649,7 @@ const useIDEStore = create(
             throw new Error(result.error || 'Failed to switch IDE');
           }
         } catch (error) {
-          logger.error('Error switching IDE:', error);
+          logger.error('Error switching IDE:', error.message, error.stack);
           set({ error: error.message });
           optimizationStore.completeSwitch(false, Date.now() - startTime);
           return false;
@@ -667,6 +704,27 @@ const useIDEStore = create(
             lastUpdate: null
           }
         });
+        
+        // Clear RequestDeduplicationService cache for IDE switches
+        if (requestDeduplicationService) {
+          requestDeduplicationService.clearCache();
+        }
+        logger.info('IDEStore reset - RequestDeduplicationService cache cleared');
+      },
+
+      // Debug function to check performance
+      debugPerformance: () => {
+        const stats = requestDeduplicationService.getStats();
+        logger.info('Performance Debug:', {
+          requestDeduplicationStats: stats,
+          memoryUsage: {
+            cacheSize: stats.cacheSize,
+            pendingRequests: stats.pendingRequestsCount,
+            cacheMemory: stats.cacheMemoryUsage,
+            pendingMemory: stats.pendingMemoryUsage
+          }
+        });
+        return stats;
       },
 
       // Custom port management methods

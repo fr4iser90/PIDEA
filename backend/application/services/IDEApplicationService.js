@@ -19,7 +19,6 @@ const ManualTasksHandler = require('@handlers/categories/workflow/ManualTasksHan
 const TerminalLogCaptureService = require('@domain/services/terminal/TerminalLogCaptureService');
 const TerminalLogReader = require('@domain/services/terminal/TerminalLogReader');
 const IDESwitchCache = require('@infrastructure/cache/IDESwitchCache');
-const RequestQueuingService = require('@infrastructure/services/RequestQueuingService');
 const Logger = require('@logging/Logger');
 
 class IDEApplicationService {
@@ -42,8 +41,7 @@ class IDEApplicationService {
         });
         this.pendingRequests = new Map(); // Request deduplication
         
-        // Initialize request queuing service
-        this.requestQueuingService = RequestQueuingService;
+        // RequestQueuingService removed - using direct execution for better performance
         
         // Initialize manual tasks handler if we have required dependencies
         if (this.ideManager && this.taskRepository) {
@@ -152,27 +150,18 @@ class IDEApplicationService {
                 return cached;
             }
             
-            // Log performance warning if too many switches
-            const queueStats = this.requestQueuingService.getQueueStatus();
-            if (queueStats.queueLength > 5) {
-                this.logger.warn(`High queue length detected: ${queueStats.queueLength} requests pending`);
-            }
+            // For non-cached requests, use direct execution instead of queuing
+            // This prevents the 5+ second delays after cache fills up
+            this.logger.info(`Cache miss for IDE switch to port ${port} - executing directly`);
+            const result = await this.performSwitch(port, userId);
             
-            // Check if already switching to this port
-            const requestKey = `switch_${port}_${userId}`;
+            // Cache successful result
+            this.cache.setCachedSwitch(port, result);
             
-            // Use request queuing service only for non-cached requests
-            return await this.requestQueuingService.queueRequest(requestKey, async () => {
-                const result = await this.performSwitch(port, userId);
-                
-                // Cache successful result with longer TTL for better performance
-                this.cache.setCachedSwitch(port, result);
-                
-                return result;
-            }, {
-                timeout: 15 * 1000, // Reduced timeout to 15 seconds
-                maxConcurrent: 3 // Limit concurrent switches
-            });
+            return result;
+            
+            // Note: RequestQueuingService removed for IDE switches to prevent 5+ second delays
+            // Direct execution is used instead for better performance
         } catch (error) {
             this.logger.error('Error switching IDE:', error);
             throw error;

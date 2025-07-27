@@ -378,7 +378,10 @@ export default class APIChatRepository extends ChatRepository {
   async switchIDE(port) {
     const key = `switch_ide_${port}`;
     
+    logger.info(`Frontend: Attempting IDE switch to port ${port} with key: ${key}`);
+    
     return this.deduplicationService.execute(key, async () => {
+      logger.info(`Frontend: Making API call for IDE switch to port ${port}`);
       return apiCall(API_CONFIG.endpoints.ide.switchIDE(port), {
         method: 'POST'
       });

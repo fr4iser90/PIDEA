@@ -74,8 +74,9 @@ function SidebarLeft({ eventBus, activePort, onActivePortChange, mode = 'chat' }
   
   const handleSwitchDirectlyToIDE = async (port) => {
     try {
-      const { apiCall } = await import('@/infrastructure/repositories/APIChatRepository.jsx');
-      await apiCall(`/api/ide/switch/${port}`, { method: 'POST' });
+      // Use IDEStore.switchIDE() instead of direct API call to get caching
+      const { switchIDE } = useIDEStore.getState();
+      await switchIDE(port, 'sidebar');
       if (onActivePortChange) onActivePortChange(port);
       
       // Make IDE list refresh asynchronous to avoid blocking the switch
@@ -85,7 +86,7 @@ function SidebarLeft({ eventBus, activePort, onActivePortChange, mode = 'chat' }
       
       eventBus.emit('sidebar-left:ide-switched', { port });
     } catch (error) {
-      logger.error('Fehler beim Umschalten der IDE:', error);
+      logger.error('Fehler beim Umschalten der IDE:', error.message, error.stack);
     }
   };
   
