@@ -463,7 +463,8 @@ class Application {
     this.getChatHistoryHandler = new GetChatHistoryHandler(
       this.serviceRegistry.getService('chatRepository'),
       this.serviceRegistry.getService('ideManager'),
-      this.serviceRegistry
+      this.serviceRegistry,
+      this.serviceRegistry.getService('chatCacheService')
     );
 
     this.createTaskHandler = new CreateTaskHandler({

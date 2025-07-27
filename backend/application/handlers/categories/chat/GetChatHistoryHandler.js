@@ -6,10 +6,11 @@ const Logger = require('@logging/Logger');
 const logger = new Logger('ChatHistoryHandler');
 
 class GetChatHistoryHandler {
-  constructor(chatRepository, ideManager = null, serviceRegistry = null) {
+  constructor(chatRepository, ideManager = null, serviceRegistry = null, chatCacheService = null) {
     this.chatRepository = chatRepository;
     this.ideManager = ideManager;
     this.serviceRegistry = serviceRegistry;
+    this.chatCacheService = chatCacheService;
   }
 
   /**
@@ -24,14 +25,36 @@ class GetChatHistoryHandler {
     const dbMessages = await this.chatRepository.getMessagesByPort(port, userId);
     logger.info(`📊 Found ${dbMessages.length} messages in database for port ${port}`);
 
-    // 2. Get live messages from IDE
+    // 2. Get live messages from IDE (with caching)
     let liveMessages = [];
     try {
-      const ideService = await this.getIDEServiceForPort(port);
-      if (ideService && typeof ideService.extractChatHistory === 'function') {
-        logger.info(`📝 Extracting live chat from IDE on port ${port}...`);
-        liveMessages = await ideService.extractChatHistory();
-        logger.info(`✅ Extracted ${liveMessages.length} live messages from IDE`);
+      // ✅ FIXED: Use chat cache service to prevent repeated extractions
+      if (this.chatCacheService) {
+        const cachedMessages = await this.chatCacheService.getChatHistory(port);
+        if (cachedMessages && cachedMessages.length > 0) {
+          logger.info(`📋 Using cached chat for port ${port}: ${cachedMessages.length} messages`);
+          liveMessages = cachedMessages;
+        } else {
+          // Cache miss - extract live and cache it
+          const ideService = await this.getIDEServiceForPort(port);
+          if (ideService && typeof ideService.extractChatHistory === 'function') {
+            logger.info(`📝 Extracting live chat from IDE on port ${port}...`);
+            liveMessages = await ideService.extractChatHistory();
+            logger.info(`✅ Extracted ${liveMessages.length} live messages from IDE`);
+            
+            // Cache the extracted messages
+            await this.chatCacheService.setChatHistory(port, liveMessages);
+            logger.info(`💾 Cached ${liveMessages.length} messages for port ${port}`);
+          }
+        }
+      } else {
+        // Fallback: direct extraction without cache
+        const ideService = await this.getIDEServiceForPort(port);
+        if (ideService && typeof ideService.extractChatHistory === 'function') {
+          logger.info(`📝 Extracting live chat from IDE on port ${port}...`);
+          liveMessages = await ideService.extractChatHistory();
+          logger.info(`✅ Extracted ${liveMessages.length} live messages from IDE`);
+        }
       }
     } catch (error) {
       logger.error(`❌ Failed to extract live chat: ${error.message}`);

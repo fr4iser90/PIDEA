@@ -232,10 +232,31 @@ const useIDEStore = create(
           if (!projectId) return;
           
           // Get active port from state
-          const { activePort } = get();
+          const { activePort, projectData } = get();
           if (!activePort) {
             logger.warn('No active port available for loading project data');
             return;
+          }
+          
+          // ✅ FIXED: Check if data already exists in state
+          const existingGitData = projectData?.git?.[workspacePath];
+          const existingAnalysisData = projectData?.analysis?.[workspacePath];
+          const existingChatData = projectData?.chat?.[workspacePath];
+          
+          // Check if data is recent (less than 30 seconds old)
+          const isDataRecent = (data) => {
+            if (!data?.lastUpdate) return false;
+            const age = Date.now() - new Date(data.lastUpdate).getTime();
+            return age < 30000; // 30 seconds
+          };
+          
+          const hasRecentData = isDataRecent(existingGitData) && 
+                               isDataRecent(existingAnalysisData) && 
+                               isDataRecent(existingChatData);
+          
+          if (hasRecentData) {
+            logger.info('Using existing project data for workspace:', workspacePath);
+            return; // Data is recent, no need to reload
           }
           
           logger.info('Loading project data for workspace:', workspacePath, 'projectId:', projectId, 'activePort:', activePort);
