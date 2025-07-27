@@ -107,8 +107,15 @@ function ChatComponent({ eventBus, activePort, attachedPrompts = [] }) {
 
   const sendMessage = async (message) => {
     if (!message.trim()) return;
+    
+    // Clear input immediately
+    setInputValue('');
+    setIsTyping(true);
+    setError(null);
+    
     let promptContents = [];
     let failedPrompts = [];
+    
     // Fetch all attached prompt contents
     if (attachedPrompts.length > 0) {
       await Promise.all(attachedPrompts.map(async (promptFile) => {
@@ -120,74 +127,32 @@ function ChatComponent({ eventBus, activePort, attachedPrompts = [] }) {
         }
       }));
     }
+    
     // Combine prompt contents and user message
     const finalMessage = `${promptContents.join('\n\n')}${promptContents.length > 0 ? '\n\n' : ''}${message}`;
-    // === DEBUG LOGS REMOVED FOR SECURITY ===
-    // logger.info('==== PROMPT CONTENTS ====', promptContents);
-    // logger.info('==== FAILED PROMPTS ====', failedPrompts);
-    // logger.info('==== FINAL MESSAGE ====', finalMessage);
-    // === DEBUG LOGS END ===
     
-    // Enhanced message type detection
-    const messageType = detectMessageType(finalMessage);
-    
-    const newMessage = normalizeMessage({
-      id: Date.now(),
-      content: finalMessage,
-      sender: 'user',
-      timestamp: new Date().toISOString(),
-      type: messageType,
-      metadata: {
-        hasCodeBlocks: finalMessage.includes('```'),
-        hasInlineCode: /`[^`]+`/.test(finalMessage),
-        promptCount: promptContents.length,
-        characterCount: finalMessage.length
-      }
-    });
-    setMessages(prevMessages => [...prevMessages, newMessage]);
-    setInputValue('');
-    if (failedPrompts.length > 0) {
-      const errorMessage = normalizeMessage({
-        id: Date.now() + 1,
-        content: `Fehler beim Laden folgender Prompts: ${failedPrompts.join(', ')}`,
-        sender: 'system',
-        timestamp: new Date().toISOString(),
-        type: 'error'
-      });
-      setMessages(prevMessages => [...prevMessages, errorMessage]);
-    }
     try {
-
-      // Send message to active IDE
+      // Send message to active IDE via backend API
       const result = await apiCall(API_CONFIG.endpoints.chat.send, {
         method: 'POST',
-        body: JSON.stringify({ message: finalMessage.trim(), requestedBy })
+        body: JSON.stringify({ 
+          message: finalMessage.trim(), 
+          requestedBy,
+          port: activePort 
+        })
       });
+      
       if (!result.success) {
         throw new Error(result.error || 'Failed to send message');
       }
       
-      // EINFACH: AI Response hinzufügen
-      if (result.data && result.data.response) {
-        const aiResponse = normalizeMessage({
-          id: Date.now() + 3,
-          content: result.data.response,
-          sender: 'assistant',
-          timestamp: new Date().toISOString(),
-          type: 'text'
-        });
-        setMessages(prevMessages => [...prevMessages, aiResponse]);
-      }
+      logger.info('Message sent successfully to backend');
+      
     } catch (error) {
       setError('❌ ' + error.message);
-      const errorMessage = normalizeMessage({
-        id: Date.now() + 2,
-        content: `Error: ${error.message}`,
-        sender: 'system',
-        timestamp: new Date().toISOString(),
-        type: 'error'
-      });
-      setMessages(prevMessages => [...prevMessages, errorMessage]);
+      logger.error('Failed to send message:', error);
+    } finally {
+      setIsTyping(false);
     }
   };
 

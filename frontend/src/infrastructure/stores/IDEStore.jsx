@@ -431,6 +431,34 @@ const useIDEStore = create(
         eventBus.off('analysis-progress');
       },
 
+      // Chat message management
+      addChatMessage: (workspacePath, message) => {
+        try {
+          logger.info('Adding chat message for workspace:', workspacePath);
+          
+          set(state => ({
+            projectData: {
+              ...state.projectData,
+              chat: {
+                ...state.projectData.chat,
+                [workspacePath]: {
+                  ...state.projectData.chat[workspacePath],
+                  messages: [
+                    ...(state.projectData.chat[workspacePath]?.messages || []),
+                    message
+                  ],
+                  lastUpdate: new Date().toISOString()
+                }
+              }
+            }
+          }));
+          
+          logger.info('Chat message added successfully');
+        } catch (error) {
+          logger.error('Failed to add chat message:', error);
+        }
+      },
+
       validatePort: async (port) => {
         try {
           logger.info('Validating port:', port);
