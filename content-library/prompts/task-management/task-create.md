@@ -105,19 +105,98 @@ Create new Plan/Implementation [Name]-implementation.md in docs/09_roadmap/tasks
 
 ### 8. Testing Strategy
 
+#### Intelligent Test Path Resolution:
+```javascript
+// Smart test path detection based on category, component type, and project structure
+const resolveTestPath = (category, componentName, componentType = 'service') => {
+  // Component type to test directory mapping
+  const componentTypeMapping = {
+    // Backend components
+    'service': 'unit',
+    'controller': 'unit',
+    'repository': 'unit',
+    'entity': 'unit',
+    'middleware': 'unit',
+    'handler': 'unit',
+    'command': 'unit',
+    'api': 'integration',
+    'database': 'integration',
+    'workflow': 'integration',
+    
+    // Frontend components
+    'component': 'unit',
+    'hook': 'unit',
+    'store': 'unit',
+    'service': 'unit',
+    'page': 'integration',
+    'flow': 'e2e'
+  };
+  
+  // Category to base path mapping
+  const categoryPaths = {
+    'backend': 'backend/tests',
+    'frontend': 'frontend/tests',
+    'database': 'backend/tests',
+    'api': 'backend/tests',
+    'security': 'backend/tests',
+    'performance': 'backend/tests',
+    'testing': 'backend/tests',
+    'documentation': 'backend/tests',
+    'migration': 'backend/tests',
+    'automation': 'backend/tests',
+    'ai': 'backend/tests',
+    'ide': 'backend/tests'
+  };
+  
+  // File extension based on category
+  const getFileExtension = (category) => {
+    return category === 'frontend' ? '.test.jsx' : '.test.js';
+  };
+  
+  const basePath = categoryPaths[category] || 'tests';
+  const testType = componentTypeMapping[componentType] || 'unit';
+  const extension = getFileExtension(category);
+  
+  return `${basePath}/${testType}/${componentName}${extension}`;
+};
+
+// Usage examples:
+// resolveTestPath('backend', 'AuthService', 'service') → 'backend/tests/unit/AuthService.test.js'
+// resolveTestPath('frontend', 'LoginForm', 'component') → 'frontend/tests/unit/LoginForm.test.jsx'
+// resolveTestPath('backend', 'AuthController', 'api') → 'backend/tests/integration/AuthController.test.js'
+// resolveTestPath('frontend', 'UserAuthentication', 'flow') → 'frontend/tests/e2e/UserAuthentication.test.jsx'
+```
+
 #### Unit Tests:
-- [ ] Test file: `tests/unit/[ComponentName].test.js`- [ ] Test cases: [List specific scenarios to test]
+- [ ] Test file: `{resolvedTestPath}` (auto-detected based on category and component type)
+- [ ] Test cases: [List specific scenarios to test]
 - [ ] Mock requirements: [External dependencies to mock]
 
 #### Integration Tests:
-- [ ] Test file: `tests/integration/[ComponentName].test.js`
+- [ ] Test file: `{resolvedTestPath}` (auto-detected for API/database components)
 - [ ] Test scenarios: [API endpoints, database interactions]
 - [ ] Test data: [Fixtures, seed data requirements]
 
 #### E2E Tests:
-- [ ] Test file: `tests/e2e/[ComponentName].test.js`
+- [ ] Test file: `{resolvedTestPath}` (auto-detected for frontend flows)
 - [ ] User flows: [Complete user journeys to test]
 - [ ] Browser compatibility: [Chrome, Firefox compatibility]
+
+#### Test Path Examples by Category:
+- **Backend Service**: `backend/tests/unit/AuthService.test.js`
+- **Backend Controller**: `backend/tests/unit/AuthController.test.js`
+- **Backend API**: `backend/tests/integration/AuthAPI.test.js`
+- **Frontend Component**: `frontend/tests/unit/LoginForm.test.jsx`
+- **Frontend Hook**: `frontend/tests/unit/useAuth.test.js`
+- **Frontend Flow**: `frontend/tests/e2e/UserAuthentication.test.jsx`
+- **Database Migration**: `backend/tests/integration/UserMigration.test.js`
+- **Security Feature**: `backend/tests/unit/SecurityMiddleware.test.js`
+
+#### Test Configuration:
+- **Backend Tests**: Jest with Node.js environment
+- **Frontend Tests**: Jest with jsdom environment
+- **Coverage**: 90%+ for unit tests, 80%+ for integration tests
+- **File Extensions**: `.test.js` for backend, `.test.jsx` for frontend
 
 ### 9. Documentation Requirements
 
