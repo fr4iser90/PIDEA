@@ -4,6 +4,7 @@ import ChatMessage from '@/domain/entities/ChatMessage.jsx';
 import ChatSession from '@/domain/entities/ChatSession.jsx';
 import useAuthStore from '@/infrastructure/stores/AuthStore.jsx';
 import etagManager from '@/infrastructure/services/ETagManager.js';
+import requestDeduplicationService from '@/infrastructure/services/RequestDeduplicationService';
 
 // Utility function to convert workspace path to project ID
 const getProjectIdFromWorkspace = (workspacePath) => {
@@ -220,6 +221,9 @@ export default class APIChatRepository extends ChatRepository {
     this.baseURL = API_CONFIG.baseURL;
     this.currentSession = null;
     this.currentProjectId = null;
+    
+    // Initialize deduplication service
+    this.deduplicationService = requestDeduplicationService;
   }
 
   // Get current project ID from active IDE
@@ -304,11 +308,25 @@ export default class APIChatRepository extends ChatRepository {
   }
 
   async getIDEs() {
-    return apiCall(API_CONFIG.endpoints.ide.list);
+    const key = 'get_available_ides';
+    
+    return this.deduplicationService.execute(key, async () => {
+      return apiCall(API_CONFIG.endpoints.ide.list);
+    }, {
+      useCache: true,
+      cacheTTL: 30 * 1000 // 30 seconds
+    });
   }
 
   async getUserAppUrl() {
-    return apiCall(API_CONFIG.endpoints.ide.userAppUrl);
+    const key = 'get_user_app_url';
+    
+    return this.deduplicationService.execute(key, async () => {
+      return apiCall(API_CONFIG.endpoints.ide.userAppUrl);
+    }, {
+      useCache: true,
+      cacheTTL: 60 * 1000 // 1 minute
+    });
   }
 
   /**
@@ -340,7 +358,14 @@ export default class APIChatRepository extends ChatRepository {
   }
 
   async getWorkspaceInfo() {
-    return apiCall(API_CONFIG.endpoints.ide.workspaceInfo);
+    const key = 'get_workspace_info';
+    
+    return this.deduplicationService.execute(key, async () => {
+      return apiCall(API_CONFIG.endpoints.ide.workspaceInfo);
+    }, {
+      useCache: true,
+      cacheTTL: 2 * 60 * 1000 // 2 minutes
+    });
   }
 
   async setWorkspacePath(port, workspacePath) {
@@ -351,8 +376,15 @@ export default class APIChatRepository extends ChatRepository {
   }
 
   async switchIDE(port) {
-    return apiCall(API_CONFIG.endpoints.ide.switchIDE(port), {
-      method: 'POST'
+    const key = `switch_ide_${port}`;
+    
+    return this.deduplicationService.execute(key, async () => {
+      return apiCall(API_CONFIG.endpoints.ide.switchIDE(port), {
+        method: 'POST'
+      });
+    }, {
+      useCache: true,
+      cacheTTL: 5 * 60 * 1000 // 5 minutes
     });
   }
 

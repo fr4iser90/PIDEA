@@ -19,6 +19,7 @@ const ManualTasksHandler = require('@handlers/categories/workflow/ManualTasksHan
 const TerminalLogCaptureService = require('@domain/services/terminal/TerminalLogCaptureService');
 const TerminalLogReader = require('@domain/services/terminal/TerminalLogReader');
 const IDESwitchCache = require('@infrastructure/cache/IDESwitchCache');
+const RequestQueuingService = require('@infrastructure/services/RequestQueuingService');
 const Logger = require('@logging/Logger');
 
 class IDEApplicationService {
@@ -40,6 +41,9 @@ class IDEApplicationService {
             cleanupInterval: 300000 // 5 minutes - less frequent cleanup
         });
         this.pendingRequests = new Map(); // Request deduplication
+        
+        // Initialize request queuing service
+        this.requestQueuingService = RequestQueuingService;
         
         // Initialize manual tasks handler if we have required dependencies
         if (this.ideManager && this.taskRepository) {
@@ -150,28 +154,18 @@ class IDEApplicationService {
                 return cached;
             }
             
-            // Check for pending request (request deduplication)
+            // Use request queuing service for better request management
             const requestKey = `switch_${port}_${userId}`;
-            if (this.pendingRequests.has(requestKey)) {
-                this.logger.info(`Deduplicating request for port ${port}`);
-                return await this.pendingRequests.get(requestKey);
-            }
-            
-            // Create new request
-            const requestPromise = this.performSwitch(port, userId);
-            this.pendingRequests.set(requestKey, requestPromise);
-            
-            try {
-                const result = await requestPromise;
+            return await this.requestQueuingService.queueRequest(requestKey, async () => {
+                const result = await this.performSwitch(port, userId);
                 
                 // Cache successful result
                 this.cache.setCachedSwitch(port, result);
                 
                 return result;
-            } finally {
-                // Clean up pending request
-                this.pendingRequests.delete(requestKey);
-            }
+            }, {
+                timeout: 30 * 1000 // 30 second timeout
+            });
         } catch (error) {
             this.logger.error('Error switching IDE:', error);
             throw error;

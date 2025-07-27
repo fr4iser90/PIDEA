@@ -9,6 +9,7 @@ import { persist } from 'zustand/middleware';
 import { logger } from '@/infrastructure/logging/Logger';
 import { apiCall } from '@/infrastructure/repositories/APIChatRepository.jsx';
 import useAuthStore from './AuthStore.jsx';
+import requestDeduplicationService from '@/infrastructure/services/RequestDeduplicationService';
 
 // Add caching to frontend store
 const switchCache = new Map();
@@ -191,7 +192,14 @@ const useIDEStore = create(
           set({ isLoading: true, error: null });
           logger.info('Loading available IDEs...');
 
-          const result = await apiCall('/api/ide/available');
+          // Use deduplication service for loading IDEs
+          const key = 'store_load_available_ides';
+          const result = await requestDeduplicationService.execute(key, async () => {
+            return apiCall('/api/ide/available');
+          }, {
+            useCache: true,
+            cacheTTL: 30 * 1000 // 30 seconds
+          });
           if (result.success) {
             // Handle both response formats: result.data.ides (new) and result.data (old)
             const ides = result.data.ides || result.data || [];
@@ -569,8 +577,16 @@ const useIDEStore = create(
           }
 
           optimizationStore.updateProgress(50, 'Connecting to IDE...');
-          const result = await apiCall(`/api/ide/switch/${port}`, {
-            method: 'POST'
+          
+          // Use deduplication service for IDE switching
+          const key = `store_switch_ide_${port}`;
+          const result = await requestDeduplicationService.execute(key, async () => {
+            return apiCall(`/api/ide/switch/${port}`, {
+              method: 'POST'
+            });
+          }, {
+            useCache: true,
+            cacheTTL: 5 * 60 * 1000 // 5 minutes
           });
 
           optimizationStore.updateProgress(75, 'Finalizing switch...');
