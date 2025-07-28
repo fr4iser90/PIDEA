@@ -199,6 +199,11 @@ class ManualTasksImportService {
                         taskMetadata
                     );
                     
+                    // ✅ FIXED: Set created_at if not already set
+                    if (!task.createdAt) {
+                        task.createdAt = new Date();
+                    }
+                    
                     // ✅ FIXED: Update task status and progress after creation
                     if (taskStatus !== 'pending') {
                         task.updateStatus(taskStatus);

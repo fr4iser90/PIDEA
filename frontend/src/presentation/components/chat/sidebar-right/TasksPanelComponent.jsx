@@ -718,7 +718,7 @@ function TasksPanelComponent({ eventBus, activePort }) {
                           </div>
                           <div className="task-footer">
                             <span className="task-category">{task.category}</span>
-                            <span className="task-date">{formatDate(task.created_at)}</span>
+                            <span className="task-date">{formatDate(task.createdAt || task.created_at)}</span>
                           </div>
                         </div>
                       ))}
