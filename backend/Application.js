@@ -188,6 +188,11 @@ class Application {
     
     this.logger.info(`✅ Database connected: ${this.databaseConnection.getType()}`);
     
+    // Initialize database migrations
+    const DatabaseMigrationService = require('./infrastructure/database/DatabaseMigrationService');
+    this.migrationService = new DatabaseMigrationService(this.databaseConnection);
+    await this.migrationService.initialize();
+    
     // Check if default user exists
     await this.checkDefaultUser();
   }
@@ -555,6 +560,8 @@ class Application {
         taskService: this.serviceRegistry.getService('taskService'),
         queueMonitoringService: this.serviceRegistry.getService('queueMonitoringService'),
         workflowLoaderService: this.serviceRegistry.getService('workflowLoaderService'),
+        stepProgressService: this.serviceRegistry.getService('stepProgressService'),
+        queueHistoryService: this.serviceRegistry.getService('queueHistoryService'),
         eventBus: this.eventBus,
         application: this,
         logger: this.serviceRegistry.getService('logger')
@@ -566,6 +573,8 @@ class Application {
         queueMonitoringService: this.serviceRegistry.getService('queueMonitoringService'),
         stepProgressService: this.serviceRegistry.getService('stepProgressService'),
         executionQueue: this.serviceRegistry.getService('executionQueue'),
+        queueHistoryService: this.serviceRegistry.getService('queueHistoryService'),
+        workflowTypeDetector: this.serviceRegistry.getService('workflowTypeDetector'),
         eventBus: this.eventBus,
         logger: this.serviceRegistry.getService('logger')
     });
@@ -900,6 +909,17 @@ class Application {
     this.app.put('/api/projects/:projectId/queue/:itemId/priority', (req, res) => this.queueController.updateQueueItemPriority(req, res));
     this.app.get('/api/projects/:projectId/queue/:itemId/step-progress', (req, res) => this.queueController.getStepProgress(req, res));
     this.app.post('/api/projects/:projectId/queue/:itemId/step/:stepId/toggle', (req, res) => this.queueController.toggleStepStatus(req, res));
+    
+    // Queue History routes (protected) - PROJECT-BASED
+    this.app.get('/api/projects/:projectId/queue/history', (req, res) => this.queueController.getQueueHistory(req, res));
+    this.app.get('/api/projects/:projectId/queue/history/statistics', (req, res) => this.queueController.getHistoryStatistics(req, res));
+    this.app.get('/api/projects/:projectId/queue/history/export', (req, res) => this.queueController.exportHistory(req, res));
+    this.app.delete('/api/projects/:projectId/queue/history', (req, res) => this.queueController.deleteHistory(req, res));
+    this.app.get('/api/projects/:projectId/queue/history/:historyId', (req, res) => this.queueController.getHistoryItem(req, res));
+    
+    // Workflow Type Detection routes (protected) - PROJECT-BASED
+    this.app.post('/api/projects/:projectId/queue/type-detect', (req, res) => this.queueController.detectWorkflowType(req, res));
+    this.app.get('/api/projects/:projectId/queue/types', (req, res) => this.queueController.getWorkflowTypes(req, res));
     this.app.get('/api/projects/:projectId/queue/statistics', (req, res) => this.queueController.getQueueStatistics(req, res));
     this.app.delete('/api/projects/:projectId/queue/completed', (req, res) => this.queueController.clearCompletedItems(req, res));
 

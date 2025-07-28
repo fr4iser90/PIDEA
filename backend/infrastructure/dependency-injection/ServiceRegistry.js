@@ -383,6 +383,23 @@ class ServiceRegistry {
             return service;
         }, { singleton: true });
 
+        // Queue History Service
+        this.container.register('queueHistoryService', (queueHistoryRepository, eventBus) => {
+            const QueueHistoryService = require('@domain/services/queue/QueueHistoryService');
+            return new QueueHistoryService({
+                queueHistoryRepository,
+                eventBus
+            });
+        }, { singleton: true, dependencies: ['queueHistoryRepository', 'eventBus'] });
+
+        // Workflow Type Detector
+        this.container.register('workflowTypeDetector', (eventBus) => {
+            const WorkflowTypeDetector = require('@domain/services/queue/WorkflowTypeDetector');
+            return new WorkflowTypeDetector({
+                eventBus
+            });
+        }, { singleton: true, dependencies: ['eventBus'] });
+
         this.registeredServices.add('domain');
     }
 
@@ -988,6 +1005,11 @@ class ServiceRegistry {
             return databaseConnection.getRepository('TaskTemplate');
         }, { singleton: true, dependencies: ['databaseConnection'] });
 
+        // Queue history repository
+        this.container.register('queueHistoryRepository', (databaseConnection) => {
+            return databaseConnection.getRepository('QueueHistory');
+        }, { singleton: true, dependencies: ['databaseConnection'] });
+
         this.registeredServices.add('repositories');
     }
 
@@ -1145,6 +1167,11 @@ class ServiceRegistry {
             case 'taskTemplateRepository':
                 this.container.register('taskTemplateRepository', (databaseConnection) => {
                     return databaseConnection.getRepository('TaskTemplate');
+                }, { singleton: true, dependencies: ['databaseConnection'] });
+                break;
+            case 'queueHistoryRepository':
+                this.container.register('queueHistoryRepository', (databaseConnection) => {
+                    return databaseConnection.getRepository('QueueHistory');
                 }, { singleton: true, dependencies: ['databaseConnection'] });
                 break;
             default:
@@ -1498,6 +1525,23 @@ class ServiceRegistry {
                     return service;
                 }, { singleton: true });
                 break;
+                    case 'queueHistoryService':
+            this.container.register('queueHistoryService', (queueHistoryRepository, eventBus) => {
+                const QueueHistoryService = require('@domain/services/queue/QueueHistoryService');
+                return new QueueHistoryService({
+                    queueHistoryRepository,
+                    eventBus
+                });
+            }, { singleton: true, dependencies: ['queueHistoryRepository', 'eventBus'] });
+                break;
+            case 'workflowTypeDetector':
+                this.container.register('workflowTypeDetector', (eventBus) => {
+                    const WorkflowTypeDetector = require('@domain/services/queue/WorkflowTypeDetector');
+                    return new WorkflowTypeDetector({
+                        eventBus
+                    });
+                }, { singleton: true, dependencies: ['eventBus'] });
+                break;
             default:
                 throw new Error(`Unknown domain service: ${serviceName}`);
         }
@@ -1542,6 +1586,7 @@ class ServiceRegistry {
         this.addServiceDefinition('userSessionRepository', ['databaseConnection'], 'repositories');
         this.addServiceDefinition('projectRepository', ['databaseConnection'], 'repositories');
         this.addServiceDefinition('taskTemplateRepository', ['databaseConnection'], 'repositories');
+        this.addServiceDefinition('queueHistoryRepository', ['databaseConnection'], 'repositories');
 
         // External services
         this.addServiceDefinition('aiService', [], 'external');
@@ -1589,6 +1634,8 @@ class ServiceRegistry {
         this.addServiceDefinition('taskService', ['taskRepository', 'aiService', 'projectAnalyzer', 'cursorIDEService'], 'domain');
         this.addServiceDefinition('manualTasksImportService', ['browserManager', 'taskService', 'taskRepository'], 'domain');
         this.addServiceDefinition('workflowLoaderService', [], 'domain');
+        this.addServiceDefinition('queueHistoryService', ['queueHistoryRepository', 'eventBus'], 'domain');
+        this.addServiceDefinition('workflowTypeDetector', ['eventBus'], 'domain');
 
         // 🚨 NEW APPLICATION SERVICES - Layer Boundary Violation Fixes
         this.addServiceDefinition('analysisApplicationService', ['analysisOutputService', 'analysisRepository', 'projectRepository', 'logger'], 'application');

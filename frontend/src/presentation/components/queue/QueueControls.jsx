@@ -8,8 +8,6 @@ import React from 'react';
 const QueueControls = ({ 
     onRefresh, 
     onClearCompleted, 
-    autoRefresh, 
-    onAutoRefreshToggle, 
     hasCompletedItems 
 }) => {
     return (
@@ -21,14 +19,6 @@ const QueueControls = ({
                     title="Refresh queue status"
                 >
                     🔄 Refresh
-                </button>
-                
-                <button 
-                    onClick={onAutoRefreshToggle} 
-                    className={`btn-auto-refresh ${autoRefresh ? 'active' : ''}`}
-                    title={`Auto-refresh ${autoRefresh ? 'enabled' : 'disabled'}`}
-                >
-                    {autoRefresh ? '⏸️ Pause Auto-refresh' : '▶️ Enable Auto-refresh'}
                 </button>
             </div>
 
@@ -43,12 +33,6 @@ const QueueControls = ({
                     </button>
                 </div>
             )}
-
-            <div className="control-info">
-                <span className="info-text">
-                    Auto-refresh: {autoRefresh ? 'Enabled' : 'Disabled'}
-                </span>
-            </div>
         </div>
     );
 };

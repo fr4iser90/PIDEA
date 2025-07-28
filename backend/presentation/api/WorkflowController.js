@@ -17,6 +17,8 @@ class WorkflowController {
         this.analysisApplicationService = dependencies.analysisApplicationService;
         this.queueMonitoringService = dependencies.queueMonitoringService;
         this.workflowLoaderService = dependencies.workflowLoaderService;
+        this.stepProgressService = dependencies.stepProgressService;
+        this.queueHistoryService = dependencies.queueHistoryService;
     }
 
     /**
@@ -1244,9 +1246,13 @@ class WorkflowController {
             // Add workflow to queue if queue monitoring service is available
             let queueItemId = null;
             if (this.queueMonitoringService) {
+                // Use central WorkflowTypes for type detection
+                const WorkflowTypes = require('@domain/constants/WorkflowTypes');
+                const workflowType = WorkflowTypes.getTypeFromName(workflow.name);
+                
                 const queueItem = {
                     id: workflowId,
-                    type: 'workflow',
+                    type: workflowType,
                     title: `${workflow.name} Workflow`,
                     description: `Executing ${workflow.steps.length} steps for project ${projectId}`,
                     status: 'running',
@@ -1269,6 +1275,12 @@ class WorkflowController {
                 const addedItem = await this.queueMonitoringService.addToQueue(projectId, userId, queueItem);
                 queueItemId = addedItem.id; // Speichere die Queue-Item-ID!
                 this.logger.info('WorkflowController: Added workflow to queue', { workflowId, queueItemId });
+
+                // Initialize step progress for the workflow
+                if (this.stepProgressService) {
+                    await this.stepProgressService.initializeTaskStepProgress(projectId, queueItemId, workflow.steps);
+                    this.logger.info('WorkflowController: Initialized step progress', { workflowId, queueItemId });
+                }
             }
 
             for (let i = 0; i < workflow.steps.length; i++) {
@@ -1372,6 +1384,44 @@ class WorkflowController {
                     progress: 100,
                     completedAt: new Date()
                 });
+            }
+
+            // Add to queue history when workflow completes
+            if (this.queueHistoryService && queueItemId) {
+                try {
+                    const WorkflowTypes = require('@domain/constants/WorkflowTypes');
+                    const workflowType = WorkflowTypes.getTypeFromName(workflow.name);
+                    
+                    await this.queueHistoryService.persistWorkflowHistory({
+                        id: queueItemId,
+                        type: workflowType,
+                        status: results.success ? 'completed' : 'failed',
+                        createdAt: new Date(startTime),
+                        completedAt: new Date(),
+                        executionTimeMs: results.duration,
+                        userId: userId,
+                        metadata: {
+                            workflowName: workflow.name,
+                            totalSteps: workflow.steps.length,
+                            completedSteps: results.steps.filter(s => s.success).length,
+                            failedSteps: results.steps.filter(s => !s.success).length,
+                            errors: results.errors
+                        },
+                        stepsData: results.steps
+                    });
+                    
+                    this.logger.info('WorkflowController: Added workflow to history', { 
+                        workflowId, 
+                        queueItemId, 
+                        workflowType 
+                    });
+                } catch (error) {
+                    this.logger.error('WorkflowController: Failed to add workflow to history', {
+                        workflowId,
+                        queueItemId,
+                        error: error.message
+                    });
+                }
             }
 
         } catch (error) {

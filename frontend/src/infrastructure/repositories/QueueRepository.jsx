@@ -192,7 +192,7 @@ class QueueRepository {
         try {
             this.logger.debug('Getting step progress', { projectId, taskId });
 
-            const response = await fetch(`${this.baseURL}/projects/${projectId}/tasks/${taskId}/steps/progress`, {
+            const response = await fetch(`${this.baseURL}/projects/${projectId}/queue/${taskId}/step-progress`, {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json',
@@ -241,7 +241,7 @@ class QueueRepository {
                 action 
             });
 
-            const response = await fetch(`${this.baseURL}/projects/${projectId}/tasks/${taskId}/steps/${stepId}/toggle`, {
+            const response = await fetch(`${this.baseURL}/projects/${projectId}/queue/${taskId}/step/${stepId}/toggle`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
@@ -460,6 +460,309 @@ class QueueRepository {
             return `${minutes}m ${seconds % 60}s`;
         } else {
             return `${seconds}s`;
+        }
+    }
+
+    // ============================================================================
+    // QUEUE HISTORY METHODS
+    // ============================================================================
+
+    /**
+     * Get queue history with filtering and pagination
+     * @param {Object} filters - Filter criteria
+     * @param {Object} pagination - Pagination options
+     * @returns {Promise<Object>} History data with pagination
+     */
+    async getQueueHistory(projectId, filters = {}, pagination = { page: 1, limit: 20 }) {
+        try {
+            this.logger.debug('Getting queue history', { projectId, filters, pagination });
+
+            const params = new URLSearchParams();
+            
+            // Add filters
+            Object.entries(filters).forEach(([key, value]) => {
+                if (value) params.append(key, value);
+            });
+            
+            // Add pagination
+            params.append('page', pagination.page);
+            params.append('limit', pagination.limit);
+            
+            const response = await fetch(`${this.baseURL}/projects/${projectId}/queue/history?${params}`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${this.getAuthToken()}`
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error(`Failed to get queue history: ${response.statusText}`);
+            }
+
+            const data = await response.json();
+            this.logger.debug('Queue history retrieved', { 
+                itemCount: data.data?.items?.length || 0 
+            });
+
+            return data.data;
+
+        } catch (error) {
+            this.logger.error('Failed to get queue history', { filters, pagination, error: error.message });
+            throw error;
+        }
+    }
+
+    /**
+     * Get specific history item by ID
+     * @param {string} historyId - History item ID
+     * @returns {Promise<Object>} History item
+     */
+    async getHistoryItem(projectId, historyId) {
+        try {
+            this.logger.debug('Getting history item', { projectId, historyId });
+
+            if (!historyId) {
+                throw new Error('History item ID is required');
+            }
+
+            const response = await fetch(`${this.baseURL}/projects/${projectId}/queue/history/${historyId}`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${this.getAuthToken()}`
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error(`Failed to get history item: ${response.statusText}`);
+            }
+
+            const data = await response.json();
+            this.logger.debug('History item retrieved', { historyId });
+
+            return data.data;
+
+        } catch (error) {
+            this.logger.error('Failed to get history item', { historyId, error: error.message });
+            throw error;
+        }
+    }
+
+    /**
+     * Delete old history items based on retention policy
+     * @param {number} retentionDays - Number of days to retain
+     * @returns {Promise<Object>} Deletion result
+     */
+    async deleteHistory(projectId, retentionDays = 30) {
+        try {
+            this.logger.debug('Deleting old history items', { projectId, retentionDays });
+
+            if (!retentionDays || retentionDays < 1) {
+                throw new Error('Retention days must be at least 1');
+            }
+
+            const response = await fetch(`${this.baseURL}/projects/${projectId}/queue/history`, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${this.getAuthToken()}`
+                },
+                body: JSON.stringify({ retentionDays })
+            });
+
+            if (!response.ok) {
+                throw new Error(`Failed to delete history: ${response.statusText}`);
+            }
+
+            const data = await response.json();
+            this.logger.debug('History items deleted', { 
+                deletedCount: data.data?.deletedCount || 0 
+            });
+
+            return data.data;
+
+        } catch (error) {
+            this.logger.error('Failed to delete history', { retentionDays, error: error.message });
+            throw error;
+        }
+    }
+
+    /**
+     * Export history to CSV format
+     * @param {Object} filters - Filter criteria
+     * @returns {Promise<string>} CSV data
+     */
+    async exportHistoryToCSV(projectId, filters = {}) {
+        try {
+            this.logger.debug('Exporting history to CSV', { projectId, filters });
+
+            const params = new URLSearchParams();
+            
+            // Add filters
+            Object.entries(filters).forEach(([key, value]) => {
+                if (value) params.append(key, value);
+            });
+
+            const response = await fetch(`${this.baseURL}/projects/${projectId}/queue/history/export?${params}`, {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${this.getAuthToken()}`
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error(`Failed to export history: ${response.statusText}`);
+            }
+
+            const csv = await response.text();
+            this.logger.debug('History exported to CSV', { filters });
+
+            return csv;
+
+        } catch (error) {
+            this.logger.error('Failed to export history', { filters, error: error.message });
+            throw error;
+        }
+    }
+
+    /**
+     * Get history statistics
+     * @param {Object} filters - Filter criteria
+     * @returns {Promise<Object>} Statistics
+     */
+    async getHistoryStatistics(projectId, filters = {}) {
+        try {
+            this.logger.debug('Getting history statistics', { projectId, filters });
+
+            const params = new URLSearchParams();
+            
+            // Add filters
+            Object.entries(filters).forEach(([key, value]) => {
+                if (value) params.append(key, value);
+            });
+
+            const response = await fetch(`${this.baseURL}/projects/${projectId}/queue/history/statistics?${params}`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${this.getAuthToken()}`
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error(`Failed to get history statistics: ${response.statusText}`);
+            }
+
+            const data = await response.json();
+            this.logger.debug('History statistics retrieved', { filters });
+
+            return data.data;
+
+        } catch (error) {
+            this.logger.error('Failed to get history statistics', { filters, error: error.message });
+            throw error;
+        }
+    }
+
+    // ============================================================================
+    // WORKFLOW TYPE DETECTION METHODS
+    // ============================================================================
+
+    /**
+     * Get workflow type for a specific task
+     * @param {string} projectId - Project identifier
+     * @param {string} taskId - Task identifier
+     * @returns {Promise<string>} Workflow type
+     */
+    async getWorkflowType(projectId, taskId) {
+        try {
+            this.logger.debug('Loading workflow type for active task', { projectId, taskId });
+
+            // For now, return a default type since we don't have a specific endpoint
+            // This will be enhanced when the backend provides workflow type detection
+            return 'workflow';
+
+        } catch (error) {
+            this.logger.error('Failed to load workflow type for active task', { 
+                projectId, 
+                taskId, 
+                error: error.message 
+            });
+            return 'unknown';
+        }
+    }
+
+    /**
+     * Detect workflow type from workflow data
+     * @param {Object} workflowData - Workflow data to analyze
+     * @returns {Promise<Object>} Detection result
+     */
+    async detectWorkflowType(projectId, workflowData) {
+        try {
+            this.logger.debug('Detecting workflow type', { projectId, workflowId: workflowData?.id });
+
+            if (!workflowData) {
+                throw new Error('Workflow data is required');
+            }
+
+            const response = await fetch(`${this.baseURL}/projects/${projectId}/queue/type-detect`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${this.getAuthToken()}`
+                },
+                body: JSON.stringify({ workflowData })
+            });
+
+            if (!response.ok) {
+                throw new Error(`Failed to detect workflow type: ${response.statusText}`);
+            }
+
+            const data = await response.json();
+            this.logger.debug('Workflow type detected', { 
+                workflowId: workflowData.id,
+                type: data.data?.type 
+            });
+
+            return data.data;
+
+        } catch (error) {
+            this.logger.error('Failed to detect workflow type', { workflowData, error: error.message });
+            throw error;
+        }
+    }
+
+    /**
+     * Get list of all known workflow types
+     * @returns {Promise<Object>} Workflow types
+     */
+    async getWorkflowTypes(projectId) {
+        try {
+            this.logger.debug('Getting workflow types', { projectId });
+
+            const response = await fetch(`${this.baseURL}/projects/${projectId}/queue/types`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${this.getAuthToken()}`
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error(`Failed to get workflow types: ${response.statusText}`);
+            }
+
+            const data = await response.json();
+            this.logger.debug('Workflow types retrieved', { 
+                count: data.data?.types?.length || 0 
+            });
+
+            return data.data;
+
+        } catch (error) {
+            this.logger.error('Failed to get workflow types', { error: error.message });
+            throw error;
         }
     }
 }

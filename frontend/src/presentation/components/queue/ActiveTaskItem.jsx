@@ -3,8 +3,10 @@
  * Provides detailed task information, progress tracking, and control actions
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { logger } from '@/infrastructure/logging/Logger';
 import QueueRepository from '@/infrastructure/repositories/QueueRepository.jsx';
+import WorkflowTypeBadge from './WorkflowTypeBadge.jsx';
 
 const ActiveTaskItem = ({ 
     item, 
@@ -16,9 +18,31 @@ const ActiveTaskItem = ({
     const [showDetails, setShowDetails] = useState(false);
     const [showPriorityMenu, setShowPriorityMenu] = useState(false);
     const [confirmCancel, setConfirmCancel] = useState(false);
+    const [workflowType, setWorkflowType] = useState(null);
 
     const queueRepository = new QueueRepository();
     const formattedItem = queueRepository.formatQueueItem(item);
+
+    /**
+     * Get workflow type from backend data
+     */
+    const getWorkflowType = useCallback(() => {
+        if (!item.workflow) return null;
+
+        // Use the workflow type from backend data - should be correct now
+        return item.workflow.type;
+    }, [item.workflow]);
+
+    // Get workflow type when component mounts or item changes
+    useEffect(() => {
+        const type = getWorkflowType();
+        setWorkflowType(type);
+        logger.debug('Got workflow type from backend', { 
+            projectId: item.projectId, 
+            taskId: item.id,
+            type 
+        });
+    }, [getWorkflowType, item.projectId, item.id]);
 
     /**
      * Handle priority change
@@ -119,6 +143,13 @@ const ActiveTaskItem = ({
                     </div>
                     <div className="task-meta">
                         <span className="task-type">{formattedItem.workflowTypeLabel}</span>
+                        {workflowType && (
+                            <WorkflowTypeBadge 
+                                type={workflowType.type} 
+                                confidence={workflowType.confidence}
+                                size="small"
+                            />
+                        )}
                         <span className="task-position">#{item.position}</span>
                         <span className="task-added">
                             Added: {formattedItem.formattedAddedAt}

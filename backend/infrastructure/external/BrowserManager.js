@@ -27,34 +27,10 @@ class BrowserManager {
     
     logger.info('BrowserManager initialized with optimized connection pooling');
     
-    // Pre-warm common connections
-    this.preWarmConnections();
+    // Pre-warming removed for faster startup
   }
 
-  async preWarmConnections() {
-    const commonPorts = [9222, 9223, 9224, 9225, 9226];
-    logger.info('Pre-warming connections for common ports:', commonPorts);
-    
-    // Pre-warm connections in parallel with individual error handling
-    const preWarmPromises = commonPorts.map(async (port) => {
-      try {
-        // Attempt to pre-warm connection (non-blocking)
-        await this.connectionPool.getConnection(port);
-        logger.debug(`Successfully pre-warmed connection for port ${port}`);
-      } catch (error) {
-        logger.debug(`Could not pre-warm port ${port}: ${error.message}`);
-        // Don't throw - just log and continue
-      }
-    });
-    
-    // Wait for all pre-warm attempts to complete (with timeout)
-    try {
-      await Promise.allSettled(preWarmPromises);
-      logger.info('Pre-warming completed');
-    } catch (error) {
-      logger.warn('Some pre-warm connections failed:', error.message);
-    }
-  }
+
 
   trackSwitchTime(duration) {
     this.switchTimes.push(duration);

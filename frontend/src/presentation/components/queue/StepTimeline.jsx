@@ -3,14 +3,80 @@
  * Provides interactive timeline with step status, progress, and control actions
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { logger } from '@/infrastructure/logging/Logger';
 import QueueRepository from '@/infrastructure/repositories/QueueRepository.jsx';
+import WebSocketService from '@/infrastructure/services/WebSocketService.jsx';
+import WorkflowTypeBadge from './WorkflowTypeBadge.jsx';
 
-const StepTimeline = ({ stepProgress, onToggleStepStatus }) => {
+const StepTimeline = ({ stepProgress, onToggleStepStatus, taskId, projectId, workflowType: propWorkflowType }) => {
     const [expandedSteps, setExpandedSteps] = useState(new Set());
     const [showStepDetails, setShowStepDetails] = useState({});
+    const [realTimeProgress, setRealTimeProgress] = useState(stepProgress);
+    const [workflowType, setWorkflowType] = useState(null);
+    const [lastUpdate, setLastUpdate] = useState(null);
 
     const queueRepository = new QueueRepository();
+    const webSocketService = WebSocketService;
+
+    /**
+     * Get workflow type from props or stepProgress data
+     */
+    const getWorkflowType = useCallback(() => {
+        // Use prop first, then fallback to stepProgress data
+        if (propWorkflowType) return propWorkflowType;
+        if (!stepProgress || !stepProgress.workflow) return null;
+        return stepProgress.workflow.type;
+    }, [propWorkflowType, stepProgress]);
+
+    useEffect(() => {
+        const type = getWorkflowType();
+        setWorkflowType(type);
+        logger.debug('Got workflow type for StepTimeline', { 
+            projectId, 
+            taskId,
+            type,
+            fromProp: !!propWorkflowType
+        });
+    }, [getWorkflowType, projectId, taskId]);
+
+    /**
+     * Set up real-time updates
+     */
+    const setupRealTimeUpdates = useCallback(() => {
+        if (!taskId || !projectId) return;
+
+        const handleStepUpdate = (data) => {
+            if (data.taskId === taskId && data.projectId === projectId) {
+                logger.debug('Received real-time step update', { 
+                    projectId, 
+                    taskId, 
+                    currentStep: data.currentStep,
+                    progressPercentage: data.progressPercentage 
+                });
+                setRealTimeProgress(data);
+                setLastUpdate(new Date());
+            }
+        };
+
+        // Subscribe to step progress updates
+        webSocketService.subscribe('step-progress-update', handleStepUpdate);
+
+        return () => {
+            webSocketService.unsubscribe('step-progress-update', handleStepUpdate);
+        };
+    }, [taskId, projectId, webSocketService, queueRepository]);
+
+    // Set up real-time updates when component mounts or taskId changes
+    useEffect(() => {
+        const cleanup = setupRealTimeUpdates();
+        return cleanup;
+    }, [setupRealTimeUpdates]);
+
+    // Update real-time progress when stepProgress prop changes
+    useEffect(() => {
+        setRealTimeProgress(stepProgress);
+    }, [stepProgress]);
 
     /**
      * Toggle step expansion
@@ -147,15 +213,30 @@ const StepTimeline = ({ stepProgress, onToggleStepStatus }) => {
             {/* Overall Progress */}
             <div className="overall-progress">
                 <div className="progress-header">
-                    <h5>Overall Progress: {progressPercentage}%</h5>
-                    <span className="step-counter">
-                        Step {currentStep} of {totalSteps}
-                    </span>
+                    <div className="progress-title">
+                        <h5>Overall Progress: {realTimeProgress?.progressPercentage || progressPercentage}%</h5>
+                        {workflowType && (
+                            <WorkflowTypeBadge 
+                                type={workflowType} 
+                                size="small"
+                            />
+                        )}
+                    </div>
+                    <div className="progress-meta">
+                        <span className="step-counter">
+                            Step {realTimeProgress?.currentStep || currentStep} of {realTimeProgress?.totalSteps || totalSteps}
+                        </span>
+                        {lastUpdate && (
+                            <span className="last-update">
+                                Last update: {lastUpdate.toLocaleTimeString()}
+                            </span>
+                        )}
+                    </div>
                 </div>
                 <div className="progress-bar">
                     <div 
                         className="progress-fill" 
-                        style={{ width: `${progressPercentage}%` }}
+                        style={{ width: `${realTimeProgress?.progressPercentage || progressPercentage}%` }}
                     />
                 </div>
             </div>

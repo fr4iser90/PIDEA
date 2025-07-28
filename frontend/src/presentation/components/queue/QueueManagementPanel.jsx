@@ -12,6 +12,7 @@ import ActiveTaskItem from './ActiveTaskItem.jsx';
 import QueueItem from './QueueItem.jsx';
 import QueueControls from './QueueControls.jsx';
 import StepTimeline from './StepTimeline.jsx';
+import QueueHistoryPanel from './QueueHistoryPanel.jsx';
 import '@/css/panel/queue-panel.css';
 
 const QueueManagementPanel = ({ eventBus, activePort }) => {
@@ -20,8 +21,8 @@ const QueueManagementPanel = ({ eventBus, activePort }) => {
     const [error, setError] = useState(null);
     const [selectedTask, setSelectedTask] = useState(null);
     const [stepProgress, setStepProgress] = useState(null);
-    const [autoRefresh, setAutoRefresh] = useState(true);
-    const [refreshInterval, setRefreshInterval] = useState(5000); // 5 seconds
+
+    const [activeTab, setActiveTab] = useState('active'); // 'active' or 'history'
 
     const queueRepository = new QueueRepository();
     const webSocketService = WebSocketService; // Use the singleton instance
@@ -225,43 +226,42 @@ const QueueManagementPanel = ({ eventBus, activePort }) => {
                 // Subscribe to queue events
                 webSocketService.on('queue:updated', (data) => {
                     logger.debug('Queue updated via WebSocket', { projectId, data });
-                    if (autoRefresh) {
-                        loadQueueStatus();
-                    }
+                    loadQueueStatus();
                 });
 
                 webSocketService.on('queue:item:added', (data) => {
                     logger.debug('Queue item added via WebSocket', { projectId, data });
-                    if (autoRefresh) {
-                        loadQueueStatus();
-                    }
+                    loadQueueStatus();
                 });
 
                 webSocketService.on('queue:item:cancelled', (data) => {
                     logger.debug('Queue item cancelled via WebSocket', { projectId, data });
-                    if (autoRefresh) {
-                        loadQueueStatus();
-                    }
+                    loadQueueStatus();
+                });
+
+                webSocketService.on('queue:item:updated', (data) => {
+                    logger.debug('Queue item updated via WebSocket', { projectId, data });
+                    loadQueueStatus();
                 });
 
                 // Subscribe to step progress events
-                webSocketService.on('task:step:progress', (data) => {
+                webSocketService.on('workflow:step:progress', (data) => {
                     logger.debug('Step progress updated via WebSocket', { projectId, data });
-                    if (selectedTask && data.taskId === selectedTask.id && autoRefresh) {
+                    if (selectedTask && data.taskId === selectedTask.id) {
                         loadStepProgress(selectedTask.id);
                     }
                 });
 
-                webSocketService.on('task:step:started', (data) => {
+                webSocketService.on('workflow:step:started', (data) => {
                     logger.debug('Step started via WebSocket', { projectId, data });
-                    if (selectedTask && data.taskId === selectedTask.id && autoRefresh) {
+                    if (selectedTask && data.taskId === selectedTask.id) {
                         loadStepProgress(selectedTask.id);
                     }
                 });
 
-                webSocketService.on('task:step:completed', (data) => {
+                webSocketService.on('workflow:step:completed', (data) => {
                     logger.debug('Step completed via WebSocket', { projectId, data });
-                    if (selectedTask && data.taskId === selectedTask.id && autoRefresh) {
+                    if (selectedTask && data.taskId === selectedTask.id) {
                         loadStepProgress(selectedTask.id);
                     }
                 });
@@ -280,24 +280,14 @@ const QueueManagementPanel = ({ eventBus, activePort }) => {
             webSocketService.off('queue:updated');
             webSocketService.off('queue:item:added');
             webSocketService.off('queue:item:cancelled');
-            webSocketService.off('task:step:progress');
-            webSocketService.off('task:step:started');
-            webSocketService.off('task:step:completed');
+            webSocketService.off('queue:item:updated');
+            webSocketService.off('workflow:step:progress');
+            webSocketService.off('workflow:step:started');
+            webSocketService.off('workflow:step:completed');
         };
-    }, [projectId, autoRefresh, selectedTask]);
+    }, [projectId, selectedTask]);
 
-    /**
-     * Auto-refresh effect
-     */
-    useEffect(() => {
-        if (!autoRefresh) return;
 
-        const interval = setInterval(() => {
-            loadQueueStatus();
-        }, refreshInterval);
-
-        return () => clearInterval(interval);
-    }, [autoRefresh, refreshInterval, loadQueueStatus]);
 
     /**
      * Initial load
@@ -316,12 +306,7 @@ const QueueManagementPanel = ({ eventBus, activePort }) => {
         }
     };
 
-    /**
-     * Handle auto-refresh toggle
-     */
-    const handleAutoRefreshToggle = () => {
-        setAutoRefresh(!autoRefresh);
-    };
+
 
     if (loading && !queueStatus) {
         return (
@@ -370,113 +355,137 @@ const QueueManagementPanel = ({ eventBus, activePort }) => {
                     >
                         🔄
                     </button>
-                    <button 
-                        onClick={handleAutoRefreshToggle} 
-                        className={`btn-auto-refresh ${autoRefresh ? 'active' : ''}`}
-                        title={`Auto-refresh ${autoRefresh ? 'enabled' : 'disabled'}`}
-                    >
-                        {autoRefresh ? '⏸️' : '▶️'}
-                    </button>
+
                 </div>
             </div>
 
             <div className="queue-panel-content">
-                {/* Queue Statistics */}
-                <div className="queue-statistics">
-                    <div className="stat-item">
-                        <span className="stat-label">Total:</span>
-                        <span className="stat-value">{statistics.totalItems || 0}</span>
-                    </div>
-                    <div className="stat-item">
-                        <span className="stat-label">Running:</span>
-                        <span className="stat-value running">{statistics.running || 0}</span>
-                    </div>
-                    <div className="stat-item">
-                        <span className="stat-label">Queued:</span>
-                        <span className="stat-value queued">{statistics.queued || 0}</span>
-                    </div>
-                    <div className="stat-item">
-                        <span className="stat-label">Completed:</span>
-                        <span className="stat-value completed">{statistics.completed || 0}</span>
-                    </div>
-                    <div className="stat-item">
-                        <span className="stat-label">Failed:</span>
-                        <span className="stat-value failed">{statistics.failed || 0}</span>
-                    </div>
+                {/* Tab Navigation */}
+                <div className="queue-tabs">
+                    <button 
+                        className={`queue-tab ${activeTab === 'active' ? 'active' : ''}`}
+                        onClick={() => setActiveTab('active')}
+                    >
+                        🟢 Active Tasks
+                    </button>
+                    <button 
+                        className={`queue-tab ${activeTab === 'history' ? 'active' : ''}`}
+                        onClick={() => setActiveTab('history')}
+                    >
+                        📚 History
+                    </button>
                 </div>
 
-                {/* Active Tasks */}
-                <div className="queue-section">
-                    <h4>🟢 Active Tasks ({activeItems.length})</h4>
-                    {activeItems.length === 0 ? (
-                        <div className="empty-state">
-                            <p>No active tasks</p>
+                {/* Active Tab Content */}
+                {activeTab === 'active' && (
+                    <>
+                        {/* Queue Statistics */}
+                        <div className="queue-statistics">
+                            <div className="stat-item">
+                                <span className="stat-label">Total:</span>
+                                <span className="stat-value">{statistics.totalItems || 0}</span>
+                            </div>
+                            <div className="stat-item">
+                                <span className="stat-label">Running:</span>
+                                <span className="stat-value running">{statistics.running || 0}</span>
+                            </div>
+                            <div className="stat-item">
+                                <span className="stat-label">Queued:</span>
+                                <span className="stat-value queued">{statistics.queued || 0}</span>
+                            </div>
+                            <div className="stat-item">
+                                <span className="stat-label">Completed:</span>
+                                <span className="stat-value completed">{statistics.completed || 0}</span>
+                            </div>
+                            <div className="stat-item">
+                                <span className="stat-label">Failed:</span>
+                                <span className="stat-value failed">{statistics.failed || 0}</span>
+                            </div>
                         </div>
-                    ) : (
-                        <div className="queue-items">
-                            {activeItems.map((item) => (
-                                <ActiveTaskItem
-                                    key={item.id}
-                                    item={item}
-                                    isSelected={selectedTask?.id === item.id}
-                                    onSelect={() => handleTaskSelect(item)}
-                                    onCancel={() => handleCancelItem(item.id)}
-                                    onUpdatePriority={(priority) => handleUpdatePriority(item.id, priority)}
-                                />
-                            ))}
-                        </div>
-                    )}
-                </div>
 
-                {/* Selected Task Step Progress */}
-                {selectedTask && stepProgress && (
-                    <div className="queue-section">
-                        <h4>📊 Step Progress: {selectedTask.workflow?.name || selectedTask.id}</h4>
-                        <StepTimeline
-                            stepProgress={stepProgress}
-                            onToggleStepStatus={handleToggleStepStatus}
-                        />
-                    </div>
-                )}
-
-                {/* Completed Tasks */}
-                {completedItems.length > 0 && (
-                    <div className="queue-section">
-                        <div className="section-header">
-                            <h4>✅ Completed Tasks ({completedItems.length})</h4>
-                            <button 
-                                onClick={handleClearCompleted} 
-                                className="btn-clear-completed"
-                                title="Clear completed items"
-                            >
-                                🗑️ Clear
-                            </button>
-                        </div>
-                        <div className="queue-items">
-                            {completedItems.slice(0, 5).map((item) => (
-                                <QueueItem
-                                    key={item.id}
-                                    item={item}
-                                    showActions={false}
-                                />
-                            ))}
-                            {completedItems.length > 5 && (
-                                <div className="more-items">
-                                    <p>... and {completedItems.length - 5} more completed items</p>
+                        {/* Active Tasks */}
+                        <div className="queue-section">
+                            <h4>🟢 Active Tasks ({activeItems.length})</h4>
+                            {activeItems.length === 0 ? (
+                                <div className="empty-state">
+                                    <p>No active tasks</p>
+                                </div>
+                            ) : (
+                                <div className="queue-items">
+                                    {activeItems.map((item) => (
+                                        <ActiveTaskItem
+                                            key={item.id}
+                                            item={item}
+                                            isSelected={selectedTask?.id === item.id}
+                                            onSelect={() => handleTaskSelect(item)}
+                                            onCancel={() => handleCancelItem(item.id)}
+                                            onUpdatePriority={(priority) => handleUpdatePriority(item.id, priority)}
+                                        />
+                                    ))}
                                 </div>
                             )}
                         </div>
-                    </div>
+
+                        {/* Selected Task Step Progress */}
+                        {selectedTask && stepProgress && (
+                            <div className="queue-section">
+                                <h4>📊 Step Progress: {selectedTask.workflow?.name || selectedTask.id}</h4>
+                                <StepTimeline
+                                    stepProgress={stepProgress}
+                                    onToggleStepStatus={handleToggleStepStatus}
+                                    taskId={selectedTask.id}
+                                    projectId={projectId}
+                                    workflowType={selectedTask.workflow?.type}
+                                />
+                            </div>
+                        )}
+
+                        {/* Completed Tasks */}
+                        {completedItems.length > 0 && (
+                            <div className="queue-section">
+                                <div className="section-header">
+                                    <h4>✅ Completed Tasks ({completedItems.length})</h4>
+                                    <button 
+                                        onClick={handleClearCompleted} 
+                                        className="btn-clear-completed"
+                                        title="Clear completed items"
+                                    >
+                                        🗑️ Clear
+                                    </button>
+                                </div>
+                                <div className="queue-items">
+                                    {completedItems.slice(0, 5).map((item) => (
+                                        <QueueItem
+                                            key={item.id}
+                                            item={item}
+                                            showActions={false}
+                                        />
+                                    ))}
+                                    {completedItems.length > 5 && (
+                                        <div className="more-items">
+                                            <p>... and {completedItems.length - 5} more completed items</p>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Queue Controls */}
+                        <QueueControls
+                            onRefresh={handleRefresh}
+                            onClearCompleted={handleClearCompleted}
+                            hasCompletedItems={completedItems.length > 0}
+                        />
+                    </>
                 )}
 
-                {/* Queue Controls */}
-                <QueueControls
-                    onRefresh={handleRefresh}
-                    onClearCompleted={handleClearCompleted}
-                    autoRefresh={autoRefresh}
-                    onAutoRefreshToggle={handleAutoRefreshToggle}
-                    hasCompletedItems={completedItems.length > 0}
-                />
+                {/* History Tab Content */}
+                {activeTab === 'history' && (
+                    <QueueHistoryPanel 
+                        eventBus={eventBus}
+                        activePort={activePort}
+                    />
+                )}
             </div>
         </div>
     );
