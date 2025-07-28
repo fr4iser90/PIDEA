@@ -192,6 +192,26 @@ class ManualTasksImportService {
                         taskMetadata.isSummaryTask = true;
                     }
                     
+                                        // ✅ FIXED: Prepare task data with timestamps from markdown file
+                    const taskData = {
+                        ...taskMetadata
+                    };
+
+                    if (progressInfo.createdDate) {
+                        taskData.createdAt = new Date(progressInfo.createdDate);
+                        logger.info(`📅 Set task created date from markdown: ${progressInfo.createdDate}`);
+                    }
+
+                    if (progressInfo.lastUpdatedDate) {
+                        taskData.updatedAt = new Date(progressInfo.lastUpdatedDate);
+                        logger.info(`📅 Set task last updated date from markdown: ${progressInfo.lastUpdatedDate}`);
+                    }
+
+                    if (progressInfo.completionDate) {
+                        taskData.completedAt = new Date(progressInfo.completionDate);
+                        logger.info(`📅 Set task completion date from markdown: ${progressInfo.completionDate}`);
+                    }
+
                     // ✅ FIXED: Create task with explicit status and progress
                     const task = await this.taskService.createTask(
                         projectId,
@@ -199,13 +219,8 @@ class ManualTasksImportService {
                         content,
                         'medium', // Priority kann aus content extrahiert werden
                         type,
-                        taskMetadata
+                        taskData
                     );
-                    
-                    // ✅ FIXED: Set created_at if not already set
-                    if (!task.createdAt) {
-                        task.createdAt = new Date();
-                    }
                     
                     // ✅ FIXED: Update task status and progress after creation
                     if (taskStatus !== 'pending') {
@@ -261,11 +276,35 @@ class ManualTasksImportService {
                         logger.info(`⏭️ DEBUG: Skipping progress update - progress unchanged: ${taskProgress}`);
                     }
                     
-                    // Save the updated task
+                    // ✅ FIXED: Update timestamps from markdown file if available
+                    const timestampUpdates = {};
+                    
+                    if (progressInfo.createdDate) {
+                        timestampUpdates.createdAt = new Date(progressInfo.createdDate);
+                        logger.info(`📅 Updated task created date from markdown: ${progressInfo.createdDate}`);
+                    }
+                    
+                    if (progressInfo.lastUpdatedDate) {
+                        timestampUpdates.updatedAt = new Date(progressInfo.lastUpdatedDate);
+                        logger.info(`📅 Updated task last updated date from markdown: ${progressInfo.lastUpdatedDate}`);
+                    }
+
+                    if (progressInfo.completionDate && taskStatus === 'completed') {
+                        timestampUpdates.completedAt = new Date(progressInfo.completionDate);
+                        logger.info(`📅 Updated task completion date from markdown: ${progressInfo.completionDate}`);
+                    }
+
+                    // Save the updated task - only update timestamps, preserve existing entity
                     const finalStatusValue = existingTask.status.value || existingTask.status;
                     logger.info(`💾 DEBUG: About to save task "${title}" with status: ${finalStatusValue}, progress: ${existingTask.metadata?.progress}`);
-                    await this.taskRepository.update(existingTask.id, existingTask);
-                    logger.info(`💾 DEBUG: Successfully saved task "${title}" to database`);
+                    
+                    // Only update if we have timestamp changes
+                    if (Object.keys(timestampUpdates).length > 0) {
+                        await this.taskRepository.update(existingTask.id, timestampUpdates);
+                        logger.info(`💾 DEBUG: Successfully updated timestamps for task "${title}"`);
+                    } else {
+                        logger.info(`💾 DEBUG: No timestamp updates needed for task "${title}"`);
+                    }
                     
                     // ✅ NEW: Verify the save worked by reloading the task
                     const reloadedTask = await this.taskRepository.findById(existingTask.id);
@@ -452,6 +491,24 @@ class ManualTasksImportService {
                     statusDetected = true;
                     break;
                 }
+            }
+
+            // Extract created date
+            const createdMatch = content.match(/Created.*?(\d{4}-\d{2}-\d{2})/);
+            if (createdMatch) {
+                progressInfo.createdDate = createdMatch[1];
+            }
+
+            // Extract last updated date
+            const lastUpdatedMatch = content.match(/Last Updated.*?(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z|\d{4}-\d{2}-\d{2})/);
+            if (lastUpdatedMatch) {
+                progressInfo.lastUpdatedDate = lastUpdatedMatch[1];
+            }
+
+            // Extract completion date
+            const completionDateMatch = content.match(/Completion Date.*?(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z|\d{4}-\d{2}-\d{2})/);
+            if (completionDateMatch) {
+                progressInfo.completionDate = completionDateMatch[1];
             }
 
             // Extract estimated completion

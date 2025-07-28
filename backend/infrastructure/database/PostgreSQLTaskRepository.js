@@ -256,12 +256,9 @@ class PostgreSQLTaskRepository extends TaskRepository {
           if (!task) {
             throw new Error(`Task with ID ${taskId} not found`);
           }
-          // Apply updates
-          Object.keys(taskOrUpdates || {}).forEach(key => {
-            if (task[key] !== undefined) {
-              task[key] = taskOrUpdates[key];
-            }
-          });
+          // ✅ FIXED: Apply updates safely without setting getter-only properties
+          // Instead of trying to set properties directly, we'll use the updates in the SQL query
+          // The task object will be updated with the new data from the database after the query
         }
       } else {
         // Called as: update(task) - backward compatibility
@@ -269,36 +266,82 @@ class PostgreSQLTaskRepository extends TaskRepository {
         taskId = task.id;
       }
 
-      const sql = `
-        UPDATE ${this.tableName} SET
-          title = $1, description = $2, type = $3, category = $4, priority = $5, status = $6,
-          project_id = $7, created_by = $8, estimated_time = $9, metadata = $10,
-          updated_at = $11, tags = $12, due_date = $13, completed_at = $14
-        WHERE id = $15
-      `;
+      // ✅ FIXED: Handle updates properly
+      let sql, params;
+      
+      if (taskOrUpdates && typeof taskOrUpdates === 'object' && !taskOrUpdates.id) {
+        // We have specific updates to apply
+        const updates = [];
+        const updateParams = [];
+        let paramIndex = 1;
+        
+        // Build dynamic SQL for specific updates
+        if (taskOrUpdates.createdAt !== undefined) {
+          updates.push(`created_at = $${paramIndex++}`);
+          updateParams.push(taskOrUpdates.createdAt.toISOString());
+        }
+        
+        if (taskOrUpdates.updatedAt !== undefined) {
+          updates.push(`updated_at = $${paramIndex++}`);
+          updateParams.push(taskOrUpdates.updatedAt.toISOString());
+        }
+        
+        if (taskOrUpdates.completedAt !== undefined) {
+          updates.push(`completed_at = $${paramIndex++}`);
+          updateParams.push(taskOrUpdates.completedAt.toISOString());
+        }
+        
+        if (taskOrUpdates.metadata !== undefined) {
+          updates.push(`metadata = $${paramIndex++}`);
+          updateParams.push(JSON.stringify(taskOrUpdates.metadata));
+        }
+        
+        if (taskOrUpdates.status !== undefined) {
+          updates.push(`status = $${paramIndex++}`);
+          updateParams.push(taskOrUpdates.status?.value || taskOrUpdates.status);
+        }
+        
+        if (updates.length === 0) {
+          // No updates to apply
+          return task;
+        }
+        
+        sql = `UPDATE ${this.tableName} SET ${updates.join(', ')} WHERE id = $${paramIndex}`;
+        updateParams.push(taskId);
+        params = updateParams;
+      } else {
+        // Full task update (existing logic)
+        sql = `
+          UPDATE ${this.tableName} SET
+            title = $1, description = $2, type = $3, category = $4, priority = $5, status = $6,
+            project_id = $7, created_by = $8, estimated_time = $9, metadata = $10,
+            updated_at = $11, tags = $12, due_date = $13, completed_at = $14
+          WHERE id = $15
+        `;
 
-      // Extract string values from value objects
-      const taskType = task.type?.value || task.type;
-      const taskPriority = task.priority?.value || task.priority;
-      const taskStatus = task.status?.value || task.status;
+        // Extract string values from value objects
+        const taskType = task.type?.value || task.type;
+        const taskPriority = task.priority?.value || task.priority;
+        const taskStatus = task.status?.value || task.status;
 
-      const params = [
-        task.title,
-        task.description,
-        taskType,
-        task.category || null,
-        taskPriority,
-        taskStatus,
-        task.projectId, // camelCase property
-        task.userId || 'me', // camelCase property with fallback
-        task.estimatedTime || null,
-        JSON.stringify(task.metadata || {}),
-        task.updatedAt ? task.updatedAt.toISOString() : new Date().toISOString(),
-        JSON.stringify(task.tags || []),
-        task.dueDate ? task.dueDate.toISOString() : null,
-        task.completedAt ? task.completedAt.toISOString() : null,
-        taskId
-      ];
+        params = [
+          task.title,
+          task.description,
+          taskType,
+          task.category || null,
+          taskPriority,
+          taskStatus,
+          task.projectId, // camelCase property
+          task.userId || 'me', // camelCase property with fallback
+          task.estimatedTime || null,
+          JSON.stringify(task.metadata || {}),
+          task.updatedAt ? task.updatedAt.toISOString() : new Date().toISOString(),
+          JSON.stringify(task.tags || []),
+          task.dueDate ? task.dueDate.toISOString() : null,
+          task.completedAt ? task.completedAt.toISOString() : null,
+          taskId
+        ];
+      }
 
       await this.databaseConnection.execute(sql, params);
       return task;

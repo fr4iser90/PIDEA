@@ -467,6 +467,10 @@ class Task {
       createdAt: this._createdAt.toISOString(),
       updatedAt: this._updatedAt.toISOString(),
       completedAt: this._completedAt ? this._completedAt.toISOString() : null,
+      // ✅ FIXED: Add snake_case versions for frontend compatibility
+      created_at: this._createdAt.toISOString(),
+      updated_at: this._updatedAt.toISOString(),
+      completed_at: this._completedAt ? this._completedAt.toISOString() : null,
       executionHistory: this._executionHistory,
       progress: this.getProgress(),
       actualDuration: this.getActualDuration(),
