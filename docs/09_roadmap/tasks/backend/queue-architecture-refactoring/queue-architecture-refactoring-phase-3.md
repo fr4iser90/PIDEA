@@ -75,7 +75,7 @@ useEffect(() => {
                 }
             });
 
-            // ❌ REMOVE: Task events
+            // ❌ REMOVE: Task events - COMPLETELY REMOVED
             // webSocketService.on('task:step:progress', ...);
             // webSocketService.on('task:step:started', ...);
             // webSocketService.on('task:step:completed', ...);
@@ -99,7 +99,7 @@ useEffect(() => {
         webSocketService.off('workflow:step:started');
         webSocketService.off('workflow:step:completed');
         
-        // ❌ REMOVE: Task event cleanup
+        // ❌ REMOVE: Task event cleanup - COMPLETELY REMOVED
         // webSocketService.off('task:step:progress');
         // webSocketService.off('task:step:started');
         // webSocketService.off('task:step:completed');
@@ -215,7 +215,7 @@ useEffect(() => {
     eventBus.on('workflow:step:completed', handleCompleted);
     eventBus.on('workflow:step:failed', handleError);
 
-    // ❌ REMOVE: Task events
+    // ❌ REMOVE: Task events - COMPLETELY REMOVED
     // eventBus.on('task-creation:progress', handleProgress);
     // eventBus.on('task-creation:completed', handleCompleted);
     // eventBus.on('task-creation:error', handleError);
@@ -225,7 +225,7 @@ useEffect(() => {
         eventBus.off('workflow:step:completed', handleCompleted);
         eventBus.off('workflow:step:failed', handleError);
         
-        // ❌ REMOVE: Task event cleanup
+        // ❌ REMOVE: Task event cleanup - COMPLETELY REMOVED
         // eventBus.off('task-creation:progress', handleProgress);
         // eventBus.off('task-creation:completed', handleCompleted);
         // eventBus.off('task-creation:error', handleError);
@@ -377,7 +377,7 @@ const QueueManagementPanel = ({ eventBus, activePort }) => {
                     }
                 });
 
-                // ❌ REMOVED: Task-specific events
+                // ❌ REMOVED: Task-specific events - COMPLETELY REMOVED
                 // webSocketService.on('task:step:progress', ...);
                 // webSocketService.on('task:step:started', ...);
                 // webSocketService.on('task:step:completed', ...);
@@ -403,7 +403,7 @@ const QueueManagementPanel = ({ eventBus, activePort }) => {
             webSocketService.off('workflow:step:completed');
             webSocketService.off('workflow:step:failed');
             
-            // ❌ REMOVED: Task event cleanup
+            // ❌ REMOVED: Task event cleanup - COMPLETELY REMOVED
             // webSocketService.off('task:step:progress');
             // webSocketService.off('task:step:started');
             // webSocketService.off('task:step:completed');
@@ -516,9 +516,9 @@ const TaskProgressComponent = ({ sessionId, onComplete, onError, onCancelled }) 
 ```
 
 ## ✅ Success Criteria for Phase 3
-- [ ] All task:step:* event listeners removed from frontend
+- [ ] All task:step:* event listeners completely removed from frontend
 - [ ] QueueManagementPanel only uses workflow:step:* events
-- [ ] TaskProgressComponent updated for unified event system
+- [ ] TaskProgressComponent completely updated for unified event system
 - [ ] TaskWorkflowProgress uses workflow events only
 - [ ] Step progress properly displayed in queue UI
 - [ ] 24/7 automation works without frontend intervention
@@ -526,6 +526,7 @@ const TaskProgressComponent = ({ sessionId, onComplete, onError, onCancelled }) 
 - [ ] Integration tests pass for event handling
 - [ ] No task:step:* events listened to anywhere in frontend
 - [ ] Queue shows current step and progress percentage correctly
+- [ ] Complete frontend event system replacement - no fallbacks
 
 ## 🎯 Final Validation
 - [ ] Queue shows "Analysis" workflow type correctly

@@ -69,13 +69,13 @@ rm backend/domain/services/queue/StepProgressService.js
 
 ### Step 3: Update Event Emitters (1 hour)
 ```javascript
-// ❌ OLD: task:step:* events
-this.eventBus.emit('task:step:progress', { projectId, taskId, stepId, progress });
-this.eventBus.emit('task:step:started', { projectId, taskId, stepId });
-this.eventBus.emit('task:step:completed', { projectId, taskId, stepId, result });
-this.eventBus.emit('task:step:failed', { projectId, taskId, stepId, error });
+// ❌ OLD: task:step:* events - COMPLETELY REMOVED
+// this.eventBus.emit('task:step:progress', { projectId, taskId, stepId, progress });
+// this.eventBus.emit('task:step:started', { projectId, taskId, stepId });
+// this.eventBus.emit('task:step:completed', { projectId, taskId, stepId, result });
+// this.eventBus.emit('task:step:failed', { projectId, taskId, stepId, error });
 
-// ✅ NEW: workflow:step:* events
+// ✅ NEW: workflow:step:* events ONLY
 this.eventBus.emit('workflow:step:progress', { projectId, workflowId, stepId, progress });
 this.eventBus.emit('workflow:step:started', { projectId, workflowId, stepId });
 this.eventBus.emit('workflow:step:completed', { projectId, workflowId, stepId, result });
@@ -84,13 +84,13 @@ this.eventBus.emit('workflow:step:failed', { projectId, workflowId, stepId, erro
 
 ### Step 4: Update Event Listeners (30 minutes)
 ```javascript
-// ❌ OLD: Listen to task events
-eventBus.on('task:step:progress', handleStepProgress);
-eventBus.on('task:step:started', handleStepStarted);
-eventBus.on('task:step:completed', handleStepCompleted);
-eventBus.on('task:step:failed', handleStepFailed);
+// ❌ OLD: Listen to task events - COMPLETELY REMOVED
+// eventBus.on('task:step:progress', handleStepProgress);
+// eventBus.on('task:step:started', handleStepStarted);
+// eventBus.on('task:step:completed', handleStepCompleted);
+// eventBus.on('task:step:failed', handleStepFailed);
 
-// ✅ NEW: Listen to workflow events only
+// ✅ NEW: Listen to workflow events ONLY
 eventBus.on('workflow:step:progress', handleStepProgress);
 eventBus.on('workflow:step:started', handleStepStarted);
 eventBus.on('workflow:step:completed', handleStepCompleted);
@@ -476,12 +476,12 @@ class TaskProgressTracker {
 ## ✅ Success Criteria for Phase 2
 - [ ] StepProgressService completely removed
 - [ ] QueueMonitoringService enhanced with step progress functionality
-- [ ] All task:step:* event emitters updated to workflow:step:*
+- [ ] All task:step:* event emitters completely replaced with workflow:step:*
 - [ ] All event listeners updated to use workflow events only
 - [ ] Integration tests pass for unified event system
 - [ ] No task:step:* events emitted anywhere in codebase
 - [ ] Step progress tracking works through workflow events
-- [ ] Backward compatibility maintained for existing workflow listeners
+- [ ] Complete event system replacement - no backward compatibility needed
 
 ## 🔄 Next Phase Preparation
 - [ ] Frontend event listener updates identified
@@ -490,8 +490,8 @@ class TaskProgressTracker {
 - [ ] 24/7 automation testing planned
 
 ## 📝 Notes
-- This phase removes the duplicate event system
-- All step progress now goes through workflow events
+- This phase removes the duplicate event system completely
+- All step progress now goes through workflow events ONLY
 - QueueMonitoringService becomes the single source of truth for step progress
 - Event unification ensures consistent progress tracking
-- Backward compatibility must be maintained for existing workflow listeners 
+- Complete event system replacement - no backward compatibility needed 
