@@ -17,6 +17,7 @@ import FrameworksPanelComponent from './chat/sidebar-right/FrameworksPanelCompon
 import PromptsPanelComponent from './chat/sidebar-right/PromptsPanelComponent.jsx';
 import TemplatesPanelComponent from './chat/sidebar-right/TemplatesPanelComponent.jsx';
 import TasksPanelComponent from './chat/sidebar-right/TasksPanelComponent.jsx';
+import QueueManagementPanel from './queue/QueueManagementPanel.jsx';
 import '@/css/global/sidebar-right.css';
 
 function SidebarRight({ eventBus, attachedPrompts, setAttachedPrompts, activePort }) {
@@ -30,6 +31,7 @@ function SidebarRight({ eventBus, attachedPrompts, setAttachedPrompts, activePor
       <div className="panel-header">
         <div className="panel-tabs">
           <button className={`tab-btn${currentTab === 'tasks' ? ' active' : ''}`} onClick={() => setCurrentTab('tasks')}>🗂️ Tasks</button>
+          <button className={`tab-btn${currentTab === 'queue' ? ' active' : ''}`} onClick={() => setCurrentTab('queue')}>🔄 Queue</button>
           <button className={`tab-btn${currentTab === 'auto' ? ' active' : ''}`} onClick={() => setCurrentTab('auto')}>🤖 Auto</button>
           <button className={`tab-btn${currentTab === 'frameworks' ? ' active' : ''}`} onClick={() => setCurrentTab('frameworks')}>🧩 Frameworks</button>
           <button className={`tab-btn${currentTab === 'prompts' ? ' active' : ''}`} onClick={() => setCurrentTab('prompts')}>💬 Prompts</button>
@@ -41,6 +43,7 @@ function SidebarRight({ eventBus, attachedPrompts, setAttachedPrompts, activePor
       </div>
       <div className="panel-content">
         {currentTab === 'tasks' && <TasksPanelComponent eventBus={eventBus} activePort={activePort} />}
+        {currentTab === 'queue' && <QueueManagementPanel eventBus={eventBus} activePort={activePort} />}
         {currentTab === 'auto' && <AutoPanelComponent eventBus={eventBus} />}
         {currentTab === 'frameworks' && <FrameworksPanelComponent />}
         {currentTab === 'prompts' && <PromptsPanelComponent attachedPrompts={attachedPrompts} setAttachedPrompts={setAttachedPrompts} />}

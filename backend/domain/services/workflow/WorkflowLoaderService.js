@@ -14,7 +14,8 @@ class WorkflowLoaderService {
         this.contentLibrary = {};
         this.workflowsPaths = [
             path.join(__dirname, '../../../framework/workflows/task-workflows.json'),
-            path.join(__dirname, '../../../framework/workflows/task-creation-workflows.json')
+            path.join(__dirname, '../../../framework/workflows/task-creation-workflows.json'),
+            path.join(__dirname, '../../../framework/workflows/analysis-workflows.json')
         ];
         this.promptsPath = path.join(__dirname, '../../../framework/prompts');
     }

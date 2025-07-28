@@ -39,8 +39,8 @@ class ProjectMappingService {
             }
         }
         
-        // Convert to lowercase and remove special characters
-        const projectId = projectName.toLowerCase().replace(/[^a-z0-9]/g, '');
+        // ✅ FIX: Keep original case and remove special characters
+        const projectId = projectName.replace(/[^a-zA-Z0-9]/g, '');
         
         // Store mapping
         this.projectMappings.set(projectId, workspacePath);

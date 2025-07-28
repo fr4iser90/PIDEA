@@ -15,6 +15,8 @@ class WorkflowController {
         this.ideManager = dependencies.ideManager;
         this.taskService = dependencies.taskService;
         this.analysisApplicationService = dependencies.analysisApplicationService;
+        this.queueMonitoringService = dependencies.queueMonitoringService;
+        this.workflowLoaderService = dependencies.workflowLoaderService;
     }
 
     /**
@@ -622,6 +624,85 @@ class WorkflowController {
                 stepOptions.includeImpact = true;
                 stepOptions.maxRecommendations = 20;
                 stepOptions.analysis_results = analysis_results;
+            } else if (mode === 'comprehensive-analysis') {
+                // Load comprehensive analysis workflow from JSON
+                try {
+                    // Get workflowLoaderService from application's service registry
+                    let workflowLoaderService = this.workflowLoaderService;
+                    
+                    // Debug logging
+                    this.logger.info('WorkflowController: Debugging workflowLoaderService', {
+                        hasWorkflowLoaderService: !!workflowLoaderService,
+                        hasApplication: !!this.application,
+                        hasServiceRegistry: !!(this.application && this.application.serviceRegistry),
+                        workflowLoaderServiceType: typeof workflowLoaderService,
+                        workflowLoaderServiceKeys: workflowLoaderService ? Object.keys(workflowLoaderService) : null,
+                        hasGetWorkflowMethod: workflowLoaderService ? typeof workflowLoaderService.getWorkflow : null,
+                        userId
+                    });
+                    if (!workflowLoaderService && this.application && this.application.serviceRegistry) {
+                        try {
+                            workflowLoaderService = this.application.serviceRegistry.getService('workflowLoaderService');
+                            this.logger.info('WorkflowController: Retrieved workflowLoaderService from service registry', {
+                                hasWorkflowLoaderService: !!workflowLoaderService,
+                                userId
+                            });
+                        } catch (error) {
+                            this.logger.error('WorkflowController: Failed to get workflowLoaderService from service registry', {
+                                error: error.message,
+                                userId
+                            });
+                        }
+                    }
+                    
+                    if (!workflowLoaderService) {
+                        throw new Error('WorkflowLoaderService not available');
+                    }
+                    
+                    // Load the comprehensive analysis workflow from analysis-workflows.json
+                    const workflow = workflowLoaderService.getWorkflow('comprehensive-analysis-workflow');
+                    if (!workflow) {
+                        throw new Error('Comprehensive analysis workflow not found');
+                    }
+                    
+                    this.logger.info('WorkflowController: Successfully loaded comprehensive analysis workflow', {
+                        workflowSteps: workflow.steps?.length || 0,
+                        userId
+                    });
+                    
+                    // Define taskData for comprehensive analysis
+                    const taskData = {
+                        type: 'comprehensive-analysis',
+                        projectId,
+                        userId,
+                        workspacePath,
+                        options: {
+                            ...options,
+                            analysisType: 'comprehensive'
+                        }
+                    };
+                    
+                    // Execute the workflow with queue integration
+                    const workflowResult = await this.executeWorkflowSteps(workflow, taskData, projectId, userId, workspacePath, options);
+                    
+                    return res.json({
+                        success: workflowResult.success,
+                        data: workflowResult,
+                        message: workflowResult.success ? 'Comprehensive analysis completed successfully' : 'Comprehensive analysis failed',
+                        workflowId: workflowResult.workflowId
+                    });
+                    
+                } catch (error) {
+                    this.logger.error('WorkflowController: Failed to execute comprehensive analysis workflow', {
+                        error: error.message,
+                        userId
+                    });
+                    
+                    return res.status(500).json({
+                        success: false,
+                        error: `Failed to execute comprehensive analysis: ${error.message}`
+                    });
+                }
             } else if (mode === 'security-recommendations' || mode === 'security-recommendations-analysis') {
                 stepName = 'SecurityRecommendationsStep';
                 stepOptions.includePriority = true;
@@ -1151,32 +1232,95 @@ class WorkflowController {
         };
 
         const startTime = Date.now();
+        const workflowId = `workflow_${projectId}_${Date.now()}`;
 
         try {
             this.logger.info('WorkflowController: Starting workflow execution', {
                 workflowName: workflow.name,
-                stepsCount: workflow.steps.length
+                stepsCount: workflow.steps.length,
+                workflowId
             });
 
-            for (const step of workflow.steps) {
+            // Add workflow to queue if queue monitoring service is available
+            let queueItemId = null;
+            if (this.queueMonitoringService) {
+                const queueItem = {
+                    id: workflowId,
+                    type: 'workflow',
+                    title: `${workflow.name} Workflow`,
+                    description: `Executing ${workflow.steps.length} steps for project ${projectId}`,
+                    status: 'running',
+                    progress: 0,
+                    totalSteps: workflow.steps.length,
+                    currentStep: 0,
+                    steps: workflow.steps.map((step, index) => ({
+                        id: `${workflowId}_step_${index}`,
+                        name: step.name,
+                        type: step.type,
+                        status: 'pending',
+                        progress: 0
+                    })),
+                    createdAt: new Date(),
+                    startedAt: new Date(),
+                    projectId,
+                    userId
+                };
+
+                const addedItem = await this.queueMonitoringService.addToQueue(projectId, userId, queueItem);
+                queueItemId = addedItem.id; // Speichere die Queue-Item-ID!
+                this.logger.info('WorkflowController: Added workflow to queue', { workflowId, queueItemId });
+            }
+
+            for (let i = 0; i < workflow.steps.length; i++) {
+                const step = workflow.steps[i];
                 const stepStartTime = Date.now();
+                const stepId = `${workflowId}_step_${i}`;
                 
                 try {
                     this.logger.info('WorkflowController: Executing step', {
                         stepName: step.name,
-                        stepType: step.type
+                        stepType: step.type,
+                        stepIndex: i + 1,
+                        totalSteps: workflow.steps.length
                     });
+
+                    // Update queue with current step
+                    if (this.queueMonitoringService && queueItemId) {
+                        await this.queueMonitoringService.updateStepProgress(projectId, queueItemId, stepId, {
+                            status: 'running',
+                            progress: 0
+                        });
+                    }
 
                     const stepResult = await this.executeStep(step, taskData, projectId, userId, workspacePath, options);
                     
-                    results.steps.push({
+                    const stepDuration = Date.now() - stepStartTime;
+                    const stepProgress = {
                         name: step.name,
                         type: step.type,
                         success: stepResult.success,
-                        duration: Date.now() - stepStartTime,
+                        duration: stepDuration,
                         data: stepResult.data,
                         error: stepResult.error
-                    });
+                    };
+
+                    results.steps.push(stepProgress);
+
+                    // Update queue with step completion
+                    if (this.queueMonitoringService && queueItemId) {
+                        await this.queueMonitoringService.updateStepProgress(projectId, queueItemId, stepId, {
+                            status: stepResult.success ? 'completed' : 'failed',
+                            progress: 100,
+                            result: stepProgress
+                        });
+
+                        // Update overall workflow progress
+                        const overallProgress = Math.round(((i + 1) / workflow.steps.length) * 100);
+                        await this.queueMonitoringService.updateQueueItem(projectId, queueItemId, {
+                            progress: overallProgress,
+                            currentStep: i + 1
+                        });
+                    }
 
                     if (!stepResult.success) {
                         results.errors.push(`Step ${step.name} failed: ${stepResult.error}`);
@@ -1192,13 +1336,25 @@ class WorkflowController {
                         error: error.message
                     });
 
-                    results.steps.push({
+                    const stepDuration = Date.now() - stepStartTime;
+                    const stepProgress = {
                         name: step.name,
                         type: step.type,
                         success: false,
-                        duration: Date.now() - stepStartTime,
+                        duration: stepDuration,
                         error: error.message
-                    });
+                    };
+
+                    results.steps.push(stepProgress);
+
+                    // Update queue with step failure
+                    if (this.queueMonitoringService && queueItemId) {
+                        await this.queueMonitoringService.updateStepProgress(projectId, queueItemId, stepId, {
+                            status: 'failed',
+                            progress: 100,
+                            result: stepProgress
+                        });
+                    }
 
                     results.errors.push(`Step ${step.name} failed: ${error.message}`);
                     
@@ -1209,6 +1365,15 @@ class WorkflowController {
                 }
             }
 
+            // Update queue with workflow completion
+            if (this.queueMonitoringService && queueItemId) {
+                await this.queueMonitoringService.updateQueueItem(projectId, queueItemId, {
+                    status: results.success ? 'completed' : 'failed',
+                    progress: 100,
+                    completedAt: new Date()
+                });
+            }
+
         } catch (error) {
             this.logger.error('WorkflowController: Workflow execution failed', {
                 workflowName: workflow.name,
@@ -1217,6 +1382,15 @@ class WorkflowController {
             
             results.success = false;
             results.errors.push(`Workflow execution failed: ${error.message}`);
+
+            // Update queue with workflow failure
+            if (this.queueMonitoringService && queueItemId) {
+                await this.queueMonitoringService.updateQueueItem(projectId, queueItemId, {
+                    status: 'failed',
+                    error: error.message,
+                    completedAt: new Date()
+                });
+            }
         }
 
         results.duration = Date.now() - startTime;
@@ -1226,7 +1400,8 @@ class WorkflowController {
             success: results.success,
             duration: results.duration,
             stepsCompleted: results.steps.length,
-            errorsCount: results.errors.length
+            errorsCount: results.errors.length,
+            workflowId
         });
 
         return results;

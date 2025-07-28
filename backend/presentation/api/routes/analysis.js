@@ -109,7 +109,14 @@ class AnalysisRoutes {
    */
   setupExecutionRoute(app, routeName, workflowMode) {
     app.post(`/api/projects/:projectId/analysis/${routeName}`, (req, res) => {
+      // Ensure req.body exists and set the mode
+      req.body = req.body || {};
       req.body.mode = workflowMode;
+      req.body.projectId = req.params.projectId;
+      
+      // Add analysis type for tracking
+      req.body.analysisType = routeName;
+      
       this.workflowController.executeWorkflow(req, res);
     });
   }

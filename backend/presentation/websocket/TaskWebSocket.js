@@ -74,6 +74,22 @@ class TaskWebSocket {
         this.eventBus.on('ide:mirror:status:changed', this.handleIDEMirrorStatusChanged.bind(this));
         this.eventBus.on('ide:dom:updated', this.handleIDEDOMUpdated.bind(this));
         this.eventBus.on('ide:element:interaction', this.handleIDEElementInteraction.bind(this));
+        
+        // Queue events
+        this.eventBus.on('queue:updated', this.handleQueueUpdated.bind(this));
+        this.eventBus.on('queue:item:added', this.handleQueueItemAdded.bind(this));
+        this.eventBus.on('queue:item:cancelled', this.handleQueueItemCancelled.bind(this));
+        this.eventBus.on('queue:item:priority_updated', this.handleQueueItemPriorityUpdated.bind(this));
+        this.eventBus.on('queue:items:cleared', this.handleQueueItemsCleared.bind(this));
+        
+        // Step progress events
+        this.eventBus.on('task:step:progress', this.handleTaskStepProgress.bind(this));
+        this.eventBus.on('task:step:started', this.handleTaskStepStarted.bind(this));
+        this.eventBus.on('task:step:completed', this.handleTaskStepCompleted.bind(this));
+        this.eventBus.on('task:step:failed', this.handleTaskStepFailed.bind(this));
+        this.eventBus.on('task:step:paused', this.handleTaskStepPaused.bind(this));
+        this.eventBus.on('task:step:resumed', this.handleTaskStepResumed.bind(this));
+        this.eventBus.on('task:step:progress:initialized', this.handleTaskStepProgressInitialized.bind(this));
     }
 
     /**
@@ -998,6 +1014,68 @@ class TaskWebSocket {
             activeRooms: this.roomSubscriptions.size,
             timestamp: new Date().toISOString()
         };
+    }
+
+    // Queue Event Handlers
+    handleQueueUpdated(data) {
+        const roomName = `queue:${data.projectId}`;
+        this.broadcastToRoom(roomName, 'queue:updated', data);
+    }
+
+    handleQueueItemAdded(data) {
+        const roomName = `queue:${data.projectId}`;
+        this.broadcastToRoom(roomName, 'queue:item:added', data);
+    }
+
+    handleQueueItemCancelled(data) {
+        const roomName = `queue:${data.projectId}`;
+        this.broadcastToRoom(roomName, 'queue:item:cancelled', data);
+    }
+
+    handleQueueItemPriorityUpdated(data) {
+        const roomName = `queue:${data.projectId}`;
+        this.broadcastToRoom(roomName, 'queue:item:priority_updated', data);
+    }
+
+    handleQueueItemsCleared(data) {
+        const roomName = `queue:${data.projectId}`;
+        this.broadcastToRoom(roomName, 'queue:items:cleared', data);
+    }
+
+    // Step Progress Event Handlers
+    handleTaskStepProgress(data) {
+        const roomName = `task:step:progress:${data.projectId}`;
+        this.broadcastToRoom(roomName, 'task:step:progress', data);
+    }
+
+    handleTaskStepStarted(data) {
+        const roomName = `task:step:progress:${data.projectId}`;
+        this.broadcastToRoom(roomName, 'task:step:started', data);
+    }
+
+    handleTaskStepCompleted(data) {
+        const roomName = `task:step:progress:${data.projectId}`;
+        this.broadcastToRoom(roomName, 'task:step:completed', data);
+    }
+
+    handleTaskStepFailed(data) {
+        const roomName = `task:step:progress:${data.projectId}`;
+        this.broadcastToRoom(roomName, 'task:step:failed', data);
+    }
+
+    handleTaskStepPaused(data) {
+        const roomName = `task:step:progress:${data.projectId}`;
+        this.broadcastToRoom(roomName, 'task:step:paused', data);
+    }
+
+    handleTaskStepResumed(data) {
+        const roomName = `task:step:progress:${data.projectId}`;
+        this.broadcastToRoom(roomName, 'task:step:resumed', data);
+    }
+
+    handleTaskStepProgressInitialized(data) {
+        const roomName = `task:step:progress:${data.projectId}`;
+        this.broadcastToRoom(roomName, 'task:step:progress:initialized', data);
     }
 }
 

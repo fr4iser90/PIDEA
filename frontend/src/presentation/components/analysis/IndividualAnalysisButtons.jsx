@@ -1,6 +1,7 @@
 import { logger } from "@/infrastructure/logging/Logger";
 import React, { useState, useEffect } from 'react';
 import APIChatRepository from '@/infrastructure/repositories/APIChatRepository';
+import { useActiveIDE } from '@/infrastructure/stores/selectors/ProjectSelectors.jsx';
 import '@/css/components/analysis/individual-analysis-buttons.css';
 
 const IndividualAnalysisButtons = ({ projectId = null, eventBus = null, onAnalysisComplete = null }) => {
@@ -12,6 +13,9 @@ const IndividualAnalysisButtons = ({ projectId = null, eventBus = null, onAnalys
   const [runAllProgress, setRunAllProgress] = useState(0);
 
   const apiRepository = new APIChatRepository();
+  
+  // ✅ FIX: Use useActiveIDE to get the correct projectId
+  const { projectId: activeProjectId } = useActiveIDE();
 
   // Core Analysis Types - Only the main analysis steps
   const analysisTypes = [
@@ -104,6 +108,16 @@ const IndividualAnalysisButtons = ({ projectId = null, eventBus = null, onAnalys
     eventBus.on('step:failed', handleStepFailed);
     eventBus.on('step:cancelled', handleStepCancelled);
     
+    // Listen for workflow events (CORRECT!)
+    eventBus.on('workflow:step:progress', handleStepProgress);
+    eventBus.on('workflow:step:completed', handleStepCompleted);
+    eventBus.on('workflow:step:failed', handleStepFailed);
+    
+    // Listen for queue events
+    eventBus.on('queue:item:added', handleQueueItemAdded);
+    eventBus.on('queue:item:updated', handleQueueItemUpdated);
+    eventBus.on('queue:item:completed', handleQueueItemCompleted);
+    
     // Listen for general analysis completion events
     eventBus.on('analysis:completed', handleAnalysisCompleted);
     eventBus.on('analysis-completed', handleAnalysisCompleted);
@@ -116,6 +130,16 @@ const IndividualAnalysisButtons = ({ projectId = null, eventBus = null, onAnalys
       eventBus.off('step:failed', handleStepFailed);
       eventBus.off('step:cancelled', handleStepCancelled);
       
+      // Cleanup workflow events
+      eventBus.off('workflow:step:progress', handleStepProgress);
+      eventBus.off('workflow:step:completed', handleStepCompleted);
+      eventBus.off('workflow:step:failed', handleStepFailed);
+      
+      // Cleanup queue events
+      eventBus.off('queue:item:added', handleQueueItemAdded);
+      eventBus.off('queue:item:updated', handleQueueItemUpdated);
+      eventBus.off('queue:item:completed', handleQueueItemCompleted);
+      
       eventBus.off('analysis:completed', handleAnalysisCompleted);
       eventBus.off('analysis-completed', handleAnalysisCompleted);
     };
@@ -123,7 +147,14 @@ const IndividualAnalysisButtons = ({ projectId = null, eventBus = null, onAnalys
 
   const loadActiveSteps = async () => {
     try {
-      const currentProjectId = projectId || await apiRepository.getCurrentProjectId();
+      // ✅ FIX: Use activeProjectId from useActiveIDE, NO FALLBACKS!
+      const currentProjectId = projectId || activeProjectId;
+      
+      if (!currentProjectId) {
+        logger.warn('No project ID available for loading active steps');
+        return;
+      }
+      
       // Use the analysis status endpoint instead of non-existent active steps endpoint
       const response = await apiRepository.getAnalysisStatus(currentProjectId);
       
@@ -158,13 +189,25 @@ const IndividualAnalysisButtons = ({ projectId = null, eventBus = null, onAnalys
 
   const handleStepStarted = (data) => {
     logger.info('Step started:', data);
-    setActiveSteps(prev => new Map(prev.set(data.analysisType, data)));
-    setLoadingStates(prev => new Map(prev.set(data.analysisType, false)));
+    // Set loading state for the specific analysis type
+    const analysisType = data.stepName?.replace('AnalysisStep', '').toLowerCase() || data.analysisType;
+    setLoadingStates(prev => new Map(prev.set(analysisType, true)));
+    setActiveSteps(prev => new Map(prev.set(analysisType, data)));
   };
 
   const handleStepProgress = (data) => {
     logger.info('Step progress:', data);
     setStepProgress(prev => new Map(prev.set(data.id, data.progress)));
+    
+    // Update Run All Analysis progress based on workflow steps
+    if (data.workflowId && runAllLoading) {
+      // Calculate progress based on current step vs total steps
+      const currentStep = data.currentStep || 0;
+      const totalSteps = data.totalSteps || 7; // Comprehensive analysis has 7 steps
+      const stepProgress = Math.round((currentStep / totalSteps) * 100);
+      setRunAllProgress(stepProgress);
+      logger.debug('Updated Run All progress', { currentStep, totalSteps, stepProgress });
+    }
   };
 
   const handleStepCompleted = (data) => {
@@ -218,17 +261,60 @@ const IndividualAnalysisButtons = ({ projectId = null, eventBus = null, onAnalys
     setLoadingStates(new Map());
     setErrorStates(new Map());
     
+    // Hide Run All Analysis progress bar when comprehensive analysis is completed
+    if (data.analysisType === 'comprehensive' || data.type === 'comprehensive') {
+      setRunAllLoading(false);
+      setRunAllProgress(0);
+      logger.debug('Comprehensive analysis completed, hiding progress bar');
+    }
+    
     if (onAnalysisComplete) {
       onAnalysisComplete(data);
     }
   };
 
+  // Queue event handlers
+  const handleQueueItemAdded = (data) => {
+    logger.info('Queue item added:', data);
+    // Set loading states for comprehensive analysis when workflow is added to queue
+    if (data.workflow && data.workflow.type === 'workflow') {
+      setRunAllLoading(true);
+      setRunAllProgress(0);
+    }
+  };
+
+  const handleQueueItemUpdated = (data) => {
+    logger.info('Queue item updated:', data);
+    // Update progress based on queue item status
+    if (data.workflow && data.workflow.progress !== undefined) {
+      setRunAllProgress(data.workflow.progress);
+    }
+  };
+
+  const handleQueueItemCompleted = (data) => {
+    logger.info('Queue item completed:', data);
+    // Hide progress bar when queue item is completed
+    if (data.workflow && data.workflow.type === 'workflow') {
+      setRunAllLoading(false);
+      setRunAllProgress(0);
+      // Clear loading states for all analysis types
+      const analysisTypes = ['code-quality', 'security', 'performance', 'architecture', 'tech-stack', 'manifest', 'dependency'];
+      analysisTypes.forEach(type => {
+        setLoadingStates(prev => new Map(prev.set(type, false)));
+      });
+    }
+  };
+
   const handleStartAnalysis = async (analysisType) => {
     try {
-      setLoadingStates(prev => new Map(prev.set(analysisType, true)));
       setErrorStates(prev => new Map(prev.set(analysisType, null)));
       
-      const currentProjectId = projectId || await apiRepository.getCurrentProjectId();
+
+      const currentProjectId = projectId || activeProjectId;
+      
+      if (!currentProjectId) {
+        throw new Error('No project ID available');
+      }
       
       // ✅ OPTIMIZATION: Use workflow execution for complex analysis runs
       // This maintains the StepRegistry approach for actual analysis execution
@@ -236,32 +322,24 @@ const IndividualAnalysisButtons = ({ projectId = null, eventBus = null, onAnalys
       
       if (response.success) {
         logger.info(`Started ${analysisType} analysis workflow:`, response);
-        
-        // Create a mock step for immediate UI feedback
-        const mockStep = {
-          id: `analysis-${Date.now()}`,
-          analysisType: analysisType,
-          status: 'running',
-          progress: 0,
-          projectId: currentProjectId
-        };
-        
-        setActiveSteps(prev => new Map(prev.set(analysisType, mockStep)));
-        setStepProgress(prev => new Map(prev.set(mockStep.id, 0)));
+        // DON'T set loading states here - let backend events handle it!
       } else {
         throw new Error(response.error || 'Failed to start analysis workflow');
       }
     } catch (error) {
       logger.error(`Failed to start ${analysisType} analysis workflow:`, error);
       setErrorStates(prev => new Map(prev.set(analysisType, error.message)));
-    } finally {
-      setLoadingStates(prev => new Map(prev.set(analysisType, false)));
     }
   };
 
   const handleCancelAnalysis = async (analysisType) => {
     try {
-      const currentProjectId = projectId || await apiRepository.getCurrentProjectId();
+      // ✅ FIX: Use activeProjectId from useActiveIDE, NO FALLBACKS!
+      const currentProjectId = projectId || activeProjectId;
+      
+      if (!currentProjectId) {
+        throw new Error('No project ID available');
+      }
       
       // Call the cancel endpoint
       const response = await apiRepository.cancelAnalysis(currentProjectId, analysisType);
@@ -303,28 +381,24 @@ const IndividualAnalysisButtons = ({ projectId = null, eventBus = null, onAnalys
       setRunAllLoading(true);
       setRunAllProgress(0);
       
-      const currentProjectId = projectId || await apiRepository.getCurrentProjectId();
+      // ✅ FIX: Use activeProjectId from useActiveIDE, NO FALLBACKS!
+      const currentProjectId = projectId || activeProjectId;
       
-      // Start all core analysis types sequentially
-      for (let i = 0; i < analysisTypes.length; i++) {
-        const analysisType = analysisTypes[i];
-        const progress = (i / analysisTypes.length) * 100;
-        setRunAllProgress(progress);
-        
-        try {
-          await handleStartAnalysis(analysisType.key);
-          // Wait a bit between analyses to avoid overwhelming the system
-          await new Promise(resolve => setTimeout(resolve, 2000));
-        } catch (error) {
-          logger.error(`Failed to start ${analysisType.key} in run-all:`, error);
-          // Continue with next analysis even if one fails
-        }
+      if (!currentProjectId) {
+        throw new Error('No project ID available');
       }
       
-      setRunAllProgress(100);
+      // Make ONE comprehensive analysis call instead of 7 separate calls
+      try {
+        await handleStartAnalysis('comprehensive');
+        // DON'T set progress here - let backend events handle it!
+      } catch (error) {
+        logger.error('Failed to start comprehensive analysis:', error);
+        throw error;
+      }
+      
     } catch (error) {
       logger.error('Failed to run all analyses:', error);
-    } finally {
       setRunAllLoading(false);
       setRunAllProgress(0);
     }

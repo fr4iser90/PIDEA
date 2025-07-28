@@ -1,0 +1,331 @@
+{
+  "workflows": {
+    "comprehensive-analysis-workflow": {
+      "name": "Comprehensive Analysis Workflow",
+      "description": "Complete project analysis with all analysis types",
+      "steps": [
+        {
+          "name": "code-quality-analysis",
+          "type": "analysis",
+          "description": "Analyze code quality, complexity, and best practices",
+          "step": "CodeQualityAnalysisStep",
+          "options": {
+            "includeMetrics": true,
+            "includeIssues": true,
+            "includeSuggestions": true
+          },
+          "strict": false
+        },
+        {
+          "name": "security-analysis",
+          "type": "analysis",
+          "description": "Scan for security vulnerabilities and issues",
+          "step": "SecurityAnalysisStep",
+          "options": {
+            "includeVulnerabilities": true,
+            "includeBestPractices": true,
+            "includeDependencies": true
+          },
+          "strict": false
+        },
+        {
+          "name": "architecture-analysis",
+          "type": "analysis",
+          "description": "Review architectural patterns and dependencies",
+          "step": "ArchitectureAnalysisStep",
+          "options": {
+            "includePatterns": true,
+            "includeStructure": true,
+            "includeRecommendations": true
+          },
+          "strict": false
+        },
+        {
+          "name": "performance-analysis",
+          "type": "analysis",
+          "description": "Analyze performance bottlenecks and optimizations",
+          "step": "PerformanceAnalysisStep",
+          "options": {
+            "includeMetrics": true,
+            "includeOptimizations": true,
+            "includeBottlenecks": true
+          },
+          "strict": false
+        },
+        {
+          "name": "tech-stack-analysis",
+          "type": "analysis",
+          "description": "Analyze technologies, frameworks, and tools",
+          "step": "TechStackAnalysisStep",
+          "options": {
+            "includeFrameworks": true,
+            "includeLibraries": true,
+            "includeTools": true
+          },
+          "strict": false
+        },
+        {
+          "name": "manifest-analysis",
+          "type": "analysis",
+          "description": "Analyze project configuration and manifest files",
+          "step": "ManifestAnalysisStep",
+          "options": {
+            "includePackageJson": true,
+            "includeConfigFiles": true,
+            "includeDockerFiles": true,
+            "includeCIFiles": true
+          },
+          "strict": false
+        },
+        {
+          "name": "dependency-analysis",
+          "type": "analysis",
+          "description": "Analyze package dependencies and versions",
+          "step": "DependencyAnalysisStep",
+          "options": {
+            "includeOutdated": true,
+            "includeVulnerabilities": true,
+            "includeRecommendations": true
+          },
+          "strict": false
+        }
+      ],
+      "options": {
+        "autoConfirm": true,
+        "createBranch": false,
+        "timeout": 300000,
+        "enableProgressTracking": true,
+        "enableErrorRecovery": true
+      }
+    },
+    "quick-analysis-workflow": {
+      "name": "Quick Analysis Workflow",
+      "description": "Fast analysis with essential checks only",
+      "steps": [
+        {
+          "name": "code-quality-analysis",
+          "type": "analysis",
+          "description": "Quick code quality check",
+          "step": "CodeQualityAnalysisStep",
+          "options": {
+            "includeMetrics": true,
+            "includeIssues": true,
+            "includeSuggestions": false
+          },
+          "strict": false
+        },
+        {
+          "name": "security-analysis",
+          "type": "analysis",
+          "description": "Basic security scan",
+          "step": "SecurityAnalysisStep",
+          "options": {
+            "includeVulnerabilities": true,
+            "includeBestPractices": false,
+            "includeDependencies": false
+          },
+          "strict": false
+        },
+        {
+          "name": "dependency-analysis",
+          "type": "analysis",
+          "description": "Check for outdated dependencies",
+          "step": "DependencyAnalysisStep",
+          "options": {
+            "includeOutdated": true,
+            "includeVulnerabilities": true,
+            "includeRecommendations": false
+          },
+          "strict": false
+        }
+      ],
+      "options": {
+        "autoConfirm": true,
+        "createBranch": false,
+        "timeout": 120000,
+        "enableProgressTracking": true,
+        "enableErrorRecovery": false
+      }
+    },
+    "security-focused-analysis-workflow": {
+      "name": "Security-Focused Analysis Workflow",
+      "description": "Comprehensive security analysis with detailed reporting",
+      "steps": [
+        {
+          "name": "security-analysis",
+          "type": "analysis",
+          "description": "Deep security vulnerability scan",
+          "step": "SecurityAnalysisStep",
+          "options": {
+            "includeVulnerabilities": true,
+            "includeBestPractices": true,
+            "includeDependencies": true,
+            "includeSecrets": true,
+            "includePermissions": true
+          },
+          "strict": true
+        },
+        {
+          "name": "dependency-analysis",
+          "type": "analysis",
+          "description": "Security-focused dependency analysis",
+          "step": "DependencyAnalysisStep",
+          "options": {
+            "includeOutdated": true,
+            "includeVulnerabilities": true,
+            "includeRecommendations": true,
+            "includeSecurityAudit": true
+          },
+          "strict": true
+        },
+        {
+          "name": "architecture-analysis",
+          "type": "analysis",
+          "description": "Security architecture review",
+          "step": "ArchitectureAnalysisStep",
+          "options": {
+            "includePatterns": true,
+            "includeStructure": true,
+            "includeRecommendations": true,
+            "includeSecurityPatterns": true
+          },
+          "strict": false
+        }
+      ],
+      "options": {
+        "autoConfirm": false,
+        "createBranch": false,
+        "timeout": 240000,
+        "enableProgressTracking": true,
+        "enableErrorRecovery": true
+      }
+    },
+    "performance-focused-analysis-workflow": {
+      "name": "Performance-Focused Analysis Workflow",
+      "description": "Deep performance analysis and optimization recommendations",
+      "steps": [
+        {
+          "name": "performance-analysis",
+          "type": "analysis",
+          "description": "Comprehensive performance analysis",
+          "step": "PerformanceAnalysisStep",
+          "options": {
+            "includeMetrics": true,
+            "includeOptimizations": true,
+            "includeBottlenecks": true,
+            "includeProfiling": true,
+            "includeLoadTesting": true
+          },
+          "strict": true
+        },
+        {
+          "name": "architecture-analysis",
+          "type": "analysis",
+          "description": "Performance architecture review",
+          "step": "ArchitectureAnalysisStep",
+          "options": {
+            "includePatterns": true,
+            "includeStructure": true,
+            "includeRecommendations": true,
+            "includePerformancePatterns": true
+          },
+          "strict": false
+        },
+        {
+          "name": "code-quality-analysis",
+          "type": "analysis",
+          "description": "Performance-focused code quality check",
+          "step": "CodeQualityAnalysisStep",
+          "options": {
+            "includeMetrics": true,
+            "includeIssues": true,
+            "includeSuggestions": true,
+            "includePerformanceIssues": true
+          },
+          "strict": false
+        }
+      ],
+      "options": {
+        "autoConfirm": false,
+        "createBranch": false,
+        "timeout": 300000,
+        "enableProgressTracking": true,
+        "enableErrorRecovery": true
+      }
+    },
+    "code-quality-focused-analysis-workflow": {
+      "name": "Code Quality-Focused Analysis Workflow",
+      "description": "Comprehensive code quality analysis and improvement suggestions",
+      "steps": [
+        {
+          "name": "code-quality-analysis",
+          "type": "analysis",
+          "description": "Deep code quality analysis",
+          "step": "CodeQualityAnalysisStep",
+          "options": {
+            "includeMetrics": true,
+            "includeIssues": true,
+            "includeSuggestions": true,
+            "includeComplexity": true,
+            "includeMaintainability": true,
+            "includeTestCoverage": true
+          },
+          "strict": true
+        },
+        {
+          "name": "architecture-analysis",
+          "type": "analysis",
+          "description": "Code quality architecture review",
+          "step": "ArchitectureAnalysisStep",
+          "options": {
+            "includePatterns": true,
+            "includeStructure": true,
+            "includeRecommendations": true,
+            "includeCodeQualityPatterns": true
+          },
+          "strict": false
+        },
+        {
+          "name": "dependency-analysis",
+          "type": "analysis",
+          "description": "Code quality impact of dependencies",
+          "step": "DependencyAnalysisStep",
+          "options": {
+            "includeOutdated": true,
+            "includeVulnerabilities": true,
+            "includeRecommendations": true,
+            "includeQualityImpact": true
+          },
+          "strict": false
+        }
+      ],
+      "options": {
+        "autoConfirm": false,
+        "createBranch": false,
+        "timeout": 240000,
+        "enableProgressTracking": true,
+        "enableErrorRecovery": true
+      }
+    }
+  },
+  "analysisTypeMapping": {
+    "comprehensive": "comprehensive-analysis-workflow",
+    "quick": "quick-analysis-workflow",
+    "security": "security-focused-analysis-workflow",
+    "performance": "performance-focused-analysis-workflow",
+    "code-quality": "code-quality-focused-analysis-workflow",
+    "default": "comprehensive-analysis-workflow"
+  },
+  "contentLibrary": {
+    "prompts": {
+      "analysis-report": "content-library/prompts/analysis/analysis-report.md",
+      "security-report": "content-library/prompts/analysis/security-report.md",
+      "performance-report": "content-library/prompts/analysis/performance-report.md",
+      "code-quality-report": "content-library/prompts/analysis/code-quality-report.md"
+    },
+    "templates": {
+      "analysis": "content-library/templates/analysis/",
+      "reports": "content-library/templates/reports/"
+    }
+  }
+} 

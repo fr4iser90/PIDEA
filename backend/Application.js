@@ -325,11 +325,10 @@ class Application {
         this.gitService = this.serviceRegistry.getService('gitService');
         this.testOrchestrator = this.serviceRegistry.getService('testOrchestrator');
         
-        // Initialize WorkflowLoaderService
-        const WorkflowLoaderService = require('@domain/services/workflow/WorkflowLoaderService');
-        this.workflowLoaderService = new WorkflowLoaderService();
+        // Get WorkflowLoaderService from service registry and initialize it
+        this.workflowLoaderService = this.serviceRegistry.getService('workflowLoaderService');
         await this.workflowLoaderService.loadWorkflows();
-        this.logger.info('✅ WorkflowLoaderService initialized and workflows loaded');
+        this.logger.info('✅ WorkflowLoaderService loaded and initialized from service registry');
 
             // Log dependency statistics
     const stats = this.serviceRegistry.getContainer().getDependencyStats();
@@ -548,23 +547,34 @@ class Application {
         this.eventBus
     );
 
-                const WorkflowController = require('./presentation/api/WorkflowController');
+    const WorkflowController = require('./presentation/api/WorkflowController');
     this.workflowController = new WorkflowController({
         workflowApplicationService: this.serviceRegistry.getService('workflowApplicationService'),
         analysisApplicationService: this.serviceRegistry.getService('analysisApplicationService'),
         ideManager: this.serviceRegistry.getService('ideManager'),
         taskService: this.serviceRegistry.getService('taskService'),
+        queueMonitoringService: this.serviceRegistry.getService('queueMonitoringService'),
+        workflowLoaderService: this.serviceRegistry.getService('workflowLoaderService'),
         eventBus: this.eventBus,
         application: this,
         logger: this.serviceRegistry.getService('logger')
     });
 
-
+    // Initialize QueueController
+    const QueueController = require('./presentation/api/QueueController');
+    this.queueController = new QueueController({
+        queueMonitoringService: this.serviceRegistry.getService('queueMonitoringService'),
+        stepProgressService: this.serviceRegistry.getService('stepProgressService'),
+        executionQueue: this.serviceRegistry.getService('executionQueue'),
+        eventBus: this.eventBus,
+        logger: this.serviceRegistry.getService('logger')
+    });
 
     // Initialize AnalysisController
     const AnalysisController = require('./presentation/api/AnalysisController');
     this.analysisController = new AnalysisController(
-        this.serviceRegistry.getService('analysisApplicationService')
+        this.serviceRegistry.getService('analysisApplicationService'),
+        this.workflowController
     );
 
     const GitController = require('./presentation/api/GitController');
@@ -882,6 +892,16 @@ class Application {
     this.app.post('/api/projects/:projectId/workflow/stop', (req, res) => this.workflowController.stopWorkflow(req, res));
     this.app.get('/api/projects/:projectId/workflow/health', (req, res) => this.workflowController.healthCheck(req, res));
 
+    // Queue Management routes (protected) - PROJECT-BASED
+    this.app.use('/api/projects/:projectId/queue', this.authMiddleware.authenticate());
+    this.app.get('/api/projects/:projectId/queue/status', (req, res) => this.queueController.getQueueStatus(req, res));
+    this.app.post('/api/projects/:projectId/queue/add', (req, res) => this.queueController.addToQueue(req, res));
+    this.app.delete('/api/projects/:projectId/queue/:itemId', (req, res) => this.queueController.cancelQueueItem(req, res));
+    this.app.put('/api/projects/:projectId/queue/:itemId/priority', (req, res) => this.queueController.updateQueueItemPriority(req, res));
+    this.app.get('/api/projects/:projectId/queue/:itemId/step-progress', (req, res) => this.queueController.getStepProgress(req, res));
+    this.app.post('/api/projects/:projectId/queue/:itemId/step/:stepId/toggle', (req, res) => this.queueController.toggleStepStatus(req, res));
+    this.app.get('/api/projects/:projectId/queue/statistics', (req, res) => this.queueController.getQueueStatistics(req, res));
+    this.app.delete('/api/projects/:projectId/queue/completed', (req, res) => this.queueController.clearCompletedItems(req, res));
 
 
     // Project routes (protected)
@@ -968,6 +988,68 @@ class Application {
           this.webSocketManager.broadcastToAll('analysis:completed', data);
         } else {
           this.logger.warn('No WebSocket manager available for broadcasting analysis:completed');
+        }
+      });
+
+      // Queue Events
+      this.eventBus.subscribe('queue:item:added', (data) => {
+        this.logger.info('Queue item added event:', '[REDACTED_QUEUE_DATA]');
+        if (this.webSocketManager) {
+          this.logger.info('Broadcasting queue:item:added to all clients');
+          this.webSocketManager.broadcastToAll('queue:item:added', data);
+        } else {
+          this.logger.warn('No WebSocket manager available for broadcasting queue:item:added');
+        }
+      });
+
+      this.eventBus.subscribe('queue:item:updated', (data) => {
+        this.logger.info('Queue item updated event:', '[REDACTED_QUEUE_DATA]');
+        if (this.webSocketManager) {
+          this.logger.info('Broadcasting queue:item:updated to all clients');
+          this.webSocketManager.broadcastToAll('queue:item:updated', data);
+        } else {
+          this.logger.warn('No WebSocket manager available for broadcasting queue:item:updated');
+        }
+      });
+
+      this.eventBus.subscribe('queue:item:completed', (data) => {
+        this.logger.info('Queue item completed event:', '[REDACTED_QUEUE_DATA]');
+        if (this.webSocketManager) {
+          this.logger.info('Broadcasting queue:item:completed to all clients');
+          this.webSocketManager.broadcastToAll('queue:item:completed', data);
+        } else {
+          this.logger.warn('No WebSocket manager available for broadcasting queue:item:completed');
+        }
+      });
+
+      // Workflow Events
+      this.eventBus.subscribe('workflow:step:progress', (data) => {
+        this.logger.info('Workflow step progress event:', '[REDACTED_WORKFLOW_DATA]');
+        if (this.webSocketManager) {
+          this.logger.info('Broadcasting workflow:step:progress to all clients');
+          this.webSocketManager.broadcastToAll('workflow:step:progress', data);
+        } else {
+          this.logger.warn('No WebSocket manager available for broadcasting workflow:step:progress');
+        }
+      });
+
+      this.eventBus.subscribe('workflow:step:completed', (data) => {
+        this.logger.info('Workflow step completed event:', '[REDACTED_WORKFLOW_DATA]');
+        if (this.webSocketManager) {
+          this.logger.info('Broadcasting workflow:step:completed to all clients');
+          this.webSocketManager.broadcastToAll('workflow:step:completed', data);
+        } else {
+          this.logger.warn('No WebSocket manager available for broadcasting workflow:step:completed');
+        }
+      });
+
+      this.eventBus.subscribe('workflow:step:failed', (data) => {
+        this.logger.info('Workflow step failed event:', '[REDACTED_WORKFLOW_DATA]');
+        if (this.webSocketManager) {
+          this.logger.info('Broadcasting workflow:step:failed to all clients');
+          this.webSocketManager.broadcastToAll('workflow:step:failed', data);
+        } else {
+          this.logger.warn('No WebSocket manager available for broadcasting workflow:step:failed');
         }
       });
     } else {

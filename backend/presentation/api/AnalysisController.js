@@ -20,13 +20,12 @@ const ServiceLogger = require('@logging/ServiceLogger');
 const logger = new ServiceLogger('AnalysisController');
 
 class AnalysisController {
-  constructor(analysisApplicationService) {
+  constructor(analysisApplicationService, workflowController = null) {
     this.analysisApplicationService = analysisApplicationService;
-    this.logger = logger;
-    
-    // Request deduplication to prevent double execution
+    this.workflowController = workflowController;
+    this.logger = new Logger('AnalysisController');
     this.activeRequests = new Map();
-    this.requestTimeout = 5000; // 5 seconds
+    this.requestTimeout = 30000; // 30 seconds
   }
 
   /**
@@ -568,21 +567,30 @@ class AnalysisController {
   async executeAnalysisWorkflow(req, res) {
     try {
       const { projectId } = req.params;
-      const { analysisType, options = {} } = req.body;
+      const { analysisType, options = {} } = req.body || {};
       
-      this.logger.info(`🚀 Executing analysis workflow for project: ${projectId}, type: ${analysisType}`);
+      this.logger.info(`🚀 Executing analysis workflow for project: ${projectId}, type: ${analysisType || 'comprehensive'}`);
       
-      // Redirect to WorkflowController for complex analysis execution
-      // This maintains the existing workflow-based approach for complex operations
-      const WorkflowController = require('./WorkflowController');
-      const workflowController = new WorkflowController();
+      // If no analysisType is provided, default to comprehensive analysis
+      const finalAnalysisType = analysisType || 'comprehensive';
+      
+      // Check if we have a workflowController injected
+      if (!this.workflowController) {
+        this.logger.error('❌ WorkflowController not available in AnalysisController');
+        return res.status(500).json({
+          success: false,
+          error: 'WorkflowController not available',
+          message: 'AnalysisController was not properly initialized with WorkflowController dependency'
+        });
+      }
       
       // Set the mode for workflow execution
-      req.body.mode = `${analysisType}-analysis`;
+      req.body = req.body || {};
+      req.body.mode = `${finalAnalysisType}-analysis`;
       req.body.projectId = projectId;
       
-      // Delegate to WorkflowController
-      return await workflowController.executeWorkflow(req, res);
+      // Delegate to the injected WorkflowController for sequential execution
+      return await this.workflowController.executeWorkflow(req, res);
       
     } catch (error) {
       this.logger.error('❌ Failed to execute analysis workflow:', error);

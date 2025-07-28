@@ -247,6 +247,32 @@ class ServiceRegistry {
             return new LogicValidationService(logger);
         }, { singleton: true, dependencies: ['logger'] });
 
+        // Queue Monitoring Service
+        this.container.register('queueMonitoringService', (eventBus, logger) => {
+            const QueueMonitoringService = require('@domain/services/queue/QueueMonitoringService');
+            return new QueueMonitoringService({
+                eventBus,
+                logger
+            });
+        }, { singleton: true, dependencies: ['eventBus', 'logger'] });
+
+        // Step Progress Service
+        this.container.register('stepProgressService', (eventBus, logger) => {
+            const StepProgressService = require('@domain/services/queue/StepProgressService');
+            return new StepProgressService({
+                eventBus,
+                logger
+            });
+        }, { singleton: true, dependencies: ['eventBus', 'logger'] });
+
+        // Execution Queue Service
+        this.container.register('executionQueue', (logger) => {
+            const ExecutionQueue = require('@domain/workflows/execution/ExecutionQueue');
+            return new ExecutionQueue({
+                logger
+            });
+        }, { singleton: true, dependencies: ['logger'] });
+
         // Chat Session Service
         this.container.register('chatSessionService', (browserManager, ideManager, eventBus, logger) => {
             const ChatSessionService = require('@domain/services/chat/ChatSessionService');
@@ -337,6 +363,25 @@ class ServiceRegistry {
             const ManualTasksImportService = require('@domain/services/task/ManualTasksImportService');
             return new ManualTasksImportService(browserManager, taskService, taskRepository);
         }, { singleton: true, dependencies: ['browserManager', 'taskService', 'taskRepository'] });
+
+        // Workflow services
+        this.container.register('workflowOrchestrationService', (cursorIDEService, taskRepository, logger, eventBus) => {
+            const WorkflowOrchestrationService = require('@domain/services/workflow/WorkflowOrchestrationService');
+            return new WorkflowOrchestrationService({
+                cursorIDEService,
+                taskRepository,
+                logger,
+                eventBus
+            });
+        }, { singleton: true, dependencies: ['cursorIDEService', 'taskRepository', 'logger', 'eventBus'] });
+
+        // WorkflowLoaderService - Loads and manages JSON workflow definitions
+        this.container.register('workflowLoaderService', () => {
+            const WorkflowLoaderService = require('@domain/services/workflow/WorkflowLoaderService');
+            const service = new WorkflowLoaderService();
+            // Note: loadWorkflows() will be called separately during initialization
+            return service;
+        }, { singleton: true });
 
         this.registeredServices.add('domain');
     }
@@ -1327,6 +1372,32 @@ class ServiceRegistry {
                     return new LogicValidationService(logger);
                 }, { singleton: true, dependencies: ['logger'] });
                 break;
+            case 'queueMonitoringService':
+                this.container.register('queueMonitoringService', (eventBus, logger) => {
+                    const QueueMonitoringService = require('@domain/services/queue/QueueMonitoringService');
+                    return new QueueMonitoringService({
+                        eventBus,
+                        logger
+                    });
+                }, { singleton: true, dependencies: ['eventBus', 'logger'] });
+                break;
+            case 'stepProgressService':
+                this.container.register('stepProgressService', (eventBus, logger) => {
+                    const StepProgressService = require('@domain/services/queue/StepProgressService');
+                    return new StepProgressService({
+                        eventBus,
+                        logger
+                    });
+                }, { singleton: true, dependencies: ['eventBus', 'logger'] });
+                break;
+            case 'executionQueue':
+                this.container.register('executionQueue', (logger) => {
+                    const ExecutionQueue = require('@domain/workflows/execution/ExecutionQueue');
+                    return new ExecutionQueue({
+                        logger
+                    });
+                }, { singleton: true, dependencies: ['logger'] });
+                break;
             case 'chatSessionService':
                 this.container.register('chatSessionService', (chatRepository, browserManager, ideManager, eventBus, logger) => {
                     const ChatSessionService = require('@domain/services/chat/ChatSessionService');
@@ -1418,6 +1489,14 @@ class ServiceRegistry {
                     return new ManualTasksImportService(browserManager, taskService, taskRepository);
                 }, { singleton: true, dependencies: ['browserManager', 'taskService', 'taskRepository'] });
                 break;
+            case 'workflowLoaderService':
+                this.container.register('workflowLoaderService', () => {
+                    const WorkflowLoaderService = require('@domain/services/workflow/WorkflowLoaderService');
+                    const service = new WorkflowLoaderService();
+                    // Note: loadWorkflows() will be called separately during initialization
+                    return service;
+                }, { singleton: true });
+                break;
             default:
                 throw new Error(`Unknown domain service: ${serviceName}`);
         }
@@ -1494,6 +1573,9 @@ class ServiceRegistry {
         this.addServiceDefinition('advancedAnalysisService', ['layerValidationService', 'logicValidationService', 'taskAnalysisService', 'eventBus', 'logger'], 'domain');
         this.addServiceDefinition('layerValidationService', ['logger'], 'domain');
         this.addServiceDefinition('logicValidationService', ['logger'], 'domain');
+        this.addServiceDefinition('queueMonitoringService', ['eventBus', 'logger'], 'domain');
+        this.addServiceDefinition('stepProgressService', ['eventBus', 'logger'], 'domain');
+        this.addServiceDefinition('executionQueue', ['logger'], 'domain');
         this.addServiceDefinition('chatSessionService', ['chatRepository', 'browserManager', 'ideManager', 'eventBus', 'logger'], 'domain');
         this.addServiceDefinition('ideAutomationService', ['browserManager', 'ideManager', 'eventBus', 'logger'], 'domain');
         this.addServiceDefinition('workflowExecutionService', ['chatSessionService', 'ideAutomationService', 'browserManager', 'ideManager', 'eventBus', 'logger'], 'domain');
@@ -1505,6 +1587,7 @@ class ServiceRegistry {
         this.addServiceDefinition('authService', ['userRepository', 'userSessionRepository'], 'domain');
         this.addServiceDefinition('taskService', ['taskRepository', 'aiService', 'projectAnalyzer', 'cursorIDEService'], 'domain');
         this.addServiceDefinition('manualTasksImportService', ['browserManager', 'taskService', 'taskRepository'], 'domain');
+        this.addServiceDefinition('workflowLoaderService', [], 'domain');
 
         // 🚨 NEW APPLICATION SERVICES - Layer Boundary Violation Fixes
         this.addServiceDefinition('analysisApplicationService', ['analysisOutputService', 'analysisRepository', 'projectRepository', 'logger'], 'application');
