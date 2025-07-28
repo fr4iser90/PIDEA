@@ -98,7 +98,39 @@
   background: var(--input-bg);
   border: 1px solid var(--border-color);
   color: var(--text-primary);
+  min-width: 120px;
+}
+
+/* Completion Filter Button */
+.completion-filter-btn {
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  background: var(--input-bg, #374151);
+  border: 1px solid var(--border-color, #4b5563);
+  color: var(--text-primary, #f9fafb);
   font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.completion-filter-btn:hover {
+  background: var(--hover-bg, #4b5563);
+  border-color: var(--hover-border, #6b7280);
+}
+
+.completion-filter-btn.active {
+  background: var(--success-bg, #f0fdf4);
+  border-color: var(--success-border, #bbf7d0);
+  color: var(--success-text, #166534);
+}
+
+.completion-filter-btn.active:hover {
+  background: var(--success-hover-bg, #dcfce7);
+  border-color: var(--success-hover-border, #86efac);
 }
 
 /* Main Content Layout */
@@ -284,6 +316,33 @@
   border-radius: 4px;
   color: white;
   font-weight: 500;
+}
+
+/* Enhanced Status Badge Styles */
+.status-badge.completed {
+  background-color: #10b981 !important;
+}
+
+.status-badge.partially_completed {
+  background-color: #3b82f6 !important;
+}
+
+.status-badge.pending {
+  background-color: #f59e0b !important;
+}
+
+.status-badge.unknown {
+  background-color: #6b7280 !important;
+}
+
+.status-badge.small {
+  font-size: 0.625rem;
+  padding: 0.125rem 0.375rem;
+}
+
+.status-badge.large {
+  font-size: 0.875rem;
+  padding: 0.375rem 0.75rem;
 }
 
 .task-footer {

@@ -7,6 +7,14 @@ import ManualTaskDetailsModal from '../modal/ManualTaskDetailsModal.jsx';
 import TaskCreationModal from '../modal/TaskCreationModal.jsx';
 import { getCategoryDisplay, getAllCategories, getCategoryIcon, getCategoryColor, MAIN_CATEGORIES } from '@/utils/taskTypeUtils';
 import TaskTypeBadge from '@/components/TaskTypeBadge.jsx';
+import TaskCompletionBadge from '@/components/TaskCompletionBadge.jsx';
+import { 
+  isTaskCompleted, 
+  isTaskPartiallyCompleted, 
+  getCompletionStatus,
+  getCompletionDisplayText,
+  getCompletionColor 
+} from '@/utils/taskCompletionUtils';
 import '@/css/panel/task-panel.css';
 
 // Import the SAME fetchPromptContent function that works everywhere
@@ -188,6 +196,7 @@ function TasksPanelComponent({ eventBus, activePort }) {
   const [taskSearch, setTaskSearch] = useState('');
   const [taskFilter, setTaskFilter] = useState('all');
   const [selectedCategory, setSelectedCategory] = useState('all');
+  const [showCompletedTasks, setShowCompletedTasks] = useState(false);
   const [showTaskCreationModal, setShowTaskCreationModal] = useState(false);
   const [feedback, setFeedback] = useState('');
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
@@ -486,6 +495,10 @@ function TasksPanelComponent({ eventBus, activePort }) {
     setShowTaskCreationModal(false);
   };
 
+  const handleCompletionFilterToggle = () => {
+    setShowCompletedTasks(!showCompletedTasks);
+  };
+
   const handleTaskSubmit = async (taskData) => {
     if (!projectId || !activeIDE?.workspacePath) {
       setFeedback('No project selected for task creation');
@@ -518,6 +531,11 @@ function TasksPanelComponent({ eventBus, activePort }) {
 
   // ✅ FIXED: Filter and group tasks using state-based data
   const filteredTasks = (Array.isArray(manualTasks) ? manualTasks : []).filter(task => {
+    // Apply completion filter first
+    const isCompleted = isTaskCompleted(task);
+    if (!showCompletedTasks && isCompleted) return false;
+    
+    // Apply existing filters
     const matchesSearch = !taskSearch || 
       getTaskTitle(task).toLowerCase().includes(taskSearch.toLowerCase()) ||
       getTaskDescription(task).toLowerCase().includes(taskSearch.toLowerCase());
@@ -530,13 +548,13 @@ function TasksPanelComponent({ eventBus, activePort }) {
     return matchesSearch && matchesCategory && matchesFilter;
   });
 
-  // Group tasks by category for display
+  // Group tasks by featureId for display (to group related tasks together)
   const groupedTasks = filteredTasks.reduce((acc, task) => {
-    const category = task.category || 'manual';
-    if (!acc[category]) {
-      acc[category] = [];
+    const featureId = task.featureId || task.featureGroup || task.category || 'manual';
+    if (!acc[featureId]) {
+      acc[featureId] = [];
     }
-    acc[category].push(task);
+    acc[featureId].push(task);
     return acc;
   }, {});
 
@@ -608,6 +626,13 @@ function TasksPanelComponent({ eventBus, activePort }) {
             <option value="medium">Medium Priority</option>
             <option value="low">Low Priority</option>
           </select>
+          <button 
+            className={`completion-filter-btn ${showCompletedTasks ? 'active' : ''}`}
+            onClick={handleCompletionFilterToggle}
+            title={showCompletedTasks ? "Hide completed tasks" : "Show completed tasks"}
+          >
+            {showCompletedTasks ? '✅' : '⏳'} Show Completed
+          </button>
         </div>
       </div>
 
@@ -650,51 +675,57 @@ function TasksPanelComponent({ eventBus, activePort }) {
             </div>
           ) : filteredTasks.length > 0 ? (
             <div className="tasks-list">
-              {Object.entries(groupedTasks).map(([category, categoryTasks]) => (
-                <div key={category} className="category-group">
-                  <div className="category-header">
-                    <TaskTypeBadge 
-                      category={category}
-                      size="small"
-                      showSubcategory={false}
-                    />
-                    <span className="category-count">
-                      {categoryTasks.length} tasks
-                    </span>
-                  </div>
-                  <div className="category-tasks">
-                    {categoryTasks.map((task) => (
-                      <div
-                        key={task.id}
-                        className="task-item"
-                        onClick={() => handleTaskClick(task)}
-                      >
-                        <div className="task-header">
-                          <h4 className="task-title">{getTaskTitle(task)}</h4>
-                          <div className="task-badges">
-                            <span 
-                              className="priority-badge"
-                              style={{ backgroundColor: getPriorityColor(task.priority) }}
-                            >
-                              {getPriorityText(task.priority)}
-                            </span>
-                            <span 
-                              className="status-badge"
-                              style={{ backgroundColor: getStatusColor(task.status) }}
-                            >
-                              {getStatusText(task.status)}
-                            </span>
+              {Object.entries(groupedTasks).map(([featureId, featureTasks]) => {
+                // Get the main task (index task) for display
+                const mainTask = featureTasks.find(task => task.isIndexTask) || featureTasks[0];
+                const featureName = mainTask?.name || featureId.replace(/_/g, ' ');
+                
+                return (
+                  <div key={featureId} className="category-group">
+                    <div className="category-header">
+                      <TaskTypeBadge 
+                        category={mainTask?.category || 'manual'}
+                        size="small"
+                        showSubcategory={false}
+                      />
+                      <span className="category-count">
+                        {featureTasks.length} tasks
+                      </span>
+                    </div>
+                    <div className="category-tasks">
+                      {featureTasks.map((task) => (
+                        <div
+                          key={task.id}
+                          className="task-item"
+                          onClick={() => handleTaskClick(task)}
+                        >
+                          <div className="task-header">
+                            <h4 className="task-title">{getTaskTitle(task)}</h4>
+                            <div className="task-badges">
+                              <span 
+                                className="priority-badge"
+                                style={{ backgroundColor: getPriorityColor(task.priority) }}
+                              >
+                                {getPriorityText(task.priority)}
+                              </span>
+                              <TaskCompletionBadge 
+                                task={task}
+                                size="small"
+                                showIcon={true}
+                                showProgress={true}
+                              />
+                            </div>
+                          </div>
+                          <div className="task-footer">
+                            <span className="task-category">{task.category}</span>
+                            <span className="task-date">{formatDate(task.created_at)}</span>
                           </div>
                         </div>
-                        <div className="task-footer">
-                          <span className="task-category">{task.category}</span>
-                          <span className="task-date">{formatDate(task.created_at)}</span>
-                        </div>
-                      </div>
-                    ))}
+                      ))}
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           ) : (
             <div className="no-tasks">

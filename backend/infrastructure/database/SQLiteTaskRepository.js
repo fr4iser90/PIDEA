@@ -609,11 +609,18 @@ class SQLiteTaskRepository extends TaskRepository {
   /**
    * Update a task
    * @param {string} id - The task ID
-   * @param {Object} updates - The updates to apply
+   * @param {Object|Task} updates - The updates to apply or the complete task object
    * @returns {Promise<Task>} The updated task
    */
   async update(id, updates) {
     try {
+      // ✅ FIXED: Handle both update object and complete task object
+      if (updates && typeof updates === 'object' && updates.id === id) {
+        // If updates is a complete task object with matching ID, save it directly
+        return await this.save(updates);
+      }
+      
+      // Otherwise, load existing task and apply updates
       const task = await this.findById(id);
       if (!task) {
         throw new Error(`Task with ID ${id} not found`);

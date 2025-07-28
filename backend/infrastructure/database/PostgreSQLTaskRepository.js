@@ -234,11 +234,41 @@ class PostgreSQLTaskRepository extends TaskRepository {
 
   /**
    * Update a task
-   * @param {Task} task - Task to update
+   * @param {string|Task} idOrTask - Task ID or Task object
+   * @param {Task|Object} taskOrUpdates - Task object or updates object
    * @returns {Promise<Task>} Updated task
    */
-  async update(task) {
+  async update(idOrTask, taskOrUpdates) {
     try {
+      let task;
+      let taskId;
+
+      // ✅ FIXED: Handle both parameter patterns
+      if (typeof idOrTask === 'string') {
+        // Called as: update(id, task) or update(id, updates)
+        taskId = idOrTask;
+        if (taskOrUpdates && typeof taskOrUpdates === 'object' && taskOrUpdates.id === taskId) {
+          // Second parameter is a complete task object
+          task = taskOrUpdates;
+        } else {
+          // Second parameter is updates object - load existing task and apply updates
+          task = await this.findById(taskId);
+          if (!task) {
+            throw new Error(`Task with ID ${taskId} not found`);
+          }
+          // Apply updates
+          Object.keys(taskOrUpdates || {}).forEach(key => {
+            if (task[key] !== undefined) {
+              task[key] = taskOrUpdates[key];
+            }
+          });
+        }
+      } else {
+        // Called as: update(task) - backward compatibility
+        task = idOrTask;
+        taskId = task.id;
+      }
+
       const sql = `
         UPDATE ${this.tableName} SET
           title = $1, description = $2, type = $3, category = $4, priority = $5, status = $6,
@@ -260,14 +290,14 @@ class PostgreSQLTaskRepository extends TaskRepository {
         taskPriority,
         taskStatus,
         task.projectId, // camelCase property
-        task.userId, // camelCase property
+        task.userId || 'me', // camelCase property with fallback
         task.estimatedTime || null,
         JSON.stringify(task.metadata || {}),
         task.updatedAt ? task.updatedAt.toISOString() : new Date().toISOString(),
         JSON.stringify(task.tags || []),
         task.dueDate ? task.dueDate.toISOString() : null,
         task.completedAt ? task.completedAt.toISOString() : null,
-        task.id
+        taskId
       ];
 
       await this.databaseConnection.execute(sql, params);

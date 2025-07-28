@@ -112,18 +112,25 @@ class TaskApplicationService {
         type
       });
       
-      return tasks.map(task => ({
+      const mappedTasks = tasks.map(task => ({
         id: task.id,
         title: task.title,
         description: task.description,
-        status: task.status,
-        priority: task.priority,
-        type: task.type,
+        status: task.status?.value || task.status,
+        priority: task.priority?.value || task.priority,
+        type: task.type?.value || task.type,
         projectId: task.projectId,
         createdAt: task.createdAt,
         updatedAt: task.updatedAt,
         metadata: task.metadata
       }));
+      
+      // ✅ NEW: Debug log to see what's actually being returned
+      this.logger.info(`🔍 DEBUG: API Response - ${mappedTasks.length} tasks with statuses:`, 
+        mappedTasks.map(t => ({ title: t.title, status: t.status, progress: t.metadata?.progress }))
+      );
+      
+      return mappedTasks;
       
     } catch (error) {
       this.logger.error('❌ Failed to get project tasks:', error);
