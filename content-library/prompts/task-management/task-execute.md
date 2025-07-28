@@ -170,3 +170,20 @@ const resolveTestPath = (category, componentName, componentType = 'service') => 
 
 ## Example Usage
 > Execute complete implementation of user authentication system with JWT tokens, including all frontend components, backend services, database schemas, API endpoints, tests, and documentation. Feature name: "User Authentication", Priority: High. Implement with zero user input required.
+
+## Integration with Other Prompts
+
+### With task-create.md
+- `task-create.md` creates the implementation plan and specifications
+- `task-execute.md` executes the implementation based on that plan
+- Use `task-create.md` for planning, `task-execute.md` for execution
+
+### With task-review.md
+- `task-review.md` validates the implementation against requirements
+- `task-execute.md` performs the actual implementation
+- Use `task-review.md` to verify execution results
+
+### With task-check-state.md
+- `task-execute.md` performs the implementation
+- `task-check-state.md` tracks progress and status updates
+- Use `task-check-state.md` to monitor execution progress

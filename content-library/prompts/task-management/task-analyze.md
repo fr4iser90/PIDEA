@@ -1,7 +1,9 @@
-# Prompt: Analyze Project Gaps & Missing Components (Database-First)
+# Prompt: Project-Wide Gap Analysis & Missing Components
 
 ## Goal
-Generate a comprehensive analysis of what's missing, incomplete, or needs improvement in the current project state. Create actionable insights that can be parsed into database tasks for AI auto-implementation, tracking, and execution.
+Generate a comprehensive analysis of what's missing, incomplete, or needs improvement across the entire project. Create actionable insights for project-wide improvements that can be parsed into database tasks for AI auto-implementation, tracking, and execution.
+
+**Note**: This prompt focuses on project-wide analysis, not individual task validation. For task-specific validation, use `task-review.md`.
 
 Create new [Name]-analysis.md in docs/09_roadmap/tasks/[category]/[name]/ with the following structure:
 **Note**: The system automatically creates a hierarchical folder structure: Category → Task Name → Analysis files
