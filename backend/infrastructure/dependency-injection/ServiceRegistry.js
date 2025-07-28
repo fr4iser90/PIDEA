@@ -710,13 +710,14 @@ class ServiceRegistry {
 
 
     registerIDEMirrorApplicationService() {
-        this.container.register('ideMirrorApplicationService', (logger, eventBus) => {
+        this.container.register('ideMirrorApplicationService', (ideMirrorService, logger, eventBus) => {
             const IDEMirrorApplicationService = require('@application/services/IDEMirrorApplicationService');
             return new IDEMirrorApplicationService({
+                ideMirrorService,
                 logger,
                 eventBus
             });
-        }, { singleton: true, dependencies: ['logger', 'eventBus'] });
+        }, { singleton: true, dependencies: ['ideMirrorService', 'logger', 'eventBus'] });
     }
 
     registerIDEApplicationService() {
@@ -1602,7 +1603,7 @@ class ServiceRegistry {
         this.addServiceDefinition('contentLibraryApplicationService', ['logger', 'eventBus'], 'application');
         this.addServiceDefinition('codeExplorerApplicationService', ['logger', 'eventBus', 'browserManager'], 'application');
 
-        this.addServiceDefinition('ideMirrorApplicationService', ['logger', 'eventBus'], 'application');
+        this.addServiceDefinition('ideMirrorApplicationService', ['ideMirrorService', 'logger', 'eventBus'], 'application');
         this.addServiceDefinition('ideApplicationService', ['ideManager', 'eventBus', 'cursorIDEService', 'taskRepository', 'terminalLogCaptureService', 'terminalLogReader', 'logger'], 'application');
 
         // Handler services are now managed by HandlerRegistry with ServiceRegistry injection

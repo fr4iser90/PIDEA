@@ -18,9 +18,13 @@ const Logger = require('@logging/Logger');
 
 class IDEMirrorApplicationService {
     constructor(dependencies = {}) {
-        this.ideMirrorService = dependencies.ideMirrorService || new IDEMirrorService();
+        this.ideMirrorService = dependencies.ideMirrorService;
         this.logger = dependencies.logger || new Logger('IDEMirrorApplicationService');
         this.eventBus = dependencies.eventBus;
+        
+        if (!this.ideMirrorService) {
+            throw new Error('IDEMirrorApplicationService requires ideMirrorService dependency');
+        }
     }
 
     async getIDEState(userId) {
